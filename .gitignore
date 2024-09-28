@@ -31,6 +31,10 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+[Bb]in-int/
+[Oo]bj-int/
+[Ll]og-int/
+[Ll]ogs-int/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
@@ -396,3 +400,4 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+SolutionExperience/SyntaxTest/*.i
