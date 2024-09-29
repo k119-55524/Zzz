@@ -12,12 +12,10 @@ int APIENTRY wWinMain(
 {
 	zEngine game;
 
-	zEngine::s_EngineInit initData;
+	s_zEngineInit initData;
 	zResult res = game.Initialize(&initData);
 	if (!res.isSuccess())
-	{
 		return -1;
-	}
 
 	return 0;
 }

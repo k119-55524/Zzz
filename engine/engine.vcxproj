@@ -54,12 +54,12 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_LIB;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(ProjectDir)\pch\</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;_LIB;_WINDOWS;_GAPI_DX12;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -73,7 +73,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_LIB;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_LIB;_WINDOWS;_GAPI_DX12;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -89,6 +89,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="source\Platforms\GAPI\DirectX12API.h" />
+    <ClInclude Include="source\Platforms\GAPI\GAPIBase.h" />
+    <ClInclude Include="InitializationFactory.h" />
+    <ClInclude Include="source\Platforms\Platform.h" />
+    <ClInclude Include="source\Platforms\MessageBox\MessageBoxMSWindows.h" />
+    <ClInclude Include="source\Platforms\MessageBox\MessageBoxBase.h" />
+    <ClInclude Include="source\Types.h" />
+    <ClInclude Include="source\Platforms\WinApplication\WinAppBase.h" />
+    <ClInclude Include="source\Platforms\WinApplication\WinAppMSWindows.h" />
     <ClInclude Include="zEngine.h" />
     <ClInclude Include="pch\header.h" />
     <ClInclude Include="pch\headerWin.h" />
@@ -96,6 +105,14 @@
     <ClInclude Include="source\helpers\zResult.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\Platforms\GAPI\DirectX12API.cpp" />
+    <ClCompile Include="source\Platforms\GAPI\GAPIBase.cpp" />
+    <ClCompile Include="InitializationFactory.cpp" />
+    <ClCompile Include="source\Platforms\Platform.cpp" />
+    <ClCompile Include="source\Platforms\MessageBox\MessageBoxMSWindows.cpp" />
+    <ClCompile Include="source\Platforms\MessageBox\MessageBoxBase.cpp" />
+    <ClCompile Include="source\Platforms\WinApplication\WinAppBase.cpp" />
+    <ClCompile Include="source\Platforms\WinApplication\WinAppMSWindows.cpp" />
     <ClCompile Include="zEngine.cpp" />
     <ClCompile Include="pch\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugDXGame|x64'">Create</PrecompiledHeader>

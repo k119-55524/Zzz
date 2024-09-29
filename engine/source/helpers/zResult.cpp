@@ -7,3 +7,8 @@ zResult::zResult() :
 	result{ e_ErrorCode::Success }
 {
 }
+
+zResult::zResult(e_ErrorCode ecode) :
+	result{ ecode }
+{
+}
