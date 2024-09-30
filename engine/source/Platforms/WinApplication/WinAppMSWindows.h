@@ -7,8 +7,13 @@ namespace Zzz::Platforms
 {
 	class WinAppMSWindows : public WinAppBase
 	{
+	public:
+		WinAppMSWindows();
+		WinAppMSWindows(WinAppMSWindows&) = delete;
+		WinAppMSWindows(WinAppMSWindows&&) = delete;
+
 	protected:
-		zResult Initialize(const s_zWinCreateSetting* data) override;
+		zResult Init(const s_zEngineInit::WinAppSettings* data) override;
 	};
 }
 #endif // defined(_WINDOWS)

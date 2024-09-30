@@ -18,20 +18,12 @@ namespace Zzz
 
 	private:
 #pragma region Инициализация
-		enum e_EngineState : zI64
-		{
-			eInitNot,		// Готов к инициализации
-			eInitProcess,	// Идёт процесс инициализации
-			eInitOK,		// Инициализированн
-			eTermination	// Процесс деинициализации
-		};
-
 		InitializationFactory initFactory;
 		mutex initMutex;
-		e_EngineState engineState;
+		e_InitState initState;
 #pragma endregion // Инициализация
 
-		unique_ptr<Platform> platform;
+		shared_ptr<Platform> platform;
 		unique_ptr<GAPIBase> gapi;
 	};
 }

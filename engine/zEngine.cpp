@@ -5,7 +5,7 @@
 using namespace Zzz;
 
 zEngine::zEngine() :
-	engineState{ eInitNot }
+	initState{ eInitNot }
 {
 }
 
@@ -13,26 +13,31 @@ zResult zEngine::Initialize(const s_zEngineInit* const initData)
 {
 	lock_guard<mutex> lock(initMutex);
 
+	zResult res;
+
 	try
 	{
-		if (engineState != e_EngineState::eInitNot)
-			return  zResult(e_ErrorCode::Failure);
+		if (initState != e_InitState::eInitNot)
+			return  zResult(e_ErrorCode::Failure, L">>>>> [zEngine::Initialize()]. Attempting to reinitialize.");
 
-		engineState = e_EngineState::eInitProcess;
+		initState = e_InitState::eInitProcess;
 
-		platform = make_unique<Platform>(initFactory.GetSystemImplementationMessageBox());
+		platform = make_shared<Platform>(initFactory.GetSystemImplementationMessageBox());
 
 		gapi = initFactory.GetGraphicsAPI(move(initFactory.GetAplicationWindows()));
-		gapi->Initialize(initData);
+		res = gapi->Initialize(initData);
 	}
-	catch (...)
+	catch (const exception& ex)
 	{
-		OutputDebugString(_T(">>>>> [zEngine::Initialize( ... )]. Возникло исключение при инициализации.\n"));
+		initState = e_InitState::eInitNot;
+		platform.reset();
+		gapi.reset();
 
-		return zResult(e_ErrorCode::Failure);
+		zStr errorMsg = L">>>>> [zEngine::Initialize( ... )]. --- EXEPTION --- :\n" + zStr(ex.what(), ex.what() + strlen(ex.what())) + L"\n";
+		return zResult(e_ErrorCode::Failure, errorMsg);
 	}
 
-	engineState = e_EngineState::eInitOK;
+	initState = e_InitState::eInitOK;
 
-	return zResult();
+	return res;
 }

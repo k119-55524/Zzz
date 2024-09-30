@@ -1,5 +1,6 @@
 #pragma once
 
+#include "source/Platforms/Platform.h"
 #include "source/Platforms/GAPI/GAPIBase.h"
 #include "source/Platforms/WinApplication/WinAppBase.h"
 #include "source/Platforms/MessageBox/MessageBoxBase.h"

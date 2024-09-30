@@ -11,13 +11,24 @@ namespace Zzz::Platforms
 {
 	class WinAppBase
 	{
-		//friend class DirectX12API;
-
 	public:
-		//virtual const zf32_2D* GetWinSize() = 0;
+		WinAppBase();
+		WinAppBase(WinAppBase&) = delete;
+		WinAppBase(WinAppBase&&) = delete;
 
-	//protected:
-		virtual zResult Initialize(const s_zWinCreateSetting* data) = 0;
+		//WinAppBase(shared_ptr<Platform>& platform);
+		//virtual ~WinAppBase() = 0;
+
+		zResult Initialize(const s_zEngineInit::WinAppSettings* data);
+
+	protected:
+		virtual zResult Init(const s_zEngineInit::WinAppSettings* data) = 0;
+
+
 		//zf32_2D winSize;
+
+	private:
+		mutex initMutex;
+		e_InitState initState;
 	};
 }

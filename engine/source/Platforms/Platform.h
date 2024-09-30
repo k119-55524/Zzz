@@ -16,11 +16,11 @@ namespace Zzz::Platforms
 		WindowsEditor,
 		Windows,
 		Android,
-		MacOS,
+		//MacOS,
 		iOS,
-		NintendoSwitch,
-		XBOX,
-		PlayStation
+		//NintendoSwitch,
+		//XBOX,
+		//PlayStation
 	};
 
 	//enum e_PlatformCurrent : zU32

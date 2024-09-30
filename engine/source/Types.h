@@ -20,13 +20,24 @@ namespace Zzz
 	//typedef XMFLOAT2 zf32_2D;
 #endif // defined(_WINDOWS)
 
-	struct s_zWinCreateSetting
+	enum e_InitState : zI32
 	{
-
+		eInitNot,		// Готов к инициализации
+		eInitProcess,	// Идёт процесс инициализации
+		eInitOK,		// Инициализированн
+		eInitError,		// Ошибка инициализации
+		eTermination	// Процесс деинициализации
 	};
 
 	struct s_zEngineInit
 	{
-		s_zWinCreateSetting winSetting;
+	public:
+		struct WinAppSettings
+		{
+			union Platforms
+			{
+
+			};
+		} winAppSettings;
 	};
 }

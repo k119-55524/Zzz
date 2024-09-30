@@ -27,7 +27,7 @@ DirectX12API::~DirectX12API()
 
 zResult DirectX12API::Initialize(const s_zEngineInit* const data)
 {
-	zResult res = win->Initialize(&(data->winSetting));
+	zResult res = win->Initialize(&(data->winAppSettings));
 
 	//LoadPipeline();
 	//LoadAssets();

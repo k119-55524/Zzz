@@ -15,7 +15,10 @@ int APIENTRY wWinMain(
 	s_zEngineInit initData;
 	zResult res = game.Initialize(&initData);
 	if (!res.isSuccess())
+	{
+		OutputDebugString(res.GetDescription().c_str());
 		return -1;
+	}
 
 	return 0;
 }
