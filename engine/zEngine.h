@@ -1,9 +1,9 @@
 #pragma once
 
-
-#include "InitializationFactory.h"
 #include "source/Platforms/Platform.h"
-#include "source/Platforms/WinApplication/WinAppBase.h"
+#include "source/Factories/FactoryInit.h"
+#include "source/Factories/FactoryPlatform.h"
+#include "source/Platforms/MainLoop/IMainAppLoop.h"
 
 using namespace Zzz::Platforms;
 
@@ -17,13 +17,13 @@ namespace Zzz
 		zResult Initialize(const s_zEngineInit* const initData);
 
 	private:
-#pragma region Инициализация
-		InitializationFactory initFactory;
+		FactoryInit factoryInit;
+		FactoryPlatform factoryPlatform;
+
 		mutex initMutex;
 		e_InitState initState;
-#pragma endregion // Инициализация
 
 		shared_ptr<Platform> platform;
-		unique_ptr<GAPIBase> gapi;
+		shared_ptr<IMainAppLoop> mainLoop;
 	};
 }

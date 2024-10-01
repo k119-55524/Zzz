@@ -89,15 +89,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="source\Platforms\MainLoop\LinuxMainAppLoop.h" />
+    <ClInclude Include="source\Platforms\MainLoop\AndroidMainAppLoop.h" />
+    <ClInclude Include="source\Platforms\MainLoop\iOSMainAppLoop.h" />
+    <ClInclude Include="source\Platforms\MainLoop\MacOSMainAppLoop.h" />
+    <ClInclude Include="source\Platforms\MainLoop\IMainAppLoop.h" />
+    <ClInclude Include="source\Factories\FactoryPlatform.h" />
     <ClInclude Include="source\Platforms\GAPI\DirectX12API.h" />
-    <ClInclude Include="source\Platforms\GAPI\GAPIBase.h" />
-    <ClInclude Include="InitializationFactory.h" />
+    <ClInclude Include="source\Platforms\GAPI\IGAPI.h" />
+    <ClInclude Include="source\Factories\FactoryInit.h" />
     <ClInclude Include="source\Platforms\Platform.h" />
-    <ClInclude Include="source\Platforms\MessageBox\MessageBoxMSWindows.h" />
-    <ClInclude Include="source\Platforms\MessageBox\MessageBoxBase.h" />
+    <ClInclude Include="source\Platforms\MessageBox\MB_MSWin.h" />
+    <ClInclude Include="source\Platforms\MessageBox\ISysMB.h" />
     <ClInclude Include="source\Types.h" />
-    <ClInclude Include="source\Platforms\WinApplication\WinAppBase.h" />
+    <ClInclude Include="source\Platforms\WinApplication\IWinApp.h" />
     <ClInclude Include="source\Platforms\WinApplication\WinAppMSWindows.h" />
+    <ClInclude Include="source\Platforms\MainLoop\WindowsMainAppLoop.h" />
     <ClInclude Include="zEngine.h" />
     <ClInclude Include="pch\header.h" />
     <ClInclude Include="pch\headerWin.h" />
@@ -105,14 +112,21 @@
     <ClInclude Include="source\helpers\zResult.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\Platforms\MainLoop\LinuxMainAppLoop.cpp" />
+    <ClCompile Include="source\Platforms\MainLoop\AndroidMainAppLoop.cpp" />
+    <ClCompile Include="source\Platforms\MainLoop\iOSMainAppLoop.cpp" />
+    <ClCompile Include="source\Platforms\MainLoop\MacOSMainAppLoop.cpp" />
+    <ClCompile Include="source\Platforms\MainLoop\IMainAppLoop.cpp" />
+    <ClCompile Include="source\Factories\FactoryPlatform.cpp" />
     <ClCompile Include="source\Platforms\GAPI\DirectX12API.cpp" />
-    <ClCompile Include="source\Platforms\GAPI\GAPIBase.cpp" />
-    <ClCompile Include="InitializationFactory.cpp" />
+    <ClCompile Include="source\Platforms\GAPI\IGAPI.cpp" />
+    <ClCompile Include="source\Factories\FactoryInit.cpp" />
     <ClCompile Include="source\Platforms\Platform.cpp" />
-    <ClCompile Include="source\Platforms\MessageBox\MessageBoxMSWindows.cpp" />
-    <ClCompile Include="source\Platforms\MessageBox\MessageBoxBase.cpp" />
-    <ClCompile Include="source\Platforms\WinApplication\WinAppBase.cpp" />
+    <ClCompile Include="source\Platforms\MessageBox\MB_MSWin.cpp" />
+    <ClCompile Include="source\Platforms\MessageBox\ISysMB.cpp" />
+    <ClCompile Include="source\Platforms\WinApplication\IWinApp.cpp" />
     <ClCompile Include="source\Platforms\WinApplication\WinAppMSWindows.cpp" />
+    <ClCompile Include="source\Platforms\MainLoop\WindowsMainLoop.cpp" />
     <ClCompile Include="zEngine.cpp" />
     <ClCompile Include="pch\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugDXGame|x64'">Create</PrecompiledHeader>

@@ -30,10 +30,10 @@
     <ClInclude Include="source\helpers\zResult.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="source\Platforms\MessageBox\MessageBoxBase.h">
+    <ClInclude Include="source\Platforms\MessageBox\ISysMB.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="source\Platforms\MessageBox\MessageBoxMSWindows.h">
+    <ClInclude Include="source\Platforms\MessageBox\MB_MSWin.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="source\Platforms\Platform.h">
@@ -42,19 +42,40 @@
     <ClInclude Include="source\Types.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="source\Platforms\WinApplication\WinAppBase.h">
+    <ClInclude Include="source\Platforms\WinApplication\IWinApp.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="source\Platforms\WinApplication\WinAppMSWindows.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="InitializationFactory.h">
+    <ClInclude Include="source\Factories\FactoryInit.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="source\Platforms\GAPI\GAPIBase.h">
+    <ClInclude Include="source\Platforms\GAPI\IGAPI.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="source\Platforms\GAPI\DirectX12API.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Factories\FactoryPlatform.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Platforms\MainLoop\IMainAppLoop.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Platforms\MainLoop\WindowsMainAppLoop.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Platforms\MainLoop\MacOSMainAppLoop.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Platforms\MainLoop\iOSMainAppLoop.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Platforms\MainLoop\AndroidMainAppLoop.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Platforms\MainLoop\LinuxMainAppLoop.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
@@ -68,28 +89,49 @@
     <ClCompile Include="source\helpers\zResult.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Platforms\MessageBox\MessageBoxBase.cpp">
+    <ClCompile Include="source\Platforms\MessageBox\ISysMB.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Platforms\MessageBox\MessageBoxMSWindows.cpp">
+    <ClCompile Include="source\Platforms\MessageBox\MB_MSWin.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\Platforms\Platform.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Platforms\WinApplication\WinAppBase.cpp">
+    <ClCompile Include="source\Platforms\WinApplication\IWinApp.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\Platforms\WinApplication\WinAppMSWindows.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="InitializationFactory.cpp">
+    <ClCompile Include="source\Factories\FactoryInit.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Platforms\GAPI\GAPIBase.cpp">
+    <ClCompile Include="source\Platforms\GAPI\IGAPI.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\Platforms\GAPI\DirectX12API.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Factories\FactoryPlatform.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Platforms\MainLoop\IMainAppLoop.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Platforms\MainLoop\WindowsMainLoop.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Platforms\MainLoop\MacOSMainAppLoop.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Platforms\MainLoop\iOSMainAppLoop.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Platforms\MainLoop\AndroidMainAppLoop.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Platforms\MainLoop\LinuxMainAppLoop.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

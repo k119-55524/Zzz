@@ -1,19 +1,21 @@
 #pragma once
 
-#include "WinAppBase.h"
+#include "IWinApp.h"
 
-#if defined(_WINDOWS)
+#ifdef _WINDOWS
 namespace Zzz::Platforms
 {
-	class WinAppMSWindows : public WinAppBase
+	class WinAppMSWindows : public IWinApp
 	{
 	public:
 		WinAppMSWindows();
 		WinAppMSWindows(WinAppMSWindows&) = delete;
 		WinAppMSWindows(WinAppMSWindows&&) = delete;
 
+		virtual ~WinAppMSWindows();
+
 	protected:
-		zResult Init(const s_zEngineInit::WinAppSettings* data) override;
+		zResult Initialize(const s_zEngineInit::WinAppSettings* data) override;
 	};
 }
-#endif // defined(_WINDOWS)
+#endif // _WINDOWS

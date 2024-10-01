@@ -4,17 +4,21 @@
 using namespace Zzz;
 using namespace Zzz::Platforms;
 
-#if defined(_WINDOWS)
+#ifdef _WINDOWS
 
 WinAppMSWindows::WinAppMSWindows()
 {
 }
 
-zResult WinAppMSWindows::Init(const s_zEngineInit::WinAppSettings* data)
+WinAppMSWindows::~WinAppMSWindows()
+{
+}
+
+zResult WinAppMSWindows::Initialize(const s_zEngineInit::WinAppSettings* data)
 {
 	const wchar_t CLASS_NAME[] = L"Sample Window Class";
 
 	return zResult();
 }
 
-#endif // defined(_WINDOWS)
+#endif // _WINDOWS

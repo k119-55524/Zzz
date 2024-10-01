@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "MessageBoxBase.h"
+#include "ISysMB.h"
 
 using namespace Zzz::Platforms;
-

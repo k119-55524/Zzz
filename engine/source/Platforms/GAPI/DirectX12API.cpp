@@ -4,8 +4,10 @@
 using namespace Zzz;
 using namespace Zzz::Platforms;
 
-DirectX12API::DirectX12API(unique_ptr<WinAppBase> _win) :
-	GAPIBase(move(_win), eGAPIType::DirectX12)//,
+#ifdef _WINDOWS
+
+DirectX12API::DirectX12API() :
+	IGAPI(eGAPIType::DirectX12)//,
 	//m_frameIndex{ 0 },
 	//m_fenceEvent{ 0 },
 	//m_fenceValue{ 0 },
@@ -27,7 +29,7 @@ DirectX12API::~DirectX12API()
 
 zResult DirectX12API::Initialize(const s_zEngineInit* const data)
 {
-	zResult res = win->Initialize(&(data->winAppSettings));
+	zResult res;// = win->Initialize(&(data->winAppSettings));
 
 	//LoadPipeline();
 	//LoadAssets();
@@ -42,3 +44,5 @@ void DirectX12API::OnUpdate()
 void DirectX12API::OnRender()
 {
 }
+
+#endif // _WINDOWS

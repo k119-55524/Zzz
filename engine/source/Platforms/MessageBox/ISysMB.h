@@ -11,7 +11,7 @@ namespace Zzz::Platforms
 		Cancel,
 	};
 
-	class MessageBoxBase
+	class ISysMB
 	{
 	public:
 		virtual void ShowError(const zStr& message) = 0;

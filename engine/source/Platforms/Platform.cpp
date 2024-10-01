@@ -4,10 +4,10 @@
 using namespace Zzz;
 using namespace Zzz::Platforms;
 
-Platform::Platform(unique_ptr<MessageBoxBase> mb) :
+Platform::Platform(unique_ptr<ISysMB> mb) :
 	messageBox{move(mb)}
 {
-#if defined(_DEBUG)
+#ifdef _DEBUG
 	assert(messageBox.get() != nullptr);
-#endif
+#endif	// _DEBUG
 }

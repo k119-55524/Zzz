@@ -1,14 +1,16 @@
 #pragma once
 
-#include "MessageBoxBase.h"
+#include "ISysMB.h"
 
-#if defined(_WINDOWS)
+#ifdef _WINDOWS
 namespace Zzz::Platforms
 {
-	class MessageBoxMSWindows : public MessageBoxBase
+	class MB_MSWin : public ISysMB
 	{
 		public:
+			virtual ~MB_MSWin();
+
 			void ShowError(const zStr& message) override { MessageBox(NULL, message.c_str(), L"Error!!!", MB_ICONERROR | MB_OK); };
 	};
 }
-#endif // defined(_WINDOWS)
+#endif // _WINDOWS

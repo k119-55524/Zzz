@@ -1,18 +1,19 @@
 #pragma once
 
-#include "GAPIBase.h"
+#include "IGAPI.h"
 
 namespace Zzz::Platforms
 {
-	class DirectX12API : public GAPIBase
+#ifdef _WINDOWS
+
+	class DirectX12API : public IGAPI
 	{
 	public:
-		DirectX12API() = delete;
+		DirectX12API();
 		DirectX12API(DirectX12API&) = delete;
 		DirectX12API(DirectX12API&&) = delete;
 
-		DirectX12API(unique_ptr<WinAppBase> _win);
-		~DirectX12API();
+		virtual ~DirectX12API();
 
 		zResult Initialize(const s_zEngineInit* const data) override;
 
@@ -22,4 +23,6 @@ namespace Zzz::Platforms
 		void OnUpdate() override;
 		void OnRender() override;
 	};
+
+#endif // _WINDOWS
 }

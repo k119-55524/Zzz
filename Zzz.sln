@@ -10,6 +10,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gameWin", "gameWin\gameWin.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "engine", "engine\engine.vcxproj", "{E77C6AFD-B5C8-4566-8AF6-1031D8E61AD5}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tests", "tests\tests.vcxproj", "{AD537093-C657-4CA4-BE3D-2A2EBDB8A7C6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A20F2AAD-C4B3-4EF5-B03E-80E173E1EEC8} = {A20F2AAD-C4B3-4EF5-B03E-80E173E1EEC8}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		DebugDXGame|x64 = DebugDXGame|x64
@@ -24,6 +29,10 @@ Global
 		{E77C6AFD-B5C8-4566-8AF6-1031D8E61AD5}.DebugDXGame|x64.Build.0 = DebugDXGame|x64
 		{E77C6AFD-B5C8-4566-8AF6-1031D8E61AD5}.ReleaseDXGame|x64.ActiveCfg = ReleaseDXGame|x64
 		{E77C6AFD-B5C8-4566-8AF6-1031D8E61AD5}.ReleaseDXGame|x64.Build.0 = ReleaseDXGame|x64
+		{AD537093-C657-4CA4-BE3D-2A2EBDB8A7C6}.DebugDXGame|x64.ActiveCfg = DebugDXGame|x64
+		{AD537093-C657-4CA4-BE3D-2A2EBDB8A7C6}.DebugDXGame|x64.Build.0 = DebugDXGame|x64
+		{AD537093-C657-4CA4-BE3D-2A2EBDB8A7C6}.ReleaseDXGame|x64.ActiveCfg = ReleaseDXGame|x64
+		{AD537093-C657-4CA4-BE3D-2A2EBDB8A7C6}.ReleaseDXGame|x64.Build.0 = ReleaseDXGame|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

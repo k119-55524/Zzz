@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../WinApplication/WinAppBase.h"
+#include "../WinApplication/IWinApp.h"
 
 using namespace Zzz;
 
@@ -14,15 +14,15 @@ namespace Zzz::Platforms
 		Metal
 	};
 
-	class GAPIBase
+	class IGAPI
 	{
 	public:
-		GAPIBase() = delete;
-		GAPIBase(GAPIBase&) = delete;
-		GAPIBase(GAPIBase&&) = delete;
+		IGAPI() = delete;
+		IGAPI(IGAPI&) = delete;
+		IGAPI(IGAPI&&) = delete;
 
-		GAPIBase(unique_ptr<WinAppBase> _win, eGAPIType type);
-		virtual ~GAPIBase() = 0;
+		IGAPI(eGAPIType type);
+		virtual ~IGAPI() = 0;
 
 		virtual zResult Initialize(const s_zEngineInit* const data) = 0;
 		void Update();
@@ -30,7 +30,6 @@ namespace Zzz::Platforms
 	protected:
 		eGAPIType gapiType;
 		//shared_ptr<IGAPI> gapiInterfaces;
-		unique_ptr<WinAppBase> win;
 
 		virtual void OnUpdate() = 0;
 		virtual void OnRender() = 0;

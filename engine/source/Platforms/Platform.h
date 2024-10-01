@@ -1,7 +1,7 @@
 #pragma once
 
 #include "pch.h"
-#include "MessageBox/MessageBoxBase.h"
+#include "MessageBox/ISysMB.h"
 
 namespace Zzz
 {
@@ -16,8 +16,9 @@ namespace Zzz::Platforms
 		WindowsEditor,
 		Windows,
 		Android,
-		//MacOS,
+		MacOS,
 		iOS,
+		Linux,
 		//NintendoSwitch,
 		//XBOX,
 		//PlayStation
@@ -46,13 +47,13 @@ namespace Zzz::Platforms
 		Platform() = delete;
 		Platform(Platform&) = delete;
 		Platform(Platform&&) = delete;
-		Platform(unique_ptr<MessageBoxBase> mb);
+		Platform(unique_ptr<ISysMB> mb);
 
 		inline void ShowErrorMessageBox(const zStr& message) { messageBox->ShowError(message); };
 
 		constexpr inline static e_PlatformType GetPlatformType()
 		{
-#if defined(WINDOWS_EDITOR)
+#ifdef WINDOWS_EDITOR
 			return e_PlatformType::WindowsEditor;
 #elif defined(_WINDOWS)
 			// ...
@@ -63,6 +64,6 @@ namespace Zzz::Platforms
 		}
 
 	private:
-		unique_ptr<MessageBoxBase> messageBox;
+		unique_ptr<ISysMB> messageBox;
 	};
 }

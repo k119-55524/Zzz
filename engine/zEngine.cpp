@@ -22,16 +22,19 @@ zResult zEngine::Initialize(const s_zEngineInit* const initData)
 
 		initState = e_InitState::eInitProcess;
 
-		platform = make_shared<Platform>(initFactory.GetSystemImplementationMessageBox());
+		platform.reset();
+		mainLoop.reset();
 
-		gapi = initFactory.GetGraphicsAPI(move(initFactory.GetAplicationWindows()));
-		res = gapi->Initialize(initData);
+		platform = make_shared<Platform>(factoryPlatform.GetSystemImplementationMessageBox());
+		mainLoop = factoryInit.GetMainAppLoop(factoryInit.GetAplicationWindows(), factoryInit.GetGraphicsAPI());
+
+		res = mainLoop->Initialize(initData);
 	}
 	catch (const exception& ex)
 	{
-		initState = e_InitState::eInitNot;
 		platform.reset();
-		gapi.reset();
+		mainLoop.reset();
+		initState = e_InitState::eInitNot;
 
 		zStr errorMsg = L">>>>> [zEngine::Initialize( ... )]. --- EXEPTION --- :\n" + zStr(ex.what(), ex.what() + strlen(ex.what())) + L"\n";
 		return zResult(e_ErrorCode::Failure, errorMsg);
