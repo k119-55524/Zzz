@@ -17,7 +17,7 @@ namespace Zzz::Platforms
 		IWinApp(IWinApp&&) = delete;
 		virtual ~IWinApp() = 0;
 
-		virtual zResult Initialize(const s_zEngineInit::WinAppSettings* data) = 0;
+		virtual zResult Initialize(const shared_ptr<IInitWinData> data) = 0;
 
 	protected:
 		//zf32_2D winSize;

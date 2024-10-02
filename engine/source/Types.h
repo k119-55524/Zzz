@@ -29,15 +29,58 @@ namespace Zzz
 		eTermination	// Процесс деинициализации
 	};
 
-	struct s_zEngineInit
+#pragma region Объявление структур для инициализации движка пользователем
+
+	class IInitWinData
 	{
 	public:
-		struct WinAppSettings
-		{
-			union Platforms
-			{
-
-			};
-		} winAppSettings;
+		virtual ~IInitWinData() = default;
 	};
+
+#ifdef _WINDOWS
+	class InitMSWindowsData : public IInitWinData
+	{
+	public:
+		InitMSWindowsData() = delete;
+		explicit InitMSWindowsData(const zStr& winClassName) :
+			WinClassName{ winClassName }
+		{
+			if (WinClassName.empty())
+				throw std::runtime_error(">>>>> [MSWindows::InitMSWindowsData()]. WinClassName.empty() == true.");
+		}
+
+		inline const wchar_t* GetClassName() const { return WinClassName.c_str(); };
+
+	private:
+		zStr WinClassName;
+	};
+#endif // _WINDOWS
+
+	class s_zEngineInit
+	{
+	public:
+		s_zEngineInit() = delete;
+		explicit s_zEngineInit(const IInitWinData& _initWinData) :
+			initWinData{ nullptr }
+		{
+#ifdef _WINDOWS
+			const auto msData = dynamic_cast<const InitMSWindowsData*>(&_initWinData);
+			if (!msData)
+				throw invalid_argument(">>>>> [s_zEngineInit::s_zEngineInit(const IInitWinData& _initWinData)]. Каст dynamic_cast<const InitMSWindowsData*>(&_initWinData) не удался.");
+
+			initWinData = make_shared<InitMSWindowsData>(*msData);
+#elif defined(_MACOS)
+			static_assert(false, ">>>>> [class s_zEngineInit]. Нет реализации для MacOS.");
+#else
+			static_assert(false, ">>>>> [class s_zEngineInit]. Неизвестная платформа.");
+#endif
+		}
+
+		inline const shared_ptr<IInitWinData> GetWinData() const { return initWinData; };
+
+	private:
+		shared_ptr<IInitWinData> initWinData;
+	};
+
+#pragma endregion Объявление структур для инициализации движка пользователем
 }

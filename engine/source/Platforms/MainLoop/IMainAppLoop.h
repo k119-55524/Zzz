@@ -19,7 +19,7 @@ namespace Zzz::Platforms
 		virtual ~IMainAppLoop() = 0;
 
 		virtual void Run() = 0;
-		zResult Initialize(const s_zEngineInit* const initData);
+		zResult Initialize(const s_zEngineInit& initData);
 
 	protected:
 		unique_ptr<IWinApp> win;

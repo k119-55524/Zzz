@@ -13,7 +13,8 @@ IMainAppLoop::~IMainAppLoop()
 {
 }
 
-zResult IMainAppLoop::Initialize(const s_zEngineInit* const initData)
+zResult IMainAppLoop::Initialize(const s_zEngineInit& initData)
 {
+	zResult res = win->Initialize(initData.GetWinData());
 	return zResult();
 }

@@ -14,7 +14,7 @@ namespace Zzz
 	public:
 		zEngine();
 
-		zResult Initialize(const s_zEngineInit* const initData);
+		zResult Initialize(const s_zEngineInit& initData);
 
 	private:
 		FactoryInit factoryInit;
