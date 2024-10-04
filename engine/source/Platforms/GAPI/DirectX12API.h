@@ -15,7 +15,7 @@ namespace Zzz::Platforms
 
 		virtual ~DirectX12API();
 
-		zResult Initialize(const s_zEngineInit* const data) override;
+		zResult Initialize(const DataEngineInitialization* const data) override;
 
 		//const ComPtr<ID3D12Device>& GetDevice() const noexcept { return m_device; };
 

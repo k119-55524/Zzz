@@ -10,10 +10,12 @@ int APIENTRY wWinMain(
 	_In_ LPWSTR lpCmdLine,
 	_In_ int nCmdShow)
 {
+#ifdef _WINDOWS
+
 	zEngine game;
 
-	InitMSWindowsData initWinData(L"zGameWinClass");
-	s_zEngineInit initData(initWinData);
+	InitWindowsData initWinData(L"zGameWinClass", L"zGame");
+	DataEngineInitialization initData(initWinData, zSize(88, 600));
 
 	zResult res = game.Initialize(initData);
 	if (!res.isSuccess())
@@ -21,6 +23,8 @@ int APIENTRY wWinMain(
 		OutputDebugString(res.GetDescription().c_str());
 		return -1;
 	}
+
+#endif
 
 	return 0;
 }

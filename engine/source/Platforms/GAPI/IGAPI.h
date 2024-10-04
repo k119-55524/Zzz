@@ -24,7 +24,7 @@ namespace Zzz::Platforms
 		IGAPI(eGAPIType type);
 		virtual ~IGAPI() = 0;
 
-		virtual zResult Initialize(const s_zEngineInit* const data) = 0;
+		virtual zResult Initialize(const DataEngineInitialization* const data) = 0;
 		void Update();
 
 	protected:

@@ -9,7 +9,7 @@ zEngine::zEngine() :
 {
 }
 
-zResult zEngine::Initialize(const s_zEngineInit& initData)
+zResult zEngine::Initialize(const DataEngineInitialization initData)
 {
 	lock_guard<mutex> lock(initMutex);
 
@@ -22,14 +22,14 @@ zResult zEngine::Initialize(const s_zEngineInit& initData)
 
 		initState = e_InitState::eInitProcess;
 
+		initData.TestParameters();
 		platform.reset();
 		mainLoop.reset();
 
-		s_zEngineInit copyInitData = initData;
 		platform = make_shared<Platform>(factoryPlatform.GetSystemImplementationMessageBox());
 		mainLoop = factoryInit.GetMainAppLoop(factoryInit.GetAplicationWindows(), factoryInit.GetGraphicsAPI());
 
-		res = mainLoop->Initialize(copyInitData);
+		res = mainLoop->Initialize(initData);
 	}
 	catch (const exception& ex)
 	{

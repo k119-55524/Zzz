@@ -27,7 +27,7 @@ DirectX12API::~DirectX12API()
 	//CloseHandle(m_fenceEvent);
 }
 
-zResult DirectX12API::Initialize(const s_zEngineInit* const data)
+zResult DirectX12API::Initialize(const DataEngineInitialization* const data)
 {
 	zResult res;// = win->Initialize(&(data->winAppSettings));
 

@@ -14,13 +14,13 @@ namespace Zzz::Platforms
 
 		virtual ~WinAppMSWindows();
 
-		zResult Initialize(const shared_ptr<IInitWinData> data) override;
+		zResult Initialize(const DataEngineInitialization& data) override;
 
 		static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	private:
-		HWND hwnd;
-		string wstring_to_string(const wstring& wstr);
+		HWND hWnd;
+		const string wstring_to_string(const wstring& wstr) const;
 
 		LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	};

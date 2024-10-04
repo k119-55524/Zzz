@@ -89,6 +89,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="source\Constants.h" />
     <ClInclude Include="source\Platforms\MainLoop\LinuxMainAppLoop.h" />
     <ClInclude Include="source\Platforms\MainLoop\AndroidMainAppLoop.h" />
     <ClInclude Include="source\Platforms\MainLoop\iOSMainAppLoop.h" />
@@ -101,6 +102,7 @@
     <ClInclude Include="source\Platforms\Platform.h" />
     <ClInclude Include="source\Platforms\MessageBox\MB_MSWin.h" />
     <ClInclude Include="source\Platforms\MessageBox\ISysMB.h" />
+    <ClInclude Include="source\Structs.h" />
     <ClInclude Include="source\Types.h" />
     <ClInclude Include="source\Platforms\WinApplication\IWinApp.h" />
     <ClInclude Include="source\Platforms\WinApplication\WinAppMSWindows.h" />

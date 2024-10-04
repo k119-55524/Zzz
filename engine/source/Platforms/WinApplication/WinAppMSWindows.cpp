@@ -6,7 +6,8 @@ using namespace Zzz::Platforms;
 
 #ifdef _WINDOWS
 
-WinAppMSWindows::WinAppMSWindows()
+WinAppMSWindows::WinAppMSWindows() :
+	hWnd{ nullptr }
 {
 }
 
@@ -14,36 +15,43 @@ WinAppMSWindows::~WinAppMSWindows()
 {
 }
 
-zResult WinAppMSWindows::Initialize(const shared_ptr<IInitWinData> data)
+zResult WinAppMSWindows::Initialize(const DataEngineInitialization& data)
 {
-	zResult res;
-
-	auto msData = dynamic_pointer_cast<InitMSWindowsData>(data);
-
-	if (!msData)
-		throw invalid_argument(">>>>> [WinAppMSWindows::Initialize]. Каст dynamic_pointer_cast<InitMSWindowsData>(data) не удался.");
-
-	const wchar_t* CLASS_NAME = msData->GetClassName();// L"zEngineWinClass";
+	auto className = data.GetWinData()->GetWinClassName().c_str();
 
 	WNDCLASS wc = { 0 };
 	wc.lpfnWndProc = WinAppMSWindows::WindowProc;	
 	wc.hInstance = GetModuleHandle(NULL);
-	wc.lpszClassName = CLASS_NAME;
+	wc.lpszClassName = className;
 
 	ATOM result = RegisterClass(&wc);
 	if (result == 0)
 	{
 		string mess = ">>>>> [WinAppMSWindows::Initialize(const shared_ptr<IInitWinData> data)].\n+--- Не удалось зарегистрировать класс окна: ";
-		mess += wstring_to_string(msData->GetClassName());
-		mess += "    Код ошибки: ";
+		mess += wstring_to_string(data.GetWinData()->GetWinClassName());
+		mess += "    Код ошибки(Windows): ";
 		mess += to_string(::GetLastError());
 		throw runtime_error(mess);
 	}
 
-	return res;
+	hWnd = CreateWindowEx(
+		0,
+		className,
+		data.GetWinData()->GetWinCaption().c_str(),
+		WS_OVERLAPPEDWINDOW,			// Стиль окна
+		CW_USEDEFAULT, CW_USEDEFAULT,	// Позиция окна
+		static_cast<int>(data.GetWinSize().width),
+		static_cast<int>(data.GetWinSize().height),
+		nullptr,
+		nullptr,
+		GetModuleHandle(NULL),
+		nullptr
+	);
+
+	return zResult();
 }
 
-string WinAppMSWindows::wstring_to_string(const wstring& wstr)
+const string WinAppMSWindows::wstring_to_string(const wstring& wstr) const
 {
 	int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, NULL, 0, NULL, NULL);
 	string str(size_needed, 0);
@@ -67,7 +75,7 @@ LRESULT CALLBACK WinAppMSWindows::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam
 		pThis = (WinAppMSWindows*)pCreate->lpCreateParams;
 		SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pThis);
 
-		pThis->hwnd = hwnd;
+		pThis->hWnd = hwnd;
 	}
 	else
 		pThis = (WinAppMSWindows*)GetWindowLongPtr(hwnd, GWLP_USERDATA);

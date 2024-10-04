@@ -1,5 +1,6 @@
 #pragma once
 
+#include "source/Structs.h"
 #include "source/Platforms/Platform.h"
 #include "source/Factories/FactoryInit.h"
 #include "source/Factories/FactoryPlatform.h"
@@ -14,7 +15,7 @@ namespace Zzz
 	public:
 		zEngine();
 
-		zResult Initialize(const s_zEngineInit& initData);
+		zResult Initialize(const DataEngineInitialization initData);
 
 	private:
 		FactoryInit factoryInit;
