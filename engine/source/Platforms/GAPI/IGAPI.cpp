@@ -3,7 +3,8 @@
 
 using namespace Zzz::Platforms;
 
-IGAPI::IGAPI(eGAPIType type) :
+IGAPI::IGAPI(const shared_ptr<IWinApp> _appWin, eGAPIType type) :
+	appWin{ _appWin },
 	gapiType{ type },
 	initState{ e_InitState::eInitNot }
 {

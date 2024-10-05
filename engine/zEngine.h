@@ -26,7 +26,7 @@ namespace Zzz
 		mutex initMutex;
 		mutex runMutex;
 
-		shared_ptr<Platform> platform;
+		unique_ptr<Platform> platform;
 		shared_ptr<IWinApp> appWin;
 		unique_ptr<IGAPI> gAPI;
 		shared_ptr<IMainAppLoop> mainLoop;

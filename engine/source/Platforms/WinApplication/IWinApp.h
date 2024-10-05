@@ -28,7 +28,7 @@ namespace Zzz::Platforms
 		virtual ~IWinApp() = 0;
 
 		virtual zResult Initialize(const DataEngineInitialization& data) = 0;
-		//virtual void Show() = 0;
+		inline const zSize& GetWinSize() const noexcept { return winSize; };
 
 	protected:
 		zSize winSize;

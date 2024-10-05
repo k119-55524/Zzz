@@ -7,5 +7,8 @@
 #pragma once
 
 // Добавьте сюда заголовочные файлы для предварительной компиляции
+
+#include "headerDX12.h"
 #include "header.h"
 #include "headerWin.h"
+

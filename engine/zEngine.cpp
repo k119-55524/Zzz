@@ -25,7 +25,7 @@ zResult zEngine::Initialize(const DataEngineInitialization initData)
 		initData.TestParameters();
 		Reset(e_InitState::eInitProcess);
 
-		platform = make_shared<Platform>(factoryPlatform.GetSystemImplementationMessageBox());
+		platform = make_unique<Platform>(factoryPlatform.GetSystemImplementationMessageBox());
 
 		appWin = factoryInit.GetAplicationWindows(bind(&zEngine::OnResizeWindow, this, placeholders::_1, placeholders::_2));
 		res = appWin->Initialize(initData);
@@ -36,7 +36,7 @@ zResult zEngine::Initialize(const DataEngineInitialization initData)
 			return res;
 		}
 
-		gAPI = factoryInit.GetGraphicsAPI();
+		gAPI = factoryInit.GetGraphicsAPI(appWin);
 		res = gAPI->Initialize(initData);
 		if (!res.isSuccess())
 		{

@@ -21,7 +21,7 @@ namespace Zzz::Platforms
 		IGAPI(IGAPI&) = delete;
 		IGAPI(IGAPI&&) = delete;
 
-		IGAPI(eGAPIType type);
+		IGAPI(const shared_ptr<IWinApp> _appWin, eGAPIType type);
 		virtual ~IGAPI() = 0;
 
 		virtual zResult Initialize(const DataEngineInitialization& data) = 0;
@@ -31,6 +31,8 @@ namespace Zzz::Platforms
 	protected:
 		eGAPIType gapiType;
 		e_InitState initState;
+
+		shared_ptr<IWinApp> appWin;
 
 		virtual void OnUpdate() = 0;
 		virtual void OnRender() = 0;

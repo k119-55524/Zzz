@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#if _DEBUG
+#ifdef _DEBUG
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
@@ -32,3 +32,13 @@ using namespace std;
 #else
 #define DebugOutput(msg)
 #endif
+
+#define THROW_RUNTIME_ERROR(msg) { \
+    throw std::runtime_error( \
+        std::string(">>>>> --- ERROR that caused the EXCEPTION ---") + \
+        "\n+--- " + msg + \
+        "\n+--- Function: " + __FUNCTION__ + \
+        "\n+--- File: " + __FILE__ + \
+        "\n+--- Line: " + std::to_string(__LINE__) \
+    ); \
+}

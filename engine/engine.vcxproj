@@ -89,6 +89,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="pch\headerDX12.h" />
     <ClInclude Include="source\Constants.h" />
     <ClInclude Include="source\Platforms\MainLoop\LinuxMainAppLoop.h" />
     <ClInclude Include="source\Platforms\MainLoop\AndroidMainAppLoop.h" />

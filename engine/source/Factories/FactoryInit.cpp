@@ -28,12 +28,15 @@ unique_ptr<IWinApp> FactoryInit::GetAplicationWindows(function<void(const zSize&
 	return appWin;
 }
 
-unique_ptr<IGAPI> FactoryInit::GetGraphicsAPI()
+unique_ptr<IGAPI> FactoryInit::GetGraphicsAPI(const shared_ptr<IWinApp> appWin)
 {
+	if (appWin == nullptr)
+		throw invalid_argument(">>>>> [FactoryInit::GetGraphicsAPI( ... )]. appWin == nullptr.");
+
 	unique_ptr<IGAPI> gapi;
 
 #ifdef _GAPI_DX12
-	gapi = make_unique<DirectX12API>();
+	gapi = make_unique<DirectX12API>(appWin);
 #elif defined(_MACOS)
 	// Не реализовано
 	throw runtime_error(">>>>> [InitializationFactory::GetGraphicsAPI()]. There is no implementation for the MacOS platform.");
