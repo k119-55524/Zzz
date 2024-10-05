@@ -5,22 +5,27 @@ using namespace Zzz::Platforms;
 
 #ifdef _WINDOWS
 
-WindowsMainAppLoop::WindowsMainAppLoop(unique_ptr<IWinApp> _win, unique_ptr<IGAPI> _gapi) :
-	IMainAppLoop(move(_win), move(_gapi))
-{
-}
-
-WindowsMainAppLoop::~WindowsMainAppLoop()
+WindowsMainAppLoop::WindowsMainAppLoop(function<void()> _updateSystem) :
+	IMainAppLoop(_updateSystem)
 {
 }
 
 void WindowsMainAppLoop::Run()
 {
-	MSG msg;
-	while (GetMessage(&msg, nullptr, 0, 0))
+	MSG msg = {0};
+
+	while (msg.message != WM_QUIT)
 	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+		if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+		else
+		{
+			if (updateSystem != nullptr)
+				updateSystem();
+		}
 	}
 }
 

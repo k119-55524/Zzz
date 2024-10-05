@@ -9,12 +9,12 @@
 
 using namespace Zzz;
 
-unique_ptr<IWinApp> FactoryInit::GetAplicationWindows()
+unique_ptr<IWinApp> FactoryInit::GetAplicationWindows(function<void(const zSize& size, e_TypeWinAppResize resType)> _resizeWindows)
 {
 	unique_ptr<IWinApp> appWin;
 
 #ifdef _WINDOWS
-	appWin = make_unique<WinAppMSWindows>();
+	appWin = make_unique<WinAppMSWindows>(_resizeWindows);
 #elif defined(_MACOS)
 	// Не реализовано
 	throw runtime_error(">>>>> [InitializationFactory::GetAplicationWindows()]. There is no implementation for the MacOS platform.");
@@ -47,20 +47,20 @@ unique_ptr<IGAPI> FactoryInit::GetGraphicsAPI()
 	return gapi;
 }
 
-unique_ptr<IMainAppLoop> FactoryInit::GetMainAppLoop(unique_ptr<IWinApp> win, unique_ptr<IGAPI> gapi)
+unique_ptr<IMainAppLoop> FactoryInit::GetMainAppLoop(function<void()> _updateSystem)
 {
 	unique_ptr<IMainAppLoop> mainAppLoop;
 
 #ifdef _WINDOWS
-	mainAppLoop = make_unique<WindowsMainAppLoop>(move(win), move(gapi));
+	mainAppLoop = make_unique<WindowsMainAppLoop>(_updateSystem);
 #elif defined(__APPLE__) && !TARGET_OS_IOS
-	mainAppLoop = make_unique<MacOSMainAppLoop>move(win), move(gapi));
+	mainAppLoop = make_unique<MacOSMainAppLoop>(_updateSystem);
 #elif defined(__APPLE__) && TARGET_OS_IOS
-	mainAppLoop = make_unique<iOSMainAppLoop>(move(win), move(gapi));
+	mainAppLoop = make_unique<iOSMainAppLoop>((_updateSystem));
 #elif defined(__ANDROID__)
-	mainAppLoop = make_unique<AndroidMainAppLoop>(move(win), move(gapi));
+	mainAppLoop = make_unique<AndroidMainAppLoop>((_updateSystem));
 #elif defined(__linux__)
-	mainAppLoop = make_unique<LinuxMainAppLoop>(move(win), move(gapi));
+	mainAppLoop = make_unique<LinuxMainAppLoop>((_updateSystem));
 #else
 	throw runtime_error(">>>>> [InitializationFactory::GetMainAppLoop(win, gapi)]. Unknown platform.");
 #endif

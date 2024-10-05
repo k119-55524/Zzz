@@ -11,8 +11,8 @@ namespace Zzz
 	class FactoryInit
 	{
 	public:
-		unique_ptr<IWinApp> GetAplicationWindows();
+		unique_ptr<IWinApp> GetAplicationWindows(function<void(const zSize& size, e_TypeWinAppResize resType)> _resizeWindows);
 		unique_ptr<IGAPI> GetGraphicsAPI();
-		unique_ptr<IMainAppLoop> GetMainAppLoop(unique_ptr<IWinApp> win, unique_ptr<IGAPI> gapi);
+		unique_ptr<IMainAppLoop> GetMainAppLoop(function<void()> _updateSystem);
 	};
 }

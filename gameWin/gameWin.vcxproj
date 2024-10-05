@@ -84,6 +84,7 @@
     <ClInclude Include="source\gameWin.h" />
     <ClInclude Include="pch\pch.h" />
     <ClInclude Include="resource\Resource.h" />
+    <ClInclude Include="resource\targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\gameWin.cpp" />
@@ -96,8 +97,13 @@
     <ResourceCompile Include="resource\gameWin.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="BigIco.ico" />
+    <Image Include="D:\Users\k119_\Downloads\arrows_16237347.ico" />
+    <Image Include="D:\Users\k119_\Downloads\arrows_16237347.png" />
+    <Image Include="D:\Users\k119_\Downloads\pinch_10435688.ico" />
+    <Image Include="resource\BigIco.ico" />
     <Image Include="resource\gameWin.ico" />
-    <Image Include="resource\small.ico" />
+    <Image Include="resource\icon1.ico" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\engine\engine.vcxproj">

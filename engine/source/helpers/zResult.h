@@ -6,9 +6,9 @@ namespace Zzz
 {
 	enum e_ErrorCode : zI64
 	{
-		Success,
-		Failure,
-		Warning
+		eSuccess,
+		eFailure,
+		eWarning
 	};
 
 	class zResult
@@ -18,7 +18,7 @@ namespace Zzz
 		zResult(e_ErrorCode ecode);
 		zResult(e_ErrorCode ecode, const zStr& descr);
 
-		bool isSuccess() const { return result == e_ErrorCode::Success; }
+		bool isSuccess() const { return result == e_ErrorCode::eSuccess; }
 
 		inline const zStr& GetDescription() const { return description; };
 

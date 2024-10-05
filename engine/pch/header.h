@@ -26,3 +26,9 @@
 #include <functional>
 
 using namespace std;
+
+#if defined(_DEBUG) && defined(_WINDOWS)
+#define DebugOutput(msg) {OutputDebugString(msg);}
+#else
+#define DebugOutput(msg)
+#endif

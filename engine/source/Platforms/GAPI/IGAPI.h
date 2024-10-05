@@ -24,14 +24,16 @@ namespace Zzz::Platforms
 		IGAPI(eGAPIType type);
 		virtual ~IGAPI() = 0;
 
-		virtual zResult Initialize(const DataEngineInitialization* const data) = 0;
+		virtual zResult Initialize(const DataEngineInitialization& data) = 0;
 		void Update();
+		void Resize(const zSize& size);
 
 	protected:
 		eGAPIType gapiType;
-		//shared_ptr<IGAPI> gapiInterfaces;
+		e_InitState initState;
 
 		virtual void OnUpdate() = 0;
 		virtual void OnRender() = 0;
+		virtual void OnResize(const zSize& size) = 0;
 	};
 }

@@ -6,47 +6,74 @@ using namespace Zzz::Platforms;
 
 #ifdef _WINDOWS
 
-WinAppMSWindows::WinAppMSWindows() :
-	hWnd{ nullptr }
+WinAppMSWindows::WinAppMSWindows(function<void(const zSize& size, e_TypeWinAppResize resType)> _resizeWindows) :
+	IWinApp(_resizeWindows),
+	hWnd{ nullptr },
+	IsMinimized{true}
 {
+	SetProcessDPIAware();
 }
 
 WinAppMSWindows::~WinAppMSWindows()
 {
+	if (hWnd)
+		DestroyWindow(hWnd);
 }
 
 zResult WinAppMSWindows::Initialize(const DataEngineInitialization& data)
 {
-	auto className = data.GetWinData()->GetWinClassName().c_str();
+	auto className = data.GetWinData()->GetWinClassName();
 
 	WNDCLASS wc = { 0 };
-	wc.lpfnWndProc = WinAppMSWindows::WindowProc;	
+	wc.style = CS_HREDRAW | CS_VREDRAW;
+	wc.lpfnWndProc = WinAppMSWindows::WindowProc;
 	wc.hInstance = GetModuleHandle(NULL);
-	wc.lpszClassName = className;
+	wc.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(data.GetWinData()->GetIcoID()));
+	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+	wc.lpszClassName = className.c_str();
 
 	ATOM result = RegisterClass(&wc);
 	if (result == 0)
 	{
-		string mess = ">>>>> [WinAppMSWindows::Initialize(const shared_ptr<IInitWinData> data)].\n+--- Не удалось зарегистрировать класс окна: ";
+		string mess = ">>>>> [WinAppMSWindows::Initialize( ... )].\n+--- Failed to register window class: ";
 		mess += wstring_to_string(data.GetWinData()->GetWinClassName());
-		mess += "    Код ошибки(Windows): ";
+		mess += "\n+--- error code(Windows): ";
 		mess += to_string(::GetLastError());
 		throw runtime_error(mess);
 	}
 
+	// Рассчитать размеры прямоугольника окна на основе запрошенных размеров клиентской области.
+	RECT R = { 0, 0, static_cast<LONG>(data.GetWinSize().width), static_cast<LONG>(data.GetWinSize().height) };
+	AdjustWindowRect(&R, WS_OVERLAPPEDWINDOW, false);
+	int width = R.right - R.left;
+	int height = R.bottom - R.top;
+
+	int screenWidth = GetSystemMetrics(SM_CXSCREEN);  // Ширина экрана
+	int screenHeight = GetSystemMetrics(SM_CYSCREEN); // Высота экрана
+	int xPos = (screenWidth - width) / 2;  // Расчет позиции по оси X
+	int yPos = (screenHeight - height) / 2; // Расчет позиции по оси Y
 	hWnd = CreateWindowEx(
 		0,
-		className,
+		className.c_str(),
 		data.GetWinData()->GetWinCaption().c_str(),
-		WS_OVERLAPPEDWINDOW,			// Стиль окна
-		CW_USEDEFAULT, CW_USEDEFAULT,	// Позиция окна
-		static_cast<int>(data.GetWinSize().width),
-		static_cast<int>(data.GetWinSize().height),
+		WS_OVERLAPPEDWINDOW,
+		xPos, yPos, width, height,
 		nullptr,
 		nullptr,
 		GetModuleHandle(NULL),
-		nullptr
+		this
 	);
+
+	if (!hWnd)
+	{
+		string mess = ">>>>> [WinAppMSWindows::Initialize( ... )].\n+--- Failed to create window: ";
+		mess += "+--- error code(Windows): ";
+		mess += to_string(::GetLastError());
+		throw runtime_error(mess);
+	}
+
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
 
 	return zResult();
 }
@@ -58,11 +85,6 @@ const string WinAppMSWindows::wstring_to_string(const wstring& wstr) const
 	WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, &str[0], size_needed, NULL, NULL);
 
 	return str;
-}
-
-LRESULT WinAppMSWindows::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	return LRESULT();
 }
 
 LRESULT CALLBACK WinAppMSWindows::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -81,9 +103,85 @@ LRESULT CALLBACK WinAppMSWindows::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam
 		pThis = (WinAppMSWindows*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
 	if (pThis)
-		return pThis->HandleMessage(uMsg, wParam, lParam);
+		return pThis->MsgProc(uMsg, wParam, lParam);
 
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
+}
+
+LRESULT WinAppMSWindows::MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg)
+	{
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		return 0;
+
+	case WM_SIZE:
+		winSize.width = static_cast<zU64>(LOWORD(lParam));
+		winSize.height = static_cast<zU64>(HIWORD(lParam));
+		if (resizeWindows != nullptr)
+		{
+			if (wParam == SIZE_MINIMIZED)
+			{
+				resizeWindows(winSize, e_TypeWinAppResize::eHide);
+				IsMinimized = true;
+			}
+			else
+			{
+				if ((wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED) && IsMinimized)
+				{
+					resizeWindows(winSize, e_TypeWinAppResize::eShow);
+					IsMinimized = false;
+				}
+				else
+				{
+					resizeWindows(winSize, e_TypeWinAppResize::eResize);
+				}
+			}
+		}
+		return 0;
+
+		// Перехватываем это сообщение, чтобы не допустить слишком маленького/большого размера окна.
+	case WM_GETMINMAXINFO:
+	{
+		((MINMAXINFO*)lParam)->ptMinTrackSize.x = c_MinimumWindowsWidth;
+		((MINMAXINFO*)lParam)->ptMinTrackSize.y = c_MinimumWindowsHeight;
+
+		RECT R = { 0, 0, static_cast<LONG>(c_MaximumWindowsWidth), static_cast<LONG>(c_MaximumWindowsHeight) };
+		AdjustWindowRect(&R, WS_OVERLAPPEDWINDOW, false);
+		LONG maxWidth = R.right - R.left;
+		LONG maxHeight = R.bottom - R.top;
+		((MINMAXINFO*)lParam)->ptMaxTrackSize.x = maxWidth;
+		((MINMAXINFO*)lParam)->ptMaxTrackSize.y = maxHeight;
+		return 0;
+	}
+
+		// брабатываем изменение DPI в системе
+	case WM_DPICHANGED:
+	{
+		// Получаем новое значение DPI
+		int newDPI = LOWORD(wParam);
+
+		// Устанавливаем новый размер окна, если это необходимо
+		RECT* prc = (RECT*)lParam;
+		SetWindowPos(hWnd, NULL, prc->left, prc->top,
+			prc->right - prc->left, prc->bottom - prc->top,
+			SWP_NOZORDER | SWP_NOACTIVATE);
+		return 0;
+	}
+
+	//case WM_PAINT:
+	//{
+	//	PAINTSTRUCT ps;
+	//	HDC hdc = BeginPaint(hWnd, &ps);
+	//	// Здесь можно выполнить рисование, если это необходимо.
+	//	EndPaint(hWnd, &ps);
+	//	return 0;
+	//}
+
+	default:
+		return DefWindowProc(hWnd, uMsg, wParam, lParam);
+	}
 }
 
 #endif // _WINDOWS

@@ -14,15 +14,13 @@ namespace Zzz::Platforms
 		IMainAppLoop(IMainAppLoop&) = delete;
 		IMainAppLoop(IMainAppLoop&&) = delete;
 
-		IMainAppLoop(unique_ptr<IWinApp> _win, unique_ptr<IGAPI> _gapi);
+		IMainAppLoop(function<void()> _updateSystem);
 
 		virtual ~IMainAppLoop() = 0;
 
 		virtual void Run() = 0;
-		zResult Initialize(const DataEngineInitialization& initData);
 
 	protected:
-		unique_ptr<IWinApp> win;
-		unique_ptr<IGAPI> gapi;
+		function<void()> updateSystem;
 	};
 }

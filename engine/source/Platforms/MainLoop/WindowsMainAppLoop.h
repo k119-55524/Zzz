@@ -12,9 +12,7 @@ namespace Zzz::Platforms
 		WindowsMainAppLoop(WindowsMainAppLoop&) = delete;
 		WindowsMainAppLoop(WindowsMainAppLoop&&) = delete;
 
-		WindowsMainAppLoop(unique_ptr<IWinApp> _win, unique_ptr<IGAPI> _gapi);
-
-		virtual ~WindowsMainAppLoop();
+		WindowsMainAppLoop(function<void()> _updateSystem);
 
 		void Run() override;
 	};

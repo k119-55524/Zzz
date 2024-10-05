@@ -28,19 +28,22 @@ namespace Zzz
 
 	public:
 		InitWindowsData() = delete;
-		explicit InitWindowsData(const zStr& _winClassName, const zStr& _winCaption) :
+		explicit InitWindowsData(const zStr& _winClassName, const zStr& _winCaption, zU64 _ICO_ID) :
 			winClassName{ _winClassName },
-			winCaption{ _winCaption }
+			winCaption{ _winCaption },
+			ICO_ID{ _ICO_ID }
 		{
 			if (winClassName.empty())
 				throw std::runtime_error(">>>>> [InitWindowsData::InitWindowsData()]. WinClassName.empty() == true.");
 		}
 		inline const zStr GetWinCaption() const { return winCaption; };
 		inline const zStr GetWinClassName() const { return winClassName; };
+		inline zU64 GetIcoID() const { return ICO_ID; };
 
 	private:
 		zStr winClassName;
 		zStr winCaption;
+		zU64 ICO_ID;
 
 		void TestParameters()
 		{

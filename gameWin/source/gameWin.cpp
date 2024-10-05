@@ -14,13 +14,21 @@ int APIENTRY wWinMain(
 
 	zEngine game;
 
-	InitWindowsData initWinData(L"zGameWinClass", L"zGame");
-	DataEngineInitialization initData(initWinData, zSize(88, 600));
+	zStr gameName = L"zGame";
+	InitWindowsData initWinData(L"zGameWinClass", gameName, IDI_BIGICO);
+	DataEngineInitialization initData(initWinData, zSize(800, 600));
 
 	zResult res = game.Initialize(initData);
 	if (!res.isSuccess())
 	{
-		OutputDebugString(res.GetDescription().c_str());
+		MessageBox(nullptr, res.GetDescription().c_str(), (gameName + L" Initialize.").c_str(), MB_ICONERROR | MB_OK);
+		return -1;
+	}
+
+	res = game.Run();
+	if (!res.isSuccess())
+	{
+		MessageBox(nullptr, res.GetDescription().c_str(), (gameName + L" Run.").c_str(), MB_ICONERROR | MB_OK);
 		return -1;
 	}
 

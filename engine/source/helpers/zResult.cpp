@@ -4,7 +4,7 @@
 using namespace Zzz;
 
 zResult::zResult() :
-	result{ e_ErrorCode::Success },
+	result{ e_ErrorCode::eSuccess },
 	description{ L"" }
 {
 }

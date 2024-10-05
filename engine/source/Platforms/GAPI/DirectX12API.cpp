@@ -27,12 +27,9 @@ DirectX12API::~DirectX12API()
 	//CloseHandle(m_fenceEvent);
 }
 
-zResult DirectX12API::Initialize(const DataEngineInitialization* const data)
+zResult DirectX12API::Initialize(const DataEngineInitialization& data)
 {
-	zResult res;// = win->Initialize(&(data->winAppSettings));
-
-	//LoadPipeline();
-	//LoadAssets();
+	zResult res;
 
 	return res;
 }
@@ -42,6 +39,10 @@ void DirectX12API::OnUpdate()
 }
 
 void DirectX12API::OnRender()
+{
+}
+
+void Zzz::Platforms::DirectX12API::OnResize(const zSize& size)
 {
 }
 

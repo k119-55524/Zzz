@@ -27,6 +27,9 @@
     <ClInclude Include="pch\header.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="resource\targetver.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\gameWin.cpp">
@@ -42,10 +45,25 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="resource\small.ico">
+    <Image Include="resource\gameWin.ico">
       <Filter>Файлы ресурсов</Filter>
     </Image>
-    <Image Include="resource\gameWin.ico">
+    <Image Include="D:\Users\k119_\Downloads\arrows_16237347.png">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="resource\icon1.ico">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="D:\Users\k119_\Downloads\arrows_16237347.ico">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="D:\Users\k119_\Downloads\pinch_10435688.ico">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="BigIco.ico">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="resource\BigIco.ico">
       <Filter>Файлы ресурсов</Filter>
     </Image>
   </ItemGroup>
