@@ -21,7 +21,7 @@ namespace Zzz
 
 #pragma region ќбъ€вление структур дл€ инициализации движка пользователем
 
-#ifdef _WINDOWS
+#if defined(_WINDOWS)  || defined(_TESTS)
 	class InitWindowsData
 	{
 		friend class DataEngineInitialization;
@@ -64,7 +64,7 @@ namespace Zzz
 	public:
 		DataEngineInitialization() = delete;
 
-#ifdef _WINDOWS
+#if defined(_WINDOWS)  || defined(_TESTS)
 		explicit DataEngineInitialization(const InitWindowsData& _initWinData, const zSize& _winSize, bool _fullScreen = false) :
 			initWinData{ make_shared<InitWindowsData>(_initWinData) },
 			winSize{ _winSize },
@@ -87,7 +87,7 @@ namespace Zzz
 
 		void TestParameters() const
 		{
-#ifdef _WINDOWS
+#if defined(_WINDOWS) || defined(_TESTS)
 			if (winSize.width < c_MinimumWindowsWidth ||
 				winSize.height < c_MinimumWindowsHeight ||
 				winSize.width > c_MaximumWindowsWidth ||

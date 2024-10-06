@@ -12,7 +12,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "engine", "engine\engine.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tests", "tests\tests.vcxproj", "{AD537093-C657-4CA4-BE3D-2A2EBDB8A7C6}"
 	ProjectSection(ProjectDependencies) = postProject
-		{A20F2AAD-C4B3-4EF5-B03E-80E173E1EEC8} = {A20F2AAD-C4B3-4EF5-B03E-80E173E1EEC8}
+		{E77C6AFD-B5C8-4566-8AF6-1031D8E61AD5} = {E77C6AFD-B5C8-4566-8AF6-1031D8E61AD5}
 	EndProjectSection
 EndProject
 Global

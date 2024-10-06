@@ -4,7 +4,7 @@
 
 namespace Zzz
 {
-#if defined(_WINDOWS)
+#if defined(_WINDOWS) || defined(_TESTS)
 
 	typedef uint32_t zU32;
 	typedef uint64_t zU64;

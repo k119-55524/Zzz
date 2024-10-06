@@ -1,6 +1,5 @@
 #pragma once
 
-#include "pch.h"
 #include "MessageBox/ISysMB.h"
 
 namespace Zzz
@@ -55,7 +54,7 @@ namespace Zzz::Platforms
 		{
 #ifdef WINDOWS_EDITOR
 			return e_PlatformType::WindowsEditor;
-#elif defined(_WINDOWS)
+#elif defined(_WINDOWS) || defined(_TESTS)
 			// ...
 			return e_PlatformType::Windows;
 #else
