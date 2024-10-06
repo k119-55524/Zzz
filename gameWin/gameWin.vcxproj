@@ -97,10 +97,6 @@
     <ResourceCompile Include="resource\gameWin.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="BigIco.ico" />
-    <Image Include="D:\Users\k119_\Downloads\arrows_16237347.ico" />
-    <Image Include="D:\Users\k119_\Downloads\arrows_16237347.png" />
-    <Image Include="D:\Users\k119_\Downloads\pinch_10435688.ico" />
     <Image Include="resource\BigIco.ico" />
     <Image Include="resource\gameWin.ico" />
     <Image Include="resource\icon1.ico" />
