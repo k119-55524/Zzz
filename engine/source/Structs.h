@@ -21,7 +21,7 @@ namespace Zzz
 
 #pragma region Объявление структур для инициализации движка пользователем
 
-#if defined(_WINDOWS)  || defined(_TESTS)
+#if defined(_WINDOWS) || defined(_SERVICES) || defined(_EDITOR)
 	class InitWindowsData
 	{
 		friend class DataEngineInitialization;
@@ -64,7 +64,7 @@ namespace Zzz
 	public:
 		DataEngineInitialization() = delete;
 
-#if defined(_WINDOWS)  || defined(_TESTS)
+#if defined(_WINDOWS)  || defined(_SERVICES) || defined(_EDITOR)
 		explicit DataEngineInitialization(const InitWindowsData& _initWinData, const zSize& _winSize, bool _fullScreen = false) :
 			initWinData{ make_shared<InitWindowsData>(_initWinData) },
 			winSize{ _winSize },
@@ -87,7 +87,7 @@ namespace Zzz
 
 		void TestParameters() const
 		{
-#if defined(_WINDOWS) || defined(_TESTS)
+#if defined(_WINDOWS) || defined(_SERVICES) || defined(_EDITOR)
 			if (winSize.width < c_MinimumWindowsWidth ||
 				winSize.height < c_MinimumWindowsHeight ||
 				winSize.width > c_MaximumWindowsWidth ||
@@ -97,7 +97,7 @@ namespace Zzz
 			static_assert(false, ">>>>> [DataEngineInitialization.TestParameters()]. Нет реализации для MacOS.");
 #else
 			static_assert(false, ">>>>> [DataEngineInitialization.TestParameters()]. Неизвестная платформа.");
-#endif _WINDOWS
+#endif //_WINDOWS
 
 			initWinData->TestParameters();
 		}

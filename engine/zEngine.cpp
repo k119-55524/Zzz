@@ -70,15 +70,24 @@ zResult zEngine::Run()
 	return zResult();
 }
 
+void zEngine::Reset(e_InitState state)
+{
+	platform.reset();
+	appWin.reset();
+	gAPI.reset();
+	mainLoop.reset();
+	initState = state;
+}
+
 void zEngine::OnUpdateSystem()
 {
 	if (isAppPaused)
 		return;
 
-	Sleep(100);
+	//Sleep(100);
 
+	sceneManager.Update();
 	gAPI->Update();
-	//DebugOutput(L">>>>> [zEngine::OnUpdateSystem()]. ...\n");
 }
 
 void zEngine::OnResizeWindow(const zSize& size, e_TypeWinAppResize resizeType)
@@ -102,13 +111,4 @@ void zEngine::OnResizeWindow(const zSize& size, e_TypeWinAppResize resizeType)
 		gAPI->Resize(size);
 		break;
 	}
-}
-
-void zEngine::Reset(e_InitState state)
-{
-	platform.reset();
-	appWin.reset();
-	gAPI.reset();
-	mainLoop.reset();
-	initState = state;
 }

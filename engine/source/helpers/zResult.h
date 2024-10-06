@@ -4,7 +4,7 @@
 
 namespace Zzz
 {
-	enum e_ErrorCode : zI64
+	enum e_ErrorCode : zU64
 	{
 		eSuccess,
 		eFailure,

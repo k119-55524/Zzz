@@ -54,7 +54,7 @@ namespace Zzz::Platforms
 		{
 #ifdef WINDOWS_EDITOR
 			return e_PlatformType::WindowsEditor;
-#elif defined(_WINDOWS) || defined(_TESTS)
+#elif defined(_WINDOWS) || defined(_SERVICES) || defined(_EDITOR)
 			// ...
 			return e_PlatformType::Windows;
 #else

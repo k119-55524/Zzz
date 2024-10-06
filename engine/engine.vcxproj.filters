@@ -27,7 +27,7 @@
     <ClInclude Include="pch\headerWin.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="source\helpers\zResult.h">
+    <ClInclude Include="source\Helpers\zResult.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="source\Platforms\MessageBox\ISysMB.h">
@@ -90,6 +90,15 @@
     <ClInclude Include="source\Platforms\GAPI\DirectX\RootSignature.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="source\SceneEntities\Scene.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="source\SceneEntities\SceneManager.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Helpers\zColor.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="zEngine.cpp">
@@ -98,7 +107,7 @@
     <ClCompile Include="pch\pch.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\helpers\zResult.cpp">
+    <ClCompile Include="source\Helpers\zResult.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\Platforms\MessageBox\ISysMB.cpp">
@@ -147,6 +156,15 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\Platforms\GAPI\DirectX\RootSignature.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\SceneEntities\Scene.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\SceneEntities\SceneManager.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Helpers\zColor.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

@@ -4,8 +4,10 @@
 #include "source/Platforms/Platform.h"
 #include "source/Factories/FactoryInit.h"
 #include "source/Factories/FactoryPlatform.h"
+#include "source/SceneEntities/SceneManager.h"
 #include "source/Platforms/MainLoop/IMainAppLoop.h"
 
+using namespace Zzz::Core;
 using namespace Zzz::Platforms;
 
 namespace Zzz
@@ -36,5 +38,7 @@ namespace Zzz
 
 		void OnUpdateSystem();
 		void OnResizeWindow(const zSize& size, e_TypeWinAppResize resizeType);
+
+		SceneManager sceneManager;
 	};
 }
