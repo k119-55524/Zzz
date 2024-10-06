@@ -28,22 +28,10 @@ zResult zEngine::Initialize(const DataEngineInitialization initData)
 		platform = make_unique<Platform>(factoryPlatform.GetSystemImplementationMessageBox());
 
 		appWin = factoryInit.GetAplicationWindows(bind(&zEngine::OnResizeWindow, this, placeholders::_1, placeholders::_2));
-		res = appWin->Initialize(initData);
-		if (!res.isSuccess())
-		{
-			Reset();
-
-			return res;
-		}
+		appWin->Initialize(initData);
 
 		gAPI = factoryInit.GetGraphicsAPI(appWin);
-		res = gAPI->Initialize(initData);
-		if (!res.isSuccess())
-		{
-			Reset();
-
-			return res;
-		}
+		gAPI->Initialize(initData);
 
 		mainLoop = factoryInit.GetMainAppLoop(bind(&zEngine::OnUpdateSystem, this));
 	}

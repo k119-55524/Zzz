@@ -90,6 +90,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="pch\headerDX12.h" />
+    <ClInclude Include="source\Platforms\GAPI\DirectX\RootSignature.h" />
     <ClInclude Include="source\Constants.h" />
     <ClInclude Include="source\Platforms\MainLoop\LinuxMainAppLoop.h" />
     <ClInclude Include="source\Platforms\MainLoop\AndroidMainAppLoop.h" />
@@ -115,6 +116,7 @@
     <ClInclude Include="source\helpers\zResult.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\Platforms\GAPI\DirectX\RootSignature.cpp" />
     <ClCompile Include="source\Platforms\MainLoop\LinuxMainAppLoop.cpp" />
     <ClCompile Include="source\Platforms\MainLoop\AndroidMainAppLoop.cpp" />
     <ClCompile Include="source\Platforms\MainLoop\iOSMainAppLoop.cpp" />

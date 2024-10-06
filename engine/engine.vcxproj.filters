@@ -87,6 +87,9 @@
     <ClInclude Include="pch\headerDX12.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="source\Platforms\GAPI\DirectX\RootSignature.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="zEngine.cpp">
@@ -141,6 +144,9 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\Platforms\MainLoop\LinuxMainAppLoop.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Platforms\GAPI\DirectX\RootSignature.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

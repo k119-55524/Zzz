@@ -20,7 +20,7 @@ WinAppMSWindows::~WinAppMSWindows()
 		DestroyWindow(hWnd);
 }
 
-zResult WinAppMSWindows::Initialize(const DataEngineInitialization& data)
+void WinAppMSWindows::Initialize(const DataEngineInitialization& data)
 {
 	auto className = data.GetWinData()->GetWinClassName();
 
@@ -35,11 +35,11 @@ zResult WinAppMSWindows::Initialize(const DataEngineInitialization& data)
 	ATOM result = RegisterClass(&wc);
 	if (result == 0)
 	{
-		string mess = ">>>>> [WinAppMSWindows::Initialize( ... )].\n+--- Failed to register window class: ";
+		string mess = "RegisterClass( ... ). Failed to register window class: ";
 		mess += wstring_to_string(data.GetWinData()->GetWinClassName());
 		mess += "\n+--- error code(Windows): ";
 		mess += to_string(::GetLastError());
-		throw runtime_error(mess);
+		THROW_RUNTIME_ERROR(mess);
 	}
 
 	// –ассчитать размеры пр€моугольника окна на основе запрошенных размеров клиентской области.
@@ -66,16 +66,14 @@ zResult WinAppMSWindows::Initialize(const DataEngineInitialization& data)
 
 	if (!hWnd)
 	{
-		string mess = ">>>>> [WinAppMSWindows::Initialize( ... )].\n+--- Failed to create window: ";
-		mess += "+--- error code(Windows): ";
+		string mess = "CreateWindowEx( ... ). Failed to create window: ";
+		mess += "\n +--- error code(Windows): ";
 		mess += to_string(::GetLastError());
-		throw runtime_error(mess);
+		THROW_RUNTIME_ERROR(mess);
 	}
 
 	ShowWindow(hWnd, SW_SHOW);
 	UpdateWindow(hWnd);
-
-	return zResult();
 }
 
 const string WinAppMSWindows::wstring_to_string(const wstring& wstr) const
