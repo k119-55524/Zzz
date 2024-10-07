@@ -13,8 +13,11 @@
 #include <thread>
 #include <chrono>
 #include <vector>
+#include <string>
 #include <random>
 #include <memory>
+#include <codecvt>
+#include <fstream>
 #include <sstream>
 #include <tchar.h>
 #include <assert.h>

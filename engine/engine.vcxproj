@@ -109,7 +109,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(ProjectDir)\pch\</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_DEBUG;_LIB;_WINDOWS;_GAPI_DX12;_EDITOR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_LIB;_WINDOWS;_GAPI_DX12;_EDITOR;_SERVICES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -144,7 +144,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_LIB;_WINDOWS;_GAPI_DX12;_EDITOR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_LIB;_WINDOWS;_GAPI_DX12;_EDITOR;_SERVICES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -188,6 +188,7 @@
     <ClInclude Include="pch\headerWin.h" />
     <ClInclude Include="pch\pch.h" />
     <ClInclude Include="source\Helpers\zResult.h" />
+    <ClInclude Include="source\Helpers\zVersion.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\SceneEntities\SceneManager.cpp" />
@@ -217,6 +218,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='ReleaseDXEditor|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="source\Helpers\zResult.cpp" />
+    <ClCompile Include="source\Helpers\zVersion.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

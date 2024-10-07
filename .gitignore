@@ -401,3 +401,4 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 SolutionExperience/SyntaxTest/*.i
+resourceСreator/Data/

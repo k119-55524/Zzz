@@ -3,14 +3,31 @@
 
 int main()
 {
-#ifdef _EDITOR
-	Scene scene;
+#ifdef _SERVICES
 
-	zColor clearColor;
-	clearColor.Default();
-	scene.SetClearColor(clearColor);
+	zResult res;
+	zStr fileName = L"Data\\TestScene.zsc";
 
-	scene.Save(L"Data/TestScene.zsc");
+	{
+		Scene sceneSave;
+		zResult res = sceneSave.Save(fileName);
+
+		if (res.isSuccess())
+			wcout << L"Success save " << fileName << "." << endl;
+		else
+			wcout << "Error save" << fileName << ". " << res.GetDescription() << endl;
+	}
+
+	{
+		Scene sceneLoad;
+		res = sceneLoad.Load(fileName);
+
+		if (res.isSuccess())
+			wcout << L"Success load " << fileName << "." << endl;
+		else
+			wcout << "Error load" << fileName << ". " << res.GetDescription() << endl;
+	}
+
 #endif
 
 	return 0;

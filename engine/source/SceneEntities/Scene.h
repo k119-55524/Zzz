@@ -2,6 +2,9 @@
 
 #include "../Helpers/zColor.h"
 #include "../Helpers/zResult.h"
+#include "../Helpers/zVersion.h"
+
+using namespace std::filesystem;
 
 namespace Zzz::Core
 {
@@ -16,7 +19,15 @@ namespace Zzz::Core
 	public:
 		Scene();
 
-		inline void SetClearColor(const zColor& color) noexcept { clearColor = color; };
+		zResult Load(const zStr& filename);
+
+		inline void SetClearColor(const zColor& color, bool IsSetCCtype = true) noexcept
+		{
+			clearColor = color;
+
+			if (IsSetCCtype)
+				typeClear = e_TypeClear::Color;
+		};
 		inline const zColor& GetClearColor() const noexcept { return clearColor; };
 
 		void Update();
@@ -26,10 +37,14 @@ namespace Zzz::Core
 #else
 	private:
 #endif
-		zResult Save(const zStr& path);
+		zResult Save(const zStr& filename);
 
 	private:
 		e_TypeClear typeClear;
 		zColor clearColor;
+
+		zResult SerializeToBuffer(stringstream& buffer) const;
+		zResult DeSerializeToBuffer(istringstream& buffer);
+		zStr StringToWstring(const string& str);
 	};
 }

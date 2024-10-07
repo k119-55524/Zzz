@@ -99,6 +99,9 @@
     <ClInclude Include="source\Helpers\zColor.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="source\Helpers\zVersion.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="zEngine.cpp">
@@ -165,6 +168,9 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\Helpers\zColor.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Helpers\zVersion.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
