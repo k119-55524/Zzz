@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "../Platform.h"
 #include "WinAppMSWindows.h"
 
 using namespace Zzz;
@@ -36,7 +37,7 @@ void WinAppMSWindows::Initialize(const DataEngineInitialization& data)
 	if (result == 0)
 	{
 		string mess = "RegisterClass( ... ). Failed to register window class: ";
-		mess += wstring_to_string(data.GetWinData()->GetWinClassName());
+		mess += WstringToString(data.GetWinData()->GetWinClassName());
 		mess += "\n+--- error code(Windows): ";
 		mess += to_string(::GetLastError());
 		THROW_RUNTIME_ERROR(mess);
@@ -61,8 +62,7 @@ void WinAppMSWindows::Initialize(const DataEngineInitialization& data)
 		nullptr,
 		nullptr,
 		GetModuleHandle(NULL),
-		this
-	);
+		this);
 
 	if (!hWnd)
 	{
@@ -74,15 +74,6 @@ void WinAppMSWindows::Initialize(const DataEngineInitialization& data)
 
 	ShowWindow(hWnd, SW_SHOW);
 	UpdateWindow(hWnd);
-}
-
-const string WinAppMSWindows::wstring_to_string(const wstring& wstr) const
-{
-	int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, NULL, 0, NULL, NULL);
-	string str(size_needed, 0);
-	WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, &str[0], size_needed, NULL, NULL);
-
-	return str;
 }
 
 LRESULT CALLBACK WinAppMSWindows::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -180,6 +171,15 @@ LRESULT WinAppMSWindows::MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	default:
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
+}
+
+const string WinAppMSWindows::WstringToString(const zStr& wstr)
+{
+	int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, NULL, 0, NULL, NULL);
+	string str(size_needed, 0);
+	WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, &str[0], size_needed, NULL, NULL);
+
+	return str;
 }
 
 #endif // _WINDOWS

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "source/Structs.h"
+#include "source/GameSettings.h"
 #include "source/Platforms/IO/IIO.h"
 #include "source/Platforms/Platform.h"
 #include "source/Factories/FactoryInit.h"

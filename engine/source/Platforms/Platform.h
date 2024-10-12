@@ -62,6 +62,23 @@ namespace Zzz::Platforms
 #endif
 		}
 
+		static zStr StringToWstring(const string& str)
+		{
+			size_t length = str.length();
+			wstring wstr(length + 1, L'\0');
+
+			size_t convertedChars = 0;
+			errno_t err = mbstowcs_s(&convertedChars, &wstr[0], wstr.size(), str.c_str(), length);
+
+			if (err != 0)
+				throw runtime_error(">>>>> [StringToWstring( ... )]. Conversion failed.");
+
+			// Уменьшаем размер wstring до фактической длины
+			wstr.resize(convertedChars);
+
+			return wstr;
+		}
+
 	private:
 		unique_ptr<ISysMB> messageBox;
 	};

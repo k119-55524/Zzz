@@ -22,10 +22,9 @@ namespace Zzz::Platforms
 		HWND hWnd;
 		bool IsMinimized;
 
-		const string wstring_to_string(const wstring& wstr) const;
-
 		static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		LRESULT MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
+		const string WstringToString(const zStr& wstr);
 	};
 }
 #endif // _WINDOWS

@@ -1,12 +1,14 @@
 #include "pch.h"
 #include "Scene.h"
 #include "../Constants.h"
+#include "../Platforms/Platform.h"
 
 using namespace Zzz;
 using namespace Zzz::Core;
 using namespace Zzz::Platforms;
 
-Scene::Scene() :
+Scene::Scene(shared_ptr<IIO> _platformIO) :
+	platformIO{ _platformIO },
 	version{ c_VerScenesSerialize },
 	typeClear{ e_TypeClear::Color }
 {
@@ -21,16 +23,18 @@ void Scene::Update()
 
 zResult Scene::Save(const zStr& filename)
 {
+	zStr fullPath = platformIO->GetAppResourcesPath() + filename;
+
 	try
 	{
-		filesystem::path parentPath = filesystem::path(filename).parent_path();
+		filesystem::path parentPath = filesystem::path(fullPath).parent_path();
 		if (!exists(parentPath))
 			create_directories(parentPath);
 
 		stringstream buffer;
 		SerializeToBuffer(buffer);
 
-		ofstream out(filename, ios::binary);
+		ofstream out(fullPath, ios::binary);
 		if (!out)
 			throw system_error(errno, generic_category(), "Failed to open file for writing");
 
@@ -38,28 +42,28 @@ zResult Scene::Save(const zStr& filename)
 	}
 	catch (const system_error& sysEx)
 	{
-		zStr mes = L">>>>> [Scene::Save(" + filename + L")]. " + StringToWstring(sysEx.what());
+		zStr mes = L">>>>> [Scene::Save(" + fullPath + L")]. " + Platform::StringToWstring(sysEx.what());
 		DebugOutput(mes.c_str());
 
 		return zResult(e_ErrorCode::eFailure, mes);
 	}
 	catch (const bad_alloc& ba) // Обработка ошибок выделения памяти
 	{
-		zStr mes = L">>>>> [Scene::Save(" + filename + L")]. " + zStr(ba.what(), ba.what() + strlen(ba.what()));
+		zStr mes = L">>>>> [Scene::Save(" + fullPath + L")]. " + zStr(ba.what(), ba.what() + strlen(ba.what()));
 		DebugOutput(mes.c_str());
 
 		return zResult(e_ErrorCode::eFailure, mes);
 	}
 	catch (const exception& ex) // Общая обработка остальных стандартных исключений
 	{
-		zStr mes = L">>>>> [Scene::Save(" + filename + L")]. " + zStr(ex.what(), ex.what() + strlen(ex.what()));
+		zStr mes = L">>>>> [Scene::Save(" + fullPath + L")]. " + zStr(ex.what(), ex.what() + strlen(ex.what()));
 		DebugOutput(mes.c_str());
 
 		return zResult(e_ErrorCode::eFailure, mes);
 	}
 	catch ( ... ) // Обработка всех других исключений
 	{
-		zStr mes = L">>>>> [Scene::Save(" + filename + L")]. Unknown error occurred.";
+		zStr mes = L">>>>> [Scene::Save(" + fullPath + L")]. Unknown error occurred.";
 		DebugOutput(mes.c_str());
 
 		return zResult(e_ErrorCode::eFailure, mes);
@@ -71,10 +75,11 @@ zResult Scene::Save(const zStr& filename)
 zResult Scene::Load(const zStr& filename)
 {
 	zResult res;
+	zStr fullPath = platformIO->GetAppResourcesPath() + filename;
 
 	try
 	{
-		ifstream in(filename, ios::binary | ios::ate);
+		ifstream in(fullPath, ios::binary | ios::ate);
 		if (!in)
 			throw runtime_error("Error opening file.");
 
@@ -92,28 +97,28 @@ zResult Scene::Load(const zStr& filename)
 	}
 	catch (const system_error& sysEx)
 	{
-		zStr mes = L">>>>> [Scene::Load(" + filename + L")]. " + StringToWstring(sysEx.what());
+		zStr mes = L">>>>> [Scene::Load(" + fullPath + L")]. " + Platform::StringToWstring(sysEx.what());
 		DebugOutput(mes.c_str());
 
 		return zResult(e_ErrorCode::eFailure, mes);
 	}
 	catch (const bad_alloc& ba) // Обработка ошибок выделения памяти
 	{
-		zStr mes = L">>>>> [Scene::Load(" + filename + L")]. " + zStr(ba.what(), ba.what() + strlen(ba.what()));
+		zStr mes = L">>>>> [Scene::Load(" + fullPath + L")]. " + zStr(ba.what(), ba.what() + strlen(ba.what()));
 		DebugOutput(mes.c_str());
 
 		return zResult(e_ErrorCode::eFailure, mes);
 	}
 	catch (const exception& ex) // Общая обработка остальных стандартных исключений
 	{
-		zStr mes = L">>>>> [Scene::Load(" + filename + L")]. " + zStr(ex.what(), ex.what() + strlen(ex.what()));
+		zStr mes = L">>>>> [Scene::Load(" + fullPath + L")]. " + zStr(ex.what(), ex.what() + strlen(ex.what()));
 		DebugOutput(mes.c_str());
 
 		return zResult(e_ErrorCode::eFailure, mes);
 	}
 	catch (...) // Обработка всех других исключений
 	{
-		zStr mes = L">>>>> [Scene::Load(" + filename + L")]. Unknown error occurred.";
+		zStr mes = L">>>>> [Scene::Load(" + fullPath + L")]. Unknown error occurred.";
 		DebugOutput(mes.c_str());
 
 		return zResult(e_ErrorCode::eFailure, mes);
@@ -148,23 +153,6 @@ zResult Scene::DeSerializeInBuffer(istringstream& buffer)
 	clearColor.DeSerialize(buffer);
 
 	return zResult();
-}
-
-zStr Scene::StringToWstring(const string& str)
-{
-	size_t length = str.length();
-	wstring wstr(length + 1, L'\0');
-
-	size_t convertedChars = 0;
-	errno_t err = mbstowcs_s(&convertedChars, &wstr[0], wstr.size(), str.c_str(), length);
-
-	if (err != 0)
-		throw runtime_error(">>>>> [StringToWstring( ... )]. Conversion failed.");
-
-	// Уменьшаем размер wstring до фактической длины
-	wstr.resize(convertedChars);
-
-	return wstr;
 }
 
 #pragma endregion

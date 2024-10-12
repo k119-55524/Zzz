@@ -5,9 +5,6 @@ using namespace Zzz::Platforms;
 
 WindowsIO::WindowsIO()
 {
-	//appPath;
-	//appResourcesPath;
-
 	wchar_t path[MAX_PATH];
 	GetModuleFileNameW(NULL, path, sizeof(path) / sizeof(wchar_t));
 

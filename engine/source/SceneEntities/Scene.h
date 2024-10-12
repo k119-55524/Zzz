@@ -4,7 +4,9 @@
 #include "../Helpers/zColor.h"
 #include "../Helpers/zResult.h"
 #include "../Helpers/zVersion.h"
+#include "../Platforms/IO/IIO.h"
 
+using namespace Zzz::Platforms;
 using namespace std::filesystem;
 
 namespace Zzz::Core
@@ -18,7 +20,8 @@ namespace Zzz::Core
 	class Scene : public zSerialize
 	{
 	public:
-		Scene();
+		Scene() = delete;
+		Scene(shared_ptr<IIO> _platformIO);
 
 		zResult Load(const zStr& filename);
 
@@ -41,12 +44,13 @@ namespace Zzz::Core
 		zResult Save(const zStr& filename);
 
 	private:
+		shared_ptr<IIO> platformIO;
+
 		zVersion version;
 		e_TypeClear typeClear;
 		zColor clearColor;
 
 		void SerializeToBuffer(stringstream& buffer) const;
 		zResult DeSerializeInBuffer(istringstream& buffer);
-		zStr StringToWstring(const string& str);
 	};
 }

@@ -160,6 +160,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="source\GameSettings.h" />
     <ClInclude Include="source\Platforms\IO\IIO.h" />
     <ClInclude Include="pch\headerDX12.h" />
     <ClInclude Include="source\SceneEntities\SceneManager.h" />
@@ -195,6 +196,7 @@
     <ClInclude Include="source\SceneEntities\zSerialize.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\GameSettings.cpp" />
     <ClCompile Include="source\Platforms\IO\IIO.cpp" />
     <ClCompile Include="source\SceneEntities\SceneManager.cpp" />
     <ClCompile Include="source\SceneEntities\Scene.cpp" />

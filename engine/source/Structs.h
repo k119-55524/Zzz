@@ -34,7 +34,7 @@ namespace Zzz
 			ICO_ID{ _ICO_ID }
 		{
 			if (winClassName.empty())
-				throw std::runtime_error(">>>>> [InitWindowsData::InitWindowsData()]. WinClassName.empty() == true.");
+				throw runtime_error(">>>>> [InitWindowsData::InitWindowsData()]. WinClassName.empty() == true.");
 		}
 		inline const zStr GetWinCaption() const { return winCaption; };
 		inline const zStr GetWinClassName() const { return winClassName; };
@@ -97,7 +97,7 @@ namespace Zzz
 			static_assert(false, ">>>>> [DataEngineInitialization.TestParameters()]. Нет реализации для MacOS.");
 #else
 			static_assert(false, ">>>>> [DataEngineInitialization.TestParameters()]. Неизвестная платформа.");
-#endif //_WINDOWS
+#endif // defined(_WINDOWS) || defined(_SERVICES) || defined(_EDITOR)
 
 			initWinData->TestParameters();
 		}
