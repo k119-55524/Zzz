@@ -2,3 +2,7 @@
 #include "ISysMB.h"
 
 using namespace Zzz::Platforms;
+
+ISysMB::~ISysMB()
+{
+}

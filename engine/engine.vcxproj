@@ -160,6 +160,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="source\Platforms\IO\IIO.h" />
     <ClInclude Include="pch\headerDX12.h" />
     <ClInclude Include="source\SceneEntities\SceneManager.h" />
     <ClInclude Include="source\SceneEntities\Scene.h" />
@@ -178,19 +179,23 @@
     <ClInclude Include="source\Platforms\MessageBox\MB_MSWin.h" />
     <ClInclude Include="source\Platforms\MessageBox\ISysMB.h" />
     <ClInclude Include="source\Structs.h" />
-    <ClInclude Include="source\Types.h" />
-    <ClInclude Include="source\Platforms\WinApplication\IWinApp.h" />
-    <ClInclude Include="source\Platforms\WinApplication\WinAppMSWindows.h" />
+    <ClInclude Include="source\Types\Types.h" />
+    <ClInclude Include="source\Platforms\WinApp\IWinApp.h" />
+    <ClInclude Include="source\Platforms\WinApp\WinAppMSWindows.h" />
     <ClInclude Include="source\Platforms\MainLoop\WindowsMainAppLoop.h" />
     <ClInclude Include="source\Helpers\zColor.h" />
+    <ClInclude Include="source\Types\zTypes.h" />
+    <ClInclude Include="source\Platforms\IO\WindowsIO.h" />
     <ClInclude Include="zEngine.h" />
     <ClInclude Include="pch\header.h" />
     <ClInclude Include="pch\headerWin.h" />
     <ClInclude Include="pch\pch.h" />
     <ClInclude Include="source\Helpers\zResult.h" />
     <ClInclude Include="source\Helpers\zVersion.h" />
+    <ClInclude Include="source\SceneEntities\zSerialize.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\Platforms\IO\IIO.cpp" />
     <ClCompile Include="source\SceneEntities\SceneManager.cpp" />
     <ClCompile Include="source\SceneEntities\Scene.cpp" />
     <ClCompile Include="source\Platforms\GAPI\DirectX\RootSignature.cpp" />
@@ -206,10 +211,11 @@
     <ClCompile Include="source\Platforms\Platform.cpp" />
     <ClCompile Include="source\Platforms\MessageBox\MB_MSWin.cpp" />
     <ClCompile Include="source\Platforms\MessageBox\ISysMB.cpp" />
-    <ClCompile Include="source\Platforms\WinApplication\IWinApp.cpp" />
-    <ClCompile Include="source\Platforms\WinApplication\WinAppMSWindows.cpp" />
+    <ClCompile Include="source\Platforms\WinApp\IWinApp.cpp" />
+    <ClCompile Include="source\Platforms\WinApp\WinAppMSWindows.cpp" />
     <ClCompile Include="source\Platforms\MainLoop\WindowsMainLoop.cpp" />
     <ClCompile Include="source\Helpers\zColor.cpp" />
+    <ClCompile Include="source\Platforms\IO\WindowsIO.cpp" />
     <ClCompile Include="zEngine.cpp" />
     <ClCompile Include="pch\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugDXGame|x64'">Create</PrecompiledHeader>
@@ -219,6 +225,7 @@
     </ClCompile>
     <ClCompile Include="source\Helpers\zResult.cpp" />
     <ClCompile Include="source\Helpers\zVersion.cpp" />
+    <ClCompile Include="source\SceneEntities\zSerialize.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

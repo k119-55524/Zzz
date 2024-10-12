@@ -1,5 +1,6 @@
 #pragma once
 
+#include "zSerialize.h"
 #include "../Helpers/zColor.h"
 #include "../Helpers/zResult.h"
 #include "../Helpers/zVersion.h"
@@ -14,7 +15,7 @@ namespace Zzz::Core
 		Color
 	};
 
-	class Scene
+	class Scene : public zSerialize
 	{
 	public:
 		Scene();
@@ -40,11 +41,12 @@ namespace Zzz::Core
 		zResult Save(const zStr& filename);
 
 	private:
+		zVersion version;
 		e_TypeClear typeClear;
 		zColor clearColor;
 
-		zResult SerializeToBuffer(stringstream& buffer) const;
-		zResult DeSerializeToBuffer(istringstream& buffer);
+		void SerializeToBuffer(stringstream& buffer) const;
+		zResult DeSerializeInBuffer(istringstream& buffer);
 		zStr StringToWstring(const string& str);
 	};
 }

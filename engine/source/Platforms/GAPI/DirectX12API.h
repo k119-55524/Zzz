@@ -13,7 +13,7 @@ namespace Zzz::Platforms
 		DirectX12API() = delete;
 		DirectX12API(DirectX12API&) = delete;
 		DirectX12API(DirectX12API&&) = delete;
-		virtual ~DirectX12API();
+		~DirectX12API() override;
 
 		DirectX12API(const shared_ptr<IWinApp> appWin);
 

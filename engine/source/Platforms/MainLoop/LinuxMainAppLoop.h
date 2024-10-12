@@ -15,7 +15,7 @@ namespace Zzz::Platforms
 
 		LinuxMainAppLoop(unique_ptr<IWinApp> _win, unique_ptr<IGAPI> _gapi);
 
-		virtual ~LinuxMainAppLoop();
+		~LinuxMainAppLoop() override;
 
 		void Run() override;
 	};

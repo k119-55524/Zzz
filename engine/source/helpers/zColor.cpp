@@ -4,31 +4,31 @@
 using namespace Zzz;
 
 zColor::zColor() :
-	clearColor{ 0.0f, 0.0f, 0.0f, 1.0f }
+	color{ 0.0f, 0.0f, 0.0f, 1.0f }
 {
 }
 
 zColor::zColor(float c) :
-	clearColor{ c, c, c, 1.0f }
+	color{ c, c, c, 1.0f }
 {
 }
 
 zColor::zColor(float r, float g, float b) :
-	clearColor{ r, g, b, 1.0f }
+	color{ r, g, b, 1.0f }
 {
 }
 
 zColor::zColor(float r, float g, float b, float a) :
-	clearColor{ r, g, b, a }
+	color{ r, g, b, a }
 {
 }
 
 zColor::zColor(const zColor& other)
 {
-	memcpy(clearColor, other.clearColor, sizeof(clearColor));
+	memcpy(color, other.color, sizeof(color));
 }
 
 zColor::zColor(zColor&& other) noexcept
 {
-	memcpy(clearColor, other.clearColor, sizeof(clearColor));
+	memcpy(color, other.color, sizeof(color));
 }

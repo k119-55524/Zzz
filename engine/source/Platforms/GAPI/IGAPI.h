@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../WinApplication/IWinApp.h"
+#include "../WinApp/IWinApp.h"
 
 using namespace Zzz;
 

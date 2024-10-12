@@ -15,7 +15,7 @@ namespace Zzz::Platforms
 
 		AndroidMainAppLoop(unique_ptr<IWinApp> _win, unique_ptr<IGAPI> _gapi);
 
-		virtual ~AndroidMainAppLoop();
+		~AndroidMainAppLoop() override;
 
 		void Run() override;
 	};

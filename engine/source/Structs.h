@@ -22,13 +22,13 @@ namespace Zzz
 #pragma region ќбъ€вление структур дл€ инициализации движка пользователем
 
 #if defined(_WINDOWS) || defined(_SERVICES) || defined(_EDITOR)
-	class InitWindowsData
+	class InitWinData
 	{
 		friend class DataEngineInitialization;
 
 	public:
-		InitWindowsData() = delete;
-		explicit InitWindowsData(const zStr& _winClassName, const zStr& _winCaption, zU64 _ICO_ID) :
+		InitWinData() = delete;
+		explicit InitWinData(const zStr& _winClassName, const zStr& _winCaption, zU64 _ICO_ID) :
 			winClassName{ _winClassName },
 			winCaption{ _winCaption },
 			ICO_ID{ _ICO_ID }
@@ -65,8 +65,8 @@ namespace Zzz
 		DataEngineInitialization() = delete;
 
 #if defined(_WINDOWS)  || defined(_SERVICES) || defined(_EDITOR)
-		explicit DataEngineInitialization(const InitWindowsData& _initWinData, const zSize& _winSize, bool _fullScreen = false) :
-			initWinData{ make_shared<InitWindowsData>(_initWinData) },
+		explicit DataEngineInitialization(const InitWinData& _initWinData, const zSize& _winSize, bool _fullScreen = false) :
+			initWinData{ make_shared<InitWinData>(_initWinData) },
 			winSize{ _winSize },
 			fullScreen{ _fullScreen }
 		{
@@ -77,11 +77,11 @@ namespace Zzz
 		static_assert(false, ">>>>> [DataEngineInitialization.DataEngineInitialization()");
 #endif // _WINDOWS
 
-		inline const shared_ptr<InitWindowsData> GetWinData() const { return initWinData; };
+		inline const shared_ptr<InitWinData> GetWinData() const { return initWinData; };
 		inline const zSize& GetWinSize() const { return winSize; };
 
 	private:
-		shared_ptr<InitWindowsData> initWinData;
+		shared_ptr<InitWinData> initWinData;
 		zSize winSize;
 		bool fullScreen;
 

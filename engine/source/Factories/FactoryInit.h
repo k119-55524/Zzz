@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../Platforms/GAPI/IGAPI.h"
+#include "../Platforms/WinApp/IWinApp.h"
 #include "../Platforms/MainLoop/IMainAppLoop.h"
-#include "../Platforms/WinApplication/IWinApp.h"
 
 using namespace Zzz::Platforms;
 

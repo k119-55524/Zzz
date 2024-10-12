@@ -1,9 +1,7 @@
 #pragma once
 
 #include "../GAPI/IGAPI.h"
-#include "../WinApplication/IWinApp.h"
-
-//using namespace Zzz;
+#include "../WinApp/IWinApp.h"
 
 namespace Zzz::Platforms
 {

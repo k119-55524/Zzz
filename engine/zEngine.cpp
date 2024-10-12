@@ -26,6 +26,7 @@ zResult zEngine::Initialize(const DataEngineInitialization initData)
 		Reset(e_InitState::eInitProcess);
 
 		platform = make_unique<Platform>(factoryPlatform.GetSystemImplementationMessageBox());
+		platformIO = factoryPlatform.GetPlatformIO();
 
 		appWin = factoryInit.GetAplicationWindows(bind(&zEngine::OnResizeWindow, this, placeholders::_1, placeholders::_2));
 		appWin->Initialize(initData);
@@ -73,6 +74,7 @@ zResult zEngine::Run()
 void zEngine::Reset(e_InitState state)
 {
 	platform.reset();
+	platformIO.reset();
 	appWin.reset();
 	gAPI.reset();
 	mainLoop.reset();

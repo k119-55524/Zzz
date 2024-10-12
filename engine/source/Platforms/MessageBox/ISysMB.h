@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../Types.h"
+#include "../../Types/Types.h"
 
 namespace Zzz::Platforms
 {
@@ -14,6 +14,10 @@ namespace Zzz::Platforms
 	class ISysMB
 	{
 	public:
+		ISysMB() = default;
+
+		virtual ~ISysMB() = 0;
+
 		virtual void ShowError(const zStr& message) = 0;
 	};
 }

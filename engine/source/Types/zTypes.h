@@ -16,9 +16,6 @@ namespace Zzz
 	typedef double zF64;
 
 	typedef wstring zStr;
-	//typedef LPCWSTR zStrPtr;
-
-	//typedef XMFLOAT2 zf32_2D;
 
 #endif // defined(_WINDOWS)
 }

@@ -1,17 +1,20 @@
 #pragma once
 
-#include "../Types.h"
+#include "../SceneEntities/zSerialize.h"
 
 namespace Zzz
 {
-	class zVersion
+	class zVersion : protected zSerialize
 	{
 	public:
-		zVersion() = delete;
-		zVersion(const zVersion& other) = default;
+		zVersion() : major(0), minor(0), patch(0), build(0) {};
 		zVersion(zVersion&& other) = default;
-		zVersion(int maj = 1, int min = 0, int pat = 0, int bld = 0)
-			: major(maj), minor(min), patch(pat), build(bld) {}
+
+		zVersion& operator=(const zVersion& other) = default;
+		zVersion& operator=(zVersion&& other) = default;
+
+		zVersion(const zVersion& ver) : major(ver.major), minor(ver.minor), patch(ver.patch), build(ver.build) {}
+		zVersion(int _major, int _minor = 0, int _patch = 0, int _buld = 0) : major(_major), minor(_minor), patch(_patch), build(_buld) {}
 
 		inline int getMajor() const noexcept { return major; }
 		inline int getMinor() const noexcept { return minor; }
@@ -33,9 +36,7 @@ namespace Zzz
 				patch == other.patch &&
 				build == other.build;
 		}
-
 		bool operator!=(const zVersion& other) const { return !(*this == other); }
-
 		bool operator<(const zVersion& other) const
 		{
 			if (major != other.major)
@@ -49,20 +50,33 @@ namespace Zzz
 
 			return build < other.build;
 		}
-
 		bool operator>(const zVersion& other) const
 		{
 			return other < *this;
 		}
-
 		bool operator<=(const zVersion& other) const
 		{
 			return !(other < *this);
 		}
-
 		bool operator>=(const zVersion& other) const
 		{
 			return !(*this < other);
+		}
+
+		inline void Serialize(stringstream& buffer) const
+		{
+			zSerialize::Serialize(buffer, major);
+			zSerialize::Serialize(buffer, minor);
+			zSerialize::Serialize(buffer, patch);
+			zSerialize::Serialize(buffer, build);
+		}
+
+		void DeSerialize(istringstream& buffer)
+		{
+			zSerialize::DeSerialize(buffer, major);
+			zSerialize::DeSerialize(buffer, minor);
+			zSerialize::DeSerialize(buffer, patch);
+			zSerialize::DeSerialize(buffer, build);
 		}
 
 	private:

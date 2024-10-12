@@ -15,7 +15,7 @@ int APIENTRY wWinMain(
 	zEngine game;
 
 	zStr gameName = L"zGame";
-	InitWindowsData initWinData(L"zGameWinClass", gameName, IDI_BIGICO);
+	InitWinData initWinData(L"zGameWinClass", gameName, IDI_BIGICO);
 	DataEngineInitialization initData(initWinData, zSize(800, 600));
 
 	zResult res = game.Initialize(initData);

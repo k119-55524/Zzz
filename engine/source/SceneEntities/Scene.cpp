@@ -7,6 +7,7 @@ using namespace Zzz::Core;
 using namespace Zzz::Platforms;
 
 Scene::Scene() :
+	version{ c_VerScenesSerialize },
 	typeClear{ e_TypeClear::Color }
 {
 	clearColor.Default();
@@ -20,15 +21,14 @@ void Scene::Update()
 
 zResult Scene::Save(const zStr& filename)
 {
-	zResult res;
 	try
 	{
-		std::filesystem::path parentPath = std::filesystem::path(filename).parent_path();
+		filesystem::path parentPath = filesystem::path(filename).parent_path();
 		if (!exists(parentPath))
 			create_directories(parentPath);
 
 		stringstream buffer;
-		res = SerializeToBuffer(buffer);
+		SerializeToBuffer(buffer);
 
 		ofstream out(filename, ios::binary);
 		if (!out)
@@ -65,19 +65,20 @@ zResult Scene::Save(const zStr& filename)
 		return zResult(e_ErrorCode::eFailure, mes);
 	}
 
-	return res;
+	return zResult();
 }
 
 zResult Scene::Load(const zStr& filename)
 {
 	zResult res;
+
 	try
 	{
-		ifstream in(filename, ios::binary | std::ios::ate);
+		ifstream in(filename, ios::binary | ios::ate);
 		if (!in)
 			throw runtime_error("Error opening file.");
 
-		std::streamsize fileSize = in.tellg();
+		streamsize fileSize = in.tellg();
 		in.seekg(0, ios::beg); // Возвращаемся в начало файла
 
 		// Читаем весь файл в буфер
@@ -87,7 +88,7 @@ zResult Scene::Load(const zStr& filename)
 
 		// Создаем поток для чтения из буфера
 		istringstream bufStream(string(buffer.data(), buffer.size()));
-		res = DeSerializeToBuffer(bufStream);
+		res = DeSerializeInBuffer(bufStream);
 	}
 	catch (const system_error& sysEx)
 	{
@@ -121,28 +122,30 @@ zResult Scene::Load(const zStr& filename)
 	return res;
 }
 
-zResult Scene::SerializeToBuffer(stringstream& buffer) const
+void Scene::SerializeToBuffer(stringstream& buffer) const
 {
-	size_t textLength = c_HeapSceneFile.size();
-	buffer.write(reinterpret_cast<const char*>(&textLength), sizeof(textLength));
-	buffer.write(reinterpret_cast<const char*>(c_HeapSceneFile.data()), textLength * sizeof(wchar_t));
-
-	// Сериализуем количество объектов
-	//size_t objectCount = objects.size();
-	//buffer.write(reinterpret_cast<const char*>(&objectCount), sizeof(objectCount));
-	//buffer.write(reinterpret_cast<const char*>(objects.data()), objectCount * sizeof(int));
-
-	return zResult();
+	Serialize(buffer, c_HeapSceneFile);
+	version.Serialize(buffer);
+	Serialize(buffer, typeClear);
+	clearColor.Serialize(buffer);
 }
 
-zResult Scene::DeSerializeToBuffer(istringstream& buffer)
+zResult Scene::DeSerializeInBuffer(istringstream& buffer)
 {
 	zStr pref;
-	size_t nameLength;
-	buffer.read(reinterpret_cast<char*>(&nameLength), sizeof(nameLength));
-	pref.resize(nameLength);
-	buffer.read(reinterpret_cast<char*>(pref.data()), nameLength * sizeof(wchar_t));
+	DeSerialize(buffer, pref);
+	if (pref != c_HeapSceneFile)
+		return zResult(e_ErrorCode::eFailure, L"Unknown scene file format.");
 
+	zVersion ver;
+	ver.DeSerialize(buffer);
+	if (ver > version)
+		return zResult(e_ErrorCode::eFailure, L"The newer scene file format is not supported.");
+
+	version = ver;
+
+	DeSerialize(buffer, typeClear);
+	clearColor.DeSerialize(buffer);
 
 	return zResult();
 }

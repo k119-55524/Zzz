@@ -14,7 +14,7 @@ public:
 
 	iOSMainAppLoop(unique_ptr<IWinApp> _win, unique_ptr<IGAPI> _gapi);
 
-	virtual ~iOSMainAppLoop();
+	~iOSMainAppLoop() override;
 
 	void Run() override;
 };

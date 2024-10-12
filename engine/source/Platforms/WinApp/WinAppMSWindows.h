@@ -13,7 +13,7 @@ namespace Zzz::Platforms
 		WinAppMSWindows(WinAppMSWindows&&) = delete;
 
 		WinAppMSWindows(function<void(const zSize& size, e_TypeWinAppResize resType)> _resizeWindows);
-		virtual ~WinAppMSWindows();
+		~WinAppMSWindows() override;
 
 		void Initialize(const DataEngineInitialization& data) override;
 		inline const HWND GetHWND() const noexcept { return hWnd; };

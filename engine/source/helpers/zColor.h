@@ -1,8 +1,10 @@
 #pragma once
 
+#include "../SceneEntities/zSerialize.h"
+
 namespace Zzz
 {
-	class zColor
+	class zColor : protected zSerialize
 	{
 	public:
 		zColor();
@@ -15,54 +17,70 @@ namespace Zzz
 		inline zColor& operator=(const zColor& other)
 		{
 			if (this != &other)
-				memcpy(clearColor, other.clearColor, sizeof(clearColor));
+				memcpy(color, other.color, sizeof(color));
 
 			return *this;
 		};
 		inline zColor& operator=(zColor&& other) noexcept
 		{
 			if (this != &other)
-				memcpy(clearColor, other.clearColor, sizeof(clearColor));
+				memcpy(color, other.color, sizeof(color));
 
 			return *this;
 		};
 
 		inline void SetColor(float c) noexcept
 		{
-			clearColor[0] = c;
-			clearColor[1] = c;
-			clearColor[2] = c;
-			clearColor[3] = 1.0;
+			color[0] = c;
+			color[1] = c;
+			color[2] = c;
+			color[3] = 1.0;
 		};
 		inline void SetColor(float r, float g, float b) noexcept
 		{ 
-			clearColor[0] = r;
-			clearColor[1] = g;
-			clearColor[2] = b;
-			clearColor[3] = 1.0;
+			color[0] = r;
+			color[1] = g;
+			color[2] = b;
+			color[3] = 1.0;
 		};
 		inline void SetColor(float r, float g, float b, float a) noexcept
 		{
-			clearColor[0] = r;
-			clearColor[1] = g;
-			clearColor[2] = b;
-			clearColor[3] = a;
+			color[0] = r;
+			color[1] = g;
+			color[2] = b;
+			color[3] = a;
 		};
-		inline void SetColor(const zColor& color) noexcept
+		inline void SetColor(const zColor& _color) noexcept
 		{ 
-			memcpy(clearColor, color.GetColor(), sizeof(clearColor));
+			memcpy(color, _color.GetColor(), sizeof(color));
 		};
 		inline void Default() noexcept
 		{
-			clearColor[0] = 0.0f;
-			clearColor[1] = 0.2f;
-			clearColor[2] = 0.4f;
-			clearColor[3] = 1.0f;
+			color[0] = 0.0f;
+			color[1] = 0.2f;
+			color[2] = 0.4f;
+			color[3] = 1.0f;
 		};
 
-		inline const float* GetColor() const noexcept { return clearColor; };
+		inline const float* GetColor() const noexcept { return color; };
+
+		inline void Serialize(stringstream& buffer) const
+		{
+			zSerialize::Serialize(buffer, color[0]);
+			zSerialize::Serialize(buffer, color[1]);
+			zSerialize::Serialize(buffer, color[2]);
+			zSerialize::Serialize(buffer, color[3]);
+		}
+
+		void DeSerialize(istringstream& buffer)
+		{
+			zSerialize::DeSerialize(buffer, color[0]);
+			zSerialize::DeSerialize(buffer, color[1]);
+			zSerialize::DeSerialize(buffer, color[2]);
+			zSerialize::DeSerialize(buffer, color[3]);
+		}
 
 	private:
-		float clearColor[4];
+		float color[4];
 	};
 }

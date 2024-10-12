@@ -16,7 +16,7 @@ namespace Zzz::Platforms
 
 		MacOSMainAppLoop(unique_ptr<IWinApp> _win, unique_ptr<IGAPI> _gapi);
 
-		virtual ~MacOSMainAppLoop();
+		~MacOSMainAppLoop() override;
 
 		void Run() override;
 	};

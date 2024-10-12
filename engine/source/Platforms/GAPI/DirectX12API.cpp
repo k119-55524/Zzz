@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "DirectX12API.h"
-#include "../WinApplication///WinAppMSWindows.h"
+#include "../WinApp/WinAppMSWindows.h"
 
 using namespace Zzz;
 using namespace Zzz::Platforms;
