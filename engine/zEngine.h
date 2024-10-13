@@ -1,7 +1,7 @@
 #pragma once
 
 #include "source/Structs.h"
-#include "source/GameSettings.h"
+#include "source/UserGameSettings.h"
 #include "source/Platforms/IO/IIO.h"
 #include "source/Platforms/Platform.h"
 #include "source/Factories/FactoryInit.h"
@@ -18,8 +18,9 @@ namespace Zzz
 	{
 	public:
 		zEngine();
+		~zEngine();
 
-		zResult Initialize(const DataEngineInitialization initData);
+		zResult Initialize();
 		zResult Run();
 
 	private:
@@ -32,6 +33,7 @@ namespace Zzz
 
 		unique_ptr<Platform> platform;
 		shared_ptr<IIO> platformIO;
+		shared_ptr<UserGameSettings> userGS;
 		shared_ptr<IWinApp> appWin;
 		unique_ptr<IGAPI> gAPI;
 		shared_ptr<IMainAppLoop> mainLoop;

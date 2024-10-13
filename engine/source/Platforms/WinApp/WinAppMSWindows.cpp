@@ -21,15 +21,15 @@ WinAppMSWindows::~WinAppMSWindows()
 		DestroyWindow(hWnd);
 }
 
-void WinAppMSWindows::Initialize(const DataEngineInitialization& data)
+void WinAppMSWindows::Initialize(const shared_ptr<UserGameSettings> userGS)
 {
-	auto className = data.GetWinData()->GetWinClassName();
+	auto className = userGS->GetMSWinClassName();
 
 	WNDCLASS wc = { 0 };
 	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = WinAppMSWindows::WindowProc;
 	wc.hInstance = GetModuleHandle(NULL);
-	wc.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(data.GetWinData()->GetIcoID()));
+	wc.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(userGS->GetMSWinIcoID()));
 	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
 	wc.lpszClassName = className.c_str();
 
@@ -37,14 +37,14 @@ void WinAppMSWindows::Initialize(const DataEngineInitialization& data)
 	if (result == 0)
 	{
 		string mess = "RegisterClass( ... ). Failed to register window class: ";
-		mess += WstringToString(data.GetWinData()->GetWinClassName());
+		mess += WstringToString(className);
 		mess += "\n+--- error code(Windows): ";
 		mess += to_string(::GetLastError());
 		THROW_RUNTIME_ERROR(mess);
 	}
 
 	// –ассчитать размеры пр€моугольника окна на основе запрошенных размеров клиентской области.
-	RECT R = { 0, 0, static_cast<LONG>(data.GetWinSize().width), static_cast<LONG>(data.GetWinSize().height) };
+	RECT R = { 0, 0, static_cast<LONG>(userGS->GetSetupAppWinSize().width), static_cast<LONG>(userGS->GetSetupAppWinSize().height)};
 	AdjustWindowRect(&R, WS_OVERLAPPEDWINDOW, false);
 	int width = R.right - R.left;
 	int height = R.bottom - R.top;
@@ -56,7 +56,7 @@ void WinAppMSWindows::Initialize(const DataEngineInitialization& data)
 	hWnd = CreateWindowEx(
 		0,
 		className.c_str(),
-		data.GetWinData()->GetWinCaption().c_str(),
+		userGS->GetWinCaption().c_str(),
 		WS_OVERLAPPEDWINDOW,
 		xPos, yPos, width, height,
 		nullptr,

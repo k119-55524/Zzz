@@ -34,7 +34,8 @@ zResult LoadScene(const shared_ptr<IIO> platformIO, const zStr& fileName)
 
 zResult SaveGameSettings(const shared_ptr<IIO> platformIO)
 {
-	GameSettings gs(platformIO);
+	UserGameSettings gs(platformIO);
+	gs.SetDefault();
 	zResult res = gs.Save();
 
 	if (res.isSuccess())
@@ -50,7 +51,7 @@ zResult SaveGameSettings(const shared_ptr<IIO> platformIO)
 
 zResult LoadGameSettings(const shared_ptr<IIO> platformIO)
 {
-	GameSettings gs(platformIO);
+	UserGameSettings gs(platformIO);
 	zResult res = gs.Load();
 
 	if (res.isSuccess())
@@ -67,7 +68,7 @@ int main()
 {
 #ifdef _SERVICES
 
-	zStr fileName = L"TestScene.zsc";
+	zStr fileName = c_DefaultStartSceneName;
 
 	FactoryPlatform factoryPlatform;
 	shared_ptr<IIO> platformIO = factoryPlatform.GetPlatformIO();

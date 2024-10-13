@@ -17,7 +17,7 @@ namespace Zzz::Platforms
 
 		DirectX12API(const shared_ptr<IWinApp> appWin);
 
-		void Initialize(const DataEngineInitialization& data) override;
+		void Initialize() override;
 
 	protected:
 		void OnUpdate() override;

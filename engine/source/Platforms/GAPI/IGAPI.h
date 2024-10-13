@@ -24,7 +24,7 @@ namespace Zzz::Platforms
 		IGAPI(const shared_ptr<IWinApp> _appWin, eGAPIType type);
 		virtual ~IGAPI() = 0;
 
-		virtual void Initialize(const DataEngineInitialization& data) = 0;
+		virtual void Initialize() = 0;
 		void Update();
 		void Resize(const zSize& size);
 

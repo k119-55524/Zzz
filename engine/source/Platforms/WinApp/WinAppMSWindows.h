@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IWinApp.h"
+#include "../../UserGameSettings.h"
 
 #ifdef _WINDOWS
 namespace Zzz::Platforms
@@ -15,7 +16,7 @@ namespace Zzz::Platforms
 		WinAppMSWindows(function<void(const zSize& size, e_TypeWinAppResize resType)> _resizeWindows);
 		~WinAppMSWindows() override;
 
-		void Initialize(const DataEngineInitialization& data) override;
+		void Initialize(const shared_ptr<UserGameSettings> userGS) override;
 		inline const HWND GetHWND() const noexcept { return hWnd; };
 
 	private:

@@ -10,7 +10,13 @@ zEngine::zEngine() :
 {
 }
 
-zResult zEngine::Initialize(const DataEngineInitialization initData)
+zEngine::~zEngine()
+{
+	if (userGS != nullptr)
+		userGS->Save();
+}
+
+zResult zEngine::Initialize()
 {
 	lock_guard<mutex> lock(initMutex);
 
@@ -21,18 +27,27 @@ zResult zEngine::Initialize(const DataEngineInitialization initData)
 		if (initState != e_InitState::eInitNot)
 			return  zResult(e_ErrorCode::eFailure, L">>>>> [zEngine::Initialize()]. Attempting to reinitialize.");
 
-		initState = e_InitState::eInitProcess;
-		initData.TestParameters();
 		Reset(e_InitState::eInitProcess);
 
 		platform = make_unique<Platform>(factoryPlatform.GetSystemImplementationMessageBox());
 		platformIO = factoryPlatform.GetPlatformIO();
 
+		userGS = make_shared<UserGameSettings>(platformIO);
+		if (userGS == nullptr)
+			throw runtime_error(">>>>> [zEngine::Initialize( ... )]. Failed to allocate memory for UserGameSettings.");
+
+		res = userGS->Load();
+		if (!res.isSuccess())
+		{
+			Reset();
+			return res;
+		}
+
 		appWin = factoryInit.GetAplicationWindows(bind(&zEngine::OnResizeWindow, this, placeholders::_1, placeholders::_2));
-		appWin->Initialize(initData);
+		appWin->Initialize(userGS);
 
 		gAPI = factoryInit.GetGraphicsAPI(appWin);
-		gAPI->Initialize(initData);
+		gAPI->Initialize();
 
 		mainLoop = factoryInit.GetMainAppLoop(bind(&zEngine::OnUpdateSystem, this));
 	}
@@ -73,11 +88,13 @@ zResult zEngine::Run()
 
 void zEngine::Reset(e_InitState state)
 {
-	platform.reset();
-	platformIO.reset();
 	appWin.reset();
 	gAPI.reset();
 	mainLoop.reset();
+	platform.reset();
+	platformIO.reset();
+	userGS.reset();
+
 	initState = state;
 }
 

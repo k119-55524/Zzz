@@ -27,7 +27,7 @@ DirectX12API::~DirectX12API()
 	CloseHandle(m_fenceEvent);
 }
 
-void DirectX12API::Initialize(const DataEngineInitialization& data)
+void DirectX12API::Initialize()
 {
 	InitializePipeline();
 	InitializeAssets();

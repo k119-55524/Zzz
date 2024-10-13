@@ -144,7 +144,7 @@ zResult Scene::DeSerializeInBuffer(istringstream& buffer)
 
 	zVersion ver;
 	ver.DeSerialize(buffer);
-	if (ver > version)
+	if (ver > c_VerScenesSerialize)
 		return zResult(e_ErrorCode::eFailure, L"The newer scene file format is not supported.");
 
 	version = ver;

@@ -114,7 +114,7 @@
     <ClInclude Include="source\Platforms\IO\WindowsIO.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="source\GameSettings.h">
+    <ClInclude Include="source\UserGameSettings.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
@@ -197,7 +197,7 @@
     <ClCompile Include="source\Platforms\IO\WindowsIO.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\GameSettings.cpp">
+    <ClCompile Include="source\UserGameSettings.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

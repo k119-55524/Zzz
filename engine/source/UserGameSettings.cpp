@@ -1,16 +1,15 @@
 #include "pch.h"
-#include "GameSettings.h"
+#include "UserGameSettings.h"
 #include "Platforms/Platform.h"
 
 using namespace Zzz;
 
-GameSettings::GameSettings(shared_ptr<IIO> _platformIO) :
+UserGameSettings::UserGameSettings(shared_ptr<IIO> _platformIO) :
 	platformIO{ _platformIO }
 {
-	SetDefault();
 }
 
-zResult Zzz::GameSettings::Save()
+zResult UserGameSettings::Save()
 {
 	zStr fullPath = platformIO->GetAppResourcesPath() + c_GameSettingsFileName;
 
@@ -61,7 +60,7 @@ zResult Zzz::GameSettings::Save()
 	return zResult();
 }
 
-zResult GameSettings::Load()
+zResult UserGameSettings::Load()
 {
 	zResult res;
 	zStr fullPath = platformIO->GetAppResourcesPath() + c_GameSettingsFileName;
@@ -86,6 +85,18 @@ zResult GameSettings::Load()
 		// Создаем поток для чтения из буфера
 		istringstream bufStream(string(buffer.data(), buffer.size()));
 		res = DeSerializeInBuffer(bufStream);
+
+		if (!res.isSuccess())
+		{
+			SetDefault();
+			return zResult(e_ErrorCode::eSuccess, L">>>>> [UserGameSettings::Load()]. Error desearelize. Set default.");
+		}
+
+		if (!TestParameters().isSuccess())
+		{
+			SetDefault();
+			return zResult(e_ErrorCode::eSuccess, L">>>>> [UserGameSettings::Load()]. Error test pframeters. Set default.");
+		}
 	}
 	catch (const system_error& sysEx)
 	{
@@ -116,41 +127,70 @@ zResult GameSettings::Load()
 		res = zResult(e_ErrorCode::eFailure, mes);
 	}
 
-	if (!res.isSuccess())
-		SetDefault();
-
 	return res;
 }
 
-void GameSettings::SetDefault() const noexcept
+void UserGameSettings::SetDefault() noexcept
 {
-
+	version = c_VerGameSettingsSerialize;
+	winSize.SetSize(800, 600);
+	isFullScreen = false;
+	startScene = c_DefaultStartSceneName;
+	msWinClassName = c_MSWindowsClassName;
+	msWinIcoID = c_MSIcoID;
+	winCaption = c_CaptionWindows;
 }
 
-void GameSettings::SerializeToBuffer(stringstream& buffer) const
+void UserGameSettings::SerializeToBuffer(stringstream& buffer) const
 {
-	//Serialize(buffer, c_HeapSceneFile);
-	//version.Serialize(buffer);
-	//Serialize(buffer, typeClear);
-	//clearColor.Serialize(buffer);
+	Serialize(buffer, c_HeapGameSettingsFile);
+	version.Serialize(buffer);
+	winSize.Serialize(buffer);
+	Serialize(buffer, isFullScreen);
+	Serialize(buffer, startScene);
+
+	Serialize(buffer, msWinClassName);
+	Serialize(buffer, msWinIcoID);
+	Serialize(buffer, winCaption);
 }
 
-zResult GameSettings::DeSerializeInBuffer(istringstream& buffer)
+zResult UserGameSettings::DeSerializeInBuffer(istringstream& buffer)
 {
-	//zStr pref;
-	//DeSerialize(buffer, pref);
-	//if (pref != c_HeapSceneFile)
-	//	return zResult(e_ErrorCode::eFailure, L"Unknown scene file format.");
+	zStr pref;
+	DeSerialize(buffer, pref);
+	if (pref != c_HeapGameSettingsFile)
+		return zResult(e_ErrorCode::eFailure, L"Unknown game settings file format.");
 
-	//zVersion ver;
-	//ver.DeSerialize(buffer);
-	//if (ver > version)
-	//	return zResult(e_ErrorCode::eFailure, L"The newer scene file format is not supported.");
+	zVersion ver;
+	ver.DeSerialize(buffer);
+	if (ver > c_VerGameSettingsSerialize)
+		return zResult(e_ErrorCode::eFailure, L"The newer game settings file format is not supported.");
 
-	//version = ver;
+	version = ver;
 
-	//DeSerialize(buffer, typeClear);
-	//clearColor.DeSerialize(buffer);
+	winSize.DeSerialize(buffer);
+	DeSerialize(buffer, isFullScreen);
+	DeSerialize(buffer, startScene);
 
+	DeSerialize(buffer, msWinClassName);
+	DeSerialize(buffer, msWinIcoID);
+	DeSerialize(buffer, winCaption);
+
+	return zResult();
+}
+
+zResult UserGameSettings::TestParameters() const
+{
+#if defined(_WINDOWS) || defined(_SERVICES) || defined(_EDITOR)
+	if (winSize.width < c_MinimumWindowsWidth ||
+		winSize.height < c_MinimumWindowsHeight ||
+		winSize.width > c_MaximumWindowsWidth ||
+		winSize.height > c_MaximumWindowsHeight)
+		return zResult(e_ErrorCode::eFailure, L">>>>> [DataEngineInitialization.TestParameters()]. The requested window size does not meet the restrictions.");
+#elif defined(_MACOS)
+	static_assert(false, ">>>>> [DataEngineInitialization.TestParameters()]. Нет реализации для MacOS.");
+#else
+	static_assert(false, ">>>>> [DataEngineInitialization.TestParameters()]. Неизвестная платформа.");
+#endif // defined(_WINDOWS) || defined(_SERVICES) || defined(_EDITOR)
 	return zResult();
 }
