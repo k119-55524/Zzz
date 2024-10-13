@@ -5,7 +5,9 @@
 using namespace Zzz;
 
 UserGameSettings::UserGameSettings(shared_ptr<IIO> _platformIO) :
-	platformIO{ _platformIO }
+	platformIO{ _platformIO },
+	isFullScreen{ false },
+	msWinIcoID{ c_MSIcoID }
 {
 }
 
