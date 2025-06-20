@@ -1,5 +1,6 @@
 ﻿
 #include "pch.h"
+import engine;
 #include "gameWin.h"
 
 int APIENTRY wWinMain(
@@ -8,5 +9,8 @@ int APIENTRY wWinMain(
 	_In_		LPWSTR		lpCmdLine,
 	_In_		int			nCmdShow)
 {
+	zzz::engine engine;
+	auto err = engine.Init();
+
 	return (int)0;
 }
