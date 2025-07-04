@@ -7,6 +7,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gameWin", "gameWin\gameWin.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "engine", "engine\engine.vcxproj", "{7902DFB3-024F-4209-8821-372C093DF543}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tests", "tests\tests.vcxproj", "{C1872207-A70C-438D-84A8-65E9B234FD01}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7902DFB3-024F-4209-8821-372C093DF543} = {7902DFB3-024F-4209-8821-372C093DF543}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +26,10 @@ Global
 		{7902DFB3-024F-4209-8821-372C093DF543}.Debug|x64.Build.0 = Debug|x64
 		{7902DFB3-024F-4209-8821-372C093DF543}.Release|x64.ActiveCfg = Release|x64
 		{7902DFB3-024F-4209-8821-372C093DF543}.Release|x64.Build.0 = Release|x64
+		{C1872207-A70C-438D-84A8-65E9B234FD01}.Debug|x64.ActiveCfg = Debug|x64
+		{C1872207-A70C-438D-84A8-65E9B234FD01}.Debug|x64.Build.0 = Debug|x64
+		{C1872207-A70C-438D-84A8-65E9B234FD01}.Release|x64.ActiveCfg = Release|x64
+		{C1872207-A70C-438D-84A8-65E9B234FD01}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
