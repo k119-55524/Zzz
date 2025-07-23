@@ -2,22 +2,31 @@
 #include "pch.h"
 export module engine;
 
-import error;
+import zzz;
+using namespace zzz;
+using namespace zzz::error;
 
-export namespace zzz {
-	export class engine {
+export namespace zzz
+{
+	export class engine
+	{
 	public:
-		unique_ptr<error> Init();
+		result<zResult> initialize();
+		result<zResult> go();
 
 	private:
 
 	};
 }
 
-using namespace zzz;
-
-unique_ptr<error> engine::Init()
+result<zResult> engine::initialize()
 {
-	auto err = make_unique<error>();
-	return err;
+	//return Unexpected(zResult::failure);
+	//return Unexpected(zResult::failure, "Error");
+	return zResult::success;
+}
+
+result<zResult> engine::go()
+{
+	return zResult::success;
 }

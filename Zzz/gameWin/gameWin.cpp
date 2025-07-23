@@ -10,7 +10,9 @@ int APIENTRY wWinMain(
 	_In_		int			nCmdShow)
 {
 	zzz::engine engine;
-	auto err = engine.Init();
+	auto res = engine.initialize();
+	if (res)
+		engine.go();
 
 	return (int)0;
 }
