@@ -16,10 +16,11 @@ export namespace zzz::result
 	enum class eResult : unsigned int
 	{
 		success = 0,
-		failure = 1,
-		invalid_argument = 2,
-		out_of_memory = 3,
-		buffer_too_small = 4
+		failure,
+		exeption,
+		invalid_argument,
+		out_of_memory,
+		buffer_too_small
 	};
 
 	class Unexpected

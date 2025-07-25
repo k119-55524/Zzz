@@ -4,6 +4,7 @@
 
 #include <bit>
 #include <span>
+#include <mutex>
 #include <vector>
 #include <string>
 #include <memory>

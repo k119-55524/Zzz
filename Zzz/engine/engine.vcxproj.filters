@@ -35,13 +35,13 @@
     <ClCompile Include="source\utils\zResult.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\platforms\superWidget\ISuperWidget.cppm">
+    <ClCompile Include="source\platforms\widgets\ISuperWidget.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\platforms\superWidget\Windows.cppm">
+    <ClCompile Include="source\platforms\widgets\SuperWidget_MSWindows.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\platforms\superWidget\ISuperWidgetSettings.cppm">
+    <ClCompile Include="source\platforms\widgets\ISuperWidgetSettings.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\helpers\zSize2D.cppm">
