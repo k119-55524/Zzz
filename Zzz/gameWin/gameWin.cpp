@@ -12,7 +12,7 @@ int APIENTRY wWinMain(
 	zzz::engine engine;
 	auto res = engine.initialize();
 	if (res)
-		engine.go();
+		res = engine.go();
 
 	return (int)0;
 }

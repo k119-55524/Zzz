@@ -11,22 +11,22 @@ export namespace zzz
 	export class engine
 	{
 	public:
-		result<zResult> initialize();
-		result<zResult> go();
+		zResult<> initialize();
+		zResult<> go();
 
 	private:
 
 	};
 }
 
-result<zResult> engine::initialize()
+zResult<> engine::initialize()
 {
 	//return Unexpected(zResult::failure);
 	//return Unexpected(zResult::failure, "Error");
-	return zResult::success;
+	return eResult::success;
 }
 
-result<zResult> engine::go()
+zResult<> engine::go()
 {
-	return zResult::success;
+	return eResult::success;
 }

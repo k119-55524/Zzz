@@ -29,7 +29,7 @@
     <ClCompile Include="source\engine.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\utils\result.cppm">
+    <ClCompile Include="source\utils\zResult.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

@@ -91,7 +91,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="source\engine.cppm" />
-    <ClCompile Include="source\utils\result.cppm" />
+    <ClCompile Include="source\utils\zResult.cppm" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />

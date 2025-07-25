@@ -13,7 +13,7 @@ export namespace zzz::error
 		const char* _msg;
 	};
 
-	enum class zResult : unsigned int
+	enum class eResult : unsigned int
 	{
 		success = 0,
 		failure = 1,
@@ -24,33 +24,32 @@ export namespace zzz::error
 	class Unexpected
 	{
 	public:
-		/// @brief Constructs an Unexpected with zResult::failure and an empty message.
-		Unexpected() noexcept : code(zResult::failure), message("") {}
-		Unexpected(zResult code) noexcept : code(code), message("") {}
-		Unexpected(zResult code, const std::string& message) noexcept : code(code), message(message) {}
+		Unexpected() noexcept : code(eResult::failure), message("") {}
+		Unexpected(eResult code) noexcept : code(code), message("") {}
+		Unexpected(eResult code, const std::string& message) noexcept : code(code), message(message) {}
 
-		inline zResult getCode() const noexcept { return code; }
+		inline eResult getCode() const noexcept { return code; }
 		inline const std::string& getMessage() const noexcept { return message; }
 
 		inline bool operator==(const Unexpected& other) const noexcept { return code == other.code && message == other.message; }
 		inline bool operator!=(const Unexpected& other) const noexcept { return !(*this == other); }
 
 	private:
-		zResult code;
+		eResult code;
 		std::string message;
 	};
 
-	template<typename _Ty>
-	class result
+	template<typename _Ty = eResult>
+	class zResult
 	{
 		public:
 			static_assert(std::is_copy_constructible_v<_Ty>, ">>>>> [class result]. Type _Ty must be copy constructible.");
 			static_assert(std::is_move_constructible_v<_Ty>, ">>>>> [class result]. Type _Ty must be move constructible.");
 
-			result(const _Ty& value) noexcept(std::is_nothrow_copy_constructible_v<_Ty>) : data(value) {}
-			result(_Ty&& value) noexcept(std::is_nothrow_move_constructible_v<_Ty>)	: data(std::move(value)) {}
-			result(const Unexpected& error) noexcept : data(error) {}
-			result(Unexpected&& error) noexcept : data(std::move(error)) {}
+			zResult(const _Ty& value) noexcept(std::is_nothrow_copy_constructible_v<_Ty>) : data(value) {}
+			zResult(_Ty&& value) noexcept(std::is_nothrow_move_constructible_v<_Ty>)	: data(std::move(value)) {}
+			zResult(const Unexpected& error) noexcept : data(error) {}
+			zResult(Unexpected&& error) noexcept : data(std::move(error)) {}
 
 			// Проверка, содержит ли объект успешное значение
 			inline bool has_value() const noexcept { return std::holds_alternative<_Ty>(data); }
@@ -79,8 +78,8 @@ export namespace zzz::error
 				return std::get<Unexpected>(data);
 			}
 
-			bool operator==(const result& other) const noexcept { return data == other.data; }
-			bool operator!=(const result& other) const noexcept { return !(*this == other); }
+			bool operator==(const zResult& other) const noexcept { return data == other.data; }
+			bool operator!=(const zResult& other) const noexcept { return !(*this == other); }
 
 			// Оператор * для удобного доступа к значению
 			_Ty& operator*() { return value(); }
