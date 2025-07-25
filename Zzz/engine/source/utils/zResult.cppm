@@ -1,8 +1,8 @@
 
 #include "pch.h"
-export module zzz;
+export module result;
 
-export namespace zzz::error
+export namespace zzz::result
 {
 	class bad_expected_access : public std::exception
 	{
@@ -19,24 +19,25 @@ export namespace zzz::error
 		failure = 1,
 		invalid_argument = 2,
 		out_of_memory = 3,
+		buffer_too_small = 4
 	};
 
 	class Unexpected
 	{
 	public:
-		Unexpected() noexcept : code(eResult::failure), message("") {}
-		Unexpected(eResult code) noexcept : code(code), message("") {}
-		Unexpected(eResult code, const std::string& message) noexcept : code(code), message(message) {}
+		Unexpected() noexcept : code(eResult::failure), message(L"") {}
+		Unexpected(eResult code) noexcept : code(code), message(L"") {}
+		Unexpected(eResult code, const std::wstring& message) noexcept : code(code), message(message) {}
 
 		inline eResult getCode() const noexcept { return code; }
-		inline const std::string& getMessage() const noexcept { return message; }
+		inline const std::wstring& getMessage() const noexcept { return message; }
 
 		inline bool operator==(const Unexpected& other) const noexcept { return code == other.code && message == other.message; }
 		inline bool operator!=(const Unexpected& other) const noexcept { return !(*this == other); }
 
 	private:
 		eResult code;
-		std::string message;
+		std::wstring message;
 	};
 
 	template<typename _Ty = eResult>
@@ -94,10 +95,54 @@ export namespace zzz::error
 
 			// Возвращает значение или значение по умолчанию
 			template<typename U>
-			_Ty value_or(U&& default_value) const noexcept(std::is_nothrow_constructible_v<_Ty, U>) {
+			_Ty value_or(U&& default_value) const noexcept(std::is_nothrow_constructible_v<_Ty, U>)
+			{
 				static_assert(std::is_convertible_v<U, _Ty>, ">>>>> [result.value_or(U&& default_value)]. U must be convertible to _Ty");
 
 				return has_value() ? std::get<_Ty>(data) : static_cast<_Ty>(std::forward<U>(default_value));
+			}
+
+			template<typename Func>
+			auto and_then(Func&& func) const -> std::invoke_result_t<Func, const _Ty&>
+			{
+				if (has_value())
+					return std::invoke(std::forward<Func>(func), value());
+
+				return std::invoke_result_t<Func, const _Ty&>(error());
+			}
+
+			template<typename Func>
+			auto and_then(Func&& func) const -> zResult<_Ty>
+				requires std::is_same_v<std::invoke_result_t<Func, const _Ty&>, void>
+			{
+				if (has_value())
+				{
+					std::invoke(std::forward<Func>(func), value());
+					return *this; // Возвращаем текущий zResult
+				}
+
+				return zResult<_Ty>(error());
+			}
+
+			template<typename Func>
+			auto or_else(Func&& func) const -> std::invoke_result_t<Func, const Unexpected&>
+			{
+				if (!has_value())
+					return std::invoke(std::forward<Func>(func), error());
+
+				return std::invoke_result_t<Func, const Unexpected&>(value());
+			}
+
+			template<typename Func>
+			auto or_else(Func&& func) const -> zResult<_Ty> requires std::is_same_v<std::invoke_result_t<Func, const Unexpected&>, void>
+			{
+				if (!has_value())
+				{
+					std::invoke(std::forward<Func>(func), error());
+					return zResult<_Ty>(error()); // Возвращаем текущую ошибку
+				}
+
+				return *this; // Возвращаем текущий zResult, если значение присутствует
 			}
 
 		private:

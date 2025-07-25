@@ -2,15 +2,21 @@
 #ifndef PCH_H
 #define PCH_H
 
+#include <bit>
+#include <span>
+#include <vector>
 #include <string>
 #include <memory>
+#include <sstream>
 #include <variant>
 #include <utility>
+#include <cstdint>
+#include <cassert>
+#include <iostream>
 #include <stdexcept>
+#include <functional>
 #include <type_traits>
 
-using namespace std;
-
-#include "header.h"
+#include "headers\header.h"
 
 #endif //PCH_H

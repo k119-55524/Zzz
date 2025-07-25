@@ -80,7 +80,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="gameWin.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>

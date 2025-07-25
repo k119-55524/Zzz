@@ -2,9 +2,9 @@
 #include "pch.h"
 export module engine;
 
-import zzz;
+import result;
 using namespace zzz;
-using namespace zzz::error;
+using namespace zzz::result;
 
 export namespace zzz
 {

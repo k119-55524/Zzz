@@ -82,7 +82,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="header.h" />
+    <ClInclude Include="headers\header.h" />
+    <ClInclude Include="headers\MSWindows.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -91,10 +92,13 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="source\engine.cppm" />
+    <ClCompile Include="source\helpers\StringConverters.cppm" />
+    <ClCompile Include="source\helpers\zSerialize.cppm" />
+    <ClCompile Include="source\helpers\zSize2D.cppm" />
+    <ClCompile Include="source\platforms\superWidget\ISuperWidgetSettings.cppm" />
     <ClCompile Include="source\utils\zResult.cppm" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ClassDiagram.cd" />
+    <ClCompile Include="source\platforms\superWidget\ISuperWidget.cppm" />
+    <ClCompile Include="source\platforms\superWidget\Windows.cppm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
