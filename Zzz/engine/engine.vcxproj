@@ -95,7 +95,9 @@
     <ClCompile Include="source\helpers\StringConverters.cppm" />
     <ClCompile Include="source\helpers\zSerialize.cppm" />
     <ClCompile Include="source\helpers\zSize2D.cppm" />
-    <ClCompile Include="source\platforms\widgets\zaml\AppSWSettings.cppm" />
+    <ClCompile Include="source\IO\IOPathFactory.cppm" />
+    <ClCompile Include="source\platforms\widgets\zaml\ioZaml.cppm" />
+    <ClCompile Include="source\platforms\widgets\zaml\SWSettings.cppm" />
     <ClCompile Include="source\utils\zResult.cppm" />
     <ClCompile Include="source\platforms\widgets\ISuperWidget.cppm" />
     <ClCompile Include="source\platforms\widgets\SW_MSWin.cppm" />

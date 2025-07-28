@@ -4,8 +4,8 @@ export module SW_MSWin;
 #ifdef _WIN64
 import result;
 import zSize2D;
+import SWSettings;
 import ISuperWidget;
-import SuperWidgetSettings;
 
 using namespace zzz;
 using namespace zzz::result;
@@ -23,7 +23,8 @@ export namespace zzz::platforms
 		SW_MSWin(const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows);
 		~SW_MSWin() override;
 
-		zResult<> Initialize(const SuperWidgetSettings& settings) override;
+	protected:
+		zResult<> Init() override;
 
 	private:
 		HWND hWnd;
@@ -47,7 +48,7 @@ export namespace zzz::platforms
 			DestroyWindow(hWnd);
 	}
 
-	zResult<> SW_MSWin::Initialize(const SuperWidgetSettings& settings)
+	zResult<> SW_MSWin::Init()
 	{
 		std::wstring className = L"zEngineClassName";
 

@@ -41,7 +41,7 @@
     <ClCompile Include="source\platforms\widgets\SW_MSWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\platforms\widgets\zaml\AppSWSettings.cppm">
+    <ClCompile Include="source\platforms\widgets\zaml\SWSettings.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\helpers\zSize2D.cppm">
@@ -51,6 +51,12 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\helpers\StringConverters.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\platforms\widgets\zaml\ioZaml.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\IO\IOPathFactory.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

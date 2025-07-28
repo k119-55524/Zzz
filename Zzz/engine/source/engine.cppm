@@ -3,9 +3,10 @@
 export module engine;
 
 import result;
+import SWSettings;
 import ISuperWidget;
+import IOPathFactory;
 import StringConverters;
-import SuperWidgetSettings;
 
 #if defined(_WIN64)
 import SW_MSWin;
@@ -14,6 +15,7 @@ import SW_MSWin;
 #endif
 
 using namespace zzz;
+using namespace zzz::io;
 using namespace zzz::result;
 using namespace zzz::platforms;
 
@@ -31,6 +33,9 @@ namespace zzz
 		eInitOK,	// Инициализированн
 		eRunning,	// Идёт процесс работы
 	};
+
+	const std::wstring swSetFolderName = L"appdata";
+	const std::wstring swSetFileName = L"mui.zaml";
 }
 
 export namespace zzz
@@ -48,13 +53,13 @@ export namespace zzz
 		eEngineState initState;
 		std::mutex stateMutex;
 
-		SuperWidgetSettings superWidgetSettings;
+		SWSettings swSettings;
 		SuperWidget superWidget;
 
 		void Reset() noexcept;
 		void OnResizeWindow(const zSize2D<>& size, e_TypeWinAppResize resizeType);
 
-		friend zResult<> SuperWidgetSettings::Initialize();
+		//friend zResult<> SWSettings::Initialize();
 	};
 
 	engine::engine() :
@@ -70,7 +75,7 @@ export namespace zzz
 
 	void engine::Reset() noexcept
 	{
-		superWidgetSettings.Reset();
+		swSettings.Reset();
 		initState = eEngineState::eInitNot;
 	}
 
@@ -83,8 +88,9 @@ export namespace zzz
 		std::wstring err;
 		try
 		{
-			auto res = superWidgetSettings.Initialize()
-				.and_then([&]() { return superWidget.Initialize(superWidgetSettings); })
+			auto settings = std::make_shared<SWSettings>();
+			auto res = swSettings.Initialize(IOPathFactory::BuildPath(IOPathFactory::GetPath_ExecutableSubfolder(), swSetFolderName, swSetFileName))
+				.and_then([&]() { return superWidget.Initialize(settings); })
 				.and_then([&]() { initState = eEngineState::eInitOK; })
 				.or_else([&](auto error) { Reset(); return error; });
 

@@ -20,7 +20,9 @@ export namespace zzz::result
 		exception,
 		invalid_argument,
 		out_of_memory,
-		buffer_too_small
+		buffer_too_small,
+		no_find,
+		io_error_open_file
 	};
 
 	class Unexpected

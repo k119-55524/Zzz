@@ -25,6 +25,20 @@ export namespace zzz
 		return wstr;
 	}
 
+	//std::wstring string_to_wstring1(const std::string& str)
+	//{
+	//	size_t size_needed = std::mbstowcs(nullptr, str.c_str(), 0);
+	//	std::wstring wstr(size_needed, 0);
+	//	std::mbstowcs(&wstr[0], str.c_str(), size_needed);
+	//	return wstr;
+	//}
+
+	//std::wstring string_to_wstring2(const std::string& str)
+	//{
+	//	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+	//	return converter.from_bytes(str);
+	//}
+
 	const std::string wstring_to_string(const std::wstring& wstr)
 	{
 		int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, NULL, 0, NULL, NULL);
