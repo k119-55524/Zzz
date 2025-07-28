@@ -38,10 +38,10 @@
     <ClCompile Include="source\platforms\widgets\ISuperWidget.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\platforms\widgets\SuperWidget_MSWindows.cppm">
+    <ClCompile Include="source\platforms\widgets\SW_MSWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\platforms\widgets\ISuperWidgetSettings.cppm">
+    <ClCompile Include="source\platforms\widgets\zaml\AppSWSettings.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\helpers\zSize2D.cppm">

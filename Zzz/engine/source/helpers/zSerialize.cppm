@@ -61,7 +61,8 @@ namespace zzz
 			str.resize(length);
 			memcpy(str.data(), buffer.data() + offset, byteSize);
 			offset += byteSize;
-			return eResult::success;
+
+			return {};
 		}
 
 		// std::string
@@ -89,7 +90,8 @@ namespace zzz
 			str.resize(length);
 			memcpy(str.data(), buffer.data() + offset, length);
 			offset += length;
-			return eResult::success;
+
+			return {};
 		}
 
 		// std::vector<T> (только тривиальные типы)

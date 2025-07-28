@@ -3,7 +3,7 @@ export module ISuperWidget;
 
 import result;
 import zSize2D;
-import ISuperWidgetSettings;
+import SuperWidgetSettings;
 
 using namespace zzz;
 using namespace zzz::result;
@@ -24,10 +24,10 @@ export namespace zzz::platforms
 		ISuperWidget(ISuperWidget&) = delete;
 		ISuperWidget(ISuperWidget&&) = delete;
 
-		ISuperWidget(std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows);
+		ISuperWidget(const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows);
 		virtual ~ISuperWidget() = 0;
 
-		virtual zResult<> Initialize(const std::shared_ptr<ISuperWidgetSettings> settings) = 0;
+		virtual zResult<> Initialize(const SuperWidgetSettings& settings) = 0;
 		inline const zSize2D<>& GetWinSize() const noexcept { return winSize; };
 
 	protected:
@@ -35,11 +35,11 @@ export namespace zzz::platforms
 		std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> resizeWindows;
 	};
 
-	ISuperWidget::ISuperWidget(std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows) :
+	ISuperWidget::ISuperWidget(const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows) :
 		resizeWindows{ _resizeWindows },
 		winSize{ 0, 0 }
 	{
-		ZASSERT_NULLPTR(resizeWindows);
+		ensure(resizeWindows);
 	}
 
 	ISuperWidget::~ISuperWidget()

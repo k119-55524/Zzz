@@ -5,14 +5,14 @@ export module engine;
 import result;
 import ISuperWidget;
 import StringConverters;
+import SuperWidgetSettings;
 
 #if defined(_WIN64)
-import SuperWidget_MSWindows;
+import SW_MSWin;
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif
 
-using namespace std;
 using namespace zzz;
 using namespace zzz::result;
 using namespace zzz::platforms;
@@ -20,7 +20,7 @@ using namespace zzz::platforms;
 namespace zzz
 {
 #if defined(_WIN64)
-	typedef SuperWidget_MSWindows SuperWidget;
+	typedef SW_MSWin SuperWidget;
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif
@@ -46,19 +46,19 @@ export namespace zzz
 
 	private:
 		eEngineState initState;
-		mutex initMutex;
-		mutex runMutex;
+		std::mutex stateMutex;
 
+		SuperWidgetSettings superWidgetSettings;
 		SuperWidget superWidget;
 
 		void Reset() noexcept;
-		void ResetDuringInitialize() noexcept;
-		void ResetDuringRun() noexcept;
 		void OnResizeWindow(const zSize2D<>& size, e_TypeWinAppResize resizeType);
+
+		friend zResult<> SuperWidgetSettings::Initialize();
 	};
 
 	engine::engine() :
-		superWidget{ bind(&engine::OnResizeWindow, this, placeholders::_1, placeholders::_2) }
+		superWidget{ std::bind(&engine::OnResizeWindow, this, std::placeholders::_1, std::placeholders::_2) }
 		, initState{ eEngineState::eInitNot }
 	{
 	}
@@ -70,51 +70,44 @@ export namespace zzz
 
 	void engine::Reset() noexcept
 	{
+		superWidgetSettings.Reset();
 		initState = eEngineState::eInitNot;
 	}
 
 	zResult<> engine::Initialize() noexcept
 	{
-		lock_guard<mutex> lock(initMutex);
+		std::lock_guard<std::mutex> lock(stateMutex);
 		if (initState != eEngineState::eInitNot)
 			return Unexpected(eResult::failure, L">>>>> [engine::initialize()]. Re-initialization is not allowed.");
 
+		std::wstring err;
 		try
 		{
-			auto res = superWidget.Initialize(nullptr)
-				.and_then([&](auto result) { initState = eEngineState::eInitOK;;})
-				.or_else([&](auto error) { ResetDuringInitialize(); return error; });
-			
+			auto res = superWidgetSettings.Initialize()
+				.and_then([&]() { return superWidget.Initialize(superWidgetSettings); })
+				.and_then([&]() { initState = eEngineState::eInitOK; })
+				.or_else([&](auto error) { Reset(); return error; });
+
 			return res;
 		}
 		catch (const std::exception& e)
 		{
-			std::wstring err;
-			zResult<std::wstring> res = string_to_wstring(e.what())
-				.and_then([&err](const std::wstring& wstr) { err = L">>>>> [engine::initialize()]. Exception: " + wstr + L"\n";  std::wcerr << err; })
-				.or_else([&err](const Unexpected& error) { err = L">>>>> #0 [engine::initialize()]. Unknown exception occurred\n";  std::wcerr << err; });
-
-			ResetDuringInitialize();
-			return Unexpected(eResult::exeption, err);
+			string_to_wstring(e.what())
+				.and_then([&err](const std::wstring& wstr) { err = L">>>>> [engine::initialize()]. Exception: " + wstr + L"\n"; })
+				.or_else([&err](const Unexpected& error) { err = L">>>>> #0 [engine::initialize()]. Unknown exception occurred\n"; });
 		}
 		catch (...)
 		{
-			std::wstring err = L">>>>> #1 [wWinMain( ... )]. Unknown exception occurred\n";
-			std::wcerr << err;
-
-			ResetDuringInitialize();
-			return Unexpected(eResult::exeption, err);
+			err = L">>>>> #1 [wWinMain( ... )]. Unknown exception occurred\n";
 		}
-	}
 
-	void engine::ResetDuringInitialize() noexcept
-	{
 		Reset();
+		return Unexpected(eResult::exception, err);
 	}
 
 	zResult<> engine::Run() noexcept
 	{
-		lock_guard<mutex> lock(runMutex);
+		std::lock_guard<std::mutex> lock(stateMutex);
 		if (initState != eEngineState::eInitOK)
 			return Unexpected(eResult::failure, L">>>>> [engine::go()]. Engine is not initialized.");
 
@@ -122,34 +115,25 @@ export namespace zzz
 			return Unexpected(eResult::failure, L">>>>> [engine::go()]. Engine is already running.");
 
 		initState = eEngineState::eRunning;
+		std::wstring err;
 
 		try
 		{
-			return eResult::success;
+			return {};
 		}
 		catch (const std::exception& e)
 		{
-			std::wstring err;
-			zResult<std::wstring> res = string_to_wstring(e.what())
-				.and_then([&err](const std::wstring& wstr) { err = L">>>>> [engine::go()]. Exception: " + wstr + L"\n";  std::wcerr << err; })
-				.or_else([&err](const Unexpected& error) { err = L">>>>> #0 [engine::go()]. Unknown exception occurred" + std::wstring(L"\n"); std::wcerr << err; });
-
-			ResetDuringRun();
-			return Unexpected(eResult::exeption, err);
+			string_to_wstring(e.what())
+				.and_then([&err](const std::wstring& wstr) { err = L">>>>> [engine::go()]. Exception: " + wstr + L"\n"; })
+				.or_else([&err](const Unexpected& error) { err = L">>>>> #0 [engine::go()]. Unknown exception occurred" + std::wstring(L"\n"); });
 		}
 		catch (...)
 		{
-			const std::wstring err = L">>>>> #1 [engine::go()]. Unknown exception occurred";
-			std::wcerr << err << std::endl;
-
-			ResetDuringRun();
-			return Unexpected(eResult::exeption, err);
+			err = L">>>>> #1 [engine::go()]. Unknown exception occurred";
 		}
-	}
 
-	void engine::ResetDuringRun() noexcept
-	{
 		Reset();
+		return Unexpected(eResult::exception, err);
 	}
 
 	void engine::OnResizeWindow(const zSize2D<>& size, e_TypeWinAppResize resizeType)

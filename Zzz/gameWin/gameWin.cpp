@@ -14,12 +14,12 @@ int APIENTRY wWinMain(
 {
 	zzz::engine engine;
 	zResult<> res = engine.Initialize()
-		.and_then([&engine](eResult) { return engine.Run(); })
+		.and_then([&engine]() { return engine.Run(); })
 		.or_else([](const Unexpected& error)
 			{
 				std::wcerr << L">>>>> [wWinMain( ... )]. Error: " << error.getMessage() << std::endl;
 				return zResult<>(error);
 			});
 
-	return res ? 0 : 1;
+	return res ? 0 : static_cast<int>(res.error().getCode());
 }

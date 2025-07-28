@@ -94,6 +94,11 @@
       <Project>{7902dfb3-024f-4209-8821-372c093df543}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="appdata\mui.zaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

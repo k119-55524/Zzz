@@ -27,4 +27,8 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="mui.zaml" />
+    <None Include="appdata\mui.zaml" />
+  </ItemGroup>
 </Project>

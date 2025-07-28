@@ -32,43 +32,30 @@ namespace zzz
 	const zU64 c_MinimumWindowsHeight = 100;
 	const zU64 c_MaximumWindowsWidth = 3840;	// Ultra HD 4K
 	const zU64 c_MaximumWindowsHeight = 2160;	// Ultra HD 4K
+
+	[[noreturn]]
+	inline void throw_runtime_error(
+		const std::string& msg,
+		const std::source_location& loc = std::source_location::current())
+	{
+		throw std::runtime_error(
+			">>>>> [Exñeption] " + msg +
+			" _ Method=" + std::string(loc.function_name()) +
+			" Line=" + std::to_string(loc.line()) +
+			" File=" + std::string(loc.file_name()));
+	}
+
+	template<typename T>
+	inline void ensure(T&& condition,
+		const std::string& msg = "Ensure failed",
+		const std::source_location& loc = std::source_location::current())
+	{
+		if (!condition)
+			throw std::runtime_error(
+				">>>>> [Ensure] " + msg +
+				" _ Method=" + std::string(loc.function_name()) +
+				" Line=" + std::to_string(loc.line()) +
+				" File=" + std::string(loc.file_name()));
+	}
 }
-
-#define ZERO_STRUCT(structure) { std::memset(&(structure), 0, sizeof(structure)); }
-
-#define THROW_RUNTIME_ERROR(msg) {										\
-	throw std::runtime_error(											\
-		std::string(">>>>> --- ERROR that caused the EXCEPTION ---") +	\
-		"\n+--- " + msg +												\
-		"\n+--- Function: " + __FUNCTION__ +							\
-		"\n+--- File: " + __FILE__ +									\
-		"\n+--- Line: " + std::to_string(__LINE__) +					\
-		"\n-------------------------------------\n"						\
-	);																	\
-}
-
-#define ZASSERT(param) {								\
-	if (param) {										\
-			throw std::runtime_error(					\
-			std::string(">>>>> --- Assert: true ---") + \
-			"\n+--- Function: " + __FUNCTION__ +		\
-			"\n+--- File: " + __FILE__ +				\
-			"\n+--- Line: " + std::to_string(__LINE__) +\
-			"\n-------------------------------------\n"	\
-		);												\
-	} \
-}
-
-#define ZASSERT_NULLPTR(param) {						\
-	if (param == nullptr) {								\
-		throw std::runtime_error(						\
-			std::string(">>>>> --- Null pointer ---") +	\
-			"\n+--- Function: " + __FUNCTION__ +		\
-			"\n+--- File: " + __FILE__ +				\
-			"\n+--- Line: " + std::to_string(__LINE__) +\
-			"\n-------------------------------------\n"	\
-		);												\
-	} \
-}
-
 #endif // HEADER_H

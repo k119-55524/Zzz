@@ -1,11 +1,11 @@
 #include "pch.h"
-export module SuperWidget_MSWindows;
+export module SW_MSWin;
 
 #ifdef _WIN64
 import result;
 import zSize2D;
 import ISuperWidget;
-import ISuperWidgetSettings;
+import SuperWidgetSettings;
 
 using namespace zzz;
 using namespace zzz::result;
@@ -13,17 +13,17 @@ using namespace zzz::platforms;
 
 export namespace zzz::platforms
 {
-	class SuperWidget_MSWindows final : public ISuperWidget
+	class SW_MSWin final : public ISuperWidget
 	{
 	public:
-		SuperWidget_MSWindows() = delete;
-		SuperWidget_MSWindows(SuperWidget_MSWindows&) = delete;
-		SuperWidget_MSWindows(SuperWidget_MSWindows&&) = delete;
+		SW_MSWin() = delete;
+		SW_MSWin(SW_MSWin&) = delete;
+		SW_MSWin(SW_MSWin&&) = delete;
 
-		SuperWidget_MSWindows(std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows);
-		~SuperWidget_MSWindows() override;
+		SW_MSWin(const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows);
+		~SW_MSWin() override;
 
-		zResult<> Initialize(const std::shared_ptr<ISuperWidgetSettings> settings) override;
+		zResult<> Initialize(const SuperWidgetSettings& settings) override;
 
 	private:
 		HWND hWnd;
@@ -33,7 +33,7 @@ export namespace zzz::platforms
 		LRESULT MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	};
 
-	SuperWidget_MSWindows::SuperWidget_MSWindows::SuperWidget_MSWindows(std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows) :
+	SW_MSWin::SW_MSWin(const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows) :
 		ISuperWidget(_resizeWindows),
 		hWnd{ nullptr },
 		IsMinimized{ true }
@@ -41,19 +41,19 @@ export namespace zzz::platforms
 		//SetProcessDPIAware();
 	}
 
-	SuperWidget_MSWindows::SuperWidget_MSWindows::~SuperWidget_MSWindows()
+	SW_MSWin::~SW_MSWin()
 	{
 		if (hWnd)
 			DestroyWindow(hWnd);
 	}
 
-	zResult<> SuperWidget_MSWindows::Initialize(const std::shared_ptr<ISuperWidgetSettings> settings)
+	zResult<> SW_MSWin::Initialize(const SuperWidgetSettings& settings)
 	{
 		std::wstring className = L"zEngineClassName";
 
 		WNDCLASS wc = { 0 };
 		wc.style = CS_HREDRAW | CS_VREDRAW;
-		wc.lpfnWndProc = SuperWidget_MSWindows::WindowProc;
+		wc.lpfnWndProc = SW_MSWin::WindowProc;
 		wc.hInstance = GetModuleHandle(NULL);
 		wc.hIcon = LoadIcon(GetModuleHandle(NULL), NULL);// MAKEINTRESOURCE(userGS->GetMSWinIcoID()));
 		wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
@@ -62,7 +62,7 @@ export namespace zzz::platforms
 		ATOM result = RegisterClass(&wc);
 		if (result == 0)
 		{
-			std::wstring mess = L">>>>> [SuperWidget_MSWindows.Initialize( ... )]. RegisterClass( ... ). Failed to register window class: ";
+			std::wstring mess = L">>>>> [SW_MSWindows.Initialize( ... )]. RegisterClass( ... ). Failed to register window class: ";
 			mess += className;
 			mess += L"\n+--- error code(Windows): ";
 			mess += std::to_wstring(::GetLastError());
@@ -92,7 +92,7 @@ export namespace zzz::platforms
 
 		if (!hWnd)
 		{
-			std::wstring mess = L">>>>> [SuperWidget_MSWindows.Initialize( ... )]. CreateWindowEx( ... ). Failed to create window: ";
+			std::wstring mess = L">>>>> [SW_MSWindows.Initialize( ... )]. CreateWindowEx( ... ). Failed to create window: ";
 			mess += L"\n +--- error code(Windows): ";
 			mess += std::to_wstring(::GetLastError());
 			return Unexpected(eResult::failure, mess);
@@ -101,23 +101,23 @@ export namespace zzz::platforms
 		ShowWindow(hWnd, SW_SHOW);
 		UpdateWindow(hWnd);
 
-		return eResult::success;
+		return {};
 	}
 
-	LRESULT CALLBACK SuperWidget_MSWindows::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	LRESULT CALLBACK SW_MSWin::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
-		SuperWidget_MSWindows* pThis;
+		SW_MSWin* pThis;
 
 		if (uMsg == WM_NCCREATE)
 		{
 			CREATESTRUCT* pCreate = (CREATESTRUCT*)lParam;
-			pThis = (SuperWidget_MSWindows*)pCreate->lpCreateParams;
+			pThis = (SW_MSWin*)pCreate->lpCreateParams;
 			SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pThis);
 
 			pThis->hWnd = hwnd;
 		}
 		else
-			pThis = (SuperWidget_MSWindows*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+			pThis = (SW_MSWin*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
 		if (pThis)
 			return pThis->MsgProc(uMsg, wParam, lParam);
@@ -125,7 +125,7 @@ export namespace zzz::platforms
 		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 
-	LRESULT SuperWidget_MSWindows::MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
+	LRESULT SW_MSWin::MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		switch (uMsg)
 		{
