@@ -5,6 +5,7 @@
 #include <bit>
 #include <span>
 #include <mutex>
+#include <array>
 #include <vector>
 #include <string>
 #include <cctype>

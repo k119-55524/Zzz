@@ -22,7 +22,10 @@ export namespace zzz::result
 		out_of_memory,
 		buffer_too_small,
 		no_find,
-		io_error_open_file
+		io_error_open_file,
+		not_initialized,
+		not_found,
+		invalid_format
 	};
 
 	class Unexpected
@@ -152,8 +155,8 @@ export namespace zzz::result
 	{
 	public:
 		zResult() noexcept : hasVal(true) {}
-		zResult(const Unexpected& error) noexcept : hasVal(false), err(error) {}
-		zResult(Unexpected&& error) noexcept : hasVal(false), err(std::move(error)) {}
+		zResult(const Unexpected& error) noexcept : hasVal(true), err(error) {}
+		zResult(Unexpected&& error) noexcept : hasVal(true), err(std::move(error)) {}
 
 		inline bool has_value() const noexcept { return hasVal; }
 

@@ -47,5 +47,36 @@ export namespace zzz
 
 		return str;
 	}
+
+	template<typename T> inline zResult<T> ConvertValue(const std::wstring& text);
+	template<> inline zResult<std::wstring> ConvertValue<std::wstring>(const std::wstring& text) { return text; }
+	template<> inline zResult<int> ConvertValue<int>(const std::wstring& text)
+	{
+		try
+		{
+			return std::stoi(text);
+		}
+		catch (...)
+		{
+			return Unexpected(eResult::invalid_format, L"Invalid int: " + text);
+		}
+	}
+	template<> inline zResult<float> ConvertValue<float>(const std::wstring& text)
+	{
+		try
+		{
+			return std::stof(text);
+		}
+		catch (...)
+		{
+			return Unexpected(eResult::invalid_format, L"Invalid float: " + text);
+		}
+	}
+	template<> inline zResult<bool> ConvertValue<bool>(const std::wstring& text)
+	{
+		if (text == L"true" || text == L"1") return true;
+		if (text == L"false" || text == L"0") return false;
+		return Unexpected(eResult::invalid_format, L"Invalid bool: " + text);
+	}
 #endif
 }

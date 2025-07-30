@@ -3,6 +3,7 @@ export module SWSettings;
 
 import result;
 import iozaml;
+import StringConverters;
 
 
 using namespace zzz;
@@ -32,17 +33,69 @@ export namespace zzz::platforms
 		zResult<> Initialize(std::wstring _filePath);
 		void Reset();
 
+		template<typename T, typename... Path>
+		zResult<T> GetParam(Path&&... pathAndParamName) const
+		{
+			if (!swSettings)
+				return Unexpected(eResult::not_initialized, L">>>>> [SWSettings.GetParam(...)] Settings not loaded");
+
+			constexpr size_t argCount = sizeof...(Path);
+			static_assert(argCount >= 1, "At least one argument (paramName) is required");
+
+			const zamlNode* node = swSettings.get();
+
+			// Помещаем аргументы в массив
+			std::array<std::wstring, argCount> args = { std::wstring(std::forward<Path>(pathAndParamName))... };
+
+			// Последний аргумент — это имя параметра
+			const std::wstring& paramName = args.back();
+
+			// Остальные — путь до нужного узла
+			for (size_t i = 0; i < args.size() - 1; ++i)
+			{
+				const std::wstring& tag = args[i];
+				bool found = false;
+
+				for (const auto& child : node->children)
+				{
+					if (child.name == tag)
+					{
+						node = &child;
+						found = true;
+						break;
+					}
+				}
+
+				if (!found)
+				{
+					return Unexpected(eResult::not_found, L">>>>> [SWSettings.GetParam(...)] Tag '" + tag + L"' not found");
+				}
+			}
+
+			// Ищем атрибут
+			auto attr = node->GetAttribute(paramName);
+			if (!attr)
+			{
+				return Unexpected(eResult::not_found, L">>>>> [SWSettings.GetParam(...)] Parameter '" + paramName + L"' not found");
+			}
+
+			// Преобразуем значение
+			return ConvertValue<T>(*attr.value());
+		}
+
+
 	private:
 		std::mutex initMutex;
 		eSWState swState;
 		std::wstring filePath;
-		zamlNode* result = nullptr;
+		std::unique_ptr<zamlNode> swSettings;
 
 		zResult<> LoadSettings(std::wstring _filePath);
 	};
 
 	SWSettings::SWSettings() :
-				swState{ eSWState::eInitNot }
+		swSettings{},
+		swState{ eSWState::eInitNot }
 	{
 	}
 
@@ -53,9 +106,7 @@ export namespace zzz::platforms
 
 	void SWSettings::Reset()
 	{
-		if (result)
-			delete result;
-
+		swSettings.reset();
 		swState = eSWState::eInitNot; // Сброс состояния
 	}
 
@@ -65,10 +116,10 @@ export namespace zzz::platforms
 		if (swState != eSWState::eInitNot)
 			return Unexpected(eResult::failure, L">>>>> [SuperWidgetSettings::Initialize()]. Re-initialization is not allowed.");
 
-		if (LoadSettings(_filePath))
-			swState = eSWState::eInitOK;
+		auto res =  LoadSettings(_filePath)
+			.and_then([this](){ swState = eSWState::eInitOK; });
 
-		return {};
+		return res;
 	}
 
 	zResult<> SWSettings::LoadSettings(std::wstring _filePath)
@@ -77,11 +128,7 @@ export namespace zzz::platforms
 		auto res = loader.LoadFromFile(_filePath)
 			.and_then([this](const zamlNode& node)
 			{
-				if (result)
-					delete result; // Освобождаем предыдущий результат
-
-				result = new zamlNode(node); // Сохраняем новый результат
-
+				swSettings = std::make_unique<zamlNode>(node);
 				return zResult<>();
 			})
 			.or_else([](auto error) { return error; });

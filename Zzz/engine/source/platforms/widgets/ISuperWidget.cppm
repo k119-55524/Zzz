@@ -8,6 +8,15 @@ import SWSettings;
 using namespace zzz;
 using namespace zzz::result;
 
+namespace zzz::platforms
+{
+	export enum eSuperWidgetState : zU32
+	{
+		eInitNot = 0,
+		eInitOK = 1,
+	};
+}
+
 export namespace zzz::platforms
 {
 	export enum e_TypeWinAppResize : zU32
@@ -24,23 +33,29 @@ export namespace zzz::platforms
 		ISuperWidget(ISuperWidget&) = delete;
 		ISuperWidget(ISuperWidget&&) = delete;
 
-		ISuperWidget(const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows);
+		ISuperWidget(SWSettings& _settings, const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows);
 		virtual ~ISuperWidget() = 0;
 
-		virtual zResult<> Initialize(std::shared_ptr<SWSettings> _setting) final;
+		virtual zResult<> Initialize() final;
 		inline const zSize2D<>& GetWinSize() const noexcept { return winSize; };
 
 	protected:
-		std::shared_ptr<SWSettings> settings;
+		SWSettings& settings;
 		zSize2D<> winSize;
 		std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> resizeWindows;
 
 		virtual zResult<> Init() = 0;
+
+	private:
+		eSuperWidgetState initState;
+		std::mutex stateMutex;
 	};
 
-	ISuperWidget::ISuperWidget(const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows) :
+	ISuperWidget::ISuperWidget(SWSettings& _settings, const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows) :
+		settings{ _settings },
 		resizeWindows{ _resizeWindows },
-		winSize{ 0, 0 }
+		winSize{ 0, 0 },
+		initState{ eSuperWidgetState::eInitNot }
 	{
 		ensure(resizeWindows);
 	}
@@ -49,9 +64,15 @@ export namespace zzz::platforms
 	{
 	}
 
-	zResult<> ISuperWidget::Initialize(std::shared_ptr<SWSettings> _setting)
+	zResult<> ISuperWidget::Initialize()
 	{
-		settings = _setting;
-		return Init();
+		std::lock_guard<std::mutex> lock(stateMutex);
+		if (initState != eSuperWidgetState::eInitNot)
+			return Unexpected(eResult::failure, L">>>>> [ISuperWidget.Initialize()]. Re-initialization is not allowed.");
+
+		return Init().and_then([&]() 
+			{
+				initState = eSuperWidgetState::eInitOK;
+			});
 	}
 }

@@ -20,7 +20,7 @@ export namespace zzz::platforms
 		SW_MSWin(SW_MSWin&) = delete;
 		SW_MSWin(SW_MSWin&&) = delete;
 
-		SW_MSWin(const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows);
+		SW_MSWin(SWSettings& _settings, const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows);
 		~SW_MSWin() override;
 
 	protected:
@@ -34,8 +34,8 @@ export namespace zzz::platforms
 		LRESULT MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	};
 
-	SW_MSWin::SW_MSWin(const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows) :
-		ISuperWidget(_resizeWindows),
+	SW_MSWin::SW_MSWin(SWSettings& _settings, const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows) :
+		ISuperWidget(_settings, _resizeWindows),
 		hWnd{ nullptr },
 		IsMinimized{ true }
 	{
@@ -50,7 +50,29 @@ export namespace zzz::platforms
 
 	zResult<> SW_MSWin::Init()
 	{
-		std::wstring className = L"zEngineClassName";
+		std::wstring Caption;
+		std::wstring ClassName;
+		auto res = settings.GetParam<std::wstring>(L"caption")
+			.and_then([&](std::wstring name) { Caption = name; });
+
+		if (!res)
+			return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'Caption' parameter.");
+
+		settings.GetParam<std::wstring>(L"MSWin_SpecSettings", L"ClassName")
+			.and_then([&](std::wstring name) {ClassName = name; })
+			.or_else([&](auto error) { ClassName = Caption;});
+
+		LONG swWidth;
+		auto res1 = settings.GetParam<int>(L"width")
+			.and_then([&](int width) {swWidth = width; });
+		if (!res1)
+			return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'width' parameter.");
+
+		LONG swHeight;
+		res1 = settings.GetParam<int>(L"height")
+			.and_then([&](int height) {swHeight = height; });
+		if (!res1)
+			return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'height' parameter.");
 
 		WNDCLASS wc = { 0 };
 		wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -58,20 +80,20 @@ export namespace zzz::platforms
 		wc.hInstance = GetModuleHandle(NULL);
 		wc.hIcon = LoadIcon(GetModuleHandle(NULL), NULL);// MAKEINTRESOURCE(userGS->GetMSWinIcoID()));
 		wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-		wc.lpszClassName = className.c_str();
+		wc.lpszClassName = ClassName.c_str();
 
 		ATOM result = RegisterClass(&wc);
 		if (result == 0)
 		{
 			std::wstring mess = L">>>>> [SW_MSWindows.Initialize( ... )]. RegisterClass( ... ). Failed to register window class: ";
-			mess += className;
+			mess += ClassName;
 			mess += L"\n+--- error code(Windows): ";
 			mess += std::to_wstring(::GetLastError());
 			return Unexpected(eResult::failure, mess);
 		}
 
 		// –ассчитать размеры пр€моугольника окна на основе запрошенных размеров клиентской области.
-		RECT R = { 0, 0, static_cast<LONG>(640), static_cast<LONG>(480) };
+		RECT R = { 0, 0, static_cast<LONG>(swWidth), static_cast<LONG>(swHeight) };
 		AdjustWindowRect(&R, WS_OVERLAPPEDWINDOW, false);
 		int width = R.right - R.left;
 		int height = R.bottom - R.top;
@@ -82,8 +104,8 @@ export namespace zzz::platforms
 		int yPos = (screenHeight - height) / 2; // –асчет позиции по оси Y
 		hWnd = CreateWindowEx(
 			0,
-			className.c_str(),
-			L"Game",
+			ClassName.c_str(),
+			Caption.c_str(),
 			WS_OVERLAPPEDWINDOW,
 			xPos, yPos, width, height,
 			nullptr,

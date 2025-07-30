@@ -58,12 +58,10 @@ export namespace zzz
 
 		void Reset() noexcept;
 		void OnResizeWindow(const zSize2D<>& size, e_TypeWinAppResize resizeType);
-
-		//friend zResult<> SWSettings::Initialize();
 	};
 
 	engine::engine() :
-		superWidget{ std::bind(&engine::OnResizeWindow, this, std::placeholders::_1, std::placeholders::_2) }
+		superWidget{ swSettings, std::bind(&engine::OnResizeWindow, this, std::placeholders::_1, std::placeholders::_2) }
 		, initState{ eEngineState::eInitNot }
 	{
 	}
@@ -88,11 +86,10 @@ export namespace zzz
 		std::wstring err;
 		try
 		{
-			auto settings = std::make_shared<SWSettings>();
 			auto res = swSettings.Initialize(IOPathFactory::BuildPath(IOPathFactory::GetPath_ExecutableSubfolder(), swSetFolderName, swSetFileName))
-				.and_then([&]() { return superWidget.Initialize(settings); })
-				.and_then([&]() { initState = eEngineState::eInitOK; })
-				.or_else([&](auto error) { Reset(); return error; });
+				.and_then([&]() { return superWidget.Initialize(); })
+				.and_then([&]() { initState = eEngineState::eInitOK; return zResult<>(); })
+				.or_else([&](auto error) { Reset(); return zResult<>(error); });
 
 			return res;
 		}
