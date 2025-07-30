@@ -1,10 +1,10 @@
 #include "pch.h"
-export module SW_MSWin;
+export module swMSWin;
 
 #ifdef _WIN64
 import result;
 import zSize2D;
-import SWSettings;
+import swSettings;
 import ISuperWidget;
 
 using namespace zzz;
@@ -13,15 +13,15 @@ using namespace zzz::platforms;
 
 export namespace zzz::platforms
 {
-	class SW_MSWin final : public ISuperWidget
+	class swMSWin final : public ISuperWidget
 	{
 	public:
-		SW_MSWin() = delete;
-		SW_MSWin(SW_MSWin&) = delete;
-		SW_MSWin(SW_MSWin&&) = delete;
+		swMSWin() = delete;
+		swMSWin(swMSWin&) = delete;
+		swMSWin(swMSWin&&) = delete;
 
-		SW_MSWin(SWSettings& _settings, const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows);
-		~SW_MSWin() override;
+		swMSWin(swSettings& _settings, const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows);
+		~swMSWin() override;
 
 	protected:
 		zResult<> Init() override;
@@ -34,7 +34,7 @@ export namespace zzz::platforms
 		LRESULT MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	};
 
-	SW_MSWin::SW_MSWin(SWSettings& _settings, const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows) :
+	swMSWin::swMSWin(swSettings& _settings, const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows) :
 		ISuperWidget(_settings, _resizeWindows),
 		hWnd{ nullptr },
 		IsMinimized{ true }
@@ -42,41 +42,43 @@ export namespace zzz::platforms
 		//SetProcessDPIAware();
 	}
 
-	SW_MSWin::~SW_MSWin()
+	swMSWin::~swMSWin()
 	{
 		if (hWnd)
 			DestroyWindow(hWnd);
 	}
 
-	zResult<> SW_MSWin::Init()
+	zResult<> swMSWin::Init()
 	{
 		std::wstring Caption;
 		std::wstring ClassName;
-		auto res = settings.GetParam<std::wstring>(L"caption")
-			.and_then([&](std::wstring name) { Caption = name; });
+		{
+			auto res = settings.GetParam<std::wstring>(L"caption")
+				.and_then([&](std::wstring name) { Caption = name; });
 
-		if (!res)
-			return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'Caption' parameter.");
+			if (!res)
+				return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'Caption' parameter.");
+		}
 
 		settings.GetParam<std::wstring>(L"MSWin_SpecSettings", L"ClassName")
 			.and_then([&](std::wstring name) {ClassName = name; })
-			.or_else([&](auto error) { ClassName = Caption;});
+			.or_else([&](auto error) { ClassName = Caption; });
 
 		LONG swWidth;
-		auto res1 = settings.GetParam<int>(L"width")
+		auto res = settings.GetParam<int>(L"width")
 			.and_then([&](int width) {swWidth = width; });
-		if (!res1)
-			return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'width' parameter.");
+		if (!res)
+			return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'width' parameter. More specifically: " + res.error().getMessage());
 
 		LONG swHeight;
-		res1 = settings.GetParam<int>(L"height")
+		res = settings.GetParam<int>(L"height")
 			.and_then([&](int height) {swHeight = height; });
-		if (!res1)
-			return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'height' parameter.");
+		if (!res)
+			return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'height' parameter. More specifically:" + res.error().getMessage());
 
 		WNDCLASS wc = { 0 };
 		wc.style = CS_HREDRAW | CS_VREDRAW;
-		wc.lpfnWndProc = SW_MSWin::WindowProc;
+		wc.lpfnWndProc = swMSWin::WindowProc;
 		wc.hInstance = GetModuleHandle(NULL);
 		wc.hIcon = LoadIcon(GetModuleHandle(NULL), NULL);// MAKEINTRESOURCE(userGS->GetMSWinIcoID()));
 		wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
@@ -85,10 +87,7 @@ export namespace zzz::platforms
 		ATOM result = RegisterClass(&wc);
 		if (result == 0)
 		{
-			std::wstring mess = L">>>>> [SW_MSWindows.Initialize( ... )]. RegisterClass( ... ). Failed to register window class: ";
-			mess += ClassName;
-			mess += L"\n+--- error code(Windows): ";
-			mess += std::to_wstring(::GetLastError());
+			std::wstring mess = L">>>>> [SW_MSWindows.Initialize( ... )]. RegisterClass( ... ). Failed to register window class: " + ClassName + L". Error code(MSWindows):" + std::to_wstring(::GetLastError());
 			return Unexpected(eResult::failure, mess);
 		}
 
@@ -115,9 +114,7 @@ export namespace zzz::platforms
 
 		if (!hWnd)
 		{
-			std::wstring mess = L">>>>> [SW_MSWindows.Initialize( ... )]. CreateWindowEx( ... ). Failed to create window: ";
-			mess += L"\n +--- error code(Windows): ";
-			mess += std::to_wstring(::GetLastError());
+			std::wstring mess = L">>>>> [SW_MSWindows.Initialize( ... )]. CreateWindowEx( ... ). Failed to create window. Error code(Windows): " + std::to_wstring(::GetLastError());
 			return Unexpected(eResult::failure, mess);
 		}
 
@@ -127,20 +124,20 @@ export namespace zzz::platforms
 		return {};
 	}
 
-	LRESULT CALLBACK SW_MSWin::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	LRESULT CALLBACK swMSWin::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
-		SW_MSWin* pThis;
+		swMSWin* pThis;
 
 		if (uMsg == WM_NCCREATE)
 		{
 			CREATESTRUCT* pCreate = (CREATESTRUCT*)lParam;
-			pThis = (SW_MSWin*)pCreate->lpCreateParams;
+			pThis = (swMSWin*)pCreate->lpCreateParams;
 			SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pThis);
 
 			pThis->hWnd = hwnd;
 		}
 		else
-			pThis = (SW_MSWin*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+			pThis = (swMSWin*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
 		if (pThis)
 			return pThis->MsgProc(uMsg, wParam, lParam);
@@ -148,7 +145,7 @@ export namespace zzz::platforms
 		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 
-	LRESULT SW_MSWin::MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
+	LRESULT swMSWin::MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		switch (uMsg)
 		{

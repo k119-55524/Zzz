@@ -3,13 +3,13 @@
 export module engine;
 
 import result;
-import SWSettings;
+import swSettings;
 import ISuperWidget;
 import IOPathFactory;
 import StringConverters;
 
 #if defined(_WIN64)
-import SW_MSWin;
+import swMSWin;
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif
@@ -22,7 +22,7 @@ using namespace zzz::platforms;
 namespace zzz
 {
 #if defined(_WIN64)
-	typedef SW_MSWin SuperWidget;
+	typedef swMSWin SuperWidget;
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif
@@ -53,7 +53,7 @@ export namespace zzz
 		eEngineState initState;
 		std::mutex stateMutex;
 
-		SWSettings swSettings;
+		swSettings settings;
 		SuperWidget superWidget;
 
 		void Reset() noexcept;
@@ -61,7 +61,7 @@ export namespace zzz
 	};
 
 	engine::engine() :
-		superWidget{ swSettings, std::bind(&engine::OnResizeWindow, this, std::placeholders::_1, std::placeholders::_2) }
+		superWidget{ settings, std::bind(&engine::OnResizeWindow, this, std::placeholders::_1, std::placeholders::_2) }
 		, initState{ eEngineState::eInitNot }
 	{
 	}
@@ -73,7 +73,7 @@ export namespace zzz
 
 	void engine::Reset() noexcept
 	{
-		swSettings.Reset();
+		settings.Reset();
 		initState = eEngineState::eInitNot;
 	}
 
@@ -86,7 +86,7 @@ export namespace zzz
 		std::wstring err;
 		try
 		{
-			auto res = swSettings.Initialize(IOPathFactory::BuildPath(IOPathFactory::GetPath_ExecutableSubfolder(), swSetFolderName, swSetFileName))
+			auto res = settings.Get(IOPathFactory::BuildPath(IOPathFactory::GetPath_ExecutableSubfolder(), swSetFolderName, swSetFileName))
 				.and_then([&]() { return superWidget.Initialize(); })
 				.and_then([&]() { initState = eEngineState::eInitOK; return zResult<>(); })
 				.or_else([&](auto error) { Reset(); return zResult<>(error); });

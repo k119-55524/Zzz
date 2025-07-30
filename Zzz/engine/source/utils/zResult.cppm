@@ -94,6 +94,15 @@ export namespace zzz::result
 		_Ty* operator->() { return &value(); }
 		const _Ty* operator->() const { return &value(); }
 
+		//explicit operator zResult<void>() const noexcept
+		//{
+		//	if (has_value())
+		//	{
+		//		return zResult<void>{}; // Успех
+		//	}
+		//	return zResult<void>{error()}; // Ошибка
+		//}
+
 		explicit operator bool() const noexcept { return has_value(); }
 
 		template<typename U>
@@ -155,8 +164,14 @@ export namespace zzz::result
 	{
 	public:
 		zResult() noexcept : hasVal(true) {}
-		zResult(const Unexpected& error) noexcept : hasVal(true), err(error) {}
-		zResult(Unexpected&& error) noexcept : hasVal(true), err(std::move(error)) {}
+		zResult(const Unexpected& error) noexcept : err(error)
+		{
+			hasVal = error.getCode() == eResult::success;
+		}
+		zResult(Unexpected&& error) noexcept : hasVal(false), err(std::move(error))
+		{
+			hasVal = error.getCode() == eResult::success;
+		}
 
 		inline bool has_value() const noexcept { return hasVal; }
 
@@ -173,71 +188,60 @@ export namespace zzz::result
 
 		explicit operator bool() const noexcept { return hasVal; }
 
-	private:
-		template<typename Func>
-		auto and_then_impl(Func&& func, std::true_type) const -> zResult<void>
-		{
-			if (hasVal)
-			{
-				std::invoke(std::forward<Func>(func));
-				return zResult<void>{};
-			}
-			return zResult<void>{err};
-		}
-
-		template<typename Func>
-		auto and_then_impl(Func&& func, std::false_type) const -> std::invoke_result_t<Func>
-		{
-			if (hasVal)
-				return std::invoke(std::forward<Func>(func));
-
-			return std::invoke_result_t<Func>{err};
-		}
-
-	public:
 		template<typename Func>
 		auto and_then(Func&& func) const
 		{
 			using R = std::invoke_result_t<Func>;
-			constexpr bool isVoid = std::is_same_v<R, void>;
-
-			return and_then_impl(std::forward<Func>(func), std::bool_constant<isVoid>{});
-		}
-
-	private:
-		template<typename Func>
-		auto or_else_impl(Func&& func, std::true_type) const -> zResult<void>
-		{
-			if (!hasVal)
+			if constexpr (std::is_same_v<R, void>)
 			{
-				std::invoke(std::forward<Func>(func), err);
+				if (hasVal)
+				{
+					std::invoke(std::forward<Func>(func));
+					return zResult<void>{};
+				}
 				return zResult<void>{err};
 			}
-
-			return zResult<void>{};
+			else
+			{
+				if (hasVal)
+					return std::invoke(std::forward<Func>(func));
+				else
+					return R{ Unexpected(err) }; // <-- здесь гарантируем конструируемость
+			}
 		}
 
-		template<typename Func>
-		auto or_else_impl(Func&& func, std::false_type) const -> std::invoke_result_t<Func, const Unexpected&>
-		{
-			if (!hasVal)
-				return std::invoke(std::forward<Func>(func), err);
-
-			return std::invoke_result_t<Func, const Unexpected&>{};
-		}
-
-	public:
 		template<typename Func>
 		auto or_else(Func&& func) const
 		{
 			using R = std::invoke_result_t<Func, const Unexpected&>;
-			constexpr bool isVoid = std::is_same_v<R, void>;
 
-			return or_else_impl(std::forward<Func>(func), std::bool_constant<isVoid>{});
+			if (!hasVal)
+			{
+				if constexpr (std::is_same_v<R, void>)
+				{
+					std::invoke(std::forward<Func>(func), err);
+					return zResult<void>{err};
+				}
+				else
+				{
+					return std::invoke(std::forward<Func>(func), err);
+				}
+			}
+			else
+			{
+				if constexpr (std::is_same_v<R, void>)
+				{
+					return zResult<void>{};
+				}
+				else
+				{
+					return R{}; // или static_assert(false) если недопустимо
+				}
+			}
 		}
 
 	private:
-		bool hasVal = true;
+		bool hasVal;
 		Unexpected err;
 	};
 }

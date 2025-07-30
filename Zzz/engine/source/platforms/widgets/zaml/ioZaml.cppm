@@ -67,6 +67,7 @@ export namespace zzz::zaml
 		std::wifstream file(filename);
 		if (!file)
 			return Unexpected(eResult::io_error_open_file, L"[ioZaml.LoadFromFile] Failed to open file: " + filename);
+
 		return ParseNode(file);
 	}
 
@@ -75,6 +76,7 @@ export namespace zzz::zaml
 		std::wofstream file(filename);
 		if (!file)
 			return Unexpected(eResult::io_error_open_file, L"[ioZaml.SaveToFile] Failed to open file: " + filename);
+
 		return WriteNode(file, node, indent);
 	}
 

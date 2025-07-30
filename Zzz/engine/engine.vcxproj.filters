@@ -38,10 +38,10 @@
     <ClCompile Include="source\platforms\widgets\ISuperWidget.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\platforms\widgets\SW_MSWin.cppm">
+    <ClCompile Include="source\platforms\widgets\swMSWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\platforms\widgets\zaml\SWSettings.cppm">
+    <ClCompile Include="source\platforms\widgets\swSettings.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\helpers\zSize2D.cppm">
@@ -57,6 +57,9 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\IO\IOPathFactory.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\helpers\MessageBox.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

@@ -2,6 +2,7 @@
 #include "pch.h"
 import engine;
 import result;
+import zMsgBox;
 
 using namespace zzz;
 using namespace zzz::result;
@@ -17,7 +18,7 @@ int APIENTRY wWinMain(
 		.and_then([&engine]() { return engine.Run(); })
 		.or_else([](const Unexpected& error)
 			{
-				std::wcerr << L">>>>> [wWinMain( ... )]. Error: " << error.getMessage() << std::endl;
+				zMsgBox::Error(error.getMessage());
 				return zResult<>(error);
 			});
 

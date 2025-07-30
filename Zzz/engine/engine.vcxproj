@@ -92,15 +92,16 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="source\engine.cppm" />
+    <ClCompile Include="source\helpers\MessageBox.cppm" />
     <ClCompile Include="source\helpers\StringConverters.cppm" />
     <ClCompile Include="source\helpers\zSerialize.cppm" />
     <ClCompile Include="source\helpers\zSize2D.cppm" />
     <ClCompile Include="source\IO\IOPathFactory.cppm" />
     <ClCompile Include="source\platforms\widgets\zaml\ioZaml.cppm" />
-    <ClCompile Include="source\platforms\widgets\zaml\SWSettings.cppm" />
+    <ClCompile Include="source\platforms\widgets\swSettings.cppm" />
     <ClCompile Include="source\utils\zResult.cppm" />
     <ClCompile Include="source\platforms\widgets\ISuperWidget.cppm" />
-    <ClCompile Include="source\platforms\widgets\SW_MSWin.cppm" />
+    <ClCompile Include="source\platforms\widgets\swMSWin.cppm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
