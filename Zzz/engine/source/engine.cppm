@@ -39,7 +39,7 @@ namespace zzz
 	};
 
 	const std::wstring swSetFolderName = L"appdata";
-	const std::wstring swSetFileName = L"mui.zaml";
+	const std::wstring swSetFileName = L"swui.zaml";
 }
 
 export namespace zzz
@@ -113,12 +113,12 @@ export namespace zzz
 		catch (const std::exception& e)
 		{
 			string_to_wstring(e.what())
-				.and_then([&err](const std::wstring& wstr) { err = L">>>>> [engine::initialize()]. Exception: " + wstr + L"\n"; })
-				.or_else([&err](const Unexpected& error) { err = L">>>>> #0 [engine::initialize()]. Unknown exception occurred\n"; });
+				.and_then([&err](const std::wstring& wstr) { err = L">>>>> [engine::initialize()].\n" + wstr; })
+				.or_else([&err](const Unexpected& error) { err = L">>>>> #0 [engine::initialize()]. Unknown exception occurred."; });
 		}
 		catch (...)
 		{
-			err = L">>>>> #1 [wWinMain( ... )]. Unknown exception occurred\n";
+			err = L">>>>> #1 [wWinMain( ... )]. Unknown exception occurred.";
 		}
 
 		Reset();

@@ -28,7 +28,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="mui.zaml" />
-    <None Include="appdata\mui.zaml" />
+    <None Include="appdata\swui.zaml" />
   </ItemGroup>
 </Project>

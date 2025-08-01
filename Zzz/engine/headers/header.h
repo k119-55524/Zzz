@@ -39,7 +39,7 @@ namespace zzz
 		const std::source_location& loc = std::source_location::current())
 	{
 		throw std::runtime_error(
-			">>>>> [Exñeption] " + msg +
+			"Exception: " + msg +
 			". Method=" + std::string(loc.function_name()) +
 			", line=" + std::to_string(loc.line()) +
 			", file=" + std::string(loc.file_name()));
@@ -52,7 +52,7 @@ namespace zzz
 	{
 		if (!condition)
 			throw std::runtime_error(
-				">>>>> [Ensure] " + msg +
+				"Ensure: " + msg +
 				". Method=" + std::string(loc.function_name()) +
 				", line=" + std::to_string(loc.line()) +
 				", file=" + std::string(loc.file_name()));

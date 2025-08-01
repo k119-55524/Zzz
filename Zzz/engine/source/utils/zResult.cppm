@@ -168,7 +168,7 @@ export namespace zzz::result
 		{
 			hasVal = error.getCode() == eResult::success;
 		}
-		zResult(Unexpected&& error) noexcept : hasVal(false), err(std::move(error))
+		zResult(Unexpected&& error) noexcept : err(std::move(error))
 		{
 			hasVal = error.getCode() == eResult::success;
 		}

@@ -86,8 +86,9 @@ export namespace zzz::platforms
 		if (filePath.empty())
 			throw_runtime_error("Empty filePath");
 
-		if(!LoadSettings())
-			throw_runtime_error("Failed to load settings from file: " + wstring_to_string(filePath));
+		auto res = LoadSettings();
+		if (!res)
+			throw_runtime_error(std::format( "Failed to load settings from file: {}.\n{}", wstring_to_string(filePath), wstring_to_string(res.error().getMessage())));
 	}
 
 	zResult<> swSettings::LoadSettings()
