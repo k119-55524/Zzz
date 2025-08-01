@@ -7,12 +7,15 @@ namespace zzz::platforms
 	{
 	public:
 		IMainLoop() = delete;
-		IMainLoop(IMainLoop&) = delete;
+		IMainLoop(const IMainLoop&) = delete;
 		IMainLoop(IMainLoop&&) = delete;
 
 		IMainLoop(std::function<void()> _updateSystem);
 
-		virtual ~IMainLoop() = 0;
+		virtual ~IMainLoop() = default;
+
+		IMainLoop& operator=(const IMainLoop&) = delete;
+		IMainLoop& operator=(IMainLoop&&) = delete;
 
 		virtual void Run() = 0;
 
@@ -21,7 +24,8 @@ namespace zzz::platforms
 	};
 
 	IMainLoop::IMainLoop(std::function<void()> _updateSystem) :
-		updateSystem{ _updateSystem }
+		updateSystem{ std::move(_updateSystem) }
 	{
+		ensure(updateSystem);
 	}
 }

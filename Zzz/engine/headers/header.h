@@ -57,5 +57,16 @@ namespace zzz
 				", line=" + std::to_string(loc.line()) +
 				", file=" + std::string(loc.file_name()));
 	}
+
+	inline void DebugOutput(const std::wstring& msg)
+	{
+#if defined(_WIN64) && defined(_DEBUG)
+		OutputDebugStringW(msg.c_str());
+#elif defined(_DEBUG)
+		std::wcerr << msg << std::endl;
+#else
+		// В релизной сборке ничего не делаем :)
+#endif
+	}
 }
 #endif // HEADER_H

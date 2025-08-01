@@ -10,18 +10,22 @@ namespace zzz::platforms
 	{
 	public:
 		mlMSWin() = delete;
-		mlMSWin(mlMSWin&) = delete;
+		mlMSWin(const mlMSWin&) = delete;
 		mlMSWin(mlMSWin&&) = delete;
 
 		mlMSWin(std::function<void()> _updateSystem);
+
+		virtual ~mlMSWin() = default;
+
+		mlMSWin& operator=(const mlMSWin&) = delete;
+		mlMSWin& operator=(mlMSWin&&) = delete;
 
 		void Run() override;
 	};
 
 	mlMSWin::mlMSWin(std::function<void()> _updateSystem) :
 		IMainLoop(_updateSystem)
-	{
-	}
+	{ }
 
 	void mlMSWin::Run()
 	{
@@ -36,8 +40,7 @@ namespace zzz::platforms
 			}
 			else
 			{
-				if (updateSystem != nullptr)
-					updateSystem();
+				updateSystem();
 			}
 		}
 	}

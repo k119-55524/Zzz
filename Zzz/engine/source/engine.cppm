@@ -4,6 +4,8 @@ export module engine;
 
 import result;
 import zSize2D;
+import mlMSWin;
+import IMainLoop;
 import swSettings;
 import ISuperWidget;
 import IOPathFactory;
@@ -24,6 +26,7 @@ namespace zzz
 {
 #if defined(_WIN64)
 	typedef swMSWin SuperWidget;
+	typedef mlMSWin MainLoop;
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif
@@ -53,20 +56,21 @@ export namespace zzz
 	private:
 		eEngineState initState;
 		std::mutex stateMutex;
+		bool isSysPaused;
 
 		std::shared_ptr<swSettings> settingsSW;
 		std::shared_ptr<SuperWidget> superWidget;
+		std::shared_ptr<IMainLoop> mainLoop;
 
 		void Reset() noexcept;
 		void OnResizeSW(const zSize2D<>& size, e_TypeWinAppResize resType);
+		void OnUpdateSystem();
 	};
 
 	engine::engine() :
-		//superWidget{ settings, std::bind(&engine::OnResizeSW, this, std::placeholders::_1, std::placeholders::_2) }
-		//,
-		initState{ eEngineState::eInitNot }
-	{
-	}
+		initState{ eEngineState::eInitNot },
+		isSysPaused{ true }
+	{ }
 
 	engine::~engine()
 	{
@@ -75,8 +79,11 @@ export namespace zzz
 
 	void engine::Reset() noexcept
 	{
+		superWidget.reset();
 		settingsSW.reset();
+
 		initState = eEngineState::eInitNot;
+		isSysPaused = true;
 	}
 
 	zResult<> engine::Initialize() noexcept
@@ -95,6 +102,9 @@ export namespace zzz
 			auto res = superWidget->Initialize();
 			if (!res)
 				return Unexpected(eResult::failure, L">>>>> [engine::initialize()]. Failed to initialize super widget. More specifically: " + res.error().getMessage());
+
+			mainLoop = std::make_shared<MainLoop>(std::bind(&engine::OnUpdateSystem, this));
+			ensure(mainLoop);
 
 			initState = eEngineState::eInitOK;
 			
@@ -129,6 +139,8 @@ export namespace zzz
 
 		try
 		{
+			mainLoop->Run();
+
 			return {};
 		}
 		catch (const std::exception& e)
@@ -146,8 +158,37 @@ export namespace zzz
 		return Unexpected(eResult::exception, err);
 	}
 
+	void engine::OnUpdateSystem()
+	{
+		if (isSysPaused)
+			return;
+
+		//Sleep(100);
+
+		//sceneManager->Update();
+		//gAPI->Update();
+	}
+
 	void engine::OnResizeSW(const zSize2D<>& size, e_TypeWinAppResize resizeType)
 	{
+		switch (resizeType)
+		{
+		case e_TypeWinAppResize::eHide:
+			DebugOutput(L">>>>> [engine::OnResizeSW]. Hide app window.\n");
 
+			isSysPaused = true;
+			break;
+		case e_TypeWinAppResize::eShow:
+			DebugOutput(L">>>>> [engine::OnResizeSW]. Show app window.\n");
+
+			isSysPaused = false;
+			break;
+		case e_TypeWinAppResize::eResize:
+			DebugOutput((L">>>>> [engine::OnResizeSW]. Resize to " + std::to_wstring(size.width) + L"x" + std::to_wstring(size.height) + L".\n").c_str());
+
+			isSysPaused = false;
+			//gAPI->Resize(size);
+			break;
+		}
 	}
 }
