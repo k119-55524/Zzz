@@ -4,6 +4,7 @@ export module swMSWin;
 #ifdef _WIN64
 import result;
 import zSize2D;
+import mlMSWin;
 import swSettings;
 import ISuperWidget;
 
@@ -20,11 +21,11 @@ export namespace zzz::platforms
 		swMSWin(swMSWin&) = delete;
 		swMSWin(swMSWin&&) = delete;
 
-		swMSWin(swSettings& _settings, const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows);
+		swMSWin(std::shared_ptr<swSettings> _settings, const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeSW);
 		~swMSWin() override;
 
 	protected:
-		zResult<> Init() override;
+		zResult<> _Initialize() override;
 
 	private:
 		HWND hWnd;
@@ -34,8 +35,8 @@ export namespace zzz::platforms
 		LRESULT MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	};
 
-	swMSWin::swMSWin(swSettings& _settings, const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows) :
-		ISuperWidget(_settings, _resizeWindows),
+	swMSWin::swMSWin(std::shared_ptr<swSettings> _settings, const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeSW) :
+		ISuperWidget(_settings, _resizeSW),
 		hWnd{ nullptr },
 		IsMinimized{ true }
 	{
@@ -48,30 +49,30 @@ export namespace zzz::platforms
 			DestroyWindow(hWnd);
 	}
 
-	zResult<> swMSWin::Init()
+	zResult<> swMSWin::_Initialize()
 	{
 		std::wstring Caption;
 		std::wstring ClassName;
 		{
-			auto res = settings.GetParam<std::wstring>(L"caption")
+			auto res = settings->GetParam<std::wstring>(L"caption")
 				.and_then([&](std::wstring name) { Caption = name; });
 
 			if (!res)
 				return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'Caption' parameter.");
 		}
 
-		settings.GetParam<std::wstring>(L"MSWin_SpecSettings", L"ClassName")
+		settings->GetParam<std::wstring>(L"MSWin_SpecSettings", L"ClassName")
 			.and_then([&](std::wstring name) {ClassName = name; })
 			.or_else([&](auto error) { ClassName = Caption; });
 
 		LONG swWidth;
-		auto res = settings.GetParam<int>(L"width")
+		auto res = settings->GetParam<int>(L"width")
 			.and_then([&](int width) {swWidth = width; });
 		if (!res)
 			return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'width' parameter. More specifically: " + res.error().getMessage());
 
 		LONG swHeight;
-		res = settings.GetParam<int>(L"height")
+		res = settings->GetParam<int>(L"height")
 			.and_then([&](int height) {swHeight = height; });
 		if (!res)
 			return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'height' parameter. More specifically:" + res.error().getMessage());
@@ -156,23 +157,23 @@ export namespace zzz::platforms
 		case WM_SIZE:
 			winSize.width = static_cast<zU64>(LOWORD(lParam));
 			winSize.height = static_cast<zU64>(HIWORD(lParam));
-			if (resizeWindows != nullptr)
+			if (callbackResizeSW != nullptr)
 			{
 				if (wParam == SIZE_MINIMIZED)
 				{
-					resizeWindows(winSize, e_TypeWinAppResize::eHide);
+					callbackResizeSW(winSize, e_TypeWinAppResize::eHide);
 					IsMinimized = true;
 				}
 				else
 				{
 					if ((wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED) && IsMinimized)
 					{
-						resizeWindows(winSize, e_TypeWinAppResize::eShow);
+						callbackResizeSW(winSize, e_TypeWinAppResize::eShow);
 						IsMinimized = false;
 					}
 					else
 					{
-						resizeWindows(winSize, e_TypeWinAppResize::eResize);
+						callbackResizeSW(winSize, e_TypeWinAppResize::eResize);
 					}
 				}
 			}

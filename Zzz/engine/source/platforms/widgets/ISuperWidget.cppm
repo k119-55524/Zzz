@@ -3,18 +3,16 @@ export module ISuperWidget;
 
 import result;
 import zSize2D;
+import IMainLoop;
 import swSettings;
+import StringConverters;
 
 using namespace zzz;
 using namespace zzz::result;
 
-namespace zzz::platforms
+namespace zzz
 {
-	export enum eSuperWidgetState : zU32
-	{
-		eInitNot = 0,
-		eInitOK = 1,
-	};
+	class engine;
 }
 
 export namespace zzz::platforms
@@ -33,31 +31,31 @@ export namespace zzz::platforms
 		ISuperWidget(ISuperWidget&) = delete;
 		ISuperWidget(ISuperWidget&&) = delete;
 
-		ISuperWidget(swSettings& _settings, const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows);
+		ISuperWidget(std::shared_ptr<swSettings> _settings, const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _callbackResizeSW);
 		virtual ~ISuperWidget() = 0;
 
-		virtual zResult<> Initialize() final;
 		inline const zSize2D<>& GetWinSize() const noexcept { return winSize; };
 
 	protected:
-		swSettings& settings;
+		virtual zResult<> _Initialize() = 0;
+		std::shared_ptr<swSettings> settings;
 		zSize2D<> winSize;
-		std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> resizeWindows;
 
-		virtual zResult<> Init() = 0;
+		std::shared_ptr<IMainLoop> mainLoop;
+		std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> callbackResizeSW;
 
 	private:
-		eSuperWidgetState initState;
-		std::mutex stateMutex;
+		zResult<> Initialize();
+		friend class zzz::engine;
 	};
 
-	ISuperWidget::ISuperWidget(swSettings& _settings, const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeWindows) :
+	ISuperWidget::ISuperWidget(std::shared_ptr<swSettings> _settings, const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _callbackResizeSW) :
 		settings{ _settings },
-		resizeWindows{ _resizeWindows },
-		winSize{ 0, 0 },
-		initState{ eSuperWidgetState::eInitNot }
+		callbackResizeSW{ _callbackResizeSW },
+		winSize{ 0, 0 }
 	{
-		ensure(resizeWindows);
+		ensure(settings);
+		ensure(callbackResizeSW);
 	}
 
 	ISuperWidget::~ISuperWidget()
@@ -66,13 +64,6 @@ export namespace zzz::platforms
 
 	zResult<> ISuperWidget::Initialize()
 	{
-		std::lock_guard<std::mutex> lock(stateMutex);
-		if (initState != eSuperWidgetState::eInitNot)
-			return Unexpected(eResult::failure, L">>>>> [ISuperWidget.Initialize()]. Re-initialization is not allowed.");
-
-		return Init().and_then([&]() 
-			{
-				initState = eSuperWidgetState::eInitOK;
-			});
+		return _Initialize();
 	}
 }

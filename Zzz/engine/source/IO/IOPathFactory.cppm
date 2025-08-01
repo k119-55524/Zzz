@@ -8,8 +8,6 @@ namespace zzz::io
 
 export namespace zzz::io
 {
-
-
 	export class IOPathFactory
 	{
 	public:

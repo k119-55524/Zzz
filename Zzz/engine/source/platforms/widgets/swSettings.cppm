@@ -10,28 +10,17 @@ using namespace zzz;
 using namespace zzz::zaml;
 using namespace zzz::result;
 
-namespace zzz::platforms
-{
-	enum eSWState : zU32
-	{
-		eInitNot = 0,	// Готов к инициализации
-		eInitOK = 1,	// Инициализированн
-	};
-}
-
 export namespace zzz::platforms
 {
 	class swSettings
 	{
 	public:
-		swSettings();
+		swSettings() = delete;
+		swSettings(std::wstring _filePath);
 		swSettings(const swSettings&) = delete;
+		swSettings(swSettings&&) = delete;
+
 		swSettings& operator=(const swSettings&) = delete;
-
-		~swSettings();
-
-		zResult<> Get(std::wstring _filePath);
-		void Reset();
 
 		template<typename T, typename... Path>
 		zResult<T> GetParam(Path&&... pathAndParamName) const
@@ -83,49 +72,28 @@ export namespace zzz::platforms
 			return ConvertValue<T>(*attr.value());
 		}
 
-
 	private:
-		std::mutex initMutex;
-		eSWState swState;
 		std::wstring filePath;
 		std::unique_ptr<zamlNode> settings;
 
-		zResult<> LoadSettings(std::wstring _filePath);
+		zResult<> LoadSettings();
 	};
 
-	swSettings::swSettings() :
-		settings{},
-		swState{ eSWState::eInitNot }
+	swSettings::swSettings(std::wstring _filePath) :
+		filePath{ std::move(_filePath) },
+		settings{}
 	{
+		if (filePath.empty())
+			throw_runtime_error("Empty filePath");
+
+		if(!LoadSettings())
+			throw_runtime_error("Failed to load settings from file: " + wstring_to_string(filePath));
 	}
 
-	swSettings::~swSettings()
-	{
-		Reset();
-	}
-
-	void swSettings::Reset()
-	{
-		settings.reset();
-		swState = eSWState::eInitNot; // Сброс состояния
-	}
-
-	zResult<> swSettings::Get(std::wstring _filePath)
-	{
-		std::lock_guard<std::mutex> lock(initMutex);
-		if (swState != eSWState::eInitNot)
-			return Unexpected(eResult::failure, L">>>>> [SuperWidgetSettings::Get()]. Re-initialization is not allowed.");
-
-		auto res = LoadSettings(_filePath)
-			.and_then([this](){ swState = eSWState::eInitOK; });
-
-		return res;
-	}
-
-	zResult<> swSettings::LoadSettings(std::wstring _filePath)
+	zResult<> swSettings::LoadSettings()
 	{
 		ioZaml loader;
-		auto res = loader.LoadFromFile(_filePath)
+		auto res = loader.LoadFromFile(filePath)
 			.and_then([this](const zamlNode& node)
 			{
 				settings = std::make_unique<zamlNode>(node);

@@ -35,14 +35,14 @@ namespace zzz
 
 	[[noreturn]]
 	inline void throw_runtime_error(
-		const std::string& msg,
+		const std::string& msg = "Throw runtime error",
 		const std::source_location& loc = std::source_location::current())
 	{
 		throw std::runtime_error(
 			">>>>> [Exñeption] " + msg +
-			" _ Method=" + std::string(loc.function_name()) +
-			" Line=" + std::to_string(loc.line()) +
-			" File=" + std::string(loc.file_name()));
+			". Method=" + std::string(loc.function_name()) +
+			", line=" + std::to_string(loc.line()) +
+			", file=" + std::string(loc.file_name()));
 	}
 
 	template<typename T>
@@ -53,9 +53,9 @@ namespace zzz
 		if (!condition)
 			throw std::runtime_error(
 				">>>>> [Ensure] " + msg +
-				" _ Method=" + std::string(loc.function_name()) +
-				" Line=" + std::to_string(loc.line()) +
-				" File=" + std::string(loc.file_name()));
+				". Method=" + std::string(loc.function_name()) +
+				", line=" + std::to_string(loc.line()) +
+				", file=" + std::string(loc.file_name()));
 	}
 }
 #endif // HEADER_H

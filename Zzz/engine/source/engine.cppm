@@ -3,6 +3,7 @@
 export module engine;
 
 import result;
+import zSize2D;
 import swSettings;
 import ISuperWidget;
 import IOPathFactory;
@@ -53,16 +54,17 @@ export namespace zzz
 		eEngineState initState;
 		std::mutex stateMutex;
 
-		swSettings settings;
-		SuperWidget superWidget;
+		std::shared_ptr<swSettings> settingsSW;
+		std::shared_ptr<SuperWidget> superWidget;
 
 		void Reset() noexcept;
-		void OnResizeWindow(const zSize2D<>& size, e_TypeWinAppResize resizeType);
+		void OnResizeSW(const zSize2D<>& size, e_TypeWinAppResize resType);
 	};
 
 	engine::engine() :
-		superWidget{ settings, std::bind(&engine::OnResizeWindow, this, std::placeholders::_1, std::placeholders::_2) }
-		, initState{ eEngineState::eInitNot }
+		//superWidget{ settings, std::bind(&engine::OnResizeSW, this, std::placeholders::_1, std::placeholders::_2) }
+		//,
+		initState{ eEngineState::eInitNot }
 	{
 	}
 
@@ -73,7 +75,7 @@ export namespace zzz
 
 	void engine::Reset() noexcept
 	{
-		settings.Reset();
+		settingsSW.reset();
 		initState = eEngineState::eInitNot;
 	}
 
@@ -86,12 +88,17 @@ export namespace zzz
 		std::wstring err;
 		try
 		{
-			auto res = settings.Get(IOPathFactory::BuildPath(IOPathFactory::GetPath_ExecutableSubfolder(), swSetFolderName, swSetFileName))
-				.and_then([&]() { return superWidget.Initialize(); })
-				.and_then([&]() { initState = eEngineState::eInitOK; return zResult<>(); })
-				.or_else([&](auto error) { Reset(); return zResult<>(error); });
+			settingsSW = std::make_shared<swSettings>(IOPathFactory::BuildPath(IOPathFactory::GetPath_ExecutableSubfolder(), swSetFolderName, swSetFileName));
+			ensure(settingsSW);
+			superWidget = std::make_shared<SuperWidget>(settingsSW, std::bind(&engine::OnResizeSW, this, std::placeholders::_1, std::placeholders::_2));
+			ensure(superWidget);
+			auto res = superWidget->Initialize();
+			if (!res)
+				return Unexpected(eResult::failure, L">>>>> [engine::initialize()]. Failed to initialize super widget. More specifically: " + res.error().getMessage());
 
-			return res;
+			initState = eEngineState::eInitOK;
+			
+			return zResult<>();
 		}
 		catch (const std::exception& e)
 		{
@@ -139,7 +146,7 @@ export namespace zzz
 		return Unexpected(eResult::exception, err);
 	}
 
-	void engine::OnResizeWindow(const zSize2D<>& size, e_TypeWinAppResize resizeType)
+	void engine::OnResizeSW(const zSize2D<>& size, e_TypeWinAppResize resizeType)
 	{
 
 	}
