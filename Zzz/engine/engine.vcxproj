@@ -92,14 +92,16 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="source\engine.cppm" />
+    <ClCompile Include="source\platforms\icoBuilder\ibMSWin.cppm" />
+    <ClCompile Include="source\platforms\icoBuilder\IIcoBuilder.cppm" />
     <ClCompile Include="source\helpers\MessageBox.cppm" />
     <ClCompile Include="source\helpers\StringConverters.cppm" />
     <ClCompile Include="source\helpers\zSerialize.cppm" />
     <ClCompile Include="source\helpers\zSize2D.cppm" />
-    <ClCompile Include="source\IO\IOPathFactory.cppm" />
+    <ClCompile Include="source\helpers\IO\IOPathFactory.cppm" />
     <ClCompile Include="source\platforms\mainAppLoop\IMainLoop.cppm" />
     <ClCompile Include="source\platforms\mainAppLoop\mlMSWin.cppm" />
-    <ClCompile Include="source\IO\ioZaml.cppm" />
+    <ClCompile Include="source\helpers\IO\ioZaml.cppm" />
     <ClCompile Include="source\platforms\widgets\swSettings.cppm" />
     <ClCompile Include="source\utils\zResult.cppm" />
     <ClCompile Include="source\platforms\widgets\ISuperWidget.cppm" />

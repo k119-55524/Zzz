@@ -37,9 +37,6 @@ namespace zzz
 		eInitOK,	// Инициализированн
 		eRunning,	// Идёт процесс работы
 	};
-
-	const std::wstring swSetFolderName = L"appdata";
-	const std::wstring swSetFileName = L"swui.zaml";
 }
 
 export namespace zzz
@@ -50,7 +47,7 @@ export namespace zzz
 		engine();
 		~engine();
 
-		zResult<> Initialize() noexcept;
+		zResult<> Initialize(std::wstring settingfile) noexcept;
 		zResult<> Run() noexcept;
 
 	private:
@@ -86,7 +83,7 @@ export namespace zzz
 		isSysPaused = true;
 	}
 
-	zResult<> engine::Initialize() noexcept
+	zResult<> engine::Initialize(std::wstring settingfile) noexcept
 	{
 		std::lock_guard<std::mutex> lock(stateMutex);
 		if (initState != eEngineState::eInitNot)
@@ -95,7 +92,7 @@ export namespace zzz
 		std::wstring err;
 		try
 		{
-			settingsSW = std::make_shared<swSettings>(IOPathFactory::BuildPath(IOPathFactory::GetPath_ExecutableSubfolder(), swSetFolderName, swSetFileName));
+			settingsSW = std::make_shared<swSettings>(settingfile);
 			ensure(settingsSW);
 			superWidget = std::make_shared<SuperWidget>(settingsSW, std::bind(&engine::OnResizeSW, this, std::placeholders::_1, std::placeholders::_2));
 			ensure(superWidget);

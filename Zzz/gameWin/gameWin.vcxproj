@@ -95,8 +95,12 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="appdata\swui.zaml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <None Include="appdata\ui.zaml" />
+    <None Include="appdata\rc\ico_1.jpg" />
+    <None Include="appdata\rc\ico_2.png" />
+    <None Include="appdata\rc\ico_3.png" />
+    <None Update="appdata\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

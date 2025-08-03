@@ -1,0 +1,3 @@
+<Window width="800" height="600" caption="zGame3D" ico="ico_3.png" icoSize="256">
+  <MSWin_SpecSettings ClassName="zEngineClassName"/>
+</Window>

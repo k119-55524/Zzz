@@ -28,6 +28,15 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="appdata\swui.zaml" />
+    <None Include="appdata\ui.zaml" />
+    <None Include="appdata\rc\ico_1.jpg">
+      <Filter>Файлы ресурсов</Filter>
+    </None>
+    <None Include="appdata\rc\ico_2.png">
+      <Filter>Файлы ресурсов</Filter>
+    </None>
+    <None Include="appdata\rc\ico_3.png">
+      <Filter>Файлы ресурсов</Filter>
+    </None>
   </ItemGroup>
 </Project>

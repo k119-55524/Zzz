@@ -53,10 +53,10 @@
     <ClCompile Include="source\helpers\StringConverters.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\IO\ioZaml.cppm">
+    <ClCompile Include="source\helpers\IO\ioZaml.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\IO\IOPathFactory.cppm">
+    <ClCompile Include="source\helpers\IO\IOPathFactory.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\helpers\MessageBox.cppm">
@@ -66,6 +66,12 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\platforms\mainAppLoop\mlMSWin.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\platforms\icoBuilder\IIcoBuilder.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\platforms\icoBuilder\ibMSWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

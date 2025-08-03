@@ -68,5 +68,7 @@ namespace zzz
 		// В релизной сборке ничего не делаем :)
 #endif
 	}
+
+#define RELEASE(x) if ((x)) { (x)->Release(); (x) = nullptr; }
 }
 #endif // HEADER_H

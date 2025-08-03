@@ -14,7 +14,7 @@ int APIENTRY wWinMain(
 	_In_		int			nCmdShow)
 {
 	zzz::engine engine;
-	zResult<> res = engine.Initialize()
+	zResult<> res = engine.Initialize(L".\\appdata\\ui.zaml")
 		.and_then([&engine]() { return engine.Run(); })
 		.or_else([](const Unexpected& error)
 			{

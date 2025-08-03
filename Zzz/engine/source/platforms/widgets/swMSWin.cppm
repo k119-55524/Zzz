@@ -5,12 +5,16 @@ export module swMSWin;
 import result;
 import zSize2D;
 import mlMSWin;
+import ibMSWin;
 import swSettings;
 import ISuperWidget;
+import IOPathFactory;
 
 using namespace zzz;
+using namespace zzz::io;
 using namespace zzz::result;
 using namespace zzz::platforms;
+using namespace zzz::icoBuilder;
 
 export namespace zzz::platforms
 {
@@ -51,6 +55,8 @@ export namespace zzz::platforms
 
 	zResult<> swMSWin::_Initialize()
 	{
+		#pragma region Получение настроек окна
+
 		std::wstring Caption;
 		std::wstring ClassName;
 		{
@@ -77,11 +83,22 @@ export namespace zzz::platforms
 		if (!res)
 			return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'height' parameter. More specifically:" + res.error().getMessage());
 
+		HICON iconHandle = nullptr;
+		{
+			ibMSWin icoBuilder;
+			std::wstring iconPath = IOPathFactory::GetPath_swRC(settings->GetParam<std::wstring>(L"ico").value_or(L""));
+			auto res = icoBuilder.LoadIco(iconPath, settings->GetParam<int>(L"icoSize").value_or(32));
+			if(res)
+				iconHandle = res.value();
+		}
+
+		#pragma endregion Получение настроек окна
+
 		WNDCLASS wc = { 0 };
 		wc.style = CS_HREDRAW | CS_VREDRAW;
 		wc.lpfnWndProc = swMSWin::WindowProc;
 		wc.hInstance = GetModuleHandle(NULL);
-		wc.hIcon = LoadIcon(GetModuleHandle(NULL), NULL);// MAKEINTRESOURCE(userGS->GetMSWinIcoID()));
+		wc.hIcon = iconHandle;// LoadIcon(GetModuleHandle(NULL), NULL);// MAKEINTRESOURCE(userGS->GetMSWinIcoID()));
 		wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
 		wc.lpszClassName = ClassName.c_str();
 

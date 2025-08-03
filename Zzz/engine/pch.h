@@ -27,7 +27,6 @@
 #include <unordered_map>
 #include <source_location>
 
-
 #include "headers\header.h"
 
 #endif //PCH_H
