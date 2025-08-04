@@ -47,7 +47,7 @@ export namespace zzz
 		engine();
 		~engine();
 
-		zResult<> Initialize(std::wstring settingfile) noexcept;
+		zResult<> Initialize(std::wstring settingFilePath) noexcept;
 		zResult<> Run() noexcept;
 
 	private:
@@ -76,6 +76,7 @@ export namespace zzz
 
 	void engine::Reset() noexcept
 	{
+		mainLoop.reset();
 		superWidget.reset();
 		settingsSW.reset();
 
@@ -83,7 +84,7 @@ export namespace zzz
 		isSysPaused = true;
 	}
 
-	zResult<> engine::Initialize(std::wstring settingfile) noexcept
+	zResult<> engine::Initialize(std::wstring settingFilePath) noexcept
 	{
 		std::lock_guard<std::mutex> lock(stateMutex);
 		if (initState != eEngineState::eInitNot)
@@ -92,17 +93,13 @@ export namespace zzz
 		std::wstring err;
 		try
 		{
-			settingsSW = std::make_shared<swSettings>(settingfile);
-			ensure(settingsSW);
-			superWidget = std::make_shared<SuperWidget>(settingsSW, std::bind(&engine::OnResizeSW, this, std::placeholders::_1, std::placeholders::_2));
-			ensure(superWidget);
+			ensure(settingsSW = std::make_shared<swSettings>(settingFilePath));
+			ensure(superWidget = std::make_shared<SuperWidget>(settingsSW, std::bind(&engine::OnResizeSW, this, std::placeholders::_1, std::placeholders::_2)));
 			auto res = superWidget->Initialize();
 			if (!res)
 				return Unexpected(eResult::failure, L">>>>> [engine::initialize()]. Failed to initialize super widget. More specifically: " + res.error().getMessage());
 
-			mainLoop = std::make_shared<MainLoop>(std::bind(&engine::OnUpdateSystem, this));
-			ensure(mainLoop);
-
+			ensure(mainLoop = std::make_shared<MainLoop>(std::bind(&engine::OnUpdateSystem, this)));
 			initState = eEngineState::eInitOK;
 			
 			return zResult<>();
@@ -176,7 +173,7 @@ export namespace zzz
 			isSysPaused = true;
 			break;
 		case e_TypeWinAppResize::eShow:
-			DebugOutput(L">>>>> [engine::OnResizeSW]. Show app window.\n");
+			DebugOutput((L">>>>> [engine::OnResizeSW]. Show app window. Win size: " + std::to_wstring(size.width) + L"x" + std::to_wstring(size.height) + L".\n").c_str());
 
 			isSysPaused = false;
 			break;

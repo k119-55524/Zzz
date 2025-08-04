@@ -25,16 +25,18 @@ export namespace zzz::icoBuilder
 		IWICImagingFactory* factory;
 		IWICBitmapDecoder* decoder;
 		IWICBitmapFrameDecode* frame;
+		IWICBitmapScaler* scaler;
 		IWICFormatConverter* converter;
 		HBITMAP colorBitmap;
 		HBITMAP maskBitmap;
 		HDC hdc;
 	};
 
-	ibMSWin::ibMSWin()
-		: factory(nullptr),
+	ibMSWin::ibMSWin() :
+		factory(nullptr),
 		decoder(nullptr),
 		frame(nullptr),
+		scaler(nullptr),
 		converter(nullptr),
 		colorBitmap(nullptr),
 		maskBitmap(nullptr),
@@ -62,6 +64,7 @@ export namespace zzz::icoBuilder
 		}
 
 		RELEASE(converter);
+		RELEASE(scaler);
 		RELEASE(frame);
 		RELEASE(decoder);
 		RELEASE(factory);
@@ -110,6 +113,32 @@ export namespace zzz::icoBuilder
 			return Unexpected(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось получить кадр из WIC Bitmap Decoder.");
 		}
 
+
+
+		UINT srcWidth = 0, srcHeight = 0;
+		if (FAILED(frame->GetSize(&srcWidth, &srcHeight)))
+		{
+			CleanupResources();
+			if (comInitialized) CoUninitialize();
+			return Unexpected(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось получить размеры изображения.");
+		}
+
+		if (FAILED(factory->CreateBitmapScaler(&scaler)))
+		{
+			CleanupResources();
+			if (comInitialized) CoUninitialize();
+			return Unexpected(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось создать WIC Bitmap Scaler.");
+		}
+
+		if (FAILED(scaler->Initialize(frame, iconSize, iconSize, WICBitmapInterpolationModeFant)))
+		{
+			CleanupResources();
+			if (comInitialized) CoUninitialize();
+			return Unexpected(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось инициализировать Bitmap Scaler.");
+		}
+
+
+
 		if (FAILED(factory->CreateFormatConverter(&converter)))
 		{
 			CleanupResources();
@@ -117,8 +146,7 @@ export namespace zzz::icoBuilder
 			return Unexpected(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось создать WIC Format Converter.");
 		}
 
-		if (FAILED(converter->Initialize(frame, GUID_WICPixelFormat32bppBGRA,
-			WICBitmapDitherTypeNone, nullptr, 0.0, WICBitmapPaletteTypeCustom)))
+		if (FAILED(converter->Initialize( scaler, GUID_WICPixelFormat32bppBGRA, WICBitmapDitherTypeNone, nullptr, 0.0, WICBitmapPaletteTypeCustom)))
 		{
 			CleanupResources();
 			if (comInitialized) CoUninitialize();

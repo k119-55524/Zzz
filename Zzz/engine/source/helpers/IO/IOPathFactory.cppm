@@ -4,10 +4,6 @@ export module IOPathFactory;
 namespace zzz::io
 {
 	namespace fs = std::filesystem;
-
-	static const std::wstring swSettingFolderName = L"appdata";
-	//static const std::wstring swSettingFileName = L"swui.zaml";
-	static const std::wstring swRCFolderName = L"rc";
 }
 
 export namespace zzz::io
@@ -24,11 +20,6 @@ export namespace zzz::io
 			(result /= ... /= fs::path(std::forward<Args>(parts)));
 			return result.wstring();
 		}
-
-		static std::wstring GetPath_swRC(std::wstring fileName)
-		{
-			return BuildPath(GetPath_ExecutableSubfolder(), swSettingFolderName, swRCFolderName, fileName);
-		}
 	};
 
 	std::wstring IOPathFactory::GetPath_ExecutableSubfolder()
@@ -43,4 +34,4 @@ export namespace zzz::io
 		fs::path exePath = fs::path(std::wstring(buffer, length));
 		return exePath.parent_path().wstring();
 	}
-} // namespace zzz::io
+}

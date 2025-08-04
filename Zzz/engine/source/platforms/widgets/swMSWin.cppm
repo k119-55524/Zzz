@@ -60,7 +60,7 @@ export namespace zzz::platforms
 		std::wstring Caption;
 		std::wstring ClassName;
 		{
-			auto res = settings->GetParam<std::wstring>(L"caption")
+			auto res = settings->GetParam<std::wstring>(L"Caption")
 				.and_then([&](std::wstring name) { Caption = name; });
 
 			if (!res)
@@ -72,26 +72,28 @@ export namespace zzz::platforms
 			.or_else([&](auto error) { ClassName = Caption; });
 
 		LONG swWidth;
-		auto res = settings->GetParam<int>(L"width")
+		auto res = settings->GetParam<int>(L"Width")
 			.and_then([&](int width) {swWidth = width; });
 		if (!res)
-			return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'width' parameter. More specifically: " + res.error().getMessage());
+			return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'Width' parameter. More specifically: " + res.error().getMessage());
 
 		LONG swHeight;
-		res = settings->GetParam<int>(L"height")
+		res = settings->GetParam<int>(L"Height")
 			.and_then([&](int height) {swHeight = height; });
 		if (!res)
-			return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'height' parameter. More specifically:" + res.error().getMessage());
+			return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'Height' parameter. More specifically:" + res.error().getMessage());
 
 		HICON iconHandle = nullptr;
 		{
-			ibMSWin icoBuilder;
-			std::wstring iconPath = IOPathFactory::GetPath_swRC(settings->GetParam<std::wstring>(L"ico").value_or(L""));
-			auto res = icoBuilder.LoadIco(iconPath, settings->GetParam<int>(L"icoSize").value_or(32));
-			if(res)
-				iconHandle = res.value();
+			zResult<std::wstring> icoPath = settings->GetParam<std::wstring>(L"IcoFullPath");
+			if (icoPath)
+			{
+				ibMSWin icoBuilder;
+				auto res = icoBuilder.LoadIco(icoPath.value(), settings->GetParam<int>(L"IcoSize").value_or(32));
+				if(res)
+					iconHandle = res.value();
+			}
 		}
-
 		#pragma endregion Получение настроек окна
 
 		WNDCLASS wc = { 0 };
