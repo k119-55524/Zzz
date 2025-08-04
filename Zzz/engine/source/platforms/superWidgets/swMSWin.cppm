@@ -1,7 +1,7 @@
 #include "pch.h"
 export module swMSWin;
 
-#ifdef _WIN64
+#if defined(_WIN64)
 import result;
 import zSize2D;
 import mlMSWin;
@@ -56,7 +56,6 @@ export namespace zzz::platforms
 	zResult<> swMSWin::_Initialize()
 	{
 		#pragma region Получение настроек окна
-
 		std::wstring Caption;
 		std::wstring ClassName;
 		{

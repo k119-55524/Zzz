@@ -35,13 +35,13 @@
     <ClCompile Include="source\utils\zResult.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\platforms\widgets\ISuperWidget.cppm">
+    <ClCompile Include="source\platforms\superWidgets\ISuperWidget.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\platforms\widgets\swMSWin.cppm">
+    <ClCompile Include="source\platforms\superWidgets\swMSWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\platforms\widgets\swSettings.cppm">
+    <ClCompile Include="source\platforms\superWidgets\swSettings.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\helpers\zSize2D.cppm">
@@ -72,6 +72,12 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\platforms\icoBuilder\ibMSWin.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gapi\IGAPI.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gapi\DXAPI.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

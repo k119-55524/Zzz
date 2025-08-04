@@ -2,6 +2,7 @@
 #include "pch.h"
 export module engine;
 
+import IGAPI;
 import result;
 import zSize2D;
 import mlMSWin;
@@ -12,6 +13,7 @@ import IOPathFactory;
 import StringConverters;
 
 #if defined(_WIN64)
+import DXAPI;
 import swMSWin;
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
@@ -27,16 +29,17 @@ namespace zzz
 #if defined(_WIN64)
 	typedef swMSWin SuperWidget;
 	typedef mlMSWin MainLoop;
+	typedef DXAPI GAPI;
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif
 
-	enum eEngineState : zU32
-	{
-		eInitNot,	// Готов к инициализации
-		eInitOK,	// Инициализированн
-		eRunning,	// Идёт процесс работы
-	};
+	//enum eEngineState : zU32
+	//{
+	//	eInitNot,	// Готов к инициализации
+	//	eInitOK,	// Инициализированн
+	//	eRunning,	// Идёт процесс работы
+	//};
 }
 
 export namespace zzz
@@ -51,13 +54,14 @@ export namespace zzz
 		zResult<> Run() noexcept;
 
 	private:
-		eEngineState initState;
+		eInitState initState;
 		std::mutex stateMutex;
 		bool isSysPaused;
 
 		std::shared_ptr<swSettings> settingsSW;
 		std::shared_ptr<SuperWidget> superWidget;
 		std::shared_ptr<IMainLoop> mainLoop;
+		std::shared_ptr<IGAPI> gapi;
 
 		void Reset() noexcept;
 		void OnResizeSW(const zSize2D<>& size, e_TypeWinAppResize resType);
@@ -65,7 +69,7 @@ export namespace zzz
 	};
 
 	engine::engine() :
-		initState{ eEngineState::eInitNot },
+		initState{ eInitState::eInitNot },
 		isSysPaused{ true }
 	{ }
 
@@ -76,18 +80,19 @@ export namespace zzz
 
 	void engine::Reset() noexcept
 	{
+		gapi.reset();
 		mainLoop.reset();
 		superWidget.reset();
 		settingsSW.reset();
 
-		initState = eEngineState::eInitNot;
+		initState = eInitState::eInitNot;
 		isSysPaused = true;
 	}
 
 	zResult<> engine::Initialize(std::wstring settingFilePath) noexcept
 	{
 		std::lock_guard<std::mutex> lock(stateMutex);
-		if (initState != eEngineState::eInitNot)
+		if (initState != eInitState::eInitNot)
 			return Unexpected(eResult::failure, L">>>>> [engine::initialize()]. Re-initialization is not allowed.");
 
 		std::wstring err;
@@ -100,8 +105,12 @@ export namespace zzz
 				return Unexpected(eResult::failure, L">>>>> [engine::initialize()]. Failed to initialize super widget. More specifically: " + res.error().getMessage());
 
 			ensure(mainLoop = std::make_shared<MainLoop>(std::bind(&engine::OnUpdateSystem, this)));
-			initState = eEngineState::eInitOK;
-			
+			ensure(gapi = std::make_shared<GAPI>(superWidget));
+			res = gapi->Initialize();
+			if (!res)
+				return Unexpected(eResult::failure, L">>>>> [engine::initialize()]. Failed to initialize gapi. More specifically: " + res.error().getMessage());
+
+			initState = eInitState::eInitOK;
 			return zResult<>();
 		}
 		catch (const std::exception& e)
@@ -122,13 +131,13 @@ export namespace zzz
 	zResult<> engine::Run() noexcept
 	{
 		std::lock_guard<std::mutex> lock(stateMutex);
-		if (initState != eEngineState::eInitOK)
+		if (initState != eInitState::eInitOK)
 			return Unexpected(eResult::failure, L">>>>> [engine::go()]. Engine is not initialized.");
 
-		if (initState == eEngineState::eRunning)
+		if (initState == eInitState::eRunning)
 			return Unexpected(eResult::failure, L">>>>> [engine::go()]. Engine is already running.");
 
-		initState = eEngineState::eRunning;
+		initState = eInitState::eRunning;
 		std::wstring err;
 
 		try

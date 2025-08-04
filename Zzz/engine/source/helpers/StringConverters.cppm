@@ -50,6 +50,9 @@ export namespace zzz
 
 		return str;
 	}
+#else
+#error ">>>>> [Compile error]. This branch requires implementation for the current platform"
+#endif
 
 	template<typename T> inline zResult<T> ConvertValue(const std::wstring& text);
 	template<> inline zResult<std::wstring> ConvertValue<std::wstring>(const std::wstring& text) { return text; }
@@ -81,5 +84,4 @@ export namespace zzz
 		if (text == L"false" || text == L"0") return false;
 		return Unexpected(eResult::invalid_format, L"Invalid bool: " + text);
 	}
-#endif
 }
