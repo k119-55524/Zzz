@@ -1,16 +1,18 @@
 #include "pch.h"
 export module IMainLoop;
 
-namespace zzz::platforms
+import zEvent;
+
+using namespace zzz;
+
+export namespace zzz::platforms
 {
-	export class IMainLoop
+	class IMainLoop
 	{
 	public:
-		IMainLoop() = delete;
+		IMainLoop() = default;
 		IMainLoop(const IMainLoop&) = delete;
 		IMainLoop(IMainLoop&&) = delete;
-
-		IMainLoop(std::function<void()> _updateSystem);
 
 		virtual ~IMainLoop() = default;
 
@@ -19,13 +21,9 @@ namespace zzz::platforms
 
 		virtual void Run() = 0;
 
+		zEvent<void> onUpdateSystem;
+
 	protected:
 		std::function<void()> updateSystem;
 	};
-
-	IMainLoop::IMainLoop(std::function<void()> _updateSystem) :
-		updateSystem{ std::move(_updateSystem) }
-	{
-		ensure(updateSystem);
-	}
 }

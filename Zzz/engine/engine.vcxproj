@@ -94,6 +94,7 @@
     <ClCompile Include="source\engine.cppm" />
     <ClCompile Include="source\gapi\DXAPI.cppm" />
     <ClCompile Include="source\gapi\IGAPI.cppm" />
+    <ClCompile Include="source\helpers\zEvent.cppm" />
     <ClCompile Include="source\platforms\icoBuilder\ibMSWin.cppm" />
     <ClCompile Include="source\platforms\icoBuilder\IIcoBuilder.cppm" />
     <ClCompile Include="source\helpers\MessageBox.cppm" />

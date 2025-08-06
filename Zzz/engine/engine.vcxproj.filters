@@ -80,5 +80,8 @@
     <ClCompile Include="source\gapi\DXAPI.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="source\helpers\zEvent.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -1,6 +1,7 @@
 #include "pch.h"
 export module ISuperWidget;
 
+import zEvent;
 import result;
 import zSize2D;
 import IMainLoop;
@@ -31,39 +32,31 @@ export namespace zzz::platforms
 		ISuperWidget(ISuperWidget&) = delete;
 		ISuperWidget(ISuperWidget&&) = delete;
 
-		ISuperWidget(std::shared_ptr<swSettings> _settings, const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _callbackResizeSW);
+		explicit ISuperWidget(std::shared_ptr<swSettings> _settings);
 		virtual ~ISuperWidget() = 0;
 
 		inline const zSize2D<>& GetWinSize() const noexcept { return winSize; };
 
+		zEvent<zSize2D<>, e_TypeWinAppResize> onResize;
+
 	protected:
-		virtual zResult<> _Initialize() = 0;
+		virtual zResult<> Initialize() = 0;
+		friend class zzz::engine;
+
 		std::shared_ptr<swSettings> settings;
 		zSize2D<> winSize;
 
-		std::shared_ptr<IMainLoop> mainLoop;
-		std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> callbackResizeSW;
-
-	private:
-		zResult<> Initialize();
-		friend class zzz::engine;
+		virtual void OnUpdate() = 0;
 	};
 
-	ISuperWidget::ISuperWidget(std::shared_ptr<swSettings> _settings, const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _callbackResizeSW) :
+	ISuperWidget::ISuperWidget(std::shared_ptr<swSettings> _settings) :
 		settings{ _settings },
-		callbackResizeSW{ _callbackResizeSW },
 		winSize{ 0, 0 }
 	{
 		ensure(settings);
-		ensure(callbackResizeSW);
 	}
 
 	ISuperWidget::~ISuperWidget()
 	{
-	}
-
-	zResult<> ISuperWidget::Initialize()
-	{
-		return _Initialize();
 	}
 }

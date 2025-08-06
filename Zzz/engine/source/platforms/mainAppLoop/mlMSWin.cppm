@@ -1,7 +1,10 @@
 #include "pch.h"
 export module mlMSWin;
 
+import zEvent;
 import IMainLoop;
+
+using namespace zzz;
 
 namespace zzz::platforms
 {
@@ -9,11 +12,9 @@ namespace zzz::platforms
 	export class mlMSWin : public IMainLoop
 	{
 	public:
-		mlMSWin() = delete;
+		mlMSWin() = default;
 		mlMSWin(const mlMSWin&) = delete;
 		mlMSWin(mlMSWin&&) = delete;
-
-		mlMSWin(std::function<void()> _updateSystem);
 
 		virtual ~mlMSWin() = default;
 
@@ -22,10 +23,6 @@ namespace zzz::platforms
 
 		void Run() override;
 	};
-
-	mlMSWin::mlMSWin(std::function<void()> _updateSystem) :
-		IMainLoop(_updateSystem)
-	{ }
 
 	void mlMSWin::Run()
 	{
@@ -40,7 +37,8 @@ namespace zzz::platforms
 			}
 			else
 			{
-				updateSystem();
+				onUpdateSystem();
+				//updateSystem();
 			}
 		}
 	}

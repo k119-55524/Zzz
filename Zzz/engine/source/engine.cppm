@@ -33,13 +33,6 @@ namespace zzz
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif
-
-	//enum eEngineState : zU32
-	//{
-	//	eInitNot,	// Готов к инициализации
-	//	eInitOK,	// Инициализированн
-	//	eRunning,	// Идёт процесс работы
-	//};
 }
 
 export namespace zzz
@@ -99,19 +92,28 @@ export namespace zzz
 		try
 		{
 			ensure(settingsSW = std::make_shared<swSettings>(settingFilePath));
-			ensure(superWidget = std::make_shared<SuperWidget>(settingsSW, std::bind(&engine::OnResizeSW, this, std::placeholders::_1, std::placeholders::_2)));
+			ensure(superWidget = std::make_shared<SuperWidget>(settingsSW));
+			superWidget->onResize += std::bind(&engine::OnResizeSW, this, std::placeholders::_1, std::placeholders::_2);
 			auto res = superWidget->Initialize();
 			if (!res)
+			{
+				Reset();
 				return Unexpected(eResult::failure, L">>>>> [engine::initialize()]. Failed to initialize super widget. More specifically: " + res.error().getMessage());
+			}
 
-			ensure(mainLoop = std::make_shared<MainLoop>(std::bind(&engine::OnUpdateSystem, this)));
+			ensure(mainLoop = std::make_shared<MainLoop>());
+			mainLoop->onUpdateSystem += std::bind(&engine::OnUpdateSystem, this);
+
 			ensure(gapi = std::make_shared<GAPI>(superWidget));
 			res = gapi->Initialize();
 			if (!res)
+			{
+				Reset();
 				return Unexpected(eResult::failure, L">>>>> [engine::initialize()]. Failed to initialize gapi. More specifically: " + res.error().getMessage());
+			}
 
 			initState = eInitState::eInitOK;
-			return zResult<>();
+			return {};
 		}
 		catch (const std::exception& e)
 		{
@@ -169,7 +171,8 @@ export namespace zzz
 		//Sleep(100);
 
 		//sceneManager->Update();
-		//gAPI->Update();
+		gapi->OnUpdate();
+		gapi->OnRender();
 	}
 
 	void engine::OnResizeSW(const zSize2D<>& size, e_TypeWinAppResize resizeType)
@@ -190,7 +193,7 @@ export namespace zzz
 			DebugOutput((L">>>>> [engine::OnResizeSW]. Resize to " + std::to_wstring(size.width) + L"x" + std::to_wstring(size.height) + L".\n").c_str());
 
 			isSysPaused = false;
-			//gAPI->Resize(size);
+			gapi->OnResize(size);
 			break;
 		}
 	}

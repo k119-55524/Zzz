@@ -16,20 +16,28 @@ using namespace zzz::result;
 using namespace zzz::platforms;
 using namespace zzz::icoBuilder;
 
+namespace zzz
+{
+	class engine;
+}
+
 export namespace zzz::platforms
 {
 	class swMSWin final : public ISuperWidget
 	{
 	public:
+		friend class zzz::engine;
+
 		swMSWin() = delete;
 		swMSWin(swMSWin&) = delete;
 		swMSWin(swMSWin&&) = delete;
 
-		swMSWin(std::shared_ptr<swSettings> _settings, const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeSW);
+		explicit swMSWin(std::shared_ptr<swSettings> _settings);
 		~swMSWin() override;
 
 	protected:
-		zResult<> _Initialize() override;
+		virtual zResult<> Initialize() override;
+		void OnUpdate() override {};
 
 	private:
 		HWND hWnd;
@@ -39,8 +47,8 @@ export namespace zzz::platforms
 		LRESULT MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	};
 
-	swMSWin::swMSWin(std::shared_ptr<swSettings> _settings, const std::function<void(const zSize2D<>& size, e_TypeWinAppResize resType)> _resizeSW) :
-		ISuperWidget(_settings, _resizeSW),
+	swMSWin::swMSWin(std::shared_ptr<swSettings> _settings) :
+		ISuperWidget(_settings),
 		hWnd{ nullptr },
 		IsMinimized{ true }
 	{
@@ -53,7 +61,7 @@ export namespace zzz::platforms
 			DestroyWindow(hWnd);
 	}
 
-	zResult<> swMSWin::_Initialize()
+	zResult<> swMSWin::Initialize()
 	{
 		#pragma region Получение настроек окна
 		std::wstring Caption;
@@ -175,26 +183,23 @@ export namespace zzz::platforms
 		case WM_SIZE:
 			winSize.width = static_cast<zU64>(LOWORD(lParam));
 			winSize.height = static_cast<zU64>(HIWORD(lParam));
-			if (callbackResizeSW != nullptr)
-			{
 				if (wParam == SIZE_MINIMIZED)
 				{
-					callbackResizeSW(winSize, e_TypeWinAppResize::eHide);
+					onResize(winSize, e_TypeWinAppResize::eHide);
 					IsMinimized = true;
 				}
 				else
 				{
 					if ((wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED) && IsMinimized)
 					{
-						callbackResizeSW(winSize, e_TypeWinAppResize::eShow);
+						onResize(winSize, e_TypeWinAppResize::eShow);
 						IsMinimized = false;
 					}
 					else
 					{
-						callbackResizeSW(winSize, e_TypeWinAppResize::eResize);
+						onResize(winSize, e_TypeWinAppResize::eResize);
 					}
 				}
-			}
 			return 0;
 
 			// Перехватываем это сообщение, чтобы не допустить слишком маленького/большого размера окна.
