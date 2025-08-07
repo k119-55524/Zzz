@@ -2,7 +2,6 @@
 #include "pch.h"
 import engine;
 import result;
-import zMsgBox;
 
 using namespace zzz;
 using namespace zzz::result;
@@ -15,12 +14,7 @@ int APIENTRY wWinMain(
 {
 	zzz::engine engine;
 	zResult<> res = engine.Initialize(L".\\appdata\\ui.zaml")
-		.and_then([&engine]() { return engine.Run(); })
-		.or_else([](const Unexpected& error)
-			{
-				zMsgBox::Error(error.getMessage());
-				return zResult<>(error);
-			});
+		.and_then([&engine]() { return engine.Run(); });
 
 	return res ? 0 : static_cast<int>(res.error().getCode());
 }

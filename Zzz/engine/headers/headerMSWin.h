@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef _WIN64
+#if defined(_WIN64)
 #include <windows.h>
 #include <windowsx.h>
 #include <comdef.h>

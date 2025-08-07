@@ -4,6 +4,7 @@ export module engine;
 
 import IGAPI;
 import result;
+import zMsgBox;
 import zSize2D;
 import mlMSWin;
 import IMainLoop;
@@ -91,8 +92,8 @@ export namespace zzz
 		std::wstring err;
 		try
 		{
-			ensure(settingsSW = std::make_shared<swSettings>(settingFilePath));
-			ensure(superWidget = std::make_shared<SuperWidget>(settingsSW));
+			settingsSW = safe_make_shared<swSettings>(settingFilePath);
+			superWidget = safe_make_shared<SuperWidget>(settingsSW);
 			superWidget->onResize += std::bind(&engine::OnResizeSW, this, std::placeholders::_1, std::placeholders::_2);
 			auto res = superWidget->Initialize();
 			if (!res)
@@ -101,11 +102,11 @@ export namespace zzz
 				return Unexpected(eResult::failure, L">>>>> [engine::initialize()]. Failed to initialize super widget. More specifically: " + res.error().getMessage());
 			}
 
-			ensure(mainLoop = std::make_shared<MainLoop>());
+			mainLoop = safe_make_shared<MainLoop>();
 			mainLoop->onUpdateSystem += std::bind(&engine::OnUpdateSystem, this);
 
-			ensure(gapi = std::make_shared<GAPI>(superWidget));
-			res = gapi->Initialize();
+			gapi = safe_make_shared<GAPI>();
+			res = gapi->Initialize(superWidget);
 			if (!res)
 			{
 				Reset();
@@ -126,6 +127,7 @@ export namespace zzz
 			err = L">>>>> #1 [wWinMain( ... )]. Unknown exception occurred.";
 		}
 
+		zMsgBox::Error(err);
 		Reset();
 		return Unexpected(eResult::exception, err);
 	}

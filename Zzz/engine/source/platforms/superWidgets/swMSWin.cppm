@@ -35,6 +35,8 @@ export namespace zzz::platforms
 		explicit swMSWin(std::shared_ptr<swSettings> _settings);
 		~swMSWin() override;
 
+		inline const HWND GetHWND() const noexcept { return hWnd; };
+
 	protected:
 		virtual zResult<> Initialize() override;
 		void OnUpdate() override {};

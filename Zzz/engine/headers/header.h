@@ -9,7 +9,8 @@
 
    ------------------------------------------------------------- */
 
-#include "MSWindows.h"
+#include "headerMSWin.h"
+#include "headerDX.h"
 
 namespace zzz
 {
@@ -28,7 +29,7 @@ namespace zzz
 	{
 		eInitNot,		// Готов к инициализации
 		eInitProcess,	// Идёт процесс инициализации
-		eInitOK,		// Инициализированн
+		eInitOK,		// Инициализирован
 		eInitError,		// Ошибка инициализации
 		eTermination,	// Процесс деинициализации
 		eRunning		// Идёт процесс работы
@@ -62,10 +63,59 @@ namespace zzz
 	{
 		if (!condition)
 			throw std::runtime_error(
-				"Ensure: " + msg +
+				msg +
 				". Method=" + std::string(loc.function_name()) +
 				", line=" + std::to_string(loc.line()) +
 				", file=" + std::string(loc.file_name()));
+	}
+
+	template<typename T, typename... Args>
+	inline std::shared_ptr<T> safe_make_shared(
+		Args&&... args)
+	{
+		return safe_make_shared_impl<T>(std::source_location::current(), std::forward<Args>(args)...);
+	}
+
+	template<typename T, typename... Args>
+	inline std::shared_ptr<T> safe_make_shared_impl(
+		const std::source_location& loc,
+		Args&&... args)
+	{
+		try {
+			return std::make_shared<T>(std::forward<Args>(args)...);
+		}
+		catch (const std::bad_alloc& e) {
+			throw std::runtime_error(
+				"Memory allocation error (make_shared). Exception: " + std::string(e.what()) +
+				". Method=" + std::string(loc.function_name()) +
+				", line=" + std::to_string(loc.line()) +
+				", file=" + std::string(loc.file_name()));
+		}
+	}
+
+	template<typename T, typename... Args>
+	inline std::unique_ptr<T> safe_make_unique(
+		Args&&... args)
+	{
+		return safe_make_unique_impl<T>(std::source_location::current(), std::forward<Args>(args)...);
+	}
+
+	// Внутренняя реализация с source_location
+	template<typename T, typename... Args>
+	inline std::unique_ptr<T> safe_make_unique_impl(
+		const std::source_location& loc,
+		Args&&... args)
+	{
+		try {
+			return std::make_unique<T>(std::forward<Args>(args)...);
+		}
+		catch (const std::bad_alloc& e) {
+			throw std::runtime_error(
+				"Memory allocation error (make_unique). Exception: " + std::string(e.what()) +
+				". Method=" + std::string(loc.function_name()) +
+				", line=" + std::to_string(loc.line()) +
+				", file=" + std::string(loc.file_name()));
+		}
 	}
 
 	inline void DebugOutput(const std::wstring& msg)

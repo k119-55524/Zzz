@@ -31,29 +31,25 @@ export namespace zzz::platforms
 
 		IGAPI& operator=(const IGAPI&) = delete;
 
-		explicit IGAPI(const std::shared_ptr<ISuperWidget> _appWin, eGAPIType type);
+		explicit IGAPI(eGAPIType type);
 		virtual ~IGAPI() = 0;
 
 	protected:
-		virtual zResult<> Initialize() = 0;
+		virtual zResult<> Initialize(const std::shared_ptr<ISuperWidget> appWin) = 0;
 		friend class zzz::engine;
 
 		eGAPIType gapiType;
 		eInitState initState;
-
-		std::shared_ptr<ISuperWidget> appWin;
 
 		virtual void OnUpdate() = 0;
 		virtual void OnRender() = 0;
 		virtual void OnResize(const zSize2D<>& size) = 0;
 	};
 
-	IGAPI::IGAPI(const std::shared_ptr<ISuperWidget> _appWin, eGAPIType type) :
-		appWin{ _appWin },
+	IGAPI::IGAPI(eGAPIType type) :
 		gapiType{ type },
 		initState{ eInitState::eInitNot }
 	{
-		ensure(appWin);
 	}
 
 	IGAPI::~IGAPI()

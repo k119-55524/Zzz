@@ -7,7 +7,7 @@ using namespace zzz::result;
 
 export namespace zzz
 {
-#ifdef _WIN64
+#if defined(_WIN64)
 	zResult<std::wstring> string_to_wstring(const std::string& str)
 	{
 		if (str.empty())

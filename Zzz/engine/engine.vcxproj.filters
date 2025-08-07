@@ -21,7 +21,10 @@
     <ClInclude Include="headers\header.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="headers\MSWindows.h">
+    <ClInclude Include="headers\headerMSWin.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\headerDX.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
@@ -74,13 +77,16 @@
     <ClCompile Include="source\platforms\icoBuilder\ibMSWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\gapi\IGAPI.cppm">
+    <ClCompile Include="source\platforms\gapi\IGAPI.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\gapi\DXAPI.cppm">
+    <ClCompile Include="source\platforms\gapi\DXAPI.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\helpers\zEvent.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\platforms\gapi\DX\RootSignature.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

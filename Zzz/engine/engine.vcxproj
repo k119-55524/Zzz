@@ -82,8 +82,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="headers\headerDX.h" />
     <ClInclude Include="headers\header.h" />
-    <ClInclude Include="headers\MSWindows.h" />
+    <ClInclude Include="headers\headerMSWin.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -92,8 +93,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="source\engine.cppm" />
-    <ClCompile Include="source\gapi\DXAPI.cppm" />
-    <ClCompile Include="source\gapi\IGAPI.cppm" />
+    <ClCompile Include="source\platforms\gapi\DXAPI.cppm" />
+    <ClCompile Include="source\platforms\gapi\DX\RootSignature.cppm" />
+    <ClCompile Include="source\platforms\gapi\IGAPI.cppm" />
     <ClCompile Include="source\helpers\zEvent.cppm" />
     <ClCompile Include="source\platforms\icoBuilder\ibMSWin.cppm" />
     <ClCompile Include="source\platforms\icoBuilder\IIcoBuilder.cppm" />
