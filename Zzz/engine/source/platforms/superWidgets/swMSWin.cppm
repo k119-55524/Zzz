@@ -54,7 +54,7 @@ export namespace zzz::platforms
 		hWnd{ nullptr },
 		IsMinimized{ true }
 	{
-		//SetProcessDPIAware();
+		SetProcessDPIAware();
 	}
 
 	swMSWin::~swMSWin()
@@ -219,18 +219,27 @@ export namespace zzz::platforms
 			return 0;
 		}
 
-		// брабатываем изменение DPI в системе
+		// Обрабатываем изменение DPI в системе
 		case WM_DPICHANGED:
 		{
-			// Получаем новое значение DPI
-			int newDPI = LOWORD(wParam);
+			// Новый DPI
+			UINT dpiX = LOWORD(wParam);
+			UINT dpiY = HIWORD(wParam);
 
-			// Устанавливаем новый размер окна, если это необходимо
-			RECT* prc = (RECT*)lParam;
-			SetWindowPos(hWnd, NULL, prc->left, prc->top,
-				prc->right - prc->left, prc->bottom - prc->top,
-				SWP_NOZORDER | SWP_NOACTIVATE);
-			return 0;
+			RECT* const prcNewWindow = reinterpret_cast<RECT*>(lParam);
+			SetWindowPos(
+				hWnd,
+				nullptr,
+				prcNewWindow->left,
+				prcNewWindow->top,
+				prcNewWindow->right - prcNewWindow->left,
+				prcNewWindow->bottom - prcNewWindow->top,
+				SWP_NOZORDER | SWP_NOACTIVATE
+			);
+
+			winSize.width = static_cast<zU64>(prcNewWindow->right - prcNewWindow->left);
+			winSize.height = static_cast<zU64>(prcNewWindow->bottom - prcNewWindow->top);
+			onResize(winSize, e_TypeWinAppResize::eResize);
 		}
 
 		//case WM_PAINT:

@@ -7,6 +7,7 @@ using namespace zzz::platforms::directx;
 import IGAPI;
 import result;
 import swMSWin;
+import strConver;
 import RootSignature;
 
 using namespace zzz::result;
@@ -112,6 +113,10 @@ export namespace zzz::platforms
 		zResult<> InitializePipeline(const std::shared_ptr<ISuperWidget> appWin);
 		zResult<> InitializeAssets();
 		zResult<> GetAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter);
+		zResult<> CreateRTVHeap();
+		zResult<> CreateSRVHeap();
+		zResult<> CreateDSVHeap();
+		zResult<> CreateDSView(const zSize2D<>& size);
 
 		void PopulateCommandList();
 		void WaitForPreviousFrame();
@@ -254,28 +259,11 @@ export namespace zzz::platforms
 		ensure(S_OK == swapChain.As(&m_swapChain));
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
-		// Create descriptor heaps.
-		{
-			// Describe and create a render target view (RTV) descriptor heap.
-			D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-			rtvHeapDesc.NumDescriptors = FrameCount;
-			rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-			rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-			ensure(S_OK == m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap)));
-
-			// Describe and create a shader resource view (SRV) heap for the texture.
-			D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-			srvHeapDesc.NumDescriptors = 1;
-			srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-			srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-			ensure(S_OK == m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap)));
-
-			//D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
-			//dsvHeapDesc.NumDescriptors = 1;
-			//dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-			//dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-			//ThrowIfFailed(m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_dsvHeap)));
-		}
+		res = CreateRTVHeap()
+			.and_then([&]() { return CreateSRVHeap(); })
+			.and_then([&]() { return CreateDSVHeap(); });
+		if (!res)
+			return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializePipeline()]. -> " + res.error().getMessage());
 
 		// Create frame resources.
 		{
@@ -291,44 +279,84 @@ export namespace zzz::platforms
 			}
 		}
 
-		// Create the depth stencil view.
-		{
-			//D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
-			//depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
-			//depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-			//depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
-
-			//D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
-			//depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
-			//depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
-			//depthOptimizedClearValue.DepthStencil.Stencil = 0;
-
-			//const CD3DX12_HEAP_PROPERTIES depthStencilHeapProps(D3D12_HEAP_TYPE_DEFAULT);
-			//const CD3DX12_RESOURCE_DESC depthStencilTextureDesc =
-			//	CD3DX12_RESOURCE_DESC::Tex2D(
-			//		DXGI_FORMAT_D32_FLOAT,
-			//		static_cast<UINT>(winSize->x),
-			//		static_cast<UINT>(winSize->y),
-			//		1, 0, 1, 0,
-			//		D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL
-			//	);
-
-			//ThrowIfFailed(m_device->CreateCommittedResource(
-			//	&depthStencilHeapProps,
-			//	D3D12_HEAP_FLAG_NONE,
-			//	&depthStencilTextureDesc,
-			//	D3D12_RESOURCE_STATE_DEPTH_WRITE,
-			//	&depthOptimizedClearValue,
-			//	IID_PPV_ARGS(&m_depthStencil)
-			//));
-
-			//NAME_D3D12_OBJECT(m_depthStencil);
-
-			//m_device->CreateDepthStencilView(m_depthStencil.Get(), &depthStencilDesc, m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
-		}
+		res = CreateDSView(winSize);
+		if (!res)
+			return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializePipeline()]. -> " + res.error().getMessage());
 
 		m_commandRender = safe_make_unique<CommandWrapper>(m_device);
 		m_commandAccum = safe_make_unique<CommandWrapper>(m_device);
+
+		return {};
+	}
+
+	zResult<> DXAPI::CreateDSView(const zSize2D<>& size)
+	{
+		//D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
+		//depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
+		//depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+		//depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+		//D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
+		//depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+		//depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
+		//depthOptimizedClearValue.DepthStencil.Stencil = 0;
+
+		//const CD3DX12_HEAP_PROPERTIES depthStencilHeapProps(D3D12_HEAP_TYPE_DEFAULT);
+		//const CD3DX12_RESOURCE_DESC depthStencilTextureDesc =
+		//	CD3DX12_RESOURCE_DESC::Tex2D(
+		//		DXGI_FORMAT_D32_FLOAT,
+		//		static_cast<UINT>(winSize->x),
+		//		static_cast<UINT>(winSize->y),
+		//		1, 0, 1, 0,
+		//		D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL
+		//	);
+
+		//ThrowIfFailed(m_device->CreateCommittedResource(
+		//	&depthStencilHeapProps,
+		//	D3D12_HEAP_FLAG_NONE,
+		//	&depthStencilTextureDesc,
+		//	D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		//	&depthOptimizedClearValue,
+		//	IID_PPV_ARGS(&m_depthStencil)
+		//));
+
+		//NAME_D3D12_OBJECT(m_depthStencil);
+
+		//m_device->CreateDepthStencilView(m_depthStencil.Get(), &depthStencilDesc, m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+		return {};
+	}
+
+	zResult<> DXAPI::CreateRTVHeap()
+	{
+		// Describe and create a render target view (RTV) descriptor heap.
+		D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
+		rtvHeapDesc.NumDescriptors = FrameCount;
+		rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+		rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		ensure(S_OK == m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap)));
+
+		return {};
+	}
+
+	zResult<> DXAPI::CreateSRVHeap()
+	{
+		// Describe and create a shader resource view (SRV) heap for the texture.
+		D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
+		srvHeapDesc.NumDescriptors = 1;
+		srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		ensure(S_OK == m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap)));
+
+		return {};
+	}
+
+	zResult<> DXAPI::CreateDSVHeap()
+	{ 
+		//D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
+		//dsvHeapDesc.NumDescriptors = 1;
+		//dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+		//dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		//ThrowIfFailed(m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_dsvHeap)));
 
 		return {};
 	}
@@ -541,6 +569,54 @@ export namespace zzz::platforms
 
 	void DXAPI::OnResize(const zSize2D<>& size)
 	{
+		if (initState != eInitState::eInitOK && !m_swapChain)
+			return;
+
+		// Ждём завершения GPU-работы перед изменением буферов
+		WaitForPreviousFrame();
+
+		// Освобождаем старые ресурсы
+		for (UINT i = 0; i < FrameCount; i++)
+		{
+			m_renderTargets[i].Reset();
+		}
+		m_rtvHeap.Reset();
+
+		// Изменяем размер буферов swap chain
+		DXGI_SWAP_CHAIN_DESC desc = {};
+		m_swapChain->GetDesc(&desc);
+		HRESULT hr = m_swapChain->ResizeBuffers(
+			FrameCount,
+			static_cast<UINT>(size.width),
+			static_cast<UINT>(size.height),
+			desc.BufferDesc.Format,
+			desc.Flags
+		);
+		if (FAILED(hr))
+			throw_runtime_error(std::format(">>>>> [DXAPI::OnResize({}x{})].", std::to_string(size.width), std::to_string(size.height)));
+
+		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+
+		// Пересоздаём RTV heap
+		auto res = CreateRTVHeap();
+		if (!res)
+			throw_runtime_error(std::format(">>>>> [DXAPI::OnResize({}x{})]. {}.", std::to_string(size.width), std::to_string(size.height), wstring_to_string(res.error().getMessage())));
+
+		// Пересоздаём render target view для каждого буфера
+		for (UINT i = 0; i < FrameCount; i++)
+		{
+			Microsoft::WRL::ComPtr<ID3D12Resource> backBuffer;
+			m_swapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer));
+			m_device->CreateRenderTargetView(backBuffer.Get(), nullptr,
+				CD3DX12_CPU_DESCRIPTOR_HANDLE(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(),
+					i, m_RtvDescrSize));
+			m_renderTargets[i] = backBuffer;
+		}
+
+		// Если есть depth-stencil — пересоздаём
+		res = CreateDSView(size);
+		if (!res)
+			throw_runtime_error(std::format(">>>>> [DXAPI::OnResize({}x{})]. {}.", std::to_string(size.width), std::to_string(size.height), wstring_to_string(res.error().getMessage())));
 	}
 }
 #endif // _WIN64

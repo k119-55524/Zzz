@@ -8,10 +8,10 @@ import zMsgBox;
 import zSize2D;
 import mlMSWin;
 import IMainLoop;
+import strConver;
 import swSettings;
 import ISuperWidget;
 import IOPathFactory;
-import strConver;
 
 #if defined(_WIN64)
 import DXAPI;

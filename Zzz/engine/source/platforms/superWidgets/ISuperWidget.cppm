@@ -4,9 +4,9 @@ export module ISuperWidget;
 import zEvent;
 import result;
 import zSize2D;
+import strConver;
 import IMainLoop;
 import swSettings;
-import strConver;
 
 using namespace zzz;
 using namespace zzz::result;
