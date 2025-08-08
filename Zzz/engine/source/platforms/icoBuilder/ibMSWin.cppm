@@ -63,11 +63,11 @@ export namespace zzz::icoBuilder
 			colorBitmap = nullptr;
 		}
 
-		RELEASE(converter);
-		RELEASE(scaler);
-		RELEASE(frame);
-		RELEASE(decoder);
-		RELEASE(factory);
+		SafeRelease(converter);
+		SafeRelease(scaler);
+		SafeRelease(frame);
+		SafeRelease(decoder);
+		SafeRelease(factory);
 
 		if (hdc)
 		{
@@ -113,8 +113,6 @@ export namespace zzz::icoBuilder
 			return Unexpected(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось получить кадр из WIC Bitmap Decoder.");
 		}
 
-
-
 		UINT srcWidth = 0, srcHeight = 0;
 		if (FAILED(frame->GetSize(&srcWidth, &srcHeight)))
 		{
@@ -136,8 +134,6 @@ export namespace zzz::icoBuilder
 			if (comInitialized) CoUninitialize();
 			return Unexpected(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось инициализировать Bitmap Scaler.");
 		}
-
-
 
 		if (FAILED(factory->CreateFormatConverter(&converter)))
 		{

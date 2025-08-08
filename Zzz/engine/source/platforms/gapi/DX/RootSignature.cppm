@@ -2,6 +2,11 @@
 
 export module RootSignature;
 
+import result;
+import strConver;
+
+using namespace zzz::result;
+
 #if defined(_WIN64)
 export namespace zzz::platforms::directx
 {
@@ -13,7 +18,7 @@ export namespace zzz::platforms::directx
 		RootSignature(RootSignature&&) = delete;
 
 		const ComPtr<ID3D12RootSignature> Get() const noexcept { return m_RootSignature; };
-		HRESULT Initialize(ComPtr<ID3D12Device> device);
+		zResult<> Initialize(ComPtr<ID3D12Device> device);
 
 	private:
 		ComPtr<ID3D12RootSignature> m_RootSignature;
@@ -25,7 +30,7 @@ export namespace zzz::platforms::directx
 	{
 	}
 
-	HRESULT RootSignature::Initialize(ComPtr<ID3D12Device> device)
+	zResult<> RootSignature::Initialize(ComPtr<ID3D12Device> device)
 	{
 		CD3DX12_DESCRIPTOR_RANGE texTable;
 		texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
@@ -55,22 +60,33 @@ export namespace zzz::platforms::directx
 		HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
 			serializedRootSig.GetAddressOf(), errorBlob.GetAddressOf());
 
-		if (errorBlob != nullptr)
-		{
-			::OutputDebugStringA((char*)errorBlob->GetBufferPointer());
-		}
 		if (S_OK != hr)
-			throw_runtime_error("D3D12SerializeRootSignature( ... )");
+		{
+			if (errorBlob)
+			{
+				const char* msg = static_cast<const char*>(errorBlob->GetBufferPointer());
+				std::string errorStr(msg, errorBlob->GetBufferSize());
+				auto wstr = string_to_wstring(errorStr);
+
+				if (wstr)
+				{
+					std::wstring errMsg = L">>>>> [RootSignature.Initialize( ... )]. " + wstr.value();
+					DebugOutput(errMsg);
+					return Unexpected(eResult::failure, errMsg);
+				}
+			}
+
+			return Unexpected(eResult::failure, L">>>>> [RootSignature.Initialize( ... )]. Failed to serialize root signature.");
+		}
 
 		if (S_OK != device->CreateRootSignature(
 			0,
 			serializedRootSig->GetBufferPointer(),
 			serializedRootSig->GetBufferSize(),
-			IID_PPV_ARGS(m_RootSignature.GetAddressOf()))
-			)
-			throw_runtime_error("CreateRootSignature( ... )");
+			IID_PPV_ARGS(m_RootSignature.GetAddressOf())))
+			return Unexpected(eResult::failure, L">>>>> [RootSignature.Initialize( ... )]. Failed to create root signature.");
 
-		return S_OK;
+		return {};
 	}
 
 	std::array<const CD3DX12_STATIC_SAMPLER_DESC, 6> RootSignature::GetStaticSamplers()

@@ -47,22 +47,22 @@
     <ClCompile Include="source\platforms\superWidgets\swSettings.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\helpers\zSize2D.cppm">
+    <ClCompile Include="source\utils\zSize2D.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\helpers\zSerialize.cppm">
+    <ClCompile Include="source\utils\zSerialize.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\helpers\StringConverters.cppm">
+    <ClCompile Include="source\utils\strConver.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\helpers\IO\ioZaml.cppm">
+    <ClCompile Include="source\utils\IO\ioZaml.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\helpers\IO\IOPathFactory.cppm">
+    <ClCompile Include="source\utils\IO\IOPathFactory.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\helpers\MessageBox.cppm">
+    <ClCompile Include="source\utils\MessageBox.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\platforms\mainAppLoop\IMainLoop.cppm">
@@ -83,7 +83,7 @@
     <ClCompile Include="source\platforms\gapi\DXAPI.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\helpers\zEvent.cppm">
+    <ClCompile Include="source\utils\zEvent.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\platforms\gapi\DX\RootSignature.cppm">

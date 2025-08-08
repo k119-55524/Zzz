@@ -69,54 +69,60 @@ namespace zzz
 				", file=" + std::string(loc.file_name()));
 	}
 
-	template<typename T, typename... Args>
-	inline std::shared_ptr<T> safe_make_shared(
-		Args&&... args)
+	template<typename T>
+	inline void SafeRelease(T*& ptr)
 	{
-		return safe_make_shared_impl<T>(std::source_location::current(), std::forward<Args>(args)...);
+		if (ptr)
+		{
+			ptr->Release();
+			ptr = nullptr;
+		}
 	}
 
-	template<typename T, typename... Args>
-	inline std::shared_ptr<T> safe_make_shared_impl(
+#pragma region SafeMake
+	template<typename Creator, typename... Args>
+	inline decltype(auto) safe_make_impl(
+		Creator&& creator,
 		const std::source_location& loc,
-		Args&&... args)
+		Args&&... args) noexcept(false)
 	{
-		try {
-			return std::make_shared<T>(std::forward<Args>(args)...);
+		try
+		{
+			return creator(std::forward<Args>(args)...);
 		}
-		catch (const std::bad_alloc& e) {
-			throw std::runtime_error(
-				"Memory allocation error (make_shared). Exception: " + std::string(e.what()) +
-				". Method=" + std::string(loc.function_name()) +
-				", line=" + std::to_string(loc.line()) +
-				", file=" + std::string(loc.file_name()));
+		catch (const std::bad_alloc& e)
+		{
+			std::ostringstream oss;
+			oss << "Memory allocation error. Exception: " << e.what()
+				<< ". Method=" << loc.function_name()
+				<< ", line=" << loc.line()
+				<< ", file=" << loc.file_name();
+			throw std::runtime_error(oss.str());
 		}
 	}
 
+	// Безопасный make_shared
 	template<typename T, typename... Args>
-	inline std::unique_ptr<T> safe_make_unique(
-		Args&&... args)
+	inline std::shared_ptr<T> safe_make_shared(Args&&... args) noexcept(false)
 	{
-		return safe_make_unique_impl<T>(std::source_location::current(), std::forward<Args>(args)...);
+		return safe_make_impl(
+			[](auto&&... a) { return std::make_shared<T>(std::forward<decltype(a)>(a)...); },
+			std::source_location::current(),
+			std::forward<Args>(args)...
+		);
 	}
 
-	// Внутренняя реализация с source_location
+	// Безопасный make_unique
 	template<typename T, typename... Args>
-	inline std::unique_ptr<T> safe_make_unique_impl(
-		const std::source_location& loc,
-		Args&&... args)
+	inline std::unique_ptr<T> safe_make_unique(Args&&... args) noexcept(false)
 	{
-		try {
-			return std::make_unique<T>(std::forward<Args>(args)...);
-		}
-		catch (const std::bad_alloc& e) {
-			throw std::runtime_error(
-				"Memory allocation error (make_unique). Exception: " + std::string(e.what()) +
-				". Method=" + std::string(loc.function_name()) +
-				", line=" + std::to_string(loc.line()) +
-				", file=" + std::string(loc.file_name()));
-		}
+		return safe_make_impl(
+			[](auto&&... a) { return std::make_unique<T>(std::forward<decltype(a)>(a)...); },
+			std::source_location::current(),
+			std::forward<Args>(args)...
+		);
 	}
+#pragma endregion SafeMake
 
 	inline void DebugOutput(const std::wstring& msg)
 	{
@@ -128,7 +134,5 @@ namespace zzz
 		// В релизной сборке ничего не делаем :)
 #endif
 	}
-
-#define RELEASE(x) if ((x)) { (x)->Release(); (x) = nullptr; }
 }
 #endif // HEADER_H

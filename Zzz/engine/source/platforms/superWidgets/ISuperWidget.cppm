@@ -6,7 +6,7 @@ import result;
 import zSize2D;
 import IMainLoop;
 import swSettings;
-import StringConverters;
+import strConver;
 
 using namespace zzz;
 using namespace zzz::result;

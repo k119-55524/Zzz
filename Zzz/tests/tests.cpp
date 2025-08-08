@@ -6,6 +6,6 @@ int main()
 {
 	{
 		zzz::engine engine;
-		auto err = engine.Initialize();
+		//auto err = engine.Initialize();
 	}
 }

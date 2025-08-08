@@ -11,7 +11,7 @@ import IMainLoop;
 import swSettings;
 import ISuperWidget;
 import IOPathFactory;
-import StringConverters;
+import strConver;
 
 #if defined(_WIN64)
 import DXAPI;
@@ -161,6 +161,7 @@ export namespace zzz
 			err = L">>>>> #1 [engine::go()]. Unknown exception occurred";
 		}
 
+		zMsgBox::Error(err);
 		Reset();
 		return Unexpected(eResult::exception, err);
 	}

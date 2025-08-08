@@ -407,7 +407,9 @@ export namespace zzz::platforms
 
 	zResult<> DXAPI::InitializeAssets()
 	{
-		ensure(S_OK == m_rootSignature.Initialize(m_device));
+		auto res = m_rootSignature.Initialize(m_device);
+		if (!res)
+			return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializeAssets()]. -> " + res.error().getMessage());
 
 		// Create the vertex buffer.
 		{
