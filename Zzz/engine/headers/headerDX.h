@@ -21,6 +21,57 @@ using namespace Microsoft::WRL;
 
 #define NOMINMAX
 
+namespace zzz::platforms::directx
+{
+	struct unique_handle
+	{
+		HANDLE handle = nullptr;
+
+		unique_handle() = default;
+		explicit unique_handle(HANDLE h) : handle(h) {}
+		unique_handle(std::nullptr_t) : handle(nullptr) {}
+
+		~unique_handle() { reset(); }
+
+		unique_handle(const unique_handle&) = delete;
+		unique_handle& operator=(const unique_handle&) = delete;
+
+		unique_handle(unique_handle&& other) noexcept
+			: handle(std::exchange(other.handle, nullptr)) {
+		}
+
+		unique_handle& operator=(unique_handle&& other) noexcept
+		{
+			if (this != &other)
+			{
+				reset();
+				handle = std::exchange(other.handle, nullptr);
+			}
+			return *this;
+		}
+
+		unique_handle& operator=(HANDLE h)
+		{
+			reset(h);
+			return *this;
+		}
+
+		void reset(HANDLE h = nullptr)
+		{
+			if (handle)
+				CloseHandle(handle);
+			handle = h;
+		}
+
+		HANDLE release()
+		{
+			return std::exchange(handle, nullptr);
+		}
+
+		explicit operator bool() const { return handle != nullptr; }
+	};
+}
+
 #pragma region Обёртки над структурами DirectX
 namespace zzz::platforms::directx
 {

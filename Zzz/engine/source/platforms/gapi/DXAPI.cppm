@@ -95,7 +95,9 @@ export namespace zzz::platforms
 		ComPtr<IDXGISwapChain3> m_swapChain;
 		ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
 		ComPtr<ID3D12DescriptorHeap> m_srvHeap;
+		ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
 		ComPtr<ID3D12Resource> m_renderTargets[FrameCount];
+		ComPtr<ID3D12Resource> m_depthStencil;
 
 		std::mutex commandMutex;
 		std::unique_ptr<CommandWrapper> m_commandRender;
@@ -106,9 +108,9 @@ export namespace zzz::platforms
 		UINT m_CbvSrvDescrSize;
 
 		UINT m_frameIndex;
-		HANDLE m_fenceEvent;
-		ComPtr<ID3D12Fence> m_fence;
 		UINT64 m_fenceValue;
+		unique_handle m_fenceEvent;
+		ComPtr<ID3D12Fence> m_fence;
 
 		zResult<> InitializePipeline(const std::shared_ptr<ISuperWidget> appWin);
 		zResult<> InitializeAssets();
@@ -116,7 +118,7 @@ export namespace zzz::platforms
 		zResult<> CreateRTVHeap();
 		zResult<> CreateSRVHeap();
 		zResult<> CreateDSVHeap();
-		zResult<> CreateDSView(const zSize2D<>& size);
+		zResult<> CreateDS(const zSize2D<>& size);
 
 		void PopulateCommandList();
 		void WaitForPreviousFrame();
@@ -132,9 +134,8 @@ export namespace zzz::platforms
 	DXAPI::DXAPI() :
 		IGAPI(eGAPIType::DirectX12),
 		m_frameIndex{ 0 },
-		m_fenceEvent{ 0 },
 		m_fenceValue{ 0 },
-		////m_aspectRatio{ 0 },
+		//m_aspectRatio{ 0 },
 		m_RtvDescrSize{ 0 },
 		m_DsvDescrSize{ 0 },
 		m_CbvSrvDescrSize{ 0 }
@@ -144,24 +145,10 @@ export namespace zzz::platforms
 	DXAPI::~DXAPI()
 	{
 		WaitForPreviousFrame();
-		CloseHandle(m_fenceEvent);
 	}
 
 	void DXAPI::WaitForPreviousFrame()
 	{
-		// TODO Переделывать
-		// ОЖИДАНИЕ ЗАВЕРШЕНИЯ КАДРА ПЕРЕД ПРОДОЛЖЕНИЕМ — НЕ ЛУЧШАЯ ПРАКТИКА.
-		// This is code implemented as such for simplicity. The D3D12HelloFrameBuffering
-		// sample illustrates how to use fences for efficient resource usage and to
-		// maximize GPU utilization.
-
-		// Add an instruction to the command queue to set a new fence point.
-		// Because we are on the GPU timeline, the new fence point won’t be
-		// set until the GPU finishes processing all the commands prior to
-		// this Signal().
-		// 
-		// Signal and increment the fence value.
-
 		const UINT64 fence = m_fenceValue;
 		ensure(S_OK == m_commandQueue->Signal(m_fence.Get(), fence));
 
@@ -170,9 +157,9 @@ export namespace zzz::platforms
 		// Ожидаем завершения предыдущего кадра.
 		if (m_fence->GetCompletedValue() < fence)
 		{
-			ensure(S_OK == m_fence->SetEventOnCompletion(fence, m_fenceEvent));
+			ensure(S_OK == m_fence->SetEventOnCompletion(fence, m_fenceEvent.handle));
 
-			WaitForSingleObject(m_fenceEvent, INFINITE);
+			WaitForSingleObject(m_fenceEvent.handle, INFINITE);
 		}
 
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
@@ -213,14 +200,22 @@ export namespace zzz::platforms
 #endif
 
 		ComPtr<IDXGIFactory4> factory;
-		ensure(S_OK == CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&factory)));
+		HRESULT hr = CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&factory));
+		if (FAILED(hr))
+			return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializePipeline()]. Failed to create DXGIFactory. HRESULT = 0x{:08X}", hr));
 
 		zResult<> res = GetAdapter(factory.Get(), &m_adapter);
 		if (!res)
 			return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializePipeline()]. Failed to get adapter. More specifically: " + res.error().getMessage());
 
-		ensure(S_OK == m_adapter.As(&m_adapter3));
-		ensure(S_OK == D3D12CreateDevice(m_adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&m_device)));
+		hr = m_adapter.As(&m_adapter3);
+		if (FAILED(hr))
+			return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializePipeline()]. Failed to query IDXGIAdapter3. HRESULT = 0x{:08X}", hr));
+
+		hr = D3D12CreateDevice(m_adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&m_device));
+		if (FAILED(hr))
+			return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializePipeline()]. Failed to create D3D12 device. HRESULT = 0x{:08X}", hr));
+
 		SET_RESOURCE_DEBUG_NAME(m_device, L"Main ID3D12Device");
 
 		m_RtvDescrSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -244,19 +239,25 @@ export namespace zzz::platforms
 		swapChainDesc.SampleDesc.Count = 1;
 
 		ComPtr<IDXGISwapChain1> swapChain;
-		ensure(S_OK ==
-			factory->CreateSwapChainForHwnd(
+		hr = factory->CreateSwapChainForHwnd(
 				m_commandQueue.Get(),	// SwapChain нужна CommandQueue, чтобы она могла принудительно очистить ее.
 				dynamic_cast<swMSWin*>(appWin.get())->GetHWND(),
 				&swapChainDesc,
 				nullptr,
 				nullptr,
-				&swapChain)
-		);
+				&swapChain);
+		if (FAILED(hr))
+			return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializePipeline()]. Failed to create swap chain. More specifically: " + res.error().getMessage());
 
 		// Этот пример не поддерживает полноэкранные переходы.
-		ensure(S_OK == factory->MakeWindowAssociation(dynamic_cast<swMSWin*>(appWin.get())->GetHWND(), DXGI_MWA_NO_ALT_ENTER));
-		ensure(S_OK == swapChain.As(&m_swapChain));
+		hr = factory->MakeWindowAssociation(dynamic_cast<swMSWin*>(appWin.get())->GetHWND(), DXGI_MWA_NO_ALT_ENTER);
+		if (FAILED(hr))
+			return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializePipeline()]. Failed to make window association. HRESULT = 0x{:08X}", hr));
+
+		hr = swapChain.As(&m_swapChain);
+		if (FAILED(hr))
+			return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializePipeline()]. Failed to query IDXGISwapChain3. HRESULT = 0x{:08X}", hr));
+
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
 		res = CreateRTVHeap()
@@ -272,14 +273,16 @@ export namespace zzz::platforms
 			// Create a RTV for each frame.
 			for (UINT n = 0; n < FrameCount; n++)
 			{
-				ensure(S_OK == m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])));
+				HRESULT hr = m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n]));
+				if (FAILED(hr))
+					return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializePipeline()]. Failed to get back buffer. HRESULT = 0x{:08X}", hr));
 
 				m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
 				rtvHandle.Offset(1, m_RtvDescrSize);
 			}
 		}
 
-		res = CreateDSView(winSize);
+		res = CreateDS(winSize);
 		if (!res)
 			return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializePipeline()]. -> " + res.error().getMessage());
 
@@ -289,40 +292,55 @@ export namespace zzz::platforms
 		return {};
 	}
 
-	zResult<> DXAPI::CreateDSView(const zSize2D<>& size)
+	zResult<> DXAPI::CreateDS(const zSize2D<>& size)
 	{
-		//D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
-		//depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
-		//depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-		//depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
+		m_depthStencil.Reset();
 
-		//D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
-		//depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
-		//depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
-		//depthOptimizedClearValue.DepthStencil.Stencil = 0;
+		// Описание вида глубины/трафарета
+		D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
+		depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
+		depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+		depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
 
-		//const CD3DX12_HEAP_PROPERTIES depthStencilHeapProps(D3D12_HEAP_TYPE_DEFAULT);
-		//const CD3DX12_RESOURCE_DESC depthStencilTextureDesc =
-		//	CD3DX12_RESOURCE_DESC::Tex2D(
-		//		DXGI_FORMAT_D32_FLOAT,
-		//		static_cast<UINT>(winSize->x),
-		//		static_cast<UINT>(winSize->y),
-		//		1, 0, 1, 0,
-		//		D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL
-		//	);
+		// Значение по умолчанию для очистки глубины
+		D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
+		depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+		depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
+		depthOptimizedClearValue.DepthStencil.Stencil = 0;
 
-		//ThrowIfFailed(m_device->CreateCommittedResource(
-		//	&depthStencilHeapProps,
-		//	D3D12_HEAP_FLAG_NONE,
-		//	&depthStencilTextureDesc,
-		//	D3D12_RESOURCE_STATE_DEPTH_WRITE,
-		//	&depthOptimizedClearValue,
-		//	IID_PPV_ARGS(&m_depthStencil)
-		//));
+		// Свойства кучи для текстуры глубины
+		const CD3DX12_HEAP_PROPERTIES depthStencilHeapProps(D3D12_HEAP_TYPE_DEFAULT);
 
-		//NAME_D3D12_OBJECT(m_depthStencil);
+		// Описание ресурса глубины
+		const CD3DX12_RESOURCE_DESC depthStencilTextureDesc =
+			CD3DX12_RESOURCE_DESC::Tex2D(
+				DXGI_FORMAT_D32_FLOAT,
+				static_cast<UINT>(size.width),
+				static_cast<UINT>(size.height),
+				1, // массив из одной текстуры
+				0, // mip-уровни
+				1, 0,
+				D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL
+			);
 
-		//m_device->CreateDepthStencilView(m_depthStencil.Get(), &depthStencilDesc, m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+		// Создаём ресурс глубины
+		if(S_OK != m_device->CreateCommittedResource(
+			&depthStencilHeapProps,
+			D3D12_HEAP_FLAG_NONE,
+			&depthStencilTextureDesc,
+			D3D12_RESOURCE_STATE_DEPTH_WRITE,
+			&depthOptimizedClearValue,
+			IID_PPV_ARGS(&m_depthStencil)))
+			return Unexpected(eResult::failure, L">>>>> [DXAPI::CreateDSView()]. Не удалось создать ресурс глубины.");
+
+		SET_RESOURCE_DEBUG_NAME(m_depthStencil, L"Main DepthStenciI(D3D12Resource).");
+
+		// Создаём DSV
+		m_device->CreateDepthStencilView(
+			m_depthStencil.Get(),
+			&depthStencilDesc,
+			m_dsvHeap->GetCPUDescriptorHandleForHeapStart() );
+
 		return {};
 	}
 
@@ -333,7 +351,9 @@ export namespace zzz::platforms
 		rtvHeapDesc.NumDescriptors = FrameCount;
 		rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 		rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-		ensure(S_OK == m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap)));
+		HRESULT hr = m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap));
+		if (FAILED(hr))
+			return Unexpected(eResult::failure, std::format(L"Failed to create RTV heap. HRESULT = 0x{:08X}", hr));
 
 		return {};
 	}
@@ -345,18 +365,25 @@ export namespace zzz::platforms
 		srvHeapDesc.NumDescriptors = 1;
 		srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-		ensure(S_OK == m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap)));
+		HRESULT hr = m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap));
+		if (FAILED(hr))
+			return Unexpected(eResult::failure, std::format(L"Failed to create SRV heap. HRESULT = 0x{:08X}", hr));
 
 		return {};
 	}
 
 	zResult<> DXAPI::CreateDSVHeap()
-	{ 
-		//D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
-		//dsvHeapDesc.NumDescriptors = 1;
-		//dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-		//dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-		//ThrowIfFailed(m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_dsvHeap)));
+	{
+		const D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{
+			.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
+			.NumDescriptors = 1,
+			.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+			.NodeMask = 0
+		};
+
+		HRESULT hr = m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_dsvHeap));
+		if (FAILED(hr))
+			return Unexpected(eResult::failure, std::format(L"Failed to create DSV heap. HRESULT = 0x{:08X}", hr));
 
 		return {};
 	}
@@ -435,62 +462,36 @@ export namespace zzz::platforms
 
 	zResult<> DXAPI::InitializeAssets()
 	{
-		auto res = m_rootSignature.Initialize(m_device);
-		if (!res)
+		// Защита от повторной инициализации
+		if (m_fence || m_fenceEvent)
+			return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializeAssets()]. Already initialized.");
+
+		// Инициализация root signature
+		if (auto res = m_rootSignature.Initialize(m_device); !res)
 			return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializeAssets()]. -> " + res.error().getMessage());
 
-		// Create the vertex buffer.
+		// Создание объектов синхронизации
 		{
-			// Define the geometry for a triangle.
-			//Vertex_PosCol triangleVertices[] =
-			//{
-			//	{ { 0.0f, 0.25f * m_aspectRatio, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-			//	{ { 0.25f, -0.25f * m_aspectRatio, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-			//	{ { -0.25f, -0.25f * m_aspectRatio, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
-			//};
+			ComPtr<ID3D12Fence> fence;
+			HRESULT hr = m_device->CreateFence( 0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence) );
+			if (FAILED(hr))
+				return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializeAssets()]. CreateFence failed. HRESULT = 0x{:08X}", hr));
 
-			//const UINT vertexBufferSize = sizeof(triangleVertices);
-
-			//// Note: using upload heaps to transfer static data like vert buffers is not 
-			//// recommended. Every time the GPU needs it, the upload heap will be marshalled 
-			//// over. Please read up on Default Heap usage. An upload heap is used here for 
-			//// code simplicity and because there are very few verts to actually transfer.
-			//ThrowIfFailed(m_device->CreateCommittedResource(
-			//	&keep(CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD)),
-			//	D3D12_HEAP_FLAG_NONE,
-			//	&keep(CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize)),
-			//	D3D12_RESOURCE_STATE_GENERIC_READ,
-			//	nullptr,
-			//	IID_PPV_ARGS(&m_vertexBuffer)));
-
-			//// Copy the triangle data to the vertex buffer.
-			//UINT8* pVertexDataBegin;
-			//CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
-			//ThrowIfFailed(m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
-			//memcpy(pVertexDataBegin, triangleVertices, sizeof(triangleVertices));
-			//m_vertexBuffer->Unmap(0, nullptr);
-
-			//// Initialize the vertex buffer view.
-			//m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
-			//m_vertexBufferView.StrideInBytes = sizeof(Vertex_PosCol);
-			//m_vertexBufferView.SizeInBytes = vertexBufferSize;
-		}
-
-		// Create synchronization objects.
-		{
-			ensure(S_OK == m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
-
+			m_fence = fence;
 			m_fenceValue = 1;
 
-			// Create an event handle to use for frame synchronization.
-			m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-			if (m_fenceEvent == nullptr)
+			// RAII для события
+			unique_handle fenceEvent{ CreateEvent(nullptr, FALSE, FALSE, nullptr) };
+			if (!fenceEvent)
 			{
-				ensure(S_OK == HRESULT_FROM_WIN32(GetLastError()));
+				hr = HRESULT_FROM_WIN32(GetLastError());
+				return Unexpected(eResult::failure,
+					std::format(L">>>>> [DXAPI::InitializeAssets()]. CreateEvent failed. HRESULT = 0x{:08X}", hr));
 			}
+
+			m_fenceEvent = fenceEvent.release();
 		}
 
-		//gapiInterfaces = make_shared<IGAPI>(m_device, m_rootSignature, m_commandList);
 		return {};
 	}
 
@@ -572,51 +573,48 @@ export namespace zzz::platforms
 		if (initState != eInitState::eInitOK && !m_swapChain)
 			return;
 
-		// Ждём завершения GPU-работы перед изменением буферов
+		ensure(m_device);
+		ensure(m_swapChain);
+
 		WaitForPreviousFrame();
 
-		// Освобождаем старые ресурсы
 		for (UINT i = 0; i < FrameCount; i++)
-		{
 			m_renderTargets[i].Reset();
-		}
 		m_rtvHeap.Reset();
 
-		// Изменяем размер буферов swap chain
-		DXGI_SWAP_CHAIN_DESC desc = {};
-		m_swapChain->GetDesc(&desc);
 		HRESULT hr = m_swapChain->ResizeBuffers(
 			FrameCount,
 			static_cast<UINT>(size.width),
 			static_cast<UINT>(size.height),
-			desc.BufferDesc.Format,
-			desc.Flags
+			DXGI_FORMAT_UNKNOWN,
+			0
 		);
 		if (FAILED(hr))
-			throw_runtime_error(std::format(">>>>> [DXAPI::OnResize({}x{})].", std::to_string(size.width), std::to_string(size.height)));
+			throw_runtime_error(std::format(">>>>> [DXAPI::OnResize({}x{})].", size.width, size.height));
 
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
-		// Пересоздаём RTV heap
 		auto res = CreateRTVHeap();
 		if (!res)
-			throw_runtime_error(std::format(">>>>> [DXAPI::OnResize({}x{})]. {}.", std::to_string(size.width), std::to_string(size.height), wstring_to_string(res.error().getMessage())));
+			throw_runtime_error(std::format(">>>>> [DXAPI::OnResize({}x{})]. {}.", size.width, size.height, wstring_to_string(res.error().getMessage())));
 
-		// Пересоздаём render target view для каждого буфера
 		for (UINT i = 0; i < FrameCount; i++)
 		{
 			Microsoft::WRL::ComPtr<ID3D12Resource> backBuffer;
-			m_swapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer));
-			m_device->CreateRenderTargetView(backBuffer.Get(), nullptr,
+			if (S_OK != m_swapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer)))
+				throw_runtime_error(std::format(">>>>> [DXAPI::OnResize({}x{})]. Failed to get back buffer {}.", size.width, size.height, i));
+
+			m_device->CreateRenderTargetView(
+				backBuffer.Get(),
+				nullptr,
 				CD3DX12_CPU_DESCRIPTOR_HANDLE(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(),
-					i, m_RtvDescrSize));
+				i, m_RtvDescrSize));
 			m_renderTargets[i] = backBuffer;
 		}
 
-		// Если есть depth-stencil — пересоздаём
-		res = CreateDSView(size);
+		res = CreateDS(size);
 		if (!res)
-			throw_runtime_error(std::format(">>>>> [DXAPI::OnResize({}x{})]. {}.", std::to_string(size.width), std::to_string(size.height), wstring_to_string(res.error().getMessage())));
+			throw_runtime_error(std::format(">>>>> [DXAPI::OnResize({}x{})]. {}.", size.width, size.height, wstring_to_string(res.error().getMessage())));
 	}
 }
 #endif // _WIN64
