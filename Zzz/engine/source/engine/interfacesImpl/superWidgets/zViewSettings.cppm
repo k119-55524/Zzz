@@ -20,7 +20,7 @@ export namespace zzz
 		zViewSettings& operator=(const zViewSettings&) = delete;
 
 		template<typename T, typename... Path>
-		zResult<T> GetParam(Path&&... pathAndParamName) const
+		result<T> GetParam(Path&&... pathAndParamName) const
 		{
 			if (!settings)
 				return Unexpected(eResult::not_initialized, L">>>>> [zViewSettings.GetParam(...)] Settings not loaded");
@@ -73,7 +73,7 @@ export namespace zzz
 		std::wstring filePath;
 		std::unique_ptr<zamlNode> settings;
 
-		zResult<> LoadSettings();
+		result<> LoadSettings();
 	};
 
 	zViewSettings::zViewSettings(std::wstring _filePath) :
@@ -88,14 +88,14 @@ export namespace zzz
 			throw_runtime_error(std::format( "Failed to load settings from file: {}.\n{}", wstring_to_string(filePath), wstring_to_string(res.error().getMessage())));
 	}
 
-	zResult<> zViewSettings::LoadSettings()
+	result<> zViewSettings::LoadSettings()
 	{
 		ioZaml loader;
 		auto res = loader.LoadFromFile(filePath)
 			.and_then([this](const zamlNode& node)
 			{
 				settings = std::make_unique<zamlNode>(node);
-				return zResult<>();
+				return result<>();
 			})
 			.or_else([](auto error) { return error; });
 

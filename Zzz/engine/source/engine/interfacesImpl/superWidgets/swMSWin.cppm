@@ -37,7 +37,7 @@ export namespace zzz::platforms
 		inline const HWND GetHWND() const noexcept { return hWnd; };
 
 	protected:
-		virtual zResult<> Initialize() override;
+		virtual result<> Initialize() override;
 		void OnUpdate() override {};
 
 	private:
@@ -62,7 +62,7 @@ export namespace zzz::platforms
 			DestroyWindow(hWnd);
 	}
 
-	zResult<> swMSWin::Initialize()
+	result<> swMSWin::Initialize()
 	{
 		#pragma region Получение настроек окна
 		std::wstring Caption;
@@ -93,7 +93,7 @@ export namespace zzz::platforms
 
 		HICON iconHandle = nullptr;
 		{
-			zResult<std::wstring> icoPath = settings->GetParam<std::wstring>(L"IcoFullPath");
+			result<std::wstring> icoPath = settings->GetParam<std::wstring>(L"IcoFullPath");
 			if (icoPath)
 			{
 				ibMSWin icoBuilder;

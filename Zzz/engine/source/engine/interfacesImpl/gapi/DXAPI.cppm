@@ -75,7 +75,7 @@ export namespace zzz::platforms
 		virtual ~DXAPI() override;
 
 	protected:
-		virtual zResult<> Initialize(const std::shared_ptr<ISuperWidget> appWin) override;
+		virtual result<> Initialize(const std::shared_ptr<ISuperWidget> appWin) override;
 
 		void OnUpdate() override;
 		void OnRender() override;
@@ -114,14 +114,14 @@ export namespace zzz::platforms
 		unique_handle m_fenceEvent;
 		ComPtr<ID3D12Fence> m_fence;
 
-		zResult<> InitializePipeline(const std::shared_ptr<ISuperWidget> appWin);
+		result<> InitializePipeline(const std::shared_ptr<ISuperWidget> appWin);
 		void CheckDirectX12UltimateSupport();
-		zResult<> InitializeAssets();
-		zResult<> GetAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter);
-		zResult<> CreateRTVHeap();
-		zResult<> CreateSRVHeap();
-		zResult<> CreateDSVHeap();
-		zResult<> CreateDS(const zSize2D<>& size);
+		result<> InitializeAssets();
+		result<> GetAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter);
+		result<> CreateRTVHeap();
+		result<> CreateSRVHeap();
+		result<> CreateDSVHeap();
+		result<> CreateDS(const zSize2D<>& size);
 
 		void PopulateCommandList();
 		void WaitForPreviousFrame();
@@ -169,7 +169,7 @@ export namespace zzz::platforms
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 	}
 
-	zResult<> DXAPI::Initialize(const std::shared_ptr<ISuperWidget> appWin)
+	result<> DXAPI::Initialize(const std::shared_ptr<ISuperWidget> appWin)
 	{
 		auto res = InitializePipeline(appWin)
 			.and_then([&]() { return InitializeAssets(); });
@@ -180,7 +180,7 @@ export namespace zzz::platforms
 		return res;
 	}
 
-	zResult<> DXAPI::InitializePipeline(const std::shared_ptr<ISuperWidget> appWin)
+	result<> DXAPI::InitializePipeline(const std::shared_ptr<ISuperWidget> appWin)
 	{
 		UINT dxgiFactoryFlags = 0;
 
@@ -221,7 +221,7 @@ export namespace zzz::platforms
 					std::format(L">>>>> [DXAPI::InitializePipeline()]. Failed to query IDXGIFactory7. HRESULT = 0x{:08X}", hr));
 		}
 
-		zResult<> res = GetAdapter(factory.Get(), &m_adapter);
+		result<> res = GetAdapter(factory.Get(), &m_adapter);
 		if (!res)
 			return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializePipeline()]. Failed to get adapter. More specifically: " + res.error().getMessage());
 
@@ -387,7 +387,7 @@ export namespace zzz::platforms
 #endif
 	}
 
-	zResult<> DXAPI::CreateDS(const zSize2D<>& size)
+	result<> DXAPI::CreateDS(const zSize2D<>& size)
 	{
 		m_depthStencil.Reset();
 
@@ -439,7 +439,7 @@ export namespace zzz::platforms
 		return {};
 	}
 
-	zResult<> DXAPI::CreateRTVHeap()
+	result<> DXAPI::CreateRTVHeap()
 	{
 		// Describe and create a render target view (RTV) descriptor heap.
 		D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
@@ -453,7 +453,7 @@ export namespace zzz::platforms
 		return {};
 	}
 
-	zResult<> DXAPI::CreateSRVHeap()
+	result<> DXAPI::CreateSRVHeap()
 	{
 		// Describe and create a shader resource view (SRV) heap for the texture.
 		D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
@@ -467,7 +467,7 @@ export namespace zzz::platforms
 		return {};
 	}
 
-	zResult<> DXAPI::CreateDSVHeap()
+	result<> DXAPI::CreateDSVHeap()
 	{
 		const D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{
 			.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
@@ -483,7 +483,7 @@ export namespace zzz::platforms
 		return {};
 	}
 
-	zResult<> DXAPI::GetAdapter(
+	result<> DXAPI::GetAdapter(
 		_In_ IDXGIFactory1* pFactory,
 		_Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter)
 	{
@@ -549,7 +549,7 @@ export namespace zzz::platforms
 		return Unexpected(eResult::fail);
 	}
 
-	zResult<> DXAPI::InitializeAssets()
+	result<> DXAPI::InitializeAssets()
 	{
 		// Защита от повторной инициализации
 		if (m_fence || m_fenceEvent)

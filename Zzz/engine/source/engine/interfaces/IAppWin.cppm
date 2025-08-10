@@ -28,7 +28,7 @@ namespace zzz
 
 	protected:
 		const std::shared_ptr<const zViewSettings> settings;
-		[[nodiscard]] virtual zResult<> Initialize() = 0;
+		[[nodiscard]] virtual result<> Initialize() = 0;
 		friend class zzz::zView;
 	};
 

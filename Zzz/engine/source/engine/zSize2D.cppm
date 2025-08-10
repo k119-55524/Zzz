@@ -32,7 +32,7 @@ export namespace zzz
 		inline bool operator==(const zSize2D& other) const noexcept { return width == other.width && height == other.height; }
 		inline bool operator!=(const zSize2D& other) const noexcept { return !(*this == other); }
 
-		inline zResult<> SaveSerialize(std::stringstream& buffer) const
+		inline result<> SaveSerialize(std::stringstream& buffer) const
 		{
 			auto res = 
 				SaveSerializer::Serialize(buffer, width)
@@ -41,7 +41,7 @@ export namespace zzz
 			return res;
 		}
 
-		inline zResult<> SaveDeSerialize(std::istringstream& buffer)
+		inline result<> SaveDeSerialize(std::istringstream& buffer)
 		{
 			auto res = 
 				SaveSerializer::DeSerialize(buffer, width)

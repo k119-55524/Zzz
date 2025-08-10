@@ -18,7 +18,7 @@ export namespace zzz::platforms::directx
 		RootSignature(RootSignature&&) = delete;
 
 		const ComPtr<ID3D12RootSignature> Get() const noexcept { return m_RootSignature; };
-		zResult<> Initialize(ComPtr<ID3D12Device> device);
+		result<> Initialize(ComPtr<ID3D12Device> device);
 
 	private:
 		ComPtr<ID3D12RootSignature> m_RootSignature;
@@ -30,7 +30,7 @@ export namespace zzz::platforms::directx
 	{
 	}
 
-	zResult<> RootSignature::Initialize(ComPtr<ID3D12Device> device)
+	result<> RootSignature::Initialize(ComPtr<ID3D12Device> device)
 	{
 		CD3DX12_DESCRIPTOR_RANGE texTable;
 		texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);

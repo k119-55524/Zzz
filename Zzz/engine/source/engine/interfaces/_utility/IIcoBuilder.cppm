@@ -13,6 +13,6 @@ export namespace zzz::icoBuilder
 	public:
 		virtual ~IIcoBuilder() = default;
 
-		virtual zResult<IconT> LoadIco(const std::wstring& filePath, int size) = 0;
+		virtual result<IconT> LoadIco(const std::wstring& filePath, int size) = 0;
 	};
 }

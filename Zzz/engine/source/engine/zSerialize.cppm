@@ -24,7 +24,7 @@ namespace zzz
 		}
 
 		template<typename T> requires std::is_trivially_copyable_v<T>
-		zResult<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, T& value) const
+		result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, T& value) const
 		{
 			if (offset + sizeof(T) > buffer.size())
 				return Unexpected(eResult::buffer_too_small, L"[zSerialize.DeSerialize]: Buffer too small.");
@@ -44,7 +44,7 @@ namespace zzz
 			memcpy(buffer.data() + offset + sizeof(length), str.data(), length * sizeof(wchar_t));
 		}
 
-		zResult<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, std::wstring& str) const
+		result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, std::wstring& str) const
 		{
 			if (offset + sizeof(uint32_t) > buffer.size())
 				return Unexpected(eResult::buffer_too_small, L"[zSerialize.DeSerialize]: Buffer too small for length.");
@@ -74,7 +74,7 @@ namespace zzz
 			memcpy(buffer.data() + offset + sizeof(length), str.data(), length);
 		}
 
-		zResult<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, std::string& str) const
+		result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, std::string& str) const
 		{
 			if (offset + sizeof(uint32_t) > buffer.size())
 				return Unexpected(eResult::buffer_too_small, L"[zSerialize.DeSerialize]: Buffer too small for string length.");
@@ -107,7 +107,7 @@ namespace zzz
 		}
 
 		template<typename T> requires std::is_trivially_copyable_v<T>
-		zResult<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, std::vector<T>& vec) const
+		result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, std::vector<T>& vec) const
 		{
 			uint32_t length;
 			auto res = DeSerialize(buffer, offset, length);

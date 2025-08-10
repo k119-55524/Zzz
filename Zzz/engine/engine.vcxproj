@@ -99,19 +99,19 @@
     <ClCompile Include="source\engine\interfacesImpl\gapi\DXAPI.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\gapi\DX\RootSignature.cppm" />
     <ClCompile Include="source\engine\interfaces\IGAPI.cppm" />
-    <ClCompile Include="source\utils\zEvent.cppm" />
+    <ClCompile Include="source\engine\zEvent.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\_utility\icoBuilder\ibMSWin.cppm" />
     <ClCompile Include="source\engine\interfaces\_utility\IIcoBuilder.cppm" />
     <ClCompile Include="source\utils\MessageBox.cppm" />
     <ClCompile Include="source\utils\strConver.cppm" />
-    <ClCompile Include="source\utils\zSerialize.cppm" />
-    <ClCompile Include="source\utils\zSize2D.cppm" />
+    <ClCompile Include="source\engine\zSerialize.cppm" />
+    <ClCompile Include="source\engine\zSize2D.cppm" />
     <ClCompile Include="source\engine\IO\IOPathFactory.cppm" />
     <ClCompile Include="source\engine\interfaces\IMainLoop.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\mainAppLoop\mlMSWin.cppm" />
     <ClCompile Include="source\engine\IO\ioZaml.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\superWidgets\zViewSettings.cppm" />
-    <ClCompile Include="source\utils\zResult.cppm" />
+    <ClCompile Include="source\engine\result.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\superWidgets\ISuperWidget.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\superWidgets\swMSWin.cppm" />
   </ItemGroup>

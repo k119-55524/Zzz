@@ -43,8 +43,8 @@ export namespace zzz
 		engine();
 		~engine();
 
-		zResult<> Initialize(std::wstring settingFilePath) noexcept;
-		zResult<> Run() noexcept;
+		result<> Initialize(std::wstring settingFilePath) noexcept;
+		result<> Run() noexcept;
 
 	private:
 		eInitState initState;
@@ -82,7 +82,7 @@ export namespace zzz
 		isSysPaused = true;
 	}
 
-	zResult<> engine::Initialize(std::wstring settingFilePath) noexcept
+	result<> engine::Initialize(std::wstring settingFilePath) noexcept
 	{
 		std::lock_guard<std::mutex> lock(stateMutex);
 		if (initState != eInitState::eInitNot)
@@ -131,7 +131,7 @@ export namespace zzz
 		return Unexpected(eResult::exception, err);
 	}
 
-	zResult<> engine::Run() noexcept
+	result<> engine::Run() noexcept
 	{
 		std::lock_guard<std::mutex> lock(stateMutex);
 		if (initState != eInitState::eInitOK)

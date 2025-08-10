@@ -58,7 +58,7 @@ export namespace zzz::platforms
 		}
 
 	protected:
-		[[nodiscard]] virtual zResult<> Initialize(std::shared_ptr<ISuperWidget> appWin) = 0;
+		[[nodiscard]] virtual result<> Initialize(std::shared_ptr<ISuperWidget> appWin) = 0;
 		friend class zzz::engine;
 		friend class zzz::zView;
 

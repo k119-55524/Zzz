@@ -12,7 +12,7 @@ int APIENTRY wWinMain(
 	_In_		int			nCmdShow)
 {
 	zzz::engine engine;
-	zResult<> res = engine.Initialize(L".\\appdata\\ui.zaml")
+	result<> res = engine.Initialize(L".\\appdata\\ui.zaml")
 		.and_then([&engine]() { return engine.Run(); });
 
 	return res ? 0 : static_cast<int>(res.error().getCode());

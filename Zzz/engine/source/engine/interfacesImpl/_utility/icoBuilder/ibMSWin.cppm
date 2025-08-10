@@ -17,7 +17,7 @@ export namespace zzz::icoBuilder
 		ibMSWin();
 		~ibMSWin();
 
-		zResult<HICON> LoadIco(const std::wstring& filePath, int size) override;
+		result<HICON> LoadIco(const std::wstring& filePath, int size) override;
 
 	private:
 		void CleanupResources();
@@ -76,7 +76,7 @@ export namespace zzz::icoBuilder
 		}
 	}
 
-	zResult<HICON> ibMSWin::LoadIco(const std::wstring& filePath, int iconSize)
+	result<HICON> ibMSWin::LoadIco(const std::wstring& filePath, int iconSize)
 	{
 		HICON hIcon = nullptr;
 		bool comInitialized = false;

@@ -39,7 +39,7 @@ export namespace zzz::platforms
 		zEvent<zSize2D<>, e_TypeWinAppResize> onResize;
 
 	protected:
-		virtual zResult<> Initialize() = 0;
+		virtual result<> Initialize() = 0;
 		friend class zzz::engine;
 
 		std::shared_ptr<zViewSettings> settings;

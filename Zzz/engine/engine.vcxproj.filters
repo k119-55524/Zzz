@@ -35,7 +35,7 @@
     <ClCompile Include="source\engine.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\utils\zResult.cppm">
+    <ClCompile Include="source\engine\result.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfacesImpl\superWidgets\ISuperWidget.cppm">
@@ -47,10 +47,10 @@
     <ClCompile Include="source\engine\interfacesImpl\superWidgets\zViewSettings.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\utils\zSize2D.cppm">
+    <ClCompile Include="source\engine\zSize2D.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\utils\zSerialize.cppm">
+    <ClCompile Include="source\engine\zSerialize.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\utils\strConver.cppm">
@@ -83,7 +83,7 @@
     <ClCompile Include="source\engine\interfacesImpl\gapi\DXAPI.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\utils\zEvent.cppm">
+    <ClCompile Include="source\engine\zEvent.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfacesImpl\gapi\DX\RootSignature.cppm">
