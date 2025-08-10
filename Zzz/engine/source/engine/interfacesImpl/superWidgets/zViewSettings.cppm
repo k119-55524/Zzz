@@ -1,32 +1,29 @@
 #include "pch.h"
-export module swSettings;
+export module zViewSettings;
 
 import result;
 import iozaml;
 import strConver;
 
-
-using namespace zzz;
 using namespace zzz::zaml;
-using namespace zzz::result;
 
-export namespace zzz::platforms
+export namespace zzz
 {
-	class swSettings
+	class zViewSettings
 	{
 	public:
-		swSettings() = delete;
-		swSettings(std::wstring _filePath);
-		swSettings(const swSettings&) = delete;
-		swSettings(swSettings&&) = delete;
+		zViewSettings() = delete;
+		zViewSettings(std::wstring _filePath);
+		zViewSettings(const zViewSettings&) = delete;
+		zViewSettings(zViewSettings&&) = delete;
 
-		swSettings& operator=(const swSettings&) = delete;
+		zViewSettings& operator=(const zViewSettings&) = delete;
 
 		template<typename T, typename... Path>
 		zResult<T> GetParam(Path&&... pathAndParamName) const
 		{
 			if (!settings)
-				return Unexpected(eResult::not_initialized, L">>>>> [swSettings.GetParam(...)] Settings not loaded");
+				return Unexpected(eResult::not_initialized, L">>>>> [zViewSettings.GetParam(...)] Settings not loaded");
 
 			constexpr size_t argCount = sizeof...(Path);
 			static_assert(argCount >= 1, "At least one argument (paramName) is required");
@@ -57,7 +54,7 @@ export namespace zzz::platforms
 
 				if (!found)
 				{
-					return Unexpected(eResult::not_found, L">>>>> [swSettings.GetParam(...)] Tag '" + tag + L"' not found");
+					return Unexpected(eResult::not_found, L">>>>> [zViewSettings.GetParam(...)] Tag '" + tag + L"' not found");
 				}
 			}
 
@@ -65,7 +62,7 @@ export namespace zzz::platforms
 			auto attr = node->GetAttribute(paramName);
 			if (!attr)
 			{
-				return Unexpected(eResult::not_found, L">>>>> [swSettings.GetParam(...)] Parameter '" + paramName + L"' not found");
+				return Unexpected(eResult::not_found, L">>>>> [zViewSettings.GetParam(...)] Parameter '" + paramName + L"' not found");
 			}
 
 			// Преобразуем значение
@@ -79,7 +76,7 @@ export namespace zzz::platforms
 		zResult<> LoadSettings();
 	};
 
-	swSettings::swSettings(std::wstring _filePath) :
+	zViewSettings::zViewSettings(std::wstring _filePath) :
 		filePath{ std::move(_filePath) },
 		settings{}
 	{
@@ -91,7 +88,7 @@ export namespace zzz::platforms
 			throw_runtime_error(std::format( "Failed to load settings from file: {}.\n{}", wstring_to_string(filePath), wstring_to_string(res.error().getMessage())));
 	}
 
-	zResult<> swSettings::LoadSettings()
+	zResult<> zViewSettings::LoadSettings()
 	{
 		ioZaml loader;
 		auto res = loader.LoadFromFile(filePath)

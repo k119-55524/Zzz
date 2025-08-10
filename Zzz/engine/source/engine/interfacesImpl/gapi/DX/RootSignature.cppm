@@ -5,7 +5,7 @@ export module RootSignature;
 import result;
 import strConver;
 
-using namespace zzz::result;
+using namespace zzz;
 
 #if defined(_WIN64)
 export namespace zzz::platforms::directx

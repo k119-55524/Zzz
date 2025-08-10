@@ -3,8 +3,6 @@ export module strConver;
 
 import result;
 
-using namespace zzz::result;
-
 export namespace zzz
 {
 #if defined(_WIN64)

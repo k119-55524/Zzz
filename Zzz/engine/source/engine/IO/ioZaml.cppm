@@ -4,7 +4,6 @@ export module iozaml;
 import result;
 
 using namespace zzz;
-using namespace zzz::result;
 
 export namespace zzz::zaml
 {

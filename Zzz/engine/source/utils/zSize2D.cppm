@@ -4,8 +4,6 @@ export module zSize2D;
 import result;
 import SaveSerializer;
 
-using namespace zzz::result;
-
 export namespace zzz
 {
 	/**

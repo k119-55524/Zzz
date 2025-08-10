@@ -3,7 +3,7 @@ export module IIcoBuilder;
 
 import result;
 
-using namespace zzz::result;
+using namespace zzz;
 
 export namespace zzz::icoBuilder
 {

@@ -24,6 +24,7 @@
 #include <stdexcept>
 #include <filesystem>
 #include <functional>
+#include <string_view>
 #include <type_traits>
 #include <unordered_map>
 #include <source_location>

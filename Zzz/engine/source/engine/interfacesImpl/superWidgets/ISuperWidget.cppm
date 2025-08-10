@@ -6,10 +6,9 @@ import result;
 import zSize2D;
 import strConver;
 import IMainLoop;
-import swSettings;
+import zViewSettings;
 
 using namespace zzz;
-using namespace zzz::result;
 
 namespace zzz
 {
@@ -32,7 +31,7 @@ export namespace zzz::platforms
 		ISuperWidget(ISuperWidget&) = delete;
 		ISuperWidget(ISuperWidget&&) = delete;
 
-		explicit ISuperWidget(std::shared_ptr<swSettings> _settings);
+		explicit ISuperWidget(std::shared_ptr<zViewSettings> _settings);
 		virtual ~ISuperWidget() = 0;
 
 		inline const zSize2D<>& GetWinSize() const noexcept { return winSize; };
@@ -43,13 +42,13 @@ export namespace zzz::platforms
 		virtual zResult<> Initialize() = 0;
 		friend class zzz::engine;
 
-		std::shared_ptr<swSettings> settings;
+		std::shared_ptr<zViewSettings> settings;
 		zSize2D<> winSize;
 
 		virtual void OnUpdate() = 0;
 	};
 
-	ISuperWidget::ISuperWidget(std::shared_ptr<swSettings> _settings) :
+	ISuperWidget::ISuperWidget(std::shared_ptr<zViewSettings> _settings) :
 		settings{ _settings },
 		winSize{ 0, 0 }
 	{

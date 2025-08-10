@@ -9,7 +9,7 @@ import zSize2D;
 import mlMSWin;
 import IMainLoop;
 import strConver;
-import swSettings;
+import zViewSettings;
 import ISuperWidget;
 import IOPathFactory;
 
@@ -22,7 +22,6 @@ import swMSWin;
 
 using namespace zzz;
 using namespace zzz::io;
-using namespace zzz::result;
 using namespace zzz::platforms;
 
 namespace zzz
@@ -52,7 +51,7 @@ export namespace zzz
 		std::mutex stateMutex;
 		bool isSysPaused;
 
-		std::shared_ptr<swSettings> settingsSW;
+		std::shared_ptr<zViewSettings> settingsSW;
 		std::shared_ptr<SuperWidget> superWidget;
 		std::shared_ptr<IMainLoop> mainLoop;
 		std::shared_ptr<IGAPI> gapi;
@@ -92,7 +91,7 @@ export namespace zzz
 		std::wstring err;
 		try
 		{
-			settingsSW = safe_make_shared<swSettings>(settingFilePath);
+			settingsSW = safe_make_shared<zViewSettings>(settingFilePath);
 			superWidget = safe_make_shared<SuperWidget>(settingsSW);
 			superWidget->onResize += std::bind(&engine::OnResizeSW, this, std::placeholders::_1, std::placeholders::_2);
 			auto res = superWidget->Initialize();

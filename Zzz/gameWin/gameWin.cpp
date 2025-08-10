@@ -4,7 +4,6 @@ import engine;
 import result;
 
 using namespace zzz;
-using namespace zzz::result;
 
 int APIENTRY wWinMain(
 	_In_		HINSTANCE	hInstance,

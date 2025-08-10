@@ -10,7 +10,7 @@ import swMSWin;
 import strConver;
 import RootSignature;
 
-using namespace zzz::result;
+using namespace zzz;
 
 namespace zzz::platforms
 {
@@ -83,6 +83,8 @@ export namespace zzz::platforms
 
 	private:
 		static const UINT FrameCount = 2;
+		UINT m_swapChainFlags;
+		float m_aspectRatio;
 
 		RootSignature m_rootSignature;
 		CD3DX12_VIEWPORT m_viewport;
@@ -113,6 +115,7 @@ export namespace zzz::platforms
 		ComPtr<ID3D12Fence> m_fence;
 
 		zResult<> InitializePipeline(const std::shared_ptr<ISuperWidget> appWin);
+		void CheckDirectX12UltimateSupport();
 		zResult<> InitializeAssets();
 		zResult<> GetAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter);
 		zResult<> CreateRTVHeap();
@@ -134,8 +137,9 @@ export namespace zzz::platforms
 	DXAPI::DXAPI() :
 		IGAPI(eGAPIType::DirectX12),
 		m_frameIndex{ 0 },
+		m_swapChainFlags{ 0 },
 		m_fenceValue{ 0 },
-		//m_aspectRatio{ 0 },
+		m_aspectRatio{ 0.0f },
 		m_RtvDescrSize{ 0 },
 		m_DsvDescrSize{ 0 },
 		m_CbvSrvDescrSize{ 0 }
@@ -184,6 +188,7 @@ export namespace zzz::platforms
 		//m_aspectRatio = static_cast<float>(winSize->x) / static_cast<float>(winSize->y);
 		m_viewport = CD3DX12_VIEWPORT{ 0.0f, 0.0f, static_cast<float>(winSize.width), static_cast<float>(winSize.height) };
 		m_scissorRect = CD3DX12_RECT{ 0, 0, static_cast<LONG>(winSize.width), static_cast<LONG>(winSize.height) };
+		m_aspectRatio = static_cast<float>(winSize.width) / static_cast<float>(winSize.height);
 
 #if defined(_DEBUG)
 		// Включаем уровень отладки.
@@ -199,10 +204,22 @@ export namespace zzz::platforms
 		}
 #endif
 
-		ComPtr<IDXGIFactory4> factory;
+		ComPtr<IDXGIFactory7> factory;
 		HRESULT hr = CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&factory));
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializePipeline()]. Failed to create DXGIFactory. HRESULT = 0x{:08X}", hr));
+		{
+			// Fallback на более старую версию если новая недоступна
+			ComPtr<IDXGIFactory4> factory4;
+			hr = CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&factory4));
+			if (FAILED(hr))
+				return Unexpected(eResult::failure,
+					std::format(L">>>>> [DXAPI::InitializePipeline()]. Failed to create DXGI Factory. HRESULT = 0x{:08X}", hr));
+
+			hr = factory4.As(&factory);
+			if (FAILED(hr))
+				return Unexpected(eResult::failure,
+					std::format(L">>>>> [DXAPI::InitializePipeline()]. Failed to query IDXGIFactory7. HRESULT = 0x{:08X}", hr));
+		}
 
 		zResult<> res = GetAdapter(factory.Get(), &m_adapter);
 		if (!res)
@@ -212,11 +229,48 @@ export namespace zzz::platforms
 		if (FAILED(hr))
 			return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializePipeline()]. Failed to query IDXGIAdapter3. HRESULT = 0x{:08X}", hr));
 
-		hr = D3D12CreateDevice(m_adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&m_device));
+		// Пытаемся создать устройство с максимальным Feature Level
+		D3D_FEATURE_LEVEL featureLevels[] = {
+			D3D_FEATURE_LEVEL_12_2,  // Поддержка DirectX 12 Ultimate
+			D3D_FEATURE_LEVEL_12_1,  // Расширенные возможности D3D12
+			D3D_FEATURE_LEVEL_12_0   // Базовый D3D12
+		};
+
+		// Пытаемся создать устройство с максимально возможным уровнем
+		D3D_FEATURE_LEVEL achievedFeatureLevel = D3D_FEATURE_LEVEL_11_0;
+		for (auto level : featureLevels)
+		{
+			hr = D3D12CreateDevice(
+				m_adapter.Get(),
+				level,
+				IID_PPV_ARGS(&m_device)
+			);
+
+			if (SUCCEEDED(hr))
+			{
+				achievedFeatureLevel = level;
+				break;
+			}
+		}
 		if (FAILED(hr))
 			return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializePipeline()]. Failed to create D3D12 device. HRESULT = 0x{:08X}", hr));
 
 		SET_RESOURCE_DEBUG_NAME(m_device, L"Main ID3D12Device");
+
+#ifdef _DEBUG
+		// Выводим достигнутый уровень функций
+		std::wstring levelName;
+		switch (achievedFeatureLevel)
+		{
+			case D3D_FEATURE_LEVEL_12_2: levelName = L"12.2 (DirectX 12 Ultimate)"; break;
+			case D3D_FEATURE_LEVEL_12_1: levelName = L"12.1"; break;
+			case D3D_FEATURE_LEVEL_12_0: levelName = L"12.0"; break;
+			default: levelName = L"Unknown"; break;
+		}
+		DebugOutput(std::format(L">>>>> [DXAPI::InitializePipeline()]. Created D3D12 device with feature level: {}\n", levelName).c_str());
+#endif
+
+		CheckDirectX12UltimateSupport();
 
 		m_RtvDescrSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 		m_DsvDescrSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
@@ -228,15 +282,17 @@ export namespace zzz::platforms
 		queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 		ensure(S_OK == m_device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_commandQueue)));
 
-		// Настройка и создание SwapChain
+		// Настройка SwapChain
+		m_swapChainFlags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 		DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 		swapChainDesc.BufferCount = FrameCount;
 		swapChainDesc.Width = static_cast<UINT>(winSize.width);
-		swapChainDesc.Height = static_cast<UINT>(winSize.width);
+		swapChainDesc.Height = static_cast<UINT>(winSize.height);
 		swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 		swapChainDesc.SampleDesc.Count = 1;
+		swapChainDesc.Flags = m_swapChainFlags; // Поддержка Variable Refresh Rate
 
 		ComPtr<IDXGISwapChain1> swapChain;
 		hr = factory->CreateSwapChainForHwnd(
@@ -290,6 +346,45 @@ export namespace zzz::platforms
 		m_commandAccum = safe_make_unique<CommandWrapper>(m_device);
 
 		return {};
+	}
+
+	// Метод для проверки поддержки DirectX 12 Ultimate функций
+	void DXAPI::CheckDirectX12UltimateSupport()
+	{
+		if (!m_device)
+			return;
+
+		// Проверка поддержки Ray Tracing (DXR)
+		D3D12_FEATURE_DATA_D3D12_OPTIONS5 options5 = {};
+		if (SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &options5, sizeof(options5))))
+			m_supportsRayTracing = (options5.RaytracingTier >= D3D12_RAYTRACING_TIER_1_0);
+
+		// Проверка поддержки Variable Rate Shading
+		D3D12_FEATURE_DATA_D3D12_OPTIONS6 options6 = {};
+		if (SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS6, &options6, sizeof(options6))))
+			m_supportsVariableRateShading = (options6.VariableShadingRateTier >= D3D12_VARIABLE_SHADING_RATE_TIER_1);
+
+		// Проверка поддержки Mesh Shaders
+		D3D12_FEATURE_DATA_D3D12_OPTIONS7 options7 = {};
+		if (SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &options7, sizeof(options7))))
+			m_supportsMeshShaders = (options7.MeshShaderTier >= D3D12_MESH_SHADER_TIER_1);
+
+		// Проверка поддержки Sampler Feedback
+		D3D12_FEATURE_DATA_D3D12_OPTIONS7 samplerFeedback = {};
+		if (SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &samplerFeedback, sizeof(samplerFeedback))))
+			m_supportsSamplerFeedback = (samplerFeedback.SamplerFeedbackTier >= D3D12_SAMPLER_FEEDBACK_TIER_0_9);
+
+#ifdef _DEBUG
+		DebugOutput(std::format(L">>>>> [DXAPI::CheckDirectX12UltimateSupport()]. DirectX 12 Ultimate Support:\n"
+			L" +- Ray Tracing: {}\n"
+			L" +- Variable Rate Shading: {}\n"
+			L" +- Mesh Shaders: {}\n"
+			L" +- Sampler Feedback: {}\n",
+			m_supportsRayTracing ? L"Yes" : L"No",
+			m_supportsVariableRateShading ? L"Yes" : L"No",
+			m_supportsMeshShaders ? L"Yes" : L"No",
+			m_supportsSamplerFeedback ? L"Yes" : L"No").c_str());
+#endif
 	}
 
 	zResult<> DXAPI::CreateDS(const zSize2D<>& size)
@@ -388,76 +483,70 @@ export namespace zzz::platforms
 		return {};
 	}
 
-	zResult<> DXAPI::GetAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter)
+	zResult<> DXAPI::GetAdapter(
+		_In_ IDXGIFactory1* pFactory,
+		_Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter)
 	{
+		if (!pFactory || !ppAdapter)
+			return Unexpected(eResult::invalid_argument);
+
 		*ppAdapter = nullptr;
-		ComPtr<IDXGIAdapter1> adapter;
-		ComPtr<IDXGIFactory6> factory6;
-		if (S_OK == pFactory->QueryInterface(IID_PPV_ARGS(&factory6)))
+
+		Microsoft::WRL::ComPtr<IDXGIAdapter1> adapter;
+		Microsoft::WRL::ComPtr<IDXGIFactory6> factory6;
+
+		auto trySelectAdapter = [&](IDXGIAdapter1* candidate) -> bool
+			{
+				DXGI_ADAPTER_DESC1 desc{};
+				candidate->GetDesc1(&desc);
+
+				if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
+					return false;
+
+				if (SUCCEEDED(D3D12CreateDevice(candidate,
+					D3D_FEATURE_LEVEL_12_0,
+					__uuidof(ID3D12Device),
+					nullptr)))
+				{
+#ifdef _DEBUG
+					DebugOutput(std::format(
+						L">>>>> [DXAPI::GetAdapter()] Selected adapter: {}\n"
+						L" VRAM: {} MB\n",
+						desc.Description,
+						desc.DedicatedVideoMemory / (1024 * 1024)).c_str());
+#endif
+					* ppAdapter = candidate;
+					(*ppAdapter)->AddRef(); // так как мы не Detach'им
+					return true;
+				}
+				return false;
+			};
+
+		// Через IDXGIFactory6 с приоритетом дискретных GPU
+		if (SUCCEEDED(pFactory->QueryInterface(IID_PPV_ARGS(&factory6))))
 		{
-			for (
-				UINT adapterIndex = 0;
-				S_OK == factory6->EnumAdapterByGpuPreference(
+			for (UINT adapterIndex = 0;
+				SUCCEEDED(factory6->EnumAdapterByGpuPreference(
 					adapterIndex,
 					DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
-					IID_PPV_ARGS(&adapter));
+					IID_PPV_ARGS(&adapter)));
 					++adapterIndex)
 			{
-				DXGI_ADAPTER_DESC1 desc;
-				adapter->GetDesc1(&desc);
-
-				OutputDebugString(L">>>>> [DirectX12API::GetAdapter()]. EnumAdapterByGpuPreference: ");
-				OutputDebugString(desc.Description);
-				OutputDebugString(L"\n");
-
-				// Пропускаем Basic Render Driver адаптер.
-				if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
-					continue;
-
-				// Проверяем, поддерживает ли адаптер Direct3D 12(без фактического создания адаптера)
-				if (S_OK == D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_12_0, _uuidof(ID3D12Device), nullptr))
-					break;
+				if (trySelectAdapter(adapter.Get()))
+					return {};
 			}
 		}
 
-		// Если подходящий адаптер создать не удалось пытаемся найти другим способом
-		if (adapter.Get() == nullptr)
+		// Обычное перечисление (в случае если Factory6 нет или не найдено подходящих)
+		for (UINT adapterIndex = 0;
+			SUCCEEDED(pFactory->EnumAdapters1(adapterIndex, &adapter));
+			++adapterIndex)
 		{
-			for (
-				UINT adapterIndex = 0;
-				S_OK == pFactory->EnumAdapters1(adapterIndex, &adapter);
-				++adapterIndex)
-			{
-				DXGI_ADAPTER_DESC1 desc;
-				adapter->GetDesc1(&desc);
-
-				OutputDebugString(L">>>>> [DirectX12API::GetAdapter()]. EnumAdapters1: ");
-				OutputDebugString(desc.Description);
-				OutputDebugString(L"\n");
-
-				// Пропускаем Basic Render Driver адаптер.
-				if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
-					continue;
-
-				// Проверяем, поддерживает ли адаптер Direct3D 12(без фактического создания адаптера)
-				if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device), nullptr)))
-					break;
-			}
+			if (trySelectAdapter(adapter.Get()))
+				return {};
 		}
 
-		{
-			ComPtr<IDXGIAdapter3> pDXGIAdapter3;
-			ensure(S_OK == adapter->QueryInterface(IID_PPV_ARGS(&pDXGIAdapter3)));
-
-			// Now I can query video/system memory usage.
-			DXGI_QUERY_VIDEO_MEMORY_INFO vm_info;
-			ensure(S_OK == pDXGIAdapter3->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &vm_info));
-			ensure(S_OK == pDXGIAdapter3->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_NON_LOCAL, &vm_info));
-		}
-
-		*ppAdapter = adapter.Detach();
-
-		return zResult<void>{};
+		return Unexpected(eResult::fail);
 	}
 
 	zResult<> DXAPI::InitializeAssets()
@@ -587,7 +676,7 @@ export namespace zzz::platforms
 			static_cast<UINT>(size.width),
 			static_cast<UINT>(size.height),
 			DXGI_FORMAT_UNKNOWN,
-			0
+			m_swapChainFlags
 		);
 		if (FAILED(hr))
 			throw_runtime_error(std::format(">>>>> [DXAPI::OnResize({}x{})].", size.width, size.height));
@@ -615,6 +704,10 @@ export namespace zzz::platforms
 		res = CreateDS(size);
 		if (!res)
 			throw_runtime_error(std::format(">>>>> [DXAPI::OnResize({}x{})]. {}.", size.width, size.height, wstring_to_string(res.error().getMessage())));
+
+		m_viewport = CD3DX12_VIEWPORT{ 0.0f, 0.0f, static_cast<float>(size.width), static_cast<float>(size.height) };
+		m_scissorRect = CD3DX12_RECT{ 0, 0, static_cast<LONG>(size.width), static_cast<LONG>(size.height) };
+		m_aspectRatio = static_cast<float>(size.width) / static_cast<float>(size.height);
 	}
 }
 #endif // _WIN64

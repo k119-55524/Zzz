@@ -1,7 +1,7 @@
 #include "pch.h"
 export module result;
 
-export namespace zzz::result
+export namespace zzz
 {
 	class bad_expected_access : public std::exception
 	{
@@ -17,6 +17,7 @@ export namespace zzz::result
 	{
 		success = 0,
 		failure,
+		fail,
 		exception,
 		invalid_argument,
 		out_of_memory,

@@ -4,7 +4,7 @@ export module ibMSWin;
 import result;
 import IIcoBuilder;
 
-using namespace zzz::result;
+using namespace zzz;
 
 #if defined(_WIN64)
 export namespace zzz::icoBuilder

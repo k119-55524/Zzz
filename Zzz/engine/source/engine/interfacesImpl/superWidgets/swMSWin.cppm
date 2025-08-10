@@ -6,13 +6,12 @@ import result;
 import zSize2D;
 import mlMSWin;
 import ibMSWin;
-import swSettings;
+import zViewSettings;
 import ISuperWidget;
 import IOPathFactory;
 
 using namespace zzz;
 using namespace zzz::io;
-using namespace zzz::result;
 using namespace zzz::platforms;
 using namespace zzz::icoBuilder;
 
@@ -32,7 +31,7 @@ export namespace zzz::platforms
 		swMSWin(swMSWin&) = delete;
 		swMSWin(swMSWin&&) = delete;
 
-		explicit swMSWin(std::shared_ptr<swSettings> _settings);
+		explicit swMSWin(std::shared_ptr<zViewSettings> _settings);
 		~swMSWin() override;
 
 		inline const HWND GetHWND() const noexcept { return hWnd; };
@@ -49,7 +48,7 @@ export namespace zzz::platforms
 		LRESULT MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	};
 
-	swMSWin::swMSWin(std::shared_ptr<swSettings> _settings) :
+	swMSWin::swMSWin(std::shared_ptr<zViewSettings> _settings) :
 		ISuperWidget(_settings),
 		hWnd{ nullptr },
 		IsMinimized{ true }
