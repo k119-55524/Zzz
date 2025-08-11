@@ -2,6 +2,8 @@
 export module IAppWin;
 
 import result;
+import zEvent;
+import zSize2D;
 import zViewSettings;
 
 using namespace zzz::platforms;
@@ -11,7 +13,7 @@ namespace zzz
 	class zView;
 }
 
-namespace zzz
+export namespace zzz
 {
 	export class IAppWin abstract
 	{
@@ -25,6 +27,8 @@ namespace zzz
 		explicit IAppWin(std::shared_ptr<const zViewSettings> settings);
 
 		virtual ~IAppWin() = default;
+
+		zEvent<zSize2D<>, e_TypeWinResize> onResize;
 
 	protected:
 		const std::shared_ptr<const zViewSettings> settings;

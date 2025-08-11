@@ -6,9 +6,15 @@ import result;
 import IAppWin;
 import zSize2D;
 import IWinSurface;
+import zViewFactory;
 import zViewSettings;
 
 using namespace zzz::platforms;
+
+namespace zzz
+{
+	class engine;
+}
 
 namespace zzz
 {
@@ -25,13 +31,16 @@ namespace zzz
 
 		~zView();
 
-	protected:
+		void OnUpdate();
+		void OnResize(const zSize2D<>& size);
+
+	private:
+		zViewFactory factory;
 		std::shared_ptr<zViewSettings> settings;
 		std::vector<std::shared_ptr<IGAPI>> gapiList;
 		std::shared_ptr<IAppWin> appWin;
 		std::shared_ptr<IWinSurface> winSurface;
 
-	private:
 		void Initialize();
 	};
 
@@ -59,5 +68,15 @@ namespace zzz
 	void zView::Initialize()
 	{
 
+	}
+
+	void zView::OnUpdate()
+	{
+
+	}
+
+	void zView::OnResize(const zSize2D<>& size)
+	{
+		winSurface->OnResize(size);
 	}
 }

@@ -74,7 +74,7 @@
     <ClCompile Include="source\engine\interfaces\_utility\IIcoBuilder.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfacesImpl\_utility\icoBuilder\ibMSWin.cppm">
+    <ClCompile Include="source\engine\interfacesImpl\utils\icoBuilder\ibMSWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfaces\IGAPI.cppm">
@@ -96,6 +96,9 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfaces\IWinSurface.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\engine\zViewFactory.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

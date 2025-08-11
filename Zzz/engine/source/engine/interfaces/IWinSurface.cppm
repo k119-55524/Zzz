@@ -2,6 +2,7 @@
 export module IWinSurface;
 
 import result;
+import zSize2D;
 import zViewSettings;
 
 using namespace zzz::platforms;
@@ -25,6 +26,8 @@ namespace zzz
 		explicit IWinSurface(std::shared_ptr<const zViewSettings> settings);
 
 		virtual ~IWinSurface() = default;
+
+		virtual void OnResize(const zSize2D<>& size) = 0;
 
 	protected:
 		const std::shared_ptr<const zViewSettings> settings;

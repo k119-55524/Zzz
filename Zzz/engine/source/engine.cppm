@@ -3,14 +3,15 @@
 export module engine;
 
 import IGAPI;
+import zView;
 import result;
 import zMsgBox;
 import zSize2D;
 import mlMSWin;
 import IMainLoop;
 import strConver;
-import zViewSettings;
 import ISuperWidget;
+import zViewSettings;
 import IOPathFactory;
 
 #if defined(_WIN64)
@@ -27,9 +28,7 @@ using namespace zzz::platforms;
 namespace zzz
 {
 #if defined(_WIN64)
-	typedef swMSWin SuperWidget;
 	typedef mlMSWin MainLoop;
-	typedef DXAPI GAPI;
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif
@@ -51,13 +50,12 @@ export namespace zzz
 		std::mutex stateMutex;
 		bool isSysPaused;
 
-		std::shared_ptr<zViewSettings> settingsSW;
-		std::shared_ptr<SuperWidget> superWidget;
+		std::shared_ptr<zViewSettings> settingsView;
+		std::shared_ptr<zView> view;
 		std::shared_ptr<IMainLoop> mainLoop;
-		std::shared_ptr<IGAPI> gapi;
 
 		void Reset() noexcept;
-		void OnResizeSW(const zSize2D<>& size, e_TypeWinAppResize resType);
+		void OnResizeAppWin(const zSize2D<>& size, e_TypeWinResize resizeType);
 		void OnUpdateSystem();
 	};
 
@@ -73,10 +71,9 @@ export namespace zzz
 
 	void engine::Reset() noexcept
 	{
-		gapi.reset();
 		mainLoop.reset();
-		superWidget.reset();
-		settingsSW.reset();
+		view.reset();
+		settingsView.reset();
 
 		initState = eInitState::eInitNot;
 		isSysPaused = true;
@@ -91,26 +88,19 @@ export namespace zzz
 		std::wstring err;
 		try
 		{
-			settingsSW = safe_make_shared<zViewSettings>(settingFilePath);
-			superWidget = safe_make_shared<SuperWidget>(settingsSW);
-			superWidget->onResize += std::bind(&engine::OnResizeSW, this, std::placeholders::_1, std::placeholders::_2);
-			auto res = superWidget->Initialize();
-			if (!res)
-			{
-				Reset();
-				return Unexpected(eResult::failure, L">>>>> [engine::initialize()]. Failed to initialize super widget. More specifically: " + res.error().getMessage());
-			}
+			settingsView = safe_make_shared<zViewSettings>(settingFilePath);
+			view = safe_make_shared<zView>(settingsView);
+			//superWidget = safe_make_shared<SuperWidget>(settingsSW);
+			//superWidget->onResize += std::bind(&engine::OnResizeSW, this, std::placeholders::_1, std::placeholders::_2);
+			//auto res = superWidget->Initialize();
+			//if (!res)
+			//{
+			//	Reset();
+			//	return Unexpected(eResult::failure, L">>>>> [engine::initialize()]. Failed to initialize super widget. More specifically: " + res.error().getMessage());
+			//}
 
 			mainLoop = safe_make_shared<MainLoop>();
 			mainLoop->onUpdateSystem += std::bind(&engine::OnUpdateSystem, this);
-
-			gapi = safe_make_shared<GAPI>();
-			res = gapi->Initialize(superWidget);
-			if (!res)
-			{
-				Reset();
-				return Unexpected(eResult::failure, L">>>>> [engine::initialize()]. Failed to initialize gapi. More specifically: " + res.error().getMessage());
-			}
 
 			initState = eInitState::eInitOK;
 			return {};
@@ -172,30 +162,28 @@ export namespace zzz
 
 		//Sleep(100);
 
-		//sceneManager->Update();
-		gapi->OnUpdate();
-		gapi->OnRender();
+		view->OnUpdate();
 	}
 
-	void engine::OnResizeSW(const zSize2D<>& size, e_TypeWinAppResize resizeType)
+	void engine::OnResizeAppWin(const zSize2D<>& size, e_TypeWinResize resizeType)
 	{
 		switch (resizeType)
 		{
-		case e_TypeWinAppResize::eHide:
-			DebugOutput(L">>>>> [engine::OnResizeSW]. Hide app window.\n");
+		case e_TypeWinResize::eHide:
+			DebugOutput(L">>>>> [engine::OnResizeAppWin()]. Hide app window.\n");
 
 			isSysPaused = true;
 			break;
-		case e_TypeWinAppResize::eShow:
-			DebugOutput((L">>>>> [engine::OnResizeSW]. Show app window. Win size: " + std::to_wstring(size.width) + L"x" + std::to_wstring(size.height) + L".\n").c_str());
+		case e_TypeWinResize::eShow:
+			DebugOutput((L">>>>> [engine::OnResizeAppWin()]. Show app window. Win size: " + std::to_wstring(size.width) + L"x" + std::to_wstring(size.height) + L".\n").c_str());
 
 			isSysPaused = false;
 			break;
-		case e_TypeWinAppResize::eResize:
-			DebugOutput((L">>>>> [engine::OnResizeSW]. Resize to " + std::to_wstring(size.width) + L"x" + std::to_wstring(size.height) + L".\n").c_str());
+		case e_TypeWinResize::eResize:
+			DebugOutput((L">>>>> [engine::OnResizeAppWin()]. Resize to " + std::to_wstring(size.width) + L"x" + std::to_wstring(size.height) + L".\n").c_str());
 
 			isSysPaused = false;
-			gapi->OnResize(size);
+			view->OnResize(size);
 			break;
 		}
 	}

@@ -93,6 +93,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="source\engine.cppm" />
+    <ClCompile Include="source\engine\zViewFactory.cppm" />
     <ClCompile Include="source\engine\interfaces\IAppWin.cppm" />
     <ClCompile Include="source\engine\interfaces\IWinSurface.cppm" />
     <ClCompile Include="source\engine\zView.cppm" />
@@ -100,7 +101,7 @@
     <ClCompile Include="source\engine\interfacesImpl\gapi\DX\RootSignature.cppm" />
     <ClCompile Include="source\engine\interfaces\IGAPI.cppm" />
     <ClCompile Include="source\engine\zEvent.cppm" />
-    <ClCompile Include="source\engine\interfacesImpl\_utility\icoBuilder\ibMSWin.cppm" />
+    <ClCompile Include="source\engine\interfacesImpl\utils\icoBuilder\ibMSWin.cppm" />
     <ClCompile Include="source\engine\interfaces\_utility\IIcoBuilder.cppm" />
     <ClCompile Include="source\utils\MessageBox.cppm" />
     <ClCompile Include="source\utils\strConver.cppm" />

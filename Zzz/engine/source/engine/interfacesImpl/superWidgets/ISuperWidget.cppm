@@ -17,13 +17,6 @@ namespace zzz
 
 export namespace zzz::platforms
 {
-	export enum e_TypeWinAppResize : zU32
-	{
-		eShow,
-		eHide,
-		eResize
-	};
-
 	class ISuperWidget
 	{
 	public:
@@ -36,7 +29,7 @@ export namespace zzz::platforms
 
 		inline const zSize2D<>& GetWinSize() const noexcept { return winSize; };
 
-		zEvent<zSize2D<>, e_TypeWinAppResize> onResize;
+		zEvent<zSize2D<>, e_TypeWinResize> onResize;
 
 	protected:
 		virtual result<> Initialize() = 0;
