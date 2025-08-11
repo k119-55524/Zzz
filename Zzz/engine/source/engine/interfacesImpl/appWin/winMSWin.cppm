@@ -1,13 +1,12 @@
 #include "pch.h"
-export module swMSWin;
+export module winMSWin;
 
-#if defined(_WIN64)
 import result;
+import zEvent;
+import IAppWin;
 import zSize2D;
-import mlMSWin;
 import ibMSWin;
 import zViewSettings;
-import ISuperWidget;
 import IOPathFactory;
 
 using namespace zzz;
@@ -15,56 +14,50 @@ using namespace zzz::io;
 using namespace zzz::platforms;
 using namespace zzz::icoBuilder;
 
-namespace zzz
+export namespace zzz
 {
-	class engine;
-}
-
-export namespace zzz::platforms
-{
-	class swMSWin final : public ISuperWidget
+	export class winMSWin final : public IAppWin
 	{
 	public:
-		friend class zzz::engine;
+		winMSWin() = delete;
+		winMSWin(const winMSWin&) = delete;
+		winMSWin(winMSWin&&) = delete;
+		winMSWin& operator=(const winMSWin&) = delete;
+		winMSWin& operator=(winMSWin&&) = delete;
 
-		swMSWin() = delete;
-		swMSWin(swMSWin&) = delete;
-		swMSWin(swMSWin&&) = delete;
+		explicit winMSWin(std::shared_ptr<zViewSettings> _settings);
 
-		explicit swMSWin(std::shared_ptr<zViewSettings> _settings);
-		~swMSWin() override;
+		~winMSWin() override;
 
-		inline const HWND GetHWND() const noexcept { return hWnd; };
+		inline const HWND GetHWND() const noexcept { return hWnd; }
 
 	protected:
 		virtual result<> Initialize() override;
-		void OnUpdate() override {};
 
 	private:
 		HWND hWnd;
 		bool IsMinimized;
-
-		static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+		static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept;
 		LRESULT MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	};
 
-	swMSWin::swMSWin(std::shared_ptr<zViewSettings> _settings) :
-		ISuperWidget(_settings),
+	winMSWin::winMSWin(std::shared_ptr<zViewSettings> _settings) :
+		IAppWin(_settings),
 		hWnd{ nullptr },
 		IsMinimized{ true }
 	{
 		SetProcessDPIAware();
 	}
 
-	swMSWin::~swMSWin()
+	winMSWin::~winMSWin()
 	{
 		if (hWnd)
 			DestroyWindow(hWnd);
 	}
 
-	result<> swMSWin::Initialize()
+	result<> winMSWin::Initialize()
 	{
-		#pragma region Получение настроек окна
+#pragma region Получение настроек окна
 		std::wstring Caption;
 		std::wstring ClassName;
 		{
@@ -98,15 +91,15 @@ export namespace zzz::platforms
 			{
 				ibMSWin icoBuilder;
 				auto res = icoBuilder.LoadIco(icoPath.value(), settings->GetParam<int>(L"IcoSize").value_or(32));
-				if(res)
+				if (res)
 					iconHandle = res.value();
 			}
 		}
-		#pragma endregion Получение настроек окна
+#pragma endregion Получение настроек окна
 
 		WNDCLASS wc = { 0 };
 		wc.style = CS_HREDRAW | CS_VREDRAW;
-		wc.lpfnWndProc = swMSWin::WindowProc;
+		wc.lpfnWndProc = winMSWin::WindowProc;
 		wc.hInstance = GetModuleHandle(NULL);
 		wc.hIcon = iconHandle;// LoadIcon(GetModuleHandle(NULL), NULL);// MAKEINTRESOURCE(userGS->GetMSWinIcoID()));
 		wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
@@ -152,28 +145,41 @@ export namespace zzz::platforms
 		return {};
 	}
 
-	LRESULT CALLBACK swMSWin::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	LRESULT CALLBACK winMSWin::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept
 	{
-		swMSWin* pThis;
+		winMSWin* pThis = nullptr;
 
-		if (uMsg == WM_NCCREATE)
+		try
 		{
-			CREATESTRUCT* pCreate = (CREATESTRUCT*)lParam;
-			pThis = (swMSWin*)pCreate->lpCreateParams;
-			SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pThis);
+			if (uMsg == WM_NCCREATE)
+			{
+				const auto* pCreate = reinterpret_cast<CREATESTRUCT*>(lParam);
+				if (!pCreate || !pCreate->lpCreateParams)
+					return FALSE; // Ошибка создания
 
-			pThis->hWnd = hwnd;
+				pThis = static_cast<winMSWin*>(pCreate->lpCreateParams);
+				SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
+				pThis->hWnd = hwnd;
+			}
+			else
+				pThis = reinterpret_cast<winMSWin*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+
+			if (pThis)
+				return pThis->MsgProc(uMsg, wParam, lParam);
 		}
-		else
-			pThis = (swMSWin*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-
-		if (pThis)
-			return pThis->MsgProc(uMsg, wParam, lParam);
+		catch (...)
+		{
+			// В callback функциях Windows нельзя допускать исключения
+#ifdef _DEBUG
+			DebugOutput(L">>>>> [winMSWin::WindowProc]. Exception in WindowProc!");
+#endif
+			return DefWindowProc(hwnd, uMsg, wParam, lParam);
+		}
 
 		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 
-	LRESULT swMSWin::MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
+	LRESULT winMSWin::MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		switch (uMsg)
 		{
@@ -184,23 +190,23 @@ export namespace zzz::platforms
 		case WM_SIZE:
 			winSize.width = static_cast<zU64>(LOWORD(lParam));
 			winSize.height = static_cast<zU64>(HIWORD(lParam));
-				if (wParam == SIZE_MINIMIZED)
+			if (wParam == SIZE_MINIMIZED)
+			{
+				onResize(winSize, e_TypeWinResize::eHide);
+				IsMinimized = true;
+			}
+			else
+			{
+				if ((wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED) && IsMinimized)
 				{
-					onResize(winSize, e_TypeWinResize::eHide);
-					IsMinimized = true;
+					onResize(winSize, e_TypeWinResize::eShow);
+					IsMinimized = false;
 				}
 				else
 				{
-					if ((wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED) && IsMinimized)
-					{
-						onResize(winSize, e_TypeWinResize::eShow);
-						IsMinimized = false;
-					}
-					else
-					{
-						onResize(winSize, e_TypeWinResize::eResize);
-					}
+					onResize(winSize, e_TypeWinResize::eResize);
 				}
+			}
 			return 0;
 
 			// Перехватываем это сообщение, чтобы не допустить слишком маленького/большого размера окна.
@@ -224,7 +230,6 @@ export namespace zzz::platforms
 			// Новый DPI
 			UINT dpiX = LOWORD(wParam);
 			UINT dpiY = HIWORD(wParam);
-
 			RECT* const prcNewWindow = reinterpret_cast<RECT*>(lParam);
 			SetWindowPos(
 				hWnd,
@@ -233,12 +238,13 @@ export namespace zzz::platforms
 				prcNewWindow->top,
 				prcNewWindow->right - prcNewWindow->left,
 				prcNewWindow->bottom - prcNewWindow->top,
-				SWP_NOZORDER | SWP_NOACTIVATE
-			);
+				SWP_NOZORDER | SWP_NOACTIVATE);
 
 			winSize.width = static_cast<zU64>(prcNewWindow->right - prcNewWindow->left);
 			winSize.height = static_cast<zU64>(prcNewWindow->bottom - prcNewWindow->top);
 			onResize(winSize, e_TypeWinResize::eResize);
+
+			return 0;
 		}
 
 		//case WM_PAINT:
@@ -255,4 +261,3 @@ export namespace zzz::platforms
 		}
 	}
 }
-#endif // _WIN64

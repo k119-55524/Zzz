@@ -14,16 +14,13 @@ export namespace zzz::platforms
 		IMainLoop(const IMainLoop&) = delete;
 		IMainLoop(IMainLoop&&) = delete;
 
-		virtual ~IMainLoop() = default;
-
 		IMainLoop& operator=(const IMainLoop&) = delete;
 		IMainLoop& operator=(IMainLoop&&) = delete;
+
+		virtual ~IMainLoop() = default;
 
 		virtual void Run() = 0;
 
 		zEvent<void> onUpdateSystem;
-
-	protected:
-		std::function<void()> updateSystem;
 	};
 }

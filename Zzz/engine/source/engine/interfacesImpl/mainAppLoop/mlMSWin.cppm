@@ -9,17 +9,17 @@ using namespace zzz;
 namespace zzz::platforms
 {
 #if defined(_WIN64)
-	export class mlMSWin : public IMainLoop
+	export class mlMSWin final: public IMainLoop
 	{
 	public:
 		mlMSWin() = default;
 		mlMSWin(const mlMSWin&) = delete;
 		mlMSWin(mlMSWin&&) = delete;
 
-		virtual ~mlMSWin() = default;
-
 		mlMSWin& operator=(const mlMSWin&) = delete;
 		mlMSWin& operator=(mlMSWin&&) = delete;
+
+		virtual ~mlMSWin() = default;
 
 		void Run() override;
 	};
@@ -38,7 +38,6 @@ namespace zzz::platforms
 			else
 			{
 				onUpdateSystem();
-				//updateSystem();
 			}
 		}
 	}

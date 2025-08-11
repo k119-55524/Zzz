@@ -35,22 +35,16 @@
     <ClCompile Include="source\engine.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\result.cppm">
+    <ClCompile Include="source\engine\utils\result.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfacesImpl\superWidgets\ISuperWidget.cppm">
+    <ClCompile Include="source\engine\zViewSettings.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfacesImpl\superWidgets\swMSWin.cppm">
+    <ClCompile Include="source\engine\utils\zSize2D.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfacesImpl\superWidgets\zViewSettings.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="source\engine\zSize2D.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="source\engine\zSerialize.cppm">
+    <ClCompile Include="source\engine\utils\zSerialize.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\utils\strConver.cppm">
@@ -71,7 +65,7 @@
     <ClCompile Include="source\engine\interfacesImpl\mainAppLoop\mlMSWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfaces\_utility\IIcoBuilder.cppm">
+    <ClCompile Include="source\engine\interfaces\utils\IIcoBuilder.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfacesImpl\utils\icoBuilder\ibMSWin.cppm">
@@ -83,7 +77,7 @@
     <ClCompile Include="source\engine\interfacesImpl\gapi\DXAPI.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\zEvent.cppm">
+    <ClCompile Include="source\engine\utils\zEvent.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfacesImpl\gapi\DX\RootSignature.cppm">
@@ -98,8 +92,14 @@
     <ClCompile Include="source\engine\interfaces\IWinSurface.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\zViewFactory.cppm">
+    <ClCompile Include="source\engine\interfacesImpl\factories\zViewFactory.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="source\engine\interfacesImpl\appWin\winMSWin.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

@@ -10,16 +10,8 @@ import zSize2D;
 import mlMSWin;
 import IMainLoop;
 import strConver;
-import ISuperWidget;
 import zViewSettings;
 import IOPathFactory;
-
-#if defined(_WIN64)
-import DXAPI;
-import swMSWin;
-#else
-#error ">>>>> [Compile error]. This branch requires implementation for the current platform"
-#endif
 
 using namespace zzz;
 using namespace zzz::io;
@@ -55,7 +47,7 @@ export namespace zzz
 		std::shared_ptr<IMainLoop> mainLoop;
 
 		void Reset() noexcept;
-		void OnResizeAppWin(const zSize2D<>& size, e_TypeWinResize resizeType);
+		void OnViewResized(const zSize2D<>& size, e_TypeWinResize resizeType);
 		void OnUpdateSystem();
 	};
 
@@ -89,9 +81,9 @@ export namespace zzz
 		try
 		{
 			settingsView = safe_make_shared<zViewSettings>(settingFilePath);
-			view = safe_make_shared<zView>(settingsView);
+			view = safe_make_shared<zView>(settingsView, std::bind(&engine::OnViewResized, this, std::placeholders::_1, std::placeholders::_2));
 			//superWidget = safe_make_shared<SuperWidget>(settingsSW);
-			//superWidget->onResize += std::bind(&engine::OnResizeSW, this, std::placeholders::_1, std::placeholders::_2);
+			//view->viewResized += ;
 			//auto res = superWidget->Initialize();
 			//if (!res)
 			//{
@@ -165,26 +157,19 @@ export namespace zzz
 		view->OnUpdate();
 	}
 
-	void engine::OnResizeAppWin(const zSize2D<>& size, e_TypeWinResize resizeType)
+	void engine::OnViewResized(const zSize2D<>& size, e_TypeWinResize resizeType)
 	{
 		switch (resizeType)
 		{
 		case e_TypeWinResize::eHide:
-			DebugOutput(L">>>>> [engine::OnResizeAppWin()]. Hide app window.\n");
-
 			isSysPaused = true;
 			break;
 		case e_TypeWinResize::eShow:
-			DebugOutput((L">>>>> [engine::OnResizeAppWin()]. Show app window. Win size: " + std::to_wstring(size.width) + L"x" + std::to_wstring(size.height) + L".\n").c_str());
-
-			isSysPaused = false;
-			break;
 		case e_TypeWinResize::eResize:
-			DebugOutput((L">>>>> [engine::OnResizeAppWin()]. Resize to " + std::to_wstring(size.width) + L"x" + std::to_wstring(size.height) + L".\n").c_str());
-
 			isSysPaused = false;
-			view->OnResize(size);
 			break;
 		}
+
+		DebugOutput(std::format(L">>>>> [engine::OnResizeAppWin()]. isSysPaused: {}\n", isSysPaused));
 	}
 }

@@ -3,7 +3,7 @@ export module IGAPI;
 
 import result;
 import zSize2D;
-import ISuperWidget;
+import IAppWin;
 
 using namespace std::literals::string_view_literals;
 
@@ -58,7 +58,7 @@ export namespace zzz::platforms
 		}
 
 	protected:
-		[[nodiscard]] virtual result<> Initialize(std::shared_ptr<ISuperWidget> appWin) = 0;
+		[[nodiscard]] virtual result<> Initialize(std::shared_ptr<IAppWin> appWin) = 0;
 		friend class zzz::engine;
 		friend class zzz::zView;
 

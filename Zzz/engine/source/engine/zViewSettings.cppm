@@ -9,7 +9,7 @@ using namespace zzz::zaml;
 
 export namespace zzz
 {
-	class zViewSettings
+	export class zViewSettings
 	{
 	public:
 		zViewSettings() = delete;

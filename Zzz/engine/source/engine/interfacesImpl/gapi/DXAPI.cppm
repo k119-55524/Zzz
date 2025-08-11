@@ -6,7 +6,7 @@ using namespace zzz::platforms::directx;
 #if defined(_WIN64)
 import IGAPI;
 import result;
-import swMSWin;
+import winMSWin;
 import strConver;
 import RootSignature;
 
@@ -33,7 +33,7 @@ namespace zzz::platforms
 
 export namespace zzz::platforms
 {
-	class DXAPI final : public IGAPI
+	export class DXAPI final : public IGAPI
 	{
 	public:
 		class CommandWrapper
@@ -71,11 +71,12 @@ export namespace zzz::platforms
 		DXAPI(DXAPI&&) = delete;
 
 		DXAPI& operator=(const DXAPI&) = delete;
+		DXAPI& operator=(DXAPI&&) = delete;
 
 		virtual ~DXAPI() override;
 
 	protected:
-		virtual result<> Initialize(const std::shared_ptr<ISuperWidget> appWin) override;
+		virtual result<> Initialize(const std::shared_ptr<IAppWin> appWin) override;
 
 		void OnUpdate() override;
 		void OnRender() override;
@@ -114,7 +115,7 @@ export namespace zzz::platforms
 		unique_handle m_fenceEvent;
 		ComPtr<ID3D12Fence> m_fence;
 
-		result<> InitializePipeline(const std::shared_ptr<ISuperWidget> appWin);
+		result<> InitializePipeline(const std::shared_ptr<winMSWin> appWin);
 		void CheckDirectX12UltimateSupport();
 		result<> InitializeAssets();
 		result<> GetAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter);
@@ -169,9 +170,13 @@ export namespace zzz::platforms
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 	}
 
-	result<> DXAPI::Initialize(const std::shared_ptr<ISuperWidget> appWin)
+	result<> DXAPI::Initialize(const std::shared_ptr<IAppWin> appWin)
 	{
-		auto res = InitializePipeline(appWin)
+		std::shared_ptr<winMSWin> appMSWin = std::dynamic_pointer_cast<winMSWin>(appWin);
+		if (!appMSWin)
+			return Unexpected(eResult::failure, L">>>>> [DXAPI::Initialize()]. Failed to cast IAppWin to winMSWin.");
+
+		auto res = InitializePipeline(appMSWin)
 			.and_then([&]() { return InitializeAssets(); });
 		
 		if(res)
@@ -180,10 +185,9 @@ export namespace zzz::platforms
 		return res;
 	}
 
-	result<> DXAPI::InitializePipeline(const std::shared_ptr<ISuperWidget> appWin)
+	result<> DXAPI::InitializePipeline(const std::shared_ptr<winMSWin> appWin)
 	{
 		UINT dxgiFactoryFlags = 0;
-
 		zSize2D winSize = appWin->GetWinSize();
 		//m_aspectRatio = static_cast<float>(winSize->x) / static_cast<float>(winSize->y);
 		m_viewport = CD3DX12_VIEWPORT{ 0.0f, 0.0f, static_cast<float>(winSize.width), static_cast<float>(winSize.height) };
@@ -297,7 +301,7 @@ export namespace zzz::platforms
 		ComPtr<IDXGISwapChain1> swapChain;
 		hr = factory->CreateSwapChainForHwnd(
 				m_commandQueue.Get(),	// SwapChain нужна CommandQueue, чтобы она могла принудительно очистить ее.
-				dynamic_cast<swMSWin*>(appWin.get())->GetHWND(),
+				dynamic_cast<winMSWin*>(appWin.get())->GetHWND(),
 				&swapChainDesc,
 				nullptr,
 				nullptr,
@@ -306,7 +310,7 @@ export namespace zzz::platforms
 			return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializePipeline()]. Failed to create swap chain. More specifically: " + res.error().getMessage());
 
 		// Этот пример не поддерживает полноэкранные переходы.
-		hr = factory->MakeWindowAssociation(dynamic_cast<swMSWin*>(appWin.get())->GetHWND(), DXGI_MWA_NO_ALT_ENTER);
+		hr = factory->MakeWindowAssociation(dynamic_cast<winMSWin*>(appWin.get())->GetHWND(), DXGI_MWA_NO_ALT_ENTER);
 		if (FAILED(hr))
 			return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializePipeline()]. Failed to make window association. HRESULT = 0x{:08X}", hr));
 
@@ -662,8 +666,27 @@ export namespace zzz::platforms
 		if (initState != eInitState::eInitOK && !m_swapChain)
 			return;
 
+		if (size.width == 0 || size.height == 0)
+		{
+			OutputDebugString(L">>>>> [DXAPI::OnResize()]. Invalid size for resize. Width or height is zero.\n");
+			return;
+		}
+
 		ensure(m_device);
 		ensure(m_swapChain);
+
+		DXGI_SWAP_CHAIN_DESC1 desc;
+		HRESULT hr = m_swapChain->GetDesc1(&desc);
+		if (SUCCEEDED(hr))
+		{
+			// Сравниваем с новым размером
+			if (desc.Width == static_cast<UINT>(size.width) &&
+				desc.Height == static_cast<UINT>(size.height))
+			{
+				OutputDebugString(std::format(L">>>>> [DXAPI::OnResize({}x{})]. No resize needed, dimensions are unchanged.\n", size.width, size.height).c_str());
+				return; // Размеры не изменились
+			}
+		}
 
 		WaitForPreviousFrame();
 
@@ -671,7 +694,7 @@ export namespace zzz::platforms
 			m_renderTargets[i].Reset();
 		m_rtvHeap.Reset();
 
-		HRESULT hr = m_swapChain->ResizeBuffers(
+		hr = m_swapChain->ResizeBuffers(
 			FrameCount,
 			static_cast<UINT>(size.width),
 			static_cast<UINT>(size.height),

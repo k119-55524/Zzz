@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
@@ -93,30 +94,40 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="source\engine.cppm" />
-    <ClCompile Include="source\engine\zViewFactory.cppm" />
+    <ClCompile Include="source\engine\interfacesImpl\appWin\winMSWin.cppm" />
+    <ClCompile Include="source\engine\interfacesImpl\factories\zViewFactory.cppm" />
     <ClCompile Include="source\engine\interfaces\IAppWin.cppm" />
     <ClCompile Include="source\engine\interfaces\IWinSurface.cppm" />
     <ClCompile Include="source\engine\zView.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\gapi\DXAPI.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\gapi\DX\RootSignature.cppm" />
     <ClCompile Include="source\engine\interfaces\IGAPI.cppm" />
-    <ClCompile Include="source\engine\zEvent.cppm" />
+    <ClCompile Include="source\engine\utils\zEvent.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\utils\icoBuilder\ibMSWin.cppm" />
-    <ClCompile Include="source\engine\interfaces\_utility\IIcoBuilder.cppm" />
+    <ClCompile Include="source\engine\interfaces\utils\IIcoBuilder.cppm" />
     <ClCompile Include="source\utils\MessageBox.cppm" />
     <ClCompile Include="source\utils\strConver.cppm" />
-    <ClCompile Include="source\engine\zSerialize.cppm" />
-    <ClCompile Include="source\engine\zSize2D.cppm" />
+    <ClCompile Include="source\engine\utils\zSerialize.cppm" />
+    <ClCompile Include="source\engine\utils\zSize2D.cppm" />
     <ClCompile Include="source\engine\IO\IOPathFactory.cppm" />
     <ClCompile Include="source\engine\interfaces\IMainLoop.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\mainAppLoop\mlMSWin.cppm" />
     <ClCompile Include="source\engine\IO\ioZaml.cppm" />
-    <ClCompile Include="source\engine\interfacesImpl\superWidgets\zViewSettings.cppm" />
-    <ClCompile Include="source\engine\result.cppm" />
-    <ClCompile Include="source\engine\interfacesImpl\superWidgets\ISuperWidget.cppm" />
-    <ClCompile Include="source\engine\interfacesImpl\superWidgets\swMSWin.cppm" />
+    <ClCompile Include="source\engine\zViewSettings.cppm" />
+    <ClCompile Include="source\engine\utils\result.cppm" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>Данный проект ссылается на пакеты NuGet, отсутствующие на этом компьютере. Используйте восстановление пакетов NuGet, чтобы скачать их.  Дополнительную информацию см. по адресу: http://go.microsoft.com/fwlink/?LinkID=322105. Отсутствует следующий файл: {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets'))" />
+  </Target>
 </Project>
