@@ -75,6 +75,22 @@ namespace zzz::platforms::directx
 #pragma region Обёртки над структурами DirectX
 namespace zzz::platforms::directx
 {
+#if defined(_DEBUG)
+#define SET_RESOURCE_DEBUG_NAME(resource, name) {			\
+	std::wstring debugName = L">>>>> ";						\
+	std::wstring tempName = name;							\
+	if (!tempName.empty()) {								\
+	    debugName += tempName;								\
+	}														\
+	debugName += L"\n+--- [" + std::wstring(__FILEW__) +	\
+	L"]\n+--- [" + std::wstring(__FUNCTIONW__) +			\
+	L"]\n+--- [Line " + std::to_wstring(__LINE__) + L"]";	\
+	resource->SetName(debugName.c_str());					\
+}
+#else
+#define SET_RESOURCE_DEBUG_NAME(resource, name) {}
+#endif
+
 	struct CD3DX12_DEFAULT {};
 	extern const DECLSPEC_SELECTANY CD3DX12_DEFAULT D3D12_DEFAULT;
 

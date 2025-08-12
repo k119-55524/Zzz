@@ -6,7 +6,9 @@ import result;
 import IAppWin;
 import winMSWin;
 import strConver;
+import ISurfaceAppWin;
 import zViewSettings;
+import surfaceAppMSWin_DirectX;
 
 #if defined(_WIN64)
 import DXAPI;
@@ -30,6 +32,10 @@ export namespace zzz
 
 		std::shared_ptr<IAppWin> CreateAppWin(std::shared_ptr<zViewSettings> settings);
 		std::shared_ptr<IGAPI> CreateGAPI();
+		std::shared_ptr<ISurfaceAppWin> CreateSurfaceWin(
+			std::shared_ptr<zViewSettings> _settings,
+			std::shared_ptr<IAppWin> _iAppWin,
+			std::shared_ptr<zzz::platforms::IGAPI> _iGAPI);
 	};
 
 	std::shared_ptr<IAppWin> zViewFactory::CreateAppWin(std::shared_ptr<zViewSettings> settings)
@@ -69,6 +75,29 @@ export namespace zzz
 		catch (...)
 		{
 			throw_runtime_error(">>>>>> [zViewFactory::CreateGAPI()]. Unknown exception occurred while creating GAPI.");
+		}
+	}
+
+	export std::shared_ptr<ISurfaceAppWin> zViewFactory::CreateSurfaceWin(
+		std::shared_ptr<zViewSettings> _settings,
+		std::shared_ptr<IAppWin> _iAppWin,
+		std::shared_ptr<zzz::platforms::IGAPI> _iGAPI)
+	{
+		try
+		{
+#if defined(_WIN64)
+			return safe_make_shared<surfaceAppMSWin_DirectX>(_settings, _iAppWin, _iGAPI);
+#else
+			throw_runtime_error(">>>>> [zViewFactory::CreateSurfaceWin()]. This branch requires implementation for the current platform");
+#endif
+			}
+		catch (const std::exception& e)
+		{
+			throw_runtime_error(std::format(">>>>> [zViewFactory::CreateSurfaceWin()]. Failed to create surface window: {}.", std::string(e.what())));
+		}
+		catch (...)
+		{
+			throw_runtime_error(">>>>>> [zViewFactory::CreateSurfaceWin()]. Unknown exception occurred while creating surface window.");
 		}
 	}
 }

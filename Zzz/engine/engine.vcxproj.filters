@@ -89,13 +89,16 @@
     <ClCompile Include="source\engine\interfaces\IAppWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfaces\IWinSurface.cppm">
+    <ClCompile Include="source\engine\interfaces\ISurfaceAppWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfacesImpl\factories\zViewFactory.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfacesImpl\appWin\winMSWin.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\engine\interfacesImpl\winSurface\surfaceMSWin_DirectX.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

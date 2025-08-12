@@ -9,8 +9,9 @@ using namespace std::literals::string_view_literals;
 
 namespace zzz
 {
-	class engine;
 	class zView;
+	class engine;
+	class surfaceAppMSWin_DirectX;
 }
 
 export namespace zzz::platforms
@@ -23,7 +24,7 @@ export namespace zzz::platforms
 		Metal
 	};
 
-	class IGAPI
+	export class IGAPI
 	{
 	public:
 		IGAPI() =							delete;
@@ -34,10 +35,17 @@ export namespace zzz::platforms
 
 		explicit IGAPI(eGAPIType type) noexcept
 			: gapiType{ type },
-			initState{ eInitState::eInitNot }
+			initState{ eInitState::eInitNot },
+			m_supportsRayTracing{ false },
+			m_supportsVariableRateShading{ false },
+			m_supportsMeshShaders{ false },
+			m_supportsSamplerFeedback{ false }
 		{}
 
 		virtual ~IGAPI() = default;
+
+		[[nodiscard]] eInitState GetInitState() const noexcept { return initState; }
+
 
 		// Геттеры возможностей
 		[[nodiscard]] constexpr bool SupportsRayTracing() const noexcept { return m_supportsRayTracing; }
@@ -62,17 +70,20 @@ export namespace zzz::platforms
 		friend class zzz::engine;
 		friend class zzz::zView;
 
-		eGAPIType gapiType{};
-		eInitState initState{};
+		eGAPIType gapiType;
+		eInitState initState;
 
-		virtual void OnUpdate() = 0;
-		virtual void OnRender() = 0;
-		virtual void OnResize(const zSize2D<>& size) = 0;
+		//virtual void OnUpdate() = 0;
+		virtual void WaitForPreviousFrame() {};
+		friend class zzz::surfaceAppMSWin_DirectX;
+
+		//virtual void OnRender() = 0;
+		//virtual void OnResize(const zSize2D<>& size) = 0;
 
 		// Возможности GAPI
-		bool m_supportsRayTracing = false; // DXR
-		bool m_supportsVariableRateShading = false; // VRS
-		bool m_supportsMeshShaders = false; // Mesh Shaders  
-		bool m_supportsSamplerFeedback = false; // Sampler Feedback
+		bool m_supportsRayTracing;			// DXR
+		bool m_supportsVariableRateShading;	// VRS
+		bool m_supportsMeshShaders;			// Mesh Shaders  
+		bool m_supportsSamplerFeedback;		// Sampler Feedback
 	};
 }

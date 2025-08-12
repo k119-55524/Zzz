@@ -7,7 +7,7 @@ import zEvent;
 import IAppWin;
 import zSize2D;
 import strConver;
-import IWinSurface;
+import ISurfaceAppWin;
 import zViewFactory;
 import zViewSettings;
 
@@ -42,7 +42,7 @@ namespace zzz
 		std::shared_ptr<zViewSettings> settings;
 		std::shared_ptr<IGAPI> gapi;
 		std::shared_ptr<IAppWin> appWin;
-		std::shared_ptr<IWinSurface> winSurface;
+		std::shared_ptr<ISurfaceAppWin> winSurface;
 
 		void Initialize();
 	};
@@ -84,6 +84,12 @@ namespace zzz
 			res = gapi->Initialize(appWin);
 			if (!res)
 				throw_runtime_error(std::format(">>>>> [zView::Initialize()]. Failed to initialize GAPI: {}.", wstring_to_string(res.error().getMessage())));
+
+			winSurface = factory.CreateSurfaceWin(settings, appWin, gapi);
+			res = winSurface->Initialize();
+			if (!res)
+				throw_runtime_error(std::format(">>>>> [zView::Initialize()]. Failed to initialize surface window: {}.", wstring_to_string(res.error().getMessage())));
+
 		}
 		catch (const std::exception& e)
 		{
@@ -97,11 +103,8 @@ namespace zzz
 
 	void zView::OnUpdate()
 	{
-		if (gapi)
-		{
-			gapi->OnUpdate();
-			gapi->OnRender();
-		}
+		if (winSurface)
+			winSurface->OnRender();
 	}
 
 	void zView::OnViewResized(const zSize2D<>& size, e_TypeWinResize resizeType)
@@ -120,7 +123,9 @@ namespace zzz
 		}
 
 		viewResized(size, resizeType);
-		if(gapi)
-			gapi->OnResize(size);
+		//if(gapi)
+		//	gapi->OnResize(size);
+		if (winSurface)
+			winSurface->OnResize(size);
 	}
 }
