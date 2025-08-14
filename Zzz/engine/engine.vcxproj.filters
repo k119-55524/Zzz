@@ -59,7 +59,7 @@
     <ClCompile Include="source\utils\MessageBox.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfaces\IMainLoop.cppm">
+    <ClCompile Include="source\engine\interfaces\platforms\IMainLoop.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfacesImpl\mainAppLoop\mlMSWin.cppm">
@@ -71,7 +71,7 @@
     <ClCompile Include="source\engine\interfacesImpl\utils\icoBuilder\ibMSWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfaces\IGAPI.cppm">
+    <ClCompile Include="source\engine\interfaces\platforms\IGAPI.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfacesImpl\gapi\DXAPI.cppm">
@@ -86,10 +86,10 @@
     <ClCompile Include="source\engine\zView.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfaces\IAppWin.cppm">
+    <ClCompile Include="source\engine\interfaces\platforms\IAppWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfaces\ISurfaceAppWin.cppm">
+    <ClCompile Include="source\engine\interfaces\platforms\IAppWinSurface.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfacesImpl\factories\zViewFactory.cppm">
@@ -104,7 +104,7 @@
     <ClCompile Include="source\engine\interfacesImpl\gapi\DX\CheckDirectXUltimateSupport.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfaces\ICheckGapiSupport.cppm">
+    <ClCompile Include="source\engine\interfaces\platforms\ICheckGapiSupport.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

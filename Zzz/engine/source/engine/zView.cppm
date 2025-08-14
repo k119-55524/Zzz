@@ -7,9 +7,9 @@ import zEvent;
 import IAppWin;
 import zSize2D;
 import strConver;
-import ISurfaceAppWin;
 import zViewFactory;
 import zViewSettings;
+import IAppWinSurface;
 
 using namespace zzz::platforms;
 
@@ -40,18 +40,18 @@ namespace zzz
 
 	private:
 		zViewFactory factory;
-		std::shared_ptr<zViewSettings> settings;
-		std::shared_ptr<IGAPI> gapi;
-		std::shared_ptr<IAppWin> appWin;
-		std::shared_ptr<ISurfaceAppWin> winSurface;
+		std::shared_ptr<zViewSettings> m_Settings;
+		std::shared_ptr<IGAPI> m_GAPI;
+		std::shared_ptr<IAppWin> m_Win;
+		std::shared_ptr<IAppWinSurface> m_WinSurface;
 
 		void Initialize();
 	};
 
 	zView::zView(std::shared_ptr<zViewSettings> _setting, std::function<void(zSize2D<>, e_TypeWinResize)> _onResizeClbk) :
-		settings{ _setting }
+		m_Settings{ _setting }
 	{
-		ensure(settings, ">>>>> [zView::zView()]. Settings cannot be null.");
+		ensure(m_Settings, ">>>>> [zView::zView()]. Settings cannot be null.");
 		if(_onResizeClbk)
 			viewResized += _onResizeClbk;
 
@@ -75,19 +75,19 @@ namespace zzz
 	{
 		try
 		{
-			appWin = factory.CreateAppWin(settings);
-			appWin->onResize += std::bind(&zView::OnViewResized, this, std::placeholders::_1, std::placeholders::_2);
-			auto res = appWin->Initialize();
+			m_Win = factory.CreateAppWin(m_Settings);
+			m_Win->onResize += std::bind(&zView::OnViewResized, this, std::placeholders::_1, std::placeholders::_2);
+			auto res = m_Win->Initialize();
 			if (!res)
 				throw_runtime_error(std::format(">>>>> [zView::Initialize()]. Failed to initialize application window: {}.", wstring_to_string(res.error().getMessage())));
 
-			gapi = factory.CreateGAPI();
-			res = gapi->Initialize(appWin);
+			m_GAPI = factory.CreateGAPI();
+			res = m_GAPI->Initialize(m_Win);
 			if (!res)
 				throw_runtime_error(std::format(">>>>> [zView::Initialize()]. Failed to initialize GAPI: {}.", wstring_to_string(res.error().getMessage())));
 
-			winSurface = factory.CreateSurfaceWin(settings, appWin, gapi);
-			res = winSurface->Initialize();
+			m_WinSurface = factory.CreateSurfaceWin(m_Settings, m_Win, m_GAPI);
+			res = m_WinSurface->Initialize();
 			if (!res)
 				throw_runtime_error(std::format(">>>>> [zView::Initialize()]. Failed to initialize surface window: {}.", wstring_to_string(res.error().getMessage())));
 
@@ -104,18 +104,20 @@ namespace zzz
 
 	void zView::OnUpdate()
 	{
-		static int frameCount = 0;
-		frameCount++;
 
-		if (winSurface)
-			winSurface->OnRender();
+		if (m_WinSurface)
+			m_WinSurface->OnRender();
 
-		if (frameCount == 30)
-			winSurface->SetFullScreen(true);
+		{
+			//static int frameCount = 0;
+			//frameCount++;
 
-		if (frameCount == 90)
-			winSurface->SetFullScreen(false);
+			//if (frameCount == 30)
+			//	winSurface->SetFullScreen(true);
 
+			//if (frameCount == 90)
+			//	winSurface->SetFullScreen(false);
+		}
 	}
 
 	void zView::OnViewResized(const zSize2D<>& size, e_TypeWinResize resizeType)
@@ -134,10 +136,8 @@ namespace zzz
 		}
 
 		viewResized(size, resizeType);
-		//if(gapi)
-		//	gapi->OnResize(size);
-		if (winSurface)
-			winSurface->OnResize(size);
+		if (m_WinSurface)
+			m_WinSurface->OnResize(size);
 	}
 
 	void zView::SetFullScreen(bool fs)

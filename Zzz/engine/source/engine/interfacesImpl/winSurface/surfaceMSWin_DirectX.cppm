@@ -9,7 +9,7 @@ import zSize2D;
 import IAppWin;
 import winMSWin;
 import strConver;
-import ISurfaceAppWin;
+import IAppWinSurface;
 import zViewSettings;
 
 using namespace zzz::platforms;
@@ -17,7 +17,7 @@ using namespace zzz::platforms::directx;
 
 namespace zzz
 {
-	export class surfaceAppMSWin_DirectX final : public ISurfaceAppWin
+	export class surfaceAppMSWin_DirectX final : public IAppWinSurface
 	{
 	public:
 		surfaceAppMSWin_DirectX() = delete;
@@ -45,7 +45,7 @@ namespace zzz
 		static constexpr DXGI_FORMAT DEPTH_FORMAT = DXGI_FORMAT_D32_FLOAT;
 		static constexpr UINT SWAP_CHAIN_FLAGS = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 
-		bool isSwapScreenMode;
+		bool b_IgnoreResize;
 
 		UINT m_frameIndex;
 		CD3DX12_VIEWPORT m_viewport;
@@ -60,7 +60,7 @@ namespace zzz
 		ComPtr<ID3D12DescriptorHeap> m_srvHeap;
 		ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
 		ComPtr<ID3D12Resource> m_renderTargets[FRAME_COUNT];
-		ComPtr<ID3D12Resource> m_depthStencil;
+		ComPtr<ID3D12Resource> m_depthStencil[FRAME_COUNT];
 
 		UINT m_RtvDescrSize;
 		UINT m_DsvDescrSize;
@@ -73,15 +73,15 @@ namespace zzz
 		void PopulateCommandList();
 
 		void ResetRTVandDS();
-		void RecreateRenderTargetsAndDepth();
+		[[nodiscard]] result<> RecreateRenderTargetsAndDepth();
 	};
 
 	surfaceAppMSWin_DirectX::surfaceAppMSWin_DirectX(
 		std::shared_ptr<zViewSettings> _settings,
 		std::shared_ptr<IAppWin> _iAppWin,
 		std::shared_ptr<IGAPI> _iGAPI)
-		: ISurfaceAppWin(_settings, _iAppWin, _iGAPI),
-		isSwapScreenMode{ false },
+		: IAppWinSurface(_settings, _iAppWin, _iGAPI),
+		b_IgnoreResize{ false },
 		m_frameIndex{ 0 },
 		m_tearingSupported{ false },
 		m_RtvDescrSize{ 0 },
@@ -116,8 +116,6 @@ namespace zzz
 		auto res = InitializeSwapChain();
 		if (!res)
 			return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializePipeline()]. Failed to initialize swap chain.");
-
-		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
 		HRESULT hr = m_factory->MakeWindowAssociation(m_Win->GetHWND(), DXGI_MWA_NO_ALT_ENTER);
 		if (FAILED(hr))
@@ -169,16 +167,6 @@ namespace zzz
 		}
 
 		auto winSize = iAppWin->GetWinSize();
-		//DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-		//swapChainDesc.Width = static_cast<UINT>(winSize.width);
-		//swapChainDesc.Height = static_cast<UINT>(winSize.height);
-		//swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		//swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-		//swapChainDesc.BufferCount = FRAME_COUNT;
-		//swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-		//swapChainDesc.SampleDesc.Count = 1;
-		//swapChainDesc.Flags = m_tearingSupported ? SWAP_CHAIN_FLAGS : 0;
-
 		DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 		swapChainDesc.Width = static_cast<UINT>(winSize.width);
 		swapChainDesc.Height = static_cast<UINT>(winSize.height);
@@ -201,7 +189,6 @@ namespace zzz
 			&swapChain1));
 
 		ensure(S_OK == swapChain1.As(&m_swapChain));
-		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
 		return {};
 	}
@@ -247,7 +234,7 @@ namespace zzz
 
 		const D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{
 			.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
-			.NumDescriptors = 1,
+			.NumDescriptors = FRAME_COUNT,
 			.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
 			.NodeMask = 0
 		};
@@ -264,7 +251,9 @@ namespace zzz
 		auto m_device = m_DXAPI->GetDevice();
 		ensure(m_device, ">>>>> [surfaceAppMSWin_DirectX::CreateDS()]. Device cannot be null.");
 
-		m_depthStencil.Reset();
+		// Очищаем старые ресурсы
+		for (auto& ds : m_depthStencil)
+			ds.Reset();
 
 		// Описание вида глубины/трафарета
 		D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
@@ -293,23 +282,63 @@ namespace zzz
 				D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL
 			);
 
-		// Создаём ресурс глубины
-		if (S_OK != m_device->CreateCommittedResource(
-			&depthStencilHeapProps,
-			D3D12_HEAP_FLAG_NONE,
-			&depthStencilTextureDesc,
-			D3D12_RESOURCE_STATE_DEPTH_WRITE,
-			&depthOptimizedClearValue,
-			IID_PPV_ARGS(&m_depthStencil)))
-			return Unexpected(eResult::failure, L">>>>> [DXAPI::CreateDSView()]. Не удалось создать ресурс глубины.");
+		// Создаём ресурсы глубины по количеству кадров
+		for (UINT i = 0; i < FRAME_COUNT; ++i)
+		{
+			HRESULT hr = m_device->CreateCommittedResource(
+				&depthStencilHeapProps,
+				D3D12_HEAP_FLAG_NONE,
+				&depthStencilTextureDesc,
+				D3D12_RESOURCE_STATE_DEPTH_WRITE,
+				&depthOptimizedClearValue,
+				IID_PPV_ARGS(&m_depthStencil[i]));
+			
+			if (S_OK != hr)
+				return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::CreateDS()]. Failed to create depth stencil resource. HRESULT = 0x{:08X}", hr));
 
-		SET_RESOURCE_DEBUG_NAME(m_depthStencil, L"Main DepthStenciI(D3D12Resource).");
+			std::wstring debugName = L"DepthStencil_" + std::to_wstring(i);
+			SET_RESOURCE_DEBUG_NAME(m_depthStencil[i], debugName.c_str());
 
-		// Создаём DSV
-		m_device->CreateDepthStencilView(
-			m_depthStencil.Get(),
-			&depthStencilDesc,
-			m_dsvHeap->GetCPUDescriptorHandleForHeapStart());
+			// Создаём DSV
+			CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(
+				m_dsvHeap->GetCPUDescriptorHandleForHeapStart(),
+				i,
+				m_DsvDescrSize);
+
+			m_device->CreateDepthStencilView(
+				m_depthStencil[i].Get(),
+				&depthStencilDesc,
+				dsvHandle);
+		}
+
+		return {};
+	}
+
+	void surfaceAppMSWin_DirectX::ResetRTVandDS()
+	{
+		for (auto& rt : m_renderTargets)
+			rt.Reset();
+
+		for (auto& ds : m_depthStencil)
+			ds.Reset();
+	}
+
+	result<> surfaceAppMSWin_DirectX::RecreateRenderTargetsAndDepth()
+	{
+		auto m_device = m_DXAPI->GetDevice();
+		auto res = CreateRTV(m_device);
+		if (!res)
+			return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::RecreateRenderTargetsAndDepth()]. Failed to create RTV. {}", res.error().getMessage()).c_str());
+
+		DXGI_SWAP_CHAIN_DESC desc{};
+		HRESULT hr = m_swapChain->GetDesc(&desc);
+		if (S_OK != hr)
+			Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::RecreateRenderTargetsAndDepth()]. Failed to get swap chain description. HRESULT = 0x{:08X}", hr));
+
+		zSize2D<> size{ desc.BufferDesc.Width, desc.BufferDesc.Height };
+		res = CreateDS(size);
+		if (!res)
+			Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::RecreateRenderTargetsAndDepth()]. Failed to create depth stencil view. {}", res.error().getMessage()).c_str());
 
 		return {};
 	}
@@ -318,6 +347,11 @@ namespace zzz
 #pragma region Rendring
 	void surfaceAppMSWin_DirectX::OnRender()
 	{
+		//static int i = 0;
+		//i++;
+		//if (i %  30)
+		//	DebugOutput(L">>>>> [surfaceAppMSWin_DirectX::OnRender()]. Rendering frame.\n");
+
 		PopulateCommandList();
 		m_DXAPI->ExecuteCommandList();
 
@@ -385,10 +419,11 @@ namespace zzz
 
 		ensure(S_OK == m_DXAPI->GetCommandRender()->CommandList()->Close());
 	}
+#pragma endregion Rendring
 
 	void surfaceAppMSWin_DirectX::OnResize(const zSize2D<>& size)
 	{
-		if (iGAPI->GetInitState() != eInitState::eInitOK && !m_swapChain || isSwapScreenMode)
+		if (iGAPI->GetInitState() != eInitState::eInitOK && !m_swapChain || b_IgnoreResize)
 			return;
 
 		if (size.width == 0 || size.height == 0)
@@ -454,7 +489,6 @@ namespace zzz
 		m_scissorRect = CD3DX12_RECT{ 0, 0, static_cast<LONG>(size.width), static_cast<LONG>(size.height) };
 		m_aspectRatio = static_cast<float>(size.width) / static_cast<float>(size.height);
 	}
-#pragma endregion Rendring
 
 	void surfaceAppMSWin_DirectX::SetFullScreen(bool fs)
 	{
@@ -475,14 +509,19 @@ namespace zzz
 		WaitRenderForPreviousFrame();
 		ResetRTVandDS();
 
-		isSwapScreenMode = true;
+		b_IgnoreResize = true;
 		hr = m_swapChain->SetFullscreenState(fs, nullptr);
 		if (S_OK != hr)
 		{
+			b_IgnoreResize = false;
 			DebugOutput(std::format(L">>>>> [surfaceAppMSWin_DirectX::SetFullScreen({})] Failed to set fullscreen state. HRESULT = 0x{:08X}\n", fs, hr).c_str());
+			auto res = RecreateRenderTargetsAndDepth();
+			if (!res)
+				throw_runtime_error(std::format(">>>>> #0 [surfaceAppMSWin_DirectX::SetFullScreen({})]. Failed to recreate render targets and depth stencil view. {}.", fs, wstring_to_string(res.error().getMessage())));
+
 			return;
 		}
-		isSwapScreenMode = false;
+		b_IgnoreResize = false;
 
 		DXGI_SWAP_CHAIN_DESC desc{};
 		hr = m_swapChain->GetDesc(&desc);
@@ -503,35 +542,11 @@ namespace zzz
 			return;
 		}
 
-		RecreateRenderTargetsAndDepth();
+		auto res = RecreateRenderTargetsAndDepth();
+		if (!res)
+			throw_runtime_error(std::format(">>>>> #1 [surfaceAppMSWin_DirectX::SetFullScreen({})]. Failed to recreate render targets and depth stencil view. {}.", fs, wstring_to_string(res.error().getMessage())));
+
 		DebugOutput(std::format(L">>>>> [surfaceAppMSWin_DirectX::SetFullScreen({})].\n", fs).c_str());
 	}
-
-	void surfaceAppMSWin_DirectX::ResetRTVandDS()
-	{
-		for (auto& rt : m_renderTargets)
-			rt.Reset();
-
-		m_depthStencil.Reset();
-	}
-
-	void surfaceAppMSWin_DirectX::RecreateRenderTargetsAndDepth()
-	{
-		auto m_device = m_DXAPI->GetDevice();
-		auto res = CreateRTV(m_device);
-		if (!res)
-			throw_runtime_error(std::format(">>>>> [DXAPI::RecreateRenderTargetsAndDepth()]. Failed to create RTV heap. {}", wstring_to_string(res.error().getMessage())));
-
-		DXGI_SWAP_CHAIN_DESC desc{};
-		HRESULT hr = m_swapChain->GetDesc(&desc);
-		if (S_OK != hr)
-			throw_runtime_error(std::format(">>>>> [DXAPI::RecreateRenderTargetsAndDepth()]. Failed to get swap chain description. HRESULT = 0x{:08X}", hr));
-
-		zSize2D<> size{ desc.BufferDesc.Width, desc.BufferDesc.Height };
-		res = CreateDS(size);
-		if (!res)
-			throw_runtime_error(std::format(">>>>> [DXAPI::RecreateRenderTargetsAndDepth()]. Failed to create depth stencil view. {}", wstring_to_string(res.error().getMessage())));
-	}
-
 }
 #endif // defined(_WIN64)

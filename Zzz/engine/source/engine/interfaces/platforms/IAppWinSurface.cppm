@@ -1,5 +1,5 @@
 #include "pch.h"
-export module ISurfaceAppWin;
+export module IAppWinSurface;
 
 import IGAPI;
 import result;
@@ -16,23 +16,23 @@ using namespace zzz::platforms;
 
 export namespace zzz
 {
-	export class ISurfaceAppWin abstract
+	export class IAppWinSurface abstract
 	{
 		friend class zzz::zView;
 
 	public:
-		ISurfaceAppWin() = delete;
-		ISurfaceAppWin(const ISurfaceAppWin&) = delete;
-		ISurfaceAppWin(ISurfaceAppWin&&) = delete;
-		ISurfaceAppWin& operator=(const ISurfaceAppWin&) = delete;
-		ISurfaceAppWin& operator=(ISurfaceAppWin&&) = delete;
+		IAppWinSurface() = delete;
+		IAppWinSurface(const IAppWinSurface&) = delete;
+		IAppWinSurface(IAppWinSurface&&) = delete;
+		IAppWinSurface& operator=(const IAppWinSurface&) = delete;
+		IAppWinSurface& operator=(IAppWinSurface&&) = delete;
 
-		explicit ISurfaceAppWin(
+		explicit IAppWinSurface(
 			std::shared_ptr<zViewSettings> _settings,
 			std::shared_ptr<IAppWin> _iAppWin,
 			std::shared_ptr<IGAPI> _iGAPI);
 
-		virtual ~ISurfaceAppWin();
+		virtual ~IAppWinSurface();
 
 		virtual void SetFullScreen(bool fs) {};
 
@@ -50,12 +50,12 @@ export namespace zzz
 		void WaitRenderForPreviousFrame() { if (iGAPI) iGAPI->WaitForPreviousFrame(); };
 	};
 
-	ISurfaceAppWin::~ISurfaceAppWin()
+	IAppWinSurface::~IAppWinSurface()
 	{
 		WaitRenderForPreviousFrame();
 	}
 
-	ISurfaceAppWin::ISurfaceAppWin(
+	IAppWinSurface::IAppWinSurface(
 		std::shared_ptr<zViewSettings> _settings,
 		std::shared_ptr<IAppWin> _iAppWin,
 		std::shared_ptr<IGAPI> _iGAPI) :
@@ -65,8 +65,8 @@ export namespace zzz
 		iAppWin{ _iAppWin },
 		iGAPI{ _iGAPI }
 	{
-		ensure(settings, ">>>>> [ISurfaceAppWin::ISurfaceAppWin()]. Settings cannot be null.");
-		ensure(iAppWin, ">>>>> [ISurfaceAppWin::ISurfaceAppWin()]. Application window cannot be null.");
-		ensure(iGAPI, ">>>>> [ISurfaceAppWin::ISurfaceAppWin()]. GAPI cannot be null.");
+		ensure(settings, ">>>>> [IAppWinSurface::IAppWinSurface()]. Settings cannot be null.");
+		ensure(iAppWin, ">>>>> [IAppWinSurface::IAppWinSurface()]. Application window cannot be null.");
+		ensure(iGAPI, ">>>>> [IAppWinSurface::IAppWinSurface()]. GAPI cannot be null.");
 	}
 }

@@ -82,14 +82,6 @@ export namespace zzz
 		{
 			settingsView = safe_make_shared<zViewSettings>(settingFilePath);
 			view = safe_make_shared<zView>(settingsView, std::bind(&engine::OnViewResized, this, std::placeholders::_1, std::placeholders::_2));
-			//superWidget = safe_make_shared<SuperWidget>(settingsSW);
-			//view->viewResized += ;
-			//auto res = superWidget->Initialize();
-			//if (!res)
-			//{
-			//	Reset();
-			//	return Unexpected(eResult::failure, L">>>>> [engine::initialize()]. Failed to initialize super widget. More specifically: " + res.error().getMessage());
-			//}
 
 			mainLoop = safe_make_shared<MainLoop>();
 			mainLoop->onUpdateSystem += std::bind(&engine::OnUpdateSystem, this);

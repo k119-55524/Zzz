@@ -11,7 +11,7 @@ using namespace std::literals::string_view_literals;
 namespace zzz
 {
 	class zView;
-	class ISurfaceAppWin;
+	class IAppWinSurface;
 }
 
 export namespace zzz::platforms
@@ -27,7 +27,7 @@ export namespace zzz::platforms
 	export class IGAPI
 	{
 		friend class zzz::zView;
-		friend class zzz::ISurfaceAppWin;
+		friend class zzz::IAppWinSurface;
 
 	public:
 		IGAPI() =							delete;

@@ -98,13 +98,13 @@
     <ClCompile Include="source\engine\interfacesImpl\factories\zViewFactory.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\gapi\DX\CheckDirectXUltimateSupport.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\winSurface\surfaceMSWin_DirectX.cppm" />
-    <ClCompile Include="source\engine\interfaces\IAppWin.cppm" />
-    <ClCompile Include="source\engine\interfaces\ICheckGapiSupport.cppm" />
-    <ClCompile Include="source\engine\interfaces\ISurfaceAppWin.cppm" />
+    <ClCompile Include="source\engine\interfaces\platforms\IAppWin.cppm" />
+    <ClCompile Include="source\engine\interfaces\platforms\ICheckGapiSupport.cppm" />
+    <ClCompile Include="source\engine\interfaces\platforms\IAppWinSurface.cppm" />
     <ClCompile Include="source\engine\zView.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\gapi\DXAPI.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\gapi\DX\RootSignature.cppm" />
-    <ClCompile Include="source\engine\interfaces\IGAPI.cppm" />
+    <ClCompile Include="source\engine\interfaces\platforms\IGAPI.cppm" />
     <ClCompile Include="source\engine\utils\zEvent.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\utils\icoBuilder\ibMSWin.cppm" />
     <ClCompile Include="source\engine\interfaces\utils\IIcoBuilder.cppm" />
@@ -113,7 +113,7 @@
     <ClCompile Include="source\engine\utils\zSerialize.cppm" />
     <ClCompile Include="source\engine\utils\zSize2D.cppm" />
     <ClCompile Include="source\engine\IO\IOPathFactory.cppm" />
-    <ClCompile Include="source\engine\interfaces\IMainLoop.cppm" />
+    <ClCompile Include="source\engine\interfaces\platforms\IMainLoop.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\mainAppLoop\mlMSWin.cppm" />
     <ClCompile Include="source\engine\IO\ioZaml.cppm" />
     <ClCompile Include="source\engine\zViewSettings.cppm" />

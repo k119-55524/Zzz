@@ -6,7 +6,7 @@ import result;
 import IAppWin;
 import winMSWin;
 import strConver;
-import ISurfaceAppWin;
+import IAppWinSurface;
 import zViewSettings;
 import surfaceAppMSWin_DirectX;
 
@@ -32,7 +32,7 @@ export namespace zzz
 
 		std::shared_ptr<IAppWin> CreateAppWin(std::shared_ptr<zViewSettings> settings);
 		std::shared_ptr<IGAPI> CreateGAPI();
-		std::shared_ptr<ISurfaceAppWin> CreateSurfaceWin(
+		std::shared_ptr<IAppWinSurface> CreateSurfaceWin(
 			std::shared_ptr<zViewSettings> _settings,
 			std::shared_ptr<IAppWin> _iAppWin,
 			std::shared_ptr<zzz::platforms::IGAPI> _iGAPI);
@@ -78,7 +78,7 @@ export namespace zzz
 		}
 	}
 
-	export std::shared_ptr<ISurfaceAppWin> zViewFactory::CreateSurfaceWin(
+	export std::shared_ptr<IAppWinSurface> zViewFactory::CreateSurfaceWin(
 		std::shared_ptr<zViewSettings> _settings,
 		std::shared_ptr<IAppWin> _iAppWin,
 		std::shared_ptr<zzz::platforms::IGAPI> _iGAPI)
