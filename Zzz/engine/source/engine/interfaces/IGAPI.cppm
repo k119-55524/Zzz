@@ -4,14 +4,14 @@ export module IGAPI;
 import result;
 import zSize2D;
 import IAppWin;
+import ICheckGapiSupport;
 
 using namespace std::literals::string_view_literals;
 
 namespace zzz
 {
 	class zView;
-	class engine;
-	class surfaceAppMSWin_DirectX;
+	class ISurfaceAppWin;
 }
 
 export namespace zzz::platforms
@@ -26,6 +26,9 @@ export namespace zzz::platforms
 
 	export class IGAPI
 	{
+		friend class zzz::zView;
+		friend class zzz::ISurfaceAppWin;
+
 	public:
 		IGAPI() =							delete;
 		IGAPI(const IGAPI&) =				delete;
@@ -35,24 +38,15 @@ export namespace zzz::platforms
 
 		explicit IGAPI(eGAPIType type) noexcept
 			: gapiType{ type },
-			initState{ eInitState::eInitNot },
-			m_supportsRayTracing{ false },
-			m_supportsVariableRateShading{ false },
-			m_supportsMeshShaders{ false },
-			m_supportsSamplerFeedback{ false }
+			initState{ eInitState::eInitNot }
 		{}
 
 		virtual ~IGAPI() = default;
 
 		[[nodiscard]] eInitState GetInitState() const noexcept { return initState; }
 
-
-		// Геттеры возможностей
-		[[nodiscard]] constexpr bool SupportsRayTracing() const noexcept { return m_supportsRayTracing; }
-		[[nodiscard]] constexpr bool SupportsVariableRateShading() const noexcept { return m_supportsVariableRateShading; }
-		[[nodiscard]] constexpr bool SupportsMeshShaders() const noexcept { return m_supportsMeshShaders; }
-		[[nodiscard]] constexpr bool SupportsSamplerFeedback() const noexcept { return m_supportsSamplerFeedback; }
-		constexpr std::wstring_view GetAPIName(eGAPIType gapiType) noexcept {
+		[[nodiscard]] inline constexpr eGAPIType GetGAPIType() const noexcept { return gapiType; }
+		[[nodiscard]] inline constexpr std::wstring_view GetAPIName(eGAPIType gapiType) const noexcept {
 			using namespace std::literals;
 			constexpr std::array names{
 				L"DirectX 12"sv,
@@ -64,26 +58,22 @@ export namespace zzz::platforms
 			return static_cast<size_t>(gapiType) < names.size() ?
 				names[static_cast<size_t>(gapiType)] : L"Unknown"sv;
 		}
+		[[nodiscard]] inline constexpr std::wstring_view GetAPIName() const noexcept {
+			return GetAPIName(gapiType);
+		}
+
+		// Геттеры возможностей
+		[[nodiscard]] inline bool SupportsRayTracing() const noexcept { return checkGapiSupport->SupportsRayTracing(); }
+		[[nodiscard]] inline bool SupportsVariableRateShading() const noexcept { return checkGapiSupport->SupportsVariableRateShading(); }
+		[[nodiscard]] inline bool SupportsMeshShaders() const noexcept { return checkGapiSupport->SupportsMeshShaders(); }
+		[[nodiscard]] inline bool SupportsSamplerFeedback() const noexcept { return checkGapiSupport->SupportsSamplerFeedback(); }
 
 	protected:
 		[[nodiscard]] virtual result<> Initialize(std::shared_ptr<IAppWin> appWin) = 0;
-		friend class zzz::engine;
-		friend class zzz::zView;
+		virtual void WaitForPreviousFrame() {};
 
 		eGAPIType gapiType;
 		eInitState initState;
-
-		//virtual void OnUpdate() = 0;
-		virtual void WaitForPreviousFrame() {};
-		friend class zzz::surfaceAppMSWin_DirectX;
-
-		//virtual void OnRender() = 0;
-		//virtual void OnResize(const zSize2D<>& size) = 0;
-
-		// Возможности GAPI
-		bool m_supportsRayTracing;			// DXR
-		bool m_supportsVariableRateShading;	// VRS
-		bool m_supportsMeshShaders;			// Mesh Shaders  
-		bool m_supportsSamplerFeedback;		// Sampler Feedback
+		std::unique_ptr<ICheckGapiSupport> checkGapiSupport; // Проверка возможностей GAPI
 	};
 }

@@ -32,23 +32,28 @@ namespace zzz
 			std::shared_ptr<IGAPI> _iGAPI);
 
 		[[nodiscard]] result<> Initialize() override;
+		[[nodiscard]] result<> CreateRTV(ComPtr<ID3D12Device>& m_device);
+		[[nodiscard]] result<> InitializeSwapChain();
 		[[nodiscard]] void OnRender() override;
 		void OnResize(const zSize2D<>& size) override;
+
+		void SetFullScreen(bool fs) override;
 
 	private:
 		static constexpr UINT FRAME_COUNT = 2;
 		static constexpr DXGI_FORMAT BACK_BUFFER_FORMAT = DXGI_FORMAT_R8G8B8A8_UNORM;
 		static constexpr DXGI_FORMAT DEPTH_FORMAT = DXGI_FORMAT_D32_FLOAT;
+		static constexpr UINT SWAP_CHAIN_FLAGS = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 
-		UINT m_swapChainFlags;
-		float m_aspectRatio;
+		bool isSwapScreenMode;
+
+		UINT m_frameIndex;
 		CD3DX12_VIEWPORT m_viewport;
 		CD3DX12_RECT m_scissorRect;
+		bool m_tearingSupported;
 
 		std::shared_ptr<DXAPI> m_DXAPI;
 		std::shared_ptr<winMSWin> m_Win;
-
-		UINT m_frameIndex;
 
 		ComPtr<IDXGISwapChain3> m_swapChain;
 		ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
@@ -65,9 +70,10 @@ namespace zzz
 		result<> CreateSRVHeap();
 		result<> CreateDSVHeap();
 		result<> CreateDS(const zSize2D<>& size);
-		void BeginFrame();
-		void EndFrame();
 		void PopulateCommandList();
+
+		void ResetRTVandDS();
+		void RecreateRenderTargetsAndDepth();
 	};
 
 	surfaceAppMSWin_DirectX::surfaceAppMSWin_DirectX(
@@ -75,12 +81,12 @@ namespace zzz
 		std::shared_ptr<IAppWin> _iAppWin,
 		std::shared_ptr<IGAPI> _iGAPI)
 		: ISurfaceAppWin(_settings, _iAppWin, _iGAPI),
+		isSwapScreenMode{ false },
 		m_frameIndex{ 0 },
+		m_tearingSupported{ false },
 		m_RtvDescrSize{ 0 },
 		m_DsvDescrSize{ 0 },
-		m_CbvSrvDescrSize{ 0 },
-		m_aspectRatio{ 0.0f },
-		m_swapChainFlags{ DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING }
+		m_CbvSrvDescrSize{ 0 }
 	{
 		m_DXAPI = std::dynamic_pointer_cast<DXAPI>(_iGAPI);
 		ensure(m_DXAPI);
@@ -88,6 +94,7 @@ namespace zzz
 		ensure(m_Win);
 	}
 
+#pragma region Initialize
 	result<> surfaceAppMSWin_DirectX::Initialize()
 	{
 		auto m_device = m_DXAPI->GetDevice();
@@ -106,61 +113,95 @@ namespace zzz
 		m_scissorRect = CD3DX12_RECT{ 0, 0, static_cast<LONG>(winSize.width), static_cast<LONG>(winSize.height) };
 		m_aspectRatio = static_cast<float>(winSize.width) / static_cast<float>(winSize.height);
 
-		DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-		swapChainDesc.BufferCount = FRAME_COUNT;
-		swapChainDesc.Width = static_cast<UINT>(winSize.width);
-		swapChainDesc.Height = static_cast<UINT>(winSize.height);
-		swapChainDesc.Format = BACK_BUFFER_FORMAT;
-		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-		swapChainDesc.SampleDesc.Count = 1;
-		swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
-
-		ComPtr<IDXGISwapChain1> swapChain;
-		HRESULT hr = m_factory->CreateSwapChainForHwnd(
-			m_commandQueue.Get(),
-			m_Win->GetHWND(),
-			&swapChainDesc,
-			nullptr,
-			nullptr,
-			&swapChain
-		);
-		if (FAILED(hr))
-			return Unexpected(eResult::failure, L"Failed to create swap chain");
-
-		hr = m_factory->MakeWindowAssociation(m_Win->GetHWND(), DXGI_MWA_NO_ALT_ENTER);
-		if (FAILED(hr))
-			return Unexpected(eResult::failure, L"Failed to make window association");
-
-		hr = swapChain.As(&m_swapChain);
-		if (FAILED(hr))
-			return Unexpected(eResult::failure, L"Failed to query IDXGISwapChain3");
+		auto res = InitializeSwapChain();
+		if (!res)
+			return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializePipeline()]. Failed to initialize swap chain.");
 
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
-		auto res = CreateRTVHeap()
+		HRESULT hr = m_factory->MakeWindowAssociation(m_Win->GetHWND(), DXGI_MWA_NO_ALT_ENTER);
+		if (FAILED(hr))
+			return Unexpected(eResult::failure, L"Failed to make window association");
+
+		res = CreateRTVHeap()
 			.and_then([&]() { return CreateSRVHeap(); })
-			.and_then([&]() { return CreateDSVHeap(); });
-
-		// Create frame resources.
-		{
-			CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
-
-			// Create a RTV for each frame.
-			for (UINT n = 0; n < FRAME_COUNT; n++)
-			{
-				HRESULT hr = m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n]));
-				if (FAILED(hr))
-					return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializePipeline()]. Failed to get back buffer. HRESULT = 0x{:08X}", hr));
-
-				m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
-				rtvHandle.Offset(1, m_RtvDescrSize);
-			}
-		};
+			.and_then([&]() { return CreateDSVHeap(); })
+			.and_then([&]() { return CreateRTV(m_device); });
 
 		CreateDS(winSize);
 		if (!res)
 			return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializePipeline()]. -> " + res.error().getMessage());
+
+		return {};
+	}
+
+	result<> surfaceAppMSWin_DirectX::CreateRTV(ComPtr<ID3D12Device>& m_device)
+	{
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
+
+		// Create a RTV for each frame.
+		for (UINT n = 0; n < FRAME_COUNT; n++)
+		{
+			HRESULT hr = m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n]));
+			if (FAILED(hr))
+				return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializePipeline()]. Failed to get back buffer. HRESULT = 0x{:08X}", hr));
+
+			m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
+			rtvHandle.Offset(1, m_RtvDescrSize);
+		}
+
+		return {};
+	}
+
+	result<> surfaceAppMSWin_DirectX::InitializeSwapChain()
+	{
+		BOOL allowTearing = FALSE;
+		ComPtr<IDXGIFactory5> factory5;
+		if (SUCCEEDED(m_DXAPI->GetFactory().As(&factory5)))
+		{
+			if (SUCCEEDED(factory5->CheckFeatureSupport(
+				DXGI_FEATURE_PRESENT_ALLOW_TEARING,
+				&allowTearing,
+				sizeof(allowTearing))))
+			{
+				m_tearingSupported = allowTearing == TRUE;
+			}
+		}
+
+		auto winSize = iAppWin->GetWinSize();
+		//DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
+		//swapChainDesc.Width = static_cast<UINT>(winSize.width);
+		//swapChainDesc.Height = static_cast<UINT>(winSize.height);
+		//swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		//swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+		//swapChainDesc.BufferCount = FRAME_COUNT;
+		//swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+		//swapChainDesc.SampleDesc.Count = 1;
+		//swapChainDesc.Flags = m_tearingSupported ? SWAP_CHAIN_FLAGS : 0;
+
+		DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
+		swapChainDesc.Width = static_cast<UINT>(winSize.width);
+		swapChainDesc.Height = static_cast<UINT>(winSize.height);
+		swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		swapChainDesc.SampleDesc.Count = 1;
+		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+		swapChainDesc.BufferCount = FRAME_COUNT;
+		swapChainDesc.Scaling = DXGI_SCALING_NONE;
+		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+		swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
+		swapChainDesc.Flags = m_tearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
+
+		ComPtr<IDXGISwapChain1> swapChain1;
+		ensure(S_OK == m_DXAPI->GetFactory()->CreateSwapChainForHwnd(
+			m_DXAPI->GetCommandQueue().Get(),
+			m_Win->GetHWND(),
+			&swapChainDesc,
+			nullptr,
+			nullptr,
+			&swapChain1));
+
+		ensure(S_OK == swapChain1.As(&m_swapChain));
+		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
 		return {};
 	}
@@ -272,59 +313,44 @@ namespace zzz
 
 		return {};
 	}
+#pragma endregion Initialize
 
-	void surfaceAppMSWin_DirectX::BeginFrame()
-	{
-		// Обновляем frameIndex
-		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
-
-		// Устанавливаем вьюпорт и scissors
-		m_DXAPI->SetViewport(m_viewport, m_scissorRect);
-
-		// Готовим ресурс к записи
-		m_DXAPI->TransitionToRenderTarget(m_renderTargets[m_frameIndex], m_rtvHeap, m_RtvDescrSize, m_frameIndex);
-	}
-
-	void surfaceAppMSWin_DirectX::EndFrame()
-	{
-		m_DXAPI->TransitionToPresent(m_renderTargets[m_frameIndex]);
-		m_swapChain->Present(1, 0);
-	}
-
+#pragma region Rendring
 	void surfaceAppMSWin_DirectX::OnRender()
 	{
 		PopulateCommandList();
-
-		// Execute the command list.
 		m_DXAPI->ExecuteCommandList();
 
-		// Present the frame.
-		//ensure(S_OK == m_swapChain->Present(1, 0));
-		HRESULT hr = m_swapChain->Present(1, 0);
+		BOOL fullscreen = FALSE;
+		ensure(S_OK == m_swapChain->GetFullscreenState(&fullscreen, nullptr));
 
-		m_DXAPI->WaitForPreviousFrame();
+		// Настраиваем Present
+		UINT syncInterval = isVSync ? 1 : 0;
+		UINT presentFlags = 0;
+
+		if (fullscreen)
+		{
+			int i = 0;
+			i++;
+		}
+		if (!isVSync && !fullscreen && m_tearingSupported)
+			presentFlags = DXGI_PRESENT_ALLOW_TEARING;
+
+		HRESULT hr = m_swapChain->Present(syncInterval, presentFlags);
+
+		WaitRenderForPreviousFrame();
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 	}
 
 	void surfaceAppMSWin_DirectX::PopulateCommandList()
 	{
-		// Command list allocators can only be reset when the associated 
-		// command lists have finished execution on the GPU; apps should use 
-		// fences to determine GPU execution progress.
 		ensure(S_OK == m_DXAPI->GetCommandRender()->CommandAllocator()->Reset());
-
-		// However, when ExecuteCommandList() is called on a particular command 
-		// list, that command list can then be reset at any time and must be before 
-		// re-recording.
-		//ThrowIfFailed(m_commandList->Reset(m_commandAllocator.Get(), m_pipelineState.Get()));
 		ensure(S_OK == m_DXAPI->GetCommandRender()->CommandList()->Reset(m_DXAPI->GetCommandRender()->CommandAllocator().Get(), nullptr));
 
-		// Set necessary state.
 		m_DXAPI->GetCommandRender()->CommandList()->SetGraphicsRootSignature(m_DXAPI->GetRootSignature().Get());
 		m_DXAPI->GetCommandRender()->CommandList()->RSSetViewports(1, &m_viewport);
 		m_DXAPI->GetCommandRender()->CommandList()->RSSetScissorRects(1, &m_scissorRect);
 
-		// Indicate that the back buffer will be used as a render target.
 		m_DXAPI->GetCommandRender()->CommandList()->ResourceBarrier(
 			1,
 			&keep(
@@ -362,18 +388,20 @@ namespace zzz
 
 	void surfaceAppMSWin_DirectX::OnResize(const zSize2D<>& size)
 	{
-		if (iGAPI->GetInitState() != eInitState::eInitOK && !m_swapChain)
+		if (iGAPI->GetInitState() != eInitState::eInitOK && !m_swapChain || isSwapScreenMode)
 			return;
 
 		if (size.width == 0 || size.height == 0)
 		{
-			OutputDebugString(L">>>>> [DXAPI::OnResize()]. Invalid size for resize. Width or height is zero.\n");
+			DebugOutput(L">>>>> [DXAPI::OnResize()]. Invalid size for resize. Width or height is zero.\n");
 			return;
 		}
 
 		auto m_device = m_DXAPI->GetDevice();
 		ensure(m_device, ">>>>> [surfaceAppMSWin_DirectX::CreateRTVHeap()]. Device cannot be null.");
-		ensure(m_swapChain);
+		ensure(m_swapChain, ">>>>> [surfaceAppMSWin_DirectX::CreateRTVHeap()]. Swap chain cannot be null.");
+
+		WaitRenderForPreviousFrame();
 
 		DXGI_SWAP_CHAIN_DESC1 desc;
 		HRESULT hr = m_swapChain->GetDesc1(&desc);
@@ -383,53 +411,127 @@ namespace zzz
 			if (desc.Width == static_cast<UINT>(size.width) &&
 				desc.Height == static_cast<UINT>(size.height))
 			{
-				OutputDebugString(std::format(L">>>>> [DXAPI::OnResize({}x{})]. No resize needed, dimensions are unchanged.\n", size.width, size.height).c_str());
+				DebugOutput(std::format(L">>>>> [DXAPI::OnResize({}x{})]. No resize needed, dimensions are unchanged.\n", size.width, size.height).c_str());
 				return; // Размеры не изменились
 			}
 		}
 
-		iGAPI->WaitForPreviousFrame();
+		ResetRTVandDS();
 
-		for (UINT i = 0; i < FRAME_COUNT; i++)
-			m_renderTargets[i].Reset();
-		m_rtvHeap.Reset();
+		BOOL fullscreen = FALSE;
+		ensure(S_OK == m_swapChain->GetFullscreenState(&fullscreen, nullptr));
+		if (fullscreen)
+		{
+			DXGI_MODE_DESC modeDesc = {};
+			modeDesc.Width = static_cast<UINT>(size.width);
+			modeDesc.Height = static_cast<UINT>(size.height);
+			modeDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+			modeDesc.RefreshRate.Numerator = 60;
+			modeDesc.RefreshRate.Denominator = 1;
 
-		hr = m_swapChain->ResizeBuffers(
-			FRAME_COUNT,
-			static_cast<UINT>(size.width),
-			static_cast<UINT>(size.height),
-			DXGI_FORMAT_UNKNOWN,
-			m_swapChainFlags
-		);
-		if (FAILED(hr))
+			hr = m_swapChain->ResizeTarget(&modeDesc);
+		}
+		else
+		{
+			hr = m_swapChain->ResizeBuffers(
+				FRAME_COUNT,
+				static_cast<UINT>(size.width),
+				static_cast<UINT>(size.height),
+				DXGI_FORMAT_R8G8B8A8_UNORM,
+				m_tearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
+		}
+		if (S_OK != hr)
 			throw_runtime_error(std::format(">>>>> [DXAPI::OnResize({}x{})].", size.width, size.height));
 
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
-		auto res = CreateRTVHeap();
-		if (!res)
-			throw_runtime_error(std::format(">>>>> [DXAPI::OnResize({}x{})]. {}.", size.width, size.height, wstring_to_string(res.error().getMessage())));
-
-		for (UINT i = 0; i < FRAME_COUNT; i++)
-		{
-			Microsoft::WRL::ComPtr<ID3D12Resource> backBuffer;
-			if (S_OK != m_swapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer)))
-				throw_runtime_error(std::format(">>>>> [DXAPI::OnResize({}x{})]. Failed to get back buffer {}.", size.width, size.height, i));
-
-			m_device->CreateRenderTargetView(
-				backBuffer.Get(),
-				nullptr,
-				CD3DX12_CPU_DESCRIPTOR_HANDLE(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), i, m_RtvDescrSize));
-			m_renderTargets[i] = backBuffer;
-		}
-
-		res = CreateDS(size);
-		if (!res)
-			throw_runtime_error(std::format(">>>>> [DXAPI::OnResize({}x{})]. {}.", size.width, size.height, wstring_to_string(res.error().getMessage())));
+		auto res = CreateRTVHeap()
+			.and_then([&]() { return CreateRTV(m_device); })
+			.and_then([&]() { return CreateDS(size); })
+			.or_else([&](const Unexpected& error) { throw_runtime_error(std::format(">>>>> [DXAPI::OnResize({}x{})]. {}.", size.width, size.height, wstring_to_string(error.getMessage()))); });
 
 		m_viewport = CD3DX12_VIEWPORT{ 0.0f, 0.0f, static_cast<float>(size.width), static_cast<float>(size.height) };
 		m_scissorRect = CD3DX12_RECT{ 0, 0, static_cast<LONG>(size.width), static_cast<LONG>(size.height) };
 		m_aspectRatio = static_cast<float>(size.width) / static_cast<float>(size.height);
 	}
+#pragma endregion Rendring
+
+	void surfaceAppMSWin_DirectX::SetFullScreen(bool fs)
+	{
+		BOOL fullscreen = FALSE;
+		HRESULT hr = m_swapChain->GetFullscreenState(&fullscreen, nullptr);
+		if (FAILED(hr))
+		{
+			DebugOutput(std::format(L">>>>> [surfaceAppMSWin_DirectX::SetFullScreen({})] Failed to get fullscreen state. HRESULT = 0x{:08X}\n", fs, hr).c_str());
+			return;
+		}
+
+		if (fs == static_cast<bool>(fullscreen))
+		{
+			DebugOutput(std::format(L">>>>> [surfaceAppMSWin_DirectX::SetFullScreen({})] Fullscreen state is already set.\n", fs).c_str());
+			return;
+		}
+
+		WaitRenderForPreviousFrame();
+		ResetRTVandDS();
+
+		isSwapScreenMode = true;
+		hr = m_swapChain->SetFullscreenState(fs, nullptr);
+		if (S_OK != hr)
+		{
+			DebugOutput(std::format(L">>>>> [surfaceAppMSWin_DirectX::SetFullScreen({})] Failed to set fullscreen state. HRESULT = 0x{:08X}\n", fs, hr).c_str());
+			return;
+		}
+		isSwapScreenMode = false;
+
+		DXGI_SWAP_CHAIN_DESC desc{};
+		hr = m_swapChain->GetDesc(&desc);
+		if (S_OK != hr)
+		{
+			DebugOutput(std::format(L">>>>> [surfaceAppMSWin_DirectX::SetFullScreen({})] Failed to get swap chain description. HRESULT = 0x{:08X}\n", fs, hr).c_str());
+			return;
+		}
+
+		hr = m_swapChain->ResizeBuffers(
+			desc.BufferCount,
+			0, 0, // авто определение размеров
+			desc.BufferDesc.Format,
+			desc.Flags );
+		if (S_OK != hr)
+		{
+			DebugOutput(std::format(L">>>>> [surfaceAppMSWin_DirectX::SetFullScreen({})] Failed to resize buffers. HRESULT = 0x{:08X}\n",fs, hr).c_str());
+			return;
+		}
+
+		RecreateRenderTargetsAndDepth();
+		DebugOutput(std::format(L">>>>> [surfaceAppMSWin_DirectX::SetFullScreen({})].\n", fs).c_str());
+	}
+
+	void surfaceAppMSWin_DirectX::ResetRTVandDS()
+	{
+		for (auto& rt : m_renderTargets)
+			rt.Reset();
+
+		m_depthStencil.Reset();
+	}
+
+	void surfaceAppMSWin_DirectX::RecreateRenderTargetsAndDepth()
+	{
+		auto m_device = m_DXAPI->GetDevice();
+		auto res = CreateRTV(m_device);
+		if (!res)
+			throw_runtime_error(std::format(">>>>> [DXAPI::RecreateRenderTargetsAndDepth()]. Failed to create RTV heap. {}", wstring_to_string(res.error().getMessage())));
+
+		DXGI_SWAP_CHAIN_DESC desc{};
+		HRESULT hr = m_swapChain->GetDesc(&desc);
+		if (S_OK != hr)
+			throw_runtime_error(std::format(">>>>> [DXAPI::RecreateRenderTargetsAndDepth()]. Failed to get swap chain description. HRESULT = 0x{:08X}", hr));
+
+		zSize2D<> size{ desc.BufferDesc.Width, desc.BufferDesc.Height };
+		res = CreateDS(size);
+		if (!res)
+			throw_runtime_error(std::format(">>>>> [DXAPI::RecreateRenderTargetsAndDepth()]. Failed to create depth stencil view. {}", wstring_to_string(res.error().getMessage())));
+	}
+
 }
 #endif // defined(_WIN64)

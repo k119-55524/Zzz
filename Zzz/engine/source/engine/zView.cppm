@@ -36,6 +36,7 @@ namespace zzz
 		zEvent<zSize2D<>, e_TypeWinResize> viewResized;
 		void OnUpdate();
 		void OnViewResized(const zSize2D<>& size, e_TypeWinResize resizeType);
+		void SetFullScreen(bool fs);
 
 	private:
 		zViewFactory factory;
@@ -103,8 +104,18 @@ namespace zzz
 
 	void zView::OnUpdate()
 	{
+		static int frameCount = 0;
+		frameCount++;
+
 		if (winSurface)
 			winSurface->OnRender();
+
+		if (frameCount == 30)
+			winSurface->SetFullScreen(true);
+
+		if (frameCount == 90)
+			winSurface->SetFullScreen(false);
+
 	}
 
 	void zView::OnViewResized(const zSize2D<>& size, e_TypeWinResize resizeType)
@@ -127,5 +138,9 @@ namespace zzz
 		//	gapi->OnResize(size);
 		if (winSurface)
 			winSurface->OnResize(size);
+	}
+
+	void zView::SetFullScreen(bool fs)
+	{
 	}
 }

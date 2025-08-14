@@ -101,6 +101,12 @@
     <ClCompile Include="source\engine\interfacesImpl\winSurface\surfaceMSWin_DirectX.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="source\engine\interfacesImpl\gapi\DX\CheckDirectXUltimateSupport.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\engine\interfaces\ICheckGapiSupport.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

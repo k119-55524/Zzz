@@ -96,8 +96,10 @@
     <ClCompile Include="source\engine.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\appWin\winMSWin.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\factories\zViewFactory.cppm" />
+    <ClCompile Include="source\engine\interfacesImpl\gapi\DX\CheckDirectXUltimateSupport.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\winSurface\surfaceMSWin_DirectX.cppm" />
     <ClCompile Include="source\engine\interfaces\IAppWin.cppm" />
+    <ClCompile Include="source\engine\interfaces\ICheckGapiSupport.cppm" />
     <ClCompile Include="source\engine\interfaces\ISurfaceAppWin.cppm" />
     <ClCompile Include="source\engine\zView.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\gapi\DXAPI.cppm" />
