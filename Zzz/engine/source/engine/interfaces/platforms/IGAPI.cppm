@@ -2,7 +2,7 @@
 export module IGAPI;
 
 import result;
-import zSize2D;
+import size2D;
 import IAppWin;
 import ICheckGapiSupport;
 
@@ -10,7 +10,7 @@ using namespace std::literals::string_view_literals;
 
 namespace zzz
 {
-	class zView;
+	class engine;
 	class IAppWinSurface;
 }
 
@@ -18,7 +18,7 @@ export namespace zzz::platforms
 {
 	enum class eGAPIType : uint8_t
 	{
-		DirectX12,
+		DirectX,
 		OpenGL,
 		Vulkan,
 		Metal
@@ -26,7 +26,7 @@ export namespace zzz::platforms
 
 	export class IGAPI
 	{
-		friend class zzz::zView;
+		friend class zzz::engine;
 		friend class zzz::IAppWinSurface;
 
 	public:
@@ -69,7 +69,7 @@ export namespace zzz::platforms
 		[[nodiscard]] inline bool SupportsSamplerFeedback() const noexcept { return checkGapiSupport->SupportsSamplerFeedback(); }
 
 	protected:
-		[[nodiscard]] virtual result<> Initialize(std::shared_ptr<IAppWin> appWin) = 0;
+		[[nodiscard]] virtual result<> Initialize() = 0;
 		virtual void WaitForPreviousFrame() {};
 
 		eGAPIType gapiType;

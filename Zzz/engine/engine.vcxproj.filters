@@ -38,16 +38,16 @@
     <ClCompile Include="source\engine\utils\result.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\zViewSettings.cppm">
+    <ClCompile Include="source\engine\settings.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\utils\zSize2D.cppm">
+    <ClCompile Include="source\engine\utils\size2D.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\utils\zSerialize.cppm">
+    <ClCompile Include="source\engine\utils\serializer.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\utils\strConver.cppm">
+    <ClCompile Include="source\utils\strConvert.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\IO\ioZaml.cppm">
@@ -77,13 +77,13 @@
     <ClCompile Include="source\engine\interfacesImpl\gapi\DXAPI.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\utils\zEvent.cppm">
+    <ClCompile Include="source\engine\utils\event.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfacesImpl\gapi\DX\RootSignature.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\zView.cppm">
+    <ClCompile Include="source\engine\view.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfaces\platforms\IAppWin.cppm">
@@ -92,19 +92,22 @@
     <ClCompile Include="source\engine\interfaces\platforms\IAppWinSurface.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfacesImpl\factories\zViewFactory.cppm">
+    <ClCompile Include="source\engine\factories\viewFactory.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfacesImpl\appWin\winMSWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfacesImpl\winSurface\surfaceMSWin_DirectX.cppm">
+    <ClCompile Include="source\engine\interfacesImpl\winSurface\surf_MSWin_DX.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfacesImpl\gapi\DX\CheckDirectXUltimateSupport.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfaces\platforms\ICheckGapiSupport.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\engine\factories\engineFactory.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

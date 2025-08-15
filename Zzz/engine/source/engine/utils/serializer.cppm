@@ -1,19 +1,19 @@
 #include "pch.h"
-export module SaveSerializer;
+export module serializer;
 
 import result;
 
 namespace zzz
 {
-	export class SaveSerializer
+	export class serializer
 	{
 	public:
-		SaveSerializer() = default;
-		SaveSerializer(SaveSerializer&) = default;
-		SaveSerializer(SaveSerializer&&) = default;
+		serializer() = default;
+		serializer(serializer&) = default;
+		serializer(serializer&&) = default;
 
-		SaveSerializer& operator=(const SaveSerializer&) = delete;
-		SaveSerializer& operator=(SaveSerializer&&) noexcept = delete;
+		serializer& operator=(const serializer&) = delete;
+		serializer& operator=(serializer&&) noexcept = delete;
 
 		// Примитивные типы
 		template<typename T> requires std::is_trivially_copyable_v<T>

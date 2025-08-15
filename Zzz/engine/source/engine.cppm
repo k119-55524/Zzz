@@ -2,16 +2,17 @@
 #include "pch.h"
 export module engine;
 
+import view;
 import IGAPI;
-import zView;
+import size2D;
 import result;
 import zMsgBox;
-import zSize2D;
 import mlMSWin;
+import settings;
 import IMainLoop;
-import strConver;
-import zViewSettings;
+import strConvert;
 import IOPathFactory;
+import engineFactory;
 
 using namespace zzz;
 using namespace zzz::io;
@@ -38,16 +39,19 @@ export namespace zzz
 		result<> Run() noexcept;
 
 	private:
+		engineFactory m_factory;
+
 		eInitState initState;
 		std::mutex stateMutex;
 		bool isSysPaused;
 
-		std::shared_ptr<zViewSettings> settingsView;
-		std::shared_ptr<zView> view;
+		std::shared_ptr<settings> m_settings;
+		std::shared_ptr<IGAPI> m_GAPI;
+		std::shared_ptr<view> m_view;
 		std::shared_ptr<IMainLoop> mainLoop;
 
 		void Reset() noexcept;
-		void OnViewResized(const zSize2D<>& size, e_TypeWinResize resizeType);
+		void OnViewResized(const size2D<>& size, e_TypeWinResize resizeType);
 		void OnUpdateSystem();
 	};
 
@@ -64,8 +68,9 @@ export namespace zzz
 	void engine::Reset() noexcept
 	{
 		mainLoop.reset();
-		view.reset();
-		settingsView.reset();
+		m_view.reset();
+		m_GAPI.reset();
+		m_settings.reset();
 
 		initState = eInitState::eInitNot;
 		isSysPaused = true;
@@ -80,8 +85,15 @@ export namespace zzz
 		std::wstring err;
 		try
 		{
-			settingsView = safe_make_shared<zViewSettings>(settingFilePath);
-			view = safe_make_shared<zView>(settingsView, std::bind(&engine::OnViewResized, this, std::placeholders::_1, std::placeholders::_2));
+			m_settings = safe_make_shared<settings>(settingFilePath);
+
+			// TODO: После тип GAPI буду передавать из m_settings
+			m_GAPI = m_factory.CreateGAPI(eGAPIType::DirectX);
+			auto res = m_GAPI->Initialize();
+			if (!res)
+				return Unexpected(eResult::failure, std::format(L">>>>> [engine::initialize()]. Failed to initialize GAPI: {}", res.error().getMessage()).c_str());
+
+			m_view = safe_make_shared<view>(m_settings, m_GAPI, std::bind(&engine::OnViewResized, this, std::placeholders::_1, std::placeholders::_2));
 
 			mainLoop = safe_make_shared<MainLoop>();
 			mainLoop->onUpdateSystem += std::bind(&engine::OnUpdateSystem, this);
@@ -146,10 +158,10 @@ export namespace zzz
 
 		//Sleep(100);
 
-		view->OnUpdate();
+		m_view->OnUpdate();
 	}
 
-	void engine::OnViewResized(const zSize2D<>& size, e_TypeWinResize resizeType)
+	void engine::OnViewResized(const size2D<>& size, e_TypeWinResize resizeType)
 	{
 		switch (resizeType)
 		{

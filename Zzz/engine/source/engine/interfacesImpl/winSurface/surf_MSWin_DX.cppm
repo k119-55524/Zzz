@@ -1,33 +1,33 @@
 #include "pch.h"
-export module surfaceAppMSWin_DirectX;
+export module surf_MSWin_DX;
 
 #if defined(_WIN64)
 import IGAPI;
 import DXAPI;
 import result;
-import zSize2D;
+import size2D;
 import IAppWin;
 import winMSWin;
-import strConver;
+import settings;
+import strConvert;
 import IAppWinSurface;
-import zViewSettings;
 
 using namespace zzz::platforms;
 using namespace zzz::platforms::directx;
 
 namespace zzz
 {
-	export class surfaceAppMSWin_DirectX final : public IAppWinSurface
+	export class surf_MSWin_DX final : public IAppWinSurface
 	{
 	public:
-		surfaceAppMSWin_DirectX() = delete;
-		surfaceAppMSWin_DirectX(const surfaceAppMSWin_DirectX&) = delete;
-		surfaceAppMSWin_DirectX(surfaceAppMSWin_DirectX&&) = delete;
-		surfaceAppMSWin_DirectX& operator=(const surfaceAppMSWin_DirectX&) = delete;
-		surfaceAppMSWin_DirectX& operator=(surfaceAppMSWin_DirectX&&) = delete;
+		surf_MSWin_DX() = delete;
+		surf_MSWin_DX(const surf_MSWin_DX&) = delete;
+		surf_MSWin_DX(surf_MSWin_DX&&) = delete;
+		surf_MSWin_DX& operator=(const surf_MSWin_DX&) = delete;
+		surf_MSWin_DX& operator=(surf_MSWin_DX&&) = delete;
 
-		explicit surfaceAppMSWin_DirectX(
-			std::shared_ptr<zViewSettings> _settings,
+		explicit surf_MSWin_DX(
+			std::shared_ptr<settings> _settings,
 			std::shared_ptr<IAppWin> _iAppWin,
 			std::shared_ptr<IGAPI> _iGAPI);
 
@@ -35,7 +35,7 @@ namespace zzz
 		[[nodiscard]] result<> CreateRTV(ComPtr<ID3D12Device>& m_device);
 		[[nodiscard]] result<> InitializeSwapChain();
 		[[nodiscard]] void OnRender() override;
-		void OnResize(const zSize2D<>& size) override;
+		void OnResize(const size2D<>& size) override;
 
 		void SetFullScreen(bool fs) override;
 
@@ -69,15 +69,15 @@ namespace zzz
 		result<> CreateRTVHeap();
 		result<> CreateSRVHeap();
 		result<> CreateDSVHeap();
-		result<> CreateDS(const zSize2D<>& size);
+		result<> CreateDS(const size2D<>& size);
 		void PopulateCommandList();
 
 		void ResetRTVandDS();
 		[[nodiscard]] result<> RecreateRenderTargetsAndDepth();
 	};
 
-	surfaceAppMSWin_DirectX::surfaceAppMSWin_DirectX(
-		std::shared_ptr<zViewSettings> _settings,
+	surf_MSWin_DX::surf_MSWin_DX(
+		std::shared_ptr<settings> _settings,
 		std::shared_ptr<IAppWin> _iAppWin,
 		std::shared_ptr<IGAPI> _iGAPI)
 		: IAppWinSurface(_settings, _iAppWin, _iGAPI),
@@ -95,20 +95,20 @@ namespace zzz
 	}
 
 #pragma region Initialize
-	result<> surfaceAppMSWin_DirectX::Initialize()
+	result<> surf_MSWin_DX::Initialize()
 	{
 		auto m_device = m_DXAPI->GetDevice();
-		ensure(m_device, ">>>>> [surfaceAppMSWin_DirectX::Initialize()]. Device cannot be null.");
+		ensure(m_device, ">>>>> [surf_MSWin_DX::Initialize()]. Device cannot be null.");
 		auto m_commandQueue = m_DXAPI->GetCommandQueue();
-		ensure(m_commandQueue, ">>>>> [surfaceAppMSWin_DirectX::Initialize()]. Command queue cannot be null.");
+		ensure(m_commandQueue, ">>>>> [surf_MSWin_DX::Initialize()]. Command queue cannot be null.");
 		auto m_factory = m_DXAPI->GetFactory();
-		ensure(m_factory, ">>>>> [surfaceAppMSWin_DirectX::Initialize()]. Factory cannot be null.");
+		ensure(m_factory, ">>>>> [surf_MSWin_DX::Initialize()]. Factory cannot be null.");
 
 		m_RtvDescrSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 		m_DsvDescrSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 		m_CbvSrvDescrSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-		auto winSize = iAppWin->GetWinSize();
+		auto winSize = m_iAppWin->GetWinSize();
 		m_viewport = CD3DX12_VIEWPORT{ 0.0f, 0.0f, static_cast<float>(winSize.width), static_cast<float>(winSize.height) };
 		m_scissorRect = CD3DX12_RECT{ 0, 0, static_cast<LONG>(winSize.width), static_cast<LONG>(winSize.height) };
 		m_aspectRatio = static_cast<float>(winSize.width) / static_cast<float>(winSize.height);
@@ -133,7 +133,7 @@ namespace zzz
 		return {};
 	}
 
-	result<> surfaceAppMSWin_DirectX::CreateRTV(ComPtr<ID3D12Device>& m_device)
+	result<> surf_MSWin_DX::CreateRTV(ComPtr<ID3D12Device>& m_device)
 	{
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
 
@@ -151,7 +151,7 @@ namespace zzz
 		return {};
 	}
 
-	result<> surfaceAppMSWin_DirectX::InitializeSwapChain()
+	result<> surf_MSWin_DX::InitializeSwapChain()
 	{
 		BOOL allowTearing = FALSE;
 		ComPtr<IDXGIFactory5> factory5;
@@ -166,7 +166,7 @@ namespace zzz
 			}
 		}
 
-		auto winSize = iAppWin->GetWinSize();
+		auto winSize = m_iAppWin->GetWinSize();
 		DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 		swapChainDesc.Width = static_cast<UINT>(winSize.width);
 		swapChainDesc.Height = static_cast<UINT>(winSize.height);
@@ -193,10 +193,10 @@ namespace zzz
 		return {};
 	}
 
-	result<> surfaceAppMSWin_DirectX::CreateRTVHeap()
+	result<> surf_MSWin_DX::CreateRTVHeap()
 	{
 		auto m_device = m_DXAPI->GetDevice();
-		ensure(m_device, ">>>>> [surfaceAppMSWin_DirectX::CreateRTVHeap()]. Device cannot be null.");
+		ensure(m_device, ">>>>> [surf_MSWin_DX::CreateRTVHeap()]. Device cannot be null.");
 
 		// Describe and create a render target view (RTV) descriptor heap.
 		D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
@@ -210,10 +210,10 @@ namespace zzz
 		return {};
 	}
 
-	result<> surfaceAppMSWin_DirectX::CreateSRVHeap()
+	result<> surf_MSWin_DX::CreateSRVHeap()
 	{
 		auto m_device = m_DXAPI->GetDevice();
-		ensure(m_device, ">>>>> [surfaceAppMSWin_DirectX::CreateSRVHeap()]. Device cannot be null.");
+		ensure(m_device, ">>>>> [surf_MSWin_DX::CreateSRVHeap()]. Device cannot be null.");
 
 		// Describe and create a shader resource view (SRV) heap for the texture.
 		D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
@@ -227,10 +227,10 @@ namespace zzz
 		return {};
 	}
 
-	result<> surfaceAppMSWin_DirectX::CreateDSVHeap()
+	result<> surf_MSWin_DX::CreateDSVHeap()
 	{
 		auto m_device = m_DXAPI->GetDevice();
-		ensure(m_device, ">>>>> [surfaceAppMSWin_DirectX::CreateDSVHeap()]. Device cannot be null.");
+		ensure(m_device, ">>>>> [surf_MSWin_DX::CreateDSVHeap()]. Device cannot be null.");
 
 		const D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{
 			.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
@@ -246,10 +246,10 @@ namespace zzz
 		return {};
 	}
 
-	result<> surfaceAppMSWin_DirectX::CreateDS(const zSize2D<>& size)
+	result<> surf_MSWin_DX::CreateDS(const size2D<>& size)
 	{
 		auto m_device = m_DXAPI->GetDevice();
-		ensure(m_device, ">>>>> [surfaceAppMSWin_DirectX::CreateDS()]. Device cannot be null.");
+		ensure(m_device, ">>>>> [surf_MSWin_DX::CreateDS()]. Device cannot be null.");
 
 		// Очищаем старые ресурсы
 		for (auto& ds : m_depthStencil)
@@ -314,7 +314,7 @@ namespace zzz
 		return {};
 	}
 
-	void surfaceAppMSWin_DirectX::ResetRTVandDS()
+	void surf_MSWin_DX::ResetRTVandDS()
 	{
 		for (auto& rt : m_renderTargets)
 			rt.Reset();
@@ -323,7 +323,7 @@ namespace zzz
 			ds.Reset();
 	}
 
-	result<> surfaceAppMSWin_DirectX::RecreateRenderTargetsAndDepth()
+	result<> surf_MSWin_DX::RecreateRenderTargetsAndDepth()
 	{
 		auto m_device = m_DXAPI->GetDevice();
 		auto res = CreateRTV(m_device);
@@ -335,7 +335,7 @@ namespace zzz
 		if (S_OK != hr)
 			Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::RecreateRenderTargetsAndDepth()]. Failed to get swap chain description. HRESULT = 0x{:08X}", hr));
 
-		zSize2D<> size{ desc.BufferDesc.Width, desc.BufferDesc.Height };
+		size2D<> size{ desc.BufferDesc.Width, desc.BufferDesc.Height };
 		res = CreateDS(size);
 		if (!res)
 			Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::RecreateRenderTargetsAndDepth()]. Failed to create depth stencil view. {}", res.error().getMessage()).c_str());
@@ -345,12 +345,12 @@ namespace zzz
 #pragma endregion Initialize
 
 #pragma region Rendring
-	void surfaceAppMSWin_DirectX::OnRender()
+	void surf_MSWin_DX::OnRender()
 	{
 		//static int i = 0;
 		//i++;
 		//if (i %  30)
-		//	DebugOutput(L">>>>> [surfaceAppMSWin_DirectX::OnRender()]. Rendering frame.\n");
+		//	DebugOutput(L">>>>> [surf_MSWin_DX::OnRender()]. Rendering frame.\n");
 
 		PopulateCommandList();
 		m_DXAPI->ExecuteCommandList();
@@ -376,7 +376,7 @@ namespace zzz
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 	}
 
-	void surfaceAppMSWin_DirectX::PopulateCommandList()
+	void surf_MSWin_DX::PopulateCommandList()
 	{
 		ensure(S_OK == m_DXAPI->GetCommandRender()->CommandAllocator()->Reset());
 		ensure(S_OK == m_DXAPI->GetCommandRender()->CommandList()->Reset(m_DXAPI->GetCommandRender()->CommandAllocator().Get(), nullptr));
@@ -421,9 +421,9 @@ namespace zzz
 	}
 #pragma endregion Rendring
 
-	void surfaceAppMSWin_DirectX::OnResize(const zSize2D<>& size)
+	void surf_MSWin_DX::OnResize(const size2D<>& size)
 	{
-		if (iGAPI->GetInitState() != eInitState::eInitOK && !m_swapChain || b_IgnoreResize)
+		if (m_iGAPI->GetInitState() != eInitState::eInitOK && !m_swapChain || b_IgnoreResize)
 			return;
 
 		if (size.width == 0 || size.height == 0)
@@ -433,8 +433,8 @@ namespace zzz
 		}
 
 		auto m_device = m_DXAPI->GetDevice();
-		ensure(m_device, ">>>>> [surfaceAppMSWin_DirectX::CreateRTVHeap()]. Device cannot be null.");
-		ensure(m_swapChain, ">>>>> [surfaceAppMSWin_DirectX::CreateRTVHeap()]. Swap chain cannot be null.");
+		ensure(m_device, ">>>>> [surf_MSWin_DX::CreateRTVHeap()]. Device cannot be null.");
+		ensure(m_swapChain, ">>>>> [surf_MSWin_DX::CreateRTVHeap()]. Swap chain cannot be null.");
 
 		WaitRenderForPreviousFrame();
 
@@ -490,19 +490,19 @@ namespace zzz
 		m_aspectRatio = static_cast<float>(size.width) / static_cast<float>(size.height);
 	}
 
-	void surfaceAppMSWin_DirectX::SetFullScreen(bool fs)
+	void surf_MSWin_DX::SetFullScreen(bool fs)
 	{
 		BOOL fullscreen = FALSE;
 		HRESULT hr = m_swapChain->GetFullscreenState(&fullscreen, nullptr);
 		if (FAILED(hr))
 		{
-			DebugOutput(std::format(L">>>>> [surfaceAppMSWin_DirectX::SetFullScreen({})] Failed to get fullscreen state. HRESULT = 0x{:08X}\n", fs, hr).c_str());
+			DebugOutput(std::format(L">>>>> [surf_MSWin_DX::SetFullScreen({})] Failed to get fullscreen state. HRESULT = 0x{:08X}\n", fs, hr).c_str());
 			return;
 		}
 
 		if (fs == static_cast<bool>(fullscreen))
 		{
-			DebugOutput(std::format(L">>>>> [surfaceAppMSWin_DirectX::SetFullScreen({})] Fullscreen state is already set.\n", fs).c_str());
+			DebugOutput(std::format(L">>>>> [surf_MSWin_DX::SetFullScreen({})] Fullscreen state is already set.\n", fs).c_str());
 			return;
 		}
 
@@ -514,10 +514,10 @@ namespace zzz
 		if (S_OK != hr)
 		{
 			b_IgnoreResize = false;
-			DebugOutput(std::format(L">>>>> [surfaceAppMSWin_DirectX::SetFullScreen({})] Failed to set fullscreen state. HRESULT = 0x{:08X}\n", fs, hr).c_str());
+			DebugOutput(std::format(L">>>>> [surf_MSWin_DX::SetFullScreen({})] Failed to set fullscreen state. HRESULT = 0x{:08X}\n", fs, hr).c_str());
 			auto res = RecreateRenderTargetsAndDepth();
 			if (!res)
-				throw_runtime_error(std::format(">>>>> #0 [surfaceAppMSWin_DirectX::SetFullScreen({})]. Failed to recreate render targets and depth stencil view. {}.", fs, wstring_to_string(res.error().getMessage())));
+				throw_runtime_error(std::format(">>>>> #0 [surf_MSWin_DX::SetFullScreen({})]. Failed to recreate render targets and depth stencil view. {}.", fs, wstring_to_string(res.error().getMessage())));
 
 			return;
 		}
@@ -527,7 +527,7 @@ namespace zzz
 		hr = m_swapChain->GetDesc(&desc);
 		if (S_OK != hr)
 		{
-			DebugOutput(std::format(L">>>>> [surfaceAppMSWin_DirectX::SetFullScreen({})] Failed to get swap chain description. HRESULT = 0x{:08X}\n", fs, hr).c_str());
+			DebugOutput(std::format(L">>>>> [surf_MSWin_DX::SetFullScreen({})] Failed to get swap chain description. HRESULT = 0x{:08X}\n", fs, hr).c_str());
 			return;
 		}
 
@@ -538,15 +538,15 @@ namespace zzz
 			desc.Flags );
 		if (S_OK != hr)
 		{
-			DebugOutput(std::format(L">>>>> [surfaceAppMSWin_DirectX::SetFullScreen({})] Failed to resize buffers. HRESULT = 0x{:08X}\n",fs, hr).c_str());
+			DebugOutput(std::format(L">>>>> [surf_MSWin_DX::SetFullScreen({})] Failed to resize buffers. HRESULT = 0x{:08X}\n",fs, hr).c_str());
 			return;
 		}
 
 		auto res = RecreateRenderTargetsAndDepth();
 		if (!res)
-			throw_runtime_error(std::format(">>>>> #1 [surfaceAppMSWin_DirectX::SetFullScreen({})]. Failed to recreate render targets and depth stencil view. {}.", fs, wstring_to_string(res.error().getMessage())));
+			throw_runtime_error(std::format(">>>>> #1 [surf_MSWin_DX::SetFullScreen({})]. Failed to recreate render targets and depth stencil view. {}.", fs, wstring_to_string(res.error().getMessage())));
 
-		DebugOutput(std::format(L">>>>> [surfaceAppMSWin_DirectX::SetFullScreen({})].\n", fs).c_str());
+		DebugOutput(std::format(L">>>>> [surf_MSWin_DX::SetFullScreen({})].\n", fs).c_str());
 	}
 }
 #endif // defined(_WIN64)

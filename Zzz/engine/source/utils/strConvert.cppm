@@ -1,5 +1,5 @@
 #include "pch.h"
-export module strConver;
+export module strConvert;
 
 import result;
 

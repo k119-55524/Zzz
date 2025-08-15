@@ -7,7 +7,7 @@ using namespace zzz::platforms::directx;
 import IGAPI;
 import result;
 import winMSWin;
-import strConver;
+import strConvert;
 import RootSignature;
 import CheckDirectXSupport;
 
@@ -23,7 +23,7 @@ export namespace zzz::platforms::directx
 	}
 }
 
-export namespace zzz::platforms
+export namespace zzz::platforms::directx
 {
 	export class DXAPI final : public IGAPI
 	{
@@ -76,7 +76,7 @@ export namespace zzz::platforms
 		void ExecuteCommandList();
 
 	protected:
-		result<> Initialize(const std::shared_ptr<IAppWin> appWin) override;
+		result<> Initialize();
 		void WaitForPreviousFrame() override;
 
 	private:
@@ -111,7 +111,7 @@ export namespace zzz::platforms
 	};
 
 	DXAPI::DXAPI() :
-		IGAPI(eGAPIType::DirectX12),
+		IGAPI(eGAPIType::DirectX),
 		m_swapChainFlags{ 0 },
 		m_fenceValue{ 0 },
 		m_featureLevel{ D3D_FEATURE_LEVEL_12_0 }
@@ -148,12 +148,8 @@ export namespace zzz::platforms
 #pragma endregion Rendring
 
 #pragma region Initialize
-	result<> DXAPI::Initialize(const std::shared_ptr<IAppWin> appWin)
+	result<> DXAPI::Initialize()
 	{
-		std::shared_ptr<winMSWin> appMSWin = std::dynamic_pointer_cast<winMSWin>(appWin);
-		if (!appMSWin)
-			return Unexpected(eResult::failure, L">>>>> [DXAPI::Initialize()]. Failed to cast IAppWin to winMSWin.");
-
 		result<> res = InitializeDevice()
 			.and_then([&]() { return InitializeFence(); })
 			.and_then([&]() { initState = eInitState::eInitOK; });

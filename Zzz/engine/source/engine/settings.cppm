@@ -1,34 +1,34 @@
 #include "pch.h"
-export module zViewSettings;
+export module settings;
 
 import result;
 import iozaml;
-import strConver;
+import strConvert;
 
 using namespace zzz::zaml;
 
 export namespace zzz
 {
-	export class zViewSettings
+	export class settings
 	{
 	public:
-		zViewSettings() = delete;
-		zViewSettings(std::wstring _filePath);
-		zViewSettings(const zViewSettings&) = delete;
-		zViewSettings(zViewSettings&&) = delete;
+		settings() = delete;
+		settings(std::wstring _filePath);
+		settings(const settings&) = delete;
+		settings(settings&&) = delete;
 
-		zViewSettings& operator=(const zViewSettings&) = delete;
+		settings& operator=(const settings&) = delete;
 
 		template<typename T, typename... Path>
 		result<T> GetParam(Path&&... pathAndParamName) const
 		{
-			if (!settings)
-				return Unexpected(eResult::not_initialized, L">>>>> [zViewSettings.GetParam(...)] Settings not loaded");
+			if (!m_settings)
+				return Unexpected(eResult::not_initialized, L">>>>> [settings.GetParam(...)] Settings not loaded");
 
 			constexpr size_t argCount = sizeof...(Path);
 			static_assert(argCount >= 1, "At least one argument (paramName) is required");
 
-			const zamlNode* node = settings.get();
+			const zamlNode* node = m_settings.get();
 
 			// Помещаем аргументы в массив
 			std::array<std::wstring, argCount> args = { std::wstring(std::forward<Path>(pathAndParamName))... };
@@ -54,7 +54,7 @@ export namespace zzz
 
 				if (!found)
 				{
-					return Unexpected(eResult::not_found, L">>>>> [zViewSettings.GetParam(...)] Tag '" + tag + L"' not found");
+					return Unexpected(eResult::not_found, L">>>>> [settings.GetParam(...)] Tag '" + tag + L"' not found");
 				}
 			}
 
@@ -62,7 +62,7 @@ export namespace zzz
 			auto attr = node->GetAttribute(paramName);
 			if (!attr)
 			{
-				return Unexpected(eResult::not_found, L">>>>> [zViewSettings.GetParam(...)] Parameter '" + paramName + L"' not found");
+				return Unexpected(eResult::not_found, L">>>>> [settings.GetParam(...)] Parameter '" + paramName + L"' not found");
 			}
 
 			// Преобразуем значение
@@ -71,30 +71,30 @@ export namespace zzz
 
 	private:
 		std::wstring filePath;
-		std::unique_ptr<zamlNode> settings;
+		std::unique_ptr<zamlNode> m_settings;
 
 		result<> LoadSettings();
 	};
 
-	zViewSettings::zViewSettings(std::wstring _filePath) :
+	settings::settings(std::wstring _filePath) :
 		filePath{ std::move(_filePath) },
-		settings{}
+		m_settings{}
 	{
 		if (filePath.empty())
 			throw_runtime_error("Empty filePath");
 
 		auto res = LoadSettings();
 		if (!res)
-			throw_runtime_error(std::format( "Failed to load settings from file: {}.\n{}", wstring_to_string(filePath), wstring_to_string(res.error().getMessage())));
+			throw_runtime_error(std::format("Failed to load settings from file: {}.\n{}", wstring_to_string(filePath), wstring_to_string(res.error().getMessage())));
 	}
 
-	result<> zViewSettings::LoadSettings()
+	result<> settings::LoadSettings()
 	{
 		ioZaml loader;
 		auto res = loader.LoadFromFile(filePath)
 			.and_then([this](const zamlNode& node)
 			{
-				settings = std::make_unique<zamlNode>(node);
+				m_settings = std::make_unique<zamlNode>(node);
 				return result<>();
 			})
 			.or_else([](auto error) { return error; });

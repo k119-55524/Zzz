@@ -2,11 +2,11 @@
 export module winMSWin;
 
 import result;
-import zEvent;
+import event;
 import IAppWin;
-import zSize2D;
+import size2D;
 import ibMSWin;
-import zViewSettings;
+import settings;
 import IOPathFactory;
 
 using namespace zzz;
@@ -25,7 +25,7 @@ export namespace zzz
 		winMSWin& operator=(const winMSWin&) = delete;
 		winMSWin& operator=(winMSWin&&) = delete;
 
-		explicit winMSWin(std::shared_ptr<zViewSettings> _settings);
+		explicit winMSWin(std::shared_ptr<settings> _settings);
 
 		~winMSWin() override;
 
@@ -41,7 +41,7 @@ export namespace zzz
 		LRESULT MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	};
 
-	winMSWin::winMSWin(std::shared_ptr<zViewSettings> _settings) :
+	winMSWin::winMSWin(std::shared_ptr<settings> _settings) :
 		IAppWin(_settings),
 		hWnd{ nullptr },
 		IsMinimized{ true }
@@ -61,36 +61,36 @@ export namespace zzz
 		std::wstring Caption;
 		std::wstring ClassName;
 		{
-			auto res = settings->GetParam<std::wstring>(L"Caption")
+			auto res = m_settings->GetParam<std::wstring>(L"Caption")
 				.and_then([&](std::wstring name) { Caption = name; });
 
 			if (!res)
 				return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'Caption' parameter.");
 		}
 
-		settings->GetParam<std::wstring>(L"MSWin_SpecSettings", L"ClassName")
+		m_settings->GetParam<std::wstring>(L"MSWin_SpecSettings", L"ClassName")
 			.and_then([&](std::wstring name) {ClassName = name; })
 			.or_else([&](auto error) { ClassName = Caption; });
 
 		LONG swWidth;
-		auto res = settings->GetParam<int>(L"Width")
+		auto res = m_settings->GetParam<int>(L"Width")
 			.and_then([&](int width) {swWidth = width; });
 		if (!res)
 			return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'Width' parameter. More specifically: " + res.error().getMessage());
 
 		LONG swHeight;
-		res = settings->GetParam<int>(L"Height")
+		res = m_settings->GetParam<int>(L"Height")
 			.and_then([&](int height) {swHeight = height; });
 		if (!res)
 			return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'Height' parameter. More specifically:" + res.error().getMessage());
 
 		HICON iconHandle = nullptr;
 		{
-			result<std::wstring> icoPath = settings->GetParam<std::wstring>(L"IcoFullPath");
+			result<std::wstring> icoPath = m_settings->GetParam<std::wstring>(L"IcoFullPath");
 			if (icoPath)
 			{
 				ibMSWin icoBuilder;
-				auto res = icoBuilder.LoadIco(icoPath.value(), settings->GetParam<int>(L"IcoSize").value_or(32));
+				auto res = icoBuilder.LoadIco(icoPath.value(), m_settings->GetParam<int>(L"IcoSize").value_or(32));
 				if (res)
 					iconHandle = res.value();
 			}

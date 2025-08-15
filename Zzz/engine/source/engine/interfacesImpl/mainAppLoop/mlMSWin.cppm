@@ -1,7 +1,7 @@
 #include "pch.h"
 export module mlMSWin;
 
-import zEvent;
+import event;
 import IMainLoop;
 
 using namespace zzz;

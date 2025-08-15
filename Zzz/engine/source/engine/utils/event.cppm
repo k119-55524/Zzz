@@ -1,10 +1,10 @@
 #include "pch.h"
-export module zEvent;
+export module event;
 
 namespace zzz
 {
 	template<typename CallbackType>
-	class zEventBase
+	class eventBase
 	{
 	protected:
 		std::vector<std::pair<std::shared_ptr<CallbackType>, std::weak_ptr<CallbackType>>> listeners;
@@ -29,7 +29,7 @@ namespace zzz
 export namespace zzz
 {
 	template<typename... Args>
-	class zEvent : public zEventBase<std::function<void(Args...)>>
+	class event : public eventBase<std::function<void(Args...)>>
 	{
 	public:
 		using CallbackType = std::function<void(Args...)>;
@@ -62,7 +62,7 @@ export namespace zzz
 	};
 
 	template<>
-	class zEvent<void> : public zEventBase<std::function<void()>>
+	class event<void> : public eventBase<std::function<void()>>
 	{
 	public:
 		using CallbackType = std::function<void()>;

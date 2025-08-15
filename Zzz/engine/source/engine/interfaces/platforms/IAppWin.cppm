@@ -2,15 +2,15 @@
 export module IAppWin;
 
 import result;
-import zEvent;
-import zSize2D;
-import zViewSettings;
+import event;
+import size2D;
+import settings;
 
 using namespace zzz::platforms;
 
 namespace zzz
 {
-	class zView;
+	class view;
 }
 
 export namespace zzz
@@ -24,24 +24,24 @@ export namespace zzz
 		IAppWin& operator=(const IAppWin&) = delete;
 		IAppWin& operator=(IAppWin&&) = delete;
 
-		explicit IAppWin(std::shared_ptr<const zViewSettings> settings);
+		explicit IAppWin(std::shared_ptr<const settings> settings);
 
 		virtual ~IAppWin() = default;
 
-		zEvent<zSize2D<>, e_TypeWinResize> onResize;
+		event<size2D<>, e_TypeWinResize> onResize;
 
-		const zSize2D<> GetWinSize() const noexcept { return winSize; }
+		const size2D<> GetWinSize() const noexcept { return winSize; }
 
 	protected:
-		const std::shared_ptr<const zViewSettings> settings;
-		zSize2D<> winSize;
+		const std::shared_ptr<const settings> m_settings;
+		size2D<> winSize;
 
 		[[nodiscard]] virtual result<> Initialize() = 0;
-		friend class zzz::zView;
+		friend class zzz::view;
 	};
 
-	IAppWin::IAppWin(std::shared_ptr<const zViewSettings> settings)
-		: settings{ settings },
+	IAppWin::IAppWin(std::shared_ptr<const settings> settings)
+		: m_settings{ settings },
 		winSize{ 0, 0 }
 	{
 		ensure(settings, ">>>>> [IAppWin::IAppWin()]. Settings cannot be null.");
