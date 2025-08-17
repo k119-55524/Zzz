@@ -62,7 +62,7 @@
     <ClCompile Include="source\engine\interfaces\platforms\IMainLoop.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfacesImpl\mainAppLoop\mlMSWin.cppm">
+    <ClCompile Include="source\engine\interfacesImpl\mainLoop\mlMSWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfaces\utils\IIcoBuilder.cppm">
@@ -89,7 +89,7 @@
     <ClCompile Include="source\engine\interfaces\platforms\IAppWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfaces\platforms\IAppWinSurface.cppm">
+    <ClCompile Include="source\engine\interfaces\platforms\ISurfaceView.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\factories\viewFactory.cppm">
@@ -98,7 +98,7 @@
     <ClCompile Include="source\engine\interfacesImpl\appWin\winMSWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfacesImpl\winSurface\surf_MSWin_DX.cppm">
+    <ClCompile Include="source\engine\interfacesImpl\surfaceView\surface_DirectX.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfacesImpl\gapi\DX\CheckDirectXUltimateSupport.cppm">

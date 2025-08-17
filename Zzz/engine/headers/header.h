@@ -51,6 +51,8 @@ namespace zzz
 	const zU64 c_MaximumWindowsWidth = 3840;	// Ultra HD 4K
 	const zU64 c_MaximumWindowsHeight = 2160;	// Ultra HD 4K
 
+	constexpr zU32 BACK_BUFFER_COUNT = 2;
+
 	[[noreturn]]
 	inline void throw_runtime_error(
 		const std::string& msg = "Throw runtime error",

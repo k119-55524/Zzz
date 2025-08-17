@@ -7,8 +7,8 @@ import IAppWin;
 import winMSWin;
 import settings;
 import strConvert;
-import surf_MSWin_DX;
-import IAppWinSurface;
+import ISurfaceView;
+import surface_DirectX;
 
 #if defined(_WIN64)
 import DXAPI;
@@ -31,7 +31,7 @@ export namespace zzz
 		~viewFactory() = default;
 
 		std::shared_ptr<IAppWin> CreateAppWin(std::shared_ptr<settings> settings);
-		std::shared_ptr<IAppWinSurface> CreateSurfaceWin(
+		std::shared_ptr<ISurfaceView> CreateSurfaceWin(
 			std::shared_ptr<settings> _settings,
 			std::shared_ptr<IAppWin> _iAppWin,
 			std::shared_ptr<zzz::platforms::IGAPI> _iGAPI);
@@ -57,7 +57,7 @@ export namespace zzz
 		}
 	}
 
-	export std::shared_ptr<IAppWinSurface> viewFactory::CreateSurfaceWin(
+	export std::shared_ptr<ISurfaceView> viewFactory::CreateSurfaceWin(
 		std::shared_ptr<settings> _settings,
 		std::shared_ptr<IAppWin> _iAppWin,
 		std::shared_ptr<zzz::platforms::IGAPI> _iGAPI)
@@ -74,7 +74,7 @@ export namespace zzz
 			{
 #if defined(_WIN64)
 			case zzz::platforms::eGAPIType::DirectX:
-				return safe_make_shared<surf_MSWin_DX>(_settings, _iAppWin, _iGAPI);
+				return safe_make_shared<surface_DirectX>(_settings, _iAppWin, _iGAPI);
 				break;
 #endif // defined(_WIN64)
 			default:

@@ -8,27 +8,17 @@ import ICheckGapiSupport;
 
 using namespace std::literals::string_view_literals;
 
-namespace zzz
-{
-	class engine;
-	class IAppWinSurface;
-}
-
 export namespace zzz::platforms
 {
 	enum class eGAPIType : uint8_t
 	{
 		DirectX,
-		OpenGL,
 		Vulkan,
 		Metal
 	};
 
 	export class IGAPI
 	{
-		friend class zzz::engine;
-		friend class zzz::IAppWinSurface;
-
 	public:
 		IGAPI() =							delete;
 		IGAPI(const IGAPI&) =				delete;
@@ -68,10 +58,11 @@ export namespace zzz::platforms
 		[[nodiscard]] inline bool SupportsMeshShaders() const noexcept { return checkGapiSupport->SupportsMeshShaders(); }
 		[[nodiscard]] inline bool SupportsSamplerFeedback() const noexcept { return checkGapiSupport->SupportsSamplerFeedback(); }
 
-	protected:
 		[[nodiscard]] virtual result<> Initialize() = 0;
-		virtual void WaitForPreviousFrame() {};
+		virtual void SubmitCommandLists(zU64 index) = 0;
+		virtual void WaitForGpu() = 0;
 
+	protected:
 		eGAPIType gapiType;
 		eInitState initState;
 		std::unique_ptr<ICheckGapiSupport> checkGapiSupport; // Проверка возможностей GAPI

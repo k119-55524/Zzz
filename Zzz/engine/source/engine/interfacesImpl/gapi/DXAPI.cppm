@@ -21,10 +21,7 @@ export namespace zzz::platforms::directx
 	{
 		return x;
 	}
-}
 
-export namespace zzz::platforms::directx
-{
 	export class DXAPI final : public IGAPI
 	{
 	public:
@@ -39,23 +36,28 @@ export namespace zzz::platforms::directx
 				Initialize(m_device);
 			};
 
-			inline const ComPtr<ID3D12CommandAllocator>& CommandAllocator() const noexcept { return m_commandAllocator; };
-			inline const ComPtr<ID3D12GraphicsCommandList>& CommandList() const noexcept { return m_commandList; };
+			inline const ComPtr<ID3D12CommandAllocator>& GetCommandAllocator(zU64 index) const noexcept { return m_commandAllocator[index]; };
+			inline const ComPtr<ID3D12GraphicsCommandList>& GetCommandList(zU64 index) const noexcept { return m_commandList[index]; };
 
 		private:
 			void Initialize(ComPtr<ID3D12Device>& m_device)
 			{
-				ensure(S_OK == m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)));
+				for (zU32 i = 0; i < BACK_BUFFER_COUNT; i++)
+				{
+					ensure(S_OK == m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator[i])));
+					SET_RESOURCE_DEBUG_NAME(m_commandAllocator[i], std::format(L"Command Allocator {}", i).c_str());
 
-				// К одному ID3D12CommandAllocator(m_commandAllocator) можно привязать несколько ID3D12GraphicsCommandList(m_commandList) но одновременно записывать можно только в один.
-				// А остальные ID3D12GraphicsCommandList, привязанные к ID3D12CommandAllocator, должны быть закрыты.
-				// Так как ID3D12GraphicsCommandList при создании всегда открыт, сразу закрываем его.
-				ensure(S_OK == m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS(&m_commandList)));
-				ensure(S_OK == m_commandList->Close());
+					// К одному ID3D12CommandAllocator(m_commandAllocator) можно привязать несколько ID3D12GraphicsCommandList(m_commandList) но одновременно записывать можно только в один.
+					// А остальные ID3D12GraphicsCommandList, привязанные к ID3D12CommandAllocator, должны быть закрыты.
+					// Так как ID3D12GraphicsCommandList при создании всегда открыт, сразу закрываем его.
+					ensure(S_OK == m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator[i].Get(), nullptr, IID_PPV_ARGS(&m_commandList[i])));
+					ensure(S_OK == m_commandList[i]->Close());
+					SET_RESOURCE_DEBUG_NAME(m_commandList[i], std::format(L"Command List {}", i).c_str());
+				}
 			}
 
-			ComPtr<ID3D12CommandAllocator> m_commandAllocator;
-			ComPtr<ID3D12GraphicsCommandList> m_commandList;
+			ComPtr<ID3D12CommandAllocator> m_commandAllocator[BACK_BUFFER_COUNT];
+			ComPtr<ID3D12GraphicsCommandList> m_commandList[BACK_BUFFER_COUNT];
 		};
 
 		explicit DXAPI();
@@ -71,16 +73,16 @@ export namespace zzz::platforms::directx
 		inline const ComPtr<ID3D12CommandQueue> GetCommandQueue() const noexcept { return m_commandQueue; };
 		inline const ComPtr<IDXGIFactory7> GetFactory() const noexcept { return m_factory; };
 		inline const std::shared_ptr<CommandWrapper> GetCommandRender() const noexcept { return m_commandRender; };
-		ComPtr<ID3D12RootSignature> GetRootSignature() const noexcept { return m_rootSignature.Get(); }
+		inline ComPtr<ID3D12RootSignature> GetRootSignature() const noexcept { return m_rootSignature.Get(); }
 
-		void ExecuteCommandList();
+		void SubmitCommandLists(zU64 index) override;
+		void WaitForGpu() override;
 
 	protected:
-		result<> Initialize();
-		void WaitForPreviousFrame() override;
+		[[nodiscard]] result<> Initialize();
 
 	private:
-		static constexpr UINT FRAME_COUNT = 2;
+		static constexpr UINT BACK_BUFFER_COUNT = 2;
 		static constexpr DXGI_FORMAT BACK_BUFFER_FORMAT = DXGI_FORMAT_R8G8B8A8_UNORM;
 		static constexpr DXGI_FORMAT DEPTH_FORMAT = DXGI_FORMAT_D32_FLOAT;
 
@@ -120,11 +122,11 @@ export namespace zzz::platforms::directx
 
 	DXAPI::~DXAPI()
 	{
-		WaitForPreviousFrame();
+		WaitForGpu();
 	}
 
 #pragma region Rendring
-	void DXAPI::WaitForPreviousFrame()
+	void DXAPI::WaitForGpu()
 	{
 		const UINT64 fence = m_fenceValue;
 		ensure(S_OK == m_commandQueue->Signal(m_fence.Get(), fence));
@@ -140,9 +142,9 @@ export namespace zzz::platforms::directx
 		}
 	}
 
-	void DXAPI::ExecuteCommandList()
+	void DXAPI::SubmitCommandLists(zU64 index)
 	{
-		ID3D12CommandList* ppCommandLists[] = { m_commandRender->CommandList().Get() };
+		ID3D12CommandList* ppCommandLists[] = { m_commandRender->GetCommandList(index).Get() };
 		m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 	}
 #pragma endregion Rendring

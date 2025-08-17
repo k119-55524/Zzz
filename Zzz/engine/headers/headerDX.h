@@ -80,7 +80,7 @@ namespace zzz::platforms::directx
 	std::wstring debugName = L">>>>> ";						\
 	std::wstring tempName = name;							\
 	if (!tempName.empty()) {								\
-	    debugName += tempName;								\
+		debugName += tempName;								\
 	}														\
 	debugName += L"\n+--- [" + std::wstring(__FILEW__) +	\
 	L"]\n+--- [" + std::wstring(__FUNCTIONW__) +			\

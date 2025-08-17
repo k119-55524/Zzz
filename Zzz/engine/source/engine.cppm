@@ -45,7 +45,7 @@ export namespace zzz
 		std::mutex stateMutex;
 		bool isSysPaused;
 
-		std::shared_ptr<settings> m_settings;
+		std::shared_ptr<settings> m_setting;
 		std::shared_ptr<IGAPI> m_GAPI;
 		std::shared_ptr<view> m_view;
 		std::shared_ptr<IMainLoop> mainLoop;
@@ -70,7 +70,7 @@ export namespace zzz
 		mainLoop.reset();
 		m_view.reset();
 		m_GAPI.reset();
-		m_settings.reset();
+		m_setting.reset();
 
 		initState = eInitState::eInitNot;
 		isSysPaused = true;
@@ -85,15 +85,15 @@ export namespace zzz
 		std::wstring err;
 		try
 		{
-			m_settings = safe_make_shared<settings>(settingFilePath);
+			m_setting = safe_make_shared<settings>(settingFilePath);
 
 			// TODO: После тип GAPI буду передавать из m_settings
-			m_GAPI = m_factory.CreateGAPI(eGAPIType::DirectX);
+			m_GAPI = m_factory.CreateGAPI(m_setting);
 			auto res = m_GAPI->Initialize();
 			if (!res)
 				return Unexpected(eResult::failure, std::format(L">>>>> [engine::initialize()]. Failed to initialize GAPI: {}", res.error().getMessage()).c_str());
 
-			m_view = safe_make_shared<view>(m_settings, m_GAPI, std::bind(&engine::OnViewResized, this, std::placeholders::_1, std::placeholders::_2));
+			m_view = safe_make_shared<view>(m_setting, m_GAPI, std::bind(&engine::OnViewResized, this, std::placeholders::_1, std::placeholders::_2));
 
 			mainLoop = safe_make_shared<MainLoop>();
 			mainLoop->onUpdateSystem += std::bind(&engine::OnUpdateSystem, this);

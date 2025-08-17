@@ -2,6 +2,7 @@
 export module engineFactory;
 
 import IGAPI;
+import settings;
 
 #if defined(_WIN64)
 import DXAPI;
@@ -24,13 +25,19 @@ export namespace zzz
 		engineFactory& operator=(engineFactory&&) = delete;
 		~engineFactory() = default;
 
-		[[nodiscard]] std::shared_ptr<IGAPI> CreateGAPI(eGAPIType type) const;
+		[[nodiscard]] std::shared_ptr<IGAPI> CreateGAPI(std::shared_ptr<settings> setting) const;
 	};
 
-	std::shared_ptr<IGAPI> engineFactory::CreateGAPI(eGAPIType type) const
+	std::shared_ptr<IGAPI> engineFactory::CreateGAPI(std::shared_ptr<settings> setting) const
 	{
+		ensure(setting, ">>>>> [engineFactories::CreateGAPI()]. Settings cannot be null.");
+
 		try
 		{
+			// TODO
+			//eGAPIType type = setting.GetGapyType();
+			eGAPIType type = eGAPIType::DirectX;
+
 			switch (type)
 			{
 #if defined(_WIN64)

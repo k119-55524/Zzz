@@ -2,14 +2,14 @@
 export module view;
 
 import IGAPI;
-import result;
 import event;
-import IAppWin;
 import size2D;
+import result;
+import IAppWin;
+import settings;
 import strConvert;
 import viewFactory;
-import settings;
-import IAppWinSurface;
+import ISurfaceView;
 
 using namespace zzz::platforms;
 
@@ -43,7 +43,7 @@ namespace zzz
 		std::shared_ptr<settings> m_Settings;
 		std::shared_ptr<IGAPI> m_GAPI;
 		std::shared_ptr<IAppWin> m_Win;
-		std::shared_ptr<IAppWinSurface> m_WinSurface;
+		std::shared_ptr<ISurfaceView> m_SurfaceView;
 
 		void Initialize();
 	};
@@ -71,8 +71,8 @@ namespace zzz
 			if (!res)
 				throw_runtime_error(std::format(">>>>> [view::Initialize()]. Failed to initialize application window: {}.", wstring_to_string(res.error().getMessage())));
 
-			m_WinSurface = factory.CreateSurfaceWin(m_Settings, m_Win, m_GAPI);
-			res = m_WinSurface->Initialize();
+			m_SurfaceView = factory.CreateSurfaceWin(m_Settings, m_Win, m_GAPI);
+			res = m_SurfaceView->Initialize();
 			if (!res)
 				throw_runtime_error(std::format(">>>>> [view::Initialize()]. Failed to initialize surface window: {}.", wstring_to_string(res.error().getMessage())));
 
@@ -89,9 +89,12 @@ namespace zzz
 
 	void view::OnUpdate()
 	{
-
-		if (m_WinSurface)
-			m_WinSurface->OnRender();
+		if (m_SurfaceView)
+		{
+			m_SurfaceView->BeginRender();
+			m_SurfaceView->Render();
+			m_SurfaceView->EndRender();
+		}
 
 		{
 			//static int frameCount = 0;
@@ -121,13 +124,13 @@ namespace zzz
 		}
 
 		viewResized(size, resizeType);
-		if (m_WinSurface)
-			m_WinSurface->OnResize(size);
+		if (m_SurfaceView)
+			m_SurfaceView->OnResize(size);
 	}
 
 	void view::SetFullScreen(bool fs)
 	{
-		if(m_WinSurface)
-			m_WinSurface->SetFullScreen(fs);
+		if(m_SurfaceView)
+			m_SurfaceView->SetFullScreen(fs);
 	}
 }
