@@ -95,6 +95,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="appdata\assets\StartScene.scn" />
     <None Include="appdata\ui.zaml" />
     <None Include="appdata\rc\ico_1.jpg" />
     <None Include="appdata\rc\ico_2.png" />

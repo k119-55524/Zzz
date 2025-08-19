@@ -85,7 +85,9 @@
   <ItemGroup>
     <ClInclude Include="headers\headerDX.h" />
     <ClInclude Include="headers\header.h" />
+    <ClInclude Include="headers\headerMetal.h" />
     <ClInclude Include="headers\headerMSWin.h" />
+    <ClInclude Include="headers\headerVulkan.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -102,6 +104,10 @@
     <ClCompile Include="source\engine\interfaces\platforms\IAppWin.cppm" />
     <ClCompile Include="source\engine\interfaces\platforms\ICheckGapiSupport.cppm" />
     <ClCompile Include="source\engine\interfaces\platforms\ISurfaceView.cppm" />
+    <ClCompile Include="source\engine\resourcesManager.cppm" />
+    <ClCompile Include="source\engine\resources\cpuVertex.cppm" />
+    <ClCompile Include="source\engine\scene.cppm" />
+    <ClCompile Include="source\engine\scenesManager.cppm" />
     <ClCompile Include="source\engine\view.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\gapi\DXAPI.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\gapi\DX\RootSignature.cppm" />

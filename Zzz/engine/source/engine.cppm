@@ -13,6 +13,8 @@ import IMainLoop;
 import strConvert;
 import IOPathFactory;
 import engineFactory;
+import scenesManager;
+import resourcesManager;
 
 using namespace zzz;
 using namespace zzz::io;
@@ -46,6 +48,8 @@ export namespace zzz
 		bool isSysPaused;
 
 		std::shared_ptr<settings> m_setting;
+		std::shared_ptr<resourcesManager> m_resourcesManager;
+		std::shared_ptr<scenesManager> m_scenesManager;
 		std::shared_ptr<IGAPI> m_GAPI;
 		std::shared_ptr<view> m_view;
 		std::shared_ptr<IMainLoop> mainLoop;
@@ -70,6 +74,8 @@ export namespace zzz
 		mainLoop.reset();
 		m_view.reset();
 		m_GAPI.reset();
+		m_scenesManager.reset();
+		m_resourcesManager.reset();
 		m_setting.reset();
 
 		initState = eInitState::eInitNot;
@@ -79,22 +85,31 @@ export namespace zzz
 	result<> engine::Initialize(std::wstring settingFilePath) noexcept
 	{
 		std::lock_guard<std::mutex> lock(stateMutex);
+
 		if (initState != eInitState::eInitNot)
 			return Unexpected(eResult::failure, L">>>>> [engine::initialize()]. Re-initialization is not allowed.");
 
 		std::wstring err;
 		try
 		{
+			// Читаем настройки из файла
 			m_setting = safe_make_shared<settings>(settingFilePath);
+			// Создаем менеджер ресурсов
+			m_resourcesManager = safe_make_shared<resourcesManager>(m_setting);
+			// Создаём менеджер сцен
+			m_scenesManager = safe_make_shared<scenesManager>(m_resourcesManager);
 
 			// TODO: После тип GAPI буду передавать из m_settings
-			m_GAPI = m_factory.CreateGAPI(m_setting);
-			auto res = m_GAPI->Initialize();
+			// Создаём обёртку над графическим API
+			auto res = m_factory.CreateGAPI(m_setting);
 			if (!res)
-				return Unexpected(eResult::failure, std::format(L">>>>> [engine::initialize()]. Failed to initialize GAPI: {}", res.error().getMessage()).c_str());
+				return Unexpected(eResult::failure, L">>>>> [engine::initialize()]. Failed to create GAPI.");
+			m_GAPI = res.value();
 
-			m_view = safe_make_shared<view>(m_setting, m_GAPI, std::bind(&engine::OnViewResized, this, std::placeholders::_1, std::placeholders::_2));
+			// Содаём основное окно(view) приложения
+			m_view = safe_make_shared<view>(m_setting, m_scenesManager, m_GAPI, std::bind(&engine::OnViewResized, this, std::placeholders::_1, std::placeholders::_2));
 
+			// Создаём главный цикл приложения
 			mainLoop = safe_make_shared<MainLoop>();
 			mainLoop->onUpdateSystem += std::bind(&engine::OnUpdateSystem, this);
 
@@ -131,6 +146,7 @@ export namespace zzz
 
 		try
 		{
+			isSysPaused = false;
 			mainLoop->Run();
 
 			return {};

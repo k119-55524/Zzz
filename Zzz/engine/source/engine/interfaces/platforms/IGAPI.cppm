@@ -4,6 +4,7 @@ export module IGAPI;
 import result;
 import size2D;
 import IAppWin;
+import strConvert;
 import ICheckGapiSupport;
 
 using namespace std::literals::string_view_literals;
@@ -26,10 +27,7 @@ export namespace zzz::platforms
 		IGAPI(IGAPI&&) =					delete;
 		IGAPI& operator=(IGAPI&&) =			delete;
 
-		explicit IGAPI(eGAPIType type) noexcept
-			: gapiType{ type },
-			initState{ eInitState::eInitNot }
-		{}
+		explicit IGAPI(eGAPIType type);
 
 		virtual ~IGAPI() = default;
 
@@ -58,13 +56,38 @@ export namespace zzz::platforms
 		[[nodiscard]] inline bool SupportsMeshShaders() const noexcept { return checkGapiSupport->SupportsMeshShaders(); }
 		[[nodiscard]] inline bool SupportsSamplerFeedback() const noexcept { return checkGapiSupport->SupportsSamplerFeedback(); }
 
-		[[nodiscard]] virtual result<> Initialize() = 0;
+		[[nodiscard]] virtual result<> Initialize();
 		virtual void SubmitCommandLists(zU64 index) = 0;
 		virtual void WaitForGpu() = 0;
 
 	protected:
+		[[nodiscard]] virtual result<> Init() = 0;
+
 		eGAPIType gapiType;
 		eInitState initState;
 		std::unique_ptr<ICheckGapiSupport> checkGapiSupport; // Проверка возможностей GAPI
+
+	private:
+		std::mutex stateMutex;
 	};
+
+	IGAPI::IGAPI(eGAPIType type)
+		: gapiType{ type },
+		initState{ eInitState::eInitNot }
+	{
+	}
+
+	result<> IGAPI::Initialize()
+	{
+		std::lock_guard<std::mutex> lock(stateMutex);
+
+		if (initState != eInitState::eInitNot)
+			return Unexpected(eResult::failure, L">>>>> [IGAPI::Initialize()]. GAPI is already initialized or in an invalid state.");
+
+		auto res = Init()
+			.and_then([&]() { initState = eInitState::eInitOK; })
+			.or_else([&](const Unexpected& error) { throw_runtime_error(std::format(">>>>> [IGAPI::Initialize()]. {}.", wstring_to_string(error.getMessage()))); });
+
+		return res;
+	}
 }

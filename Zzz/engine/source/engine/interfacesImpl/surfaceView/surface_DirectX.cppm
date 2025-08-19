@@ -298,7 +298,7 @@ namespace zzz
 				&depthStencilHeapProps,
 				D3D12_HEAP_FLAG_NONE,
 				&depthStencilTextureDesc,
-				D3D12_RESOURCE_STATE_DEPTH_WRITE,
+				D3D12_RESOURCE_STATE_COMMON,
 				&depthOptimizedClearValue,
 				IID_PPV_ARGS(&m_depthStencil[i]));
 			
@@ -393,7 +393,7 @@ namespace zzz
 		);
 
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_RtvDescrSize);
-		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV));
+		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_DsvDescrSize);
 		commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 	}
 
@@ -408,7 +408,7 @@ namespace zzz
 		const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_RtvDescrSize);
 		commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr );
-		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV));
+		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_DsvDescrSize);
 		commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 		// Здесь можно добавить дополнительные команды рендеринга, например:
@@ -480,8 +480,6 @@ namespace zzz
 		ensure(m_device, ">>>>> [surface_DirectX::CreateRTVHeap()]. Device cannot be null.");
 		ensure(m_swapChain, ">>>>> [surface_DirectX::CreateRTVHeap()]. Swap chain cannot be null.");
 
-		m_iGAPI->WaitForGpu();
-
 		DXGI_SWAP_CHAIN_DESC1 desc;
 		HRESULT hr = m_swapChain->GetDesc1(&desc);
 		if (SUCCEEDED(hr))
@@ -495,6 +493,7 @@ namespace zzz
 			}
 		}
 
+		m_iGAPI->WaitForGpu();
 		ResetRTVandDS();
 
 		BOOL fullscreen = FALSE;
@@ -522,6 +521,7 @@ namespace zzz
 		if (S_OK != hr)
 			throw_runtime_error(std::format(">>>>> [DXAPI::OnResize({}x{})].", size.width, size.height));
 
+		//m_iGAPI->WaitForGpu();
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
 		auto res = CreateRTVHeap()

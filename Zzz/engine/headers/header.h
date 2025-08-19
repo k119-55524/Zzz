@@ -11,6 +11,8 @@
 
 #include "headerMSWin.h"
 #include "headerDX.h"
+#include "headerVulkan.h"
+#include "headerMetal.h"
 
 namespace zzz
 {

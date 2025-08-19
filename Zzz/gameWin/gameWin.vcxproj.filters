@@ -38,5 +38,6 @@
     <None Include="appdata\rc\ico_3.png">
       <Filter>Файлы ресурсов</Filter>
     </None>
+    <None Include="appdata\assets\StartScene.scn" />
   </ItemGroup>
 </Project>

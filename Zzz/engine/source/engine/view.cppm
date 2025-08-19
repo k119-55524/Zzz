@@ -3,6 +3,7 @@ export module view;
 
 import IGAPI;
 import event;
+import scene;
 import size2D;
 import result;
 import IAppWin;
@@ -10,6 +11,8 @@ import settings;
 import strConvert;
 import viewFactory;
 import ISurfaceView;
+import scenesManager;
+import resourcesManager;
 
 using namespace zzz::platforms;
 
@@ -29,7 +32,11 @@ namespace zzz
 		view& operator=(const view&) = delete;
 		view& operator=(view&&) = delete;
 
-		view(std::shared_ptr<settings> _setting, std::shared_ptr<IGAPI> _GAPI, std::function<void(size2D<>, e_TypeWinResize)> _onResizeClbk);
+		view(
+			const std::shared_ptr<settings> _setting,
+			const std::shared_ptr<scenesManager> _scenesManager,
+			const std::shared_ptr<IGAPI> _GAPI,
+			std::function<void(size2D<>, e_TypeWinResize)> _onResizeClbk);
 
 		~view() = default;
 
@@ -40,19 +47,30 @@ namespace zzz
 
 	private:
 		viewFactory factory;
-		std::shared_ptr<settings> m_Settings;
-		std::shared_ptr<IGAPI> m_GAPI;
+		const std::shared_ptr<settings> m_Settings;
+		const std::shared_ptr<IGAPI> m_GAPI;
+		const std::shared_ptr<scenesManager> m_ScenesManager;
 		std::shared_ptr<IAppWin> m_Win;
 		std::shared_ptr<ISurfaceView> m_SurfaceView;
 
+		eInitState initState;
 		void Initialize();
+
+		std::shared_ptr<scene> m_Scene;
 	};
 
-	view::view(std::shared_ptr<settings> _setting, std::shared_ptr<IGAPI> _GAPI, std::function<void(size2D<>, e_TypeWinResize)> _onResizeClbk) :
+	view::view(
+		const std::shared_ptr<settings> _setting,
+		const std::shared_ptr<scenesManager> _scenesManager,
+		const std::shared_ptr<IGAPI> _GAPI,
+		std::function<void(size2D<>, e_TypeWinResize)> _onResizeClbk) :
 		m_Settings{ _setting },
-		m_GAPI{ _GAPI }
+		m_ScenesManager{ _scenesManager },
+		m_GAPI{ _GAPI },
+		initState{ eInitState::eInitNot }
 	{
 		ensure(m_Settings, ">>>>> [view::view()]. Settings cannot be null.");
+		ensure(m_ScenesManager, ">>>>> [view::view()]. Scenes manager cannot be null.");
 		ensure(m_GAPI, ">>>>> [view::view()]. GAPI cannot be null.");
 
 		if(_onResizeClbk)
@@ -65,17 +83,26 @@ namespace zzz
 	{
 		try
 		{
+			// Cоздаём обёртку над окном приложения под текущую ОС
 			m_Win = factory.CreateAppWin(m_Settings);
 			m_Win->onResize += std::bind(&view::OnViewResized, this, std::placeholders::_1, std::placeholders::_2);
 			auto res = m_Win->Initialize();
 			if (!res)
 				throw_runtime_error(std::format(">>>>> [view::Initialize()]. Failed to initialize application window: {}.", wstring_to_string(res.error().getMessage())));
 
+			// Cоздаём проверхность рендринга для текущего окна и GAPI
 			m_SurfaceView = factory.CreateSurfaceWin(m_Settings, m_Win, m_GAPI);
 			res = m_SurfaceView->Initialize();
 			if (!res)
 				throw_runtime_error(std::format(">>>>> [view::Initialize()]. Failed to initialize surface window: {}.", wstring_to_string(res.error().getMessage())));
 
+			// Создаём сцену
+			auto res1 = m_ScenesManager->GetStartScene();
+			if (!res1)
+				throw_runtime_error(std::format(">>>>> [view::Initialize()]. Failed to get start scene: {}.", wstring_to_string(res.error().getMessage())));
+			m_Scene = res1.value();
+
+			initState = eInitState::eInitOK;
 		}
 		catch (const std::exception& e)
 		{
@@ -89,6 +116,9 @@ namespace zzz
 
 	void view::OnUpdate()
 	{
+		if (initState != eInitState::eInitOK)
+			return;
+
 		if (m_SurfaceView)
 		{
 			m_SurfaceView->BeginRender();
@@ -110,6 +140,9 @@ namespace zzz
 
 	void view::OnViewResized(const size2D<>& size, e_TypeWinResize resizeType)
 	{
+		if (initState != eInitState::eInitOK)
+			return;
+
 		switch (resizeType)
 		{
 		case e_TypeWinResize::eHide:
@@ -130,6 +163,9 @@ namespace zzz
 
 	void view::SetFullScreen(bool fs)
 	{
+		if (initState != eInitState::eInitOK)
+			return;
+
 		if(m_SurfaceView)
 			m_SurfaceView->SetFullScreen(fs);
 	}

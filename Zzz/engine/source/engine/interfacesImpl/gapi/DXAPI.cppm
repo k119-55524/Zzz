@@ -79,7 +79,7 @@ export namespace zzz::platforms::directx
 		void WaitForGpu() override;
 
 	protected:
-		[[nodiscard]] result<> Initialize();
+		[[nodiscard]] result<> Init() override;
 
 	private:
 		static constexpr UINT BACK_BUFFER_COUNT = 2;
@@ -150,11 +150,10 @@ export namespace zzz::platforms::directx
 #pragma endregion Rendring
 
 #pragma region Initialize
-	result<> DXAPI::Initialize()
+	result<> DXAPI::Init()
 	{
 		result<> res = InitializeDevice()
-			.and_then([&]() { return InitializeFence(); })
-			.and_then([&]() { initState = eInitState::eInitOK; });
+			.and_then([&]() { return InitializeFence(); });
 
 		return res;
 	}
@@ -334,7 +333,7 @@ export namespace zzz::platforms::directx
 				return {};
 		}
 
-		return Unexpected(eResult::fail);
+		return Unexpected(eResult::failure);
 	}
 
 	result<> DXAPI::InitializeFence()

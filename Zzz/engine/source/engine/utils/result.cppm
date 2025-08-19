@@ -17,7 +17,6 @@ export namespace zzz
 	{
 		success = 0,
 		failure,
-		fail,
 		exception,
 		invalid_argument,
 		out_of_memory,
@@ -26,7 +25,8 @@ export namespace zzz
 		io_error_open_file,
 		not_initialized,
 		not_found,
-		invalid_format
+		invalid_format,
+		already_created		// Объект уже создан
 	};
 
 	class Unexpected

@@ -27,6 +27,12 @@
     <ClInclude Include="headers\headerDX.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="headers\headerVulkan.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\headerMetal.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -108,6 +114,18 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\factories\engineFactory.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\engine\scene.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\engine\resourcesManager.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\engine\scenesManager.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\engine\resources\cpuVertex.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
