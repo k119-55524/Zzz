@@ -22,6 +22,7 @@ export namespace zzz
 		out_of_memory,
 		buffer_too_small,
 		no_find,
+		no_make_shared_ptr,
 		io_error_open_file,
 		not_initialized,
 		not_found,

@@ -3,7 +3,7 @@ export module view;
 
 import IGAPI;
 import event;
-import scene;
+import Scene;
 import size2D;
 import result;
 import IAppWin;
@@ -11,7 +11,7 @@ import settings;
 import strConvert;
 import viewFactory;
 import ISurfaceView;
-import scenesManager;
+import ScenesManager;
 import resourcesManager;
 
 using namespace zzz::platforms;
@@ -34,7 +34,7 @@ namespace zzz
 
 		view(
 			const std::shared_ptr<settings> _setting,
-			const std::shared_ptr<scenesManager> _scenesManager,
+			const std::shared_ptr<ScenesManager> _scenesManager,
 			const std::shared_ptr<IGAPI> _GAPI,
 			std::function<void(size2D<>, e_TypeWinResize)> _onResizeClbk);
 
@@ -49,19 +49,19 @@ namespace zzz
 		viewFactory factory;
 		const std::shared_ptr<settings> m_Settings;
 		const std::shared_ptr<IGAPI> m_GAPI;
-		const std::shared_ptr<scenesManager> m_ScenesManager;
+		const std::shared_ptr<ScenesManager> m_ScenesManager;
 		std::shared_ptr<IAppWin> m_Win;
 		std::shared_ptr<ISurfaceView> m_SurfaceView;
 
 		eInitState initState;
 		void Initialize();
 
-		std::shared_ptr<scene> m_Scene;
+		std::shared_ptr<Scene> m_Scene;
 	};
 
 	view::view(
 		const std::shared_ptr<settings> _setting,
-		const std::shared_ptr<scenesManager> _scenesManager,
+		const std::shared_ptr<ScenesManager> _scenesManager,
 		const std::shared_ptr<IGAPI> _GAPI,
 		std::function<void(size2D<>, e_TypeWinResize)> _onResizeClbk) :
 		m_Settings{ _setting },
@@ -98,9 +98,8 @@ namespace zzz
 
 			// Создаём сцену
 			auto res1 = m_ScenesManager->GetStartScene();
-			if (!res1)
-				throw_runtime_error(std::format(">>>>> [view::Initialize()]. Failed to get start scene: {}.", wstring_to_string(res.error().getMessage())));
-			m_Scene = res1.value();
+			if (res1)
+				m_Scene = res1.value();
 
 			initState = eInitState::eInitOK;
 		}
@@ -121,6 +120,12 @@ namespace zzz
 
 		if (m_SurfaceView)
 		{
+			// Если есть сцена
+			if (m_Scene)
+			{
+				// рендрим её
+			}
+
 			m_SurfaceView->BeginRender();
 			m_SurfaceView->Render();
 			m_SurfaceView->EndRender();

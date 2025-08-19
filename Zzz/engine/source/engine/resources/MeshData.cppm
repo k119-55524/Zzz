@@ -1,7 +1,7 @@
 #include "pch.h"
-export module cpuVertex;
+export module MeshData;
 
-namespace zzz
+export namespace zzz
 {
 	// ----- Универсальные семантики -----
 	export enum class Semantic
@@ -76,7 +76,7 @@ namespace zzz
 
 	// ----- Вершина -----
 	export template<typename... Attrs>
-		struct cpuVertex : public Attrs...
+		struct MeshData : public Attrs...
 	{
 		using Attributes = std::tuple<Attrs...>;
 
@@ -91,7 +91,7 @@ namespace zzz
 		{
 			return reinterpret_cast<size_t>(
 				&(reinterpret_cast<const A*>(
-					reinterpret_cast<const cpuVertex*>(0)
+					reinterpret_cast<const MeshData*>(0)
 					)->value)
 				);
 		}
@@ -183,7 +183,7 @@ namespace zzz
 	export template<typename... Attrs>
 		struct VertexBuffer : public ICPUVertexBuffer
 	{
-		using VertexT = cpuVertex<Attrs...>;
+		using VertexT = MeshData<Attrs...>;
 		std::vector<VertexT> vertices;
 
 		VertexBuffer() = default;
@@ -221,10 +221,7 @@ namespace zzz
 		Attribute<Semantic::Position, float, 3>,
 		Attribute<Semantic::Normal, float, 3>,
 		Attribute<Semantic::TexCoord, float, 2>>;
-}
 
-namespace zzz
-{
 	export struct IVertexFormatMapper
 	{
 		virtual ~IVertexFormatMapper() = default;

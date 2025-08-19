@@ -1,8 +1,10 @@
 #include "pch.h"
 export module resourcesManager;
 
+import result;
+import MeshCPU;
 import settings;
-import cpuVertex;
+import MeshData;
 
 export namespace zzz
 {
@@ -16,7 +18,7 @@ export namespace zzz
 		resourcesManager& operator=(resourcesManager&&) = delete;
 		explicit resourcesManager(const std::shared_ptr<settings> _settings);
 
-		std::shared_ptr<ICPUVertexBuffer> GetDefaultTriangleMesh();
+		result<std::shared_ptr<MeshCPU>> GetDefaultTriangleMesh();
 
 		~resourcesManager();
 
@@ -34,9 +36,9 @@ export namespace zzz
 	{
 	}
 
-	std::shared_ptr<ICPUVertexBuffer> resourcesManager::GetDefaultTriangleMesh()
+	result<std::shared_ptr<MeshCPU>> resourcesManager::GetDefaultTriangleMesh()
 	{
-		auto vb = std::make_shared<VB_P3C3>(std::initializer_list<zzz::VB_P3C3::VertexT>{
+		std::shared_ptr<VB_P3C3> vertexBufferCPU = std::make_shared<VB_P3C3>(std::initializer_list<zzz::VB_P3C3::VertexT>{
 			{
 				{ { 0.0f,  0.5f, 0.0f } }, // Position
 				{ { 1.0f,  0.0f, 0.0f } }  // Color (Red)
@@ -51,6 +53,13 @@ export namespace zzz
 			}
 		});
 
-		return vb;
+		if (!vertexBufferCPU)
+			return Unexpected(eResult::no_make_shared_ptr, L">>>>> [resourcesManager::GetDefaultTriangleMesh()]. Failed to create vertexBufferCPU.");
+
+		auto meshCPU = std::make_shared<MeshCPU>(vertexBufferCPU);
+		if (!meshCPU)
+			return Unexpected(eResult::no_make_shared_ptr, L">>>>> [resourcesManager::GetDefaultTriangleMesh()]. Failed to create meshCPU.");
+
+		return meshCPU;
 	}
 }

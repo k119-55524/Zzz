@@ -1,132 +1,138 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Исходные файлы">
+    <Filter Include="�������� �����">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Файлы заголовков">
+    <Filter Include="����� ����������">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Файлы ресурсов">
+    <Filter Include="����� ��������">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
-      <Filter>Файлы заголовков</Filter>
+      <Filter>����� ����������</Filter>
     </ClInclude>
     <ClInclude Include="headers\header.h">
-      <Filter>Файлы заголовков</Filter>
+      <Filter>����� ����������</Filter>
     </ClInclude>
     <ClInclude Include="headers\headerMSWin.h">
-      <Filter>Файлы заголовков</Filter>
+      <Filter>����� ����������</Filter>
     </ClInclude>
     <ClInclude Include="headers\headerDX.h">
-      <Filter>Файлы заголовков</Filter>
+      <Filter>����� ����������</Filter>
     </ClInclude>
     <ClInclude Include="headers\headerVulkan.h">
-      <Filter>Файлы заголовков</Filter>
+      <Filter>����� ����������</Filter>
     </ClInclude>
     <ClInclude Include="headers\headerMetal.h">
-      <Filter>Файлы заголовков</Filter>
+      <Filter>����� ����������</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\utils\result.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\settings.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\utils\size2D.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\utils\serializer.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\utils\strConvert.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\IO\ioZaml.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\IO\IOPathFactory.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\utils\MessageBox.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfaces\platforms\IMainLoop.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfacesImpl\mainLoop\mlMSWin.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfaces\utils\IIcoBuilder.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfacesImpl\utils\icoBuilder\ibMSWin.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfaces\platforms\IGAPI.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfacesImpl\gapi\DXAPI.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\utils\event.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfacesImpl\gapi\DX\RootSignature.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\view.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfaces\platforms\IAppWin.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfaces\platforms\ISurfaceView.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\factories\viewFactory.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfacesImpl\appWin\winMSWin.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfacesImpl\surfaceView\surface_DirectX.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfacesImpl\gapi\DX\CheckDirectXUltimateSupport.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\interfaces\platforms\ICheckGapiSupport.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\factories\engineFactory.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\scene.cppm">
-      <Filter>Исходные файлы</Filter>
+    <ClCompile Include="source\engine\Scene\Scene.cppm">
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\resourcesManager.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\scenesManager.cppm">
-      <Filter>Исходные файлы</Filter>
+    <ClCompile Include="source\engine\Scene\ScenesManager.cppm">
+      <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\resources\cpuVertex.cppm">
-      <Filter>Исходные файлы</Filter>
+    <ClCompile Include="source\engine\resources\MeshData.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\engine\resources\MeshCPU.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\engine\Scene\SceneEntity.cppm">
+      <Filter>�������� �����</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

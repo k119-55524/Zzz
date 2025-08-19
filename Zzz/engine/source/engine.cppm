@@ -13,7 +13,7 @@ import IMainLoop;
 import strConvert;
 import IOPathFactory;
 import engineFactory;
-import scenesManager;
+import ScenesManager;
 import resourcesManager;
 
 using namespace zzz;
@@ -49,7 +49,7 @@ export namespace zzz
 
 		std::shared_ptr<settings> m_setting;
 		std::shared_ptr<resourcesManager> m_resourcesManager;
-		std::shared_ptr<scenesManager> m_scenesManager;
+		std::shared_ptr<ScenesManager> m_scenesManager;
 		std::shared_ptr<IGAPI> m_GAPI;
 		std::shared_ptr<view> m_view;
 		std::shared_ptr<IMainLoop> mainLoop;
@@ -97,7 +97,7 @@ export namespace zzz
 			// Создаем менеджер ресурсов
 			m_resourcesManager = safe_make_shared<resourcesManager>(m_setting);
 			// Создаём менеджер сцен
-			m_scenesManager = safe_make_shared<scenesManager>(m_resourcesManager);
+			m_scenesManager = safe_make_shared<ScenesManager>(m_resourcesManager);
 
 			// TODO: После тип GAPI буду передавать из m_settings
 			// Создаём обёртку над графическим API
