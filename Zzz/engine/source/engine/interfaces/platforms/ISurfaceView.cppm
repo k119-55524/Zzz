@@ -5,7 +5,7 @@ import IGAPI;
 import result;
 import IAppWin;
 import size2D;
-import settings;
+import Settings;
 
 using namespace zzz::platforms;
 
@@ -21,7 +21,7 @@ export namespace zzz
 		ISurfaceView& operator=(ISurfaceView&&) = delete;
 
 		explicit ISurfaceView(
-			std::shared_ptr<settings> _settings,
+			std::shared_ptr<Settings> _settings,
 			std::shared_ptr<IAppWin> _iAppWin,
 			std::shared_ptr<IGAPI> _iGAPI);
 
@@ -37,22 +37,24 @@ export namespace zzz
 		virtual void SetFullScreen(bool fs) {};
 
 	protected:
+		zU64 m_frameIndex;
 		float m_aspectRatio;
-		bool isVSync; // Флаг, указывающий, включена ли синхронизация вертикальной развертки (VSync).
-		std::shared_ptr<settings> m_settings;
+		bool isVSync;
+		std::shared_ptr<Settings> m_settings;
 		std::shared_ptr<IAppWin> m_iAppWin;
 		std::shared_ptr<IGAPI> m_iGAPI;
 	};
 
 	ISurfaceView::~ISurfaceView()
 	{
-		m_iGAPI->WaitForGpu();
+		m_iGAPI->WaitForGpu(m_frameIndex);
 	}
 
 	ISurfaceView::ISurfaceView(
-		std::shared_ptr<settings> _settings,
+		std::shared_ptr<Settings> _settings,
 		std::shared_ptr<IAppWin> _iAppWin,
 		std::shared_ptr<IGAPI> _iGAPI) :
+		m_frameIndex{ 0 },
 		m_aspectRatio{ 0.0f },
 		isVSync{ true },
 		m_settings{ _settings },

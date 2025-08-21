@@ -100,23 +100,25 @@
     <ClCompile Include="source\engine\factories\engineFactory.cppm" />
     <ClCompile Include="source\engine\factories\viewFactory.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\gapi\DX\CheckDirectXUltimateSupport.cppm" />
-    <ClCompile Include="source\engine\interfacesImpl\surfaceView\surface_DirectX.cppm" />
+    <ClCompile Include="source\engine\interfacesImpl\SurfaceView\SurfDirectX.cppm" />
     <ClCompile Include="source\engine\interfaces\platforms\IAppWin.cppm" />
     <ClCompile Include="source\engine\interfaces\platforms\ICheckGapiSupport.cppm" />
     <ClCompile Include="source\engine\interfaces\platforms\ISurfaceView.cppm" />
-    <ClCompile Include="source\engine\resourcesManager.cppm" />
+    <ClCompile Include="source\engine\resources\ResourcesManager.cppm" />
     <ClCompile Include="source\engine\resources\MeshCPU.cppm" />
     <ClCompile Include="source\engine\resources\MeshData.cppm" />
     <ClCompile Include="source\engine\Scene\Scene.cppm" />
     <ClCompile Include="source\engine\Scene\SceneEntity.cppm" />
     <ClCompile Include="source\engine\Scene\ScenesManager.cppm" />
-    <ClCompile Include="source\engine\view.cppm" />
+    <ClCompile Include="source\engine\View.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\gapi\DXAPI.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\gapi\DX\RootSignature.cppm" />
     <ClCompile Include="source\engine\interfaces\platforms\IGAPI.cppm" />
     <ClCompile Include="source\engine\utils\event.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\utils\icoBuilder\ibMSWin.cppm" />
     <ClCompile Include="source\engine\interfaces\utils\IIcoBuilder.cppm" />
+    <ClCompile Include="source\Platforms.cppm" />
+    <ClCompile Include="source\Templates\ThreadPool.cppm" />
     <ClCompile Include="source\utils\MessageBox.cppm" />
     <ClCompile Include="source\utils\strConvert.cppm" />
     <ClCompile Include="source\engine\utils\serializer.cppm" />
@@ -125,7 +127,7 @@
     <ClCompile Include="source\engine\interfaces\platforms\IMainLoop.cppm" />
     <ClCompile Include="source\engine\interfacesImpl\mainLoop\mlMSWin.cppm" />
     <ClCompile Include="source\engine\IO\ioZaml.cppm" />
-    <ClCompile Include="source\engine\settings.cppm" />
+    <ClCompile Include="source\engine\Settings.cppm" />
     <ClCompile Include="source\engine\utils\result.cppm" />
   </ItemGroup>
   <ItemGroup>

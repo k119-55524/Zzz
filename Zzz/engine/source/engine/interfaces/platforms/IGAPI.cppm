@@ -58,7 +58,7 @@ export namespace zzz::platforms
 
 		[[nodiscard]] virtual result<> Initialize();
 		virtual void SubmitCommandLists(zU64 index) = 0;
-		virtual void WaitForGpu() = 0;
+		virtual void WaitForGpu(zU64 index) = 0;
 
 	protected:
 		[[nodiscard]] virtual result<> Init() = 0;

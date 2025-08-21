@@ -6,7 +6,7 @@ import event;
 import IAppWin;
 import size2D;
 import ibMSWin;
-import settings;
+import Settings;
 import IOPathFactory;
 
 using namespace zzz;
@@ -25,7 +25,7 @@ export namespace zzz
 		winMSWin& operator=(const winMSWin&) = delete;
 		winMSWin& operator=(winMSWin&&) = delete;
 
-		explicit winMSWin(std::shared_ptr<settings> _settings);
+		explicit winMSWin(std::shared_ptr<Settings> _settings);
 
 		~winMSWin() override;
 
@@ -41,7 +41,7 @@ export namespace zzz
 		LRESULT MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	};
 
-	winMSWin::winMSWin(std::shared_ptr<settings> _settings) :
+	winMSWin::winMSWin(std::shared_ptr<Settings> _settings) :
 		IAppWin(_settings),
 		hWnd{ nullptr },
 		IsMinimized{ true }

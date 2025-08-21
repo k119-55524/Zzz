@@ -67,6 +67,18 @@ namespace zzz
 			", file=" + std::string(loc.file_name()));
 	}
 
+	[[noreturn]]
+	inline void throw_out_of_range(
+		const std::string& msg = "Throw out of range",
+		const std::source_location& loc = std::source_location::current())
+	{
+		throw std::out_of_range(
+			"Exception: " + msg +
+			". Method=" + std::string(loc.function_name()) +
+			", line=" + std::to_string(loc.line()) +
+			", file=" + std::string(loc.file_name()));
+	}
+
 	template<typename T>
 	inline void ensure(T&& condition,
 		const std::string& msg = "Ensure failed",

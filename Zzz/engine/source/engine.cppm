@@ -2,19 +2,19 @@
 #include "pch.h"
 export module engine;
 
-import view;
+import View;
 import IGAPI;
 import size2D;
 import result;
 import zMsgBox;
 import mlMSWin;
-import settings;
+import Settings;
 import IMainLoop;
 import strConvert;
 import IOPathFactory;
 import engineFactory;
 import ScenesManager;
-import resourcesManager;
+import ResourcesManager;
 
 using namespace zzz;
 using namespace zzz::io;
@@ -47,11 +47,11 @@ export namespace zzz
 		std::mutex stateMutex;
 		bool isSysPaused;
 
-		std::shared_ptr<settings> m_setting;
-		std::shared_ptr<resourcesManager> m_resourcesManager;
+		std::shared_ptr<Settings> m_setting;
+		std::shared_ptr<ResourcesManager> m_resourcesManager;
 		std::shared_ptr<ScenesManager> m_scenesManager;
 		std::shared_ptr<IGAPI> m_GAPI;
-		std::shared_ptr<view> m_view;
+		std::shared_ptr<View> m_view;
 		std::shared_ptr<IMainLoop> mainLoop;
 
 		void Reset() noexcept;
@@ -93,9 +93,9 @@ export namespace zzz
 		try
 		{
 			// Читаем настройки из файла
-			m_setting = safe_make_shared<settings>(settingFilePath);
+			m_setting = safe_make_shared<Settings>(settingFilePath);
 			// Создаем менеджер ресурсов
-			m_resourcesManager = safe_make_shared<resourcesManager>(m_setting);
+			m_resourcesManager = safe_make_shared<ResourcesManager>(m_setting);
 			// Создаём менеджер сцен
 			m_scenesManager = safe_make_shared<ScenesManager>(m_resourcesManager);
 
@@ -106,8 +106,8 @@ export namespace zzz
 				return Unexpected(eResult::failure, L">>>>> [engine::initialize()]. Failed to create GAPI.");
 			m_GAPI = res.value();
 
-			// Содаём основное окно(view) приложения
-			m_view = safe_make_shared<view>(m_setting, m_scenesManager, m_GAPI, std::bind(&engine::OnViewResized, this, std::placeholders::_1, std::placeholders::_2));
+			// Содаём основное окно(View) приложения
+			m_view = safe_make_shared<View>(m_setting, m_scenesManager, m_GAPI, std::bind(&engine::OnViewResized, this, std::placeholders::_1, std::placeholders::_2));
 
 			// Создаём главный цикл приложения
 			mainLoop = safe_make_shared<MainLoop>();

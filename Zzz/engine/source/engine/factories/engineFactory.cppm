@@ -3,7 +3,7 @@ export module engineFactory;
 
 import IGAPI;
 import result;
-import settings;
+import Settings;
 import strConvert;
 
 #if defined(_WIN64)
@@ -27,14 +27,14 @@ export namespace zzz
 		engineFactory& operator=(engineFactory&&) = delete;
 		~engineFactory() = default;
 
-		[[nodiscard]] result<std::shared_ptr<IGAPI>> CreateGAPI(std::shared_ptr<settings> setting);
+		[[nodiscard]] result<std::shared_ptr<IGAPI>> CreateGAPI(std::shared_ptr<Settings> setting);
 		[[nodiscard]] inline std::shared_ptr<IGAPI> GetGAPI() const noexcept { return m_GAPI; }
 
 	private:
 		std::shared_ptr<IGAPI> m_GAPI;
 	};
 
-	result<std::shared_ptr<IGAPI>> engineFactory::CreateGAPI(std::shared_ptr<settings> setting)
+	result<std::shared_ptr<IGAPI>> engineFactory::CreateGAPI(std::shared_ptr<Settings> setting)
 	{
 		if (m_GAPI)
 			return Unexpected(eResult::already_created, L">>>>> [engineFactories::CreateGAPI()]. GAPI already created.");

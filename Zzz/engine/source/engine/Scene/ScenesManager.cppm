@@ -3,8 +3,8 @@ export module ScenesManager;
 
 import Scene;
 import result;
-import settings;
-import resourcesManager;
+import Settings;
+import ResourcesManager;
 
 export namespace zzz
 {
@@ -16,16 +16,16 @@ export namespace zzz
 		ScenesManager(ScenesManager&&) = delete;
 		ScenesManager& operator=(const ScenesManager&) = delete;
 		ScenesManager& operator=(ScenesManager&&) = delete;
-		explicit ScenesManager(const std::shared_ptr<resourcesManager> _resourcesManager);
+		explicit ScenesManager(const std::shared_ptr<ResourcesManager> _resourcesManager);
 		~ScenesManager();
 
 		result<std::shared_ptr<Scene>> GetStartScene();
 
 	private:
-		const std::shared_ptr<resourcesManager> m_resourcesManager;
+		const std::shared_ptr<ResourcesManager> m_resourcesManager;
 	};
 
-	ScenesManager::ScenesManager(const std::shared_ptr<resourcesManager> _resourcesManager) :
+	ScenesManager::ScenesManager(const std::shared_ptr<ResourcesManager> _resourcesManager) :
 		m_resourcesManager{ _resourcesManager }
 	{
 		ensure(m_resourcesManager, ">>>>> [ScenesManager::ScenesManager()]. Resource system cannot be null.");

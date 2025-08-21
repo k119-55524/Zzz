@@ -1,4 +1,4 @@
-﻿
+
 #ifndef PCH_H
 #define PCH_H
 
@@ -6,6 +6,7 @@
 #include <span>
 #include <mutex>
 #include <array>
+#include <atomic>
 #include <vector>
 #include <string>
 #include <cctype>

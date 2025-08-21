@@ -1,5 +1,5 @@
 #include "pch.h"
-export module view;
+export module View;
 
 import IGAPI;
 import event;
@@ -7,12 +7,12 @@ import Scene;
 import size2D;
 import result;
 import IAppWin;
-import settings;
+import Settings;
 import strConvert;
 import viewFactory;
 import ISurfaceView;
 import ScenesManager;
-import resourcesManager;
+import ResourcesManager;
 
 using namespace zzz::platforms;
 
@@ -23,22 +23,22 @@ namespace zzz
 
 namespace zzz
 {
-	export class view final
+	export class View final
 	{
 	public:
-		view() = delete;
-		view(const view&) = delete;
-		view(view&&) = delete;
-		view& operator=(const view&) = delete;
-		view& operator=(view&&) = delete;
+		View() = delete;
+		View(const View&) = delete;
+		View(View&&) = delete;
+		View& operator=(const View&) = delete;
+		View& operator=(View&&) = delete;
 
-		view(
-			const std::shared_ptr<settings> _setting,
+		View(
+			const std::shared_ptr<Settings> _setting,
 			const std::shared_ptr<ScenesManager> _scenesManager,
 			const std::shared_ptr<IGAPI> _GAPI,
 			std::function<void(size2D<>, e_TypeWinResize)> _onResizeClbk);
 
-		~view() = default;
+		~View() = default;
 
 		event<size2D<>, e_TypeWinResize> viewResized;
 		void OnUpdate();
@@ -47,7 +47,7 @@ namespace zzz
 
 	private:
 		viewFactory factory;
-		const std::shared_ptr<settings> m_Settings;
+		const std::shared_ptr<Settings> m_Settings;
 		const std::shared_ptr<IGAPI> m_GAPI;
 		const std::shared_ptr<ScenesManager> m_ScenesManager;
 		std::shared_ptr<IAppWin> m_Win;
@@ -59,8 +59,8 @@ namespace zzz
 		std::shared_ptr<Scene> m_Scene;
 	};
 
-	view::view(
-		const std::shared_ptr<settings> _setting,
+	View::View(
+		const std::shared_ptr<Settings> _setting,
 		const std::shared_ptr<ScenesManager> _scenesManager,
 		const std::shared_ptr<IGAPI> _GAPI,
 		std::function<void(size2D<>, e_TypeWinResize)> _onResizeClbk) :
@@ -69,9 +69,9 @@ namespace zzz
 		m_GAPI{ _GAPI },
 		initState{ eInitState::eInitNot }
 	{
-		ensure(m_Settings, ">>>>> [view::view()]. Settings cannot be null.");
-		ensure(m_ScenesManager, ">>>>> [view::view()]. Scenes manager cannot be null.");
-		ensure(m_GAPI, ">>>>> [view::view()]. GAPI cannot be null.");
+		ensure(m_Settings, ">>>>> [View::View()]. Settings cannot be null.");
+		ensure(m_ScenesManager, ">>>>> [View::View()]. Scenes manager cannot be null.");
+		ensure(m_GAPI, ">>>>> [View::View()]. GAPI cannot be null.");
 
 		if(_onResizeClbk)
 			viewResized += _onResizeClbk;
@@ -79,22 +79,22 @@ namespace zzz
 		Initialize();
 	}
 
-	void view::Initialize()
+	void View::Initialize()
 	{
 		try
 		{
 			// Cоздаём обёртку над окном приложения под текущую ОС
 			m_Win = factory.CreateAppWin(m_Settings);
-			m_Win->onResize += std::bind(&view::OnViewResized, this, std::placeholders::_1, std::placeholders::_2);
+			m_Win->onResize += std::bind(&View::OnViewResized, this, std::placeholders::_1, std::placeholders::_2);
 			auto res = m_Win->Initialize();
 			if (!res)
-				throw_runtime_error(std::format(">>>>> [view::Initialize()]. Failed to initialize application window: {}.", wstring_to_string(res.error().getMessage())));
+				throw_runtime_error(std::format(">>>>> [View::Initialize()]. Failed to initialize application window: {}.", wstring_to_string(res.error().getMessage())));
 
 			// Cоздаём проверхность рендринга для текущего окна и GAPI
 			m_SurfaceView = factory.CreateSurfaceWin(m_Settings, m_Win, m_GAPI);
 			res = m_SurfaceView->Initialize();
 			if (!res)
-				throw_runtime_error(std::format(">>>>> [view::Initialize()]. Failed to initialize surface window: {}.", wstring_to_string(res.error().getMessage())));
+				throw_runtime_error(std::format(">>>>> [View::Initialize()]. Failed to initialize surface window: {}.", wstring_to_string(res.error().getMessage())));
 
 			// Создаём сцену
 			auto res1 = m_ScenesManager->GetStartScene();
@@ -105,15 +105,15 @@ namespace zzz
 		}
 		catch (const std::exception& e)
 		{
-			throw_runtime_error(std::format(">>>>> [view::Initialize()]. -> {}.", std::string(e.what())));
+			throw_runtime_error(std::format(">>>>> [View::Initialize()]. -> {}.", std::string(e.what())));
 		}
 		catch (...)
 		{
-			throw_runtime_error(">>>>>> [view::Initialize()]. Unknown exception.");
+			throw_runtime_error(">>>>>> [View::Initialize()]. Unknown exception.");
 		}
 	}
 
-	void view::OnUpdate()
+	void View::OnUpdate()
 	{
 		if (initState != eInitState::eInitOK)
 			return;
@@ -143,7 +143,7 @@ namespace zzz
 		}
 	}
 
-	void view::OnViewResized(const size2D<>& size, e_TypeWinResize resizeType)
+	void View::OnViewResized(const size2D<>& size, e_TypeWinResize resizeType)
 	{
 		if (initState != eInitState::eInitOK)
 			return;
@@ -151,13 +151,13 @@ namespace zzz
 		switch (resizeType)
 		{
 		case e_TypeWinResize::eHide:
-			DebugOutput(L">>>>> [view::OnViewResized()]. Hide app window.\n");
+			DebugOutput(L">>>>> [View::OnViewResized()]. Hide app window.\n");
 			break;
 		case e_TypeWinResize::eShow:
-			DebugOutput(std::format(L">>>>> [view::OnViewResized({}x{})]. Show app window.\n", std::to_wstring(size.width), std::to_wstring(size.height)));
+			DebugOutput(std::format(L">>>>> [View::OnViewResized({}x{})]. Show app window.\n", std::to_wstring(size.width), std::to_wstring(size.height)));
 			break;
 		case e_TypeWinResize::eResize:
-			DebugOutput(std::format(L">>>>> [view::OnViewResized({}x{}))]. Resize app window.\n", std::to_wstring(size.width), std::to_wstring(size.height)));
+			DebugOutput(std::format(L">>>>> [View::OnViewResized({}x{}))]. Resize app window.\n", std::to_wstring(size.width), std::to_wstring(size.height)));
 			break;
 		}
 
@@ -166,7 +166,7 @@ namespace zzz
 			m_SurfaceView->OnResize(size);
 	}
 
-	void view::SetFullScreen(bool fs)
+	void View::SetFullScreen(bool fs)
 	{
 		if (initState != eInitState::eInitOK)
 			return;

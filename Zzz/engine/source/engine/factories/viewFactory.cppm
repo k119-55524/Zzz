@@ -5,10 +5,10 @@ import IGAPI;
 import result;
 import IAppWin;
 import winMSWin;
-import settings;
+import Settings;
 import strConvert;
 import ISurfaceView;
-import surface_DirectX;
+import SurfDirectX;
 
 #if defined(_WIN64)
 import DXAPI;
@@ -30,19 +30,19 @@ export namespace zzz
 		viewFactory& operator=(viewFactory&&) = delete;
 		~viewFactory() = default;
 
-		std::shared_ptr<IAppWin> CreateAppWin(std::shared_ptr<settings> settings);
+		std::shared_ptr<IAppWin> CreateAppWin(std::shared_ptr<Settings> Settings);
 		std::shared_ptr<ISurfaceView> CreateSurfaceWin(
-			std::shared_ptr<settings> _settings,
+			std::shared_ptr<Settings> _settings,
 			std::shared_ptr<IAppWin> _iAppWin,
 			std::shared_ptr<zzz::platforms::IGAPI> _iGAPI);
 	};
 
-	std::shared_ptr<IAppWin> viewFactory::CreateAppWin(std::shared_ptr<settings> settings)
+	std::shared_ptr<IAppWin> viewFactory::CreateAppWin(std::shared_ptr<Settings> Settings)
 	{
 		try
 		{
 #if defined(_WIN64)
-			return safe_make_shared<winMSWin>(settings);
+			return safe_make_shared<winMSWin>(Settings);
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif
@@ -58,7 +58,7 @@ export namespace zzz
 	}
 
 	export std::shared_ptr<ISurfaceView> viewFactory::CreateSurfaceWin(
-		std::shared_ptr<settings> _settings,
+		std::shared_ptr<Settings> _settings,
 		std::shared_ptr<IAppWin> _iAppWin,
 		std::shared_ptr<zzz::platforms::IGAPI> _iGAPI)
 	{
@@ -74,7 +74,7 @@ export namespace zzz
 			{
 #if defined(_WIN64)
 			case zzz::platforms::eGAPIType::DirectX:
-				return safe_make_shared<surface_DirectX>(_settings, _iAppWin, _iGAPI);
+				return safe_make_shared<SurfDirectX>(_settings, _iAppWin, _iGAPI);
 				break;
 #endif // defined(_WIN64)
 			default:

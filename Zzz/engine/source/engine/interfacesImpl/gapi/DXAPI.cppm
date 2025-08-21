@@ -31,33 +31,34 @@ export namespace zzz::platforms::directx
 			CommandWrapper() = delete;
 			CommandWrapper(CommandWrapper&) = delete;
 			CommandWrapper(CommandWrapper&&) = delete;
-			CommandWrapper(ComPtr<ID3D12Device>& m_device)
+			CommandWrapper(ComPtr<ID3D12Device>& m_device) :
+				fenceValue{0}
 			{
 				Initialize(m_device);
 			};
 
-			inline const ComPtr<ID3D12CommandAllocator>& GetCommandAllocator(zU64 index) const noexcept { return m_commandAllocator[index]; };
-			inline const ComPtr<ID3D12GraphicsCommandList>& GetCommandList(zU64 index) const noexcept { return m_commandList[index]; };
+			inline const ComPtr<ID3D12CommandAllocator>& GetCommandAllocator() const noexcept { return m_commandAllocator; };
+			inline const ComPtr<ID3D12GraphicsCommandList>& GetCommandList() const noexcept { return m_commandList; };
+			inline const UINT64 GetFenceValue() const noexcept { return fenceValue; };
+			inline void IncFenceValue() noexcept { fenceValue++; };
 
 		private:
 			void Initialize(ComPtr<ID3D12Device>& m_device)
 			{
-				for (zU32 i = 0; i < BACK_BUFFER_COUNT; i++)
-				{
-					ensure(S_OK == m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator[i])));
-					SET_RESOURCE_DEBUG_NAME(m_commandAllocator[i], std::format(L"Command Allocator {}", i).c_str());
+				ensure(S_OK == m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)));
+				SET_RESOURCE_DEBUG_NAME(m_commandAllocator, std::format(L"Command Allocator").c_str());
 
-					//   одному ID3D12CommandAllocator(m_commandAllocator) можно прив€зать несколько ID3D12GraphicsCommandList(m_commandList) но одновременно записывать можно только в один.
-					// ј остальные ID3D12GraphicsCommandList, прив€занные к ID3D12CommandAllocator, должны быть закрыты.
-					// “ак как ID3D12GraphicsCommandList при создании всегда открыт, сразу закрываем его.
-					ensure(S_OK == m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator[i].Get(), nullptr, IID_PPV_ARGS(&m_commandList[i])));
-					ensure(S_OK == m_commandList[i]->Close());
-					SET_RESOURCE_DEBUG_NAME(m_commandList[i], std::format(L"Command List {}", i).c_str());
-				}
+				//   одному ID3D12CommandAllocator(m_commandAllocator) можно прив€зать несколько ID3D12GraphicsCommandList(m_commandList) но одновременно записывать можно только в один.
+				// ј остальные ID3D12GraphicsCommandList, прив€занные к ID3D12CommandAllocator, должны быть закрыты.
+				// “ак как ID3D12GraphicsCommandList при создании всегда открыт, сразу закрываем его.
+				ensure(S_OK == m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS(&m_commandList)));
+				ensure(S_OK == m_commandList->Close());
+				SET_RESOURCE_DEBUG_NAME(m_commandList, std::format(L"Command List").c_str());
 			}
 
-			ComPtr<ID3D12CommandAllocator> m_commandAllocator[BACK_BUFFER_COUNT];
-			ComPtr<ID3D12GraphicsCommandList> m_commandList[BACK_BUFFER_COUNT];
+			ComPtr<ID3D12CommandAllocator> m_commandAllocator;
+			ComPtr<ID3D12GraphicsCommandList> m_commandList;
+			UINT64 fenceValue;
 		};
 
 		explicit DXAPI();
@@ -72,11 +73,11 @@ export namespace zzz::platforms::directx
 		inline const ComPtr<ID3D12Device> GetDevice() const noexcept { return m_device; };
 		inline const ComPtr<ID3D12CommandQueue> GetCommandQueue() const noexcept { return m_commandQueue; };
 		inline const ComPtr<IDXGIFactory7> GetFactory() const noexcept { return m_factory; };
-		inline const std::shared_ptr<CommandWrapper> GetCommandRender() const noexcept { return m_commandRender; };
+		inline const std::shared_ptr<CommandWrapper> GetCommandRender(zU64 index) const noexcept { return m_commandRender[index]; };
 		inline ComPtr<ID3D12RootSignature> GetRootSignature() const noexcept { return m_rootSignature.Get(); }
 
 		void SubmitCommandLists(zU64 index) override;
-		void WaitForGpu() override;
+		void WaitForGpu(zU64 index) override;
 
 	protected:
 		[[nodiscard]] result<> Init() override;
@@ -95,11 +96,8 @@ export namespace zzz::platforms::directx
 		ComPtr<IDXGIAdapter3> m_adapter3;
 		ComPtr<ID3D12Device> m_device;
 		ComPtr<ID3D12CommandQueue> m_commandQueue;
+		std::shared_ptr<CommandWrapper> m_commandRender[BACK_BUFFER_COUNT];
 
-		std::shared_ptr<CommandWrapper> m_commandRender;
-		std::shared_ptr<CommandWrapper> m_commandAccum;
-
-		UINT64 m_fenceValue;
 		unique_handle m_fenceEvent;
 		ComPtr<ID3D12Fence> m_fence;
 
@@ -115,23 +113,27 @@ export namespace zzz::platforms::directx
 	DXAPI::DXAPI() :
 		IGAPI(eGAPIType::DirectX),
 		m_swapChainFlags{ 0 },
-		m_fenceValue{ 0 },
 		m_featureLevel{ D3D_FEATURE_LEVEL_12_0 }
 	{
 	}
 
 	DXAPI::~DXAPI()
 	{
-		WaitForGpu();
 	}
 
 #pragma region Rendring
-	void DXAPI::WaitForGpu()
+	void DXAPI::SubmitCommandLists(zU64 index)
 	{
-		const UINT64 fence = m_fenceValue;
+		ID3D12CommandList* ppCommandLists[] = { m_commandRender[index]->GetCommandList().Get()};
+		m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+	}
+
+	void DXAPI::WaitForGpu(zU64 index)
+	{
+		const UINT64 fence = m_commandRender[index]->GetFenceValue();
 		ensure(S_OK == m_commandQueue->Signal(m_fence.Get(), fence));
 
-		m_fenceValue++;
+		m_commandRender[index]->IncFenceValue();
 
 		// ќжидаем завершени€ предыдущего кадра.
 		if (m_fence->GetCompletedValue() < fence)
@@ -140,12 +142,6 @@ export namespace zzz::platforms::directx
 
 			WaitForSingleObject(m_fenceEvent.handle, INFINITE);
 		}
-	}
-
-	void DXAPI::SubmitCommandLists(zU64 index)
-	{
-		ID3D12CommandList* ppCommandLists[] = { m_commandRender->GetCommandList(index).Get() };
-		m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 	}
 #pragma endregion Rendring
 
@@ -180,9 +176,8 @@ export namespace zzz::platforms::directx
 		if (!res)
 			return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializeDevice()]. -> {}", res.error().getMessage()));
 
-		// —оздаЄм обЄртки дл€ командных списков
-		m_commandRender = safe_make_shared<CommandWrapper>(m_device);
-		m_commandAccum = safe_make_shared<CommandWrapper>(m_device);
+		for (int index = 0; index < BACK_BUFFER_COUNT; index++)
+			m_commandRender[index] = safe_make_shared<CommandWrapper>(m_device);
 
 		return {};
 	}
@@ -354,7 +349,6 @@ export namespace zzz::platforms::directx
 				return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializeAssets()]. CreateFence failed. HRESULT = 0x{:08X}", hr));
 
 			m_fence = fence;
-			m_fenceValue = 1;
 
 			// RAII дл€ событи€
 			unique_handle fenceEvent{ CreateEvent(nullptr, FALSE, FALSE, nullptr) };

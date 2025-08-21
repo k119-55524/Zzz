@@ -1,5 +1,5 @@
 #include "pch.h"
-export module settings;
+export module Settings;
 
 import result;
 import iozaml;
@@ -9,21 +9,21 @@ using namespace zzz::zaml;
 
 export namespace zzz
 {
-	export class settings
+	export class Settings
 	{
 	public:
-		settings() = delete;
-		settings(std::wstring _filePath);
-		settings(const settings&) = delete;
-		settings(settings&&) = delete;
+		Settings() = delete;
+		Settings(std::wstring _filePath);
+		Settings(const Settings&) = delete;
+		Settings(Settings&&) = delete;
 
-		settings& operator=(const settings&) = delete;
+		Settings& operator=(const Settings&) = delete;
 
 		template<typename T, typename... Path>
 		result<T> GetParam(Path&&... pathAndParamName) const
 		{
 			if (!m_settings)
-				return Unexpected(eResult::not_initialized, L">>>>> [settings.GetParam(...)] Settings not loaded");
+				return Unexpected(eResult::not_initialized, L">>>>> [Settings.GetParam(...)] Settings not loaded");
 
 			constexpr size_t argCount = sizeof...(Path);
 			static_assert(argCount >= 1, "At least one argument (paramName) is required");
@@ -54,7 +54,7 @@ export namespace zzz
 
 				if (!found)
 				{
-					return Unexpected(eResult::not_found, L">>>>> [settings.GetParam(...)] Tag '" + tag + L"' not found");
+					return Unexpected(eResult::not_found, L">>>>> [Settings.GetParam(...)] Tag '" + tag + L"' not found");
 				}
 			}
 
@@ -62,7 +62,7 @@ export namespace zzz
 			auto attr = node->GetAttribute(paramName);
 			if (!attr)
 			{
-				return Unexpected(eResult::not_found, L">>>>> [settings.GetParam(...)] Parameter '" + paramName + L"' not found");
+				return Unexpected(eResult::not_found, L">>>>> [Settings.GetParam(...)] Parameter '" + paramName + L"' not found");
 			}
 
 			// Преобразуем значение
@@ -76,7 +76,7 @@ export namespace zzz
 		result<> LoadSettings();
 	};
 
-	settings::settings(std::wstring _filePath) :
+	Settings::Settings(std::wstring _filePath) :
 		filePath{ std::move(_filePath) },
 		m_settings{}
 	{
@@ -85,10 +85,10 @@ export namespace zzz
 
 		auto res = LoadSettings();
 		if (!res)
-			throw_runtime_error(std::format("Failed to load settings from file: {}.\n{}", wstring_to_string(filePath), wstring_to_string(res.error().getMessage())));
+			throw_runtime_error(std::format("Failed to load Settings from file: {}.\n{}", wstring_to_string(filePath), wstring_to_string(res.error().getMessage())));
 	}
 
-	result<> settings::LoadSettings()
+	result<> Settings::LoadSettings()
 	{
 		ioZaml loader;
 		auto res = loader.LoadFromFile(filePath)
