@@ -9,11 +9,13 @@ import result;
 import IAppWin;
 import Settings;
 import strConvert;
+import ThreadPool;
 import viewFactory;
 import ISurfaceView;
 import ScenesManager;
 import ResourcesManager;
 
+using namespace Zzz::Templates;
 using namespace zzz::platforms;
 
 namespace zzz
@@ -56,6 +58,7 @@ namespace zzz
 		eInitState initState;
 		void Initialize();
 
+		ThreadPool m_ThreadRenderAnUpdate;
 		std::shared_ptr<Scene> m_Scene;
 	};
 
@@ -67,7 +70,8 @@ namespace zzz
 		m_Settings{ _setting },
 		m_ScenesManager{ _scenesManager },
 		m_GAPI{ _GAPI },
-		initState{ eInitState::eInitNot }
+		initState{ eInitState::eInitNot },
+		m_ThreadRenderAnUpdate{2}
 	{
 		ensure(m_Settings, ">>>>> [View::View()]. Settings cannot be null.");
 		ensure(m_ScenesManager, ">>>>> [View::View()]. Scenes manager cannot be null.");
@@ -126,9 +130,14 @@ namespace zzz
 				// рендрим её
 			}
 
-			m_SurfaceView->BeginRender();
-			m_SurfaceView->Render();
-			m_SurfaceView->EndRender();
+			m_ThreadRenderAnUpdate.Submit([] () {});
+			m_ThreadRenderAnUpdate.Submit([&] ()
+				{
+					m_SurfaceView->BeginRender();
+					m_SurfaceView->Render();
+					m_SurfaceView->EndRender();
+				});
+			m_ThreadRenderAnUpdate.Join();
 		}
 
 		{

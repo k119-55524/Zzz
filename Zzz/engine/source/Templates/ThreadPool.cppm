@@ -5,41 +5,83 @@ import Platforms;
 
 using namespace zzz;
 
-namespace Zzz::Templates
+export namespace Zzz::Templates
 {
-	// TODO Не тестировал
+	// Динамический массив с автоматическим изменением размера
 	template<typename T>
-	class zQueueArray
+	class QueueArray
 	{
 	public:
-		zQueueArray() = delete;
-		zQueueArray(zQueueArray&) = delete;
-		zQueueArray(zQueueArray&&) = delete;
+		QueueArray() = delete;
+		QueueArray(const QueueArray&) = delete;
+		QueueArray& operator=(const QueueArray&) = delete;
 
-		explicit zQueueArray(size_t _capacity, size_t _resizeStep) :
+		explicit QueueArray(size_t capacity) :
 			size{ 0 },
-			capacity{ _capacity },
-			resizeStep{ _resizeStep }
+			capacity{ capacity }
 		{
-			if (capacity == 0 || resizeStep == 0)
-				throw_out_of_range(">>>>> [ZArray.ZArray()]. Constructor parameters cannot be 0.");
+			if (capacity == 0)
+				throw_out_of_range(">>>>> [QueueArray::QueueArray]. Constructor parameters cannot be 0.");
 
 			data = static_cast<T*>(_aligned_malloc(capacity * sizeof(T), Platforms::ArrayAligment));
 			if (data == nullptr)
-				throw_runtime_error(">>>>> [ZQueueArray.ZQueueArray()]. An exception occurred while allocating memory.");
+				throw_runtime_error(">>>>> [QueueArray::QueueArray]. Failed to allocate memory.");
 
-			memset(data, 0, capacity * sizeof(T));
+			// Инициализация элементов по умолчанию
+			std::uninitialized_default_construct_n(data, capacity);
 		}
 
-		~zQueueArray()
+		QueueArray(QueueArray&& other) noexcept :
+			data{ other.data },
+			size{ other.size },
+			capacity{ other.capacity }
 		{
-			_aligned_free(data);
+			other.data = nullptr;
+			other.size = 0;
+			other.capacity = 0;
+		}
+
+		QueueArray& operator=(QueueArray&& other) noexcept
+		{
+			if (this != &other)
+			{
+				if (data)
+				{
+					std::destroy_n(data, capacity);
+					_aligned_free(data);
+				}
+
+				data = other.data;
+				size = other.size;
+				capacity = other.capacity;
+				other.data = nullptr;
+				other.size = 0;
+				other.capacity = 0;
+			}
+			return *this;
+		}
+
+		~QueueArray()
+		{
+			if (data)
+			{
+				std::destroy_n(data, capacity);
+				_aligned_free(data);
+			}
 		}
 
 		T& operator[](size_t index)
 		{
 			if (index >= size)
-				throw_out_of_range(">>>>> [ZArray.operator[]]. Index out of range.");
+				throw_out_of_range(">>>>> [QueueArray::operator[]]. Index out of range.");
+
+			return data[index];
+		}
+
+		const T& operator[](size_t index) const
+		{
+			if (index >= size)
+				throw_out_of_range(">>>>> [QueueArray::operator[]]. Index out of range.");
 
 			return data[index];
 		}
@@ -52,180 +94,261 @@ namespace Zzz::Templates
 			data[size++] = element;
 		}
 
-		inline size_t Capacity() const noexcept
+		void PushBack(T&& element)
 		{
-			return capacity;
+			if (size >= capacity)
+				AddSize();
+
+			data[size++] = std::move(element);
 		}
+
+		inline size_t Capacity() const noexcept { return capacity; }
+		inline size_t Size() const noexcept { return size; }
 
 		inline void Reset() noexcept
 		{
+			std::destroy_n(data, size);
 			size = 0;
 		}
 
 	private:
-		T* data;
+		T* data = nullptr;
 		size_t size;
 		size_t capacity;
-		size_t resizeStep;
 
 		void AddSize()
 		{
-			capacity += resizeStep;
+			size_t newCapacity;
+			if (capacity > std::numeric_limits<size_t>::max() / 2)
+			{
+				// Если capacity слишком большой для роста в 1.5x, пробуем минимальный рост
+				if (capacity >= std::numeric_limits<size_t>::max())
+					throw_overflow_error(">>>>> #0 [QueueArray::AddSize]. Capacity overflow.");
 
-			T* newData = static_cast<T*>(_aligned_malloc(capacity * sizeof(T), Platforms::ArrayAligment));
+				newCapacity = std::numeric_limits<size_t>::max();
+			}
+			else
+				newCapacity = capacity + capacity / 2; // Рост в 1.5x
+
+			T* newData = static_cast<T*>(_aligned_malloc(newCapacity * sizeof(T), Platforms::ArrayAligment));
 			if (newData == nullptr)
-				throw_runtime_error(">>>>> [ZQueueArray.resizeArray()]. An exception occurred while allocating memory.");
+				throw_runtime_error(">>>>> #1 [QueueArray::AddSize]. Failed to allocate memory.");
 
-			memset(newData, 0, capacity * sizeof(T));
-			copy(data, data + size, newData);
+			std::uninitialized_default_construct_n(newData, newCapacity);
+			std::move(data, data + size, newData);
+
+			try
+			{
+				std::uninitialized_move_n(data, size, newData);
+			}
+			catch (...)
+			{
+				_aligned_free(newData);
+				throw_runtime_error(">>>>> #2 [QueueArray::AddSize]. Unknown exception.");
+			}
+
+			std::destroy_n(data, size);
 			_aligned_free(data);
 			data = newData;
+			capacity = newCapacity;
 		}
 	};
 
+	// Потокобезопасная очередь на основе QueueArray
 	template<typename T>
-	class zThreadSafeArrayQueue
+	class ThreadSafeArrayQueue
 	{
 	public:
-		zThreadSafeArrayQueue() = delete;
-		zThreadSafeArrayQueue(zThreadSafeArrayQueue&) = delete;
-		zThreadSafeArrayQueue(zThreadSafeArrayQueue&&) = delete;
+		ThreadSafeArrayQueue() = delete;
+		ThreadSafeArrayQueue(const ThreadSafeArrayQueue&) = delete;
+		ThreadSafeArrayQueue& operator=(const ThreadSafeArrayQueue&) = delete;
 
-		explicit zThreadSafeArrayQueue(size_t _startArraySize, size_t _arrayResizeStep) :
-			threadQueue(_startArraySize, _arrayResizeStep),
+		explicit ThreadSafeArrayQueue(size_t startArraySize) :
+			threadQueue(startArraySize),
 			head{ 0 },
 			tail{ 0 },
-			lenghtQueue{ 0 }
+			lengthQueue{ 0 }
 		{
 		}
 
-		void push(const T value)
+		ThreadSafeArrayQueue(ThreadSafeArrayQueue&& other) noexcept :
+			threadQueue(std::move(other.threadQueue)),
+			head{ other.head },
+			tail{ other.tail },
+			lengthQueue{ other.lengthQueue }
+		{
+			other.head = 0;
+			other.tail = 0;
+			other.lengthQueue = 0;
+		}
+
+		ThreadSafeArrayQueue& operator=(ThreadSafeArrayQueue&& other) noexcept
+		{
+			if (this != &other)
+			{
+				threadQueue = std::move(other.threadQueue);
+				head = other.head;
+				tail = other.tail;
+				lengthQueue = other.lengthQueue;
+				other.head = 0;
+				other.tail = 0;
+				other.lengthQueue = 0;
+			}
+			return *this;
+		}
+
+		void push(const T& value)
 		{
 			std::lock_guard<std::mutex> lk(mut);
-
 			threadQueue.PushBack(value);
 			tail = (tail + 1) % threadQueue.Capacity();
-			lenghtQueue++;
+			lengthQueue++;
+			cv.notify_one();
 		}
 
-		inline bool pop(T& value) noexcept
+		void push(T&& value)
 		{
 			std::lock_guard<std::mutex> lk(mut);
+			threadQueue.PushBack(std::move(value));
+			tail = (tail + 1) % threadQueue.Capacity();
+			lengthQueue++;
+			cv.notify_one();
+		}
 
-			if (lenghtQueue == 0)
+		bool pop(T& value) noexcept
+		{
+			std::lock_guard<std::mutex> lk(mut);
+			if (lengthQueue == 0)
 				return false;
 
-			value = threadQueue[head];
+			value = std::move(threadQueue[head]);
 			head = (head + 1) % threadQueue.Capacity();
-			lenghtQueue--;
+			lengthQueue--;
 
-			if (lenghtQueue == 0)
+			if (lengthQueue == 0)
 			{
 				head = tail = 0;
 				threadQueue.Reset();
 			}
-
 			return true;
 		}
 
-		inline bool IsEmpty() const noexcept
+		bool IsEmpty() const noexcept
 		{
 			std::lock_guard<std::mutex> lk(mut);
+			return lengthQueue == 0;
+		}
 
-			return lenghtQueue == 0;
+		size_t Length() const noexcept
+		{
+			std::lock_guard<std::mutex> lk(mut);
+			return lengthQueue;
 		}
 
 	private:
-		zQueueArray<T> threadQueue;
+		QueueArray<T> threadQueue;
 		size_t head;
 		size_t tail;
-		size_t lenghtQueue;
+		size_t lengthQueue;
 		mutable std::mutex mut;
+		std::condition_variable cv;
 	};
 
-	class zThreadPool
+	// Пул потоков для выполнения задач
+	export class ThreadPool
 	{
 	public:
-		zThreadPool() = delete;
-		zThreadPool(zThreadPool&) = delete;
-		zThreadPool(zThreadPool&&) = delete;
+		ThreadPool() = delete;
+		ThreadPool(const ThreadPool&) = delete;
+		ThreadPool& operator=(const ThreadPool&) = delete;
 
-		explicit zThreadPool(size_t _threadCount, size_t _queueResizeStep) :
+		explicit ThreadPool(size_t threadCount) :
 			done{ false },
 			pause{ true },
-			threadCount{ _threadCount },
-			activTreadCount{ 0 },
-			workQueue(_threadCount, _queueResizeStep)
+			threadCount{ threadCount },
+			activeThreadCount{ 0 },
+			workQueue(threadCount)
 		{
-			ensure(_threadCount == 0);
-			ensure(_queueResizeStep == 0);
+			if (threadCount == 0)
+				throw_invalid_argument(">>>>> [ThreadPool::ThreadPool]. Parameters cannot be 0.");
 
-			threads.reserve(_threadCount);
-
+			threads.reserve(threadCount);
 			try
 			{
-				for (unsigned i = 0; i < threadCount; ++i)
+				for (size_t i = 0; i < threadCount; ++i)
 				{
-					threads.push_back(std::thread(&zThreadPool::WorkerThread, this, i));
+					threads.emplace_back(&ThreadPool::WorkerThread, this, i);
 				}
 			}
 			catch (...)
 			{
 				done = true;
-				throw_runtime_error(">>>>> [ZArray.ZArray()]. An exception occurred while creating threads.");
+				cv.notify_all();
+				for (auto& thread : threads)
+				{
+					if (thread.joinable())
+						thread.join();
+				}
+				throw std::runtime_error(">>>>> [ThreadPool::ThreadPool]. Failed to create threads.");
 			}
 		}
 
-		~zThreadPool()
+		~ThreadPool()
 		{
 			done = true;
-
-			for (unsigned long i = 0; i < threads.size(); ++i)
+			cv.notify_all();
+			for (auto& thread : threads)
 			{
-				if (threads[i].joinable())
-					threads[i].join();
+				if (thread.joinable())
+					thread.join();
 			}
 		}
 
 		template<typename FunctionType, typename... Args>
-		inline void Submit(FunctionType f, Args... args)
+		void Submit(FunctionType&& f, Args&&... args)
 		{
-			workQueue.push(bind(f, args...));
+			workQueue.push([f = std::forward<FunctionType>(f), ...args = std::forward<Args>(args)]() mutable {
+				f(args...);
+				});
+			cv.notify_one();
 		}
 
-		inline void Join()
+		void Join()
 		{
 			pause = false;
-			while (!workQueue.IsEmpty()) {};
-			while (activTreadCount != 0) {};
+			cv.notify_all();
+			std::unique_lock<std::mutex> lk(cv_mutex);
+			cv.wait(lk, [this] { return workQueue.IsEmpty() && activeThreadCount == 0; });
 			pause = true;
-		};
+		}
 
 	private:
 		size_t threadCount;
 		std::atomic_bool done;
 		std::atomic_bool pause;
-		std::atomic_uint activTreadCount;
-
-		zThreadSafeArrayQueue<std::function<void()>> workQueue;
+		std::atomic_uint activeThreadCount;
+		ThreadSafeArrayQueue<std::function<void()>> workQueue;
 		std::vector<std::thread> threads;
+		std::mutex cv_mutex;
+		std::condition_variable cv;
 
-		void WorkerThread(int id)
+		void WorkerThread(size_t id)
 		{
 			while (!done)
 			{
-				if (!pause)
+				std::function<void()> task;
 				{
-					std::function<void()> task;
+					std::unique_lock<std::mutex> lk(cv_mutex);
+					cv.wait(lk, [this] { return !workQueue.IsEmpty() || done || !pause; });
+					if (done && workQueue.IsEmpty())
+						return;
 					if (workQueue.pop(task))
 					{
-						activTreadCount++;
+						activeThreadCount++;
+						lk.unlock();
 						task();
-						activTreadCount--;
-					}
-					else
-					{
-						std::this_thread::yield();
+						activeThreadCount--;
+						cv.notify_one();
 					}
 				}
 			}

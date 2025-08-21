@@ -6,6 +6,6 @@ export namespace zzz
 	export class Platforms
 	{
 	public:
-		static const size_t ArrayAligment = 64;
+		static const size_t ArrayAligment = 32;
 	};
 }

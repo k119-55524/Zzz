@@ -1,6 +1,7 @@
 #pragma once
 
 #if defined(_WIN64)
+#define NOMINMAX
 #include <windows.h>
 #include <windowsx.h>
 #include <comdef.h>
