@@ -125,17 +125,18 @@ namespace zzz
 		if (m_SurfaceView)
 		{
 			// Если есть сцена
-			if (m_Scene)
-			{
-				// рендрим её
-			}
+			//if (m_Scene)
+			//{
+			//	// рендрим её
+			//}
 
-			m_ThreadRenderAnUpdate.Submit([] () {});
-			m_ThreadRenderAnUpdate.Submit([&] ()
+			m_ThreadRenderAnUpdate.Submit([&]()
 				{
-					m_SurfaceView->BeginRender();
-					m_SurfaceView->Render();
-					m_SurfaceView->EndRender();
+					m_SurfaceView->RenderFrame();
+				});
+			m_ThreadRenderAnUpdate.Submit([&]()
+				{
+					m_SurfaceView->PrepareFrame();
 				});
 			m_ThreadRenderAnUpdate.Join();
 		}

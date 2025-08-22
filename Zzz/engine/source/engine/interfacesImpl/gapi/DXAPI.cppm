@@ -31,19 +31,27 @@ export namespace zzz::platforms::directx
 			CommandWrapper() = delete;
 			CommandWrapper(CommandWrapper&) = delete;
 			CommandWrapper(CommandWrapper&&) = delete;
-			CommandWrapper(ComPtr<ID3D12Device>& m_device) :
-				fenceValue{0}
+			CommandWrapper(ComPtr<ID3D12Device>& m_device)
 			{
 				Initialize(m_device);
 			};
 
 			inline const ComPtr<ID3D12CommandAllocator>& GetCommandAllocator() const noexcept { return m_commandAllocator; };
 			inline const ComPtr<ID3D12GraphicsCommandList>& GetCommandList() const noexcept { return m_commandList; };
-			inline const UINT64 GetFenceValue() const noexcept { return fenceValue; };
-			inline void IncFenceValue() noexcept { fenceValue++; };
+
+			inline void Reset() noexcept
+			{
+				if (m_commandList) m_commandList.Reset();
+				if (m_commandAllocator) m_commandAllocator.Reset();
+			}
+			[[nodiscard]] inline result<> Reinitialize(const ComPtr<ID3D12Device>& device)
+			{
+				Reset();
+				return Initialize(device);
+			}
 
 		private:
-			void Initialize(ComPtr<ID3D12Device>& m_device)
+			result<> Initialize(const ComPtr<ID3D12Device>& m_device)
 			{
 				ensure(S_OK == m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)));
 				SET_RESOURCE_DEBUG_NAME(m_commandAllocator, std::format(L"Command Allocator").c_str());
@@ -54,11 +62,12 @@ export namespace zzz::platforms::directx
 				ensure(S_OK == m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS(&m_commandList)));
 				ensure(S_OK == m_commandList->Close());
 				SET_RESOURCE_DEBUG_NAME(m_commandList, std::format(L"Command List").c_str());
+
+				return {};
 			}
 
 			ComPtr<ID3D12CommandAllocator> m_commandAllocator;
 			ComPtr<ID3D12GraphicsCommandList> m_commandList;
-			UINT64 fenceValue;
 		};
 
 		explicit DXAPI();
@@ -76,17 +85,19 @@ export namespace zzz::platforms::directx
 		inline const std::shared_ptr<CommandWrapper> GetCommandRender(zU64 index) const noexcept { return m_commandRender[index]; };
 		inline ComPtr<ID3D12RootSignature> GetRootSignature() const noexcept { return m_rootSignature.Get(); }
 
+		void CommandRenderReset() noexcept;
+		[[nodiscard]] result<> CommandRenderReinitialize();
 		void SubmitCommandLists(zU64 index) override;
-		void WaitForGpu(zU64 index) override;
+		void WaitForGpu() override;
 
 	protected:
 		[[nodiscard]] result<> Init() override;
 
 	private:
-		static constexpr UINT BACK_BUFFER_COUNT = 2;
 		static constexpr DXGI_FORMAT BACK_BUFFER_FORMAT = DXGI_FORMAT_R8G8B8A8_UNORM;
 		static constexpr DXGI_FORMAT DEPTH_FORMAT = DXGI_FORMAT_D32_FLOAT;
 
+		UINT64 fenceValue;
 		UINT m_swapChainFlags;
 
 		RootSignature m_rootSignature;
@@ -121,6 +132,25 @@ export namespace zzz::platforms::directx
 	{
 	}
 
+	void DXAPI::CommandRenderReset() noexcept
+	{
+		for (int i = 0; i < BACK_BUFFER_COUNT; i++)
+			m_commandRender[i]->Reset();
+	}
+
+	result<> DXAPI::CommandRenderReinitialize()
+	{
+		result<> res;
+		for (int i = 0; i < BACK_BUFFER_COUNT; i++)
+		{
+			res = m_commandRender[i]->Reinitialize(m_device);
+			if (!res)
+				break;
+		}
+
+		return res;
+	}
+
 #pragma region Rendring
 	void DXAPI::SubmitCommandLists(zU64 index)
 	{
@@ -128,12 +158,12 @@ export namespace zzz::platforms::directx
 		m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 	}
 
-	void DXAPI::WaitForGpu(zU64 index)
+	void DXAPI::WaitForGpu()
 	{
-		const UINT64 fence = m_commandRender[index]->GetFenceValue();
+		const UINT64 fence = fenceValue;
 		ensure(S_OK == m_commandQueue->Signal(m_fence.Get(), fence));
 
-		m_commandRender[index]->IncFenceValue();
+		fenceValue++;
 
 		// ќжидаем завершени€ предыдущего кадра.
 		if (m_fence->GetCompletedValue() < fence)

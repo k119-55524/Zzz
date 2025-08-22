@@ -28,11 +28,9 @@ export namespace zzz
 		virtual ~ISurfaceView();
 
 		[[nodiscard]] virtual result<> Initialize() = 0;
+		virtual void PrepareFrame() = 0;
+		virtual void RenderFrame() = 0;
 		virtual void OnResize(const size2D<>& size) = 0;
-
-		virtual void BeginRender() = 0;
-		virtual void Render() = 0;
-		virtual void EndRender() = 0;
 
 		virtual void SetFullScreen(bool fs) {};
 
@@ -47,7 +45,7 @@ export namespace zzz
 
 	ISurfaceView::~ISurfaceView()
 	{
-		m_iGAPI->WaitForGpu(m_frameIndex);
+		m_iGAPI->WaitForGpu();
 	}
 
 	ISurfaceView::ISurfaceView(

@@ -32,12 +32,8 @@ namespace zzz
 			std::shared_ptr<IGAPI> _iGAPI);
 
 		[[nodiscard]] result<> Initialize() override;
-		[[nodiscard]] result<> CreateRTV(ComPtr<ID3D12Device>& m_device);
-		[[nodiscard]] result<> InitializeSwapChain();
-
-		void BeginRender() override;
-		void Render() override;
-		void EndRender() override;
+		void PrepareFrame() override;
+		void RenderFrame() override;
 		void OnResize(const size2D<>& size) override;
 
 		void SetFullScreen(bool fs) override;
@@ -48,7 +44,6 @@ namespace zzz
 		static constexpr UINT SWAP_CHAIN_FLAGS = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 
 		bool b_IgnoreResize;
-
 		UINT m_frameIndex;
 		CD3DX12_VIEWPORT m_viewport;
 		CD3DX12_RECT m_scissorRect;
@@ -68,10 +63,12 @@ namespace zzz
 		UINT m_DsvDescrSize;
 		UINT m_CbvSrvDescrSize;
 
-		result<> CreateRTVHeap();
-		result<> CreateSRVHeap();
-		result<> CreateDSVHeap();
-		result<> CreateDS(const size2D<>& size);
+		[[nodiscard]] result<> CreateRTVHeap();
+		[[nodiscard]] result<> CreateSRVHeap();
+		[[nodiscard]] result<> CreateDSVHeap();
+		[[nodiscard]] result<> CreateDS(const size2D<>& size);
+		[[nodiscard]] result<> CreateRTV(ComPtr<ID3D12Device>& m_device);
+		[[nodiscard]] result<> InitializeSwapChain();
 
 		void ResetRTVandDS();
 		[[nodiscard]] result<> RecreateRenderTargetsAndDepth();
@@ -127,7 +124,7 @@ namespace zzz
 			.and_then([&]() { return CreateDSVHeap(); })
 			.and_then([&]() { return CreateRTV(m_device); });
 
-		CreateDS(winSize);
+		res = CreateDS(winSize);
 		if (!res)
 			return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializePipeline()]. -> " + res.error().getMessage());
 
@@ -356,15 +353,18 @@ namespace zzz
 #pragma endregion Initialize
 
 #pragma region Rendring
-	void SurfDirectX::BeginRender()
+	void SurfDirectX::PrepareFrame()
 	{
-		auto m_device = m_DXAPI->GetDevice();
-		ensure(m_device, ">>>>> [SurfDirectX::BeginRender()]. Device cannot be null.");
-		auto commandAllocator = m_DXAPI->GetCommandRender(m_frameIndex)->GetCommandAllocator();
-		ensure(commandAllocator, ">>>>> [SurfDirectX::BeginRender()]. Command allocator cannot be null.");
-		auto commandList = m_DXAPI->GetCommandRender(m_frameIndex)->GetCommandList();
-		ensure(commandList, ">>>>> [SurfDirectX::BeginRender()]. Command list cannot be null.");
+		zU64 frameIndex = (m_frameIndex + 1) % BACK_BUFFER_COUNT;
 
+		auto commandWrapper = m_DXAPI->GetCommandRender(frameIndex);
+		ensure(commandWrapper, ">>>>> [SurfDirectX::PrepareFrame()]. Command wrapper cannot be null.");
+		auto commandAllocator = commandWrapper->GetCommandAllocator();
+		auto commandList = commandWrapper->GetCommandList();
+		ensure(commandAllocator, ">>>>> [SurfDirectX::PrepareFrame()]. Command allocator cannot be null.");
+		ensure(commandList, ">>>>> [SurfDirectX::PrepareFrame()]. Command list cannot be null.");
+
+		// Сбрасываем аллокатор и командный список
 		ensure(S_OK == commandAllocator->Reset());
 		ensure(S_OK == commandList->Reset(commandAllocator.Get(), nullptr));
 
@@ -374,93 +374,70 @@ namespace zzz
 
 		commandList->ResourceBarrier(
 			1,
-			&keep(
-				CD3DX12_RESOURCE_BARRIER::Transition(
-					m_renderTargets[m_frameIndex].Get(),
-					D3D12_RESOURCE_STATE_PRESENT,
-					D3D12_RESOURCE_STATE_RENDER_TARGET)
-			)
+			&keep(CD3DX12_RESOURCE_BARRIER::Transition(
+				m_renderTargets[frameIndex].Get(),
+				D3D12_RESOURCE_STATE_PRESENT,
+				D3D12_RESOURCE_STATE_RENDER_TARGET))
 		);
 
 		commandList->ResourceBarrier(
 			1,
-			&keep(
-				CD3DX12_RESOURCE_BARRIER::Transition(
-					m_depthStencil[m_frameIndex].Get(),
-					D3D12_RESOURCE_STATE_COMMON, // Предполагаем, что начальное состояние COMMON
-					D3D12_RESOURCE_STATE_DEPTH_WRITE)
-			)
+			&keep(CD3DX12_RESOURCE_BARRIER::Transition(
+				m_depthStencil[frameIndex].Get(),
+				D3D12_RESOURCE_STATE_COMMON,
+				D3D12_RESOURCE_STATE_DEPTH_WRITE))
 		);
 
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_RtvDescrSize);
-		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_DsvDescrSize);
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_RtvDescrSize);
+		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_DsvDescrSize);
 		commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
-	}
 
-	void SurfDirectX::Render()
-	{
-		auto m_device = m_DXAPI->GetDevice();
-		ensure(m_device, ">>>>> [SurfDirectX::Render()]. Device cannot be null.");
-		auto commandList = m_DXAPI->GetCommandRender(m_frameIndex)->GetCommandList();
-		ensure(commandList, ">>>>> [SurfDirectX::Render()]. Command list cannot be null.");
-
-		// Записываем команды рендеринга
+		// Рендеринг (из Render)
 		const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_RtvDescrSize);
-		commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr );
-		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_DsvDescrSize);
+		commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 		commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
-		// Здесь можно добавить дополнительные команды рендеринга, например:
-		// m_DXAPI->GetCommandRender()->CommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		// m_DXAPI->GetCommandRender()->CommandList()->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-		// m_DXAPI->GetCommandRender()->CommandList()->DrawInstanced(3, 1, 0, 0);
-	}
+		// Дополнительные команды рендеринга, если нужно
+		// commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		// commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+		// commandList->DrawInstanced(3, 1, 0, 0);
 
-	void SurfDirectX::EndRender()
-	{
-		auto commandList = m_DXAPI->GetCommandRender(m_frameIndex)->GetCommandList();
-		ensure(commandList, ">>>>> [SurfDirectX::EndRender()]. Command list cannot be null.");
-
-		// Переводим буфер рендеринга в состояние для отображения
+		// Завершение подготовки (из EndRender, до закрытия командного списка)
 		commandList->ResourceBarrier(
 			1,
-			&keep(
-				CD3DX12_RESOURCE_BARRIER::Transition(
-					m_renderTargets[m_frameIndex].Get(),
-					D3D12_RESOURCE_STATE_RENDER_TARGET,
-					D3D12_RESOURCE_STATE_PRESENT
-				)
-			)
+			&keep(CD3DX12_RESOURCE_BARRIER::Transition(
+				m_renderTargets[frameIndex].Get(),
+				D3D12_RESOURCE_STATE_RENDER_TARGET,
+				D3D12_RESOURCE_STATE_PRESENT))
 		);
 
 		commandList->ResourceBarrier(
 			1,
-			&keep(
-				CD3DX12_RESOURCE_BARRIER::Transition(
-					m_depthStencil[m_frameIndex].Get(),
-					D3D12_RESOURCE_STATE_DEPTH_WRITE,
-					D3D12_RESOURCE_STATE_COMMON)
-			)
+			&keep(CD3DX12_RESOURCE_BARRIER::Transition(
+				m_depthStencil[frameIndex].Get(),
+				D3D12_RESOURCE_STATE_DEPTH_WRITE,
+				D3D12_RESOURCE_STATE_COMMON))
 		);
 
 		// Закрываем командный список
 		ensure(S_OK == commandList->Close());
+	}
+
+	void SurfDirectX::RenderFrame()
+	{
+		zU64 frameIndex = m_frameIndex;
 
 		// Выполняем командный список
-		m_iGAPI->SubmitCommandLists(m_frameIndex);
+		m_iGAPI->SubmitCommandLists(frameIndex);
 
 		// Настраиваем параметры для Present
 		BOOL fullscreen = FALSE;
 		ensure(S_OK == m_swapChain->GetFullscreenState(&fullscreen, nullptr));
-
 		UINT syncInterval = isVSync ? 1 : 0;
 		UINT presentFlags = (!isVSync && !fullscreen && m_tearingSupported) ? DXGI_PRESENT_ALLOW_TEARING : 0;
+		ensure(S_OK == m_swapChain->Present(syncInterval, presentFlags));
 
-		HRESULT hr = m_swapChain->Present(syncInterval, presentFlags);
-		m_iGAPI->WaitForGpu(m_frameIndex);
-
-		// Обновляем индекс текущего буфера
+		m_iGAPI->WaitForGpu();
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 	}
 #pragma endregion Rendring
@@ -493,7 +470,9 @@ namespace zzz
 			}
 		}
 
-		m_iGAPI->WaitForGpu(m_frameIndex);
+		m_iGAPI->WaitForGpu();
+		m_DXAPI->CommandRenderReset();
+
 		ResetRTVandDS();
 
 		BOOL fullscreen = FALSE;
@@ -521,12 +500,13 @@ namespace zzz
 		if (S_OK != hr)
 			throw_runtime_error(std::format(">>>>> [DXAPI::OnResize({}x{})].", size.width, size.height));
 
-		//m_iGAPI->WaitForGpu();
+		m_iGAPI->WaitForGpu();
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
 		auto res = CreateRTVHeap()
 			.and_then([&]() { return CreateRTV(m_device); })
 			.and_then([&]() { return CreateDS(size); })
+			.and_then([&]() { return m_DXAPI->CommandRenderReinitialize(); })
 			.or_else([&](const Unexpected& error) { throw_runtime_error(std::format(">>>>> [DXAPI::OnResize({}x{})]. {}.", size.width, size.height, wstring_to_string(error.getMessage()))); });
 
 		m_viewport = CD3DX12_VIEWPORT{ 0.0f, 0.0f, static_cast<float>(size.width), static_cast<float>(size.height) };
@@ -550,7 +530,10 @@ namespace zzz
 			return;
 		}
 
-		m_iGAPI->WaitForGpu(m_frameIndex);
+		m_iGAPI->WaitForGpu();
+
+		m_DXAPI->CommandRenderReset();
+		m_iGAPI->WaitForGpu();
 		ResetRTVandDS();
 
 		b_IgnoreResize = true;
@@ -579,16 +562,17 @@ namespace zzz
 			desc.BufferCount,
 			0, 0, // авто определение размеров
 			desc.BufferDesc.Format,
-			desc.Flags );
+			desc.Flags);
 		if (S_OK != hr)
 		{
-			DebugOutput(std::format(L">>>>> [SurfDirectX::SetFullScreen({})] Failed to resize buffers. HRESULT = 0x{:08X}\n",fs, hr).c_str());
+			DebugOutput(std::format(L">>>>> [SurfDirectX::SetFullScreen({})] Failed to resize buffers. HRESULT = 0x{:08X}\n", fs, hr).c_str());
 			return;
 		}
 
-		auto res = RecreateRenderTargetsAndDepth();
-		if (!res)
-			throw_runtime_error(std::format(">>>>> #1 [SurfDirectX::SetFullScreen({})]. Failed to recreate render targets and depth stencil View. {}.", fs, wstring_to_string(res.error().getMessage())));
+		auto res = RecreateRenderTargetsAndDepth()
+			.and_then([&]() { return m_DXAPI->CommandRenderReinitialize(); })
+			.or_else([&](const Unexpected& error) { throw_runtime_error(std::format(">>>>> #1 [SurfDirectX::SetFullScreen({})]. Failed: {}.", fs, wstring_to_string(error.getMessage()))); });
+		
 
 		DebugOutput(std::format(L">>>>> [SurfDirectX::SetFullScreen({})].\n", fs).c_str());
 	}
