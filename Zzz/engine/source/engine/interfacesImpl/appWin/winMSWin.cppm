@@ -30,6 +30,8 @@ export namespace zzz
 		~winMSWin() override;
 
 		inline const HWND GetHWND() const noexcept { return hWnd; }
+		void SetCaptionText(std::wstring caption) override;
+		void AddCaptionText(std::wstring caption) override;
 
 	protected:
 		virtual result<> Initialize() override;
@@ -37,6 +39,7 @@ export namespace zzz
 	private:
 		HWND hWnd;
 		bool IsMinimized;
+
 		static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept;
 		LRESULT MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	};
@@ -58,39 +61,38 @@ export namespace zzz
 	result<> winMSWin::Initialize()
 	{
 #pragma region Получение настроек окна
-		std::wstring Caption;
 		std::wstring ClassName;
 		{
-			auto res = m_settings->GetParam<std::wstring>(L"Caption")
-				.and_then([&](std::wstring name) { Caption = name; });
+			auto res = m_Settings->GetParam<std::wstring>(L"Caption")
+				.and_then([&](std::wstring name) { m_Caption = name; });
 
 			if (!res)
 				return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'Caption' parameter.");
 		}
 
-		m_settings->GetParam<std::wstring>(L"MSWin_SpecSettings", L"ClassName")
+		m_Settings->GetParam<std::wstring>(L"MSWin_SpecSettings", L"ClassName")
 			.and_then([&](std::wstring name) {ClassName = name; })
-			.or_else([&](auto error) { ClassName = Caption; });
+			.or_else([&](auto error) { ClassName = m_Caption; });
 
 		LONG swWidth;
-		auto res = m_settings->GetParam<int>(L"Width")
+		auto res = m_Settings->GetParam<int>(L"Width")
 			.and_then([&](int width) {swWidth = width; });
 		if (!res)
 			return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'Width' parameter. More specifically: " + res.error().getMessage());
 
 		LONG swHeight;
-		res = m_settings->GetParam<int>(L"Height")
+		res = m_Settings->GetParam<int>(L"Height")
 			.and_then([&](int height) {swHeight = height; });
 		if (!res)
 			return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'Height' parameter. More specifically:" + res.error().getMessage());
 
 		HICON iconHandle = nullptr;
 		{
-			result<std::wstring> icoPath = m_settings->GetParam<std::wstring>(L"IcoFullPath");
+			result<std::wstring> icoPath = m_Settings->GetParam<std::wstring>(L"IcoFullPath");
 			if (icoPath)
 			{
 				ibMSWin icoBuilder;
-				auto res = icoBuilder.LoadIco(icoPath.value(), m_settings->GetParam<int>(L"IcoSize").value_or(32));
+				auto res = icoBuilder.LoadIco(icoPath.value(), m_Settings->GetParam<int>(L"IcoSize").value_or(32));
 				if (res)
 					iconHandle = res.value();
 			}
@@ -125,7 +127,7 @@ export namespace zzz
 		hWnd = CreateWindowEx(
 			0,
 			ClassName.c_str(),
-			Caption.c_str(),
+			m_Caption.c_str(),
 			WS_OVERLAPPEDWINDOW,
 			xPos, yPos, width, height,
 			nullptr,
@@ -259,5 +261,17 @@ export namespace zzz
 		default:
 			return DefWindowProc(hWnd, uMsg, wParam, lParam);
 		}
+	}
+
+	void winMSWin::SetCaptionText(std::wstring caption)
+	{
+		m_Caption = caption;
+		SetWindowText(hWnd, m_Caption.c_str());
+	}
+
+	void winMSWin::AddCaptionText(std::wstring caption)
+	{
+		std::wstring cap = m_Caption + caption;
+		SetWindowText(hWnd, cap.c_str());
 	}
 }

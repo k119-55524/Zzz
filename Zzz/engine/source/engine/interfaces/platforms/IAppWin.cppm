@@ -31,9 +31,12 @@ export namespace zzz
 		event<size2D<>, e_TypeWinResize> onResize;
 
 		const size2D<> GetWinSize() const noexcept { return winSize; }
+		virtual void SetCaptionText(std::wstring caption) = 0;
+		virtual void AddCaptionText(std::wstring caption) = 0;
 
 	protected:
-		const std::shared_ptr<const Settings> m_settings;
+		const std::shared_ptr<const Settings> m_Settings;
+		std::wstring m_Caption;
 		size2D<> winSize;
 
 		[[nodiscard]] virtual result<> Initialize() = 0;
@@ -41,7 +44,7 @@ export namespace zzz
 	};
 
 	IAppWin::IAppWin(std::shared_ptr<const Settings> Settings)
-		: m_settings{ Settings },
+		: m_Settings{ Settings },
 		winSize{ 0, 0 }
 	{
 		ensure(Settings, ">>>>> [IAppWin::IAppWin()]. Settings cannot be null.");

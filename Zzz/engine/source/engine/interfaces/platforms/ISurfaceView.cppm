@@ -33,6 +33,7 @@ export namespace zzz
 		virtual void OnResize(const size2D<>& size) = 0;
 
 		virtual void SetFullScreen(bool fs) {};
+		inline void SetVSync(bool vs) { isVSync = vs; };
 
 	protected:
 		zU64 m_frameIndex;

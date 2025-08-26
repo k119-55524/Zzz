@@ -13,7 +13,6 @@ import ThreadPool;
 import viewFactory;
 import ISurfaceView;
 import ScenesManager;
-import PerformanceMeter;
 import ResourcesManager;
 
 using namespace Zzz::Templates;
@@ -47,6 +46,9 @@ namespace zzz
 		void OnUpdate(double deltaTime);
 		void OnViewResized(const size2D<>& size, e_TypeWinResize resizeType);
 		void SetFullScreen(bool fs);
+		inline void SetVSync(bool vs) { if (m_SurfaceView != nullptr) m_SurfaceView->SetVSync(vs); };
+		inline void SetViewCaptionText(std::wstring caption) { if (m_Win != nullptr) m_Win->SetCaptionText(caption); };
+		inline void AddViewCaptionText(std::wstring caption) { if (m_Win != nullptr) m_Win->AddCaptionText(caption); };
 
 	private:
 		viewFactory factory;
@@ -62,8 +64,6 @@ namespace zzz
 
 		ThreadPool m_ThreadRenderAnUpdate;
 		std::shared_ptr<Scene> m_Scene;
-
-		PerformanceMeter m_PerfRender;
 	};
 
 	View::View(
@@ -153,24 +153,7 @@ namespace zzz
 
 	void View::PrepareFrame(double deltaTime)
 	{
-		//m_PerfRender.StartPerformance();
 		m_SurfaceView->PrepareFrame();
-		//double perfTime = m_PerfRender.StopPerformance();
-
-		//{
-		//	const int testValue = 60;
-		//	static int frameCount = 0;
-		//	static double allTime = 0.0;
-		//	frameCount++;
-		//	allTime += perfTime;
-		//	if (frameCount == testValue)
-		//	{
-		//		double fps = 1.0 / (allTime / testValue);
-		//		frameCount = 0;
-		//		allTime = 0.0;
-		//		DebugOutput(std::format(L">>>>> [View::PrepareFrame()]. FPS: {}.\n", fps));
-		//	}
-		//}
 	}
 
 	void View::OnViewResized(const size2D<>& size, e_TypeWinResize resizeType)

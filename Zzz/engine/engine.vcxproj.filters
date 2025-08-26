@@ -38,112 +38,112 @@
     <ClCompile Include="pch.cpp">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine.cppm">
+    <ClCompile Include="Source\engine.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\utils\result.cppm">
+    <ClCompile Include="Source\Engine\Utils\result.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\Settings.cppm">
+    <ClCompile Include="Source\Engine\Settings.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\utils\size2D.cppm">
+    <ClCompile Include="Source\Engine\Utils\size2D.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\utils\serializer.cppm">
+    <ClCompile Include="Source\Engine\Utils\serializer.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\utils\strConvert.cppm">
+    <ClCompile Include="Source\utils\strConvert.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\IO\ioZaml.cppm">
+    <ClCompile Include="Source\Engine\IO\ioZaml.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\IO\IOPathFactory.cppm">
+    <ClCompile Include="Source\Engine\IO\IOPathFactory.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\utils\MessageBox.cppm">
+    <ClCompile Include="Source\utils\MessageBox.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfaces\platforms\IMainLoop.cppm">
+    <ClCompile Include="Source\Engine\Interfaces\platforms\IMainLoop.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfacesImpl\mainLoop\mlMSWin.cppm">
+    <ClCompile Include="Source\Engine\InterfacesImpl\MainLoop\mlMSWin.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfaces\utils\IIcoBuilder.cppm">
+    <ClCompile Include="Source\Engine\Interfaces\utils\IIcoBuilder.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfacesImpl\utils\icoBuilder\ibMSWin.cppm">
+    <ClCompile Include="Source\Engine\InterfacesImpl\Utils\icoBuilder\ibMSWin.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfaces\platforms\IGAPI.cppm">
+    <ClCompile Include="Source\Engine\Interfaces\platforms\IGAPI.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfacesImpl\gapi\DXAPI.cppm">
+    <ClCompile Include="Source\Engine\InterfacesImpl\gapi\DXAPI.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\utils\event.cppm">
+    <ClCompile Include="Source\Engine\Utils\event.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfacesImpl\gapi\DX\RootSignature.cppm">
+    <ClCompile Include="Source\Engine\InterfacesImpl\gapi\DX\RootSignature.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\View.cppm">
+    <ClCompile Include="Source\Engine\View.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfaces\platforms\IAppWin.cppm">
+    <ClCompile Include="Source\Engine\Interfaces\platforms\IAppWin.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfaces\platforms\ISurfaceView.cppm">
+    <ClCompile Include="Source\Engine\Interfaces\platforms\ISurfaceView.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\factories\viewFactory.cppm">
+    <ClCompile Include="Source\Engine\Factories\viewFactory.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfacesImpl\appWin\winMSWin.cppm">
+    <ClCompile Include="Source\Engine\InterfacesImpl\AppWin\winMSWin.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfacesImpl\SurfaceView\SurfDirectX.cppm">
+    <ClCompile Include="Source\Engine\InterfacesImpl\SurfaceView\SurfDirectX.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfacesImpl\gapi\DX\CheckDirectXUltimateSupport.cppm">
+    <ClCompile Include="Source\Engine\InterfacesImpl\gapi\DX\CheckDirectXUltimateSupport.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\interfaces\platforms\ICheckGapiSupport.cppm">
+    <ClCompile Include="Source\Engine\Interfaces\platforms\ICheckGapiSupport.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\factories\engineFactory.cppm">
+    <ClCompile Include="Source\Engine\Factories\engineFactory.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\Scene\Scene.cppm">
+    <ClCompile Include="Source\Engine\Scene\Scene.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\resources\ResourcesManager.cppm">
+    <ClCompile Include="Source\Engine\Resources\ResourcesManager.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\Scene\ScenesManager.cppm">
+    <ClCompile Include="Source\Engine\Scene\ScenesManager.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\resources\MeshData.cppm">
+    <ClCompile Include="Source\Engine\Resources\MeshData.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\resources\MeshCPU.cppm">
+    <ClCompile Include="Source\Engine\Resources\MeshCPU.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\Scene\SceneEntity.cppm">
+    <ClCompile Include="Source\Engine\Scene\SceneEntity.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Templates\ThreadPool.cppm">
+    <ClCompile Include="Source\Templates\ThreadPool.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Platforms.cppm">
+    <ClCompile Include="Source\Platforms.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\AppTime.cppm">
+    <ClCompile Include="Source\Engine\Utils\AppTime.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\PerformanceMeter.cppm">
+    <ClCompile Include="Source\Engine\Utils\PerformanceMeter.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
   </ItemGroup>

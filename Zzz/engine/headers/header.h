@@ -175,7 +175,7 @@ namespace zzz
 	inline void DebugOutput(const std::wstring& msg)
 	{
 #if defined(_WIN64) && defined(_DEBUG)
-		OutputDebugStringW(msg.c_str());
+		OutputDebugStringW((msg + L"\n").c_str());
 #elif defined(_DEBUG)
 		std::wcerr << msg << std::endl;
 #else

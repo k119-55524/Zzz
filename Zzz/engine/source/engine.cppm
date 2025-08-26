@@ -15,6 +15,7 @@ import strConvert;
 import IOPathFactory;
 import engineFactory;
 import ScenesManager;
+import PerformanceMeter;
 import ResourcesManager;
 
 using namespace zzz;
@@ -59,6 +60,8 @@ export namespace zzz
 		void Reset() noexcept;
 		void OnViewResized(const size2D<>& size, e_TypeWinResize resizeType);
 		void OnUpdateSystem();
+
+		PerformanceMeter m_PerfRender;
 	};
 
 	engine::engine() :
@@ -149,6 +152,7 @@ export namespace zzz
 		try
 		{
 			isSysPaused = false;
+			m_view->SetVSync(false);
 			m_time.Reset();
 			mainLoop->Run();
 
@@ -177,7 +181,22 @@ export namespace zzz
 
 		//Sleep(100);
 
+		static zU32 frameCount = 0;
+		static double allTime = 0.0;
+		m_PerfRender.StartPerformance();
 		m_view->OnUpdate(m_time.GetDeltaTime());
+		allTime += m_PerfRender.StopPerformance();
+		{
+			frameCount++;
+			if (allTime >= 1.0)
+			{
+				double mspf = (allTime / frameCount) * 1000;;
+				std::wstring cap = std::format(L".  fps: {}.  mspf: {:.4f}.", frameCount, mspf);
+				m_view->AddViewCaptionText(cap);
+				frameCount = 0;
+				allTime = 0.0f;
+			}
+		}
 	}
 
 	void engine::OnViewResized(const size2D<>& size, e_TypeWinResize resizeType)

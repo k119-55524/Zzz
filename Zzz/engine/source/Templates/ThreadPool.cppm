@@ -151,6 +151,8 @@ export namespace Zzz::Templates
 			_aligned_free(data);
 			data = newData;
 			capacity = newCapacity;
+
+			DebugOutput(std::format(L">>>>> [QueueArray::AddSize]. size: {}", size));
 		}
 	};
 
@@ -255,7 +257,7 @@ export namespace Zzz::Templates
 	};
 
 	// Пул потоков для выполнения задач
-	export class ThreadPool
+	class ThreadPool
 	{
 	public:
 		ThreadPool() = delete;
@@ -264,13 +266,12 @@ export namespace Zzz::Templates
 
 		explicit ThreadPool(size_t threadCount) :
 			done{ false },
-			pause{ true },
 			threadCount{ threadCount },
 			activeThreadCount{ 0 },
 			workQueue(threadCount)
 		{
 			if (threadCount == 0)
-				throw_invalid_argument(">>>>> [ThreadPool::ThreadPool]. Parameters cannot be 0.");
+				throw std::invalid_argument(">>>>> [ThreadPool::ThreadPool]. Parameters cannot be 0.");
 
 			threads.reserve(threadCount);
 			try
@@ -295,8 +296,12 @@ export namespace Zzz::Templates
 
 		~ThreadPool()
 		{
-			done = true;
+			{
+				std::lock_guard<std::mutex> lock(cv_mutex);
+				done = true;
+			}
 			cv.notify_all();
+
 			for (auto& thread : threads)
 			{
 				if (thread.joinable())
@@ -307,6 +312,11 @@ export namespace Zzz::Templates
 		template<typename FunctionType, typename... Args>
 		void Submit(FunctionType&& f, Args&&... args)
 		{
+			{
+				std::lock_guard<std::mutex> lock(cv_mutex);
+				if (done) return; // Не добавляем задачи если пул закрывается
+			}
+
 			workQueue.push([f = std::forward<FunctionType>(f), ...args = std::forward<Args>(args)]() mutable {
 				f(args...);
 				});
@@ -315,17 +325,20 @@ export namespace Zzz::Templates
 
 		void Join()
 		{
-			pause = false;
-			cv.notify_all();
 			std::unique_lock<std::mutex> lk(cv_mutex);
-			cv.wait(lk, [this] { return workQueue.IsEmpty() && activeThreadCount == 0; });
-			pause = true;
+
+			// Ждем пока все задачи не будут выполнены
+			cv.wait(lk, [this]
+				{
+					bool queueEmpty = workQueue.IsEmpty();
+					uint32_t activeCount = activeThreadCount.load();
+					return queueEmpty && activeCount == 0;
+				});
 		}
 
 	private:
 		size_t threadCount;
 		std::atomic_bool done;
-		std::atomic_bool pause;
 		std::atomic_uint activeThreadCount;
 		ThreadSafeArrayQueue<std::function<void()>> workQueue;
 		std::vector<std::thread> threads;
@@ -334,23 +347,46 @@ export namespace Zzz::Templates
 
 		void WorkerThread(size_t id)
 		{
-			while (!done)
+			while (true)
 			{
 				std::function<void()> task;
+
 				{
 					std::unique_lock<std::mutex> lk(cv_mutex);
-					cv.wait(lk, [this] { return !workQueue.IsEmpty() || done || !pause; });
+
+					// Ждем задачу или сигнал завершения
+					cv.wait(lk, [this] {
+						return !workQueue.IsEmpty() || done;
+						});
+
+					// Если пул закрывается и очередь пуста - выходим
 					if (done && workQueue.IsEmpty())
 						return;
-					if (workQueue.pop(task))
-					{
-						activeThreadCount++;
-						lk.unlock();
-						task();
-						activeThreadCount--;
-						cv.notify_one();
-					}
+
+					// Пытаемся взять задачу
+					if (!workQueue.pop(task))
+						continue; // Нет задач, продолжаем ожидание
+
+					// Увеличиваем счетчик активных потоков
+					activeThreadCount++;
+				} // Освобождаем мьютекс перед выполнением задачи
+
+				// Выполняем задачу вне критической секции
+				try
+				{
+					task();
 				}
+				catch (...)
+				{
+					throw_runtime_error("Unknown exceptions.");
+				}
+
+				// Уменьшаем счетчик и уведомляем
+				{
+					std::lock_guard<std::mutex> lk(cv_mutex);
+					activeThreadCount--;
+				}
+				cv.notify_all(); // Используем notify_all для надежности
 			}
 		}
 	};
