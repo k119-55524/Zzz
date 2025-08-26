@@ -140,7 +140,10 @@
     <ClCompile Include="source\Platforms.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\AppTime.cppm">
+    <ClCompile Include="source\engine\AppTime.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\engine\PerformanceMeter.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
   </ItemGroup>
