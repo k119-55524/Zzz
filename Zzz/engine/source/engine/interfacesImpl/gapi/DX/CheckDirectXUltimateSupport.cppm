@@ -46,8 +46,7 @@ export namespace zzz::platforms::directx
 
 		// Проверка поддержки Sampler Feedback и Mesh Shaders
 		D3D12_FEATURE_DATA_D3D12_OPTIONS7 options7{};
-		if (SUCCEEDED(m_device->CheckFeatureSupport(
-			D3D12_FEATURE_D3D12_OPTIONS7, &options7, sizeof(options7))))
+		if (SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &options7, sizeof(options7))))
 		{
 			m_supportsMeshShaders = (options7.MeshShaderTier >= D3D12_MESH_SHADER_TIER_1);
 			m_supportsSamplerFeedback = (options7.SamplerFeedbackTier >= D3D12_SAMPLER_FEEDBACK_TIER_0_9);

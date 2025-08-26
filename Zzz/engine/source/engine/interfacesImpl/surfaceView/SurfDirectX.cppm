@@ -53,15 +53,14 @@ namespace zzz
 		std::shared_ptr<winMSWin> m_Win;
 
 		ComPtr<IDXGISwapChain3> m_swapChain;
+		UINT m_RtvDescrSize;
+		UINT m_DsvDescrSize;
+		UINT m_CbvSrvDescrSize;
 		ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
 		ComPtr<ID3D12DescriptorHeap> m_srvHeap;
 		ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
 		ComPtr<ID3D12Resource> m_renderTargets[BACK_BUFFER_COUNT];
 		ComPtr<ID3D12Resource> m_depthStencil[BACK_BUFFER_COUNT];
-
-		UINT m_RtvDescrSize;
-		UINT m_DsvDescrSize;
-		UINT m_CbvSrvDescrSize;
 
 		[[nodiscard]] result<> CreateRTVHeap();
 		[[nodiscard]] result<> CreateSRVHeap();
@@ -302,8 +301,7 @@ namespace zzz
 			if (S_OK != hr)
 				return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::CreateDS()]. Failed to create depth stencil resource. HRESULT = 0x{:08X}", hr));
 
-			std::wstring debugName = L"DepthStencil_" + std::to_wstring(i);
-			SET_RESOURCE_DEBUG_NAME(m_depthStencil[i], debugName.c_str());
+			SET_RESOURCE_DEBUG_NAME(m_depthStencil[i], std::format(L"DepthStencil_{}", i).c_str());
 
 			// Создаём DSV
 			CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(
@@ -425,10 +423,8 @@ namespace zzz
 
 	void SurfDirectX::RenderFrame()
 	{
-		zU64 frameIndex = m_frameIndex;
-
 		// Выполняем командный список
-		m_iGAPI->SubmitCommandLists(frameIndex);
+		m_iGAPI->SubmitCommandLists(m_frameIndex);
 
 		// Настраиваем параметры для Present
 		BOOL fullscreen = FALSE;

@@ -6,6 +6,7 @@ import View;
 import IGAPI;
 import size2D;
 import result;
+import AppTime;
 import zMsgBox;
 import mlMSWin;
 import Settings;
@@ -53,6 +54,7 @@ export namespace zzz
 		std::shared_ptr<IGAPI> m_GAPI;
 		std::shared_ptr<View> m_view;
 		std::shared_ptr<IMainLoop> mainLoop;
+		AppTime m_time;
 
 		void Reset() noexcept;
 		void OnViewResized(const size2D<>& size, e_TypeWinResize resizeType);
@@ -147,6 +149,7 @@ export namespace zzz
 		try
 		{
 			isSysPaused = false;
+			m_time.Reset();
 			mainLoop->Run();
 
 			return {};
@@ -174,7 +177,7 @@ export namespace zzz
 
 		//Sleep(100);
 
-		m_view->OnUpdate();
+		m_view->OnUpdate(m_time.GetDeltaTime());
 	}
 
 	void engine::OnViewResized(const size2D<>& size, e_TypeWinResize resizeType)
@@ -183,10 +186,12 @@ export namespace zzz
 		{
 		case e_TypeWinResize::eHide:
 			isSysPaused = true;
+			m_time.Pause(isSysPaused);
 			break;
 		case e_TypeWinResize::eShow:
 		case e_TypeWinResize::eResize:
 			isSysPaused = false;
+			m_time.Pause(isSysPaused);
 			break;
 		}
 

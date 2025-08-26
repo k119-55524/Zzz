@@ -43,7 +43,7 @@ namespace zzz
 		~View() = default;
 
 		event<size2D<>, e_TypeWinResize> viewResized;
-		void OnUpdate();
+		void OnUpdate(double deltaTime);
 		void OnViewResized(const size2D<>& size, e_TypeWinResize resizeType);
 		void SetFullScreen(bool fs);
 
@@ -57,6 +57,7 @@ namespace zzz
 
 		eInitState initState;
 		void Initialize();
+		void PrepareFrame(double deltaTime);
 
 		ThreadPool m_ThreadRenderAnUpdate;
 		std::shared_ptr<Scene> m_Scene;
@@ -117,26 +118,20 @@ namespace zzz
 		}
 	}
 
-	void View::OnUpdate()
+	void View::OnUpdate(double deltaTime)
 	{
 		if (initState != eInitState::eInitOK)
 			return;
 
 		if (m_SurfaceView)
 		{
-			// Если есть сцена
-			//if (m_Scene)
-			//{
-			//	// рендрим её
-			//}
-
 			m_ThreadRenderAnUpdate.Submit([&]()
 				{
 					m_SurfaceView->RenderFrame();
 				});
 			m_ThreadRenderAnUpdate.Submit([&]()
 				{
-					m_SurfaceView->PrepareFrame();
+					PrepareFrame(deltaTime);
 				});
 			m_ThreadRenderAnUpdate.Join();
 		}
@@ -150,6 +145,22 @@ namespace zzz
 
 			//if (frameCount == 60)
 			//	SetFullScreen(false);
+		}
+	}
+
+	void View::PrepareFrame(double deltaTime)
+	{
+		m_SurfaceView->PrepareFrame();
+
+		{
+			//const int testValue = 60;
+			//static int frameCount = 0;
+			//frameCount++;
+			//if (frameCount == testValue)
+			//{
+			//	frameCount = 0;
+			//	DebugOutput(std::format(L">>>>> FPS: {}, deltaTime: {}.\n", 60/deltaTime, deltaTime));
+			//}
 		}
 	}
 

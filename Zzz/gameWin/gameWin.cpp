@@ -1,4 +1,4 @@
-﻿
+
 #include "pch.h"
 import engine;
 import result;
@@ -11,9 +11,22 @@ int APIENTRY wWinMain(
 	_In_		LPWSTR		lpCmdLine,
 	_In_		int			nCmdShow)
 {
-	zzz::engine engine;
-	result<> res = engine.Initialize(L".\\appdata\\ui.zaml")
-		.and_then([&engine]() { return engine.Run(); });
+#ifdef _DEBUG
+		_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+		//_CrtSetBreakAlloc(263);
+		//_CrtSetBreakAlloc(160);
+		//_CrtSetBreakAlloc(202);
+#endif // _DEBUG
+	{
+		result<> res;
+		zzz::engine engine;
+		res = engine.Initialize(L".\\appdata\\ui.zaml")
+			.and_then([&engine]() { return engine.Run(); });
+	}
 
-	return res ? 0 : static_cast<int>(res.error().getCode());
+#ifdef _DEBUG
+	_CrtDumpMemoryLeaks();
+#endif // _DEBUG
+
+	return 0;
 }
