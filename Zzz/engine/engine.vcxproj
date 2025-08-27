@@ -96,8 +96,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Source\Engine\Interfaces\platforms\IMeshGPU.cppm" />
-    <ClCompile Include="Source\Engine\Resources\MeshGPU_DX.cppm" />
-    <ClCompile Include="Source\Engine\Resources\ResourcesManagerGPU.cppm" />
+    <ClCompile Include="Source\Engine\Resources\CPUIndexBuffer.cppm" />
+    <ClCompile Include="Source\Engine\Resources\GPUMeshDX.cppm" />
+    <ClCompile Include="Source\Engine\Resources\GPUResourcesManager.cppm" />
     <ClCompile Include="Source\Engine\Utils\AppTime.cppm" />
     <ClCompile Include="Source\Engine.cppm" />
     <ClCompile Include="Source\Engine\InterfacesImpl\AppWin\winMSWin.cppm" />
@@ -110,8 +111,8 @@
     <ClCompile Include="Source\Engine\Interfaces\platforms\ISurfaceView.cppm" />
     <ClCompile Include="Source\Engine\Utils\Colors.cppm" />
     <ClCompile Include="Source\Engine\Utils\PerformanceMeter.cppm" />
-    <ClCompile Include="Source\Engine\Resources\ResourcesManagerCPU.cppm" />
-    <ClCompile Include="Source\Engine\Resources\MeshCPU.cppm" />
+    <ClCompile Include="Source\Engine\Resources\CPUResourcesManager.cppm" />
+    <ClCompile Include="Source\Engine\Resources\CPUMesh.cppm" />
     <ClCompile Include="Source\Engine\Resources\MeshData.cppm" />
     <ClCompile Include="Source\Engine\Scene\Scene.cppm" />
     <ClCompile Include="Source\Engine\Scene\SceneEntity.cppm" />

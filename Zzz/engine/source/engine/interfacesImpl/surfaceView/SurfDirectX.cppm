@@ -400,6 +400,14 @@ namespace zzz
 		// commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
 		// commandList->DrawInstanced(3, 1, 0, 0);
 
+		//void RenderCube() {
+		//	// ... (настройка конвейера, RTV, очистка)
+		//	commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+		//	commandList->IASetIndexBuffer(&indexBufferView);
+		//	commandList->DrawIndexedInstanced(36, 1, 0, 0, 0);
+		//	// ... (барьеры, close, execute, present, WaitForGPU)
+		//}
+
 		// Завершение подготовки (из EndRender, до закрытия командного списка)
 		commandList->ResourceBarrier(
 			1,

@@ -119,7 +119,7 @@
     <ClCompile Include="Source\Engine\Scene\Scene.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Resources\ResourcesManagerCPU.cppm">
+    <ClCompile Include="Source\Engine\Resources\CPUResourcesManager.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Scene\ScenesManager.cppm">
@@ -128,7 +128,7 @@
     <ClCompile Include="Source\Engine\Resources\MeshData.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Resources\MeshCPU.cppm">
+    <ClCompile Include="Source\Engine\Resources\CPUMesh.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Scene\SceneEntity.cppm">
@@ -146,16 +146,19 @@
     <ClCompile Include="Source\Engine\Utils\PerformanceMeter.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Resources\ResourcesManagerGPU.cppm">
+    <ClCompile Include="Source\Engine\Resources\GPUResourcesManager.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Resources\MeshGPU_DX.cppm">
+    <ClCompile Include="Source\Engine\Resources\GPUMeshDX.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Utils\Colors.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Interfaces\platforms\IMeshGPU.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Resources\CPUIndexBuffer.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
   </ItemGroup>

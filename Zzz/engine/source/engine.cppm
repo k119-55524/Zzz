@@ -16,8 +16,8 @@ import IOPathFactory;
 import EngineFactory;
 import ScenesManager;
 import PerformanceMeter;
-import ResourcesManagerCPU;
-import ResourcesManagerGPU;
+import CPUResourcesManager;
+import GPUResourcesManager;
 
 using namespace zzz;
 using namespace zzz::io;
@@ -51,8 +51,8 @@ export namespace zzz
 		bool isSysPaused;
 
 		std::shared_ptr<Settings> m_setting;
-		std::shared_ptr<ResourcesManagerCPU> m_ResCPU;
-		std::shared_ptr<ResourcesManagerGPU> m_ResGPU;
+		std::shared_ptr<CPUResourcesManager> m_ResCPU;
+		std::shared_ptr<GPUResourcesManager> m_ResGPU;
 		std::shared_ptr<ScenesManager> m_ScenManager;
 		std::shared_ptr<IGAPI> m_GAPI;
 		std::shared_ptr<View> m_View;
@@ -103,9 +103,6 @@ export namespace zzz
 		{
 			// Читаем настройки из файла
 			m_setting = safe_make_shared<Settings>(settingFilePath);
-			m_ResCPU = safe_make_shared<ResourcesManagerCPU>(m_setting);
-			m_ResGPU = safe_make_shared<ResourcesManagerGPU>(m_ResCPU);
-			m_ScenManager = safe_make_shared<ScenesManager>(m_ResGPU);
 
 			// TODO: После тип GAPI буду передавать из m_settings
 			// Создаём обёртку над графическим API
@@ -113,6 +110,10 @@ export namespace zzz
 			if (!res)
 				return Unexpected(eResult::failure, L">>>>> [Engine::initialize()]. Failed to create GAPI.");
 			m_GAPI = res.value();
+
+			m_ResCPU = safe_make_shared<CPUResourcesManager>(m_setting);
+			m_ResGPU = safe_make_shared<GPUResourcesManager>(m_GAPI, m_ResCPU);
+			m_ScenManager = safe_make_shared<ScenesManager>(m_ResGPU);
 
 			// Содаём основное окно(View) приложения
 			m_View = safe_make_shared<View>(m_setting, m_ScenManager, m_GAPI, std::bind(&Engine::OnViewResized, this, std::placeholders::_1, std::placeholders::_2));

@@ -179,10 +179,10 @@ export namespace zzz
 	{
 		virtual ~ICPUVertexBuffer() = default;
 
-		virtual size_t stride() const = 0;
-		virtual size_t sizeInBytes() const = 0;
-		virtual const void* rawData() const = 0;
-		virtual size_t vertexCount() const = 0;
+		virtual size_t Stride() const = 0;
+		virtual size_t SizeInBytes() const = 0;
+		virtual const void* RawData() const = 0;
+		virtual size_t VertexCount() const = 0;
 
 		// Удаляем локальное определение LayoutEntry
 		virtual std::vector<LayoutEntry> layout() const = 0;
@@ -205,10 +205,10 @@ export namespace zzz
 		VertexBuffer(const VertexBuffer&) = delete;
 		VertexBuffer& operator=(const VertexBuffer&) = delete;
 
-		size_t stride() const override { return sizeof(VertexT); }
-		size_t sizeInBytes() const override { return vertices.size() * sizeof(VertexT); }
-		size_t vertexCount() const override { return vertices.size(); }
-		const void* rawData() const override { return vertices.data(); }
+		size_t Stride() const override { return sizeof(VertexT); }
+		size_t SizeInBytes() const override { return vertices.size() * sizeof(VertexT); }
+		size_t VertexCount() const override { return vertices.size(); }
+		const void* RawData() const override { return vertices.data(); }
 
 		std::vector<LayoutEntry> layout() const override
 		{

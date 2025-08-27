@@ -4,7 +4,7 @@ export module ScenesManager;
 import Scene;
 import result;
 import Settings;
-import ResourcesManagerGPU;
+import GPUResourcesManager;
 
 export namespace zzz
 {
@@ -16,16 +16,16 @@ export namespace zzz
 		ScenesManager(ScenesManager&&) = delete;
 		ScenesManager& operator=(const ScenesManager&) = delete;
 		ScenesManager& operator=(ScenesManager&&) = delete;
-		explicit ScenesManager(const std::shared_ptr<ResourcesManagerGPU> resGPU);
+		explicit ScenesManager(const std::shared_ptr<GPUResourcesManager> resGPU);
 		~ScenesManager();
 
 		result<std::shared_ptr<Scene>> GetStartScene();
 
 	private:
-		const std::shared_ptr<ResourcesManagerGPU> m_ResGPU;
+		const std::shared_ptr<GPUResourcesManager> m_ResGPU;
 	};
 
-	ScenesManager::ScenesManager(const std::shared_ptr<ResourcesManagerGPU> resGPU) :
+	ScenesManager::ScenesManager(const std::shared_ptr<GPUResourcesManager> resGPU) :
 		m_ResGPU{ resGPU }
 	{
 		ensure(m_ResGPU, ">>>>> [ScenesManager::ScenesManager()]. Resource system GPU cannot be null.");
@@ -41,9 +41,9 @@ export namespace zzz
 		if (!scene)
 			return Unexpected(eResult::no_make_shared_ptr, L">>>>> [ScenesManager::GetStartScene()]. Failed to create Scene.");
 
-		auto MeshGPU_DX = m_ResGPU->GetGenericMesh(MeshType::eGenericBox);
-		if (!MeshGPU_DX)
-			return MeshGPU_DX.error();
+		auto GPUMeshDX = m_ResGPU->GetGenericMesh(MeshType::eGenericBox);
+		if (!GPUMeshDX)
+			return GPUMeshDX.error();
 
 		return scene;
 	}
