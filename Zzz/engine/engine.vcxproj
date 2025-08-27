@@ -83,11 +83,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="headers\headerDX.h" />
-    <ClInclude Include="headers\header.h" />
-    <ClInclude Include="headers\headerMetal.h" />
-    <ClInclude Include="headers\headerMSWin.h" />
-    <ClInclude Include="headers\headerVulkan.h" />
+    <ClInclude Include="Headers\HeaderDX.h" />
+    <ClInclude Include="Headers\Header.h" />
+    <ClInclude Include="Headers\HeaderMetal.h" />
+    <ClInclude Include="Headers\HeaderMSWin.h" />
+    <ClInclude Include="Headers\HeaderVulkan.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -95,6 +95,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Source\Engine\Interfaces\platforms\IMeshGPU.cppm" />
+    <ClCompile Include="Source\Engine\Resources\MeshGPU_DX.cppm" />
     <ClCompile Include="Source\Engine\Resources\ResourcesManagerGPU.cppm" />
     <ClCompile Include="Source\Engine\Utils\AppTime.cppm" />
     <ClCompile Include="Source\Engine.cppm" />
@@ -106,6 +108,7 @@
     <ClCompile Include="Source\Engine\Interfaces\platforms\IAppWin.cppm" />
     <ClCompile Include="Source\Engine\Interfaces\platforms\ICheckGapiSupport.cppm" />
     <ClCompile Include="Source\Engine\Interfaces\platforms\ISurfaceView.cppm" />
+    <ClCompile Include="Source\Engine\Utils\Colors.cppm" />
     <ClCompile Include="Source\Engine\Utils\PerformanceMeter.cppm" />
     <ClCompile Include="Source\Engine\Resources\ResourcesManagerCPU.cppm" />
     <ClCompile Include="Source\Engine\Resources\MeshCPU.cppm" />

@@ -18,19 +18,19 @@
     <ClInclude Include="pch.h">
       <Filter>����� ����������</Filter>
     </ClInclude>
-    <ClInclude Include="headers\header.h">
+    <ClInclude Include="Headers\Header.h">
       <Filter>����� ����������</Filter>
     </ClInclude>
-    <ClInclude Include="headers\headerMSWin.h">
+    <ClInclude Include="Headers\HeaderMSWin.h">
       <Filter>����� ����������</Filter>
     </ClInclude>
-    <ClInclude Include="headers\headerDX.h">
+    <ClInclude Include="Headers\HeaderDX.h">
       <Filter>����� ����������</Filter>
     </ClInclude>
-    <ClInclude Include="headers\headerVulkan.h">
+    <ClInclude Include="Headers\HeaderVulkan.h">
       <Filter>����� ����������</Filter>
     </ClInclude>
-    <ClInclude Include="headers\headerMetal.h">
+    <ClInclude Include="Headers\HeaderMetal.h">
       <Filter>����� ����������</Filter>
     </ClInclude>
   </ItemGroup>
@@ -147,6 +147,15 @@
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Resources\ResourcesManagerGPU.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Resources\MeshGPU_DX.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Utils\Colors.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Interfaces\platforms\IMeshGPU.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
   </ItemGroup>

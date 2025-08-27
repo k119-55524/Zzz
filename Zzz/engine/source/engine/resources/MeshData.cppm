@@ -1,6 +1,8 @@
 #include "pch.h"
 export module MeshData;
 
+import Colors;
+
 export namespace zzz
 {
 	// ----- Универсальные семантики -----
@@ -64,6 +66,13 @@ export namespace zzz
 		{
 			assert(init.size() == N);
 			std::copy(init.begin(), init.end(), value);
+		}
+
+		// Конструктор для Color
+		Attribute(const Colors::Color& color) requires (S == Semantic::Color && std::is_same_v<T, float>)
+		{
+			for (size_t i = 0; i < N; ++i)
+				value[i] = color[i];
 		}
 	};
 

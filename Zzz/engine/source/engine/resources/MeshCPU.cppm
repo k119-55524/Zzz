@@ -13,13 +13,13 @@ export namespace zzz
 		MeshCPU(MeshCPU&&) = delete;
 		MeshCPU& operator=(const MeshCPU&) = delete;
 		MeshCPU& operator=(MeshCPU&&) = delete;
-		explicit MeshCPU(std::shared_ptr<ICPUVertexBuffer> _mesh);
+		explicit MeshCPU(std::shared_ptr<ICPUVertexBuffer> _mesh, std::shared_ptr<std::vector<zU16>> _indicies = nullptr);
 
 	private:
 		std::shared_ptr<ICPUVertexBuffer> mesh;
 	};
 
-	MeshCPU::MeshCPU(std::shared_ptr<ICPUVertexBuffer> _mesh) :
+	MeshCPU::MeshCPU(std::shared_ptr<ICPUVertexBuffer> _mesh, std::shared_ptr<std::vector<zU16>> _indicies) :
 			mesh{ std::move(_mesh) }
 	{
 		ensure(mesh);

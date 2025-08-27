@@ -9,14 +9,15 @@
 
    ------------------------------------------------------------- */
 
-#include "headerMSWin.h"
-#include "headerDX.h"
-#include "headerVulkan.h"
-#include "headerMetal.h"
+#include "HeaderMSWin.h"
+#include "HeaderDX.h"
+#include "HeaderVulkan.h"
+#include "HeaderMetal.h"
 
 namespace zzz
 {
 	typedef uint8_t zU8;
+	typedef uint16_t zU16;
 	typedef uint32_t zU32;
 	typedef uint64_t zU64;
 

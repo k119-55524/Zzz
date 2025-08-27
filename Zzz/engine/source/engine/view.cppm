@@ -104,10 +104,20 @@ namespace zzz
 			if (!res)
 				throw_runtime_error(std::format(">>>>> [View::Initialize()]. Failed to initialize surface window: {}.", wstring_to_string(res.error().getMessage())));
 
-			// Создаём сцену
-			auto res1 = m_ScenesManager->GetStartScene();
-			if (res1)
+
+			try
+			{
+				// Создаём сцену для теста
+				auto res1 = m_ScenesManager->GetStartScene();
+				if (!res1)
+					throw_runtime_error(">>>>> +++ #0 [View::Initialize()}. ERROR!!! Failed to create test scene.");
+
 				m_Scene = res1.value();
+			}
+			catch (...)
+			{
+				DebugOutput(L">>>>> +++ #1 [View::Initialize()}. ERROR!!! Failed to create test scene.");
+			}
 
 			initState = eInitState::eInitOK;
 		}

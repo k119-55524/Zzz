@@ -41,9 +41,9 @@ export namespace zzz
 		if (!scene)
 			return Unexpected(eResult::no_make_shared_ptr, L">>>>> [ScenesManager::GetStartScene()]. Failed to create Scene.");
 
-		//auto res = m_ResourcesManagerCPU->GetDefaultTriangleMesh();
-		//if (!res)
-		//	return res.error();
+		auto MeshGPU_DX = m_ResGPU->GetGenericMesh(MeshType::eGenericBox);
+		if (!MeshGPU_DX)
+			return MeshGPU_DX.error();
 
 		return scene;
 	}
