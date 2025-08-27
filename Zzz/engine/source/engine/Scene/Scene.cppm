@@ -1,7 +1,7 @@
 #include "pch.h"
 export module Scene;
 
-import ResourcesManager;
+import ResourcesManagerCPU;
 
 export namespace zzz
 {

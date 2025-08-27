@@ -38,7 +38,7 @@
     <ClCompile Include="pch.cpp">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\engine.cppm">
+    <ClCompile Include="Source\Engine.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Utils\result.cppm">
@@ -53,7 +53,7 @@
     <ClCompile Include="Source\Engine\Utils\serializer.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\utils\strConvert.cppm">
+    <ClCompile Include="Source\Utils\strConvert.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\IO\ioZaml.cppm">
@@ -62,7 +62,7 @@
     <ClCompile Include="Source\Engine\IO\IOPathFactory.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\utils\MessageBox.cppm">
+    <ClCompile Include="Source\Utils\MessageBox.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Interfaces\platforms\IMainLoop.cppm">
@@ -80,13 +80,13 @@
     <ClCompile Include="Source\Engine\Interfaces\platforms\IGAPI.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\InterfacesImpl\gapi\DXAPI.cppm">
+    <ClCompile Include="Source\Engine\InterfacesImpl\GAPI\DXAPI.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Utils\event.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\InterfacesImpl\gapi\DX\RootSignature.cppm">
+    <ClCompile Include="Source\Engine\InterfacesImpl\GAPI\DX\RootSignature.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\View.cppm">
@@ -107,7 +107,7 @@
     <ClCompile Include="Source\Engine\InterfacesImpl\SurfaceView\SurfDirectX.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\InterfacesImpl\gapi\DX\CheckDirectXUltimateSupport.cppm">
+    <ClCompile Include="Source\Engine\InterfacesImpl\GAPI\DX\CheckDirectXUltimateSupport.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Interfaces\platforms\ICheckGapiSupport.cppm">
@@ -119,7 +119,7 @@
     <ClCompile Include="Source\Engine\Scene\Scene.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Resources\ResourcesManager.cppm">
+    <ClCompile Include="Source\Engine\Resources\ResourcesManagerCPU.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Scene\ScenesManager.cppm">
@@ -144,6 +144,9 @@
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Utils\PerformanceMeter.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Resources\ResourcesManagerGPU.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
   </ItemGroup>

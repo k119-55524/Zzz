@@ -1,6 +1,6 @@
 
 #include "pch.h"
-export module engine;
+export module Engine;
 
 import View;
 import IGAPI;
@@ -13,10 +13,11 @@ import Settings;
 import IMainLoop;
 import strConvert;
 import IOPathFactory;
-import engineFactory;
+import EngineFactory;
 import ScenesManager;
 import PerformanceMeter;
-import ResourcesManager;
+import ResourcesManagerCPU;
+import ResourcesManagerGPU;
 
 using namespace zzz;
 using namespace zzz::io;
@@ -33,28 +34,29 @@ namespace zzz
 
 export namespace zzz
 {
-	export class engine
+	export class Engine
 	{
 	public:
-		engine();
-		~engine();
+		Engine();
+		~Engine();
 
 		result<> Initialize(std::wstring settingFilePath) noexcept;
 		result<> Run() noexcept;
 
 	private:
-		engineFactory m_factory;
+		EngineFactory m_factory;
 
 		eInitState initState;
 		std::mutex stateMutex;
 		bool isSysPaused;
 
 		std::shared_ptr<Settings> m_setting;
-		std::shared_ptr<ResourcesManager> m_resourcesManager;
-		std::shared_ptr<ScenesManager> m_scenesManager;
+		std::shared_ptr<ResourcesManagerCPU> m_ResCPU;
+		std::shared_ptr<ResourcesManagerGPU> m_ResGPU;
+		std::shared_ptr<ScenesManager> m_ScenManager;
 		std::shared_ptr<IGAPI> m_GAPI;
-		std::shared_ptr<View> m_view;
-		std::shared_ptr<IMainLoop> mainLoop;
+		std::shared_ptr<View> m_View;
+		std::shared_ptr<IMainLoop> m_MainLoop;
 		AppTime m_time;
 
 		void Reset() noexcept;
@@ -64,59 +66,60 @@ export namespace zzz
 		PerformanceMeter m_PerfRender;
 	};
 
-	engine::engine() :
+	Engine::Engine() :
 		initState{ eInitState::eInitNot },
 		isSysPaused{ true }
-	{ }
+	{
+	}
 
-	engine::~engine()
+	Engine::~Engine()
 	{
 		Reset();
 	}
 
-	void engine::Reset() noexcept
+	void Engine::Reset() noexcept
 	{
-		mainLoop.reset();
-		m_view.reset();
+		m_MainLoop.reset();
+		m_View.reset();
 		m_GAPI.reset();
-		m_scenesManager.reset();
-		m_resourcesManager.reset();
+		m_ScenManager.reset();
+		m_ResCPU.reset();
+		m_ResGPU.reset();
 		m_setting.reset();
 
 		initState = eInitState::eInitNot;
 		isSysPaused = true;
 	}
 
-	result<> engine::Initialize(std::wstring settingFilePath) noexcept
+	result<> Engine::Initialize(std::wstring settingFilePath) noexcept
 	{
 		std::lock_guard<std::mutex> lock(stateMutex);
 
 		if (initState != eInitState::eInitNot)
-			return Unexpected(eResult::failure, L">>>>> [engine::initialize()]. Re-initialization is not allowed.");
+			return Unexpected(eResult::failure, L">>>>> [Engine::initialize()]. Re-initialization is not allowed.");
 
 		std::wstring err;
 		try
 		{
 			// Читаем настройки из файла
 			m_setting = safe_make_shared<Settings>(settingFilePath);
-			// Создаем менеджер ресурсов
-			m_resourcesManager = safe_make_shared<ResourcesManager>(m_setting);
-			// Создаём менеджер сцен
-			m_scenesManager = safe_make_shared<ScenesManager>(m_resourcesManager);
+			m_ResCPU = safe_make_shared<ResourcesManagerCPU>(m_setting);
+			m_ResGPU = safe_make_shared<ResourcesManagerGPU>(m_ResCPU);
+			m_ScenManager = safe_make_shared<ScenesManager>(m_ResGPU);
 
 			// TODO: После тип GAPI буду передавать из m_settings
 			// Создаём обёртку над графическим API
 			auto res = m_factory.CreateGAPI(m_setting);
 			if (!res)
-				return Unexpected(eResult::failure, L">>>>> [engine::initialize()]. Failed to create GAPI.");
+				return Unexpected(eResult::failure, L">>>>> [Engine::initialize()]. Failed to create GAPI.");
 			m_GAPI = res.value();
 
 			// Содаём основное окно(View) приложения
-			m_view = safe_make_shared<View>(m_setting, m_scenesManager, m_GAPI, std::bind(&engine::OnViewResized, this, std::placeholders::_1, std::placeholders::_2));
+			m_View = safe_make_shared<View>(m_setting, m_ScenManager, m_GAPI, std::bind(&Engine::OnViewResized, this, std::placeholders::_1, std::placeholders::_2));
 
 			// Создаём главный цикл приложения
-			mainLoop = safe_make_shared<MainLoop>();
-			mainLoop->onUpdateSystem += std::bind(&engine::OnUpdateSystem, this);
+			m_MainLoop = safe_make_shared<MainLoop>();
+			m_MainLoop->onUpdateSystem += std::bind(&Engine::OnUpdateSystem, this);
 
 			initState = eInitState::eInitOK;
 			return {};
@@ -124,8 +127,8 @@ export namespace zzz
 		catch (const std::exception& e)
 		{
 			string_to_wstring(e.what())
-				.and_then([&err](const std::wstring& wstr) { err = L">>>>> [engine::initialize()].\n" + wstr; })
-				.or_else([&err](const Unexpected& error) { err = L">>>>> #0 [engine::initialize()]. Unknown exception occurred."; });
+				.and_then([&err](const std::wstring& wstr) { err = L">>>>> [Engine::initialize()].\n" + wstr; })
+				.or_else([&err](const Unexpected& error) { err = L">>>>> #0 [Engine::initialize()]. Unknown exception occurred."; });
 		}
 		catch (...)
 		{
@@ -137,14 +140,14 @@ export namespace zzz
 		return Unexpected(eResult::exception, err);
 	}
 
-	result<> engine::Run() noexcept
+	result<> Engine::Run() noexcept
 	{
 		std::lock_guard<std::mutex> lock(stateMutex);
 		if (initState != eInitState::eInitOK)
-			return Unexpected(eResult::failure, L">>>>> [engine::go()]. Engine is not initialized.");
+			return Unexpected(eResult::failure, L">>>>> [Engine::go()]. Engine is not initialized.");
 
 		if (initState == eInitState::eRunning)
-			return Unexpected(eResult::failure, L">>>>> [engine::go()]. Engine is already running.");
+			return Unexpected(eResult::failure, L">>>>> [Engine::go()]. Engine is already running.");
 
 		initState = eInitState::eRunning;
 		std::wstring err;
@@ -152,21 +155,22 @@ export namespace zzz
 		try
 		{
 			isSysPaused = false;
-			m_view->SetVSync(false);
+			
+			m_View->SetVSync(false);
 			m_time.Reset();
-			mainLoop->Run();
+			m_MainLoop->Run();
 
 			return {};
 		}
 		catch (const std::exception& e)
 		{
 			string_to_wstring(e.what())
-				.and_then([&err](const std::wstring& wstr) { err = L">>>>> [engine::go()]. Exception: " + wstr + L"\n"; })
-				.or_else([&err](const Unexpected& error) { err = L">>>>> #0 [engine::go()]. Unknown exception occurred" + std::wstring(L"\n"); });
+				.and_then([&err](const std::wstring& wstr) { err = L">>>>> [Engine::go()]. Exception: " + wstr + L"\n"; })
+				.or_else([&err](const Unexpected& error) { err = L">>>>> #0 [Engine::go()]. Unknown exception occurred" + std::wstring(L"\n"); });
 		}
 		catch (...)
 		{
-			err = L">>>>> #1 [engine::go()]. Unknown exception occurred";
+			err = L">>>>> #1 [Engine::go()]. Unknown exception occurred";
 		}
 
 		zMsgBox::Error(err);
@@ -174,7 +178,7 @@ export namespace zzz
 		return Unexpected(eResult::exception, err);
 	}
 
-	void engine::OnUpdateSystem()
+	void Engine::OnUpdateSystem()
 	{
 		if (isSysPaused)
 			return;
@@ -184,7 +188,7 @@ export namespace zzz
 		static zU32 frameCount = 0;
 		static double allTime = 0.0;
 		m_PerfRender.StartPerformance();
-		m_view->OnUpdate(m_time.GetDeltaTime());
+		m_View->OnUpdate(m_time.GetDeltaTime());
 		allTime += m_PerfRender.StopPerformance();
 		{
 			frameCount++;
@@ -192,14 +196,14 @@ export namespace zzz
 			{
 				double mspf = (allTime / frameCount) * 1000;;
 				std::wstring cap = std::format(L".  fps: {}.  mspf: {:.4f}.", frameCount, mspf);
-				m_view->AddViewCaptionText(cap);
+				m_View->AddViewCaptionText(cap);
 				frameCount = 0;
 				allTime = 0.0f;
 			}
 		}
 	}
 
-	void engine::OnViewResized(const size2D<>& size, e_TypeWinResize resizeType)
+	void Engine::OnViewResized(const size2D<>& size, e_TypeWinResize resizeType)
 	{
 		switch (resizeType)
 		{
@@ -214,6 +218,6 @@ export namespace zzz
 			break;
 		}
 
-		DebugOutput(std::format(L">>>>> [engine::OnResizeAppWin()]. isSysPaused: {}\n", isSysPaused));
+		DebugOutput(std::format(L">>>>> [Engine::OnResizeAppWin()]. isSysPaused: {}\n", isSysPaused));
 	}
 }

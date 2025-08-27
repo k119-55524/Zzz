@@ -13,14 +13,14 @@ import ThreadPool;
 import viewFactory;
 import ISurfaceView;
 import ScenesManager;
-import ResourcesManager;
+import ResourcesManagerCPU;
 
 using namespace Zzz::Templates;
 using namespace zzz::platforms;
 
 namespace zzz
 {
-	class engine;
+	class Engine;
 }
 
 namespace zzz

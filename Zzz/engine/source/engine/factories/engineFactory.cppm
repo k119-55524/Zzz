@@ -1,5 +1,5 @@
 #include "pch.h"
-export module engineFactory;
+export module EngineFactory;
 
 import IGAPI;
 import result;
@@ -17,15 +17,15 @@ using namespace zzz::platforms;
 
 export namespace zzz
 {
-	export class engineFactory final
+	export class EngineFactory final
 	{
 	public:
-		engineFactory() = default;
-		engineFactory(const engineFactory&) = delete;
-		engineFactory(engineFactory&&) = delete;
-		engineFactory& operator=(const engineFactory&) = delete;
-		engineFactory& operator=(engineFactory&&) = delete;
-		~engineFactory() = default;
+		EngineFactory() = default;
+		EngineFactory(const EngineFactory&) = delete;
+		EngineFactory(EngineFactory&&) = delete;
+		EngineFactory& operator=(const EngineFactory&) = delete;
+		EngineFactory& operator=(EngineFactory&&) = delete;
+		~EngineFactory() = default;
 
 		[[nodiscard]] result<std::shared_ptr<IGAPI>> CreateGAPI(std::shared_ptr<Settings> setting);
 		[[nodiscard]] inline std::shared_ptr<IGAPI> GetGAPI() const noexcept { return m_GAPI; }
@@ -34,12 +34,12 @@ export namespace zzz
 		std::shared_ptr<IGAPI> m_GAPI;
 	};
 
-	result<std::shared_ptr<IGAPI>> engineFactory::CreateGAPI(std::shared_ptr<Settings> setting)
+	result<std::shared_ptr<IGAPI>> EngineFactory::CreateGAPI(std::shared_ptr<Settings> setting)
 	{
 		if (m_GAPI)
-			return Unexpected(eResult::already_created, L">>>>> [engineFactories::CreateGAPI()]. GAPI already created.");
+			return Unexpected(eResult::already_created, L">>>>> [EngineFactories::CreateGAPI()]. GAPI already created.");
 
-		ensure(setting, ">>>>> [engineFactories::CreateGAPI()]. Settings cannot be null.");
+		ensure(setting, ">>>>> [EngineFactories::CreateGAPI()]. Settings cannot be null.");
 
 		try
 		{
@@ -55,22 +55,22 @@ export namespace zzz
 				break;
 #endif // defined(_WIN64)
 			default:
-				throw_runtime_error(std::format(">>>>> [engineFactories::CreateGAPI()]. Unsupported GAPI type: {}.", static_cast<uint8_t>(type)));
+				throw_runtime_error(std::format(">>>>> [EngineFactories::CreateGAPI()]. Unsupported GAPI type: {}.", static_cast<uint8_t>(type)));
 			}
 
 			auto res = igapi->Initialize()
 				.and_then([&]() { m_GAPI = std::move(igapi); })
-				.or_else([&](const Unexpected& error) { throw_runtime_error(std::format(">>>>> [engineFactory::CreateGAPI( ... )]. {}.", wstring_to_string(error.getMessage()))); });
+				.or_else([&](const Unexpected& error) { throw_runtime_error(std::format(">>>>> [EngineFactory::CreateGAPI( ... )]. {}.", wstring_to_string(error.getMessage()))); });
 
 			return m_GAPI;
 		}
 		catch (const std::exception& e)
 		{
-			throw_runtime_error(std::format(">>>>> [engineFactories::CreateGAPI()]. Failed to create GAPI: {}.", std::string(e.what())));
+			throw_runtime_error(std::format(">>>>> [EngineFactories::CreateGAPI()]. Failed to create GAPI: {}.", std::string(e.what())));
 		}
 		catch (...)
 		{
-			throw_runtime_error(">>>>>> [engineFactories::CreateGAPI()]. Unknown exception occurred while creating GAPI.");
+			throw_runtime_error(">>>>>> [EngineFactories::CreateGAPI()]. Unknown exception occurred while creating GAPI.");
 		}
 	}
 }

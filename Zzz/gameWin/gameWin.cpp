@@ -1,6 +1,6 @@
 
 #include "pch.h"
-import engine;
+import Engine;
 import result;
 
 using namespace zzz;
@@ -19,9 +19,9 @@ int APIENTRY wWinMain(
 #endif // _DEBUG
 	{
 		result<> res;
-		zzz::engine engine;
-		res = engine.Initialize(L".\\appdata\\ui.zaml")
-			.and_then([&engine]() { return engine.Run(); });
+		zzz::Engine Engine;
+		res = Engine.Initialize(L".\\appdata\\ui.zaml")
+			.and_then([&Engine]() { return Engine.Run(); });
 	}
 
 #ifdef _DEBUG

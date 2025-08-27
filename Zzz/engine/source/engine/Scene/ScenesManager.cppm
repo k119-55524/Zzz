@@ -4,7 +4,7 @@ export module ScenesManager;
 import Scene;
 import result;
 import Settings;
-import ResourcesManager;
+import ResourcesManagerGPU;
 
 export namespace zzz
 {
@@ -16,19 +16,19 @@ export namespace zzz
 		ScenesManager(ScenesManager&&) = delete;
 		ScenesManager& operator=(const ScenesManager&) = delete;
 		ScenesManager& operator=(ScenesManager&&) = delete;
-		explicit ScenesManager(const std::shared_ptr<ResourcesManager> _resourcesManager);
+		explicit ScenesManager(const std::shared_ptr<ResourcesManagerGPU> resGPU);
 		~ScenesManager();
 
 		result<std::shared_ptr<Scene>> GetStartScene();
 
 	private:
-		const std::shared_ptr<ResourcesManager> m_resourcesManager;
+		const std::shared_ptr<ResourcesManagerGPU> m_ResGPU;
 	};
 
-	ScenesManager::ScenesManager(const std::shared_ptr<ResourcesManager> _resourcesManager) :
-		m_resourcesManager{ _resourcesManager }
+	ScenesManager::ScenesManager(const std::shared_ptr<ResourcesManagerGPU> resGPU) :
+		m_ResGPU{ resGPU }
 	{
-		ensure(m_resourcesManager, ">>>>> [ScenesManager::ScenesManager()]. Resource system cannot be null.");
+		ensure(m_ResGPU, ">>>>> [ScenesManager::ScenesManager()]. Resource system GPU cannot be null.");
 	}
 
 	ScenesManager::~ScenesManager()
@@ -41,9 +41,9 @@ export namespace zzz
 		if (!scene)
 			return Unexpected(eResult::no_make_shared_ptr, L">>>>> [ScenesManager::GetStartScene()]. Failed to create Scene.");
 
-		auto res = m_resourcesManager->GetDefaultTriangleMesh();
-		if (!res)
-			return res.error();
+		//auto res = m_ResourcesManagerCPU->GetDefaultTriangleMesh();
+		//if (!res)
+		//	return res.error();
 
 		return scene;
 	}
