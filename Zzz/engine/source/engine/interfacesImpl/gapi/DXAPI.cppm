@@ -280,7 +280,7 @@ export namespace zzz::platforms::directx
 				{
 #ifdef _DEBUG
 					DebugOutput(std::format(
-						L">>>>> [DXAPI::GetAdapter()] Selected adapter: {}\n"
+						L">>>>> [DXAPI::GetAdapter()] Selected adapter: {}"
 						L" VRAM: {} MB\n",
 						desc.Description,
 						desc.DedicatedVideoMemory / (1024 * 1024)).c_str());

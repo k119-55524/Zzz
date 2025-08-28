@@ -10,7 +10,7 @@ import IAppWin;
 import Settings;
 import strConvert;
 import ThreadPool;
-import viewFactory;
+import ViewFactory;
 import ISurfaceView;
 import ScenesManager;
 import CPUResourcesManager;
@@ -51,7 +51,7 @@ namespace zzz
 		inline void AddViewCaptionText(std::wstring caption) { if (m_Win != nullptr) m_Win->AddCaptionText(caption); };
 
 	private:
-		viewFactory factory;
+		ViewFactory factory;
 		const std::shared_ptr<Settings> m_Settings;
 		const std::shared_ptr<IGAPI> m_GAPI;
 		const std::shared_ptr<ScenesManager> m_ScenesManager;

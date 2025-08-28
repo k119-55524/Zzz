@@ -108,8 +108,8 @@
     <ClCompile Include="Source\Engine\Utils\AppTime.cppm" />
     <ClCompile Include="Source\Engine.cppm" />
     <ClCompile Include="Source\Engine\InterfacesImpl\AppWin\winMSWin.cppm" />
-    <ClCompile Include="Source\Engine\Factories\engineFactory.cppm" />
-    <ClCompile Include="Source\Engine\Factories\viewFactory.cppm" />
+    <ClCompile Include="Source\Engine\Factories\EngineFactory.cppm" />
+    <ClCompile Include="Source\Engine\Factories\ViewFactory.cppm" />
     <ClCompile Include="Source\Engine\Platforms\DX\CheckDirectXUltimateSupport.cppm" />
     <ClCompile Include="Source\Engine\InterfacesImpl\SurfaceView\SurfDirectX.cppm" />
     <ClCompile Include="Source\Engine\Interfaces\Platforms\IAppWin.cppm" />

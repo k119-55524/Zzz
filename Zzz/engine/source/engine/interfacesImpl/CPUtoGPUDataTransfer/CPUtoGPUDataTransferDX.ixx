@@ -9,7 +9,7 @@ using namespace zzz;
 #if defined(_WIN64)
 export namespace zzz::platforms::directx
 {
-	export class CPUtoGPUDataTransferDX : public ICPUtoGPUDataTransfer
+	export class CPUtoGPUDataTransferDX final : public ICPUtoGPUDataTransfer
 	{
 	public:
 		CPUtoGPUDataTransferDX() = delete;
@@ -27,6 +27,7 @@ export namespace zzz::platforms::directx
 	CPUtoGPUDataTransferDX::CPUtoGPUDataTransferDX(const ComPtr<ID3D12Device> device) :
 		m_device{ device }
 	{
+		ensure(m_device != nullptr);
 	}
 }
 #endif // _WIN64
