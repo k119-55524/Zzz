@@ -18,6 +18,8 @@ export namespace zzz::platforms
 		[[nodiscard]] inline bool SupportsVariableRateShading() const noexcept { return m_supportsVariableRateShading; }
 		[[nodiscard]] inline bool SupportsMeshShaders() const noexcept { return m_supportsMeshShaders; }
 		[[nodiscard]] inline bool SupportsSamplerFeedback() const noexcept { return m_supportsSamplerFeedback; }
+		[[nodiscard]] inline bool SupportsCopyQueue() const noexcept { return m_supportsCopyQueue; }
+		[[nodiscard]] inline bool SupportsDedicatedDMA() const noexcept { return m_supportsDedicatedDMA; }
 
 	protected:
 		virtual void CheckSupported() = 0;
@@ -26,13 +28,17 @@ export namespace zzz::platforms
 		bool m_supportsVariableRateShading;	// VRS
 		bool m_supportsMeshShaders;			// Mesh Shaders  
 		bool m_supportsSamplerFeedback;		// Sampler Feedback
+		bool m_supportsCopyQueue;			// CopyQueue
+		bool m_supportsDedicatedDMA;		// Dedicated DMA
 	};
 
-ICheckGapiSupport::ICheckGapiSupport()
-		: m_supportsRayTracing{ false },
-		  m_supportsVariableRateShading{ false },
-		  m_supportsMeshShaders{ false },
-		  m_supportsSamplerFeedback{ false }
+ICheckGapiSupport::ICheckGapiSupport() :
+	m_supportsRayTracing{ false },
+	m_supportsVariableRateShading{ false },
+	m_supportsMeshShaders{ false },
+	m_supportsSamplerFeedback{ false },
+	m_supportsCopyQueue{ false },
+	m_supportsDedicatedDMA{ false }
 	{
 	}
 }

@@ -6,6 +6,7 @@ import size2D;
 import IAppWin;
 import strConvert;
 import ICheckGapiSupport;
+import ICPUtoGPUDataTransfer;
 
 using namespace std::literals::string_view_literals;
 
@@ -51,10 +52,10 @@ export namespace zzz::platforms
 		}
 
 		// Геттеры возможностей
-		[[nodiscard]] inline bool SupportsRayTracing() const noexcept { return checkGapiSupport->SupportsRayTracing(); }
-		[[nodiscard]] inline bool SupportsVariableRateShading() const noexcept { return checkGapiSupport->SupportsVariableRateShading(); }
-		[[nodiscard]] inline bool SupportsMeshShaders() const noexcept { return checkGapiSupport->SupportsMeshShaders(); }
-		[[nodiscard]] inline bool SupportsSamplerFeedback() const noexcept { return checkGapiSupport->SupportsSamplerFeedback(); }
+		[[nodiscard]] inline bool SupportsRayTracing() const noexcept { return m_CheckGapiSupport->SupportsRayTracing(); }
+		[[nodiscard]] inline bool SupportsVariableRateShading() const noexcept { return m_CheckGapiSupport->SupportsVariableRateShading(); }
+		[[nodiscard]] inline bool SupportsMeshShaders() const noexcept { return m_CheckGapiSupport->SupportsMeshShaders(); }
+		[[nodiscard]] inline bool SupportsSamplerFeedback() const noexcept { return m_CheckGapiSupport->SupportsSamplerFeedback(); }
 
 		[[nodiscard]] virtual result<> Initialize();
 		virtual void SubmitCommandLists(zU64 index) = 0;
@@ -65,7 +66,8 @@ export namespace zzz::platforms
 
 		eGAPIType gapiType;
 		eInitState initState;
-		std::unique_ptr<ICheckGapiSupport> checkGapiSupport; // Проверка возможностей GAPI
+		std::unique_ptr<ICPUtoGPUDataTransfer> m_CPUtoGPUDataTransfer;
+		std::unique_ptr<ICheckGapiSupport> m_CheckGapiSupport; // Проверка возможностей GAPI
 
 	private:
 		std::mutex stateMutex;

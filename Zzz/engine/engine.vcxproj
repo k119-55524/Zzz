@@ -44,6 +44,9 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -95,43 +98,46 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Interfaces\platforms\IMeshGPU.cppm" />
+    <ClCompile Include="Source\Engine\InterfacesImpl\CPUtoGPUDataTransfer\CPUtoGPUDataTransferDX.ixx" />
+    <ClCompile Include="Source\Engine\Platforms\DX\CommandWrapperDX.cppm" />
+    <ClCompile Include="Source\Engine\Interfaces\Platforms\ICPUtoGPUDataTransfer.cppm" />
+    <ClCompile Include="Source\Engine\Interfaces\Platforms\IMeshGPU.cppm" />
     <ClCompile Include="Source\Engine\Resources\CPUIndexBuffer.cppm" />
-    <ClCompile Include="Source\Engine\Resources\GPUMeshDX.cppm" />
+    <ClCompile Include="Source\Engine\InterfacesImpl\MeshGPU\GPUMeshDX.cppm" />
     <ClCompile Include="Source\Engine\Resources\GPUResourcesManager.cppm" />
     <ClCompile Include="Source\Engine\Utils\AppTime.cppm" />
     <ClCompile Include="Source\Engine.cppm" />
     <ClCompile Include="Source\Engine\InterfacesImpl\AppWin\winMSWin.cppm" />
     <ClCompile Include="Source\Engine\Factories\engineFactory.cppm" />
     <ClCompile Include="Source\Engine\Factories\viewFactory.cppm" />
-    <ClCompile Include="Source\Engine\InterfacesImpl\GAPI\DX\CheckDirectXUltimateSupport.cppm" />
+    <ClCompile Include="Source\Engine\Platforms\DX\CheckDirectXUltimateSupport.cppm" />
     <ClCompile Include="Source\Engine\InterfacesImpl\SurfaceView\SurfDirectX.cppm" />
-    <ClCompile Include="Source\Engine\Interfaces\platforms\IAppWin.cppm" />
-    <ClCompile Include="Source\Engine\Interfaces\platforms\ICheckGapiSupport.cppm" />
-    <ClCompile Include="Source\Engine\Interfaces\platforms\ISurfaceView.cppm" />
+    <ClCompile Include="Source\Engine\Interfaces\Platforms\IAppWin.cppm" />
+    <ClCompile Include="Source\Engine\Interfaces\Platforms\ICheckGapiSupport.cppm" />
+    <ClCompile Include="Source\Engine\Interfaces\Platforms\ISurfaceView.cppm" />
     <ClCompile Include="Source\Engine\Utils\Colors.cppm" />
     <ClCompile Include="Source\Engine\Utils\PerformanceMeter.cppm" />
     <ClCompile Include="Source\Engine\Resources\CPUResourcesManager.cppm" />
     <ClCompile Include="Source\Engine\Resources\CPUMesh.cppm" />
-    <ClCompile Include="Source\Engine\Resources\MeshData.cppm" />
+    <ClCompile Include="Source\Engine\Resources\CPUVertexBuffer.cppm" />
     <ClCompile Include="Source\Engine\Scene\Scene.cppm" />
     <ClCompile Include="Source\Engine\Scene\SceneEntity.cppm" />
     <ClCompile Include="Source\Engine\Scene\ScenesManager.cppm" />
     <ClCompile Include="Source\Engine\View.cppm" />
     <ClCompile Include="Source\Engine\InterfacesImpl\GAPI\DXAPI.cppm" />
-    <ClCompile Include="Source\Engine\InterfacesImpl\GAPI\DX\RootSignature.cppm" />
-    <ClCompile Include="Source\Engine\Interfaces\platforms\IGAPI.cppm" />
+    <ClCompile Include="Source\Engine\Platforms\DX\RootSignature.cppm" />
+    <ClCompile Include="Source\Engine\Interfaces\Platforms\IGAPI.cppm" />
     <ClCompile Include="Source\Engine\Utils\event.cppm" />
     <ClCompile Include="Source\Engine\InterfacesImpl\Utils\icoBuilder\ibMSWin.cppm" />
-    <ClCompile Include="Source\Engine\Interfaces\utils\IIcoBuilder.cppm" />
-    <ClCompile Include="Source\Platforms.cppm" />
+    <ClCompile Include="Source\Engine\Interfaces\Utils\IIcoBuilder.cppm" />
+    <ClCompile Include="Source\Engine\Platforms\Platforms.cppm" />
     <ClCompile Include="Source\Templates\ThreadPool.cppm" />
     <ClCompile Include="Source\Utils\MessageBox.cppm" />
     <ClCompile Include="Source\Utils\strConvert.cppm" />
     <ClCompile Include="Source\Engine\Utils\serializer.cppm" />
     <ClCompile Include="Source\Engine\Utils\size2D.cppm" />
     <ClCompile Include="Source\Engine\IO\IOPathFactory.cppm" />
-    <ClCompile Include="Source\Engine\Interfaces\platforms\IMainLoop.cppm" />
+    <ClCompile Include="Source\Engine\Interfaces\Platforms\IMainLoop.cppm" />
     <ClCompile Include="Source\Engine\InterfacesImpl\MainLoop\mlMSWin.cppm" />
     <ClCompile Include="Source\Engine\IO\ioZaml.cppm" />
     <ClCompile Include="Source\Engine\Settings.cppm" />

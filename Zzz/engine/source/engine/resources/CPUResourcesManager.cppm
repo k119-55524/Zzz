@@ -5,8 +5,8 @@ import result;
 import Colors;
 import CPUMesh;
 import Settings;
-import MeshData;
 import CPUIndexBuffer;
+import CPUVertexBuffer;
 
 export namespace zzz
 {

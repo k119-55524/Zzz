@@ -1,7 +1,7 @@
 #include "pch.h"
 export module CPUMesh;
 
-import MeshData;
+import CPUVertexBuffer;
 import CPUIndexBuffer;
 
 export namespace zzz

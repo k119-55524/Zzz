@@ -863,6 +863,9 @@ namespace zzz::platforms::directx
 			UINT numDescriptorRanges,
 			_In_reads_opt_(numDescriptorRanges) const D3D12_DESCRIPTOR_RANGE* _pDescriptorRanges)
 		{
+			if (numDescriptorRanges > 0 && _pDescriptorRanges == nullptr)
+				throw std::invalid_argument("pDescriptorRanges cannot be null when numDescriptorRanges > 0");
+
 			Init(numDescriptorRanges, _pDescriptorRanges);
 		}
 

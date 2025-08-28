@@ -1,5 +1,5 @@
 #include "pch.h"
-export module MeshData;
+export module CPUVertexBuffer;
 
 import Colors;
 
@@ -181,7 +181,7 @@ export namespace zzz
 
 		virtual size_t Stride() const = 0;
 		virtual size_t SizeInBytes() const = 0;
-		virtual const void* RawData() const = 0;
+		virtual const void* GetData() const = 0;
 		virtual size_t VertexCount() const = 0;
 
 		// Удаляем локальное определение LayoutEntry
@@ -190,25 +190,25 @@ export namespace zzz
 
 	// ----- Шаблон буфера вершин -----
 	export template<typename... Attrs>
-		struct VertexBuffer : public ICPUVertexBuffer
+		struct CPUVertexBuffer : public ICPUVertexBuffer
 	{
 		using VertexT = MeshData<Attrs...>;
 		std::vector<VertexT> vertices;
 
-		VertexBuffer() = default;
-		VertexBuffer(std::initializer_list<VertexT> init) : vertices(init) {}
-		~VertexBuffer() = default;
+		CPUVertexBuffer() = default;
+		CPUVertexBuffer(std::initializer_list<VertexT> init) : vertices(init) {}
+		~CPUVertexBuffer() = default;
 
-		VertexBuffer(VertexBuffer&&) noexcept = default;
-		VertexBuffer& operator=(VertexBuffer&&) noexcept = default;
+		CPUVertexBuffer(CPUVertexBuffer&&) noexcept = default;
+		CPUVertexBuffer& operator=(CPUVertexBuffer&&) noexcept = default;
 
-		VertexBuffer(const VertexBuffer&) = delete;
-		VertexBuffer& operator=(const VertexBuffer&) = delete;
+		CPUVertexBuffer(const CPUVertexBuffer&) = delete;
+		CPUVertexBuffer& operator=(const CPUVertexBuffer&) = delete;
 
 		size_t Stride() const override { return sizeof(VertexT); }
 		size_t SizeInBytes() const override { return vertices.size() * sizeof(VertexT); }
 		size_t VertexCount() const override { return vertices.size(); }
-		const void* RawData() const override { return vertices.data(); }
+		const void* GetData() const override { return vertices.data(); }
 
 		std::vector<LayoutEntry> layout() const override
 		{
@@ -218,15 +218,15 @@ export namespace zzz
 	};
 
 	// ----- Готовые типы -----
-	export using VB_P3N3 = VertexBuffer<
+	export using VB_P3N3 = CPUVertexBuffer<
 		Attribute<Semantic::Position, float, 3>,
 		Attribute<Semantic::Normal, float, 3>>;
 
-	export using VB_P3C3 = VertexBuffer<
+	export using VB_P3C3 = CPUVertexBuffer<
 		Attribute<Semantic::Position, float, 3>,
 		Attribute<Semantic::Color, float, 3>>;
 
-	export using VB_P3N3T3 = VertexBuffer<
+	export using VB_P3N3T3 = CPUVertexBuffer<
 		Attribute<Semantic::Position, float, 3>,
 		Attribute<Semantic::Normal, float, 3>,
 		Attribute<Semantic::TexCoord, float, 2>>;

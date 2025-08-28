@@ -52,16 +52,37 @@ export namespace zzz::platforms::directx
 			m_supportsSamplerFeedback = (options7.SamplerFeedbackTier >= D3D12_SAMPLER_FEEDBACK_TIER_0_9);
 		}
 
+		// Проверка поддержки Copy Queue и DMA
+		D3D12_COMMAND_QUEUE_DESC copyQueueDesc = {};
+		copyQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
+		copyQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+		ComPtr<ID3D12CommandQueue> tempCopyQueue;
+		HRESULT hr = m_device->CreateCommandQueue(&copyQueueDesc, IID_PPV_ARGS(&tempCopyQueue));
+		if (SUCCEEDED(hr))
+		{
+			m_supportsCopyQueue = true;
+			// Проверка ResourceBindingTier для косвенной оценки DMA
+			D3D12_FEATURE_DATA_D3D12_OPTIONS options = {};
+			if (SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS, &options, sizeof(options))))
+			{
+				m_supportsDedicatedDMA = (options.ResourceBindingTier >= D3D12_RESOURCE_BINDING_TIER_2);
+			}
+		}
+
 #ifdef _DEBUG
 		DebugOutput(std::format(L">>>>> [DXAPI::CheckDirectX12UltimateSupport()]. DirectX 12 Ultimate Support:\n"
 			L" +- Ray Tracing: {}\n"
 			L" +- Variable Rate Shading: {}\n"
 			L" +- Mesh Shaders: {}\n"
-			L" +- Sampler Feedback: {}\n",
+			L" +- Sampler Feedback: {}\n"
+			L" +- Copy Queue: {}\n"
+			L" +- Likely Dedicated DMA: {}",
 			m_supportsRayTracing ? L"Yes" : L"No",
 			m_supportsVariableRateShading ? L"Yes" : L"No",
 			m_supportsMeshShaders ? L"Yes" : L"No",
-			m_supportsSamplerFeedback ? L"Yes" : L"No").c_str());
+			m_supportsSamplerFeedback ? L"Yes" : L"No",
+			m_supportsCopyQueue ? L"Yes" : L"No",
+			m_supportsDedicatedDMA ? L"Yes (Tier 2+)" : L"No (Tier 1 or lower, may be emulated)").c_str());
 #endif
 	}
 };

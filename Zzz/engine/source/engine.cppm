@@ -219,6 +219,6 @@ export namespace zzz
 			break;
 		}
 
-		DebugOutput(std::format(L">>>>> [Engine::OnResizeAppWin()]. isSysPaused: {}\n", isSysPaused));
+		DebugOutput(std::format(L">>>>> [Engine::OnResizeAppWin()]. isSysPaused: {}", isSysPaused));
 	}
 }

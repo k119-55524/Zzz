@@ -65,19 +65,19 @@
     <ClCompile Include="Source\Utils\MessageBox.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Interfaces\platforms\IMainLoop.cppm">
+    <ClCompile Include="Source\Engine\Interfaces\Platforms\IMainLoop.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\InterfacesImpl\MainLoop\mlMSWin.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Interfaces\utils\IIcoBuilder.cppm">
+    <ClCompile Include="Source\Engine\Interfaces\Utils\IIcoBuilder.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\InterfacesImpl\Utils\icoBuilder\ibMSWin.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Interfaces\platforms\IGAPI.cppm">
+    <ClCompile Include="Source\Engine\Interfaces\Platforms\IGAPI.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\InterfacesImpl\GAPI\DXAPI.cppm">
@@ -86,16 +86,16 @@
     <ClCompile Include="Source\Engine\Utils\event.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\InterfacesImpl\GAPI\DX\RootSignature.cppm">
+    <ClCompile Include="Source\Engine\Platforms\DX\RootSignature.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\View.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Interfaces\platforms\IAppWin.cppm">
+    <ClCompile Include="Source\Engine\Interfaces\Platforms\IAppWin.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Interfaces\platforms\ISurfaceView.cppm">
+    <ClCompile Include="Source\Engine\Interfaces\Platforms\ISurfaceView.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Factories\viewFactory.cppm">
@@ -107,10 +107,10 @@
     <ClCompile Include="Source\Engine\InterfacesImpl\SurfaceView\SurfDirectX.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\InterfacesImpl\GAPI\DX\CheckDirectXUltimateSupport.cppm">
+    <ClCompile Include="Source\Engine\Platforms\DX\CheckDirectXUltimateSupport.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Interfaces\platforms\ICheckGapiSupport.cppm">
+    <ClCompile Include="Source\Engine\Interfaces\Platforms\ICheckGapiSupport.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Factories\engineFactory.cppm">
@@ -125,7 +125,7 @@
     <ClCompile Include="Source\Engine\Scene\ScenesManager.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Resources\MeshData.cppm">
+    <ClCompile Include="Source\Engine\Resources\CPUVertexBuffer.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Resources\CPUMesh.cppm">
@@ -137,7 +137,7 @@
     <ClCompile Include="Source\Templates\ThreadPool.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Platforms.cppm">
+    <ClCompile Include="Source\Engine\Platforms\Platforms.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Utils\AppTime.cppm">
@@ -149,16 +149,25 @@
     <ClCompile Include="Source\Engine\Resources\GPUResourcesManager.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Resources\GPUMeshDX.cppm">
+    <ClCompile Include="Source\Engine\InterfacesImpl\MeshGPU\GPUMeshDX.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Utils\Colors.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Interfaces\platforms\IMeshGPU.cppm">
+    <ClCompile Include="Source\Engine\Interfaces\Platforms\IMeshGPU.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Resources\CPUIndexBuffer.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Platforms\DX\CommandWrapperDX.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Interfaces\Platforms\ICPUtoGPUDataTransfer.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\InterfacesImpl\CPUtoGPUDataTransfer\CPUtoGPUDataTransferDX.ixx">
       <Filter>�������� �����</Filter>
     </ClCompile>
   </ItemGroup>

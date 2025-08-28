@@ -9,7 +9,9 @@ import result;
 import winMSWin;
 import strConvert;
 import RootSignature;
+import CommandWrapperDX;
 import CheckDirectXSupport;
+import CPUtoGPUDataTransferDX;
 
 using namespace zzz;
 
@@ -25,51 +27,6 @@ export namespace zzz::platforms::directx
 	export class DXAPI final : public IGAPI
 	{
 	public:
-		class CommandWrapper
-		{
-		public:
-			CommandWrapper() = delete;
-			CommandWrapper(CommandWrapper&) = delete;
-			CommandWrapper(CommandWrapper&&) = delete;
-			CommandWrapper(ComPtr<ID3D12Device>& m_device)
-			{
-				Initialize(m_device);
-			};
-
-			inline const ComPtr<ID3D12CommandAllocator>& GetCommandAllocator() const noexcept { return m_commandAllocator; };
-			inline const ComPtr<ID3D12GraphicsCommandList>& GetCommandList() const noexcept { return m_commandList; };
-
-			inline void Reset() noexcept
-			{
-				if (m_commandList) m_commandList.Reset();
-				if (m_commandAllocator) m_commandAllocator.Reset();
-			}
-			[[nodiscard]] inline result<> Reinitialize(const ComPtr<ID3D12Device>& device)
-			{
-				Reset();
-				return Initialize(device);
-			}
-
-		private:
-			result<> Initialize(const ComPtr<ID3D12Device>& m_device)
-			{
-				ensure(S_OK == m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)));
-				SET_RESOURCE_DEBUG_NAME(m_commandAllocator, std::format(L"Command Allocator").c_str());
-
-				// К одному ID3D12CommandAllocator(m_commandAllocator) можно привязать несколько ID3D12GraphicsCommandList(m_commandList) но одновременно записывать можно только в один.
-				// А остальные ID3D12GraphicsCommandList, привязанные к ID3D12CommandAllocator, должны быть закрыты.
-				// Так как ID3D12GraphicsCommandList при создании всегда открыт, сразу закрываем его.
-				ensure(S_OK == m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS(&m_commandList)));
-				ensure(S_OK == m_commandList->Close());
-				SET_RESOURCE_DEBUG_NAME(m_commandList, std::format(L"Command List").c_str());
-
-				return {};
-			}
-
-			ComPtr<ID3D12CommandAllocator> m_commandAllocator;
-			ComPtr<ID3D12GraphicsCommandList> m_commandList;
-		};
-
 		explicit DXAPI();
 		DXAPI(DXAPI&) = delete;
 		DXAPI(DXAPI&&) = delete;
@@ -82,7 +39,7 @@ export namespace zzz::platforms::directx
 		inline const ComPtr<ID3D12Device> GetDevice() const noexcept { return m_device; };
 		inline const ComPtr<ID3D12CommandQueue> GetCommandQueue() const noexcept { return m_commandQueue; };
 		inline const ComPtr<IDXGIFactory7> GetFactory() const noexcept { return m_factory; };
-		inline const std::shared_ptr<CommandWrapper> GetCommandRender(zU64 index) const noexcept { return m_commandRender[index]; };
+		inline const std::shared_ptr<CommandWrapperDX> GetCommandRender(zU64 index) const noexcept { return m_commandRender[index]; };
 		inline ComPtr<ID3D12RootSignature> GetRootSignature() const noexcept { return m_rootSignature.Get(); }
 
 		void CommandRenderReset() noexcept;
@@ -107,7 +64,7 @@ export namespace zzz::platforms::directx
 		ComPtr<IDXGIAdapter3> m_adapter3;
 		ComPtr<ID3D12Device> m_device;
 		ComPtr<ID3D12CommandQueue> m_commandQueue;
-		std::shared_ptr<CommandWrapper> m_commandRender[BACK_BUFFER_COUNT];
+		std::shared_ptr<CommandWrapperDX> m_commandRender[BACK_BUFFER_COUNT];
 
 		unique_handle m_fenceEvent;
 		ComPtr<ID3D12Fence> m_fence;
@@ -179,6 +136,7 @@ export namespace zzz::platforms::directx
 	result<> DXAPI::Init()
 	{
 		result<> res = InitializeDevice()
+			.and_then([&]() { m_CPUtoGPUDataTransfer = safe_make_unique<CPUtoGPUDataTransferDX>(m_device); })
 			.and_then([&]() { return InitializeFence(); });
 
 		return res;
@@ -207,7 +165,7 @@ export namespace zzz::platforms::directx
 			return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializeDevice()]. -> {}", res.error().getMessage()));
 
 		for (int index = 0; index < BACK_BUFFER_COUNT; index++)
-			m_commandRender[index] = safe_make_shared<CommandWrapper>(m_device);
+			m_commandRender[index] = safe_make_shared<CommandWrapperDX>(m_device);
 
 		return {};
 	}
@@ -221,7 +179,7 @@ export namespace zzz::platforms::directx
 			debugController->EnableDebugLayer();
 			dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
 
-			DebugOutput(L">>>>> [DXAPI::EnableDebugLayer()]. DirectX debug layer enabled.\n");
+			DebugOutput(L">>>>> [DXAPI::EnableDebugLayer()]. DirectX debug layer enabled.");
 		}
 #endif
 	}
@@ -275,11 +233,11 @@ export namespace zzz::platforms::directx
 			(outFeatureLevel == D3D_FEATURE_LEVEL_12_1) ? L"12.1" :
 			(outFeatureLevel == D3D_FEATURE_LEVEL_12_0) ? L"12.0" : L"Unknown";
 		DebugOutput(std::format(
-			L">>>>> [DXAPI::InitializePipeline()]. Created D3D12 device with feature level: {}\n",
+			L">>>>> [DXAPI::InitializePipeline()]. Created D3D12 device with feature level: {}",
 			levelName).c_str());
 #endif
 
-		checkGapiSupport = safe_make_unique<CheckDirectXSupport>(outDevice);
+		m_CheckGapiSupport = safe_make_unique<CheckDirectXSupport>(outDevice);
 
 		return {};
 	}
