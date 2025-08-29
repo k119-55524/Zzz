@@ -54,7 +54,7 @@ export namespace zzz::platforms::directx
 		static constexpr DXGI_FORMAT BACK_BUFFER_FORMAT = DXGI_FORMAT_R8G8B8A8_UNORM;
 		static constexpr DXGI_FORMAT DEPTH_FORMAT = DXGI_FORMAT_D32_FLOAT;
 
-		UINT64 fenceValue;
+		UINT64 m_fenceValue;
 		UINT m_swapChainFlags;
 
 		RootSignature m_rootSignature;
@@ -108,30 +108,6 @@ export namespace zzz::platforms::directx
 		return res;
 	}
 
-#pragma region Rendring
-	void DXAPI::SubmitCommandLists(zU64 index)
-	{
-		ID3D12CommandList* ppCommandLists[] = { m_commandRender[index]->GetCommandList().Get()};
-		m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
-	}
-
-	void DXAPI::WaitForGpu()
-	{
-		const UINT64 fence = fenceValue;
-		ensure(S_OK == m_commandQueue->Signal(m_fence.Get(), fence));
-
-		fenceValue++;
-
-		// ќжидаем завершени€ предыдущего кадра.
-		if (m_fence->GetCompletedValue() < fence)
-		{
-			ensure(S_OK == m_fence->SetEventOnCompletion(fence, m_fenceEvent.handle));
-
-			WaitForSingleObject(m_fenceEvent.handle, INFINITE);
-		}
-	}
-#pragma endregion Rendring
-
 #pragma region Initialize
 	result<> DXAPI::Init()
 	{
@@ -165,7 +141,7 @@ export namespace zzz::platforms::directx
 			return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializeDevice()]. -> {}", res.error().getMessage()));
 
 		for (int index = 0; index < BACK_BUFFER_COUNT; index++)
-			m_commandRender[index] = safe_make_shared<CommandWrapperDX>(m_device);
+			m_commandRender[index] = safe_make_shared<CommandWrapperDX>(m_device, D3D12_COMMAND_LIST_TYPE_DIRECT);
 
 		return {};
 	}
@@ -278,13 +254,8 @@ export namespace zzz::platforms::directx
 					__uuidof(ID3D12Device),
 					nullptr)))
 				{
-#ifdef _DEBUG
-					DebugOutput(std::format(
-						L">>>>> [DXAPI::GetAdapter()] Selected adapter: {}"
-						L" VRAM: {} MB\n",
-						desc.Description,
-						desc.DedicatedVideoMemory / (1024 * 1024)).c_str());
-#endif
+					DebugOutput(std::format( L">>>>> [DXAPI::GetAdapter()] Selected adapter: {} VRAM: {} MB", desc.Description, desc.DedicatedVideoMemory / (1024 * 1024)).c_str());
+
 					* ppAdapter = candidate;
 					(*ppAdapter)->AddRef(); // так как мы не Detach'им
 					return true;
@@ -343,8 +314,7 @@ export namespace zzz::platforms::directx
 			if (!fenceEvent)
 			{
 				hr = HRESULT_FROM_WIN32(GetLastError());
-				return Unexpected(eResult::failure,
-					std::format(L">>>>> [DXAPI::InitializeAssets()]. CreateEvent failed. HRESULT = 0x{:08X}", hr));
+				return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializeAssets()]. CreateEvent failed. HRESULT = 0x{:08X}", hr));
 			}
 
 			m_fenceEvent = fenceEvent.release();
@@ -353,5 +323,29 @@ export namespace zzz::platforms::directx
 		return {};
 	}
 #pragma endregion Initialize
+
+#pragma region Rendring
+	void DXAPI::SubmitCommandLists(zU64 index)
+	{
+		ID3D12CommandList* ppCommandLists[] = { m_commandRender[index]->GetCommandList().Get()};
+		m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+	}
+
+	void DXAPI::WaitForGpu()
+	{
+		const UINT64 fence = m_fenceValue;
+		ensure(S_OK == m_commandQueue->Signal(m_fence.Get(), fence));
+
+		m_fenceValue++;
+
+		// ќжидаем завершени€ предыдущего кадра.
+		if (m_fence->GetCompletedValue() < fence)
+		{
+			ensure(S_OK == m_fence->SetEventOnCompletion(fence, m_fenceEvent.handle));
+
+			WaitForSingleObject(m_fenceEvent.handle, INFINITE);
+		}
+	}
+#pragma endregion Rendring
 }
 #endif // _WIN64

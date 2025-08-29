@@ -98,7 +98,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Source\Engine\InterfacesImpl\CPUtoGPUDataTransfer\CPUtoGPUDataTransferDX.ixx" />
+    <ClCompile Include="Source\Engine\InterfacesImpl\CPUtoGPUDataTransfer\CPUtoGPUDataTransferDX.cppm" />
     <ClCompile Include="Source\Engine\Platforms\DX\CommandWrapperDX.cppm" />
     <ClCompile Include="Source\Engine\Interfaces\Platforms\ICPUtoGPUDataTransfer.cppm" />
     <ClCompile Include="Source\Engine\Interfaces\Platforms\IMeshGPU.cppm" />

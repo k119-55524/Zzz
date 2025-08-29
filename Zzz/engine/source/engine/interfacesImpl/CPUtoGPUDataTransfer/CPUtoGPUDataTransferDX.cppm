@@ -1,0 +1,117 @@
+#include "pch.h"
+export module CPUtoGPUDataTransferDX;
+
+import result;
+import CommandWrapperDX;
+import ICPUtoGPUDataTransfer;
+
+#if defined(_WIN64)
+export namespace zzz::platforms::directx
+{
+	export class CPUtoGPUDataTransferDX final : public ICPUtoGPUDataTransfer
+	{
+	public:
+		CPUtoGPUDataTransferDX() = delete;
+		CPUtoGPUDataTransferDX(CPUtoGPUDataTransferDX&) = delete;
+		CPUtoGPUDataTransferDX(CPUtoGPUDataTransferDX&&) = delete;
+		CPUtoGPUDataTransferDX& operator=(const CPUtoGPUDataTransferDX&) = delete;
+		CPUtoGPUDataTransferDX& operator=(CPUtoGPUDataTransferDX&&) = delete;
+
+		CPUtoGPUDataTransferDX(ComPtr<ID3D12Device>& m_device);
+
+		~CPUtoGPUDataTransferDX() override;
+
+		void TransferResourceToGPU() override;
+
+	private:
+		void Initialize(ComPtr<ID3D12Device>& device);
+
+		std::unique_ptr<CommandWrapperDX> m_CommandTransfer[2];
+		ComPtr<ID3D12CommandQueue> m_CopyQueue;
+		UINT64 m_CopyFenceValue;
+		ComPtr<ID3D12Fence> m_CopyFence;
+		unique_handle m_FenceEvent;
+	};
+
+	CPUtoGPUDataTransferDX::CPUtoGPUDataTransferDX(ComPtr<ID3D12Device>& device) :
+		m_CopyFenceValue{ 0 }
+	{
+		ensure(device != nullptr);
+		Initialize(device);
+	}
+
+	CPUtoGPUDataTransferDX::~CPUtoGPUDataTransferDX()
+	{
+	}
+
+	void CPUtoGPUDataTransferDX::Initialize(ComPtr<ID3D12Device>& device)
+	{
+		m_CommandTransfer[0] = safe_make_unique<CommandWrapperDX>(device, D3D12_COMMAND_LIST_TYPE_COPY);
+		m_CommandTransfer[1] = safe_make_unique<CommandWrapperDX>(device, D3D12_COMMAND_LIST_TYPE_COPY);
+
+		D3D12_COMMAND_QUEUE_DESC copyQueueDesc = {};
+		copyQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_COPY;  // Ключевой тип
+		copyQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+		HRESULT hr = device->CreateCommandQueue(&copyQueueDesc, IID_PPV_ARGS(&m_CopyQueue));
+		if (hr != S_OK)
+			throw_runtime_error(std::format(">>>>> #0 [CPUtoGPUDataTransferDX::Initialize]. Failed to CreateCommandQueue. HRESULT = 0x{:08X}", hr));
+
+		// Создание объектов синхронизации
+		{
+			ComPtr<ID3D12Fence> fence;
+			HRESULT hr = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
+			if (FAILED(hr))
+				throw_runtime_error(std::format(">>>>> #1 [CPUtoGPUDataTransferDX::Initialize]. Failed to CreateFence. HRESULT = 0x{:08X}", hr));
+
+			m_CopyFence = fence;
+
+			// RAII для события
+			unique_handle fenceEvent{ CreateEvent(nullptr, FALSE, FALSE, nullptr) };
+			if (!fenceEvent)
+			{
+				hr = HRESULT_FROM_WIN32(GetLastError());
+				throw_runtime_error(std::format(">>>>> #2 [CPUtoGPUDataTransferDX::Initialize]. Failed to CreateEvent. HRESULT = 0x{:08X}", hr));
+			}
+
+			m_FenceEvent = fenceEvent.release();
+		}
+	}
+
+	void CPUtoGPUDataTransferDX::TransferResourceToGPU()
+	{
+		if (m_TransferCallbacks[m_TransferIndex].Size() > 0)
+		{
+			const ComPtr<ID3D12CommandAllocator>& copyAllocator = m_CommandTransfer[m_TransferIndex]->GetCommandAllocator();
+			const ComPtr<ID3D12GraphicsCommandList>& copyList = m_CommandTransfer[m_TransferIndex]->GetCommandList();
+
+			copyAllocator->Reset();
+			copyList->Reset(copyAllocator.Get(), nullptr);
+			for (int i = 0; i < m_TransferCallbacks[m_TransferIndex].Size(); i++)
+				m_TransferCallbacks[m_TransferIndex][i].get()->fillCallback(copyList);
+
+			copyList->Close();
+			ID3D12CommandList* ppLists[] = { copyList.Get() };
+			m_CopyQueue->ExecuteCommandLists(1, ppLists);
+
+			const UINT64 fence = m_CopyFenceValue;
+			ensure(S_OK == m_CopyQueue->Signal(m_CopyFence.Get(), fence));
+
+			m_CopyFenceValue++;
+
+			if (m_CopyFence->GetCompletedValue() < m_CopyFenceValue)
+			{
+				ensure(S_OK == m_CopyFence->SetEventOnCompletion(m_CopyFenceValue, m_FenceEvent.handle));
+
+				WaitForSingleObject(m_FenceEvent.handle, INFINITE); // Или таймаут
+			}
+
+			for (int i = 0; i < m_TransferCallbacks[m_TransferIndex].Size(); i++)
+				m_TransferCallbacks[m_TransferIndex][i].get()->completeCallback(true);
+
+			m_TransferCallbacks[m_TransferIndex].Reset();
+		}
+
+		m_TransferIndex = 1 - m_TransferIndex;
+	}
+}
+#endif // _WIN64

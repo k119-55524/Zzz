@@ -5,7 +5,7 @@ import Platforms;
 
 using namespace zzz;
 
-export namespace Zzz::Templates
+export namespace zzz::templates
 {
 	// ƒинамический массив с автоматическим изменением размера
 	template<typename T>
@@ -31,7 +31,7 @@ export namespace Zzz::Templates
 			std::uninitialized_default_construct_n(data, capacity);
 		}
 
-		QueueArray(QueueArray&& other) noexcept :
+		explicit QueueArray(QueueArray&& other) noexcept :
 			data{ other.data },
 			size{ other.size },
 			capacity{ other.capacity }
@@ -317,10 +317,17 @@ export namespace Zzz::Templates
 				if (done) return; // Ќе добавл€ем задачи если пул закрываетс€
 			}
 
-			workQueue.push([f = std::forward<FunctionType>(f), ...args = std::forward<Args>(args)]() mutable {
-				f(args...);
-				});
+			workQueue.push([f = std::forward<FunctionType>(f), ...args = std::forward<Args>(args)]() mutable { f(args...); });
 			cv.notify_one();
+		}
+
+		bool IsCompleted()
+		{
+			std::lock_guard<std::mutex> lk(cv_mutex);
+			bool queueEmpty = workQueue.IsEmpty();
+			uint32_t activeCount = activeThreadCount.load();
+
+			return queueEmpty && activeCount == 0;
 		}
 
 		void Join()

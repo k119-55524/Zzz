@@ -11,6 +11,7 @@ import zMsgBox;
 import mlMSWin;
 import Settings;
 import IMainLoop;
+import ThreadPool;
 import strConvert;
 import IOPathFactory;
 import EngineFactory;
@@ -21,6 +22,7 @@ import GPUResourcesManager;
 
 using namespace zzz;
 using namespace zzz::io;
+using namespace zzz::templates;
 using namespace zzz::platforms;
 
 namespace zzz
@@ -57,6 +59,7 @@ export namespace zzz
 		std::shared_ptr<IGAPI> m_GAPI;
 		std::shared_ptr<View> m_View;
 		std::shared_ptr<IMainLoop> m_MainLoop;
+		ThreadPool transferResToGPU;
 		AppTime m_time;
 
 		void Reset() noexcept;
@@ -68,6 +71,7 @@ export namespace zzz
 
 	Engine::Engine() :
 		initState{ eInitState::eInitNot },
+		transferResToGPU{ 1 },
 		isSysPaused{ true }
 	{
 	}
@@ -185,6 +189,10 @@ export namespace zzz
 			return;
 
 		//Sleep(100);
+
+		//Если предыдущий вызов отправки ресурсов на GPU завершён
+		if (transferResToGPU.IsCompleted() && m_GAPI->HasResourcesToUpload())
+			transferResToGPU.Submit([&]() { m_GAPI->TranferResourceToGPU(); });
 
 		static zU32 frameCount = 0;
 		static double allTime = 0.0;

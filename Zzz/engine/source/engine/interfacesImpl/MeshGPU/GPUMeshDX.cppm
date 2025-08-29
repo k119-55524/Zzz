@@ -110,6 +110,15 @@ export namespace zzz
 			uploadIndexBuffer->Unmap(0, nullptr);
 		}
 
+		_IGAPI->AddTransferResource(
+			[&](const ComPtr<ID3D12GraphicsCommandList>& commandList)
+			{
+			},
+			[&](bool res)
+			{
+			}
+		);
+
 		// Барьеры для перехода буферов в состояние копирования (если нужно; по умолчанию уже в COPY_DEST)
 		// CD3DX12_RESOURCE_BARRIER vertexBarrier = CD3DX12_RESOURCE_BARRIER::Transition(vertexBufferDefault.Get(), D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_COPY_DEST);
 		// commandList->ResourceBarrier(1, &vertexBarrier);

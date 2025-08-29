@@ -175,13 +175,13 @@ namespace zzz
 
 	inline void DebugOutput(const std::wstring& msg)
 	{
-#if defined(_WIN64) && defined(_DEBUG)
+#if defined(_DEBUG)
+#if defined(_WIN64)
 		OutputDebugStringW((msg + L"\n").c_str());
-#elif defined(_DEBUG)
-		std::wcerr << msg << std::endl;
 #else
-		// В релизной сборке ничего не делаем :)
-#endif
+		std::wcerr << msg << std::endl;
+#endif	// _WIN64
+#endif	// _DEBUG
 	}
 }
-#endif // HEADER_H
+#endif	// HEADER_H

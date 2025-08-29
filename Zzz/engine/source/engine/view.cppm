@@ -15,7 +15,7 @@ import ISurfaceView;
 import ScenesManager;
 import CPUResourcesManager;
 
-using namespace Zzz::Templates;
+using namespace zzz::templates;
 using namespace zzz::platforms;
 
 namespace zzz
@@ -62,7 +62,7 @@ namespace zzz
 		void Initialize();
 		void PrepareFrame(double deltaTime);
 
-		ThreadPool m_ThreadRenderAnUpdate;
+		ThreadPool m_ThreadsUpdate;
 		std::shared_ptr<Scene> m_Scene;
 	};
 
@@ -75,7 +75,7 @@ namespace zzz
 		m_ScenesManager{ _scenesManager },
 		m_GAPI{ _GAPI },
 		initState{ eInitState::eInitNot },
-		m_ThreadRenderAnUpdate{2}
+		m_ThreadsUpdate{2}
 	{
 		ensure(m_Settings, ">>>>> [View::View()]. Settings cannot be null.");
 		ensure(m_ScenesManager, ">>>>> [View::View()]. Scenes manager cannot be null.");
@@ -140,15 +140,15 @@ namespace zzz
 
 		if (m_SurfaceView)
 		{
-			m_ThreadRenderAnUpdate.Submit([&]()
+			m_ThreadsUpdate.Submit([&]()
 				{
 					m_SurfaceView->RenderFrame();
 				});
-			m_ThreadRenderAnUpdate.Submit([&]()
+			m_ThreadsUpdate.Submit([&]()
 				{
 					PrepareFrame(deltaTime);
 				});
-			m_ThreadRenderAnUpdate.Join();
+			m_ThreadsUpdate.Join();
 		}
 
 		{

@@ -167,7 +167,7 @@
     <ClCompile Include="Source\Engine\Interfaces\Platforms\ICPUtoGPUDataTransfer.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\InterfacesImpl\CPUtoGPUDataTransfer\CPUtoGPUDataTransferDX.ixx">
+    <ClCompile Include="Source\Engine\InterfacesImpl\CPUtoGPUDataTransfer\CPUtoGPUDataTransferDX.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
   </ItemGroup>
