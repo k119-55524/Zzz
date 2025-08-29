@@ -13,6 +13,7 @@
 #include <memory>
 #include <format>
 #include <locale>
+#include <format>
 #include <fstream>
 #include <sstream>
 #include <variant>
@@ -26,6 +27,7 @@
 #include <filesystem>
 #include <functional>
 #include <string_view>
+#include <shared_mutex>
 #include <type_traits>
 #include <unordered_map>
 #include <source_location>

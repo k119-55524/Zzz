@@ -77,6 +77,7 @@ export namespace zzz::platforms::directx
 		}
 	}
 
+	// Не потоко безопасна. Предназначена для вызова строго из одного потока.
 	void CPUtoGPUDataTransferDX::TransferResourceToGPU()
 	{
 		if (m_TransferCallbacks[m_TransferIndex].Size() > 0)
@@ -84,33 +85,52 @@ export namespace zzz::platforms::directx
 			const ComPtr<ID3D12CommandAllocator>& copyAllocator = m_CommandTransfer[m_TransferIndex]->GetCommandAllocator();
 			const ComPtr<ID3D12GraphicsCommandList>& copyList = m_CommandTransfer[m_TransferIndex]->GetCommandList();
 
-			copyAllocator->Reset();
-			copyList->Reset(copyAllocator.Get(), nullptr);
-			for (int i = 0; i < m_TransferCallbacks[m_TransferIndex].Size(); i++)
-				m_TransferCallbacks[m_TransferIndex][i].get()->fillCallback(copyList);
+			HRESULT hr = copyAllocator->Reset();
+			if (S_OK != hr)
+				throw_runtime_error(">>>>> [CPUtoGPUDataTransferDX::TransferResourceToGPU())]. copyAllocator->Reset()...");
 
-			copyList->Close();
+			hr = copyList->Reset(copyAllocator.Get(), nullptr);
+			if (S_OK != hr)
+				throw_runtime_error(">>>>> [CPUtoGPUDataTransferDX::TransferResourceToGPU())]. copyList->Reset( ... )...");
+
+			for (int i = 0; i < m_TransferCallbacks[m_TransferIndex].Size(); i++)
+			{
+				try
+				{
+					m_TransferCallbacks[m_TransferIndex][i].get()->fillCallback(copyList);
+				}
+				catch ( ... )
+				{
+					m_TransferCallbacks[m_TransferIndex][i]->isCorrect = false;
+				}
+			}
+
+			hr = copyList->Close();
+			if (S_OK != hr)
+				throw_runtime_error(">>>>> [CPUtoGPUDataTransferDX::TransferResourceToGPU())]. copyList->Close()...");
+
 			ID3D12CommandList* ppLists[] = { copyList.Get() };
 			m_CopyQueue->ExecuteCommandLists(1, ppLists);
 
-			const UINT64 fence = m_CopyFenceValue;
-			ensure(S_OK == m_CopyQueue->Signal(m_CopyFence.Get(), fence));
+			{ // Sync
+				m_CopyFenceValue++;
+				ensure(S_OK == m_CopyQueue->Signal(m_CopyFence.Get(), m_CopyFenceValue));
 
-			m_CopyFenceValue++;
-
-			if (m_CopyFence->GetCompletedValue() < m_CopyFenceValue)
-			{
-				ensure(S_OK == m_CopyFence->SetEventOnCompletion(m_CopyFenceValue, m_FenceEvent.handle));
-
-				WaitForSingleObject(m_FenceEvent.handle, INFINITE); // Или таймаут
+				if (m_CopyFence->GetCompletedValue() < m_CopyFenceValue)
+				{
+					ensure(S_OK == m_CopyFence->SetEventOnCompletion(m_CopyFenceValue, m_FenceEvent.handle));
+					WaitForSingleObject(m_FenceEvent.handle, INFINITE);
+				}
 			}
 
+			// Оповещаем заказчиков ресурсов о том что они могут ими пользоваться
 			for (int i = 0; i < m_TransferCallbacks[m_TransferIndex].Size(); i++)
-				m_TransferCallbacks[m_TransferIndex][i].get()->completeCallback(true);
+				m_TransferCallbacks[m_TransferIndex][i].get()->completeCallback(m_TransferCallbacks[m_TransferIndex][i]->isCorrect);
 
 			m_TransferCallbacks[m_TransferIndex].Reset();
 		}
 
+		std::lock_guard<std::mutex> lock(hasMutex);
 		m_TransferIndex = 1 - m_TransferIndex;
 	}
 }

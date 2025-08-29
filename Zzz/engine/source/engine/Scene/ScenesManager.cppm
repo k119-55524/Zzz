@@ -45,6 +45,8 @@ export namespace zzz
 		if (!GPUMeshDX)
 			return GPUMeshDX.error();
 
+		scene->AddMesh(GPUMeshDX.value());
+
 		return scene;
 	}
 }

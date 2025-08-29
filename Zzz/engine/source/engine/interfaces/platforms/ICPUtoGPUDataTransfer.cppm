@@ -22,6 +22,7 @@ export namespace zzz
 		{
 			CommandListFillCallback fillCallback;
 			TransferCompleteCallback completeCallback;
+			bool isCorrect = true;
 		};
 
 		ICPUtoGPUDataTransfer();
@@ -34,13 +35,17 @@ export namespace zzz
 
 		virtual ~ICPUtoGPUDataTransfer() = default;
 
-		void AddTransferResource(CommandListFillCallback fillClbk, TransferCompleteCallback completeClbk);
-		inline bool HasResourcesToUpload() const noexcept {  return m_TransferCallbacks[0].Size() > 0 || m_TransferCallbacks[1].Size() > 0; };
+		void AddTransferResource(CommandListFillCallback& fillCallback, TransferCompleteCallback& completeCallback);
+		inline bool HasResourcesToUpload() const noexcept
+		{
+			std::lock_guard<std::mutex> lock(hasMutex);
+			return m_TransferCallbacks[0].Size() > 0 || m_TransferCallbacks[1].Size() > 0;
+		}
 
 	protected:
-		std::mutex hasMutex;
+		mutable std::mutex hasMutex;
 
-		std::atomic_uint m_TransferIndex;
+		zU8 m_TransferIndex;
 		QueueArray<std::shared_ptr<sTransferCallbacks>> m_TransferCallbacks[2];
 	};
 
@@ -51,8 +56,9 @@ export namespace zzz
 	}
 	
 	// Накапливаем список для отправки
-	void ICPUtoGPUDataTransfer::AddTransferResource(CommandListFillCallback fillCallback, TransferCompleteCallback completeCallback)
+	void ICPUtoGPUDataTransfer::AddTransferResource(CommandListFillCallback& fillCallback, TransferCompleteCallback& completeCallback)
 	{
+		std::lock_guard<std::mutex> lock(hasMutex);
 		std::shared_ptr<sTransferCallbacks> callbacks = safe_make_shared<sTransferCallbacks>(fillCallback, completeCallback);
 		m_TransferCallbacks[1 - m_TransferIndex].PushBack(callbacks);
 	}

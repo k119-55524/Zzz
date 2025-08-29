@@ -7,7 +7,7 @@ using namespace zzz;
 
 export namespace zzz::templates
 {
-	// ƒинамический массив с автоматическим изменением размера
+	// ƒинамический, потоко безопасный, массив с автоматическим изменением размера
 	template<typename T>
 	class QueueArray
 	{
@@ -30,7 +30,6 @@ export namespace zzz::templates
 			// »нициализаци€ элементов по умолчанию
 			std::uninitialized_default_construct_n(data, capacity);
 		}
-
 		explicit QueueArray(QueueArray&& other) noexcept :
 			data{ other.data },
 			size{ other.size },
@@ -39,6 +38,15 @@ export namespace zzz::templates
 			other.data = nullptr;
 			other.size = 0;
 			other.capacity = 0;
+		}
+
+		~QueueArray()
+		{
+			if (data)
+			{
+				std::destroy_n(data, capacity);
+				_aligned_free(data);
+			}
 		}
 
 		QueueArray& operator=(QueueArray&& other) noexcept
@@ -61,52 +69,56 @@ export namespace zzz::templates
 			return *this;
 		}
 
-		~QueueArray()
-		{
-			if (data)
-			{
-				std::destroy_n(data, capacity);
-				_aligned_free(data);
-			}
-		}
-
 		T& operator[](size_t index)
 		{
+			std::shared_lock<std::shared_mutex> lock(mutex);
+
 			if (index >= size)
 				throw_out_of_range(">>>>> [QueueArray::operator[]]. Index out of range.");
 
 			return data[index];
 		}
-
 		const T& operator[](size_t index) const
 		{
+			std::shared_lock<std::shared_mutex> lock(mutex);
+
 			if (index >= size)
 				throw_out_of_range(">>>>> [QueueArray::operator[]]. Index out of range.");
 
 			return data[index];
 		}
-
 		void PushBack(const T& element)
 		{
+			std::unique_lock<std::shared_mutex> lock(mutex);
+
 			if (size >= capacity)
 				AddSize();
 
 			data[size++] = element;
 		}
-
 		void PushBack(T&& element)
 		{
+			std::unique_lock<std::shared_mutex> lock(mutex);
+
 			if (size >= capacity)
 				AddSize();
 
 			data[size++] = std::move(element);
 		}
-
-		inline size_t Capacity() const noexcept { return capacity; }
-		inline size_t Size() const noexcept { return size; }
-
+		inline size_t Capacity() const noexcept
+		{
+			std::shared_lock<std::shared_mutex> lock(mutex);
+			return capacity;
+		}
+		inline size_t Size() const noexcept
+		{
+			std::shared_lock<std::shared_mutex> lock(mutex);
+			return size;
+		}
 		inline void Reset() noexcept
 		{
+			std::unique_lock<std::shared_mutex> lock(mutex);
+
 			std::destroy_n(data, size);
 			size = 0;
 		}
@@ -115,9 +127,12 @@ export namespace zzz::templates
 		T* data = nullptr;
 		size_t size;
 		size_t capacity;
+		mutable std::shared_mutex mutex;
 
 		void AddSize()
 		{
+			std::unique_lock<std::shared_mutex> lock(mutex);
+
 			size_t newCapacity;
 			if (capacity > std::numeric_limits<size_t>::max() / 2)
 			{
@@ -135,7 +150,7 @@ export namespace zzz::templates
 				throw_runtime_error(">>>>> #1 [QueueArray::AddSize]. Failed to allocate memory.");
 
 			std::uninitialized_default_construct_n(newData, newCapacity);
-			std::move(data, data + size, newData);
+			//std::move(data, data + size, newData);
 
 			try
 			{
