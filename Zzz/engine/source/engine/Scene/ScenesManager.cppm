@@ -37,7 +37,7 @@ export namespace zzz
 
 	result<std::shared_ptr<Scene>> ScenesManager::GetStartScene()
 	{
-		std::shared_ptr<Scene> scene = std::make_shared<Scene>();
+		std::shared_ptr<Scene> scene = safe_make_shared<Scene>();
 		if (!scene)
 			return Unexpected(eResult::no_make_shared_ptr, L">>>>> [ScenesManager::GetStartScene()]. Failed to create Scene.");
 

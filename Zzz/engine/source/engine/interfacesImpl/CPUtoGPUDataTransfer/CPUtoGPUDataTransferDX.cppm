@@ -2,8 +2,11 @@
 export module CPUtoGPUDataTransferDX;
 
 import result;
+import QueueArray;
 import CommandWrapperDX;
 import ICPUtoGPUDataTransfer;
+
+using namespace zzz::templates;
 
 #if defined(_WIN64)
 export namespace zzz::platforms::directx
@@ -97,7 +100,7 @@ export namespace zzz::platforms::directx
 			{
 				try
 				{
-					m_TransferCallbacks[m_TransferIndex][i].get()->fillCallback(copyList);
+					m_TransferCallbacks[m_TransferIndex][i]->fillCallback(copyList);
 				}
 				catch ( ... )
 				{
@@ -127,7 +130,7 @@ export namespace zzz::platforms::directx
 			for (int i = 0; i < m_TransferCallbacks[m_TransferIndex].Size(); i++)
 				m_TransferCallbacks[m_TransferIndex][i].get()->completeCallback(m_TransferCallbacks[m_TransferIndex][i]->isCorrect);
 
-			m_TransferCallbacks[m_TransferIndex].Reset();
+			m_TransferCallbacks[m_TransferIndex].Clear();
 		}
 
 		std::lock_guard<std::mutex> lock(hasMutex);

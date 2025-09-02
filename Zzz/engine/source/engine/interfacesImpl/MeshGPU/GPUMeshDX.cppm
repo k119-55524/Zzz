@@ -7,6 +7,8 @@ import IGAPI;
 import DXAPI;
 import CPUMesh;
 import IMeshGPU;
+import CPUIndexBuffer;
+import CPUVertexBuffer;
 
 using namespace zzz::platforms;
 using namespace zzz::platforms::directx;
@@ -32,12 +34,29 @@ export namespace zzz
 		D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 		D3D12_INDEX_BUFFER_VIEW indexBufferView;
 
+		std::shared_ptr<ICPUVertexBuffer> vertices;
+		std::shared_ptr<ICPUIndexBuffer> indices;
+		UINT vertexBufferSize;
+		UINT indexBufferSize;
+
 		result<> Initialize(std::shared_ptr<IGAPI> _IGAPI) override;
 	};
 
 	GPUMeshDX::GPUMeshDX(std::shared_ptr<CPUMesh> meshCPU) :
 		IMeshGPU(meshCPU)
 	{
+		vertices = m_MeshCPU->GetMesh();
+		if (!vertices || vertices->GetData() == nullptr || vertices->SizeInBytes() == 0)
+			throw_runtime_error(">>>>> [GPUMeshDX::GPUMeshDX()]. Invalid vertex data");
+
+		indices = m_MeshCPU->GetIndicies();
+		if (indices != nullptr && (indices->GetData() == nullptr || indices->GetSizeInBytes() == 0))
+			throw_runtime_error(">>>>> [GPUMeshDX::GPUMeshDX()]. Invalid index data");
+
+		vertexBufferSize = static_cast<UINT>(vertices->SizeInBytes());
+		DebugOutput(std::format(L">>>>> [GPUMeshDX::GPUMeshDX( ... )]. vertexBufferSize: {}", vertexBufferSize));
+		indexBufferSize = indices ? static_cast<UINT>(indices->GetSizeInBytes()) : 0;
+		DebugOutput(std::format(L">>>>> [GPUMeshDX::GPUMeshDX( ... )]. indexBufferSize: {}", indexBufferSize));
 	}
 
 	result<> GPUMeshDX::Initialize(std::shared_ptr<IGAPI> _IGAPI)
@@ -45,19 +64,6 @@ export namespace zzz
 		std::shared_ptr<DXAPI> m_DXAPI = std::dynamic_pointer_cast<DXAPI>(_IGAPI);
 		if (!m_DXAPI)
 			return Unexpected(eResult::failure, L">>>>> [GPUMeshDX::Initialize]. Invalid DXAPI");
-
-		auto vertices = m_MeshCPU->GetMesh();
-		if (!vertices || vertices->GetData() == nullptr || vertices->SizeInBytes() == 0)
-			return Unexpected(eResult::failure, L">>>>> [GPUMeshDX::Initialize]. Invalid vertex data");
-
-		auto indices = m_MeshCPU->GetIndicies();
-		if (indices != nullptr && (indices->GetData() == nullptr || indices->GetSizeInBytes() == 0))
-			return Unexpected(eResult::failure, L">>>>> [GPUMeshDX::Initialize]. Invalid index data");
-
-		const UINT vertexBufferSize = static_cast<UINT>(vertices->SizeInBytes());
-		DebugOutput(std::format(L">>>>> [GPUMeshDX::Initialize( ... )]. vertexBufferSize: {}", vertexBufferSize));
-		UINT indexBufferSize = indices ? static_cast<UINT>(indices->GetSizeInBytes()) : 0;
-		DebugOutput(std::format(L">>>>> [GPUMeshDX::Initialize( ... )]. indexBufferSize: {}", indexBufferSize));
 
 		CD3DX12_HEAP_PROPERTIES defaultHeapProps(D3D12_HEAP_TYPE_DEFAULT);
 		CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
@@ -98,8 +104,7 @@ export namespace zzz
 				&bufferDesc,
 				D3D12_RESOURCE_STATE_COMMON,
 				nullptr,
-				IID_PPV_ARGS(&indexBuffer)
-			);
+				IID_PPV_ARGS(&indexBuffer));
 			if (FAILED(hr))
 				return Unexpected(eResult::failure, std::format(L">>>>> #2 [GPUMeshDX::Initialize]. Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
 
@@ -109,8 +114,7 @@ export namespace zzz
 				&bufferDesc,
 				D3D12_RESOURCE_STATE_GENERIC_READ,
 				nullptr,
-				IID_PPV_ARGS(&uploadIndexBuffer)
-			);
+				IID_PPV_ARGS(&uploadIndexBuffer));
 			if (FAILED(hr))
 				return Unexpected(eResult::failure, std::format(L">>>>> #3 [GPUMeshDX::Initialize]. Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
 
@@ -139,7 +143,6 @@ export namespace zzz
 			uploadIndexBuffer->Unmap(0, nullptr);
 		}
 
-		// ИСПРАВЛЕНИЕ 4: Используем только допустимые состояния для copy command list
 		_IGAPI->AddTransferResource(
 			[&](const ComPtr<ID3D12GraphicsCommandList>& commandList)
 			{
@@ -147,8 +150,7 @@ export namespace zzz
 				auto vbBarrierToCopy = CD3DX12_RESOURCE_BARRIER::Transition(
 					vertexBuffer.Get(),
 					D3D12_RESOURCE_STATE_COMMON,
-					D3D12_RESOURCE_STATE_COPY_DEST
-				);
+					D3D12_RESOURCE_STATE_COPY_DEST);
 				commandList->ResourceBarrier(1, &vbBarrierToCopy);
 
 				// Копирование vertex buffer
@@ -158,8 +160,7 @@ export namespace zzz
 				CD3DX12_RESOURCE_BARRIER vbBarrierToCommon = CD3DX12_RESOURCE_BARRIER::Transition(
 					vertexBuffer.Get(),
 					D3D12_RESOURCE_STATE_COPY_DEST,
-					D3D12_RESOURCE_STATE_COMMON  // Только COMMON допустимо в copy command list
-				);
+					D3D12_RESOURCE_STATE_COMMON); // Только COMMON допустимо в copy command list
 				commandList->ResourceBarrier(1, &vbBarrierToCommon);
 
 				if (indices != nullptr)
@@ -167,8 +168,7 @@ export namespace zzz
 					auto ibBarrierToCopy = CD3DX12_RESOURCE_BARRIER::Transition(
 						indexBuffer.Get(),
 						D3D12_RESOURCE_STATE_COMMON,
-						D3D12_RESOURCE_STATE_COPY_DEST
-					);
+						D3D12_RESOURCE_STATE_COPY_DEST);
 					commandList->ResourceBarrier(1, &ibBarrierToCopy);
 
 					commandList->CopyBufferRegion(indexBuffer.Get(), 0, uploadIndexBuffer.Get(), 0, indexBufferSize);
@@ -176,8 +176,7 @@ export namespace zzz
 					CD3DX12_RESOURCE_BARRIER ibBarrierToCommon = CD3DX12_RESOURCE_BARRIER::Transition(
 						indexBuffer.Get(),
 						D3D12_RESOURCE_STATE_COPY_DEST,
-						D3D12_RESOURCE_STATE_COMMON  // Только COMMON допустимо в copy command list
-					);
+						D3D12_RESOURCE_STATE_COMMON); // Только COMMON допустимо в copy command list
 					commandList->ResourceBarrier(1, &ibBarrierToCommon);
 				}
 			},

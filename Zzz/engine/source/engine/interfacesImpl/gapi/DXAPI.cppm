@@ -113,7 +113,7 @@ export namespace zzz::platforms::directx
 	{
 		result<> res = InitializeDevice()
 			.and_then([&]() { m_CPUtoGPUDataTransfer = safe_make_unique<CPUtoGPUDataTransferDX>(m_device); })
-			.and_then([&]() { return InitializeFence(); });
+			.and_then([&]() { return  InitializeFence(); });
 
 		return res;
 	}

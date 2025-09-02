@@ -170,6 +170,15 @@
     <ClCompile Include="Source\Engine\InterfacesImpl\CPUtoGPUDataTransfer\CPUtoGPUDataTransferDX.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Templates\QueueArray.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Templates\ThreadSafeQueueArray.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Templates\ThreadSafeSwapBuffer.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

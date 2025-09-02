@@ -131,7 +131,10 @@
     <ClCompile Include="Source\Engine\InterfacesImpl\Utils\icoBuilder\ibMSWin.cppm" />
     <ClCompile Include="Source\Engine\Interfaces\Utils\IIcoBuilder.cppm" />
     <ClCompile Include="Source\Engine\Platforms\Platforms.cppm" />
+    <ClCompile Include="Source\Templates\QueueArray.cppm" />
     <ClCompile Include="Source\Templates\ThreadPool.cppm" />
+    <ClCompile Include="Source\Templates\ThreadSafeQueueArray.cppm" />
+    <ClCompile Include="Source\Templates\ThreadSafeSwapBuffer.cppm" />
     <ClCompile Include="Source\Utils\MessageBox.cppm" />
     <ClCompile Include="Source\Utils\strConvert.cppm" />
     <ClCompile Include="Source\Engine\Utils\serializer.cppm" />

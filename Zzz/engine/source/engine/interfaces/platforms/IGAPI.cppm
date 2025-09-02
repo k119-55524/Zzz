@@ -47,9 +47,7 @@ export namespace zzz::platforms
 			return static_cast<size_t>(gapiType) < names.size() ?
 				names[static_cast<size_t>(gapiType)] : L"Unknown"sv;
 		}
-		[[nodiscard]] inline constexpr std::wstring_view GetAPIName() const noexcept {
-			return GetAPIName(gapiType);
-		}
+		[[nodiscard]] inline constexpr std::wstring_view GetAPIName() const noexcept { return GetAPIName(gapiType); }
 
 		// Геттеры возможностей
 		[[nodiscard]] inline bool SupportsRayTracing() const noexcept { return m_CheckGapiSupport->SupportsRayTracing(); }
