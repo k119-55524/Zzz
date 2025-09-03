@@ -6,9 +6,9 @@ using namespace zzz::platforms::directx;
 #if defined(_WIN64)
 import IGAPI;
 import result;
-import AppWindowMsWin;
 import strConvert;
 import RootSignature;
+import AppWindowMsWin;
 import CommandWrapperDX;
 import CheckDirectXSupport;
 import ThreadSafeSwapBuffer;
@@ -46,7 +46,8 @@ export namespace zzz::platforms::directx
 
 		void CommandRenderReset() noexcept;
 		[[nodiscard]] result<> CommandRenderReinitialize();
-		void PreparedTransfers(ComPtr<ID3D12GraphicsCommandList>& commandList);
+		void BeginPreparedTransfers(ComPtr<ID3D12GraphicsCommandList>& commandList);
+		void EndPreparedTransfers();
 		void SubmitCommandLists(zU64 index) override;
 		void WaitForGpu() override;
 
@@ -57,7 +58,7 @@ export namespace zzz::platforms::directx
 		static constexpr DXGI_FORMAT BACK_BUFFER_FORMAT = DXGI_FORMAT_R8G8B8A8_UNORM;
 		static constexpr DXGI_FORMAT DEPTH_FORMAT = DXGI_FORMAT_D32_FLOAT;
 
-		ThreadSafeSwapBuffer<PreparedCallback> m_PreparedTransfers;
+		ThreadSafeSwapBuffer<std::shared_ptr<sInTransfersCallbacks>> m_PreparedTransfers;
 
 		UINT64 m_fenceValue;
 		unique_handle m_fenceEvent;
@@ -331,13 +332,22 @@ export namespace zzz::platforms::directx
 
 #pragma region Rendring
 	// Устанавливаем состояние ресурса готовое к рендрингу после копирования в память GPU
-	void DXAPI::PreparedTransfers(ComPtr<ID3D12GraphicsCommandList>& commandList)
+	void DXAPI::BeginPreparedTransfers(ComPtr<ID3D12GraphicsCommandList>& commandList)
 	{
-		m_PreparedTransfers.ForEach([&](PreparedCallback preparedCallback)
+		m_PreparedTransfers.ForEach([&](std::shared_ptr<sInTransfersCallbacks> callback)
 			{
-				preparedCallback(commandList);
-			}
-		);
+				if (callback->isCorrect)
+					callback->preparedCallback(commandList);
+			});
+	}
+
+	void DXAPI::EndPreparedTransfers()
+	{
+		m_PreparedTransfers.ForEach([&](std::shared_ptr<sInTransfersCallbacks> callback)
+			{
+				if (callback->isCorrect)
+					callback->completeCallback(callback->isCorrect);
+			});
 
 		m_PreparedTransfers.SwapAndReset();
 	}

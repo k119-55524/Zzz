@@ -16,17 +16,18 @@ export namespace zzz
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif
+
+	export struct sInTransfersCallbacks
+	{
+		FillCallback fillCallback;
+		PreparedCallback preparedCallback;
+		CompleteCallback completeCallback;
+		bool isCorrect = true;
+	};
+
 	export class ICPUtoGPUDataTransfer
 	{
 	public:
-		struct sTransferCallbacks
-		{
-			FillCallback fillCallback;
-			PreparedCallback preparedCallback;
-			CompleteCallback completeCallback;
-			bool isCorrect = true;
-		};
-
 		ICPUtoGPUDataTransfer();
 		ICPUtoGPUDataTransfer(ICPUtoGPUDataTransfer&) = delete;
 		ICPUtoGPUDataTransfer(ICPUtoGPUDataTransfer&&) = delete;
@@ -48,12 +49,12 @@ export namespace zzz
 		mutable std::mutex hasMutex;
 
 		zU8 m_TransferIndex;
-		QueueArray<std::shared_ptr<sTransferCallbacks>> m_TransferCallbacks[2];
+		QueueArray<std::shared_ptr<sInTransfersCallbacks>> m_TransferCallbacks[2];
 	};
 
 	ICPUtoGPUDataTransfer::ICPUtoGPUDataTransfer() :
 		m_TransferIndex{ 0 },
-		m_TransferCallbacks{ QueueArray<std::shared_ptr<sTransferCallbacks>>(100), QueueArray<std::shared_ptr<sTransferCallbacks>>(100) }
+		m_TransferCallbacks{ QueueArray<std::shared_ptr<sInTransfersCallbacks>>(100), QueueArray<std::shared_ptr<sInTransfersCallbacks>>(100) }
 	{
 	}
 	
@@ -61,7 +62,7 @@ export namespace zzz
 	void ICPUtoGPUDataTransfer::AddTransferResource(FillCallback fillCallback, PreparedCallback preparedCallback, CompleteCallback completeCallback)
 	{
 		std::lock_guard<std::mutex> lock(hasMutex);
-		std::shared_ptr<sTransferCallbacks> callbacks = safe_make_shared<sTransferCallbacks>(fillCallback, preparedCallback, completeCallback);
+		std::shared_ptr<sInTransfersCallbacks> callbacks = safe_make_shared<sInTransfersCallbacks>(fillCallback, preparedCallback, completeCallback);
 		m_TransferCallbacks[1 - m_TransferIndex].PushBack(callbacks);
 	}
 }

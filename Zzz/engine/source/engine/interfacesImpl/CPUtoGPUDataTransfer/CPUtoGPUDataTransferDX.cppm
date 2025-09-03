@@ -22,7 +22,7 @@ export namespace zzz::platforms::directx
 		CPUtoGPUDataTransferDX& operator=(const CPUtoGPUDataTransferDX&) = delete;
 		CPUtoGPUDataTransferDX& operator=(CPUtoGPUDataTransferDX&&) = delete;
 
-		CPUtoGPUDataTransferDX(ComPtr<ID3D12Device>& m_device, ThreadSafeSwapBuffer<PreparedCallback>& _Prepared);
+		CPUtoGPUDataTransferDX(ComPtr<ID3D12Device>& m_device, ThreadSafeSwapBuffer<std::shared_ptr<sInTransfersCallbacks>>& _Prepared);
 
 		~CPUtoGPUDataTransferDX() override;
 
@@ -37,10 +37,10 @@ export namespace zzz::platforms::directx
 		ComPtr<ID3D12Fence> m_CopyFence;
 		unique_handle m_FenceEvent;
 
-		ThreadSafeSwapBuffer<PreparedCallback>& m_Prepared;
+		ThreadSafeSwapBuffer<std::shared_ptr<sInTransfersCallbacks>>& m_Prepared;
 	};
 
-	CPUtoGPUDataTransferDX::CPUtoGPUDataTransferDX(ComPtr<ID3D12Device>& device, ThreadSafeSwapBuffer<PreparedCallback>& _Prepared) :
+	CPUtoGPUDataTransferDX::CPUtoGPUDataTransferDX(ComPtr<ID3D12Device>& device, ThreadSafeSwapBuffer<std::shared_ptr<sInTransfersCallbacks>>& _Prepared) :
 		m_Prepared{ _Prepared },
 		m_CopyFenceValue{ 0 }
 	{
@@ -136,12 +136,10 @@ export namespace zzz::platforms::directx
 			for (int i = 0; i < m_TransferCallbacks[m_TransferIndex].Size(); i++)
 			{
 				if (m_TransferCallbacks[m_TransferIndex][i]->isCorrect)
-					m_Prepared.Add(m_TransferCallbacks[m_TransferIndex][i]->preparedCallback);
+				{
+					m_Prepared.Add(m_TransferCallbacks[m_TransferIndex][i]);
+				}
 			}
-
-			// Оповещаем заказчиков ресурсов о том что они могут ими пользоваться
-			for (int i = 0; i < m_TransferCallbacks[m_TransferIndex].Size(); i++)
-				m_TransferCallbacks[m_TransferIndex][i].get()->completeCallback(m_TransferCallbacks[m_TransferIndex][i]->isCorrect);
 
 			m_TransferCallbacks[m_TransferIndex].Clear();
 		}

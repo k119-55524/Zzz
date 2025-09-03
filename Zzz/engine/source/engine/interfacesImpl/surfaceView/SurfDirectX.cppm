@@ -366,8 +366,8 @@ namespace zzz
 		ensure(S_OK == commandAllocator->Reset());
 		ensure(S_OK == commandList->Reset(commandAllocator.Get(), nullptr));
 
-		// Устанавливаем состояние ресурсов готовыми к рендрингу после копирования в память GPU
-		m_DXAPI->PreparedTransfers(commandList);
+		// Устанавливаем состояние ресурсов как готовых к рендрингу после копирования в память GPU
+		m_DXAPI->BeginPreparedTransfers(commandList);
 
 		commandList->SetGraphicsRootSignature(m_DXAPI->GetRootSignature().Get());
 		commandList->RSSetViewports(1, &m_viewport);
@@ -442,6 +442,9 @@ namespace zzz
 
 		m_iGAPI->WaitForGpu();
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+
+		// Устанавливаем состояние ресурсов как готовых к рендрингу после копирования в память GPU
+		m_DXAPI->EndPreparedTransfers();
 	}
 #pragma endregion Rendring
 
