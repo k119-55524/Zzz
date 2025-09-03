@@ -101,7 +101,7 @@
     <ClCompile Include="Source\Engine\Factories\ViewFactory.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\InterfacesImpl\AppWin\winMSWin.cppm">
+    <ClCompile Include="Source\Engine\InterfacesImpl\AppWin\AppWindowMsWin.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\InterfacesImpl\SurfaceView\SurfDirectX.cppm">

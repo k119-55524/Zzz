@@ -1,10 +1,10 @@
 #include "pch.h"
-export module winMSWin;
+export module AppWindowMsWin;
 
-import result;
 import event;
-import IAppWin;
 import size2D;
+import result;
+import IAppWin;
 import ibMSWin;
 import Settings;
 import IOPathFactory;
@@ -16,18 +16,18 @@ using namespace zzz::icoBuilder;
 
 export namespace zzz
 {
-	export class winMSWin final : public IAppWin
+	export class AppWindowMsWin final : public IAppWin
 	{
 	public:
-		winMSWin() = delete;
-		winMSWin(const winMSWin&) = delete;
-		winMSWin(winMSWin&&) = delete;
-		winMSWin& operator=(const winMSWin&) = delete;
-		winMSWin& operator=(winMSWin&&) = delete;
+		AppWindowMsWin() = delete;
+		AppWindowMsWin(const AppWindowMsWin&) = delete;
+		AppWindowMsWin(AppWindowMsWin&&) = delete;
+		AppWindowMsWin& operator=(const AppWindowMsWin&) = delete;
+		AppWindowMsWin& operator=(AppWindowMsWin&&) = delete;
 
-		explicit winMSWin(std::shared_ptr<Settings> _settings);
+		explicit AppWindowMsWin(std::shared_ptr<Settings> _settings);
 
-		~winMSWin() override;
+		~AppWindowMsWin() override;
 
 		inline const HWND GetHWND() const noexcept { return hWnd; }
 		void SetCaptionText(std::wstring caption) override;
@@ -44,7 +44,7 @@ export namespace zzz
 		LRESULT MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	};
 
-	winMSWin::winMSWin(std::shared_ptr<Settings> _settings) :
+	AppWindowMsWin::AppWindowMsWin(std::shared_ptr<Settings> _settings) :
 		IAppWin(_settings),
 		hWnd{ nullptr },
 		IsMinimized{ true }
@@ -52,13 +52,13 @@ export namespace zzz
 		SetProcessDPIAware();
 	}
 
-	winMSWin::~winMSWin()
+	AppWindowMsWin::~AppWindowMsWin()
 	{
 		if (hWnd)
 			DestroyWindow(hWnd);
 	}
 
-	result<> winMSWin::Initialize()
+	result<> AppWindowMsWin::Initialize()
 	{
 #pragma region Получение настроек окна
 		std::wstring ClassName;
@@ -101,7 +101,7 @@ export namespace zzz
 
 		WNDCLASS wc = { 0 };
 		wc.style = CS_HREDRAW | CS_VREDRAW;
-		wc.lpfnWndProc = winMSWin::WindowProc;
+		wc.lpfnWndProc = AppWindowMsWin::WindowProc;
 		wc.hInstance = GetModuleHandle(NULL);
 		wc.hIcon = iconHandle;// LoadIcon(GetModuleHandle(NULL), NULL);// MAKEINTRESOURCE(userGS->GetMSWinIcoID()));
 		wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
@@ -147,9 +147,9 @@ export namespace zzz
 		return {};
 	}
 
-	LRESULT CALLBACK winMSWin::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept
+	LRESULT CALLBACK AppWindowMsWin::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept
 	{
-		winMSWin* pThis = nullptr;
+		AppWindowMsWin* pThis = nullptr;
 
 		try
 		{
@@ -159,12 +159,12 @@ export namespace zzz
 				if (!pCreate || !pCreate->lpCreateParams)
 					return FALSE; // Ошибка создания
 
-				pThis = static_cast<winMSWin*>(pCreate->lpCreateParams);
+				pThis = static_cast<AppWindowMsWin*>(pCreate->lpCreateParams);
 				SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
 				pThis->hWnd = hwnd;
 			}
 			else
-				pThis = reinterpret_cast<winMSWin*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+				pThis = reinterpret_cast<AppWindowMsWin*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
 
 			if (pThis)
 				return pThis->MsgProc(uMsg, wParam, lParam);
@@ -173,7 +173,7 @@ export namespace zzz
 		{
 			// В callback функциях Windows нельзя допускать исключения
 #ifdef _DEBUG
-			DebugOutput(L">>>>> [winMSWin::WindowProc]. Exception in WindowProc!");
+			DebugOutput(L">>>>> [AppWindowMsWin::WindowProc]. Exception in WindowProc!");
 #endif
 			return DefWindowProc(hwnd, uMsg, wParam, lParam);
 		}
@@ -181,7 +181,7 @@ export namespace zzz
 		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 
-	LRESULT winMSWin::MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
+	LRESULT AppWindowMsWin::MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		switch (uMsg)
 		{
@@ -263,13 +263,13 @@ export namespace zzz
 		}
 	}
 
-	void winMSWin::SetCaptionText(std::wstring caption)
+	void AppWindowMsWin::SetCaptionText(std::wstring caption)
 	{
 		m_Caption = caption;
 		SetWindowText(hWnd, m_Caption.c_str());
 	}
 
-	void winMSWin::AddCaptionText(std::wstring caption)
+	void AppWindowMsWin::AddCaptionText(std::wstring caption)
 	{
 		std::wstring cap = m_Caption + caption;
 		SetWindowText(hWnd, cap.c_str());

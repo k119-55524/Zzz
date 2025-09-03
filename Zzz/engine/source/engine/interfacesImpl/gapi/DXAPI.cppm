@@ -6,14 +6,16 @@ using namespace zzz::platforms::directx;
 #if defined(_WIN64)
 import IGAPI;
 import result;
-import winMSWin;
+import AppWindowMsWin;
 import strConvert;
 import RootSignature;
 import CommandWrapperDX;
 import CheckDirectXSupport;
+import ThreadSafeSwapBuffer;
 import CPUtoGPUDataTransferDX;
 
 using namespace zzz;
+using namespace zzz::templates;
 
 export namespace zzz::platforms::directx
 {
@@ -39,11 +41,12 @@ export namespace zzz::platforms::directx
 		inline const ComPtr<ID3D12Device> GetDevice() const noexcept { return m_device; };
 		inline const ComPtr<ID3D12CommandQueue> GetCommandQueue() const noexcept { return m_commandQueue; };
 		inline const ComPtr<IDXGIFactory7> GetFactory() const noexcept { return m_factory; };
-		inline const std::shared_ptr<CommandWrapperDX> GetCommandRender(zU64 index) const noexcept { return m_commandRender[index]; };
+		inline const std::shared_ptr<CommandWrapperDX> GetCommandWrapper(zU64 index) const noexcept { return m_commandWrapper[index]; };
 		inline ComPtr<ID3D12RootSignature> GetRootSignature() const noexcept { return m_rootSignature.Get(); }
 
 		void CommandRenderReset() noexcept;
 		[[nodiscard]] result<> CommandRenderReinitialize();
+		void PreparedTransfers(ComPtr<ID3D12GraphicsCommandList>& commandList);
 		void SubmitCommandLists(zU64 index) override;
 		void WaitForGpu() override;
 
@@ -54,7 +57,11 @@ export namespace zzz::platforms::directx
 		static constexpr DXGI_FORMAT BACK_BUFFER_FORMAT = DXGI_FORMAT_R8G8B8A8_UNORM;
 		static constexpr DXGI_FORMAT DEPTH_FORMAT = DXGI_FORMAT_D32_FLOAT;
 
+		ThreadSafeSwapBuffer<PreparedCallback> m_PreparedTransfers;
+
 		UINT64 m_fenceValue;
+		unique_handle m_fenceEvent;
+		ComPtr<ID3D12Fence> m_fence;
 		UINT m_swapChainFlags;
 
 		RootSignature m_rootSignature;
@@ -64,10 +71,7 @@ export namespace zzz::platforms::directx
 		ComPtr<IDXGIAdapter3> m_adapter3;
 		ComPtr<ID3D12Device> m_device;
 		ComPtr<ID3D12CommandQueue> m_commandQueue;
-		std::shared_ptr<CommandWrapperDX> m_commandRender[BACK_BUFFER_COUNT];
-
-		unique_handle m_fenceEvent;
-		ComPtr<ID3D12Fence> m_fence;
+		std::shared_ptr<CommandWrapperDX> m_commandWrapper[BACK_BUFFER_COUNT];
 
 		result<> InitializeDevice();
 		result<> InitializeFence();
@@ -81,7 +85,8 @@ export namespace zzz::platforms::directx
 	DXAPI::DXAPI() :
 		IGAPI(eGAPIType::DirectX),
 		m_swapChainFlags{ 0 },
-		m_featureLevel{ D3D_FEATURE_LEVEL_12_0 }
+		m_featureLevel{ D3D_FEATURE_LEVEL_12_0 },
+		m_PreparedTransfers{ 100 }
 	{
 	}
 
@@ -92,7 +97,7 @@ export namespace zzz::platforms::directx
 	void DXAPI::CommandRenderReset() noexcept
 	{
 		for (int i = 0; i < BACK_BUFFER_COUNT; i++)
-			m_commandRender[i]->Reset();
+			m_commandWrapper[i]->Reset();
 	}
 
 	result<> DXAPI::CommandRenderReinitialize()
@@ -100,7 +105,7 @@ export namespace zzz::platforms::directx
 		result<> res;
 		for (int i = 0; i < BACK_BUFFER_COUNT; i++)
 		{
-			res = m_commandRender[i]->Reinitialize(m_device);
+			res = m_commandWrapper[i]->Reinitialize(m_device);
 			if (!res)
 				break;
 		}
@@ -112,7 +117,7 @@ export namespace zzz::platforms::directx
 	result<> DXAPI::Init()
 	{
 		result<> res = InitializeDevice()
-			.and_then([&]() { m_CPUtoGPUDataTransfer = safe_make_unique<CPUtoGPUDataTransferDX>(m_device); })
+			.and_then([&]() { m_CPUtoGPUDataTransfer = safe_make_unique<CPUtoGPUDataTransferDX>(m_device, m_PreparedTransfers); })
 			.and_then([&]() { return  InitializeFence(); });
 
 		return res;
@@ -141,7 +146,7 @@ export namespace zzz::platforms::directx
 			return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializeDevice()]. -> {}", res.error().getMessage()));
 
 		for (int index = 0; index < BACK_BUFFER_COUNT; index++)
-			m_commandRender[index] = safe_make_shared<CommandWrapperDX>(m_device, D3D12_COMMAND_LIST_TYPE_DIRECT);
+			m_commandWrapper[index] = safe_make_shared<CommandWrapperDX>(m_device, D3D12_COMMAND_LIST_TYPE_DIRECT);
 
 		return {};
 	}
@@ -325,9 +330,21 @@ export namespace zzz::platforms::directx
 #pragma endregion Initialize
 
 #pragma region Rendring
+	// Устанавливаем состояние ресурса готовое к рендрингу после копирования в память GPU
+	void DXAPI::PreparedTransfers(ComPtr<ID3D12GraphicsCommandList>& commandList)
+	{
+		m_PreparedTransfers.ForEach([&](PreparedCallback preparedCallback)
+			{
+				preparedCallback(commandList);
+			}
+		);
+
+		m_PreparedTransfers.SwapAndReset();
+	}
+
 	void DXAPI::SubmitCommandLists(zU64 index)
 	{
-		ID3D12CommandList* ppCommandLists[] = { m_commandRender[index]->GetCommandList().Get()};
+		ID3D12CommandList* ppCommandLists[] = { m_commandWrapper[index]->GetCommandList().Get()};
 		m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 	}
 

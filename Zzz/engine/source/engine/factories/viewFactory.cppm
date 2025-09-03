@@ -4,7 +4,7 @@ export module ViewFactory;
 import IGAPI;
 import result;
 import IAppWin;
-import winMSWin;
+import AppWindowMsWin;
 import Settings;
 import strConvert;
 import ISurfaceView;
@@ -42,7 +42,7 @@ export namespace zzz
 		try
 		{
 #if defined(_WIN64)
-			return safe_make_shared<winMSWin>(Settings);
+			return safe_make_shared<AppWindowMsWin>(Settings);
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif

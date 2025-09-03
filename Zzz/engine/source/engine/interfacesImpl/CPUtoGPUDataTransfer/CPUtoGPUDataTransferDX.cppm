@@ -4,8 +4,10 @@ export module CPUtoGPUDataTransferDX;
 import result;
 import QueueArray;
 import CommandWrapperDX;
+import ThreadSafeSwapBuffer;
 import ICPUtoGPUDataTransfer;
 
+using namespace zzz;
 using namespace zzz::templates;
 
 #if defined(_WIN64)
@@ -20,7 +22,7 @@ export namespace zzz::platforms::directx
 		CPUtoGPUDataTransferDX& operator=(const CPUtoGPUDataTransferDX&) = delete;
 		CPUtoGPUDataTransferDX& operator=(CPUtoGPUDataTransferDX&&) = delete;
 
-		CPUtoGPUDataTransferDX(ComPtr<ID3D12Device>& m_device);
+		CPUtoGPUDataTransferDX(ComPtr<ID3D12Device>& m_device, ThreadSafeSwapBuffer<PreparedCallback>& _Prepared);
 
 		~CPUtoGPUDataTransferDX() override;
 
@@ -34,9 +36,12 @@ export namespace zzz::platforms::directx
 		UINT64 m_CopyFenceValue;
 		ComPtr<ID3D12Fence> m_CopyFence;
 		unique_handle m_FenceEvent;
+
+		ThreadSafeSwapBuffer<PreparedCallback>& m_Prepared;
 	};
 
-	CPUtoGPUDataTransferDX::CPUtoGPUDataTransferDX(ComPtr<ID3D12Device>& device) :
+	CPUtoGPUDataTransferDX::CPUtoGPUDataTransferDX(ComPtr<ID3D12Device>& device, ThreadSafeSwapBuffer<PreparedCallback>& _Prepared) :
+		m_Prepared{ _Prepared },
 		m_CopyFenceValue{ 0 }
 	{
 		ensure(device != nullptr);
@@ -105,6 +110,7 @@ export namespace zzz::platforms::directx
 				catch ( ... )
 				{
 					m_TransferCallbacks[m_TransferIndex][i]->isCorrect = false;
+					m_TransferCallbacks[m_TransferIndex][i]->completeCallback(false);
 				}
 			}
 
@@ -115,7 +121,8 @@ export namespace zzz::platforms::directx
 			ID3D12CommandList* ppLists[] = { copyList.Get() };
 			m_CopyQueue->ExecuteCommandLists(1, ppLists);
 
-			{ // Sync
+			// Sync
+			{
 				m_CopyFenceValue++;
 				ensure(S_OK == m_CopyQueue->Signal(m_CopyFence.Get(), m_CopyFenceValue));
 
@@ -124,6 +131,12 @@ export namespace zzz::platforms::directx
 					ensure(S_OK == m_CopyFence->SetEventOnCompletion(m_CopyFenceValue, m_FenceEvent.handle));
 					WaitForSingleObject(m_FenceEvent.handle, INFINITE);
 				}
+			}
+
+			for (int i = 0; i < m_TransferCallbacks[m_TransferIndex].Size(); i++)
+			{
+				if (m_TransferCallbacks[m_TransferIndex][i]->isCorrect)
+					m_Prepared.Add(m_TransferCallbacks[m_TransferIndex][i]->preparedCallback);
 			}
 
 			// Оповещаем заказчиков ресурсов о том что они могут ими пользоваться

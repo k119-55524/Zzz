@@ -29,18 +29,18 @@ export namespace zzz::templates
 
 			data[writeIndex].PushBack(_data);
 		};
-		inline void ProcessAll(std::function<void(const T&)> callback)
-		{
-			std::lock_guard<std::mutex> lock(readMutex);
-			for (zU64 i = 0; i < data[readIndex].Size(); i++)
-				callback(data[readIndex][i]);
-		}
 		inline void ForEach(const std::function<void(const T&)>& callback)
 		{
-			std::shared_lock lock(readMutex);
+			if (!callback)
+				return;
 
-			for (const auto& item : data[readIndex])
-				callback(item);
+			std::lock_guard<std::mutex> lock(readMutex);
+
+			const auto& currentData = data[readIndex];
+			const size_t dataSize = currentData.Size();
+
+			for (size_t i = 0; i < dataSize; i++)
+				callback(currentData[i]);
 		}
 		inline void SwapAndReset() noexcept 
 		{
@@ -49,7 +49,7 @@ export namespace zzz::templates
 			std::lock_guard<std::mutex> readLock(readMutex, std::adopt_lock);
 
 			std::swap(readIndex, writeIndex);
-			data[writeIndex].Reset();
+			data[writeIndex].Clear();
 		};
 
 	private:

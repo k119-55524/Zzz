@@ -180,6 +180,25 @@ export namespace zzz
 					commandList->ResourceBarrier(1, &ibBarrierToCommon);
 				}
 			},
+			[&](const ComPtr<ID3D12GraphicsCommandList>& commandList)
+			{
+				// Перевод вершинного буфера
+				auto vbBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+					vertexBuffer.Get(),
+					D3D12_RESOURCE_STATE_COMMON,
+					D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+				commandList->ResourceBarrier(1, &vbBarrier);
+
+				// Если есть индексный буфер
+				if (indexBuffer != nullptr)
+				{
+					auto ibBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+						indexBuffer.Get(),
+						D3D12_RESOURCE_STATE_COMMON,
+						D3D12_RESOURCE_STATE_INDEX_BUFFER);
+					commandList->ResourceBarrier(1, &ibBarrier);
+				}
+			},
 			[&](bool res)
 			{
 				if (!res)

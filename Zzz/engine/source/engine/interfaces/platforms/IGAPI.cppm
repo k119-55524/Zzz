@@ -57,7 +57,10 @@ export namespace zzz::platforms
 
 		[[nodiscard]] virtual result<> Initialize();
 		virtual void SubmitCommandLists(zU64 index) = 0;
-		inline void AddTransferResource(CommandListFillCallback fillCallback, TransferCompleteCallback completeCallback) { m_CPUtoGPUDataTransfer->AddTransferResource(fillCallback, completeCallback); };
+		inline void AddTransferResource(FillCallback fillCallback, PreparedCallback preparedCallback, CompleteCallback completeCallback)
+		{
+			m_CPUtoGPUDataTransfer->AddTransferResource(fillCallback, preparedCallback, completeCallback);
+		};
 		inline bool HasResourcesToUpload() { return m_CPUtoGPUDataTransfer->HasResourcesToUpload(); };
 		inline void TranferResourceToGPU() { m_CPUtoGPUDataTransfer->TransferResourceToGPU(); };
 		virtual void WaitForGpu() = 0;

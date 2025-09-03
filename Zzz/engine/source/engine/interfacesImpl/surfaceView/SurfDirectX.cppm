@@ -7,7 +7,7 @@ import DXAPI;
 import result;
 import size2D;
 import IAppWin;
-import winMSWin;
+import AppWindowMsWin;
 import Settings;
 import strConvert;
 import ISurfaceView;
@@ -50,7 +50,7 @@ namespace zzz
 		bool m_tearingSupported;
 
 		std::shared_ptr<DXAPI> m_DXAPI;
-		std::shared_ptr<winMSWin> m_Win;
+		std::shared_ptr<AppWindowMsWin> m_Win;
 
 		ComPtr<IDXGISwapChain3> m_swapChain;
 		UINT m_RtvDescrSize;
@@ -87,7 +87,7 @@ namespace zzz
 	{
 		m_DXAPI = std::dynamic_pointer_cast<DXAPI>(_iGAPI);
 		ensure(m_DXAPI);
-		m_Win = std::dynamic_pointer_cast<winMSWin>(_iAppWin);
+		m_Win = std::dynamic_pointer_cast<AppWindowMsWin>(_iAppWin);
 		ensure(m_Win);
 	}
 
@@ -355,7 +355,7 @@ namespace zzz
 	{
 		zU64 frameIndex = (m_frameIndex + 1) % BACK_BUFFER_COUNT;
 
-		auto commandWrapper = m_DXAPI->GetCommandRender(frameIndex);
+		auto commandWrapper = m_DXAPI->GetCommandWrapper(frameIndex);
 		ensure(commandWrapper, ">>>>> [SurfDirectX::PrepareFrame()]. Command wrapper cannot be null.");
 		auto commandAllocator = commandWrapper->GetCommandAllocator();
 		auto commandList = commandWrapper->GetCommandList();
@@ -366,6 +366,9 @@ namespace zzz
 		ensure(S_OK == commandAllocator->Reset());
 		ensure(S_OK == commandList->Reset(commandAllocator.Get(), nullptr));
 
+		// Устанавливаем состояние ресурсов готовыми к рендрингу после копирования в память GPU
+		m_DXAPI->PreparedTransfers(commandList);
+
 		commandList->SetGraphicsRootSignature(m_DXAPI->GetRootSignature().Get());
 		commandList->RSSetViewports(1, &m_viewport);
 		commandList->RSSetScissorRects(1, &m_scissorRect);
@@ -375,16 +378,14 @@ namespace zzz
 			&keep(CD3DX12_RESOURCE_BARRIER::Transition(
 				m_renderTargets[frameIndex].Get(),
 				D3D12_RESOURCE_STATE_PRESENT,
-				D3D12_RESOURCE_STATE_RENDER_TARGET))
-		);
+				D3D12_RESOURCE_STATE_RENDER_TARGET)));
 
 		commandList->ResourceBarrier(
 			1,
 			&keep(CD3DX12_RESOURCE_BARRIER::Transition(
 				m_depthStencil[frameIndex].Get(),
 				D3D12_RESOURCE_STATE_COMMON,
-				D3D12_RESOURCE_STATE_DEPTH_WRITE))
-		);
+				D3D12_RESOURCE_STATE_DEPTH_WRITE)));
 
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_RtvDescrSize);
 		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_DsvDescrSize);
@@ -414,16 +415,14 @@ namespace zzz
 			&keep(CD3DX12_RESOURCE_BARRIER::Transition(
 				m_renderTargets[frameIndex].Get(),
 				D3D12_RESOURCE_STATE_RENDER_TARGET,
-				D3D12_RESOURCE_STATE_PRESENT))
-		);
+				D3D12_RESOURCE_STATE_PRESENT)));
 
 		commandList->ResourceBarrier(
 			1,
 			&keep(CD3DX12_RESOURCE_BARRIER::Transition(
 				m_depthStencil[frameIndex].Get(),
 				D3D12_RESOURCE_STATE_DEPTH_WRITE,
-				D3D12_RESOURCE_STATE_COMMON))
-		);
+				D3D12_RESOURCE_STATE_COMMON)));
 
 		// Закрываем командный список
 		ensure(S_OK == commandList->Close());
