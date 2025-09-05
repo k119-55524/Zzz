@@ -197,7 +197,11 @@ export namespace zzz
 		static zU32 frameCount = 0;
 		static double allTime = 0.0;
 		m_PerfRender.StartPerformance();
+
+		m_GAPI->BeginRender();
 		m_View->OnUpdate(m_time.GetDeltaTime());
+		m_GAPI->EndRender();
+
 		allTime += m_PerfRender.StopPerformance();
 		{
 			frameCount++;

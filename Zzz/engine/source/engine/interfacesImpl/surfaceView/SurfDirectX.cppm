@@ -332,6 +332,7 @@ namespace zzz
 	result<> SurfDirectX::RecreateRenderTargetsAndDepth()
 	{
 		auto m_device = m_DXAPI->GetDevice();
+
 		auto res = CreateRTV(m_device);
 		if (!res)
 			return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::RecreateRenderTargetsAndDepth()]. Failed to create RTV. {}", res.error().getMessage()).c_str());
@@ -355,19 +356,8 @@ namespace zzz
 	{
 		zU64 frameIndex = (m_frameIndex + 1) % BACK_BUFFER_COUNT;
 
-		auto commandWrapper = m_DXAPI->GetCommandWrapper(frameIndex);
-		ensure(commandWrapper, ">>>>> [SurfDirectX::PrepareFrame()]. Command wrapper cannot be null.");
-		auto commandAllocator = commandWrapper->GetCommandAllocator();
-		auto commandList = commandWrapper->GetCommandList();
-		ensure(commandAllocator, ">>>>> [SurfDirectX::PrepareFrame()]. Command allocator cannot be null.");
+		auto commandList = m_DXAPI->GetCommandList();
 		ensure(commandList, ">>>>> [SurfDirectX::PrepareFrame()]. Command list cannot be null.");
-
-		// —брасываем аллокатор и командный список
-		ensure(S_OK == commandAllocator->Reset());
-		ensure(S_OK == commandList->Reset(commandAllocator.Get(), nullptr));
-
-		// ”станавливаем состо€ние ресурсов как готовых к рендрингу после копировани€ в пам€ть GPU
-		m_DXAPI->BeginPreparedTransfers(commandList);
 
 		commandList->SetGraphicsRootSignature(m_DXAPI->GetRootSignature().Get());
 		commandList->RSSetViewports(1, &m_viewport);
@@ -423,15 +413,12 @@ namespace zzz
 				m_depthStencil[frameIndex].Get(),
 				D3D12_RESOURCE_STATE_DEPTH_WRITE,
 				D3D12_RESOURCE_STATE_COMMON)));
-
-		// «акрываем командный список
-		ensure(S_OK == commandList->Close());
 	}
 
 	void SurfDirectX::RenderFrame()
 	{
 		// ¬ыполн€ем командный список
-		m_iGAPI->SubmitCommandLists(m_frameIndex);
+		m_iGAPI->SubmitCommandLists();
 
 		// Ќастраиваем параметры дл€ Present
 		BOOL fullscreen = FALSE;
@@ -442,9 +429,6 @@ namespace zzz
 
 		m_iGAPI->WaitForGpu();
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
-
-		// ”станавливаем состо€ние ресурсов как готовых к рендрингу после копировани€ в пам€ть GPU
-		m_DXAPI->EndPreparedTransfers();
 	}
 #pragma endregion Rendring
 
@@ -506,9 +490,6 @@ namespace zzz
 		if (S_OK != hr)
 			throw_runtime_error(std::format(">>>>> [DXAPI::OnResize({}x{})].", size.width, size.height));
 
-		m_iGAPI->WaitForGpu();
-		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
-
 		auto res = CreateRTVHeap()
 			.and_then([&]() { return CreateRTV(m_device); })
 			.and_then([&]() { return CreateDS(size); })
@@ -518,6 +499,8 @@ namespace zzz
 		m_viewport = CD3DX12_VIEWPORT{ 0.0f, 0.0f, static_cast<float>(size.width), static_cast<float>(size.height) };
 		m_scissorRect = CD3DX12_RECT{ 0, 0, static_cast<LONG>(size.width), static_cast<LONG>(size.height) };
 		m_aspectRatio = static_cast<float>(size.width) / static_cast<float>(size.height);
+
+		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 	}
 
 	void SurfDirectX::SetFullScreen(bool fs)
@@ -537,7 +520,6 @@ namespace zzz
 		}
 
 		m_iGAPI->WaitForGpu();
-
 		m_DXAPI->CommandRenderReset();
 		m_iGAPI->WaitForGpu();
 		ResetRTVandDS();

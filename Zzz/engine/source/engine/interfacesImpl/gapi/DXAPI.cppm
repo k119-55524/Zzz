@@ -41,15 +41,17 @@ export namespace zzz::platforms::directx
 		inline const ComPtr<ID3D12Device> GetDevice() const noexcept { return m_device; };
 		inline const ComPtr<ID3D12CommandQueue> GetCommandQueue() const noexcept { return m_commandQueue; };
 		inline const ComPtr<IDXGIFactory7> GetFactory() const noexcept { return m_factory; };
-		inline const std::shared_ptr<CommandWrapperDX> GetCommandWrapper(zU64 index) const noexcept { return m_commandWrapper[index]; };
+		inline const ComPtr<ID3D12GraphicsCommandList>& GetCommandList() const noexcept { return m_commandWrapper[m_frameIndexUpdate]->GetCommandList(); };
 		inline ComPtr<ID3D12RootSignature> GetRootSignature() const noexcept { return m_rootSignature.Get(); }
 
 		void CommandRenderReset() noexcept;
 		[[nodiscard]] result<> CommandRenderReinitialize();
-		void BeginPreparedTransfers(ComPtr<ID3D12GraphicsCommandList>& commandList);
 		void EndPreparedTransfers();
-		void SubmitCommandLists(zU64 index) override;
+		void SubmitCommandLists() override;
 		void WaitForGpu() override;
+
+		void BeginRender() override;
+		void EndRender() override;
 
 	protected:
 		[[nodiscard]] result<> Init() override;
@@ -81,6 +83,8 @@ export namespace zzz::platforms::directx
 		result<> CreateDevice(ComPtr<IDXGIAdapter1> adapter, ComPtr<ID3D12Device>& outDevice, D3D_FEATURE_LEVEL& outFeatureLevel);
 		result<> CreateCommandQueue(ComPtr<ID3D12Device> device, ComPtr<ID3D12CommandQueue>& outQueue);
 		result<> GetAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter);
+
+		void BeginPreparedTransfers();
 	};
 
 	DXAPI::DXAPI() :
@@ -331,9 +335,37 @@ export namespace zzz::platforms::directx
 #pragma endregion Initialize
 
 #pragma region Rendring
-	// Устанавливаем состояние ресурса готовое к рендрингу после копирования в память GPU
-	void DXAPI::BeginPreparedTransfers(ComPtr<ID3D12GraphicsCommandList>& commandList)
+	void DXAPI::BeginRender()
 	{
+		auto commandAllocator = m_commandWrapper[m_frameIndexUpdate]->GetCommandAllocator();
+		auto commandList = m_commandWrapper[m_frameIndexUpdate]->GetCommandList();
+
+		// Сбрасываем аллокатор и командный список
+		ensure(S_OK == commandAllocator->Reset());
+		ensure(S_OK == commandList->Reset(commandAllocator.Get(), nullptr));
+
+		// Устанавливаем состояние ресурсов как готовых к рендрингу после копирования в память GPU
+		BeginPreparedTransfers();
+	}
+
+	void DXAPI::EndRender()
+	{
+		// Закрываем командный список
+		auto commandListUpdate = m_commandWrapper[m_frameIndexUpdate]->GetCommandList();
+		ensure(S_OK == commandListUpdate->Close());
+
+		m_frameIndexRender = (m_frameIndexRender + 1) % BACK_BUFFER_COUNT;
+		m_frameIndexUpdate = (m_frameIndexRender + 1) % BACK_BUFFER_COUNT;
+
+		// Устанавливаем состояние ресурсов как готовых к рендрингу после копирования в память GPU
+		EndPreparedTransfers();
+	}
+
+	// Устанавливаем состояние ресурса готовое к рендрингу после копирования в память GPU
+	void DXAPI::BeginPreparedTransfers()
+	{
+		auto commandList = m_commandWrapper[m_frameIndexUpdate]->GetCommandList();
+
 		m_PreparedTransfers.ForEach([&](std::shared_ptr<sInTransfersCallbacks> callback)
 			{
 				if (callback->isCorrect)
@@ -352,9 +384,9 @@ export namespace zzz::platforms::directx
 		m_PreparedTransfers.SwapAndReset();
 	}
 
-	void DXAPI::SubmitCommandLists(zU64 index)
+	void DXAPI::SubmitCommandLists()
 	{
-		ID3D12CommandList* ppCommandLists[] = { m_commandWrapper[index]->GetCommandList().Get()};
+		ID3D12CommandList* ppCommandLists[] = { m_commandWrapper[m_frameIndexRender]->GetCommandList().Get()};
 		m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 	}
 

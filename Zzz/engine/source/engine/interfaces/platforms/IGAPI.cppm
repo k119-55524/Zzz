@@ -48,6 +48,7 @@ export namespace zzz::platforms
 				names[static_cast<size_t>(gapiType)] : L"Unknown"sv;
 		}
 		[[nodiscard]] inline constexpr std::wstring_view GetAPIName() const noexcept { return GetAPIName(gapiType); }
+		inline zU32 GetFrameIndexUpdate() const noexcept { return m_frameIndexUpdate; }
 
 		// Геттеры возможностей
 		[[nodiscard]] inline bool SupportsRayTracing() const noexcept { return m_CheckGapiSupport->SupportsRayTracing(); }
@@ -56,7 +57,7 @@ export namespace zzz::platforms
 		[[nodiscard]] inline bool SupportsSamplerFeedback() const noexcept { return m_CheckGapiSupport->SupportsSamplerFeedback(); }
 
 		[[nodiscard]] virtual result<> Initialize();
-		virtual void SubmitCommandLists(zU64 index) = 0;
+		virtual void SubmitCommandLists() = 0;
 		inline void AddTransferResource(FillCallback fillCallback, PreparedCallback preparedCallback, CompleteCallback completeCallback)
 		{
 			m_CPUtoGPUDataTransfer->AddTransferResource(fillCallback, preparedCallback, completeCallback);
@@ -65,21 +66,28 @@ export namespace zzz::platforms
 		inline void TranferResourceToGPU() { m_CPUtoGPUDataTransfer->TransferResourceToGPU(); };
 		virtual void WaitForGpu() = 0;
 
+		virtual void BeginRender() = 0;
+		virtual void EndRender() = 0;
+
 	protected:
 		[[nodiscard]] virtual result<> Init() = 0;
 
 		eGAPIType gapiType;
 		eInitState initState;
 		std::unique_ptr<ICPUtoGPUDataTransfer> m_CPUtoGPUDataTransfer;
-		std::unique_ptr<ICheckGapiSupport> m_CheckGapiSupport; // Проверка возможностей GAPI
+		std::unique_ptr<ICheckGapiSupport> m_CheckGapiSupport;
+		zU32 m_frameIndexRender;
+		zU32 m_frameIndexUpdate;
 
 	private:
 		std::mutex stateMutex;
 	};
 
-	IGAPI::IGAPI(eGAPIType type)
-		: gapiType{ type },
-		initState{ eInitState::eInitNot }
+	IGAPI::IGAPI(eGAPIType type) :
+		gapiType{ type },
+		initState{ eInitState::eInitNot },
+		m_frameIndexRender{ 0 },
+		m_frameIndexUpdate{ 1 }
 	{
 	}
 
