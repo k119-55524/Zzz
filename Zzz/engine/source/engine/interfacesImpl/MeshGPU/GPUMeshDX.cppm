@@ -201,6 +201,11 @@ export namespace zzz
 			},
 			[&](bool res)
 			{
+				// Освобождаем промежуточные буферы
+				uploadVertexBuffer.Reset();
+				if (uploadIndexBuffer != nullptr)
+					uploadIndexBuffer.Reset();
+
 				if (!res)
 					std::cerr << "Transfer resource failed" << std::endl;
 				else
