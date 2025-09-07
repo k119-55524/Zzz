@@ -142,24 +142,13 @@ namespace zzz
 		{
 			m_ThreadsUpdate.Submit([&]()
 				{
-					m_SurfaceView->RenderFrame();
+					PrepareFrame(deltaTime);
 				});
 			m_ThreadsUpdate.Submit([&]()
 				{
-					PrepareFrame(deltaTime);
+					m_SurfaceView->RenderFrame();
 				});
 			m_ThreadsUpdate.Join();
-		}
-
-		{
-			//static int frameCount = 0;
-			//frameCount++;
-
-			//if (frameCount == 30)
-			//	SetFullScreen(true);
-
-			//if (frameCount == 60)
-			//	SetFullScreen(false);
 		}
 	}
 

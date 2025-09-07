@@ -25,7 +25,7 @@ export namespace zzz
 			std::shared_ptr<IAppWin> _iAppWin,
 			std::shared_ptr<IGAPI> _iGAPI);
 
-		virtual ~ISurfaceView();
+		virtual ~ISurfaceView() = default;
 
 		[[nodiscard]] virtual result<> Initialize() = 0;
 		virtual void PrepareFrame() = 0;
@@ -43,11 +43,6 @@ export namespace zzz
 		std::shared_ptr<IAppWin> m_iAppWin;
 		std::shared_ptr<IGAPI> m_iGAPI;
 	};
-
-	ISurfaceView::~ISurfaceView()
-	{
-		m_iGAPI->WaitForGpu();
-	}
 
 	ISurfaceView::ISurfaceView(
 		std::shared_ptr<Settings> _settings,

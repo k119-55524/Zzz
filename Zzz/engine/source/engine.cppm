@@ -149,10 +149,10 @@ export namespace zzz
 	{
 		std::lock_guard<std::mutex> lock(stateMutex);
 		if (initState != eInitState::eInitOK)
-			return Unexpected(eResult::failure, L">>>>> [Engine::go()]. Engine is not initialized.");
+			return Unexpected(eResult::failure, L">>>>> [Engine::Run()]. Engine is not initialized.");
 
 		if (initState == eInitState::eRunning)
-			return Unexpected(eResult::failure, L">>>>> [Engine::go()]. Engine is already running.");
+			return Unexpected(eResult::failure, L">>>>> [Engine::Run()]. Engine is already running.");
 
 		initState = eInitState::eRunning;
 		std::wstring err;
@@ -170,12 +170,12 @@ export namespace zzz
 		catch (const std::exception& e)
 		{
 			string_to_wstring(e.what())
-				.and_then([&err](const std::wstring& wstr) { err = L">>>>> [Engine::go()]. Exception: " + wstr + L"\n"; })
-				.or_else([&err](const Unexpected& error) { err = L">>>>> #0 [Engine::go()]. Unknown exception occurred" + std::wstring(L"\n"); });
+				.and_then([&err](const std::wstring& wstr) { err = L">>>>> [Engine::Run()]. Exception: " + wstr + L"\n"; })
+				.or_else([&err](const Unexpected& error) { err = L">>>>> #0 [Engine::Run()]. Unknown exception occurred" + std::wstring(L"\n"); });
 		}
 		catch (...)
 		{
-			err = L">>>>> #1 [Engine::go()]. Unknown exception occurred";
+			err = L">>>>> #1 [Engine::Run()]. Unknown exception occurred";
 		}
 
 		zMsgBox::Error(err);
@@ -190,7 +190,7 @@ export namespace zzz
 
 		//Sleep(100);
 
-		//Если предыдущий вызов отправки ресурсов на GPU завершён
+		//Если предыдущий вызов отправки ресурсов GPU завершён и есть ресурсы для отправки в GPU, то запускаем новый
 		if (transferResToGPU.IsCompleted() && m_GAPI->HasResourcesToUpload())
 			transferResToGPU.Submit([&]() { m_GAPI->TranferResourceToGPU(); });
 
@@ -214,6 +214,18 @@ export namespace zzz
 				allTime = 0.0f;
 			}
 		}
+
+		// Тестовый код для проверки переключения в полноэкранный режим и обратно
+		{
+			//static int frameCount = 0;
+			//frameCount++;
+
+			//if (frameCount == 5000)
+			//	m_View->SetFullScreen(true);
+
+			//if (frameCount == 15000)
+			//	m_View->SetFullScreen(false);
+		}
 	}
 
 	void Engine::OnViewResized(const size2D<>& size, e_TypeWinResize resizeType)
@@ -230,7 +242,5 @@ export namespace zzz
 			m_time.Pause(isSysPaused);
 			break;
 		}
-
-		DebugOutput(std::format(L">>>>> [Engine::OnResizeAppWin()]. isSysPaused: {}", isSysPaused));
 	}
 }

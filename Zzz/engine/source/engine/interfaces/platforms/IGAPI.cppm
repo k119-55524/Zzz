@@ -48,7 +48,6 @@ export namespace zzz::platforms
 				names[static_cast<size_t>(gapiType)] : L"Unknown"sv;
 		}
 		[[nodiscard]] inline constexpr std::wstring_view GetAPIName() const noexcept { return GetAPIName(gapiType); }
-		inline zU32 GetFrameIndexUpdate() const noexcept { return m_frameIndexUpdate; }
 
 		// Геттеры возможностей
 		[[nodiscard]] inline bool SupportsRayTracing() const noexcept { return m_CheckGapiSupport->SupportsRayTracing(); }
@@ -64,13 +63,13 @@ export namespace zzz::platforms
 		};
 		inline bool HasResourcesToUpload() { return m_CPUtoGPUDataTransfer->HasResourcesToUpload(); };
 		inline void TranferResourceToGPU() { m_CPUtoGPUDataTransfer->TransferResourceToGPU(); };
-		virtual void WaitForGpu() = 0;
 
 		virtual void BeginRender() = 0;
 		virtual void EndRender() = 0;
 
 	protected:
 		[[nodiscard]] virtual result<> Init() = 0;
+		virtual void WaitForGpu() = 0;
 
 		eGAPIType gapiType;
 		eInitState initState;

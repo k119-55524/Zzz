@@ -48,13 +48,13 @@ export namespace zzz::platforms::directx
 		[[nodiscard]] result<> CommandRenderReinitialize();
 		void EndPreparedTransfers();
 		void SubmitCommandLists() override;
-		void WaitForGpu() override;
 
 		void BeginRender() override;
 		void EndRender() override;
 
 	protected:
 		[[nodiscard]] result<> Init() override;
+		void WaitForGpu() override;
 
 	private:
 		static constexpr DXGI_FORMAT BACK_BUFFER_FORMAT = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -89,6 +89,7 @@ export namespace zzz::platforms::directx
 
 	DXAPI::DXAPI() :
 		IGAPI(eGAPIType::DirectX),
+		m_fenceValue{ 0 },
 		m_swapChainFlags{ 0 },
 		m_featureLevel{ D3D_FEATURE_LEVEL_12_0 },
 		m_PreparedTransfers{ 100 }
@@ -97,6 +98,7 @@ export namespace zzz::platforms::directx
 
 	DXAPI::~DXAPI()
 	{
+		WaitForGpu();
 	}
 
 	void DXAPI::CommandRenderReset() noexcept
@@ -359,6 +361,8 @@ export namespace zzz::platforms::directx
 
 		// Устанавливаем состояние ресурсов как готовых к рендрингу после копирования в память GPU
 		EndPreparedTransfers();
+
+		WaitForGpu();
 	}
 
 	// Устанавливаем состояние ресурса готовое к рендрингу после копирования в память GPU
@@ -386,6 +390,8 @@ export namespace zzz::platforms::directx
 
 	void DXAPI::SubmitCommandLists()
 	{
+		//DebugOutput(std::format(L">>>>> [DXAPI::SubmitCommandLists()]. m_frameIndexRender: {}.", m_frameIndexRender));
+
 		ID3D12CommandList* ppCommandLists[] = { m_commandWrapper[m_frameIndexRender]->GetCommandList().Get()};
 		m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 	}
@@ -396,8 +402,6 @@ export namespace zzz::platforms::directx
 		ensure(S_OK == m_commandQueue->Signal(m_fence.Get(), fence));
 
 		m_fenceValue++;
-
-		// Ожидаем завершения предыдущего кадра.
 		if (m_fence->GetCompletedValue() < fence)
 		{
 			ensure(S_OK == m_fence->SetEventOnCompletion(fence, m_fenceEvent.handle));

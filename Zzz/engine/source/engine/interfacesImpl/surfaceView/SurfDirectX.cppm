@@ -44,10 +44,12 @@ namespace zzz
 		static constexpr UINT SWAP_CHAIN_FLAGS = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 
 		bool b_IgnoreResize;
-		UINT m_frameIndex;
 		CD3DX12_VIEWPORT m_viewport;
 		CD3DX12_RECT m_scissorRect;
 		bool m_tearingSupported;
+		std::mutex m_frameMutex;
+		std::condition_variable m_frameCV;
+		bool m_frameReady;
 
 		std::shared_ptr<DXAPI> m_DXAPI;
 		std::shared_ptr<AppWindowMsWin> m_Win;
@@ -79,11 +81,11 @@ namespace zzz
 		std::shared_ptr<IGAPI> _iGAPI)
 		: ISurfaceView(_settings, _iAppWin, _iGAPI),
 		b_IgnoreResize{ false },
-		m_frameIndex{ 0 },
 		m_tearingSupported{ false },
 		m_RtvDescrSize{ 0 },
 		m_DsvDescrSize{ 0 },
-		m_CbvSrvDescrSize{ 0 }
+		m_CbvSrvDescrSize{ 0 },
+		m_frameReady{ false }
 	{
 		m_DXAPI = std::dynamic_pointer_cast<DXAPI>(_iGAPI);
 		ensure(m_DXAPI);
@@ -132,6 +134,9 @@ namespace zzz
 
 	result<> SurfDirectX::CreateRTV(ComPtr<ID3D12Device>& m_device)
 	{
+		ensure(m_device, ">>>>> [SurfDirectX::CreateRTV()]. Device cannot be null.");
+		ensure(m_rtvHeap, ">>>>> [SurfDirectX::CreateRTV()]. RTV Heap cannot be null.");
+
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
 
 		// Create a RTV for each frame.
@@ -354,7 +359,14 @@ namespace zzz
 #pragma region Rendring
 	void SurfDirectX::PrepareFrame()
 	{
-		zU64 frameIndex = (m_frameIndex + 1) % BACK_BUFFER_COUNT;
+		zU64 frameIndex = (m_swapChain->GetCurrentBackBufferIndex() + 1) % BACK_BUFFER_COUNT;
+
+		// Синхронизируемся с рендерингом чтобы frameIndex остался валидным
+		{
+			std::lock_guard<std::mutex> lock(m_frameMutex);
+			m_frameReady = true;
+			m_frameCV.notify_one(); // Уведомляем ОДИН ожидающий поток
+		}
 
 		auto commandList = m_DXAPI->GetCommandList();
 		ensure(commandList, ">>>>> [SurfDirectX::PrepareFrame()]. Command list cannot be null.");
@@ -417,6 +429,13 @@ namespace zzz
 
 	void SurfDirectX::RenderFrame()
 	{
+		// Ожидаем(синхронизируемся) получения валидного frameIndex в PrepareFrame
+		{
+			std::unique_lock<std::mutex> lock(m_frameMutex);
+			m_frameCV.wait(lock, [this] { return m_frameReady; }); // Ждем, пока фрейм будет готов
+			m_frameReady = false; // Сбрасываем флаг для следующего кадра
+		}
+
 		// Выполняем командный список
 		m_iGAPI->SubmitCommandLists();
 
@@ -425,21 +444,52 @@ namespace zzz
 		ensure(S_OK == m_swapChain->GetFullscreenState(&fullscreen, nullptr));
 		UINT syncInterval = isVSync ? 1 : 0;
 		UINT presentFlags = (!isVSync && !fullscreen && m_tearingSupported) ? DXGI_PRESENT_ALLOW_TEARING : 0;
-		ensure(S_OK == m_swapChain->Present(syncInterval, presentFlags));
+		HRESULT hr = m_swapChain->Present(syncInterval, presentFlags);
+		if (FAILED(hr))
+		{
+			std::string errMsg;
+			switch (hr)
+			{
+			case DXGI_ERROR_DEVICE_HUNG:
+				// Драйвер устройства перестал отвечать
+				errMsg = ">>>>> [SurfDirectX::RenderFrame()]. GPU device hung - driver issues";
+				break;
+			case DXGI_ERROR_DEVICE_REMOVED:
+				// Устройство было физически удалено
+				errMsg = ">>>>> [SurfDirectX::RenderFrame()]. GPU device physically removed";
+				break;
+			case DXGI_ERROR_DEVICE_RESET:
+				// Устройство было сброшено
+				errMsg = ">>>>> [SurfDirectX::RenderFrame()]. GPU device reset";
+				break;
+			case DXGI_ERROR_DRIVER_INTERNAL_ERROR:
+				// Внутренняя ошибка драйвера
+				errMsg = ">>>>> [SurfDirectX::RenderFrame()]. GPU driver internal error";
+				break;
+			case DXGI_ERROR_INVALID_CALL:
+				// Неправильный вызов API
+				errMsg = ">>>>> [SurfDirectX::RenderFrame()]. Invalid API call";
+				break;
+			default:
+				errMsg = std::format(">>>>> [SurfDirectX::RenderFrame()]. Unknown device removed reason: {:#x}", hr);
+				break;
+			}
 
-		m_iGAPI->WaitForGpu();
-		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+			throw_runtime_error(errMsg);
+		}
 	}
 #pragma endregion Rendring
 
 	void SurfDirectX::OnResize(const size2D<>& size)
 	{
+		//DebugOutput(std::format(L">>>>> [SurfDirectX::OnResize({}x{})].", size.width, size.height).c_str());
+
 		if (m_iGAPI->GetInitState() != eInitState::eInitOK && !m_swapChain || b_IgnoreResize)
 			return;
 
 		if (size.width == 0 || size.height == 0)
 		{
-			DebugOutput(L">>>>> [DXAPI::OnResize()]. Invalid size for resize. Width or height is zero.\n");
+			DebugOutput(L">>>>> [SurfDirectX::OnResize()]. Invalid size for resize. Width or height is zero.\n");
 			return;
 		}
 
@@ -455,14 +505,12 @@ namespace zzz
 			if (desc.Width == static_cast<UINT>(size.width) &&
 				desc.Height == static_cast<UINT>(size.height))
 			{
-				DebugOutput(std::format(L">>>>> [DXAPI::OnResize({}x{})]. No resize needed, dimensions are unchanged.\n", size.width, size.height).c_str());
+				DebugOutput(std::format(L">>>>> [SurfDirectX::OnResize({}x{})]. No resize needed, dimensions are unchanged.", size.width, size.height).c_str());
 				return; // Размеры не изменились
 			}
 		}
 
-		m_iGAPI->WaitForGpu();
 		m_DXAPI->CommandRenderReset();
-
 		ResetRTVandDS();
 
 		BOOL fullscreen = FALSE;
@@ -488,19 +536,17 @@ namespace zzz
 				m_tearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
 		}
 		if (S_OK != hr)
-			throw_runtime_error(std::format(">>>>> [DXAPI::OnResize({}x{})].", size.width, size.height));
+			throw_runtime_error(std::format(">>>>> [SurfDirectX::OnResize({}x{})].", size.width, size.height));
 
 		auto res = CreateRTVHeap()
 			.and_then([&]() { return CreateRTV(m_device); })
 			.and_then([&]() { return CreateDS(size); })
 			.and_then([&]() { return m_DXAPI->CommandRenderReinitialize(); })
-			.or_else([&](const Unexpected& error) { throw_runtime_error(std::format(">>>>> [DXAPI::OnResize({}x{})]. {}.", size.width, size.height, wstring_to_string(error.getMessage()))); });
+			.or_else([&](const Unexpected& error) { throw_runtime_error(std::format(">>>>> [SurfDirectX::OnResize({}x{})]. {}.", size.width, size.height, wstring_to_string(error.getMessage()))); });
 
 		m_viewport = CD3DX12_VIEWPORT{ 0.0f, 0.0f, static_cast<float>(size.width), static_cast<float>(size.height) };
 		m_scissorRect = CD3DX12_RECT{ 0, 0, static_cast<LONG>(size.width), static_cast<LONG>(size.height) };
 		m_aspectRatio = static_cast<float>(size.width) / static_cast<float>(size.height);
-
-		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 	}
 
 	void SurfDirectX::SetFullScreen(bool fs)
@@ -519,9 +565,7 @@ namespace zzz
 			return;
 		}
 
-		m_iGAPI->WaitForGpu();
 		m_DXAPI->CommandRenderReset();
-		m_iGAPI->WaitForGpu();
 		ResetRTVandDS();
 
 		b_IgnoreResize = true;
