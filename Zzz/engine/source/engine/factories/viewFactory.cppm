@@ -6,7 +6,7 @@ import result;
 import IAppWin;
 import AppWindowMsWin;
 import Settings;
-import strConvert;
+import StrConvert;
 import ISurfaceView;
 import SurfDirectX;
 

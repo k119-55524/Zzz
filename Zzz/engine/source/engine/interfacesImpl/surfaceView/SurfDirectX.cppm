@@ -9,7 +9,7 @@ import size2D;
 import IAppWin;
 import AppWindowMsWin;
 import Settings;
-import strConvert;
+import StrConvert;
 import ISurfaceView;
 
 using namespace zzz::platforms;
@@ -368,7 +368,7 @@ namespace zzz
 			m_frameCV.notify_one(); // Уведомляем ОДИН ожидающий поток
 		}
 
-		auto commandList = m_DXAPI->GetCommandList();
+		auto commandList = m_DXAPI->GetCommandListUpdate();
 		ensure(commandList, ">>>>> [SurfDirectX::PrepareFrame()]. Command list cannot be null.");
 
 		commandList->SetGraphicsRootSignature(m_DXAPI->GetRootSignature().Get());

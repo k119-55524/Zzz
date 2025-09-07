@@ -6,7 +6,7 @@ using namespace zzz::platforms::directx;
 #if defined(_WIN64)
 import IGAPI;
 import result;
-import strConvert;
+import StrConvert;
 import RootSignature;
 import AppWindowMsWin;
 import CommandWrapperDX;
@@ -41,7 +41,8 @@ export namespace zzz::platforms::directx
 		inline const ComPtr<ID3D12Device> GetDevice() const noexcept { return m_device; };
 		inline const ComPtr<ID3D12CommandQueue> GetCommandQueue() const noexcept { return m_commandQueue; };
 		inline const ComPtr<IDXGIFactory7> GetFactory() const noexcept { return m_factory; };
-		inline const ComPtr<ID3D12GraphicsCommandList>& GetCommandList() const noexcept { return m_commandWrapper[m_frameIndexUpdate]->GetCommandList(); };
+		inline const ComPtr<ID3D12GraphicsCommandList>& GetCommandListUpdate() const noexcept { return m_commandWrapper[m_frameIndexUpdate]->GetCommandList(); };
+		inline const ComPtr<ID3D12GraphicsCommandList>& GetCommandListRender() const noexcept { return m_commandWrapper[m_frameIndexRender]->GetCommandList(); };
 		inline ComPtr<ID3D12RootSignature> GetRootSignature() const noexcept { return m_rootSignature.Get(); }
 
 		void CommandRenderReset() noexcept;

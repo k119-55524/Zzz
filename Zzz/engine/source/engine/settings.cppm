@@ -3,7 +3,7 @@ export module Settings;
 
 import result;
 import iozaml;
-import strConvert;
+import StrConvert;
 
 using namespace zzz::zaml;
 

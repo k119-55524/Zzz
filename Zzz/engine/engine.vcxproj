@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props')" />
+  <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
@@ -98,66 +98,69 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Source\Engine\InterfacesImpl\CPUtoGPUDataTransfer\CPUtoGPUDataTransferDX.cppm" />
+    <ClCompile Include="Source\engine\InterfacesImpl\CPUtoGPUDataTransfer\CPUtoGPUDataTransferDX.cppm" />
     <ClCompile Include="Source\Engine\Platforms\DX\CommandWrapperDX.cppm" />
-    <ClCompile Include="Source\Engine\Interfaces\Platforms\ICPUtoGPUDataTransfer.cppm" />
-    <ClCompile Include="Source\Engine\Interfaces\Platforms\IMeshGPU.cppm" />
-    <ClCompile Include="Source\Engine\Resources\CPUIndexBuffer.cppm" />
-    <ClCompile Include="Source\Engine\InterfacesImpl\MeshGPU\GPUMeshDX.cppm" />
-    <ClCompile Include="Source\Engine\Resources\GPUResourcesManager.cppm" />
-    <ClCompile Include="Source\Engine\Utils\AppTime.cppm" />
+    <ClCompile Include="Source\engine\Interfaces\platforms\ICPUtoGPUDataTransfer.cppm" />
+    <ClCompile Include="Source\engine\Interfaces\platforms\IMeshGPU.cppm" />
+    <ClCompile Include="Source\engine\Resources\CPUIndexBuffer.cppm" />
+    <ClCompile Include="Source\engine\InterfacesImpl\MeshGPU\GPUMeshDX.cppm" />
+    <ClCompile Include="Source\engine\Resources\GPUResourcesManager.cppm" />
+    <ClCompile Include="Source\engine\Utils\AppTime.cppm" />
     <ClCompile Include="Source\Engine.cppm" />
-    <ClCompile Include="Source\Engine\InterfacesImpl\AppWin\AppWindowMsWin.cppm" />
-    <ClCompile Include="Source\Engine\Factories\EngineFactory.cppm" />
-    <ClCompile Include="Source\Engine\Factories\ViewFactory.cppm" />
+    <ClCompile Include="Source\engine\InterfacesImpl\appWin\AppWindowMsWin.cppm" />
+    <ClCompile Include="Source\engine\Factories\EngineFactory.cppm" />
+    <ClCompile Include="Source\engine\Factories\ViewFactory.cppm" />
     <ClCompile Include="Source\Engine\Platforms\DX\CheckDirectXUltimateSupport.cppm" />
-    <ClCompile Include="Source\Engine\InterfacesImpl\SurfaceView\SurfDirectX.cppm" />
-    <ClCompile Include="Source\Engine\Interfaces\Platforms\IAppWin.cppm" />
-    <ClCompile Include="Source\Engine\Interfaces\Platforms\ICheckGapiSupport.cppm" />
-    <ClCompile Include="Source\Engine\Interfaces\Platforms\ISurfaceView.cppm" />
-    <ClCompile Include="Source\Engine\Utils\Colors.cppm" />
-    <ClCompile Include="Source\Engine\Utils\PerformanceMeter.cppm" />
-    <ClCompile Include="Source\Engine\Resources\CPUResourcesManager.cppm" />
-    <ClCompile Include="Source\Engine\Resources\CPUMesh.cppm" />
-    <ClCompile Include="Source\Engine\Resources\CPUVertexBuffer.cppm" />
+    <ClCompile Include="Source\engine\InterfacesImpl\surfaceView\SurfDirectX.cppm" />
+    <ClCompile Include="Source\engine\Interfaces\platforms\IAppWin.cppm" />
+    <ClCompile Include="Source\engine\Interfaces\platforms\ICheckGapiSupport.cppm" />
+    <ClCompile Include="Source\engine\Interfaces\platforms\ISurfaceView.cppm" />
+    <ClCompile Include="Source\engine\Utils\Colors.cppm" />
+    <ClCompile Include="Source\engine\Utils\GpuEventScope.cppm" />
+    <ClCompile Include="Source\engine\Utils\PerformanceMeter.cppm" />
+    <ClCompile Include="Source\engine\Resources\CPUResourcesManager.cppm" />
+    <ClCompile Include="Source\engine\Resources\CPUMesh.cppm" />
+    <ClCompile Include="Source\engine\Resources\CPUVertexBuffer.cppm" />
     <ClCompile Include="Source\Engine\Scene\Scene.cppm" />
     <ClCompile Include="Source\Engine\Scene\SceneEntity.cppm" />
     <ClCompile Include="Source\Engine\Scene\ScenesManager.cppm" />
     <ClCompile Include="Source\Engine\View.cppm" />
-    <ClCompile Include="Source\Engine\InterfacesImpl\GAPI\DXAPI.cppm" />
+    <ClCompile Include="Source\engine\InterfacesImpl\gapi\DXAPI.cppm" />
     <ClCompile Include="Source\Engine\Platforms\DX\RootSignature.cppm" />
-    <ClCompile Include="Source\Engine\Interfaces\Platforms\IGAPI.cppm" />
-    <ClCompile Include="Source\Engine\Utils\event.cppm" />
-    <ClCompile Include="Source\Engine\InterfacesImpl\Utils\icoBuilder\ibMSWin.cppm" />
-    <ClCompile Include="Source\Engine\Interfaces\Utils\IIcoBuilder.cppm" />
+    <ClCompile Include="Source\engine\Interfaces\platforms\IGAPI.cppm" />
+    <ClCompile Include="Source\engine\Utils\event.cppm" />
+    <ClCompile Include="Source\engine\InterfacesImpl\utils\icoBuilder\ibMSWin.cppm" />
+    <ClCompile Include="Source\engine\Interfaces\utils\IIcoBuilder.cppm" />
     <ClCompile Include="Source\Engine\Platforms\Platforms.cppm" />
     <ClCompile Include="Source\Templates\QueueArray.cppm" />
     <ClCompile Include="Source\Templates\ThreadPool.cppm" />
     <ClCompile Include="Source\Templates\ThreadSafeQueueArray.cppm" />
     <ClCompile Include="Source\Templates\ThreadSafeSwapBuffer.cppm" />
     <ClCompile Include="Source\Utils\MessageBox.cppm" />
-    <ClCompile Include="Source\Utils\strConvert.cppm" />
-    <ClCompile Include="Source\Engine\Utils\serializer.cppm" />
-    <ClCompile Include="Source\Engine\Utils\size2D.cppm" />
+    <ClCompile Include="Source\Utils\StrConvert.cppm" />
+    <ClCompile Include="Source\engine\Utils\serializer.cppm" />
+    <ClCompile Include="Source\engine\Utils\size2D.cppm" />
     <ClCompile Include="Source\Engine\IO\IOPathFactory.cppm" />
-    <ClCompile Include="Source\Engine\Interfaces\Platforms\IMainLoop.cppm" />
-    <ClCompile Include="Source\Engine\InterfacesImpl\MainLoop\mlMSWin.cppm" />
+    <ClCompile Include="Source\engine\Interfaces\platforms\IMainLoop.cppm" />
+    <ClCompile Include="Source\engine\InterfacesImpl\mainLoop\mlMSWin.cppm" />
     <ClCompile Include="Source\Engine\IO\ioZaml.cppm" />
     <ClCompile Include="Source\Engine\Settings.cppm" />
-    <ClCompile Include="Source\Engine\Utils\result.cppm" />
+    <ClCompile Include="Source\engine\Utils\result.cppm" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets')" />
+    <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.targets')" />
+    <Import Project="..\packages\WinPixEventRuntime.1.0.240308001\build\WinPixEventRuntime.targets" Condition="Exists('..\packages\WinPixEventRuntime.1.0.240308001\build\WinPixEventRuntime.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>Данный проект ссылается на пакеты NuGet, отсутствующие на этом компьютере. Используйте восстановление пакетов NuGet, чтобы скачать их.  Дополнительную информацию см. по адресу: http://go.microsoft.com/fwlink/?LinkID=322105. Отсутствует следующий файл: {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.targets'))" />
+    <Error Condition="!Exists('..\packages\WinPixEventRuntime.1.0.240308001\build\WinPixEventRuntime.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\WinPixEventRuntime.1.0.240308001\build\WinPixEventRuntime.targets'))" />
   </Target>
 </Project>

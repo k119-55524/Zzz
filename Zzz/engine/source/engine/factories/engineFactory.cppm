@@ -4,7 +4,7 @@ export module EngineFactory;
 import IGAPI;
 import result;
 import Settings;
-import strConvert;
+import StrConvert;
 
 #if defined(_WIN64)
 import DXAPI;

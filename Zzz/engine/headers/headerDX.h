@@ -16,6 +16,8 @@
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
 
+#include <pix3.h>
+
 using namespace DirectX;
 using namespace Microsoft::WRL;
 

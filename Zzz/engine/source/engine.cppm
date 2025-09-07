@@ -5,6 +5,7 @@ export module Engine;
 import View;
 import IGAPI;
 import size2D;
+import Colors;
 import result;
 import AppTime;
 import zMsgBox;
@@ -12,7 +13,8 @@ import mlMSWin;
 import Settings;
 import IMainLoop;
 import ThreadPool;
-import strConvert;
+import StrConvert;
+import GpuEventScope;
 import IOPathFactory;
 import EngineFactory;
 import ScenesManager;
@@ -22,6 +24,7 @@ import GPUResourcesManager;
 
 using namespace zzz;
 using namespace zzz::io;
+using namespace zzz::Colors;
 using namespace zzz::templates;
 using namespace zzz::platforms;
 
@@ -188,19 +191,24 @@ export namespace zzz
 		if (isSysPaused)
 			return;
 
-		//Sleep(100);
-
-		//Если предыдущий вызов отправки ресурсов GPU завершён и есть ресурсы для отправки в GPU, то запускаем новый
-		if (transferResToGPU.IsCompleted() && m_GAPI->HasResourcesToUpload())
-			transferResToGPU.Submit([&]() { m_GAPI->TranferResourceToGPU(); });
+		static zU64 frame = 0;
 
 		static zU32 frameCount = 0;
 		static double allTime = 0.0;
 		m_PerfRender.StartPerformance();
 
 		m_GAPI->BeginRender();
-		m_View->OnUpdate(m_time.GetDeltaTime());
+		{
+			GpuEventScope scope(m_GAPI, std::format(">>>>> [Engine::OnUpdateSystem()]. frame: {}", frame).c_str(), Colors::Blue);
+
+			//Если предыдущий вызов отправки ресурсов GPU завершён и есть ресурсы для отправки в GPU, то запускаем новый
+			if (transferResToGPU.IsCompleted() && m_GAPI->HasResourcesToUpload())
+				transferResToGPU.Submit([&]() { m_GAPI->TranferResourceToGPU(); });
+
+			m_View->OnUpdate(m_time.GetDeltaTime());
+		}
 		m_GAPI->EndRender();
+		frame++;
 
 		allTime += m_PerfRender.StopPerformance();
 		{
@@ -225,6 +233,7 @@ export namespace zzz
 
 			//if (frameCount == 15000)
 			//	m_View->SetFullScreen(false);
+
 		}
 	}
 

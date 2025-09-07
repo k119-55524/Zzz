@@ -4,7 +4,7 @@ export module IGAPI;
 import result;
 import size2D;
 import IAppWin;
-import strConvert;
+import StrConvert;
 import ICheckGapiSupport;
 import ICPUtoGPUDataTransfer;
 

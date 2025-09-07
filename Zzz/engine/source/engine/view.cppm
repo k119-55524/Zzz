@@ -8,7 +8,7 @@ import size2D;
 import result;
 import IAppWin;
 import Settings;
-import strConvert;
+import StrConvert;
 import ThreadPool;
 import ViewFactory;
 import ISurfaceView;

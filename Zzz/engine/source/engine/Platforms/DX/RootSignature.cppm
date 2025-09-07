@@ -3,7 +3,7 @@
 export module RootSignature;
 
 import result;
-import strConvert;
+import StrConvert;
 
 using namespace zzz;
 
@@ -68,12 +68,12 @@ export namespace zzz::platforms::directx
 				std::string errorStr(msg, errorBlob->GetBufferSize());
 				auto wstr = string_to_wstring(errorStr);
 
+				std::wstring errMsg = L">>>>> [RootSignature.Initialize( ... )]. ";
 				if (wstr)
-				{
-					std::wstring errMsg = L">>>>> [RootSignature.Initialize( ... )]. " + wstr.value();
-					DebugOutput(errMsg);
-					return Unexpected(eResult::failure, errMsg);
-				}
+					errMsg += wstr.value();
+
+				DebugOutput(errMsg);
+				return Unexpected(eResult::failure, errMsg);
 			}
 
 			return Unexpected(eResult::failure, L">>>>> [RootSignature.Initialize( ... )]. Failed to serialize root signature.");
