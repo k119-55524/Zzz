@@ -41,9 +41,13 @@ export namespace zzz
 		if (!scene)
 			return Unexpected(eResult::no_make_shared_ptr, L">>>>> [ScenesManager::GetStartScene()]. Failed to create Scene.");
 
-		auto GPUMeshDX = m_ResGPU->GetGenericMesh(MeshType::eGenericBox);
+		result<std::shared_ptr<IMeshGPU>> GPUMeshDX = m_ResGPU->GetGenericMesh(MeshType::eGenericBox);
 		if (!GPUMeshDX)
 			return GPUMeshDX.error();
+
+		result<std::shared_ptr<IShader>> shader = m_ResGPU->GetGenericShader(L"GenShader");
+		if (!shader)
+			return shader.error();
 
 		scene->AddMesh(GPUMeshDX.value());
 

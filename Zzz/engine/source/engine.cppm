@@ -199,7 +199,7 @@ export namespace zzz
 
 		m_GAPI->BeginRender();
 		{
-			GpuEventScope scope(m_GAPI, std::format(">>>>> [Engine::OnUpdateSystem()]. frame: {}", frame).c_str(), Colors::Blue);
+			//GpuEventScope scope(m_GAPI, std::format(">>>>> [Engine::OnUpdateSystem()]. frame: {}", frame).c_str(), Colors::Blue);
 
 			//Если предыдущий вызов отправки ресурсов GPU завершён и есть ресурсы для отправки в GPU, то запускаем новый
 			if (transferResToGPU.IsCompleted() && m_GAPI->HasResourcesToUpload())

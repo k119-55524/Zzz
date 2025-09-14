@@ -32,38 +32,48 @@ export namespace zzz::platforms::directx
 
 	result<> RootSignature::Initialize(ComPtr<ID3D12Device> device)
 	{
+		// Создаём таблицу дескрипторов для текстурных SRV (Shader Resource View)
 		CD3DX12_DESCRIPTOR_RANGE texTable;
 		texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+		
+		// Описание root-параметров: могут быть таблицами, константами или дескрипторами
+		CD3DX12_ROOT_PARAMETER rootParams[4];
+		rootParams[0].InitAsConstantBufferView(0);			// Глобальный CBV (b0)	
+		rootParams[1].InitAsConstantBufferView(1);			// CBV для материала (b1)	
+		CD3DX12_DESCRIPTOR_RANGE srvRange;
+		srvRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 128, 0);
+		rootParams[2].InitAsDescriptorTable(1, &srvRange);	// Таблица SRV (t0..t127)
+		CD3DX12_DESCRIPTOR_RANGE uavRange;
+		uavRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 16, 0);
+		rootParams[3].InitAsDescriptorTable(1, &uavRange);	// Таблица UAV (u0..u15)
 
-		// Root parameter can be a table, root descriptor or root constants.
-		CD3DX12_ROOT_PARAMETER slotRootParameter[4];
-
-		// Perfomance TIP: Order from most frequent to least frequent.
-		slotRootParameter[0].InitAsDescriptorTable(1, &texTable, D3D12_SHADER_VISIBILITY_PIXEL);
-		slotRootParameter[1].InitAsConstantBufferView(0);
-		slotRootParameter[2].InitAsConstantBufferView(1);
-		slotRootParameter[3].InitAsConstantBufferView(2);
-
+		// Получаем набор статических сэмплеров (обычно point/linear/wrap/clamp)
 		auto staticSamplers = GetStaticSamplers();
 
-		// A root signature is an array of root parameters.
-		CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(4, slotRootParameter,
-			(UINT)staticSamplers.size(), staticSamplers.data(),
-			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+		// Формируем описание root signature
+		CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(
+			_countof(rootParams),		// количество root-параметров
+			rootParams,					// массив параметров
+			(UINT)staticSamplers.size(),// количество статических сэмплеров
+			staticSamplers.data(),		// массив статических сэмплеров
+			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT // разрешаем Input Assembler Layout
+		);
 
-		//CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-		//rootSignatureDesc.Init_1_1(_countof(slotRootParameter), slotRootParameter, 1, &staticSamplers, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-
-		// create a root signature with a single slot which points to a descriptor range consisting of a single constant buffer
+		// Сериализуем root signature в бинарный формат (для передачи в драйвер)
 		ComPtr<ID3DBlob> serializedRootSig = nullptr;
 		ComPtr<ID3DBlob> errorBlob = nullptr;
-		HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
-			serializedRootSig.GetAddressOf(), errorBlob.GetAddressOf());
+		HRESULT hr = D3D12SerializeRootSignature(
+			&rootSigDesc,						// описание
+			D3D_ROOT_SIGNATURE_VERSION_1,		// версия root signature
+			serializedRootSig.GetAddressOf(),	// результат сериализации
+			errorBlob.GetAddressOf());			// ошибки компиляции (если есть)
 
+		// Проверяем успешность сериализации
 		if (S_OK != hr)
 		{
 			if (errorBlob)
 			{
+				// Получаем текст ошибки из blob'а
 				const char* msg = static_cast<const char*>(errorBlob->GetBufferPointer());
 				std::string errorStr(msg, errorBlob->GetBufferSize());
 				auto wstr = string_to_wstring(errorStr);
@@ -79,21 +89,23 @@ export namespace zzz::platforms::directx
 			return Unexpected(eResult::failure, L">>>>> [RootSignature.Initialize( ... )]. Failed to serialize root signature.");
 		}
 
+		// Создаём сам объект Root Signature на GPU
 		if (S_OK != device->CreateRootSignature(
 			0,
 			serializedRootSig->GetBufferPointer(),
 			serializedRootSig->GetBufferSize(),
 			IID_PPV_ARGS(m_RootSignature.GetAddressOf())))
+		{
 			return Unexpected(eResult::failure, L">>>>> [RootSignature.Initialize( ... )]. Failed to create root signature.");
+		}
 
 		return {};
 	}
 
 	std::array<const CD3DX12_STATIC_SAMPLER_DESC, 6> RootSignature::GetStaticSamplers()
 	{
-		// Applications usually only need a handful of samplers.  So just define them all up front
-		// and keep them available as part of the root signature.
-
+		// Обычно требуется лишь несколько вариантов сэмплеров.
+		// Определяем их заранее и делаем доступными как часть корневой сигнатуры.
 		const CD3DX12_STATIC_SAMPLER_DESC pointWrap(
 			0, // shaderRegister
 			D3D12_FILTER_MIN_MAG_MIP_POINT,		// filter

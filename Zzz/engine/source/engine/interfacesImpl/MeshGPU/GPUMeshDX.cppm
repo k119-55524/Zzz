@@ -11,9 +11,8 @@ import CPUIndexBuffer;
 import CPUVertexBuffer;
 
 using namespace zzz::platforms;
-using namespace zzz::platforms::directx;
 
-export namespace zzz
+export namespace zzz::platforms::directx
 {
 	export class GPUMeshDX final : public IMeshGPU
 	{

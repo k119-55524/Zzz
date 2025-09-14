@@ -12,7 +12,7 @@ export namespace zzz
 			return std::wstring();
 
 		// Определяем размер необходимого буфера для широкой строки
-		int size_needed = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, nullptr, 0);
+		int size_needed = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), nullptr, 0);
 		if (size_needed == 0)
 			return Unexpected(eResult::failure, L">>>>> [to_wstring( ... )]. MultiByteToWideChar failed.");
 

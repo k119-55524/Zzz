@@ -43,7 +43,7 @@ export namespace zzz::platforms::directx
 		inline const ComPtr<IDXGIFactory7> GetFactory() const noexcept { return m_factory; };
 		inline const ComPtr<ID3D12GraphicsCommandList>& GetCommandListUpdate() const noexcept { return m_commandWrapper[m_frameIndexUpdate]->GetCommandList(); };
 		inline const ComPtr<ID3D12GraphicsCommandList>& GetCommandListRender() const noexcept { return m_commandWrapper[m_frameIndexRender]->GetCommandList(); };
-		inline ComPtr<ID3D12RootSignature> GetRootSignature() const noexcept { return m_rootSignature.Get(); }
+		inline ComPtr<ID3D12RootSignature> GetRootSignature() const noexcept  {  return m_rootSignature.Get(); }
 
 		void CommandRenderReset() noexcept;
 		[[nodiscard]] result<> CommandRenderReinitialize();
@@ -310,8 +310,9 @@ export namespace zzz::platforms::directx
 			return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializeAssets()]. Already initialized.");
 
 		// Инициализация root signature
-		//if (auto res = m_rootSignature.Initialize(m_device); !res)
-		//	return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializeAssets()]. -> " + res.error().getMessage());
+		auto res = m_rootSignature.Initialize(m_device);
+		if (!res)
+			return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializeAssets()]. -> " + res.error().getMessage());
 
 		// Создание объектов синхронизации
 		{

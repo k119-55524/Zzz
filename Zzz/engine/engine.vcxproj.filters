@@ -68,19 +68,19 @@
     <ClCompile Include="Source\engine\Interfaces\platforms\IMainLoop.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\engine\InterfacesImpl\mainLoop\mlMSWin.cppm">
+    <ClCompile Include="Source\engine\InterfacesImpl\MainLoop\mlMSWin.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\engine\Interfaces\utils\IIcoBuilder.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\engine\InterfacesImpl\utils\icoBuilder\ibMSWin.cppm">
+    <ClCompile Include="Source\engine\InterfacesImpl\Utils\icoBuilder\ibMSWin.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\engine\Interfaces\platforms\IGAPI.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\engine\InterfacesImpl\gapi\DXAPI.cppm">
+    <ClCompile Include="Source\engine\InterfacesImpl\GAPI\DXAPI.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\engine\Utils\event.cppm">
@@ -101,10 +101,10 @@
     <ClCompile Include="Source\engine\Factories\ViewFactory.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\engine\InterfacesImpl\appWin\AppWindowMsWin.cppm">
+    <ClCompile Include="Source\engine\InterfacesImpl\AppWin\AppWindowMsWin.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\engine\InterfacesImpl\surfaceView\SurfDirectX.cppm">
+    <ClCompile Include="Source\engine\InterfacesImpl\SurfaceView\SurfDirectX.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Platforms\DX\CheckDirectXUltimateSupport.cppm">
@@ -180,6 +180,12 @@
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\engine\Utils\GpuEventScope.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\engine\Interfaces\platforms\IShader.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\engine\InterfacesImpl\Shader\ShaderDX.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
   </ItemGroup>
