@@ -91,6 +91,7 @@
     <ClInclude Include="Headers\HeaderMetal.h" />
     <ClInclude Include="Headers\HeaderMSWin.h" />
     <ClInclude Include="Headers\HeaderVulkan.h" />
+    <ClInclude Include="Headers\PlatformsDefines.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -133,7 +134,7 @@
     <ClCompile Include="Source\engine\Utils\event.cppm" />
     <ClCompile Include="Source\engine\InterfacesImpl\Utils\icoBuilder\ibMSWin.cppm" />
     <ClCompile Include="Source\engine\Interfaces\utils\IIcoBuilder.cppm" />
-    <ClCompile Include="Source\Engine\Platforms\Platforms.cppm" />
+    <ClCompile Include="Source\Utils\Platforms.cppm" />
     <ClCompile Include="Source\Templates\QueueArray.cppm" />
     <ClCompile Include="Source\Templates\ThreadPool.cppm" />
     <ClCompile Include="Source\Templates\ThreadSafeQueueArray.cppm" />

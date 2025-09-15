@@ -2,6 +2,7 @@
 export module IShader;
 
 import result;
+import IMeshGPU;
 
 export namespace zzz
 {
@@ -19,7 +20,7 @@ export namespace zzz
 	{
 	public:
 		IShader() = delete;
-		explicit IShader(std::wstring&& name);
+		explicit IShader(const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name);
 
 		virtual ~IShader() = default;
 		[[nodiscard]] inline std::wstring GetName() const noexcept { return m_Name; }
@@ -27,12 +28,15 @@ export namespace zzz
 		virtual result<> InitializeByText(std::string&& srcVS, std::string&& srcPS) = 0;
 
 	private:
+		const std::shared_ptr<IMeshGPU> m_Mesh;
 		std::wstring m_Name;
 	};
 
-	IShader::IShader(std::wstring&& name) :
+	IShader::IShader(const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name) :
+		m_Mesh{ mesh },
 		m_Name{ std::move(name) }
 	{
+		ensure(m_Mesh != nullptr, ">>>>> [IShader::IShader( ... )]. Mesh pointer cannot be null.");
 		ensure(!m_Name.empty(), ">>>>> [IShader::IShader( ... )]. Shader name cannot be empty.");
 	}
 }

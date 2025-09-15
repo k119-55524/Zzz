@@ -45,7 +45,7 @@ export namespace zzz
 		if (!GPUMeshDX)
 			return GPUMeshDX.error();
 
-		result<std::shared_ptr<IShader>> shader = m_ResGPU->GetGenericShader(L"GenShader");
+		result<std::shared_ptr<IShader>> shader = m_ResGPU->GetGenericShader(GPUMeshDX.value(), L"GenShader");
 		if (!shader)
 			return shader.error();
 

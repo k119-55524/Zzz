@@ -33,6 +33,9 @@
     <ClInclude Include="Headers\HeaderMetal.h">
       <Filter>����� ����������</Filter>
     </ClInclude>
+    <ClInclude Include="Headers\PlatformsDefines.h">
+      <Filter>����� ����������</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -137,7 +140,7 @@
     <ClCompile Include="Source\Templates\ThreadPool.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Platforms\Platforms.cppm">
+    <ClCompile Include="Source\Utils\Platforms.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\engine\Utils\AppTime.cppm">

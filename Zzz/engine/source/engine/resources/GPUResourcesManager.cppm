@@ -35,7 +35,7 @@ export namespace zzz
 		~GPUResourcesManager() = default;
 
 		result<std::shared_ptr<IMeshGPU>> GetGenericMesh(MeshType type);
-		result<std::shared_ptr<IShader>> GetGenericShader(std::wstring&& name);
+		result<std::shared_ptr<IShader>> GetGenericShader(const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name);
 
 
 	private:
@@ -64,9 +64,9 @@ export namespace zzz
 		return meshGPU;
 	}
 
-	result<std::shared_ptr<IShader>> GPUResourcesManager::GetGenericShader(std::wstring&& name)
+	result<std::shared_ptr<IShader>> GPUResourcesManager::GetGenericShader(const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name)
 	{
-		std::shared_ptr<IShader> shader = safe_make_shared<Shader>(std::move(name));
+		std::shared_ptr<IShader> shader = safe_make_shared<Shader>(mesh, std::move(name));
 
 		// Исходный код шейдера в виде строки
 		std::string vs = R"(

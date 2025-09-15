@@ -3,6 +3,7 @@ export module ShaderDX;
 
 import result;
 import IShader;
+import IMeshGPU;
 import StrConvert;
 
 using namespace zzz;
@@ -14,7 +15,7 @@ export namespace zzz::platforms::directx
 	{
 	public:
 		ShaderDX() = delete;
-		explicit ShaderDX(std::wstring&& name);
+		explicit ShaderDX(const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name);
 
 		virtual ~ShaderDX() override = default;
 
@@ -28,8 +29,8 @@ export namespace zzz::platforms::directx
 
 	};
 
-	ShaderDX::ShaderDX(std::wstring&& name) :
-		IShader(std::move(name))
+	ShaderDX::ShaderDX(const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name) :
+		IShader(mesh, std::move(name))
 	{
 	}
 

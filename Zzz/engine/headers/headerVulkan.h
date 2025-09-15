@@ -1,6 +1,5 @@
-#ifndef HEADERVULKAN_H
-#define HEADERVULKAN_H
+#pragma once
 
-//#if defined(IS_VULKAN)
-//#include <vulkan/vulkan.h>
+#if defined(IS_VULKAN)
+#include <vulkan/vulkan.h>
 #endif // defined(IS_VULKAN)

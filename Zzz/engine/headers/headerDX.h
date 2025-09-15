@@ -1,6 +1,6 @@
 #pragma once
 
-#if defined(_WIN64)
+#if defined(RENDER_API_D3D12)
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dCompiler.lib")

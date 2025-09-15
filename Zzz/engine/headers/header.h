@@ -1,13 +1,6 @@
-#ifndef HEADER_H
-#define HEADER_H
+#pragma once
 
-/* -------------------------------------------------------------
-
-	Кастомные макросы которые используются в проекте:
-		1. `ZTEST` - используется для включения тестовых проверок и сообщений.
-		2. `ZLOG` - используется для логирования сообщений.
-
-   ------------------------------------------------------------- */
+#include "PlatformsDefines.h"
 
 #include "HeaderMSWin.h"
 #include "HeaderDX.h"
@@ -176,12 +169,11 @@ namespace zzz
 	inline void DebugOutput(const std::wstring& msg)
 	{
 #if defined(_DEBUG)
-#if defined(_WIN64)
+#if defined(PLATFORM_WINDOWS)
 		OutputDebugStringW((msg + L"\n").c_str());
 #else
 		std::wcerr << msg << std::endl;
-#endif	// _WIN64
+#endif	// PLATFORM_WINDOWS
 #endif	// _DEBUG
 	}
 }
-#endif	// HEADER_H
