@@ -100,14 +100,18 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Source\engine\InterfacesImpl\CPUtoGPUDataTransfer\CPUtoGPUDataTransferDX.cppm" />
+    <ClCompile Include="Source\engine\InterfacesImpl\PSO\PSO_DX.cppm" />
     <ClCompile Include="Source\engine\InterfacesImpl\Shader\ShaderDX.cppm" />
+    <ClCompile Include="Source\engine\Interfaces\platforms\IPSO.cppm" />
     <ClCompile Include="Source\engine\Interfaces\platforms\IShader.cppm" />
+    <ClCompile Include="Source\engine\Material.cppm" />
     <ClCompile Include="Source\Engine\Platforms\DX\CommandWrapperDX.cppm" />
     <ClCompile Include="Source\engine\Interfaces\platforms\ICPUtoGPUDataTransfer.cppm" />
     <ClCompile Include="Source\engine\Interfaces\platforms\IMeshGPU.cppm" />
     <ClCompile Include="Source\engine\Resources\CPUIndexBuffer.cppm" />
     <ClCompile Include="Source\engine\InterfacesImpl\MeshGPU\GPUMeshDX.cppm" />
     <ClCompile Include="Source\engine\Resources\GPUResourcesManager.cppm" />
+    <ClCompile Include="Source\engine\Scene\SceneEntitySpawner.cppm" />
     <ClCompile Include="Source\engine\Utils\AppTime.cppm" />
     <ClCompile Include="Source\Engine.cppm" />
     <ClCompile Include="Source\engine\InterfacesImpl\AppWin\AppWindowMsWin.cppm" />

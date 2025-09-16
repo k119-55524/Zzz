@@ -191,6 +191,18 @@
     <ClCompile Include="Source\engine\InterfacesImpl\Shader\ShaderDX.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
+    <ClCompile Include="Source\engine\Interfaces\platforms\IPSO.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\engine\InterfacesImpl\PSO\PSO_DX.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\engine\Scene\SceneEntitySpawner.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\engine\Material.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

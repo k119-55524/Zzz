@@ -1,7 +1,7 @@
 #include "pch.h"
 export module Scene;
 
-import IMeshGPU;
+import SceneEntity;
 import CPUResourcesManager;
 
 export namespace zzz
@@ -17,10 +17,10 @@ export namespace zzz
 
 		~Scene();
 
-		void AddMesh(std::shared_ptr<IMeshGPU> _mesh);
+		void Add(std::shared_ptr<SceneEntity> entity);
 
 	private:
-		std::shared_ptr<IMeshGPU> mesh;
+		std::shared_ptr<SceneEntity> m_Entity;
 	};
 
 	export Scene::Scene()
@@ -31,8 +31,8 @@ export namespace zzz
 	{
 	}
 
-	void Scene::AddMesh(std::shared_ptr<IMeshGPU> _mesh)
+	void Scene::Add(std::shared_ptr<SceneEntity> entity)
 	{
-		mesh = _mesh;
+		m_Entity = entity;
 	}
 }

@@ -12,8 +12,8 @@ export namespace zzz
 {
 	export enum MeshType
 	{
-		eGenericTriangle,
-		eGenericBox
+		Triangle,
+		Box
 	};
 
 	export class CPUResourcesManager final
@@ -51,9 +51,9 @@ export namespace zzz
 	{
 		switch (type)
 		{
-		case MeshType::eGenericTriangle:
+		case MeshType::Triangle:
 			return GetGenericTriangle();
-		case MeshType::eGenericBox:
+		case MeshType::Box:
 			return GetGenericBox();
 		default:
 			throw_invalid_argument("Unknown type mesh.");

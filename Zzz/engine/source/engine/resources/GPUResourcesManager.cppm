@@ -1,11 +1,13 @@
 #include "pch.h"
 export module GPUResourcesManager;
 
+import IPSO;
 import IGAPI;
 import result;
 import IShader;
 import IMeshGPU;
 import ShaderDX;
+import Material;
 import GPUMeshDX;
 import CPUResourcesManager;
 
@@ -35,10 +37,12 @@ export namespace zzz
 		~GPUResourcesManager() = default;
 
 		result<std::shared_ptr<IMeshGPU>> GetGenericMesh(MeshType type);
-		result<std::shared_ptr<IShader>> GetGenericShader(const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name);
-
+		result<std::shared_ptr<Material>> GetGenericMaterial(const std::shared_ptr<IMeshGPU> mesh);
 
 	private:
+		result<std::shared_ptr<IPSO>> GetGenericPSO(const std::shared_ptr<IMeshGPU> mesh);
+		result<std::shared_ptr<IShader>> GetGenericShader(const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name);
+
 		std::shared_ptr<IGAPI> m_GAPI;
 		std::shared_ptr<CPUResourcesManager> m_ResCPU;
 	};
@@ -62,6 +66,32 @@ export namespace zzz
 			return Unexpected(res.error());
 
 		return meshGPU;
+	}
+
+	result<std::shared_ptr<Material>> GPUResourcesManager::GetGenericMaterial(const std::shared_ptr<IMeshGPU> mesh)
+		{
+		result<std::shared_ptr<IPSO>> pso = GetGenericPSO(mesh);
+		if (!pso)
+			return pso.error();
+
+		std::shared_ptr<Material> material = safe_make_shared<Material>(pso.value());
+		if (!material)
+			return Unexpected(eResult::no_make_shared_ptr, L">>>>> [GPUResourcesManager::GetGenericMaterial()]. Failed to create Material.");
+
+		return material;
+	}
+
+	result<std::shared_ptr<IPSO>> GPUResourcesManager::GetGenericPSO(const std::shared_ptr<IMeshGPU> mesh)
+	{
+		result<std::shared_ptr<IShader>> shader = GetGenericShader(mesh, L"GenShader");
+		if (!shader)
+			return shader.error();
+
+		std::shared_ptr<IPSO> pso = safe_make_shared<IPSO>(shader.value());
+		if (!pso)
+			return Unexpected(eResult::no_make_shared_ptr, L">>>>> [GPUResourcesManager::GetGenericPSO()]. Failed to create IPSO.");
+
+		return pso;
 	}
 
 	result<std::shared_ptr<IShader>> GPUResourcesManager::GetGenericShader(const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name)

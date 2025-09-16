@@ -4,6 +4,7 @@ export module ScenesManager;
 import Scene;
 import result;
 import Settings;
+import SceneEntitySpawner;
 import GPUResourcesManager;
 
 export namespace zzz
@@ -22,13 +23,12 @@ export namespace zzz
 		result<std::shared_ptr<Scene>> GetStartScene();
 
 	private:
-		const std::shared_ptr<GPUResourcesManager> m_ResGPU;
+		SceneEntitySpawner m_EntitySpawner;
 	};
 
 	ScenesManager::ScenesManager(const std::shared_ptr<GPUResourcesManager> resGPU) :
-		m_ResGPU{ resGPU }
+		m_EntitySpawner{ resGPU }
 	{
-		ensure(m_ResGPU, ">>>>> [ScenesManager::ScenesManager()]. Resource system GPU cannot be null.");
 	}
 
 	ScenesManager::~ScenesManager()
@@ -41,15 +41,11 @@ export namespace zzz
 		if (!scene)
 			return Unexpected(eResult::no_make_shared_ptr, L">>>>> [ScenesManager::GetStartScene()]. Failed to create Scene.");
 
-		result<std::shared_ptr<IMeshGPU>> GPUMeshDX = m_ResGPU->GetGenericMesh(MeshType::eGenericBox);
-		if (!GPUMeshDX)
-			return GPUMeshDX.error();
+		result<std::shared_ptr<SceneEntity>> box = m_EntitySpawner.SpawnGenericBox();
+		if(!box)
+			return box.error();
 
-		result<std::shared_ptr<IShader>> shader = m_ResGPU->GetGenericShader(GPUMeshDX.value(), L"GenShader");
-		if (!shader)
-			return shader.error();
-
-		scene->AddMesh(GPUMeshDX.value());
+		scene->Add(box.value());
 
 		return scene;
 	}

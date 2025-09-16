@@ -27,6 +27,14 @@ export namespace zzz
 
 		virtual result<> InitializeByText(std::string&& srcVS, std::string&& srcPS) = 0;
 
+#if defined(RENDER_API_D3D12)
+
+#elif defined(RENDER_API_VULKAN)
+#elif defined(RENDER_API_METAL)
+#else
+#error ">>>>> [Compile error]. This branch requires implementation for the current platform"
+#endif
+
 	private:
 		const std::shared_ptr<IMeshGPU> m_Mesh;
 		std::wstring m_Name;

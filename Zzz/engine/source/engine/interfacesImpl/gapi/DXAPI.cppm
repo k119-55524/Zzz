@@ -2,7 +2,6 @@
 export module DXAPI;
 
 #if defined(RENDER_API_D3D12)
-using namespace zzz::platforms::directx;
 
 import IGAPI;
 import result;
