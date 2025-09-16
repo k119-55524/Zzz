@@ -29,7 +29,7 @@ export namespace zzz
 
 		~AppWindowMsWin() override;
 
-		inline const HWND GetHWND() const noexcept { return hWnd; }
+		const HWND GetHWND() const noexcept override { return hWnd; }
 		void SetCaptionText(std::wstring caption) override;
 		void AddCaptionText(std::wstring caption) override;
 

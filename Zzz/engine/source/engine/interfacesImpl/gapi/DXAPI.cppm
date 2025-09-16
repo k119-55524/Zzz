@@ -1,9 +1,9 @@
 #include "pch.h"
 export module DXAPI;
 
+#if defined(RENDER_API_D3D12)
 using namespace zzz::platforms::directx;
 
-#if defined(_WIN64)
 import IGAPI;
 import result;
 import StrConvert;
@@ -38,16 +38,16 @@ export namespace zzz::platforms::directx
 
 		virtual ~DXAPI() override;
 
-		inline const ComPtr<ID3D12Device> GetDevice() const noexcept { return m_device; };
-		inline const ComPtr<ID3D12CommandQueue> GetCommandQueue() const noexcept { return m_commandQueue; };
-		inline const ComPtr<IDXGIFactory7> GetFactory() const noexcept { return m_factory; };
-		inline const ComPtr<ID3D12GraphicsCommandList>& GetCommandListUpdate() const noexcept { return m_commandWrapper[m_frameIndexUpdate]->GetCommandList(); };
-		inline const ComPtr<ID3D12GraphicsCommandList>& GetCommandListRender() const noexcept { return m_commandWrapper[m_frameIndexRender]->GetCommandList(); };
-		inline ComPtr<ID3D12RootSignature> GetRootSignature() const noexcept  {  return m_rootSignature.Get(); }
+		const ComPtr<ID3D12Device> GetDevice() const noexcept override { return m_device; };
+		const ComPtr<ID3D12CommandQueue> GetCommandQueue() const noexcept override { return m_commandQueue; };
+		const ComPtr<IDXGIFactory7> GetFactory() const noexcept override { return m_factory; };
+		const ComPtr<ID3D12GraphicsCommandList>& GetCommandListUpdate() const noexcept override { return m_commandWrapper[m_frameIndexUpdate]->GetCommandList(); };
+		const ComPtr<ID3D12GraphicsCommandList>& GetCommandListRender() const noexcept override { return m_commandWrapper[m_frameIndexRender]->GetCommandList(); };
+		ComPtr<ID3D12RootSignature> GetRootSignature() const noexcept override {  return m_rootSignature.Get(); }
 
-		void CommandRenderReset() noexcept;
-		[[nodiscard]] result<> CommandRenderReinitialize();
-		void EndPreparedTransfers();
+		void CommandRenderReset() noexcept override;
+		[[nodiscard]] result<> CommandRenderReinitialize() override;
+		void EndPreparedTransfers() override;
 		void SubmitCommandLists() override;
 
 		void BeginRender() override;
@@ -413,4 +413,4 @@ export namespace zzz::platforms::directx
 	}
 #pragma endregion Rendring
 }
-#endif // _WIN64
+#endif // defined(RENDER_API_D3D12)

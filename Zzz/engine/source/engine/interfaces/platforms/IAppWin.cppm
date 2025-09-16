@@ -31,8 +31,16 @@ export namespace zzz
 		event<size2D<>, e_TypeWinResize> onResize;
 
 		const size2D<> GetWinSize() const noexcept { return winSize; }
+
+#if defined(RENDER_API_D3D12)
+		virtual const HWND GetHWND() const noexcept = 0;
 		virtual void SetCaptionText(std::wstring caption) = 0;
 		virtual void AddCaptionText(std::wstring caption) = 0;
+#elif defined(RENDER_API_VULKAN)
+#elif defined(RENDER_API_METAL)
+#else
+#error ">>>>> [Compile error]. This branch requires implementation for the current platform"
+#endif
 
 	protected:
 		const std::shared_ptr<const Settings> m_Settings;

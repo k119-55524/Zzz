@@ -30,7 +30,7 @@ using namespace zzz::platforms;
 
 namespace zzz
 {
-#if defined(_WIN64)
+#if defined(RENDER_API_D3D12)
 	typedef mlMSWin MainLoop;
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"

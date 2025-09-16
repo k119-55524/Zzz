@@ -1,7 +1,7 @@
 #include "pch.h"
 export module SurfDirectX;
 
-#if defined(_WIN64)
+#if defined(RENDER_API_D3D12)
 import IGAPI;
 import DXAPI;
 import result;
@@ -51,9 +51,6 @@ namespace zzz
 		std::condition_variable m_frameCV;
 		bool m_frameReady;
 
-		std::shared_ptr<DXAPI> m_DXAPI;
-		std::shared_ptr<AppWindowMsWin> m_Win;
-
 		ComPtr<IDXGISwapChain3> m_swapChain;
 		UINT m_RtvDescrSize;
 		UINT m_DsvDescrSize;
@@ -87,20 +84,16 @@ namespace zzz
 		m_CbvSrvDescrSize{ 0 },
 		m_frameReady{ false }
 	{
-		m_DXAPI = std::dynamic_pointer_cast<DXAPI>(_iGAPI);
-		ensure(m_DXAPI);
-		m_Win = std::dynamic_pointer_cast<AppWindowMsWin>(_iAppWin);
-		ensure(m_Win);
 	}
 
 #pragma region Initialize
 	result<> SurfDirectX::Initialize()
 	{
-		auto m_device = m_DXAPI->GetDevice();
+		auto m_device = m_iGAPI->GetDevice();
 		ensure(m_device, ">>>>> [SurfDirectX::Initialize()]. Device cannot be null.");
-		auto m_commandQueue = m_DXAPI->GetCommandQueue();
+		auto m_commandQueue = m_iGAPI->GetCommandQueue();
 		ensure(m_commandQueue, ">>>>> [SurfDirectX::Initialize()]. Command queue cannot be null.");
-		auto m_factory = m_DXAPI->GetFactory();
+		auto m_factory = m_iGAPI->GetFactory();
 		ensure(m_factory, ">>>>> [SurfDirectX::Initialize()]. Factory cannot be null.");
 
 		m_RtvDescrSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -116,7 +109,7 @@ namespace zzz
 		if (!res)
 			return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializePipeline()]. Failed to initialize swap chain.");
 
-		HRESULT hr = m_factory->MakeWindowAssociation(m_Win->GetHWND(), DXGI_MWA_NO_ALT_ENTER);
+		HRESULT hr = m_factory->MakeWindowAssociation(m_iAppWin->GetHWND(), DXGI_MWA_NO_ALT_ENTER);
 		if (FAILED(hr))
 			return Unexpected(eResult::failure, L"Failed to make window association");
 
@@ -159,7 +152,7 @@ namespace zzz
 	{
 		BOOL allowTearing = FALSE;
 		ComPtr<IDXGIFactory5> factory5;
-		if (SUCCEEDED(m_DXAPI->GetFactory().As(&factory5)))
+		if (SUCCEEDED(m_iGAPI->GetFactory().As(&factory5)))
 		{
 			if (SUCCEEDED(factory5->CheckFeatureSupport(
 				DXGI_FEATURE_PRESENT_ALLOW_TEARING,
@@ -184,9 +177,9 @@ namespace zzz
 		swapChainDesc.Flags = m_tearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
 		ComPtr<IDXGISwapChain1> swapChain1;
-		ensure(S_OK == m_DXAPI->GetFactory()->CreateSwapChainForHwnd(
-			m_DXAPI->GetCommandQueue().Get(),
-			m_Win->GetHWND(),
+		ensure(S_OK == m_iGAPI->GetFactory()->CreateSwapChainForHwnd(
+			m_iGAPI->GetCommandQueue().Get(),
+			m_iAppWin->GetHWND(),
 			&swapChainDesc,
 			nullptr,
 			nullptr,
@@ -199,7 +192,7 @@ namespace zzz
 
 	result<> SurfDirectX::CreateRTVHeap()
 	{
-		auto m_device = m_DXAPI->GetDevice();
+		auto m_device = m_iGAPI->GetDevice();
 		ensure(m_device, ">>>>> [SurfDirectX::CreateRTVHeap()]. Device cannot be null.");
 
 		// Describe and create a render target View (RTV) descriptor heap.
@@ -218,7 +211,7 @@ namespace zzz
 
 	result<> SurfDirectX::CreateSRVHeap()
 	{
-		auto m_device = m_DXAPI->GetDevice();
+		auto m_device = m_iGAPI->GetDevice();
 		ensure(m_device, ">>>>> [SurfDirectX::CreateSRVHeap()]. Device cannot be null.");
 
 		// Describe and create a shader resource View (SRV) heap for the texture.
@@ -237,7 +230,7 @@ namespace zzz
 
 	result<> SurfDirectX::CreateDSVHeap()
 	{
-		auto m_device = m_DXAPI->GetDevice();
+		auto m_device = m_iGAPI->GetDevice();
 		ensure(m_device, ">>>>> [SurfDirectX::CreateDSVHeap()]. Device cannot be null.");
 
 		const D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{
@@ -258,7 +251,7 @@ namespace zzz
 
 	result<> SurfDirectX::CreateDS(const size2D<>& size)
 	{
-		auto m_device = m_DXAPI->GetDevice();
+		auto m_device = m_iGAPI->GetDevice();
 		ensure(m_device, ">>>>> [SurfDirectX::CreateDS()]. Device cannot be null.");
 
 		// Очищаем старые ресурсы
@@ -336,7 +329,7 @@ namespace zzz
 
 	result<> SurfDirectX::RecreateRenderTargetsAndDepth()
 	{
-		auto m_device = m_DXAPI->GetDevice();
+		auto m_device = m_iGAPI->GetDevice();
 
 		auto res = CreateRTV(m_device);
 		if (!res)
@@ -368,10 +361,10 @@ namespace zzz
 			m_frameCV.notify_one(); // Уведомляем ОДИН ожидающий поток
 		}
 
-		auto commandList = m_DXAPI->GetCommandListUpdate();
+		auto commandList = m_iGAPI->GetCommandListUpdate();
 		ensure(commandList, ">>>>> [SurfDirectX::PrepareFrame()]. Command list cannot be null.");
 
-		commandList->SetGraphicsRootSignature(m_DXAPI->GetRootSignature().Get());
+		commandList->SetGraphicsRootSignature(m_iGAPI->GetRootSignature().Get());
 		commandList->RSSetViewports(1, &m_viewport);
 		commandList->RSSetScissorRects(1, &m_scissorRect);
 
@@ -493,7 +486,7 @@ namespace zzz
 			return;
 		}
 
-		auto m_device = m_DXAPI->GetDevice();
+		auto m_device = m_iGAPI->GetDevice();
 		ensure(m_device, ">>>>> [SurfDirectX::CreateRTVHeap()]. Device cannot be null.");
 		ensure(m_swapChain, ">>>>> [SurfDirectX::CreateRTVHeap()]. Swap chain cannot be null.");
 
@@ -510,7 +503,7 @@ namespace zzz
 			}
 		}
 
-		m_DXAPI->CommandRenderReset();
+		m_iGAPI->CommandRenderReset();
 		ResetRTVandDS();
 
 		BOOL fullscreen = FALSE;
@@ -541,7 +534,7 @@ namespace zzz
 		auto res = CreateRTVHeap()
 			.and_then([&]() { return CreateRTV(m_device); })
 			.and_then([&]() { return CreateDS(size); })
-			.and_then([&]() { return m_DXAPI->CommandRenderReinitialize(); })
+			.and_then([&]() { return m_iGAPI->CommandRenderReinitialize(); })
 			.or_else([&](const Unexpected& error) { throw_runtime_error(std::format(">>>>> [SurfDirectX::OnResize({}x{})]. {}.", size.width, size.height, wstring_to_string(error.getMessage()))); });
 
 		m_viewport = CD3DX12_VIEWPORT{ 0.0f, 0.0f, static_cast<float>(size.width), static_cast<float>(size.height) };
@@ -565,7 +558,7 @@ namespace zzz
 			return;
 		}
 
-		m_DXAPI->CommandRenderReset();
+		m_iGAPI->CommandRenderReset();
 		ResetRTVandDS();
 
 		b_IgnoreResize = true;
@@ -602,11 +595,11 @@ namespace zzz
 		}
 
 		auto res = RecreateRenderTargetsAndDepth()
-			.and_then([&]() { return m_DXAPI->CommandRenderReinitialize(); })
+			.and_then([&]() { return m_iGAPI->CommandRenderReinitialize(); })
 			.or_else([&](const Unexpected& error) { throw_runtime_error(std::format(">>>>> #1 [SurfDirectX::SetFullScreen({})]. Failed: {}.", fs, wstring_to_string(error.getMessage()))); });
 		
 
 		DebugOutput(std::format(L">>>>> [SurfDirectX::SetFullScreen({})].\n", fs).c_str());
 	}
 }
-#endif // defined(_WIN64)
+#endif // defined(RENDER_API_D3D12)

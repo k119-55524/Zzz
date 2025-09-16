@@ -10,7 +10,7 @@ import StrConvert;
 import ISurfaceView;
 import SurfDirectX;
 
-#if defined(_WIN64)
+#if defined(RENDER_API_D3D12)
 import DXAPI;
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
@@ -41,7 +41,7 @@ export namespace zzz
 	{
 		try
 		{
-#if defined(_WIN64)
+#if defined(RENDER_API_D3D12)
 			return safe_make_shared<AppWindowMsWin>(Settings);
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"

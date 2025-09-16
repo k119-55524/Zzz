@@ -60,13 +60,9 @@ export namespace zzz::platforms::directx
 
 	result<> GPUMeshDX::Initialize(std::shared_ptr<IGAPI> _IGAPI)
 	{
-		std::shared_ptr<DXAPI> m_DXAPI = std::dynamic_pointer_cast<DXAPI>(_IGAPI);
-		if (!m_DXAPI)
-			return Unexpected(eResult::failure, L">>>>> [GPUMeshDX::Initialize]. Invalid DXAPI");
-
 		CD3DX12_HEAP_PROPERTIES defaultHeapProps(D3D12_HEAP_TYPE_DEFAULT);
 		CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
-		HRESULT hr = m_DXAPI->GetDevice()->CreateCommittedResource(
+		HRESULT hr = _IGAPI->GetDevice()->CreateCommittedResource(
 			&defaultHeapProps,
 			D3D12_HEAP_FLAG_NONE,
 			&bufferDesc,
@@ -79,7 +75,7 @@ export namespace zzz::platforms::directx
 
 		// Создание промежуточного буфера для загрузки вершин (HEAP_TYPE_UPLOAD)
 		CD3DX12_HEAP_PROPERTIES uploadHeapProps(D3D12_HEAP_TYPE_UPLOAD);
-		hr = m_DXAPI->GetDevice()->CreateCommittedResource(
+		hr = _IGAPI->GetDevice()->CreateCommittedResource(
 			&uploadHeapProps,
 			D3D12_HEAP_FLAG_NONE,
 			&bufferDesc,
@@ -97,7 +93,7 @@ export namespace zzz::platforms::directx
 		if (indices != nullptr)
 		{
 			bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize);
-			hr = m_DXAPI->GetDevice()->CreateCommittedResource(
+			hr = _IGAPI->GetDevice()->CreateCommittedResource(
 				&defaultHeapProps,
 				D3D12_HEAP_FLAG_NONE,
 				&bufferDesc,
@@ -107,7 +103,7 @@ export namespace zzz::platforms::directx
 			if (FAILED(hr))
 				return Unexpected(eResult::failure, std::format(L">>>>> #2 [GPUMeshDX::Initialize]. Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
 
-			hr = m_DXAPI->GetDevice()->CreateCommittedResource(
+			hr = _IGAPI->GetDevice()->CreateCommittedResource(
 				&uploadHeapProps,
 				D3D12_HEAP_FLAG_NONE,
 				&bufferDesc,
