@@ -1,5 +1,5 @@
 #pragma once
 
-#if defined(IS_VULKAN)
+#if defined(RENDER_API_VULKAN)
 #include <vulkan/vulkan.h>
-#endif // defined(IS_VULKAN)
+#endif // defined(RENDER_API_VULKAN)

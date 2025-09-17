@@ -109,15 +109,15 @@ namespace zzz
 				try
 				{
 					// Создаём сцену для теста
-					auto res1 = m_ScenesManager->GetStartScene();
+					auto res1 = m_ScenesManager->GetDefaultScene();
 					if (!res1)
-						throw_runtime_error(">>>>> +++ #0 [View::Initialize()}. ERROR!!! Failed to create test scene.");
+						throw_runtime_error(">>>>> #0 [View::Initialize()}. ERROR!!! Failed to create test scene.");
 
 					m_Scene = res1.value();
 				}
 				catch (...)
 				{
-					DebugOutput(L">>>>> +++ #1 [View::Initialize()}. ERROR!!! Failed to create test scene.");
+					DebugOutput(L">>>>> #1 [View::Initialize()}. ERROR!!! Failed to create test scene.");
 				}
 			}
 

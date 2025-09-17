@@ -1,6 +1,8 @@
 #include "pch.h"
 export module ShaderDX;
 
+#if defined(RENDER_API_D3D12)
+
 import result;
 import IShader;
 import IMeshGPU;
@@ -8,7 +10,6 @@ import StrConvert;
 
 using namespace zzz;
 
-#if defined(_WIN64)
 export namespace zzz::platforms::directx
 {
 	export class ShaderDX final : public IShader
@@ -27,6 +28,12 @@ export namespace zzz::platforms::directx
 			const D3D_SHADER_MACRO* defines = nullptr,
 			ID3DInclude* includeHandler = nullptr);
 
+		ComPtr<ID3DBlob> GetVS() const noexcept override { return m_VS; }
+		ComPtr<ID3DBlob> GetPS() const noexcept override { return m_PS; }
+
+	private:
+		ComPtr<ID3DBlob> m_VS;
+		ComPtr<ID3DBlob> m_PS;
 	};
 
 	ShaderDX::ShaderDX(const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name) :
@@ -60,8 +67,8 @@ export namespace zzz::platforms::directx
 		if (!resPS)
 			return resPS.error();
 
-		//ComPtr<ID3DBlob> compileVS = res.value();
-		//ComPtr<ID3DBlob> compilePS = res.value();
+		m_VS = resVS.value();
+		m_PS = resPS.value();
 
 		return {};
 	}
@@ -125,4 +132,4 @@ export namespace zzz::platforms::directx
 		return shaderBlob;
 	}
 }
-#endif // defined(_WIN64)
+#endif // defined(RENDER_API_D3D12)

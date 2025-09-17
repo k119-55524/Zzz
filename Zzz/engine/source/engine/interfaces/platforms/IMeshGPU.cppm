@@ -4,6 +4,7 @@ export module IMeshGPU;
 import IGAPI;
 import result;
 import CPUMesh;
+import VertexFormatMapper;
 
 using namespace zzz::platforms;
 
@@ -18,6 +19,7 @@ export namespace zzz
 		IMeshGPU(std::shared_ptr<CPUMesh> meshCPU);
 
 		~IMeshGPU() = default;
+		inline const std::vector<VertexAttrDescr>& GetInputLayout() const noexcept { return m_MeshCPU->GetInputLayout(); };
 
 	protected:
 		std::shared_ptr<CPUMesh> m_MeshCPU;

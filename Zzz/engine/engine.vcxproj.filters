@@ -203,6 +203,9 @@
     <ClCompile Include="Source\engine\Material.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
+    <ClCompile Include="Source\engine\Resources\VertexFormatMapper.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

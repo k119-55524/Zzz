@@ -111,6 +111,7 @@
     <ClCompile Include="Source\engine\Resources\CPUIndexBuffer.cppm" />
     <ClCompile Include="Source\engine\InterfacesImpl\MeshGPU\GPUMeshDX.cppm" />
     <ClCompile Include="Source\engine\Resources\GPUResourcesManager.cppm" />
+    <ClCompile Include="Source\engine\Resources\VertexFormatMapper.cppm" />
     <ClCompile Include="Source\engine\Scene\SceneEntitySpawner.cppm" />
     <ClCompile Include="Source\engine\Utils\AppTime.cppm" />
     <ClCompile Include="Source\Engine.cppm" />

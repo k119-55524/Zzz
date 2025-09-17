@@ -20,7 +20,7 @@ export namespace zzz
 		explicit ScenesManager(const std::shared_ptr<GPUResourcesManager> resGPU);
 		~ScenesManager();
 
-		result<std::shared_ptr<Scene>> GetStartScene();
+		result<std::shared_ptr<Scene>> GetDefaultScene();
 
 	private:
 		SceneEntitySpawner m_EntitySpawner;
@@ -35,17 +35,17 @@ export namespace zzz
 	{
 	}
 
-	result<std::shared_ptr<Scene>> ScenesManager::GetStartScene()
+	result<std::shared_ptr<Scene>> ScenesManager::GetDefaultScene()
 	{
-		std::shared_ptr<Scene> scene = safe_make_shared<Scene>();
-		if (!scene)
-			return Unexpected(eResult::no_make_shared_ptr, L">>>>> [ScenesManager::GetStartScene()]. Failed to create Scene.");
-
 		result<std::shared_ptr<SceneEntity>> box = m_EntitySpawner.SpawnGenericBox();
 		if(!box)
 			return box.error();
 
-		scene->Add(box.value());
+		result<std::shared_ptr<Scene>> scene = safe_make_shared<Scene>();
+		if (!scene)
+			return scene.error();
+
+		scene.value()->Add(box.value());
 
 		return scene;
 	}

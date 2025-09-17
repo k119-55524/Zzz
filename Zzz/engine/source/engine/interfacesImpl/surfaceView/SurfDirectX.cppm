@@ -7,10 +7,10 @@ import DXAPI;
 import result;
 import size2D;
 import IAppWin;
-import AppWindowMsWin;
 import Settings;
 import StrConvert;
 import ISurfaceView;
+import AppWindowMsWin;
 
 using namespace zzz::platforms;
 using namespace zzz::platforms::directx;
@@ -40,7 +40,7 @@ namespace zzz
 
 	private:
 		static constexpr DXGI_FORMAT BACK_BUFFER_FORMAT = DXGI_FORMAT_R8G8B8A8_UNORM;
-		static constexpr DXGI_FORMAT DEPTH_FORMAT = DXGI_FORMAT_D32_FLOAT;
+		static constexpr DXGI_FORMAT DEPTH_FORMAT = DXGI_FORMAT_D32_FLOAT; // При использовании трафаарета: DXGI_FORMAT_D24_UNORM_S8_UINT;
 		static constexpr UINT SWAP_CHAIN_FLAGS = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 
 		bool b_IgnoreResize;

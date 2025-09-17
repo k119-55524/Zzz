@@ -1,7 +1,11 @@
 #include "pch.h"
 export module IPSO;
 
+import IGAPI;
 import IShader;
+import VertexFormatMapper;
+
+using namespace zzz::platforms;
 
 namespace zzz
 {
@@ -9,11 +13,11 @@ namespace zzz
 	{
 	public:
 		IPSO() = delete;
-		explicit IPSO(const std::shared_ptr<IShader> _shader);
+		explicit IPSO(const std::shared_ptr<IShader> _shader, const std::vector<VertexAttrDescr>& _inputLayout);
 		virtual ~IPSO() = default;
 
 #if defined(RENDER_API_D3D12)
-
+		virtual const ComPtr<ID3D12PipelineState> GetPSO()  const noexcept = 0;
 #elif defined(RENDER_API_VULKAN)
 #elif defined(RENDER_API_METAL)
 #else
@@ -21,12 +25,15 @@ namespace zzz
 #endif
 
 	protected:
-		const std::shared_ptr<IShader> shader;
+		const std::shared_ptr<IShader> m_Shader;
+		const std::vector<VertexAttrDescr>& m_InputLayout;
 	};
 
-	IPSO::IPSO(const std::shared_ptr<IShader> _shader) :
-		shader{ _shader }
+	IPSO::IPSO(const std::shared_ptr<IShader> _shader, const std::vector<VertexAttrDescr>& _inputLayout) :
+		m_Shader{ _shader },
+		m_InputLayout{ _inputLayout }
 	{
-		ensure(shader != nullptr, ">>>>> [IPSO::IPSO( ... )]. Shader pointer cannot be null.");
+		ensure(m_Shader != nullptr, ">>>>> [IPSO::IPSO( ... )]. Shader pointer cannot be null.");
+		ensure(!m_InputLayout.empty(), ">>>>> [IPSO::IPSO( ... )]. Input layout cannot be empty.");
 	}
 }

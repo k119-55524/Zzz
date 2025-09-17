@@ -4,6 +4,7 @@ export module GPUResourcesManager;
 import IPSO;
 import IGAPI;
 import result;
+import PSO_DX;
 import IShader;
 import IMeshGPU;
 import ShaderDX;
@@ -19,6 +20,7 @@ namespace zzz
 #if defined(_WIN64)
 	typedef GPUMeshDX GPUMesh;
 	typedef ShaderDX Shader;
+	typedef PSO_DX PSO;
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif
@@ -87,7 +89,7 @@ export namespace zzz
 		if (!shader)
 			return shader.error();
 
-		std::shared_ptr<IPSO> pso = safe_make_shared<IPSO>(shader.value());
+		std::shared_ptr<IPSO> pso = safe_make_shared<PSO>(m_GAPI, shader.value(), mesh->GetInputLayout());
 		if (!pso)
 			return Unexpected(eResult::no_make_shared_ptr, L">>>>> [GPUResourcesManager::GetGenericPSO()]. Failed to create IPSO.");
 

@@ -28,7 +28,8 @@ export namespace zzz
 		virtual result<> InitializeByText(std::string&& srcVS, std::string&& srcPS) = 0;
 
 #if defined(RENDER_API_D3D12)
-
+		virtual ComPtr<ID3DBlob> GetVS() const noexcept = 0;
+		virtual ComPtr<ID3DBlob> GetPS() const noexcept = 0;
 #elif defined(RENDER_API_VULKAN)
 #elif defined(RENDER_API_METAL)
 #else
