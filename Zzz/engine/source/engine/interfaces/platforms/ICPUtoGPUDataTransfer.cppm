@@ -4,27 +4,13 @@ export module ICPUtoGPUDataTransfer;
 import result;
 import QueueArray;
 import ThreadPool;
+import BaseCPUtoGPUDataTransfer;
 
 using namespace zzz::templates;
+using namespace zzz::platforms;
 
 export namespace zzz
 {
-#if defined(_WIN64)
-		using FillCallback = std::function<void(const ComPtr<ID3D12GraphicsCommandList>&)>;
-		using PreparedCallback = std::function<void(const ComPtr<ID3D12GraphicsCommandList>&)>;
-		using CompleteCallback = std::function<void(bool)>;
-#else
-#error ">>>>> [Compile error]. This branch requires implementation for the current platform"
-#endif
-
-	export struct sInTransfersCallbacks
-	{
-		FillCallback fillCallback;
-		PreparedCallback preparedCallback;
-		CompleteCallback completeCallback;
-		bool isCorrect = true;
-	};
-
 	export class ICPUtoGPUDataTransfer
 	{
 	public:

@@ -1,7 +1,7 @@
 #include "pch.h"
 export module ShaderDX;
 
-#if defined(RENDER_API_D3D12)
+#if defined(ZRENDER_API_D3D12)
 
 import result;
 import IShader;
@@ -132,4 +132,4 @@ export namespace zzz::platforms::directx
 		return shaderBlob;
 	}
 }
-#endif // defined(RENDER_API_D3D12)
+#endif // defined(ZRENDER_API_D3D12)

@@ -6,11 +6,11 @@ import CPUVertexBuffer;
 
 export namespace zzz
 {
-#if defined(RENDER_API_D3D12)
+#if defined(ZRENDER_API_D3D12)
 	using VertexAttrDescr = D3D12_INPUT_ELEMENT_DESC;
-#elif defined(RENDER_API_VULKAN)
+#elif defined(ZRENDER_API_VULKAN)
 	using VertexAttrDescr = VkVertexInputAttributeDescription;
-#elif defined(RENDER_API_METAL)
+#elif defined(ZRENDER_API_METAL)
 	struct VertexAttrDescr
 	{
 		MTLVertexFormat format;
@@ -21,7 +21,7 @@ export namespace zzz
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif
 
-#if defined(RENDER_API_D3D12)
+#if defined(ZRENDER_API_D3D12)
 	// Маппинг семантик на строки для D3D12
 	constexpr const char* semanticToD3D12String(Semantic semantic)
 	{
@@ -100,7 +100,7 @@ export namespace zzz
 			throw_runtime_error(">>>>> [function vertexFormatToDXGI]. Unsupported VertexFormat");
 		}
 	}
-#elif defined(RENDER_API_VULKAN)
+#elif defined(ZRENDER_API_VULKAN)
 	// Маппинг VertexFormat на VkFormat (Vulkan)
 	VkFormat vertexFormatToVk(VertexFormat format)
 	{
@@ -163,7 +163,7 @@ export namespace zzz
 			throw_runtime_error(">>>>> [function vertexFormatToVk]. Unsupported VertexFormat");
 		}
 	}
-#elif defined(RENDER_API_METAL)
+#elif defined(ZRENDER_API_METAL)
 // Маппинг VertexFormat на MTLVertexFormat (Metal)
 MTLVertexFormat vertexFormatToMTL(VertexFormat format)
 {
@@ -243,7 +243,7 @@ MTLVertexFormat vertexFormatToMTL(VertexFormat format)
 		std::vector<LayoutEntry> layout = vb.layout();
 		std::vector<VertexAttrDescr> attr;
 
-#if defined(RENDER_API_D3D12)
+#if defined(ZRENDER_API_D3D12)
 		attr.reserve(layout.size());
 		for (const auto& entry : layout)
 		{
@@ -257,7 +257,7 @@ MTLVertexFormat vertexFormatToMTL(VertexFormat format)
 			desc.InstanceDataStepRate = 0;
 			attr.push_back(desc);
 		}
-#elif defined(RENDER_API_VULKAN)
+#elif defined(ZRENDER_API_VULKAN)
 		attr.reserve(layout.size());
 		for (size_t i = 0; i < layout.size(); ++i)
 		{
@@ -269,7 +269,7 @@ MTLVertexFormat vertexFormatToMTL(VertexFormat format)
 			desc.offset = static_cast<uint32_t>(entry.offset);
 			attr.push_back(desc);
 		}
-#elif defined(RENDER_API_METAL)
+#elif defined(ZRENDER_API_METAL)
 		attr.reserve(layout.size());
 		for (size_t i = 0; i < layout.size(); ++i)
 		{

@@ -15,6 +15,9 @@ export namespace zzz
 			const std::shared_ptr<Material> material);
 		~SceneEntity() = default;
 
+		[[nodiscard]] inline std::shared_ptr<IMeshGPU> GetMesh() const noexcept { return m_Mesh; }
+		[[nodiscard]] inline std::shared_ptr<Material> GetMaterial() const noexcept { return m_Material; }
+
 	private:
 		const std::shared_ptr<IMeshGPU> m_Mesh;
 		const std::shared_ptr<Material> m_Material;

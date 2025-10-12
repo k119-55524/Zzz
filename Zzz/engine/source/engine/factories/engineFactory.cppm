@@ -6,7 +6,7 @@ import result;
 import Settings;
 import StrConvert;
 
-#if defined(RENDER_API_D3D12)
+#if defined(ZRENDER_API_D3D12)
 import DXAPI;
 using namespace zzz::platforms::directx;
 #else
@@ -49,11 +49,11 @@ export namespace zzz
 			std::shared_ptr<IGAPI> igapi;
 			switch (type)
 			{
-#if defined(RENDER_API_D3D12)
+#if defined(ZRENDER_API_D3D12)
 			case eGAPIType::DirectX:
 				igapi = safe_make_shared<DXAPI>();
 				break;
-#endif // defined(RENDER_API_D3D12)
+#endif // defined(ZRENDER_API_D3D12)
 			default:
 				throw_runtime_error(std::format(">>>>> [EngineFactories::CreateGAPI()]. Unsupported GAPI type: {}.", static_cast<uint8_t>(type)));
 			}

@@ -1,7 +1,7 @@
 #include "pch.h"
 export module DXAPI;
 
-#if defined(RENDER_API_D3D12)
+#if defined(ZRENDER_API_D3D12)
 
 import IGAPI;
 import result;
@@ -12,9 +12,11 @@ import CommandWrapperDX;
 import CheckDirectXSupport;
 import ThreadSafeSwapBuffer;
 import CPUtoGPUDataTransferDX;
+import BaseCPUtoGPUDataTransfer;
 
 using namespace zzz;
 using namespace zzz::templates;
+using namespace zzz::platforms;
 
 export namespace zzz::platforms::directx
 {
@@ -57,9 +59,6 @@ export namespace zzz::platforms::directx
 		void WaitForGpu() override;
 
 	private:
-		static constexpr DXGI_FORMAT BACK_BUFFER_FORMAT = DXGI_FORMAT_R8G8B8A8_UNORM;
-		static constexpr DXGI_FORMAT DEPTH_FORMAT = DXGI_FORMAT_D32_FLOAT;
-
 		ThreadSafeSwapBuffer<std::shared_ptr<sInTransfersCallbacks>> m_PreparedTransfers;
 
 		UINT64 m_fenceValue;
@@ -412,4 +411,4 @@ export namespace zzz::platforms::directx
 	}
 #pragma endregion Rendring
 }
-#endif // defined(RENDER_API_D3D12)
+#endif // defined(ZRENDER_API_D3D12)

@@ -1,9 +1,10 @@
 #include "pch.h"
 export module SurfDirectX;
 
-#if defined(RENDER_API_D3D12)
+#if defined(ZRENDER_API_D3D12)
 import IGAPI;
 import DXAPI;
+import Scene;
 import result;
 import size2D;
 import IAppWin;
@@ -32,7 +33,7 @@ namespace zzz
 			std::shared_ptr<IGAPI> _iGAPI);
 
 		[[nodiscard]] result<> Initialize() override;
-		void PrepareFrame() override;
+		void PrepareFrame(std::shared_ptr<Scene> scene) override;
 		void RenderFrame() override;
 		void OnResize(const size2D<>& size) override;
 
@@ -350,7 +351,7 @@ namespace zzz
 #pragma endregion Initialize
 
 #pragma region Rendring
-	void SurfDirectX::PrepareFrame()
+	void SurfDirectX::PrepareFrame(std::shared_ptr<Scene> scene)
 	{
 		zU64 frameIndex = (m_swapChain->GetCurrentBackBufferIndex() + 1) % BACK_BUFFER_COUNT;
 
@@ -391,10 +392,21 @@ namespace zzz
 		commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 		commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
-		// Дополнительные команды рендеринга, если нужно
-		// commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		// commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-		// commandList->DrawInstanced(3, 1, 0, 0);
+		{
+			// Дополнительные команды рендеринга, если нужно
+			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			auto entity = scene->GetEntity();
+			auto material = entity->GetMaterial();
+			commandList->SetPipelineState(material->GetPSO()->GetPSO().Get());
+
+			auto mesh = entity->GetMesh();
+			commandList->IASetVertexBuffers(0, 1, mesh->VertexBufferView());
+			commandList->IASetIndexBuffer(mesh->IndexBufferView());
+
+			commandList->SetGraphicsRootDescriptorTable(0, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
+
+			commandList->DrawIndexedInstanced(32, 1, 0, 0, 0);
+		}
 
 		//void RenderCube() {
 		//	// ... (настройка конвейера, RTV, очистка)
@@ -602,4 +614,4 @@ namespace zzz
 		DebugOutput(std::format(L">>>>> [SurfDirectX::SetFullScreen({})].\n", fs).c_str());
 	}
 }
-#endif // defined(RENDER_API_D3D12)
+#endif // defined(ZRENDER_API_D3D12)

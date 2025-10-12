@@ -2,6 +2,7 @@
 export module ISurfaceView;
 
 import IGAPI;
+import Scene;
 import result;
 import size2D;
 import IAppWin;
@@ -28,7 +29,7 @@ export namespace zzz
 		virtual ~ISurfaceView() = default;
 
 		[[nodiscard]] virtual result<> Initialize() = 0;
-		virtual void PrepareFrame() = 0;
+		virtual void PrepareFrame(std::shared_ptr<Scene> scene) = 0;
 		virtual void RenderFrame() = 0;
 		virtual void OnResize(const size2D<>& size) = 0;
 

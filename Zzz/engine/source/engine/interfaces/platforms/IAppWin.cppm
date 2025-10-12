@@ -1,12 +1,14 @@
 #include "pch.h"
 export module IAppWin;
 
-import result;
 import event;
+import result;
 import size2D;
 import Settings;
+import IBaseAppWin_MSWin;
 
 using namespace zzz::platforms;
+using namespace zzz::platforms::mswin;
 
 namespace zzz
 {
@@ -15,7 +17,8 @@ namespace zzz
 
 export namespace zzz
 {
-	export class IAppWin abstract
+	export class IAppWin abstract :
+		public IBaseAppWin_MSWin
 	{
 	public:
 		IAppWin() = delete;
@@ -29,18 +32,7 @@ export namespace zzz
 		virtual ~IAppWin() = default;
 
 		event<size2D<>, e_TypeWinResize> onResize;
-
 		const size2D<> GetWinSize() const noexcept { return winSize; }
-
-#if defined(RENDER_API_D3D12)
-		virtual const HWND GetHWND() const noexcept = 0;
-		virtual void SetCaptionText(std::wstring caption) = 0;
-		virtual void AddCaptionText(std::wstring caption) = 0;
-#elif defined(RENDER_API_VULKAN)
-#elif defined(RENDER_API_METAL)
-#else
-#error ">>>>> [Compile error]. This branch requires implementation for the current platform"
-#endif
 
 	protected:
 		const std::shared_ptr<const Settings> m_Settings;

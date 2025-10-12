@@ -206,6 +206,24 @@
     <ClCompile Include="Source\engine\Resources\VertexFormatMapper.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
+    <ClCompile Include="Source\engine\Interfaces\platforms\IAppWin\IBaseAppWin_MSWin.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\engine\Interfaces\platforms\ICPUtoGPUDataTransfer\BaseCPUtoGPUDataTransfer.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\engine\Interfaces\platforms\IGAPI\IBaseGAPI_DirectX.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\engine\Interfaces\platforms\IMeshGPU\IBaseMeshGPU_DirectX.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\engine\Interfaces\platforms\IPSO\IBasePSO_DirectX.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\engine\Interfaces\platforms\IShader\IBaseShader_DirectX.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -169,11 +169,11 @@ namespace zzz
 	inline void DebugOutput(const std::wstring& msg)
 	{
 #if defined(_DEBUG)
-#if defined(PLATFORM_WINDOWS)
+#if defined(ZPLATFORM_MSWINDOWS)
 		OutputDebugStringW((msg + L"\n").c_str());
 #else
 		std::wcerr << msg << std::endl;
-#endif	// PLATFORM_WINDOWS
+#endif	// ZPLATFORM_MSWINDOWS
 #endif	// _DEBUG
 	}
 }

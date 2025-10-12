@@ -129,8 +129,8 @@ export namespace zzz
 
 		std::shared_ptr<zzz::ICPUIndexBuffer> indices =
 			std::make_shared<IndexBuffer16>(std::initializer_list<zU16>{
-			// front face
-			0, 1, 2,
+				// front face
+				0, 1, 2,
 				0, 2, 3,
 
 				// back face

@@ -8,7 +8,7 @@ using namespace zzz;
 
 namespace zzz::platforms
 {
-#if defined(_WIN64)
+#if defined(ZPLATFORM_MSWINDOWS)
 	export class mlMSWin final: public IMainLoop
 	{
 	public:
@@ -41,5 +41,5 @@ namespace zzz::platforms
 			}
 		}
 	}
-#endif // _WIN64
+#endif // ZPLATFORM_MSWINDOWS
 }

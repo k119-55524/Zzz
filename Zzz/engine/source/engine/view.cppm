@@ -154,7 +154,7 @@ namespace zzz
 
 	void View::PrepareFrame(double deltaTime)
 	{
-		m_SurfaceView->PrepareFrame();
+		m_SurfaceView->PrepareFrame(m_Scene);
 	}
 
 	void View::OnViewResized(const size2D<>& size, e_TypeWinResize resizeType)

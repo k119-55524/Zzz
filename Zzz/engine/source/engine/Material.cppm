@@ -16,6 +16,8 @@ namespace zzz
 		explicit Material(std::shared_ptr<IPSO> _PSO);
 		~Material() = default;
 
+		[[nodiscard]] inline std::shared_ptr<IPSO> GetPSO() const noexcept { return m_PSO; }
+
 	private:
 		std::shared_ptr<IPSO> m_PSO;
 	};

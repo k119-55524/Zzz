@@ -9,16 +9,16 @@
 
    ------------------------------------------------------------- */
 
-   // —Ì‡˜‡Î‡ ÓÔÂ‰ÂÎˇÂÏ ÔÎ‡ÚÙÓÏÛ (ÂÒÎË Â˘∏ ÌÂ ÓÔÂ‰ÂÎÂÌ‡)
-#if !defined(PLATFORM_WINDOWS) && !defined(PLATFORM_LINUX) && !defined(PLATFORM_MACOS) && \
-    !defined(PLATFORM_ANDROID) && !defined(PLATFORM_XBOX) && !defined(PLATFORM_PLAYSTATION) && \
-    !defined(PLATFORM_SWITCH)
+// —Ì‡˜‡Î‡ ÓÔÂ‰ÂÎˇÂÏ ÔÎ‡ÚÙÓÏÛ (ÂÒÎË Â˘∏ ÌÂ ÓÔÂ‰ÂÎÂÌ‡)
+#if !defined(ZPLATFORM_MSWINDOWS) && !defined(ZPLATFORM_LINUX) && !defined(ZPLATFORM_MACOS) && \
+    !defined(ZPLATFORM_ANDROID) && !defined(ZPLATFORM_XBOX) && !defined(ZPLATFORM_PLAYSTATION) && \
+    !defined(ZPLATFORM_NINTENDO_SWITCH)
 
     // -------------------------------------------------------------
     // XBOX SERIES X|S (GDK) ó ÕŒ¬Œ≈ œŒ ŒÀ≈Õ»≈
     // -------------------------------------------------------------
     #if defined(_GAMING_XBOX) || (defined(WINAPI_FAMILY) && WINAPI_FAMILY == WINAPI_FAMILY_GAMES)
-        #define PLATFORM_XBOX
+        #define ZPLATFORM_XBOX
         #ifdef ZLOG
             #pragma message(">>>>> Target: Xbox Series X|S (GDK)")
     #endif
@@ -27,7 +27,7 @@
     // PLAYSTATION 5 (Prospero) ó ÕŒ¬Œ≈ œŒ ŒÀ≈Õ»≈
     // -------------------------------------------------------------
     #elif defined(__PROSPERO__)
-        #define PLATFORM_PLAYSTATION
+        #define ZPLATFORM_PLAYSTATION
         #ifdef ZLOG
             #pragma message(">>>>> Target: PlayStation 5 (Prospero)")
     #endif
@@ -36,7 +36,7 @@
     // NINTENDO SWITCH
     // -------------------------------------------------------------
     #elif defined(__NX__) || defined(__SWITCH__)
-        #define PLATFORM_SWITCH
+        #define ZPLATFORM_NINTENDO_SWITCH
         #ifdef ZLOG
             #pragma message(">>>>> Target: Nintendo Switch")
     #endif
@@ -49,7 +49,7 @@
         #if defined(_DURANGO) || defined(_XBOX_ONE)
             #error ">>>>> Xbox One is not supported. Only Xbox Series X|S (GDK) is allowed."
         #else
-            #define PLATFORM_WINDOWS
+            #define ZPLATFORM_MSWINDOWS
         #ifdef ZLOG
             #pragma message(">>>>> Target: Windows Desktop")
         #endif
@@ -59,7 +59,7 @@
     // ANDROID
     // -------------------------------------------------------------
     #elif defined(__ANDROID__) || defined(ANDROID)
-        #define PLATFORM_ANDROID
+        #define ZPLATFORM_ANDROID
         #ifdef ZLOG
             #pragma message(">>>>> Target: Android")
     #endif
@@ -68,7 +68,7 @@
     // LINUX
     // -------------------------------------------------------------
     #elif defined(__linux__) || defined(__linux)
-        #define PLATFORM_LINUX
+        #define ZPLATFORM_LINUX
         #ifdef ZLOG
             #pragma message(">>>>> Target: Linux")
     #endif
@@ -79,17 +79,17 @@
     #elif defined(__APPLE__)
         #include <TargetConditionals.h>
         #if TARGET_OS_IOS || TARGET_OS_TV
-            #define PLATFORM_IOS
+            #define ZPLATFORM_IOS
             #ifdef ZLOG
                 #pragma message(">>>>> Target: iOS/tvOS")
             #endif
         #elif TARGET_OS_MAC
-            #define PLATFORM_MACOS
+            #define ZPLATFORM_MACOS
             #ifdef ZLOG
                 #pragma message(">>>>> Target: macOS")
             #endif
         #else
-            #define PLATFORM_MACOS
+            #define ZPLATFORM_MACOS
         #endif
 
     // -------------------------------------------------------------
@@ -110,11 +110,11 @@
 // -------------------------------------------------------------
 // œ–»Õ”ƒ»“≈À‹ÕŒ≈ œ≈–≈Œœ–≈ƒ≈À≈Õ»≈ ◊≈–≈« ZVULKAN (“ŒÀ‹ Œ Õ¿ WINDOWS!)
 // -------------------------------------------------------------
-#if defined(ZVULKAN) && defined(PLATFORM_WINDOWS)
-    #undef RENDER_API_D3D12
-    #undef RENDER_API_VULKAN
-    #undef RENDER_API_METAL
-    #define RENDER_API_VULKAN
+#if defined(ZVULKAN) && defined(ZPLATFORM_MSWINDOWS)
+    #undef ZRENDER_API_D3D12
+    #undef ZRENDER_API_VULKAN
+    #undef ZRENDER_API_VULKAN
+    #define ZRENDER_API_VULKAN
     #ifdef ZLOG
         #pragma message(">>>>> ZVULKAN enabled on Windows: Forcing Vulkan API.")
     #endif
@@ -123,13 +123,13 @@
 // -------------------------------------------------------------
 // ¿¬“ŒÃ¿“»◊≈— »… ¬€¡Œ– API
 // -------------------------------------------------------------
-#if !defined(RENDER_API_D3D12) && !defined(RENDER_API_VULKAN) && !defined(RENDER_API_METAL)
-    #if defined(PLATFORM_WINDOWS) || defined(PLATFORM_XBOX)
-        #define RENDER_API_D3D12
-    #elif defined(PLATFORM_ANDROID) || defined(PLATFORM_LINUX) || defined(PLATFORM_PLAYSTATION) || defined(PLATFORM_SWITCH)
-        #define RENDER_API_VULKAN
-    #elif defined(PLATFORM_MACOS) || defined(PLATFORM_IOS)
-        #define RENDER_API_METAL
+#if !defined(ZRENDER_API_D3D12) && !defined(ZRENDER_API_VULKAN) && !defined(ZRENDER_API_METAL)
+    #if defined(ZPLATFORM_MSWINDOWS) || defined(ZPLATFORM_XBOX)
+        #define ZRENDER_API_D3D12
+    #elif defined(ZPLATFORM_ANDROID) || defined(ZPLATFORM_LINUX) || defined(ZPLATFORM_PLAYSTATION) || defined(ZPLATFORM_NINTENDO_SWITCH)
+        #define ZRENDER_API_VULKAN
+    #elif defined(ZPLATFORM_MACOS) || defined(ZPLATFORM_IOS)
+        #define ZRENDER_API_METAL
     #else
         #error "No suitable graphics API defined for this platform!"
     #endif

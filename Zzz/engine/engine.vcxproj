@@ -102,8 +102,14 @@
     <ClCompile Include="Source\engine\InterfacesImpl\CPUtoGPUDataTransfer\CPUtoGPUDataTransferDX.cppm" />
     <ClCompile Include="Source\engine\InterfacesImpl\PSO\PSO_DX.cppm" />
     <ClCompile Include="Source\engine\InterfacesImpl\Shader\ShaderDX.cppm" />
+    <ClCompile Include="Source\engine\Interfaces\platforms\IAppWin\IBaseAppWin_MSWin.cppm" />
+    <ClCompile Include="Source\engine\Interfaces\platforms\ICPUtoGPUDataTransfer\BaseCPUtoGPUDataTransfer.cppm" />
+    <ClCompile Include="Source\engine\Interfaces\platforms\IGAPI\IBaseGAPI_DirectX.cppm" />
+    <ClCompile Include="Source\engine\Interfaces\platforms\IMeshGPU\IBaseMeshGPU_DirectX.cppm" />
     <ClCompile Include="Source\engine\Interfaces\platforms\IPSO.cppm" />
+    <ClCompile Include="Source\engine\Interfaces\platforms\IPSO\IBasePSO_DirectX.cppm" />
     <ClCompile Include="Source\engine\Interfaces\platforms\IShader.cppm" />
+    <ClCompile Include="Source\engine\Interfaces\platforms\IShader\IBaseShader_DirectX.cppm" />
     <ClCompile Include="Source\engine\Material.cppm" />
     <ClCompile Include="Source\Engine\Platforms\DX\CommandWrapperDX.cppm" />
     <ClCompile Include="Source\engine\Interfaces\platforms\ICPUtoGPUDataTransfer.cppm" />

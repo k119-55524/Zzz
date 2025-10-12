@@ -5,7 +5,7 @@ import IPSO;
 import IGAPI;
 import VertexFormatMapper;
 
-#if defined(RENDER_API_D3D12)
+#if defined(ZRENDER_API_D3D12)
 namespace zzz::platforms::directx
 {
 	export class PSO_DX final : public IPSO
@@ -57,10 +57,11 @@ namespace zzz::platforms::directx
 		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 		psoDesc.NumRenderTargets = 1;
 		psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+		psoDesc.DSVFormat = DEPTH_FORMAT;
 		psoDesc.SampleDesc.Count = 1;
 		HRESULT hr = m_GAPI->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PSO));
 		if(hr != S_OK)
 			throw_runtime_error(std::format(">>>>> [PSO_DX::CreatePSO()]. Failed to create pipeline state object. HRESULT = 0x{:08X}", hr));
 	}
 }
-#endif	// RENDER_API_D3D12
+#endif	// ZRENDER_API_D3D12

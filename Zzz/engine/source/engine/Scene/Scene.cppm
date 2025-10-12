@@ -19,6 +19,8 @@ export namespace zzz
 
 		void Add(std::shared_ptr<SceneEntity> entity);
 
+		[[nodiscard]] inline std::shared_ptr<SceneEntity> GetEntity() const noexcept { return m_Entity; }
+
 	private:
 		std::shared_ptr<SceneEntity> m_Entity;
 	};

@@ -3,26 +3,21 @@ export module IPSO;
 
 import IGAPI;
 import IShader;
+import IBasePSO_DirectX;
 import VertexFormatMapper;
 
 using namespace zzz::platforms;
+using namespace zzz::platforms::directx;
 
 namespace zzz
 {
-	export class IPSO
+	export class IPSO :
+		public IBasePSO_DirectX
 	{
 	public:
 		IPSO() = delete;
 		explicit IPSO(const std::shared_ptr<IShader> _shader, const std::vector<VertexAttrDescr>& _inputLayout);
 		virtual ~IPSO() = default;
-
-#if defined(RENDER_API_D3D12)
-		virtual const ComPtr<ID3D12PipelineState> GetPSO()  const noexcept = 0;
-#elif defined(RENDER_API_VULKAN)
-#elif defined(RENDER_API_METAL)
-#else
-#error ">>>>> [Compile error]. This branch requires implementation for the current platform"
-#endif
 
 	protected:
 		const std::shared_ptr<IShader> m_Shader;

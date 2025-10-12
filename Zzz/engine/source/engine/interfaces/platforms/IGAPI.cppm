@@ -7,6 +7,7 @@ import IAppWin;
 import StrConvert;
 import ICheckGapiSupport;
 import ICPUtoGPUDataTransfer;
+import BaseCPUtoGPUDataTransfer;
 
 using namespace std::literals::string_view_literals;
 
@@ -67,7 +68,7 @@ export namespace zzz::platforms
 		virtual void BeginRender() = 0;
 		virtual void EndRender() = 0;
 
-#if defined(RENDER_API_D3D12)
+#if defined(ZRENDER_API_D3D12)
 		virtual const ComPtr<ID3D12Device> GetDevice() const noexcept = 0;
 		virtual const ComPtr<ID3D12CommandQueue> GetCommandQueue() const noexcept = 0;
 		virtual const ComPtr<IDXGIFactory7> GetFactory() const noexcept = 0;
@@ -78,8 +79,8 @@ export namespace zzz::platforms
 		virtual void CommandRenderReset() noexcept = 0;
 		virtual [[nodiscard]] result<> CommandRenderReinitialize() = 0;
 		virtual void EndPreparedTransfers() = 0;
-#elif defined(RENDER_API_VULKAN)
-#elif defined(RENDER_API_METAL)
+#elif defined(ZRENDER_API_VULKAN)
+#elif defined(ZRENDER_API_METAL)
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif

@@ -24,6 +24,9 @@ export namespace zzz::platforms::directx
 
 		~GPUMeshDX() = default;
 
+		const D3D12_VERTEX_BUFFER_VIEW* VertexBufferView() const override { return &vertexBufferView; };
+		const D3D12_INDEX_BUFFER_VIEW* IndexBufferView() const override { return indices ? &indexBufferView : nullptr; };
+
 	private:
 		ComPtr<ID3D12Resource> vertexBuffer;
 		ComPtr<ID3D12Resource> indexBuffer;

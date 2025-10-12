@@ -26,21 +26,21 @@ export namespace zzz
 		// Получить текущую платформу в рантайме
 		static constexpr PlatformType GetCurrent() noexcept
 		{
-#if defined(PLATFORM_WINDOWS)
+#if defined(ZPLATFORM_MSWINDOWS)
 			return PlatformType::Windows;
-#elif defined(PLATFORM_XBOX)
+#elif defined(ZPLATFORM_XBOX)
 			return PlatformType::XboxSeries;
-#elif defined(PLATFORM_PLAYSTATION)
+#elif defined(ZPLATFORM_PLAYSTATION)
 			return PlatformType::PlayStation5;
-#elif defined(PLATFORM_SWITCH)
+#elif defined(ZPLATFORM_NINTENDO_SWITCH)
 			return PlatformType::NintendoSwitch;
-#elif defined(PLATFORM_ANDROID)
+#elif defined(ZPLATFORM_ANDROID)
 			return PlatformType::Android;
-#elif defined(PLATFORM_LINUX)
+#elif defined(ZPLATFORM_LINUX)
 			return PlatformType::Linux;
-#elif defined(PLATFORM_MACOS)
+#elif defined(ZPLATFORM_MACOS)
 			return PlatformType::MacOS;
-#elif defined(PLATFORM_IOS)
+#elif defined(ZPLATFORM_IOS)
 			return PlatformType::iOS;
 #else
 			#error ">>>>> [Platforms.GetCurrent()]. Compile error. Unknown platform!""

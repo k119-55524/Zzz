@@ -5,12 +5,15 @@ import IGAPI;
 import result;
 import CPUMesh;
 import VertexFormatMapper;
+import IBaseMeshGPU_DirectX;
 
 using namespace zzz::platforms;
+using namespace zzz::platforms::directx;
 
 export namespace zzz
 {
-	export class IMeshGPU
+	export class IMeshGPU :
+		public IBaseMeshGPU_DirectX
 	{
 		friend class GPUResourcesManager;
 

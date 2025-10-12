@@ -3,6 +3,9 @@ export module IShader;
 
 import result;
 import IMeshGPU;
+import IBaseShader_DirectX;
+
+using namespace zzz::platforms::directx;
 
 export namespace zzz
 {
@@ -16,7 +19,8 @@ export namespace zzz
 	//	Compute    // Вычислительный шейдер
 	//};
 
-	export class IShader
+	export class IShader :
+		public IBaseShader
 	{
 	public:
 		IShader() = delete;
@@ -26,15 +30,6 @@ export namespace zzz
 		[[nodiscard]] inline std::wstring GetName() const noexcept { return m_Name; }
 
 		virtual result<> InitializeByText(std::string&& srcVS, std::string&& srcPS) = 0;
-
-#if defined(RENDER_API_D3D12)
-		virtual ComPtr<ID3DBlob> GetVS() const noexcept = 0;
-		virtual ComPtr<ID3DBlob> GetPS() const noexcept = 0;
-#elif defined(RENDER_API_VULKAN)
-#elif defined(RENDER_API_METAL)
-#else
-#error ">>>>> [Compile error]. This branch requires implementation for the current platform"
-#endif
 
 	private:
 		const std::shared_ptr<IMeshGPU> m_Mesh;
