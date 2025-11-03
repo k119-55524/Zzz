@@ -167,9 +167,11 @@ export namespace zzz::platforms::directx
 			debugController->EnableDebugLayer();
 			dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
 
-			ComPtr<ID3D12Debug1> debugController1;
-			debugController->QueryInterface(IID_PPV_ARGS(&debugController1));
-			debugController1->SetEnableGPUBasedValidation(true);
+			// Даёт дополнительную проверку корректности работы с GPU ресурсами
+			// но работает медленнее
+			//ComPtr<ID3D12Debug1> debugController1;
+			//debugController->QueryInterface(IID_PPV_ARGS(&debugController1));
+			//debugController1->SetEnableGPUBasedValidation(true);
 
 			DebugOutput(L">>>>> [DXAPI::EnableDebugLayer()]. DirectX debug layer enabled.");
 		}

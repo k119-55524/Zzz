@@ -145,6 +145,8 @@
     <ClCompile Include="Source\engine\Utils\event.cppm" />
     <ClCompile Include="Source\engine\InterfacesImpl\Utils\icoBuilder\ibMSWin.cppm" />
     <ClCompile Include="Source\engine\Interfaces\utils\IIcoBuilder.cppm" />
+    <ClCompile Include="Source\math\MathUtils.cppm" />
+    <ClCompile Include="Source\math\zVector.cppm" />
     <ClCompile Include="Source\Utils\Platforms.cppm" />
     <ClCompile Include="Source\Templates\QueueArray.cppm" />
     <ClCompile Include="Source\Templates\ThreadPool.cppm" />
