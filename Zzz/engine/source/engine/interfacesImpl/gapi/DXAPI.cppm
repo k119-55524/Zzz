@@ -124,6 +124,7 @@ export namespace zzz::platforms::directx
 	{
 		result<> res = InitializeDevice()
 			.and_then([&]() { m_CPUtoGPUDataTransfer = safe_make_unique<CPUtoGPUDataTransferDX>(m_device, m_PreparedTransfers); })
+			.and_then([&]() { return m_rootSignature.Initialize(m_device); })
 			.and_then([&]() { return  InitializeFence(); });
 
 		return res;
@@ -165,6 +166,10 @@ export namespace zzz::platforms::directx
 		{
 			debugController->EnableDebugLayer();
 			dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
+
+			ComPtr<ID3D12Debug1> debugController1;
+			debugController->QueryInterface(IID_PPV_ARGS(&debugController1));
+			debugController1->SetEnableGPUBasedValidation(true);
 
 			DebugOutput(L">>>>> [DXAPI::EnableDebugLayer()]. DirectX debug layer enabled.");
 		}
@@ -306,11 +311,6 @@ export namespace zzz::platforms::directx
 		// Защита от повторной инициализации
 		if (m_fence || m_fenceEvent)
 			return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializeAssets()]. Already initialized.");
-
-		// Инициализация root signature
-		auto res = m_rootSignature.Initialize(m_device);
-		if (!res)
-			return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializeAssets()]. -> " + res.error().getMessage());
 
 		// Создание объектов синхронизации
 		{

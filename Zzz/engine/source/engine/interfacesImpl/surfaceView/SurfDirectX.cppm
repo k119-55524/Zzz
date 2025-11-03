@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <Headers/headerDX.h>
 export module SurfDirectX;
 
 #if defined(ZRENDER_API_D3D12)
@@ -18,6 +19,110 @@ using namespace zzz::platforms::directx;
 
 namespace zzz
 {
+	// DelMy sections
+	//{
+		static UINT CalcConstantBufferByteSize(UINT byteSize)
+		{
+			// Constant buffers must be a multiple of the minimum hardware
+			// allocation size (usually 256 bytes).  So round up to nearest
+			// multiple of 256.  We do this by adding 255 and then masking off
+			// the lower 2 bytes which store all bits < 256.
+			// Example: Suppose byteSize = 300.
+			// (300 + 255) & ~255
+			// 555 & ~255
+			// 0x022B & ~0x00ff
+			// 0x022B & 0xff00
+			// 0x0200
+			// 512
+			return (byteSize + 255) & ~255;
+		}
+
+		template<typename T>
+		class UploadBuffer
+		{
+		public:
+			UploadBuffer(ID3D12Device* device, UINT elementCount, bool isConstantBuffer) :
+				mIsConstantBuffer(isConstantBuffer)
+			{
+				mElementByteSize = sizeof(T);
+
+				// Constant buffer elements need to be multiples of 256 bytes.
+				// This is because the hardware can only view constant data 
+				// at m*256 byte offsets and of n*256 byte lengths. 
+				// typedef struct D3D12_CONSTANT_BUFFER_VIEW_DESC {
+				// UINT64 OffsetInBytes; // multiple of 256
+				// UINT   SizeInBytes;   // multiple of 256
+				// } D3D12_CONSTANT_BUFFER_VIEW_DESC;
+				if (isConstantBuffer)
+					mElementByteSize = CalcConstantBufferByteSize(sizeof(T));
+
+				CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_UPLOAD);
+				CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(mElementByteSize * elementCount);
+				HRESULT hr = device->CreateCommittedResource(
+					&heapProps,
+					D3D12_HEAP_FLAG_NONE,
+					&bufferDesc,
+					D3D12_RESOURCE_STATE_GENERIC_READ,
+					nullptr,
+					IID_PPV_ARGS(&mUploadBuffer));
+				ensure(hr == S_OK, ">>>>> [UploadBuffer::UploadBuffer(...)]. Failed to create upload buffer resource.");
+
+				hr = mUploadBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mMappedData));
+				ensure(hr == S_OK, ">>>>> [UploadBuffer::UploadBuffer(...)]. Failed to map upload buffer resource.");
+
+				// We do not need to unmap until we are done with the resource.  However, we must not write to
+				// the resource while it is in use by the GPU (so we must use synchronization techniques).
+			}
+
+			UploadBuffer(const UploadBuffer& rhs) = delete;
+			UploadBuffer& operator=(const UploadBuffer& rhs) = delete;
+			~UploadBuffer()
+			{
+				if (mUploadBuffer != nullptr)
+					mUploadBuffer->Unmap(0, nullptr);
+
+				mMappedData = nullptr;
+			}
+
+			ID3D12Resource* Resource()const
+			{
+				return mUploadBuffer.Get();
+			}
+
+			void CopyData(int elementIndex, const T& data)
+			{
+				memcpy(&mMappedData[elementIndex * mElementByteSize], &data, sizeof(T));
+			}
+
+		private:
+			Microsoft::WRL::ComPtr<ID3D12Resource> mUploadBuffer;
+			BYTE* mMappedData = nullptr;
+
+			UINT mElementByteSize = 0;
+			bool mIsConstantBuffer = false;
+		};
+
+		static DirectX::XMFLOAT4X4 Identity4x4()
+		{
+			static DirectX::XMFLOAT4X4 I(
+				1.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 1.0f, 0.0f, 0.0f,
+				0.0f, 0.0f, 1.0f, 0.0f,
+				0.0f, 0.0f, 0.0f, 1.0f);
+
+			return I;
+		}
+
+		struct ObjectConstants
+		{
+			XMFLOAT4X4 WorldViewProj	= Identity4x4();
+			//XMFLOAT4X4 view				= Identity4x4();
+			//XMFLOAT4X4 proj				= Identity4x4();
+			//XMFLOAT4X4 viewProj			= Identity4x4();
+			//XMFLOAT4X4 cameraPos		= Identity4x4();
+		};
+	//};
+
 	export class SurfDirectX final : public ISurfaceView
 	{
 	public:
@@ -52,6 +157,8 @@ namespace zzz
 		std::condition_variable m_frameCV;
 		bool m_frameReady;
 
+		std::unique_ptr<UploadBuffer<ObjectConstants>> mObjectCB = nullptr;
+
 		ComPtr<IDXGISwapChain3> m_swapChain;
 		UINT m_RtvDescrSize;
 		UINT m_DsvDescrSize;
@@ -62,6 +169,7 @@ namespace zzz
 		ComPtr<ID3D12Resource> m_renderTargets[BACK_BUFFER_COUNT];
 		ComPtr<ID3D12Resource> m_depthStencil[BACK_BUFFER_COUNT];
 
+		[[nodiscard]] result<> BuildConstantBuffers();
 		[[nodiscard]] result<> CreateRTVHeap();
 		[[nodiscard]] result<> CreateSRVHeap();
 		[[nodiscard]] result<> CreateDSVHeap();
@@ -116,6 +224,7 @@ namespace zzz
 
 		res = CreateRTVHeap()
 			.and_then([&]() { return CreateSRVHeap(); })
+			.and_then([&]() { return BuildConstantBuffers(); })
 			.and_then([&]() { return CreateDSVHeap(); })
 			.and_then([&]() { return CreateRTV(m_device); });
 
@@ -225,6 +334,27 @@ namespace zzz
 			return Unexpected(eResult::failure, std::format(L"Failed to create SRV heap. HRESULT = 0x{:08X}", hr));
 
 		SET_RESOURCE_DEBUG_NAME(m_srvHeap, L"SRV Heap");
+
+		return {};
+	}
+
+	result<> SurfDirectX::BuildConstantBuffers()
+	{
+		auto m_device = m_iGAPI->GetDevice();
+		mObjectCB = std::make_unique<UploadBuffer<ObjectConstants>>(m_device.Get(), 1, true);
+
+		UINT objCBByteSize = CalcConstantBufferByteSize(sizeof(ObjectConstants));
+
+		D3D12_GPU_VIRTUAL_ADDRESS cbAddress = mObjectCB->Resource()->GetGPUVirtualAddress();
+		// Offset to the ith object constant buffer in the buffer.
+		int boxCBufIndex = 0;
+		cbAddress += boxCBufIndex * objCBByteSize;
+
+		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
+		cbvDesc.BufferLocation = cbAddress;
+		cbvDesc.SizeInBytes = CalcConstantBufferByteSize(sizeof(ObjectConstants));
+
+		m_device->CreateConstantBufferView( &cbvDesc, m_srvHeap->GetCPUDescriptorHandleForHeapStart());
 
 		return {};
 	}
@@ -353,6 +483,43 @@ namespace zzz
 #pragma region Rendring
 	void SurfDirectX::PrepareFrame(std::shared_ptr<Scene> scene)
 	{
+		//void BoxApp::Update(const GameTimer & gt)
+		{
+			const float Pi = 3.1415926535f;
+			XMFLOAT4X4 mWorld = Identity4x4();
+			XMFLOAT4X4 mView = Identity4x4();
+			XMFLOAT4X4 mProj = Identity4x4();
+
+			XMMATRIX P = XMMatrixPerspectiveFovLH(0.25f * Pi, m_aspectRatio, 1.0f, 1000.0f);
+			XMStoreFloat4x4(&mProj, P);
+
+			float mTheta = 1.5f * XM_PI;
+			float mPhi = XM_PIDIV4;
+			float mRadius = 5.0f;
+
+			// Convert Spherical to Cartesian coordinates.
+			float x = mRadius * sinf(mPhi) * cosf(mTheta);
+			float z = mRadius * sinf(mPhi) * sinf(mTheta);
+			float y = mRadius * cosf(mPhi);
+
+			// Build the view matrix.
+			XMVECTOR pos = XMVectorSet(x, y, z, 1.0f);
+			XMVECTOR target = XMVectorZero();
+			XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+
+			XMMATRIX view = XMMatrixLookAtLH(pos, target, up);
+			XMStoreFloat4x4(&mView, view);
+
+			XMMATRIX world = XMLoadFloat4x4(&mWorld);
+			XMMATRIX proj = XMLoadFloat4x4(&mProj);
+			XMMATRIX worldViewProj = world * view * proj;
+
+			// Update the constant buffer with the latest worldViewProj matrix.
+			ObjectConstants objConstants;
+			XMStoreFloat4x4(&objConstants.WorldViewProj, XMMatrixTranspose(worldViewProj));
+			mObjectCB->CopyData(0, objConstants);
+		}
+
 		zU64 frameIndex = (m_swapChain->GetCurrentBackBufferIndex() + 1) % BACK_BUFFER_COUNT;
 
 		// Синхронизируемся с рендерингом чтобы frameIndex остался валидным
@@ -365,7 +532,11 @@ namespace zzz
 		auto commandList = m_iGAPI->GetCommandListUpdate();
 		ensure(commandList, ">>>>> [SurfDirectX::PrepareFrame()]. Command list cannot be null.");
 
-		commandList->SetGraphicsRootSignature(m_iGAPI->GetRootSignature().Get());
+		{
+			ID3D12DescriptorHeap* descriptorHeaps[] = { m_srvHeap.Get() };
+			commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+		}
+
 		commandList->RSSetViewports(1, &m_viewport);
 		commandList->RSSetScissorRects(1, &m_scissorRect);
 
@@ -385,16 +556,22 @@ namespace zzz
 
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_RtvDescrSize);
 		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_DsvDescrSize);
-		commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
 		// Рендеринг (из Render)
 		const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
 		commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 		commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
+		commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+		commandList->SetGraphicsRootSignature(m_iGAPI->GetRootSignature().Get());
+
+		static UINT c = 0;
+		++c;
+		if (c > 10000)
 		{
 			// Дополнительные команды рендеринга, если нужно
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 			auto entity = scene->GetEntity();
 			auto material = entity->GetMaterial();
 			commandList->SetPipelineState(material->GetPSO()->GetPSO().Get());
@@ -405,16 +582,8 @@ namespace zzz
 
 			commandList->SetGraphicsRootDescriptorTable(0, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
 
-			commandList->DrawIndexedInstanced(32, 1, 0, 0, 0);
+			commandList->DrawIndexedInstanced(36, 1, 0, 0, 0);
 		}
-
-		//void RenderCube() {
-		//	// ... (настройка конвейера, RTV, очистка)
-		//	commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
-		//	commandList->IASetIndexBuffer(&indexBufferView);
-		//	commandList->DrawIndexedInstanced(36, 1, 0, 0, 0);
-		//	// ... (барьеры, close, execute, present, WaitForGPU)
-		//}
 
 		// Завершение подготовки (из EndRender, до закрытия командного списка)
 		commandList->ResourceBarrier(

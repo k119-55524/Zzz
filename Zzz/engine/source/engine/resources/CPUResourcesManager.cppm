@@ -91,8 +91,8 @@ export namespace zzz
 	{
 		std::shared_ptr<VB_P3C3> vertex = std::make_shared<VB_P3C3>(std::initializer_list<zzz::VB_P3C3::VertexT>{
 			{
-				{ { -1.0f, -1.0f, -1.0f } }, // Position
-				{ { Colors::White } } // Color
+				{ { -1.0f, -1.0f, -1.0f } },	// Position
+				{ { Colors::White } }			// Color
 			},
 			{
 				{ { -1.0f, +1.0f, -1.0f } },

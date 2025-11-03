@@ -51,13 +51,23 @@ export namespace zzz::platforms::directx
 		auto staticSamplers = GetStaticSamplers();
 
 		// Формируем описание root signature
-		CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(
-			_countof(rootParams),		// количество root-параметров
-			rootParams,					// массив параметров
-			(UINT)staticSamplers.size(),// количество статических сэмплеров
-			staticSamplers.data(),		// массив статических сэмплеров
-			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT // разрешаем Input Assembler Layout
-		);
+		//CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(
+		//	_countof(rootParams),		// количество root-параметров
+		//	rootParams,					// массив параметров
+		//	(UINT)staticSamplers.size(),// количество статических сэмплеров
+		//	staticSamplers.data(),		// массив статических сэмплеров
+		//	D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT // разрешаем Input Assembler Layout
+		//);
+
+		// Root parameter can be a table, root descriptor or root constants.
+		CD3DX12_ROOT_PARAMETER slotRootParameter[1];
+
+		// Create a single descriptor table of CBVs.
+		CD3DX12_DESCRIPTOR_RANGE cbvTable;
+		cbvTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+		slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable);
+		CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(1, slotRootParameter, 0, nullptr,
+			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 		// Сериализуем root signature в бинарный формат (для передачи в драйвер)
 		ComPtr<ID3DBlob> serializedRootSig = nullptr;
