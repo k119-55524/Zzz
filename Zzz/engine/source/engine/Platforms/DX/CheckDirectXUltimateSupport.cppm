@@ -1,6 +1,7 @@
 #include "pch.h"
 export module CheckDirectXSupport;
 
+import StrConvert;
 import ICheckGapiSupport;
 
 using namespace zzz::platforms;
@@ -17,6 +18,7 @@ export namespace zzz::platforms::directx
 		~CheckDirectXSupport() = default;
 
 		explicit CheckDirectXSupport(ComPtr<ID3D12Device> device);
+		[[nodiscard]] std::string GetHighestShaderModelAsString(ShaderType shaderType) const override;
 
 	protected:
 		void CheckSupported() override;
@@ -52,6 +54,50 @@ export namespace zzz::platforms::directx
 			m_supportsSamplerFeedback = (options7.SamplerFeedbackTier >= D3D12_SAMPLER_FEEDBACK_TIER_0_9);
 		}
 
+		D3D12_FEATURE_DATA_SHADER_MODEL shaderModel = {};
+		shaderModel.HighestShaderModel = D3D_HIGHEST_SHADER_MODEL;
+		if (SUCCEEDED(m_device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shaderModel, sizeof(shaderModel))))
+		{
+			switch (shaderModel.HighestShaderModel)
+			{
+			case D3D_SHADER_MODEL_5_1:
+				m_strSupportHiShaderModel = "5_1";
+				break;
+			case D3D_SHADER_MODEL_6_0:
+				m_strSupportHiShaderModel = "6_0";
+				break;
+			case D3D_SHADER_MODEL_6_1:
+				m_strSupportHiShaderModel = "6_1";
+				break;
+			case D3D_SHADER_MODEL_6_2:
+				m_strSupportHiShaderModel = "6_2";
+				break;
+			case D3D_SHADER_MODEL_6_3:
+				m_strSupportHiShaderModel = "6_3";
+				break;
+			case D3D_SHADER_MODEL_6_4:
+				m_strSupportHiShaderModel = "6_4";
+				break;
+			case D3D_SHADER_MODEL_6_5:
+				m_strSupportHiShaderModel = "6_5";
+				break;
+			case D3D_SHADER_MODEL_6_6:
+				m_strSupportHiShaderModel = "6_6";
+				break;
+			case D3D_SHADER_MODEL_6_7:
+				m_strSupportHiShaderModel = "6_7";
+				break;
+			case D3D_SHADER_MODEL_6_8:
+				m_strSupportHiShaderModel = "6_8";
+				break;
+			case D3D_SHADER_MODEL_6_9:
+				m_strSupportHiShaderModel = "6_9";
+				break;
+			default:
+				throw_runtime_error(">>>>> [CheckDirectXSupport::CheckSupported()]. Unsupported shader model in GetHighestShaderModelAsString");
+			}
+		}
+
 		// Проверка поддержки Copy Queue и DMA
 		D3D12_COMMAND_QUEUE_DESC copyQueueDesc = {};
 		copyQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
@@ -70,20 +116,52 @@ export namespace zzz::platforms::directx
 		}
 
 #ifdef _DEBUG
-		DebugOutput(std::format(L">>>>> [DXAPI::CheckDirectX12UltimateSupport()]. DirectX 12 Ultimate Support:\n"
+		DebugOutput(std::format(L">>>>> [CheckDirectXSupport::CheckSupported()]. DirectX 12 Ultimate Support:\n"
+			L" +- Hi shader model: {}\n"
 			L" +- Ray Tracing: {}\n"
 			L" +- Variable Rate Shading: {}\n"
 			L" +- Mesh Shaders: {}\n"
 			L" +- Sampler Feedback: {}\n"
 			L" +- Copy Queue: {}\n"
 			L" +- Likely Dedicated DMA: {}",
+			string_to_wstring(m_strSupportHiShaderModel).value(),
 			m_supportsRayTracing ? L"Yes" : L"No",
 			m_supportsVariableRateShading ? L"Yes" : L"No",
 			m_supportsMeshShaders ? L"Yes" : L"No",
 			m_supportsSamplerFeedback ? L"Yes" : L"No",
 			m_supportsCopyQueue ? L"Yes" : L"No",
-			m_supportsDedicatedDMA ? L"Yes (Tier 2+)" : L"No (Tier 1 or lower, may be emulated)").c_str());
+			m_supportsDedicatedDMA ? L"Yes" : L"No"));
 #endif
+	}
+
+	[[nodiscard]] std::string CheckDirectXSupport::GetHighestShaderModelAsString(ShaderType shaderType) const
+	{
+		std::string shaderModelStr;
+		switch (shaderType)
+		{
+		case ShaderType::Vertex:
+			shaderModelStr = "vs_" + m_strSupportHiShaderModel;
+			break;
+		case ShaderType::Pixel:
+			shaderModelStr = "ps_" + m_strSupportHiShaderModel;
+			break;
+		case ShaderType::Geometry:
+			shaderModelStr = "gs_" + m_strSupportHiShaderModel;
+			break;
+		case ShaderType::Hull:
+			shaderModelStr = "hs_" + m_strSupportHiShaderModel;
+			break;
+		case ShaderType::Domain:
+			shaderModelStr = "ds_" + m_strSupportHiShaderModel;
+			break;
+		case ShaderType::Compute:
+			shaderModelStr = "cs_" + m_strSupportHiShaderModel;
+			break;
+		default:
+			throw_runtime_error("Unsupported shader type in GetHighestShaderModelAsString");
+		}
+
+		return shaderModelStr;
 	}
 };
 #endif // defined(_WIN64)

@@ -59,11 +59,11 @@ export namespace zzz::platforms::directx
 		//	{nullptr, nullptr}		// ќб€зательный терминатор
 		//};
 
-		auto resVS = CompileShaderFromSource(srcVS.c_str(), std::string("mainVS"), "vs_5_1", nullptr);
+		auto resVS = CompileShaderFromSource(srcVS.c_str(), std::string("mainVS"), "vs_6_8", nullptr);
 		if (!resVS)
 			return resVS.error();
 
-		auto resPS = CompileShaderFromSource(srcPS.c_str(), "mainPS", "ps_5_1", nullptr);
+		auto resPS = CompileShaderFromSource(srcPS.c_str(), "mainPS", "ps_6_8", nullptr);
 		if (!resPS)
 			return resPS.error();
 
@@ -103,8 +103,7 @@ export namespace zzz::platforms::directx
 			flags,					// ‘лаги компил€ции
 			0,						// ƒополнительные флаги (устарело)
 			&shaderBlob,			// –езультат компил€ции
-			&errorBlob				// ќшибки компил€ции
-		);
+			&errorBlob);			// ќшибки компил€ции
 
 		if (S_OK != hr)
 		{
