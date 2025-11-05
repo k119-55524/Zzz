@@ -17,7 +17,7 @@ using namespace zzz::platforms::directx;
 
 namespace zzz
 {
-#if defined(_WIN64)
+#if defined(ZRENDER_API_D3D12)
 	typedef GPUMeshDX GPUMesh;
 	typedef ShaderDX Shader;
 	typedef PSO_DX PSO;
@@ -98,7 +98,7 @@ export namespace zzz
 
 	result<std::shared_ptr<IShader>> GPUResourcesManager::GetGenericShader(const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name)
 	{
-		std::shared_ptr<IShader> shader = safe_make_shared<Shader>(mesh, std::move(name));
+		std::shared_ptr<IShader> shader = safe_make_shared<Shader>(m_GAPI, mesh, std::move(name));
 
 		// Исходный код шейдера в виде строки
 		std::string vs = R"(

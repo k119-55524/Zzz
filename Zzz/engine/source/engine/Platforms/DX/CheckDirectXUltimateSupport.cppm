@@ -18,7 +18,7 @@ export namespace zzz::platforms::directx
 		~CheckDirectXSupport() = default;
 
 		explicit CheckDirectXSupport(ComPtr<ID3D12Device> device);
-		[[nodiscard]] std::string GetHighestShaderModelAsString(ShaderType shaderType) const override;
+		[[nodiscard]] std::wstring GetHighestShaderModelAsString(ShaderType shaderType) const override;
 
 	protected:
 		void CheckSupported() override;
@@ -61,37 +61,37 @@ export namespace zzz::platforms::directx
 			switch (shaderModel.HighestShaderModel)
 			{
 			case D3D_SHADER_MODEL_5_1:
-				m_strSupportHiShaderModel = "5_1";
+				m_strSupportHiShaderModel = L"5_1";
 				break;
 			case D3D_SHADER_MODEL_6_0:
-				m_strSupportHiShaderModel = "6_0";
+				m_strSupportHiShaderModel = L"6_0";
 				break;
 			case D3D_SHADER_MODEL_6_1:
-				m_strSupportHiShaderModel = "6_1";
+				m_strSupportHiShaderModel = L"6_1";
 				break;
 			case D3D_SHADER_MODEL_6_2:
-				m_strSupportHiShaderModel = "6_2";
+				m_strSupportHiShaderModel = L"6_2";
 				break;
 			case D3D_SHADER_MODEL_6_3:
-				m_strSupportHiShaderModel = "6_3";
+				m_strSupportHiShaderModel = L"6_3";
 				break;
 			case D3D_SHADER_MODEL_6_4:
-				m_strSupportHiShaderModel = "6_4";
+				m_strSupportHiShaderModel = L"6_4";
 				break;
 			case D3D_SHADER_MODEL_6_5:
-				m_strSupportHiShaderModel = "6_5";
+				m_strSupportHiShaderModel = L"6_5";
 				break;
 			case D3D_SHADER_MODEL_6_6:
-				m_strSupportHiShaderModel = "6_6";
+				m_strSupportHiShaderModel = L"6_6";
 				break;
 			case D3D_SHADER_MODEL_6_7:
-				m_strSupportHiShaderModel = "6_7";
+				m_strSupportHiShaderModel = L"6_7";
 				break;
 			case D3D_SHADER_MODEL_6_8:
-				m_strSupportHiShaderModel = "6_8";
+				m_strSupportHiShaderModel = L"6_8";
 				break;
 			case D3D_SHADER_MODEL_6_9:
-				m_strSupportHiShaderModel = "6_9";
+				m_strSupportHiShaderModel = L"6_9";
 				break;
 			default:
 				throw_runtime_error(">>>>> [CheckDirectXSupport::CheckSupported()]. Unsupported shader model in GetHighestShaderModelAsString");
@@ -124,7 +124,7 @@ export namespace zzz::platforms::directx
 			L" +- Sampler Feedback: {}\n"
 			L" +- Copy Queue: {}\n"
 			L" +- Likely Dedicated DMA: {}",
-			string_to_wstring(m_strSupportHiShaderModel).value(),
+			m_strSupportHiShaderModel,
 			m_supportsRayTracing ? L"Yes" : L"No",
 			m_supportsVariableRateShading ? L"Yes" : L"No",
 			m_supportsMeshShaders ? L"Yes" : L"No",
@@ -134,28 +134,28 @@ export namespace zzz::platforms::directx
 #endif
 	}
 
-	[[nodiscard]] std::string CheckDirectXSupport::GetHighestShaderModelAsString(ShaderType shaderType) const
+	[[nodiscard]] std::wstring CheckDirectXSupport::GetHighestShaderModelAsString(ShaderType shaderType) const
 	{
-		std::string shaderModelStr;
+		std::wstring shaderModelStr;
 		switch (shaderType)
 		{
 		case ShaderType::Vertex:
-			shaderModelStr = "vs_" + m_strSupportHiShaderModel;
+			shaderModelStr = L"vs_" + m_strSupportHiShaderModel;
 			break;
 		case ShaderType::Pixel:
-			shaderModelStr = "ps_" + m_strSupportHiShaderModel;
+			shaderModelStr = L"ps_" + m_strSupportHiShaderModel;
 			break;
 		case ShaderType::Geometry:
-			shaderModelStr = "gs_" + m_strSupportHiShaderModel;
+			shaderModelStr = L"gs_" + m_strSupportHiShaderModel;
 			break;
 		case ShaderType::Hull:
-			shaderModelStr = "hs_" + m_strSupportHiShaderModel;
+			shaderModelStr = L"hs_" + m_strSupportHiShaderModel;
 			break;
 		case ShaderType::Domain:
-			shaderModelStr = "ds_" + m_strSupportHiShaderModel;
+			shaderModelStr = L"ds_" + m_strSupportHiShaderModel;
 			break;
 		case ShaderType::Compute:
-			shaderModelStr = "cs_" + m_strSupportHiShaderModel;
+			shaderModelStr = L"cs_" + m_strSupportHiShaderModel;
 			break;
 		default:
 			throw_runtime_error("Unsupported shader type in GetHighestShaderModelAsString");

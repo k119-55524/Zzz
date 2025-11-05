@@ -159,9 +159,8 @@ namespace zzz
 
 	void View::OnViewResized(const size2D<>& size, e_TypeWinResize resizeType)
 	{
-		if (initState != eInitState::eInitOK)
-			return;
 
+#if defined(_DEBUG)
 		switch (resizeType)
 		{
 		case e_TypeWinResize::eHide:
@@ -174,6 +173,10 @@ namespace zzz
 			DebugOutput(std::format(L">>>>> [View::OnViewResized({}x{}))]. Resize app window.", std::to_wstring(size.width), std::to_wstring(size.height)));
 			break;
 		}
+#endif	// _DEBUG
+
+		if (initState != eInitState::eInitOK)
+			return;
 
 		viewResized(size, resizeType);
 		if (m_SurfaceView)

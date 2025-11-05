@@ -1,19 +1,21 @@
 #pragma once
 
+/////////////////////////////////////////////////////////////////////////
+// WARNING
+// ”становите NuGet пакет Microsoft.Direct3D.DXC дл€ компил€ции шейдеров
+/////////////////////////////////////////////////////////////////////////
+
 #if defined(ZRENDER_API_D3D12)
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
-#pragma comment(lib, "d3dCompiler.lib")
-//#pragma comment(lib, "comsuppwd.lib")
-
-//#include <comdef.h>
+#pragma comment(lib, "dxcompiler.lib")
 
 #include <wrl.h>
 #include <d3d12.h>
-#include <d3d11_1.h>
+#include <dxcapi.h>
 #include <dxgi1_6.h>
 #include <SDKDDKVer.h>
-#include <d3dcompiler.h>
+#include <d3dcommon.h>
 #include <DirectXMath.h>
 
 #include <pix3.h>

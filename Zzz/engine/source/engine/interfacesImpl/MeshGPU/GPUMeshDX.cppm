@@ -1,7 +1,7 @@
 #include "pch.h"
 export module GPUMeshDX;
 
-#if defined(_WIN64)
+#if defined(ZRENDER_API_D3D12)
 
 import IGAPI;
 import DXAPI;
@@ -216,4 +216,4 @@ export namespace zzz::platforms::directx
 		return {};
 	}
 }
-#endif // _WIN64
+#endif // ZRENDER_API_D3D12

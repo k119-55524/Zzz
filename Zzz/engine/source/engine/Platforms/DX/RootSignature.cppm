@@ -2,12 +2,12 @@
 
 export module RootSignature;
 
+#if defined(ZRENDER_API_D3D12)
 import result;
 import StrConvert;
 
 using namespace zzz;
 
-#if defined(_WIN64)
 export namespace zzz::platforms::directx
 {
 	class RootSignature
@@ -158,4 +158,4 @@ export namespace zzz::platforms::directx
 			anisotropicWrap, anisotropicClamp };
 	}
 }
-#endif // defined(_WIN64)
+#endif // defined(ZRENDER_API_D3D12)

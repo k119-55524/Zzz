@@ -1,10 +1,12 @@
 #include "pch.h"
 export module IShader;
 
+import IGAPI;
 import result;
 import IMeshGPU;
 import IBaseShader_DirectX;
 
+using namespace zzz::platforms;
 using namespace zzz::platforms::directx;
 
 export namespace zzz
@@ -14,19 +16,23 @@ export namespace zzz
 	{
 	public:
 		IShader() = delete;
-		explicit IShader(const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name);
+		explicit IShader(const std::shared_ptr<IGAPI> gapi, const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name);
 
 		virtual ~IShader() = default;
 		[[nodiscard]] inline std::wstring GetName() const noexcept { return m_Name; }
 
 		virtual result<> InitializeByText(std::string&& srcVS, std::string&& srcPS) = 0;
 
+	protected:
+		const std::shared_ptr<IGAPI> m_GAPI;
+
 	private:
 		const std::shared_ptr<IMeshGPU> m_Mesh;
 		std::wstring m_Name;
 	};
 
-	IShader::IShader(const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name) :
+	IShader::IShader(const std::shared_ptr<IGAPI> gapi, const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name) :
+		m_GAPI{ gapi },
 		m_Mesh{ mesh },
 		m_Name{ std::move(name) }
 	{
