@@ -34,8 +34,5 @@ export namespace zzz
 		ensure(m_Mesh);
 
 		m_InputLayout = VertexFormatMapper::GetInputLayout(*m_Mesh);
-
-		int i = 0;
-		i++;
 	}
 }

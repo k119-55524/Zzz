@@ -6,7 +6,7 @@ import ICheckGapiSupport;
 
 using namespace zzz::platforms;
 
-#if defined(_WIN64)
+#if defined(ZRENDER_API_D3D12)
 export namespace zzz::platforms::directx
 {
 	export class CheckDirectXSupport : public ICheckGapiSupport
@@ -164,4 +164,4 @@ export namespace zzz::platforms::directx
 		return shaderModelStr;
 	}
 };
-#endif // defined(_WIN64)
+#endif // defined(ZRENDER_API_D3D12)

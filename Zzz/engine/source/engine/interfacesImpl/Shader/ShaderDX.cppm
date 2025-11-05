@@ -2,7 +2,6 @@
 export module ShaderDX;
 
 #if defined(ZRENDER_API_D3D12)
-
 import result;
 import IShader;
 import IMeshGPU;
