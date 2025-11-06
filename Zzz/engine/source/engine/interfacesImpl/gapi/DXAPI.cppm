@@ -29,14 +29,10 @@ export namespace zzz::platforms::directx
 
 	export class DXAPI final : public IGAPI
 	{
+		Z_NO_COPY_MOVE(DXAPI);
+
 	public:
 		explicit DXAPI();
-		DXAPI(DXAPI&) = delete;
-		DXAPI(DXAPI&&) = delete;
-
-		DXAPI& operator=(const DXAPI&) = delete;
-		DXAPI& operator=(DXAPI&&) = delete;
-
 		virtual ~DXAPI() override;
 
 		const ComPtr<ID3D12Device> GetDevice() const noexcept override { return m_device; };

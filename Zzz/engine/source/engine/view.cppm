@@ -159,7 +159,6 @@ namespace zzz
 
 	void View::OnViewResized(const size2D<>& size, e_TypeWinResize resizeType)
 	{
-
 #if defined(_DEBUG)
 		switch (resizeType)
 		{

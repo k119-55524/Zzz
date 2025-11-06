@@ -175,7 +175,7 @@ export namespace zzz::platforms::directx
 		if (FAILED(hr) || !finalBlob)
 			return Unexpected(eResult::failure, L">>>>> [haderDX::CompileShaderFromSource( ... )]. Failed to convert to ID3DBlob");
 
-		DebugOutput(std::format(L">>>>> [haderDX::CompileShaderFromSource( ... )]. Shader compiled. Entry: {}, Target: {}", entryPoint, target));
+		DebugOutput(std::format(L">>>>> [haderDX::CompileShaderFromSource( ... )]. Shader '{}' compiled: OK. Entry: {}, Target: {}", m_Name, entryPoint, target));
 
 		return finalBlob;
 	}

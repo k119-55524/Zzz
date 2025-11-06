@@ -22,15 +22,10 @@ export namespace zzz::platforms
 
 	export class IGAPI
 	{
+		Z_NO_CREATE_COPY(IGAPI);
+
 	public:
-		IGAPI() =							delete;
-		IGAPI(const IGAPI&) =				delete;
-		IGAPI& operator=(const IGAPI&) =	delete;
-		IGAPI(IGAPI&&) =					delete;
-		IGAPI& operator=(IGAPI&&) =			delete;
-
 		explicit IGAPI(eGAPIType type);
-
 		virtual ~IGAPI() = default;
 
 		[[nodiscard]] eInitState GetInitState() const noexcept { return initState; }

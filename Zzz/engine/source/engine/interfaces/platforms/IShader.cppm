@@ -25,10 +25,10 @@ export namespace zzz
 
 	protected:
 		const std::shared_ptr<IGAPI> m_GAPI;
+		std::wstring m_Name;
 
 	private:
 		const std::shared_ptr<IMeshGPU> m_Mesh;
-		std::wstring m_Name;
 	};
 
 	IShader::IShader(const std::shared_ptr<IGAPI> gapi, const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name) :
