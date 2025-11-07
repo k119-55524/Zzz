@@ -24,7 +24,6 @@ import GPUResourcesManager;
 
 using namespace zzz;
 using namespace zzz::io;
-using namespace zzz::Colors;
 using namespace zzz::templates;
 using namespace zzz::platforms;
 

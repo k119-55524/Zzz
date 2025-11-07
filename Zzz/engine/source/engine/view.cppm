@@ -27,13 +27,9 @@ namespace zzz
 {
 	export class View final
 	{
-	public:
-		View() = delete;
-		View(const View&) = delete;
-		View(View&&) = delete;
-		View& operator=(const View&) = delete;
-		View& operator=(View&&) = delete;
+		Z_NO_CREATE_COPY(View);
 
+	public:
 		View(
 			const std::shared_ptr<Settings> _setting,
 			const std::shared_ptr<ScenesManager> _scenesManager,

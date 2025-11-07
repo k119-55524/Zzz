@@ -3,15 +3,23 @@ export module ISurfaceView;
 
 import IGAPI;
 import Scene;
+import Colors;
 import result;
 import size2D;
 import IAppWin;
 import Settings;
 
+using namespace zzz::colors;
 using namespace zzz::platforms;
 
 export namespace zzz
 {
+	export enum class SurfClearType : zU32
+	{
+		None = 0,	// Без очистки
+		Color = 1	// Очистка фона цветом
+	};
+
 	export class ISurfaceView abstract
 	{
 	public:
@@ -34,15 +42,19 @@ export namespace zzz
 		virtual void OnResize(const size2D<>& size) = 0;
 
 		virtual void SetFullScreen(bool fs) {};
-		inline void SetVSync(bool vs) { isVSync = vs; };
+		inline void SetVSync(bool vs) { b_IsVSync = vs; };
 
 	protected:
 		zU64 m_frameIndex;
 		float m_aspectRatio;
-		bool isVSync;
+		bool b_IsVSync;
 		std::shared_ptr<Settings> m_settings;
 		std::shared_ptr<IAppWin> m_iAppWin;
 		std::shared_ptr<IGAPI> m_iGAPI;
+
+		SurfClearType m_SurfClearType;
+		Color m_ClearColor;
+		bool b_IsClearDepth;
 	};
 
 	ISurfaceView::ISurfaceView(
@@ -51,13 +63,17 @@ export namespace zzz
 		std::shared_ptr<IGAPI> _iGAPI) :
 		m_frameIndex{ 0 },
 		m_aspectRatio{ 0.0f },
-		isVSync{ true },
+		b_IsVSync{ true },
 		m_settings{ _settings },
 		m_iAppWin{ _iAppWin },
-		m_iGAPI{ _iGAPI }
+		m_iGAPI{ _iGAPI },
+		m_ClearColor{ colors::DarkMidnightBlue },
+		b_IsClearDepth{ true }
 	{
 		ensure(m_settings, ">>>>> [ISurfaceView::ISurfaceView()]. Settings cannot be null.");
 		ensure(m_iAppWin, ">>>>> [ISurfaceView::ISurfaceView()]. Application window cannot be null.");
 		ensure(m_iGAPI, ">>>>> [ISurfaceView::ISurfaceView()]. GAPI cannot be null.");
+
+		m_SurfClearType = SurfClearType::Color;
 	}
 }

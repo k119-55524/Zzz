@@ -3,6 +3,8 @@ export module CPUVertexBuffer;
 
 import Colors;
 
+using namespace zzz::colors;
+
 export namespace zzz
 {
 	// ----- Универсальные семантики -----
@@ -69,7 +71,7 @@ export namespace zzz
 		}
 
 		// Конструктор для Color
-		Attribute(const Colors::Color& color) requires (S == Semantic::Color && std::is_same_v<T, float>)
+		Attribute(const Color& color) requires (S == Semantic::Color && std::is_same_v<T, float>)
 		{
 			for (size_t i = 0; i < N; ++i)
 				value[i] = color[i];

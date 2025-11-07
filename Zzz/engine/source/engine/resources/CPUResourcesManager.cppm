@@ -92,35 +92,35 @@ export namespace zzz
 		std::shared_ptr<VB_P3C3> vertex = std::make_shared<VB_P3C3>(std::initializer_list<zzz::VB_P3C3::VertexT>{
 			{
 				{ { -1.0f, -1.0f, -1.0f } },	// Position
-				{ { Colors::White } }			// Color
+				{ { colors::White } }			// Color
 			},
 			{
 				{ { -1.0f, +1.0f, -1.0f } },
-				{ { Colors::Black } }
+				{ { colors::Black } }
 			},
 			{
 				{ { +1.0f, +1.0f, -1.0f } },
-				{ { Colors::Red } }
+				{ { colors::Red } }
 			},
 			{
 				{ { +1.0f, -1.0f, -1.0f } },
-				{ { Colors::Green } }
+				{ { colors::Green } }
 			},
 			{
 				{ { -1.0f, -1.0f, +1.0f } },
-				{ { Colors::Blue } }
+				{ { colors::Blue } }
 			},
 			{
 				{ { -1.0f, +1.0f, +1.0f } },
-				{ { Colors::Yellow } }
+				{ { colors::Yellow } }
 			},
 			{
 				{ { +1.0f, +1.0f, +1.0f } },
-				{ { Colors::Cyan } }
+				{ { colors::Cyan } }
 			},
 			{
 				{ { +1.0f, -1.0f, +1.0f } },
-				{ { Colors::Magenta } }
+				{ { colors::Magenta } }
 			}
 		});
 

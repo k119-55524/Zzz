@@ -548,10 +548,15 @@ namespace zzz
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_RtvDescrSize);
 		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_DsvDescrSize);
 
-		// Рендеринг (из Render)
-		const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-		commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-		commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+		switch (m_SurfClearType)
+		{
+		case SurfClearType::Color:
+			commandList->ClearRenderTargetView(rtvHandle, m_ClearColor, 0, nullptr);
+			break;
+		}
+
+		if(b_IsClearDepth)
+			commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 		commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
@@ -603,8 +608,8 @@ namespace zzz
 		// Настраиваем параметры для Present
 		BOOL fullscreen = FALSE;
 		ensure(S_OK == m_swapChain->GetFullscreenState(&fullscreen, nullptr));
-		UINT syncInterval = isVSync ? 1 : 0;
-		UINT presentFlags = (!isVSync && !fullscreen && m_tearingSupported) ? DXGI_PRESENT_ALLOW_TEARING : 0;
+		UINT syncInterval = b_IsVSync ? 1 : 0;
+		UINT presentFlags = (!b_IsVSync && !fullscreen && m_tearingSupported) ? DXGI_PRESENT_ALLOW_TEARING : 0;
 		HRESULT hr = m_swapChain->Present(syncInterval, presentFlags);
 		if (FAILED(hr))
 		{

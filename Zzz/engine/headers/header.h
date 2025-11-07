@@ -38,7 +38,7 @@ namespace zzz
 		eResize
 	};
 
-	enum class ShaderType : zU8
+	enum class ShaderType : zU32
 	{
 		Vertex,		// Вершинный шейдер
 		Pixel,		// Пиксельный шейдер (ранее назывался фрагментный)
