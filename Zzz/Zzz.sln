@@ -31,9 +31,15 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "engineCore", "engineFoundat
 	ProjectSection(ProjectDependencies) = postProject
 		{67571D08-65C1-42D4-B1C5-8DEE498530A6} = {67571D08-65C1-42D4-B1C5-8DEE498530A6}
 		{739374B1-C690-4A3A-99E8-C6243336D2F3} = {739374B1-C690-4A3A-99E8-C6243336D2F3}
+		{AE46C4D5-4929-4E49-9AEB-00D2641966D9} = {AE46C4D5-4929-4E49-9AEB-00D2641966D9}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "logger", "engineFoundation\logger\logger.vcxproj", "{739374B1-C690-4A3A-99E8-C6243336D2F3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{67571D08-65C1-42D4-B1C5-8DEE498530A6} = {67571D08-65C1-42D4-B1C5-8DEE498530A6}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "math", "math\math.vcxproj", "{AE46C4D5-4929-4E49-9AEB-00D2641966D9}"
 	ProjectSection(ProjectDependencies) = postProject
 		{67571D08-65C1-42D4-B1C5-8DEE498530A6} = {67571D08-65C1-42D4-B1C5-8DEE498530A6}
 	EndProjectSection
@@ -72,6 +78,10 @@ Global
 		{739374B1-C690-4A3A-99E8-C6243336D2F3}.Debug|x64.Build.0 = Debug|x64
 		{739374B1-C690-4A3A-99E8-C6243336D2F3}.Release|x64.ActiveCfg = Release|x64
 		{739374B1-C690-4A3A-99E8-C6243336D2F3}.Release|x64.Build.0 = Release|x64
+		{AE46C4D5-4929-4E49-9AEB-00D2641966D9}.Debug|x64.ActiveCfg = Debug|x64
+		{AE46C4D5-4929-4E49-9AEB-00D2641966D9}.Debug|x64.Build.0 = Debug|x64
+		{AE46C4D5-4929-4E49-9AEB-00D2641966D9}.Release|x64.ActiveCfg = Release|x64
+		{AE46C4D5-4929-4E49-9AEB-00D2641966D9}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
