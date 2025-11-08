@@ -18,7 +18,7 @@
     <ClInclude Include="pch.h">
       <Filter>����� ����������</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\Header.h">
+    <ClInclude Include="Headers\header.h">
       <Filter>����� ����������</Filter>
     </ClInclude>
     <ClInclude Include="Headers\PlatformsDefines.h">

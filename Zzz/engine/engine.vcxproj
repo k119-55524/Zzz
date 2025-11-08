@@ -58,7 +58,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)engineFoundation\engineCore;$(SolutionDir)engineFoundation\engineBase</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)engineFoundation\engineCore;$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)engineFoundation\logger</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -78,7 +78,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)engineFoundation\engineCore;$(SolutionDir)engineFoundation\engineBase</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)engineFoundation\engineCore;$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)engineFoundation\logger</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -87,7 +87,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Headers\Header.h" />
+    <ClInclude Include="Headers\header.h" />
     <ClInclude Include="Headers\PlatformsDefines.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>

@@ -18,25 +18,25 @@
     <ClInclude Include="pch.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="headers\PlatformsDefines.h">
+    <ClInclude Include="headers\platformsDefines.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="engineBase.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="headers\Header.h">
+    <ClInclude Include="headers\header.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="headers\MacroDefinition.h">
+    <ClInclude Include="headers\macroDefinition.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="headers\HeadersMSWin.h">
+    <ClInclude Include="headers\headersMSWin.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="headers\HeaderVulkan.h">
+    <ClInclude Include="headers\headerVulkan.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="headers\HeaderMetal.h">
+    <ClInclude Include="headers\headerMetal.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="headers\headerDX.h">
