@@ -18,7 +18,7 @@ export namespace zzz::platforms::directx
 		~CheckDirectXSupport() = default;
 
 		explicit CheckDirectXSupport(ComPtr<ID3D12Device> device);
-		[[nodiscard]] std::wstring GetHighestShaderModelAsString(ShaderType shaderType) const override;
+		[[nodiscard]] std::wstring GetHighestShaderModelAsString(eShaderType eShaderType) const override;
 
 	protected:
 		void CheckSupported() override;
@@ -134,27 +134,27 @@ export namespace zzz::platforms::directx
 #endif
 	}
 
-	[[nodiscard]] std::wstring CheckDirectXSupport::GetHighestShaderModelAsString(ShaderType shaderType) const
+	[[nodiscard]] std::wstring CheckDirectXSupport::GetHighestShaderModelAsString(eShaderType eShaderType) const
 	{
 		std::wstring shaderModelStr;
-		switch (shaderType)
+		switch (eShaderType)
 		{
-		case ShaderType::Vertex:
+		case eShaderType::Vertex:
 			shaderModelStr = L"vs_" + m_strSupportHiShaderModel;
 			break;
-		case ShaderType::Pixel:
+		case eShaderType::Pixel:
 			shaderModelStr = L"ps_" + m_strSupportHiShaderModel;
 			break;
-		case ShaderType::Geometry:
+		case eShaderType::Geometry:
 			shaderModelStr = L"gs_" + m_strSupportHiShaderModel;
 			break;
-		case ShaderType::Hull:
+		case eShaderType::Hull:
 			shaderModelStr = L"hs_" + m_strSupportHiShaderModel;
 			break;
-		case ShaderType::Domain:
+		case eShaderType::Domain:
 			shaderModelStr = L"ds_" + m_strSupportHiShaderModel;
 			break;
-		case ShaderType::Compute:
+		case eShaderType::Compute:
 			shaderModelStr = L"cs_" + m_strSupportHiShaderModel;
 			break;
 		default:

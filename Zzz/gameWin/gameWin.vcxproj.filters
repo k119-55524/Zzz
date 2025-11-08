@@ -39,6 +39,5 @@
       <Filter>Файлы ресурсов</Filter>
     </None>
     <None Include="appdata\assets\StartScene.scn" />
-    <None Include="packages.config" />
   </ItemGroup>
 </Project>

@@ -50,11 +50,11 @@ export namespace zzz::platforms::directx
 		//	{nullptr, nullptr}		// Обязательный терминатор
 		//};
 
-		auto resVS = CompileShaderFromSource(srcVS.c_str(), L"mainVS", m_GAPI->GetHighestShaderModelAsString(ShaderType::Vertex));
+		auto resVS = CompileShaderFromSource(srcVS.c_str(), L"mainVS", m_GAPI->GetHighestShaderModelAsString(eShaderType::Vertex));
 		if (!resVS)
 			return resVS.error();
 
-		auto resPS = CompileShaderFromSource(srcPS.c_str(), L"mainPS", m_GAPI->GetHighestShaderModelAsString(ShaderType::Pixel));
+		auto resPS = CompileShaderFromSource(srcPS.c_str(), L"mainPS", m_GAPI->GetHighestShaderModelAsString(eShaderType::Pixel));
 		if (!resPS)
 			return resPS.error();
 

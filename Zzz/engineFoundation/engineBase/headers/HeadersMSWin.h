@@ -1,6 +1,8 @@
 #pragma once
 
-#if defined(_WIN64)
+#pragma once
+
+#if defined(ZPLATFORM_MSWINDOWS)
 #define NOMINMAX
 #include <windows.h>
 #include <windowsx.h>
@@ -10,4 +12,4 @@
 
 #define WIN32_LEAN_AND_MEAN // Исключите редко используемые компоненты из заголовков Windows
 
-#endif
+#endif // ZPLATFORM_MSWINDOWS

@@ -21,7 +21,7 @@ export namespace zzz::platforms
 		[[nodiscard]] inline bool SupportsCopyQueue() const noexcept { return m_supportsCopyQueue; }
 		[[nodiscard]] inline bool SupportsDedicatedDMA() const noexcept { return m_supportsDedicatedDMA; }
 
-		[[nodiscard]] virtual std::wstring GetHighestShaderModelAsString(ShaderType shaderType) const = 0;
+		[[nodiscard]] virtual std::wstring GetHighestShaderModelAsString(eShaderType eShaderType) const = 0;
 
 	protected:
 		virtual void CheckSupported() = 0;

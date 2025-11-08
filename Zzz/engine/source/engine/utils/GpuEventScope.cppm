@@ -3,13 +3,9 @@ export module GpuEventScope;
 
 import IGAPI;
 import DXAPI;
-//import VKAPI;
-//import MTLAPI;
 import StrConvert;
 
 using namespace zzz::platforms;
-//using namespace zzz::platforms::metal;
-//using namespace zzz::platforms::vulkan;
 using namespace zzz::platforms::directx;
 
 export namespace zzz
@@ -34,7 +30,7 @@ export namespace zzz
 #endif
 
 	private:
-#if defined(_WIN64) // ==== Direct3D12 / PIX ====
+#if defined(ZRENDER_API_D3D12) // ==== Direct3D12 / PIX ====
 		ComPtr<ID3D12GraphicsCommandList> m_cmdList = nullptr;
 
 		void init(std::shared_ptr<IGAPI> igapi, const char* name, const std::array<float, 4>&)
@@ -49,16 +45,16 @@ export namespace zzz
 			if (!wname)
 				throw_runtime_error(">>>>> [GpuEventScope::init]. string_to_wstring failed.");
 
-			PIXBeginEvent(m_cmdList.Get(), 0, wname.value().c_str());
+			//PIXBeginEvent(m_cmdList.Get(), 0, wname.value().c_str());
 		}
 
 		void shutdown()
 		{
-			if (m_cmdList)
-				PIXEndEvent(m_cmdList.Get());
+			//if (m_cmdList)
+			//	PIXEndEvent(m_cmdList.Get());
 		}
 
-#elif defined(VK_VERSION_1_0) // ==== Vulkan ====
+#elif defined(ZRENDER_API_VULKAN) // ==== Vulkan ====
 		VkCommandBuffer m_cmdBuf{};
 
 		void init(std::shared_ptr<IGAPI> igapi, const char* name, const std::array<float, 4>& color)
@@ -88,7 +84,7 @@ export namespace zzz
 			}
 		}
 
-#elif defined(__APPLE__) && defined(__OBJC__) // ==== Metal ====
+#elif defined(ZRENDER_API_METAL) // ==== Metal ====
 		id<MTLCommandBuffer> m_cmdBuf = nil;
 
 		void init(std::shared_ptr<IGAPI> igapi, const char* name, const std::array<float, 4>&)

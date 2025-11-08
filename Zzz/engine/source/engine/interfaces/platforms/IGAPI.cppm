@@ -52,7 +52,7 @@ export namespace zzz::platforms
 		[[nodiscard]] inline bool SupportsSamplerFeedback() const noexcept { return m_CheckGapiSupport->SupportsSamplerFeedback(); }
 		[[nodiscard]] inline bool SupportsCopyQueue() const noexcept { return m_CheckGapiSupport->SupportsCopyQueue(); }
 		[[nodiscard]] inline bool SupportsDedicatedDMA() const noexcept { return m_CheckGapiSupport->SupportsDedicatedDMA(); }
-		[[nodiscard]] inline std::wstring GetHighestShaderModelAsString(ShaderType shaderType) const { return m_CheckGapiSupport->GetHighestShaderModelAsString(shaderType); }
+		[[nodiscard]] inline std::wstring GetHighestShaderModelAsString(eShaderType eShaderType) const { return m_CheckGapiSupport->GetHighestShaderModelAsString(eShaderType); }
 
 		[[nodiscard]] virtual result<> Initialize();
 		virtual void SubmitCommandLists() = 0;

@@ -194,19 +194,19 @@ export namespace zzz
 			winSize.height = static_cast<zU64>(HIWORD(lParam));
 			if (wParam == SIZE_MINIMIZED)
 			{
-				onResize(winSize, e_TypeWinResize::eHide);
+				onResize(winSize, eTypeWinResize::eHide);
 				IsMinimized = true;
 			}
 			else
 			{
 				if ((wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED) && IsMinimized)
 				{
-					onResize(winSize, e_TypeWinResize::eShow);
+					onResize(winSize, eTypeWinResize::eShow);
 					IsMinimized = false;
 				}
 				else
 				{
-					onResize(winSize, e_TypeWinResize::eResize);
+					onResize(winSize, eTypeWinResize::eResize);
 				}
 			}
 			return 0;
@@ -244,7 +244,7 @@ export namespace zzz
 
 			winSize.width = static_cast<zU64>(prcNewWindow->right - prcNewWindow->left);
 			winSize.height = static_cast<zU64>(prcNewWindow->bottom - prcNewWindow->top);
-			onResize(winSize, e_TypeWinResize::eResize);
+			onResize(winSize, eTypeWinResize::eResize);
 
 			return 0;
 		}

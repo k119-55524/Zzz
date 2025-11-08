@@ -65,7 +65,7 @@ export namespace zzz
 		AppTime m_time;
 
 		void Reset() noexcept;
-		void OnViewResized(const size2D<>& size, e_TypeWinResize resizeType);
+		void OnViewResized(const size2D<>& size, eTypeWinResize resizeType);
 		void OnUpdateSystem();
 
 		PerformanceMeter m_PerfRender;
@@ -236,16 +236,16 @@ export namespace zzz
 		}
 	}
 
-	void Engine::OnViewResized(const size2D<>& size, e_TypeWinResize resizeType)
+	void Engine::OnViewResized(const size2D<>& size, eTypeWinResize resizeType)
 	{
 		switch (resizeType)
 		{
-		case e_TypeWinResize::eHide:
+		case eTypeWinResize::eHide:
 			isSysPaused = true;
 			m_time.Pause(isSysPaused);
 			break;
-		case e_TypeWinResize::eShow:
-		case e_TypeWinResize::eResize:
+		case eTypeWinResize::eShow:
+		case eTypeWinResize::eResize:
 			isSysPaused = false;
 			m_time.Pause(isSysPaused);
 			break;

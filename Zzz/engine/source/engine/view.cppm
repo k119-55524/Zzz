@@ -34,13 +34,13 @@ namespace zzz
 			const std::shared_ptr<Settings> _setting,
 			const std::shared_ptr<ScenesManager> _scenesManager,
 			const std::shared_ptr<IGAPI> _GAPI,
-			std::function<void(size2D<>, e_TypeWinResize)> _onResizeClbk);
+			std::function<void(size2D<>, eTypeWinResize)> _onResizeClbk);
 
 		~View() = default;
 
-		event<size2D<>, e_TypeWinResize> viewResized;
+		event<size2D<>, eTypeWinResize> viewResized;
 		void OnUpdate(double deltaTime);
-		void OnViewResized(const size2D<>& size, e_TypeWinResize resizeType);
+		void OnViewResized(const size2D<>& size, eTypeWinResize resizeType);
 		void SetFullScreen(bool fs);
 		inline void SetVSync(bool vs) { if (m_SurfaceView != nullptr) m_SurfaceView->SetVSync(vs); };
 		inline void SetViewCaptionText(std::wstring caption) { if (m_Win != nullptr) m_Win->SetCaptionText(caption); };
@@ -66,7 +66,7 @@ namespace zzz
 		const std::shared_ptr<Settings> _setting,
 		const std::shared_ptr<ScenesManager> _scenesManager,
 		const std::shared_ptr<IGAPI> _GAPI,
-		std::function<void(size2D<>, e_TypeWinResize)> _onResizeClbk) :
+		std::function<void(size2D<>, eTypeWinResize)> _onResizeClbk) :
 		m_Settings{ _setting },
 		m_ScenesManager{ _scenesManager },
 		m_GAPI{ _GAPI },
@@ -153,18 +153,18 @@ namespace zzz
 		m_SurfaceView->PrepareFrame(m_Scene);
 	}
 
-	void View::OnViewResized(const size2D<>& size, e_TypeWinResize resizeType)
+	void View::OnViewResized(const size2D<>& size, eTypeWinResize resizeType)
 	{
 #if defined(_DEBUG)
 		switch (resizeType)
 		{
-		case e_TypeWinResize::eHide:
+		case eTypeWinResize::eHide:
 			DebugOutput(L">>>>> [View::OnViewResized()]. Hide app window.");
 			break;
-		case e_TypeWinResize::eShow:
+		case eTypeWinResize::eShow:
 			DebugOutput(std::format(L">>>>> [View::OnViewResized({}x{})]. Show app window.", std::to_wstring(size.width), std::to_wstring(size.height)));
 			break;
-		case e_TypeWinResize::eResize:
+		case eTypeWinResize::eResize:
 			DebugOutput(std::format(L">>>>> [View::OnViewResized({}x{}))]. Resize app window.", std::to_wstring(size.width), std::to_wstring(size.height)));
 			break;
 		}

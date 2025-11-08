@@ -1,6 +1,5 @@
 
 #include "pch.h"
-#include "..\..\Headers\PlatformsDefines.h"
 
 export module Platforms;
 

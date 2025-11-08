@@ -21,18 +21,6 @@
     <ClInclude Include="Headers\Header.h">
       <Filter>����� ����������</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\HeaderMSWin.h">
-      <Filter>����� ����������</Filter>
-    </ClInclude>
-    <ClInclude Include="Headers\HeaderDX.h">
-      <Filter>����� ����������</Filter>
-    </ClInclude>
-    <ClInclude Include="Headers\HeaderVulkan.h">
-      <Filter>����� ����������</Filter>
-    </ClInclude>
-    <ClInclude Include="Headers\HeaderMetal.h">
-      <Filter>����� ����������</Filter>
-    </ClInclude>
     <ClInclude Include="Headers\PlatformsDefines.h">
       <Filter>����� ����������</Filter>
     </ClInclude>
@@ -230,8 +218,5 @@
     <ClCompile Include="Source\math\zVector.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
   </ItemGroup>
 </Project>

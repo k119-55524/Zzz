@@ -5,4 +5,4 @@
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_LEFT_HANDED
 #include <glm/glm.hpp>
-#endif // defined(ZRENDER_API_VULKAN)
+#endif // ZRENDER_API_VULKAN
