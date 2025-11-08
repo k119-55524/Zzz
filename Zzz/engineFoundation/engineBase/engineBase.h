@@ -2,6 +2,6 @@
 
 #include "headers/Header.h"
 
-#if defined(ZZZ_PLATFORM_WINDOWS)
-int i = 0;
+#if defined(ZRENDER_API_D3D12)
+int TestBase();
 #endif
