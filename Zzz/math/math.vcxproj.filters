@@ -21,9 +21,18 @@
     <ClInclude Include="headers\header.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="headers\headerSIMD.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="vectors\vector4.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="vectors\Matrix4x4.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
