@@ -212,11 +212,5 @@
     <ClCompile Include="Source\engine\Interfaces\platforms\IShader\IBaseShader_DirectX.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\math\MathUtils.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\math\zVector.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>

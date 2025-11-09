@@ -29,10 +29,13 @@
     <ClCompile Include="pch.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="vectors\vector4.cppm">
+    <ClCompile Include="source\vector4.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="vectors\Matrix4x4.cppm">
+    <ClCompile Include="source\matrix4x4.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="math.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

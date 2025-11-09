@@ -461,6 +461,38 @@ export namespace zzz::zmath
 			return "(" + std::to_string((*this)[0]) + ", " + std::to_string((*this)[1]) +
 				", " + std::to_string((*this)[2]) + ", " + std::to_string((*this)[3]) + ")";
 		}
+
+		// 3D cross product (игнорирует W, результат имеет W=0)
+		vector4 cross3(const vector4& rhs) const noexcept
+		{
+			vector4 result;
+#if defined(__APPLE__)
+			// Metal simd::cross работает с float4, но использует только xyz
+			simd_float3 a = simd_make_float3(data[0], data[1], data[2]);
+			simd_float3 b = simd_make_float3(rhs[0], rhs[1], rhs[2]);
+			simd_float3 c = simd_cross(a, b);
+			result = vector4(c.x, c.y, c.z, 0.0f);
+#elif defined(_M_X64) || defined(__x86_64__)
+			// SSE оптимизация
+			__m128 a_yzx = _mm_shuffle_ps(data, data, _MM_SHUFFLE(3, 0, 2, 1));
+			__m128 b_yzx = _mm_shuffle_ps(rhs.data, rhs.data, _MM_SHUFFLE(3, 0, 2, 1));
+			__m128 c = _mm_sub_ps(
+				_mm_mul_ps(data, b_yzx),
+				_mm_mul_ps(a_yzx, rhs.data)
+			);
+			result.data = _mm_shuffle_ps(c, c, _MM_SHUFFLE(3, 0, 2, 1));
+			result[3] = 0.0f;
+#elif defined(_M_ARM64) || defined(__aarch64__)
+			// NEON версия
+			result = vector4(
+				data[1] * rhs[2] - data[2] * rhs[1],
+				data[2] * rhs[0] - data[0] * rhs[2],
+				data[0] * rhs[1] - data[1] * rhs[0],
+				0.0f
+			);
+#endif
+			return result;
+		}
 	};
 
 	// Операции с float слева
@@ -481,4 +513,5 @@ export namespace zzz::zmath
 	//inline vector4 max(const vector4& a, const vector4& b) noexcept { return a.compMax(b); }
 	//inline vector4 clamp(const vector4& v, const vector4& minVal, const vector4& maxVal) noexcept { return v.clamp(minVal, maxVal); }
 	//inline vector4 lerp(const vector4& a, const vector4& b, float t) noexcept { return vector4::lerp(a, b, t); }
+	//inline vector4 cross3(const vector4& a, const vector4& b) noexcept { return a.cross3(b);
 }

@@ -1,7 +1,9 @@
-#include "pch.h"
-export module MathUtils;
 
-namespace zzz::zmath
+#include "pch.h"
+
+export module math;
+
+export namespace zzz::math
 {
 	export constexpr float Pi = 3.14159265358979323846f;
 	export constexpr float DegreesToRadians(float degrees)
