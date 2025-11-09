@@ -7,7 +7,7 @@ export module matrix4x4;
 
 import vector4;
 
-export namespace zzz::zmath
+export namespace zzz::math
 {
 	// Матрица 4x4 в column-major формате (как OpenGL, Metal, Vulkan)
 	struct alignas(16) matrix4x4
@@ -601,17 +601,47 @@ export namespace zzz::zmath
 		// Look-At матрица (камера)
 		static matrix4x4 lookAt(const vector4& eye, const vector4& target, const vector4& up) noexcept
 		{
-			vector4 forward = (target - eye).normalized();
-			vector4 right = cross3(forward, up).normalized();
-			vector4 newUp = cross3(right, forward);
+#if defined(ZRENDER_API_D3D12)
+			// DirectX использует left-handed систему координат
+			vector4 zAxis = (target - eye).normalized();  // forward
+			vector4 xAxis = cross3(up, zAxis).normalized();  // right
+			vector4 yAxis = cross3(zAxis, xAxis);  // up
 
 			matrix4x4 result;
-			result.columns[0] = vector4(right[0], newUp[0], -forward[0], 0.0f);
-			result.columns[1] = vector4(right[1], newUp[1], -forward[1], 0.0f);
-			result.columns[2] = vector4(right[2], newUp[2], -forward[2], 0.0f);
-			result.columns[3] = vector4(-right.dot(eye), -newUp.dot(eye), forward.dot(eye), 1.0f);
+			// Строим матрицу напрямую в row-major порядке для DirectX
+			result.at(0, 0) = xAxis[0];
+			result.at(0, 1) = yAxis[0];
+			result.at(0, 2) = zAxis[0];
+			result.at(0, 3) = 0.0f;
 
-			return result;
+			result.at(1, 0) = xAxis[1];
+			result.at(1, 1) = yAxis[1];
+			result.at(1, 2) = zAxis[1];
+			result.at(1, 3) = 0.0f;
+
+			result.at(2, 0) = xAxis[2];
+			result.at(2, 1) = yAxis[2];
+			result.at(2, 2) = zAxis[2];
+			result.at(2, 3) = 0.0f;
+
+			result.at(3, 0) = -xAxis.dot(eye);
+			result.at(3, 1) = -yAxis.dot(eye);
+			result.at(3, 2) = -zAxis.dot(eye);
+			result.at(3, 3) = 1.0f;
+#else
+			// Metal / Vulkan используют right-handed систему координат
+			vector4 zAxis = (eye - target).normalized();  // forward
+			vector4 xAxis = cross3(up, zAxis).normalized();  // right
+			vector4 yAxis = cross3(zAxis, xAxis);  // up
+
+			matrix4x4 result;
+			result.columns[0] = vector4(xAxis[0], yAxis[0], zAxis[0], 0.0f);
+			result.columns[1] = vector4(xAxis[1], yAxis[1], zAxis[1], 0.0f);
+			result.columns[2] = vector4(xAxis[2], yAxis[2], zAxis[2], 0.0f);
+			result.columns[3] = vector4(-xAxis.dot(eye), -yAxis.dot(eye), -zAxis.dot(eye), 1.0f);
+#endif
+
+			return finalize_for_api(result);
 		}
 
 		// Перспективная проекция
@@ -619,33 +649,52 @@ export namespace zzz::zmath
 		{
 			float tanHalfFov = std::tan(fovYRadians / 2.0f);
 
-			matrix4x4 result(0.0f); // Нулевая матрица
+			matrix4x4 result(0.0f);
 			result.at(0, 0) = 1.0f / (aspect * tanHalfFov);
 			result.at(1, 1) = 1.0f / tanHalfFov;
+#if defined(ZRENDER_API_D3D12)
+			// Left-Handed (DirectX) - строим в column-major, потом транспонируем
+			result.at(2, 2) = farZ / (farZ - nearZ);
+			result.at(3, 2) = -(nearZ * farZ) / (farZ - nearZ);
+			result.at(2, 3) = 1.0f;
+			result.at(3, 3) = 0.0f;
+#else
+			// Right-Handed (Metal/Vulkan) - остаётся column-major
 			result.at(2, 2) = -(farZ + nearZ) / (farZ - nearZ);
-			result.at(2, 3) = -1.0f;
 			result.at(3, 2) = -(2.0f * farZ * nearZ) / (farZ - nearZ);
+			result.at(2, 3) = -1.0f;
+#endif
 
-			return result;
+			return finalize_for_api(result);
 		}
 
-		// Ортографическая проекция
 		static matrix4x4 orthographic(float left, float right, float bottom,
 			float top, float nearZ, float farZ) noexcept
 		{
 			matrix4x4 result(0.0f);
 			result.at(0, 0) = 2.0f / (right - left);
 			result.at(1, 1) = 2.0f / (top - bottom);
+
+#if defined(ZRENDER_API_D3D12)
+			// DirectX: Z от 0 до 1
+			result.at(2, 2) = 1.0f / (farZ - nearZ);
+			result.at(3, 0) = -(right + left) / (right - left);
+			result.at(3, 1) = -(top + bottom) / (top - bottom);
+			result.at(3, 2) = -nearZ / (farZ - nearZ);
+			result.at(3, 3) = 1.0f;
+#else
+			// Vulkan/Metal: Z от -1 до 1
 			result.at(2, 2) = -2.0f / (farZ - nearZ);
 			result.at(3, 0) = -(right + left) / (right - left);
 			result.at(3, 1) = -(top + bottom) / (top - bottom);
 			result.at(3, 2) = -(farZ + nearZ) / (farZ - nearZ);
 			result.at(3, 3) = 1.0f;
+#endif
 
-			return result;
+			return finalize_for_api(result);
 		}
 
-		// --- Сравнение ---
+		// Сравнение
 		bool operator==(const matrix4x4& rhs) const noexcept
 		{
 			return columns[0] == rhs.columns[0] &&
@@ -659,7 +708,7 @@ export namespace zzz::zmath
 			return !(*this == rhs);
 		}
 
-		// --- Строковое представление ---
+		// Строковое представление
 		std::string to_string() const
 		{
 			std::string result = "[\n";
@@ -689,6 +738,15 @@ export namespace zzz::zmath
 				a[0] * b[1] - a[1] * b[0],
 				0.0f
 			);
+		}
+
+		static matrix4x4 finalize_for_api(const matrix4x4& m) noexcept
+		{
+#if defined(ZRENDER_API_D3D12)
+			return m.transposed();
+#else
+			return m;
+#endif
 		}
 	};
 

@@ -159,6 +159,9 @@
     <ClCompile Include="Source\engine\Utils\result.cppm" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\engineFoundation\engineBase\engineBase.vcxproj">
+      <Project>{67571d08-65c1-42d4-b1c5-8dee498530a6}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\engineFoundation\engineCore\engineCore.vcxproj">
       <Project>{3fec6029-5764-4953-b6e7-d8d2bb3bc483}</Project>
     </ProjectReference>

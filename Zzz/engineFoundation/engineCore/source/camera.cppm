@@ -4,7 +4,7 @@ export module camera;
 import vector4;
 import matrix4x4;
 
-using namespace zzz::zmath;
+using namespace zzz::math;
 
 namespace zzz::engineCore
 {

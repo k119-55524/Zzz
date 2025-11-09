@@ -3,20 +3,23 @@
 export module SurfDirectX;
 
 #if defined(ZRENDER_API_D3D12)
+import math;
 import IGAPI;
 import DXAPI;
 import Scene;
 import result;
 import size2D;
 import IAppWin;
-import zVector;
+import helpers;
 import Settings;
-import MathUtils;
 import StrConvert;
 import ISurfaceView;
 import AppWindowMsWin;
+import vector4;
+import matrix4x4;
 
-using namespace zzz::zmath;
+using namespace zzz::math;
+using namespace zzz::helpers;
 using namespace zzz::platforms;
 using namespace zzz::platforms::directx;
 
@@ -92,7 +95,9 @@ namespace zzz
 
 	struct ObjectConstants
 	{
-		XMFLOAT4X4 WorldViewProj	= Identity4x4();
+		matrix4x4 WorldViewProj;
+		//XMFLOAT4X4 _WorldViewProj	= Identity4x4();
+		
 		//XMFLOAT4X4 view				= Identity4x4();
 		//XMFLOAT4X4 proj				= Identity4x4();
 		//XMFLOAT4X4 viewProj			= Identity4x4();
@@ -460,37 +465,35 @@ namespace zzz
 	void SurfDirectX::PrepareFrame(std::shared_ptr<Scene> scene)
 	{
 		{
-			XMFLOAT4X4 mWorld = Identity4x4();
-			XMFLOAT4X4 mView = Identity4x4();
-			XMFLOAT4X4 mProj = Identity4x4();
+			matrix4x4 mWorld;
+			matrix4x4 mView;
+			matrix4x4 mProj;
 
-			XMMATRIX P = XMMatrixPerspectiveFovLH(0.25f * Pi, m_aspectRatio, 1.0f, 1000.0f);
-			XMStoreFloat4x4(&mProj, P);
+			mProj = matrix4x4::perspective(
+				0.25f * Pi,		// FoV 45 градусов
+				m_aspectRatio,	// Aspect ratio
+				1.0f,			// Near plane
+				1000.0f);		// Far plane
 
-			float mTheta = 1.5f * XM_PI;
-			float mPhi = XM_PIDIV4;
+			float mTheta = 1.5f * Pi;
+			float mPhi = Pi / 4.0f;  // 45 градусов
 			float mRadius = 5.0f;
 
-			// Convert Spherical to Cartesian coordinates.
-			float x = mRadius * sinf(mPhi) * cosf(mTheta);
-			float z = mRadius * sinf(mPhi) * sinf(mTheta);
-			float y = mRadius * cosf(mPhi);
+			float x = mRadius * std::sin(mPhi) * std::cos(mTheta);
+			float z = mRadius * std::sin(mPhi) * std::sin(mTheta);
+			float y = mRadius * std::cos(mPhi);
 
-			// Build the view matrix.
-			XMVECTOR pos = XMVectorSet(x, y, z, 1.0f);
-			XMVECTOR target = XMVectorZero();
-			XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+			vector4 pos(x, y, z, 1.0f);
+			vector4 target(0.0f, 0.0f, 0.0f, 1.0f);
+			vector4 up(0.0f, 1.0f, 0.0f, 0.0f);
+			mView = matrix4x4::lookAt(pos, target, up);
+			matrix4x4 worldViewProj = mProj * mView * mWorld;
 
-			XMMATRIX view = XMMatrixLookAtLH(pos, target, up);
-			XMStoreFloat4x4(&mView, view);
+			// ВАЖНО: DirectX требует транспонированные матрицы для HLSL!
+			matrix4x4 worldViewProjTransposed = worldViewProj.transposed();
 
-			XMMATRIX world = XMLoadFloat4x4(&mWorld);
-			XMMATRIX proj = XMLoadFloat4x4(&mProj);
-			XMMATRIX worldViewProj = world * view * proj;
-
-			// Update the constant buffer with the latest worldViewProj matrix.
 			ObjectConstants objConstants;
-			XMStoreFloat4x4(&objConstants.WorldViewProj, XMMatrixTranspose(worldViewProj));
+			std::memcpy(&objConstants.WorldViewProj, &worldViewProjTransposed, sizeof(matrix4x4));
 			mObjectCB->CopyData(0, objConstants);
 		}
 

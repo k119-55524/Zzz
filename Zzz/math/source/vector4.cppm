@@ -4,7 +4,7 @@
 
 export module vector4;
 
-export namespace zzz::zmath
+export namespace zzz::math
 {
 	struct alignas(16) vector4
 	{
