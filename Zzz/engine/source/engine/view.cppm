@@ -13,7 +13,6 @@ import ThreadPool;
 import ViewFactory;
 import ISurfaceView;
 import ScenesManager;
-import CPUResourcesManager;
 
 using namespace zzz::templates;
 using namespace zzz::platforms;

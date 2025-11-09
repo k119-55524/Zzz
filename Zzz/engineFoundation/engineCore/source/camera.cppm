@@ -1,6 +1,8 @@
 #include "pch.h"
 
 export module camera;
+
+import ray;
 import vector4;
 import matrix4x4;
 
@@ -280,46 +282,37 @@ namespace zzz::engineCore
 
 		ProjectionType getProjectionType() const noexcept { return m_projectionType; }
 
-		// Ray casting (для picking)
-		struct Ray
-		{
-			vector4 origin;
-			vector4 direction;
-		};
-
 		// Преобразование экранных координат (normalized device coords) в луч в мировом пространстве
-		Ray screenPointToRay(float ndcX, float ndcY) const noexcept
+		ray screenPointToRay(float ndcX, float ndcY) const noexcept
 		{
-			// NDC: x, y в диапазоне [-1, 1]
-			Ray ray;
-			ray.origin = m_position;
-
 			if (m_projectionType == ProjectionType::Perspective)
 			{
-				// Обратная трансформация из NDC в view space
-				float tanHalfFov = std::tan(m_fovY / 2.0f);
-				float x = ndcX * m_aspectRatio * tanHalfFov;
-				float y = ndcY * tanHalfFov;
-
-				// Направление в view space
-				vector4 directionView(x, y, -1.0f, 0.0f);
-
-				// Трансформируем в world space
-				matrix4x4 viewInv = getViewMatrix().inverted();
-				ray.direction = (viewInv * directionView).normalized();
+				return ray::from_ndc_perspective(
+					ndcX, ndcY,
+					m_position,
+					getViewMatrix(),
+					m_fovY,
+					m_aspectRatio);
 			}
 			else // Orthographic
 			{
-				// В ортографической проекции лучи параллельны
-				float x = m_left + (ndcX + 1.0f) * 0.5f * (m_right - m_left);
-				float y = m_bottom + (ndcY + 1.0f) * 0.5f * (m_top - m_bottom);
-
-				matrix4x4 viewInv = getViewMatrix().inverted();
-				ray.origin = viewInv * vector4(x, y, 0.0f, 1.0f);
-				ray.direction = getForward();
+				return ray::from_ndc_orthographic(
+					ndcX, ndcY,
+					getViewMatrix(),
+					m_left, m_right,
+					m_bottom, m_top);
 			}
+		}
 
-			return ray;
+		// Дополнительно: из пиксельных координат
+		ray screenPixelsToRay(float screenX, float screenY,
+			float screenWidth, float screenHeight) const noexcept
+		{
+			// Конвертируем в NDC
+			float ndcX = (2.0f * screenX) / screenWidth - 1.0f;
+			float ndcY = 1.0f - (2.0f * screenY) / screenHeight;
+
+			return screenPointToRay(ndcX, ndcY);
 		}
 
 		// Frustum culling (базовая версия)
@@ -465,15 +458,5 @@ namespace zzz::engineCore
 		mutable matrix4x4 m_projectionMatrix;
 		mutable bool m_viewMatrixDirty;
 		mutable bool m_projectionMatrixDirty;
-
-		//// Вспомогательная функция для cross product
-		//static vector4 cross3(const vector4& a, const vector4& b) noexcept
-		//{
-		//	return vector4(
-		//		a[1] * b[2] - a[2] * b[1],
-		//		a[2] * b[0] - a[0] * b[2],
-		//		a[0] * b[1] - a[1] * b[0],
-		//		0.0f);
-		//}
 	};
 }

@@ -15,7 +15,7 @@ export namespace zzz
 	export class IMeshGPU :
 		public IBaseMeshGPU_DirectX
 	{
-		friend class GPUResourcesManager;
+		friend class GPUResManager;
 
 	public:
 		IMeshGPU() = delete;

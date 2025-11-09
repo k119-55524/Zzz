@@ -107,13 +107,13 @@
     <ClCompile Include="Source\engine\Factories\EngineFactory.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Scene\Scene.cppm">
+    <ClCompile Include="source\engine\scene\Scene.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\engine\Resources\CPUResourcesManager.cppm">
+    <ClCompile Include="Source\engine\Resources\CPUResManager.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Scene\ScenesManager.cppm">
+    <ClCompile Include="source\engine\scene\ScenesManager.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\engine\Resources\CPUVertexBuffer.cppm">
@@ -122,7 +122,7 @@
     <ClCompile Include="Source\engine\Resources\CPUMesh.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Scene\SceneEntity.cppm">
+    <ClCompile Include="source\engine\scene\SceneEntity.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Templates\ThreadPool.cppm">
@@ -137,7 +137,7 @@
     <ClCompile Include="Source\engine\Utils\PerformanceMeter.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\engine\Resources\GPUResourcesManager.cppm">
+    <ClCompile Include="Source\engine\Resources\GPUResManager.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\engine\InterfacesImpl\MeshGPU\GPUMeshDX.cppm">
@@ -185,7 +185,7 @@
     <ClCompile Include="Source\engine\InterfacesImpl\PSO\PSO_DX.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\engine\Scene\SceneEntitySpawner.cppm">
+    <ClCompile Include="source\engine\scene\SceneEntitySpawner.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\engine\Material.cppm">

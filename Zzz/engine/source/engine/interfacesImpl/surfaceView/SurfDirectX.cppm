@@ -11,12 +11,12 @@ import result;
 import size2D;
 import IAppWin;
 import helpers;
+import vector4;
 import Settings;
+import matrix4x4;
 import StrConvert;
 import ISurfaceView;
 import AppWindowMsWin;
-import vector4;
-import matrix4x4;
 
 using namespace zzz::math;
 using namespace zzz::helpers;
@@ -489,11 +489,8 @@ namespace zzz
 			mView = matrix4x4::lookAt(pos, target, up);
 			matrix4x4 worldViewProj = mProj * mView * mWorld;
 
-			// ВАЖНО: DirectX требует транспонированные матрицы для HLSL!
-			matrix4x4 worldViewProjTransposed = worldViewProj.transposed();
-
 			ObjectConstants objConstants;
-			std::memcpy(&objConstants.WorldViewProj, &worldViewProjTransposed, sizeof(matrix4x4));
+			std::memcpy(&objConstants.WorldViewProj, &worldViewProj, sizeof(matrix4x4));
 			mObjectCB->CopyData(0, objConstants);
 		}
 

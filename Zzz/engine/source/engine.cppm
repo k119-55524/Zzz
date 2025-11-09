@@ -18,9 +18,9 @@ import GpuEventScope;
 import IOPathFactory;
 import EngineFactory;
 import ScenesManager;
+import CPUResManager;
+import GPUResManager;
 import PerformanceMeter;
-import CPUResourcesManager;
-import GPUResourcesManager;
 
 using namespace zzz;
 using namespace zzz::io;
@@ -55,8 +55,8 @@ export namespace zzz
 		bool isSysPaused;
 
 		std::shared_ptr<Settings> m_setting;
-		std::shared_ptr<CPUResourcesManager> m_ResCPU;
-		std::shared_ptr<GPUResourcesManager> m_ResGPU;
+		std::shared_ptr<CPUResManager> m_ResCPU;
+		std::shared_ptr<GPUResManager> m_ResGPU;
 		std::shared_ptr<ScenesManager> m_ScenManager;
 		std::shared_ptr<IGAPI> m_GAPI;
 		std::shared_ptr<View> m_View;
@@ -117,8 +117,8 @@ export namespace zzz
 				return Unexpected(eResult::failure, L">>>>> [Engine::initialize()]. Failed to create GAPI.");
 			m_GAPI = res.value();
 
-			m_ResCPU = safe_make_shared<CPUResourcesManager>(m_setting);
-			m_ResGPU = safe_make_shared<GPUResourcesManager>(m_GAPI, m_ResCPU);
+			m_ResCPU = safe_make_shared<CPUResManager>(m_setting);
+			m_ResGPU = safe_make_shared<GPUResManager>(m_GAPI, m_ResCPU);
 			m_ScenManager = safe_make_shared<ScenesManager>(m_ResGPU);
 
 			// Содаём основное окно(View) приложения

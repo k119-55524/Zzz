@@ -1,5 +1,5 @@
 #include "pch.h"
-export module GPUResourcesManager;
+export module GPUResManager;
 
 import IPSO;
 import IGAPI;
@@ -10,7 +10,7 @@ import IMeshGPU;
 import ShaderDX;
 import Material;
 import GPUMeshDX;
-import CPUResourcesManager;
+import CPUResManager;
 
 using namespace zzz::platforms;
 using namespace zzz::platforms::directx;
@@ -28,15 +28,13 @@ namespace zzz
 
 export namespace zzz
 {
-	export class GPUResourcesManager final
+	export class GPUResManager final
 	{
-	public:
-		GPUResourcesManager() = delete;
-		GPUResourcesManager(const GPUResourcesManager&) = delete;
-		GPUResourcesManager(GPUResourcesManager&&) = delete;
-		GPUResourcesManager(std::shared_ptr<IGAPI> _IGAPI, std::shared_ptr<CPUResourcesManager> resCPU);
+		Z_NO_CREATE_COPY(GPUResManager);
 
-		~GPUResourcesManager() = default;
+	public:
+		GPUResManager(std::shared_ptr<IGAPI> _IGAPI, std::shared_ptr<CPUResManager> resCPU);
+		~GPUResManager() = default;
 
 		result<std::shared_ptr<IMeshGPU>> GetGenericMesh(MeshType type);
 		result<std::shared_ptr<Material>> GetGenericMaterial(const std::shared_ptr<IMeshGPU> mesh);
@@ -46,17 +44,17 @@ export namespace zzz
 		result<std::shared_ptr<IShader>> GetGenericShader(const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name);
 
 		std::shared_ptr<IGAPI> m_GAPI;
-		std::shared_ptr<CPUResourcesManager> m_ResCPU;
+		std::shared_ptr<CPUResManager> m_ResCPU;
 	};
 
-	GPUResourcesManager::GPUResourcesManager(std::shared_ptr<IGAPI> _IGAPI, std::shared_ptr<CPUResourcesManager> resCPU) :
+	GPUResManager::GPUResManager(std::shared_ptr<IGAPI> _IGAPI, std::shared_ptr<CPUResManager> resCPU) :
 		m_GAPI{ _IGAPI },
 		m_ResCPU{ resCPU }
 	{
-		ensure(m_ResCPU, ">>>>> [GPUResourcesManager::GPUResourcesManager()]. Resource system CPU cannot be null.");
+		ensure(m_ResCPU, ">>>>> [GPUResManager::GPUResManager()]. Resource system CPU cannot be null.");
 	}
 
-	result<std::shared_ptr<IMeshGPU>> GPUResourcesManager::GetGenericMesh(MeshType type)
+	result<std::shared_ptr<IMeshGPU>> GPUResManager::GetGenericMesh(MeshType type)
 	{
 		auto meshCPU = m_ResCPU->GetGenericMesh(type);
 		if (!meshCPU)
@@ -70,7 +68,7 @@ export namespace zzz
 		return meshGPU;
 	}
 
-	result<std::shared_ptr<Material>> GPUResourcesManager::GetGenericMaterial(const std::shared_ptr<IMeshGPU> mesh)
+	result<std::shared_ptr<Material>> GPUResManager::GetGenericMaterial(const std::shared_ptr<IMeshGPU> mesh)
 		{
 		result<std::shared_ptr<IPSO>> pso = GetGenericPSO(mesh);
 		if (!pso)
@@ -78,12 +76,12 @@ export namespace zzz
 
 		std::shared_ptr<Material> material = safe_make_shared<Material>(pso.value());
 		if (!material)
-			return Unexpected(eResult::no_make_shared_ptr, L">>>>> [GPUResourcesManager::GetGenericMaterial()]. Failed to create Material.");
+			return Unexpected(eResult::no_make_shared_ptr, L">>>>> [GPUResManager::GetGenericMaterial()]. Failed to create Material.");
 
 		return material;
 	}
 
-	result<std::shared_ptr<IPSO>> GPUResourcesManager::GetGenericPSO(const std::shared_ptr<IMeshGPU> mesh)
+	result<std::shared_ptr<IPSO>> GPUResManager::GetGenericPSO(const std::shared_ptr<IMeshGPU> mesh)
 	{
 		result<std::shared_ptr<IShader>> shader = GetGenericShader(mesh, L"GenShader");
 		if (!shader)
@@ -91,12 +89,12 @@ export namespace zzz
 
 		std::shared_ptr<IPSO> pso = safe_make_shared<PSO>(m_GAPI, shader.value(), mesh->GetInputLayout());
 		if (!pso)
-			return Unexpected(eResult::no_make_shared_ptr, L">>>>> [GPUResourcesManager::GetGenericPSO()]. Failed to create IPSO.");
+			return Unexpected(eResult::no_make_shared_ptr, L">>>>> [GPUResManager::GetGenericPSO()]. Failed to create IPSO.");
 
 		return pso;
 	}
 
-	result<std::shared_ptr<IShader>> GPUResourcesManager::GetGenericShader(const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name)
+	result<std::shared_ptr<IShader>> GPUResManager::GetGenericShader(const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name)
 	{
 		std::shared_ptr<IShader> shader = safe_make_shared<Shader>(m_GAPI, mesh, std::move(name));
 
@@ -104,7 +102,7 @@ export namespace zzz
 		std::string vs = R"(
 			cbuffer cbPerObject : register(b0)
 			{
-				float4x4 gWorldViewProj; 
+				row_major float4x4 gWorldViewProj; 
 			};
 
 			struct VertexIn

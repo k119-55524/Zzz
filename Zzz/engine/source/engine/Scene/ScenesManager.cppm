@@ -4,8 +4,8 @@ export module ScenesManager;
 import Scene;
 import result;
 import Settings;
+import GPUResManager;
 import SceneEntitySpawner;
-import GPUResourcesManager;
 
 export namespace zzz
 {
@@ -17,7 +17,7 @@ export namespace zzz
 		ScenesManager(ScenesManager&&) = delete;
 		ScenesManager& operator=(const ScenesManager&) = delete;
 		ScenesManager& operator=(ScenesManager&&) = delete;
-		explicit ScenesManager(const std::shared_ptr<GPUResourcesManager> resGPU);
+		explicit ScenesManager(const std::shared_ptr<GPUResManager> resGPU);
 		~ScenesManager();
 
 		result<std::shared_ptr<Scene>> GetDefaultScene();
@@ -26,7 +26,7 @@ export namespace zzz
 		SceneEntitySpawner m_EntitySpawner;
 	};
 
-	ScenesManager::ScenesManager(const std::shared_ptr<GPUResourcesManager> resGPU) :
+	ScenesManager::ScenesManager(const std::shared_ptr<GPUResManager> resGPU) :
 		m_EntitySpawner{ resGPU }
 	{
 	}

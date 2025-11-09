@@ -16,7 +16,7 @@ export namespace zzz::platforms::directx
 {
 	export class GPUMeshDX final : public IMeshGPU
 	{
-		friend class GPUResourcesManager;
+		friend class GPUResManager;
 
 	public:
 		GPUMeshDX() = delete;

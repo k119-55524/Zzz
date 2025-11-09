@@ -157,6 +157,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="source\matrix4x4.cppm" />
+    <ClCompile Include="source\ray.cppm" />
     <ClCompile Include="source\vector4.cppm" />
   </ItemGroup>
   <ItemGroup>

@@ -4,7 +4,7 @@ export module SceneEntitySpawner;
 import result;
 import Material;
 import SceneEntity;
-import GPUResourcesManager;
+import GPUResManager;
 
 namespace zzz
 {
@@ -16,16 +16,16 @@ namespace zzz
 		SceneEntitySpawner(SceneEntitySpawner&&) = delete;
 		SceneEntitySpawner& operator=(const SceneEntitySpawner&) = delete;
 		SceneEntitySpawner& operator=(SceneEntitySpawner&&) = delete;
-		explicit SceneEntitySpawner(const std::shared_ptr<GPUResourcesManager> resGPU);
+		explicit SceneEntitySpawner(const std::shared_ptr<GPUResManager> resGPU);
 		~SceneEntitySpawner() = default;
 
 		result<std::shared_ptr<SceneEntity>> SpawnGenericBox();
 
 	private:
-		const std::shared_ptr<GPUResourcesManager> m_ResGPU;
+		const std::shared_ptr<GPUResManager> m_ResGPU;
 	};
 
-	SceneEntitySpawner::SceneEntitySpawner(const std::shared_ptr<GPUResourcesManager> resGPU) :
+	SceneEntitySpawner::SceneEntitySpawner(const std::shared_ptr<GPUResManager> resGPU) :
 		m_ResGPU{ resGPU }
 	{
 		ensure(m_ResGPU, ">>>>> [SceneEntitySpawner::SceneEntitySpawner()]. Resource system GPU cannot be null.");

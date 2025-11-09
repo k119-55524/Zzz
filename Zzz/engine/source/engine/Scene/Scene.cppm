@@ -1,8 +1,8 @@
 #include "pch.h"
 export module Scene;
 
+import camera;
 import SceneEntity;
-import CPUResourcesManager;
 
 export namespace zzz
 {

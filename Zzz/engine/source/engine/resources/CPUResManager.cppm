@@ -1,5 +1,6 @@
+
 #include "pch.h"
-export module CPUResourcesManager;
+export module CPUResManager;
 
 import result;
 import Colors;
@@ -16,19 +17,16 @@ export namespace zzz
 		Box
 	};
 
-	export class CPUResourcesManager final
+	export class CPUResManager final
 	{
+		Z_NO_CREATE_COPY(CPUResManager);
+
 	public:
-		CPUResourcesManager() = delete;
-		CPUResourcesManager(const CPUResourcesManager&) = delete;
-		CPUResourcesManager(CPUResourcesManager&&) = delete;
-		CPUResourcesManager& operator=(const CPUResourcesManager&) = delete;
-		CPUResourcesManager& operator=(CPUResourcesManager&&) = delete;
-		explicit CPUResourcesManager(const std::shared_ptr<Settings> _settings);
+		explicit CPUResManager(const std::shared_ptr<Settings> _settings);
 
 		result<std::shared_ptr<CPUMesh>> GetGenericMesh(MeshType type);
 
-		~CPUResourcesManager();
+		~CPUResManager();
 
 		private:
 			const std::shared_ptr<Settings> m_settings;
@@ -37,17 +35,17 @@ export namespace zzz
 			result<std::shared_ptr<CPUMesh>> GetGenericBox();
 	};
 
-	export CPUResourcesManager::CPUResourcesManager(const std::shared_ptr<Settings> _settings)
+	export CPUResManager::CPUResManager(const std::shared_ptr<Settings> _settings)
 		: m_settings{ _settings }
 	{
 		ensure(m_settings, ">>>>> [CPUResourcesManager::CPUResourcesManager()]. Settings cannot be null.");
 	}
 
-	export CPUResourcesManager::~CPUResourcesManager()
+	export CPUResManager::~CPUResManager()
 	{
 	}
 
-	result<std::shared_ptr<CPUMesh>> CPUResourcesManager::GetGenericMesh(MeshType type)
+	result<std::shared_ptr<CPUMesh>> CPUResManager::GetGenericMesh(MeshType type)
 	{
 		switch (type)
 		{
@@ -60,7 +58,7 @@ export namespace zzz
 		}
 	}
 
-	result<std::shared_ptr<CPUMesh>> CPUResourcesManager::GetGenericTriangle()
+	result<std::shared_ptr<CPUMesh>> CPUResManager::GetGenericTriangle()
 	{
 		std::shared_ptr<VB_P3C3> vertexBuffer = std::make_shared<VB_P3C3>(std::initializer_list<zzz::VB_P3C3::VertexT>{
 			{
@@ -87,7 +85,7 @@ export namespace zzz
 		return mesh;
 	}
 
-	result<std::shared_ptr<CPUMesh>> CPUResourcesManager::GetGenericBox()
+	result<std::shared_ptr<CPUMesh>> CPUResManager::GetGenericBox()
 	{
 		std::shared_ptr<VB_P3C3> vertex = std::make_shared<VB_P3C3>(std::initializer_list<zzz::VB_P3C3::VertexT>{
 			{
