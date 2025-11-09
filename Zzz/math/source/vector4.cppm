@@ -2,16 +2,16 @@
 
 #include "../headers/headerSIMD.h"
 
-export module vector4;
+export module Vector4;
 
 export namespace zzz::math
 {
-	struct alignas(16) vector4
+	struct alignas(16) Vector4
 	{
 		simd_float4 data;
 
 		// Конструкторы 
-		vector4() noexcept
+		Vector4() noexcept
 		{
 #if defined(__APPLE__)
 			data = ::simd::float4{ 0,0,0,0 };
@@ -22,7 +22,7 @@ export namespace zzz::math
 #endif
 		}
 
-		vector4(float v) noexcept
+		Vector4(float v) noexcept
 		{
 #if defined(__APPLE__)
 			data = ::simd::float4{ v,v,v,v };
@@ -33,7 +33,7 @@ export namespace zzz::math
 #endif
 		}
 
-		vector4(float x, float y, float z, float w) noexcept
+		Vector4(float x, float y, float z, float w) noexcept
 		{
 #if defined(__APPLE__)
 			data = ::simd::float4{ x,y,z,w };
@@ -45,28 +45,97 @@ export namespace zzz::math
 #endif
 		}
 
-		// Доступ к компонентам 
-		float& operator[](size_t i) noexcept
+#pragma region Getters
+		inline float x() const noexcept
 		{
 #if defined(__APPLE__)
-			return data[i];
+			return data.x;
 #else
-			return reinterpret_cast<float*>(&data)[i];
+			return reinterpret_cast<const float*>(&data)[0];
 #endif
 		}
-		const float& operator[](size_t i) const noexcept
+		inline float y() const noexcept
 		{
 #if defined(__APPLE__)
-			return data[i];
+			return data.y;
 #else
-			return reinterpret_cast<const float*>(&data)[i];
+			return reinterpret_cast<const float*>(&data)[1];
+#endif
+
+		}
+		inline float z() const noexcept
+		{
+#if defined(__APPLE__)
+			return data.z;
+#else
+			return reinterpret_cast<const float*>(&data)[2];
+#endif
+		}
+		inline float w() const noexcept
+		{
+#if defined(__APPLE__)
+			return data.w;
+#else
+			return reinterpret_cast<const float*>(&data)[3];
 #endif
 		}
 
-		// Арифметика 
-		vector4 operator+(const vector4& rhs) const noexcept
+		// RGBA aliases
+		inline float r() const noexcept { return x(); }
+		inline float g() const noexcept { return y(); }
+		inline float b() const noexcept { return z(); }
+		inline float a() const noexcept { return w(); }
+#pragma endregion Getters
+
+#pragma region Setters
+		inline void set_x(float value) noexcept
 		{
-			vector4 result;
+#if defined(__APPLE__)
+			data.x = value;
+#else
+			reinterpret_cast<float*>(&data)[0] = value;
+#endif
+		}
+		inline void set_y(float value) noexcept
+		{
+#if defined(__APPLE__)
+			data.y = value;
+#else
+			reinterpret_cast<float*>(&data)[1] = value;
+#endif
+		}
+		inline void set_z(float value) noexcept
+		{
+#if defined(__APPLE__)
+			data.z = value;
+#else
+			reinterpret_cast<float*>(&data)[2] = value;
+#endif
+		}
+		inline void set_w(float value) noexcept
+		{
+#if defined(__APPLE__)
+			data.w = value;
+#else
+			reinterpret_cast<float*>(&data)[3] = value;
+#endif
+		}
+
+		// RGBA setters
+		inline void set_r(float value) noexcept { set_x(value); }
+		inline void set_g(float value) noexcept { set_y(value); }
+		inline void set_b(float value) noexcept { set_z(value); }
+		inline void set_a(float value) noexcept { set_w(value); }
+#pragma endregion Setters
+
+		// Доступ к компонентам 
+		inline float& operator[](size_t i) noexcept { return reinterpret_cast<float*>(&data)[i]; }
+		inline const float& operator[](size_t i) const noexcept { return reinterpret_cast<const float*>(&data)[i]; }
+
+		// Арифметика 
+		Vector4 operator+(const Vector4& rhs) const noexcept
+		{
+			Vector4 result;
 #if defined(__APPLE__)
 			result.data = data + rhs.data;
 #elif defined(_M_X64) || defined(__x86_64__)
@@ -77,9 +146,9 @@ export namespace zzz::math
 			return result;
 		}
 
-		vector4 operator-(const vector4& rhs) const noexcept
+		Vector4 operator-(const Vector4& rhs) const noexcept
 		{
-			vector4 result;
+			Vector4 result;
 #if defined(__APPLE__)
 			result.data = data - rhs.data;
 #elif defined(_M_X64) || defined(__x86_64__)
@@ -90,9 +159,9 @@ export namespace zzz::math
 			return result;
 		}
 
-		vector4 operator*(float s) const noexcept
+		Vector4 operator*(float s) const noexcept
 		{
-			vector4 result;
+			Vector4 result;
 #if defined(__APPLE__)
 			result.data = data * s;
 #elif defined(_M_X64) || defined(__x86_64__)
@@ -105,9 +174,9 @@ export namespace zzz::math
 			return result;
 		}
 
-		vector4 operator/(float s) const noexcept
+		Vector4 operator/(float s) const noexcept
 		{
-			vector4 result;
+			Vector4 result;
 #if defined(__APPLE__)
 			result.data = data / s;
 #elif defined(_M_X64) || defined(__x86_64__)
@@ -122,9 +191,9 @@ export namespace zzz::math
 		}
 
 		// Покомпонентное умножение
-		vector4 operator*(const vector4& rhs) const noexcept
+		Vector4 operator*(const Vector4& rhs) const noexcept
 		{
-			vector4 result;
+			Vector4 result;
 #if defined(__APPLE__)
 			result.data = data * rhs.data;
 #elif defined(_M_X64) || defined(__x86_64__)
@@ -136,9 +205,9 @@ export namespace zzz::math
 		}
 
 		// Покомпонентное деление
-		vector4 operator/(const vector4& rhs) const noexcept
+		Vector4 operator/(const Vector4& rhs) const noexcept
 		{
-			vector4 result;
+			Vector4 result;
 #if defined(__APPLE__)
 			result.data = data / rhs.data;
 #elif defined(_M_X64) || defined(__x86_64__)
@@ -153,7 +222,7 @@ export namespace zzz::math
 		}
 
 		// Оптимизированные операции присваивания
-		vector4& operator+=(const vector4& rhs) noexcept
+		Vector4& operator+=(const Vector4& rhs) noexcept
 		{
 #if defined(__APPLE__)
 			data += rhs.data;
@@ -165,7 +234,7 @@ export namespace zzz::math
 			return *this;
 		}
 
-		vector4& operator-=(const vector4& rhs) noexcept
+		Vector4& operator-=(const Vector4& rhs) noexcept
 		{
 #if defined(__APPLE__)
 			data -= rhs.data;
@@ -177,7 +246,7 @@ export namespace zzz::math
 			return *this;
 		}
 
-		vector4& operator*=(float s) noexcept
+		Vector4& operator*=(float s) noexcept
 		{
 #if defined(__APPLE__)
 			data *= s;
@@ -191,7 +260,7 @@ export namespace zzz::math
 			return *this;
 		}
 
-		vector4& operator*=(const vector4& rhs) noexcept
+		Vector4& operator*=(const Vector4& rhs) noexcept
 		{
 #if defined(__APPLE__)
 			data *= rhs.data;
@@ -203,7 +272,7 @@ export namespace zzz::math
 			return *this;
 		}
 
-		vector4& operator/=(float s) noexcept
+		Vector4& operator/=(float s) noexcept
 		{
 #if defined(__APPLE__)
 			data /= s;
@@ -217,15 +286,15 @@ export namespace zzz::math
 			return *this;
 		}
 
-		vector4& operator/=(const vector4& rhs) noexcept
+		Vector4& operator/=(const Vector4& rhs) noexcept
 		{
 			*this = *this / rhs;
 			return *this;
 		}
 
-		vector4 operator-() const noexcept
+		Vector4 operator-() const noexcept
 		{
-			vector4 result;
+			Vector4 result;
 #if defined(__APPLE__)
 			result.data = -data;
 #elif defined(_M_X64) || defined(__x86_64__)
@@ -238,7 +307,7 @@ export namespace zzz::math
 		}
 
 		// Сравнение 
-		bool operator==(const vector4& rhs) const noexcept
+		bool operator==(const Vector4& rhs) const noexcept
 		{
 #if defined(__APPLE__)
 			return ::simd::all(data == rhs.data);
@@ -252,7 +321,7 @@ export namespace zzz::math
 #endif
 		}
 
-		bool operator!=(const vector4& rhs) const noexcept { return !(*this == rhs); }
+		bool operator!=(const Vector4& rhs) const noexcept { return !(*this == rhs); }
 
 		// Длина и нормализация 
 		float lengthSq() const noexcept
@@ -266,11 +335,11 @@ export namespace zzz::math
 
 		float length() const noexcept { return std::sqrt(lengthSq()); }
 
-		vector4 normalized() const noexcept
+		Vector4 normalized() const noexcept
 		{
 			float len = length();
 			constexpr float epsilon = 1e-8f;
-			return (len < epsilon) ? vector4{} : *this / len;
+			return (len < epsilon) ? Vector4{} : *this / len;
 		}
 
 		void normalize() noexcept
@@ -279,7 +348,7 @@ export namespace zzz::math
 		}
 
 		// Скалярное произведение 
-		float dot(const vector4& rhs) const noexcept
+		float dot(const Vector4& rhs) const noexcept
 		{
 #if defined(__APPLE__)
 			return ::simd::dot(data, rhs.data);
@@ -298,15 +367,15 @@ export namespace zzz::math
 		}
 
 		// Линейная интерполяция 
-		static vector4 lerp(const vector4& a, const vector4& b, float t) noexcept
+		static Vector4 lerp(const Vector4& a, const Vector4& b, float t) noexcept
 		{
 			return a + (b - a) * t;
 		}
 
 		// Ограничение значений по компонентно(SIMD-оптимизированная) 
-		vector4 clamp(const vector4& minVal, const vector4& maxVal) const noexcept
+		Vector4 clamp(const Vector4& minVal, const Vector4& maxVal) const noexcept
 		{
-			vector4 result;
+			Vector4 result;
 #if defined(__APPLE__)
 			result.data = ::simd::clamp(data, minVal.data, maxVal.data);
 #elif defined(_M_X64) || defined(__x86_64__)
@@ -317,15 +386,15 @@ export namespace zzz::math
 			return result;
 		}
 
-		vector4 clamp(float minVal, float maxVal) const noexcept
+		Vector4 clamp(float minVal, float maxVal) const noexcept
 		{
-			return clamp(vector4(minVal), vector4(maxVal));
+			return clamp(Vector4(minVal), Vector4(maxVal));
 		}
 
 		// Покомпонентный min/max (SIMD-оптимизированные) 
-		vector4 compMin(const vector4& rhs) const noexcept
+		Vector4 compMin(const Vector4& rhs) const noexcept
 		{
-			vector4 result;
+			Vector4 result;
 #if defined(__APPLE__)
 			result.data = ::simd::min(data, rhs.data);
 #elif defined(_M_X64) || defined(__x86_64__)
@@ -336,9 +405,9 @@ export namespace zzz::math
 			return result;
 		}
 
-		vector4 compMax(const vector4& rhs) const noexcept
+		Vector4 compMax(const Vector4& rhs) const noexcept
 		{
-			vector4 result;
+			Vector4 result;
 #if defined(__APPLE__)
 			result.data = ::simd::max(data, rhs.data);
 #elif defined(_M_X64) || defined(__x86_64__)
@@ -350,9 +419,9 @@ export namespace zzz::math
 		}
 
 		// Абсолютное значение 
-		vector4 abs() const noexcept
+		Vector4 abs() const noexcept
 		{
-			vector4 result;
+			Vector4 result;
 #if defined(__APPLE__)
 			result.data = ::simd::abs(data);
 #elif defined(_M_X64) || defined(__x86_64__)
@@ -394,9 +463,9 @@ export namespace zzz::math
 		}
 
 		// Покомпонентная обратная величина(1/x[0], ...)
-		vector4 reciprocal() const noexcept
+		Vector4 reciprocal() const noexcept
 		{
-			vector4 result;
+			Vector4 result;
 #if defined(__APPLE__)
 			result.data = ::simd::recip(data);
 #elif defined(_M_X64) || defined(__x86_64__)
@@ -411,9 +480,9 @@ export namespace zzz::math
 		}
 
 		// Квадратный корень
-		vector4 sqrt() const noexcept
+		Vector4 sqrt() const noexcept
 		{
-			vector4 result;
+			Vector4 result;
 #if defined(__APPLE__)
 			result.data = ::simd::sqrt(data);
 #elif defined(_M_X64) || defined(__x86_64__)
@@ -428,9 +497,9 @@ export namespace zzz::math
 		}
 
 		// Обратный квадратный корень (быстрый)(1/sqrt(x[0], ...)
-		vector4 rsqrt() const noexcept
+		Vector4 rsqrt() const noexcept
 		{
-			vector4 result;
+			Vector4 result;
 #if defined(__APPLE__)
 			result.data = ::simd::rsqrt(data);
 #elif defined(_M_X64) || defined(__x86_64__)
@@ -444,13 +513,13 @@ export namespace zzz::math
 		}
 
 		// Расстояние между векторами 
-		float distance(const vector4& rhs) const noexcept
+		float distance(const Vector4& rhs) const noexcept
 		{
 			return (*this - rhs).length();
 		}
 
 		// Квадрат расстояния между векторами
-		float distanceSq(const vector4& rhs) const noexcept
+		float distanceSq(const Vector4& rhs) const noexcept
 		{
 			return (*this - rhs).lengthSq();
 		}
@@ -463,15 +532,15 @@ export namespace zzz::math
 		}
 
 		// 3D cross product (игнорирует W, результат имеет W=0)
-		vector4 cross3(const vector4& rhs) const noexcept
+		Vector4 cross3(const Vector4& rhs) const noexcept
 		{
-			vector4 result;
+			Vector4 result;
 #if defined(__APPLE__)
 			// Metal simd::cross работает с float4, но использует только xyz
 			simd_float3 a = simd_make_float3(data[0], data[1], data[2]);
 			simd_float3 b = simd_make_float3(rhs[0], rhs[1], rhs[2]);
 			simd_float3 c = simd_cross(a, b);
-			result = vector4(c.x, c.y, c.z, 0.0f);
+			result = Vector4(c.x, c.y, c.z, 0.0f);
 #elif defined(_M_X64) || defined(__x86_64__)
 			// SSE оптимизация
 			__m128 a_yzx = _mm_shuffle_ps(data, data, _MM_SHUFFLE(3, 0, 2, 1));
@@ -484,7 +553,7 @@ export namespace zzz::math
 			result[3] = 0.0f;
 #elif defined(_M_ARM64) || defined(__aarch64__)
 			// NEON версия
-			result = vector4(
+			result = Vector4(
 				data[1] * rhs[2] - data[2] * rhs[1],
 				data[2] * rhs[0] - data[0] * rhs[2],
 				data[0] * rhs[1] - data[1] * rhs[0],
@@ -496,22 +565,22 @@ export namespace zzz::math
 	};
 
 	// Операции с float слева
-	inline vector4 operator*(float s, const vector4& v) noexcept { return v * s; }
+	inline Vector4 operator*(float s, const Vector4& v) noexcept { return v * s; }
 
 	// Вывод в поток
-	inline std::ostream& operator<<(std::ostream& os, const vector4& v)
+	inline std::ostream& operator<<(std::ostream& os, const Vector4& v)
 	{
 		return os << v.to_string();
 	}
 
-	//inline float dot(const vector4& a, const vector4& b) noexcept { return a.dot(b); }
-	//inline float distance(const vector4& a, const vector4& b) noexcept { return a.distance(b); }
-	//inline float distanceSq(const vector4& a, const vector4& b) noexcept { return a.distanceSq(b); }
-	//inline vector4 normalize(const vector4& v) noexcept { return v.normalized(); }
-	//inline vector4 abs(const vector4& v) noexcept { return v.abs(); }
-	//inline vector4 min(const vector4& a, const vector4& b) noexcept { return a.compMin(b); }
-	//inline vector4 max(const vector4& a, const vector4& b) noexcept { return a.compMax(b); }
-	//inline vector4 clamp(const vector4& v, const vector4& minVal, const vector4& maxVal) noexcept { return v.clamp(minVal, maxVal); }
-	//inline vector4 lerp(const vector4& a, const vector4& b, float t) noexcept { return vector4::lerp(a, b, t); }
-	//inline vector4 cross3(const vector4& a, const vector4& b) noexcept { return a.cross3(b);
+	//inline float dot(const Vector4& a, const Vector4& b) noexcept { return a.dot(b); }
+	//inline float distance(const Vector4& a, const Vector4& b) noexcept { return a.distance(b); }
+	//inline float distanceSq(const Vector4& a, const Vector4& b) noexcept { return a.distanceSq(b); }
+	//inline Vector4 normalize(const Vector4& v) noexcept { return v.normalized(); }
+	//inline Vector4 abs(const Vector4& v) noexcept { return v.abs(); }
+	//inline Vector4 min(const Vector4& a, const Vector4& b) noexcept { return a.compMin(b); }
+	//inline Vector4 max(const Vector4& a, const Vector4& b) noexcept { return a.compMax(b); }
+	//inline Vector4 clamp(const Vector4& v, const Vector4& minVal, const Vector4& maxVal) noexcept { return v.clamp(minVal, maxVal); }
+	//inline Vector4 lerp(const Vector4& a, const Vector4& b, float t) noexcept { return Vector4::lerp(a, b, t); }
+	//inline Vector4 cross3(const Vector4& a, const Vector4& b) noexcept { return a.cross3(b);
 }

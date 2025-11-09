@@ -31,12 +31,12 @@ namespace zzz
 
 	enum eInitState : zU32
 	{
-		eInitNot,		// Готов к инициализации
-		eInitProcess,	// Идёт процесс инициализации
-		eInitOK,		// Инициализирован
-		eInitError,		// Ошибка инициализации
-		eTermination,	// Процесс деинициализации
-		eRunning		// Идёт процесс работы
+		InitNot,		// Готов к инициализации
+		InitProcess,	// Идёт процесс инициализации
+		InitOK,			// Инициализирован
+		InitError,		// Ошибка инициализации
+		Termination,	// Процесс деинициализации
+		Running			// Идёт процесс работы
 	};
 
 	[[noreturn]]

@@ -32,13 +32,15 @@ namespace zzz
 		View(
 			const std::shared_ptr<Settings> _setting,
 			const std::shared_ptr<ScenesManager> _scenesManager,
-			const std::shared_ptr<IGAPI> _GAPI,
-			std::function<void(size2D<>, eTypeWinResize)> _onResizeClbk);
+			const std::shared_ptr<IGAPI> _GAPI);
 
 		~View() = default;
 
 		event<size2D<>, eTypeWinResize> viewResized;
+		event<> resizePaint;
+
 		void OnUpdate(double deltaTime);
+		void OnResizePaint();
 		void OnViewResized(const size2D<>& size, eTypeWinResize resizeType);
 		void SetFullScreen(bool fs);
 		inline void SetVSync(bool vs) { if (m_SurfaceView != nullptr) m_SurfaceView->SetVSync(vs); };
@@ -64,20 +66,16 @@ namespace zzz
 	View::View(
 		const std::shared_ptr<Settings> _setting,
 		const std::shared_ptr<ScenesManager> _scenesManager,
-		const std::shared_ptr<IGAPI> _GAPI,
-		std::function<void(size2D<>, eTypeWinResize)> _onResizeClbk) :
+		const std::shared_ptr<IGAPI> _GAPI) :
 		m_Settings{ _setting },
 		m_ScenesManager{ _scenesManager },
 		m_GAPI{ _GAPI },
-		initState{ eInitState::eInitNot },
+		initState{ eInitState::InitNot },
 		m_ThreadsUpdate{2}
 	{
 		ensure(m_Settings, ">>>>> [View::View()]. Settings cannot be null.");
 		ensure(m_ScenesManager, ">>>>> [View::View()]. Scenes manager cannot be null.");
 		ensure(m_GAPI, ">>>>> [View::View()]. GAPI cannot be null.");
-
-		if(_onResizeClbk)
-			viewResized += _onResizeClbk;
 
 		Initialize();
 	}
@@ -88,7 +86,8 @@ namespace zzz
 		{
 			// Cоздаём обёртку над окном приложения под текущую ОС
 			m_Win = factory.CreateAppWin(m_Settings);
-			m_Win->onResize += std::bind(&View::OnViewResized, this, std::placeholders::_1, std::placeholders::_2);
+			m_Win->OnResize += std::bind(&View::OnViewResized, this, std::placeholders::_1, std::placeholders::_2);
+			m_Win->OnResizePaint += std::bind(&View::OnResizePaint, this);
 			auto res = m_Win->Initialize();
 			if (!res)
 				throw_runtime_error(std::format(">>>>> [View::Initialize()]. Failed to initialize application window: {}.", wstring_to_string(res.error().getMessage())));
@@ -116,7 +115,7 @@ namespace zzz
 				}
 			}
 
-			initState = eInitState::eInitOK;
+			initState = eInitState::InitOK;
 		}
 		catch (const std::exception& e)
 		{
@@ -130,7 +129,7 @@ namespace zzz
 
 	void View::OnUpdate(double deltaTime)
 	{
-		if (initState != eInitState::eInitOK)
+		if (initState != eInitState::InitOK)
 			return;
 
 		if (m_SurfaceView)
@@ -147,6 +146,11 @@ namespace zzz
 		}
 	}
 
+	void View::OnResizePaint()
+	{
+		resizePaint();
+	}
+
 	void View::PrepareFrame(double deltaTime)
 	{
 		m_SurfaceView->PrepareFrame(m_Scene);
@@ -157,19 +161,19 @@ namespace zzz
 #if defined(_DEBUG)
 		switch (resizeType)
 		{
-		case eTypeWinResize::eHide:
+		case eTypeWinResize::Hide:
 			DebugOutput(L">>>>> [View::OnViewResized()]. Hide app window.");
 			break;
-		case eTypeWinResize::eShow:
+		case eTypeWinResize::Show:
 			DebugOutput(std::format(L">>>>> [View::OnViewResized({}x{})]. Show app window.", std::to_wstring(size.width), std::to_wstring(size.height)));
 			break;
-		case eTypeWinResize::eResize:
+		case eTypeWinResize::Resize:
 			DebugOutput(std::format(L">>>>> [View::OnViewResized({}x{}))]. Resize app window.", std::to_wstring(size.width), std::to_wstring(size.height)));
 			break;
 		}
 #endif	// _DEBUG
 
-		if (initState != eInitState::eInitOK)
+		if (initState != eInitState::InitOK)
 			return;
 
 		viewResized(size, resizeType);
@@ -179,7 +183,7 @@ namespace zzz
 
 	void View::SetFullScreen(bool fs)
 	{
-		if (initState != eInitState::eInitOK)
+		if (initState != eInitState::InitOK)
 			return;
 
 		if(m_SurfaceView)

@@ -32,7 +32,10 @@
     <ClCompile Include="pch.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\camera.cppm">
+    <ClCompile Include="source\Camera.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\utils\RenderArea.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

@@ -186,32 +186,49 @@ export namespace zzz
 		switch (uMsg)
 		{
 		case WM_DESTROY:
+		{
 			PostQuitMessage(0);
 			return 0;
+		}
 
 		case WM_SIZE:
+		{
 			winSize.width = static_cast<zU64>(LOWORD(lParam));
 			winSize.height = static_cast<zU64>(HIWORD(lParam));
 			if (wParam == SIZE_MINIMIZED)
 			{
-				onResize(winSize, eTypeWinResize::eHide);
+				OnResize(winSize, eTypeWinResize::Hide);
 				IsMinimized = true;
 			}
 			else
 			{
 				if ((wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED) && IsMinimized)
 				{
-					onResize(winSize, eTypeWinResize::eShow);
+					OnResize(winSize, eTypeWinResize::Show);
 					IsMinimized = false;
 				}
 				else
 				{
-					onResize(winSize, eTypeWinResize::eResize);
+					OnResize(winSize, eTypeWinResize::Resize);
 				}
 			}
-			return 0;
 
-			// Перехватываем это сообщение, чтобы не допустить слишком маленького/большого размера окна.
+			return 0;
+		}
+
+		case WM_SIZING:
+		{
+			RECT* pRect = reinterpret_cast<RECT*>(lParam);
+			winSize.width = static_cast<zU64>(pRect->right - pRect->left);
+			winSize.height = static_cast<zU64>(pRect->bottom - pRect->top);
+			//DebugOutput(std::format(L">>>>> [AppWindowMsWin::MsgProc({}x{})]. WM_SIZING.", std::to_wstring(winSize.width), std::to_wstring(winSize.height)));
+			OnResize(winSize, eTypeWinResize::Resize);
+			OnResizePaint();
+			return TRUE;
+
+		}
+
+		// Перехватываем это сообщение, чтобы не допустить слишком маленького/большого размера окна.
 		case WM_GETMINMAXINFO:
 		{
 			((MINMAXINFO*)lParam)->ptMinTrackSize.x = c_MinimumWindowsWidth;
@@ -244,17 +261,34 @@ export namespace zzz
 
 			winSize.width = static_cast<zU64>(prcNewWindow->right - prcNewWindow->left);
 			winSize.height = static_cast<zU64>(prcNewWindow->bottom - prcNewWindow->top);
-			onResize(winSize, eTypeWinResize::eResize);
+			OnResize(winSize, eTypeWinResize::Resize);
 
 			return 0;
 		}
 
+		//case WM_ENTERSIZEMOVE:
+		//{
+		//	IsResizeProcess = true;
+
+		//	return 0;
+		//}
+
+		//case WM_EXITSIZEMOVE:
+		//{
+		//	IsResizeProcess = false;
+		//	return 0;
+		//}
+
 		//case WM_PAINT:
 		//{
-		//	PAINTSTRUCT ps;
-		//	HDC hdc = BeginPaint(hWnd, &ps);
-		//	// Здесь можно выполнить рисование, если это необходимо.
-		//	EndPaint(hWnd, &ps);
+		//	if (IsResizeProcess)
+		//	{
+		//		PAINTSTRUCT ps;
+		//		HDC hdc = BeginPaint(hWnd, &ps);
+		//		onPaint();
+		//		EndPaint(hWnd, &ps);
+		//	}
+
 		//	return 0;
 		//}
 

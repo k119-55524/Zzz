@@ -100,7 +100,7 @@ export namespace zzz::platforms
 
 	IGAPI::IGAPI(eGAPIType type) :
 		gapiType{ type },
-		initState{ eInitState::eInitNot },
+		initState{ eInitState::InitNot },
 		m_frameIndexRender{ 0 },
 		m_frameIndexUpdate{ 1 }
 	{
@@ -110,11 +110,11 @@ export namespace zzz::platforms
 	{
 		std::lock_guard<std::mutex> lock(stateMutex);
 
-		if (initState != eInitState::eInitNot)
+		if (initState != eInitState::InitNot)
 			return Unexpected(eResult::failure, L">>>>> [IGAPI::Initialize()]. GAPI is already initialized or in an invalid state.");
 
 		auto res = Init()
-			.and_then([&]() { initState = eInitState::eInitOK; })
+			.and_then([&]() { initState = eInitState::InitOK; })
 			.or_else([&](const Unexpected& error) { throw_runtime_error(std::format(">>>>> [IGAPI::Initialize()]. {}.", wstring_to_string(error.getMessage()))); });
 
 		return res;

@@ -1,8 +1,13 @@
 #include "pch.h"
 export module Scene;
 
-import camera;
+import Math;
+import Camera;
+import Vector4;
 import SceneEntity;
+
+using namespace zzz::math;
+using namespace zzz::engineCore;
 
 export namespace zzz
 {
@@ -19,14 +24,33 @@ export namespace zzz
 
 		void Add(std::shared_ptr<SceneEntity> entity);
 
-		[[nodiscard]] inline std::shared_ptr<SceneEntity> GetEntity() const noexcept { return m_Entity; }
+		inline Camera& GetPrimaryCamera() noexcept { return m_PrimaryCamera; }
+		inline std::shared_ptr<SceneEntity> GetEntity() const noexcept { return m_Entity; }
 
 	private:
+		Camera m_PrimaryCamera;
 		std::shared_ptr<SceneEntity> m_Entity;
 	};
 
 	export Scene::Scene()
 	{
+		m_PrimaryCamera.SetFovY(0.25f * Pi);
+		m_PrimaryCamera.SetAspectRatio(eAspectType::Ratio_16_9);
+		//m_PrimaryCamera.SetAspectRatio(eAspectType::FullWindow);
+		m_PrimaryCamera.SetNearPlane(1.0f);
+		m_PrimaryCamera.SetFarPlane(1000.0f);
+
+		float mTheta = 1.5f * Pi;
+		float mPhi = Pi / 4.0f;  // 45 градусов
+		float mRadius = 5.0f;
+
+		float x = mRadius * std::sin(mPhi) * std::cos(mTheta);
+		float z = mRadius * std::sin(mPhi) * std::sin(mTheta);
+		float y = mRadius * std::cos(mPhi);
+
+		m_PrimaryCamera.SetPosition(Vector4(x, y, z, 1.0f));
+		m_PrimaryCamera.SetTarget(Vector4(0.0f, 0.0f, 0.0f, 1.0f));
+		m_PrimaryCamera.SetUp(Vector4(0.0f, 1.0f, 0.0f, 0.0f));
 	}
 
 	export Scene::~Scene()

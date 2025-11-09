@@ -67,12 +67,13 @@ export namespace zzz
 		void Reset() noexcept;
 		void OnViewResized(const size2D<>& size, eTypeWinResize resizeType);
 		void OnUpdateSystem();
+		void OnResizePaint();
 
 		PerformanceMeter m_PerfRender;
 	};
 
 	Engine::Engine() :
-		initState{ eInitState::eInitNot },
+		initState{ eInitState::InitNot },
 		transferResToGPU{ 1 },
 		isSysPaused{ true }
 	{
@@ -93,7 +94,7 @@ export namespace zzz
 		m_ResGPU.reset();
 		m_setting.reset();
 
-		initState = eInitState::eInitNot;
+		initState = eInitState::InitNot;
 		isSysPaused = true;
 	}
 
@@ -101,7 +102,7 @@ export namespace zzz
 	{
 		std::lock_guard<std::mutex> lock(stateMutex);
 
-		if (initState != eInitState::eInitNot)
+		if (initState != eInitState::InitNot)
 			return Unexpected(eResult::failure, L">>>>> [Engine::initialize()]. Re-initialization is not allowed.");
 
 		std::wstring err;
@@ -122,13 +123,15 @@ export namespace zzz
 			m_ScenManager = safe_make_shared<ScenesManager>(m_ResGPU);
 
 			// Содаём основное окно(View) приложения
-			m_View = safe_make_shared<View>(m_setting, m_ScenManager, m_GAPI, std::bind(&Engine::OnViewResized, this, std::placeholders::_1, std::placeholders::_2));
+			m_View = safe_make_shared<View>(m_setting, m_ScenManager, m_GAPI);
+			m_View->viewResized += std::bind(&Engine::OnViewResized, this, std::placeholders::_1, std::placeholders::_2);
+			m_View->resizePaint += std::bind(&Engine::OnResizePaint, this);
 
 			// Создаём главный цикл приложения
 			m_MainLoop = safe_make_shared<MainLoop>();
 			m_MainLoop->onUpdateSystem += std::bind(&Engine::OnUpdateSystem, this);
 
-			initState = eInitState::eInitOK;
+			initState = eInitState::InitOK;
 			return {};
 		}
 		catch (const std::exception& e)
@@ -150,13 +153,13 @@ export namespace zzz
 	result<> Engine::Run() noexcept
 	{
 		std::lock_guard<std::mutex> lock(stateMutex);
-		if (initState != eInitState::eInitOK)
+		if (initState != eInitState::InitOK)
 			return Unexpected(eResult::failure, L">>>>> [Engine::Run()]. Engine is not initialized.");
 
-		if (initState == eInitState::eRunning)
+		if (initState == eInitState::Running)
 			return Unexpected(eResult::failure, L">>>>> [Engine::Run()]. Engine is already running.");
 
-		initState = eInitState::eRunning;
+		initState = eInitState::Running;
 		std::wstring err;
 
 		try
@@ -236,16 +239,22 @@ export namespace zzz
 		}
 	}
 
+	void Engine::OnResizePaint()
+	{
+		//DebugOutput(L">>>>> [Engine::OnResizePaint()].");
+		OnUpdateSystem();
+	}
+
 	void Engine::OnViewResized(const size2D<>& size, eTypeWinResize resizeType)
 	{
 		switch (resizeType)
 		{
-		case eTypeWinResize::eHide:
+		case eTypeWinResize::Hide:
 			isSysPaused = true;
 			m_time.Pause(isSysPaused);
 			break;
-		case eTypeWinResize::eShow:
-		case eTypeWinResize::eResize:
+		case eTypeWinResize::Show:
+		case eTypeWinResize::Resize:
 			isSysPaused = false;
 			m_time.Pause(isSysPaused);
 			break;

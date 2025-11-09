@@ -156,9 +156,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="source\matrix4x4.cppm" />
+    <ClCompile Include="source\AABB.cppm" />
+    <ClCompile Include="source\Matrix4x4.cppm" />
     <ClCompile Include="source\ray.cppm" />
-    <ClCompile Include="source\vector4.cppm" />
+    <ClCompile Include="source\Vector4.cppm" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\engineFoundation\engineBase\engineBase.vcxproj">

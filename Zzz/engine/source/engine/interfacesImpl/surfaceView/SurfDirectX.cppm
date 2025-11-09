@@ -3,24 +3,27 @@
 export module SurfDirectX;
 
 #if defined(ZRENDER_API_D3D12)
-import math;
+import Math;
 import IGAPI;
 import DXAPI;
 import Scene;
 import result;
 import size2D;
+import Camera;
 import IAppWin;
 import helpers;
-import vector4;
+import Vector4;
 import Settings;
-import matrix4x4;
+import Matrix4x4;
 import StrConvert;
+import RenderArea;
 import ISurfaceView;
 import AppWindowMsWin;
 
 using namespace zzz::math;
 using namespace zzz::helpers;
 using namespace zzz::platforms;
+using namespace zzz::engineCore;
 using namespace zzz::platforms::directx;
 
 namespace zzz
@@ -82,20 +85,9 @@ namespace zzz
 		bool mIsConstantBuffer = false;
 	};
 
-	static DirectX::XMFLOAT4X4 Identity4x4()
-	{
-		static DirectX::XMFLOAT4X4 I(
-			1.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, 1.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f);
-
-		return I;
-	}
-
 	struct ObjectConstants
 	{
-		matrix4x4 WorldViewProj;
+		Matrix4x4 WorldViewProj;
 		//XMFLOAT4X4 _WorldViewProj	= Identity4x4();
 		
 		//XMFLOAT4X4 view				= Identity4x4();
@@ -131,8 +123,6 @@ namespace zzz
 		static constexpr UINT SWAP_CHAIN_FLAGS = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 
 		bool b_IgnoreResize;
-		CD3DX12_VIEWPORT m_viewport;
-		CD3DX12_RECT m_scissorRect;
 		bool m_tearingSupported;
 		std::mutex m_frameMutex;
 		std::condition_variable m_frameCV;
@@ -191,9 +181,7 @@ namespace zzz
 		m_CbvSrvDescrSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 		auto winSize = m_iAppWin->GetWinSize();
-		m_viewport = CD3DX12_VIEWPORT{ 0.0f, 0.0f, static_cast<float>(winSize.width), static_cast<float>(winSize.height) };
-		m_scissorRect = CD3DX12_RECT{ 0, 0, static_cast<LONG>(winSize.width), static_cast<LONG>(winSize.height) };
-		m_aspectRatio = static_cast<float>(winSize.width) / static_cast<float>(winSize.height);
+		m_SurfSize.SetSize(static_cast<zU32>(winSize.width), static_cast<zU32>(winSize.height));
 
 		auto res = InitializeSwapChain();
 		if (!res)
@@ -465,32 +453,39 @@ namespace zzz
 	void SurfDirectX::PrepareFrame(std::shared_ptr<Scene> scene)
 	{
 		{
-			matrix4x4 mWorld;
-			matrix4x4 mView;
-			matrix4x4 mProj;
+			//Matrix4x4 mView;
+			//Matrix4x4 mProj;
+			//
+			//mProj = Matrix4x4::perspective(
+			//	0.25f * Pi,		// FoV 45 градусов
+			//	16.0f / 9.0f,	// Aspect ratio
+			//	1.0f,			// Near plane
+			//	1000.0f);		// Far plane
+			//
+			//float mTheta = 1.5f * Pi;
+			//float mPhi = Pi / 4.0f;  // 45 градусов
+			//float mRadius = 5.0f;
+			//
+			//float x = mRadius * std::sin(mPhi) * std::cos(mTheta);
+			//float z = mRadius * std::sin(mPhi) * std::sin(mTheta);
+			//float y = mRadius * std::cos(mPhi);
+			//
+			//Vector4 pos(x, y, z, 1.0f);
+			//Vector4 target(0.0f, 0.0f, 0.0f, 1.0f);
+			//Vector4 up(0.0f, 1.0f, 0.0f, 0.0f);
+			//mView = Matrix4x4::lookAt(pos, target, up);
+			//Matrix4x4 worldViewProj = mProj * mView * mWorld;
+		}
 
-			mProj = matrix4x4::perspective(
-				0.25f * Pi,		// FoV 45 градусов
-				m_aspectRatio,	// Aspect ratio
-				1.0f,			// Near plane
-				1000.0f);		// Far plane
+		Camera& primaryCamera = scene->GetPrimaryCamera();
 
-			float mTheta = 1.5f * Pi;
-			float mPhi = Pi / 4.0f;  // 45 градусов
-			float mRadius = 5.0f;
-
-			float x = mRadius * std::sin(mPhi) * std::cos(mTheta);
-			float z = mRadius * std::sin(mPhi) * std::sin(mTheta);
-			float y = mRadius * std::cos(mPhi);
-
-			vector4 pos(x, y, z, 1.0f);
-			vector4 target(0.0f, 0.0f, 0.0f, 1.0f);
-			vector4 up(0.0f, 1.0f, 0.0f, 0.0f);
-			mView = matrix4x4::lookAt(pos, target, up);
-			matrix4x4 worldViewProj = mProj * mView * mWorld;
-
+		// Обновляем константный буфер. Пока для 1-го объекта
+		{
+			Matrix4x4 mWorld;
+			Matrix4x4 camViewProj = primaryCamera.GetViewProjectionMatrix();
+			Matrix4x4 worldViewProj = camViewProj * mWorld;
 			ObjectConstants objConstants;
-			std::memcpy(&objConstants.WorldViewProj, &worldViewProj, sizeof(matrix4x4));
+			std::memcpy(&objConstants.WorldViewProj, &worldViewProj, sizeof(Matrix4x4));
 			mObjectCB->CopyData(0, objConstants);
 		}
 
@@ -528,8 +523,14 @@ namespace zzz
 			commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 		}
 
-		commandList->RSSetViewports(1, &m_viewport);
-		commandList->RSSetScissorRects(1, &m_scissorRect);
+		// Настраиваем область рендеринга исходя из настроек камеры
+		{
+			RenderArea renderArea = primaryCamera.CalculateRenderArea(static_cast<zU32>(m_SurfSize.width), static_cast<zU32>(m_SurfSize.height));
+			D3D12_VIEWPORT viewport = renderArea.GetViewport();
+			D3D12_RECT scissor = renderArea.GetScissor();
+			commandList->RSSetViewports(1, &viewport);
+			commandList->RSSetScissorRects(1, &scissor);
+		}
 
 		commandList->ResourceBarrier(
 			1,
@@ -548,6 +549,7 @@ namespace zzz
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_RtvDescrSize);
 		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_DsvDescrSize);
 
+		// Очищаем всю поверхность перед рендерингом если нужно
 		switch (m_SurfClearType)
 		{
 		case SurfClearType::Color:
@@ -555,6 +557,7 @@ namespace zzz
 			break;
 		}
 
+		// Очистка буфера глубины, если нужно
 		if(b_IsClearDepth)
 			commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
@@ -648,9 +651,8 @@ namespace zzz
 
 	void SurfDirectX::OnResize(const size2D<>& size)
 	{
-		//DebugOutput(std::format(L">>>>> [SurfDirectX::OnResize({}x{})].", size.width, size.height).c_str());
-
-		if (m_iGAPI->GetInitState() != eInitState::eInitOK && !m_swapChain || b_IgnoreResize)
+		//DebugOutput(std::format(L">>>>> [SurfDirectX::OnResize({}x{})]. b_IgnoreResize: {}.", size.width, size.height, b_IgnoreResize).c_str());
+		if (m_iGAPI->GetInitState() != eInitState::InitOK && !m_swapChain || b_IgnoreResize)
 			return;
 
 		if (size.width == 0 || size.height == 0)
@@ -710,9 +712,7 @@ namespace zzz
 			.and_then([&]() { return m_iGAPI->CommandRenderReinitialize(); })
 			.or_else([&](const Unexpected& error) { throw_runtime_error(std::format(">>>>> [SurfDirectX::OnResize({}x{})]. {}.", size.width, size.height, wstring_to_string(error.getMessage()))); });
 
-		m_viewport = CD3DX12_VIEWPORT{ 0.0f, 0.0f, static_cast<float>(size.width), static_cast<float>(size.height) };
-		m_scissorRect = CD3DX12_RECT{ 0, 0, static_cast<LONG>(size.width), static_cast<LONG>(size.height) };
-		m_aspectRatio = static_cast<float>(size.width) / static_cast<float>(size.height);
+		m_SurfSize.SetSize(size.width, size.height);
 	}
 
 	void SurfDirectX::SetFullScreen(bool fs)

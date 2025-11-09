@@ -5,11 +5,17 @@
 
 namespace zzz
 {
+	enum class eProjType
+	{
+		Perspective,
+		Orthographic
+	};
+
 	enum eTypeWinResize : zU32
 	{
-		eShow,
-		eHide,
-		eResize
+		Show,
+		Hide,
+		Resize
 	};
 
 	enum class eShaderType : zU32
@@ -20,6 +26,16 @@ namespace zzz
 		Hull,		// Халловский шейдер (шейдер корпуса)
 		Domain,		// Домейн шейдер (шейдер области)
 		Compute		// Вычислительный шейдер
+	};
+
+	enum class eAspectType
+	{
+		Ratio_16_9,
+		Ratio_16_10,
+		Ratio_4_3,
+		Ratio_21_9,
+		Custom,
+		FullWindow
 	};
 
 	//-----------------------------------

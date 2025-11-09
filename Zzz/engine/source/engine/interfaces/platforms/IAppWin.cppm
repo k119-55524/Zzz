@@ -31,7 +31,8 @@ export namespace zzz
 
 		virtual ~IAppWin() = default;
 
-		event<size2D<>, eTypeWinResize> onResize;
+		event<size2D<>, eTypeWinResize> OnResize;
+		event<> OnResizePaint;
 		const size2D<> GetWinSize() const noexcept { return winSize; }
 
 	protected:

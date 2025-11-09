@@ -1,334 +1,303 @@
 #include "pch.h"
 
-export module camera;
+export module Camera;
 
 import ray;
-import vector4;
-import matrix4x4;
+import Vector4;
+import Matrix4x4;
+import RenderArea;
 
+using namespace zzz;
 using namespace zzz::math;
 
-namespace zzz::engineCore
+export namespace zzz::engineCore
 {
-	export enum class ProjectionType
-	{
-		Perspective,
-		Orthographic
-	};
-
-	export class camera
+	export class Camera
 	{
 	public:
-		// --- Конструкторы ---
-		camera() noexcept
-			: m_position(0.0f, 0.0f, 5.0f, 1.0f)
-			, m_target(0.0f, 0.0f, 0.0f, 1.0f)
-			, m_up(0.0f, 1.0f, 0.0f, 0.0f)
-			, m_fovY(45.0f * 3.14159265f / 180.0f)  // 45 градусов в радианах
-			, m_aspectRatio(16.0f / 9.0f)
-			, m_nearPlane(0.1f)
-			, m_farPlane(1000.0f)
-			, m_left(-10.0f)
-			, m_right(10.0f)
-			, m_bottom(-10.0f)
-			, m_top(10.0f)
-			, m_projectionType(ProjectionType::Perspective)
-			, m_viewMatrixDirty(true)
-			, m_projectionMatrixDirty(true)
-		{}
+		Camera() noexcept :
+			m_Position(0.0f, 0.0f, 5.0f, 1.0f),
+			m_Target(0.0f, 0.0f, 0.0f, 1.0f),
+			m_Up(0.0f, 1.0f, 0.0f, 0.0f),
+			m_FovY(45.0f * 3.14159265f / 180.0f),
+			m_AspectPreset(eAspectType::Ratio_16_9),
+			m_NearPlane(0.1f),
+			m_FarPlane(1000.0f),
+			m_Left(-10.0f),
+			m_Right(10.0f),
+			m_Bottom(-10.0f),
+			m_Top(10.0f),
+			m_ProjectionType(eProjType::Perspective),
+			m_ViewMatrixDirty(true),
+			m_ProjectionMatrixDirty(true)
+		{
+			m_AspectRatio = GetAspect(m_AspectPreset);
+		}
 
 		// Перспективная камера
-		camera(const vector4& position, const vector4& target, const vector4& up,
-			float fovYRadians, float aspectRatio, float nearPlane, float farPlane) noexcept
-			: m_position(position)
-			, m_target(target)
-			, m_up(up.normalized())
-			, m_fovY(fovYRadians)
-			, m_aspectRatio(aspectRatio)
-			, m_nearPlane(nearPlane)
-			, m_farPlane(farPlane)
-			, m_left(-10.0f)
-			, m_right(10.0f)
-			, m_bottom(-10.0f)
-			, m_top(10.0f)
-			, m_projectionType(ProjectionType::Perspective)
-			, m_viewMatrixDirty(true)
-			, m_projectionMatrixDirty(true)
-		{}
+		//Camera(const Vector4& position, const Vector4& target, const Vector4& up,
+		//	float fovYRadians, float aspectRatio, float nearPlane, float farPlane) noexcept :
+		//	m_Position(position),
+		//	m_Target(target),
+		//	m_Up(up.normalized()),
+		//	m_FovY(fovYRadians),
+		//	m_AspectPreset(eAspectType::Custom),
+		//	m_NearPlane(nearPlane),
+		//	m_FarPlane(farPlane),
+		//	m_Left(-10.0f),
+		//	m_Right(10.0f),
+		//	m_Bottom(-10.0f),
+		//	m_Top(10.0f),
+		//	m_ProjectionType(eProjType::Perspective),
+		//	m_ViewMatrixDirty(true),
+		//	m_ProjectionMatrixDirty(true),
+		//{
+		//	m_AspectRatio = aspectRatio;
+		//}
 
 		// Ортографическая камера
-		camera(const vector4& position, const vector4& target, const vector4& up,
-			float left, float right, float bottom, float top,
-			float nearPlane, float farPlane) noexcept
-			: m_position(position)
-			, m_target(target)
-			, m_up(up.normalized())
-			, m_fovY(45.0f * 3.14159265f / 180.0f)
-			, m_aspectRatio(16.0f / 9.0f)
-			, m_nearPlane(nearPlane)
-			, m_farPlane(farPlane)
-			, m_left(left)
-			, m_right(right)
-			, m_bottom(bottom)
-			, m_top(top)
-			, m_projectionType(ProjectionType::Orthographic)
-			, m_viewMatrixDirty(true)
-			, m_projectionMatrixDirty(true)
-		{}
+		//Camera(const Vector4& position, const Vector4& target, const Vector4& up,
+		//	float left, float right, float bottom, float top,
+		//	float nearPlane, float farPlane) noexcept :
+		//	m_Position(position),
+		//	m_Target(target),
+		//	m_Up(up.normalized()),
+		//	m_FovY(45.0f * 3.14159265f / 180.0f),
+		//	m_AspectPreset(eAspectType::Ratio_16_9),
+		//	m_NearPlane(nearPlane),
+		//	m_FarPlane(farPlane),
+		//	m_Left(left),
+		//	m_Right(right),
+		//	m_Bottom(bottom),
+		//	m_Top(top),
+		//	m_ProjectionType(eProjType::Orthographic),
+		//	m_ViewMatrixDirty(true),
+		//	m_ProjectionMatrixDirty(true)
+		//{
+		//	m_AspectRatio = GetAspect(m_AspectPreset);
+		//}
 
-		// Позиция и ориентация
-		void setPosition(const vector4& position) noexcept
+		RenderArea CalculateRenderArea(zU32 surface_width, zU32 surface_height) noexcept
 		{
-			m_position = position;
-			m_viewMatrixDirty = true;
+			RenderArea result{};
+
+			float surface_aspect = (float)surface_width / (float)surface_height;
+
+			if (m_AspectPreset == eAspectType::FullWindow)
+			{
+				m_AspectRatio = surface_aspect;
+				m_ProjectionMatrixDirty = true;
+
+				result.viewport = { 0.0f, 0.0f, (float)surface_width, (float)surface_height, 0.0f, 1.0f };
+				result.scissor = { 0, 0, (zI32)surface_width, (zI32)surface_height };
+
+				return result;
+			}
+
+			float render_width, render_height;
+			float offset_x = 0.0f, offset_y = 0.0f;
+
+			if (surface_aspect > m_AspectRatio)
+			{
+				render_height = (float)surface_height;
+				render_width = render_height * m_AspectRatio;
+				offset_x = (surface_width - render_width) * 0.5f;
+			}
+			else
+			{
+				render_width = (float)surface_width;
+				render_height = render_width / m_AspectRatio;
+				offset_y = (surface_height - render_height) * 0.5f;
+			}
+
+			result.viewport = { offset_x, offset_y, render_width, render_height, 0.0f, 1.0f };
+			result.scissor = { (zI32)offset_x, (zI32)offset_y, (zI32)render_width, (zI32)render_height };
+
+			return result;
 		}
 
-		const vector4& getPosition() const noexcept { return m_position; }
+		inline void SetPosition(const Vector4& position) noexcept { m_Position = position; m_ViewMatrixDirty = true; }
+		inline const Vector4& GetPosition() const noexcept { return m_Position; }
 
-		void setTarget(const vector4& target) noexcept
+		inline void SetTarget(const Vector4& target) noexcept { m_Target = target; m_ViewMatrixDirty = true; }
+		inline const Vector4& GetTarget() const noexcept { return m_Target; }
+
+		inline void SetUp(const Vector4& up) noexcept { m_Up = up.normalized(); m_ViewMatrixDirty = true; }
+		inline const Vector4& GetUp() const noexcept { return m_Up; }
+
+		inline Vector4 GetForward() const noexcept { return (m_Target - m_Position).normalized(); }
+		inline Vector4 GetRight() const noexcept { return GetForward().cross3(m_Up).normalized(); }
+		inline Vector4 GetActualUp() const noexcept { return GetRight().cross3(GetForward()).normalized(); }
+
+		inline void Move(const Vector4& offset) noexcept { m_Position += offset; m_Target += offset; m_ViewMatrixDirty = true; }
+		inline void MoveForward(float distance) noexcept { Move(GetForward() * distance); }
+		inline void MoveRight(float distance) noexcept { Move(GetRight() * distance); }
+		inline void MoveUp(float distance) noexcept { Move(m_Up * distance); }
+
+		inline void RotateAroundTarget(float yawRadians, float pitchRadians) noexcept
 		{
-			m_target = target;
-			m_viewMatrixDirty = true;
-		}
-
-		const vector4& getTarget() const noexcept { return m_target; }
-
-		void setUp(const vector4& up) noexcept
-		{
-			m_up = up.normalized();
-			m_viewMatrixDirty = true;
-		}
-
-		const vector4& getUp() const noexcept { return m_up; }
-
-		// Векторы локальной системы координат камеры
-		vector4 getForward() const noexcept
-		{
-			return (m_target - m_position).normalized();
-		}
-
-		vector4 getRight() const noexcept
-		{
-			vector4 forward = getForward();
-			return forward.cross3(m_up).normalized();
-		}
-
-		vector4 getActualUp() const noexcept
-		{
-			vector4 forward = getForward();
-			vector4 right = getRight();
-			return right.cross3(forward).normalized();
-		}
-
-		// Движение камеры
-		void move(const vector4& offset) noexcept
-		{
-			m_position += offset;
-			m_target += offset;
-			m_viewMatrixDirty = true;
-		}
-
-		void moveForward(float distance) noexcept
-		{
-			vector4 forward = getForward();
-			move(forward * distance);
-		}
-
-		void moveRight(float distance) noexcept
-		{
-			vector4 right = getRight();
-			move(right * distance);
-		}
-
-		void moveUp(float distance) noexcept
-		{
-			move(m_up * distance);
-		}
-
-		// Вращение камеры
-		void rotateAroundTarget(float yawRadians, float pitchRadians) noexcept
-		{
-			vector4 offset = m_position - m_target;
+			Vector4 offset = m_Position - m_Target;
 			float radius = offset.length();
 
-			// Вращение по Yaw (вокруг мировой оси Y)
-			matrix4x4 yawRotation = matrix4x4::rotationY(yawRadians);
+			Matrix4x4 yawRotation = Matrix4x4::rotationY(yawRadians);
 			offset = yawRotation * offset;
 
-			// Вращение по Pitch (вокруг локальной оси Right)
-			vector4 right = (m_target - m_position).normalized().cross3(m_up).normalized();
-			matrix4x4 pitchRotation = matrix4x4::rotation(right, pitchRadians);
+			Vector4 right = (m_Target - m_Position).normalized().cross3(m_Up).normalized();
+			Matrix4x4 pitchRotation = Matrix4x4::rotation(right, pitchRadians);
 			offset = pitchRotation * offset;
 
-			m_position = m_target + offset.normalized() * radius;
-			m_viewMatrixDirty = true;
+			m_Position = m_Target + offset.normalized() * radius;
+			m_ViewMatrixDirty = true;
 		}
 
-		void lookAt(const vector4& target) noexcept
-		{
-			m_target = target;
-			m_viewMatrixDirty = true;
-		}
+		inline void LookAt(const Vector4& target) noexcept { m_Target = target; m_ViewMatrixDirty = true; }
 
-		void rotate(float yawRadians, float pitchRadians) noexcept
+		inline void Rotate(float yawRadians, float pitchRadians) noexcept
 		{
-			// Вращение направления взгляда
-			vector4 forward = getForward();
-			vector4 right = getRight();
+			Vector4 forward = GetForward();
+			Vector4 right = GetRight();
 
-			// Yaw (поворот влево-вправо)
-			matrix4x4 yawRotation = matrix4x4::rotationY(yawRadians);
+			Matrix4x4 yawRotation = Matrix4x4::rotationY(yawRadians);
 			forward = yawRotation * forward;
 
-			// Pitch (поворот вверх-вниз)
-			matrix4x4 pitchRotation = matrix4x4::rotation(right, pitchRadians);
+			Matrix4x4 pitchRotation = Matrix4x4::rotation(right, pitchRadians);
 			forward = pitchRotation * forward;
 
-			m_target = m_position + forward;
-			m_viewMatrixDirty = true;
+			m_Target = m_Position + forward;
+			m_ViewMatrixDirty = true;
 		}
 
-		// Перспективная проекция
-		void setPerspective(float fovYRadians, float aspectRatio,
-			float nearPlane, float farPlane) noexcept
-		{
-			m_fovY = fovYRadians;
-			m_aspectRatio = aspectRatio;
-			m_nearPlane = nearPlane;
-			m_farPlane = farPlane;
-			m_projectionType = ProjectionType::Perspective;
-			m_projectionMatrixDirty = true;
-		}
+		// TODO: Возможно, эти методы не нужны, так как есть SetFovY и SetAspectRatio
+		//inline void SetPerspective(float fovYRadians, float aspectRatio, float nearPlane, float farPlane) noexcept
+		//{
+		//	m_FovY = fovYRadians;
+		//	m_AspectRatio = aspectRatio;
+		//	m_AspectPreset = eAspectType::Custom;
+		//	m_NearPlane = nearPlane;
+		//	m_FarPlane = farPlane;
+		//	m_ProjectionType = eProjType::Perspective;
+		//	m_ProjectionMatrixDirty = true;
+		//}
 
-		// Ортографическая проекция
-		void setOrthographic(float left, float right, float bottom, float top,
-			float nearPlane, float farPlane) noexcept
-		{
-			m_left = left;
-			m_right = right;
-			m_bottom = bottom;
-			m_top = top;
-			m_nearPlane = nearPlane;
-			m_farPlane = farPlane;
-			m_projectionType = ProjectionType::Orthographic;
-			m_projectionMatrixDirty = true;
-		}
+		//inline void SetOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane) noexcept
+		//{
+		//	m_Left = left;
+		//	m_Right = right;
+		//	m_Bottom = bottom;
+		//	m_Top = top;
+		//	m_NearPlane = nearPlane;
+		//	m_FarPlane = farPlane;
+		//	m_ProjectionType = eProjType::Orthographic;
+		//	m_ProjectionMatrixDirty = true;
+		//}
 
-		// Получение матриц
-		const matrix4x4& getViewMatrix() const noexcept
+		inline const Matrix4x4& GetViewMatrix() const noexcept
 		{
-			if (m_viewMatrixDirty)
+			if (m_ViewMatrixDirty)
 			{
-				m_viewMatrix = matrix4x4::lookAt(m_position, m_target, m_up);
-				m_viewMatrixDirty = false;
+				m_ViewMatrix = Matrix4x4::lookAt(m_Position, m_Target, m_Up);
+				m_ViewMatrixDirty = false;
 			}
-			return m_viewMatrix;
+			return m_ViewMatrix;
 		}
 
-		const matrix4x4& getProjectionMatrix() const noexcept
+		inline const Matrix4x4& GetProjectionMatrix() const noexcept
 		{
-			if (m_projectionMatrixDirty)
+			if (m_ProjectionMatrixDirty)
 			{
-				if (m_projectionType == ProjectionType::Perspective)
-				{
-					m_projectionMatrix = matrix4x4::perspective(
-						m_fovY, m_aspectRatio, m_nearPlane, m_farPlane
-					);
-				}
+				if (m_ProjectionType == eProjType::Perspective)
+					m_ProjectionMatrix = Matrix4x4::perspective(m_FovY, m_AspectRatio, m_NearPlane, m_FarPlane);
 				else
-				{
-					m_projectionMatrix = matrix4x4::orthographic(
-						m_left, m_right, m_bottom, m_top, m_nearPlane, m_farPlane
-					);
-				}
-				m_projectionMatrixDirty = false;
+					m_ProjectionMatrix = Matrix4x4::orthographic(m_Left, m_Right, m_Bottom, m_Top, m_NearPlane, m_FarPlane);
+				m_ProjectionMatrixDirty = false;
 			}
-			return m_projectionMatrix;
+			return m_ProjectionMatrix;
 		}
 
-		matrix4x4 getViewProjectionMatrix() const noexcept
+		inline Matrix4x4 GetViewProjectionMatrix() const noexcept { return GetProjectionMatrix() * GetViewMatrix(); }
+
+		inline float GetFovY() const noexcept { return m_FovY; }
+		inline void SetFovY(float fovYRadians) noexcept { m_FovY = fovYRadians; m_ProjectionMatrixDirty = true; }
+
+		inline float GetAspectRatio() const noexcept { return m_AspectRatio; }
+
+		inline void SetAspectRatio(eAspectType type, float aspect = 0.0f) noexcept
 		{
-			return getProjectionMatrix() * getViewMatrix();
+			m_AspectPreset = type;
+			switch (type)
+			{
+			case eAspectType::Custom:
+				if (aspect <= 0.0f)
+					throw_runtime_error(">>>>> [Camera::SetAspectRatioPreset( ... )]. Custom aspect ratio must be greater than zero.");
+
+				m_AspectRatio = aspect;
+				break;
+			case eAspectType::FullWindow:
+				break;
+			default:
+				m_AspectRatio = GetAspect(type);
+			}
+
+			m_ProjectionMatrixDirty = true;
 		}
 
-		// Параметры
-		float getFovY() const noexcept { return m_fovY; }
-		void setFovY(float fovYRadians) noexcept
-		{
-			m_fovY = fovYRadians;
-			m_projectionMatrixDirty = true;
-		}
+		inline eAspectType GetAspectPreset() const noexcept { return m_AspectPreset; }
 
-		float getAspectRatio() const noexcept { return m_aspectRatio; }
-		void setAspectRatio(float aspectRatio) noexcept
-		{
-			m_aspectRatio = aspectRatio;
-			m_projectionMatrixDirty = true;
-		}
+		inline float GetNearPlane() const noexcept { return m_NearPlane; }
+		inline void SetNearPlane(float nearPlane) noexcept { m_NearPlane = nearPlane; m_ProjectionMatrixDirty = true; }
 
-		float getNearPlane() const noexcept { return m_nearPlane; }
-		void setNearPlane(float nearPlane) noexcept
-		{
-			m_nearPlane = nearPlane;
-			m_projectionMatrixDirty = true;
-		}
+		inline float GetFarPlane() const noexcept { return m_FarPlane; }
+		inline void SetFarPlane(float farPlane) noexcept { m_FarPlane = farPlane; m_ProjectionMatrixDirty = true; }
 
-		float getFarPlane() const noexcept { return m_farPlane; }
-		void setFarPlane(float farPlane) noexcept
-		{
-			m_farPlane = farPlane;
-			m_projectionMatrixDirty = true;
-		}
-
-		ProjectionType getProjectionType() const noexcept { return m_projectionType; }
+		inline eProjType GetProjectionType() const noexcept { return m_ProjectionType; }
 
 		// Преобразование экранных координат (normalized device coords) в луч в мировом пространстве
-		ray screenPointToRay(float ndcX, float ndcY) const noexcept
+		inline ray ScreenPointToRay(float ndcX, float ndcY) const noexcept
 		{
-			if (m_projectionType == ProjectionType::Perspective)
+			if (m_ProjectionType == eProjType::Perspective)
 			{
 				return ray::from_ndc_perspective(
 					ndcX, ndcY,
-					m_position,
-					getViewMatrix(),
-					m_fovY,
-					m_aspectRatio);
+					m_Position,
+					GetViewMatrix(),
+					m_FovY,
+					m_AspectRatio);
 			}
 			else // Orthographic
 			{
 				return ray::from_ndc_orthographic(
 					ndcX, ndcY,
-					getViewMatrix(),
-					m_left, m_right,
-					m_bottom, m_top);
+					GetViewMatrix(),
+					m_Left, m_Right,
+					m_Bottom, m_Top);
 			}
 		}
 
 		// Дополнительно: из пиксельных координат
-		ray screenPixelsToRay(float screenX, float screenY,
+		inline ray ScreenPixelsToRay(float screenX, float screenY,
 			float screenWidth, float screenHeight) const noexcept
 		{
 			// Конвертируем в NDC
 			float ndcX = (2.0f * screenX) / screenWidth - 1.0f;
 			float ndcY = 1.0f - (2.0f * screenY) / screenHeight;
 
-			return screenPointToRay(ndcX, ndcY);
+			return ScreenPointToRay(ndcX, ndcY);
 		}
 
 		// Frustum culling (базовая версия)
 		struct Frustum
 		{
-			vector4 planes[6]; // Left, Right, Bottom, Top, Near, Far (normal + distance)
+			Vector4 planes[6]; // Left, Right, Bottom, Top, Near, Far (normal + distance)
 		};
 
-		Frustum getFrustum() const noexcept
+		inline Frustum GetFrustum() const noexcept
 		{
 			Frustum frustum;
-			matrix4x4 vp = getViewProjectionMatrix();
+			Matrix4x4 vp = GetViewProjectionMatrix();
 
 			// Извлекаем плоскости из матрицы VP
 			// Left plane
-			frustum.planes[0] = vector4(
+			frustum.planes[0] = Vector4(
 				vp.at(0, 3) + vp.at(0, 0),
 				vp.at(1, 3) + vp.at(1, 0),
 				vp.at(2, 3) + vp.at(2, 0),
@@ -336,7 +305,7 @@ namespace zzz::engineCore
 			).normalized();
 
 			// Right plane
-			frustum.planes[1] = vector4(
+			frustum.planes[1] = Vector4(
 				vp.at(0, 3) - vp.at(0, 0),
 				vp.at(1, 3) - vp.at(1, 0),
 				vp.at(2, 3) - vp.at(2, 0),
@@ -344,7 +313,7 @@ namespace zzz::engineCore
 			).normalized();
 
 			// Bottom plane
-			frustum.planes[2] = vector4(
+			frustum.planes[2] = Vector4(
 				vp.at(0, 3) + vp.at(0, 1),
 				vp.at(1, 3) + vp.at(1, 1),
 				vp.at(2, 3) + vp.at(2, 1),
@@ -352,7 +321,7 @@ namespace zzz::engineCore
 			).normalized();
 
 			// Top plane
-			frustum.planes[3] = vector4(
+			frustum.planes[3] = Vector4(
 				vp.at(0, 3) - vp.at(0, 1),
 				vp.at(1, 3) - vp.at(1, 1),
 				vp.at(2, 3) - vp.at(2, 1),
@@ -360,7 +329,7 @@ namespace zzz::engineCore
 			).normalized();
 
 			// Near plane
-			frustum.planes[4] = vector4(
+			frustum.planes[4] = Vector4(
 				vp.at(0, 3) + vp.at(0, 2),
 				vp.at(1, 3) + vp.at(1, 2),
 				vp.at(2, 3) + vp.at(2, 2),
@@ -368,7 +337,7 @@ namespace zzz::engineCore
 			).normalized();
 
 			// Far plane
-			frustum.planes[5] = vector4(
+			frustum.planes[5] = Vector4(
 				vp.at(0, 3) - vp.at(0, 2),
 				vp.at(1, 3) - vp.at(1, 2),
 				vp.at(2, 3) - vp.at(2, 2),
@@ -379,9 +348,9 @@ namespace zzz::engineCore
 		}
 
 		// Проверка точки внутри frustum
-		bool isPointInFrustum(const vector4& point) const noexcept
+		inline bool isPointInFrustum(const Vector4& point) const noexcept
 		{
-			Frustum frustum = getFrustum();
+			Frustum frustum = GetFrustum();
 			for (int i = 0; i < 6; ++i)
 			{
 				// Distance from point to plane
@@ -393,9 +362,9 @@ namespace zzz::engineCore
 		}
 
 		// Проверка сферы внутри frustum
-		bool isSphereInFrustum(const vector4& center, float radius) const noexcept
+		inline bool isSphereInFrustum(const Vector4& center, float radius) const noexcept
 		{
-			Frustum frustum = getFrustum();
+			Frustum frustum = GetFrustum();
 			for (int i = 0; i < 6; ++i)
 			{
 				float distance = center.dot(frustum.planes[i]) + frustum.planes[i][3];
@@ -406,57 +375,74 @@ namespace zzz::engineCore
 		}
 
 		// Zoom
-		void zoom(float factor) noexcept
+		//inline void Zoom(float factor) noexcept
+		//{
+		//	if (m_ProjectionType == eProjType::Perspective)
+		//	{
+		//		m_FovY *= factor;
+		//		m_FovY = std::max(0.1f, std::min(m_FovY, 3.14f)); // Clamp [~6°, 180°]
+		//		m_ProjectionMatrixDirty = true;
+		//	}
+		//	else
+		//	{
+		//		float width = m_Right - m_Left;
+		//		float height = m_Top - m_Bottom;
+		//		float centerX = (m_Left + m_Right) * 0.5f;
+		//		float centerY = (m_Bottom + m_Top) * 0.5f;
+
+		//		width *= factor;
+		//		height *= factor;
+
+		//		m_Left = centerX - width * 0.5f;
+		//		m_Right = centerX + width * 0.5f;
+		//		m_Bottom = centerY - height * 0.5f;
+		//		m_Top = centerY + height * 0.5f;
+		//		m_ProjectionMatrixDirty = true;
+		//	}
+		//}
+
+	private:
+		constexpr zF32 GetAspect(eAspectType preset) const
 		{
-			if (m_projectionType == ProjectionType::Perspective)
+			switch (preset)
 			{
-				m_fovY *= factor;
-				m_fovY = std::max(0.1f, std::min(m_fovY, 3.14f)); // Clamp [~6°, 180°]
-				m_projectionMatrixDirty = true;
-			}
-			else
-			{
-				float width = m_right - m_left;
-				float height = m_top - m_bottom;
-				float centerX = (m_left + m_right) * 0.5f;
-				float centerY = (m_bottom + m_top) * 0.5f;
-
-				width *= factor;
-				height *= factor;
-
-				m_left = centerX - width * 0.5f;
-				m_right = centerX + width * 0.5f;
-				m_bottom = centerY - height * 0.5f;
-				m_top = centerY + height * 0.5f;
-				m_projectionMatrixDirty = true;
+			case eAspectType::Ratio_16_9:
+				return 16.0f / 9.0f;
+			case eAspectType::Ratio_16_10:
+				return 16.0f / 10.0f;
+			case eAspectType::Ratio_4_3:
+				return 4.0f / 3.0f;
+			case eAspectType::Ratio_21_9:
+				return 21.0f / 9.0f;
+			case eAspectType::Custom:
+			case eAspectType::FullWindow:
+				return m_AspectRatio;
+			default:
+				throw_runtime_error(">>>>> [Camera::GetAspect( ... )]. Invalid aspect type.");
 			}
 		}
 
-	private:
-		// Позиция и ориентация
-		vector4 m_position;
-		vector4 m_target;
-		vector4 m_up;
+		Vector4 m_Position;
+		Vector4 m_Target;
+		Vector4 m_Up;
 
-		// Параметры перспективной проекции
-		float m_fovY;
-		float m_aspectRatio;
-		float m_nearPlane;
-		float m_farPlane;
+		float m_FovY;
+		float m_NearPlane;
+		float m_FarPlane;
 
-		// Параметры ортографической проекции
-		float m_left;
-		float m_right;
-		float m_bottom;
-		float m_top;
+		eAspectType m_AspectPreset;
+		float m_AspectRatio;
 
-		// Тип проекции
-		ProjectionType m_projectionType;
+		float m_Left;
+		float m_Right;
+		float m_Bottom;
+		float m_Top;
 
-		// Кэшированные матрицы (mutable для ленивого вычисления в const методах)
-		mutable matrix4x4 m_viewMatrix;
-		mutable matrix4x4 m_projectionMatrix;
-		mutable bool m_viewMatrixDirty;
-		mutable bool m_projectionMatrixDirty;
+		eProjType m_ProjectionType;
+
+		mutable Matrix4x4 m_ViewMatrix;
+		mutable Matrix4x4 m_ProjectionMatrix;
+		mutable bool m_ViewMatrixDirty;
+		mutable bool m_ProjectionMatrixDirty;
 	};
 }

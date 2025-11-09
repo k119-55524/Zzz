@@ -46,11 +46,11 @@ export namespace zzz
 
 	protected:
 		zU64 m_frameIndex;
-		float m_aspectRatio;
 		bool b_IsVSync;
 		std::shared_ptr<Settings> m_settings;
 		std::shared_ptr<IAppWin> m_iAppWin;
 		std::shared_ptr<IGAPI> m_iGAPI;
+		size2D<> m_SurfSize;
 
 		SurfClearType m_SurfClearType;
 		Color m_ClearColor;
@@ -62,13 +62,13 @@ export namespace zzz
 		std::shared_ptr<IAppWin> _iAppWin,
 		std::shared_ptr<IGAPI> _iGAPI) :
 		m_frameIndex{ 0 },
-		m_aspectRatio{ 0.0f },
 		b_IsVSync{ true },
 		m_settings{ _settings },
 		m_iAppWin{ _iAppWin },
 		m_iGAPI{ _iGAPI },
 		m_ClearColor{ colors::DarkMidnightBlue },
-		b_IsClearDepth{ true }
+		b_IsClearDepth{ true },
+		m_SurfSize{}
 	{
 		ensure(m_settings, ">>>>> [ISurfaceView::ISurfaceView()]. Settings cannot be null.");
 		ensure(m_iAppWin, ">>>>> [ISurfaceView::ISurfaceView()]. Application window cannot be null.");

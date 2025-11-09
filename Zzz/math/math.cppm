@@ -1,7 +1,7 @@
 
 #include "pch.h"
 
-export module math;
+export module Math;
 
 export namespace zzz::math
 {
