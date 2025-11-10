@@ -65,9 +65,9 @@ export namespace zzz
 		AppTime m_time;
 
 		void Reset() noexcept;
-		void OnViewResized(const size2D<>& size, eTypeWinResize resizeType);
+		void OnViewResize(const size2D<>& size, eTypeWinResize resizeType);
 		void OnUpdateSystem();
-		void OnResizePaint();
+		void OnViewResizing();
 
 		PerformanceMeter m_PerfRender;
 	};
@@ -124,8 +124,8 @@ export namespace zzz
 
 			// Содаём основное окно(View) приложения
 			m_View = safe_make_shared<View>(m_setting, m_ScenManager, m_GAPI);
-			m_View->viewResized += std::bind(&Engine::OnViewResized, this, std::placeholders::_1, std::placeholders::_2);
-			m_View->resizePaint += std::bind(&Engine::OnResizePaint, this);
+			m_View->viewResized += std::bind(&Engine::OnViewResize, this, std::placeholders::_1, std::placeholders::_2);
+			m_View->viewResizing += std::bind(&Engine::OnViewResizing, this);
 
 			// Создаём главный цикл приложения
 			m_MainLoop = safe_make_shared<MainLoop>();
@@ -230,22 +230,24 @@ export namespace zzz
 			//static int frameCount = 0;
 			//frameCount++;
 
+			//if (frameCount == 2)
+			//	m_View->SetVSync(true);
+
 			//if (frameCount == 5000)
 			//	m_View->SetFullScreen(true);
 
 			//if (frameCount == 15000)
 			//	m_View->SetFullScreen(false);
-
 		}
 	}
 
-	void Engine::OnResizePaint()
+	void Engine::OnViewResizing()
 	{
-		//DebugOutput(L">>>>> [Engine::OnResizePaint()].");
+		OnUpdateSystem();
 		OnUpdateSystem();
 	}
 
-	void Engine::OnViewResized(const size2D<>& size, eTypeWinResize resizeType)
+	void Engine::OnViewResize(const size2D<>& size, eTypeWinResize resizeType)
 	{
 		switch (resizeType)
 		{

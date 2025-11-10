@@ -80,7 +80,6 @@ export namespace zzz::engineCore
 		RenderArea CalculateRenderArea(zU32 surface_width, zU32 surface_height) noexcept
 		{
 			RenderArea result{};
-
 			float surface_aspect = (float)surface_width / (float)surface_height;
 
 			if (m_AspectPreset == eAspectType::FullWindow)
@@ -110,6 +109,7 @@ export namespace zzz::engineCore
 				offset_y = (surface_height - render_height) * 0.5f;
 			}
 
+			m_AspectRatio = (float)render_width / (float)render_height;
 			result.viewport = { offset_x, offset_y, render_width, render_height, 0.0f, 1.0f };
 			result.scissor = { (zI32)offset_x, (zI32)offset_y, (zI32)render_width, (zI32)render_height };
 

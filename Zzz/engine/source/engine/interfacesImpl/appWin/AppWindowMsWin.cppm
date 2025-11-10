@@ -218,28 +218,28 @@ export namespace zzz
 
 		case WM_SIZING:
 		{
-			RECT* pRect = reinterpret_cast<RECT*>(lParam);
-			winSize.width = static_cast<zU64>(pRect->right - pRect->left);
-			winSize.height = static_cast<zU64>(pRect->bottom - pRect->top);
-			//DebugOutput(std::format(L">>>>> [AppWindowMsWin::MsgProc({}x{})]. WM_SIZING.", std::to_wstring(winSize.width), std::to_wstring(winSize.height)));
-			OnResize(winSize, eTypeWinResize::Resize);
-			OnResizePaint();
-			return TRUE;
+			OnResizing();
 
+			return TRUE;
 		}
 
 		// Перехватываем это сообщение, чтобы не допустить слишком маленького/большого размера окна.
 		case WM_GETMINMAXINFO:
 		{
-			((MINMAXINFO*)lParam)->ptMinTrackSize.x = c_MinimumWindowsWidth;
-			((MINMAXINFO*)lParam)->ptMinTrackSize.y = c_MinimumWindowsHeight;
+			MINMAXINFO* pMinMaxInfo = reinterpret_cast<MINMAXINFO*>(lParam);
 
-			RECT R = { 0, 0, static_cast<LONG>(c_MaximumWindowsWidth), static_cast<LONG>(c_MaximumWindowsHeight) };
-			AdjustWindowRect(&R, WS_OVERLAPPEDWINDOW, false);
-			LONG maxWidth = R.right - R.left;
-			LONG maxHeight = R.bottom - R.top;
-			((MINMAXINFO*)lParam)->ptMaxTrackSize.x = maxWidth;
-			((MINMAXINFO*)lParam)->ptMaxTrackSize.y = maxHeight;
+			// Минимальный размер клиентской области
+			RECT minRect = { 0, 0, static_cast<LONG>(c_MinimumWindowsWidth), static_cast<LONG>(c_MinimumWindowsHeight) };
+			AdjustWindowRect(&minRect, WS_OVERLAPPEDWINDOW, FALSE);
+			pMinMaxInfo->ptMinTrackSize.x = minRect.right - minRect.left;
+			pMinMaxInfo->ptMinTrackSize.y = minRect.bottom - minRect.top;
+
+			// Максимальный размер клиентской области
+			RECT maxRect = { 0, 0, static_cast<LONG>(c_MaximumWindowsWidth), static_cast<LONG>(c_MaximumWindowsHeight) };
+			AdjustWindowRect(&maxRect, WS_OVERLAPPEDWINDOW, FALSE);
+			pMinMaxInfo->ptMaxTrackSize.x = maxRect.right - maxRect.left;
+			pMinMaxInfo->ptMaxTrackSize.y = maxRect.bottom - maxRect.top;
+
 			return 0;
 		}
 

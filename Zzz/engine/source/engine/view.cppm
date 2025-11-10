@@ -37,17 +37,18 @@ namespace zzz
 		~View() = default;
 
 		event<size2D<>, eTypeWinResize> viewResized;
-		event<> resizePaint;
+		event<> viewResizing;
 
 		void OnUpdate(double deltaTime);
-		void OnResizePaint();
-		void OnViewResized(const size2D<>& size, eTypeWinResize resizeType);
 		void SetFullScreen(bool fs);
 		inline void SetVSync(bool vs) { if (m_SurfaceView != nullptr) m_SurfaceView->SetVSync(vs); };
 		inline void SetViewCaptionText(std::wstring caption) { if (m_Win != nullptr) m_Win->SetCaptionText(caption); };
 		inline void AddViewCaptionText(std::wstring caption) { if (m_Win != nullptr) m_Win->AddCaptionText(caption); };
 
 	private:
+		void OnViewResizing();
+		void OnViewResize(const size2D<>& size, eTypeWinResize resizeType);
+
 		ViewFactory factory;
 		const std::shared_ptr<Settings> m_Settings;
 		const std::shared_ptr<IGAPI> m_GAPI;
@@ -86,8 +87,8 @@ namespace zzz
 		{
 			// Cоздаём обёртку над окном приложения под текущую ОС
 			m_Win = factory.CreateAppWin(m_Settings);
-			m_Win->OnResize += std::bind(&View::OnViewResized, this, std::placeholders::_1, std::placeholders::_2);
-			m_Win->OnResizePaint += std::bind(&View::OnResizePaint, this);
+			m_Win->OnResize += std::bind(&View::OnViewResize, this, std::placeholders::_1, std::placeholders::_2);
+			m_Win->OnResizing += std::bind(&View::OnViewResizing, this);
 			auto res = m_Win->Initialize();
 			if (!res)
 				throw_runtime_error(std::format(">>>>> [View::Initialize()]. Failed to initialize application window: {}.", wstring_to_string(res.error().getMessage())));
@@ -146,9 +147,9 @@ namespace zzz
 		}
 	}
 
-	void View::OnResizePaint()
+	void View::OnViewResizing()
 	{
-		resizePaint();
+		viewResizing();
 	}
 
 	void View::PrepareFrame(double deltaTime)
@@ -156,7 +157,7 @@ namespace zzz
 		m_SurfaceView->PrepareFrame(m_Scene);
 	}
 
-	void View::OnViewResized(const size2D<>& size, eTypeWinResize resizeType)
+	void View::OnViewResize(const size2D<>& size, eTypeWinResize resizeType)
 	{
 #if defined(_DEBUG)
 		switch (resizeType)

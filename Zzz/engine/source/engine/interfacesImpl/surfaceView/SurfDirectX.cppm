@@ -524,7 +524,9 @@ namespace zzz
 		}
 
 		// Настраиваем область рендеринга исходя из настроек камеры
-		{
+		{ 
+			zU32 x = static_cast<zU32>(m_SurfSize.width);
+			zU32 y = static_cast<zU32>(m_SurfSize.height);
 			RenderArea renderArea = primaryCamera.CalculateRenderArea(static_cast<zU32>(m_SurfSize.width), static_cast<zU32>(m_SurfSize.height));
 			D3D12_VIEWPORT viewport = renderArea.GetViewport();
 			D3D12_RECT scissor = renderArea.GetScissor();
