@@ -30,10 +30,33 @@ namespace zzz
 
 	enum class eAspectType
 	{
-		Ratio_16_9,
-		Ratio_16_10,
-		Ratio_4_3,
-		Ratio_21_9,
+		// Стандартные
+		Ratio_16x9,
+		Ratio_9x16,
+		Ratio_16x10,
+		Ratio_10x16,
+		Ratio_4x3,
+		Ratio_3x4,
+
+		// Ультра-широкие
+		Ratio_21x9,
+		Ratio_9x21,
+		Ratio_32x9,
+		Ratio_9x32,
+
+		// Мобильные
+		Ratio_18x9,
+		Ratio_9x18,
+		Ratio_20x9,
+		Ratio_9x20,
+		Ratio_19_5x9,  // 19.5:9
+		Ratio_9x19_5,
+
+		// Прочие
+		Ratio_1x1,     // Квадрат
+		Ratio_5x4,
+		Ratio_4x5,
+
 		Custom,
 		FullWindow
 	};

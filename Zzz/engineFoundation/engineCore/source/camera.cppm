@@ -20,7 +20,7 @@ export namespace zzz::engineCore
 			m_Target(0.0f, 0.0f, 0.0f, 1.0f),
 			m_Up(0.0f, 1.0f, 0.0f, 0.0f),
 			m_FovY(45.0f * 3.14159265f / 180.0f),
-			m_AspectPreset(eAspectType::Ratio_16_9),
+			m_AspectPreset(eAspectType::Ratio_16x9),
 			m_NearPlane(0.1f),
 			m_FarPlane(1000.0f),
 			m_Left(-10.0f),
@@ -86,10 +86,8 @@ export namespace zzz::engineCore
 			{
 				m_AspectRatio = surface_aspect;
 				m_ProjectionMatrixDirty = true;
-
 				result.viewport = { 0.0f, 0.0f, (float)surface_width, (float)surface_height, 0.0f, 1.0f };
 				result.scissor = { 0, 0, (zI32)surface_width, (zI32)surface_height };
-
 				return result;
 			}
 
@@ -109,7 +107,6 @@ export namespace zzz::engineCore
 				offset_y = (surface_height - render_height) * 0.5f;
 			}
 
-			m_AspectRatio = (float)render_width / (float)render_height;
 			result.viewport = { offset_x, offset_y, render_width, render_height, 0.0f, 1.0f };
 			result.scissor = { (zI32)offset_x, (zI32)offset_y, (zI32)render_width, (zI32)render_height };
 
@@ -198,19 +195,25 @@ export namespace zzz::engineCore
 				m_ViewMatrix = Matrix4x4::lookAt(m_Position, m_Target, m_Up);
 				m_ViewMatrixDirty = false;
 			}
+
 			return m_ViewMatrix;
 		}
 
 		inline const Matrix4x4& GetProjectionMatrix() const noexcept
 		{
+			float currentAspect = m_AspectRatio;
+			if (m_AspectPreset == eAspectType::FullWindow)
+				currentAspect = 1.0f;
+
 			if (m_ProjectionMatrixDirty)
 			{
 				if (m_ProjectionType == eProjType::Perspective)
-					m_ProjectionMatrix = Matrix4x4::perspective(m_FovY, m_AspectRatio, m_NearPlane, m_FarPlane);
+					m_ProjectionMatrix = Matrix4x4::perspective(m_FovY, currentAspect, m_NearPlane, m_FarPlane);
 				else
 					m_ProjectionMatrix = Matrix4x4::orthographic(m_Left, m_Right, m_Bottom, m_Top, m_NearPlane, m_FarPlane);
 				m_ProjectionMatrixDirty = false;
 			}
+
 			return m_ProjectionMatrix;
 		}
 
@@ -406,17 +409,56 @@ export namespace zzz::engineCore
 		{
 			switch (preset)
 			{
-			case eAspectType::Ratio_16_9:
+				// Стандартные
+			case eAspectType::Ratio_16x9:
 				return 16.0f / 9.0f;
-			case eAspectType::Ratio_16_10:
+			case eAspectType::Ratio_9x16:
+				return 9.0f / 16.0f;
+			case eAspectType::Ratio_16x10:
 				return 16.0f / 10.0f;
-			case eAspectType::Ratio_4_3:
+			case eAspectType::Ratio_10x16:
+				return 10.0f / 16.0f;
+			case eAspectType::Ratio_4x3:
 				return 4.0f / 3.0f;
-			case eAspectType::Ratio_21_9:
+			case eAspectType::Ratio_3x4:
+				return 3.0f / 4.0f;
+
+				// Ультра-широкие
+			case eAspectType::Ratio_21x9:
 				return 21.0f / 9.0f;
+			case eAspectType::Ratio_9x21:
+				return 9.0f / 21.0f;
+			case eAspectType::Ratio_32x9:
+				return 32.0f / 9.0f;
+			case eAspectType::Ratio_9x32:
+				return 9.0f / 32.0f;
+
+				// Мобильные
+			case eAspectType::Ratio_18x9:
+				return 18.0f / 9.0f;
+			case eAspectType::Ratio_9x18:
+				return 9.0f / 18.0f;
+			case eAspectType::Ratio_20x9:
+				return 20.0f / 9.0f;
+			case eAspectType::Ratio_9x20:
+				return 9.0f / 20.0f;
+			case eAspectType::Ratio_19_5x9:
+				return 19.5f / 9.0f;
+			case eAspectType::Ratio_9x19_5:
+				return 9.0f / 19.5f;
+
+				// Прочие
+			case eAspectType::Ratio_1x1:
+				return 1.0f;
+			case eAspectType::Ratio_5x4:
+				return 5.0f / 4.0f;
+			case eAspectType::Ratio_4x5:
+				return 4.0f / 5.0f;
+
 			case eAspectType::Custom:
 			case eAspectType::FullWindow:
 				return m_AspectRatio;
+
 			default:
 				throw_runtime_error(">>>>> [Camera::GetAspect( ... )]. Invalid aspect type.");
 			}
