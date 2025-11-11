@@ -18,28 +18,28 @@
     <ClInclude Include="pch.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="headers\platformsDefines.h">
+    <ClInclude Include="Headers\platformsDefines.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="engineBase.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="headers\header.h">
+    <ClInclude Include="Headers\header.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="headers\macroDefinition.h">
+    <ClInclude Include="Headers\macroDefinition.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="headers\headersMSWin.h">
+    <ClInclude Include="Headers\headersMSWin.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="headers\headerVulkan.h">
+    <ClInclude Include="Headers\headerVulkan.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="headers\headerMetal.h">
+    <ClInclude Include="Headers\headerMetal.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="headers\headerDX.h">
+    <ClInclude Include="Headers\headerDX.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
@@ -51,6 +51,15 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="helpers.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Platforms.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Colors.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\result.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

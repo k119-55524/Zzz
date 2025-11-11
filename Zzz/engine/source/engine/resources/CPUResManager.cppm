@@ -9,6 +9,8 @@ import Settings;
 import CPUIndexBuffer;
 import CPUVertexBuffer;
 
+using namespace zzz::engineCore;
+
 export namespace zzz
 {
 	export enum MeshType
@@ -60,7 +62,7 @@ export namespace zzz
 
 	result<std::shared_ptr<CPUMesh>> CPUResManager::GetGenericTriangle()
 	{
-		std::shared_ptr<VB_P3C3> vertexBuffer = std::make_shared<VB_P3C3>(std::initializer_list<zzz::VB_P3C3::VertexT>{
+		std::shared_ptr<VB_P3C3> vertexBuffer = std::make_shared<VB_P3C3>(std::initializer_list<VB_P3C3::VertexT>{
 			{
 				{ { 0.0f,  0.5f, 0.0f } }, // Position
 				{ { 1.0f,  0.0f, 0.0f } }  // Color (Red)
@@ -87,7 +89,7 @@ export namespace zzz
 
 	result<std::shared_ptr<CPUMesh>> CPUResManager::GetGenericBox()
 	{
-		std::shared_ptr<VB_P3C3> vertex = std::make_shared<VB_P3C3>(std::initializer_list<zzz::VB_P3C3::VertexT>{
+		std::shared_ptr<VB_P3C3> vertex = std::make_shared<VB_P3C3>(std::initializer_list<VB_P3C3::VertexT>{
 			{
 				{ { -1.0f, -1.0f, -1.0f } },	// Position
 				{ { colors::White } }			// Color
@@ -125,7 +127,7 @@ export namespace zzz
 		if (!vertex)
 			return Unexpected(eResult::no_make_shared_ptr, L">>>>> [CPUResourcesManager::GetDefaultTriangleMesh()]. Failed to create vertexBufferCPU.");
 
-		std::shared_ptr<zzz::ICPUIndexBuffer> indices =
+		std::shared_ptr<ICPUIndexBuffer> indices =
 			std::make_shared<IndexBuffer16>(std::initializer_list<zU16>{
 				// front face
 				0, 1, 2,

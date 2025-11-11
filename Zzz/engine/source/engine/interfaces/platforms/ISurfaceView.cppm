@@ -10,8 +10,8 @@ import IAppWin;
 import Settings;
 import RenderQueue;
 
+using namespace zzz;
 using namespace zzz::colors;
-using namespace zzz::platforms;
 using namespace zzz::engineCore;
 
 export namespace zzz

@@ -13,7 +13,7 @@ using namespace zzz::platforms::directx;
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif
 
-using namespace zzz::platforms;
+using namespace zzz::engineCore;
 
 export namespace zzz
 {

@@ -3,9 +3,9 @@ export module IMainLoop;
 
 import event;
 
-using namespace zzz;
+using namespace zzz::engineCore;
 
-export namespace zzz::platforms
+export namespace zzz
 {
 	class IMainLoop
 	{

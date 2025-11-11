@@ -4,7 +4,7 @@ export module CheckDirectXSupport;
 import StrConvert;
 import ICheckGapiSupport;
 
-using namespace zzz::platforms;
+using namespace zzz::engineCore;
 
 #if defined(ZRENDER_API_D3D12)
 export namespace zzz::platforms::directx

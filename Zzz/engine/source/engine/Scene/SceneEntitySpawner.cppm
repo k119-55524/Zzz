@@ -6,6 +6,8 @@ import Material;
 import SceneEntity;
 import GPUResManager;
 
+using namespace zzz::engineCore;
+
 namespace zzz
 {
 	export class SceneEntitySpawner final

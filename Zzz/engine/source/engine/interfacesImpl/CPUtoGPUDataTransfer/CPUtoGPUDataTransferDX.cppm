@@ -9,6 +9,7 @@ import ICPUtoGPUDataTransfer;
 
 using namespace zzz;
 using namespace zzz::templates;
+using namespace zzz::engineCore;
 
 #if defined(_WIN64)
 export namespace zzz::platforms::directx

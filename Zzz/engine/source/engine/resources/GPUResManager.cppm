@@ -14,7 +14,7 @@ import Material;
 import GPUMeshDX;
 import CPUResManager;
 
-using namespace zzz::platforms;
+using namespace zzz::engineCore;
 using namespace zzz::platforms::directx;
 
 namespace zzz

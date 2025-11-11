@@ -6,7 +6,7 @@ import IMainLoop;
 
 using namespace zzz;
 
-namespace zzz::platforms
+namespace zzz
 {
 #if defined(ZPLATFORM_MSWINDOWS)
 	export class mlMSWin final: public IMainLoop

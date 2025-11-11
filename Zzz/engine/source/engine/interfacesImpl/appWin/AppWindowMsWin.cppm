@@ -11,7 +11,7 @@ import IOPathFactory;
 
 using namespace zzz;
 using namespace zzz::io;
-using namespace zzz::platforms;
+using namespace zzz::engineCore;
 using namespace zzz::icoBuilder;
 
 export namespace zzz

@@ -10,6 +10,7 @@ import StrConvert;
 
 using namespace zzz;
 using namespace zzz::platforms;
+using namespace zzz::engineCore;
 
 export namespace zzz::platforms::directx
 {

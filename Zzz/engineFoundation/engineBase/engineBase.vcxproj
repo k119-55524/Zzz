@@ -116,6 +116,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <FloatingPointModel>Fast</FloatingPointModel>
+      <AdditionalIncludeDirectories>$(SolutionDir)engineFoundation\engineBase;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -135,6 +136,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <FloatingPointModel>Fast</FloatingPointModel>
+      <AdditionalIncludeDirectories>$(SolutionDir)engineFoundation\engineBase;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -144,13 +146,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="engineBase.h" />
-    <ClInclude Include="headers\header.h" />
-    <ClInclude Include="headers\headerDX.h" />
-    <ClInclude Include="headers\headerMetal.h" />
-    <ClInclude Include="headers\headersMSWin.h" />
-    <ClInclude Include="headers\headerVulkan.h" />
-    <ClInclude Include="headers\macroDefinition.h" />
-    <ClInclude Include="headers\platformsDefines.h" />
+    <ClInclude Include="Headers\header.h" />
+    <ClInclude Include="Headers\headerDX.h" />
+    <ClInclude Include="Headers\headerMetal.h" />
+    <ClInclude Include="Headers\headersMSWin.h" />
+    <ClInclude Include="Headers\headerVulkan.h" />
+    <ClInclude Include="Headers\macroDefinition.h" />
+    <ClInclude Include="Headers\platformsDefines.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -162,6 +164,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Utils\Colors.cppm" />
+    <ClCompile Include="Utils\Platforms.cppm" />
+    <ClCompile Include="Utils\result.cppm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

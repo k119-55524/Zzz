@@ -11,12 +11,13 @@ import AppWindowMsWin;
 import CommandWrapperDX;
 import CheckDirectXSupport;
 import ThreadSafeSwapBuffer;
+import CPUtoGPUDataTransfer;
 import CPUtoGPUDataTransferDX;
-import BaseCPUtoGPUDataTransfer;
 
 using namespace zzz;
 using namespace zzz::templates;
 using namespace zzz::platforms;
+using namespace zzz::engineCore;
 
 export namespace zzz::platforms::directx
 {

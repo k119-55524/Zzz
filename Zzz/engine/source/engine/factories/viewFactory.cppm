@@ -16,7 +16,7 @@ import DXAPI;
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif
 
-using namespace zzz::platforms;
+using namespace zzz::engineCore;
 
 export namespace zzz
 {
@@ -34,7 +34,7 @@ export namespace zzz
 		std::shared_ptr<ISurfaceView> CreateSurfaceWin(
 			std::shared_ptr<Settings> _settings,
 			std::shared_ptr<IAppWin> _iAppWin,
-			std::shared_ptr<zzz::platforms::IGAPI> _iGAPI);
+			std::shared_ptr<IGAPI> _iGAPI);
 	};
 
 	std::shared_ptr<IAppWin> ViewFactory::CreateAppWin(std::shared_ptr<Settings> Settings)
@@ -60,7 +60,7 @@ export namespace zzz
 	export std::shared_ptr<ISurfaceView> ViewFactory::CreateSurfaceWin(
 		std::shared_ptr<Settings> _settings,
 		std::shared_ptr<IAppWin> _iAppWin,
-		std::shared_ptr<zzz::platforms::IGAPI> _iGAPI)
+		std::shared_ptr<IGAPI> _iGAPI)
 	{
 		ensure(_settings, ">>>>> [ViewFactory::CreateSurfaceWin()]. Settings cannot be null.");
 		ensure(_iAppWin, ">>>>> [ViewFactory::CreateSurfaceWin()]. Application window cannot be null.");
@@ -73,7 +73,7 @@ export namespace zzz
 			switch (gariType)
 			{
 #if defined(_WIN64)
-			case zzz::platforms::eGAPIType::DirectX:
+			case eGAPIType::DirectX:
 				return safe_make_shared<SurfDirectX>(_settings, _iAppWin, _iGAPI);
 				break;
 #endif // defined(_WIN64)

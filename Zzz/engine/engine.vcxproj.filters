@@ -32,24 +32,6 @@
     <ClCompile Include="Source\Engine.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\engine\Utils\result.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Settings.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\engine\Utils\size2D.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\engine\Utils\serializer.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Utils\StrConvert.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\IO\ioZaml.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Engine\IO\IOPathFactory.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
@@ -68,22 +50,13 @@
     <ClCompile Include="Source\engine\InterfacesImpl\Utils\icoBuilder\ibMSWin.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\engine\Interfaces\platforms\IGAPI.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
     <ClCompile Include="Source\engine\InterfacesImpl\GAPI\DXAPI.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\engine\Utils\event.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Platforms\DX\RootSignature.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\View.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\engine\Interfaces\platforms\IAppWin.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\engine\Interfaces\platforms\ISurfaceView.cppm">
@@ -101,34 +74,13 @@
     <ClCompile Include="Source\Engine\Platforms\DX\CheckDirectXUltimateSupport.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\engine\Interfaces\platforms\ICheckGapiSupport.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
     <ClCompile Include="Source\engine\Factories\EngineFactory.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="source\engine\scene\Scene.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\engine\Resources\CPUResManager.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\scene\ScenesManager.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\engine\Resources\CPUVertexBuffer.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\engine\Resources\CPUMesh.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="source\engine\scene\SceneEntity.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Templates\ThreadPool.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Utils\Platforms.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\engine\Utils\AppTime.cppm">
@@ -143,25 +95,10 @@
     <ClCompile Include="Source\engine\InterfacesImpl\MeshGPU\GPUMeshDX.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\engine\Utils\Colors.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\engine\Interfaces\platforms\IMeshGPU.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\engine\Resources\CPUIndexBuffer.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Engine\Platforms\DX\CommandWrapperDX.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\engine\Interfaces\platforms\ICPUtoGPUDataTransfer.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
     <ClCompile Include="Source\engine\InterfacesImpl\CPUtoGPUDataTransfer\CPUtoGPUDataTransferDX.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Templates\QueueArray.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Source\Templates\ThreadSafeQueueArray.cppm">
@@ -173,43 +110,13 @@
     <ClCompile Include="Source\engine\Utils\GpuEventScope.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\engine\Interfaces\platforms\IShader.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
     <ClCompile Include="Source\engine\InterfacesImpl\Shader\ShaderDX.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\engine\Interfaces\platforms\IPSO.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\engine\InterfacesImpl\PSO\PSO_DX.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\scene\SceneEntitySpawner.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\engine\Material.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\engine\Resources\VertexFormatMapper.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\engine\Interfaces\platforms\IAppWin\IBaseAppWin_MSWin.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\engine\Interfaces\platforms\ICPUtoGPUDataTransfer\BaseCPUtoGPUDataTransfer.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
     <ClCompile Include="Source\engine\Interfaces\platforms\IGAPI\IBaseGAPI_DirectX.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\engine\Interfaces\platforms\IMeshGPU\IBaseMeshGPU_DirectX.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\engine\Interfaces\platforms\IPSO\IBasePSO_DirectX.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\engine\Interfaces\platforms\IShader\IBaseShader_DirectX.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
   </ItemGroup>

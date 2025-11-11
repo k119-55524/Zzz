@@ -10,7 +10,7 @@ import IMeshGPU;
 import CPUIndexBuffer;
 import CPUVertexBuffer;
 
-using namespace zzz::platforms;
+using namespace zzz::engineCore;
 
 export namespace zzz::platforms::directx
 {
