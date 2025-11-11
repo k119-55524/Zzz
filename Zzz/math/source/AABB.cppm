@@ -2,7 +2,7 @@
 #include "pch.h"
 export module AABB;
 
-import ray;
+import Ray;
 import Vector4;
 
 namespace zzz::math
@@ -23,7 +23,7 @@ namespace zzz::math
 
 		// Проверка пересечения луча с AABB
 		// Использует алгоритм slab method
-		bool intersect(const ray& r, float tMin, float tMax) const
+		bool intersect(const Ray& r, float tMin, float tMax) const
 		{
 			Vector4 origin;
 			Vector4 direction;
@@ -49,7 +49,7 @@ namespace zzz::math
 		}
 
 		// Проверка пересечения луча с AABB (упрощенная версия)
-		bool intersect(const ray& r) const { return intersect(r, 0.0f, std::numeric_limits<float>::infinity()); }
+		bool intersect(const Ray& r) const { return intersect(r, 0.0f, std::numeric_limits<float>::infinity()); }
 
 		// Проверка, содержится ли точка внутри AABB
 		bool contains(const Vector4& point) const

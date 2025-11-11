@@ -1,10 +1,12 @@
 #include "pch.h"
+
 export module Scene;
 
 import Math;
 import Camera;
 import Vector4;
 import SceneEntity;
+import RenderQueue;
 
 using namespace zzz::math;
 using namespace zzz::engineCore;
@@ -13,13 +15,10 @@ export namespace zzz
 {
 	export class Scene final
 	{
+		Z_NO_COPY_MOVE(Scene);
+
 	public:
 		Scene();
-		Scene(const Scene&) = delete;
-		Scene(Scene&&) = delete;
-		Scene& operator=(const Scene&) = delete;
-		Scene& operator=(Scene&&) = delete;
-
 		~Scene();
 
 		void Add(std::shared_ptr<SceneEntity> entity);
@@ -27,9 +26,12 @@ export namespace zzz
 		inline Camera& GetPrimaryCamera() noexcept { return m_PrimaryCamera; }
 		inline std::shared_ptr<SceneEntity> GetEntity() const noexcept { return m_Entity; }
 
+		inline std::shared_ptr<RenderQueue> GetCalcRenderQueue();
+
 	private:
 		Camera m_PrimaryCamera;
 		std::shared_ptr<SceneEntity> m_Entity;
+		RenderQueue m_RenderQueue;
 	};
 
 	export Scene::Scene()
@@ -62,5 +64,12 @@ export namespace zzz
 	void Scene::Add(std::shared_ptr<SceneEntity> entity)
 	{
 		m_Entity = entity;
+	}
+
+	std::shared_ptr<RenderQueue> Scene::GetCalcRenderQueue()
+	{
+		m_RenderQueue.ClearQueue();
+
+		return std::make_shared<RenderQueue>(m_RenderQueue);
 	}
 }

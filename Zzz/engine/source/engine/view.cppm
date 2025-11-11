@@ -10,12 +10,14 @@ import IAppWin;
 import Settings;
 import StrConvert;
 import ThreadPool;
+import RenderQueue;
 import ViewFactory;
 import ISurfaceView;
 import ScenesManager;
 
 using namespace zzz::templates;
 using namespace zzz::platforms;
+using namespace zzz::engineCore;
 
 namespace zzz
 {
@@ -154,7 +156,8 @@ namespace zzz
 
 	void View::PrepareFrame(double deltaTime)
 	{
-		m_SurfaceView->PrepareFrame(m_Scene);
+		std::shared_ptr<RenderQueue> renderQueue = m_Scene->GetCalcRenderQueue();
+		m_SurfaceView->PrepareFrame(m_Scene, renderQueue);
 	}
 
 	void View::OnViewResize(const size2D<>& size, eTypeWinResize resizeType)

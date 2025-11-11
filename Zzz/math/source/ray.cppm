@@ -1,19 +1,19 @@
 
 #include "pch.h"
 
-export module ray;
+export module Ray;
 
 import Vector4;
 import Matrix4x4;
 
 export namespace zzz::math
 {
-	export class ray
+	export class Ray
 	{
 	public:
 		// Конструкторы
-		ray() noexcept : origin(0.0f, 0.0f, 0.0f, 1.0f), direction(0.0f, 0.0f, 1.0f, 0.0f) {}
-		ray(const Vector4& orig, const Vector4& dir) noexcept : origin(orig), direction(dir.normalized()) {}
+		Ray() noexcept : origin(0.0f, 0.0f, 0.0f, 1.0f), direction(0.0f, 0.0f, 1.0f, 0.0f) {}
+		Ray(const Vector4& orig, const Vector4& dir) noexcept : origin(orig), direction(dir.normalized()) {}
 
 		inline Vector4 getOrigin() const noexcept { return origin; }
 		inline Vector4 getDirection() const noexcept { return direction; }
@@ -24,13 +24,13 @@ export namespace zzz::math
 		Vector4 point_at(float distance) const noexcept { return at(distance); }
 
 		// Трансформация луча
-		ray transform(const Matrix4x4& matrix) const noexcept
+		Ray transform(const Matrix4x4& matrix) const noexcept
 		{
 			Vector4 newOrigin = matrix * origin;
 			// Направление трансформируем без трансляции (w=0)
 			Vector4 newDir = matrix * Vector4(direction[0], direction[1], direction[2], 0.0f);
 
-			return ray(newOrigin, newDir);
+			return Ray(newOrigin, newDir);
 		}
 
 		// Расстояние от точки до луча
@@ -60,7 +60,7 @@ export namespace zzz::math
 
 #pragma region createtion rays from screen coords
 		// Вариант 1: Из пиксельных координат экрана
-		static ray from_screen_pixels(
+		static Ray from_screen_pixels(
 			float screenX, float screenY,
 			float screenWidth, float screenHeight,
 			const Matrix4x4& viewMatrix,
@@ -74,7 +74,7 @@ export namespace zzz::math
 		}
 
 		// Вариант 2: Из Normalized Device Coordinates (Нормализованные Координаты Устройства)
-		static ray from_ndc(
+		static Ray from_ndc(
 			float ndcX, float ndcY,
 			const Matrix4x4& viewMatrix,
 			const Matrix4x4& projectionMatrix) noexcept
@@ -105,18 +105,18 @@ export namespace zzz::math
 			Vector4 origin = rayWorld_near;
 			Vector4 direction = (rayWorld_far - rayWorld_near).normalized();
 
-			return ray(origin, direction);
+			return Ray(origin, direction);
 		}
 
 		// Вариант 3: Оптимизированный для перспективной проекции
-		static ray from_ndc_perspective(
+		static Ray from_ndc_perspective(
 			float ndcX, float ndcY,
 			const Vector4& cameraPosition,
 			const Matrix4x4& viewMatrix,
 			float fovY,
 			float aspectRatio) noexcept
 		{
-			ray ray;
+			Ray ray;
 			ray.origin = cameraPosition;
 
 			// Обратная трансформация из NDC в view space
@@ -139,13 +139,13 @@ export namespace zzz::math
 		}
 
 		// Вариант 4: Для ортографической проекции
-		static ray from_ndc_orthographic(
+		static Ray from_ndc_orthographic(
 			float ndcX, float ndcY,
 			const Matrix4x4& viewMatrix,
 			float left, float right,
 			float bottom, float top) noexcept
 		{
-			ray ray;
+			Ray ray;
 
 			// В ортографической проекции лучи параллельны
 			float x = left + (ndcX + 1.0f) * 0.5f * (right - left);

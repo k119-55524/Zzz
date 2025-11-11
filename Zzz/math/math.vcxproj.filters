@@ -38,7 +38,7 @@
     <ClCompile Include="math.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\ray.cppm">
+    <ClCompile Include="source\Ray.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\AABB.cppm">

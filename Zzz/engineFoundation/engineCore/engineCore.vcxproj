@@ -146,7 +146,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="engineCore.h" />
-    <ClInclude Include="headers\header.h" />
+    <ClInclude Include="Headers\header.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -157,8 +157,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="source\Camera.cppm" />
-    <ClCompile Include="source\utils\RenderArea.cppm" />
+    <ClCompile Include="Source\Camera.cppm" />
+    <ClCompile Include="Source\RenderQueue.cppm" />
+    <ClCompile Include="Source\Utils\RenderArea.cppm" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\math\math.vcxproj">

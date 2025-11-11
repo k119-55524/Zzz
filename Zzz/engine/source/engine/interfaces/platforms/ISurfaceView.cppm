@@ -8,9 +8,11 @@ import result;
 import size2D;
 import IAppWin;
 import Settings;
+import RenderQueue;
 
 using namespace zzz::colors;
 using namespace zzz::platforms;
+using namespace zzz::engineCore;
 
 export namespace zzz
 {
@@ -37,7 +39,7 @@ export namespace zzz
 		virtual ~ISurfaceView() = default;
 
 		[[nodiscard]] virtual result<> Initialize() = 0;
-		virtual void PrepareFrame(std::shared_ptr<Scene> scene) = 0;
+		virtual void PrepareFrame(std::shared_ptr<Scene> scene, std::shared_ptr<RenderQueue> renderQueue) = 0;
 		virtual void RenderFrame() = 0;
 		virtual void OnResize(const size2D<>& size) = 0;
 

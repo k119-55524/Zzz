@@ -17,6 +17,7 @@ import Settings;
 import Matrix4x4;
 import StrConvert;
 import RenderArea;
+import RenderQueue;
 import ISurfaceView;
 import AppWindowMsWin;
 
@@ -111,7 +112,7 @@ namespace zzz
 			std::shared_ptr<IGAPI> _iGAPI);
 
 		[[nodiscard]] result<> Initialize() override;
-		void PrepareFrame(std::shared_ptr<Scene> scene) override;
+		void PrepareFrame(std::shared_ptr<Scene> scene, std::shared_ptr<RenderQueue> renderQueue) override;
 		void RenderFrame() override;
 		void OnResize(const size2D<>& size) override;
 
@@ -450,7 +451,7 @@ namespace zzz
 #pragma endregion Initialize
 
 #pragma region Rendring
-	void SurfDirectX::PrepareFrame(std::shared_ptr<Scene> scene)
+	void SurfDirectX::PrepareFrame(std::shared_ptr<Scene> scene, std::shared_ptr<RenderQueue> renderQueue)
 	{
 		{
 			//Matrix4x4 mView;

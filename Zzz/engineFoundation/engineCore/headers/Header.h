@@ -49,11 +49,10 @@ namespace zzz
 		Ratio_9x18,
 		Ratio_20x9,
 		Ratio_9x20,
-		Ratio_19_5x9,  // 19.5:9
-		Ratio_9x19_5,
+		Ratio_19_5x9, // 19.5:9
+		Ratio_9x19_5, // 9:19.5
 
 		// Прочие
-		Ratio_1x1,     // Квадрат
 		Ratio_5x4,
 		Ratio_4x5,
 

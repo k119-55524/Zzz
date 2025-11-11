@@ -18,7 +18,7 @@
     <ClInclude Include="pch.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="headers\header.h">
+    <ClInclude Include="Headers\header.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="engineCore.h">
@@ -32,10 +32,13 @@
     <ClCompile Include="pch.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Camera.cppm">
+    <ClCompile Include="Source\Camera.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\utils\RenderArea.cppm">
+    <ClCompile Include="Source\Utils\RenderArea.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderQueue.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

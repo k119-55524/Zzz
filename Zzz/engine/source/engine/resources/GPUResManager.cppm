@@ -1,4 +1,6 @@
+
 #include "pch.h"
+
 export module GPUResManager;
 
 import IPSO;
@@ -102,18 +104,18 @@ export namespace zzz
 		std::string vs = R"(
 			cbuffer cbPerObject : register(b0)
 			{
-				row_major float4x4 gWorldViewProj; 
+				row_major float4x4 gWorldViewProj;
 			};
 
 			struct VertexIn
 			{
-				float3 PosL  : POSITION;
+				float3 Pos  : POSITION;
 				float4 Color : COLOR;
 			};
 
 			struct VertexOut
 			{
-				float4 PosH  : SV_POSITION;
+				float4 Pos  : SV_POSITION;
 				float4 Color : COLOR;
 			};
 
@@ -122,7 +124,7 @@ export namespace zzz
 				VertexOut vout;
 	
 				// Transform to homogeneous clip space.
-				vout.PosH = mul(float4(vin.PosL, 1.0f), gWorldViewProj);
+				vout.Pos = mul(float4(vin.Pos, 1.0f), gWorldViewProj);
 	
 				// Just pass vertex color into the pixel shader.
 				vout.Color = vin.Color;
@@ -134,7 +136,7 @@ export namespace zzz
 		std::string ps = R"(
 			struct VertexOut
 			{
-				float4 PosH  : SV_POSITION;
+				float4 Pos  : SV_POSITION;
 				float4 Color : COLOR;
 			};
 

@@ -2,7 +2,7 @@
 
 export module Camera;
 
-import ray;
+import Ray;
 import Vector4;
 import Matrix4x4;
 import RenderArea;
@@ -255,11 +255,11 @@ export namespace zzz::engineCore
 		inline eProjType GetProjectionType() const noexcept { return m_ProjectionType; }
 
 		// Преобразование экранных координат (normalized device coords) в луч в мировом пространстве
-		inline ray ScreenPointToRay(float ndcX, float ndcY) const noexcept
+		inline Ray ScreenPointToRay(float ndcX, float ndcY) const noexcept
 		{
 			if (m_ProjectionType == eProjType::Perspective)
 			{
-				return ray::from_ndc_perspective(
+				return Ray::from_ndc_perspective(
 					ndcX, ndcY,
 					m_Position,
 					GetViewMatrix(),
@@ -268,7 +268,7 @@ export namespace zzz::engineCore
 			}
 			else // Orthographic
 			{
-				return ray::from_ndc_orthographic(
+				return Ray::from_ndc_orthographic(
 					ndcX, ndcY,
 					GetViewMatrix(),
 					m_Left, m_Right,
@@ -277,7 +277,7 @@ export namespace zzz::engineCore
 		}
 
 		// Дополнительно: из пиксельных координат
-		inline ray ScreenPixelsToRay(float screenX, float screenY,
+		inline Ray ScreenPixelsToRay(float screenX, float screenY,
 			float screenWidth, float screenHeight) const noexcept
 		{
 			// Конвертируем в NDC
@@ -409,7 +409,7 @@ export namespace zzz::engineCore
 		{
 			switch (preset)
 			{
-				// Стандартные
+			// Стандартные
 			case eAspectType::Ratio_16x9:
 				return 16.0f / 9.0f;
 			case eAspectType::Ratio_9x16:
@@ -423,7 +423,7 @@ export namespace zzz::engineCore
 			case eAspectType::Ratio_3x4:
 				return 3.0f / 4.0f;
 
-				// Ультра-широкие
+			// Ультра-широкие
 			case eAspectType::Ratio_21x9:
 				return 21.0f / 9.0f;
 			case eAspectType::Ratio_9x21:
@@ -433,7 +433,7 @@ export namespace zzz::engineCore
 			case eAspectType::Ratio_9x32:
 				return 9.0f / 32.0f;
 
-				// Мобильные
+			// Мобильные
 			case eAspectType::Ratio_18x9:
 				return 18.0f / 9.0f;
 			case eAspectType::Ratio_9x18:
@@ -447,9 +447,7 @@ export namespace zzz::engineCore
 			case eAspectType::Ratio_9x19_5:
 				return 9.0f / 19.5f;
 
-				// Прочие
-			case eAspectType::Ratio_1x1:
-				return 1.0f;
+			// Прочие
 			case eAspectType::Ratio_5x4:
 				return 5.0f / 4.0f;
 			case eAspectType::Ratio_4x5:
