@@ -18,7 +18,7 @@ using namespace zzz;
 using namespace zzz::templates;
 using namespace zzz::engineCore;
 
-export namespace zzz::platforms::directx
+export namespace zzz::directx
 {
 	// Создана только для обхода ограничений VisualStudio при передаче параметров
 	template <class T>

@@ -1,4 +1,6 @@
+
 #include "pch.h"
+
 export module CPUtoGPUDataTransferDX;
 
 import result;
@@ -8,8 +10,8 @@ import ThreadSafeSwapBuffer;
 import ICPUtoGPUDataTransfer;
 
 using namespace zzz;
+using namespace zzz::directx;
 using namespace zzz::templates;
-using namespace zzz::platforms::directx;
 
 #if defined(_WIN64)
 export namespace zzz::engineCore

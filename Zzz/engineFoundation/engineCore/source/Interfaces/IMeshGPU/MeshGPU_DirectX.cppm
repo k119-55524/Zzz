@@ -1,5 +1,7 @@
+
 #include "pch.h"
-export module GPUMeshDX;
+
+export module MeshGPU_DirectX;
 
 #if defined(ZRENDER_API_D3D12)
 
@@ -12,17 +14,16 @@ import CPUVertexBuffer;
 
 using namespace zzz::engineCore;
 
-export namespace zzz::platforms::directx
+export namespace zzz::directx
 {
-	export class GPUMeshDX final : public IMeshGPU
+	export class MeshGPU_DirectX final : public IMeshGPU
 	{
 		friend class GPUResManager;
 
 	public:
-		GPUMeshDX() = delete;
-		GPUMeshDX(std::shared_ptr<CPUMesh> meshCPU);
-
-		~GPUMeshDX() = default;
+		MeshGPU_DirectX() = delete;
+		MeshGPU_DirectX(std::shared_ptr<CPUMesh> meshCPU);
+		~MeshGPU_DirectX() = default;
 
 		const D3D12_VERTEX_BUFFER_VIEW* VertexBufferView() const override { return &vertexBufferView; };
 		const D3D12_INDEX_BUFFER_VIEW* IndexBufferView() const override { return indices ? &indexBufferView : nullptr; };
@@ -44,7 +45,7 @@ export namespace zzz::platforms::directx
 		result<> Initialize(std::shared_ptr<IGAPI> _IGAPI) override;
 	};
 
-	GPUMeshDX::GPUMeshDX(std::shared_ptr<CPUMesh> meshCPU) :
+	MeshGPU_DirectX::MeshGPU_DirectX(std::shared_ptr<CPUMesh> meshCPU) :
 		IMeshGPU(meshCPU)
 	{
 		vertices = m_MeshCPU->GetMesh();
@@ -61,7 +62,7 @@ export namespace zzz::platforms::directx
 		DebugOutput(std::format(L">>>>> [GPUMeshDX::GPUMeshDX( ... )]. indexBufferSize: {}", indexBufferSize));
 	}
 
-	result<> GPUMeshDX::Initialize(std::shared_ptr<IGAPI> _IGAPI)
+	result<> MeshGPU_DirectX::Initialize(std::shared_ptr<IGAPI> _IGAPI)
 	{
 		CD3DX12_HEAP_PROPERTIES defaultHeapProps(D3D12_HEAP_TYPE_DEFAULT);
 		CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);

@@ -3,7 +3,7 @@
 
 export module event;
 
-namespace zzz::engineCore
+namespace zzz
 {
 	template<typename CallbackType>
 	class eventBase

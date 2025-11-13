@@ -18,39 +18,36 @@
     <ClInclude Include="pch.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\platformsDefines.h">
+    <ClInclude Include="Headers\PlatformsDefines.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="engineBase.h">
+    <ClInclude Include="EngineBase.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\header.h">
+    <ClInclude Include="Headers\Header.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\macroDefinition.h">
+    <ClInclude Include="Headers\MacroDefinition.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\headersMSWin.h">
+    <ClInclude Include="Headers\HeadersMSWin.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\headerVulkan.h">
+    <ClInclude Include="Headers\HeaderVulkan.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\headerMetal.h">
+    <ClInclude Include="Headers\HeaderMetal.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\headerDX.h">
+    <ClInclude Include="Headers\HeaderDX.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="engineBase.cpp">
+    <ClCompile Include="EngineBase.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="helpers.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Utils\Platforms.cppm">
@@ -72,6 +69,12 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Templates\ThreadSafeSwapBuffer.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\StrConvert.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Event.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

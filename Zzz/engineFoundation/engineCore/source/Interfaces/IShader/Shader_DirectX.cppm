@@ -1,5 +1,7 @@
+
 #include "pch.h"
-export module ShaderDX;
+
+export module Shader_DirectX;
 
 #if defined(ZRENDER_API_D3D12)
 import IGAPI;
@@ -8,19 +10,16 @@ import IShader;
 import IMeshGPU;
 import StrConvert;
 
-using namespace zzz;
-using namespace zzz::platforms;
 using namespace zzz::engineCore;
 
-export namespace zzz::platforms::directx
+export namespace zzz::directx
 {
-	export class ShaderDX final : public IShader
+	export class Shader_DirectX final : public IShader
 	{
 	public:
-		ShaderDX() = delete;
-		explicit ShaderDX(const std::shared_ptr<IGAPI> gapi, const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name);
-
-		virtual ~ShaderDX() override = default;
+		Shader_DirectX() = delete;
+		explicit Shader_DirectX(const std::shared_ptr<IGAPI> gapi, const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name);
+		virtual ~Shader_DirectX() override = default;
 
 		result<> InitializeByText(std::string&& srcVS, std::string&& srcPS) override;
 		result<ComPtr<ID3DBlob>> CompileShaderFromSource(
@@ -38,11 +37,11 @@ export namespace zzz::platforms::directx
 		ComPtr<ID3DBlob> m_PS;
 	};
 
-	ShaderDX::ShaderDX(const std::shared_ptr<IGAPI> gapi, const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name) :
+	Shader_DirectX::Shader_DirectX(const std::shared_ptr<IGAPI> gapi, const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name) :
 		IShader(gapi, mesh, std::move(name))
 	{}
 
-	result<> ShaderDX::InitializeByText(std::string&& srcVS, std::string&& srcPS)
+	result<> Shader_DirectX::InitializeByText(std::string&& srcVS, std::string&& srcPS)
 	{
 		//D3D_SHADER_MACRO defines[] =
 		//{
@@ -65,7 +64,7 @@ export namespace zzz::platforms::directx
 		return {};
 	}
 
-	result<ComPtr<ID3DBlob>> ShaderDX::CompileShaderFromSource(
+	result<ComPtr<ID3DBlob>> Shader_DirectX::CompileShaderFromSource(
 		std::string&& shaderSource,
 		const std::wstring& entryPoint,
 		const std::wstring& target,

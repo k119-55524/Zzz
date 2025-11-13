@@ -8,7 +8,7 @@ import StrConvert;
 
 #if defined(ZRENDER_API_D3D12)
 import DXAPI;
-using namespace zzz::platforms::directx;
+using namespace zzz::directx;
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif

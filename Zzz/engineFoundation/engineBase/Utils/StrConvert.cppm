@@ -5,7 +5,7 @@ export module StrConvert;
 
 import result;
 
-export namespace zzz::engineCore
+export namespace zzz
 {
 #if defined(_WIN64)
 	result<std::wstring> string_to_wstring(const std::string& str)

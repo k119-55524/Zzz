@@ -8,8 +8,7 @@ import IShader;
 import IPSO_DirectX;
 import VertexFormatMapper;
 
-using namespace zzz::platforms;
-using namespace zzz::platforms::directx;
+using namespace zzz::directx;
 
 namespace zzz::engineCore
 {

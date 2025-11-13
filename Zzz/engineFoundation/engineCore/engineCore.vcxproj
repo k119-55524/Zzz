@@ -168,6 +168,7 @@
     <ClCompile Include="Source\Interfaces\IIcoBuilder\ibMSWin.cppm" />
     <ClCompile Include="Source\Interfaces\IIcoBuilder\IIcoBuilder.cppm" />
     <ClCompile Include="Source\Interfaces\IMainLoop\MainLoop_MSWin.cppm" />
+    <ClCompile Include="Source\Interfaces\IMeshGPU\MeshGPU_DirectX.cppm" />
     <ClCompile Include="Source\Interfaces\IPSO\PSO_DX.cppm" />
     <ClCompile Include="Source\Interfaces\IAppWin\IAppWin.cppm" />
     <ClCompile Include="Source\Interfaces\IAppWin\IAppWin_MSWin.cppm" />
@@ -182,7 +183,9 @@
     <ClCompile Include="Source\Interfaces\IPSO\IPSO_DirectX.cppm" />
     <ClCompile Include="Source\Interfaces\IShader\IShader.cppm" />
     <ClCompile Include="Source\Interfaces\IShader\IShader_DirectX.cppm" />
-    <ClCompile Include="Source\Interfaces\ISurfaceView.cppm" />
+    <ClCompile Include="Source\Interfaces\IShader\Shader_DirectX.cppm" />
+    <ClCompile Include="Source\Interfaces\ISurfaceView\ISurfaceView.cppm" />
+    <ClCompile Include="Source\Interfaces\ISurfaceView\SurfDirectX.cppm" />
     <ClCompile Include="Source\IO\IOPathFactory.cppm" />
     <ClCompile Include="Source\Material.cppm" />
     <ClCompile Include="Source\RenderQueue.cppm" />
@@ -194,12 +197,11 @@
     <ClCompile Include="Source\Scene\SceneEntity.cppm" />
     <ClCompile Include="Source\Settings.cppm" />
     <ClCompile Include="Source\ZAML\ioZaml.cppm" />
-    <ClCompile Include="Utils\event.cppm" />
+    <ClCompile Include="Utils\Helpers.cppm" />
     <ClCompile Include="Utils\MessageBox.cppm" />
     <ClCompile Include="Utils\RenderArea.cppm" />
     <ClCompile Include="Utils\serializer.cppm" />
     <ClCompile Include="Utils\size2D.cppm" />
-    <ClCompile Include="Utils\StrConvert.cppm" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\math\math.vcxproj">

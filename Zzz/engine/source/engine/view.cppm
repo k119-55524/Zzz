@@ -1,4 +1,6 @@
+
 #include "pch.h"
+
 export module View;
 
 import IGAPI;
@@ -16,7 +18,6 @@ import ISurfaceView;
 import ScenesManager;
 
 using namespace zzz::templates;
-using namespace zzz::platforms;
 using namespace zzz::engineCore;
 
 namespace zzz

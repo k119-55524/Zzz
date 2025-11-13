@@ -1,4 +1,6 @@
+
 #include "pch.h"
+
 #include <Headers/headerDX.h>
 export module SurfDirectX;
 
@@ -11,7 +13,7 @@ import result;
 import size2D;
 import Camera;
 import IAppWin;
-import helpers;
+import Helpers;
 import Vector4;
 import Settings;
 import Matrix4x4;
@@ -22,12 +24,9 @@ import ISurfaceView;
 import AppWin_MSWin;
 
 using namespace zzz::math;
-using namespace zzz::helpers;
-using namespace zzz::platforms;
 using namespace zzz::engineCore;
-using namespace zzz::platforms::directx;
 
-namespace zzz
+namespace zzz::directx
 {
 	template<typename T>
 	class UploadBuffer

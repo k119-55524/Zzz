@@ -5,8 +5,8 @@ import IGAPI;
 import DXAPI;
 import StrConvert;
 
+using namespace zzz::directx;
 using namespace zzz::engineCore;
-using namespace zzz::platforms::directx;
 
 export namespace zzz
 {

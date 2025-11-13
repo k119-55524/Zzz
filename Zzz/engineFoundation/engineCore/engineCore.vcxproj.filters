@@ -65,12 +65,6 @@
     <ClCompile Include="Source\Interfaces\IAppWin\IAppWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Utils\event.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Utils\StrConvert.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Interfaces\IAppWin\IAppWin_MSWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -140,7 +134,7 @@
     <ClCompile Include="Source\ZAML\ioZaml.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Interfaces\ISurfaceView.cppm">
+    <ClCompile Include="Source\Interfaces\ISurfaceView\ISurfaceView.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Interfaces\IGAPI\DXAPI.cppm">
@@ -159,6 +153,18 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Interfaces\IMainLoop\MainLoop_MSWin.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interfaces\IShader\Shader_DirectX.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interfaces\IMeshGPU\MeshGPU_DirectX.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interfaces\ISurfaceView\SurfDirectX.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Helpers.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

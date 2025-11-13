@@ -38,9 +38,6 @@
     <ClCompile Include="Source\engine\Factories\ViewFactory.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\engine\InterfacesImpl\SurfaceView\SurfDirectX.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
     <ClCompile Include="Source\engine\Factories\EngineFactory.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
@@ -59,13 +56,7 @@
     <ClCompile Include="Source\engine\Resources\GPUResManager.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\engine\InterfacesImpl\MeshGPU\GPUMeshDX.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
     <ClCompile Include="Source\engine\Utils\GpuEventScope.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\engine\InterfacesImpl\Shader\ShaderDX.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\engine\scene\SceneEntitySpawner.cppm">

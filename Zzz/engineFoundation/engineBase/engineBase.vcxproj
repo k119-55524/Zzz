@@ -145,19 +145,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="engineBase.h" />
-    <ClInclude Include="Headers\header.h" />
-    <ClInclude Include="Headers\headerDX.h" />
-    <ClInclude Include="Headers\headerMetal.h" />
-    <ClInclude Include="Headers\headersMSWin.h" />
-    <ClInclude Include="Headers\headerVulkan.h" />
-    <ClInclude Include="Headers\macroDefinition.h" />
-    <ClInclude Include="Headers\platformsDefines.h" />
+    <ClInclude Include="EngineBase.h" />
+    <ClInclude Include="Headers\Header.h" />
+    <ClInclude Include="Headers\HeaderDX.h" />
+    <ClInclude Include="Headers\HeaderMetal.h" />
+    <ClInclude Include="Headers\HeadersMSWin.h" />
+    <ClInclude Include="Headers\HeaderVulkan.h" />
+    <ClInclude Include="Headers\MacroDefinition.h" />
+    <ClInclude Include="Headers\PlatformsDefines.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="engineBase.cpp" />
-    <ClCompile Include="helpers.cppm" />
+    <ClCompile Include="EngineBase.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -169,8 +168,10 @@
     <ClCompile Include="Templates\ThreadSafeQueueArray.cppm" />
     <ClCompile Include="Templates\ThreadSafeSwapBuffer.cppm" />
     <ClCompile Include="Utils\Colors.cppm" />
+    <ClCompile Include="Utils\Event.cppm" />
     <ClCompile Include="Utils\Platforms.cppm" />
     <ClCompile Include="Utils\result.cppm" />
+    <ClCompile Include="Utils\StrConvert.cppm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

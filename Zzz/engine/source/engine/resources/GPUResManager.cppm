@@ -9,19 +9,19 @@ import result;
 import PSO_DX;
 import IShader;
 import IMeshGPU;
-import ShaderDX;
 import Material;
-import GPUMeshDX;
 import CPUResManager;
+import Shader_DirectX;
+import MeshGPU_DirectX;
 
+using namespace zzz::directx;
 using namespace zzz::engineCore;
-using namespace zzz::platforms::directx;
 
 namespace zzz
 {
 #if defined(ZRENDER_API_D3D12)
-	typedef GPUMeshDX GPUMesh;
-	typedef ShaderDX Shader;
+	typedef MeshGPU_DirectX MeshGPU;
+	typedef Shader_DirectX Shader;
 	typedef PSO_DX PSO;
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
@@ -62,7 +62,7 @@ export namespace zzz
 		if (!meshCPU)
 			return meshCPU.error();
 
-		std::shared_ptr<IMeshGPU> meshGPU = safe_make_shared<GPUMesh>(meshCPU.value());
+		std::shared_ptr<IMeshGPU> meshGPU = safe_make_shared<MeshGPU>(meshCPU.value());
 		result<> res = meshGPU->Initialize(m_GAPI);
 		if (!res)
 			return Unexpected(res.error());

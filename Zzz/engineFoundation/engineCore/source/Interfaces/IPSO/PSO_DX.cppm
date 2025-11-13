@@ -1,14 +1,16 @@
+
 #include "pch.h"
+
 export module PSO_DX;
 
 import IPSO;
 import IGAPI;
 import VertexFormatMapper;
 
-#if defined(ZRENDER_API_D3D12)
-using namespace zzz::platforms::directx;
+using namespace zzz::engineCore;
 
-namespace zzz::engineCore
+#if defined(ZRENDER_API_D3D12)
+namespace zzz::directx
 {
 	export class PSO_DX final : public IPSO
 	{

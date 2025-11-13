@@ -11,14 +11,10 @@ namespace zzz
 #if defined(ZPLATFORM_MSWINDOWS)
 	export class MainLoop_MSWin final: public IMainLoop
 	{
+		Z_NO_COPY_MOVE(MainLoop_MSWin);
+
 	public:
 		MainLoop_MSWin() = default;
-		MainLoop_MSWin(const MainLoop_MSWin&) = delete;
-		MainLoop_MSWin(MainLoop_MSWin&&) = delete;
-
-		MainLoop_MSWin& operator=(const MainLoop_MSWin&) = delete;
-		MainLoop_MSWin& operator=(MainLoop_MSWin&&) = delete;
-
 		virtual ~MainLoop_MSWin() = default;
 
 		void Run() override;
