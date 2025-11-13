@@ -9,7 +9,7 @@ import Math;
 import IGAPI;
 import DXAPI;
 import Scene;
-import result;
+import Result;
 import size2D;
 import Camera;
 import IAppWin;
@@ -107,7 +107,7 @@ namespace zzz::directx
 			std::shared_ptr<IGAPI> _iGAPI);
 		~SurfDirectX() override = default;
 
-		[[nodiscard]] result<> Initialize() override;
+		[[nodiscard]] Result<> Initialize() override;
 		void PrepareFrame(std::shared_ptr<Scene> scene, std::shared_ptr<RenderQueue> renderQueue) override;
 		void RenderFrame() override;
 		void OnResize(const size2D<>& size) override;
@@ -137,16 +137,16 @@ namespace zzz::directx
 		ComPtr<ID3D12Resource> m_renderTargets[BACK_BUFFER_COUNT];
 		ComPtr<ID3D12Resource> m_depthStencil[BACK_BUFFER_COUNT];
 
-		[[nodiscard]] result<> BuildConstantBuffers();
-		[[nodiscard]] result<> CreateRTVHeap();
-		[[nodiscard]] result<> CreateSRVHeap();
-		[[nodiscard]] result<> CreateDSVHeap();
-		[[nodiscard]] result<> CreateDS(const size2D<>& size);
-		[[nodiscard]] result<> CreateRTV(ComPtr<ID3D12Device>& m_device);
-		[[nodiscard]] result<> InitializeSwapChain();
+		[[nodiscard]] Result<> BuildConstantBuffers();
+		[[nodiscard]] Result<> CreateRTVHeap();
+		[[nodiscard]] Result<> CreateSRVHeap();
+		[[nodiscard]] Result<> CreateDSVHeap();
+		[[nodiscard]] Result<> CreateDS(const size2D<>& size);
+		[[nodiscard]] Result<> CreateRTV(ComPtr<ID3D12Device>& m_device);
+		[[nodiscard]] Result<> InitializeSwapChain();
 
 		void ResetRTVandDS();
-		[[nodiscard]] result<> RecreateRenderTargetsAndDepth();
+		[[nodiscard]] Result<> RecreateRenderTargetsAndDepth();
 	};
 
 	SurfDirectX::SurfDirectX(
@@ -164,7 +164,7 @@ namespace zzz::directx
 	}
 
 #pragma region Initialize
-	result<> SurfDirectX::Initialize()
+	Result<> SurfDirectX::Initialize()
 	{
 		auto m_device = m_iGAPI->GetDevice();
 		ensure(m_device, ">>>>> [SurfDirectX::Initialize()]. Device cannot be null.");
@@ -201,7 +201,7 @@ namespace zzz::directx
 		return {};
 	}
 
-	result<> SurfDirectX::CreateRTV(ComPtr<ID3D12Device>& m_device)
+	Result<> SurfDirectX::CreateRTV(ComPtr<ID3D12Device>& m_device)
 	{
 		ensure(m_device, ">>>>> [SurfDirectX::CreateRTV()]. Device cannot be null.");
 		ensure(m_rtvHeap, ">>>>> [SurfDirectX::CreateRTV()]. RTV Heap cannot be null.");
@@ -224,7 +224,7 @@ namespace zzz::directx
 		return {};
 	}
 
-	result<> SurfDirectX::InitializeSwapChain()
+	Result<> SurfDirectX::InitializeSwapChain()
 	{
 		BOOL allowTearing = FALSE;
 		ComPtr<IDXGIFactory5> factory5;
@@ -266,7 +266,7 @@ namespace zzz::directx
 		return {};
 	}
 
-	result<> SurfDirectX::CreateRTVHeap()
+	Result<> SurfDirectX::CreateRTVHeap()
 	{
 		auto m_device = m_iGAPI->GetDevice();
 		ensure(m_device, ">>>>> [SurfDirectX::CreateRTVHeap()]. Device cannot be null.");
@@ -285,7 +285,7 @@ namespace zzz::directx
 		return {};
 	}
 
-	result<> SurfDirectX::CreateSRVHeap()
+	Result<> SurfDirectX::CreateSRVHeap()
 	{
 		auto m_device = m_iGAPI->GetDevice();
 		ensure(m_device, ">>>>> [SurfDirectX::CreateSRVHeap()]. Device cannot be null.");
@@ -304,7 +304,7 @@ namespace zzz::directx
 		return {};
 	}
 
-	result<> SurfDirectX::BuildConstantBuffers()
+	Result<> SurfDirectX::BuildConstantBuffers()
 	{
 		auto m_device = m_iGAPI->GetDevice();
 		mObjectCB = std::make_unique<UploadBuffer<ObjectConstants>>(m_device.Get(), 1, true);
@@ -325,7 +325,7 @@ namespace zzz::directx
 		return {};
 	}
 
-	result<> SurfDirectX::CreateDSVHeap()
+	Result<> SurfDirectX::CreateDSVHeap()
 	{
 		auto m_device = m_iGAPI->GetDevice();
 		ensure(m_device, ">>>>> [SurfDirectX::CreateDSVHeap()]. Device cannot be null.");
@@ -346,7 +346,7 @@ namespace zzz::directx
 		return {};
 	}
 
-	result<> SurfDirectX::CreateDS(const size2D<>& size)
+	Result<> SurfDirectX::CreateDS(const size2D<>& size)
 	{
 		auto m_device = m_iGAPI->GetDevice();
 		ensure(m_device, ">>>>> [SurfDirectX::CreateDS()]. Device cannot be null.");
@@ -424,7 +424,7 @@ namespace zzz::directx
 			ds.Reset();
 	}
 
-	result<> SurfDirectX::RecreateRenderTargetsAndDepth()
+	Result<> SurfDirectX::RecreateRenderTargetsAndDepth()
 	{
 		auto m_device = m_iGAPI->GetDevice();
 

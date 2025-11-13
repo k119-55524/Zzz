@@ -2,7 +2,7 @@
 export module CommandWrapperDX;
 
 #if defined(_WIN64)
-import result;
+import Result;
 
 using namespace zzz;
 
@@ -28,14 +28,14 @@ export namespace zzz::engineCore
 			if (m_commandList) m_commandList.Reset();
 			if (m_commandAllocator) m_commandAllocator.Reset();
 		}
-		[[nodiscard]] inline result<> Reinitialize(const ComPtr<ID3D12Device>& device)
+		[[nodiscard]] inline Result<> Reinitialize(const ComPtr<ID3D12Device>& device)
 		{
 			Reset();
 			return Initialize(device);
 		}
 
 	private:
-		result<> Initialize(const ComPtr<ID3D12Device>& m_device)
+		Result<> Initialize(const ComPtr<ID3D12Device>& m_device)
 		{
 			ensure(S_OK == m_device->CreateCommandAllocator(type, IID_PPV_ARGS(&m_commandAllocator)));
 			SET_RESOURCE_DEBUG_NAME(m_commandAllocator, std::format(L"Command Allocator").c_str());

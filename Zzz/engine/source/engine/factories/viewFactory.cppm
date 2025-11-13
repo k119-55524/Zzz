@@ -2,7 +2,7 @@
 export module ViewFactory;
 
 import IGAPI;
-import result;
+import Result;
 import IAppWin;
 import Settings;
 import StrConvert;

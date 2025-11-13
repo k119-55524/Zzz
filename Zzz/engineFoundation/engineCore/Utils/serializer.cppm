@@ -1,7 +1,7 @@
 #include "pch.h"
 export module serializer;
 
-import result;
+import Result;
 
 namespace zzz::engineCore
 {
@@ -24,7 +24,7 @@ namespace zzz::engineCore
 		}
 
 		template<typename T> requires std::is_trivially_copyable_v<T>
-		result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, T& value) const
+		Result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, T& value) const
 		{
 			if (offset + sizeof(T) > buffer.size())
 				return Unexpected(eResult::buffer_too_small, L"[zSerialize.DeSerialize]: Buffer too small.");
@@ -44,7 +44,7 @@ namespace zzz::engineCore
 			memcpy(buffer.data() + offset + sizeof(length), str.data(), length * sizeof(wchar_t));
 		}
 
-		result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, std::wstring& str) const
+		Result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, std::wstring& str) const
 		{
 			if (offset + sizeof(uint32_t) > buffer.size())
 				return Unexpected(eResult::buffer_too_small, L"[zSerialize.DeSerialize]: Buffer too small for length.");
@@ -74,7 +74,7 @@ namespace zzz::engineCore
 			memcpy(buffer.data() + offset + sizeof(length), str.data(), length);
 		}
 
-		result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, std::string& str) const
+		Result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, std::string& str) const
 		{
 			if (offset + sizeof(uint32_t) > buffer.size())
 				return Unexpected(eResult::buffer_too_small, L"[zSerialize.DeSerialize]: Buffer too small for string length.");
@@ -107,7 +107,7 @@ namespace zzz::engineCore
 		}
 
 		template<typename T> requires std::is_trivially_copyable_v<T>
-		result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, std::vector<T>& vec) const
+		Result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, std::vector<T>& vec) const
 		{
 			uint32_t length;
 			auto res = DeSerialize(buffer, offset, length);

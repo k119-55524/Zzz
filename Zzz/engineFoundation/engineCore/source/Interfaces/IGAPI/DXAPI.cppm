@@ -4,7 +4,7 @@ export module DXAPI;
 #if defined(ZRENDER_API_D3D12)
 
 import IGAPI;
-import result;
+import Result;
 import StrConvert;
 import AppWin_MSWin;
 import RootSignature;
@@ -43,7 +43,7 @@ export namespace zzz::directx
 		ComPtr<ID3D12RootSignature> GetRootSignature() const noexcept override {  return m_rootSignature.Get(); }
 
 		void CommandRenderReset() noexcept override;
-		[[nodiscard]] result<> CommandRenderReinitialize() override;
+		[[nodiscard]] Result<> CommandRenderReinitialize() override;
 		void EndPreparedTransfers() override;
 		void SubmitCommandLists() override;
 
@@ -51,7 +51,7 @@ export namespace zzz::directx
 		void EndRender() override;
 
 	protected:
-		[[nodiscard]] result<> Init() override;
+		[[nodiscard]] Result<> Init() override;
 		void WaitForGpu() override;
 
 	private:
@@ -71,13 +71,13 @@ export namespace zzz::directx
 		ComPtr<ID3D12CommandQueue> m_commandQueue;
 		std::shared_ptr<CommandWrapperDX> m_commandWrapper[BACK_BUFFER_COUNT];
 
-		result<> InitializeDevice();
-		result<> InitializeFence();
+		Result<> InitializeDevice();
+		Result<> InitializeFence();
 		void EnableDebugLayer(UINT& dxgiFactoryFlags);
-		result<> CreateFactory(UINT dxgiFactoryFlags, ComPtr<IDXGIFactory7>& outFactory);
-		result<> CreateDevice(ComPtr<IDXGIAdapter1> adapter, ComPtr<ID3D12Device>& outDevice, D3D_FEATURE_LEVEL& outFeatureLevel);
-		result<> CreateCommandQueue(ComPtr<ID3D12Device> device, ComPtr<ID3D12CommandQueue>& outQueue);
-		result<> GetAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter);
+		Result<> CreateFactory(UINT dxgiFactoryFlags, ComPtr<IDXGIFactory7>& outFactory);
+		Result<> CreateDevice(ComPtr<IDXGIAdapter1> adapter, ComPtr<ID3D12Device>& outDevice, D3D_FEATURE_LEVEL& outFeatureLevel);
+		Result<> CreateCommandQueue(ComPtr<ID3D12Device> device, ComPtr<ID3D12CommandQueue>& outQueue);
+		Result<> GetAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter);
 
 		void BeginPreparedTransfers();
 	};
@@ -102,9 +102,9 @@ export namespace zzz::directx
 			m_commandWrapper[i]->Reset();
 	}
 
-	result<> DXAPI::CommandRenderReinitialize()
+	Result<> DXAPI::CommandRenderReinitialize()
 	{
-		result<> res;
+		Result<> res;
 		for (int i = 0; i < BACK_BUFFER_COUNT; i++)
 		{
 			res = m_commandWrapper[i]->Reinitialize(m_device);
@@ -116,9 +116,9 @@ export namespace zzz::directx
 	}
 
 #pragma region Initialize
-	result<> DXAPI::Init()
+	Result<> DXAPI::Init()
 	{
-		result<> res = InitializeDevice()
+		Result<> res = InitializeDevice()
 			.and_then([&]() { m_CPUtoGPUDataTransfer = safe_make_unique<CPUtoGPUDataTransferDX>(m_device, m_PreparedTransfers); })
 			.and_then([&]() { return m_rootSignature.Initialize(m_device); })
 			.and_then([&]() { return  InitializeFence(); });
@@ -126,7 +126,7 @@ export namespace zzz::directx
 		return res;
 	}
 
-	result<> DXAPI::InitializeDevice()
+	Result<> DXAPI::InitializeDevice()
 	{
 		UINT dxgiFactoryFlags = 0;
 		EnableDebugLayer(dxgiFactoryFlags);
@@ -174,7 +174,7 @@ export namespace zzz::directx
 #endif
 	}
 
-	result<> DXAPI::CreateFactory(UINT dxgiFactoryFlags, ComPtr<IDXGIFactory7>& outFactory)
+	Result<> DXAPI::CreateFactory(UINT dxgiFactoryFlags, ComPtr<IDXGIFactory7>& outFactory)
 	{
 		HRESULT hr = CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&outFactory));
 		if (FAILED(hr))
@@ -192,7 +192,7 @@ export namespace zzz::directx
 		return {};
 	}
 
-	result<> DXAPI::CreateDevice(ComPtr<IDXGIAdapter1> adapter, ComPtr<ID3D12Device>& outDevice, D3D_FEATURE_LEVEL& outFeatureLevel)
+	Result<> DXAPI::CreateDevice(ComPtr<IDXGIAdapter1> adapter, ComPtr<ID3D12Device>& outDevice, D3D_FEATURE_LEVEL& outFeatureLevel)
 	{
 		static constexpr D3D_FEATURE_LEVEL levels[] =
 		{
@@ -232,7 +232,7 @@ export namespace zzz::directx
 		return {};
 	}
 
-	result<> DXAPI::CreateCommandQueue(ComPtr<ID3D12Device> device, ComPtr<ID3D12CommandQueue>& outQueue)
+	Result<> DXAPI::CreateCommandQueue(ComPtr<ID3D12Device> device, ComPtr<ID3D12CommandQueue>& outQueue)
 	{
 		D3D12_COMMAND_QUEUE_DESC queueDesc{};
 		queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
@@ -245,7 +245,7 @@ export namespace zzz::directx
 		return {};
 	}
 
-	result<> DXAPI::GetAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter)
+	Result<> DXAPI::GetAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter)
 	{
 		if (!pFactory || !ppAdapter)
 			return Unexpected(eResult::invalid_argument);
@@ -304,7 +304,7 @@ export namespace zzz::directx
 		return Unexpected(eResult::failure);
 	}
 
-	result<> DXAPI::InitializeFence()
+	Result<> DXAPI::InitializeFence()
 	{
 		// Защита от повторной инициализации
 		if (m_fence || m_fenceEvent)

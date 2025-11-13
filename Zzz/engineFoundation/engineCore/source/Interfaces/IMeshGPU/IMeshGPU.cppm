@@ -4,7 +4,7 @@
 export module IMeshGPU;
 
 import IGAPI;
-import result;
+import Result;
 import CPUMesh;
 import IMeshGPU_DirectX;
 import VertexFormatMapper;
@@ -32,7 +32,7 @@ export namespace zzz::engineCore
 		std::shared_ptr<CPUMesh> m_MeshCPU;
 
 	private:
-		virtual result<> Initialize(std::shared_ptr<IGAPI> _IGAPI) = 0;
+		virtual Result<> Initialize(std::shared_ptr<IGAPI> _IGAPI) = 0;
 	};
 
 	IMeshGPU::IMeshGPU(std::shared_ptr<CPUMesh> meshCPU) :

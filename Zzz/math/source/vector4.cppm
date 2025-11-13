@@ -135,90 +135,90 @@ export namespace zzz::math
 		// Арифметика 
 		Vector4 operator+(const Vector4& rhs) const noexcept
 		{
-			Vector4 result;
+			Vector4 Result;
 #if defined(__APPLE__)
-			result.data = data + rhs.data;
+			Result.data = data + rhs.data;
 #elif defined(_M_X64) || defined(__x86_64__)
-			result.data = _mm_add_ps(data, rhs.data);
+			Result.data = _mm_add_ps(data, rhs.data);
 #elif defined(_M_ARM64) || defined(__aarch64__)
-			result.data = vaddq_f32(data, rhs.data);
+			Result.data = vaddq_f32(data, rhs.data);
 #endif
-			return result;
+			return Result;
 		}
 
 		Vector4 operator-(const Vector4& rhs) const noexcept
 		{
-			Vector4 result;
+			Vector4 Result;
 #if defined(__APPLE__)
-			result.data = data - rhs.data;
+			Result.data = data - rhs.data;
 #elif defined(_M_X64) || defined(__x86_64__)
-			result.data = _mm_sub_ps(data, rhs.data);
+			Result.data = _mm_sub_ps(data, rhs.data);
 #elif defined(_M_ARM64) || defined(__aarch64__)
-			result.data = vsubq_f32(data, rhs.data);
+			Result.data = vsubq_f32(data, rhs.data);
 #endif
-			return result;
+			return Result;
 		}
 
 		Vector4 operator*(float s) const noexcept
 		{
-			Vector4 result;
+			Vector4 Result;
 #if defined(__APPLE__)
-			result.data = data * s;
+			Result.data = data * s;
 #elif defined(_M_X64) || defined(__x86_64__)
 			__m128 scalar = _mm_set1_ps(s);
-			result.data = _mm_mul_ps(data, scalar);
+			Result.data = _mm_mul_ps(data, scalar);
 #elif defined(_M_ARM64) || defined(__aarch64__)
 			float32x4_t scalar = vdupq_n_f32(s);
-			result.data = vmulq_f32(data, scalar);
+			Result.data = vmulq_f32(data, scalar);
 #endif
-			return result;
+			return Result;
 		}
 
 		Vector4 operator/(float s) const noexcept
 		{
-			Vector4 result;
+			Vector4 Result;
 #if defined(__APPLE__)
-			result.data = data / s;
+			Result.data = data / s;
 #elif defined(_M_X64) || defined(__x86_64__)
 			__m128 scalar = _mm_set1_ps(s);
-			result.data = _mm_div_ps(data, scalar);
+			Result.data = _mm_div_ps(data, scalar);
 #elif defined(_M_ARM64) || defined(__aarch64__)
 			// Используем обратное умножение для совместимости со старыми версиями NEON
 			float32x4_t inv_scalar = vdupq_n_f32(1.0f / s);
-			result.data = vmulq_f32(data, inv_scalar);
+			Result.data = vmulq_f32(data, inv_scalar);
 #endif
-			return result;
+			return Result;
 		}
 
 		// Покомпонентное умножение
 		Vector4 operator*(const Vector4& rhs) const noexcept
 		{
-			Vector4 result;
+			Vector4 Result;
 #if defined(__APPLE__)
-			result.data = data * rhs.data;
+			Result.data = data * rhs.data;
 #elif defined(_M_X64) || defined(__x86_64__)
-			result.data = _mm_mul_ps(data, rhs.data);
+			Result.data = _mm_mul_ps(data, rhs.data);
 #elif defined(_M_ARM64) || defined(__aarch64__)
-			result.data = vmulq_f32(data, rhs.data);
+			Result.data = vmulq_f32(data, rhs.data);
 #endif
-			return result;
+			return Result;
 		}
 
 		// Покомпонентное деление
 		Vector4 operator/(const Vector4& rhs) const noexcept
 		{
-			Vector4 result;
+			Vector4 Result;
 #if defined(__APPLE__)
-			result.data = data / rhs.data;
+			Result.data = data / rhs.data;
 #elif defined(_M_X64) || defined(__x86_64__)
-			result.data = _mm_div_ps(data, rhs.data);
+			Result.data = _mm_div_ps(data, rhs.data);
 #elif defined(_M_ARM64) || defined(__aarch64__)
 			// Обратное умножение для каждого компонента
 			float32x4_t inv = vrecpeq_f32(rhs.data); // Приближённая обратная величина
 			inv = vmulq_f32(vrecpsq_f32(rhs.data, inv), inv); // Уточнение Newton-Raphson
-			result.data = vmulq_f32(data, inv);
+			Result.data = vmulq_f32(data, inv);
 #endif
-			return result;
+			return Result;
 		}
 
 		// Оптимизированные операции присваивания
@@ -294,16 +294,16 @@ export namespace zzz::math
 
 		Vector4 operator-() const noexcept
 		{
-			Vector4 result;
+			Vector4 Result;
 #if defined(__APPLE__)
-			result.data = -data;
+			Result.data = -data;
 #elif defined(_M_X64) || defined(__x86_64__)
 			__m128 neg = _mm_set1_ps(-0.0f);
-			result.data = _mm_xor_ps(data, neg);
+			Result.data = _mm_xor_ps(data, neg);
 #elif defined(_M_ARM64) || defined(__aarch64__)
-			result.data = vnegq_f32(data);
+			Result.data = vnegq_f32(data);
 #endif
-			return result;
+			return Result;
 		}
 
 		// Сравнение 
@@ -375,15 +375,15 @@ export namespace zzz::math
 		// Ограничение значений по компонентно(SIMD-оптимизированная) 
 		Vector4 clamp(const Vector4& minVal, const Vector4& maxVal) const noexcept
 		{
-			Vector4 result;
+			Vector4 Result;
 #if defined(__APPLE__)
-			result.data = ::simd::clamp(data, minVal.data, maxVal.data);
+			Result.data = ::simd::clamp(data, minVal.data, maxVal.data);
 #elif defined(_M_X64) || defined(__x86_64__)
-			result.data = _mm_min_ps(_mm_max_ps(data, minVal.data), maxVal.data);
+			Result.data = _mm_min_ps(_mm_max_ps(data, minVal.data), maxVal.data);
 #elif defined(_M_ARM64) || defined(__aarch64__)
-			result.data = vminq_f32(vmaxq_f32(data, minVal.data), maxVal.data);
+			Result.data = vminq_f32(vmaxq_f32(data, minVal.data), maxVal.data);
 #endif
-			return result;
+			return Result;
 		}
 
 		Vector4 clamp(float minVal, float maxVal) const noexcept
@@ -394,43 +394,43 @@ export namespace zzz::math
 		// Покомпонентный min/max (SIMD-оптимизированные) 
 		Vector4 compMin(const Vector4& rhs) const noexcept
 		{
-			Vector4 result;
+			Vector4 Result;
 #if defined(__APPLE__)
-			result.data = ::simd::min(data, rhs.data);
+			Result.data = ::simd::min(data, rhs.data);
 #elif defined(_M_X64) || defined(__x86_64__)
-			result.data = _mm_min_ps(data, rhs.data);
+			Result.data = _mm_min_ps(data, rhs.data);
 #elif defined(_M_ARM64) || defined(__aarch64__)
-			result.data = vminq_f32(data, rhs.data);
+			Result.data = vminq_f32(data, rhs.data);
 #endif
-			return result;
+			return Result;
 		}
 
 		Vector4 compMax(const Vector4& rhs) const noexcept
 		{
-			Vector4 result;
+			Vector4 Result;
 #if defined(__APPLE__)
-			result.data = ::simd::max(data, rhs.data);
+			Result.data = ::simd::max(data, rhs.data);
 #elif defined(_M_X64) || defined(__x86_64__)
-			result.data = _mm_max_ps(data, rhs.data);
+			Result.data = _mm_max_ps(data, rhs.data);
 #elif defined(_M_ARM64) || defined(__aarch64__)
-			result.data = vmaxq_f32(data, rhs.data);
+			Result.data = vmaxq_f32(data, rhs.data);
 #endif
-			return result;
+			return Result;
 		}
 
 		// Абсолютное значение 
 		Vector4 abs() const noexcept
 		{
-			Vector4 result;
+			Vector4 Result;
 #if defined(__APPLE__)
-			result.data = ::simd::abs(data);
+			Result.data = ::simd::abs(data);
 #elif defined(_M_X64) || defined(__x86_64__)
 			__m128 mask = _mm_castsi128_ps(_mm_set1_epi32(0x7FFFFFFF));
-			result.data = _mm_and_ps(data, mask);
+			Result.data = _mm_and_ps(data, mask);
 #elif defined(_M_ARM64) || defined(__aarch64__)
-			result.data = vabsq_f32(data);
+			Result.data = vabsq_f32(data);
 #endif
-			return result;
+			return Result;
 		}
 
 		// Минимальный/максимальный компонент 
@@ -465,51 +465,51 @@ export namespace zzz::math
 		// Покомпонентная обратная величина(1/x[0], ...)
 		Vector4 reciprocal() const noexcept
 		{
-			Vector4 result;
+			Vector4 Result;
 #if defined(__APPLE__)
-			result.data = ::simd::recip(data);
+			Result.data = ::simd::recip(data);
 #elif defined(_M_X64) || defined(__x86_64__)
-			result.data = _mm_div_ps(_mm_set1_ps(1.0f), data);
+			Result.data = _mm_div_ps(_mm_set1_ps(1.0f), data);
 #elif defined(_M_ARM64) || defined(__aarch64__)
 			// Используем приближённую обратную величину с уточнением
 			float32x4_t inv = vrecpeq_f32(data);
 			inv = vmulq_f32(vrecpsq_f32(data, inv), inv);
-			result.data = inv;
+			Result.data = inv;
 #endif
-			return result;
+			return Result;
 		}
 
 		// Квадратный корень
 		Vector4 sqrt() const noexcept
 		{
-			Vector4 result;
+			Vector4 Result;
 #if defined(__APPLE__)
-			result.data = ::simd::sqrt(data);
+			Result.data = ::simd::sqrt(data);
 #elif defined(_M_X64) || defined(__x86_64__)
-			result.data = _mm_sqrt_ps(data);
+			Result.data = _mm_sqrt_ps(data);
 #elif defined(_M_ARM64) || defined(__aarch64__)
 			// NEON не имеет прямой sqrt, используем приближение
 			float32x4_t rsqrt = vrsqrteq_f32(data);
 			rsqrt = vmulq_f32(vrsqrtsq_f32(vmulq_f32(data, rsqrt), rsqrt), rsqrt);
-			result.data = vmulq_f32(data, rsqrt);
+			Result.data = vmulq_f32(data, rsqrt);
 #endif
-			return result;
+			return Result;
 		}
 
 		// Обратный квадратный корень (быстрый)(1/sqrt(x[0], ...)
 		Vector4 rsqrt() const noexcept
 		{
-			Vector4 result;
+			Vector4 Result;
 #if defined(__APPLE__)
-			result.data = ::simd::rsqrt(data);
+			Result.data = ::simd::rsqrt(data);
 #elif defined(_M_X64) || defined(__x86_64__)
-			result.data = _mm_rsqrt_ps(data);
+			Result.data = _mm_rsqrt_ps(data);
 #elif defined(_M_ARM64) || defined(__aarch64__)
 			float32x4_t rsqrt = vrsqrteq_f32(data);
 			rsqrt = vmulq_f32(vrsqrtsq_f32(vmulq_f32(data, rsqrt), rsqrt), rsqrt);
-			result.data = rsqrt;
+			Result.data = rsqrt;
 #endif
-			return result;
+			return Result;
 		}
 
 		// Расстояние между векторами 
@@ -534,13 +534,13 @@ export namespace zzz::math
 		// 3D cross product (игнорирует W, результат имеет W=0)
 		Vector4 cross3(const Vector4& rhs) const noexcept
 		{
-			Vector4 result;
+			Vector4 Result;
 #if defined(__APPLE__)
 			// Metal simd::cross работает с float4, но использует только xyz
 			simd_float3 a = simd_make_float3(data[0], data[1], data[2]);
 			simd_float3 b = simd_make_float3(rhs[0], rhs[1], rhs[2]);
 			simd_float3 c = simd_cross(a, b);
-			result = Vector4(c.x, c.y, c.z, 0.0f);
+			Result = Vector4(c.x, c.y, c.z, 0.0f);
 #elif defined(_M_X64) || defined(__x86_64__)
 			// SSE оптимизация
 			__m128 a_yzx = _mm_shuffle_ps(data, data, _MM_SHUFFLE(3, 0, 2, 1));
@@ -549,18 +549,18 @@ export namespace zzz::math
 				_mm_mul_ps(data, b_yzx),
 				_mm_mul_ps(a_yzx, rhs.data)
 			);
-			result.data = _mm_shuffle_ps(c, c, _MM_SHUFFLE(3, 0, 2, 1));
-			result[3] = 0.0f;
+			Result.data = _mm_shuffle_ps(c, c, _MM_SHUFFLE(3, 0, 2, 1));
+			Result[3] = 0.0f;
 #elif defined(_M_ARM64) || defined(__aarch64__)
 			// NEON версия
-			result = Vector4(
+			Result = Vector4(
 				data[1] * rhs[2] - data[2] * rhs[1],
 				data[2] * rhs[0] - data[0] * rhs[2],
 				data[0] * rhs[1] - data[1] * rhs[0],
 				0.0f
 			);
 #endif
-			return result;
+			return Result;
 		}
 	};
 

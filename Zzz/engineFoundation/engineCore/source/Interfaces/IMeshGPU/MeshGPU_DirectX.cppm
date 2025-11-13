@@ -42,7 +42,7 @@ export namespace zzz::directx
 		UINT vertexBufferSize;
 		UINT indexBufferSize;
 
-		result<> Initialize(std::shared_ptr<IGAPI> _IGAPI) override;
+		Result<> Initialize(std::shared_ptr<IGAPI> _IGAPI) override;
 	};
 
 	MeshGPU_DirectX::MeshGPU_DirectX(std::shared_ptr<CPUMesh> meshCPU) :
@@ -62,7 +62,7 @@ export namespace zzz::directx
 		DebugOutput(std::format(L">>>>> [GPUMeshDX::GPUMeshDX( ... )]. indexBufferSize: {}", indexBufferSize));
 	}
 
-	result<> MeshGPU_DirectX::Initialize(std::shared_ptr<IGAPI> _IGAPI)
+	Result<> MeshGPU_DirectX::Initialize(std::shared_ptr<IGAPI> _IGAPI)
 	{
 		CD3DX12_HEAP_PROPERTIES defaultHeapProps(D3D12_HEAP_TYPE_DEFAULT);
 		CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);

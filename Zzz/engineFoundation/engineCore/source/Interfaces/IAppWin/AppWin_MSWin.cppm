@@ -3,7 +3,7 @@ export module AppWin_MSWin;
 
 import Event;
 import size2D;
-import result;
+import Result;
 import IAppWin;
 import ibMSWin;
 import Settings;
@@ -26,7 +26,7 @@ export namespace zzz::engineCore
 		void AddCaptionText(std::wstring caption) override;
 
 	protected:
-		virtual result<> Initialize() override;
+		virtual Result<> Initialize() override;
 
 	private:
 		HWND hWnd;
@@ -50,7 +50,7 @@ export namespace zzz::engineCore
 			DestroyWindow(hWnd);
 	}
 
-	result<> AppWin_MSWin::Initialize()
+	Result<> AppWin_MSWin::Initialize()
 	{
 #pragma region Получение настроек окна
 		std::wstring ClassName;
@@ -80,7 +80,7 @@ export namespace zzz::engineCore
 
 		HICON iconHandle = nullptr;
 		{
-			result<std::wstring> icoPath = m_Settings->GetParam<std::wstring>(L"IcoFullPath");
+			Result<std::wstring> icoPath = m_Settings->GetParam<std::wstring>(L"IcoFullPath");
 			if (icoPath)
 			{
 				ibMSWin icoBuilder;
@@ -99,8 +99,8 @@ export namespace zzz::engineCore
 		wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
 		wc.lpszClassName = ClassName.c_str();
 
-		ATOM result = RegisterClass(&wc);
-		if (result == 0)
+		ATOM Result = RegisterClass(&wc);
+		if (Result == 0)
 		{
 			std::wstring mess = L">>>>> [SW_MSWindows.Initialize( ... )]. RegisterClass( ... ). Failed to register window class: " + ClassName + L". Error code(MSWindows):" + std::to_wstring(::GetLastError());
 			return Unexpected(eResult::failure, mess);

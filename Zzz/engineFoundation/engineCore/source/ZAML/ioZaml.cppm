@@ -3,7 +3,7 @@
 
 export module iozaml;
 
-import result;
+import Result;
 
 export namespace zzz::engineCore
 {
@@ -14,12 +14,12 @@ export namespace zzz::engineCore
 		std::unordered_map<std::wstring, std::wstring> attributes;
 		std::vector<zamlNode> children;
 
-		result<const std::wstring*> GetAttribute(const std::wstring& key) const;
-		result<const zamlNode*> FindFirst(const std::wstring& tagName) const;
-		result<std::vector<const zamlNode*>> FindAll(const std::wstring& tagName) const;
+		Result<const std::wstring*> GetAttribute(const std::wstring& key) const;
+		Result<const zamlNode*> FindFirst(const std::wstring& tagName) const;
+		Result<std::vector<const zamlNode*>> FindAll(const std::wstring& tagName) const;
 	};
 
-	result<const std::wstring*> zamlNode::GetAttribute(const std::wstring& key) const
+	Result<const std::wstring*> zamlNode::GetAttribute(const std::wstring& key) const
 	{
 		auto it = attributes.find(key);
 		if (it != attributes.end())
@@ -27,7 +27,7 @@ export namespace zzz::engineCore
 		return Unexpected(eResult::no_find);
 	}
 
-	result<const zamlNode*> zamlNode::FindFirst(const std::wstring& tagName) const
+	Result<const zamlNode*> zamlNode::FindFirst(const std::wstring& tagName) const
 	{
 		for (const auto& child : children)
 			if (child.name == tagName)
@@ -35,33 +35,33 @@ export namespace zzz::engineCore
 		return Unexpected(eResult::no_find);
 	}
 
-	result<std::vector<const zamlNode*>> zamlNode::FindAll(const std::wstring& tagName) const
+	Result<std::vector<const zamlNode*>> zamlNode::FindAll(const std::wstring& tagName) const
 	{
-		std::vector<const zamlNode*> result;
+		std::vector<const zamlNode*> Result;
 		for (const auto& child : children)
 			if (child.name == tagName)
-				result.push_back(&child);
-		if (result.empty())
+				Result.push_back(&child);
+		if (Result.empty())
 			return Unexpected(eResult::no_find);
-		return result;
+		return Result;
 	}
 
 	class ioZaml
 	{
 	public:
-		result<zamlNode> LoadFromFile(const std::wstring& filename);
-		result<> SaveToFile(const std::wstring& filename, const zamlNode& node, int indent = 0);
+		Result<zamlNode> LoadFromFile(const std::wstring& filename);
+		Result<> SaveToFile(const std::wstring& filename, const zamlNode& node, int indent = 0);
 
 	private:
 		std::wstring EscapeXML(const std::wstring& s);
 		std::wstring UnescapeXML(const std::wstring& s);
 		std::wstring Trim(const std::wstring& s);
 		std::unordered_map<std::wstring, std::wstring> ParseAttributes(const std::wstring& str);
-		result<zamlNode> ParseNode(std::wistream& in);
-		result<> WriteNode(std::wostream& out, const zamlNode& node, int indent);
+		Result<zamlNode> ParseNode(std::wistream& in);
+		Result<> WriteNode(std::wostream& out, const zamlNode& node, int indent);
 	};
 
-	result<zamlNode> ioZaml::LoadFromFile(const std::wstring& filename)
+	Result<zamlNode> ioZaml::LoadFromFile(const std::wstring& filename)
 	{
 		std::wifstream file(filename);
 		if (!file)
@@ -70,7 +70,7 @@ export namespace zzz::engineCore
 		return ParseNode(file);
 	}
 
-	result<> ioZaml::SaveToFile(const std::wstring& filename, const zamlNode& node, int indent)
+	Result<> ioZaml::SaveToFile(const std::wstring& filename, const zamlNode& node, int indent)
 	{
 		std::wofstream file(filename);
 		if (!file)
@@ -150,7 +150,7 @@ export namespace zzz::engineCore
 		return attrs;
 	}
 
-	result<zamlNode> ioZaml::ParseNode(std::wistream& in)
+	Result<zamlNode> ioZaml::ParseNode(std::wistream& in)
 	{
 		std::wstring line;
 		std::wstreampos lastPos;
@@ -199,7 +199,7 @@ export namespace zzz::engineCore
 		return Unexpected(eResult::failure, L"[ioZaml.ParseNode] Unexpected end");
 	}
 
-	result<> ioZaml::WriteNode(std::wostream& out, const zamlNode& node, int indent)
+	Result<> ioZaml::WriteNode(std::wostream& out, const zamlNode& node, int indent)
 	{
 		std::wstring ind(indent, ' ');
 		out << ind << L"<" << node.name;

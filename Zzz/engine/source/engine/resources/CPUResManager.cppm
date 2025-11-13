@@ -2,7 +2,7 @@
 #include "pch.h"
 export module CPUResManager;
 
-import result;
+import Result;
 import Colors;
 import CPUMesh;
 import Settings;
@@ -26,15 +26,15 @@ export namespace zzz
 	public:
 		explicit CPUResManager(const std::shared_ptr<Settings> _settings);
 
-		result<std::shared_ptr<CPUMesh>> GetGenericMesh(MeshType type);
+		Result<std::shared_ptr<CPUMesh>> GetGenericMesh(MeshType type);
 
 		~CPUResManager();
 
 		private:
 			const std::shared_ptr<Settings> m_settings;
 
-			result<std::shared_ptr<CPUMesh>> GetGenericTriangle();
-			result<std::shared_ptr<CPUMesh>> GetGenericBox();
+			Result<std::shared_ptr<CPUMesh>> GetGenericTriangle();
+			Result<std::shared_ptr<CPUMesh>> GetGenericBox();
 	};
 
 	export CPUResManager::CPUResManager(const std::shared_ptr<Settings> _settings)
@@ -47,7 +47,7 @@ export namespace zzz
 	{
 	}
 
-	result<std::shared_ptr<CPUMesh>> CPUResManager::GetGenericMesh(MeshType type)
+	Result<std::shared_ptr<CPUMesh>> CPUResManager::GetGenericMesh(MeshType type)
 	{
 		switch (type)
 		{
@@ -60,7 +60,7 @@ export namespace zzz
 		}
 	}
 
-	result<std::shared_ptr<CPUMesh>> CPUResManager::GetGenericTriangle()
+	Result<std::shared_ptr<CPUMesh>> CPUResManager::GetGenericTriangle()
 	{
 		std::shared_ptr<VB_P3C3> vertexBuffer = std::make_shared<VB_P3C3>(std::initializer_list<VB_P3C3::VertexT>{
 			{
@@ -87,7 +87,7 @@ export namespace zzz
 		return mesh;
 	}
 
-	result<std::shared_ptr<CPUMesh>> CPUResManager::GetGenericBox()
+	Result<std::shared_ptr<CPUMesh>> CPUResManager::GetGenericBox()
 	{
 		std::shared_ptr<VB_P3C3> vertex = std::make_shared<VB_P3C3>(std::initializer_list<VB_P3C3::VertexT>{
 			{

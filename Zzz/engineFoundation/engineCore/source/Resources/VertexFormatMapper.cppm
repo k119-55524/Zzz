@@ -3,7 +3,7 @@
 
 export module VertexFormatMapper;
 
-import result;
+import Result;
 import CPUVertexBuffer;
 
 export namespace zzz::engineCore

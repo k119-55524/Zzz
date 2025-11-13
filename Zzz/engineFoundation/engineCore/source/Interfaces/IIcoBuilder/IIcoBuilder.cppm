@@ -1,7 +1,7 @@
 #include "pch.h"
 export module IIcoBuilder;
 
-import result;
+import Result;
 
 using namespace zzz;
 
@@ -13,6 +13,6 @@ export namespace zzz::engineCore
 	public:
 		virtual ~IIcoBuilder() = default;
 
-		virtual result<IconT> LoadIco(const std::wstring& filePath, int size) = 0;
+		virtual Result<IconT> LoadIco(const std::wstring& filePath, int size) = 0;
 	};
 }

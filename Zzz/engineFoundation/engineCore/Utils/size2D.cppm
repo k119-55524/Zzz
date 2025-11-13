@@ -3,7 +3,7 @@
 
 export module size2D;
 
-import result;
+import Result;
 import serializer;
 
 export namespace zzz::engineCore
@@ -34,7 +34,7 @@ export namespace zzz::engineCore
 		inline bool operator==(const size2D& other) const noexcept { return width == other.width && height == other.height; }
 		inline bool operator!=(const size2D& other) const noexcept { return !(*this == other); }
 
-		inline result<> SaveSerialize(std::stringstream& buffer) const
+		inline Result<> SaveSerialize(std::stringstream& buffer) const
 		{
 			auto res =
 				serializer::Serialize(buffer, width)
@@ -43,7 +43,7 @@ export namespace zzz::engineCore
 			return res;
 		}
 
-		inline result<> SaveDeSerialize(std::istringstream& buffer)
+		inline Result<> SaveDeSerialize(std::istringstream& buffer)
 		{
 			auto res =
 				serializer::DeSerialize(buffer, width)

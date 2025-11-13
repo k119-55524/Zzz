@@ -2,7 +2,7 @@
 #include "pch.h"
 export module IBaseGAPI_DirectX;
 
-import result;
+import Result;
 
 using namespace zzz;
 
@@ -25,7 +25,7 @@ export namespace zzz::core
 		virtual ComPtr<ID3D12RootSignature> GetRootSignature() const noexcept = 0;
 
 		virtual void CommandRenderReset() noexcept = 0;
-		virtual [[nodiscard]] result<> CommandRenderReinitialize() = 0;
+		virtual [[nodiscard]] Result<> CommandRenderReinitialize() = 0;
 		virtual void EndPreparedTransfers() = 0;
 	};
 #endif // defined(ZRENDER_API_D3D12)

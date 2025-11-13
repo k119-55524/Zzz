@@ -7,7 +7,7 @@ import IGAPI;
 import Event;
 import Scene;
 import size2D;
-import result;
+import Result;
 import IAppWin;
 import Settings;
 import StrConvert;

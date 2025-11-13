@@ -3,7 +3,7 @@
 
 export module ICPUtoGPUDataTransfer;
 
-import result;
+import Result;
 import QueueArray;
 import ThreadPool;
 import CPUtoGPUDataTransfer;

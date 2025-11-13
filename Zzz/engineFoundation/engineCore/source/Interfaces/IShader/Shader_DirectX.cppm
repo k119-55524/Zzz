@@ -5,7 +5,7 @@ export module Shader_DirectX;
 
 #if defined(ZRENDER_API_D3D12)
 import IGAPI;
-import result;
+import Result;
 import IShader;
 import IMeshGPU;
 import StrConvert;
@@ -21,8 +21,8 @@ export namespace zzz::directx
 		explicit Shader_DirectX(const std::shared_ptr<IGAPI> gapi, const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name);
 		virtual ~Shader_DirectX() override = default;
 
-		result<> InitializeByText(std::string&& srcVS, std::string&& srcPS) override;
-		result<ComPtr<ID3DBlob>> CompileShaderFromSource(
+		Result<> InitializeByText(std::string&& srcVS, std::string&& srcPS) override;
+		Result<ComPtr<ID3DBlob>> CompileShaderFromSource(
 			std::string&& shaderSource,
 			const std::wstring& entryPoint,
 			const std::wstring& target,
@@ -41,7 +41,7 @@ export namespace zzz::directx
 		IShader(gapi, mesh, std::move(name))
 	{}
 
-	result<> Shader_DirectX::InitializeByText(std::string&& srcVS, std::string&& srcPS)
+	Result<> Shader_DirectX::InitializeByText(std::string&& srcVS, std::string&& srcPS)
 	{
 		//D3D_SHADER_MACRO defines[] =
 		//{
@@ -64,7 +64,7 @@ export namespace zzz::directx
 		return {};
 	}
 
-	result<ComPtr<ID3DBlob>> Shader_DirectX::CompileShaderFromSource(
+	Result<ComPtr<ID3DBlob>> Shader_DirectX::CompileShaderFromSource(
 		std::string&& shaderSource,
 		const std::wstring& entryPoint,
 		const std::wstring& target,
@@ -74,7 +74,7 @@ export namespace zzz::directx
 		ComPtr<IDxcLibrary> library;
 		ComPtr<IDxcCompiler> compiler;
 		ComPtr<IDxcBlobEncoding> sourceBlob;
-		ComPtr<IDxcOperationResult> result;
+		ComPtr<IDxcOperationResult> Result;
 		HRESULT hr;
 
 		// === 1. Инициализация DXC ===
@@ -131,7 +131,7 @@ export namespace zzz::directx
 			args.data(), (UINT32)args.size(),
 			dxcDefines.data(), (UINT32)dxcDefines.size(),
 			nullptr, // includeHandler — можно реализовать позже
-			&result);
+			&Result);
 
 		// Проверяем только что вызов выполнен, не результат компиляции
 		if (FAILED(hr))
@@ -139,14 +139,14 @@ export namespace zzz::directx
 
 		// === 5. Проверка результата компиляции ===
 		HRESULT compileStatus;
-		hr = result->GetStatus(&compileStatus);
+		hr = Result->GetStatus(&compileStatus);
 		if (FAILED(hr))
 			return Unexpected(eResult::failure, L">>>>> [haderDX::CompileShaderFromSource( ... )]. Failed to get compilation status");
 
 		if (FAILED(compileStatus))
 		{
 			ComPtr<IDxcBlobEncoding> errorBlob;
-			hr = result->GetErrorBuffer(&errorBlob);
+			hr = Result->GetErrorBuffer(&errorBlob);
 			if (SUCCEEDED(hr) && errorBlob && errorBlob->GetBufferSize() > 0)
 			{
 				std::string errors(static_cast<const char*>(errorBlob->GetBufferPointer()),
@@ -165,7 +165,7 @@ export namespace zzz::directx
 
 		// === 6. Получение результата ===
 		ComPtr<IDxcBlob> shaderBlob;
-		hr = result->GetResult(&shaderBlob);
+		hr = Result->GetResult(&shaderBlob);
 		if (FAILED(hr) || !shaderBlob)
 			return Unexpected(eResult::failure, L">>>>> [haderDX::CompileShaderFromSource( ... )]. Failed to get compiled shader blob");
 

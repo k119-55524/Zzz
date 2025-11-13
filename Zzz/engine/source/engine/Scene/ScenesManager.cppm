@@ -2,7 +2,7 @@
 export module ScenesManager;
 
 import Scene;
-import result;
+import Result;
 import Settings;
 import GPUResManager;
 import SceneEntitySpawner;
@@ -22,7 +22,7 @@ export namespace zzz
 		explicit ScenesManager(const std::shared_ptr<GPUResManager> resGPU);
 		~ScenesManager();
 
-		result<std::shared_ptr<Scene>> GetDefaultScene();
+		Result<std::shared_ptr<Scene>> GetDefaultScene();
 
 	private:
 		SceneEntitySpawner m_EntitySpawner;
@@ -37,13 +37,13 @@ export namespace zzz
 	{
 	}
 
-	result<std::shared_ptr<Scene>> ScenesManager::GetDefaultScene()
+	Result<std::shared_ptr<Scene>> ScenesManager::GetDefaultScene()
 	{
-		result<std::shared_ptr<SceneEntity>> box = m_EntitySpawner.SpawnGenericBox();
+		Result<std::shared_ptr<SceneEntity>> box = m_EntitySpawner.SpawnGenericBox();
 		if(!box)
 			return box.error();
 
-		result<std::shared_ptr<Scene>> scene = safe_make_shared<Scene>();
+		Result<std::shared_ptr<Scene>> scene = safe_make_shared<Scene>();
 		if (!scene)
 			return scene.error();
 

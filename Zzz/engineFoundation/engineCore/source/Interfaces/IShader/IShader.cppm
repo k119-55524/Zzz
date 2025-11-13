@@ -4,7 +4,7 @@
 export module IShader;
 
 import IGAPI;
-import result;
+import Result;
 import IMeshGPU;
 import IShader_DirectX;
 
@@ -20,7 +20,7 @@ export namespace zzz::engineCore
 		virtual ~IShader() = default;
 		[[nodiscard]] inline std::wstring GetName() const noexcept { return m_Name; }
 
-		virtual result<> InitializeByText(std::string&& srcVS, std::string&& srcPS) = 0;
+		virtual Result<> InitializeByText(std::string&& srcVS, std::string&& srcPS) = 0;
 
 	protected:
 		const std::shared_ptr<IGAPI> m_GAPI;

@@ -4,7 +4,7 @@ export module ISurfaceView;
 import IGAPI;
 import Scene;
 import Colors;
-import result;
+import Result;
 import size2D;
 import IAppWin;
 import Settings;
@@ -33,7 +33,7 @@ export namespace zzz::engineCore
 
 		virtual ~ISurfaceView() = default;
 
-		[[nodiscard]] virtual result<> Initialize() = 0;
+		[[nodiscard]] virtual Result<> Initialize() = 0;
 		virtual void PrepareFrame(std::shared_ptr<Scene> scene, std::shared_ptr<RenderQueue> renderQueue) = 0;
 		virtual void RenderFrame() = 0;
 		virtual void OnResize(const size2D<>& size) = 0;

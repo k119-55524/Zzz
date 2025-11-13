@@ -3,7 +3,7 @@
 
 export module Settings;
 
-import result;
+import Result;
 import iozaml;
 import StrConvert;
 
@@ -18,7 +18,7 @@ export namespace zzz::engineCore
 		virtual ~Settings() = default;
 
 		template<typename T, typename... Path>
-		result<T> GetParam(Path&&... pathAndParamName) const
+		Result<T> GetParam(Path&&... pathAndParamName) const
 		{
 			if (!m_settings)
 				return Unexpected(eResult::not_initialized, L">>>>> [Settings.GetParam(...)] Settings not loaded");
@@ -71,7 +71,7 @@ export namespace zzz::engineCore
 		std::wstring filePath;
 		std::unique_ptr<zamlNode> m_settings;
 
-		result<> LoadSettings();
+		Result<> LoadSettings();
 	};
 
 	Settings::Settings(std::wstring _filePath) :
@@ -86,14 +86,14 @@ export namespace zzz::engineCore
 			throw_runtime_error(std::format("Failed to load Settings from file: {}.\n{}", wstring_to_string(filePath), wstring_to_string(res.error().getMessage())));
 	}
 
-	result<> Settings::LoadSettings()
+	Result<> Settings::LoadSettings()
 	{
 		ioZaml loader;
 		auto res = loader.LoadFromFile(filePath)
 			.and_then([this](const zamlNode& node)
 				{
 					m_settings = std::make_unique<zamlNode>(node);
-					return result<>();
+					return Result<>();
 				})
 			.or_else([](auto error) { return error; });
 

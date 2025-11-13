@@ -1,7 +1,7 @@
 #include "pch.h"
 export module ibMSWin;
 
-import result;
+import Result;
 import IIcoBuilder;
 
 using namespace zzz;
@@ -17,7 +17,7 @@ export namespace zzz::engineCore
 		ibMSWin();
 		~ibMSWin();
 
-		result<HICON> LoadIco(const std::wstring& filePath, int size) override;
+		Result<HICON> LoadIco(const std::wstring& filePath, int size) override;
 
 	private:
 		void CleanupResources();
@@ -76,7 +76,7 @@ export namespace zzz::engineCore
 		}
 	}
 
-	result<HICON> ibMSWin::LoadIco(const std::wstring& filePath, int iconSize)
+	Result<HICON> ibMSWin::LoadIco(const std::wstring& filePath, int iconSize)
 	{
 		HICON hIcon = nullptr;
 		bool comInitialized = false;

@@ -5,7 +5,7 @@ export module GPUResManager;
 
 import IPSO;
 import IGAPI;
-import result;
+import Result;
 import PSO_DX;
 import IShader;
 import IMeshGPU;
@@ -38,12 +38,12 @@ export namespace zzz
 		GPUResManager(std::shared_ptr<IGAPI> _IGAPI, std::shared_ptr<CPUResManager> resCPU);
 		~GPUResManager() = default;
 
-		result<std::shared_ptr<IMeshGPU>> GetGenericMesh(MeshType type);
-		result<std::shared_ptr<Material>> GetGenericMaterial(const std::shared_ptr<IMeshGPU> mesh);
+		Result<std::shared_ptr<IMeshGPU>> GetGenericMesh(MeshType type);
+		Result<std::shared_ptr<Material>> GetGenericMaterial(const std::shared_ptr<IMeshGPU> mesh);
 
 	private:
-		result<std::shared_ptr<IPSO>> GetGenericPSO(const std::shared_ptr<IMeshGPU> mesh);
-		result<std::shared_ptr<IShader>> GetGenericShader(const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name);
+		Result<std::shared_ptr<IPSO>> GetGenericPSO(const std::shared_ptr<IMeshGPU> mesh);
+		Result<std::shared_ptr<IShader>> GetGenericShader(const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name);
 
 		std::shared_ptr<IGAPI> m_GAPI;
 		std::shared_ptr<CPUResManager> m_ResCPU;
@@ -56,23 +56,23 @@ export namespace zzz
 		ensure(m_ResCPU, ">>>>> [GPUResManager::GPUResManager()]. Resource system CPU cannot be null.");
 	}
 
-	result<std::shared_ptr<IMeshGPU>> GPUResManager::GetGenericMesh(MeshType type)
+	Result<std::shared_ptr<IMeshGPU>> GPUResManager::GetGenericMesh(MeshType type)
 	{
 		auto meshCPU = m_ResCPU->GetGenericMesh(type);
 		if (!meshCPU)
 			return meshCPU.error();
 
 		std::shared_ptr<IMeshGPU> meshGPU = safe_make_shared<MeshGPU>(meshCPU.value());
-		result<> res = meshGPU->Initialize(m_GAPI);
+		Result<> res = meshGPU->Initialize(m_GAPI);
 		if (!res)
 			return Unexpected(res.error());
 
 		return meshGPU;
 	}
 
-	result<std::shared_ptr<Material>> GPUResManager::GetGenericMaterial(const std::shared_ptr<IMeshGPU> mesh)
+	Result<std::shared_ptr<Material>> GPUResManager::GetGenericMaterial(const std::shared_ptr<IMeshGPU> mesh)
 		{
-		result<std::shared_ptr<IPSO>> pso = GetGenericPSO(mesh);
+		Result<std::shared_ptr<IPSO>> pso = GetGenericPSO(mesh);
 		if (!pso)
 			return pso.error();
 
@@ -83,9 +83,9 @@ export namespace zzz
 		return material;
 	}
 
-	result<std::shared_ptr<IPSO>> GPUResManager::GetGenericPSO(const std::shared_ptr<IMeshGPU> mesh)
+	Result<std::shared_ptr<IPSO>> GPUResManager::GetGenericPSO(const std::shared_ptr<IMeshGPU> mesh)
 	{
-		result<std::shared_ptr<IShader>> shader = GetGenericShader(mesh, L"GenShader");
+		Result<std::shared_ptr<IShader>> shader = GetGenericShader(mesh, L"GenShader");
 		if (!shader)
 			return shader.error();
 
@@ -96,7 +96,7 @@ export namespace zzz
 		return pso;
 	}
 
-	result<std::shared_ptr<IShader>> GPUResManager::GetGenericShader(const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name)
+	Result<std::shared_ptr<IShader>> GPUResManager::GetGenericShader(const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name)
 	{
 		std::shared_ptr<IShader> shader = safe_make_shared<Shader>(m_GAPI, mesh, std::move(name));
 

@@ -3,7 +3,7 @@
 export module RootSignature;
 
 #if defined(ZRENDER_API_D3D12)
-import result;
+import Result;
 import StrConvert;
 
 export namespace zzz::directx
@@ -16,7 +16,7 @@ export namespace zzz::directx
 		RootSignature(RootSignature&&) = delete;
 
 		const ComPtr<ID3D12RootSignature> Get() const noexcept { return m_RootSignature; };
-		result<> Initialize(ComPtr<ID3D12Device> device);
+		Result<> Initialize(ComPtr<ID3D12Device> device);
 
 	private:
 		ComPtr<ID3D12RootSignature> m_RootSignature;
@@ -28,7 +28,7 @@ export namespace zzz::directx
 	{
 	}
 
-	result<> RootSignature::Initialize(ComPtr<ID3D12Device> device)
+	Result<> RootSignature::Initialize(ComPtr<ID3D12Device> device)
 	{
 		// Создаём таблицу дескрипторов для текстурных SRV (Shader Resource View)
 		CD3DX12_DESCRIPTOR_RANGE texTable;

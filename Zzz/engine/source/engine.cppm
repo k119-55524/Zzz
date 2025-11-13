@@ -6,7 +6,7 @@ import View;
 import IGAPI;
 import size2D;
 import Colors;
-import result;
+import Result;
 import AppTime;
 import zMsgBox;
 import Settings;
@@ -43,8 +43,8 @@ export namespace zzz
 		Engine();
 		~Engine();
 
-		result<> Initialize(std::wstring settingFilePath) noexcept;
-		result<> Run() noexcept;
+		Result<> Initialize(std::wstring settingFilePath) noexcept;
+		Result<> Run() noexcept;
 
 	private:
 		EngineFactory m_factory;
@@ -97,7 +97,7 @@ export namespace zzz
 		isSysPaused = true;
 	}
 
-	result<> Engine::Initialize(std::wstring settingFilePath) noexcept
+	Result<> Engine::Initialize(std::wstring settingFilePath) noexcept
 	{
 		std::lock_guard<std::mutex> lock(stateMutex);
 
@@ -149,7 +149,7 @@ export namespace zzz
 		return Unexpected(eResult::exception, err);
 	}
 
-	result<> Engine::Run() noexcept
+	Result<> Engine::Run() noexcept
 	{
 		std::lock_guard<std::mutex> lock(stateMutex);
 		if (initState != eInitState::InitOK)

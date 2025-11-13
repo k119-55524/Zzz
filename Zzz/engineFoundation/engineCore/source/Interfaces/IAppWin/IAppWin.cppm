@@ -4,7 +4,7 @@
 export module IAppWin;
 
 import Event;
-import result;
+import Result;
 import size2D;
 import Settings;
 import IAppWin_MSWin;
@@ -34,7 +34,7 @@ export namespace zzz::engineCore
 		std::wstring m_Caption;
 		size2D<> winSize;
 
-		[[nodiscard]] virtual result<> Initialize() = 0;
+		[[nodiscard]] virtual Result<> Initialize() = 0;
 		friend class zzz::View;
 	};
 

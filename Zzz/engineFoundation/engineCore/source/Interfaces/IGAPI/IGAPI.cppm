@@ -2,7 +2,7 @@
 #include "pch.h"
 export module IGAPI;
 
-import result;
+import Result;
 import size2D;
 import IAppWin;
 import StrConvert;
@@ -55,7 +55,7 @@ export namespace zzz::engineCore
 		[[nodiscard]] inline bool SupportsDedicatedDMA() const noexcept { return m_CheckGapiSupport->SupportsDedicatedDMA(); }
 		[[nodiscard]] inline std::wstring GetHighestShaderModelAsString(eShaderType eShaderType) const { return m_CheckGapiSupport->GetHighestShaderModelAsString(eShaderType); }
 
-		[[nodiscard]] virtual result<> Initialize();
+		[[nodiscard]] virtual Result<> Initialize();
 		virtual void SubmitCommandLists() = 0;
 		inline void AddTransferResource(FillCallback fillCallback, PreparedCallback preparedCallback, CompleteCallback completeCallback)
 		{
@@ -76,7 +76,7 @@ export namespace zzz::engineCore
 		virtual ComPtr<ID3D12RootSignature> GetRootSignature() const noexcept = 0;
 
 		virtual void CommandRenderReset() noexcept = 0;
-		virtual [[nodiscard]] result<> CommandRenderReinitialize() = 0;
+		virtual [[nodiscard]] Result<> CommandRenderReinitialize() = 0;
 		virtual void EndPreparedTransfers() = 0;
 #elif defined(ZRENDER_API_VULKAN)
 #elif defined(ZRENDER_API_METAL)
@@ -85,7 +85,7 @@ export namespace zzz::engineCore
 #endif
 
 	protected:
-		[[nodiscard]] virtual result<> Init() = 0;
+		[[nodiscard]] virtual Result<> Init() = 0;
 		virtual void WaitForGpu() = 0;
 
 		eGAPIType gapiType;
@@ -107,7 +107,7 @@ export namespace zzz::engineCore
 	{
 	}
 
-	result<> IGAPI::Initialize()
+	Result<> IGAPI::Initialize()
 	{
 		std::lock_guard<std::mutex> lock(stateMutex);
 

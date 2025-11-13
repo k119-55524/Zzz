@@ -3,7 +3,7 @@
 
 export module CPUtoGPUDataTransferDX;
 
-import result;
+import Result;
 import QueueArray;
 import CommandWrapperDX;
 import ThreadSafeSwapBuffer;

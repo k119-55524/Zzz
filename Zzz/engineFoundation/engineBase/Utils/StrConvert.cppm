@@ -3,12 +3,12 @@
 
 export module StrConvert;
 
-import result;
+import Result;
 
 export namespace zzz
 {
 #if defined(_WIN64)
-	result<std::wstring> string_to_wstring(const std::string& str)
+	Result<std::wstring> string_to_wstring(const std::string& str)
 	{
 		if (str.empty())
 			return std::wstring();
@@ -54,9 +54,9 @@ export namespace zzz
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif
 
-	template<typename T> inline result<T> ConvertValue(const std::wstring& text);
-	template<> inline result<std::wstring> ConvertValue<std::wstring>(const std::wstring& text) { return text; }
-	template<> inline result<int> ConvertValue<int>(const std::wstring& text)
+	template<typename T> inline Result<T> ConvertValue(const std::wstring& text);
+	template<> inline Result<std::wstring> ConvertValue<std::wstring>(const std::wstring& text) { return text; }
+	template<> inline Result<int> ConvertValue<int>(const std::wstring& text)
 	{
 		try
 		{
@@ -67,7 +67,7 @@ export namespace zzz
 			return Unexpected(eResult::invalid_format, L"Invalid int: " + text);
 		}
 	}
-	template<> inline result<float> ConvertValue<float>(const std::wstring& text)
+	template<> inline Result<float> ConvertValue<float>(const std::wstring& text)
 	{
 		try
 		{
@@ -78,7 +78,7 @@ export namespace zzz
 			return Unexpected(eResult::invalid_format, L"Invalid float: " + text);
 		}
 	}
-	template<> inline result<bool> ConvertValue<bool>(const std::wstring& text)
+	template<> inline Result<bool> ConvertValue<bool>(const std::wstring& text)
 	{
 		if (text == L"true" || text == L"1") return true;
 		if (text == L"false" || text == L"0") return false;

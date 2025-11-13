@@ -18,9 +18,9 @@ export namespace zzz::engineCore
 		template<typename... Args>
 		static std::wstring BuildPath(Args&&... parts)
 		{
-			fs::path result;
-			(result /= ... /= fs::path(std::forward<Args>(parts)));
-			return result.wstring();
+			fs::path Result;
+			(Result /= ... /= fs::path(std::forward<Args>(parts)));
+			return Result.wstring();
 		}
 	};
 

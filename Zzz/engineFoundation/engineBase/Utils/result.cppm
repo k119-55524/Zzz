@@ -1,7 +1,7 @@
 
 #include "pch.h"
 
-export module result;
+export module Result;
 
 export namespace zzz
 {
@@ -50,47 +50,47 @@ export namespace zzz
 		std::wstring message;
 	};
 
-	// Основной шаблон result<T>
+	// Основной шаблон Result<T>
 	template<typename _Ty = void>
-	class result
+	class Result
 	{
 	public:
-		static_assert(std::is_copy_constructible_v<_Ty>, ">>>>> [class result]. Type _Ty must be copy constructible.");
-		static_assert(std::is_move_constructible_v<_Ty>, ">>>>> [class result]. Type _Ty must be move constructible.");
+		static_assert(std::is_copy_constructible_v<_Ty>, ">>>>> [class Result]. Type _Ty must be copy constructible.");
+		static_assert(std::is_move_constructible_v<_Ty>, ">>>>> [class Result]. Type _Ty must be move constructible.");
 
-		result(const _Ty& value) noexcept(std::is_nothrow_copy_constructible_v<_Ty>) : data(value) {}
-		result(_Ty&& value) noexcept(std::is_nothrow_move_constructible_v<_Ty>) : data(std::move(value)) {}
-		result(const Unexpected& error) noexcept : data(error) {}
-		result(Unexpected&& error) noexcept : data(std::move(error)) {}
+		Result(const _Ty& value) noexcept(std::is_nothrow_copy_constructible_v<_Ty>) : data(value) {}
+		Result(_Ty&& value) noexcept(std::is_nothrow_move_constructible_v<_Ty>) : data(std::move(value)) {}
+		Result(const Unexpected& error) noexcept : data(error) {}
+		Result(Unexpected&& error) noexcept : data(std::move(error)) {}
 
 		inline bool has_value() const noexcept { return std::holds_alternative<_Ty>(data); }
 
 		_Ty& value()
 		{
-			assert(has_value() && ">>>>> [_Ty& result.value()]. Attempt to access value of an error.");
+			assert(has_value() && ">>>>> [_Ty& Result.value()]. Attempt to access value of an error.");
 			return std::get<_Ty>(data);
 		}
 
 		const _Ty& value() const
 		{
-			assert(has_value() && ">>>>> [const _Ty& result.value()]. Attempt to access value of an error.");
+			assert(has_value() && ">>>>> [const _Ty& Result.value()]. Attempt to access value of an error.");
 			return std::get<_Ty>(data);
 		}
 
 		Unexpected& error()
 		{
-			assert(!has_value() && ">>>>> [Unexpected& result.error()]. Attempt to access error of a value.");
+			assert(!has_value() && ">>>>> [Unexpected& Result.error()]. Attempt to access error of a value.");
 			return std::get<Unexpected>(data);
 		}
 
 		const Unexpected& error() const
 		{
-			assert(!has_value() && ">>>>> [const Unexpected& result.error()]. Attempt to access error of a value.");
+			assert(!has_value() && ">>>>> [const Unexpected& Result.error()]. Attempt to access error of a value.");
 			return std::get<Unexpected>(data);
 		}
 
-		bool operator==(const result& other) const noexcept { return data == other.data; }
-		bool operator!=(const result& other) const noexcept { return !(*this == other); }
+		bool operator==(const Result& other) const noexcept { return data == other.data; }
+		bool operator!=(const Result& other) const noexcept { return !(*this == other); }
 
 		_Ty& operator*() { return value(); }
 		const _Ty& operator*() const { return value(); }
@@ -98,13 +98,13 @@ export namespace zzz
 		_Ty* operator->() { return &value(); }
 		const _Ty* operator->() const { return &value(); }
 
-		//explicit operator result<void>() const noexcept
+		//explicit operator Result<void>() const noexcept
 		//{
 		//	if (has_value())
 		//	{
-		//		return result<void>{}; // Успех
+		//		return Result<void>{}; // Успех
 		//	}
-		//	return result<void>{error()}; // Ошибка
+		//	return Result<void>{error()}; // Ошибка
 		//}
 
 		explicit operator bool() const noexcept { return has_value(); }
@@ -112,7 +112,7 @@ export namespace zzz
 		template<typename U>
 		_Ty value_or(U&& default_value) const noexcept(std::is_nothrow_constructible_v<_Ty, U>)
 		{
-			static_assert(std::is_convertible_v<U, _Ty>, ">>>>> [result.value_or(U&& default_value)]. U must be convertible to _Ty");
+			static_assert(std::is_convertible_v<U, _Ty>, ">>>>> [Result.value_or(U&& default_value)]. U must be convertible to _Ty");
 			return has_value() ? std::get<_Ty>(data) : static_cast<_Ty>(std::forward<U>(default_value));
 		}
 
@@ -126,7 +126,7 @@ export namespace zzz
 		}
 
 		template<typename Func>
-		auto and_then(Func&& func) const -> result<_Ty>
+		auto and_then(Func&& func) const -> Result<_Ty>
 			requires std::is_same_v<std::invoke_result_t<Func, const _Ty&>, void>
 		{
 			if (has_value())
@@ -134,7 +134,7 @@ export namespace zzz
 				std::invoke(std::forward<Func>(func), value());
 				return *this;
 			}
-			return result<_Ty>(error());
+			return Result<_Ty>(error());
 		}
 
 		template<typename Func>
@@ -147,13 +147,13 @@ export namespace zzz
 		}
 
 		template<typename Func>
-		auto or_else(Func&& func) const -> result<_Ty>
+		auto or_else(Func&& func) const -> Result<_Ty>
 			requires std::is_same_v<std::invoke_result_t<Func, const Unexpected&>, void>
 		{
 			if (!has_value())
 			{
 				std::invoke(std::forward<Func>(func), error());
-				return result<_Ty>(error());
+				return Result<_Ty>(error());
 			}
 			return *this;
 		}
@@ -164,15 +164,15 @@ export namespace zzz
 
 	// Специализация для void
 	template<>
-	class result<void>
+	class Result<void>
 	{
 	public:
-		result() noexcept : hasVal(true) {}
-		result(const Unexpected& error) noexcept : err(error)
+		Result() noexcept : hasVal(true) {}
+		Result(const Unexpected& error) noexcept : err(error)
 		{
 			hasVal = error.getCode() == eResult::success;
 		}
-		result(Unexpected&& error) noexcept : err(std::move(error))
+		Result(Unexpected&& error) noexcept : err(std::move(error))
 		{
 			hasVal = error.getCode() == eResult::success;
 		}
@@ -181,12 +181,12 @@ export namespace zzz
 
 		void value() const
 		{
-			assert(hasVal && ">>>>> [void result.value()]. Attempt to access value of an error.");
+			assert(hasVal && ">>>>> [void Result.value()]. Attempt to access value of an error.");
 		}
 
 		const Unexpected& error() const
 		{
-			assert(!hasVal && ">>>>> [void result.error()]. Attempt to access error of a value.");
+			assert(!hasVal && ">>>>> [void Result.error()]. Attempt to access error of a value.");
 			return err;
 		}
 
@@ -201,9 +201,9 @@ export namespace zzz
 				if (hasVal)
 				{
 					std::invoke(std::forward<Func>(func));
-					return result<void>{};
+					return Result<void>{};
 				}
-				return result<void>{err};
+				return Result<void>{err};
 			}
 			else
 			{
@@ -224,7 +224,7 @@ export namespace zzz
 				if constexpr (std::is_same_v<R, void>)
 				{
 					std::invoke(std::forward<Func>(func), err);
-					return result<void>{err};
+					return Result<void>{err};
 				}
 				else
 				{
@@ -235,7 +235,7 @@ export namespace zzz
 			{
 				if constexpr (std::is_same_v<R, void>)
 				{
-					return result<void>{};
+					return Result<void>{};
 				}
 				else
 				{

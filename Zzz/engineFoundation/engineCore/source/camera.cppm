@@ -79,16 +79,16 @@ export namespace zzz::engineCore
 
 		RenderArea CalculateRenderArea(zU32 surface_width, zU32 surface_height) noexcept
 		{
-			RenderArea result{};
+			RenderArea Result{};
 			float surface_aspect = (float)surface_width / (float)surface_height;
 
 			if (m_AspectPreset == eAspectType::FullWindow)
 			{
 				m_AspectRatio = surface_aspect;
 				m_ProjectionMatrixDirty = true;
-				result.viewport = { 0.0f, 0.0f, (float)surface_width, (float)surface_height, 0.0f, 1.0f };
-				result.scissor = { 0, 0, (zI32)surface_width, (zI32)surface_height };
-				return result;
+				Result.viewport = { 0.0f, 0.0f, (float)surface_width, (float)surface_height, 0.0f, 1.0f };
+				Result.scissor = { 0, 0, (zI32)surface_width, (zI32)surface_height };
+				return Result;
 			}
 
 			float render_width, render_height;
@@ -107,10 +107,10 @@ export namespace zzz::engineCore
 				offset_y = (surface_height - render_height) * 0.5f;
 			}
 
-			result.viewport = { offset_x, offset_y, render_width, render_height, 0.0f, 1.0f };
-			result.scissor = { (zI32)offset_x, (zI32)offset_y, (zI32)render_width, (zI32)render_height };
+			Result.viewport = { offset_x, offset_y, render_width, render_height, 0.0f, 1.0f };
+			Result.scissor = { (zI32)offset_x, (zI32)offset_y, (zI32)render_width, (zI32)render_height };
 
-			return result;
+			return Result;
 		}
 
 		inline void SetPosition(const Vector4& position) noexcept { m_Position = position; m_ViewMatrixDirty = true; }
