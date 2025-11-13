@@ -19,7 +19,7 @@ import StrConvert;
 import RenderArea;
 import RenderQueue;
 import ISurfaceView;
-import AppWindowMsWin;
+import AppWin_MSWin;
 
 using namespace zzz::math;
 using namespace zzz::helpers;
@@ -99,17 +99,14 @@ namespace zzz
 
 	export class SurfDirectX final : public ISurfaceView
 	{
-	public:
-		SurfDirectX() = delete;
-		SurfDirectX(const SurfDirectX&) = delete;
-		SurfDirectX(SurfDirectX&&) = delete;
-		SurfDirectX& operator=(const SurfDirectX&) = delete;
-		SurfDirectX& operator=(SurfDirectX&&) = delete;
+		Z_NO_COPY_MOVE(SurfDirectX);
 
+	public:
 		explicit SurfDirectX(
 			std::shared_ptr<Settings> _settings,
 			std::shared_ptr<IAppWin> _iAppWin,
 			std::shared_ptr<IGAPI> _iGAPI);
+		~SurfDirectX() override = default;
 
 		[[nodiscard]] result<> Initialize() override;
 		void PrepareFrame(std::shared_ptr<Scene> scene, std::shared_ptr<RenderQueue> renderQueue) override;

@@ -1,34 +1,37 @@
+
 #include "pch.h"
-export module ThreadSafeQueueArray;
+
+export module QueueArray;
 
 import Platforms;
+
+using namespace zzz;
 
 export namespace zzz::templates
 {
 	// Динамический, потоко безопасный, массив с автоматическим изменением размера
 	template<typename T>
-	class ThreadSafeQueueArray
+	class QueueArray
 	{
 	public:
-		ThreadSafeQueueArray() = delete;
-		ThreadSafeQueueArray(const ThreadSafeQueueArray&) = delete;
-		ThreadSafeQueueArray& operator=(const ThreadSafeQueueArray&) = delete;
+		QueueArray(const QueueArray&) = delete;
+		QueueArray& operator=(const QueueArray&) = delete;
 
-		explicit ThreadSafeQueueArray(size_t capacity) :
+		QueueArray(size_t capacity = 1) :
 			size{ 0 },
 			capacity{ capacity }
 		{
 			if (capacity == 0)
-				throw_out_of_range(">>>>> [ThreadSafeQueueArray::ThreadSafeQueueArray]. Constructor parameters cannot be 0.");
+				throw_out_of_range(">>>>> [QueueArray::QueueArray]. Constructor parameters cannot be 0.");
 
 			data = static_cast<T*>(_aligned_malloc(capacity * sizeof(T), Platforms::ArrayAligment));
 			if (data == nullptr)
-				throw_runtime_error(">>>>> [ThreadSafeQueueArray::ThreadSafeQueueArray]. Failed to allocate memory.");
+				throw_runtime_error(">>>>> [QueueArray::QueueArray]. Failed to allocate memory.");
 
 			// Инициализация элементов по умолчанию
 			std::uninitialized_default_construct_n(data, capacity);
 		}
-		explicit ThreadSafeQueueArray(ThreadSafeQueueArray&& other) noexcept :
+		explicit QueueArray(QueueArray&& other) noexcept :
 			data{ other.data },
 			size{ other.size },
 			capacity{ other.capacity }
@@ -38,7 +41,7 @@ export namespace zzz::templates
 			other.capacity = 0;
 		}
 
-		~ThreadSafeQueueArray()
+		~QueueArray()
 		{
 			if (data)
 			{
@@ -47,7 +50,7 @@ export namespace zzz::templates
 			}
 		}
 
-		ThreadSafeQueueArray& operator=(ThreadSafeQueueArray&& other) noexcept
+		QueueArray& operator=(QueueArray&& other) noexcept
 		{
 			if (this != &other)
 			{
@@ -69,8 +72,6 @@ export namespace zzz::templates
 
 		T& operator[](size_t index)
 		{
-			std::shared_lock<std::shared_mutex> lock(mutex);
-
 			if (index >= size)
 				throw_out_of_range(">>>>> [ThreadSafeQueueArray::operator[]]. Index out of range.");
 
@@ -78,8 +79,6 @@ export namespace zzz::templates
 		}
 		const T& operator[](size_t index) const
 		{
-			std::shared_lock<std::shared_mutex> lock(mutex);
-
 			if (index >= size)
 				throw_out_of_range(">>>>> [ThreadSafeQueueArray::operator[]]. Index out of range.");
 
@@ -87,8 +86,6 @@ export namespace zzz::templates
 		}
 		void PushBack(const T& element)
 		{
-			std::unique_lock<std::shared_mutex> lock(mutex);
-
 			if (size >= capacity)
 				AddSize();
 
@@ -96,8 +93,6 @@ export namespace zzz::templates
 		}
 		void PushBack(T&& element)
 		{
-			std::unique_lock<std::shared_mutex> lock(mutex);
-
 			if (size >= capacity)
 				AddSize();
 
@@ -105,18 +100,14 @@ export namespace zzz::templates
 		}
 		inline size_t Capacity() const noexcept
 		{
-			std::shared_lock<std::shared_mutex> lock(mutex);
 			return capacity;
 		}
 		inline size_t Size() const noexcept
 		{
-			std::shared_lock<std::shared_mutex> lock(mutex);
 			return size;
 		}
 		inline void Clear() noexcept
 		{
-			std::unique_lock<std::shared_mutex> lock(mutex);
-
 			std::destroy_n(data, size);
 			size = 0;
 		}
@@ -125,12 +116,9 @@ export namespace zzz::templates
 		T* data = nullptr;
 		size_t size;
 		size_t capacity;
-		mutable std::shared_mutex mutex;
 
 		void AddSize()
 		{
-			std::unique_lock<std::shared_mutex> lock(mutex);
-
 			size_t newCapacity;
 			if (capacity > std::numeric_limits<size_t>::max() / 2)
 			{
@@ -164,8 +152,6 @@ export namespace zzz::templates
 			_aligned_free(data);
 			data = newData;
 			capacity = newCapacity;
-
-			DebugOutput(std::format(L">>>>> [ThreadSafeQueueArray::AddSize]. size: {}", size));
 		}
 	};
 }

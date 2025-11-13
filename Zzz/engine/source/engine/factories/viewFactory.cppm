@@ -4,11 +4,11 @@ export module ViewFactory;
 import IGAPI;
 import result;
 import IAppWin;
-import AppWindowMsWin;
 import Settings;
 import StrConvert;
-import ISurfaceView;
 import SurfDirectX;
+import ISurfaceView;
+import AppWin_MSWin;
 
 #if defined(ZRENDER_API_D3D12)
 import DXAPI;
@@ -42,7 +42,7 @@ export namespace zzz
 		try
 		{
 #if defined(ZRENDER_API_D3D12)
-			return safe_make_shared<AppWindowMsWin>(Settings);
+			return safe_make_shared<AppWin_MSWin>(Settings);
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif

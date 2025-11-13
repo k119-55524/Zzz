@@ -96,36 +96,20 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Source\engine\InterfacesImpl\CPUtoGPUDataTransfer\CPUtoGPUDataTransferDX.cppm" />
     <ClCompile Include="Source\engine\InterfacesImpl\Shader\ShaderDX.cppm" />
-    <ClCompile Include="Source\engine\Interfaces\platforms\IGAPI\IBaseGAPI_DirectX.cppm" />
-    <ClCompile Include="Source\Engine\Platforms\DX\CommandWrapperDX.cppm" />
     <ClCompile Include="Source\engine\InterfacesImpl\MeshGPU\GPUMeshDX.cppm" />
     <ClCompile Include="Source\engine\Resources\GPUResManager.cppm" />
     <ClCompile Include="source\engine\scene\SceneEntitySpawner.cppm" />
     <ClCompile Include="Source\engine\Utils\AppTime.cppm" />
     <ClCompile Include="Source\Engine.cppm" />
-    <ClCompile Include="Source\engine\InterfacesImpl\AppWin\AppWindowMsWin.cppm" />
     <ClCompile Include="Source\engine\Factories\EngineFactory.cppm" />
     <ClCompile Include="Source\engine\Factories\ViewFactory.cppm" />
-    <ClCompile Include="Source\Engine\Platforms\DX\CheckDirectXUltimateSupport.cppm" />
     <ClCompile Include="Source\engine\InterfacesImpl\SurfaceView\SurfDirectX.cppm" />
-    <ClCompile Include="Source\engine\Interfaces\platforms\ISurfaceView.cppm" />
     <ClCompile Include="Source\engine\Utils\GpuEventScope.cppm" />
     <ClCompile Include="Source\engine\Utils\PerformanceMeter.cppm" />
     <ClCompile Include="Source\engine\Resources\CPUResManager.cppm" />
     <ClCompile Include="source\engine\scene\ScenesManager.cppm" />
     <ClCompile Include="Source\Engine\View.cppm" />
-    <ClCompile Include="Source\engine\InterfacesImpl\GAPI\DXAPI.cppm" />
-    <ClCompile Include="Source\Engine\Platforms\DX\RootSignature.cppm" />
-    <ClCompile Include="Source\engine\InterfacesImpl\Utils\icoBuilder\ibMSWin.cppm" />
-    <ClCompile Include="Source\engine\Interfaces\utils\IIcoBuilder.cppm" />
-    <ClCompile Include="Source\Templates\ThreadSafeQueueArray.cppm" />
-    <ClCompile Include="Source\Templates\ThreadSafeSwapBuffer.cppm" />
-    <ClCompile Include="Source\Utils\MessageBox.cppm" />
-    <ClCompile Include="Source\Engine\IO\IOPathFactory.cppm" />
-    <ClCompile Include="Source\engine\Interfaces\platforms\IMainLoop.cppm" />
-    <ClCompile Include="Source\engine\InterfacesImpl\MainLoop\mlMSWin.cppm" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\engineFoundation\engineBase\engineBase.vcxproj">

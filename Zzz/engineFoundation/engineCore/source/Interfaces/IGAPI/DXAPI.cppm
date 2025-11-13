@@ -6,8 +6,8 @@ export module DXAPI;
 import IGAPI;
 import result;
 import StrConvert;
+import AppWin_MSWin;
 import RootSignature;
-import AppWindowMsWin;
 import CommandWrapperDX;
 import CheckDirectXSupport;
 import ThreadSafeSwapBuffer;
@@ -16,7 +16,6 @@ import CPUtoGPUDataTransferDX;
 
 using namespace zzz;
 using namespace zzz::templates;
-using namespace zzz::platforms;
 using namespace zzz::engineCore;
 
 export namespace zzz::platforms::directx

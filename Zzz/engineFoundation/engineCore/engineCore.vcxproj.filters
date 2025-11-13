@@ -35,7 +35,7 @@
     <ClCompile Include="Source\Camera.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Utils\RenderArea.cppm">
+    <ClCompile Include="Utils\RenderArea.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\RenderQueue.cppm">
@@ -53,28 +53,22 @@
     <ClCompile Include="Source\Interfaces\IPSO\IPSO.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Interfaces\IGAPI.cppm">
+    <ClCompile Include="Source\Interfaces\IGAPI\IGAPI.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Utils\size2D.cppm">
+    <ClCompile Include="Utils\size2D.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Utils\serializer.cppm">
+    <ClCompile Include="Utils\serializer.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Interfaces\IAppWin\IAppWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Utils\event.cppm">
+    <ClCompile Include="Utils\event.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Settings.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\IO\ioZaml.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Utils\StrConvert.cppm">
+    <ClCompile Include="Utils\StrConvert.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Interfaces\IAppWin\IAppWin_MSWin.cppm">
@@ -84,12 +78,6 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Interfaces\ICPUtoGPUDataTransfer.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Templates\QueueArray.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Templates\ThreadPool.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\CPUtoGPUDataTransfer.cppm">
@@ -122,7 +110,55 @@
     <ClCompile Include="Source\Interfaces\IShader\IShader_DirectX.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\interfacesImpl\PSO\PSO_DX.cppm">
+    <ClCompile Include="Source\Interfaces\IPSO\PSO_DX.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\MessageBox.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interfaces\IGAPI\IGAPI_DirectX.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interfaces\IMainLoop\IMainLoop.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interfaces\IAppWin\AppWin_MSWin.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interfaces\IIcoBuilder\ibMSWin.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interfaces\IIcoBuilder\IIcoBuilder.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\IO\IOPathFactory.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Settings.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ZAML\ioZaml.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interfaces\ISurfaceView.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interfaces\IGAPI\DXAPI.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Platforms\DX\CheckDirectXUltimateSupport.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Platforms\DX\CommandWrapperDX.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Platforms\DX\RootSignature.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Platforms\DX\CPUtoGPUDataTransferDX.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interfaces\IMainLoop\MainLoop_MSWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

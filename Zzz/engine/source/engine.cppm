@@ -9,7 +9,6 @@ import Colors;
 import result;
 import AppTime;
 import zMsgBox;
-import mlMSWin;
 import Settings;
 import IMainLoop;
 import ThreadPool;
@@ -20,17 +19,17 @@ import EngineFactory;
 import ScenesManager;
 import CPUResManager;
 import GPUResManager;
+import MainLoop_MSWin;
 import PerformanceMeter;
 
 using namespace zzz;
-using namespace zzz::io;
 using namespace zzz::templates;
 using namespace zzz::engineCore;
 
 namespace zzz
 {
 #if defined(ZRENDER_API_D3D12)
-	typedef mlMSWin MainLoop;
+	typedef MainLoop_MSWin MainLoop;
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif

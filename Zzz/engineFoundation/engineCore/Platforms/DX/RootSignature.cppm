@@ -6,9 +6,9 @@ export module RootSignature;
 import result;
 import StrConvert;
 
-using namespace zzz::engineCore;
+using namespace zzz::platforms::directx;
 
-export namespace zzz::platforms::directx
+export namespace zzz::engineCore
 {
 	class RootSignature
 	{

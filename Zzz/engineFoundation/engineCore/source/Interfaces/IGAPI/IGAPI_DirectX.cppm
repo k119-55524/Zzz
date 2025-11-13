@@ -6,17 +6,16 @@ import result;
 
 using namespace zzz;
 
-export namespace zzz::platforms::directx
+export namespace zzz::core
 {
-	export class IBaseGAPI_DirectX
+	export class IGAPI_DirectX
 	{
 #if defined(ZRENDER_API_D3D12)
+		Z_NO_COPY_MOVE(IGAPI_DirectX);
+
 	public:
-		IBaseGAPI_DirectX() = default;
-		IBaseGAPI_DirectX(const IBaseGAPI_DirectX&) = delete;
-		IBaseGAPI_DirectX(IBaseGAPI_DirectX&&) = delete;
-		IBaseGAPI_DirectX& operator=(const IBaseGAPI_DirectX&) = delete;
-		IBaseGAPI_DirectX& operator=(IBaseGAPI_DirectX&&) = delete;
+		IGAPI_DirectX() = default;
+		virtual ~IGAPI_DirectX() = default;
 
 		virtual const ComPtr<ID3D12Device> GetDevice() const noexcept = 0;
 		virtual const ComPtr<ID3D12CommandQueue> GetCommandQueue() const noexcept = 0;

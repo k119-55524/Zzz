@@ -10,6 +10,5 @@
 
 	// Макрос для запрета создания с конструктором без параметров, копирования и перемещения класса
 #define Z_NO_CREATE_COPY(ClassName) \
-	private: \
 		ClassName() = delete; \
 		Z_NO_COPY_MOVE(ClassName)

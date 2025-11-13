@@ -5,7 +5,6 @@ export module iozaml;
 
 import result;
 
-
 export namespace zzz::engineCore
 {
 	class zamlNode

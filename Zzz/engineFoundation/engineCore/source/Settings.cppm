@@ -9,15 +9,13 @@ import StrConvert;
 
 export namespace zzz::engineCore
 {
-	export class Settings
+	export class Settings final
 	{
-	public:
-		Settings() = delete;
-		Settings(std::wstring _filePath);
-		Settings(const Settings&) = delete;
-		Settings(Settings&&) = delete;
+		Z_NO_CREATE_COPY(Settings);
 
-		Settings& operator=(const Settings&) = delete;
+	public:
+		Settings(std::wstring _filePath);
+		virtual ~Settings() = default;
 
 		template<typename T, typename... Path>
 		result<T> GetParam(Path&&... pathAndParamName) const

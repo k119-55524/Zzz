@@ -12,9 +12,8 @@ import RenderQueue;
 
 using namespace zzz;
 using namespace zzz::colors;
-using namespace zzz::engineCore;
 
-export namespace zzz
+export namespace zzz::engineCore
 {
 	export enum class SurfClearType : zU32
 	{
@@ -24,13 +23,9 @@ export namespace zzz
 
 	export class ISurfaceView abstract
 	{
-	public:
-		ISurfaceView() = delete;
-		ISurfaceView(const ISurfaceView&) = delete;
-		ISurfaceView(ISurfaceView&&) = delete;
-		ISurfaceView& operator=(const ISurfaceView&) = delete;
-		ISurfaceView& operator=(ISurfaceView&&) = delete;
+		Z_NO_CREATE_COPY(ISurfaceView);
 
+	public:
 		explicit ISurfaceView(
 			std::shared_ptr<Settings> _settings,
 			std::shared_ptr<IAppWin> _iAppWin,

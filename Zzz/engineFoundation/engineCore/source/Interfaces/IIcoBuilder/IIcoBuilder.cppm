@@ -5,7 +5,7 @@ import result;
 
 using namespace zzz;
 
-export namespace zzz::icoBuilder
+export namespace zzz::engineCore
 {
 	template<typename IconT>
 	class IIcoBuilder

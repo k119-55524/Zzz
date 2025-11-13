@@ -19,15 +19,10 @@ export namespace zzz::engineCore
 	export class IAppWin abstract :
 		public IAppWin_MSWin
 	{
+		Z_NO_CREATE_COPY(IAppWin);
+
 	public:
-		IAppWin() = delete;
-		IAppWin(const IAppWin&) = delete;
-		IAppWin(IAppWin&&) = delete;
-		IAppWin& operator=(const IAppWin&) = delete;
-		IAppWin& operator=(IAppWin&&) = delete;
-
 		explicit IAppWin(std::shared_ptr<const Settings> Settings);
-
 		virtual ~IAppWin() = default;
 
 		event<size2D<>, eTypeWinResize> OnResize;
