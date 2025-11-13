@@ -1,10 +1,11 @@
 
 #include "pch.h"
+
 export module Engine;
 
 import View;
 import IGAPI;
-import size2D;
+import Size2D;
 import Colors;
 import Result;
 import AppTime;
@@ -64,7 +65,7 @@ export namespace zzz
 		AppTime m_time;
 
 		void Reset() noexcept;
-		void OnViewResize(const size2D<>& size, eTypeWinResize resizeType);
+		void OnViewResize(const Size2D<>& size, eTypeWinResize resizeType);
 		void OnUpdateSystem();
 		void OnViewResizing();
 
@@ -246,7 +247,7 @@ export namespace zzz
 		OnUpdateSystem();
 	}
 
-	void Engine::OnViewResize(const size2D<>& size, eTypeWinResize resizeType)
+	void Engine::OnViewResize(const Size2D<>& size, eTypeWinResize resizeType)
 	{
 		switch (resizeType)
 		{

@@ -35,16 +35,16 @@
     <ClCompile Include="Source\Camera.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Utils\RenderArea.cppm">
+    <ClCompile Include="Utilities\RenderArea.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\RenderQueue.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Scene\Scene.cppm">
+    <ClCompile Include="Source\Scenes\Scene.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Scene\SceneEntity.cppm">
+    <ClCompile Include="Source\Scenes\SceneEntity.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Material.cppm">
@@ -56,10 +56,10 @@
     <ClCompile Include="Source\Interfaces\IGAPI\IGAPI.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Utils\size2D.cppm">
+    <ClCompile Include="Utilities\Size2D.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Utils\serializer.cppm">
+    <ClCompile Include="Utilities\Serializer.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Interfaces\IAppWin\IAppWin.cppm">
@@ -107,7 +107,7 @@
     <ClCompile Include="Source\Interfaces\IPSO\PSO_DX.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Utils\MessageBox.cppm">
+    <ClCompile Include="Utilities\MessageBox.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Interfaces\IGAPI\IGAPI_DirectX.cppm">
@@ -164,7 +164,7 @@
     <ClCompile Include="Source\Interfaces\ISurfaceView\SurfDirectX.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Utils\Helpers.cppm">
+    <ClCompile Include="Utilities\Helpers.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

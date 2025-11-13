@@ -10,7 +10,7 @@ import IGAPI;
 import DXAPI;
 import Scene;
 import Result;
-import size2D;
+import Size2D;
 import Camera;
 import IAppWin;
 import Helpers;
@@ -110,7 +110,7 @@ namespace zzz::directx
 		[[nodiscard]] Result<> Initialize() override;
 		void PrepareFrame(std::shared_ptr<Scene> scene, std::shared_ptr<RenderQueue> renderQueue) override;
 		void RenderFrame() override;
-		void OnResize(const size2D<>& size) override;
+		void OnResize(const Size2D<>& size) override;
 
 		void SetFullScreen(bool fs) override;
 
@@ -141,7 +141,7 @@ namespace zzz::directx
 		[[nodiscard]] Result<> CreateRTVHeap();
 		[[nodiscard]] Result<> CreateSRVHeap();
 		[[nodiscard]] Result<> CreateDSVHeap();
-		[[nodiscard]] Result<> CreateDS(const size2D<>& size);
+		[[nodiscard]] Result<> CreateDS(const Size2D<>& size);
 		[[nodiscard]] Result<> CreateRTV(ComPtr<ID3D12Device>& m_device);
 		[[nodiscard]] Result<> InitializeSwapChain();
 
@@ -346,7 +346,7 @@ namespace zzz::directx
 		return {};
 	}
 
-	Result<> SurfDirectX::CreateDS(const size2D<>& size)
+	Result<> SurfDirectX::CreateDS(const Size2D<>& size)
 	{
 		auto m_device = m_iGAPI->GetDevice();
 		ensure(m_device, ">>>>> [SurfDirectX::CreateDS()]. Device cannot be null.");
@@ -437,7 +437,7 @@ namespace zzz::directx
 		if (S_OK != hr)
 			Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::RecreateRenderTargetsAndDepth()]. Failed to get swap chain description. HRESULT = 0x{:08X}", hr));
 
-		size2D<> size{ desc.BufferDesc.Width, desc.BufferDesc.Height };
+		Size2D<> size{ desc.BufferDesc.Width, desc.BufferDesc.Height };
 		res = CreateDS(size);
 		if (!res)
 			Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::RecreateRenderTargetsAndDepth()]. Failed to create depth stencil View. {}", res.error().getMessage()).c_str());
@@ -645,7 +645,7 @@ namespace zzz::directx
 	}
 #pragma endregion Rendring
 
-	void SurfDirectX::OnResize(const size2D<>& size)
+	void SurfDirectX::OnResize(const Size2D<>& size)
 	{
 		//DebugOutput(std::format(L">>>>> [SurfDirectX::OnResize({}x{})]. b_IgnoreResize: {}.", size.width, size.height, b_IgnoreResize).c_str());
 		if (m_iGAPI->GetInitState() != eInitState::InitOK && !m_swapChain || b_IgnoreResize)

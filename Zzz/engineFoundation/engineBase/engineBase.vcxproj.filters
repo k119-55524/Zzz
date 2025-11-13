@@ -1,81 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Исходные файлы">
+    <Filter Include="пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Файлы заголовков">
+    <Filter Include="пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Файлы ресурсов">
+    <Filter Include="пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
-      <Filter>Файлы заголовков</Filter>
+      <Filter>пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</Filter>
     </ClInclude>
     <ClInclude Include="Headers\PlatformsDefines.h">
-      <Filter>Файлы заголовков</Filter>
+      <Filter>пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</Filter>
     </ClInclude>
     <ClInclude Include="EngineBase.h">
-      <Filter>Файлы заголовков</Filter>
+      <Filter>пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</Filter>
     </ClInclude>
     <ClInclude Include="Headers\Header.h">
-      <Filter>Файлы заголовков</Filter>
+      <Filter>пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</Filter>
     </ClInclude>
     <ClInclude Include="Headers\MacroDefinition.h">
-      <Filter>Файлы заголовков</Filter>
+      <Filter>пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</Filter>
     </ClInclude>
     <ClInclude Include="Headers\HeadersMSWin.h">
-      <Filter>Файлы заголовков</Filter>
+      <Filter>пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</Filter>
     </ClInclude>
     <ClInclude Include="Headers\HeaderVulkan.h">
-      <Filter>Файлы заголовков</Filter>
+      <Filter>пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</Filter>
     </ClInclude>
     <ClInclude Include="Headers\HeaderMetal.h">
-      <Filter>Файлы заголовков</Filter>
+      <Filter>пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</Filter>
     </ClInclude>
     <ClInclude Include="Headers\HeaderDX.h">
-      <Filter>Файлы заголовков</Filter>
+      <Filter>пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EngineBase.cpp">
-      <Filter>Исходные файлы</Filter>
+      <Filter>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
-      <Filter>Исходные файлы</Filter>
+      <Filter>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ</Filter>
     </ClCompile>
-    <ClCompile Include="Utils\Platforms.cppm">
-      <Filter>Исходные файлы</Filter>
+    <ClCompile Include="Utilities\Platforms.cppm">
+      <Filter>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ</Filter>
     </ClCompile>
-    <ClCompile Include="Utils\Colors.cppm">
-      <Filter>Исходные файлы</Filter>
+    <ClCompile Include="Utilities\Colors.cppm">
+      <Filter>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ</Filter>
     </ClCompile>
-    <ClCompile Include="Utils\Result.cppm">
-      <Filter>Исходные файлы</Filter>
+    <ClCompile Include="Utilities\Result.cppm">
+      <Filter>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ</Filter>
     </ClCompile>
     <ClCompile Include="Templates\QueueArray.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ</Filter>
     </ClCompile>
     <ClCompile Include="Templates\ThreadPool.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ</Filter>
     </ClCompile>
     <ClCompile Include="Templates\ThreadSafeQueueArray.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ</Filter>
     </ClCompile>
     <ClCompile Include="Templates\ThreadSafeSwapBuffer.cppm">
-      <Filter>Исходные файлы</Filter>
+      <Filter>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ</Filter>
     </ClCompile>
-    <ClCompile Include="Utils\StrConvert.cppm">
-      <Filter>Исходные файлы</Filter>
+    <ClCompile Include="Utilities\StrConvert.cppm">
+      <Filter>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ</Filter>
     </ClCompile>
-    <ClCompile Include="Utils\Event.cppm">
-      <Filter>Исходные файлы</Filter>
+    <ClCompile Include="Utilities\Event.cppm">
+      <Filter>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

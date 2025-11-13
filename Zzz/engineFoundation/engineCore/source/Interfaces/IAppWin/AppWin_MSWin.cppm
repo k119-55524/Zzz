@@ -2,7 +2,7 @@
 export module AppWin_MSWin;
 
 import Event;
-import size2D;
+import Size2D;
 import Result;
 import IAppWin;
 import ibMSWin;
@@ -185,23 +185,23 @@ export namespace zzz::engineCore
 
 		case WM_SIZE:
 		{
-			winSize.width = static_cast<zU64>(LOWORD(lParam));
-			winSize.height = static_cast<zU64>(HIWORD(lParam));
+			m_WinSize.width = static_cast<zU64>(LOWORD(lParam));
+			m_WinSize.height = static_cast<zU64>(HIWORD(lParam));
 			if (wParam == SIZE_MINIMIZED)
 			{
-				OnResize(winSize, eTypeWinResize::Hide);
+				OnResize(m_WinSize, eTypeWinResize::Hide);
 				IsMinimized = true;
 			}
 			else
 			{
 				if ((wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED) && IsMinimized)
 				{
-					OnResize(winSize, eTypeWinResize::Show);
+					OnResize(m_WinSize, eTypeWinResize::Show);
 					IsMinimized = false;
 				}
 				else
 				{
-					OnResize(winSize, eTypeWinResize::Resize);
+					OnResize(m_WinSize, eTypeWinResize::Resize);
 				}
 			}
 
@@ -251,9 +251,9 @@ export namespace zzz::engineCore
 				prcNewWindow->bottom - prcNewWindow->top,
 				SWP_NOZORDER | SWP_NOACTIVATE);
 
-			winSize.width = static_cast<zU64>(prcNewWindow->right - prcNewWindow->left);
-			winSize.height = static_cast<zU64>(prcNewWindow->bottom - prcNewWindow->top);
-			OnResize(winSize, eTypeWinResize::Resize);
+			m_WinSize.width = static_cast<zU64>(prcNewWindow->right - prcNewWindow->left);
+			m_WinSize.height = static_cast<zU64>(prcNewWindow->bottom - prcNewWindow->top);
+			OnResize(m_WinSize, eTypeWinResize::Resize);
 
 			return 0;
 		}

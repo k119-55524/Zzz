@@ -5,7 +5,7 @@ import IGAPI;
 import Scene;
 import Colors;
 import Result;
-import size2D;
+import Size2D;
 import IAppWin;
 import Settings;
 import RenderQueue;
@@ -36,7 +36,7 @@ export namespace zzz::engineCore
 		[[nodiscard]] virtual Result<> Initialize() = 0;
 		virtual void PrepareFrame(std::shared_ptr<Scene> scene, std::shared_ptr<RenderQueue> renderQueue) = 0;
 		virtual void RenderFrame() = 0;
-		virtual void OnResize(const size2D<>& size) = 0;
+		virtual void OnResize(const Size2D<>& size) = 0;
 
 		virtual void SetFullScreen(bool fs) {};
 		inline void SetVSync(bool vs) { b_IsVSync = vs; };
@@ -47,7 +47,7 @@ export namespace zzz::engineCore
 		std::shared_ptr<Settings> m_settings;
 		std::shared_ptr<IAppWin> m_iAppWin;
 		std::shared_ptr<IGAPI> m_iGAPI;
-		size2D<> m_SurfSize;
+		Size2D<> m_SurfSize;
 
 		SurfClearType m_SurfClearType;
 		Color m_ClearColor;

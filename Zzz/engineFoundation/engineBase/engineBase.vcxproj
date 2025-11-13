@@ -167,11 +167,11 @@
     <ClCompile Include="Templates\ThreadPool.cppm" />
     <ClCompile Include="Templates\ThreadSafeQueueArray.cppm" />
     <ClCompile Include="Templates\ThreadSafeSwapBuffer.cppm" />
-    <ClCompile Include="Utils\Colors.cppm" />
-    <ClCompile Include="Utils\Event.cppm" />
-    <ClCompile Include="Utils\Platforms.cppm" />
-    <ClCompile Include="Utils\result.cppm" />
-    <ClCompile Include="Utils\StrConvert.cppm" />
+    <ClCompile Include="Utilities\Colors.cppm" />
+    <ClCompile Include="Utilities\Event.cppm" />
+    <ClCompile Include="Utilities\Platforms.cppm" />
+    <ClCompile Include="Utilities\Result.cppm" />
+    <ClCompile Include="Utilities\StrConvert.cppm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

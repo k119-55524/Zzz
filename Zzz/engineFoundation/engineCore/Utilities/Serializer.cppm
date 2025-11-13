@@ -1,19 +1,21 @@
+
 #include "pch.h"
-export module serializer;
+
+export module Serializer;
 
 import Result;
 
 namespace zzz::engineCore
 {
-	export class serializer
+	export class Serializer
 	{
 	public:
-		serializer() = default;
-		serializer(serializer&) = default;
-		serializer(serializer&&) = default;
+		Serializer() = default;
+		Serializer(Serializer&) = default;
+		Serializer(Serializer&&) = default;
 
-		serializer& operator=(const serializer&) = delete;
-		serializer& operator=(serializer&&) noexcept = delete;
+		Serializer& operator=(const Serializer&) = delete;
+		Serializer& operator=(Serializer&&) noexcept = delete;
 
 		// Примитивные типы
 		template<typename T> requires std::is_trivially_copyable_v<T>

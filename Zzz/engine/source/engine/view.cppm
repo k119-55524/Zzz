@@ -6,7 +6,7 @@ export module View;
 import IGAPI;
 import Event;
 import Scene;
-import size2D;
+import Size2D;
 import Result;
 import IAppWin;
 import Settings;
@@ -39,7 +39,7 @@ namespace zzz
 
 		~View() = default;
 
-		Event<size2D<>, eTypeWinResize> viewResized;
+		Event<Size2D<>, eTypeWinResize> viewResized;
 		Event<> viewResizing;
 
 		void OnUpdate(double deltaTime);
@@ -50,7 +50,7 @@ namespace zzz
 
 	private:
 		void OnViewResizing();
-		void OnViewResize(const size2D<>& size, eTypeWinResize resizeType);
+		void OnViewResize(const Size2D<>& size, eTypeWinResize resizeType);
 
 		ViewFactory factory;
 		const std::shared_ptr<Settings> m_Settings;
@@ -161,7 +161,7 @@ namespace zzz
 		m_SurfaceView->PrepareFrame(m_Scene, renderQueue);
 	}
 
-	void View::OnViewResize(const size2D<>& size, eTypeWinResize resizeType)
+	void View::OnViewResize(const Size2D<>& size, eTypeWinResize resizeType)
 	{
 #if defined(_DEBUG)
 		switch (resizeType)

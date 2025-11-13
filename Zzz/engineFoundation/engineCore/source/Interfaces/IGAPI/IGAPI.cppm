@@ -3,7 +3,7 @@
 export module IGAPI;
 
 import Result;
-import size2D;
+import Size2D;
 import IAppWin;
 import StrConvert;
 import ICheckGapiSupport;

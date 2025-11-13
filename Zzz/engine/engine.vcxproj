@@ -87,7 +87,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Headers\header.h" />
+    <ClInclude Include="Headers\Header.h" />
     <ClInclude Include="Headers\PlatformsDefines.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
@@ -96,16 +96,16 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Source\engine\Resources\GPUResManager.cppm" />
-    <ClCompile Include="source\engine\scene\SceneEntitySpawner.cppm" />
-    <ClCompile Include="Source\engine\Utils\AppTime.cppm" />
+    <ClCompile Include="source\engine\Resources\GPUResManager.cppm" />
+    <ClCompile Include="source\engine\Scenes\SceneEntitySpawner.cppm" />
+    <ClCompile Include="source\engine\Utilities\AppTime.cppm" />
     <ClCompile Include="Source\Engine.cppm" />
-    <ClCompile Include="Source\engine\Factories\EngineFactory.cppm" />
-    <ClCompile Include="Source\engine\Factories\ViewFactory.cppm" />
-    <ClCompile Include="Source\engine\Utils\GpuEventScope.cppm" />
-    <ClCompile Include="Source\engine\Utils\PerformanceMeter.cppm" />
-    <ClCompile Include="Source\engine\Resources\CPUResManager.cppm" />
-    <ClCompile Include="source\engine\scene\ScenesManager.cppm" />
+    <ClCompile Include="source\engine\Factories\EngineFactory.cppm" />
+    <ClCompile Include="source\engine\Factories\ViewFactory.cppm" />
+    <ClCompile Include="source\engine\Utilities\GpuEventScope.cppm" />
+    <ClCompile Include="source\engine\Utilities\PerformanceMeter.cppm" />
+    <ClCompile Include="source\engine\Resources\CPUResManager.cppm" />
+    <ClCompile Include="source\engine\Scenes\ScenesManager.cppm" />
     <ClCompile Include="Source\Engine\View.cppm" />
   </ItemGroup>
   <ItemGroup>
