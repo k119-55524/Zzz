@@ -3,7 +3,7 @@
 
 export module IAppWin;
 
-import event;
+import Event;
 import result;
 import size2D;
 import Settings;
@@ -25,8 +25,8 @@ export namespace zzz::engineCore
 		explicit IAppWin(std::shared_ptr<const Settings> Settings);
 		virtual ~IAppWin() = default;
 
-		event<size2D<>, eTypeWinResize> OnResize;
-		event<> OnResizing;
+		Event<size2D<>, eTypeWinResize> OnResize;
+		Event<> OnResizing;
 		const size2D<> GetWinSize() const noexcept { return winSize; }
 
 	protected:

@@ -1,7 +1,7 @@
 #include "pch.h"
 export module MainLoop_MSWin;
 
-import event;
+import Event;
 import IMainLoop;
 
 using namespace zzz::engineCore;

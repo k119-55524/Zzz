@@ -1,7 +1,7 @@
 #include "pch.h"
 export module AppWin_MSWin;
 
-import event;
+import Event;
 import size2D;
 import result;
 import IAppWin;

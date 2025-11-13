@@ -1,7 +1,7 @@
 
 #include "pch.h"
 
-export module event;
+export module Event;
 
 namespace zzz
 {
@@ -31,7 +31,7 @@ namespace zzz
 export namespace zzz::engineCore
 {
 	template<typename... Args>
-	class event : public eventBase<std::function<void(Args...)>>
+	class Event : public eventBase<std::function<void(Args...)>>
 	{
 	public:
 		using CallbackType = std::function<void(Args...)>;
@@ -64,7 +64,7 @@ export namespace zzz::engineCore
 	};
 
 	template<>
-	class event<void> : public eventBase<std::function<void()>>
+	class Event<void> : public eventBase<std::function<void()>>
 	{
 	public:
 		using CallbackType = std::function<void()>;

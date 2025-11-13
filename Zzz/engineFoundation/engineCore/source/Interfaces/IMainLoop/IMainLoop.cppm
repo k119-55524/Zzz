@@ -1,7 +1,7 @@
 #include "pch.h"
 export module IMainLoop;
 
-import event;
+import Event;
 
 export namespace zzz::engineCore
 {
@@ -15,6 +15,6 @@ export namespace zzz::engineCore
 
 		virtual void Run() = 0;
 
-		event<void> onUpdateSystem;
+		Event<void> onUpdateSystem;
 	};
 }

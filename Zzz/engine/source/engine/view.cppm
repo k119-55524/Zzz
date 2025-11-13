@@ -4,7 +4,7 @@
 export module View;
 
 import IGAPI;
-import event;
+import Event;
 import Scene;
 import size2D;
 import result;
@@ -39,8 +39,8 @@ namespace zzz
 
 		~View() = default;
 
-		event<size2D<>, eTypeWinResize> viewResized;
-		event<> viewResizing;
+		Event<size2D<>, eTypeWinResize> viewResized;
+		Event<> viewResizing;
 
 		void OnUpdate(double deltaTime);
 		void SetFullScreen(bool fs);
