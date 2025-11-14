@@ -24,8 +24,8 @@ import MainLoop_MSWin;
 import PerformanceMeter;
 
 using namespace zzz;
-using namespace zzz::templates;
 using namespace zzz::core;
+using namespace zzz::templates;
 
 namespace zzz
 {
