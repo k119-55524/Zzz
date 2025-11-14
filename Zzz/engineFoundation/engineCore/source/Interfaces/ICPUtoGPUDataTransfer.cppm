@@ -10,7 +10,7 @@ import CPUtoGPUDataTransfer;
 
 using namespace zzz::templates;
 
-export namespace zzz::engineCore
+export namespace zzz::core
 {
 	export class ICPUtoGPUDataTransfer
 	{

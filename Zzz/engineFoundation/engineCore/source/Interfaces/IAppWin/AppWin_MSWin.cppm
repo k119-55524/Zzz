@@ -11,7 +11,7 @@ import IOPathFactory;
 
 using namespace zzz;
 
-export namespace zzz::engineCore
+export namespace zzz::core
 {
 	export class AppWin_MSWin final : public IAppWin
 	{

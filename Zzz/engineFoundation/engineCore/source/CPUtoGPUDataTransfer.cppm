@@ -3,7 +3,7 @@
 
 export module CPUtoGPUDataTransfer;
 
-export namespace zzz::engineCore
+export namespace zzz::core
 {
 #if defined(ZRENDER_API_D3D12)
 	using FillCallback = std::function<void(const ComPtr<ID3D12GraphicsCommandList>&)>;

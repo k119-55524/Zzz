@@ -5,7 +5,7 @@ export module RenderQueue;
 
 //import Scene;
 
-export namespace zzz::engineCore
+export namespace zzz::core
 {
 	// Класс позволяет накапливать в себе объекты рендринга для последующей их отрисовки
 	export class RenderQueue

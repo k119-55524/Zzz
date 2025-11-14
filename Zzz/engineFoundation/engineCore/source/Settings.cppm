@@ -7,7 +7,7 @@ import Result;
 import iozaml;
 import StrConvert;
 
-export namespace zzz::engineCore
+export namespace zzz::core
 {
 	export class Settings final
 	{

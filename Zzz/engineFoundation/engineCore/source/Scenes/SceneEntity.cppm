@@ -4,7 +4,7 @@ export module SceneEntity;
 import Material;
 import IMeshGPU;
 
-export namespace zzz::engineCore
+export namespace zzz::core
 {
 	export class SceneEntity final
 	{

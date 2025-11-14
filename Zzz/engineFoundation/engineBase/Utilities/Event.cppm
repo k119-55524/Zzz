@@ -28,7 +28,7 @@ namespace zzz
 	};
 }
 
-export namespace zzz::engineCore
+export namespace zzz::core
 {
 	template<typename... Args>
 	class Event : public eventBase<std::function<void(Args...)>>

@@ -16,7 +16,7 @@ import CPUtoGPUDataTransferDX;
 
 using namespace zzz;
 using namespace zzz::templates;
-using namespace zzz::engineCore;
+using namespace zzz::core;
 
 export namespace zzz::directx
 {

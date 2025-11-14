@@ -32,34 +32,37 @@
     <ClCompile Include="Source\Engine.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\View.cppm">
+    <ClCompile Include="source\View.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\Factories\ViewFactory.cppm">
+    <ClCompile Include="source\Factories\ViewFactory.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\Factories\EngineFactory.cppm">
+    <ClCompile Include="source\Factories\EngineFactory.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\Resources\CPUResManager.cppm">
+    <ClCompile Include="source\Resources\CPUResManager.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\Scenes\ScenesManager.cppm">
+    <ClCompile Include="source\Scenes\ScenesManager.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\Utilities\AppTime.cppm">
+    <ClCompile Include="source\Utilities\AppTime.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\Utilities\PerformanceMeter.cppm">
+    <ClCompile Include="source\Utilities\PerformanceMeter.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\Resources\GPUResManager.cppm">
+    <ClCompile Include="source\Resources\GPUResManager.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\Utilities\GpuEventScope.cppm">
+    <ClCompile Include="source\Utilities\GpuEventScope.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\engine\Scenes\SceneEntitySpawner.cppm">
+    <ClCompile Include="source\Scenes\SceneEntitySpawner.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Configs\StartupConfig.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
   </ItemGroup>

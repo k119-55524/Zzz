@@ -11,7 +11,7 @@ import RenderQueue;
 
 using namespace zzz::math;
 
-export namespace zzz::engineCore
+export namespace zzz::core
 {
 	export class Scene final
 	{

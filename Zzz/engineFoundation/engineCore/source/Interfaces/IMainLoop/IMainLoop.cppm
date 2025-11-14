@@ -3,7 +3,7 @@ export module IMainLoop;
 
 import Event;
 
-export namespace zzz::engineCore
+export namespace zzz::core
 {
 	class IMainLoop
 	{

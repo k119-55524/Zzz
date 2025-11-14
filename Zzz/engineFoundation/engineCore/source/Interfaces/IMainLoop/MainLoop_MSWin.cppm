@@ -4,7 +4,7 @@ export module MainLoop_MSWin;
 import Event;
 import IMainLoop;
 
-using namespace zzz::engineCore;
+using namespace zzz::core;
 
 namespace zzz
 {

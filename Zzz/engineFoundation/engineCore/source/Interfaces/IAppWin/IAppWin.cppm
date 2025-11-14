@@ -14,7 +14,7 @@ namespace zzz
 	class View;
 }
 
-export namespace zzz::engineCore
+export namespace zzz::core
 {
 	export class IAppWin abstract :
 		public IAppWin_MSWin

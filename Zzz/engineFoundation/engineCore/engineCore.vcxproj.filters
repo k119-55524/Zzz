@@ -59,7 +59,7 @@
     <ClCompile Include="Utilities\Size2D.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Utilities\Serializer.cppm">
+    <ClCompile Include="Source\Serializer\Serializer.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Interfaces\IAppWin\IAppWin.cppm">

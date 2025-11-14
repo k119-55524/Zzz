@@ -24,7 +24,7 @@ import ISurfaceView;
 import AppWin_MSWin;
 
 using namespace zzz::math;
-using namespace zzz::engineCore;
+using namespace zzz::core;
 
 namespace zzz::directx
 {

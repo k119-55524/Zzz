@@ -3,14 +3,14 @@
 
 export module Helpers;
 
-namespace zzz::engineCore
+namespace zzz::core
 {
 	// Универсальная функция округления вверх до кратного ALIGN
 	template <uint64_t ALIGN, typename T>
 	constexpr T CalcAlignedSize(T size)
 	{
-		static_assert(ALIGN > 0 && (ALIGN & (ALIGN - 1)) == 0, ">>>>> [zzz::engineCore::CalcAlignedSize( ... )]. ALIGN must be a power of 2");
-		static_assert(std::is_unsigned_v<T>, ">>>>> [zzz::engineCore::CalcAlignedSize( ... )]. T must be unsigned integer type");
+		static_assert(ALIGN > 0 && (ALIGN & (ALIGN - 1)) == 0, ">>>>> [zzz::core::CalcAlignedSize( ... )]. ALIGN must be a power of 2");
+		static_assert(std::is_unsigned_v<T>, ">>>>> [zzz::core::CalcAlignedSize( ... )]. T must be unsigned integer type");
 
 		if (size > std::numeric_limits<T>::max() - (ALIGN - 1))
 			return std::numeric_limits<T>::max(); // защита от переполнения

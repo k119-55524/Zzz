@@ -3,7 +3,7 @@
 
 export module CPUIndexBuffer;
 
-namespace zzz::engineCore
+namespace zzz::core
 {
 	// ===== Интерфейс индексного буфера =====
 	export struct ICPUIndexBuffer

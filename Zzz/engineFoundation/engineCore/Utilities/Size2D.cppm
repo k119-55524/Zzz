@@ -6,7 +6,7 @@ export module Size2D;
 import Result;
 import Serializer;
 
-export namespace zzz::engineCore
+export namespace zzz::core
 {
 	/**
 	* @class size2D
@@ -20,7 +20,7 @@ export namespace zzz::engineCore
 	*			Значение по умолчанию: zU64.
 	*/
 	template<typename T = zU64, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
-	class Size2D : protected Serializer
+	class Size2D : protected ISerializable
 	{
 	public:
 		Size2D() : width{ 0 }, height{ 0 } {}
@@ -34,25 +34,24 @@ export namespace zzz::engineCore
 		inline bool operator==(const Size2D& other) const noexcept { return width == other.width && height == other.height; }
 		inline bool operator!=(const Size2D& other) const noexcept { return !(*this == other); }
 
-		inline Result<> SaveSerialize(std::stringstream& buffer) const
+	protected:
+		T width;  // Ширина объекта.
+		T height; // Высота объекта.
+
+		Result<> Serialize(std::vector<std::byte>& buffer, const zzz::core::Serializer& s) const override
 		{
-			auto res =
-				Serializer::Serialize(buffer, width)
+			auto res = Serializer::Serialize(buffer, width)
 				.and_then([]() { return Serializer::Serialize(buffer, height); });
 
 			return res;
 		}
 
-		inline Result<> SaveDeSerialize(std::istringstream& buffer)
+		Result<> DeSerialize(std::span<const std::byte> buffer, const zzz::core::Serializer& s) override
 		{
-			auto res =
-				Serializer::DeSerialize(buffer, width)
+			auto res = Serializer::DeSerialize(buffer, width)
 				.and_then([]() { return Serializer::DeSerialize(buffer, height); });
 
 			return res;
 		}
-
-		T width{ 0 };  // Ширина объекта.
-		T height{ 0 }; // Высота объекта.
 	};
 }

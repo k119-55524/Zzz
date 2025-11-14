@@ -10,7 +10,7 @@ import VertexFormatMapper;
 
 using namespace zzz::directx;
 
-namespace zzz::engineCore
+namespace zzz::core
 {
 	export class IPSO :
 		public IPSO_DirectX

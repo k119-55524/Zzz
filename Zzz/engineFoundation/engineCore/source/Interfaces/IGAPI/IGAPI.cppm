@@ -12,7 +12,7 @@ import ICPUtoGPUDataTransfer;
 
 using namespace std::literals::string_view_literals;
 
-export namespace zzz::engineCore
+export namespace zzz::core
 {
 	enum class eGAPIType : uint8_t
 	{

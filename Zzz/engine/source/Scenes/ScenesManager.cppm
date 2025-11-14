@@ -7,7 +7,7 @@ import Settings;
 import GPUResManager;
 import SceneEntitySpawner;
 
-using namespace zzz::engineCore;
+using namespace zzz::core;
 
 export namespace zzz
 {

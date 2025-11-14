@@ -10,11 +10,11 @@ import ThreadSafeSwapBuffer;
 import ICPUtoGPUDataTransfer;
 
 using namespace zzz;
-using namespace zzz::directx;
 using namespace zzz::templates;
+using namespace zzz::core;
 
 #if defined(_WIN64)
-export namespace zzz::engineCore
+export namespace zzz::directx
 {
 	export class CPUtoGPUDataTransferDX final : public ICPUtoGPUDataTransfer
 	{

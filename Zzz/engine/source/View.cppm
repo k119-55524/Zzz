@@ -18,7 +18,7 @@ import ISurfaceView;
 import ScenesManager;
 
 using namespace zzz::templates;
-using namespace zzz::engineCore;
+using namespace zzz::core;
 
 namespace zzz
 {

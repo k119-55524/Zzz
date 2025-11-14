@@ -3,7 +3,7 @@
 
 export module IMeshGPU_DirectX;
 
-export namespace zzz::engineCore
+export namespace zzz::core
 {
 	export class IMeshGPU_DirectX
 	{

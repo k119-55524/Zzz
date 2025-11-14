@@ -7,7 +7,7 @@ import IPSO;
 import IGAPI;
 import VertexFormatMapper;
 
-using namespace zzz::engineCore;
+using namespace zzz::core;
 
 #if defined(ZRENDER_API_D3D12)
 namespace zzz::directx

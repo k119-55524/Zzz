@@ -10,7 +10,7 @@ import RenderArea;
 using namespace zzz;
 using namespace zzz::math;
 
-export namespace zzz::engineCore
+export namespace zzz::core
 {
 	export class Camera
 	{

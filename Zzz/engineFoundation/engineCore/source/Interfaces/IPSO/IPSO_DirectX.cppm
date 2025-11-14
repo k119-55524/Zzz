@@ -3,7 +3,7 @@
 
 export module IPSO_DirectX;
 
-export namespace zzz::engineCore
+export namespace zzz::core
 {
 	class IPSO_DirectX
 	{

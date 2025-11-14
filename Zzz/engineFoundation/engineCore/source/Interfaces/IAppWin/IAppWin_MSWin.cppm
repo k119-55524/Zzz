@@ -3,7 +3,7 @@
 
 export module IAppWin_MSWin;
 
-export namespace zzz::engineCore
+export namespace zzz::core
 {
 	export class IAppWin_MSWin
 	{

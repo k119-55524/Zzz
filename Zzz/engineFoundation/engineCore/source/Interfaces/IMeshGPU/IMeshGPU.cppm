@@ -14,7 +14,7 @@ namespace zzz
 	 class GPUResManager;
 }
 
-export namespace zzz::engineCore
+export namespace zzz::core
 {
 	export class IMeshGPU :
 		public IMeshGPU_DirectX

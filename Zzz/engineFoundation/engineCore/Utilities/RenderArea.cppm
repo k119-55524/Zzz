@@ -2,7 +2,7 @@
 #include "pch.h"
 export module RenderArea;
 
-export namespace zzz::engineCore
+export namespace zzz::core
 {
 	class RenderArea
 	{

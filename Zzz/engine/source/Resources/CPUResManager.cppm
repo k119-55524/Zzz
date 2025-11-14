@@ -9,7 +9,7 @@ import Settings;
 import CPUIndexBuffer;
 import CPUVertexBuffer;
 
-using namespace zzz::engineCore;
+using namespace zzz::core;
 
 export namespace zzz
 {

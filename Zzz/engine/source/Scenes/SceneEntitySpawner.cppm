@@ -6,7 +6,7 @@ import Material;
 import SceneEntity;
 import GPUResManager;
 
-using namespace zzz::engineCore;
+using namespace zzz::core;
 
 namespace zzz
 {

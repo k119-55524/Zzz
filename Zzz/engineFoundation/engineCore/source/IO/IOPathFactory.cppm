@@ -3,12 +3,12 @@
 
 export module IOPathFactory;
 
-namespace zzz::engineCore
+namespace zzz::core
 {
 	namespace fs = std::filesystem;
 }
 
-export namespace zzz::engineCore
+export namespace zzz::core
 {
 	export class IOPathFactory
 	{

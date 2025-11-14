@@ -7,7 +7,7 @@ import CPUIndexBuffer;
 import CPUVertexBuffer;
 import VertexFormatMapper;
 
-export namespace zzz::engineCore
+export namespace zzz::core
 {
 	export class CPUMesh final
 	{

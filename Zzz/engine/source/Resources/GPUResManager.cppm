@@ -15,7 +15,7 @@ import Shader_DirectX;
 import MeshGPU_DirectX;
 
 using namespace zzz::directx;
-using namespace zzz::engineCore;
+using namespace zzz::core;
 
 namespace zzz
 {

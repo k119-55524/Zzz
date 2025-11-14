@@ -13,7 +13,7 @@ import RenderQueue;
 using namespace zzz;
 using namespace zzz::colors;
 
-export namespace zzz::engineCore
+export namespace zzz::core
 {
 	export enum class SurfClearType : zU32
 	{

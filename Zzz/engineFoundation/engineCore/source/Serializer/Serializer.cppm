@@ -5,8 +5,22 @@ export module Serializer;
 
 import Result;
 
-namespace zzz::engineCore
+namespace zzz::core
 {
+	export class Serializer;
+
+	export class ISerializable
+	{
+	public:
+		virtual ~ISerializable() = default;
+
+	protected:
+		virtual Result<> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const = 0;
+		virtual Result<> DeSerialize(std::span<const std::byte> buffer, const Serializer& serializer) = 0;
+
+		friend class Serializer;
+	};
+
 	export class Serializer
 	{
 	public:
@@ -16,6 +30,17 @@ namespace zzz::engineCore
 
 		Serializer& operator=(const Serializer&) = delete;
 		Serializer& operator=(Serializer&&) noexcept = delete;
+
+		// Сериализация ISerializable объектов
+		Result<> Serialize(std::vector<std::byte>& buffer, const ISerializable& obj) const
+		{
+			return obj.Serialize(buffer, *this);
+		}
+
+		Result<> DeSerialize(std::span<const std::byte> buffer, ISerializable& obj) const
+		{
+			return obj.DeSerialize(buffer, *this);
+		}
 
 		// Примитивные типы
 		template<typename T> requires std::is_trivially_copyable_v<T>
@@ -29,10 +54,11 @@ namespace zzz::engineCore
 		Result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, T& value) const
 		{
 			if (offset + sizeof(T) > buffer.size())
-				return Unexpected(eResult::buffer_too_small, L"[zSerialize.DeSerialize]: Buffer too small.");
+				return Unexpected(eResult::buffer_too_small, L"[Serializer.DeSerialize]: Buffer too small.");
 
 			memcpy(&value, buffer.data() + offset, sizeof(T));
 			offset += sizeof(T);
+
 			return eResult::success;
 		}
 
@@ -46,22 +72,20 @@ namespace zzz::engineCore
 			memcpy(buffer.data() + offset + sizeof(length), str.data(), length * sizeof(wchar_t));
 		}
 
-		Result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, std::wstring& str) const
+		Result<> DeSerialize(std::span<const std::byte> buffer, std::wstring& str) const
 		{
-			if (offset + sizeof(uint32_t) > buffer.size())
-				return Unexpected(eResult::buffer_too_small, L"[zSerialize.DeSerialize]: Buffer too small for length.");
+			if (sizeof(uint32_t) > buffer.size())
+				return Unexpected(eResult::buffer_too_small, L"[Serializer.DeSerialize]: Buffer too small for length.");
 
 			uint32_t length;
-			memcpy(&length, buffer.data() + offset, sizeof(length));
-			offset += sizeof(length);
+			memcpy(&length, buffer.data(), sizeof(length));
 
 			size_t byteSize = length * sizeof(wchar_t);
-			if (offset + byteSize > buffer.size())
-				return Unexpected(eResult::buffer_too_small, L"[zSerialize.DeSerialize]: Buffer too small for string.");
+			if (byteSize > buffer.size())
+				return Unexpected(eResult::buffer_too_small, L"[Serializer.DeSerialize]: Buffer too small for string.");
 
 			str.resize(length);
-			memcpy(str.data(), buffer.data() + offset, byteSize);
-			offset += byteSize;
+			memcpy(str.data(), buffer.data(), byteSize);
 
 			return {};
 		}
@@ -76,21 +100,19 @@ namespace zzz::engineCore
 			memcpy(buffer.data() + offset + sizeof(length), str.data(), length);
 		}
 
-		Result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, std::string& str) const
+		Result<> DeSerialize(std::span<const std::byte> buffer, std::string& str) const
 		{
-			if (offset + sizeof(uint32_t) > buffer.size())
-				return Unexpected(eResult::buffer_too_small, L"[zSerialize.DeSerialize]: Buffer too small for string length.");
+			if (sizeof(uint32_t) > buffer.size())
+				return Unexpected(eResult::buffer_too_small, L"[Serializer.DeSerialize]: Buffer too small for string length.");
 
 			uint32_t length;
-			memcpy(&length, buffer.data() + offset, sizeof(length));
-			offset += sizeof(length);
+			memcpy(&length, buffer.data(), sizeof(length));
 
-			if (offset + length > buffer.size())
-				return Unexpected(eResult::buffer_too_small, L"[zSerialize.DeSerialize]: Buffer too small for string data.");
+			if (length > buffer.size())
+				return Unexpected(eResult::buffer_too_small, L"[Serializer.DeSerialize]: Buffer too small for string data.");
 
 			str.resize(length);
-			memcpy(str.data(), buffer.data() + offset, length);
-			offset += length;
+			memcpy(str.data(), buffer.data(), length);
 
 			return {};
 		}
@@ -109,21 +131,21 @@ namespace zzz::engineCore
 		}
 
 		template<typename T> requires std::is_trivially_copyable_v<T>
-		Result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, std::vector<T>& vec) const
+		Result<> DeSerialize(std::span<const std::byte> buffer, std::vector<T>& vec) const
 		{
 			uint32_t length;
-			auto res = DeSerialize(buffer, offset, length);
+			auto res = DeSerialize(buffer, length);
 			if (!res)
 				return res;
 
 			size_t byteSize = length * sizeof(T);
-			if (offset + byteSize > buffer.size())
-				return Unexpected(eResult::buffer_too_small, L"[zSerialize.DeSerialize]: Buffer too small for vector data.");
+			if (byteSize > buffer.size())
+				return Unexpected(eResult::buffer_too_small, L"[Serializer.DeSerialize]: Buffer too small for vector data.");
 
 			vec.resize(length);
-			memcpy(vec.data(), buffer.data() + offset, byteSize);
-			offset += byteSize;
-			return eResult::success;
+			memcpy(vec.data(), buffer.data(), byteSize);
+
+			return {};
 		}
 	};
 }

@@ -200,7 +200,7 @@
     <ClCompile Include="Utilities\Helpers.cppm" />
     <ClCompile Include="Utilities\MessageBox.cppm" />
     <ClCompile Include="Utilities\RenderArea.cppm" />
-    <ClCompile Include="Utilities\Serializer.cppm" />
+    <ClCompile Include="Source\Serializer\Serializer.cppm" />
     <ClCompile Include="Utilities\Size2D.cppm" />
   </ItemGroup>
   <ItemGroup>

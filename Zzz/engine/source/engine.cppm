@@ -25,7 +25,7 @@ import PerformanceMeter;
 
 using namespace zzz;
 using namespace zzz::templates;
-using namespace zzz::engineCore;
+using namespace zzz::core;
 
 namespace zzz
 {

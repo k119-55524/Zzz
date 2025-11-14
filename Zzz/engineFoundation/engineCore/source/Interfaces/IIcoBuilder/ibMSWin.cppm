@@ -7,7 +7,7 @@ import IIcoBuilder;
 using namespace zzz;
 
 #if defined(_WIN64)
-export namespace zzz::engineCore
+export namespace zzz::core
 {
 #pragma comment(lib, "windowscodecs.lib")
 

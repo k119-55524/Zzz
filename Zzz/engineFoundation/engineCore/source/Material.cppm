@@ -3,7 +3,7 @@ export module Material;
 
 import IPSO;
 
-namespace zzz::engineCore
+namespace zzz::core
 {
 	export class Material
 	{
