@@ -5,7 +5,6 @@ export module CPUResManager;
 import Result;
 import Colors;
 import CPUMesh;
-import Settings;
 import CPUIndexBuffer;
 import CPUVertexBuffer;
 
@@ -21,31 +20,20 @@ export namespace zzz
 
 	export class CPUResManager final
 	{
-		Z_NO_CREATE_COPY(CPUResManager);
+		Z_NO_COPY_MOVE(CPUResManager);
 
 	public:
-		explicit CPUResManager(const std::shared_ptr<Settings> _settings);
+		explicit CPUResManager() = default;
+		~CPUResManager() = default;
 
 		Result<std::shared_ptr<CPUMesh>> GetGenericMesh(MeshType type);
 
-		~CPUResManager();
+
 
 		private:
-			const std::shared_ptr<Settings> m_settings;
-
 			Result<std::shared_ptr<CPUMesh>> GetGenericTriangle();
 			Result<std::shared_ptr<CPUMesh>> GetGenericBox();
 	};
-
-	export CPUResManager::CPUResManager(const std::shared_ptr<Settings> _settings)
-		: m_settings{ _settings }
-	{
-		ensure(m_settings, ">>>>> [CPUResourcesManager::CPUResourcesManager()]. Settings cannot be null.");
-	}
-
-	export CPUResManager::~CPUResManager()
-	{
-	}
 
 	Result<std::shared_ptr<CPUMesh>> CPUResManager::GetGenericMesh(MeshType type)
 	{

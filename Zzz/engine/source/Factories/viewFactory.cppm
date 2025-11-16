@@ -4,11 +4,11 @@ export module ViewFactory;
 import IGAPI;
 import Result;
 import IAppWin;
-import Settings;
 import StrConvert;
-import SurfDirectX;
+import AppWinConfig;
 import ISurfaceView;
 import AppWin_MSWin;
+import SurfaceView_DirectX;
 
 #if defined(ZRENDER_API_D3D12)
 import DXAPI;
@@ -31,14 +31,11 @@ export namespace zzz
 		ViewFactory& operator=(ViewFactory&&) = delete;
 		~ViewFactory() = default;
 
-		std::shared_ptr<IAppWin> CreateAppWin(std::shared_ptr<Settings> Settings);
-		std::shared_ptr<ISurfaceView> CreateSurfaceWin(
-			std::shared_ptr<Settings> _settings,
-			std::shared_ptr<IAppWin> _iAppWin,
-			std::shared_ptr<IGAPI> _iGAPI);
+		std::shared_ptr<IAppWin> CreateAppWin(std::shared_ptr<AppWinConfig> Settings);
+		std::shared_ptr<ISurfaceView> CreateSurfaceWin(std::shared_ptr<IAppWin> _iAppWin, std::shared_ptr<IGAPI> _iGAPI);
 	};
 
-	std::shared_ptr<IAppWin> ViewFactory::CreateAppWin(std::shared_ptr<Settings> Settings)
+	std::shared_ptr<IAppWin> ViewFactory::CreateAppWin(std::shared_ptr<AppWinConfig> Settings)
 	{
 		try
 		{
@@ -58,12 +55,8 @@ export namespace zzz
 		}
 	}
 
-	export std::shared_ptr<ISurfaceView> ViewFactory::CreateSurfaceWin(
-		std::shared_ptr<Settings> _settings,
-		std::shared_ptr<IAppWin> _iAppWin,
-		std::shared_ptr<IGAPI> _iGAPI)
+	export std::shared_ptr<ISurfaceView> ViewFactory::CreateSurfaceWin(std::shared_ptr<IAppWin> _iAppWin, std::shared_ptr<IGAPI> _iGAPI)
 	{
-		ensure(_settings, ">>>>> [ViewFactory::CreateSurfaceWin()]. Settings cannot be null.");
 		ensure(_iAppWin, ">>>>> [ViewFactory::CreateSurfaceWin()]. Application window cannot be null.");
 		ensure(_iGAPI, ">>>>> [ViewFactory::CreateSurfaceWin()]. GAPI cannot be null.");
 
@@ -75,7 +68,7 @@ export namespace zzz
 			{
 #if defined(_WIN64)
 			case eGAPIType::DirectX:
-				return safe_make_shared<SurfDirectX>(_settings, _iAppWin, _iGAPI);
+				return safe_make_shared<SurfaceView_DirectX>(_iAppWin, _iGAPI);
 				break;
 #endif // defined(_WIN64)
 			default:

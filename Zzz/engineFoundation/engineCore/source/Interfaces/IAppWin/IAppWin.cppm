@@ -6,7 +6,7 @@ export module IAppWin;
 import Event;
 import Result;
 import Size2D;
-import Settings;
+import AppWinConfig;
 import IAppWin_MSWin;
 
 namespace zzz
@@ -22,7 +22,7 @@ export namespace zzz::core
 		Z_NO_CREATE_COPY(IAppWin);
 
 	public:
-		explicit IAppWin(std::shared_ptr<const Settings> Settings);
+		explicit IAppWin(std::shared_ptr<const AppWinConfig> config);
 		virtual ~IAppWin() = default;
 
 		Event<Size2D<>, eTypeWinResize> OnResize;
@@ -30,7 +30,7 @@ export namespace zzz::core
 		const Size2D<> GetWinSize() const noexcept { return m_WinSize; }
 
 	protected:
-		const std::shared_ptr<const Settings> m_Settings;
+		const std::shared_ptr<const AppWinConfig> m_Config;
 		std::wstring m_Caption;
 		Size2D<> m_WinSize;
 
@@ -38,10 +38,10 @@ export namespace zzz::core
 		friend class zzz::View;
 	};
 
-	IAppWin::IAppWin(std::shared_ptr<const Settings> Settings)
-		: m_Settings{ Settings },
+	IAppWin::IAppWin(std::shared_ptr<const AppWinConfig> config)
+		: m_Config{ config },
 		m_WinSize{ 0, 0 }
 	{
-		ensure(Settings, ">>>>> [IAppWin::IAppWin()]. Settings cannot be null.");
+		ensure(m_Config, ">>>>> [IAppWin::IAppWin()]. Settings cannot be null.");
 	}
 }

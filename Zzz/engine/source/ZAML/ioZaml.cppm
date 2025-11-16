@@ -1,11 +1,9 @@
 
-#include "pch.h"
-
 export module iozaml;
 
 import Result;
 
-export namespace zzz::core
+export namespace zzz
 {
 	class zamlNode
 	{

@@ -1,21 +1,24 @@
 
-#include "pch.h"
-
-export module Settings;
+export module ZamlProcessor;
 
 import Result;
 import iozaml;
+import GAPIConfig;
 import StrConvert;
+import AppWinConfig;
+import StartupConfig;
 
-export namespace zzz::core
+using namespace zzz::core;
+
+export namespace zzz
 {
-	export class Settings final
+	export class ZamlProcessor  final
 	{
-		Z_NO_CREATE_COPY(Settings);
+		Z_NO_CREATE_COPY(ZamlProcessor);
 
 	public:
-		Settings(std::wstring _filePath);
-		virtual ~Settings() = default;
+		ZamlProcessor(std::wstring _filePath);
+		virtual ~ZamlProcessor() = default;
 
 		template<typename T, typename... Path>
 		Result<T> GetParam(Path&&... pathAndParamName) const
@@ -74,7 +77,7 @@ export namespace zzz::core
 		Result<> LoadSettings();
 	};
 
-	Settings::Settings(std::wstring _filePath) :
+	ZamlProcessor::ZamlProcessor(std::wstring _filePath) :
 		filePath{ std::move(_filePath) },
 		m_settings{}
 	{
@@ -86,7 +89,7 @@ export namespace zzz::core
 			throw_runtime_error(std::format("Failed to load Settings from file: {}.\n{}", wstring_to_string(filePath), wstring_to_string(res.error().getMessage())));
 	}
 
-	Result<> Settings::LoadSettings()
+	Result<> ZamlProcessor::LoadSettings()
 	{
 		ioZaml loader;
 		auto res = loader.LoadFromFile(filePath)
@@ -98,5 +101,14 @@ export namespace zzz::core
 			.or_else([](auto error) { return error; });
 
 		return res;
+	}
+
+	Result<std::unique_ptr<StartupConfig>> GetStartupConfig(const ZamlProcessor& zaml)
+	{
+		AppWinConfig winConfig;
+		GAPIConfig gapiConfig;
+		std::unique_ptr<StartupConfig> config = safe_make_unique<StartupConfig>(winConfig, gapiConfig);
+
+		return Result<std::unique_ptr<StartupConfig>>(config);
 	}
 }

@@ -117,6 +117,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)engineFoundation\logger;$(SolutionDir)math</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
+      <ForcedIncludeFiles>pch.h;</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -137,6 +138,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)engineFoundation\logger;$(SolutionDir)math</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
+      <ForcedIncludeFiles>pch.h;</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -151,7 +153,9 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Configs\AppWinConfig\AppWinConfig_MSin.cppm" />
+    <ClCompile Include="Configs\AppWinConfig\AppWinConfig.cppm" />
+    <ClCompile Include="Configs\AppWinConfig\AppWinConfig_MSWin.cppm" />
+    <ClCompile Include="Configs\GAPIConfig\GAPIConfig.cppm" />
     <ClCompile Include="engineCore.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -187,7 +191,7 @@
     <ClCompile Include="Source\Interfaces\IShader\IShader_DirectX.cppm" />
     <ClCompile Include="Source\Interfaces\IShader\Shader_DirectX.cppm" />
     <ClCompile Include="Source\Interfaces\ISurfaceView\ISurfaceView.cppm" />
-    <ClCompile Include="Source\Interfaces\ISurfaceView\SurfDirectX.cppm" />
+    <ClCompile Include="Source\Interfaces\ISurfaceView\SurfaceView_DirectX.cppm" />
     <ClCompile Include="Source\IO\IOPathFactory.cppm" />
     <ClCompile Include="Source\Material.cppm" />
     <ClCompile Include="Source\RenderQueue.cppm" />
@@ -197,8 +201,6 @@
     <ClCompile Include="Source\Resources\VertexFormatMapper.cppm" />
     <ClCompile Include="Source\Scenes\Scene.cppm" />
     <ClCompile Include="Source\Scenes\SceneEntity.cppm" />
-    <ClCompile Include="Source\Settings.cppm" />
-    <ClCompile Include="Source\ZAML\ioZaml.cppm" />
     <ClCompile Include="Utilities\Helpers.cppm" />
     <ClCompile Include="Utilities\MessageBox.cppm" />
     <ClCompile Include="Utilities\RenderArea.cppm" />

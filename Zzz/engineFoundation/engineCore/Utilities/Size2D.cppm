@@ -1,6 +1,4 @@
 
-#include "pch.h"
-
 export module Size2D;
 
 import Result;
@@ -20,7 +18,7 @@ export namespace zzz::core
 	*			Значение по умолчанию: zU64.
 	*/
 	template<typename T = zU64, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
-	class Size2D final : protected ISerializable
+	class Size2D final : public ISerializable
 	{
 	public:
 		Size2D() : width{ 0 }, height{ 0 } {}
@@ -28,6 +26,9 @@ export namespace zzz::core
 		Size2D(T _width, T _height) : width{ _width }, height{ _height } {}
 		Size2D(const Size2D& size) : width{ size.width }, height{ size.height } {}
 		Size2D(Size2D&&) = default;
+
+		Size2D& operator=(const Size2D&) = default;
+		Size2D& operator=(Size2D&&) noexcept = default;
 
 		inline void SetSize(T _width, T _height) noexcept { width = _width; height = _height; }
 
@@ -40,18 +41,14 @@ export namespace zzz::core
 	private:
 		Result<> Serialize(std::vector<std::byte>& buffer, const zzz::core::Serializer& s) const override
 		{
-			Result<> res = s.Serialize(buffer, width)
+			return s.Serialize(buffer, width)
 				.and_then([&]() {return s.Serialize(buffer, height); });
-
-			return res;
 		}
 
 		Result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const zzz::core::Serializer& s) override
 		{
-			Result<> res = s.DeSerialize(buffer, offset, width)
+			return s.DeSerialize(buffer, offset, width)
 				.and_then([&]() {return s.DeSerialize(buffer, offset, height); });
-
-			return res;
 		}
 	};
 }

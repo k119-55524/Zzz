@@ -1,9 +1,9 @@
-#include "pch.h"
+
 export module EngineFactory;
 
 import IGAPI;
 import Result;
-import Settings;
+import GAPIConfig;
 import StrConvert;
 
 #if defined(ZRENDER_API_D3D12)
@@ -27,35 +27,30 @@ export namespace zzz
 		EngineFactory& operator=(EngineFactory&&) = delete;
 		~EngineFactory() = default;
 
-		[[nodiscard]] Result<std::shared_ptr<IGAPI>> CreateGAPI(std::shared_ptr<Settings> setting);
+		[[nodiscard]] Result<std::shared_ptr<IGAPI>> CreateGAPI(std::shared_ptr<GAPIConfig> config);
 		[[nodiscard]] inline std::shared_ptr<IGAPI> GetGAPI() const noexcept { return m_GAPI; }
 
 	private:
 		std::shared_ptr<IGAPI> m_GAPI;
 	};
 
-	Result<std::shared_ptr<IGAPI>> EngineFactory::CreateGAPI(std::shared_ptr<Settings> setting)
+	Result<std::shared_ptr<IGAPI>> EngineFactory::CreateGAPI(std::shared_ptr<GAPIConfig> config)
 	{
 		if (m_GAPI)
 			return Unexpected(eResult::already_created, L">>>>> [EngineFactories::CreateGAPI()]. GAPI already created.");
 
-		ensure(setting, ">>>>> [EngineFactories::CreateGAPI()]. Settings cannot be null.");
+		ensure(config, ">>>>> [EngineFactories::CreateGAPI()]. GAPIConfig cannot be null.");
 
 		try
 		{
-			// TODO
-			//eGAPIType type = setting.GetGapyType();
-			eGAPIType type = eGAPIType::DirectX;
 			std::shared_ptr<IGAPI> igapi;
-			switch (type)
+			switch (config->GetGAPIType())
 			{
-#if defined(ZRENDER_API_D3D12)
 			case eGAPIType::DirectX:
 				igapi = safe_make_shared<DXAPI>();
 				break;
-#endif // defined(ZRENDER_API_D3D12)
 			default:
-				throw_runtime_error(std::format(">>>>> [EngineFactories::CreateGAPI()]. Unsupported GAPI type: {}.", static_cast<uint8_t>(type)));
+				throw_runtime_error(std::format(">>>>> [EngineFactories::CreateGAPI()]. Unsupported GAPI type: {}.", static_cast<uint8_t>(config->GetGAPIType())));
 			}
 
 			auto res = igapi->Initialize()

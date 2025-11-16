@@ -1,4 +1,4 @@
-#include "pch.h"
+
 export module AppWin_MSWin;
 
 import Event;
@@ -6,7 +6,7 @@ import Size2D;
 import Result;
 import IAppWin;
 import ibMSWin;
-import Settings;
+import AppWinConfig;
 import IOPathFactory;
 
 using namespace zzz;
@@ -18,7 +18,7 @@ export namespace zzz::core
 		Z_NO_CREATE_COPY(AppWin_MSWin);
 
 	public:
-		explicit AppWin_MSWin(std::shared_ptr<Settings> _settings);
+		explicit AppWin_MSWin(std::shared_ptr<AppWinConfig> _settings);
 		virtual ~AppWin_MSWin() override;
 
 		const HWND GetHWND() const noexcept override { return hWnd; }
@@ -36,8 +36,8 @@ export namespace zzz::core
 		LRESULT MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	};
 
-	AppWin_MSWin::AppWin_MSWin(std::shared_ptr<Settings> _settings) :
-		IAppWin(_settings),
+	AppWin_MSWin::AppWin_MSWin(std::shared_ptr<AppWinConfig> config) :
+		IAppWin(config),
 		hWnd{ nullptr },
 		IsMinimized{ true }
 	{
@@ -52,44 +52,17 @@ export namespace zzz::core
 
 	Result<> AppWin_MSWin::Initialize()
 	{
-#pragma region Получение настроек окна
-		std::wstring ClassName;
-		{
-			auto res = m_Settings->GetParam<std::wstring>(L"Caption")
-				.and_then([&](std::wstring name) { m_Caption = name; });
-
-			if (!res)
-				return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'Caption' parameter.");
-		}
-
-		m_Settings->GetParam<std::wstring>(L"MSWin_SpecSettings", L"ClassName")
-			.and_then([&](std::wstring name) {ClassName = name; })
-			.or_else([&](auto error) { ClassName = m_Caption; });
-
-		LONG swWidth;
-		auto res = m_Settings->GetParam<int>(L"Width")
-			.and_then([&](int width) {swWidth = width; });
-		if (!res)
-			return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'Width' parameter. More specifically: " + res.error().getMessage());
-
-		LONG swHeight;
-		res = m_Settings->GetParam<int>(L"Height")
-			.and_then([&](int height) {swHeight = height; });
-		if (!res)
-			return Unexpected(eResult::failure, L">>>>> [SW_MSWindows.Initialize( ... )]. GetParam( ... ). Failed to get 'Height' parameter. More specifically:" + res.error().getMessage());
-
 		HICON iconHandle = nullptr;
 		{
-			Result<std::wstring> icoPath = m_Settings->GetParam<std::wstring>(L"IcoFullPath");
+			Result<std::wstring> icoPath = m_Config->GetIcoFullPath();
 			if (icoPath)
 			{
 				ibMSWin icoBuilder;
-				auto res = icoBuilder.LoadIco(icoPath.value(), m_Settings->GetParam<int>(L"IcoSize").value_or(32));
+				auto res = icoBuilder.LoadIco(icoPath.value(), m_Config->GetIcoSize());
 				if (res)
 					iconHandle = res.value();
 			}
 		}
-#pragma endregion Получение настроек окна
 
 		WNDCLASS wc = { 0 };
 		wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -97,17 +70,18 @@ export namespace zzz::core
 		wc.hInstance = GetModuleHandle(NULL);
 		wc.hIcon = iconHandle;// LoadIcon(GetModuleHandle(NULL), NULL);// MAKEINTRESOURCE(userGS->GetMSWinIcoID()));
 		wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-		wc.lpszClassName = ClassName.c_str();
+		wc.lpszClassName = m_Config->GetClassName().c_str();
 
 		ATOM Result = RegisterClass(&wc);
 		if (Result == 0)
 		{
-			std::wstring mess = L">>>>> [SW_MSWindows.Initialize( ... )]. RegisterClass( ... ). Failed to register window class: " + ClassName + L". Error code(MSWindows):" + std::to_wstring(::GetLastError());
+			std::wstring mess = L">>>>> [SW_MSWindows.Initialize( ... )]. RegisterClass( ... ). Failed to register window class: " + m_Config->GetClassName() + L". Error code(MSWindows):" + std::to_wstring(::GetLastError());
 			return Unexpected(eResult::failure, mess);
 		}
 
 		// Рассчитать размеры прямоугольника окна на основе запрошенных размеров клиентской области.
-		RECT R = { 0, 0, static_cast<LONG>(swWidth), static_cast<LONG>(swHeight) };
+		const Size2D<LONG>& winSize = m_Config->GetWinSize();
+		RECT R = { 0, 0, winSize.width, winSize.height };
 		AdjustWindowRect(&R, WS_OVERLAPPEDWINDOW, false);
 		int width = R.right - R.left;
 		int height = R.bottom - R.top;
@@ -118,8 +92,8 @@ export namespace zzz::core
 		int yPos = (screenHeight - height) / 2; // Расчет позиции по оси Y
 		hWnd = CreateWindowEx(
 			0,
-			ClassName.c_str(),
-			m_Caption.c_str(),
+			m_Config->GetClassName().c_str(),
+			m_Config->GetCaption().c_str(),
 			WS_OVERLAPPEDWINDOW,
 			xPos, yPos, width, height,
 			nullptr,

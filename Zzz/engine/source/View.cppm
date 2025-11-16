@@ -9,11 +9,11 @@ import Scene;
 import Size2D;
 import Result;
 import IAppWin;
-import Settings;
 import StrConvert;
 import ThreadPool;
 import RenderQueue;
 import ViewFactory;
+import AppWinConfig;
 import ISurfaceView;
 import ScenesManager;
 
@@ -33,7 +33,7 @@ namespace zzz
 
 	public:
 		View(
-			const std::shared_ptr<Settings> _setting,
+			const std::shared_ptr<AppWinConfig> _winConfig,
 			const std::shared_ptr<ScenesManager> _scenesManager,
 			const std::shared_ptr<IGAPI> _GAPI);
 
@@ -53,7 +53,7 @@ namespace zzz
 		void OnViewResize(const Size2D<>& size, eTypeWinResize resizeType);
 
 		ViewFactory factory;
-		const std::shared_ptr<Settings> m_Settings;
+		const std::shared_ptr<AppWinConfig> m_WinConfig;
 		const std::shared_ptr<IGAPI> m_GAPI;
 		const std::shared_ptr<ScenesManager> m_ScenesManager;
 		std::shared_ptr<IAppWin> m_Win;
@@ -68,16 +68,16 @@ namespace zzz
 	};
 
 	View::View(
-		const std::shared_ptr<Settings> _setting,
+		const std::shared_ptr<AppWinConfig> _winConfig,
 		const std::shared_ptr<ScenesManager> _scenesManager,
 		const std::shared_ptr<IGAPI> _GAPI) :
-		m_Settings{ _setting },
+		m_WinConfig{ _winConfig },
 		m_ScenesManager{ _scenesManager },
 		m_GAPI{ _GAPI },
 		initState{ eInitState::InitNot },
 		m_ThreadsUpdate{2}
 	{
-		ensure(m_Settings, ">>>>> [View::View()]. Settings cannot be null.");
+		ensure(m_WinConfig, ">>>>> [View::View()]. Window config cannot be null.");
 		ensure(m_ScenesManager, ">>>>> [View::View()]. Scenes manager cannot be null.");
 		ensure(m_GAPI, ">>>>> [View::View()]. GAPI cannot be null.");
 
@@ -89,7 +89,7 @@ namespace zzz
 		try
 		{
 			// Cоздаём обёртку над окном приложения под текущую ОС
-			m_Win = factory.CreateAppWin(m_Settings);
+			m_Win = factory.CreateAppWin(m_WinConfig);
 			m_Win->OnResize += std::bind(&View::OnViewResize, this, std::placeholders::_1, std::placeholders::_2);
 			m_Win->OnResizing += std::bind(&View::OnViewResizing, this);
 			auto res = m_Win->Initialize();
@@ -97,7 +97,7 @@ namespace zzz
 				throw_runtime_error(std::format(">>>>> [View::Initialize()]. Failed to initialize application window: {}.", wstring_to_string(res.error().getMessage())));
 
 			// Cоздаём проверхность рендринга для текущего окна и GAPI
-			m_SurfaceView = factory.CreateSurfaceWin(m_Settings, m_Win, m_GAPI);
+			m_SurfaceView = factory.CreateSurfaceWin(m_Win, m_GAPI);
 			res = m_SurfaceView->Initialize();
 			if (!res)
 				throw_runtime_error(std::format(">>>>> [View::Initialize()]. Failed to initialize surface window: {}.", wstring_to_string(res.error().getMessage())));

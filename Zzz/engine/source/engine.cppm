@@ -1,6 +1,4 @@
 
-#include "pch.h"
-
 export module Engine;
 
 import View;
@@ -10,10 +8,11 @@ import Colors;
 import Result;
 import AppTime;
 import zMsgBox;
-import Settings;
 import IMainLoop;
 import ThreadPool;
 import StrConvert;
+import StartupConfig;
+import ZamlProcessor;
 import GpuEventScope;
 import IOPathFactory;
 import EngineFactory;
@@ -44,8 +43,8 @@ export namespace zzz
 		Engine();
 		~Engine();
 
-		Result<> Initialize(std::wstring settingFilePath) noexcept;
-		Result<> Run() noexcept;
+		[[nodiscard]] Result<> Initialize(std::wstring settingFilePath) noexcept;
+		[[nodiscard]] Result<> Run() noexcept;
 
 	private:
 		EngineFactory m_factory;
@@ -54,7 +53,9 @@ export namespace zzz
 		std::mutex stateMutex;
 		bool isSysPaused;
 
-		std::shared_ptr<Settings> m_setting;
+		std::shared_ptr<ZamlProcessor> m_setting;
+		std::unique_ptr<StartupConfig> m_Config;
+
 		std::shared_ptr<CPUResManager> m_ResCPU;
 		std::shared_ptr<GPUResManager> m_ResGPU;
 		std::shared_ptr<ScenesManager> m_ScenManager;
@@ -63,6 +64,8 @@ export namespace zzz
 		std::shared_ptr<IMainLoop> m_MainLoop;
 		ThreadPool transferResToGPU;
 		AppTime m_time;
+
+		[[nodiscard]] Result<> Initialize(StartupConfig config) noexcept;
 
 		void Reset() noexcept;
 		void OnViewResize(const Size2D<>& size, eTypeWinResize resizeType);
@@ -103,42 +106,21 @@ export namespace zzz
 		std::lock_guard<std::mutex> lock(stateMutex);
 
 		if (initState != eInitState::InitNot)
-			return Unexpected(eResult::failure, L">>>>> [Engine::initialize()]. Re-initialization is not allowed.");
+			return Unexpected(eResult::failure, L">>>>> [Engine::initialize(settingFilePath)]. Re-initialization is not allowed.");
 
 		std::wstring err;
 		try
 		{
 			// Читаем настройки из файла
-			m_setting = safe_make_shared<Settings>(settingFilePath);
+			m_setting = safe_make_shared<ZamlProcessor>(settingFilePath);
 
-			// TODO: После тип GAPI буду передавать из m_settings
-			// Создаём обёртку над графическим API
-			auto res = m_factory.CreateGAPI(m_setting);
-			if (!res)
-				return Unexpected(eResult::failure, L">>>>> [Engine::initialize()]. Failed to create GAPI.");
-			m_GAPI = res.value();
-
-			m_ResCPU = safe_make_shared<CPUResManager>(m_setting);
-			m_ResGPU = safe_make_shared<GPUResManager>(m_GAPI, m_ResCPU);
-			m_ScenManager = safe_make_shared<ScenesManager>(m_ResGPU);
-
-			// Содаём основное окно(View) приложения
-			m_View = safe_make_shared<View>(m_setting, m_ScenManager, m_GAPI);
-			m_View->viewResized += std::bind(&Engine::OnViewResize, this, std::placeholders::_1, std::placeholders::_2);
-			m_View->viewResizing += std::bind(&Engine::OnViewResizing, this);
-
-			// Создаём главный цикл приложения
-			m_MainLoop = safe_make_shared<MainLoop>();
-			m_MainLoop->onUpdateSystem += std::bind(&Engine::OnUpdateSystem, this);
-
-			initState = eInitState::InitOK;
 			return {};
 		}
 		catch (const std::exception& e)
 		{
 			string_to_wstring(e.what())
-				.and_then([&err](const std::wstring& wstr) { err = L">>>>> [Engine::initialize()].\n" + wstr; })
-				.or_else([&err](const Unexpected& error) { err = L">>>>> #0 [Engine::initialize()]. Unknown exception occurred."; });
+				.and_then([&err](const std::wstring& wstr) { err = L">>>>> [Engine::initialize(settingFilePath)].\n" + wstr; })
+				.or_else([&err](const Unexpected& error) { err = L">>>>> #0 [Engine::initialize(settingFilePath)]. Unknown exception occurred."; });
 		}
 		catch (...)
 		{
@@ -148,6 +130,32 @@ export namespace zzz
 		zMsgBox::Error(err);
 		Reset();
 		return Unexpected(eResult::exception, err);
+	}
+
+	Result<> Engine::Initialize(StartupConfig config) noexcept
+	{
+		// TODO: После тип GAPI буду передавать из m_settings
+		// Создаём обёртку над графическим API
+		//auto res = m_factory.CreateGAPI(m_setting);
+		//if (!res)
+		//	return Unexpected(eResult::failure, L">>>>> [Engine::initialize()]. Failed to create GAPI.");
+		//m_GAPI = res.value();
+
+		//m_ResCPU = safe_make_shared<CPUResManager>(m_setting);
+		//m_ResGPU = safe_make_shared<GPUResManager>(m_GAPI, m_ResCPU);
+		//m_ScenManager = safe_make_shared<ScenesManager>(m_ResGPU);
+
+		//// Содаём основное окно(View) приложения
+		//m_View = safe_make_shared<View>(m_setting, m_ScenManager, m_GAPI);
+		//m_View->viewResized += std::bind(&Engine::OnViewResize, this, std::placeholders::_1, std::placeholders::_2);
+		//m_View->viewResizing += std::bind(&Engine::OnViewResizing, this);
+
+		//// Создаём главный цикл приложения
+		//m_MainLoop = safe_make_shared<MainLoop>();
+		//m_MainLoop->onUpdateSystem += std::bind(&Engine::OnUpdateSystem, this);
+
+		initState = eInitState::InitOK;
+		return {};
 	}
 
 	Result<> Engine::Run() noexcept

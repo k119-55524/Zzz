@@ -3,7 +3,6 @@ export module ScenesManager;
 
 import Scene;
 import Result;
-import Settings;
 import GPUResManager;
 import SceneEntitySpawner;
 

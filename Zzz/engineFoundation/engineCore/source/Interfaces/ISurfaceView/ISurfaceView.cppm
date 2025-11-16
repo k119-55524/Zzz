@@ -1,4 +1,4 @@
-#include "pch.h"
+
 export module ISurfaceView;
 
 import IGAPI;
@@ -7,7 +7,6 @@ import Colors;
 import Result;
 import Size2D;
 import IAppWin;
-import Settings;
 import RenderQueue;
 
 using namespace zzz;
@@ -27,7 +26,6 @@ export namespace zzz::core
 
 	public:
 		explicit ISurfaceView(
-			std::shared_ptr<Settings> _settings,
 			std::shared_ptr<IAppWin> _iAppWin,
 			std::shared_ptr<IGAPI> _iGAPI);
 
@@ -44,7 +42,6 @@ export namespace zzz::core
 	protected:
 		zU64 m_frameIndex;
 		bool b_IsVSync;
-		std::shared_ptr<Settings> m_settings;
 		std::shared_ptr<IAppWin> m_iAppWin;
 		std::shared_ptr<IGAPI> m_iGAPI;
 		Size2D<> m_SurfSize;
@@ -55,19 +52,16 @@ export namespace zzz::core
 	};
 
 	ISurfaceView::ISurfaceView(
-		std::shared_ptr<Settings> _settings,
 		std::shared_ptr<IAppWin> _iAppWin,
 		std::shared_ptr<IGAPI> _iGAPI) :
 		m_frameIndex{ 0 },
 		b_IsVSync{ true },
-		m_settings{ _settings },
 		m_iAppWin{ _iAppWin },
 		m_iGAPI{ _iGAPI },
 		m_ClearColor{ colors::DarkMidnightBlue },
 		b_IsClearDepth{ true },
 		m_SurfSize{}
 	{
-		ensure(m_settings, ">>>>> [ISurfaceView::ISurfaceView()]. Settings cannot be null.");
 		ensure(m_iAppWin, ">>>>> [ISurfaceView::ISurfaceView()]. Application window cannot be null.");
 		ensure(m_iGAPI, ">>>>> [ISurfaceView::ISurfaceView()]. GAPI cannot be null.");
 
