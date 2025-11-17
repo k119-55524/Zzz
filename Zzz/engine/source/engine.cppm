@@ -53,7 +53,7 @@ export namespace zzz
 		std::mutex stateMutex;
 		bool isSysPaused;
 
-		std::shared_ptr<ZamlProcessor> m_setting;
+		std::shared_ptr<ZamlProcessor> m_ZamlSettings;
 		std::unique_ptr<StartupConfig> m_Config;
 
 		std::shared_ptr<CPUResManager> m_ResCPU;
@@ -95,7 +95,7 @@ export namespace zzz
 		m_ScenManager.reset();
 		m_ResCPU.reset();
 		m_ResGPU.reset();
-		m_setting.reset();
+		m_ZamlSettings.reset();
 
 		initState = eInitState::InitNot;
 		isSysPaused = true;
@@ -106,21 +106,25 @@ export namespace zzz
 		std::lock_guard<std::mutex> lock(stateMutex);
 
 		if (initState != eInitState::InitNot)
-			return Unexpected(eResult::failure, L">>>>> [Engine::initialize(settingFilePath)]. Re-initialization is not allowed.");
+			return Unexpected(eResult::failure, std::format(L">>>>> [Engine::initialize({})]. Re-initialization is not allowed.", settingFilePath));
 
 		std::wstring err;
 		try
 		{
 			// Читаем настройки из файла
-			m_setting = safe_make_shared<ZamlProcessor>(settingFilePath);
+			m_ZamlSettings = safe_make_shared<ZamlProcessor>(settingFilePath);
+			auto res = m_ZamlSettings->GetStartupConfig();
+			if (!res)
+				return Unexpected(eResult::failure, std::format(L">>>>> [Engine::initialize({})]. Failed to transfer settings from file.", settingFilePath));
+			m_Config = std::move(res.value());
 
 			return {};
 		}
 		catch (const std::exception& e)
 		{
 			string_to_wstring(e.what())
-				.and_then([&err](const std::wstring& wstr) { err = L">>>>> [Engine::initialize(settingFilePath)].\n" + wstr; })
-				.or_else([&err](const Unexpected& error) { err = L">>>>> #0 [Engine::initialize(settingFilePath)]. Unknown exception occurred."; });
+				.and_then([&](const std::wstring& wstr) { err = std::format(L">>>>> [Engine::initialize({})].\n{}", settingFilePath, wstr); })
+				.or_else([&](const Unexpected& error) { err = std::format(L">>>>> #0 [Engine::initialize({})]. Unknown exception occurred.", settingFilePath); });
 		}
 		catch (...)
 		{
@@ -136,17 +140,17 @@ export namespace zzz
 	{
 		// TODO: После тип GAPI буду передавать из m_settings
 		// Создаём обёртку над графическим API
-		//auto res = m_factory.CreateGAPI(m_setting);
+		//auto res = m_factory.CreateGAPI(m_ZamlSettings);
 		//if (!res)
 		//	return Unexpected(eResult::failure, L">>>>> [Engine::initialize()]. Failed to create GAPI.");
 		//m_GAPI = res.value();
 
-		//m_ResCPU = safe_make_shared<CPUResManager>(m_setting);
+		//m_ResCPU = safe_make_shared<CPUResManager>(m_ZamlSettings);
 		//m_ResGPU = safe_make_shared<GPUResManager>(m_GAPI, m_ResCPU);
 		//m_ScenManager = safe_make_shared<ScenesManager>(m_ResGPU);
 
 		//// Содаём основное окно(View) приложения
-		//m_View = safe_make_shared<View>(m_setting, m_ScenManager, m_GAPI);
+		//m_View = safe_make_shared<View>(m_ZamlSettings, m_ScenManager, m_GAPI);
 		//m_View->viewResized += std::bind(&Engine::OnViewResize, this, std::placeholders::_1, std::placeholders::_2);
 		//m_View->viewResizing += std::bind(&Engine::OnViewResizing, this);
 

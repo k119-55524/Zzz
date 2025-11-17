@@ -1,9 +1,9 @@
 
-export module iozaml;
+export module ioZaml;
 
 import Result;
 
-export namespace zzz
+export namespace zzz::core
 {
 	class zamlNode
 	{

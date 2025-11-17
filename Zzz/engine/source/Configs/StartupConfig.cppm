@@ -11,8 +11,9 @@ namespace zzz::core
 	{
 	public:
 		StartupConfig() = default;
-		explicit StartupConfig(const AppWinConfig& appWinConfig) :
-			m_AppWinConfig(appWinConfig)
+		explicit StartupConfig(const AppWinConfig& appWinConfig, const GAPIConfig& gapionfig) :
+			m_AppWinConfig{ appWinConfig },
+			m_GAPIConfig{gapionfig}
 		{
 		}
 		~StartupConfig() = default;

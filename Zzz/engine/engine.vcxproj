@@ -98,7 +98,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="source\ZAML\ioZaml.cppm" />
     <ClCompile Include="source\ZAML\ZamlProcessor .cppm" />
     <ClCompile Include="source\Configs\StartupConfig.cppm" />
     <ClCompile Include="source\Resources\GPUResManager.cppm" />

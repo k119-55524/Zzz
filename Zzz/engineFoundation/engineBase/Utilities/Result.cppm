@@ -55,7 +55,7 @@ export namespace zzz
 	class Result
 	{
 	public:
-		static_assert(std::is_copy_constructible_v<_Ty>, ">>>>> [class Result]. Type _Ty must be copy constructible.");
+		//static_assert(std::is_copy_constructible_v<_Ty>, ">>>>> [class Result]. Type _Ty must be copy constructible.");
 		static_assert(std::is_move_constructible_v<_Ty>, ">>>>> [class Result]. Type _Ty must be move constructible.");
 
 		Result(const _Ty& value) noexcept(std::is_nothrow_copy_constructible_v<_Ty>) : data(value) {}

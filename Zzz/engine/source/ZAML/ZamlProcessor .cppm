@@ -2,7 +2,7 @@
 export module ZamlProcessor;
 
 import Result;
-import iozaml;
+import ioZaml;
 import GAPIConfig;
 import StrConvert;
 import AppWinConfig;
@@ -23,13 +23,13 @@ export namespace zzz
 		template<typename T, typename... Path>
 		Result<T> GetParam(Path&&... pathAndParamName) const
 		{
-			if (!m_settings)
+			if (!m_Settings)
 				return Unexpected(eResult::not_initialized, L">>>>> [Settings.GetParam(...)] Settings not loaded");
 
 			constexpr size_t argCount = sizeof...(Path);
 			static_assert(argCount >= 1, "At least one argument (paramName) is required");
 
-			const zamlNode* node = m_settings.get();
+			const zamlNode* node = m_Settings.get();
 
 			// Помещаем аргументы в массив
 			std::array<std::wstring, argCount> args = { std::wstring(std::forward<Path>(pathAndParamName))... };
@@ -70,16 +70,18 @@ export namespace zzz
 			return ConvertValue<T>(*attr.value());
 		}
 
+		Result<std::unique_ptr<StartupConfig>> GetStartupConfig();
+
 	private:
 		std::wstring filePath;
-		std::unique_ptr<zamlNode> m_settings;
+		std::shared_ptr<zamlNode> m_Settings;
 
 		Result<> LoadSettings();
 	};
 
 	ZamlProcessor::ZamlProcessor(std::wstring _filePath) :
 		filePath{ std::move(_filePath) },
-		m_settings{}
+		m_Settings{}
 	{
 		if (filePath.empty())
 			throw_runtime_error("Empty filePath");
@@ -95,7 +97,7 @@ export namespace zzz
 		auto res = loader.LoadFromFile(filePath)
 			.and_then([this](const zamlNode& node)
 				{
-					m_settings = std::make_unique<zamlNode>(node);
+					m_Settings = std::make_unique<zamlNode>(node);
 					return Result<>();
 				})
 			.or_else([](auto error) { return error; });
@@ -103,12 +105,13 @@ export namespace zzz
 		return res;
 	}
 
-	Result<std::unique_ptr<StartupConfig>> GetStartupConfig(const ZamlProcessor& zaml)
+	Result<std::unique_ptr<StartupConfig>> ZamlProcessor::GetStartupConfig()
 	{
 		AppWinConfig winConfig;
-		GAPIConfig gapiConfig;
-		std::unique_ptr<StartupConfig> config = safe_make_unique<StartupConfig>(winConfig, gapiConfig);
+		winConfig.Configure(m_Settings);
 
-		return Result<std::unique_ptr<StartupConfig>>(config);
+		GAPIConfig gapiConfig;
+
+		return Result<std::unique_ptr<StartupConfig>>(safe_make_unique<StartupConfig>(winConfig, gapiConfig));
 	}
 }
