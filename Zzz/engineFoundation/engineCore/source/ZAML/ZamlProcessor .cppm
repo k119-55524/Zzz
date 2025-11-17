@@ -8,9 +8,7 @@ import StrConvert;
 import AppWinConfig;
 import StartupConfig;
 
-using namespace zzz::core;
-
-export namespace zzz
+export namespace zzz::core
 {
 	export class ZamlProcessor  final
 	{

@@ -179,5 +179,8 @@
     <ClCompile Include="Source\ZAML\ioZaml.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="source\ZAML\ZamlProcessor .cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

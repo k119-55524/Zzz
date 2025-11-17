@@ -41,7 +41,7 @@ export namespace zzz::core
 		int GetIcoSize() const noexcept { return m_IcoSize; }
 
 	protected:
-		Result<> Configure(std::shared_ptr<zamlNode> zamlConfig) override;
+		Result<> Configure(std::shared_ptr<ZamlProcessor> zamlData) override;
 
 	private:
 		std::wstring m_Caption;
@@ -78,9 +78,9 @@ export namespace zzz::core
 		}
 	};
 
-	Result<> AppWinConfig_MSWin::Configure(std::shared_ptr<zamlNode> zamlConfig)
+	Result<> AppWinConfig_MSWin::Configure(std::shared_ptr<ZamlProcessor> zamlData)
 	{
-		auto res = zamlConfig->GetParam<std::wstring>(L"Caption")
+		auto res = zamlData->GetParam<std::wstring>(L"Caption")
 			.and_then([&](std::wstring name) { m_Caption = name; });
 
 		if (!res)
