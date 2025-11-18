@@ -71,6 +71,9 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -112,8 +115,9 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)engineFoundation\logger</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)engineFoundation\logger;$(SolutionDir)math</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
+      <ForcedIncludeFiles>pch.h;</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -132,8 +136,9 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)engineFoundation\logger</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)engineFoundation\logger;$(SolutionDir)math</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
+      <ForcedIncludeFiles>pch.h;</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -143,7 +148,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="engineCore.h" />
-    <ClInclude Include="headers\header.h" />
+    <ClInclude Include="Headers\header.h" />
+    <ClInclude Include="Headers\MacroDefinition.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -154,6 +160,52 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Platforms\DX\CheckDirectXUltimateSupport.cppm" />
+    <ClCompile Include="Platforms\DX\CommandWrapperDX.cppm" />
+    <ClCompile Include="Platforms\DX\CPUtoGPUDataTransferDX.cppm" />
+    <ClCompile Include="Platforms\DX\RootSignature.cppm" />
+    <ClCompile Include="Source\Camera.cppm" />
+    <ClCompile Include="Source\CPUtoGPUDataTransfer.cppm" />
+    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppWinConfig.cppm" />
+    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppWinConfig_MSWin.cppm" />
+    <ClCompile Include="Source\Interfaces\Configs\GAPIConfig\GAPIConfig.cppm" />
+    <ClCompile Include="Source\Interfaces\IAppWin\AppWin_MSWin.cppm" />
+    <ClCompile Include="Source\Interfaces\IGAPI\DXAPI.cppm" />
+    <ClCompile Include="Source\Interfaces\IIcoBuilder\ibMSWin.cppm" />
+    <ClCompile Include="Source\Interfaces\IIcoBuilder\IIcoBuilder.cppm" />
+    <ClCompile Include="Source\Interfaces\IMainLoop\MainLoop_MSWin.cppm" />
+    <ClCompile Include="Source\Interfaces\IMeshGPU\MeshGPU_DirectX.cppm" />
+    <ClCompile Include="Source\Interfaces\IPSO\PSO_DX.cppm" />
+    <ClCompile Include="Source\Interfaces\IAppWin\IAppWin.cppm" />
+    <ClCompile Include="Source\Interfaces\IAppWin\IAppWin_MSWin.cppm" />
+    <ClCompile Include="Source\Interfaces\ICheckGapiSupport.cppm" />
+    <ClCompile Include="Source\Interfaces\ICPUtoGPUDataTransfer.cppm" />
+    <ClCompile Include="Source\Interfaces\IGAPI\IGAPI_DirectX.cppm" />
+    <ClCompile Include="Source\Interfaces\IGAPI\IGAPI.cppm" />
+    <ClCompile Include="Source\Interfaces\IMainLoop\IMainLoop.cppm" />
+    <ClCompile Include="Source\Interfaces\IMeshGPU\IMeshGPU.cppm" />
+    <ClCompile Include="Source\Interfaces\IMeshGPU\IMeshGPU_DirectX.cppm" />
+    <ClCompile Include="Source\Interfaces\IPSO\IPSO.cppm" />
+    <ClCompile Include="Source\Interfaces\IPSO\IPSO_DirectX.cppm" />
+    <ClCompile Include="Source\Interfaces\IShader\IShader.cppm" />
+    <ClCompile Include="Source\Interfaces\IShader\IShader_DirectX.cppm" />
+    <ClCompile Include="Source\Interfaces\IShader\Shader_DirectX.cppm" />
+    <ClCompile Include="Source\Interfaces\ISurfaceView\ISurfaceView.cppm" />
+    <ClCompile Include="Source\Interfaces\ISurfaceView\SurfaceView_DirectX.cppm" />
+    <ClCompile Include="Source\IO\IOPathFactory.cppm" />
+    <ClCompile Include="Source\Material.cppm" />
+    <ClCompile Include="Source\RenderQueue.cppm" />
+    <ClCompile Include="Source\Resources\CPUIndexBuffer.cppm" />
+    <ClCompile Include="Source\Resources\CPUMesh.cppm" />
+    <ClCompile Include="Source\Resources\CPUVertexBuffer.cppm" />
+    <ClCompile Include="Source\Resources\VertexFormatMapper.cppm" />
+    <ClCompile Include="Source\Scenes\Scene.cppm" />
+    <ClCompile Include="Source\Scenes\SceneEntity.cppm" />
+    <ClCompile Include="Utilities\Helpers.cppm" />
+    <ClCompile Include="Utilities\MessageBox.cppm" />
+    <ClCompile Include="Utilities\RenderArea.cppm" />
+    <ClCompile Include="Source\Serializer\Serializer.cppm" />
+    <ClCompile Include="Utilities\Size2D.cppm" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\math\math.vcxproj">

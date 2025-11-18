@@ -1,54 +1,81 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Исходные файлы">
+    <Filter Include="�������� �����">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Файлы заголовков">
+    <Filter Include="����� ����������">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Файлы ресурсов">
+    <Filter Include="����� ��������">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
-      <Filter>Файлы заголовков</Filter>
+      <Filter>����� ����������</Filter>
     </ClInclude>
-    <ClInclude Include="headers\platformsDefines.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="Headers\PlatformsDefines.h">
+      <Filter>����� ����������</Filter>
     </ClInclude>
-    <ClInclude Include="engineBase.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="EngineBase.h">
+      <Filter>����� ����������</Filter>
     </ClInclude>
-    <ClInclude Include="headers\header.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="Headers\Header.h">
+      <Filter>����� ����������</Filter>
     </ClInclude>
-    <ClInclude Include="headers\macroDefinition.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="Headers\MacroDefinition.h">
+      <Filter>����� ����������</Filter>
     </ClInclude>
-    <ClInclude Include="headers\headersMSWin.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="Headers\HeadersMSWin.h">
+      <Filter>����� ����������</Filter>
     </ClInclude>
-    <ClInclude Include="headers\headerVulkan.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="Headers\HeaderVulkan.h">
+      <Filter>����� ����������</Filter>
     </ClInclude>
-    <ClInclude Include="headers\headerMetal.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="Headers\HeaderMetal.h">
+      <Filter>����� ����������</Filter>
     </ClInclude>
-    <ClInclude Include="headers\headerDX.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="Headers\HeaderDX.h">
+      <Filter>����� ����������</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="engineBase.cpp">
-      <Filter>Исходные файлы</Filter>
+    <ClCompile Include="EngineBase.cpp">
+      <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
-      <Filter>Исходные файлы</Filter>
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Utilities\Platforms.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Utilities\Colors.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Utilities\Result.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\QueueArray.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\ThreadPool.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\ThreadSafeQueueArray.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\ThreadSafeSwapBuffer.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Utilities\StrConvert.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="Utilities\Event.cppm">
+      <Filter>�������� �����</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

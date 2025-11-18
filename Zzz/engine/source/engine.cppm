@@ -1,36 +1,36 @@
 
-#include "pch.h"
 export module Engine;
 
 import View;
 import IGAPI;
-import size2D;
+import Size2D;
 import Colors;
-import result;
+import Result;
 import AppTime;
 import zMsgBox;
-import mlMSWin;
-import Settings;
 import IMainLoop;
 import ThreadPool;
 import StrConvert;
+import ZamlConfig;
+import ZamlParser;
+import StartupConfig;
 import GpuEventScope;
 import IOPathFactory;
 import EngineFactory;
 import ScenesManager;
+import CPUResManager;
+import GPUResManager;
+import MainLoop_MSWin;
 import PerformanceMeter;
-import CPUResourcesManager;
-import GPUResourcesManager;
 
 using namespace zzz;
-using namespace zzz::io;
+using namespace zzz::core;
 using namespace zzz::templates;
-using namespace zzz::platforms;
 
 namespace zzz
 {
 #if defined(ZRENDER_API_D3D12)
-	typedef mlMSWin MainLoop;
+	typedef MainLoop_MSWin MainLoop;
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif
@@ -44,19 +44,20 @@ export namespace zzz
 		Engine();
 		~Engine();
 
-		result<> Initialize(std::wstring settingFilePath) noexcept;
-		result<> Run() noexcept;
+		[[nodiscard]] Result<> Initialize(std::wstring zamlPath) noexcept;
+		[[nodiscard]] Result<> Run() noexcept;
 
 	private:
-		EngineFactory m_factory;
+		EngineFactory m_EngineFactory;
+		std::shared_ptr<ZamlConfig> m_ZamlStartupConfig;
+		std::unique_ptr<StartupConfig> m_Config;
 
 		eInitState initState;
 		std::mutex stateMutex;
 		bool isSysPaused;
 
-		std::shared_ptr<Settings> m_setting;
-		std::shared_ptr<CPUResourcesManager> m_ResCPU;
-		std::shared_ptr<GPUResourcesManager> m_ResGPU;
+		std::shared_ptr<CPUResManager> m_ResCPU;
+		std::shared_ptr<GPUResManager> m_ResGPU;
 		std::shared_ptr<ScenesManager> m_ScenManager;
 		std::shared_ptr<IGAPI> m_GAPI;
 		std::shared_ptr<View> m_View;
@@ -64,15 +65,20 @@ export namespace zzz
 		ThreadPool transferResToGPU;
 		AppTime m_time;
 
+		[[nodiscard]] Result<> Initialize() noexcept;
+
 		void Reset() noexcept;
-		void OnViewResized(const size2D<>& size, eTypeWinResize resizeType);
+		void OnViewResize(const Size2D<>& size, eTypeWinResize resizeType);
 		void OnUpdateSystem();
+		void OnViewResizing();
+
+		Result<std::unique_ptr<StartupConfig>> GetStartupConfig();
 
 		PerformanceMeter m_PerfRender;
 	};
 
 	Engine::Engine() :
-		initState{ eInitState::eInitNot },
+		initState{ eInitState::InitNot },
 		transferResToGPU{ 1 },
 		isSysPaused{ true }
 	{
@@ -91,51 +97,37 @@ export namespace zzz
 		m_ScenManager.reset();
 		m_ResCPU.reset();
 		m_ResGPU.reset();
-		m_setting.reset();
+		m_ZamlStartupConfig.reset();
 
-		initState = eInitState::eInitNot;
+		initState = eInitState::InitNot;
 		isSysPaused = true;
 	}
 
-	result<> Engine::Initialize(std::wstring settingFilePath) noexcept
+	// Инициализация с использованием ZAML файла
+	Result<> Engine::Initialize(std::wstring zamlPath) noexcept
 	{
 		std::lock_guard<std::mutex> lock(stateMutex);
 
-		if (initState != eInitState::eInitNot)
-			return Unexpected(eResult::failure, L">>>>> [Engine::initialize()]. Re-initialization is not allowed.");
+		if (initState != eInitState::InitNot)
+			return Unexpected(eResult::failure, std::format(L">>>>> [Engine::initialize({})]. Re-initialization is not allowed.", zamlPath));
 
 		std::wstring err;
 		try
 		{
 			// Читаем настройки из файла
-			m_setting = safe_make_shared<Settings>(settingFilePath);
-
-			// TODO: После тип GAPI буду передавать из m_settings
-			// Создаём обёртку над графическим API
-			auto res = m_factory.CreateGAPI(m_setting);
+			m_ZamlStartupConfig = safe_make_shared<ZamlConfig>(zamlPath);
+			auto res = GetStartupConfig();
 			if (!res)
-				return Unexpected(eResult::failure, L">>>>> [Engine::initialize()]. Failed to create GAPI.");
-			m_GAPI = res.value();
+				return Unexpected(eResult::failure, std::format(L">>>>> [Engine::initialize({})]. Failed to transfer settings from file.", zamlPath));
+			m_Config = std::move(res.value());
 
-			m_ResCPU = safe_make_shared<CPUResourcesManager>(m_setting);
-			m_ResGPU = safe_make_shared<GPUResourcesManager>(m_GAPI, m_ResCPU);
-			m_ScenManager = safe_make_shared<ScenesManager>(m_ResGPU);
-
-			// Содаём основное окно(View) приложения
-			m_View = safe_make_shared<View>(m_setting, m_ScenManager, m_GAPI, std::bind(&Engine::OnViewResized, this, std::placeholders::_1, std::placeholders::_2));
-
-			// Создаём главный цикл приложения
-			m_MainLoop = safe_make_shared<MainLoop>();
-			m_MainLoop->onUpdateSystem += std::bind(&Engine::OnUpdateSystem, this);
-
-			initState = eInitState::eInitOK;
-			return {};
+			return Initialize();
 		}
 		catch (const std::exception& e)
 		{
 			string_to_wstring(e.what())
-				.and_then([&err](const std::wstring& wstr) { err = L">>>>> [Engine::initialize()].\n" + wstr; })
-				.or_else([&err](const Unexpected& error) { err = L">>>>> #0 [Engine::initialize()]. Unknown exception occurred."; });
+				.and_then([&](const std::wstring& wstr) { err = std::format(L">>>>> [Engine::initialize({})].\n{}", zamlPath, wstr); })
+				.or_else([&](const Unexpected& error) { err = std::format(L">>>>> #0 [Engine::initialize({})]. Unknown exception occurred.", zamlPath); });
 		}
 		catch (...)
 		{
@@ -147,16 +139,41 @@ export namespace zzz
 		return Unexpected(eResult::exception, err);
 	}
 
-	result<> Engine::Run() noexcept
+	Result<> Engine::Initialize() noexcept
+	{
+		// Создаём обёртку над графическим API
+		auto res = m_EngineFactory.CreateGAPI(m_Config->GetGAPIConfig());
+		if (!res)
+			return Unexpected(eResult::failure, L">>>>> [Engine::initialize()]. Failed to create GAPI.");
+		m_GAPI = res.value();
+
+		m_ResCPU = safe_make_shared<CPUResManager>();
+		m_ResGPU = safe_make_shared<GPUResManager>(m_GAPI, m_ResCPU);
+		m_ScenManager = safe_make_shared<ScenesManager>(m_ResGPU);
+
+		// Содаём основное окно(View) приложения
+		m_View = safe_make_shared<View>(m_Config->GetAppWinConfig(), m_ScenManager, m_GAPI);
+		m_View->viewResized += std::bind(&Engine::OnViewResize, this, std::placeholders::_1, std::placeholders::_2);
+		m_View->viewResizing += std::bind(&Engine::OnViewResizing, this);
+
+		// Создаём главный цикл приложения
+		m_MainLoop = safe_make_shared<MainLoop>();
+		m_MainLoop->onUpdateSystem += std::bind(&Engine::OnUpdateSystem, this);
+
+		initState = eInitState::InitOK;
+		return {};
+	}
+
+	Result<> Engine::Run() noexcept
 	{
 		std::lock_guard<std::mutex> lock(stateMutex);
-		if (initState != eInitState::eInitOK)
+		if (initState != eInitState::InitOK)
 			return Unexpected(eResult::failure, L">>>>> [Engine::Run()]. Engine is not initialized.");
 
-		if (initState == eInitState::eRunning)
+		if (initState == eInitState::Running)
 			return Unexpected(eResult::failure, L">>>>> [Engine::Run()]. Engine is already running.");
 
-		initState = eInitState::eRunning;
+		initState = eInitState::Running;
 		std::wstring err;
 
 		try
@@ -227,28 +244,51 @@ export namespace zzz
 			//static int frameCount = 0;
 			//frameCount++;
 
+			//if (frameCount == 2)
+			//	m_View->SetVSync(true);
+
 			//if (frameCount == 5000)
 			//	m_View->SetFullScreen(true);
 
 			//if (frameCount == 15000)
 			//	m_View->SetFullScreen(false);
-
 		}
 	}
 
-	void Engine::OnViewResized(const size2D<>& size, eTypeWinResize resizeType)
+	void Engine::OnViewResizing()
+	{
+		OnUpdateSystem();
+		OnUpdateSystem();
+	}
+
+	void Engine::OnViewResize(const Size2D<>& size, eTypeWinResize resizeType)
 	{
 		switch (resizeType)
 		{
-		case eTypeWinResize::eHide:
+		case eTypeWinResize::Hide:
 			isSysPaused = true;
 			m_time.Pause(isSysPaused);
 			break;
-		case eTypeWinResize::eShow:
-		case eTypeWinResize::eResize:
+		case eTypeWinResize::Show:
+		case eTypeWinResize::Resize:
 			isSysPaused = false;
 			m_time.Pause(isSysPaused);
 			break;
 		}
 	}
+
+#pragma region 
+	Result<std::unique_ptr<StartupConfig>> Engine::GetStartupConfig()
+	{
+		ZamlParser zamlParser;
+		auto res = zamlParser.GetAppWinConfig(m_ZamlStartupConfig);
+		if (!res)
+			Unexpected(eResult::not_initialized, res.error().getMessage());
+
+		std::shared_ptr<AppWinConfig> winConfig = res.value();
+		std::shared_ptr<GAPIConfig> gapiConfig = safe_make_shared<GAPIConfig>();
+
+		return Result<std::unique_ptr<StartupConfig>>(safe_make_unique<StartupConfig>(winConfig, gapiConfig));
+	}
+#pragma endregion
 }

@@ -1,6 +1,5 @@
 
-#ifndef PCH_H
-#define PCH_H
+#pragma once
 
 #include <bit>
 #include <span>
@@ -34,4 +33,3 @@
 
 #include "Headers\Header.h"
 
-#endif //PCH_H

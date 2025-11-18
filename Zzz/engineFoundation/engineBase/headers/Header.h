@@ -1,11 +1,33 @@
 #pragma once
 
-#include <memory>
+#include <bit>
+#include <span>
+#include <mutex>
+#include <array>
+#include <atomic>
+#include <vector>
 #include <string>
-#include <cstdint>
+#include <cctype>
+#include <memory>
+#include <format>
+#include <locale>
+#include <future>
+#include <fstream>
 #include <sstream>
+#include <variant>
+#include <utility>
+#include <codecvt>
+#include <cstdint>
+#include <cassert>
 #include <iostream>
+#include <algorithm>
 #include <stdexcept>
+#include <filesystem>
+#include <functional>
+#include <string_view>
+#include <type_traits>
+#include <shared_mutex>
+#include <unordered_map>
 #include <source_location>
 
 #include "PlatformsDefines.h"
@@ -31,12 +53,12 @@ namespace zzz
 
 	enum eInitState : zU32
 	{
-		eInitNot,		// Готов к инициализации
-		eInitProcess,	// Идёт процесс инициализации
-		eInitOK,		// Инициализирован
-		eInitError,		// Ошибка инициализации
-		eTermination,	// Процесс деинициализации
-		eRunning		// Идёт процесс работы
+		InitNot,		// Готов к инициализации
+		InitProcess,	// Идёт процесс инициализации
+		InitOK,			// Инициализирован
+		InitError,		// Ошибка инициализации
+		Termination,	// Процесс деинициализации
+		Running			// Идёт процесс работы
 	};
 
 	[[noreturn]]

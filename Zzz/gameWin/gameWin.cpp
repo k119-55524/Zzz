@@ -1,7 +1,6 @@
 
-#include "pch.h"
 import Engine;
-import result;
+import Result;
 
 using namespace zzz;
 
@@ -18,7 +17,7 @@ int APIENTRY wWinMain(
 		//_CrtSetBreakAlloc(202);
 #endif // _DEBUG
 	{
-		result<> res;
+		Result<> res;
 		zzz::Engine Engine;
 		res = Engine.Initialize(L".\\appdata\\ui.zaml")
 			.and_then([&Engine]() { return Engine.Run(); });

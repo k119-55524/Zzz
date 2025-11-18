@@ -18,10 +18,10 @@
     <ClInclude Include="pch.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="headers\header.h">
+    <ClInclude Include="headers\Header.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="headers\headerSIMD.h">
+    <ClInclude Include="headers\HeaderSIMD.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
@@ -29,10 +29,19 @@
     <ClCompile Include="pch.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="vectors\vector4.cppm">
+    <ClCompile Include="source\Vector4.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="vectors\Matrix4x4.cppm">
+    <ClCompile Include="source\Matrix4x4.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Math.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Ray.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\AABB.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
