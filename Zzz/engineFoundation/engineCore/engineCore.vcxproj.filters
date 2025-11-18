@@ -164,22 +164,13 @@
     <ClCompile Include="Utilities\Helpers.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppWinConfig_MSWin.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppWinConfig.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppWinConfig_MSWin.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Interfaces\Configs\GAPIConfig\GAPIConfig.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\IAppWinConfig.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\ZAML\ioZaml.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="source\ZAML\ZamlProcessor .cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

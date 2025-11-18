@@ -1,6 +1,4 @@
 
-#include "pch.h"
-
 export module IAppWin_MSWin;
 
 export namespace zzz::core

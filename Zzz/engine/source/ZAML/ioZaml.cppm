@@ -3,7 +3,7 @@ export module ioZaml;
 
 import Result;
 
-export namespace zzz::core
+export namespace zzz
 {
 	class zamlNode
 	{

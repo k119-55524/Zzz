@@ -265,13 +265,11 @@ export namespace zzz::core
 
 	void AppWin_MSWin::SetCaptionText(std::wstring caption)
 	{
-		m_Caption = caption;
-		SetWindowText(hWnd, m_Caption.c_str());
+		SetWindowText(hWnd, m_Config->GetCaption().c_str());
 	}
 
 	void AppWin_MSWin::AddCaptionText(std::wstring caption)
 	{
-		std::wstring cap = m_Caption + caption;
-		SetWindowText(hWnd, cap.c_str());
+		SetWindowText(hWnd, (m_Config->GetCaption() + caption).c_str());
 	}
 }

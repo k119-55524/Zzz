@@ -153,10 +153,6 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppWinConfig.cppm" />
-    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppWinConfig_MSWin.cppm" />
-    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\IAppWinConfig.cppm" />
-    <ClCompile Include="Source\Interfaces\Configs\GAPIConfig\GAPIConfig.cppm" />
     <ClCompile Include="engineCore.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -170,6 +166,9 @@
     <ClCompile Include="Platforms\DX\RootSignature.cppm" />
     <ClCompile Include="Source\Camera.cppm" />
     <ClCompile Include="Source\CPUtoGPUDataTransfer.cppm" />
+    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppWinConfig.cppm" />
+    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppWinConfig_MSWin.cppm" />
+    <ClCompile Include="Source\Interfaces\Configs\GAPIConfig\GAPIConfig.cppm" />
     <ClCompile Include="Source\Interfaces\IAppWin\AppWin_MSWin.cppm" />
     <ClCompile Include="Source\Interfaces\IGAPI\DXAPI.cppm" />
     <ClCompile Include="Source\Interfaces\IIcoBuilder\ibMSWin.cppm" />
@@ -202,8 +201,6 @@
     <ClCompile Include="Source\Resources\VertexFormatMapper.cppm" />
     <ClCompile Include="Source\Scenes\Scene.cppm" />
     <ClCompile Include="Source\Scenes\SceneEntity.cppm" />
-    <ClCompile Include="Source\ZAML\ioZaml.cppm" />
-    <ClCompile Include="source\ZAML\ZamlProcessor .cppm" />
     <ClCompile Include="Utilities\Helpers.cppm" />
     <ClCompile Include="Utilities\MessageBox.cppm" />
     <ClCompile Include="Utilities\RenderArea.cppm" />

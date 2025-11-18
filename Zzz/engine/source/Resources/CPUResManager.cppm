@@ -1,5 +1,4 @@
 
-#include "pch.h"
 export module CPUResManager;
 
 import Result;
@@ -27,8 +26,6 @@ export namespace zzz
 		~CPUResManager() = default;
 
 		Result<std::shared_ptr<CPUMesh>> GetGenericMesh(MeshType type);
-
-
 
 		private:
 			Result<std::shared_ptr<CPUMesh>> GetGenericTriangle();

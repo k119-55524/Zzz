@@ -65,5 +65,17 @@
     <ClCompile Include="source\Configs\StartupConfig.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
+    <ClCompile Include="source\ZAML\ZamlConfig.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ZAML\ioZaml.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Configs\ZamlParser.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Configs\ZamlParser_MSWinDirectX.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

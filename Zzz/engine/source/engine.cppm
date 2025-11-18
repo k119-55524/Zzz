@@ -11,8 +11,9 @@ import zMsgBox;
 import IMainLoop;
 import ThreadPool;
 import StrConvert;
+import ZamlConfig;
+import ZamlParser;
 import StartupConfig;
-import ZamlProcessor;
 import GpuEventScope;
 import IOPathFactory;
 import EngineFactory;
@@ -43,18 +44,17 @@ export namespace zzz
 		Engine();
 		~Engine();
 
-		[[nodiscard]] Result<> Initialize(std::wstring settingFilePath) noexcept;
+		[[nodiscard]] Result<> Initialize(std::wstring zamlPath) noexcept;
 		[[nodiscard]] Result<> Run() noexcept;
 
 	private:
-		EngineFactory m_factory;
+		EngineFactory m_EngineFactory;
+		std::shared_ptr<ZamlConfig> m_ZamlStartupConfig;
+		std::unique_ptr<StartupConfig> m_Config;
 
 		eInitState initState;
 		std::mutex stateMutex;
 		bool isSysPaused;
-
-		std::shared_ptr<ZamlProcessor> m_ZamlSettings;
-		std::unique_ptr<StartupConfig> m_Config;
 
 		std::shared_ptr<CPUResManager> m_ResCPU;
 		std::shared_ptr<GPUResManager> m_ResGPU;
@@ -65,12 +65,14 @@ export namespace zzz
 		ThreadPool transferResToGPU;
 		AppTime m_time;
 
-		[[nodiscard]] Result<> Initialize(StartupConfig config) noexcept;
+		[[nodiscard]] Result<> Initialize() noexcept;
 
 		void Reset() noexcept;
 		void OnViewResize(const Size2D<>& size, eTypeWinResize resizeType);
 		void OnUpdateSystem();
 		void OnViewResizing();
+
+		Result<std::unique_ptr<StartupConfig>> GetStartupConfig();
 
 		PerformanceMeter m_PerfRender;
 	};
@@ -95,36 +97,37 @@ export namespace zzz
 		m_ScenManager.reset();
 		m_ResCPU.reset();
 		m_ResGPU.reset();
-		m_ZamlSettings.reset();
+		m_ZamlStartupConfig.reset();
 
 		initState = eInitState::InitNot;
 		isSysPaused = true;
 	}
 
-	Result<> Engine::Initialize(std::wstring settingFilePath) noexcept
+	// Инициализация с использованием ZAML файла
+	Result<> Engine::Initialize(std::wstring zamlPath) noexcept
 	{
 		std::lock_guard<std::mutex> lock(stateMutex);
 
 		if (initState != eInitState::InitNot)
-			return Unexpected(eResult::failure, std::format(L">>>>> [Engine::initialize({})]. Re-initialization is not allowed.", settingFilePath));
+			return Unexpected(eResult::failure, std::format(L">>>>> [Engine::initialize({})]. Re-initialization is not allowed.", zamlPath));
 
 		std::wstring err;
 		try
 		{
 			// Читаем настройки из файла
-			m_ZamlSettings = safe_make_shared<ZamlProcessor>(settingFilePath);
-			auto res = m_ZamlSettings->GetStartupConfig();
+			m_ZamlStartupConfig = safe_make_shared<ZamlConfig>(zamlPath);
+			auto res = GetStartupConfig();
 			if (!res)
-				return Unexpected(eResult::failure, std::format(L">>>>> [Engine::initialize({})]. Failed to transfer settings from file.", settingFilePath));
+				return Unexpected(eResult::failure, std::format(L">>>>> [Engine::initialize({})]. Failed to transfer settings from file.", zamlPath));
 			m_Config = std::move(res.value());
 
-			return {};
+			return Initialize();
 		}
 		catch (const std::exception& e)
 		{
 			string_to_wstring(e.what())
-				.and_then([&](const std::wstring& wstr) { err = std::format(L">>>>> [Engine::initialize({})].\n{}", settingFilePath, wstr); })
-				.or_else([&](const Unexpected& error) { err = std::format(L">>>>> #0 [Engine::initialize({})]. Unknown exception occurred.", settingFilePath); });
+				.and_then([&](const std::wstring& wstr) { err = std::format(L">>>>> [Engine::initialize({})].\n{}", zamlPath, wstr); })
+				.or_else([&](const Unexpected& error) { err = std::format(L">>>>> #0 [Engine::initialize({})]. Unknown exception occurred.", zamlPath); });
 		}
 		catch (...)
 		{
@@ -136,27 +139,26 @@ export namespace zzz
 		return Unexpected(eResult::exception, err);
 	}
 
-	Result<> Engine::Initialize(StartupConfig config) noexcept
+	Result<> Engine::Initialize() noexcept
 	{
-		// TODO: После тип GAPI буду передавать из m_settings
 		// Создаём обёртку над графическим API
-		//auto res = m_factory.CreateGAPI(m_ZamlSettings);
-		//if (!res)
-		//	return Unexpected(eResult::failure, L">>>>> [Engine::initialize()]. Failed to create GAPI.");
-		//m_GAPI = res.value();
+		auto res = m_EngineFactory.CreateGAPI(m_Config->GetGAPIConfig());
+		if (!res)
+			return Unexpected(eResult::failure, L">>>>> [Engine::initialize()]. Failed to create GAPI.");
+		m_GAPI = res.value();
 
-		//m_ResCPU = safe_make_shared<CPUResManager>(m_ZamlSettings);
-		//m_ResGPU = safe_make_shared<GPUResManager>(m_GAPI, m_ResCPU);
-		//m_ScenManager = safe_make_shared<ScenesManager>(m_ResGPU);
+		m_ResCPU = safe_make_shared<CPUResManager>();
+		m_ResGPU = safe_make_shared<GPUResManager>(m_GAPI, m_ResCPU);
+		m_ScenManager = safe_make_shared<ScenesManager>(m_ResGPU);
 
-		//// Содаём основное окно(View) приложения
-		//m_View = safe_make_shared<View>(m_ZamlSettings, m_ScenManager, m_GAPI);
-		//m_View->viewResized += std::bind(&Engine::OnViewResize, this, std::placeholders::_1, std::placeholders::_2);
-		//m_View->viewResizing += std::bind(&Engine::OnViewResizing, this);
+		// Содаём основное окно(View) приложения
+		m_View = safe_make_shared<View>(m_Config->GetAppWinConfig(), m_ScenManager, m_GAPI);
+		m_View->viewResized += std::bind(&Engine::OnViewResize, this, std::placeholders::_1, std::placeholders::_2);
+		m_View->viewResizing += std::bind(&Engine::OnViewResizing, this);
 
-		//// Создаём главный цикл приложения
-		//m_MainLoop = safe_make_shared<MainLoop>();
-		//m_MainLoop->onUpdateSystem += std::bind(&Engine::OnUpdateSystem, this);
+		// Создаём главный цикл приложения
+		m_MainLoop = safe_make_shared<MainLoop>();
+		m_MainLoop->onUpdateSystem += std::bind(&Engine::OnUpdateSystem, this);
 
 		initState = eInitState::InitOK;
 		return {};
@@ -274,4 +276,19 @@ export namespace zzz
 			break;
 		}
 	}
+
+#pragma region 
+	Result<std::unique_ptr<StartupConfig>> Engine::GetStartupConfig()
+	{
+		ZamlParser zamlParser;
+		auto res = zamlParser.GetAppWinConfig(m_ZamlStartupConfig);
+		if (!res)
+			Unexpected(eResult::not_initialized, res.error().getMessage());
+
+		std::shared_ptr<AppWinConfig> winConfig = res.value();
+		std::shared_ptr<GAPIConfig> gapiConfig = safe_make_shared<GAPIConfig>();
+
+		return Result<std::unique_ptr<StartupConfig>>(safe_make_unique<StartupConfig>(winConfig, gapiConfig));
+	}
+#pragma endregion
 }
