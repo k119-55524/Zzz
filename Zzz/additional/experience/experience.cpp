@@ -1,20 +1,58 @@
-﻿#include "pch.h"
+﻿
+#include <stack>
+#include "LeetCode/Hard.h"
 
-//import coroutine_1;
+bool isCloseChar(char in, char out)
+{
+	switch (in)
+	{
+	case '(': return out == ')';
+	case '{': return out == '}';
+	case '[': return out == ']';
+	default: return false;
+	}
+}
+
+bool isValid(string& s)
+{
+	if (s.length() < 2)
+		return false;
+
+	stack<int> st;
+	for (int i = 0; i < s.length(); i++)
+	{
+		char c = s[i];
+		if (c == '(' || c == '{' || c == '[')
+		{
+			st.push(c);
+		}
+		else
+		{
+			if (st.empty())
+				return false;
+
+			char top = st.top();
+			st.pop();
+			if (!isCloseChar(top, c))
+				return false;
+		}
+	}
+
+	return st.empty();
+}
+
 
 int main()
 {
-	//auto gen = simple_coroutine();
+	string s = "({}{[]})";
+	string s1 = "([])";
+	string s2 = "([(])";
+	string s3 = "((";
+	string s4 = "){";
+	bool res = isValid(s4);
 
-	//if (gen.resume())
-	//{
-	//	std::cout << "Yielded: " << gen.value() << '\n';
-	//}
-
-	//if (gen.resume())
-	//{
-	//	std::cout << "Returned: " << gen.value() << '\n';
-	//}
+	int i = 0;
+	i++;
 
 	return 0;
 }

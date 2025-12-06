@@ -1,8 +1,10 @@
-﻿#ifndef PCH_H
-#define PCH_H
+﻿
+#pragma once
 
-#include <iostream>
+#include <string>
 #include <cstdint>
+#include <iostream>
 #include <coroutine>
+#include <unordered_map>
 
-#endif //PCH_H
+using namespace std;
