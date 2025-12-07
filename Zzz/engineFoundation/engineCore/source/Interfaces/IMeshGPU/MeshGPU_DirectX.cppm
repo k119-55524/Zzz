@@ -43,6 +43,13 @@ export namespace zzz::directx
 		UINT indexBufferSize;
 
 		Result<> Initialize(std::shared_ptr<IGAPI> _IGAPI) override;
+
+		// Копирует данные из промежуточных буферов на GPU
+		void CopyBuffersToGPU(const ComPtr<ID3D12GraphicsCommandList>& commandList);
+		// Настраивает барьеры ресурсов перед копированием данных на GPU
+		void SetupResourceBarriers(const ComPtr<ID3D12GraphicsCommandList>& commandList);
+		// Вызывается после завершения передачи данных на GPU
+		void OnTransferComplete(bool isComplete);
 	};
 
 	MeshGPU_DirectX::MeshGPU_DirectX(std::shared_ptr<CPUMesh> meshCPU) :
@@ -50,16 +57,16 @@ export namespace zzz::directx
 	{
 		vertices = m_MeshCPU->GetMesh();
 		if (!vertices || vertices->GetData() == nullptr || vertices->SizeInBytes() == 0)
-			throw_runtime_error(">>>>> [GPUMeshDX::GPUMeshDX()]. Invalid vertex data");
+			throw_runtime_error(">>>>> [MeshGPU_DirectX::MeshGPU_DirectX( ... )]. Invalid vertex data");
 
 		indices = m_MeshCPU->GetIndicies();
 		if (indices != nullptr && (indices->GetData() == nullptr || indices->GetSizeInBytes() == 0))
-			throw_runtime_error(">>>>> [GPUMeshDX::GPUMeshDX()]. Invalid index data");
+			throw_runtime_error(">>>>> [MeshGPU_DirectX::MeshGPU_DirectX( ... )]. Invalid index data");
 
 		vertexBufferSize = static_cast<UINT>(vertices->SizeInBytes());
-		DebugOutput(std::format(L">>>>> [GPUMeshDX::GPUMeshDX( ... )]. vertexBufferSize: {}", vertexBufferSize));
+		DebugOutput(std::format(L">>>>> [MeshGPU_DirectX::MeshGPU_DirectX( ... )]. vertexBufferSize: {}", vertexBufferSize));
 		indexBufferSize = indices ? static_cast<UINT>(indices->GetSizeInBytes()) : 0;
-		DebugOutput(std::format(L">>>>> [GPUMeshDX::GPUMeshDX( ... )]. indexBufferSize: {}", indexBufferSize));
+		DebugOutput(std::format(L">>>>> [MeshGPU_DirectX::MeshGPU_DirectX( ... )]. indexBufferSize: {}", indexBufferSize));
 	}
 
 	Result<> MeshGPU_DirectX::Initialize(std::shared_ptr<IGAPI> _IGAPI)
@@ -75,7 +82,7 @@ export namespace zzz::directx
 			IID_PPV_ARGS(&vertexBuffer)
 		);
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, std::format(L">>>>> #0 [GPUMeshDX::Initialize]. Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
+			return Unexpected(eResult::failure, std::format(L">>>>> #0 [MeshGPU_DirectX::Initialize( ... )]. Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
 
 		// Создание промежуточного буфера для загрузки вершин (HEAP_TYPE_UPLOAD)
 		CD3DX12_HEAP_PROPERTIES uploadHeapProps(D3D12_HEAP_TYPE_UPLOAD);
@@ -88,7 +95,7 @@ export namespace zzz::directx
 			IID_PPV_ARGS(&uploadVertexBuffer)
 		);
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, std::format(L">>>>> #1 [GPUMeshDX::Initialize]. Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
+			return Unexpected(eResult::failure, std::format(L">>>>> #1 [MeshGPU_DirectX::Initialize( ... )]. Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
 
 		vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
 		vertexBufferView.StrideInBytes = static_cast<UINT>(vertices->Stride());
@@ -105,7 +112,7 @@ export namespace zzz::directx
 				nullptr,
 				IID_PPV_ARGS(&indexBuffer));
 			if (FAILED(hr))
-				return Unexpected(eResult::failure, std::format(L">>>>> #2 [GPUMeshDX::Initialize]. Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
+				return Unexpected(eResult::failure, std::format(L">>>>> #2 [MeshGPU_DirectX::Initialize( ... )]. Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
 
 			hr = _IGAPI->GetDevice()->CreateCommittedResource(
 				&uploadHeapProps,
@@ -115,7 +122,7 @@ export namespace zzz::directx
 				nullptr,
 				IID_PPV_ARGS(&uploadIndexBuffer));
 			if (FAILED(hr))
-				return Unexpected(eResult::failure, std::format(L">>>>> #3 [GPUMeshDX::Initialize]. Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
+				return Unexpected(eResult::failure, std::format(L">>>>> #3 [MeshGPU_DirectX::Initialize( ... )]. Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
 
 			indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
 			indexBufferView.SizeInBytes = indexBufferSize;
@@ -126,7 +133,7 @@ export namespace zzz::directx
 		CD3DX12_RANGE readRange(0, 0);
 		hr = uploadVertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin));
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, std::format(L">>>>> #4 [GPUMeshDX::Initialize]. Failed Map. HRESULT = 0x{:08X}", hr));
+			return Unexpected(eResult::failure, std::format(L">>>>> #4 [MeshGPU_DirectX::Initialize( ... )]. Failed Map. HRESULT = 0x{:08X}", hr));
 
 		memcpy(pVertexDataBegin, vertices->GetData(), vertexBufferSize);
 		uploadVertexBuffer->Unmap(0, nullptr);
@@ -136,85 +143,98 @@ export namespace zzz::directx
 			UINT8* pIndexDataBegin;
 			hr = uploadIndexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pIndexDataBegin));
 			if (FAILED(hr))
-				return Unexpected(eResult::failure, std::format(L">>>>> #5 [GPUMeshDX::Initialize]. Failed Map. HRESULT = 0x{:08X}", hr));
+				return Unexpected(eResult::failure, std::format(L">>>>> #5 [MeshGPU_DirectX::Initialize( ... )]. Failed Map. HRESULT = 0x{:08X}", hr));
 
 			memcpy(pIndexDataBegin, indices->GetData(), indexBufferSize);
 			uploadIndexBuffer->Unmap(0, nullptr);
 		}
 
+		// Передача ресурсов на GPU асинхронно
 		_IGAPI->AddTransferResource(
-			[&](const ComPtr<ID3D12GraphicsCommandList>& commandList)
+			[this](const ComPtr<ID3D12GraphicsCommandList>& commandList)
 			{
-				// Переход vertex buffer в состояние для копирования
-				auto vbBarrierToCopy = CD3DX12_RESOURCE_BARRIER::Transition(
-					vertexBuffer.Get(),
-					D3D12_RESOURCE_STATE_COMMON,
-					D3D12_RESOURCE_STATE_COPY_DEST);
-				commandList->ResourceBarrier(1, &vbBarrierToCopy);
-
-				// Копирование vertex buffer
-				commandList->CopyBufferRegion(vertexBuffer.Get(), 0, uploadVertexBuffer.Get(), 0, vertexBufferSize);
-
-				// Переход vertex buffer обратно в COMMON (единственное допустимое финальное состояние для copy command list)
-				CD3DX12_RESOURCE_BARRIER vbBarrierToCommon = CD3DX12_RESOURCE_BARRIER::Transition(
-					vertexBuffer.Get(),
-					D3D12_RESOURCE_STATE_COPY_DEST,
-					D3D12_RESOURCE_STATE_COMMON); // Только COMMON допустимо в copy command list
-				commandList->ResourceBarrier(1, &vbBarrierToCommon);
-
-				if (indices != nullptr)
-				{
-					auto ibBarrierToCopy = CD3DX12_RESOURCE_BARRIER::Transition(
-						indexBuffer.Get(),
-						D3D12_RESOURCE_STATE_COMMON,
-						D3D12_RESOURCE_STATE_COPY_DEST);
-					commandList->ResourceBarrier(1, &ibBarrierToCopy);
-
-					commandList->CopyBufferRegion(indexBuffer.Get(), 0, uploadIndexBuffer.Get(), 0, indexBufferSize);
-
-					CD3DX12_RESOURCE_BARRIER ibBarrierToCommon = CD3DX12_RESOURCE_BARRIER::Transition(
-						indexBuffer.Get(),
-						D3D12_RESOURCE_STATE_COPY_DEST,
-						D3D12_RESOURCE_STATE_COMMON); // Только COMMON допустимо в copy command list
-					commandList->ResourceBarrier(1, &ibBarrierToCommon);
-				}
+				CopyBuffersToGPU(commandList);
 			},
-			[&](const ComPtr<ID3D12GraphicsCommandList>& commandList)
+			[this](const ComPtr<ID3D12GraphicsCommandList>& commandList)
 			{
-				// Перевод вершинного буфера
-				auto vbBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-					vertexBuffer.Get(),
-					D3D12_RESOURCE_STATE_COMMON,
-					D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-				commandList->ResourceBarrier(1, &vbBarrier);
-
-				// Если есть индексный буфер
-				if (indexBuffer != nullptr)
-				{
-					auto ibBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-						indexBuffer.Get(),
-						D3D12_RESOURCE_STATE_COMMON,
-						D3D12_RESOURCE_STATE_INDEX_BUFFER);
-					commandList->ResourceBarrier(1, &ibBarrier);
-				}
+				SetupResourceBarriers(commandList);
 			},
-			[&](bool res)
+			[this](bool res)
 			{
-				// Освобождаем промежуточные буферы
-				uploadVertexBuffer.Reset();
-				if (uploadIndexBuffer != nullptr)
-					uploadIndexBuffer.Reset();
-
-				if (!res)
-					std::cerr << "Transfer resource failed" << std::endl;
-				else
-				{
-
-				}
+				OnTransferComplete(res);
 			}
 		);
 
 		return {};
+	}
+
+	void MeshGPU_DirectX::CopyBuffersToGPU(const ComPtr<ID3D12GraphicsCommandList>& commandList)
+	{
+		// Переход vertex buffer в состояние для копирования
+		auto vbBarrierToCopy = CD3DX12_RESOURCE_BARRIER::Transition(
+			vertexBuffer.Get(),
+			D3D12_RESOURCE_STATE_COMMON,
+			D3D12_RESOURCE_STATE_COPY_DEST);
+		commandList->ResourceBarrier(1, &vbBarrierToCopy);
+
+		// Копирование vertex buffer
+		commandList->CopyBufferRegion(vertexBuffer.Get(), 0, uploadVertexBuffer.Get(), 0, vertexBufferSize);
+
+		// Переход vertex buffer обратно в COMMON (единственное допустимое финальное состояние для copy command list)
+		CD3DX12_RESOURCE_BARRIER vbBarrierToCommon = CD3DX12_RESOURCE_BARRIER::Transition(
+			vertexBuffer.Get(),
+			D3D12_RESOURCE_STATE_COPY_DEST,
+			D3D12_RESOURCE_STATE_COMMON); // Только COMMON допустимо в copy command list
+		commandList->ResourceBarrier(1, &vbBarrierToCommon);
+
+		if (indices != nullptr)
+		{
+			auto ibBarrierToCopy = CD3DX12_RESOURCE_BARRIER::Transition(
+				indexBuffer.Get(),
+				D3D12_RESOURCE_STATE_COMMON,
+				D3D12_RESOURCE_STATE_COPY_DEST);
+			commandList->ResourceBarrier(1, &ibBarrierToCopy);
+
+			commandList->CopyBufferRegion(indexBuffer.Get(), 0, uploadIndexBuffer.Get(), 0, indexBufferSize);
+
+			CD3DX12_RESOURCE_BARRIER ibBarrierToCommon = CD3DX12_RESOURCE_BARRIER::Transition(
+				indexBuffer.Get(),
+				D3D12_RESOURCE_STATE_COPY_DEST,
+				D3D12_RESOURCE_STATE_COMMON); // Только COMMON допустимо в copy command list
+			commandList->ResourceBarrier(1, &ibBarrierToCommon);
+		}
+	}
+
+	void MeshGPU_DirectX::SetupResourceBarriers(const ComPtr<ID3D12GraphicsCommandList>& commandList)
+	{
+		// Перевод вершинного буфера
+		auto vbBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			vertexBuffer.Get(),
+			D3D12_RESOURCE_STATE_COMMON,
+			D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+		commandList->ResourceBarrier(1, &vbBarrier);
+
+		// Если есть индексный буфер
+		if (indexBuffer != nullptr)
+		{
+			auto ibBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+				indexBuffer.Get(),
+				D3D12_RESOURCE_STATE_COMMON,
+				D3D12_RESOURCE_STATE_INDEX_BUFFER);
+			commandList->ResourceBarrier(1, &ibBarrier);
+		}
+	}
+
+	void MeshGPU_DirectX::OnTransferComplete(bool isComplete)
+	{
+		uploadVertexBuffer.Reset();
+		if (uploadIndexBuffer != nullptr)
+			uploadIndexBuffer.Reset();
+
+		if (!isComplete)
+			DebugOutput(L">>>>> [MeshGPU_DirectX::Initialize( ... )]. Transfer mesh resource: FAILED.");
+		else
+			DebugOutput(L">>>>> [MeshGPU_DirectX::Initialize( ... )]. Transfer mesh resource: SUCESS.");
 	}
 }
 #endif // ZRENDER_API_D3D12

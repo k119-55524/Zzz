@@ -11,7 +11,7 @@ namespace zzz
 		Orthographic
 	};
 
-	enum eTypeWinResize : zU32
+	enum class eTypeWinResize : zU32
 	{
 		Show,
 		Hide,
@@ -20,12 +20,12 @@ namespace zzz
 
 	enum class eShaderType : zU32
 	{
-		Vertex,		// Вершинный шейдер
-		Pixel,		// Пиксельный шейдер (ранее назывался фрагментный)
-		Geometry,	// Геометрический шейдер
-		Hull,		// Халловский шейдер (шейдер корпуса)
-		Domain,		// Домейн шейдер (шейдер области)
-		Compute		// Вычислительный шейдер
+		Vertex,     // Вершинный шейдер
+		Pixel,      // Пиксельный шейдер (DirectX) / Фрагментный шейдер (OpenGL)
+		Geometry,   // Геометрический шейдер
+		Hull,       // Шейдер оболочки (Hull Shader) - управляющая стадия тесселяции
+		Domain,     // Доменный шейдер (Domain Shader) - оценочная стадия тесселяции
+		Compute     // Вычислительный шейдер
 	};
 
 	enum class eAspectType
@@ -63,8 +63,8 @@ namespace zzz
 	//-----------------------------------
 	// Общие константы для всех проектов
 	//-----------------------------------
-	const zU32 c_MinimumWindowsWidth = 100;
-	const zU32 c_MinimumWindowsHeight = 100;
+	const zU32 c_MinimumWindowsWidth = 150;		// TODO: Win 11 ограничение по минимальному размеру окна 148 при использовании системной рамки
+	const zU32 c_MinimumWindowsHeight = 150;
 	const zU32 c_MaximumWindowsWidth = 3840;	// Ultra HD 4K
 	const zU32 c_MaximumWindowsHeight = 2160;	// Ultra HD 4K
 

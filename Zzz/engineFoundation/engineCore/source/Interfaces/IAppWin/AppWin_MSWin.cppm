@@ -41,7 +41,7 @@ export namespace zzz::core
 		hWnd{ nullptr },
 		IsMinimized{ true }
 	{
-		SetProcessDPIAware();
+		SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 	}
 
 	AppWin_MSWin::~AppWin_MSWin()
@@ -82,7 +82,7 @@ export namespace zzz::core
 		// –ассчитать размеры пр€моугольника окна на основе запрошенных размеров клиентской области.
 		const Size2D<LONG>& winSize = m_Config->GetWinSize();
 		RECT R = { 0, 0, winSize.width, winSize.height };
-		AdjustWindowRect(&R, WS_OVERLAPPEDWINDOW, false);
+		AdjustWindowRectEx(&R, WS_OVERLAPPEDWINDOW, false, 0);
 		int width = R.right - R.left;
 		int height = R.bottom - R.top;
 
@@ -194,9 +194,13 @@ export namespace zzz::core
 		{
 			MINMAXINFO* pMinMaxInfo = reinterpret_cast<MINMAXINFO*>(lParam);
 
+			DWORD dwStyle = static_cast<DWORD>(GetWindowLongPtr(hWnd, GWL_STYLE));
+			DWORD dwExStyle = static_cast<DWORD>(GetWindowLongPtr(hWnd, GWL_EXSTYLE));
+			BOOL bMenu = (GetMenu(hWnd) != NULL);
+
 			// ћинимальный размер клиентской области
 			RECT minRect = { 0, 0, static_cast<LONG>(c_MinimumWindowsWidth), static_cast<LONG>(c_MinimumWindowsHeight) };
-			AdjustWindowRect(&minRect, WS_OVERLAPPEDWINDOW, FALSE);
+			AdjustWindowRectEx(&minRect, dwStyle, bMenu, dwExStyle);
 			pMinMaxInfo->ptMinTrackSize.x = minRect.right - minRect.left;
 			pMinMaxInfo->ptMinTrackSize.y = minRect.bottom - minRect.top;
 
