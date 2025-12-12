@@ -1,4 +1,4 @@
-#include "pch.h"
+
 export module DXAPI;
 
 #if defined(ZRENDER_API_D3D12)
@@ -15,8 +15,8 @@ import CPUtoGPUDataTransfer;
 import CPUtoGPUDataTransferDX;
 
 using namespace zzz;
-using namespace zzz::templates;
 using namespace zzz::core;
+using namespace zzz::templates;
 
 export namespace zzz::directx
 {
@@ -35,9 +35,9 @@ export namespace zzz::directx
 		explicit DXAPI();
 		virtual ~DXAPI() override;
 
-		const ComPtr<ID3D12Device> GetDevice() const noexcept override { return m_device; };
-		const ComPtr<ID3D12CommandQueue> GetCommandQueue() const noexcept override { return m_commandQueue; };
-		const ComPtr<IDXGIFactory7> GetFactory() const noexcept override { return m_factory; };
+		const ComPtr<ID3D12Device>& GetDevice() const noexcept override { return m_device; };
+		const ComPtr<ID3D12CommandQueue>& GetCommandQueue() const noexcept override { return m_commandQueue; };
+		const ComPtr<IDXGIFactory7>& GetFactory() const noexcept override { return m_factory; };
 		const ComPtr<ID3D12GraphicsCommandList>& GetCommandListUpdate() const noexcept override { return m_commandWrapper[m_frameIndexUpdate]->GetCommandList(); };
 		const ComPtr<ID3D12GraphicsCommandList>& GetCommandListRender() const noexcept override { return m_commandWrapper[m_frameIndexRender]->GetCommandList(); };
 		ComPtr<ID3D12RootSignature> GetRootSignature() const noexcept override {  return m_rootSignature.Get(); }

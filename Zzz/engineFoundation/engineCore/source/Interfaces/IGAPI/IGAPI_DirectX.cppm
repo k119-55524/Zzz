@@ -1,25 +1,24 @@
 
-#include "pch.h"
-export module IBaseGAPI_DirectX;
+export module IGAPI_DirectX;
 
 import Result;
 
 using namespace zzz;
 
-export namespace zzz::core
+export namespace zzz::directx
 {
+#if defined(ZRENDER_API_D3D12)
 	export class IGAPI_DirectX
 	{
-#if defined(ZRENDER_API_D3D12)
 		Z_NO_COPY_MOVE(IGAPI_DirectX);
 
 	public:
 		IGAPI_DirectX() = default;
 		virtual ~IGAPI_DirectX() = default;
 
-		virtual const ComPtr<ID3D12Device> GetDevice() const noexcept = 0;
-		virtual const ComPtr<ID3D12CommandQueue> GetCommandQueue() const noexcept = 0;
-		virtual const ComPtr<IDXGIFactory7> GetFactory() const noexcept = 0;
+		virtual const ComPtr<ID3D12Device>& GetDevice() const noexcept = 0;
+		virtual const ComPtr<ID3D12CommandQueue>& GetCommandQueue() const noexcept = 0;
+		virtual const ComPtr<IDXGIFactory7>& GetFactory() const noexcept = 0;
 		virtual const ComPtr<ID3D12GraphicsCommandList>& GetCommandListUpdate() const noexcept = 0;
 		virtual const ComPtr<ID3D12GraphicsCommandList>& GetCommandListRender() const noexcept = 0;
 		virtual ComPtr<ID3D12RootSignature> GetRootSignature() const noexcept = 0;
