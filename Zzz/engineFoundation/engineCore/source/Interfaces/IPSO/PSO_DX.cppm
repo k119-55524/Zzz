@@ -1,34 +1,43 @@
 
-#include "pch.h"
-
 export module PSO_DX;
 
+#if defined(ZRENDER_API_D3D12)
 import IPSO;
 import IGAPI;
 import VertexFormatMapper;
 
 using namespace zzz::core;
 
-#if defined(ZRENDER_API_D3D12)
 namespace zzz::directx
 {
 	export class PSO_DX final : public IPSO
 	{
 	public:
-		PSO_DX() = delete;
-		explicit PSO_DX(const std::shared_ptr<IGAPI> m_GAPI, const std::shared_ptr<IShader> _shader, const std::vector<VertexAttrDescr>& _inputLayout);
+		explicit PSO_DX(
+			const std::shared_ptr<IGAPI> m_GAPI,
+			const std::shared_ptr<IShader> _shader,
+			const std::vector<VertexAttrDescr>& _inputLayout,
+			D3D_PRIMITIVE_TOPOLOGY _primitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		virtual ~PSO_DX() override = default;
 
-		const ComPtr<ID3D12PipelineState> GetPSO() const noexcept override { return m_PSO; };
+		const ComPtr<ID3D12PipelineState> GetPSO() const noexcept { return m_PSO; };
+		D3D_PRIMITIVE_TOPOLOGY GetPrimitiveType() const noexcept { return m_PrimitiveType; };
 
 	private:
 		void CreatePSO(const std::shared_ptr<IGAPI> m_GAPI);
+		D3D12_PRIMITIVE_TOPOLOGY_TYPE ConvertPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology);
 
 		ComPtr<ID3D12PipelineState> m_PSO;
+		D3D_PRIMITIVE_TOPOLOGY m_PrimitiveType;
 	};
 
-	PSO_DX::PSO_DX(const std::shared_ptr<IGAPI> m_GAPI, const std::shared_ptr<IShader> _shader, const std::vector<VertexAttrDescr>& _inputLayout) :
-		IPSO(_shader, _inputLayout)
+	PSO_DX::PSO_DX(
+		const std::shared_ptr<IGAPI> m_GAPI,
+		const std::shared_ptr<IShader> _shader,
+		const std::vector<VertexAttrDescr>& _inputLayout,
+		D3D12_PRIMITIVE_TOPOLOGY _primitiveType) :
+		IPSO(_shader, _inputLayout),
+		m_PrimitiveType{ _primitiveType }
 	{
 		CreatePSO(m_GAPI);
 	}
@@ -58,7 +67,7 @@ namespace zzz::directx
 		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
 
 		psoDesc.SampleMask = UINT_MAX;
-		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		psoDesc.PrimitiveTopologyType = ConvertPrimitiveTopology(m_PrimitiveType);
 		psoDesc.NumRenderTargets = 1;
 		psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 		psoDesc.DSVFormat = DEPTH_FORMAT;
@@ -66,6 +75,70 @@ namespace zzz::directx
 		HRESULT hr = m_GAPI->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PSO));
 		if (hr != S_OK)
 			throw_runtime_error(std::format(">>>>> [PSO_DX::CreatePSO()]. Failed to create pipeline state object. HRESULT = 0x{:08X}", hr));
+	}
+
+	D3D12_PRIMITIVE_TOPOLOGY_TYPE PSO_DX::ConvertPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology)
+	{
+		switch (topology)
+		{
+			// Point topologies
+		case D3D_PRIMITIVE_TOPOLOGY_POINTLIST:
+			return D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+
+			// Line topologies
+		case D3D_PRIMITIVE_TOPOLOGY_LINELIST:
+		case D3D_PRIMITIVE_TOPOLOGY_LINESTRIP:
+		case D3D_PRIMITIVE_TOPOLOGY_LINELIST_ADJ:
+		case D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ:
+			return D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+
+			// Triangle topologies
+		case D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST:
+		case D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP:
+		case D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ:
+		case D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ:
+			return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+
+			// Patch topologies (для tessellation)
+		case D3D_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_2_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_5_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_6_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_7_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_8_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_9_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_10_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_11_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_12_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_13_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_14_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_15_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_16_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_17_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_18_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_19_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_20_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_21_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_22_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_23_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_24_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_25_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_26_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_27_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_28_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_29_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_30_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_31_CONTROL_POINT_PATCHLIST:
+		case D3D_PRIMITIVE_TOPOLOGY_32_CONTROL_POINT_PATCHLIST:
+			return D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
+
+			// Undefined или неизвестные
+		case D3D_PRIMITIVE_TOPOLOGY_UNDEFINED:
+		default:
+			return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
+		}
 	}
 }
 #endif	// ZRENDER_API_D3D12

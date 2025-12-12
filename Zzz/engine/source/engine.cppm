@@ -255,12 +255,17 @@ export namespace zzz
 		}
 	}
 
+	// ќбработка изменени€ размера окна в процессе изменени€
 	void Engine::OnViewResizing()
 	{
+		// TODO: в будущем настроить созранение отрендренных кадров при изменении размера окна
+		// и их отрисовку дл€ плавного зума окна без чЄрных экранов
+		// —ейчас просто дважды вызываем OnUpdateSystem чтобы отрисовать что-то
 		OnUpdateSystem();
 		OnUpdateSystem();
 	}
 
+	// ќбработка изменени€ размера окна
 	void Engine::OnViewResize(const Size2D<>& size, eTypeWinResize resizeType)
 	{
 		switch (resizeType)

@@ -187,7 +187,6 @@
     <ClCompile Include="Source\Interfaces\IMeshGPU\IMeshGPU.cppm" />
     <ClCompile Include="Source\Interfaces\IMeshGPU\IMeshGPU_DirectX.cppm" />
     <ClCompile Include="Source\Interfaces\IPSO\IPSO.cppm" />
-    <ClCompile Include="Source\Interfaces\IPSO\IPSO_DirectX.cppm" />
     <ClCompile Include="Source\Interfaces\IShader\IShader.cppm" />
     <ClCompile Include="Source\Interfaces\IShader\IShader_DirectX.cppm" />
     <ClCompile Include="Source\Interfaces\IShader\Shader_DirectX.cppm" />

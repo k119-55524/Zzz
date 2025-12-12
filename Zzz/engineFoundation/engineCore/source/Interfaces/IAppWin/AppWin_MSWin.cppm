@@ -157,6 +157,7 @@ export namespace zzz::core
 			return 0;
 		}
 
+		// Обрабатываем изменение размера окна после того, как пользователь закончил его изменять.
 		case WM_SIZE:
 		{
 			m_WinSize.width = static_cast<zU64>(LOWORD(lParam));
@@ -182,6 +183,7 @@ export namespace zzz::core
 			return 0;
 		}
 
+		// Обрабатываем изменение размера окна в процессе изменения его пользователем.
 		case WM_SIZING:
 		{
 			OnResizing();

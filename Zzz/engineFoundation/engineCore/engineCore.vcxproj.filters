@@ -98,9 +98,6 @@
     <ClCompile Include="Source\Resources\VertexFormatMapper.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Interfaces\IPSO\IPSO_DirectX.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Interfaces\IMeshGPU\IMeshGPU_DirectX.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>

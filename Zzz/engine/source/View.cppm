@@ -44,9 +44,9 @@ namespace zzz
 
 		void OnUpdate(double deltaTime);
 		void SetFullScreen(bool fs);
-		inline void SetVSync(bool vs) { if (m_SurfaceView != nullptr) m_SurfaceView->SetVSync(vs); };
-		inline void SetViewCaptionText(std::wstring caption) { if (m_Win != nullptr) m_Win->SetCaptionText(caption); };
-		inline void AddViewCaptionText(std::wstring caption) { if (m_Win != nullptr) m_Win->AddCaptionText(caption); };
+		inline void SetVSync(bool vs) { if (m_RenderSurface != nullptr) m_RenderSurface->SetVSync(vs); };
+		inline void SetViewCaptionText(std::wstring caption) { if (m_NativeWindow != nullptr) m_NativeWindow->SetCaptionText(caption); };
+		inline void AddViewCaptionText(std::wstring caption) { if (m_NativeWindow != nullptr) m_NativeWindow->AddCaptionText(caption); };
 
 	private:
 		void OnViewResizing();
@@ -56,14 +56,15 @@ namespace zzz
 		const std::shared_ptr<AppWinConfig> m_WinConfig;
 		const std::shared_ptr<IGAPI> m_GAPI;
 		const std::shared_ptr<ScenesManager> m_ScenesManager;
-		std::shared_ptr<IAppWin> m_Win;
-		std::shared_ptr<ISurfaceView> m_SurfaceView;
+		std::shared_ptr<IAppWin> m_NativeWindow;
+		std::shared_ptr<ISurfaceView> m_RenderSurface;
 
 		eInitState initState;
 		void Initialize();
 		void PrepareFrame(double deltaTime);
 
 		ThreadPool m_ThreadsUpdate;
+		RenderQueue m_RenderQueue;
 		std::shared_ptr<Scene> m_Scene;
 	};
 
@@ -89,16 +90,16 @@ namespace zzz
 		try
 		{
 			// Cоздаём обёртку над окном приложения под текущую ОС
-			m_Win = factory.CreateAppWin(m_WinConfig);
-			m_Win->OnResize += std::bind(&View::OnViewResize, this, std::placeholders::_1, std::placeholders::_2);
-			m_Win->OnResizing += std::bind(&View::OnViewResizing, this);
-			auto res = m_Win->Initialize();
+			m_NativeWindow = factory.CreateAppWin(m_WinConfig);
+			m_NativeWindow->OnResize += std::bind(&View::OnViewResize, this, std::placeholders::_1, std::placeholders::_2);
+			m_NativeWindow->OnResizing += std::bind(&View::OnViewResizing, this);
+			auto res = m_NativeWindow->Initialize();
 			if (!res)
 				throw_runtime_error(std::format(">>>>> [View::Initialize()]. Failed to initialize application window: {}.", wstring_to_string(res.error().getMessage())));
 
 			// Cоздаём проверхность рендринга для текущего окна и GAPI
-			m_SurfaceView = factory.CreateSurfaceWin(m_Win, m_GAPI);
-			res = m_SurfaceView->Initialize();
+			m_RenderSurface = factory.CreateSurfaceWin(m_NativeWindow, m_GAPI);
+			res = m_RenderSurface->Initialize();
 			if (!res)
 				throw_runtime_error(std::format(">>>>> [View::Initialize()]. Failed to initialize surface window: {}.", wstring_to_string(res.error().getMessage())));
 
@@ -136,7 +137,7 @@ namespace zzz
 		if (initState != eInitState::InitOK)
 			return;
 
-		if (m_SurfaceView)
+		if (m_RenderSurface)
 		{
 			m_ThreadsUpdate.Submit([&]()
 				{
@@ -144,7 +145,7 @@ namespace zzz
 				});
 			m_ThreadsUpdate.Submit([&]()
 				{
-					m_SurfaceView->RenderFrame();
+					m_RenderSurface->RenderFrame();
 				});
 			m_ThreadsUpdate.Join();
 		}
@@ -157,8 +158,7 @@ namespace zzz
 
 	void View::PrepareFrame(double deltaTime)
 	{
-		std::shared_ptr<RenderQueue> renderQueue = m_Scene->GetCalcRenderQueue();
-		m_SurfaceView->PrepareFrame(m_Scene, renderQueue);
+		m_RenderSurface->PrepareFrame(m_Scene, m_RenderQueue);
 	}
 
 	void View::OnViewResize(const Size2D<>& size, eTypeWinResize resizeType)
@@ -182,8 +182,8 @@ namespace zzz
 			return;
 
 		viewResized(size, resizeType);
-		if (m_SurfaceView)
-			m_SurfaceView->OnResize(size);
+		if (m_RenderSurface)
+			m_RenderSurface->OnResize(size);
 	}
 
 	void View::SetFullScreen(bool fs)
@@ -191,7 +191,7 @@ namespace zzz
 		if (initState != eInitState::InitOK)
 			return;
 
-		if(m_SurfaceView)
-			m_SurfaceView->SetFullScreen(fs);
+		if(m_RenderSurface)
+			m_RenderSurface->SetFullScreen(fs);
 	}
 }

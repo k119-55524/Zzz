@@ -1,20 +1,18 @@
 
-#include "pch.h"
-
 export module IPSO;
 
 import IGAPI;
 import IShader;
-import IPSO_DirectX;
 import VertexFormatMapper;
 
 using namespace zzz::directx;
 
 namespace zzz::core
 {
-	export class IPSO :
-		public IPSO_DirectX
+	export class IPSO
 	{
+		Z_NO_COPY_MOVE(IPSO);
+
 	public:
 		IPSO() = delete;
 		explicit IPSO(const std::shared_ptr<IShader> _shader, const std::vector<VertexAttrDescr>& _inputLayout);

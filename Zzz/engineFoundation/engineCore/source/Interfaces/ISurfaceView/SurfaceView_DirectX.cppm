@@ -8,6 +8,7 @@ import Math;
 import IGAPI;
 import DXAPI;
 import Scene;
+import PSO_DX;
 import Result;
 import Size2D;
 import Camera;
@@ -105,7 +106,7 @@ namespace zzz::directx
 		~SurfaceView_DirectX() override = default;
 
 		[[nodiscard]] Result<> Initialize() override;
-		void PrepareFrame(std::shared_ptr<Scene> scene, std::shared_ptr<RenderQueue> renderQueue) override;
+		void PrepareFrame(std::shared_ptr<Scene> scene, const RenderQueue& renderQueue) override;
 		void RenderFrame() override;
 		void OnResize(const Size2D<>& size) override;
 
@@ -443,8 +444,10 @@ namespace zzz::directx
 #pragma endregion Initialize
 
 #pragma region Rendring
-	void SurfaceView_DirectX::PrepareFrame(std::shared_ptr<Scene> scene, std::shared_ptr<RenderQueue> renderQueue)
+	void SurfaceView_DirectX::PrepareFrame(std::shared_ptr<Scene> scene, const RenderQueue& renderQueue)
 	{
+		D3D_PRIMITIVE_TOPOLOGY currPrimitiveType = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+
 		{
 			//Matrix4x4 mView;
 			//Matrix4x4 mProj;
@@ -556,12 +559,21 @@ namespace zzz::directx
 		commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
 		{
-			// ƒополнительные команды рендеринга, если нужно
-			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			// ѕри старте выставл€ем топологию по умолчанию
+			commandList->IASetPrimitiveTopology(currPrimitiveType);
 
 			auto entity = scene->GetEntity();
+
+			// Set material
 			auto material = entity->GetMaterial();
-			commandList->SetPipelineState(material->GetPSO()->GetPSO().Get());
+			std::shared_ptr<PSO_DX> pso = static_pointer_cast<PSO_DX>(material->GetPSO());
+			commandList->SetPipelineState(pso->GetPSO().Get());
+
+			if (pso->GetPrimitiveType() != currPrimitiveType)
+			{
+				currPrimitiveType = pso->GetPrimitiveType();
+				commandList->IASetPrimitiveTopology(currPrimitiveType);
+			}
 
 			auto mesh = entity->GetMesh();
 			commandList->IASetVertexBuffers(0, 1, mesh->VertexBufferView());
