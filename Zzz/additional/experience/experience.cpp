@@ -2,54 +2,30 @@
 #include <stack>
 #include "LeetCode/Hard.h"
 
-bool isCloseChar(char in, char out)
+int removeElement(vector<int>& nums, int val)
 {
-	switch (in)
+	if (nums.size() == 0) return 0;
+
+	int curr = 0;
+	int i = 0;
+	for (; i < nums.size(); i++)
 	{
-	case '(': return out == ')';
-	case '{': return out == '}';
-	case '[': return out == ']';
-	default: return false;
-	}
-}
-
-bool isValid(string& s)
-{
-	if (s.length() < 2)
-		return false;
-
-	stack<int> st;
-	for (int i = 0; i < s.length(); i++)
-	{
-		char c = s[i];
-		if (c == '(' || c == '{' || c == '[')
+		if (nums[i] != val)
 		{
-			st.push(c);
-		}
-		else
-		{
-			if (st.empty())
-				return false;
-
-			char top = st.top();
-			st.pop();
-			if (!isCloseChar(top, c))
-				return false;
+			nums[curr] = nums[i];
+			curr++;
 		}
 	}
 
-	return st.empty();
+	return curr;
 }
-
 
 int main()
 {
-	string s = "({}{[]})";
-	string s1 = "([])";
-	string s2 = "([(])";
-	string s3 = "((";
-	string s4 = "){";
-	bool res = isValid(s4);
+	vector<int> nums = { 0 };
+	vector<int> nums1 = { 0, 0 };
+	vector<int> nums2 = { 0, 0, 1, 1, 1, 2, 2, 3, 3, 4 };
+	int res = removeElement(nums2, 2);
 
 	int i = 0;
 	i++;

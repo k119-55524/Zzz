@@ -1,4 +1,4 @@
-#include "pch.h"
+
 export module SceneEntity;
 
 import Material;

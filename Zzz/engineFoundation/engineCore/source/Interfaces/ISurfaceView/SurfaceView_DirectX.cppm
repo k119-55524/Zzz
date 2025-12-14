@@ -1,5 +1,4 @@
 
-
 #include <Headers/headerDX.h>
 export module SurfaceView_DirectX;
 
@@ -475,7 +474,7 @@ namespace zzz::directx
 
 		Camera& primaryCamera = scene->GetPrimaryCamera();
 
-		RenderArea renderArea = primaryCamera.CalculateRenderArea(static_cast<zU32>(m_SurfSize.width), static_cast<zU32>(m_SurfSize.height));
+		const std::shared_ptr<RenderArea> renderArea = renderQueue.GetRenderArea(); //primaryCamera.CalculateRenderArea(static_cast<zU32>(m_SurfSize.width), static_cast<zU32>(m_SurfSize.height));
 
 		{
 			Matrix4x4 mWorld;
@@ -521,8 +520,8 @@ namespace zzz::directx
 		}
 
 		{ 
-			D3D12_VIEWPORT viewport = renderArea.GetViewport();
-			D3D12_RECT scissor = renderArea.GetScissor();
+			D3D12_VIEWPORT viewport = renderArea->GetViewport();
+			D3D12_RECT scissor = renderArea->GetScissor();
 			commandList->RSSetViewports(1, &viewport);
 			commandList->RSSetScissorRects(1, &scissor);
 		}

@@ -60,6 +60,65 @@ namespace zzz
 		FullWindow
 	};
 
+	constexpr inline zF32 GetAspect(eAspectType aspectType, zF32 width = 0, zF32 height = 0)
+	{
+		switch (aspectType)
+		{
+			// Стандартные
+		case eAspectType::Ratio_16x9:
+			return 16.0f / 9.0f;
+		case eAspectType::Ratio_9x16:
+			return 9.0f / 16.0f;
+		case eAspectType::Ratio_16x10:
+			return 16.0f / 10.0f;
+		case eAspectType::Ratio_10x16:
+			return 10.0f / 16.0f;
+		case eAspectType::Ratio_4x3:
+			return 4.0f / 3.0f;
+		case eAspectType::Ratio_3x4:
+			return 3.0f / 4.0f;
+
+			// Ультра-широкие
+		case eAspectType::Ratio_21x9:
+			return 21.0f / 9.0f;
+		case eAspectType::Ratio_9x21:
+			return 9.0f / 21.0f;
+		case eAspectType::Ratio_32x9:
+			return 32.0f / 9.0f;
+		case eAspectType::Ratio_9x32:
+			return 9.0f / 32.0f;
+
+			// Мобильные
+		case eAspectType::Ratio_18x9:
+			return 18.0f / 9.0f;
+		case eAspectType::Ratio_9x18:
+			return 9.0f / 18.0f;
+		case eAspectType::Ratio_20x9:
+			return 20.0f / 9.0f;
+		case eAspectType::Ratio_9x20:
+			return 9.0f / 20.0f;
+		case eAspectType::Ratio_19_5x9:
+			return 19.5f / 9.0f;
+		case eAspectType::Ratio_9x19_5:
+			return 9.0f / 19.5f;
+
+			// Прочие
+		case eAspectType::Ratio_5x4:
+			return 5.0f / 4.0f;
+		case eAspectType::Ratio_4x5:
+			return 4.0f / 5.0f;
+
+		case eAspectType::Custom:
+		case eAspectType::FullWindow:
+			if (height <= 0.0f)
+				throw_runtime_error(">>>>> [GetAspect( ... )]. Height must be greater than zero for Custom/FullWindow aspect.");
+			return width / height;
+
+		default:
+			throw_runtime_error(">>>>> [GetAspect( ... )]. Invalid aspect type.");
+		}
+	}
+
 	//-----------------------------------
 	// Общие константы для всех проектов
 	//-----------------------------------

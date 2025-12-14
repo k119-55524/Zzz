@@ -4,8 +4,6 @@ export module Camera;
 import Ray;
 import Vector4;
 import Matrix4x4;
-import RenderArea;
-
 using namespace zzz;
 using namespace zzz::math;
 
@@ -75,42 +73,6 @@ export namespace zzz::core
 		//{
 		//	m_AspectRatio = GetAspect(m_AspectPreset);
 		//}
-
-		RenderArea CalculateRenderArea(zU32 surface_width, zU32 surface_height) noexcept
-		{
-			RenderArea Result{};
-			float surface_aspect = (float)surface_width / (float)surface_height;
-
-			if (m_AspectPreset == eAspectType::FullWindow)
-			{
-				m_AspectRatio = surface_aspect;
-				m_ProjectionMatrixDirty = true;
-				Result.viewport = { 0.0f, 0.0f, (float)surface_width, (float)surface_height, 0.0f, 1.0f };
-				Result.scissor = { 0, 0, (zI32)surface_width, (zI32)surface_height };
-				return Result;
-			}
-
-			float render_width, render_height;
-			float offset_x = 0.0f, offset_y = 0.0f;
-
-			if (surface_aspect > m_AspectRatio)
-			{
-				render_height = (float)surface_height;
-				render_width = render_height * m_AspectRatio;
-				offset_x = (surface_width - render_width) * 0.5f;
-			}
-			else
-			{
-				render_width = (float)surface_width;
-				render_height = render_width / m_AspectRatio;
-				offset_y = (surface_height - render_height) * 0.5f;
-			}
-
-			Result.viewport = { offset_x, offset_y, render_width, render_height, 0.0f, 1.0f };
-			Result.scissor = { (zI32)offset_x, (zI32)offset_y, (zI32)render_width, (zI32)render_height };
-
-			return Result;
-		}
 
 		inline void SetPosition(const Vector4& position) noexcept { m_Position = position; m_ViewMatrixDirty = true; }
 		inline const Vector4& GetPosition() const noexcept { return m_Position; }
@@ -404,63 +366,6 @@ export namespace zzz::core
 		//}
 
 	private:
-		constexpr zF32 GetAspect(eAspectType preset) const
-		{
-			switch (preset)
-			{
-			// Стандартные
-			case eAspectType::Ratio_16x9:
-				return 16.0f / 9.0f;
-			case eAspectType::Ratio_9x16:
-				return 9.0f / 16.0f;
-			case eAspectType::Ratio_16x10:
-				return 16.0f / 10.0f;
-			case eAspectType::Ratio_10x16:
-				return 10.0f / 16.0f;
-			case eAspectType::Ratio_4x3:
-				return 4.0f / 3.0f;
-			case eAspectType::Ratio_3x4:
-				return 3.0f / 4.0f;
-
-			// Ультра-широкие
-			case eAspectType::Ratio_21x9:
-				return 21.0f / 9.0f;
-			case eAspectType::Ratio_9x21:
-				return 9.0f / 21.0f;
-			case eAspectType::Ratio_32x9:
-				return 32.0f / 9.0f;
-			case eAspectType::Ratio_9x32:
-				return 9.0f / 32.0f;
-
-			// Мобильные
-			case eAspectType::Ratio_18x9:
-				return 18.0f / 9.0f;
-			case eAspectType::Ratio_9x18:
-				return 9.0f / 18.0f;
-			case eAspectType::Ratio_20x9:
-				return 20.0f / 9.0f;
-			case eAspectType::Ratio_9x20:
-				return 9.0f / 20.0f;
-			case eAspectType::Ratio_19_5x9:
-				return 19.5f / 9.0f;
-			case eAspectType::Ratio_9x19_5:
-				return 9.0f / 19.5f;
-
-			// Прочие
-			case eAspectType::Ratio_5x4:
-				return 5.0f / 4.0f;
-			case eAspectType::Ratio_4x5:
-				return 4.0f / 5.0f;
-
-			case eAspectType::Custom:
-			case eAspectType::FullWindow:
-				return m_AspectRatio;
-
-			default:
-				throw_runtime_error(">>>>> [Camera::GetAspect( ... )]. Invalid aspect type.");
-			}
-		}
-
 		Vector4 m_Position;
 		Vector4 m_Target;
 		Vector4 m_Up;
