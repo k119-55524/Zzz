@@ -474,8 +474,6 @@ namespace zzz::directx
 
 		Camera& primaryCamera = scene->GetPrimaryCamera();
 
-		const std::shared_ptr<RenderArea> renderArea = renderQueue.GetRenderArea(); //primaryCamera.CalculateRenderArea(static_cast<zU32>(m_SurfSize.width), static_cast<zU32>(m_SurfSize.height));
-
 		{
 			Matrix4x4 mWorld;
 			Matrix4x4 camViewProj = primaryCamera.GetViewProjectionMatrix();
@@ -519,13 +517,6 @@ namespace zzz::directx
 			commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 		}
 
-		{ 
-			D3D12_VIEWPORT viewport = renderArea->GetViewport();
-			D3D12_RECT scissor = renderArea->GetScissor();
-			commandList->RSSetViewports(1, &viewport);
-			commandList->RSSetScissorRects(1, &scissor);
-		}
-
 		commandList->ResourceBarrier(
 			1,
 			&keep(CD3DX12_RESOURCE_BARRIER::Transition(
@@ -558,6 +549,12 @@ namespace zzz::directx
 		commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
 		{
+			const std::shared_ptr<RenderArea> renderArea = renderQueue.GetRenderArea();
+			D3D12_VIEWPORT viewport = renderArea->GetViewport();
+			D3D12_RECT scissor = renderArea->GetScissor();
+			commandList->RSSetViewports(1, &viewport);
+			commandList->RSSetScissorRects(1, &scissor);
+
 			// ѕри старте выставл€ем топологию по умолчанию
 			commandList->IASetPrimitiveTopology(currPrimitiveType);
 
