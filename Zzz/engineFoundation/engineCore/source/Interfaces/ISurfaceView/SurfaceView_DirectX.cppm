@@ -148,7 +148,7 @@ namespace zzz::directx
 		ComPtr<ID3D12Resource> m_renderTargets[BACK_BUFFER_COUNT];
 		ComPtr<ID3D12Resource> m_depthStencil[BACK_BUFFER_COUNT];
 
-		[[nodiscard]] Result<> BuildConstantBuffers();
+		void BuildConstantBuffers();
 		[[nodiscard]] Result<> CreateRTVHeap();
 		[[nodiscard]] Result<> CreateSRVHeap();
 		[[nodiscard]] Result<> CreateDSVHeap();
@@ -200,7 +200,7 @@ namespace zzz::directx
 
 		res = CreateRTVHeap()
 			.and_then([&]() { return CreateSRVHeap(); })
-			.and_then([&]() { return BuildConstantBuffers(); })
+			.and_then([&]() { BuildConstantBuffers(); })
 			.and_then([&]() { return CreateDSVHeap(); })
 			.and_then([&]() { return CreateRTV(m_device); });
 
@@ -314,14 +314,12 @@ namespace zzz::directx
 		return {};
 	}
 
-	Result<> SurfaceView_DirectX::BuildConstantBuffers()
+	void SurfaceView_DirectX::BuildConstantBuffers()
 	{
 		auto device = m_iGAPI->GetDevice();	
 		m_CB_Layer		= safe_make_unique<UploadBuffer<GPU_LayerConstants>>(device.Get(), 1, true);	// b0 – Layer
 		m_CB_Material	= safe_make_unique<UploadBuffer<GPU_MaterialConstants>>(device.Get(), 1, true);	// b1 – Material
 		m_CB_Object		= safe_make_unique<UploadBuffer<GPU_ObjectConstants>>(device.Get(), 1, true);	// b2 – Object
-
-		return {};
 	}
 
 	Result<> SurfaceView_DirectX::CreateDSVHeap()
