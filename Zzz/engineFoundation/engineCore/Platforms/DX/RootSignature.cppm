@@ -35,15 +35,15 @@ export namespace zzz::directx
 		texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 		
 		// Описание root-параметров: могут быть таблицами, константами или дескрипторами
-		CD3DX12_ROOT_PARAMETER rootParams[4];
-		rootParams[0].InitAsConstantBufferView(0);			// Глобальный CBV (b0)	
-		rootParams[1].InitAsConstantBufferView(1);			// CBV для материала (b1)	
-		CD3DX12_DESCRIPTOR_RANGE srvRange;
-		srvRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 128, 0);
-		rootParams[2].InitAsDescriptorTable(1, &srvRange);	// Таблица SRV (t0..t127)
-		CD3DX12_DESCRIPTOR_RANGE uavRange;
-		uavRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 16, 0);
-		rootParams[3].InitAsDescriptorTable(1, &uavRange);	// Таблица UAV (u0..u15)
+		CD3DX12_ROOT_PARAMETER rootParams[5];
+		rootParams[0].InitAsConstantBufferView(0);					// Глобальный CBV (b0)
+		rootParams[1].InitAsConstantBufferView(1);					// CBV для объекта (b1)
+		rootParams[2].InitAsConstantBufferView(2);					// CBV для материала (b2)
+		CD3DX12_DESCRIPTOR_RANGE ranges[2];
+		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 128, 0);	// Таблица SRV (t0..t127)
+		rootParams[3].InitAsDescriptorTable(1, &ranges[0]);
+		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 16, 0);		// Таблица UAV (u0..u15)
+		rootParams[4].InitAsDescriptorTable(1, &ranges[1]);
 
 		// Получаем набор статических сэмплеров (обычно point/linear/wrap/clamp)
 		auto staticSamplers = GetStaticSamplers();

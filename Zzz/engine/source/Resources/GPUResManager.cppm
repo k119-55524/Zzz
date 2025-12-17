@@ -71,7 +71,7 @@ export namespace zzz
 	}
 
 	Result<std::shared_ptr<Material>> GPUResManager::GetGenericMaterial(const std::shared_ptr<IMeshGPU> mesh)
-		{
+	{
 		Result<std::shared_ptr<IPSO>> pso = GetGenericPSO(mesh);
 		if (!pso)
 			return pso.error();
@@ -105,6 +105,24 @@ export namespace zzz
 			cbuffer cbPerObject : register(b0)
 			{
 				row_major float4x4 gWorldViewProj;
+				row_major float4x4 view;
+				row_major float4x4 proj;
+				row_major float4x4 viewProj;
+
+				float4 cameraPos;
+			};
+
+			cbuffer cbMaterial : register(b1)
+			{
+				float4 gBaseColor;
+				float  gRoughness;
+				float  gMetallic;
+			};
+
+			cbuffer cbObject : register(b2)
+			{
+				row_major float4x4 gWorld;
+				row_major float4x4 gWorldViewProj1;
 			};
 
 			struct VertexIn
@@ -124,7 +142,7 @@ export namespace zzz
 				VertexOut vout;
 	
 				// Transform to homogeneous clip space.
-				vout.Pos = mul(float4(vin.Pos, 1.0f), gWorldViewProj);
+				vout.Pos = mul(float4(vin.Pos, 1.0f), gWorldViewProj1);
 	
 				// Just pass vertex color into the pixel shader.
 				vout.Color = vin.Color;

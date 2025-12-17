@@ -183,7 +183,7 @@ export namespace zzz::core
 		inline float GetFovY() const noexcept { return m_FovY; }
 		inline void SetFovY(float fovYRadians) noexcept { m_FovY = fovYRadians; m_ProjectionMatrixDirty = true; }
 
-		inline float GetAspectRatio() const noexcept { return m_AspectRatio; }
+		//inline float GetAspectRatio() const noexcept { return m_AspectRatio; }
 
 		inline void SetAspectRatio(eAspectType type, float aspect = 0.0f) noexcept
 		{

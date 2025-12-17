@@ -24,9 +24,7 @@ export namespace zzz::core
 		};
 
 		RenderArea() = delete;
-		RenderArea(
-			eAspectType aspectPreset,
-			zF32 x, zF32 y) noexcept :
+		RenderArea(eAspectType aspectPreset, zF32 x, zF32 y) noexcept :
 			m_AspectPreset{ aspectPreset }
 		{
 		}
@@ -115,6 +113,7 @@ export namespace zzz::core
 
 	protected:
 		eAspectType m_AspectPreset;
+		float m_AspectRatio;
 
 		Viewport viewport;
 		Scissor scissor;
@@ -122,7 +121,7 @@ export namespace zzz::core
 
 	void RenderArea::Update(zF32 surface_width, zF32 surface_height) noexcept
 	{
-		float m_AspectRatio = GetAspect(m_AspectPreset, surface_width, surface_height);
+		m_AspectRatio = GetAspect(m_AspectPreset, surface_width, surface_height);
 		zF32 surface_aspect = surface_width / surface_height;
 		if (m_AspectPreset == eAspectType::FullWindow)
 		{

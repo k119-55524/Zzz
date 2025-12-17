@@ -83,15 +83,27 @@ namespace zzz::directx
 		bool mIsConstantBuffer = false;
 	};
 
-	struct ObjectConstants
+	struct GPU_LayerConstants
 	{
 		Matrix4x4 WorldViewProj;
-		//XMFLOAT4X4 _WorldViewProj	= Identity4x4();
-		
-		//XMFLOAT4X4 view				= Identity4x4();
-		//XMFLOAT4X4 proj				= Identity4x4();
-		//XMFLOAT4X4 viewProj			= Identity4x4();
-		//XMFLOAT4X4 cameraPos		= Identity4x4();
+		Matrix4x4 view;
+		Matrix4x4 proj;
+		Matrix4x4 viewProj;
+		Matrix4x4 cameraPos;
+	};
+
+	struct GPU_MaterialConstants
+	{
+		Vector4 BaseColor;
+		float Roughness;
+		float Metallic;
+		float Padding[2]; // выравнивание до 16 байт
+	};
+
+	struct GPU_ObjectConstants
+	{
+		Matrix4x4 World;
+		Matrix4x4 WorldViewProj;
 	};
 
 	export class SurfaceView_DirectX final : public ISurfaceView
@@ -122,7 +134,9 @@ namespace zzz::directx
 		std::condition_variable m_frameCV;
 		bool m_frameReady;
 
-		std::unique_ptr<UploadBuffer<ObjectConstants>> mObjectCB = nullptr;
+		std::unique_ptr<UploadBuffer<GPU_LayerConstants>> m_CB_Layer = nullptr;
+		std::unique_ptr<UploadBuffer<GPU_MaterialConstants>> m_CB_Material = nullptr;
+		std::unique_ptr<UploadBuffer<GPU_ObjectConstants>> m_CB_Object = nullptr;
 
 		ComPtr<IDXGISwapChain3> m_swapChain;
 		UINT m_RtvDescrSize;
@@ -302,21 +316,10 @@ namespace zzz::directx
 
 	Result<> SurfaceView_DirectX::BuildConstantBuffers()
 	{
-		auto m_device = m_iGAPI->GetDevice();
-		mObjectCB = std::make_unique<UploadBuffer<ObjectConstants>>(m_device.Get(), 1, true);
-
-		UINT objCBByteSize = CalcBufferSize32(sizeof(ObjectConstants));
-
-		D3D12_GPU_VIRTUAL_ADDRESS cbAddress = mObjectCB->Resource()->GetGPUVirtualAddress();
-		// Offset to the ith object constant buffer in the buffer.
-		int boxCBufIndex = 0;
-		cbAddress += boxCBufIndex * objCBByteSize;
-
-		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
-		cbvDesc.BufferLocation = cbAddress;
-		cbvDesc.SizeInBytes = CalcBufferSize32(sizeof(ObjectConstants));
-
-		m_device->CreateConstantBufferView(&cbvDesc, m_srvHeap->GetCPUDescriptorHandleForHeapStart());
+		auto device = m_iGAPI->GetDevice();	
+		m_CB_Layer		= safe_make_unique<UploadBuffer<GPU_LayerConstants>>(device.Get(), 1, true);	// b0 – Layer
+		m_CB_Material	= safe_make_unique<UploadBuffer<GPU_MaterialConstants>>(device.Get(), 1, true);	// b1 – Material
+		m_CB_Object		= safe_make_unique<UploadBuffer<GPU_ObjectConstants>>(device.Get(), 1, true);	// b2 – Object
 
 		return {};
 	}
@@ -472,19 +475,7 @@ namespace zzz::directx
 			//Matrix4x4 worldViewProj = mProj * mView * mWorld;
 		}
 
-		Camera& primaryCamera = scene->GetPrimaryCamera();
-
-		{
-			Matrix4x4 mWorld;
-			Matrix4x4 camViewProj = primaryCamera.GetViewProjectionMatrix();
-			Matrix4x4 worldViewProj = camViewProj * mWorld;
-			ObjectConstants objConstants;
-			std::memcpy(&objConstants.WorldViewProj, &worldViewProj, sizeof(Matrix4x4));
-			mObjectCB->CopyData(0, objConstants);
-		}
-
 		zU64 frameIndex = (m_swapChain->GetCurrentBackBufferIndex() + 1) % BACK_BUFFER_COUNT;
-
 		// Синхронизируемся с рендерингом чтобы frameIndex остался валидным
 		{
 			std::lock_guard<std::mutex> lock(m_frameMutex);
@@ -498,7 +489,7 @@ namespace zzz::directx
 
 		{
 			// Привязываем root-параметры
-			commandList->SetGraphicsRootConstantBufferView(0, mObjectCB->Resource()->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(0, m_CB_Layer->Resource()->GetGPUVirtualAddress());
 
 			//commandList->SetGraphicsRootConstantBufferView(
 			//	1,
@@ -517,22 +508,12 @@ namespace zzz::directx
 			commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 		}
 
-		commandList->ResourceBarrier(
-			1,
-			&keep(CD3DX12_RESOURCE_BARRIER::Transition(
-				m_renderTargets[frameIndex].Get(),
-				D3D12_RESOURCE_STATE_PRESENT,
-				D3D12_RESOURCE_STATE_RENDER_TARGET)));
-
-		commandList->ResourceBarrier(
-			1,
-			&keep(CD3DX12_RESOURCE_BARRIER::Transition(
-				m_depthStencil[frameIndex].Get(),
-				D3D12_RESOURCE_STATE_COMMON,
-				D3D12_RESOURCE_STATE_DEPTH_WRITE)));
+		commandList->ResourceBarrier(1, &keep(CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET)));
+		commandList->ResourceBarrier(1, &keep(CD3DX12_RESOURCE_BARRIER::Transition(m_depthStencil[frameIndex].Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE)));
 
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_RtvDescrSize);
 		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_DsvDescrSize);
+		commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
 		// Очищаем всю поверхность перед рендерингом если нужно
 		switch (m_SurfClearType)
@@ -546,7 +527,39 @@ namespace zzz::directx
 		if(b_IsClearDepth)
 			commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
-		commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+		Camera& primaryCamera = scene->GetPrimaryCamera();
+		//{
+			Matrix4x4 mWorld;// = mWorld.translation(0.0f, 0.0f, 2.5f);
+			Matrix4x4 camViewProj = primaryCamera.GetViewProjectionMatrix();
+			Matrix4x4 worldViewProj = camViewProj * mWorld;
+			GPU_LayerConstants objConstants;
+			std::memcpy(&objConstants.WorldViewProj, &worldViewProj, sizeof(Matrix4x4));
+			m_CB_Layer->CopyData(0, objConstants);
+		//}
+
+		{
+			GPU_MaterialConstants gpuMat{};
+			//gpuMat.BaseColor = mat.BaseColor;
+			//gpuMat.Roughness = mat.Roughness;
+			//gpuMat.Metallic = mat.Metallic;
+
+			m_CB_Material->CopyData(0, gpuMat);
+
+			// привязка СРАЗУ
+			commandList->SetGraphicsRootConstantBufferView(1, m_CB_Material->Resource()->GetGPUVirtualAddress());
+		}
+
+		{
+			GPU_ObjectConstants gpuObj{};
+			//gpuObj.World = obj.GetWorldMatrix();
+			//gpuObj.WorldViewProj = m_CurrentViewProj * gpuObj.World;
+			gpuObj.WorldViewProj = worldViewProj;
+
+			m_CB_Object->CopyData(0, gpuObj);
+
+			// привязка СРАЗУ
+			commandList->SetGraphicsRootConstantBufferView(2, m_CB_Object->Resource()->GetGPUVirtualAddress());
+		}
 
 		{
 			const std::shared_ptr<RenderArea> renderArea = renderQueue.GetRenderArea();
