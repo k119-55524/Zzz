@@ -1,12 +1,9 @@
 
-#include "pch.h"
-
 export module IMeshGPU;
 
 import IGAPI;
 import Result;
 import CPUMesh;
-import IMeshGPU_DirectX;
 import VertexFormatMapper;
 
 namespace zzz
@@ -16,8 +13,7 @@ namespace zzz
 
 export namespace zzz::core
 {
-	export class IMeshGPU :
-		public IMeshGPU_DirectX
+	export class IMeshGPU
 	{
 		friend class zzz::GPUResManager;
 

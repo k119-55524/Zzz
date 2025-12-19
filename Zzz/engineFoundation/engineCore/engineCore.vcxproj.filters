@@ -98,9 +98,6 @@
     <ClCompile Include="Source\Resources\VertexFormatMapper.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Interfaces\IMeshGPU\IMeshGPU_DirectX.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Interfaces\IShader\IShader_DirectX.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -168,6 +165,12 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Interfaces\Configs\GAPIConfig\GAPIConfig.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Platforms\ViewportDesc.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Platforms\PrimitiveTopology.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

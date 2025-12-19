@@ -5,6 +5,30 @@
 
 namespace zzz
 {
+	enum class eTopology : zU32
+	{
+		Undefined = 0,
+		PointList,
+		LineList,
+		LineStrip,
+		TriangleList,
+		TriangleStrip,
+
+		// Расширенные (не все поддерживаются везде)
+		//TriangleFan,			// Только Vulkan
+		//LineListAdjacency,		// DX12, Vulkan
+		//LineStripAdjacency,		// DX12, Vulkan
+		//TriangleListAdjacency,	// DX12, Vulkan
+		//TriangleStripAdjacency,// DX12, Vulkan
+		//PatchList				// Vulkan (тесселяция)
+	};
+
+	enum class eSurfClearType : zU32
+	{
+		None = 0,	// Без очистки
+		Color = 1	// Очистка фона цветом
+	};
+
 	enum class eProjType
 	{
 		Perspective,

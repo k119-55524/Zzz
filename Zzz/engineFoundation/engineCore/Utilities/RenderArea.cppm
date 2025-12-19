@@ -1,6 +1,8 @@
 
 export module RenderArea;
 
+import ViewportDesc;
+
 using namespace zzz;
 
 export namespace zzz::core
@@ -8,21 +10,6 @@ export namespace zzz::core
 	class RenderArea
 	{
 	public:
-		// Описание области просмотра
-		struct Viewport
-		{
-			zF32 x, y;
-			zF32 width, height;
-			zF32 min_depth, max_depth;
-		};
-
-		// Описание области отсечения
-		struct Scissor
-		{
-			zI32 x, y;
-			zI32 width, height;
-		};
-
 		RenderArea() = delete;
 		RenderArea(eAspectType aspectPreset, zF32 x, zF32 y) noexcept :
 			m_AspectPreset{ aspectPreset }
@@ -30,96 +17,30 @@ export namespace zzz::core
 		}
 		RenderArea(
 			eAspectType aspectPreset,
-			zF32 x, zF32 y,
-			zF32 width, zF32 height,
-			zF32 min_depth = 0.0f,
-			zF32 max_depth = 1.0f) noexcept :
+			float x, float y,
+			float width, float height,
+			float min_depth = 0.0f,
+			float max_depth = 1.0f) noexcept :
 			m_AspectPreset{ aspectPreset },
 			viewport{ x, y, width, height, min_depth, max_depth },
-			scissor{ static_cast<zI32>(x), static_cast<zI32>(y), static_cast<zI32>(width), static_cast<zI32>(height) }
+			scissor{ static_cast<int32_t>(x), static_cast<int32_t>(y), static_cast<uint32_t>(width), static_cast<uint32_t>(height) }
 		{
 			Update(width, height);
 		}
 
 		void Update(zF32 surface_width, zF32 surface_height) noexcept;
-
-#if defined(ZRENDER_API_D3D12)
-		// Конвертация в D3D12
-		D3D12_VIEWPORT GetViewport() const noexcept
-		{
-			return
-			{
-				viewport.x, viewport.y,
-				viewport.width, viewport.height,
-				viewport.min_depth, viewport.max_depth
-			};
-		}
-
-		D3D12_RECT GetScissor() const noexcept
-		{
-			return
-			{
-				(LONG)scissor.x,
-				(LONG)scissor.y,
-				(LONG)(scissor.x + scissor.width),
-				(LONG)(scissor.y + scissor.height)
-			};
-		}
-#elif defined(ZRENDER_API_VULKAN)
-		// Конвертация в Vulkan
-		VkViewport GetViewport() const noexcept
-		{
-			return
-			{
-				viewport.x, viewport.y,
-				viewport.width, viewport.height,
-				viewport.min_depth, viewport.max_depth
-			};
-		}
-
-		VkRect2D GetScissor() const noexcept
-		{
-			return
-			{
-				{scissor.x, scissor.y},
-				{static_cast<zU32>(scissor.width), static_cast<zU32>(scissor.height)}
-			};
-		}
-#elif defined(__APPLE__)
-		// Конвертация в Metal
-		MTL::Viewport GetViewport() const noexcept
-		{
-			return
-			{
-				viewport.x, viewport.y,
-				viewport.width, viewport.height,
-				viewport.min_depth, viewport.max_depth
-			};
-		}
-
-		MTL::ScissorRect GetScissor() const noexcept
-		{
-			return 
-			{
-				(NS::UInteger)scissor.x,
-				(NS::UInteger)scissor.y,
-				(NS::UInteger)scissor.width,
-				(NS::UInteger)scissor.height
-			};
-		}
-#else
-#error ">>>>> []. Unsupported rendering API for RenderArea conversions."
-#endif
+		const ViewportDesc& GetViewport() const noexcept { return viewport; }
+		const ScissorDesc& GetScissor() const noexcept { return scissor; }
 
 	protected:
 		eAspectType m_AspectPreset;
 		float m_AspectRatio;
 
-		Viewport viewport;
-		Scissor scissor;
+		ViewportDesc viewport;
+		ScissorDesc scissor;
 	};
 
-	void RenderArea::Update(zF32 surface_width, zF32 surface_height) noexcept
+	void RenderArea::Update(float surface_width, float surface_height) noexcept
 	{
 		m_AspectRatio = GetAspect(m_AspectPreset, surface_width, surface_height);
 		zF32 surface_aspect = surface_width / surface_height;
@@ -127,7 +48,7 @@ export namespace zzz::core
 		{
 			m_AspectRatio = surface_aspect;
 			viewport = { 0.0f, 0.0f, surface_width, surface_height, 0.0f, 1.0f };
-			scissor = { 0, 0, static_cast<zI32>(surface_width), static_cast<zI32>(surface_height) };
+			scissor = { 0, 0, static_cast<uint32_t>(surface_width), static_cast<uint32_t>(surface_height) };
 			return;
 		}
 
@@ -147,6 +68,6 @@ export namespace zzz::core
 		}
 
 		viewport = { offset_x, offset_y, render_width, render_height, 0.0f, 1.0f };
-		scissor = { static_cast<zI32>(offset_x), static_cast<zI32>(offset_y), static_cast<zI32>(render_width), static_cast<zI32>(render_height) };
+		scissor = { static_cast<zI32>(offset_x), static_cast<zI32>(offset_y), static_cast<uint32_t>(render_width), static_cast<uint32_t>(render_height) };
 	}
 }

@@ -165,6 +165,8 @@
     <ClCompile Include="Platforms\DX\CommandWrapperDX.cppm" />
     <ClCompile Include="Platforms\DX\CPUtoGPUDataTransferDX.cppm" />
     <ClCompile Include="Platforms\DX\RootSignature.cppm" />
+    <ClCompile Include="Platforms\PrimitiveTopology.cppm" />
+    <ClCompile Include="Platforms\ViewportDesc.cppm" />
     <ClCompile Include="Source\Camera.cppm" />
     <ClCompile Include="Source\CPUtoGPUDataTransfer.cppm" />
     <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppWinConfig.cppm" />
@@ -185,7 +187,6 @@
     <ClCompile Include="Source\Interfaces\IGAPI\IGAPI.cppm" />
     <ClCompile Include="Source\Interfaces\IMainLoop\IMainLoop.cppm" />
     <ClCompile Include="Source\Interfaces\IMeshGPU\IMeshGPU.cppm" />
-    <ClCompile Include="Source\Interfaces\IMeshGPU\IMeshGPU_DirectX.cppm" />
     <ClCompile Include="Source\Interfaces\IPSO\IPSO.cppm" />
     <ClCompile Include="Source\Interfaces\IShader\IShader.cppm" />
     <ClCompile Include="Source\Interfaces\IShader\IShader_DirectX.cppm" />

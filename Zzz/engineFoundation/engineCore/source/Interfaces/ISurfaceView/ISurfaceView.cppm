@@ -3,23 +3,15 @@ export module ISurfaceView;
 
 import IGAPI;
 import Scene;
-import Colors;
 import Result;
 import Size2D;
 import IAppWin;
 import RenderQueue;
 
 using namespace zzz;
-using namespace zzz::colors;
 
 export namespace zzz::core
 {
-	export enum class SurfClearType : zU32
-	{
-		None = 0,	// Без очистки
-		Color = 1	// Очистка фона цветом
-	};
-
 	export class ISurfaceView abstract
 	{
 		Z_NO_CREATE_COPY(ISurfaceView);
@@ -45,10 +37,6 @@ export namespace zzz::core
 		std::shared_ptr<IAppWin> m_iAppWin;
 		std::shared_ptr<IGAPI> m_iGAPI;
 		Size2D<> m_SurfSize;
-
-		SurfClearType m_SurfClearType;
-		Color m_ClearColor;
-		bool b_IsClearDepth;
 	};
 
 	ISurfaceView::ISurfaceView(
@@ -58,13 +46,9 @@ export namespace zzz::core
 		b_IsVSync{ true },
 		m_iAppWin{ _iAppWin },
 		m_iGAPI{ _iGAPI },
-		m_ClearColor{ colors::DarkMidnightBlue },
-		b_IsClearDepth{ true },
 		m_SurfSize{}
 	{
 		ensure(m_iAppWin, ">>>>> [ISurfaceView::ISurfaceView()]. Application window cannot be null.");
 		ensure(m_iGAPI, ">>>>> [ISurfaceView::ISurfaceView()]. GAPI cannot be null.");
-
-		m_SurfClearType = SurfClearType::Color;
 	}
 }

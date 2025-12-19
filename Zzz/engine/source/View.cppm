@@ -166,7 +166,7 @@ namespace zzz
 
 	void View::PrepareFrame(double deltaTime)
 	{
-		m_RenderQueue.ClearQueue(m_RenderArea);
+		m_RenderQueue.ClearQueue(m_RenderArea, m_Scene);
 		m_RenderSurface->PrepareFrame(m_Scene, m_RenderQueue);
 	}
 
