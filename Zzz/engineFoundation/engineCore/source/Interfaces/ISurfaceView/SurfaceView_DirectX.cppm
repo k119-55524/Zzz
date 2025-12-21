@@ -93,10 +93,10 @@ namespace zzz::directx
 	struct GPU_LayerConstants
 	{
 		Matrix4x4 WorldViewProj;
-		Matrix4x4 view;
-		Matrix4x4 proj;
-		Matrix4x4 viewProj;
-		Matrix4x4 cameraPos;
+		Matrix4x4 View;
+		Matrix4x4 Proj;
+		Matrix4x4 ViewProj;
+		//Matrix4x4 CameraPos;
 	};
 
 	struct GPU_MaterialConstants
@@ -453,33 +453,8 @@ namespace zzz::directx
 #pragma region Rendring
 	void SurfaceView_DirectX::PrepareFrame(std::shared_ptr<Scene> scene, const RenderQueue& renderQueue)
 	{
-		{
-			//Matrix4x4 mView;
-			//Matrix4x4 mProj;
-			//
-			//mProj = Matrix4x4::perspective(
-			//	0.25f * Pi,		// FoV 45 градусов
-			//	16.0f / 9.0f,	// Aspect ratio
-			//	1.0f,			// Near plane
-			//	1000.0f);		// Far plane
-			//
-			//float mTheta = 1.5f * Pi;
-			//float mPhi = Pi / 4.0f;  // 45 градусов
-			//float mRadius = 5.0f;
-			//
-			//float x = mRadius * std::sin(mPhi) * std::cos(mTheta);
-			//float z = mRadius * std::sin(mPhi) * std::sin(mTheta);
-			//float y = mRadius * std::cos(mPhi);
-			//
-			//Vector4 pos(x, y, z, 1.0f);
-			//Vector4 target(0.0f, 0.0f, 0.0f, 1.0f);
-			//Vector4 up(0.0f, 1.0f, 0.0f, 0.0f);
-			//mView = Matrix4x4::lookAt(pos, target, up);
-			//Matrix4x4 worldViewProj = mProj * mView * mWorld;
-		}
-
-		zU64 frameIndex = (m_swapChain->GetCurrentBackBufferIndex() + 1) % BACK_BUFFER_COUNT;
 		// Синхронизируемся с рендерингом чтобы frameIndex остался валидным
+		zU64 frameIndex = (m_swapChain->GetCurrentBackBufferIndex() + 1) % BACK_BUFFER_COUNT;
 		{
 			std::lock_guard<std::mutex> lock(m_frameMutex);
 			m_frameReady = true;
@@ -497,12 +472,10 @@ namespace zzz::directx
 			commandList->SetGraphicsRootConstantBufferView(1, m_CB_Material->Resource()->GetGPUVirtualAddress());
 			commandList->SetGraphicsRootConstantBufferView(2, m_CB_Object->Resource()->GetGPUVirtualAddress());
 	
+			// Пока не используем текстуры - закомментировано
 			//commandList->SetGraphicsRootDescriptorTable(2, m_srvHeap->GetGPUDescriptorHandleForHeapStart()); // SRV таблица начинается с t0
-		}
-
-		{
-			ID3D12DescriptorHeap* descriptorHeaps[] = { m_srvHeap.Get() };
-			commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+			//ID3D12DescriptorHeap* descriptorHeaps[] = { m_srvHeap.Get() };
+			//commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 		}
 
 		commandList->ResourceBarrier(1, &keep(CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET)));
@@ -512,28 +485,29 @@ namespace zzz::directx
 		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_DsvDescrSize);
 		commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
-		{
-			Camera& primaryCamera = scene->GetPrimaryCamera();
-			Matrix4x4 mWorld;// = mWorld.translation(0.0f, 0.0f, 2.5f);
-			Matrix4x4 camViewProj = primaryCamera.GetViewProjectionMatrix();
-			Matrix4x4 worldViewProj = camViewProj * mWorld;
-			GPU_LayerConstants objConstants;
-			std::memcpy(&objConstants.WorldViewProj, &worldViewProj, sizeof(Matrix4x4));
-			m_CB_Layer->CopyData(0, objConstants);
+		//{
+		//	Camera& primaryCamera = scene->GetPrimaryCamera();
+		//	Matrix4x4 mWorld;// = mWorld.translation(0.0f, 0.0f, 2.5f);
+		//	Matrix4x4 camViewProj = primaryCamera.GetViewProjectionMatrix();
+		//	Matrix4x4 worldViewProj = camViewProj * mWorld;
+		//	GPU_LayerConstants objConstants;
+		//	std::memcpy(&objConstants.WorldViewProj, &worldViewProj, sizeof(Matrix4x4));
+		//	m_CB_Layer->CopyData(0, objConstants);
 
-			GPU_MaterialConstants gpuMat{};
-			//gpuMat.BaseColor = mat.BaseColor;
-			//gpuMat.Roughness = mat.Roughness;
-			//gpuMat.Metallic = mat.Metallic;
-			m_CB_Material->CopyData(0, gpuMat);
+		//	GPU_MaterialConstants gpuMat{};
+		//	//gpuMat.BaseColor = mat.BaseColor;
+		//	//gpuMat.Roughness = mat.Roughness;
+		//	//gpuMat.Metallic = mat.Metallic;
+		//	m_CB_Material->CopyData(0, gpuMat);
 
-			GPU_ObjectConstants gpuObj{};
-			//gpuObj.World = obj.GetWorldMatrix();
-			//gpuObj.WorldViewProj = m_CurrentViewProj * gpuObj.World;
-			gpuObj.WorldViewProj = worldViewProj;
-			m_CB_Object->CopyData(0, gpuObj);
-		}
+		//	GPU_ObjectConstants gpuObj{};
+		//	//gpuObj.World = obj.GetWorldMatrix();
+		//	//gpuObj.WorldViewProj = m_CurrentViewProj * gpuObj.World;
+		//	gpuObj.WorldViewProj = worldViewProj;
+		//	m_CB_Object->CopyData(0, gpuObj);
+		//}
 
+		// Выполняем рендринг очереди
 		renderQueue.PrepareQueue(
 			// Очистка поверхности
 			[&](const eSurfClearType surfClearType, const Color& color, bool isClearDepth)
@@ -556,16 +530,30 @@ namespace zzz::directx
 				commandList->RSSetViewports(1, &vp);
 				commandList->RSSetScissorRects(1, &sr);
 			},
-			// Установка топологии примитивов
-			[&](const PrimitiveTopology& topo)
+			// Установка глобальных констант
+			[&](const Matrix4x4& viewProj)
 			{
-				commandList->IASetPrimitiveTopology(topo.ToD3D12());
+				GPU_LayerConstants objConstants;
+				std::memcpy(&objConstants.ViewProj, &viewProj, sizeof(Matrix4x4));
+				m_CB_Layer->CopyData(0, objConstants);
 			},
 			// Установка PSO(set material)
 			[&](const std::shared_ptr<IPSO> pso)
 			{
 				std::shared_ptr<PSO_DX> psoDX = static_pointer_cast<PSO_DX>(pso);
 				commandList->SetPipelineState(psoDX->GetPSO().Get());
+			},
+			// Установка топологии примитивов
+			[&](const PrimitiveTopology& topo)
+			{
+				commandList->IASetPrimitiveTopology(topo.ToD3D12());
+			},
+			// Установка констант объекта
+			[&](const Matrix4x4& worldViewProj)
+			{
+				GPU_ObjectConstants gpuObj{};
+				std::memcpy(&gpuObj.WorldViewProj, &worldViewProj, sizeof(Matrix4x4));
+				m_CB_Object->CopyData(0, gpuObj);
 			},
 			// Отрисовка меша с инексным буффером
 			[&](const std::shared_ptr<IMeshGPU> mesh, zU32 count)
