@@ -13,10 +13,10 @@ namespace zzz::ztests
 	{
 	public:
 
-		void AddTest(std::unique_ptr<BaseTest> test);
+		void AddTest(std::unique_ptr<ITest> test);
 		void RunTests();
 
 	private:
-		std::vector<std::unique_ptr<BaseTest>> tests;
+		std::vector<std::unique_ptr<ITest>> tests;
 	};
 }

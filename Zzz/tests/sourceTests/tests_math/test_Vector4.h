@@ -6,10 +6,10 @@ using namespace zzz::ztests;
 
 namespace zzz::ztests
 {
-	class test_Matrix4x4 : public BaseTest<test_Matrix4x4>
+	class test_Vector4 : public BaseTest<test_Vector4>
 	{
 	public:
-		test_Matrix4x4();
+		test_Vector4();
 
 		bool Initialize() override;
 		bool Run() override;

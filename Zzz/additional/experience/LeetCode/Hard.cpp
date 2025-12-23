@@ -89,12 +89,12 @@ double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2)
 	if (nums1.size() > nums2.size())
 		return findMedianSortedArrays(nums2, nums1);
 
-	int s1 = nums1.size();
-	int s2 = nums2.size();
-	int left = 0, right = s1;
+	size_t s1 = nums1.size();
+	size_t s2 = nums2.size();
+	size_t left = 0, right = s1;
 	while (left <= right) {
-		int partition1 = (left + right) / 2;
-		int partition2 = (s1 + s2 + 1) / 2 - partition1;
+		size_t partition1 = (left + right) / 2;
+		size_t partition2 = (s1 + s2 + 1) / 2 - partition1;
 
 		int maxLeft1 = (partition1 == 0) ? numeric_limits<int>::min() : nums1[partition1 - 1];
 		int minRight1 = (partition1 == s1) ? numeric_limits<int>::max() : nums1[partition1];
@@ -122,13 +122,13 @@ double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2)
 
 int search(vector<int>& nums, int target)
 {
-	int left = 0;
-	int right = nums.size() - 1;
+	size_t left = 0;
+	size_t right = nums.size() - 1;
 	while (left <= right)
 	{
-		int c = left + (right - left) / 2;
+		size_t c = left + (right - left) / 2;
 		if (nums[c] == target)
-			return c;
+			return (int)c;
 
 		if (nums[c] < target)
 			left = c + 1;

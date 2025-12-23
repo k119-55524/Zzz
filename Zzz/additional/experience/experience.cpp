@@ -4,11 +4,11 @@
 
 int searchInsert(vector<int>& nums, int target)
 {
-	int left = 0;
-	int right = nums.size() - 1;
+	size_t left = 0;
+	size_t right = nums.size() - 1;
 	while (left <= right)
 	{
-		int mid = left + (right - left) / 2;
+		size_t mid = left + (right - left) / 2;
 		if (nums[mid] == target)
 		{
 			return mid;
@@ -23,7 +23,7 @@ int searchInsert(vector<int>& nums, int target)
 		}
 	}
 
-	return left;
+	return (int)left;
 }
 
 int main()
