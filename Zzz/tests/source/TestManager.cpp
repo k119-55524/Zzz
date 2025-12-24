@@ -22,16 +22,17 @@ void TestManager::RunTests()
 		if (test->Initialize())
 		{
 			std::cout << "\033[34m[" << test->GetTestName() << "]\033[0m\n";
-			std::cout << "  Initialized: \033[32mSuccess.\033[0m" << std::endl;
+			std::cout << "  Init result: \033[32mSuccess.\033[0m" << std::endl;
 
-			if (!test->Run())
+			auto res = test->Run();
+			if (!res)
 			{
-				std::cout << "  Test result: \033[31mFailure.\033[0m Message: \033[35m" << test->GetTestResult() << "\033[0m\n";
+				std::wcout << "  Test result: \033[31mFailure: \033[35m" << res.error().getMessage() << "\033[0m\n";
 				failedCount++;
 			}
 			else
 			{
-				std::cout << "  Test result: \033[32m" << test->GetTestResult() << "\033[0m\n";
+				std::cout << "  Test result: \033[32m" << res.value() << "\033[0m\n";
 				passedCount++;
 			}
 
@@ -66,5 +67,5 @@ void TestManager::RunTests()
 	if (notShutdownCount > 0)
 		std::cout << "\033[31m - Not kill: " << notShutdownCount << "\033[0m\n";
 
-	std::cout << "\n\033[33m===>>>    EXIT TESTS   <<<===\033[0m\n\n";
+	std::cout << "\n\033[33m===>>>   EXIT  TESTS   <<<===\033[0m\n\n";
 }

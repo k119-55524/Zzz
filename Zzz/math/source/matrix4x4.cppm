@@ -247,106 +247,22 @@ export namespace zzz::math
 			simd_float4x4 mat;
 			std::memcpy(&mat, this, sizeof(Matrix4x4));
 			return ::simd::determinant(mat);
-#elif defined(_M_X64) || defined(__x86_64__)
-			// Intel SSE оптимизация
-			__m128 minor0, minor1, minor2, minor3;
-			__m128 row0, row1, row2, row3;
-			__m128 det, tmp1;
+#else
+			// Универсальный алгоритм для SSE и NEON
+			// Работает с column-major форматом: columns[col][row]
+			float a00 = columns[0][0], a01 = columns[1][0], a02 = columns[2][0], a03 = columns[3][0];
+			float a10 = columns[0][1], a11 = columns[1][1], a12 = columns[2][1], a13 = columns[3][1];
+			float a20 = columns[0][2], a21 = columns[1][2], a22 = columns[2][2], a23 = columns[3][2];
+			float a30 = columns[0][3], a31 = columns[1][3], a32 = columns[2][3], a33 = columns[3][3];
 
-			// Транспонируем для удобства
-			tmp1 = _mm_unpacklo_ps(columns[0].data, columns[1].data);
-			row1 = _mm_unpackhi_ps(columns[0].data, columns[1].data);
-			row0 = _mm_movelh_ps(tmp1, _mm_unpacklo_ps(columns[2].data, columns[3].data));
-			row1 = _mm_movehl_ps(_mm_unpacklo_ps(columns[2].data, columns[3].data), tmp1);
-			tmp1 = _mm_unpackhi_ps(columns[2].data, columns[3].data);
-			row2 = _mm_movelh_ps(row1, tmp1);
-			row3 = _mm_movehl_ps(tmp1, row1);
+			// Вычисляем кофакторы для первой строки
+			float c00 = a11 * (a22 * a33 - a23 * a32) - a12 * (a21 * a33 - a23 * a31) + a13 * (a21 * a32 - a22 * a31);
+			float c01 = a10 * (a22 * a33 - a23 * a32) - a12 * (a20 * a33 - a23 * a30) + a13 * (a20 * a32 - a22 * a30);
+			float c02 = a10 * (a21 * a33 - a23 * a31) - a11 * (a20 * a33 - a23 * a30) + a13 * (a20 * a31 - a21 * a30);
+			float c03 = a10 * (a21 * a32 - a22 * a31) - a11 * (a20 * a32 - a22 * a30) + a12 * (a20 * a31 - a21 * a30);
 
-			// Вычисляем sub-детерминанты
-			tmp1 = _mm_mul_ps(row2, row3);
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xB1);
-			minor0 = _mm_mul_ps(row1, tmp1);
-			minor1 = _mm_mul_ps(row0, tmp1);
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4E);
-			minor0 = _mm_sub_ps(_mm_mul_ps(row1, tmp1), minor0);
-			minor1 = _mm_sub_ps(_mm_mul_ps(row0, tmp1), minor1);
-			minor1 = _mm_shuffle_ps(minor1, minor1, 0x4E);
-
-			// Продолжаем вычисления
-			tmp1 = _mm_mul_ps(row1, row2);
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xB1);
-			minor0 = _mm_add_ps(_mm_mul_ps(row3, tmp1), minor0);
-			minor3 = _mm_mul_ps(row0, tmp1);
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4E);
-			minor0 = _mm_sub_ps(minor0, _mm_mul_ps(row3, tmp1));
-			minor3 = _mm_sub_ps(_mm_mul_ps(row0, tmp1), minor3);
-			minor3 = _mm_shuffle_ps(minor3, minor3, 0x4E);
-
-			tmp1 = _mm_mul_ps(_mm_shuffle_ps(row1, row1, 0x4E), row3);
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xB1);
-			row2 = _mm_shuffle_ps(row2, row2, 0x4E);
-			minor0 = _mm_add_ps(_mm_mul_ps(row2, tmp1), minor0);
-			minor2 = _mm_mul_ps(row0, tmp1);
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4E);
-			minor0 = _mm_sub_ps(minor0, _mm_mul_ps(row2, tmp1));
-			minor2 = _mm_sub_ps(_mm_mul_ps(row0, tmp1), minor2);
-			minor2 = _mm_shuffle_ps(minor2, minor2, 0x4E);
-
-			tmp1 = _mm_mul_ps(row0, row1);
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xB1);
-			minor2 = _mm_add_ps(_mm_mul_ps(row3, tmp1), minor2);
-			minor3 = _mm_sub_ps(_mm_mul_ps(row2, tmp1), minor3);
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4E);
-			minor2 = _mm_sub_ps(_mm_mul_ps(row3, tmp1), minor2);
-			minor3 = _mm_sub_ps(minor3, _mm_mul_ps(row2, tmp1));
-
-			tmp1 = _mm_mul_ps(row0, row3);
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xB1);
-			minor1 = _mm_sub_ps(minor1, _mm_mul_ps(row2, tmp1));
-			minor2 = _mm_add_ps(_mm_mul_ps(row1, tmp1), minor2);
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4E);
-			minor1 = _mm_add_ps(_mm_mul_ps(row2, tmp1), minor1);
-			minor2 = _mm_sub_ps(minor2, _mm_mul_ps(row1, tmp1));
-
-			tmp1 = _mm_mul_ps(row0, row2);
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xB1);
-			minor1 = _mm_add_ps(_mm_mul_ps(row3, tmp1), minor1);
-			minor3 = _mm_sub_ps(minor3, _mm_mul_ps(row1, tmp1));
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4E);
-			minor1 = _mm_sub_ps(minor1, _mm_mul_ps(row3, tmp1));
-			minor3 = _mm_add_ps(_mm_mul_ps(row1, tmp1), minor3);
-
-			// Вычисляем детерминант
-			det = _mm_mul_ps(row0, minor0);
-			det = _mm_add_ps(_mm_shuffle_ps(det, det, 0x4E), det);
-			det = _mm_add_ss(_mm_shuffle_ps(det, det, 0xB1), det);
-
-			return _mm_cvtss_f32(det);
-#elif defined(_M_ARM64) || defined(__aarch64__)
-			// ARM NEON оптимизация
-			// Используем упрощённую версию для NEON
-			float32x4_t row0 = columns[0].data;
-			float32x4_t row1 = columns[1].data;
-			float32x4_t row2 = columns[2].data;
-			float32x4_t row3 = columns[3].data;
-
-			// Вычисляем sub-факторы
-			float32x4_t tmp0 = vmulq_f32(
-				vzip2q_f32(row2, row2),
-				vzip2q_f32(row3, row3)
-			);
-
-			float32x4_t tmp1 = vmulq_f32(
-				vzip1q_f32(row2, row2),
-				vzip2q_f32(row3, row3)
-			);
-
-			float32x4_t minor0 = vsubq_f32(tmp0, tmp1);
-
-			// Dot product для финального детерминанта
-			float32x4_t det = vmulq_f32(row0, minor0);
-			float32x2_t sum = vadd_f32(vget_low_f32(det), vget_high_f32(det));
-			return vget_lane_f32(vpadd_f32(sum, sum), 0);
+			// Детерминант = разложение по первой строке
+			return a00 * c00 - a01 * c01 + a02 * c02 - a03 * c03;
 #endif
 		}
 
@@ -361,138 +277,47 @@ export namespace zzz::math
 			Matrix4x4 Result;
 			std::memcpy(&Result, &inv, sizeof(Matrix4x4));
 			return Result;
-#elif defined(_M_X64) || defined(__x86_64__)
-			// Intel SSE оптимизированная инверсия матрицы
-			__m128 minor0, minor1, minor2, minor3;
-			__m128 row0, row1, row2, row3;
-			__m128 det, tmp1;
-
-			// Транспонируем матрицу
-			tmp1 = _mm_unpacklo_ps(columns[0].data, columns[1].data);
-			row1 = _mm_unpackhi_ps(columns[0].data, columns[1].data);
-			row0 = _mm_movelh_ps(tmp1, _mm_unpacklo_ps(columns[2].data, columns[3].data));
-			row1 = _mm_movehl_ps(_mm_unpacklo_ps(columns[2].data, columns[3].data), tmp1);
-			tmp1 = _mm_unpackhi_ps(columns[2].data, columns[3].data);
-			row2 = _mm_movelh_ps(row1, tmp1);
-			row3 = _mm_movehl_ps(tmp1, row1);
-
-			// Вычисляем все миноры параллельно
-			tmp1 = _mm_mul_ps(row2, row3);
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xB1);
-			minor0 = _mm_mul_ps(row1, tmp1);
-			minor1 = _mm_mul_ps(row0, tmp1);
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4E);
-			minor0 = _mm_sub_ps(_mm_mul_ps(row1, tmp1), minor0);
-			minor1 = _mm_sub_ps(_mm_mul_ps(row0, tmp1), minor1);
-			minor1 = _mm_shuffle_ps(minor1, minor1, 0x4E);
-
-			tmp1 = _mm_mul_ps(row1, row2);
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xB1);
-			minor0 = _mm_add_ps(_mm_mul_ps(row3, tmp1), minor0);
-			minor3 = _mm_mul_ps(row0, tmp1);
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4E);
-			minor0 = _mm_sub_ps(minor0, _mm_mul_ps(row3, tmp1));
-			minor3 = _mm_sub_ps(_mm_mul_ps(row0, tmp1), minor3);
-			minor3 = _mm_shuffle_ps(minor3, minor3, 0x4E);
-
-			tmp1 = _mm_mul_ps(_mm_shuffle_ps(row1, row1, 0x4E), row3);
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xB1);
-			row2 = _mm_shuffle_ps(row2, row2, 0x4E);
-			minor0 = _mm_add_ps(_mm_mul_ps(row2, tmp1), minor0);
-			minor2 = _mm_mul_ps(row0, tmp1);
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4E);
-			minor0 = _mm_sub_ps(minor0, _mm_mul_ps(row2, tmp1));
-			minor2 = _mm_sub_ps(_mm_mul_ps(row0, tmp1), minor2);
-			minor2 = _mm_shuffle_ps(minor2, minor2, 0x4E);
-
-			tmp1 = _mm_mul_ps(row0, row1);
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xB1);
-			minor2 = _mm_add_ps(_mm_mul_ps(row3, tmp1), minor2);
-			minor3 = _mm_sub_ps(_mm_mul_ps(row2, tmp1), minor3);
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4E);
-			minor2 = _mm_sub_ps(_mm_mul_ps(row3, tmp1), minor2);
-			minor3 = _mm_sub_ps(minor3, _mm_mul_ps(row2, tmp1));
-
-			tmp1 = _mm_mul_ps(row0, row3);
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xB1);
-			minor1 = _mm_sub_ps(minor1, _mm_mul_ps(row2, tmp1));
-			minor2 = _mm_add_ps(_mm_mul_ps(row1, tmp1), minor2);
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4E);
-			minor1 = _mm_add_ps(_mm_mul_ps(row2, tmp1), minor1);
-			minor2 = _mm_sub_ps(minor2, _mm_mul_ps(row1, tmp1));
-
-			tmp1 = _mm_mul_ps(row0, row2);
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xB1);
-			minor1 = _mm_add_ps(_mm_mul_ps(row3, tmp1), minor1);
-			minor3 = _mm_sub_ps(minor3, _mm_mul_ps(row1, tmp1));
-			tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4E);
-			minor1 = _mm_sub_ps(minor1, _mm_mul_ps(row3, tmp1));
-			minor3 = _mm_add_ps(_mm_mul_ps(row1, tmp1), minor3);
-
-			// Вычисляем детерминант
-			det = _mm_mul_ps(row0, minor0);
-			det = _mm_add_ps(_mm_shuffle_ps(det, det, 0x4E), det);
-			det = _mm_add_ss(_mm_shuffle_ps(det, det, 0xB1), det);
-
-			// Проверяем на вырожденность
-			tmp1 = _mm_rcp_ss(det);
-			det = _mm_sub_ss(_mm_add_ss(tmp1, tmp1), _mm_mul_ss(det, _mm_mul_ss(tmp1, tmp1)));
-			det = _mm_shuffle_ps(det, det, 0x00);
-
-			// Умножаем миноры на 1/det
-			Matrix4x4 Result;
-			Result.columns[0].data = _mm_mul_ps(det, minor0);
-			Result.columns[1].data = _mm_mul_ps(det, minor1);
-			Result.columns[2].data = _mm_mul_ps(det, minor2);
-			Result.columns[3].data = _mm_mul_ps(det, minor3);
-
-			return Result;
-#elif defined(_M_ARM64) || defined(__aarch64__)
-			// ARM NEON оптимизированная инверсия
-			// Для полной SIMD-версии нужен более сложный код
-			// Используем гибридный подход: SIMD где возможно
-
-			Matrix4x4 Result;
+#else
+			// Универсальный алгоритм для x64 и ARM через вычисление присоединённой матрицы
 			float det = determinant();
 
-			if (std::abs(det) < 1e-8f)
+			// Проверка на вырожденность
+			if (det > -1e-8f && det < 1e-8f)
 			{
-				return Matrix4x4(); // Единичная матрица
+				return Matrix4x4(); // Возвращаем единичную матрицу
 			}
 
 			float invDet = 1.0f / det;
 
-			// Вычисляем миноры используя NEON
-			for (int col = 0; col < 4; ++col)
-			{
-				for (int row = 0; row < 4; ++row)
-				{
-					// Извлекаем 3x3 минор
-					float m[9];
-					int idx = 0;
-					for (int j = 0; j < 4; ++j)
-					{
-						if (j == col) continue;
-						for (int i = 0; i < 4; ++i)
-						{
-							if (i == row) continue;
-							m[idx++] = at(i, j);
-						}
-					}
+			// Извлекаем элементы из column-major: columns[col][row]
+			float a00 = columns[0][0], a01 = columns[1][0], a02 = columns[2][0], a03 = columns[3][0];
+			float a10 = columns[0][1], a11 = columns[1][1], a12 = columns[2][1], a13 = columns[3][1];
+			float a20 = columns[0][2], a21 = columns[1][2], a22 = columns[2][2], a23 = columns[3][2];
+			float a30 = columns[0][3], a31 = columns[1][3], a32 = columns[2][3], a33 = columns[3][3];
 
-					// Детерминант 3x3 через NEON
-					float32x4_t a = vld1q_f32(&m[0]); // m[0..3]
-					float32x4_t b = vld1q_f32(&m[3]); // m[3..6]
-					float32x4_t c = vld1q_f32(&m[6]); // m[6..8, padding]
+			Matrix4x4 Result;
 
-					float det3 = m[0] * (m[4] * m[8] - m[5] * m[7]) -
-						m[1] * (m[3] * m[8] - m[5] * m[6]) +
-						m[2] * (m[3] * m[7] - m[4] * m[6]);
+			// Вычисляем присоединённую матрицу (adjugate) = транспонированная матрица кофакторов
+			// Сохраняем в column-major формате
+			Result.columns[0][0] = invDet * (a11 * (a22 * a33 - a23 * a32) - a12 * (a21 * a33 - a23 * a31) + a13 * (a21 * a32 - a22 * a31));
+			Result.columns[1][0] = invDet * -(a01 * (a22 * a33 - a23 * a32) - a02 * (a21 * a33 - a23 * a31) + a03 * (a21 * a32 - a22 * a31));
+			Result.columns[2][0] = invDet * (a01 * (a12 * a33 - a13 * a32) - a02 * (a11 * a33 - a13 * a31) + a03 * (a11 * a32 - a12 * a31));
+			Result.columns[3][0] = invDet * -(a01 * (a12 * a23 - a13 * a22) - a02 * (a11 * a23 - a13 * a21) + a03 * (a11 * a22 - a12 * a21));
 
-					float sign = ((row + col) % 2 == 0) ? 1.0f : -1.0f;
-					Result.at(col, row) = sign * det3 * invDet;
-				}
-			}
+			Result.columns[0][1] = invDet * -(a10 * (a22 * a33 - a23 * a32) - a12 * (a20 * a33 - a23 * a30) + a13 * (a20 * a32 - a22 * a30));
+			Result.columns[1][1] = invDet * (a00 * (a22 * a33 - a23 * a32) - a02 * (a20 * a33 - a23 * a30) + a03 * (a20 * a32 - a22 * a30));
+			Result.columns[2][1] = invDet * -(a00 * (a12 * a33 - a13 * a32) - a02 * (a10 * a33 - a13 * a30) + a03 * (a10 * a32 - a12 * a30));
+			Result.columns[3][1] = invDet * (a00 * (a12 * a23 - a13 * a22) - a02 * (a10 * a23 - a13 * a20) + a03 * (a10 * a22 - a12 * a20));
+
+			Result.columns[0][2] = invDet * (a10 * (a21 * a33 - a23 * a31) - a11 * (a20 * a33 - a23 * a30) + a13 * (a20 * a31 - a21 * a30));
+			Result.columns[1][2] = invDet * -(a00 * (a21 * a33 - a23 * a31) - a01 * (a20 * a33 - a23 * a30) + a03 * (a20 * a31 - a21 * a30));
+			Result.columns[2][2] = invDet * (a00 * (a11 * a33 - a13 * a31) - a01 * (a10 * a33 - a13 * a30) + a03 * (a10 * a31 - a11 * a30));
+			Result.columns[3][2] = invDet * -(a00 * (a11 * a23 - a13 * a21) - a01 * (a10 * a23 - a13 * a20) + a03 * (a10 * a21 - a11 * a20));
+
+			Result.columns[0][3] = invDet * -(a10 * (a21 * a32 - a22 * a31) - a11 * (a20 * a32 - a22 * a30) + a12 * (a20 * a31 - a21 * a30));
+			Result.columns[1][3] = invDet * (a00 * (a21 * a32 - a22 * a31) - a01 * (a20 * a32 - a22 * a30) + a02 * (a20 * a31 - a21 * a30));
+			Result.columns[2][3] = invDet * -(a00 * (a11 * a32 - a12 * a31) - a01 * (a10 * a32 - a12 * a30) + a02 * (a10 * a31 - a11 * a30));
+			Result.columns[3][3] = invDet * (a00 * (a11 * a22 - a12 * a21) - a01 * (a10 * a22 - a12 * a20) + a02 * (a10 * a21 - a11 * a20));
 
 			return Result;
 #endif
@@ -603,69 +428,64 @@ export namespace zzz::math
 		{
 #if defined(ZRENDER_API_D3D12)
 			// DirectX использует left-handed систему координат
-			Vector4 zAxis = (target - eye).normalized();  // forward
-			Vector4 xAxis = cross3(up, zAxis).normalized();  // right
-			Vector4 yAxis = cross3(zAxis, xAxis);  // up
+			Vector4 zAxis = (target - eye).normalized();  // forward (к цели)
+			Vector4 xAxis = zAxis.cross3(up).normalized();  // right (ПОМЕНЯЛИ ПОРЯДОК!)
+			Vector4 yAxis = zAxis.cross3(xAxis);  // up
 
 			Matrix4x4 Result;
-			// Строим матрицу напрямую в row-major порядке для DirectX
-			Result.at(0, 0) = xAxis[0];
-			Result.at(0, 1) = yAxis[0];
-			Result.at(0, 2) = zAxis[0];
-			Result.at(0, 3) = 0.0f;
-
-			Result.at(1, 0) = xAxis[1];
-			Result.at(1, 1) = yAxis[1];
-			Result.at(1, 2) = zAxis[1];
-			Result.at(1, 3) = 0.0f;
-
-			Result.at(2, 0) = xAxis[2];
-			Result.at(2, 1) = yAxis[2];
-			Result.at(2, 2) = zAxis[2];
-			Result.at(2, 3) = 0.0f;
-
-			Result.at(3, 0) = -xAxis.dot(eye);
-			Result.at(3, 1) = -yAxis.dot(eye);
-			Result.at(3, 2) = -zAxis.dot(eye);
-			Result.at(3, 3) = 1.0f;
+			Result.columns[0] = Vector4(xAxis[0], xAxis[1], xAxis[2], 0.0f);
+			Result.columns[1] = Vector4(yAxis[0], yAxis[1], yAxis[2], 0.0f);
+			Result.columns[2] = Vector4(zAxis[0], zAxis[1], zAxis[2], 0.0f);
+			Result.columns[3] = Vector4(-xAxis.dot(eye), -yAxis.dot(eye), -zAxis.dot(eye), 1.0f);
 #else
 			// Metal / Vulkan используют right-handed систему координат
-			Vector4 zAxis = (eye - target).normalized();  // forward
-			Vector4 xAxis = cross3(up, zAxis).normalized();  // right
-			Vector4 yAxis = cross3(zAxis, xAxis);  // up
+			Vector4 zAxis = (eye - target).normalized();  // forward (от цели)
+			Vector4 xAxis = up.cross3(zAxis).normalized();  // right
+			Vector4 yAxis = zAxis.cross3(xAxis);  // up
 
 			Matrix4x4 Result;
-			Result.columns[0] = Vector4(xAxis[0], yAxis[0], zAxis[0], 0.0f);
-			Result.columns[1] = Vector4(xAxis[1], yAxis[1], zAxis[1], 0.0f);
-			Result.columns[2] = Vector4(xAxis[2], yAxis[2], zAxis[2], 0.0f);
+			Result.columns[0] = Vector4(xAxis[0], xAxis[1], xAxis[2], 0.0f);
+			Result.columns[1] = Vector4(yAxis[0], yAxis[1], yAxis[2], 0.0f);
+			Result.columns[2] = Vector4(zAxis[0], zAxis[1], zAxis[2], 0.0f);
 			Result.columns[3] = Vector4(-xAxis.dot(eye), -yAxis.dot(eye), -zAxis.dot(eye), 1.0f);
 #endif
 
-			return finalize_for_api(Result);
+			return Result;
 		}
 
 		// Перспективная проекция
 		static Matrix4x4 perspective(float fovYRadians, float aspect, float nearZ, float farZ) noexcept
 		{
 			float tanHalfFov = std::tan(fovYRadians / 2.0f);
-
 			Matrix4x4 Result(0.0f);
-			Result.at(0, 0) = 1.0f / (aspect * tanHalfFov);
-			Result.at(1, 1) = 1.0f / tanHalfFov;
+
+			// Диагональные элементы масштабирования
+			Result.columns[0][0] = 1.0f / (aspect * tanHalfFov);
+			Result.columns[1][1] = 1.0f / tanHalfFov;
+
 #if defined(ZRENDER_API_D3D12)
-			// Left-Handed (DirectX) - строим в column-major, потом транспонируем
-			Result.at(2, 2) = farZ / (farZ - nearZ);
-			Result.at(3, 2) = -(nearZ * farZ) / (farZ - nearZ);
-			Result.at(2, 3) = 1.0f;
-			Result.at(3, 3) = 0.0f;
+			// Left-Handed (DirectX), Z от 0 до 1
+			// Стандартная DirectX перспективная матрица:
+			// columns[2] = [0, 0, farZ/(farZ-nearZ), 1]
+			// columns[3] = [0, 0, -nearZ*farZ/(farZ-nearZ), 0]
+
+			Result.columns[2][2] = farZ / (farZ - nearZ);
+			Result.columns[2][3] = 1.0f;  // Перспективное деление (положительное для LH)
+			Result.columns[3][2] = -(nearZ * farZ) / (farZ - nearZ);
+			Result.columns[3][3] = 0.0f;
 #else
-			// Right-Handed (Metal/Vulkan) - остаётся column-major
-			Result.at(2, 2) = -(farZ + nearZ) / (farZ - nearZ);
-			Result.at(3, 2) = -(2.0f * farZ * nearZ) / (farZ - nearZ);
-			Result.at(2, 3) = -1.0f;
+			// Right-Handed (Metal/Vulkan/OpenGL), Z от -1 до 1
+			// Стандартная OpenGL перспективная матрица:
+			// columns[2] = [0, 0, -(farZ+nearZ)/(farZ-nearZ), -1]
+			// columns[3] = [0, 0, -2*farZ*nearZ/(farZ-nearZ), 0]
+
+			Result.columns[2][2] = -(farZ + nearZ) / (farZ - nearZ);
+			Result.columns[2][3] = -1.0f;  // Перспективное деление (отрицательное для RH)
+			Result.columns[3][2] = -(2.0f * farZ * nearZ) / (farZ - nearZ);
+			Result.columns[3][3] = 0.0f;
 #endif
 
-			return finalize_for_api(Result);
+			return Result;
 		}
 
 		static Matrix4x4 orthographic(float left, float right, float bottom,
@@ -691,7 +511,7 @@ export namespace zzz::math
 			Result.at(3, 3) = 1.0f;
 #endif
 
-			return finalize_for_api(Result);
+			return Result;
 		}
 
 		// Сравнение
@@ -726,6 +546,37 @@ export namespace zzz::math
 			}
 			Result += "]";
 			return Result;
+		}
+
+		Vector4 row(size_t rowIndex) const noexcept
+		{
+			return Vector4(
+				columns[0][rowIndex],
+				columns[1][rowIndex],
+				columns[2][rowIndex],
+				columns[3][rowIndex]
+			);
+		}
+
+		// Получение колонки (работает для column-major хранения)
+		Vector4 column(size_t colIndex) const noexcept
+		{
+			return columns[colIndex];
+		}
+
+		// Установка строки
+		void setRow(size_t rowIndex, const Vector4& rowData) noexcept
+		{
+			columns[0][rowIndex] = rowData[0];
+			columns[1][rowIndex] = rowData[1];
+			columns[2][rowIndex] = rowData[2];
+			columns[3][rowIndex] = rowData[3];
+		}
+
+		// Установка колонки
+		void setColumn(size_t colIndex, const Vector4& colData) noexcept
+		{
+			columns[colIndex] = colData;
 		}
 
 	private:

@@ -2,6 +2,9 @@
 
 #include "..\..\source\BaseTest.h"
 
+import Result;
+
+using namespace zzz;
 using namespace zzz::ztests;
 
 namespace zzz::ztests
@@ -12,10 +15,7 @@ namespace zzz::ztests
 		test_Vector4();
 
 		bool Initialize() override;
-		bool Run() override;
+		Result<std::string> Run() override;
 		bool Kill() override;
-
-	private:
-		//bool Test(zVec2& v, float x, float y, std::string mes = "");
 	};
 }

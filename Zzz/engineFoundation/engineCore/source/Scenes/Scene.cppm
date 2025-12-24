@@ -35,19 +35,19 @@ export namespace zzz::core
 		m_PrimaryCamera.SetNearPlane(1.0f);
 		m_PrimaryCamera.SetFarPlane(1000.0f);
 
-		//float mTheta = 1.5f * Pi;
-		//float mPhi = Pi / 4.0f;  // 45 градусов
-		//float mRadius = 5.0f;
+		float mTheta = 1.5f * Pi;
+		float mPhi = Pi / 4.0f;  // 45 градусов
+		float mRadius = 5.0f;
 
-		//float x = mRadius * std::sin(mPhi) * std::cos(mTheta);
-		//float z = mRadius * std::sin(mPhi) * std::sin(mTheta);
-		//float y = mRadius * std::cos(mPhi);
+		float x = mRadius * std::sin(mPhi) * std::cos(mTheta);
+		float z = mRadius * std::sin(mPhi) * std::sin(mTheta);
+		float y = mRadius * std::cos(mPhi);
 		//float x = 0.0f;
 		//float y = 0.0f;
 		//float z = -5.0f;
 
-		//m_PrimaryCamera.SetPosition(Vector4(x, y, z, 1.0f));
-		m_PrimaryCamera.SetPosition(Vector4(0, 0, -5, 1.0f));
+		m_PrimaryCamera.SetPosition(Vector4(x, y, z, 1.0f));
+		//m_PrimaryCamera.SetPosition(Vector4(0, 0, -5, 1.0f));
 		m_PrimaryCamera.SetTarget(Vector4(0.0f, 0.0f, 0.0f, 1.0f));
 		m_PrimaryCamera.SetUp(Vector4(0.0f, 1.0f, 0.0f, 0.0f));
 	}

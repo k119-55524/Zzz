@@ -6,6 +6,10 @@
 
 #include "ITest.h"
 
+import Result;
+
+using namespace zzz;
+
 namespace zzz::ztests
 {
 	template <typename T>
@@ -34,20 +38,13 @@ namespace zzz::ztests
 	{
 	public:
 		BaseTest() :
-			testName{ TypeName<Derived>() },
-			testResult{ "Success" }
+			testName{ TypeName<Derived>() }
 		{
 		}
 
-		virtual bool Initialize() = 0;
-		virtual bool Run() = 0;
-		virtual bool Kill() = 0;
-
 		constexpr std::string_view GetTestName() const { return testName; };
-		inline const std::string& GetTestResult() const { return testResult; };
 
 	protected:
 		std::string_view testName;
-		std::string testResult;
 	};
 }

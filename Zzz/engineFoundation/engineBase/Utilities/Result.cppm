@@ -37,6 +37,7 @@ export namespace zzz
 	public:
 		Unexpected() noexcept : code(eResult::success), message() {}
 		Unexpected(eResult code) noexcept : code(code), message() {}
+		Unexpected(const std::wstring& message) noexcept : code(eResult::failure), message(message) {}
 		Unexpected(eResult code, const std::wstring& message) noexcept : code(code), message(message) {}
 
 		inline eResult getCode() const noexcept { return code; }
