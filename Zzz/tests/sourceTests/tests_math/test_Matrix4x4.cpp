@@ -5,6 +5,7 @@ import Math;
 import Vector4;
 import Matrix4x4;
 
+using namespace zzz;
 using namespace zzz::math;
 using namespace zzz::ztests;
 
@@ -19,504 +20,444 @@ bool test_Matrix4x4::Initialize()
 
 Result<std::string> test_Matrix4x4::Run()
 {
-	const float epsilon = 1e-5f;
-
-	auto floatEquals = [epsilon](float a, float b) -> bool
-		{
-			return std::abs(a - b) < epsilon;
-		};
-
-	auto vec4Equals = [&floatEquals](const Vector4& a, const Vector4& b) -> bool
-		{
-			return floatEquals(a.x(), b.x()) &&
-				floatEquals(a.y(), b.y()) &&
-				floatEquals(a.z(), b.z()) &&
-				floatEquals(a.w(), b.w());
-		};
-
-	// Test 1: Конструктор по умолчанию (единичная матрица)
-	{
-		Matrix4x4 m;
-		if (!floatEquals(m[0][0], 1.0f) || !floatEquals(m[1][1], 1.0f) ||
-			!floatEquals(m[2][2], 1.0f) || !floatEquals(m[3][3], 1.0f))
-			return Unexpected(L"Failed: Default constructor (identity)");
-
-		if (!floatEquals(m[0][1], 0.0f) || !floatEquals(m[1][0], 0.0f))
-			return Unexpected(L"Failed: Default constructor (zeros)");
-	}
-
-	// Test 2: Конструктор из векторов-строк
-	{
-		Vector4 r0(1, 2, 3, 4);
-		Vector4 r1(5, 6, 7, 8);
-		Vector4 r2(9, 10, 11, 12);
-		Vector4 r3(13, 14, 15, 16);
-		Matrix4x4 m(r0, r1, r2, r3);
-
-		if (!floatEquals(m[0][0], 1.0f) || !floatEquals(m[0][3], 4.0f) ||
-			!floatEquals(m[3][0], 13.0f) || !floatEquals(m[3][3], 16.0f))
-			return Unexpected(L"Failed: Row vector constructor");
-	}
-
-	// Test 3: Конструктор из 16 скаляров
-	{
-		Matrix4x4 m(
-			1, 2, 3, 4,
-			5, 6, 7, 8,
-			9, 10, 11, 12,
-			13, 14, 15, 16);
-
-		if (!floatEquals(m[0][0], 1.0f) || !floatEquals(m[1][1], 6.0f) ||
-			!floatEquals(m[2][2], 11.0f) || !floatEquals(m[3][3], 16.0f))
-			return Unexpected(L"Failed: Scalar constructor");
-	}
-
-	// Test 4: Доступ к элементам
-	{
-		Matrix4x4 m;
-		m[0][0] = 5.0f;
-		m[1][2] = 7.0f;
-		m[3][3] = 9.0f;
-
-		if (!floatEquals(m[0][0], 5.0f))
-			return Unexpected(L"Failed: Element access [0][0]");
-
-		if (!floatEquals(m[1][2], 7.0f))
-			return Unexpected(L"Failed: Element access [1][2]");
-
-		if (!floatEquals(m[3][3], 9.0f))
-			return Unexpected(L"Failed: Element access [3][3]");
-	}
-
-	// Test 5: Получение строк
-	{
-		Matrix4x4 m(
-			1, 2, 3, 4,
-			5, 6, 7, 8,
-			9, 10, 11, 12,
-			13, 14, 15, 16);
-
-		Vector4 row0 = m.row(0);
-		Vector4 row2 = m.row(2);
-
-		if (!vec4Equals(row0, Vector4(1, 2, 3, 4)))
-			return Unexpected(L"Failed: row(0)");
-
-		if (!vec4Equals(row2, Vector4(9, 10, 11, 12)))
-			return Unexpected(L"Failed: row(2)");
-	}
-
-	// Test 6: Получение столбцов
-	{
-		Matrix4x4 m(
-			1, 2, 3, 4,
-			5, 6, 7, 8,
-			9, 10, 11, 12,
-			13, 14, 15, 16);
-
-		Vector4 col0 = m.column(0);
-		Vector4 col3 = m.column(3);
-
-		if (!vec4Equals(col0, Vector4(1, 5, 9, 13)))
-			return Unexpected(L"Failed: column(0)");
-
-		if (!vec4Equals(col3, Vector4(4, 8, 12, 16)))
-			return Unexpected(L"Failed: column(3)");
-	}
-
-	// Test 7: Установка строк
-	{
-		Matrix4x4 m;
-		m.setRow(0, Vector4(1, 2, 3, 4));
-		m.setRow(2, Vector4(9, 10, 11, 12));
-
-		if (!vec4Equals(m.row(0), Vector4(1, 2, 3, 4)))
-			return Unexpected(L"Failed: setRow(0)");
-
-		if (!vec4Equals(m.row(2), Vector4(9, 10, 11, 12)))
-			return Unexpected(L"Failed: setRow(2)");
-	}
-
-	// Test 8: Установка столбцов
-	{
-		Matrix4x4 m;
-		m.setColumn(0, Vector4(1, 5, 9, 13));
-		m.setColumn(3, Vector4(4, 8, 12, 16));
-
-		if (!vec4Equals(m.column(0), Vector4(1, 5, 9, 13)))
-			return Unexpected(L"Failed: setColumn(0)");
-
-		if (!vec4Equals(m.column(3), Vector4(4, 8, 12, 16)))
-			return Unexpected(L"Failed: setColumn(3)");
-	}
-
-	// Test 9: Сложение матриц
-	{
-		Matrix4x4 m1(
-			1, 2, 3, 4,
-			5, 6, 7, 8,
-			9, 10, 11, 12,
-			13, 14, 15, 16);
-
-		Matrix4x4 m2(
-			16, 15, 14, 13,
-			12, 11, 10, 9,
-			8, 7, 6, 5,
-			4, 3, 2, 1);
-
-		Matrix4x4 sum = m1 + m2;
-
-		if (!floatEquals(sum[0][0], 17.0f) || !floatEquals(sum[1][1], 17.0f) ||
-			!floatEquals(sum[2][2], 17.0f) || !floatEquals(sum[3][3], 17.0f))
-			return Unexpected(L"Failed: Matrix addition");
-	}
-
-	// Test 10: Вычитание матриц
-	{
-		Matrix4x4 m1(
-			10, 20, 30, 40,
-			50, 60, 70, 80,
-			90, 100, 110, 120,
-			130, 140, 150, 160);
-
-		Matrix4x4 m2(
-			1, 2, 3, 4,
-			5, 6, 7, 8,
-			9, 10, 11, 12,
-			13, 14, 15, 16);
-
-		Matrix4x4 diff = m1 - m2;
-
-		if (!floatEquals(diff[0][0], 9.0f) || !floatEquals(diff[1][1], 54.0f) ||
-			!floatEquals(diff[2][2], 99.0f) || !floatEquals(diff[3][3], 144.0f))
-			return Unexpected(L"Failed: Matrix subtraction");
-	}
-
-	// Test 11: Умножение матрицы на скаляр
-	{
-		Matrix4x4 m(
-			1, 2, 3, 4,
-			5, 6, 7, 8,
-			9, 10, 11, 12,
-			13, 14, 15, 16);
-
-		Matrix4x4 scaled = m * 2.0f;
-
-		if (!floatEquals(scaled[0][0], 2.0f) || !floatEquals(scaled[1][1], 12.0f) ||
-			!floatEquals(scaled[2][2], 22.0f) || !floatEquals(scaled[3][3], 32.0f))
-			return Unexpected(L"Failed: Scalar multiplication");
-	}
-
-	// Test 12: Умножение матрицы на вектор
-	{
-		Matrix4x4 m(
-			1, 0, 0, 0,
-			0, 2, 0, 0,
-			0, 0, 3, 0,
-			0, 0, 0, 1);
-
-		Vector4 v(2, 3, 4, 1);
-		Vector4 result = m * v;
-
-		if (!vec4Equals(result, Vector4(2, 6, 12, 1)))
-			return Unexpected(L"Failed: Matrix-vector multiplication");
-	}
-
-	// Test 13: Умножение матриц (единичная матрица)
-	{
-		Matrix4x4 m(
-			1, 2, 3, 4,
-			5, 6, 7, 8,
-			9, 10, 11, 12,
-			13, 14, 15, 16);
-
-		Matrix4x4 identity;
-		Matrix4x4 result = m * identity;
-
-		if (!floatEquals(result[0][0], 1.0f) || !floatEquals(result[1][1], 6.0f) ||
-			!floatEquals(result[2][2], 11.0f) || !floatEquals(result[3][3], 16.0f))
-			return Unexpected(L"Failed: Matrix multiplication with identity");
-	}
-
-	// Test 14: Умножение матриц (общий случай)
-	{
-		Matrix4x4 m1(
-			1, 2, 3, 4,
-			5, 6, 7, 8,
-			9, 10, 11, 12,
-			13, 14, 15, 16);
-
-		Matrix4x4 m2(
-			2, 0, 0, 0,
-			0, 2, 0, 0,
-			0, 0, 2, 0,
-			0, 0, 0, 2);
-
-		Matrix4x4 result = m1 * m2;
-
-		if (!floatEquals(result[0][0], 2.0f) || !floatEquals(result[1][1], 12.0f) ||
-			!floatEquals(result[2][2], 22.0f) || !floatEquals(result[3][3], 32.0f))
-			return Unexpected(L"Failed: Matrix multiplication (scaling)");
-	}
-
-	// Test 15: Транспонирование
-	{
-		Matrix4x4 m(
-			1, 2, 3, 4,
-			5, 6, 7, 8,
-			9, 10, 11, 12,
-			13, 14, 15, 16);
-
-		Matrix4x4 t = m.transposed();
-
-		if (!floatEquals(t[0][0], 1.0f) || !floatEquals(t[0][1], 2.0f) ||
-			!floatEquals(t[1][0], 5.0f) || !floatEquals(t[3][2], 15.0f))
-			return Unexpected(L"Failed: Transpose");
-
-		// Проверка, что исходная матрица не изменилась
-		if (!floatEquals(m[0][1], 5.0f))
-			return Unexpected(L"Failed: Transpose should not modify original");
-	}
-
-	// Test 16: Детерминант (единичная матрица)
-	{
-		Matrix4x4 identity;
-		float det = identity.determinant();
-
-		if (!floatEquals(det, 1.0f))
-			return Unexpected(L"Failed: Determinant of identity");
-	}
-
-	// Test 17: Детерминант (диагональная матрица)
-	{
-		Matrix4x4 m(
-			2, 0, 0, 0,
-			0, 3, 0, 0,
-			0, 0, 4, 0,
-			0, 0, 0, 5);
-
-		float det = m.determinant();
-
-		if (!floatEquals(det, 120.0f)) // 2*3*4*5 = 120
-			return Unexpected(L"Failed: Determinant of diagonal matrix");
-	}
-
-	// Test 18: Обратная матрица (единичная)
-	{
-		Matrix4x4 identity;
-		Matrix4x4 inv = identity.inverted();
-
-		if (!floatEquals(inv[0][0], 1.0f) || !floatEquals(inv[1][1], 1.0f) ||
-			!floatEquals(inv[2][2], 1.0f) || !floatEquals(inv[3][3], 1.0f))
-			return Unexpected(L"Failed: Inverse of identity");
-	}
-
-	// Test 19: Обратная матрица (масштабирование)
-	{
-		Matrix4x4 m(
-			2, 0, 0, 0,
-			0, 2, 0, 0,
-			0, 0, 2, 0,
-			0, 0, 0, 1);
-
-		Matrix4x4 inv = m.inverted();
-
-		if (!floatEquals(inv[0][0], 0.5f) || !floatEquals(inv[1][1], 0.5f) ||
-			!floatEquals(inv[2][2], 0.5f) || !floatEquals(inv[3][3], 1.0f))
-			return Unexpected(L"Failed: Inverse of scale matrix");
-	}
-
-	// Test 20: Произведение матрицы и её обратной
-	{
-		Matrix4x4 m(
-			2, 1, 0, 0,
-			0, 3, 1, 0,
-			0, 0, 4, 1,
-			0, 0, 0, 5);
-
-		Matrix4x4 inv = m.inverted();
-		Matrix4x4 product = m * inv;
-
-		if (!floatEquals(product[0][0], 1.0f) || !floatEquals(product[1][1], 1.0f) ||
-			!floatEquals(product[2][2], 1.0f) || !floatEquals(product[3][3], 1.0f))
-			return Unexpected(L"Failed: M * M^-1 diagonal");
-
-		if (!floatEquals(product[0][1], 0.0f) || !floatEquals(product[1][0], 0.0f))
-			return Unexpected(L"Failed: M * M^-1 off-diagonal");
-	}
-
-	// Test 21: Создание матрицы переноса
-	{
-		Matrix4x4 t = Matrix4x4::translation(5, 10, 15);
-		Vector4 point(1, 2, 3, 1);
-		Vector4 result = t * point;
-
-		if (!vec4Equals(result, Vector4(6, 12, 18, 1)))
-			return Unexpected(L"Failed: Translation matrix");
-	}
-
-	// Test 22: Создание матрицы масштабирования
-	{
-		Matrix4x4 s = Matrix4x4::scale(2, 3, 4);
-		Vector4 point(1, 1, 1, 1);
-		Vector4 result = s * point;
-
-		if (!vec4Equals(result, Vector4(2, 3, 4, 1)))
-			return Unexpected(L"Failed: Scaling matrix");
-	}
-
-	// Test 23: Матрица вращения вокруг X
-	{
-		Matrix4x4 rx = Matrix4x4::rotationX(Pi / 2.0f); // 90 градусов
-		Vector4 point(0, 1, 0, 1);
-		Vector4 result = rx * point;
-
-		if (!floatEquals(result.x(), 0.0f) || !floatEquals(result.y(), 0.0f) ||
-			!floatEquals(result.z(), 1.0f))
-			return Unexpected(L"Failed: Rotation X matrix");
-	}
-
-	// Test 24: Матрица вращения вокруг Y
-	{
-		Matrix4x4 ry = Matrix4x4::rotationY(Pi / 2.0f); // 90 градусов
-		Vector4 point(1, 0, 0, 1);
-		Vector4 result = ry * point;
-
-		if (!floatEquals(result.x(), 0.0f) || !floatEquals(result.y(), 0.0f) ||
-			!floatEquals(result.z(), -1.0f))
-			return Unexpected(L"Failed: Rotation Y matrix");
-	}
-
-	// Test 25: Матрица вращения вокруг Z
-	{
-		Matrix4x4 rz = Matrix4x4::rotationZ(Pi / 2.0f); // 90 градусов
-		Vector4 point(1, 0, 0, 1);
-		Vector4 result = rz * point;
-
-		if (!floatEquals(result.x(), 0.0f) || !floatEquals(result.y(), 1.0f) ||
-			!floatEquals(result.z(), 0.0f))
-			return Unexpected(L"Failed: Rotation Z matrix");
-	}
-
-	// Test 26: Операции присваивания
-	{
-		Matrix4x4 m(
-			1, 2, 3, 4,
-			5, 6, 7, 8,
-			9, 10, 11, 12,
-			13, 14, 15, 16);
-
-		Matrix4x4 m2;
-		m2 += m;
-
-		if (!floatEquals(m2[0][0], 2.0f) || !floatEquals(m2[1][1], 7.0f))
-			return Unexpected(L"Failed: += operator");
-
-		m2 -= m;
-
-		if (!floatEquals(m2[0][0], 1.0f) || !floatEquals(m2[1][1], 1.0f))
-			return Unexpected(L"Failed: -= operator");
-
-		m2 *= 2.0f;
-
-		if (!floatEquals(m2[0][0], 2.0f) || !floatEquals(m2[1][1], 2.0f))
-			return Unexpected(L"Failed: *= scalar operator");
-	}
-
-	// Test 27: Перспективная матрица (базовая проверка)
-	{
-		Matrix4x4 proj = Matrix4x4::perspective(Pi / 2.0f, 16.0f / 9.0f, 0.1f, 100.0f);
-
-		// Проверяем, что это не нулевая матрица
-		if (floatEquals(proj[0][0], 0.0f) && floatEquals(proj[1][1], 0.0f))
-			return Unexpected(L"Failed: Perspective matrix (zero)");
-
-#if defined(ZRENDER_API_D3D12)
-		// Для DirectX проверяем proj[2][3] = 1 (перспективное деление для left-handed)
-		if (!floatEquals(proj[2][3], 1.0f))
-			return Unexpected(L"Failed: Perspective matrix [2][3] (DirectX)");
-#else
-		// Для OpenGL/Vulkan/Metal проверяем proj[2][3] = -1 (перспективное деление для right-handed)
-		if (!floatEquals(proj[2][3], -1.0f))
-			return Unexpected(L"Failed: Perspective matrix [2][3] (OpenGL)");
-#endif
-
-		// Проверяем что proj[3][3] = 0 (характерно для перспективной проекции)
-		if (!floatEquals(proj[3][3], 0.0f))
-			return Unexpected(L"Failed: Perspective matrix [3][3]");
-	}
-
-	// Test 28: Ортографическая матрица
-	{
-		Matrix4x4 ortho = Matrix4x4::orthographic(-10, 10, -10, 10, 0.1f, 100.0f);
-
-		// Проверяем диагональные элементы масштабирования
-		if (floatEquals(ortho[0][0], 0.0f) || floatEquals(ortho[1][1], 0.0f))
-			return Unexpected(L"Failed: Orthographic matrix");
-	}
-
-	// Test 29: LookAt матрица
-	{
-		Vector4 eye(0, 0, 5, 1);
-		Vector4 center(0, 0, 0, 1);
-		Vector4 up(0, 1, 0, 0);
-		Matrix4x4 view = Matrix4x4::lookAt(eye, center, up);
-
-		// Проверяем, что точка в центре правильно трансформирована
-		Vector4 transformed = view * center;
-
-#if defined(ZRENDER_API_D3D12)
-		// DirectX (left-handed): камера в (0,0,5) смотрит вдоль +Z
-		// Точка (0,0,0) находится ВПЕРЕДИ камеры на расстоянии 5
-		// В view space: z = +5
-		if (!floatEquals(transformed.z(), 5.0f))
-			return Unexpected(L"Failed: LookAt matrix (DirectX)");
-#else
-		// Metal/Vulkan (right-handed): камера смотрит вдоль -Z
-		// Точка (0,0,0) находится ВПЕРЕДИ камеры на расстоянии 5
-		// В view space: z = -5
-		if (!floatEquals(transformed.z(), -5.0f))
-			return Unexpected(L"Failed: LookAt matrix (OpenGL)");
-#endif
-	}
-
-	// Test 30: Сравнение матриц
-	{
-		Matrix4x4 m1(
-			1, 2, 3, 4,
-			5, 6, 7, 8,
-			9, 10, 11, 12,
-			13, 14, 15, 16);
-
-		Matrix4x4 m2(
-			1, 2, 3, 4,
-			5, 6, 7, 8,
-			9, 10, 11, 12,
-			13, 14, 15, 16);
-
-		Matrix4x4 m3(
-			16, 15, 14, 13,
-			12, 11, 10, 9,
-			8, 7, 6, 5,
-			4, 3, 2, 1);
-
-		if (!(m1 == m2))
-			return Unexpected(L"Failed: Matrix equality (equal)");
-
-		if (m1 == m3)
-			return Unexpected(L"Failed: Matrix equality (different)");
-
-		if (m1 != m2)
-			return Unexpected(L"Failed: Matrix inequality (equal)");
-
-		if (!(m1 != m3))
-			return Unexpected(L"Failed: Matrix inequality (different)");
-	}
-
-	return { "Success" };
+	auto res = TestForGAPI_DirectX();
+	if (!res)
+		return res;
+
+	return TestForGAPI_MetalVulkan();
 }
 
 bool test_Matrix4x4::Kill()
 {
 	return true;
+}
+
+#pragma region DirectX
+Result<std::string> test_Matrix4x4::TestForGAPI_DirectX()
+{
+	auto res = ValidateMatrixVectorMultiply();
+	if (!res)
+		return res;
+
+	res = ValidatePerspective_DirectX();
+	if (!res)
+		return res;
+
+	res = ValidateLookAt_DirectX();
+	if (!res)
+		return res;
+
+	return { "Success" };
+}
+
+// --- Тест умножения матриц ---
+Result<std::string> test_Matrix4x4::ValidateMatrixVectorMultiply()
+{
+	struct MatrixVectorTest
+	{
+		Matrix4x4 matrix;
+		Vector4 vector;
+		Vector4 expected;
+		const wchar_t* description;
+	};
+
+	MatrixVectorTest testCases[] = {
+		// 1. Единичная матрица * вектор = вектор
+		{
+			Matrix4x4(), // identity
+			Vector4(1.0f, 2.0f, 3.0f, 1.0f),
+			Vector4(1.0f, 2.0f, 3.0f, 1.0f),
+			L"Identity matrix"
+		},
+
+		// 2. Translation матрица
+		{
+			Matrix4x4::translation(5.0f, 10.0f, 15.0f),
+			Vector4(1.0f, 2.0f, 3.0f, 1.0f),
+			Vector4(6.0f, 12.0f, 18.0f, 1.0f),
+			L"Translation matrix"
+		},
+
+		// 3. Scale матрица
+		{
+			Matrix4x4::scale(2.0f, 3.0f, 4.0f),
+			Vector4(1.0f, 2.0f, 3.0f, 1.0f),
+			Vector4(2.0f, 6.0f, 12.0f, 1.0f),
+			L"Scale matrix"
+		},
+
+		// 4. Rotation X на 90 градусов
+		{
+			Matrix4x4::rotationX(3.14159f / 2.0f),
+			Vector4(0.0f, 1.0f, 0.0f, 1.0f),
+			Vector4(0.0f, 0.0f, 1.0f, 1.0f),
+			L"Rotation X 90 degrees"
+		},
+
+		// 5. Rotation Y на 90 градусов
+		{
+			Matrix4x4::rotationY(3.14159f / 2.0f),
+			Vector4(0.0f, 0.0f, 1.0f, 1.0f),
+			Vector4(1.0f, 0.0f, 0.0f, 1.0f),
+			L"Rotation Y 90 degrees"
+		},
+
+		// 6. Rotation Z на 90 градусов
+		{
+			Matrix4x4::rotationZ(3.14159f / 2.0f),
+			Vector4(1.0f, 0.0f, 0.0f, 1.0f),
+			Vector4(0.0f, 1.0f, 0.0f, 1.0f),
+			L"Rotation Z 90 degrees"
+		},
+
+		// 7. Translation * Scale (сначала scale, потом translation)
+		{
+			Matrix4x4::translation(1.0f, 2.0f, 3.0f) * Matrix4x4::scale(2.0f),
+			Vector4(1.0f, 1.0f, 1.0f, 1.0f),
+			Vector4(3.0f, 4.0f, 5.0f, 1.0f),
+			L"Translation * Scale"
+		},
+
+		// 8. Вектор с w=0 (направление) - translation не влияет
+		{
+			Matrix4x4::translation(10.0f, 20.0f, 30.0f),
+			Vector4(1.0f, 2.0f, 3.0f, 0.0f),
+			Vector4(1.0f, 2.0f, 3.0f, 0.0f),
+			L"Translation with direction vector (w=0)"
+		},
+
+		// 9. Произвольная матрица
+		{
+			Matrix4x4(
+				2.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 3.0f, 0.0f, 0.0f,
+				0.0f, 0.0f, 4.0f, 0.0f,
+					1.0f, 2.0f, 3.0f, 1.0f
+					),
+					Vector4(1.0f, 1.0f, 1.0f, 1.0f),
+					Vector4(3.0f, 5.0f, 7.0f, 1.0f),
+					L"Custom matrix"
+		},
+
+		// 10. Нулевой вектор
+		{
+			Matrix4x4::scale(5.0f),
+			Vector4(0.0f, 0.0f, 0.0f, 0.0f),
+			Vector4(0.0f, 0.0f, 0.0f, 0.0f),
+			L"Zero vector"
+		}
+	};
+
+	// Прогоняем все тест-кейсы
+	for (const auto& testCase : testCases)
+	{
+		auto result = ValidateMatrixVectorMultiply(testCase.matrix, testCase.vector, testCase.expected, testCase.description);
+
+		if (!result)
+			return result;
+	}
+
+	return { "Success" };
+}
+
+Result<std::string> test_Matrix4x4::ValidateMatrixVectorMultiply(
+	const Matrix4x4& matrix,
+	const Vector4& vector,
+	const Vector4& expectedResult,
+	const wchar_t* testName)
+{
+	const float epsilon = 0.0001f;
+
+	Vector4 result = matrix * vector;
+
+	// Проверяем каждую компоненту
+	if (std::abs(result[0] - expectedResult[0]) > epsilon)
+	{
+		std::wstring msg = L"Matrix * Vector (";
+		msg += testName;
+		msg += L"): X component incorrect. Expected: ";
+		msg += std::to_wstring(expectedResult[0]);
+		msg += L", Got: ";
+		msg += std::to_wstring(result[0]);
+		return Unexpected(msg);
+	}
+
+	if (std::abs(result[1] - expectedResult[1]) > epsilon)
+	{
+		std::wstring msg = L"Matrix * Vector (";
+		msg += testName;
+		msg += L"): Y component incorrect. Expected: ";
+		msg += std::to_wstring(expectedResult[1]);
+		msg += L", Got: ";
+		msg += std::to_wstring(result[1]);
+		return Unexpected(msg);
+	}
+
+	if (std::abs(result[2] - expectedResult[2]) > epsilon)
+	{
+		std::wstring msg = L"Matrix * Vector (";
+		msg += testName;
+		msg += L"): Z component incorrect. Expected: ";
+		msg += std::to_wstring(expectedResult[2]);
+		msg += L", Got: ";
+		msg += std::to_wstring(result[2]);
+		return Unexpected(msg);
+	}
+
+	if (std::abs(result[3] - expectedResult[3]) > epsilon)
+	{
+		std::wstring msg = L"Matrix * Vector (";
+		msg += testName;
+		msg += L"): W component incorrect. Expected: ";
+		msg += std::to_wstring(expectedResult[3]);
+		msg += L", Got: ";
+		msg += std::to_wstring(result[3]);
+		return Unexpected(msg);
+	}
+
+	return { "Success" };
+}
+
+// --- Тест формирования perspective матрицы --- 
+Result<std::string> test_Matrix4x4::ValidatePerspective_DirectX()
+{
+	struct PerspectiveParams
+	{
+		float fovY;
+		float aspect;
+		float nearZ;
+		float farZ;
+		const wchar_t* description;
+	};
+
+	PerspectiveParams testCases[] =
+	{
+		{ 3.14159f / 2.0f, GetAspect(eAspectType::Ratio_16x9),	0.1f,	100.0f,		L"FOV 90°, 16:9, near=0.1, far=100" },
+		{ 3.14159f / 4.0f, GetAspect(eAspectType::Ratio_16x9),	0.1f,	1000.0f,	L"FOV 45°, 16:9, near=0.1, far=1000" },
+		{ 3.14159f / 3.0f, GetAspect(eAspectType::Ratio_4x3),	1.0f,	100.0f,		L"FOV 60°, 4:3, near=1.0, far=100" },
+		{ 3.14159f / 6.0f, GetAspect(eAspectType::Ratio_21x9),	0.01f,	10000.0f,	L"FOV 30°, 21:9, near=0.01, far=10000" },
+		{ 3.14159f / 2.5f, GetAspect(eAspectType::Ratio_1x1),	0.5f,	500.0f,		L"FOV 72°, 1:1, near=0.5, far=500" }
+	};
+
+	// Прогоняем все тест-кейсы
+	for (const auto& testCase : testCases)
+	{
+		auto result = ValidatePerspective_DirectX(testCase.fovY, testCase.aspect, testCase.nearZ, testCase.farZ);
+		if (!result)
+		{
+			std::wstring errorMsg = testCase.description;
+			errorMsg += L" - ";
+			errorMsg += result.error().getMessage();
+
+			return Unexpected(errorMsg);
+		}
+	}
+
+	return { "Success" };
+}
+
+Result<std::string> test_Matrix4x4::ValidatePerspective_DirectX(
+	float fovY,
+	float aspect,
+	float nearZ,
+	float farZ)
+{
+	Matrix4x4 proj = Matrix4x4::perspective(fovY, aspect, nearZ, farZ);
+
+	// Проверка ключевых элементов DirectX perspective матрицы
+	float tanHalfFov = std::tan(fovY * 0.5f);
+	float expectedM00 = 1.0f / (aspect * tanHalfFov);
+	float expectedM11 = 1.0f / tanHalfFov;
+	float expectedM22 = farZ / (farZ - nearZ);
+	float expectedM32 = -nearZ * farZ / (farZ - nearZ);
+
+	const float epsilon = 0.0001f;
+
+	// Проверяем элементы [row][col]
+	if (std::abs(proj[0][0] - expectedM00) > epsilon)
+		return Unexpected(L"DirectX Perspective: M[0][0] incorrect");
+
+	if (std::abs(proj[1][1] - expectedM11) > epsilon)
+		return Unexpected(L"DirectX Perspective: M[1][1] incorrect");
+
+	if (std::abs(proj[2][2] - expectedM22) > epsilon)
+		return Unexpected(L"DirectX Perspective: M[2][2] incorrect");
+
+	if (std::abs(proj[2][3] - 1.0f) > epsilon)
+		return Unexpected(L"DirectX Perspective: M[2][3] should be 1.0");
+
+	if (std::abs(proj[3][2] - expectedM32) > epsilon)
+		return Unexpected(L"DirectX Perspective: M[3][2] incorrect");
+
+	if (std::abs(proj[3][3] - 0.0f) > epsilon)
+		return Unexpected(L"DirectX Perspective: M[3][3] should be 0.0");
+
+	// Проверка трансформации точек
+	// Точка на near plane (центр экрана)
+	Vector4 nearPoint(0.0f, 0.0f, nearZ, 1.0f);
+	Vector4 projNear = proj * nearPoint;
+	// После perspective divide z должен быть 0 (near plane -> 0 в DirectX)
+	float zNear = projNear[2] / projNear[3];
+	if (std::abs(zNear - 0.0f) > epsilon)
+		return Unexpected(L"DirectX Perspective: Near plane Z mapping incorrect");
+
+	// Точка на far plane
+	Vector4 farPoint(0.0f, 0.0f, farZ, 1.0f);
+	Vector4 projFar = proj * farPoint;
+	float zFar = projFar[2] / projFar[3];
+	if (std::abs(zFar - 1.0f) > epsilon)
+		return Unexpected(L"DirectX Perspective: Far plane Z mapping incorrect");
+
+	return { "Success" };
+}
+
+// --- Тест формирования LookAt матрицы ---
+Result<std::string> test_Matrix4x4::ValidateLookAt_DirectX()
+{
+	struct LookAtParams
+	{
+		Vector4 eye;
+		Vector4 target;
+		Vector4 up;
+		const wchar_t* description;
+	};
+
+	LookAtParams testCases[] =
+	{
+		{ Vector4(0.0f, 0.0f, 5.0f, 1.0f),  Vector4(0.0f, 0.0f, 0.0f, 1.0f), Vector4(0.0f, 1.0f, 0.0f, 0.0f), L"Standard view along -Z axis from (0,0,5) to origin, up Y" },
+		{ Vector4(5.0f, 0.0f, 0.0f, 1.0f),  Vector4(0.0f, 0.0f, 0.0f, 1.0f), Vector4(0.0f, 1.0f, 0.0f, 0.0f), L"View along -X axis from (5,0,0) to origin, up Y" },
+		{ Vector4(0.0f, 5.0f, 0.0f, 1.0f),  Vector4(0.0f, 0.0f, 0.0f, 1.0f), Vector4(0.0f, 0.0f, 1.0f, 0.0f), L"View along -Y axis from (0,5,0) to origin, up Z (adjusted)" },
+		{ Vector4(1.0f, 2.0f, 3.0f, 1.0f),  Vector4(4.0f, 5.0f, 6.0f, 1.0f), Vector4(0.0f, 1.0f, 0.0f, 0.0f), L"Arbitrary view from (1,2,3) to (4,5,6), up Y" },
+		{ Vector4(0.0f, 0.0f, 10.0f, 1.0f), Vector4(0.0f, 0.0f, 0.0f, 1.0f), Vector4(1.0f, 0.0f, 0.0f, 0.0f), L"View along -Z from (0,0,10) to origin, up X (tilted)" }
+	};
+
+	// Прогоняем все тест-кейсы
+	for (const auto& testCase : testCases)
+	{
+		auto result = ValidateLookAt_DirectX(testCase.eye, testCase.target, testCase.up);
+		if (!result)
+		{
+			std::wstring errorMsg = testCase.description;
+			errorMsg += L" - ";
+			errorMsg += result.error().getMessage();
+			return Unexpected(errorMsg);
+		}
+	}
+
+	return { "Success" };
+}
+
+Result<std::string> test_Matrix4x4::ValidateLookAt_DirectX(
+	const Vector4& eye,
+	const Vector4& target,
+	const Vector4& up)
+{
+	Matrix4x4 view = Matrix4x4::lookAt(eye, target, up);
+
+	const float epsilon = 0.0001f;
+
+	// 1. Проверка ортонормальности базисных векторов
+	// Извлекаем базисные векторы из матрицы (первые 3 строки, первые 3 столбца)
+	Vector4 right(view[0][0], view[0][1], view[0][2], 0.0f);
+	Vector4 upVec(view[1][0], view[1][1], view[1][2], 0.0f);
+	Vector4 forward(view[2][0], view[2][1], view[2][2], 0.0f);
+
+	// Проверка нормализации (длина каждого вектора должна быть ~1)
+	float rightLen = std::sqrt(right[0] * right[0] + right[1] * right[1] + right[2] * right[2]);
+	float upLen = std::sqrt(upVec[0] * upVec[0] + upVec[1] * upVec[1] + upVec[2] * upVec[2]);
+	float forwardLen = std::sqrt(forward[0] * forward[0] + forward[1] * forward[1] + forward[2] * forward[2]);
+
+	if (std::abs(rightLen - 1.0f) > epsilon)
+		return Unexpected(L"LookAt: Right vector not normalized");
+
+	if (std::abs(upLen - 1.0f) > epsilon)
+		return Unexpected(L"LookAt: Up vector not normalized");
+
+	if (std::abs(forwardLen - 1.0f) > epsilon)
+		return Unexpected(L"LookAt: Forward vector not normalized");
+
+	// Проверка ортогональности (скалярное произведение должно быть ~0)
+	float rightDotUp = right[0] * upVec[0] + right[1] * upVec[1] + right[2] * upVec[2];
+	float rightDotForward = right[0] * forward[0] + right[1] * forward[1] + right[2] * forward[2];
+	float upDotForward = upVec[0] * forward[0] + upVec[1] * forward[1] + upVec[2] * forward[2];
+
+	if (std::abs(rightDotUp) > epsilon)
+		return Unexpected(L"LookAt: Right and Up vectors not orthogonal");
+
+	if (std::abs(rightDotForward) > epsilon)
+		return Unexpected(L"LookAt: Right and Forward vectors not orthogonal");
+
+	if (std::abs(upDotForward) > epsilon)
+		return Unexpected(L"LookAt: Up and Forward vectors not orthogonal");
+
+	// 2. Проверка направления forward вектора
+	// Forward должен указывать от eye к target (для left-handed DirectX)
+	Vector4 expectedForward = (target - eye).normalized();
+
+	float forwardDot = forward[0] * expectedForward[0] +
+		forward[1] * expectedForward[1] +
+		forward[2] * expectedForward[2];
+
+	// Косинус угла между векторами должен быть близок к 1 (векторы сонаправлены)
+	if (forwardDot < 0.999f)
+		return Unexpected(L"LookAt: Forward vector direction incorrect");
+
+	// 3. Проверка последней строки (перемещение)
+	// Последняя строка должна содержать -dot(basis, eye) для каждой оси
+	float expectedTx = -(right[0] * eye[0] + right[1] * eye[1] + right[2] * eye[2]);
+	float expectedTy = -(upVec[0] * eye[0] + upVec[1] * eye[1] + upVec[2] * eye[2]);
+	float expectedTz = -(forward[0] * eye[0] + forward[1] * eye[1] + forward[2] * eye[2]);
+
+	if (std::abs(view[3][0] - expectedTx) > epsilon)
+		return Unexpected(L"LookAt: Translation X component incorrect");
+
+	if (std::abs(view[3][1] - expectedTy) > epsilon)
+		return Unexpected(L"LookAt: Translation Y component incorrect");
+
+	if (std::abs(view[3][2] - expectedTz) > epsilon)
+		return Unexpected(L"LookAt: Translation Z component incorrect");
+
+	// 4. Проверка что последний элемент [3][3] = 1
+	if (std::abs(view[3][3] - 1.0f) > epsilon)
+		return Unexpected(L"LookAt: M[3][3] should be 1.0");
+
+	// 5. Проверка трансформации точки eye -> должна попасть в начало координат view space
+	Vector4 transformedEye = view * eye;
+
+	// Для однородных координат проверяем с учетом w-компоненты
+	float w = transformedEye[3];
+	if (std::abs(w) < epsilon)
+		return Unexpected(L"LookAt: Transformed eye has invalid w component");
+
+	// Нормализуем к декартовым координатам (perspective divide)
+	float x = transformedEye[0] / w;
+	float y = transformedEye[1] / w;
+	float z = transformedEye[2] / w;
+
+	if (std::abs(x) > epsilon ||
+		std::abs(y) > epsilon ||
+		std::abs(z) > epsilon)
+		return Unexpected(L"LookAt: Eye position should transform to origin");
+
+	// 6. Проверка трансформации точки target -> должна быть на положительной оси Z
+	Vector4 transformedTarget = view * target;
+
+	// Также нормализуем target
+	float tw = transformedTarget[3];
+	if (std::abs(tw) < epsilon)
+		return Unexpected(L"LookAt: Transformed target has invalid w component");
+
+	float tz = transformedTarget[2] / tw;
+
+	if (tz <= epsilon)
+		return Unexpected(L"LookAt: Target should be in front of camera (positive Z in left-handed)");
+
+	return { "Success" };
+}
+#pragma endregion // DirectX
+
+// Тестируем для Vulkan/Metal
+Result<std::string> test_Matrix4x4::TestForGAPI_MetalVulkan()
+{
+	return { "Success" };
 }

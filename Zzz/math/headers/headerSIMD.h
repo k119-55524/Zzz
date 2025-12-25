@@ -15,8 +15,7 @@
 		#include <arm_neon.h>
 		using simd_float4 = float32x4_t;
 	#else
-		#include <xmmintrin.h>
-		#include <emmintrin.h>
+		#include <immintrin.h>
 		using simd_float4 = __m128;
 	#endif
 

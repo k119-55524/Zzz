@@ -151,8 +151,11 @@
     <ClInclude Include="EngineBase.h" />
     <ClInclude Include="Headers\Header.h" />
     <ClInclude Include="Headers\HeaderDX.h" />
+    <ClInclude Include="headers\HeaderEnums.h" />
     <ClInclude Include="Headers\HeaderMetal.h" />
     <ClInclude Include="Headers\HeadersMSWin.h" />
+    <ClInclude Include="headers\HeaderThrowWrappers.h" />
+    <ClInclude Include="headers\HeaderTypes.h" />
     <ClInclude Include="Headers\HeaderVulkan.h" />
     <ClInclude Include="Headers\MacroDefinition.h" />
     <ClInclude Include="Headers\PlatformsDefines.h" />

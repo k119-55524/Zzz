@@ -122,7 +122,8 @@ export namespace zzz
 			cbuffer cbObject : register(b2)
 			{
 				row_major float4x4 gWorld;
-				row_major float4x4 gWorldViewProj1;
+				float4x4 gWorldViewProj1;
+				//row_major float4x4 gWorldViewProj1;
 			};
 
 			struct VertexIn
@@ -142,7 +143,8 @@ export namespace zzz
 				VertexOut vout;
 	
 				// Transform to homogeneous clip space.
-				vout.Pos = mul(float4(vin.Pos, 1.0f), gWorldViewProj1);
+				vout.Pos = mul(gWorldViewProj1, float4(vin.Pos, 1.0f));
+				//vout.Pos = mul(float4(vin.Pos, 1.0f), gWorldViewProj1);
 	
 				// Just pass vertex color into the pixel shader.
 				vout.Color = vin.Color;

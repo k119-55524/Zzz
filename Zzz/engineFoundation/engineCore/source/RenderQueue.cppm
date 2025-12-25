@@ -57,7 +57,7 @@ export namespace zzz::core
 
 			// Установка глобальных констант шейдеров
 			Camera& primaryCamera = m_Scene->GetPrimaryCamera();
-			Matrix4x4 camViewProj = primaryCamera.GetViewProjectionMatrix();
+			Matrix4x4 camViewProj = primaryCamera.GetProjectionViewMatrix();
 			setGlobalConstFunc(camViewProj);
 
 			auto entity = m_Scene->GetEntity();
@@ -75,7 +75,7 @@ export namespace zzz::core
 			}
 
 			Matrix4x4 world;
-			world = world.translation(0.0f, 0.0f, 2.5f);
+			//world = world.translation(1.0f, 0.0f, 0.0f);
 			Matrix4x4 worldViewProj = camViewProj * world;
 			setMeshConstFunc(worldViewProj);
 

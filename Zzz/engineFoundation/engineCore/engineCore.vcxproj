@@ -116,7 +116,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)engineFoundation\logger;$(SolutionDir)math</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)engineFoundation\logger;$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)math</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
       <ForcedIncludeFiles>pch.h;</ForcedIncludeFiles>
     </ClCompile>
@@ -137,7 +137,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)engineFoundation\logger;$(SolutionDir)math</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)engineFoundation\logger;$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)math</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
       <ForcedIncludeFiles>pch.h;</ForcedIncludeFiles>
     </ClCompile>
@@ -214,6 +214,9 @@
     </ProjectReference>
     <ProjectReference Include="..\engineBase\engineBase.vcxproj">
       <Project>{67571d08-65c1-42d4-b1c5-8dee498530a6}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\logger\logger.vcxproj">
+      <Project>{739374b1-c690-4a3a-99e8-c6243336d2f3}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

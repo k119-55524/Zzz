@@ -178,7 +178,7 @@ export namespace zzz::core
 			return m_ProjectionMatrix;
 		}
 
-		inline Matrix4x4 GetViewProjectionMatrix() const noexcept { return GetProjectionMatrix() * GetViewMatrix(); }
+		inline Matrix4x4 GetProjectionViewMatrix() const noexcept { return GetProjectionMatrix() * GetViewMatrix(); }
 
 		inline float GetFovY() const noexcept { return m_FovY; }
 		inline void SetFovY(float fovYRadians) noexcept { m_FovY = fovYRadians; m_ProjectionMatrixDirty = true; }
@@ -257,7 +257,7 @@ export namespace zzz::core
 		inline Frustum GetFrustum() const noexcept
 		{
 			Frustum frustum;
-			Matrix4x4 vp = GetViewProjectionMatrix();
+			Matrix4x4 vp = GetProjectionViewMatrix();
 
 			// Извлекаем плоскости из матрицы VP
 			// Left plane

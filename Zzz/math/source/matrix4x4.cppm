@@ -1,32 +1,26 @@
-
-#include "pch.h"
-
 #include "../headers/headerSIMD.h"
 
 export module Matrix4x4;
-
 import Vector4;
 
 export namespace zzz::math
 {
-	// Матрица 4x4 в column-major формате (как OpenGL, Metal, Vulkan)
 	struct alignas(16) Matrix4x4
 	{
-		// 4 колонки, каждая - Vector4
-		Vector4 columns[4];
+		Vector4 columns[4]; // Row-major хранение: columns[i] = i-я строка
 
 		// --- Конструкторы ---
+
 		Matrix4x4() noexcept
 		{
-			// Единичная матрица по умолчанию
+			// Единичная матрица
 			columns[0] = Vector4(1.0f, 0.0f, 0.0f, 0.0f);
 			columns[1] = Vector4(0.0f, 1.0f, 0.0f, 0.0f);
 			columns[2] = Vector4(0.0f, 0.0f, 1.0f, 0.0f);
 			columns[3] = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
 		}
 
-		// Конструктор из 4 колонок
-		Matrix4x4(const Vector4& col0, const Vector4& col1,
+		explicit Matrix4x4(const Vector4& col0, const Vector4& col1,
 			const Vector4& col2, const Vector4& col3) noexcept
 		{
 			columns[0] = col0;
@@ -35,20 +29,18 @@ export namespace zzz::math
 			columns[3] = col3;
 		}
 
-		// Конструктор из 16 значений (row-major порядок для удобства)
+		// Конструктор из 16 значений в row-major порядке (стандарт для DirectX)
 		Matrix4x4(float m00, float m01, float m02, float m03,
 			float m10, float m11, float m12, float m13,
 			float m20, float m21, float m22, float m23,
 			float m30, float m31, float m32, float m33) noexcept
 		{
-			// Транспонируем при записи (row -> column major)
-			columns[0] = Vector4(m00, m10, m20, m30);
-			columns[1] = Vector4(m01, m11, m21, m31);
-			columns[2] = Vector4(m02, m12, m22, m32);
-			columns[3] = Vector4(m03, m13, m23, m33);
+			columns[0] = Vector4(m00, m01, m02, m03); // строка 0
+			columns[1] = Vector4(m10, m11, m12, m13); // строка 1
+			columns[2] = Vector4(m20, m21, m22, m23); // строка 2
+			columns[3] = Vector4(m30, m31, m32, m33); // строка 3
 		}
 
-		// Диагональная матрица
 		explicit Matrix4x4(float diagonal) noexcept
 		{
 			columns[0] = Vector4(diagonal, 0.0f, 0.0f, 0.0f);
@@ -58,14 +50,44 @@ export namespace zzz::math
 		}
 
 		// --- Доступ к элементам ---
-		Vector4& operator[](size_t col) noexcept { return columns[col]; }
-		const Vector4& operator[](size_t col) const noexcept { return columns[col]; }
 
-		// Доступ к элементу [row][col]
-		float& at(size_t row, size_t col) noexcept { return columns[col][row]; }
-		const float& at(size_t row, size_t col) const noexcept { return columns[col][row]; }
+		Vector4& operator[](size_t row) noexcept { return columns[row]; }
+		const Vector4& operator[](size_t row) const noexcept { return columns[row]; }
+
+		float& at(size_t row, size_t col) noexcept { return columns[row][col]; }
+		const float& at(size_t row, size_t col) const noexcept { return columns[row][col]; }
+
+		Vector4& row(size_t index) noexcept { return columns[index]; }
+		const Vector4& row(size_t index) const noexcept { return columns[index]; }
+
+		// Доступ к столбцу (извлекает столбец из row-major матрицы)
+		Vector4 column(size_t index) const noexcept
+		{
+			return Vector4(
+				columns[0][index],
+				columns[1][index],
+				columns[2][index],
+				columns[3][index]
+			);
+		}
+
+		// Установка столбца
+		void setColumn(size_t index, const Vector4& v) noexcept
+		{
+			columns[0][index] = v[0];
+			columns[1][index] = v[1];
+			columns[2][index] = v[2];
+			columns[3][index] = v[3];
+		}
+
+		// Установка строки
+		void setRow(size_t index, const Vector4& v) noexcept
+		{
+			columns[index] = v;
+		}
 
 		// --- Арифметика ---
+
 		Matrix4x4 operator+(const Matrix4x4& rhs) const noexcept
 		{
 			return Matrix4x4(
@@ -96,316 +118,138 @@ export namespace zzz::math
 			);
 		}
 
-		Matrix4x4 operator/(float scalar) const noexcept
+		// Умножение матриц - стандартное для row-major
+		Matrix4x4 operator*(const Matrix4x4& rhs) const noexcept
 		{
-			return Matrix4x4(
-				columns[0] / scalar,
-				columns[1] / scalar,
-				columns[2] / scalar,
-				columns[3] / scalar
+			Matrix4x4 result(0.0f);
+
+			for (int row = 0; row < 4; ++row)
+			{
+				for (int col = 0; col < 4; ++col)
+				{
+					float sum = 0.0f;
+					for (int k = 0; k < 4; ++k)
+					{
+						// Стандартное умножение: this[row][k] * rhs[k][col]
+						sum += columns[row][k] * rhs.columns[k][col];
+					}
+					result.columns[row][col] = sum;
+				}
+			}
+
+			return result;
+		}
+
+		// Умножение M * v (вектор-столбец справа)
+		// Для DirectX row-major с вектором-столбцом
+		Vector4 operator*(const Vector4& v) const noexcept
+		{
+			// Извлекаем столбцы матрицы и умножаем на компоненты вектора
+			return Vector4(
+				columns[0][0] * v[0] + columns[1][0] * v[1] + columns[2][0] * v[2] + columns[3][0] * v[3],
+				columns[0][1] * v[0] + columns[1][1] * v[1] + columns[2][1] * v[2] + columns[3][1] * v[3],
+				columns[0][2] * v[0] + columns[1][2] * v[1] + columns[2][2] * v[2] + columns[3][2] * v[3],
+				columns[0][3] * v[0] + columns[1][3] * v[1] + columns[2][3] * v[2] + columns[3][3] * v[3]
 			);
 		}
 
-		// Умножение матриц (SIMD-оптимизированное)
-		Matrix4x4 operator*(const Matrix4x4& rhs) const noexcept
+		// Умножение v * M (вектор-строка слева) - стандарт DirectX
+		friend Vector4 operator*(const Vector4& v, const Matrix4x4& m) noexcept
 		{
-			Matrix4x4 Result;
-
-#if defined(__APPLE__)
-			// Metal напрямую поддерживает умножение матриц
-			simd_float4x4 lhs_mat, rhs_mat;
-			std::memcpy(&lhs_mat, this, sizeof(Matrix4x4));
-			std::memcpy(&rhs_mat, &rhs, sizeof(Matrix4x4));
-			simd_float4x4 res = ::simd::operator*(lhs_mat, rhs_mat);
-			std::memcpy(&Result, &res, sizeof(Matrix4x4));
-#else
-			// Умножаем каждую колонку правой матрицы на левую
-			for (int i = 0; i < 4; ++i)
-			{
-				Vector4 col;
-#if defined(_M_X64) || defined(__x86_64__)
-				__m128 c0 = _mm_mul_ps(columns[0].data, _mm_set1_ps(rhs.columns[i][0]));
-				__m128 c1 = _mm_mul_ps(columns[1].data, _mm_set1_ps(rhs.columns[i][1]));
-				__m128 c2 = _mm_mul_ps(columns[2].data, _mm_set1_ps(rhs.columns[i][2]));
-				__m128 c3 = _mm_mul_ps(columns[3].data, _mm_set1_ps(rhs.columns[i][3]));
-				col.data = _mm_add_ps(_mm_add_ps(c0, c1), _mm_add_ps(c2, c3));
-#elif defined(_M_ARM64) || defined(__aarch64__)
-				float32x4_t c0 = vmulq_n_f32(columns[0].data, rhs.columns[i][0]);
-				float32x4_t c1 = vmulq_n_f32(columns[1].data, rhs.columns[i][1]);
-				float32x4_t c2 = vmulq_n_f32(columns[2].data, rhs.columns[i][2]);
-				float32x4_t c3 = vmulq_n_f32(columns[3].data, rhs.columns[i][3]);
-				col.data = vaddq_f32(vaddq_f32(c0, c1), vaddq_f32(c2, c3));
-#endif
-				Result.columns[i] = col;
-			}
-#endif
-			return Result;
+			// Вектор-строка умножается на строки матрицы
+			return Vector4(
+				v[0] * m.columns[0][0] + v[1] * m.columns[1][0] + v[2] * m.columns[2][0] + v[3] * m.columns[3][0],
+				v[0] * m.columns[0][1] + v[1] * m.columns[1][1] + v[2] * m.columns[2][1] + v[3] * m.columns[3][1],
+				v[0] * m.columns[0][2] + v[1] * m.columns[1][2] + v[2] * m.columns[2][2] + v[3] * m.columns[3][2],
+				v[0] * m.columns[0][3] + v[1] * m.columns[1][3] + v[2] * m.columns[2][3] + v[3] * m.columns[3][3]
+			);
 		}
 
-		// Умножение матрицы на вектор
-		Vector4 operator*(const Vector4& v) const noexcept
-		{
-			Vector4 Result;
+		Matrix4x4& operator+=(const Matrix4x4& rhs) noexcept { columns[0] += rhs.columns[0]; columns[1] += rhs.columns[1]; columns[2] += rhs.columns[2]; columns[3] += rhs.columns[3]; return *this; }
+		Matrix4x4& operator-=(const Matrix4x4& rhs) noexcept { columns[0] -= rhs.columns[0]; columns[1] -= rhs.columns[1]; columns[2] -= rhs.columns[2]; columns[3] -= rhs.columns[3]; return *this; }
+		Matrix4x4& operator*=(float scalar) noexcept { columns[0] *= scalar; columns[1] *= scalar; columns[2] *= scalar; columns[3] *= scalar; return *this; }
+		Matrix4x4& operator*=(const Matrix4x4& rhs) noexcept { *this = *this * rhs; return *this; }
 
-#if defined(__APPLE__)
-			Result.data = ::simd::operator*(
-				*reinterpret_cast<const simd_float4x4*>(this),
-				v.data
-				);
-#elif defined(_M_X64) || defined(__x86_64__)
-			__m128 c0 = _mm_mul_ps(columns[0].data, _mm_set1_ps(v[0]));
-			__m128 c1 = _mm_mul_ps(columns[1].data, _mm_set1_ps(v[1]));
-			__m128 c2 = _mm_mul_ps(columns[2].data, _mm_set1_ps(v[2]));
-			__m128 c3 = _mm_mul_ps(columns[3].data, _mm_set1_ps(v[3]));
-			Result.data = _mm_add_ps(_mm_add_ps(c0, c1), _mm_add_ps(c2, c3));
-#elif defined(_M_ARM64) || defined(__aarch64__)
-			float32x4_t c0 = vmulq_n_f32(columns[0].data, v[0]);
-			float32x4_t c1 = vmulq_n_f32(columns[1].data, v[1]);
-			float32x4_t c2 = vmulq_n_f32(columns[2].data, v[2]);
-			float32x4_t c3 = vmulq_n_f32(columns[3].data, v[3]);
-			Result.data = vaddq_f32(vaddq_f32(c0, c1), vaddq_f32(c2, c3));
-#endif
-			return Result;
-		}
+		// --- Транспонирование (для row-major -> column-major при передаче в шейдеры, если нужно) ---
 
-		Matrix4x4& operator+=(const Matrix4x4& rhs) noexcept
-		{
-			columns[0] += rhs.columns[0];
-			columns[1] += rhs.columns[1];
-			columns[2] += rhs.columns[2];
-			columns[3] += rhs.columns[3];
-			return *this;
-		}
-
-		Matrix4x4& operator-=(const Matrix4x4& rhs) noexcept
-		{
-			columns[0] -= rhs.columns[0];
-			columns[1] -= rhs.columns[1];
-			columns[2] -= rhs.columns[2];
-			columns[3] -= rhs.columns[3];
-			return *this;
-		}
-
-		Matrix4x4& operator*=(float scalar) noexcept
-		{
-			columns[0] *= scalar;
-			columns[1] *= scalar;
-			columns[2] *= scalar;
-			columns[3] *= scalar;
-			return *this;
-		}
-
-		Matrix4x4& operator*=(const Matrix4x4& rhs) noexcept
-		{
-			*this = *this * rhs;
-			return *this;
-		}
-
-		// --- Транспонирование ---
 		Matrix4x4 transposed() const noexcept
 		{
-			Matrix4x4 Result;
-
-#if defined(__APPLE__)
-			simd_float4x4 mat;
-			std::memcpy(&mat, this, sizeof(Matrix4x4));
-			simd_float4x4 trans = ::simd::transpose(mat);
-			std::memcpy(&Result, &trans, sizeof(Matrix4x4));
-#elif defined(_M_X64) || defined(__x86_64__)
-			// Транспонируем 4x4 матрицу через SSE
+			Matrix4x4 result;
 			__m128 tmp0 = _mm_unpacklo_ps(columns[0].data, columns[1].data);
-			__m128 tmp2 = _mm_unpacklo_ps(columns[2].data, columns[3].data);
 			__m128 tmp1 = _mm_unpackhi_ps(columns[0].data, columns[1].data);
+			__m128 tmp2 = _mm_unpacklo_ps(columns[2].data, columns[3].data);
 			__m128 tmp3 = _mm_unpackhi_ps(columns[2].data, columns[3].data);
 
-			Result.columns[0].data = _mm_movelh_ps(tmp0, tmp2);
-			Result.columns[1].data = _mm_movehl_ps(tmp2, tmp0);
-			Result.columns[2].data = _mm_movelh_ps(tmp1, tmp3);
-			Result.columns[3].data = _mm_movehl_ps(tmp3, tmp1);
-#elif defined(_M_ARM64) || defined(__aarch64__)
-			// NEON транспонирование через vtrn и vzip
-			float32x4x2_t t01 = vtrnq_f32(columns[0].data, columns[1].data);
-			float32x4x2_t t23 = vtrnq_f32(columns[2].data, columns[3].data);
-
-			Result.columns[0].data = vcombine_f32(vget_low_f32(t01.val[0]), vget_low_f32(t23.val[0]));
-			Result.columns[1].data = vcombine_f32(vget_low_f32(t01.val[1]), vget_low_f32(t23.val[1]));
-			Result.columns[2].data = vcombine_f32(vget_high_f32(t01.val[0]), vget_high_f32(t23.val[0]));
-			Result.columns[3].data = vcombine_f32(vget_high_f32(t01.val[1]), vget_high_f32(t23.val[1]));
-#endif
-			return Result;
+			result.columns[0].data = _mm_movelh_ps(tmp0, tmp2);
+			result.columns[1].data = _mm_movehl_ps(tmp2, tmp0);
+			result.columns[2].data = _mm_movelh_ps(tmp1, tmp3);
+			result.columns[3].data = _mm_movehl_ps(tmp3, tmp1);
+			return result;
 		}
 
-		void transpose() noexcept
-		{
-			*this = transposed();
-		}
+		void transpose() noexcept { *this = transposed(); }
 
-		// --- Определитель (SIMD-оптимизированный) ---
-		float determinant() const noexcept
-		{
-#if defined(__APPLE__)
-			simd_float4x4 mat;
-			std::memcpy(&mat, this, sizeof(Matrix4x4));
-			return ::simd::determinant(mat);
-#else
-			// Универсальный алгоритм для SSE и NEON
-			// Работает с column-major форматом: columns[col][row]
-			float a00 = columns[0][0], a01 = columns[1][0], a02 = columns[2][0], a03 = columns[3][0];
-			float a10 = columns[0][1], a11 = columns[1][1], a12 = columns[2][1], a13 = columns[3][1];
-			float a20 = columns[0][2], a21 = columns[1][2], a22 = columns[2][2], a23 = columns[3][2];
-			float a30 = columns[0][3], a31 = columns[1][3], a32 = columns[2][3], a33 = columns[3][3];
+		// --- Статические фабрики (DirectX: left-handed, Z [0,1]) ---
 
-			// Вычисляем кофакторы для первой строки
-			float c00 = a11 * (a22 * a33 - a23 * a32) - a12 * (a21 * a33 - a23 * a31) + a13 * (a21 * a32 - a22 * a31);
-			float c01 = a10 * (a22 * a33 - a23 * a32) - a12 * (a20 * a33 - a23 * a30) + a13 * (a20 * a32 - a22 * a30);
-			float c02 = a10 * (a21 * a33 - a23 * a31) - a11 * (a20 * a33 - a23 * a30) + a13 * (a20 * a31 - a21 * a30);
-			float c03 = a10 * (a21 * a32 - a22 * a31) - a11 * (a20 * a32 - a22 * a30) + a12 * (a20 * a31 - a21 * a30);
-
-			// Детерминант = разложение по первой строке
-			return a00 * c00 - a01 * c01 + a02 * c02 - a03 * c03;
-#endif
-		}
-
-		// --- Обратная матрица (SIMD-оптимизированная) ---
-		Matrix4x4 inverted() const noexcept
-		{
-#if defined(__APPLE__)
-			simd_float4x4 mat;
-			std::memcpy(&mat, this, sizeof(Matrix4x4));
-			simd_float4x4 inv = ::simd::inverse(mat);
-
-			Matrix4x4 Result;
-			std::memcpy(&Result, &inv, sizeof(Matrix4x4));
-			return Result;
-#else
-			// Универсальный алгоритм для x64 и ARM через вычисление присоединённой матрицы
-			float det = determinant();
-
-			// Проверка на вырожденность
-			if (det > -1e-8f && det < 1e-8f)
-			{
-				return Matrix4x4(); // Возвращаем единичную матрицу
-			}
-
-			float invDet = 1.0f / det;
-
-			// Извлекаем элементы из column-major: columns[col][row]
-			float a00 = columns[0][0], a01 = columns[1][0], a02 = columns[2][0], a03 = columns[3][0];
-			float a10 = columns[0][1], a11 = columns[1][1], a12 = columns[2][1], a13 = columns[3][1];
-			float a20 = columns[0][2], a21 = columns[1][2], a22 = columns[2][2], a23 = columns[3][2];
-			float a30 = columns[0][3], a31 = columns[1][3], a32 = columns[2][3], a33 = columns[3][3];
-
-			Matrix4x4 Result;
-
-			// Вычисляем присоединённую матрицу (adjugate) = транспонированная матрица кофакторов
-			// Сохраняем в column-major формате
-			Result.columns[0][0] = invDet * (a11 * (a22 * a33 - a23 * a32) - a12 * (a21 * a33 - a23 * a31) + a13 * (a21 * a32 - a22 * a31));
-			Result.columns[1][0] = invDet * -(a01 * (a22 * a33 - a23 * a32) - a02 * (a21 * a33 - a23 * a31) + a03 * (a21 * a32 - a22 * a31));
-			Result.columns[2][0] = invDet * (a01 * (a12 * a33 - a13 * a32) - a02 * (a11 * a33 - a13 * a31) + a03 * (a11 * a32 - a12 * a31));
-			Result.columns[3][0] = invDet * -(a01 * (a12 * a23 - a13 * a22) - a02 * (a11 * a23 - a13 * a21) + a03 * (a11 * a22 - a12 * a21));
-
-			Result.columns[0][1] = invDet * -(a10 * (a22 * a33 - a23 * a32) - a12 * (a20 * a33 - a23 * a30) + a13 * (a20 * a32 - a22 * a30));
-			Result.columns[1][1] = invDet * (a00 * (a22 * a33 - a23 * a32) - a02 * (a20 * a33 - a23 * a30) + a03 * (a20 * a32 - a22 * a30));
-			Result.columns[2][1] = invDet * -(a00 * (a12 * a33 - a13 * a32) - a02 * (a10 * a33 - a13 * a30) + a03 * (a10 * a32 - a12 * a30));
-			Result.columns[3][1] = invDet * (a00 * (a12 * a23 - a13 * a22) - a02 * (a10 * a23 - a13 * a20) + a03 * (a10 * a22 - a12 * a20));
-
-			Result.columns[0][2] = invDet * (a10 * (a21 * a33 - a23 * a31) - a11 * (a20 * a33 - a23 * a30) + a13 * (a20 * a31 - a21 * a30));
-			Result.columns[1][2] = invDet * -(a00 * (a21 * a33 - a23 * a31) - a01 * (a20 * a33 - a23 * a30) + a03 * (a20 * a31 - a21 * a30));
-			Result.columns[2][2] = invDet * (a00 * (a11 * a33 - a13 * a31) - a01 * (a10 * a33 - a13 * a30) + a03 * (a10 * a31 - a11 * a30));
-			Result.columns[3][2] = invDet * -(a00 * (a11 * a23 - a13 * a21) - a01 * (a10 * a23 - a13 * a20) + a03 * (a10 * a21 - a11 * a20));
-
-			Result.columns[0][3] = invDet * -(a10 * (a21 * a32 - a22 * a31) - a11 * (a20 * a32 - a22 * a30) + a12 * (a20 * a31 - a21 * a30));
-			Result.columns[1][3] = invDet * (a00 * (a21 * a32 - a22 * a31) - a01 * (a20 * a32 - a22 * a30) + a02 * (a20 * a31 - a21 * a30));
-			Result.columns[2][3] = invDet * -(a00 * (a11 * a32 - a12 * a31) - a01 * (a10 * a32 - a12 * a30) + a02 * (a10 * a31 - a11 * a30));
-			Result.columns[3][3] = invDet * (a00 * (a11 * a22 - a12 * a21) - a01 * (a10 * a22 - a12 * a20) + a02 * (a10 * a21 - a11 * a20));
-
-			return Result;
-#endif
-		}
-
-		void invert() noexcept
-		{
-			*this = inverted();
-		}
-
-		// --- Статические фабричные методы ---
-
-		// Матрица переноса
 		static Matrix4x4 translation(float x, float y, float z) noexcept
 		{
-			Matrix4x4 Result;
-			Result.columns[3] = Vector4(x, y, z, 1.0f);
-			return Result;
+			Matrix4x4 m;
+			// DirectX row-major с вектором-строкой: v * M
+			// Translation в последней строке
+			m.columns[3][0] = x;
+			m.columns[3][1] = y;
+			m.columns[3][2] = z;
+			return m;
 		}
 
-		static Matrix4x4 translation(const Vector4& v) noexcept
-		{
-			return translation(v[0], v[1], v[2]);
-		}
-
-		// Матрица масштабирования
 		static Matrix4x4 scale(float x, float y, float z) noexcept
 		{
-			Matrix4x4 Result;
-			Result.columns[0][0] = x;
-			Result.columns[1][1] = y;
-			Result.columns[2][2] = z;
-			return Result;
+			Matrix4x4 m;
+			m.columns[0][0] = x;
+			m.columns[1][1] = y;
+			m.columns[2][2] = z;
+			return m;
 		}
 
-		static Matrix4x4 scale(float uniform) noexcept
+		static Matrix4x4 scale(float s) noexcept { return scale(s, s, s); }
+
+		static Matrix4x4 rotationX(float angle) noexcept
 		{
-			return scale(uniform, uniform, uniform);
+			float c = std::cos(angle), s = std::sin(angle);
+			Matrix4x4 m;
+			// DirectX left-handed rotation around X-axis
+			// Row-major matrix layout
+			m.columns[1][1] = c;
+			m.columns[1][2] = s;
+			m.columns[2][1] = -s;
+			m.columns[2][2] = c;
+			return m;
 		}
 
-		static Matrix4x4 scale(const Vector4& v) noexcept
+		static Matrix4x4 rotationY(float angle) noexcept
 		{
-			return scale(v[0], v[1], v[2]);
+			float c = std::cos(angle), s = std::sin(angle);
+			Matrix4x4 m;
+			// DirectX left-handed rotation around Y-axis
+			m.columns[0][0] = c;
+			m.columns[0][2] = -s;
+			m.columns[2][0] = s;
+			m.columns[2][2] = c;
+			return m;
 		}
 
-		// Вращение вокруг оси X
-		static Matrix4x4 rotationX(float angleRadians) noexcept
+		static Matrix4x4 rotationZ(float angle) noexcept
 		{
-			float c = std::cos(angleRadians);
-			float s = std::sin(angleRadians);
-
-			Matrix4x4 Result;
-			Result.columns[1][1] = c;
-			Result.columns[1][2] = s;
-			Result.columns[2][1] = -s;
-			Result.columns[2][2] = c;
-			return Result;
+			float c = std::cos(angle), s = std::sin(angle);
+			Matrix4x4 m;
+			// DirectX left-handed rotation around Z-axis
+			m.columns[0][0] = c;
+			m.columns[0][1] = s;
+			m.columns[1][0] = -s;
+			m.columns[1][1] = c;
+			return m;
 		}
 
-		// Вращение вокруг оси Y
-		static Matrix4x4 rotationY(float angleRadians) noexcept
-		{
-			float c = std::cos(angleRadians);
-			float s = std::sin(angleRadians);
-
-			Matrix4x4 Result;
-			Result.columns[0][0] = c;
-			Result.columns[0][2] = -s;
-			Result.columns[2][0] = s;
-			Result.columns[2][2] = c;
-			return Result;
-		}
-
-		// Вращение вокруг оси Z
-		static Matrix4x4 rotationZ(float angleRadians) noexcept
-		{
-			float c = std::cos(angleRadians);
-			float s = std::sin(angleRadians);
-
-			Matrix4x4 Result;
-			Result.columns[0][0] = c;
-			Result.columns[0][1] = s;
-			Result.columns[1][0] = -s;
-			Result.columns[1][1] = c;
-			return Result;
-		}
-
-		// Вращение вокруг произвольной оси
 		static Matrix4x4 rotation(const Vector4& axis, float angleRadians) noexcept
 		{
 			Vector4 a = axis.normalized();
@@ -413,200 +257,153 @@ export namespace zzz::math
 			float s = std::sin(angleRadians);
 			float t = 1.0f - c;
 
-			float x = a[0], y = a[1], z = a[2];
+			float x = a.x();
+			float y = a.y();
+			float z = a.z();
 
-			return Matrix4x4(
-				t * x * x + c, t * x * y + z * s, t * x * z - y * s, 0.0f,
-				t * x * y - z * s, t * y * y + c, t * y * z + x * s, 0.0f,
-				t * x * z + y * s, t * y * z - x * s, t * z * z + c, 0.0f,
-				0.0f, 0.0f, 0.0f, 1.0f
-			);
+			// Формула Родрига для row-major, left-handed
+			Matrix4x4 m;
+			m.columns[0] = Vector4(t * x * x + c, t * x * y + z * s, t * x * z - y * s, 0.0f);
+			m.columns[1] = Vector4(t * x * y - z * s, t * y * y + c, t * y * z + x * s, 0.0f);
+			m.columns[2] = Vector4(t * x * z + y * s, t * y * z - x * s, t * z * z + c, 0.0f);
+			m.columns[3] = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+			return m;
 		}
 
-		// Look-At матрица (камера)
 		static Matrix4x4 lookAt(const Vector4& eye, const Vector4& target, const Vector4& up) noexcept
 		{
-#if defined(ZRENDER_API_D3D12)
-			// DirectX использует left-handed систему координат
-			Vector4 zAxis = (target - eye).normalized();  // forward (к цели)
-			Vector4 xAxis = zAxis.cross3(up).normalized();  // right (ПОМЕНЯЛИ ПОРЯДОК!)
-			Vector4 yAxis = zAxis.cross3(xAxis);  // up
+			// DirectX left-handed view matrix для M * v (вектор-столбец)
+			Vector4 zAxis = (target - eye).normalized();   // forward (look direction)
+			Vector4 xAxis = up.cross3(zAxis).normalized(); // right
+			Vector4 yAxis = zAxis.cross3(xAxis);           // up
 
-			Matrix4x4 Result;
-			Result.columns[0] = Vector4(xAxis[0], xAxis[1], xAxis[2], 0.0f);
-			Result.columns[1] = Vector4(yAxis[0], yAxis[1], yAxis[2], 0.0f);
-			Result.columns[2] = Vector4(zAxis[0], zAxis[1], zAxis[2], 0.0f);
-			Result.columns[3] = Vector4(-xAxis.dot(eye), -yAxis.dot(eye), -zAxis.dot(eye), 1.0f);
-#else
-			// Metal / Vulkan используют right-handed систему координат
-			Vector4 zAxis = (eye - target).normalized();  // forward (от цели)
-			Vector4 xAxis = up.cross3(zAxis).normalized();  // right
-			Vector4 yAxis = zAxis.cross3(xAxis);  // up
+			// Для M * v нужна транспонированная структура
+			Matrix4x4 m;
+			m[0] = Vector4(xAxis.x(), yAxis.x(), zAxis.x(), 0.0f);
+			m[1] = Vector4(xAxis.y(), yAxis.y(), zAxis.y(), 0.0f);
+			m[2] = Vector4(xAxis.z(), yAxis.z(), zAxis.z(), 0.0f);
+			m[3] = Vector4(-xAxis.dot(eye), -yAxis.dot(eye), -zAxis.dot(eye), 1.0f);
 
-			Matrix4x4 Result;
-			Result.columns[0] = Vector4(xAxis[0], xAxis[1], xAxis[2], 0.0f);
-			Result.columns[1] = Vector4(yAxis[0], yAxis[1], yAxis[2], 0.0f);
-			Result.columns[2] = Vector4(zAxis[0], zAxis[1], zAxis[2], 0.0f);
-			Result.columns[3] = Vector4(-xAxis.dot(eye), -yAxis.dot(eye), -zAxis.dot(eye), 1.0f);
-#endif
-
-			return Result;
+			return m;
 		}
 
-		// Перспективная проекция
-		static Matrix4x4 perspective(float fovYRadians, float aspect, float nearZ, float farZ) noexcept
+		static Matrix4x4 perspective(float fovY, float aspect, float nearZ, float farZ) noexcept
 		{
-			float tanHalfFov = std::tan(fovYRadians / 2.0f);
-			Matrix4x4 Result(0.0f);
+			// DirectX left-handed perspective projection, Z в [0,1]
+			float tanHalfFov = std::tan(fovY * 0.5f);
+			Matrix4x4 m(0.0f);
 
-			// Диагональные элементы масштабирования
-			Result.columns[0][0] = 1.0f / (aspect * tanHalfFov);
-			Result.columns[1][1] = 1.0f / tanHalfFov;
+			m.columns[0][0] = 1.0f / (aspect * tanHalfFov);
+			m.columns[1][1] = 1.0f / tanHalfFov;
+			m.columns[2][2] = farZ / (farZ - nearZ);
+			m.columns[2][3] = 1.0f;
+			m.columns[3][2] = -(nearZ * farZ) / (farZ - nearZ);
+			m.columns[3][3] = 0.0f;
 
-#if defined(ZRENDER_API_D3D12)
-			// Left-Handed (DirectX), Z от 0 до 1
-			// Стандартная DirectX перспективная матрица:
-			// columns[2] = [0, 0, farZ/(farZ-nearZ), 1]
-			// columns[3] = [0, 0, -nearZ*farZ/(farZ-nearZ), 0]
-
-			Result.columns[2][2] = farZ / (farZ - nearZ);
-			Result.columns[2][3] = 1.0f;  // Перспективное деление (положительное для LH)
-			Result.columns[3][2] = -(nearZ * farZ) / (farZ - nearZ);
-			Result.columns[3][3] = 0.0f;
-#else
-			// Right-Handed (Metal/Vulkan/OpenGL), Z от -1 до 1
-			// Стандартная OpenGL перспективная матрица:
-			// columns[2] = [0, 0, -(farZ+nearZ)/(farZ-nearZ), -1]
-			// columns[3] = [0, 0, -2*farZ*nearZ/(farZ-nearZ), 0]
-
-			Result.columns[2][2] = -(farZ + nearZ) / (farZ - nearZ);
-			Result.columns[2][3] = -1.0f;  // Перспективное деление (отрицательное для RH)
-			Result.columns[3][2] = -(2.0f * farZ * nearZ) / (farZ - nearZ);
-			Result.columns[3][3] = 0.0f;
-#endif
-
-			return Result;
+			return m;
 		}
 
-		static Matrix4x4 orthographic(float left, float right, float bottom,
-			float top, float nearZ, float farZ) noexcept
+		static Matrix4x4 orthographic(float left, float right, float bottom, float top, float nearZ, float farZ) noexcept
 		{
-			Matrix4x4 Result(0.0f);
-			Result.at(0, 0) = 2.0f / (right - left);
-			Result.at(1, 1) = 2.0f / (top - bottom);
-
-#if defined(ZRENDER_API_D3D12)
-			// DirectX: Z от 0 до 1
-			Result.at(2, 2) = 1.0f / (farZ - nearZ);
-			Result.at(3, 0) = -(right + left) / (right - left);
-			Result.at(3, 1) = -(top + bottom) / (top - bottom);
-			Result.at(3, 2) = -nearZ / (farZ - nearZ);
-			Result.at(3, 3) = 1.0f;
-#else
-			// Vulkan/Metal: Z от -1 до 1
-			Result.at(2, 2) = -2.0f / (farZ - nearZ);
-			Result.at(3, 0) = -(right + left) / (right - left);
-			Result.at(3, 1) = -(top + bottom) / (top - bottom);
-			Result.at(3, 2) = -(farZ + nearZ) / (farZ - nearZ);
-			Result.at(3, 3) = 1.0f;
-#endif
-
-			return Result;
+			// DirectX left-handed orthographic projection, Z в [0,1]
+			Matrix4x4 m;
+			m.columns[0][0] = 2.0f / (right - left);
+			m.columns[1][1] = 2.0f / (top - bottom);
+			m.columns[2][2] = 1.0f / (farZ - nearZ);
+			m.columns[3][0] = -(right + left) / (right - left);
+			m.columns[3][1] = -(top + bottom) / (top - bottom);
+			m.columns[3][2] = -nearZ / (farZ - nearZ);
+			m.columns[3][3] = 1.0f;
+			return m;
 		}
 
-		// Сравнение
+		float determinant() const noexcept
+		{
+			float m00 = columns[0][0], m01 = columns[0][1], m02 = columns[0][2], m03 = columns[0][3];
+			float m10 = columns[1][0], m11 = columns[1][1], m12 = columns[1][2], m13 = columns[1][3];
+			float m20 = columns[2][0], m21 = columns[2][1], m22 = columns[2][2], m23 = columns[2][3];
+			float m30 = columns[3][0], m31 = columns[3][1], m32 = columns[3][2], m33 = columns[3][3];
+
+			float minor00 = m11 * (m22 * m33 - m23 * m32) - m12 * (m21 * m33 - m23 * m31) + m13 * (m21 * m32 - m22 * m31);
+			float minor01 = m10 * (m22 * m33 - m23 * m32) - m12 * (m20 * m33 - m23 * m30) + m13 * (m20 * m32 - m22 * m30);
+			float minor02 = m10 * (m21 * m33 - m23 * m31) - m11 * (m20 * m33 - m23 * m30) + m13 * (m20 * m31 - m21 * m30);
+			float minor03 = m10 * (m21 * m32 - m22 * m31) - m11 * (m20 * m32 - m22 * m30) + m12 * (m20 * m31 - m21 * m30);
+
+			return m00 * minor00 - m01 * minor01 + m02 * minor02 - m03 * minor03;
+		}
+
+		Matrix4x4 inverted() const noexcept
+		{
+			float m00 = columns[0][0], m01 = columns[0][1], m02 = columns[0][2], m03 = columns[0][3];
+			float m10 = columns[1][0], m11 = columns[1][1], m12 = columns[1][2], m13 = columns[1][3];
+			float m20 = columns[2][0], m21 = columns[2][1], m22 = columns[2][2], m23 = columns[2][3];
+			float m30 = columns[3][0], m31 = columns[3][1], m32 = columns[3][2], m33 = columns[3][3];
+
+			// Вычисляем кофакторы
+			float c00 = (m11 * (m22 * m33 - m23 * m32) - m12 * (m21 * m33 - m23 * m31) + m13 * (m21 * m32 - m22 * m31));
+			float c01 = -(m01 * (m22 * m33 - m23 * m32) - m02 * (m21 * m33 - m23 * m31) + m03 * (m21 * m32 - m22 * m31));
+			float c02 = (m01 * (m12 * m33 - m13 * m32) - m02 * (m11 * m33 - m13 * m31) + m03 * (m11 * m32 - m12 * m31));
+			float c03 = -(m01 * (m12 * m23 - m13 * m22) - m02 * (m11 * m23 - m13 * m21) + m03 * (m11 * m22 - m12 * m21));
+
+			float c10 = -(m10 * (m22 * m33 - m23 * m32) - m12 * (m20 * m33 - m23 * m30) + m13 * (m20 * m32 - m22 * m30));
+			float c11 = (m00 * (m22 * m33 - m23 * m32) - m02 * (m20 * m33 - m23 * m30) + m03 * (m20 * m32 - m22 * m30));
+			float c12 = -(m00 * (m12 * m33 - m13 * m32) - m02 * (m10 * m33 - m13 * m30) + m03 * (m10 * m32 - m12 * m30));
+			float c13 = (m00 * (m12 * m23 - m13 * m22) - m02 * (m10 * m23 - m13 * m20) + m03 * (m10 * m22 - m12 * m20));
+
+			float c20 = (m10 * (m21 * m33 - m23 * m31) - m11 * (m20 * m33 - m23 * m30) + m13 * (m20 * m31 - m21 * m30));
+			float c21 = -(m00 * (m21 * m33 - m23 * m31) - m01 * (m20 * m33 - m23 * m30) + m03 * (m20 * m31 - m21 * m30));
+			float c22 = (m00 * (m11 * m33 - m13 * m31) - m01 * (m10 * m33 - m13 * m30) + m03 * (m10 * m31 - m11 * m30));
+			float c23 = -(m00 * (m11 * m23 - m13 * m21) - m01 * (m10 * m23 - m13 * m20) + m03 * (m10 * m21 - m11 * m20));
+
+			float c30 = -(m10 * (m21 * m32 - m22 * m31) - m11 * (m20 * m32 - m22 * m30) + m12 * (m20 * m31 - m21 * m30));
+			float c31 = (m00 * (m21 * m32 - m22 * m31) - m01 * (m20 * m32 - m22 * m30) + m02 * (m20 * m31 - m21 * m30));
+			float c32 = -(m00 * (m11 * m32 - m12 * m31) - m01 * (m10 * m32 - m12 * m30) + m02 * (m10 * m31 - m11 * m30));
+			float c33 = (m00 * (m11 * m22 - m12 * m21) - m01 * (m10 * m22 - m12 * m20) + m02 * (m10 * m21 - m11 * m20));
+
+			float det = m00 * c00 + m01 * c10 + m02 * c20 + m03 * c30;
+
+			if (std::abs(det) < 1e-8f)
+				return Matrix4x4(); // Вырожденная матрица
+
+			float invDet = 1.0f / det;
+
+			Matrix4x4 result;
+			result.columns[0] = Vector4(c00 * invDet, c10 * invDet, c20 * invDet, c30 * invDet);
+			result.columns[1] = Vector4(c01 * invDet, c11 * invDet, c21 * invDet, c31 * invDet);
+			result.columns[2] = Vector4(c02 * invDet, c12 * invDet, c22 * invDet, c32 * invDet);
+			result.columns[3] = Vector4(c03 * invDet, c13 * invDet, c23 * invDet, c33 * invDet);
+
+			return result;
+		}
+
+		// --- Утилиты ---
+
 		bool operator==(const Matrix4x4& rhs) const noexcept
 		{
-			return columns[0] == rhs.columns[0] &&
-				columns[1] == rhs.columns[1] &&
-				columns[2] == rhs.columns[2] &&
-				columns[3] == rhs.columns[3];
+			return columns[0] == rhs.columns[0] && columns[1] == rhs.columns[1] &&
+				columns[2] == rhs.columns[2] && columns[3] == rhs.columns[3];
 		}
 
-		bool operator!=(const Matrix4x4& rhs) const noexcept
-		{
-			return !(*this == rhs);
-		}
+		bool operator!=(const Matrix4x4& rhs) const noexcept { return !(*this == rhs); }
 
-		// Строковое представление
 		std::string to_string() const
 		{
-			std::string Result = "[\n";
-			for (int row = 0; row < 4; ++row)
+			std::string s = "[\n";
+			for (int r = 0; r < 4; ++r)
 			{
-				Result += "  [";
-				for (int col = 0; col < 4; ++col)
+				s += " [";
+				for (int c = 0; c < 4; ++c)
 				{
-					Result += std::to_string(at(row, col));
-					if (col < 3) Result += ", ";
+					s += std::to_string(columns[r][c]);
+					if (c < 3) s += ", ";
 				}
-				Result += "]";
-				if (row < 3) Result += ",";
-				Result += "\n";
+				s += (r < 3) ? "],\n" : "]";
 			}
-			Result += "]";
-			return Result;
-		}
-
-		Vector4 row(size_t rowIndex) const noexcept
-		{
-			return Vector4(
-				columns[0][rowIndex],
-				columns[1][rowIndex],
-				columns[2][rowIndex],
-				columns[3][rowIndex]
-			);
-		}
-
-		// Получение колонки (работает для column-major хранения)
-		Vector4 column(size_t colIndex) const noexcept
-		{
-			return columns[colIndex];
-		}
-
-		// Установка строки
-		void setRow(size_t rowIndex, const Vector4& rowData) noexcept
-		{
-			columns[0][rowIndex] = rowData[0];
-			columns[1][rowIndex] = rowData[1];
-			columns[2][rowIndex] = rowData[2];
-			columns[3][rowIndex] = rowData[3];
-		}
-
-		// Установка колонки
-		void setColumn(size_t colIndex, const Vector4& colData) noexcept
-		{
-			columns[colIndex] = colData;
-		}
-
-	private:
-		// Вспомогательная функция для cross product (только для 3D векторов)
-		static Vector4 cross3(const Vector4& a, const Vector4& b) noexcept
-		{
-			return Vector4(
-				a[1] * b[2] - a[2] * b[1],
-				a[2] * b[0] - a[0] * b[2],
-				a[0] * b[1] - a[1] * b[0],
-				0.0f
-			);
-		}
-
-		static Matrix4x4 finalize_for_api(const Matrix4x4& m) noexcept
-		{
-#if defined(ZRENDER_API_D3D12)
-			return m.transposed();
-#else
-			return m;
-#endif
+			s += "\n]";
+			return s;
 		}
 	};
 
-	// --- Операции с float слева ---
 	inline Matrix4x4 operator*(float s, const Matrix4x4& m) noexcept { return m * s; }
-
-	// --- Вывод в поток ---
-	inline std::ostream& operator<<(std::ostream& os, const Matrix4x4& m)
-	{
-		return os << m.to_string();
-	}
+	inline std::ostream& operator<<(std::ostream& os, const Matrix4x4& m) { return os << m.to_string(); }
 }
