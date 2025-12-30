@@ -568,10 +568,7 @@ export namespace zzz::math
 	inline Vector4 operator*(float s, const Vector4& v) noexcept { return v * s; }
 
 	// Вывод в поток
-	inline std::ostream& operator<<(std::ostream& os, const Vector4& v)
-	{
-		return os << v.to_string();
-	}
+	inline std::ostream& operator<<(std::ostream& os, const Vector4& v) { return os << v.to_string(); }
 
 	//inline float dot(const Vector4& a, const Vector4& b) noexcept { return a.dot(b); }
 	//inline float distance(const Vector4& a, const Vector4& b) noexcept { return a.distance(b); }
