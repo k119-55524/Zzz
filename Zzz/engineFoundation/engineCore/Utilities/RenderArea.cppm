@@ -68,6 +68,12 @@ export namespace zzz::core
 		}
 
 		viewport = { offset_x, offset_y, render_width, render_height, 0.0f, 1.0f };
-		scissor = { static_cast<zI32>(offset_x), static_cast<zI32>(offset_y), static_cast<uint32_t>(render_width), static_cast<uint32_t>(render_height) };
+		scissor =
+		{
+			static_cast<zI32>(std::round(offset_x)),
+			static_cast<zI32>(std::round(offset_y)),
+			static_cast<uint32_t>(std::round(render_width)),
+			static_cast<uint32_t>(std::round(render_height))
+		};
 	}
 }

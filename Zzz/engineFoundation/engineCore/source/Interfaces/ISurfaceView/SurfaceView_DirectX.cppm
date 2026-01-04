@@ -523,12 +523,12 @@ namespace zzz::directx
 					commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 			},
 			// Установка viewport и scissor rect
-			[&](const ViewportDesc& viewport, const ScissorDesc& scissor)
+			[&](const ViewportDesc& vp, const ScissorDesc& sc)
 			{
-				D3D12_VIEWPORT vp = viewport.ToD3D12();
-				D3D12_RECT sr = scissor.ToD3D12();
-				commandList->RSSetViewports(1, &vp);
-				commandList->RSSetScissorRects(1, &sr);
+				D3D12_VIEWPORT viewport = vp.ToD3D12();
+				D3D12_RECT scissor = sc.ToD3D12();
+				commandList->RSSetViewports(1, &viewport);
+				commandList->RSSetScissorRects(1, &scissor);
 			},
 			// Установка глобальных констант
 			[&](const Matrix4x4& viewProj)

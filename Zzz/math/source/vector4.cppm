@@ -45,6 +45,8 @@ export namespace zzz::math
 #endif
 		}
 
+		explicit Vector4(simd_float4 simd_data) noexcept : data(simd_data) {}
+
 #pragma region Getters
 		inline float x() const noexcept
 		{
@@ -333,7 +335,19 @@ export namespace zzz::math
 #endif
 		}
 
+		float lengthSq3() const noexcept
+		{
+#if defined(__APPLE__)
+			simd_float3 xyz = ::simd::make_float3(data.x, data.y, data.z);
+			return ::simd::dot(xyz, xyz);
+#else
+			return x() * x() + y() * y() + z() * z();
+#endif
+		}
+
 		float length() const noexcept { return std::sqrt(lengthSq()); }
+
+		float length3() const noexcept { return std::sqrt(lengthSq3()); }
 
 		Vector4 normalized() const noexcept
 		{
@@ -363,6 +377,42 @@ export namespace zzz::math
 			float32x4_t mul = vmulq_f32(data, rhs.data);
 			float32x2_t sum1 = vadd_f32(vget_low_f32(mul), vget_high_f32(mul));
 			return vget_lane_f32(vpadd_f32(sum1, sum1), 0);
+#endif
+		}
+
+		float dot3(const Vector4& rhs) const noexcept
+		{
+#if defined(__APPLE__)
+			// simd_dot включает все 4 компонента, нужно обнулить w
+			simd::float4 v1 = simd_make_float4(data.x, data.y, data.z, 0.0f);
+			simd::float4 v2 = simd_make_float4(rhs.data.x, rhs.data.y, rhs.data.z, 0.0f);
+			return ::simd::dot(v1, v2);
+#elif defined(_M_X64) || defined(__x86_64__)
+			// Обнуляем w компоненту через маску
+			__m128 mask = _mm_castsi128_ps(_mm_setr_epi32(-1, -1, -1, 0));
+			__m128 v1 = _mm_and_ps(data, mask);
+			__m128 v2 = _mm_and_ps(rhs.data, mask);
+
+			__m128 mul = _mm_mul_ps(v1, v2);
+			__m128 shuf1 = _mm_movehdup_ps(mul);
+			__m128 sum1 = _mm_add_ps(mul, shuf1);
+			__m128 shuf2 = _mm_movehl_ps(sum1, sum1);
+			__m128 sum2 = _mm_add_ss(sum1, shuf2);
+			return _mm_cvtss_f32(sum2);
+#elif defined(_M_ARM64) || defined(__aarch64__)
+			// Используем только первые 3 компонента
+			float32x2_t low1 = vget_low_f32(data);
+			float32x2_t low2 = vget_low_f32(rhs.data);
+			float32x2_t high1 = vget_high_f32(data);
+			float32x2_t high2 = vget_high_f32(rhs.data);
+
+			// mul.xy = low1 * low2, mul.z = high1[0] * high2[0]
+			float32x2_t mul_low = vmul_f32(low1, low2);
+			float z_mul = vget_lane_f32(high1, 0) * vget_lane_f32(high2, 0);
+
+			// sum = x + y + z
+			float32x2_t sum_xy = vpadd_f32(mul_low, mul_low);
+			return vget_lane_f32(sum_xy, 0) + z_mul;
 #endif
 		}
 

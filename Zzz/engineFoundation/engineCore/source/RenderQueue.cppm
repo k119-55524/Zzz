@@ -75,8 +75,8 @@ export namespace zzz::core
 			}
 
 			Matrix4x4 world;
-			//world = world.translation(1.0f, 0.0f, 0.0f);
-			Matrix4x4 worldViewProj = camViewProj * world;
+			world = world.translation(0.0f, 0.0f, 3.0f);
+			Matrix4x4 worldViewProj = world * camViewProj;
 			setMeshConstFunc(worldViewProj);
 
 			// Рендринг меша

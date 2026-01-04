@@ -98,11 +98,11 @@ export namespace zzz::core
 			float radius = offset.length();
 
 			Matrix4x4 yawRotation = Matrix4x4::rotationY(yawRadians);
-			offset = yawRotation * offset;
+			offset = offset * yawRotation;
 
 			Vector4 right = (m_Target - m_Position).normalized().cross3(m_Up).normalized();
 			Matrix4x4 pitchRotation = Matrix4x4::rotation(right, pitchRadians);
-			offset = pitchRotation * offset;
+			offset = offset * pitchRotation;
 
 			m_Position = m_Target + offset.normalized() * radius;
 			m_ViewMatrixDirty = true;
@@ -116,10 +116,10 @@ export namespace zzz::core
 			Vector4 right = GetRight();
 
 			Matrix4x4 yawRotation = Matrix4x4::rotationY(yawRadians);
-			forward = yawRotation * forward;
+			forward = forward * yawRotation;
 
 			Matrix4x4 pitchRotation = Matrix4x4::rotation(right, pitchRadians);
-			forward = pitchRotation * forward;
+			forward = forward * pitchRotation;
 
 			m_Target = m_Position + forward;
 			m_ViewMatrixDirty = true;
@@ -178,7 +178,7 @@ export namespace zzz::core
 			return m_ProjectionMatrix;
 		}
 
-		inline Matrix4x4 GetProjectionViewMatrix() const noexcept { return GetProjectionMatrix() * GetViewMatrix(); }
+		inline Matrix4x4 GetProjectionViewMatrix() const noexcept { return GetViewMatrix() * GetProjectionMatrix(); }
 
 		inline float GetFovY() const noexcept { return m_FovY; }
 		inline void SetFovY(float fovYRadians) noexcept { m_FovY = fovYRadians; m_ProjectionMatrixDirty = true; }
