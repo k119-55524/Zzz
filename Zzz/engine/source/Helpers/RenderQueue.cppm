@@ -10,11 +10,11 @@ import RenderArea;
 import ViewportDesc;
 import PrimitiveTopology;
 
-using namespace zzz;
+using namespace zzz::core;
 using namespace zzz::math;
 using namespace zzz::colors;
 
-export namespace zzz::core
+export namespace zzz
 {
 	// Класс позволяет накапливать в себе объекты рендринга для последующей их отрисовки
 	export class RenderQueue

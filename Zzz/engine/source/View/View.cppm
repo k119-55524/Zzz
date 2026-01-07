@@ -7,6 +7,7 @@ import Scene;
 import Size2D;
 import Result;
 import IAppWin;
+import ViewSetup;
 import StrConvert;
 import ThreadPool;
 import RenderArea;
@@ -64,6 +65,7 @@ namespace zzz
 
 		ThreadPool m_ThreadsUpdate;
 		RenderQueue m_RenderQueue;
+		ViewSetup m_ViewSetup;
 		std::shared_ptr<RenderArea> m_RenderArea;
 		std::shared_ptr<Scene> m_Scene;
 	};

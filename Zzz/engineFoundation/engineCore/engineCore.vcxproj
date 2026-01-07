@@ -149,8 +149,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="engineCore.h" />
-    <ClInclude Include="Headers\header.h" />
-    <ClInclude Include="Headers\MacroDefinition.h" />
+    <ClInclude Include="header.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -166,7 +165,6 @@
     <ClCompile Include="Platforms\DX\CPUtoGPUDataTransferDX.cppm" />
     <ClCompile Include="Platforms\DX\RootSignature.cppm" />
     <ClCompile Include="Platforms\PrimitiveTopology.cppm" />
-    <ClCompile Include="Platforms\ViewportDesc.cppm" />
     <ClCompile Include="Source\Camera.cppm" />
     <ClCompile Include="Source\CPUtoGPUDataTransfer.cppm" />
     <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppWinConfig.cppm" />
@@ -191,11 +189,8 @@
     <ClCompile Include="Source\Interfaces\IShader\IShader.cppm" />
     <ClCompile Include="Source\Interfaces\IShader\IShader_DirectX.cppm" />
     <ClCompile Include="Source\Interfaces\IShader\Shader_DirectX.cppm" />
-    <ClCompile Include="Source\Interfaces\ISurfaceView\ISurfaceView.cppm" />
-    <ClCompile Include="Source\Interfaces\ISurfaceView\SurfaceView_DirectX.cppm" />
     <ClCompile Include="Source\IO\IOPathFactory.cppm" />
     <ClCompile Include="Source\Material.cppm" />
-    <ClCompile Include="Source\RenderQueue.cppm" />
     <ClCompile Include="Source\Resources\CPUIndexBuffer.cppm" />
     <ClCompile Include="Source\Resources\CPUMesh.cppm" />
     <ClCompile Include="Source\Resources\CPUVertexBuffer.cppm" />
@@ -204,7 +199,6 @@
     <ClCompile Include="Source\Scenes\SceneEntity.cppm" />
     <ClCompile Include="Utilities\Helpers.cppm" />
     <ClCompile Include="Utilities\MessageBox.cppm" />
-    <ClCompile Include="Utilities\RenderArea.cppm" />
     <ClCompile Include="Source\Serializer\Serializer.cppm" />
     <ClCompile Include="Utilities\Size2D.cppm" />
   </ItemGroup>

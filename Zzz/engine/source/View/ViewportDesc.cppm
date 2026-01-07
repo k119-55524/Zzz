@@ -1,7 +1,7 @@
 
 export module ViewportDesc;
 
-export namespace zzz::core
+export namespace zzz
 {
 	class ViewportDesc
 	{

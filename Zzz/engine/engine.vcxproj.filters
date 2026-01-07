@@ -32,7 +32,7 @@
     <ClCompile Include="Source\Engine.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\View.cppm">
+    <ClCompile Include="source\View\View.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\Factories\ViewFactory.cppm">
@@ -75,6 +75,24 @@
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\Configs\ZamlParser_MSWinDirectX.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\View\ViewSetup.ixx">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Helpers\RenderQueue.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\ISurfaceView\ISurfaceView.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\ISurfaceView\SurfaceView_DirectX.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\View\ViewportDesc.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Helpers\RenderArea.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
   </ItemGroup>

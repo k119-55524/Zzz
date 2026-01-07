@@ -150,10 +150,12 @@
   <ItemGroup>
     <ClInclude Include="EngineBase.h" />
     <ClInclude Include="Headers\Header.h" />
+    <ClInclude Include="headers\HeaderConstants.h" />
     <ClInclude Include="Headers\HeaderDX.h" />
     <ClInclude Include="headers\HeaderEnums.h" />
     <ClInclude Include="Headers\HeaderMetal.h" />
     <ClInclude Include="Headers\HeadersMSWin.h" />
+    <ClInclude Include="headers\HeaderTemplates.h" />
     <ClInclude Include="headers\HeaderThrowWrappers.h" />
     <ClInclude Include="headers\HeaderTypes.h" />
     <ClInclude Include="Headers\HeaderVulkan.h" />

@@ -51,6 +51,12 @@
     <ClInclude Include="headers\HeaderThrowWrappers.h">
       <Filter>����� ����������</Filter>
     </ClInclude>
+    <ClInclude Include="headers\HeaderConstants.h">
+      <Filter>����� ����������</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\HeaderTemplates.h">
+      <Filter>����� ����������</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EngineBase.cpp">
