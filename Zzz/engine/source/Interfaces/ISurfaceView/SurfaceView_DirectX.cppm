@@ -124,7 +124,7 @@ namespace zzz::directx
 		~SurfaceView_DirectX() override = default;
 
 		[[nodiscard]] Result<> Initialize() override;
-		void PrepareFrame(std::shared_ptr<Scene> scene, const RenderQueue& renderQueue) override;
+		void PrepareFrame(const std::shared_ptr<RenderQueue> renderQueue) override;
 		void RenderFrame() override;
 		void OnResize(const Size2D<>& size) override;
 
@@ -195,7 +195,7 @@ namespace zzz::directx
 		m_CbvSrvDescrSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 		auto winSize = m_iAppWin->GetWinSize();
-		m_SurfSize.SetSize(static_cast<zU32>(winSize.width), static_cast<zU32>(winSize.height));
+		m_SurfSize.SetFrom(winSize);
 
 		auto res = InitializeSwapChain();
 		if (!res)
@@ -451,7 +451,7 @@ namespace zzz::directx
 #pragma endregion Initialize
 
 #pragma region Rendring
-	void SurfaceView_DirectX::PrepareFrame(std::shared_ptr<Scene> scene, const RenderQueue& renderQueue)
+	void SurfaceView_DirectX::PrepareFrame(const std::shared_ptr<RenderQueue> renderQueue)
 	{
 		// Синхронизируемся с рендерингом чтобы frameIndex остался валидным
 		zU64 frameIndex = (m_swapChain->GetCurrentBackBufferIndex() + 1) % BACK_BUFFER_COUNT;
@@ -485,30 +485,8 @@ namespace zzz::directx
 		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_DsvDescrSize);
 		commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
-		//{
-		//	Camera& primaryCamera = scene->GetPrimaryCamera();
-		//	Matrix4x4 mWorld;// = mWorld.translation(0.0f, 0.0f, 2.5f);
-		//	Matrix4x4 camViewProj = primaryCamera.GetViewProjectionMatrix();
-		//	Matrix4x4 worldViewProj = camViewProj * mWorld;
-		//	GPU_LayerConstants objConstants;
-		//	std::memcpy(&objConstants.WorldViewProj, &worldViewProj, sizeof(Matrix4x4));
-		//	m_CB_Layer->CopyData(0, objConstants);
-
-		//	GPU_MaterialConstants gpuMat{};
-		//	//gpuMat.BaseColor = mat.BaseColor;
-		//	//gpuMat.Roughness = mat.Roughness;
-		//	//gpuMat.Metallic = mat.Metallic;
-		//	m_CB_Material->CopyData(0, gpuMat);
-
-		//	GPU_ObjectConstants gpuObj{};
-		//	//gpuObj.World = obj.GetWorldMatrix();
-		//	//gpuObj.WorldViewProj = m_CurrentViewProj * gpuObj.World;
-		//	gpuObj.WorldViewProj = worldViewProj;
-		//	m_CB_Object->CopyData(0, gpuObj);
-		//}
-
 		// Выполняем рендринг очереди
-		renderQueue.PrepareQueue(
+		renderQueue->PrepareQueue(
 			m_SurfSize,
 			// Очистка поверхности
 			[&](const eSurfClearType surfClearType, const Color& color, bool isClearDepth)
@@ -687,7 +665,7 @@ namespace zzz::directx
 			.and_then([&]() { return m_iGAPI->CommandRenderReinitialize(); })
 			.or_else([&](const Unexpected& error) { throw_runtime_error(std::format(">>>>> [SurfaceView_DirectX::OnResize({}x{})]. {}.", size.width, size.height, wstring_to_string(error.getMessage()))); });
 
-		m_SurfSize.SetSize(size.width, size.height);
+		m_SurfSize = size;
 	}
 
 	void SurfaceView_DirectX::SetFullScreen(bool fs)

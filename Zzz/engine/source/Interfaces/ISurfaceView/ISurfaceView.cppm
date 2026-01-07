@@ -24,7 +24,7 @@ export namespace zzz::core
 		virtual ~ISurfaceView() = default;
 
 		[[nodiscard]] virtual Result<> Initialize() = 0;
-		virtual void PrepareFrame(std::shared_ptr<Scene> scene, const RenderQueue& renderQueue) = 0;
+		virtual void PrepareFrame(const std::shared_ptr<RenderQueue> renderQueue) = 0;
 		virtual void RenderFrame() = 0;
 		virtual void OnResize(const Size2D<>& size) = 0;
 

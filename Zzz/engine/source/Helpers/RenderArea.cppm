@@ -2,7 +2,7 @@
 export module RenderArea;
 
 export import Size2D;
-import ViewportDesc;
+export import ViewportDesc;
 
 using namespace zzz::core;
 
@@ -12,7 +12,7 @@ export namespace zzz
 	{
 	public:
 		RenderArea() = delete;
-		RenderArea(eAspectType aspectPreset, Size2D<float>& size, float minDepth, float maxDepth) noexcept :
+		RenderArea(eAspectType aspectPreset, Size2D<zF32>& size, zF32 minDepth, zF32 maxDepth) noexcept :
 			m_AspectPreset{ aspectPreset },
 			m_MinDepth{ minDepth },
 			m_MaxDepth{ maxDepth }
@@ -20,7 +20,7 @@ export namespace zzz
 			Update(size);
 		}
 
-		void Update(Size2D<float>& size) noexcept;
+		void Update(Size2D<zF32>& size) noexcept;
 		const ViewportDesc& GetViewport() const noexcept { return m_Viewport; }
 		const ScissorDesc& GetScissor() const noexcept { return m_Scissor; }
 
@@ -34,7 +34,7 @@ export namespace zzz
 		ScissorDesc m_Scissor;
 	};
 
-	void RenderArea::Update(Size2D<float>& size) noexcept
+	void RenderArea::Update(Size2D<zF32>& size) noexcept
 	{
 		m_AspectRatio = GetAspect(m_AspectPreset, size.width, size.height);
 		zF32 surface_aspect = size.width / size.height;

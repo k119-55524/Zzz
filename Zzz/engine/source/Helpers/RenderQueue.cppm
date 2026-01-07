@@ -3,16 +3,12 @@ export module RenderQueue;
 
 import Scene;
 import Camera;
-import Colors;
-import Size2D;
 import Matrix4x4;
-import RenderArea;
-import ViewportDesc;
+export import ViewSetup;
 import PrimitiveTopology;
 
 using namespace zzz::core;
 using namespace zzz::math;
-using namespace zzz::colors;
 
 export namespace zzz
 {
@@ -20,16 +16,14 @@ export namespace zzz
 	export class RenderQueue
 	{
 	public:
-		RenderQueue() :
-			m_ClearColor{ colors::DarkMidnightBlue },
-			b_IsClearDepth{ true }
+		RenderQueue(const std::shared_ptr<ViewSetup> viewSetup) :
+			m_ViewSetup{ viewSetup }
 		{
-			m_SurfClearType = eSurfClearType::Color;
 		}
 		virtual ~RenderQueue() = default;
 
 		// Очищает очередь рендринга перед началом нового кадра
-		void ClearQueue(const std::shared_ptr<RenderArea> renderArea, const std::shared_ptr<Scene> scene);
+		void ClearQueue(const std::shared_ptr<Scene> scene) noexcept { m_Scene = scene; }
 
 		template<
 			typename ClearFunc,
@@ -52,10 +46,10 @@ export namespace zzz
 			PrimitiveTopology currTopo;
 
 			// Очистка поверхности
-			clearFunc(m_SurfClearType, m_ClearColor, b_IsClearDepth);
+			clearFunc(m_ViewSetup->GetSurfClearType(), m_ViewSetup->GetClearColor(), m_ViewSetup->IsClearDepth());
 
 			// Установка viewport и scissor rect
-			layerFunc(m_RenderArea->GetViewport(), m_RenderArea->GetScissor());
+			layerFunc(m_ViewSetup->GetViewport(), m_ViewSetup->GetScissor());
 
 			// Установка глобальных констант шейдеров
 			Camera& primaryCamera = m_Scene->GetPrimaryCamera();
@@ -87,42 +81,7 @@ export namespace zzz
 		}
 
 	protected:
-		std::shared_ptr<RenderArea> m_RenderArea;
+		std::shared_ptr<ViewSetup> m_ViewSetup;
 		std::shared_ptr<Scene> m_Scene;
-
-		eSurfClearType m_SurfClearType;
-		Color m_ClearColor;
-		bool b_IsClearDepth;
 	};
-
-	void RenderQueue::ClearQueue(const std::shared_ptr<RenderArea> renderArea, const std::shared_ptr<Scene> scene)
-	{
-		m_RenderArea = renderArea;
-		m_Scene = scene;
-	}
 }
-
-//{
-	//Matrix4x4 mView;
-	//Matrix4x4 mProj;
-	//
-	//mProj = Matrix4x4::perspective(
-	//	0.25f * Pi,		// FoV 45 градусов
-	//	16.0f / 9.0f,	// Aspect ratio
-	//	1.0f,			// Near plane
-	//	1000.0f);		// Far plane
-	//
-	//float mTheta = 1.5f * Pi;
-	//float mPhi = Pi / 4.0f;  // 45 градусов
-	//float mRadius = 5.0f;
-	//
-	//float x = mRadius * std::sin(mPhi) * std::cos(mTheta);
-	//float z = mRadius * std::sin(mPhi) * std::sin(mTheta);
-	//float y = mRadius * std::cos(mPhi);
-	//
-	//Vector4 pos(x, y, z, 1.0f);
-	//Vector4 target(0.0f, 0.0f, 0.0f, 1.0f);
-	//Vector4 up(0.0f, 1.0f, 0.0f, 0.0f);
-	//mView = Matrix4x4::lookAt(pos, target, up);
-	//Matrix4x4 worldViewProj = mProj * mView * mWorld;
-//}
