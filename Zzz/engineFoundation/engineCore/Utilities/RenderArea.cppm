@@ -46,7 +46,7 @@ export namespace zzz::core
 		zF32 surface_aspect = surface_width / surface_height;
 		if (m_AspectPreset == eAspectType::FullWindow)
 		{
-			m_AspectRatio = surface_aspect;
+			m_AspectRatio = 1.0f;// surface_aspect;
 			viewport = { 0.0f, 0.0f, surface_width, surface_height, 0.0f, 1.0f };
 			scissor = { 0, 0, static_cast<uint32_t>(surface_width), static_cast<uint32_t>(surface_height) };
 			return;

@@ -509,6 +509,7 @@ namespace zzz::directx
 
 		// Выполняем рендринг очереди
 		renderQueue.PrepareQueue(
+			m_SurfSize,
 			// Очистка поверхности
 			[&](const eSurfClearType surfClearType, const Color& color, bool isClearDepth)
 			{

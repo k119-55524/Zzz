@@ -105,7 +105,8 @@ namespace zzz
 
 			// TODO: В будущем надо будет учитывать настройки рендеринга из конфигурации
 			m_RenderArea = safe_make_shared<RenderArea>(
-				eAspectType::Ratio_16x9,
+				//eAspectType::Ratio_16x9,
+				eAspectType::FullWindow,
 				0.0f,
 				0.0f,
 				static_cast<zF32>(m_NativeWindow->GetWinSize().width),

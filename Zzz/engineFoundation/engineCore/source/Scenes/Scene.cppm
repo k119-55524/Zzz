@@ -31,12 +31,13 @@ export namespace zzz::core
 	export Scene::Scene()
 	{
 		m_PrimaryCamera.SetFovY(0.25f * Pi);
-		m_PrimaryCamera.SetAspectRatio(eAspectType::Ratio_16x9);
+		//m_PrimaryCamera.SetAspectRatio(eAspectType::Ratio_16x9);
+		m_PrimaryCamera.SetAspectRatio(eAspectType::FullWindow, 1.0f);
 		m_PrimaryCamera.SetNearPlane(0.1f);
 		m_PrimaryCamera.SetFarPlane(1000.0f);
 
 		float mTheta = 1.5f * Pi;
-		float mPhi = Pi / 4.0f;  // 45 градусов
+		float mPhi = Pi / 4.0f; // 45 градусов
 		float mRadius = 5.0f;
 
 		float x = mRadius * std::sin(mPhi) * std::cos(mTheta);

@@ -4,6 +4,7 @@ export module RenderQueue;
 import Scene;
 import Camera;
 import Colors;
+import Size2D;
 import Matrix4x4;
 import RenderArea;
 import ViewportDesc;
@@ -39,6 +40,7 @@ export namespace zzz::core
 			typename SetMeshConstFunc,
 			typename RenderInexedMeshFunc>
 		void PrepareQueue(
+			Size2D<>& surfSize,
 			ClearFunc&& clearFunc,
 			LayerFunc&& layerFunc,
 			SetGlobalConstFunc&& setGlobalConstFunc,
@@ -57,7 +59,7 @@ export namespace zzz::core
 
 			// Установка глобальных констант шейдеров
 			Camera& primaryCamera = m_Scene->GetPrimaryCamera();
-			Matrix4x4 camViewProj = primaryCamera.GetProjectionViewMatrix();
+			Matrix4x4 camViewProj = primaryCamera.GetProjectionViewMatrix(surfSize);
 			setGlobalConstFunc(camViewProj);
 
 			auto entity = m_Scene->GetEntity();
