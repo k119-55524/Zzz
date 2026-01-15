@@ -1,11 +1,13 @@
 
 export module RenderQueue;
 
-import Scene;
-import Camera;
 import Matrix4x4;
+
+export import Scene;
+export import Camera;
 export import ViewSetup;
-import PrimitiveTopology;
+export import IRenderLayer;
+export import PrimitiveTopology;
 
 using namespace zzz::math;
 
@@ -15,14 +17,13 @@ export namespace zzz
 	export class RenderQueue
 	{
 	public:
-		RenderQueue(const std::shared_ptr<ViewSetup> viewSetup) :
-			m_ViewSetup{ viewSetup }
+		RenderQueue(const std::shared_ptr<ViewSetup> viewSetup,
+			std::vector<std::shared_ptr<IRenderLayer>>& m_RenderLayers) :
+			m_ViewSetup{ viewSetup },
+			m_RenderLayers{ m_RenderLayers }
 		{
 		}
 		virtual ~RenderQueue() = default;
-
-		// Очищает очередь рендринга перед началом нового кадра
-		void ClearQueue(const std::shared_ptr<Scene> scene) noexcept { m_Scene = scene; }
 
 		template<
 			typename ClearFunc,
@@ -50,37 +51,45 @@ export namespace zzz
 			// Установка viewport и scissor rect
 			layerFunc(m_ViewSetup->GetViewport(), m_ViewSetup->GetScissor());
 
-			// Установка глобальных констант шейдеров
-			Camera& primaryCamera = m_Scene->GetPrimaryCamera();
-			Matrix4x4 camViewProj = primaryCamera.GetProjectionViewMatrix(surfSize);
-			setGlobalConstFunc(camViewProj);
-
-			auto entity = m_Scene->GetEntity();
-			auto material = entity->GetMaterial();
-			auto pso = material->GetPSO();
-
-			// Установка PSO(set material)
-			setPSOFunc(pso);
-
-			// Установка топологии примитивов
-			if (pso->GetPrimitiveTopology() != currTopo)
+			std::shared_ptr<Scene> scene;
+			for (auto& layer : m_RenderLayers)
 			{
-				currTopo = pso->GetPrimitiveTopology();
-				topoFunc(currTopo);
+				scene = layer->GetScene();
+				if (scene == nullptr)
+					continue;
+
+				// Установка глобальных констант шейдеров
+				Camera& primaryCamera = scene->GetPrimaryCamera();
+				Matrix4x4 camViewProj = primaryCamera.GetProjectionViewMatrix(surfSize);
+				setGlobalConstFunc(camViewProj);
+
+				auto entity = scene->GetEntity();
+				auto material = entity->GetMaterial();
+				auto pso = material->GetPSO();
+
+				// Установка PSO(set material)
+				setPSOFunc(pso);
+
+				// Установка топологии примитивов
+				if (pso->GetPrimitiveTopology() != currTopo)
+				{
+					currTopo = pso->GetPrimitiveTopology();
+					topoFunc(currTopo);
+				}
+
+				Matrix4x4 world;
+				world = world.translation(0.0f, 0.0f, 3.0f);
+				Matrix4x4 worldViewProj = world * camViewProj;
+				setMeshConstFunc(worldViewProj);
+
+				// Рендринг меша
+				auto mesh = entity->GetMesh();
+				renderInexedMeshFunc(mesh, 36);
 			}
-
-			Matrix4x4 world;
-			world = world.translation(0.0f, 0.0f, 3.0f);
-			Matrix4x4 worldViewProj = world * camViewProj;
-			setMeshConstFunc(worldViewProj);
-
-			// Рендринг меша
-			auto mesh = entity->GetMesh();
-			renderInexedMeshFunc(mesh, 36);
 		}
 
 	protected:
 		std::shared_ptr<ViewSetup> m_ViewSetup;
-		std::shared_ptr<Scene> m_Scene;
+		std::vector<std::shared_ptr<IRenderLayer>>& m_RenderLayers;
 	};
 }

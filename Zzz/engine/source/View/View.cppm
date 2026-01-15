@@ -3,8 +3,6 @@ export module View;
 
 import IGAPI;
 import Event;
-import Scene;
-import Size2D;
 import Result;
 import IAppWin;
 import StrConvert;
@@ -14,7 +12,9 @@ import ViewFactory;
 import AppWinConfig;
 import ISurfaceView;
 import ScenesManager;
-import IRenderLayers;
+
+export import Layer3D;
+export import IRenderLayer;
 
 using namespace zzz::core;
 using namespace zzz::templates;
@@ -60,11 +60,10 @@ namespace zzz
 
 		eInitState initState;
 		void Initialize();
-		void PrepareFrame(double deltaTime);
 
 		ThreadPool m_ThreadsUpdate;
 		std::shared_ptr<ViewSetup> m_ViewSetup;
-		std::vector<std::shared_ptr<IRenderLayers>> m_RenderLayers;
+		std::vector<std::shared_ptr<IRenderLayer>> m_RenderLayers;
 		std::shared_ptr<RenderQueue> m_RenderQueue;
 		std::shared_ptr<Scene> m_Scene;
 	};
@@ -109,7 +108,7 @@ namespace zzz
 			size.SetFrom(m_NativeWindow->GetWinSize());
 			m_ViewSetup = safe_make_shared<ViewSetup>(size, 0.0f, 1.0f, true);
 			m_ViewSetup->ActivateClearColor(colors::DarkMidnightBlue);
-			m_RenderQueue = safe_make_shared<RenderQueue>(m_ViewSetup);
+			m_RenderQueue = safe_make_shared<RenderQueue>(m_ViewSetup, m_RenderLayers);
 
 			// Кусок кода для теста
 			{
@@ -121,6 +120,9 @@ namespace zzz
 						throw_runtime_error(">>>>> #0 [View::Initialize()}. ERROR!!! Failed to create test scene.");
 
 					m_Scene = res1.value();
+
+					std::shared_ptr<IRenderLayer> layer = safe_make_shared<Layer3D>(m_Scene, eAspectType::FullWindow, size, 0.0f, 1.0f);
+					m_RenderLayers.push_back(layer);
 				}
 				catch (...)
 				{
@@ -149,7 +151,7 @@ namespace zzz
 		{
 			m_ThreadsUpdate.Submit([&]()
 				{
-					PrepareFrame(deltaTime);
+					m_RenderSurface->PrepareFrame(m_RenderQueue);
 				});
 			m_ThreadsUpdate.Submit([&]()
 				{
@@ -164,12 +166,6 @@ namespace zzz
 		viewResizing();
 	}
 
-	void View::PrepareFrame(double deltaTime)
-	{
-		m_RenderQueue->ClearQueue(m_Scene);
-		m_RenderSurface->PrepareFrame(m_RenderQueue);
-	}
-
 	void View::OnViewResize(const Size2D<>& size, eTypeWinResize resizeType)
 	{
 		switch (resizeType)
@@ -182,9 +178,14 @@ namespace zzz
 			break;
 		case eTypeWinResize::Resize:
 			DebugOutput(std::format(L">>>>> [View::OnViewResized({}x{}))]. Resize app window.", std::to_wstring(size.width), std::to_wstring(size.height)));
+
 			Size2D<zF32> fsize;
 			fsize.SetFrom(size);
 			m_ViewSetup->Update(fsize);
+
+			for (auto& layer : m_RenderLayers)
+				layer->Update(fsize);
+
 			break;
 		}
 

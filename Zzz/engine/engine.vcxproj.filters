@@ -95,7 +95,7 @@
     <ClCompile Include="source\Helpers\RenderVolume.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Interfaces\IRenderLayers\IRenderLayers.cppm">
+    <ClCompile Include="source\Interfaces\IRenderLayers\IRenderLayer.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\Interfaces\IRenderLayers\Layer3D.cppm">
