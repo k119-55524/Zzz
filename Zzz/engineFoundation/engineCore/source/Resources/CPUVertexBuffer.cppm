@@ -7,7 +7,7 @@ import Colors;
 
 using namespace zzz::colors;
 
-export namespace zzz::core
+export namespace zzz
 {
 	// ----- ”ниверсальные семантики -----
 	export enum class Semantic

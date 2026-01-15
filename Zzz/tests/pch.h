@@ -1,7 +1,7 @@
 ﻿
-#ifndef PCH_H
-#define PCH_H
+#pragma once
 
+#include <string>
+#include <vector>
+#include <memory>
 #include <iostream>
-
-#endif //PCH_H

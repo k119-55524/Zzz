@@ -4,7 +4,7 @@ export module Size2D;
 import Result;
 import Serializer;
 
-export namespace zzz::core
+export namespace zzz
 {
 	/**
 	* @class size2D
@@ -27,10 +27,17 @@ export namespace zzz::core
 		Size2D(const Size2D& size) : width{ size.width }, height{ size.height } {}
 		Size2D(Size2D&&) = default;
 
+		inline void Set(T _width, T _height) noexcept { width = _width; height = _height; }
+		// Копирует размеры из другого объекта Size2D с возможным приведением типов.
+		template<typename U>
+		inline void SetFrom(const Size2D<U>& other)
+		{
+			width = static_cast<T>(other.width);
+			height = static_cast<T>(other.height);
+		}
+
 		Size2D& operator=(const Size2D&) = default;
 		Size2D& operator=(Size2D&&) noexcept = default;
-
-		inline void SetSize(T _width, T _height) noexcept { width = _width; height = _height; }
 
 		inline bool operator==(const Size2D& other) const noexcept { return width == other.width && height == other.height; }
 		inline bool operator!=(const Size2D& other) const noexcept { return !(*this == other); }
@@ -39,13 +46,13 @@ export namespace zzz::core
 		T height; // Высота объекта.
 
 	private:
-		Result<> Serialize(std::vector<std::byte>& buffer, const zzz::core::Serializer& s) const override
+		Result<> Serialize(std::vector<std::byte>& buffer, const zzz::Serializer& s) const override
 		{
 			return s.Serialize(buffer, width)
 				.and_then([&]() {return s.Serialize(buffer, height); });
 		}
 
-		Result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const zzz::core::Serializer& s) override
+		Result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const zzz::Serializer& s) override
 		{
 			return s.DeSerialize(buffer, offset, width)
 				.and_then([&]() {return s.DeSerialize(buffer, offset, height); });

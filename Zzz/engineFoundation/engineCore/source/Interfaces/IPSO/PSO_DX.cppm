@@ -4,9 +4,8 @@ export module PSO_DX;
 #if defined(ZRENDER_API_D3D12)
 import IPSO;
 import IGAPI;
+import PrimitiveTopology;
 import VertexFormatMapper;
-
-using namespace zzz::core;
 
 namespace zzz::directx
 {
@@ -17,27 +16,23 @@ namespace zzz::directx
 			const std::shared_ptr<IGAPI> m_GAPI,
 			const std::shared_ptr<IShader> _shader,
 			const std::vector<VertexAttrDescr>& _inputLayout,
-			D3D_PRIMITIVE_TOPOLOGY _primitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			PrimitiveTopology _topo = PrimitiveTopology(eTopology::TriangleList));
 		virtual ~PSO_DX() override = default;
 
 		const ComPtr<ID3D12PipelineState> GetPSO() const noexcept { return m_PSO; };
-		D3D_PRIMITIVE_TOPOLOGY GetPrimitiveType() const noexcept { return m_PrimitiveType; };
 
 	private:
 		void CreatePSO(const std::shared_ptr<IGAPI> m_GAPI);
 		D3D12_PRIMITIVE_TOPOLOGY_TYPE ConvertPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology);
-
 		ComPtr<ID3D12PipelineState> m_PSO;
-		D3D_PRIMITIVE_TOPOLOGY m_PrimitiveType;
 	};
 
 	PSO_DX::PSO_DX(
 		const std::shared_ptr<IGAPI> m_GAPI,
 		const std::shared_ptr<IShader> _shader,
 		const std::vector<VertexAttrDescr>& _inputLayout,
-		D3D12_PRIMITIVE_TOPOLOGY _primitiveType) :
-		IPSO(_shader, _inputLayout),
-		m_PrimitiveType{ _primitiveType }
+		PrimitiveTopology _topo) :
+		IPSO(_shader, _inputLayout, _topo)
 	{
 		CreatePSO(m_GAPI);
 	}
@@ -67,7 +62,7 @@ namespace zzz::directx
 		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
 
 		psoDesc.SampleMask = UINT_MAX;
-		psoDesc.PrimitiveTopologyType = ConvertPrimitiveTopology(m_PrimitiveType);
+		psoDesc.PrimitiveTopologyType = ConvertPrimitiveTopology(m_PrimitiveTopology.ToD3D12());
 		psoDesc.NumRenderTargets = 1;
 		psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 		psoDesc.DSVFormat = DEPTH_FORMAT;

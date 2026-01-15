@@ -6,7 +6,6 @@ import DXAPI;
 import StrConvert;
 
 using namespace zzz::directx;
-using namespace zzz::core;
 
 export namespace zzz
 {

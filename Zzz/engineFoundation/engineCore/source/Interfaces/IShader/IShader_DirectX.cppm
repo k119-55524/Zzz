@@ -2,7 +2,7 @@
 #include "pch.h"
 export module IShader_DirectX;
 
-export namespace zzz::core
+export namespace zzz
 {
 	export class IShader_DirectX
 	{

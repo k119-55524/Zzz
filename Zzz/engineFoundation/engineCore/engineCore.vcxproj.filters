@@ -18,13 +18,10 @@
     <ClInclude Include="pch.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\header.h">
+    <ClInclude Include="header.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="engineCore.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Headers\MacroDefinition.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
@@ -36,12 +33,6 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Camera.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Utilities\RenderArea.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\RenderQueue.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Scenes\Scene.cppm">
@@ -98,9 +89,6 @@
     <ClCompile Include="Source\Resources\VertexFormatMapper.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Interfaces\IMeshGPU\IMeshGPU_DirectX.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Interfaces\IShader\IShader_DirectX.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -128,9 +116,6 @@
     <ClCompile Include="Source\IO\IOPathFactory.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Interfaces\ISurfaceView\ISurfaceView.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Interfaces\IGAPI\DXAPI.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -155,9 +140,6 @@
     <ClCompile Include="Source\Interfaces\IMeshGPU\MeshGPU_DirectX.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Interfaces\ISurfaceView\SurfaceView_DirectX.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="Utilities\Helpers.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -168,6 +150,9 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Interfaces\Configs\GAPIConfig\GAPIConfig.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Platforms\PrimitiveTopology.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

@@ -4,8 +4,6 @@ export module CheckDirectXSupport;
 import StrConvert;
 import ICheckGapiSupport;
 
-using namespace zzz::core;
-
 #if defined(ZRENDER_API_D3D12)
 export namespace zzz::directx
 {
@@ -115,7 +113,6 @@ export namespace zzz::directx
 			}
 		}
 
-#ifdef _DEBUG
 		DebugOutput(std::format(L">>>>> [CheckDirectXSupport::CheckSupported()]. DirectX 12 Ultimate Support:\n"
 			L" +- Hi shader model: {}\n"
 			L" +- Ray Tracing: {}\n"
@@ -131,7 +128,6 @@ export namespace zzz::directx
 			m_supportsSamplerFeedback ? L"Yes" : L"No",
 			m_supportsCopyQueue ? L"Yes" : L"No",
 			m_supportsDedicatedDMA ? L"Yes" : L"No"));
-#endif
 	}
 
 	[[nodiscard]] std::wstring CheckDirectXSupport::GetHighestShaderModelAsString(eShaderType eShaderType) const

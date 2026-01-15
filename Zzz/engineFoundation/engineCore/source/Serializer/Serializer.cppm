@@ -5,7 +5,7 @@ export module Serializer;
 
 import Result;
 
-namespace zzz::core
+namespace zzz
 {
 	export class Serializer;
 

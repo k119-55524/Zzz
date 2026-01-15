@@ -50,7 +50,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -116,7 +116,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)engineFoundation\logger;$(SolutionDir)math</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)engineFoundation\logger;$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)math</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
       <ForcedIncludeFiles>pch.h;</ForcedIncludeFiles>
     </ClCompile>
@@ -137,7 +137,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)engineFoundation\logger;$(SolutionDir)math</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)engineFoundation\logger;$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)math</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
       <ForcedIncludeFiles>pch.h;</ForcedIncludeFiles>
     </ClCompile>
@@ -149,8 +149,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="engineCore.h" />
-    <ClInclude Include="Headers\header.h" />
-    <ClInclude Include="Headers\MacroDefinition.h" />
+    <ClInclude Include="header.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -165,6 +164,7 @@
     <ClCompile Include="Platforms\DX\CommandWrapperDX.cppm" />
     <ClCompile Include="Platforms\DX\CPUtoGPUDataTransferDX.cppm" />
     <ClCompile Include="Platforms\DX\RootSignature.cppm" />
+    <ClCompile Include="Platforms\PrimitiveTopology.cppm" />
     <ClCompile Include="Source\Camera.cppm" />
     <ClCompile Include="Source\CPUtoGPUDataTransfer.cppm" />
     <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppWinConfig.cppm" />
@@ -185,16 +185,12 @@
     <ClCompile Include="Source\Interfaces\IGAPI\IGAPI.cppm" />
     <ClCompile Include="Source\Interfaces\IMainLoop\IMainLoop.cppm" />
     <ClCompile Include="Source\Interfaces\IMeshGPU\IMeshGPU.cppm" />
-    <ClCompile Include="Source\Interfaces\IMeshGPU\IMeshGPU_DirectX.cppm" />
     <ClCompile Include="Source\Interfaces\IPSO\IPSO.cppm" />
     <ClCompile Include="Source\Interfaces\IShader\IShader.cppm" />
     <ClCompile Include="Source\Interfaces\IShader\IShader_DirectX.cppm" />
     <ClCompile Include="Source\Interfaces\IShader\Shader_DirectX.cppm" />
-    <ClCompile Include="Source\Interfaces\ISurfaceView\ISurfaceView.cppm" />
-    <ClCompile Include="Source\Interfaces\ISurfaceView\SurfaceView_DirectX.cppm" />
     <ClCompile Include="Source\IO\IOPathFactory.cppm" />
     <ClCompile Include="Source\Material.cppm" />
-    <ClCompile Include="Source\RenderQueue.cppm" />
     <ClCompile Include="Source\Resources\CPUIndexBuffer.cppm" />
     <ClCompile Include="Source\Resources\CPUMesh.cppm" />
     <ClCompile Include="Source\Resources\CPUVertexBuffer.cppm" />
@@ -203,7 +199,6 @@
     <ClCompile Include="Source\Scenes\SceneEntity.cppm" />
     <ClCompile Include="Utilities\Helpers.cppm" />
     <ClCompile Include="Utilities\MessageBox.cppm" />
-    <ClCompile Include="Utilities\RenderArea.cppm" />
     <ClCompile Include="Source\Serializer\Serializer.cppm" />
     <ClCompile Include="Utilities\Size2D.cppm" />
   </ItemGroup>
@@ -213,6 +208,9 @@
     </ProjectReference>
     <ProjectReference Include="..\engineBase\engineBase.vcxproj">
       <Project>{67571d08-65c1-42d4-b1c5-8dee498530a6}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\logger\logger.vcxproj">
+      <Project>{739374b1-c690-4a3a-99e8-c6243336d2f3}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

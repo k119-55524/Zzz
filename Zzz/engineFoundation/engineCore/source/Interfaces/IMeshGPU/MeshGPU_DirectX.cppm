@@ -1,18 +1,13 @@
 
-#include "pch.h"
-
 export module MeshGPU_DirectX;
 
 #if defined(ZRENDER_API_D3D12)
-
 import IGAPI;
 import DXAPI;
 import CPUMesh;
 import IMeshGPU;
 import CPUIndexBuffer;
 import CPUVertexBuffer;
-
-using namespace zzz::core;
 
 export namespace zzz::directx
 {
@@ -25,8 +20,8 @@ export namespace zzz::directx
 		MeshGPU_DirectX(std::shared_ptr<CPUMesh> meshCPU);
 		~MeshGPU_DirectX() = default;
 
-		const D3D12_VERTEX_BUFFER_VIEW* VertexBufferView() const override { return &vertexBufferView; };
-		const D3D12_INDEX_BUFFER_VIEW* IndexBufferView() const override { return indices ? &indexBufferView : nullptr; };
+		const D3D12_VERTEX_BUFFER_VIEW* VertexBufferView() const { return &vertexBufferView; };
+		const D3D12_INDEX_BUFFER_VIEW* IndexBufferView() const { return indices ? &indexBufferView : nullptr; };
 
 	private:
 		ComPtr<ID3D12Resource> vertexBuffer;
@@ -231,6 +226,7 @@ export namespace zzz::directx
 		if (uploadIndexBuffer != nullptr)
 			uploadIndexBuffer.Reset();
 
+		// TODO: Cделать нормальную обработку
 		if (!isComplete)
 			DebugOutput(L">>>>> [MeshGPU_DirectX::Initialize( ... )]. Transfer mesh resource: FAILED.");
 		else

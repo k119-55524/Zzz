@@ -6,7 +6,7 @@ export module VertexFormatMapper;
 import Result;
 import CPUVertexBuffer;
 
-export namespace zzz::core
+export namespace zzz
 {
 #if defined(ZRENDER_API_D3D12)
 	using VertexAttrDescr = D3D12_INPUT_ELEMENT_DESC;

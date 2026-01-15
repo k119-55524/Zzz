@@ -42,6 +42,21 @@
     <ClInclude Include="Headers\HeaderDX.h">
       <Filter>����� ����������</Filter>
     </ClInclude>
+    <ClInclude Include="headers\HeaderEnums.h">
+      <Filter>����� ����������</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\HeaderTypes.h">
+      <Filter>����� ����������</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\HeaderThrowWrappers.h">
+      <Filter>����� ����������</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\HeaderConstants.h">
+      <Filter>����� ����������</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\HeaderTemplates.h">
+      <Filter>����� ����������</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EngineBase.cpp">

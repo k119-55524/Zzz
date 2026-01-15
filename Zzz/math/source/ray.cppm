@@ -26,9 +26,9 @@ export namespace zzz::math
 		// Трансформация луча
 		Ray transform(const Matrix4x4& matrix) const noexcept
 		{
-			Vector4 newOrigin = matrix * origin;
+			Vector4 newOrigin = origin * matrix;
 			// Направление трансформируем без трансляции (w=0)
-			Vector4 newDir = matrix * Vector4(direction[0], direction[1], direction[2], 0.0f);
+			Vector4 newDir = Vector4(direction[0], direction[1], direction[2], 0.0f) * matrix;
 
 			return Ray(newOrigin, newDir);
 		}
@@ -88,8 +88,8 @@ export namespace zzz::math
 			Matrix4x4 invView = viewMatrix.inverted();
 
 			// Из NDC в view space
-			Vector4 rayView_near = invProj * rayNDC_near;
-			Vector4 rayView_far = invProj * rayNDC_far;
+			Vector4 rayView_near = rayNDC_near * invProj;
+			Vector4 rayView_far = rayNDC_far * invProj;
 
 			// Perspective divide
 			if (std::abs(rayView_near[3]) > 1e-6f)
@@ -99,8 +99,8 @@ export namespace zzz::math
 			}
 
 			// Из view space в world space
-			Vector4 rayWorld_near = invView * rayView_near;
-			Vector4 rayWorld_far = invView * rayView_far;
+			Vector4 rayWorld_near = rayView_near * invView;
+			Vector4 rayWorld_far = rayView_far * invView;
 
 			Vector4 origin = rayWorld_near;
 			Vector4 direction = (rayWorld_far - rayWorld_near).normalized();
@@ -133,7 +133,7 @@ export namespace zzz::math
 
 			// Трансформируем в world space
 			Matrix4x4 viewInv = viewMatrix.inverted();
-			ray.direction = (viewInv * directionView).normalized();
+			ray.direction = (directionView * viewInv).normalized();
 
 			return ray;
 		}
@@ -154,7 +154,7 @@ export namespace zzz::math
 			Matrix4x4 viewInv = viewMatrix.inverted();
 
 			// Origin на near plane
-			ray.origin = viewInv * Vector4(x, y, 0.0f, 1.0f);
+			ray.origin = Vector4(x, y, 0.0f, 1.0f) * viewInv;
 
 			// Direction - forward вектор камеры
 #if defined(ZRENDER_API_D3D12)
@@ -163,7 +163,7 @@ export namespace zzz::math
 			Vector4 forwardView(0.0f, 0.0f, -1.0f, 0.0f); // Right-handed
 #endif
 
-			ray.direction = (viewInv * forwardView).normalized();
+			ray.direction = (forwardView * viewInv).normalized();
 
 			return ray;
 		}

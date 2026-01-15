@@ -9,12 +9,12 @@ import Result;
 import IAppWin;
 import StrConvert;
 import ThreadPool;
-import RenderArea;
 import RenderQueue;
 import ViewFactory;
 import AppWinConfig;
 import ISurfaceView;
 import ScenesManager;
+import IRenderLayers;
 
 using namespace zzz::core;
 using namespace zzz::templates;
@@ -63,8 +63,9 @@ namespace zzz
 		void PrepareFrame(double deltaTime);
 
 		ThreadPool m_ThreadsUpdate;
-		RenderQueue m_RenderQueue;
-		std::shared_ptr<RenderArea> m_RenderArea;
+		std::shared_ptr<ViewSetup> m_ViewSetup;
+		std::vector<std::shared_ptr<IRenderLayers>> m_RenderLayers;
+		std::shared_ptr<RenderQueue> m_RenderQueue;
 		std::shared_ptr<Scene> m_Scene;
 	};
 
@@ -104,12 +105,11 @@ namespace zzz
 				throw_runtime_error(std::format(">>>>> [View::Initialize()]. Failed to initialize surface window: {}.", wstring_to_string(res.error().getMessage())));
 
 			// TODO: В будущем надо будет учитывать настройки рендеринга из конфигурации
-			m_RenderArea = safe_make_shared<RenderArea>(
-				eAspectType::Ratio_16x9,
-				0.0f,
-				0.0f,
-				static_cast<zF32>(m_NativeWindow->GetWinSize().width),
-				static_cast<zF32>(m_NativeWindow->GetWinSize().height));
+			Size2D<zF32> size;
+			size.SetFrom(m_NativeWindow->GetWinSize());
+			m_ViewSetup = safe_make_shared<ViewSetup>(size, 0.0f, 1.0f, true);
+			m_ViewSetup->ActivateClearColor(colors::DarkMidnightBlue);
+			m_RenderQueue = safe_make_shared<RenderQueue>(m_ViewSetup);
 
 			// Кусок кода для теста
 			{
@@ -166,8 +166,8 @@ namespace zzz
 
 	void View::PrepareFrame(double deltaTime)
 	{
-		m_RenderQueue.ClearQueue(m_RenderArea);
-		m_RenderSurface->PrepareFrame(m_Scene, m_RenderQueue);
+		m_RenderQueue->ClearQueue(m_Scene);
+		m_RenderSurface->PrepareFrame(m_RenderQueue);
 	}
 
 	void View::OnViewResize(const Size2D<>& size, eTypeWinResize resizeType)
@@ -182,7 +182,9 @@ namespace zzz
 			break;
 		case eTypeWinResize::Resize:
 			DebugOutput(std::format(L">>>>> [View::OnViewResized({}x{}))]. Resize app window.", std::to_wstring(size.width), std::to_wstring(size.height)));
-			m_RenderArea->Update(static_cast<zF32>(size.width), static_cast<zF32>(size.height));
+			Size2D<zF32> fsize;
+			fsize.SetFrom(size);
+			m_ViewSetup->Update(fsize);
 			break;
 		}
 

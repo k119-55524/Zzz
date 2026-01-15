@@ -6,8 +6,6 @@ import Result;
 import GPUResManager;
 import SceneEntitySpawner;
 
-using namespace zzz::core;
-
 export namespace zzz
 {
 	export class ScenesManager final

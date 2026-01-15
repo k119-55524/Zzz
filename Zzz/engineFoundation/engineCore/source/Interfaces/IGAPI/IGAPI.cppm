@@ -24,7 +24,7 @@ import IGAPI_DirectX;
 
 using namespace std::literals::string_view_literals;
 
-export namespace zzz::core
+export namespace zzz
 {
 	enum class eGAPIType : uint8_t
 	{

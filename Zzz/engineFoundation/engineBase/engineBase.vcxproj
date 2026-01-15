@@ -50,7 +50,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -150,9 +150,14 @@
   <ItemGroup>
     <ClInclude Include="EngineBase.h" />
     <ClInclude Include="Headers\Header.h" />
+    <ClInclude Include="headers\HeaderConstants.h" />
     <ClInclude Include="Headers\HeaderDX.h" />
+    <ClInclude Include="headers\HeaderEnums.h" />
     <ClInclude Include="Headers\HeaderMetal.h" />
     <ClInclude Include="Headers\HeadersMSWin.h" />
+    <ClInclude Include="headers\HeaderTemplates.h" />
+    <ClInclude Include="headers\HeaderThrowWrappers.h" />
+    <ClInclude Include="headers\HeaderTypes.h" />
     <ClInclude Include="Headers\HeaderVulkan.h" />
     <ClInclude Include="Headers\MacroDefinition.h" />
     <ClInclude Include="Headers\PlatformsDefines.h" />

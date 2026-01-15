@@ -138,9 +138,7 @@ export namespace zzz::core
 		catch (...)
 		{
 			// В callback функциях Windows нельзя допускать исключения
-#ifdef _DEBUG
 			DebugOutput(L">>>>> [AppWindowMsWin::WindowProc]. Exception in WindowProc!");
-#endif
 			return DefWindowProc(hwnd, uMsg, wParam, lParam);
 		}
 

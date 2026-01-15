@@ -4,25 +4,32 @@ export module SurfaceView_DirectX;
 
 #if defined(ZRENDER_API_D3D12)
 import Math;
+import IPSO;
 import IGAPI;
 import DXAPI;
 import Scene;
 import PSO_DX;
 import Result;
 import Size2D;
+import Colors;
 import Camera;
 import IAppWin;
 import Helpers;
 import Vector4;
+import IMeshGPU;
 import Matrix4x4;
 import StrConvert;
-import RenderArea;
+import RenderVolume;
 import RenderQueue;
+import ViewportDesc;
 import ISurfaceView;
 import AppWin_MSWin;
+import MeshGPU_DirectX;
+import PrimitiveTopology;
 
 using namespace zzz::math;
 using namespace zzz::core;
+using namespace zzz::colors;
 
 namespace zzz::directx
 {
@@ -83,15 +90,27 @@ namespace zzz::directx
 		bool mIsConstantBuffer = false;
 	};
 
-	struct ObjectConstants
+	struct GPU_LayerConstants
 	{
 		Matrix4x4 WorldViewProj;
-		//XMFLOAT4X4 _WorldViewProj	= Identity4x4();
-		
-		//XMFLOAT4X4 view				= Identity4x4();
-		//XMFLOAT4X4 proj				= Identity4x4();
-		//XMFLOAT4X4 viewProj			= Identity4x4();
-		//XMFLOAT4X4 cameraPos		= Identity4x4();
+		Matrix4x4 View;
+		Matrix4x4 Proj;
+		Matrix4x4 ViewProj;
+		//Matrix4x4 CameraPos;
+	};
+
+	struct GPU_MaterialConstants
+	{
+		Vector4 BaseColor;
+		float Roughness;
+		float Metallic;
+		float Padding[2]; // выравнивание до 16 байт
+	};
+
+	struct GPU_ObjectConstants
+	{
+		Matrix4x4 World;
+		Matrix4x4 WorldViewProj;
 	};
 
 	export class SurfaceView_DirectX final : public ISurfaceView
@@ -105,7 +124,7 @@ namespace zzz::directx
 		~SurfaceView_DirectX() override = default;
 
 		[[nodiscard]] Result<> Initialize() override;
-		void PrepareFrame(std::shared_ptr<Scene> scene, const RenderQueue& renderQueue) override;
+		void PrepareFrame(const std::shared_ptr<RenderQueue> renderQueue) override;
 		void RenderFrame() override;
 		void OnResize(const Size2D<>& size) override;
 
@@ -122,7 +141,9 @@ namespace zzz::directx
 		std::condition_variable m_frameCV;
 		bool m_frameReady;
 
-		std::unique_ptr<UploadBuffer<ObjectConstants>> mObjectCB = nullptr;
+		std::unique_ptr<UploadBuffer<GPU_LayerConstants>> m_CB_Layer = nullptr;
+		std::unique_ptr<UploadBuffer<GPU_MaterialConstants>> m_CB_Material = nullptr;
+		std::unique_ptr<UploadBuffer<GPU_ObjectConstants>> m_CB_Object = nullptr;
 
 		ComPtr<IDXGISwapChain3> m_swapChain;
 		UINT m_RtvDescrSize;
@@ -134,7 +155,7 @@ namespace zzz::directx
 		ComPtr<ID3D12Resource> m_renderTargets[BACK_BUFFER_COUNT];
 		ComPtr<ID3D12Resource> m_depthStencil[BACK_BUFFER_COUNT];
 
-		[[nodiscard]] Result<> BuildConstantBuffers();
+		void BuildConstantBuffers();
 		[[nodiscard]] Result<> CreateRTVHeap();
 		[[nodiscard]] Result<> CreateSRVHeap();
 		[[nodiscard]] Result<> CreateDSVHeap();
@@ -174,7 +195,7 @@ namespace zzz::directx
 		m_CbvSrvDescrSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 		auto winSize = m_iAppWin->GetWinSize();
-		m_SurfSize.SetSize(static_cast<zU32>(winSize.width), static_cast<zU32>(winSize.height));
+		m_SurfSize.SetFrom(winSize);
 
 		auto res = InitializeSwapChain();
 		if (!res)
@@ -186,7 +207,7 @@ namespace zzz::directx
 
 		res = CreateRTVHeap()
 			.and_then([&]() { return CreateSRVHeap(); })
-			.and_then([&]() { return BuildConstantBuffers(); })
+			.and_then([&]() { BuildConstantBuffers(); })
 			.and_then([&]() { return CreateDSVHeap(); })
 			.and_then([&]() { return CreateRTV(m_device); });
 
@@ -300,25 +321,12 @@ namespace zzz::directx
 		return {};
 	}
 
-	Result<> SurfaceView_DirectX::BuildConstantBuffers()
+	void SurfaceView_DirectX::BuildConstantBuffers()
 	{
-		auto m_device = m_iGAPI->GetDevice();
-		mObjectCB = std::make_unique<UploadBuffer<ObjectConstants>>(m_device.Get(), 1, true);
-
-		UINT objCBByteSize = CalcBufferSize32(sizeof(ObjectConstants));
-
-		D3D12_GPU_VIRTUAL_ADDRESS cbAddress = mObjectCB->Resource()->GetGPUVirtualAddress();
-		// Offset to the ith object constant buffer in the buffer.
-		int boxCBufIndex = 0;
-		cbAddress += boxCBufIndex * objCBByteSize;
-
-		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
-		cbvDesc.BufferLocation = cbAddress;
-		cbvDesc.SizeInBytes = CalcBufferSize32(sizeof(ObjectConstants));
-
-		m_device->CreateConstantBufferView(&cbvDesc, m_srvHeap->GetCPUDescriptorHandleForHeapStart());
-
-		return {};
+		auto device = m_iGAPI->GetDevice();	
+		m_CB_Layer		= safe_make_unique<UploadBuffer<GPU_LayerConstants>>(device.Get(), 1, true);	// b0 – Layer
+		m_CB_Material	= safe_make_unique<UploadBuffer<GPU_MaterialConstants>>(device.Get(), 1, true);	// b1 – Material
+		m_CB_Object		= safe_make_unique<UploadBuffer<GPU_ObjectConstants>>(device.Get(), 1, true);	// b2 – Object
 	}
 
 	Result<> SurfaceView_DirectX::CreateDSVHeap()
@@ -443,49 +451,10 @@ namespace zzz::directx
 #pragma endregion Initialize
 
 #pragma region Rendring
-	void SurfaceView_DirectX::PrepareFrame(std::shared_ptr<Scene> scene, const RenderQueue& renderQueue)
+	void SurfaceView_DirectX::PrepareFrame(const std::shared_ptr<RenderQueue> renderQueue)
 	{
-		D3D_PRIMITIVE_TOPOLOGY currPrimitiveType = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
-
-		{
-			//Matrix4x4 mView;
-			//Matrix4x4 mProj;
-			//
-			//mProj = Matrix4x4::perspective(
-			//	0.25f * Pi,		// FoV 45 градусов
-			//	16.0f / 9.0f,	// Aspect ratio
-			//	1.0f,			// Near plane
-			//	1000.0f);		// Far plane
-			//
-			//float mTheta = 1.5f * Pi;
-			//float mPhi = Pi / 4.0f;  // 45 градусов
-			//float mRadius = 5.0f;
-			//
-			//float x = mRadius * std::sin(mPhi) * std::cos(mTheta);
-			//float z = mRadius * std::sin(mPhi) * std::sin(mTheta);
-			//float y = mRadius * std::cos(mPhi);
-			//
-			//Vector4 pos(x, y, z, 1.0f);
-			//Vector4 target(0.0f, 0.0f, 0.0f, 1.0f);
-			//Vector4 up(0.0f, 1.0f, 0.0f, 0.0f);
-			//mView = Matrix4x4::lookAt(pos, target, up);
-			//Matrix4x4 worldViewProj = mProj * mView * mWorld;
-		}
-
-		Camera& primaryCamera = scene->GetPrimaryCamera();
-
-		{
-			Matrix4x4 mWorld;
-			Matrix4x4 camViewProj = primaryCamera.GetViewProjectionMatrix();
-			Matrix4x4 worldViewProj = camViewProj * mWorld;
-			ObjectConstants objConstants;
-			std::memcpy(&objConstants.WorldViewProj, &worldViewProj, sizeof(Matrix4x4));
-			mObjectCB->CopyData(0, objConstants);
-		}
-
-		zU64 frameIndex = (m_swapChain->GetCurrentBackBufferIndex() + 1) % BACK_BUFFER_COUNT;
-
 		// Синхронизируемся с рендерингом чтобы frameIndex остался валидным
+		zU64 frameIndex = (m_swapChain->GetCurrentBackBufferIndex() + 1) % BACK_BUFFER_COUNT;
 		{
 			std::lock_guard<std::mutex> lock(m_frameMutex);
 			m_frameReady = true;
@@ -494,106 +463,90 @@ namespace zzz::directx
 
 		auto commandList = m_iGAPI->GetCommandListUpdate();
 		ensure(commandList, ">>>>> [SurfaceView_DirectX::PrepareFrame()]. Command list cannot be null.");
-		commandList->SetGraphicsRootSignature(m_iGAPI->GetRootSignature().Get());
 
 		{
+			commandList->SetGraphicsRootSignature(m_iGAPI->GetRootSignature().Get());
+
 			// Привязываем root-параметры
-			commandList->SetGraphicsRootConstantBufferView(0, mObjectCB->Resource()->GetGPUVirtualAddress());
-
-			//commandList->SetGraphicsRootConstantBufferView(
-			//	1,
-			//	materialCBV_GPUHandle  // если есть материал (b1)
-			//);
-
-			//commandList->SetGraphicsRootDescriptorTable(
-			//	2,
-			//	m_srvHeap->GetGPUDescriptorHandleForHeapStart()  // SRV таблица начинается с t0
-			//	// Если CBV занимает слот 0, то SRV начинаются с 1 -> нужно сместить!
-			//);
+			commandList->SetGraphicsRootConstantBufferView(0, m_CB_Layer->Resource()->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(1, m_CB_Material->Resource()->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(2, m_CB_Object->Resource()->GetGPUVirtualAddress());
+	
+			// Пока не используем текстуры - закомментировано
+			//commandList->SetGraphicsRootDescriptorTable(2, m_srvHeap->GetGPUDescriptorHandleForHeapStart()); // SRV таблица начинается с t0
+			//ID3D12DescriptorHeap* descriptorHeaps[] = { m_srvHeap.Get() };
+			//commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 		}
 
-		{
-			ID3D12DescriptorHeap* descriptorHeaps[] = { m_srvHeap.Get() };
-			commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-		}
-
-		commandList->ResourceBarrier(
-			1,
-			&keep(CD3DX12_RESOURCE_BARRIER::Transition(
-				m_renderTargets[frameIndex].Get(),
-				D3D12_RESOURCE_STATE_PRESENT,
-				D3D12_RESOURCE_STATE_RENDER_TARGET)));
-
-		commandList->ResourceBarrier(
-			1,
-			&keep(CD3DX12_RESOURCE_BARRIER::Transition(
-				m_depthStencil[frameIndex].Get(),
-				D3D12_RESOURCE_STATE_COMMON,
-				D3D12_RESOURCE_STATE_DEPTH_WRITE)));
+		commandList->ResourceBarrier(1, &keep(CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET)));
+		commandList->ResourceBarrier(1, &keep(CD3DX12_RESOURCE_BARRIER::Transition(m_depthStencil[frameIndex].Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE)));
 
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_RtvDescrSize);
 		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_DsvDescrSize);
-
-		// Очищаем всю поверхность перед рендерингом если нужно
-		switch (m_SurfClearType)
-		{
-		case SurfClearType::Color:
-			commandList->ClearRenderTargetView(rtvHandle, m_ClearColor, 0, nullptr);
-			break;
-		}
-
-		// Очистка буфера глубины, если нужно
-		if(b_IsClearDepth)
-			commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-
 		commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
-		{
-			const std::shared_ptr<RenderArea> renderArea = renderQueue.GetRenderArea();
-			D3D12_VIEWPORT viewport = renderArea->GetViewport();
-			D3D12_RECT scissor = renderArea->GetScissor();
-			commandList->RSSetViewports(1, &viewport);
-			commandList->RSSetScissorRects(1, &scissor);
-
-			// При старте выставляем топологию по умолчанию
-			commandList->IASetPrimitiveTopology(currPrimitiveType);
-
-			auto entity = scene->GetEntity();
-
-			// Set material
-			auto material = entity->GetMaterial();
-			std::shared_ptr<PSO_DX> pso = static_pointer_cast<PSO_DX>(material->GetPSO());
-			commandList->SetPipelineState(pso->GetPSO().Get());
-
-			if (pso->GetPrimitiveType() != currPrimitiveType)
+		// Выполняем рендринг очереди
+		renderQueue->PrepareQueue(
+			m_SurfSize,
+			// Очистка поверхности
+			[&](const eSurfClearType surfClearType, const Color& color, bool isClearDepth)
 			{
-				currPrimitiveType = pso->GetPrimitiveType();
-				commandList->IASetPrimitiveTopology(currPrimitiveType);
+				switch (surfClearType)
+				{
+				case eSurfClearType::Color:
+					commandList->ClearRenderTargetView(rtvHandle, color, 0, nullptr);
+					break;
+				}
+
+				if(isClearDepth)
+					commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+			},
+			// Установка viewport и scissor rect
+			[&](const ViewportDesc& vp, const ScissorDesc& sc)
+			{
+				D3D12_VIEWPORT viewport = vp.ToD3D12();
+				D3D12_RECT scissor = sc.ToD3D12();
+				commandList->RSSetViewports(1, &viewport);
+				commandList->RSSetScissorRects(1, &scissor);
+			},
+			// Установка глобальных констант
+			[&](const Matrix4x4& viewProj)
+			{
+				GPU_LayerConstants objConstants;
+				std::memcpy(&objConstants.ViewProj, &viewProj, sizeof(Matrix4x4));
+				m_CB_Layer->CopyData(0, objConstants);
+			},
+			// Установка PSO(set material)
+			[&](const std::shared_ptr<IPSO> pso)
+			{
+				std::shared_ptr<PSO_DX> psoDX = static_pointer_cast<PSO_DX>(pso);
+				commandList->SetPipelineState(psoDX->GetPSO().Get());
+			},
+			// Установка топологии примитивов
+			[&](const PrimitiveTopology& topo)
+			{
+				commandList->IASetPrimitiveTopology(topo.ToD3D12());
+			},
+			// Установка констант объекта
+			[&](const Matrix4x4& worldViewProj)
+			{
+				GPU_ObjectConstants gpuObj{};
+				std::memcpy(&gpuObj.WorldViewProj, &worldViewProj, sizeof(Matrix4x4));
+				m_CB_Object->CopyData(0, gpuObj);
+			},
+			// Отрисовка меша с инексным буффером
+			[&](const std::shared_ptr<IMeshGPU> mesh, zU32 count)
+			{
+				std::shared_ptr<MeshGPU_DirectX> meshDX = static_pointer_cast<MeshGPU_DirectX>(mesh);
+				commandList->IASetVertexBuffers(0, 1, meshDX->VertexBufferView());
+				commandList->IASetIndexBuffer(meshDX->IndexBufferView());
+				commandList->DrawIndexedInstanced(count, 1, 0, 0, 0);
 			}
-
-			auto mesh = entity->GetMesh();
-			commandList->IASetVertexBuffers(0, 1, mesh->VertexBufferView());
-			commandList->IASetIndexBuffer(mesh->IndexBufferView());
-
-			//commandList->SetGraphicsRootDescriptorTable(0, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
-
-			commandList->DrawIndexedInstanced(36, 1, 0, 0, 0);
-		}
+		);
 
 		// Завершение подготовки (из EndRender, до закрытия командного списка)
-		commandList->ResourceBarrier(
-			1,
-			&keep(CD3DX12_RESOURCE_BARRIER::Transition(
-				m_renderTargets[frameIndex].Get(),
-				D3D12_RESOURCE_STATE_RENDER_TARGET,
-				D3D12_RESOURCE_STATE_PRESENT)));
-
-		commandList->ResourceBarrier(
-			1,
-			&keep(CD3DX12_RESOURCE_BARRIER::Transition(
-				m_depthStencil[frameIndex].Get(),
-				D3D12_RESOURCE_STATE_DEPTH_WRITE,
-				D3D12_RESOURCE_STATE_COMMON)));
+		commandList->ResourceBarrier(1, &keep(CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT)));
+		commandList->ResourceBarrier(1, &keep(CD3DX12_RESOURCE_BARRIER::Transition( m_depthStencil[frameIndex].Get(), D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COMMON)));
 	}
 
 	void SurfaceView_DirectX::RenderFrame()
@@ -712,7 +665,7 @@ namespace zzz::directx
 			.and_then([&]() { return m_iGAPI->CommandRenderReinitialize(); })
 			.or_else([&](const Unexpected& error) { throw_runtime_error(std::format(">>>>> [SurfaceView_DirectX::OnResize({}x{})]. {}.", size.width, size.height, wstring_to_string(error.getMessage()))); });
 
-		m_SurfSize.SetSize(size.width, size.height);
+		m_SurfSize = size;
 	}
 
 	void SurfaceView_DirectX::SetFullScreen(bool fs)
