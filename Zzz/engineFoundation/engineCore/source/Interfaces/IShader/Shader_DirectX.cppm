@@ -143,8 +143,10 @@ export namespace zzz::directx
 		if (FAILED(hr))
 			return Unexpected(eResult::failure, L">>>>> [haderDX::CompileShaderFromSource( ... )]. Failed to get compilation status");
 
+		// TODO: Переработать обработку ошибок компиляции
 		if (FAILED(compileStatus))
 		{
+#if defined(_DEBUG)
 			ComPtr<IDxcBlobEncoding> errorBlob;
 			hr = Result->GetErrorBuffer(&errorBlob);
 			if (SUCCEEDED(hr) && errorBlob && errorBlob->GetBufferSize() > 0)
@@ -159,6 +161,7 @@ export namespace zzz::directx
 			}
 			else
 				DebugOutput(L">>>>> [haderDX::CompileShaderFromSource( ... )]. Compile error: No error details available");
+#endif // defined(_DEBUG)
 
 			return Unexpected(eResult::failure, L">>>>> [haderDX::CompileShaderFromSource( ... )]. Shader compilation failed");
 		}

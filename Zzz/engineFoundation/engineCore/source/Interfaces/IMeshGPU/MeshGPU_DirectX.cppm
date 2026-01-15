@@ -228,6 +228,7 @@ export namespace zzz::directx
 		if (uploadIndexBuffer != nullptr)
 			uploadIndexBuffer.Reset();
 
+		// TODO: Cделать нормальную обработку
 		if (!isComplete)
 			DebugOutput(L">>>>> [MeshGPU_DirectX::Initialize( ... )]. Transfer mesh resource: FAILED.");
 		else

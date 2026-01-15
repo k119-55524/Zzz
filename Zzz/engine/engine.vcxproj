@@ -103,7 +103,8 @@
     <ClCompile Include="source\Configs\ZamlParser_MSWinDirectX.cppm" />
     <ClCompile Include="source\Interfaces\ISurfaceView\ISurfaceView.cppm" />
     <ClCompile Include="source\Interfaces\ISurfaceView\SurfaceView_DirectX.cppm" />
-    <ClCompile Include="source\Helpers\RenderArea.cppm" />
+    <ClCompile Include="source\Helpers\RenderVolume.cppm" />
+    <ClCompile Include="source\Interfaces\IRenderLayers\IRenderLayers.cppm" />
     <ClCompile Include="source\View\ViewportDesc.cppm" />
     <ClCompile Include="source\Helpers\RenderQueue.cppm" />
     <ClCompile Include="source\Resources\GPUResManager.cppm" />
@@ -117,7 +118,7 @@
     <ClCompile Include="source\Resources\CPUResManager.cppm" />
     <ClCompile Include="source\Scenes\ScenesManager.cppm" />
     <ClCompile Include="source\View\View.cppm" />
-    <ClCompile Include="source\View\ViewSetup.ixx" />
+    <ClCompile Include="source\View\ViewSetup.cppm" />
     <ClCompile Include="source\ZAML\ioZaml.cppm" />
     <ClCompile Include="source\ZAML\ZamlConfig.cppm" />
   </ItemGroup>

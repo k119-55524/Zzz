@@ -19,7 +19,7 @@ import Vector4;
 import IMeshGPU;
 import Matrix4x4;
 import StrConvert;
-import RenderArea;
+import RenderVolume;
 import RenderQueue;
 import ViewportDesc;
 import ISurfaceView;

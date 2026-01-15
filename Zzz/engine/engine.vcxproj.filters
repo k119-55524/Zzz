@@ -77,7 +77,7 @@
     <ClCompile Include="source\Configs\ZamlParser_MSWinDirectX.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\View\ViewSetup.ixx">
+    <ClCompile Include="source\View\ViewSetup.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\Helpers\RenderQueue.cppm">
@@ -92,7 +92,10 @@
     <ClCompile Include="source\View\ViewportDesc.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Helpers\RenderArea.cppm">
+    <ClCompile Include="source\Helpers\RenderVolume.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\IRenderLayers\IRenderLayers.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
   </ItemGroup>

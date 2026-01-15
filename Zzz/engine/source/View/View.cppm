@@ -105,7 +105,8 @@ namespace zzz
 			// TODO: В будущем надо будет учитывать настройки рендеринга из конфигурации
 			Size2D<zF32> size;
 			size.SetFrom(m_NativeWindow->GetWinSize());
-			m_ViewSetup = safe_make_shared<ViewSetup>(eAspectType::FullWindow, size, 0.0f, 1.0f);
+			m_ViewSetup = safe_make_shared<ViewSetup>(size, 0.0f, 1.0f, true);
+			m_ViewSetup->ActivateClearColor(colors::DarkMidnightBlue);
 			m_RenderQueue = safe_make_shared<RenderQueue>(m_ViewSetup);
 
 			// Кусок кода для теста

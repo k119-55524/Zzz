@@ -4,7 +4,7 @@ export module Size2D;
 import Result;
 import Serializer;
 
-export namespace zzz::core
+export namespace zzz
 {
 	/**
 	* @class size2D
@@ -46,13 +46,13 @@ export namespace zzz::core
 		T height; // Высота объекта.
 
 	private:
-		Result<> Serialize(std::vector<std::byte>& buffer, const zzz::core::Serializer& s) const override
+		Result<> Serialize(std::vector<std::byte>& buffer, const zzz::Serializer& s) const override
 		{
 			return s.Serialize(buffer, width)
 				.and_then([&]() {return s.Serialize(buffer, height); });
 		}
 
-		Result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const zzz::core::Serializer& s) override
+		Result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const zzz::Serializer& s) override
 		{
 			return s.DeSerialize(buffer, offset, width)
 				.and_then([&]() {return s.DeSerialize(buffer, offset, height); });

@@ -2,9 +2,8 @@
 export module ViewSetup;
 
 export import Colors;
-export import RenderArea;
+export import RenderVolume;
 
-using namespace zzz::core;
 using namespace zzz::colors;
 
 namespace zzz
@@ -13,13 +12,15 @@ namespace zzz
 	{
 	public:
 		ViewSetup() = delete;
-		ViewSetup(eAspectType aspect, Size2D<zF32>& size, zF32 minDepth, zF32 maxDepth) :
-			m_RenderArea(aspect, size, minDepth, maxDepth),
-			m_SurfClearType{ eSurfClearType::Color },
+		ViewSetup(Size2D<zF32>& size, zF32 minDepth, zF32 maxDepth, bool isClearrDepth) :
+			m_RenderArea(eAspectType::FullWindow, size, minDepth, maxDepth),
+			m_SurfClearType{ eSurfClearType::None },
 			m_ClearColor{ colors::DarkMidnightBlue },
-			b_IsClearDepth{ true }
+			b_IsClearDepth{ isClearrDepth }
 		{
 		}
+
+		inline void ActivateClearColor(const Color& color) noexcept { m_ClearColor = color; m_SurfClearType = eSurfClearType::Color; }
 
 		inline const ViewportDesc& GetViewport() const noexcept { return m_RenderArea.GetViewport(); }
 		inline const ScissorDesc& GetScissor() const noexcept { return m_RenderArea.GetScissor(); }
@@ -30,7 +31,7 @@ namespace zzz
 		inline void Update(Size2D<zF32>& size) noexcept { m_RenderArea.Update(size); }
 
 	protected:
-		RenderArea m_RenderArea;
+		RenderVolume m_RenderArea;
 
 		eSurfClearType m_SurfClearType;
 		Color m_ClearColor;

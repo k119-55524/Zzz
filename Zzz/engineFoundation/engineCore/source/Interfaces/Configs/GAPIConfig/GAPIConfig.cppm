@@ -23,7 +23,7 @@ namespace zzz::core
 
 		static constexpr eGAPIType GetCurrentGAPI() noexcept;
 
-		Result<> Serialize(std::vector<std::byte>& buffer, const zzz::core::Serializer& s) const override
+		Result<> Serialize(std::vector<std::byte>& buffer, const zzz::Serializer& s) const override
 		{
 			//return s.Serialize(buffer, m_AppWinConfig);
 			//.and_then([&]() { return s.Serialize(buffer, i2); });
@@ -31,7 +31,7 @@ namespace zzz::core
 			return {};
 		}
 
-		Result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const zzz::core::Serializer& s) override
+		Result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const zzz::Serializer& s) override
 		{
 			//return s.DeSerialize(buffer, offset, m_AppWinConfig);
 			//.and_then([&]() { return s.DeSerialize(buffer, offset, i2); });
