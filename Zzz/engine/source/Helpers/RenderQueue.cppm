@@ -48,43 +48,46 @@ export namespace zzz
 			// Очистка поверхности
 			clearFunc(m_ViewSetup->GetSurfClearType(), m_ViewSetup->GetClearColor(), m_ViewSetup->IsClearDepth());
 
-			// Установка viewport и scissor rect
-			layerFunc(m_ViewSetup->GetViewport(), m_ViewSetup->GetScissor());
-
 			std::shared_ptr<Scene> scene;
 			for (auto& layer : m_RenderLayers)
 			{
-				scene = layer->GetScene();
-				if (scene == nullptr)
+				if (!layer->IsActive())
 					continue;
 
-				// Установка глобальных констант шейдеров
-				Camera& primaryCamera = scene->GetPrimaryCamera();
-				Matrix4x4 camViewProj = primaryCamera.GetProjectionViewMatrix(surfSize);
-				setGlobalConstFunc(camViewProj);
+				// Установка viewport и scissor rect
+				layerFunc(layer->GetViewport(), layer->GetScissor());
 
-				auto entity = scene->GetEntity();
-				auto material = entity->GetMaterial();
-				auto pso = material->GetPSO();
-
-				// Установка PSO(set material)
-				setPSOFunc(pso);
-
-				// Установка топологии примитивов
-				if (pso->GetPrimitiveTopology() != currTopo)
+				scene = layer->GetScene();
+				if (scene != nullptr)
 				{
-					currTopo = pso->GetPrimitiveTopology();
-					topoFunc(currTopo);
+					// Установка глобальных констант шейдеров
+					Camera& primaryCamera = scene->GetPrimaryCamera();
+					Matrix4x4 camViewProj = primaryCamera.GetProjectionViewMatrix(surfSize);
+					setGlobalConstFunc(camViewProj);
+
+					auto entity = scene->GetEntity();
+					auto material = entity->GetMaterial();
+					auto pso = material->GetPSO();
+
+					// Установка PSO(set material)
+					setPSOFunc(pso);
+
+					// Установка топологии примитивов
+					if (pso->GetPrimitiveTopology() != currTopo)
+					{
+						currTopo = pso->GetPrimitiveTopology();
+						topoFunc(currTopo);
+					}
+
+					Matrix4x4 world;
+					world = world.translation(0.0f, 0.0f, 3.0f);
+					Matrix4x4 worldViewProj = world * camViewProj;
+					setMeshConstFunc(worldViewProj);
+
+					// Рендринг меша
+					auto mesh = entity->GetMesh();
+					renderInexedMeshFunc(mesh, 36);
 				}
-
-				Matrix4x4 world;
-				world = world.translation(0.0f, 0.0f, 3.0f);
-				Matrix4x4 worldViewProj = world * camViewProj;
-				setMeshConstFunc(worldViewProj);
-
-				// Рендринг меша
-				auto mesh = entity->GetMesh();
-				renderInexedMeshFunc(mesh, 36);
 			}
 		}
 
