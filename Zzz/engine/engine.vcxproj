@@ -101,6 +101,7 @@
     <ClCompile Include="source\Configs\StartupConfig.cppm" />
     <ClCompile Include="source\Configs\ZamlParser.cppm" />
     <ClCompile Include="source\Configs\ZamlParser_MSWinDirectX.cppm" />
+    <ClCompile Include="source\Interfaces\IRenderLayers\Layer3D.cppm" />
     <ClCompile Include="source\Interfaces\ISurfaceView\ISurfaceView.cppm" />
     <ClCompile Include="source\Interfaces\ISurfaceView\SurfaceView_DirectX.cppm" />
     <ClCompile Include="source\Helpers\RenderVolume.cppm" />

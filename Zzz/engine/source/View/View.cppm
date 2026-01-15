@@ -14,6 +14,7 @@ import ViewFactory;
 import AppWinConfig;
 import ISurfaceView;
 import ScenesManager;
+import IRenderLayers;
 
 using namespace zzz::core;
 using namespace zzz::templates;
@@ -63,6 +64,7 @@ namespace zzz
 
 		ThreadPool m_ThreadsUpdate;
 		std::shared_ptr<ViewSetup> m_ViewSetup;
+		std::vector<std::shared_ptr<IRenderLayers>> m_RenderLayers;
 		std::shared_ptr<RenderQueue> m_RenderQueue;
 		std::shared_ptr<Scene> m_Scene;
 	};

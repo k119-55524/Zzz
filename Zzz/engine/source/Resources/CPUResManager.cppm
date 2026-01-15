@@ -7,8 +7,6 @@ import CPUMesh;
 import CPUIndexBuffer;
 import CPUVertexBuffer;
 
-using namespace zzz::core;
-
 export namespace zzz
 {
 	export enum MeshType

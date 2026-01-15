@@ -9,8 +9,6 @@ import IMeshGPU;
 import CPUIndexBuffer;
 import CPUVertexBuffer;
 
-using namespace zzz::core;
-
 export namespace zzz::directx
 {
 	export class MeshGPU_DirectX final : public IMeshGPU

@@ -11,7 +11,6 @@ import ICPUtoGPUDataTransfer;
 
 using namespace zzz;
 using namespace zzz::templates;
-using namespace zzz::core;
 
 #if defined(_WIN64)
 export namespace zzz::directx

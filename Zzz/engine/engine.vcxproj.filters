@@ -98,6 +98,9 @@
     <ClCompile Include="source\Interfaces\IRenderLayers\IRenderLayers.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
+    <ClCompile Include="source\Interfaces\IRenderLayers\Layer3D.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

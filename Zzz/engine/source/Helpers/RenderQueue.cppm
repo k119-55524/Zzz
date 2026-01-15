@@ -7,7 +7,6 @@ import Matrix4x4;
 export import ViewSetup;
 import PrimitiveTopology;
 
-using namespace zzz::core;
 using namespace zzz::math;
 
 export namespace zzz

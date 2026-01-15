@@ -8,7 +8,7 @@ import SceneEntity;
 
 using namespace zzz::math;
 
-export namespace zzz::core
+export namespace zzz
 {
 	export class Scene final
 	{

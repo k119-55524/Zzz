@@ -3,7 +3,7 @@
 
 export module ICheckGapiSupport;
 
-export namespace zzz::core
+export namespace zzz
 {
 	export class ICheckGapiSupport
 	{

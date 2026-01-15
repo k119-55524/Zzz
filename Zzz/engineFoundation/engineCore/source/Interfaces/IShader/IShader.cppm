@@ -8,7 +8,7 @@ import Result;
 import IMeshGPU;
 import IShader_DirectX;
 
-export namespace zzz::core
+export namespace zzz
 {
 	export class IShader :
 		public IShader_DirectX

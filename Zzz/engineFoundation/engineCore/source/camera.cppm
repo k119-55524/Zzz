@@ -6,10 +6,9 @@ import Size2D;
 import Vector4;
 import Matrix4x4;
 
-using namespace zzz;
 using namespace zzz::math;
 
-export namespace zzz::core
+export namespace zzz
 {
 	export class Camera
 	{

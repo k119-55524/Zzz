@@ -10,7 +10,6 @@ import IShader;
 import IMeshGPU;
 import StrConvert;
 
-using namespace zzz::core;
 
 export namespace zzz::directx
 {

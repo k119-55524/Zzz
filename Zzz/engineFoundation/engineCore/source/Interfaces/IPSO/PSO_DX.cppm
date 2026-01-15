@@ -7,8 +7,6 @@ import IGAPI;
 import PrimitiveTopology;
 import VertexFormatMapper;
 
-using namespace zzz::core;
-
 namespace zzz::directx
 {
 	export class PSO_DX final : public IPSO

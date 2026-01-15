@@ -8,7 +8,7 @@ import VertexFormatMapper;
 
 using namespace zzz::directx;
 
-namespace zzz::core
+namespace zzz
 {
 	export class IPSO
 	{

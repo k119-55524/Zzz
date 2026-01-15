@@ -11,7 +11,7 @@ namespace zzz
 	 class GPUResManager;
 }
 
-export namespace zzz::core
+export namespace zzz
 {
 	export class IMeshGPU
 	{

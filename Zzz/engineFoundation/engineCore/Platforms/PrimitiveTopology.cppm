@@ -1,7 +1,7 @@
 
 export module PrimitiveTopology;
 
-export namespace zzz::core
+export namespace zzz
 {
 	class PrimitiveTopology
 	{
