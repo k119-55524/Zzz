@@ -76,7 +76,7 @@ namespace zzz
 		m_ScenesManager{ _scenesManager },
 		m_GAPI{ _GAPI },
 		initState{ eInitState::InitNot },
-		m_ThreadsUpdate{2}
+		m_ThreadsUpdate{std::string("View"), 2}
 	{
 		ensure(m_WinConfig, ">>>>> [View::View()]. Window config cannot be null.");
 		ensure(m_ScenesManager, ">>>>> [View::View()]. Scenes manager cannot be null.");

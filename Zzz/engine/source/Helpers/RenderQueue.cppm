@@ -41,8 +41,10 @@ export namespace zzz
 			SetPSOFunc&& setPSOFunc,
 			SetMeshTopologyFunc&& topoFunc,
 			SetMeshConstFunc&& setMeshConstFunc,
-			RenderInexedMeshFunc&& renderInexedMeshFunc) const
+			RenderInexedMeshFunc&& renderInexedMeshFunc)
 		{
+			BuildQueue();
+
 			PrimitiveTopology currTopo;
 
 			// Очистка поверхности
@@ -91,8 +93,15 @@ export namespace zzz
 			}
 		}
 
-	protected:
+	private:
 		std::shared_ptr<ViewSetup> m_ViewSetup;
 		std::vector<std::shared_ptr<IRenderLayer>>& m_RenderLayers;
+
+		void BuildQueue();
 	};
+
+	void RenderQueue::BuildQueue()
+	{
+
+	}
 }
