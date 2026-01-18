@@ -35,18 +35,6 @@
     <ClCompile Include="Source\Camera.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Scenes\Scene.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Scenes\SceneEntity.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Material.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Interfaces\IPSO\IPSO.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Interfaces\IGAPI\IGAPI.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -69,30 +57,6 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\CPUtoGPUDataTransfer.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Interfaces\IShader\IShader.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Interfaces\IMeshGPU\IMeshGPU.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Resources\CPUMesh.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Resources\CPUVertexBuffer.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Resources\CPUIndexBuffer.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Resources\VertexFormatMapper.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Interfaces\IShader\IShader_DirectX.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Interfaces\IPSO\PSO_DX.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Utilities\MessageBox.cppm">
@@ -132,12 +96,6 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Interfaces\IMainLoop\MainLoop_MSWin.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Interfaces\IShader\Shader_DirectX.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Interfaces\IMeshGPU\MeshGPU_DirectX.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Utilities\Helpers.cppm">

@@ -88,7 +88,7 @@ export namespace zzz
 
 					// Рендринг меша
 					auto mesh = entity->GetMesh();
-					renderInexedMeshFunc(mesh, 36);
+					renderInexedMeshFunc(mesh, mesh->GetIndexCount());
 				}
 			}
 		}

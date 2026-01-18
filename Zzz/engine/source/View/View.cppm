@@ -182,7 +182,7 @@ namespace zzz
 			Size2D<zF32> fsize;
 			fsize.SetFrom(size);
 			for (auto& layer : m_RenderLayers)
-				layer->Update(fsize);
+				layer->UpdateSize(fsize);
 
 			break;
 		}

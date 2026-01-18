@@ -1,10 +1,10 @@
 
 export module Scene;
 
-import Math;
-import Camera;
-import Vector4;
-import SceneEntity;
+export import Math;
+export import Camera;
+export import Vector4;
+export import SceneEntity;
 
 using namespace zzz::math;
 

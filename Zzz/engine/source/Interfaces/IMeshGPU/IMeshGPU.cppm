@@ -1,10 +1,10 @@
 
 export module IMeshGPU;
 
-import IGAPI;
-import Result;
-import CPUMesh;
-import VertexFormatMapper;
+export import IGAPI;
+export import Result;
+export import CPUMesh;
+export import VertexFormatMapper;
 
 namespace zzz
 {
@@ -23,9 +23,13 @@ export namespace zzz
 
 		~IMeshGPU() = default;
 		inline const std::vector<VertexAttrDescr>& GetInputLayout() const noexcept { return m_MeshCPU->GetInputLayout(); };
+		inline size_t GetVertexCount() const noexcept { return m_VertexCount; };
+		inline size_t GetIndexCount() const noexcept { return m_IndexCount; };
 
 	protected:
 		std::shared_ptr<CPUMesh> m_MeshCPU;
+		size_t m_VertexCount;
+		size_t m_IndexCount;
 
 	private:
 		virtual Result<> Initialize(std::shared_ptr<IGAPI> _IGAPI) = 0;
@@ -35,5 +39,7 @@ export namespace zzz
 		m_MeshCPU{ meshCPU }
 	{
 		ensure(m_MeshCPU, ">>>>> [IMeshGPU_DX::IMeshGPU_DX()]. m_MeshCPU cannot be null.");
+		m_VertexCount = meshCPU->GetMesh()->VertexCount();
+		m_IndexCount = meshCPU->GetIndicies()->GetCount();
 	}
 }

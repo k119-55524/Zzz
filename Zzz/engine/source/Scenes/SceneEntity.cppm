@@ -1,8 +1,8 @@
 
 export module SceneEntity;
 
-import Material;
-import IMeshGPU;
+export import Material;
+export import IMeshGPU;
 
 export namespace zzz
 {
