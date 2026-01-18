@@ -219,23 +219,31 @@ export namespace zzz::math
 
 		float dot(const VectorBase& rhs) const noexcept
 		{
+#if defined(__APPLE__)
+			if constexpr (std::is_same_v<WPolicy, NoW>)
+			{
+				// 3-компонентный вектор
+				simd_float3 a = simd_make_float3(data.x, data.y, data.z);
+				simd_float3 b = simd_make_float3(rhs.data.x, rhs.data.y, rhs.data.z);
+
+				return ::simd::dot(a, b);
+			}
+			else
+			{
+				// 4-компонентный вектор
+				simd_float4 a = simd_make_float4(data.x, data.y, data.z, data.w);
+				simd_float4 b = simd_make_float4(rhs.data.x, rhs.data.y, rhs.data.z, rhs.data.w);
+
+				return ::simd::dot(a, b);
+			}
+#else
+			// Без SIMD
 			float sum = x() * rhs.x() + y() * rhs.y() + z() * rhs.z();
 
 			if constexpr (!std::is_same_v<WPolicy, NoW>)
 				sum += w() * rhs.w();
 
 			return sum;
-		}
-
-
-		float dot3(const VectorBase& rhs) const noexcept
-		{
-#if defined(__APPLE__)
-			simd_float3 a = simd_make_float3(data.x, data.y, data.z);
-			simd_float3 b = simd_make_float3(rhs.data.x, rhs.data.y, rhs.data.z);
-			return ::simd::dot(a, b);
-#else
-			return x() * rhs.x() + y() * rhs.y() + z() * rhs.z();
 #endif
 		}
 

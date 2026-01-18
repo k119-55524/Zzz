@@ -29,9 +29,6 @@
     <ClCompile Include="pch.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Vector4.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="source\Matrix4x4.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -44,10 +41,10 @@
     <ClCompile Include="source\AABB.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Vector3.cppm">
+    <ClCompile Include="source\Vector.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Vector.cppm">
+    <ClCompile Include="source\Quaternion.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

@@ -160,10 +160,9 @@
     </ClCompile>
     <ClCompile Include="source\AABB.cppm" />
     <ClCompile Include="source\Matrix4x4.cppm" />
+    <ClCompile Include="source\Quaternion.cppm" />
     <ClCompile Include="source\Ray.cppm" />
     <ClCompile Include="source\Vector.cppm" />
-    <ClCompile Include="source\Vector3.cppm" />
-    <ClCompile Include="source\Vector4.cppm" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\engineFoundation\engineBase\engineBase.vcxproj">

@@ -46,10 +46,10 @@ export namespace zzz
 		//float y = 0.0f;
 		//float z = -5.0f;
 
-		m_PrimaryCamera.SetPosition(Vector4(x, y, z, 1.0f));
+		m_PrimaryCamera.SetPosition(Vector3(x, y, z));
 		//m_PrimaryCamera.SetPosition(Vector4(0, 0, -5, 1.0f));
-		m_PrimaryCamera.SetTarget(Vector4(0.0f, 0.0f, 0.0f, 0.0f));
-		m_PrimaryCamera.SetUp(Vector4(0.0f, 1.0f, 0.0f, 0.0f));
+		m_PrimaryCamera.SetTarget(Vector3(0.0f, 0.0f, 0.0f));
+		m_PrimaryCamera.SetUp(Vector3(0.0f, 1.0f, 0.0f));
 	}
 
 	export Scene::~Scene()

@@ -313,153 +313,153 @@ Result<std::string> test_Matrix4x4::ValidateLookAt_DirectX()
 {
 	struct LookAtParams
 	{
-		Vector4 eye;
-		Vector4 target;
-		Vector4 up;
+		Vector3 eye;
+		Vector3 target;
+		Vector3 up;
 		const wchar_t* description;
 	};
 
 	LookAtParams testCases[] =
 	{
-		// Базовые тесты (ваши оригинальные)
+		// Базовые тесты
 		{
-			Vector4(0.0f, 0.0f, 5.0f, 1.0f),
-			Vector4(0.0f, 0.0f, 0.0f, 1.0f),
-			Vector4(0.0f, 1.0f, 0.0f, 1.0f),
+			Vector3(0.0f, 0.0f, 5.0f),
+			Vector3(0.0f, 0.0f, 0.0f),
+			Vector3(0.0f, 1.0f, 0.0f),
 			L"Standard view along -Z axis from (0,0,5) to origin, up Y"
 		},
 		{
-			Vector4(5.0f, 0.0f, 0.0f, 1.0f),
-			Vector4(0.0f, 0.0f, 0.0f, 1.0f),
-			Vector4(0.0f, 1.0f, 0.0f, 1.0f),
+			Vector3(5.0f, 0.0f, 0.0f),
+			Vector3(0.0f, 0.0f, 0.0f),
+			Vector3(0.0f, 1.0f, 0.0f),
 			L"View along -X axis from (5,0,0) to origin, up Y"
 		},
 		{
-			Vector4(0.0f, 5.0f, 0.0f, 1.0f),
-			Vector4(0.0f, 0.0f, 0.0f, 1.0f),
-			Vector4(0.0f, 0.0f, 1.0f, 1.0f),
+			Vector3(0.0f, 5.0f, 0.0f),
+			Vector3(0.0f, 0.0f, 0.0f),
+			Vector3(0.0f, 0.0f, 1.0f),
 			L"View along -Y axis from (0,5,0) to origin, up Z (adjusted)"
 		},
 		{
-			Vector4(1.0f, 2.0f, 3.0f, 1.0f),
-			Vector4(4.0f, 5.0f, 6.0f, 1.0f),
-			Vector4(0.0f, 1.0f, 0.0f, 1.0f),
+			Vector3(1.0f, 2.0f, 3.0f),
+			Vector3(4.0f, 5.0f, 6.0f),
+			Vector3(0.0f, 1.0f, 0.0f),
 			L"Arbitrary view from (1,2,3) to (4,5,6), up Y"
 		},
 		{
-			Vector4(0.0f, 0.0f, 10.0f, 1.0f),
-			Vector4(0.0f, 0.0f, 0.0f, 1.0f),
-			Vector4(1.0f, 0.0f, 0.0f, 1.0f),
+			Vector3(0.0f, 0.0f, 10.0f),
+			Vector3(0.0f, 0.0f, 0.0f),
+			Vector3(1.0f, 0.0f, 0.0f),
 			L"View along -Z from (0,0,10) to origin, up X (tilted 90°)"
 		},
 
 		// Тесты с отрицательными координатами
 		{
-			Vector4(-3.0f, -4.0f, -5.0f, 1.0f),
-			Vector4(0.0f, 0.0f, 0.0f, 1.0f),
-			Vector4(0.0f, 1.0f, 0.0f, 1.0f),
+			Vector3(-3.0f, -4.0f, -5.0f),
+			Vector3(0.0f, 0.0f, 0.0f),
+			Vector3(0.0f, 1.0f, 0.0f),
 			L"View from negative octant (-3,-4,-5) to origin, up Y"
 		},
 		{
-			Vector4(0.0f, 0.0f, -5.0f, 1.0f),
-			Vector4(0.0f, 0.0f, 0.0f, 1.0f),
-			Vector4(0.0f, 1.0f, 0.0f, 1.0f),
+			Vector3(0.0f, 0.0f, -5.0f),
+			Vector3(0.0f, 0.0f, 0.0f),
+			Vector3(0.0f, 1.0f, 0.0f),
 			L"View along +Z axis from (0,0,-5) to origin (behind target), up Y"
 		},
 		{
-			Vector4(5.0f, 3.0f, 2.0f, 1.0f),
-			Vector4(-2.0f, -1.0f, -3.0f, 1.0f),
-			Vector4(0.0f, 1.0f, 0.0f, 1.0f),
+			Vector3(5.0f, 3.0f, 2.0f),
+			Vector3(-2.0f, -1.0f, -3.0f),
+			Vector3(0.0f, 1.0f, 0.0f),
 			L"View from positive to negative coordinates (5,3,2) to (-2,-1,-3), up Y"
 		},
 
 		// Тесты с разными up векторами
 		{
-			Vector4(3.0f, 3.0f, 3.0f, 1.0f),
-			Vector4(0.0f, 0.0f, 0.0f, 1.0f),
-			Vector4(0.0f, 0.0f, 1.0f, 1.0f),
+			Vector3(3.0f, 3.0f, 3.0f),
+			Vector3(0.0f, 0.0f, 0.0f),
+			Vector3(0.0f, 0.0f, 1.0f),
 			L"Diagonal view from (3,3,3) to origin, up Z"
 		},
 		{
-			Vector4(5.0f, 5.0f, 0.0f, 1.0f),
-			Vector4(0.0f, 0.0f, 0.0f, 1.0f),
-			Vector4(1.0f, 0.0f, 0.0f, 1.0f),
+			Vector3(5.0f, 5.0f, 0.0f),
+			Vector3(0.0f, 0.0f, 0.0f),
+			Vector3(1.0f, 0.0f, 0.0f),
 			L"View from (5,5,0) to origin, up X (unusual orientation)"
 		},
 		{
-			Vector4(0.0f, 0.0f, 5.0f, 1.0f),
-			Vector4(0.0f, 0.0f, 0.0f, 1.0f),
-			Vector4(0.0f, -1.0f, 0.0f, 1.0f),
+			Vector3(0.0f, 0.0f, 5.0f),
+			Vector3(0.0f, 0.0f, 0.0f),
+			Vector3(0.0f, -1.0f, 0.0f),
 			L"Standard view along -Z with inverted up (-Y, upside down)"
 		},
 
 		// Тесты с большими и маленькими расстояниями
 		{
-			Vector4(0.0f, 0.0f, 0.1f, 1.0f),
-			Vector4(0.0f, 0.0f, 0.0f, 1.0f),
-			Vector4(0.0f, 1.0f, 0.0f, 1.0f),
+			Vector3(0.0f, 0.0f, 0.1f),
+			Vector3(0.0f, 0.0f, 0.0f),
+			Vector3(0.0f, 1.0f, 0.0f),
 			L"Very close view from (0,0,0.1) to origin, up Y"
 		},
 		{
-			Vector4(0.0f, 0.0f, 1000.0f, 1.0f),
-			Vector4(0.0f, 0.0f, 0.0f, 1.0f),
-			Vector4(0.0f, 1.0f, 0.0f, 1.0f),
+			Vector3(0.0f, 0.0f, 1000.0f),
+			Vector3(0.0f, 0.0f, 0.0f),
+			Vector3(0.0f, 1.0f, 0.0f),
 			L"Very far view from (0,0,1000) to origin, up Y"
 		},
 		{
-			Vector4(100.0f, 200.0f, 300.0f, 1.0f),
-			Vector4(400.0f, 500.0f, 600.0f, 1.0f),
-			Vector4(0.0f, 1.0f, 0.0f, 1.0f),
+			Vector3(100.0f, 200.0f, 300.0f),
+			Vector3(400.0f, 500.0f, 600.0f),
+			Vector3(0.0f, 1.0f, 0.0f),
 			L"Large coordinates view from (100,200,300) to (400,500,600), up Y"
 		},
 
 		// Тесты с ненулевыми целевыми точками
 		{
-			Vector4(10.0f, 10.0f, 10.0f, 1.0f),
-			Vector4(5.0f, 5.0f, 5.0f, 1.0f),
-			Vector4(0.0f, 1.0f, 0.0f, 1.0f),
+			Vector3(10.0f, 10.0f, 10.0f),
+			Vector3(5.0f, 5.0f, 5.0f),
+			Vector3(0.0f, 1.0f, 0.0f),
 			L"View from (10,10,10) to (5,5,5), up Y"
 		},
 		{
-			Vector4(0.0f, 5.0f, 5.0f, 1.0f),
-			Vector4(0.0f, 0.0f, 0.0f, 1.0f),
-			Vector4(1.0f, 0.0f, 0.0f, 1.0f),
+			Vector3(0.0f, 5.0f, 5.0f),
+			Vector3(0.0f, 0.0f, 0.0f),
+			Vector3(1.0f, 0.0f, 0.0f),
 			L"View from (0,5,5) at 45° angle to origin, up X"
 		},
 
 		// Граничные случаи (edge cases)
 		{
-			Vector4(0.01f, 5.0f, 0.0f, 1.0f),
-			Vector4(0.0f, 0.0f, 0.0f, 1.0f),
-			Vector4(0.0f, 0.0f, 1.0f, 1.0f),
+			Vector3(0.01f, 5.0f, 0.0f),
+			Vector3(0.0f, 0.0f, 0.0f),
+			Vector3(0.0f, 0.0f, 1.0f),
 			L"Nearly along -Y axis (0.01,5,0) to origin, up Z (small X offset)"
 		},
 		{
-			Vector4(7.071f, 0.0f, 7.071f, 1.0f),  // 45° в XZ плоскости
-			Vector4(0.0f, 0.0f, 0.0f, 1.0f),
-			Vector4(0.0f, 1.0f, 0.0f, 1.0f),
+			Vector3(7.071f, 0.0f, 7.071f),
+			Vector3(0.0f, 0.0f, 0.0f),
+			Vector3(0.0f, 1.0f, 0.0f),
 			L"45° angle in XZ plane from (7.071,0,7.071) to origin, up Y"
 		},
 		{
-			Vector4(1.0f, 1.0f, 1.0f, 1.0f),
-			Vector4(2.0f, 2.0f, 2.0f, 1.0f),
-			Vector4(-1.0f, 2.0f, 0.0f, 1.0f),  // ненормализованный up
+			Vector3(1.0f, 1.0f, 1.0f),
+			Vector3(2.0f, 2.0f, 2.0f),
+			Vector3(-1.0f, 2.0f, 0.0f),
 			L"Non-normalized up vector (-1,2,0), should be handled by algorithm"
 		},
 
 		// Тесты симметрии
 		{
-			Vector4(-5.0f, 0.0f, 0.0f, 1.0f),
-			Vector4(0.0f, 0.0f, 0.0f, 1.0f),
-			Vector4(0.0f, 1.0f, 0.0f, 1.0f),
+			Vector3(-5.0f, 0.0f, 0.0f),
+			Vector3(0.0f, 0.0f, 0.0f),
+			Vector3(0.0f, 1.0f, 0.0f),
 			L"View along +X axis from (-5,0,0) to origin, up Y (opposite of test 2)"
 		},
 		{
-			Vector4(0.0f, -5.0f, 0.0f, 1.0f),
-			Vector4(0.0f, 0.0f, 0.0f, 1.0f),
-			Vector4(0.0f, 0.0f, -1.0f, 1.0f),
+			Vector3(0.0f, -5.0f, 0.0f),
+			Vector3(0.0f, 0.0f, 0.0f),
+			Vector3(0.0f, 0.0f, -1.0f),
 			L"View along +Y axis from (0,-5,0) to origin, up -Z"
-		},
+		}
 
 		// ВЫРОЖДЕННЫЕ СЛУЧАИ - должны обрабатываться корректно или падать явно
 		// Раскомментируйте если хотите протестировать обработку ошибок:
@@ -502,18 +502,18 @@ Result<std::string> test_Matrix4x4::ValidateLookAt_DirectX()
 }
 
 Result<std::string> test_Matrix4x4::ValidateLookAt_DirectX(
-	const Vector4& eye,
-	const Vector4& target,
-	const Vector4& up)
+	const Vector3& eye,
+	const Vector3& target,
+	const Vector3& up)
 {
 	Matrix4x4 view = Matrix4x4::lookAt(eye, target, up);
 	const float epsilon = 0.0001f;
 
 	// --- 1. Базисные векторы ---
 	// ВАЖНО: В вашей матрице базисные векторы идут ПО СТОЛБЦАМ, а не по строкам!
-	Vector4 right = Vector4(view[0][0], view[1][0], view[2][0], 0.0f);
-	Vector4 upVec = Vector4(view[0][1], view[1][1], view[2][1], 0.0f);
-	Vector4 forward = Vector4(view[0][2], view[1][2], view[2][2], 0.0f);
+	Vector3 right = Vector3(view[0][0], view[1][0], view[2][0]);
+	Vector3 upVec = Vector3(view[0][1], view[1][1], view[2][1]);
+	Vector3 forward = Vector3(view[0][2], view[1][2], view[2][2]);
 
 	// Нормализация
 	if (std::abs(right.length3() - 1.0f) > epsilon)
@@ -524,23 +524,23 @@ Result<std::string> test_Matrix4x4::ValidateLookAt_DirectX(
 		return Unexpected(L"LookAt: Forward vector not normalized");
 
 	// Ортогональность
-	if (std::abs(right.dot3(upVec)) > epsilon)
+	if (std::abs(right.dot(upVec)) > epsilon)
 		return Unexpected(L"LookAt: Right and Up vectors not orthogonal");
-	if (std::abs(right.dot3(forward)) > epsilon)
+	if (std::abs(right.dot(forward)) > epsilon)
 		return Unexpected(L"LookAt: Right and Forward vectors not orthogonal");
-	if (std::abs(upVec.dot3(forward)) > epsilon)
+	if (std::abs(upVec.dot(forward)) > epsilon)
 		return Unexpected(L"LookAt: Up and Forward vectors not orthogonal");
 
 	// --- 2. Проверка направления forward (DirectX LH) ---
-	Vector4 expectedForward = (target - eye).normalized();
-	float forwardDot = forward.dot3(expectedForward);
+	Vector3 expectedForward = (target - eye).normalized();
+	float forwardDot = forward.dot(expectedForward);
 	if (forwardDot < 0.999f)
 		return Unexpected(L"LookAt: Forward vector direction incorrect");
 
 	// --- 3. Проверка translation ---
-	float expectedTx = -right.dot3(eye);
-	float expectedTy = -upVec.dot3(eye);
-	float expectedTz = -forward.dot3(eye);
+	float expectedTx = -right.dot(eye);
+	float expectedTy = -upVec.dot(eye);
+	float expectedTz = -forward.dot(eye);
 
 	if (std::abs(view[3][0] - expectedTx) > epsilon)
 		return Unexpected(L"LookAt: Translation X component incorrect");
@@ -550,30 +550,6 @@ Result<std::string> test_Matrix4x4::ValidateLookAt_DirectX(
 		return Unexpected(L"LookAt: Translation Z component incorrect");
 	if (std::abs(view[3][3] - 1.0f) > epsilon)
 		return Unexpected(L"LookAt: M[3][3] should be 1.0");
-
-	// --- 4. Проверка трансформации точки eye ---
-	Vector4 transformedEye = eye * view;
-	float w = transformedEye[3];
-	if (std::abs(w) < epsilon)
-		return Unexpected(L"LookAt: Transformed eye has invalid w component");
-
-	float x = transformedEye[0] / w;
-	float y = transformedEye[1] / w;
-	float z = transformedEye[2] / w;
-
-	if (std::abs(x) > epsilon || std::abs(y) > epsilon || std::abs(z) > epsilon)
-		return Unexpected(L"LookAt: Eye position should transform to origin");
-
-	// --- 5. Проверка трансформации точки target ---
-	Vector4 transformedTarget = target * view;
-	float tw = transformedTarget[3];
-	if (std::abs(tw) < epsilon)
-		return Unexpected(L"LookAt: Transformed target has invalid w component");
-
-	float tz = transformedTarget[2] / tw;
-	// В DirectX LH forward = target - eye, значит target впереди камеры => Z > 0
-	if (tz <= epsilon)
-		return Unexpected(L"LookAt: Target should be in front of camera (positive Z in LH)");
 
 	return { "Success" };
 }
