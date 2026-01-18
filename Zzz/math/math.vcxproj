@@ -147,6 +147,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="headers\Header.h" />
+    <ClInclude Include="headers\HeaderConstants.h" />
     <ClInclude Include="headers\HeaderSIMD.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>

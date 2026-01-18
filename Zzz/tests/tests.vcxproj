@@ -85,6 +85,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="sourceTests\tests_math\test_Vector3.cpp" />
+    <ClCompile Include="sourceTests\tests_math\test_Quaternion.cpp" />
     <ClCompile Include="source\ITest.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -98,6 +99,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sourceTests\tests_math\test_Vector3.h" />
+    <ClInclude Include="sourceTests\tests_math\test_Quaternion.h" />
     <ClInclude Include="source\ITest.h" />
     <ClInclude Include="sourceTests\headerTests.h" />
     <ClInclude Include="source\BaseTest.h" />
