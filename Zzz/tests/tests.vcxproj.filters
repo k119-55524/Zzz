@@ -36,6 +36,9 @@
     <ClCompile Include="source\ITest.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="sourceTests\tests_math\test_Vector3.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -60,6 +63,9 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="source\ITest.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="sourceTests\tests_math\test_Vector3.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

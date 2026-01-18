@@ -3,6 +3,10 @@
 
 export module Math;
 
+export import Vector3;
+export import Vector4;
+export import Matrix4x4;
+
 export namespace zzz::math
 {
 	export constexpr float Pi = 3.14159265358979323846f;

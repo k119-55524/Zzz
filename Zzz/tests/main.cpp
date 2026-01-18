@@ -19,6 +19,7 @@ int main()
 		//zzz::Engine Engine;
 
 		TestManager manager;
+		manager.AddTest(std::make_unique<test_Vector3>());
 		manager.AddTest(std::make_unique<test_Vector4>());
 		manager.AddTest(std::make_unique<test_Matrix4x4>());
 		manager.RunTests();

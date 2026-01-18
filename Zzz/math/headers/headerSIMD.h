@@ -46,7 +46,7 @@
 #endif
 
 // Дополнительные типы для Metal)
-#if defined(__APPLE__)
-	using simd_float3 = ::simd::float3;
-	using simd_float4x4 = ::simd::float4x4;
-#endif
+//#if defined(__APPLE__)
+//	using simd_float3 = ::simd::float3;
+//	using simd_float4x4 = ::simd::float4x4;
+//#endif

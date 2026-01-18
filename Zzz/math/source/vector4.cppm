@@ -1,5 +1,3 @@
-#include "pch.h"
-
 #include "../headers/headerSIMD.h"
 
 export module Vector4;
@@ -10,7 +8,7 @@ export namespace zzz::math
 	{
 		simd_float4 data;
 
-		// Конструкторы 
+		// ---------------- Constructors ----------------
 		Vector4() noexcept
 		{
 #if defined(__APPLE__)

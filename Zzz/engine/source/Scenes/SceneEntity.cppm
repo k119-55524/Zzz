@@ -3,6 +3,9 @@ export module SceneEntity;
 
 export import Material;
 export import IMeshGPU;
+export import Transform;
+
+using namespace zzz::math;
 
 export namespace zzz
 {
@@ -17,6 +20,9 @@ export namespace zzz
 
 		[[nodiscard]] inline std::shared_ptr<IMeshGPU> GetMesh() const noexcept { return m_Mesh; }
 		[[nodiscard]] inline std::shared_ptr<Material> GetMaterial() const noexcept { return m_Material; }
+
+	protected:
+		Transform m_Transform;
 
 	private:
 		const std::shared_ptr<IMeshGPU> m_Mesh;

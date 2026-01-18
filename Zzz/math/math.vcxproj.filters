@@ -44,5 +44,11 @@
     <ClCompile Include="source\AABB.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="source\Vector3.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Vector.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
