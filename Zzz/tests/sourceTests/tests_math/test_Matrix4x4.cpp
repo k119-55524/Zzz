@@ -2,8 +2,6 @@
 #include "test_Matrix4x4.h"
 
 import Math;
-import Vector4;
-import Matrix4x4;
 
 using namespace zzz;
 using namespace zzz::math;
@@ -112,7 +110,7 @@ Result<std::string> test_Matrix4x4::ValidateMatrixVectorMultiply()
 
 		// 7. Translation * Scale (сначала scale, потом translation)
 		{
-			Matrix4x4::scale(2.0f)* Matrix4x4::translation(1.0f, 2.0f, 3.0f),
+			Matrix4x4::scale(2.0f) * Matrix4x4::translation(1.0f, 2.0f, 3.0f),
 			Vector4(1.0f, 1.0f, 1.0f, 1.0f),
 			Vector4(3.0f, 4.0f, 5.0f, 1.0f),
 			L"Translation * Scale"

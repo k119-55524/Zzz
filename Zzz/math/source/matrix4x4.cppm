@@ -1,7 +1,8 @@
 #include "../headers/headerSIMD.h"
 
 export module Matrix4x4;
-import Vector4;
+
+export import Vector;
 
 export namespace zzz::math
 {
@@ -256,6 +257,10 @@ export namespace zzz::math
 			return scale(v.x(), v.y(), v.z());
 		}
 
+		static Matrix4x4 scale(float s) noexcept
+		{
+			return scale(s, s, s);
+		}
 
 		static Matrix4x4 rotationX(float angle) noexcept
 		{

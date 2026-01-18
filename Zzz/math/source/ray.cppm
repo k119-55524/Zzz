@@ -3,7 +3,7 @@
 
 export module Ray;
 
-import Vector4;
+import Vector;
 import Matrix4x4;
 
 export namespace zzz::math

@@ -1,6 +1,6 @@
 #include "test_Vector3.h"
 
-import Vector3;
+import Math;
 
 using namespace zzz::math;
 using namespace zzz::ztests;

@@ -3,7 +3,6 @@ export module Scene;
 
 export import Math;
 export import Camera;
-export import Vector4;
 export import SceneEntity;
 
 using namespace zzz::math;

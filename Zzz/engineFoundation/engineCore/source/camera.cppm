@@ -1,9 +1,8 @@
 
 export module Camera;
 
-import Ray;
+import Math;
 import Size2D;
-import Vector4;
 import Matrix4x4;
 
 using namespace zzz::math;

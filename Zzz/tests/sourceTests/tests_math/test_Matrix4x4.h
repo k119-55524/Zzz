@@ -2,8 +2,8 @@
 
 #include "..\..\source\BaseTest.h"
 
+import Math;
 import Result;
-import Vector4;
 import Matrix4x4;
 
 using namespace zzz;

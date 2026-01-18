@@ -3,8 +3,10 @@
 
 export module Math;
 
-export import Vector3;
-export import Vector4;
+export import Ray;
+export import Vector;
+//export import Vector3;
+//export import Vector4;
 export import Matrix4x4;
 
 export namespace zzz::math
