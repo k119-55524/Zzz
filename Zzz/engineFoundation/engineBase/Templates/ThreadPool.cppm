@@ -8,8 +8,40 @@ import QueueArray;
 
 using namespace zzz;
 
-export namespace zzz::templates
+namespace zzz::templates
 {
+	// ”становка имени потока дл€ отладки в Visual Studio
+#if defined(_MSC_VER) && defined(_DEBUG)
+	inline void SetThreadName(const char* threadName)
+	{
+		const DWORD MS_VC_EXCEPTION = 0x406D1388;
+
+#pragma pack(push,8)
+		struct THREADNAME_INFO
+		{
+			DWORD dwType;       // must be 0x1000
+			LPCSTR szName;      // им€ потока
+			DWORD dwThreadID;   // Thread ID (-1 = текущий поток)
+			DWORD dwFlags;      // reserved, must be zero
+		} info;
+		info.dwType = 0x1000;
+		info.szName = threadName;
+		info.dwThreadID = -1;  // текущий поток
+		info.dwFlags = 0;
+#pragma pack(pop)
+
+		__try
+		{
+			RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
+		}
+		__except (EXCEPTION_EXECUTE_HANDLER)
+		{
+		}
+	}
+#else
+	inline void SetThreadName(const char*) {}
+#endif
+
 	// ѕотокобезопасна€ очередь на основе QueueArray
 	template<typename T>
 	class ThreadSafeArrayQueue
@@ -111,14 +143,12 @@ export namespace zzz::templates
 	};
 
 	// ѕул потоков дл€ выполнени€ задач
-	class ThreadPool
+	export class ThreadPool
 	{
-	public:
-		ThreadPool() = delete;
-		ThreadPool(const ThreadPool&) = delete;
-		ThreadPool& operator=(const ThreadPool&) = delete;
+		Z_NO_CREATE_COPY(ThreadPool);
 
-		explicit ThreadPool(size_t threadCount) :
+	public:
+		explicit ThreadPool(std::string threadName, size_t threadCount) :
 			done{ false },
 			threadCount{ threadCount },
 			activeThreadCount{ 0 },
@@ -132,7 +162,7 @@ export namespace zzz::templates
 			{
 				for (size_t i = 0; i < threadCount; ++i)
 				{
-					threads.emplace_back(&ThreadPool::WorkerThread, this, i);
+					threads.emplace_back(&ThreadPool::WorkerThread, this, threadName, i);
 				}
 			}
 			catch (...)
@@ -206,8 +236,14 @@ export namespace zzz::templates
 		std::mutex cv_mutex;
 		std::condition_variable cv;
 
-		void WorkerThread(size_t id)
+		void WorkerThread(std::string _threadName, size_t id)
 		{
+#if defined(_MSC_VER) && defined(_DEBUG)
+			// ”станавливаем им€ потока дл€ отладки только в Visual Studio
+			std::string threadName = std::format(">>>>> [zzz::ThreadPool]. Thread-using class: zzz::{}({})", _threadName, id);
+			SetThreadName(threadName.c_str());
+#endif
+
 			while (true)
 			{
 				std::function<void()> task;

@@ -79,7 +79,7 @@ export namespace zzz
 
 	Engine::Engine() :
 		initState{ eInitState::InitNot },
-		transferResToGPU{ 1 },
+		transferResToGPU{std::string("Engine"), 1},
 		isSysPaused{ true }
 	{
 	}

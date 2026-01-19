@@ -1,10 +1,8 @@
 
 export module Camera;
 
-import Ray;
-import Size2D;
-import Vector4;
-import Matrix4x4;
+export import Math;
+export import Size2D;
 
 using namespace zzz::math;
 
@@ -75,56 +73,56 @@ export namespace zzz
 		//	m_AspectRatio = GetAspect(m_AspectPreset);
 		//}
 
-		inline void SetPosition(const Vector4& position) noexcept { m_Position = position; m_ViewMatrixDirty = true; }
-		inline const Vector4& GetPosition() const noexcept { return m_Position; }
+		inline void SetPosition(const Vector3& position) noexcept { m_Position = position; m_ViewMatrixDirty = true; }
+		inline const Vector3& GetPosition() const noexcept { return m_Position; }
 
-		inline void SetTarget(const Vector4& target) noexcept { m_Target = target; m_ViewMatrixDirty = true; }
-		inline const Vector4& GetTarget() const noexcept { return m_Target; }
+		inline void SetTarget(const Vector3& target) noexcept { m_Target = target; m_ViewMatrixDirty = true; }
+		inline const Vector3& GetTarget() const noexcept { return m_Target; }
 
-		inline void SetUp(const Vector4& up) noexcept { m_Up = up.normalized(); m_ViewMatrixDirty = true; }
-		inline const Vector4& GetUp() const noexcept { return m_Up; }
+		inline void SetUp(const Vector3& up) noexcept { m_Up = up.normalized(); m_ViewMatrixDirty = true; }
+		inline const Vector3& GetUp() const noexcept { return m_Up; }
 
-		inline Vector4 GetForward() const noexcept { return (m_Target - m_Position).normalized(); }
-		inline Vector4 GetRight() const noexcept { return GetForward().cross3(m_Up).normalized(); }
-		inline Vector4 GetActualUp() const noexcept { return GetRight().cross3(GetForward()).normalized(); }
+		inline Vector3 GetForward() const noexcept { return (m_Target - m_Position).normalized(); }
+		inline Vector3 GetRight() const noexcept { return GetForward().cross3(m_Up).normalized(); }
+		inline Vector3 GetActualUp() const noexcept { return GetRight().cross3(GetForward()).normalized(); }
 
-		inline void Move(const Vector4& offset) noexcept { m_Position += offset; m_Target += offset; m_ViewMatrixDirty = true; }
+		inline void Move(const Vector3& offset) noexcept { m_Position += offset; m_Target += offset; m_ViewMatrixDirty = true; }
 		inline void MoveForward(float distance) noexcept { Move(GetForward() * distance); }
 		inline void MoveRight(float distance) noexcept { Move(GetRight() * distance); }
 		inline void MoveUp(float distance) noexcept { Move(m_Up * distance); }
 
-		inline void RotateAroundTarget(float yawRadians, float pitchRadians) noexcept
-		{
-			Vector4 offset = m_Position - m_Target;
-			float radius = offset.length();
+		//inline void RotateAroundTarget(float yawRadians, float pitchRadians) noexcept
+		//{
+		//	Vector3 offset = m_Position - m_Target;
+		//	float radius = offset.length();
 
-			Matrix4x4 yawRotation = Matrix4x4::rotationY(yawRadians);
-			offset = offset * yawRotation;
+		//	Matrix4x4 yawRotation = Matrix4x4::rotationY(yawRadians);
+		//	offset = offset * yawRotation;
 
-			Vector4 right = (m_Target - m_Position).normalized().cross3(m_Up).normalized();
-			Matrix4x4 pitchRotation = Matrix4x4::rotation(right, pitchRadians);
-			offset = offset * pitchRotation;
+		//	Vector4 right = (m_Target - m_Position).normalized().cross3(m_Up).normalized();
+		//	Matrix4x4 pitchRotation = Matrix4x4::rotation(right, pitchRadians);
+		//	offset = offset * pitchRotation;
 
-			m_Position = m_Target + offset.normalized() * radius;
-			m_ViewMatrixDirty = true;
-		}
+		//	m_Position = m_Target + offset.normalized() * radius;
+		//	m_ViewMatrixDirty = true;
+		//}
 
-		inline void LookAt(const Vector4& target) noexcept { m_Target = target; m_ViewMatrixDirty = true; }
+		inline void LookAt(const Vector3& target) noexcept { m_Target = target; m_ViewMatrixDirty = true; }
 
-		inline void Rotate(float yawRadians, float pitchRadians) noexcept
-		{
-			Vector4 forward = GetForward();
-			Vector4 right = GetRight();
+		//inline void Rotate(float yawRadians, float pitchRadians) noexcept
+		//{
+		//	Vector4 forward = GetForward();
+		//	Vector4 right = GetRight();
 
-			Matrix4x4 yawRotation = Matrix4x4::rotationY(yawRadians);
-			forward = forward * yawRotation;
+		//	Matrix4x4 yawRotation = Matrix4x4::rotationY(yawRadians);
+		//	forward = forward * yawRotation;
 
-			Matrix4x4 pitchRotation = Matrix4x4::rotation(right, pitchRadians);
-			forward = forward * pitchRotation;
+		//	Matrix4x4 pitchRotation = Matrix4x4::rotation(right, pitchRadians);
+		//	forward = forward * pitchRotation;
 
-			m_Target = m_Position + forward;
-			m_ViewMatrixDirty = true;
-		}
+		//	m_Target = m_Position + forward;
+		//	m_ViewMatrixDirty = true;
+		//}
 
 		// TODO: Возможно, эти методы не нужны, так как есть SetFovY и SetAspectRatio
 		//inline void SetPerspective(float fovYRadians, float aspectRatio, float nearPlane, float farPlane) noexcept
@@ -217,37 +215,37 @@ export namespace zzz
 		inline eProjType GetProjectionType() const noexcept { return m_ProjectionType; }
 
 		// Преобразование экранных координат (normalized device coords) в луч в мировом пространстве
-		inline Ray ScreenPointToRay(float ndcX, float ndcY) const noexcept
-		{
-			if (m_ProjectionType == eProjType::Perspective)
-			{
-				return Ray::from_ndc_perspective(
-					ndcX, ndcY,
-					m_Position,
-					GetViewMatrix(),
-					m_FovY,
-					m_AspectRatio);
-			}
-			else // Orthographic
-			{
-				return Ray::from_ndc_orthographic(
-					ndcX, ndcY,
-					GetViewMatrix(),
-					m_Left, m_Right,
-					m_Bottom, m_Top);
-			}
-		}
+		//inline Ray ScreenPointToRay(float ndcX, float ndcY) const noexcept
+		//{
+		//	if (m_ProjectionType == eProjType::Perspective)
+		//	{
+		//		return Ray::from_ndc_perspective(
+		//			ndcX, ndcY,
+		//			m_Position,
+		//			GetViewMatrix(),
+		//			m_FovY,
+		//			m_AspectRatio);
+		//	}
+		//	else // Orthographic
+		//	{
+		//		return Ray::from_ndc_orthographic(
+		//			ndcX, ndcY,
+		//			GetViewMatrix(),
+		//			m_Left, m_Right,
+		//			m_Bottom, m_Top);
+		//	}
+		//}
 
 		// Дополнительно: из пиксельных координат
-		inline Ray ScreenPixelsToRay(float screenX, float screenY,
-			float screenWidth, float screenHeight) const noexcept
-		{
-			// Конвертируем в NDC
-			float ndcX = (2.0f * screenX) / screenWidth - 1.0f;
-			float ndcY = 1.0f - (2.0f * screenY) / screenHeight;
+		//inline Ray ScreenPixelsToRay(float screenX, float screenY,
+		//	float screenWidth, float screenHeight) const noexcept
+		//{
+		//	// Конвертируем в NDC
+		//	float ndcX = (2.0f * screenX) / screenWidth - 1.0f;
+		//	float ndcY = 1.0f - (2.0f * screenY) / screenHeight;
 
-			return ScreenPointToRay(ndcX, ndcY);
-		}
+		//	return ScreenPointToRay(ndcX, ndcY);
+		//}
 
 		// Frustum culling (базовая версия)
 		struct Frustum
@@ -367,9 +365,9 @@ export namespace zzz
 		//}
 
 	private:
-		Vector4 m_Position;
-		Vector4 m_Target;
-		Vector4 m_Up;
+		Vector3 m_Position;
+		Vector3 m_Target;
+		Vector3 m_Up;
 
 		float m_FovY;
 		float m_NearPlane;

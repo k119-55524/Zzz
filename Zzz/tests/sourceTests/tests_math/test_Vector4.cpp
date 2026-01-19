@@ -1,7 +1,7 @@
 
 #include "test_Vector4.h"
 
-import Vector4;
+import Math;
 
 using namespace zzz::math;
 using namespace zzz::ztests;

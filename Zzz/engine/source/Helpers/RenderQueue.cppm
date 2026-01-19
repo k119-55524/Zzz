@@ -41,55 +41,95 @@ export namespace zzz
 			SetPSOFunc&& setPSOFunc,
 			SetMeshTopologyFunc&& topoFunc,
 			SetMeshConstFunc&& setMeshConstFunc,
-			RenderInexedMeshFunc&& renderInexedMeshFunc) const
+			RenderInexedMeshFunc&& renderInexedMeshFunc)
 		{
+			BuildQueue();
+
 			PrimitiveTopology currTopo;
 
 			// Очистка поверхности
 			clearFunc(m_ViewSetup->GetSurfClearType(), m_ViewSetup->GetClearColor(), m_ViewSetup->IsClearDepth());
 
-			// Установка viewport и scissor rect
-			layerFunc(m_ViewSetup->GetViewport(), m_ViewSetup->GetScissor());
-
 			std::shared_ptr<Scene> scene;
 			for (auto& layer : m_RenderLayers)
 			{
-				scene = layer->GetScene();
-				if (scene == nullptr)
+				if (!layer->IsActive())
 					continue;
 
-				// Установка глобальных констант шейдеров
-				Camera& primaryCamera = scene->GetPrimaryCamera();
-				Matrix4x4 camViewProj = primaryCamera.GetProjectionViewMatrix(surfSize);
-				setGlobalConstFunc(camViewProj);
+				// Установка viewport и scissor rect
+				layerFunc(layer->GetViewport(), layer->GetScissor());
 
-				auto entity = scene->GetEntity();
-				auto material = entity->GetMaterial();
-				auto pso = material->GetPSO();
-
-				// Установка PSO(set material)
-				setPSOFunc(pso);
-
-				// Установка топологии примитивов
-				if (pso->GetPrimitiveTopology() != currTopo)
+				scene = layer->GetScene();
+				if (scene != nullptr)
 				{
-					currTopo = pso->GetPrimitiveTopology();
-					topoFunc(currTopo);
+					// Установка глобальных констант шейдеров
+					Camera& primaryCamera = scene->GetPrimaryCamera();
+					Matrix4x4 camViewProj = primaryCamera.GetProjectionViewMatrix(surfSize);
+					setGlobalConstFunc(camViewProj);
+
+					auto entity = scene->GetEntity();
+					auto material = entity->GetMaterial();
+					auto pso = material->GetPSO();
+
+					// Установка PSO(set material)
+					setPSOFunc(pso);
+
+					// Установка топологии примитивов
+					if (pso->GetPrimitiveTopology() != currTopo)
+					{
+						currTopo = pso->GetPrimitiveTopology();
+						topoFunc(currTopo);
+					}
+
+					// Пример изменения трансформации объекта
+					{
+						//Transform& transform = entity->GetTransform();
+
+						//Vector3 position = transform.GetPosition();
+						//position.set_x(-1.2f);
+						//position.set_y(-1.2f);
+						//position.set_z(3.0f);
+						//transform.SetPosition(position);
+
+						//Vector3 scale = transform.GetScale();
+						//scale.set_x(0.5f);
+						//scale.set_y(0.5f);
+						//scale.set_z(0.5f);
+						//transform.SetScale(scale);
+
+						//static int c = 0;
+						//static float f = 0.0f;
+						//c++;
+						//if (c > 50)
+						//{
+						//	c = 0;
+						//	f += 0.01f;
+						//}
+
+						//Quaternion rotationQuat = Quaternion::fromEulerXYZ(f, f / 2.0f, 0.0f);
+						//transform.SetRotation(rotationQuat);
+					}
+
+					const Matrix4x4& world = entity->GetTransform().GetWorldMatrix();
+					Matrix4x4 worldViewProj = world * camViewProj;
+					setMeshConstFunc(worldViewProj);
+
+					// Рендринг меша
+					auto mesh = entity->GetMesh();
+					renderInexedMeshFunc(mesh, mesh->GetIndexCount());
 				}
-
-				Matrix4x4 world;
-				world = world.translation(0.0f, 0.0f, 3.0f);
-				Matrix4x4 worldViewProj = world * camViewProj;
-				setMeshConstFunc(worldViewProj);
-
-				// Рендринг меша
-				auto mesh = entity->GetMesh();
-				renderInexedMeshFunc(mesh, 36);
 			}
 		}
 
-	protected:
+	private:
 		std::shared_ptr<ViewSetup> m_ViewSetup;
 		std::vector<std::shared_ptr<IRenderLayer>>& m_RenderLayers;
+
+		void BuildQueue();
 	};
+
+	void RenderQueue::BuildQueue()
+	{
+
+	}
 }

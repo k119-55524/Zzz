@@ -1,10 +1,9 @@
 
 export module Scene;
 
-import Math;
-import Camera;
-import Vector4;
-import SceneEntity;
+export import Math;
+export import Camera;
+export import SceneEntity;
 
 using namespace zzz::math;
 
@@ -30,14 +29,14 @@ export namespace zzz
 
 	export Scene::Scene()
 	{
-		m_PrimaryCamera.SetFovY(0.25f * Pi);
+		m_PrimaryCamera.SetFovY(0.25f * PI);
 		//m_PrimaryCamera.SetAspectRatio(eAspectType::Ratio_16x9);
 		m_PrimaryCamera.SetAspectRatio(eAspectType::FullWindow, 1.0f);
 		m_PrimaryCamera.SetNearPlane(0.1f);
 		m_PrimaryCamera.SetFarPlane(1000.0f);
 
-		float mTheta = 1.5f * Pi;
-		float mPhi = Pi / 4.0f; // 45 градусов
+		float mTheta = 1.5f * PI;
+		float mPhi = PI / 4.0f; // 45 градусов
 		float mRadius = 5.0f;
 
 		float x = mRadius * std::sin(mPhi) * std::cos(mTheta);
@@ -47,10 +46,10 @@ export namespace zzz
 		//float y = 0.0f;
 		//float z = -5.0f;
 
-		m_PrimaryCamera.SetPosition(Vector4(x, y, z, 1.0f));
+		m_PrimaryCamera.SetPosition(Vector3(x, y, z));
 		//m_PrimaryCamera.SetPosition(Vector4(0, 0, -5, 1.0f));
-		m_PrimaryCamera.SetTarget(Vector4(0.0f, 0.0f, 0.0f, 0.0f));
-		m_PrimaryCamera.SetUp(Vector4(0.0f, 1.0f, 0.0f, 0.0f));
+		m_PrimaryCamera.SetTarget(Vector3(0.0f, 0.0f, 0.0f));
+		m_PrimaryCamera.SetUp(Vector3(0.0f, 1.0f, 0.0f));
 	}
 
 	export Scene::~Scene()

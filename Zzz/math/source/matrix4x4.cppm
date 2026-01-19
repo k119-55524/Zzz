@@ -1,7 +1,8 @@
 #include "../headers/headerSIMD.h"
 
 export module Matrix4x4;
-import Vector4;
+
+export import Vector;
 
 export namespace zzz::math
 {
@@ -236,6 +237,11 @@ export namespace zzz::math
 			);
 		}
 
+		static Matrix4x4 translation(const Vector3& v) noexcept
+		{
+			return translation(v.x(), v.y(), v.z());
+		}
+
 		static Matrix4x4 translation(const Vector4& v) noexcept
 		{
 			return translation(v.x(), v.y(), v.z());
@@ -251,11 +257,20 @@ export namespace zzz::math
 			);
 		}
 
+		static Matrix4x4 scale(const Vector3& v) noexcept
+		{
+			return scale(v.x(), v.y(), v.z());
+		}
+
 		static Matrix4x4 scale(const Vector4& v) noexcept
 		{
 			return scale(v.x(), v.y(), v.z());
 		}
 
+		static Matrix4x4 scale(float s) noexcept
+		{
+			return scale(s, s, s);
+		}
 
 		static Matrix4x4 rotationX(float angle) noexcept
 		{
@@ -326,15 +341,13 @@ export namespace zzz::math
 		}
 
 		// LookAtLH
-		static Matrix4x4 lookAt(const Vector4& eye, const Vector4& target, const Vector4& up) noexcept
+		static Matrix4x4 lookAt(const Vector3& eye, const Vector3& target, const Vector3& up) noexcept
 		{
-			Vector4 forward = (target - eye).normalized();      // R2 (Z axis)
-			Vector4 right = up.cross3(forward).normalized();    // R0 (X axis)
-			Vector4 upVec = forward.cross3(right);              // R1 (Y axis)
+			Vector3 forward = (target - eye).normalized();      // R2 (Z axis)
+			Vector3 right = up.cross3(forward).normalized();    // R0 (X axis)
+			Vector3 upVec = forward.cross3(right);              // R1 (Y axis)
 
-			auto dot = [](const Vector4& a, const Vector4& b) {
-				return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-				};
+			auto dot = [](const Vector3& a, const Vector3& b) { return a.dot(b); };
 
 			// DirectX создает матрицу с векторами как строками и dot в 4-м столбце,
 			// потом транспонирует. Для row-major это означает:
@@ -574,4 +587,64 @@ export namespace zzz::math
 		return Vector4{ result };
 #endif
 	}
+
+	inline Vector3 operator*(const Vector3& v, const Matrix4x4& m) noexcept
+	{
+#if defined(__APPLE__)
+		// Apple SIMD
+		simd_float4 vec = simd_make_float4(v.x(), v.y(), v.z(), 1.0f); // добавляем w=1
+		simd_float4x4 mat;
+		mat.columns[0] = m.rows[0].data;
+		mat.columns[1] = m.rows[1].data;
+		mat.columns[2] = m.rows[2].data;
+		mat.columns[3] = m.rows[3].data;
+
+		simd_float4 result = ::simd::float4{ 0,0,0,0 };
+		result += vec.x * mat.columns[0];
+		result += vec.y * mat.columns[1];
+		result += vec.z * mat.columns[2];
+		result += vec.w * mat.columns[3];
+
+		return Vector3{ result.x, result.y, result.z };
+
+#elif defined(_M_X64) || defined(__x86_64__)
+		__m128 vec = _mm_set_ps(1.0f, v.z(), v.y(), v.x()); // w=1, порядок: [w,z,y,x]
+
+		__m128 brod_x = _mm_shuffle_ps(vec, vec, _MM_SHUFFLE(0, 0, 0, 0));
+		__m128 brod_y = _mm_shuffle_ps(vec, vec, _MM_SHUFFLE(1, 1, 1, 1));
+		__m128 brod_z = _mm_shuffle_ps(vec, vec, _MM_SHUFFLE(2, 2, 2, 2));
+		__m128 brod_w = _mm_shuffle_ps(vec, vec, _MM_SHUFFLE(3, 3, 3, 3));
+
+		__m128 mul_x = _mm_mul_ps(brod_x, m.rows[0].data);
+		__m128 mul_y = _mm_mul_ps(brod_y, m.rows[1].data);
+		__m128 mul_z = _mm_mul_ps(brod_z, m.rows[2].data);
+		__m128 mul_w = _mm_mul_ps(brod_w, m.rows[3].data);
+
+		__m128 sum_xy = _mm_add_ps(mul_x, mul_y);
+		__m128 sum_zw = _mm_add_ps(mul_z, mul_w);
+		__m128 result = _mm_add_ps(sum_xy, sum_zw);
+
+		return Vector3{ result.m128_f32[0], result.m128_f32[1], result.m128_f32[2] };
+
+#elif defined(_M_ARM64) || defined(__aarch64__)
+		float32x4_t vec = { v.x(), v.y(), v.z(), 1.0f };
+
+		float32x4_t brod_x = vdupq_laneq_f32(vec, 0);
+		float32x4_t brod_y = vdupq_laneq_f32(vec, 1);
+		float32x4_t brod_z = vdupq_laneq_f32(vec, 2);
+		float32x4_t brod_w = vdupq_laneq_f32(vec, 3);
+
+		float32x4_t mul_x = vmulq_f32(brod_x, m.rows[0].data);
+		float32x4_t mul_y = vmulq_f32(brod_y, m.rows[1].data);
+		float32x4_t mul_z = vmulq_f32(brod_z, m.rows[2].data);
+		float32x4_t mul_w = vmulq_f32(brod_w, m.rows[3].data);
+
+		float32x4_t sum_xy = vaddq_f32(mul_x, mul_y);
+		float32x4_t sum_zw = vaddq_f32(mul_z, mul_w);
+		float32x4_t result = vaddq_f32(sum_xy, sum_zw);
+
+		return Vector3{ result[0], result[1], result[2] };
+#endif
+	}
+
 }

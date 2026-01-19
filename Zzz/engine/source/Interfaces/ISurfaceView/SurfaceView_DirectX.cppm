@@ -15,9 +15,7 @@ import Colors;
 import Camera;
 import IAppWin;
 import Helpers;
-import Vector4;
 import IMeshGPU;
-import Matrix4x4;
 import StrConvert;
 import RenderVolume;
 import RenderQueue;
@@ -535,12 +533,12 @@ namespace zzz::directx
 				m_CB_Object->CopyData(0, gpuObj);
 			},
 			// Отрисовка меша с инексным буффером
-			[&](const std::shared_ptr<IMeshGPU> mesh, zU32 count)
+			[&](const std::shared_ptr<IMeshGPU> mesh, size_t count)
 			{
 				std::shared_ptr<MeshGPU_DirectX> meshDX = static_pointer_cast<MeshGPU_DirectX>(mesh);
 				commandList->IASetVertexBuffers(0, 1, meshDX->VertexBufferView());
 				commandList->IASetIndexBuffer(meshDX->IndexBufferView());
-				commandList->DrawIndexedInstanced(count, 1, 0, 0, 0);
+				commandList->DrawIndexedInstanced(static_cast<UINT>(count), 1, 0, 0, 0);
 			}
 		);
 

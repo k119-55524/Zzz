@@ -101,6 +101,51 @@
     <ClCompile Include="source\Interfaces\IRenderLayers\Layer3D.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
+    <ClCompile Include="source\Interfaces\IMeshGPU\IMeshGPU.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\IMeshGPU\MeshGPU_DirectX.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\IShader\IShader.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\IShader\IShader_DirectX.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\IShader\Shader_DirectX.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\IPSO\IPSO.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\IPSO\PSO_DX.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Material.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Scenes\Scene.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Scenes\SceneEntity.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Resources\CPUIndexBuffer.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Resources\CPUMesh.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Resources\CPUVertexBuffer.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Resources\VertexFormatMapper.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Transform.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

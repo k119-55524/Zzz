@@ -2,8 +2,8 @@
 
 #include "..\..\source\BaseTest.h"
 
+import Math;
 import Result;
-import Vector4;
 import Matrix4x4;
 
 using namespace zzz;
@@ -29,7 +29,7 @@ namespace zzz::ztests
 		Result<std::string> ValidatePerspective_DirectX();
 		Result<std::string> ValidatePerspective_DirectX(float fovY, float aspect, float nearZ, float farZ);
 		Result<std::string> ValidateLookAt_DirectX();
-		Result<std::string> ValidateLookAt_DirectX(const Vector4& eye, const Vector4& target, const Vector4& up);
+		Result<std::string> ValidateLookAt_DirectX(const Vector3& eye, const Vector3& target, const Vector3& up);
 
 		// Тесты для Metal/Vulkan
 		Result<std::string> TestForGAPI_MetalVulkan();

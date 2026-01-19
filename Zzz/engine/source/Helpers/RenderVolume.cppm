@@ -15,10 +15,10 @@ export namespace zzz
 			m_MinDepth{ minDepth },
 			m_MaxDepth{ maxDepth }
 		{
-			Update(size);
+			UpdateSize(size);
 		}
 
-		void Update(Size2D<zF32>& size) noexcept;
+		void UpdateSize(Size2D<zF32>& size) noexcept;
 		const ViewportDesc& GetViewport() const noexcept { return m_Viewport; }
 		const ScissorDesc& GetScissor() const noexcept { return m_Scissor; }
 
@@ -32,7 +32,7 @@ export namespace zzz
 		ScissorDesc m_Scissor;
 	};
 
-	void RenderVolume::Update(Size2D<zF32>& size) noexcept
+	void RenderVolume::UpdateSize(Size2D<zF32>& size) noexcept
 	{
 		m_AspectRatio = GetAspect(m_AspectPreset, size.width, size.height);
 		zF32 surface_aspect = size.width / size.height;

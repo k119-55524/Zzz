@@ -2,12 +2,12 @@
 export module MeshGPU_DirectX;
 
 #if defined(ZRENDER_API_D3D12)
-import IGAPI;
-import DXAPI;
-import CPUMesh;
-import IMeshGPU;
-import CPUIndexBuffer;
-import CPUVertexBuffer;
+export import IGAPI;
+export import DXAPI;
+export import CPUMesh;
+export import IMeshGPU;
+export import CPUIndexBuffer;
+export import CPUVertexBuffer;
 
 export namespace zzz::directx
 {
@@ -34,8 +34,6 @@ export namespace zzz::directx
 
 		std::shared_ptr<ICPUVertexBuffer> vertices;
 		std::shared_ptr<ICPUIndexBuffer> indices;
-		UINT vertexBufferSize;
-		UINT indexBufferSize;
 
 		Result<> Initialize(std::shared_ptr<IGAPI> _IGAPI) override;
 
@@ -57,17 +55,12 @@ export namespace zzz::directx
 		indices = m_MeshCPU->GetIndicies();
 		if (indices != nullptr && (indices->GetData() == nullptr || indices->GetSizeInBytes() == 0))
 			throw_runtime_error(">>>>> [MeshGPU_DirectX::MeshGPU_DirectX( ... )]. Invalid index data");
-
-		vertexBufferSize = static_cast<UINT>(vertices->SizeInBytes());
-		DebugOutput(std::format(L">>>>> [MeshGPU_DirectX::MeshGPU_DirectX( ... )]. vertexBufferSize: {}", vertexBufferSize));
-		indexBufferSize = indices ? static_cast<UINT>(indices->GetSizeInBytes()) : 0;
-		DebugOutput(std::format(L">>>>> [MeshGPU_DirectX::MeshGPU_DirectX( ... )]. indexBufferSize: {}", indexBufferSize));
 	}
 
 	Result<> MeshGPU_DirectX::Initialize(std::shared_ptr<IGAPI> _IGAPI)
 	{
 		CD3DX12_HEAP_PROPERTIES defaultHeapProps(D3D12_HEAP_TYPE_DEFAULT);
-		CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
+		CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertices->SizeInBytes());
 		HRESULT hr = _IGAPI->GetDevice()->CreateCommittedResource(
 			&defaultHeapProps,
 			D3D12_HEAP_FLAG_NONE,
@@ -94,11 +87,11 @@ export namespace zzz::directx
 
 		vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
 		vertexBufferView.StrideInBytes = static_cast<UINT>(vertices->Stride());
-		vertexBufferView.SizeInBytes = vertexBufferSize;
+		vertexBufferView.SizeInBytes = static_cast<UINT>(vertices->SizeInBytes());
 
 		if (indices != nullptr)
 		{
-			bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(indexBufferSize);
+			bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(indices->GetSizeInBytes());
 			hr = _IGAPI->GetDevice()->CreateCommittedResource(
 				&defaultHeapProps,
 				D3D12_HEAP_FLAG_NONE,
@@ -120,7 +113,7 @@ export namespace zzz::directx
 				return Unexpected(eResult::failure, std::format(L">>>>> #3 [MeshGPU_DirectX::Initialize( ... )]. Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
 
 			indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
-			indexBufferView.SizeInBytes = indexBufferSize;
+			indexBufferView.SizeInBytes = static_cast<UINT>(indices->GetSizeInBytes());
 			indexBufferView.Format = indices->GetFormat();
 		}
 
@@ -130,7 +123,7 @@ export namespace zzz::directx
 		if (FAILED(hr))
 			return Unexpected(eResult::failure, std::format(L">>>>> #4 [MeshGPU_DirectX::Initialize( ... )]. Failed Map. HRESULT = 0x{:08X}", hr));
 
-		memcpy(pVertexDataBegin, vertices->GetData(), vertexBufferSize);
+		memcpy(pVertexDataBegin, vertices->GetData(), vertices->SizeInBytes());
 		uploadVertexBuffer->Unmap(0, nullptr);
 
 		if (indices != nullptr)
@@ -140,7 +133,7 @@ export namespace zzz::directx
 			if (FAILED(hr))
 				return Unexpected(eResult::failure, std::format(L">>>>> #5 [MeshGPU_DirectX::Initialize( ... )]. Failed Map. HRESULT = 0x{:08X}", hr));
 
-			memcpy(pIndexDataBegin, indices->GetData(), indexBufferSize);
+			memcpy(pIndexDataBegin, indices->GetData(), indices->GetSizeInBytes());
 			uploadIndexBuffer->Unmap(0, nullptr);
 		}
 
@@ -173,7 +166,7 @@ export namespace zzz::directx
 		commandList->ResourceBarrier(1, &vbBarrierToCopy);
 
 		//  опирование vertex buffer
-		commandList->CopyBufferRegion(vertexBuffer.Get(), 0, uploadVertexBuffer.Get(), 0, vertexBufferSize);
+		commandList->CopyBufferRegion(vertexBuffer.Get(), 0, uploadVertexBuffer.Get(), 0, vertices->SizeInBytes());
 
 		// ѕереход vertex buffer обратно в COMMON (единственное допустимое финальное состо€ние дл€ copy command list)
 		CD3DX12_RESOURCE_BARRIER vbBarrierToCommon = CD3DX12_RESOURCE_BARRIER::Transition(
@@ -190,7 +183,7 @@ export namespace zzz::directx
 				D3D12_RESOURCE_STATE_COPY_DEST);
 			commandList->ResourceBarrier(1, &ibBarrierToCopy);
 
-			commandList->CopyBufferRegion(indexBuffer.Get(), 0, uploadIndexBuffer.Get(), 0, indexBufferSize);
+			commandList->CopyBufferRegion(indexBuffer.Get(), 0, uploadIndexBuffer.Get(), 0, indices->GetSizeInBytes());
 
 			CD3DX12_RESOURCE_BARRIER ibBarrierToCommon = CD3DX12_RESOURCE_BARRIER::Transition(
 				indexBuffer.Get(),

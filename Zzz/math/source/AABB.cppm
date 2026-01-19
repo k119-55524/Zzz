@@ -3,7 +3,7 @@
 export module AABB;
 
 import Ray;
-import Vector4;
+import Vector;
 
 namespace zzz::math
 {

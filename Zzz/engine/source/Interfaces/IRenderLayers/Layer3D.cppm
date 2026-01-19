@@ -17,7 +17,7 @@ namespace zzz
 		}
 		virtual ~Layer3D() = default;
 
-		const [[nodiscard]] std::shared_ptr<Scene> GetScene() const override { return m_Scene; };
+		[[nodiscard]] std::shared_ptr<Scene> GetScene() const override { return m_Scene; };
 
 	private:
 		std::shared_ptr<Scene> m_Scene;

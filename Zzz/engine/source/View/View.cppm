@@ -76,7 +76,7 @@ namespace zzz
 		m_ScenesManager{ _scenesManager },
 		m_GAPI{ _GAPI },
 		initState{ eInitState::InitNot },
-		m_ThreadsUpdate{2}
+		m_ThreadsUpdate{std::string("View"), 2}
 	{
 		ensure(m_WinConfig, ">>>>> [View::View()]. Window config cannot be null.");
 		ensure(m_ScenesManager, ">>>>> [View::View()]. Scenes manager cannot be null.");
@@ -106,7 +106,7 @@ namespace zzz
 			// TODO: В будущем надо будет учитывать настройки рендеринга из конфигурации
 			Size2D<zF32> size;
 			size.SetFrom(m_NativeWindow->GetWinSize());
-			m_ViewSetup = safe_make_shared<ViewSetup>(size, 0.0f, 1.0f, true);
+			m_ViewSetup = safe_make_shared<ViewSetup>(true);
 			m_ViewSetup->ActivateClearColor(colors::DarkMidnightBlue);
 			m_RenderQueue = safe_make_shared<RenderQueue>(m_ViewSetup, m_RenderLayers);
 
@@ -181,10 +181,8 @@ namespace zzz
 
 			Size2D<zF32> fsize;
 			fsize.SetFrom(size);
-			m_ViewSetup->Update(fsize);
-
 			for (auto& layer : m_RenderLayers)
-				layer->Update(fsize);
+				layer->UpdateSize(fsize);
 
 			break;
 		}
