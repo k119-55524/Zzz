@@ -237,6 +237,11 @@ export namespace zzz::math
 			);
 		}
 
+		static Matrix4x4 translation(const Vector3& v) noexcept
+		{
+			return translation(v.x(), v.y(), v.z());
+		}
+
 		static Matrix4x4 translation(const Vector4& v) noexcept
 		{
 			return translation(v.x(), v.y(), v.z());
@@ -250,6 +255,11 @@ export namespace zzz::math
 				0.0f, 0.0f, sz, 0.0f,
 				0.0f, 0.0f, 0.0f, 1.0f
 			);
+		}
+
+		static Matrix4x4 scale(const Vector3& v) noexcept
+		{
+			return scale(v.x(), v.y(), v.z());
 		}
 
 		static Matrix4x4 scale(const Vector4& v) noexcept

@@ -20,6 +20,7 @@ export namespace zzz
 
 		[[nodiscard]] inline std::shared_ptr<IMeshGPU> GetMesh() const noexcept { return m_Mesh; }
 		[[nodiscard]] inline std::shared_ptr<Material> GetMaterial() const noexcept { return m_Material; }
+		[[nodiscard]] inline Transform& GetTransform() noexcept { return m_Transform; }
 
 	protected:
 		Transform m_Transform;

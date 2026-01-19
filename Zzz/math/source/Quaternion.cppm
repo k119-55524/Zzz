@@ -51,7 +51,7 @@ namespace zzz::math
 		Quaternion& operator*=(float scalar) noexcept;
 		Quaternion& operator/=(float scalar) noexcept;
 
-		Matrix4x4 toMatrix4() const noexcept;
+		Matrix4x4 toMatrix4x4() const noexcept;
 		Vector3 toEulerAngles() const noexcept;
 
 		// Получение осей и углов
@@ -391,7 +391,7 @@ namespace zzz::math
 		return angles;
 	}
 
-	inline Matrix4x4 Quaternion::toMatrix4() const noexcept
+	inline Matrix4x4 Quaternion::toMatrix4x4() const noexcept
 	{
 		Quaternion q = normalized();
 

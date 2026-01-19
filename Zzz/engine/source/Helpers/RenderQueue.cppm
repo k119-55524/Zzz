@@ -81,8 +81,36 @@ export namespace zzz
 						topoFunc(currTopo);
 					}
 
-					Matrix4x4 world;
-					world = world.translation(0.0f, 0.0f, 3.0f);
+					// Пример изменения трансформации объекта
+					{
+						//Transform& transform = entity->GetTransform();
+
+						//Vector3 position = transform.GetPosition();
+						//position.set_x(-1.2f);
+						//position.set_y(-1.2f);
+						//position.set_z(3.0f);
+						//transform.SetPosition(position);
+
+						//Vector3 scale = transform.GetScale();
+						//scale.set_x(0.5f);
+						//scale.set_y(0.5f);
+						//scale.set_z(0.5f);
+						//transform.SetScale(scale);
+
+						//static int c = 0;
+						//static float f = 0.0f;
+						//c++;
+						//if (c > 50)
+						//{
+						//	c = 0;
+						//	f += 0.01f;
+						//}
+
+						//Quaternion rotationQuat = Quaternion::fromEulerXYZ(f, f / 2.0f, 0.0f);
+						//transform.SetRotation(rotationQuat);
+					}
+
+					const Matrix4x4& world = entity->GetTransform().GetWorldMatrix();
 					Matrix4x4 worldViewProj = world * camViewProj;
 					setMeshConstFunc(worldViewProj);
 
