@@ -1,11 +1,13 @@
 
 export module Engine;
 
+export import Result;
+export import UserView;
+
 import View;
 import IGAPI;
 import Size2D;
 import Colors;
-import Result;
 import AppTime;
 import zMsgBox;
 import IMainLoop;
@@ -47,6 +49,8 @@ export namespace zzz
 		[[nodiscard]] Result<> Initialize(std::wstring zamlPath) noexcept;
 		[[nodiscard]] Result<> Run() noexcept;
 
+		[[nodiscard]] std::shared_ptr<UserView> GetMainView() { return m_UserView; }
+
 	private:
 		EngineFactory m_EngineFactory;
 		std::shared_ptr<ZamlConfig> m_ZamlStartupConfig;
@@ -62,6 +66,9 @@ export namespace zzz
 		std::shared_ptr<IGAPI> m_GAPI;
 		std::shared_ptr<View> m_View;
 		std::shared_ptr<IMainLoop> m_MainLoop;
+
+		std::shared_ptr<UserView> m_UserView;
+
 		ThreadPool transferResToGPU;
 		AppTime m_time;
 
@@ -159,6 +166,9 @@ export namespace zzz
 		// Создаём главный цикл приложения
 		m_MainLoop = safe_make_shared<MainLoop>();
 		m_MainLoop->onUpdateSystem += std::bind(&Engine::OnUpdateSystem, this);
+
+		// Создаём обёртки для публичного API
+		m_UserView = safe_make_shared<UserView>(m_View);
 
 		initState = eInitState::InitOK;
 		return {};
@@ -282,7 +292,11 @@ export namespace zzz
 		}
 	}
 
-#pragma region 
+#pragma region User API
+
+#pragma endregion
+
+#pragma region Helpers
 	Result<std::unique_ptr<StartupConfig>> Engine::GetStartupConfig()
 	{
 		ZamlParser zamlParser;

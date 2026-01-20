@@ -32,37 +32,37 @@
     <ClCompile Include="Source\Engine.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\View\View.cppm">
+    <ClCompile Include="source\view\View.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Factories\ViewFactory.cppm">
+    <ClCompile Include="source\factories\ViewFactory.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Factories\EngineFactory.cppm">
+    <ClCompile Include="source\factories\EngineFactory.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Resources\CPUResManager.cppm">
+    <ClCompile Include="source\resources\CPUResManager.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Scenes\ScenesManager.cppm">
+    <ClCompile Include="source\scenes\ScenesManager.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Utilities\AppTime.cppm">
+    <ClCompile Include="source\utilities\AppTime.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Utilities\PerformanceMeter.cppm">
+    <ClCompile Include="source\utilities\PerformanceMeter.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Resources\GPUResManager.cppm">
+    <ClCompile Include="source\resources\GPUResManager.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Utilities\GpuEventScope.cppm">
+    <ClCompile Include="source\utilities\GpuEventScope.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Scenes\SceneEntitySpawner.cppm">
+    <ClCompile Include="source\scenes\SceneEntitySpawner.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Configs\StartupConfig.cppm">
+    <ClCompile Include="source\configs\StartupConfig.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\ZAML\ZamlConfig.cppm">
@@ -71,16 +71,16 @@
     <ClCompile Include="source\ZAML\ioZaml.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Configs\ZamlParser.cppm">
+    <ClCompile Include="source\configs\ZamlParser.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Configs\ZamlParser_MSWinDirectX.cppm">
+    <ClCompile Include="source\configs\ZamlParser_MSWinDirectX.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\View\ViewSetup.cppm">
+    <ClCompile Include="source\view\ViewSetup.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Helpers\RenderQueue.cppm">
+    <ClCompile Include="source\helpers\RenderQueue.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\Interfaces\ISurfaceView\ISurfaceView.cppm">
@@ -89,10 +89,10 @@
     <ClCompile Include="source\Interfaces\ISurfaceView\SurfaceView_DirectX.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\View\ViewportDesc.cppm">
+    <ClCompile Include="source\view\ViewportDesc.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Helpers\RenderVolume.cppm">
+    <ClCompile Include="source\helpers\RenderVolume.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\Interfaces\IRenderLayers\IRenderLayer.cppm">
@@ -125,25 +125,28 @@
     <ClCompile Include="source\Material.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Scenes\Scene.cppm">
+    <ClCompile Include="source\scenes\Scene.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Scenes\SceneEntity.cppm">
+    <ClCompile Include="source\scenes\SceneEntity.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Resources\CPUIndexBuffer.cppm">
+    <ClCompile Include="source\resources\CPUIndexBuffer.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Resources\CPUMesh.cppm">
+    <ClCompile Include="source\resources\CPUMesh.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Resources\CPUVertexBuffer.cppm">
+    <ClCompile Include="source\resources\CPUVertexBuffer.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\Resources\VertexFormatMapper.cppm">
+    <ClCompile Include="source\resources\VertexFormatMapper.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\Transform.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\api\UserView.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
   </ItemGroup>
