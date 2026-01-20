@@ -1,10 +1,11 @@
 
 export module Engine;
 
+export import View;
 export import Result;
 export import UserView;
+export import UserLayer;
 
-import View;
 import IGAPI;
 import Size2D;
 import Colors;
@@ -132,9 +133,12 @@ export namespace zzz
 		}
 		catch (const std::exception& e)
 		{
-			string_to_wstring(e.what())
-				.and_then([&](const std::wstring& wstr) { err = std::format(L">>>>> [Engine::initialize({})].\n{}", zamlPath, wstr); })
-				.or_else([&](const Unexpected& error) { err = std::format(L">>>>> #0 [Engine::initialize({})]. Unknown exception occurred.", zamlPath); });
+			auto result = string_to_wstring(e.what());
+
+			if (result)
+				err = std::format(L">>>>> [Engine::initialize({})].\n{}", zamlPath, result.value());
+			else
+				err = std::format(L">>>>> [Engine::initialize({})]. Unknown exception occurred.", zamlPath);
 		}
 		catch (...)
 		{
@@ -171,6 +175,7 @@ export namespace zzz
 		m_UserView = safe_make_shared<UserView>(m_View);
 
 		initState = eInitState::InitOK;
+
 		return {};
 	}
 
@@ -198,9 +203,11 @@ export namespace zzz
 		}
 		catch (const std::exception& e)
 		{
-			string_to_wstring(e.what())
-				.and_then([&err](const std::wstring& wstr) { err = L">>>>> [Engine::Run()]. Exception: " + wstr + L"\n"; })
-				.or_else([&err](const Unexpected& error) { err = L">>>>> #0 [Engine::Run()]. Unknown exception occurred" + std::wstring(L"\n"); });
+			auto result = string_to_wstring(e.what());
+			if (result)
+				err = L">>>>> [Engine::Run()]. Exception: " + result.value() + L"\n";
+			else
+				err = L">>>>> [Engine::Run()]. Unknown exception occurred\n";
 		}
 		catch (...)
 		{

@@ -1,6 +1,10 @@
 
 export module View;
 
+export import Layer3D;
+export import UserLayer;
+export import IRenderLayer;
+
 import IGAPI;
 import Event;
 import Result;
@@ -12,9 +16,6 @@ import ViewFactory;
 import AppWinConfig;
 import ISurfaceView;
 import ScenesManager;
-
-export import Layer3D;
-export import IRenderLayer;
 
 using namespace zzz::core;
 using namespace zzz::templates;
@@ -40,6 +41,8 @@ namespace zzz
 
 		Event<Size2D<>, eTypeWinResize> viewResized;
 		Event<> viewResizing;
+
+		Result<std::shared_ptr<UserLayer>> AddLayer_3D();
 
 		void OnUpdate(double deltaTime);
 		void SetFullScreen(bool fs);
@@ -202,5 +205,17 @@ namespace zzz
 
 		if(m_RenderSurface)
 			m_RenderSurface->SetFullScreen(fs);
+	}
+
+	Result<std::shared_ptr<UserLayer>> View::AddLayer_3D()
+	{
+		Size2D<zF32> size;
+		size.SetFrom(m_NativeWindow->GetWinSize());
+		std::shared_ptr<Layer3D> layer = safe_make_shared<Layer3D>(m_Scene, eAspectType::FullWindow, size, 0.0f, 1.0f);
+
+		std::shared_ptr<UserLayer> userLayer = safe_make_shared<UserLayer>(layer);
+		m_RenderLayers.push_back(layer);
+
+		return userLayer;
 	}
 }

@@ -17,12 +17,12 @@ namespace zzz
 		{
 		}
 
-		inline Result<> AddLayer_3D()
+		inline Result<Result<std::shared_ptr<UserLayer>>> AddLayer_3D()
 		{
 			if (!m_MainView)
 				return Unexpected(eResult::failure, L">>>>> [UserViewþAddLayer_3D()]. m_MainView is not initialized.");
 
-			return {};
+			return m_MainView->AddLayer_3D();
 		}
 
 	private:

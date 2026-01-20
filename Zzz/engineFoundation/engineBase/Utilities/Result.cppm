@@ -127,18 +127,6 @@ export namespace zzz
 		}
 
 		template<typename Func>
-		auto and_then(Func&& func) const -> Result<_Ty>
-			requires std::is_same_v<std::invoke_result_t<Func, const _Ty&>, void>
-		{
-			if (has_value())
-			{
-				std::invoke(std::forward<Func>(func), value());
-				return *this;
-			}
-			return Result<_Ty>(error());
-		}
-
-		template<typename Func>
 		auto or_else(Func&& func) const -> std::invoke_result_t<Func, const Unexpected&>
 		{
 			if (!has_value())
@@ -197,8 +185,10 @@ export namespace zzz
 		auto and_then(Func&& func) const
 		{
 			using R = std::invoke_result_t<Func>;
+
 			if constexpr (std::is_same_v<R, void>)
 			{
+				// Случай 1: func возвращает void
 				if (hasVal)
 				{
 					std::invoke(std::forward<Func>(func));
@@ -206,12 +196,22 @@ export namespace zzz
 				}
 				return Result<void>{err};
 			}
-			else
+			else if constexpr (std::is_same_v<R, Result<void>>)
 			{
+				// Случай 2: func возвращает Result<void>
 				if (hasVal)
 					return std::invoke(std::forward<Func>(func));
 				else
-					return R{ Unexpected(err) }; // <-- здесь гарантируем конструируемость
+					return Result<void>{err};
+			}
+			else
+			{
+				// ЭТОТ БЛОК ДОЛЖЕН БЫТЬ!
+				// Случай 3: func возвращает Result<T> где T != void
+				if (hasVal)
+					return std::invoke(std::forward<Func>(func));
+				else
+					return R{ err };
 			}
 		}
 

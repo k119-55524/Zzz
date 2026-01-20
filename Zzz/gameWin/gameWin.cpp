@@ -10,18 +10,23 @@ int APIENTRY wWinMain(
 	_In_		int			nCmdShow)
 {
 #ifdef _DEBUG
-		_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-		//_CrtSetBreakAlloc(263);
-		//_CrtSetBreakAlloc(160);
-		//_CrtSetBreakAlloc(202);
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	//_CrtSetBreakAlloc(263);
+	//_CrtSetBreakAlloc(160);
+	//_CrtSetBreakAlloc(202);
 #endif // _DEBUG
 	{
 		Engine engine;
 		Result<> res = engine.Initialize(L".\\appdata\\ui.zaml")
-			.and_then([&engine](void)
+			.and_then([&engine](void) -> Result<>
 				{
-					std::shared_ptr<UserView> view = engine.GetMainView();
-					Result<> resLayer = view->AddLayer_3D();
+					auto view = engine.GetMainView();
+					Result<std::shared_ptr<UserLayer>> resLayer = view->AddLayer_3D();
+					if (!resLayer)
+						return Result<>(resLayer.error());
+
+					//std::shared_ptr<UserLayer> layer = resLayer.value();
+					// Используйте layer если нужно
 
 					return Result<>();
 				})
