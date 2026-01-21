@@ -21,12 +21,16 @@ int APIENTRY wWinMain(
 			.and_then([&engine](void) -> Result<>
 				{
 					auto view = engine.GetMainView();
-					Result<std::shared_ptr<UserLayer>> resLayer = view->AddLayer_3D();
+					auto resLayer = view->AddLayer_3D();
 					if (!resLayer)
 						return Result<>(resLayer.error());
 
-					//std::shared_ptr<UserLayer> layer = resLayer.value();
-					// Используйте layer если нужно
+					auto layer = resLayer.value();
+					auto resScene = layer->AddScene();
+					if (!resScene)
+						return Result<>(resScene.error());
+
+					auto scene = resScene.value();
 
 					return Result<>();
 				})

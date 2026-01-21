@@ -1,12 +1,13 @@
 
 export module UserView;
 
-export import View;
-export import Result;
+import View;
+import Result;
+import UserLayer3D;
 
-namespace zzz
+export namespace zzz
 {
-	export class UserView
+	class UserView
 	{
 	public:
 		UserView() = delete;
@@ -15,9 +16,10 @@ namespace zzz
 		explicit UserView(const std::shared_ptr<View> mainView) :
 			m_MainView{ mainView }
 		{
+			ensure(m_MainView, ">>>>> [UserView::UserView(...)]. Main view cannot be null.");
 		}
 
-		inline Result<Result<std::shared_ptr<UserLayer>>> AddLayer_3D()
+		inline Result<std::shared_ptr<UserLayer3D>> AddLayer_3D()
 		{
 			if (!m_MainView)
 				return Unexpected(eResult::failure, L">>>>> [UserViewþAddLayer_3D()]. m_MainView is not initialized.");

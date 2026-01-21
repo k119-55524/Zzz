@@ -1,8 +1,8 @@
 
 export module IRenderLayer;
 
-export import Scene;
-export import RenderVolume;
+import Scene;
+import RenderVolume;
 
 namespace zzz
 {

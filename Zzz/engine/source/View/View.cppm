@@ -1,18 +1,19 @@
 
 export module View;
 
-export import Layer3D;
-export import UserLayer;
-export import IRenderLayer;
-
 import IGAPI;
 import Event;
 import Result;
+import Layer3D;
 import IAppWin;
 import StrConvert;
 import ThreadPool;
+import UserLayer3D;
 import RenderQueue;
 import ViewFactory;
+import UserLayer3D;
+import IRenderLayer;
+import IRenderLayer;
 import AppWinConfig;
 import ISurfaceView;
 import ScenesManager;
@@ -42,7 +43,7 @@ namespace zzz
 		Event<Size2D<>, eTypeWinResize> viewResized;
 		Event<> viewResizing;
 
-		Result<std::shared_ptr<UserLayer>> AddLayer_3D();
+		Result<std::shared_ptr<UserLayer3D>> AddLayer_3D();
 
 		void OnUpdate(double deltaTime);
 		void SetFullScreen(bool fs);
@@ -68,7 +69,6 @@ namespace zzz
 		std::shared_ptr<ViewSetup> m_ViewSetup;
 		std::vector<std::shared_ptr<IRenderLayer>> m_RenderLayers;
 		std::shared_ptr<RenderQueue> m_RenderQueue;
-		std::shared_ptr<Scene> m_Scene;
 	};
 
 	View::View(
@@ -112,26 +112,6 @@ namespace zzz
 			m_ViewSetup = safe_make_shared<ViewSetup>(true);
 			m_ViewSetup->ActivateClearColor(colors::DarkMidnightBlue);
 			m_RenderQueue = safe_make_shared<RenderQueue>(m_ViewSetup, m_RenderLayers);
-
-			// Кусок кода для теста
-			{
-				try
-				{
-					// Создаём сцену для теста
-					auto res1 = m_ScenesManager->GetDefaultScene();
-					if (!res1)
-						throw_runtime_error(">>>>> #0 [View::Initialize()}. ERROR!!! Failed to create test scene.");
-
-					m_Scene = res1.value();
-
-					std::shared_ptr<IRenderLayer> layer = safe_make_shared<Layer3D>(m_Scene, eAspectType::FullWindow, size, 0.0f, 1.0f);
-					m_RenderLayers.push_back(layer);
-				}
-				catch (...)
-				{
-					DebugOutput(L">>>>> #1 [View::Initialize()}. ERROR!!! Failed to create test scene.");
-				}
-			}
 
 			initState = eInitState::InitOK;
 		}
@@ -207,13 +187,13 @@ namespace zzz
 			m_RenderSurface->SetFullScreen(fs);
 	}
 
-	Result<std::shared_ptr<UserLayer>> View::AddLayer_3D()
+	Result<std::shared_ptr<UserLayer3D>> View::AddLayer_3D()
 	{
 		Size2D<zF32> size;
 		size.SetFrom(m_NativeWindow->GetWinSize());
-		std::shared_ptr<Layer3D> layer = safe_make_shared<Layer3D>(m_Scene, eAspectType::FullWindow, size, 0.0f, 1.0f);
+		std::shared_ptr<Layer3D> layer = safe_make_shared<Layer3D>(m_ScenesManager, eAspectType::FullWindow, size, 0.0f, 1.0f);
 
-		std::shared_ptr<UserLayer> userLayer = safe_make_shared<UserLayer>(layer);
+		std::shared_ptr<UserLayer3D> userLayer = safe_make_shared<UserLayer3D>(layer);
 		m_RenderLayers.push_back(layer);
 
 		return userLayer;

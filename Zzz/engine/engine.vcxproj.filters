@@ -149,7 +149,10 @@
     <ClCompile Include="source\api\UserView.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\api\UserLayer.cppm">
+    <ClCompile Include="source\api\UserScene.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\api\UserLayer3D.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
   </ItemGroup>
