@@ -100,6 +100,7 @@
     </ClCompile>
     <ClCompile Include="source\api\UserLayer3D.cppm" />
     <ClCompile Include="source\api\UserScene.cppm" />
+    <ClCompile Include="source\api\UserSceneEntity.cppm" />
     <ClCompile Include="source\api\UserView.cppm" />
     <ClCompile Include="source\configs\StartupConfig.cppm" />
     <ClCompile Include="source\configs\ZamlParser.cppm" />
@@ -127,7 +128,7 @@
     <ClCompile Include="source\view\ViewportDesc.cppm" />
     <ClCompile Include="source\helpers\RenderQueue.cppm" />
     <ClCompile Include="source\resources\GPUResManager.cppm" />
-    <ClCompile Include="source\scenes\SceneEntitySpawner.cppm" />
+    <ClCompile Include="source\scenes\SceneEntityFactory.cppm" />
     <ClCompile Include="source\utilities\AppTime.cppm" />
     <ClCompile Include="Source\Engine.cppm" />
     <ClCompile Include="source\factories\EngineFactory.cppm" />
@@ -135,7 +136,6 @@
     <ClCompile Include="source\utilities\GpuEventScope.cppm" />
     <ClCompile Include="source\utilities\PerformanceMeter.cppm" />
     <ClCompile Include="source\resources\CPUResManager.cppm" />
-    <ClCompile Include="source\scenes\ScenesManager.cppm" />
     <ClCompile Include="source\view\View.cppm" />
     <ClCompile Include="source\view\ViewSetup.cppm" />
     <ClCompile Include="source\ZAML\ioZaml.cppm" />

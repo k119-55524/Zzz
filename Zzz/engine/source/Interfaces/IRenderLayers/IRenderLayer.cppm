@@ -3,6 +3,7 @@ export module IRenderLayer;
 
 import Scene;
 import RenderVolume;
+import SceneEntityFactory;
 
 namespace zzz
 {
@@ -10,10 +11,18 @@ namespace zzz
 	{
 	public:
 	IRenderLayer() = delete;
-		IRenderLayer(eAspectType aspectPreset, Size2D<zF32>& size, zF32 minDepth, zF32 maxDepth, bool isactive = true) noexcept :
+		IRenderLayer(
+			const std::shared_ptr<SceneEntityFactory> entityFactory,
+			eAspectType aspectPreset,
+			Size2D<zF32>& size,
+			zF32 minDepth,
+			zF32 maxDepth,
+			bool isactive = true) noexcept :
+			m_EntityFactory{ entityFactory },
 			m_RV{ aspectPreset, size, minDepth, maxDepth },
 			b_IsActive{ isactive }
 		{
+			ensure(m_EntityFactory, ">>>>> [IRenderLayer::IRenderLayer()]. Scene entity factory cannot be null.");
 		}
 		virtual ~IRenderLayer() = 0;
 
@@ -27,6 +36,8 @@ namespace zzz
 		[[nodiscard]] virtual std::shared_ptr<Scene> GetScene() const = 0;
 
 	protected:
+		std::shared_ptr<SceneEntityFactory> m_EntityFactory;
+
 		RenderVolume m_RV;
 		std::atomic<bool> b_IsActive;
 	};

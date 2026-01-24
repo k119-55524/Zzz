@@ -1,6 +1,4 @@
 
-#include "pch.h"
-
 export module Shader_DirectX;
 
 #if defined(ZRENDER_API_D3D12)
@@ -9,7 +7,6 @@ import Result;
 import IShader;
 import IMeshGPU;
 import StrConvert;
-
 
 export namespace zzz::directx
 {

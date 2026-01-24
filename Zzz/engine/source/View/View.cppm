@@ -16,7 +16,7 @@ import IRenderLayer;
 import IRenderLayer;
 import AppWinConfig;
 import ISurfaceView;
-import ScenesManager;
+import SceneEntityFactory;
 
 using namespace zzz::core;
 using namespace zzz::templates;
@@ -34,9 +34,9 @@ namespace zzz
 
 	public:
 		View(
-			const std::shared_ptr<AppWinConfig> _winConfig,
-			const std::shared_ptr<ScenesManager> _scenesManager,
-			const std::shared_ptr<IGAPI> _GAPI);
+			const std::shared_ptr<AppWinConfig> winConfig,
+			const std::shared_ptr<SceneEntityFactory> entityFactory,
+			const std::shared_ptr<IGAPI> GAPI);
 
 		~View() = default;
 
@@ -58,7 +58,7 @@ namespace zzz
 		ViewFactory factory;
 		const std::shared_ptr<AppWinConfig> m_WinConfig;
 		const std::shared_ptr<IGAPI> m_GAPI;
-		const std::shared_ptr<ScenesManager> m_ScenesManager;
+		const std::shared_ptr<SceneEntityFactory> m_EntityFactory;
 		std::shared_ptr<IAppWin> m_NativeWindow;
 		std::shared_ptr<ISurfaceView> m_RenderSurface;
 
@@ -72,17 +72,17 @@ namespace zzz
 	};
 
 	View::View(
-		const std::shared_ptr<AppWinConfig> _winConfig,
-		const std::shared_ptr<ScenesManager> _scenesManager,
-		const std::shared_ptr<IGAPI> _GAPI) :
-		m_WinConfig{ _winConfig },
-		m_ScenesManager{ _scenesManager },
-		m_GAPI{ _GAPI },
+		const std::shared_ptr<AppWinConfig> winConfig,
+		const std::shared_ptr<SceneEntityFactory> entityFactory,
+		const std::shared_ptr<IGAPI> GAPI) :
+		m_WinConfig{ winConfig },
+		m_EntityFactory{ entityFactory },
+		m_GAPI{ GAPI },
 		initState{ eInitState::InitNot },
 		m_ThreadsUpdate{std::string("View"), 2}
 	{
 		ensure(m_WinConfig, ">>>>> [View::View()]. Window config cannot be null.");
-		ensure(m_ScenesManager, ">>>>> [View::View()]. Scenes manager cannot be null.");
+		ensure(m_EntityFactory, ">>>>> [View::View()]. Scene entity factory cannot be null.");
 		ensure(m_GAPI, ">>>>> [View::View()]. GAPI cannot be null.");
 
 		Initialize();
@@ -191,7 +191,7 @@ namespace zzz
 	{
 		Size2D<zF32> size;
 		size.SetFrom(m_NativeWindow->GetWinSize());
-		std::shared_ptr<Layer3D> layer = safe_make_shared<Layer3D>(m_ScenesManager, eAspectType::FullWindow, size, 0.0f, 1.0f);
+		std::shared_ptr<Layer3D> layer = safe_make_shared<Layer3D>(m_EntityFactory, eAspectType::FullWindow, size, 0.0f, 1.0f);
 
 		std::shared_ptr<UserLayer3D> userLayer = safe_make_shared<UserLayer3D>(layer);
 		m_RenderLayers.push_back(layer);

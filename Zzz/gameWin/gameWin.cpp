@@ -31,6 +31,13 @@ int APIENTRY wWinMain(
 						return Result<>(resScene.error());
 
 					auto scene = resScene.value();
+					Transform transform;
+					auto resEntity = scene->AddColorBox(transform);
+					if (!resEntity)
+						return Result<>(resEntity.error());
+
+					//auto entity = resEntity.value();
+					//entity->GetTransform().SetPosition(-1.5f, 0.0f, 0.0f);
 
 					return Result<>();
 				})
