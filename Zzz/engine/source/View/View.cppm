@@ -1,6 +1,7 @@
 
 export module View;
 
+import Input;
 import IGAPI;
 import Event;
 import Result;
@@ -19,6 +20,7 @@ import ISurfaceView;
 import SceneEntityFactory;
 
 using namespace zzz::core;
+using namespace zzz::input;
 using namespace zzz::templates;
 
 namespace zzz
@@ -69,6 +71,8 @@ namespace zzz
 		std::shared_ptr<ViewSetup> m_ViewSetup;
 		std::vector<std::shared_ptr<IRenderLayer>> m_RenderLayers;
 		std::shared_ptr<RenderQueue> m_RenderQueue;
+
+		std::shared_ptr<Input> m_Input;
 	};
 
 	View::View(
@@ -112,6 +116,8 @@ namespace zzz
 			m_ViewSetup = safe_make_shared<ViewSetup>(true);
 			m_ViewSetup->ActivateClearColor(colors::DarkMidnightBlue);
 			m_RenderQueue = safe_make_shared<RenderQueue>(m_ViewSetup, m_RenderLayers);
+
+			m_Input = safe_make_shared<Input>(m_NativeWindow);
 
 			initState = eInitState::InitOK;
 		}

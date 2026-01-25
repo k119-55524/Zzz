@@ -1,6 +1,7 @@
 
 export module Engine;
 
+export import Input;
 export import Result;
 export import UserView;
 export import UserScene;
