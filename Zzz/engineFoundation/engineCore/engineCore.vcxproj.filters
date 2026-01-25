@@ -44,12 +44,6 @@
     <ClCompile Include="Source\Serializer\Serializer.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Interfaces\IAppWin\IAppWin.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Interfaces\IAppWin\IAppWin_MSWin.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Interfaces\ICheckGapiSupport.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -111,6 +105,9 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Platforms\PrimitiveTopology.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\IAppWin\IAppWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

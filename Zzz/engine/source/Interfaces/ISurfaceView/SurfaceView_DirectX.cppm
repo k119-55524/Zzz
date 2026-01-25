@@ -129,6 +129,8 @@ namespace zzz::directx
 		void SetFullScreen(bool fs) override;
 
 	private:
+		std::shared_ptr<AppWin_MSWin> m_iAppWin;
+
 		static constexpr DXGI_FORMAT BACK_BUFFER_FORMAT = DXGI_FORMAT_R8G8B8A8_UNORM;
 		static constexpr DXGI_FORMAT DEPTH_FORMAT = DXGI_FORMAT_D32_FLOAT; // При использовании трафаарета: DXGI_FORMAT_D24_UNORM_S8_UINT;
 		static constexpr UINT SWAP_CHAIN_FLAGS = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
@@ -168,7 +170,7 @@ namespace zzz::directx
 	SurfaceView_DirectX::SurfaceView_DirectX(
 		std::shared_ptr<IAppWin> _iAppWin,
 		std::shared_ptr<IGAPI> _iGAPI)
-		: ISurfaceView(_iAppWin, _iGAPI),
+		: ISurfaceView(_iGAPI),
 		b_IgnoreResize{ false },
 		m_tearingSupported{ false },
 		m_RtvDescrSize{ 0 },
@@ -176,6 +178,9 @@ namespace zzz::directx
 		m_CbvSrvDescrSize{ 0 },
 		m_frameReady{ false }
 	{
+		ensure(_iAppWin, ">>>>> [SurfaceView_DirectX::SurfaceView_DirectX()]. App window cannot be null.");
+		m_iAppWin = std::dynamic_pointer_cast<AppWin_MSWin>(_iAppWin);
+		ensure(m_iAppWin, ">>>>> [SurfaceView_DirectX::SurfaceView_DirectX()]. App window must be of type AppWin_MSWin.");
 	}
 
 #pragma region Initialize

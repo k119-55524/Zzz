@@ -21,7 +21,7 @@ export namespace zzz::core
 		explicit AppWin_MSWin(std::shared_ptr<AppWinConfig> _settings);
 		virtual ~AppWin_MSWin() override;
 
-		const HWND GetHWND() const noexcept override { return hWnd; }
+		const HWND GetHWND() const noexcept { return hWnd; }
 		void SetCaptionText(std::wstring caption) override;
 		void AddCaptionText(std::wstring caption) override;
 

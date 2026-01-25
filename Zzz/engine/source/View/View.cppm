@@ -14,7 +14,6 @@ import RenderQueue;
 import ViewFactory;
 import UserLayer3D;
 import IRenderLayer;
-import IRenderLayer;
 import AppWinConfig;
 import ISurfaceView;
 import SceneEntityFactory;

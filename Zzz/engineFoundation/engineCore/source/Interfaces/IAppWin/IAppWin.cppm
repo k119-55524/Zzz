@@ -7,7 +7,6 @@ import Event;
 import Result;
 import Size2D;
 import AppWinConfig;
-import IAppWin_MSWin;
 
 namespace zzz
 {
@@ -16,8 +15,7 @@ namespace zzz
 
 export namespace zzz::core
 {
-	export class IAppWin abstract :
-		public IAppWin_MSWin
+	export class IAppWin abstract
 	{
 		Z_NO_CREATE_COPY(IAppWin);
 
@@ -28,6 +26,9 @@ export namespace zzz::core
 		Event<Size2D<>, eTypeWinResize> OnResize;
 		Event<> OnResizing;
 		const Size2D<> GetWinSize() const noexcept { return m_WinSize; }
+
+		virtual void SetCaptionText(std::wstring caption) = 0;
+		virtual void AddCaptionText(std::wstring caption) = 0;
 
 	protected:
 		const std::shared_ptr<const AppWinConfig> m_Config;
