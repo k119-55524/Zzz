@@ -49,8 +49,8 @@ namespace zzz
 		void OnUpdate(double deltaTime);
 		void SetFullScreen(bool fs);
 		inline void SetVSync(bool vs) { if (m_RenderSurface != nullptr) m_RenderSurface->SetVSync(vs); };
-		inline void SetViewCaptionText(std::wstring caption) { if (m_NativeWindow != nullptr) m_NativeWindow->SetCaptionText(caption); };
-		inline void AddViewCaptionText(std::wstring caption) { if (m_NativeWindow != nullptr) m_NativeWindow->AddCaptionText(caption); };
+		inline void SetViewCaptionText(std::wstring caption) { if (m_Window != nullptr) m_Window->SetCaptionText(caption); };
+		inline void AddViewCaptionText(std::wstring caption) { if (m_Window != nullptr) m_Window->AddCaptionText(caption); };
 
 	private:
 		void OnViewResizing();
@@ -60,7 +60,7 @@ namespace zzz
 		const std::shared_ptr<AppWinConfig> m_WinConfig;
 		const std::shared_ptr<IGAPI> m_GAPI;
 		const std::shared_ptr<SceneEntityFactory> m_EntityFactory;
-		std::shared_ptr<IAppWin> m_NativeWindow;
+		std::shared_ptr<IAppWin> m_Window;
 		std::shared_ptr<ISurfaceView> m_RenderSurface;
 
 		eInitState initState;
@@ -96,27 +96,27 @@ namespace zzz
 		try
 		{
 			// Cоздаём обёртку над окном приложения под текущую ОС
-			m_NativeWindow = factory.CreateAppWin(m_WinConfig);
-			m_NativeWindow->OnResize += std::bind(&View::OnViewResize, this, std::placeholders::_1, std::placeholders::_2);
-			m_NativeWindow->OnResizing += std::bind(&View::OnViewResizing, this);
-			auto res = m_NativeWindow->Initialize();
+			m_Window = factory.CreateAppWin(m_WinConfig);
+			m_Window->OnResize += std::bind(&View::OnViewResize, this, std::placeholders::_1, std::placeholders::_2);
+			m_Window->OnResizing += std::bind(&View::OnViewResizing, this);
+			auto res = m_Window->Initialize();
 			if (!res)
 				throw_runtime_error(std::format(">>>>> [View::Initialize()]. Failed to initialize application window: {}.", wstring_to_string(res.error().getMessage())));
 
 			// Cоздаём проверхность рендринга для текущего окна и GAPI
-			m_RenderSurface = factory.CreateSurfaceWin(m_NativeWindow, m_GAPI);
+			m_RenderSurface = factory.CreateSurfaceWin(m_Window, m_GAPI);
 			res = m_RenderSurface->Initialize();
 			if (!res)
 				throw_runtime_error(std::format(">>>>> [View::Initialize()]. Failed to initialize surface window: {}.", wstring_to_string(res.error().getMessage())));
 
 			// TODO: В будущем надо будет учитывать настройки рендеринга из конфигурации
 			Size2D<zF32> size;
-			size.SetFrom(m_NativeWindow->GetWinSize());
+			size.SetFrom(m_Window->GetWinSize());
 			m_ViewSetup = safe_make_shared<ViewSetup>(true);
 			m_ViewSetup->ActivateClearColor(colors::DarkMidnightBlue);
 			m_RenderQueue = safe_make_shared<RenderQueue>(m_ViewSetup, m_RenderLayers);
 
-			m_Input = safe_make_shared<Input>(m_NativeWindow);
+			m_Input = safe_make_shared<Input>(m_Window);
 
 			initState = eInitState::InitOK;
 		}
@@ -195,7 +195,7 @@ namespace zzz
 	Result<std::shared_ptr<UserLayer3D>> View::AddLayer_3D()
 	{
 		Size2D<zF32> size;
-		size.SetFrom(m_NativeWindow->GetWinSize());
+		size.SetFrom(m_Window->GetWinSize());
 		std::shared_ptr<Layer3D> layer = safe_make_shared<Layer3D>(m_EntityFactory, eAspectType::FullWindow, size, 0.0f, 1.0f);
 
 		std::shared_ptr<UserLayer3D> userLayer = safe_make_shared<UserLayer3D>(layer);

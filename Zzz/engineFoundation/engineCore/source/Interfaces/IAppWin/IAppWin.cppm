@@ -25,6 +25,10 @@ export namespace zzz::core
 
 		Event<Size2D<>, eTypeWinResize> OnResize;
 		Event<> OnResizing;
+
+		Event<> OnMouseEnter;
+		Event<> OnMouseLeave;
+
 		const Size2D<> GetWinSize() const noexcept { return m_WinSize; }
 
 		virtual void SetCaptionText(std::wstring caption) = 0;

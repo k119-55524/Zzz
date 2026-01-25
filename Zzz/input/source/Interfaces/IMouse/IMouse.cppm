@@ -22,9 +22,11 @@ namespace zzz::input
 
 	void IMouse::OnMouseEnter()
 	{
+		//DebugOutput(L">>>>> [IMouse::OnMouseEnter()]. Mouse entered application window.");
 	}
 
 	void IMouse::OnMouseLeave()
 	{
+		//DebugOutput(L">>>>> [IMouse::OnMouseLeave()]. Mouse leave application window.");
 	}
 }

@@ -170,6 +170,9 @@
     <ProjectReference Include="..\engineFoundation\engineCore\engineCore.vcxproj">
       <Project>{3fec6029-5764-4953-b6e7-d8d2bb3bc483}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\engineFoundation\logger\logger.vcxproj">
+      <Project>{739374b1-c690-4a3a-99e8-c6243336d2f3}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

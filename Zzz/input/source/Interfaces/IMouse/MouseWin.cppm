@@ -30,6 +30,8 @@ namespace zzz::input
 
 	void MouseWin::Initialize()
 	{
+		m_Window->OnMouseEnter += std::bind(&MouseWin::OnMouseEnter, this);
+		m_Window->OnMouseLeave += std::bind(&MouseWin::OnMouseLeave, this);
 	}
 }
 #endif // ZPLATFORM_MSWINDOWS

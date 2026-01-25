@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.2.11408.102 d18.0
+VisualStudioVersion = 18.2.11408.102
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gameWin", "gameWin\gameWin.vcxproj", "{7F2DBE68-41E9-476F-8B4B-5F3D462687D6}"
 EndProject
@@ -49,6 +49,7 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "input", "input\input.vcxproj", "{93909E27-AD0E-42E4-AAF1-70F58766E0EE}"
 	ProjectSection(ProjectDependencies) = postProject
 		{3FEC6029-5764-4953-B6E7-D8D2BB3BC483} = {3FEC6029-5764-4953-B6E7-D8D2BB3BC483}
+		{67571D08-65C1-42D4-B1C5-8DEE498530A6} = {67571D08-65C1-42D4-B1C5-8DEE498530A6}
 	EndProjectSection
 EndProject
 Global

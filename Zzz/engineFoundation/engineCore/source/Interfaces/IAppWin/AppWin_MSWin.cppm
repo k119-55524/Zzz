@@ -32,6 +32,8 @@ export namespace zzz::core
 		HWND hWnd;
 		bool IsMinimized;
 
+		bool mouseInside;
+
 		static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept;
 		LRESULT MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	};
@@ -39,7 +41,8 @@ export namespace zzz::core
 	AppWin_MSWin::AppWin_MSWin(std::shared_ptr<AppWinConfig> config) :
 		IAppWin(config),
 		hWnd{ nullptr },
-		IsMinimized{ true }
+		IsMinimized{ true },
+		mouseInside{ false }
 	{
 		SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 	}
@@ -261,6 +264,31 @@ export namespace zzz::core
 
 		//	return 0;
 		//}
+
+		case WM_MOUSEMOVE:
+		{
+			if (!mouseInside)
+			{
+				mouseInside = true;
+				OnMouseEnter(); // уведомляем об входе мыши в окно
+
+				TRACKMOUSEEVENT tme = {};
+				tme.cbSize = sizeof(tme);
+				tme.dwFlags = TME_LEAVE;
+				tme.hwndTrack = hWnd;
+				TrackMouseEvent(&tme);
+			}
+
+			return 0;
+		}
+
+		case WM_MOUSELEAVE:
+		{
+			mouseInside = false;
+			OnMouseLeave(); // уведомляем о выходе мыши из окна
+
+			return 0;
+		}
 
 		default:
 			return DefWindowProc(hWnd, uMsg, wParam, lParam);
