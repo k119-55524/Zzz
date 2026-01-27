@@ -101,13 +101,13 @@ namespace zzz
 			m_Window->OnResizing += std::bind(&View::OnViewResizing, this);
 			auto res = m_Window->Initialize();
 			if (!res)
-				throw_runtime_error(std::format(">>>>> [View::Initialize()]. Failed to initialize application window: {}.", wstring_to_string(res.error().getMessage())));
+				throw_runtime_error(wstring_to_string(res.error().getMessage()));
 
 			// Cоздаём проверхность рендринга для текущего окна и GAPI
 			m_RenderSurface = factory.CreateSurfaceWin(m_Window, m_GAPI);
 			res = m_RenderSurface->Initialize();
 			if (!res)
-				throw_runtime_error(std::format(">>>>> [View::Initialize()]. Failed to initialize surface window: {}.", wstring_to_string(res.error().getMessage())));
+				throw_runtime_error(wstring_to_string(res.error().getMessage()));
 
 			// TODO: В будущем надо будет учитывать настройки рендеринга из конфигурации
 			Size2D<zF32> size;
@@ -122,7 +122,7 @@ namespace zzz
 		}
 		catch (const std::exception& e)
 		{
-			throw_runtime_error(std::format(">>>>> [View::Initialize()]. -> {}.", std::string(e.what())));
+			throw_runtime_error((e.what() && e.what()[0]) ? std::string(e.what()) : "unknown exception");
 		}
 		catch (...)
 		{

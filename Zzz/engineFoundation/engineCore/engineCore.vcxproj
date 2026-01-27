@@ -150,6 +150,8 @@
   <ItemGroup>
     <ClInclude Include="engineCore.h" />
     <ClInclude Include="header.h" />
+    <ClInclude Include="Headers\HeaderEnums.h" />
+    <ClInclude Include="Headers\HeaderThrowWrappers.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -182,9 +184,14 @@
     <ClCompile Include="Source\Interfaces\IGAPI\IGAPI.cppm" />
     <ClCompile Include="Source\Interfaces\IMainLoop\IMainLoop.cppm" />
     <ClCompile Include="Source\IO\IOPathFactory.cppm" />
+    <ClCompile Include="Templates\QueueArray.cppm" />
+    <ClCompile Include="Templates\ThreadPool.cppm" />
+    <ClCompile Include="Templates\ThreadSafeQueueArray.cppm" />
+    <ClCompile Include="Templates\ThreadSafeSwapBuffer.cppm" />
     <ClCompile Include="Utilities\Helpers.cppm" />
-    <ClCompile Include="Utilities\MessageBox.cppm" />
+    <ClCompile Include="Utilities\MsgBox.cppm" />
     <ClCompile Include="Source\Serializer\Serializer.cppm" />
+    <ClCompile Include="Utilities\Platforms.cppm" />
     <ClCompile Include="Utilities\Size2D.cppm" />
   </ItemGroup>
   <ItemGroup>

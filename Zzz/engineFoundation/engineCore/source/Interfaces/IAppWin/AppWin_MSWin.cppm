@@ -2,10 +2,12 @@
 export module AppWin_MSWin;
 
 import Event;
+import MsgBox;
 import Size2D;
 import Result;
 import IAppWin;
 import ibMSWin;
+import StrConvert;
 import AppWinConfig;
 import IOPathFactory;
 
@@ -22,6 +24,7 @@ export namespace zzz::core
 		virtual ~AppWin_MSWin() override;
 
 		const HWND GetHWND() const noexcept { return hWnd; }
+
 		void SetCaptionText(std::wstring caption) override;
 		void AddCaptionText(std::wstring caption) override;
 
@@ -36,6 +39,8 @@ export namespace zzz::core
 
 		static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept;
 		LRESULT MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+		int InitRawInput();
 	};
 
 	AppWin_MSWin::AppWin_MSWin(std::shared_ptr<AppWinConfig> config) :
@@ -105,10 +110,7 @@ export namespace zzz::core
 			this);
 
 		if (!hWnd)
-		{
-			std::wstring mess = L">>>>> [SW_MSWindows.Initialize( ... )]. CreateWindowEx( ... ). Failed to create window. Error code(Windows): " + std::to_wstring(::GetLastError());
-			return Unexpected(eResult::failure, mess);
-		}
+			throw_runtime_error(wstring_to_string(std::format(L"CreateWindowEx( ... ) failed. Error code (Windows): {}", ::GetLastError())));
 
 		ShowWindow(hWnd, SW_SHOW);
 		UpdateWindow(hWnd);
@@ -152,11 +154,14 @@ export namespace zzz::core
 	{
 		switch (uMsg)
 		{
-		case WM_DESTROY:
+		case WM_CREATE:
 		{
+			return InitRawInput();
+		}
+
+		case WM_DESTROY:
 			PostQuitMessage(0);
 			return 0;
-		}
 
 		// ќбрабатываем изменение размера окна после того, как пользователь закончил его измен€ть.
 		case WM_SIZE:
@@ -186,11 +191,8 @@ export namespace zzz::core
 
 		// ќбрабатываем изменение размера окна в процессе изменени€ его пользователем.
 		case WM_SIZING:
-		{
 			OnResizing();
-
-			return TRUE;
-		}
+			return 0;
 
 		// ѕерехватываем это сообщение, чтобы не допустить слишком маленького/большого размера окна.
 		case WM_GETMINMAXINFO:
@@ -239,38 +241,12 @@ export namespace zzz::core
 			return 0;
 		}
 
-		//case WM_ENTERSIZEMOVE:
-		//{
-		//	IsResizeProcess = true;
-
-		//	return 0;
-		//}
-
-		//case WM_EXITSIZEMOVE:
-		//{
-		//	IsResizeProcess = false;
-		//	return 0;
-		//}
-
-		//case WM_PAINT:
-		//{
-		//	if (IsResizeProcess)
-		//	{
-		//		PAINTSTRUCT ps;
-		//		HDC hdc = BeginPaint(hWnd, &ps);
-		//		onPaint();
-		//		EndPaint(hWnd, &ps);
-		//	}
-
-		//	return 0;
-		//}
-
 		case WM_MOUSEMOVE:
 		{
 			if (!mouseInside)
 			{
 				mouseInside = true;
-				OnMouseEnter(); // уведомл€ем об входе мыши в окно
+				OnMouseEnter(true);
 
 				TRACKMOUSEEVENT tme = {};
 				tme.cbSize = sizeof(tme);
@@ -283,16 +259,25 @@ export namespace zzz::core
 		}
 
 		case WM_MOUSELEAVE:
-		{
 			mouseInside = false;
-			OnMouseLeave(); // уведомл€ем о выходе мыши из окна
+			OnMouseEnter(false);
+			return 0;
 
+		case WM_SETFOCUS:
+			OnFocus(true);
+			break;
+
+		case WM_KILLFOCUS:
+			OnFocus(false);
+			break;
+
+		case WM_ACTIVATE:
+			b_IsWinActive = (wParam != 0);
+			OnActivate(b_IsWinActive);
 			return 0;
 		}
 
-		default:
-			return DefWindowProc(hWnd, uMsg, wParam, lParam);
-		}
+		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
 
 	void AppWin_MSWin::SetCaptionText(std::wstring caption)
@@ -303,5 +288,67 @@ export namespace zzz::core
 	void AppWin_MSWin::AddCaptionText(std::wstring caption)
 	{
 		SetWindowText(hWnd, (m_Config->GetCaption() + caption).c_str());
+	}
+
+	int AppWin_MSWin::InitRawInput()
+	{
+		// ћассив из двух устройств: мышь и клавиатура
+		RAWINPUTDEVICE rid[2];
+		ZeroMemory(rid, sizeof(rid));
+
+		// ћышь
+		rid[0].usUsagePage = HID_USAGE_PAGE_GENERIC;
+		rid[0].usUsage = HID_USAGE_GENERIC_MOUSE;
+		rid[0].dwFlags = 0;
+		rid[0].hwndTarget = hWnd;
+
+		//  лавиатура
+		rid[1].usUsagePage = HID_USAGE_PAGE_GENERIC;
+		rid[1].usUsage = HID_USAGE_GENERIC_KEYBOARD;
+		rid[1].dwFlags = 0; // или RIDEV_NOLEGACY
+		rid[1].hwndTarget = hWnd;
+
+		if (!RegisterRawInputDevices(rid, 2, sizeof(RAWINPUTDEVICE)))
+		{
+			DWORD err = GetLastError();
+
+			wchar_t* sysMsg = nullptr;
+			FormatMessageW(
+				FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+				nullptr,
+				err,
+				MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+				reinterpret_cast<LPWSTR>(&sysMsg),
+				0,
+				nullptr);
+
+			wchar_t buf[1024];
+
+			if (sysMsg)
+			{
+				swprintf(buf, 1024,
+					L"Raw Input registration failed!\n\n"
+					L"Error code: %lu\n"
+					L"Description: %s",
+					err,
+					sysMsg);
+
+				LocalFree(sysMsg); // free allocated buffer
+			}
+			else
+			{
+				swprintf(buf, 1024,
+					L"Raw Input registration failed!\n\n"
+					L"Error code: %lu\n"
+					L"Description: could not retrieve system message",
+					err);
+			}
+
+			MsgBox::Error(buf);
+
+			return -1;
+		}
+
+		return 0;
 	}
 }

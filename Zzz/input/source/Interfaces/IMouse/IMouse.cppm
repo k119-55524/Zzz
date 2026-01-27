@@ -3,30 +3,22 @@ export module IMouse;
 
 namespace zzz::input
 {
+	/// <summary>
+	/// Интерфейс для работы с мышью
+	/// </summary>
 	export class IMouse
 	{
 	public:
 		explicit IMouse() = default;
 		virtual ~IMouse() = 0;
 
-		void OnMouseEnter();
-		void OnMouseLeave();
-
-		//void OnMouseMove(int x, int y);
-		//void OnMouseDown(int button, int x, int y);
-		//void OnMouseUp(int button, int x, int y);
-		//void OnMouseWheel(int delta, int x, int y);
+		void OnMouseEnter(bool enter);
 	};
 
 	IMouse::~IMouse() {};
 
-	void IMouse::OnMouseEnter()
+	void IMouse::OnMouseEnter(bool enter)
 	{
-		//DebugOutput(L">>>>> [IMouse::OnMouseEnter()]. Mouse entered application window.");
-	}
-
-	void IMouse::OnMouseLeave()
-	{
-		//DebugOutput(L">>>>> [IMouse::OnMouseLeave()]. Mouse leave application window.");
+		//DebugOutput(std::format(L">>>>> [IMouse::OnMouseEnter()]. Mouse enter state changed: {}", enter ? L"true" : L"false"));
 	}
 }

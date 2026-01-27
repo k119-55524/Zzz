@@ -164,7 +164,7 @@
     <ClCompile Include="source\InputFactory.cppm" />
     <ClCompile Include="source\Interfaces\IMouse\IMouse.cppm" />
     <ClCompile Include="source\Interfaces\IMouse\MouseNull.cppm" />
-    <ClCompile Include="source\Interfaces\IMouse\MouseWin.cppm" />
+    <ClCompile Include="source\Interfaces\IMouse\MouseMSWindows.cppm" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\engineFoundation\engineCore\engineCore.vcxproj">

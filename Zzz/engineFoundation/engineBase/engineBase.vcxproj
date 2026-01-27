@@ -152,11 +152,9 @@
     <ClInclude Include="Headers\Header.h" />
     <ClInclude Include="headers\HeaderConstants.h" />
     <ClInclude Include="Headers\HeaderDX.h" />
-    <ClInclude Include="headers\HeaderEnums.h" />
     <ClInclude Include="Headers\HeaderMetal.h" />
     <ClInclude Include="Headers\HeadersMSWin.h" />
     <ClInclude Include="headers\HeaderTemplates.h" />
-    <ClInclude Include="headers\HeaderThrowWrappers.h" />
     <ClInclude Include="headers\HeaderTypes.h" />
     <ClInclude Include="Headers\HeaderVulkan.h" />
     <ClInclude Include="Headers\MacroDefinition.h" />
@@ -171,13 +169,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Templates\QueueArray.cppm" />
-    <ClCompile Include="Templates\ThreadPool.cppm" />
-    <ClCompile Include="Templates\ThreadSafeQueueArray.cppm" />
-    <ClCompile Include="Templates\ThreadSafeSwapBuffer.cppm" />
     <ClCompile Include="Utilities\Colors.cppm" />
     <ClCompile Include="Utilities\Event.cppm" />
-    <ClCompile Include="Utilities\Platforms.cppm" />
     <ClCompile Include="Utilities\Result.cppm" />
     <ClCompile Include="Utilities\StrConvert.cppm" />
   </ItemGroup>

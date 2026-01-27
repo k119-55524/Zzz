@@ -26,26 +26,30 @@ export namespace zzz::core
 		Event<Size2D<>, eTypeWinResize> OnResize;
 		Event<> OnResizing;
 
-		Event<> OnMouseEnter;
-		Event<> OnMouseLeave;
+		Event<bool> OnMouseEnter;
+		Event<bool> OnFocus;
+		Event<bool> OnActivate;
 
 		const Size2D<> GetWinSize() const noexcept { return m_WinSize; }
 
+		[[nodiscard]] inline bool IsActive() { return b_IsWinActive; };
+	
 		virtual void SetCaptionText(std::wstring caption) = 0;
 		virtual void AddCaptionText(std::wstring caption) = 0;
+		[[nodiscard]] virtual Result<> Initialize() = 0;
 
 	protected:
 		const std::shared_ptr<const AppWinConfig> m_Config;
 		std::wstring m_Caption;
 		Size2D<> m_WinSize;
 
-		[[nodiscard]] virtual Result<> Initialize() = 0;
-		friend class zzz::View;
+		bool b_IsWinActive;
 	};
 
 	IAppWin::IAppWin(std::shared_ptr<const AppWinConfig> config)
 		: m_Config{ config },
-		m_WinSize{ 0, 0 }
+		m_WinSize{ 0, 0 },
+		b_IsWinActive{ false }
 	{
 		ensure(m_Config, ">>>>> [IAppWin::IAppWin()]. Settings cannot be null.");
 	}

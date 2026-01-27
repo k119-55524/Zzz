@@ -13,8 +13,8 @@ import View;
 import IGAPI;
 import Size2D;
 import Colors;
+import MsgBox;
 import AppTime;
-import zMsgBox;
 import IMainLoop;
 import ThreadPool;
 import StrConvert;
@@ -77,7 +77,7 @@ export namespace zzz
 		ThreadPool transferResToGPU;
 		AppTime m_time;
 
-		[[nodiscard]] Result<> Initialize() noexcept;
+		[[nodiscard]] Result<> Initialize();
 
 		void Reset() noexcept;
 		void OnViewResize(const Size2D<>& size, eTypeWinResize resizeType);
@@ -140,7 +140,7 @@ export namespace zzz
 			auto result = string_to_wstring(e.what());
 
 			if (result)
-				err = std::format(L">>>>> [Engine::initialize({})].\n{}", zamlPath, result.value());
+				err = result.value();
 			else
 				err = std::format(L">>>>> [Engine::initialize({})]. Unknown exception occurred.", zamlPath);
 		}
@@ -149,12 +149,12 @@ export namespace zzz
 			err = L">>>>> #1 [wWinMain( ... )]. Unknown exception occurred.";
 		}
 
-		zMsgBox::Error(err);
+		MsgBox::Error(err);
 		Reset();
 		return Unexpected(eResult::exception, err);
 	}
 
-	Result<> Engine::Initialize() noexcept
+	Result<> Engine::Initialize()
 	{
 		// Создаём обёртку над графическим API
 		auto res = m_EngineFactory.CreateGAPI(m_Config->GetGAPIConfig());
@@ -219,7 +219,7 @@ export namespace zzz
 			err = L">>>>> #1 [Engine::Run()]. Unknown exception occurred";
 		}
 
-		zMsgBox::Error(err);
+		MsgBox::Error(err);
 		Reset();
 		return Unexpected(eResult::exception, err);
 	}

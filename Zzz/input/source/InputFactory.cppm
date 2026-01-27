@@ -6,7 +6,7 @@ import IAppWin;
 import MouseNull;
 
 #if defined(ZPLATFORM_MSWINDOWS)
-import MouseWin;
+import MouseMSWindows;
 import AppWin_MSWin;
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
@@ -31,7 +31,7 @@ namespace zzz::input
 		auto win = std::dynamic_pointer_cast<AppWin_MSWin>(appWindow);
 		ensure(win, ">>>>> [InputFactory::CreateInterfaceMouse(...)]. Application window is not of type IAppWin_MSWin.");
 
-		return std::make_shared<MouseWin>(win);
+		return std::make_shared<MouseMSWindows>(win);
 #else
 		return std::make_shared<MouseNull>();
 #endif
