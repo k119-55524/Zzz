@@ -26,7 +26,6 @@ export namespace zzz::core
 		Event<Size2D<>, eTypeWinResize> OnResize;
 		Event<> OnResizing;
 
-		Event<bool> OnMouseEnter;
 		Event<bool> OnFocus;
 		Event<bool> OnActivate;
 
