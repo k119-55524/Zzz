@@ -131,6 +131,9 @@
     <ClCompile Include="Templates\ThreadSafeSwapBuffer.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="source\KeyCode.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

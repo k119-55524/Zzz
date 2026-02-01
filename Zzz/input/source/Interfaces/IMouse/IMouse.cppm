@@ -57,11 +57,11 @@ namespace zzz::input
 
 	void IMouse::OnMouseWheelVertical(zI32 delta)
 	{
-		DebugOutput(std::format(L">>>>> [IMouse::OnMouseWheelVertical()]. Ddelta: {}", delta));
+		//DebugOutput(std::format(L">>>>> [IMouse::OnMouseWheelVertical()]. Ddelta: {}", delta));
 	}
 
 	void IMouse::OnMouseWheelHorizontal(zI32 delta)
 	{
-		DebugOutput(std::format(L">>>>> [IMouse::OnMouseWheelHorizontal()]. Delta: {}", delta));
+		//DebugOutput(std::format(L">>>>> [IMouse::OnMouseWheelHorizontal()]. Delta: {}", delta));
 	}
 }

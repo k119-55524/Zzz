@@ -35,13 +35,16 @@
     <ClCompile Include="source\Interfaces\IMouse\IMouse.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Interfaces\IMouse\MouseMSWindows.cppm">
+    <ClCompile Include="source\Interfaces\IMouse\Mouse_MSWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\InputFactory.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Interfaces\IMouse\MouseNull.cppm">
+    <ClCompile Include="source\Interfaces\IKeyboard\IKeyboard.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\IKeyboard\Keyboard_MSWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

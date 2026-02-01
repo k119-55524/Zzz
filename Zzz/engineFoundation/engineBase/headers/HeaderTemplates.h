@@ -2,6 +2,7 @@
 
 namespace zzz
 {
+	// TODO: пересмотреть все вызовы и убрать лишнее в текстовых сообщениях
 	template<typename T>
 	inline void ensure(T&& condition,
 		const std::string& msg = "Ensure failed",
@@ -9,10 +10,11 @@ namespace zzz
 	{
 		if (!condition)
 			throw std::runtime_error(
-				msg +
-				". Method=" + std::string(loc.function_name()) +
-				", line=" + std::to_string(loc.line()) +
-				", file=" + std::string(loc.file_name()));
+				">>>>> [" +
+				std::string(loc.function_name()) +
+				"]. line: " + std::to_string(loc.line()) +
+				", file=: " + std::string(loc.file_name()) +
+				"\n" + msg);
 	}
 
 	template<typename T>

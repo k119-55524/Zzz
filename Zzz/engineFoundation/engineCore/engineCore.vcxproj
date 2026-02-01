@@ -186,6 +186,7 @@
     <ClCompile Include="Source\Interfaces\IGAPI\IGAPI.cppm" />
     <ClCompile Include="Source\Interfaces\IMainLoop\IMainLoop.cppm" />
     <ClCompile Include="Source\IO\IOPathFactory.cppm" />
+    <ClCompile Include="source\KeyCode.cppm" />
     <ClCompile Include="Templates\QueueArray.cppm" />
     <ClCompile Include="Templates\ThreadPool.cppm" />
     <ClCompile Include="Templates\ThreadSafeQueueArray.cppm" />

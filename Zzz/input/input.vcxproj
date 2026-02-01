@@ -164,9 +164,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="source\InputFactory.cppm" />
+    <ClCompile Include="source\Interfaces\IKeyboard\IKeyboard.cppm" />
+    <ClCompile Include="source\Interfaces\IKeyboard\Keyboard_MSWin.cppm" />
     <ClCompile Include="source\Interfaces\IMouse\IMouse.cppm" />
-    <ClCompile Include="source\Interfaces\IMouse\MouseNull.cppm" />
-    <ClCompile Include="source\Interfaces\IMouse\MouseMSWindows.cppm" />
+    <ClCompile Include="source\Interfaces\IMouse\Mouse_MSWin.cppm" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\engineFoundation\engineCore\engineCore.vcxproj">

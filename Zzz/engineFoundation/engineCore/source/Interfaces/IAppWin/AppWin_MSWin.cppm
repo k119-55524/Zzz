@@ -5,6 +5,7 @@ import Event;
 import MsgBox;
 import Size2D;
 import Result;
+import KeyCode;
 import IAppWin;
 import ibMSWin;
 import StrConvert;
@@ -33,6 +34,7 @@ export namespace zzz::core
 		Event<MouseButtonMask, MouseButtonMask> OnMouseButtonsChanged;
 		Event<zI32> OnMouseWheelVertical;
 		Event<zI32> OnMouseWheelHorizontal;
+		Event<KeyCode, KeyState> OnKeyStateChanged;
 
 	protected:
 		virtual Result<> Initialize() override;
@@ -443,21 +445,16 @@ export namespace zzz::core
 	void AppWin_MSWin::HandleRawKeyboard(const RAWKEYBOARD& kb)
 	{
 		const bool pressed = !(kb.Flags & RI_KEY_BREAK);
-		UINT key = kb.VKey;
+		UINT vk = kb.VKey;
 
-		if (key == 255)
+		// Прямая рекомендация Microsoft
+		if (vk == 255)
 			return;
 
-		// Расширенные клавиши
-		if (kb.Flags & RI_KEY_E0)
-			key |= 0x100;  // расширенный диапазон 256..511
+		bool e0 = (kb.Flags & RI_KEY_E0) != 0;
+		KeyCode key = TranslateMSWinKey(vk, e0);
+		KeyState state = pressed ? KeyState::Down : KeyState::Up;
 
-		DebugOutput(std::format(
-			L"[RAW KB] vkey={} pressed={} flags=0x{:X} scancode={}",
-			key,
-			pressed,
-			kb.Flags,
-			kb.MakeCode
-		));;
+		OnKeyStateChanged(key, state);
 	}
 }

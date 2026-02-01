@@ -3,6 +3,7 @@ export module Input;
 
 import IMouse;
 import IAppWin;
+import IKeyboard;
 import InputFactory;
 
 using namespace zzz::core;
@@ -28,8 +29,9 @@ namespace zzz::input
 
 		std::shared_ptr<IAppWin> m_AppWin;
 
-		InputFactory factory;
+		InputFactory m_Factory;
 		std::shared_ptr<IMouse> m_Mouse;
+		std::shared_ptr<IKeyboard> m_Keyboard;
 	};
 
 	void Input::Initialize()
@@ -37,7 +39,8 @@ namespace zzz::input
 		m_AppWin->OnFocus += std::bind(&Input::OnWinFocus, this, std::placeholders::_1);
 		m_AppWin->OnActivate += std::bind(&Input::OnWinActivate, this, std::placeholders::_1);
 
-		m_Mouse = factory.CreateInterfaceMouse(m_AppWin);
+		m_Mouse = m_Factory.CreateInterfaceMouse(m_AppWin);
+		m_Keyboard = m_Factory.CreateInterfaceKeyboard(m_AppWin);
 	}
 
 	void Input::OnWinFocus(bool focus)

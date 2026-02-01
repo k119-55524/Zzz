@@ -23,11 +23,10 @@ export namespace zzz::core
 		explicit IAppWin(std::shared_ptr<const AppWinConfig> config);
 		virtual ~IAppWin() = default;
 
+		Event<bool> OnActivate;
+		Event<bool> OnFocus;
 		Event<Size2D<>, eTypeWinResize> OnResize;
 		Event<> OnResizing;
-
-		Event<bool> OnFocus;
-		Event<bool> OnActivate;
 
 		const Size2D<> GetWinSize() const noexcept { return m_WinSize; }
 
