@@ -5,6 +5,7 @@ export import Input;
 export import Result;
 export import UserView;
 export import UserScene;
+export import IBehavior;
 export import Transform;
 export import UserLayer3D;
 export import UserSceneEntity;

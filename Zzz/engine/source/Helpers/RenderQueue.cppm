@@ -25,6 +25,8 @@ export namespace zzz
 		}
 		virtual ~RenderQueue() = default;
 
+		inline void SetDeltaTime(float deltaTime) noexcept { m_DeltaTime = deltaTime; };
+
 		template<
 			typename ClearFunc,
 			typename LayerFunc,
@@ -71,6 +73,8 @@ export namespace zzz
 					if (entity == nullptr)
 						continue;
 
+					entity->OnUpdate(m_DeltaTime);
+
 					auto material = entity->GetMaterial();
 					auto pso = material->GetPSO();
 
@@ -98,6 +102,8 @@ export namespace zzz
 	private:
 		std::shared_ptr<ViewSetup> m_ViewSetup;
 		std::vector<std::shared_ptr<IRenderLayer>>& m_RenderLayers;
+
+		float m_DeltaTime;
 
 		void BuildQueue();
 	};

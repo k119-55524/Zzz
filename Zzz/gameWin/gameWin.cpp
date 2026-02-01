@@ -2,6 +2,23 @@
 import Engine;
 
 using namespace zzz;
+using namespace zzz::core;
+
+class MyScript : public IBehavior
+{
+public:
+	MyScript()
+	{
+	}
+	~MyScript() noexcept
+	{
+	}
+
+	void OnUpdate(float deltaTime) override
+	{
+
+	}
+};
 
 int APIENTRY wWinMain(
 	_In_		HINSTANCE	hInstance,
@@ -38,6 +55,7 @@ int APIENTRY wWinMain(
 						return Result<>(resEntity.error());
 
 					entity = resEntity.value();
+					auto resScript = entity->SetScript<MyScript>();
 					//entity->GetTransform().SetPosition(-1.5f, 0.0f, 0.0f);
 
 					return Result<>();

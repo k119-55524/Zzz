@@ -139,6 +139,7 @@ namespace zzz
 		{
 			m_ThreadsUpdate.Submit([&]()
 				{
+					m_RenderQueue->SetDeltaTime(static_cast<float>(deltaTime));
 					m_RenderSurface->PrepareFrame(m_RenderQueue);
 				});
 			m_ThreadsUpdate.Submit([&]()
