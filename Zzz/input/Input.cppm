@@ -1,6 +1,8 @@
 
 export module Input;
 
+export import KeyCode;
+
 import IMouse;
 import IAppWin;
 import IKeyboard;
@@ -16,10 +18,12 @@ namespace zzz::input
 			explicit Input(const std::shared_ptr<IAppWin> appWin) :
 				m_AppWin{ appWin }
 			{
-				ensure(m_AppWin, ">>>>> [Input::Input()]. Application window cannot be null.");
+				ensure(m_AppWin, "Application window cannot be null.");
 				Initialize();
 			}
 			~Input() = default;
+
+			inline KeyState GetKeyState(KeyCode key) const { return m_Keyboard->GetKeyState(key); };
 
 	private:
 		void Initialize();

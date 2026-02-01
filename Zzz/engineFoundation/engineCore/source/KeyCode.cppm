@@ -5,8 +5,8 @@ namespace zzz::core
 {
 	export enum class KeyState : zI32
 	{
-		Down,
-		Up
+		Up		= 0,
+		Down	= 1
 	};
 
 	export constexpr const wchar_t* ToString(KeyState state)
