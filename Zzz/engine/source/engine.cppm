@@ -1,16 +1,20 @@
 
 export module Engine;
 
+export import Input;
 export import Result;
 export import UserView;
+export import UserScene;
+export import Transform;
 export import UserLayer3D;
+export import UserSceneEntity;
 
 import View;
 import IGAPI;
 import Size2D;
 import Colors;
+import MsgBox;
 import AppTime;
-import zMsgBox;
 import IMainLoop;
 import ThreadPool;
 import StrConvert;
@@ -20,11 +24,11 @@ import StartupConfig;
 import GpuEventScope;
 import IOPathFactory;
 import EngineFactory;
-import ScenesManager;
 import CPUResManager;
 import GPUResManager;
 import MainLoop_MSWin;
 import PerformanceMeter;
+import SceneEntityFactory;
 
 using namespace zzz;
 using namespace zzz::core;
@@ -63,7 +67,7 @@ export namespace zzz
 
 		std::shared_ptr<CPUResManager> m_ResCPU;
 		std::shared_ptr<GPUResManager> m_ResGPU;
-		std::shared_ptr<ScenesManager> m_ScenManager;
+		std::shared_ptr<SceneEntityFactory> m_EntityFactory;
 		std::shared_ptr<IGAPI> m_GAPI;
 		std::shared_ptr<View> m_View;
 		std::shared_ptr<IMainLoop> m_MainLoop;
@@ -73,7 +77,7 @@ export namespace zzz
 		ThreadPool transferResToGPU;
 		AppTime m_time;
 
-		[[nodiscard]] Result<> Initialize() noexcept;
+		[[nodiscard]] Result<> Initialize();
 
 		void Reset() noexcept;
 		void OnViewResize(const Size2D<>& size, eTypeWinResize resizeType);
@@ -101,8 +105,8 @@ export namespace zzz
 	{
 		m_MainLoop.reset();
 		m_View.reset();
+		m_EntityFactory.reset();
 		m_GAPI.reset();
-		m_ScenManager.reset();
 		m_ResCPU.reset();
 		m_ResGPU.reset();
 		m_ZamlStartupConfig.reset();
@@ -136,7 +140,7 @@ export namespace zzz
 			auto result = string_to_wstring(e.what());
 
 			if (result)
-				err = std::format(L">>>>> [Engine::initialize({})].\n{}", zamlPath, result.value());
+				err = result.value();
 			else
 				err = std::format(L">>>>> [Engine::initialize({})]. Unknown exception occurred.", zamlPath);
 		}
@@ -145,12 +149,12 @@ export namespace zzz
 			err = L">>>>> #1 [wWinMain( ... )]. Unknown exception occurred.";
 		}
 
-		zMsgBox::Error(err);
+		MsgBox::Error(err);
 		Reset();
 		return Unexpected(eResult::exception, err);
 	}
 
-	Result<> Engine::Initialize() noexcept
+	Result<> Engine::Initialize()
 	{
 		// Создаём обёртку над графическим API
 		auto res = m_EngineFactory.CreateGAPI(m_Config->GetGAPIConfig());
@@ -158,12 +162,13 @@ export namespace zzz
 			return Unexpected(eResult::failure, L">>>>> [Engine::initialize()]. Failed to create GAPI.");
 		m_GAPI = res.value();
 
+		// Создаём менеджеры ресурсов и фабрику сущностей сцены
 		m_ResCPU = safe_make_shared<CPUResManager>();
 		m_ResGPU = safe_make_shared<GPUResManager>(m_GAPI, m_ResCPU);
-		m_ScenManager = safe_make_shared<ScenesManager>(m_ResGPU);
+		m_EntityFactory = safe_make_shared<SceneEntityFactory>(m_ResGPU);
 
 		// Содаём основное окно(View) приложения
-		m_View = safe_make_shared<View>(m_Config->GetAppWinConfig(), m_ScenManager, m_GAPI);
+		m_View = safe_make_shared<View>(m_Config->GetAppWinConfig(), m_EntityFactory, m_GAPI);
 		m_View->viewResized += std::bind(&Engine::OnViewResize, this, std::placeholders::_1, std::placeholders::_2);
 		m_View->viewResizing += std::bind(&Engine::OnViewResizing, this);
 
@@ -214,7 +219,7 @@ export namespace zzz
 			err = L">>>>> #1 [Engine::Run()]. Unknown exception occurred";
 		}
 
-		zMsgBox::Error(err);
+		MsgBox::Error(err);
 		Reset();
 		return Unexpected(eResult::exception, err);
 	}

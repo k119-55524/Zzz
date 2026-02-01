@@ -1,16 +1,18 @@
-#include "pch.h"
-export module zMsgBox;
+
+export module MsgBox;
 
 export namespace zzz
 {
-	class zMsgBox
+	class MsgBox
 	{
 	public:
 		static void Error(const std::wstring& message);
 	};
 
-	void zMsgBox::Error(const std::wstring& message)
+	void MsgBox::Error(const std::wstring& message)
 	{
+		DebugOutput(message);
+
 #if defined(_WIN64)
 		::MessageBoxW(GetActiveWindow(), message.empty() ? L"No message text. Unknown error." : message.c_str(), L"Error!!!", MB_ICONERROR | MB_OK);
 #else

@@ -18,6 +18,50 @@ namespace zzz
 		{
 		}
 
+		Transform(const Transform& other) :
+			m_Position(other.m_Position),
+			m_Rotation(other.m_Rotation),
+			m_Scale(other.m_Scale),
+			m_IsDirty(other.m_IsDirty),
+			m_WorldMatrix(other.m_WorldMatrix)
+		{
+		}
+
+		Transform(Transform&& other) noexcept :
+			m_Position(std::move(other.m_Position)),
+			m_Rotation(std::move(other.m_Rotation)),
+			m_Scale(std::move(other.m_Scale)),
+			m_IsDirty(other.m_IsDirty),
+			m_WorldMatrix(std::move(other.m_WorldMatrix))
+		{
+		}
+
+		Transform& operator=(const Transform& other)
+		{
+			if (this != &other)
+			{
+				m_Position = other.m_Position;
+				m_Rotation = other.m_Rotation;
+				m_Scale = other.m_Scale;
+				m_IsDirty = other.m_IsDirty;
+				m_WorldMatrix = other.m_WorldMatrix;
+			}
+			return *this;
+		}
+
+		Transform& operator=(Transform&& other) noexcept
+		{
+			if (this != &other)
+			{
+				m_Position = std::move(other.m_Position);
+				m_Rotation = std::move(other.m_Rotation);
+				m_Scale = std::move(other.m_Scale);
+				m_IsDirty = other.m_IsDirty;
+				m_WorldMatrix = std::move(other.m_WorldMatrix);
+			}
+			return *this;
+		}
+
 		virtual ~Transform() = default;
 
 		inline void SetPosition(float x, float y, float z) noexcept

@@ -24,6 +24,12 @@
     <ClInclude Include="engineCore.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="Headers\HeaderThrowWrappers.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\HeaderEnums.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engineCore.cpp">
@@ -44,12 +50,6 @@
     <ClCompile Include="Source\Serializer\Serializer.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Interfaces\IAppWin\IAppWin.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Interfaces\IAppWin\IAppWin_MSWin.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Interfaces\ICheckGapiSupport.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -59,7 +59,7 @@
     <ClCompile Include="Source\CPUtoGPUDataTransfer.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Utilities\MessageBox.cppm">
+    <ClCompile Include="Utilities\MsgBox.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Interfaces\IGAPI\IGAPI_DirectX.cppm">
@@ -111,6 +111,27 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Platforms\PrimitiveTopology.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\IAppWin\IAppWin.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Utilities\Platforms.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\QueueArray.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\ThreadPool.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\ThreadSafeQueueArray.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\ThreadSafeSwapBuffer.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\KeyCode.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

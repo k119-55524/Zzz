@@ -17,8 +17,9 @@ int APIENTRY wWinMain(
 #endif // _DEBUG
 	{
 		Engine engine;
+		std::shared_ptr<UserSceneEntity> entity;
 		Result<> res = engine.Initialize(L".\\appdata\\ui.zaml")
-			.and_then([&engine](void) -> Result<>
+			.and_then([&](void) -> Result<>
 				{
 					auto view = engine.GetMainView();
 					auto resLayer = view->AddLayer_3D();
@@ -31,6 +32,13 @@ int APIENTRY wWinMain(
 						return Result<>(resScene.error());
 
 					auto scene = resScene.value();
+					Transform transform;
+					auto resEntity = scene->AddColorBox(transform);
+					if (!resEntity)
+						return Result<>(resEntity.error());
+
+					entity = resEntity.value();
+					//entity->GetTransform().SetPosition(-1.5f, 0.0f, 0.0f);
 
 					return Result<>();
 				})

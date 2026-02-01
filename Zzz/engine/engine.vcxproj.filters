@@ -44,9 +44,6 @@
     <ClCompile Include="source\resources\CPUResManager.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="source\scenes\ScenesManager.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
     <ClCompile Include="source\utilities\AppTime.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
@@ -57,9 +54,6 @@
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\utilities\GpuEventScope.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="source\scenes\SceneEntitySpawner.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\configs\StartupConfig.cppm">
@@ -153,6 +147,12 @@
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="source\api\UserLayer3D.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\scenes\SceneEntityFactory.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
+    <ClCompile Include="source\api\UserSceneEntity.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
   </ItemGroup>

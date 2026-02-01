@@ -117,6 +117,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)engineFoundation\engineBase</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
       <ForcedIncludeFiles>pch.h</ForcedIncludeFiles>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -138,6 +139,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)engineFoundation\engineBase</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
       <ForcedIncludeFiles>pch.h</ForcedIncludeFiles>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>

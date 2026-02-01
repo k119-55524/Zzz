@@ -36,9 +36,7 @@
 #include "HeaderMetal.h"
 #include "headerDX.h"
 #include "MacroDefinition.h"
-#include "HeaderThrowWrappers.h"
 #include "HeaderTypes.h"
-#include "HeaderEnums.h"
 #include "HeaderConstants.h"
 
 #include "HeaderTemplates.h"

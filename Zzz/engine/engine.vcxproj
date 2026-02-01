@@ -60,6 +60,7 @@
       <FloatingPointModel>Fast</FloatingPointModel>
       <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)engineFoundation\engineCore;$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)engineFoundation\logger</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>pch.h</ForcedIncludeFiles>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -81,6 +82,7 @@
       <FloatingPointModel>Fast</FloatingPointModel>
       <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)engineFoundation\engineCore;$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)engineFoundation\logger</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>pch.h</ForcedIncludeFiles>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -100,6 +102,7 @@
     </ClCompile>
     <ClCompile Include="source\api\UserLayer3D.cppm" />
     <ClCompile Include="source\api\UserScene.cppm" />
+    <ClCompile Include="source\api\UserSceneEntity.cppm" />
     <ClCompile Include="source\api\UserView.cppm" />
     <ClCompile Include="source\configs\StartupConfig.cppm" />
     <ClCompile Include="source\configs\ZamlParser.cppm" />
@@ -127,7 +130,7 @@
     <ClCompile Include="source\view\ViewportDesc.cppm" />
     <ClCompile Include="source\helpers\RenderQueue.cppm" />
     <ClCompile Include="source\resources\GPUResManager.cppm" />
-    <ClCompile Include="source\scenes\SceneEntitySpawner.cppm" />
+    <ClCompile Include="source\scenes\SceneEntityFactory.cppm" />
     <ClCompile Include="source\utilities\AppTime.cppm" />
     <ClCompile Include="Source\Engine.cppm" />
     <ClCompile Include="source\factories\EngineFactory.cppm" />
@@ -135,7 +138,6 @@
     <ClCompile Include="source\utilities\GpuEventScope.cppm" />
     <ClCompile Include="source\utilities\PerformanceMeter.cppm" />
     <ClCompile Include="source\resources\CPUResManager.cppm" />
-    <ClCompile Include="source\scenes\ScenesManager.cppm" />
     <ClCompile Include="source\view\View.cppm" />
     <ClCompile Include="source\view\ViewSetup.cppm" />
     <ClCompile Include="source\ZAML\ioZaml.cppm" />
@@ -147,6 +149,9 @@
     </ProjectReference>
     <ProjectReference Include="..\engineFoundation\engineCore\engineCore.vcxproj">
       <Project>{3fec6029-5764-4953-b6e7-d8d2bb3bc483}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\input\input.vcxproj">
+      <Project>{93909e27-ad0e-42e4-aaf1-70f58766e0ee}</Project>
     </ProjectReference>
     <ProjectReference Include="..\math\math.vcxproj">
       <Project>{ae46c4d5-4929-4e49-9aeb-00d2641966d9}</Project>

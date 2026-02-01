@@ -17,9 +17,7 @@ export namespace zzz::core
 		Z_NO_CREATE_COPY(ISurfaceView);
 
 	public:
-		explicit ISurfaceView(
-			std::shared_ptr<IAppWin> _iAppWin,
-			std::shared_ptr<IGAPI> _iGAPI);
+		explicit ISurfaceView(std::shared_ptr<IGAPI> _iGAPI);
 
 		virtual ~ISurfaceView() = default;
 
@@ -34,21 +32,16 @@ export namespace zzz::core
 	protected:
 		zU64 m_frameIndex;
 		bool b_IsVSync;
-		std::shared_ptr<IAppWin> m_iAppWin;
 		std::shared_ptr<IGAPI> m_iGAPI;
 		Size2D<> m_SurfSize;
 	};
 
-	ISurfaceView::ISurfaceView(
-		std::shared_ptr<IAppWin> _iAppWin,
-		std::shared_ptr<IGAPI> _iGAPI) :
+	ISurfaceView::ISurfaceView(std::shared_ptr<IGAPI> _iGAPI) :
 		m_frameIndex{ 0 },
 		b_IsVSync{ true },
-		m_iAppWin{ _iAppWin },
 		m_iGAPI{ _iGAPI },
 		m_SurfSize{}
 	{
-		ensure(m_iAppWin, ">>>>> [ISurfaceView::ISurfaceView()]. Application window cannot be null.");
 		ensure(m_iGAPI, ">>>>> [ISurfaceView::ISurfaceView()]. GAPI cannot be null.");
 	}
 }

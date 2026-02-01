@@ -42,13 +42,7 @@
     <ClInclude Include="Headers\HeaderDX.h">
       <Filter>����� ����������</Filter>
     </ClInclude>
-    <ClInclude Include="headers\HeaderEnums.h">
-      <Filter>����� ����������</Filter>
-    </ClInclude>
     <ClInclude Include="headers\HeaderTypes.h">
-      <Filter>����� ����������</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\HeaderThrowWrappers.h">
       <Filter>����� ����������</Filter>
     </ClInclude>
     <ClInclude Include="headers\HeaderConstants.h">
@@ -65,25 +59,10 @@
     <ClCompile Include="pch.cpp">
       <Filter>�������� �����</Filter>
     </ClCompile>
-    <ClCompile Include="Utilities\Platforms.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
     <ClCompile Include="Utilities\Colors.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Utilities\Result.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Templates\QueueArray.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Templates\ThreadPool.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Templates\ThreadSafeQueueArray.cppm">
-      <Filter>�������� �����</Filter>
-    </ClCompile>
-    <ClCompile Include="Templates\ThreadSafeSwapBuffer.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
     <ClCompile Include="Utilities\StrConvert.cppm">

@@ -2,6 +2,21 @@
 
 namespace zzz
 {
+	// Битовая маска кнопок мыши
+	enum class MouseButtonMask : zU8
+	{
+		None = 0,
+		Left = 1 << 0,
+		Right = 1 << 1,
+		Middle = 1 << 2,
+		Button4 = 1 << 3,
+		Button5 = 1 << 4
+	};
+
+	inline MouseButtonMask operator|(MouseButtonMask a, MouseButtonMask b) { return static_cast<MouseButtonMask>(static_cast<zU8>(a) | static_cast<zU8>(b)); }
+	inline MouseButtonMask& operator|=(MouseButtonMask& a, MouseButtonMask b) { a = a | b; return a; }
+	inline MouseButtonMask operator&(MouseButtonMask a, MouseButtonMask b) { return static_cast<MouseButtonMask>(static_cast<uint8_t>(a) & static_cast<uint8_t>(b)); }
+
 	enum eInitState : zU32
 	{
 		InitNot,		// Готов к инициализации
