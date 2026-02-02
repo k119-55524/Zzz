@@ -24,9 +24,6 @@
     <ClInclude Include="EngineBase.h">
       <Filter>����� ����������</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\Header.h">
-      <Filter>����� ����������</Filter>
-    </ClInclude>
     <ClInclude Include="Headers\MacroDefinition.h">
       <Filter>����� ����������</Filter>
     </ClInclude>
@@ -49,6 +46,9 @@
       <Filter>����� ����������</Filter>
     </ClInclude>
     <ClInclude Include="headers\HeaderTemplates.h">
+      <Filter>����� ����������</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\Header.h">
       <Filter>����� ����������</Filter>
     </ClInclude>
   </ItemGroup>

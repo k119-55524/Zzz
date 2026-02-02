@@ -2,21 +2,21 @@
 
 /* -------------------------------------------------------------
 
-    Кастомные макросы которые используются в проекте(задаются в свойствах проекта):
-        1. `ZTEST` - используется для включения тестовых проверок и сообщений.
-        2. `ZLOG` - используется для логирования сообщений.
-        3. `ZVULKAN` - принудительно использовать апи VULKAN в Windows.
+	Кастомные макросы которые используются в проекте(задаются в свойствах проекта):
+		1. `ZTEST` - используется для включения тестовых проверок и сообщений.
+		2. `ZLOG` - используется для логирования сообщений.
+		3. `ZVULKAN` - принудительно использовать апи VULKAN в Windows.
 
    ------------------------------------------------------------- */
 
-   // Сначала определяем платформу (если ещё не определена)
+	// Сначала определяем платформу (если ещё не определена)
 #if !defined(ZPLATFORM_MSWINDOWS) && !defined(ZPLATFORM_LINUX) && !defined(ZPLATFORM_MACOS) && \
-    !defined(ZPLATFORM_ANDROID) && !defined(ZPLATFORM_XBOX) && !defined(ZPLATFORM_PLAYSTATION) && \
-    !defined(ZPLATFORM_NINTENDO_SWITCH)
+	!defined(ZPLATFORM_ANDROID) && !defined(ZPLATFORM_XBOX) && !defined(ZPLATFORM_PLAYSTATION) && \
+	!defined(ZPLATFORM_NINTENDO_SWITCH)
 
-    // -------------------------------------------------------------
-    // XBOX SERIES X|S (GDK) — НОВОЕ ПОКОЛЕНИЕ
-    // -------------------------------------------------------------
+	// -------------------------------------------------------------
+	// XBOX SERIES X|S (GDK) — НОВОЕ ПОКОЛЕНИЕ
+	// -------------------------------------------------------------
 #if defined(_GAMING_XBOX) || (defined(WINAPI_FAMILY) && WINAPI_FAMILY == WINAPI_FAMILY_GAMES)
 #define ZPLATFORM_XBOX
 #ifdef ZLOG
@@ -45,7 +45,7 @@
 // WINDOWS DESKTOP
 // -------------------------------------------------------------
 #elif defined(_WIN64)
-    // Явно исключаем Xbox One (Durango/XDK)
+	// Явно исключаем Xbox One (Durango/XDK)
 #if defined(_DURANGO) || defined(_XBOX_ONE)
 #error ">>>>> Xbox One is not supported. Only Xbox Series X|S (GDK) is allowed."
 #else
