@@ -5,7 +5,7 @@ import Result;
 
 export namespace zzz
 {
-#if defined(_WIN64)
+#if defined(ZPLATFORM_MSWINDOWS)
 	Result<std::wstring> string_to_wstring(const std::string& str)
 	{
 		if (str.empty())

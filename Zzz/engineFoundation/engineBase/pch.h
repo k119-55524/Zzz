@@ -18,7 +18,7 @@
 #include <utility>
 //#include <codecvt>
 //#include <cstdint>
-//#include <cassert>
+#include <cassert>
 //#include <iostream>
 //#include <algorithm>
 #include <stdexcept>
@@ -30,13 +30,4 @@
 //#include <unordered_map>
 #include <source_location>
 
-#include "Headers/PlatformsDefines.h"
 #include "Headers/HeadersMSWin.h"
-#include "Headers/HeaderVulkan.h"
-#include "Headers/HeaderMetal.h"
-#include "Headers/HeaderDX.h"
-#include "Headers/MacroDefinition.h"
-#include "Headers/HeaderTypes.h"
-#include "Headers/HeaderConstants.h"
-
-#include "Headers/HeaderTemplates.h"
