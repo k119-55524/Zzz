@@ -176,7 +176,6 @@
     <ClCompile Include="Source\Interfaces\Configs\GAPIConfig\GAPIConfig.cppm" />
     <ClCompile Include="Source\Interfaces\IAppWin\AppWin_MSWin.cppm" />
     <ClCompile Include="source\Interfaces\IAppWin\IAppWin.cppm" />
-    <ClCompile Include="source\Interfaces\IBehavior\IBehavior.cppm" />
     <ClCompile Include="Source\Interfaces\IGAPI\DXAPI.cppm" />
     <ClCompile Include="Source\Interfaces\IIcoBuilder\ibMSWin.cppm" />
     <ClCompile Include="Source\Interfaces\IIcoBuilder\IIcoBuilder.cppm" />

@@ -7,7 +7,6 @@ import Transform;
 import IBehavior;
 import SceneEntity;
 
-using namespace zzz::core;
 using namespace zzz::math;
 
 namespace zzz

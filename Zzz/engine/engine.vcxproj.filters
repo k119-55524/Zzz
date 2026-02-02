@@ -155,6 +155,9 @@
     <ClCompile Include="source\api\UserSceneEntity.cppm">
       <Filter>�������� �����</Filter>
     </ClCompile>
+    <ClCompile Include="source\Interfaces\IBehavior\IBehavior.cppm">
+      <Filter>�������� �����</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

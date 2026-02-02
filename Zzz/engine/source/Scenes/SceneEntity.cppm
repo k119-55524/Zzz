@@ -7,7 +7,6 @@ import IMeshGPU;
 import Transform;
 import IBehavior;
 
-using namespace zzz::core;
 using namespace zzz::math;
 
 export namespace zzz
@@ -34,6 +33,7 @@ export namespace zzz
 			static_assert(std::is_base_of_v<IBehavior, T>, "T must derive from IBehavior");
 
 			m_Script = safe_make_unique<T>(std::forward<Args>(args)...);
+			m_Script->SetTransform(m_Transform);
 
 			return {};
 		}

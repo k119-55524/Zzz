@@ -69,16 +69,30 @@ namespace zzz
 			m_Position = Vector3(x, y, z);
 			m_IsDirty = true;
 		}
+
 		inline void SetPosition(const Vector3& position) noexcept
 		{
 			m_Position = position;
 			m_IsDirty = true;
 		}
+
+		inline void Move(const Vector3& delta) noexcept
+		{
+			m_Position += delta;
+			m_IsDirty = true;
+		}
+
+		inline void Move(float dx, float dy, float dz) noexcept
+		{
+			Move(Vector3(dx, dy, dz));
+		}
+
 		inline void SetRotation(const Quaternion& rotation) noexcept
 		{
 			m_Rotation = rotation;
 			m_IsDirty = true;
 		}
+
 		inline void SetScale(const Vector3& scale) noexcept
 		{
 			m_Scale = scale;

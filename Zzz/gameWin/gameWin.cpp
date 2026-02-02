@@ -2,12 +2,14 @@
 import Engine;
 
 using namespace zzz;
+using namespace zzz::math;
 using namespace zzz::core;
 
 class MyScript : public IBehavior
 {
 public:
-	MyScript()
+	MyScript() :
+		rotAngle{0}
 	{
 	}
 	~MyScript() noexcept
@@ -16,8 +18,14 @@ public:
 
 	void OnUpdate(float deltaTime) override
 	{
-
+		rotAngle -= 0.5f * deltaTime;
+		Quaternion m_QRor = Quaternion::rotateY(rotAngle);
+		m_Transform->SetRotation(m_QRor);
+		//m_Transform->Move(0.1f * deltaTime, 0.0f, 0.0f);
 	}
+
+protected:
+	float rotAngle;
 };
 
 int APIENTRY wWinMain(
