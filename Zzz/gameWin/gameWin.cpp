@@ -2,6 +2,31 @@
 import Engine;
 
 using namespace zzz;
+using namespace zzz::math;
+using namespace zzz::core;
+
+class MyScript : public IBehavior
+{
+public:
+	MyScript() :
+		rotAngle{0}
+	{
+	}
+	~MyScript() noexcept
+	{
+	}
+
+	void OnUpdate(float deltaTime) override
+	{
+		rotAngle -= 0.5f * deltaTime;
+		Quaternion m_QRor = Quaternion::rotateY(rotAngle);
+		m_Transform->SetRotation(m_QRor);
+		//m_Transform->Move(0.1f * deltaTime, 0.0f, 0.0f);
+	}
+
+protected:
+	float rotAngle;
+};
 
 int APIENTRY wWinMain(
 	_In_		HINSTANCE	hInstance,
@@ -38,6 +63,7 @@ int APIENTRY wWinMain(
 						return Result<>(resEntity.error());
 
 					entity = resEntity.value();
+					auto resScript = entity->SetScript<MyScript>();
 					//entity->GetTransform().SetPosition(-1.5f, 0.0f, 0.0f);
 
 					return Result<>();
