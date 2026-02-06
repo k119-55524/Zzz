@@ -2,22 +2,27 @@
 export module IBehavior;
 
 import Transform;
+//import SceneEntity;
 
 namespace zzz
 {
+	export class SceneEntity;
+
 	export class IBehavior
 	{
 	public:
-		IBehavior() : m_Transform{ nullptr } {};
+		IBehavior(){};
 		virtual ~IBehavior() noexcept {}
 
 		virtual void OnUpdate(float deltaTime) = 0;
 
 	protected:
-		Transform* m_Transform = nullptr;
+		std::shared_ptr<SceneEntity> m_Entity;
+
+		[[nodiscard]] Transform& GetTransform() noexcept;
 
 	private:
-		void SetTransform(Transform& transform) { m_Transform = &transform; }
+		void SetEntity(const std::shared_ptr<SceneEntity> entity);
 		friend class SceneEntity;
 	};
 }

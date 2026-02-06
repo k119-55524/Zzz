@@ -158,6 +158,9 @@
     <ClCompile Include="source\Interfaces\IBehavior\IBehavior.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="source\Interfaces\IBehavior\IBehavior-impl.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

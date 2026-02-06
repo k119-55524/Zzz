@@ -20,7 +20,8 @@ public:
 	{
 		rotAngle -= 0.5f * deltaTime;
 		Quaternion m_QRor = Quaternion::rotateY(rotAngle);
-		m_Transform->SetRotation(m_QRor);
+		Transform& transform = GetTransform();
+		transform.SetRotation(m_QRor);
 		//m_Transform->Move(0.1f * deltaTime, 0.0f, 0.0f);
 	}
 

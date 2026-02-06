@@ -9,9 +9,10 @@ import IBehavior;
 
 using namespace zzz::math;
 
-export namespace zzz
+namespace zzz
 {
-	export class SceneEntity final
+	export class SceneEntity final :
+		public std::enable_shared_from_this<SceneEntity>
 	{
 	public:
 		SceneEntity() = delete;
@@ -33,7 +34,7 @@ export namespace zzz
 			static_assert(std::is_base_of_v<IBehavior, T>, "T must derive from IBehavior");
 
 			m_Script = safe_make_unique<T>(std::forward<Args>(args)...);
-			m_Script->SetTransform(m_Transform);
+			m_Script->SetEntity(shared_from_this());
 
 			return {};
 		}
