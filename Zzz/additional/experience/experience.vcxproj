@@ -94,6 +94,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="source\coroutine_1.cppm" />
+    <ClCompile Include="source\Modules\ModuleA.cpp" />
+    <ClCompile Include="source\Modules\ModuleA.cppm" />
+    <ClCompile Include="source\Modules\ModuleB.cpp" />
+    <ClCompile Include="source\Modules\ModuleB.cppm" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LeetCode\Easy.h" />
