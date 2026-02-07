@@ -14,9 +14,9 @@
     !defined(ZPLATFORM_ANDROID) && !defined(ZPLATFORM_XBOX) && !defined(ZPLATFORM_PLAYSTATION) && \
     !defined(ZPLATFORM_NINTENDO_SWITCH)
 
-    // -------------------------------------------------------------
-    // XBOX SERIES X|S (GDK) ≈ мнбне онйнкемхе
-    // -------------------------------------------------------------
+// -------------------------------------------------------------
+// XBOX SERIES X|S (GDK) ≈ мнбне онйнкемхе
+// -------------------------------------------------------------
 #if defined(_GAMING_XBOX) || (defined(WINAPI_FAMILY) && WINAPI_FAMILY == WINAPI_FAMILY_GAMES)
 #define ZPLATFORM_XBOX
 #ifdef ZLOG
