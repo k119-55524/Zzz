@@ -158,7 +158,7 @@
     <ClCompile Include="source\Interfaces\IBehavior\IBehavior.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Interfaces\IBehavior\IBehavior-impl.cppm">
+    <ClCompile Include="source\Interfaces\IBehavior\IBehavior-impl.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

@@ -36,9 +36,35 @@ export namespace zzz
 	{
 	public:
 		Unexpected() noexcept : code(eResult::success), message() {}
-		Unexpected(eResult code) noexcept : code(code), message() {}
-		Unexpected(const std::wstring& message) noexcept : code(eResult::failure), message(message) {}
-		Unexpected(eResult code, const std::wstring& message) noexcept : code(code), message(message) {}
+		Unexpected(
+			eResult code,
+			const std::wstring& msg,
+			const std::source_location& loc = std::source_location::current()) noexcept
+			: code(code)
+		{
+			std::wstringstream ss;
+			ss << L">>>>> ["
+				<< std::wstring(loc.function_name(), loc.function_name() + strlen(loc.function_name()))
+				<< L"]. Expected: " << msg
+				<< L"\nLine " << loc.line()
+				<< L" in file: "
+				<< std::wstring(loc.file_name(), loc.file_name() + strlen(loc.file_name()));
+			message = ss.str();
+		}
+
+		Unexpected(eResult code,
+			const std::source_location& loc = std::source_location::current()) noexcept
+			: code(code)
+		{
+			std::wstringstream ss;
+			ss << L">>>>> ["
+				<< std::wstring(loc.function_name(), loc.function_name() + strlen(loc.function_name()))
+				<< L"]. Expected: <no message>"
+				<< L"\nLine " << loc.line()
+				<< L" in file: "
+				<< std::wstring(loc.file_name(), loc.file_name() + strlen(loc.file_name()));
+			message = ss.str();
+		}
 
 		inline eResult getCode() const noexcept { return code; }
 		inline const std::wstring& getMessage() const noexcept { return message; }

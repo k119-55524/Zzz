@@ -1,16 +1,22 @@
 
 export module SceneEntity;
 
+import Input;
+//import Scene;
 import Result;
 import Material;
 import IMeshGPU;
 import Transform;
 import IBehavior;
+import StrConvert;
 
 using namespace zzz::math;
+using namespace zzz::input;
 
 namespace zzz
 {
+	//export class Scene;
+
 	export class SceneEntity final :
 		public std::enable_shared_from_this<SceneEntity>
 	{
@@ -26,6 +32,8 @@ namespace zzz
 		inline void SetTransform(Transform& transform) noexcept { m_Transform = transform; }
 		[[nodiscard]] inline Transform& GetTransform() noexcept { return m_Transform; }
 
+		[[nodiscard]] inline std::shared_ptr<Input> GetInput() const noexcept { return nullptr; };
+
 		inline void OnUpdate(float deltaTime) { if (m_Script != nullptr) m_Script->OnUpdate(deltaTime); };
 
 		template<typename T, typename... Args>
@@ -33,17 +41,23 @@ namespace zzz
 		{
 			static_assert(std::is_base_of_v<IBehavior, T>, "T must derive from IBehavior");
 
-			m_Script = safe_make_unique<T>(std::forward<Args>(args)...);
-			m_Script->SetEntity(shared_from_this());
+			try
+			{
+				m_Script = safe_make_unique<T>(shared_from_this(), std::forward<Args>(args)...);
+			}
+			catch (const std::exception& e)
+			{
+				return Unexpected(eResult::exception, string_to_wstring(e.what()).value_or(L"Unknown exception occurred."));
+			}
 
 			return {};
 		}
 
 	protected:
 		Transform m_Transform;
-		std::unique_ptr<IBehavior> m_Script;
 
 	private:
+		std::unique_ptr<IBehavior> m_Script;
 		const std::shared_ptr<IMeshGPU> m_Mesh;
 		const std::shared_ptr<Material> m_Material;
 	};

@@ -17,7 +17,6 @@ namespace zzz
 		UserSceneEntity() = delete;
 		~UserSceneEntity() = default;
 		UserSceneEntity(std::shared_ptr<SceneEntity> entity);
-		//Transform& GetTransform() noexcept;
 
 		template<typename T, typename... Args>
 		Result<> SetScript(Args&&... args)
@@ -35,9 +34,4 @@ namespace zzz
 	{
 		ensure(m_Entity, ">>>>> [UserSceneEntity::UserSceneEntity(...)]. SceneEntity cannot be null.");
 	}
-
-	//inline Transform& UserSceneEntity::GetTransform() noexcept
-	//{
-	//	return m_Entity->GetTransform();
-	//}
 }

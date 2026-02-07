@@ -197,7 +197,7 @@ namespace zzz
 	{
 		Size2D<zF32> size;
 		size.SetFrom(m_Window->GetWinSize());
-		std::shared_ptr<Layer3D> layer = safe_make_shared<Layer3D>(m_EntityFactory, eAspectType::FullWindow, size, 0.0f, 1.0f);
+		std::shared_ptr<Layer3D> layer = safe_make_shared<Layer3D>(m_Input, m_EntityFactory, eAspectType::FullWindow, size, 0.0f, 1.0f);
 
 		std::shared_ptr<UserLayer3D> userLayer = safe_make_shared<UserLayer3D>(layer);
 		m_RenderLayers.push_back(layer);

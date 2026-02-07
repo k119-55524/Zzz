@@ -1,8 +1,10 @@
 
 export module IBehavior;
 
+import Input;
 import Transform;
-//import SceneEntity;
+
+using namespace zzz::input;
 
 namespace zzz
 {
@@ -11,18 +13,19 @@ namespace zzz
 	export class IBehavior
 	{
 	public:
-		IBehavior(){};
+		IBehavior(const std::shared_ptr<SceneEntity> entity) :
+			m_Entity{ entity }
+		{
+		}
 		virtual ~IBehavior() noexcept {}
+
+		[[nodiscard]] std::shared_ptr<Input> GetInput() const noexcept;
 
 		virtual void OnUpdate(float deltaTime) = 0;
 
 	protected:
-		std::shared_ptr<SceneEntity> m_Entity;
+		const std::weak_ptr<SceneEntity> m_Entity;
 
 		[[nodiscard]] Transform& GetTransform() noexcept;
-
-	private:
-		void SetEntity(const std::shared_ptr<SceneEntity> entity);
-		friend class SceneEntity;
 	};
 }

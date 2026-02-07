@@ -8,7 +8,8 @@ using namespace zzz::core;
 class MyScript : public IBehavior
 {
 public:
-	MyScript() :
+	MyScript(const std::shared_ptr<SceneEntity> entity) :
+		IBehavior{ entity },
 		rotAngle{0}
 	{
 	}
@@ -37,7 +38,7 @@ int APIENTRY wWinMain(
 {
 #ifdef _DEBUG
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtSetBreakAlloc(263);
+	//_CrtSetBreakAlloc(1563);
 	//_CrtSetBreakAlloc(160);
 	//_CrtSetBreakAlloc(202);
 #endif // _DEBUG
@@ -65,7 +66,6 @@ int APIENTRY wWinMain(
 
 					entity = resEntity.value();
 					auto resScript = entity->SetScript<MyScript>();
-					//entity->GetTransform().SetPosition(-1.5f, 0.0f, 0.0f);
 
 					return Result<>();
 				})

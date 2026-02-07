@@ -65,7 +65,7 @@ export namespace zzz
 				if (scene != nullptr)
 				{
 					// Установка глобальных констант шейдеров
-					Camera& primaryCamera = scene->GetPrimaryCamera();
+					const Camera& primaryCamera = scene->GetPrimaryCamera();
 					Matrix4x4 camViewProj = primaryCamera.GetProjectionViewMatrix(surfSize);
 					setGlobalConstFunc(camViewProj);
 

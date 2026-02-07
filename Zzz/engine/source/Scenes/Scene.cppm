@@ -2,6 +2,7 @@
 export module Scene;
 
 import Math;
+import Input;
 import Result;
 import Camera;
 import Transform;
@@ -10,9 +11,12 @@ import SceneEntity;
 import SceneEntityFactory;
 
 using namespace zzz::math;
+using namespace zzz::input;
 
 export namespace zzz
 {
+	//export class SceneEntity;
+
 	export class Scene final
 	{
 		Z_NO_COPY_MOVE(Scene);
@@ -20,10 +24,14 @@ export namespace zzz
 	public:
 		Scene() = delete;
 		~Scene() = default;
-		Scene(const std::shared_ptr<SceneEntityFactory> sceneEntityFactory) :
+		Scene(
+			const std::shared_ptr<Input> input,
+			const std::shared_ptr<SceneEntityFactory> sceneEntityFactory
+		) :
 			m_EntityFactory{ sceneEntityFactory }
 		{
-			ensure(m_EntityFactory, ">>>>> [Scene::Scene()]. Scene entity factory cannot be null.");
+			ensure(input, "Scene input cannot be null.");
+			ensure(m_EntityFactory, "Scene entity factory cannot be null.");
 
 			m_PrimaryCamera.SetFovY(0.25f * PI);
 			//m_PrimaryCamera.SetAspectRatio(eAspectType::Ratio_16x9);
@@ -47,10 +55,12 @@ export namespace zzz
 
 		Result<std::shared_ptr<SceneEntity>> AddColorBox(Transform& transform);
 
-		inline Camera& GetPrimaryCamera() noexcept { return m_PrimaryCamera; }
-		inline std::shared_ptr<SceneEntity> GetEntity() const noexcept { return m_Entity; }
+		inline [[nodiscard]] const Camera& GetPrimaryCamera() noexcept { return m_PrimaryCamera; }
+		inline [[nodiscard]] std::shared_ptr<SceneEntity> GetEntity() const noexcept { return m_Entity; }
+		inline [[nodiscard]] const std::shared_ptr<Input> GetInput() const noexcept { return m_Input; }
 
 	private:
+		const std::shared_ptr<Input> m_Input;
 		std::shared_ptr<SceneEntityFactory> m_EntityFactory;
 
 		Camera m_PrimaryCamera;

@@ -8,6 +8,8 @@ export import UserView;
 export import UserScene;
 export import IBehavior;
 export import Transform;
+export import StrConvert;
+export import SceneEntity;
 export import UserLayer3D;
 export import UserSceneEntity;
 
@@ -19,7 +21,6 @@ import MsgBox;
 import AppTime;
 import IMainLoop;
 import ThreadPool;
-import StrConvert;
 import ZamlConfig;
 import ZamlParser;
 import StartupConfig;
@@ -305,10 +306,6 @@ export namespace zzz
 			break;
 		}
 	}
-
-#pragma region User API
-
-#pragma endregion
 
 #pragma region Helpers
 	Result<std::unique_ptr<StartupConfig>> Engine::GetStartupConfig()
