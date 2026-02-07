@@ -23,6 +23,7 @@ namespace zzz
 	public:
 		SceneEntity() = delete;
 		explicit SceneEntity(
+			const std::shared_ptr<Input> input,
 			const std::shared_ptr<IMeshGPU> mesh,
 			const std::shared_ptr<Material> material);
 		~SceneEntity() = default;
@@ -32,7 +33,7 @@ namespace zzz
 		inline void SetTransform(Transform& transform) noexcept { m_Transform = transform; }
 		[[nodiscard]] inline Transform& GetTransform() noexcept { return m_Transform; }
 
-		[[nodiscard]] inline std::shared_ptr<Input> GetInput() const noexcept { return nullptr; };
+		[[nodiscard]] inline const std::shared_ptr<Input> GetInput() const noexcept { return m_Input; };
 
 		void OnUpdate(float deltaTime);
 
@@ -57,20 +58,24 @@ namespace zzz
 		Transform m_Transform;
 
 	private:
+		const std::shared_ptr<Input> m_Input;
 		std::unique_ptr<IBehavior> m_Script;
 		const std::shared_ptr<IMeshGPU> m_Mesh;
 		const std::shared_ptr<Material> m_Material;
 	};
 
 	inline SceneEntity::SceneEntity(
+		const std::shared_ptr<Input> input,
 		const std::shared_ptr<IMeshGPU> mesh,
 		const std::shared_ptr<Material> material
 	) :
+		m_Input{ input },
 		m_Mesh{ mesh },
 		m_Material{ material }
 	{
-		ensure(m_Mesh != nullptr, "Mesh pointer cannot be null.");
-		ensure(m_Material != nullptr, "Material pointer cannot be null.");
+		ensure(m_Input, "Input pointer cannot be null.");
+		ensure(m_Mesh, "Mesh pointer cannot be null.");
+		ensure(m_Material, "Material pointer cannot be null.");
 	}
 
 	inline void SceneEntity::OnUpdate(float deltaTime)

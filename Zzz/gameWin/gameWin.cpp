@@ -4,6 +4,7 @@ import Engine;
 using namespace zzz;
 using namespace zzz::math;
 using namespace zzz::core;
+using namespace zzz::input;
 
 class MyScript : public IBehavior
 {
@@ -12,6 +13,7 @@ public:
 		IBehavior{ entity },
 		rotAngle{0}
 	{
+		m_Input = GetInput();
 	}
 	~MyScript() noexcept
 	{
@@ -28,6 +30,7 @@ public:
 
 protected:
 	float rotAngle;
+	std::shared_ptr<Input> m_Input;
 };
 
 int APIENTRY wWinMain(
@@ -69,7 +72,8 @@ int APIENTRY wWinMain(
 
 					return Result<>();
 				})
-			.and_then([&engine]() { return engine.Run(); });
+			.and_then([&engine]() { return engine.Run(); })
+			.or_else([&](const Unexpected& error) { MsgBox::Error(error.getMessage()); });
 	}
 
 #ifdef _DEBUG

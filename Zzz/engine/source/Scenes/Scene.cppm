@@ -39,21 +39,15 @@ namespace zzz
 		Camera m_PrimaryCamera;
 		std::shared_ptr<SceneEntity> m_Entity;
 	};
-//}
 
-//module :private;
-//
-//import SceneEntity;
-//
-//namespace zzz
-//{
 	inline Scene::Scene(
 		const std::shared_ptr<Input> input,
 		const std::shared_ptr<SceneEntityFactory> sceneEntityFactory
 	) :
+		m_Input{ input },
 		m_EntityFactory{ sceneEntityFactory }
 	{
-		ensure(input, "Scene input cannot be null.");
+		ensure(m_Input, "Scene input cannot be null.");
 		ensure(m_EntityFactory, "Scene entity factory cannot be null.");
 
 		m_PrimaryCamera.SetFovY(0.25f * PI);
@@ -86,7 +80,7 @@ namespace zzz
 		std::shared_ptr<SceneEntity> entity;
 		try
 		{
-			Result<std::shared_ptr<SceneEntity>> resEntity = m_EntityFactory->GetColorBox();
+			Result<std::shared_ptr<SceneEntity>> resEntity = m_EntityFactory->GetColorBox(m_Input);
 			if (!resEntity)
 				return resEntity.error();
 

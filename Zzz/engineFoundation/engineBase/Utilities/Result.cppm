@@ -45,9 +45,9 @@ export namespace zzz
 			std::wstringstream ss;
 			ss << L">>>>> ["
 				<< std::wstring(loc.function_name(), loc.function_name() + strlen(loc.function_name()))
-				<< L"]. Expected: " << msg
-				<< L"\nLine " << loc.line()
-				<< L" in file: "
+				<< L"].\nExpected: " << msg
+				<< L"\n    Line " << loc.line()
+				<< L"\n    In file: "
 				<< std::wstring(loc.file_name(), loc.file_name() + strlen(loc.file_name()));
 			message = ss.str();
 		}
