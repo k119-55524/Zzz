@@ -9,18 +9,18 @@ import ICheckGapiSupport;
 import CPUtoGPUDataTransfer;
 import ICPUtoGPUDataTransfer;
 
-#if defined(ZRENDER_API_D3D12)
-import IGAPI_DirectX;
-	using PlatformGAPIBase = zzz::directx::IGAPI_DirectX;
-//#elif defined(ZRENDER_API_VULKAN)
-//import IGAPI_Vulkan;
-//	using PlatformGAPIBase = zzz::vulkan::IGAPI_Vulkan;
-//#elif defined(ZRENDER_API_METAL)
-//import IGAPI_Metal;
-//	using PlatformGAPIBase = zzz::matal::IGAPI_Metal;
-#else
-#error ">>>>> [IGAPI module]. No graphics API defined."
-#endif
+//#if defined(ZRENDER_API_D3D12)
+//import IGAPI_DirectX;
+//	using PlatformGAPIBase = zzz::directx::IGAPI_DirectX;
+////#elif defined(ZRENDER_API_VULKAN)
+////import IGAPI_Vulkan;
+////	using PlatformGAPIBase = zzz::vulkan::IGAPI_Vulkan;
+////#elif defined(ZRENDER_API_METAL)
+////import IGAPI_Metal;
+////	using PlatformGAPIBase = zzz::matal::IGAPI_Metal;
+//#else
+//#error ">>>>> [IGAPI module]. No graphics API defined."
+//#endif
 
 using namespace std::literals::string_view_literals;
 
@@ -33,7 +33,7 @@ export namespace zzz
 		Metal
 	};
 
-	export class IGAPI : public PlatformGAPIBase
+	export class IGAPI
 	{
 		Z_NO_CREATE_COPY(IGAPI);
 

@@ -87,7 +87,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)engineFoundation\logger;$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)math</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)engineFoundation\logger;$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)math;%VULKAN_SDK%\Include</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
       <ForcedIncludeFiles>pch.h;</ForcedIncludeFiles>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
@@ -129,7 +129,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)engineFoundation\logger;$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)math</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)engineFoundation\logger;$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)math;%VULKAN_SDK%\Include</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
       <ForcedIncludeFiles>pch.h;</ForcedIncludeFiles>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
@@ -164,7 +164,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="engineCore.h" />
-    <ClInclude Include="header.h" />
+    <ClInclude Include="Headers\Header.h" />
     <ClInclude Include="Headers\HeaderEnums.h" />
     <ClInclude Include="Headers\HeaderThrowWrappers.h" />
     <ClInclude Include="pch.h" />
@@ -195,7 +195,6 @@
     <ClCompile Include="Source\Interfaces\IMainLoop\MainLoop_MSWin.cppm" />
     <ClCompile Include="Source\Interfaces\ICheckGapiSupport.cppm" />
     <ClCompile Include="Source\Interfaces\ICPUtoGPUDataTransfer.cppm" />
-    <ClCompile Include="Source\Interfaces\IGAPI\IGAPI_DirectX.cppm" />
     <ClCompile Include="Source\Interfaces\IGAPI\IGAPI.cppm" />
     <ClCompile Include="Source\Interfaces\IMainLoop\IMainLoop.cppm" />
     <ClCompile Include="Source\IO\IOPathFactory.cppm" />

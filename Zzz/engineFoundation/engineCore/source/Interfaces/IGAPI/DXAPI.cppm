@@ -35,16 +35,16 @@ export namespace zzz::directx
 		explicit DXAPI();
 		virtual ~DXAPI() override;
 
-		const ComPtr<ID3D12Device>& GetDevice() const noexcept override { return m_device; };
-		const ComPtr<ID3D12CommandQueue>& GetCommandQueue() const noexcept override { return m_commandQueue; };
-		const ComPtr<IDXGIFactory7>& GetFactory() const noexcept override { return m_factory; };
-		const ComPtr<ID3D12GraphicsCommandList>& GetCommandListUpdate() const noexcept override { return m_commandWrapper[m_frameIndexUpdate]->GetCommandList(); };
-		const ComPtr<ID3D12GraphicsCommandList>& GetCommandListRender() const noexcept override { return m_commandWrapper[m_frameIndexRender]->GetCommandList(); };
-		ComPtr<ID3D12RootSignature> GetRootSignature() const noexcept override {  return m_rootSignature.Get(); }
+		const ComPtr<ID3D12Device>& GetDevice() const noexcept { return m_device; };
+		const ComPtr<ID3D12CommandQueue>& GetCommandQueue() const noexcept { return m_commandQueue; };
+		const ComPtr<IDXGIFactory7>& GetFactory() const noexcept { return m_factory; };
+		const ComPtr<ID3D12GraphicsCommandList>& GetCommandListUpdate() const noexcept { return m_commandWrapper[m_frameIndexUpdate]->GetCommandList(); };
+		const ComPtr<ID3D12GraphicsCommandList>& GetCommandListRender() const noexcept { return m_commandWrapper[m_frameIndexRender]->GetCommandList(); };
+		ComPtr<ID3D12RootSignature> GetRootSignature() const noexcept {  return m_rootSignature.Get(); }
 
-		void CommandRenderReset() noexcept override;
-		[[nodiscard]] Result<> CommandRenderReinitialize() override;
-		void EndPreparedTransfers() override;
+		void CommandRenderReset() noexcept;
+		[[nodiscard]] Result<> CommandRenderReinitialize();
+		void EndPreparedTransfers();
 		void SubmitCommandLists() override;
 
 		void BeginRender() override;
