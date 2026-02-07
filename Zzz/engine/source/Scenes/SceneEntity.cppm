@@ -15,7 +15,7 @@ using namespace zzz::input;
 
 namespace zzz
 {
-	//export class Scene;
+	export class Scene;
 
 	export class SceneEntity final :
 		public std::enable_shared_from_this<SceneEntity>
@@ -34,7 +34,7 @@ namespace zzz
 
 		[[nodiscard]] inline std::shared_ptr<Input> GetInput() const noexcept { return nullptr; };
 
-		inline void OnUpdate(float deltaTime) { if (m_Script != nullptr) m_Script->OnUpdate(deltaTime); };
+		void OnUpdate(float deltaTime);
 
 		template<typename T, typename... Args>
 		Result<> SetScript(Args&&... args)
@@ -62,13 +62,20 @@ namespace zzz
 		const std::shared_ptr<Material> m_Material;
 	};
 
-	SceneEntity::SceneEntity(
+	inline SceneEntity::SceneEntity(
 		const std::shared_ptr<IMeshGPU> mesh,
-		const std::shared_ptr<Material> material) :
+		const std::shared_ptr<Material> material
+	) :
 		m_Mesh{ mesh },
 		m_Material{ material }
 	{
 		ensure(m_Mesh != nullptr, "Mesh pointer cannot be null.");
 		ensure(m_Material != nullptr, "Material pointer cannot be null.");
+	}
+
+	inline void SceneEntity::OnUpdate(float deltaTime)
+	{
+		if (m_Script != nullptr)
+			m_Script->OnUpdate(deltaTime);
 	}
 }

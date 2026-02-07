@@ -32,6 +32,6 @@ namespace zzz
 	inline UserSceneEntity::UserSceneEntity(std::shared_ptr<SceneEntity> entity) :
 		m_Entity{ std::move(entity) }
 	{
-		ensure(m_Entity, ">>>>> [UserSceneEntity::UserSceneEntity(...)]. SceneEntity cannot be null.");
+		ensure(m_Entity, "SceneEntity cannot be null.");
 	}
 }

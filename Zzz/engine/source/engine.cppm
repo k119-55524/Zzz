@@ -3,6 +3,7 @@ export module Engine;
 
 export import Math;
 export import Input;
+export import Scene;
 export import Result;
 export import UserView;
 export import UserScene;

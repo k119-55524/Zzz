@@ -7,15 +7,15 @@ import Result;
 import Camera;
 import Transform;
 import StrConvert;
-import SceneEntity;
+//import SceneEntity;
 import SceneEntityFactory;
 
 using namespace zzz::math;
 using namespace zzz::input;
 
-export namespace zzz
+namespace zzz
 {
-	//export class SceneEntity;
+	export class SceneEntity;
 
 	export class Scene final
 	{
@@ -24,39 +24,12 @@ export namespace zzz
 	public:
 		Scene() = delete;
 		~Scene() = default;
-		Scene(
-			const std::shared_ptr<Input> input,
-			const std::shared_ptr<SceneEntityFactory> sceneEntityFactory
-		) :
-			m_EntityFactory{ sceneEntityFactory }
-		{
-			ensure(input, "Scene input cannot be null.");
-			ensure(m_EntityFactory, "Scene entity factory cannot be null.");
-
-			m_PrimaryCamera.SetFovY(0.25f * PI);
-			//m_PrimaryCamera.SetAspectRatio(eAspectType::Ratio_16x9);
-			m_PrimaryCamera.SetAspectRatio(eAspectType::FullWindow, 1.0f);
-			m_PrimaryCamera.SetNearPlane(0.1f);
-			m_PrimaryCamera.SetFarPlane(1000.0f);
-			float mTheta = 1.5f * PI;
-			float mPhi = PI / 4.0f; // 45 градусов
-			float mRadius = 5.0f;
-			float x = mRadius * std::sin(mPhi) * std::cos(mTheta);
-			float z = mRadius * std::sin(mPhi) * std::sin(mTheta);
-			float y = mRadius * std::cos(mPhi);
-			//float x = 0.0f;
-			//float y = 0.0f;
-			//float z = -5.0f;
-			m_PrimaryCamera.SetPosition(Vector3(x, y, z));
-			//m_PrimaryCamera.SetPosition(Vector4(0, 0, -5, 1.0f));
-			m_PrimaryCamera.SetTarget(Vector3(0.0f, 0.0f, 0.0f));
-			m_PrimaryCamera.SetUp(Vector3(0.0f, 1.0f, 0.0f));
-		}
+		Scene(const std::shared_ptr<Input> input, const std::shared_ptr<SceneEntityFactory> sceneEntityFactory);
 
 		Result<std::shared_ptr<SceneEntity>> AddColorBox(Transform& transform);
 
 		inline [[nodiscard]] const Camera& GetPrimaryCamera() noexcept { return m_PrimaryCamera; }
-		inline [[nodiscard]] std::shared_ptr<SceneEntity> GetEntity() const noexcept { return m_Entity; }
+		[[nodiscard]] std::shared_ptr<SceneEntity> GetEntity() const noexcept;
 		inline [[nodiscard]] const std::shared_ptr<Input> GetInput() const noexcept { return m_Input; }
 
 	private:
@@ -66,8 +39,49 @@ export namespace zzz
 		Camera m_PrimaryCamera;
 		std::shared_ptr<SceneEntity> m_Entity;
 	};
+//}
 
-	Result<std::shared_ptr<SceneEntity>> Scene::AddColorBox(Transform& transform)
+//module :private;
+//
+//import SceneEntity;
+//
+//namespace zzz
+//{
+	inline Scene::Scene(
+		const std::shared_ptr<Input> input,
+		const std::shared_ptr<SceneEntityFactory> sceneEntityFactory
+	) :
+		m_EntityFactory{ sceneEntityFactory }
+	{
+		ensure(input, "Scene input cannot be null.");
+		ensure(m_EntityFactory, "Scene entity factory cannot be null.");
+
+		m_PrimaryCamera.SetFovY(0.25f * PI);
+		//m_PrimaryCamera.SetAspectRatio(eAspectType::Ratio_16x9);
+		m_PrimaryCamera.SetAspectRatio(eAspectType::FullWindow, 1.0f);
+		m_PrimaryCamera.SetNearPlane(0.1f);
+		m_PrimaryCamera.SetFarPlane(1000.0f);
+		float mTheta = 1.5f * PI;
+		float mPhi = PI / 4.0f; // 45 градусов
+		float mRadius = 5.0f;
+		float x = mRadius * std::sin(mPhi) * std::cos(mTheta);
+		float z = mRadius * std::sin(mPhi) * std::sin(mTheta);
+		float y = mRadius * std::cos(mPhi);
+		//float x = 0.0f;
+		//float y = 0.0f;
+		//float z = -5.0f;
+		m_PrimaryCamera.SetPosition(Vector3(x, y, z));
+		//m_PrimaryCamera.SetPosition(Vector4(0, 0, -5, 1.0f));
+		m_PrimaryCamera.SetTarget(Vector3(0.0f, 0.0f, 0.0f));
+		m_PrimaryCamera.SetUp(Vector3(0.0f, 1.0f, 0.0f));
+	}
+
+	[[nodiscard]] inline std::shared_ptr<SceneEntity> Scene::GetEntity() const noexcept
+	{
+		return m_Entity;
+	}
+
+	inline Result<std::shared_ptr<SceneEntity>> Scene::AddColorBox(Transform& transform)
 	{
 		std::shared_ptr<SceneEntity> entity;
 		try
