@@ -45,6 +45,6 @@ namespace zzz
 		}
 
 	private:
-		std::shared_ptr<Scene> m_Scene;
+		const std::shared_ptr<Scene> m_Scene;
 	};
 }

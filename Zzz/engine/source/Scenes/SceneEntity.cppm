@@ -28,8 +28,8 @@ namespace zzz
 			const std::shared_ptr<Material> material);
 		~SceneEntity() = default;
 
-		[[nodiscard]] inline std::shared_ptr<IMeshGPU> GetMesh() const noexcept { return m_Mesh; }
-		[[nodiscard]] inline std::shared_ptr<Material> GetMaterial() const noexcept { return m_Material; }
+		[[nodiscard]] inline const std::shared_ptr<IMeshGPU>& GetMesh() const noexcept { return m_Mesh; }
+		[[nodiscard]] inline const std::shared_ptr<Material>& GetMaterial() const noexcept { return m_Material; }
 		inline void SetTransform(Transform& transform) noexcept { m_Transform = transform; }
 		[[nodiscard]] inline Transform& GetTransform() noexcept { return m_Transform; }
 

@@ -126,7 +126,7 @@ export namespace zzz
 		std::lock_guard<std::mutex> lock(stateMutex);
 
 		if (initState != eInitState::InitNot)
-			return Unexpected(eResult::failure, std::format(L"Re-initialization is not allowed.", zamlPath));
+			return Unexpected(eResult::failure, L"Re-initialization is not allowed.");
 
 		std::wstring err;
 		try
@@ -187,6 +187,7 @@ export namespace zzz
 	Result<> Engine::Run() noexcept
 	{
 		std::lock_guard<std::mutex> lock(stateMutex);
+
 		if (initState != eInitState::InitOK)
 			return Unexpected(eResult::failure, L"Engine is not initialized.");
 
