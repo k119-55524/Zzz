@@ -4,13 +4,17 @@ import Engine;
 using namespace zzz;
 using namespace zzz::math;
 using namespace zzz::core;
+using namespace zzz::input;
 
 class MyScript : public IBehavior
 {
 public:
-	MyScript() :
-		rotAngle{0}
+	MyScript(const std::shared_ptr<SceneEntity> entity) :
+		IBehavior{ entity },
+		rotSpeed{ 0.5f },
+		moveSpeed{ 1.0f }
 	{
+		m_Input = GetInput();
 	}
 	~MyScript() noexcept
 	{
@@ -18,14 +22,26 @@ public:
 
 	void OnUpdate(float deltaTime) override
 	{
-		rotAngle -= 0.5f * deltaTime;
-		Quaternion m_QRor = Quaternion::rotateY(rotAngle);
-		m_Transform->SetRotation(m_QRor);
-		//m_Transform->Move(0.1f * deltaTime, 0.0f, 0.0f);
+		Transform& transform = GetTransform();
+		transform.AddRotation(0.0f, -rotSpeed * deltaTime, 0.0f);
+
+		if (m_Input->GetKeyState(KeyCode::ArrowLeft) == KeyState::Down)
+			transform.Move(-moveSpeed * deltaTime, 0.0f, 0.0f);
+
+		if (m_Input->GetKeyState(KeyCode::ArrowRight) == KeyState::Down)
+			transform.Move(moveSpeed * deltaTime, 0.0f, 0.0f);
+
+		if (m_Input->GetKeyState(KeyCode::ArrowUp) == KeyState::Down)
+			transform.Move(0.0f, 0.0f, moveSpeed * deltaTime);
+
+		if (m_Input->GetKeyState(KeyCode::ArrowDown) == KeyState::Down)
+			transform.Move(0.0f, 0.0f, -moveSpeed * deltaTime);
 	}
 
 protected:
-	float rotAngle;
+	float rotSpeed;
+	float moveSpeed;
+	std::shared_ptr<Input> m_Input;
 };
 
 int APIENTRY wWinMain(
@@ -36,7 +52,7 @@ int APIENTRY wWinMain(
 {
 #ifdef _DEBUG
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtSetBreakAlloc(263);
+	//_CrtSetBreakAlloc(1563);
 	//_CrtSetBreakAlloc(160);
 	//_CrtSetBreakAlloc(202);
 #endif // _DEBUG
@@ -64,11 +80,11 @@ int APIENTRY wWinMain(
 
 					entity = resEntity.value();
 					auto resScript = entity->SetScript<MyScript>();
-					//entity->GetTransform().SetPosition(-1.5f, 0.0f, 0.0f);
 
 					return Result<>();
 				})
-			.and_then([&engine]() { return engine.Run(); });
+			.and_then([&engine]() { return engine.Run(); })
+			.or_else([&](const Unexpected& error) { MsgBox::Error(error.getMessage()); });
 	}
 
 #ifdef _DEBUG

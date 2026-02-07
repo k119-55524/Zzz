@@ -2,8 +2,11 @@
 export module IRenderLayer;
 
 import Scene;
+import Input;
 import RenderVolume;
 import SceneEntityFactory;
+
+using namespace zzz::input;
 
 namespace zzz
 {
@@ -12,17 +15,20 @@ namespace zzz
 	public:
 	IRenderLayer() = delete;
 		IRenderLayer(
+			const std::shared_ptr<Input> input,
 			const std::shared_ptr<SceneEntityFactory> entityFactory,
 			eAspectType aspectPreset,
 			Size2D<zF32>& size,
 			zF32 minDepth,
 			zF32 maxDepth,
 			bool isactive = true) noexcept :
+			m_Input{ input },
 			m_EntityFactory{ entityFactory },
 			m_RV{ aspectPreset, size, minDepth, maxDepth },
 			b_IsActive{ isactive }
 		{
-			ensure(m_EntityFactory, ">>>>> [IRenderLayer::IRenderLayer()]. Scene entity factory cannot be null.");
+			ensure(m_Input, "Input cannot be null.");
+			ensure(m_EntityFactory, "Scene entity factory cannot be null.");
 		}
 		virtual ~IRenderLayer() = 0;
 
@@ -33,9 +39,12 @@ namespace zzz
 		inline const ViewportDesc& GetViewport() const noexcept { return m_RV.GetViewport(); }
 		inline const ScissorDesc& GetScissor() const noexcept { return m_RV.GetScissor(); }
 
-		[[nodiscard]] virtual std::shared_ptr<Scene> GetScene() const = 0;
+		[[nodiscard]] const std::shared_ptr<Input> GetInput() const noexcept { return m_Input; }
+		[[nodiscard]] const std::shared_ptr<Scene> GetScene() const { return m_Scene; };
 
 	protected:
+		const std::shared_ptr<Input> m_Input;
+		std::shared_ptr<Scene> m_Scene;
 		std::shared_ptr<SceneEntityFactory> m_EntityFactory;
 
 		RenderVolume m_RV;

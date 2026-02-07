@@ -36,9 +36,29 @@ export namespace zzz
 	{
 	public:
 		Unexpected() noexcept : code(eResult::success), message() {}
-		Unexpected(eResult code) noexcept : code(code), message() {}
-		Unexpected(const std::wstring& message) noexcept : code(eResult::failure), message(message) {}
-		Unexpected(eResult code, const std::wstring& message) noexcept : code(code), message(message) {}
+		Unexpected(
+			eResult code,
+			const std::wstring& msg,
+			const std::source_location& loc = std::source_location::current()) noexcept
+			: code(code)
+		{
+			message = FormatMessage(msg, loc);
+		}
+
+		Unexpected(eResult code,
+			const std::source_location& loc = std::source_location::current()) noexcept
+			: code(code)
+		{
+			message = FormatMessage(L"<no message>", loc);
+		}
+
+		Unexpected(
+			const std::wstring& msg,
+			const std::source_location& loc = std::source_location::current()) noexcept
+			: code(eResult::failure)  // Используем failure по умолчанию
+		{
+			message = FormatMessage(msg, loc);
+		}
 
 		inline eResult getCode() const noexcept { return code; }
 		inline const std::wstring& getMessage() const noexcept { return message; }
@@ -49,6 +69,18 @@ export namespace zzz
 	private:
 		eResult code;
 		std::wstring message;
+
+		static std::wstring FormatMessage(const std::wstring& msg, const std::source_location& loc) noexcept
+		{
+			std::wstringstream ss;
+			ss << L">>>>> ["
+				<< std::wstring(loc.function_name(), loc.function_name() + strlen(loc.function_name()))
+				<< L"].\nExpected: " << msg
+				<< L"\n    Line " << loc.line()
+				<< L"\n    In file: "
+				<< std::wstring(loc.file_name(), loc.file_name() + strlen(loc.file_name()));
+			return ss.str();
+		}
 	};
 
 	// Основной шаблон Result<T>

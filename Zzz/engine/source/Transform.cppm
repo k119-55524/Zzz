@@ -13,7 +13,7 @@ namespace zzz
 		Transform() :
 			m_Position{ 0, 0, 0 },
 			m_Scale{ 1, 1, 1 },
-			m_Rotation{ Quaternion::identity() },
+			m_Rotation{ 0, 0, 0 },
 			m_IsDirty{ true }
 		{
 		}
@@ -87,9 +87,27 @@ namespace zzz
 			Move(Vector3(dx, dy, dz));
 		}
 
-		inline void SetRotation(const Quaternion& rotation) noexcept
+		inline void SetRotation(const Vector3& rotation) noexcept
 		{
 			m_Rotation = rotation;
+			m_IsDirty = true;
+		}
+
+		inline void SetRotation(const Quaternion& rotation) noexcept
+		{
+			m_Rotation = rotation.toEulerAngles();
+			m_IsDirty = true;
+		}
+
+		inline void AddRotation(float x, float y, float z) noexcept
+		{
+			AddRotation(Vector3(x, y, z));
+			m_IsDirty = true;
+		}
+
+		inline void AddRotation(const Vector3& delta) noexcept
+		{
+			m_Rotation += delta;
 			m_IsDirty = true;
 		}
 
@@ -100,16 +118,17 @@ namespace zzz
 		}
 
 		[[nodiscard]] inline const Vector3& GetPosition() const noexcept { return m_Position; }
-		[[nodiscard]] inline const Quaternion& GetRotation() const noexcept { return m_Rotation; }
+		[[nodiscard]] inline const Vector3& GetRotation() const noexcept { return m_Rotation; }
 		[[nodiscard]] inline const Vector3& GetScale() const noexcept { return m_Scale; }
 		[[nodiscard]] inline const Matrix4x4& GetWorldMatrix() const noexcept
 		{
 			if (m_IsDirty)
 			{
 				Matrix4x4 translationMatrix = Matrix4x4::translation(m_Position);
-				Matrix4x4 rotationMatrix = m_Rotation.toMatrix4x4();
+				Quaternion qrot = Quaternion::rotateX(m_Rotation.x()) * Quaternion::rotateY(m_Rotation.y()) * Quaternion::rotateZ(m_Rotation.z());
+				Matrix4x4 rotationMatrix = qrot.toMatrix4x4();
 				Matrix4x4 scaleMatrix = Matrix4x4::scale(m_Scale);
-				m_WorldMatrix = translationMatrix * rotationMatrix * scaleMatrix;
+				m_WorldMatrix = scaleMatrix * rotationMatrix * translationMatrix;
 				m_IsDirty = false;
 			}
 
@@ -118,7 +137,7 @@ namespace zzz
 
 	protected:
 		Vector3 m_Position;
-		Quaternion m_Rotation;
+		Vector3 m_Rotation;
 		Vector3 m_Scale;
 
 		mutable bool m_IsDirty;

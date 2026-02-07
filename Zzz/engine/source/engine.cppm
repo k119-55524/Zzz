@@ -3,11 +3,16 @@ export module Engine;
 
 export import Math;
 export import Input;
+export import Scene;
+export import MsgBox;
 export import Result;
+export import KeyCode;
 export import UserView;
 export import UserScene;
 export import IBehavior;
 export import Transform;
+export import StrConvert;
+export import SceneEntity;
 export import UserLayer3D;
 export import UserSceneEntity;
 
@@ -15,11 +20,9 @@ import View;
 import IGAPI;
 import Size2D;
 import Colors;
-import MsgBox;
 import AppTime;
 import IMainLoop;
 import ThreadPool;
-import StrConvert;
 import ZamlConfig;
 import ZamlParser;
 import StartupConfig;
@@ -123,7 +126,7 @@ export namespace zzz
 		std::lock_guard<std::mutex> lock(stateMutex);
 
 		if (initState != eInitState::InitNot)
-			return Unexpected(eResult::failure, std::format(L">>>>> [Engine::initialize({})]. Re-initialization is not allowed.", zamlPath));
+			return Unexpected(eResult::failure, std::format(L"Re-initialization is not allowed.", zamlPath));
 
 		std::wstring err;
 		try
@@ -132,23 +135,18 @@ export namespace zzz
 			m_ZamlStartupConfig = safe_make_shared<ZamlConfig>(zamlPath);
 			auto res = GetStartupConfig();
 			if (!res)
-				return Unexpected(eResult::failure, std::format(L">>>>> [Engine::initialize({})]. Failed to transfer settings from file.", zamlPath));
+				return Unexpected(eResult::failure, std::format(L"Failed to transfer settings from file.", zamlPath));
 			m_Config = std::move(res.value());
 
 			return Initialize();
 		}
 		catch (const std::exception& e)
 		{
-			auto result = string_to_wstring(e.what());
-
-			if (result)
-				err = result.value();
-			else
-				err = std::format(L">>>>> [Engine::initialize({})]. Unknown exception occurred.", zamlPath);
+			err = string_to_wstring(e.what()).value_or(std::format(L"Unknown exception occurred.", zamlPath));
 		}
 		catch (...)
 		{
-			err = L">>>>> #1 [wWinMain( ... )]. Unknown exception occurred.";
+			err = L"Unknown exception occurred.";
 		}
 
 		MsgBox::Error(err);
@@ -161,7 +159,7 @@ export namespace zzz
 		// Создаём обёртку над графическим API
 		auto res = m_EngineFactory.CreateGAPI(m_Config->GetGAPIConfig());
 		if (!res)
-			return Unexpected(eResult::failure, L">>>>> [Engine::initialize()]. Failed to create GAPI.");
+			return Unexpected(eResult::failure, L"Failed to create GAPI.");
 		m_GAPI = res.value();
 
 		// Создаём менеджеры ресурсов и фабрику сущностей сцены
@@ -190,10 +188,10 @@ export namespace zzz
 	{
 		std::lock_guard<std::mutex> lock(stateMutex);
 		if (initState != eInitState::InitOK)
-			return Unexpected(eResult::failure, L">>>>> [Engine::Run()]. Engine is not initialized.");
+			return Unexpected(eResult::failure, L"Engine is not initialized.");
 
 		if (initState == eInitState::Running)
-			return Unexpected(eResult::failure, L">>>>> [Engine::Run()]. Engine is already running.");
+			return Unexpected(eResult::failure, L"Engine is already running.");
 
 		initState = eInitState::Running;
 		std::wstring err;
@@ -210,15 +208,11 @@ export namespace zzz
 		}
 		catch (const std::exception& e)
 		{
-			auto result = string_to_wstring(e.what());
-			if (result)
-				err = L">>>>> [Engine::Run()]. Exception: " + result.value() + L"\n";
-			else
-				err = L">>>>> [Engine::Run()]. Unknown exception occurred\n";
+			err = string_to_wstring(e.what()).value_or(L"Unknown exception occurred.");
 		}
 		catch (...)
 		{
-			err = L">>>>> #1 [Engine::Run()]. Unknown exception occurred";
+			err = L"Unknown exception occurred";
 		}
 
 		MsgBox::Error(err);
@@ -305,10 +299,6 @@ export namespace zzz
 			break;
 		}
 	}
-
-#pragma region User API
-
-#pragma endregion
 
 #pragma region Helpers
 	Result<std::unique_ptr<StartupConfig>> Engine::GetStartupConfig()

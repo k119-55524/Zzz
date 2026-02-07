@@ -107,6 +107,7 @@
     <ClCompile Include="source\configs\StartupConfig.cppm" />
     <ClCompile Include="source\configs\ZamlParser.cppm" />
     <ClCompile Include="source\configs\ZamlParser_MSWinDirectX.cppm" />
+    <ClCompile Include="source\Interfaces\IBehavior\IBehavior-impl.cpp" />
     <ClCompile Include="source\Interfaces\IBehavior\IBehavior.cppm" />
     <ClCompile Include="source\Interfaces\IMeshGPU\IMeshGPU.cppm" />
     <ClCompile Include="source\Interfaces\IMeshGPU\MeshGPU_DirectX.cppm" />

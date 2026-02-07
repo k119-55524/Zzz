@@ -1,6 +1,6 @@
 #pragma once
 
 #include <engineBase.h>
-#include <logger.h>
+#include <Logger.h>
 #include "Headers/HeaderThrowWrappers.h"
 #include "Headers/HeaderEnums.h"

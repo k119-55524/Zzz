@@ -12,9 +12,9 @@ namespace zzz
 			throw std::runtime_error(
 				">>>>> [" +
 				std::string(loc.function_name()) +
-				"]. line: " + std::to_string(loc.line()) +
-				", file=: " + std::string(loc.file_name()) +
-				"\n" + msg);
+				"]. Line: " + std::to_string(loc.line()) +
+				", File=: " + std::string(loc.file_name()) +
+				"\n\nRoot message:\n    " + msg);
 	}
 
 	template<typename T>

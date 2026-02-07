@@ -1,6 +1,6 @@
-
 export module UserSceneEntity;
 
+import std;
 import Math;
 import Result;
 import Transform;
@@ -16,13 +16,7 @@ namespace zzz
 	public:
 		UserSceneEntity() = delete;
 		~UserSceneEntity() = default;
-		explicit UserSceneEntity(const std::shared_ptr<SceneEntity> entity) :
-			m_Entity{ entity }
-		{
-			ensure(m_Entity, ">>>>> [UserSceneEntity::UserSceneEntity(...)]. SceneEntity cannot be null.");
-		}
-
-		inline Transform& GetTransform() noexcept { return m_Entity->GetTransform(); }
+		UserSceneEntity(std::shared_ptr<SceneEntity> entity);
 
 		template<typename T, typename... Args>
 		Result<> SetScript(Args&&... args)
@@ -34,4 +28,10 @@ namespace zzz
 	private:
 		std::shared_ptr<SceneEntity> m_Entity;
 	};
+
+	inline UserSceneEntity::UserSceneEntity(std::shared_ptr<SceneEntity> entity) :
+		m_Entity{ std::move(entity) }
+	{
+		ensure(m_Entity, "SceneEntity cannot be null.");
+	}
 }

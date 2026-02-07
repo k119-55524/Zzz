@@ -1,12 +1,15 @@
 
 export module Layer3D;
 
+import Input;
 import Scene;
 import Size2D;
 import Result;
 import StrConvert;
 import IRenderLayer;
 import SceneEntityFactory;
+
+using namespace zzz::input;
 
 namespace zzz
 {
@@ -15,23 +18,25 @@ namespace zzz
 	public:
 		Layer3D() = delete;
 		virtual ~Layer3D() = default;
-		Layer3D(const std::shared_ptr<SceneEntityFactory> entityFactory, eAspectType aspectPreset, Size2D<zF32>& size, zF32 minDepth, zF32 maxDepth) noexcept :
-			IRenderLayer{ entityFactory, aspectPreset, size, minDepth, maxDepth }
+		Layer3D(
+			const std::shared_ptr<Input> input,
+			const std::shared_ptr<SceneEntityFactory> entityFactory,
+			eAspectType aspectPreset,
+			Size2D<zF32>& size,
+			zF32 minDepth,
+			zF32 maxDepth) noexcept :
+			IRenderLayer{ input, entityFactory, aspectPreset, size, minDepth, maxDepth }
 		{
 		}
 
 		[[nodiscard]] Result<std::shared_ptr<Scene>> AddScene() noexcept;
-		[[nodiscard]] std::shared_ptr<Scene> GetScene() const override { return m_Scene; };
-
-	private:
-		std::shared_ptr<Scene> m_Scene;
 	};
 
 	Result<std::shared_ptr<Scene>> Layer3D::AddScene() noexcept
 	{
 		try
 		{
-			Result<std::shared_ptr<Scene>> scene = safe_make_shared<Scene>(m_EntityFactory);
+			Result<std::shared_ptr<Scene>> scene = safe_make_shared<Scene>(m_Input, m_EntityFactory);
 			if (!scene)
 				return scene.error();
 

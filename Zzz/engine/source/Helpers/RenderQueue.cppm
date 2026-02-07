@@ -1,19 +1,20 @@
 
 export module RenderQueue;
 
+import Scene;
+import Size2D;
+import Camera;
+import ViewSetup;
 import Matrix4x4;
-
-export import Scene;
-export import Camera;
-export import ViewSetup;
-export import IRenderLayer;
-export import PrimitiveTopology;
+import SceneEntity;
+import IRenderLayer;
+import PrimitiveTopology;
 
 using namespace zzz::math;
 
 export namespace zzz
 {
-	// Класс позволяет накапливать в себе объекты рендринга для последующей их отрисовки
+	// Класс позволяет накапливать(в разработке) в себе объекты рендринга для последующей их отрисовки
 	export class RenderQueue
 	{
 	public:
@@ -65,7 +66,7 @@ export namespace zzz
 				if (scene != nullptr)
 				{
 					// Установка глобальных констант шейдеров
-					Camera& primaryCamera = scene->GetPrimaryCamera();
+					const Camera& primaryCamera = scene->GetPrimaryCamera();
 					Matrix4x4 camViewProj = primaryCamera.GetProjectionViewMatrix(surfSize);
 					setGlobalConstFunc(camViewProj);
 
@@ -107,7 +108,12 @@ export namespace zzz
 
 		void BuildQueue();
 	};
+}
 
+module :private;
+
+namespace zzz
+{
 	void RenderQueue::BuildQueue()
 	{
 
