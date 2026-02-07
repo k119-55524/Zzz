@@ -6,6 +6,7 @@ export import Input;
 export import Scene;
 export import MsgBox;
 export import Result;
+export import KeyCode;
 export import UserView;
 export import UserScene;
 export import IBehavior;

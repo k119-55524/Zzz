@@ -18,7 +18,7 @@
     <ClInclude Include="pch.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Logger.h">
+    <ClInclude Include="logger.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="headers\Header.h">
@@ -26,7 +26,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Logger.cpp">
+    <ClCompile Include="logger.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">

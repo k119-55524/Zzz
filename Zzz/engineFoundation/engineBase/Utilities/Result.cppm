@@ -42,28 +42,22 @@ export namespace zzz
 			const std::source_location& loc = std::source_location::current()) noexcept
 			: code(code)
 		{
-			std::wstringstream ss;
-			ss << L">>>>> ["
-				<< std::wstring(loc.function_name(), loc.function_name() + strlen(loc.function_name()))
-				<< L"].\nExpected: " << msg
-				<< L"\n    Line " << loc.line()
-				<< L"\n    In file: "
-				<< std::wstring(loc.file_name(), loc.file_name() + strlen(loc.file_name()));
-			message = ss.str();
+			message = FormatMessage(msg, loc);
 		}
 
 		Unexpected(eResult code,
 			const std::source_location& loc = std::source_location::current()) noexcept
 			: code(code)
 		{
-			std::wstringstream ss;
-			ss << L">>>>> ["
-				<< std::wstring(loc.function_name(), loc.function_name() + strlen(loc.function_name()))
-				<< L"]. Expected: <no message>"
-				<< L"\nLine " << loc.line()
-				<< L" in file: "
-				<< std::wstring(loc.file_name(), loc.file_name() + strlen(loc.file_name()));
-			message = ss.str();
+			message = FormatMessage(L"<no message>", loc);
+		}
+
+		Unexpected(
+			const std::wstring& msg,
+			const std::source_location& loc = std::source_location::current()) noexcept
+			: code(eResult::failure)  // Используем failure по умолчанию
+		{
+			message = FormatMessage(msg, loc);
 		}
 
 		inline eResult getCode() const noexcept { return code; }
@@ -75,6 +69,18 @@ export namespace zzz
 	private:
 		eResult code;
 		std::wstring message;
+
+		static std::wstring FormatMessage(const std::wstring& msg, const std::source_location& loc) noexcept
+		{
+			std::wstringstream ss;
+			ss << L">>>>> ["
+				<< std::wstring(loc.function_name(), loc.function_name() + strlen(loc.function_name()))
+				<< L"].\nExpected: " << msg
+				<< L"\n    Line " << loc.line()
+				<< L"\n    In file: "
+				<< std::wstring(loc.file_name(), loc.file_name() + strlen(loc.file_name()));
+			return ss.str();
+		}
 	};
 
 	// Основной шаблон Result<T>

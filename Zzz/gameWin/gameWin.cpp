@@ -11,7 +11,8 @@ class MyScript : public IBehavior
 public:
 	MyScript(const std::shared_ptr<SceneEntity> entity) :
 		IBehavior{ entity },
-		rotAngle{0}
+		rotSpeed{ 0.5f },
+		moveSpeed{ 1.0f }
 	{
 		m_Input = GetInput();
 	}
@@ -21,15 +22,25 @@ public:
 
 	void OnUpdate(float deltaTime) override
 	{
-		rotAngle -= 0.5f * deltaTime;
-		Quaternion m_QRor = Quaternion::rotateY(rotAngle);
 		Transform& transform = GetTransform();
-		transform.SetRotation(m_QRor);
-		//m_Transform->Move(0.1f * deltaTime, 0.0f, 0.0f);
+		transform.AddRotation(0.0f, -rotSpeed * deltaTime, 0.0f);
+
+		if (m_Input->GetKeyState(KeyCode::ArrowLeft) == KeyState::Down)
+			transform.Move(-moveSpeed * deltaTime, 0.0f, 0.0f);
+
+		if (m_Input->GetKeyState(KeyCode::ArrowRight) == KeyState::Down)
+			transform.Move(moveSpeed * deltaTime, 0.0f, 0.0f);
+
+		if (m_Input->GetKeyState(KeyCode::ArrowUp) == KeyState::Down)
+			transform.Move(0.0f, 0.0f, moveSpeed * deltaTime);
+
+		if (m_Input->GetKeyState(KeyCode::ArrowDown) == KeyState::Down)
+			transform.Move(0.0f, 0.0f, -moveSpeed * deltaTime);
 	}
 
 protected:
-	float rotAngle;
+	float rotSpeed;
+	float moveSpeed;
 	std::shared_ptr<Input> m_Input;
 };
 

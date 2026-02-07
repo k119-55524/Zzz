@@ -54,7 +54,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)engineFoundation\engineBase</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)engineFoundation\engineCore;$(SolutionDir)engineFoundation\logger</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
       <ForcedIncludeFiles>pch.h</ForcedIncludeFiles>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
@@ -75,7 +75,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)engineFoundation\engineBase</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)engineFoundation\engineCore;$(SolutionDir)engineFoundation\logger</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
       <ForcedIncludeFiles>pch.h</ForcedIncludeFiles>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
@@ -129,6 +129,9 @@
     </ProjectReference>
     <ProjectReference Include="..\gameWin\gameWin.vcxproj">
       <Project>{7f2dbe68-41e9-476f-8b4b-5f3d462687d6}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\input\input.vcxproj">
+      <Project>{93909e27-ad0e-42e4-aaf1-70f58766e0ee}</Project>
     </ProjectReference>
     <ProjectReference Include="..\math\math.vcxproj">
       <Project>{ae46c4d5-4929-4e49-9aeb-00d2641966d9}</Project>
