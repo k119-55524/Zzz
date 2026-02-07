@@ -1,6 +1,4 @@
 
-#include "pch.h"
-
 export module CPUtoGPUDataTransferDX;
 
 import Result;
@@ -12,7 +10,7 @@ import ICPUtoGPUDataTransfer;
 using namespace zzz;
 using namespace zzz::templates;
 
-#if defined(_WIN64)
+#if defined(ZRENDER_API_D3D12)
 export namespace zzz::directx
 {
 	export class CPUtoGPUDataTransferDX final : public ICPUtoGPUDataTransfer
@@ -150,4 +148,4 @@ export namespace zzz::directx
 		m_TransferIndex = 1 - m_TransferIndex;
 	}
 }
-#endif // _WIN64
+#endif // ZRENDER_API_D3D12
