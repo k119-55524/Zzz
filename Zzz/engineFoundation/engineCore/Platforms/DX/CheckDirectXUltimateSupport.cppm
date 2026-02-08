@@ -5,7 +5,7 @@ import StrConvert;
 import ICheckGapiSupport;
 
 #if defined(ZRENDER_API_D3D12)
-export namespace zzz::directx
+export namespace zzz::dx
 {
 	export class CheckDirectXSupport : public ICheckGapiSupport
 	{

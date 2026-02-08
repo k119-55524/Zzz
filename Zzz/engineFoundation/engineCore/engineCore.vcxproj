@@ -190,6 +190,7 @@
     <ClCompile Include="Source\Interfaces\IAppWin\AppWin_MSWin.cppm" />
     <ClCompile Include="source\Interfaces\IAppWin\IAppWin.cppm" />
     <ClCompile Include="Source\Interfaces\IGAPI\DXAPI.cppm" />
+    <ClCompile Include="source\Interfaces\IGAPI\VKAPI.cppm" />
     <ClCompile Include="Source\Interfaces\IIcoBuilder\ibMSWin.cppm" />
     <ClCompile Include="Source\Interfaces\IIcoBuilder\IIcoBuilder.cppm" />
     <ClCompile Include="Source\Interfaces\IMainLoop\MainLoop_MSWin.cppm" />

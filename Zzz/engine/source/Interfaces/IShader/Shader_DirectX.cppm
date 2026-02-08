@@ -8,7 +8,7 @@ import IShader;
 import IMeshGPU;
 import StrConvert;
 
-export namespace zzz::directx
+export namespace zzz::dx
 {
 	export class Shader_DirectX final : public IShader
 	{

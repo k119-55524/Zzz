@@ -29,7 +29,7 @@ using namespace zzz::math;
 using namespace zzz::core;
 using namespace zzz::colors;
 
-namespace zzz::directx
+namespace zzz::dx
 {
 	template<typename T>
 	class UploadBuffer

@@ -4,26 +4,33 @@ export module GPUResManager;
 import IPSO;
 import IGAPI;
 import Result;
-import PSO_DX;
 import IShader;
 import IMeshGPU;
 import Material;
 import CPUResManager;
 import Shader_DirectX;
-import MeshGPU_DirectX;
 
-using namespace zzz::directx;
-
-namespace zzz
-{
 #if defined(ZRENDER_API_D3D12)
+	import PSO_DX;
+	import MeshGPU_DirectX;
+	using namespace zzz::dx;
+
 	typedef MeshGPU_DirectX MeshGPU;
 	typedef Shader_DirectX Shader;
 	typedef PSO_DX PSO;
+#elif defined(ZRENDER_API_VULKAN)
+	import MeshGPU_Vulkan;
+	import PSO_DX PSO;
+	using namespace zzz::vk;
+
+	typedef MeshGPU_Vulkan MeshGPU;
+	//typedef Shader_Vulkan Shader;
+	typedef PSO_VK PSO;
+
+	using namespace zzz::vk;
 #else
-#error ">>>>> [Compile error]. This branch requires implementation for the current platform"
+#error ">>>>> [GPUResManager file]. Compile error. This branch requires implementation for the current platform"
 #endif
-}
 
 export namespace zzz
 {

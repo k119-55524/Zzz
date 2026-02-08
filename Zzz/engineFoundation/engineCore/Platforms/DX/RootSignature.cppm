@@ -1,4 +1,3 @@
-#include "pch.h"
 
 export module RootSignature;
 
@@ -6,7 +5,7 @@ export module RootSignature;
 import Result;
 import StrConvert;
 
-export namespace zzz::directx
+export namespace zzz::dx
 {
 	class RootSignature
 	{

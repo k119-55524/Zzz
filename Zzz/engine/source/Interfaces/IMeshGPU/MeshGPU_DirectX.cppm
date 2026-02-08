@@ -2,14 +2,19 @@
 export module MeshGPU_DirectX;
 
 #if defined(ZRENDER_API_D3D12)
-export import IGAPI;
-export import DXAPI;
-export import CPUMesh;
-export import IMeshGPU;
-export import CPUIndexBuffer;
-export import CPUVertexBuffer;
+import IGAPI;
+import DXAPI;
+import CPUMesh;
+import IMeshGPU;
+import CPUIndexBuffer;
+import CPUVertexBuffer;
 
-export namespace zzz::directx
+namespace zzz
+{
+	export class GPUResManager;
+}
+
+namespace zzz::dx
 {
 	export class MeshGPU_DirectX final : public IMeshGPU
 	{

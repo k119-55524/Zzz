@@ -11,10 +11,10 @@ import ICPUtoGPUDataTransfer;
 
 //#if defined(ZRENDER_API_D3D12)
 //import IGAPI_DirectX;
-//	using PlatformGAPIBase = zzz::directx::IGAPI_DirectX;
+//	using PlatformGAPIBase = zzz::dx::IGAPI_DirectX;
 ////#elif defined(ZRENDER_API_VULKAN)
 ////import IGAPI_Vulkan;
-////	using PlatformGAPIBase = zzz::vulkan::IGAPI_Vulkan;
+////	using PlatformGAPIBase = zzz::vk::IGAPI_Vulkan;
 ////#elif defined(ZRENDER_API_METAL)
 ////import IGAPI_Metal;
 ////	using PlatformGAPIBase = zzz::matal::IGAPI_Metal;

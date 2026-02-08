@@ -6,7 +6,13 @@ import IShader;
 import PrimitiveTopology;
 import VertexFormatMapper;
 
-using namespace zzz::directx;
+//#if defined(ZRENDER_API_D3D12)
+////using namespace zzz::dx;
+//#elif defined(ZRENDER_API_VULKAN)
+////using namespace zzz::vk;
+//#else
+//#error ">>>>> [Compile error]. This branch requires implementation for the current platform"
+//#endif
 
 namespace zzz
 {

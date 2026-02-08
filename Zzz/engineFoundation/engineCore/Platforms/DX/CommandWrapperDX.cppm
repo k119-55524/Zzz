@@ -6,7 +6,7 @@ import Result;
 
 using namespace zzz;
 
-export namespace zzz::directx
+export namespace zzz::dx
 {
 	class CommandWrapperDX
 	{

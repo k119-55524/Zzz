@@ -1,10 +1,10 @@
 
 export module IMeshGPU;
 
-export import IGAPI;
-export import Result;
-export import CPUMesh;
-export import VertexFormatMapper;
+import IGAPI;
+import Result;
+import CPUMesh;
+import VertexFormatMapper;
 
 namespace zzz
 {

@@ -88,7 +88,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)engineFoundation\engineCore;$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)engineFoundation\logger</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)engineFoundation\engineCore;$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)engineFoundation\logger;%VULKAN_SDK%\Include</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>pch.h</ForcedIncludeFiles>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
@@ -130,7 +130,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)engineFoundation\engineCore;$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)engineFoundation\logger</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)engineFoundation\engineCore;$(SolutionDir)engineFoundation\engineBase;$(SolutionDir)engineFoundation\logger;%VULKAN_SDK%\Include</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>pch.h</ForcedIncludeFiles>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
@@ -185,8 +185,10 @@
     <ClCompile Include="source\Interfaces\IBehavior\IBehavior.cppm" />
     <ClCompile Include="source\Interfaces\IMeshGPU\IMeshGPU.cppm" />
     <ClCompile Include="source\Interfaces\IMeshGPU\MeshGPU_DirectX.cppm" />
+    <ClCompile Include="source\Interfaces\IMeshGPU\MeshGPU_Vulkan.cppm" />
     <ClCompile Include="source\Interfaces\IPSO\IPSO.cppm" />
     <ClCompile Include="source\Interfaces\IPSO\PSO_DX.cppm" />
+    <ClCompile Include="source\Interfaces\IPSO\PSO_VK.cppm" />
     <ClCompile Include="source\Interfaces\IRenderLayers\Layer3D.cppm" />
     <ClCompile Include="source\Interfaces\IShader\IShader.cppm" />
     <ClCompile Include="source\Interfaces\IShader\IShader_DirectX.cppm" />

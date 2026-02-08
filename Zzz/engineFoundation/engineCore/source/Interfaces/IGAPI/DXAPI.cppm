@@ -18,7 +18,7 @@ using namespace zzz;
 using namespace zzz::core;
 using namespace zzz::templates;
 
-export namespace zzz::directx
+export namespace zzz::dx
 {
 	// Создана только для обхода ограничений VisualStudio при передаче параметров
 	template <class T>
@@ -45,8 +45,8 @@ export namespace zzz::directx
 		void CommandRenderReset() noexcept;
 		[[nodiscard]] Result<> CommandRenderReinitialize();
 		void EndPreparedTransfers();
-		void SubmitCommandLists() override;
 
+		void SubmitCommandLists() override;
 		void BeginRender() override;
 		void EndRender() override;
 

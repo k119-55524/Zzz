@@ -41,7 +41,7 @@ using namespace zzz::templates;
 
 namespace zzz
 {
-#if defined(ZRENDER_API_D3D12)
+#if defined(ZPLATFORM_MSWINDOWS)
 	typedef MainLoop_MSWin MainLoop;
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"

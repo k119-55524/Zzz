@@ -11,7 +11,7 @@ using namespace zzz;
 using namespace zzz::templates;
 
 #if defined(ZRENDER_API_D3D12)
-export namespace zzz::directx
+export namespace zzz::dx
 {
 	export class CPUtoGPUDataTransferDX final : public ICPUtoGPUDataTransfer
 	{
