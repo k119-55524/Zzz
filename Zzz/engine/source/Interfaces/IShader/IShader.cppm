@@ -4,12 +4,10 @@ export module IShader;
 import IGAPI;
 import Result;
 import IMeshGPU;
-import IShader_DirectX;
 
 export namespace zzz
 {
-	export class IShader :
-		public IShader_DirectX
+	export class IShader
 	{
 	public:
 		IShader() = delete;

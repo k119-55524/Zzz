@@ -5,6 +5,8 @@ export module PSO_DX;
 import IPSO;
 import IGAPI;
 import DXAPI;
+import IShader;
+import Shader_DirectX;
 import PrimitiveTopology;
 import VertexFormatMapper;
 
@@ -23,7 +25,7 @@ namespace zzz::dx
 		const ComPtr<ID3D12PipelineState> GetPSO() const noexcept { return m_PSO; };
 
 	private:
-		void CreatePSO(const std::shared_ptr<IGAPI> _IGAPI);
+		void CreatePSO(const std::shared_ptr<DXAPI> dxAPI, std::shared_ptr<Shader_DirectX> shaderDX);
 		D3D12_PRIMITIVE_TOPOLOGY_TYPE ConvertPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology);
 		ComPtr<ID3D12PipelineState> m_PSO;
 	};
@@ -35,10 +37,15 @@ namespace zzz::dx
 		PrimitiveTopology _topo) :
 		IPSO(_shader, _inputLayout, _topo)
 	{
-		CreatePSO(m_GAPI);
+		std::shared_ptr<DXAPI> dxAPI = std::dynamic_pointer_cast<DXAPI>(m_GAPI);
+		ensure(dxAPI, "Invalid GAPI type. Expected DXAPI.");
+		std::shared_ptr<Shader_DirectX> shaderDX = dynamic_pointer_cast<Shader_DirectX>(m_Shader);
+		ensure(shaderDX, "Invalid shader type. Expected Shader_DirectX.");
+
+		CreatePSO(dxAPI, shaderDX);
 	}
 
-	void PSO_DX::CreatePSO(const std::shared_ptr<IGAPI> _IGAPI)
+	void PSO_DX::CreatePSO(const std::shared_ptr<DXAPI> dxAPI, std::shared_ptr<Shader_DirectX> shaderDX)
 	{
 		//D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
 		//{
@@ -46,15 +53,12 @@ namespace zzz::dx
 		//	{ "COLOR",	  0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 		//};
 
-		std::shared_ptr<DXAPI> dxAPI = std::dynamic_pointer_cast<DXAPI>(_IGAPI);
-		ensure(dxAPI, "Failed to cast IGAPI to DXAPI.");
-
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 		ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
 		psoDesc.InputLayout = { m_InputLayout.data(), static_cast<UINT>(m_InputLayout.size()) };
 		psoDesc.pRootSignature = dxAPI->GetRootSignature().Get();
-		psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_Shader->GetVS().Get());
-		psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_Shader->GetPS().Get());
+		psoDesc.VS = CD3DX12_SHADER_BYTECODE(shaderDX->GetVS().Get());
+		psoDesc.PS = CD3DX12_SHADER_BYTECODE(shaderDX->GetPS().Get());
 		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 		psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 

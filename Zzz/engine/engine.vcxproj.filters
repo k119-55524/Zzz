@@ -104,9 +104,6 @@
     <ClCompile Include="source\Interfaces\IShader\IShader.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Interfaces\IShader\IShader_DirectX.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="source\Interfaces\IShader\Shader_DirectX.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>

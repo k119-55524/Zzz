@@ -191,7 +191,6 @@
     <ClCompile Include="source\Interfaces\IPSO\PSO_VK.cppm" />
     <ClCompile Include="source\Interfaces\IRenderLayers\Layer3D.cppm" />
     <ClCompile Include="source\Interfaces\IShader\IShader.cppm" />
-    <ClCompile Include="source\Interfaces\IShader\IShader_DirectX.cppm" />
     <ClCompile Include="source\Interfaces\IShader\Shader_DirectX.cppm" />
     <ClCompile Include="source\Interfaces\IShader\Shader_VK.cppm" />
     <ClCompile Include="source\Interfaces\ISurfaceView\ISurfView.cppm" />
