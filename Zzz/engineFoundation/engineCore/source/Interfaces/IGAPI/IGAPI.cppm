@@ -9,19 +9,6 @@ import ICheckGapiSupport;
 import CPUtoGPUDataTransfer;
 import ICPUtoGPUDataTransfer;
 
-//#if defined(ZRENDER_API_D3D12)
-//import IGAPI_DirectX;
-//	using PlatformGAPIBase = zzz::dx::IGAPI_DirectX;
-////#elif defined(ZRENDER_API_VULKAN)
-////import IGAPI_Vulkan;
-////	using PlatformGAPIBase = zzz::vk::IGAPI_Vulkan;
-////#elif defined(ZRENDER_API_METAL)
-////import IGAPI_Metal;
-////	using PlatformGAPIBase = zzz::matal::IGAPI_Metal;
-//#else
-//#error ">>>>> [IGAPI module]. No graphics API defined."
-//#endif
-
 using namespace std::literals::string_view_literals;
 
 export namespace zzz
@@ -93,7 +80,7 @@ export namespace zzz
 	Result<> IGAPI::Initialize()
 	{
 		if (initState != eInitState::InitNot)
-			return Unexpected(eResult::failure, L">>>>> [IGAPI::Initialize()]. GAPI is already initialized or in an invalid state.");
+			return Unexpected(eResult::failure, L"GAPI is already initialized or in an invalid state.");
 
 		return Init().and_then([&]() { initState = eInitState::InitOK; });
 	}

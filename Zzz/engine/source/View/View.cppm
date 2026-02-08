@@ -17,7 +17,7 @@ import ViewFactory;
 import UserLayer3D;
 import IRenderLayer;
 import AppWinConfig;
-import ISurfaceView;
+import ISurfView;
 import SceneEntityFactory;
 
 using namespace zzz::core;
@@ -63,7 +63,7 @@ namespace zzz
 		const std::shared_ptr<IGAPI> m_GAPI;
 		const std::shared_ptr<SceneEntityFactory> m_EntityFactory;
 		std::shared_ptr<IAppWin> m_Window;
-		std::shared_ptr<ISurfaceView> m_RenderSurface;
+		std::shared_ptr<ISurfView> m_RenderSurface;
 
 		eInitState initState;
 		void Initialize();

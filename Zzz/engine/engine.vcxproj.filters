@@ -77,10 +77,10 @@
     <ClCompile Include="source\helpers\RenderQueue.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Interfaces\ISurfaceView\ISurfaceView.cppm">
+    <ClCompile Include="source\Interfaces\ISurfaceView\ISurfView.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Interfaces\ISurfaceView\SurfaceView_DirectX.cppm">
+    <ClCompile Include="source\Interfaces\ISurfaceView\SurfView_DX.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\view\ViewportDesc.cppm">
@@ -165,6 +165,12 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\Interfaces\IPSO\PSO_VK.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\IShader\Shader_VK.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\ISurfaceView\SurfView_VK_MSWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

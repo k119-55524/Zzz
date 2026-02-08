@@ -20,11 +20,12 @@ import Shader_DirectX;
 	typedef PSO_DX PSO;
 #elif defined(ZRENDER_API_VULKAN)
 	import MeshGPU_Vulkan;
-	import PSO_DX PSO;
+	import Shader_VK;
+	import PSO_VK;
 	using namespace zzz::vk;
 
 	typedef MeshGPU_Vulkan MeshGPU;
-	//typedef Shader_Vulkan Shader;
+	typedef Shader_VK Shader;
 	typedef PSO_VK PSO;
 
 	using namespace zzz::vk;

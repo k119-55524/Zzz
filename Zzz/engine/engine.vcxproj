@@ -193,10 +193,12 @@
     <ClCompile Include="source\Interfaces\IShader\IShader.cppm" />
     <ClCompile Include="source\Interfaces\IShader\IShader_DirectX.cppm" />
     <ClCompile Include="source\Interfaces\IShader\Shader_DirectX.cppm" />
-    <ClCompile Include="source\Interfaces\ISurfaceView\ISurfaceView.cppm" />
-    <ClCompile Include="source\Interfaces\ISurfaceView\SurfaceView_DirectX.cppm" />
+    <ClCompile Include="source\Interfaces\IShader\Shader_VK.cppm" />
+    <ClCompile Include="source\Interfaces\ISurfaceView\ISurfView.cppm" />
+    <ClCompile Include="source\Interfaces\ISurfaceView\SurfView_DX.cppm" />
     <ClCompile Include="source\helpers\RenderVolume.cppm" />
     <ClCompile Include="source\Interfaces\IRenderLayers\IRenderLayer.cppm" />
+    <ClCompile Include="source\Interfaces\ISurfaceView\SurfView_VK_MSWin.cppm" />
     <ClCompile Include="source\Material.cppm" />
     <ClCompile Include="source\resources\CPUIndexBuffer.cppm" />
     <ClCompile Include="source\resources\CPUMesh.cppm" />

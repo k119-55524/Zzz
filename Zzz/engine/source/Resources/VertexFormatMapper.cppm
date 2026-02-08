@@ -1,6 +1,4 @@
 
-#include "pch.h"
-
 export module VertexFormatMapper;
 
 import Result;

@@ -1,5 +1,5 @@
 
-export module ISurfaceView;
+export module ISurfView;
 
 import IGAPI;
 import Scene;
@@ -12,14 +12,14 @@ using namespace zzz;
 
 export namespace zzz::core
 {
-	export class ISurfaceView abstract
+	export class ISurfView abstract
 	{
-		Z_NO_CREATE_COPY(ISurfaceView);
+		Z_NO_CREATE_COPY(ISurfView);
 
 	public:
-		explicit ISurfaceView(std::shared_ptr<IGAPI> _iGAPI);
+		explicit ISurfView(std::shared_ptr<IGAPI> _iGAPI);
 
-		virtual ~ISurfaceView() = default;
+		virtual ~ISurfView() = default;
 
 		[[nodiscard]] virtual Result<> Initialize() = 0;
 		virtual void PrepareFrame(const std::shared_ptr<RenderQueue> renderQueue) = 0;
@@ -36,12 +36,12 @@ export namespace zzz::core
 		Size2D<> m_SurfSize;
 	};
 
-	ISurfaceView::ISurfaceView(std::shared_ptr<IGAPI> _iGAPI) :
+	ISurfView::ISurfView(std::shared_ptr<IGAPI> _iGAPI) :
 		m_frameIndex{ 0 },
 		b_IsVSync{ true },
 		m_iGAPI{ _iGAPI },
 		m_SurfSize{}
 	{
-		ensure(m_iGAPI, ">>>>> [ISurfaceView::ISurfaceView()]. GAPI cannot be null.");
+		ensure(m_iGAPI, ">>>>> [ISurfView::ISurfView()]. GAPI cannot be null.");
 	}
 }
