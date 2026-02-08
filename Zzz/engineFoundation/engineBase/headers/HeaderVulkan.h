@@ -2,10 +2,15 @@
 #pragma once
 
 #if defined(ZRENDER_API_VULKAN)
+#if (_DEBUG)
+#pragma comment(lib, "volkd.lib")
+#else
+#pragma comment(lib, "volk.lib")
+#endif
 
 // ---- Vulkan ----
-#define VK_NO_PROTOTYPES
-#include <vulkan/vulkan.h>
+#include <Volk/volk.h>
+#include <vulkan/vulkan_win32.h>
 
 // ---- GLM ----
 #define GLM_FORCE_RADIANS

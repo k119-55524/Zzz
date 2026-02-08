@@ -25,24 +25,184 @@ namespace zzz::vk
 		void EndRender() override;
 
 	private:
+		[[nodiscard]] Result<> CreateInstance();
+		[[nodiscard]] Result<> PickPhysicalDevice();
+		[[nodiscard]] Result<> CreateLogicalDevice();
+		[[nodiscard]] Result<> CreateCommandPool();
+
+		VkInstance m_Instance{};
+		VkPhysicalDevice m_PhysicalDevice{};
+		VkDevice m_Device{};
+		VkQueue m_GraphicsQueue{};
+		uint32_t m_GraphicsQueueFamily{};
+		VkCommandPool m_CommandPool{};
 	};
 
 	VKAPI::VKAPI() :
-		IGAPI(eGAPIType::Vulkan)
+		IGAPI(eGAPIType::Vulkan),
+		m_Instance(VK_NULL_HANDLE),
+		m_PhysicalDevice(VK_NULL_HANDLE),
+		m_Device(VK_NULL_HANDLE),
+		m_GraphicsQueue(VK_NULL_HANDLE),
+		m_GraphicsQueueFamily(0),
+		m_CommandPool(VK_NULL_HANDLE)
 	{
 	}
 
 	VKAPI::~VKAPI()
 	{
+		WaitForGpu();
+
+		if (m_CommandPool)
+			vkDestroyCommandPool(m_Device, m_CommandPool, nullptr);
+
+		if (m_Device)
+			vkDestroyDevice(m_Device, nullptr);
+
+		if (m_Instance)
+			vkDestroyInstance(m_Instance, nullptr);
 	}
 
+#pragma region Initialize
 	[[nodiscard]] Result<> VKAPI::Init()
 	{
+		VkResult vr = volkInitialize();
+		if (vr != VK_SUCCESS)
+			return Unexpected(eResult::failure, std::format(L"volkInitialize failed ({})", int(vr)));
+
+		Result<> res = CreateInstance()
+			.and_then([&]() { return PickPhysicalDevice(); })
+			.and_then([&]() { return CreateLogicalDevice(); })
+			.and_then([&]() { return CreateCommandPool(); });
+
+		return res;
+	}
+
+	[[nodiscard]] Result<> VKAPI::CreateInstance()
+	{
+		VkApplicationInfo appInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+			.pApplicationName = "ZzzEngine",
+			.applicationVersion = VK_MAKE_VERSION(1, 0, 0),
+			.pEngineName = "ZzzEngine",
+			.engineVersion = VK_MAKE_VERSION(1, 0, 0),
+			.apiVersion = VK_API_VERSION_1_3
+		};
+
+		std::vector<const char*> extensions =
+		{
+			VK_KHR_SURFACE_EXTENSION_NAME,
+			VK_KHR_WIN32_SURFACE_EXTENSION_NAME
+		};
+
+#ifdef _DEBUG
+		extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+#endif
+
+		VkInstanceCreateInfo ci
+		{
+			.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+			.pApplicationInfo = &appInfo,
+			.enabledExtensionCount = uint32_t(extensions.size()),
+			.ppEnabledExtensionNames = extensions.data()
+		};
+
+		VkResult vr = vkCreateInstance(&ci, nullptr, &m_Instance);
+		if (vr != VK_SUCCESS)
+			return Unexpected(eResult::failure, std::format(L"vkCreateInstance failed ({})", int(vr)));
+
+		volkLoadInstance(m_Instance);
+
 		return {};
 	}
 
+	[[nodiscard]] Result<> VKAPI::PickPhysicalDevice()
+	{
+		uint32_t deviceCount = 0;
+		vkEnumeratePhysicalDevices(m_Instance, &deviceCount, nullptr);
+
+		if (deviceCount == 0)
+			return Unexpected(eResult::failure, L"No Vulkan devices found");
+
+		std::vector<VkPhysicalDevice> devices(deviceCount);
+		vkEnumeratePhysicalDevices(m_Instance, &deviceCount, devices.data());
+
+		for (VkPhysicalDevice device : devices)
+		{
+			uint32_t familyCount = 0;
+			vkGetPhysicalDeviceQueueFamilyProperties(device, &familyCount, nullptr);
+
+			std::vector<VkQueueFamilyProperties> families(familyCount);
+			vkGetPhysicalDeviceQueueFamilyProperties(device, &familyCount, families.data());
+
+			for (uint32_t i = 0; i < familyCount; ++i)
+			{
+				if (families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
+				{
+					m_PhysicalDevice = device;
+					m_GraphicsQueueFamily = i;
+					return {};
+				}
+			}
+		}
+
+		return Unexpected(eResult::failure, L"No suitable Vulkan device found");
+	}
+
+
+	[[nodiscard]] Result<> VKAPI::CreateLogicalDevice()
+	{
+		float priority = 1.0f;
+
+		VkDeviceQueueCreateInfo qci
+		{
+			.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+			.queueFamilyIndex = m_GraphicsQueueFamily,
+			.queueCount = 1,
+			.pQueuePriorities = &priority
+		};
+
+		VkPhysicalDeviceFeatures features{};
+
+		VkDeviceCreateInfo dci{
+			.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+			.queueCreateInfoCount = 1,
+			.pQueueCreateInfos = &qci,
+			.pEnabledFeatures = &features
+		};
+
+		VkResult vr = vkCreateDevice(m_PhysicalDevice, &dci, nullptr, &m_Device);
+		if (vr != VK_SUCCESS)
+			return Unexpected(eResult::failure, std::format(L"vkCreateDevice failed ({})", int(vr)));
+
+		vkGetDeviceQueue(m_Device, m_GraphicsQueueFamily, 0, &m_GraphicsQueue);
+
+		return {};
+	}
+
+	[[nodiscard]] Result<> VKAPI::CreateCommandPool()
+	{
+		VkCommandPoolCreateInfo ci
+		{
+			.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+			.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+			.queueFamilyIndex = m_GraphicsQueueFamily
+		};
+
+		VkResult vr = vkCreateCommandPool(m_Device, &ci, nullptr, &m_CommandPool);
+		if (vr != VK_SUCCESS)
+			return Unexpected(eResult::failure, std::format(L"vkCreateCommandPool failed ({})", int(vr)));
+
+		return {};
+	}
+
+#pragma endregion Initialize
+
 	void VKAPI::WaitForGpu()
 	{
+		if (m_Device)
+			vkDeviceWaitIdle(m_Device);
 	}
 
 	void VKAPI::SubmitCommandLists()
