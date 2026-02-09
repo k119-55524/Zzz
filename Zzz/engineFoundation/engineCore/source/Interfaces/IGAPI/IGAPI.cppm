@@ -6,8 +6,8 @@ import Size2D;
 import IAppWin;
 import StrConvert;
 import ICheckGapiSupport;
-import CPUtoGPUDataTransfer;
-import ICPUtoGPUDataTransfer;
+import GPUUploadCallbacks;
+import IGPUUpload;
 
 using namespace std::literals::string_view_literals;
 
@@ -47,10 +47,7 @@ export namespace zzz
 
 		[[nodiscard]] virtual Result<> Initialize();
 		virtual void SubmitCommandLists() = 0;
-		inline void AddTransferResource(FillCallback fillCallback, PreparedCallback preparedCallback, CompleteCallback completeCallback)
-		{
-			m_CPUtoGPUDataTransfer->AddTransferResource(fillCallback, preparedCallback, completeCallback);
-		};
+		inline void AddTransferResource(FillCallback OnFill, PreparedCallback OnPrepared, CompleteCallback OnComplete) { m_CPUtoGPUDataTransfer->AddTransferResource(OnFill, OnPrepared, OnComplete); };
 		inline bool HasResourcesToUpload() { return m_CPUtoGPUDataTransfer->HasResourcesToUpload(); };
 		inline void TranferResourceToGPU() { m_CPUtoGPUDataTransfer->TransferResourceToGPU(); };
 
@@ -63,7 +60,7 @@ export namespace zzz
 
 		eGAPIType gapiType;
 		eInitState initState;
-		std::unique_ptr<ICPUtoGPUDataTransfer> m_CPUtoGPUDataTransfer;
+		std::unique_ptr<IGPUUpload> m_CPUtoGPUDataTransfer;
 		std::unique_ptr<ICheckGapiSupport> m_CheckGapiSupport;
 		zU32 m_frameIndexRender;
 		zU32 m_frameIndexUpdate;

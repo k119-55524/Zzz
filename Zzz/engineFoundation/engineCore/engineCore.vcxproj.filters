@@ -53,10 +53,10 @@
     <ClCompile Include="Source\Interfaces\ICheckGapiSupport.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Interfaces\ICPUtoGPUDataTransfer.cppm">
+    <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\IGPUpload.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\CPUtoGPUDataTransfer.cppm">
+    <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\GPUUploadCallbacks.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Utilities\MsgBox.cppm">
@@ -89,7 +89,7 @@
     <ClCompile Include="Platforms\DX\RootSignature.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Platforms\DX\CPUtoGPUDataTransferDX.cppm">
+    <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\GPUUploadDX.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Interfaces\IMainLoop\MainLoop_MSWin.cppm">
@@ -132,6 +132,9 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\Interfaces\IGAPI\VKAPI.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\GPUUploadVK.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

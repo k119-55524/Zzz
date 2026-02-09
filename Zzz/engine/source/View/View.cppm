@@ -162,13 +162,13 @@ namespace zzz
 		switch (resizeType)
 		{
 		case eTypeWinResize::Hide:
-			DebugOutput(L">>>>> [View::OnViewResized()]. Hide app window.");
+			DebugOutput(L"Hide app window.");
 			break;
 		case eTypeWinResize::Show:
-			DebugOutput(std::format(L">>>>> [View::OnViewResized({}x{})]. Show app window.", std::to_wstring(size.width), std::to_wstring(size.height)));
+			DebugOutput(std::format(L"Show app window - {}x{}.", std::to_wstring(size.width), std::to_wstring(size.height)));
 			break;
 		case eTypeWinResize::Resize:
-			DebugOutput(std::format(L">>>>> [View::OnViewResized({}x{}))]. Resize app window.", std::to_wstring(size.width), std::to_wstring(size.height)));
+			DebugOutput(std::format(L"Resize app window to {}x{}.", std::to_wstring(size.width), std::to_wstring(size.height)));
 
 			Size2D<zF32> fsize;
 			fsize.SetFrom(size);

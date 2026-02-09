@@ -74,7 +74,7 @@
     <ClCompile Include="source\view\ViewSetup.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\helpers\RenderQueue.cppm">
+    <ClCompile Include="source\renderQueue\RenderQueue.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\Interfaces\ISurfaceView\ISurfView.cppm">
@@ -86,7 +86,7 @@
     <ClCompile Include="source\view\ViewportDesc.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\helpers\RenderVolume.cppm">
+    <ClCompile Include="source\renderQueue\RenderVolume.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\Interfaces\IRenderLayers\IRenderLayer.cppm">

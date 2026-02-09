@@ -5,6 +5,7 @@ export module VKAPI;
 
 import IGAPI;
 import Result;
+import GPUUploadVK;
 
 namespace zzz::vk
 {
@@ -73,7 +74,8 @@ namespace zzz::vk
 		Result<> res = CreateInstance()
 			.and_then([&]() { return PickPhysicalDevice(); })
 			.and_then([&]() { return CreateLogicalDevice(); })
-			.and_then([&]() { return CreateCommandPool(); });
+			.and_then([&]() { return CreateCommandPool(); })
+			.and_then([&]() { m_CPUtoGPUDataTransfer = safe_make_unique<GPUUploadVK>(); });
 
 		return res;
 	}

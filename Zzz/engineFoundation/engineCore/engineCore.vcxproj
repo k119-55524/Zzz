@@ -179,11 +179,12 @@
     </ClCompile>
     <ClCompile Include="Platforms\DX\CheckDirectXUltimateSupport.cppm" />
     <ClCompile Include="Platforms\DX\CommandWrapperDX.cppm" />
-    <ClCompile Include="Platforms\DX\CPUtoGPUDataTransferDX.cppm" />
+    <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\GPUUploadDX.cppm" />
     <ClCompile Include="Platforms\DX\RootSignature.cppm" />
     <ClCompile Include="Platforms\PrimitiveTopology.cppm" />
     <ClCompile Include="Source\Camera.cppm" />
-    <ClCompile Include="Source\CPUtoGPUDataTransfer.cppm" />
+    <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\GPUUploadVK.cppm" />
+    <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\GPUUploadCallbacks.cppm" />
     <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppWinConfig.cppm" />
     <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppWinConfig_MSWin.cppm" />
     <ClCompile Include="Source\Interfaces\Configs\GAPIConfig\GAPIConfig.cppm" />
@@ -195,7 +196,7 @@
     <ClCompile Include="Source\Interfaces\IIcoBuilder\IIcoBuilder.cppm" />
     <ClCompile Include="Source\Interfaces\IMainLoop\MainLoop_MSWin.cppm" />
     <ClCompile Include="Source\Interfaces\ICheckGapiSupport.cppm" />
-    <ClCompile Include="Source\Interfaces\ICPUtoGPUDataTransfer.cppm" />
+    <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\IGPUpload.cppm" />
     <ClCompile Include="Source\Interfaces\IGAPI\IGAPI.cppm" />
     <ClCompile Include="Source\Interfaces\IMainLoop\IMainLoop.cppm" />
     <ClCompile Include="Source\IO\IOPathFactory.cppm" />

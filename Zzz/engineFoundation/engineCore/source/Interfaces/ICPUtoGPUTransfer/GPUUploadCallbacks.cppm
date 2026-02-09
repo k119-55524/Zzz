@@ -1,5 +1,5 @@
 
-export module CPUtoGPUDataTransfer;
+export module GPUUploadCallbacks;
 
 export namespace zzz
 {
@@ -17,11 +17,11 @@ export namespace zzz
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif
 
-	export struct sInTransfersCallbacks
+	export struct GPUUploadCB
 	{
-		FillCallback fillCallback;
-		PreparedCallback preparedCallback;
-		CompleteCallback completeCallback;
-		bool isCorrect = true;
+		FillCallback		OnFill;
+		PreparedCallback	OnPrepared;
+		CompleteCallback	OnComplete;
+		bool Success = true;
 	};
 }

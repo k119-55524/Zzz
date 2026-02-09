@@ -9,10 +9,10 @@ import StrConvert;
 import AppWin_MSWin;
 import RootSignature;
 import CommandWrapperDX;
+import GPUUploadDX;
 import CheckDirectXSupport;
 import ThreadSafeSwapBuffer;
-import CPUtoGPUDataTransfer;
-import CPUtoGPUDataTransferDX;
+import GPUUploadCallbacks;
 
 using namespace zzz;
 using namespace zzz::core;
@@ -55,7 +55,7 @@ export namespace zzz::dx
 		void WaitForGpu() override;
 
 	private:
-		ThreadSafeSwapBuffer<std::shared_ptr<sInTransfersCallbacks>> m_PreparedTransfers;
+		ThreadSafeSwapBuffer<std::shared_ptr<GPUUploadCB>> m_PreparedTransfers;
 
 		UINT64 m_fenceValue;
 		unique_handle m_fenceEvent;
@@ -119,7 +119,7 @@ export namespace zzz::dx
 	[[nodiscard]] Result<> DXAPI::Init()
 	{
 		Result<> res = InitializeDevice()
-			.and_then([&]() { m_CPUtoGPUDataTransfer = safe_make_unique<CPUtoGPUDataTransferDX>(m_device, m_PreparedTransfers); })
+			.and_then([&]() { m_CPUtoGPUDataTransfer = safe_make_unique<GPUUploadDX>(m_device, m_PreparedTransfers); })
 			.and_then([&]() { return m_rootSignature.Initialize(m_device); })
 			.and_then([&]() { return InitializeFence(); });
 
@@ -137,16 +137,16 @@ export namespace zzz::dx
 			.and_then([&]() { m_factory = factory; })
 			.and_then([&]() { return GetAdapter(factory.Get(), &adapter); });
 		if (!res)
-			return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializeDevice()]. -> {}", res.error().getMessage()));
+			return Unexpected(eResult::failure, std::format(L" -> {}", res.error().getMessage()));
 
 		HRESULT hr = adapter.As(&m_adapter3);
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializeDevice()]. Failed to query IDXGIAdapter3. HRESULT = 0x{:08X}", hr));
+			return Unexpected(eResult::failure, std::format(L"Failed to query IDXGIAdapter3. HRESULT = 0x{:08X}", hr));
 
 		res = CreateDevice(adapter, m_device, m_featureLevel)
 			.and_then([&]() { return CreateCommandQueue(m_device, m_commandQueue); });
 		if (!res)
-			return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializeDevice()]. -> {}", res.error().getMessage()));
+			return Unexpected(eResult::failure, std::format(L" -> {}", res.error().getMessage()));
 
 		for (int index = 0; index < BACK_BUFFER_COUNT; index++)
 			m_commandWrapper[index] = safe_make_shared<CommandWrapperDX>(m_device, D3D12_COMMAND_LIST_TYPE_DIRECT);
@@ -169,7 +169,7 @@ export namespace zzz::dx
 			//debugController->QueryInterface(IID_PPV_ARGS(&debugController1));
 			//debugController1->SetEnableGPUBasedValidation(true);
 
-			DebugOutput(L">>>>> [DXAPI::EnableDebugLayer()]. DirectX debug layer enabled.");
+			DebugOutput(L"DirectX debug layer enabled.");
 		}
 #endif
 	}
@@ -182,11 +182,11 @@ export namespace zzz::dx
 			ComPtr<IDXGIFactory4> factory4;
 			hr = CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&factory4));
 			if (FAILED(hr))
-				return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializeDevice()]. Failed to create DXGI Factory");
+				return Unexpected(eResult::failure, L"Failed to create DXGI Factory");
 
 			hr = factory4.As(&outFactory);
 			if (FAILED(hr))
-				return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializeDevice()]. Failed to query IDXGIFactory7");
+				return Unexpected(eResult::failure, L"Failed to query IDXGIFactory7");
 		}
 
 		return {};
@@ -214,7 +214,7 @@ export namespace zzz::dx
 
 		if (FAILED(hr))
 			return Unexpected(eResult::failure,
-				std::format(L">>>>> [DXAPI::InitializeDevice()]. Failed to create D3D12 device. HRESULT = 0x{:08X}", hr));
+				std::format(L"Failed to create D3D12 device. HRESULT = 0x{:08X}", hr));
 
 		SET_RESOURCE_DEBUG_NAME(outDevice, L"Main ID3D12Device");
 
@@ -223,7 +223,7 @@ export namespace zzz::dx
 			(outFeatureLevel == D3D_FEATURE_LEVEL_12_1) ? L"12.1" :
 			(outFeatureLevel == D3D_FEATURE_LEVEL_12_0) ? L"12.0" : L"Unknown";
 		DebugOutput(std::format(
-			L">>>>> [DXAPI::InitializePipeline()]. Created D3D12 device with feature level: {}",
+			L"Created D3D12 device with feature level: {}",
 			levelName).c_str());
 #endif
 
@@ -240,7 +240,7 @@ export namespace zzz::dx
 
 		HRESULT hr = device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&outQueue));
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializeDevice()]. Failed to create Command Queue. HRESULT = 0x{:08X}", hr));
+			return Unexpected(eResult::failure, std::format(L"Failed to create Command Queue. HRESULT = 0x{:08X}", hr));
 
 		return {};
 	}
@@ -268,7 +268,7 @@ export namespace zzz::dx
 					__uuidof(ID3D12Device),
 					nullptr)))
 				{
-					DebugOutput(std::format( L">>>>> [DXAPI::GetAdapter()] Selected adapter: {} VRAM: {} MB", desc.Description, desc.DedicatedVideoMemory / (1024 * 1024)).c_str());
+					DebugOutput(std::format( L"Selected adapter: {} VRAM: {} MB", desc.Description, desc.DedicatedVideoMemory / (1024 * 1024)).c_str());
 
 					* ppAdapter = candidate;
 					(*ppAdapter)->AddRef(); // так как мы не Detach'им
@@ -308,14 +308,14 @@ export namespace zzz::dx
 	{
 		// Защита от повторной инициализации
 		if (m_fence || m_fenceEvent)
-			return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializeAssets()]. Already initialized.");
+			return Unexpected(eResult::failure, L"Already initialized.");
 
 		// Создание объектов синхронизации
 		{
 			ComPtr<ID3D12Fence> fence;
 			HRESULT hr = m_device->CreateFence( 0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence) );
 			if (FAILED(hr))
-				return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializeAssets()]. CreateFence failed. HRESULT = 0x{:08X}", hr));
+				return Unexpected(eResult::failure, std::format(L"CreateFence failed. HRESULT = 0x{:08X}", hr));
 
 			m_fence = fence;
 
@@ -324,7 +324,7 @@ export namespace zzz::dx
 			if (!fenceEvent)
 			{
 				hr = HRESULT_FROM_WIN32(GetLastError());
-				return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializeAssets()]. CreateEvent failed. HRESULT = 0x{:08X}", hr));
+				return Unexpected(eResult::failure, std::format(L"CreateEvent failed. HRESULT = 0x{:08X}", hr));
 			}
 
 			m_fenceEvent = fenceEvent.release();
@@ -368,19 +368,19 @@ export namespace zzz::dx
 	{
 		auto commandList = m_commandWrapper[m_frameIndexUpdate]->GetCommandList();
 
-		m_PreparedTransfers.ForEach([&](std::shared_ptr<sInTransfersCallbacks> callback)
+		m_PreparedTransfers.ForEach([&](std::shared_ptr<GPUUploadCB> callback)
 			{
-				if (callback->isCorrect)
-					callback->preparedCallback(commandList);
+				if (callback->Success)
+					callback->OnPrepared(commandList);
 			});
 	}
 
 	void DXAPI::EndPreparedTransfers()
 	{
-		m_PreparedTransfers.ForEach([&](std::shared_ptr<sInTransfersCallbacks> callback)
+		m_PreparedTransfers.ForEach([&](std::shared_ptr<GPUUploadCB> callback)
 			{
-				if (callback->isCorrect)
-					callback->completeCallback(callback->isCorrect);
+				if (callback->Success)
+					callback->OnComplete(callback->Success);
 			});
 
 		m_PreparedTransfers.SwapAndReset();
@@ -388,7 +388,7 @@ export namespace zzz::dx
 
 	void DXAPI::SubmitCommandLists()
 	{
-		//DebugOutput(std::format(L">>>>> [DXAPI::SubmitCommandLists()]. m_frameIndexRender: {}.", m_frameIndexRender));
+		//DebugOutput(std::format(L"m_frameIndexRender: {}.", m_frameIndexRender));
 
 		ID3D12CommandList* ppCommandLists[] = { m_commandWrapper[m_frameIndexRender]->GetCommandList().Get()};
 		m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);

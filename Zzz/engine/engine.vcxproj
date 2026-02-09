@@ -195,7 +195,7 @@
     <ClCompile Include="source\Interfaces\IShader\Shader_VK.cppm" />
     <ClCompile Include="source\Interfaces\ISurfaceView\ISurfView.cppm" />
     <ClCompile Include="source\Interfaces\ISurfaceView\SurfView_DX.cppm" />
-    <ClCompile Include="source\helpers\RenderVolume.cppm" />
+    <ClCompile Include="source\renderQueue\RenderVolume.cppm" />
     <ClCompile Include="source\Interfaces\IRenderLayers\IRenderLayer.cppm" />
     <ClCompile Include="source\Interfaces\ISurfaceView\SurfView_VK_MSWin.cppm" />
     <ClCompile Include="source\Material.cppm" />
@@ -207,7 +207,7 @@
     <ClCompile Include="source\scenes\SceneEntity.cppm" />
     <ClCompile Include="source\Transform.cppm" />
     <ClCompile Include="source\view\ViewportDesc.cppm" />
-    <ClCompile Include="source\helpers\RenderQueue.cppm" />
+    <ClCompile Include="source\renderQueue\RenderQueue.cppm" />
     <ClCompile Include="source\resources\GPUResManager.cppm" />
     <ClCompile Include="source\scenes\SceneEntityFactory.cppm" />
     <ClCompile Include="source\utilities\AppTime.cppm" />
