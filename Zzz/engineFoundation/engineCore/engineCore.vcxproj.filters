@@ -50,7 +50,7 @@
     <ClCompile Include="Source\Serializer\Serializer.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Interfaces\ICheckGapiSupport.cppm">
+    <ClCompile Include="source\Interfaces\IDeviceCapabilities\IDeviceCapabilities.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\IGPUpload.cppm">
@@ -80,7 +80,7 @@
     <ClCompile Include="Source\Interfaces\IGAPI\DXAPI.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Platforms\DX\CheckDirectXUltimateSupport.cppm">
+    <ClCompile Include="source\Interfaces\IDeviceCapabilities\DXDeviceCapabilities.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Platforms\DX\CommandWrapperDX.cppm">
@@ -135,6 +135,9 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\GPUUploadVK.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\IDeviceCapabilities\VKDeviceCapabilities.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

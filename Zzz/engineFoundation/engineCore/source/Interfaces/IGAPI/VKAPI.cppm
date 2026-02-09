@@ -6,6 +6,7 @@ export module VKAPI;
 import IGAPI;
 import Result;
 import GPUUploadVK;
+import VKDeviceCapabilities;
 
 namespace zzz::vk
 {
@@ -75,6 +76,7 @@ namespace zzz::vk
 			.and_then([&]() { return PickPhysicalDevice(); })
 			.and_then([&]() { return CreateLogicalDevice(); })
 			.and_then([&]() { return CreateCommandPool(); })
+			.and_then([&]() { m_CheckGapiSupport = safe_make_unique<VKDeviceCapabilities>(m_PhysicalDevice, m_Device); })
 			.and_then([&]() { m_CPUtoGPUDataTransfer = safe_make_unique<GPUUploadVK>(); });
 
 		return res;

@@ -6,13 +6,13 @@ export module DXAPI;
 import IGAPI;
 import Result;
 import StrConvert;
+import GPUUploadDX;
 import AppWin_MSWin;
 import RootSignature;
 import CommandWrapperDX;
-import GPUUploadDX;
-import CheckDirectXSupport;
-import ThreadSafeSwapBuffer;
 import GPUUploadCallbacks;
+import DXDeviceCapabilities;
+import ThreadSafeSwapBuffer;
 
 using namespace zzz;
 using namespace zzz::core;
@@ -227,7 +227,7 @@ export namespace zzz::dx
 			levelName).c_str());
 #endif
 
-		m_CheckGapiSupport = safe_make_unique<CheckDirectXSupport>(outDevice);
+		m_CheckGapiSupport = safe_make_unique<DXDeviceCapabilities>(outDevice, m_adapter3);
 
 		return {};
 	}

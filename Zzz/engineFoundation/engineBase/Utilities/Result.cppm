@@ -145,7 +145,7 @@ export namespace zzz
 		template<typename U>
 		_Ty value_or(U&& default_value) const noexcept(std::is_nothrow_constructible_v<_Ty, U>)
 		{
-			static_assert(std::is_convertible_v<U, _Ty>, ">>>>> [Result.value_or(U&& default_value)]. U must be convertible to _Ty");
+			static_assert(std::is_convertible_v<U, _Ty>, "U type must be convertible to _Ty");
 			return has_value() ? std::get<_Ty>(data) : static_cast<_Ty>(std::forward<U>(default_value));
 		}
 

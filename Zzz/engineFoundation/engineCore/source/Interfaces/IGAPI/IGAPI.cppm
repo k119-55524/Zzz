@@ -5,7 +5,7 @@ import Result;
 import Size2D;
 import IAppWin;
 import StrConvert;
-import ICheckGapiSupport;
+import IDeviceCapabilities;
 import GPUUploadCallbacks;
 import IGPUUpload;
 
@@ -43,7 +43,7 @@ export namespace zzz
 				names[static_cast<size_t>(gapiType)] : L"Unknown"sv;
 		}
 		[[nodiscard]] inline constexpr std::wstring_view GetAPIName() const noexcept { return GetAPIName(gapiType); }
-		inline const ICheckGapiSupport& GetGapiSupportChecker() const noexcept { return *m_CheckGapiSupport; }
+		inline const IDeviceCapabilities& GetGapiSupportChecker() const noexcept { return *m_CheckGapiSupport; }
 
 		[[nodiscard]] virtual Result<> Initialize();
 		virtual void SubmitCommandLists() = 0;
@@ -61,7 +61,7 @@ export namespace zzz
 		eGAPIType gapiType;
 		eInitState initState;
 		std::unique_ptr<IGPUUpload> m_CPUtoGPUDataTransfer;
-		std::unique_ptr<ICheckGapiSupport> m_CheckGapiSupport;
+		std::unique_ptr<IDeviceCapabilities> m_CheckGapiSupport;
 		zU32 m_frameIndexRender;
 		zU32 m_frameIndexUpdate;
 	};

@@ -177,8 +177,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug_MSWin_Vulkan|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug_MSWin_DirectX|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Platforms\DX\CheckDirectXUltimateSupport.cppm" />
+    <ClCompile Include="source\Interfaces\IDeviceCapabilities\DXDeviceCapabilities.cppm" />
     <ClCompile Include="Platforms\DX\CommandWrapperDX.cppm" />
+    <ClCompile Include="source\Interfaces\IDeviceCapabilities\VKDeviceCapabilities.cppm" />
     <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\GPUUploadDX.cppm" />
     <ClCompile Include="Platforms\DX\RootSignature.cppm" />
     <ClCompile Include="Platforms\PrimitiveTopology.cppm" />
@@ -195,7 +196,7 @@
     <ClCompile Include="Source\Interfaces\IIcoBuilder\ibMSWin.cppm" />
     <ClCompile Include="Source\Interfaces\IIcoBuilder\IIcoBuilder.cppm" />
     <ClCompile Include="Source\Interfaces\IMainLoop\MainLoop_MSWin.cppm" />
-    <ClCompile Include="Source\Interfaces\ICheckGapiSupport.cppm" />
+    <ClCompile Include="source\Interfaces\IDeviceCapabilities\IDeviceCapabilities.cppm" />
     <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\IGPUpload.cppm" />
     <ClCompile Include="Source\Interfaces\IGAPI\IGAPI.cppm" />
     <ClCompile Include="Source\Interfaces\IMainLoop\IMainLoop.cppm" />
