@@ -1,12 +1,12 @@
 
-export module AppWinConfig;
+export module AppConfig;
 
-import AppWinConfig_MSWin;
+import AppConfig_MSWin;
 
 export namespace zzz::core
 {
 #if defined(ZPLATFORM_MSWINDOWS)
-	export typedef AppWinConfig_MSWin AppWinConfig;
+	export typedef AppConfig_MSWin AppConfig;
 #elif defined(ZPLATFORM_LINUX)
 #elif defined(ZPLATFORM_ANDROID)
 #elif defined(ZPLATFORM_MACOS)

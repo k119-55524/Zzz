@@ -16,7 +16,7 @@ import RenderQueue;
 import ViewFactory;
 import UserLayer3D;
 import IRenderLayer;
-import AppWinConfig;
+import AppConfig;
 import ISurfView;
 import SceneEntityFactory;
 
@@ -37,7 +37,7 @@ namespace zzz
 
 	public:
 		View(
-			const std::shared_ptr<AppWinConfig> winConfig,
+			const std::shared_ptr<AppConfig> winConfig,
 			const std::shared_ptr<SceneEntityFactory> entityFactory,
 			const std::shared_ptr<IGAPI> GAPI);
 
@@ -59,7 +59,7 @@ namespace zzz
 		void OnViewResize(const Size2D<>& size, eTypeWinResize resizeType);
 
 		ViewFactory factory;
-		const std::shared_ptr<AppWinConfig> m_WinConfig;
+		const std::shared_ptr<AppConfig> m_WinConfig;
 		const std::shared_ptr<IGAPI> m_GAPI;
 		const std::shared_ptr<SceneEntityFactory> m_EntityFactory;
 		std::shared_ptr<IAppWin> m_Window;
@@ -77,7 +77,7 @@ namespace zzz
 	};
 
 	View::View(
-		const std::shared_ptr<AppWinConfig> winConfig,
+		const std::shared_ptr<AppConfig> winConfig,
 		const std::shared_ptr<SceneEntityFactory> entityFactory,
 		const std::shared_ptr<IGAPI> GAPI) :
 		m_WinConfig{ winConfig },
@@ -86,9 +86,9 @@ namespace zzz
 		initState{ eInitState::InitNot },
 		m_ThreadsUpdate{std::string("View"), 2}
 	{
-		ensure(m_WinConfig, ">>>>> [View::View()]. Window config cannot be null.");
-		ensure(m_EntityFactory, ">>>>> [View::View()]. Scene entity factory cannot be null.");
-		ensure(m_GAPI, ">>>>> [View::View()]. GAPI cannot be null.");
+		ensure(m_WinConfig, "Window config cannot be null.");
+		ensure(m_EntityFactory, "Scene entity factory cannot be null.");
+		ensure(m_GAPI, "GAPI cannot be null.");
 
 		Initialize();
 	}
@@ -124,11 +124,11 @@ namespace zzz
 		}
 		catch (const std::exception& e)
 		{
-			throw_runtime_error((e.what() && e.what()[0]) ? std::string(e.what()) : "unknown exception");
+			throw_runtime_error((e.what() && e.what()[0]) ? std::string(e.what()) : "Unknown exception");
 		}
 		catch (...)
 		{
-			throw_runtime_error(">>>>>> [View::Initialize()]. Unknown exception.");
+			throw_runtime_error("Unknown exception.");
 		}
 	}
 

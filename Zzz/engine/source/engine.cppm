@@ -63,8 +63,8 @@ export namespace zzz
 
 	private:
 		EngineFactory m_EngineFactory;
-		std::shared_ptr<ZamlConfig> m_ZamlStartupConfig;
-		std::unique_ptr<StartupConfig> m_Config;
+		std::shared_ptr<ZamlConfig> m_ZamlConfig;
+		std::shared_ptr<StartupConfig> m_Config;
 
 		eInitState initState;
 		std::mutex stateMutex;
@@ -89,7 +89,7 @@ export namespace zzz
 		void OnUpdateSystem();
 		void OnViewResizing();
 
-		Result<std::unique_ptr<StartupConfig>> GetStartupConfig();
+		Result<std::shared_ptr<StartupConfig>> GetStartupConfig(std::shared_ptr<ZamlConfig> zamlConfig);
 
 		PerformanceMeter m_PerfRender;
 	};
@@ -114,7 +114,7 @@ export namespace zzz
 		m_GAPI.reset();
 		m_ResCPU.reset();
 		m_ResGPU.reset();
-		m_ZamlStartupConfig.reset();
+		m_ZamlConfig.reset();
 
 		initState = eInitState::InitNot;
 		isSysPaused = true;
@@ -132,11 +132,11 @@ export namespace zzz
 		try
 		{
 			// Читаем настройки из файла
-			m_ZamlStartupConfig = safe_make_shared<ZamlConfig>(zamlPath);
-			auto res = GetStartupConfig();
+			m_ZamlConfig = safe_make_shared<ZamlConfig>(zamlPath);
+			auto res = GetStartupConfig(m_ZamlConfig);
 			if (!res)
 				return Unexpected(eResult::failure, std::format(L"Failed to transfer settings from file.", zamlPath));
-			m_Config = std::move(res.value());
+			m_Config = res.value();
 
 			return Initialize();
 		}
@@ -302,17 +302,17 @@ export namespace zzz
 	}
 
 #pragma region Helpers
-	Result<std::unique_ptr<StartupConfig>> Engine::GetStartupConfig()
+	Result<std::shared_ptr<StartupConfig>> Engine::GetStartupConfig(std::shared_ptr<ZamlConfig> zamlConfig)
 	{
 		ZamlParser zamlParser;
-		auto res = zamlParser.GetAppWinConfig(m_ZamlStartupConfig);
+		auto res = zamlParser.GetAppWinConfig(zamlConfig);
 		if (!res)
 			Unexpected(eResult::not_initialized, res.error().getMessage());
 
-		std::shared_ptr<AppWinConfig> winConfig = res.value();
-		std::shared_ptr<GAPIConfig> gapiConfig = safe_make_shared<GAPIConfig>();
+		std::shared_ptr<AppConfig> winConfig = res.value();
+		std::shared_ptr<GAPIConfig> gapiConfig = safe_make_shared<GAPIConfig>(winConfig);
 
-		return Result<std::unique_ptr<StartupConfig>>(safe_make_unique<StartupConfig>(winConfig, gapiConfig));
+		return Result<std::shared_ptr<StartupConfig>>(safe_make_shared<StartupConfig>(winConfig, gapiConfig));
 	}
 #pragma endregion
 }

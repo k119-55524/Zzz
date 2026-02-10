@@ -3,7 +3,7 @@ export module StartupConfig;
 
 import GAPIConfig;
 import Serializer;
-import AppWinConfig;
+import AppConfig;
 
 using namespace zzz::core;
 
@@ -13,7 +13,7 @@ namespace zzz
 	{
 	public:
 		StartupConfig() = default;
-		explicit StartupConfig(std::shared_ptr<AppWinConfig> appWinConfig, std::shared_ptr<GAPIConfig> gapionfig) :
+		explicit StartupConfig(std::shared_ptr<AppConfig> appWinConfig, std::shared_ptr<GAPIConfig> gapionfig) :
 			m_AppWinConfig{ appWinConfig },
 			m_GAPIConfig{gapionfig}
 		{
@@ -21,11 +21,11 @@ namespace zzz
 		~StartupConfig() = default;
 
 
-		const std::shared_ptr<AppWinConfig> GetAppWinConfig() const noexcept { return m_AppWinConfig; }
+		const std::shared_ptr<AppConfig> GetAppWinConfig() const noexcept { return m_AppWinConfig; }
 		const std::shared_ptr<GAPIConfig> GetGAPIConfig() const noexcept { return m_GAPIConfig; }
 
 	protected:
-		std::shared_ptr<AppWinConfig> m_AppWinConfig;
+		std::shared_ptr<AppConfig> m_AppWinConfig;
 		std::shared_ptr<GAPIConfig> m_GAPIConfig;
 
 		Result<> Serialize(std::vector<std::byte>& buffer, const zzz::Serializer& s) const override

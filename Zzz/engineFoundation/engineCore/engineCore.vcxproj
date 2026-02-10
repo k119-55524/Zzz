@@ -186,8 +186,8 @@
     <ClCompile Include="Source\Camera.cppm" />
     <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\GPUUploadVK.cppm" />
     <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\GPUUploadCallbacks.cppm" />
-    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppWinConfig.cppm" />
-    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppWinConfig_MSWin.cppm" />
+    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppConfig.cppm" />
+    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppConfig_MSWin.cppm" />
     <ClCompile Include="Source\Interfaces\Configs\GAPIConfig\GAPIConfig.cppm" />
     <ClCompile Include="Source\Interfaces\IAppWin\AppWin_MSWin.cppm" />
     <ClCompile Include="source\Interfaces\IAppWin\IAppWin.cppm" />
@@ -211,6 +211,7 @@
     <ClCompile Include="Source\Serializer\Serializer.cppm" />
     <ClCompile Include="Utilities\Platforms.cppm" />
     <ClCompile Include="Utilities\Size2D.cppm" />
+    <ClCompile Include="Utilities\Version.cppm" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\math\math.vcxproj">

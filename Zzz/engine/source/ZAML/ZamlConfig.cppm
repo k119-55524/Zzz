@@ -5,7 +5,7 @@ import Result;
 import ioZaml;
 import GAPIConfig;
 import StrConvert;
-import AppWinConfig;
+import AppConfig;
 
 using namespace zzz::core;
 

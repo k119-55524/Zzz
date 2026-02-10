@@ -30,14 +30,14 @@ export namespace zzz
 		EngineFactory& operator=(EngineFactory&&) = delete;
 		~EngineFactory() = default;
 
-		[[nodiscard]] Result<std::shared_ptr<IGAPI>> CreateGAPI(std::shared_ptr<GAPIConfig> config);
+		[[nodiscard]] Result<std::shared_ptr<IGAPI>> CreateGAPI(const std::shared_ptr<GAPIConfig> config);
 		[[nodiscard]] inline std::shared_ptr<IGAPI> GetGAPI() const noexcept { return m_GAPI; }
 
 	private:
 		std::shared_ptr<IGAPI> m_GAPI;
 	};
 
-	Result<std::shared_ptr<IGAPI>> EngineFactory::CreateGAPI(std::shared_ptr<GAPIConfig> config)
+	Result<std::shared_ptr<IGAPI>> EngineFactory::CreateGAPI(const std::shared_ptr<GAPIConfig> config)
 	{
 		if (m_GAPI)
 			return Unexpected(eResult::already_created, L"GAPI already created.");
@@ -48,9 +48,9 @@ export namespace zzz
 		{
 			std::shared_ptr<IGAPI> igapi;
 #ifdef ZRENDER_API_D3D12
-			igapi = safe_make_shared<DXAPI>();
+			igapi = safe_make_shared<DXAPI>(config);
 #elif defined(ZRENDER_API_VULKAN)
-			igapi = safe_make_shared<VKAPI>();
+			igapi = safe_make_shared<VKAPI>(config);
 #else
 #error ">>>>> [EngineFactory::CreateGAPI]. Compile error. This branch requires implementation for the current platform"
 #endif

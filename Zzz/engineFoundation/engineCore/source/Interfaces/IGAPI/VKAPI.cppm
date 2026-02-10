@@ -5,17 +5,21 @@ export module VKAPI;
 
 import IGAPI;
 import Result;
+import StrConvert;
+import GAPIConfig;
 import GPUUploadVK;
 import VKDeviceCapabilities;
+
+using namespace zzz::core;
 
 namespace zzz::vk
 {
 	export class VKAPI final : public IGAPI
 	{
-		Z_NO_COPY_MOVE(VKAPI);
+		Z_NO_CREATE_COPY(VKAPI);
 
 	public:
-		explicit VKAPI();
+		explicit VKAPI(const std::shared_ptr<GAPIConfig> config);
 		virtual ~VKAPI() override;
 
 	protected:
@@ -38,17 +42,21 @@ namespace zzz::vk
 		VkQueue m_GraphicsQueue{};
 		uint32_t m_GraphicsQueueFamily{};
 		VkCommandPool m_CommandPool{};
+
+		std::shared_ptr<GAPIConfig> m_Config;
 	};
 
-	VKAPI::VKAPI() :
-		IGAPI(eGAPIType::Vulkan),
+	VKAPI::VKAPI(const std::shared_ptr<GAPIConfig> config) :
+		IGAPI(config, eGAPIType::Vulkan),
 		m_Instance(VK_NULL_HANDLE),
 		m_PhysicalDevice(VK_NULL_HANDLE),
 		m_Device(VK_NULL_HANDLE),
 		m_GraphicsQueue(VK_NULL_HANDLE),
 		m_GraphicsQueueFamily(0),
-		m_CommandPool(VK_NULL_HANDLE)
+		m_CommandPool(VK_NULL_HANDLE),
+		m_Config(config)
 	{
+		ensure(config, "GAPIConfig cannot be null.");
 	}
 
 	VKAPI::~VKAPI()
@@ -84,14 +92,28 @@ namespace zzz::vk
 
 	[[nodiscard]] Result<> VKAPI::CreateInstance()
 	{
+		std::string appNameStr = wstring_to_string(m_Config->GetAppName());
+		const char* appName = appNameStr.c_str();
+		std::string engineNameStr = wstring_to_string(m_Config->GetEngineName());
+		const char* engineName = engineNameStr.c_str();
+
+		const Version& appVersion = m_Config->GetAppVersion();
+		const Version& engineVersion = m_Config->GetEngineVersion();
+
+		uint32_t supportedVersion = VK_API_VERSION_1_0;
+		if (vkEnumerateInstanceVersion)
+			vkEnumerateInstanceVersion(&supportedVersion);
+
+		DebugOutput(std::format(L"Vulkan API version supported by the system: {}.{}.{}", VK_VERSION_MAJOR(supportedVersion), VK_VERSION_MINOR(supportedVersion), VK_VERSION_PATCH(supportedVersion)));
+
 		VkApplicationInfo appInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
-			.pApplicationName = "ZzzEngine",
-			.applicationVersion = VK_MAKE_VERSION(1, 0, 0),
-			.pEngineName = "ZzzEngine",
-			.engineVersion = VK_MAKE_VERSION(1, 0, 0),
-			.apiVersion = VK_API_VERSION_1_3
+			.pApplicationName = appName,
+			.applicationVersion = VK_MAKE_VERSION(appVersion.GetMajor(), appVersion.GetMinor(), appVersion.GetPatch()),
+			.pEngineName = engineName,
+			.engineVersion = VK_MAKE_VERSION(engineVersion.GetMajor(), engineVersion.GetMinor(), engineVersion.GetPatch()),
+			.apiVersion = supportedVersion
 		};
 
 		std::vector<const char*> extensions =

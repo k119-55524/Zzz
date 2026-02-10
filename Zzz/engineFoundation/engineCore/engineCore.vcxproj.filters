@@ -98,12 +98,6 @@
     <ClCompile Include="Utilities\Helpers.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppWinConfig.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppWinConfig_MSWin.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Interfaces\Configs\GAPIConfig\GAPIConfig.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -138,6 +132,15 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\Interfaces\IDeviceCapabilities\VKDeviceCapabilities.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppConfig.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppConfig_MSWin.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Utilities\Version.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

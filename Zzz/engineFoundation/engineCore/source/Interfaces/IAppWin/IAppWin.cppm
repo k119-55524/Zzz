@@ -6,7 +6,7 @@ export module IAppWin;
 import Event;
 import Result;
 import Size2D;
-import AppWinConfig;
+import AppConfig;
 
 namespace zzz
 {
@@ -20,7 +20,7 @@ export namespace zzz::core
 		Z_NO_CREATE_COPY(IAppWin);
 
 	public:
-		explicit IAppWin(std::shared_ptr<const AppWinConfig> config);
+		explicit IAppWin(std::shared_ptr<const AppConfig> config);
 		virtual ~IAppWin() = default;
 
 		Event<bool> OnActivate;
@@ -37,14 +37,14 @@ export namespace zzz::core
 		[[nodiscard]] virtual Result<> Initialize() = 0;
 
 	protected:
-		const std::shared_ptr<const AppWinConfig> m_Config;
+		const std::shared_ptr<const AppConfig> m_Config;
 		std::wstring m_Caption;
 		Size2D<> m_WinSize;
 
 		bool b_IsWinActive;
 	};
 
-	IAppWin::IAppWin(std::shared_ptr<const AppWinConfig> config)
+	IAppWin::IAppWin(std::shared_ptr<const AppConfig> config)
 		: m_Config{ config },
 		m_WinSize{ 0, 0 },
 		b_IsWinActive{ false }

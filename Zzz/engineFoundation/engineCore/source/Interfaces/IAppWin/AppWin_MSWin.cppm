@@ -9,7 +9,7 @@ import KeyCode;
 import IAppWin;
 import ibMSWin;
 import StrConvert;
-import AppWinConfig;
+import AppConfig;
 import IOPathFactory;
 
 using namespace zzz;
@@ -21,7 +21,7 @@ export namespace zzz::core
 		Z_NO_CREATE_COPY(AppWin_MSWin);
 
 	public:
-		explicit AppWin_MSWin(std::shared_ptr<AppWinConfig> _settings);
+		explicit AppWin_MSWin(std::shared_ptr<AppConfig> _settings);
 		virtual ~AppWin_MSWin() override;
 
 		const HWND GetHWND() const noexcept { return hWnd; }
@@ -54,7 +54,7 @@ export namespace zzz::core
 		void HandleRawKeyboard(const RAWKEYBOARD& kb);
 	};
 
-	AppWin_MSWin::AppWin_MSWin(std::shared_ptr<AppWinConfig> config) :
+	AppWin_MSWin::AppWin_MSWin(std::shared_ptr<AppConfig> config) :
 		IAppWin(config),
 		hWnd{ nullptr },
 		IsMinimized{ true },
@@ -113,7 +113,7 @@ export namespace zzz::core
 		hWnd = CreateWindowEx(
 			0,
 			m_Config->GetClassName().c_str(),
-			m_Config->GetCaption().c_str(),
+			m_Config->GetAppName().c_str(),
 			WS_OVERLAPPEDWINDOW,
 			xPos, yPos, width, height,
 			nullptr,
@@ -294,12 +294,12 @@ export namespace zzz::core
 
 	void AppWin_MSWin::SetCaptionText(std::wstring caption)
 	{
-		SetWindowText(hWnd, m_Config->GetCaption().c_str());
+		SetWindowText(hWnd, m_Config->GetAppName().c_str());
 	}
 
 	void AppWin_MSWin::AddCaptionText(std::wstring caption)
 	{
-		SetWindowText(hWnd, (m_Config->GetCaption() + caption).c_str());
+		SetWindowText(hWnd, (m_Config->GetAppName() + caption).c_str());
 	}
 
 	int AppWin_MSWin::InitRawInput()

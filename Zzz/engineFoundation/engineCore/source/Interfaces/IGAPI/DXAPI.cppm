@@ -32,7 +32,7 @@ export namespace zzz::dx
 		Z_NO_COPY_MOVE(DXAPI);
 
 	public:
-		explicit DXAPI();
+		explicit DXAPI(const std::shared_ptr<GAPIConfig> config);
 		virtual ~DXAPI() override;
 
 		const ComPtr<ID3D12Device>& GetDevice() const noexcept { return m_device; };
@@ -82,8 +82,8 @@ export namespace zzz::dx
 		void BeginPreparedTransfers();
 	};
 
-	DXAPI::DXAPI() :
-		IGAPI(eGAPIType::DirectX),
+	DXAPI::DXAPI(const std::shared_ptr<GAPIConfig> config) :
+		IGAPI(config, eGAPIType::DirectX),
 		m_fenceValue{ 0 },
 		m_swapChainFlags{ 0 },
 		m_featureLevel{ D3D_FEATURE_LEVEL_12_0 },

@@ -5,7 +5,7 @@ import IGAPI;
 import Result;
 import IAppWin;
 import StrConvert;
-import AppWinConfig;
+import AppConfig;
 import ISurfView;
 import AppWin_MSWin;
 
@@ -35,11 +35,11 @@ export namespace zzz
 		ViewFactory& operator=(ViewFactory&&) = delete;
 		~ViewFactory() = default;
 
-		std::shared_ptr<IAppWin> CreateAppWin(std::shared_ptr<AppWinConfig> Settings);
+		std::shared_ptr<IAppWin> CreateAppWin(std::shared_ptr<AppConfig> Settings);
 		std::shared_ptr<ISurfView> CreateSurfaceWin(std::shared_ptr<IAppWin> _iAppWin, std::shared_ptr<IGAPI> _iGAPI);
 	};
 
-	std::shared_ptr<IAppWin> ViewFactory::CreateAppWin(std::shared_ptr<AppWinConfig> Settings)
+	std::shared_ptr<IAppWin> ViewFactory::CreateAppWin(std::shared_ptr<AppConfig> Settings)
 	{
 		try
 		{

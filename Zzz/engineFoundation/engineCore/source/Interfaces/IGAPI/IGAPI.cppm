@@ -4,11 +4,13 @@ export module IGAPI;
 import Result;
 import Size2D;
 import IAppWin;
+import GAPIConfig;
 import StrConvert;
-import IDeviceCapabilities;
-import GPUUploadCallbacks;
 import IGPUUpload;
+import GPUUploadCallbacks;
+import IDeviceCapabilities;
 
+using namespace zzz::core;
 using namespace std::literals::string_view_literals;
 
 export namespace zzz
@@ -25,7 +27,7 @@ export namespace zzz
 		Z_NO_CREATE_COPY(IGAPI);
 
 	public:
-		explicit IGAPI(eGAPIType type);
+		explicit IGAPI(const std::shared_ptr<GAPIConfig> config, eGAPIType type);
 		virtual ~IGAPI() = default;
 
 		[[nodiscard]] eInitState GetInitState() const noexcept { return initState; }
@@ -58,6 +60,7 @@ export namespace zzz
 		[[nodiscard]] virtual Result<> Init() = 0;
 		virtual void WaitForGpu() = 0;
 
+		const std::shared_ptr<GAPIConfig> m_Config;
 		eGAPIType gapiType;
 		eInitState initState;
 		std::unique_ptr<IGPUUpload> m_CPUtoGPUDataTransfer;
@@ -66,12 +69,14 @@ export namespace zzz
 		zU32 m_frameIndexUpdate;
 	};
 
-	IGAPI::IGAPI(eGAPIType type) :
+	IGAPI::IGAPI(const std::shared_ptr<GAPIConfig> config, eGAPIType type) :
+		m_Config(config),
 		gapiType{ type },
 		initState{ eInitState::InitNot },
 		m_frameIndexRender{ 0 },
 		m_frameIndexUpdate{ 1 }
 	{
+		ensure(config, "GAPIConfig cannot be null.");
 	}
 
 	Result<> IGAPI::Initialize()
