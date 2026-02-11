@@ -9,6 +9,7 @@ import StrConvert;
 import GPUUploadDX;
 import AppWin_MSWin;
 import RootSignature;
+import EngineConstants;
 import CommandWrapperDX;
 import GPUUploadCallbacks;
 import DXDeviceCapabilities;

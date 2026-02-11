@@ -8,8 +8,10 @@ import Result;
 import StrConvert;
 import GAPIConfig;
 import GPUUploadVK;
+import EngineConstants;
 import VKDeviceCapabilities;
 
+using namespace zzz;
 using namespace zzz::core;
 
 namespace zzz::vk
@@ -32,6 +34,8 @@ namespace zzz::vk
 
 	private:
 		[[nodiscard]] Result<> CreateInstance();
+		[[nodiscard]] Result<std::vector<const char*>> GetRequiredExtensions();
+		void GetPlatformExtension(std::vector<const char*>& extensions);
 		[[nodiscard]] Result<> PickPhysicalDevice();
 		[[nodiscard]] Result<> CreateLogicalDevice();
 		[[nodiscard]] Result<> CreateCommandPool();
@@ -84,8 +88,11 @@ namespace zzz::vk
 			.and_then([&]() { return PickPhysicalDevice(); })
 			.and_then([&]() { return CreateLogicalDevice(); })
 			.and_then([&]() { return CreateCommandPool(); })
-			.and_then([&]() { m_CheckGapiSupport = safe_make_unique<VKDeviceCapabilities>(m_PhysicalDevice, m_Device); })
-			.and_then([&]() { m_CPUtoGPUDataTransfer = safe_make_unique<GPUUploadVK>(); });
+			.and_then([&]()
+				{
+					m_CheckGapiSupport = safe_make_unique<VKDeviceCapabilities>(m_PhysicalDevice, m_Device);
+					m_CPUtoGPUDataTransfer = safe_make_unique<GPUUploadVK>();
+				});
 
 		return res;
 	}
@@ -93,18 +100,54 @@ namespace zzz::vk
 	[[nodiscard]] Result<> VKAPI::CreateInstance()
 	{
 		std::string appNameStr = wstring_to_string(m_Config->GetAppName());
+		std::string engineNameStr = wstring_to_string(std::wstring(g_EngineName));
+
 		const char* appName = appNameStr.c_str();
-		std::string engineNameStr = wstring_to_string(m_Config->GetEngineName());
 		const char* engineName = engineNameStr.c_str();
-
 		const Version& appVersion = m_Config->GetAppVersion();
-		const Version& engineVersion = m_Config->GetEngineVersion();
 
+		// Определение поддерживаемой версии Vulkan
 		uint32_t supportedVersion = VK_API_VERSION_1_0;
+
 		if (vkEnumerateInstanceVersion)
 			vkEnumerateInstanceVersion(&supportedVersion);
 
-		DebugOutput(std::format(L"Vulkan API version supported by the system: {}.{}.{}", VK_VERSION_MAJOR(supportedVersion), VK_VERSION_MINOR(supportedVersion), VK_VERSION_PATCH(supportedVersion)));
+		// Выбираем минимальную из поддерживаемой bcntvjq и максимальной, которую мы хотим использовать
+		uint32_t apiVersion = std::min(supportedVersion, VULKAN_ENGINE_MAX_VERSION);
+
+		DebugOutput(std::format(
+			L"Vulkan supported: {}.{}.{} | Using: {}.{}.{}",
+			VK_VERSION_MAJOR(supportedVersion), VK_VERSION_MINOR(supportedVersion), VK_VERSION_PATCH(supportedVersion),
+			VK_VERSION_MAJOR(apiVersion), VK_VERSION_MINOR(apiVersion), VK_VERSION_PATCH(apiVersion)));
+
+		auto extensionsRes = GetRequiredExtensions();
+		if (!extensionsRes)
+			return extensionsRes.error();
+
+		std::vector<const char*> extensions = extensionsRes.value();
+
+		// Проверка validation layer
+		std::vector<const char*> layers;
+#ifdef _DEBUG
+		uint32_t layerCount = 0;
+		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+		std::vector<VkLayerProperties> availableLayers(layerCount);
+		vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+		bool validationLayerFound = false;
+		for (const auto& layer : availableLayers)
+		{
+			if (std::strcmp(layer.layerName, "VK_LAYER_KHRONOS_validation") == 0)
+			{
+				validationLayerFound = true;
+				break;
+			}
+		}
+
+		if (validationLayerFound)
+			layers.push_back("VK_LAYER_KHRONOS_validation");
+		else
+			DebugOutput(L"Warning: VK_LAYER_KHRONOS_validation not found");
+#endif
 
 		VkApplicationInfo appInfo
 		{
@@ -112,24 +155,18 @@ namespace zzz::vk
 			.pApplicationName = appName,
 			.applicationVersion = VK_MAKE_VERSION(appVersion.GetMajor(), appVersion.GetMinor(), appVersion.GetPatch()),
 			.pEngineName = engineName,
-			.engineVersion = VK_MAKE_VERSION(engineVersion.GetMajor(), engineVersion.GetMinor(), engineVersion.GetPatch()),
-			.apiVersion = supportedVersion
+			.engineVersion = VK_MAKE_VERSION(g_EngineVersion.GetMajor(), g_EngineVersion.GetMinor(), g_EngineVersion.GetPatch()),
+			.apiVersion = apiVersion
 		};
-
-		std::vector<const char*> extensions =
-		{
-			VK_KHR_SURFACE_EXTENSION_NAME,
-			VK_KHR_WIN32_SURFACE_EXTENSION_NAME
-		};
-
-#ifdef _DEBUG
-		extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-#endif
 
 		VkInstanceCreateInfo ci
 		{
 			.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+			.pNext = nullptr,
+			.flags = 0,
 			.pApplicationInfo = &appInfo,
+			.enabledLayerCount = uint32_t(layers.size()),
+			.ppEnabledLayerNames = layers.empty() ? nullptr : layers.data(),
 			.enabledExtensionCount = uint32_t(extensions.size()),
 			.ppEnabledExtensionNames = extensions.data()
 		};
@@ -141,6 +178,72 @@ namespace zzz::vk
 		volkLoadInstance(m_Instance);
 
 		return {};
+	}
+
+	Result<std::vector<const char*>> VKAPI::GetRequiredExtensions()
+	{
+		uint32_t extCount = 0;
+		vkEnumerateInstanceExtensionProperties(nullptr, &extCount, nullptr);
+
+		std::vector<VkExtensionProperties> availableExt(extCount);
+		vkEnumerateInstanceExtensionProperties(nullptr, &extCount, availableExt.data());
+
+		auto IsExtensionAvailable = [&](const char* name)
+			{
+				for (const auto& ext : availableExt)
+				{
+					if (std::strcmp(ext.extensionName, name) == 0)
+						return true;
+				}
+
+				return false;
+			};
+
+		std::vector<const char*> extensions;
+		auto RequireExtension = [&](const char* name) -> Result<>
+			{
+				if (!IsExtensionAvailable(name))
+					return Unexpected(eResult::failure, std::format(L"Required extension not supported: {}", string_to_wstring(name).value_or(L"Unknown extension name")));
+
+				extensions.push_back(name);
+
+				return {};
+			};
+
+		std::vector<const char*> requiredExtensions = { VK_KHR_SURFACE_EXTENSION_NAME };
+		GetPlatformExtension(requiredExtensions);
+
+#ifdef _DEBUG
+		bool debugUtilsAvailable =
+			IsExtensionAvailable(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+
+		if (debugUtilsAvailable)
+			requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+#endif
+
+		// Проверяем и добавляем в список расширения, которые нам нужны
+		for (const char* ext : requiredExtensions)
+		{
+			if (auto res = RequireExtension(ext); !res)
+				return res.error();
+		}
+
+		return extensions;
+	}
+
+	void VKAPI::GetPlatformExtension(std::vector<const char*>& extensions)
+	{
+#if defined(ZPLATFORM_MSWINDOWS)
+		extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+#elif defined(ZPLATFORM_ANDROID)
+		extensions.push_back(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
+#elif defined(ZPLATFORM_LINUX)
+#if defined(USE_WAYLAND)
+		extensions.push_back(VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
+#else
+		extensions.push_back(VK_KHR_XCB_SURFACE_EXTENSION_NAME);
+#endif
+#endif
 	}
 
 	[[nodiscard]] Result<> VKAPI::PickPhysicalDevice()
@@ -175,7 +278,6 @@ namespace zzz::vk
 
 		return Unexpected(eResult::failure, L"No suitable Vulkan device found");
 	}
-
 
 	[[nodiscard]] Result<> VKAPI::CreateLogicalDevice()
 	{

@@ -37,6 +37,4 @@
 #include "headerDX.h"
 #include "MacroDefinition.h"
 #include "HeaderTypes.h"
-#include "HeaderConstants.h"
-
 #include "HeaderTemplates.h"

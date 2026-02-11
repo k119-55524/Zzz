@@ -32,4 +32,3 @@
 #include <source_location>
 
 #include "Headers\Header.h"
-

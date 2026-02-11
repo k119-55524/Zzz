@@ -45,9 +45,6 @@
     <ClInclude Include="headers\HeaderTypes.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="headers\HeaderConstants.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="headers\HeaderTemplates.h">
       <Filter>Headers</Filter>
     </ClInclude>

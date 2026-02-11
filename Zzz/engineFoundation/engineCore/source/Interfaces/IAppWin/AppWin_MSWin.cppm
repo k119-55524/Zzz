@@ -8,9 +8,10 @@ import Result;
 import KeyCode;
 import IAppWin;
 import ibMSWin;
-import StrConvert;
 import AppConfig;
+import StrConvert;
 import IOPathFactory;
+import EngineConstants;
 
 using namespace zzz;
 
@@ -214,13 +215,13 @@ export namespace zzz::core
 			BOOL bMenu = (GetMenu(hWnd) != NULL);
 
 			// ћинимальный размер клиентской области
-			RECT minRect = { 0, 0, static_cast<LONG>(c_MinimumWindowsWidth), static_cast<LONG>(c_MinimumWindowsHeight) };
+			RECT minRect = { 0, 0, static_cast<LONG>(g_MinimumWindowsWidth), static_cast<LONG>(g_MinimumWindowsHeight) };
 			AdjustWindowRectEx(&minRect, dwStyle, bMenu, dwExStyle);
 			pMinMaxInfo->ptMinTrackSize.x = minRect.right - minRect.left;
 			pMinMaxInfo->ptMinTrackSize.y = minRect.bottom - minRect.top;
 
 			// ћаксимальный размер клиентской области
-			RECT maxRect = { 0, 0, static_cast<LONG>(c_MaximumWindowsWidth), static_cast<LONG>(c_MaximumWindowsHeight) };
+			RECT maxRect = { 0, 0, static_cast<LONG>(g_MaximumWindowsWidth), static_cast<LONG>(g_MaximumWindowsHeight) };
 			AdjustWindowRect(&maxRect, WS_OVERLAPPEDWINDOW, FALSE);
 			pMinMaxInfo->ptMaxTrackSize.x = maxRect.right - maxRect.left;
 			pMinMaxInfo->ptMaxTrackSize.y = maxRect.bottom - maxRect.top;

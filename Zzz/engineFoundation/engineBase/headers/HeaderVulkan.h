@@ -17,4 +17,9 @@
 #define GLM_FORCE_LEFT_HANDED
 #include <glm/glm.hpp>
 
+// Максимальная поддерживаемая версия Vulkan, которую мы будем использовать.
+// Это не означает, что она будет поддерживаться на всех устройствах,
+// но мы будем стараться использовать её возможности, если они доступны.
+constexpr uint32_t VULKAN_ENGINE_MAX_VERSION = VK_API_VERSION_1_4;
+
 #endif // ZRENDER_API_VULKAN

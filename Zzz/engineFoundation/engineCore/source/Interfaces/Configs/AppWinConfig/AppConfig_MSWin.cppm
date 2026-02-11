@@ -36,7 +36,6 @@ export namespace zzz::core
 		~AppConfig_MSWin() = default;
 
 		inline const Version& GetVersion() const noexcept { return m_Version; }
-		inline const std::wstring& GetEngineName() const noexcept { static const std::wstring name{ m_EngineName }; return name; }
 		inline const std::wstring& GetAppName() const noexcept { return m_AppName; }
 		inline const std::wstring& GetClassName() const noexcept { return m_ClassName; }
 		inline const Size2D<LONG>& GetWinSize() const noexcept { return m_WinSize; }
@@ -44,8 +43,6 @@ export namespace zzz::core
 		inline int GetIcoSize() const noexcept { return m_IcoSize; }
 
 	private:
-		static constexpr std::wstring_view m_EngineName = L"zEngine";
-
 		Version m_Version;
 		std::wstring m_AppName;
 		std::wstring m_ClassName;
