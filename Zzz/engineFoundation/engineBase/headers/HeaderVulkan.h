@@ -8,8 +8,26 @@
 #pragma comment(lib, "volk.lib")
 #endif
 
+#if defined(ZPLATFORM_MSWINDOWS)
+#define VK_USE_PLATFORM_WIN32_KHR
+#elif defined(ZPLATFORM_ANDROID)
+#define VK_USE_PLATFORM_ANDROID_KHR
+#elif defined(ZPLATFORM_LINUX)
+#if defined(USE_WAYLAND)
+#define VK_USE_PLATFORM_WAYLAND_KHR
+#else
+#define VK_USE_PLATFORM_XCB_KHR
+#endif // USE_WAYLAND
+#else
+#error ">>>>> [Compile error]. This branch requires implementation for the current platform"
+#endif // #if defined(ZPLATFORM_MSWINDOWS)
+
 // ---- Vulkan ----
-#include <Volk/volk.h>
+#pragma warning(push)
+#pragma warning(disable: 28251)
+#include <volk/volk.h>
+#pragma warning(pop)
+
 #include <vulkan/vulkan_win32.h>
 
 // ---- GLM ----
