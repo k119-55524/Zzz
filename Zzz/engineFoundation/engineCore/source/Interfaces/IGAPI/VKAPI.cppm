@@ -91,13 +91,15 @@ namespace zzz::vk
 		[[nodiscard]] Result<std::optional<Candidate>> BestDeviceCandidat(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface);
 		[[nodiscard]] Result<> CreateLogicalDevice();
 		[[nodiscard]] Result<> CreateCommandPool();
+		[[nodiscard]] Result<> CreateCommandBuffers();
 
-		VkInstance m_Instance{};
-		VkPhysicalDevice m_PhysicalDevice{};
-		VkDevice m_Device{};
-		VkQueue m_GraphicsQueue{};
-		uint32_t m_GraphicsQueueFamily{};
-		VkCommandPool m_CommandPool{};
+		VkInstance m_Instance;
+		VkPhysicalDevice m_PhysicalDevice;
+		VkDevice m_Device;
+		VkQueue m_GraphicsQueue;
+		uint32_t m_GraphicsQueueFamily;
+		VkCommandPool m_CommandPool;
+		std::vector<VkCommandBuffer> m_CommandBuffers;
 
 		std::shared_ptr<GAPIConfig> m_Config;
 
@@ -175,7 +177,8 @@ namespace zzz::vk
 				{
 					m_CheckGapiSupport = safe_make_unique<VKDeviceCapabilities>(m_PhysicalDevice, m_Device);
 					m_CPUtoGPUDataTransfer = safe_make_unique<GPUUploadVK>();
-				});
+				})
+			.and_then([&]() { return CreateCommandBuffers(); });
 
 		return res;
 	}
@@ -636,6 +639,24 @@ namespace zzz::vk
 		VkResult vr = vkCreateCommandPool(m_Device, &ci, nullptr, &m_CommandPool);
 		if (vr != VK_SUCCESS)
 			return Unexpected(eResult::failure, std::format(L"vkCreateCommandPool failed ({})", int(vr)));
+
+		return {};
+	}
+
+	[[nodiscard]] Result<> VKAPI::CreateCommandBuffers()
+	{
+		// ֲûהוכÿול 3 command buffer'א הכÿ triple buffering
+		m_CommandBuffers.resize(3);
+
+		VkCommandBufferAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.commandPool = m_CommandPool;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBuffers.size());
+
+		VkResult vr = vkAllocateCommandBuffers(m_Device, &allocInfo, m_CommandBuffers.data());
+		if (vr != VK_SUCCESS)
+			return Unexpected(eResult::failure, std::format(L"vkAllocateCommandBuffers failed ({})", int(vr)));
 
 		return {};
 	}
