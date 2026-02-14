@@ -85,9 +85,10 @@ namespace zzz::vk
 	private:
 		[[nodiscard]] Result<> CreateInstance();
 		[[nodiscard]] Result<std::vector<const char*>> GetRequiredExtensions();
-		void GetPlatformExtension(std::vector<const char*>& extensions);
+		[[nodiscard]] void GetPlatformExtension(std::vector<const char*>& extensions);
+		[[nodiscard]] Result<> CreateDebugMessenger();
 		[[nodiscard]] Result<> PickPhysicalDevice(VkSurfaceKHR surface);
-		std::optional<Candidate> BestDeviceCandidat(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface);
+		[[nodiscard]] Result<std::optional<Candidate>> BestDeviceCandidat(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface);
 		[[nodiscard]] Result<> CreateLogicalDevice();
 		[[nodiscard]] Result<> CreateCommandPool();
 
@@ -99,6 +100,20 @@ namespace zzz::vk
 		VkCommandPool m_CommandPool{};
 
 		std::shared_ptr<GAPIConfig> m_Config;
+
+#if defined(_DEBUG)
+		VkDebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE;
+
+		static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
+			VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+			VkDebugUtilsMessageTypeFlagsEXT messageType,
+			const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+			void* pUserData);
+		void ReportGPUDebugMessages(
+			VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+			VkDebugUtilsMessageTypeFlagsEXT messageType,
+			const char* message);
+#endif
 	};
 
 	VKAPI::VKAPI(const std::shared_ptr<GAPIConfig> config) :
@@ -124,6 +139,14 @@ namespace zzz::vk
 		if (m_Device)
 			vkDestroyDevice(m_Device, nullptr);
 
+#if defined(_DEBUG)
+		auto destroyFunc =
+			reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(m_Instance, "vkDestroyDebugUtilsMessengerEXT"));
+
+		if (destroyFunc && m_DebugMessenger)
+			destroyFunc(m_Instance, m_DebugMessenger, nullptr);
+#endif
+
 		if (m_Instance)
 			vkDestroyInstance(m_Instance, nullptr);
 	}
@@ -136,12 +159,13 @@ namespace zzz::vk
 			return Unexpected(eResult::failure, std::format(L"volkInitialize failed ({})", int(vr)));
 
 		Result<> res = CreateInstance()
+			.and_then([&]() { return CreateDebugMessenger(); })
 			.and_then([&]()
 				{
 					TestSurface_MSWin surface(m_Instance);
 
 					if (!surface.IsValid())
-						return Result<>(Unexpected(eResult::failure, L"Failed to create temp surface"));
+						return Result<>(Unexpected(eResult::failure, L"Failed to create TestSurface_MSWin surface"));
 
 					return PickPhysicalDevice(surface.Get());
 				})
@@ -198,9 +222,8 @@ namespace zzz::vk
 		std::vector<VkLayerProperties> availableLayers(layerCount);
 		vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-		bool validationLayerFound = false;
-
 		// Проверяем наличие VK_LAYER_KHRONOS_validation
+		bool validationLayerFound = false;
 		for (const auto& layer : availableLayers)
 		{
 			if (std::strcmp(layer.layerName, "VK_LAYER_KHRONOS_validation") == 0)
@@ -259,11 +282,15 @@ namespace zzz::vk
 		uint32_t extCount = 0;
 
 		// Узнаём количество доступных расширений instance
-		vkEnumerateInstanceExtensionProperties(nullptr, &extCount, nullptr);
+		auto vkRes = vkEnumerateInstanceExtensionProperties(nullptr, &extCount, nullptr);
+		if (vkRes != VK_SUCCESS)
+			return Unexpected(eResult::failure, std::format(L"vkEnumerateInstanceExtensionProperties failed ({})", int(vkRes)));
 
 		// Получаем список доступных расширений
 		std::vector<VkExtensionProperties> availableExt(extCount);
-		vkEnumerateInstanceExtensionProperties(nullptr, &extCount, availableExt.data());
+		vkRes = vkEnumerateInstanceExtensionProperties(nullptr, &extCount, availableExt.data());
+		if (vkRes != VK_SUCCESS)
+			return Unexpected(eResult::failure, std::format(L"vkEnumerateInstanceExtensionProperties failed ({})", int(vkRes)));
 
 		// Лямбда для проверки наличия расширения в списке доступных
 		auto IsExtensionAvailable = [&](const char* name)
@@ -283,10 +310,7 @@ namespace zzz::vk
 		auto RequireExtension = [&](const char* name) -> Result<>
 			{
 				if (!IsExtensionAvailable(name))
-					return Unexpected(
-						eResult::failure,
-						std::format(L"Required extension not supported: {}",
-							string_to_wstring(name).value_or(L"Unknown extension name")));
+					return Unexpected(eResult::failure, std::format(L"Required extension not supported: {}", string_to_wstring(name).value_or(L"Unknown extension name")));
 
 				extensions.push_back(name);
 				return {};
@@ -304,10 +328,7 @@ namespace zzz::vk
 #ifdef _DEBUG
 		// В Debug-режиме пытаемся добавить VK_EXT_debug_utils,
 		// если оно доступно
-		bool debugUtilsAvailable =
-			IsExtensionAvailable(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-
-		if (debugUtilsAvailable)
+		if (IsExtensionAvailable(VK_EXT_DEBUG_UTILS_EXTENSION_NAME))
 			requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 #endif
 
@@ -340,23 +361,99 @@ namespace zzz::vk
 #endif
 	}
 
+	Result<> VKAPI::CreateDebugMessenger()
+	{
+#ifdef _DEBUG
+		VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
+		debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+		debugCreateInfo.messageSeverity =
+			VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+		debugCreateInfo.messageType =
+			VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+		debugCreateInfo.pfnUserCallback = VKAPI::DebugCallback;
+		debugCreateInfo.pUserData = this;
+
+		auto func =
+			reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(m_Instance, "vkCreateDebugUtilsMessengerEXT"));
+
+		if (func && func(m_Instance, &debugCreateInfo, nullptr, &m_DebugMessenger) != VK_SUCCESS)
+			return Unexpected(eResult::failure, L"Failed to create debug messenger");
+#endif
+
+		return {};
+	}
+
+#if defined(_DEBUG)
+	VKAPI_ATTR VkBool32 VKAPI_CALL VKAPI::DebugCallback(
+		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+		VkDebugUtilsMessageTypeFlagsEXT messageType,
+		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+		void* pUserData)
+	{
+		auto* api = reinterpret_cast<VKAPI*>(pUserData); // получаем экземпляр
+		if (api)
+			api->ReportGPUDebugMessages(messageSeverity, messageType, pCallbackData->pMessage);
+
+		return VK_FALSE; // не прерываем Vulkan
+	}
+
+	void VKAPI::ReportGPUDebugMessages(
+		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+		VkDebugUtilsMessageTypeFlagsEXT messageType,
+		const char* message)
+	{
+		std::wstring severityStr;
+		if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
+			severityStr = L"VERBOSE";
+		else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
+			severityStr = L"INFO";
+		else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+			severityStr = L"WARNING";
+		else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+			severityStr = L"ERROR";
+		else
+			severityStr = L"UNKNOWN";
+
+		std::wstring typeStr;
+		if (messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT)
+			typeStr = L"GENERAL";
+		else if (messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT)
+			typeStr = L"VALIDATION";
+		else if (messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT)
+			typeStr = L"PERFORMANCE";
+		else
+			typeStr = L"UNKNOWN";
+
+		LogGPUDebugMessage(std::format(L"[Vulkan Validation] {} | {}: {}", severityStr, typeStr, string_to_wstring(message).value_or(L"Unknown message")));
+	}
+#endif
+
 	[[nodiscard]] Result<> VKAPI::PickPhysicalDevice(VkSurfaceKHR surface)
 	{
 		// Запрашиваем количество доступных физических устройств
 		uint32_t deviceCount = 0;
-		vkEnumeratePhysicalDevices(m_Instance, &deviceCount, nullptr);
+		auto vkRes = vkEnumeratePhysicalDevices(m_Instance, &deviceCount, nullptr);
+		if (vkRes != VK_SUCCESS)
+			return Unexpected(eResult::failure, std::format(L"vkEnumeratePhysicalDevices failed ({})", int(vkRes)));
 
 		if (deviceCount == 0)
 			return Unexpected(eResult::failure, L"No Vulkan devices found");
 
 		// Получаем список физических устройств
 		std::vector<VkPhysicalDevice> devices(deviceCount);
-		vkEnumeratePhysicalDevices(m_Instance, &deviceCount, devices.data());
+		vkRes = vkEnumeratePhysicalDevices(m_Instance, &deviceCount, devices.data());
+		if (vkRes != VK_SUCCESS)
+			return Unexpected(eResult::failure, std::format(L"vkEnumeratePhysicalDevices failed ({})", int(vkRes)));
 
 		// Ищем лучшее устройство среди доступных
-		std::optional<Candidate> best = BestDeviceCandidat(devices, surface);
-		if (!best)
+		auto bestRes = BestDeviceCandidat(devices, surface);
+		if (!bestRes)
 			return Unexpected(eResult::failure, L"No suitable Vulkan device found");
+
+		std::optional<Candidate> best = bestRes.value();
 
 		// Сохраняем выбранное устройство
 		m_PhysicalDevice = best->device;
@@ -365,13 +462,12 @@ namespace zzz::vk
 		// Логируем результат выбора
 		VkPhysicalDeviceProperties props{};
 		vkGetPhysicalDeviceProperties(m_PhysicalDevice, &props);
-
 		DebugOutput(std::format( L"Selected GPU: {} (score: {})", string_to_wstring(props.deviceName).value_or(L"Unknown GPU"), best->score));
 
 		return {};
 	}
 
-	std::optional<Candidate> VKAPI::BestDeviceCandidat(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface)
+	Result<std::optional<Candidate>> VKAPI::BestDeviceCandidat(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface)
 	{
 		std::optional<zzz::vk::Candidate> best;
 
@@ -384,7 +480,6 @@ namespace zzz::vk
 			vkGetPhysicalDeviceQueueFamilyProperties(device, &familyCount, families.data());
 
 			std::optional<uint32_t> graphicsFamily;
-
 			for (uint32_t i = 0; i < familyCount; ++i)
 			{
 				// Проверяем, поддерживает ли очередь графику
@@ -393,7 +488,12 @@ namespace zzz::vk
 					// Проверяем, поддерживает ли эта же очередь presentation
 					// (важно для swapchain)
 					VkBool32 presentSupported = VK_FALSE;
-					vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupported);
+					auto vkRes = vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupported);
+					if (vkRes != VK_SUCCESS)
+					{
+						DebugOutput(std::format(L"vkGetPhysicalDeviceSurfaceSupportKHR failed ({})", int(vkRes)));
+						continue;
+					}
 
 					if (presentSupported)
 					{
@@ -407,9 +507,7 @@ namespace zzz::vk
 			if (!graphicsFamily)
 				continue;
 
-			// ------------------------------
 			// Получаем свойства устройства
-			// ------------------------------
 			VkPhysicalDeviceProperties props{};
 			vkGetPhysicalDeviceProperties(device, &props);
 
@@ -461,10 +559,7 @@ namespace zzz::vk
 			if (!features13.dynamicRendering)
 				continue;
 
-			// ------------------------------
-			// 4. Вычисляем score устройства
-			// ------------------------------
-
+			// Вычисляем score устройства
 			uint64_t score = 0;
 
 			// 4.1 Предпочитаем дискретные GPU
@@ -485,10 +580,7 @@ namespace zzz::vk
 			// (чем больше — тем гибче устройство)
 			score += families.size() * 100;
 
-			// ------------------------------
-			// 5. Сравниваем с лучшим кандидатом
-			// ------------------------------
-
+			// Сравниваем с лучшим кандидатом
 			if (!best || score > best->score)
 			{
 				best = Candidate{

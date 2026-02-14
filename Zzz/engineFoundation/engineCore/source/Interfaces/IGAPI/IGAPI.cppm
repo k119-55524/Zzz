@@ -56,6 +56,8 @@ export namespace zzz
 		virtual void BeginRender() = 0;
 		virtual void EndRender() = 0;
 
+		void LogGPUDebugMessage(const std::wstring& message);
+
 	protected:
 		[[nodiscard]] virtual Result<> Init() = 0;
 		virtual void WaitForGpu() = 0;
@@ -85,5 +87,10 @@ export namespace zzz
 			return Unexpected(eResult::failure, L"GAPI is already initialized or in an invalid state.");
 
 		return Init().and_then([&]() { initState = eInitState::InitOK; });
+	}
+
+	inline void IGAPI::LogGPUDebugMessage(const std::wstring& message)
+	{
+		DebugOutput(message);
 	}
 }

@@ -34,7 +34,7 @@ export namespace zzz::dx
 
 	public:
 		explicit DXAPI(const std::shared_ptr<GAPIConfig> config);
-		virtual ~DXAPI() override;
+		~DXAPI() override;
 
 		const ComPtr<ID3D12Device>& GetDevice() const noexcept { return m_device; };
 		const ComPtr<ID3D12CommandQueue>& GetCommandQueue() const noexcept { return m_commandQueue; };
@@ -72,15 +72,22 @@ export namespace zzz::dx
 		ComPtr<ID3D12CommandQueue> m_commandQueue;
 		std::shared_ptr<CommandWrapperDX> m_commandWrapper[BACK_BUFFER_COUNT];
 
-		[[nodiscard]] Result<> InitializeDevice();
+		[[nodiscard]] Result<> EnableDebugLayer(UINT& dxgiFactoryFlags);
+		[[nodiscard]] Result<> InitializeDevice(UINT dxgiFactoryFlags);
 		[[nodiscard]] Result<> InitializeFence();
-		void EnableDebugLayer(UINT& dxgiFactoryFlags);
 		[[nodiscard]] Result<> CreateFactory(UINT dxgiFactoryFlags, ComPtr<IDXGIFactory7>& outFactory);
 		[[nodiscard]] Result<> CreateDevice(ComPtr<IDXGIAdapter1> adapter, ComPtr<ID3D12Device>& outDevice, D3D_FEATURE_LEVEL& outFeatureLevel);
 		[[nodiscard]] Result<> CreateCommandQueue(ComPtr<ID3D12Device> device, ComPtr<ID3D12CommandQueue>& outQueue);
 		[[nodiscard]] Result<> GetAdapter(_In_ IDXGIFactory1* pFactory, _Outptr_result_maybenull_ IDXGIAdapter1** ppAdapter);
 
 		void BeginPreparedTransfers();
+
+		[[nodiscard]] Result<> CreateDebugMessenger();
+		void ReportGPUDebugMessages();
+#if defined(_DEBUG)
+		ComPtr<ID3D12InfoQueue> m_infoQueue;
+#endif
+
 	};
 
 	DXAPI::DXAPI(const std::shared_ptr<GAPIConfig> config) :
@@ -97,6 +104,7 @@ export namespace zzz::dx
 		WaitForGpu();
 	}
 
+#pragma region Helpers
 	void DXAPI::CommandRenderReset() noexcept
 	{
 		for (int i = 0; i < BACK_BUFFER_COUNT; i++)
@@ -115,11 +123,15 @@ export namespace zzz::dx
 
 		return res;
 	}
+#pragma endregion
 
 #pragma region Initialize
 	[[nodiscard]] Result<> DXAPI::Init()
 	{
-		Result<> res = InitializeDevice()
+		UINT dxgiFactoryFlags = 0;
+		Result<> res = EnableDebugLayer(dxgiFactoryFlags)
+			.and_then([&]() { return InitializeDevice(dxgiFactoryFlags); })
+			.and_then([&]() { return CreateDebugMessenger(); })
 			.and_then([&]() { m_CPUtoGPUDataTransfer = safe_make_unique<GPUUploadDX>(m_device, m_PreparedTransfers); })
 			.and_then([&]() { return m_rootSignature.Initialize(m_device); })
 			.and_then([&]() { return InitializeFence(); });
@@ -127,11 +139,8 @@ export namespace zzz::dx
 		return res;
 	}
 
-	[[nodiscard]] Result<> DXAPI::InitializeDevice()
+	[[nodiscard]] Result<> DXAPI::InitializeDevice(UINT dxgiFactoryFlags)
 	{
-		UINT dxgiFactoryFlags = 0;
-		EnableDebugLayer(dxgiFactoryFlags);
-
 		ComPtr<IDXGIFactory7> factory;
 		ComPtr<IDXGIAdapter1> adapter;
 		auto res = CreateFactory(dxgiFactoryFlags, factory)
@@ -155,7 +164,90 @@ export namespace zzz::dx
 		return {};
 	}
 
-	void DXAPI::EnableDebugLayer(UINT& dxgiFactoryFlags)
+	[[nodiscard]] Result<> DXAPI::CreateDebugMessenger()
+	{
+#if defined(_DEBUG)
+		if (SUCCEEDED(m_device.As(&m_infoQueue)))
+		{
+			// Включаем break-on-severity, если нужно
+			m_infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
+			m_infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
+			m_infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, FALSE);
+
+			// Фильтр для ненужных сообщений (по желанию)
+			D3D12_MESSAGE_ID hide[] =
+			{
+				D3D12_MESSAGE_ID_SETPRIVATEDATA_CHANGINGPARAMS
+			};
+			D3D12_INFO_QUEUE_FILTER filter{};
+			filter.DenyList.NumIDs = _countof(hide);
+			filter.DenyList.pIDList = hide;
+			m_infoQueue->AddStorageFilterEntries(&filter);
+
+			DebugOutput(L"D3D12 InfoQueue enabled.");
+		}
+		else
+			return Unexpected(eResult::failure, L"Failed to get ID3D12InfoQueue for debug messaging.");
+#endif
+
+		return {};
+	}
+
+	void DXAPI::ReportGPUDebugMessages()
+	{
+#if defined(_DEBUG)
+		if (!m_infoQueue)
+			return;
+
+		const UINT64 numMessages = m_infoQueue->GetNumStoredMessages();
+		for (UINT64 i = 0; i < numMessages; ++i)
+		{
+			SIZE_T messageLength = 0;
+			m_infoQueue->GetMessage(i, nullptr, &messageLength);
+
+			std::vector<char> buffer(messageLength);
+			D3D12_MESSAGE* msg = reinterpret_cast<D3D12_MESSAGE*>(buffer.data());
+
+			m_infoQueue->GetMessage(i, msg, &messageLength);
+
+			// severity
+			std::wstring severityStr;
+			switch (msg->Severity)
+			{
+			case D3D12_MESSAGE_SEVERITY_CORRUPTION:	severityStr = L"CORRUPTION"; break;
+			case D3D12_MESSAGE_SEVERITY_ERROR:		severityStr = L"ERROR"; break;
+			case D3D12_MESSAGE_SEVERITY_WARNING:	severityStr = L"WARNING"; break;
+			case D3D12_MESSAGE_SEVERITY_INFO:		severityStr = L"INFO"; break;
+			case D3D12_MESSAGE_SEVERITY_MESSAGE:	severityStr = L"MESSAGE"; break;
+			default:								severityStr = L"UNKNOWN"; break;
+			}
+
+			// category
+			std::wstring categoryStr;
+			switch (msg->Category)
+			{
+			case D3D12_MESSAGE_CATEGORY_APPLICATION_DEFINED:	categoryStr = L"APPLICATION_DEFINED"; break;
+			case D3D12_MESSAGE_CATEGORY_MISCELLANEOUS:			categoryStr = L"MISCELLANEOUS"; break;
+			case D3D12_MESSAGE_CATEGORY_INITIALIZATION:			categoryStr = L"INITIALIZATION"; break;
+			case D3D12_MESSAGE_CATEGORY_CLEANUP:				categoryStr = L"CLEANUP"; break;
+			case D3D12_MESSAGE_CATEGORY_COMPILATION:			categoryStr = L"COMPILATION"; break;
+			case D3D12_MESSAGE_CATEGORY_STATE_CREATION:			categoryStr = L"STATE_CREATION"; break;
+			case D3D12_MESSAGE_CATEGORY_STATE_SETTING:			categoryStr = L"STATE_SETTING"; break;
+			case D3D12_MESSAGE_CATEGORY_RESOURCE_MANIPULATION:	categoryStr = L"RESOURCE_MANIPULATION"; break;
+			case D3D12_MESSAGE_CATEGORY_EXECUTION:				categoryStr = L"EXECUTION"; break;
+			case D3D12_MESSAGE_CATEGORY_SHADER:					categoryStr = L"SHADER"; break;
+			default:											categoryStr = L"UNKNOWN"; break;
+			}
+
+			std::wstring msgStr(msg->pDescription, msg->pDescription + strlen(msg->pDescription));
+			LogGPUDebugMessage(std::format(L"[DX12 Debug] {} | {}: {}", severityStr, categoryStr, msgStr));
+		}
+
+		m_infoQueue->ClearStoredMessages();
+#endif
+	}
+
+	[[nodiscard]] Result<> DXAPI::EnableDebugLayer(UINT& dxgiFactoryFlags)
 	{
 #if defined(_DEBUG)
 		ComPtr<ID3D12Debug> debugController;
@@ -172,7 +264,11 @@ export namespace zzz::dx
 
 			DebugOutput(L"DirectX debug layer enabled.");
 		}
+		else
+			return Unexpected(eResult::failure, L"Failed to enable DirectX debug layer.");
 #endif
+
+		return {};
 	}
 
 	[[nodiscard]] Result<> DXAPI::CreateFactory(UINT dxgiFactoryFlags, ComPtr<IDXGIFactory7>& outFactory)
@@ -219,13 +315,11 @@ export namespace zzz::dx
 
 		SET_RESOURCE_DEBUG_NAME(outDevice, L"Main ID3D12Device");
 
-#ifdef _DEBUG
+#if  defined(_DEBUG)
 		std::wstring levelName = (outFeatureLevel == D3D_FEATURE_LEVEL_12_2) ? L"12.2 (DirectX 12 Ultimate)" :
 			(outFeatureLevel == D3D_FEATURE_LEVEL_12_1) ? L"12.1" :
 			(outFeatureLevel == D3D_FEATURE_LEVEL_12_0) ? L"12.0" : L"Unknown";
-		DebugOutput(std::format(
-			L"Created D3D12 device with feature level: {}",
-			levelName).c_str());
+		DebugOutput(std::format(L"Created D3D12 device with feature level: {}", levelName).c_str());
 #endif
 
 		m_CheckGapiSupport = safe_make_unique<DXDeviceCapabilities>(outDevice, m_adapter3);
@@ -351,6 +445,8 @@ export namespace zzz::dx
 
 	void DXAPI::EndRender()
 	{
+		ReportGPUDebugMessages();
+
 		// Закрываем командный список
 		auto commandListUpdate = m_commandWrapper[m_frameIndexUpdate]->GetCommandList();
 		ensure(S_OK == commandListUpdate->Close());

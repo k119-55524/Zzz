@@ -7,7 +7,6 @@ import Result;
 import Camera;
 import Transform;
 import StrConvert;
-//import SceneEntity;
 import SceneEntityFactory;
 
 using namespace zzz::math;
