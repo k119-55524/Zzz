@@ -20,7 +20,9 @@ namespace zzz::vk
 	struct Candidate
 	{
 		VkPhysicalDevice device{};          // сам физический GPU
-		uint32_t graphicsQueueFamily{};     // индекс подходящей queue family
+		uint32_t graphicsQueueFamily{};     // индекс графической очереди
+		uint32_t computeQueueFamily{};      // индекс compute очереди
+		uint32_t transferQueueFamily{};     // индекс transfer очереди
 		uint64_t score = 0;                 // вычисленный score
 	};
 
@@ -85,11 +87,11 @@ namespace zzz::vk
 	private:
 		[[nodiscard]] Result<> CreateInstance();
 		[[nodiscard]] Result<std::vector<const char*>> GetRequiredExtensions();
-		[[nodiscard]] void GetPlatformExtension(std::vector<const char*>& extensions);
+		[[nodiscard]] const char* GetPlatformExtension();
 		[[nodiscard]] Result<> CreateDebugMessenger();
 		[[nodiscard]] Result<> PickPhysicalDevice(VkSurfaceKHR surface);
-		[[nodiscard]] Result<std::optional<Candidate>> BestDeviceCandidat(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface);
-		[[nodiscard]] Result<> CreateLogicalDevice();
+		[[nodiscard]] std::optional<Candidate> BestDeviceCandidat(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface);
+		[[nodiscard]] Result<> CreateLogicalDevice(const Candidate& candidate);
 		[[nodiscard]] Result<> CreateCommandPool();
 		[[nodiscard]] Result<> CreateCommandBuffers();
 
@@ -97,6 +99,8 @@ namespace zzz::vk
 		VkPhysicalDevice m_PhysicalDevice;
 		VkDevice m_Device;
 		VkQueue m_GraphicsQueue;
+		VkQueue m_ComputeQueue;
+		VkQueue m_TransferQueue;
 		uint32_t m_GraphicsQueueFamily;
 		VkCommandPool m_CommandPool;
 		std::vector<VkCommandBuffer> m_CommandBuffers;
@@ -171,7 +175,6 @@ namespace zzz::vk
 
 					return PickPhysicalDevice(surface.Get());
 				})
-			.and_then([&]() { return CreateLogicalDevice(); })
 			.and_then([&]() { return CreateCommandPool(); })
 			.and_then([&]()
 				{
@@ -270,9 +273,7 @@ namespace zzz::vk
 		// Создаём Vulkan instance
 		VkResult vr = vkCreateInstance(&ci, nullptr, &m_Instance);
 		if (vr != VK_SUCCESS)
-			return Unexpected(
-				eResult::failure,
-				std::format(L"vkCreateInstance failed ({})", int(vr)));
+			return Unexpected(eResult::failure, std::format(L"vkCreateInstance failed ({})", int(vr)));
 
 		// Загружаем функции уровня instance через volk
 		volkLoadInstance(m_Instance);
@@ -326,7 +327,7 @@ namespace zzz::vk
 		};
 
 		// Добавляем платформо-зависимое расширение (Win32, XCB, Wayland и т.д.)
-		GetPlatformExtension(requiredExtensions);
+		requiredExtensions.push_back(GetPlatformExtension());
 
 #ifdef _DEBUG
 		// В Debug-режиме пытаемся добавить VK_EXT_debug_utils,
@@ -345,21 +346,21 @@ namespace zzz::vk
 		return extensions;
 	}
 
-	void VKAPI::GetPlatformExtension(std::vector<const char*>& extensions)
+	[[nodiscard]] const char* VKAPI::GetPlatformExtension()
 	{
 #if defined(ZPLATFORM_MSWINDOWS)
 		// Расширение для создания Win32 surface
-		extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+		return VK_KHR_WIN32_SURFACE_EXTENSION_NAME;
 #elif defined(ZPLATFORM_ANDROID)
 		// Расширение для Android surface
-		extensions.push_back(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
+		return VK_KHR_ANDROID_SURFACE_EXTENSION_NAME;
 #elif defined(ZPLATFORM_LINUX)
 #if defined(USE_WAYLAND)
 		// Wayland surface
-		extensions.push_back(VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
+		return VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME;
 #else
 		// XCB surface (X11)
-		extensions.push_back(VK_KHR_XCB_SURFACE_EXTENSION_NAME);
+		return VK_KHR_XCB_SURFACE_EXTENSION_NAME;
 #endif
 #endif
 	}
@@ -452,11 +453,9 @@ namespace zzz::vk
 			return Unexpected(eResult::failure, std::format(L"vkEnumeratePhysicalDevices failed ({})", int(vkRes)));
 
 		// Ищем лучшее устройство среди доступных
-		auto bestRes = BestDeviceCandidat(devices, surface);
-		if (!bestRes)
+		auto best = BestDeviceCandidat(devices, surface);
+		if (!best)
 			return Unexpected(eResult::failure, L"No suitable Vulkan device found");
-
-		std::optional<Candidate> best = bestRes.value();
 
 		// Сохраняем выбранное устройство
 		m_PhysicalDevice = best->device;
@@ -467,10 +466,13 @@ namespace zzz::vk
 		vkGetPhysicalDeviceProperties(m_PhysicalDevice, &props);
 		DebugOutput(std::format( L"Selected GPU: {} (score: {})", string_to_wstring(props.deviceName).value_or(L"Unknown GPU"), best->score));
 
+		if (!CreateLogicalDevice(best.value()))
+			return Unexpected(eResult::failure, L"Failed to create device queues");
+
 		return {};
 	}
 
-	Result<std::optional<Candidate>> VKAPI::BestDeviceCandidat(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface)
+	std::optional<Candidate> VKAPI::BestDeviceCandidat(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface)
 	{
 		std::optional<zzz::vk::Candidate> best;
 
@@ -483,32 +485,28 @@ namespace zzz::vk
 			vkGetPhysicalDeviceQueueFamilyProperties(device, &familyCount, families.data());
 
 			std::optional<uint32_t> graphicsFamily;
+			std::optional<uint32_t> computeFamily;
+			std::optional<uint32_t> transferFamily;
+
 			for (uint32_t i = 0; i < familyCount; ++i)
 			{
-				// Проверяем, поддерживает ли очередь графику
-				if (families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
-				{
-					// Проверяем, поддерживает ли эта же очередь presentation
-					// (важно для swapchain)
-					VkBool32 presentSupported = VK_FALSE;
-					auto vkRes = vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupported);
-					if (vkRes != VK_SUCCESS)
-					{
-						DebugOutput(std::format(L"vkGetPhysicalDeviceSurfaceSupportKHR failed ({})", int(vkRes)));
-						continue;
-					}
+				const auto& f = families[i];
 
-					if (presentSupported)
-					{
-						graphicsFamily = i;
-						break;
-					}
-				}
+				if ((f.queueFlags & VK_QUEUE_GRAPHICS_BIT) && !graphicsFamily.has_value())
+					graphicsFamily = i;
+
+				if ((f.queueFlags & VK_QUEUE_COMPUTE_BIT) && !(f.queueFlags & VK_QUEUE_GRAPHICS_BIT) && !computeFamily.has_value())
+					computeFamily = i;
+
+				if ((f.queueFlags & VK_QUEUE_TRANSFER_BIT) && !(f.queueFlags & VK_QUEUE_GRAPHICS_BIT) && !(f.queueFlags & VK_QUEUE_COMPUTE_BIT) && !transferFamily.has_value())
+					transferFamily = i;
 			}
 
-			// Если не нашли подходящую очередь — GPU нам не подходит
+			if (!computeFamily) computeFamily = graphicsFamily;
+			if (!transferFamily) transferFamily = graphicsFamily;
+
 			if (!graphicsFamily)
-				continue;
+				continue; // без графической очереди устройство не годится
 
 			// Получаем свойства устройства
 			VkPhysicalDeviceProperties props{};
@@ -589,6 +587,8 @@ namespace zzz::vk
 				best = Candidate{
 					.device = device,
 					.graphicsQueueFamily = *graphicsFamily,
+					.computeQueueFamily = *computeFamily,
+					.transferQueueFamily = *transferFamily,
 					.score = score
 				};
 			}
@@ -597,32 +597,81 @@ namespace zzz::vk
 		return best;
 	}
 
-	[[nodiscard]] Result<> VKAPI::CreateLogicalDevice()
+	[[nodiscard]] Result<> VKAPI::CreateLogicalDevice(const Candidate& candidate)
 	{
 		float priority = 1.0f;
 
-		VkDeviceQueueCreateInfo queueInfo
-		{
-			.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-			.queueFamilyIndex = m_GraphicsQueueFamily,
-			.queueCount = 1,
-			.pQueuePriorities = &priority
+		// Чтобы не дублировать очереди, используем map
+		std::vector<VkDeviceQueueCreateInfo> queueInfos;
+		std::set<uint32_t> usedFamilies;
+
+		auto AddQueue = [&](uint32_t familyIndex)
+			{
+				if (usedFamilies.find(familyIndex) != usedFamilies.end())
+					return; // уже добавляли эту очередь
+
+				VkDeviceQueueCreateInfo qi{};
+				qi.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+				qi.queueFamilyIndex = familyIndex;
+				qi.queueCount = 1;            // обычно создают одну очередь на family
+				qi.pQueuePriorities = &priority;
+
+				queueInfos.push_back(qi);
+				usedFamilies.insert(familyIndex);
+			};
+
+		AddQueue(candidate.graphicsQueueFamily);
+		AddQueue(candidate.computeQueueFamily);
+		AddQueue(candidate.transferQueueFamily);
+
+		// Теперь создаём логическое устройство
+		VkPhysicalDeviceFeatures2 features2{};
+		features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+
+		VkPhysicalDeviceVulkan12Features features12{};
+		features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+		features12.timelineSemaphore = VK_TRUE;
+
+		VkPhysicalDeviceVulkan13Features features13{};
+		features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+		features13.dynamicRendering = VK_TRUE;
+
+		features2.pNext = &features12;
+		features12.pNext = &features13;
+
+		VkDeviceCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+		createInfo.pNext = &features2;
+		createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueInfos.size());
+		createInfo.pQueueCreateInfos = queueInfos.data();
+
+		// Расширения (Swapchain, Timeline Semaphore, Dynamic Rendering и др.)
+		std::vector<const char*> deviceExtensions = {
+			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+			VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME,
+			VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
+			VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
+			VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+			VK_EXT_MESH_SHADER_EXTENSION_NAME
 		};
 
-		VkPhysicalDeviceFeatures features{};
+#if defined(_DEBUG)
+		deviceExtensions.push_back(VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME);
+#endif
 
-		VkDeviceCreateInfo createInfo
-		{
-			.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-			.queueCreateInfoCount = 1,
-			.pQueueCreateInfos = &queueInfo,
-			.pEnabledFeatures = &features
-		};
+		createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+		createInfo.ppEnabledExtensionNames = deviceExtensions.data();
+		createInfo.pEnabledFeatures = nullptr; // базовые 1.0 фичи через features2
 
-		if (vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_Device) != VK_SUCCESS)
+		if (vkCreateDevice(candidate.device, &createInfo, nullptr, &m_Device) != VK_SUCCESS)
 			return Unexpected(eResult::failure, L"Failed to create logical device");
 
-		vkGetDeviceQueue(m_Device, m_GraphicsQueueFamily, 0, &m_GraphicsQueue);
+		// Получаем очереди
+		vkGetDeviceQueue(m_Device, candidate.graphicsQueueFamily, 0, &m_GraphicsQueue);
+
+		// Если нужны compute и transfer очереди отдельно, можно их сохранить:
+		vkGetDeviceQueue(m_Device, candidate.computeQueueFamily, 0, &m_ComputeQueue);
+		vkGetDeviceQueue(m_Device, candidate.transferQueueFamily, 0, &m_TransferQueue);
 
 		return {};
 	}

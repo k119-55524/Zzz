@@ -1,5 +1,6 @@
 #pragma once
 
+#include <set>
 #include <bit>
 #include <span>
 #include <mutex>
