@@ -89,21 +89,25 @@ namespace zzz::vk
 		[[nodiscard]] Result<std::vector<const char*>> GetRequiredExtensions();
 		[[nodiscard]] const char* GetPlatformExtension();
 		[[nodiscard]] Result<> CreateDebugMessenger();
-		[[nodiscard]] Result<> PickPhysicalDevice(VkSurfaceKHR surface);
+		[[nodiscard]] Result<> PickPhysicalDevice(Candidate& deviceCandidate, const VkSurfaceKHR& surface);
 		[[nodiscard]] std::optional<Candidate> BestDeviceCandidat(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface);
-		[[nodiscard]] Result<> CreateLogicalDevice(const Candidate& candidate);
-		[[nodiscard]] Result<> CreateCommandPool();
+		[[nodiscard]] Result<> CreateLogicalDevice(const Candidate& deviceCandidate);
+		[[nodiscard]] Result<> CreateCommandPools(const Candidate& deviceCandidate);
 		[[nodiscard]] Result<> CreateCommandBuffers();
 
 		VkInstance m_Instance;
 		VkPhysicalDevice m_PhysicalDevice;
 		VkDevice m_Device;
+
 		VkQueue m_GraphicsQueue;
 		VkQueue m_ComputeQueue;
 		VkQueue m_TransferQueue;
-		uint32_t m_GraphicsQueueFamily;
-		VkCommandPool m_CommandPool;
-		std::vector<VkCommandBuffer> m_CommandBuffers;
+		VkCommandPool m_GraphicsCommandPool;
+		VkCommandPool m_TransferCommandPool;
+		VkCommandPool m_ComputeCommandPool;
+		std::vector<VkCommandBuffer> m_GraphicsCommandBuffers;
+		std::vector<VkCommandBuffer> m_ComputeCommandBuffers;
+		std::vector<VkCommandBuffer> m_TransferCommandBuffers;
 
 		std::shared_ptr<GAPIConfig> m_Config;
 
@@ -128,8 +132,11 @@ namespace zzz::vk
 		m_PhysicalDevice(VK_NULL_HANDLE),
 		m_Device(VK_NULL_HANDLE),
 		m_GraphicsQueue(VK_NULL_HANDLE),
-		m_GraphicsQueueFamily(0),
-		m_CommandPool(VK_NULL_HANDLE),
+		m_ComputeQueue(VK_NULL_HANDLE),
+		m_TransferQueue(VK_NULL_HANDLE),
+		m_GraphicsCommandPool(VK_NULL_HANDLE),
+		m_TransferCommandPool(VK_NULL_HANDLE),
+		m_ComputeCommandPool(VK_NULL_HANDLE),
 		m_Config(config)
 	{
 		ensure(config, "GAPIConfig cannot be null.");
@@ -139,8 +146,15 @@ namespace zzz::vk
 	{
 		WaitForGpu();
 
-		if (m_CommandPool)
-			vkDestroyCommandPool(m_Device, m_CommandPool, nullptr);
+		if (m_ComputeCommandPool && m_ComputeCommandPool != m_GraphicsCommandPool)
+			vkDestroyCommandPool(m_Device, m_ComputeCommandPool, nullptr);
+
+		if (m_TransferCommandPool && m_TransferCommandPool != m_GraphicsCommandPool &&
+			m_TransferCommandPool != m_ComputeCommandPool)
+			vkDestroyCommandPool(m_Device, m_TransferCommandPool, nullptr);
+
+		if (m_GraphicsCommandPool)
+			vkDestroyCommandPool(m_Device, m_GraphicsCommandPool, nullptr);
 
 		if (m_Device)
 			vkDestroyDevice(m_Device, nullptr);
@@ -164,6 +178,7 @@ namespace zzz::vk
 		if (vr != VK_SUCCESS)
 			return Unexpected(eResult::failure, std::format(L"volkInitialize failed ({})", int(vr)));
 
+		Candidate deviceCandidate;
 		Result<> res = CreateInstance()
 			.and_then([&]() { return CreateDebugMessenger(); })
 			.and_then([&]()
@@ -173,9 +188,10 @@ namespace zzz::vk
 					if (!surface.IsValid())
 						return Result<>(Unexpected(eResult::failure, L"Failed to create TestSurface_MSWin surface"));
 
-					return PickPhysicalDevice(surface.Get());
+					return PickPhysicalDevice(deviceCandidate, surface.Get());
 				})
-			.and_then([&]() { return CreateCommandPool(); })
+			.and_then([&]() { return CreateLogicalDevice(deviceCandidate); })
+			.and_then([&]() { return CreateCommandPools(deviceCandidate); })
 			.and_then([&]()
 				{
 					m_CheckGapiSupport = safe_make_unique<VKDeviceCapabilities>(m_PhysicalDevice, m_Device);
@@ -435,7 +451,7 @@ namespace zzz::vk
 	}
 #endif
 
-	[[nodiscard]] Result<> VKAPI::PickPhysicalDevice(VkSurfaceKHR surface)
+	[[nodiscard]] Result<> VKAPI::PickPhysicalDevice(Candidate& deviceCandidate, const VkSurfaceKHR& surface)
 	{
 		// Запрашиваем количество доступных физических устройств
 		uint32_t deviceCount = 0;
@@ -453,21 +469,18 @@ namespace zzz::vk
 			return Unexpected(eResult::failure, std::format(L"vkEnumeratePhysicalDevices failed ({})", int(vkRes)));
 
 		// Ищем лучшее устройство среди доступных
-		auto best = BestDeviceCandidat(devices, surface);
-		if (!best)
+		auto candidat = BestDeviceCandidat(devices, surface);
+		if (!candidat)
 			return Unexpected(eResult::failure, L"No suitable Vulkan device found");
 
 		// Сохраняем выбранное устройство
-		m_PhysicalDevice = best->device;
-		m_GraphicsQueueFamily = best->graphicsQueueFamily;
+		deviceCandidate = candidat.value();
+		m_PhysicalDevice = deviceCandidate.device;
 
 		// Логируем результат выбора
 		VkPhysicalDeviceProperties props{};
 		vkGetPhysicalDeviceProperties(m_PhysicalDevice, &props);
-		DebugOutput(std::format( L"Selected GPU: {} (score: {})", string_to_wstring(props.deviceName).value_or(L"Unknown GPU"), best->score));
-
-		if (!CreateLogicalDevice(best.value()))
-			return Unexpected(eResult::failure, L"Failed to create device queues");
+		DebugOutput(std::format( L"Selected GPU: {} (score: {})", string_to_wstring(props.deviceName).value_or(L"Unknown GPU"), deviceCandidate.score));
 
 		return {};
 	}
@@ -597,11 +610,11 @@ namespace zzz::vk
 		return best;
 	}
 
-	[[nodiscard]] Result<> VKAPI::CreateLogicalDevice(const Candidate& candidate)
+	[[nodiscard]] Result<> VKAPI::CreateLogicalDevice(const Candidate& deviceCandidate)
 	{
 		float priority = 1.0f;
 
-		// Чтобы не дублировать очереди, используем map
+		// Чтобы не дублировать очереди, используем set
 		std::vector<VkDeviceQueueCreateInfo> queueInfos;
 		std::set<uint32_t> usedFamilies;
 
@@ -613,24 +626,91 @@ namespace zzz::vk
 				VkDeviceQueueCreateInfo qi{};
 				qi.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 				qi.queueFamilyIndex = familyIndex;
-				qi.queueCount = 1;            // обычно создают одну очередь на family
+				qi.queueCount = 1;
 				qi.pQueuePriorities = &priority;
 
 				queueInfos.push_back(qi);
 				usedFamilies.insert(familyIndex);
 			};
 
-		AddQueue(candidate.graphicsQueueFamily);
-		AddQueue(candidate.computeQueueFamily);
-		AddQueue(candidate.transferQueueFamily);
+		AddQueue(deviceCandidate.graphicsQueueFamily);
+		AddQueue(deviceCandidate.computeQueueFamily);
+		AddQueue(deviceCandidate.transferQueueFamily);
 
-		// Теперь создаём логическое устройство
+		// Получаем список доступных расширений устройства
+		uint32_t extCount = 0;
+		auto vkRes = vkEnumerateDeviceExtensionProperties(m_PhysicalDevice, nullptr, &extCount, nullptr);
+		if (vkRes != VK_SUCCESS)
+			return Unexpected(eResult::failure, std::format(L"vkEnumerateDeviceExtensionProperties failed ({})", int(vkRes)));
+
+		std::vector<VkExtensionProperties> availableExt(extCount);
+		vkRes = vkEnumerateDeviceExtensionProperties(m_PhysicalDevice, nullptr, &extCount, availableExt.data());
+		if (vkRes != VK_SUCCESS)
+			return Unexpected(eResult::failure, std::format(L"vkEnumerateDeviceExtensionProperties failed ({})", int(vkRes)));
+
+		// Лямбда для проверки наличия расширения
+		auto IsExtensionAvailable = [&](const char* name)
+			{
+				for (const auto& ext : availableExt)
+				{
+					if (std::strcmp(ext.extensionName, name) == 0)
+						return true;
+				}
+				return false;
+			};
+
+		std::vector<const char*> enabledExtensions;
+
+		// Лямбда для обязательного добавления расширения
+		auto RequireExtension = [&](const char* name) -> Result<>
+			{
+				if (!IsExtensionAvailable(name))
+					return Unexpected(eResult::failure, std::format(L"Required device extension not supported: {}", string_to_wstring(name).value_or(L"Unknown extension name")));
+
+				enabledExtensions.push_back(name);
+				return {};
+			};
+
+		// Лямбда для опционального добавления расширения (не вызывает ошибку, если недоступно)
+		auto TryAddExtension = [&](const char* name)
+			{
+				if (IsExtensionAvailable(name))
+					enabledExtensions.push_back(name);
+			};
+
+		// Список обязательных расширений
+		std::vector<const char*> requiredExtensions = {
+			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+			VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME,
+			VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
+			VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
+			VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
+		};
+
+		// Проверяем и добавляем все обязательные расширения
+		for (const char* ext : requiredExtensions)
+		{
+			if (auto res = RequireExtension(ext); !res)
+				return res.error();
+		}
+
+		// Опциональные расширения (не критичны для работы)
+		TryAddExtension(VK_EXT_MESH_SHADER_EXTENSION_NAME);
+
+#if defined(_DEBUG)
+		TryAddExtension(VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME);
+#endif
+
+		// Настройка features
 		VkPhysicalDeviceFeatures2 features2{};
 		features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 
 		VkPhysicalDeviceVulkan12Features features12{};
 		features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
 		features12.timelineSemaphore = VK_TRUE;
+		features12.bufferDeviceAddress = VK_TRUE;
+		features12.descriptorIndexing = VK_TRUE;
+		features12.runtimeDescriptorArray = VK_TRUE;
 
 		VkPhysicalDeviceVulkan13Features features13{};
 		features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
@@ -639,73 +719,115 @@ namespace zzz::vk
 		features2.pNext = &features12;
 		features12.pNext = &features13;
 
+		// Создание логического устройства
 		VkDeviceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		createInfo.pNext = &features2;
 		createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueInfos.size());
 		createInfo.pQueueCreateInfos = queueInfos.data();
-
-		// Расширения (Swapchain, Timeline Semaphore, Dynamic Rendering и др.)
-		std::vector<const char*> deviceExtensions = {
-			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-			VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME,
-			VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
-			VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
-			VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
-			VK_EXT_MESH_SHADER_EXTENSION_NAME
-		};
-
-#if defined(_DEBUG)
-		deviceExtensions.push_back(VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME);
-#endif
-
-		createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-		createInfo.ppEnabledExtensionNames = deviceExtensions.data();
+		createInfo.enabledExtensionCount = static_cast<uint32_t>(enabledExtensions.size());
+		createInfo.ppEnabledExtensionNames = enabledExtensions.data();
 		createInfo.pEnabledFeatures = nullptr; // базовые 1.0 фичи через features2
 
-		if (vkCreateDevice(candidate.device, &createInfo, nullptr, &m_Device) != VK_SUCCESS)
+		if (vkCreateDevice(deviceCandidate.device, &createInfo, nullptr, &m_Device) != VK_SUCCESS)
 			return Unexpected(eResult::failure, L"Failed to create logical device");
 
 		// Получаем очереди
-		vkGetDeviceQueue(m_Device, candidate.graphicsQueueFamily, 0, &m_GraphicsQueue);
-
-		// Если нужны compute и transfer очереди отдельно, можно их сохранить:
-		vkGetDeviceQueue(m_Device, candidate.computeQueueFamily, 0, &m_ComputeQueue);
-		vkGetDeviceQueue(m_Device, candidate.transferQueueFamily, 0, &m_TransferQueue);
+		vkGetDeviceQueue(m_Device, deviceCandidate.graphicsQueueFamily, 0, &m_GraphicsQueue);
+		vkGetDeviceQueue(m_Device, deviceCandidate.computeQueueFamily, 0, &m_ComputeQueue);
+		vkGetDeviceQueue(m_Device, deviceCandidate.transferQueueFamily, 0, &m_TransferQueue);
 
 		return {};
 	}
 
-	[[nodiscard]] Result<> VKAPI::CreateCommandPool()
+	[[nodiscard]] Result<> VKAPI::CreateCommandPools(const Candidate& deviceCandidate)
 	{
-		VkCommandPoolCreateInfo ci
-		{
-			.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-			.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-			.queueFamilyIndex = m_GraphicsQueueFamily
-		};
+		auto CreatePool = [&](uint32_t queueFamily, VkCommandPool& pool) -> Result<>
+			{
+				VkCommandPoolCreateInfo ci{
+					.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+					.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+					.queueFamilyIndex = queueFamily
+				};
 
-		VkResult vr = vkCreateCommandPool(m_Device, &ci, nullptr, &m_CommandPool);
-		if (vr != VK_SUCCESS)
-			return Unexpected(eResult::failure, std::format(L"vkCreateCommandPool failed ({})", int(vr)));
+				VkResult vr = vkCreateCommandPool(m_Device, &ci, nullptr, &pool);
+				if (vr != VK_SUCCESS)
+					return Unexpected(eResult::failure, std::format(L"vkCreateCommandPool failed ({})", int(vr)));
+
+				return {};
+			};
+
+		// Graphics pool (всегда нужен)
+		if (auto res = CreatePool(deviceCandidate.graphicsQueueFamily, m_GraphicsCommandPool); !res)
+			return res;
+
+		// Compute pool (только если отдельная family)
+		if (deviceCandidate.computeQueueFamily != deviceCandidate.graphicsQueueFamily)
+		{
+			if (auto res = CreatePool(deviceCandidate.computeQueueFamily, m_ComputeCommandPool); !res)
+				return res;
+		}
+		else
+		{
+			m_ComputeCommandPool = m_GraphicsCommandPool; // переиспользуем
+		}
+
+		// Transfer pool (только если отдельная family)
+		if (deviceCandidate.transferQueueFamily != deviceCandidate.graphicsQueueFamily &&
+			deviceCandidate.transferQueueFamily != deviceCandidate.computeQueueFamily)
+		{
+			if (auto res = CreatePool(deviceCandidate.transferQueueFamily, m_TransferCommandPool); !res)
+				return res;
+		}
+		else if (deviceCandidate.transferQueueFamily == deviceCandidate.computeQueueFamily)
+		{
+			m_TransferCommandPool = m_ComputeCommandPool;
+		}
+		else
+		{
+			m_TransferCommandPool = m_GraphicsCommandPool;
+		}
 
 		return {};
 	}
 
 	[[nodiscard]] Result<> VKAPI::CreateCommandBuffers()
 	{
-		// Выделяем 3 command buffer'а для triple buffering
-		m_CommandBuffers.resize(3);
+		auto AllocateBuffers = [&](VkCommandPool pool, std::vector<VkCommandBuffer>& buffers, uint32_t count) -> Result<>
+			{
+				buffers.resize(count);
+				VkCommandBufferAllocateInfo allocInfo{
+					.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+					.commandPool = pool,
+					.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+					.commandBufferCount = count
+				};
 
-		VkCommandBufferAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocInfo.commandPool = m_CommandPool;
-		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBuffers.size());
+				VkResult vr = vkAllocateCommandBuffers(m_Device, &allocInfo, buffers.data());
+				if (vr != VK_SUCCESS)
+					return Unexpected(eResult::failure, std::format(L"vkAllocateCommandBuffers failed ({})", int(vr)));
 
-		VkResult vr = vkAllocateCommandBuffers(m_Device, &allocInfo, m_CommandBuffers.data());
-		if (vr != VK_SUCCESS)
-			return Unexpected(eResult::failure, std::format(L"vkAllocateCommandBuffers failed ({})", int(vr)));
+				return {};
+			};
+
+		// Graphics buffers (для triple buffering рендеринга)
+		if (auto res = AllocateBuffers(m_GraphicsCommandPool, m_GraphicsCommandBuffers, 3); !res)
+			return Unexpected(eResult::failure, L"Failed to allocate graphics command buffers");
+
+		// Compute buffers (1-2 достаточно для async compute)
+		if (m_ComputeCommandPool != m_GraphicsCommandPool)
+		{
+			if (auto res = AllocateBuffers(m_ComputeCommandPool, m_ComputeCommandBuffers, 2); !res)
+				return Unexpected(eResult::failure, L"Failed to allocate compute command buffers");
+		}
+
+		// Transfer buffers (1-2 для upload операций)
+		if (m_TransferCommandPool != m_GraphicsCommandPool &&
+			m_TransferCommandPool != m_ComputeCommandPool)
+		{
+			if (auto res = AllocateBuffers(m_TransferCommandPool, m_TransferCommandBuffers, 2); !res)
+				return Unexpected(eResult::failure, L"Failed to allocate transfer command buffers");
+		}
 
 		return {};
 	}
