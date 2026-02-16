@@ -496,10 +496,6 @@ namespace zzz::vk
 			vr = vkCreateFence(device, &fenceCI, nullptr, &m_InFlightFences[i]);
 			if (vr != VK_SUCCESS)
 				return Unexpected(eResult::failure, std::format(L"Failed to create fence ({})", int(vr)));
-
-			//vr = vkCreateFence(device, &fenceCI, nullptr, &m_ImagesInFlight[i]);
-			//if (vr != VK_SUCCESS)
-			//	return Unexpected(eResult::failure, std::format(L"Failed to create image in flight fence ({})", int(vr)));
 		}
 
 		return {};
@@ -581,29 +577,6 @@ namespace zzz::vk
 #pragma region Rendering
 	void SurfView_VK_MSWin::PrepareFrame(const std::shared_ptr<RenderQueue> renderQueue)
 	{
-		//// Сохраняем текущий индекс VKAPI для последующего submit
-		//m_SubmitFrameIndex = m_VulkanAPI->GetCurrentFrameIndex(); // Нужен новый геттер!
-
-		//// Получаем командный буфер, который VKAPI уже начал записывать
-		//VkCommandBuffer cmd = m_VulkanAPI->GetCommandBufferUpdate();
-
-		//// Просто записываем команды рендер-пасса
-		//std::array<VkClearValue, 2> clearValues{};
-		//clearValues[0].color = { {0.f, 0.f, 0.f, 1.f} };
-		//clearValues[1].depthStencil = { 1.f, 0 };
-
-		//VkRenderPassBeginInfo renderPassInfo{
-		//	.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-		//	.renderPass = m_RenderPass,
-		//	.framebuffer = m_Framebuffers[m_CurrentImageIndex],
-		//	.renderArea = { {0, 0}, {static_cast<uint32_t>(m_SurfSize.width), static_cast<uint32_t>(m_SurfSize.height)} },
-		//	.clearValueCount = static_cast<uint32_t>(clearValues.size()),
-		//	.pClearValues = clearValues.data()
-		//};
-
-		//vkCmdBeginRenderPass(cmd, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-		//// renderQueue->Execute(cmd);
-		//vkCmdEndRenderPass(cmd);
 	}
 
 	constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;

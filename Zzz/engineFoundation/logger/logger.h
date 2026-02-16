@@ -22,4 +22,16 @@ namespace zzz
 #endif
 #endif // _DEBUG
 	}
+
+	inline void DebugOutputLite( std::wstring_view msg)
+	{
+#if defined(_DEBUG)
+		std::wstring output = L">>>>> DebugMessage: " + std::wstring(msg) + L"\n";
+#if defined(ZPLATFORM_MSWINDOWS)
+		OutputDebugStringW(output.c_str());
+#else
+		std::wcerr << output;
+#endif
+#endif // _DEBUG
+	}
 }
