@@ -1,4 +1,3 @@
-
 export module VKAPI;
 
 #if defined(ZRENDER_API_VULKAN)
@@ -19,11 +18,11 @@ namespace zzz::vk
 	// Структура-кандидат для хранения лучшего устройства
 	struct Candidate
 	{
-		VkPhysicalDevice device{};          // сам физический GPU
-		uint32_t graphicsQueueFamily{};     // индекс графической очереди
-		uint32_t computeQueueFamily{};      // индекс compute очереди
-		uint32_t transferQueueFamily{};     // индекс transfer очереди
-		uint64_t score = 0;                 // вычисленный score
+		VkPhysicalDevice device{};
+		uint32_t graphicsQueueFamily{};
+		uint32_t computeQueueFamily{};
+		uint32_t transferQueueFamily{};
+		uint64_t score = 0;
 	};
 
 	class TestSurface_MSWin final
@@ -76,13 +75,31 @@ namespace zzz::vk
 		explicit VKAPI(const std::shared_ptr<GAPIConfig> config);
 		virtual ~VKAPI() override;
 
-	protected:
-		[[nodiscard]] Result<> Init() override;
-		void WaitForGpu() override;
+		// Геттеры (аналогично DXAPI)
+		VkInstance GetInstance() const noexcept { return m_Instance; }
+		VkPhysicalDevice GetPhysicalDevice() const noexcept { return m_PhysicalDevice; }
+		VkDevice GetDevice() const noexcept { return m_Device; }
+		VkQueue GetGraphicsQueue() const noexcept { return m_GraphicsQueue; }
+		VkQueue GetComputeQueue() const noexcept { return m_ComputeQueue; }
+		VkQueue GetTransferQueue() const noexcept { return m_TransferQueue; }
+		VkCommandPool GetGraphicsCommandPool() const noexcept { return m_GraphicsCommandPool; }
+		VkCommandBuffer GetCommandBufferUpdate() const noexcept { return m_GraphicsCommandBuffers[m_frameIndexUpdate]; }
+		VkCommandBuffer GetCommandBufferRender() const noexcept { return m_GraphicsCommandBuffers[m_frameIndexRender]; }
+		VkCommandBuffer GetCommandBuffer(zU32 index) const noexcept { return m_GraphicsCommandBuffers[index]; }
+
+		//VkFence GetCurrentFence() const noexcept { return m_InFlightFences[m_frameIndexUpdate]; }
+		//VkFence GetRenderFence() const noexcept { return m_InFlightFences[m_frameIndexRender]; }
+		//zU32 GetCurrentFrameIndex() const noexcept { return m_frameIndexUpdate; }
+		//VkFence GetFenceForFrame(zU32 frameIndex) const noexcept { return m_InFlightFences[frameIndex]; }
+		VkCommandBuffer GetCommandBufferForFrame(zU32 frameIndex) const noexcept { return m_GraphicsCommandBuffers[frameIndex]; }
 
 		void SubmitCommandLists() override;
 		void BeginRender() override;
 		void EndRender() override;
+
+	protected:
+		[[nodiscard]] Result<> Init() override;
+		void WaitForGpu() override;
 
 	private:
 		[[nodiscard]] Result<> CreateInstance();
@@ -94,6 +111,7 @@ namespace zzz::vk
 		[[nodiscard]] Result<> CreateLogicalDevice(const Candidate& deviceCandidate);
 		[[nodiscard]] Result<> CreateCommandPools(const Candidate& deviceCandidate);
 		[[nodiscard]] Result<> CreateCommandBuffers();
+		[[nodiscard]] Result<> CreateSyncObjects();
 
 		VkInstance m_Instance;
 		VkPhysicalDevice m_PhysicalDevice;
@@ -102,12 +120,19 @@ namespace zzz::vk
 		VkQueue m_GraphicsQueue;
 		VkQueue m_ComputeQueue;
 		VkQueue m_TransferQueue;
+
 		VkCommandPool m_GraphicsCommandPool;
 		VkCommandPool m_TransferCommandPool;
 		VkCommandPool m_ComputeCommandPool;
+
 		std::vector<VkCommandBuffer> m_GraphicsCommandBuffers;
 		std::vector<VkCommandBuffer> m_ComputeCommandBuffers;
 		std::vector<VkCommandBuffer> m_TransferCommandBuffers;
+
+		// Объекты синхронизации для каждого фрейма
+		//std::vector<VkSemaphore> m_ImageAvailableSemaphores;
+		//std::vector<VkSemaphore> m_RenderFinishedSemaphores;
+		//std::vector<VkFence> m_InFlightFences;
 
 		std::shared_ptr<GAPIConfig> m_Config;
 
@@ -144,8 +169,14 @@ namespace zzz::vk
 
 	VKAPI::~VKAPI()
 	{
-		WaitForGpu();
+		if (m_Device)
+			vkDeviceWaitIdle(m_Device);
 
+		// Очистка fence (семафоры убрали)
+		//for (auto& fence : m_InFlightFences)
+		//	if (fence) vkDestroyFence(m_Device, fence, nullptr);
+
+		// Очистка command pools
 		if (m_ComputeCommandPool && m_ComputeCommandPool != m_GraphicsCommandPool)
 			vkDestroyCommandPool(m_Device, m_ComputeCommandPool, nullptr);
 
@@ -197,7 +228,8 @@ namespace zzz::vk
 					m_CheckGapiSupport = safe_make_unique<VKDeviceCapabilities>(m_PhysicalDevice, m_Device);
 					m_CPUtoGPUDataTransfer = safe_make_unique<GPUUploadVK>();
 				})
-			.and_then([&]() { return CreateCommandBuffers(); });
+			.and_then([&]() { return CreateCommandBuffers(); })
+			.and_then([&]() { return CreateSyncObjects(); });
 
 		return res;
 	}
@@ -211,22 +243,16 @@ namespace zzz::vk
 		const Version& appVersion = m_Config->GetAppVersion();
 
 		uint32_t supportedVersion = VK_API_VERSION_1_0;
-		// Если функция доступна (Vulkan 1.1+), получаем максимальную поддерживаемую версию API
 		if (vkEnumerateInstanceVersion)
 			vkEnumerateInstanceVersion(&supportedVersion);
 
-		// Выбираем минимальную из:
-		// 1) версии, поддерживаемой драйвером
-		// 2) максимальной версии, которую поддерживает наш движок
 		uint32_t apiVersion = std::min(supportedVersion, VULKAN_ENGINE_MAX_VERSION);
 
-		// Логируем поддерживаемую и фактически используемую версии Vulkan
 		DebugOutput(std::format(
 			L"Vulkan supported: {}.{}.{} | Using: {}.{}.{}",
 			VK_VERSION_MAJOR(supportedVersion), VK_VERSION_MINOR(supportedVersion), VK_VERSION_PATCH(supportedVersion),
 			VK_VERSION_MAJOR(apiVersion), VK_VERSION_MINOR(apiVersion), VK_VERSION_PATCH(apiVersion)));
 
-		// Получаем список обязательных расширений
 		auto extensionsRes = GetRequiredExtensions();
 		if (!extensionsRes)
 			return extensionsRes.error();
@@ -234,17 +260,12 @@ namespace zzz::vk
 		std::vector<const char*> extensions = extensionsRes.value();
 		std::vector<const char*> layers;
 
-		// Добавляем validation layer только в Debug
 #ifdef _DEBUG
-		// Узнаём количество доступных слоёв
 		uint32_t layerCount = 0;
 		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
-
-		// Получаем список слоёв
 		std::vector<VkLayerProperties> availableLayers(layerCount);
 		vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-		// Проверяем наличие VK_LAYER_KHRONOS_validation
 		bool validationLayerFound = false;
 		for (const auto& layer : availableLayers)
 		{
@@ -255,14 +276,12 @@ namespace zzz::vk
 			}
 		}
 
-		// Если найден — добавляем в список активируемых слоёв
 		if (validationLayerFound)
 			layers.push_back("VK_LAYER_KHRONOS_validation");
 		else
 			DebugOutput(L"Warning: VK_LAYER_KHRONOS_validation not found");
 #endif
 
-		// Описание приложения для Vulkan
 		VkApplicationInfo appInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
@@ -273,7 +292,6 @@ namespace zzz::vk
 			.apiVersion = apiVersion
 		};
 
-		// Структура создания VkInstance
 		VkInstanceCreateInfo ci
 		{
 			.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
@@ -286,33 +304,27 @@ namespace zzz::vk
 			.ppEnabledExtensionNames = extensions.data()
 		};
 
-		// Создаём Vulkan instance
 		VkResult vr = vkCreateInstance(&ci, nullptr, &m_Instance);
 		if (vr != VK_SUCCESS)
 			return Unexpected(eResult::failure, std::format(L"vkCreateInstance failed ({})", int(vr)));
 
-		// Загружаем функции уровня instance через volk
 		volkLoadInstance(m_Instance);
 
 		return {};
 	}
 
-	Result<std::vector<const char*>> VKAPI::GetRequiredExtensions()
+	[[nodiscard]] Result<std::vector<const char*>> VKAPI::GetRequiredExtensions()
 	{
 		uint32_t extCount = 0;
-
-		// Узнаём количество доступных расширений instance
 		auto vkRes = vkEnumerateInstanceExtensionProperties(nullptr, &extCount, nullptr);
 		if (vkRes != VK_SUCCESS)
 			return Unexpected(eResult::failure, std::format(L"vkEnumerateInstanceExtensionProperties failed ({})", int(vkRes)));
 
-		// Получаем список доступных расширений
 		std::vector<VkExtensionProperties> availableExt(extCount);
 		vkRes = vkEnumerateInstanceExtensionProperties(nullptr, &extCount, availableExt.data());
 		if (vkRes != VK_SUCCESS)
 			return Unexpected(eResult::failure, std::format(L"vkEnumerateInstanceExtensionProperties failed ({})", int(vkRes)));
 
-		// Лямбда для проверки наличия расширения в списке доступных
 		auto IsExtensionAvailable = [&](const char* name)
 			{
 				for (const auto& ext : availableExt)
@@ -325,8 +337,6 @@ namespace zzz::vk
 
 		std::vector<const char*> extensions;
 
-		// Лямбда для обязательного добавления расширения:
-		// если расширение недоступно — возвращаем ошибку
 		auto RequireExtension = [&](const char* name) -> Result<>
 			{
 				if (!IsExtensionAvailable(name))
@@ -336,23 +346,18 @@ namespace zzz::vk
 				return {};
 			};
 
-		// Базовое обязательное расширение — VK_KHR_surface
 		std::vector<const char*> requiredExtensions =
 		{
 			VK_KHR_SURFACE_EXTENSION_NAME
 		};
 
-		// Добавляем платформо-зависимое расширение (Win32, XCB, Wayland и т.д.)
 		requiredExtensions.push_back(GetPlatformExtension());
 
 #ifdef _DEBUG
-		// В Debug-режиме пытаемся добавить VK_EXT_debug_utils,
-		// если оно доступно
 		if (IsExtensionAvailable(VK_EXT_DEBUG_UTILS_EXTENSION_NAME))
 			requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 #endif
 
-		// Проверяем и добавляем все обязательные расширения
 		for (const char* ext : requiredExtensions)
 		{
 			if (auto res = RequireExtension(ext); !res)
@@ -365,45 +370,16 @@ namespace zzz::vk
 	[[nodiscard]] const char* VKAPI::GetPlatformExtension()
 	{
 #if defined(ZPLATFORM_MSWINDOWS)
-		// Расширение для создания Win32 surface
 		return VK_KHR_WIN32_SURFACE_EXTENSION_NAME;
 #elif defined(ZPLATFORM_ANDROID)
-		// Расширение для Android surface
 		return VK_KHR_ANDROID_SURFACE_EXTENSION_NAME;
 #elif defined(ZPLATFORM_LINUX)
 #if defined(USE_WAYLAND)
-		// Wayland surface
 		return VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME;
 #else
-		// XCB surface (X11)
 		return VK_KHR_XCB_SURFACE_EXTENSION_NAME;
 #endif
 #endif
-	}
-
-	Result<> VKAPI::CreateDebugMessenger()
-	{
-#ifdef _DEBUG
-		VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-		debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-		debugCreateInfo.messageSeverity =
-			VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
-			VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-		debugCreateInfo.messageType =
-			VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-			VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-			VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-		debugCreateInfo.pfnUserCallback = VKAPI::DebugCallback;
-		debugCreateInfo.pUserData = this;
-
-		auto func =
-			reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(m_Instance, "vkCreateDebugUtilsMessengerEXT"));
-
-		if (func && func(m_Instance, &debugCreateInfo, nullptr, &m_DebugMessenger) != VK_SUCCESS)
-			return Unexpected(eResult::failure, L"Failed to create debug messenger");
-#endif
-
-		return {};
 	}
 
 #if defined(_DEBUG)
@@ -413,11 +389,11 @@ namespace zzz::vk
 		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
 		void* pUserData)
 	{
-		auto* api = reinterpret_cast<VKAPI*>(pUserData); // получаем экземпляр
+		auto* api = reinterpret_cast<VKAPI*>(pUserData);
 		if (api)
 			api->ReportGPUDebugMessages(messageSeverity, messageType, pCallbackData->pMessage);
 
-		return VK_FALSE; // не прерываем Vulkan
+		return VK_FALSE;
 	}
 
 	void VKAPI::ReportGPUDebugMessages(
@@ -451,9 +427,33 @@ namespace zzz::vk
 	}
 #endif
 
+	[[nodiscard]] Result<> VKAPI::CreateDebugMessenger()
+	{
+#ifdef _DEBUG
+		VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
+		debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+		debugCreateInfo.messageSeverity =
+			VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+		debugCreateInfo.messageType =
+			VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+		debugCreateInfo.pfnUserCallback = VKAPI::DebugCallback;
+		debugCreateInfo.pUserData = this;
+
+		auto func =
+			reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(m_Instance, "vkCreateDebugUtilsMessengerEXT"));
+
+		if (func && func(m_Instance, &debugCreateInfo, nullptr, &m_DebugMessenger) != VK_SUCCESS)
+			return Unexpected(eResult::failure, L"Failed to create debug messenger");
+#endif
+
+		return {};
+	}
+
 	[[nodiscard]] Result<> VKAPI::PickPhysicalDevice(Candidate& deviceCandidate, const VkSurfaceKHR& surface)
 	{
-		// Запрашиваем количество доступных физических устройств
 		uint32_t deviceCount = 0;
 		auto vkRes = vkEnumeratePhysicalDevices(m_Instance, &deviceCount, nullptr);
 		if (vkRes != VK_SUCCESS)
@@ -462,30 +462,26 @@ namespace zzz::vk
 		if (deviceCount == 0)
 			return Unexpected(eResult::failure, L"No Vulkan devices found");
 
-		// Получаем список физических устройств
 		std::vector<VkPhysicalDevice> devices(deviceCount);
 		vkRes = vkEnumeratePhysicalDevices(m_Instance, &deviceCount, devices.data());
 		if (vkRes != VK_SUCCESS)
 			return Unexpected(eResult::failure, std::format(L"vkEnumeratePhysicalDevices failed ({})", int(vkRes)));
 
-		// Ищем лучшее устройство среди доступных
 		auto candidat = BestDeviceCandidat(devices, surface);
 		if (!candidat)
 			return Unexpected(eResult::failure, L"No suitable Vulkan device found");
 
-		// Сохраняем выбранное устройство
 		deviceCandidate = candidat.value();
 		m_PhysicalDevice = deviceCandidate.device;
 
-		// Логируем результат выбора
 		VkPhysicalDeviceProperties props{};
 		vkGetPhysicalDeviceProperties(m_PhysicalDevice, &props);
-		DebugOutput(std::format( L"Selected GPU: {} (score: {})", string_to_wstring(props.deviceName).value_or(L"Unknown GPU"), deviceCandidate.score));
+		DebugOutput(std::format(L"Selected GPU: {} (score: {})", string_to_wstring(props.deviceName).value_or(L"Unknown GPU"), deviceCandidate.score));
 
 		return {};
 	}
 
-	std::optional<Candidate> VKAPI::BestDeviceCandidat(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface)
+	[[nodiscard]] std::optional<Candidate> VKAPI::BestDeviceCandidat(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface)
 	{
 		std::optional<zzz::vk::Candidate> best;
 
@@ -519,16 +515,14 @@ namespace zzz::vk
 			if (!transferFamily) transferFamily = graphicsFamily;
 
 			if (!graphicsFamily)
-				continue; // без графической очереди устройство не годится
+				continue;
 
-			// Получаем свойства устройства
 			VkPhysicalDeviceProperties props{};
 			vkGetPhysicalDeviceProperties(device, &props);
 
 			VkPhysicalDeviceMemoryProperties memProps{};
 			vkGetPhysicalDeviceMemoryProperties(device, &memProps);
 
-			// Подсчитываем объём device-local памяти (VRAM)
 			uint64_t localMemory = 0;
 			for (uint32_t i = 0; i < memProps.memoryHeapCount; ++i)
 			{
@@ -536,8 +530,6 @@ namespace zzz::vk
 					localMemory += memProps.memoryHeaps[i].size;
 			}
 
-			// Проверяем обязательные features
-			// Проверка фич через цепочку
 			VkPhysicalDeviceVulkan12Features features12{
 				.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES
 			};
@@ -554,47 +546,31 @@ namespace zzz::vk
 
 			vkGetPhysicalDeviceFeatures2(device, &features2);
 
-			// TODO: переделать на применение входных требований из GAPIConfig
-			// Проверка базовых фич
 			if (!features2.features.samplerAnisotropy ||
 				!features2.features.multiDrawIndirect ||
 				!features2.features.fragmentStoresAndAtomics ||
 				!features2.features.independentBlend)
 				continue;
 
-			// Проверка Vulkan 1.2 фич
 			if (!features12.descriptorIndexing ||
 				!features12.runtimeDescriptorArray ||
 				!features12.bufferDeviceAddress ||
 				!features12.timelineSemaphore)
 				continue;
 
-			// Проверка Vulkan 1.3 фич
 			if (!features13.dynamicRendering)
 				continue;
 
-			// Вычисляем score устройства
 			uint64_t score = 0;
 
-			// 4.1 Предпочитаем дискретные GPU
-			// (обычно существенно мощнее интегрированных)
 			if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
 				score += 1'000'000;
 
-			// 4.2 Вклад VRAM (в мегабайтах)
-			// Больше VRAM — выше score
 			score += localMemory / (1024ull * 1024ull);
-
-			// 4.3 Вклад версии Vulkan API
-			// Более новая версия = больше возможностей
 			score += VK_VERSION_MAJOR(props.apiVersion) * 10'000;
 			score += VK_VERSION_MINOR(props.apiVersion) * 1'000;
-
-			// 4.4 Косвенный вклад по количеству queue families
-			// (чем больше — тем гибче устройство)
 			score += families.size() * 100;
 
-			// Сравниваем с лучшим кандидатом
 			if (!best || score > best->score)
 			{
 				best = Candidate{
@@ -614,14 +590,13 @@ namespace zzz::vk
 	{
 		float priority = 1.0f;
 
-		// Чтобы не дублировать очереди, используем set
 		std::vector<VkDeviceQueueCreateInfo> queueInfos;
 		std::set<uint32_t> usedFamilies;
 
 		auto AddQueue = [&](uint32_t familyIndex)
 			{
 				if (usedFamilies.find(familyIndex) != usedFamilies.end())
-					return; // уже добавляли эту очередь
+					return;
 
 				VkDeviceQueueCreateInfo qi{};
 				qi.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -637,7 +612,6 @@ namespace zzz::vk
 		AddQueue(deviceCandidate.computeQueueFamily);
 		AddQueue(deviceCandidate.transferQueueFamily);
 
-		// Получаем список доступных расширений устройства
 		uint32_t extCount = 0;
 		auto vkRes = vkEnumerateDeviceExtensionProperties(m_PhysicalDevice, nullptr, &extCount, nullptr);
 		if (vkRes != VK_SUCCESS)
@@ -648,7 +622,6 @@ namespace zzz::vk
 		if (vkRes != VK_SUCCESS)
 			return Unexpected(eResult::failure, std::format(L"vkEnumerateDeviceExtensionProperties failed ({})", int(vkRes)));
 
-		// Лямбда для проверки наличия расширения
 		auto IsExtensionAvailable = [&](const char* name)
 			{
 				for (const auto& ext : availableExt)
@@ -661,7 +634,6 @@ namespace zzz::vk
 
 		std::vector<const char*> enabledExtensions;
 
-		// Лямбда для обязательного добавления расширения
 		auto RequireExtension = [&](const char* name) -> Result<>
 			{
 				if (!IsExtensionAvailable(name))
@@ -671,14 +643,12 @@ namespace zzz::vk
 				return {};
 			};
 
-		// Лямбда для опционального добавления расширения (не вызывает ошибку, если недоступно)
 		auto TryAddExtension = [&](const char* name)
 			{
 				if (IsExtensionAvailable(name))
 					enabledExtensions.push_back(name);
 			};
 
-		// Список обязательных расширений
 		std::vector<const char*> requiredExtensions = {
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 			VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME,
@@ -687,21 +657,18 @@ namespace zzz::vk
 			VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
 		};
 
-		// Проверяем и добавляем все обязательные расширения
 		for (const char* ext : requiredExtensions)
 		{
 			if (auto res = RequireExtension(ext); !res)
 				return res.error();
 		}
 
-		// Опциональные расширения (не критичны для работы)
 		TryAddExtension(VK_EXT_MESH_SHADER_EXTENSION_NAME);
 
 #if defined(_DEBUG)
 		TryAddExtension(VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME);
 #endif
 
-		// Настройка features
 		VkPhysicalDeviceFeatures2 features2{};
 		features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 
@@ -719,7 +686,6 @@ namespace zzz::vk
 		features2.pNext = &features12;
 		features12.pNext = &features13;
 
-		// Создание логического устройства
 		VkDeviceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		createInfo.pNext = &features2;
@@ -727,12 +693,11 @@ namespace zzz::vk
 		createInfo.pQueueCreateInfos = queueInfos.data();
 		createInfo.enabledExtensionCount = static_cast<uint32_t>(enabledExtensions.size());
 		createInfo.ppEnabledExtensionNames = enabledExtensions.data();
-		createInfo.pEnabledFeatures = nullptr; // базовые 1.0 фичи через features2
+		createInfo.pEnabledFeatures = nullptr;
 
 		if (vkCreateDevice(deviceCandidate.device, &createInfo, nullptr, &m_Device) != VK_SUCCESS)
 			return Unexpected(eResult::failure, L"Failed to create logical device");
 
-		// Получаем очереди
 		vkGetDeviceQueue(m_Device, deviceCandidate.graphicsQueueFamily, 0, &m_GraphicsQueue);
 		vkGetDeviceQueue(m_Device, deviceCandidate.computeQueueFamily, 0, &m_ComputeQueue);
 		vkGetDeviceQueue(m_Device, deviceCandidate.transferQueueFamily, 0, &m_TransferQueue);
@@ -757,11 +722,9 @@ namespace zzz::vk
 				return {};
 			};
 
-		// Graphics pool (всегда нужен)
 		if (auto res = CreatePool(deviceCandidate.graphicsQueueFamily, m_GraphicsCommandPool); !res)
 			return res;
 
-		// Compute pool (только если отдельная family)
 		if (deviceCandidate.computeQueueFamily != deviceCandidate.graphicsQueueFamily)
 		{
 			if (auto res = CreatePool(deviceCandidate.computeQueueFamily, m_ComputeCommandPool); !res)
@@ -769,10 +732,9 @@ namespace zzz::vk
 		}
 		else
 		{
-			m_ComputeCommandPool = m_GraphicsCommandPool; // переиспользуем
+			m_ComputeCommandPool = m_GraphicsCommandPool;
 		}
 
-		// Transfer pool (только если отдельная family)
 		if (deviceCandidate.transferQueueFamily != deviceCandidate.graphicsQueueFamily &&
 			deviceCandidate.transferQueueFamily != deviceCandidate.computeQueueFamily)
 		{
@@ -810,18 +772,15 @@ namespace zzz::vk
 				return {};
 			};
 
-		// Graphics buffers (для triple buffering рендеринга)
 		if (auto res = AllocateBuffers(m_GraphicsCommandPool, m_GraphicsCommandBuffers, 3); !res)
 			return Unexpected(eResult::failure, L"Failed to allocate graphics command buffers");
 
-		// Compute buffers (1-2 достаточно для async compute)
 		if (m_ComputeCommandPool != m_GraphicsCommandPool)
 		{
 			if (auto res = AllocateBuffers(m_ComputeCommandPool, m_ComputeCommandBuffers, 2); !res)
 				return Unexpected(eResult::failure, L"Failed to allocate compute command buffers");
 		}
 
-		// Transfer buffers (1-2 для upload операций)
 		if (m_TransferCommandPool != m_GraphicsCommandPool &&
 			m_TransferCommandPool != m_ComputeCommandPool)
 		{
@@ -832,24 +791,91 @@ namespace zzz::vk
 		return {};
 	}
 
+	[[nodiscard]] Result<> VKAPI::CreateSyncObjects()
+	{
+		//m_InFlightFences.resize(BACK_BUFFER_COUNT);
+
+		//VkFenceCreateInfo fenceInfo{
+		//	.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+		//	.flags = VK_FENCE_CREATE_SIGNALED_BIT
+		//};
+
+		//for (size_t i = 0; i < BACK_BUFFER_COUNT; i++)
+		//{
+		//	VkResult vr = vkCreateFence(m_Device, &fenceInfo, nullptr, &m_InFlightFences[i]);
+		//	if (vr != VK_SUCCESS)
+		//		return Unexpected(eResult::failure, std::format(L"Failed to create in-flight fence {} ({})", i, int(vr)));
+		//}
+
+		return {};
+	}
 #pragma endregion Initialize
 
-	void VKAPI::WaitForGpu()
-	{
-		if (m_Device)
-			vkDeviceWaitIdle(m_Device);
-	}
-
-	void VKAPI::SubmitCommandLists()
-	{
-	}
-
+#pragma region Rendering
 	void VKAPI::BeginRender()
 	{
+		//// Ждём fence для текущего фрейма
+		//vkWaitForFences(m_Device, 1, &m_InFlightFences[m_frameIndexUpdate], VK_TRUE, UINT64_MAX);
+		//vkResetFences(m_Device, 1, &m_InFlightFences[m_frameIndexUpdate]);
+
+		//// Сбрасываем и начинаем запись командного буфера
+		//VkCommandBuffer commandBuffer = m_GraphicsCommandBuffers[m_frameIndexUpdate];
+		//vkResetCommandBuffer(commandBuffer, 0);
+
+		//VkCommandBufferBeginInfo beginInfo{
+		//	.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+		//	.flags = 0,
+		//	.pInheritanceInfo = nullptr
+		//};
+
+		//ensure(vkBeginCommandBuffer(commandBuffer, &beginInfo) == VK_SUCCESS);
 	}
 
 	void VKAPI::EndRender()
 	{
+		//VkCommandBuffer commandBuffer = m_GraphicsCommandBuffers[m_frameIndexUpdate];
+		//ensure(vkEndCommandBuffer(commandBuffer) == VK_SUCCESS);
+
+		// Переходим к следующему кадру ПОСЛЕ окончания записи
+		// но теперь m_frameIndexRender указывает на только что записанный буфер
+		//m_frameIndexRender = m_frameIndexUpdate;
+		//m_frameIndexUpdate = (m_frameIndexUpdate + 1) % BACK_BUFFER_COUNT;
+
+		m_frameIndexRender = (m_frameIndexRender + 1) % BACK_BUFFER_COUNT;
+		m_frameIndexUpdate = (m_frameIndexRender + 1) % BACK_BUFFER_COUNT;
 	}
+
+	void VKAPI::SubmitCommandLists()
+	{
+		//VkCommandBuffer commandBuffer = m_GraphicsCommandBuffers[m_frameIndexRender];
+
+		//VkSubmitInfo submitInfo{
+		//	.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+		//	.waitSemaphoreCount = 0,
+		//	.pWaitSemaphores = nullptr,
+		//	.pWaitDstStageMask = nullptr,
+		//	.commandBufferCount = 1,
+		//	.pCommandBuffers = &commandBuffer,
+		//	.signalSemaphoreCount = 0,
+		//	.pSignalSemaphores = nullptr
+		//};
+
+		//ensure(vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, m_InFlightFences[m_frameIndexRender]) == VK_SUCCESS);
+	}
+
+	void VKAPI::WaitForGpu()
+	{
+		//if (m_Device)
+		//{
+		//	vkWaitForFences(
+		//		m_Device,
+		//		1,
+		//		&m_InFlightFences[m_frameIndexRender],
+		//		VK_TRUE,
+		//		UINT64_MAX
+		//	);
+		//}
+	}
+#pragma endregion Rendering
 }
 #endif // ZRENDER_API_VULKAN

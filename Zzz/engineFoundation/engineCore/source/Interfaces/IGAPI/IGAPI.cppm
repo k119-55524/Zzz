@@ -53,6 +53,9 @@ export namespace zzz
 		inline bool HasResourcesToUpload() { return m_CPUtoGPUDataTransfer->HasResourcesToUpload(); };
 		inline void TranferResourceToGPU() { m_CPUtoGPUDataTransfer->TransferResourceToGPU(); };
 
+		inline zU32 GetCurrentFrameIndexRender() const noexcept { return m_frameIndexRender; }
+		inline zU32 GetCurrentFrameIndexUpdate() const noexcept { return m_frameIndexUpdate; }
+
 		virtual void BeginRender() = 0;
 		virtual void EndRender() = 0;
 
