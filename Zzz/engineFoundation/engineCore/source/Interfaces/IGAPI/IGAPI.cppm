@@ -54,8 +54,8 @@ namespace zzz
 		inline bool HasResourcesToUpload() { return m_CPUtoGPUDataTransfer->HasResourcesToUpload(); };
 		inline void TranferResourceToGPU() { m_CPUtoGPUDataTransfer->TransferResourceToGPU(); };
 
-		inline zU32 GetCurrentFrameIndexRender() const noexcept { return m_frameIndexRender; }
-		inline zU32 GetCurrentFrameIndexUpdate() const noexcept { return m_frameIndexUpdate; }
+		inline zU32 GetIndexFrameRender() const noexcept { return m_IndexFrameRender; }
+		inline zU32 GetIndexFrameUpdate() const noexcept { return m_IndexFrameUpdate; }
 
 		virtual void BeginRender() = 0;
 		virtual void EndRender();
@@ -64,23 +64,23 @@ namespace zzz
 
 	protected:
 		[[nodiscard]] virtual Result<> Init() = 0;
-		virtual void WaitForGpu() = 0;
+		virtual void WaitForGpu() {};
 
 		const std::shared_ptr<GAPIConfig> m_Config;
 		eGAPIType gapiType;
 		eInitState initState;
 		std::unique_ptr<IGPUUpload> m_CPUtoGPUDataTransfer;
 		std::unique_ptr<IDeviceCapabilities> m_CheckGapiSupport;
-		zU32 m_frameIndexRender;
-		zU32 m_frameIndexUpdate;
+		zU32 m_IndexFrameRender;
+		zU32 m_IndexFrameUpdate;
 	};
 
 	IGAPI::IGAPI(const std::shared_ptr<GAPIConfig> config, eGAPIType type) :
 		m_Config(config),
 		gapiType{ type },
 		initState{ eInitState::InitNot },
-		m_frameIndexRender{ 0 },
-		m_frameIndexUpdate{ 1 }
+		m_IndexFrameRender{ 0 },
+		m_IndexFrameUpdate{ 1 }
 	{
 		ensure(config, "GAPIConfig cannot be null.");
 	}
@@ -100,7 +100,7 @@ namespace zzz
 
 	void IGAPI::EndRender()
 	{
-		m_frameIndexRender = (m_frameIndexRender + 1) % BACK_BUFFER_COUNT;
-		m_frameIndexUpdate = (m_frameIndexRender + 1) % BACK_BUFFER_COUNT;
+		m_IndexFrameRender = (m_IndexFrameRender + 1) % BACK_BUFFER_COUNT;
+		m_IndexFrameUpdate = (m_IndexFrameRender + 1) % BACK_BUFFER_COUNT;
 	}
 }

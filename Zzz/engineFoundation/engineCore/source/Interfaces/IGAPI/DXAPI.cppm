@@ -39,8 +39,8 @@ export namespace zzz::dx
 		const ComPtr<ID3D12Device>& GetDevice() const noexcept { return m_device; };
 		const ComPtr<ID3D12CommandQueue>& GetCommandQueue() const noexcept { return m_commandQueue; };
 		const ComPtr<IDXGIFactory7>& GetFactory() const noexcept { return m_factory; };
-		const ComPtr<ID3D12GraphicsCommandList>& GetCommandListUpdate() const noexcept { return m_commandWrapper[m_frameIndexUpdate]->GetCommandList(); };
-		const ComPtr<ID3D12GraphicsCommandList>& GetCommandListRender() const noexcept { return m_commandWrapper[m_frameIndexRender]->GetCommandList(); };
+		const ComPtr<ID3D12GraphicsCommandList>& GetCommandListUpdate() const noexcept { return m_commandWrapper[m_IndexFrameUpdate]->GetCommandList(); };
+		const ComPtr<ID3D12GraphicsCommandList>& GetCommandListRender() const noexcept { return m_commandWrapper[m_IndexFrameRender]->GetCommandList(); };
 		ComPtr<ID3D12RootSignature> GetRootSignature() const noexcept {  return m_rootSignature.Get(); }
 
 		void CommandRenderReset() noexcept;
@@ -432,8 +432,8 @@ export namespace zzz::dx
 #pragma region Rendring
 	void DXAPI::BeginRender()
 	{
-		auto commandAllocator = m_commandWrapper[m_frameIndexUpdate]->GetCommandAllocator();
-		auto commandList = m_commandWrapper[m_frameIndexUpdate]->GetCommandList();
+		auto commandAllocator = m_commandWrapper[m_IndexFrameUpdate]->GetCommandAllocator();
+		auto commandList = m_commandWrapper[m_IndexFrameUpdate]->GetCommandList();
 
 		// Сбрасываем аллокатор и командный список
 		ensure(S_OK == commandAllocator->Reset());
@@ -448,11 +448,11 @@ export namespace zzz::dx
 		ReportGPUDebugMessages();
 
 		// Закрываем командный список
-		auto commandListUpdate = m_commandWrapper[m_frameIndexUpdate]->GetCommandList();
+		auto commandListUpdate = m_commandWrapper[m_IndexFrameUpdate]->GetCommandList();
 		ensure(S_OK == commandListUpdate->Close());
 
-		m_frameIndexRender = (m_frameIndexRender + 1) % BACK_BUFFER_COUNT;
-		m_frameIndexUpdate = (m_frameIndexRender + 1) % BACK_BUFFER_COUNT;
+		m_IndexFrameRender = (m_IndexFrameRender + 1) % BACK_BUFFER_COUNT;
+		m_IndexFrameUpdate = (m_IndexFrameRender + 1) % BACK_BUFFER_COUNT;
 
 		// Устанавливаем состояние ресурсов как готовых к рендрингу после копирования в память GPU
 		EndPreparedTransfers();
@@ -463,7 +463,7 @@ export namespace zzz::dx
 	// Устанавливаем состояние ресурса готовое к рендрингу после копирования в память GPU
 	void DXAPI::BeginPreparedTransfers()
 	{
-		auto commandList = m_commandWrapper[m_frameIndexUpdate]->GetCommandList();
+		auto commandList = m_commandWrapper[m_IndexFrameUpdate]->GetCommandList();
 
 		m_PreparedTransfers.ForEach([&](std::shared_ptr<GPUUploadCB> callback)
 			{
@@ -485,9 +485,9 @@ export namespace zzz::dx
 
 	void DXAPI::SubmitCommandLists()
 	{
-		//DebugOutput(std::format(L"m_frameIndexRender: {}.", m_frameIndexRender));
+		//DebugOutput(std::format(L"m_IndexFrameRender: {}.", m_IndexFrameRender));
 
-		ID3D12CommandList* ppCommandLists[] = { m_commandWrapper[m_frameIndexRender]->GetCommandList().Get()};
+		ID3D12CommandList* ppCommandLists[] = { m_commandWrapper[m_IndexFrameRender]->GetCommandList().Get()};
 		m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 	}
 

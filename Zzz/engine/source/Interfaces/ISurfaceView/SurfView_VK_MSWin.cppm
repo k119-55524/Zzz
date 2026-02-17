@@ -74,7 +74,6 @@ namespace zzz::vk
 		static constexpr VkFormat DEPTH_FORMAT = VK_FORMAT_D32_SFLOAT;
 
 		zU32 m_CurrentImageIndex;
-		zU32 m_CurrentFrame;
 		zU32 m_SubmitFrameIndex;
 
 		VkSurfaceKHR m_Surface;
@@ -119,7 +118,6 @@ namespace zzz::vk
 		std::shared_ptr<IGAPI> _iGAPI)
 		: ISurfView(_iGAPI),
 		m_CurrentImageIndex{ 0 },
-		m_CurrentFrame{ 0 },
 		m_SubmitFrameIndex{ 0 },
 		m_Surface(VK_NULL_HANDLE),
 		m_Swapchain(VK_NULL_HANDLE),
@@ -635,7 +633,8 @@ namespace zzz::vk
 		ensure(device, "Logical device is not initialized.");
 		ensure(queue, "Graphics queue is not initialized.");
 
-		vkWaitForFences(device, 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
+		zU32 currentFrame = m_VulkanAPI->GetIndexFrameRender();
+		vkWaitForFences(device, 1, &m_InFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
 		uint32_t imageIndex;
 		auto vr = vkAcquireNextImageKHR
@@ -643,7 +642,7 @@ namespace zzz::vk
 			device,
 			m_Swapchain,
 			UINT64_MAX,
-			m_ImageAvailableSemaphores[m_CurrentFrame],
+			m_ImageAvailableSemaphores[currentFrame],
 			VK_NULL_HANDLE,
 			&imageIndex
 		);
@@ -663,11 +662,11 @@ namespace zzz::vk
 		if (m_ImagesInFlight[imageIndex] != VK_NULL_HANDLE)
 			vkWaitForFences(device, 1, &m_ImagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
 
-		m_ImagesInFlight[imageIndex] = m_InFlightFences[m_CurrentFrame];
-		vkResetFences(device, 1, &m_InFlightFences[m_CurrentFrame]);
+		m_ImagesInFlight[imageIndex] = m_InFlightFences[currentFrame];
+		vkResetFences(device, 1, &m_InFlightFences[currentFrame]);
 
 		// Render
-		VkCommandBuffer cmd = m_GraphicsCommandBuffers[m_CurrentFrame];
+		VkCommandBuffer cmd = m_GraphicsCommandBuffers[currentFrame];
 		{
 			vkResetCommandBuffer(cmd, 0);
 
@@ -712,14 +711,14 @@ namespace zzz::vk
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &m_ImageAvailableSemaphores[m_CurrentFrame];
+		submitInfo.pWaitSemaphores = &m_ImageAvailableSemaphores[currentFrame];
 		submitInfo.pWaitDstStageMask = waitStages;
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &cmd;
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &m_RenderFinishedSemaphores[imageIndex];
 
-		vkQueueSubmit(queue, 1, &submitInfo, m_InFlightFences[m_CurrentFrame]);
+		vkQueueSubmit(queue, 1, &submitInfo, m_InFlightFences[currentFrame]);
 
 		VkPresentInfoKHR presentInfo{};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -730,8 +729,6 @@ namespace zzz::vk
 		presentInfo.pImageIndices = &imageIndex;
 
 		vkQueuePresentKHR(queue, &presentInfo);
-
-		m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 	}
 
 	void SurfView_VK_MSWin::OnResize(const Size2D<>& size)

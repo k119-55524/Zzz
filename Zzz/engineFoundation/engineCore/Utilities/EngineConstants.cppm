@@ -16,5 +16,4 @@ export namespace zzz
 	inline constexpr zU32 g_MaximumWindowsHeight = 2160;	// Ultra HD 4K
 
 	inline constexpr zU32 BACK_BUFFER_COUNT = 2;
-	inline constexpr zU32 MAX_FRAMES_IN_FLIGHT = 2;
 }
