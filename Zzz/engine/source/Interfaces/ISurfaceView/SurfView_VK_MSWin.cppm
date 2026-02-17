@@ -93,12 +93,6 @@ namespace zzz::vk
 
 		VkRenderPass m_RenderPass;
 
-		// Sync objects (ссылки на VKAPI)
-		std::array<VkSemaphore, BACK_BUFFER_COUNT> m_ImageAvailableSemaphores{};
-		std::array<VkSemaphore, BACK_BUFFER_COUNT> m_RenderFinishedSemaphores{};
-		std::array<VkFence, BACK_BUFFER_COUNT> m_InFlightFences;
-		std::array<VkFence, BACK_BUFFER_COUNT> m_ImagesInFlight;
-
 		[[nodiscard]] Result<> CreateSurface();
 		[[nodiscard]] Result<> CreateSwapchain(const Size2D<>& size);
 		[[nodiscard]] Result<> CreateImageViews();
@@ -111,6 +105,18 @@ namespace zzz::vk
 
 		void CleanupSwapchain();
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
+		VkSemaphore m_StagingAcquireSemaphore;
+		VkSemaphore m_StagingRenderFinishedSemaphore;
+		std::array<VkSemaphore, BACK_BUFFER_COUNT> m_AcquireSemaphores{};
+		std::array<VkSemaphore, BACK_BUFFER_COUNT> m_RenderFinishedSemaphores{};
+		std::array<VkFence, BACK_BUFFER_COUNT> m_InFlightFences;
+		std::array<VkFence, BACK_BUFFER_COUNT> m_ImagesInFlight;
+
+		std::mutex m_FrameMutex;
+		std::condition_variable m_FrameReady;
+		bool m_IsFramePrepared = false;
+		uint32_t m_PreparedImageIndex = 0;
 	};
 
 	SurfView_VK_MSWin::SurfView_VK_MSWin(
@@ -119,12 +125,14 @@ namespace zzz::vk
 		: ISurfView(_iGAPI),
 		m_CurrentImageIndex{ 0 },
 		m_SubmitFrameIndex{ 0 },
-		m_Surface(VK_NULL_HANDLE),
-		m_Swapchain(VK_NULL_HANDLE),
-		m_DepthImage(VK_NULL_HANDLE),
-		m_DepthImageMemory(VK_NULL_HANDLE),
-		m_DepthImageView(VK_NULL_HANDLE),
-		m_RenderPass(VK_NULL_HANDLE)
+		m_Surface{ VK_NULL_HANDLE },
+		m_Swapchain{ VK_NULL_HANDLE },
+		m_DepthImage{ VK_NULL_HANDLE },
+		m_DepthImageMemory{ VK_NULL_HANDLE },
+		m_DepthImageView{ VK_NULL_HANDLE },
+		m_RenderPass{ VK_NULL_HANDLE },
+		m_StagingAcquireSemaphore{ VK_NULL_HANDLE },
+		m_StagingRenderFinishedSemaphore{VK_NULL_HANDLE}
 	{
 		ensure(_iAppWin, "App window cannot be null.");
 		m_iAppWin = std::dynamic_pointer_cast<AppWin_MSWin>(_iAppWin);
@@ -145,13 +153,24 @@ namespace zzz::vk
 
 		vkDeviceWaitIdle(device);
 
-		// Уничтожаем семафоры и fence для всех кадров
+		if (m_StagingAcquireSemaphore)
+		{
+			vkDestroySemaphore(device, m_StagingAcquireSemaphore, nullptr);
+			m_StagingAcquireSemaphore = VK_NULL_HANDLE;
+		}
+
+		if (m_StagingRenderFinishedSemaphore)
+		{
+			vkDestroySemaphore(device, m_StagingRenderFinishedSemaphore, nullptr);
+			m_StagingRenderFinishedSemaphore = VK_NULL_HANDLE;
+		}
+
 		for (size_t i = 0; i < BACK_BUFFER_COUNT; i++)
 		{
-			if (m_ImageAvailableSemaphores[i])
+			if (m_AcquireSemaphores[i])
 			{
-				vkDestroySemaphore(device, m_ImageAvailableSemaphores[i], nullptr);
-				m_ImageAvailableSemaphores[i] = VK_NULL_HANDLE;
+				vkDestroySemaphore(device, m_AcquireSemaphores[i], nullptr);
+				m_AcquireSemaphores[i] = VK_NULL_HANDLE;
 			}
 
 			if (m_RenderFinishedSemaphores[i])
@@ -159,7 +178,6 @@ namespace zzz::vk
 				vkDestroySemaphore(device, m_RenderFinishedSemaphores[i], nullptr);
 				m_RenderFinishedSemaphores[i] = VK_NULL_HANDLE;
 			}
-
 			if (m_InFlightFences[i])
 			{
 				vkDestroyFence(device, m_InFlightFences[i], nullptr);
@@ -473,28 +491,35 @@ namespace zzz::vk
 		return {};
 	}
 
-	[[nodiscard]] Result<> SurfView_VK_MSWin::CreateSyncObjects()
+	Result<> SurfView_VK_MSWin::CreateSyncObjects()
 	{
 		VkDevice device = m_VulkanAPI->GetDevice();
 		VkSemaphoreCreateInfo semInfo{ .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
-		VkFenceCreateInfo fenceInfo{ .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO, .flags = VK_FENCE_CREATE_SIGNALED_BIT };
+		VkFenceCreateInfo fenceCI{
+			.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+			.flags = VK_FENCE_CREATE_SIGNALED_BIT
+		};
+
+		// Два staging семафора
+		if (vkCreateSemaphore(device, &semInfo, nullptr, &m_StagingAcquireSemaphore) != VK_SUCCESS)
+			return Unexpected(eResult::failure, L"Failed to create StagingAcquireSemaphore");
+
+		if (vkCreateSemaphore(device, &semInfo, nullptr, &m_StagingRenderFinishedSemaphore) != VK_SUCCESS)
+			return Unexpected(eResult::failure, L"Failed to create StagingRenderFinishedSemaphore");
 
 		for (size_t i = 0; i < BACK_BUFFER_COUNT; i++)
 		{
-			VkResult vr = vkCreateSemaphore(device, &semInfo, nullptr, &m_ImageAvailableSemaphores[i]);
-			if (vr != VK_SUCCESS)
-				return Unexpected(eResult::failure, std::format(L"Failed to create ImageAvailableSemaphore ({})", int(vr)));
+			if (vkCreateSemaphore(device, &semInfo, nullptr, &m_AcquireSemaphores[i]) != VK_SUCCESS)
+				return Unexpected(eResult::failure,
+					std::format(L"Failed to create AcquireSemaphore [{}]", i));
 
-			vr = vkCreateSemaphore(device, &semInfo, nullptr, &m_RenderFinishedSemaphores[i]);
-			if (vr != VK_SUCCESS)
-				return Unexpected(eResult::failure, std::format(L"Failed to create RenderFinishedSemaphore ({})", int(vr)));
+			if (vkCreateSemaphore(device, &semInfo, nullptr, &m_RenderFinishedSemaphores[i]) != VK_SUCCESS)
+				return Unexpected(eResult::failure,
+					std::format(L"Failed to create RenderFinishedSemaphore [{}]", i));
 
-			// Fence используется для обеспечения завершения выполнения буфера команд перед его повторным использованием.
-			VkFenceCreateInfo fenceCI{ VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
-			fenceCI.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-			vr = vkCreateFence(device, &fenceCI, nullptr, &m_InFlightFences[i]);
-			if (vr != VK_SUCCESS)
-				return Unexpected(eResult::failure, std::format(L"Failed to create fence ({})", int(vr)));
+			if (vkCreateFence(device, &fenceCI, nullptr, &m_InFlightFences[i]) != VK_SUCCESS)
+				return Unexpected(eResult::failure,
+					std::format(L"Failed to create InFlightFence [{}]", i));
 		}
 
 		return {};
@@ -624,112 +649,138 @@ namespace zzz::vk
 #pragma region Rendering
 	void SurfView_VK_MSWin::PrepareFrame(const std::shared_ptr<RenderQueue> renderQueue)
 	{
-	}
-
-	void SurfView_VK_MSWin::RenderFrame()
-	{
 		VkDevice device = m_VulkanAPI->GetDevice();
-		VkQueue  queue = m_VulkanAPI->GetGraphicsQueue();
-		ensure(device, "Logical device is not initialized.");
-		ensure(queue, "Graphics queue is not initialized.");
+		uint32_t currentFrame = m_VulkanAPI->GetIndexFrameRender();
 
-		zU32 currentFrame = m_VulkanAPI->GetIndexFrameRender();
 		vkWaitForFences(device, 1, &m_InFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
 		uint32_t imageIndex;
-		auto vr = vkAcquireNextImageKHR
-		(
-			device,
-			m_Swapchain,
-			UINT64_MAX,
-			m_ImageAvailableSemaphores[currentFrame],
-			VK_NULL_HANDLE,
-			&imageIndex
+		VkResult vr = vkAcquireNextImageKHR(
+			device, m_Swapchain, UINT64_MAX,
+			m_StagingAcquireSemaphore,
+			VK_NULL_HANDLE, &imageIndex
 		);
 
 		if (vr == VK_ERROR_OUT_OF_DATE_KHR)
 		{
 			auto res = RecreateSwapchain(m_SurfSize);
 			if (!res)
-				throw_runtime_error(std::format("Failed to recreate swapchain: {}", wstring_to_string(res.error().getMessage())));
+				throw_runtime_error("Failed to recreate swapchain");
+
+			std::lock_guard lock(m_FrameMutex);
+			m_IsFramePrepared = false;
+			m_FrameReady.notify_one();
 
 			return;
 		}
-
 		if (vr != VK_SUCCESS && vr != VK_SUBOPTIMAL_KHR)
-			throw_runtime_error("Acquire failed");
+			throw_runtime_error("vkAcquireNextImageKHR failed");
+
+		// Acquire swap — как раньше
+		std::swap(m_StagingAcquireSemaphore, m_AcquireSemaphores[imageIndex]);
+
+		// RenderFinished swap — симметрично acquire:
+		// m_RenderFinishedSemaphores[imageIndex] был использован в предыдущей
+		// presentation этого image → driver вернул image → семафор свободен →
+		// отдаём его в staging, staging (свежий) идёт в этот кадр
+		std::swap(m_StagingRenderFinishedSemaphore, m_RenderFinishedSemaphores[imageIndex]);
 
 		if (m_ImagesInFlight[imageIndex] != VK_NULL_HANDLE)
 			vkWaitForFences(device, 1, &m_ImagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
 
-		m_ImagesInFlight[imageIndex] = m_InFlightFences[currentFrame];
 		vkResetFences(device, 1, &m_InFlightFences[currentFrame]);
+		m_ImagesInFlight[imageIndex] = m_InFlightFences[currentFrame];
 
-		// Render
 		VkCommandBuffer cmd = m_GraphicsCommandBuffers[currentFrame];
+		vkResetCommandBuffer(cmd, 0);
+
+		VkCommandBufferBeginInfo beginInfo{ .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+		vkBeginCommandBuffer(cmd, &beginInfo);
+
+		VkClearValue clearValues[2]{};
+		clearValues[0].color = { 0.5f, 0.5f, 0.5f, 1.0f };
+		clearValues[1].depthStencil = { 1.0f, 0 };
+
+		VkRenderPassBeginInfo rpInfo{
+			.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+			.renderPass = m_RenderPass,
+			.framebuffer = m_Framebuffers[imageIndex],
+			.renderArea = {.offset = {0,0}, .extent = m_SwapchainExtent },
+			.clearValueCount = 2,
+			.pClearValues = clearValues
+		};
+
+		vkCmdBeginRenderPass(cmd, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdEndRenderPass(cmd);
+		vkEndCommandBuffer(cmd);
+
 		{
-			vkResetCommandBuffer(cmd, 0);
+			std::lock_guard lock(m_FrameMutex);
+			m_PreparedImageIndex = imageIndex;
+			m_IsFramePrepared = true;
+		}
+		m_FrameReady.notify_one();
+	}
 
-			VkCommandBufferBeginInfo beginInfo{};
-			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-			beginInfo.flags = 0;
+	void SurfView_VK_MSWin::RenderFrame()
+	{
+		VkDevice device = m_VulkanAPI->GetDevice();
+		VkQueue  queue = m_VulkanAPI->GetGraphicsQueue();
 
-			auto vr = vkBeginCommandBuffer(cmd, &beginInfo);
-			if (vr != VK_SUCCESS)
-				throw_runtime_error(std::format("Failed to begin command buffer ({})", static_cast<int>(vr)));
-
-			// --- RenderPass begin ---
-			VkClearValue clearValues[2];
-			clearValues[0].color = { 0.5f, 0.5f, 0.5f, 1.0f };
-			clearValues[1].depthStencil = { 1.0f, 0 };
-
-			VkRenderPassBeginInfo rpInfo{};
-			rpInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			rpInfo.renderPass = m_RenderPass;
-			rpInfo.framebuffer = m_Framebuffers[imageIndex];
-			rpInfo.renderArea.offset = { 0, 0 };
-			rpInfo.renderArea.extent = m_SwapchainExtent;
-			rpInfo.clearValueCount = 2;
-			rpInfo.pClearValues = clearValues;
-
-			vkCmdBeginRenderPass(cmd, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-			// Здесь будет рендеринг сцены (vkCmdBindPipeline, vkCmdDraw и т.д.)
-			{
-				//vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline);
-				//vkCmdDraw(cmd, 3, 1, 0, 0);
-			}
-
-			vkCmdEndRenderPass(cmd);
-
-			vr = vkEndCommandBuffer(cmd);
-			if (vr != VK_SUCCESS)
-				throw_runtime_error(std::format("Failed to end command buffer ({})", int(vr)));
+		uint32_t imageIndex;
+		{
+			std::unique_lock lock(m_FrameMutex);
+			m_FrameReady.wait(lock, [this] { return m_IsFramePrepared; });
+			if (!m_IsFramePrepared) return;
+			imageIndex = m_PreparedImageIndex;
+			m_IsFramePrepared = false;
 		}
 
+		uint32_t currentFrame = m_VulkanAPI->GetIndexFrameRender();
+		VkCommandBuffer cmd = m_GraphicsCommandBuffers[currentFrame];
+
+		// Оба семафора — per imageIndex
+		VkSemaphore waitSemaphore = m_AcquireSemaphores[imageIndex];
+		VkSemaphore signalSemaphore = m_RenderFinishedSemaphores[imageIndex];
+
 		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-		VkSubmitInfo submitInfo{};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &m_ImageAvailableSemaphores[currentFrame];
-		submitInfo.pWaitDstStageMask = waitStages;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &cmd;
-		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &m_RenderFinishedSemaphores[imageIndex];
 
-		vkQueueSubmit(queue, 1, &submitInfo, m_InFlightFences[currentFrame]);
+		VkSubmitInfo submitInfo{
+			.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+			.waitSemaphoreCount = 1,
+			.pWaitSemaphores = &waitSemaphore,
+			.pWaitDstStageMask = waitStages,
+			.commandBufferCount = 1,
+			.pCommandBuffers = &cmd,
+			.signalSemaphoreCount = 1,
+			.pSignalSemaphores = &signalSemaphore
+		};
 
-		VkPresentInfoKHR presentInfo{};
-		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = &m_RenderFinishedSemaphores[imageIndex];
-		presentInfo.swapchainCount = 1;
-		presentInfo.pSwapchains = &m_Swapchain;
-		presentInfo.pImageIndices = &imageIndex;
+		if (vkQueueSubmit(queue, 1, &submitInfo, m_InFlightFences[currentFrame]) != VK_SUCCESS)
+			throw_runtime_error("vkQueueSubmit failed");
 
-		vkQueuePresentKHR(queue, &presentInfo);
+		VkPresentInfoKHR presentInfo{
+			.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+			.waitSemaphoreCount = 1,
+			.pWaitSemaphores = &signalSemaphore,
+			.swapchainCount = 1,
+			.pSwapchains = &m_Swapchain,
+			.pImageIndices = &imageIndex
+		};
+
+		VkResult vr = vkQueuePresentKHR(queue, &presentInfo);
+
+		if (vr == VK_ERROR_OUT_OF_DATE_KHR || vr == VK_SUBOPTIMAL_KHR)
+		{
+			if (auto res = RecreateSwapchain(m_SurfSize); !res)
+				throw_runtime_error("Failed to recreate swapchain");
+		}
+		else if (vr != VK_SUCCESS)
+		{
+			throw_runtime_error("vkQueuePresentKHR failed");
+		}
 	}
+#pragma endregion Rendering
 
 	void SurfView_VK_MSWin::OnResize(const Size2D<>& size)
 	{
@@ -756,6 +807,6 @@ namespace zzz::vk
 		// TODO: Implement fullscreen switching for Vulkan
 		DebugOutput(std::format(L"[SurfView_VK_MSWin::SetFullScreen({})] Not implemented yet\n", fs).c_str());
 	}
-#pragma endregion Rendering
+
 }
 #endif // ZRENDER_API_VULKAN

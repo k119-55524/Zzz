@@ -451,13 +451,11 @@ export namespace zzz::dx
 		auto commandListUpdate = m_commandWrapper[m_IndexFrameUpdate]->GetCommandList();
 		ensure(S_OK == commandListUpdate->Close());
 
-		m_IndexFrameRender = (m_IndexFrameRender + 1) % BACK_BUFFER_COUNT;
-		m_IndexFrameUpdate = (m_IndexFrameRender + 1) % BACK_BUFFER_COUNT;
-
 		// Устанавливаем состояние ресурсов как готовых к рендрингу после копирования в память GPU
 		EndPreparedTransfers();
 
 		WaitForGpu();
+		IGAPI::EndRender();
 	}
 
 	// Устанавливаем состояние ресурса готовое к рендрингу после копирования в память GPU
