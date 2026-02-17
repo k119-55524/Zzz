@@ -7,15 +7,16 @@ import IAppWin;
 import GAPIConfig;
 import StrConvert;
 import IGPUUpload;
+import EngineConstants;
 import GPUUploadCallbacks;
 import IDeviceCapabilities;
 
 using namespace zzz::core;
 using namespace std::literals::string_view_literals;
 
-export namespace zzz
+namespace zzz
 {
-	enum class eGAPIType : uint8_t
+	export enum class eGAPIType : uint8_t
 	{
 		DirectX,
 		Vulkan,
@@ -57,7 +58,7 @@ export namespace zzz
 		inline zU32 GetCurrentFrameIndexUpdate() const noexcept { return m_frameIndexUpdate; }
 
 		virtual void BeginRender() = 0;
-		virtual void EndRender() = 0;
+		virtual void EndRender();
 
 		void LogGPUDebugMessage(const std::wstring& message);
 
@@ -95,5 +96,11 @@ export namespace zzz
 	inline void IGAPI::LogGPUDebugMessage(const std::wstring& message)
 	{
 		DebugOutput(message);
+	}
+
+	void IGAPI::EndRender()
+	{
+		m_frameIndexRender = (m_frameIndexRender + 1) % BACK_BUFFER_COUNT;
+		m_frameIndexUpdate = (m_frameIndexRender + 1) % BACK_BUFFER_COUNT;
 	}
 }

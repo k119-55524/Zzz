@@ -1,3 +1,4 @@
+
 export module VKAPI;
 
 #if defined(ZRENDER_API_VULKAN)
@@ -84,14 +85,15 @@ namespace zzz::vk
 		VkQueue GetTransferQueue() const noexcept { return m_TransferQueue; }
 
 		VkCommandPool GetGraphicsCommandPool() const noexcept { return m_GraphicsCommandPool; }
-		VkCommandBuffer GetCommandBufferUpdate() const noexcept { return m_GraphicsCommandBuffers[m_frameIndexUpdate]; }
-		VkCommandBuffer GetCommandBufferRender() const noexcept { return m_GraphicsCommandBuffers[m_frameIndexRender]; }
-		VkCommandBuffer GetCommandBuffer(zU32 index) const noexcept { return m_GraphicsCommandBuffers[index]; }
-		VkCommandBuffer GetCommandBufferForFrame(zU32 frameIndex) const noexcept { return m_GraphicsCommandBuffers[frameIndex]; }
+		VkCommandPool GetComputeCommandPool() const noexcept { return m_ComputeCommandPool; }
+		VkCommandPool GetTransferCommandPool() const noexcept { return m_TransferCommandPool; }
+		//VkCommandBuffer GetCommandBufferUpdate() const noexcept { return m_GraphicsCommandBuffers[m_frameIndexUpdate]; }
+		//VkCommandBuffer GetCommandBufferRender() const noexcept { return m_GraphicsCommandBuffers[m_frameIndexRender]; }
+		//VkCommandBuffer GetCommandBuffer(zU32 index) const noexcept { return m_GraphicsCommandBuffers[index]; }
+		//VkCommandBuffer GetCommandBufferForFrame(zU32 frameIndex) const noexcept { return m_GraphicsCommandBuffers[frameIndex]; }
 
 		void SubmitCommandLists() override;
 		void BeginRender() override;
-		void EndRender() override;
 
 	protected:
 		[[nodiscard]] Result<> Init() override;
@@ -106,7 +108,7 @@ namespace zzz::vk
 		[[nodiscard]] std::optional<Candidate> BestDeviceCandidat(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface);
 		[[nodiscard]] Result<> CreateLogicalDevice(const Candidate& deviceCandidate);
 		[[nodiscard]] Result<> CreateCommandPools(const Candidate& deviceCandidate);
-		[[nodiscard]] Result<> CreateCommandBuffers();
+		//[[nodiscard]] Result<> CreateCommandBuffers();
 
 		VkInstance m_Instance;
 		VkPhysicalDevice m_PhysicalDevice;
@@ -120,9 +122,9 @@ namespace zzz::vk
 		VkCommandPool m_TransferCommandPool;
 		VkCommandPool m_ComputeCommandPool;
 
-		std::vector<VkCommandBuffer> m_GraphicsCommandBuffers;
-		std::vector<VkCommandBuffer> m_ComputeCommandBuffers;
-		std::vector<VkCommandBuffer> m_TransferCommandBuffers;
+		//std::vector<VkCommandBuffer> m_GraphicsCommandBuffers;
+		//std::vector<VkCommandBuffer> m_ComputeCommandBuffers;
+		//std::vector<VkCommandBuffer> m_TransferCommandBuffers;
 
 		std::shared_ptr<GAPIConfig> m_Config;
 
@@ -213,8 +215,8 @@ namespace zzz::vk
 				{
 					m_CheckGapiSupport = safe_make_unique<VKDeviceCapabilities>(m_PhysicalDevice, m_Device);
 					m_CPUtoGPUDataTransfer = safe_make_unique<GPUUploadVK>();
-				})
-			.and_then([&]() { return CreateCommandBuffers(); });
+				});
+			//.and_then([&]() { return CreateCommandBuffers(); });
 
 		return res;
 	}
@@ -738,54 +740,48 @@ namespace zzz::vk
 		return {};
 	}
 
-	[[nodiscard]] Result<> VKAPI::CreateCommandBuffers()
-	{
-		auto AllocateBuffers = [&](VkCommandPool pool, std::vector<VkCommandBuffer>& buffers, uint32_t count) -> Result<>
-			{
-				buffers.resize(count);
-				VkCommandBufferAllocateInfo allocInfo{
-					.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-					.commandPool = pool,
-					.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-					.commandBufferCount = count
-				};
+	//[[nodiscard]] Result<> VKAPI::CreateCommandBuffers()
+	//{
+	//	auto AllocateBuffers = [&](VkCommandPool pool, std::vector<VkCommandBuffer>& buffers, uint32_t count) -> Result<>
+	//		{
+	//			buffers.resize(count);
+	//			VkCommandBufferAllocateInfo allocInfo{
+	//				.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+	//				.commandPool = pool,
+	//				.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+	//				.commandBufferCount = count
+	//			};
 
-				VkResult vr = vkAllocateCommandBuffers(m_Device, &allocInfo, buffers.data());
-				if (vr != VK_SUCCESS)
-					return Unexpected(eResult::failure, std::format(L"vkAllocateCommandBuffers failed ({})", int(vr)));
+	//			VkResult vr = vkAllocateCommandBuffers(m_Device, &allocInfo, buffers.data());
+	//			if (vr != VK_SUCCESS)
+	//				return Unexpected(eResult::failure, std::format(L"vkAllocateCommandBuffers failed ({})", int(vr)));
 
-				return {};
-			};
+	//			return {};
+	//		};
 
-		if (auto res = AllocateBuffers(m_GraphicsCommandPool, m_GraphicsCommandBuffers, 3); !res)
-			return Unexpected(eResult::failure, L"Failed to allocate graphics command buffers");
+	//	if (auto res = AllocateBuffers(m_GraphicsCommandPool, m_GraphicsCommandBuffers, 3); !res)
+	//		return Unexpected(eResult::failure, L"Failed to allocate graphics command buffers");
 
-		if (m_ComputeCommandPool != m_GraphicsCommandPool)
-		{
-			if (auto res = AllocateBuffers(m_ComputeCommandPool, m_ComputeCommandBuffers, 2); !res)
-				return Unexpected(eResult::failure, L"Failed to allocate compute command buffers");
-		}
+	//	if (m_ComputeCommandPool != m_GraphicsCommandPool)
+	//	{
+	//		if (auto res = AllocateBuffers(m_ComputeCommandPool, m_ComputeCommandBuffers, 2); !res)
+	//			return Unexpected(eResult::failure, L"Failed to allocate compute command buffers");
+	//	}
 
-		if (m_TransferCommandPool != m_GraphicsCommandPool &&
-			m_TransferCommandPool != m_ComputeCommandPool)
-		{
-			if (auto res = AllocateBuffers(m_TransferCommandPool, m_TransferCommandBuffers, 2); !res)
-				return Unexpected(eResult::failure, L"Failed to allocate transfer command buffers");
-		}
+	//	if (m_TransferCommandPool != m_GraphicsCommandPool &&
+	//		m_TransferCommandPool != m_ComputeCommandPool)
+	//	{
+	//		if (auto res = AllocateBuffers(m_TransferCommandPool, m_TransferCommandBuffers, 2); !res)
+	//			return Unexpected(eResult::failure, L"Failed to allocate transfer command buffers");
+	//	}
 
-		return {};
-	}
+	//	return {};
+	//}
 #pragma endregion Initialize
 
 #pragma region Rendering
 	void VKAPI::BeginRender()
 	{
-	}
-
-	void VKAPI::EndRender()
-	{
-		m_frameIndexRender = (m_frameIndexRender + 1) % BACK_BUFFER_COUNT;
-		m_frameIndexUpdate = (m_frameIndexRender + 1) % BACK_BUFFER_COUNT;
 	}
 
 	void VKAPI::SubmitCommandLists()

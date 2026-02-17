@@ -84,6 +84,10 @@ namespace zzz::vk
 		std::vector<VkImageView> m_SwapchainImageViews;
 		std::vector<VkFramebuffer> m_Framebuffers;
 
+		std::vector<VkCommandBuffer> m_GraphicsCommandBuffers;
+		std::vector<VkCommandBuffer> m_ComputeCommandBuffers;
+		std::vector<VkCommandBuffer> m_TransferCommandBuffers;
+
 		VkImage m_DepthImage;
 		VkDeviceMemory m_DepthImageMemory;
 		VkImageView m_DepthImageView;
@@ -104,6 +108,7 @@ namespace zzz::vk
 		[[nodiscard]] Result<> CreateFramebuffers();
 		[[nodiscard]] Result<> RecreateSwapchain(const Size2D<>& size);
 		[[nodiscard]] Result<> CreateSyncObjects();
+		[[nodiscard]] Result<> CreateCommandBuffers();
 
 		void CleanupSwapchain();
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
@@ -162,12 +167,6 @@ namespace zzz::vk
 				vkDestroyFence(device, m_InFlightFences[i], nullptr);
 				m_InFlightFences[i] = VK_NULL_HANDLE;
 			}
-
-			//if (m_ImagesInFlight[i])
-			//{
-			//	vkDestroyFence(device, m_ImagesInFlight[i], nullptr);
-			//	m_InFlightFences[i] = VK_NULL_HANDLE;
-			//}
 		}
 
 		CleanupSwapchain();
@@ -177,11 +176,6 @@ namespace zzz::vk
 
 		if (m_Surface)
 			vkDestroySurfaceKHR(m_VulkanAPI->GetInstance(), m_Surface, nullptr);
-
-		//for (uint32_t i = 0; i < BACK_BUFFER_COUNT; i++)
-		//{
-		//	vkDestroyFence(device, m_InFlightFences[i], nullptr);
-		//}
 	}
 
 #pragma region Initialize
@@ -196,6 +190,7 @@ namespace zzz::vk
 			.and_then([&]() { return CreateRenderPass(); })
 			.and_then([&]() { return CreateDepthResources(winSize); })
 			.and_then([&]() { return CreateFramebuffers(); })
+			.and_then([&]() { return CreateCommandBuffers(); })
 			.and_then([&]() { return CreateSyncObjects(); });
 
 		if (!res)
@@ -223,17 +218,22 @@ namespace zzz::vk
 	{
 		VkPhysicalDevice physicalDevice = m_VulkanAPI->GetPhysicalDevice();
 		VkDevice device = m_VulkanAPI->GetDevice();
+		ensure(physicalDevice, "Physical device is not initialized.");
+		ensure(device, "Logical device is not initialized.");
 
 		VkSurfaceCapabilitiesKHR capabilities;
 		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_Surface, &capabilities);
 
 		// Вычисляем корректный extent
 		VkExtent2D extent;
-		if (capabilities.currentExtent.width != UINT32_MAX) {
+		if (capabilities.currentExtent.width != UINT32_MAX)
+		{
 			extent = capabilities.currentExtent;
 		}
-		else {
-			extent = {
+		else
+		{
+			extent =
+			{
 				std::clamp(static_cast<uint32_t>(size.width), capabilities.minImageExtent.width, capabilities.maxImageExtent.width),
 				std::clamp(static_cast<uint32_t>(size.height), capabilities.minImageExtent.height, capabilities.maxImageExtent.height)
 			};
@@ -275,10 +275,11 @@ namespace zzz::vk
 		return {};
 	}
 
-
 	[[nodiscard]] Result<> SurfView_VK_MSWin::CreateImageViews()
 	{
 		VkDevice device = m_VulkanAPI->GetDevice();
+		ensure(device, "Logical device is not initialized.");
+
 		m_SwapchainImageViews.resize(m_SwapchainImages.size());
 
 		for (size_t i = 0; i < m_SwapchainImages.size(); i++)
@@ -539,6 +540,8 @@ namespace zzz::vk
 	[[nodiscard]] Result<> SurfView_VK_MSWin::RecreateSwapchain(const Size2D<>& size)
 	{
 		VkDevice device = m_VulkanAPI->GetDevice();
+		ensure(device, "Logical device is not initialized.");
+
 		vkDeviceWaitIdle(device);
 
 		// Удаляем старые ресурсы swapchain
@@ -553,7 +556,8 @@ namespace zzz::vk
 		{
 			m_SwapchainExtent = capabilities.currentExtent;
 		}
-		else {
+		else
+		{
 			m_SwapchainExtent =
 			{
 				std::clamp(static_cast<uint32_t>(size.width), capabilities.minImageExtent.width, capabilities.maxImageExtent.width),
@@ -572,6 +576,51 @@ namespace zzz::vk
 
 		return {};
 	}
+
+	[[nodiscard]] Result<> SurfView_VK_MSWin::CreateCommandBuffers()
+	{
+		VkDevice device = m_VulkanAPI->GetDevice();
+		ensure(device, "Logical device is not initialized.");
+
+		auto AllocateBuffers = [&](VkCommandPool pool, std::vector<VkCommandBuffer>& buffers, uint32_t count) -> Result<>
+			{
+				buffers.resize(count);
+				VkCommandBufferAllocateInfo allocInfo{
+					.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+					.commandPool = pool,
+					.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+					.commandBufferCount = count
+				};
+
+				VkResult vr = vkAllocateCommandBuffers(device, &allocInfo, buffers.data());
+				if (vr != VK_SUCCESS)
+					return Unexpected(eResult::failure, std::format(L"vkAllocateCommandBuffers failed ({})", int(vr)));
+
+				return {};
+			};
+
+		VkCommandPool graphicsPool = m_VulkanAPI->GetGraphicsCommandPool();
+		VkCommandPool computePool = m_VulkanAPI->GetComputeCommandPool();
+		VkCommandPool transferPool = m_VulkanAPI->GetTransferCommandPool();
+
+		if (auto res = AllocateBuffers(graphicsPool, m_GraphicsCommandBuffers, 3); !res)
+			return Unexpected(eResult::failure, L"Failed to allocate graphics command buffers");
+
+		if (computePool != graphicsPool)
+		{
+			if (auto res = AllocateBuffers(computePool, m_ComputeCommandBuffers, 2); !res)
+				return Unexpected(eResult::failure, L"Failed to allocate compute command buffers");
+		}
+
+		if (transferPool != graphicsPool &&
+			transferPool != computePool)
+		{
+			if (auto res = AllocateBuffers(transferPool, m_TransferCommandBuffers, 2); !res)
+				return Unexpected(eResult::failure, L"Failed to allocate transfer command buffers");
+		}
+
+		return {};
+	}
 #pragma endregion Initialize
 
 #pragma region Rendering
@@ -579,23 +628,22 @@ namespace zzz::vk
 	{
 	}
 
-	constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
-
 	void SurfView_VK_MSWin::RenderFrame()
 	{
 		VkDevice device = m_VulkanAPI->GetDevice();
 		VkQueue  queue = m_VulkanAPI->GetGraphicsQueue();
+		ensure(device, "Logical device is not initialized.");
+		ensure(queue, "Graphics queue is not initialized.");
 
-		uint32_t frameIndex = m_CurrentFrame;
-
-		vkWaitForFences(device, 1, &m_InFlightFences[frameIndex], VK_TRUE, UINT64_MAX);
+		vkWaitForFences(device, 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
 
 		uint32_t imageIndex;
-		auto vr = vkAcquireNextImageKHR(
+		auto vr = vkAcquireNextImageKHR
+		(
 			device,
 			m_Swapchain,
 			UINT64_MAX,
-			m_ImageAvailableSemaphores[frameIndex],
+			m_ImageAvailableSemaphores[m_CurrentFrame],
 			VK_NULL_HANDLE,
 			&imageIndex
 		);
@@ -610,21 +658,16 @@ namespace zzz::vk
 		}
 
 		if (vr != VK_SUCCESS && vr != VK_SUBOPTIMAL_KHR)
-		{
 			throw_runtime_error("Acquire failed");
-		}
 
 		if (m_ImagesInFlight[imageIndex] != VK_NULL_HANDLE)
-		{
 			vkWaitForFences(device, 1, &m_ImagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
-		}
 
-		m_ImagesInFlight[imageIndex] = m_InFlightFences[frameIndex];
-
-		vkResetFences(device, 1, &m_InFlightFences[frameIndex]);
+		m_ImagesInFlight[imageIndex] = m_InFlightFences[m_CurrentFrame];
+		vkResetFences(device, 1, &m_InFlightFences[m_CurrentFrame]);
 
 		// Render
-		VkCommandBuffer cmd = m_VulkanAPI->GetCommandBuffer(frameIndex);
+		VkCommandBuffer cmd = m_GraphicsCommandBuffers[m_CurrentFrame];
 		{
 			vkResetCommandBuffer(cmd, 0);
 
@@ -634,7 +677,7 @@ namespace zzz::vk
 
 			auto vr = vkBeginCommandBuffer(cmd, &beginInfo);
 			if (vr != VK_SUCCESS)
-				throw_runtime_error(std::format("Failed to begin command buffer ({})", int(vr)));
+				throw_runtime_error(std::format("Failed to begin command buffer ({})", static_cast<int>(vr)));
 
 			// --- RenderPass begin ---
 			VkClearValue clearValues[2];
@@ -652,9 +695,11 @@ namespace zzz::vk
 
 			vkCmdBeginRenderPass(cmd, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-			//vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline);
-
-			//vkCmdDraw(cmd, 3, 1, 0, 0);
+			// Здесь будет рендеринг сцены (vkCmdBindPipeline, vkCmdDraw и т.д.)
+			{
+				//vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline);
+				//vkCmdDraw(cmd, 3, 1, 0, 0);
+			}
 
 			vkCmdEndRenderPass(cmd);
 
@@ -667,14 +712,14 @@ namespace zzz::vk
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &m_ImageAvailableSemaphores[frameIndex];
+		submitInfo.pWaitSemaphores = &m_ImageAvailableSemaphores[m_CurrentFrame];
 		submitInfo.pWaitDstStageMask = waitStages;
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &cmd;
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &m_RenderFinishedSemaphores[imageIndex];
 
-		vkQueueSubmit(queue, 1, &submitInfo, m_InFlightFences[frameIndex]);
+		vkQueueSubmit(queue, 1, &submitInfo, m_InFlightFences[m_CurrentFrame]);
 
 		VkPresentInfoKHR presentInfo{};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -697,7 +742,10 @@ namespace zzz::vk
 		if (size.width == 0 || size.height == 0)
 			return;
 
-		vkDeviceWaitIdle(m_VulkanAPI->GetDevice());
+		VkDevice device = m_VulkanAPI->GetDevice();
+		ensure(device, "Logical device is not initialized.");
+
+		vkDeviceWaitIdle(device);
 
 		auto res = RecreateSwapchain(size);
 		if (!res)
