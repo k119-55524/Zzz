@@ -76,23 +76,30 @@ namespace zzz::vk
 		explicit VKAPI(const std::shared_ptr<GAPIConfig> config);
 		virtual ~VKAPI() override;
 
-		// Геттеры (аналогично DXAPI)
-		VkInstance GetInstance() const noexcept { return m_Instance; }
-		VkPhysicalDevice GetPhysicalDevice() const noexcept { return m_PhysicalDevice; }
-		VkDevice GetDevice() const noexcept { return m_Device; }
+		inline VkInstance GetInstance() const noexcept { return m_Instance; }
+		inline VkPhysicalDevice GetPhysicalDevice() const noexcept { return m_PhysicalDevice; }
+		inline VkDevice GetDevice() const noexcept { return m_Device; }
 
-		VkQueue GetGraphicsQueue() const noexcept { return m_GraphicsQueue; }
-		VkQueue GetComputeQueue() const noexcept { return m_ComputeQueue; }
-		VkQueue GetTransferQueue() const noexcept { return m_TransferQueue; }
-		VkCommandPool GetGraphicsCommandPool() const noexcept { return m_GraphicsCommandPool; }
-		VkCommandPool GetComputeCommandPool() const noexcept { return m_ComputeCommandPool; }
-		VkCommandPool GetTransferCommandPool() const noexcept { return m_TransferCommandPool; }
+		inline VkQueue GetGraphicsQueue() const noexcept { return m_GraphicsQueue; }
+		inline VkQueue GetComputeQueue() const noexcept { return m_ComputeQueue; }
+		inline VkQueue GetTransferQueue() const noexcept { return m_TransferQueue; }
+		inline VkCommandPool GetGraphicsCommandPool() const noexcept { return m_GraphicsCommandPool; }
+		inline VkCommandPool GetComputeCommandPool() const noexcept { return m_ComputeCommandPool; }
+		inline VkCommandPool GetTransferCommandPool() const noexcept { return m_TransferCommandPool; }
+		inline void SetFrameSyncData(VkSemaphore waitSemaphore, VkSemaphore signalSemaphore) noexcept
+		{
+			m_CurrentWaitSemaphore = waitSemaphore;
+			m_CurrentSignalSemaphore = signalSemaphore;
+		}
+		inline VkCommandBuffer GetGraphicsCBUpdate() const noexcept { return m_GraphicsCommandBuffers[m_IndexFrameRender]; }
 
 		void SubmitCommandLists() override;
 		void BeginRender() override;
 
 	protected:
 		[[nodiscard]] Result<> Init() override;
+		void WaitForGpu() override;
+		void EndRender() override;
 
 	private:
 		[[nodiscard]] Result<> CreateInstance();
@@ -103,6 +110,8 @@ namespace zzz::vk
 		[[nodiscard]] std::optional<Candidate> BestDeviceCandidat(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface);
 		[[nodiscard]] Result<> CreateLogicalDevice(const Candidate& deviceCandidate);
 		[[nodiscard]] Result<> CreateCommandPools(const Candidate& deviceCandidate);
+		[[nodiscard]] Result<> CreateCommandBuffers();
+		[[nodiscard]] Result<> CreateSyncObjects();
 
 		VkInstance m_Instance;
 		VkPhysicalDevice m_PhysicalDevice;
@@ -111,11 +120,17 @@ namespace zzz::vk
 		VkQueue m_GraphicsQueue;
 		VkQueue m_ComputeQueue;
 		VkQueue m_TransferQueue;
+
 		VkCommandPool m_GraphicsCommandPool;
 		VkCommandPool m_TransferCommandPool;
 		VkCommandPool m_ComputeCommandPool;
+		std::vector<VkCommandBuffer> m_GraphicsCommandBuffers;
+		std::vector<VkCommandBuffer> m_ComputeCommandBuffers;
+		std::vector<VkCommandBuffer> m_TransferCommandBuffers;
 
-		std::shared_ptr<GAPIConfig> m_Config;
+		std::array<VkFence, BACK_BUFFER_COUNT> m_InFlightFences{};
+		VkSemaphore m_CurrentWaitSemaphore = VK_NULL_HANDLE;
+		VkSemaphore m_CurrentSignalSemaphore = VK_NULL_HANDLE;
 
 #if defined(_DEBUG)
 		VkDebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE;
@@ -142,10 +157,12 @@ namespace zzz::vk
 		m_TransferQueue(VK_NULL_HANDLE),
 		m_GraphicsCommandPool(VK_NULL_HANDLE),
 		m_TransferCommandPool(VK_NULL_HANDLE),
-		m_ComputeCommandPool(VK_NULL_HANDLE),
-		m_Config(config)
+		m_ComputeCommandPool(VK_NULL_HANDLE)
 	{
 		ensure(config, "GAPIConfig cannot be null.");
+
+		for (uint32_t i = 0; i < BACK_BUFFER_COUNT; i++)
+			m_InFlightFences[i] = VK_NULL_HANDLE;
 	}
 
 	VKAPI::~VKAPI()
@@ -153,7 +170,12 @@ namespace zzz::vk
 		if (m_Device)
 			vkDeviceWaitIdle(m_Device);
 
-		// Очистка command pools
+		for (size_t i = 0; i < BACK_BUFFER_COUNT; i++)
+		{
+			if (m_InFlightFences[i])
+				vkDestroyFence(m_Device, m_InFlightFences[i], nullptr);
+		}
+
 		if (m_ComputeCommandPool && m_ComputeCommandPool != m_GraphicsCommandPool)
 			vkDestroyCommandPool(m_Device, m_ComputeCommandPool, nullptr);
 
@@ -168,9 +190,8 @@ namespace zzz::vk
 			vkDestroyDevice(m_Device, nullptr);
 
 #if defined(_DEBUG)
-		auto destroyFunc =
-			reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(m_Instance, "vkDestroyDebugUtilsMessengerEXT"));
-
+		auto destroyFunc = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
+			vkGetInstanceProcAddr(m_Instance, "vkDestroyDebugUtilsMessengerEXT"));
 		if (destroyFunc && m_DebugMessenger)
 			destroyFunc(m_Instance, m_DebugMessenger, nullptr);
 #endif
@@ -200,12 +221,13 @@ namespace zzz::vk
 				})
 			.and_then([&]() { return CreateLogicalDevice(deviceCandidate); })
 			.and_then([&]() { return CreateCommandPools(deviceCandidate); })
+			.and_then([&]() { return CreateCommandBuffers(); })
+			.and_then([&]() { return CreateSyncObjects(); })
 			.and_then([&]()
 				{
 					m_CheckGapiSupport = safe_make_unique<VKDeviceCapabilities>(m_PhysicalDevice, m_Device);
 					m_CPUtoGPUDataTransfer = safe_make_unique<GPUUploadVK>();
 				});
-			//.and_then([&]() { return CreateCommandBuffers(); });
 
 		return res;
 	}
@@ -728,15 +750,114 @@ namespace zzz::vk
 
 		return {};
 	}
+
+	[[nodiscard]] Result<> VKAPI::CreateCommandBuffers()
+	{
+		auto AllocateBuffers = [&](VkCommandPool pool, std::vector<VkCommandBuffer>& buffers) -> Result<>
+			{
+				buffers.resize(BACK_BUFFER_COUNT);
+				VkCommandBufferAllocateInfo allocInfo{
+					.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+					.commandPool = pool,
+					.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+					.commandBufferCount = BACK_BUFFER_COUNT
+				};
+
+				VkResult vr = vkAllocateCommandBuffers(m_Device, &allocInfo, buffers.data());
+				if (vr != VK_SUCCESS)
+					return Unexpected(eResult::failure, std::format(L"vkAllocateCommandBuffers failed ({})", int(vr)));
+
+				return {};
+			};
+
+		if (auto res = AllocateBuffers(m_GraphicsCommandPool, m_GraphicsCommandBuffers); !res)
+			return res;
+
+		if (m_ComputeCommandPool != m_GraphicsCommandPool)
+		{
+			if (auto res = AllocateBuffers(m_ComputeCommandPool, m_ComputeCommandBuffers); !res)
+				return res;
+		}
+
+		if (m_TransferCommandPool != m_GraphicsCommandPool &&
+			m_TransferCommandPool != m_ComputeCommandPool)
+		{
+			if (auto res = AllocateBuffers(m_TransferCommandPool, m_TransferCommandBuffers); !res)
+				return res;
+		}
+
+		return {};
+	}
+
+	[[nodiscard]] Result<> VKAPI::CreateSyncObjects()
+	{
+		VkFenceCreateInfo fenceCI{
+			.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+			.flags = VK_FENCE_CREATE_SIGNALED_BIT
+		};
+
+		for (size_t i = 0; i < BACK_BUFFER_COUNT; i++)
+		{
+			if (vkCreateFence(m_Device, &fenceCI, nullptr, &m_InFlightFences[i]) != VK_SUCCESS)
+				return Unexpected(eResult::failure, std::format(L"Failed to create InFlightFence [{}]", i));
+		}
+
+		return {};
+	}
 #pragma endregion Initialize
 
 #pragma region Rendering
 	void VKAPI::BeginRender()
 	{
+		// Используем IndexFrameRender вместо IndexFrameUpdate
+		uint32_t frame = m_IndexFrameRender;
+
+		// Ждём завершения предыдущего кадра в этом слоте
+		vkWaitForFences(m_Device, 1, &m_InFlightFences[frame], VK_TRUE, UINT64_MAX);
+
+		VkCommandBuffer cmd = m_GraphicsCommandBuffers[frame];
+		vkResetCommandBuffer(cmd, 0);
+
+		VkCommandBufferBeginInfo beginInfo{
+			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+			.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
+		};
+		ensure(VK_SUCCESS == vkBeginCommandBuffer(cmd, &beginInfo));
 	}
 
 	void VKAPI::SubmitCommandLists()
 	{
+		uint32_t frame = m_IndexFrameRender;
+		VkCommandBuffer cmd = m_GraphicsCommandBuffers[frame];
+
+		ensure(VK_SUCCESS == vkEndCommandBuffer(cmd));
+
+		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+
+		VkSubmitInfo submitInfo{
+			.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+			.waitSemaphoreCount = 1,
+			.pWaitSemaphores = &m_CurrentWaitSemaphore,
+			.pWaitDstStageMask = waitStages,
+			.commandBufferCount = 1,
+			.pCommandBuffers = &cmd,
+			.signalSemaphoreCount = 1,
+			.pSignalSemaphores = &m_CurrentSignalSemaphore
+		};
+
+		// Reset fence непосредственно перед submit
+		vkResetFences(m_Device, 1, &m_InFlightFences[frame]);
+		ensure(VK_SUCCESS == vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, m_InFlightFences[frame]));
+	}
+
+	void VKAPI::WaitForGpu()
+	{
+		vkDeviceWaitIdle(m_Device);
+	}
+
+	void VKAPI::EndRender()
+	{
+		IGAPI::EndRender();
 	}
 #pragma endregion Rendering
 }

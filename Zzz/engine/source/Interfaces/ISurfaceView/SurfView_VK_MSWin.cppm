@@ -73,9 +73,6 @@ namespace zzz::vk
 		static constexpr VkFormat BACK_BUFFER_FORMAT = VK_FORMAT_B8G8R8A8_UNORM;
 		static constexpr VkFormat DEPTH_FORMAT = VK_FORMAT_D32_SFLOAT;
 
-		zU32 m_CurrentImageIndex;
-		zU32 m_SubmitFrameIndex;
-
 		VkSurfaceKHR m_Surface;
 		VkSwapchainKHR m_Swapchain;
 		VkExtent2D m_SwapchainExtent;
@@ -83,14 +80,9 @@ namespace zzz::vk
 		std::vector<VkImageView> m_SwapchainImageViews;
 		std::vector<VkFramebuffer> m_Framebuffers;
 
-		std::vector<VkCommandBuffer> m_GraphicsCommandBuffers;
-		std::vector<VkCommandBuffer> m_ComputeCommandBuffers;
-		std::vector<VkCommandBuffer> m_TransferCommandBuffers;
-
 		VkImage m_DepthImage;
 		VkDeviceMemory m_DepthImageMemory;
 		VkImageView m_DepthImageView;
-
 		VkRenderPass m_RenderPass;
 
 		[[nodiscard]] Result<> CreateSurface();
@@ -101,17 +93,13 @@ namespace zzz::vk
 		[[nodiscard]] Result<> CreateFramebuffers();
 		[[nodiscard]] Result<> RecreateSwapchain(const Size2D<>& size);
 		[[nodiscard]] Result<> CreateSyncObjects();
-		[[nodiscard]] Result<> CreateCommandBuffers();
-
 		void CleanupSwapchain();
-		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+		[[nodiscard]] uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
 		VkSemaphore m_StagingAcquireSemaphore;
 		VkSemaphore m_StagingRenderFinishedSemaphore;
 		std::array<VkSemaphore, BACK_BUFFER_COUNT> m_AcquireSemaphores{};
 		std::array<VkSemaphore, BACK_BUFFER_COUNT> m_RenderFinishedSemaphores{};
-		std::array<VkFence, BACK_BUFFER_COUNT> m_InFlightFences;
-		std::array<VkFence, BACK_BUFFER_COUNT> m_ImagesInFlight;
 
 		std::mutex m_FrameMutex;
 		std::condition_variable m_FrameReady;
@@ -123,8 +111,6 @@ namespace zzz::vk
 		std::shared_ptr<IAppWin> _iAppWin,
 		std::shared_ptr<IGAPI> _iGAPI)
 		: ISurfView(_iGAPI),
-		m_CurrentImageIndex{ 0 },
-		m_SubmitFrameIndex{ 0 },
 		m_Surface{ VK_NULL_HANDLE },
 		m_Swapchain{ VK_NULL_HANDLE },
 		m_DepthImage{ VK_NULL_HANDLE },
@@ -140,9 +126,6 @@ namespace zzz::vk
 
 		m_VulkanAPI = std::dynamic_pointer_cast<VKAPI>(_iGAPI);
 		ensure(m_VulkanAPI, "Failed to cast IGAPI to VKAPI.");
-
-		for (uint32_t i = 0; i < BACK_BUFFER_COUNT; i++)
-			m_ImagesInFlight[i] = VK_NULL_HANDLE;
 	}
 
 	SurfView_VK_MSWin::~SurfView_VK_MSWin()
@@ -178,11 +161,6 @@ namespace zzz::vk
 				vkDestroySemaphore(device, m_RenderFinishedSemaphores[i], nullptr);
 				m_RenderFinishedSemaphores[i] = VK_NULL_HANDLE;
 			}
-			if (m_InFlightFences[i])
-			{
-				vkDestroyFence(device, m_InFlightFences[i], nullptr);
-				m_InFlightFences[i] = VK_NULL_HANDLE;
-			}
 		}
 
 		CleanupSwapchain();
@@ -206,7 +184,6 @@ namespace zzz::vk
 			.and_then([&]() { return CreateRenderPass(); })
 			.and_then([&]() { return CreateDepthResources(winSize); })
 			.and_then([&]() { return CreateFramebuffers(); })
-			.and_then([&]() { return CreateCommandBuffers(); })
 			.and_then([&]() { return CreateSyncObjects(); });
 
 		if (!res)
@@ -255,7 +232,7 @@ namespace zzz::vk
 			};
 		}
 
-		m_SwapchainExtent = extent; // <--- сохраняем для рендера и framebuffer
+		m_SwapchainExtent = extent;
 
 		// Далее создаём swapchain с этим extent
 		uint32_t imageCount = BACK_BUFFER_COUNT;
@@ -268,7 +245,7 @@ namespace zzz::vk
 			.minImageCount = imageCount,
 			.imageFormat = BACK_BUFFER_FORMAT,
 			.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-			.imageExtent = extent, // используем корректный extent
+			.imageExtent = extent,
 			.imageArrayLayers = 1,
 			.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
 			.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
@@ -408,9 +385,9 @@ namespace zzz::vk
 			.imageType = VK_IMAGE_TYPE_2D,
 			.format = DEPTH_FORMAT,
 			.extent = {
-				.width = static_cast<uint32_t>(size.width),
-				.height = static_cast<uint32_t>(size.height),
-				.depth = 1
+				m_SwapchainExtent.width,	//.width = static_cast<uint32_t>(size.width),
+				m_SwapchainExtent.height,	//.height = static_cast<uint32_t>(size.height),
+				1
 			},
 			.mipLevels = 1,
 			.arrayLayers = 1,
@@ -478,8 +455,8 @@ namespace zzz::vk
 				.renderPass = m_RenderPass,
 				.attachmentCount = static_cast<uint32_t>(attachments.size()),
 				.pAttachments = attachments.data(),
-				.width = m_SwapchainExtent.width,   // ← ИСПРАВЛЕНО
-				.height = m_SwapchainExtent.height, // ← ИСПРАВЛЕНО
+				.width = m_SwapchainExtent.width,
+				.height = m_SwapchainExtent.height,
 				.layers = 1
 			};
 
@@ -495,12 +472,7 @@ namespace zzz::vk
 	{
 		VkDevice device = m_VulkanAPI->GetDevice();
 		VkSemaphoreCreateInfo semInfo{ .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
-		VkFenceCreateInfo fenceCI{
-			.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
-			.flags = VK_FENCE_CREATE_SIGNALED_BIT
-		};
 
-		// Два staging семафора
 		if (vkCreateSemaphore(device, &semInfo, nullptr, &m_StagingAcquireSemaphore) != VK_SUCCESS)
 			return Unexpected(eResult::failure, L"Failed to create StagingAcquireSemaphore");
 
@@ -510,16 +482,11 @@ namespace zzz::vk
 		for (size_t i = 0; i < BACK_BUFFER_COUNT; i++)
 		{
 			if (vkCreateSemaphore(device, &semInfo, nullptr, &m_AcquireSemaphores[i]) != VK_SUCCESS)
-				return Unexpected(eResult::failure,
-					std::format(L"Failed to create AcquireSemaphore [{}]", i));
+				return Unexpected(eResult::failure, std::format(L"Failed to create AcquireSemaphore [{}]", i));
 
+			// per-image — остаётся в SurfView
 			if (vkCreateSemaphore(device, &semInfo, nullptr, &m_RenderFinishedSemaphores[i]) != VK_SUCCESS)
-				return Unexpected(eResult::failure,
-					std::format(L"Failed to create RenderFinishedSemaphore [{}]", i));
-
-			if (vkCreateFence(device, &fenceCI, nullptr, &m_InFlightFences[i]) != VK_SUCCESS)
-				return Unexpected(eResult::failure,
-					std::format(L"Failed to create InFlightFence [{}]", i));
+				return Unexpected(eResult::failure, std::format(L"Failed to create RenderFinishedSemaphore [{}]", i));
 		}
 
 		return {};
@@ -599,65 +566,17 @@ namespace zzz::vk
 
 		return {};
 	}
-
-	[[nodiscard]] Result<> SurfView_VK_MSWin::CreateCommandBuffers()
-	{
-		VkDevice device = m_VulkanAPI->GetDevice();
-		ensure(device, "Logical device is not initialized.");
-
-		auto AllocateBuffers = [&](VkCommandPool pool, std::vector<VkCommandBuffer>& buffers, uint32_t count) -> Result<>
-			{
-				buffers.resize(count);
-				VkCommandBufferAllocateInfo allocInfo{
-					.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-					.commandPool = pool,
-					.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-					.commandBufferCount = count
-				};
-
-				VkResult vr = vkAllocateCommandBuffers(device, &allocInfo, buffers.data());
-				if (vr != VK_SUCCESS)
-					return Unexpected(eResult::failure, std::format(L"vkAllocateCommandBuffers failed ({})", int(vr)));
-
-				return {};
-			};
-
-		VkCommandPool graphicsPool = m_VulkanAPI->GetGraphicsCommandPool();
-		VkCommandPool computePool = m_VulkanAPI->GetComputeCommandPool();
-		VkCommandPool transferPool = m_VulkanAPI->GetTransferCommandPool();
-
-		if (auto res = AllocateBuffers(graphicsPool, m_GraphicsCommandBuffers, 3); !res)
-			return Unexpected(eResult::failure, L"Failed to allocate graphics command buffers");
-
-		if (computePool != graphicsPool)
-		{
-			if (auto res = AllocateBuffers(computePool, m_ComputeCommandBuffers, 2); !res)
-				return Unexpected(eResult::failure, L"Failed to allocate compute command buffers");
-		}
-
-		if (transferPool != graphicsPool &&
-			transferPool != computePool)
-		{
-			if (auto res = AllocateBuffers(transferPool, m_TransferCommandBuffers, 2); !res)
-				return Unexpected(eResult::failure, L"Failed to allocate transfer command buffers");
-		}
-
-		return {};
-	}
 #pragma endregion Initialize
 
 #pragma region Rendering
 	void SurfView_VK_MSWin::PrepareFrame(const std::shared_ptr<RenderQueue> renderQueue)
 	{
 		VkDevice device = m_VulkanAPI->GetDevice();
-		uint32_t currentFrame = m_VulkanAPI->GetIndexFrameRender();
-
-		vkWaitForFences(device, 1, &m_InFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
 		uint32_t imageIndex;
 		VkResult vr = vkAcquireNextImageKHR(
 			device, m_Swapchain, UINT64_MAX,
-			m_StagingAcquireSemaphore,
+			m_StagingAcquireSemaphore, // остаётся здесь — привязан к swapchain
 			VK_NULL_HANDLE, &imageIndex
 		);
 
@@ -670,33 +589,14 @@ namespace zzz::vk
 			std::lock_guard lock(m_FrameMutex);
 			m_IsFramePrepared = false;
 			m_FrameReady.notify_one();
-
 			return;
 		}
 		if (vr != VK_SUCCESS && vr != VK_SUBOPTIMAL_KHR)
 			throw_runtime_error("vkAcquireNextImageKHR failed");
 
-		// Acquire swap — как раньше
 		std::swap(m_StagingAcquireSemaphore, m_AcquireSemaphores[imageIndex]);
 
-		// RenderFinished swap — симметрично acquire:
-		// m_RenderFinishedSemaphores[imageIndex] был использован в предыдущей
-		// presentation этого image → driver вернул image → семафор свободен →
-		// отдаём его в staging, staging (свежий) идёт в этот кадр
-		std::swap(m_StagingRenderFinishedSemaphore, m_RenderFinishedSemaphores[imageIndex]);
-
-		if (m_ImagesInFlight[imageIndex] != VK_NULL_HANDLE)
-			vkWaitForFences(device, 1, &m_ImagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
-
-		vkResetFences(device, 1, &m_InFlightFences[currentFrame]);
-		m_ImagesInFlight[imageIndex] = m_InFlightFences[currentFrame];
-
-		VkCommandBuffer cmd = m_GraphicsCommandBuffers[currentFrame];
-		vkResetCommandBuffer(cmd, 0);
-
-		VkCommandBufferBeginInfo beginInfo{ .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-		vkBeginCommandBuffer(cmd, &beginInfo);
-
+		VkCommandBuffer cmd = m_VulkanAPI->GetGraphicsCBUpdate();
 		VkClearValue clearValues[2]{};
 		clearValues[0].color = { 0.5f, 0.5f, 0.5f, 1.0f };
 		clearValues[1].depthStencil = { 1.0f, 0 };
@@ -712,8 +612,6 @@ namespace zzz::vk
 
 		vkCmdBeginRenderPass(cmd, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
 		vkCmdEndRenderPass(cmd);
-		vkEndCommandBuffer(cmd);
-
 		{
 			std::lock_guard lock(m_FrameMutex);
 			m_PreparedImageIndex = imageIndex;
@@ -724,9 +622,6 @@ namespace zzz::vk
 
 	void SurfView_VK_MSWin::RenderFrame()
 	{
-		VkDevice device = m_VulkanAPI->GetDevice();
-		VkQueue  queue = m_VulkanAPI->GetGraphicsQueue();
-
 		uint32_t imageIndex;
 		{
 			std::unique_lock lock(m_FrameMutex);
@@ -736,49 +631,32 @@ namespace zzz::vk
 			m_IsFramePrepared = false;
 		}
 
-		uint32_t currentFrame = m_VulkanAPI->GetIndexFrameRender();
-		VkCommandBuffer cmd = m_GraphicsCommandBuffers[currentFrame];
+		// swap RenderFinished — симметрично acquire
+		std::swap(m_StagingRenderFinishedSemaphore, m_RenderFinishedSemaphores[imageIndex]);
 
-		// Оба семафора — per imageIndex
-		VkSemaphore waitSemaphore = m_AcquireSemaphores[imageIndex];
-		VkSemaphore signalSemaphore = m_RenderFinishedSemaphores[imageIndex];
+		VkSemaphore waitSem = m_AcquireSemaphores[imageIndex];
+		VkSemaphore signalSem = m_RenderFinishedSemaphores[imageIndex];
 
-		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-
-		VkSubmitInfo submitInfo{
-			.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-			.waitSemaphoreCount = 1,
-			.pWaitSemaphores = &waitSemaphore,
-			.pWaitDstStageMask = waitStages,
-			.commandBufferCount = 1,
-			.pCommandBuffers = &cmd,
-			.signalSemaphoreCount = 1,
-			.pSignalSemaphores = &signalSemaphore
-		};
-
-		if (vkQueueSubmit(queue, 1, &submitInfo, m_InFlightFences[currentFrame]) != VK_SUCCESS)
-			throw_runtime_error("vkQueueSubmit failed");
+		m_VulkanAPI->SetFrameSyncData(waitSem, signalSem);
+		m_VulkanAPI->SubmitCommandLists();
 
 		VkPresentInfoKHR presentInfo{
 			.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
 			.waitSemaphoreCount = 1,
-			.pWaitSemaphores = &signalSemaphore,
+			.pWaitSemaphores = &signalSem,
 			.swapchainCount = 1,
 			.pSwapchains = &m_Swapchain,
 			.pImageIndices = &imageIndex
 		};
 
-		VkResult vr = vkQueuePresentKHR(queue, &presentInfo);
-
+		VkResult vr = vkQueuePresentKHR(m_VulkanAPI->GetGraphicsQueue(), &presentInfo);
 		if (vr == VK_ERROR_OUT_OF_DATE_KHR || vr == VK_SUBOPTIMAL_KHR)
 		{
 			if (auto res = RecreateSwapchain(m_SurfSize); !res)
 				throw_runtime_error("Failed to recreate swapchain");
 		}
 		else if (vr != VK_SUCCESS)
-		{
 			throw_runtime_error("vkQueuePresentKHR failed");
-		}
 	}
 #pragma endregion Rendering
 
@@ -807,6 +685,5 @@ namespace zzz::vk
 		// TODO: Implement fullscreen switching for Vulkan
 		DebugOutput(std::format(L"[SurfView_VK_MSWin::SetFullScreen({})] Not implemented yet\n", fs).c_str());
 	}
-
 }
 #endif // ZRENDER_API_VULKAN
