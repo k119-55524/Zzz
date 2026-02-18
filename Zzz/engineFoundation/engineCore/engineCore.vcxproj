@@ -211,6 +211,7 @@
     <ClCompile Include="Utilities\MsgBox.cppm" />
     <ClCompile Include="Source\Serializer\Serializer.cppm" />
     <ClCompile Include="Utilities\Platforms.cppm" />
+    <ClCompile Include="Utilities\ScreenResolution.cppm" />
     <ClCompile Include="Utilities\Size2D.cppm" />
     <ClCompile Include="Utilities\Version.cppm" />
   </ItemGroup>

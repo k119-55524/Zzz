@@ -235,7 +235,7 @@ namespace zzz::vk
 	[[nodiscard]] Result<> VKAPI::CreateInstance()
 	{
 		std::string appNameStr = wstring_to_string(m_Config->GetAppName());
-		std::string engineNameStr = wstring_to_string(std::wstring(g_EngineName));
+		std::string engineNameStr = std::string(g_EngineName);
 		const char* appName = appNameStr.c_str();
 		const char* engineName = engineNameStr.c_str();
 		const Version& appVersion = m_Config->GetAppVersion();

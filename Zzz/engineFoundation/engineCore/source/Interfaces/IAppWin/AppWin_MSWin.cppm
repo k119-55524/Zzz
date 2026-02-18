@@ -215,13 +215,13 @@ export namespace zzz::core
 			BOOL bMenu = (GetMenu(hWnd) != NULL);
 
 			// ћинимальный размер клиентской области
-			RECT minRect = { 0, 0, static_cast<LONG>(g_MinimumWindowsWidth), static_cast<LONG>(g_MinimumWindowsHeight) };
+			RECT minRect = { 0, 0, static_cast<LONG>(g_MinimumWindowWidth), static_cast<LONG>(g_MinimumWindowHeight) };
 			AdjustWindowRectEx(&minRect, dwStyle, bMenu, dwExStyle);
 			pMinMaxInfo->ptMinTrackSize.x = minRect.right - minRect.left;
 			pMinMaxInfo->ptMinTrackSize.y = minRect.bottom - minRect.top;
 
 			// ћаксимальный размер клиентской области
-			RECT maxRect = { 0, 0, static_cast<LONG>(g_MaximumWindowsWidth), static_cast<LONG>(g_MaximumWindowsHeight) };
+			RECT maxRect = { 0, 0, static_cast<LONG>(g_MaximumWindowWidth), static_cast<LONG>(g_MaximumWindowHeight) };
 			AdjustWindowRect(&maxRect, WS_OVERLAPPEDWINDOW, FALSE);
 			pMinMaxInfo->ptMaxTrackSize.x = maxRect.right - maxRect.left;
 			pMinMaxInfo->ptMaxTrackSize.y = maxRect.bottom - maxRect.top;
