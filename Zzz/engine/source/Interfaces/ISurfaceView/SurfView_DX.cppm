@@ -575,8 +575,8 @@ namespace zzz::dx
 		// Настраиваем параметры для Present
 		BOOL fullscreen = FALSE;
 		ensure(S_OK == m_swapChain->GetFullscreenState(&fullscreen, nullptr));
-		UINT syncInterval = b_IsVSync ? 1 : 0;
-		UINT presentFlags = (!b_IsVSync && !fullscreen && m_tearingSupported) ? DXGI_PRESENT_ALLOW_TEARING : 0;
+		UINT syncInterval = IsVSync() ? 1 : 0;
+		UINT presentFlags = (!IsVSync() && !fullscreen && m_tearingSupported) ? DXGI_PRESENT_ALLOW_TEARING : 0;
 		HRESULT hr = m_swapChain->Present(syncInterval, presentFlags);
 		if (FAILED(hr))
 		{

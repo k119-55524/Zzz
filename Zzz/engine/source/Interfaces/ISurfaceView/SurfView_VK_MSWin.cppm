@@ -251,7 +251,7 @@ namespace zzz::vk
 			.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
 			.preTransform = capabilities.currentTransform,
 			.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-			.presentMode = VK_PRESENT_MODE_FIFO_KHR,
+			.presentMode = m_iGAPI->IsCanDisableVsync() ? VK_PRESENT_MODE_IMMEDIATE_KHR : VK_PRESENT_MODE_FIFO_KHR,
 			.clipped = VK_TRUE,
 			.oldSwapchain = VK_NULL_HANDLE
 		};

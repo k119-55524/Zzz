@@ -31,10 +31,10 @@ namespace zzz
 		explicit IGAPI(const std::shared_ptr<GAPIConfig> config, eGAPIType type);
 		virtual ~IGAPI() = default;
 
-		[[nodiscard]] eInitState GetInitState() const noexcept { return initState; }
+		[[nodiscard]] eInitState GetInitState() const noexcept { return m_InitState; }
 
-		[[nodiscard]] inline constexpr eGAPIType GetGAPIType() const noexcept { return gapiType; }
-		[[nodiscard]] inline constexpr std::wstring_view GetAPIName(eGAPIType gapiType) const noexcept {
+		[[nodiscard]] constexpr eGAPIType GetGAPIType() const noexcept { return m_GapiType; }
+		[[nodiscard]] constexpr std::wstring_view GetAPIName(eGAPIType gapiType) const noexcept {
 			using namespace std::literals;
 			constexpr std::array names{
 				L"DirectX 12"sv,
@@ -45,8 +45,9 @@ namespace zzz
 			return static_cast<size_t>(gapiType) < names.size() ?
 				names[static_cast<size_t>(gapiType)] : L"Unknown"sv;
 		}
-		[[nodiscard]] inline constexpr std::wstring_view GetAPIName() const noexcept { return GetAPIName(gapiType); }
-		inline const IDeviceCapabilities& GetGapiSupportChecker() const noexcept { return *m_CheckGapiSupport; }
+		[[nodiscard]] constexpr std::wstring_view GetAPIName() const noexcept { return GetAPIName(m_GapiType); }
+		[[nodiscard]] inline bool IsCanDisableVsync() const noexcept { return m_IsCanDisableVsync; }
+		[[nodiscard]] inline const IDeviceCapabilities& GetGapiSupportChecker() const noexcept { return *m_CheckGapiSupport; }
 
 		[[nodiscard]] virtual Result<> Initialize();
 		virtual void SubmitCommandLists() = 0;
@@ -66,8 +67,10 @@ namespace zzz
 		virtual void WaitForGpu() {};
 
 		const std::shared_ptr<GAPIConfig> m_Config;
-		eGAPIType gapiType;
-		eInitState initState;
+		eGAPIType m_GapiType;
+		eInitState m_InitState;
+		bool m_IsCanDisableVsync;
+
 		std::unique_ptr<IGPUUpload> m_CPUtoGPUDataTransfer;
 		std::unique_ptr<IDeviceCapabilities> m_CheckGapiSupport;
 		zU32 m_IndexFrameRender;
@@ -76,8 +79,9 @@ namespace zzz
 
 	IGAPI::IGAPI(const std::shared_ptr<GAPIConfig> config, eGAPIType type) :
 		m_Config(config),
-		gapiType{ type },
-		initState{ eInitState::InitNot },
+		m_GapiType{ type },
+		m_IsCanDisableVsync{ false },
+		m_InitState{ eInitState::InitNot },
 		m_IndexFrameRender{ 0 },
 		m_IndexFrameUpdate{ 1 }
 	{
@@ -86,10 +90,10 @@ namespace zzz
 
 	Result<> IGAPI::Initialize()
 	{
-		if (initState != eInitState::InitNot)
+		if (m_InitState != eInitState::InitNot)
 			return Unexpected(eResult::failure, L"GAPI is already initialized or in an invalid state.");
 
-		return Init().and_then([&]() { initState = eInitState::InitOK; });
+		return Init().and_then([&]() { m_InitState = eInitState::InitOK; });
 	}
 
 	inline void IGAPI::LogGPUDebugMessage(const std::wstring& message)

@@ -24,6 +24,7 @@ namespace zzz::vk
 		uint32_t computeQueueFamily{};
 		uint32_t transferQueueFamily{};
 		uint64_t score = 0;
+		bool isCanDisableVsync = false;
 	};
 
 	class TestSurface_MSWin final
@@ -471,6 +472,7 @@ namespace zzz::vk
 
 		deviceCandidate = candidat.value();
 		m_PhysicalDevice = deviceCandidate.device;
+		m_IsCanDisableVsync = deviceCandidate.isCanDisableVsync;
 
 		VkPhysicalDeviceProperties props{};
 		vkGetPhysicalDeviceProperties(m_PhysicalDevice, &props);
@@ -559,8 +561,25 @@ namespace zzz::vk
 			if (!features13.dynamicRendering)
 				continue;
 
-			uint64_t score = 0;
+			bool isCanDisableVsync = false;  // можем ли отключить vsync?
+			uint32_t presentModeCount = 0;
+			vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
+			if (presentModeCount > 0)
+			{
+				std::vector<VkPresentModeKHR> presentModes(presentModeCount);
+				vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, presentModes.data());
 
+				for (const auto& mode : presentModes)
+				{
+					if (mode == VK_PRESENT_MODE_IMMEDIATE_KHR)
+					{
+						isCanDisableVsync = true;  // Можем отключить vsync
+						break;
+					}
+				}
+			}
+
+			uint64_t score = 0;
 			if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
 				score += 1'000'000;
 
@@ -576,7 +595,8 @@ namespace zzz::vk
 					.graphicsQueueFamily = *graphicsFamily,
 					.computeQueueFamily = *computeFamily,
 					.transferQueueFamily = *transferFamily,
-					.score = score
+					.score = score,
+					.isCanDisableVsync = isCanDisableVsync
 				};
 			}
 		}

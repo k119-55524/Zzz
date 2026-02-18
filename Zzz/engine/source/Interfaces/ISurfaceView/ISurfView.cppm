@@ -27,17 +27,24 @@ export namespace zzz::core
 		virtual void OnResize(const Size2D<>& size) = 0;
 
 		virtual void SetFullScreen(bool fs) {};
-		inline void SetVSync(bool vs) { b_IsVSync = vs; };
+		inline void SetVSync(bool vs)
+		{
+			if (m_iGAPI->IsCanDisableVsync())
+				b_IsVSync = vs;
+			else
+				b_IsVSync = true; // Если отключение VSync не поддерживается, всегда включаем его
+		};
+		inline bool IsVSync() const noexcept { return b_IsVSync; }
 
 	protected:
-		zU64 m_frameIndex;
-		bool b_IsVSync;
 		std::shared_ptr<IGAPI> m_iGAPI;
 		Size2D<> m_SurfSize;
+
+	private:
+		bool b_IsVSync;
 	};
 
 	ISurfView::ISurfView(std::shared_ptr<IGAPI> _iGAPI) :
-		m_frameIndex{ 0 },
 		b_IsVSync{ true },
 		m_iGAPI{ _iGAPI },
 		m_SurfSize{}
