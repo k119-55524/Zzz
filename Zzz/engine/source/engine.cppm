@@ -202,7 +202,7 @@ export namespace zzz
 		{
 			isSysPaused = false;
 			
-			m_View->SetVSync(false);
+			m_View->SetVSyncState(false);
 			m_time.Reset();
 			m_MainLoop->Run();
 

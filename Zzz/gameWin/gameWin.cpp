@@ -18,9 +18,13 @@ public:
 	{
 		ensure(m_View);
 		m_Input = GetInput();
+		m_Input->Keyboard()->GetButtonWatcher(KeyCode::F1).OnDown += std::bind(&MyScript::OnKeyDown_F1, this);
 	}
-	~MyScript() noexcept
+	~MyScript() = default;
+
+	void OnKeyDown_F1()
 	{
+		m_View->SetVSyncState(!m_View->GetVSyncState());
 	}
 
 	void OnUpdate(float deltaTime) override
@@ -28,16 +32,16 @@ public:
 		Transform& transform = GetTransform();
 		transform.AddRotation(0.0f, -rotSpeed * deltaTime, 0.0f);
 
-		if (m_Input->GetKeyState(KeyCode::ArrowLeft) == KeyState::Down)
+		if (m_Input->Keyboard()->GetKeyState(KeyCode::ArrowLeft) == KeyState::Down)
 			transform.Move(-moveSpeed * deltaTime, 0.0f, 0.0f);
 
-		if (m_Input->GetKeyState(KeyCode::ArrowRight) == KeyState::Down)
+		if (m_Input->Keyboard()->GetKeyState(KeyCode::ArrowRight) == KeyState::Down)
 			transform.Move(moveSpeed * deltaTime, 0.0f, 0.0f);
 
-		if (m_Input->GetKeyState(KeyCode::ArrowUp) == KeyState::Down)
+		if (m_Input->Keyboard()->GetKeyState(KeyCode::ArrowUp) == KeyState::Down)
 			transform.Move(0.0f, 0.0f, moveSpeed * deltaTime);
 
-		if (m_Input->GetKeyState(KeyCode::ArrowDown) == KeyState::Down)
+		if (m_Input->Keyboard()->GetKeyState(KeyCode::ArrowDown) == KeyState::Down)
 			transform.Move(0.0f, 0.0f, -moveSpeed * deltaTime);
 	}
 
@@ -61,12 +65,14 @@ int APIENTRY wWinMain(
 	//_CrtSetBreakAlloc(202);
 #endif // _DEBUG
 	{
+		std::shared_ptr<UserView> view;
+
 		Engine engine;
 		std::shared_ptr<UserSceneEntity> entity;
 		Result<> res = engine.Initialize(L".\\appdata\\ui.zaml")
 			.and_then([&](void) -> Result<>
 				{
-					auto view = engine.GetMainView();
+					view = engine.GetMainView();
 					auto resLayer = view->AddLayer_3D();
 					if (!resLayer)
 						return Result<>(resLayer.error());

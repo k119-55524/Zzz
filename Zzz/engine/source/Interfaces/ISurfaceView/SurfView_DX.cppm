@@ -131,7 +131,8 @@ namespace zzz::dx
 		void OnResize(const Size2D<>& size) override;
 
 		void SetFullScreen(bool fs) override;
-		void SetVSync(bool vs) override;
+		void SetVSyncState(bool vs) override;
+		bool GetVSyncState() override;
 
 	private:
 		std::shared_ptr<AppWin_MSWin> m_iAppWin;
@@ -740,12 +741,17 @@ namespace zzz::dx
 		DebugOutput(std::format(L"[SurfView_DX::SetFullScreen({})].\n", fs).c_str());
 	}
 
-	void SurfView_DX::SetVSync(bool vs)
+	void SurfView_DX::SetVSyncState(bool vs)
 	{
 		if (m_iGAPI->IsCanDisableVsync())
 			b_IsVSync = vs;
 		else
 			b_IsVSync = true;
 	};
+
+	bool SurfView_DX::GetVSyncState()
+	{
+		return b_IsVSync;
+	}
 }
 #endif // defined(ZRENDER_API_D3D12)

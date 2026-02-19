@@ -21,7 +21,8 @@ export namespace zzz
 		}
 
 		inline Result<std::shared_ptr<UserLayer3D>> AddLayer_3D() { return m_View->AddLayer_3D(); }
-		inline void SetVSync(bool vs) { m_View->SetVSync(vs); };
+		inline void SetVSyncState(bool vs) { m_View->SetVSyncState(vs); };
+		inline bool GetVSyncState() { return m_View->GetVSyncState(); };
 
 	private:
 		std::shared_ptr<View> m_View;

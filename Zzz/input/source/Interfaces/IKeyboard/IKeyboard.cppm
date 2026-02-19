@@ -1,12 +1,44 @@
 
 export module IKeyboard;
 
+import Event;
 import KeyCode;
 
+using namespace zzz;
 using namespace zzz::core;
 
 namespace zzz::input
 {
+	class KeyButtonWatcher
+	{
+	public:
+		KeyButtonWatcher() :
+			m_KeyState{KeyState::Up}
+		{
+		}
+		~KeyButtonWatcher() = default;
+
+		inline void SetState(KeyState state) noexcept
+		{
+			if (m_KeyState != state)
+			{
+				m_KeyState = state;
+
+				if (state == KeyState::Up)
+					OnUp();
+				else
+					OnDown();
+			}
+		}
+		inline KeyState GetState() const noexcept { return m_KeyState; }
+
+		Event<> OnUp;
+		Event<> OnDown;
+
+	private:
+		KeyState m_KeyState;
+	};
+
 	/// <summary>
 	/// Интерфейс для работы с клавиатурой
 	/// </summary>
@@ -15,15 +47,16 @@ namespace zzz::input
 	public:
 		explicit IKeyboard()
 		{
-			std::fill(Keys, Keys + static_cast<int>(KeyCode::Count), KeyState::Up);
 		};
 		virtual ~IKeyboard() = 0;
 
-		void OnKeyStateChanged(KeyCode key, KeyState state);
-		inline KeyState GetKeyState(KeyCode key) const { return Keys[static_cast<int>(key)]; };
+		inline KeyState GetKeyState(KeyCode key) const { return Keys[static_cast<int>(key)].GetState(); };
+		inline KeyButtonWatcher& GetButtonWatcher(KeyCode key) noexcept { return Keys[static_cast<int>(key)]; }
 
 	protected:
-		KeyState Keys[static_cast<int>(KeyCode::Count)] = { KeyState::Up };
+		void OnKeyStateChanged(KeyCode key, KeyState state);
+
+		KeyButtonWatcher Keys[static_cast<int>(KeyCode::Count)];
 	};
 
 	IKeyboard::~IKeyboard() {};
@@ -31,6 +64,6 @@ namespace zzz::input
 	void IKeyboard::OnKeyStateChanged(KeyCode key, KeyState state)
 	{
 		//DebugOutput(std::format(L">>>>> [IKeyboard::OnKeyStateChanged()]. Key: {}, state: {}.", ToString(key), ToString(state)));
- 		Keys[static_cast<int>(key)] = state;
+ 		Keys[static_cast<int>(key)].SetState(state);
 	}
 }

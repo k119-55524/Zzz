@@ -28,7 +28,8 @@ namespace zzz::core
 		virtual void OnResize(const Size2D<>& size) = 0;
 
 		virtual void SetFullScreen(bool fs) {};
-		virtual void SetVSync(bool vs) = 0;
+		virtual void SetVSyncState(bool vs) = 0;
+		virtual bool GetVSyncState() = 0;
 		inline bool IsVSync() const noexcept { return b_IsVSync; }
 
 	protected:

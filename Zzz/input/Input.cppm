@@ -24,7 +24,8 @@ namespace zzz::input
 		}
 		~Input() = default;
 
-		inline KeyState GetKeyState(KeyCode key) const { return m_Keyboard->GetKeyState(key); };
+		inline const std::shared_ptr<IKeyboard>& Keyboard() const noexcept { return m_Keyboard; }
+		inline const std::shared_ptr<IMouse>& Mouse() const noexcept { return m_Mouse; }
 
 	private:
 		void Initialize();
