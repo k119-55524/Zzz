@@ -9,11 +9,14 @@ using namespace zzz::input;
 class MyScript : public IBehavior
 {
 public:
-	MyScript(const std::shared_ptr<SceneEntity> entity) :
+	MyScript(const std::shared_ptr<SceneEntity> entity,
+		const std::shared_ptr<UserView>& view) :
 		IBehavior{ entity },
+		m_View{view},
 		rotSpeed{ 0.5f },
 		moveSpeed{ 1.0f }
 	{
+		ensure(m_View);
 		m_Input = GetInput();
 	}
 	~MyScript() noexcept
@@ -42,6 +45,7 @@ protected:
 	float rotSpeed;
 	float moveSpeed;
 	std::shared_ptr<Input> m_Input;
+	const std::shared_ptr<UserView>& m_View;
 };
 
 int APIENTRY wWinMain(
@@ -52,7 +56,7 @@ int APIENTRY wWinMain(
 {
 #ifdef _DEBUG
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtSetBreakAlloc(854);
+	//_CrtSetBreakAlloc(1689);
 	//_CrtSetBreakAlloc(160);
 	//_CrtSetBreakAlloc(202);
 #endif // _DEBUG
@@ -79,7 +83,7 @@ int APIENTRY wWinMain(
 						return Result<>(resEntity.error());
 
 					entity = resEntity.value();
-					auto resScript = entity->SetScript<MyScript>();
+					auto resScript = entity->SetScript<MyScript>(view);
 
 					return Result<>();
 				})

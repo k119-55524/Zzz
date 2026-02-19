@@ -2,6 +2,7 @@
 export module GpuEventScope;
 
 import IGAPI;
+import Ensure;
 import StrConvert;
 
 //import RootSignature;

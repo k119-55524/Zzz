@@ -3,6 +3,7 @@ export module SceneEntityFactory;
 
 import Input;
 import Result;
+import Ensure;
 import Material;
 import StrConvert;
 import SceneEntity;
@@ -29,7 +30,7 @@ namespace zzz
 	SceneEntityFactory::SceneEntityFactory(const std::shared_ptr<GPUResManager> resGPU) :
 		m_ResGPU{ resGPU }
 	{
-		ensure(m_ResGPU, ">>>>> [SceneEntityFactory::SceneEntityFactory()]. Resource system GPU cannot be null.");
+		ensure(m_ResGPU, "Resource system GPU cannot be null.");
 	}
 
 	Result<std::shared_ptr<SceneEntity>> SceneEntityFactory::GetColorBox(const std::shared_ptr<Input> input) noexcept

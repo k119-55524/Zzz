@@ -18,28 +18,28 @@
     <ClInclude Include="pch.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\PlatformsDefines.h">
+    <ClInclude Include="headers\PlatformsDefines.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="EngineBase.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\Header.h">
+    <ClInclude Include="headers\Header.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\MacroDefinition.h">
+    <ClInclude Include="headers\MacroDefinition.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\HeadersMSWin.h">
+    <ClInclude Include="headers\HeadersMSWin.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\HeaderVulkan.h">
+    <ClInclude Include="headers\HeaderVulkan.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\HeaderMetal.h">
+    <ClInclude Include="headers\HeaderMetal.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Headers\HeaderDX.h">
+    <ClInclude Include="headers\HeaderDX.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="headers\HeaderTypes.h">
@@ -56,16 +56,19 @@
     <ClCompile Include="pch.cpp">
       <Filter>Utilities</Filter>
     </ClCompile>
-    <ClCompile Include="Utilities\Colors.cppm">
+    <ClCompile Include="source\Colors.cppm">
       <Filter>Utilities</Filter>
     </ClCompile>
-    <ClCompile Include="Utilities\Result.cppm">
+    <ClCompile Include="source\Result.cppm">
       <Filter>Utilities</Filter>
     </ClCompile>
-    <ClCompile Include="Utilities\StrConvert.cppm">
+    <ClCompile Include="source\utilities\StrConvert.cppm">
       <Filter>Utilities</Filter>
     </ClCompile>
-    <ClCompile Include="Utilities\Event.cppm">
+    <ClCompile Include="source\Event.cppm">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Ensure.cppm">
       <Filter>Utilities</Filter>
     </ClCompile>
   </ItemGroup>

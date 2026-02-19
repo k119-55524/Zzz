@@ -4,6 +4,7 @@ export module VKAPI;
 #if defined(ZRENDER_API_VULKAN)
 
 import IGAPI;
+import Ensure;
 import Result;
 import StrConvert;
 import GAPIConfig;
@@ -472,7 +473,7 @@ namespace zzz::vk
 
 		deviceCandidate = candidat.value();
 		m_PhysicalDevice = deviceCandidate.device;
-		m_IsCanDisableVsync = deviceCandidate.isCanDisableVsync;
+		b_IsCanDisableVsync = deviceCandidate.isCanDisableVsync;
 
 		VkPhysicalDeviceProperties props{};
 		vkGetPhysicalDeviceProperties(m_PhysicalDevice, &props);

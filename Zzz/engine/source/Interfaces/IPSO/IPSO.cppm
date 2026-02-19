@@ -2,6 +2,7 @@
 export module IPSO;
 
 import IGAPI;
+import Ensure;
 import IShader;
 import PrimitiveTopology;
 import VertexFormatMapper;
@@ -39,7 +40,7 @@ namespace zzz
 		m_InputLayout{ _inputLayout },
 		m_PrimitiveTopology{ _topo }
 	{
-		ensure(m_Shader != nullptr, ">>>>> [IPSO::IPSO( ... )]. Shader pointer cannot be null.");
-		ensure(!m_InputLayout.empty(), ">>>>> [IPSO::IPSO( ... )]. Input layout cannot be empty.");
+		ensure(m_Shader != nullptr, "Shader pointer cannot be null.");
+		ensure(!m_InputLayout.empty(), "Input layout cannot be empty.");
 	}
 }

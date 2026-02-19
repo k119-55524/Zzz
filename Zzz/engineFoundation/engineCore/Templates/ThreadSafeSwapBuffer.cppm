@@ -1,6 +1,7 @@
-#include "pch.h"
+
 export module ThreadSafeSwapBuffer;
 
+import Ensure;
 import ThreadSafeQueueArray;
 
 export namespace zzz::templates

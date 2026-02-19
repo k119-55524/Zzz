@@ -3,6 +3,7 @@ export module Keyboard_MSWin;
 
 #if defined(ZPLATFORM_MSWINDOWS)
 
+import Ensure;
 import IAppWin;
 import IKeyboard;
 import AppWin_MSWin;

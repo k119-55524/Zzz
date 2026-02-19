@@ -2,9 +2,12 @@
 export module GAPIConfig;
 
 import Result;
+import Ensure;
 import Version;
 import AppConfig;
 import Serializer;
+
+using namespace zzz;
 
 namespace zzz::core
 {
@@ -15,7 +18,7 @@ namespace zzz::core
 		GAPIConfig(const std::shared_ptr<AppConfig> appConfig) :
 			m_AppConfig{ appConfig }
 		{
-			ensure(appConfig, "AppConfig cannot be null.");
+			ensure(m_AppConfig, "AppConfig cannot be null.");
 		}
 		~GAPIConfig() = default;
 

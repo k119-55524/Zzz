@@ -2,6 +2,7 @@
 export module EngineFactory;
 
 import IGAPI;
+import Ensure;
 import Result;
 import GAPIConfig;
 import StrConvert;

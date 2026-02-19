@@ -2,6 +2,7 @@ export module UserSceneEntity;
 
 import std;
 import Math;
+import Ensure;
 import Result;
 import Transform;
 import IBehavior;

@@ -4,6 +4,7 @@ export module GPUResManager;
 import IPSO;
 import IGAPI;
 import Result;
+import Ensure;
 import IShader;
 import IMeshGPU;
 import Material;
@@ -58,7 +59,7 @@ export namespace zzz
 		m_GAPI{ _IGAPI },
 		m_ResCPU{ resCPU }
 	{
-		ensure(m_ResCPU, ">>>>> [GPUResManager::GPUResManager()]. Resource system CPU cannot be null.");
+		ensure(m_ResCPU, "Resource system CPU cannot be null.");
 	}
 
 	Result<std::shared_ptr<IMeshGPU>> GPUResManager::GetGenericMesh(MeshType type)
@@ -83,7 +84,7 @@ export namespace zzz
 
 		std::shared_ptr<Material> material = safe_make_shared<Material>(pso.value());
 		if (!material)
-			return Unexpected(eResult::no_make_shared_ptr, L">>>>> [GPUResManager::GetGenericMaterial()]. Failed to create Material.");
+			return Unexpected(eResult::no_make_shared_ptr, L"Failed to create Material.");
 
 		return material;
 	}
@@ -96,7 +97,7 @@ export namespace zzz
 
 		std::shared_ptr<IPSO> pso = safe_make_shared<PSO>(m_GAPI, shader.value(), mesh->GetInputLayout());
 		if (!pso)
-			return Unexpected(eResult::no_make_shared_ptr, L">>>>> [GPUResManager::GetGenericPSO()]. Failed to create IPSO.");
+			return Unexpected(eResult::no_make_shared_ptr, L"Failed to create IPSO.");
 
 		return pso;
 	}

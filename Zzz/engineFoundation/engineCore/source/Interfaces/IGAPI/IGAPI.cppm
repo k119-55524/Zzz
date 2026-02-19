@@ -3,6 +3,7 @@ export module IGAPI;
 
 import Result;
 import Size2D;
+import Ensure;
 import IAppWin;
 import GAPIConfig;
 import StrConvert;
@@ -46,7 +47,7 @@ namespace zzz
 				names[static_cast<size_t>(gapiType)] : L"Unknown"sv;
 		}
 		[[nodiscard]] constexpr std::wstring_view GetAPIName() const noexcept { return GetAPIName(m_GapiType); }
-		[[nodiscard]] inline bool IsCanDisableVsync() const noexcept { return m_IsCanDisableVsync; }
+		[[nodiscard]] inline bool IsCanDisableVsync() const noexcept { return b_IsCanDisableVsync; }
 		[[nodiscard]] inline const IDeviceCapabilities& GetGapiSupportChecker() const noexcept { return *m_CheckGapiSupport; }
 
 		[[nodiscard]] virtual Result<> Initialize();
@@ -69,7 +70,7 @@ namespace zzz
 		const std::shared_ptr<GAPIConfig> m_Config;
 		eGAPIType m_GapiType;
 		eInitState m_InitState;
-		bool m_IsCanDisableVsync;
+		bool b_IsCanDisableVsync;
 
 		std::unique_ptr<IGPUUpload> m_CPUtoGPUDataTransfer;
 		std::unique_ptr<IDeviceCapabilities> m_CheckGapiSupport;
@@ -80,7 +81,7 @@ namespace zzz
 	IGAPI::IGAPI(const std::shared_ptr<GAPIConfig> config, eGAPIType type) :
 		m_Config(config),
 		m_GapiType{ type },
-		m_IsCanDisableVsync{ false },
+		b_IsCanDisableVsync{ false },
 		m_InitState{ eInitState::InitNot },
 		m_IndexFrameRender{ 0 },
 		m_IndexFrameUpdate{ 1 }

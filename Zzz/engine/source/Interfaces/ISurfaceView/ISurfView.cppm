@@ -3,6 +3,7 @@ export module ISurfView;
 
 import IGAPI;
 import Scene;
+import Ensure;
 import Result;
 import Size2D;
 import IAppWin;
@@ -10,7 +11,7 @@ import RenderQueue;
 
 using namespace zzz;
 
-export namespace zzz::core
+namespace zzz::core
 {
 	export class ISurfView abstract
 	{
@@ -27,20 +28,12 @@ export namespace zzz::core
 		virtual void OnResize(const Size2D<>& size) = 0;
 
 		virtual void SetFullScreen(bool fs) {};
-		inline void SetVSync(bool vs)
-		{
-			if (m_iGAPI->IsCanDisableVsync())
-				b_IsVSync = vs;
-			else
-				b_IsVSync = true; // Если отключение VSync не поддерживается, всегда включаем его
-		};
+		virtual void SetVSync(bool vs) = 0;
 		inline bool IsVSync() const noexcept { return b_IsVSync; }
 
 	protected:
 		std::shared_ptr<IGAPI> m_iGAPI;
 		Size2D<> m_SurfSize;
-
-	private:
 		bool b_IsVSync;
 	};
 
@@ -49,6 +42,6 @@ export namespace zzz::core
 		m_iGAPI{ _iGAPI },
 		m_SurfSize{}
 	{
-		ensure(m_iGAPI, ">>>>> [ISurfView::ISurfView()]. GAPI cannot be null.");
+		ensure(m_iGAPI, "GAPI cannot be null.");
 	}
 }

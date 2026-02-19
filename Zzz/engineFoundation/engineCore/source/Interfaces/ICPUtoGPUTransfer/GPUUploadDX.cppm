@@ -4,6 +4,7 @@ export module GPUUploadDX;
 #if defined(ZRENDER_API_D3D12)
 
 import Result;
+import Ensure;
 import QueueArray;
 import IGPUUpload;
 import CommandWrapperDX;
@@ -40,7 +41,7 @@ namespace zzz::dx
 		m_Prepared{ _Prepared },
 		m_CopyFenceValue{ 0 }
 	{
-		ensure(device != nullptr);
+		ensure(device);
 		Initialize(device);
 	}
 

@@ -3,6 +3,7 @@
 
 export module CPUMesh;
 
+import Ensure;
 import CPUIndexBuffer;
 import CPUVertexBuffer;
 import VertexFormatMapper;

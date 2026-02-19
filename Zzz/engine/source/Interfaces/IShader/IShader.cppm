@@ -2,6 +2,7 @@
 export module IShader;
 
 import IGAPI;
+import Ensure;
 import Result;
 import IMeshGPU;
 

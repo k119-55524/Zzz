@@ -3,6 +3,7 @@ export module Input;
 
 export import KeyCode;
 
+import Ensure;
 import IMouse;
 import IAppWin;
 import IKeyboard;

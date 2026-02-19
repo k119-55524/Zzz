@@ -2,6 +2,7 @@ export module VKDeviceCapabilities;
 
 #if defined(ZRENDER_API_VULKAN)
 
+import Ensure;
 import StrConvert;
 import IDeviceCapabilities;
 

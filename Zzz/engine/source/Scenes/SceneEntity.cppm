@@ -2,7 +2,7 @@
 export module SceneEntity;
 
 import Input;
-//import Scene;
+import Ensure;
 import Result;
 import Material;
 import IMeshGPU;

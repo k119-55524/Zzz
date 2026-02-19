@@ -3,6 +3,7 @@ export module UserScene;
 
 import Scene;
 import Result;
+import Ensure;
 import Transform;
 import StrConvert;
 import SceneEntity;

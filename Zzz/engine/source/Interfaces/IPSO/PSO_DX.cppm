@@ -5,6 +5,7 @@ export module PSO_DX;
 import IPSO;
 import IGAPI;
 import DXAPI;
+import Ensure;
 import IShader;
 import Shader_DirectX;
 import PrimitiveTopology;

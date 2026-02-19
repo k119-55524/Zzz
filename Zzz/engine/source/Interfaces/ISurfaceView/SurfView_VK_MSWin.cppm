@@ -7,6 +7,7 @@ import IPSO;
 import IGAPI;
 import VKAPI;
 import Scene;
+import Ensure;
 import Result;
 import Size2D;
 import Colors;
@@ -65,6 +66,7 @@ namespace zzz::vk
 		void RenderFrame() override;
 		void OnResize(const Size2D<>& size) override;
 		void SetFullScreen(bool fs) override;
+		void SetVSync(bool vs) override;
 
 	private:
 		std::shared_ptr<AppWin_MSWin> m_iAppWin;
@@ -685,5 +687,13 @@ namespace zzz::vk
 		// TODO: Implement fullscreen switching for Vulkan
 		DebugOutput(std::format(L"[SurfView_VK_MSWin::SetFullScreen({})] Not implemented yet\n", fs).c_str());
 	}
+
+	void SurfView_VK_MSWin::SetVSync(bool vs)
+	{
+		if (m_iGAPI->IsCanDisableVsync())
+			b_IsVSync = vs;
+		else
+			b_IsVSync = true; // Если отключение VSync не поддерживается, всегда включаем его
+	};
 }
 #endif // ZRENDER_API_VULKAN

@@ -172,15 +172,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="EngineBase.h" />
-    <ClInclude Include="Headers\Header.h" />
-    <ClInclude Include="Headers\HeaderDX.h" />
-    <ClInclude Include="Headers\HeaderMetal.h" />
-    <ClInclude Include="Headers\HeadersMSWin.h" />
+    <ClInclude Include="headers\Header.h" />
+    <ClInclude Include="headers\HeaderDX.h" />
+    <ClInclude Include="headers\HeaderMetal.h" />
+    <ClInclude Include="headers\HeadersMSWin.h" />
     <ClInclude Include="headers\HeaderTemplates.h" />
     <ClInclude Include="headers\HeaderTypes.h" />
-    <ClInclude Include="Headers\HeaderVulkan.h" />
-    <ClInclude Include="Headers\MacroDefinition.h" />
-    <ClInclude Include="Headers\PlatformsDefines.h" />
+    <ClInclude Include="headers\HeaderVulkan.h" />
+    <ClInclude Include="headers\MacroDefinition.h" />
+    <ClInclude Include="headers\PlatformsDefines.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -191,10 +191,11 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug_MSWin_Vulkan|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug_MSWin_DirectX|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Utilities\Colors.cppm" />
-    <ClCompile Include="Utilities\Event.cppm" />
-    <ClCompile Include="Utilities\Result.cppm" />
-    <ClCompile Include="Utilities\StrConvert.cppm" />
+    <ClCompile Include="source\Colors.cppm" />
+    <ClCompile Include="source\Ensure.cppm" />
+    <ClCompile Include="source\Event.cppm" />
+    <ClCompile Include="source\Result.cppm" />
+    <ClCompile Include="source\utilities\StrConvert.cppm" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

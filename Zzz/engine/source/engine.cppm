@@ -4,6 +4,7 @@ export module Engine;
 export import Math;
 export import Input;
 export import Scene;
+export import Ensure;
 export import MsgBox;
 export import Result;
 export import KeyCode;

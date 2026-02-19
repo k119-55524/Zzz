@@ -3,6 +3,7 @@ export module Scene;
 
 import Math;
 import Input;
+import Ensure;
 import Result;
 import Camera;
 import Transform;

@@ -4,6 +4,7 @@ export module MeshGPU_DirectX;
 #if defined(ZRENDER_API_D3D12)
 import IGAPI;
 import DXAPI;
+import Ensure;
 import CPUMesh;
 import IMeshGPU;
 import CPUIndexBuffer;

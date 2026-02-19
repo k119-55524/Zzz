@@ -1,9 +1,8 @@
 
-#include "pch.h"
-
 export module IAppWin;
 
 import Event;
+import Ensure;
 import Result;
 import Size2D;
 import AppConfig;
@@ -49,6 +48,6 @@ export namespace zzz::core
 		m_WinSize{ 0, 0 },
 		b_IsWinActive{ false }
 	{
-		ensure(m_Config, ">>>>> [IAppWin::IAppWin()]. Settings cannot be null.");
+		ensure(m_Config, "Settings cannot be null.");
 	}
 }

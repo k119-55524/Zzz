@@ -2,6 +2,7 @@
 export module Material;
 
 import IPSO;
+import Ensure;
 
 namespace zzz
 {
@@ -22,6 +23,6 @@ namespace zzz
 	Material::Material(std::shared_ptr<IPSO> _PSO) :
 		m_PSO{ _PSO }
 	{
-		ensure(m_PSO != nullptr, ">>>>> [Material::Material( ... )]. PSO pointer cannot be null.");
+		ensure(m_PSO != nullptr, "PSO pointer cannot be null.");
 	}
 }

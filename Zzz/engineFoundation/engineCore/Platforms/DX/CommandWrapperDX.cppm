@@ -3,6 +3,7 @@ export module CommandWrapperDX;
 
 #if defined(ZRENDER_API_D3D12)
 import Result;
+import Ensure;
 
 using namespace zzz;
 

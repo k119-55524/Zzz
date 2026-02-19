@@ -5,6 +5,7 @@ export module DXAPI;
 
 import IGAPI;
 import Result;
+import Ensure;
 import StrConvert;
 import GPUUploadDX;
 import AppWin_MSWin;
@@ -131,6 +132,7 @@ export namespace zzz::dx
 		UINT dxgiFactoryFlags = 0;
 		Result<> res = EnableDebugLayer(dxgiFactoryFlags)
 			.and_then([&]() { return InitializeDevice(dxgiFactoryFlags); })
+			.and_then([&]() { return CreateCommandQueue(m_device, m_commandQueue); })
 			.and_then([&]() { return CreateDebugMessenger(); })
 			.and_then([&]() { m_CPUtoGPUDataTransfer = safe_make_unique<GPUUploadDX>(m_device, m_PreparedTransfers); })
 			.and_then([&]() { return m_rootSignature.Initialize(m_device); })
@@ -158,8 +160,11 @@ export namespace zzz::dx
 		if (!res)
 			return Unexpected(eResult::failure, std::format(L" -> {}", res.error().getMessage()));
 
-		for (int index = 0; index < BACK_BUFFER_COUNT; index++)
-			m_commandWrapper[index] = safe_make_shared<CommandWrapperDX>(m_device, D3D12_COMMAND_LIST_TYPE_DIRECT);
+		// Проверка возможности отключения VSYNC
+		BOOL allowTearing = FALSE;
+		hr = factory->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
+		if (SUCCEEDED(hr))
+			b_IsCanDisableVsync = allowTearing;
 
 		return {};
 	}
@@ -336,6 +341,9 @@ export namespace zzz::dx
 		HRESULT hr = device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&outQueue));
 		if (FAILED(hr))
 			return Unexpected(eResult::failure, std::format(L"Failed to create Command Queue. HRESULT = 0x{:08X}", hr));
+
+		for (int index = 0; index < BACK_BUFFER_COUNT; index++)
+			m_commandWrapper[index] = safe_make_shared<CommandWrapperDX>(m_device, D3D12_COMMAND_LIST_TYPE_DIRECT);
 
 		return {};
 	}

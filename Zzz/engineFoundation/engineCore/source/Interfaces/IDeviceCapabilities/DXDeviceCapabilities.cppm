@@ -2,7 +2,7 @@
 export module DXDeviceCapabilities;
 
 #if defined(ZRENDER_API_D3D12)
-
+import Ensure;
 import StrConvert;
 import IDeviceCapabilities;
 

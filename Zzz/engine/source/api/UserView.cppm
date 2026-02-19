@@ -3,6 +3,7 @@ export module UserView;
 
 import View;
 import Result;
+import Ensure;
 import UserLayer3D;
 
 export namespace zzz
@@ -13,21 +14,16 @@ export namespace zzz
 		UserView() = delete;
 		~UserView() = default;
 
-		explicit UserView(const std::shared_ptr<View> mainView) :
-			m_MainView{ mainView }
+		explicit UserView(const std::shared_ptr<View> view) :
+			m_View{ view }
 		{
-			ensure(m_MainView, ">>>>> [UserView::UserView(...)]. Main view cannot be null.");
+			ensure(m_View, "Main view cannot be null.");
 		}
 
-		inline Result<std::shared_ptr<UserLayer3D>> AddLayer_3D()
-		{
-			if (!m_MainView)
-				return Unexpected(eResult::failure, L">>>>> [UserViewþAddLayer_3D()]. m_MainView is not initialized.");
-
-			return m_MainView->AddLayer_3D();
-		}
+		inline Result<std::shared_ptr<UserLayer3D>> AddLayer_3D() { return m_View->AddLayer_3D(); }
+		inline void SetVSync(bool vs) { m_View->SetVSync(vs); };
 
 	private:
-		std::shared_ptr<View> m_MainView;
+		std::shared_ptr<View> m_View;
 	};
 }

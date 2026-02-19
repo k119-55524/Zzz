@@ -12,6 +12,7 @@ import DXAPI;
 import Scene;
 import PSO_DX;
 import Result;
+import Ensure;
 import Size2D;
 import Colors;
 import Camera;
@@ -130,6 +131,7 @@ namespace zzz::dx
 		void OnResize(const Size2D<>& size) override;
 
 		void SetFullScreen(bool fs) override;
+		void SetVSync(bool vs) override;
 
 	private:
 		std::shared_ptr<AppWin_MSWin> m_iAppWin;
@@ -737,5 +739,13 @@ namespace zzz::dx
 
 		DebugOutput(std::format(L"[SurfView_DX::SetFullScreen({})].\n", fs).c_str());
 	}
+
+	void SurfView_DX::SetVSync(bool vs)
+	{
+		if (m_iGAPI->IsCanDisableVsync())
+			b_IsVSync = vs;
+		else
+			b_IsVSync = true;
+	};
 }
 #endif // defined(ZRENDER_API_D3D12)

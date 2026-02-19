@@ -2,6 +2,7 @@
 module IBehavior;
 
 import Input;
+import Ensure;
 import Transform;
 import IBehavior;
 import SceneEntity;

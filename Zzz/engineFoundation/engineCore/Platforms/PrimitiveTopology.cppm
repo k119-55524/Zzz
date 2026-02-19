@@ -1,6 +1,8 @@
 
 export module PrimitiveTopology;
 
+import Ensure;
+
 export namespace zzz
 {
 	class PrimitiveTopology
@@ -25,7 +27,7 @@ export namespace zzz
 #if defined(ZRENDER_API_D3D12)
 		D3D_PRIMITIVE_TOPOLOGY ToD3D12() const
 		{
-			ensure(topology != eTopology::Undefined, ">>>>> [PrimitiveTopology::ToD3D12(...)]. Undefined topology cannot be converted.");
+			ensure(topology != eTopology::Undefined, "Undefined topology cannot be converted.");
 
 			switch (topology)
 			{

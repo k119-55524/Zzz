@@ -3,6 +3,7 @@ export module ViewFactory;
 
 import IGAPI;
 import Result;
+import Ensure;
 import IAppWin;
 import StrConvert;
 import AppConfig;
