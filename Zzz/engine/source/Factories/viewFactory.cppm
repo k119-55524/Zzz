@@ -6,9 +6,9 @@ import Result;
 import Ensure;
 import IAppWin;
 import StrConvert;
-import AppConfig;
 import ISurfView;
 import AppWin_MSWin;
+import PlatformConfig;
 
 #if defined(ZRENDER_API_D3D12)
 import DXAPI;
@@ -36,11 +36,11 @@ export namespace zzz
 		ViewFactory& operator=(ViewFactory&&) = delete;
 		~ViewFactory() = default;
 
-		std::shared_ptr<IAppWin> CreateAppWin(std::shared_ptr<AppConfig> Settings);
+		std::shared_ptr<IAppWin> CreateAppWin(std::shared_ptr<PlatformConfig> Settings);
 		std::shared_ptr<ISurfView> CreateSurfaceWin(std::shared_ptr<IAppWin> _iAppWin, std::shared_ptr<IGAPI> _iGAPI);
 	};
 
-	std::shared_ptr<IAppWin> ViewFactory::CreateAppWin(std::shared_ptr<AppConfig> Settings)
+	std::shared_ptr<IAppWin> ViewFactory::CreateAppWin(std::shared_ptr<PlatformConfig> Settings)
 	{
 		try
 		{

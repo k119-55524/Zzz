@@ -8,9 +8,9 @@ import Result;
 import KeyCode;
 import IAppWin;
 import ibMSWin;
-import AppConfig;
 import StrConvert;
 import IOPathFactory;
+import PlatformConfig;
 import EngineConstants;
 
 using namespace zzz;
@@ -22,7 +22,7 @@ export namespace zzz::core
 		Z_NO_CREATE_COPY(AppWin_MSWin);
 
 	public:
-		explicit AppWin_MSWin(std::shared_ptr<AppConfig> _settings);
+		explicit AppWin_MSWin(std::shared_ptr<PlatformConfig> _settings);
 		virtual ~AppWin_MSWin() override;
 
 		const HWND GetHWND() const noexcept { return hWnd; }
@@ -55,7 +55,7 @@ export namespace zzz::core
 		void HandleRawKeyboard(const RAWKEYBOARD& kb);
 	};
 
-	AppWin_MSWin::AppWin_MSWin(std::shared_ptr<AppConfig> config) :
+	AppWin_MSWin::AppWin_MSWin(std::shared_ptr<PlatformConfig> config) :
 		IAppWin(config),
 		hWnd{ nullptr },
 		IsMinimized{ true },

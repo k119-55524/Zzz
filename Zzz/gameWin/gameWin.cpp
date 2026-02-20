@@ -24,7 +24,7 @@ public:
 
 	void OnKeyDown_F1()
 	{
-		m_View->SetVSyncState(!m_View->GetVSyncState());
+		m_View->SetVsyncState(!m_View->GetVsyncState());
 	}
 
 	void OnUpdate(float deltaTime) override

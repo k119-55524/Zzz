@@ -1,6 +1,4 @@
 
-#include <Headers/headerDX.h>
-
 export module SurfView_DX;
 
 #if defined(ZRENDER_API_D3D12)
@@ -131,8 +129,7 @@ namespace zzz::dx
 		void OnResize(const Size2D<>& size) override;
 
 		void SetFullScreen(bool fs) override;
-		void SetVSyncState(bool vs) override;
-		bool GetVSyncState() override;
+		void SetVsyncState(bool vs) override;
 
 	private:
 		std::shared_ptr<AppWin_MSWin> m_iAppWin;
@@ -142,11 +139,11 @@ namespace zzz::dx
 		static constexpr DXGI_FORMAT DEPTH_FORMAT = DXGI_FORMAT_D32_FLOAT; // При использовании трафаарета: DXGI_FORMAT_D24_UNORM_S8_UINT;
 		static constexpr UINT SWAP_CHAIN_FLAGS = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 
-		bool b_IgnoreResize;
-		bool m_tearingSupported;
-		std::mutex m_frameMutex;
-		std::condition_variable m_frameCV;
-		bool m_frameReady;
+		bool m_IgnoreResize;
+		bool m_TearingSupported;
+		std::mutex m_FrameMutex;
+		std::condition_variable m_FrameCV;
+		bool m_FrameReady;
 
 		std::unique_ptr<UploadBuffer<GPU_LayerConstants>> m_CB_Layer = nullptr;
 		std::unique_ptr<UploadBuffer<GPU_MaterialConstants>> m_CB_Material = nullptr;
@@ -156,9 +153,9 @@ namespace zzz::dx
 		UINT m_RtvDescrSize;
 		UINT m_DsvDescrSize;
 		UINT m_CbvSrvDescrSize;
-		ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
-		ComPtr<ID3D12DescriptorHeap> m_srvHeap;
-		ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
+		ComPtr<ID3D12DescriptorHeap> m_RtvHeap;
+		ComPtr<ID3D12DescriptorHeap> m_SrvHeap;
+		ComPtr<ID3D12DescriptorHeap> m_DsvHeap;
 		ComPtr<ID3D12Resource> m_renderTargets[BACK_BUFFER_COUNT];
 		ComPtr<ID3D12Resource> m_depthStencil[BACK_BUFFER_COUNT];
 
@@ -178,12 +175,12 @@ namespace zzz::dx
 		std::shared_ptr<IAppWin> _iAppWin,
 		std::shared_ptr<IGAPI> _iGAPI)
 		: ISurfView(_iGAPI),
-		b_IgnoreResize{ false },
-		m_tearingSupported{ false },
+		m_IgnoreResize{ false },
+		m_TearingSupported{ false },
 		m_RtvDescrSize{ 0 },
 		m_DsvDescrSize{ 0 },
 		m_CbvSrvDescrSize{ 0 },
-		m_frameReady{ false }
+		m_FrameReady{ false }
 	{
 		ensure(_iAppWin, "App window cannot be null.");
 		m_iAppWin = std::dynamic_pointer_cast<AppWin_MSWin>(_iAppWin);
@@ -234,9 +231,9 @@ namespace zzz::dx
 	Result<> SurfView_DX::CreateRTV(ComPtr<ID3D12Device>& m_device)
 	{
 		ensure(m_device, "Device cannot be null.");
-		ensure(m_rtvHeap, "RTV Heap cannot be null.");
+		ensure(m_RtvHeap, "RTV Heap cannot be null.");
 
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_RtvHeap->GetCPUDescriptorHandleForHeapStart());
 
 		// Create a RTV for each frame.
 		for (UINT n = 0; n < BACK_BUFFER_COUNT; n++)
@@ -266,7 +263,7 @@ namespace zzz::dx
 				&allowTearing,
 				sizeof(allowTearing))))
 			{
-				m_tearingSupported = allowTearing == TRUE;
+				m_TearingSupported = allowTearing == TRUE;
 			}
 		}
 
@@ -281,7 +278,7 @@ namespace zzz::dx
 		swapChainDesc.Scaling = DXGI_SCALING_NONE;
 		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 		swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
-		swapChainDesc.Flags = m_tearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
+		swapChainDesc.Flags = m_TearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
 		ComPtr<IDXGISwapChain1> swapChain1;
 		ensure(S_OK == m_DXGAPI->GetFactory()->CreateSwapChainForHwnd(
@@ -307,11 +304,11 @@ namespace zzz::dx
 		rtvHeapDesc.NumDescriptors = BACK_BUFFER_COUNT;
 		rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 		rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-		HRESULT hr = m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap));
+		HRESULT hr = m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_RtvHeap));
 		if (FAILED(hr))
 			return Unexpected(eResult::failure, std::format(L"Failed to create RTV heap. HRESULT = 0x{:08X}", hr));
 
-		SET_RESOURCE_DEBUG_NAME(m_rtvHeap, L"RTV Heap");
+		SET_RESOURCE_DEBUG_NAME(m_RtvHeap, L"RTV Heap");
 
 		return {};
 	}
@@ -326,11 +323,11 @@ namespace zzz::dx
 		srvHeapDesc.NumDescriptors = 1;
 		srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-		HRESULT hr = m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap));
+		HRESULT hr = m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_SrvHeap));
 		if (FAILED(hr))
 			return Unexpected(eResult::failure, std::format(L"Failed to create SRV heap. HRESULT = 0x{:08X}", hr));
 
-		SET_RESOURCE_DEBUG_NAME(m_srvHeap, L"SRV Heap");
+		SET_RESOURCE_DEBUG_NAME(m_SrvHeap, L"SRV Heap");
 
 		return {};
 	}
@@ -355,11 +352,11 @@ namespace zzz::dx
 			.NodeMask = 0
 		};
 
-		HRESULT hr = m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_dsvHeap));
+		HRESULT hr = m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_DsvHeap));
 		if (FAILED(hr))
 			return Unexpected(eResult::failure, std::format(L"Failed to create DSV heap. HRESULT = 0x{:08X}", hr));
 
-		SET_RESOURCE_DEBUG_NAME(m_dsvHeap, L"DSV Heap");
+		SET_RESOURCE_DEBUG_NAME(m_DsvHeap, L"DSV Heap");
 
 		return {};
 	}
@@ -418,7 +415,7 @@ namespace zzz::dx
 
 			// Создаём DSV
 			CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(
-				m_dsvHeap->GetCPUDescriptorHandleForHeapStart(),
+				m_DsvHeap->GetCPUDescriptorHandleForHeapStart(),
 				i,
 				m_DsvDescrSize);
 
@@ -470,9 +467,9 @@ namespace zzz::dx
 		// Синхронизируемся с рендерингом чтобы frameIndex остался валидным
 		zU64 frameIndex = (m_swapChain->GetCurrentBackBufferIndex() + 1) % BACK_BUFFER_COUNT;
 		{
-			std::lock_guard<std::mutex> lock(m_frameMutex);
-			m_frameReady = true;
-			m_frameCV.notify_one(); // Уведомляем ОДИН ожидающий поток
+			std::lock_guard<std::mutex> lock(m_FrameMutex);
+			m_FrameReady = true;
+			m_FrameCV.notify_one(); // Уведомляем ОДИН ожидающий поток
 		}
 
 		auto commandList = m_DXGAPI->GetCommandListUpdate();
@@ -495,8 +492,8 @@ namespace zzz::dx
 		commandList->ResourceBarrier(1, &keep(CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET)));
 		commandList->ResourceBarrier(1, &keep(CD3DX12_RESOURCE_BARRIER::Transition(m_depthStencil[frameIndex].Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE)));
 
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_RtvDescrSize);
-		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_DsvDescrSize);
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_RtvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_RtvDescrSize);
+		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_DsvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_DsvDescrSize);
 		commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
 		// Выполняем рендринг очереди
@@ -567,19 +564,19 @@ namespace zzz::dx
 	{
 		// Ожидаем(синхронизируемся) получения валидного frameIndex в PrepareFrame
 		{
-			std::unique_lock<std::mutex> lock(m_frameMutex);
-			m_frameCV.wait(lock, [this] { return m_frameReady; }); // Ждем, пока фрейм будет готов
-			m_frameReady = false; // Сбрасываем флаг для следующего кадра
+			std::unique_lock<std::mutex> lock(m_FrameMutex);
+			m_FrameCV.wait(lock, [this] { return m_FrameReady; }); // Ждем, пока фрейм будет готов
+			m_FrameReady = false; // Сбрасываем флаг для следующего кадра
 		}
 
 		// Выполняем командный список
-		m_iGAPI->SubmitCommandLists();
+		m_GAPI->SubmitCommandLists();
 
 		// Настраиваем параметры для Present
 		BOOL fullscreen = FALSE;
 		ensure(S_OK == m_swapChain->GetFullscreenState(&fullscreen, nullptr));
-		UINT syncInterval = IsVSync() ? 1 : 0;
-		UINT presentFlags = (!IsVSync() && !fullscreen && m_tearingSupported) ? DXGI_PRESENT_ALLOW_TEARING : 0;
+		UINT syncInterval = m_IsVsync ? 1 : 0;
+		UINT presentFlags = (!m_IsVsync && !fullscreen && m_TearingSupported) ? DXGI_PRESENT_ALLOW_TEARING : 0;
 		HRESULT hr = m_swapChain->Present(syncInterval, presentFlags);
 		if (FAILED(hr))
 		{
@@ -619,7 +616,7 @@ namespace zzz::dx
 	void SurfView_DX::OnResize(const Size2D<>& size)
 	{
 		//DebugOutput(std::format(L">>>>> [SurfView_DX::OnResize({}x{})]. b_IgnoreResize: {}.", size.width, size.height, b_IgnoreResize).c_str());
-		if (m_iGAPI->GetInitState() != eInitState::InitOK && !m_swapChain || b_IgnoreResize)
+		if (m_GAPI->GetInitState() != eInitState::InitOK && !m_swapChain || m_IgnoreResize)
 			return;
 
 		if (size.width == 0 || size.height == 0)
@@ -668,7 +665,7 @@ namespace zzz::dx
 				static_cast<UINT>(size.width),
 				static_cast<UINT>(size.height),
 				DXGI_FORMAT_R8G8B8A8_UNORM,
-				m_tearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
+				m_TearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
 		}
 		if (S_OK != hr)
 			throw_runtime_error(std::format("[SurfView_DX::OnResize({}x{})].", size.width, size.height));
@@ -701,11 +698,11 @@ namespace zzz::dx
 		m_DXGAPI->CommandRenderReset();
 		ResetRTVandDS();
 
-		b_IgnoreResize = true;
+		m_IgnoreResize = true;
 		hr = m_swapChain->SetFullscreenState(fs, nullptr);
 		if (S_OK != hr)
 		{
-			b_IgnoreResize = false;
+			m_IgnoreResize = false;
 			DebugOutput(std::format(L"[SurfView_DX::SetFullScreen({})] Failed to set fullscreen state.HRESULT = 0x{:08X}\n", fs, hr).c_str());
 			auto res = RecreateRenderTargetsAndDepth();
 			if (!res)
@@ -713,7 +710,7 @@ namespace zzz::dx
 
 			return;
 		}
-		b_IgnoreResize = false;
+		m_IgnoreResize = false;
 
 		DXGI_SWAP_CHAIN_DESC desc{};
 		hr = m_swapChain->GetDesc(&desc);
@@ -741,17 +738,16 @@ namespace zzz::dx
 		DebugOutput(std::format(L"[SurfView_DX::SetFullScreen({})].\n", fs).c_str());
 	}
 
-	void SurfView_DX::SetVSyncState(bool vs)
+	void SurfView_DX::SetVsyncState(bool vs)
 	{
-		if (m_iGAPI->IsCanDisableVsync())
-			b_IsVSync = vs;
+		// Если поддерживается отключение и в уонфиге разрешено использование
+		if (m_GAPI->IsCanDisableVsync() &&
+			m_GAPI->GetConfig()->IsSupportsTearing())
+		{
+			m_IsVsync = vs;
+		}
 		else
-			b_IsVSync = true;
+			m_IsVsync = true;
 	};
-
-	bool SurfView_DX::GetVSyncState()
-	{
-		return b_IsVSync;
-	}
 }
 #endif // defined(ZRENDER_API_D3D12)

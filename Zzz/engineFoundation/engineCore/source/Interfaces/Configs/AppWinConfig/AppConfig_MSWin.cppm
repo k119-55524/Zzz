@@ -1,7 +1,7 @@
 
 #if defined(ZPLATFORM_MSWINDOWS)
 
-export module AppConfig_MSWin;
+export module PlatformConfig_MSWin;
 
 import Result;
 import Size2D;
@@ -15,25 +15,26 @@ namespace zzz
 
 export namespace zzz::core
 {
-	export class AppConfig_MSWin final : public ISerializable
+	export class PlatformConfig_MSWin final : public ISerializable
 	{
 		friend class zzz::ZamlConfig;
 
 	public:
-		AppConfig_MSWin()
+		PlatformConfig_MSWin()
 		{
 			SetDefaults();
 		}
-		AppConfig_MSWin(std::wstring appName, std::wstring className, Size2D<LONG> winSize, std::wstring icoFullPath, int icoSize) :
-			m_Version(0, 0, 1),
-			m_AppName(appName),
-			m_ClassName(className),
-			m_WinSize(winSize),
-			m_IcoFullPath(icoFullPath),
-			m_IcoSize(icoSize)
+		PlatformConfig_MSWin(std::wstring appName, std::wstring className, Size2D<LONG> winSize, std::wstring icoFullPath, int icoSize) :
+			m_Version{ 0, 0, 1 },
+			m_AppName{ appName },
+			m_ClassName{ className },
+			m_WinSize{ winSize },
+			m_IcoFullPath{ icoFullPath },
+			m_IcoSize{ icoSize },
+			m_SupportsTearing{ true }
 		{
 		}
-		~AppConfig_MSWin() = default;
+		~PlatformConfig_MSWin() = default;
 
 		inline const Version& GetVersion() const noexcept { return m_Version; }
 		inline const std::wstring& GetAppName() const noexcept { return m_AppName; }
@@ -41,6 +42,7 @@ export namespace zzz::core
 		inline const Size2D<LONG>& GetWinSize() const noexcept { return m_WinSize; }
 		inline const std::wstring& GetIcoFullPath() const noexcept { return m_IcoFullPath; }
 		inline int GetIcoSize() const noexcept { return m_IcoSize; }
+		inline bool IsSupportsTearing() const noexcept { return m_SupportsTearing; }
 
 	private:
 		Version m_Version;
@@ -49,6 +51,7 @@ export namespace zzz::core
 		Size2D<LONG> m_WinSize;
 		std::wstring m_IcoFullPath;
 		int m_IcoSize;
+		bool m_SupportsTearing;	// Можно ли отключать Vsync
 
 		void SetDefaults()
 		{
@@ -57,6 +60,7 @@ export namespace zzz::core
 			m_WinSize = Size2D<LONG>(800, 600);
 			m_IcoFullPath = L"";
 			m_IcoSize = 32;
+			m_SupportsTearing = true;
 		}
 
 		Result<> Serialize(std::vector<std::byte>& buffer, const zzz::Serializer& s) const override
@@ -65,7 +69,8 @@ export namespace zzz::core
 				.and_then([&]() { return s.Serialize(buffer, m_ClassName); })
 				.and_then([&]() { return s.Serialize(buffer, m_WinSize); })
 				.and_then([&]() { return s.Serialize(buffer, m_IcoFullPath); })
-				.and_then([&]() { return s.Serialize(buffer, m_IcoSize); });
+				.and_then([&]() { return s.Serialize(buffer, m_IcoSize); })
+				.and_then([&]() { return s.Serialize(buffer, m_SupportsTearing); });
 		}
 
 		Result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const zzz::Serializer& s) override
@@ -74,7 +79,8 @@ export namespace zzz::core
 				.and_then([&]() { return s.DeSerialize(buffer, offset, m_ClassName); })
 				.and_then([&]() { return s.DeSerialize(buffer, offset, m_WinSize); })
 				.and_then([&]() { return s.DeSerialize(buffer, offset, m_IcoFullPath); })
-				.and_then([&]() { return s.DeSerialize(buffer, offset, m_IcoSize); });
+				.and_then([&]() { return s.DeSerialize(buffer, offset, m_IcoSize); })
+				.and_then([&]() { return s.DeSerialize(buffer, offset, m_SupportsTearing); });
 		}
 	};
 }

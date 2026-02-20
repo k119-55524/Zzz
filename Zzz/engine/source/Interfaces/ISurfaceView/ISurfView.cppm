@@ -28,21 +28,25 @@ namespace zzz::core
 		virtual void OnResize(const Size2D<>& size) = 0;
 
 		virtual void SetFullScreen(bool fs) {};
-		virtual void SetVSyncState(bool vs) = 0;
-		virtual bool GetVSyncState() = 0;
-		inline bool IsVSync() const noexcept { return b_IsVSync; }
+		virtual void SetVsyncState(bool vs) = 0;
+		inline bool GetVsyncState() const noexcept { return m_IsVsync; }
 
 	protected:
-		std::shared_ptr<IGAPI> m_iGAPI;
+		std::shared_ptr<IGAPI> m_GAPI;
 		Size2D<> m_SurfSize;
-		bool b_IsVSync;
+		bool m_IsVsync;
 	};
 
 	ISurfView::ISurfView(std::shared_ptr<IGAPI> _iGAPI) :
-		b_IsVSync{ true },
-		m_iGAPI{ _iGAPI },
+		m_IsVsync{ true },
+		m_GAPI{ _iGAPI },
 		m_SurfSize{}
 	{
-		ensure(m_iGAPI, "GAPI cannot be null.");
+		ensure(m_GAPI, "GAPI cannot be null.");
+
+		m_IsVsync = !(m_GAPI->GetConfig()->IsStartupEnableVsync());
+
+		int i = 0;
+		i++;
 	}
 }

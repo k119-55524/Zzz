@@ -187,7 +187,7 @@
     <ClCompile Include="Source\Camera.cppm" />
     <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\GPUUploadVK.cppm" />
     <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\GPUUploadCallbacks.cppm" />
-    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppConfig.cppm" />
+    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\PlatformConfig.cppm" />
     <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppConfig_MSWin.cppm" />
     <ClCompile Include="Source\Interfaces\Configs\GAPIConfig\GAPIConfig.cppm" />
     <ClCompile Include="Source\Interfaces\IAppWin\AppWin_MSWin.cppm" />

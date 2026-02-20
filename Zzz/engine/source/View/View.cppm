@@ -10,7 +10,6 @@ import Ensure;
 import Layer3D;
 import IAppWin;
 import ViewSetup;
-import AppConfig;
 import ISurfView;
 import StrConvert;
 import ThreadPool;
@@ -19,6 +18,7 @@ import RenderQueue;
 import ViewFactory;
 import UserLayer3D;
 import IRenderLayer;
+import PlatformConfig;
 import SceneEntityFactory;
 
 using namespace zzz::core;
@@ -38,7 +38,7 @@ namespace zzz
 
 	public:
 		View(
-			const std::shared_ptr<AppConfig> winConfig,
+			const std::shared_ptr<PlatformConfig> winConfig,
 			const std::shared_ptr<SceneEntityFactory> entityFactory,
 			const std::shared_ptr<IGAPI> GAPI);
 
@@ -51,8 +51,8 @@ namespace zzz
 
 		void OnUpdate(double deltaTime);
 		void SetFullScreen(bool fs);
-		inline void SetVSyncState(bool vs) { m_RenderSurface->SetVSyncState(vs); };
-		inline bool GetVSyncState() { return m_RenderSurface->GetVSyncState(); };
+		inline void SetVsyncState(bool vs) { m_RenderSurface->SetVsyncState(vs); };
+		inline bool GetVsyncState() { return m_RenderSurface->GetVsyncState(); };
 		inline void SetViewCaptionText(std::wstring caption) { if (m_Window != nullptr) m_Window->SetCaptionText(caption); };
 		inline void AddViewCaptionText(std::wstring caption) { if (m_Window != nullptr) m_Window->AddCaptionText(caption); };
 
@@ -61,7 +61,7 @@ namespace zzz
 		void OnViewResize(const Size2D<>& size, eTypeWinResize resizeType);
 
 		ViewFactory factory;
-		const std::shared_ptr<AppConfig> m_WinConfig;
+		const std::shared_ptr<PlatformConfig> m_WinConfig;
 		const std::shared_ptr<IGAPI> m_GAPI;
 		const std::shared_ptr<SceneEntityFactory> m_EntityFactory;
 		std::shared_ptr<IAppWin> m_Window;
@@ -79,7 +79,7 @@ namespace zzz
 	};
 
 	View::View(
-		const std::shared_ptr<AppConfig> winConfig,
+		const std::shared_ptr<PlatformConfig> winConfig,
 		const std::shared_ptr<SceneEntityFactory> entityFactory,
 		const std::shared_ptr<IGAPI> GAPI) :
 		m_WinConfig{ winConfig },

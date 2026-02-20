@@ -35,8 +35,8 @@ namespace zzz
 	 *
 	 * Пример использования:
 	 * @code
-	 * std::shared_ptr<AppConfig> appConfig;
-	 * ensure(appConfig, "AppConfig cannot be null");
+	 * std::shared_ptr<PlatfotmConfig> appConfig;
+	 * ensure(appConfig, "PlatfotmConfig cannot be null");
 	 * @endcode
 	 */
 	export template<typename T>

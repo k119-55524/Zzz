@@ -29,7 +29,7 @@ namespace zzz
 		Z_NO_CREATE_COPY(IGAPI);
 
 	public:
-		explicit IGAPI(const std::shared_ptr<GAPIConfig> config, eGAPIType type);
+		explicit IGAPI(const std::shared_ptr<GAPIConfig>& config, eGAPIType type);
 		virtual ~IGAPI() = default;
 
 		[[nodiscard]] eInitState GetInitState() const noexcept { return m_InitState; }
@@ -47,7 +47,8 @@ namespace zzz
 				names[static_cast<size_t>(gapiType)] : L"Unknown"sv;
 		}
 		[[nodiscard]] constexpr std::wstring_view GetAPIName() const noexcept { return GetAPIName(m_GapiType); }
-		[[nodiscard]] inline bool IsCanDisableVsync() const noexcept { return b_IsCanDisableVsync; }
+		[[nodiscard]] inline bool IsCanDisableVsync() const noexcept { return b_IsCanDisableVsync; } // Поддерживается ли отключение вертикальной синхронизации
+		inline const std::shared_ptr<GAPIConfig>& GetConfig()  const noexcept { return m_Config; };
 		[[nodiscard]] inline const IDeviceCapabilities& GetGapiSupportChecker() const noexcept { return *m_CheckGapiSupport; }
 
 		[[nodiscard]] virtual Result<> Initialize();
@@ -78,7 +79,7 @@ namespace zzz
 		zU32 m_IndexFrameUpdate;
 	};
 
-	IGAPI::IGAPI(const std::shared_ptr<GAPIConfig> config, eGAPIType type) :
+	IGAPI::IGAPI(const std::shared_ptr<GAPIConfig>& config, eGAPIType type) :
 		m_Config(config),
 		m_GapiType{ type },
 		b_IsCanDisableVsync{ false },

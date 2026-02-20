@@ -1,6 +1,4 @@
 
-#include "pch.h"
-
 export module Result;
 
 export namespace zzz
@@ -35,50 +33,103 @@ export namespace zzz
 	class Unexpected
 	{
 	public:
-		Unexpected() noexcept : code(eResult::success), message() {}
+		Unexpected() noexcept
+			: m_code(eResult::success)
+		{
+		}
+
 		Unexpected(
 			eResult code,
-			const std::wstring& msg,
 			const std::source_location& loc = std::source_location::current()) noexcept
-			: code(code)
+			: m_code(code)
 		{
-			message = FormatMessage(msg, loc);
+			m_message = FormatMessage(L"<no message>", loc);
 		}
 
-		Unexpected(eResult code,
+		explicit Unexpected(
+			eResult code,
+			std::wstring message,
 			const std::source_location& loc = std::source_location::current()) noexcept
-			: code(code)
+			: m_code(code)
+			, m_message(FormatMessage(std::move(message), loc))
 		{
-			message = FormatMessage(L"<no message>", loc);
 		}
 
+		template<typename... Args>
 		Unexpected(
-			const std::wstring& msg,
-			const std::source_location& loc = std::source_location::current()) noexcept
-			: code(eResult::failure)  // Используем failure по умолчанию
+			eResult code,
+			std::wformat_string<Args...> fmt,
+			Args&&... args) noexcept
+			: m_code(code)
 		{
-			message = FormatMessage(msg, loc);
+			const auto loc = std::source_location::current();
+
+			try
+			{
+				m_message = FormatMessage(
+					std::format(fmt, std::forward<Args>(args)...),
+					loc);
+			}
+			catch (...)
+			{
+				m_message = FormatMessage(L"<format error>", loc);
+			}
 		}
 
-		inline eResult getCode() const noexcept { return code; }
-		inline const std::wstring& getMessage() const noexcept { return message; }
+		template<typename... Args>
+		explicit Unexpected(
+			std::wformat_string<Args...> fmt,
+			Args&&... args) noexcept
+			: m_code(eResult::failure)
+		{
+			const auto loc = std::source_location::current();
 
-		inline bool operator==(const Unexpected& other) const noexcept { return code == other.code && message == other.message; }
-		inline bool operator!=(const Unexpected& other) const noexcept { return !(*this == other); }
+			try
+			{
+				m_message = FormatMessage(
+					std::format(fmt, std::forward<Args>(args)...),
+					loc);
+			}
+			catch (...)
+			{
+				m_message = FormatMessage(L"<format error>", loc);
+			}
+		}
+
+	public:
+		[[nodiscard]] eResult getCode() const noexcept { return m_code; }
+		[[nodiscard]] const std::wstring& getMessage() const noexcept { return m_message; }
+
+		bool operator==(const Unexpected& other) const noexcept
+		{
+			return m_code == other.m_code &&
+				m_message == other.m_message;
+		}
+
+		bool operator!=(const Unexpected& other) const noexcept
+		{
+			return !(*this == other);
+		}
 
 	private:
-		eResult code;
-		std::wstring message;
+		eResult m_code{};
+		std::wstring m_message{};
 
-		static std::wstring FormatMessage(const std::wstring& msg, const std::source_location& loc) noexcept
+		static std::wstring FormatMessage(
+			std::wstring msg,
+			const std::source_location& loc) noexcept
 		{
 			std::wstringstream ss;
+
 			ss << L">>>>> ["
-				<< std::wstring(loc.function_name(), loc.function_name() + strlen(loc.function_name()))
-				<< L"].\nExpected: " << msg
-				<< L"\n    Line " << loc.line()
-				<< L"\n    In file: "
-				<< std::wstring(loc.file_name(), loc.file_name() + strlen(loc.file_name()));
+				<< loc.function_name()
+				<< L"]\nExpected: "
+				<< msg
+				<< L"\n    Line: "
+				<< loc.line()
+				<< L"\n    File: "
+				<< loc.file_name();
+
 			return ss.str();
 		}
 	};

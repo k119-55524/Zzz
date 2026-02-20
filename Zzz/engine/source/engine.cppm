@@ -202,7 +202,6 @@ export namespace zzz
 		{
 			isSysPaused = false;
 			
-			m_View->SetVSyncState(false);
 			m_time.Reset();
 			m_MainLoop->Run();
 
@@ -310,7 +309,7 @@ export namespace zzz
 		if (!res)
 			Unexpected(eResult::not_initialized, res.error().getMessage());
 
-		std::shared_ptr<AppConfig> winConfig = res.value();
+		std::shared_ptr<PlatformConfig> winConfig = res.value();
 		std::shared_ptr<GAPIConfig> gapiConfig = safe_make_shared<GAPIConfig>(winConfig);
 
 		return Result<std::shared_ptr<StartupConfig>>(safe_make_shared<StartupConfig>(winConfig, gapiConfig));

@@ -134,7 +134,7 @@
     <ClCompile Include="source\Interfaces\IDeviceCapabilities\VKDeviceCapabilities.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppConfig.cppm">
+    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\PlatformConfig.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppConfig_MSWin.cppm">
