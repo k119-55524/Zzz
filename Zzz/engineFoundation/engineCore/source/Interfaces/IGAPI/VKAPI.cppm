@@ -25,7 +25,7 @@ namespace zzz::vk
 		uint32_t computeQueueFamily{};
 		uint32_t transferQueueFamily{};
 		uint64_t score = 0;
-		bool isCanDisableVsync = false;
+		bool isCanDisableVSync = false;
 	};
 
 	class TestSurface_MSWin final
@@ -473,7 +473,7 @@ namespace zzz::vk
 
 		deviceCandidate = candidat.value();
 		m_PhysicalDevice = deviceCandidate.device;
-		b_IsCanDisableVsync = deviceCandidate.isCanDisableVsync;
+		b_IsCanDisableVSync = deviceCandidate.isCanDisableVSync;
 
 		VkPhysicalDeviceProperties props{};
 		vkGetPhysicalDeviceProperties(m_PhysicalDevice, &props);
@@ -562,7 +562,7 @@ namespace zzz::vk
 			if (!features13.dynamicRendering)
 				continue;
 
-			bool isCanDisableVsync = false;  // можем ли отключить vsync?
+			bool isCanDisableVSync = false;  // можем ли отключить vsync?
 			uint32_t presentModeCount = 0;
 			vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
 			if (presentModeCount > 0)
@@ -574,7 +574,7 @@ namespace zzz::vk
 				{
 					if (mode == VK_PRESENT_MODE_IMMEDIATE_KHR)
 					{
-						isCanDisableVsync = true;  // Можем отключить vsync
+						isCanDisableVSync = true;  // Можем отключить vsync
 						break;
 					}
 				}
@@ -597,7 +597,7 @@ namespace zzz::vk
 					.computeQueueFamily = *computeFamily,
 					.transferQueueFamily = *transferFamily,
 					.score = score,
-					.isCanDisableVsync = isCanDisableVsync
+					.isCanDisableVSync = isCanDisableVSync
 				};
 			}
 		}

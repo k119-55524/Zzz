@@ -9,14 +9,12 @@ using namespace zzz::input;
 class MyScript : public IBehavior
 {
 public:
-	MyScript(const std::shared_ptr<SceneEntity> entity,
-		const std::shared_ptr<UserView>& view) :
+	MyScript(const std::shared_ptr<SceneEntity> entity, Engine& engine) :
 		IBehavior{ entity },
-		m_View{view},
+		m_Engine{ engine },
 		rotSpeed{ 0.5f },
 		moveSpeed{ 1.0f }
 	{
-		ensure(m_View);
 		m_Input = GetInput();
 		m_Input->Keyboard()->GetButtonWatcher(KeyCode::F1).OnDown += std::bind(&MyScript::OnKeyDown_F1, this);
 	}
@@ -24,7 +22,7 @@ public:
 
 	void OnKeyDown_F1()
 	{
-		m_View->SetVsyncState(!m_View->GetVsyncState());
+		m_Engine.SetVSyncState(!m_Engine.GetVSyncState());
 	}
 
 	void OnUpdate(float deltaTime) override
@@ -49,7 +47,7 @@ protected:
 	float rotSpeed;
 	float moveSpeed;
 	std::shared_ptr<Input> m_Input;
-	const std::shared_ptr<UserView>& m_View;
+	Engine& m_Engine;
 };
 
 int APIENTRY wWinMain(
@@ -89,7 +87,7 @@ int APIENTRY wWinMain(
 						return Result<>(resEntity.error());
 
 					entity = resEntity.value();
-					auto resScript = entity->SetScript<MyScript>(view);
+					auto resScript = entity->SetScript<MyScript>(engine);
 
 					return Result<>();
 				})

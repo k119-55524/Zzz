@@ -242,7 +242,7 @@ namespace zzz::vk
 		if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount)
 			imageCount = capabilities.maxImageCount;
 
-		m_CurrentPresentMode = (m_GAPI->IsCanDisableVsync() && IsVsync()) ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_MAILBOX_KHR;
+		m_CurrentPresentMode = (m_GAPI->IsCanDisableVSync() && IsVSync()) ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_MAILBOX_KHR;
 		VkSwapchainCreateInfoKHR createInfo{
 			.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
 			.surface = m_Surface,
@@ -608,9 +608,9 @@ namespace zzz::vk
 			&presentModeCount,
 			presentModes.data());
 
-		bool wantVsync = m_GAPI->IsCanDisableVsync() && IsVsync();
+		bool wantVSync = m_GAPI->IsCanDisableVSync() && IsVSync();
 		m_CurrentPresentMode = VK_PRESENT_MODE_FIFO_KHR; // гарантирован
-		if (!wantVsync)
+		if (!wantVSync)
 		{
 			for (auto m : presentModes)
 			{
@@ -623,7 +623,7 @@ namespace zzz::vk
 		}
 
 		if (m_CurrentPresentMode == VK_PRESENT_MODE_FIFO_KHR)
-			SetVsyncState(true);
+			SetVSyncState(true);
 
 		// 7. Создать swapchain
 		uint32_t imageCount = BACK_BUFFER_COUNT;
@@ -768,14 +768,14 @@ namespace zzz::vk
 			throw_runtime_error("vkQueuePresentKHR failed");
 
 		// TODO: надо будет переделывать вынося логику в глобальный код
-		// Отлавливаем переключение состояния Vsync
-		if (m_GAPI->IsCanDisableVsync())
+		// Отлавливаем переключение состояния VSync
+		if (m_GAPI->IsCanDisableVSync())
 		{
-			if (m_CurrentPresentMode == VK_PRESENT_MODE_FIFO_KHR && !IsVsync())
+			if (m_CurrentPresentMode == VK_PRESENT_MODE_FIFO_KHR && !IsVSync())
 			{
 				auto res = RecreateSwapchain();
 			}
-			else if (IsVsync())
+			else if (IsVSync())
 			{
 				auto res = RecreateSwapchain();
 			}

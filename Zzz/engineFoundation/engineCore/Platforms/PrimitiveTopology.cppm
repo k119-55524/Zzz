@@ -42,7 +42,7 @@ export namespace zzz
 #elif defined(ZRENDER_API_VULKAN)
 		VkPrimitiveTopology ToVulkan() const noexcept
 		{
-			ensure(topology != eTopology::Undefined, ">>>>> [PrimitiveTopology::ToVulkan(...)]. Undefined topology cannot be converted.");
+			ensure(topology != eTopology::Undefined, "Undefined topology cannot be converted.");
 
 			switch (topology)
 			{
@@ -58,7 +58,7 @@ export namespace zzz
 #elif defined(ZRENDER_API_METAL)
 		MTLPrimitiveType ToMetal() const noexcept
 		{
-			ensure(topology != eTopology::Undefined, ">>>>> [PrimitiveTopology::ToMetal(...)]. Undefined topology cannot be converted.");
+			ensure(topology != eTopology::Undefined, "Undefined topology cannot be converted.");
 
 			switch (topology)
 			{

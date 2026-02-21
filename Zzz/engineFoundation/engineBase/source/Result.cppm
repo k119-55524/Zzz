@@ -1,7 +1,7 @@
 
 export module Result;
 
-export namespace zzz
+namespace zzz
 {
 	class bad_expected_access : public std::exception
 	{
@@ -13,7 +13,7 @@ export namespace zzz
 		const char* _msg;
 	};
 
-	enum class eResult : unsigned int
+	export enum class eResult : unsigned int
 	{
 		success = 0,
 		failure,
@@ -30,7 +30,7 @@ export namespace zzz
 		already_created		// Объект уже создан
 	};
 
-	class Unexpected
+	export class Unexpected
 	{
 	public:
 		Unexpected() noexcept
@@ -135,7 +135,7 @@ export namespace zzz
 	};
 
 	// Основной шаблон Result<T>
-	template<typename _Ty = void>
+	export template<typename _Ty = void>
 	class Result
 	{
 	public:
@@ -235,7 +235,7 @@ export namespace zzz
 	};
 
 	// Специализация для void
-	template<>
+	export template<>
 	class Result<void>
 	{
 	public:

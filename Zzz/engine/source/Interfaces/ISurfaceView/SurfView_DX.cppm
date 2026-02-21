@@ -53,10 +53,10 @@ namespace zzz::dx
 				D3D12_RESOURCE_STATE_GENERIC_READ,
 				nullptr,
 				IID_PPV_ARGS(&mUploadBuffer));
-			ensure(hr == S_OK, ">>>>> [UploadBuffer::UploadBuffer(...)]. Failed to create upload buffer resource.");
+			ensure(hr == S_OK, "Failed to create upload buffer resource.");
 
 			hr = mUploadBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mMappedData));
-			ensure(hr == S_OK, ">>>>> [UploadBuffer::UploadBuffer(...)]. Failed to map upload buffer resource.");
+			ensure(hr == S_OK, "Failed to map upload buffer resource.");
 
 			// Нам не нужно вызывать unmap, пока мы не закончим работу с ресурсом. Однако мы не должны выполнять запись в
 			// ресурс, пока он используется графическим процессором (поэтому необходимо использовать методы синхронизации).
@@ -261,7 +261,7 @@ namespace zzz::dx
 		swapChainDesc.Scaling = DXGI_SCALING_NONE;
 		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 		swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
-		swapChainDesc.Flags = m_GAPI->IsCanDisableVsync() ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
+		swapChainDesc.Flags = m_GAPI->IsCanDisableVSync() ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
 		ComPtr<IDXGISwapChain1> swapChain1;
 		ensure(S_OK == m_DXGAPI->GetFactory()->CreateSwapChainForHwnd(
@@ -561,7 +561,7 @@ namespace zzz::dx
 
 		UINT syncInterval = 0;
 		UINT presentFlags = DXGI_PRESENT_ALLOW_TEARING;
-		if (IsVsync())
+		if (m_GAPI->IsVSyncEnabled())
 		{
 			syncInterval = 1;
 			presentFlags = 0;
@@ -655,7 +655,7 @@ namespace zzz::dx
 				static_cast<UINT>(size.width),
 				static_cast<UINT>(size.height),
 				DXGI_FORMAT_R8G8B8A8_UNORM,
-				m_GAPI->IsCanDisableVsync() ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
+				m_GAPI->IsCanDisableVSync() ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
 		}
 		if (S_OK != hr)
 			throw_runtime_error(std::format("[SurfView_DX::OnResize({}x{})].", size.width, size.height));

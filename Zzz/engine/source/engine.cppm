@@ -61,6 +61,27 @@ export namespace zzz
 		[[nodiscard]] Result<> Run() noexcept;
 
 		[[nodiscard]] std::shared_ptr<UserView> GetMainView() { return m_UserView; }
+		inline void SetVSyncState(bool vss)
+		{
+			ensure(initState != eInitState::InitOK, "Initialization required before changing VSync");
+
+			if (m_GAPI->IsCanDisableVSync())
+			{
+				bool oldVSync = m_Config->GetGAPIConfig()->GetVSyncEnabledOnStartup();
+				if (oldVSync == vss)
+					return;
+
+				m_Config->GetGAPIConfig()->SetVSyncEnabledOnStartup(vss);
+
+				//m_UserView;
+			}
+		};
+		inline bool GetVSyncState() const noexcept
+		{
+			ensure(initState != eInitState::InitOK, "Cannot get VSync state before initialization");
+
+			return m_Config->GetGAPIConfig()->GetVSyncEnabledOnStartup();
+		};
 
 	private:
 		EngineFactory m_EngineFactory;

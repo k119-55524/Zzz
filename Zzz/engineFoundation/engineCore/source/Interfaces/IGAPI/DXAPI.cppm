@@ -164,7 +164,7 @@ export namespace zzz::dx
 		BOOL allowTearing = FALSE;
 		hr = factory->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
 		if (SUCCEEDED(hr))
-			b_IsCanDisableVsync = allowTearing;
+			m_IsCanDisableVSync = allowTearing;
 
 		return {};
 	}
