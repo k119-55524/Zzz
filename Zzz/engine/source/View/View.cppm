@@ -51,8 +51,8 @@ namespace zzz
 
 		void OnUpdate(double deltaTime);
 		void SetFullScreen(bool fs);
-		inline void SetVsyncState(bool vs) { m_RenderSurface->SetVsyncState(vs); };
-		inline bool GetVsyncState() { return m_RenderSurface->IsVsync(); };
+		//inline void SetVSyncState(bool vs) { m_RenderSurface->SetVSyncState(vs); };
+		//inline bool GetVSyncState() { return m_RenderSurface->IsVSync(); };
 		inline void SetViewCaptionText(std::wstring caption) { if (m_Window != nullptr) m_Window->SetCaptionText(caption); };
 		inline void AddViewCaptionText(std::wstring caption) { if (m_Window != nullptr) m_Window->AddCaptionText(caption); };
 
