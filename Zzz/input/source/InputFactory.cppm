@@ -1,6 +1,7 @@
 
 export module InputFactory;
 
+import Ensure;
 import IMouse;
 import IAppWin;
 import IKeyboard;

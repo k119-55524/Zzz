@@ -29,7 +29,7 @@ using namespace Microsoft::WRL;
 
 #define NOMINMAX
 
-namespace zzz::directx
+namespace zzz::dx
 {
 	struct unique_handle
 	{
@@ -84,7 +84,7 @@ static constexpr DXGI_FORMAT BACK_BUFFER_FORMAT = DXGI_FORMAT_R8G8B8A8_UNORM;
 static constexpr DXGI_FORMAT DEPTH_FORMAT = DXGI_FORMAT_D32_FLOAT;
 
 #pragma region Обёртки над структурами DirectX
-namespace zzz::directx
+namespace zzz::dx
 {
 #if defined(_DEBUG)
 #define SET_RESOURCE_DEBUG_NAME(resource, name) {			\

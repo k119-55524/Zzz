@@ -3,11 +3,11 @@ export module Scene;
 
 import Math;
 import Input;
+import Ensure;
 import Result;
 import Camera;
 import Transform;
 import StrConvert;
-//import SceneEntity;
 import SceneEntityFactory;
 
 using namespace zzz::math;
@@ -26,11 +26,11 @@ namespace zzz
 		~Scene() = default;
 		Scene(const std::shared_ptr<Input> input, const std::shared_ptr<SceneEntityFactory> sceneEntityFactory);
 
-		Result<std::shared_ptr<SceneEntity>> AddColorBox(Transform& transform);
+		[[nodiscard]] inline Result<std::shared_ptr<SceneEntity>> AddColorBox(Transform& transform);
 
 		inline [[nodiscard]] const Camera& GetPrimaryCamera() noexcept { return m_PrimaryCamera; }
-		[[nodiscard]] std::shared_ptr<SceneEntity> GetEntity() const noexcept;
-		inline [[nodiscard]] const std::shared_ptr<Input> GetInput() const noexcept { return m_Input; }
+		[[nodiscard]] const std::shared_ptr<SceneEntity>& GetEntity() const noexcept;
+		inline [[nodiscard]] const std::shared_ptr<Input>& GetInput() const noexcept { return m_Input; }
 
 	private:
 		const std::shared_ptr<Input> m_Input;
@@ -70,12 +70,12 @@ namespace zzz
 		m_PrimaryCamera.SetUp(Vector3(0.0f, 1.0f, 0.0f));
 	}
 
-	[[nodiscard]] inline std::shared_ptr<SceneEntity> Scene::GetEntity() const noexcept
+	[[nodiscard]] inline const std::shared_ptr<SceneEntity>& Scene::GetEntity() const noexcept
 	{
 		return m_Entity;
 	}
 
-	inline Result<std::shared_ptr<SceneEntity>> Scene::AddColorBox(Transform& transform)
+	[[nodiscard]] inline Result<std::shared_ptr<SceneEntity>> Scene::AddColorBox(Transform& transform)
 	{
 		std::shared_ptr<SceneEntity> entity;
 		try

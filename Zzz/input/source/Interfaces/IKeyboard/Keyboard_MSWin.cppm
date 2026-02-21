@@ -3,6 +3,7 @@ export module Keyboard_MSWin;
 
 #if defined(ZPLATFORM_MSWINDOWS)
 
+import Ensure;
 import IAppWin;
 import IKeyboard;
 import AppWin_MSWin;
@@ -31,6 +32,7 @@ namespace zzz::input
 	void Keyboard_MSWin::Initialize()
 	{
 		m_Window->OnKeyStateChanged += std::bind(&Keyboard_MSWin::OnKeyStateChanged, this, std::placeholders::_1, std::placeholders::_2);
+		m_Window->OnFocus += std::bind(&Keyboard_MSWin::OnFocus, this, std::placeholders::_1);
 	}
 }
 #endif // ZPLATFORM_MSWINDOWS

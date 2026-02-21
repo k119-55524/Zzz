@@ -5,7 +5,6 @@ import Result;
 import ioZaml;
 import GAPIConfig;
 import StrConvert;
-import AppWinConfig;
 
 using namespace zzz::core;
 
@@ -53,17 +52,13 @@ export namespace zzz
 				}
 
 				if (!found)
-				{
-					return Unexpected(eResult::not_found, L">>>>> [Settings.GetParam(...)] Tag '" + tag + L"' not found");
-				}
+					return Unexpected(eResult::not_found, L"Tag '{}' not found", tag);
 			}
 
 			// Ищем атрибут
 			auto attr = node->GetAttribute(paramName);
 			if (!attr)
-			{
-				return Unexpected(eResult::not_found, L">>>>> [Settings.GetParam(...)] Parameter '" + paramName + L"' not found");
-			}
+				return Unexpected(eResult::not_found, L"Parameter '{}' not found", paramName);
 
 			// Преобразуем значение
 			return ConvertValue<T>(*attr.value());

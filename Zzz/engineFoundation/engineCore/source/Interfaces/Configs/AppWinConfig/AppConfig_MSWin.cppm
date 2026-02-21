@@ -1,10 +1,11 @@
 
 #if defined(ZPLATFORM_MSWINDOWS)
 
-export module AppWinConfig_MSWin;
+export module PlatformConfig_MSWin;
 
 import Result;
 import Size2D;
+import Version;
 import Serializer;
 
 namespace zzz
@@ -14,33 +15,36 @@ namespace zzz
 
 export namespace zzz::core
 {
-	export class AppWinConfig_MSWin final : public ISerializable
+	export class PlatformConfig_MSWin final : public ISerializable
 	{
 		friend class zzz::ZamlConfig;
 
 	public:
-		AppWinConfig_MSWin()
+		PlatformConfig_MSWin()
 		{
 			SetDefaults();
 		}
-		AppWinConfig_MSWin(std::wstring caption, std::wstring className, Size2D<LONG> winSize, std::wstring icoFullPath, int icoSize) :
-			m_Caption(caption),
-			m_ClassName(className),
-			m_WinSize(winSize),
-			m_IcoFullPath(icoFullPath),
-			m_IcoSize(icoSize)
+		PlatformConfig_MSWin(std::wstring appName, std::wstring className, Size2D<LONG> winSize, std::wstring icoFullPath, int icoSize) :
+			m_Version{ 0, 0, 1 },
+			m_AppName{ appName },
+			m_ClassName{ className },
+			m_WinSize{ winSize },
+			m_IcoFullPath{ icoFullPath },
+			m_IcoSize{ icoSize }
 		{
 		}
-		~AppWinConfig_MSWin() = default;
+		~PlatformConfig_MSWin() = default;
 
-		const std::wstring& GetCaption() const noexcept { return m_Caption; }
-		const std::wstring& GetClassName() const noexcept { return m_ClassName; }
-		const Size2D<LONG>& GetWinSize() const noexcept { return m_WinSize; }
-		const std::wstring& GetIcoFullPath() const noexcept { return m_IcoFullPath; }
-		int GetIcoSize() const noexcept { return m_IcoSize; }
+		inline const Version& GetVersion() const noexcept { return m_Version; }
+		inline const std::wstring& GetAppName() const noexcept { return m_AppName; }
+		inline const std::wstring& GetClassName() const noexcept { return m_ClassName; }
+		inline const Size2D<LONG>& GetWinSize() const noexcept { return m_WinSize; }
+		inline const std::wstring& GetIcoFullPath() const noexcept { return m_IcoFullPath; }
+		inline int GetIcoSize() const noexcept { return m_IcoSize; }
 
 	private:
-		std::wstring m_Caption;
+		Version m_Version;
+		std::wstring m_AppName;
 		std::wstring m_ClassName;
 		Size2D<LONG> m_WinSize;
 		std::wstring m_IcoFullPath;
@@ -48,7 +52,7 @@ export namespace zzz::core
 
 		void SetDefaults()
 		{
-			m_Caption = L"zGame3D";
+			m_AppName = L"zGame3D";
 			m_ClassName = L"zEngineClassName";
 			m_WinSize = Size2D<LONG>(800, 600);
 			m_IcoFullPath = L"";
@@ -57,7 +61,7 @@ export namespace zzz::core
 
 		Result<> Serialize(std::vector<std::byte>& buffer, const zzz::Serializer& s) const override
 		{
-			return s.Serialize(buffer, m_Caption)
+			return s.Serialize(buffer, m_AppName)
 				.and_then([&]() { return s.Serialize(buffer, m_ClassName); })
 				.and_then([&]() { return s.Serialize(buffer, m_WinSize); })
 				.and_then([&]() { return s.Serialize(buffer, m_IcoFullPath); })
@@ -66,7 +70,7 @@ export namespace zzz::core
 
 		Result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const zzz::Serializer& s) override
 		{
-			return s.DeSerialize(buffer, offset, m_Caption)
+			return s.DeSerialize(buffer, offset, m_AppName)
 				.and_then([&]() { return s.DeSerialize(buffer, offset, m_ClassName); })
 				.and_then([&]() { return s.DeSerialize(buffer, offset, m_WinSize); })
 				.and_then([&]() { return s.DeSerialize(buffer, offset, m_IcoFullPath); })

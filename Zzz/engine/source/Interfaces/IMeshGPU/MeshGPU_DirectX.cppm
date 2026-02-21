@@ -2,14 +2,20 @@
 export module MeshGPU_DirectX;
 
 #if defined(ZRENDER_API_D3D12)
-export import IGAPI;
-export import DXAPI;
-export import CPUMesh;
-export import IMeshGPU;
-export import CPUIndexBuffer;
-export import CPUVertexBuffer;
+import IGAPI;
+import DXAPI;
+import Ensure;
+import CPUMesh;
+import IMeshGPU;
+import CPUIndexBuffer;
+import CPUVertexBuffer;
 
-export namespace zzz::directx
+namespace zzz
+{
+	export class GPUResManager;
+}
+
+namespace zzz::dx
 {
 	export class MeshGPU_DirectX final : public IMeshGPU
 	{
@@ -50,18 +56,21 @@ export namespace zzz::directx
 	{
 		vertices = m_MeshCPU->GetMesh();
 		if (!vertices || vertices->GetData() == nullptr || vertices->SizeInBytes() == 0)
-			throw_runtime_error(">>>>> [MeshGPU_DirectX::MeshGPU_DirectX( ... )]. Invalid vertex data");
+			throw_runtime_error("Invalid vertex data");
 
 		indices = m_MeshCPU->GetIndicies();
 		if (indices != nullptr && (indices->GetData() == nullptr || indices->GetSizeInBytes() == 0))
-			throw_runtime_error(">>>>> [MeshGPU_DirectX::MeshGPU_DirectX( ... )]. Invalid index data");
+			throw_runtime_error("Invalid index data");
 	}
 
 	Result<> MeshGPU_DirectX::Initialize(std::shared_ptr<IGAPI> _IGAPI)
 	{
+		std::shared_ptr<DXAPI> dxAPI = std::dynamic_pointer_cast<DXAPI>(_IGAPI);
+		ensure(dxAPI, "Failed to cast IGAPI to DXAPI.");
+
 		CD3DX12_HEAP_PROPERTIES defaultHeapProps(D3D12_HEAP_TYPE_DEFAULT);
 		CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertices->SizeInBytes());
-		HRESULT hr = _IGAPI->GetDevice()->CreateCommittedResource(
+		HRESULT hr = dxAPI->GetDevice()->CreateCommittedResource(
 			&defaultHeapProps,
 			D3D12_HEAP_FLAG_NONE,
 			&bufferDesc,
@@ -70,11 +79,11 @@ export namespace zzz::directx
 			IID_PPV_ARGS(&vertexBuffer)
 		);
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, std::format(L">>>>> #0 [MeshGPU_DirectX::Initialize( ... )]. Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
+			return Unexpected(eResult::failure, std::format(L"Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
 
 		// Создание промежуточного буфера для загрузки вершин (HEAP_TYPE_UPLOAD)
 		CD3DX12_HEAP_PROPERTIES uploadHeapProps(D3D12_HEAP_TYPE_UPLOAD);
-		hr = _IGAPI->GetDevice()->CreateCommittedResource(
+		hr = dxAPI->GetDevice()->CreateCommittedResource(
 			&uploadHeapProps,
 			D3D12_HEAP_FLAG_NONE,
 			&bufferDesc,
@@ -83,7 +92,7 @@ export namespace zzz::directx
 			IID_PPV_ARGS(&uploadVertexBuffer)
 		);
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, std::format(L">>>>> #1 [MeshGPU_DirectX::Initialize( ... )]. Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
+			return Unexpected(eResult::failure, std::format(L"#1 Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
 
 		vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
 		vertexBufferView.StrideInBytes = static_cast<UINT>(vertices->Stride());
@@ -92,7 +101,7 @@ export namespace zzz::directx
 		if (indices != nullptr)
 		{
 			bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(indices->GetSizeInBytes());
-			hr = _IGAPI->GetDevice()->CreateCommittedResource(
+			hr = dxAPI->GetDevice()->CreateCommittedResource(
 				&defaultHeapProps,
 				D3D12_HEAP_FLAG_NONE,
 				&bufferDesc,
@@ -100,9 +109,9 @@ export namespace zzz::directx
 				nullptr,
 				IID_PPV_ARGS(&indexBuffer));
 			if (FAILED(hr))
-				return Unexpected(eResult::failure, std::format(L">>>>> #2 [MeshGPU_DirectX::Initialize( ... )]. Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
+				return Unexpected(eResult::failure, std::format(L"#2 Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
 
-			hr = _IGAPI->GetDevice()->CreateCommittedResource(
+			hr = dxAPI->GetDevice()->CreateCommittedResource(
 				&uploadHeapProps,
 				D3D12_HEAP_FLAG_NONE,
 				&bufferDesc,
@@ -110,7 +119,7 @@ export namespace zzz::directx
 				nullptr,
 				IID_PPV_ARGS(&uploadIndexBuffer));
 			if (FAILED(hr))
-				return Unexpected(eResult::failure, std::format(L">>>>> #3 [MeshGPU_DirectX::Initialize( ... )]. Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
+				return Unexpected(eResult::failure, std::format(L"#3 Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
 
 			indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
 			indexBufferView.SizeInBytes = static_cast<UINT>(indices->GetSizeInBytes());
@@ -121,7 +130,7 @@ export namespace zzz::directx
 		CD3DX12_RANGE readRange(0, 0);
 		hr = uploadVertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin));
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, std::format(L">>>>> #4 [MeshGPU_DirectX::Initialize( ... )]. Failed Map. HRESULT = 0x{:08X}", hr));
+			return Unexpected(eResult::failure, std::format(L"#4 Failed Map. HRESULT = 0x{:08X}", hr));
 
 		memcpy(pVertexDataBegin, vertices->GetData(), vertices->SizeInBytes());
 		uploadVertexBuffer->Unmap(0, nullptr);
@@ -131,14 +140,14 @@ export namespace zzz::directx
 			UINT8* pIndexDataBegin;
 			hr = uploadIndexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pIndexDataBegin));
 			if (FAILED(hr))
-				return Unexpected(eResult::failure, std::format(L">>>>> #5 [MeshGPU_DirectX::Initialize( ... )]. Failed Map. HRESULT = 0x{:08X}", hr));
+				return Unexpected(eResult::failure, std::format(L"#5 Failed Map. HRESULT = 0x{:08X}", hr));
 
 			memcpy(pIndexDataBegin, indices->GetData(), indices->GetSizeInBytes());
 			uploadIndexBuffer->Unmap(0, nullptr);
 		}
 
 		// Передача ресурсов на GPU асинхронно
-		_IGAPI->AddTransferResource(
+		dxAPI->AddTransferResource(
 			[this](const ComPtr<ID3D12GraphicsCommandList>& commandList)
 			{
 				CopyBuffersToGPU(commandList);
@@ -221,9 +230,9 @@ export namespace zzz::directx
 
 		// TODO: Cделать нормальную обработку
 		if (!isComplete)
-			DebugOutput(L">>>>> [MeshGPU_DirectX::Initialize( ... )]. Transfer mesh resource: FAILED.");
+			DebugOutput(L"Transfer mesh resource: FAILED.");
 		else
-			DebugOutput(L">>>>> [MeshGPU_DirectX::Initialize( ... )]. Transfer mesh resource: SUCESS.");
+			DebugOutput(L"Transfer mesh resource: SUCESS.");
 	}
 }
 #endif // ZRENDER_API_D3D12

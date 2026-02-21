@@ -18,9 +18,6 @@
     <ClInclude Include="pch.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="header.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
     <ClInclude Include="engineCore.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
@@ -28,6 +25,9 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Headers\HeaderEnums.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\Header.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
@@ -50,19 +50,16 @@
     <ClCompile Include="Source\Serializer\Serializer.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Interfaces\ICheckGapiSupport.cppm">
+    <ClCompile Include="source\Interfaces\IDeviceCapabilities\IDeviceCapabilities.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Interfaces\ICPUtoGPUDataTransfer.cppm">
+    <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\IGPUpload.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\CPUtoGPUDataTransfer.cppm">
+    <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\GPUUploadCallbacks.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Utilities\MsgBox.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Interfaces\IGAPI\IGAPI_DirectX.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Interfaces\IMainLoop\IMainLoop.cppm">
@@ -83,7 +80,7 @@
     <ClCompile Include="Source\Interfaces\IGAPI\DXAPI.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Platforms\DX\CheckDirectXUltimateSupport.cppm">
+    <ClCompile Include="source\Interfaces\IDeviceCapabilities\DXDeviceCapabilities.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Platforms\DX\CommandWrapperDX.cppm">
@@ -92,19 +89,13 @@
     <ClCompile Include="Platforms\DX\RootSignature.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Platforms\DX\CPUtoGPUDataTransferDX.cppm">
+    <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\GPUUploadDX.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Interfaces\IMainLoop\MainLoop_MSWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Utilities\Helpers.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppWinConfig.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppWinConfig_MSWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Interfaces\Configs\GAPIConfig\GAPIConfig.cppm">
@@ -132,6 +123,30 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\KeyCode.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\IGAPI\VKAPI.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\GPUUploadVK.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\IDeviceCapabilities\VKDeviceCapabilities.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\PlatformConfig.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\AppConfig_MSWin.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Utilities\Version.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Utilities\EngineConstants.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Utilities\ScreenResolution.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

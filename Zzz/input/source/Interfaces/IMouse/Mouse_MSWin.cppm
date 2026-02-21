@@ -3,6 +3,7 @@ export module Mouse_MSWin;
 
 #if defined(ZPLATFORM_MSWINDOWS)
 
+import Ensure;
 import IMouse;
 import IAppWin;
 import AppWin_MSWin;

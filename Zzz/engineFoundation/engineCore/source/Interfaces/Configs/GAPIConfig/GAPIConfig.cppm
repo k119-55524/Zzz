@@ -1,55 +1,49 @@
 
 export module GAPIConfig;
 
-import IGAPI;
 import Result;
+import Ensure;
+import Version;
 import Serializer;
+import PlatformConfig;
+
+using namespace zzz;
 
 namespace zzz::core
 {
 	export class GAPIConfig final : public ISerializable
 	{
 	public:
-		GAPIConfig() :
-			e_GAPIType{ GetCurrentGAPI() }
+		GAPIConfig() = delete;
+		GAPIConfig(const std::shared_ptr<PlatformConfig>& appConfig) :
+			m_AppConfig{ appConfig },
+			m_VSyncEnabledOnStartup{ false }
 		{
+			ensure(m_AppConfig, "PlatfotmConfig cannot be null.");
 		}
 		~GAPIConfig() = default;
 
-		constexpr eGAPIType GetGAPIType() const noexcept { return e_GAPIType; }
+		inline const Version& GetAppVersion() const noexcept { return m_AppConfig->GetVersion(); }
+		inline const std::wstring& GetAppName() const noexcept { return m_AppConfig->GetAppName(); }
+		inline bool GetVSyncEnabledOnStartup() const noexcept { return m_VSyncEnabledOnStartup; };
+		inline void SetVSyncEnabledOnStartup(bool vss) noexcept { m_VSyncEnabledOnStartup = vss; };
 
 	private:
-		eGAPIType e_GAPIType;
+		[[nodiscard]] Result<> Serialize(std::vector<std::byte>& buffer, const zzz::Serializer& s) const override;
+		[[nodiscard]] Result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const zzz::Serializer& s) override;
 
-		static constexpr eGAPIType GetCurrentGAPI() noexcept;
+		const std::shared_ptr<PlatformConfig> m_AppConfig;
 
-		Result<> Serialize(std::vector<std::byte>& buffer, const zzz::Serializer& s) const override
-		{
-			//return s.Serialize(buffer, m_AppWinConfig);
-			//.and_then([&]() { return s.Serialize(buffer, i2); });
-
-			return {};
-		}
-
-		Result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const zzz::Serializer& s) override
-		{
-			//return s.DeSerialize(buffer, offset, m_AppWinConfig);
-			//.and_then([&]() { return s.DeSerialize(buffer, offset, i2); });
-
-			return {};
-		}
+		bool m_VSyncEnabledOnStartup;
 	};
 
-	constexpr eGAPIType GAPIConfig::GetCurrentGAPI() noexcept
+	[[nodiscard]] Result<> GAPIConfig::Serialize(std::vector<std::byte>& buffer, const zzz::Serializer& s) const
 	{
-#if defined(ZRENDER_API_D3D12)
-		return eGAPIType::DirectX;
-#elif defined(ZRENDER_API_VULKAN)
-		return eGAPIType::Vulkan;
-#elif defined(ZRENDER_API_METAL)
-		return eGAPIType::Metal;
-#else
-		static_assert(false, "Unsupported graphics API. Define ZRENDER_API_D3D12, ZRENDER_API_VULKAN, or ZRENDER_API_METAL");
-#endif
+		return s.Serialize(buffer, m_VSyncEnabledOnStartup);
+	}
+
+	[[nodiscard]] Result<> GAPIConfig::DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const zzz::Serializer& s)
+	{
+		return s.DeSerialize(buffer, offset, m_VSyncEnabledOnStartup);
 	}
 }

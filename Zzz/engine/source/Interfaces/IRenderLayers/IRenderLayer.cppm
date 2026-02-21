@@ -3,6 +3,7 @@ export module IRenderLayer;
 
 import Scene;
 import Input;
+import Ensure;
 import RenderVolume;
 import SceneEntityFactory;
 

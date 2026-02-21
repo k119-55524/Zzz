@@ -3,6 +3,7 @@ export module Input;
 
 export import KeyCode;
 
+import Ensure;
 import IMouse;
 import IAppWin;
 import IKeyboard;
@@ -14,16 +15,17 @@ namespace zzz::input
 {
 	export class Input final
 	{
-		public:
-			explicit Input(const std::shared_ptr<IAppWin> appWin) :
-				m_AppWin{ appWin }
-			{
-				ensure(m_AppWin, "Application window cannot be null.");
-				Initialize();
-			}
-			~Input() = default;
+	public:
+		explicit Input(const std::shared_ptr<IAppWin> appWin) :
+			m_AppWin{ appWin }
+		{
+			ensure(m_AppWin, "Application window cannot be null.");
+			Initialize();
+		}
+		~Input() = default;
 
-			inline KeyState GetKeyState(KeyCode key) const { return m_Keyboard->GetKeyState(key); };
+		inline const std::shared_ptr<IKeyboard>& Keyboard() const noexcept { return m_Keyboard; }
+		inline const std::shared_ptr<IMouse>& Mouse() const noexcept { return m_Mouse; }
 
 	private:
 		void Initialize();

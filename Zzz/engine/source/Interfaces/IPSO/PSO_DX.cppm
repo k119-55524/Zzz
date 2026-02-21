@@ -4,10 +4,14 @@ export module PSO_DX;
 #if defined(ZRENDER_API_D3D12)
 import IPSO;
 import IGAPI;
+import DXAPI;
+import Ensure;
+import IShader;
+import Shader_DirectX;
 import PrimitiveTopology;
 import VertexFormatMapper;
 
-namespace zzz::directx
+namespace zzz::dx
 {
 	export class PSO_DX final : public IPSO
 	{
@@ -22,7 +26,7 @@ namespace zzz::directx
 		const ComPtr<ID3D12PipelineState> GetPSO() const noexcept { return m_PSO; };
 
 	private:
-		void CreatePSO(const std::shared_ptr<IGAPI> m_GAPI);
+		void CreatePSO(const std::shared_ptr<DXAPI> dxAPI, std::shared_ptr<Shader_DirectX> shaderDX);
 		D3D12_PRIMITIVE_TOPOLOGY_TYPE ConvertPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology);
 		ComPtr<ID3D12PipelineState> m_PSO;
 	};
@@ -34,10 +38,15 @@ namespace zzz::directx
 		PrimitiveTopology _topo) :
 		IPSO(_shader, _inputLayout, _topo)
 	{
-		CreatePSO(m_GAPI);
+		std::shared_ptr<DXAPI> dxAPI = std::dynamic_pointer_cast<DXAPI>(m_GAPI);
+		ensure(dxAPI, "Invalid GAPI type. Expected DXAPI.");
+		std::shared_ptr<Shader_DirectX> shaderDX = dynamic_pointer_cast<Shader_DirectX>(m_Shader);
+		ensure(shaderDX, "Invalid shader type. Expected Shader_DirectX.");
+
+		CreatePSO(dxAPI, shaderDX);
 	}
 
-	void PSO_DX::CreatePSO(const std::shared_ptr<IGAPI> m_GAPI)
+	void PSO_DX::CreatePSO(const std::shared_ptr<DXAPI> dxAPI, std::shared_ptr<Shader_DirectX> shaderDX)
 	{
 		//D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
 		//{
@@ -48,9 +57,9 @@ namespace zzz::directx
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 		ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
 		psoDesc.InputLayout = { m_InputLayout.data(), static_cast<UINT>(m_InputLayout.size()) };
-		psoDesc.pRootSignature = m_GAPI->GetRootSignature().Get();
-		psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_Shader->GetVS().Get());
-		psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_Shader->GetPS().Get());
+		psoDesc.pRootSignature = dxAPI->GetRootSignature().Get();
+		psoDesc.VS = CD3DX12_SHADER_BYTECODE(shaderDX->GetVS().Get());
+		psoDesc.PS = CD3DX12_SHADER_BYTECODE(shaderDX->GetPS().Get());
 		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 		psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 
@@ -67,9 +76,9 @@ namespace zzz::directx
 		psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 		psoDesc.DSVFormat = DEPTH_FORMAT;
 		psoDesc.SampleDesc.Count = 1;
-		HRESULT hr = m_GAPI->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PSO));
+		HRESULT hr = dxAPI->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PSO));
 		if (hr != S_OK)
-			throw_runtime_error(std::format(">>>>> [PSO_DX::CreatePSO()]. Failed to create pipeline state object. HRESULT = 0x{:08X}", hr));
+			throw_runtime_error(std::format("Failed to create pipeline state object. HRESULT = 0x{:08X}", hr));
 	}
 
 	D3D12_PRIMITIVE_TOPOLOGY_TYPE PSO_DX::ConvertPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology)

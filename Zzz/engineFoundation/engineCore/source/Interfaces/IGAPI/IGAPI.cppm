@@ -3,98 +3,99 @@ export module IGAPI;
 
 import Result;
 import Size2D;
+import Ensure;
 import IAppWin;
+import GAPIConfig;
 import StrConvert;
-import ICheckGapiSupport;
-import CPUtoGPUDataTransfer;
-import ICPUtoGPUDataTransfer;
+import IGPUUpload;
+import EngineConstants;
+import GPUUploadCallbacks;
+import IDeviceCapabilities;
 
-#if defined(ZRENDER_API_D3D12)
-import IGAPI_DirectX;
-	using PlatformGAPIBase = zzz::directx::IGAPI_DirectX;
-//#elif defined(ZRENDER_API_VULKAN)
-//import IGAPI_Vulkan;
-//	using PlatformGAPIBase = zzz::vulkan::IGAPI_Vulkan;
-//#elif defined(ZRENDER_API_METAL)
-//import IGAPI_Metal;
-//	using PlatformGAPIBase = zzz::matal::IGAPI_Metal;
-#else
-#error ">>>>> [IGAPI module]. No graphics API defined."
-#endif
-
+using namespace zzz::core;
 using namespace std::literals::string_view_literals;
 
-export namespace zzz
+namespace zzz
 {
-	enum class eGAPIType : uint8_t
+	export enum class eGAPIType : uint8_t
 	{
 		DirectX,
 		Vulkan,
 		Metal
 	};
 
-	export class IGAPI : public PlatformGAPIBase
+	export class IGAPI
 	{
 		Z_NO_CREATE_COPY(IGAPI);
 
 	public:
-		explicit IGAPI(eGAPIType type);
+		explicit IGAPI(const std::shared_ptr<GAPIConfig>& config, eGAPIType type);
 		virtual ~IGAPI() = default;
 
-		[[nodiscard]] eInitState GetInitState() const noexcept { return initState; }
+		[[nodiscard]] eInitState GetInitState() const noexcept { return m_InitState; }
 
-		[[nodiscard]] inline constexpr eGAPIType GetGAPIType() const noexcept { return gapiType; }
-		[[nodiscard]] inline constexpr std::wstring_view GetAPIName(eGAPIType gapiType) const noexcept {
-			using namespace std::literals;
-			constexpr std::array names{
-				L"DirectX 12"sv,
-				L"Vulkan"sv,
-				L"Metal"sv
-			};
-
-			return static_cast<size_t>(gapiType) < names.size() ?
-				names[static_cast<size_t>(gapiType)] : L"Unknown"sv;
-		}
-		[[nodiscard]] inline constexpr std::wstring_view GetAPIName() const noexcept { return GetAPIName(gapiType); }
-		inline const ICheckGapiSupport& GetGapiSupportChecker() const noexcept { return *m_CheckGapiSupport; }
+		[[nodiscard]] constexpr eGAPIType GetGAPIType() const noexcept { return m_GapiType; }
+		[[nodiscard]] inline bool IsCanDisableVSync() const noexcept { return m_IsCanDisableVSync; }
+		[[nodiscard]] inline bool IsVSyncEnabled() { return m_Config->GetVSyncEnabledOnStartup() && m_IsCanDisableVSync; };
+		[[nodiscard]] inline const IDeviceCapabilities& GetGapiSupportChecker() const noexcept { return *m_CheckGapiSupport; }
 
 		[[nodiscard]] virtual Result<> Initialize();
 		virtual void SubmitCommandLists() = 0;
-		inline void AddTransferResource(FillCallback fillCallback, PreparedCallback preparedCallback, CompleteCallback completeCallback)
-		{
-			m_CPUtoGPUDataTransfer->AddTransferResource(fillCallback, preparedCallback, completeCallback);
-		};
+		inline void AddTransferResource(FillCallback OnFill, PreparedCallback OnPrepared, CompleteCallback OnComplete) { m_CPUtoGPUDataTransfer->AddTransferResource(OnFill, OnPrepared, OnComplete); };
 		inline bool HasResourcesToUpload() { return m_CPUtoGPUDataTransfer->HasResourcesToUpload(); };
 		inline void TranferResourceToGPU() { m_CPUtoGPUDataTransfer->TransferResourceToGPU(); };
 
+		inline zU32 GetIndexFrameRender() const noexcept { return m_IndexFrameRender; }
+
 		virtual void BeginRender() = 0;
-		virtual void EndRender() = 0;
+		virtual void EndRender();
+
+		void LogGPUDebugMessage(const std::wstring& message);
 
 	protected:
 		[[nodiscard]] virtual Result<> Init() = 0;
-		virtual void WaitForGpu() = 0;
+		virtual void WaitForGpu() {};
 
-		eGAPIType gapiType;
-		eInitState initState;
-		std::unique_ptr<ICPUtoGPUDataTransfer> m_CPUtoGPUDataTransfer;
-		std::unique_ptr<ICheckGapiSupport> m_CheckGapiSupport;
-		zU32 m_frameIndexRender;
-		zU32 m_frameIndexUpdate;
+		const std::shared_ptr<GAPIConfig> m_Config;
+		eGAPIType m_GapiType;
+		eInitState m_InitState;
+		bool m_IsCanDisableVSync;
+
+		std::unique_ptr<IGPUUpload> m_CPUtoGPUDataTransfer;
+		std::unique_ptr<IDeviceCapabilities> m_CheckGapiSupport;
+		zU32 m_IndexFrameRender;
+		zU32 m_IndexFrameUpdate;
 	};
 
-	IGAPI::IGAPI(eGAPIType type) :
-		gapiType{ type },
-		initState{ eInitState::InitNot },
-		m_frameIndexRender{ 0 },
-		m_frameIndexUpdate{ 1 }
+	IGAPI::IGAPI(const std::shared_ptr<GAPIConfig>& config, eGAPIType type) :
+		m_Config(config),
+		m_GapiType{ type },
+		m_IsCanDisableVSync{ false },
+		m_InitState{ eInitState::InitNot },
+		m_IndexFrameRender{ 0 },
+		m_IndexFrameUpdate{ 1 }
 	{
+		ensure(config, "GAPIConfig cannot be null.");
 	}
 
 	Result<> IGAPI::Initialize()
 	{
-		if (initState != eInitState::InitNot)
-			return Unexpected(eResult::failure, L">>>>> [IGAPI::Initialize()]. GAPI is already initialized or in an invalid state.");
+		if (m_InitState != eInitState::InitNot)
+			return Unexpected(eResult::failure, L"GAPI is already initialized or in an invalid state.");
 
-		return Init().and_then([&]() { initState = eInitState::InitOK; });
+		return Init()
+			.and_then([&]() { m_InitState = eInitState::InitOK; })
+			.and_then([&]() { if (!m_IsCanDisableVSync && m_Config->GetVSyncEnabledOnStartup()) m_Config->SetVSyncEnabledOnStartup(false); });
+	}
+
+	inline void IGAPI::LogGPUDebugMessage(const std::wstring& message)
+	{
+		DebugOutput(message);
+	}
+
+	void IGAPI::EndRender()
+	{
+		m_IndexFrameRender = (m_IndexFrameRender + 1) % BACK_BUFFER_COUNT;
+		m_IndexFrameUpdate = (m_IndexFrameRender + 1) % BACK_BUFFER_COUNT;
 	}
 }

@@ -4,26 +4,35 @@ export module GPUResManager;
 import IPSO;
 import IGAPI;
 import Result;
-import PSO_DX;
+import Ensure;
 import IShader;
 import IMeshGPU;
 import Material;
 import CPUResManager;
 import Shader_DirectX;
-import MeshGPU_DirectX;
 
-using namespace zzz::directx;
-
-namespace zzz
-{
 #if defined(ZRENDER_API_D3D12)
+	import PSO_DX;
+	import MeshGPU_DirectX;
+	using namespace zzz::dx;
+
 	typedef MeshGPU_DirectX MeshGPU;
 	typedef Shader_DirectX Shader;
 	typedef PSO_DX PSO;
+#elif defined(ZRENDER_API_VULKAN)
+	import MeshGPU_Vulkan;
+	import Shader_VK;
+	import PSO_VK;
+	using namespace zzz::vk;
+
+	typedef MeshGPU_Vulkan MeshGPU;
+	typedef Shader_VK Shader;
+	typedef PSO_VK PSO;
+
+	using namespace zzz::vk;
 #else
-#error ">>>>> [Compile error]. This branch requires implementation for the current platform"
+#error ">>>>> [GPUResManager file]. Compile error. This branch requires implementation for the current platform"
 #endif
-}
 
 export namespace zzz
 {
@@ -50,7 +59,7 @@ export namespace zzz
 		m_GAPI{ _IGAPI },
 		m_ResCPU{ resCPU }
 	{
-		ensure(m_ResCPU, ">>>>> [GPUResManager::GPUResManager()]. Resource system CPU cannot be null.");
+		ensure(m_ResCPU, "Resource system CPU cannot be null.");
 	}
 
 	Result<std::shared_ptr<IMeshGPU>> GPUResManager::GetGenericMesh(MeshType type)
@@ -75,7 +84,7 @@ export namespace zzz
 
 		std::shared_ptr<Material> material = safe_make_shared<Material>(pso.value());
 		if (!material)
-			return Unexpected(eResult::no_make_shared_ptr, L">>>>> [GPUResManager::GetGenericMaterial()]. Failed to create Material.");
+			return Unexpected(eResult::no_make_shared_ptr, L"Failed to create Material.");
 
 		return material;
 	}
@@ -88,7 +97,7 @@ export namespace zzz
 
 		std::shared_ptr<IPSO> pso = safe_make_shared<PSO>(m_GAPI, shader.value(), mesh->GetInputLayout());
 		if (!pso)
-			return Unexpected(eResult::no_make_shared_ptr, L">>>>> [GPUResManager::GetGenericPSO()]. Failed to create IPSO.");
+			return Unexpected(eResult::no_make_shared_ptr, L"Failed to create IPSO.");
 
 		return pso;
 	}

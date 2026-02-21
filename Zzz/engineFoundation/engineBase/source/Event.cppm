@@ -1,6 +1,4 @@
 
-#include "pch.h"
-
 export module Event;
 
 namespace zzz

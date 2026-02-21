@@ -2,21 +2,6 @@
 
 namespace zzz
 {
-	// TODO: пересмотреть все вызовы и убрать лишнее в текстовых сообщениях
-	template<typename T>
-	inline void ensure(T&& condition,
-		const std::string& msg = "Ensure failed",
-		const std::source_location& loc = std::source_location::current())
-	{
-		if (!condition)
-			throw std::runtime_error(
-				">>>>> [" +
-				std::string(loc.function_name()) +
-				"]. Line: " + std::to_string(loc.line()) +
-				", File=: " + std::string(loc.file_name()) +
-				"\n\nRoot message:\n    " + msg);
-	}
-
 	template<typename T>
 	inline void SafeRelease(T*& ptr)
 	{

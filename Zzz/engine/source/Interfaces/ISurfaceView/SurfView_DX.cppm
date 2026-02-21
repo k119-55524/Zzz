@@ -1,8 +1,8 @@
 
-#include <Headers/headerDX.h>
-export module SurfaceView_DirectX;
+export module SurfView_DX;
 
 #if defined(ZRENDER_API_D3D12)
+
 import Math;
 import IPSO;
 import IGAPI;
@@ -10,18 +10,20 @@ import DXAPI;
 import Scene;
 import PSO_DX;
 import Result;
+import Ensure;
 import Size2D;
 import Colors;
 import Camera;
 import IAppWin;
 import Helpers;
 import IMeshGPU;
+import ISurfView;
 import StrConvert;
-import RenderVolume;
 import RenderQueue;
+import RenderVolume;
 import ViewportDesc;
-import ISurfaceView;
 import AppWin_MSWin;
+import EngineConstants;
 import MeshGPU_DirectX;
 import PrimitiveTopology;
 
@@ -29,7 +31,7 @@ using namespace zzz::math;
 using namespace zzz::core;
 using namespace zzz::colors;
 
-namespace zzz::directx
+namespace zzz::dx
 {
 	template<typename T>
 	class UploadBuffer
@@ -51,10 +53,10 @@ namespace zzz::directx
 				D3D12_RESOURCE_STATE_GENERIC_READ,
 				nullptr,
 				IID_PPV_ARGS(&mUploadBuffer));
-			ensure(hr == S_OK, ">>>>> [UploadBuffer::UploadBuffer(...)]. Failed to create upload buffer resource.");
+			ensure(hr == S_OK, "Failed to create upload buffer resource.");
 
 			hr = mUploadBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mMappedData));
-			ensure(hr == S_OK, ">>>>> [UploadBuffer::UploadBuffer(...)]. Failed to map upload buffer resource.");
+			ensure(hr == S_OK, "Failed to map upload buffer resource.");
 
 			// Нам не нужно вызывать unmap, пока мы не закончим работу с ресурсом. Однако мы не должны выполнять запись в
 			// ресурс, пока он используется графическим процессором (поэтому необходимо использовать методы синхронизации).
@@ -111,35 +113,35 @@ namespace zzz::directx
 		Matrix4x4 WorldViewProj;
 	};
 
-	export class SurfaceView_DirectX final : public ISurfaceView
+	export class SurfView_DX final : public ISurfView
 	{
-		Z_NO_COPY_MOVE(SurfaceView_DirectX);
+		Z_NO_COPY_MOVE(SurfView_DX);
 
 	public:
-		explicit SurfaceView_DirectX(
+		explicit SurfView_DX(
 			std::shared_ptr<IAppWin> _iAppWin,
 			std::shared_ptr<IGAPI> _iGAPI);
-		~SurfaceView_DirectX() override = default;
+		~SurfView_DX() override = default;
 
 		[[nodiscard]] Result<> Initialize() override;
 		void PrepareFrame(const std::shared_ptr<RenderQueue> renderQueue) override;
 		void RenderFrame() override;
 		void OnResize(const Size2D<>& size) override;
 
-		void SetFullScreen(bool fs) override;
+		void SetFullScreen(bool fss) override;
 
 	private:
 		std::shared_ptr<AppWin_MSWin> m_iAppWin;
+		std::shared_ptr<DXAPI> m_DXGAPI;
 
 		static constexpr DXGI_FORMAT BACK_BUFFER_FORMAT = DXGI_FORMAT_R8G8B8A8_UNORM;
 		static constexpr DXGI_FORMAT DEPTH_FORMAT = DXGI_FORMAT_D32_FLOAT; // При использовании трафаарета: DXGI_FORMAT_D24_UNORM_S8_UINT;
 		static constexpr UINT SWAP_CHAIN_FLAGS = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 
-		bool b_IgnoreResize;
-		bool m_tearingSupported;
-		std::mutex m_frameMutex;
-		std::condition_variable m_frameCV;
-		bool m_frameReady;
+		bool m_IgnoreResize;
+		std::mutex m_FrameMutex;
+		std::condition_variable m_FrameCV;
+		bool m_FrameReady;
 
 		std::unique_ptr<UploadBuffer<GPU_LayerConstants>> m_CB_Layer = nullptr;
 		std::unique_ptr<UploadBuffer<GPU_MaterialConstants>> m_CB_Material = nullptr;
@@ -149,9 +151,9 @@ namespace zzz::directx
 		UINT m_RtvDescrSize;
 		UINT m_DsvDescrSize;
 		UINT m_CbvSrvDescrSize;
-		ComPtr<ID3D12DescriptorHeap> m_rtvHeap;
-		ComPtr<ID3D12DescriptorHeap> m_srvHeap;
-		ComPtr<ID3D12DescriptorHeap> m_dsvHeap;
+		ComPtr<ID3D12DescriptorHeap> m_RtvHeap;
+		ComPtr<ID3D12DescriptorHeap> m_SrvHeap;
+		ComPtr<ID3D12DescriptorHeap> m_DsvHeap;
 		ComPtr<ID3D12Resource> m_renderTargets[BACK_BUFFER_COUNT];
 		ComPtr<ID3D12Resource> m_depthStencil[BACK_BUFFER_COUNT];
 
@@ -167,31 +169,33 @@ namespace zzz::directx
 		[[nodiscard]] Result<> RecreateRenderTargetsAndDepth();
 	};
 
-	SurfaceView_DirectX::SurfaceView_DirectX(
+	SurfView_DX::SurfView_DX(
 		std::shared_ptr<IAppWin> _iAppWin,
 		std::shared_ptr<IGAPI> _iGAPI)
-		: ISurfaceView(_iGAPI),
-		b_IgnoreResize{ false },
-		m_tearingSupported{ false },
+		: ISurfView(_iGAPI),
+		m_IgnoreResize{ false },
 		m_RtvDescrSize{ 0 },
 		m_DsvDescrSize{ 0 },
 		m_CbvSrvDescrSize{ 0 },
-		m_frameReady{ false }
+		m_FrameReady{ false }
 	{
-		ensure(_iAppWin, ">>>>> [SurfaceView_DirectX::SurfaceView_DirectX()]. App window cannot be null.");
+		ensure(_iAppWin, "App window cannot be null.");
 		m_iAppWin = std::dynamic_pointer_cast<AppWin_MSWin>(_iAppWin);
-		ensure(m_iAppWin, ">>>>> [SurfaceView_DirectX::SurfaceView_DirectX()]. App window must be of type AppWin_MSWin.");
+		ensure(m_iAppWin, "App window must be of type AppWin_MSWin.");
+
+		m_DXGAPI = std::dynamic_pointer_cast<DXAPI>(_iGAPI);
+		ensure(m_DXGAPI, "Failed to cast IGAPI to DXAPI.");
 	}
 
 #pragma region Initialize
-	Result<> SurfaceView_DirectX::Initialize()
+	Result<> SurfView_DX::Initialize()
 	{
-		auto m_device = m_iGAPI->GetDevice();
-		ensure(m_device, ">>>>> [SurfaceView_DirectX::Initialize()]. Device cannot be null.");
-		auto m_commandQueue = m_iGAPI->GetCommandQueue();
-		ensure(m_commandQueue, ">>>>> [SurfaceView_DirectX::Initialize()]. Command queue cannot be null.");
-		auto m_factory = m_iGAPI->GetFactory();
-		ensure(m_factory, ">>>>> [SurfaceView_DirectX::Initialize()]. Factory cannot be null.");
+		auto m_device = m_DXGAPI->GetDevice();
+		ensure(m_device, "Device cannot be null.");
+		auto m_commandQueue = m_DXGAPI->GetCommandQueue();
+		ensure(m_commandQueue, "Command queue cannot be null.");
+		auto m_factory = m_DXGAPI->GetFactory();
+		ensure(m_factory, "Factory cannot be null.");
 
 		m_RtvDescrSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 		m_DsvDescrSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
@@ -202,7 +206,7 @@ namespace zzz::directx
 
 		auto res = InitializeSwapChain();
 		if (!res)
-			return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializePipeline()]. Failed to initialize swap chain.");
+			return Unexpected(eResult::failure, L"Failed to initialize swap chain.");
 
 		HRESULT hr = m_factory->MakeWindowAssociation(m_iAppWin->GetHWND(), DXGI_MWA_NO_ALT_ENTER);
 		if (FAILED(hr))
@@ -216,24 +220,24 @@ namespace zzz::directx
 
 		res = CreateDS(winSize);
 		if (!res)
-			return Unexpected(eResult::failure, L">>>>> [DXAPI::InitializePipeline()]. -> " + res.error().getMessage());
+			return Unexpected(eResult::failure, res.error().getMessage());
 
 		return {};
 	}
 
-	Result<> SurfaceView_DirectX::CreateRTV(ComPtr<ID3D12Device>& m_device)
+	Result<> SurfView_DX::CreateRTV(ComPtr<ID3D12Device>& m_device)
 	{
-		ensure(m_device, ">>>>> [SurfaceView_DirectX::CreateRTV()]. Device cannot be null.");
-		ensure(m_rtvHeap, ">>>>> [SurfaceView_DirectX::CreateRTV()]. RTV Heap cannot be null.");
+		ensure(m_device, "Device cannot be null.");
+		ensure(m_RtvHeap, "RTV Heap cannot be null.");
 
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_RtvHeap->GetCPUDescriptorHandleForHeapStart());
 
-		// Create a RTV for each frame.
+		// Create RTV for each frame.
 		for (UINT n = 0; n < BACK_BUFFER_COUNT; n++)
 		{
 			HRESULT hr = m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n]));
 			if (FAILED(hr))
-				return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::InitializePipeline()]. Failed to get back buffer. HRESULT = 0x{:08X}", hr));
+				return Unexpected(eResult::failure, std::format(L"Failed to get back buffer. HRESULT = 0x{:08X}", hr));
 
 			m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
 			rtvHandle.Offset(1, m_RtvDescrSize);
@@ -244,21 +248,8 @@ namespace zzz::directx
 		return {};
 	}
 
-	Result<> SurfaceView_DirectX::InitializeSwapChain()
+	Result<> SurfView_DX::InitializeSwapChain()
 	{
-		BOOL allowTearing = FALSE;
-		ComPtr<IDXGIFactory5> factory5;
-		if (SUCCEEDED(m_iGAPI->GetFactory().As(&factory5)))
-		{
-			if (SUCCEEDED(factory5->CheckFeatureSupport(
-				DXGI_FEATURE_PRESENT_ALLOW_TEARING,
-				&allowTearing,
-				sizeof(allowTearing))))
-			{
-				m_tearingSupported = allowTearing == TRUE;
-			}
-		}
-
 		auto winSize = m_iAppWin->GetWinSize();
 		DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 		swapChainDesc.Width = static_cast<UINT>(winSize.width);
@@ -270,11 +261,11 @@ namespace zzz::directx
 		swapChainDesc.Scaling = DXGI_SCALING_NONE;
 		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 		swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
-		swapChainDesc.Flags = m_tearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
+		swapChainDesc.Flags = m_GAPI->IsCanDisableVSync() ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
 		ComPtr<IDXGISwapChain1> swapChain1;
-		ensure(S_OK == m_iGAPI->GetFactory()->CreateSwapChainForHwnd(
-			m_iGAPI->GetCommandQueue().Get(),
+		ensure(S_OK == m_DXGAPI->GetFactory()->CreateSwapChainForHwnd(
+			m_DXGAPI->GetCommandQueue().Get(),
 			m_iAppWin->GetHWND(),
 			&swapChainDesc,
 			nullptr,
@@ -286,56 +277,56 @@ namespace zzz::directx
 		return {};
 	}
 
-	Result<> SurfaceView_DirectX::CreateRTVHeap()
+	Result<> SurfView_DX::CreateRTVHeap()
 	{
-		auto m_device = m_iGAPI->GetDevice();
-		ensure(m_device, ">>>>> [SurfaceView_DirectX::CreateRTVHeap()]. Device cannot be null.");
+		auto m_device = m_DXGAPI->GetDevice();
+		ensure(m_device, "Device cannot be null.");
 
 		// Describe and create a render target View (RTV) descriptor heap.
 		D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
 		rtvHeapDesc.NumDescriptors = BACK_BUFFER_COUNT;
 		rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 		rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-		HRESULT hr = m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap));
+		HRESULT hr = m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_RtvHeap));
 		if (FAILED(hr))
 			return Unexpected(eResult::failure, std::format(L"Failed to create RTV heap. HRESULT = 0x{:08X}", hr));
 
-		SET_RESOURCE_DEBUG_NAME(m_rtvHeap, L"RTV Heap");
+		SET_RESOURCE_DEBUG_NAME(m_RtvHeap, L"RTV Heap");
 
 		return {};
 	}
 
-	Result<> SurfaceView_DirectX::CreateSRVHeap()
+	Result<> SurfView_DX::CreateSRVHeap()
 	{
-		auto m_device = m_iGAPI->GetDevice();
-		ensure(m_device, ">>>>> [SurfaceView_DirectX::CreateSRVHeap()]. Device cannot be null.");
+		auto m_device = m_DXGAPI->GetDevice();
+		ensure(m_device, "Device cannot be null.");
 
 		// Describe and create a shader resource View (SRV) heap for the texture.
 		D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
 		srvHeapDesc.NumDescriptors = 1;
 		srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-		HRESULT hr = m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap));
+		HRESULT hr = m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_SrvHeap));
 		if (FAILED(hr))
 			return Unexpected(eResult::failure, std::format(L"Failed to create SRV heap. HRESULT = 0x{:08X}", hr));
 
-		SET_RESOURCE_DEBUG_NAME(m_srvHeap, L"SRV Heap");
+		SET_RESOURCE_DEBUG_NAME(m_SrvHeap, L"SRV Heap");
 
 		return {};
 	}
 
-	void SurfaceView_DirectX::BuildConstantBuffers()
+	void SurfView_DX::BuildConstantBuffers()
 	{
-		auto device = m_iGAPI->GetDevice();	
+		auto device = m_DXGAPI->GetDevice();
 		m_CB_Layer		= safe_make_unique<UploadBuffer<GPU_LayerConstants>>(device.Get(), 1, true);	// b0 – Layer
 		m_CB_Material	= safe_make_unique<UploadBuffer<GPU_MaterialConstants>>(device.Get(), 1, true);	// b1 – Material
 		m_CB_Object		= safe_make_unique<UploadBuffer<GPU_ObjectConstants>>(device.Get(), 1, true);	// b2 – Object
 	}
 
-	Result<> SurfaceView_DirectX::CreateDSVHeap()
+	Result<> SurfView_DX::CreateDSVHeap()
 	{
-		auto m_device = m_iGAPI->GetDevice();
-		ensure(m_device, ">>>>> [SurfaceView_DirectX::CreateDSVHeap()]. Device cannot be null.");
+		auto m_device = m_DXGAPI->GetDevice();
+		ensure(m_device, "Device cannot be null.");
 
 		const D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{
 			.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
@@ -344,19 +335,19 @@ namespace zzz::directx
 			.NodeMask = 0
 		};
 
-		HRESULT hr = m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_dsvHeap));
+		HRESULT hr = m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_DsvHeap));
 		if (FAILED(hr))
 			return Unexpected(eResult::failure, std::format(L"Failed to create DSV heap. HRESULT = 0x{:08X}", hr));
 
-		SET_RESOURCE_DEBUG_NAME(m_dsvHeap, L"DSV Heap");
+		SET_RESOURCE_DEBUG_NAME(m_DsvHeap, L"DSV Heap");
 
 		return {};
 	}
 
-	Result<> SurfaceView_DirectX::CreateDS(const Size2D<>& size)
+	Result<> SurfView_DX::CreateDS(const Size2D<>& size)
 	{
-		auto m_device = m_iGAPI->GetDevice();
-		ensure(m_device, ">>>>> [SurfaceView_DirectX::CreateDS()]. Device cannot be null.");
+		auto m_device = m_DXGAPI->GetDevice();
+		ensure(m_device, "Device cannot be null.");
 
 		// Очищаем старые ресурсы
 		for (auto& ds : m_depthStencil)
@@ -401,13 +392,13 @@ namespace zzz::directx
 				IID_PPV_ARGS(&m_depthStencil[i]));
 			
 			if (S_OK != hr)
-				return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::CreateDS()]. Failed to create depth stencil resource. HRESULT = 0x{:08X}", hr));
+				return Unexpected(eResult::failure, std::format(L"Failed to create depth stencil resource. HRESULT = 0x{:08X}", hr));
 
 			SET_RESOURCE_DEBUG_NAME(m_depthStencil[i], std::format(L"DepthStencil_{}", i).c_str());
 
 			// Создаём DSV
 			CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(
-				m_dsvHeap->GetCPUDescriptorHandleForHeapStart(),
+				m_DsvHeap->GetCPUDescriptorHandleForHeapStart(),
 				i,
 				m_DsvDescrSize);
 
@@ -422,7 +413,7 @@ namespace zzz::directx
 		return {};
 	}
 
-	void SurfaceView_DirectX::ResetRTVandDS()
+	void SurfView_DX::ResetRTVandDS()
 	{
 		for (auto& rt : m_renderTargets)
 			rt.Reset();
@@ -431,44 +422,44 @@ namespace zzz::directx
 			ds.Reset();
 	}
 
-	Result<> SurfaceView_DirectX::RecreateRenderTargetsAndDepth()
+	Result<> SurfView_DX::RecreateRenderTargetsAndDepth()
 	{
-		auto m_device = m_iGAPI->GetDevice();
+		auto m_device = m_DXGAPI->GetDevice();
 
 		auto res = CreateRTV(m_device);
 		if (!res)
-			return Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::RecreateRenderTargetsAndDepth()]. Failed to create RTV. {}", res.error().getMessage()).c_str());
+			return Unexpected(eResult::failure, std::format(L"Failed to create RTV. {}", res.error().getMessage()).c_str());
 
 		DXGI_SWAP_CHAIN_DESC desc{};
 		HRESULT hr = m_swapChain->GetDesc(&desc);
 		if (S_OK != hr)
-			Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::RecreateRenderTargetsAndDepth()]. Failed to get swap chain description. HRESULT = 0x{:08X}", hr));
+			Unexpected(eResult::failure, std::format(L"Failed to get swap chain description. HRESULT = 0x{:08X}", hr));
 
 		Size2D<> size{ desc.BufferDesc.Width, desc.BufferDesc.Height };
 		res = CreateDS(size);
 		if (!res)
-			Unexpected(eResult::failure, std::format(L">>>>> [DXAPI::RecreateRenderTargetsAndDepth()]. Failed to create depth stencil View. {}", res.error().getMessage()).c_str());
+			Unexpected(eResult::failure, std::format(L"Failed to create depth stencil View. {}", res.error().getMessage()).c_str());
 
 		return {};
 	}
 #pragma endregion Initialize
 
 #pragma region Rendring
-	void SurfaceView_DirectX::PrepareFrame(const std::shared_ptr<RenderQueue> renderQueue)
+	void SurfView_DX::PrepareFrame(const std::shared_ptr<RenderQueue> renderQueue)
 	{
 		// Синхронизируемся с рендерингом чтобы frameIndex остался валидным
 		zU64 frameIndex = (m_swapChain->GetCurrentBackBufferIndex() + 1) % BACK_BUFFER_COUNT;
 		{
-			std::lock_guard<std::mutex> lock(m_frameMutex);
-			m_frameReady = true;
-			m_frameCV.notify_one(); // Уведомляем ОДИН ожидающий поток
+			std::lock_guard<std::mutex> lock(m_FrameMutex);
+			m_FrameReady = true;
+			m_FrameCV.notify_one(); // Уведомляем ОДИН ожидающий поток
 		}
 
-		auto commandList = m_iGAPI->GetCommandListUpdate();
-		ensure(commandList, ">>>>> [SurfaceView_DirectX::PrepareFrame()]. Command list cannot be null.");
+		auto commandList = m_DXGAPI->GetCommandListUpdate();
+		ensure(commandList, "Command list cannot be null.");
 
 		{
-			commandList->SetGraphicsRootSignature(m_iGAPI->GetRootSignature().Get());
+			commandList->SetGraphicsRootSignature(m_DXGAPI->GetRootSignature().Get());
 
 			// Привязываем root-параметры
 			commandList->SetGraphicsRootConstantBufferView(0, m_CB_Layer->Resource()->GetGPUVirtualAddress());
@@ -484,8 +475,8 @@ namespace zzz::directx
 		commandList->ResourceBarrier(1, &keep(CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET)));
 		commandList->ResourceBarrier(1, &keep(CD3DX12_RESOURCE_BARRIER::Transition(m_depthStencil[frameIndex].Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE)));
 
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_RtvDescrSize);
-		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_DsvDescrSize);
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_RtvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_RtvDescrSize);
+		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_DsvHeap->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(frameIndex), m_DsvDescrSize);
 		commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 
 		// Выполняем рендринг очереди
@@ -552,23 +543,30 @@ namespace zzz::directx
 		commandList->ResourceBarrier(1, &keep(CD3DX12_RESOURCE_BARRIER::Transition( m_depthStencil[frameIndex].Get(), D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COMMON)));
 	}
 
-	void SurfaceView_DirectX::RenderFrame()
+	void SurfView_DX::RenderFrame()
 	{
 		// Ожидаем(синхронизируемся) получения валидного frameIndex в PrepareFrame
 		{
-			std::unique_lock<std::mutex> lock(m_frameMutex);
-			m_frameCV.wait(lock, [this] { return m_frameReady; }); // Ждем, пока фрейм будет готов
-			m_frameReady = false; // Сбрасываем флаг для следующего кадра
+			std::unique_lock<std::mutex> lock(m_FrameMutex);
+			m_FrameCV.wait(lock, [this] { return m_FrameReady; }); // Ждем, пока фрейм будет готов
+			m_FrameReady = false; // Сбрасываем флаг для следующего кадра
 		}
 
 		// Выполняем командный список
-		m_iGAPI->SubmitCommandLists();
+		m_GAPI->SubmitCommandLists();
 
 		// Настраиваем параметры для Present
 		BOOL fullscreen = FALSE;
 		ensure(S_OK == m_swapChain->GetFullscreenState(&fullscreen, nullptr));
-		UINT syncInterval = b_IsVSync ? 1 : 0;
-		UINT presentFlags = (!b_IsVSync && !fullscreen && m_tearingSupported) ? DXGI_PRESENT_ALLOW_TEARING : 0;
+
+		UINT syncInterval = 0;
+		UINT presentFlags = DXGI_PRESENT_ALLOW_TEARING;
+		if (m_GAPI->IsVSyncEnabled())
+		{
+			syncInterval = 1;
+			presentFlags = 0;
+		}
+
 		HRESULT hr = m_swapChain->Present(syncInterval, presentFlags);
 		if (FAILED(hr))
 		{
@@ -577,26 +575,26 @@ namespace zzz::directx
 			{
 			case DXGI_ERROR_DEVICE_HUNG:
 				// Драйвер устройства перестал отвечать
-				errMsg = ">>>>> [SurfaceView_DirectX::RenderFrame()]. GPU device hung - driver issues";
+				errMsg = "GPU device hung - driver issues";
 				break;
 			case DXGI_ERROR_DEVICE_REMOVED:
 				// Устройство было физически удалено
-				errMsg = ">>>>> [SurfaceView_DirectX::RenderFrame()]. GPU device physically removed";
+				errMsg = "GPU device physically removed";
 				break;
 			case DXGI_ERROR_DEVICE_RESET:
 				// Устройство было сброшено
-				errMsg = ">>>>> [SurfaceView_DirectX::RenderFrame()]. GPU device reset";
+				errMsg = "GPU device reset";
 				break;
 			case DXGI_ERROR_DRIVER_INTERNAL_ERROR:
 				// Внутренняя ошибка драйвера
-				errMsg = ">>>>> [SurfaceView_DirectX::RenderFrame()]. GPU driver internal error";
+				errMsg = "GPU driver internal error";
 				break;
 			case DXGI_ERROR_INVALID_CALL:
 				// Неправильный вызов API
-				errMsg = ">>>>> [SurfaceView_DirectX::RenderFrame()]. Invalid API call";
+				errMsg = "Invalid API call";
 				break;
 			default:
-				errMsg = std::format(">>>>> [SurfaceView_DirectX::RenderFrame()]. Unknown device removed reason: {:#x}", hr);
+				errMsg = std::format("Unknown device removed reason: {:#x}", hr);
 				break;
 			}
 
@@ -605,21 +603,21 @@ namespace zzz::directx
 	}
 #pragma endregion Rendring
 
-	void SurfaceView_DirectX::OnResize(const Size2D<>& size)
+	void SurfView_DX::OnResize(const Size2D<>& size)
 	{
-		//DebugOutput(std::format(L">>>>> [SurfaceView_DirectX::OnResize({}x{})]. b_IgnoreResize: {}.", size.width, size.height, b_IgnoreResize).c_str());
-		if (m_iGAPI->GetInitState() != eInitState::InitOK && !m_swapChain || b_IgnoreResize)
+		//DebugOutput(std::format(L">>>>> [SurfView_DX::OnResize({}x{})]. b_IgnoreResize: {}.", size.width, size.height, b_IgnoreResize).c_str());
+		if (m_GAPI->GetInitState() != eInitState::InitOK && !m_swapChain || m_IgnoreResize)
 			return;
 
 		if (size.width == 0 || size.height == 0)
 		{
-			DebugOutput(L">>>>> [SurfaceView_DirectX::OnResize()]. Invalid size for resize. Width or height is zero.\n");
+			DebugOutput(L"Invalid size for resize. Width or height is zero.\n");
 			return;
 		}
 
-		auto m_device = m_iGAPI->GetDevice();
-		ensure(m_device, ">>>>> [SurfaceView_DirectX::CreateRTVHeap()]. Device cannot be null.");
-		ensure(m_swapChain, ">>>>> [SurfaceView_DirectX::CreateRTVHeap()]. Swap chain cannot be null.");
+		auto m_device = m_DXGAPI->GetDevice();
+		ensure(m_device, "Device cannot be null.");
+		ensure(m_swapChain, "Swap chain cannot be null.");
 
 		DXGI_SWAP_CHAIN_DESC1 desc;
 		HRESULT hr = m_swapChain->GetDesc1(&desc);
@@ -629,12 +627,12 @@ namespace zzz::directx
 			if (desc.Width == static_cast<UINT>(size.width) &&
 				desc.Height == static_cast<UINT>(size.height))
 			{
-				DebugOutput(std::format(L">>>>> [SurfaceView_DirectX::OnResize({}x{})]. No resize needed, dimensions are unchanged.", size.width, size.height).c_str());
+				DebugOutput(std::format(L"No resize needed, dimensions are unchanged.", size.width, size.height).c_str());
 				return; // Размеры не изменились
 			}
 		}
 
-		m_iGAPI->CommandRenderReset();
+		m_DXGAPI->CommandRenderReset();
 		ResetRTVandDS();
 
 		BOOL fullscreen = FALSE;
@@ -657,58 +655,58 @@ namespace zzz::directx
 				static_cast<UINT>(size.width),
 				static_cast<UINT>(size.height),
 				DXGI_FORMAT_R8G8B8A8_UNORM,
-				m_tearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
+				m_GAPI->IsCanDisableVSync() ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
 		}
 		if (S_OK != hr)
-			throw_runtime_error(std::format(">>>>> [SurfaceView_DirectX::OnResize({}x{})].", size.width, size.height));
+			throw_runtime_error(std::format("[SurfView_DX::OnResize({}x{})].", size.width, size.height));
 
 		auto res = CreateRTVHeap()
 			.and_then([&]() { return CreateRTV(m_device); })
 			.and_then([&]() { return CreateDS(size); })
-			.and_then([&]() { return m_iGAPI->CommandRenderReinitialize(); })
-			.or_else([&](const Unexpected& error) { throw_runtime_error(std::format(">>>>> [SurfaceView_DirectX::OnResize({}x{})]. {}.", size.width, size.height, wstring_to_string(error.getMessage()))); });
+			.and_then([&]() { return m_DXGAPI->CommandRenderReinitialize(); })
+			.or_else([&](const Unexpected& error) { throw_runtime_error(std::format("[SurfView_DX::OnResize({}x{})]. {}.", size.width, size.height, wstring_to_string(error.getMessage()))); });
 
 		m_SurfSize = size;
 	}
 
-	void SurfaceView_DirectX::SetFullScreen(bool fs)
+	void SurfView_DX::SetFullScreen(bool fss)
 	{
 		BOOL fullscreen = FALSE;
 		HRESULT hr = m_swapChain->GetFullscreenState(&fullscreen, nullptr);
 		if (FAILED(hr))
 		{
-			DebugOutput(std::format(L">>>>> [SurfaceView_DirectX::SetFullScreen({})] Failed to get fullscreen state. HRESULT = 0x{:08X}\n", fs, hr).c_str());
+			DebugOutput(std::format(L"[SurfView_DX::SetFullScreen({})] Failed to get fullscreen state. HRESULT = 0x{:08X}\n", fss, hr).c_str());
 			return;
 		}
 
-		if (fs == static_cast<bool>(fullscreen))
+		if (fss == static_cast<bool>(fullscreen))
 		{
-			DebugOutput(std::format(L">>>>> [SurfaceView_DirectX::SetFullScreen({})] Fullscreen state is already set.\n", fs).c_str());
+			DebugOutput(std::format(L"[SurfView_DX::SetFullScreen({})] Fullscreen state is already set.\n", fss).c_str());
 			return;
 		}
 
-		m_iGAPI->CommandRenderReset();
+		m_DXGAPI->CommandRenderReset();
 		ResetRTVandDS();
 
-		b_IgnoreResize = true;
-		hr = m_swapChain->SetFullscreenState(fs, nullptr);
+		m_IgnoreResize = true;
+		hr = m_swapChain->SetFullscreenState(fss, nullptr);
 		if (S_OK != hr)
 		{
-			b_IgnoreResize = false;
-			DebugOutput(std::format(L">>>>> [SurfaceView_DirectX::SetFullScreen({})] Failed to set fullscreen state. HRESULT = 0x{:08X}\n", fs, hr).c_str());
+			m_IgnoreResize = false;
+			DebugOutput(std::format(L"[SurfView_DX::SetFullScreen({})] Failed to set fullscreen state.HRESULT = 0x{:08X}\n", fss, hr).c_str());
 			auto res = RecreateRenderTargetsAndDepth();
 			if (!res)
-				throw_runtime_error(std::format(">>>>> #0 [SurfaceView_DirectX::SetFullScreen({})]. Failed to recreate render targets and depth stencil View. {}.", fs, wstring_to_string(res.error().getMessage())));
+				throw_runtime_error(std::format("#0 [SurfView_DX::SetFullScreen({})]. Failed to recreate render targets and depth stencil View. {}.", fss, wstring_to_string(res.error().getMessage())));
 
 			return;
 		}
-		b_IgnoreResize = false;
+		m_IgnoreResize = false;
 
 		DXGI_SWAP_CHAIN_DESC desc{};
 		hr = m_swapChain->GetDesc(&desc);
 		if (S_OK != hr)
 		{
-			DebugOutput(std::format(L">>>>> [SurfaceView_DirectX::SetFullScreen({})] Failed to get swap chain description. HRESULT = 0x{:08X}\n", fs, hr).c_str());
+			DebugOutput(std::format(L"[SurfView_DX::SetFullScreen({})] Failed to get swap chain description. HRESULT = 0x{:08X}\n", fss, hr).c_str());
 			return;
 		}
 
@@ -719,16 +717,15 @@ namespace zzz::directx
 			desc.Flags);
 		if (S_OK != hr)
 		{
-			DebugOutput(std::format(L">>>>> [SurfaceView_DirectX::SetFullScreen({})] Failed to resize buffers. HRESULT = 0x{:08X}\n", fs, hr).c_str());
+			DebugOutput(std::format(L"[SurfView_DX::SetFullScreen({})] Failed to resize buffers. HRESULT = 0x{:08X}\n", fss, hr).c_str());
 			return;
 		}
 
 		auto res = RecreateRenderTargetsAndDepth()
-			.and_then([&]() { return m_iGAPI->CommandRenderReinitialize(); })
-			.or_else([&](const Unexpected& error) { throw_runtime_error(std::format(">>>>> #1 [SurfaceView_DirectX::SetFullScreen({})]. Failed: {}.", fs, wstring_to_string(error.getMessage()))); });
-		
+			.and_then([&]() { return m_DXGAPI->CommandRenderReinitialize(); })
+			.or_else([&](const Unexpected& error) { throw_runtime_error(std::format("[SurfView_DX::SetFullScreen({})]. Failed: {}.", fss, wstring_to_string(error.getMessage()))); });	
 
-		DebugOutput(std::format(L">>>>> [SurfaceView_DirectX::SetFullScreen({})].\n", fs).c_str());
+		DebugOutput(std::format(L"[SurfView_DX::SetFullScreen({})].\n", fss).c_str());
 	}
 }
 #endif // defined(ZRENDER_API_D3D12)

@@ -6,9 +6,11 @@ import IGAPI;
 import Event;
 import Size2D;
 import Result;
+import Ensure;
 import Layer3D;
 import IAppWin;
 import ViewSetup;
+import ISurfView;
 import StrConvert;
 import ThreadPool;
 import UserLayer3D;
@@ -16,8 +18,7 @@ import RenderQueue;
 import ViewFactory;
 import UserLayer3D;
 import IRenderLayer;
-import AppWinConfig;
-import ISurfaceView;
+import PlatformConfig;
 import SceneEntityFactory;
 
 using namespace zzz::core;
@@ -37,7 +38,7 @@ namespace zzz
 
 	public:
 		View(
-			const std::shared_ptr<AppWinConfig> winConfig,
+			const std::shared_ptr<PlatformConfig> winConfig,
 			const std::shared_ptr<SceneEntityFactory> entityFactory,
 			const std::shared_ptr<IGAPI> GAPI);
 
@@ -49,8 +50,8 @@ namespace zzz
 		Result<std::shared_ptr<UserLayer3D>> AddLayer_3D();
 
 		void OnUpdate(double deltaTime);
+		Result<> OnUpdateVSyncState() { return m_RenderSurface->OnUpdateVSyncState(); };
 		void SetFullScreen(bool fs);
-		inline void SetVSync(bool vs) { if (m_RenderSurface != nullptr) m_RenderSurface->SetVSync(vs); };
 		inline void SetViewCaptionText(std::wstring caption) { if (m_Window != nullptr) m_Window->SetCaptionText(caption); };
 		inline void AddViewCaptionText(std::wstring caption) { if (m_Window != nullptr) m_Window->AddCaptionText(caption); };
 
@@ -59,11 +60,11 @@ namespace zzz
 		void OnViewResize(const Size2D<>& size, eTypeWinResize resizeType);
 
 		ViewFactory factory;
-		const std::shared_ptr<AppWinConfig> m_WinConfig;
+		const std::shared_ptr<PlatformConfig> m_WinConfig;
 		const std::shared_ptr<IGAPI> m_GAPI;
 		const std::shared_ptr<SceneEntityFactory> m_EntityFactory;
 		std::shared_ptr<IAppWin> m_Window;
-		std::shared_ptr<ISurfaceView> m_RenderSurface;
+		std::shared_ptr<ISurfView> m_RenderSurface;
 
 		eInitState initState;
 		void Initialize();
@@ -77,7 +78,7 @@ namespace zzz
 	};
 
 	View::View(
-		const std::shared_ptr<AppWinConfig> winConfig,
+		const std::shared_ptr<PlatformConfig> winConfig,
 		const std::shared_ptr<SceneEntityFactory> entityFactory,
 		const std::shared_ptr<IGAPI> GAPI) :
 		m_WinConfig{ winConfig },
@@ -86,9 +87,9 @@ namespace zzz
 		initState{ eInitState::InitNot },
 		m_ThreadsUpdate{std::string("View"), 2}
 	{
-		ensure(m_WinConfig, ">>>>> [View::View()]. Window config cannot be null.");
-		ensure(m_EntityFactory, ">>>>> [View::View()]. Scene entity factory cannot be null.");
-		ensure(m_GAPI, ">>>>> [View::View()]. GAPI cannot be null.");
+		ensure(m_WinConfig, "Window config cannot be null.");
+		ensure(m_EntityFactory, "Scene entity factory cannot be null.");
+		ensure(m_GAPI, "GAPI cannot be null.");
 
 		Initialize();
 	}
@@ -124,11 +125,11 @@ namespace zzz
 		}
 		catch (const std::exception& e)
 		{
-			throw_runtime_error((e.what() && e.what()[0]) ? std::string(e.what()) : "unknown exception");
+			throw_runtime_error((e.what() && e.what()[0]) ? std::string(e.what()) : "Unknown exception");
 		}
 		catch (...)
 		{
-			throw_runtime_error(">>>>>> [View::Initialize()]. Unknown exception.");
+			throw_runtime_error("Unknown exception.");
 		}
 	}
 
@@ -162,13 +163,13 @@ namespace zzz
 		switch (resizeType)
 		{
 		case eTypeWinResize::Hide:
-			DebugOutput(L">>>>> [View::OnViewResized()]. Hide app window.");
+			DebugOutputLite(L"Hide app window.");
 			break;
 		case eTypeWinResize::Show:
-			DebugOutput(std::format(L">>>>> [View::OnViewResized({}x{})]. Show app window.", std::to_wstring(size.width), std::to_wstring(size.height)));
+			DebugOutputLite(std::format(L"Show app window - {}x{}.", std::to_wstring(size.width), std::to_wstring(size.height)));
 			break;
 		case eTypeWinResize::Resize:
-			DebugOutput(std::format(L">>>>> [View::OnViewResized({}x{}))]. Resize app window.", std::to_wstring(size.width), std::to_wstring(size.height)));
+			DebugOutputLite(std::format(L"Resize app window to {}x{}.", std::to_wstring(size.width), std::to_wstring(size.height)));
 
 			Size2D<zF32> fsize;
 			fsize.SetFrom(size);

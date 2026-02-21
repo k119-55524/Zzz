@@ -9,15 +9,20 @@ using namespace zzz::input;
 class MyScript : public IBehavior
 {
 public:
-	MyScript(const std::shared_ptr<SceneEntity> entity) :
+	MyScript(const std::shared_ptr<SceneEntity> entity, Engine& engine) :
 		IBehavior{ entity },
+		m_Engine{ engine },
 		rotSpeed{ 0.5f },
 		moveSpeed{ 1.0f }
 	{
 		m_Input = GetInput();
+		m_Input->Keyboard()->GetButtonWatcher(KeyCode::F1).OnDown += std::bind(&MyScript::OnKeyDown_F1, this);
 	}
-	~MyScript() noexcept
+	~MyScript() = default;
+
+	void OnKeyDown_F1()
 	{
+		m_Engine.SetVSyncState(!m_Engine.GetVSyncState());
 	}
 
 	void OnUpdate(float deltaTime) override
@@ -25,16 +30,16 @@ public:
 		Transform& transform = GetTransform();
 		transform.AddRotation(0.0f, -rotSpeed * deltaTime, 0.0f);
 
-		if (m_Input->GetKeyState(KeyCode::ArrowLeft) == KeyState::Down)
+		if (m_Input->Keyboard()->GetKeyState(KeyCode::ArrowLeft) == KeyState::Down)
 			transform.Move(-moveSpeed * deltaTime, 0.0f, 0.0f);
 
-		if (m_Input->GetKeyState(KeyCode::ArrowRight) == KeyState::Down)
+		if (m_Input->Keyboard()->GetKeyState(KeyCode::ArrowRight) == KeyState::Down)
 			transform.Move(moveSpeed * deltaTime, 0.0f, 0.0f);
 
-		if (m_Input->GetKeyState(KeyCode::ArrowUp) == KeyState::Down)
+		if (m_Input->Keyboard()->GetKeyState(KeyCode::ArrowUp) == KeyState::Down)
 			transform.Move(0.0f, 0.0f, moveSpeed * deltaTime);
 
-		if (m_Input->GetKeyState(KeyCode::ArrowDown) == KeyState::Down)
+		if (m_Input->Keyboard()->GetKeyState(KeyCode::ArrowDown) == KeyState::Down)
 			transform.Move(0.0f, 0.0f, -moveSpeed * deltaTime);
 	}
 
@@ -42,6 +47,7 @@ protected:
 	float rotSpeed;
 	float moveSpeed;
 	std::shared_ptr<Input> m_Input;
+	Engine& m_Engine;
 };
 
 int APIENTRY wWinMain(
@@ -52,17 +58,19 @@ int APIENTRY wWinMain(
 {
 #ifdef _DEBUG
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtSetBreakAlloc(1563);
+	//_CrtSetBreakAlloc(1689);
 	//_CrtSetBreakAlloc(160);
 	//_CrtSetBreakAlloc(202);
 #endif // _DEBUG
 	{
+		std::shared_ptr<UserView> view;
+
 		Engine engine;
 		std::shared_ptr<UserSceneEntity> entity;
 		Result<> res = engine.Initialize(L".\\appdata\\ui.zaml")
 			.and_then([&](void) -> Result<>
 				{
-					auto view = engine.GetMainView();
+					view = engine.GetMainView();
 					auto resLayer = view->AddLayer_3D();
 					if (!resLayer)
 						return Result<>(resLayer.error());
@@ -79,7 +87,7 @@ int APIENTRY wWinMain(
 						return Result<>(resEntity.error());
 
 					entity = resEntity.value();
-					auto resScript = entity->SetScript<MyScript>();
+					auto resScript = entity->SetScript<MyScript>(engine);
 
 					return Result<>();
 				})

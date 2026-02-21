@@ -4,6 +4,7 @@ export module Engine;
 export import Math;
 export import Input;
 export import Scene;
+export import Ensure;
 export import MsgBox;
 export import Result;
 export import KeyCode;
@@ -41,7 +42,7 @@ using namespace zzz::templates;
 
 namespace zzz
 {
-#if defined(ZRENDER_API_D3D12)
+#if defined(ZPLATFORM_MSWINDOWS)
 	typedef MainLoop_MSWin MainLoop;
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
@@ -60,11 +61,33 @@ export namespace zzz
 		[[nodiscard]] Result<> Run() noexcept;
 
 		[[nodiscard]] std::shared_ptr<UserView> GetMainView() { return m_UserView; }
+		inline void SetVSyncState(bool vss)
+		{
+			ensure(initState != eInitState::InitOK, "Initialization required before changing VSync");
+
+			if (m_GAPI->IsCanDisableVSync())
+			{
+				bool oldVSync = m_Config->GetGAPIConfig()->GetVSyncEnabledOnStartup();
+				if (oldVSync == vss)
+					return;
+
+				m_Config->GetGAPIConfig()->SetVSyncEnabledOnStartup(vss);
+
+				if (!m_View->OnUpdateVSyncState())
+					m_Config->GetGAPIConfig()->SetVSyncEnabledOnStartup(oldVSync);
+			}
+		};
+		inline bool GetVSyncState() const noexcept
+		{
+			ensure(initState != eInitState::InitOK, "Cannot get VSync state before initialization");
+
+			return m_Config->GetGAPIConfig()->GetVSyncEnabledOnStartup();
+		};
 
 	private:
 		EngineFactory m_EngineFactory;
-		std::shared_ptr<ZamlConfig> m_ZamlStartupConfig;
-		std::unique_ptr<StartupConfig> m_Config;
+		std::shared_ptr<ZamlConfig> m_ZamlConfig;
+		std::shared_ptr<StartupConfig> m_Config;
 
 		eInitState initState;
 		std::mutex stateMutex;
@@ -89,7 +112,7 @@ export namespace zzz
 		void OnUpdateSystem();
 		void OnViewResizing();
 
-		Result<std::unique_ptr<StartupConfig>> GetStartupConfig();
+		Result<std::shared_ptr<StartupConfig>> GetStartupConfig(std::shared_ptr<ZamlConfig> zamlConfig);
 
 		PerformanceMeter m_PerfRender;
 	};
@@ -114,7 +137,7 @@ export namespace zzz
 		m_GAPI.reset();
 		m_ResCPU.reset();
 		m_ResGPU.reset();
-		m_ZamlStartupConfig.reset();
+		m_ZamlConfig.reset();
 
 		initState = eInitState::InitNot;
 		isSysPaused = true;
@@ -126,17 +149,17 @@ export namespace zzz
 		std::lock_guard<std::mutex> lock(stateMutex);
 
 		if (initState != eInitState::InitNot)
-			return Unexpected(eResult::failure, std::format(L"Re-initialization is not allowed.", zamlPath));
+			return Unexpected(eResult::failure, L"Re-initialization is not allowed.");
 
 		std::wstring err;
 		try
 		{
 			// Читаем настройки из файла
-			m_ZamlStartupConfig = safe_make_shared<ZamlConfig>(zamlPath);
-			auto res = GetStartupConfig();
+			m_ZamlConfig = safe_make_shared<ZamlConfig>(zamlPath);
+			auto res = GetStartupConfig(m_ZamlConfig);
 			if (!res)
 				return Unexpected(eResult::failure, std::format(L"Failed to transfer settings from file.", zamlPath));
-			m_Config = std::move(res.value());
+			m_Config = res.value();
 
 			return Initialize();
 		}
@@ -187,6 +210,7 @@ export namespace zzz
 	Result<> Engine::Run() noexcept
 	{
 		std::lock_guard<std::mutex> lock(stateMutex);
+
 		if (initState != eInitState::InitOK)
 			return Unexpected(eResult::failure, L"Engine is not initialized.");
 
@@ -200,7 +224,6 @@ export namespace zzz
 		{
 			isSysPaused = false;
 			
-			m_View->SetVSync(false);
 			m_time.Reset();
 			m_MainLoop->Run();
 
@@ -301,17 +324,17 @@ export namespace zzz
 	}
 
 #pragma region Helpers
-	Result<std::unique_ptr<StartupConfig>> Engine::GetStartupConfig()
+	Result<std::shared_ptr<StartupConfig>> Engine::GetStartupConfig(std::shared_ptr<ZamlConfig> zamlConfig)
 	{
 		ZamlParser zamlParser;
-		auto res = zamlParser.GetAppWinConfig(m_ZamlStartupConfig);
+		auto res = zamlParser.GetAppWinConfig(zamlConfig);
 		if (!res)
 			Unexpected(eResult::not_initialized, res.error().getMessage());
 
-		std::shared_ptr<AppWinConfig> winConfig = res.value();
-		std::shared_ptr<GAPIConfig> gapiConfig = safe_make_shared<GAPIConfig>();
+		std::shared_ptr<PlatformConfig> winConfig = res.value();
+		std::shared_ptr<GAPIConfig> gapiConfig = safe_make_shared<GAPIConfig>(winConfig);
 
-		return Result<std::unique_ptr<StartupConfig>>(safe_make_unique<StartupConfig>(winConfig, gapiConfig));
+		return Result<std::shared_ptr<StartupConfig>>(safe_make_shared<StartupConfig>(winConfig, gapiConfig));
 	}
 #pragma endregion
 }

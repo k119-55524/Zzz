@@ -2,6 +2,7 @@
 export module UserLayer3D;
 
 import Result;
+import Ensure;
 import Layer3D;
 import UserScene;
 
@@ -15,7 +16,7 @@ namespace zzz
 		explicit UserLayer3D(const std::shared_ptr<Layer3D> layer) :
 			m_Layer{ layer }
 		{
-			ensure(m_Layer, ">>>>> [UserLayer3D::UserLayer3D(...)]. Layer3D cannot be null.");
+			ensure(m_Layer, "Layer3D cannot be null.");
 		}
 
 		Result<std::shared_ptr<UserScene>> AddScene();

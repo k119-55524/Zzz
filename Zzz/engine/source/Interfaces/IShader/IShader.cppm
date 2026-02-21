@@ -1,17 +1,14 @@
 
-#include "pch.h"
-
 export module IShader;
 
 import IGAPI;
+import Ensure;
 import Result;
 import IMeshGPU;
-import IShader_DirectX;
 
 export namespace zzz
 {
-	export class IShader :
-		public IShader_DirectX
+	export class IShader
 	{
 	public:
 		IShader() = delete;
@@ -35,7 +32,7 @@ export namespace zzz
 		m_Mesh{ mesh },
 		m_Name{ std::move(name) }
 	{
-		ensure(m_Mesh != nullptr, ">>>>> [IShader::IShader( ... )]. Mesh pointer cannot be null.");
-		ensure(!m_Name.empty(), ">>>>> [IShader::IShader( ... )]. Shader name cannot be empty.");
+		ensure(m_Mesh != nullptr, "Mesh pointer cannot be null.");
+		ensure(!m_Name.empty(), "Shader name cannot be empty.");
 	}
 }

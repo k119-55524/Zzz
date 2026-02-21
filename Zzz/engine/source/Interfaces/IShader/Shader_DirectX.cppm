@@ -8,7 +8,7 @@ import IShader;
 import IMeshGPU;
 import StrConvert;
 
-export namespace zzz::directx
+export namespace zzz::dx
 {
 	export class Shader_DirectX final : public IShader
 	{
@@ -17,7 +17,7 @@ export namespace zzz::directx
 		explicit Shader_DirectX(const std::shared_ptr<IGAPI> gapi, const std::shared_ptr<IMeshGPU> mesh, std::wstring&& name);
 		virtual ~Shader_DirectX() override = default;
 
-		Result<> InitializeByText(std::string&& srcVS, std::string&& srcPS) override;
+		Result<> InitializeByText(std::string&& srcVS, std::string&& srcPS);
 		Result<ComPtr<ID3DBlob>> CompileShaderFromSource(
 			std::string&& shaderSource,
 			const std::wstring& entryPoint,
@@ -25,8 +25,8 @@ export namespace zzz::directx
 			const D3D_SHADER_MACRO* defines = nullptr,
 			ID3DInclude* includeHandler = nullptr);
 
-		ComPtr<ID3DBlob> GetVS() const noexcept override { return m_VS; }
-		ComPtr<ID3DBlob> GetPS() const noexcept override { return m_PS; }
+		ComPtr<ID3DBlob> GetVS() const noexcept { return m_VS; }
+		ComPtr<ID3DBlob> GetPS() const noexcept { return m_PS; }
 
 	private:
 		ComPtr<ID3DBlob> m_VS;
@@ -76,15 +76,15 @@ export namespace zzz::directx
 		// === 1. Инициализация DXC ===
 		hr = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&library));
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, L">>>>> [haderDX::CompileShaderFromSource( ... )]. Failed to create DXC library");
+			return Unexpected(eResult::failure, L"Failed to create DXC library");
 
 		hr = library->CreateBlobWithEncodingFromPinned(shaderSource.c_str(), (UINT32)shaderSource.size(), CP_UTF8, &sourceBlob);
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, L">>>>> [haderDX::CompileShaderFromSource( ... )]. Failed to create source blob");
+			return Unexpected(eResult::failure, L"Failed to create source blob");
 
 		hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&compiler));
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, L">>>>> [haderDX::CompileShaderFromSource( ... )]. Failed to create DXC compiler");
+			return Unexpected(eResult::failure, L"Failed to create DXC compiler");
 
 		// === 2. Аргументы компиляции ===
 		std::vector<LPCWSTR> args = {
@@ -131,13 +131,13 @@ export namespace zzz::directx
 
 		// Проверяем только что вызов выполнен, не результат компиляции
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, L">>>>> [haderDX::CompileShaderFromSource( ... )]. DXC Compile call failed");
+			return Unexpected(eResult::failure, L"DXC Compile call failed");
 
 		// === 5. Проверка результата компиляции ===
 		HRESULT compileStatus;
 		hr = Result->GetStatus(&compileStatus);
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, L">>>>> [haderDX::CompileShaderFromSource( ... )]. Failed to get compilation status");
+			return Unexpected(eResult::failure, L"Failed to get compilation status");
 
 		// TODO: Переработать обработку ошибок компиляции
 		if (FAILED(compileStatus))
@@ -151,30 +151,30 @@ export namespace zzz::directx
 					errorBlob->GetBufferSize());
 				auto werr = string_to_wstring(errors);
 				if (werr.has_value())
-					DebugOutput(std::format(L">>>>> [haderDX::CompileShaderFromSource( ... )]. [DXC] Compile error: {}", werr.value()));
+					DebugOutput(std::format(L"[DXC] Compile error: {}", werr.value()));
 				else
-					DebugOutput(L">>>>> [haderDX::CompileShaderFromSource( ... )]. Compile error: Failed to convert error message");
+					DebugOutput(L"Compile error: Failed to convert error message");
 			}
 			else
-				DebugOutput(L">>>>> [haderDX::CompileShaderFromSource( ... )]. Compile error: No error details available");
+				DebugOutput(L"Compile error: No error details available");
 #endif // defined(_DEBUG)
 
-			return Unexpected(eResult::failure, L">>>>> [haderDX::CompileShaderFromSource( ... )]. Shader compilation failed");
+			return Unexpected(eResult::failure, L"Shader compilation failed");
 		}
 
 		// === 6. Получение результата ===
 		ComPtr<IDxcBlob> shaderBlob;
 		hr = Result->GetResult(&shaderBlob);
 		if (FAILED(hr) || !shaderBlob)
-			return Unexpected(eResult::failure, L">>>>> [haderDX::CompileShaderFromSource( ... )]. Failed to get compiled shader blob");
+			return Unexpected(eResult::failure, L"Failed to get compiled shader blob");
 
 		// === 7. Конвертация в ID3DBlob ===
 		ComPtr<ID3DBlob> finalBlob;
 		hr = shaderBlob.As(&finalBlob);
 		if (FAILED(hr) || !finalBlob)
-			return Unexpected(eResult::failure, L">>>>> [haderDX::CompileShaderFromSource( ... )]. Failed to convert to ID3DBlob");
+			return Unexpected(eResult::failure, L"Failed to convert to ID3DBlob");
 
-		DebugOutput(std::format(L">>>>> [haderDX::CompileShaderFromSource( ... )]. Shader '{}' compiled: OK. Entry: {}, Target: {}", m_Name, entryPoint, target));
+		DebugOutput(std::format(L"Shader '{}' compiled: OK. Entry: {}, Target: {}", m_Name, entryPoint, target));
 
 		return finalBlob;
 	}

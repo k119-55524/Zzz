@@ -9,8 +9,9 @@ import KeyCode;
 import IAppWin;
 import ibMSWin;
 import StrConvert;
-import AppWinConfig;
 import IOPathFactory;
+import PlatformConfig;
+import EngineConstants;
 
 using namespace zzz;
 
@@ -21,7 +22,7 @@ export namespace zzz::core
 		Z_NO_CREATE_COPY(AppWin_MSWin);
 
 	public:
-		explicit AppWin_MSWin(std::shared_ptr<AppWinConfig> _settings);
+		explicit AppWin_MSWin(std::shared_ptr<PlatformConfig> _settings);
 		virtual ~AppWin_MSWin() override;
 
 		const HWND GetHWND() const noexcept { return hWnd; }
@@ -54,7 +55,7 @@ export namespace zzz::core
 		void HandleRawKeyboard(const RAWKEYBOARD& kb);
 	};
 
-	AppWin_MSWin::AppWin_MSWin(std::shared_ptr<AppWinConfig> config) :
+	AppWin_MSWin::AppWin_MSWin(std::shared_ptr<PlatformConfig> config) :
 		IAppWin(config),
 		hWnd{ nullptr },
 		IsMinimized{ true },
@@ -113,7 +114,7 @@ export namespace zzz::core
 		hWnd = CreateWindowEx(
 			0,
 			m_Config->GetClassName().c_str(),
-			m_Config->GetCaption().c_str(),
+			m_Config->GetAppName().c_str(),
 			WS_OVERLAPPEDWINDOW,
 			xPos, yPos, width, height,
 			nullptr,
@@ -214,13 +215,13 @@ export namespace zzz::core
 			BOOL bMenu = (GetMenu(hWnd) != NULL);
 
 			// ћинимальный размер клиентской области
-			RECT minRect = { 0, 0, static_cast<LONG>(c_MinimumWindowsWidth), static_cast<LONG>(c_MinimumWindowsHeight) };
+			RECT minRect = { 0, 0, static_cast<LONG>(g_MinimumWindowWidth), static_cast<LONG>(g_MinimumWindowHeight) };
 			AdjustWindowRectEx(&minRect, dwStyle, bMenu, dwExStyle);
 			pMinMaxInfo->ptMinTrackSize.x = minRect.right - minRect.left;
 			pMinMaxInfo->ptMinTrackSize.y = minRect.bottom - minRect.top;
 
 			// ћаксимальный размер клиентской области
-			RECT maxRect = { 0, 0, static_cast<LONG>(c_MaximumWindowsWidth), static_cast<LONG>(c_MaximumWindowsHeight) };
+			RECT maxRect = { 0, 0, static_cast<LONG>(g_MaximumWindowWidth), static_cast<LONG>(g_MaximumWindowHeight) };
 			AdjustWindowRect(&maxRect, WS_OVERLAPPEDWINDOW, FALSE);
 			pMinMaxInfo->ptMaxTrackSize.x = maxRect.right - maxRect.left;
 			pMinMaxInfo->ptMaxTrackSize.y = maxRect.bottom - maxRect.top;
@@ -294,12 +295,12 @@ export namespace zzz::core
 
 	void AppWin_MSWin::SetCaptionText(std::wstring caption)
 	{
-		SetWindowText(hWnd, m_Config->GetCaption().c_str());
+		SetWindowText(hWnd, m_Config->GetAppName().c_str());
 	}
 
 	void AppWin_MSWin::AddCaptionText(std::wstring caption)
 	{
-		SetWindowText(hWnd, (m_Config->GetCaption() + caption).c_str());
+		SetWindowText(hWnd, (m_Config->GetAppName() + caption).c_str());
 	}
 
 	int AppWin_MSWin::InitRawInput()

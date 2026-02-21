@@ -74,19 +74,19 @@
     <ClCompile Include="source\view\ViewSetup.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\helpers\RenderQueue.cppm">
+    <ClCompile Include="source\renderQueue\RenderQueue.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Interfaces\ISurfaceView\ISurfaceView.cppm">
+    <ClCompile Include="source\Interfaces\ISurfaceView\ISurfView.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Interfaces\ISurfaceView\SurfaceView_DirectX.cppm">
+    <ClCompile Include="source\Interfaces\ISurfaceView\SurfView_DX.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\view\ViewportDesc.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\helpers\RenderVolume.cppm">
+    <ClCompile Include="source\renderQueue\RenderVolume.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\Interfaces\IRenderLayers\IRenderLayer.cppm">
@@ -102,9 +102,6 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\Interfaces\IShader\IShader.cppm">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Interfaces\IShader\IShader_DirectX.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\Interfaces\IShader\Shader_DirectX.cppm">
@@ -159,6 +156,18 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="source\Interfaces\IBehavior\IBehavior-impl.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\IMeshGPU\MeshGPU_Vulkan.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\IPSO\PSO_VK.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\IShader\Shader_VK.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\ISurfaceView\SurfView_VK_MSWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

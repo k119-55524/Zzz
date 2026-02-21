@@ -1,12 +1,13 @@
-#include "pch.h"
+
 export module CommandWrapperDX;
 
-#if defined(_WIN64)
+#if defined(ZRENDER_API_D3D12)
 import Result;
+import Ensure;
 
 using namespace zzz;
 
-export namespace zzz::directx
+export namespace zzz::dx
 {
 	class CommandWrapperDX
 	{
@@ -55,4 +56,4 @@ export namespace zzz::directx
 		ComPtr<ID3D12GraphicsCommandList> m_commandList;
 	};
 }
-#endif // _WIN64
+#endif // ZRENDER_API_D3D12

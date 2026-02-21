@@ -1,13 +1,11 @@
 
-#include "pch.h"
-
 export module StrConvert;
 
 import Result;
 
 export namespace zzz
 {
-#if defined(_WIN64)
+#if defined(ZPLATFORM_MSWINDOWS)
 	Result<std::wstring> string_to_wstring(const std::string& str)
 	{
 		if (str.empty())
@@ -52,7 +50,7 @@ export namespace zzz
 	}
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
-#endif
+#endif // #if defined(ZPLATFORM_MSWINDOWS)
 
 	template<typename T> inline Result<T> ConvertValue(const std::wstring& text);
 	template<> inline Result<std::wstring> ConvertValue<std::wstring>(const std::wstring& text) { return text; }
