@@ -9,6 +9,7 @@ import KeyCode;
 import IAppWin;
 import ibMSWin;
 import StrConvert;
+import DebugOutput;
 import IOPathFactory;
 import PlatformConfig;
 import EngineConstants;
@@ -156,7 +157,7 @@ export namespace zzz::core
 		catch (...)
 		{
 			// В callback функциях Windows нельзя допускать исключения
-			DebugOutput(L">>>>> [AppWindowMsWin::WindowProc]. Exception in WindowProc!");
+			DOut(L">>>>> [AppWindowMsWin::WindowProc]. Exception in WindowProc!");
 			return DefWindowProc(hwnd, uMsg, wParam, lParam);
 		}
 

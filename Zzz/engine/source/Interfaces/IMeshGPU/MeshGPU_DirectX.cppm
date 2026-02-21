@@ -7,8 +7,11 @@ import DXAPI;
 import Ensure;
 import CPUMesh;
 import IMeshGPU;
+import DebugOutput;
 import CPUIndexBuffer;
 import CPUVertexBuffer;
+
+using namespace zzz::logger;
 
 namespace zzz
 {
@@ -230,9 +233,9 @@ namespace zzz::dx
 
 		// TODO: Cделать нормальную обработку
 		if (!isComplete)
-			DebugOutput(L"Transfer mesh resource: FAILED.");
+			DOut(L"Transfer mesh resource: FAILED.");
 		else
-			DebugOutput(L"Transfer mesh resource: SUCESS.");
+			DOut(L"Transfer mesh resource: SUCESS.");
 	}
 }
 #endif // ZRENDER_API_D3D12

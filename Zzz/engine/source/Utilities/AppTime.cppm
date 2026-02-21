@@ -1,4 +1,4 @@
-#include "pch.h"
+
 export module AppTime;
 
 export namespace zzz
@@ -13,7 +13,7 @@ export namespace zzz
 	 */
 	export class AppTime final
 	{
-		using Clock = std::chrono::high_resolution_clock;
+		using Clock = std::chrono::steady_clock;
 
 	public:
 		/**
@@ -117,16 +117,26 @@ export namespace zzz
 	{
 		auto now = Clock::now();
 		double deltaTime = std::chrono::duration<double>(now - m_TimeAppStart).count();
+
 		return deltaTime < 0.0 ? 0.0 : deltaTime;
 	}
 
 	double AppTime::GetDeltaTime()
 	{
 		auto now = Clock::now();
+
+		if (isPause)
+		{
+			m_PrevTick = now;
+			return 0.0;
+		}
+
 		double deltaTime = std::chrono::duration<double>(now - m_PrevTick).count();
 		m_PrevTick = now;
+
 		deltaTime -= m_DeltaPause;
 		m_DeltaPause = 0.0;
+
 		return deltaTime < 0.0 ? 0.0 : deltaTime;
 	}
 

@@ -1,5 +1,6 @@
 
 import Engine;
+import DebugOutput;
 
 using namespace zzz;
 using namespace zzz::math;
@@ -17,12 +18,24 @@ public:
 	{
 		m_Input = GetInput();
 		m_Input->Keyboard()->GetButtonWatcher(KeyCode::F1).OnDown += std::bind(&MyScript::OnKeyDown_F1, this);
+		m_Input->Keyboard()->GetButtonWatcher(KeyCode::F2).OnDown += std::bind(&MyScript::OnKeyDown_F2, this);
 	}
 	~MyScript() = default;
 
 	void OnKeyDown_F1()
 	{
 		m_Engine.SetVSyncState(!m_Engine.GetVSyncState());
+	}
+
+	void OnKeyDown_F2()
+	{
+		auto resGet = m_Engine.GetFullScreenState();
+		if (resGet)
+		{
+			auto resSet = m_Engine.SetFullScreenState(!resGet.value());
+			if (!resSet)
+				DOut(L"");
+		}
 	}
 
 	void OnUpdate(float deltaTime) override

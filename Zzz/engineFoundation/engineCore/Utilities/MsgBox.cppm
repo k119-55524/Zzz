@@ -1,6 +1,8 @@
 
 export module MsgBox;
 
+import DebugOutput;
+
 export namespace zzz
 {
 	class MsgBox
@@ -11,7 +13,7 @@ export namespace zzz
 
 	void MsgBox::Error(const std::wstring& message)
 	{
-		DebugOutput(message);
+		DOut(message);
 
 #if defined(_WIN64)
 		::MessageBoxW(GetActiveWindow(), message.empty() ? L"No message text. Unknown error." : message.c_str(), L"Error!!!", MB_ICONERROR | MB_OK);

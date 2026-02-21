@@ -7,6 +7,7 @@ import Result;
 import IShader;
 import IMeshGPU;
 import StrConvert;
+import DebugOutput;
 
 export namespace zzz::dx
 {
@@ -151,12 +152,12 @@ export namespace zzz::dx
 					errorBlob->GetBufferSize());
 				auto werr = string_to_wstring(errors);
 				if (werr.has_value())
-					DebugOutput(std::format(L"[DXC] Compile error: {}", werr.value()));
+					DOut(std::format(L"[DXC] Compile error: {}", werr.value()));
 				else
-					DebugOutput(L"Compile error: Failed to convert error message");
+					DOut(L"Compile error: Failed to convert error message");
 			}
 			else
-				DebugOutput(L"Compile error: No error details available");
+				DOut(L"Compile error: No error details available");
 #endif // defined(_DEBUG)
 
 			return Unexpected(eResult::failure, L"Shader compilation failed");
@@ -174,7 +175,7 @@ export namespace zzz::dx
 		if (FAILED(hr) || !finalBlob)
 			return Unexpected(eResult::failure, L"Failed to convert to ID3DBlob");
 
-		DebugOutput(std::format(L"Shader '{}' compiled: OK. Entry: {}, Target: {}", m_Name, entryPoint, target));
+		DOut(std::format(L"Shader '{}' compiled: OK. Entry: {}, Target: {}", m_Name, entryPoint, target));
 
 		return finalBlob;
 	}

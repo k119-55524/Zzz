@@ -787,7 +787,7 @@ namespace zzz::vk
 	void SurfView_VK_MSWin::SetFullScreen(bool fs)
 	{
 		// TODO: Implement fullscreen switching for Vulkan
-		DebugOutput(std::format(L"[SurfView_VK_MSWin::SetFullScreen({})] Not implemented yet\n", fs).c_str());
+		DOut(std::format(L"[SurfView_VK_MSWin::SetFullScreen({})] Not implemented yet\n", fs).c_str());
 	}
 
 	[[nodiscard]] Result<> SurfView_VK_MSWin::OnUpdateVSyncState()

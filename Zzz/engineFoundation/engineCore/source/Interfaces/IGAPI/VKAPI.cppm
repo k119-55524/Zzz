@@ -248,7 +248,7 @@ namespace zzz::vk
 
 		uint32_t apiVersion = std::min(supportedVersion, VULKAN_ENGINE_MAX_VERSION);
 
-		DebugOutput(std::format(
+		DOut(std::format(
 			L"Vulkan supported: {}.{}.{} | Using: {}.{}.{}",
 			VK_VERSION_MAJOR(supportedVersion), VK_VERSION_MINOR(supportedVersion), VK_VERSION_PATCH(supportedVersion),
 			VK_VERSION_MAJOR(apiVersion), VK_VERSION_MINOR(apiVersion), VK_VERSION_PATCH(apiVersion)));
@@ -279,7 +279,7 @@ namespace zzz::vk
 		if (validationLayerFound)
 			layers.push_back("VK_LAYER_KHRONOS_validation");
 		else
-			DebugOutput(L"Warning: VK_LAYER_KHRONOS_validation not found");
+			DOut(L"Warning: VK_LAYER_KHRONOS_validation not found");
 #endif
 
 		VkApplicationInfo appInfo
@@ -477,7 +477,7 @@ namespace zzz::vk
 
 		VkPhysicalDeviceProperties props{};
 		vkGetPhysicalDeviceProperties(m_PhysicalDevice, &props);
-		DebugOutput(std::format(L"Selected GPU: {} (score: {})", string_to_wstring(props.deviceName).value_or(L"Unknown GPU"), deviceCandidate.score));
+		DOut(std::format(L"Selected GPU: {} (score: {})", string_to_wstring(props.deviceName).value_or(L"Unknown GPU"), deviceCandidate.score));
 
 		return {};
 	}

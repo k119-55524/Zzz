@@ -83,6 +83,19 @@ export namespace zzz
 
 			return m_Config->GetGAPIConfig()->GetVSyncEnabledOnStartup();
 		};
+		inline Result<> SetFullScreenState(bool fss)
+		{
+			ensure(initState != eInitState::InitOK, "Initialization required before setting fullscreen mode.");
+
+			return m_View->SetFullScreenState(fss);
+		}
+		inline Result<bool> GetFullScreenState()
+		{
+			ensure(initState != eInitState::InitOK, "Initialization required before getting fullscreen mode.");
+
+			return m_View->GetFullScreenState();
+		}
+
 
 	private:
 		EngineFactory m_EngineFactory;
@@ -278,21 +291,6 @@ export namespace zzz
 				frameCount = 0;
 				allTime = 0.0f;
 			}
-		}
-
-		// Тестовый код для проверки переключения в полноэкранный режим и обратно
-		{
-			//static int frameCount = 0;
-			//frameCount++;
-
-			//if (frameCount == 2)
-			//	m_View->SetVSync(true);
-
-			//if (frameCount == 5000)
-			//	m_View->SetFullScreen(true);
-
-			//if (frameCount == 15000)
-			//	m_View->SetFullScreen(false);
 		}
 	}
 

@@ -13,6 +13,7 @@ import ViewSetup;
 import ISurfView;
 import StrConvert;
 import ThreadPool;
+import DebugOutput;
 import UserLayer3D;
 import RenderQueue;
 import ViewFactory;
@@ -23,6 +24,7 @@ import SceneEntityFactory;
 
 using namespace zzz::core;
 using namespace zzz::input;
+using namespace zzz::logger;
 using namespace zzz::templates;
 
 namespace zzz
@@ -51,7 +53,8 @@ namespace zzz
 
 		void OnUpdate(double deltaTime);
 		Result<> OnUpdateVSyncState() { return m_RenderSurface->OnUpdateVSyncState(); };
-		void SetFullScreen(bool fs);
+		[[nodiscard]] Result<> SetFullScreenState(bool fss);
+		[[nodiscard]] Result<bool> GetFullScreenState() const;
 		inline void SetViewCaptionText(std::wstring caption) { if (m_Window != nullptr) m_Window->SetCaptionText(caption); };
 		inline void AddViewCaptionText(std::wstring caption) { if (m_Window != nullptr) m_Window->AddCaptionText(caption); };
 
@@ -187,13 +190,26 @@ namespace zzz
 			m_RenderSurface->OnResize(size);
 	}
 
-	void View::SetFullScreen(bool fs)
+	[[nodiscard]] Result<> View::SetFullScreenState(bool fss)
 	{
 		if (initState != eInitState::InitOK)
-			return;
+			Unexpected(L"Requires successful initialization.");
 
-		if(m_RenderSurface)
-			m_RenderSurface->SetFullScreen(fs);
+		if (!m_RenderSurface)
+			return Unexpected(L"RenderSurface is null.");
+
+		return m_RenderSurface->SetFullScreenState(fss);
+	}
+
+	[[nodiscard]] Result<bool> View::GetFullScreenState() const
+	{
+		if (initState != eInitState::InitOK)
+			Unexpected(L"Requires successful initialization.");
+
+		if (!m_RenderSurface)
+			return Unexpected(L"RenderSurface is null.");
+
+		return m_RenderSurface->GetFullScreenState();
 	}
 
 	Result<std::shared_ptr<UserLayer3D>> View::AddLayer_3D()

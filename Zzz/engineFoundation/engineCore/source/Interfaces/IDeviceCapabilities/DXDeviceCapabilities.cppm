@@ -4,6 +4,7 @@ export module DXDeviceCapabilities;
 #if defined(ZRENDER_API_D3D12)
 import Ensure;
 import StrConvert;
+import DebugOutput;
 import IDeviceCapabilities;
 
 namespace zzz::dx
@@ -109,7 +110,7 @@ namespace zzz::dx
 		}
 
 		// --- Вывод всех данных ---
-		DebugOutput(std::format(L"DirectX 12 Ultimate Device Capabilities:\n"
+		DOut(std::format(L"DirectX 12 Ultimate Device Capabilities:\n"
 			L"     +- GPU: {}\n"
 			L"     +- VendorId: 0x{:X}, DeviceId: 0x{:X}\n"
 			L"     +- Dedicated Video Memory: {} MB, Shared System Memory: {} MB\n"

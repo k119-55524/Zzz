@@ -50,13 +50,13 @@
     <ClCompile Include="Source\Serializer\Serializer.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Interfaces\IDeviceCapabilities\IDeviceCapabilities.cppm">
+    <ClCompile Include="Source\Interfaces\IDeviceCapabilities\IDeviceCapabilities.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\IGPUpload.cppm">
+    <ClCompile Include="Source\Interfaces\ICPUtoGPUTransfer\IGPUpload.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\GPUUploadCallbacks.cppm">
+    <ClCompile Include="Source\Interfaces\ICPUtoGPUTransfer\GPUUploadCallbacks.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Utilities\MsgBox.cppm">
@@ -80,7 +80,7 @@
     <ClCompile Include="Source\Interfaces\IGAPI\DXAPI.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Interfaces\IDeviceCapabilities\DXDeviceCapabilities.cppm">
+    <ClCompile Include="Source\Interfaces\IDeviceCapabilities\DXDeviceCapabilities.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Platforms\DX\CommandWrapperDX.cppm">
@@ -89,7 +89,7 @@
     <ClCompile Include="Platforms\DX\RootSignature.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\GPUUploadDX.cppm">
+    <ClCompile Include="Source\Interfaces\ICPUtoGPUTransfer\GPUUploadDX.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Interfaces\IMainLoop\MainLoop_MSWin.cppm">
@@ -104,7 +104,7 @@
     <ClCompile Include="Platforms\PrimitiveTopology.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Interfaces\IAppWin\IAppWin.cppm">
+    <ClCompile Include="Source\Interfaces\IAppWin\IAppWin.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Utilities\Platforms.cppm">
@@ -122,16 +122,16 @@
     <ClCompile Include="Templates\ThreadSafeSwapBuffer.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\KeyCode.cppm">
+    <ClCompile Include="Source\KeyCode.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Interfaces\IGAPI\VKAPI.cppm">
+    <ClCompile Include="Source\Interfaces\IGAPI\VKAPI.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Interfaces\ICPUtoGPUTransfer\GPUUploadVK.cppm">
+    <ClCompile Include="Source\Interfaces\ICPUtoGPUTransfer\GPUUploadVK.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Interfaces\IDeviceCapabilities\VKDeviceCapabilities.cppm">
+    <ClCompile Include="Source\Interfaces\IDeviceCapabilities\VKDeviceCapabilities.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Interfaces\Configs\AppWinConfig\PlatformConfig.cppm">

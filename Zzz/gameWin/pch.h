@@ -17,3 +17,4 @@
 
 // Файлы заголовков Windows
 #include <windows.h>
+#include <Logger.h>

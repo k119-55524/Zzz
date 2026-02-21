@@ -64,7 +64,7 @@ namespace zzz::input
 
 	void IKeyboard::OnKeyStateChanged(KeyCode key, KeyState state)
 	{
-		//DebugOutput(std::format(L">>>>> [IKeyboard::OnKeyStateChanged()]. Key: {}, state: {}.", ToString(key), ToString(state)));
+		//DOut(std::format(L">>>>> [IKeyboard::OnKeyStateChanged()]. Key: {}, state: {}.", ToString(key), ToString(state)));
  		Keys[static_cast<int>(key)].SetState(state);
 	}
 

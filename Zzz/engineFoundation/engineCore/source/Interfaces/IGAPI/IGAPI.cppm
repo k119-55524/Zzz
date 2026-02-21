@@ -8,6 +8,7 @@ import IAppWin;
 import GAPIConfig;
 import StrConvert;
 import IGPUUpload;
+import DebugOutput;
 import EngineConstants;
 import GPUUploadCallbacks;
 import IDeviceCapabilities;
@@ -90,7 +91,7 @@ namespace zzz
 
 	inline void IGAPI::LogGPUDebugMessage(const std::wstring& message)
 	{
-		DebugOutput(message);
+		DOut(message);
 	}
 
 	void IGAPI::EndRender()

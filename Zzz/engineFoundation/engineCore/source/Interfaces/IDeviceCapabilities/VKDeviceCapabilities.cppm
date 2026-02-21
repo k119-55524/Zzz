@@ -126,7 +126,7 @@ export namespace zzz::vk
 		m_HighestShaderModel = std::format(L"SPIR-V {}.{}{}", spirvMajor, spirvMinor, features.empty() ? L"" : L" (" + features + L")");
 
 		// --- Вывод полной информации ---
-		DebugOutput(std::format(
+		DOut(std::format(
 			L"Vulkan Device Capabilities:\n"
 			L"     +- GPU: {}\n"
 			L"     +- VendorId: 0x{:X}, DeviceId: 0x{:X}\n"

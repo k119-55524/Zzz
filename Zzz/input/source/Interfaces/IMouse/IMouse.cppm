@@ -29,12 +29,12 @@ namespace zzz::input
 
 	void IMouse::OnMouseEnter(bool enter)
 	{
-		//DebugOutput(std::format(L">>>>> [IMouse::OnMouseEnter()]. Enter: {}", enter ? L"true" : L"false"));
+		//DOut(std::format(L">>>>> [IMouse::OnMouseEnter()]. Enter: {}", enter ? L"true" : L"false"));
 	}
 
 	void IMouse::OnMouseDelta(zI32 dX, zI32 dY)
 	{
-		//DebugOutput(std::format(L">>>>> [IMouse::OnMouseDelta()]. Move(delta): {}, {}", dX, dY));
+		//DOut(std::format(L">>>>> [IMouse::OnMouseDelta()]. Move(delta): {}, {}", dX, dY));
 	}
 
 	void IMouse::OnMouseButtonsChanged(MouseButtonMask pressed, MouseButtonMask released)
@@ -45,23 +45,23 @@ namespace zzz::input
 
 			if (static_cast<uint8_t>(pressed & mask) != 0)
 			{
-				//DebugOutput(std::format(L">>>>> [IMouse::OnMouseButtonsChanged()]. Press: {}", buttonNames[i]));
+				//DOut(std::format(L">>>>> [IMouse::OnMouseButtonsChanged()]. Press: {}", buttonNames[i]));
 			}
 
 			if (static_cast<uint8_t>(released & mask) != 0)
 			{
-				//DebugOutput(std::format(L">>>>> [IMouse::OnMouseButtonsChanged()]. Released: {}", buttonNames[i]));
+				//DOut(std::format(L">>>>> [IMouse::OnMouseButtonsChanged()]. Released: {}", buttonNames[i]));
 			}
 		}
 	}
 
 	void IMouse::OnMouseWheelVertical(zI32 delta)
 	{
-		//DebugOutput(std::format(L">>>>> [IMouse::OnMouseWheelVertical()]. Ddelta: {}", delta));
+		//DOut(std::format(L">>>>> [IMouse::OnMouseWheelVertical()]. Ddelta: {}", delta));
 	}
 
 	void IMouse::OnMouseWheelHorizontal(zI32 delta)
 	{
-		//DebugOutput(std::format(L">>>>> [IMouse::OnMouseWheelHorizontal()]. Delta: {}", delta));
+		//DOut(std::format(L">>>>> [IMouse::OnMouseWheelHorizontal()]. Delta: {}", delta));
 	}
 }

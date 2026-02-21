@@ -4,6 +4,7 @@ export module RootSignature;
 #if defined(ZRENDER_API_D3D12)
 import Result;
 import StrConvert;
+import DebugOutput;
 
 export namespace zzz::dx
 {
@@ -79,7 +80,7 @@ export namespace zzz::dx
 				if (wstr)
 					errMsg += wstr.value();
 
-				DebugOutput(errMsg);
+				DOut(errMsg);
 				return Unexpected(eResult::failure, errMsg);
 			}
 

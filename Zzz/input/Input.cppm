@@ -51,11 +51,11 @@ namespace zzz::input
 
 	void Input::OnWinFocus(bool focus)
 	{
-		//DebugOutput(std::format(L">>>>> [Input::OnWinFocus()]. Window focus changed: {}", focus ? L"true" : L"false"));
+		//DOut(std::format(L">>>>> [Input::OnWinFocus()]. Window focus changed: {}", focus ? L"true" : L"false"));
 	}
 
 	void Input::OnWinActivate(bool activate)
 	{
-		//DebugOutput(std::format(L">>>>> [Input::OnWinActivate()]. Window activation changed: {}", activate ? L"true" : L"false"));
+		//DOut(std::format(L">>>>> [Input::OnWinActivate()]. Window activation changed: {}", activate ? L"true" : L"false"));
 	}
 }

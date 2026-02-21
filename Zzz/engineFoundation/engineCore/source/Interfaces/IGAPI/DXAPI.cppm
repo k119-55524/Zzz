@@ -7,6 +7,7 @@ import IGAPI;
 import Result;
 import Ensure;
 import StrConvert;
+import DebugOutput;
 import GPUUploadDX;
 import AppWin_MSWin;
 import RootSignature;
@@ -189,7 +190,7 @@ export namespace zzz::dx
 			filter.DenyList.pIDList = hide;
 			m_infoQueue->AddStorageFilterEntries(&filter);
 
-			DebugOutput(L"D3D12 InfoQueue enabled.");
+			DOut(L"D3D12 InfoQueue enabled.");
 		}
 		else
 			return Unexpected(eResult::failure, L"Failed to get ID3D12InfoQueue for debug messaging.");
@@ -267,7 +268,7 @@ export namespace zzz::dx
 			//debugController->QueryInterface(IID_PPV_ARGS(&debugController1));
 			//debugController1->SetEnableGPUBasedValidation(true);
 
-			DebugOutput(L"DirectX debug layer enabled.");
+			DOut(L"DirectX debug layer enabled.");
 		}
 		else
 			return Unexpected(eResult::failure, L"Failed to enable DirectX debug layer.");
@@ -324,7 +325,7 @@ export namespace zzz::dx
 		std::wstring levelName = (outFeatureLevel == D3D_FEATURE_LEVEL_12_2) ? L"12.2 (DirectX 12 Ultimate)" :
 			(outFeatureLevel == D3D_FEATURE_LEVEL_12_1) ? L"12.1" :
 			(outFeatureLevel == D3D_FEATURE_LEVEL_12_0) ? L"12.0" : L"Unknown";
-		DebugOutput(std::format(L"Created D3D12 device with feature level: {}", levelName).c_str());
+		DOut(std::format(L"Created D3D12 device with feature level: {}", levelName).c_str());
 #endif
 
 		m_CheckGapiSupport = safe_make_unique<DXDeviceCapabilities>(outDevice, m_adapter3);
@@ -371,7 +372,7 @@ export namespace zzz::dx
 					__uuidof(ID3D12Device),
 					nullptr)))
 				{
-					DebugOutput(std::format( L"Selected adapter: {} VRAM: {} MB", desc.Description, desc.DedicatedVideoMemory / (1024 * 1024)).c_str());
+					DOut(std::format( L"Selected adapter: {} VRAM: {} MB", desc.Description, desc.DedicatedVideoMemory / (1024 * 1024)).c_str());
 
 					* ppAdapter = candidate;
 					(*ppAdapter)->AddRef(); // так как мы не Detach'им
@@ -491,7 +492,7 @@ export namespace zzz::dx
 
 	void DXAPI::SubmitCommandLists()
 	{
-		//DebugOutput(std::format(L"m_IndexFrameRender: {}.", m_IndexFrameRender));
+		//DOut(std::format(L"m_IndexFrameRender: {}.", m_IndexFrameRender));
 
 		ID3D12CommandList* ppCommandLists[] = { m_commandWrapper[m_IndexFrameRender]->GetCommandList().Get()};
 		m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
