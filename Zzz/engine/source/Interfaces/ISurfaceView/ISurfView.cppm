@@ -25,7 +25,7 @@ namespace zzz::core
 		virtual void PrepareFrame(const std::shared_ptr<RenderQueue> renderQueue) = 0;
 		virtual void RenderFrame() = 0;
 		virtual void OnResize(const Size2D<>& size) = 0;
-
+		[[nodiscard]] virtual Result<> OnUpdateVSyncState() { return {}; };
 		virtual void SetFullScreen(bool fs) {};
 
 	protected:

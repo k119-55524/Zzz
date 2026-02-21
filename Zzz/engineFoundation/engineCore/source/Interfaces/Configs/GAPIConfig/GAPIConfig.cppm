@@ -25,7 +25,6 @@ namespace zzz::core
 
 		inline const Version& GetAppVersion() const noexcept { return m_AppConfig->GetVersion(); }
 		inline const std::wstring& GetAppName() const noexcept { return m_AppConfig->GetAppName(); }
-
 		inline bool GetVSyncEnabledOnStartup() const noexcept { return m_VSyncEnabledOnStartup; };
 		inline void SetVSyncEnabledOnStartup(bool vss) noexcept { m_VSyncEnabledOnStartup = vss; };
 

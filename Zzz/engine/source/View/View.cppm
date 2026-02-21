@@ -50,9 +50,8 @@ namespace zzz
 		Result<std::shared_ptr<UserLayer3D>> AddLayer_3D();
 
 		void OnUpdate(double deltaTime);
+		Result<> OnUpdateVSyncState() { return m_RenderSurface->OnUpdateVSyncState(); };
 		void SetFullScreen(bool fs);
-		//inline void SetVSyncState(bool vs) { m_RenderSurface->SetVSyncState(vs); };
-		//inline bool GetVSyncState() { return m_RenderSurface->IsVSync(); };
 		inline void SetViewCaptionText(std::wstring caption) { if (m_Window != nullptr) m_Window->SetCaptionText(caption); };
 		inline void AddViewCaptionText(std::wstring caption) { if (m_Window != nullptr) m_Window->AddCaptionText(caption); };
 

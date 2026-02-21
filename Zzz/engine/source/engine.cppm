@@ -73,7 +73,8 @@ export namespace zzz
 
 				m_Config->GetGAPIConfig()->SetVSyncEnabledOnStartup(vss);
 
-				//m_UserView;
+				if (!m_View->OnUpdateVSyncState())
+					m_Config->GetGAPIConfig()->SetVSyncEnabledOnStartup(oldVSync);
 			}
 		};
 		inline bool GetVSyncState() const noexcept

@@ -65,6 +65,7 @@ namespace zzz::vk
 		void PrepareFrame(const std::shared_ptr<RenderQueue> renderQueue) override;
 		void RenderFrame() override;
 		void OnResize(const Size2D<>& size) override;
+		[[nodiscard]] Result<> OnUpdateVSyncState() override;
 		void SetFullScreen(bool fs) override;
 
 	private:
@@ -85,7 +86,6 @@ namespace zzz::vk
 		VkDeviceMemory m_DepthImageMemory;
 		VkImageView m_DepthImageView;
 		VkRenderPass m_RenderPass;
-		VkPresentModeKHR m_CurrentPresentMode;
 
 		[[nodiscard]] Result<> CreateSurface();
 		[[nodiscard]] Result<> CreateSwapchain(const Size2D<>& size);
@@ -120,8 +120,7 @@ namespace zzz::vk
 		m_DepthImageView{ VK_NULL_HANDLE },
 		m_RenderPass{ VK_NULL_HANDLE },
 		m_StagingAcquireSemaphore{ VK_NULL_HANDLE },
-		m_StagingRenderFinishedSemaphore{VK_NULL_HANDLE},
-		m_CurrentPresentMode{ VK_PRESENT_MODE_FIFO_KHR }
+		m_StagingRenderFinishedSemaphore{VK_NULL_HANDLE}
 	{
 		ensure(_iAppWin, "App window cannot be null.");
 		m_iAppWin = std::dynamic_pointer_cast<AppWin_MSWin>(_iAppWin);
@@ -242,7 +241,7 @@ namespace zzz::vk
 		if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount)
 			imageCount = capabilities.maxImageCount;
 
-		m_CurrentPresentMode = (m_GAPI->IsCanDisableVSync() && IsVSync()) ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_MAILBOX_KHR;
+		auto presentMode = m_GAPI->IsVSyncEnabled() ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_MAILBOX_KHR;
 		VkSwapchainCreateInfoKHR createInfo{
 			.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
 			.surface = m_Surface,
@@ -255,7 +254,7 @@ namespace zzz::vk
 			.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
 			.preTransform = capabilities.currentTransform,
 			.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-			.presentMode = m_CurrentPresentMode,
+			.presentMode = presentMode,
 			.clipped = VK_TRUE,
 			.oldSwapchain = VK_NULL_HANDLE
 		};
@@ -608,22 +607,19 @@ namespace zzz::vk
 			&presentModeCount,
 			presentModes.data());
 
-		bool wantVSync = m_GAPI->IsCanDisableVSync() && IsVSync();
-		m_CurrentPresentMode = VK_PRESENT_MODE_FIFO_KHR; // гарантирован
+		bool wantVSync = m_GAPI->IsVSyncEnabled();
+		VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR; // всегда доступен
 		if (!wantVSync)
 		{
 			for (auto m : presentModes)
 			{
-				if (m == VK_PRESENT_MODE_MAILBOX_KHR)
+				if (m == VK_PRESENT_MODE_IMMEDIATE_KHR)
 				{
-					m_CurrentPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+					presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
 					break;
 				}
 			}
 		}
-
-		if (m_CurrentPresentMode == VK_PRESENT_MODE_FIFO_KHR)
-			SetVSyncState(true);
 
 		// 7. Создать swapchain
 		uint32_t imageCount = BACK_BUFFER_COUNT;
@@ -645,7 +641,7 @@ namespace zzz::vk
 			.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
 			.preTransform = capabilities.currentTransform,
 			.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-			.presentMode = m_CurrentPresentMode,
+			.presentMode = presentMode,
 			.clipped = VK_TRUE,
 			.oldSwapchain = oldSwapchain
 		};
@@ -766,20 +762,6 @@ namespace zzz::vk
 		}
 		else if (vr != VK_SUCCESS)
 			throw_runtime_error("vkQueuePresentKHR failed");
-
-		// TODO: надо будет переделывать вынося логику в глобальный код
-		// Отлавливаем переключение состояния VSync
-		if (m_GAPI->IsCanDisableVSync())
-		{
-			if (m_CurrentPresentMode == VK_PRESENT_MODE_FIFO_KHR && !IsVSync())
-			{
-				auto res = RecreateSwapchain();
-			}
-			else if (IsVSync())
-			{
-				auto res = RecreateSwapchain();
-			}
-		}
 	}
 #pragma endregion Rendering
 
@@ -807,5 +789,10 @@ namespace zzz::vk
 		// TODO: Implement fullscreen switching for Vulkan
 		DebugOutput(std::format(L"[SurfView_VK_MSWin::SetFullScreen({})] Not implemented yet\n", fs).c_str());
 	}
+
+	[[nodiscard]] Result<> SurfView_VK_MSWin::OnUpdateVSyncState()
+	{
+		return RecreateSwapchain();
+	};
 }
 #endif // ZRENDER_API_VULKAN

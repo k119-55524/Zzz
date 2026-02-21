@@ -473,7 +473,7 @@ namespace zzz::vk
 
 		deviceCandidate = candidat.value();
 		m_PhysicalDevice = deviceCandidate.device;
-		b_IsCanDisableVSync = deviceCandidate.isCanDisableVSync;
+		m_IsCanDisableVSync = deviceCandidate.isCanDisableVSync;
 
 		VkPhysicalDeviceProperties props{};
 		vkGetPhysicalDeviceProperties(m_PhysicalDevice, &props);

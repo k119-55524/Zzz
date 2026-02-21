@@ -37,7 +37,6 @@ namespace zzz
 		[[nodiscard]] constexpr eGAPIType GetGAPIType() const noexcept { return m_GapiType; }
 		[[nodiscard]] inline bool IsCanDisableVSync() const noexcept { return m_IsCanDisableVSync; }
 		[[nodiscard]] inline bool IsVSyncEnabled() { return m_Config->GetVSyncEnabledOnStartup() && m_IsCanDisableVSync; };
-		//inline const std::shared_ptr<GAPIConfig>& GetConfig()  const noexcept { return m_Config; };
 		[[nodiscard]] inline const IDeviceCapabilities& GetGapiSupportChecker() const noexcept { return *m_CheckGapiSupport; }
 
 		[[nodiscard]] virtual Result<> Initialize();
