@@ -66,7 +66,6 @@ namespace zzz::vk
 		void RenderFrame() override;
 		void OnResize(const Size2D<>& size) override;
 		void SetFullScreen(bool fs) override;
-		void SetVSync(bool vs) override;
 
 	private:
 		std::shared_ptr<AppWin_MSWin> m_iAppWin;
@@ -86,6 +85,7 @@ namespace zzz::vk
 		VkDeviceMemory m_DepthImageMemory;
 		VkImageView m_DepthImageView;
 		VkRenderPass m_RenderPass;
+		VkPresentModeKHR m_CurrentPresentMode;
 
 		[[nodiscard]] Result<> CreateSurface();
 		[[nodiscard]] Result<> CreateSwapchain(const Size2D<>& size);
@@ -93,7 +93,7 @@ namespace zzz::vk
 		[[nodiscard]] Result<> CreateRenderPass();
 		[[nodiscard]] Result<> CreateDepthResources(const Size2D<>& size);
 		[[nodiscard]] Result<> CreateFramebuffers();
-		[[nodiscard]] Result<> RecreateSwapchain(const Size2D<>& size);
+		[[nodiscard]] Result<> RecreateSwapchain();
 		[[nodiscard]] Result<> CreateSyncObjects();
 		void CleanupSwapchain();
 		[[nodiscard]] uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
@@ -120,7 +120,8 @@ namespace zzz::vk
 		m_DepthImageView{ VK_NULL_HANDLE },
 		m_RenderPass{ VK_NULL_HANDLE },
 		m_StagingAcquireSemaphore{ VK_NULL_HANDLE },
-		m_StagingRenderFinishedSemaphore{VK_NULL_HANDLE}
+		m_StagingRenderFinishedSemaphore{VK_NULL_HANDLE},
+		m_CurrentPresentMode{ VK_PRESENT_MODE_FIFO_KHR }
 	{
 		ensure(_iAppWin, "App window cannot be null.");
 		m_iAppWin = std::dynamic_pointer_cast<AppWin_MSWin>(_iAppWin);
@@ -241,6 +242,7 @@ namespace zzz::vk
 		if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount)
 			imageCount = capabilities.maxImageCount;
 
+		m_CurrentPresentMode = (m_GAPI->IsCanDisableVsync() && IsVsync()) ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_MAILBOX_KHR;
 		VkSwapchainCreateInfoKHR createInfo{
 			.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
 			.surface = m_Surface,
@@ -253,7 +255,7 @@ namespace zzz::vk
 			.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
 			.preTransform = capabilities.currentTransform,
 			.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-			.presentMode = m_iGAPI->IsCanDisableVsync() ? VK_PRESENT_MODE_IMMEDIATE_KHR : VK_PRESENT_MODE_FIFO_KHR,
+			.presentMode = m_CurrentPresentMode,
 			.clipped = VK_TRUE,
 			.oldSwapchain = VK_NULL_HANDLE
 		};
@@ -529,44 +531,149 @@ namespace zzz::vk
 		throw_runtime_error("Failed to find suitable memory type");
 	}
 
-	[[nodiscard]] Result<> SurfView_VK_MSWin::RecreateSwapchain(const Size2D<>& size)
+	[[nodiscard]]
+	Result<> SurfView_VK_MSWin::RecreateSwapchain()
 	{
 		VkDevice device = m_VulkanAPI->GetDevice();
-		ensure(device, "Logical device is not initialized.");
+		VkPhysicalDevice physicalDevice = m_VulkanAPI->GetPhysicalDevice();
 
+		ensure(device, "Logical device is not initialized.");
+		ensure(physicalDevice, "Physical device is not initialized.");
+
+		// 1. Дождаться завершения GPU
 		vkDeviceWaitIdle(device);
 
-		// Удаляем старые ресурсы swapchain
-		CleanupSwapchain();
+		// 2. Получить capabilities
+		VkSurfaceCapabilitiesKHR capabilities{};
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+			physicalDevice,
+			m_Surface,
+			&capabilities);
 
-		// Получаем capabilities поверхности
-		VkSurfaceCapabilitiesKHR capabilities;
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_VulkanAPI->GetPhysicalDevice(), m_Surface, &capabilities);
-
-		// Вычисляем новый extent swapchain
+		// 3. Вычислить новый extent
+		VkExtent2D newExtent{};
 		if (capabilities.currentExtent.width != UINT32_MAX)
 		{
-			m_SwapchainExtent = capabilities.currentExtent;
+			newExtent = capabilities.currentExtent;
 		}
 		else
 		{
-			m_SwapchainExtent =
-			{
-				std::clamp(static_cast<uint32_t>(size.width), capabilities.minImageExtent.width, capabilities.maxImageExtent.width),
-				std::clamp(static_cast<uint32_t>(size.height), capabilities.minImageExtent.height, capabilities.maxImageExtent.height)
-			};
+			newExtent.width = std::clamp(
+				static_cast<uint32_t>(m_SurfSize.width),
+				capabilities.minImageExtent.width,
+				capabilities.maxImageExtent.width);
+
+			newExtent.height = std::clamp(
+				static_cast<uint32_t>(m_SurfSize.height),
+				capabilities.minImageExtent.height,
+				capabilities.maxImageExtent.height);
 		}
 
-		// Создаём swapchain с новым extent
-		auto res = CreateSwapchain(Size2D<>(m_SwapchainExtent.width, m_SwapchainExtent.height))
-			.and_then([&]() { return CreateImageViews(); })
-			.and_then([&]() { return CreateDepthResources(Size2D<>(m_SwapchainExtent.width, m_SwapchainExtent.height)); })
-			.and_then([&]() { return CreateFramebuffers(); });
+		if (newExtent.width == 0 || newExtent.height == 0)
+			return {}; // окно минимизировано
 
-		if (!res)
-			return Unexpected(eResult::failure, std::format(L"Failed to recreate swapchain: {}", res.error().getMessage()));
+		m_SwapchainExtent = newExtent;
 
-		return {};
+		// 4. Сохранить старый swapchain
+		VkSwapchainKHR oldSwapchain = m_Swapchain;
+
+		// 5. Очистить зависимые ресурсы
+		for (auto fb : m_Framebuffers)
+			vkDestroyFramebuffer(device, fb, nullptr);
+		m_Framebuffers.clear();
+
+		if (m_DepthImageView)
+			vkDestroyImageView(device, m_DepthImageView, nullptr);
+		if (m_DepthImage)
+			vkDestroyImage(device, m_DepthImage, nullptr);
+		if (m_DepthImageMemory)
+			vkFreeMemory(device, m_DepthImageMemory, nullptr);
+
+		for (auto view : m_SwapchainImageViews)
+			vkDestroyImageView(device, view, nullptr);
+		m_SwapchainImageViews.clear();
+
+		// 6. Выбрать present mode корректно
+		uint32_t presentModeCount = 0;
+		vkGetPhysicalDeviceSurfacePresentModesKHR(
+			physicalDevice,
+			m_Surface,
+			&presentModeCount,
+			nullptr);
+
+		std::vector<VkPresentModeKHR> presentModes(presentModeCount);
+		vkGetPhysicalDeviceSurfacePresentModesKHR(
+			physicalDevice,
+			m_Surface,
+			&presentModeCount,
+			presentModes.data());
+
+		bool wantVsync = m_GAPI->IsCanDisableVsync() && IsVsync();
+		m_CurrentPresentMode = VK_PRESENT_MODE_FIFO_KHR; // гарантирован
+		if (!wantVsync)
+		{
+			for (auto m : presentModes)
+			{
+				if (m == VK_PRESENT_MODE_MAILBOX_KHR)
+				{
+					m_CurrentPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+					break;
+				}
+			}
+		}
+
+		if (m_CurrentPresentMode == VK_PRESENT_MODE_FIFO_KHR)
+			SetVsyncState(true);
+
+		// 7. Создать swapchain
+		uint32_t imageCount = BACK_BUFFER_COUNT;
+		if (capabilities.maxImageCount > 0 &&
+			imageCount > capabilities.maxImageCount)
+		{
+			imageCount = capabilities.maxImageCount;
+		}
+
+		VkSwapchainCreateInfoKHR createInfo{
+			.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+			.surface = m_Surface,
+			.minImageCount = imageCount,
+			.imageFormat = BACK_BUFFER_FORMAT,
+			.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+			.imageExtent = newExtent,
+			.imageArrayLayers = 1,
+			.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+			.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
+			.preTransform = capabilities.currentTransform,
+			.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+			.presentMode = m_CurrentPresentMode,
+			.clipped = VK_TRUE,
+			.oldSwapchain = oldSwapchain
+		};
+
+		VkResult vr = vkCreateSwapchainKHR(
+			device,
+			&createInfo,
+			nullptr,
+			&m_Swapchain);
+
+		if (vr != VK_SUCCESS)
+			return Unexpected(
+				eResult::failure,
+				std::format(L"Failed to recreate swapchain ({})", int(vr)));
+
+		// 8. Удалить старый swapchain
+		if (oldSwapchain)
+			vkDestroySwapchainKHR(device, oldSwapchain, nullptr);
+
+		// 9. Получить новые изображения
+		vkGetSwapchainImagesKHR(device, m_Swapchain, &imageCount, nullptr);
+		m_SwapchainImages.resize(imageCount);
+		vkGetSwapchainImagesKHR(device, m_Swapchain, &imageCount, m_SwapchainImages.data());
+
+		// 10. Пересоздать зависимые ресурсы
+		return CreateImageViews()
+			.and_then([&] { return CreateDepthResources(Size2D<>(newExtent.width, newExtent.height)); })
+			.and_then([&] { return CreateFramebuffers(); });
 	}
 #pragma endregion Initialize
 
@@ -584,7 +691,7 @@ namespace zzz::vk
 
 		if (vr == VK_ERROR_OUT_OF_DATE_KHR)
 		{
-			auto res = RecreateSwapchain(m_SurfSize);
+			auto res = RecreateSwapchain();
 			if (!res)
 				throw_runtime_error("Failed to recreate swapchain");
 
@@ -654,17 +761,31 @@ namespace zzz::vk
 		VkResult vr = vkQueuePresentKHR(m_VulkanAPI->GetGraphicsQueue(), &presentInfo);
 		if (vr == VK_ERROR_OUT_OF_DATE_KHR || vr == VK_SUBOPTIMAL_KHR)
 		{
-			if (auto res = RecreateSwapchain(m_SurfSize); !res)
+			if (auto res = RecreateSwapchain(); !res)
 				throw_runtime_error("Failed to recreate swapchain");
 		}
 		else if (vr != VK_SUCCESS)
 			throw_runtime_error("vkQueuePresentKHR failed");
+
+		// TODO: надо будет переделывать вынося логику в глобальный код
+		// Отлавливаем переключение состояния Vsync
+		if (m_GAPI->IsCanDisableVsync())
+		{
+			if (m_CurrentPresentMode == VK_PRESENT_MODE_FIFO_KHR && !IsVsync())
+			{
+				auto res = RecreateSwapchain();
+			}
+			else if (IsVsync())
+			{
+				auto res = RecreateSwapchain();
+			}
+		}
 	}
 #pragma endregion Rendering
 
 	void SurfView_VK_MSWin::OnResize(const Size2D<>& size)
 	{
-		if (m_iGAPI->GetInitState() != eInitState::InitOK)
+		if (m_GAPI->GetInitState() != eInitState::InitOK)
 			return;
 
 		if (size.width == 0 || size.height == 0)
@@ -675,11 +796,10 @@ namespace zzz::vk
 
 		vkDeviceWaitIdle(device);
 
-		auto res = RecreateSwapchain(size);
+		m_SurfSize = size;
+		auto res = RecreateSwapchain();
 		if (!res)
 			throw_runtime_error(std::format("[SurfView_VK_MSWin::OnResize] {}", wstring_to_string(res.error().getMessage())));
-
-		m_SurfSize = size;
 	}
 
 	void SurfView_VK_MSWin::SetFullScreen(bool fs)
@@ -687,13 +807,5 @@ namespace zzz::vk
 		// TODO: Implement fullscreen switching for Vulkan
 		DebugOutput(std::format(L"[SurfView_VK_MSWin::SetFullScreen({})] Not implemented yet\n", fs).c_str());
 	}
-
-	void SurfView_VK_MSWin::SetVSync(bool vs)
-	{
-		if (m_iGAPI->IsCanDisableVsync())
-			b_IsVSync = vs;
-		else
-			b_IsVSync = true; // Если отключение VSync не поддерживается, всегда включаем его
-	};
 }
 #endif // ZRENDER_API_VULKAN

@@ -47,7 +47,7 @@ namespace zzz
 				names[static_cast<size_t>(gapiType)] : L"Unknown"sv;
 		}
 		[[nodiscard]] constexpr std::wstring_view GetAPIName() const noexcept { return GetAPIName(m_GapiType); }
-		[[nodiscard]] inline bool IsCanDisableVsync() const noexcept { return b_IsCanDisableVsync; } // Поддерживается ли отключение вертикальной синхронизации
+		[[nodiscard]] inline bool IsCanDisableVsync() const noexcept { return b_IsCanDisableVsync; }
 		inline const std::shared_ptr<GAPIConfig>& GetConfig()  const noexcept { return m_Config; };
 		[[nodiscard]] inline const IDeviceCapabilities& GetGapiSupportChecker() const noexcept { return *m_CheckGapiSupport; }
 

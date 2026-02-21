@@ -19,7 +19,6 @@ namespace zzz::core
 
 	public:
 		explicit ISurfView(std::shared_ptr<IGAPI> _iGAPI);
-
 		virtual ~ISurfView() = default;
 
 		[[nodiscard]] virtual Result<> Initialize() = 0;
@@ -28,12 +27,25 @@ namespace zzz::core
 		virtual void OnResize(const Size2D<>& size) = 0;
 
 		virtual void SetFullScreen(bool fs) {};
-		virtual void SetVsyncState(bool vs) = 0;
-		inline bool GetVsyncState() const noexcept { return m_IsVsync; }
+		void SetVsyncState(bool vss) noexcept
+		{
+			if (m_IsVsync == vss)
+				return;
+
+			if (m_GAPI->IsCanDisableVsync())
+				m_IsVsync = vss;
+			else
+				m_IsVsync = true;
+
+			m_GAPI->GetConfig()->SetVSyncEnabledOnStartup(m_IsVsync);
+		}
+		inline bool IsVsync() const noexcept { return m_IsVsync; }
 
 	protected:
 		std::shared_ptr<IGAPI> m_GAPI;
 		Size2D<> m_SurfSize;
+
+	private:
 		bool m_IsVsync;
 	};
 
@@ -44,9 +56,6 @@ namespace zzz::core
 	{
 		ensure(m_GAPI, "GAPI cannot be null.");
 
-		m_IsVsync = !(m_GAPI->GetConfig()->IsStartupEnableVsync());
-
-		int i = 0;
-		i++;
+		m_IsVsync = m_GAPI->GetConfig()->GetVSyncEnabledOnStartup();
 	}
 }

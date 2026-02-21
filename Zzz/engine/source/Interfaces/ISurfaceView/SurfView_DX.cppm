@@ -128,8 +128,7 @@ namespace zzz::dx
 		void RenderFrame() override;
 		void OnResize(const Size2D<>& size) override;
 
-		void SetFullScreen(bool fs) override;
-		void SetVsyncState(bool vs) override;
+		void SetFullScreen(bool fss) override;
 
 	private:
 		std::shared_ptr<AppWin_MSWin> m_iAppWin;
@@ -140,7 +139,6 @@ namespace zzz::dx
 		static constexpr UINT SWAP_CHAIN_FLAGS = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 
 		bool m_IgnoreResize;
-		bool m_TearingSupported;
 		std::mutex m_FrameMutex;
 		std::condition_variable m_FrameCV;
 		bool m_FrameReady;
@@ -176,7 +174,6 @@ namespace zzz::dx
 		std::shared_ptr<IGAPI> _iGAPI)
 		: ISurfView(_iGAPI),
 		m_IgnoreResize{ false },
-		m_TearingSupported{ false },
 		m_RtvDescrSize{ 0 },
 		m_DsvDescrSize{ 0 },
 		m_CbvSrvDescrSize{ 0 },
@@ -235,7 +232,7 @@ namespace zzz::dx
 
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_RtvHeap->GetCPUDescriptorHandleForHeapStart());
 
-		// Create a RTV for each frame.
+		// Create RTV for each frame.
 		for (UINT n = 0; n < BACK_BUFFER_COUNT; n++)
 		{
 			HRESULT hr = m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n]));
@@ -253,20 +250,6 @@ namespace zzz::dx
 
 	Result<> SurfView_DX::InitializeSwapChain()
 	{
-		BOOL allowTearing = FALSE;
-		ComPtr<IDXGIFactory5> factory5;
-
-		if (SUCCEEDED(m_DXGAPI->GetFactory().As(&factory5)))
-		{
-			if (SUCCEEDED(factory5->CheckFeatureSupport(
-				DXGI_FEATURE_PRESENT_ALLOW_TEARING,
-				&allowTearing,
-				sizeof(allowTearing))))
-			{
-				m_TearingSupported = allowTearing == TRUE;
-			}
-		}
-
 		auto winSize = m_iAppWin->GetWinSize();
 		DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 		swapChainDesc.Width = static_cast<UINT>(winSize.width);
@@ -278,7 +261,7 @@ namespace zzz::dx
 		swapChainDesc.Scaling = DXGI_SCALING_NONE;
 		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 		swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
-		swapChainDesc.Flags = m_TearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
+		swapChainDesc.Flags = m_GAPI->IsCanDisableVsync() ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
 		ComPtr<IDXGISwapChain1> swapChain1;
 		ensure(S_OK == m_DXGAPI->GetFactory()->CreateSwapChainForHwnd(
@@ -575,8 +558,15 @@ namespace zzz::dx
 		// Настраиваем параметры для Present
 		BOOL fullscreen = FALSE;
 		ensure(S_OK == m_swapChain->GetFullscreenState(&fullscreen, nullptr));
-		UINT syncInterval = m_IsVsync ? 1 : 0;
-		UINT presentFlags = (!m_IsVsync && !fullscreen && m_TearingSupported) ? DXGI_PRESENT_ALLOW_TEARING : 0;
+
+		UINT syncInterval = 0;
+		UINT presentFlags = DXGI_PRESENT_ALLOW_TEARING;
+		if (IsVsync())
+		{
+			syncInterval = 1;
+			presentFlags = 0;
+		}
+
 		HRESULT hr = m_swapChain->Present(syncInterval, presentFlags);
 		if (FAILED(hr))
 		{
@@ -665,7 +655,7 @@ namespace zzz::dx
 				static_cast<UINT>(size.width),
 				static_cast<UINT>(size.height),
 				DXGI_FORMAT_R8G8B8A8_UNORM,
-				m_TearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
+				m_GAPI->IsCanDisableVsync() ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
 		}
 		if (S_OK != hr)
 			throw_runtime_error(std::format("[SurfView_DX::OnResize({}x{})].", size.width, size.height));
@@ -679,19 +669,19 @@ namespace zzz::dx
 		m_SurfSize = size;
 	}
 
-	void SurfView_DX::SetFullScreen(bool fs)
+	void SurfView_DX::SetFullScreen(bool fss)
 	{
 		BOOL fullscreen = FALSE;
 		HRESULT hr = m_swapChain->GetFullscreenState(&fullscreen, nullptr);
 		if (FAILED(hr))
 		{
-			DebugOutput(std::format(L"[SurfView_DX::SetFullScreen({})] Failed to get fullscreen state. HRESULT = 0x{:08X}\n", fs, hr).c_str());
+			DebugOutput(std::format(L"[SurfView_DX::SetFullScreen({})] Failed to get fullscreen state. HRESULT = 0x{:08X}\n", fss, hr).c_str());
 			return;
 		}
 
-		if (fs == static_cast<bool>(fullscreen))
+		if (fss == static_cast<bool>(fullscreen))
 		{
-			DebugOutput(std::format(L"[SurfView_DX::SetFullScreen({})] Fullscreen state is already set.\n", fs).c_str());
+			DebugOutput(std::format(L"[SurfView_DX::SetFullScreen({})] Fullscreen state is already set.\n", fss).c_str());
 			return;
 		}
 
@@ -699,14 +689,14 @@ namespace zzz::dx
 		ResetRTVandDS();
 
 		m_IgnoreResize = true;
-		hr = m_swapChain->SetFullscreenState(fs, nullptr);
+		hr = m_swapChain->SetFullscreenState(fss, nullptr);
 		if (S_OK != hr)
 		{
 			m_IgnoreResize = false;
-			DebugOutput(std::format(L"[SurfView_DX::SetFullScreen({})] Failed to set fullscreen state.HRESULT = 0x{:08X}\n", fs, hr).c_str());
+			DebugOutput(std::format(L"[SurfView_DX::SetFullScreen({})] Failed to set fullscreen state.HRESULT = 0x{:08X}\n", fss, hr).c_str());
 			auto res = RecreateRenderTargetsAndDepth();
 			if (!res)
-				throw_runtime_error(std::format("#0 [SurfView_DX::SetFullScreen({})]. Failed to recreate render targets and depth stencil View. {}.", fs, wstring_to_string(res.error().getMessage())));
+				throw_runtime_error(std::format("#0 [SurfView_DX::SetFullScreen({})]. Failed to recreate render targets and depth stencil View. {}.", fss, wstring_to_string(res.error().getMessage())));
 
 			return;
 		}
@@ -716,7 +706,7 @@ namespace zzz::dx
 		hr = m_swapChain->GetDesc(&desc);
 		if (S_OK != hr)
 		{
-			DebugOutput(std::format(L"[SurfView_DX::SetFullScreen({})] Failed to get swap chain description. HRESULT = 0x{:08X}\n", fs, hr).c_str());
+			DebugOutput(std::format(L"[SurfView_DX::SetFullScreen({})] Failed to get swap chain description. HRESULT = 0x{:08X}\n", fss, hr).c_str());
 			return;
 		}
 
@@ -727,27 +717,15 @@ namespace zzz::dx
 			desc.Flags);
 		if (S_OK != hr)
 		{
-			DebugOutput(std::format(L"[SurfView_DX::SetFullScreen({})] Failed to resize buffers. HRESULT = 0x{:08X}\n", fs, hr).c_str());
+			DebugOutput(std::format(L"[SurfView_DX::SetFullScreen({})] Failed to resize buffers. HRESULT = 0x{:08X}\n", fss, hr).c_str());
 			return;
 		}
 
 		auto res = RecreateRenderTargetsAndDepth()
 			.and_then([&]() { return m_DXGAPI->CommandRenderReinitialize(); })
-			.or_else([&](const Unexpected& error) { throw_runtime_error(std::format("[SurfView_DX::SetFullScreen({})]. Failed: {}.", fs, wstring_to_string(error.getMessage()))); });	
+			.or_else([&](const Unexpected& error) { throw_runtime_error(std::format("[SurfView_DX::SetFullScreen({})]. Failed: {}.", fss, wstring_to_string(error.getMessage()))); });	
 
-		DebugOutput(std::format(L"[SurfView_DX::SetFullScreen({})].\n", fs).c_str());
+		DebugOutput(std::format(L"[SurfView_DX::SetFullScreen({})].\n", fss).c_str());
 	}
-
-	void SurfView_DX::SetVsyncState(bool vs)
-	{
-		// Если поддерживается отключение и в уонфиге разрешено использование
-		if (m_GAPI->IsCanDisableVsync() &&
-			m_GAPI->GetConfig()->IsSupportsTearing())
-		{
-			m_IsVsync = vs;
-		}
-		else
-			m_IsVsync = true;
-	};
 }
 #endif // defined(ZRENDER_API_D3D12)

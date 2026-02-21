@@ -55,6 +55,7 @@ namespace zzz::input
 
 	protected:
 		void OnKeyStateChanged(KeyCode key, KeyState state);
+		void OnFocus(bool focus);
 
 		KeyButtonWatcher Keys[static_cast<int>(KeyCode::Count)];
 	};
@@ -65,5 +66,14 @@ namespace zzz::input
 	{
 		//DebugOutput(std::format(L">>>>> [IKeyboard::OnKeyStateChanged()]. Key: {}, state: {}.", ToString(key), ToString(state)));
  		Keys[static_cast<int>(key)].SetState(state);
+	}
+
+	void IKeyboard::OnFocus(bool focus)
+	{
+		if (!focus)
+		{
+			for (auto& key : Keys)
+				key.SetState(KeyState::Up);
+		}
 	}
 }
