@@ -29,13 +29,7 @@ public:
 
 	void OnKeyDown_F2()
 	{
-		auto resGet = m_Engine.GetFullScreenState();
-		if (resGet)
-		{
-			auto resSet = m_Engine.SetFullScreenState(!resGet.value());
-			if (!resSet)
-				DOut(L"");
-		}
+		m_Engine.SetFullScreenState(!m_Engine.GetFullScreenState());
 	}
 
 	void OnUpdate(float deltaTime) override

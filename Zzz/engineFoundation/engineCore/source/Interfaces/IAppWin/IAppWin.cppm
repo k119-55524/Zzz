@@ -29,7 +29,7 @@ export namespace zzz::core
 
 		[[nodiscard]] inline bool IsActive() { return b_IsWinActive; };
 		const Size2D<> GetWinSize() const noexcept { return m_WinSize; }
-		virtual Result<> SetFullScreenState(bool fss) = 0;
+		virtual void SetFullScreenState(bool fss) = 0;
 		[[nodiscard]] virtual bool GetFullScreenState() const noexcept = 0;
 		virtual void SetCaptionText(std::wstring caption) = 0;
 		virtual void AddCaptionText(std::wstring caption) = 0;

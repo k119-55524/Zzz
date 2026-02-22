@@ -16,7 +16,7 @@ import SurfView_DX;
 using namespace zzz::dx;
 #elif defined(ZRENDER_API_VULKAN)
 import VKAPI;
-import SurfView_VK_MSWin;
+import SurfView_VK;
 using namespace zzz::vk;
 #else
 #error ">>>>> [ViewFactory file]. Compile error. This branch requires implementation for the current platform"
@@ -72,7 +72,7 @@ export namespace zzz
 #if defined(ZRENDER_API_D3D12)
 			return safe_make_shared<SurfView_DX>(_iAppWin, _iGAPI);
 #elif defined(ZRENDER_API_VULKAN)
-			return safe_make_shared<SurfView_VK_MSWin>(_iAppWin, _iGAPI);
+			return safe_make_shared<SurfView_VK>(_iAppWin, _iGAPI);
 #else
 #error ">>>>> [ViewFactory.CreateSurfaceWin()]. Compile error. This branch requires implementation for the current platform"
 #endif // defined(ZPLATFORM_MSWINDOWS)

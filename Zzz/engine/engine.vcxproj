@@ -197,7 +197,7 @@
     <ClCompile Include="source\Interfaces\ISurfaceView\SurfView_DX.cppm" />
     <ClCompile Include="source\renderQueue\RenderVolume.cppm" />
     <ClCompile Include="source\Interfaces\IRenderLayers\IRenderLayer.cppm" />
-    <ClCompile Include="source\Interfaces\ISurfaceView\SurfView_VK_MSWin.cppm" />
+    <ClCompile Include="source\Interfaces\ISurfaceView\SurfView_VK.cppm" />
     <ClCompile Include="source\Material.cppm" />
     <ClCompile Include="source\resources\CPUIndexBuffer.cppm" />
     <ClCompile Include="source\resources\CPUMesh.cppm" />

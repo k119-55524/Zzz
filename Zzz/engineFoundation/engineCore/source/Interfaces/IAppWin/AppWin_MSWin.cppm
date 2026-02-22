@@ -28,7 +28,7 @@ export namespace zzz::core
 
 		const HWND GetHWND() const noexcept { return hWnd; }
 
-		Result<> SetFullScreenState(bool fss) override;
+		void SetFullScreenState(bool fss) override;
 		[[nodiscard]] bool GetFullScreenState() const noexcept override { return m_FullScreenState; };
 		void SetCaptionText(std::wstring caption) override;
 		void AddCaptionText(std::wstring caption) override;
@@ -467,10 +467,10 @@ export namespace zzz::core
 		OnKeyStateChanged(key, state);
 	}
 
-	Result<> AppWin_MSWin::SetFullScreenState(bool fss)
+	void AppWin_MSWin::SetFullScreenState(bool fss)
 	{
 		if (fss == m_FullScreenState)
-			return {};
+			return;
 
 		static RECT m_WindowedRect{};
 		static DWORD m_WindowedStyle{};
@@ -504,7 +504,5 @@ export namespace zzz::core
 		}
 
 		m_FullScreenState = fss;
-
-		return {};
 	}
 }

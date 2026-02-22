@@ -167,7 +167,7 @@
     <ClCompile Include="source\Interfaces\IShader\Shader_VK.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="source\Interfaces\ISurfaceView\SurfView_VK_MSWin.cppm">
+    <ClCompile Include="source\Interfaces\ISurfaceView\SurfView_VK.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>

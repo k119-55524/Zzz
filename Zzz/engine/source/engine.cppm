@@ -80,22 +80,18 @@ export namespace zzz
 		inline bool GetVSyncState() const noexcept
 		{
 			ensure(initState != eInitState::InitOK, "Cannot get VSync state before initialization");
-
 			return m_Config->GetGAPIConfig()->GetVSyncEnabledOnStartup();
 		};
-		inline Result<> SetFullScreenState(bool fss)
+		inline void SetFullScreenState(bool fss)
 		{
 			ensure(initState != eInitState::InitOK, "Initialization required before setting fullscreen mode.");
-
-			return m_View->SetFullScreenState(fss);
+			m_View->SetFullScreenState(fss);
 		}
-		inline Result<bool> GetFullScreenState()
+		inline bool GetFullScreenState()
 		{
 			ensure(initState != eInitState::InitOK, "Initialization required before getting fullscreen mode.");
-
 			return m_View->GetFullScreenState();
 		}
-
 
 	private:
 		EngineFactory m_EngineFactory;

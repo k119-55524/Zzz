@@ -1,4 +1,4 @@
-export module SurfView_VK_MSWin;
+export module SurfView_VK;
 
 #if defined(ZRENDER_API_VULKAN)
 
@@ -53,13 +53,13 @@ namespace zzz::vk
 		Matrix4x4 WorldViewProj;
 	};
 
-	export class SurfView_VK_MSWin final : public ISurfView
+	export class SurfView_VK final : public ISurfView
 	{
-		Z_NO_COPY_MOVE(SurfView_VK_MSWin);
+		Z_NO_COPY_MOVE(SurfView_VK);
 
 	public:
-		explicit SurfView_VK_MSWin(std::shared_ptr<IAppWin> _iAppWin, std::shared_ptr<IGAPI> _iGAPI);
-		~SurfView_VK_MSWin() override;
+		explicit SurfView_VK(std::shared_ptr<IAppWin> _iAppWin, std::shared_ptr<IGAPI> _iGAPI);
+		~SurfView_VK() override;
 
 		[[nodiscard]] Result<> Initialize() override;
 		void PrepareFrame(const std::shared_ptr<RenderQueue> renderQueue) override;
@@ -108,7 +108,7 @@ namespace zzz::vk
 		uint32_t m_PreparedImageIndex = 0;
 	};
 
-	SurfView_VK_MSWin::SurfView_VK_MSWin(
+	SurfView_VK::SurfView_VK(
 		std::shared_ptr<IAppWin> _iAppWin,
 		std::shared_ptr<IGAPI> _iGAPI)
 		: ISurfView(_iGAPI),
@@ -129,7 +129,7 @@ namespace zzz::vk
 		ensure(m_VulkanAPI, "Failed to cast IGAPI to VKAPI.");
 	}
 
-	SurfView_VK_MSWin::~SurfView_VK_MSWin()
+	SurfView_VK::~SurfView_VK()
 	{
 		VkDevice device = m_VulkanAPI->GetDevice();
 		if (!device)
@@ -174,7 +174,7 @@ namespace zzz::vk
 	}
 
 #pragma region Initialize
-	Result<> SurfView_VK_MSWin::Initialize()
+	Result<> SurfView_VK::Initialize()
 	{
 		auto winSize = m_iAppWin->GetWinSize();
 		m_SurfSize.SetFrom(winSize);
@@ -193,22 +193,52 @@ namespace zzz::vk
 		return {};
 	}
 
-	[[nodiscard]] Result<> SurfView_VK_MSWin::CreateSurface()
+	[[nodiscard]] Result<> SurfView_VK::CreateSurface()
 	{
+		VkResult vr = VK_SUCCESS;
+
+#if defined(ZPLATFORM_MSWINDOWS)
 		VkWin32SurfaceCreateInfoKHR createInfo{
 			.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
 			.hinstance = GetModuleHandle(nullptr),
 			.hwnd = m_iAppWin->GetHWND()
 		};
+		vr = vkCreateWin32SurfaceKHR(m_VulkanAPI->GetInstance(), &createInfo, nullptr, &m_Surface);
 
-		VkResult vr = vkCreateWin32SurfaceKHR(m_VulkanAPI->GetInstance(), &createInfo, nullptr, &m_Surface);
+#elif defined(ZPLATFORM_ANDROID)
+		VkAndroidSurfaceCreateInfoKHR createInfo{
+			.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR,
+			.window = m_NativeWindow  // ANativeWindow*
+		};
+		vr = vkCreateAndroidSurfaceKHR(m_VulkanAPI->GetInstance(), &createInfo, nullptr, &m_Surface);
+
+#elif defined(ZPLATFORM_LINUX)
+#if defined(USE_WAYLAND)
+		VkWaylandSurfaceCreateInfoKHR createInfo{
+			.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR,
+			.display = m_WaylandDisplay,  // wl_display*
+			.surface = m_WaylandSurface   // wl_surface*
+		};
+		vr = vkCreateWaylandSurfaceKHR(m_VulkanAPI->GetInstance(), &createInfo, nullptr, &m_Surface);
+#else
+		VkXcbSurfaceCreateInfoKHR createInfo{
+			.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR,
+			.connection = m_XcbConnection, // xcb_connection_t*
+			.window = m_XcbWindow          // xcb_window_t
+		};
+		vr = vkCreateXcbSurfaceKHR(m_VulkanAPI->GetInstance(), &createInfo, nullptr, &m_Surface);
+#endif
+#else
+#error ">>>>> [Compile error]. This branch requires implementation for the current platform"
+#endif
+
 		if (vr != VK_SUCCESS)
 			return Unexpected(eResult::failure, std::format(L"Failed to create surface ({})", int(vr)));
 
 		return {};
 	}
 
-	[[nodiscard]] Result<> SurfView_VK_MSWin::CreateSwapchain(const Size2D<>& size)
+	[[nodiscard]] Result<> SurfView_VK::CreateSwapchain(const Size2D<>& size)
 	{
 		VkPhysicalDevice physicalDevice = m_VulkanAPI->GetPhysicalDevice();
 		VkDevice device = m_VulkanAPI->GetDevice();
@@ -270,7 +300,7 @@ namespace zzz::vk
 		return {};
 	}
 
-	[[nodiscard]] Result<> SurfView_VK_MSWin::CreateImageViews()
+	[[nodiscard]] Result<> SurfView_VK::CreateImageViews()
 	{
 		VkDevice device = m_VulkanAPI->GetDevice();
 		ensure(device, "Logical device is not initialized.");
@@ -307,7 +337,7 @@ namespace zzz::vk
 		return {};
 	}
 
-	[[nodiscard]] Result<> SurfView_VK_MSWin::CreateRenderPass()
+	[[nodiscard]] Result<> SurfView_VK::CreateRenderPass()
 	{
 		VkDevice device = m_VulkanAPI->GetDevice();
 
@@ -377,7 +407,7 @@ namespace zzz::vk
 		return {};
 	}
 
-	[[nodiscard]] Result<> SurfView_VK_MSWin::CreateDepthResources(const Size2D<>& size)
+	[[nodiscard]] Result<> SurfView_VK::CreateDepthResources(const Size2D<>& size)
 	{
 		VkDevice device = m_VulkanAPI->GetDevice();
 		VkPhysicalDevice physicalDevice = m_VulkanAPI->GetPhysicalDevice();
@@ -440,7 +470,7 @@ namespace zzz::vk
 		return {};
 	}
 
-	[[nodiscard]] Result<> SurfView_VK_MSWin::CreateFramebuffers()
+	[[nodiscard]] Result<> SurfView_VK::CreateFramebuffers()
 	{
 		VkDevice device = m_VulkanAPI->GetDevice();
 		m_Framebuffers.resize(m_SwapchainImageViews.size());
@@ -470,7 +500,7 @@ namespace zzz::vk
 		return {};
 	}
 
-	Result<> SurfView_VK_MSWin::CreateSyncObjects()
+	Result<> SurfView_VK::CreateSyncObjects()
 	{
 		VkDevice device = m_VulkanAPI->GetDevice();
 		VkSemaphoreCreateInfo semInfo{ .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
@@ -494,7 +524,7 @@ namespace zzz::vk
 		return {};
 	}
 
-	void SurfView_VK_MSWin::CleanupSwapchain()
+	void SurfView_VK::CleanupSwapchain()
 	{
 		VkDevice device = m_VulkanAPI->GetDevice();
 
@@ -515,7 +545,7 @@ namespace zzz::vk
 			vkDestroySwapchainKHR(device, m_Swapchain, nullptr);
 	}
 
-	[[nodiscard]] uint32_t SurfView_VK_MSWin::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
+	[[nodiscard]] uint32_t SurfView_VK::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
 	{
 		VkPhysicalDeviceMemoryProperties memProperties;
 		vkGetPhysicalDeviceMemoryProperties(m_VulkanAPI->GetPhysicalDevice(), &memProperties);
@@ -530,7 +560,7 @@ namespace zzz::vk
 	}
 
 	[[nodiscard]]
-	Result<> SurfView_VK_MSWin::RecreateSwapchain()
+	Result<> SurfView_VK::RecreateSwapchain()
 	{
 		VkDevice device = m_VulkanAPI->GetDevice();
 		VkPhysicalDevice physicalDevice = m_VulkanAPI->GetPhysicalDevice();
@@ -673,7 +703,7 @@ namespace zzz::vk
 #pragma endregion Initialize
 
 #pragma region Rendering
-	void SurfView_VK_MSWin::PrepareFrame(const std::shared_ptr<RenderQueue> renderQueue)
+	void SurfView_VK::PrepareFrame(const std::shared_ptr<RenderQueue> renderQueue)
 	{
 		VkDevice device = m_VulkanAPI->GetDevice();
 
@@ -724,7 +754,7 @@ namespace zzz::vk
 		m_FrameReady.notify_one();
 	}
 
-	void SurfView_VK_MSWin::RenderFrame()
+	void SurfView_VK::RenderFrame()
 	{
 		uint32_t imageIndex;
 		{
@@ -764,7 +794,7 @@ namespace zzz::vk
 	}
 #pragma endregion Rendering
 
-	void SurfView_VK_MSWin::OnResize(const Size2D<>& size)
+	void SurfView_VK::OnResize(const Size2D<>& size)
 	{
 		if (m_GAPI->GetInitState() != eInitState::InitOK)
 			return;
@@ -780,10 +810,10 @@ namespace zzz::vk
 		m_SurfSize = size;
 		auto res = RecreateSwapchain();
 		if (!res)
-			throw_runtime_error(std::format("[SurfView_VK_MSWin::OnResize] {}", wstring_to_string(res.error().getMessage())));
+			throw_runtime_error(std::format("[SurfView_VK::OnResize] {}", wstring_to_string(res.error().getMessage())));
 	}
 
-	[[nodiscard]] Result<> SurfView_VK_MSWin::OnUpdateVSyncState()
+	[[nodiscard]] Result<> SurfView_VK::OnUpdateVSyncState()
 	{
 		return RecreateSwapchain();
 	};
