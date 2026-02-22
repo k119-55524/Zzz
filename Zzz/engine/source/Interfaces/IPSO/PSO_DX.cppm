@@ -8,6 +8,7 @@ import DXAPI;
 import Ensure;
 import IShader;
 import Shader_DirectX;
+import EngineConstants;
 import PrimitiveTopology;
 import VertexFormatMapper;
 

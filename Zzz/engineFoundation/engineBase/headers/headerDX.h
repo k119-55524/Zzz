@@ -80,9 +80,6 @@ namespace zzz::dx
 	};
 }
 
-static constexpr DXGI_FORMAT BACK_BUFFER_FORMAT = DXGI_FORMAT_R8G8B8A8_UNORM;
-static constexpr DXGI_FORMAT DEPTH_FORMAT = DXGI_FORMAT_D32_FLOAT;
-
 #pragma region Обёртки над структурами DirectX
 namespace zzz::dx
 {

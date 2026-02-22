@@ -71,15 +71,14 @@ namespace zzz::vk
 		std::shared_ptr<AppWin_MSWin> m_iAppWin;
 		std::shared_ptr<VKAPI> m_VulkanAPI;
 
-		static constexpr VkFormat BACK_BUFFER_FORMAT = VK_FORMAT_B8G8R8A8_UNORM;
-		static constexpr VkFormat DEPTH_FORMAT = VK_FORMAT_D32_SFLOAT;
-
 		VkSurfaceKHR m_Surface;
 		VkSwapchainKHR m_Swapchain;
 		VkExtent2D m_SwapchainExtent;
 		std::vector<VkImage> m_SwapchainImages;
 		std::vector<VkImageView> m_SwapchainImageViews;
 		std::vector<VkFramebuffer> m_Framebuffers;
+		VkFormat m_ChosenSwapchainFormat;
+		VkFormat m_ChosenDepthFormat;
 
 		VkImage m_DepthImage;
 		VkDeviceMemory m_DepthImageMemory;
@@ -242,8 +241,6 @@ namespace zzz::vk
 	{
 		VkPhysicalDevice physicalDevice = m_VulkanAPI->GetPhysicalDevice();
 		VkDevice device = m_VulkanAPI->GetDevice();
-		ensure(physicalDevice, "Physical device is not initialized.");
-		ensure(device, "Logical device is not initialized.");
 
 		VkSurfaceCapabilitiesKHR capabilities;
 		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_Surface, &capabilities);
@@ -270,12 +267,27 @@ namespace zzz::vk
 		if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount)
 			imageCount = capabilities.maxImageCount;
 
+		uint32_t formatCount = 0;
+		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface, &formatCount, nullptr);
+		std::vector<VkSurfaceFormatKHR> formats(formatCount);
+		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface, &formatCount, formats.data());
+
+		m_ChosenSwapchainFormat = formats[0].format; // fallback
+		for (auto& pf : PREFERRED_FORMATS) {
+			for (auto& f : formats) {
+				if (f.format == pf && f.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+					m_ChosenSwapchainFormat = f.format;
+					break;
+				}
+			}
+		}
+
 		auto presentMode = m_GAPI->IsVSyncEnabled() ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_MAILBOX_KHR;
 		VkSwapchainCreateInfoKHR createInfo{
 			.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
 			.surface = m_Surface,
 			.minImageCount = imageCount,
-			.imageFormat = BACK_BUFFER_FORMAT,
+			.imageFormat = m_ChosenSwapchainFormat,
 			.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
 			.imageExtent = extent,
 			.imageArrayLayers = 1,
@@ -302,18 +314,17 @@ namespace zzz::vk
 
 	[[nodiscard]] Result<> SurfView_VK::CreateImageViews()
 	{
+		VkPhysicalDevice physicalDevice = m_VulkanAPI->GetPhysicalDevice();
 		VkDevice device = m_VulkanAPI->GetDevice();
-		ensure(device, "Logical device is not initialized.");
 
 		m_SwapchainImageViews.resize(m_SwapchainImages.size());
-
 		for (size_t i = 0; i < m_SwapchainImages.size(); i++)
 		{
 			VkImageViewCreateInfo createInfo{
 				.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
 				.image = m_SwapchainImages[i],
 				.viewType = VK_IMAGE_VIEW_TYPE_2D,
-				.format = BACK_BUFFER_FORMAT,
+				.format = m_ChosenSwapchainFormat,
 				.components = {
 					.r = VK_COMPONENT_SWIZZLE_IDENTITY,
 					.g = VK_COMPONENT_SWIZZLE_IDENTITY,
@@ -339,10 +350,11 @@ namespace zzz::vk
 
 	[[nodiscard]] Result<> SurfView_VK::CreateRenderPass()
 	{
+		VkPhysicalDevice physicalDevice = m_VulkanAPI->GetPhysicalDevice();
 		VkDevice device = m_VulkanAPI->GetDevice();
 
 		VkAttachmentDescription colorAttachment{
-			.format = BACK_BUFFER_FORMAT,
+			.format = m_ChosenSwapchainFormat,
 			.samples = VK_SAMPLE_COUNT_1_BIT,
 			.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
 			.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
@@ -352,8 +364,19 @@ namespace zzz::vk
 			.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 		};
 
+		for (auto fmt : PREFERRED_DEPTH_FORMATS)
+		{
+			VkFormatProperties props;
+			vkGetPhysicalDeviceFormatProperties(physicalDevice, fmt, &props);
+			if (props.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
+			{
+				m_ChosenDepthFormat = fmt;
+				break;
+			}
+		}
+
 		VkAttachmentDescription depthAttachment{
-			.format = DEPTH_FORMAT,
+			.format = m_ChosenDepthFormat,
 			.samples = VK_SAMPLE_COUNT_1_BIT,
 			.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
 			.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
@@ -415,7 +438,7 @@ namespace zzz::vk
 		VkImageCreateInfo imageInfo{
 			.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 			.imageType = VK_IMAGE_TYPE_2D,
-			.format = DEPTH_FORMAT,
+			.format = m_ChosenDepthFormat,
 			.extent = {
 				m_SwapchainExtent.width,	//.width = static_cast<uint32_t>(size.width),
 				m_SwapchainExtent.height,	//.height = static_cast<uint32_t>(size.height),
@@ -453,7 +476,7 @@ namespace zzz::vk
 			.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
 			.image = m_DepthImage,
 			.viewType = VK_IMAGE_VIEW_TYPE_2D,
-			.format = DEPTH_FORMAT,
+			.format = m_ChosenDepthFormat,
 			.subresourceRange = {
 				.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
 				.baseMipLevel = 0,
@@ -662,7 +685,7 @@ namespace zzz::vk
 			.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
 			.surface = m_Surface,
 			.minImageCount = imageCount,
-			.imageFormat = BACK_BUFFER_FORMAT,
+			.imageFormat = m_ChosenSwapchainFormat,
 			.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
 			.imageExtent = newExtent,
 			.imageArrayLayers = 1,
@@ -745,7 +768,9 @@ namespace zzz::vk
 		};
 
 		vkCmdBeginRenderPass(cmd, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
+
 		vkCmdEndRenderPass(cmd);
+
 		{
 			std::lock_guard lock(m_FrameMutex);
 			m_PreparedImageIndex = imageIndex;

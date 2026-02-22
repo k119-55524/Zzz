@@ -55,6 +55,14 @@ namespace zzz
 		{
 		}
 
+		explicit Unexpected(
+			std::wstring message,
+			const std::source_location& loc = std::source_location::current()) noexcept
+			: m_code(eResult::failure)
+			, m_message(FormatMessage(std::move(message), loc))
+		{
+		}
+
 		template<typename... Args>
 		Unexpected(
 			eResult code,

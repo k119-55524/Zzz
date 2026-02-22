@@ -33,8 +33,7 @@ namespace zzz
 		explicit IGAPI(const std::shared_ptr<GAPIConfig>& config, eGAPIType type);
 		virtual ~IGAPI() = default;
 
-		[[nodiscard]] eInitState GetInitState() const noexcept { return m_InitState; }
-
+		[[nodiscard]] inline eInitState GetInitState() const noexcept { return m_InitState; }
 		[[nodiscard]] constexpr eGAPIType GetGAPIType() const noexcept { return m_GapiType; }
 		[[nodiscard]] inline bool IsCanDisableVSync() const noexcept { return m_IsCanDisableVSync; }
 		[[nodiscard]] inline bool IsVSyncEnabled() { return m_Config->GetVSyncEnabledOnStartup() && m_IsCanDisableVSync; };
