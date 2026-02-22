@@ -76,7 +76,7 @@ namespace zzz
 		m_IndexFrameRender{ 0 },
 		m_IndexFrameUpdate{ 1 }
 	{
-		ensure(config, "GAPIConfig cannot be null.");
+		ensure(m_Config, "GAPIConfig cannot be null.");
 	}
 
 	Result<> IGAPI::Initialize()

@@ -129,9 +129,6 @@ namespace zzz::dx
 		void RenderFrame() override;
 		void OnResize(const Size2D<>& size) override;
 
-		[[nodiscard]] Result<> SetFullScreenState(bool fss) override;
-		[[nodiscard]] Result<bool> GetFullScreenState() const override;
-
 	private:
 		std::shared_ptr<AppWin_MSWin> m_iAppWin;
 		std::shared_ptr<DXAPI> m_DXGAPI;
@@ -562,11 +559,24 @@ namespace zzz::dx
 		ensure(S_OK == m_swapChain->GetFullscreenState(&fullscreen, nullptr));
 
 		UINT syncInterval = 0;
-		UINT presentFlags = DXGI_PRESENT_ALLOW_TEARING;
-		if (m_GAPI->IsVSyncEnabled())
+		UINT presentFlags = 0;
+
+		if (fullscreen)
 		{
-			syncInterval = 1;
-			presentFlags = 0;
+			// В fullscreen tearing запрещён
+			syncInterval = m_GAPI->IsVSyncEnabled() ? 1 : 0;
+		}
+		else
+		{
+			if (m_GAPI->IsVSyncEnabled())
+			{
+				syncInterval = 1;
+			}
+			else
+			{
+				syncInterval = 0;
+				presentFlags = DXGI_PRESENT_ALLOW_TEARING;
+			}
 		}
 
 		HRESULT hr = m_swapChain->Present(syncInterval, presentFlags);
@@ -671,69 +681,78 @@ namespace zzz::dx
 		m_SurfSize = size;
 	}
 
-	[[nodiscard]] Result<> SurfView_DX::SetFullScreenState(bool fss)
-	{
-		BOOL fullscreen = FALSE;
-		HRESULT hr = m_swapChain->GetFullscreenState(&fullscreen, nullptr);
-		if (FAILED(hr))
-			return Unexpected(L"Failed to get fullscreen state. HRESULT = 0x{:08X}\n", fss, hr);
+#pragma region Deprecated
+	//[[nodiscard]] Result<> SurfView_DX::SetFullScreenState(bool fss)
+	//{
+	//	BOOL fullscreen = FALSE;
+	//	HRESULT hr = m_swapChain->GetFullscreenState(&fullscreen, nullptr);
+	//	if (FAILED(hr))
+	//		return Unexpected(L"Failed to get fullscreen state. HRESULT = 0x{:08X}\n", fss, hr);
 
-		if (fss == static_cast<bool>(fullscreen))
-		{
-			DOut(L"Fullscreen state is already set.\n", fss);
-			return {};
-		}
+	//	if (fss == static_cast<bool>(fullscreen))
+	//	{
+	//		DOut(L"Fullscreen state is already set.\n", fss);
+	//		return {};
+	//	}
 
-		m_DXGAPI->CommandRenderReset();
-		ResetRTVandDS();
+	//	m_DXGAPI->CommandRenderReset();
+	//	ResetRTVandDS();
 
-		m_IgnoreResize = true;
-		hr = m_swapChain->SetFullscreenState(fss, nullptr);
-		if (FAILED(hr))
-		{
-			m_IgnoreResize = false;
-			DOut(L"Failed to set {} in fullscreen state.HRESULT = 0x{:08X}\n", fss, hr);
-			auto res = RecreateRenderTargetsAndDepth();
-			if (!res)
-				throw_runtime_error(std::format("#0 [SurfView_DX::SetFullScreen({})]. Failed to recreate render targets and depth stencil View. {}.", fss, wstring_to_string(res.error().getMessage())));
+	//	m_IgnoreResize = true;
+	//	hr = m_swapChain->SetFullscreenState(fss, nullptr);
+	//	if (FAILED(hr))
+	//	{
+	//		m_IgnoreResize = false;
+	//		DOut(L"Failed to set {} in fullscreen state.HRESULT = 0x{:08X}\n", fss, hr);
+	//		auto res = RecreateRenderTargetsAndDepth();
+	//		if (!res)
+	//			throw_runtime_error(std::format("#0 [SurfView_DX::SetFullScreen({})]. Failed to recreate render targets and depth stencil View. {}.", fss, wstring_to_string(res.error().getMessage())));
 
-			return {};
-		}
-		m_IgnoreResize = false;
+	//		return {};
+	//	}
+	//	m_IgnoreResize = false;
 
-		DXGI_SWAP_CHAIN_DESC desc{};
-		hr = m_swapChain->GetDesc(&desc);
-		if (FAILED(hr))
-		{
-			DOut(L"[SurfView_DX::SetFullScreen({})] Failed to get swap chain description. HRESULT = 0x{:08X}\n", fss, hr);
-			return {};
-		}
+	//	DXGI_SWAP_CHAIN_DESC desc{};
+	//	hr = m_swapChain->GetDesc(&desc);
+	//	if (FAILED(hr))
+	//	{
+	//		DOut(L"[SurfView_DX::SetFullScreen({})] Failed to get swap chain description. HRESULT = 0x{:08X}\n", fss, hr);
+	//		return {};
+	//	}
 
-		hr = m_swapChain->ResizeBuffers(
-			desc.BufferCount,
-			0, 0, // авто определение размеров
-			desc.BufferDesc.Format,
-			desc.Flags);
-		if (FAILED(hr))
-		{
-			DOut(L"[SurfView_DX::SetFullScreen({})] Failed to resize buffers. HRESULT = 0x{:08X}\n", fss, hr);
-			return {};
-		}
+	//	hr = m_swapChain->ResizeBuffers(
+	//		desc.BufferCount,
+	//		0, 0, // авто определение размеров
+	//		desc.BufferDesc.Format,
+	//		desc.Flags);
+	//	if (FAILED(hr))
+	//	{
+	//		DOut(L"[SurfView_DX::SetFullScreen({})] Failed to resize buffers. HRESULT = 0x{:08X}\n", fss, hr);
+	//		return {};
+	//	}
 
-		return RecreateRenderTargetsAndDepth()
-			.and_then([&]() { return m_DXGAPI->CommandRenderReinitialize(); })
-			.and_then([&]() { DOut(L"SetFullScreenState({}): succeeded.\n", fss); })
-			.or_else([&](const Unexpected& error) { throw_runtime_error(std::format("SetFullScreenState({}): Failed: {}.", fss, wstring_to_string(error.getMessage()))); });
-	}
+	//	ComPtr<ID3D12Resource> backBuffer;
+	//	ensure(S_OK == m_swapChain->GetBuffer(0, IID_PPV_ARGS(&backBuffer)));
 
-	[[nodiscard]] Result<bool> SurfView_DX::GetFullScreenState() const
-	{
-		BOOL fullscreen = FALSE;
-		HRESULT hr = m_swapChain->GetFullscreenState(&fullscreen, nullptr);
-		if (FAILED(hr))
-			return Unexpected(L"Failed to get fullscreen state. HRESULT = 0x{:08X}\n", hr);
+	//	auto bbDesc = backBuffer->GetDesc();
 
-		return static_cast<bool>(fullscreen);
-	}
+	//	m_SurfSize.Set(bbDesc.Width, bbDesc.Height);
+
+	//	return RecreateRenderTargetsAndDepth()
+	//		.and_then([&]() { return m_DXGAPI->CommandRenderReinitialize(); })
+	//		.and_then([&]() { DOut(L"SetFullScreenState({}): succeeded.\n", fss); })
+	//		.or_else([&](const Unexpected& error) { throw_runtime_error(std::format("SetFullScreenState({}): Failed: {}.", fss, wstring_to_string(error.getMessage()))); });
+	//}
+
+	//[[nodiscard]] Result<bool> SurfView_DX::GetFullScreenState() const
+	//{
+	//	BOOL fullscreen = FALSE;
+	//	HRESULT hr = m_swapChain->GetFullscreenState(&fullscreen, nullptr);
+	//	if (FAILED(hr))
+	//		return Unexpected(L"Failed to get fullscreen state. HRESULT = 0x{:08X}\n", hr);
+
+	//	return static_cast<bool>(fullscreen);
+	//}
+#pragma endregion
 }
 #endif // defined(ZRENDER_API_D3D12)

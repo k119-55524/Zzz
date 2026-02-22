@@ -26,8 +26,6 @@ namespace zzz::core
 		virtual void RenderFrame() = 0;
 		virtual void OnResize(const Size2D<>& size) = 0;
 		[[nodiscard]] virtual Result<> OnUpdateVSyncState() { return {}; };
-		[[nodiscard]] virtual Result<> SetFullScreenState(bool fss) { return {}; };
-		[[nodiscard]] virtual Result<bool> GetFullScreenState() const { return true; };
 
 	protected:
 		std::shared_ptr<IGAPI> m_GAPI;

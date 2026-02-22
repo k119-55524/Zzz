@@ -28,6 +28,8 @@ export namespace zzz::core
 
 		const HWND GetHWND() const noexcept { return hWnd; }
 
+		Result<> SetFullScreenState(bool fss) override;
+		[[nodiscard]] bool GetFullScreenState() const noexcept override { return m_FullScreenState; };
 		void SetCaptionText(std::wstring caption) override;
 		void AddCaptionText(std::wstring caption) override;
 
@@ -44,6 +46,7 @@ export namespace zzz::core
 	private:
 		HWND hWnd;
 		bool IsMinimized;
+		bool m_FullScreenState;
 
 		bool mouseInside;
 
@@ -60,7 +63,8 @@ export namespace zzz::core
 		IAppWin(config),
 		hWnd{ nullptr },
 		IsMinimized{ true },
-		mouseInside{ false }
+		mouseInside{ false },
+		m_FullScreenState{ false }
 	{
 		SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 	}
@@ -175,7 +179,7 @@ export namespace zzz::core
 			PostQuitMessage(0);
 			return 0;
 
-		// Обрабатываем изменение размера окна после того, как пользователь закончил его изменять.
+		// Обрабатываем изменение размера окна
 		case WM_SIZE:
 		{
 			m_WinSize.width = static_cast<zU64>(LOWORD(lParam));
@@ -246,10 +250,13 @@ export namespace zzz::core
 				prcNewWindow->bottom - prcNewWindow->top,
 				SWP_NOZORDER | SWP_NOACTIVATE);
 
-			m_WinSize.width = static_cast<zU64>(prcNewWindow->right - prcNewWindow->left);
-			m_WinSize.height = static_cast<zU64>(prcNewWindow->bottom - prcNewWindow->top);
-			OnResize(m_WinSize, eTypeWinResize::Resize);
+			RECT clientRect;
+			GetClientRect(hWnd, &clientRect);
 
+			m_WinSize.width = clientRect.right - clientRect.left;
+			m_WinSize.height = clientRect.bottom - clientRect.top;
+
+			OnResize(m_WinSize, eTypeWinResize::Resize);
 			return 0;
 		}
 
@@ -458,5 +465,46 @@ export namespace zzz::core
 		KeyState state = pressed ? KeyState::Down : KeyState::Up;
 
 		OnKeyStateChanged(key, state);
+	}
+
+	Result<> AppWin_MSWin::SetFullScreenState(bool fss)
+	{
+		if (fss == m_FullScreenState)
+			return {};
+
+		static RECT m_WindowedRect{};
+		static DWORD m_WindowedStyle{};
+
+		if (fss)
+		{
+			m_WindowedStyle = GetWindowLong(hWnd, GWL_STYLE);
+			GetWindowRect(hWnd, &m_WindowedRect);
+
+			MONITORINFO mi{ sizeof(mi) };
+			GetMonitorInfo(MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST), &mi);
+
+			SetWindowLong(hWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+			SetWindowPos(hWnd, HWND_TOP,
+				mi.rcMonitor.left,
+				mi.rcMonitor.top,
+				mi.rcMonitor.right - mi.rcMonitor.left,
+				mi.rcMonitor.bottom - mi.rcMonitor.top,
+				SWP_FRAMECHANGED);
+		}
+		else
+		{
+			SetWindowLong(hWnd, GWL_STYLE, m_WindowedStyle);
+
+			SetWindowPos(hWnd, nullptr,
+				m_WindowedRect.left,
+				m_WindowedRect.top,
+				m_WindowedRect.right - m_WindowedRect.left,
+				m_WindowedRect.bottom - m_WindowedRect.top,
+				SWP_FRAMECHANGED);
+		}
+
+		m_FullScreenState = fss;
+
+		return {};
 	}
 }

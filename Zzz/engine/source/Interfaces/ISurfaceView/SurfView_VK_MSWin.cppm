@@ -66,7 +66,6 @@ namespace zzz::vk
 		void RenderFrame() override;
 		void OnResize(const Size2D<>& size) override;
 		[[nodiscard]] Result<> OnUpdateVSyncState() override;
-		void SetFullScreen(bool fs) override;
 
 	private:
 		std::shared_ptr<AppWin_MSWin> m_iAppWin;
@@ -782,12 +781,6 @@ namespace zzz::vk
 		auto res = RecreateSwapchain();
 		if (!res)
 			throw_runtime_error(std::format("[SurfView_VK_MSWin::OnResize] {}", wstring_to_string(res.error().getMessage())));
-	}
-
-	void SurfView_VK_MSWin::SetFullScreen(bool fs)
-	{
-		// TODO: Implement fullscreen switching for Vulkan
-		DOut(std::format(L"[SurfView_VK_MSWin::SetFullScreen({})] Not implemented yet\n", fs).c_str());
 	}
 
 	[[nodiscard]] Result<> SurfView_VK_MSWin::OnUpdateVSyncState()

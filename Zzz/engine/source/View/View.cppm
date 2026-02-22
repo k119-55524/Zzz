@@ -53,8 +53,8 @@ namespace zzz
 
 		void OnUpdate(double deltaTime);
 		Result<> OnUpdateVSyncState() { return m_RenderSurface->OnUpdateVSyncState(); };
-		[[nodiscard]] Result<> SetFullScreenState(bool fss);
-		[[nodiscard]] Result<bool> GetFullScreenState() const;
+		[[nodiscard]] inline  Result<> SetFullScreenState(bool fss) { return m_Window->SetFullScreenState(fss); };
+		[[nodiscard]] bool GetFullScreenState() const { return m_Window->GetFullScreenState(); };
 		inline void SetViewCaptionText(std::wstring caption) { if (m_Window != nullptr) m_Window->SetCaptionText(caption); };
 		inline void AddViewCaptionText(std::wstring caption) { if (m_Window != nullptr) m_Window->AddCaptionText(caption); };
 
@@ -115,9 +115,6 @@ namespace zzz
 			if (!res)
 				throw_runtime_error(wstring_to_string(res.error().getMessage()));
 
-			// TODO: В будущем надо будет учитывать настройки рендеринга из конфигурации
-			Size2D<zF32> size;
-			size.SetFrom(m_Window->GetWinSize());
 			m_ViewSetup = safe_make_shared<ViewSetup>(true);
 			m_ViewSetup->ActivateClearColor(colors::DarkMidnightBlue);
 			m_RenderQueue = safe_make_shared<RenderQueue>(m_ViewSetup, m_RenderLayers);
@@ -188,28 +185,6 @@ namespace zzz
 		viewResized(size, resizeType);
 		if (m_RenderSurface)
 			m_RenderSurface->OnResize(size);
-	}
-
-	[[nodiscard]] Result<> View::SetFullScreenState(bool fss)
-	{
-		if (initState != eInitState::InitOK)
-			Unexpected(L"Requires successful initialization.");
-
-		if (!m_RenderSurface)
-			return Unexpected(L"RenderSurface is null.");
-
-		return m_RenderSurface->SetFullScreenState(fss);
-	}
-
-	[[nodiscard]] Result<bool> View::GetFullScreenState() const
-	{
-		if (initState != eInitState::InitOK)
-			Unexpected(L"Requires successful initialization.");
-
-		if (!m_RenderSurface)
-			return Unexpected(L"RenderSurface is null.");
-
-		return m_RenderSurface->GetFullScreenState();
 	}
 
 	Result<std::shared_ptr<UserLayer3D>> View::AddLayer_3D()
