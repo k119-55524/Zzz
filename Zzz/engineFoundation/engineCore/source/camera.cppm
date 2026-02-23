@@ -159,7 +159,7 @@ export namespace zzz
 			return m_ViewMatrix;
 		}
 
-		inline const Matrix4x4& GetProjectionMatrix(Size2D<>& surfSize) const noexcept
+		inline const Matrix4x4& GetProjectionMatrix(const Size2D<>& surfSize) const noexcept
 		{
 			float currentAspect = m_AspectRatio;
 			if (m_AspectPreset == eAspectType::FullWindow)

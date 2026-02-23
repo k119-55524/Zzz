@@ -67,8 +67,6 @@ export namespace zzz
 
 		try
 		{
-			auto gariType = _iGAPI->GetGAPIType();
-
 #if defined(ZRENDER_API_D3D12)
 			return safe_make_shared<SurfView_DX>(_iAppWin, _iGAPI);
 #elif defined(ZRENDER_API_VULKAN)

@@ -11,14 +11,31 @@ export namespace zzz
 		if (str.empty())
 			return std::wstring();
 
-		// Определяем размер необходимого буфера для широкой строки
-		int size_needed = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), nullptr, 0);
-		if (size_needed == 0)
-			return Unexpected(eResult::failure, L">>>>> [to_wstring( ... )]. MultiByteToWideChar failed.");
+		// Определяем размер буфера
+		const int size_needed = ::MultiByteToWideChar(
+			CP_UTF8,
+			MB_ERR_INVALID_CHARS,
+			str.data(),
+			static_cast<int>(str.size()),
+			nullptr,
+			0);
 
-		// Выделяем буфер и выполняем преобразование
-		std::wstring wstr(size_needed, 0);
-		MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, &wstr[0], size_needed);
+		if (size_needed <= 0)
+			return Unexpected(eResult::failure, L">>>>> [to_wstring(...)]. MultiByteToWideChar failed.");
+
+		// Выделяем буфер
+		std::wstring wstr(static_cast<size_t>(size_needed), L'\0');
+
+		const int converted = ::MultiByteToWideChar(
+			CP_UTF8,
+			MB_ERR_INVALID_CHARS,
+			str.data(),
+			static_cast<int>(str.size()),
+			wstr.data(),
+			size_needed);
+
+		if (converted != size_needed)
+			return Unexpected(eResult::failure, L">>>>> [to_wstring(...)]. MultiByteToWideChar conversion failed.");
 
 		return wstr;
 	}
@@ -42,11 +59,35 @@ export namespace zzz
 		if (wstr.empty())
 			return {};
 
-		int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), nullptr, 0, nullptr, nullptr);
-		std::string str(size_needed, 0);
-		WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), str.data(), size_needed, nullptr, nullptr);
+		const int size_needed = ::WideCharToMultiByte(
+			CP_UTF8,
+			WC_ERR_INVALID_CHARS,
+			wstr.data(),
+			static_cast<int>(wstr.size()),
+			nullptr,
+			0,
+			nullptr,
+			nullptr);
 
-		return str;
+		if (size_needed <= 0)
+			throw std::runtime_error("WideCharToMultiByte size query failed.");
+
+		std::string result(static_cast<size_t>(size_needed), '\0');
+
+		const int converted = ::WideCharToMultiByte(
+			CP_UTF8,
+			WC_ERR_INVALID_CHARS,
+			wstr.data(),
+			static_cast<int>(wstr.size()),
+			result.data(),
+			size_needed,
+			nullptr,
+			nullptr);
+
+		if (converted != size_needed)
+			throw std::runtime_error("WideCharToMultiByte conversion failed.");
+
+		return result;
 	}
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"

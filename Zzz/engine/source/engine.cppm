@@ -23,6 +23,7 @@ import Size2D;
 import Colors;
 import AppTime;
 import IMainLoop;
+import GAPIConfig;
 import ThreadPool;
 import ZamlConfig;
 import ZamlParser;
@@ -51,7 +52,7 @@ namespace zzz
 
 export namespace zzz
 {
-	export class Engine
+	class Engine
 	{
 	public:
 		Engine();
@@ -61,7 +62,7 @@ export namespace zzz
 		[[nodiscard]] Result<> Run() noexcept;
 
 		[[nodiscard]] std::shared_ptr<UserView> GetMainView() { return m_UserView; }
-		inline void SetVSyncState(bool vss)
+		inline void SetVSyncState(bool vss) const
 		{
 			ensure(initState != eInitState::InitOK, "Initialization required before changing VSync");
 
@@ -82,12 +83,12 @@ export namespace zzz
 			ensure(initState != eInitState::InitOK, "Cannot get VSync state before initialization");
 			return m_Config->GetGAPIConfig()->GetVSyncEnabledOnStartup();
 		};
-		inline void SetFullScreenState(bool fss)
+		inline void SetFullScreenState(bool fss) const
 		{
 			ensure(initState != eInitState::InitOK, "Initialization required before setting fullscreen mode.");
 			m_View->SetFullScreenState(fss);
 		}
-		inline bool GetFullScreenState()
+		inline bool GetFullScreenState() const
 		{
 			ensure(initState != eInitState::InitOK, "Initialization required before getting fullscreen mode.");
 			return m_View->GetFullScreenState();
@@ -111,7 +112,7 @@ export namespace zzz
 
 		std::shared_ptr<UserView> m_UserView;
 
-		ThreadPool transferResToGPU;
+		ThreadPool m_TransferResToGPU;
 		AppTime m_time;
 
 		[[nodiscard]] Result<> Initialize();
@@ -128,7 +129,7 @@ export namespace zzz
 
 	Engine::Engine() :
 		initState{ eInitState::InitNot },
-		transferResToGPU{std::string("Engine"), 1},
+		m_TransferResToGPU{std::string("Engine"), 1},
 		isSysPaused{ true }
 	{
 	}
@@ -157,7 +158,7 @@ export namespace zzz
 	{
 		std::lock_guard<std::mutex> lock(stateMutex);
 
-		if (initState != eInitState::InitNot)
+		if (initState != InitNot)
 			return Unexpected(eResult::failure, L"Re-initialization is not allowed.");
 
 		std::wstring err;
@@ -218,15 +219,15 @@ export namespace zzz
 
 	Result<> Engine::Run() noexcept
 	{
-		std::lock_guard<std::mutex> lock(stateMutex);
+		std::lock_guard lock(stateMutex);
 
-		if (initState != eInitState::InitOK)
+		if (initState != InitOK)
 			return Unexpected(eResult::failure, L"Engine is not initialized.");
 
-		if (initState == eInitState::Running)
+		if (initState == Running)
 			return Unexpected(eResult::failure, L"Engine is already running.");
 
-		initState = eInitState::Running;
+		initState = Running;
 		std::wstring err;
 
 		try
@@ -268,8 +269,8 @@ export namespace zzz
 			//GpuEventScope scope(m_GAPI, std::format(">>>>> [Engine::OnUpdateSystem()]. frame: {}", frame).c_str(), Colors::Blue);
 
 			//Если предыдущий вызов отправки ресурсов GPU завершён и есть ресурсы для отправки в GPU, то запускаем новый
-			if (transferResToGPU.IsCompleted() && m_GAPI->HasResourcesToUpload())
-				transferResToGPU.Submit([&]() { m_GAPI->TranferResourceToGPU(); });
+			if (m_TransferResToGPU.IsCompleted() && m_GAPI->HasResourcesToUpload())
+				m_TransferResToGPU.Submit([&]() { m_GAPI->TranferResourceToGPU(); });
 
 			m_View->OnUpdate(m_time.GetDeltaTime());
 		}

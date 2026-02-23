@@ -6,6 +6,7 @@ export module VKAPI;
 import IGAPI;
 import Ensure;
 import Result;
+import Version;
 import StrConvert;
 import GAPIConfig;
 import GPUUploadVK;

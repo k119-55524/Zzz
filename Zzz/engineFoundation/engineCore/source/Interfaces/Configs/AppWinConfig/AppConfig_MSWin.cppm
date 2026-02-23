@@ -24,7 +24,7 @@ export namespace zzz::core
 		{
 			SetDefaults();
 		}
-		PlatformConfig_MSWin(std::wstring appName, std::wstring className, Size2D<LONG> winSize, std::wstring icoFullPath, int icoSize) :
+		PlatformConfig_MSWin(const std::wstring& appName, const std::wstring& className, const Size2D<LONG>& winSize, const std::wstring& icoFullPath, int icoSize) :
 			m_Version{ 0, 0, 1 },
 			m_AppName{ appName },
 			m_ClassName{ className },

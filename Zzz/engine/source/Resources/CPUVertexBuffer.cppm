@@ -1,13 +1,11 @@
 
-#include "pch.h"
-
 export module CPUVertexBuffer;
 
 import Colors;
 
 using namespace zzz::colors;
 
-export namespace zzz
+namespace zzz
 {
 	// ----- Óíèâåğñàëüíûå ñåìàíòèêè -----
 	export enum class Semantic
@@ -53,10 +51,8 @@ export namespace zzz
 	export template<Semantic S, typename T, size_t N>
 		struct Attribute
 	{
-		static_assert(N >= 1 && N <= 4,
-			">>>>> [struct Attribute]. ÑomponentCount (N) must be in range [1..4]");
-		static_assert(std::is_arithmetic_v<T>,
-			">>>>> [struct Attribute]. Ñomponent type T must be arithmetic (float, int, uint...)");
+		static_assert(N >= 1 && N <= 4, "ÑomponentCount (N) must be in range [1..4]");
+		static_assert(std::is_arithmetic_v<T>, "Ñomponent type T must be arithmetic (float, int, uint...)");
 
 		using type = T;
 		static constexpr Semantic semantic = S;
@@ -214,7 +210,7 @@ export namespace zzz
 
 		CPUVertexBuffer() = default;
 		CPUVertexBuffer(std::initializer_list<VertexT> init) : vertices(init) {}
-		~CPUVertexBuffer() = default;
+		~CPUVertexBuffer() override = default;
 
 		CPUVertexBuffer(CPUVertexBuffer&&) noexcept = default;
 		CPUVertexBuffer& operator=(CPUVertexBuffer&&) noexcept = default;

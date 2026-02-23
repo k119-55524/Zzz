@@ -1,9 +1,7 @@
 
-#include "pch.h"
-
 export module Platforms;
 
-export namespace zzz
+namespace zzz
 {
 	export class Platforms
 	{

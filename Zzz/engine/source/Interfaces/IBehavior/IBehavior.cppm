@@ -13,7 +13,7 @@ namespace zzz
 	export class IBehavior
 	{
 	public:
-		IBehavior(const std::shared_ptr<SceneEntity> entity) :
+		IBehavior(const std::shared_ptr<SceneEntity>& entity) :
 			m_Entity{ entity }
 		{
 		}

@@ -1,6 +1,4 @@
 
-#include "pch.h"
-
 export module ThreadPool;
 
 import Platforms;
@@ -70,7 +68,7 @@ namespace zzz::templates
 			other.lengthQueue = 0;
 		}
 
-		ThreadSafeArrayQueue& operator=(ThreadSafeArrayQueue&& other) noexcept
+		inline ThreadSafeArrayQueue& operator=(ThreadSafeArrayQueue&& other) noexcept
 		{
 			if (this != &other)
 			{
@@ -85,7 +83,7 @@ namespace zzz::templates
 			return *this;
 		}
 
-		void push(const T& value)
+		inline void push(const T& value)
 		{
 			std::lock_guard<std::mutex> lk(mut);
 			threadQueue.PushBack(value);
@@ -94,7 +92,7 @@ namespace zzz::templates
 			cv.notify_one();
 		}
 
-		void push(T&& value)
+		inline void push(T&& value)
 		{
 			std::lock_guard<std::mutex> lk(mut);
 			threadQueue.PushBack(std::move(value));
@@ -103,7 +101,7 @@ namespace zzz::templates
 			cv.notify_one();
 		}
 
-		bool pop(T& value) noexcept
+		inline bool pop(T& value) noexcept
 		{
 			std::lock_guard<std::mutex> lk(mut);
 			if (lengthQueue == 0)
@@ -118,19 +116,29 @@ namespace zzz::templates
 				head = tail = 0;
 				threadQueue.Clear();
 			}
+
 			return true;
 		}
 
-		bool IsEmpty() const noexcept
+		inline bool IsEmpty() const noexcept
 		{
 			std::lock_guard<std::mutex> lk(mut);
 			return lengthQueue == 0;
 		}
 
-		size_t Length() const noexcept
+		inline size_t Length() const noexcept
 		{
 			std::lock_guard<std::mutex> lk(mut);
 			return lengthQueue;
+		}
+
+		inline void clear()
+		{
+			std::lock_guard<std::mutex> lk(mut);
+			head = 0;
+			tail = 0;
+			lengthQueue = 0;
+			threadQueue.Clear();
 		}
 
 	private:
@@ -148,7 +156,7 @@ namespace zzz::templates
 		Z_NO_CREATE_COPY(ThreadPool);
 
 	public:
-		explicit ThreadPool(std::string threadName, size_t threadCount) :
+		explicit ThreadPool(const std::string& threadName, size_t threadCount) :
 			done{ false },
 			threadCount{ threadCount },
 			activeThreadCount{ 0 },
@@ -191,6 +199,9 @@ namespace zzz::templates
 				if (thread.joinable())
 					thread.join();
 			}
+
+			threads.clear();
+			workQueue.clear();
 		}
 
 		template<typename FunctionType, typename... Args>
@@ -236,7 +247,7 @@ namespace zzz::templates
 		std::mutex cv_mutex;
 		std::condition_variable cv;
 
-		void WorkerThread(std::string _threadName, size_t id)
+		void WorkerThread(const std::string& _threadName, size_t id)
 		{
 #if defined(_MSC_VER) && defined(_DEBUG)
 			// Устанавливаем имя потока для отладки только в Visual Studio

@@ -12,7 +12,7 @@ namespace zzz
 	 class GPUResManager;
 }
 
-export namespace zzz
+namespace zzz
 {
 	export class IMeshGPU
 	{
@@ -20,9 +20,9 @@ export namespace zzz
 
 	public:
 		IMeshGPU() = delete;
-		IMeshGPU(std::shared_ptr<CPUMesh> meshCPU);
+		IMeshGPU(const std::shared_ptr<CPUMesh>& meshCPU);
 
-		~IMeshGPU() = default;
+		virtual ~IMeshGPU() = default;
 		inline const std::vector<VertexAttrDescr>& GetInputLayout() const noexcept { return m_MeshCPU->GetInputLayout(); };
 		inline size_t GetVertexCount() const noexcept { return m_VertexCount; };
 		inline size_t GetIndexCount() const noexcept { return m_IndexCount; };
@@ -36,7 +36,7 @@ export namespace zzz
 		virtual Result<> Initialize(std::shared_ptr<IGAPI> _IGAPI) = 0;
 	};
 
-	IMeshGPU::IMeshGPU(std::shared_ptr<CPUMesh> meshCPU) :
+	IMeshGPU::IMeshGPU(const std::shared_ptr<CPUMesh>& meshCPU) :
 		m_MeshCPU{ meshCPU }
 	{
 		ensure(m_MeshCPU, "m_MeshCPU cannot be null.");

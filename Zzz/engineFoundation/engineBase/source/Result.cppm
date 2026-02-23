@@ -124,7 +124,7 @@ namespace zzz
 		std::wstring m_message{};
 
 		static std::wstring FormatMessage(
-			std::wstring msg,
+			const std::wstring& msg,
 			const std::source_location& loc) noexcept
 		{
 			std::wstringstream ss;

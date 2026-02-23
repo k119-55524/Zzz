@@ -1,6 +1,7 @@
 
 export module UserLayer3D;
 
+import Scene;
 import Result;
 import Ensure;
 import Layer3D;
@@ -13,7 +14,7 @@ namespace zzz
 	public:
 		UserLayer3D() = delete;
 		~UserLayer3D() = default;
-		explicit UserLayer3D(const std::shared_ptr<Layer3D> layer) :
+		explicit UserLayer3D(const std::shared_ptr<Layer3D>& layer) :
 			m_Layer{ layer }
 		{
 			ensure(m_Layer, "Layer3D cannot be null.");

@@ -1,11 +1,110 @@
 
+#ifdef _DEBUG
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#endif
+
 import Engine;
 import DebugOutput;
+
+#ifdef _DEBUG
+#ifndef DBG_NEW
+#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )
+#define new DBG_NEW
+#endif
+#endif
 
 using namespace zzz;
 using namespace zzz::math;
 using namespace zzz::core;
 using namespace zzz::input;
+
+#ifdef _DEBUG
+#ifdef _MSC_VER
+_CrtMemState g_memStateVeryEarly;
+bool g_memoryTrackingInit = false;
+
+void __cdecl InitMemoryTracking()
+{
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
+	_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
+	_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG);
+
+	_CrtMemCheckpoint(&g_memStateVeryEarly);
+	g_memoryTrackingInit = true;
+}
+
+void __cdecl TerminateMemoryTracking()
+{
+	if (!g_memoryTrackingInit)
+		return;
+
+	_CrtMemState memStateLate;
+	_CrtMemCheckpoint(&memStateLate);
+
+	_CrtMemState diff;
+	if (_CrtMemDifference(&diff, &g_memStateVeryEarly, &memStateLate))
+	{
+		OutputDebugStringA("=== LEAKS (entire program lifetime) ===\n");
+		_CrtMemDumpStatistics(&diff);
+		_CrtMemDumpAllObjectsSince(&g_memStateVeryEarly);
+	}
+	else
+		OutputDebugStringA("=== NO LEAKS (full program check) ===\n");
+
+	OutputDebugStringA("=== All remaining objects ===\n");
+	_CrtDumpMemoryLeaks();
+}
+
+// MSVC-specific: Регистрация в CRT секциях
+#pragma section(".CRT$XCU", read)
+__declspec(allocate(".CRT$XCU"))
+void(__cdecl* _Pep_Init)() = InitMemoryTracking;
+#pragma section(".CRT$XPA", read)
+__declspec(allocate(".CRT$XPA"))
+void(__cdecl* _Pep_Term)() = TerminateMemoryTracking;
+#else
+class MemoryLeakDetector
+{
+public:
+	_CrtMemState memStateBeforeMain;
+
+	MemoryLeakDetector()
+	{
+		_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+		_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
+		_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
+
+		_CrtMemCheckpoint(&memStateBeforeMain);
+	}
+
+	~MemoryLeakDetector()
+	{
+		_CrtMemState memStateAfter;
+		_CrtMemCheckpoint(&memStateAfter);
+
+		_CrtMemState diff;
+		if (_CrtMemDifference(&diff, &memStateBeforeMain, &memStateAfter))
+		{
+			OutputDebugStringA("=== !!! LEAKS DETECTED !!! ===\n");
+			_CrtMemDumpStatistics(&diff);
+			_CrtMemDumpAllObjectsSince(&memStateBeforeMain);
+		}
+		else
+			OutputDebugStringA("=== NO LEAKS ===\n");
+
+		OutputDebugStringA("=== All remaining objects ===\n");
+		_CrtDumpMemoryLeaks();
+	}
+};
+
+// Глобальный экземпляр - создастся до main, уничтожится после
+static MemoryLeakDetector g_MemoryLeakDetector;
+
+#endif // _MSC_VER
+#endif // _DEBUG
 
 class MyScript : public IBehavior
 {
@@ -64,20 +163,26 @@ int APIENTRY wWinMain(
 	_In_		int			nCmdShow)
 {
 #ifdef _DEBUG
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtSetBreakAlloc(1689);
-	//_CrtSetBreakAlloc(160);
-	//_CrtSetBreakAlloc(202);
-#endif // _DEBUG
-	{
-		std::shared_ptr<UserView> view;
+	// Breakpoints (можно оставить закомментированными)
+	//_CrtSetBreakAlloc(279);
+	//_CrtSetBreakAlloc(278);
+	//_CrtSetBreakAlloc(277);
+	//_CrtSetBreakAlloc(276);
 
+	OutputDebugStringA("\n>>> Entered wWinMain\n");
+
+	// Снимок в начале wWinMain
+	_CrtMemState memStateBegin;
+	_CrtMemCheckpoint(&memStateBegin);
+#endif
+
+	{
 		Engine engine;
 		std::shared_ptr<UserSceneEntity> entity;
 		Result<> res = engine.Initialize(L".\\appdata\\ui.zaml")
 			.and_then([&](void) -> Result<>
 				{
-					view = engine.GetMainView();
+					auto view = engine.GetMainView();
 					auto resLayer = view->AddLayer_3D();
 					if (!resLayer)
 						return Result<>(resLayer.error());
@@ -103,8 +208,19 @@ int APIENTRY wWinMain(
 	}
 
 #ifdef _DEBUG
-	_CrtDumpMemoryLeaks();
-#endif // _DEBUG
+	_CrtMemState memStateEnd;
+	_CrtMemCheckpoint(&memStateEnd);
+
+	_CrtMemState memStateDiff;
+	if (_CrtMemDifference(&memStateDiff, &memStateBegin, &memStateEnd))
+	{
+		OutputDebugStringA("=== LEAKS in wWinMain scope ===\n");
+		_CrtMemDumpStatistics(&memStateDiff);
+		_CrtMemDumpAllObjectsSince(&memStateBegin);
+	}
+	else
+		OutputDebugStringA("=== NO LEAKS in wWinMain scope ===\n");
+#endif
 
 	return 0;
 }

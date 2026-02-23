@@ -79,7 +79,6 @@ namespace zzz::vk
 		std::vector<VkFramebuffer> m_Framebuffers;
 		VkFormat m_ChosenSwapchainFormat;
 		VkFormat m_ChosenDepthFormat;
-
 		VkImage m_DepthImage;
 		VkDeviceMemory m_DepthImageMemory;
 		VkImageView m_DepthImageView;
@@ -111,20 +110,21 @@ namespace zzz::vk
 		std::shared_ptr<IAppWin> _iAppWin,
 		std::shared_ptr<IGAPI> _iGAPI)
 		: ISurfView(_iGAPI),
+		m_iAppWin{ std::dynamic_pointer_cast<AppWin_MSWin>(_iAppWin)} ,
+		m_VulkanAPI{ std::dynamic_pointer_cast<VKAPI>(_iGAPI) },
 		m_Surface{ VK_NULL_HANDLE },
 		m_Swapchain{ VK_NULL_HANDLE },
+		m_ChosenSwapchainFormat{ VK_FORMAT_UNDEFINED },
+		m_ChosenDepthFormat{ VK_FORMAT_UNDEFINED },
 		m_DepthImage{ VK_NULL_HANDLE },
 		m_DepthImageMemory{ VK_NULL_HANDLE },
 		m_DepthImageView{ VK_NULL_HANDLE },
 		m_RenderPass{ VK_NULL_HANDLE },
 		m_StagingAcquireSemaphore{ VK_NULL_HANDLE },
-		m_StagingRenderFinishedSemaphore{VK_NULL_HANDLE}
-	{
-		ensure(_iAppWin, "App window cannot be null.");
-		m_iAppWin = std::dynamic_pointer_cast<AppWin_MSWin>(_iAppWin);
-		ensure(m_iAppWin, "App window must be of type AppWin_MSWin.");
+		m_StagingRenderFinishedSemaphore{ VK_NULL_HANDLE }
 
-		m_VulkanAPI = std::dynamic_pointer_cast<VKAPI>(_iGAPI);
+	{
+		ensure(m_iAppWin, "App window must be of type AppWin_MSWin.");
 		ensure(m_VulkanAPI, "Failed to cast IGAPI to VKAPI.");
 	}
 
@@ -314,7 +314,6 @@ namespace zzz::vk
 
 	[[nodiscard]] Result<> SurfView_VK::CreateImageViews()
 	{
-		VkPhysicalDevice physicalDevice = m_VulkanAPI->GetPhysicalDevice();
 		VkDevice device = m_VulkanAPI->GetDevice();
 
 		m_SwapchainImageViews.resize(m_SwapchainImages.size());
@@ -433,8 +432,6 @@ namespace zzz::vk
 	[[nodiscard]] Result<> SurfView_VK::CreateDepthResources(const Size2D<>& size)
 	{
 		VkDevice device = m_VulkanAPI->GetDevice();
-		VkPhysicalDevice physicalDevice = m_VulkanAPI->GetPhysicalDevice();
-
 		VkImageCreateInfo imageInfo{
 			.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 			.imageType = VK_IMAGE_TYPE_2D,

@@ -17,7 +17,7 @@ namespace zzz
 		friend class Serializer;
 	};
 
-	export class Serializer
+	class Serializer
 	{
 	public:
 		Serializer() = default;

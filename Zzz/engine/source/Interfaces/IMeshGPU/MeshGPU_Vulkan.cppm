@@ -20,14 +20,14 @@ namespace zzz::vk
 
 	public:
 		MeshGPU_Vulkan() = delete;
-		MeshGPU_Vulkan(std::shared_ptr<CPUMesh> meshCPU);
-		~MeshGPU_Vulkan() = default;
+		MeshGPU_Vulkan(std::shared_ptr<CPUMesh>& meshCPU);
+		~MeshGPU_Vulkan() override = default;
 
 	private:
 		Result<> Initialize(std::shared_ptr<IGAPI> _IGAPI) override;
 	};
 
-	MeshGPU_Vulkan::MeshGPU_Vulkan(std::shared_ptr<CPUMesh> meshCPU) :
+	MeshGPU_Vulkan::MeshGPU_Vulkan(std::shared_ptr<CPUMesh>& meshCPU) :
 		IMeshGPU(meshCPU)
 	{
 	}

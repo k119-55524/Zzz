@@ -44,7 +44,7 @@ namespace zzz
 			const std::shared_ptr<SceneEntityFactory> entityFactory,
 			const std::shared_ptr<IGAPI> GAPI);
 
-		~View() = default;
+		~View() {}
 
 		Event<Size2D<>, eTypeWinResize> viewResized;
 		Event<> viewResizing;
@@ -85,8 +85,9 @@ namespace zzz
 		const std::shared_ptr<SceneEntityFactory> entityFactory,
 		const std::shared_ptr<IGAPI> GAPI) :
 		m_WinConfig{ winConfig },
-		m_EntityFactory{ entityFactory },
 		m_GAPI{ GAPI },
+		m_EntityFactory{ entityFactory },
+
 		initState{ eInitState::InitNot },
 		m_ThreadsUpdate{std::string("View"), 2}
 	{

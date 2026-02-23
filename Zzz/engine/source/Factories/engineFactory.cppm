@@ -19,7 +19,7 @@ using namespace zzz::vk;
 
 using namespace zzz::core;
 
-export namespace zzz
+namespace zzz
 {
 	export class EngineFactory final
 	{
@@ -31,18 +31,14 @@ export namespace zzz
 		EngineFactory& operator=(EngineFactory&&) = delete;
 		~EngineFactory() = default;
 
-		[[nodiscard]] Result<std::shared_ptr<IGAPI>> CreateGAPI(const std::shared_ptr<GAPIConfig> config);
-		[[nodiscard]] inline std::shared_ptr<IGAPI> GetGAPI() const noexcept { return m_GAPI; }
-
-	private:
-		std::shared_ptr<IGAPI> m_GAPI;
+		[[nodiscard]] Result<std::shared_ptr<IGAPI>> CreateGAPI(const std::shared_ptr<GAPIConfig>& config);
 	};
 
-	Result<std::shared_ptr<IGAPI>> EngineFactory::CreateGAPI(const std::shared_ptr<GAPIConfig> config)
+	Result<std::shared_ptr<IGAPI>> EngineFactory::CreateGAPI(const std::shared_ptr<GAPIConfig>& config)
 	{
-		if (m_GAPI)
-			return Unexpected(eResult::already_created, L"GAPI already created.");
-
+		static bool isCreate = false;
+		ensure(!isCreate, "GAPI can only be created once.");
+		isCreate = true;
 		ensure(config, "GAPIConfig cannot be null.");
 
 		try
@@ -56,11 +52,10 @@ export namespace zzz
 #error ">>>>> [EngineFactory::CreateGAPI]. Compile error. This branch requires implementation for the current platform"
 #endif
 
-			auto res = igapi->Initialize()
-				.and_then([&]() { m_GAPI = std::move(igapi); })
-				.or_else([&](const Unexpected& error) { throw_runtime_error(std::format("{}", wstring_to_string(error.getMessage()))); });
+			if (auto res = igapi->Initialize(); !res)
+				throw_runtime_error(std::format("{}", wstring_to_string(res.error().getMessage())));
 
-			return m_GAPI;
+			return igapi;
 		}
 		catch (const std::exception& e)
 		{

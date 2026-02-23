@@ -1,6 +1,7 @@
 
 export module StartupConfig;
 
+import Result;
 import GAPIConfig;
 import Serializer;
 import PlatformConfig;
@@ -13,15 +14,17 @@ namespace zzz
 	{
 	public:
 		StartupConfig() = default;
-		explicit StartupConfig(std::shared_ptr<PlatformConfig> appWinConfig, std::shared_ptr<GAPIConfig> gapionfig) :
+		explicit StartupConfig(const std::shared_ptr<PlatformConfig>& appWinConfig, const std::shared_ptr<GAPIConfig>& gapiConfig) :
 			m_AppWinConfig{ appWinConfig },
-			m_GAPIConfig{gapionfig}
+			m_GAPIConfig{gapiConfig}
 		{
 		}
-		~StartupConfig() = default;
+		~StartupConfig() override
+		{
+		};
 
-		const std::shared_ptr<PlatformConfig> GetAppWinConfig() const noexcept { return m_AppWinConfig; }
-		const std::shared_ptr<GAPIConfig> GetGAPIConfig() const noexcept { return m_GAPIConfig; }
+		std::shared_ptr<PlatformConfig> GetAppWinConfig() const noexcept { return m_AppWinConfig; }
+		std::shared_ptr<GAPIConfig> GetGAPIConfig() const noexcept { return m_GAPIConfig; }
 
 	protected:
 		std::shared_ptr<PlatformConfig> m_AppWinConfig;

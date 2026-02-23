@@ -3,6 +3,8 @@ export module Transform;
 
 export import Math;
 
+import Matrix4x4;
+
 using namespace zzz::math;
 
 namespace zzz
@@ -12,8 +14,8 @@ namespace zzz
 	public:
 		Transform() :
 			m_Position{ 0, 0, 0 },
-			m_Scale{ 1, 1, 1 },
 			m_Rotation{ 0, 0, 0 },
+			m_Scale{ 1, 1, 1 },
 			m_IsDirty{ true }
 		{
 		}

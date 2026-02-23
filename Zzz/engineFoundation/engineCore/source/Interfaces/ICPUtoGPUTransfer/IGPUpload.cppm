@@ -3,7 +3,6 @@ export module IGPUUpload;
 
 import Result;
 import QueueArray;
-import ThreadPool;
 import GPUUploadCallbacks;
 
 using namespace zzz::templates;

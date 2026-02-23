@@ -14,13 +14,13 @@ export namespace zzz
 		UserView() = delete;
 		~UserView() = default;
 
-		explicit UserView(const std::shared_ptr<View> view) :
+		explicit UserView(const std::shared_ptr<View>& view) :
 			m_View{ view }
 		{
 			ensure(m_View, "Main view cannot be null.");
 		}
 
-		inline Result<std::shared_ptr<UserLayer3D>> AddLayer_3D() { return m_View->AddLayer_3D(); }
+		inline Result<std::shared_ptr<UserLayer3D>> AddLayer_3D() const noexcept { return m_View->AddLayer_3D(); }
 
 	private:
 		std::shared_ptr<View> m_View;

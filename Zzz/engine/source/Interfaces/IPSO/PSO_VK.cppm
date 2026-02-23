@@ -7,6 +7,7 @@ import IPSO;
 import IGAPI;
 import IShader;
 import PrimitiveTopology;
+import VertexFormatMapper;
 
 namespace zzz::vk
 {
@@ -14,20 +15,20 @@ namespace zzz::vk
 	{
 	public:
 		explicit PSO_VK(
-			const std::shared_ptr<IGAPI> m_GAPI,
-			const std::shared_ptr<IShader> _shader,
-			const std::vector<VertexAttrDescr>& _inputLayout,
+			const std::shared_ptr<IGAPI>& m_GAPI,
+			const std::shared_ptr<IShader>& shader,
+			const std::vector<VertexAttrDescr>& inputLayout,
 			PrimitiveTopology _topo = PrimitiveTopology(eTopology::TriangleList));
 
 		virtual ~PSO_VK() override = default;
 	};
 
 	PSO_VK::PSO_VK(
-		const std::shared_ptr<IGAPI> m_GAPI,
-		const std::shared_ptr<IShader> _shader,
-		const std::vector<VertexAttrDescr>& _inputLayout,
-		PrimitiveTopology _topo) :
-		IPSO(_shader, _inputLayout, _topo)
+		const std::shared_ptr<IGAPI>& m_GAPI,
+		const std::shared_ptr<IShader>& shader,
+		const std::vector<VertexAttrDescr>& inputLayout,
+		PrimitiveTopology topo) :
+		IPSO(shader, inputLayout, topo)
 	{
 		//CreatePSO(m_GAPI);
 	}

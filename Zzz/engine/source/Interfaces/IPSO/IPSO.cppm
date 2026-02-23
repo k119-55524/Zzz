@@ -23,22 +23,22 @@ namespace zzz
 
 	public:
 		IPSO() = delete;
-		explicit IPSO(const std::shared_ptr<IShader> _shader, const std::vector<VertexAttrDescr>& _inputLayout, PrimitiveTopology _topo);
-		virtual ~IPSO() = default;
+		explicit IPSO(const std::shared_ptr<IShader>& shader, const std::vector<VertexAttrDescr>& inputLayout, const PrimitiveTopology& topo);
+		virtual ~IPSO() {};
 
 		const PrimitiveTopology& GetPrimitiveTopology() const noexcept { return m_PrimitiveTopology; }
 
 	protected:
-		const std::shared_ptr<IShader> m_Shader;
-		const std::vector<VertexAttrDescr>& m_InputLayout;
+		std::shared_ptr<IShader> m_Shader;
+		std::vector<VertexAttrDescr> m_InputLayout;
 
 		PrimitiveTopology m_PrimitiveTopology;
 	};
 
-	IPSO::IPSO(const std::shared_ptr<IShader> _shader, const std::vector<VertexAttrDescr>& _inputLayout, PrimitiveTopology _topo) :
-		m_Shader{ _shader },
-		m_InputLayout{ _inputLayout },
-		m_PrimitiveTopology{ _topo }
+	IPSO::IPSO(const std::shared_ptr<IShader>& shader, const std::vector<VertexAttrDescr>& inputLayout, const PrimitiveTopology& topo) :
+		m_Shader{ shader },
+		m_InputLayout{ inputLayout },
+		m_PrimitiveTopology{ topo }
 	{
 		ensure(m_Shader != nullptr, "Shader pointer cannot be null.");
 		ensure(!m_InputLayout.empty(), "Input layout cannot be empty.");

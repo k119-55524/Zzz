@@ -34,7 +34,7 @@ import Shader_DirectX;
 #error ">>>>> [GPUResManager file]. Compile error. This branch requires implementation for the current platform"
 #endif
 
-export namespace zzz
+namespace zzz
 {
 	export class GPUResManager final
 	{
