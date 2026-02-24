@@ -11,12 +11,13 @@ namespace zzz
 	{
 	public:
 		ViewSetup() = delete;
-		ViewSetup(bool isClearrDepth) :
+		ViewSetup(bool isClearDepth) :
 			m_SurfClearType{ eSurfClearType::None },
 			m_ClearColor{ colors::DarkMidnightBlue },
-			b_IsClearDepth{ isClearrDepth }
+			b_IsClearDepth{ isClearDepth }
 		{
 		}
+		~ViewSetup() {}
 
 		inline void ActivateClearColor(const Color& color) noexcept { m_ClearColor = color; m_SurfClearType = eSurfClearType::Color; }
 

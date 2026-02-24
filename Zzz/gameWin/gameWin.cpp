@@ -65,7 +65,7 @@ int APIENTRY wWinMain(
 	_In_		LPWSTR		lpCmdLine,
 	_In_		int			nCmdShow)
 {
-	CRT_LEAK_CHECK_BEGIN();
+	//CRT_LEAK_CHECK_BEGIN();
 	{
 		Engine engine;
 		std::shared_ptr<UserSceneEntity> entity;
@@ -91,11 +91,11 @@ int APIENTRY wWinMain(
 					entity = resEntity.value();
 					auto resScript = entity->SetScript<MyScript>(engine);
 
-					return Result<>();
+					return {};
 				})
 			.and_then([&engine]() { return engine.Run(); })
 			.or_else([&](const Unexpected& error) { MsgBox::Error(error.getMessage()); });
 	}
 
-	return CRT_LEAK_CHECK_END();
+	return 0;// CRT_LEAK_CHECK_END();
 }

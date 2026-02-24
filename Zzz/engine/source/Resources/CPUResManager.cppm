@@ -7,7 +7,7 @@ import CPUMesh;
 import CPUIndexBuffer;
 import CPUVertexBuffer;
 
-export namespace zzz
+namespace zzz
 {
 	export enum MeshType
 	{

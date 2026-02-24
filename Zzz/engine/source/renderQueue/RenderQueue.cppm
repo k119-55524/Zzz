@@ -18,7 +18,7 @@ export namespace zzz
 	export class RenderQueue
 	{
 	public:
-		RenderQueue(const std::shared_ptr<ViewSetup> viewSetup,
+		RenderQueue(const std::shared_ptr<ViewSetup>& viewSetup,
 			std::vector<std::shared_ptr<IRenderLayer>>& m_RenderLayers) :
 			m_ViewSetup{ viewSetup },
 			m_RenderLayers{ m_RenderLayers }
