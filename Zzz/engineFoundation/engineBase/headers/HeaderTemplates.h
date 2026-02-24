@@ -39,7 +39,7 @@ namespace zzz
 	inline std::shared_ptr<T> safe_make_shared(Args&&... args) noexcept(false)
 	{
 		return safe_make_impl(
-			[](auto&&... a) { return std::make_shared<T>(std::forward<decltype(a)>(a)...); },
+			[]<typename... A>(A&&... a) { return std::make_shared<T>(std::forward<A>(a)...); },
 			std::source_location::current(),
 			std::forward<Args>(args)...
 		);
@@ -50,7 +50,7 @@ namespace zzz
 	inline std::unique_ptr<T> safe_make_unique(Args&&... args) noexcept(false)
 	{
 		return safe_make_impl(
-			[](auto&&... a) { return std::make_unique<T>(std::forward<decltype(a)>(a)...); },
+			[]<typename... A>(A&&... a) { return std::make_unique<T>(std::forward<A>(a)...); },
 			std::source_location::current(),
 			std::forward<Args>(args)...
 		);

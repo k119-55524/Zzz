@@ -122,7 +122,7 @@ export namespace zzz
 		void OnUpdateSystem();
 		void OnViewResizing();
 
-		Result<std::shared_ptr<StartupConfig>> GetStartupConfig(std::shared_ptr<ZamlConfig> zamlConfig);
+		Result<std::shared_ptr<StartupConfig>> GetStartupConfig(const std::shared_ptr<ZamlConfig>& zamlConfig);
 
 		PerformanceMeter m_PerfRender;
 	};
@@ -319,7 +319,7 @@ export namespace zzz
 	}
 
 #pragma region Helpers
-	Result<std::shared_ptr<StartupConfig>> Engine::GetStartupConfig(std::shared_ptr<ZamlConfig> zamlConfig)
+	Result<std::shared_ptr<StartupConfig>> Engine::GetStartupConfig(const std::shared_ptr<ZamlConfig>& zamlConfig)
 	{
 		ZamlParser zamlParser;
 		auto res = zamlParser.GetAppWinConfig(zamlConfig);
