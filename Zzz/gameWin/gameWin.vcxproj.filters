@@ -18,6 +18,9 @@
     <ClInclude Include="pch.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="Source\HeaderLeakTrace.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gameWin.cpp">
@@ -26,19 +29,22 @@
     <ClCompile Include="pch.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="Source\MemoryLeakDetector.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="appdata\ui.zaml" />
-    <None Include="appdata\rc\ico_1.jpg">
+    <None Include="AppData\ui.zaml" />
+    <None Include="AppData\rc\ico_1.jpg">
       <Filter>Файлы ресурсов</Filter>
     </None>
-    <None Include="appdata\rc\ico_2.png">
+    <None Include="AppData\rc\ico_2.png">
       <Filter>Файлы ресурсов</Filter>
     </None>
-    <None Include="appdata\rc\ico_3.png">
+    <None Include="AppData\rc\ico_3.png">
       <Filter>Файлы ресурсов</Filter>
     </None>
-    <None Include="appdata\assets\StartScene.scn" />
+    <None Include="AppData\assets\StartScene.scn" />
     <None Include="packages.config" />
   </ItemGroup>
 </Project>

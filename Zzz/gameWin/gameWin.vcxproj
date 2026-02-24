@@ -168,6 +168,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Source\HeaderLeakTrace.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gameWin.cpp" />
@@ -177,6 +178,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_MSWin_Vulkan|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_MSWin_DirectX|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Source\MemoryLeakDetector.cppm" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\engine\engine.vcxproj">
@@ -184,11 +186,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="appdata\assets\StartScene.scn" />
-    <None Include="appdata\ui.zaml" />
-    <None Include="appdata\rc\ico_1.jpg" />
-    <None Include="appdata\rc\ico_2.png" />
-    <None Include="appdata\rc\ico_3.png" />
+    <None Include="AppData\assets\StartScene.scn" />
+    <None Include="AppData\ui.zaml" />
+    <None Include="AppData\rc\ico_1.jpg" />
+    <None Include="AppData\rc\ico_2.png" />
+    <None Include="AppData\rc\ico_3.png" />
     <None Update="appdata\**\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
