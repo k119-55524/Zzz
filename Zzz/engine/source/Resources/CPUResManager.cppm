@@ -21,7 +21,7 @@ namespace zzz
 
 	public:
 		explicit CPUResManager() = default;
-		~CPUResManager() = default;
+		~CPUResManager() {};
 
 		Result<std::shared_ptr<CPUMesh>> GetGenericMesh(MeshType type);
 
@@ -108,7 +108,7 @@ namespace zzz
 		});
 
 		if (!vertex)
-			return Unexpected(eResult::no_make_shared_ptr, L">>>>> [CPUResourcesManager::GetDefaultTriangleMesh()]. Failed to create vertexBufferCPU.");
+			return Unexpected(eResult::no_make_shared_ptr, L"Failed to create vertexBufferCPU.");
 
 		std::shared_ptr<ICPUIndexBuffer> indices =
 			std::make_shared<IndexBuffer16>(std::initializer_list<zU16>{
@@ -139,7 +139,7 @@ namespace zzz
 
 		auto mesh = std::make_shared<CPUMesh>(vertex, indices);
 		if (!mesh)
-			return Unexpected(eResult::no_make_shared_ptr, L">>>>> [CPUResourcesManager::GetDefaultTriangleMesh()]. Failed to create meshCPU.");
+			return Unexpected(eResult::no_make_shared_ptr, L"Failed to create meshCPU.");
 
 		return mesh;
 	}

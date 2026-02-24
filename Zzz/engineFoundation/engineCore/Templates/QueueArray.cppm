@@ -1,6 +1,4 @@
 
-#include "pch.h"
-
 export module QueueArray;
 
 import Platforms;
@@ -45,8 +43,11 @@ export namespace zzz::templates
 		{
 			if (data)
 			{
-				std::destroy_n(data, capacity);
-				_aligned_free(data);
+				if (data)
+				{
+					std::destroy_n(data, capacity);
+					_aligned_free(data);
+				}
 			}
 		}
 
@@ -122,33 +123,32 @@ export namespace zzz::templates
 			size_t newCapacity;
 			if (capacity > std::numeric_limits<size_t>::max() / 2)
 			{
-				// Если capacity слишком большой для роста в 1.5x, пробуем минимальный рост
 				if (capacity >= std::numeric_limits<size_t>::max())
-					throw_overflow_error(">>>>> #0 [ThreadSafeQueueArray::AddSize]. Capacity overflow.");
-
+					throw_overflow_error("Capacity overflow.");
 				newCapacity = std::numeric_limits<size_t>::max();
 			}
 			else
-				newCapacity = capacity + capacity / 2; // Рост в 1.5x
+				newCapacity = capacity + capacity / 2;
 
 			T* newData = static_cast<T*>(_aligned_malloc(newCapacity * sizeof(T), Platforms::ArrayAligment));
 			if (newData == nullptr)
-				throw_runtime_error(">>>>> #1 [ThreadSafeQueueArray::AddSize]. Failed to allocate memory.");
+				throw_runtime_error("Failed to allocate memory.");
 
-			std::uninitialized_default_construct_n(newData, newCapacity);
-			//std::move(data, data + size, newData);
-
+			// Инициализируем только "хвост" — новые элементы за пределами size
 			try
 			{
-				std::uninitialized_move_n(data, size, newData);
+				std::uninitialized_move_n(data, size, newData); // перемещаем существующие
 			}
 			catch (...)
 			{
 				_aligned_free(newData);
-				throw_runtime_error(">>>>> #2 [ThreadSafeQueueArray::AddSize]. Unknown exception.");
+				throw_runtime_error("Unknown exception.");
 			}
 
-			std::destroy_n(data, size);
+			// Инициализируем по умолчанию только новую часть
+			std::uninitialized_default_construct_n(newData + size, newCapacity - size);
+
+			std::destroy_n(data, size); // уничтожаем moved-from объекты в старом буфере
 			_aligned_free(data);
 			data = newData;
 			capacity = newCapacity;

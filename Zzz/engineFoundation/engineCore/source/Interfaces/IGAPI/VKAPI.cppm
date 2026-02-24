@@ -875,7 +875,8 @@ namespace zzz::vk
 
 	void VKAPI::WaitForGpu()
 	{
-		vkDeviceWaitIdle(m_Device);
+		if (m_Device)
+			vkDeviceWaitIdle(m_Device);
 	}
 
 	void VKAPI::EndRender()

@@ -54,7 +54,7 @@ namespace zzz
 
 	protected:
 		[[nodiscard]] virtual Result<> Init() = 0;
-		virtual void WaitForGpu() {};
+		virtual void WaitForGpu() = 0;
 
 		const std::shared_ptr<GAPIConfig> m_Config;
 		eGAPIType m_GapiType;

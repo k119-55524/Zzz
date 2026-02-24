@@ -141,10 +141,10 @@ export namespace zzz
 
 	void Engine::Reset() noexcept
 	{
+		m_GAPI.reset();
 		m_MainLoop.reset();
 		m_View.reset();
 		m_EntityFactory.reset();
-		m_GAPI.reset();
 		m_ResCPU.reset();
 		m_ResGPU.reset();
 		m_ZamlConfig.reset();

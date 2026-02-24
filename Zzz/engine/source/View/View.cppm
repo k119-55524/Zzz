@@ -40,11 +40,19 @@ namespace zzz
 
 	public:
 		View(
-			const std::shared_ptr<PlatformConfig> winConfig,
-			const std::shared_ptr<SceneEntityFactory> entityFactory,
-			const std::shared_ptr<IGAPI> GAPI);
+			const std::shared_ptr<PlatformConfig>& winConfig,
+			const std::shared_ptr<SceneEntityFactory>& entityFactory,
+			const std::shared_ptr<IGAPI>& GAPI);
 
-		~View() {}
+		~View()
+		{
+			m_Input.reset();
+			m_RenderQueue.reset();
+			m_RenderLayers.clear();
+			m_ViewSetup.reset();
+			m_RenderSurface.reset();
+			m_Window.reset();
+		}
 
 		Event<Size2D<>, eTypeWinResize> viewResized;
 		Event<> viewResizing;
@@ -81,9 +89,9 @@ namespace zzz
 	};
 
 	View::View(
-		const std::shared_ptr<PlatformConfig> winConfig,
-		const std::shared_ptr<SceneEntityFactory> entityFactory,
-		const std::shared_ptr<IGAPI> GAPI) :
+		const std::shared_ptr<PlatformConfig>& winConfig,
+		const std::shared_ptr<SceneEntityFactory>& entityFactory,
+		const std::shared_ptr<IGAPI>& GAPI) :
 		m_WinConfig{ winConfig },
 		m_GAPI{ GAPI },
 		m_EntityFactory{ entityFactory },
