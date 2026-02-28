@@ -87,15 +87,6 @@ namespace zzz::vk
 		inline VkQueue GetGraphicsQueue() const noexcept { return m_GraphicsQueue; }
 		inline VkQueue GetComputeQueue() const noexcept { return m_ComputeQueue; }
 		inline VkQueue GetTransferQueue() const noexcept { return m_TransferQueue; }
-		inline VkCommandPool GetGraphicsCommandPool() const noexcept { return m_GraphicsCommandPool; }
-		inline VkCommandPool GetComputeCommandPool() const noexcept { return m_ComputeCommandPool; }
-		inline VkCommandPool GetTransferCommandPool() const noexcept { return m_TransferCommandPool; }
-		inline void SetFrameSyncData(VkSemaphore waitSemaphore, VkSemaphore signalSemaphore) noexcept
-		{
-			m_CurrentWaitSemaphore = waitSemaphore;
-			m_CurrentSignalSemaphore = signalSemaphore;
-		}
-		inline VkCommandBuffer GetGraphicsCBUpdate() const noexcept { return m_GraphicsCommandBuffers[m_IndexFrameRender]; }
 
 		void SubmitCommandLists() override;
 		void BeginRender() override;
@@ -106,16 +97,18 @@ namespace zzz::vk
 		void EndRender() override;
 
 	private:
-		[[nodiscard]] Result<> CreateInstance();
+		[[nodiscard]] Result<> CreateInstance(uint32_t& apiVersion);
 		[[nodiscard]] Result<std::vector<const char*>> GetRequiredExtensions();
 		[[nodiscard]] const char* GetPlatformExtension();
 		[[nodiscard]] Result<> CreateDebugMessenger();
-		[[nodiscard]] Result<> PickPhysicalDevice(Candidate& deviceCandidate, const VkSurfaceKHR& surface);
-		[[nodiscard]] std::optional<Candidate> BestDeviceCandidat(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface);
+		[[nodiscard]] Result<> PickPhysicalDevice(Candidate& deviceCandidate, const VkSurfaceKHR& surface, uint32_t apiVersion);
+		[[nodiscard]] std::optional<Candidate> BestDeviceCandidate(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface, uint32_t apiVersion);
 		[[nodiscard]] Result<> CreateLogicalDevice(const Candidate& deviceCandidate);
+		[[nodiscard]] Result<> CreateAllocator();
+		[[nodiscard]] Result<> CreatePipelineCache();
+		[[nodiscard]] Result<> CreateDescriptorPool();
 		[[nodiscard]] Result<> CreateCommandPools(const Candidate& deviceCandidate);
 		[[nodiscard]] Result<> CreateCommandBuffers();
-		[[nodiscard]] Result<> CreateSyncObjects();
 
 		VkInstance m_Instance;
 		VkPhysicalDevice m_PhysicalDevice;
@@ -125,16 +118,17 @@ namespace zzz::vk
 		VkQueue m_ComputeQueue;
 		VkQueue m_TransferQueue;
 
-		VkCommandPool m_GraphicsCommandPool;
 		VkCommandPool m_TransferCommandPool;
-		VkCommandPool m_ComputeCommandPool;
-		std::vector<VkCommandBuffer> m_GraphicsCommandBuffers;
-		std::vector<VkCommandBuffer> m_ComputeCommandBuffers;
 		std::vector<VkCommandBuffer> m_TransferCommandBuffers;
 
-		std::array<VkFence, BACK_BUFFER_COUNT> m_InFlightFences{};
-		VkSemaphore m_CurrentWaitSemaphore = VK_NULL_HANDLE;
-		VkSemaphore m_CurrentSignalSemaphore = VK_NULL_HANDLE;
+		// === Queue Family Indices Ч нужны при создании ресурсов и барьерах ===
+		uint32_t m_GraphicsQueueFamilyIndex;
+		uint32_t m_TransferQueueFamilyIndex;
+		uint32_t m_ComputeQueueFamilyIndex;
+
+		VmaAllocator m_Allocator;
+		VkPipelineCache m_PipelineCache; // сериализуешь на диск -> экономишь врем€ компил€ции
+		VkDescriptorPool m_GlobalDescriptorPool; // (дл€ долгоживущих дескрипторов: текстуры, глобальные UBO)
 
 #if defined(_DEBUG)
 		VkDebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE;
@@ -159,49 +153,62 @@ namespace zzz::vk
 		m_GraphicsQueue(VK_NULL_HANDLE),
 		m_ComputeQueue(VK_NULL_HANDLE),
 		m_TransferQueue(VK_NULL_HANDLE),
-		m_GraphicsCommandPool(VK_NULL_HANDLE),
 		m_TransferCommandPool(VK_NULL_HANDLE),
-		m_ComputeCommandPool(VK_NULL_HANDLE)
+		m_GraphicsQueueFamilyIndex{ VK_QUEUE_FAMILY_IGNORED },
+		m_TransferQueueFamilyIndex{ VK_QUEUE_FAMILY_IGNORED },
+		m_ComputeQueueFamilyIndex{ VK_QUEUE_FAMILY_IGNORED }
 	{
 		ensure(config, "GAPIConfig cannot be null.");
-
-		for (uint32_t i = 0; i < BACK_BUFFER_COUNT; i++)
-			m_InFlightFences[i] = VK_NULL_HANDLE;
 	}
 
 	VKAPI::~VKAPI()
 	{
 		if (m_Device)
+		{
 			vkDeviceWaitIdle(m_Device);
 
-		for (size_t i = 0; i < BACK_BUFFER_COUNT; i++)
-		{
-			if (m_InFlightFences[i])
-				vkDestroyFence(m_Device, m_InFlightFences[i], nullptr);
+			// Descriptor Pool
+			if (m_GlobalDescriptorPool)
+				vkDestroyDescriptorPool(m_Device, m_GlobalDescriptorPool, nullptr);
+
+			// Pipeline Cache Ч сначала сериализуем
+			if (m_PipelineCache)
+			{
+				size_t dataSize = 0;
+				vkGetPipelineCacheData(m_Device, m_PipelineCache, &dataSize, nullptr);
+				std::vector<char> data(dataSize);
+				vkGetPipelineCacheData(m_Device, m_PipelineCache, &dataSize, data.data());
+				SavePSOCacheToDisk(data);
+				vkDestroyPipelineCache(m_Device, m_PipelineCache, nullptr);
+			}
+
+			// VMA Ч до vkDestroyDevice
+			if (m_Allocator)
+				vmaDestroyAllocator(m_Allocator);
+
+			// Command Buffers Ч до пулов
+			if (m_TransferCommandPool && !m_TransferCommandBuffers.empty())
+				vkFreeCommandBuffers(m_Device, m_TransferCommandPool,
+					uint32_t(m_TransferCommandBuffers.size()), m_TransferCommandBuffers.data());
+
+			// Command Pools
+			if (m_TransferCommandPool)
+				vkDestroyCommandPool(m_Device, m_TransferCommandPool, nullptr);
+
+			vkDestroyDevice(m_Device, nullptr);
 		}
 
-		if (m_ComputeCommandPool && m_ComputeCommandPool != m_GraphicsCommandPool)
-			vkDestroyCommandPool(m_Device, m_ComputeCommandPool, nullptr);
-
-		if (m_TransferCommandPool && m_TransferCommandPool != m_GraphicsCommandPool &&
-			m_TransferCommandPool != m_ComputeCommandPool)
-			vkDestroyCommandPool(m_Device, m_TransferCommandPool, nullptr);
-
-		if (m_GraphicsCommandPool)
-			vkDestroyCommandPool(m_Device, m_GraphicsCommandPool, nullptr);
-
-		if (m_Device)
-			vkDestroyDevice(m_Device, nullptr);
-
-#if defined(_DEBUG)
-		auto destroyFunc = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
-			vkGetInstanceProcAddr(m_Instance, "vkDestroyDebugUtilsMessengerEXT"));
-		if (destroyFunc && m_DebugMessenger)
-			destroyFunc(m_Instance, m_DebugMessenger, nullptr);
-#endif
-
 		if (m_Instance)
+		{
+#if defined(_DEBUG)
+			auto destroyFunc = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
+				vkGetInstanceProcAddr(m_Instance, "vkDestroyDebugUtilsMessengerEXT"));
+
+			if (destroyFunc && m_DebugMessenger)
+				destroyFunc(m_Instance, m_DebugMessenger, nullptr);
+#endif
 			vkDestroyInstance(m_Instance, nullptr);
+		}
 	}
 
 #pragma region Initialize
@@ -212,7 +219,8 @@ namespace zzz::vk
 			return Unexpected(eResult::failure, std::format(L"volkInitialize failed ({})", int(vr)));
 
 		Candidate deviceCandidate;
-		Result<> res = CreateInstance()
+		uint32_t apiVersion;
+		Result<> res = CreateInstance(apiVersion)
 			.and_then([&]() { return CreateDebugMessenger(); })
 			.and_then([&]()
 				{
@@ -221,12 +229,14 @@ namespace zzz::vk
 					if (!surface.IsValid())
 						return Result<>(Unexpected(eResult::failure, L"Failed to create TestSurface_MSWin surface"));
 
-					return PickPhysicalDevice(deviceCandidate, surface.Get());
+					return PickPhysicalDevice(deviceCandidate, surface.Get(), apiVersion);
 				})
 			.and_then([&]() { return CreateLogicalDevice(deviceCandidate); })
+			.and_then([&]() { return CreateAllocator(); })
+			.and_then([&]() { return CreatePipelineCache(); })
+			.and_then([&]() { return CreateDescriptorPool(); })
 			.and_then([&]() { return CreateCommandPools(deviceCandidate); })
 			.and_then([&]() { return CreateCommandBuffers(); })
-			.and_then([&]() { return CreateSyncObjects(); })
 			.and_then([&]()
 				{
 					m_CheckGapiSupport = safe_make_unique<VKDeviceCapabilities>(m_PhysicalDevice, m_Device);
@@ -236,7 +246,7 @@ namespace zzz::vk
 		return res;
 	}
 
-	[[nodiscard]] Result<> VKAPI::CreateInstance()
+	[[nodiscard]] Result<> VKAPI::CreateInstance(uint32_t& apiVersion)
 	{
 		std::string appNameStr = wstring_to_string(m_Config->GetAppName());
 		std::string engineNameStr = std::string(g_EngineName);
@@ -248,12 +258,16 @@ namespace zzz::vk
 		if (vkEnumerateInstanceVersion)
 			vkEnumerateInstanceVersion(&supportedVersion);
 
-		uint32_t apiVersion = std::min(supportedVersion, VULKAN_ENGINE_MAX_VERSION);
+		apiVersion = std::min(supportedVersion, VULKAN_ENGINE_MAX_VERSION);
 
 		DOut(std::format(
 			L"Vulkan supported: {}.{}.{} | Using: {}.{}.{}",
-			VK_VERSION_MAJOR(supportedVersion), VK_VERSION_MINOR(supportedVersion), VK_VERSION_PATCH(supportedVersion),
-			VK_VERSION_MAJOR(apiVersion), VK_VERSION_MINOR(apiVersion), VK_VERSION_PATCH(apiVersion)));
+			static_cast<int>VK_VERSION_MAJOR(supportedVersion),
+			VK_VERSION_MINOR(supportedVersion),
+			VK_VERSION_PATCH(supportedVersion),
+			VK_VERSION_MAJOR(apiVersion),
+			VK_VERSION_MINOR(apiVersion),
+			VK_VERSION_PATCH(apiVersion)));
 
 		auto extensionsRes = GetRequiredExtensions();
 		if (!extensionsRes)
@@ -300,15 +314,15 @@ namespace zzz::vk
 			.pNext = nullptr,
 			.flags = 0,
 			.pApplicationInfo = &appInfo,
-			.enabledLayerCount = uint32_t(layers.size()),
+			.enabledLayerCount = static_cast<uint32_t>(layers.size()),
 			.ppEnabledLayerNames = layers.empty() ? nullptr : layers.data(),
-			.enabledExtensionCount = uint32_t(extensions.size()),
+			.enabledExtensionCount = static_cast<uint32_t>(extensions.size()),
 			.ppEnabledExtensionNames = extensions.data()
 		};
 
 		VkResult vr = vkCreateInstance(&ci, nullptr, &m_Instance);
 		if (vr != VK_SUCCESS)
-			return Unexpected(eResult::failure, std::format(L"vkCreateInstance failed ({})", int(vr)));
+			return Unexpected(eResult::failure, L"vkCreateInstance failed ({})", static_cast<int>(vr));
 
 		volkLoadInstance(m_Instance);
 
@@ -454,12 +468,12 @@ namespace zzz::vk
 		return {};
 	}
 
-	[[nodiscard]] Result<> VKAPI::PickPhysicalDevice(Candidate& deviceCandidate, const VkSurfaceKHR& surface)
+	[[nodiscard]] Result<> VKAPI::PickPhysicalDevice(Candidate& deviceCandidate, const VkSurfaceKHR& surface, uint32_t apiVersion)
 	{
 		uint32_t deviceCount = 0;
 		auto vkRes = vkEnumeratePhysicalDevices(m_Instance, &deviceCount, nullptr);
 		if (vkRes != VK_SUCCESS)
-			return Unexpected(eResult::failure, std::format(L"vkEnumeratePhysicalDevices failed ({})", int(vkRes)));
+			return Unexpected(eResult::failure, L"vkEnumeratePhysicalDevices failed ({})", static_cast<int>(vkRes));
 
 		if (deviceCount == 0)
 			return Unexpected(eResult::failure, L"No Vulkan devices found");
@@ -467,9 +481,9 @@ namespace zzz::vk
 		std::vector<VkPhysicalDevice> devices(deviceCount);
 		vkRes = vkEnumeratePhysicalDevices(m_Instance, &deviceCount, devices.data());
 		if (vkRes != VK_SUCCESS)
-			return Unexpected(eResult::failure, std::format(L"vkEnumeratePhysicalDevices failed ({})", int(vkRes)));
+			return Unexpected(eResult::failure, L"vkEnumeratePhysicalDevices failed ({})", static_cast<int>(vkRes));
 
-		auto candidat = BestDeviceCandidat(devices, surface);
+		auto candidat = BestDeviceCandidate(devices, surface, apiVersion);
 		if (!candidat)
 			return Unexpected(eResult::failure, L"No suitable Vulkan device found");
 
@@ -479,12 +493,14 @@ namespace zzz::vk
 
 		VkPhysicalDeviceProperties props{};
 		vkGetPhysicalDeviceProperties(m_PhysicalDevice, &props);
-		DOut(std::format(L"Selected GPU: {} (score: {})", string_to_wstring(props.deviceName).value_or(L"Unknown GPU"), deviceCandidate.score));
+
+		std::wstring mess = string_to_wstring(props.deviceName).value_or(L"Unknown GPU");
+		DOut(L"Selected GPU: {} (score: {})", mess, deviceCandidate.score);
 
 		return {};
 	}
 
-	[[nodiscard]] std::optional<Candidate> VKAPI::BestDeviceCandidat(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface)
+	[[nodiscard]] std::optional<Candidate> VKAPI::BestDeviceCandidate(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface, uint32_t apiVersion)
 	{
 		std::optional<zzz::vk::Candidate> best;
 
@@ -522,6 +538,8 @@ namespace zzz::vk
 
 			VkPhysicalDeviceProperties props{};
 			vkGetPhysicalDeviceProperties(device, &props);
+			if (props.apiVersion < apiVersion)
+				continue;
 
 			VkPhysicalDeviceMemoryProperties memProps{};
 			vkGetPhysicalDeviceMemoryProperties(device, &memProps);
@@ -722,53 +740,98 @@ namespace zzz::vk
 		vkGetDeviceQueue(m_Device, deviceCandidate.graphicsQueueFamily, 0, &m_GraphicsQueue);
 		vkGetDeviceQueue(m_Device, deviceCandidate.computeQueueFamily, 0, &m_ComputeQueue);
 		vkGetDeviceQueue(m_Device, deviceCandidate.transferQueueFamily, 0, &m_TransferQueue);
+		m_GraphicsQueueFamilyIndex = deviceCandidate.graphicsQueueFamily;
+		m_TransferQueueFamilyIndex = deviceCandidate.transferQueueFamily;
+		m_ComputeQueueFamilyIndex = deviceCandidate.computeQueueFamily;
+
+		return {};
+	}
+
+	[[nodiscard]] Result<> VKAPI::CreateAllocator()
+	{
+		VmaAllocatorCreateInfo ci{
+			.flags = VMA_ALLOCATOR_CREATE_EXT_MEMORY_BUDGET_BIT,
+			.physicalDevice = m_PhysicalDevice,
+			.device = m_Device,
+			.instance = m_Instance,
+			.vulkanApiVersion = VK_API_VERSION_1_4,
+		};
+
+		VkResult vr = vmaCreateAllocator(&ci, &m_Allocator);
+		if (vr != VK_SUCCESS)
+			return Unexpected(eResult::failure, L"vmaCreateAllocator failed ({})", static_cast<int>(vr));
+
+		return {};
+	}
+
+	[[nodiscard]] Result<> VKAPI::CreatePipelineCache()
+	{
+		std::vector<char> cacheData;
+
+		// ѕытаемс€ загрузить с диска
+		std::ifstream file(std::filesystem::path(g_PipelineCachePath), std::ios::binary | std::ios::ate);
+		if (file)
+		{
+			size_t size = file.tellg();
+			file.seekg(0);
+			cacheData.resize(size);
+			file.read(cacheData.data(), size);
+		}
+
+		VkPipelineCacheCreateInfo ci{
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO,
+			.initialDataSize = cacheData.size(),
+			.pInitialData = cacheData.empty() ? nullptr : cacheData.data(),
+		};
+
+		VkResult vr = vkCreatePipelineCache(m_Device, &ci, nullptr, &m_PipelineCache);
+		if (vr != VK_SUCCESS)
+			return Unexpected(eResult::failure, L"vkCreatePipelineCache failed ({})", static_cast<int>(vr));
+
+		return {};
+	}
+
+	[[nodiscard]] Result<> VKAPI::CreateDescriptorPool()
+	{
+		std::array poolSizes{
+			VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         g_MaxUniformBuffers        },
+			VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, g_MaxCombinedImageSamplers },
+			VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,         g_MaxStorageBuffers        },
+			VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,          g_MaxStorageImages         },
+		};
+
+		VkDescriptorPoolCreateInfo ci{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+			.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
+			.maxSets = g_MaxDescriptorSets,
+			.poolSizeCount = static_cast<uint32_t>(poolSizes.size()),
+			.pPoolSizes = poolSizes.data(),
+		};
+
+		VkResult vr = vkCreateDescriptorPool(m_Device, &ci, nullptr, &m_GlobalDescriptorPool);
+		if (vr != VK_SUCCESS)
+			return Unexpected(eResult::failure, L"vkCreateDescriptorPool failed ({})", static_cast<int>(vr));
 
 		return {};
 	}
 
 	[[nodiscard]] Result<> VKAPI::CreateCommandPools(const Candidate& deviceCandidate)
 	{
-		auto CreatePool = [&](uint32_t queueFamily, VkCommandPool& pool) -> Result<>
-			{
-				VkCommandPoolCreateInfo ci{
-					.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-					.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-					.queueFamilyIndex = queueFamily
-				};
+		const bool transferIsUnique =
+			deviceCandidate.transferQueueFamily != deviceCandidate.graphicsQueueFamily &&
+			deviceCandidate.transferQueueFamily != deviceCandidate.computeQueueFamily;
 
-				VkResult vr = vkCreateCommandPool(m_Device, &ci, nullptr, &pool);
-				if (vr != VK_SUCCESS)
-					return Unexpected(eResult::failure, std::format(L"vkCreateCommandPool failed ({})", int(vr)));
-
-				return {};
+		if (transferIsUnique)
+		{
+			VkCommandPoolCreateInfo ci{
+				.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+				.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+				.queueFamilyIndex = deviceCandidate.transferQueueFamily
 			};
 
-		if (auto res = CreatePool(deviceCandidate.graphicsQueueFamily, m_GraphicsCommandPool); !res)
-			return res;
-
-		if (deviceCandidate.computeQueueFamily != deviceCandidate.graphicsQueueFamily)
-		{
-			if (auto res = CreatePool(deviceCandidate.computeQueueFamily, m_ComputeCommandPool); !res)
-				return res;
-		}
-		else
-		{
-			m_ComputeCommandPool = m_GraphicsCommandPool;
-		}
-
-		if (deviceCandidate.transferQueueFamily != deviceCandidate.graphicsQueueFamily &&
-			deviceCandidate.transferQueueFamily != deviceCandidate.computeQueueFamily)
-		{
-			if (auto res = CreatePool(deviceCandidate.transferQueueFamily, m_TransferCommandPool); !res)
-				return res;
-		}
-		else if (deviceCandidate.transferQueueFamily == deviceCandidate.computeQueueFamily)
-		{
-			m_TransferCommandPool = m_ComputeCommandPool;
-		}
-		else
-		{
-			m_TransferCommandPool = m_GraphicsCommandPool;
+			VkResult vr = vkCreateCommandPool(m_Device, &ci, nullptr, &m_TransferCommandPool);
+			if (vr != VK_SUCCESS)
+				return Unexpected(eResult::failure, L"vkCreateCommandPool (transfer) failed ({})", static_cast<int>(vr));
 		}
 
 		return {};
@@ -776,54 +839,19 @@ namespace zzz::vk
 
 	[[nodiscard]] Result<> VKAPI::CreateCommandBuffers()
 	{
-		auto AllocateBuffers = [&](VkCommandPool pool, std::vector<VkCommandBuffer>& buffers) -> Result<>
-			{
-				buffers.resize(BACK_BUFFER_COUNT);
-				VkCommandBufferAllocateInfo allocInfo{
-					.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-					.commandPool = pool,
-					.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-					.commandBufferCount = BACK_BUFFER_COUNT
-				};
+		if (m_TransferCommandPool == VK_NULL_HANDLE)
+			return {}; // transfer не уникальный Ч буферы не нужны
 
-				VkResult vr = vkAllocateCommandBuffers(m_Device, &allocInfo, buffers.data());
-				if (vr != VK_SUCCESS)
-					return Unexpected(eResult::failure, std::format(L"vkAllocateCommandBuffers failed ({})", int(vr)));
-
-				return {};
-			};
-
-		if (auto res = AllocateBuffers(m_GraphicsCommandPool, m_GraphicsCommandBuffers); !res)
-			return res;
-
-		if (m_ComputeCommandPool != m_GraphicsCommandPool)
-		{
-			if (auto res = AllocateBuffers(m_ComputeCommandPool, m_ComputeCommandBuffers); !res)
-				return res;
-		}
-
-		if (m_TransferCommandPool != m_GraphicsCommandPool &&
-			m_TransferCommandPool != m_ComputeCommandPool)
-		{
-			if (auto res = AllocateBuffers(m_TransferCommandPool, m_TransferCommandBuffers); !res)
-				return res;
-		}
-
-		return {};
-	}
-
-	[[nodiscard]] Result<> VKAPI::CreateSyncObjects()
-	{
-		VkFenceCreateInfo fenceCI{
-			.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
-			.flags = VK_FENCE_CREATE_SIGNALED_BIT
+		m_TransferCommandBuffers.resize(BACK_BUFFER_COUNT);
+		VkCommandBufferAllocateInfo allocInfo{
+			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+			.commandPool = m_TransferCommandPool,
+			.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+			.commandBufferCount = BACK_BUFFER_COUNT
 		};
-
-		for (size_t i = 0; i < BACK_BUFFER_COUNT; i++)
-		{
-			if (vkCreateFence(m_Device, &fenceCI, nullptr, &m_InFlightFences[i]) != VK_SUCCESS)
-				return Unexpected(eResult::failure, std::format(L"Failed to create InFlightFence [{}]", i));
-		}
+		VkResult vr = vkAllocateCommandBuffers(m_Device, &allocInfo, m_TransferCommandBuffers.data());
+		if (vr != VK_SUCCESS)
+			return Unexpected(eResult::failure, L"vkAllocateCommandBuffers (transfer) failed ({})", static_cast<int>(vr));
 
 		return {};
 	}
@@ -832,45 +860,10 @@ namespace zzz::vk
 #pragma region Rendering
 	void VKAPI::BeginRender()
 	{
-		// »спользуем IndexFrameRender вместо IndexFrameUpdate
-		uint32_t frame = m_IndexFrameRender;
-
-		// ∆дЄм завершени€ предыдущего кадра в этом слоте
-		vkWaitForFences(m_Device, 1, &m_InFlightFences[frame], VK_TRUE, UINT64_MAX);
-
-		VkCommandBuffer cmd = m_GraphicsCommandBuffers[frame];
-		vkResetCommandBuffer(cmd, 0);
-
-		VkCommandBufferBeginInfo beginInfo{
-			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-			.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
-		};
-		ensure(VK_SUCCESS == vkBeginCommandBuffer(cmd, &beginInfo));
 	}
 
 	void VKAPI::SubmitCommandLists()
 	{
-		uint32_t frame = m_IndexFrameRender;
-		VkCommandBuffer cmd = m_GraphicsCommandBuffers[frame];
-
-		ensure(VK_SUCCESS == vkEndCommandBuffer(cmd));
-
-		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-
-		VkSubmitInfo submitInfo{
-			.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-			.waitSemaphoreCount = 1,
-			.pWaitSemaphores = &m_CurrentWaitSemaphore,
-			.pWaitDstStageMask = waitStages,
-			.commandBufferCount = 1,
-			.pCommandBuffers = &cmd,
-			.signalSemaphoreCount = 1,
-			.pSignalSemaphores = &m_CurrentSignalSemaphore
-		};
-
-		// Reset fence непосредственно перед submit
-		vkResetFences(m_Device, 1, &m_InFlightFences[frame]);
-		ensure(VK_SUCCESS == vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, m_InFlightFences[frame]));
 	}
 
 	void VKAPI::WaitForGpu()

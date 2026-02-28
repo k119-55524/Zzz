@@ -29,6 +29,7 @@
 #pragma warning(pop)
 
 #include <vulkan/vulkan_win32.h>
+#include <vma/vk_mem_alloc.h>
 
 // ---- GLM ----
 #define GLM_FORCE_RADIANS

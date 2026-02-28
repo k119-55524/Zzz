@@ -52,6 +52,26 @@ namespace zzz
 
 		void LogGPUDebugMessage(const std::wstring& message);
 
+		inline void SavePSOCacheToDisk(const std::vector<char>& data)
+		{
+			if (data.empty())
+				return;
+
+			try
+			{
+				std::filesystem::create_directories(std::filesystem::path(g_PipelineCachePath).parent_path());
+				std::ofstream file(g_PipelineCachePath.data(), std::ios::binary | std::ios::trunc);
+				if (!file)
+					return;
+
+				file.write(data.data(), data.size());
+			}
+			catch (const std::exception& e)
+			{
+				DOut(L"SaveCacheToDisk failed: {}", string_to_wstring(e.what()).value());
+			}
+		}
+
 	protected:
 		[[nodiscard]] virtual Result<> Init() = 0;
 		virtual void WaitForGpu() = 0;

@@ -21,7 +21,7 @@ export namespace zzz
 			0);
 
 		if (size_needed <= 0)
-			return Unexpected(eResult::failure, L">>>>> [to_wstring(...)]. MultiByteToWideChar failed.");
+			return Unexpected(eResult::failure, L"MultiByteToWideChar failed.");
 
 		// Βϋδελÿεμ αστεπ
 		std::wstring wstr(static_cast<size_t>(size_needed), L'\0');
@@ -35,7 +35,7 @@ export namespace zzz
 			size_needed);
 
 		if (converted != size_needed)
-			return Unexpected(eResult::failure, L">>>>> [to_wstring(...)]. MultiByteToWideChar conversion failed.");
+			return Unexpected(eResult::failure, L"MultiByteToWideChar conversion failed.");
 
 		return wstr;
 	}
