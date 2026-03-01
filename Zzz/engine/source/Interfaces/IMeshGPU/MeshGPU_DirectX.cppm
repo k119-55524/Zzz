@@ -82,7 +82,7 @@ namespace zzz::dx
 			IID_PPV_ARGS(&vertexBuffer)
 		);
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, std::format(L"Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
+			return UNEXPECTED(eResult::failure, L"Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr);
 
 		// Создание промежуточного буфера для загрузки вершин (HEAP_TYPE_UPLOAD)
 		CD3DX12_HEAP_PROPERTIES uploadHeapProps(D3D12_HEAP_TYPE_UPLOAD);
@@ -95,7 +95,7 @@ namespace zzz::dx
 			IID_PPV_ARGS(&uploadVertexBuffer)
 		);
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, std::format(L"#1 Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
+			return UNEXPECTED(eResult::failure, L"#1 Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr);
 
 		vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
 		vertexBufferView.StrideInBytes = static_cast<UINT>(vertices->Stride());
@@ -112,7 +112,7 @@ namespace zzz::dx
 				nullptr,
 				IID_PPV_ARGS(&indexBuffer));
 			if (FAILED(hr))
-				return Unexpected(eResult::failure, std::format(L"#2 Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
+				return UNEXPECTED(eResult::failure, L"#2 Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr);
 
 			hr = dxAPI->GetDevice()->CreateCommittedResource(
 				&uploadHeapProps,
@@ -122,7 +122,7 @@ namespace zzz::dx
 				nullptr,
 				IID_PPV_ARGS(&uploadIndexBuffer));
 			if (FAILED(hr))
-				return Unexpected(eResult::failure, std::format(L"#3 Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr));
+				return UNEXPECTED(eResult::failure, L"#3 Failed to CreateCommittedResource. HRESULT = 0x{:08X}", hr);
 
 			indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
 			indexBufferView.SizeInBytes = static_cast<UINT>(indices->GetSizeInBytes());
@@ -133,7 +133,7 @@ namespace zzz::dx
 		CD3DX12_RANGE readRange(0, 0);
 		hr = uploadVertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin));
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, std::format(L"#4 Failed Map. HRESULT = 0x{:08X}", hr));
+			return UNEXPECTED(eResult::failure, L"#4 Failed Map. HRESULT = 0x{:08X}", hr);
 
 		memcpy(pVertexDataBegin, vertices->GetData(), vertices->SizeInBytes());
 		uploadVertexBuffer->Unmap(0, nullptr);
@@ -143,7 +143,7 @@ namespace zzz::dx
 			UINT8* pIndexDataBegin;
 			hr = uploadIndexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pIndexDataBegin));
 			if (FAILED(hr))
-				return Unexpected(eResult::failure, std::format(L"#5 Failed Map. HRESULT = 0x{:08X}", hr));
+				return UNEXPECTED(eResult::failure, L"#5 Failed Map. HRESULT = 0x{:08X}", hr);
 
 			memcpy(pIndexDataBegin, indices->GetData(), indices->GetSizeInBytes());
 			uploadIndexBuffer->Unmap(0, nullptr);

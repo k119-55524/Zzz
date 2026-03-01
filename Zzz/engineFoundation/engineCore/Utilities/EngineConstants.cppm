@@ -102,4 +102,5 @@ export namespace zzz
 	static_assert(g_MinimumWindowHeight < g_MaximumWindowHeight);
 	static_assert(g_MinimumWindowHeight >= g_MinimumWindowWidthAndHeight, "Minimum window height must be at least 150");
 	static_assert(BACK_BUFFER_COUNT >= 2, "At least 2 back buffers required");
+	static_assert(FRAMES_IN_FLIGHT >= 2, "At least 2 frames in flight required");
 }

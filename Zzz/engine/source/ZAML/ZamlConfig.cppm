@@ -22,7 +22,7 @@ export namespace zzz
 		Result<T> GetParam(Path&&... pathAndParamName) const
 		{
 			if (!m_Settings)
-				return Unexpected(eResult::not_initialized, L">>>>> [Settings.GetParam(...)] Settings not loaded");
+				return UNEXPECTED(eResult::not_initialized, L">>>>> [Settings.GetParam(...)] Settings not loaded");
 
 			constexpr size_t argCount = sizeof...(Path);
 			static_assert(argCount >= 1, "At least one argument (paramName) is required");
@@ -52,13 +52,13 @@ export namespace zzz
 				}
 
 				if (!found)
-					return Unexpected(eResult::not_found, L"Tag '{}' not found", tag);
+					return UNEXPECTED(eResult::not_found, L"Tag '{}' not found", tag);
 			}
 
 			// Ищем атрибут
 			auto attr = node->GetAttribute(paramName);
 			if (!attr)
-				return Unexpected(eResult::not_found, L"Parameter '{}' not found", paramName);
+				return UNEXPECTED(eResult::not_found, L"Parameter '{}' not found", paramName);
 
 			// Преобразуем значение
 			return ConvertValue<T>(*attr.value());

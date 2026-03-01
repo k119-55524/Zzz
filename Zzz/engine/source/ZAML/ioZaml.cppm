@@ -22,6 +22,7 @@ export namespace zzz
 		auto it = attributes.find(key);
 		if (it != attributes.end())
 			return &it->second;
+
 		return Unexpected(eResult::no_find);
 	}
 
@@ -30,6 +31,7 @@ export namespace zzz
 		for (const auto& child : children)
 			if (child.name == tagName)
 				return &child;
+
 		return Unexpected(eResult::no_find);
 	}
 
@@ -41,6 +43,7 @@ export namespace zzz
 				Result.push_back(&child);
 		if (Result.empty())
 			return Unexpected(eResult::no_find);
+
 		return Result;
 	}
 
@@ -63,7 +66,7 @@ export namespace zzz
 	{
 		std::wifstream file(filename);
 		if (!file)
-			return Unexpected(eResult::io_error_open_file, L"[ioZaml.LoadFromFile] Failed to open file: " + filename);
+			return UNEXPECTED(eResult::io_error_open_file, L"Failed to open file: {}.", filename);
 
 		return ParseNode(file);
 	}
@@ -72,7 +75,7 @@ export namespace zzz
 	{
 		std::wofstream file(filename);
 		if (!file)
-			return Unexpected(eResult::io_error_open_file, L"[ioZaml.SaveToFile] Failed to open file: " + filename);
+			return UNEXPECTED(eResult::io_error_open_file, L"Failed to open file: {}.", filename);
 
 		return WriteNode(file, node, indent);
 	}
@@ -166,7 +169,7 @@ export namespace zzz
 				size_t attrStart = nameEnd;
 				size_t tagEnd = line.find('>', attrStart);
 				if (tagEnd == std::string::npos)
-					return Unexpected(eResult::failure, L"Malformed tag");
+					return UNEXPECTED(eResult::failure, L"Malformed tag");
 				if (line[tagEnd - 1] == '/')
 				{
 					selfClosing = true;
@@ -180,7 +183,7 @@ export namespace zzz
 					lastPos = in.tellg();
 					std::wstring nextLine;
 					if (!std::getline(in, nextLine))
-						return Unexpected(eResult::failure, L"Unexpected end of input");
+						return UNEXPECTED(eResult::failure, L"UNEXPECTED end of input");
 					nextLine = Trim(nextLine);
 					if (nextLine == L"</" + node.name + L">")
 						break;
@@ -194,7 +197,7 @@ export namespace zzz
 				return node;
 			}
 		}
-		return Unexpected(eResult::failure, L"[ioZaml.ParseNode] Unexpected end");
+		return UNEXPECTED(eResult::failure, L"[ioZaml.ParseNode] UNEXPECTED end");
 	}
 
 	Result<> ioZaml::WriteNode(std::wostream& out, const zamlNode& node, int indent)

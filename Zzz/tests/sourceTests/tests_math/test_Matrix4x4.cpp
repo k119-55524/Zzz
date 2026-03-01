@@ -176,7 +176,7 @@ Result<std::string> test_Matrix4x4::ValidateMatrixVectorMultiply(
 		msg += std::to_wstring(expectedResult[0]);
 		msg += L", Got: ";
 		msg += std::to_wstring(result[0]);
-		return Unexpected(msg);
+		return UNEXPECTED(msg);
 	}
 
 	if (std::abs(result[1] - expectedResult[1]) > epsilon)
@@ -187,7 +187,7 @@ Result<std::string> test_Matrix4x4::ValidateMatrixVectorMultiply(
 		msg += std::to_wstring(expectedResult[1]);
 		msg += L", Got: ";
 		msg += std::to_wstring(result[1]);
-		return Unexpected(msg);
+		return UNEXPECTED(msg);
 	}
 
 	if (std::abs(result[2] - expectedResult[2]) > epsilon)
@@ -198,7 +198,7 @@ Result<std::string> test_Matrix4x4::ValidateMatrixVectorMultiply(
 		msg += std::to_wstring(expectedResult[2]);
 		msg += L", Got: ";
 		msg += std::to_wstring(result[2]);
-		return Unexpected(msg);
+		return UNEXPECTED(msg);
 	}
 
 	if (std::abs(result[3] - expectedResult[3]) > epsilon)
@@ -209,7 +209,7 @@ Result<std::string> test_Matrix4x4::ValidateMatrixVectorMultiply(
 		msg += std::to_wstring(expectedResult[3]);
 		msg += L", Got: ";
 		msg += std::to_wstring(result[3]);
-		return Unexpected(msg);
+		return UNEXPECTED(msg);
 	}
 
 	return { "Success" };
@@ -246,7 +246,7 @@ Result<std::string> test_Matrix4x4::ValidatePerspective_DirectX()
 			errorMsg += L" - ";
 			errorMsg += result.error().getMessage();
 
-			return Unexpected(errorMsg);
+			return UNEXPECTED(errorMsg);
 		}
 	}
 
@@ -272,22 +272,22 @@ Result<std::string> test_Matrix4x4::ValidatePerspective_DirectX(
 
 	// Проверяем элементы [row][col]
 	if (std::abs(proj[0][0] - expectedM00) > epsilon)
-		return Unexpected(L"DirectX Perspective: M[0][0] incorrect");
+		return UNEXPECTED(L"DirectX Perspective: M[0][0] incorrect");
 
 	if (std::abs(proj[1][1] - expectedM11) > epsilon)
-		return Unexpected(L"DirectX Perspective: M[1][1] incorrect");
+		return UNEXPECTED(L"DirectX Perspective: M[1][1] incorrect");
 
 	if (std::abs(proj[2][2] - expectedM22) > epsilon)
-		return Unexpected(L"DirectX Perspective: M[2][2] incorrect");
+		return UNEXPECTED(L"DirectX Perspective: M[2][2] incorrect");
 
 	if (std::abs(proj[2][3] - 1.0f) > epsilon)
-		return Unexpected(L"DirectX Perspective: M[2][3] should be 1.0");
+		return UNEXPECTED(L"DirectX Perspective: M[2][3] should be 1.0");
 
 	if (std::abs(proj[3][2] - expectedM32) > epsilon)
-		return Unexpected(L"DirectX Perspective: M[3][2] incorrect");
+		return UNEXPECTED(L"DirectX Perspective: M[3][2] incorrect");
 
 	if (std::abs(proj[3][3] - 0.0f) > epsilon)
-		return Unexpected(L"DirectX Perspective: M[3][3] should be 0.0");
+		return UNEXPECTED(L"DirectX Perspective: M[3][3] should be 0.0");
 
 	// Проверка трансформации точек
 	// Точка на near plane (центр экрана)
@@ -296,14 +296,14 @@ Result<std::string> test_Matrix4x4::ValidatePerspective_DirectX(
 	// После perspective divide z должен быть 0 (near plane -> 0 в DirectX)
 	float zNear = projNear[2] / projNear[3];
 	if (std::abs(zNear - 0.0f) > epsilon)
-		return Unexpected(L"DirectX Perspective: Near plane Z mapping incorrect");
+		return UNEXPECTED(L"DirectX Perspective: Near plane Z mapping incorrect");
 
 	// Точка на far plane
 	Vector4 farPoint(0.0f, 0.0f, farZ, 1.0f);
 	Vector4 projFar = farPoint * proj;
 	float zFar = projFar[2] / projFar[3];
 	if (std::abs(zFar - 1.0f) > epsilon)
-		return Unexpected(L"DirectX Perspective: Far plane Z mapping incorrect");
+		return UNEXPECTED(L"DirectX Perspective: Far plane Z mapping incorrect");
 
 	return { "Success" };
 }
@@ -494,7 +494,7 @@ Result<std::string> test_Matrix4x4::ValidateLookAt_DirectX()
 			std::wstring errorMsg = testCase.description;
 			errorMsg += L" - ";
 			errorMsg += result.error().getMessage();
-			return Unexpected(errorMsg);
+			return UNEXPECTED(errorMsg);
 		}
 	}
 
@@ -517,25 +517,25 @@ Result<std::string> test_Matrix4x4::ValidateLookAt_DirectX(
 
 	// Нормализация
 	if (std::abs(right.length3() - 1.0f) > epsilon)
-		return Unexpected(L"LookAt: Right vector not normalized");
+		return UNEXPECTED(L"LookAt: Right vector not normalized");
 	if (std::abs(upVec.length3() - 1.0f) > epsilon)
-		return Unexpected(L"LookAt: Up vector not normalized");
+		return UNEXPECTED(L"LookAt: Up vector not normalized");
 	if (std::abs(forward.length3() - 1.0f) > epsilon)
-		return Unexpected(L"LookAt: Forward vector not normalized");
+		return UNEXPECTED(L"LookAt: Forward vector not normalized");
 
 	// Ортогональность
 	if (std::abs(right.dot(upVec)) > epsilon)
-		return Unexpected(L"LookAt: Right and Up vectors not orthogonal");
+		return UNEXPECTED(L"LookAt: Right and Up vectors not orthogonal");
 	if (std::abs(right.dot(forward)) > epsilon)
-		return Unexpected(L"LookAt: Right and Forward vectors not orthogonal");
+		return UNEXPECTED(L"LookAt: Right and Forward vectors not orthogonal");
 	if (std::abs(upVec.dot(forward)) > epsilon)
-		return Unexpected(L"LookAt: Up and Forward vectors not orthogonal");
+		return UNEXPECTED(L"LookAt: Up and Forward vectors not orthogonal");
 
 	// --- 2. Проверка направления forward (DirectX LH) ---
 	Vector3 expectedForward = (target - eye).normalized();
 	float forwardDot = forward.dot(expectedForward);
 	if (forwardDot < 0.999f)
-		return Unexpected(L"LookAt: Forward vector direction incorrect");
+		return UNEXPECTED(L"LookAt: Forward vector direction incorrect");
 
 	// --- 3. Проверка translation ---
 	float expectedTx = -right.dot(eye);
@@ -543,13 +543,13 @@ Result<std::string> test_Matrix4x4::ValidateLookAt_DirectX(
 	float expectedTz = -forward.dot(eye);
 
 	if (std::abs(view[3][0] - expectedTx) > epsilon)
-		return Unexpected(L"LookAt: Translation X component incorrect");
+		return UNEXPECTED(L"LookAt: Translation X component incorrect");
 	if (std::abs(view[3][1] - expectedTy) > epsilon)
-		return Unexpected(L"LookAt: Translation Y component incorrect");
+		return UNEXPECTED(L"LookAt: Translation Y component incorrect");
 	if (std::abs(view[3][2] - expectedTz) > epsilon)
-		return Unexpected(L"LookAt: Translation Z component incorrect");
+		return UNEXPECTED(L"LookAt: Translation Z component incorrect");
 	if (std::abs(view[3][3] - 1.0f) > epsilon)
-		return Unexpected(L"LookAt: M[3][3] should be 1.0");
+		return UNEXPECTED(L"LookAt: M[3][3] should be 1.0");
 
 	return { "Success" };
 }

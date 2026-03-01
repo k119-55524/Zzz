@@ -205,11 +205,11 @@ namespace zzz::dx
 
 		auto res = InitializeSwapChain();
 		if (!res)
-			return Unexpected(eResult::failure, L"Failed to initialize swap chain.");
+			return UNEXPECTED(eResult::failure, L"Failed to initialize swap chain.");
 
 		HRESULT hr = m_factory->MakeWindowAssociation(m_iAppWin->GetHWND(), DXGI_MWA_NO_ALT_ENTER);
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, L"Failed to make window association");
+			return UNEXPECTED(eResult::failure, L"Failed to make window association");
 
 		res = CreateRTVHeap()
 			.and_then([&]() { return CreateSRVHeap(); })
@@ -236,7 +236,7 @@ namespace zzz::dx
 		{
 			HRESULT hr = m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n]));
 			if (FAILED(hr))
-				return Unexpected(eResult::failure, std::format(L"Failed to get back buffer. HRESULT = 0x{:08X}", hr));
+				return UNEXPECTED(eResult::failure, L"Failed to get back buffer. HRESULT = 0x{:08X}", hr);
 
 			m_device->CreateRenderTargetView(m_renderTargets[n].Get(), nullptr, rtvHandle);
 			rtvHandle.Offset(1, m_RtvDescrSize);
@@ -288,7 +288,7 @@ namespace zzz::dx
 		rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 		HRESULT hr = m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_RtvHeap));
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, std::format(L"Failed to create RTV heap. HRESULT = 0x{:08X}", hr));
+			return UNEXPECTED(eResult::failure, L"Failed to create RTV heap. HRESULT = 0x{:08X}", hr);
 
 		SET_RESOURCE_DEBUG_NAME(m_RtvHeap, L"RTV Heap");
 
@@ -307,7 +307,7 @@ namespace zzz::dx
 		srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		HRESULT hr = m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_SrvHeap));
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, std::format(L"Failed to create SRV heap. HRESULT = 0x{:08X}", hr));
+			return UNEXPECTED(eResult::failure, L"Failed to create SRV heap. HRESULT = 0x{:08X}", hr);
 
 		SET_RESOURCE_DEBUG_NAME(m_SrvHeap, L"SRV Heap");
 
@@ -336,7 +336,7 @@ namespace zzz::dx
 
 		HRESULT hr = m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_DsvHeap));
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, std::format(L"Failed to create DSV heap. HRESULT = 0x{:08X}", hr));
+			return UNEXPECTED(eResult::failure, L"Failed to create DSV heap. HRESULT = 0x{:08X}", hr);
 
 		SET_RESOURCE_DEBUG_NAME(m_DsvHeap, L"DSV Heap");
 
@@ -391,7 +391,7 @@ namespace zzz::dx
 				IID_PPV_ARGS(&m_depthStencil[i]));
 			
 			if (S_OK != hr)
-				return Unexpected(eResult::failure, std::format(L"Failed to create depth stencil resource. HRESULT = 0x{:08X}", hr));
+				return UNEXPECTED(eResult::failure, L"Failed to create depth stencil resource. HRESULT = 0x{:08X}", hr);
 
 			SET_RESOURCE_DEBUG_NAME(m_depthStencil[i], std::format(L"DepthStencil_{}", i).c_str());
 
@@ -427,17 +427,17 @@ namespace zzz::dx
 
 		auto res = CreateRTV(m_device);
 		if (!res)
-			return Unexpected(eResult::failure, std::format(L"Failed to create RTV. {}", res.error().getMessage()).c_str());
+			return UNEXPECTED(eResult::failure, L"Failed to create RTV. {}", res.error().getMessage());
 
 		DXGI_SWAP_CHAIN_DESC desc{};
 		HRESULT hr = m_swapChain->GetDesc(&desc);
 		if (S_OK != hr)
-			Unexpected(eResult::failure, std::format(L"Failed to get swap chain description. HRESULT = 0x{:08X}", hr));
+			UNEXPECTED(eResult::failure, L"Failed to get swap chain description. HRESULT = 0x{:08X}", hr);
 
 		Size2D<> size{ desc.BufferDesc.Width, desc.BufferDesc.Height };
 		res = CreateDS(size);
 		if (!res)
-			Unexpected(eResult::failure, std::format(L"Failed to create depth stencil View. {}", res.error().getMessage()).c_str());
+			UNEXPECTED(eResult::failure, L"Failed to create depth stencil View. {}", res.error().getMessage());
 
 		return {};
 	}
@@ -687,7 +687,7 @@ namespace zzz::dx
 	//	BOOL fullscreen = FALSE;
 	//	HRESULT hr = m_swapChain->GetFullscreenState(&fullscreen, nullptr);
 	//	if (FAILED(hr))
-	//		return Unexpected(L"Failed to get fullscreen state. HRESULT = 0x{:08X}\n", fss, hr);
+	//		return UNEXPECTED(L"Failed to get fullscreen state. HRESULT = 0x{:08X}\n", fss, hr);
 
 	//	if (fss == static_cast<bool>(fullscreen))
 	//	{
@@ -741,7 +741,7 @@ namespace zzz::dx
 	//	return RecreateRenderTargetsAndDepth()
 	//		.and_then([&]() { return m_DXGAPI->CommandRenderReinitialize(); })
 	//		.and_then([&]() { DOut(L"SetFullScreenState({}): succeeded.\n", fss); })
-	//		.or_else([&](const Unexpected& error) { throw_runtime_error(std::format("SetFullScreenState({}): Failed: {}.", fss, wstring_to_string(error.getMessage()))); });
+	//		.or_else([&](const UNEXPECTED& error) { throw_runtime_error(std::format("SetFullScreenState({}): Failed: {}.", fss, wstring_to_string(error.getMessage()))); });
 	//}
 
 	//[[nodiscard]] Result<bool> SurfView_DX::GetFullScreenState() const
@@ -749,7 +749,7 @@ namespace zzz::dx
 	//	BOOL fullscreen = FALSE;
 	//	HRESULT hr = m_swapChain->GetFullscreenState(&fullscreen, nullptr);
 	//	if (FAILED(hr))
-	//		return Unexpected(L"Failed to get fullscreen state. HRESULT = 0x{:08X}\n", hr);
+	//		return UNEXPECTED(L"Failed to get fullscreen state. HRESULT = 0x{:08X}\n", hr);
 
 	//	return static_cast<bool>(fullscreen);
 	//}

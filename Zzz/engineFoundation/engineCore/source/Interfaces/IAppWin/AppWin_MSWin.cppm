@@ -100,7 +100,7 @@ export namespace zzz::core
 
 		ATOM Result = RegisterClass(&wc);
 		if (Result == 0)
-			return Unexpected(eResult::failure, L"RegisterClass( ... ). Failed to register window class: {}. Error code(MSWindows): {}", m_Config->GetClassName(), std::to_wstring(::GetLastError()));
+			return UNEXPECTED(eResult::failure, L"RegisterClass( ... ). Failed to register window class: {}. Error code(MSWindows): {}", m_Config->GetClassName(), std::to_wstring(::GetLastError()));
 
 		// –ассчитать размеры пр€моугольника окна на основе запрошенных размеров клиентской области.
 		const Size2D<LONG>& winSize = m_Config->GetWinSize();

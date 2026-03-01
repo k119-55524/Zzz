@@ -45,7 +45,7 @@ namespace zzz
 		}
 		catch (const std::exception& e)
 		{
-			return Unexpected(eResult::exception, std::format(L">>>>> [Layer3D::AddScene()]. Exception: {}.", string_to_wstring(e.what()).value_or(L"Unknown exception")));
+			return UNEXPECTED(eResult::exception, L"Exception: {}.", string_to_wstring(e.what()).value_or(L"Unknown exception"));
 		}
 
 		return m_Scene;

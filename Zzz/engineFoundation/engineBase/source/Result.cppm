@@ -38,7 +38,7 @@ namespace zzz
 		{
 		}
 
-		Unexpected(
+		explicit Unexpected(
 			eResult code,
 			const std::source_location& loc = std::source_location::current()) noexcept
 			: m_code(code)
@@ -64,39 +64,16 @@ namespace zzz
 		}
 
 		template<typename... Args>
-		Unexpected(
-			eResult code,
-			std::wformat_string<Args...> fmt,
-			Args&&... args) noexcept
-			: m_code(code)
-		{
-			const auto loc = std::source_location::current();
-
-			try
-			{
-				m_message = FormatMessage(
-					std::format(fmt, std::forward<Args>(args)...),
-					loc);
-			}
-			catch (...)
-			{
-				m_message = FormatMessage(L"<format error>", loc);
-			}
-		}
-
-		template<typename... Args>
 		explicit Unexpected(
+			eResult code,
+			std::source_location loc,
 			std::wformat_string<Args...> fmt,
 			Args&&... args) noexcept
 			: m_code(eResult::failure)
 		{
-			const auto loc = std::source_location::current();
-
 			try
 			{
-				m_message = FormatMessage(
-					std::format(fmt, std::forward<Args>(args)...),
-					loc);
+				m_message = FormatMessage(std::format(fmt, std::forward<Args>(args)...), loc);
 			}
 			catch (...)
 			{
@@ -104,7 +81,6 @@ namespace zzz
 			}
 		}
 
-	public:
 		[[nodiscard]] eResult getCode() const noexcept { return m_code; }
 		[[nodiscard]] const std::wstring& getMessage() const noexcept { return m_message; }
 
@@ -171,13 +147,13 @@ namespace zzz
 
 		Unexpected& error()
 		{
-			assert(!has_value() && ">>>>> [Unexpected& Result.error()]. Attempt to access error of a value.");
+			assert(!has_value() && ">>>>> [UNEXPECTED& Result.error()]. Attempt to access error of a value.");
 			return std::get<Unexpected>(data);
 		}
 
 		const Unexpected& error() const
 		{
-			assert(!has_value() && ">>>>> [const Unexpected& Result.error()]. Attempt to access error of a value.");
+			assert(!has_value() && ">>>>> [const UNEXPECTED& Result.error()]. Attempt to access error of a value.");
 			return std::get<Unexpected>(data);
 		}
 
@@ -189,15 +165,6 @@ namespace zzz
 
 		_Ty* operator->() { return &value(); }
 		const _Ty* operator->() const { return &value(); }
-
-		//explicit operator Result<void>() const noexcept
-		//{
-		//	if (has_value())
-		//	{
-		//		return Result<void>{}; // Успех
-		//	}
-		//	return Result<void>{error()}; // Ошибка
-		//}
 
 		explicit operator bool() const noexcept { return has_value(); }
 

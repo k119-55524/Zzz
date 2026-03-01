@@ -77,15 +77,15 @@ export namespace zzz::dx
 		// === 1. Инициализация DXC ===
 		hr = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&library));
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, L"Failed to create DXC library");
+			return UNEXPECTED(eResult::failure, L"Failed to create DXC library");
 
 		hr = library->CreateBlobWithEncodingFromPinned(shaderSource.c_str(), (UINT32)shaderSource.size(), CP_UTF8, &sourceBlob);
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, L"Failed to create source blob");
+			return UNEXPECTED(eResult::failure, L"Failed to create source blob");
 
 		hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&compiler));
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, L"Failed to create DXC compiler");
+			return UNEXPECTED(eResult::failure, L"Failed to create DXC compiler");
 
 		// === 2. Аргументы компиляции ===
 		std::vector<LPCWSTR> args = {
@@ -132,13 +132,13 @@ export namespace zzz::dx
 
 		// Проверяем только что вызов выполнен, не результат компиляции
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, L"DXC Compile call failed");
+			return UNEXPECTED(eResult::failure, L"DXC Compile call failed");
 
 		// === 5. Проверка результата компиляции ===
 		HRESULT compileStatus;
 		hr = Result->GetStatus(&compileStatus);
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, L"Failed to get compilation status");
+			return UNEXPECTED(eResult::failure, L"Failed to get compilation status");
 
 		// TODO: Переработать обработку ошибок компиляции
 		if (FAILED(compileStatus))
@@ -160,20 +160,20 @@ export namespace zzz::dx
 				DOut(L"Compile error: No error details available");
 #endif // defined(_DEBUG)
 
-			return Unexpected(eResult::failure, L"Shader compilation failed");
+			return UNEXPECTED(eResult::failure, L"Shader compilation failed");
 		}
 
 		// === 6. Получение результата ===
 		ComPtr<IDxcBlob> shaderBlob;
 		hr = Result->GetResult(&shaderBlob);
 		if (FAILED(hr) || !shaderBlob)
-			return Unexpected(eResult::failure, L"Failed to get compiled shader blob");
+			return UNEXPECTED(eResult::failure, L"Failed to get compiled shader blob");
 
 		// === 7. Конвертация в ID3DBlob ===
 		ComPtr<ID3DBlob> finalBlob;
 		hr = shaderBlob.As(&finalBlob);
 		if (FAILED(hr) || !finalBlob)
-			return Unexpected(eResult::failure, L"Failed to convert to ID3DBlob");
+			return UNEXPECTED(eResult::failure, L"Failed to convert to ID3DBlob");
 
 		DOut(std::format(L"Shader '{}' compiled: OK. Entry: {}, Target: {}", m_Name, entryPoint, target));
 

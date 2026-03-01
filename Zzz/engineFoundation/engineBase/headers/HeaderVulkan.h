@@ -29,7 +29,11 @@
 #pragma warning(pop)
 
 #include <vulkan/vulkan_win32.h>
+
+#pragma warning(push)
+#pragma warning(disable: 26110 26495 6386 6387 26813)
 #include <vma/vk_mem_alloc.h>
+#pragma warning(pop)
 
 // ---- GLM ----
 #define GLM_FORCE_RADIANS

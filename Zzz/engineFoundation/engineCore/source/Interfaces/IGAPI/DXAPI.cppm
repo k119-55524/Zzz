@@ -150,16 +150,16 @@ export namespace zzz::dx
 			.and_then([&]() { m_factory = factory; })
 			.and_then([&]() { return GetAdapter(factory.Get(), &adapter); });
 		if (!res)
-			return Unexpected(eResult::failure, std::format(L" -> {}", res.error().getMessage()));
+			return UNEXPECTED(eResult::failure, L" -> {}", res.error().getMessage());
 
 		HRESULT hr = adapter.As(&m_adapter3);
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, std::format(L"Failed to query IDXGIAdapter3. HRESULT = 0x{:08X}", hr));
+			return UNEXPECTED(eResult::failure, L"Failed to query IDXGIAdapter3. HRESULT = 0x{:08X}", hr);
 
 		res = CreateDevice(adapter, m_device, m_featureLevel)
 			.and_then([&]() { return CreateCommandQueue(m_device, m_commandQueue); });
 		if (!res)
-			return Unexpected(eResult::failure, std::format(L" -> {}", res.error().getMessage()));
+			return UNEXPECTED(eResult::failure, L" -> {}", res.error().getMessage());
 
 		// Проверка возможности отключения VSYNC
 		BOOL allowTearing = FALSE;
@@ -193,7 +193,7 @@ export namespace zzz::dx
 			DOut(L"D3D12 InfoQueue enabled.");
 		}
 		else
-			return Unexpected(eResult::failure, L"Failed to get ID3D12InfoQueue for debug messaging.");
+			return UNEXPECTED(eResult::failure, L"Failed to get ID3D12InfoQueue for debug messaging.");
 #endif
 
 		return {};
@@ -271,7 +271,7 @@ export namespace zzz::dx
 			DOut(L"DirectX debug layer enabled.");
 		}
 		else
-			return Unexpected(eResult::failure, L"Failed to enable DirectX debug layer.");
+			return UNEXPECTED(eResult::failure, L"Failed to enable DirectX debug layer.");
 #endif
 
 		return {};
@@ -285,11 +285,11 @@ export namespace zzz::dx
 			ComPtr<IDXGIFactory4> factory4;
 			hr = CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&factory4));
 			if (FAILED(hr))
-				return Unexpected(eResult::failure, L"Failed to create DXGI Factory");
+				return UNEXPECTED(eResult::failure, L"Failed to create DXGI Factory");
 
 			hr = factory4.As(&outFactory);
 			if (FAILED(hr))
-				return Unexpected(eResult::failure, L"Failed to query IDXGIFactory7");
+				return UNEXPECTED(eResult::failure, L"Failed to query IDXGIFactory7");
 		}
 
 		return {};
@@ -316,8 +316,7 @@ export namespace zzz::dx
 		}
 
 		if (FAILED(hr))
-			return Unexpected(eResult::failure,
-				std::format(L"Failed to create D3D12 device. HRESULT = 0x{:08X}", hr));
+			return UNEXPECTED(eResult::failure, L"Failed to create D3D12 device. HRESULT = 0x{:08X}", hr);
 
 		SET_RESOURCE_DEBUG_NAME(outDevice, L"Main ID3D12Device");
 
@@ -325,7 +324,7 @@ export namespace zzz::dx
 		std::wstring levelName = (outFeatureLevel == D3D_FEATURE_LEVEL_12_2) ? L"12.2 (DirectX 12 Ultimate)" :
 			(outFeatureLevel == D3D_FEATURE_LEVEL_12_1) ? L"12.1" :
 			(outFeatureLevel == D3D_FEATURE_LEVEL_12_0) ? L"12.0" : L"Unknown";
-		DOut(std::format(L"Created D3D12 device with feature level: {}", levelName).c_str());
+		DOut(L"Created D3D12 device with feature level: {}", levelName);
 #endif
 
 		m_CheckGapiSupport = safe_make_unique<DXDeviceCapabilities>(outDevice, m_adapter3);
@@ -341,7 +340,7 @@ export namespace zzz::dx
 
 		HRESULT hr = device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&outQueue));
 		if (FAILED(hr))
-			return Unexpected(eResult::failure, std::format(L"Failed to create Command Queue. HRESULT = 0x{:08X}", hr));
+			return UNEXPECTED(eResult::failure, L"Failed to create Command Queue. HRESULT = 0x{:08X}", hr);
 
 		for (int index = 0; index < BACK_BUFFER_COUNT; index++)
 			m_commandWrapper[index] = safe_make_shared<CommandWrapperDX>(m_device, D3D12_COMMAND_LIST_TYPE_DIRECT);
@@ -419,7 +418,7 @@ export namespace zzz::dx
 			ComPtr<ID3D12Fence> fence;
 			HRESULT hr = m_device->CreateFence( 0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence) );
 			if (FAILED(hr))
-				return Unexpected(eResult::failure, std::format(L"CreateFence failed. HRESULT = 0x{:08X}", hr));
+				return UNEXPECTED(eResult::failure, L"CreateFence failed. HRESULT = 0x{:08X}", hr);
 
 			m_fence = fence;
 
@@ -428,7 +427,7 @@ export namespace zzz::dx
 			if (!fenceEvent)
 			{
 				hr = HRESULT_FROM_WIN32(GetLastError());
-				return Unexpected(eResult::failure, std::format(L"CreateEvent failed. HRESULT = 0x{:08X}", hr));
+				return UNEXPECTED(eResult::failure, L"CreateEvent failed. HRESULT = 0x{:08X}", hr);
 			}
 
 			m_fenceEvent = fenceEvent.release();

@@ -159,7 +159,7 @@ export namespace zzz
 		std::lock_guard<std::mutex> lock(stateMutex);
 
 		if (initState != InitNot)
-			return Unexpected(eResult::failure, L"Re-initialization is not allowed.");
+			return UNEXPECTED(eResult::failure, L"Re-initialization is not allowed.");
 
 		std::wstring err;
 		try
@@ -168,7 +168,7 @@ export namespace zzz
 			m_ZamlConfig = safe_make_shared<ZamlConfig>(zamlPath);
 			auto res = GetStartupConfig(m_ZamlConfig);
 			if (!res)
-				return Unexpected(eResult::failure, std::format(L"Failed to transfer settings from file.", zamlPath));
+				return UNEXPECTED(eResult::failure, L"Failed to transfer settings from file.", zamlPath);
 			m_Config = res.value();
 
 			return Initialize();
@@ -192,7 +192,7 @@ export namespace zzz
 		// Создаём обёртку над графическим API
 		auto res = m_EngineFactory.CreateGAPI(m_Config->GetGAPIConfig());
 		if (!res)
-			return Unexpected(eResult::failure, L"Failed to create GAPI.");
+			return UNEXPECTED(eResult::failure, L"Failed to create GAPI.");
 		m_GAPI = res.value();
 
 		// Создаём менеджеры ресурсов и фабрику сущностей сцены
@@ -222,10 +222,10 @@ export namespace zzz
 		std::lock_guard lock(stateMutex);
 
 		if (initState != InitOK)
-			return Unexpected(eResult::failure, L"Engine is not initialized.");
+			return UNEXPECTED(eResult::failure, L"Engine is not initialized.");
 
 		if (initState == Running)
-			return Unexpected(eResult::failure, L"Engine is already running.");
+			return UNEXPECTED(eResult::failure, L"Engine is already running.");
 
 		initState = Running;
 		std::wstring err;

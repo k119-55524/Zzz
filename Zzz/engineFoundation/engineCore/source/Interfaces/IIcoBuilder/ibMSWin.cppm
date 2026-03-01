@@ -88,14 +88,14 @@ export namespace zzz::core
 		}
 		else if (hr != RPC_E_CHANGED_MODE)
 		{
-			return Unexpected(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Ошибка инициализации COM.");
+			return UNEXPECTED(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Ошибка инициализации COM.");
 		}
 
 		if (FAILED(CoCreateInstance(CLSID_WICImagingFactory, nullptr,
 			CLSCTX_INPROC_SERVER, IID_IWICImagingFactory, (void**)&factory)))
 		{
 			if (comInitialized) CoUninitialize();
-			return Unexpected(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось создать экземпляр WIC Imaging Factory.");
+			return UNEXPECTED(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось создать экземпляр WIC Imaging Factory.");
 		}
 
 		if (FAILED(factory->CreateDecoderFromFilename(filePath.c_str(), nullptr,
@@ -103,14 +103,14 @@ export namespace zzz::core
 		{
 			CleanupResources();
 			if (comInitialized) CoUninitialize();
-			return Unexpected(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось создать WIC Bitmap Decoder.");
+			return UNEXPECTED(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось создать WIC Bitmap Decoder.");
 		}
 
 		if (FAILED(decoder->GetFrame(0, &frame)))
 		{
 			CleanupResources();
 			if (comInitialized) CoUninitialize();
-			return Unexpected(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось получить кадр из WIC Bitmap Decoder.");
+			return UNEXPECTED(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось получить кадр из WIC Bitmap Decoder.");
 		}
 
 		UINT srcWidth = 0, srcHeight = 0;
@@ -118,35 +118,35 @@ export namespace zzz::core
 		{
 			CleanupResources();
 			if (comInitialized) CoUninitialize();
-			return Unexpected(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось получить размеры изображения.");
+			return UNEXPECTED(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось получить размеры изображения.");
 		}
 
 		if (FAILED(factory->CreateBitmapScaler(&scaler)))
 		{
 			CleanupResources();
 			if (comInitialized) CoUninitialize();
-			return Unexpected(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось создать WIC Bitmap Scaler.");
+			return UNEXPECTED(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось создать WIC Bitmap Scaler.");
 		}
 
 		if (FAILED(scaler->Initialize(frame, iconSize, iconSize, WICBitmapInterpolationModeFant)))
 		{
 			CleanupResources();
 			if (comInitialized) CoUninitialize();
-			return Unexpected(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось инициализировать Bitmap Scaler.");
+			return UNEXPECTED(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось инициализировать Bitmap Scaler.");
 		}
 
 		if (FAILED(factory->CreateFormatConverter(&converter)))
 		{
 			CleanupResources();
 			if (comInitialized) CoUninitialize();
-			return Unexpected(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось создать WIC Format Converter.");
+			return UNEXPECTED(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось создать WIC Format Converter.");
 		}
 
 		if (FAILED(converter->Initialize( scaler, GUID_WICPixelFormat32bppBGRA, WICBitmapDitherTypeNone, nullptr, 0.0, WICBitmapPaletteTypeCustom)))
 		{
 			CleanupResources();
 			if (comInitialized) CoUninitialize();
-			return Unexpected(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось инициализировать WIC Format Converter.");
+			return UNEXPECTED(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось инициализировать WIC Format Converter.");
 		}
 
 		hdc = GetDC(nullptr);
@@ -154,7 +154,7 @@ export namespace zzz::core
 		{
 			CleanupResources();
 			if (comInitialized) CoUninitialize();
-			return Unexpected(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось получить контекст устройства.");
+			return UNEXPECTED(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось получить контекст устройства.");
 		}
 
 		BITMAPV5HEADER bi = {};
@@ -179,14 +179,14 @@ export namespace zzz::core
 		{
 			CleanupResources();
 			if (comInitialized) CoUninitialize();
-			return Unexpected(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось создать DIB-секцию для цветного битмапа.");
+			return UNEXPECTED(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось создать DIB-секцию для цветного битмапа.");
 		}
 
 		if (FAILED(converter->CopyPixels(nullptr, iconSize * 4, iconSize * iconSize * 4, (BYTE*)bits)))
 		{
 			CleanupResources();
 			if (comInitialized) CoUninitialize();
-			return Unexpected(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось скопировать пиксели в цветной битмап.");
+			return UNEXPECTED(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось скопировать пиксели в цветной битмап.");
 		}
 
 		// Создание маски битмапа с использованием альфа-канала
@@ -195,7 +195,7 @@ export namespace zzz::core
 		{
 			CleanupResources();
 			if (comInitialized) CoUninitialize();
-			return Unexpected(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось скопировать пиксели для обработки маски.");
+			return UNEXPECTED(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось скопировать пиксели для обработки маски.");
 		}
 
 		// Обработка альфа-канала для создания монохромной маски
@@ -215,7 +215,7 @@ export namespace zzz::core
 		{
 			CleanupResources();
 			if (comInitialized) CoUninitialize();
-			return Unexpected(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось создать маску битмапа.");
+			return UNEXPECTED(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось создать маску битмапа.");
 		}
 
 		ICONINFO iconInfo = {};
@@ -228,7 +228,7 @@ export namespace zzz::core
 		{
 			CleanupResources();
 			if (comInitialized) CoUninitialize();
-			return Unexpected(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось создать иконку.");
+			return UNEXPECTED(eResult::failure, L">>>>> [ibMSWin::LoadIco]. Не удалось создать иконку.");
 		}
 
 		CleanupResources();

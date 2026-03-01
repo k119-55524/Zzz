@@ -42,7 +42,7 @@ namespace zzz
 		Result<> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, T& value) const
 		{
 			if (offset + sizeof(T) > buffer.size())
-				return Unexpected(eResult::buffer_too_small, L"[zSerialize.DeSerialize]: Buffer too small.");
+				return UNEXPECTED(eResult::buffer_too_small, L"[zSerialize.DeSerialize]: Buffer too small.");
 			std::memcpy(&value, buffer.data() + offset, sizeof(T));
 			offset += sizeof(T);
 
@@ -77,7 +77,7 @@ namespace zzz
 
 			// Проверяем, достаточно ли данных в буфере
 			if (offset + size > buffer.size())
-				return Unexpected(eResult::buffer_too_small, L"[zSerialize.DeSerialize]: Buffer too small for string data.");
+				return UNEXPECTED(eResult::buffer_too_small, L"[zSerialize.DeSerialize]: Buffer too small for string data.");
 
 			// Читаем данные строки
 			str.resize(size);
@@ -119,7 +119,7 @@ namespace zzz
 
 			// Проверяем, достаточно ли данных в буфере
 			if (offset + byte_size > buffer.size())
-				return Unexpected(eResult::buffer_too_small, L"[zSerialize.DeSerialize]: Buffer too small for wstring data.");
+				return UNEXPECTED(eResult::buffer_too_small, L"[zSerialize.DeSerialize]: Buffer too small for wstring data.");
 
 			// Читаем данные строки
 			str.resize(size);

@@ -8,7 +8,10 @@
 		ClassName& operator=(const ClassName&) = delete; \
 		ClassName& operator=(ClassName&&) = delete;
 
-	// Макрос для запрета создания с конструктором без параметров, копирования и перемещения класса
+// Макрос для запрета создания с конструктором без параметров, копирования и перемещения класса
 #define Z_NO_CREATE_COPY(ClassName) \
 		ClassName() = delete; \
 		Z_NO_COPY_MOVE(ClassName)
+
+// Макрос позволяющий избежать ручного ввода std::source_location::current()
+#define UNEXPECTED(code, fmt, ...) Unexpected(code, std::source_location::current(), fmt, ##__VA_ARGS__)

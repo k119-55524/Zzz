@@ -76,15 +76,11 @@ export namespace zzz::dx
 				std::string errorStr(msg, errorBlob->GetBufferSize());
 				auto wstr = string_to_wstring(errorStr);
 
-				std::wstring errMsg = L">>>>> [RootSignature.Initialize( ... )]. ";
-				if (wstr)
-					errMsg += wstr.value();
-
-				DOut(errMsg);
-				return Unexpected(eResult::failure, errMsg);
+				DOut(wstr.value());
+				return Unexpected(eResult::failure, wstr.value());
 			}
 
-			return Unexpected(eResult::failure, L">>>>> [RootSignature.Initialize( ... )]. Failed to serialize root signature.");
+			return Unexpected(eResult::failure, L"Failed to serialize root signature.");
 		}
 
 		// Создаём сам объект Root Signature на GPU
@@ -94,7 +90,7 @@ export namespace zzz::dx
 			serializedRootSig->GetBufferSize(),
 			IID_PPV_ARGS(m_RootSignature.GetAddressOf())))
 		{
-			return Unexpected(eResult::failure, L">>>>> [RootSignature.Initialize( ... )]. Failed to create root signature.");
+			return Unexpected(eResult::failure, L"Failed to create root signature.");
 		}
 
 		return {};

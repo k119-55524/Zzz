@@ -187,7 +187,7 @@ namespace zzz::vk
 			.and_then([&]() { return CreateSyncObjects(); });
 
 		if (!res)
-			return Unexpected(eResult::failure, std::format(L"Failed to initialize SurfView: {}", res.error().getMessage()));
+			return UNEXPECTED(eResult::failure, L"Failed to initialize SurfView: {}", res.error().getMessage());
 
 		return {};
 	}
@@ -232,7 +232,7 @@ namespace zzz::vk
 #endif
 
 		if (vr != VK_SUCCESS)
-			return Unexpected(eResult::failure, std::format(L"Failed to create surface ({})", int(vr)));
+			return UNEXPECTED(eResult::failure, L"Failed to create surface ({})", static_cast<int>(vr));
 
 		return {};
 	}
@@ -302,7 +302,7 @@ namespace zzz::vk
 
 		VkResult vr = vkCreateSwapchainKHR(device, &createInfo, nullptr, &m_Swapchain);
 		if (vr != VK_SUCCESS)
-			return Unexpected(eResult::failure, std::format(L"Failed to create swapchain ({})", int(vr)));
+			return UNEXPECTED(eResult::failure, L"Failed to create swapchain ({})", static_cast<int>(vr));
 
 		// Получаем изображения swapchain
 		vkGetSwapchainImagesKHR(device, m_Swapchain, &imageCount, nullptr);
@@ -341,7 +341,7 @@ namespace zzz::vk
 
 			VkResult vr = vkCreateImageView(device, &createInfo, nullptr, &m_SwapchainImageViews[i]);
 			if (vr != VK_SUCCESS)
-				return Unexpected(eResult::failure, std::format(L"Failed to create image view {} ({})", i, int(vr)));
+				return UNEXPECTED(eResult::failure, L"Failed to create image view {} ({})", i, static_cast<int>(vr));
 		}
 
 		return {};
@@ -424,7 +424,7 @@ namespace zzz::vk
 
 		VkResult vr = vkCreateRenderPass(device, &renderPassInfo, nullptr, &m_RenderPass);
 		if (vr != VK_SUCCESS)
-			return Unexpected(eResult::failure, std::format(L"Failed to create render pass ({})", int(vr)));
+			return UNEXPECTED(eResult::failure, L"Failed to create render pass ({})", static_cast<int>(vr));
 
 		return {};
 	}
@@ -452,7 +452,7 @@ namespace zzz::vk
 
 		VkResult vr = vkCreateImage(device, &imageInfo, nullptr, &m_DepthImage);
 		if (vr != VK_SUCCESS)
-			return Unexpected(eResult::failure, std::format(L"Failed to create depth image ({})", int(vr)));
+			return UNEXPECTED(eResult::failure, L"Failed to create depth image ({})", static_cast<int>(vr));
 
 		VkMemoryRequirements memRequirements;
 		vkGetImageMemoryRequirements(device, m_DepthImage, &memRequirements);
@@ -465,7 +465,7 @@ namespace zzz::vk
 
 		vr = vkAllocateMemory(device, &allocInfo, nullptr, &m_DepthImageMemory);
 		if (vr != VK_SUCCESS)
-			return Unexpected(eResult::failure, std::format(L"Failed to allocate depth image memory ({})", int(vr)));
+			return UNEXPECTED(eResult::failure, L"Failed to allocate depth image memory ({})", static_cast<int>(vr));
 
 		vkBindImageMemory(device, m_DepthImage, m_DepthImageMemory, 0);
 
@@ -485,7 +485,7 @@ namespace zzz::vk
 
 		vr = vkCreateImageView(device, &viewInfo, nullptr, &m_DepthImageView);
 		if (vr != VK_SUCCESS)
-			return Unexpected(eResult::failure, std::format(L"Failed to create depth image view ({})", int(vr)));
+			return UNEXPECTED(eResult::failure, L"Failed to create depth image view ({})", static_cast<int>(vr));
 
 		return {};
 	}
@@ -514,7 +514,7 @@ namespace zzz::vk
 
 			VkResult vr = vkCreateFramebuffer(device, &framebufferInfo, nullptr, &m_Framebuffers[i]);
 			if (vr != VK_SUCCESS)
-				return Unexpected(eResult::failure, std::format(L"Failed to create framebuffer {} ({})", i, int(vr)));
+				return UNEXPECTED(eResult::failure, L"Failed to create framebuffer {} ({})", i, static_cast<int>(vr));
 		}
 
 		return {};
@@ -526,19 +526,19 @@ namespace zzz::vk
 		VkSemaphoreCreateInfo semInfo{ .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 
 		if (vkCreateSemaphore(device, &semInfo, nullptr, &m_StagingAcquireSemaphore) != VK_SUCCESS)
-			return Unexpected(eResult::failure, L"Failed to create StagingAcquireSemaphore");
+			return UNEXPECTED(eResult::failure, L"Failed to create StagingAcquireSemaphore");
 
 		if (vkCreateSemaphore(device, &semInfo, nullptr, &m_StagingRenderFinishedSemaphore) != VK_SUCCESS)
-			return Unexpected(eResult::failure, L"Failed to create StagingRenderFinishedSemaphore");
+			return UNEXPECTED(eResult::failure, L"Failed to create StagingRenderFinishedSemaphore");
 
 		for (size_t i = 0; i < BACK_BUFFER_COUNT; i++)
 		{
 			if (vkCreateSemaphore(device, &semInfo, nullptr, &m_AcquireSemaphores[i]) != VK_SUCCESS)
-				return Unexpected(eResult::failure, std::format(L"Failed to create AcquireSemaphore [{}]", i));
+				return UNEXPECTED(eResult::failure, L"Failed to create AcquireSemaphore [{}]", i);
 
 			// per-image — остаётся в SurfView
 			if (vkCreateSemaphore(device, &semInfo, nullptr, &m_RenderFinishedSemaphores[i]) != VK_SUCCESS)
-				return Unexpected(eResult::failure, std::format(L"Failed to create RenderFinishedSemaphore [{}]", i));
+				return UNEXPECTED(eResult::failure, L"Failed to create RenderFinishedSemaphore [{}]", i);
 		}
 
 		return {};
@@ -702,7 +702,7 @@ namespace zzz::vk
 			&m_Swapchain);
 
 		if (vr != VK_SUCCESS)
-			return Unexpected(
+			return UNEXPECTED(
 				eResult::failure,
 				std::format(L"Failed to recreate swapchain ({})", int(vr)));
 
@@ -725,94 +725,12 @@ namespace zzz::vk
 #pragma region Rendering
 	void SurfView_VK::PrepareFrame(const std::shared_ptr<RenderQueue> renderQueue)
 	{
-		VkDevice device = m_VulkanAPI->GetDevice();
 
-		uint32_t imageIndex;
-		VkResult vr = vkAcquireNextImageKHR(
-			device, m_Swapchain, UINT64_MAX,
-			m_StagingAcquireSemaphore, // остаётся здесь — привязан к swapchain
-			VK_NULL_HANDLE, &imageIndex
-		);
-
-		if (vr == VK_ERROR_OUT_OF_DATE_KHR)
-		{
-			auto res = RecreateSwapchain();
-			if (!res)
-				throw_runtime_error("Failed to recreate swapchain");
-
-			std::lock_guard lock(m_FrameMutex);
-			m_IsFramePrepared = false;
-			m_FrameReady.notify_one();
-			return;
-		}
-		if (vr != VK_SUCCESS && vr != VK_SUBOPTIMAL_KHR)
-			throw_runtime_error("vkAcquireNextImageKHR failed");
-
-		std::swap(m_StagingAcquireSemaphore, m_AcquireSemaphores[imageIndex]);
-
-		VkCommandBuffer cmd = m_VulkanAPI->GetGraphicsCBUpdate();
-		VkClearValue clearValues[2]{};
-		clearValues[0].color = { 0.5f, 0.5f, 0.5f, 1.0f };
-		clearValues[1].depthStencil = { 1.0f, 0 };
-
-		VkRenderPassBeginInfo rpInfo{
-			.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-			.renderPass = m_RenderPass,
-			.framebuffer = m_Framebuffers[imageIndex],
-			.renderArea = {.offset = {0,0}, .extent = m_SwapchainExtent },
-			.clearValueCount = 2,
-			.pClearValues = clearValues
-		};
-
-		vkCmdBeginRenderPass(cmd, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-		vkCmdEndRenderPass(cmd);
-
-		{
-			std::lock_guard lock(m_FrameMutex);
-			m_PreparedImageIndex = imageIndex;
-			m_IsFramePrepared = true;
-		}
-		m_FrameReady.notify_one();
 	}
 
 	void SurfView_VK::RenderFrame()
 	{
-		uint32_t imageIndex;
-		{
-			std::unique_lock lock(m_FrameMutex);
-			m_FrameReady.wait(lock, [this] { return m_IsFramePrepared; });
-			if (!m_IsFramePrepared) return;
-			imageIndex = m_PreparedImageIndex;
-			m_IsFramePrepared = false;
-		}
 
-		// swap RenderFinished — симметрично acquire
-		std::swap(m_StagingRenderFinishedSemaphore, m_RenderFinishedSemaphores[imageIndex]);
-
-		VkSemaphore waitSem = m_AcquireSemaphores[imageIndex];
-		VkSemaphore signalSem = m_RenderFinishedSemaphores[imageIndex];
-
-		m_VulkanAPI->SetFrameSyncData(waitSem, signalSem);
-		m_VulkanAPI->SubmitCommandLists();
-
-		VkPresentInfoKHR presentInfo{
-			.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
-			.waitSemaphoreCount = 1,
-			.pWaitSemaphores = &signalSem,
-			.swapchainCount = 1,
-			.pSwapchains = &m_Swapchain,
-			.pImageIndices = &imageIndex
-		};
-
-		VkResult vr = vkQueuePresentKHR(m_VulkanAPI->GetGraphicsQueue(), &presentInfo);
-		if (vr == VK_ERROR_OUT_OF_DATE_KHR || vr == VK_SUBOPTIMAL_KHR)
-		{
-			if (auto res = RecreateSwapchain(); !res)
-				throw_runtime_error("Failed to recreate swapchain");
-		}
-		else if (vr != VK_SUCCESS)
-			throw_runtime_error("vkQueuePresentKHR failed");
 	}
 #pragma endregion Rendering
 

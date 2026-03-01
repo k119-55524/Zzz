@@ -84,7 +84,7 @@ namespace zzz
 
 		std::shared_ptr<Material> material = safe_make_shared<Material>(pso.value());
 		if (!material)
-			return Unexpected(eResult::no_make_shared_ptr, L"Failed to create Material.");
+			return UNEXPECTED(eResult::no_make_shared_ptr, L"Failed to create Material.");
 
 		return material;
 	}
@@ -97,7 +97,7 @@ namespace zzz
 
 		std::shared_ptr<IPSO> pso = safe_make_shared<PSO>(m_GAPI, shader.value(), mesh->GetInputLayout());
 		if (!pso)
-			return Unexpected(eResult::no_make_shared_ptr, L"Failed to create IPSO.");
+			return UNEXPECTED(eResult::no_make_shared_ptr, L"Failed to create IPSO.");
 
 		return pso;
 	}

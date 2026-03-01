@@ -101,7 +101,7 @@ namespace zzz
 	Result<> IGAPI::Initialize()
 	{
 		if (m_InitState != eInitState::InitNot)
-			return Unexpected(eResult::failure, L"GAPI is already initialized or in an invalid state.");
+			return UNEXPECTED(eResult::failure, L"GAPI is already initialized or in an invalid state.");
 
 		return Init()
 			.and_then([&]() { m_InitState = eInitState::InitOK; })

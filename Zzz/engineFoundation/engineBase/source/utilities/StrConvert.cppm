@@ -21,7 +21,7 @@ export namespace zzz
 			0);
 
 		if (size_needed <= 0)
-			return Unexpected(eResult::failure, L"MultiByteToWideChar failed.");
+			return UNEXPECTED(eResult::failure, L"MultiByteToWideChar failed.");
 
 		// Βϋδελÿεμ αστεπ
 		std::wstring wstr(static_cast<size_t>(size_needed), L'\0');
@@ -35,7 +35,7 @@ export namespace zzz
 			size_needed);
 
 		if (converted != size_needed)
-			return Unexpected(eResult::failure, L"MultiByteToWideChar conversion failed.");
+			return UNEXPECTED(eResult::failure, L"MultiByteToWideChar conversion failed.");
 
 		return wstr;
 	}
@@ -103,7 +103,7 @@ export namespace zzz
 		}
 		catch (...)
 		{
-			return Unexpected(eResult::invalid_format, L"Invalid int: " + text);
+			return UNEXPECTED(eResult::invalid_format, L"Invalid int: {}.", text);
 		}
 	}
 	template<> inline Result<float> ConvertValue<float>(const std::wstring& text)
@@ -114,13 +114,14 @@ export namespace zzz
 		}
 		catch (...)
 		{
-			return Unexpected(eResult::invalid_format, L"Invalid float: " + text);
+			return UNEXPECTED(eResult::invalid_format, L"Invalid float: {}.", text);
 		}
 	}
 	template<> inline Result<bool> ConvertValue<bool>(const std::wstring& text)
 	{
 		if (text == L"true" || text == L"1") return true;
 		if (text == L"false" || text == L"0") return false;
-		return Unexpected(eResult::invalid_format, L"Invalid bool: " + text);
+
+		return UNEXPECTED(eResult::invalid_format, L"Invalid bool: {}.", text);
 	}
 }

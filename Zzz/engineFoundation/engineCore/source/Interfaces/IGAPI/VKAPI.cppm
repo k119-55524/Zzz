@@ -104,9 +104,8 @@ namespace zzz::vk
 		[[nodiscard]] Result<> PickPhysicalDevice(Candidate& deviceCandidate, const VkSurfaceKHR& surface, uint32_t apiVersion);
 		[[nodiscard]] std::optional<Candidate> BestDeviceCandidate(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface, uint32_t apiVersion);
 		[[nodiscard]] Result<> CreateLogicalDevice(const Candidate& deviceCandidate);
-		[[nodiscard]] Result<> CreateAllocator();
+		[[nodiscard]] Result<> CreateAllocator(uint32_t apiVersion);
 		[[nodiscard]] Result<> CreatePipelineCache();
-		[[nodiscard]] Result<> CreateDescriptorPool();
 		[[nodiscard]] Result<> CreateCommandPools(const Candidate& deviceCandidate);
 		[[nodiscard]] Result<> CreateCommandBuffers();
 
@@ -120,15 +119,12 @@ namespace zzz::vk
 
 		VkCommandPool m_TransferCommandPool;
 		std::vector<VkCommandBuffer> m_TransferCommandBuffers;
-
-		// === Queue Family Indices Ч нужны при создании ресурсов и барьерах ===
 		uint32_t m_GraphicsQueueFamilyIndex;
 		uint32_t m_TransferQueueFamilyIndex;
 		uint32_t m_ComputeQueueFamilyIndex;
 
 		VmaAllocator m_Allocator;
-		VkPipelineCache m_PipelineCache; // сериализуешь на диск -> экономишь врем€ компил€ции
-		VkDescriptorPool m_GlobalDescriptorPool; // (дл€ долгоживущих дескрипторов: текстуры, глобальные UBO)
+		VkPipelineCache m_PipelineCache;
 
 #if defined(_DEBUG)
 		VkDebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE;
@@ -167,11 +163,6 @@ namespace zzz::vk
 		{
 			vkDeviceWaitIdle(m_Device);
 
-			// Descriptor Pool
-			if (m_GlobalDescriptorPool)
-				vkDestroyDescriptorPool(m_Device, m_GlobalDescriptorPool, nullptr);
-
-			// Pipeline Cache Ч сначала сериализуем
 			if (m_PipelineCache)
 			{
 				size_t dataSize = 0;
@@ -182,16 +173,12 @@ namespace zzz::vk
 				vkDestroyPipelineCache(m_Device, m_PipelineCache, nullptr);
 			}
 
-			// VMA Ч до vkDestroyDevice
 			if (m_Allocator)
 				vmaDestroyAllocator(m_Allocator);
 
-			// Command Buffers Ч до пулов
 			if (m_TransferCommandPool && !m_TransferCommandBuffers.empty())
-				vkFreeCommandBuffers(m_Device, m_TransferCommandPool,
-					uint32_t(m_TransferCommandBuffers.size()), m_TransferCommandBuffers.data());
+				vkFreeCommandBuffers(m_Device, m_TransferCommandPool, static_cast<uint32_t>(m_TransferCommandBuffers.size()), m_TransferCommandBuffers.data());
 
-			// Command Pools
 			if (m_TransferCommandPool)
 				vkDestroyCommandPool(m_Device, m_TransferCommandPool, nullptr);
 
@@ -216,7 +203,7 @@ namespace zzz::vk
 	{
 		VkResult vr = volkInitialize();
 		if (vr != VK_SUCCESS)
-			return Unexpected(eResult::failure, std::format(L"volkInitialize failed ({})", int(vr)));
+			return UNEXPECTED(eResult::failure, L"Volk nitialize failed: {}.", static_cast<int>(vr));
 
 		Candidate deviceCandidate;
 		uint32_t apiVersion;
@@ -227,14 +214,13 @@ namespace zzz::vk
 					TestSurface_MSWin surface(m_Instance);
 
 					if (!surface.IsValid())
-						return Result<>(Unexpected(eResult::failure, L"Failed to create TestSurface_MSWin surface"));
+						return Result<>(UNEXPECTED(eResult::failure, L"Failed to create TestSurface_MSWin surface"));
 
 					return PickPhysicalDevice(deviceCandidate, surface.Get(), apiVersion);
 				})
 			.and_then([&]() { return CreateLogicalDevice(deviceCandidate); })
-			.and_then([&]() { return CreateAllocator(); })
+			.and_then([&]() { return CreateAllocator(apiVersion); })
 			.and_then([&]() { return CreatePipelineCache(); })
-			.and_then([&]() { return CreateDescriptorPool(); })
 			.and_then([&]() { return CreateCommandPools(deviceCandidate); })
 			.and_then([&]() { return CreateCommandBuffers(); })
 			.and_then([&]()
@@ -322,7 +308,7 @@ namespace zzz::vk
 
 		VkResult vr = vkCreateInstance(&ci, nullptr, &m_Instance);
 		if (vr != VK_SUCCESS)
-			return Unexpected(eResult::failure, L"vkCreateInstance failed ({})", static_cast<int>(vr));
+			return UNEXPECTED(eResult::failure, L"vkCreateInstance failed ({})", static_cast<int>(vr));
 
 		volkLoadInstance(m_Instance);
 
@@ -334,12 +320,12 @@ namespace zzz::vk
 		uint32_t extCount = 0;
 		auto vkRes = vkEnumerateInstanceExtensionProperties(nullptr, &extCount, nullptr);
 		if (vkRes != VK_SUCCESS)
-			return Unexpected(eResult::failure, std::format(L"vkEnumerateInstanceExtensionProperties failed ({})", int(vkRes)));
+			return UNEXPECTED(eResult::failure, L"vkEnumerateInstanceExtensionProperties failed ({})", static_cast<int>(vkRes));
 
 		std::vector<VkExtensionProperties> availableExt(extCount);
 		vkRes = vkEnumerateInstanceExtensionProperties(nullptr, &extCount, availableExt.data());
 		if (vkRes != VK_SUCCESS)
-			return Unexpected(eResult::failure, std::format(L"vkEnumerateInstanceExtensionProperties failed ({})", int(vkRes)));
+			return UNEXPECTED(eResult::failure, L"vkEnumerateInstanceExtensionProperties failed ({})", static_cast<int>(vkRes));
 
 		auto IsExtensionAvailable = [&](const char* name)
 			{
@@ -356,7 +342,7 @@ namespace zzz::vk
 		auto RequireExtension = [&](const char* name) -> Result<>
 			{
 				if (!IsExtensionAvailable(name))
-					return Unexpected(eResult::failure, std::format(L"Required extension not supported: {}", string_to_wstring(name).value_or(L"Unknown extension name")));
+					return UNEXPECTED(eResult::failure, L"Required extension not supported: {}", string_to_wstring(name).value_or(L"Unknown extension name"));
 
 				extensions.push_back(name);
 				return {};
@@ -462,7 +448,7 @@ namespace zzz::vk
 			reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(m_Instance, "vkCreateDebugUtilsMessengerEXT"));
 
 		if (func && func(m_Instance, &debugCreateInfo, nullptr, &m_DebugMessenger) != VK_SUCCESS)
-			return Unexpected(eResult::failure, L"Failed to create debug messenger");
+			return UNEXPECTED(eResult::failure, L"Failed to create debug messenger");
 #endif
 
 		return {};
@@ -473,19 +459,19 @@ namespace zzz::vk
 		uint32_t deviceCount = 0;
 		auto vkRes = vkEnumeratePhysicalDevices(m_Instance, &deviceCount, nullptr);
 		if (vkRes != VK_SUCCESS)
-			return Unexpected(eResult::failure, L"vkEnumeratePhysicalDevices failed ({})", static_cast<int>(vkRes));
+			return UNEXPECTED(eResult::failure, L"vkEnumeratePhysicalDevices failed ({})", static_cast<int>(vkRes));
 
 		if (deviceCount == 0)
-			return Unexpected(eResult::failure, L"No Vulkan devices found");
+			return UNEXPECTED(eResult::failure, L"No Vulkan devices found");
 
 		std::vector<VkPhysicalDevice> devices(deviceCount);
 		vkRes = vkEnumeratePhysicalDevices(m_Instance, &deviceCount, devices.data());
 		if (vkRes != VK_SUCCESS)
-			return Unexpected(eResult::failure, L"vkEnumeratePhysicalDevices failed ({})", static_cast<int>(vkRes));
+			return UNEXPECTED(eResult::failure, L"vkEnumeratePhysicalDevices failed ({})", static_cast<int>(vkRes));
 
 		auto candidat = BestDeviceCandidate(devices, surface, apiVersion);
 		if (!candidat)
-			return Unexpected(eResult::failure, L"No suitable Vulkan device found");
+			return UNEXPECTED(eResult::failure, L"No suitable Vulkan device found");
 
 		deviceCandidate = candidat.value();
 		m_PhysicalDevice = deviceCandidate.device;
@@ -654,12 +640,12 @@ namespace zzz::vk
 		uint32_t extCount = 0;
 		auto vkRes = vkEnumerateDeviceExtensionProperties(m_PhysicalDevice, nullptr, &extCount, nullptr);
 		if (vkRes != VK_SUCCESS)
-			return Unexpected(eResult::failure, std::format(L"vkEnumerateDeviceExtensionProperties failed ({})", int(vkRes)));
+			return UNEXPECTED(eResult::failure, L"vkEnumerateDeviceExtensionProperties failed ({})", static_cast<int>(vkRes));
 
 		std::vector<VkExtensionProperties> availableExt(extCount);
 		vkRes = vkEnumerateDeviceExtensionProperties(m_PhysicalDevice, nullptr, &extCount, availableExt.data());
 		if (vkRes != VK_SUCCESS)
-			return Unexpected(eResult::failure, std::format(L"vkEnumerateDeviceExtensionProperties failed ({})", int(vkRes)));
+			return UNEXPECTED(eResult::failure, L"vkEnumerateDeviceExtensionProperties failed ({})", static_cast<int>(vkRes));
 
 		auto IsExtensionAvailable = [&](const char* name)
 			{
@@ -676,7 +662,7 @@ namespace zzz::vk
 		auto RequireExtension = [&](const char* name) -> Result<>
 			{
 				if (!IsExtensionAvailable(name))
-					return Unexpected(eResult::failure, std::format(L"Required device extension not supported: {}", string_to_wstring(name).value_or(L"Unknown extension name")));
+					return UNEXPECTED(eResult::failure, L"Required device extension not supported: {}", string_to_wstring(name).value_or(L"Unknown extension name"));
 
 				enabledExtensions.push_back(name);
 				return {};
@@ -735,7 +721,7 @@ namespace zzz::vk
 		createInfo.pEnabledFeatures = nullptr;
 
 		if (vkCreateDevice(deviceCandidate.device, &createInfo, nullptr, &m_Device) != VK_SUCCESS)
-			return Unexpected(eResult::failure, L"Failed to create logical device");
+			return UNEXPECTED(eResult::failure, L"Failed to create logical device");
 
 		vkGetDeviceQueue(m_Device, deviceCandidate.graphicsQueueFamily, 0, &m_GraphicsQueue);
 		vkGetDeviceQueue(m_Device, deviceCandidate.computeQueueFamily, 0, &m_ComputeQueue);
@@ -747,19 +733,27 @@ namespace zzz::vk
 		return {};
 	}
 
-	[[nodiscard]] Result<> VKAPI::CreateAllocator()
+	[[nodiscard]] Result<> VKAPI::CreateAllocator(uint32_t apiVersion)
 	{
-		VmaAllocatorCreateInfo ci{
-			.flags = VMA_ALLOCATOR_CREATE_EXT_MEMORY_BUDGET_BIT,
-			.physicalDevice = m_PhysicalDevice,
-			.device = m_Device,
-			.instance = m_Instance,
-			.vulkanApiVersion = VK_API_VERSION_1_4,
-		};
+		VmaVulkanFunctions vf{};
+		vf.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
+		vf.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
+
+		// ∆Єстка€ проверка Ч чтобы не ловить assert внутри VMA
+		if (!vf.vkGetInstanceProcAddr || !vf.vkGetDeviceProcAddr)
+			return UNEXPECTED(eResult::failure, L"Vulkan function pointers are null");
+
+		VmaAllocatorCreateInfo ci{};
+		ci.flags = VMA_ALLOCATOR_CREATE_EXT_MEMORY_BUDGET_BIT;
+		ci.physicalDevice = m_PhysicalDevice;
+		ci.device = m_Device;
+		ci.instance = m_Instance;
+		ci.vulkanApiVersion = apiVersion;
+		ci.pVulkanFunctions = &vf;
 
 		VkResult vr = vmaCreateAllocator(&ci, &m_Allocator);
 		if (vr != VK_SUCCESS)
-			return Unexpected(eResult::failure, L"vmaCreateAllocator failed ({})", static_cast<int>(vr));
+			return UNEXPECTED(eResult::failure, L"vmaCreateAllocator failed ({})", static_cast<int>(vr));
 
 		return {};
 	}
@@ -786,31 +780,7 @@ namespace zzz::vk
 
 		VkResult vr = vkCreatePipelineCache(m_Device, &ci, nullptr, &m_PipelineCache);
 		if (vr != VK_SUCCESS)
-			return Unexpected(eResult::failure, L"vkCreatePipelineCache failed ({})", static_cast<int>(vr));
-
-		return {};
-	}
-
-	[[nodiscard]] Result<> VKAPI::CreateDescriptorPool()
-	{
-		std::array poolSizes{
-			VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         g_MaxUniformBuffers        },
-			VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, g_MaxCombinedImageSamplers },
-			VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,         g_MaxStorageBuffers        },
-			VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,          g_MaxStorageImages         },
-		};
-
-		VkDescriptorPoolCreateInfo ci{
-			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-			.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
-			.maxSets = g_MaxDescriptorSets,
-			.poolSizeCount = static_cast<uint32_t>(poolSizes.size()),
-			.pPoolSizes = poolSizes.data(),
-		};
-
-		VkResult vr = vkCreateDescriptorPool(m_Device, &ci, nullptr, &m_GlobalDescriptorPool);
-		if (vr != VK_SUCCESS)
-			return Unexpected(eResult::failure, L"vkCreateDescriptorPool failed ({})", static_cast<int>(vr));
+			return UNEXPECTED(eResult::failure, L"vkCreatePipelineCache failed ({})", static_cast<int>(vr));
 
 		return {};
 	}
@@ -831,7 +801,7 @@ namespace zzz::vk
 
 			VkResult vr = vkCreateCommandPool(m_Device, &ci, nullptr, &m_TransferCommandPool);
 			if (vr != VK_SUCCESS)
-				return Unexpected(eResult::failure, L"vkCreateCommandPool (transfer) failed ({})", static_cast<int>(vr));
+				return UNEXPECTED(eResult::failure, L"vkCreateCommandPool (transfer) failed ({})", static_cast<int>(vr));
 		}
 
 		return {};
@@ -851,7 +821,7 @@ namespace zzz::vk
 		};
 		VkResult vr = vkAllocateCommandBuffers(m_Device, &allocInfo, m_TransferCommandBuffers.data());
 		if (vr != VK_SUCCESS)
-			return Unexpected(eResult::failure, L"vkAllocateCommandBuffers (transfer) failed ({})", static_cast<int>(vr));
+			return UNEXPECTED(eResult::failure, L"vkAllocateCommandBuffers (transfer) failed ({})", static_cast<int>(vr));
 
 		return {};
 	}
