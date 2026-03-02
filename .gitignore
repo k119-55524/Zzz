@@ -402,3 +402,6 @@ FodyWeavers.xsd
 *.sln.iml
 SolutionExperience/SyntaxTest/*.i
 resourceСreator/Data/
+
+# Main
+Zzz/gameWin/data/

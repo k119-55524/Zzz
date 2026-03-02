@@ -46,6 +46,7 @@ namespace zzz
 		inline void TranferResourceToGPU() { m_CPUtoGPUDataTransfer->TransferResourceToGPU(); };
 
 		inline zU32 GetIndexFrameRender() const noexcept { return m_IndexFrameRender; }
+		inline zU32 GetIndexFrameUpdate() const noexcept { return m_IndexFrameUpdate; }
 
 		virtual void BeginRender() = 0;
 		virtual void EndRender();
@@ -92,8 +93,8 @@ namespace zzz
 		m_GapiType{ type },
 		m_IsCanDisableVSync{ false },
 		m_InitState{ eInitState::InitNot },
-		m_IndexFrameRender{ 0 },
-		m_IndexFrameUpdate{ 1 }
+		m_IndexFrameRender{ 1 },
+		m_IndexFrameUpdate{ 0 }
 	{
 		ensure(m_Config, "GAPIConfig cannot be null.");
 	}

@@ -26,6 +26,7 @@ namespace zzz::vk
 		uint32_t graphicsQueueFamily{};
 		uint32_t computeQueueFamily{};
 		uint32_t transferQueueFamily{};
+		uint32_t presentQueueFamily{};
 		uint64_t score = 0;
 		bool isCanDisableVSync = false;
 	};
@@ -87,6 +88,8 @@ namespace zzz::vk
 		inline VkQueue GetGraphicsQueue() const noexcept { return m_GraphicsQueue; }
 		inline VkQueue GetComputeQueue() const noexcept { return m_ComputeQueue; }
 		inline VkQueue GetTransferQueue() const noexcept { return m_TransferQueue; }
+		inline VkQueue GetPresentQueue() const noexcept { return m_PresentQueue; }
+		inline uint32_t GetPresentQueueFamilyIndex() const noexcept { return m_PresentQueueFamilyIndex; }
 
 		void SubmitCommandLists() override;
 		void BeginRender() override;
@@ -113,6 +116,8 @@ namespace zzz::vk
 		VkPhysicalDevice m_PhysicalDevice;
 		VkDevice m_Device;
 
+		uint32_t m_PresentQueueFamilyIndex;
+		VkQueue m_PresentQueue;
 		VkQueue m_GraphicsQueue;
 		VkQueue m_ComputeQueue;
 		VkQueue m_TransferQueue;
@@ -501,25 +506,40 @@ namespace zzz::vk
 			std::optional<uint32_t> graphicsFamily;
 			std::optional<uint32_t> computeFamily;
 			std::optional<uint32_t> transferFamily;
-
+			std::optional<uint32_t> presentFamily;
 			for (uint32_t i = 0; i < familyCount; ++i)
 			{
 				const auto& f = families[i];
 
-				if ((f.queueFlags & VK_QUEUE_GRAPHICS_BIT) && !graphicsFamily.has_value())
+				if ((f.queueFlags & VK_QUEUE_GRAPHICS_BIT) && !graphicsFamily)
 					graphicsFamily = i;
 
-				if ((f.queueFlags & VK_QUEUE_COMPUTE_BIT) && !(f.queueFlags & VK_QUEUE_GRAPHICS_BIT) && !computeFamily.has_value())
+				if ((f.queueFlags & VK_QUEUE_COMPUTE_BIT) &&
+					!(f.queueFlags & VK_QUEUE_GRAPHICS_BIT) &&
+					!computeFamily)
 					computeFamily = i;
 
-				if ((f.queueFlags & VK_QUEUE_TRANSFER_BIT) && !(f.queueFlags & VK_QUEUE_GRAPHICS_BIT) && !(f.queueFlags & VK_QUEUE_COMPUTE_BIT) && !transferFamily.has_value())
+				if ((f.queueFlags & VK_QUEUE_TRANSFER_BIT) &&
+					!(f.queueFlags & VK_QUEUE_GRAPHICS_BIT) &&
+					!(f.queueFlags & VK_QUEUE_COMPUTE_BIT) &&
+					!transferFamily)
 					transferFamily = i;
+
+				VkBool32 supportsPresent = VK_FALSE;
+				vkGetPhysicalDeviceSurfaceSupportKHR(
+					device,
+					i,
+					surface,
+					&supportsPresent);
+
+				if (supportsPresent && !presentFamily)
+					presentFamily = i;
 			}
 
 			if (!computeFamily) computeFamily = graphicsFamily;
 			if (!transferFamily) transferFamily = graphicsFamily;
 
-			if (!graphicsFamily)
+			if (!graphicsFamily || !presentFamily)
 				continue;
 
 			VkPhysicalDeviceProperties props{};
@@ -602,6 +622,7 @@ namespace zzz::vk
 					.graphicsQueueFamily = *graphicsFamily,
 					.computeQueueFamily = *computeFamily,
 					.transferQueueFamily = *transferFamily,
+					.presentQueueFamily = *presentFamily,
 					.score = score,
 					.isCanDisableVSync = isCanDisableVSync
 				};
@@ -636,6 +657,7 @@ namespace zzz::vk
 		AddQueue(deviceCandidate.graphicsQueueFamily);
 		AddQueue(deviceCandidate.computeQueueFamily);
 		AddQueue(deviceCandidate.transferQueueFamily);
+		AddQueue(deviceCandidate.presentQueueFamily);
 
 		uint32_t extCount = 0;
 		auto vkRes = vkEnumerateDeviceExtensionProperties(m_PhysicalDevice, nullptr, &extCount, nullptr);
@@ -726,9 +748,11 @@ namespace zzz::vk
 		vkGetDeviceQueue(m_Device, deviceCandidate.graphicsQueueFamily, 0, &m_GraphicsQueue);
 		vkGetDeviceQueue(m_Device, deviceCandidate.computeQueueFamily, 0, &m_ComputeQueue);
 		vkGetDeviceQueue(m_Device, deviceCandidate.transferQueueFamily, 0, &m_TransferQueue);
+		vkGetDeviceQueue(m_Device, deviceCandidate.presentQueueFamily, 0, &m_PresentQueue);
 		m_GraphicsQueueFamilyIndex = deviceCandidate.graphicsQueueFamily;
 		m_TransferQueueFamilyIndex = deviceCandidate.transferQueueFamily;
 		m_ComputeQueueFamilyIndex = deviceCandidate.computeQueueFamily;
+		m_PresentQueueFamilyIndex = deviceCandidate.presentQueueFamily;
 
 		return {};
 	}

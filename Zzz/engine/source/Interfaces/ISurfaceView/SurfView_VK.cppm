@@ -30,7 +30,7 @@ using namespace zzz::colors;
 
 namespace zzz::vk
 {
-	// Структуры для uniform buffers (аналог UploadBuffer в DirectX)
+	// Структуры для uniform buffers
 	struct GPU_LayerConstants
 	{
 		Matrix4x4 WorldViewProj;
@@ -53,6 +53,19 @@ namespace zzz::vk
 		Matrix4x4 WorldViewProj;
 	};
 
+	// Константы для preferred форматов
+	constexpr std::array<VkFormat, 3> PREFERRED_SWAPCHAIN_FORMATS = {
+		VK_FORMAT_B8G8R8A8_SRGB,
+		VK_FORMAT_R8G8B8A8_SRGB,
+		VK_FORMAT_A2B10G10R10_UNORM_PACK32
+	};
+
+	constexpr std::array<VkFormat, 3> PREFERRED_DEPTH_FORMATS = {
+		VK_FORMAT_D32_SFLOAT,
+		VK_FORMAT_D24_UNORM_S8_UINT,
+		VK_FORMAT_D16_UNORM
+	};
+
 	export class SurfView_VK final : public ISurfView
 	{
 		Z_NO_COPY_MOVE(SurfView_VK);
@@ -68,61 +81,76 @@ namespace zzz::vk
 		[[nodiscard]] Result<> OnUpdateVSyncState() override;
 
 	private:
+		// Core members
 		std::shared_ptr<AppWin_MSWin> m_iAppWin;
 		std::shared_ptr<VKAPI> m_VulkanAPI;
 
-		VkSurfaceKHR m_Surface;
-		VkSwapchainKHR m_Swapchain;
-		VkExtent2D m_SwapchainExtent;
+		// Surface and swapchain
+		VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
+		VkSwapchainKHR m_Swapchain = VK_NULL_HANDLE;
+		VkExtent2D m_SwapchainExtent{};
 		std::vector<VkImage> m_SwapchainImages;
 		std::vector<VkImageView> m_SwapchainImageViews;
 		std::vector<VkFramebuffer> m_Framebuffers;
-		VkFormat m_ChosenSwapchainFormat;
-		VkFormat m_ChosenDepthFormat;
-		VkImage m_DepthImage;
-		VkDeviceMemory m_DepthImageMemory;
-		VkImageView m_DepthImageView;
-		VkRenderPass m_RenderPass;
+		VkFormat m_ChosenSwapchainFormat = VK_FORMAT_UNDEFINED;
 
+		// Depth resources
+		VkFormat m_ChosenDepthFormat = VK_FORMAT_UNDEFINED;
+		VkImage m_DepthImage = VK_NULL_HANDLE;
+		VkDeviceMemory m_DepthImageMemory = VK_NULL_HANDLE;
+		VkImageView m_DepthImageView = VK_NULL_HANDLE;
+
+		// Render pass
+		VkRenderPass m_RenderPass = VK_NULL_HANDLE;
+
+		// Queue families
+		uint32_t m_GraphicsQueueFamily = UINT32_MAX;
+		uint32_t m_PresentQueueFamily = UINT32_MAX;
+
+		// Command pool and per-frame data
+		VkCommandPool m_CommandPool = VK_NULL_HANDLE;
+
+		struct FrameData
+		{
+			VkFence fence = VK_NULL_HANDLE;          // Сигналит когда ГПУ закончил рендер фрейма
+			VkSemaphore acquireSemaphore = VK_NULL_HANDLE;   // для vkAcquireNextImageKHR
+			VkSemaphore renderSemaphore = VK_NULL_HANDLE;   // для vkQueuePresentKHR
+			VkCommandBuffer cmdBuffer = VK_NULL_HANDLE;    // Буфер команд для этого фрейма
+			uint32_t imageIndex = 0;                        // Индекс изображения в свапчейне
+			bool inFlight = false;                          // Флаг что фрейм в полете
+		};
+
+		VkSemaphore m_ImageAvailableSemaphore = VK_NULL_HANDLE;  // Один на всех
+		VkSemaphore m_RenderFinishedSemaphore = VK_NULL_HANDLE;  // Один на всех
+
+		std::array<FrameData, FRAMES_IN_FLIGHT> m_Frames;
+		//uint32_t m_CurrentFrame = 0;
+
+		// Private methods
+		[[nodiscard]] Result<> FindQueueFamilies();
 		[[nodiscard]] Result<> CreateSurface();
 		[[nodiscard]] Result<> CreateSwapchain(const Size2D<>& size);
 		[[nodiscard]] Result<> CreateImageViews();
 		[[nodiscard]] Result<> CreateRenderPass();
 		[[nodiscard]] Result<> CreateDepthResources(const Size2D<>& size);
 		[[nodiscard]] Result<> CreateFramebuffers();
-		[[nodiscard]] Result<> RecreateSwapchain();
+		[[nodiscard]] Result<> CreateCommandPool();
 		[[nodiscard]] Result<> CreateSyncObjects();
+		[[nodiscard]] Result<> RecreateSwapchain();
 		void CleanupSwapchain();
 		[[nodiscard]] uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-
-		VkSemaphore m_StagingAcquireSemaphore;
-		VkSemaphore m_StagingRenderFinishedSemaphore;
-		std::array<VkSemaphore, BACK_BUFFER_COUNT> m_AcquireSemaphores{};
-		std::array<VkSemaphore, BACK_BUFFER_COUNT> m_RenderFinishedSemaphores{};
-
-		std::mutex m_FrameMutex;
-		std::condition_variable m_FrameReady;
-		bool m_IsFramePrepared = false;
-		uint32_t m_PreparedImageIndex = 0;
 	};
+
+	//=============================================================================
+	// Constructor / Destructor
+	//=============================================================================
 
 	SurfView_VK::SurfView_VK(
 		std::shared_ptr<IAppWin> _iAppWin,
 		std::shared_ptr<IGAPI> _iGAPI)
-		: ISurfView(_iGAPI),
-		m_iAppWin{ std::dynamic_pointer_cast<AppWin_MSWin>(_iAppWin)} ,
-		m_VulkanAPI{ std::dynamic_pointer_cast<VKAPI>(_iGAPI) },
-		m_Surface{ VK_NULL_HANDLE },
-		m_Swapchain{ VK_NULL_HANDLE },
-		m_ChosenSwapchainFormat{ VK_FORMAT_UNDEFINED },
-		m_ChosenDepthFormat{ VK_FORMAT_UNDEFINED },
-		m_DepthImage{ VK_NULL_HANDLE },
-		m_DepthImageMemory{ VK_NULL_HANDLE },
-		m_DepthImageView{ VK_NULL_HANDLE },
-		m_RenderPass{ VK_NULL_HANDLE },
-		m_StagingAcquireSemaphore{ VK_NULL_HANDLE },
-		m_StagingRenderFinishedSemaphore{ VK_NULL_HANDLE }
-
+		: ISurfView(_iGAPI)
+		, m_iAppWin{ std::dynamic_pointer_cast<AppWin_MSWin>(_iAppWin) }
+		, m_VulkanAPI{ std::dynamic_pointer_cast<VKAPI>(_iGAPI) }
 	{
 		ensure(m_iAppWin, "App window must be of type AppWin_MSWin.");
 		ensure(m_VulkanAPI, "Failed to cast IGAPI to VKAPI.");
@@ -136,37 +164,25 @@ namespace zzz::vk
 
 		vkDeviceWaitIdle(device);
 
-		if (m_StagingAcquireSemaphore)
-		{
-			vkDestroySemaphore(device, m_StagingAcquireSemaphore, nullptr);
-			m_StagingAcquireSemaphore = VK_NULL_HANDLE;
-		}
+		if (m_ImageAvailableSemaphore)
+			vkDestroySemaphore(device, m_ImageAvailableSemaphore, nullptr);
+		if (m_RenderFinishedSemaphore)
+			vkDestroySemaphore(device, m_RenderFinishedSemaphore, nullptr);
 
-		if (m_StagingRenderFinishedSemaphore)
+		// Cleanup per-frame data
+		for (auto& frame : m_Frames)
 		{
-			vkDestroySemaphore(device, m_StagingRenderFinishedSemaphore, nullptr);
-			m_StagingRenderFinishedSemaphore = VK_NULL_HANDLE;
-		}
-
-		for (size_t i = 0; i < BACK_BUFFER_COUNT; i++)
-		{
-			if (m_AcquireSemaphores[i])
-			{
-				vkDestroySemaphore(device, m_AcquireSemaphores[i], nullptr);
-				m_AcquireSemaphores[i] = VK_NULL_HANDLE;
-			}
-
-			if (m_RenderFinishedSemaphores[i])
-			{
-				vkDestroySemaphore(device, m_RenderFinishedSemaphores[i], nullptr);
-				m_RenderFinishedSemaphores[i] = VK_NULL_HANDLE;
-			}
+			if (frame.fence)
+				vkDestroyFence(device, frame.fence, nullptr);
 		}
 
 		CleanupSwapchain();
 
 		if (m_RenderPass)
 			vkDestroyRenderPass(device, m_RenderPass, nullptr);
+
+		if (m_CommandPool)
+			vkDestroyCommandPool(device, m_CommandPool, nullptr);
 
 		if (m_Surface)
 			vkDestroySurfaceKHR(m_VulkanAPI->GetInstance(), m_Surface, nullptr);
@@ -179,7 +195,9 @@ namespace zzz::vk
 		m_SurfSize.SetFrom(winSize);
 
 		auto res = CreateSurface()
+			.and_then([&]() { return FindQueueFamilies(); })
 			.and_then([&]() { return CreateSwapchain(winSize); })
+			.and_then([&]() { return CreateCommandPool(); })
 			.and_then([&]() { return CreateImageViews(); })
 			.and_then([&]() { return CreateRenderPass(); })
 			.and_then([&]() { return CreateDepthResources(winSize); })
@@ -188,6 +206,54 @@ namespace zzz::vk
 
 		if (!res)
 			return UNEXPECTED(eResult::failure, L"Failed to initialize SurfView: {}", res.error().getMessage());
+
+		return {};
+	}
+
+	[[nodiscard]] Result<> SurfView_VK::FindQueueFamilies()
+	{
+		VkPhysicalDevice physicalDevice = m_VulkanAPI->GetPhysicalDevice();
+
+		uint32_t queueFamilyCount = 0;
+		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
+		std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+		vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilies.data());
+
+		// Find graphics and present queue families
+		for (uint32_t i = 0; i < queueFamilyCount; i++)
+		{
+			if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
+			{
+				m_GraphicsQueueFamily = i;
+
+				// Check if this queue supports presentation
+				VkBool32 presentSupport = VK_FALSE;
+				vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, m_Surface, &presentSupport);
+				if (presentSupport)
+				{
+					m_PresentQueueFamily = i;
+					break;
+				}
+			}
+		}
+
+		// If we didn't find a combined queue, look for a separate present queue
+		if (m_PresentQueueFamily == UINT32_MAX)
+		{
+			for (uint32_t i = 0; i < queueFamilyCount; i++)
+			{
+				VkBool32 presentSupport = VK_FALSE;
+				vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, m_Surface, &presentSupport);
+				if (presentSupport)
+				{
+					m_PresentQueueFamily = i;
+					break;
+				}
+			}
+		}
+
+		if (m_GraphicsQueueFamily == UINT32_MAX || m_PresentQueueFamily == UINT32_MAX)
+			return UNEXPECTED(eResult::failure, L"Failed to find required queue families");
 
 		return {};
 	}
@@ -203,32 +269,31 @@ namespace zzz::vk
 			.hwnd = m_iAppWin->GetHWND()
 		};
 		vr = vkCreateWin32SurfaceKHR(m_VulkanAPI->GetInstance(), &createInfo, nullptr, &m_Surface);
-
 #elif defined(ZPLATFORM_ANDROID)
+		// Android implementation
 		VkAndroidSurfaceCreateInfoKHR createInfo{
 			.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR,
-			.window = m_NativeWindow  // ANativeWindow*
+			.window = GetNativeWindow() // You need to implement this
 		};
 		vr = vkCreateAndroidSurfaceKHR(m_VulkanAPI->GetInstance(), &createInfo, nullptr, &m_Surface);
-
 #elif defined(ZPLATFORM_LINUX)
 #if defined(USE_WAYLAND)
 		VkWaylandSurfaceCreateInfoKHR createInfo{
 			.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR,
-			.display = m_WaylandDisplay,  // wl_display*
-			.surface = m_WaylandSurface   // wl_surface*
+			.display = GetWaylandDisplay(),
+			.surface = GetWaylandSurface()
 		};
 		vr = vkCreateWaylandSurfaceKHR(m_VulkanAPI->GetInstance(), &createInfo, nullptr, &m_Surface);
 #else
 		VkXcbSurfaceCreateInfoKHR createInfo{
 			.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR,
-			.connection = m_XcbConnection, // xcb_connection_t*
-			.window = m_XcbWindow          // xcb_window_t
+			.connection = GetXcbConnection(),
+			.window = GetXcbWindow()
 		};
 		vr = vkCreateXcbSurfaceKHR(m_VulkanAPI->GetInstance(), &createInfo, nullptr, &m_Surface);
 #endif
 #else
-#error ">>>>> [Compile error]. This branch requires implementation for the current platform"
+#error "Platform not supported"
 #endif
 
 		if (vr != VK_SUCCESS)
@@ -242,54 +307,66 @@ namespace zzz::vk
 		VkPhysicalDevice physicalDevice = m_VulkanAPI->GetPhysicalDevice();
 		VkDevice device = m_VulkanAPI->GetDevice();
 
+		// Get surface capabilities
 		VkSurfaceCapabilitiesKHR capabilities;
 		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_Surface, &capabilities);
 
-		// Вычисляем корректный extent
-		VkExtent2D extent;
+		// Calculate extent
 		if (capabilities.currentExtent.width != UINT32_MAX)
 		{
-			extent = capabilities.currentExtent;
+			m_SwapchainExtent = capabilities.currentExtent;
 		}
 		else
 		{
-			extent =
-			{
-				std::clamp(static_cast<uint32_t>(size.width), capabilities.minImageExtent.width, capabilities.maxImageExtent.width),
-				std::clamp(static_cast<uint32_t>(size.height), capabilities.minImageExtent.height, capabilities.maxImageExtent.height)
+			m_SwapchainExtent = {
+				std::clamp(static_cast<uint32_t>(size.width),
+						  capabilities.minImageExtent.width,
+						  capabilities.maxImageExtent.width),
+				std::clamp(static_cast<uint32_t>(size.height),
+						  capabilities.minImageExtent.height,
+						  capabilities.maxImageExtent.height)
 			};
 		}
 
-		m_SwapchainExtent = extent;
-
-		// Далее создаём swapchain с этим extent
-		uint32_t imageCount = BACK_BUFFER_COUNT;
-		if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount)
-			imageCount = capabilities.maxImageCount;
-
+		// Get surface formats
 		uint32_t formatCount = 0;
 		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface, &formatCount, nullptr);
 		std::vector<VkSurfaceFormatKHR> formats(formatCount);
 		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface, &formatCount, formats.data());
 
+		// Choose format
 		m_ChosenSwapchainFormat = formats[0].format; // fallback
-		for (auto& pf : PREFERRED_FORMATS) {
-			for (auto& f : formats) {
-				if (f.format == pf && f.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
-					m_ChosenSwapchainFormat = f.format;
+		for (auto& preferredFormat : PREFERRED_SWAPCHAIN_FORMATS)
+		{
+			for (auto& format : formats)
+			{
+				if (format.format == preferredFormat &&
+					format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+				{
+					m_ChosenSwapchainFormat = format.format;
 					break;
 				}
 			}
 		}
 
-		auto presentMode = m_GAPI->IsVSyncEnabled() ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_MAILBOX_KHR;
+		// Determine image count
+		uint32_t imageCount = BACK_BUFFER_COUNT;
+		if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount)
+			imageCount = capabilities.maxImageCount;
+
+		// Choose present mode based on vsync
+		VkPresentModeKHR presentMode = m_GAPI->IsVSyncEnabled()
+			? VK_PRESENT_MODE_FIFO_KHR
+			: VK_PRESENT_MODE_MAILBOX_KHR;
+
+		// Create swapchain
 		VkSwapchainCreateInfoKHR createInfo{
 			.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
 			.surface = m_Surface,
 			.minImageCount = imageCount,
 			.imageFormat = m_ChosenSwapchainFormat,
 			.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-			.imageExtent = extent,
+			.imageExtent = m_SwapchainExtent,
 			.imageArrayLayers = 1,
 			.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
 			.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
@@ -304,7 +381,7 @@ namespace zzz::vk
 		if (vr != VK_SUCCESS)
 			return UNEXPECTED(eResult::failure, L"Failed to create swapchain ({})", static_cast<int>(vr));
 
-		// Получаем изображения swapchain
+		// Get swapchain images
 		vkGetSwapchainImagesKHR(device, m_Swapchain, &imageCount, nullptr);
 		m_SwapchainImages.resize(imageCount);
 		vkGetSwapchainImagesKHR(device, m_Swapchain, &imageCount, m_SwapchainImages.data());
@@ -312,11 +389,28 @@ namespace zzz::vk
 		return {};
 	}
 
+	[[nodiscard]] Result<> SurfView_VK::CreateCommandPool()
+	{
+		ensure(m_GraphicsQueueFamily != UINT32_MAX, "Graphics queue family not found");
+
+		VkDevice device = m_VulkanAPI->GetDevice();
+		VkCommandPoolCreateInfo poolInfo{};
+		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		poolInfo.queueFamilyIndex = m_GraphicsQueueFamily;
+
+		VkResult vr = vkCreateCommandPool(device, &poolInfo, nullptr, &m_CommandPool);
+		if (vr != VK_SUCCESS)
+			return UNEXPECTED(eResult::failure, L"Failed to create command pool ({})", static_cast<int>(vr));
+
+		return {};
+	}
+
 	[[nodiscard]] Result<> SurfView_VK::CreateImageViews()
 	{
 		VkDevice device = m_VulkanAPI->GetDevice();
-
 		m_SwapchainImageViews.resize(m_SwapchainImages.size());
+
 		for (size_t i = 0; i < m_SwapchainImages.size(); i++)
 		{
 			VkImageViewCreateInfo createInfo{
@@ -352,6 +446,7 @@ namespace zzz::vk
 		VkPhysicalDevice physicalDevice = m_VulkanAPI->GetPhysicalDevice();
 		VkDevice device = m_VulkanAPI->GetDevice();
 
+		// Color attachment
 		VkAttachmentDescription colorAttachment{
 			.format = m_ChosenSwapchainFormat,
 			.samples = VK_SAMPLE_COUNT_1_BIT,
@@ -363,6 +458,7 @@ namespace zzz::vk
 			.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 		};
 
+		// Choose depth format
 		for (auto fmt : PREFERRED_DEPTH_FORMATS)
 		{
 			VkFormatProperties props;
@@ -374,6 +470,10 @@ namespace zzz::vk
 			}
 		}
 
+		if (m_ChosenDepthFormat == VK_FORMAT_UNDEFINED)
+			return UNEXPECTED(eResult::failure, L"No suitable depth format found");
+
+		// Depth attachment
 		VkAttachmentDescription depthAttachment{
 			.format = m_ChosenDepthFormat,
 			.samples = VK_SAMPLE_COUNT_1_BIT,
@@ -405,10 +505,13 @@ namespace zzz::vk
 		VkSubpassDependency dependency{
 			.srcSubpass = VK_SUBPASS_EXTERNAL,
 			.dstSubpass = 0,
-			.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-			.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-			.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-			.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT
+			.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
+						   VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+			.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
+						   VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+			.srcAccessMask = 0,
+			.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
+							VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT
 		};
 
 		std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
@@ -432,14 +535,15 @@ namespace zzz::vk
 	[[nodiscard]] Result<> SurfView_VK::CreateDepthResources(const Size2D<>& size)
 	{
 		VkDevice device = m_VulkanAPI->GetDevice();
+
 		VkImageCreateInfo imageInfo{
 			.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 			.imageType = VK_IMAGE_TYPE_2D,
 			.format = m_ChosenDepthFormat,
 			.extent = {
-				m_SwapchainExtent.width,	//.width = static_cast<uint32_t>(size.width),
-				m_SwapchainExtent.height,	//.height = static_cast<uint32_t>(size.height),
-				1
+				.width = m_SwapchainExtent.width,
+				.height = m_SwapchainExtent.height,
+				.depth = 1
 			},
 			.mipLevels = 1,
 			.arrayLayers = 1,
@@ -460,7 +564,8 @@ namespace zzz::vk
 		VkMemoryAllocateInfo allocInfo{
 			.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
 			.allocationSize = memRequirements.size,
-			.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
+			.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits,
+											  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
 		};
 
 		vr = vkAllocateMemory(device, &allocInfo, nullptr, &m_DepthImageMemory);
@@ -523,46 +628,49 @@ namespace zzz::vk
 	Result<> SurfView_VK::CreateSyncObjects()
 	{
 		VkDevice device = m_VulkanAPI->GetDevice();
-		VkSemaphoreCreateInfo semInfo{ .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 
-		if (vkCreateSemaphore(device, &semInfo, nullptr, &m_StagingAcquireSemaphore) != VK_SUCCESS)
-			return UNEXPECTED(eResult::failure, L"Failed to create StagingAcquireSemaphore");
+		// Create semaphores
+		VkSemaphoreCreateInfo semaphoreInfo{};
+		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+		VkResult vr = vkCreateSemaphore(device, &semaphoreInfo, nullptr, &m_ImageAvailableSemaphore);
+		if (vr != VK_SUCCESS)
+			return UNEXPECTED(eResult::failure, L"Failed to create m_ImageAvailableSemaphore semaphore.");
 
-		if (vkCreateSemaphore(device, &semInfo, nullptr, &m_StagingRenderFinishedSemaphore) != VK_SUCCESS)
-			return UNEXPECTED(eResult::failure, L"Failed to create StagingRenderFinishedSemaphore");
+		vr = vkCreateSemaphore(device, &semaphoreInfo, nullptr, &m_RenderFinishedSemaphore);
+		if (vr != VK_SUCCESS)
+			return UNEXPECTED(eResult::failure, L"Failed to create m_RenderFinishedSemaphore semaphore.");
 
-		for (size_t i = 0; i < BACK_BUFFER_COUNT; i++)
+		for (uint32_t i = 0; i < FRAMES_IN_FLIGHT; i++)
 		{
-			if (vkCreateSemaphore(device, &semInfo, nullptr, &m_AcquireSemaphores[i]) != VK_SUCCESS)
-				return UNEXPECTED(eResult::failure, L"Failed to create AcquireSemaphore [{}]", i);
+			// Allocate command buffer
+			VkCommandBufferAllocateInfo allocInfo{};
+			allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+			allocInfo.commandPool = m_CommandPool;
+			allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+			allocInfo.commandBufferCount = 1;
 
-			// per-image — остаётся в SurfView
-			if (vkCreateSemaphore(device, &semInfo, nullptr, &m_RenderFinishedSemaphores[i]) != VK_SUCCESS)
-				return UNEXPECTED(eResult::failure, L"Failed to create RenderFinishedSemaphore [{}]", i);
+			vr = vkAllocateCommandBuffers(device, &allocInfo, &m_Frames[i].cmdBuffer);
+			if (vr != VK_SUCCESS)
+				return UNEXPECTED(eResult::failure, L"Failed to allocate command buffer for frame {}", i);
+
+			// Create fence (initially signaled)
+			VkFenceCreateInfo fenceInfo{};
+			fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+			fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+			VkSemaphoreCreateInfo semInfo = {};
+			semInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+			vkCreateSemaphore(device, &semInfo, nullptr, &m_Frames[i].acquireSemaphore);
+			vkCreateSemaphore(device, &semInfo, nullptr, &m_Frames[i].renderSemaphore);
+
+			vr = vkCreateFence(device, &fenceInfo, nullptr, &m_Frames[i].fence);
+			if (vr != VK_SUCCESS)
+				return UNEXPECTED(eResult::failure, L"Failed to create fence for frame {}", i);
+
+			m_Frames[i].inFlight = false;
 		}
 
 		return {};
-	}
-
-	void SurfView_VK::CleanupSwapchain()
-	{
-		VkDevice device = m_VulkanAPI->GetDevice();
-
-		for (auto framebuffer : m_Framebuffers)
-			vkDestroyFramebuffer(device, framebuffer, nullptr);
-
-		if (m_DepthImageView)
-			vkDestroyImageView(device, m_DepthImageView, nullptr);
-		if (m_DepthImage)
-			vkDestroyImage(device, m_DepthImage, nullptr);
-		if (m_DepthImageMemory)
-			vkFreeMemory(device, m_DepthImageMemory, nullptr);
-
-		for (auto imageView : m_SwapchainImageViews)
-			vkDestroyImageView(device, imageView, nullptr);
-
-		if (m_Swapchain)
-			vkDestroySwapchainKHR(device, m_Swapchain, nullptr);
 	}
 
 	[[nodiscard]] uint32_t SurfView_VK::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
@@ -572,15 +680,55 @@ namespace zzz::vk
 
 		for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
 		{
-			if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+			if ((typeFilter & (1 << i)) &&
+				(memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+			{
 				return i;
+			}
 		}
 
 		throw_runtime_error("Failed to find suitable memory type");
+		return UINT32_MAX;
 	}
 
-	[[nodiscard]]
-	Result<> SurfView_VK::RecreateSwapchain()
+	void SurfView_VK::CleanupSwapchain()
+	{
+		VkDevice device = m_VulkanAPI->GetDevice();
+
+		for (auto framebuffer : m_Framebuffers)
+			vkDestroyFramebuffer(device, framebuffer, nullptr);
+		m_Framebuffers.clear();
+
+		if (m_DepthImageView)
+		{
+			vkDestroyImageView(device, m_DepthImageView, nullptr);
+			m_DepthImageView = VK_NULL_HANDLE;
+		}
+
+		if (m_DepthImage)
+		{
+			vkDestroyImage(device, m_DepthImage, nullptr);
+			m_DepthImage = VK_NULL_HANDLE;
+		}
+
+		if (m_DepthImageMemory)
+		{
+			vkFreeMemory(device, m_DepthImageMemory, nullptr);
+			m_DepthImageMemory = VK_NULL_HANDLE;
+		}
+
+		for (auto imageView : m_SwapchainImageViews)
+			vkDestroyImageView(device, imageView, nullptr);
+		m_SwapchainImageViews.clear();
+
+		if (m_Swapchain)
+		{
+			vkDestroySwapchainKHR(device, m_Swapchain, nullptr);
+			m_Swapchain = VK_NULL_HANDLE;
+		}
+	}
+
+	[[nodiscard]] Result<> SurfView_VK::RecreateSwapchain()
 	{
 		VkDevice device = m_VulkanAPI->GetDevice();
 		VkPhysicalDevice physicalDevice = m_VulkanAPI->GetPhysicalDevice();
@@ -588,17 +736,14 @@ namespace zzz::vk
 		ensure(device, "Logical device is not initialized.");
 		ensure(physicalDevice, "Physical device is not initialized.");
 
-		// 1. Дождаться завершения GPU
+		// Wait for GPU to finish
 		vkDeviceWaitIdle(device);
 
-		// 2. Получить capabilities
+		// Get current surface capabilities
 		VkSurfaceCapabilitiesKHR capabilities{};
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-			physicalDevice,
-			m_Surface,
-			&capabilities);
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_Surface, &capabilities);
 
-		// 3. Вычислить новый extent
+		// Calculate new extent
 		VkExtent2D newExtent{};
 		if (capabilities.currentExtent.width != UINT32_MAX)
 		{
@@ -618,51 +763,30 @@ namespace zzz::vk
 		}
 
 		if (newExtent.width == 0 || newExtent.height == 0)
-			return {}; // окно минимизировано
+			return {}; // Window is minimized
 
 		m_SwapchainExtent = newExtent;
 
-		// 4. Сохранить старый swapchain
+		// Save old swapchain
 		VkSwapchainKHR oldSwapchain = m_Swapchain;
 
-		// 5. Очистить зависимые ресурсы
-		for (auto fb : m_Framebuffers)
-			vkDestroyFramebuffer(device, fb, nullptr);
-		m_Framebuffers.clear();
+		// Clean up old resources
+		CleanupSwapchain();
 
-		if (m_DepthImageView)
-			vkDestroyImageView(device, m_DepthImageView, nullptr);
-		if (m_DepthImage)
-			vkDestroyImage(device, m_DepthImage, nullptr);
-		if (m_DepthImageMemory)
-			vkFreeMemory(device, m_DepthImageMemory, nullptr);
-
-		for (auto view : m_SwapchainImageViews)
-			vkDestroyImageView(device, view, nullptr);
-		m_SwapchainImageViews.clear();
-
-		// 6. Выбрать present mode корректно
+		// Get present modes
 		uint32_t presentModeCount = 0;
-		vkGetPhysicalDeviceSurfacePresentModesKHR(
-			physicalDevice,
-			m_Surface,
-			&presentModeCount,
-			nullptr);
-
+		vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Surface, &presentModeCount, nullptr);
 		std::vector<VkPresentModeKHR> presentModes(presentModeCount);
-		vkGetPhysicalDeviceSurfacePresentModesKHR(
-			physicalDevice,
-			m_Surface,
-			&presentModeCount,
-			presentModes.data());
+		vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Surface, &presentModeCount, presentModes.data());
 
+		// Choose present mode based on vsync
 		bool wantVSync = m_GAPI->IsVSyncEnabled();
-		VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR; // всегда доступен
+		VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR; // always available
 		if (!wantVSync)
 		{
-			for (auto m : presentModes)
+			for (auto mode : presentModes)
 			{
-				if (m == VK_PRESENT_MODE_IMMEDIATE_KHR)
+				if (mode == VK_PRESENT_MODE_IMMEDIATE_KHR)
 				{
 					presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
 					break;
@@ -670,14 +794,12 @@ namespace zzz::vk
 			}
 		}
 
-		// 7. Создать swapchain
+		// Get image count
 		uint32_t imageCount = BACK_BUFFER_COUNT;
-		if (capabilities.maxImageCount > 0 &&
-			imageCount > capabilities.maxImageCount)
-		{
+		if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount)
 			imageCount = capabilities.maxImageCount;
-		}
 
+		// Create new swapchain
 		VkSwapchainCreateInfoKHR createInfo{
 			.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
 			.surface = m_Surface,
@@ -695,44 +817,107 @@ namespace zzz::vk
 			.oldSwapchain = oldSwapchain
 		};
 
-		VkResult vr = vkCreateSwapchainKHR(
-			device,
-			&createInfo,
-			nullptr,
-			&m_Swapchain);
-
+		VkResult vr = vkCreateSwapchainKHR(device, &createInfo, nullptr, &m_Swapchain);
 		if (vr != VK_SUCCESS)
-			return UNEXPECTED(
-				eResult::failure,
-				std::format(L"Failed to recreate swapchain ({})", int(vr)));
+			return UNEXPECTED(eResult::failure, L"Failed to recreate swapchain ({})", static_cast<int>(vr));
 
-		// 8. Удалить старый swapchain
+		// Destroy old swapchain
 		if (oldSwapchain)
 			vkDestroySwapchainKHR(device, oldSwapchain, nullptr);
 
-		// 9. Получить новые изображения
+		// Get new swapchain images
 		vkGetSwapchainImagesKHR(device, m_Swapchain, &imageCount, nullptr);
 		m_SwapchainImages.resize(imageCount);
 		vkGetSwapchainImagesKHR(device, m_Swapchain, &imageCount, m_SwapchainImages.data());
 
-		// 10. Пересоздать зависимые ресурсы
+		// Recreate dependent resources
 		return CreateImageViews()
 			.and_then([&] { return CreateDepthResources(Size2D<>(newExtent.width, newExtent.height)); })
 			.and_then([&] { return CreateFramebuffers(); });
 	}
-#pragma endregion Initialize
+#pragma endregion 
 
 #pragma region Rendering
 	void SurfView_VK::PrepareFrame(const std::shared_ptr<RenderQueue> renderQueue)
 	{
+		VkDevice device = m_VulkanAPI->GetDevice();
+		uint32_t frameIndex = m_GAPI->GetIndexFrameUpdate();
+		FrameData& frame = m_Frames[frameIndex];
 
+		// Ждём завершения предыдущего submit (не acquire!)
+		vkWaitForFences(device, 1, &frame.fence, VK_TRUE, UINT64_MAX);
+		vkResetFences(device, 1, &frame.fence); // сразу сбрасываем
+
+		frame.inFlight = false;
+
+		vkResetCommandBuffer(frame.cmdBuffer, 0);
+		// ... запись команд если нужно ...
+		frame.inFlight = true;
 	}
 
 	void SurfView_VK::RenderFrame()
 	{
+		VkDevice device = m_VulkanAPI->GetDevice();
+		uint32_t frameIndex = m_GAPI->GetIndexFrameRender();
+		FrameData& frame = m_Frames[frameIndex];
+		if (!frame.inFlight) return;
 
+		// Acquire через семафор — НЕ через fence
+		uint32_t imageIndex;
+		vkAcquireNextImageKHR(device, m_Swapchain, UINT64_MAX,
+			frame.acquireSemaphore,  // семафор
+			VK_NULL_HANDLE,           // fence не нужен здесь
+			&imageIndex);
+
+		// Записываем command buffer
+		vkResetCommandBuffer(frame.cmdBuffer, 0);
+		VkCommandBufferBeginInfo beginInfo = {};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		vkBeginCommandBuffer(frame.cmdBuffer, &beginInfo);
+
+		// Layout transition: UNDEFINED -> PRESENT_SRC
+		VkImageMemoryBarrier barrier = {};
+		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.image = m_SwapchainImages[imageIndex];
+		barrier.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+		barrier.srcAccessMask = 0;
+		barrier.dstAccessMask = 0;
+		vkCmdPipelineBarrier(frame.cmdBuffer,
+			VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+			VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+			0, 0, nullptr, 0, nullptr, 1, &barrier);
+		vkEndCommandBuffer(frame.cmdBuffer);
+
+		// Submit — ждём acquireSemaphore, сигналим renderSemaphore
+		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		VkSubmitInfo submitInfo = {};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &frame.acquireSemaphore;  // ✅
+		submitInfo.pWaitDstStageMask = &waitStage;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &frame.cmdBuffer;
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &frame.renderSemaphore;   // ✅
+
+		vkQueueSubmit(m_VulkanAPI->GetGraphicsQueue(), 1, &submitInfo, frame.fence);
+
+		// Present — ждём renderSemaphore
+		VkPresentInfoKHR presentInfo = {};
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		presentInfo.waitSemaphoreCount = 1;
+		presentInfo.pWaitSemaphores = &frame.renderSemaphore;    // ✅
+		presentInfo.swapchainCount = 1;
+		presentInfo.pSwapchains = &m_Swapchain;
+		presentInfo.pImageIndices = &imageIndex;
+		vkQueuePresentKHR(m_VulkanAPI->GetPresentQueue(), &presentInfo);
 	}
-#pragma endregion Rendering
+#pragma endregion
 
 	void SurfView_VK::OnResize(const Size2D<>& size)
 	{
@@ -750,12 +935,19 @@ namespace zzz::vk
 		m_SurfSize = size;
 		auto res = RecreateSwapchain();
 		if (!res)
-			throw_runtime_error(std::format("[SurfView_VK::OnResize] {}", wstring_to_string(res.error().getMessage())));
+		{
+			auto errorMsg = wstring_to_string(res.error().getMessage());
+			throw_runtime_error(std::format("[SurfView_VK::OnResize] {}", errorMsg));
+		}
 	}
 
 	[[nodiscard]] Result<> SurfView_VK::OnUpdateVSyncState()
 	{
+		if (m_GAPI->GetInitState() != eInitState::InitOK)
+			return {};
+
 		return RecreateSwapchain();
-	};
+	}
 }
+
 #endif // ZRENDER_API_VULKAN
