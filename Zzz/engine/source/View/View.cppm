@@ -149,6 +149,8 @@ namespace zzz
 
 		if (m_RenderSurface)
 		{
+			m_RenderSurface->PreRender();
+
 			m_ThreadsUpdate.Submit([&]()
 				{
 					m_RenderQueue->SetDeltaTime(static_cast<float>(deltaTime));
@@ -159,6 +161,8 @@ namespace zzz
 					m_RenderSurface->RenderFrame();
 				});
 			m_ThreadsUpdate.Join();
+
+			m_RenderSurface->PostRender();
 		}
 	}
 

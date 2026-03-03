@@ -27,6 +27,9 @@ namespace zzz::core
 		virtual void OnResize(const Size2D<>& size) = 0;
 		[[nodiscard]] virtual Result<> OnUpdateVSyncState() { return {}; };
 
+		virtual void PreRender() {};
+		virtual void PostRender() {};
+
 	protected:
 		std::shared_ptr<IGAPI> m_GAPI;
 		Size2D<> m_SurfSize;
