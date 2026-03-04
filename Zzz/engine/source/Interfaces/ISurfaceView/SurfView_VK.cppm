@@ -27,6 +27,7 @@ import PrimitiveTopology;
 
 using namespace zzz::math;
 using namespace zzz::core;
+using namespace zzz::logger;
 using namespace zzz::colors;
 
 namespace zzz::vk
@@ -116,21 +117,19 @@ namespace zzz::vk
 
 		struct FrameData
 		{
-			VkFence fence = VK_NULL_HANDLE;          // Сигналит когда ГПУ закончил рендер фрейма
-			VkSemaphore acquireSemaphore = VK_NULL_HANDLE;   // для vkAcquireNextImageKHR
-			VkSemaphore renderSemaphore = VK_NULL_HANDLE;   // для vkQueuePresentKHR
-			VkCommandBuffer cmdBuffer = VK_NULL_HANDLE;    // Буфер команд для этого фрейма
-			uint32_t imageIndex = 0;                        // Индекс изображения в свапчейне
-			bool inFlight = false;                          // Флаг что фрейм в полете
-			bool imageAcquired = false;
+			VkFence fence = VK_NULL_HANDLE;					// Сигналит когда ГПУ закончил рендер фрейма
+			VkSemaphore acquireSemaphore = VK_NULL_HANDLE;	// для vkAcquireNextImageKHR
+			VkSemaphore renderSemaphore = VK_NULL_HANDLE;	// для vkQueuePresentKHR
+			VkCommandBuffer cmdBuffer = VK_NULL_HANDLE;		// Буфер команд для этого фрейма
+			uint32_t imageIndex = 0;						// Индекс изображения в свапчейне
+			bool inFlight = false;							// Флаг что фрейм в полете
 		};
-
-		VkSemaphore m_ImageAvailableSemaphore = VK_NULL_HANDLE;  // Один на всех
-		VkSemaphore m_RenderFinishedSemaphore = VK_NULL_HANDLE;  // Один на всех
 
 		std::array<FrameData, FRAMES_IN_FLIGHT> m_Frames;
 		std::mutex m_SwapchainMutex;
-		//uint32_t m_CurrentFrame = 0;
+
+		VkSemaphore m_ImageAvailableSemaphore = VK_NULL_HANDLE;  // Один на всех
+		VkSemaphore m_RenderFinishedSemaphore = VK_NULL_HANDLE;  // Один на всех
 
 		// Private methods
 		[[nodiscard]] Result<> FindQueueFamilies();
@@ -146,10 +145,6 @@ namespace zzz::vk
 		void CleanupSwapchain();
 		[[nodiscard]] uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 	};
-
-	//=============================================================================
-	// Constructor / Destructor
-	//=============================================================================
 
 	SurfView_VK::SurfView_VK(
 		std::shared_ptr<IAppWin> _iAppWin,
@@ -839,11 +834,44 @@ namespace zzz::vk
 			.and_then([&] { return CreateDepthResources(Size2D<>(newExtent.width, newExtent.height)); })
 			.and_then([&] { return CreateFramebuffers(); });
 	}
-#pragma endregion 
+#pragma endregion
+
+	void Fill()
+	{
+		//if (stepCounter == 1)
+		//{
+		//	//zU32 indexRender = m_VulkanAPI->GetIndexFrameRender();
+		//	zU32 indexRender = m_VulkanAPI->GetIndexFramePrepare();
+
+		//	DebugOutputLite(L">>>>> #1 PreRender(). stepCounter: {}, indexRender: {}, imageIndex: {}.", stepCounter, indexRender, imageIndex);
+
+		//	auto& frameRender = m_Frames[indexRender];
+		//	vr = vkResetCommandBuffer(frameRender.cmdBuffer, 0);
+		//	if (vr != VK_SUCCESS)
+		//		throw_runtime_error("Failed to vkResetCommandBuffer().");
+
+		//	VkCommandBufferBeginInfo bi{};
+		//	bi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		//	bi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		//	vr = vkBeginCommandBuffer(frameRender.cmdBuffer, &bi);
+		//	if (vr != VK_SUCCESS)
+		//		throw_runtime_error("Failed to vkBeginCommandBuffer().");
+
+		//	// ничего не записываем — пустой буфер
+		//	vr = vkEndCommandBuffer(frameRender.cmdBuffer);
+		//	if (vr != VK_SUCCESS)
+		//		throw_runtime_error("Failed to vkEndCommandBuffer().");
+
+		//	frameRender.inFlight = true;
+		//}
+	}
 
 #pragma region Rendering
 	void SurfView_VK::PreRender()
 	{
+		static zU32 stepCounter = 0;
+		stepCounter++;
+
 		VkDevice device = m_VulkanAPI->GetDevice();
 		zU32 indexPrepare = m_VulkanAPI->GetIndexFramePrepare();
 		auto& frame = m_Frames[indexPrepare];
@@ -854,20 +882,32 @@ namespace zzz::vk
 
 		uint32_t imageIndex;
 		vr = vkAcquireNextImageKHR(device, m_Swapchain, UINT64_MAX, frame.acquireSemaphore, VK_NULL_HANDLE, &imageIndex);
-		if (vr != VK_SUCCESS)
+		if (vr == VK_ERROR_OUT_OF_DATE_KHR) {
+			if (!RecreateSwapchain())
+				throw_runtime_error("Failed to RecreateSwapchain().");
+
+			return;
+		}
+		else if (vr != VK_SUCCESS && vr != VK_SUBOPTIMAL_KHR)
+		{
 			throw_runtime_error("Failed to vkAcquireNextImageKHR().");
+		}
+
+		DebugOutputLite(L">>>>> #0 PreRender(). stepCounter: {}, indexPrepare: {}, imageIndex: {}.", stepCounter, indexPrepare, imageIndex);
 
 		frame.imageIndex = imageIndex;
 	}
 
 	void SurfView_VK::PrepareFrame(const std::shared_ptr<RenderQueue> renderQueue)
 	{
-		static zU32 prepareCounter = 0;
-		prepareCounter++;
+		static zU32 stepCounter = 0;
+		stepCounter++;
 
 		VkDevice device = m_VulkanAPI->GetDevice();
 		zU32 indexPrepare = m_VulkanAPI->GetIndexFramePrepare();
 		auto& frame = m_Frames[indexPrepare];
+
+		DebugOutputLite(L">>>>> PrepareFrame(). stepCounter: {}, indexPrepare: {}, frame.imageIndex: {}.", stepCounter, indexPrepare, frame.imageIndex);
 
 		VkResult vr = vkResetCommandBuffer(frame.cmdBuffer, 0);
 		if (vr != VK_SUCCESS)
@@ -903,28 +943,27 @@ namespace zzz::vk
 		vr = vkEndCommandBuffer(frame.cmdBuffer);
 		if (vr != VK_SUCCESS)
 			throw_runtime_error("Failed to vkEndCommandBuffer().");
-		////////////////////////////////////////////////////////
 
 		frame.inFlight = true;
 	}
 
 	void SurfView_VK::RenderFrame()
 	{
-		static zU32 renderCounter = 0;
-		renderCounter++;
+		static zU32 stepCounter = 0;
+		stepCounter++;
 
 		VkDevice device = m_VulkanAPI->GetDevice();
 		zU32 indexRender = m_VulkanAPI->GetIndexFrameRender();
+		//zU32 indexRender = m_VulkanAPI->GetIndexFramePrepare();
 		auto& frame = m_Frames[indexRender];
 
-		if (!frame.inFlight)
-			return;
+		DebugOutputLite(L">>>>> RenderFrame(). stepCounter: {}, indexRender: {}.", stepCounter, indexRender);
 
 		VkResult vr = vkResetFences(device, 1, &frame.fence);
 		if (vr != VK_SUCCESS)
 			throw_runtime_error("Failed to vkResetFences().");
 
-		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;// VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 		VkSubmitInfo submitInfo = {};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submitInfo.waitSemaphoreCount = 1;
@@ -941,9 +980,15 @@ namespace zzz::vk
 
 	void SurfView_VK::PostRender()
 	{
+		static zU32 stepCounter = 0;
+		stepCounter++;
+
 		VkDevice device = m_VulkanAPI->GetDevice();
 		zU32 indexRender = m_VulkanAPI->GetIndexFrameRender();
+		//zU32 indexRender = m_VulkanAPI->GetIndexFramePrepare();
 		auto& frame = m_Frames[indexRender];
+
+		DebugOutputLite(L">>>>> PostRender(). stepCounter: {}, indexRender: {}.", stepCounter, indexRender);
 
 		VkPresentInfoKHR presentInfo = {};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -957,7 +1002,6 @@ namespace zzz::vk
 		if (vr != VK_SUCCESS)
 			throw_runtime_error("Failed to vkQueuePresentKHR().");
 
-		frame.imageAcquired = false;
 		frame.inFlight = false;
 	}
 #pragma endregion
