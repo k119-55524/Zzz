@@ -24,14 +24,9 @@
 
 // ---- Vulkan ----
 #pragma warning(push)
-#pragma warning(disable: 28251)
+#pragma warning(disable: 28251 26110 26495 6386 6387 26813)
 #include <volk/volk.h>
-#pragma warning(pop)
-
-#include <vulkan/vulkan_win32.h>
-
-#pragma warning(push)
-#pragma warning(disable: 26110 26495 6386 6387 26813)
+#include <vulkan/vulkan_raii.hpp>
 #include <vma/vk_mem_alloc.h>
 #pragma warning(pop)
 

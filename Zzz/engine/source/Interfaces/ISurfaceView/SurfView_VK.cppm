@@ -893,7 +893,7 @@ namespace zzz::vk
 			throw_runtime_error("Failed to vkAcquireNextImageKHR().");
 		}
 
-		DebugOutputLite(L">>>>> #0 PreRender(). stepCounter: {}, indexPrepare: {}, imageIndex: {}.", stepCounter, indexPrepare, imageIndex);
+		//DebugOutputLite(L">>>>> PreRender(). stepCounter: {}, indexPrepare: {}, imageIndex: {}.", stepCounter, indexPrepare, imageIndex);
 
 		frame.imageIndex = imageIndex;
 	}
@@ -907,7 +907,7 @@ namespace zzz::vk
 		zU32 indexPrepare = m_VulkanAPI->GetIndexFramePrepare();
 		auto& frame = m_Frames[indexPrepare];
 
-		DebugOutputLite(L">>>>> PrepareFrame(). stepCounter: {}, indexPrepare: {}, frame.imageIndex: {}.", stepCounter, indexPrepare, frame.imageIndex);
+		//DebugOutputLite(L">>>>> PrepareFrame(). stepCounter: {}, indexPrepare: {}, frame.imageIndex: {}.", stepCounter, indexPrepare, frame.imageIndex);
 
 		VkResult vr = vkResetCommandBuffer(frame.cmdBuffer, 0);
 		if (vr != VK_SUCCESS)
@@ -929,8 +929,14 @@ namespace zzz::vk
 		renderPassInfo.renderArea.offset = { 0, 0 };
 		renderPassInfo.renderArea.extent = m_SwapchainExtent;
 
+		Color color = colors::DarkMidnightBlue;
+		VkClearColorValue ccolor {};
+		ccolor.float32[0] = color.r;
+		ccolor.float32[1] = color.g;
+		ccolor.float32[2] = color.b;
+		ccolor.float32[3] = color.a;
 		VkClearValue clearValues[2];
-		clearValues[0].color = { {0.3f, 0.3f, 0.6f, 1.0f} };
+		clearValues[0].color = ccolor;
 		clearValues[1].depthStencil = { 1.0f, 0 };
 
 		renderPassInfo.clearValueCount = 2;
@@ -957,7 +963,7 @@ namespace zzz::vk
 		//zU32 indexRender = m_VulkanAPI->GetIndexFramePrepare();
 		auto& frame = m_Frames[indexRender];
 
-		DebugOutputLite(L">>>>> RenderFrame(). stepCounter: {}, indexRender: {}.", stepCounter, indexRender);
+		//DebugOutputLite(L">>>>> RenderFrame(). stepCounter: {}, indexRender: {}.", stepCounter, indexRender);
 
 		VkResult vr = vkResetFences(device, 1, &frame.fence);
 		if (vr != VK_SUCCESS)
@@ -988,7 +994,7 @@ namespace zzz::vk
 		//zU32 indexRender = m_VulkanAPI->GetIndexFramePrepare();
 		auto& frame = m_Frames[indexRender];
 
-		DebugOutputLite(L">>>>> PostRender(). stepCounter: {}, indexRender: {}.", stepCounter, indexRender);
+		//DebugOutputLite(L">>>>> PostRender(). stepCounter: {}, indexRender: {}.", stepCounter, indexRender);
 
 		VkPresentInfoKHR presentInfo = {};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
