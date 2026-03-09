@@ -1,16 +1,17 @@
 ﻿
-import ModuleA;
-import ModuleB;
-
-using namespace zzz;
+#include <iostream>
 
 int main()
 {
-	ModuleA a;
-	ModuleB b;
+	for (int X = 2; X < 10; X = X + 1)
+	{
+		for (int Y = 2; Y < 10; Y = Y + 1)
+		{
+			std::cout << X << " * " << Y << " = " << X * Y << "\n";
+		}
 
-	a.Method(&b);
-	b.Method(&a);
+		std::cout << "\n";
+	}
 
 	return 0;
 }

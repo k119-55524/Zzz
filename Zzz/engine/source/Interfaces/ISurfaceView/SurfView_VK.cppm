@@ -122,11 +122,10 @@ namespace zzz::vk
 			VkSemaphore renderSemaphore = VK_NULL_HANDLE;	// для vkQueuePresentKHR
 			VkCommandBuffer cmdBuffer = VK_NULL_HANDLE;		// Буфер команд для этого фрейма
 			uint32_t imageIndex = 0;						// Индекс изображения в свапчейне
-			bool inFlight = false;							// Флаг что фрейм в полете
 		};
-
 		std::array<FrameData, FRAMES_IN_FLIGHT> m_Frames;
-		std::mutex m_SwapchainMutex;
+
+		void WarmUpGPU();
 
 		VkSemaphore m_ImageAvailableSemaphore = VK_NULL_HANDLE;  // Один на всех
 		VkSemaphore m_RenderFinishedSemaphore = VK_NULL_HANDLE;  // Один на всех
@@ -203,7 +202,8 @@ namespace zzz::vk
 			.and_then([&]() { return CreateRenderPass(); })
 			.and_then([&]() { return CreateDepthResources(winSize); })
 			.and_then([&]() { return CreateFramebuffers(); })
-			.and_then([&]() { return CreateSyncObjects(); });
+			.and_then([&]() { return CreateSyncObjects(); })
+			.and_then([&]() { return WarmUpGPU(); });
 
 		if (!res)
 			return UNEXPECTED(eResult::failure, L"Failed to initialize SurfView: {}", res.error().getMessage());
@@ -665,8 +665,6 @@ namespace zzz::vk
 			vr = vkCreateFence(device, &fenceInfo, nullptr, &m_Frames[i].fence);
 			if (vr != VK_SUCCESS)
 				return UNEXPECTED(eResult::failure, L"Failed to create fence for frame {}", i);
-
-			m_Frames[i].inFlight = false;
 		}
 
 		return {};
@@ -836,64 +834,137 @@ namespace zzz::vk
 	}
 #pragma endregion
 
-	void Fill()
+	void SurfView_VK::WarmUpGPU()
 	{
-		//if (stepCounter == 1)
-		//{
-		//	//zU32 indexRender = m_VulkanAPI->GetIndexFrameRender();
-		//	zU32 indexRender = m_VulkanAPI->GetIndexFramePrepare();
+		return;
 
-		//	DebugOutputLite(L">>>>> #1 PreRender(). stepCounter: {}, indexRender: {}, imageIndex: {}.", stepCounter, indexRender, imageIndex);
+		VkDevice device = m_VulkanAPI->GetDevice();
+		//zU32 index = m_IndexRender;  // frame[0]
+		zU32 frameIndex = m_IndexPrepare;  // frame[0]
+		auto& frame = m_Frames[frameIndex];
 
-		//	auto& frameRender = m_Frames[indexRender];
-		//	vr = vkResetCommandBuffer(frameRender.cmdBuffer, 0);
-		//	if (vr != VK_SUCCESS)
-		//		throw_runtime_error("Failed to vkResetCommandBuffer().");
+		// 1. ACQUIRE - получаем imageIndex и сигнализируем acquireSemaphore
+		uint32_t imageIndex = 0;
+		VkResult vr = vkAcquireNextImageKHR(device, m_Swapchain, UINT64_MAX, frame.acquireSemaphore, VK_NULL_HANDLE, &imageIndex);
+		if (vr != VK_SUCCESS)
+			throw_runtime_error("Failed to vkAcquireNextImageKHR().");
 
-		//	VkCommandBufferBeginInfo bi{};
-		//	bi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		//	bi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-		//	vr = vkBeginCommandBuffer(frameRender.cmdBuffer, &bi);
-		//	if (vr != VK_SUCCESS)
-		//		throw_runtime_error("Failed to vkBeginCommandBuffer().");
+		frame.imageIndex = imageIndex;
 
-		//	// ничего не записываем — пустой буфер
-		//	vr = vkEndCommandBuffer(frameRender.cmdBuffer);
-		//	if (vr != VK_SUCCESS)
-		//		throw_runtime_error("Failed to vkEndCommandBuffer().");
+		// 2. RESET FENCE перед submit
+		vr = vkResetFences(device, 1, &frame.fence);
+		if (vr != VK_SUCCESS)
+			throw_runtime_error("Failed to vkResetFences().");
 
-		//	frameRender.inFlight = true;
+		// 3. RECORD COMMAND BUFFER
+		vr = vkResetCommandBuffer(frame.cmdBuffer, 0);
+		if (vr != VK_SUCCESS)
+			throw_runtime_error("Failed to vkResetCommandBuffer().");
+
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		vr = vkBeginCommandBuffer(frame.cmdBuffer, &beginInfo);
+		if (vr != VK_SUCCESS)
+			throw_runtime_error("Failed to vkBeginCommandBuffer().");
+
+		// Пустой render pass
+		VkRenderPassBeginInfo renderPassInfo{};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassInfo.renderPass = m_RenderPass;
+		renderPassInfo.framebuffer = m_Framebuffers[imageIndex];  // используем правильный imageIndex!
+		renderPassInfo.renderArea.offset = { 0, 0 };
+		renderPassInfo.renderArea.extent = m_SwapchainExtent;
+
+		VkClearValue clearValues[2];
+		clearValues[0].color = { 0.f, 0.f, 0.f, 1.f };
+		clearValues[1].depthStencil = { 1.f, 0 };
+		renderPassInfo.clearValueCount = 2;
+		renderPassInfo.pClearValues = clearValues;
+
+		vkCmdBeginRenderPass(frame.cmdBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdEndRenderPass(frame.cmdBuffer);
+
+		vr = vkEndCommandBuffer(frame.cmdBuffer);
+		if (vr != VK_SUCCESS)
+			throw_runtime_error("Failed to vkEndCommandBuffer().");
+
+		// 4. SUBMIT с WAIT на acquireSemaphore и SIGNAL на renderSemaphore
+		//VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		//VkSubmitInfo submitInfo{};
+		//submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		//submitInfo.waitSemaphoreCount = 1;
+		//submitInfo.pWaitSemaphores = &frame.acquireSemaphore;  // КРИТИЧНО: wait на acquire!
+		//submitInfo.pWaitDstStageMask = &waitStage;
+		//submitInfo.commandBufferCount = 1;
+		//submitInfo.pCommandBuffers = &frame.cmdBuffer;
+		//submitInfo.signalSemaphoreCount = 1;
+		//submitInfo.pSignalSemaphores = &frame.renderSemaphore;
+
+		//vr = vkQueueSubmit(m_VulkanAPI->GetGraphicsQueue(), 1, &submitInfo, frame.fence);
+		//if (vr != VK_SUCCESS)
+		//	throw_runtime_error("Failed to vkQueueSubmit().");
+
+		//// 5. PRESENT для завершения цикла (consume renderSemaphore!)
+		//VkPresentInfoKHR presentInfo{};
+		//presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		//presentInfo.waitSemaphoreCount = 1;
+		//presentInfo.pWaitSemaphores = &frame.renderSemaphore;  // КРИТИЧНО: wait на render!
+		//presentInfo.swapchainCount = 1;
+		//presentInfo.pSwapchains = &m_Swapchain;
+		//presentInfo.pImageIndices = &imageIndex;
+
+		//vr = vkQueuePresentKHR(m_VulkanAPI->GetPresentQueue(), &presentInfo);
+		//if (vr == VK_ERROR_OUT_OF_DATE_KHR || vr == VK_SUBOPTIMAL_KHR) {
+		//	// handle recreate if needed
 		//}
+		//else if (vr != VK_SUCCESS) {
+		//	throw_runtime_error("Failed to vkQueuePresentKHR().");
+		//}
+
+		//// 6. WAIT - дожидаемся завершения
+		//vr = vkWaitForFences(device, 1, &frame.fence, VK_TRUE, UINT64_MAX);
+		//if (vr != VK_SUCCESS)
+		//	throw_runtime_error("Failed to vkWaitForFences().");
+
+		//m_IndexRender = (m_IndexRender + 1) % BACK_BUFFER_COUNT;
+		//m_IndexPrepare = (m_IndexRender + 1) % BACK_BUFFER_COUNT;
+
+		DebugOutputLite(L">>>>> WarmUpGPU(). frameIndex: {}, m_IndexRender: {}, m_IndexPrepare: {}, imageIndex: {}.", frameIndex, m_IndexRender, m_IndexPrepare, imageIndex);
 	}
 
 #pragma region Rendering
+
 	void SurfView_VK::PreRender()
 	{
 		static zU32 stepCounter = 0;
 		stepCounter++;
 
 		VkDevice device = m_VulkanAPI->GetDevice();
-		zU32 indexPrepare = m_VulkanAPI->GetIndexFramePrepare();
-		auto& frame = m_Frames[indexPrepare];
+		zU32 frameIndex = m_IndexPrepare;
+		auto& frame = m_Frames[frameIndex];
 
 		VkResult vr = vkWaitForFences(device, 1, &frame.fence, VK_TRUE, UINT64_MAX);
 		if (vr != VK_SUCCESS)
 			throw_runtime_error("Failed to vkWaitForFences().");
 
-		uint32_t imageIndex;
+		vr = vkResetFences(device, 1, &frame.fence);
+		if (vr != VK_SUCCESS)
+			throw_runtime_error("Failed to vkResetFences().");
+
+		uint32_t imageIndex{0};
 		vr = vkAcquireNextImageKHR(device, m_Swapchain, UINT64_MAX, frame.acquireSemaphore, VK_NULL_HANDLE, &imageIndex);
 		if (vr == VK_ERROR_OUT_OF_DATE_KHR) {
 			if (!RecreateSwapchain())
 				throw_runtime_error("Failed to RecreateSwapchain().");
-
 			return;
 		}
-		else if (vr != VK_SUCCESS && vr != VK_SUBOPTIMAL_KHR)
-		{
+		else if (vr != VK_SUCCESS && vr != VK_SUBOPTIMAL_KHR) {
 			throw_runtime_error("Failed to vkAcquireNextImageKHR().");
 		}
 
-		//DebugOutputLite(L">>>>> PreRender(). stepCounter: {}, indexPrepare: {}, imageIndex: {}.", stepCounter, indexPrepare, imageIndex);
+		//DebugOutputLite(L">>>>> PreRender(). stepCounter: {}, m_IndexRender: {}, m_IndexPrepare: {}, frameIndex, imageIndex: {}.",
+		//	stepCounter, m_IndexRender, m_IndexPrepare, frameIndex, imageIndex);
 
 		frame.imageIndex = imageIndex;
 	}
@@ -904,25 +975,25 @@ namespace zzz::vk
 		stepCounter++;
 
 		VkDevice device = m_VulkanAPI->GetDevice();
-		zU32 indexPrepare = m_VulkanAPI->GetIndexFramePrepare();
-		auto& frame = m_Frames[indexPrepare];
+		zU32 frameIndex = m_IndexPrepare;
+		auto& frame = m_Frames[frameIndex];
 
-		//DebugOutputLite(L">>>>> PrepareFrame(). stepCounter: {}, indexPrepare: {}, frame.imageIndex: {}.", stepCounter, indexPrepare, frame.imageIndex);
+		//DebugOutputLite(L">>>>> PrepareFrame(). stepCounter: {}, m_IndexRender: {}, m_IndexPrepare: {}, frameIndex: {}, frame.imageIndex: {}.", 
+		//	stepCounter, m_IndexRender, m_IndexPrepare, frameIndex, frame.imageIndex);
 
 		VkResult vr = vkResetCommandBuffer(frame.cmdBuffer, 0);
 		if (vr != VK_SUCCESS)
 			throw_runtime_error("Failed to vkResetCommandBuffer().");
 
-		VkCommandBufferBeginInfo beginInfo = {};
+		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 		vr = vkBeginCommandBuffer(frame.cmdBuffer, &beginInfo);
 		if (vr != VK_SUCCESS)
 			throw_runtime_error("Failed to vkBeginCommandBuffer().");
 
-		// TODO: команды рендера
 		// Начало render pass
-		VkRenderPassBeginInfo renderPassInfo = {};
+		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		renderPassInfo.renderPass = m_RenderPass;
 		renderPassInfo.framebuffer = m_Framebuffers[frame.imageIndex];
@@ -930,11 +1001,12 @@ namespace zzz::vk
 		renderPassInfo.renderArea.extent = m_SwapchainExtent;
 
 		Color color = colors::DarkMidnightBlue;
-		VkClearColorValue ccolor {};
+		VkClearColorValue ccolor{};
 		ccolor.float32[0] = color.r;
 		ccolor.float32[1] = color.g;
 		ccolor.float32[2] = color.b;
 		ccolor.float32[3] = color.a;
+
 		VkClearValue clearValues[2];
 		clearValues[0].color = ccolor;
 		clearValues[1].depthStencil = { 1.0f, 0 };
@@ -943,14 +1015,12 @@ namespace zzz::vk
 		renderPassInfo.pClearValues = clearValues;
 
 		vkCmdBeginRenderPass(frame.cmdBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-		// Здесь ваши команды рендеринга (draw calls)
+		// TODO: команды draw
 		vkCmdEndRenderPass(frame.cmdBuffer);
 
 		vr = vkEndCommandBuffer(frame.cmdBuffer);
 		if (vr != VK_SUCCESS)
 			throw_runtime_error("Failed to vkEndCommandBuffer().");
-
-		frame.inFlight = true;
 	}
 
 	void SurfView_VK::RenderFrame()
@@ -959,18 +1029,15 @@ namespace zzz::vk
 		stepCounter++;
 
 		VkDevice device = m_VulkanAPI->GetDevice();
-		zU32 indexRender = m_VulkanAPI->GetIndexFrameRender();
-		//zU32 indexRender = m_VulkanAPI->GetIndexFramePrepare();
-		auto& frame = m_Frames[indexRender];
+		zU32 frameIndex = m_IndexPrepare;
+		auto& frame = m_Frames[frameIndex];
 
-		//DebugOutputLite(L">>>>> RenderFrame(). stepCounter: {}, indexRender: {}.", stepCounter, indexRender);
+		//DebugOutputLite(L">>>>> RenderFrame(). stepCounter: {}, m_IndexRender: {}, m_IndexPrepare: {}, frameIndex: {}.",
+		//	stepCounter, m_IndexRender, m_IndexPrepare, frameIndex);
 
-		VkResult vr = vkResetFences(device, 1, &frame.fence);
-		if (vr != VK_SUCCESS)
-			throw_runtime_error("Failed to vkResetFences().");
-
-		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;// VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-		VkSubmitInfo submitInfo = {};
+		VkSemaphore submit_semaphore = m_Frames[frame.imageIndex].renderSemaphore;
+		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submitInfo.waitSemaphoreCount = 1;
 		submitInfo.pWaitSemaphores = &frame.acquireSemaphore;
@@ -978,8 +1045,9 @@ namespace zzz::vk
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &frame.cmdBuffer;
 		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &frame.renderSemaphore;
-		vr = vkQueueSubmit(m_VulkanAPI->GetGraphicsQueue(), 1, &submitInfo, frame.fence);
+		submitInfo.pSignalSemaphores = &submit_semaphore;
+
+		VkResult vr = vkQueueSubmit(m_VulkanAPI->GetGraphicsQueue(), 1, &submitInfo, frame.fence);
 		if (vr != VK_SUCCESS)
 			throw_runtime_error("Failed to vkQueueSubmit().");
 	}
@@ -990,26 +1058,28 @@ namespace zzz::vk
 		stepCounter++;
 
 		VkDevice device = m_VulkanAPI->GetDevice();
-		zU32 indexRender = m_VulkanAPI->GetIndexFrameRender();
-		//zU32 indexRender = m_VulkanAPI->GetIndexFramePrepare();
-		auto& frame = m_Frames[indexRender];
+		zU32 frameIndex = m_IndexPrepare;
+		auto& frame = m_Frames[frameIndex];
 
-		//DebugOutputLite(L">>>>> PostRender(). stepCounter: {}, indexRender: {}.", stepCounter, indexRender);
+		//DebugOutputLite(L">>>>> PostRender(). stepCounter: {}, m_IndexRender: {}, m_IndexPrepare: {}.", stepCounter, m_IndexRender, m_IndexPrepare);
 
-		VkPresentInfoKHR presentInfo = {};
+		VkSemaphore submit_semaphore = m_Frames[frame.imageIndex].renderSemaphore;
+		VkPresentInfoKHR presentInfo{};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = &frame.renderSemaphore;
+		presentInfo.pWaitSemaphores = &submit_semaphore;
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = &m_Swapchain;
 		presentInfo.pImageIndices = &frame.imageIndex;
-		std::lock_guard<std::mutex> lock(m_SwapchainMutex);
+
 		VkResult vr = vkQueuePresentKHR(m_VulkanAPI->GetPresentQueue(), &presentInfo);
 		if (vr != VK_SUCCESS)
 			throw_runtime_error("Failed to vkQueuePresentKHR().");
 
-		frame.inFlight = false;
+		m_IndexRender = (m_IndexRender + 1) % BACK_BUFFER_COUNT;
+		m_IndexPrepare = (m_IndexRender + 1) % BACK_BUFFER_COUNT;
 	}
+
 #pragma endregion
 
 	void SurfView_VK::OnResize(const Size2D<>& size)

@@ -45,9 +45,6 @@ namespace zzz
 		inline bool HasResourcesToUpload() { return m_CPUtoGPUDataTransfer->HasResourcesToUpload(); };
 		inline void TranferResourceToGPU() { m_CPUtoGPUDataTransfer->TransferResourceToGPU(); };
 
-		inline zU32 GetIndexFrameRender() const noexcept { return m_IndexFrameRender; }
-		inline zU32 GetIndexFramePrepare() const noexcept { return m_IndexFramePrepare; }
-
 		virtual void BeginRender() = 0;
 		virtual void EndRender();
 
@@ -84,17 +81,13 @@ namespace zzz
 
 		std::unique_ptr<IGPUUpload> m_CPUtoGPUDataTransfer;
 		std::unique_ptr<IDeviceCapabilities> m_CheckGapiSupport;
-		zU32 m_IndexFrameRender;
-		zU32 m_IndexFramePrepare;
 	};
 
 	IGAPI::IGAPI(const std::shared_ptr<GAPIConfig>& config, eGAPIType type) :
 		m_Config(config),
 		m_GapiType{ type },
 		m_IsCanDisableVSync{ false },
-		m_InitState{ eInitState::InitNot },
-		m_IndexFrameRender{ 1 },
-		m_IndexFramePrepare{ 0 }
+		m_InitState{ eInitState::InitNot }
 	{
 		ensure(m_Config, "GAPIConfig cannot be null.");
 	}
@@ -116,7 +109,5 @@ namespace zzz
 
 	void IGAPI::EndRender()
 	{
-		m_IndexFrameRender = (m_IndexFrameRender + 1) % BACK_BUFFER_COUNT;
-		m_IndexFramePrepare = (m_IndexFrameRender + 1) % BACK_BUFFER_COUNT;
 	}
 }

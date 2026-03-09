@@ -151,16 +151,20 @@ namespace zzz
 		{
 			m_RenderSurface->PreRender();
 
-			m_ThreadsUpdate.Submit([&]()
-				{
-					m_RenderQueue->SetDeltaTime(static_cast<float>(deltaTime));
-					m_RenderSurface->PrepareFrame(m_RenderQueue);
-				});
-			m_ThreadsUpdate.Submit([&]()
-				{
-					m_RenderSurface->RenderFrame();
-				});
-			m_ThreadsUpdate.Join();
+			m_RenderQueue->SetDeltaTime(static_cast<float>(deltaTime));
+			m_RenderSurface->PrepareFrame(m_RenderQueue);
+			m_RenderSurface->RenderFrame();
+
+			//m_ThreadsUpdate.Submit([&]()
+			//	{
+			//		m_RenderQueue->SetDeltaTime(static_cast<float>(deltaTime));
+			//		m_RenderSurface->PrepareFrame(m_RenderQueue);
+			//	});
+			//m_ThreadsUpdate.Submit([&]()
+			//	{
+			//		m_RenderSurface->RenderFrame();
+			//	});
+			//m_ThreadsUpdate.Join();
 
 			m_RenderSurface->PostRender();
 		}

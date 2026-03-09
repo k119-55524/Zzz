@@ -33,11 +33,15 @@ namespace zzz::core
 	protected:
 		std::shared_ptr<IGAPI> m_GAPI;
 		Size2D<> m_SurfSize;
+
+		zU32 m_IndexRender;
+		zU32 m_IndexPrepare;
 	};
 
 	ISurfView::ISurfView(std::shared_ptr<IGAPI> _iGAPI) :
 		m_GAPI{ _iGAPI },
-		m_SurfSize{}
+		m_IndexRender{ 1 },
+		m_IndexPrepare{ 0 }
 	{
 		ensure(m_GAPI, "GAPI cannot be null.");
 	}
