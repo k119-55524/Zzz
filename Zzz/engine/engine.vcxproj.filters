@@ -170,6 +170,9 @@
     <ClCompile Include="source\Interfaces\ISurfaceView\SurfView_VK.cppm">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="source\platforms\Vulkan\Swapchain_VK.cppm">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

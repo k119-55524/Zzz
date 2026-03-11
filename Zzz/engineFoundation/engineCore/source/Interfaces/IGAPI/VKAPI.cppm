@@ -19,6 +19,20 @@ using namespace zzz::core;
 
 namespace zzz::vk
 {
+#if defined(_DEBUG)
+	constexpr VkObjectType GetVulkanObjectType(VkSwapchainKHR) { return VK_OBJECT_TYPE_SWAPCHAIN_KHR; }
+	constexpr VkObjectType GetVulkanObjectType(VkImageView) { return VK_OBJECT_TYPE_IMAGE_VIEW; }
+	constexpr VkObjectType GetVulkanObjectType(VkImage) { return VK_OBJECT_TYPE_IMAGE; }
+	constexpr VkObjectType GetVulkanObjectType(VkPipeline) { return VK_OBJECT_TYPE_PIPELINE; }
+	constexpr VkObjectType GetVulkanObjectType(VkRenderPass) { return VK_OBJECT_TYPE_RENDER_PASS; }
+	constexpr VkObjectType GetVulkanObjectType(VkFramebuffer) { return VK_OBJECT_TYPE_FRAMEBUFFER; }
+	constexpr VkObjectType GetVulkanObjectType(VkSemaphore) { return VK_OBJECT_TYPE_SEMAPHORE; }
+	constexpr VkObjectType GetVulkanObjectType(VkFence) { return VK_OBJECT_TYPE_FENCE; }
+	constexpr VkObjectType GetVulkanObjectType(VkDescriptorSet) { return VK_OBJECT_TYPE_DESCRIPTOR_SET; }
+	constexpr VkObjectType GetVulkanObjectType(VkCommandPool) { return VK_OBJECT_TYPE_COMMAND_POOL; }
+	constexpr VkObjectType GetVulkanObjectType(VkCommandBuffer) { return VK_OBJECT_TYPE_COMMAND_BUFFER; }
+#endif // _DEBUG
+
 	// Структура-кандидат для хранения лучшего устройства
 	struct Candidate
 	{
@@ -94,6 +108,98 @@ namespace zzz::vk
 		void SubmitCommandLists() override;
 		void BeginRender() override;
 
+		template<typename T>
+		void SetDebugName(T obj, const char* name)
+		{
+#if defined(_DEBUG)
+			ensure(m_Device, "Device cannot be null.");
+			ensure(vkSetDebugUtilsObjectNameEXT, "vkSetDebugUtilsObjectNameEXT cannot be null.");
+
+			VkDebugUtilsObjectNameInfoEXT info{};
+			info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+			info.objectType = GetVulkanObjectType(obj);
+			info.objectHandle = reinterpret_cast<uint64_t>(obj);
+			info.pObjectName = name;
+
+			vkSetDebugUtilsObjectNameEXT(m_Device, &info);
+#endif // _DEBUG
+		}
+
+		// Простая вспомогательная программа для создания временного буфера команд,
+		// используемая для записи команд загрузки данных или перехода между изображениями.
+		Result<VkCommandBuffer> BeginSingleTimeCommands()
+		{
+			ensure(m_Device, "Device cannot be null.");
+			ensure(m_TransientCmdPool, "VkCommandPool cannot be null.");
+
+			const VkCommandBufferAllocateInfo allocInfo
+			{
+				.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+				.commandPool = m_TransientCmdPool,
+				.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+				.commandBufferCount = 1
+			};
+			VkCommandBuffer cmd{};
+			VkResult vr = vkAllocateCommandBuffers(m_Device, &allocInfo, &cmd);
+
+			const VkCommandBufferBeginInfo beginInfo
+			{
+				.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+				.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
+			};
+			vr = vkBeginCommandBuffer(cmd, &beginInfo);
+
+			return cmd;
+		}
+
+		// Отправляем временный буфер команд, ждем завершения выполнения команды и выполняем очистку.
+		// Это блокирующая функция, и ее следует использовать только для небольших операций.
+		Result<> EndSingleTimeCommands(VkCommandBuffer cmd)
+		{
+			ensure(m_Device, "Device cannot be null.");
+			ensure(m_TransientCmdPool, "VkCommandPool cannot be null.");
+			ensure(m_PresentQueue, "m_PresentQueue cannot be null.");
+
+			// Отправить и очистить
+			VkResult vr = vkEndCommandBuffer(cmd);
+
+			// Создать барьер для синхронизации
+			const VkFenceCreateInfo fenceInfo{ .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
+			std::array<VkFence, 1>  fence{};
+			vr = vkCreateFence(m_Device, &fenceInfo, nullptr, fence.data());
+			if (vr != VK_SUCCESS)
+				return UNEXPECTED(eResult::failure, L"Failed to vkCreateFence(): {}.", static_cast<int>(vr));
+
+			const VkCommandBufferSubmitInfo cmdBufferInfo
+			{
+				.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO,
+				.commandBuffer = cmd
+			};
+			const std::array<VkSubmitInfo2, 1> submitInfo
+			{
+				{
+					{
+						.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2,
+						.commandBufferInfoCount = 1,
+						.pCommandBufferInfos = &cmdBufferInfo
+					}
+				}
+			};
+			vr = vkQueueSubmit2(m_PresentQueue, uint32_t(submitInfo.size()), submitInfo.data(), fence[0]);
+			if (vr != VK_SUCCESS)
+				return UNEXPECTED(eResult::failure, L"Failed to vkQueueSubmit2(): {}.", static_cast<int>(vr));
+
+			vr = vkWaitForFences(m_Device, uint32_t(fence.size()), fence.data(), VK_TRUE, UINT64_MAX);
+			if (vr != VK_SUCCESS)
+				return UNEXPECTED(eResult::failure, L"Failed to vkWaitForFences(): {}.", static_cast<int>(vr));
+
+			// Очистить
+			vkDestroyFence(m_Device, fence[0], nullptr);
+			vkFreeCommandBuffers(m_Device, m_TransientCmdPool, 1, &cmd);
+
+			return {};
+		}
+
 	protected:
 		[[nodiscard]] Result<> Init() override;
 		void WaitForGpu() override;
@@ -112,27 +218,28 @@ namespace zzz::vk
 		[[nodiscard]] Result<> CreateCommandPools(const Candidate& deviceCandidate);
 		[[nodiscard]] Result<> CreateCommandBuffers();
 
-		VkInstance m_Instance;
-		VkPhysicalDevice m_PhysicalDevice;
-		VkDevice m_Device;
+		VkInstance m_Instance{ VK_NULL_HANDLE };
+		VkPhysicalDevice m_PhysicalDevice{ VK_NULL_HANDLE };
+		VkDevice m_Device{ VK_NULL_HANDLE };
 
 		uint32_t m_PresentQueueFamilyIndex;
-		VkQueue m_PresentQueue;
-		VkQueue m_GraphicsQueue;
-		VkQueue m_ComputeQueue;
-		VkQueue m_TransferQueue;
+		VkQueue m_PresentQueue{ VK_NULL_HANDLE };
+		VkQueue m_GraphicsQueue{ VK_NULL_HANDLE };
+		VkQueue m_ComputeQueue{ VK_NULL_HANDLE };
+		VkQueue m_TransferQueue{ VK_NULL_HANDLE };
 
-		VkCommandPool m_TransferCommandPool;
+		VkCommandPool m_TransferCommandPool{ VK_NULL_HANDLE };
+		VkCommandPool m_TransientCmdPool{ VK_NULL_HANDLE };
 		std::vector<VkCommandBuffer> m_TransferCommandBuffers;
-		uint32_t m_GraphicsQueueFamilyIndex;
-		uint32_t m_TransferQueueFamilyIndex;
-		uint32_t m_ComputeQueueFamilyIndex;
+		uint32_t m_GraphicsQueueFamilyIndex{ VK_QUEUE_FAMILY_IGNORED };
+		uint32_t m_TransferQueueFamilyIndex{ VK_QUEUE_FAMILY_IGNORED };
+		uint32_t m_ComputeQueueFamilyIndex{ VK_QUEUE_FAMILY_IGNORED };
 
-		VmaAllocator m_Allocator;
-		VkPipelineCache m_PipelineCache;
+		VmaAllocator m_Allocator{ VK_NULL_HANDLE };
+		VkPipelineCache m_PipelineCache{ VK_NULL_HANDLE };
 
 #if defined(_DEBUG)
-		VkDebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE;
+		VkDebugUtilsMessengerEXT m_DebugMessenger{ VK_NULL_HANDLE };
 
 		static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
 			VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -147,17 +254,7 @@ namespace zzz::vk
 	};
 
 	VKAPI::VKAPI(const std::shared_ptr<GAPIConfig> config) :
-		IGAPI(config, eGAPIType::Vulkan),
-		m_Instance(VK_NULL_HANDLE),
-		m_PhysicalDevice(VK_NULL_HANDLE),
-		m_Device(VK_NULL_HANDLE),
-		m_GraphicsQueue(VK_NULL_HANDLE),
-		m_ComputeQueue(VK_NULL_HANDLE),
-		m_TransferQueue(VK_NULL_HANDLE),
-		m_TransferCommandPool(VK_NULL_HANDLE),
-		m_GraphicsQueueFamilyIndex{ VK_QUEUE_FAMILY_IGNORED },
-		m_TransferQueueFamilyIndex{ VK_QUEUE_FAMILY_IGNORED },
-		m_ComputeQueueFamilyIndex{ VK_QUEUE_FAMILY_IGNORED }
+		IGAPI(config, eGAPIType::Vulkan)
 	{
 		ensure(config, "GAPIConfig cannot be null.");
 	}
@@ -187,6 +284,9 @@ namespace zzz::vk
 			if (m_TransferCommandPool)
 				vkDestroyCommandPool(m_Device, m_TransferCommandPool, nullptr);
 
+			if (m_TransientCmdPool)
+				vkDestroyCommandPool(m_Device, m_TransientCmdPool, nullptr);
+
 			vkDestroyDevice(m_Device, nullptr);
 		}
 
@@ -208,7 +308,7 @@ namespace zzz::vk
 	{
 		VkResult vr = volkInitialize();
 		if (vr != VK_SUCCESS)
-			return UNEXPECTED(eResult::failure, L"Volk nitialize failed: {}.", static_cast<int>(vr));
+			return UNEXPECTED(eResult::failure, L"Volk initialize failed: {}.", static_cast<int>(vr));
 
 		Candidate deviceCandidate;
 		uint32_t apiVersion;
@@ -635,7 +735,6 @@ namespace zzz::vk
 	[[nodiscard]] Result<> VKAPI::CreateLogicalDevice(const Candidate& deviceCandidate)
 	{
 		float priority = 1.0f;
-
 		std::vector<VkDeviceQueueCreateInfo> queueInfos;
 		std::set<uint32_t> usedFamilies;
 
@@ -817,7 +916,8 @@ namespace zzz::vk
 
 		if (transferIsUnique)
 		{
-			VkCommandPoolCreateInfo ci{
+			VkCommandPoolCreateInfo ci
+			{
 				.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
 				.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
 				.queueFamilyIndex = deviceCandidate.transferQueueFamily
@@ -827,6 +927,15 @@ namespace zzz::vk
 			if (vr != VK_SUCCESS)
 				return UNEXPECTED(eResult::failure, L"vkCreateCommandPool (transfer) failed ({})", static_cast<int>(vr));
 		}
+
+		const VkCommandPoolCreateInfo commandPoolCreateInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+			.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT, // Hint that commands will be short-lived
+			.queueFamilyIndex = deviceCandidate.transferQueueFamily,
+		};
+		VkResult vr = vkCreateCommandPool(m_Device, &commandPoolCreateInfo, nullptr, &m_TransientCmdPool);
+		SetDebugName(m_TransientCmdPool, "Transient cmd pool");
 
 		return {};
 	}

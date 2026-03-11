@@ -38,7 +38,7 @@ export namespace zzz
 	// [2] (Рекомендуется): Баланс между задержкой ввода и стабильностью. 
 	// [1] : Минимальный input lag, но GPU будет простаивать, если CPU задержится.
 	// [3] : Максимальная загрузка GPU, но увеличивается задержка ввода (input lag).
-	inline constexpr zU32 FRAMES_IN_FLIGHT = 2;
+	inline constexpr zU32 FRAMES_IN_FLIGHT = 3;
 
 #if defined(ZRENDER_API_D3D12)
 	inline constexpr DXGI_FORMAT BACK_BUFFER_FORMAT = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -53,6 +53,7 @@ export namespace zzz
 	// [VK_API_VERSION_1_4] : Текущий максимум: descriptor indexing improvements и др.
 	inline constexpr uint32_t VULKAN_ENGINE_MAX_VERSION = VK_API_VERSION_1_4;
 
+	// TODO: расмотреть вынос в файл параметров инициализации
 	// ПРЕДПОЧТИТЕЛЬНЫЕ ФОРМАТЫ ЦВЕТОВОГО БУФЕРА (SwapChain / Render Target)
 	// Порядок в векторе = приоритет выбора при создании surface.
 	inline const std::vector<VkFormat> PREFERRED_FORMATS =
@@ -70,7 +71,13 @@ export namespace zzz
 		// Используются как fallback, если SRGB не поддерживается поверхностью.
 		// ВНИМАНИЕ: При использовании UNORM нужно вручную делать gamma-encode в шейдере!
 		// Лучше избегать для основного рендер-таргета, если нет специфических причин.
-		VK_FORMAT_B8G8R8A8_UNORM
+		VK_FORMAT_B8G8R8A8_UNORM,
+
+		// Практически универсальный формат,
+		// поддерживается почти всеми Vulkan-устройствами
+		// и часто используется на мобильных GPU.
+		// Используется если BGR-вариант не поддерживается surface.
+		VK_FORMAT_R8G8B8A8_UNORM
 	};
 
 	// ПРЕДПОЧТИТЕЛЬНЫЕ ФОРМАТЫ БУФЕРА ГЛУБИНЫ (Depth/Stencil)

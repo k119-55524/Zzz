@@ -19,6 +19,7 @@ import ISurfView;
 import StrConvert;
 import DebugOutput;
 import RenderQueue;
+import Swapchain_VK;
 import RenderVolume;
 import ViewportDesc;
 import AppWin_MSWin;
@@ -92,12 +93,13 @@ namespace zzz::vk
 
 		// Surface and swapchain
 		VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
-		VkSwapchainKHR m_Swapchain = VK_NULL_HANDLE;
-		VkExtent2D m_SwapchainExtent{};
-		std::vector<VkImage> m_SwapchainImages;
-		std::vector<VkImageView> m_SwapchainImageViews;
-		std::vector<VkFramebuffer> m_Framebuffers;
-		VkFormat m_ChosenSwapchainFormat = VK_FORMAT_UNDEFINED;
+		//VkSwapchainKHR m_Swapchain = VK_NULL_HANDLE;
+		//VkExtent2D m_SwapchainExtent{};
+		//std::vector<VkImage> m_SwapchainImages;
+		//std::vector<VkImageView> m_SwapchainImageViews;
+		//std::vector<VkFramebuffer> m_Framebuffers;
+		//VkFormat m_ChosenSwapchainFormat = VK_FORMAT_UNDEFINED;
+		Swapchain_VK m_Swapchain;
 
 		// Depth resources
 		VkFormat m_ChosenDepthFormat = VK_FORMAT_UNDEFINED;
@@ -133,7 +135,7 @@ namespace zzz::vk
 		// Private methods
 		[[nodiscard]] Result<> FindQueueFamilies();
 		[[nodiscard]] Result<> CreateSurface();
-		[[nodiscard]] Result<> CreateSwapchain(const Size2D<>& size);
+		//[[nodiscard]] Result<> CreateSwapchain(const Size2D<>& size);
 		[[nodiscard]] Result<> CreateImageViews();
 		[[nodiscard]] Result<> CreateRenderPass();
 		[[nodiscard]] Result<> CreateDepthResources(const Size2D<>& size);
@@ -196,7 +198,14 @@ namespace zzz::vk
 
 		auto res = CreateSurface()
 			.and_then([&]() { return FindQueueFamilies(); })
-			.and_then([&]() { return CreateSwapchain(winSize); })
+			.and_then([&]() -> Result<>
+			{
+				auto resWinSize = m_Swapchain.Initialize(m_VulkanAPI); /*CreateSwapchain(winSize);*/
+				if (!resWinSize)
+					return UNEXPECTED(eResult::failure, resWinSize.error().getMessage());
+
+				return {};
+			})
 			.and_then([&]() { return CreateCommandPool(); })
 			.and_then([&]() { return CreateImageViews(); })
 			.and_then([&]() { return CreateRenderPass(); })
@@ -299,93 +308,6 @@ namespace zzz::vk
 
 		if (vr != VK_SUCCESS)
 			return UNEXPECTED(eResult::failure, L"Failed to create surface ({})", static_cast<int>(vr));
-
-		return {};
-	}
-
-	[[nodiscard]] Result<> SurfView_VK::CreateSwapchain(const Size2D<>& size)
-	{
-		VkPhysicalDevice physicalDevice = m_VulkanAPI->GetPhysicalDevice();
-		VkDevice device = m_VulkanAPI->GetDevice();
-
-		// Get surface capabilities
-		VkSurfaceCapabilitiesKHR capabilities;
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_Surface, &capabilities);
-
-		// Calculate extent
-		if (capabilities.currentExtent.width != UINT32_MAX)
-		{
-			m_SwapchainExtent = capabilities.currentExtent;
-		}
-		else
-		{
-			m_SwapchainExtent = {
-				std::clamp(static_cast<uint32_t>(size.width),
-						  capabilities.minImageExtent.width,
-						  capabilities.maxImageExtent.width),
-				std::clamp(static_cast<uint32_t>(size.height),
-						  capabilities.minImageExtent.height,
-						  capabilities.maxImageExtent.height)
-			};
-		}
-
-		// Get surface formats
-		uint32_t formatCount = 0;
-		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface, &formatCount, nullptr);
-		std::vector<VkSurfaceFormatKHR> formats(formatCount);
-		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface, &formatCount, formats.data());
-
-		// Choose format
-		m_ChosenSwapchainFormat = formats[0].format; // fallback
-		for (auto& preferredFormat : PREFERRED_SWAPCHAIN_FORMATS)
-		{
-			for (auto& format : formats)
-			{
-				if (format.format == preferredFormat &&
-					format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
-				{
-					m_ChosenSwapchainFormat = format.format;
-					break;
-				}
-			}
-		}
-
-		// Determine image count
-		uint32_t imageCount = BACK_BUFFER_COUNT;
-		if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount)
-			imageCount = capabilities.maxImageCount;
-
-		// Choose present mode based on vsync
-		VkPresentModeKHR presentMode = m_GAPI->IsVSyncEnabled()
-			? VK_PRESENT_MODE_FIFO_KHR
-			: VK_PRESENT_MODE_MAILBOX_KHR;
-
-		// Create swapchain
-		VkSwapchainCreateInfoKHR createInfo{
-			.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
-			.surface = m_Surface,
-			.minImageCount = imageCount,
-			.imageFormat = m_ChosenSwapchainFormat,
-			.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-			.imageExtent = m_SwapchainExtent,
-			.imageArrayLayers = 1,
-			.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-			.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
-			.preTransform = capabilities.currentTransform,
-			.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-			.presentMode = presentMode,
-			.clipped = VK_TRUE,
-			.oldSwapchain = VK_NULL_HANDLE
-		};
-
-		VkResult vr = vkCreateSwapchainKHR(device, &createInfo, nullptr, &m_Swapchain);
-		if (vr != VK_SUCCESS)
-			return UNEXPECTED(eResult::failure, L"Failed to create swapchain ({})", static_cast<int>(vr));
-
-		// Get swapchain images
-		vkGetSwapchainImagesKHR(device, m_Swapchain, &imageCount, nullptr);
-		m_SwapchainImages.resize(imageCount);
-		vkGetSwapchainImagesKHR(device, m_Swapchain, &imageCount, m_SwapchainImages.data());
 
 		return {};
 	}
