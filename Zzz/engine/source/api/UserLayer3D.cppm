@@ -30,7 +30,7 @@ namespace zzz
 	{
 		auto resScene = m_Layer->AddScene();
 		if (!resScene)
-			return Unexpected(eResult::failure, resScene.error().getMessage());
+			return resScene.error();
 
 		std::shared_ptr<Scene> scene = resScene.value();
 		std::shared_ptr<UserScene> userScene = safe_make_shared<UserScene>(scene);

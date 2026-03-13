@@ -269,10 +269,10 @@ namespace zzz::vk
 
 				auto resEnd = gapi->EndSingleTimeCommands(cmd);
 				if (!resEnd)
-					return UNEXPECTED(eResult::failure, resEnd.error().getMessage());
+					return resEnd.error();
 			}
 			else
-				return UNEXPECTED(eResult::failure, resBegin.error().getMessage());
+				return resBegin.error();
 		}
 
 		return winSize;

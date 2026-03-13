@@ -150,7 +150,7 @@ export namespace zzz::dx
 			.and_then([&]() { m_factory = factory; })
 			.and_then([&]() { return GetAdapter(factory.Get(), &adapter); });
 		if (!res)
-			return UNEXPECTED(eResult::failure, L" -> {}", res.error().getMessage());
+			return error().getMessage;
 
 		HRESULT hr = adapter.As(&m_adapter3);
 		if (FAILED(hr))
@@ -159,7 +159,7 @@ export namespace zzz::dx
 		res = CreateDevice(adapter, m_device, m_featureLevel)
 			.and_then([&]() { return CreateCommandQueue(m_device, m_commandQueue); });
 		if (!res)
-			return UNEXPECTED(eResult::failure, L" -> {}", res.error().getMessage());
+			return res.error();
 
 		// Проверка возможности отключения VSYNC
 		BOOL allowTearing = FALSE;

@@ -324,7 +324,7 @@ export namespace zzz
 		ZamlParser zamlParser;
 		auto res = zamlParser.GetAppWinConfig(zamlConfig);
 		if (!res)
-			Unexpected(eResult::not_initialized, res.error().getMessage());
+			return res.error();
 
 		std::shared_ptr<PlatformConfig> winConfig = res.value();
 		std::shared_ptr<GAPIConfig> gapiConfig = safe_make_shared<GAPIConfig>(winConfig);

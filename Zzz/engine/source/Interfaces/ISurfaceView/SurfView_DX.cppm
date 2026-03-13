@@ -219,7 +219,7 @@ namespace zzz::dx
 
 		res = CreateDS(winSize);
 		if (!res)
-			return Unexpected(eResult::failure, res.error().getMessage());
+			return res.error();
 
 		return {};
 	}
@@ -427,17 +427,17 @@ namespace zzz::dx
 
 		auto res = CreateRTV(m_device);
 		if (!res)
-			return UNEXPECTED(eResult::failure, L"Failed to create RTV. {}", res.error().getMessage());
+			return res.error();
 
 		DXGI_SWAP_CHAIN_DESC desc{};
 		HRESULT hr = m_swapChain->GetDesc(&desc);
 		if (S_OK != hr)
-			UNEXPECTED(eResult::failure, L"Failed to get swap chain description. HRESULT = 0x{:08X}", hr);
+			return UNEXPECTED(eResult::failure, L"Failed to get swap chain description. HRESULT = 0x{:08X}", hr);
 
 		Size2D<> size{ desc.BufferDesc.Width, desc.BufferDesc.Height };
 		res = CreateDS(size);
 		if (!res)
-			UNEXPECTED(eResult::failure, L"Failed to create depth stencil View. {}", res.error().getMessage());
+			return res.error();
 
 		return {};
 	}
