@@ -51,7 +51,7 @@ export namespace zzz
 	// [VK_API_VERSION_1_2] : Базовый набор: timeline semaphores, buffer device address.
 	// [VK_API_VERSION_1_3] : Рекомендуется: dynamic rendering, sync2, maintenance4.
 	// [VK_API_VERSION_1_4] : Текущий максимум: descriptor indexing improvements и др.
-	inline constexpr uint32_t VULKAN_ENGINE_MAX_VERSION = VK_API_VERSION_1_4;
+	inline constexpr uint32_t VULKAN_ENGINE_MIN_VERSION = VK_API_VERSION_1_4;
 
 	// TODO: расмотреть вынос в файл параметров инициализации
 	// ПРЕДПОЧТИТЕЛЬНЫЕ ФОРМАТЫ ЦВЕТОВОГО БУФЕРА (SwapChain / Render Target)

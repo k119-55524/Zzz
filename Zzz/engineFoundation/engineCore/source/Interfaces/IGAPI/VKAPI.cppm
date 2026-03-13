@@ -16,6 +16,7 @@ import VKDeviceCapabilities;
 
 using namespace zzz;
 using namespace zzz::core;
+using namespace zzz::logger;
 
 namespace zzz::vk
 {
@@ -33,6 +34,62 @@ namespace zzz::vk
 	constexpr VkObjectType GetVulkanObjectType(VkCommandBuffer) { return VK_OBJECT_TYPE_COMMAND_BUFFER; }
 #endif // _DEBUG
 
+	// Точная настройка того, что проверяется.
+	struct ValidationSettings
+	{
+		VkBool32 fine_grained_locking{ VK_TRUE };
+		VkBool32 validate_core{ VK_TRUE };
+		VkBool32 check_image_layout{ VK_TRUE };
+		VkBool32 check_command_buffer{ VK_TRUE };
+		VkBool32 check_object_in_use{ VK_TRUE };
+		VkBool32 check_query{ VK_TRUE };
+		VkBool32 check_shaders{ VK_TRUE };
+		VkBool32 check_shaders_caching{ VK_TRUE };
+		VkBool32 unique_handles{ VK_TRUE };
+		VkBool32 object_lifetime{ VK_TRUE };
+		VkBool32 stateless_param{ VK_TRUE };
+		std::vector<const char*> debug_action{ "VK_DBG_LAYER_ACTION_LOG_MSG" }; // "VK_DBG_LAYER_ACTION_DEBUG_OUTPUT", "VK_DBG_LAYER_ACTION_BREAK"
+		std::vector<const char*> report_flags{ "error", "warn" }; // Включаем как сообщения об ошибках, так и предупреждения.
+
+		// TODO: Пока не использую.
+		// Фильтр: предупреждение о некорректной работе функции vkGetPhysicalDeviceProperties от сторонних библиотек (ImGui/VMA)
+		std::vector<const char*> message_id_filter{ "WARNING-legacy-gpdp2" };
+
+		VkBaseInStructure* buildPNextChain()
+		{
+			layerSettings = std::vector<VkLayerSettingEXT>
+			{
+				{layerName, "fine_grained_locking", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &fine_grained_locking},
+				{layerName, "validate_core", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &validate_core},
+				{layerName, "check_image_layout", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &check_image_layout},
+				{layerName, "check_command_buffer", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &check_command_buffer},
+				{layerName, "check_object_in_use", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &check_object_in_use},
+				{layerName, "check_query", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &check_query},
+				{layerName, "check_shaders", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &check_shaders},
+				{layerName, "check_shaders_caching", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &check_shaders_caching},
+				{layerName, "unique_handles", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &unique_handles},
+				{layerName, "object_lifetime", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &object_lifetime},
+				{layerName, "stateless_param", VK_LAYER_SETTING_TYPE_BOOL32_EXT, 1, &stateless_param},
+				{layerName, "debug_action", VK_LAYER_SETTING_TYPE_STRING_EXT, uint32_t(debug_action.size()), debug_action.data()},
+				{layerName, "report_flags", VK_LAYER_SETTING_TYPE_STRING_EXT, uint32_t(report_flags.size()), report_flags.data()},
+				{layerName, "message_id_filter", VK_LAYER_SETTING_TYPE_STRING_EXT, uint32_t(message_id_filter.size()), message_id_filter.data()},
+			};
+
+			layerSettingsCreateInfo =
+			{
+				.sType = VK_STRUCTURE_TYPE_LAYER_SETTINGS_CREATE_INFO_EXT,
+				.settingCount = uint32_t(layerSettings.size()),
+				.pSettings = layerSettings.data(),
+			};
+
+			return reinterpret_cast<VkBaseInStructure*>(&layerSettingsCreateInfo);
+		}
+
+		static constexpr const char* layerName{ "VK_LAYER_KHRONOS_validation" };
+		std::vector<VkLayerSettingEXT> layerSettings;
+		VkLayerSettingsCreateInfoEXT   layerSettingsCreateInfo{};
+	};
+
 	// Структура-кандидат для хранения лучшего устройства
 	struct Candidate
 	{
@@ -43,6 +100,19 @@ namespace zzz::vk
 		uint32_t presentQueueFamily{};
 		uint64_t score = 0;
 		bool isCanDisableVSync = false;
+		uint32_t apiVersion;
+	};
+
+	// Очередь (queue) — это последовательность команд, которые выполняются GPU строго по порядку.
+	// Очередь используется для отправки (submit) командных буферов на выполнение графическим процессором.
+	// FamilyIndex — индекс семейства очередей (graphics, compute, transfer и т.п.).
+	// QueueIndex — индекс конкретной очереди внутри этого семейства,
+	// так как в одном семействе может существовать несколько очередей.
+	struct QueueInfo
+	{
+		uint32_t m_FamilyIndex = ~0U;	// Индекс семейства очередей (graphics / compute / transfer и др.)
+		uint32_t m_QueueIndex = ~0U;	// Индекс очереди внутри семейства
+		VkQueue  m_Queue{};				// Объект очереди Vulkan (дескриптор очереди GPU)
 	};
 
 	class TestSurface_MSWin final
@@ -99,11 +169,11 @@ namespace zzz::vk
 		inline VkPhysicalDevice GetPhysicalDevice() const noexcept { return m_PhysicalDevice; }
 		inline VkDevice GetDevice() const noexcept { return m_Device; }
 
-		inline VkQueue GetGraphicsQueue() const noexcept { return m_GraphicsQueue; }
-		inline VkQueue GetComputeQueue() const noexcept { return m_ComputeQueue; }
-		inline VkQueue GetTransferQueue() const noexcept { return m_TransferQueue; }
-		inline VkQueue GetPresentQueue() const noexcept { return m_PresentQueue; }
-		inline uint32_t GetPresentQueueFamilyIndex() const noexcept { return m_PresentQueueFamilyIndex; }
+		//inline VkQueue GetGraphicsQueue() const noexcept { return m_GraphicsQueue; }
+		//inline VkQueue GetComputeQueue() const noexcept { return m_ComputeQueue; }
+		//inline VkQueue GetTransferQueue() const noexcept { return m_TransferQueue; }
+		//inline VkQueue GetPresentQueue() const noexcept { return m_PresentQueue; }
+		//inline uint32_t GetPresentQueueFamilyIndex() const noexcept { return m_PresentQueueFamilyIndex; }
 
 		void SubmitCommandLists() override;
 		void BeginRender() override;
@@ -210,8 +280,8 @@ namespace zzz::vk
 		[[nodiscard]] Result<std::vector<const char*>> GetRequiredExtensions();
 		[[nodiscard]] const char* GetPlatformExtension();
 		[[nodiscard]] Result<> CreateDebugMessenger();
-		[[nodiscard]] Result<> PickPhysicalDevice(Candidate& deviceCandidate, const VkSurfaceKHR& surface, uint32_t apiVersion);
-		[[nodiscard]] std::optional<Candidate> BestDeviceCandidate(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface, uint32_t apiVersion);
+		[[nodiscard]] Result<> PickPhysicalDevice(Candidate& deviceCandidate, const VkSurfaceKHR& surface);
+		[[nodiscard]] std::optional<Candidate> BestDeviceCandidate(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface);
 		[[nodiscard]] Result<> CreateLogicalDevice(const Candidate& deviceCandidate);
 		[[nodiscard]] Result<> CreateAllocator(uint32_t apiVersion);
 		[[nodiscard]] Result<> CreatePipelineCache();
@@ -221,19 +291,22 @@ namespace zzz::vk
 		VkInstance m_Instance{ VK_NULL_HANDLE };
 		VkPhysicalDevice m_PhysicalDevice{ VK_NULL_HANDLE };
 		VkDevice m_Device{ VK_NULL_HANDLE };
+		std::vector<QueueInfo> m_Queues; // The queue used to submit command buffers to the GPU
+		std::vector<VkExtensionProperties> m_InstanceExtensionsAvailable;
+		std::vector<VkExtensionProperties> m_DeviceExtensionsAvailable;
 
-		uint32_t m_PresentQueueFamilyIndex;
+		//uint32_t m_PresentQueueFamilyIndex;
 		VkQueue m_PresentQueue{ VK_NULL_HANDLE };
-		VkQueue m_GraphicsQueue{ VK_NULL_HANDLE };
-		VkQueue m_ComputeQueue{ VK_NULL_HANDLE };
-		VkQueue m_TransferQueue{ VK_NULL_HANDLE };
+		//VkQueue m_GraphicsQueue{ VK_NULL_HANDLE };
+		//VkQueue m_ComputeQueue{ VK_NULL_HANDLE };
+		//VkQueue m_TransferQueue{ VK_NULL_HANDLE };
 
 		VkCommandPool m_TransferCommandPool{ VK_NULL_HANDLE };
 		VkCommandPool m_TransientCmdPool{ VK_NULL_HANDLE };
-		std::vector<VkCommandBuffer> m_TransferCommandBuffers;
-		uint32_t m_GraphicsQueueFamilyIndex{ VK_QUEUE_FAMILY_IGNORED };
-		uint32_t m_TransferQueueFamilyIndex{ VK_QUEUE_FAMILY_IGNORED };
-		uint32_t m_ComputeQueueFamilyIndex{ VK_QUEUE_FAMILY_IGNORED };
+		//std::vector<VkCommandBuffer> m_TransferCommandBuffers;
+		//uint32_t m_GraphicsQueueFamilyIndex{ VK_QUEUE_FAMILY_IGNORED };
+		//uint32_t m_TransferQueueFamilyIndex{ VK_QUEUE_FAMILY_IGNORED };
+		//uint32_t m_ComputeQueueFamilyIndex{ VK_QUEUE_FAMILY_IGNORED };
 
 		VmaAllocator m_Allocator{ VK_NULL_HANDLE };
 		VkPipelineCache m_PipelineCache{ VK_NULL_HANDLE };
@@ -278,8 +351,8 @@ namespace zzz::vk
 			if (m_Allocator)
 				vmaDestroyAllocator(m_Allocator);
 
-			if (m_TransferCommandPool && !m_TransferCommandBuffers.empty())
-				vkFreeCommandBuffers(m_Device, m_TransferCommandPool, static_cast<uint32_t>(m_TransferCommandBuffers.size()), m_TransferCommandBuffers.data());
+			//if (m_TransferCommandPool && !m_TransferCommandBuffers.empty())
+			//	vkFreeCommandBuffers(m_Device, m_TransferCommandPool, static_cast<uint32_t>(m_TransferCommandBuffers.size()), m_TransferCommandBuffers.data());
 
 			if (m_TransferCommandPool)
 				vkDestroyCommandPool(m_Device, m_TransferCommandPool, nullptr);
@@ -321,7 +394,7 @@ namespace zzz::vk
 					if (!surface.IsValid())
 						return Result<>(UNEXPECTED(eResult::failure, L"Failed to create TestSurface_MSWin surface"));
 
-					return PickPhysicalDevice(deviceCandidate, surface.Get(), apiVersion);
+					return PickPhysicalDevice(deviceCandidate, surface.Get());
 				})
 			.and_then([&]() { return CreateLogicalDevice(deviceCandidate); })
 			.and_then([&]() { return CreateAllocator(apiVersion); })
@@ -345,17 +418,14 @@ namespace zzz::vk
 		const char* engineName = engineNameStr.c_str();
 		const Version& appVersion = m_Config->GetAppVersion();
 
-		uint32_t supportedVersion = VK_API_VERSION_1_0;
-		if (vkEnumerateInstanceVersion)
-			vkEnumerateInstanceVersion(&supportedVersion);
+		VkResult vr = vkEnumerateInstanceVersion(&apiVersion);
+		if (vr != VK_SUCCESS)
+			return UNEXPECTED(eResult::failure, L"Failed to vkEnumerateInstanceVersion(): {}.", static_cast<int>(vr));
 
-		apiVersion = std::min(supportedVersion, VULKAN_ENGINE_MAX_VERSION);
+		ensure(apiVersion >= VULKAN_ENGINE_MIN_VERSION, "Require Vulkan 1.4 loader");
 
 		DOut(std::format(
-			L"Vulkan supported: {}.{}.{} | Using: {}.{}.{}",
-			static_cast<int>VK_VERSION_MAJOR(supportedVersion),
-			VK_VERSION_MINOR(supportedVersion),
-			VK_VERSION_PATCH(supportedVersion),
+			L"Vulkan supported: {}.{}.{}.",
 			VK_VERSION_MAJOR(apiVersion),
 			VK_VERSION_MINOR(apiVersion),
 			VK_VERSION_PATCH(apiVersion)));
@@ -399,19 +469,19 @@ namespace zzz::vk
 			.apiVersion = apiVersion
 		};
 
-		VkInstanceCreateInfo ci
+		ValidationSettings vs{ .validate_core = VK_TRUE };
+		const VkInstanceCreateInfo instanceCreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-			.pNext = nullptr,
-			.flags = 0,
+			.pNext = vs.buildPNextChain(), // Если отладочный слой не подключён то эта настройка проигнорируется и производительность не упадёт
 			.pApplicationInfo = &appInfo,
 			.enabledLayerCount = static_cast<uint32_t>(layers.size()),
 			.ppEnabledLayerNames = layers.empty() ? nullptr : layers.data(),
 			.enabledExtensionCount = static_cast<uint32_t>(extensions.size()),
-			.ppEnabledExtensionNames = extensions.data()
+			.ppEnabledExtensionNames = extensions.data(),
 		};
 
-		VkResult vr = vkCreateInstance(&ci, nullptr, &m_Instance);
+		vr = vkCreateInstance(&instanceCreateInfo, nullptr, &m_Instance);
 		if (vr != VK_SUCCESS)
 			return UNEXPECTED(eResult::failure, L"vkCreateInstance failed ({})", static_cast<int>(vr));
 
@@ -443,7 +513,6 @@ namespace zzz::vk
 			};
 
 		std::vector<const char*> extensions;
-
 		auto RequireExtension = [&](const char* name) -> Result<>
 			{
 				if (!IsExtensionAvailable(name))
@@ -455,6 +524,8 @@ namespace zzz::vk
 
 		std::vector<const char*> requiredExtensions =
 		{
+			VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME,
+			VK_KHR_SURFACE_MAINTENANCE_1_EXTENSION_NAME,
 			VK_KHR_SURFACE_EXTENSION_NAME
 		};
 
@@ -559,39 +630,46 @@ namespace zzz::vk
 		return {};
 	}
 
-	[[nodiscard]] Result<> VKAPI::PickPhysicalDevice(Candidate& deviceCandidate, const VkSurfaceKHR& surface, uint32_t apiVersion)
+	[[nodiscard]] Result<> VKAPI::PickPhysicalDevice(Candidate& deviceCandidate, const VkSurfaceKHR& surface)
 	{
 		uint32_t deviceCount = 0;
 		auto vkRes = vkEnumeratePhysicalDevices(m_Instance, &deviceCount, nullptr);
 		if (vkRes != VK_SUCCESS)
-			return UNEXPECTED(eResult::failure, L"vkEnumeratePhysicalDevices failed ({})", static_cast<int>(vkRes));
+			return UNEXPECTED(eResult::failure, L"vkEnumeratePhysicalDevices failed ({}).", static_cast<int>(vkRes));
 
 		if (deviceCount == 0)
-			return UNEXPECTED(eResult::failure, L"No Vulkan devices found");
+			return UNEXPECTED(eResult::failure, L"No Vulkan physical devices found.");
 
 		std::vector<VkPhysicalDevice> devices(deviceCount);
 		vkRes = vkEnumeratePhysicalDevices(m_Instance, &deviceCount, devices.data());
 		if (vkRes != VK_SUCCESS)
-			return UNEXPECTED(eResult::failure, L"vkEnumeratePhysicalDevices failed ({})", static_cast<int>(vkRes));
+			return UNEXPECTED(eResult::failure, L"vkEnumeratePhysicalDevices failed ({}).", static_cast<int>(vkRes));
 
-		auto candidat = BestDeviceCandidate(devices, surface, apiVersion);
+		auto candidat = BestDeviceCandidate(devices, surface);
 		if (!candidat)
-			return UNEXPECTED(eResult::failure, L"No suitable Vulkan device found");
+			return UNEXPECTED(eResult::failure, L"No suitable Vulkan device found.");
 
 		deviceCandidate = candidat.value();
 		m_PhysicalDevice = deviceCandidate.device;
 		m_IsCanDisableVSync = deviceCandidate.isCanDisableVSync;
 
-		VkPhysicalDeviceProperties props{};
-		vkGetPhysicalDeviceProperties(m_PhysicalDevice, &props);
+		{
+			VkPhysicalDeviceProperties2 props{};
+			props.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+			vkGetPhysicalDeviceProperties2(m_PhysicalDevice, &props);
 
-		std::wstring mess = string_to_wstring(props.deviceName).value_or(L"Unknown GPU");
-		DOut(L"Selected GPU: {} (score: {})", mess, deviceCandidate.score);
+			std::wstring gpuName = string_to_wstring(props.properties.deviceName).value_or(L"Unknown GPU");
+			uint32_t apiVersion = props.properties.apiVersion;
+			uint32_t major = VK_API_VERSION_MAJOR(apiVersion);
+			uint32_t minor = VK_API_VERSION_MINOR(apiVersion);
+			uint32_t patch = VK_API_VERSION_PATCH(apiVersion);
+			DOut(L"Selected GPU - {}(Vulkan {}.{}.{}).", gpuName, major, minor, patch);
+		}
 
 		return {};
 	}
 
-	[[nodiscard]] std::optional<Candidate> VKAPI::BestDeviceCandidate(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface, uint32_t apiVersion)
+	[[nodiscard]] std::optional<Candidate> VKAPI::BestDeviceCandidate(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface)
 	{
 		std::optional<zzz::vk::Candidate> best;
 
@@ -642,9 +720,9 @@ namespace zzz::vk
 			if (!graphicsFamily || !presentFamily)
 				continue;
 
-			VkPhysicalDeviceProperties props{};
-			vkGetPhysicalDeviceProperties(device, &props);
-			if (props.apiVersion < apiVersion)
+			VkPhysicalDeviceProperties2 props{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
+			vkGetPhysicalDeviceProperties2(device, &props);
+			if (props.properties.apiVersion < VULKAN_ENGINE_MIN_VERSION)
 				continue;
 
 			VkPhysicalDeviceMemoryProperties memProps{};
@@ -657,16 +735,14 @@ namespace zzz::vk
 					localMemory += memProps.memoryHeaps[i].size;
 			}
 
-			VkPhysicalDeviceVulkan12Features features12{
-				.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES
-			};
-
-			VkPhysicalDeviceVulkan13Features features13{
+			VkPhysicalDeviceVulkan12Features features12 { .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES };
+			VkPhysicalDeviceVulkan13Features features13
+			{
 				.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
 				.pNext = &features12
 			};
-
-			VkPhysicalDeviceFeatures2 features2{
+			VkPhysicalDeviceFeatures2 features2
+			{
 				.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
 				.pNext = &features13
 			};
@@ -707,12 +783,12 @@ namespace zzz::vk
 			}
 
 			uint64_t score = 0;
-			if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+			if (props.properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
 				score += 1'000'000;
 
 			score += localMemory / (1024ull * 1024ull);
-			score += VK_VERSION_MAJOR(props.apiVersion) * 10'000;
-			score += VK_VERSION_MINOR(props.apiVersion) * 1'000;
+			score += VK_VERSION_MAJOR(props.properties.apiVersion) * 10'000;
+			score += VK_VERSION_MINOR(props.properties.apiVersion) * 1'000;
 			score += families.size() * 100;
 
 			if (!best || score > best->score)
@@ -844,14 +920,14 @@ namespace zzz::vk
 		if (vkCreateDevice(deviceCandidate.device, &createInfo, nullptr, &m_Device) != VK_SUCCESS)
 			return UNEXPECTED(eResult::failure, L"Failed to create logical device");
 
-		vkGetDeviceQueue(m_Device, deviceCandidate.graphicsQueueFamily, 0, &m_GraphicsQueue);
-		vkGetDeviceQueue(m_Device, deviceCandidate.computeQueueFamily, 0, &m_ComputeQueue);
-		vkGetDeviceQueue(m_Device, deviceCandidate.transferQueueFamily, 0, &m_TransferQueue);
-		vkGetDeviceQueue(m_Device, deviceCandidate.presentQueueFamily, 0, &m_PresentQueue);
-		m_GraphicsQueueFamilyIndex = deviceCandidate.graphicsQueueFamily;
-		m_TransferQueueFamilyIndex = deviceCandidate.transferQueueFamily;
-		m_ComputeQueueFamilyIndex = deviceCandidate.computeQueueFamily;
-		m_PresentQueueFamilyIndex = deviceCandidate.presentQueueFamily;
+		//vkGetDeviceQueue(m_Device, deviceCandidate.graphicsQueueFamily, 0, &m_GraphicsQueue);
+		//vkGetDeviceQueue(m_Device, deviceCandidate.computeQueueFamily, 0, &m_ComputeQueue);
+		//vkGetDeviceQueue(m_Device, deviceCandidate.transferQueueFamily, 0, &m_TransferQueue);
+		//vkGetDeviceQueue(m_Device, deviceCandidate.presentQueueFamily, 0, &m_PresentQueue);
+		//m_GraphicsQueueFamilyIndex = deviceCandidate.graphicsQueueFamily;
+		//m_TransferQueueFamilyIndex = deviceCandidate.transferQueueFamily;
+		//m_ComputeQueueFamilyIndex = deviceCandidate.computeQueueFamily;
+		//m_PresentQueueFamilyIndex = deviceCandidate.presentQueueFamily;
 
 		return {};
 	}
@@ -945,16 +1021,16 @@ namespace zzz::vk
 		if (m_TransferCommandPool == VK_NULL_HANDLE)
 			return {}; // transfer не уникальный — буферы не нужны
 
-		m_TransferCommandBuffers.resize(BACK_BUFFER_COUNT);
-		VkCommandBufferAllocateInfo allocInfo{
-			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-			.commandPool = m_TransferCommandPool,
-			.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-			.commandBufferCount = BACK_BUFFER_COUNT
-		};
-		VkResult vr = vkAllocateCommandBuffers(m_Device, &allocInfo, m_TransferCommandBuffers.data());
-		if (vr != VK_SUCCESS)
-			return UNEXPECTED(eResult::failure, L"vkAllocateCommandBuffers (transfer) failed ({})", static_cast<int>(vr));
+		//m_TransferCommandBuffers.resize(BACK_BUFFER_COUNT);
+		//VkCommandBufferAllocateInfo allocInfo{
+		//	.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+		//	.commandPool = m_TransferCommandPool,
+		//	.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+		//	.commandBufferCount = BACK_BUFFER_COUNT
+		//};
+		//VkResult vr = vkAllocateCommandBuffers(m_Device, &allocInfo, m_TransferCommandBuffers.data());
+		//if (vr != VK_SUCCESS)
+		//	return UNEXPECTED(eResult::failure, L"vkAllocateCommandBuffers (transfer) failed ({})", static_cast<int>(vr));
 
 		return {};
 	}
