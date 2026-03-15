@@ -92,7 +92,7 @@ namespace zzz::vk
 		std::shared_ptr<VKAPI> m_VulkanAPI;
 
 		// Surface and swapchain
-		VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
+		VkSurfaceKHR m_Surface{ VK_NULL_HANDLE };
 		//VkSwapchainKHR m_Swapchain = VK_NULL_HANDLE;
 		//VkExtent2D m_SwapchainExtent{};
 		//std::vector<VkImage> m_SwapchainImages;
@@ -114,8 +114,7 @@ namespace zzz::vk
 		//uint32_t m_GraphicsQueueFamily = UINT32_MAX;
 		//uint32_t m_PresentQueueFamily = UINT32_MAX;
 
-		//// Command pool and per-frame data
-		//VkCommandPool m_CommandPool = VK_NULL_HANDLE;
+		VkCommandPool m_CommandPool{ VK_NULL_HANDLE };
 
 		//struct FrameData
 		//{
@@ -134,13 +133,13 @@ namespace zzz::vk
 
 		// Private methods
 		//[[nodiscard]] Result<> FindQueueFamilies();
-		//[[nodiscard]] Result<> CreateSurface();
+		[[nodiscard]] Result<> CreateSurface();
 		////[[nodiscard]] Result<> CreateSwapchain(const Size2D<>& size);
 		//[[nodiscard]] Result<> CreateImageViews();
 		//[[nodiscard]] Result<> CreateRenderPass();
 		//[[nodiscard]] Result<> CreateDepthResources(const Size2D<>& size);
 		//[[nodiscard]] Result<> CreateFramebuffers();
-		//[[nodiscard]] Result<> CreateCommandPool();
+		[[nodiscard]] Result<> CreateCommandPool();
 		//[[nodiscard]] Result<> CreateSyncObjects();
 		//[[nodiscard]] Result<> RecreateSwapchain();
 		void CleanupSwapchain();
@@ -183,20 +182,20 @@ namespace zzz::vk
 		//if (m_RenderPass)
 		//	vkDestroyRenderPass(device, m_RenderPass, nullptr);
 
-		//if (m_CommandPool)
-		//	vkDestroyCommandPool(device, m_CommandPool, nullptr);
+		if (m_CommandPool)
+			vkDestroyCommandPool(device, m_CommandPool, nullptr);
 
-		//if (m_Surface)
-		//	vkDestroySurfaceKHR(m_VulkanAPI->GetInstance(), m_Surface, nullptr);
+		if (m_Surface)
+			vkDestroySurfaceKHR(m_VulkanAPI->GetInstance(), m_Surface, nullptr);
 	}
 
 #pragma region Initialize
 	Result<> SurfView_VK::Initialize()
 	{
-		//auto winSize = m_iAppWin->GetWinSize();
-		//m_SurfSize.SetFrom(winSize);
+		auto winSize = m_iAppWin->GetWinSize();
+		m_SurfSize.SetFrom(winSize);
 
-		//auto res = CreateSurface()
+		auto res = CreateSurface()
 		//	.and_then([&]() { return FindQueueFamilies(); })
 		//	.and_then([&]() -> Result<>
 		//	{
@@ -206,7 +205,15 @@ namespace zzz::vk
 
 		//		return {};
 		//	})
-		//	.and_then([&]() { return CreateCommandPool(); })
+			.and_then([&]() { return CreateCommandPool(); })
+			.and_then([&]() -> Result<>
+			{
+				auto resWinSize = m_Swapchain.Initialize(m_VulkanAPI, m_Surface);
+				if (!resWinSize)
+					return resWinSize.error();
+
+				return {};
+			});
 		//	.and_then([&]() { return CreateImageViews(); })
 		//	.and_then([&]() { return CreateRenderPass(); })
 		//	.and_then([&]() { return CreateDepthResources(winSize); })
@@ -214,8 +221,8 @@ namespace zzz::vk
 		//	.and_then([&]() { return CreateSyncObjects(); })
 		//	.and_then([&]() { return WarmUpGPU(); });
 
-		//if (!res)
-		//	return UNEXPECTED(eResult::failure, L"Failed to initialize SurfView: {}", res.error().getMessage());
+		if (!res)
+			return UNEXPECTED(eResult::failure, L"Failed to initialize SurfView: {}", res.error().getMessage());
 
 		return {};
 	}
@@ -267,68 +274,66 @@ namespace zzz::vk
 //
 //		return {};
 //	}
-//
-//	[[nodiscard]] Result<> SurfView_VK::CreateSurface()
-//	{
-//		VkResult vr = VK_SUCCESS;
-//
-//#if defined(ZPLATFORM_MSWINDOWS)
-//		VkWin32SurfaceCreateInfoKHR createInfo{
-//			.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
-//			.hinstance = GetModuleHandle(nullptr),
-//			.hwnd = m_iAppWin->GetHWND()
-//		};
-//		vr = vkCreateWin32SurfaceKHR(m_VulkanAPI->GetInstance(), &createInfo, nullptr, &m_Surface);
-//#elif defined(ZPLATFORM_ANDROID)
-//		// Android implementation
-//		VkAndroidSurfaceCreateInfoKHR createInfo{
-//			.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR,
-//			.window = GetNativeWindow() // You need to implement this
-//		};
-//		vr = vkCreateAndroidSurfaceKHR(m_VulkanAPI->GetInstance(), &createInfo, nullptr, &m_Surface);
-//#elif defined(ZPLATFORM_LINUX)
-//#if defined(USE_WAYLAND)
-//		VkWaylandSurfaceCreateInfoKHR createInfo{
-//			.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR,
-//			.display = GetWaylandDisplay(),
-//			.surface = GetWaylandSurface()
-//		};
-//		vr = vkCreateWaylandSurfaceKHR(m_VulkanAPI->GetInstance(), &createInfo, nullptr, &m_Surface);
-//#else
-//		VkXcbSurfaceCreateInfoKHR createInfo{
-//			.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR,
-//			.connection = GetXcbConnection(),
-//			.window = GetXcbWindow()
-//		};
-//		vr = vkCreateXcbSurfaceKHR(m_VulkanAPI->GetInstance(), &createInfo, nullptr, &m_Surface);
-//#endif
-//#else
-//#error "Platform not supported"
-//#endif
-//
-//		if (vr != VK_SUCCESS)
-//			return UNEXPECTED(eResult::failure, L"Failed to create surface ({})", static_cast<int>(vr));
-//
-//		return {};
-//	}
-//
-//	[[nodiscard]] Result<> SurfView_VK::CreateCommandPool()
-//	{
-//		ensure(m_GraphicsQueueFamily != UINT32_MAX, "Graphics queue family not found");
-//
-//		VkDevice device = m_VulkanAPI->GetDevice();
-//		VkCommandPoolCreateInfo poolInfo{};
-//		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-//		poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-//		poolInfo.queueFamilyIndex = m_GraphicsQueueFamily;
-//
-//		VkResult vr = vkCreateCommandPool(device, &poolInfo, nullptr, &m_CommandPool);
-//		if (vr != VK_SUCCESS)
-//			return UNEXPECTED(eResult::failure, L"Failed to create command pool ({})", static_cast<int>(vr));
-//
-//		return {};
-//	}
-//
+
+	[[nodiscard]] Result<> SurfView_VK::CreateSurface()
+	{
+		VkResult vr = VK_SUCCESS;
+
+#if defined(ZPLATFORM_MSWINDOWS)
+		VkWin32SurfaceCreateInfoKHR createInfo{
+			.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
+			.hinstance = GetModuleHandle(nullptr),
+			.hwnd = m_iAppWin->GetHWND()
+		};
+		vr = vkCreateWin32SurfaceKHR(m_VulkanAPI->GetInstance(), &createInfo, nullptr, &m_Surface);
+#elif defined(ZPLATFORM_ANDROID)
+		// Android implementation
+		VkAndroidSurfaceCreateInfoKHR createInfo{
+			.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR,
+			.window = GetNativeWindow() // You need to implement this
+		};
+		vr = vkCreateAndroidSurfaceKHR(m_VulkanAPI->GetInstance(), &createInfo, nullptr, &m_Surface);
+#elif defined(ZPLATFORM_LINUX)
+#if defined(USE_WAYLAND)
+		VkWaylandSurfaceCreateInfoKHR createInfo{
+			.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR,
+			.display = GetWaylandDisplay(),
+			.surface = GetWaylandSurface()
+		};
+		vr = vkCreateWaylandSurfaceKHR(m_VulkanAPI->GetInstance(), &createInfo, nullptr, &m_Surface);
+#else
+		VkXcbSurfaceCreateInfoKHR createInfo{
+			.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR,
+			.connection = GetXcbConnection(),
+			.window = GetXcbWindow()
+		};
+		vr = vkCreateXcbSurfaceKHR(m_VulkanAPI->GetInstance(), &createInfo, nullptr, &m_Surface);
+#endif
+#else
+#error "Platform not supported"
+#endif
+
+		if (vr != VK_SUCCESS)
+			return UNEXPECTED(eResult::failure, L"Failed to create surface ({})", static_cast<int>(vr));
+
+		return {};
+	}
+
+	[[nodiscard]] Result<> SurfView_VK::CreateCommandPool()
+	{
+		VkDevice device = m_VulkanAPI->GetDevice();
+		VkCommandPoolCreateInfo poolInfo{};
+		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		poolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;//VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		poolInfo.queueFamilyIndex = m_VulkanAPI->GetGraphicsQueueIndex();
+
+		VkResult vr = vkCreateCommandPool(device, &poolInfo, nullptr, &m_CommandPool);
+		if (vr != VK_SUCCESS)
+			return UNEXPECTED(eResult::failure, L"Failed to create command pool ({})", static_cast<int>(vr));
+
+		return {};
+	}
+
 //	[[nodiscard]] Result<> SurfView_VK::CreateImageViews()
 //	{
 //		VkDevice device = m_VulkanAPI->GetDevice();

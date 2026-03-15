@@ -97,22 +97,9 @@ namespace zzz::vk
 		uint32_t graphicsQueueFamily{};
 		uint32_t computeQueueFamily{};
 		uint32_t transferQueueFamily{};
-		uint32_t presentQueueFamily{};
 		uint64_t score = 0;
 		bool isCanDisableVSync = false;
 		uint32_t apiVersion;
-	};
-
-	// Очередь (queue) — это последовательность команд, которые выполняются GPU строго по порядку.
-	// Очередь используется для отправки (submit) командных буферов на выполнение графическим процессором.
-	// FamilyIndex — индекс семейства очередей (graphics, compute, transfer и т.п.).
-	// QueueIndex — индекс конкретной очереди внутри этого семейства,
-	// так как в одном семействе может существовать несколько очередей.
-	struct QueueInfo
-	{
-		uint32_t m_FamilyIndex = ~0U;	// Индекс семейства очередей (graphics / compute / transfer и др.)
-		uint32_t m_QueueIndex = ~0U;	// Индекс очереди внутри семейства
-		VkQueue  m_Queue{};				// Объект очереди Vulkan (дескриптор очереди GPU)
 	};
 
 	class TestSurface_MSWin final
@@ -173,7 +160,7 @@ namespace zzz::vk
 		//inline VkQueue GetComputeQueue() const noexcept { return m_ComputeQueue; }
 		//inline VkQueue GetTransferQueue() const noexcept { return m_TransferQueue; }
 		//inline VkQueue GetPresentQueue() const noexcept { return m_PresentQueue; }
-		//inline uint32_t GetPresentQueueFamilyIndex() const noexcept { return m_PresentQueueFamilyIndex; }
+		inline uint32_t GetGraphicsQueueIndex() const noexcept { return m_GraphicsQueueFamilyIndex; }
 
 		void SubmitCommandLists() override;
 		void BeginRender() override;
@@ -228,7 +215,7 @@ namespace zzz::vk
 		{
 			ensure(m_Device, "Device cannot be null.");
 			ensure(m_TransientCmdPool, "VkCommandPool cannot be null.");
-			ensure(m_PresentQueue, "m_PresentQueue cannot be null.");
+			ensure(m_GraphicsQueue, "GraphicsQueue cannot be null.");
 
 			// Отправить и очистить
 			VkResult vr = vkEndCommandBuffer(cmd);
@@ -255,7 +242,7 @@ namespace zzz::vk
 					}
 				}
 			};
-			vr = vkQueueSubmit2(m_PresentQueue, uint32_t(submitInfo.size()), submitInfo.data(), fence[0]);
+			vr = vkQueueSubmit2(m_GraphicsQueue, uint32_t(submitInfo.size()), submitInfo.data(), fence[0]);
 			if (vr != VK_SUCCESS)
 				return UNEXPECTED(eResult::failure, L"Failed to vkQueueSubmit2(): {}.", static_cast<int>(vr));
 
@@ -291,22 +278,19 @@ namespace zzz::vk
 		VkInstance m_Instance{ VK_NULL_HANDLE };
 		VkPhysicalDevice m_PhysicalDevice{ VK_NULL_HANDLE };
 		VkDevice m_Device{ VK_NULL_HANDLE };
-		std::vector<QueueInfo> m_Queues; // The queue used to submit command buffers to the GPU
 		std::vector<VkExtensionProperties> m_InstanceExtensionsAvailable;
 		std::vector<VkExtensionProperties> m_DeviceExtensionsAvailable;
 
-		//uint32_t m_PresentQueueFamilyIndex;
-		VkQueue m_PresentQueue{ VK_NULL_HANDLE };
-		//VkQueue m_GraphicsQueue{ VK_NULL_HANDLE };
-		//VkQueue m_ComputeQueue{ VK_NULL_HANDLE };
-		//VkQueue m_TransferQueue{ VK_NULL_HANDLE };
+		VkQueue m_GraphicsQueue{ VK_NULL_HANDLE };
+		VkQueue m_ComputeQueue{ VK_NULL_HANDLE };
+		VkQueue m_TransferQueue{ VK_NULL_HANDLE };
+		uint32_t m_GraphicsQueueFamilyIndex{ VK_QUEUE_FAMILY_IGNORED };
+		uint32_t m_TransferQueueFamilyIndex{ VK_QUEUE_FAMILY_IGNORED };
+		uint32_t m_ComputeQueueFamilyIndex{ VK_QUEUE_FAMILY_IGNORED };
 
 		VkCommandPool m_TransferCommandPool{ VK_NULL_HANDLE };
 		VkCommandPool m_TransientCmdPool{ VK_NULL_HANDLE };
 		//std::vector<VkCommandBuffer> m_TransferCommandBuffers;
-		//uint32_t m_GraphicsQueueFamilyIndex{ VK_QUEUE_FAMILY_IGNORED };
-		//uint32_t m_TransferQueueFamilyIndex{ VK_QUEUE_FAMILY_IGNORED };
-		//uint32_t m_ComputeQueueFamilyIndex{ VK_QUEUE_FAMILY_IGNORED };
 
 		VmaAllocator m_Allocator{ VK_NULL_HANDLE };
 		VkPipelineCache m_PipelineCache{ VK_NULL_HANDLE };
@@ -672,22 +656,28 @@ namespace zzz::vk
 	[[nodiscard]] std::optional<Candidate> VKAPI::BestDeviceCandidate(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface)
 	{
 		std::optional<zzz::vk::Candidate> best;
-
 		for (VkPhysicalDevice device : devices)
 		{
+			// Используем vkGetPhysicalDeviceQueueFamilyProperties2
 			uint32_t familyCount = 0;
-			vkGetPhysicalDeviceQueueFamilyProperties(device, &familyCount, nullptr);
+			vkGetPhysicalDeviceQueueFamilyProperties2(device, &familyCount, nullptr);
 
-			std::vector<VkQueueFamilyProperties> families(familyCount);
-			vkGetPhysicalDeviceQueueFamilyProperties(device, &familyCount, families.data());
+			std::vector<VkQueueFamilyProperties2> families(familyCount);
+			for (auto& family : families)
+			{
+				family.sType = VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2;
+				family.pNext = nullptr;
+			}
+
+			vkGetPhysicalDeviceQueueFamilyProperties2(device, &familyCount, families.data());
 
 			std::optional<uint32_t> graphicsFamily;
 			std::optional<uint32_t> computeFamily;
 			std::optional<uint32_t> transferFamily;
-			std::optional<uint32_t> presentFamily;
+
 			for (uint32_t i = 0; i < familyCount; ++i)
 			{
-				const auto& f = families[i];
+				const auto& f = families[i].queueFamilyProperties;
 
 				if ((f.queueFlags & VK_QUEUE_GRAPHICS_BIT) && !graphicsFamily)
 					graphicsFamily = i;
@@ -702,40 +692,32 @@ namespace zzz::vk
 					!(f.queueFlags & VK_QUEUE_COMPUTE_BIT) &&
 					!transferFamily)
 					transferFamily = i;
-
-				VkBool32 supportsPresent = VK_FALSE;
-				vkGetPhysicalDeviceSurfaceSupportKHR(
-					device,
-					i,
-					surface,
-					&supportsPresent);
-
-				if (supportsPresent && !presentFamily)
-					presentFamily = i;
 			}
 
 			if (!computeFamily) computeFamily = graphicsFamily;
 			if (!transferFamily) transferFamily = graphicsFamily;
 
-			if (!graphicsFamily || !presentFamily)
-				continue;
-
 			VkPhysicalDeviceProperties2 props{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
 			vkGetPhysicalDeviceProperties2(device, &props);
+
 			if (props.properties.apiVersion < VULKAN_ENGINE_MIN_VERSION)
 				continue;
 
-			VkPhysicalDeviceMemoryProperties memProps{};
-			vkGetPhysicalDeviceMemoryProperties(device, &memProps);
+			// Используем vkGetPhysicalDeviceMemoryProperties2
+			VkPhysicalDeviceMemoryProperties2 memProps2{};
+			memProps2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2;
+			memProps2.pNext = nullptr;
+
+			vkGetPhysicalDeviceMemoryProperties2(device, &memProps2);
 
 			uint64_t localMemory = 0;
-			for (uint32_t i = 0; i < memProps.memoryHeapCount; ++i)
+			for (uint32_t i = 0; i < memProps2.memoryProperties.memoryHeapCount; ++i)
 			{
-				if (memProps.memoryHeaps[i].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
-					localMemory += memProps.memoryHeaps[i].size;
+				if (memProps2.memoryProperties.memoryHeaps[i].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
+					localMemory += memProps2.memoryProperties.memoryHeaps[i].size;
 			}
 
-			VkPhysicalDeviceVulkan12Features features12 { .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES };
+			VkPhysicalDeviceVulkan12Features features12{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES };
 			VkPhysicalDeviceVulkan13Features features13
 			{
 				.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
@@ -746,7 +728,6 @@ namespace zzz::vk
 				.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
 				.pNext = &features13
 			};
-
 			vkGetPhysicalDeviceFeatures2(device, &features2);
 
 			if (!features2.features.samplerAnisotropy ||
@@ -764,19 +745,18 @@ namespace zzz::vk
 			if (!features13.dynamicRendering)
 				continue;
 
-			bool isCanDisableVSync = false;  // можем ли отключить vsync?
+			bool isCanDisableVSync = false;
 			uint32_t presentModeCount = 0;
 			vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
 			if (presentModeCount > 0)
 			{
 				std::vector<VkPresentModeKHR> presentModes(presentModeCount);
 				vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, presentModes.data());
-
 				for (const auto& mode : presentModes)
 				{
 					if (mode == VK_PRESENT_MODE_IMMEDIATE_KHR)
 					{
-						isCanDisableVSync = true;  // Можем отключить vsync
+						isCanDisableVSync = true;
 						break;
 					}
 				}
@@ -798,25 +778,23 @@ namespace zzz::vk
 					.graphicsQueueFamily = *graphicsFamily,
 					.computeQueueFamily = *computeFamily,
 					.transferQueueFamily = *transferFamily,
-					.presentQueueFamily = *presentFamily,
 					.score = score,
 					.isCanDisableVSync = isCanDisableVSync
 				};
 			}
 		}
-
 		return best;
 	}
 
 	[[nodiscard]] Result<> VKAPI::CreateLogicalDevice(const Candidate& deviceCandidate)
 	{
 		float priority = 1.0f;
+
 		std::vector<VkDeviceQueueCreateInfo> queueInfos;
 		std::set<uint32_t> usedFamilies;
-
 		auto AddQueue = [&](uint32_t familyIndex)
 			{
-				if (usedFamilies.find(familyIndex) != usedFamilies.end())
+				if (usedFamilies.contains(familyIndex))
 					return;
 
 				VkDeviceQueueCreateInfo qi{};
@@ -832,34 +810,64 @@ namespace zzz::vk
 		AddQueue(deviceCandidate.graphicsQueueFamily);
 		AddQueue(deviceCandidate.computeQueueFamily);
 		AddQueue(deviceCandidate.transferQueueFamily);
-		AddQueue(deviceCandidate.presentQueueFamily);
 
+		// Проверка семейств очередей
+		{
+			uint32_t queueFamilyCount = 0;
+			vkGetPhysicalDeviceQueueFamilyProperties2(deviceCandidate.device, &queueFamilyCount, nullptr);
+			std::vector<VkQueueFamilyProperties2> queueFamilies(queueFamilyCount);
+			for (auto& qfp : queueFamilies)
+			{
+				qfp.sType = VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2;
+				qfp.pNext = nullptr;
+			}
+
+			vkGetPhysicalDeviceQueueFamilyProperties2(deviceCandidate.device, &queueFamilyCount, queueFamilies.data());
+
+			// Валидация индексов семейств очередей
+			auto ValidateQueueFamily = [&](uint32_t familyIndex, VkQueueFlags requiredFlags, const wchar_t* queueName) -> Result<>
+				{
+					// 1. Сначала проверяем на специальное значение
+					if (familyIndex == VK_QUEUE_FAMILY_IGNORED)
+						return UNEXPECTED(eResult::failure, L"{} queue family was not assigned", queueName);
+
+					// 2. Потом проверяем границы
+					if (familyIndex >= queueFamilyCount)
+						return UNEXPECTED(eResult::failure, L"{} queue family index {} is out of range", queueName, familyIndex);
+
+					// 3. Проверяем флаги
+					if (!(queueFamilies[familyIndex].queueFamilyProperties.queueFlags & requiredFlags))
+						return UNEXPECTED(eResult::failure, L"{} queue family does not support required flags", queueName);
+
+					return {};
+				};
+
+			auto res = ValidateQueueFamily(deviceCandidate.graphicsQueueFamily, VK_QUEUE_GRAPHICS_BIT, L"Graphics")
+				.and_then([&] { return ValidateQueueFamily(deviceCandidate.computeQueueFamily, VK_QUEUE_COMPUTE_BIT, L"Compute"); })
+				.and_then([&] { return ValidateQueueFamily(deviceCandidate.transferQueueFamily, VK_QUEUE_TRANSFER_BIT, L"Transfer"); });
+			if (!res)
+				return res;
+		}
+
+		// Расширения устройств
 		uint32_t extCount = 0;
-		auto vkRes = vkEnumerateDeviceExtensionProperties(m_PhysicalDevice, nullptr, &extCount, nullptr);
-		if (vkRes != VK_SUCCESS)
-			return UNEXPECTED(eResult::failure, L"vkEnumerateDeviceExtensionProperties failed ({})", static_cast<int>(vkRes));
-
+		vkEnumerateDeviceExtensionProperties(deviceCandidate.device, nullptr, &extCount, nullptr);
 		std::vector<VkExtensionProperties> availableExt(extCount);
-		vkRes = vkEnumerateDeviceExtensionProperties(m_PhysicalDevice, nullptr, &extCount, availableExt.data());
-		if (vkRes != VK_SUCCESS)
-			return UNEXPECTED(eResult::failure, L"vkEnumerateDeviceExtensionProperties failed ({})", static_cast<int>(vkRes));
+		vkEnumerateDeviceExtensionProperties(deviceCandidate.device, nullptr, &extCount, availableExt.data());
 
 		auto IsExtensionAvailable = [&](const char* name)
 			{
 				for (const auto& ext : availableExt)
-				{
-					if (std::strcmp(ext.extensionName, name) == 0)
+					if (strcmp(ext.extensionName, name) == 0)
 						return true;
-				}
 				return false;
 			};
 
 		std::vector<const char*> enabledExtensions;
-
 		auto RequireExtension = [&](const char* name) -> Result<>
 			{
 				if (!IsExtensionAvailable(name))
-					return UNEXPECTED(eResult::failure, L"Required device extension not supported: {}", string_to_wstring(name).value_or(L"Unknown extension name"));
+					return UNEXPECTED(eResult::failure, L"Required device extension not supported: {}", string_to_wstring(name).value());
 
 				enabledExtensions.push_back(name);
 				return {};
@@ -871,42 +879,34 @@ namespace zzz::vk
 					enabledExtensions.push_back(name);
 			};
 
-		std::vector<const char*> requiredExtensions = {
-			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-			VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME,
-			VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
-			VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
-			VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
-		};
-
-		for (const char* ext : requiredExtensions)
-		{
-			if (auto res = RequireExtension(ext); !res)
-				return res.error();
-		}
+		auto res = RequireExtension(VK_KHR_SWAPCHAIN_EXTENSION_NAME)
+			.and_then([&] { return RequireExtension(VK_KHR_UNIFIED_IMAGE_LAYOUTS_EXTENSION_NAME); })
+			.and_then([&] { return RequireExtension(VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME); })
+			.and_then([&] { return RequireExtension(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME); });
+		if (!res)
+			return res;
 
 		TryAddExtension(VK_EXT_MESH_SHADER_EXTENSION_NAME);
-
 #if defined(_DEBUG)
 		TryAddExtension(VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME);
 #endif
 
-		VkPhysicalDeviceFeatures2 features2{};
-		features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-
-		VkPhysicalDeviceVulkan12Features features12{};
-		features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-		features12.timelineSemaphore = VK_TRUE;
-		features12.bufferDeviceAddress = VK_TRUE;
-		features12.descriptorIndexing = VK_TRUE;
-		features12.runtimeDescriptorArray = VK_TRUE;
-
-		VkPhysicalDeviceVulkan13Features features13{};
-		features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
-		features13.dynamicRendering = VK_TRUE;
-
-		features2.pNext = &features12;
+		VkPhysicalDeviceFeatures2 features2{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
+		VkPhysicalDeviceVulkan11Features features11{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES };
+		VkPhysicalDeviceVulkan12Features features12{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES };
+		VkPhysicalDeviceVulkan13Features features13{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES };
+		VkPhysicalDeviceVulkan14Features features14{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_FEATURES };
+		features2.pNext = &features11;
+		features11.pNext = &features12;
 		features12.pNext = &features13;
+		features13.pNext = &features14;
+		vkGetPhysicalDeviceFeatures2(deviceCandidate.device, &features2);
+
+		ensure(features12.timelineSemaphore, "Timeline semaphore required");
+		ensure(features13.dynamicRendering, "Dynamic rendering required");
+		ensure(features13.synchronization2, "Synchronization2 required");
+		ensure(features14.maintenance5, "Maintenance5 required");
+		ensure(features14.maintenance6, "Maintenance6 required");
 
 		VkDeviceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -915,19 +915,35 @@ namespace zzz::vk
 		createInfo.pQueueCreateInfos = queueInfos.data();
 		createInfo.enabledExtensionCount = static_cast<uint32_t>(enabledExtensions.size());
 		createInfo.ppEnabledExtensionNames = enabledExtensions.data();
-		createInfo.pEnabledFeatures = nullptr;
 
-		if (vkCreateDevice(deviceCandidate.device, &createInfo, nullptr, &m_Device) != VK_SUCCESS)
-			return UNEXPECTED(eResult::failure, L"Failed to create logical device");
+		VkResult vr = vkCreateDevice(deviceCandidate.device, &createInfo, nullptr, &m_Device);
+		if (vr != VK_SUCCESS)
+			return UNEXPECTED(eResult::failure, L"Failed to create logical device: {}", static_cast<int>(vr));
 
-		//vkGetDeviceQueue(m_Device, deviceCandidate.graphicsQueueFamily, 0, &m_GraphicsQueue);
-		//vkGetDeviceQueue(m_Device, deviceCandidate.computeQueueFamily, 0, &m_ComputeQueue);
-		//vkGetDeviceQueue(m_Device, deviceCandidate.transferQueueFamily, 0, &m_TransferQueue);
-		//vkGetDeviceQueue(m_Device, deviceCandidate.presentQueueFamily, 0, &m_PresentQueue);
-		//m_GraphicsQueueFamilyIndex = deviceCandidate.graphicsQueueFamily;
-		//m_TransferQueueFamilyIndex = deviceCandidate.transferQueueFamily;
-		//m_ComputeQueueFamilyIndex = deviceCandidate.computeQueueFamily;
-		//m_PresentQueueFamilyIndex = deviceCandidate.presentQueueFamily;
+		volkLoadDevice(m_Device);  // Загрузить все функции устройства Vulkan
+
+		VkDeviceQueueInfo2 queueInfo{};
+		queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_INFO_2;
+		queueInfo.pNext = nullptr;
+		queueInfo.flags = 0;
+		queueInfo.queueIndex = 0;
+
+		queueInfo.queueFamilyIndex = deviceCandidate.graphicsQueueFamily;
+		vkGetDeviceQueue2(m_Device, &queueInfo, &m_GraphicsQueue);
+
+		queueInfo.queueFamilyIndex = deviceCandidate.computeQueueFamily;
+		vkGetDeviceQueue2(m_Device, &queueInfo, &m_ComputeQueue);
+
+		queueInfo.queueFamilyIndex = deviceCandidate.transferQueueFamily;
+		vkGetDeviceQueue2(m_Device, &queueInfo, &m_TransferQueue);
+
+		m_GraphicsQueueFamilyIndex = deviceCandidate.graphicsQueueFamily;
+		m_ComputeQueueFamilyIndex = deviceCandidate.computeQueueFamily;
+		m_TransferQueueFamilyIndex = deviceCandidate.transferQueueFamily;
+
+		DebugOutputLite(L">>>>> Enabled extensions <<<<<");
+		for (const auto& ext : enabledExtensions)
+			DebugOutputLite(L" +- {}", string_to_wstring(ext).value());
 
 		return {};
 	}
@@ -943,7 +959,11 @@ namespace zzz::vk
 			return UNEXPECTED(eResult::failure, L"Vulkan function pointers are null");
 
 		VmaAllocatorCreateInfo ci{};
-		ci.flags = VMA_ALLOCATOR_CREATE_EXT_MEMORY_BUDGET_BIT;
+		ci.flags =
+			VMA_ALLOCATOR_CREATE_EXT_MEMORY_BUDGET_BIT |
+			VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT |
+			VMA_ALLOCATOR_CREATE_KHR_MAINTENANCE4_BIT |
+			VMA_ALLOCATOR_CREATE_KHR_MAINTENANCE5_BIT;
 		ci.physicalDevice = m_PhysicalDevice;
 		ci.device = m_Device;
 		ci.instance = m_Instance;

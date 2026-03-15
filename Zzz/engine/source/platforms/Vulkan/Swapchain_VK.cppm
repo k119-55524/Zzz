@@ -20,7 +20,7 @@ namespace zzz::vk
 		Swapchain_VK();
 		~Swapchain_VK();
 
-		Result<VkExtent2D> Initialize(std::shared_ptr<VKAPI> gapi);
+		Result<VkExtent2D> Initialize(std::shared_ptr<VKAPI> gapi, VkSurfaceKHR m_Surface);
 
 	private:
 		VkSurfaceFormat2KHR SelectSwapSurfaceFormat(const std::vector<VkSurfaceFormat2KHR>& availableFormats) const;
@@ -45,7 +45,6 @@ namespace zzz::vk
 		VkDevice m_Device{ VK_NULL_HANDLE };
 		VkSwapchainKHR m_SwapChain{ VK_NULL_HANDLE };
 		VkFormat m_ImageFormat{}; // Формат изображений свопчейна
-		VkSurfaceKHR m_Surface{}; // Поверхность для представления изображений
 
 		std::vector<Image> m_NextImages;
 		std::vector<FrameResources> m_FrameResources;
@@ -84,13 +83,14 @@ namespace zzz::vk
 		}
 	};
 
-	Result<VkExtent2D> Swapchain_VK::Initialize(std::shared_ptr<VKAPI> gapi)
+	Result<VkExtent2D> Swapchain_VK::Initialize(std::shared_ptr<VKAPI> gapi, VkSurfaceKHR surface)
 	{
 		ensure(gapi, "VKAPI cannot be null.");
 		VkPhysicalDevice m_PhysicalDevice = gapi->GetPhysicalDevice();
 		ensure(m_PhysicalDevice, "Physical device cannot be null.");
 		m_Device = gapi->GetDevice();
 		ensure(m_Device, "Device cannot be null.");
+		ensure(surface, "Surface cannot be null.");
 		VkExtent2D winSize;
 
 		// --------------------------------------------------------------------
@@ -102,7 +102,7 @@ namespace zzz::vk
 		const VkPhysicalDeviceSurfaceInfo2KHR surfaceInfo2
 		{
 			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SURFACE_INFO_2_KHR,
-			.surface = m_Surface
+			.surface = surface
 		};
 
 		// VkSurfaceCapabilities2KHR содержит информацию:
@@ -146,13 +146,13 @@ namespace zzz::vk
 		// --------------------------------------------------------------------
 		// Первый вызов — получаем количество режимов.
 		uint32_t presentModeCount = 0;
-		vr = vkGetPhysicalDeviceSurfacePresentModesKHR(m_PhysicalDevice, m_Surface, &presentModeCount, nullptr);
+		vr = vkGetPhysicalDeviceSurfacePresentModesKHR(m_PhysicalDevice, surface, &presentModeCount, nullptr);
 		if (vr != VK_SUCCESS)
 			return UNEXPECTED(eResult::failure, L"Failed to vkGetPhysicalDeviceSurfacePresentModesKHR: {}.", static_cast<int>(vr));
 
 		// Второй вызов — получаем сами режимы.
 		std::vector<VkPresentModeKHR> presentModes(presentModeCount);
-		vr = vkGetPhysicalDeviceSurfacePresentModesKHR(m_PhysicalDevice, m_Surface, &presentModeCount, presentModes.data());
+		vr = vkGetPhysicalDeviceSurfacePresentModesKHR(m_PhysicalDevice, surface, &presentModeCount, presentModes.data());
 		if (vr != VK_SUCCESS)
 			return UNEXPECTED(eResult::failure, L"Failed to vkGetPhysicalDeviceSurfacePresentModesKHR: {}.", static_cast<int>(vr));
 
@@ -181,7 +181,7 @@ namespace zzz::vk
 		// Создайте цепочку обменов.
 		const VkSwapchainCreateInfoKHR swapchainCreateInfo{
 			.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
-			.surface = m_Surface,
+			.surface = surface,
 			.minImageCount = m_MaxFramesInFlight,
 			.imageFormat = surfaceFormat2.surfaceFormat.format,
 			.imageColorSpace = surfaceFormat2.surfaceFormat.colorSpace,
