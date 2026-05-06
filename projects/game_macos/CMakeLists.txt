@@ -1,21 +1,12 @@
 add_executable(game_macos
     MACOSX_BUNDLE
-)
-
-target_precompile_headers(game_macos PRIVATE
-    pch/pch.h
+    main.mm
 )
 
 target_include_directories(game_macos PRIVATE
     pch
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/src
-)
-
-target_sources(game_macos
-    PRIVATE
-        main.mm
-        pch/pch.mm
 )
 
 target_link_libraries(game_macos
@@ -42,4 +33,5 @@ target_link_libraries(game_macos
 set_target_properties(game_macos PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER com.zzz.game
     MACOSX_BUNDLE_BUNDLE_NAME Zzz
+    XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER com.zzz.game
 )

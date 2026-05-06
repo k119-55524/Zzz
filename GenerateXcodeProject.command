@@ -2,4 +2,4 @@
 
 cd "$(dirname "$0")"
 
-cmake -B build -G Xcode
+cmake -B projects/game_macos -G Xcode

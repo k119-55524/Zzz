@@ -2,37 +2,72 @@
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
 
+#include "main.h"
+
+@interface AppDelegate : NSObject <NSApplicationDelegate>
+@end
+
+@implementation AppDelegate
+
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)sender
+{
+    DOut(L">>>>> MacOS game END.");
+    
+    return YES;
+}
+
+@end
+
 int main(int argc, const char* argv[])
 {
-	@autoreleasepool
-	{
-		NSApplication * app = [NSApplication sharedApplication];
+    @autoreleasepool
+    {
+        zzz::engine::Engine engine;
 
-		NSRect frame = NSMakeRect(0, 0, 1280, 720);
+        auto initResult = engine.Initialize();
 
-		NSUInteger style =
-			NSWindowStyleMaskTitled |
-			NSWindowStyleMaskClosable |
-			NSWindowStyleMaskResizable;
+        if (!initResult.has_value())
+        {
+            return -1;
+        }
 
-		NSWindow* window = [[NSWindow alloc]
-			initWithContentRect:frame
-			styleMask : style
-			backing : NSBackingStoreBuffered
-			defer : NO];
+        NSApplication* app = [NSApplication sharedApplication];
 
-		[window setTitle:@"Zzz"] ;
-		[window makeKeyAndOrderFront:nil] ;
+        AppDelegate* delegate = [[AppDelegate alloc] init];
+        [app setDelegate:delegate];
 
-		id<MTLDevice> device = MTLCreateSystemDefaultDevice();
+        [app setActivationPolicy:NSApplicationActivationPolicyRegular];
+        [app activateIgnoringOtherApps:YES];
 
-		MTKView* metalView =
-			[[MTKView alloc]initWithFrame:frame device : device];
+        NSRect frame = NSMakeRect(0, 0, 1280, 720);
 
-		[window setContentView:metalView] ;
+        NSUInteger style =
+            NSWindowStyleMaskTitled |
+            NSWindowStyleMaskClosable |
+            NSWindowStyleMaskResizable;
 
-		[app run] ;
-	}
+        NSWindow* window =
+            [[NSWindow alloc]
+                initWithContentRect:frame
+                styleMask:style
+                backing:NSBackingStoreBuffered
+                defer:NO];
 
-	return 0;
+        [window setTitle:@"Zzz"];
+        [window setReleasedWhenClosed:NO];
+        [window makeKeyAndOrderFront:nil];
+
+        id<MTLDevice> device = MTLCreateSystemDefaultDevice();
+
+        MTKView* metalView =
+            [[MTKView alloc]
+                initWithFrame:frame
+                device:device];
+
+        [window setContentView:metalView];
+
+        [app run];
+    }
+
+    return 0;
 }

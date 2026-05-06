@@ -1,0 +1,38 @@
+# CMake generated folders
+
+build/
+Build/
+CMakeFiles/
+CMakeScripts/
+Debug/
+Release/
+RelWithDebInfo/
+MinSizeRel/
+src/
+
+# CMake generated files
+
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+Makefile
+build.ninja
+.ninja_deps
+.ninja_log
+
+# Xcode
+
+*.xcodeproj
+*.xcworkspace
+DerivedData/
+*.app
+
+# macOS
+
+.DS_Store
+
+# Temporary files
+
+*.tmp
+*.log
+*.swp
