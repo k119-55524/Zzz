@@ -2,9 +2,9 @@ module;
 
 #include "pch.h"
 
-module zlogger;
+module logger;
 
-namespace zlogger
+namespace zzz::logger
 {
 	std::wstring Logger::MakeDebugOutputString(const std::source_location& loc, const std::wstring& msg)
 	{

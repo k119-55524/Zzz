@@ -1,24 +1,29 @@
 module;
 
-export module zlogger;
+export module logger;
 
-export namespace zlogger
+using namespace std;
+
+export namespace zzz::logger
 {
 	class Logger
 	{
 	public:
 		template <typename... Args>
-			inline void DebugOutput(const std::source_location& loc, std::wstring_view fmt, Args&&... args)
+			static void DebugOutput(
+				const std::source_location& loc,
+				std::wstring_view fmt,
+				Args&&... args)
 		{
-#if defined(ZZZ_ENABLE_LOGGER)
+#if ZZZ_ENABLE_LOGGER
 			auto formatted = std::vformat(fmt, std::make_wformat_args(std::forward<Args>(args)...));
 			auto output = MakeDebugOutputString(loc, formatted);
 			DebugOutputRaw(output);
-#endif // #if defined(ZZZ_ENABLE_LOGGER)
+#endif // #if ZZZ_ENABLE_LOGGER
 		}
 
 	private:
-		std::wstring MakeDebugOutputString(const std::source_location& loc, const std::wstring& msg);
-		void DebugOutputRaw(const std::wstring& output) noexcept;
+		static std::wstring MakeDebugOutputString(const std::source_location& loc, const std::wstring& msg);
+		static void DebugOutputRaw(const std::wstring& output) noexcept;
 	};
 }
