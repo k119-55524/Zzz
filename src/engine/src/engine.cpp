@@ -2,7 +2,7 @@ module;
 
 #include "pch.h"
 
-module zzz.engine;
+module engine;
 
 import logger;
 

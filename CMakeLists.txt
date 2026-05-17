@@ -9,3 +9,4 @@ option(ZZZ_ENABLE_LOGGER "Enable logger" ON)
 
 add_subdirectory(src/logger/logger_lib)
 add_subdirectory(src/engine)
+add_subdirectory(projects/game_win)
