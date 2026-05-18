@@ -9,4 +9,16 @@ option(ZZZ_ENABLE_LOGGER "Enable logger" ON)
 
 add_subdirectory(src/logger/logger_lib)
 add_subdirectory(src/engine)
-add_subdirectory(projects/game_win)
+
+if(WIN32)
+    add_subdirectory(projects/game_win)
+    add_subdirectory(projects/game_linux)
+endif()
+
+if(UNIX AND NOT APPLE)
+    add_subdirectory(projects/game_linux)
+endif()
+
+#if(APPLE)
+#    add_subdirectory(projects/game_macos)
+#endif()
