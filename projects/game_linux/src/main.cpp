@@ -7,13 +7,22 @@ import logger;
 
 using namespace zzz::engine;
 
+// Linux
 int main(int argc, char* argv[])
 {
-	DOut(L"Game started.");
+	DOut(L">>>>> [Linux OS]. Game started.");
 
 	Engine engine;
-
-	engine.Initialize();
+	auto res = engine.Initialize();
+	if (res)
+	{
+		
+	}
+	else
+	{
+		DOut(L">>>>> [Linux OS]. Game started error: {}.", res.error());
+		return -1;
+	}
 
 	return 0;
 }

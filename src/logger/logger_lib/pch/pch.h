@@ -2,6 +2,7 @@
 
 #include <format>
 #include <string>
+#include <cstring>
 #include <iostream>
 #include <source_location>
 
