@@ -1,5 +1,12 @@
 add_library(game_android SHARED)
 
+# Находим native_app_glue в NDK
+set(NATIVE_APP_GLUE_DIR "${ANDROID_NDK}/sources/android/native_app_glue")
+add_library(native_app_glue STATIC
+    ${NATIVE_APP_GLUE_DIR}/android_native_app_glue.c
+)
+target_include_directories(native_app_glue PUBLIC ${NATIVE_APP_GLUE_DIR})
+
 target_precompile_headers(game_android PRIVATE
     pch/pch.h
 )
@@ -16,6 +23,7 @@ target_sources(game_android PRIVATE
 )
 
 target_link_libraries(game_android PRIVATE
+    native_app_glue
     engine_lib
     logger_lib
 
