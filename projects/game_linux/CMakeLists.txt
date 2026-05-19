@@ -12,7 +12,7 @@ target_include_directories(game_linux PRIVATE
 
 target_sources(game_linux
     PRIVATE
-        src/main.cpp
+        main.cpp
 )
 
 target_link_libraries(game_linux

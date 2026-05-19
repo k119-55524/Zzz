@@ -1,17 +1,11 @@
-module;
-
 #include "pch.h"
 
-module engine;
-
-import logger;
-
-using namespace zzz::logger;
+#include "engine.h"
 
 namespace zzz::engine
 {
 	Engine::Engine() :
-		initState{InitNot}
+		initState{zzz::InitNot}
 	{
 	}
 
@@ -19,7 +13,7 @@ namespace zzz::engine
 	{
 		std::lock_guard lock(initMutex);
 
-		if (initState != InitNot)
+		if (initState != zzz::InitNot)
 		{
 			DOut(L">>>>> [Engine::Initialize()]. Engine is already initialized or in the process of initialization.");
 			return std::unexpected(L"Engine is already initialized or in the process of initialization.");
@@ -27,7 +21,7 @@ namespace zzz::engine
 
 		DOut(L">>>>> [Engine::Initialize()]. Engine initialized.");
 
-		initState = InitOK;
+		initState = zzz::InitOK;
 		return {};
 	}
 }

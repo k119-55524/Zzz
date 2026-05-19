@@ -1,9 +1,4 @@
-#include "pch.h"
-
-#include "modules/main.h"
-
-import engine;
-import logger;
+#include "main.h"
 
 using namespace zzz::engine;
 

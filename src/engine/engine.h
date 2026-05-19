@@ -1,13 +1,14 @@
-module;
+#pragma once
 
+#include <mutex>
+#include <string>
 #include <expected>
-#include "foundation/enums.h"
 
-export module engine;
+#include "foundation/enums.h"
 
 using namespace zzz;
 
-export namespace zzz::engine
+namespace zzz::engine
 {
 	class Engine
 	{

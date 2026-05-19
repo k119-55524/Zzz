@@ -1,10 +1,6 @@
-#include "pch.h"
+#include "android_main.h"
 
-#include "modules/main.h"
-
-import engine;
-import logger;
-
+using namespace zzz::logger;
 using namespace zzz::engine;
 
 void android_main(struct android_app* app)

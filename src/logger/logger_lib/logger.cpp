@@ -1,8 +1,6 @@
-module;
+#include <iostream>
 
-#include "pch.h"
-
-module logger;
+#include "logger.h"
 
 namespace zzz::logger
 {
@@ -33,6 +31,6 @@ namespace zzz::logger
 		__android_log_write(ANDROID_LOG_DEBUG, "Zzz", narrow.c_str());
 #else // For non-MSVC compilers, we can write to standard error as a fallback.
 		std::wcerr << output << std::endl;
-#endif
+#endif // #if defined(_MSC_VER)
 	}
 }

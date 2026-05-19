@@ -4,20 +4,15 @@ target_precompile_headers(engine_lib PRIVATE
     pch/pch.h
 )
 
-target_include_directories(engine_lib PRIVATE
+target_include_directories(engine_lib PUBLIC
     pch
-    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
+    ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_sources(engine_lib
-    PUBLIC
-        FILE_SET CXX_MODULES FILES
-            modules/engine.ixx
-)
-
-target_sources(engine_lib
-    PRIVATE
-        src/engine.cpp
+target_sources(engine_lib PRIVATE
+    engine.h
+    engine.cpp
 )
 
 target_compile_features(engine_lib PUBLIC cxx_std_23)
