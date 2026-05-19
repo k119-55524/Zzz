@@ -26,8 +26,13 @@ namespace zzz::logger
 #if defined(_MSC_VER)
 		if (IsDebuggerPresent())
 			OutputDebugStringW(output.c_str());
+#elif defined(__ANDROID__)
+		// Simple narrowing for Android logcat.
+		// For full Unicode support, a proper UTF-8 conversion should be used.
+		std::string narrow(output.begin(), output.end());
+		__android_log_write(ANDROID_LOG_DEBUG, "Zzz", narrow.c_str());
 #else // For non-MSVC compilers, we can write to standard error as a fallback.
 		std::wcerr << output << std::endl;
-#endif // #if defined(_MSC_VER)
+#endif
 	}
 }

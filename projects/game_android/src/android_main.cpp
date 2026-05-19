@@ -26,5 +26,24 @@ void android_main(struct android_app* app)
 
 	while (true)
 	{
+		int ident;
+		int events;
+		struct android_poll_source* source;
+
+		while ((ident = ALooper_pollAll(0, nullptr, &events, (void**)&source)) >= 0)
+		{
+			if (source != nullptr)
+			{
+				source->process(app, source);
+			}
+
+			if (app->destroyRequested != 0)
+			{
+				DOut(L"[Android]. Game exiting.");
+				return;
+			}
+		}
+
+		// Тут будет логика кадра (Update/Render)
 	}
 }
