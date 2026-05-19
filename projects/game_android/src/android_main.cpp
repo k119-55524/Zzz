@@ -3,6 +3,9 @@
 using namespace zzz::logger;
 using namespace zzz::engine;
 
+extern "C"
+__attribute__((visibility("default")))
+__attribute__((used))
 void android_main(struct android_app* app)
 {
 	DOut(L"[Android]. Game started.");
