@@ -12,11 +12,14 @@ add_subdirectory(src/engine)
 
 if(WIN32)
     add_subdirectory(projects/game_win)
-    add_subdirectory(projects/game_linux)
 endif()
 
 if(UNIX AND NOT APPLE)
     add_subdirectory(projects/game_linux)
+endif()
+
+if(ANDROID)
+    add_subdirectory(projects/game_android)
 endif()
 
 #if(APPLE)
