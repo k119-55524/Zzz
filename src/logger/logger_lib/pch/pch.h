@@ -10,4 +10,4 @@
 #include <Windows.h>
 #elif defined(__ANDROID__)
 #include <android/log.h>
-#endif // #if defined(_MSC_VER)
+#endif
