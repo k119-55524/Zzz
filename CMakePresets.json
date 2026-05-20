@@ -8,6 +8,10 @@
             "displayName": "Release no Logger",
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/release-no-logger",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
 
             "cacheVariables":
             {
@@ -21,6 +25,10 @@
             "displayName": "Release and Logger",
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/release-and-logger",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
 
             "cacheVariables":
             {
@@ -34,6 +42,10 @@
             "displayName": "Debug",
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/debug",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
 
             "cacheVariables":
             {
