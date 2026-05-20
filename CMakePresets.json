@@ -4,15 +4,22 @@
     "configurePresets":
     [
         {
-            "name": "release-no-logger",
-            "displayName": "Release no Logger",
+            "name": "base-debug",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/debug",
+            "cacheVariables":
+            {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "ZZZ_ENABLE_LOGGER": "ON"
+            }
+        },
+
+        {
+            "name": "base-release-no-logger",
+            "hidden": true,
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/release-no-logger",
-            "architecture": {
-                "value": "x64",
-                "strategy": "external"
-            },
-
             "cacheVariables":
             {
                 "CMAKE_BUILD_TYPE": "Release",
@@ -21,15 +28,10 @@
         },
 
         {
-            "name": "release-and-logger",
-            "displayName": "Release and Logger",
+            "name": "base-release-and-logger",
+            "hidden": true,
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/release-and-logger",
-            "architecture": {
-                "value": "x64",
-                "strategy": "external"
-            },
-
             "cacheVariables":
             {
                 "CMAKE_BUILD_TYPE": "Release",
@@ -40,17 +42,84 @@
         {
             "name": "debug",
             "displayName": "Debug",
-            "generator": "Ninja",
-            "binaryDir": "${sourceDir}/build/debug",
+            "inherits": "base-debug",
             "architecture": {
                 "value": "x64",
                 "strategy": "external"
             },
-
-            "cacheVariables":
+            "condition":
             {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "ZZZ_ENABLE_LOGGER": "ON"
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+
+        {
+            "name": "release-no-logger",
+            "displayName": "Release no Logger",
+            "inherits": "base-release-no-logger",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "condition":
+            {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+
+        {
+            "name": "release-and-logger",
+            "displayName": "Release and Logger",
+            "inherits": "base-release-and-logger",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "condition":
+            {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+
+        {
+            "name": "linux-debug",
+            "displayName": "Linux Debug",
+            "inherits": "base-debug",
+            "condition":
+            {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            }
+        },
+
+        {
+            "name": "linux-release-no-logger",
+            "displayName": "Linux Release no Logger",
+            "inherits": "base-release-no-logger",
+            "condition":
+            {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            }
+        },
+
+        {
+            "name": "linux-release-and-logger",
+            "displayName": "Linux Release and Logger",
+            "inherits": "base-release-and-logger",
+            "condition":
+            {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
             }
         }
     ]

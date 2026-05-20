@@ -1,7 +1,5 @@
 #pragma once
 
-using namespace zzz;
-
 #include "header.h"
 
 namespace zzz::engine
