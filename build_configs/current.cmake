@@ -1,0 +1,1 @@
+option(ZZZ_ENABLE_LOGGER "Enable logger" ON)

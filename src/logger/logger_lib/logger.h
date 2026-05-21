@@ -1,9 +1,6 @@
 #pragma once
 
-#include <string>
-#include <string_view>
-#include <format>
-#include <source_location>
+#include "header.h"
 
 namespace zzz::logger
 {

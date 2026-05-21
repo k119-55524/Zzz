@@ -5,7 +5,7 @@ project(Zzz LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-option(ZZZ_ENABLE_LOGGER "Enable logger" ON)
+include(build_configs/current.cmake OPTIONAL)
 
 add_subdirectory(src/logger/logger_lib)
 add_subdirectory(src/engine)

@@ -1,45 +1,31 @@
 {
-    "version": 3,
+  "version": 3,
 
-    "configurePresets":
-    [
-        {
-            "name": "release-no-logger",
-            "displayName": "Release no Logger",
-            "generator": "Ninja",
-            "binaryDir": "${sourceDir}/build/release-no-logger",
+  "configurePresets": [
+    {
+      "name": "debug",
+      "displayName": "Debug",
 
-            "cacheVariables":
-            {
-                "CMAKE_BUILD_TYPE": "Release",
-                "ZZZ_ENABLE_LOGGER": "OFF"
-            }
-        },
+      "generator": "Ninja",
 
-        {
-            "name": "release-and-logger",
-            "displayName": "Release and Logger",
-            "generator": "Ninja",
-            "binaryDir": "${sourceDir}/build/release-and-logger",
+      "binaryDir": "${sourceDir}/build/${hostSystemName}/debug",
 
-            "cacheVariables":
-            {
-                "CMAKE_BUILD_TYPE": "Release",
-                "ZZZ_ENABLE_LOGGER": "ON"
-            }
-        },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
 
-        {
-            "name": "debug",
-            "displayName": "Debug",
-            "generator": "Ninja",
-            "binaryDir": "${sourceDir}/build/debug",
+    {
+      "name": "release",
+      "displayName": "Release",
 
-            "cacheVariables":
-            {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "ZZZ_ENABLE_LOGGER": "ON"
-            }
-        }
-    ]
+      "generator": "Ninja",
+
+      "binaryDir": "${sourceDir}/build/${hostSystemName}/release",
+
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    }
+  ]
 }
