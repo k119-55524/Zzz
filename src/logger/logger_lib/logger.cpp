@@ -19,8 +19,9 @@ namespace zzz::logger
 			L"\n";
 	}
 
-	void Logger::DebugOutputRaw(const std::wstring& output) noexcept
+	void Logger::DebugOutputIDE(const std::wstring& output) noexcept
 	{
+#if ZIDE_OUT_LOGS
 #if defined(_MSC_VER)
 		if (IsDebuggerPresent())
 			OutputDebugStringW(output.c_str());
@@ -32,5 +33,6 @@ namespace zzz::logger
 #else // For non-MSVC compilers, we can write to standard error as a fallback.
 		std::wcerr << output << std::endl;
 #endif // #if defined(_MSC_VER)
+#endif // #if ZIDE_OUT_LOGS
 	}
 }

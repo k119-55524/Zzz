@@ -210,6 +210,8 @@ static void write_cmake(
         active_defines.insert(item.get<std::string>());
     }
 
+    file << "add_compile_definitions(\n";
+
     for (const auto& def : data["defines"])
     {
         if (def.value("isArchived", false))
@@ -222,12 +224,14 @@ static void write_cmake(
             active_defines.contains(name);
 
         file
-            << "set("
+            << "    "
             << name
-            << ' '
-            << (enabled ? "ON" : "OFF")
-            << " CACHE BOOL \"\")\n";
+            << '='
+            << (enabled ? "1" : "0")
+            << '\n';
     }
+
+    file << ")\n";
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

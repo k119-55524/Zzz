@@ -1,5 +1,7 @@
 # Auto-generated file.
-# Configuration: LOGGER
+# Configuration: INCLUDE_LOGGER
 
-set(ZADD_LOGGER ON CACHE BOOL "")
-set(ZIDE_OUT_LOGS ON CACHE BOOL "")
+add_compile_definitions(
+    ZADD_LOGGER=1
+    ZIDE_OUT_LOGS=1
+)

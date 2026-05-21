@@ -6,10 +6,15 @@
         "ZIDE_OUT_LOGS"
       ],
       "description": "Включить код логера в сборку",
-      "name": "LOGGER"
+      "name": "INCLUDE_LOGGER"
+    },
+    {
+      "activeDefines": [],
+      "description": "Не исппользовать код логера в сборке",
+      "name": "NO LOGGER"
     }
   ],
-  "currentConfig": "LOGGER",
+  "currentConfig": "INCLUDE_LOGGER",
   "defines": [
     {
       "description": "Включить код логера в сборку",
@@ -17,7 +22,7 @@
       "name": "ZADD_LOGGER"
     },
     {
-      "description": "Выводить логи в консоле IDE",
+      "description": "Выводить логи в консоле IDE(при использовании логера)",
       "isArchived": false,
       "name": "ZIDE_OUT_LOGS"
     }
