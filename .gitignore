@@ -68,3 +68,9 @@ Testing/
 # vcpkg
 
 vcpkg_installed/
+
+# Config switcher (build locally, not stored in repo)
+
+build_configurator_switch
+build_configurator_switch.exe
+tools/config_switcher/build/
