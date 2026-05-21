@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.28)
 
-project(Zzz LANGUAGES C CXX)
+project(Zzz LANGUAGES C CXX OBJCXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -22,6 +22,6 @@ if(ANDROID)
     add_subdirectory(projects/game_android)
 endif()
 
-#if(APPLE)
-#    add_subdirectory(projects/game_macos)
-#endif()
+if(APPLE)
+    add_subdirectory(projects/game_macos)
+endif()
