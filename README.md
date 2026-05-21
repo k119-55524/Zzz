@@ -8,8 +8,10 @@
 
 ### Build Configurator
 
-Чтобы пользоваться конфигуратором, его нужно собрать вручную:
+> Только для Windows
 
 1. Открыть проект `tools/build_configurator/BuildConfigurator.csproj` в Visual Studio
 2. Выбрать конфигурацию **Release**
-3. Собрать проект (Build → Build Solution)
+3. Build → Build Solution
+
+После сборки исполняемый файл автоматически появится в папке `build_configs/` в корне репозитория.
