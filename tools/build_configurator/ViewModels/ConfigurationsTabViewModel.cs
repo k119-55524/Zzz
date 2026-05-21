@@ -12,17 +12,22 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
     private readonly IDialogService _dialogService;
     private AppData _data;
 
-    // Left panel list
     public ObservableCollection<ConfigItemViewModel> ConfigItems { get; } = new();
 
     [ObservableProperty] private ConfigItemViewModel? _selectedConfigItem;
+    [ObservableProperty] private string _definesSearchText = string.Empty;
 
-    // Editor fields
-    [ObservableProperty] private string _editingName        = string.Empty;
-    [ObservableProperty] private string _editingDescription = string.Empty;
-    private bool _isLoading;
-    [ObservableProperty] private string _definesSearchText  = string.Empty;
-    [ObservableProperty] private bool   _hasUnsavedChanges;
+    // Computed from ConfigItems — set via RefreshHasUnsavedChanges()
+    private bool _hasUnsavedChanges;
+    public bool HasUnsavedChanges
+    {
+        get => _hasUnsavedChanges;
+        private set
+        {
+            if (SetProperty(ref _hasUnsavedChanges, value))
+                SaveConfigurationCommand.NotifyCanExecuteChanged();
+        }
+    }
 
     public ObservableCollection<DefineEntryViewModel> DefineEntries { get; } = new();
 
@@ -32,12 +37,9 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
               e.Name.Contains(DefinesSearchText, StringComparison.OrdinalIgnoreCase) ||
               e.Description.Contains(DefinesSearchText, StringComparison.OrdinalIgnoreCase));
 
-    public string NameCountText        => $"{EditingName.Length} / 25";
-    public string DescriptionCountText => $"{EditingDescription.Length} / 100";
     public string ActiveDefinesCountText => $"Активные дефайны ({DefineEntries.Count(e => e.IsActive && !e.IsArchived)})";
-    public string TotalConfigsText     => $"Всего конфигураций: {ConfigItems.Count}";
-
-    public bool HasSelectedConfig => SelectedConfigItem != null;
+    public string TotalConfigsText       => $"Всего конфигураций: {ConfigItems.Count}";
+    public bool   HasSelectedConfig      => SelectedConfigItem != null;
 
     public event Action? DataChanged;
 
@@ -57,16 +59,32 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
 
     public void RefreshDefineEntries()
     {
-        // Called when defines list changes (define added/archived/restored/deleted)
         if (SelectedConfigItem == null) return;
-        LoadEditorFromConfig(SelectedConfigItem.Configuration);
+        // Preserve pending checkbox changes by flushing them to the model first
+        if (SelectedConfigItem.HasUnsavedChanges)
+            CommitDefineEntriesToModel(SelectedConfigItem.Configuration);
+        LoadDefineEntries(SelectedConfigItem.Configuration);
     }
+
+    private ConfigItemViewModel CreateConfigItem(BuildConfiguration cfg)
+    {
+        var item = new ConfigItemViewModel(cfg);
+        item.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(ConfigItemViewModel.HasUnsavedChanges))
+                RefreshHasUnsavedChanges();
+        };
+        return item;
+    }
+
+    private void RefreshHasUnsavedChanges()
+        => HasUnsavedChanges = ConfigItems.Any(c => c.HasUnsavedChanges);
 
     private void RebuildList(string? selectName)
     {
         ConfigItems.Clear();
         foreach (var cfg in _data.Configurations)
-            ConfigItems.Add(new ConfigItemViewModel(cfg));
+            ConfigItems.Add(CreateConfigItem(cfg));
 
         OnPropertyChanged(nameof(TotalConfigsText));
 
@@ -74,24 +92,25 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
         SelectedConfigItem = toSelect;
     }
 
+    // Auto-commit DefineEntries to model BEFORE switching away from a config
+    partial void OnSelectedConfigItemChanging(ConfigItemViewModel? oldValue, ConfigItemViewModel? newValue)
+    {
+        if (oldValue != null && DefineEntries.Any())
+            CommitDefineEntriesToModel(oldValue.Configuration);
+    }
+
     partial void OnSelectedConfigItemChanged(ConfigItemViewModel? value)
     {
-        HasUnsavedChanges = false;
         OnPropertyChanged(nameof(HasSelectedConfig));
         DeleteConfigurationCommand.NotifyCanExecuteChanged();
         if (value != null)
-            LoadEditorFromConfig(value.Configuration);
+            LoadDefineEntries(value.Configuration);
         else
-            ClearEditor();
+            ClearDefineEntries();
     }
 
-    private void LoadEditorFromConfig(BuildConfiguration cfg)
+    private void LoadDefineEntries(BuildConfiguration cfg)
     {
-        _isLoading = true;
-        EditingName        = cfg.Name;
-        EditingDescription = cfg.Description;
-        _isLoading = false;
-
         UnsubscribeDefineEntries();
         DefineEntries.Clear();
         foreach (var d in _data.Defines)
@@ -105,17 +124,11 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
 
         OnPropertyChanged(nameof(FilteredEntries));
         OnPropertyChanged(nameof(ActiveDefinesCountText));
-        HasUnsavedChanges = false;
-        if (SelectedConfigItem != null)
-            SelectedConfigItem.HasUnsavedChanges = false;
+        // Do NOT reset HasUnsavedChanges here — dirty state persists until global Save
     }
 
-    private void ClearEditor()
+    private void ClearDefineEntries()
     {
-        _isLoading = true;
-        EditingName        = string.Empty;
-        EditingDescription = string.Empty;
-        _isLoading = false;
         UnsubscribeDefineEntries();
         DefineEntries.Clear();
         OnPropertyChanged(nameof(FilteredEntries));
@@ -130,38 +143,21 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
     private void OnDefineEntryPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(DefineEntryViewModel.IsActive))
-            OnDefineEntryChanged();
-    }
-
-    // ── Dirty tracking ───────────────────────────────────────────────────────
-
-    partial void OnEditingNameChanged(string value)
-    {
-        OnPropertyChanged(nameof(NameCountText));
-        if (!_isLoading) MarkDirty();
-    }
-
-    partial void OnEditingDescriptionChanged(string value)
-    {
-        OnPropertyChanged(nameof(DescriptionCountText));
-        if (!_isLoading) MarkDirty();
-    }
-
-    partial void OnDefinesSearchTextChanged(string value)
-        => OnPropertyChanged(nameof(FilteredEntries));
-
-    private void OnDefineEntryChanged()
-    {
-        MarkDirty();
-        OnPropertyChanged(nameof(ActiveDefinesCountText));
+        {
+            MarkDirty();
+            OnPropertyChanged(nameof(ActiveDefinesCountText));
+        }
     }
 
     private void MarkDirty()
     {
-        HasUnsavedChanges = true;
         if (SelectedConfigItem != null)
             SelectedConfigItem.HasUnsavedChanges = true;
+        // HasUnsavedChanges computed via subscription
     }
+
+    partial void OnDefinesSearchTextChanged(string value)
+        => OnPropertyChanged(nameof(FilteredEntries));
 
     // ── Commands ─────────────────────────────────────────────────────────────
 
@@ -193,10 +189,23 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
         _data.Configurations.Add(cfg);
         _fileService.SaveData(_data);
 
-        var item = new ConfigItemViewModel(cfg);
+        var item = CreateConfigItem(cfg);
         ConfigItems.Add(item);
         SelectedConfigItem = item;
         OnPropertyChanged(nameof(TotalConfigsText));
+        DataChanged?.Invoke();
+    }
+
+    [RelayCommand]
+    private void EditConfiguration((string name, string description) args)
+    {
+        if (SelectedConfigItem == null) return;
+        var cfg = SelectedConfigItem.Configuration;
+        cfg.Name        = args.name;
+        cfg.Description = args.description;
+        _fileService.SaveData(_data);
+        SelectedConfigItem.RefreshName();
+        MarkDirty();
         DataChanged?.Invoke();
     }
 
@@ -226,53 +235,8 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
     private void SaveConfiguration()
     {
         if (SelectedConfigItem == null) return;
-
-        var name = EditingName.Trim();
-        if (string.IsNullOrEmpty(name))
-        {
-            _dialogService.ShowError("Имя конфигурации не может быть пустым.", "Ошибка");
-            return;
-        }
-
-        if (name.Length > 25)
-        {
-            _dialogService.ShowError("Имя не должно превышать 25 символов.", "Ошибка");
-            return;
-        }
-
-        var duplicate = _data.Configurations.FirstOrDefault(c =>
-            c != SelectedConfigItem.Configuration &&
-            c.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-
-        if (duplicate != null)
-        {
-            _dialogService.ShowError($"Конфигурация «{name}» уже существует.", "Дубликат");
-            return;
-        }
-
-        if (!_dialogService.Confirm("Сохранить изменения конфигурации?", "Сохранение"))
-            return;
-
-        var cfg = SelectedConfigItem.Configuration;
-        cfg.Name        = name;
-        cfg.Description = EditingDescription.Trim();
-        cfg.ActiveDefines = DefineEntries
-            .Where(e => e.IsActive && !e.IsArchived)
-            .Select(e => e.Name)
-            .ToList();
-
-        // Also persist archived defines that were active (remembered but excluded from cmake)
-        var archivedActive = DefineEntries
-            .Where(e => e.IsActive && e.IsArchived)
-            .Select(e => e.Name);
-        cfg.ActiveDefines.AddRange(archivedActive);
-
+        CommitActiveDefines();
         _fileService.SaveData(_data);
-
-        foreach (var e in DefineEntries) e.AcceptChanges();
-        HasUnsavedChanges = false;
-        SelectedConfigItem.HasUnsavedChanges = false;
-        SelectedConfigItem.RefreshName();
         DataChanged?.Invoke();
     }
 
@@ -280,42 +244,16 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
     private void CancelChanges()
     {
         if (SelectedConfigItem == null) return;
-        LoadEditorFromConfig(SelectedConfigItem.Configuration);
+        // Reload from model (discards uncommitted checkbox changes)
+        SelectedConfigItem.HasUnsavedChanges = false;
+        LoadDefineEntries(SelectedConfigItem.Configuration);
     }
 
-    partial void OnHasUnsavedChangesChanged(bool value)
+    // ── Commit helpers ───────────────────────────────────────────────────────
+
+    // Writes current DefineEntries to model without touching dirty flags
+    private void CommitDefineEntriesToModel(BuildConfiguration cfg)
     {
-        SaveConfigurationCommand.NotifyCanExecuteChanged();
-    }
-
-    // Apply staged changes to the model without confirmation (used by global Save)
-    public bool ApplyChanges()
-    {
-        if (SelectedConfigItem == null || !HasUnsavedChanges) return true;
-
-        var name = EditingName.Trim();
-        if (string.IsNullOrEmpty(name))
-        {
-            _dialogService.ShowError("Имя конфигурации не может быть пустым.", "Ошибка");
-            return false;
-        }
-        if (name.Length > 25)
-        {
-            _dialogService.ShowError("Имя не должно превышать 25 символов.", "Ошибка");
-            return false;
-        }
-        var duplicate = _data.Configurations.FirstOrDefault(c =>
-            c != SelectedConfigItem.Configuration &&
-            c.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-        if (duplicate != null)
-        {
-            _dialogService.ShowError($"Конфигурация «{name}» уже существует.", "Дубликат");
-            return false;
-        }
-
-        var cfg = SelectedConfigItem.Configuration;
-        cfg.Name        = name;
-        cfg.Description = EditingDescription.Trim();
         cfg.ActiveDefines = DefineEntries
             .Where(e => e.IsActive && !e.IsArchived)
             .Select(e => e.Name)
@@ -323,21 +261,42 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
         cfg.ActiveDefines.AddRange(DefineEntries
             .Where(e => e.IsActive && e.IsArchived)
             .Select(e => e.Name));
-
         foreach (var e in DefineEntries) e.AcceptChanges();
-        HasUnsavedChanges = false;
+    }
+
+    // Commits current config and clears its dirty flag
+    private void CommitActiveDefines()
+    {
+        if (SelectedConfigItem == null) return;
+        CommitDefineEntriesToModel(SelectedConfigItem.Configuration);
         SelectedConfigItem.HasUnsavedChanges = false;
-        SelectedConfigItem.RefreshName();
+    }
+
+    // ── Public API for MainWindowViewModel ──────────────────────────────────
+
+    // Commit current config before global file save
+    public bool ApplyChanges()
+    {
+        if (!HasUnsavedChanges) return true;
+        CommitActiveDefines();
+        // All other configs were auto-committed in OnSelectedConfigItemChanging
         return true;
+    }
+
+    // Clear all dirty flags after global file save
+    public void ClearAllDirty()
+    {
+        foreach (var item in ConfigItems)
+            item.HasUnsavedChanges = false;
     }
 
     public void DiscardChanges()
     {
+        ClearAllDirty();
         if (SelectedConfigItem != null)
-            LoadEditorFromConfig(SelectedConfigItem.Configuration);
+            LoadDefineEntries(SelectedConfigItem.Configuration);
     }
 
-    // Allow MainVM to programmatically save before switching configs
     public bool TrySave()
     {
         SaveConfiguration();

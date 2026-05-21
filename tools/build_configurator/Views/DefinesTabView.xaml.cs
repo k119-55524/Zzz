@@ -1,5 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
 using BuildConfigurator.ViewModels;
 using BuildConfigurator.Views.Dialogs;
 
@@ -22,10 +24,17 @@ public partial class DefinesTabView : UserControl
         VM.AddDefineCommand.Execute((dialog.DefineName, dialog.DefineDescription));
     }
 
-    private void EditDefine_Click(object sender, RoutedEventArgs e)
+    private void DefinesGrid_DoubleClick(object sender, MouseButtonEventArgs e)
     {
         if (VM.SelectedDefine == null) return;
+        if (e.OriginalSource is not DependencyObject source) return;
+        if (FindVisualParent<DataGridRow>(source) == null) return;
+        OpenEditDefineDialog();
+    }
 
+    private void OpenEditDefineDialog()
+    {
+        if (VM.SelectedDefine == null) return;
         var existingNames = VM.Defines.Select(d => d.Name).ToList();
         var dialog = new AddEditDefineDialog(
             "Редактировать дефайн",
@@ -40,5 +49,19 @@ public partial class DefinesTabView : UserControl
     }
 
     private void ArchiveCheckBox_Changed(object sender, RoutedEventArgs e)
-        => VM?.OnIsArchivedChanged();
+    {
+        var define = (sender as System.Windows.Controls.CheckBox)?.DataContext as DefineItemViewModel;
+        VM?.OnIsArchivedChanged(define);
+    }
+
+    private static T? FindVisualParent<T>(DependencyObject child) where T : DependencyObject
+    {
+        var parent = VisualTreeHelper.GetParent(child);
+        while (parent != null)
+        {
+            if (parent is T found) return found;
+            parent = VisualTreeHelper.GetParent(parent);
+        }
+        return null;
+    }
 }

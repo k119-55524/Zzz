@@ -1,6 +1,8 @@
 using System.IO;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Unicode;
 using BuildConfigurator.Models;
 
 namespace BuildConfigurator.Services;
@@ -11,7 +13,8 @@ public class FileService : IFileService
     {
         WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.Never
+        DefaultIgnoreCondition = JsonIgnoreCondition.Never,
+        Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
     };
 
     private static string BaseDir =>

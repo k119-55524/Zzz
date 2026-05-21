@@ -17,7 +17,8 @@ public partial class MainWindowViewModel : ViewModelBase
     public ConfigurationsTabViewModel ConfigurationsTab { get; private set; } = null!;
     public DefinesTabViewModel        DefinesTab        { get; private set; } = null!;
 
-    public bool HasUnsavedChanges => ConfigurationsTab?.HasUnsavedChanges == true;
+    public bool HasUnsavedChanges => ConfigurationsTab?.HasUnsavedChanges == true
+                                  || DefinesTab?.HasUnsavedChanges == true;
 
     public MainWindowViewModel(IFileService fileService, IDialogService dialogService)
     {
@@ -54,6 +55,14 @@ public partial class MainWindowViewModel : ViewModelBase
                 UpdateWindowTitle();
             }
         };
+        DefinesTab.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(DefinesTab.HasUnsavedChanges))
+            {
+                OnPropertyChanged(nameof(HasUnsavedChanges));
+                UpdateWindowTitle();
+            }
+        };
 
         OnPropertyChanged(nameof(ConfigurationsTab));
         OnPropertyChanged(nameof(DefinesTab));
@@ -79,8 +88,18 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void SaveAll()
     {
+        if (!_dialogService.Confirm("Сохранить все изменения?", "Сохранение"))
+            return;
+        ExecuteSave();
+    }
+
+    // Called without confirmation from CanClose
+    private void ExecuteSave()
+    {
         if (!ConfigurationsTab.ApplyChanges()) return;
         _fileService.SaveData(_data);
+        ConfigurationsTab.ClearAllDirty();
+        DefinesTab.MarkSaved();
         OnPropertyChanged(nameof(HasUnsavedChanges));
         UpdateWindowTitle();
     }
@@ -88,13 +107,11 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void ReloadAll()
     {
-        if (HasUnsavedChanges)
-        {
-            if (!_dialogService.Confirm(
-                    "Есть несохранённые изменения.\nПерезагрузить данные с диска? Изменения будут потеряны.",
-                    "Перезагрузка"))
-                return;
-        }
+        var message = HasUnsavedChanges
+            ? "Есть несохранённые изменения.\nПерезагрузить данные с диска? Изменения будут потеряны."
+            : "Перезагрузить данные с диска?";
+        if (!_dialogService.Confirm(message, "Перезагрузка"))
+            return;
 
         try { _data = _fileService.LoadData(); }
         catch (JsonException ex)
@@ -105,6 +122,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
         ConfigurationsTab.UpdateData(_data);
         DefinesTab.UpdateData(_data);
+        ConfigurationsTab.ClearAllDirty();
+        DefinesTab.MarkSaved();
         OnPropertyChanged(nameof(HasUnsavedChanges));
         UpdateWindowTitle();
     }
@@ -122,7 +141,7 @@ public partial class MainWindowViewModel : ViewModelBase
         switch (result)
         {
             case ConfirmResult.Yes:
-                SaveAll();
+                ExecuteSave(); // no double confirmation
                 return true;
             case ConfirmResult.No:
                 return true;

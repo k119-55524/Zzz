@@ -17,8 +17,16 @@ public partial class DefinesTabViewModel : ViewModelBase
     [ObservableProperty] private DefineItemViewModel? _selectedDefine;
     [ObservableProperty] private string _searchText = string.Empty;
     [ObservableProperty] private bool   _showArchivedOnly;
+    [ObservableProperty] private bool   _hasUnsavedChanges;
 
     public string StatusText => BuildStatusText();
+
+    public void MarkSaved()
+    {
+        HasUnsavedChanges = false;
+        foreach (var d in Defines)
+            d.HasUnsavedChanges = false;
+    }
 
     public event Action? DataChanged;
 
@@ -76,10 +84,12 @@ public partial class DefinesTabViewModel : ViewModelBase
     partial void OnShowArchivedOnlyChanged(bool value)  => OnPropertyChanged(nameof(FilteredDefines));
 
     // Called from view when IsArchived checkbox is toggled
-    public void OnIsArchivedChanged()
+    public void OnIsArchivedChanged(DefineItemViewModel? changedItem)
     {
+        changedItem?.MarkDirty();
         _fileService.SaveData(_data);
         RefreshStatus();
+        HasUnsavedChanges = true;
         DataChanged?.Invoke();
     }
 
@@ -114,6 +124,7 @@ public partial class DefinesTabViewModel : ViewModelBase
         SelectedDefine = vm;
         OnPropertyChanged(nameof(FilteredDefines));
         RefreshStatus();
+        HasUnsavedChanges = true;
         DataChanged?.Invoke();
     }
 
@@ -157,8 +168,10 @@ public partial class DefinesTabViewModel : ViewModelBase
         }
 
         _fileService.SaveData(_data);
+        SelectedDefine.MarkDirty();
         SelectedDefine.Refresh();
         OnPropertyChanged(nameof(FilteredDefines));
+        HasUnsavedChanges = true;
         DataChanged?.Invoke();
     }
 
@@ -191,6 +204,7 @@ public partial class DefinesTabViewModel : ViewModelBase
         SelectedDefine = null;
         OnPropertyChanged(nameof(FilteredDefines));
         RefreshStatus();
+        HasUnsavedChanges = true;
         DataChanged?.Invoke();
     }
 

@@ -54,7 +54,8 @@
                          Background="Transparent" BorderThickness="0"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          Padding="8,4"
-                         ItemContainerStyle="{StaticResource ConfigListItemStyle}">
+                         ItemContainerStyle="{StaticResource ConfigListItemStyle}"
+                         MouseDoubleClick="ConfigListBox_DoubleClick">
                     <ListBox.ItemTemplate>
                         <DataTemplate DataType="{x:Type vm:ConfigItemViewModel}">
                             <Grid>
@@ -89,7 +90,7 @@
                       Background="{StaticResource BrushBorder}"
                       HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
 
-        <!-- ── Right: Editor ── -->
+        <!-- ── Right: Defines Panel ── -->
         <Border Grid.Column="2" Background="{StaticResource BrushBackground}">
             <Grid>
                 <!-- No selection placeholder -->
@@ -108,7 +109,7 @@
                     </TextBlock.Style>
                 </TextBlock>
 
-                <!-- Editor -->
+                <!-- Content -->
                 <Grid>
                     <Grid.Style>
                         <Style TargetType="Grid">
@@ -125,67 +126,38 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Fields -->
-                    <StackPanel Grid.Row="0" Margin="20,16,20,0">
-                        <TextBlock Text="Редактирование конфигурации" Style="{StaticResource HeadingStyle}" Margin="0,0,0,16"/>
-
-                        <TextBlock Text="Имя" Style="{StaticResource LabelStyle}" Margin="0,0,0,4"/>
-                        <Grid Margin="0,0,0,12">
-                            <TextBox Text="{Binding EditingName, UpdateSourceTrigger=PropertyChanged}"
-                                     MaxLength="25"
-                                     Style="{StaticResource DarkTextBoxStyle}"/>
-                            <TextBlock Text="{Binding NameCountText}"
-                                       HorizontalAlignment="Right" VerticalAlignment="Center"
-                                       Margin="0,0,8,0"
-                                       Foreground="{StaticResource BrushTextMuted}" FontSize="11"
-                                       IsHitTestVisible="False"/>
+                    <!-- Defines heading + search -->
+                    <Grid Grid.Row="0" Margin="20,16,20,8">
+                        <TextBlock Text="{Binding ActiveDefinesCountText}"
+                                   Style="{StaticResource HeadingStyle}"
+                                   VerticalAlignment="Center"/>
+                        <Grid HorizontalAlignment="Right" Width="220">
+                            <TextBox Text="{Binding DefinesSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource DarkTextBoxStyle}"
+                                     Padding="8,5,32,5"
+                                     FontSize="12"/>
+                            <TextBlock Text="Поиск дефайна..."
+                                       Foreground="{StaticResource BrushTextMuted}"
+                                       FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0"
+                                       IsHitTestVisible="False">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding DefinesSearchText}" Value="">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <Path Data="M 8,4 C 10.2,4 12,5.8 12,8 C 12,10.2 10.2,12 8,12 C 5.8,12 4,10.2 4,8 C 4,5.8 5.8,4 8,4 Z M 11,11 L 15,15"
+                                  Stroke="{StaticResource BrushTextMuted}"
+                                  StrokeThickness="1.5" Width="16" Height="16"
+                                  HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"
+                                  IsHitTestVisible="False"/>
                         </Grid>
-
-                        <TextBlock Text="Описание" Style="{StaticResource LabelStyle}" Margin="0,0,0,4"/>
-                        <Grid Margin="0,0,0,16">
-                            <TextBox Text="{Binding EditingDescription, UpdateSourceTrigger=PropertyChanged}"
-                                     MaxLength="100"
-                                     Style="{StaticResource DarkTextBoxStyle}"/>
-                            <TextBlock Text="{Binding DescriptionCountText}"
-                                       HorizontalAlignment="Right" VerticalAlignment="Center"
-                                       Margin="0,0,8,0"
-                                       Foreground="{StaticResource BrushTextMuted}" FontSize="11"
-                                       IsHitTestVisible="False"/>
-                        </Grid>
-
-                        <!-- Defines heading + search -->
-                        <Grid Margin="0,0,0,8">
-                            <TextBlock Text="{Binding ActiveDefinesCountText}"
-                                       Style="{StaticResource HeadingStyle}"
-                                       VerticalAlignment="Center"/>
-                            <Grid HorizontalAlignment="Right" Width="220">
-                                <TextBox Text="{Binding DefinesSearchText, UpdateSourceTrigger=PropertyChanged}"
-                                         Style="{StaticResource DarkTextBoxStyle}"
-                                         Padding="8,5,32,5"
-                                         FontSize="12"/>
-                                <TextBlock Text="Поиск дефайна..."
-                                           Foreground="{StaticResource BrushTextMuted}"
-                                           FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0"
-                                           IsHitTestVisible="False">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding DefinesSearchText}" Value="">
-                                                    <Setter Property="Visibility" Value="Visible"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                                <Path Data="M 8,4 C 10.2,4 12,5.8 12,8 C 12,10.2 10.2,12 8,12 C 5.8,12 4,10.2 4,8 C 4,5.8 5.8,4 8,4 Z M 11,11 L 15,15"
-                                      Stroke="{StaticResource BrushTextMuted}"
-                                      StrokeThickness="1.5" Width="16" Height="16"
-                                      HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"
-                                      IsHitTestVisible="False"/>
-                            </Grid>
-                        </Grid>
-                    </StackPanel>
+                    </Grid>
 
                     <!-- Defines DataGrid -->
                     <Border Grid.Row="1" Margin="20,0,20,0"
