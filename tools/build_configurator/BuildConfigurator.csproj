@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>BuildConfigurator</AssemblyName>
+    <RootNamespace>BuildConfigurator</RootNamespace>
+    <ApplicationIcon>build_configurator.ico</ApplicationIcon>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="build_configurator.ico"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+  </ItemGroup>
+
+  <!-- Автоматический запуск публикации для создания единого EXE при сборке в Release -->
+  <Target Name="PublishOnBuild" AfterTargets="Build" Condition="'$(PublishingAlready)' != 'true' And '$(Configuration)' == 'Release'">
+    <Message Importance="high" Text="[Auto-Publish] Генерация единого исполняемого файла (.exe) со всеми встроенными DLL..." />
+    <MSBuild Projects="$(MSBuildProjectFile)" 
+             Targets="Publish" 
+             Properties="PublishingAlready=true;Configuration=$(Configuration);PublishDir=$(MSBuildProjectDirectory)\dist\" />
+    <Message Importance="high" Text="[Auto-Publish] Готово! Единый файл собран в папку: $(MSBuildProjectDirectory)\dist\" />
+  </Target>
+
+</Project>
