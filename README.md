@@ -4,6 +4,43 @@
 
 1. Скачать репозиторий из Git
 
+## Сборка macOS
+
+### Требования
+
+- macOS 12+
+- Xcode 14+ (с установленными Command Line Tools)
+- CMake 3.28+
+
+### Шаги
+
+1. (Опционально) Применить конфигурацию сборки через Config Switcher:
+
+   ```sh
+   ./config_switcher_switch
+   ```
+
+2. Запустить скрипт генерации Xcode-проекта. При первом запуске дать ему исполняемый статус:
+
+   ```sh
+   chmod +x GenerateXcodeProject.command
+   ./GenerateXcodeProject.command
+   ```
+
+   Или двойным кликом из Finder (предварительно дав статус через `chmod +x`).
+
+3. Открыть сгенерированный проект:
+
+   ```sh
+   open projects/game_macos/Zzz.xcodeproj
+   ```
+
+4. В Xcode выбрать схему `game_macos` и собрать/запустить.
+
+### Используемые фреймворки
+
+Проект использует Cocoa, Metal, MetalKit и QuartzCore — все они входят в стандартный Xcode SDK и дополнительной установки не требуют.
+
 ## Инструменты
 
 ### Build Configurator
