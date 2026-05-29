@@ -10,18 +10,18 @@ namespace zzz::logger
 		template <typename... Args>
 		static void DebugOutput(
 			const std::source_location& loc,
-			std::wstring_view fmt,
+			std::string_view fmt,
 			Args&&... args)
 		{
 #if ZADD_LOGGER
-			auto formatted = std::vformat(fmt, std::make_wformat_args(std::forward<Args>(args)...));
+			auto formatted = std::vformat(fmt, std::make_format_args(std::forward<Args>(args)...));
 			auto output = MakeDebugOutputString(loc, formatted);
 			DebugOutputIDE(output);
 #endif
 		}
 
 	private:
-		static std::wstring MakeDebugOutputString(const std::source_location& loc, const std::wstring& msg);
-		static void DebugOutputIDE(const std::wstring& output) noexcept;
+		static std::string MakeDebugOutputString(const std::source_location& loc, const std::string& msg);
+		static void DebugOutputIDE(const std::string& output) noexcept;
 	};
 }

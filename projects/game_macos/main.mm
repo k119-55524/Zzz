@@ -11,7 +11,7 @@
 
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)sender
 {
-    DOut(L">>>>> MacOS game END.");
+    DOut(">>>>> MacOS game END.");
     
     return YES;
 }

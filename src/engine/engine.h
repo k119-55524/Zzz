@@ -9,7 +9,7 @@ namespace zzz::engine
 	public:
 		Engine();
 
-		[[nodiscard]] std::expected<void, std::wstring> Initialize();
+		[[nodiscard]] std::expected<void, std::string> Initialize();
 
 	private:
 		std::mutex initMutex;

@@ -8,7 +8,7 @@ __attribute__((visibility("default")))
 __attribute__((used))
 void android_main(struct android_app* app)
 {
-	DOut(L"[Android]. Game started.");
+	DOut("[Android]. Game started.");
 
 	Engine engine;
 
@@ -17,7 +17,7 @@ void android_main(struct android_app* app)
 	if (!res)
 	{
 		DOut(
-			L"[Android]. Engine init error: {}.",
+			"[Android]. Engine init error: {}.",
 			res.error());
 
 		return;
@@ -38,7 +38,7 @@ void android_main(struct android_app* app)
 
 			if (app->destroyRequested != 0)
 			{
-				DOut(L"[Android]. Game exiting.");
+				DOut("[Android]. Game exiting.");
 				return;
 			}
 		}
