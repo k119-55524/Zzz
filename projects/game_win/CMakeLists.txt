@@ -12,6 +12,7 @@ target_include_directories(game_win PRIVATE
 
 target_sources(game_win
     PRIVATE
+        "main.h"
         "main.cpp"
 )
 

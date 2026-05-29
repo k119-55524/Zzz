@@ -1,5 +1,6 @@
 add_executable(game_macos
     MACOSX_BUNDLE
+    main.h
     main.mm
 )
 

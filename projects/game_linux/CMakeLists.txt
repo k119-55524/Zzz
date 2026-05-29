@@ -12,6 +12,7 @@ target_include_directories(game_linux PRIVATE
 
 target_sources(game_linux
     PRIVATE
+        main.h
         main.cpp
 )
 
