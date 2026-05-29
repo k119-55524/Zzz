@@ -14,9 +14,9 @@ namespace zzz::logger
 			Args&&... args)
 		{
 #if ZADD_LOGGER
-			auto formatted = std::vformat(fmt, std::make_format_args(std::forward<Args>(args)...));
-			auto output = MakeDebugOutputString(loc, formatted);
-			DebugOutputIDE(output);
+			//auto formatted = std::vformat(fmt, std::make_format_args(std::forward<Args>(args)...));
+			//auto output = MakeDebugOutputString(loc, formatted);
+			//DebugOutputIDE(output);
 #endif
 		}
 

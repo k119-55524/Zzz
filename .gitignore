@@ -96,6 +96,7 @@ DerivedData/
 *.dSYM/
 *.xcarchive
 *.ipa
+*.app/
 
 # iOS provisioning profiles
 
@@ -104,3 +105,7 @@ DerivedData/
 # Explicit generated files
 
 **/ReRunCMake.make
+
+# iOS generated build output
+
+projects/game_ios/projects/
