@@ -1,30 +1,29 @@
 {
+  "defines": [
+    {
+      "name": "ZADD_LOGGER",
+      "description": "Включить код логера в сборку",
+      "isArchived": false
+    },
+    {
+      "name": "ZIDE_OUT_LOGS",
+      "description": "Выводить логи в консоле IDE(при использовании логера)",
+      "isArchived": false
+    }
+  ],
   "configurations": [
     {
+      "name": "INCLUDE_LOGGER",
+      "description": "Включить код логера в сборку",
       "activeDefines": [
         "ZADD_LOGGER",
         "ZIDE_OUT_LOGS"
-      ],
-      "description": "Включить код логера в сборку",
-      "name": "INCLUDE_LOGGER"
+      ]
     },
     {
-      "activeDefines": [],
+      "name": "NO LOGGER",
       "description": "Не исппользовать код логера в сборке",
-      "name": "NO LOGGER"
-    }
-  ],
-  "currentConfig": "INCLUDE_LOGGER",
-  "defines": [
-    {
-      "description": "Включить код логера в сборку",
-      "isArchived": false,
-      "name": "ZADD_LOGGER"
-    },
-    {
-      "description": "Выводить логи в консоле IDE(при использовании логера)",
-      "isArchived": false,
-      "name": "ZIDE_OUT_LOGS"
+      "activeDefines": []
     }
   ]
 }
