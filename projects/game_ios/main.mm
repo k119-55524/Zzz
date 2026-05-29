@@ -1,4 +1,5 @@
 #import <UIKit/UIKit.h>
+#import "AppDelegate.h"
 
 int main(int argc, char* argv[])
 {
@@ -8,6 +9,6 @@ int main(int argc, char* argv[])
             argc,
             argv,
             nil,
-            nil);
+            NSStringFromClass([AppDelegate class]));
     }
 }

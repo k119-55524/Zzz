@@ -2,6 +2,8 @@
 #import "ViewController.h"
 
 #include <memory>
+#include <iostream>
+
 #include <engine.h>
 #include <logger.h>
 
