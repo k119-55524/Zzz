@@ -26,7 +26,7 @@ if(ANDROID)
     add_subdirectory(projects/game_android)
 endif()
 
-if(APPLE)
+if(APPLE AND NOT IOS)
     add_subdirectory(projects/game_macos)
 endif()
 
