@@ -1,0 +1,12 @@
+# Gradle
+
+.gradle/
+local.properties
+
+# Android NDK build cache
+
+.cxx/
+
+# Android profiling captures
+
+captures/

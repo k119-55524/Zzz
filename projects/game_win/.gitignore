@@ -1,0 +1,5 @@
+# MSVC debug info
+
+*.ilk
+*.pdb
+*.idb
