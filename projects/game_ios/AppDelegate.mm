@@ -1,8 +1,6 @@
 #import "AppDelegate.h"
 #import "ViewController.h"
 
-#include "main.h"
-
 @implementation AppDelegate
 {
     std::unique_ptr<zzz::engine::Engine> _engine;

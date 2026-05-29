@@ -1,4 +1,5 @@
 add_executable(game_ios
+    MACOSX_BUNDLE
     main.mm
     AppDelegate.mm
     ViewController.mm
@@ -21,4 +22,13 @@ target_link_libraries(game_ios
         ${METAL_LIBRARY}
         ${METALKIT_LIBRARY}
         ${FOUNDATION_LIBRARY}
+)
+
+set_target_properties(game_ios PROPERTIES
+    MACOSX_BUNDLE YES
+    MACOSX_BUNDLE_GUI_IDENTIFIER com.dzzzz.game
+    MACOSX_BUNDLE_BUNDLE_NAME Zzz
+
+    XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER com.dzzzz.game
+    XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET 17.0
 )

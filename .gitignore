@@ -53,6 +53,10 @@ CMakeFiles/
 *.d
 *.dwo
 
+# Static libraries
+
+*.a
+
 # Temporary files
 
 *.tmp
@@ -92,3 +96,11 @@ DerivedData/
 *.dSYM/
 *.xcarchive
 *.ipa
+
+# iOS provisioning profiles
+
+*.mobileprovision
+
+# Explicit generated files
+
+**/ReRunCMake.make
