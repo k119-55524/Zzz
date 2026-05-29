@@ -13,7 +13,12 @@ target_include_directories(engine_lib PUBLIC
 target_sources(engine_lib PRIVATE
     engine.h
     engine.cpp
-    header.h)
+    header.h
+    "headers/header_Apple.h"
+    "headers/header_MSWin.h"
+    "headers/header_Linux.h"
+    "private/core/Config/ConfigManager.h" "private/core/Config/ConfigManager.cpp"
+    "private/core/IO/Path.h" "private/core/IO/Path.cpp")
 
 target_compile_features(engine_lib PUBLIC cxx_std_23)
 

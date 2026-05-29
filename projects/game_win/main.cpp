@@ -10,7 +10,7 @@ int APIENTRY wWinMain(
 	_In_		LPWSTR		lpCmdLine,
 	_In_		int			nCmdShow)
 {
-	DOut(">>>>> [Windows OS]. Game started.");
+	DOutLite("[Windows OS]. Game started.");
 
 	Engine engine;
 	auto res = engine.Initialize();
@@ -20,7 +20,7 @@ int APIENTRY wWinMain(
 	}
 	else
 	{
-		DOut(">>>>> [Windows OS]. Game started error: {}.", res.error());
+		DOut("[Windows OS]. Game started error: {}.", res.error());
 		return -1;
 	}
 

@@ -1,6 +1,6 @@
-#include "pch.h"
 
 #include "engine.h"
+#include "private/core/Config/ConfigManager.h"
 
 namespace zzz::engine
 {
@@ -9,19 +9,40 @@ namespace zzz::engine
 	{
 	}
 
-	std::expected<void, std::string> Engine::Initialize()
+	std::expected<void, std::string> Engine::Initialize(std::string_view configPath)
 	{
 		std::lock_guard lock(initMutex);
 
-		if (initState != zzz::InitNot)
+		if (initState != InitNot)
 		{
-			DOut(">>>>> [Engine::Initialize()]. Engine is already initialized or in the process of initialization.");
+			DOut("Engine is already initialized or in the process of initialization.");
 			return std::unexpected("Engine is already initialized or in the process of initialization.");
 		}
 
-		DOut(">>>>> [Engine::Initialize()]. Engine initialized.");
+		try
+		{
+			DOutLite("Engine initialized: START.");
 
-		initState = zzz::InitOK;
-		return {};
+			configManager = zzz::safe_make_shared<ConfigManager>();
+			auto res = configManager->Initialize(configPath);
+			if (!res)
+			{
+				DOut("Failed to initialize ConfigManager: {}.", res.error());
+				return std::unexpected(res.error());
+			}
+
+			DOutLite("Engine initialized: END.");
+			initState = zzz::InitOK;
+
+			return {};
+		}
+		catch (const std::exception& e)
+		{
+			return std::unexpected(std::format("Exception initialize: {}.", e.what()));
+		}
+		catch (...)
+		{
+			return std::unexpected("Unknown exception occurred.");
+		}
 	}
 }

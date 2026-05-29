@@ -3,7 +3,11 @@
 #include <mutex>
 #include <expected>
 #include <logger.h>
+#include <ztypes.h>
+#include <zenums.h>
+#include <zmacros.h>
+#include <filesystem>
 
-#include "types.h"
-#include "enums.h"
-#include "logger_macros.h"
+#include "headers/header_MSWin.h"
+#include "headers/header_Apple.h"
+#include "headers/header_Linux.h"

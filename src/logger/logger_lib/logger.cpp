@@ -17,6 +17,17 @@ namespace zzz::logger
 			"\n";
 	}
 
+	std::string Logger::MakeDebugOutputLiteString(const std::source_location& loc, const std::string& msg)
+	{
+		return
+			">>>>> " + msg + " -> [" +
+			std::string(loc.function_name()) +
+			"] line: " + std::to_string(loc.line()) +
+			", file: " +
+			std::string(loc.file_name()) +
+			"\n";
+	}
+
 	void Logger::DebugOutputIDE(const std::string& output) noexcept
 	{
 #if ZIDE_OUT_LOGS
