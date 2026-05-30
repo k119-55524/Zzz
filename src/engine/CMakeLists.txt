@@ -20,7 +20,8 @@ target_sources(engine_lib PRIVATE
     "headers/Android.h"
     "headers/Constants.h"
     "private/core/Config/ConfigManager.h" "private/core/Config/ConfigManager.cpp"
-    "private/core/IO/Path.h" "private/core/IO/Path.cpp" "private/core/Config/EngineConfig.h" "private/core/Config/EngineConfig.cpp" )
+    "private/core/IO/Path.h" "private/core/IO/Path.cpp" "private/core/Config/EngineConfig.h" "private/core/Config/EngineConfig.cpp"  "private/core/Serialize/ISerializable.h" "private/core/Serialize/Serializer.h" "private/core/Serialize/Serializer.cpp"
+    "private/core/Utils/version.h" "private/core/Utils/version.cpp")
 
 target_compile_features(engine_lib PUBLIC cxx_std_23)
 

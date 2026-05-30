@@ -23,8 +23,10 @@ namespace zzz::engine
 
 	private:
 		std::expected<std::filesystem::path, std::string> GetSettingsDirectory();
+		std::expected<void, std::string> LoadConfig(std::filesystem::path path);
 
 		std::shared_ptr<Path> m_Path;
-		std::shared_ptr<EngineConfig> engineConfig;
+		std::shared_ptr<EngineConfig> m_EngineConfig;
+		Serializer serializer;
 	};
 }

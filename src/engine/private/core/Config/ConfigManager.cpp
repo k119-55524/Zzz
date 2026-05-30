@@ -1,7 +1,9 @@
 
 #include <fstream>
-#include "ConfigManager.h"
+
 #include "../IO/Path.h"
+#include "ConfigManager.h"
+#include "../Serialize/Serializer.h"
 #include "../../../headers/Constants.h"
 
 
@@ -45,46 +47,51 @@ std::expected<std::filesystem::path, std::string> ConfigManager::GetSettingsDire
 	// Далее работаем с файлом
 	try
 	{
+		m_EngineConfig = zzz::safe_make_shared<EngineConfig>();
+
 		if (!std::filesystem::exists(settingsPath))
 		{
 			DOutWarning("Config file not found at {}. Creating default config.", settingsPath.string());
-			engineConfig = zzz::safe_make_shared<EngineConfig>();
-
 			return eInitConfigState::InitDefault;
 		}
 		else
 		{
 			std::ifstream file(settingsPath);
 
-			if (!file.is_open())
+			if (!std::filesystem::is_regular_file(settingsPath))
 			{
 				DOutWarning("Failed to open config file: {}. Creating default config.", settingsPath.string());
-				engineConfig = zzz::safe_make_shared<EngineConfig>();
-
 				return eInitConfigState::InitDefault;
 			}
 
-			//engineConfig = LoadConfig(file);
+			auto loadResult = LoadConfig(settingsPath);
+			if (!loadResult)
+			{
+				DOutWarning("Failed to load config file: {}. Creating default config.", settingsPath.string());
+				m_EngineConfig = zzz::safe_make_shared<EngineConfig>();
+
+				return eInitConfigState::InitDefault;
+			}
 		}
 	}
 	catch (const std::filesystem::filesystem_error& e)
 	{
 		DOutException("Filesystem error: {}. Setting to default config.", e.what());
-		engineConfig = zzz::safe_make_shared<EngineConfig>();
+		m_EngineConfig = zzz::safe_make_shared<EngineConfig>();
 
 		return eInitConfigState::InitDefault;
 	}
 	catch (const std::exception& e)
 	{
 		DOutException("Config loading error: {}. Setting to default config.", e.what());
-		engineConfig = zzz::safe_make_shared<EngineConfig>();
+		m_EngineConfig = zzz::safe_make_shared<EngineConfig>();
 
 		return eInitConfigState::InitDefault;
 	}
 	catch (...)
 	{
 		DOutException("Unknown config loading error. Setting to default config.");
-		engineConfig = zzz::safe_make_shared<EngineConfig>();
+		m_EngineConfig = zzz::safe_make_shared<EngineConfig>();
 
 		return eInitConfigState::InitDefault;
 	}
@@ -92,4 +99,49 @@ std::expected<std::filesystem::path, std::string> ConfigManager::GetSettingsDire
 	DOut("Settings file path: {}. OK.", settingsPath.string());
 
 	return eInitConfigState::InitOK;
+}
+
+std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path path)
+{
+	try
+	{
+		std::ifstream in(path, std::ios::binary | std::ios::ate);
+		if (!in)
+			UNEXPECTED("Failed to open config file.");
+
+		std::streamsize fileSize = in.tellg();
+		in.seekg(0, std::ios::beg); // Возвращаемся в начало файла
+
+		// Читаем весь файл в буфер
+		std::vector<char> buffer(fileSize);
+		if (!in.read(buffer.data(), fileSize))
+			UNEXPECTED("Failed to read config file.");
+
+		// Создаем поток для чтения из буфера
+		std::istringstream bufStream(std::string(buffer.data(), buffer.size()));
+
+		std::size_t offset = 0;
+
+		auto result = serializer.DeSerialize(
+			std::span(
+				reinterpret_cast<const std::byte*>(buffer.data()),
+				buffer.size()),
+			offset,
+			*m_EngineConfig);
+
+		if (!result)
+			UNEXPECTED("Failed to deserialize config: {}.", result.error());
+	}
+	catch (const std::filesystem::filesystem_error& e)
+	{
+		UNEXPECTED("Filesystem error: {}", std::string(e.what()));
+	}
+	catch (const std::exception& e)
+	{
+		UNEXPECTED("Config loading error: {}", std::string(e.what()));
+	}
+	catch (...)
+	{
+		UNEXPECTED("Unknown config loading error.");
+	}
 }
