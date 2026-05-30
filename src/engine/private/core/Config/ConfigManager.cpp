@@ -16,10 +16,10 @@ ConfigManager::ConfigManager(std::shared_ptr<Path> path) :
 
 std::expected<std::filesystem::path, std::string> ConfigManager::GetSettingsDirectory()
 {
-#if defined(_WIN32) || defined(__linux__)
-	return m_Path->GetExecutableDirectory();
-#elif defined(__APPLE__) || defined(__ANDROID__)
+#if defined(__APPLE__) || defined(__ANDROID__)
 	return m_Path->GetUserDataDirectory();
+#elif defined(_WIN32) || defined(__linux__)
+	return m_Path->GetExecutableDirectory();
 #else
 #error Unsupported platform
 #endif
