@@ -6,6 +6,7 @@ target_precompile_headers(logger_lib PRIVATE
 
 target_include_directories(logger_lib PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../foundation
 )
 
 target_sources(logger_lib PRIVATE

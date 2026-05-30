@@ -46,7 +46,7 @@ namespace zzz::engine
 		}
 		catch (const std::exception& e)
 		{
-			UNEXPECTED(std::format("Exception initialize: {}.", e.what()));
+			UNEXPECTED("Exception initialize: {}.", e.what());
 		}
 		catch (...)
 		{

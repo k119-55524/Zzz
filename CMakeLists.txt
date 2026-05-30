@@ -9,6 +9,10 @@ endif()
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(MSVC)
+    add_compile_options(/Zc:preprocessor)
+endif()
+
 include(build_configs/current.cmake OPTIONAL)
 
 add_subdirectory(src/logger/logger_lib)

@@ -1,7 +1,6 @@
 #pragma once
 
-#include "../../foundation/zenums.h"
-//#include <zmacros.h>
+#include <zenums.h>
 
 #include "header.h"
 
