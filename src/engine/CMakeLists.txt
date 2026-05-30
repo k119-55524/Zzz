@@ -17,12 +17,20 @@ target_sources(engine_lib PRIVATE
     "headers/Apple.h"
     "headers/MSWin.h"
     "headers/Linux.h"
+    "headers/Android.h"
+    "headers/Constants.h"
     "private/core/Config/ConfigManager.h" "private/core/Config/ConfigManager.cpp"
     "private/core/IO/Path.h" "private/core/IO/Path.cpp" "private/core/Config/EngineConfig.h" "private/core/Config/EngineConfig.cpp")
 
 target_compile_features(engine_lib PUBLIC cxx_std_23)
 
+if(ANDROID)
+    find_package(game-activity REQUIRED CONFIG)
+endif()
+
 target_link_libraries(engine_lib
     PUBLIC
         logger_lib
+    PRIVATE
+        $<$<PLATFORM_ID:Android>:game-activity::game-activity_static>
 )

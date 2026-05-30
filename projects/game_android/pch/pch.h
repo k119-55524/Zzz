@@ -1,6 +1,6 @@
 #pragma once
 
-#include <android_native_app_glue.h>
+#include <game-activity/native_app_glue/android_native_app_glue.h>
 
 #include <memory>
 #include <string>
@@ -10,4 +10,4 @@
 #include <logger.h>
 #include <engine.h>
 
-#include "foundation/logger_macros.h"
+#include <zfoundation.h>

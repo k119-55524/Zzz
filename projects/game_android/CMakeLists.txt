@@ -1,11 +1,7 @@
-# Находим native_app_glue в NDK
-set(NATIVE_APP_GLUE_DIR "${ANDROID_NDK}/sources/android/native_app_glue")
+find_package(game-activity REQUIRED CONFIG)
 
 add_library(game_android SHARED)
 
-target_include_directories(game_android PUBLIC ${NATIVE_APP_GLUE_DIR})
-
-# Применяем PCH только для C++
 target_precompile_headers(game_android PRIVATE
     "$<$<COMPILE_LANGUAGE:CXX>:pch/pch.h>"
 )
@@ -19,12 +15,14 @@ target_include_directories(game_android PRIVATE
 
 target_sources(game_android PRIVATE
     src/android_main.cpp
-    ${NATIVE_APP_GLUE_DIR}/android_native_app_glue.c
 )
 
 target_link_libraries(game_android PRIVATE
     engine_lib
     logger_lib
+
+    # Это магическая строка, которая решит UnsatisfiedLinkError
+    -Wl,--whole-archive game-activity::game-activity_static -Wl,--no-whole-archive
 
     android
     log
