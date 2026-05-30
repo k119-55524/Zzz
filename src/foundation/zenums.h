@@ -4,7 +4,7 @@
 
 namespace zzz
 {
-	enum eInitState : zU32
+	enum class eInitState : zU8
 	{
 		InitNot,		// Готов к инициализации
 		InitProcess,	// Идёт процесс инициализации
@@ -12,5 +12,13 @@ namespace zzz
 		InitError,		// Ошибка инициализации
 		Termination,	// Процесс деинициализации
 		Running			// Идёт процесс работы
+	};
+
+	enum class eLogMessageType : zU8
+	{
+		Message,
+		Warning,
+		Error,
+		Exception
 	};
 }

@@ -1,9 +1,9 @@
 
 #include <fstream>
-
 #include "ConfigManager.h"
 #include "../IO/Path.h"
 #include "../../../headers/Constants.h"
+
 
 using namespace zzz::io;
 using namespace zzz::engine;
@@ -47,7 +47,7 @@ std::expected<std::filesystem::path, std::string> ConfigManager::GetSettingsDire
 	{
 		if (!std::filesystem::exists(settingsPath))
 		{
-			DOutLite("Config file not found at {}. Creating default config.", settingsPath.string());
+			DOutWarning("Config file not found at {}. Creating default config.", settingsPath.string());
 			engineConfig = zzz::safe_make_shared<EngineConfig>();
 
 			return eInitConfigState::InitDefault;
@@ -58,7 +58,7 @@ std::expected<std::filesystem::path, std::string> ConfigManager::GetSettingsDire
 
 			if (!file.is_open())
 			{
-				DOutLite("Failed to open config file: {}. Creating default config.", settingsPath.string());
+				DOutWarning("Failed to open config file: {}. Creating default config.", settingsPath.string());
 				engineConfig = zzz::safe_make_shared<EngineConfig>();
 
 				return eInitConfigState::InitDefault;
@@ -69,27 +69,27 @@ std::expected<std::filesystem::path, std::string> ConfigManager::GetSettingsDire
 	}
 	catch (const std::filesystem::filesystem_error& e)
 	{
-		DOutLite("Filesystem error: {}. Setting to default config.", e.what());
+		DOutException("Filesystem error: {}. Setting to default config.", e.what());
 		engineConfig = zzz::safe_make_shared<EngineConfig>();
 
 		return eInitConfigState::InitDefault;
 	}
 	catch (const std::exception& e)
 	{
-		DOutLite("Config loading error: {}. Setting to default config.", e.what());
+		DOutException("Config loading error: {}. Setting to default config.", e.what());
 		engineConfig = zzz::safe_make_shared<EngineConfig>();
 
 		return eInitConfigState::InitDefault;
 	}
 	catch (...)
 	{
-		DOutLite("Unknown config loading error. Setting to default config.");
+		DOutException("Unknown config loading error. Setting to default config.");
 		engineConfig = zzz::safe_make_shared<EngineConfig>();
 
 		return eInitConfigState::InitDefault;
 	}
 
-	DOutLite("Settings file path: {}. OK.", settingsPath.string());
+	DOut("Settings file path: {}. OK.", settingsPath.string());
 
 	return eInitConfigState::InitOK;
 }

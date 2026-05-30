@@ -13,8 +13,8 @@ void android_main(struct android_app* app)
 
 	try
 	{
-        auto platformData = std::shared_ptr<android_app>(app, [](android_app*){ /* не удаляем */ });
-        Engine engine("GameAndroid_ZzzEngine", platformData);
+		auto platformData = std::shared_ptr<android_app>(app, [](android_app*) {});
+		Engine engine("GameAndroid_ZzzEngine", platformData);
 		auto res = engine.Initialize();
 		if (!res)
 		{

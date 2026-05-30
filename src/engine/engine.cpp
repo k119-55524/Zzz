@@ -11,7 +11,7 @@ namespace zzz::engine
 	Engine::Engine(std::string_view appName, std::shared_ptr<void> platformData) :
 		m_AppName{ appName },
 		m_PlatformData{ platformData },
-		initState{zzz::InitNot}
+		initState{ eInitState::InitNot}
 	{
 		ensure(m_AppName.empty() == false, "Application name must not be empty.");
 	}
@@ -20,37 +20,37 @@ namespace zzz::engine
 	{
 		std::lock_guard lock(initMutex);
 
-		if (initState != InitNot)
+		if (initState != eInitState::InitNot)
 		{
-			DOut("Engine is already initialized or in the process of initialization.");
+			DOutError("Engine is already initialized or in the process of initialization.");
 			return std::unexpected("Engine is already initialized or in the process of initialization.");
 		}
 
 		try
 		{
-			DOutLite("Engine initialized: START.");
+			DOut("Engine initialized: START.");
 
 			m_Path = zzz::safe_make_shared<Path>(m_AppName, m_PlatformData);
 			m_ConfigManager = zzz::safe_make_shared<ConfigManager>(m_Path);
 			auto res = m_ConfigManager->Initialize(configPath);
 			if (!res)
 			{
-				DOut("Failed to initialize ConfigManager: {}.", res.error());
+				DOutError("Failed to initialize ConfigManager: {}.", res.error());
 				return std::unexpected(res.error());
 			}
 
-			DOutLite("Engine initialized: END.");
-			initState = zzz::InitOK;
+			DOut("Engine initialized: END.");
+			initState = eInitState::InitOK;
 
 			return {};
 		}
 		catch (const std::exception& e)
 		{
-			return std::unexpected(std::format("Exception initialize: {}.", e.what()));
+			UNEXPECTED(std::format("Exception initialize: {}.", e.what()));
 		}
 		catch (...)
 		{
-			return std::unexpected("Unknown exception occurred.");
+			UNEXPECTED("Unknown exception occurred.");
 		}
 	}
 }

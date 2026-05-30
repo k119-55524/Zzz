@@ -1,43 +1,61 @@
 #pragma once
 
+#include "../../foundation/zenums.h"
+//#include <zmacros.h>
+
 #include "header.h"
+
+using namespace zzz;
 
 namespace zzz::logger
 {
 	class Logger
 	{
 	public:
-		template <typename... Args>
-		static void DebugOutput(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
+		template<typename... Args>
+		static void LogMessage(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
 		{
 #if ZADD_LOGGER
 			auto formatted = std::format(fmt, std::forward<Args>(args)...);
-			auto output = MakeDebugOutputString(loc, formatted);
+			auto output = MakeLogMessage(loc, eLogMessageType::Message, formatted);
 			DebugOutputIDE(output);
 #endif
 		}
 
 		template<typename... Args>
-		static void DebugOutputLite(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
+		static void LogWarning(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
 		{
 #if ZADD_LOGGER
 			auto formatted = std::format(fmt, std::forward<Args>(args)...);
-			auto output = MakeDebugOutputLiteString(loc, formatted);
+			auto output = MakeLogMessage(loc, eLogMessageType::Warning, formatted);
 			DebugOutputIDE(output);
 #endif
 		}
 
-		static void DebugOutputLite(const std::source_location& loc, std::string_view message)
+		template<typename... Args>
+		static void LogError(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
 		{
 #if ZADD_LOGGER
-			auto output = MakeDebugOutputLiteString(loc, message.data());
+			auto formatted = std::format(fmt, std::forward<Args>(args)...);
+			auto output = MakeLogMessage(loc, eLogMessageType::Error, formatted);
+			DebugOutputIDE(output);
+#endif
+		}
+
+		template<typename... Args>
+		static void LogException(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
+		{
+#if ZADD_LOGGER
+			auto formatted = std::format(fmt, std::forward<Args>(args)...);
+			auto output = MakeLogMessage(loc, eLogMessageType::Exception, formatted);
 			DebugOutputIDE(output);
 #endif
 		}
 
 	private:
-		static std::string MakeDebugOutputString(const std::source_location& loc, const std::string& msg);
-		static std::string MakeDebugOutputLiteString(const std::source_location& loc, const std::string& msg);
+		static std::string MakeLogMessage(const std::source_location& loc, eLogMessageType type, const std::string& msg);
+		static constexpr const char* LogMessageTypeToString(eLogMessageType type);
+
 		static void DebugOutputIDE(const std::string& output) noexcept;
 	};
 }

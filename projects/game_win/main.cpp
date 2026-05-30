@@ -11,7 +11,7 @@ int APIENTRY wWinMain(
 	_In_		LPWSTR		lpCmdLine,
 	_In_		int			nCmdShow)
 {
-	DOutLite("[Windows OS]. Game started.");
+	DOut("[Windows OS]. Game started.");
 
 	try
 	{
@@ -23,18 +23,18 @@ int APIENTRY wWinMain(
 		}
 		else
 		{
-			DOut("[Windows OS]. Game started error: {}.", res.error());
+			DOutError("[Windows OS]. Game started error: {}.", res.error());
 			return -1;
 		}
 	}
 	catch (const std::exception& e)
 	{
-		DOut("[Windows OS]. Game started exception: {}.", e.what());
+		DOutException("[Windows OS]. Game started exception: {}.", e.what());
 		return -1;
 	}
 	catch (...)
 	{
-		DOut("[Windows OS]. Game started unknown exception.");
+		DOutException("[Windows OS]. Game started unknown exception.");
 		return -1;
 	}
 

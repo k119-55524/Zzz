@@ -4,28 +4,27 @@
 
 namespace zzz::logger
 {
-	std::string Logger::MakeDebugOutputString(const std::source_location& loc, const std::string& msg)
+	std::string Logger::MakeLogMessage(const std::source_location& loc, eLogMessageType type, const std::string& msg)
 	{
-		return
-			">>>>> -= DebugOutput =-\n"
-			"    Message: " + msg +
-			"\n    Source: [" +
-			std::string(loc.function_name()) +
-			"] line: " + std::to_string(loc.line()) +
-			", file: " +
-			std::string(loc.file_name()) +
-			"\n";
+		return std::format(
+			">>>>> [{}] {} -> line: {}, file: {}\n",
+			LogMessageTypeToString(type),
+			msg,
+			loc.line(),
+			loc.file_name());
 	}
 
-	std::string Logger::MakeDebugOutputLiteString(const std::source_location& loc, const std::string& msg)
+	constexpr const char* Logger::LogMessageTypeToString(eLogMessageType type)
 	{
-		return
-			">>>>> " + msg + " -> [" +
-			std::string(loc.function_name()) +
-			"] line: " + std::to_string(loc.line()) +
-			", file: " +
-			std::string(loc.file_name()) +
-			"\n";
+		switch (type)
+		{
+		case eLogMessageType::Message:		return "MESSAGE";
+		case eLogMessageType::Warning:		return "WARNING";
+		case eLogMessageType::Error:		return "ERROR";
+		case eLogMessageType::Exception:	return "EXCEPTION";
+		}
+
+		return "UNKNOWN";
 	}
 
 	void Logger::DebugOutputIDE(const std::string& output) noexcept
