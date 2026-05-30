@@ -1,5 +1,6 @@
 #include "main.h"
 
+using namespace zzz;
 using namespace zzz::logger;
 using namespace zzz::engine;
 
@@ -12,15 +13,28 @@ int APIENTRY wWinMain(
 {
 	DOutLite("[Windows OS]. Game started.");
 
-	Engine engine;
-	auto res = engine.Initialize();
-	if (res)
+	try
 	{
+		Engine engine("GameWin_ZzzEngine");
+		auto res = engine.Initialize();
+		if (res)
+		{
 
+		}
+		else
+		{
+			DOut("[Windows OS]. Game started error: {}.", res.error());
+			return -1;
+		}
 	}
-	else
+	catch (const std::exception& e)
 	{
-		DOut("[Windows OS]. Game started error: {}.", res.error());
+		DOut("[Windows OS]. Game started exception: {}.", e.what());
+		return -1;
+	}
+	catch (...)
+	{
+		DOut("[Windows OS]. Game started unknown exception.");
 		return -1;
 	}
 

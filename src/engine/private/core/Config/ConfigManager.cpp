@@ -1,75 +1,39 @@
 
+#include <fstream>
+
 #include "ConfigManager.h"
 #include "../IO/Path.h"
+#include "../../../headers/constants.h"
 
 using namespace zzz::io;
 using namespace zzz::engine;
 
-ConfigManager::ConfigManager()
+ConfigManager::ConfigManager(std::shared_ptr<Path> path) :
+	m_Path(path)
 {
+	ensure(m_Path, "Path must not be null.");
 }
 
-[[nodiscard]] std::expected<std::filesystem::path, std::string> ConfigManager::GetSettingsDirectory()
+std::expected<std::filesystem::path, std::string> ConfigManager::GetSettingsDirectory()
 {
-#if defined(_WIN32)
-	wchar_t* localAppData = nullptr;
-	size_t len = 0;
-
-	_wdupenv_s(&localAppData, &len, L"LOCALAPPDATA");
-	if (!localAppData)
-		return std::unexpected("Failed to get LOCALAPPDATA.");
-
-	std::filesystem::path result(localAppData);
-	free(localAppData);
-
-	return result / "ZzzEngine";
-#elif defined(__APPLE__)
-	const char* home = std::getenv("HOME");
-	if (!home)
-		return std::unexpected("Failed to get HOME.");
-
-	return std::filesystem::path(home) / "Library" / "Application Support" / "ZzzEngine";
-#elif defined(__linux__)
-	const char* xdgConfigHome = std::getenv("XDG_CONFIG_HOME");
-	if (xdgConfigHome)
-		return std::filesystem::path(xdgConfigHome) / "ZzzEngine";
-
-	const char* home = std::getenv("HOME");
-	if (!home)
-		return std::unexpected("Failed to get HOME.");
-
-	return std::filesystem::path(home) / ".config" / "ZzzEngine";
+#if defined(_WIN32) || defined(__linux__)
+	return m_Path->GetExecutableDirectory();
+#elif defined(__APPLE__) || defined(__ANDROID__)
+	return m_Path->GetUserDataDirectory();
 #else
 #error Unsupported platform
 #endif
 }
 
-std::expected<void, std::string> ConfigManager::Initialize(std::string_view configPath)
+[[nodiscard]] std::expected<eInitConfigState, std::string> ConfigManager::Initialize(std::string_view configPath)
 {
-	if (!configPath.empty())
-	{
-		if (!Path::IsPathStringValid(configPath))
-		{
-			auto errorMessage = std::format("Invalid config path: {}.", configPath);
-			DOutLite(errorMessage);
-			return std::unexpected(errorMessage);
-		}
-	}
-
 	std::filesystem::path userPath(configPath);
 	if (userPath.is_absolute())
-	{
-		auto errorMessage = std::format("Config path must be relative: {}.", configPath);
-		DOutLite(errorMessage);
-		return std::unexpected(errorMessage);
-	}
+		UNEXPECTED("Config path must be relative.");
 
 	auto resPath = GetSettingsDirectory();
 	if (!resPath)
-	{
-		DOutLite("Failed to get settings directory: {}.", resPath.error());
-		return std::unexpected(resPath.error());
-	}
+		UNEXPECTED("Failed to get settings directory: {}.", resPath.error());
 
 	auto settingsPath = resPath.value();
 	if (!userPath.empty())
@@ -78,9 +42,54 @@ std::expected<void, std::string> ConfigManager::Initialize(std::string_view conf
 	settingsPath /= configFileName;
 	settingsPath = settingsPath.lexically_normal();
 
-	// TODO: далее работаем с файлом
+	// Далее работаем с файлом
+	try
+	{
+		if (!std::filesystem::exists(settingsPath))
+		{
+			DOutLite("Config file not found at {}. Creating default config.", settingsPath.string());
+			engineConfig = zzz::safe_make_shared<EngineConfig>();
 
-	DOutLite("Settings file path: {}.", settingsPath.string());
+			return eInitConfigState::InitDefault;
+		}
+		else
+		{
+			std::ifstream file(settingsPath);
 
-	return {};
+			if (!file.is_open())
+			{
+				DOutLite("Failed to open config file: {}. Creating default config.", settingsPath.string());
+				engineConfig = zzz::safe_make_shared<EngineConfig>();
+
+				return eInitConfigState::InitDefault;
+			}
+
+			//engineConfig = LoadConfig(file);
+		}
+	}
+	catch (const std::filesystem::filesystem_error& e)
+	{
+		DOutLite("Filesystem error: {}. Setting to default config.", e.what());
+		engineConfig = zzz::safe_make_shared<EngineConfig>();
+
+		return eInitConfigState::InitDefault;
+	}
+	catch (const std::exception& e)
+	{
+		DOutLite("Config loading error: {}. Setting to default config.", e.what());
+		engineConfig = zzz::safe_make_shared<EngineConfig>();
+
+		return eInitConfigState::InitDefault;
+	}
+	catch (...)
+	{
+		DOutLite("Unknown config loading error. Setting to default config.");
+		engineConfig = zzz::safe_make_shared<EngineConfig>();
+
+		return eInitConfigState::InitDefault;
+	}
+
+	DOutLite("Settings file path: {}. OK.", settingsPath.string());
+
+	return eInitConfigState::InitOK;
 }

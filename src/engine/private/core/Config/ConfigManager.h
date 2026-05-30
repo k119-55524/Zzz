@@ -1,17 +1,30 @@
 #pragma once
 
-#include "header.h"
+#include "../IO/Path.h"
+#include "EngineConfig.h"
+
+using namespace zzz::io;
 
 namespace zzz::engine
 {
+	enum class eInitConfigState
+	{
+		InitOK,
+		InitDefault,
+	};
+
 	class ConfigManager final
 	{
 	public:
-		ConfigManager();
+		ConfigManager() = delete;
+		ConfigManager(std::shared_ptr<Path> path);
 
-		[[nodiscard]] std::expected<void, std::string> Initialize(std::string_view configPath);
+		[[nodiscard]] std::expected<eInitConfigState, std::string> Initialize(std::string_view configPath);
 
 	private:
-		[[nodiscard]] std::expected<std::filesystem::path, std::string> GetSettingsDirectory();
+		std::expected<std::filesystem::path, std::string> GetSettingsDirectory();
+
+		std::shared_ptr<Path> m_Path;
+		std::shared_ptr<EngineConfig> engineConfig;
 	};
 }

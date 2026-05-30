@@ -22,10 +22,8 @@ int main(int argc, const char* argv[])
 {
     @autoreleasepool
     {
-        zzz::engine::Engine engine;
-
+        zzz::engine::Engine engine("GameMacOS_ZzzEngine");
         auto initResult = engine.Initialize();
-
         if (!initResult.has_value())
         {
             return -1;

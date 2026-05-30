@@ -15,10 +15,8 @@
 - (BOOL)application:(UIApplication*)application
     didFinishLaunchingWithOptions:(NSDictionary*)launchOptions
 {
-    _engine = std::make_unique<zzz::engine::Engine>();
-
+    _engine = std::make_unique<zzz::engine::Engine>("GameiOS_ZzzEngine");
     auto initResult = _engine->Initialize();
-
     if (!initResult.has_value())
     {
         return NO;

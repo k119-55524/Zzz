@@ -1,6 +1,11 @@
 #pragma once
 
-#include "../header.h"
+#include <string>
+#include <filesystem>
+
+#include "../../../../foundation/zstructs.h"
+
+using namespace zzz;
 
 namespace zzz::io
 {
@@ -8,36 +13,22 @@ namespace zzz::io
 	{
 	public:
 		Path() = delete;
+		Path(std::string_view appName, std::shared_ptr<void> platformData);
 
-		static std::filesystem::path GetExecutableDirectory();
-		static char GetSeparator();
+		[[nodiscard]] static bool IsValidDirectoryName(std::string_view name);
 
-		/**
-		 * @brief Проверяет корректность пути.
-		 *
-		 * Выполняет базовую проверку пути и его компонентов
-		 * в соответствии с правилами текущей платформы.
-		 *
-		 * @param path Проверяемый путь.
-		 *
-		 * @return true, если путь считается корректным.
-		 * @return false, если путь некорректен.
-		 */
-		static bool IsValidPath(std::string_view path);
+		[[nodiscard]] std::expected<std::filesystem::path, std::string> GetExecutableDirectory();
+		inline std::filesystem::path GetUserDataDirectory() { return m_UserDataDirectory; };
 
-		/**
-		 * @brief Проверяет строку пути на наличие недопустимых символов.
-		 *
-		 * Метод выполняет синтаксическую проверку строки без
-		 * обращения к файловой системе. Наличие файла или директории
-		 * по указанному пути не проверяется.
-		 *
-		 * @param path Проверяемая строка пути.
-		 *
-		 * @return true, если строка не содержит недопустимых символов.
-		 * @return false, если строка содержит недопустимые символы
-		 *         или не может быть использована как путь.
-		 */
-		static bool IsPathStringValid(std::string_view path);
+	private:
+		std::string_view m_AppName;
+		std::shared_ptr<void>  m_PlatformData;
+		std::filesystem::path m_UserDataDirectory;
+
+		[[nodiscard]] std::expected<std::filesystem::path, std::string> ResolveUserDataDirectory();
+
+#if defined(__APPLE__)
+		[[nodiscard]] std::expected<std::filesystem::path, std::string> GetAppleUserDataDirectory();
+#endif
 	};
 }

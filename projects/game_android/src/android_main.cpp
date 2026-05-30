@@ -1,5 +1,6 @@
 #include "android_main.h"
 
+using namespace zzz;
 using namespace zzz::logger;
 using namespace zzz::engine;
 
@@ -10,16 +11,24 @@ void android_main(struct android_app* app)
 {
 	DOut("[Android]. Game started.");
 
-	Engine engine;
-
-	auto res = engine.Initialize();
-
-	if (!res)
+	try
 	{
-		DOut(
-			"[Android]. Engine init error: {}.",
-			res.error());
-
+		Engine engine("GameAndroid_ZzzEngine", app);
+		auto res = engine.Initialize();
+		if (!res)
+		{
+			DOut("[Android]. Engine init error: {}.", res.error());
+			return;
+		}
+	}
+	catch (const std::exception& e)
+	{
+		DOut("[Android]. Game started exception: {}.", e.what());
+		return;
+	}
+	catch (...)
+	{
+		DOut("[Android]. Game started unknown exception.");
 		return;
 	}
 
