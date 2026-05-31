@@ -1,9 +1,23 @@
 #pragma once
 
-#include "ISerializable.h"
+#include <span>
 
 namespace zzz::engine
 {
+	class Serializer;
+
+	class ISerializable
+	{
+	public:
+		virtual ~ISerializable() = default;
+
+	protected:
+		[[nodiscard]] virtual std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const = 0;
+		[[nodiscard]] virtual std::expected<void, std::string> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& serializer) = 0;
+
+		friend class Serializer;
+	};
+
 	class Serializer
 	{
 	public:
@@ -32,6 +46,30 @@ namespace zzz::engine
 				UNEXPECTED("Buffer too small.");
 			std::memcpy(&value, buffer.data() + offset, sizeof(T));
 			offset += sizeof(T);
+
+			return {};
+		}
+
+		// Сериализация std::array<std::byte, N>
+		template<std::size_t N>
+		std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const std::array<std::byte, N>& value) const
+		{
+			const auto oldSize = buffer.size();
+			buffer.resize(oldSize + N);
+			std::memcpy(buffer.data() + oldSize, value.data(), N);
+
+			return {};
+		}
+
+		// Десериализация std::array<std::byte, N>
+		template<std::size_t N>
+		std::expected<void, std::string> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, std::array<std::byte, N>& value) const
+		{
+			if (offset + N > buffer.size())
+				UNEXPECTED("Buffer too small.");
+
+			std::memcpy(value.data(), buffer.data() + offset, N);
+			offset += N;
 
 			return {};
 		}

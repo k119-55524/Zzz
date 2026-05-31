@@ -1,6 +1,23 @@
 #pragma once
 
+#include <array>
+
+namespace zzz::engine
+{
+	class Version;
+}
+
 namespace zzz
 {
-	constexpr std::string_view configFileName = "config.json";
+	// Константы для конфигурационного файла
+	constexpr std::string_view configFileName = "config.dat";
+	constexpr std::array<std::byte, 3> configHeader
+	{
+		static_cast<std::byte>(0x5A),	// 'Z'
+		static_cast<std::byte>(0x5A),	// 'Z'
+		static_cast<std::byte>(0x5A)	// 'Z'
+	};
+	constexpr zU8 configFileMajorVersion = 1;
+	constexpr zU8 configFileMinorVersion = 0;
+	constexpr zU8 configFilePatchVersion = 0;
 }

@@ -27,7 +27,8 @@ namespace zzz::engine
 		std::expected<void, std::string> LoadConfig(std::filesystem::path path);
 
 		std::shared_ptr<Path> m_Path;
+		std::filesystem::path m_ConfigPath;
 		std::shared_ptr<EngineConfig> m_EngineConfig;
-		Serializer serializer;
+		Serializer m_Serializer;
 	};
 }

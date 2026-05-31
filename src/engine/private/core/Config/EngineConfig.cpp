@@ -1,27 +1,28 @@
+#include "headers/constants.h"
 #include "EngineConfig.h"
 
 using namespace zzz::engine;
 
-EngineConfig::EngineConfig()
-{
-}
+EngineConfig::EngineConfig() :
+	m_Version(configFileMajorVersion, configFileMinorVersion, configFilePatchVersion)
+{}
 
 [[nodiscard]] std::expected<void, std::string> EngineConfig::Serialize(std::vector<std::byte>& buffer, const Serializer& s) const
 {
-	return s.Serialize(buffer, m_Version);
-	//return s.Serialize(buffer, m_AppName)
-	//	.and_then([&]() { return s.Serialize(buffer, m_ClassName); })
-	//	.and_then([&]() { return s.Serialize(buffer, m_WinSize); })
-	//	.and_then([&]() { return s.Serialize(buffer, m_IcoFullPath); })
-	//	.and_then([&]() { return s.Serialize(buffer, m_IcoSize); });
+	return s.Serialize(buffer, configHeader)
+		.and_then([&]() { return s.Serialize(buffer, m_Version); });
 }
 
 [[nodiscard]] std::expected<void, std::string> EngineConfig::DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s)
 {
-	return s.DeSerialize(buffer, offset, m_Version);
-	//return s.DeSerialize(buffer, offset, m_AppName)
-	//	.and_then([&]() { return s.DeSerialize(buffer, offset, m_ClassName); })
-	//	.and_then([&]() { return s.DeSerialize(buffer, offset, m_WinSize); })
-	//	.and_then([&]() { return s.DeSerialize(buffer, offset, m_IcoFullPath); })
-	//	.and_then([&]() { return s.DeSerialize(buffer, offset, m_IcoSize); });
+	std::array<std::byte, configHeader.size()> header;
+
+	return s.DeSerialize(buffer, offset, header)
+		.and_then([&]() -> std::expected<void, std::string>
+			{
+				if (header != configHeader)
+					return std::unexpected("Invalid config header.");
+
+				return s.DeSerialize(buffer, offset, m_Version);
+			});
 }

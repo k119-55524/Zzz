@@ -16,7 +16,7 @@ namespace zzz::io
 		[[nodiscard]] static bool IsValidDirectoryName(std::string_view name);
 
 		[[nodiscard]] std::expected<std::filesystem::path, std::string> GetExecutableDirectory();
-		inline std::filesystem::path GetUserDataDirectory() { return m_UserDataDirectory; };
+		inline std::filesystem::path GetUserDataDirectory() noexcept { return m_UserDataDirectory; };
 
 	private:
 		std::string_view m_AppName;
