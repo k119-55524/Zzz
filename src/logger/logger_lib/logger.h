@@ -1,7 +1,5 @@
 #pragma once
 
-#include <zenums.h>
-
 #include "header.h"
 
 using namespace zzz;
@@ -51,8 +49,17 @@ namespace zzz::logger
 #endif
 		}
 
+		template<typename... Args>
+		static void LogFatal(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
+		{
+			auto formatted = std::format(fmt, std::forward<Args>(args)...);
+			auto output = MakeLogMessageFatal(loc, eLogMessageType::Fatal, formatted);
+			DebugOutputIDE(output);
+		}
+
 	private:
 		static std::string MakeLogMessage(const std::source_location& loc, eLogMessageType type, const std::string& msg);
+		static std::string MakeLogMessageFatal(const std::source_location& loc, eLogMessageType type, const std::string& msg);
 		static constexpr const char* LogMessageTypeToString(eLogMessageType type);
 
 		static void DebugOutputIDE(const std::string& output) noexcept;

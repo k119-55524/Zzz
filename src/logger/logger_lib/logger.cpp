@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "logger.h"
 
 namespace zzz::logger
@@ -14,6 +12,17 @@ namespace zzz::logger
 			loc.file_name());
 	}
 
+	std::string Logger::MakeLogMessageFatal(const std::source_location& loc, eLogMessageType type, const std::string& msg)
+	{
+		return std::format(
+			">>>>> [{}] {} -> [{}]. line: {}, file: {}\n",
+			LogMessageTypeToString(type),
+			msg,
+			loc.function_name(),
+			loc.line(),
+			loc.file_name());
+	}
+
 	constexpr const char* Logger::LogMessageTypeToString(eLogMessageType type)
 	{
 		switch (type)
@@ -22,9 +31,10 @@ namespace zzz::logger
 		case eLogMessageType::Warning:		return "WARNING";
 		case eLogMessageType::Error:		return "ERROR";
 		case eLogMessageType::Exception:	return "EXCEPTION";
+		case eLogMessageType::Fatal:		return "FATAL";
 		}
 
-		return "UNKNOWN";
+		std::unreachable();
 	}
 
 	void Logger::DebugOutputIDE(const std::string& output) noexcept

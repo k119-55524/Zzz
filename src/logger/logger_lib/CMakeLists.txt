@@ -12,7 +12,7 @@ target_include_directories(logger_lib PUBLIC
 target_sources(logger_lib PRIVATE
     logger.h
     logger.cpp
-    header.h)
+    header.h "headers/enums.h")
 
 target_compile_features(logger_lib PUBLIC cxx_std_23)
 

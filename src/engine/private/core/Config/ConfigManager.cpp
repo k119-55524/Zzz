@@ -1,11 +1,10 @@
 
 #include <fstream>
 
-#include "../IO/Path.h"
+#include "IO/Path.h"
 #include "ConfigManager.h"
-#include "../Serialize/Serializer.h"
-#include "../../../headers/Constants.h"
-
+#include "headers/constants.h"
+#include "Serialize/Serializer.h"
 
 using namespace zzz::io;
 using namespace zzz::engine;
@@ -16,15 +15,9 @@ ConfigManager::ConfigManager(std::shared_ptr<Path> path) :
 	ensure(m_Path, "Path must not be null.");
 }
 
-std::expected<std::filesystem::path, std::string> ConfigManager::GetSettingsDirectory()
+[[nodiscard]] std::expected<void, std::string> ConfigManager::Serialize()
 {
-#if defined(__APPLE__) || defined(__ANDROID__)
-	return m_Path->GetUserDataDirectory();
-#elif defined(_WIN32) || defined(__linux__)
-	return m_Path->GetExecutableDirectory();
-#else
-#error Unsupported platform
-#endif
+	return {};
 }
 
 [[nodiscard]] std::expected<eInitConfigState, std::string> ConfigManager::Initialize(std::string_view configPath)
@@ -144,4 +137,17 @@ std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path
 	{
 		UNEXPECTED("Unknown config loading error.");
 	}
+
+	return {};
+}
+
+std::expected<std::filesystem::path, std::string> ConfigManager::GetSettingsDirectory()
+{
+#if defined(__APPLE__) || defined(__ANDROID__)
+	return m_Path->GetUserDataDirectory();
+#elif defined(_WIN32) || defined(__linux__)
+	return m_Path->GetExecutableDirectory();
+#else
+#error Unsupported platform
+#endif
 }

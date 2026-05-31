@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../IO/Path.h"
+#include "IO/Path.h"
 #include "EngineConfig.h"
 
 using namespace zzz::io;
@@ -20,6 +20,7 @@ namespace zzz::engine
 		ConfigManager(std::shared_ptr<Path> path);
 
 		[[nodiscard]] std::expected<eInitConfigState, std::string> Initialize(std::string_view configPath);
+		[[nodiscard]] std::expected<void, std::string> Serialize();
 
 	private:
 		std::expected<std::filesystem::path, std::string> GetSettingsDirectory();

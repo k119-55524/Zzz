@@ -16,15 +16,43 @@ namespace zzz::engine
 		ensure(m_AppName.empty() == false, "Application name must not be empty.");
 	}
 
+	Engine::~Engine()
+	{
+		Shutdown();
+	}
+
+	void Engine::Shutdown()
+	{
+		try
+		{
+			if (initState != eInitState::InitNot)
+			{
+				auto res = m_ConfigManager->Serialize();
+				if (!res)
+					DOutFatal("Failed to serialize config: {}.", res.error());
+			}
+
+			m_ConfigManager = nullptr;
+			m_Path = nullptr;
+		}
+		catch (const std::exception& e)
+		{
+			Shutdown();
+			DOutException("Exception during shutdown: {}.", e.what());
+		}
+		catch (...)
+		{
+			Shutdown();
+			DOutException("Unknown exception during shutdown.");
+		}
+	}
+
 	std::expected<void, std::string> Engine::Initialize(std::string_view configPath)
 	{
-		std::lock_guard lock(initMutex);
+		std::lock_guard lock(stateMutex);
 
 		if (initState != eInitState::InitNot)
-		{
-			DOutError("Engine is already initialized or in the process of initialization.");
-			return std::unexpected("Engine is already initialized or in the process of initialization.");
-		}
+			UNEXPECTED("Engine is already initialized or running.");
 
 		try
 		{
@@ -34,10 +62,9 @@ namespace zzz::engine
 			m_ConfigManager = zzz::safe_make_shared<ConfigManager>(m_Path);
 			auto res = m_ConfigManager->Initialize(configPath);
 			if (!res)
-			{
-				DOutError("Failed to initialize ConfigManager: {}.", res.error());
-				return std::unexpected(res.error());
-			}
+				UNEXPECTED("Failed to initialize ConfigManager: {}.", res.error());
+
+
 
 			DOut("Engine initialized: END.");
 			initState = eInitState::InitOK;
@@ -52,5 +79,22 @@ namespace zzz::engine
 		{
 			UNEXPECTED("Unknown exception occurred.");
 		}
+	}
+
+	[[nodiscard]] std::expected<void, std::string> Engine::Run()
+	{
+		std::lock_guard lock(stateMutex);
+
+		if (initState != eInitState::InitOK)
+			UNEXPECTED("Engine is not initialized. Call Initialize() before Run().");
+
+		if (initState == eInitState::Running)
+			UNEXPECTED("Engine is already running.");
+
+		initState = eInitState::Running;
+
+
+
+		return {};
 	}
 }

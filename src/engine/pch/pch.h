@@ -6,4 +6,6 @@
 #include <logger.h>
 #include <filesystem>
 
-#include <zfoundation.h>
+#include <foundation.h>
+
+#include "headers/enums.h"

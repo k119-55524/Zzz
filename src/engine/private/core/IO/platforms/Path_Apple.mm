@@ -4,7 +4,7 @@
 #include <expected>
 #include <filesystem>
 
-#include "../Path.hpp"
+#include "Path.hpp"
 
 std::expected<std::filesystem::path, std::string> Path::GetAppleUserDataDirectory()
 {

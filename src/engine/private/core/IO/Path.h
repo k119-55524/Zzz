@@ -3,8 +3,6 @@
 #include <string>
 #include <filesystem>
 
-#include "../../../../foundation/zstructs.h"
-
 using namespace zzz;
 
 namespace zzz::io

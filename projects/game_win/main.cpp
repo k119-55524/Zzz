@@ -11,6 +11,13 @@ int APIENTRY wWinMain(
 	_In_		LPWSTR		lpCmdLine,
 	_In_		int			nCmdShow)
 {
+	// Подавляем предупреждения о неиспользуемых параметрах
+	// Чтобы не засорять вывод компилятора
+	(void)hInstance;
+	(void)hPrevInstance;
+	(void)lpCmdLine;
+	(void)nCmdShow;
+
 	DOut("[Windows OS]. Game started.");
 
 	try

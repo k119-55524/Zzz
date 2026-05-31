@@ -1,8 +1,7 @@
 #pragma once
 
-#include "../../../header.h"
-#include "../Utils/version.h"
-#include "../Serialize/serializer.h"
+#include "Utils/version.h"
+#include "Serialize/serializer.h"
 
 namespace zzz::engine
 {

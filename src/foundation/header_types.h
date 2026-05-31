@@ -1,6 +1,6 @@
 #pragma once
 
-#include "header.h"
+#include <cstdint>
 
 namespace zzz
 {

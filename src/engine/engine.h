@@ -1,9 +1,9 @@
 #pragma once
 
 #include <mutex>
-#include <zfoundation.h>
 
 #include "header.h"
+#include "headers/enums.h"
 
 namespace zzz::io
 {
@@ -24,14 +24,18 @@ namespace zzz::engine
 	public:
 		Engine() = delete;
 		Engine(std::string_view appName, std::shared_ptr<void> platformData = nullptr);
+		~Engine();
 
 		[[nodiscard]] std::expected<void, std::string> Initialize(std::string_view configPath = {});
+		[[nodiscard]] std::expected<void, std::string> Run();
 
 	private:
+		void Shutdown();
+
 		std::string_view m_AppName;
 		std::shared_ptr<void> m_PlatformData;
 
-		std::mutex initMutex;
+		std::mutex stateMutex;
 		eInitState initState;
 
 		std::shared_ptr<io::Path> m_Path;

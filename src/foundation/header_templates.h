@@ -1,6 +1,11 @@
 #pragma once
 
-#include "header.h"
+#include <memory>
+#include <sstream>
+#include <utility>
+#include <stdexcept>
+#include <source_location>
+
 namespace zzz
 {
 	template<typename T>
