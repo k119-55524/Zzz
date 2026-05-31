@@ -98,7 +98,7 @@ ConfigManager::ConfigManager(std::shared_ptr<Path> path) :
 		return eInitConfigState::InitDefault;
 	}
 
-	DOut("LOADINGSettings file {}: OK.", m_ConfigPath.string());
+	DOut("Config initialized successfully from file: {}.", m_ConfigPath.string());
 
 	return eInitConfigState::InitOK;
 }
@@ -146,6 +146,8 @@ std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path
 	{
 		UNEXPECTED("Unknown config loading error.");
 	}
+
+	DOut("Config file {} loaded successfully.", path.string());
 
 	return {};
 }
