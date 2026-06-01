@@ -2,6 +2,7 @@
 
 #include <span>
 #include <mutex>
+#include <cstring>
 #include <expected>
 #include <logger.h>
 #include <filesystem>
