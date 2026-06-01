@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include <fstream>
+#include <system_error>
 
 #include "IO/Path.h"
 #include "ConfigManager.h"
@@ -23,6 +24,11 @@ ConfigManager::ConfigManager(std::shared_ptr<Path> path) :
 		std::vector<std::byte> buffer;
 		if (auto res = m_Serializer.Serialize(buffer, *m_EngineConfig); !res)
 			UNEXPECTED("Failed to serialize config: {}.", res.error());
+
+		std::error_code ec;
+		std::filesystem::create_directories(m_ConfigPath.parent_path(), ec);
+		if (ec)
+			UNEXPECTED("Failed to create directories: {}. Error: {}", m_ConfigPath.parent_path().string(), ec.message());
 
 		std::ofstream file(m_ConfigPath, std::ios::binary);
 		if (!file)
@@ -71,6 +77,13 @@ ConfigManager::ConfigManager(std::shared_ptr<Path> path) :
 
 		// Далее работаем с файлом
 		m_EngineConfig = zzz::safe_make_shared<EngineConfig>();
+
+		if (!std::filesystem::exists(m_ConfigPath))
+		{
+			DOut("Config file not found: {}. Using default config.", m_ConfigPath.string());
+			return eInitConfigState::InitDefault;
+		}
+
 		auto loadResult = LoadConfig(m_ConfigPath);
 		if (!loadResult)
 		{
