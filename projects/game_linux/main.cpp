@@ -5,7 +5,7 @@ using namespace zzz::engine;
 // Linux
 int main(int argc, char* argv[])
 {
-	DOut(">>>>> [Linux OS]. Game started.");
+	DOut("[Linux OS]. Game started.");
 
 	try
 	{

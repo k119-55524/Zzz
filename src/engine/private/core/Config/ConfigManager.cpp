@@ -1,3 +1,4 @@
+#include "pch.h"
 
 #include <fstream>
 
@@ -43,6 +44,8 @@ ConfigManager::ConfigManager(std::shared_ptr<Path> path) :
 	{
 		UNEXPECTED("Unknown config serialization error.");
 	}
+
+	DOut("Config serialized successfully to file: {}.", m_ConfigPath.string());
 
 	return {};
 }
@@ -98,7 +101,7 @@ ConfigManager::ConfigManager(std::shared_ptr<Path> path) :
 		return eInitConfigState::InitDefault;
 	}
 
-	DOut("Config initialized successfully from file: {}.", m_ConfigPath.string());
+	DOut("Config deserialized successfully from file: {}.", m_ConfigPath.string());
 
 	return eInitConfigState::InitOK;
 }
@@ -154,8 +157,11 @@ std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path
 
 std::expected<std::filesystem::path, std::string> ConfigManager::GetSettingsDirectory()
 {
+	// На Apple и Android используем директорию данных пользователя
 #if defined(__APPLE__) || defined(__ANDROID__)
 	return m_Path->GetUserDataDirectory();
+
+	// На Windows и Linux используем директорию с исполняемым файлом
 #elif defined(_WIN32) || defined(__linux__)
 	return m_Path->GetExecutableDirectory();
 #else

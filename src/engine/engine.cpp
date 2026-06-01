@@ -1,3 +1,4 @@
+#include "pch.h"
 
 #include "engine.h"
 #include "private/core/IO/Path.h"
@@ -37,14 +38,15 @@ namespace zzz::engine
 		}
 		catch (const std::exception& e)
 		{
-			Shutdown();
 			DOutException("Exception during shutdown: {}.", e.what());
 		}
 		catch (...)
 		{
-			Shutdown();
 			DOutException("Unknown exception during shutdown.");
 		}
+
+		DOut("Engine shutdown completed.");
+		initState = eInitState::InitNot;
 	}
 
 	std::expected<void, std::string> Engine::Initialize(std::string_view configPath)

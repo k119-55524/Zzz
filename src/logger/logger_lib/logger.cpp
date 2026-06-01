@@ -4,12 +4,20 @@ namespace zzz::logger
 {
 	std::string Logger::MakeLogMessage(const std::source_location& loc, eLogMessageType type, const std::string& msg)
 	{
+		auto end = "\n";
+
+		// На Linux и Android перенос строки в логах не нужен, так как они уже добавляются автоматически.
+#if defined(__linux__)
+		end = "";
+#endif
+
 		return std::format(
-			">>>>> [{}] {} -> line: {}, file: {}\n",
+			">>>>> [{}] {} -> line: {}, file: {}{}",
 			LogMessageTypeToString(type),
 			msg,
 			loc.line(),
-			loc.file_name());
+			loc.file_name(),
+			end);
 	}
 
 	std::string Logger::MakeLogMessageFatal(const std::source_location& loc, eLogMessageType type, const std::string& msg)
