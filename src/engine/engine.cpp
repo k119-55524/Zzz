@@ -11,7 +11,7 @@ using namespace zzz::engine;
 Engine::Engine(std::string_view appName, std::shared_ptr<void> platformData) :
 	m_AppName{ appName },
 	m_PlatformData{ platformData },
-	initState{ eInitState::NotInitialized }
+	initState{ eInitState::InitNot}
 {
 	ensure(m_AppName.empty() == false, "Application name must not be empty.");
 }
@@ -25,7 +25,7 @@ void Engine::Shutdown()
 {
 	try
 	{
-		if (initState != eInitState::NotInitialized)
+		if (initState != eInitState::InitNot)
 		{
 			auto res = m_ConfigManager->SaveConfig();
 			if (!res)
@@ -45,14 +45,14 @@ void Engine::Shutdown()
 	}
 
 	DOut("Engine shutdown completed.");
-	initState.store(eInitState::NotInitialized);
+	initState = eInitState::InitNot;
 }
 
 std::expected<void, std::string> Engine::Initialize(std::string_view configPath)
 {
 	std::lock_guard lock(stateMutex);
 
-	if (initState != eInitState::NotInitialized)
+	if (initState != eInitState::InitNot)
 		UNEXPECTED("Engine is already initialized or running.");
 
 	try
@@ -68,7 +68,7 @@ std::expected<void, std::string> Engine::Initialize(std::string_view configPath)
 
 
 		DOut("Engine initialized: END.");
-		initState.store(eInitState::Initialized);
+		initState = eInitState::InitOK;
 
 		return {};
 	}
@@ -86,10 +86,10 @@ std::expected<void, std::string> Engine::Initialize(std::string_view configPath)
 {
 	std::lock_guard lock(stateMutex);
 
-	if (initState != eInitState::Initialized)
+	if (initState != eInitState::InitOK)
 		UNEXPECTED("Engine is not initialized. Call Initialize() before Run().");
 
-	initState.store(eInitState::Running);
+	initState = eInitState::Running;
 
 
 
@@ -140,6 +140,13 @@ void Engine::OnPlatformActivityResumed()
 void Engine::OnPlatformActivityPaused()
 {
 	DOut("Activity paused.");
+
+	if (initState.load() == eInitState::Running)
+	{
+		auto res = m_ConfigManager->SaveConfig();
+		if (!res)
+			DOutCritical("Failed to save config on entering background: {}.", res.error());
+	}
 }
 
 void Engine::OnPlatformActivityStopped()

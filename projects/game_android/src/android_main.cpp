@@ -42,10 +42,20 @@ void android_main(struct android_app* app)
 
 		switch (cmd)
 		{
+		case APP_CMD_START:
+			engineInstance->OnPlatformActivityStarted();
+			break;
+		case APP_CMD_RESUME:
+			engineInstance->OnPlatformActivityResumed();
+			break;
 		case APP_CMD_PAUSE:
+			engineInstance->OnPlatformActivityPaused();
+			break;
 		case APP_CMD_STOP:
-		case APP_CMD_SAVE_STATE:
-			engineInstance->OnAppMinimize();
+			engineInstance->OnPlatformActivityStopped();
+			break;
+		case APP_CMD_LOW_MEMORY:
+			engineInstance->OnPlatformLowMemory();
 			break;
 		}
 	};

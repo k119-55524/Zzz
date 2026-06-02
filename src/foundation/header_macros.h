@@ -4,7 +4,7 @@
 #define DOutWarning(...) ::zzz::logger::Logger::LogWarning(std::source_location::current(), __VA_ARGS__)
 #define DOutError(...) ::zzz::logger::Logger::LogError(std::source_location::current(), __VA_ARGS__)
 #define DOutException(...) ::zzz::logger::Logger::LogException(std::source_location::current(), __VA_ARGS__)
-#define DOutCritical(...) ::zzz::logger::Logger::LogCritical(std::source_location::current(), __VA_ARGS__)
+#define DOutCritical(...) ::zzz::logger::Logger::LogFatal(std::source_location::current(), __VA_ARGS__)
 
 /// @brief Макрос для возврата std::unexpected с логированием ошибки.
 #define UNEXPECTED(fmt, ...) \

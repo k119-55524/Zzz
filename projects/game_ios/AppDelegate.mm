@@ -37,27 +37,39 @@
     return YES;
 }
 
+- (void)applicationDidBecomeActive:(UIApplication *)application
+{
+    if (_engine)
+        _engine->OnPlatformApplicationDidBecomeActive();
+}
+
+- (void)applicationWillResignActive:(UIApplication *)application
+{
+    if (_engine)
+        _engine->OnPlatformApplicationWillResignActive();
+}
+
 - (void)applicationDidEnterBackground:(UIApplication *)application
 {
     if (_engine)
-    {
-        auto res = _engine->OnPlatformApplicationDidEnterBackground();
-        if (!res)
-        {
-            DOutCritical("Failed to save config on entering background: {}.", res.error());
-        }
-    }
+        _engine->OnPlatformApplicationDidEnterBackground();
+}
+
+- (void)applicationWillEnterForeground:(UIApplication *)application
+{
+    if (_engine)
+        _engine->OnPlatformApplicationWillEnterForeground();
+}
+
+- (void)applicationDidReceiveMemoryWarning:(UIApplication *)application
+{
+    if (_engine)
+        _engine->OnPlatformApplicationDidReceiveMemoryWarning();
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application
 {
-    if (_engine)
-    {
-        if (!res)
-        {
-            DOutCritical("Failed to save config on termination: {}.", res.error());
-        }
-    }
+    _engine.reset();
 }
 
 @end
