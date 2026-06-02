@@ -4,9 +4,9 @@
 #include <expected>
 #include <filesystem>
 
-#include "Path.hpp"
+#include "../Path.h"
 
-std::expected<std::filesystem::path, std::string> Path::GetAppleUserDataDirectory()
+std::expected<std::filesystem::path, std::string> zzz::io::Path::GetAppleUserDataDirectory()
 {
 	@autoreleasepool
 	{
