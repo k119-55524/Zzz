@@ -37,4 +37,28 @@
     return YES;
 }
 
+- (void)applicationDidEnterBackground:(UIApplication *)application
+{
+    if (_engine)
+    {
+        auto res = _engine->OnAppMinimize();
+        if (!res)
+        {
+            DOutFatal("Failed to save config on entering background: {}.", res.error());
+        }
+    }
+}
+
+- (void)applicationWillTerminate:(UIApplication *)application
+{
+    if (_engine)
+    {
+        auto res = _engine->OnAppMinimize();
+        if (!res)
+        {
+            DOutFatal("Failed to save config on termination: {}.", res.error());
+        }
+    }
+}
+
 @end

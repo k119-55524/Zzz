@@ -11,11 +11,13 @@ void android_main(struct android_app* app)
 {
 	DOut("[Android]. Game started.");
 
+	std::unique_ptr<Engine> engine;
+
 	try
 	{
 		auto platformData = std::shared_ptr<android_app>(app, [](android_app*) {});
-		Engine engine("GameAndroid_ZzzEngine", platformData);
-		auto res = engine.Initialize();
+		engine = std::make_unique<Engine>("GameAndroid_ZzzEngine", platformData);
+		auto res = engine->Initialize();
 		if (!res)
 		{
 			DOut("[Android]. Engine init error: {}.", res.error());
@@ -32,6 +34,21 @@ void android_main(struct android_app* app)
 		DOut("[Android]. Game started unknown exception.");
 		return;
 	}
+
+	app->userData = engine.get();
+	app->onAppCmd = [](struct android_app* app, int32_t cmd) {
+		auto* engineInstance = static_cast<Engine*>(app->userData);
+		if (!engineInstance) return;
+
+		switch (cmd)
+		{
+		case APP_CMD_PAUSE:
+		case APP_CMD_STOP:
+		case APP_CMD_SAVE_STATE:
+			engineInstance->OnAppMinimize();
+			break;
+		}
+	};
 
 	while (true)
 	{

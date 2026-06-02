@@ -99,4 +99,14 @@ namespace zzz::engine
 
 		return {};
 	}
+
+	[[nodiscard]] std::expected<void, std::string> Engine::OnAppMinimize()
+	{
+		std::lock_guard lock(stateMutex);
+		if (m_ConfigManager)
+		{
+			return m_ConfigManager->Serialize();
+		}
+		return {};
+	}
 }

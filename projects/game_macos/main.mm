@@ -18,6 +18,18 @@ static std::unique_ptr<zzz::engine::Engine> g_Engine;
     return YES;
 }
 
+- (void)applicationDidResignActive:(NSNotification *)notification
+{
+    if (g_Engine)
+    {
+        auto res = g_Engine->OnAppMinimize();
+        if (!res)
+        {
+            DOutFatal("Failed to save config on deactivation: {}.", res.error());
+        }
+    }
+}
+
 - (void)applicationWillTerminate:(NSNotification *)notification
 {
     g_Engine.reset();

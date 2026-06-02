@@ -27,6 +27,7 @@ namespace zzz::engine
 
 		[[nodiscard]] std::expected<void, std::string> Initialize(std::string_view configPath = {});
 		[[nodiscard]] std::expected<void, std::string> Run();
+		[[nodiscard]] std::expected<void, std::string> OnAppMinimize();
 
 	private:
 		void Shutdown();
