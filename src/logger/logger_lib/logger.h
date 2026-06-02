@@ -50,17 +50,41 @@ namespace zzz::logger
 		}
 
 		template<typename... Args>
-		static void LogFatal(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
+		static void LogCritical(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
 		{
 			auto formatted = std::format(fmt, std::forward<Args>(args)...);
-			auto output = MakeLogMessageFatal(loc, eLogMessageType::Fatal, formatted);
+			auto output = MakeLogMessageCritical(loc, eLogMessageType::Critical, formatted);
 			DebugOutputIDE(output);
 		}
 
 	private:
 		static std::string MakeLogMessage(const std::source_location& loc, eLogMessageType type, const std::string& msg);
-		static std::string MakeLogMessageFatal(const std::source_location& loc, eLogMessageType type, const std::string& msg);
-		static constexpr const char* LogMessageTypeToString(eLogMessageType type);
+		static std::string MakeLogMessageCritical(const std::source_location& loc, eLogMessageType type, const std::string& msg);
+		static constexpr const char* LogMessageTypeToString(eLogMessageType type)
+		{
+			switch (type)
+			{
+			case eLogMessageType::Message:		return "MESSAGE";
+			case eLogMessageType::Warning:		return "WARNING";
+			case eLogMessageType::Error:		return "ERROR";
+			case eLogMessageType::Exception:	return "EXCEPTION";
+			case eLogMessageType::Critical:		return "CRITICAL";
+			case eLogMessageType::Fatal:		return "FATAL";
+			}
+
+			std::unreachable();
+		}
+		static constexpr const char* GetPlatformLogLineEnding()
+		{
+			auto end = "\n";
+
+			// Для Linux-подобных платформ (включая Android) символ '\n' не требуется,
+			// поскольку средства просмотра логов (IDE, Logcat и т.п.) сами разделяют записи.
+#if defined(__linux__)
+			end = "";
+#endif
+			return end;
+		}
 
 		static void DebugOutputIDE(const std::string& output) noexcept;
 	};

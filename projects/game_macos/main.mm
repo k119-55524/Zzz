@@ -25,7 +25,7 @@ static std::unique_ptr<zzz::engine::Engine> g_Engine;
         auto res = g_Engine->OnAppMinimize();
         if (!res)
         {
-            DOutFatal("Failed to save config on deactivation: {}.", res.error());
+            DOutCritical("Failed to save config on deactivation: {}.", res.error());
         }
     }
 }

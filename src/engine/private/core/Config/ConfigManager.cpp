@@ -12,13 +12,17 @@ using namespace zzz::io;
 using namespace zzz::engine;
 
 ConfigManager::ConfigManager(std::shared_ptr<Path> path) :
-	m_Path(path)
+	m_Path(path),
+	m_IsDirty(true)
 {
 	ensure(m_Path, "Path must not be null.");
 }
 
-[[nodiscard]] std::expected<void, std::string> ConfigManager::Serialize()
+[[nodiscard]] std::expected<void, std::string> ConfigManager::SaveConfig()
 {
+	if (!m_IsDirty)
+		return {};
+
 	try
 	{
 		std::vector<std::byte> buffer;
@@ -51,6 +55,7 @@ ConfigManager::ConfigManager(std::shared_ptr<Path> path) :
 		UNEXPECTED("Unknown config serialization error.");
 	}
 
+	m_IsDirty = false;
 	DOut("Config serialized successfully to file: {}.", m_ConfigPath.string());
 
 	return {};

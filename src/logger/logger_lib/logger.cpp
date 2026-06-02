@@ -4,45 +4,25 @@ namespace zzz::logger
 {
 	std::string Logger::MakeLogMessage(const std::source_location& loc, eLogMessageType type, const std::string& msg)
 	{
-		auto end = "\n";
-
-		// На Linux и Android перенос строки в логах не нужен, так как они уже добавляются автоматически.
-#if defined(__linux__)
-		end = "";
-#endif
-
 		return std::format(
 			">>>>> [{}] {} -> line: {}, file: {}{}",
 			LogMessageTypeToString(type),
 			msg,
 			loc.line(),
 			loc.file_name(),
-			end);
+			GetPlatformLogLineEnding());
 	}
 
-	std::string Logger::MakeLogMessageFatal(const std::source_location& loc, eLogMessageType type, const std::string& msg)
+	std::string Logger::MakeLogMessageCritical(const std::source_location& loc, eLogMessageType type, const std::string& msg)
 	{
 		return std::format(
-			">>>>> [{}] {} -> [{}]. line: {}, file: {}\n",
+			">>>>> [{}] {} -> [{}]. line: {}, file: {}{}",
 			LogMessageTypeToString(type),
 			msg,
 			loc.function_name(),
 			loc.line(),
-			loc.file_name());
-	}
-
-	constexpr const char* Logger::LogMessageTypeToString(eLogMessageType type)
-	{
-		switch (type)
-		{
-		case eLogMessageType::Message:		return "MESSAGE";
-		case eLogMessageType::Warning:		return "WARNING";
-		case eLogMessageType::Error:		return "ERROR";
-		case eLogMessageType::Exception:	return "EXCEPTION";
-		case eLogMessageType::Fatal:		return "FATAL";
-		}
-
-		std::unreachable();
+			loc.file_name(),
+			GetPlatformLogLineEnding());
 	}
 
 	void Logger::DebugOutputIDE(const std::string& output) noexcept

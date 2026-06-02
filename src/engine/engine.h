@@ -1,7 +1,7 @@
 #pragma once
 
 #include <mutex>
-#include "header.h"
+#include <expected>
 #include "headers/enums.h"
 
 namespace zzz::io
@@ -27,7 +27,54 @@ namespace zzz::engine
 
 		[[nodiscard]] std::expected<void, std::string> Initialize(std::string_view configPath = {});
 		[[nodiscard]] std::expected<void, std::string> Run();
-		[[nodiscard]] std::expected<void, std::string> OnAppMinimize();
+
+#pragma region Mobile Lifecycle Events
+#if defined(__APPLE__)
+		// Приложение стало активным и может обрабатывать ввод, обновление и рендеринг.
+		// iOS: applicationDidBecomeActive:
+		void OnPlatformApplicationDidBecomeActive();
+
+		// Приложение теряет активность (звонок, уведомление, переход в фон).
+		// iOS: applicationWillResignActive:
+		void OnPlatformApplicationWillResignActive();
+
+		// Приложение перешло в фоновый режим.
+		// Используется для сохранения состояния и пользовательских данных.
+		// iOS: applicationDidEnterBackground:
+		void OnPlatformApplicationDidEnterBackground();
+
+		// Приложение начинает возвращаться из фонового режима.
+		// iOS: applicationWillEnterForeground:
+		void OnPlatformApplicationWillEnterForeground();
+
+		// Система сообщает о нехватке памяти.
+		// Следует освободить кэши и временные ресурсы.
+		// iOS: applicationDidReceiveMemoryWarning:
+		void OnPlatformApplicationDidReceiveMemoryWarning();
+#endif // defined(__APPLE__)
+
+#if defined(__ANDROID__)
+		// Activity получила фокус и переходит в активное состояние.
+		// Android: Activity.onResume()
+		void OnPlatformActivityResumed();
+
+		// Activity теряет фокус и переходит в неактивное состояние.
+		// Android: Activity.onPause()
+		void OnPlatformActivityPaused();
+
+		// Activity становится невидимой для пользователя.
+		// Android: Activity.onStop()
+		void OnPlatformActivityStopped();
+
+		// Activity снова становится видимой.
+		// Android: Activity.onStart()
+		void OnPlatformActivityStarted();
+
+		// Система испытывает нехватку памяти.
+		// Android: Activity.onLowMemory()
+		void OnPlatformLowMemory();
+#endif // defined(__ANDROID__)
+#pragma endregion
 
 	private:
 		void Shutdown();
@@ -36,7 +83,7 @@ namespace zzz::engine
 		std::shared_ptr<void> m_PlatformData;
 
 		std::mutex stateMutex;
-		eInitState initState;
+		std::atomic<eInitState> initState;
 
 		std::shared_ptr<io::Path> m_Path;
 		std::shared_ptr<ConfigManager> m_ConfigManager;

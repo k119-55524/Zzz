@@ -6,8 +6,9 @@ namespace zzz
 {
 	enum class eInitState : zU8
 	{
-		InitNot,		// Готов к инициализации
-		InitOK,			// Инициализирован
-		Running			// Идёт процесс работы
+		NotInitialized,	// Готов к инициализации
+		Initialized,	// Инициализирован
+		Running,		// Идёт процесс работы
+		Destroying,		// Процесс уничтожения
 	};
 }

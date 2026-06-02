@@ -41,10 +41,10 @@
 {
     if (_engine)
     {
-        auto res = _engine->OnAppMinimize();
+        auto res = _engine->OnPlatformApplicationDidEnterBackground();
         if (!res)
         {
-            DOutFatal("Failed to save config on entering background: {}.", res.error());
+            DOutCritical("Failed to save config on entering background: {}.", res.error());
         }
     }
 }
@@ -53,10 +53,9 @@
 {
     if (_engine)
     {
-        auto res = _engine->OnAppMinimize();
         if (!res)
         {
-            DOutFatal("Failed to save config on termination: {}.", res.error());
+            DOutCritical("Failed to save config on termination: {}.", res.error());
         }
     }
 }
