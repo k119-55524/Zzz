@@ -10,9 +10,9 @@ using namespace zzz::engine;
 
 Engine::Engine(std::string_view appName, std::shared_ptr<void> platformData) :
 	m_AppName{ appName },
-	m_PlatformData{ platformData },
-	initState{ eInitState::InitNot}
+	m_PlatformData{ platformData }
 {
+	initState.store(eInitState::NotInitialized);
 	ensure(m_AppName.empty() == false, "Application name must not be empty.");
 }
 
@@ -25,7 +25,7 @@ void Engine::Shutdown()
 {
 	try
 	{
-		if (initState != eInitState::InitNot)
+		if (initState.load() != eInitState::NotInitialized)
 		{
 			auto res = m_ConfigManager->SaveConfig();
 			if (!res)
@@ -45,40 +45,41 @@ void Engine::Shutdown()
 	}
 
 	DOut("Engine shutdown completed.");
-	initState = eInitState::InitNot;
+	initState.store(eInitState::NotInitialized);
 }
 
 std::expected<void, std::string> Engine::Initialize(std::string_view configPath)
 {
 	std::lock_guard lock(stateMutex);
 
-	if (initState != eInitState::InitNot)
-		UNEXPECTED("Engine is already initialized or running.");
+	if (initState.load() != eInitState::NotInitialized)
+		return UNEXPECTED("Engine is already initialized or running.");
 
 	try
 	{
 		DOut("Engine initialized: START.");
 
+		// Инициализация пути и менеджера конфигурации
 		m_Path = zzz::safe_make_shared<Path>(m_AppName, m_PlatformData);
 		m_ConfigManager = zzz::safe_make_shared<ConfigManager>(m_Path);
 		auto res = m_ConfigManager->Initialize(configPath);
 		if (!res)
-			UNEXPECTED("Failed to initialize ConfigManager: {}.", res.error());
+			return UNEXPECTED("Failed to initialize ConfigManager: {}.", res.error());
 
 
 
 		DOut("Engine initialized: END.");
-		initState = eInitState::InitOK;
+		initState.store(eInitState::Initialized);
 
 		return {};
 	}
 	catch (const std::exception& e)
 	{
-		UNEXPECTED("Exception initialize: {}.", e.what());
+		return UNEXPECTED("Exception initialize: {}.", e.what());
 	}
 	catch (...)
 	{
-		UNEXPECTED("Unknown exception occurred.");
+		return UNEXPECTED("Unknown exception occurred.");
 	}
 }
 
@@ -86,10 +87,10 @@ std::expected<void, std::string> Engine::Initialize(std::string_view configPath)
 {
 	std::lock_guard lock(stateMutex);
 
-	if (initState != eInitState::InitOK)
-		UNEXPECTED("Engine is not initialized. Call Initialize() before Run().");
+	if (initState.load() != eInitState::Initialized)
+		return UNEXPECTED("Engine is not initialized. Call Initialize() before Run().");
 
-	initState = eInitState::Running;
+	initState.store(eInitState::Running);
 
 
 

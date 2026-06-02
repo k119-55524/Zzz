@@ -21,38 +21,41 @@ ConfigManager::ConfigManager(std::shared_ptr<Path> path) :
 [[nodiscard]] std::expected<void, std::string> ConfigManager::SaveConfig()
 {
 	if (!m_IsDirty)
+	{
+		DOut("Config is not dirty. No need to save.");
 		return {};
+	}
 
 	try
 	{
 		std::vector<std::byte> buffer;
 		if (auto res = m_Serializer.Serialize(buffer, *m_EngineConfig); !res)
-			UNEXPECTED("Failed to serialize config: {}.", res.error());
+			return UNEXPECTED("Failed to serialize config: {}.", res.error());
 
 		std::error_code ec;
 		std::filesystem::create_directories(m_ConfigPath.parent_path(), ec);
 		if (ec)
-			UNEXPECTED("Failed to create directories: {}. Error: {}", m_ConfigPath.parent_path().string(), ec.message());
+			return UNEXPECTED("Failed to create directories: {}. Error: {}", m_ConfigPath.parent_path().string(), ec.message());
 
 		std::ofstream file(m_ConfigPath, std::ios::binary);
 		if (!file)
-			UNEXPECTED("Failed to open file: {}.", m_ConfigPath.string());
+			return UNEXPECTED("Failed to open file: {}.", m_ConfigPath.string());
 
 		file.write(reinterpret_cast<const char*>(buffer.data()), static_cast<std::streamsize>(buffer.size()));
 		if (!file)
-			UNEXPECTED("Failed to write file: {}.", m_Path->GetUserDataDirectory().string());
+			return UNEXPECTED("Failed to write file: {}.", m_Path->GetUserDataDirectory().string());
 	}
 	catch (const std::filesystem::filesystem_error& e)
 	{
-		UNEXPECTED("Filesystem error: {}.", std::string(e.what()));
+		return UNEXPECTED("Filesystem error: {}.", std::string(e.what()));
 	}
 	catch (const std::exception& e)
 	{
-		UNEXPECTED("Config serialization error: {}.", std::string(e.what()));
+		return UNEXPECTED("Config serialization error: {}.", std::string(e.what()));
 	}
 	catch (...)
 	{
-		UNEXPECTED("Unknown config serialization error.");
+		return UNEXPECTED("Unknown config serialization error.");
 	}
 
 	m_IsDirty = false;
@@ -67,11 +70,11 @@ ConfigManager::ConfigManager(std::shared_ptr<Path> path) :
 	{
 		std::filesystem::path userPath(configPath);
 		if (userPath.is_absolute())
-			UNEXPECTED("Config path must be relative.");
+			return UNEXPECTED("Config path must be relative.");
 
 		auto resPath = GetSettingsDirectory();
 		if (!resPath)
-			UNEXPECTED("Failed to get settings directory: {}.", resPath.error());
+			return UNEXPECTED("Failed to get settings directory: {}.", resPath.error());
 
 		m_ConfigPath = resPath.value();
 		if (!userPath.empty())
@@ -130,7 +133,7 @@ std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path
 	{
 		std::ifstream in(path, std::ios::binary | std::ios::ate);
 		if (!in)
-			UNEXPECTED("Failed to open config file.");
+			return UNEXPECTED("Failed to open config file.");
 
 		std::streamsize fileSize = in.tellg();
 		in.seekg(0, std::ios::beg); // Возвращаемся в начало файла
@@ -138,7 +141,7 @@ std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path
 		// Читаем весь файл в буфер
 		std::vector<char> buffer(fileSize);
 		if (!in.read(buffer.data(), fileSize))
-			UNEXPECTED("Failed to read config file.");
+			return UNEXPECTED("Failed to read config file.");
 
 		// Создаем поток для чтения из буфера
 		std::istringstream bufStream(std::string(buffer.data(), buffer.size()));
@@ -153,19 +156,19 @@ std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path
 			*m_EngineConfig);
 
 		if (!result)
-			UNEXPECTED("Failed to deserialize config: {}.", result.error());
+			return UNEXPECTED("Failed to deserialize config: {}.", result.error());
 	}
 	catch (const std::filesystem::filesystem_error& e)
 	{
-		UNEXPECTED("Filesystem error: {}", std::string(e.what()));
+		return UNEXPECTED("Filesystem error: {}", std::string(e.what()));
 	}
 	catch (const std::exception& e)
 	{
-		UNEXPECTED("Config loading error: {}", std::string(e.what()));
+		return UNEXPECTED("Config loading error: {}", std::string(e.what()));
 	}
 	catch (...)
 	{
-		UNEXPECTED("Unknown config loading error.");
+		return UNEXPECTED("Unknown config loading error.");
 	}
 
 	DOut("Config file {} loaded successfully.", path.string());

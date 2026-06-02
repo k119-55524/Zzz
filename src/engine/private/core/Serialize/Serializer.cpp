@@ -30,7 +30,7 @@ std::expected<void, std::string> Serializer::DeSerialize(std::span<const std::by
 
 	// Проверяем, достаточно ли данных в буфере
 	if (offset + size > buffer.size())
-		UNEXPECTED("Buffer too small for string data.");
+		return UNEXPECTED("Buffer too small for string data.");
 
 	// Читаем данные строки
 	str.resize(size);
@@ -70,7 +70,7 @@ std::expected<void, std::string> Serializer::DeSerialize(std::span<const std::by
 
 	// Проверяем, достаточно ли данных в буфере
 	if (offset + byte_size > buffer.size())
-		UNEXPECTED("Buffer too small for wstring data.");
+		return UNEXPECTED("Buffer too small for wstring data.");
 
 	// Читаем данные строки
 	str.resize(size);

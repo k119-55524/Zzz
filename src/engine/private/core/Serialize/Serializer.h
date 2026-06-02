@@ -46,7 +46,7 @@ namespace zzz::engine
 		std::expected<void, std::string> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, T& value) const
 		{
 			if (offset + sizeof(T) > buffer.size())
-				UNEXPECTED("Buffer too small.");
+				return UNEXPECTED("Buffer too small.");
 			std::memcpy(&value, buffer.data() + offset, sizeof(T));
 			offset += sizeof(T);
 
@@ -69,7 +69,7 @@ namespace zzz::engine
 		std::expected<void, std::string> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, std::array<std::byte, N>& value) const
 		{
 			if (offset + N > buffer.size())
-				UNEXPECTED("Buffer too small.");
+				return UNEXPECTED("Buffer too small.");
 
 			std::memcpy(value.data(), buffer.data() + offset, N);
 			offset += N;

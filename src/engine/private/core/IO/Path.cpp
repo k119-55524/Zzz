@@ -55,12 +55,12 @@ namespace zzz::io
 			wchar_t buffer[MAX_PATH];
 			DWORD len = GetModuleFileNameW(nullptr, buffer, MAX_PATH);
 			if (len == 0)
-				UNEXPECTED("Failed to get executable path.");
+				return UNEXPECTED("Failed to get executable path.");
 
 			return std::filesystem::path(buffer).parent_path();
 #elif defined(__APPLE__)
 #if TARGET_OS_IPHONE
-			UNEXPECTED("iOS is not supported.");
+			return UNEXPECTED("iOS is not supported.");
 #else
 			uint32_t size = 0;
 			_NSGetExecutablePath(nullptr, &size);
@@ -68,7 +68,7 @@ namespace zzz::io
 			std::string path(size, '\0');
 
 			if (_NSGetExecutablePath(path.data(), &size) != 0)
-				UNEXPECTED("Failed to get executable path.");
+				return UNEXPECTED("Failed to get executable path.");
 
 			return std::filesystem::weakly_canonical(path).parent_path();
 #endif
@@ -76,26 +76,26 @@ namespace zzz::io
 			char buffer[PATH_MAX];
 			ssize_t len = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
 			if (len == -1)
-				UNEXPECTED("Failed to get executable path.");
+				return UNEXPECTED("Failed to get executable path.");
 
 			buffer[len] = '\0';
 
 			return std::filesystem::weakly_canonical(buffer).parent_path();
 #else
-			UNEXPECTED("Unsupported platform.");
+			return UNEXPECTED("Unsupported platform.");
 #endif
 		}
 		catch (const std::filesystem::filesystem_error& e)
 		{
-			UNEXPECTED("Filesystem error: {}.", e.what());
+			return UNEXPECTED("Filesystem error: {}.", e.what());
 		}
 		catch (const std::exception& e)
 		{
-			UNEXPECTED("Failed to get executable path: {}.", e.what());
+			return UNEXPECTED("Failed to get executable path: {}.", e.what());
 		}
 		catch (...)
 		{
-			UNEXPECTED("Unknown error while getting executable path.");
+			return UNEXPECTED("Unknown error while getting executable path.");
 		}
 	}
 
@@ -109,7 +109,7 @@ namespace zzz::io
 			size_t len = 0;
 			_wdupenv_s(&localAppData, &len, L"LOCALAPPDATA");
 			if (!localAppData)
-				UNEXPECTED("Failed to get LOCALAPPDATA.");
+				return UNEXPECTED("Failed to get LOCALAPPDATA.");
 
 			std::filesystem::path result(localAppData);
 			free(localAppData);
@@ -124,13 +124,13 @@ namespace zzz::io
 #elif defined(__ANDROID__)
 			auto app = static_cast<android_app*>(m_PlatformData.get());
 			if (!app)
-				UNEXPECTED("Android app context is null.");
+				return UNEXPECTED("Android app context is null.");
 
 			if (!app->activity)
-				UNEXPECTED("Android activity is null.");
+				return UNEXPECTED("Android activity is null.");
 
 			if (!app->activity->internalDataPath)
-				UNEXPECTED("Android internal data path is null.");
+				return UNEXPECTED("Android internal data path is null.");
 
 			return std::filesystem::path(app->activity->internalDataPath) / m_AppName;
 #elif defined(__linux__)
@@ -140,24 +140,24 @@ namespace zzz::io
 
 			const char* home = std::getenv("HOME");
 			if (!home)
-				UNEXPECTED("Failed to get HOME.");
+				return UNEXPECTED("Failed to get HOME.");
 
 			return std::filesystem::path(home) / ".config" / m_AppName;
 #else
-			UNEXPECTED("Unsupported platform.");
+			return UNEXPECTED("Unsupported platform.");
 #endif
 		}
 		catch (const std::filesystem::filesystem_error& e)
 		{
-			UNEXPECTED("Filesystem error: {}.", e.what());
+			return UNEXPECTED("Filesystem error: {}.", e.what());
 		}
 		catch (const std::exception& e)
 		{
-			UNEXPECTED("Failed to get user data directory: {}", e.what());
+			return UNEXPECTED("Failed to get user data directory: {}", e.what());
 		}
 		catch (...)
 		{
-			UNEXPECTED("Unknown error while getting executable path.");
+			return UNEXPECTED("Unknown error while getting user data directory.");
 		}
 	}
 }
