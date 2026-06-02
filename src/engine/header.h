@@ -1,6 +1,7 @@
 #pragma once
 
 #include <expected>
+#include <foundation.h>
 
 #include "headers/MSWin.h"
 #include "headers/Apple.h"

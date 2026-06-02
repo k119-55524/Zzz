@@ -9,8 +9,6 @@ target_precompile_headers(game_android PRIVATE
 target_include_directories(game_android PRIVATE
     pch
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/src
 )
 
 target_sources(game_android PRIVATE

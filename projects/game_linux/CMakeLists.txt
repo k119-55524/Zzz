@@ -7,7 +7,6 @@ target_precompile_headers(game_linux PRIVATE
 target_include_directories(game_linux PRIVATE
     pch
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/src
 )
 
 target_sources(game_linux

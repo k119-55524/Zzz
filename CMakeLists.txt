@@ -4,6 +4,7 @@ project(Zzz LANGUAGES C CXX)
 
 if(APPLE)
     enable_language(OBJCXX)
+    add_link_options("-Wl,-no_warn_duplicate_libraries")
 endif()
 
 set(CMAKE_CXX_STANDARD 23)

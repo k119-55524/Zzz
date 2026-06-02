@@ -10,7 +10,6 @@ add_executable(game_ios
 
 target_include_directories(game_ios PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/src
 )
 
 target_link_libraries(game_ios PRIVATE
@@ -40,4 +39,6 @@ set_target_properties(game_ios PROPERTIES
     XCODE_ATTRIBUTE_MARKETING_VERSION 1.0
 
     XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
+
+    XCODE_SCHEME_ENVIRONMENT "OS_ACTIVITY_MODE=disable"
 )

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <compare>
 #include "Serialize/Serializer.h"
 
 namespace zzz::engine
@@ -36,7 +37,19 @@ namespace zzz::engine
 			return v;
 		}
 
-		auto operator<=>(const Version&) const = default;
+		constexpr auto operator<=>(const Version& other) const noexcept
+		{
+			if (auto cmp = m_Major <=> other.m_Major; cmp != 0) return cmp;
+			if (auto cmp = m_Minor <=> other.m_Minor; cmp != 0) return cmp;
+			return m_Patch <=> other.m_Patch;
+		}
+
+		constexpr bool operator==(const Version& other) const noexcept
+		{
+			return m_Major == other.m_Major &&
+			       m_Minor == other.m_Minor &&
+			       m_Patch == other.m_Patch;
+		}
 
 		inline Version BumpMajor() const noexcept { return Version(m_Major + 1, 0, 0); }
 		inline Version BumpMinor() const noexcept { return Version(m_Major, m_Minor + 1, 0); }

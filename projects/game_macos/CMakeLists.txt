@@ -7,7 +7,6 @@ add_executable(game_macos
 target_include_directories(game_macos PRIVATE
     pch
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/src
 )
 
 target_link_libraries(game_macos
@@ -35,4 +34,5 @@ set_target_properties(game_macos PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER com.zzz.game
     MACOSX_BUNDLE_BUNDLE_NAME Zzz
     XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER com.zzz.game
+    XCODE_SCHEME_ENVIRONMENT "OS_ACTIVITY_MODE=disable"
 )

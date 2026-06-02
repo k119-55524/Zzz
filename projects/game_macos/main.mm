@@ -4,6 +4,8 @@
 
 #include "main.h"
 
+static std::unique_ptr<zzz::engine::Engine> g_Engine;
+
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 @end
 
@@ -16,14 +18,19 @@
     return YES;
 }
 
+- (void)applicationWillTerminate:(NSNotification *)notification
+{
+    g_Engine.reset();
+}
+
 @end
 
 int main(int argc, const char* argv[])
 {
     @autoreleasepool
     {
-        zzz::engine::Engine engine("GameMacOS_ZzzEngine");
-        auto initResult = engine.Initialize();
+        g_Engine = std::make_unique<zzz::engine::Engine>("GameMacOS_ZzzEngine");
+        auto initResult = g_Engine->Initialize();
         if (!initResult.has_value())
         {
             return -1;
