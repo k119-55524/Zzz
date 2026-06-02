@@ -6,6 +6,7 @@
 
 #include <engine.h>
 #include <logger.h>
+#include <foundation.h>
 
 @implementation AppDelegate
 {
