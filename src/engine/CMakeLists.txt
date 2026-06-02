@@ -11,6 +11,8 @@ target_include_directories(engine_lib
     PRIVATE
         pch
         ${CMAKE_CURRENT_SOURCE_DIR}/private/core
+        ${CMAKE_CURRENT_SOURCE_DIR}/private/platforms
+        ${CMAKE_CURRENT_SOURCE_DIR}/private/factories
 )
 
 target_sources(engine_lib PRIVATE
@@ -26,7 +28,12 @@ target_sources(engine_lib PRIVATE
     "private/core/IO/Path.h" "private/core/IO/Path.cpp"
     "private/core/Config/EngineConfig.h" "private/core/Config/EngineConfig.cpp"
     "private/core/Serialize/Serializer.h" "private/core/Serialize/Serializer.cpp"
-    "private/core/Utils/version.h" "private/core/Utils/version.cpp" "headers/enums.h")
+    "private/core/Utils/version.h" "private/core/Utils/version.cpp"
+    "headers/enums.h"
+    "private/platforms/windows/IWindow.h" "private/platforms/windows/IWindow.cpp"
+    "private/platforms/windows/MSWin_Window.h" "private/platforms/windows/MSWin_Window.cpp"
+    "private/factories/PlatformFactory.h" "private/factories/PlatformFactory.cpp"
+)
 
 target_compile_features(engine_lib PUBLIC cxx_std_23)
 

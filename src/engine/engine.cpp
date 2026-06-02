@@ -23,6 +23,8 @@ Engine::~Engine()
 
 void Engine::Shutdown()
 {
+	initState.store(eInitState::Destroying);
+
 	try
 	{
 		if (initState.load() != eInitState::NotInitialized)
