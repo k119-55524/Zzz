@@ -10,3 +10,4 @@
 #include <foundation.h>
 
 #include "headers/enums.h"
+#include "../headers/throwWrappers.h"

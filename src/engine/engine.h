@@ -1,8 +1,10 @@
 #pragma once
 
+#include <list>
 #include <mutex>
 #include <expected>
 #include "headers/enums.h"
+#include "private/platforms/native_view/NativeView.h"
 
 namespace zzz::io
 {
@@ -83,9 +85,10 @@ namespace zzz::engine
 		std::shared_ptr<void> m_PlatformData;
 
 		std::mutex stateMutex;
-		std::atomic<eInitState> initState;
+		std::atomic<eInitState> engineState;
 
 		std::shared_ptr<io::Path> m_Path;
 		std::shared_ptr<ConfigManager> m_ConfigManager;
+		std::list<std::shared_ptr<NativeView>> m_NativeView;
 	};
 }

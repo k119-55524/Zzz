@@ -30,10 +30,11 @@ target_sources(engine_lib PRIVATE
     "private/core/Serialize/Serializer.h" "private/core/Serialize/Serializer.cpp"
     "private/core/Utils/version.h" "private/core/Utils/version.cpp"
     "headers/enums.h"
-    "private/platforms/windows/IWindow.h" "private/platforms/windows/IWindow.cpp"
-    "private/platforms/windows/MSWin_Window.h" "private/platforms/windows/MSWin_Window.cpp"
+    "pch/pch.cpp"
+    "private/platforms/native_view/window/IWindow.h" "private/platforms/native_view/window/IWindow.cpp"
+    "private/platforms/native_view/window/MSWin_Window.h" "private/platforms/native_view/window/MSWin_Window.cpp"
     "private/factories/PlatformFactory.h" "private/factories/PlatformFactory.cpp"
-)
+    "private/platforms/native_view/NativeView.h" "private/platforms/native_view/NativeView.cpp")
 
 target_compile_features(engine_lib PUBLIC cxx_std_23)
 

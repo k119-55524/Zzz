@@ -10,6 +10,7 @@ target_include_directories(logger_lib PUBLIC
 )
 
 target_sources(logger_lib PRIVATE
+    pch/pch.cpp
     logger.h
     logger.cpp
     header.h

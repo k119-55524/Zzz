@@ -88,7 +88,7 @@ ConfigManager::ConfigManager(std::shared_ptr<Path> path) :
 
 		if (!std::filesystem::exists(m_ConfigPath))
 		{
-			DOut("Config file not found: {}. Using default config.", m_ConfigPath.string());
+			DOutWarning("Config file not found: {}. Using default config.", m_ConfigPath.string());
 			return eInitConfigState::InitDefault;
 		}
 
@@ -186,6 +186,6 @@ std::expected<std::filesystem::path, std::string> ConfigManager::GetSettingsDire
 #elif defined(_WIN32) || defined(__linux__)
 	return m_Path->GetExecutableDirectory();
 #else
-#error Unsupported platform
+#error >>>>> Unsupported platform
 #endif
 }

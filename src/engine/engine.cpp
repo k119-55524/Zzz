@@ -12,7 +12,7 @@ Engine::Engine(std::string_view appName, std::shared_ptr<void> platformData) :
 	m_AppName{ appName },
 	m_PlatformData{ platformData }
 {
-	initState.store(eInitState::NotInitialized);
+	engineState.store(eInitState::NotInitialized);
 	ensure(m_AppName.empty() == false, "Application name must not be empty.");
 }
 
@@ -23,16 +23,24 @@ Engine::~Engine()
 
 void Engine::Shutdown()
 {
-	initState.store(eInitState::Destroying);
+	std::lock_guard lock(stateMutex);
+
+	bool isSaveConfig = (engineState.load() != eInitState::NotInitialized && m_ConfigManager);
+	engineState.store(eInitState::Destroying);
 
 	try
 	{
-		if (initState.load() != eInitState::NotInitialized)
+		if (isSaveConfig)
 		{
 			auto res = m_ConfigManager->SaveConfig();
 			if (!res)
 				DOutCritical("Failed to serialize config: {}.", res.error());
 		}
+
+		for (auto& view : m_NativeView)
+			view = nullptr;
+
+		m_NativeView.clear();
 
 		m_ConfigManager = nullptr;
 		m_Path = nullptr;
@@ -47,15 +55,17 @@ void Engine::Shutdown()
 	}
 
 	DOut("Engine shutdown completed.");
-	initState.store(eInitState::NotInitialized);
+	engineState.store(eInitState::NotInitialized);
 }
 
 std::expected<void, std::string> Engine::Initialize(std::string_view configPath)
 {
 	std::lock_guard lock(stateMutex);
 
-	if (initState.load() != eInitState::NotInitialized)
+	if (engineState.load() != eInitState::NotInitialized)
 		return UNEXPECTED("Engine is already initialized or running.");
+
+	engineState.store(eInitState::Initializing);
 
 	try
 	{
@@ -64,23 +74,38 @@ std::expected<void, std::string> Engine::Initialize(std::string_view configPath)
 		// Инициализация пути и менеджера конфигурации
 		m_Path = zzz::safe_make_shared<Path>(m_AppName, m_PlatformData);
 		m_ConfigManager = zzz::safe_make_shared<ConfigManager>(m_Path);
-		auto res = m_ConfigManager->Initialize(configPath);
-		if (!res)
-			return UNEXPECTED("Failed to initialize ConfigManager: {}.", res.error());
+		auto res = m_ConfigManager->Initialize(configPath)
+			.and_then([this](eInitConfigState state)
+				{
+					if (state == eInitConfigState::InitDefault)
+						DOutWarning("Config initialized with default settings.");
+					else
+						DOut("Config initialized successfully from file.");
 
-
+					m_NativeView.push_back(zzz::safe_make_shared<NativeView>(m_ConfigManager));
+					return std::expected<void, std::string>{};
+				})
+			.or_else([&](const std::string& error)
+				-> std::expected<void, std::string>
+				{
+					DOutError("Initialization failed: {}", error);
+					Shutdown();
+					return std::unexpected(error);
+				});
 
 		DOut("Engine initialized: END.");
-		initState.store(eInitState::Initialized);
+		engineState.store(eInitState::Initialized);
 
 		return {};
 	}
 	catch (const std::exception& e)
 	{
+		Shutdown();
 		return UNEXPECTED("Exception initialize: {}.", e.what());
 	}
 	catch (...)
 	{
+		Shutdown();
 		return UNEXPECTED("Unknown exception occurred.");
 	}
 }
@@ -89,10 +114,10 @@ std::expected<void, std::string> Engine::Initialize(std::string_view configPath)
 {
 	std::lock_guard lock(stateMutex);
 
-	if (initState.load() != eInitState::Initialized)
+	if (engineState.load() != eInitState::Initialized)
 		return UNEXPECTED("Engine is not initialized. Call Initialize() before Run().");
 
-	initState.store(eInitState::Running);
+	engineState.store(eInitState::Running);
 
 
 
@@ -115,7 +140,7 @@ void Engine::OnPlatformApplicationDidEnterBackground()
 {
 	DOut("Application did enter background.");
 
-	if (initState.load() == eInitState::Running)
+	if (engineState.load() == eInitState::Running)
 	{
 		auto res = m_ConfigManager->SaveConfig();
 		if (!res)
@@ -144,7 +169,7 @@ void Engine::OnPlatformActivityPaused()
 {
 	DOut("Activity paused.");
 
-	if (initState.load() == eInitState::Running)
+	if (engineState.load() == eInitState::Running)
 	{
 		auto res = m_ConfigManager->SaveConfig();
 		if (!res)

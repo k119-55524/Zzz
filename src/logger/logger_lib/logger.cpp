@@ -4,16 +4,23 @@ namespace zzz::logger
 {
 	std::string Logger::MakeLogMessage(const std::source_location& loc, eLogMessageType type, const std::string& msg)
 	{
-		return std::format(
-			">>>>> [{}] {} -> line: {}, file: {}{}",
-			LogMessageTypeToString(type),
-			msg,
-			loc.line(),
-			loc.file_name(),
-			GetPlatformLogLineEnding());
+		if (type == eLogMessageType::Message)
+			return std::format(
+				">>>>> [{}] {}{}",
+				LogMessageTypeToString(type),
+				msg,
+				GetPlatformLogLineEnding());
+		else
+			return std::format(
+				">>>>> [{}] {} -> line: {}, file: {}{}",
+				LogMessageTypeToString(type),
+				msg,
+				loc.line(),
+				loc.file_name(),
+				GetPlatformLogLineEnding());
 	}
 
-	std::string Logger::MakeLogMessageCritical(const std::source_location& loc, eLogMessageType type, const std::string& msg)
+	std::string Logger::MakeLogMessageError(const std::source_location& loc, eLogMessageType type, const std::string& msg)
 	{
 		return std::format(
 			">>>>> [{}] {} -> [{}]. line: {}, file: {}{}",
@@ -27,7 +34,7 @@ namespace zzz::logger
 
 	void Logger::DebugOutputIDE(const std::string& output) noexcept
 	{
-#if ZIDE_OUT_LOGS
+#if Z_IDE_OUT_LOGS
 #if defined(_MSC_VER)
 		if (IsDebuggerPresent())
 			OutputDebugStringA(output.c_str());

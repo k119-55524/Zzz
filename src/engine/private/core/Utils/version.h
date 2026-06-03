@@ -1,7 +1,7 @@
 #pragma once
 
 #include <compare>
-#include "Serialize/Serializer.h"
+#include "../Serialize/Serializer.h"
 
 namespace zzz::engine
 {

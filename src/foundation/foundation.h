@@ -1,7 +1,7 @@
 #pragma once
 
-#include "header_types.h"
-#include "header_ensure.h"
-#include "header_macros.h"
-#include "platform_defines.h"
-#include "header_templates.h"
+#include "ztypes.h"
+#include "zensure.h"
+#include "zmacros.h"
+#include "zdefines.h"
+#include "ztemplates.h"

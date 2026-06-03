@@ -1,14 +1,20 @@
 #pragma once
 
 #include "PlatformFactory.h"
+#include "../core/Config/ConfigManager.h"
+#include "../platforms/native_view/window/MSWin_Window.h"
+
 namespace zzz::engine
 {
-#if defined(_WIN64)
-#include "../platforms/windows/MSWin_Window.h"
+#if defined(Z_WINDOWS)
 	typedef zzz::engine::MSWin_Window Window;
-#endif // defined(_WIN64)
+#else
+#error >>>>> Unsupported platform. No window implementation available.
+#endif
 
 	class PlatformFactory final
 	{
+	public:
+		std::shared_ptr<IWindow> CreateAppWin(std::shared_ptr<ConfigManager> configManager);
 	};
 }
