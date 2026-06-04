@@ -171,8 +171,6 @@ std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path
 		return UNEXPECTED("Unknown config loading error.");
 	}
 
-	DOut("Config file {} loaded successfully.", path.string());
-
 	return {};
 }
 

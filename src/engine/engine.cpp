@@ -69,8 +69,6 @@ std::expected<void, std::string> Engine::Initialize(std::string_view configPath)
 
 	try
 	{
-		DOut("Engine initialized: START.");
-
 		// Инициализация пути и менеджера конфигурации
 		m_Path = zzz::safe_make_shared<Path>(m_AppName, m_PlatformData);
 		m_ConfigManager = zzz::safe_make_shared<ConfigManager>(m_Path);
@@ -93,7 +91,7 @@ std::expected<void, std::string> Engine::Initialize(std::string_view configPath)
 					return std::unexpected(error);
 				});
 
-		DOut("Engine initialized: END.");
+		DOut("Engine initialized: OK.");
 		engineState.store(eInitState::Initialized);
 
 		return {};

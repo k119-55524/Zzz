@@ -22,6 +22,5 @@ namespace zzz::engine
 		std::shared_ptr<ConfigManager> m_ConfigManager;
 		PlatformFactory m_PlatformFactory;
 		std::shared_ptr<IWindow> m_Window;
-
 	};
 }
