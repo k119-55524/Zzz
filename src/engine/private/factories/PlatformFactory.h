@@ -1,15 +1,15 @@
 ﻿#pragma once
 
 #include "../core/config/ConfigManager.h"
-#include "../platforms/native_view/window/MSWin_Window.h"
-#include "../platforms/native_view/window/Linux_Window.h"
+#include "../platforms/native_view/window/MSWindows.h"
+#include "../platforms/native_view/window/LinuxWayland.h"
 
 namespace zzz::engine
 {
 #if defined(Z_WINDOWS)
-	typedef zzz::engine::MSWin_Window Window;
+	typedef zzz::engine::MSWindows Window;
 #elif defined(Z_LINUX)
-	typedef zzz::engine::Linux_Window Window;
+	typedef zzz::engine::LinuxWayland Window;
 #else
 #error >>>>> Unsupported platform. No window implementation available.
 #endif

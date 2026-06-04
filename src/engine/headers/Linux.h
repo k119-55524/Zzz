@@ -1,6 +1,6 @@
 #pragma once
 
-#if defined(__linux__)
+#if defined(Z_LINUX)
 #include <unistd.h>
 #include <limits.h> 
-#endif
+#endif // defined(Z_LINUX)

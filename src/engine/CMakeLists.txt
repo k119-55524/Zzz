@@ -33,13 +33,13 @@ target_sources(engine_lib PRIVATE
     "headers/throwWrappers.h"
     "pch/pch.cpp"
     "private/platforms/native_view/window/IWindow.h" "private/platforms/native_view/window/IWindow.cpp"
-    "private/platforms/native_view/window/MSWin_Window.h" "private/platforms/native_view/window/MSWin_Window.cpp"
+    "private/platforms/native_view/window/MSWindows.h" "private/platforms/native_view/window/MSWindows.cpp"
     "private/factories/PlatformFactory.h" "private/factories/PlatformFactory.cpp"
     "private/platforms/native_view/NativeView.h" "private/platforms/native_view/NativeView.cpp"
     "private/core/config/platforms/ConfigMSWin.h" "private/core/config/platforms/ConfigMSWin.cpp"
     "private/core/templates/Size2D.h"  "private/platforms/native_view/ScreenResolution.h"  "private/core/templates/Event.h" "private/platforms/main_loop/IMainLoop.h" "private/platforms/main_loop/MainLoop_MSWin.h" "private/platforms/main_loop/MainLoop_MSWin.cpp"
     "private/platforms/main_loop/MainLoop_Linux.h" "private/platforms/main_loop/MainLoop_Linux.cpp"
-    "private/platforms/native_view/window/Linux_Window.h" "private/platforms/native_view/window/Linux_Window.cpp" "private/core/config/platforms/ConfigLinux.h" "private/core/config/platforms/ConfigLinux.cpp")
+    "private/platforms/native_view/window/LinuxWayland.h" "private/platforms/native_view/window/LinuxWayland.cpp" "private/core/config/platforms/ConfigLinux.h" "private/core/config/platforms/ConfigLinux.cpp")
 
 target_compile_features(engine_lib PUBLIC cxx_std_23)
 

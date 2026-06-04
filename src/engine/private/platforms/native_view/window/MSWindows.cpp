@@ -1,17 +1,17 @@
 #if defined(Z_WINDOWS)
 
-#include "MSWin_Window.h"
+#include "MSWindows.h"
 #include "../ScreenResolution.h"
 
 using namespace zzz::engine;
 
-MSWin_Window::MSWin_Window(const EngineConfig& config) :
+MSWindows::MSWindows(const EngineConfig& config) :
 	IWindow(config),
 	m_hWnd(nullptr)
 {
 }
 
-[[nodiscard]] std::expected<void, std::string> MSWin_Window::Initialize(const std::string_view appName)
+[[nodiscard]] std::expected<void, std::string> MSWindows::Initialize(const std::string_view appName)
 {
 	HICON iconHandle = (HICON)LoadImage(
 		GetModuleHandle(NULL),
@@ -23,7 +23,7 @@ MSWin_Window::MSWin_Window(const EngineConfig& config) :
 
 	WNDCLASS wc = { 0 };
 	wc.style = CS_HREDRAW | CS_VREDRAW;
-	wc.lpfnWndProc = MSWin_Window::WindowProc;
+	wc.lpfnWndProc = MSWindows::WindowProc;
 	wc.hInstance = GetModuleHandle(NULL);
 	wc.hIcon = iconHandle;
 	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
@@ -65,9 +65,9 @@ MSWin_Window::MSWin_Window(const EngineConfig& config) :
 	return std::expected<void, std::string>();
 }
 
-LRESULT CALLBACK MSWin_Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept
+LRESULT CALLBACK MSWindows::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept
 {
-	MSWin_Window* pThis = nullptr;
+	MSWindows* pThis = nullptr;
 
 	try
 	{
@@ -77,12 +77,12 @@ LRESULT CALLBACK MSWin_Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
 			if (!pCreate || !pCreate->lpCreateParams)
 				return FALSE; // Ошибка создания
 
-			pThis = static_cast<MSWin_Window*>(pCreate->lpCreateParams);
+			pThis = static_cast<MSWindows*>(pCreate->lpCreateParams);
 			SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
 			pThis->m_hWnd = hwnd;
 		}
 		else
-			pThis = reinterpret_cast<MSWin_Window*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+			pThis = reinterpret_cast<MSWindows*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
 
 		if (pThis)
 			return pThis->MsgProc(uMsg, wParam, lParam);
@@ -96,7 +96,7 @@ LRESULT CALLBACK MSWin_Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-LRESULT MSWin_Window::MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT MSWindows::MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
