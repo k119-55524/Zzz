@@ -2,22 +2,16 @@
 
 using namespace zzz::engine;
 
-NativeView::NativeView(std::shared_ptr<ConfigManager> configManager) :
-	m_ConfigManager{ configManager }
+NativeView::NativeView(const std::string_view appName, const EngineConfig& config) :
+	m_Config{ config }
 {
-	ensure(m_ConfigManager != nullptr, "ConfigManager must not be null.");
-
-	Initialize();
+	Initialize(appName);
 }
 
-NativeView::~NativeView()
+void NativeView::Initialize(const std::string_view appName)
 {
-}
-
-void NativeView::Initialize()
-{
-	m_Window = m_PlatformFactory.CreateAppWin(m_ConfigManager->GetPlatformConfig());
-	auto res = m_Window->Initialize();
+	m_Window = m_Factory.CreateAppWin(m_Config);
+	auto res = m_Window->Initialize(appName);
 	if (!res)
 		THROW_RUNTIME("Failed to initialize window: {}.", res.error());
 }

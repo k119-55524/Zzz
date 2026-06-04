@@ -3,11 +3,11 @@
 using namespace zzz;
 using namespace zzz::engine;
 
-std::shared_ptr<IWindow> PlatformFactory::CreateAppWin(const PlatformConfig& platformConfig)
+std::shared_ptr<IWindow> PlatformFactory::CreateAppWin(const EngineConfig& config)
 {
 	try
 	{
-		return safe_make_shared<Window>(platformConfig);
+		return safe_make_shared<Window>(config);
 	}
 	catch (const std::exception& e)
 	{

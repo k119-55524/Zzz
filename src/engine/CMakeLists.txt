@@ -24,18 +24,20 @@ target_sources(engine_lib PRIVATE
     "headers/Linux.h"
     "headers/Android.h"
     "headers/constants.h"
-    "private/core/Config/ConfigManager.h" "private/core/Config/ConfigManager.cpp"
-    "private/core/IO/Path.h" "private/core/IO/Path.cpp"
-    "private/core/Config/EngineConfig.h" "private/core/Config/EngineConfig.cpp"
-    "private/core/Serialize/Serializer.h" "private/core/Serialize/Serializer.cpp"
-    "private/core/Utils/version.h" "private/core/Utils/version.cpp"
+    "private/core/config/ConfigManager.h" "private/core/config/ConfigManager.cpp"
+    "private/core/io/Path.h" "private/core/io/Path.cpp"
+    "private/core/config/EngineConfig.h" "private/core/config/EngineConfig.cpp"
+    "private/core/serialize/Serializer.h" "private/core/serialize/Serializer.cpp"
+    "private/core/utils/version.h" "private/core/utils/version.cpp"
     "headers/enums.h"
     "headers/throwWrappers.h"
     "pch/pch.cpp"
     "private/platforms/native_view/window/IWindow.h" "private/platforms/native_view/window/IWindow.cpp"
     "private/platforms/native_view/window/MSWin_Window.h" "private/platforms/native_view/window/MSWin_Window.cpp"
     "private/factories/PlatformFactory.h" "private/factories/PlatformFactory.cpp"
-    "private/platforms/native_view/NativeView.h" "private/platforms/native_view/NativeView.cpp" "private/core/Config/platforms/ConfigMSWin.h" "private/core/Config/platforms/ConfigMSWin.cpp")
+    "private/platforms/native_view/NativeView.h" "private/platforms/native_view/NativeView.cpp"
+    "private/core/config/platforms/ConfigMSWin.h" "private/core/config/platforms/ConfigMSWin.cpp"
+    "private/core/templates/Size2D.h")
 
 target_compile_features(engine_lib PUBLIC cxx_std_23)
 
@@ -44,7 +46,7 @@ if(ANDROID)
 endif()
 
 if(APPLE)
-    target_sources(engine_lib PRIVATE "private/core/IO/platforms/Path_Apple.mm")
+    target_sources(engine_lib PRIVATE "private/core/io/platforms/Path_Apple.mm")
 endif()
 
 target_link_libraries(engine_lib

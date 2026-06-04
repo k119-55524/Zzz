@@ -15,6 +15,6 @@ namespace zzz::engine
 	class PlatformFactory final
 	{
 	public:
-		std::shared_ptr<IWindow> CreateAppWin(const PlatformConfig& platformConfig);
+		std::shared_ptr<IWindow> CreateAppWin(const EngineConfig& config);
 	};
 }

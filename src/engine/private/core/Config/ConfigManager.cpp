@@ -156,7 +156,7 @@ std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path
 			*m_EngineConfig);
 
 		if (!result)
-			return UNEXPECTED("Failed to deserialize config: {}.", result.error());
+			return UNEXPECTED("Failed to deserialize config: {}", result.error());
 	}
 	catch (const std::filesystem::filesystem_error& e)
 	{

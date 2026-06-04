@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../../core/Config/ConfigManager.h"
+#include "../../../core/Config/EngineConfig.h"
 
 namespace zzz::engine
 {
@@ -8,12 +8,12 @@ namespace zzz::engine
 	{
 	public:
 		IWindow() = delete;
-		IWindow(const PlatformConfig& platformConfig);
+		IWindow(const EngineConfig& config);
 		virtual ~IWindow() = default;
 
-		[[nodiscard]] virtual std::expected<void, std::string> Initialize() = 0;
+		[[nodiscard]] virtual std::expected<void, std::string> Initialize(const std::string_view appName) = 0;
 
 	protected:
-		const PlatformConfig& m_PlatformConfig;
+		const EngineConfig& m_Config;
 	};
 }

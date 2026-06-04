@@ -22,6 +22,7 @@ namespace zzz::engine
 		[[nodiscard]] std::expected<eInitConfigState, std::string> Initialize(std::string_view configPath);
 		[[nodiscard]] std::expected<void, std::string> SaveConfig();
 
+		inline const EngineConfig& GetEngineConfig() const noexcept { return *m_EngineConfig; }
 		inline const PlatformConfig& GetPlatformConfig() const noexcept { return m_EngineConfig->GetPlatformConfig(); }
 
 	private:
@@ -36,3 +37,4 @@ namespace zzz::engine
 		bool m_IsDirty;
 	};
 }
+

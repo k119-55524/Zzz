@@ -7,7 +7,9 @@ using namespace zzz::engine;
 
 EngineConfig::EngineConfig() :
 	m_Version(configFileMajorVersion, configFileMinorVersion, configFilePatchVersion)
-{}
+	//m_WinSize{ 800, 600 }
+{
+}
 
 [[nodiscard]] std::expected<void, std::string> EngineConfig::Serialize(std::vector<std::byte>& buffer, const Serializer& s) const
 {

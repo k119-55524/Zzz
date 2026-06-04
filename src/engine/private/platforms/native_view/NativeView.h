@@ -2,8 +2,8 @@
 
 #include "../../../header.h"
 
+#include "../../core/config/EngineConfig.h"
 #include "../../factories/PlatformFactory.h"
-#include "../../core/Config/ConfigManager.h"
 #include "../../platforms/native_view/window/IWindow.h"
 
 namespace zzz::engine
@@ -13,14 +13,15 @@ namespace zzz::engine
 		Z_NO_MOVE(NativeView);
 
 	public:
-		NativeView(std::shared_ptr<ConfigManager> configManager);
-		~NativeView();
+		NativeView() = delete;
+		NativeView(const std::string_view appName, const EngineConfig& config);
+		~NativeView() = default;
 
 	private:
-		void Initialize();
+		void Initialize(const std::string_view appName);
 
-		std::shared_ptr<ConfigManager> m_ConfigManager;
-		PlatformFactory m_PlatformFactory;
+		const EngineConfig& m_Config;
+		PlatformFactory m_Factory;
 		std::shared_ptr<IWindow> m_Window;
 	};
 }

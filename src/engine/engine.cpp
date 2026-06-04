@@ -77,10 +77,8 @@ std::expected<void, std::string> Engine::Initialize(std::string_view configPath)
 				{
 					if (state == eInitConfigState::InitDefault)
 						DOutWarning("Config initialized with default settings.");
-					else
-						DOut("Config initialized successfully from file.");
 
-					m_NativeView.push_back(zzz::safe_make_shared<NativeView>(m_ConfigManager));
+					m_NativeView.push_back(zzz::safe_make_shared<NativeView>(m_AppName, m_ConfigManager->GetEngineConfig()));
 					return std::expected<void, std::string>{};
 				})
 			.or_else([&](const std::string& error)
@@ -191,3 +189,4 @@ void Engine::OnPlatformLowMemory()
 }
 #endif // defined(__ANDROID__)
 #pragma endregion
+
