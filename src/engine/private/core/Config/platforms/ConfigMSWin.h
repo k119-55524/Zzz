@@ -11,7 +11,7 @@ namespace zzz::engine
 	{
 	public:
 		ConfigMSWin();
-		~ConfigMSWin();
+		~ConfigMSWin() = default;
 
 		inline const std::string& GetIcoResourceName() const noexcept { return m_IcoResourceName; }
 		inline const std::string& GetClassName() const noexcept { return m_ClassName; }

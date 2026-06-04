@@ -37,7 +37,7 @@ target_sources(engine_lib PRIVATE
     "private/factories/PlatformFactory.h" "private/factories/PlatformFactory.cpp"
     "private/platforms/native_view/NativeView.h" "private/platforms/native_view/NativeView.cpp"
     "private/core/config/platforms/ConfigMSWin.h" "private/core/config/platforms/ConfigMSWin.cpp"
-    "private/core/templates/Size2D.h")
+    "private/core/templates/Size2D.h"  "private/platforms/native_view/ScreenResolution.h")
 
 target_compile_features(engine_lib PUBLIC cxx_std_23)
 

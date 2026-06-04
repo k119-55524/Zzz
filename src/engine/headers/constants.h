@@ -1,15 +1,12 @@
 #pragma once
 
 #include <array>
-
-namespace zzz::engine
-{
-	class Version;
-}
+#include <string_view>
+#include <foundation.h>
 
 namespace zzz
 {
-	// Константы для конфигурационного файла
+#pragma region Config File Constants
 	constexpr std::string_view configFileName = "config.dat";
 	constexpr std::array<std::byte, 3> configHeader
 	{
@@ -20,4 +17,5 @@ namespace zzz
 	constexpr zU8 configFileMajorVersion = 1;
 	constexpr zU8 configFileMinorVersion = 0;
 	constexpr zU8 configFilePatchVersion = 0;
+#pragma endregion
 }

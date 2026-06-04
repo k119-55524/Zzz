@@ -6,8 +6,8 @@
 using namespace zzz::engine;
 
 EngineConfig::EngineConfig() :
-	m_Version(configFileMajorVersion, configFileMinorVersion, configFilePatchVersion)
-	//m_WinSize{ 800, 600 }
+	m_Version(configFileMajorVersion, configFileMinorVersion, configFilePatchVersion),
+	m_WinSize(800, 600)
 {
 }
 

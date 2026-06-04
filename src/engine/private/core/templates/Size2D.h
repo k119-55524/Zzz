@@ -1,3 +1,5 @@
+#pragma once
+
 #include <foundation.h>
 #include "../serialize/Serializer.h"
 
@@ -18,11 +20,11 @@ namespace zzz::engine
 	class Size2D final : public ISerializable
 	{
 	public:
-		Size2D() : width{ 0 }, height{ 0 } {}
-		explicit Size2D(T size) : width{ size }, height{ size } {}
-		Size2D(T _width, T _height) : width{ _width }, height{ _height } {}
-		Size2D(const Size2D& size) : width{ size.width }, height{ size.height } {}
-		Size2D(Size2D&&) = default;
+		constexpr Size2D() : width{ 0 }, height{ 0 } {}
+		explicit constexpr Size2D(T size) : width{ size }, height{ size } {}
+		constexpr Size2D(T _width, T _height) : width{ _width }, height{ _height } {}
+		constexpr Size2D(const Size2D& size) : width{ size.width }, height{ size.height } {}
+		constexpr Size2D(Size2D&&) = default;
 
 		inline void Set(T _width, T _height) noexcept { width = _width; height = _height; }
 		// Копирует размеры из другого объекта Size2D с возможным приведением типов.
@@ -42,27 +44,27 @@ namespace zzz::engine
 		T width;  // Ширина объекта.
 		T height; // Высота объекта.
 
-#if defined(Z_VULKAN)
-		Size2D(const VkExtent2D& extent)
-			: width(static_cast<T>(extent.width))
-			, height(static_cast<T>(extent.height))
-		{}
-
-		Size2D& operator=(const VkExtent2D& extent) noexcept
-		{
-			width = static_cast<T>(extent.width);
-			height = static_cast<T>(extent.height);
-			return *this;
-		}
-
-		operator VkExtent2D() const noexcept
-		{
-			return VkExtent2D{
-				static_cast<uint32_t>(width),
-				static_cast<uint32_t>(height)
-			};
-		}
-#endif
+//#if defined(Z_VULKAN)
+//		Size2D(const VkExtent2D& extent)
+//			: width(static_cast<T>(extent.width))
+//			, height(static_cast<T>(extent.height))
+//		{}
+//
+//		Size2D& operator=(const VkExtent2D& extent) noexcept
+//		{
+//			width = static_cast<T>(extent.width);
+//			height = static_cast<T>(extent.height);
+//			return *this;
+//		}
+//
+//		operator VkExtent2D() const noexcept
+//		{
+//			return VkExtent2D{
+//				static_cast<uint32_t>(width),
+//				static_cast<uint32_t>(height)
+//			};
+//		}
+//#endif
 
 	private:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override

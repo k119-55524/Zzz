@@ -9,11 +9,6 @@ ConfigMSWin::ConfigMSWin() :
 
 }
 
-ConfigMSWin::~ConfigMSWin()
-{
-
-}
-
 [[nodiscard]] std::expected<void, std::string> ConfigMSWin::Serialize(std::vector<std::byte>& buffer, const Serializer& s) const
 {
 	return s.Serialize(buffer, m_IcoResourceName)
