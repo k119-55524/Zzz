@@ -13,11 +13,20 @@ int main(int argc, char* argv[])
 		auto res = engine.Initialize();
 		if (res)
 		{
-		
+			res = engine.Run();
+			if (!res)
+			{
+				DOutError("[Linux OS]. Game runtime error: {}.", res.error());
+				return -1;
+			}
+			else
+			{
+				DOut("[Linux OS]. Game exited successfully.");
+			}
 		}
 		else
 		{
-			DOut(">>>>> [Linux OS]. Game started error: {}.", res.error());
+			DOutError("[Linux OS]. Game started error: {}.", res.error());
 			return -1;
 		}
 	}
