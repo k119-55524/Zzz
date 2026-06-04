@@ -4,6 +4,7 @@
 #include <mutex>
 #include <expected>
 #include "headers/enums.h"
+#include "private/platforms/main_loop/IMainLoop.h"
 #include "private/platforms/native_view/NativeView.h"
 
 namespace zzz::io
@@ -90,5 +91,6 @@ namespace zzz::engine
 		std::shared_ptr<io::Path> m_Path;
 		std::shared_ptr<ConfigManager> m_ConfigManager;
 		std::list<std::shared_ptr<NativeView>> m_NativeView;
+		std::shared_ptr<IMainLoop> m_MainLoop;
 	};
 }

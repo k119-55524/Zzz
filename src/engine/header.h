@@ -1,6 +1,7 @@
 #pragma once
 
 #include <expected>
+#include <functional>
 #include <foundation.h>
 
 #include "headers/MSWin.h"

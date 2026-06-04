@@ -3,16 +3,27 @@
 #include "engine.h"
 #include "private/core/IO/Path.h"
 #include "private/core/Config/ConfigManager.h"
+#include "private/platforms/main_loop/MainLoop_MSWin.h"
 
 using namespace zzz;
 using namespace zzz::io;
 using namespace zzz::engine;
 
+namespace zzz::engine
+{
+#if defined(Z_WINDOWS)
+
+	typedef MainLoop_MSWin MainLoop;
+#else
+#error ">>>>> [Compile error]. This branch requires implementation for the current platform"
+#endif
+}
+
 Engine::Engine(std::string_view appName, std::shared_ptr<void> platformData) :
 	m_AppName{ appName },
-	m_PlatformData{ platformData }
+	m_PlatformData{ platformData },
+	engineState{ eInitState::NotInitialized }
 {
-	engineState.store(eInitState::NotInitialized);
 	ensure(m_AppName.empty() == false, "Application name must not be empty.");
 }
 
@@ -23,8 +34,6 @@ Engine::~Engine()
 
 void Engine::Shutdown()
 {
-	std::lock_guard lock(stateMutex);
-
 	bool isSaveConfig = (engineState.load() != eInitState::NotInitialized && m_ConfigManager);
 	engineState.store(eInitState::Destroying);
 
@@ -36,6 +45,8 @@ void Engine::Shutdown()
 			if (!res)
 				DOutCritical("Failed to serialize config: {}.", res.error());
 		}
+
+		m_MainLoop = nullptr;
 
 		for (auto& view : m_NativeView)
 			view = nullptr;
@@ -54,7 +65,6 @@ void Engine::Shutdown()
 		DOutException("Unknown exception during shutdown.");
 	}
 
-	DOut("Engine shutdown completed.");
 	engineState.store(eInitState::NotInitialized);
 }
 
@@ -79,6 +89,9 @@ std::expected<void, std::string> Engine::Initialize(std::string_view configPath)
 						DOutWarning("Config initialized with default settings.");
 
 					m_NativeView.push_back(zzz::safe_make_shared<NativeView>(m_AppName, m_ConfigManager->GetEngineConfig()));
+
+					m_MainLoop = safe_make_shared<MainLoop>();
+
 					return std::expected<void, std::string>{};
 				})
 			.or_else([&](const std::string& error)
@@ -114,8 +127,31 @@ std::expected<void, std::string> Engine::Initialize(std::string_view configPath)
 		return UNEXPECTED("Engine is not initialized. Call Initialize() before Run().");
 
 	engineState.store(eInitState::Running);
+	std::string err;
+	bool isError = false;
+	try
+	{
+		m_MainLoop->Run();
+	}
+	catch (const std::exception& e)
+	{
+		isError = true;
+		err = e.what();
+	}
+	catch (...)
+	{
+		isError = true;
+		err = "Unknown exception occurred";
+	}
 
+	Shutdown();
 
+	if (isError)
+	{
+		DOutException("Exception during Run: {}.", err);
+		//MsgBox::Error(err);
+		return UNEXPECTED("Exception during Run: {}.", err);
+	}
 
 	return {};
 }

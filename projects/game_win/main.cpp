@@ -26,7 +26,16 @@ int APIENTRY wWinMain(
 		auto res = engine.Initialize();
 		if (res)
 		{
-
+			res = engine.Run();
+			if (!res)
+			{
+				DOutError("[Windows OS]. Game runtime error: {}.", res.error());
+				return -1;
+			}
+			else
+			{
+				DOut("[Windows OS]. Game exited successfully.");
+			}
 		}
 		else
 		{
