@@ -1,17 +1,20 @@
-#pragma once
+﻿#pragma once
 
 #include <foundation.h>
 
-#include "../Utils/version.h"
+#include "../utils/version.h"
 #include "../templates/Size2D.h"
-#include "../Serialize/Serializer.h"
+#include "../serialize/Serializer.h"
 
 #include "platforms/ConfigMSWin.h"
+#include "platforms/ConfigLinux.h"
 
 namespace zzz::engine
 {
 #if defined(Z_WINDOWS)
 	typedef zzz::engine::ConfigMSWin PlatformConfig;
+#elif defined(Z_LINUX)
+	typedef zzz::engine::ConfigLinux PlatformConfig;
 #else
 #error >>>>> Unsupported platform. No window implementation available.
 #endif

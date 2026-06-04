@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../../../core/Config/EngineConfig.h"
+#include "../../../core/config/EngineConfig.h"
 
 namespace zzz::engine
 {
-	class IWindow abstract
+	class IWindow
 	{
 	public:
 		IWindow() = delete;

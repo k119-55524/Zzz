@@ -3,6 +3,7 @@
 #include <list>
 #include <mutex>
 #include <expected>
+#include <atomic>
 #include "headers/enums.h"
 #include "private/platforms/main_loop/IMainLoop.h"
 #include "private/platforms/native_view/NativeView.h"

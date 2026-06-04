@@ -1,9 +1,10 @@
 #include "pch.h"
 
 #include "engine.h"
-#include "private/core/IO/Path.h"
-#include "private/core/Config/ConfigManager.h"
+#include "private/core/io/Path.h"
+#include "private/core/config/ConfigManager.h"
 #include "private/platforms/main_loop/MainLoop_MSWin.h"
+#include "private/platforms/main_loop/MainLoop_Linux.h"
 
 using namespace zzz;
 using namespace zzz::io;
@@ -12,8 +13,9 @@ using namespace zzz::engine;
 namespace zzz::engine
 {
 #if defined(Z_WINDOWS)
-
 	typedef MainLoop_MSWin MainLoop;
+#elif defined(Z_LINUX)
+	typedef MainLoop_Linux MainLoop;
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif

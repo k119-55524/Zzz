@@ -3,6 +3,7 @@
 #include <span>
 #include <vector>
 #include <string>
+#include <cstring>
 #include <expected>
 
 namespace zzz::engine
