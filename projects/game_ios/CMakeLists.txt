@@ -38,3 +38,5 @@ set_target_properties(game_ios PROPERTIES
 
     XCODE_SCHEME_ENVIRONMENT "OS_ACTIVITY_MODE=disable"
 )
+
+target_link_options(game_ios PRIVATE "-ObjC")

@@ -105,7 +105,9 @@ std::expected<void, std::string> Engine::Initialize()
 		err = "Unknown exception occurred";
 	}
 
+#if !defined(Z_APPLE)
 	Shutdown();
+#endif
 
 	if (isError)
 	{
@@ -147,7 +149,7 @@ void Engine::OnPlatformApplicationDidEnterBackground()
 
 	if (engineState.load() == eInitState::Running)
 	{
-		auto res = m_ConfigManager->SaveConfig();
+		auto res = m_Platform->GetConfigManager()->SaveConfig();
 		if (!res)
 			DOutCritical("Failed to save config on entering background: {}.", res.error());
 	}

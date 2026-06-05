@@ -32,19 +32,19 @@ namespace zzz::engine
 #elif defined(Z_LINUX)
 	struct LinuxMsg
 	{
-		void* event;
+		void* msg;
 	};
 	using NativeMsg = LinuxMsg;
 #elif defined(Z_MACOS)
 	struct MacOSMsg
 	{
-		void* event;
+		void* msg;
 	};
 	using NativeMsg = MacOSMsg;
 #elif defined(Z_IOS)
 	struct iOSMsg
 	{
-		void* event;
+		void* msg;
 	};
 	using NativeMsg = iOSMsg;
 #else

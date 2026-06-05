@@ -35,3 +35,5 @@ set_target_properties(game_macos PROPERTIES
     XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER com.zzz.game
     XCODE_SCHEME_ENVIRONMENT "OS_ACTIVITY_MODE=disable"
 )
+
+target_link_options(game_macos PRIVATE "-ObjC")

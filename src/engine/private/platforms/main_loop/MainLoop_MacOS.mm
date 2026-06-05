@@ -11,7 +11,7 @@ using namespace zzz::engine;
 
 @implementation DisplayLinkTarget_MacOS
 - (void)update:(NSTimer *)timer {
-    if (self.loop && self.loop->onUpdateSystem) {
+    if (self.loop) {
         self.loop->onUpdateSystem();
     }
 }

@@ -11,7 +11,7 @@ using namespace zzz::engine;
 
 @implementation DisplayLinkTarget_iOS
 - (void)update:(CADisplayLink *)displayLink {
-    if (self.loop && self.loop->onUpdateSystem) {
+    if (self.loop) {
         self.loop->onUpdateSystem();
     }
 }

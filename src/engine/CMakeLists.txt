@@ -97,25 +97,25 @@ if(APPLE)
     target_sources(engine_lib PRIVATE
         # Core
         "private/core/io/platforms/Path_Apple.mm"
-        "private/core/config/platforms/ConfigMacOS.h"   "private/core/config/platforms/ConfigMacOS.mm"
-        "private/core/config/platforms/ConfigiOS.h"     "private/core/config/platforms/ConfigiOS.mm"
-
-    # Inputs
-        "private/platforms/input/platforms/InputMacOS.h"         "private/platforms/input/platforms/InputMacOS.mm"
-        "private/platforms/input/platforms/InputiOS.h"           "private/platforms/input/platforms/InputiOS.mm"
-
-        # Platforms
-        "private/platforms/Platform_MacOS.mm"
-        "private/platforms/Platform_iOS.mm"
-
-        # Main Loop
-        "private/platforms/main_loop/MainLoop_MacOS.h"  "private/platforms/main_loop/MainLoop_MacOS.mm"
-        "private/platforms/main_loop/MainLoop_iOS.h"    "private/platforms/main_loop/MainLoop_iOS.mm"
-
-        # Native View / Window
-        "private/platforms/window/WinMacOS.h"   "private/platforms/window/WinMacOS.mm"
-        "private/platforms/window/WiniOS.h"     "private/platforms/window/WiniOS.mm"
     )
+
+    if(IOS)
+        target_sources(engine_lib PRIVATE
+            "private/core/config/platforms/ConfigiOS.h"     "private/core/config/platforms/ConfigiOS.mm"
+            "private/platforms/input/platforms/InputiOS.h"           "private/platforms/input/platforms/InputiOS.mm"
+            "private/platforms/Platform_iOS.mm"
+            "private/platforms/main_loop/MainLoop_iOS.h"    "private/platforms/main_loop/MainLoop_iOS.mm"
+            "private/platforms/window/WiniOS.h"     "private/platforms/window/WiniOS.mm"
+        )
+    else()
+        target_sources(engine_lib PRIVATE
+            "private/core/config/platforms/ConfigMacOS.h"   "private/core/config/platforms/ConfigMacOS.mm"
+            "private/platforms/input/platforms/InputMacOS.h"         "private/platforms/input/platforms/InputMacOS.mm"
+            "private/platforms/Platform_MacOS.mm"
+            "private/platforms/main_loop/MainLoop_MacOS.h"  "private/platforms/main_loop/MainLoop_MacOS.mm"
+            "private/platforms/window/WinMacOS.h"   "private/platforms/window/WinMacOS.mm"
+        )
+    endif()
 endif()
 
 target_compile_features(engine_lib PUBLIC cxx_std_23)
