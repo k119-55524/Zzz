@@ -48,6 +48,15 @@ target_sources(engine_lib PRIVATE
 
 target_compile_features(engine_lib PUBLIC cxx_std_23)
 
+if(UNIX AND NOT APPLE AND NOT ANDROID)
+    target_link_libraries(engine_lib PRIVATE wayland-client)
+
+    set_source_files_properties(
+        "private/platforms/platforms/lLinux/Wayland/xdg-shell-protocol.cpp"
+        PROPERTIES COMPILE_OPTIONS "-Wno-attributes"
+    )
+endif()
+
 if(ANDROID)
     find_package(game-activity REQUIRED CONFIG)
 endif()

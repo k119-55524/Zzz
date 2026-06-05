@@ -51,6 +51,7 @@ extern const struct wl_interface xdg_popup_interface;
 extern const struct wl_interface xdg_positioner_interface;
 extern const struct wl_interface xdg_surface_interface;
 extern const struct wl_interface xdg_toplevel_interface;
+extern const struct wl_interface xdg_wm_base_interface;
 
 static const struct wl_interface *xdg_shell_types[] = {
 	NULL,
