@@ -47,23 +47,29 @@ static std::unique_ptr<Engine> g_Engine;
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {
-    if (g_Engine) g_Engine->OnPlatformApplicationDidBecomeActive();
+    NSLog(@"[EngineAppDelegate] Application did become active.");
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application {
-    if (g_Engine) g_Engine->OnPlatformApplicationWillResignActive();
+    NSLog(@"[EngineAppDelegate] Application will resign active.");
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application {
-    if (g_Engine) g_Engine->OnPlatformApplicationDidEnterBackground();
+    NSLog(@"[EngineAppDelegate] Application did enter background.");
+    if (g_Engine) {
+        auto res = g_Engine->GetPlatform()->GetConfigManager()->SaveConfig();
+        if (!res) {
+            NSLog(@"[EngineAppDelegate] Failed to save config on entering background: %s", res.error().c_str());
+        }
+    }
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application {
-    if (g_Engine) g_Engine->OnPlatformApplicationWillEnterForeground();
+    NSLog(@"[EngineAppDelegate] Application will enter foreground.");
 }
 
 - (void)applicationDidReceiveMemoryWarning:(UIApplication *)application {
-    if (g_Engine) g_Engine->OnPlatformApplicationDidReceiveMemoryWarning();
+    NSLog(@"[EngineAppDelegate] Application did receive memory warning.");
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application {

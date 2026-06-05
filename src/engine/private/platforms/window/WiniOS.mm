@@ -1,10 +1,12 @@
 #include "WiniOS.h"
 #import "iOSView.h"
+#include <foundation.h>
 
 using namespace zzz::engine;
 
 @interface EngineViewController : UIViewController
 @property (nonatomic, assign) WiniOS* winEngine;
+@property (nonatomic, assign) zzz::engine::InputiOS* inputEngine;
 @end
 
 @implementation EngineViewController
@@ -14,6 +16,7 @@ using namespace zzz::engine;
     id<MTLDevice> device = MTLCreateSystemDefaultDevice();
     iOSView* metalView = [[iOSView alloc] initWithFrame:self.view.bounds device:device];
     metalView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    metalView.inputEngine = self.inputEngine;
     [self.view addSubview:metalView];
 }
 @end
@@ -29,11 +32,14 @@ WiniOS::~WiniOS()
 
 std::expected<void, std::string> WiniOS::Initialize(const std::string_view appName)
 {
-    // The UIWindow should be created by AppDelegate, but we can also manage the rootViewController here.
-    // Wait, on iOS, the UIWindow is typically bound to the screen. 
-    // Usually AppDelegate passes the UIWindow through NativeAppData.
-    // Let's assume NativeAppData holds the UIWindow, or we just rely on AppDelegate to set the rootViewController.
-    
-    // For now, we just return success. EngineViewController will be used by Platform_iOS.mm.
+    UIWindow* window = [(id)[[UIApplication sharedApplication] delegate] window];
+    if (window != nil) {
+        EngineViewController* viewController = [[EngineViewController alloc] init];
+        viewController.winEngine = this;
+        viewController.inputEngine = m_Input.get();
+        window.rootViewController = viewController;
+    } else {
+        return UNEXPECTED("UIWindow is not initialized on iOS.");
+    }
 	return {};
 }

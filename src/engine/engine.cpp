@@ -131,38 +131,4 @@ void Engine::OnUpdateSystem()
 	}
 }
 
-#pragma region Mobile Lifecycle Events
-#if defined(Z_APPLE)
-void Engine::OnPlatformApplicationDidBecomeActive()
-{
-	DOut("Application did become active.");
-}
 
-void Engine::OnPlatformApplicationWillResignActive()
-{
-	DOut("Application will resign active.");
-}
-
-void Engine::OnPlatformApplicationDidEnterBackground()
-{
-	DOut("Application did enter background.");
-
-	if (engineState.load() == eInitState::Running)
-	{
-		auto res = m_Platform->GetConfigManager()->SaveConfig();
-		if (!res)
-			DOutCritical("Failed to save config on entering background: {}.", res.error());
-	}
-}
-
-void Engine::OnPlatformApplicationWillEnterForeground()
-{
-	DOut("Application will enter foreground.");
-}
-
-void Engine::OnPlatformApplicationDidReceiveMemoryWarning()
-{
-	DOut("Application did receive memory warning.");
-}
-#endif // defined(Z_APPLE)
-#pragma endregion

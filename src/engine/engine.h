@@ -36,31 +36,7 @@ namespace zzz::engine
 		[[nodiscard]] std::expected<void, std::string> Initialize();
 		[[nodiscard]] std::expected<void, std::string> Run();
 
-#pragma region Mobile Lifecycle Events
-#if defined(Z_APPLE)
-		// Приложение стало активным и может обрабатывать ввод, обновление и рендеринг.
-		// iOS: applicationDidBecomeActive:
-		void OnPlatformApplicationDidBecomeActive();
-
-		// Приложение теряет активность (звонок, уведомление, переход в фон).
-		// iOS: applicationWillResignActive:
-		void OnPlatformApplicationWillResignActive();
-
-		// Приложение перешло в фоновый режим.
-		// Используется для сохранения состояния и пользовательских данных.
-		// iOS: applicationDidEnterBackground:
-		void OnPlatformApplicationDidEnterBackground();
-
-		// Приложение начинает возвращаться из фонового режима.
-		// iOS: applicationWillEnterForeground:
-		void OnPlatformApplicationWillEnterForeground();
-
-		// Система сообщает о нехватке памяти.
-		// Следует освободить кэши и временные ресурсы.
-		// iOS: applicationDidReceiveMemoryWarning:
-		void OnPlatformApplicationDidReceiveMemoryWarning();
-#endif // defined(Z_APPLE)
-#pragma endregion
+		[[nodiscard]] inline std::shared_ptr<Platform> GetPlatform() const noexcept { return m_Platform; }
 
 	private:
 		void Shutdown();

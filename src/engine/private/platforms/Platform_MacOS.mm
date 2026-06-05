@@ -37,9 +37,7 @@ static std::unique_ptr<Engine> g_Engine;
 }
 
 - (void)applicationDidResignActive:(NSNotification *)notification {
-    if (g_Engine) {
-        g_Engine->OnPlatformApplicationWillResignActive();
-    }
+    std::cerr << "[EngineAppDelegate] Application did resign active." << std::endl;
 }
 
 - (void)applicationWillTerminate:(NSNotification *)notification {

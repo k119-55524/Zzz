@@ -18,6 +18,7 @@ target_link_libraries(game_ios PRIVATE
     "-framework Foundation"
     "-framework Metal"
     "-framework MetalKit"
+    "-framework QuartzCore"
 )
 
 set_target_properties(game_ios PROPERTIES
