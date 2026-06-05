@@ -2,14 +2,18 @@
 
 #if defined(Z_LINUX)
 
-#include <wayland-client.h>
-#include "xdg-shell-client-protocol.h"
-
 #include "IWindow.h"
+
+struct wl_display;
+struct wl_registry;
+struct wl_compositor;
+struct wl_surface;
+struct xdg_wm_base;
+struct xdg_surface;
+struct xdg_toplevel;
+
 #include "../../../../header.h"
 #include "../../../core/config/EngineConfig.h"
-
-#include "IWindow.h"
 
 namespace zzz::engine
 {
