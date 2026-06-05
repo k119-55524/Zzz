@@ -43,47 +43,10 @@ target_sources(engine_lib PRIVATE
     "private/platforms/main_loop/MainLoop_MSWin.h" "private/platforms/main_loop/MainLoop_MSWin.cpp"
     "private/platforms/main_loop/MainLoop_Linux.h" "private/platforms/main_loop/MainLoop_Linux.cpp"
     "private/platforms/native_view/window/LinuxWayland.h" "private/platforms/native_view/window/LinuxWayland.cpp"
-    "private/core/config/platforms/ConfigLinux.h" "private/core/config/platforms/ConfigLinux.cpp")
+    "private/core/config/platforms/ConfigLinux.h" "private/core/config/platforms/ConfigLinux.cpp"
+    "private/platforms/platforms/lLinux/Wayland/xdg-shell-client-protocol.h" "private/platforms/platforms/lLinux/Wayland/xdg-shell-protocol.cpp")
 
 target_compile_features(engine_lib PUBLIC cxx_std_23)
-
-if(UNIX AND NOT APPLE AND NOT ANDROID)
-    find_program(WAYLAND_SCANNER wayland-scanner REQUIRED)
-
-    set(XDG_SHELL_XML /usr/share/wayland-protocols/stable/xdg-shell/xdg-shell.xml)
-
-    add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/xdg-shell-client-protocol.h
-        COMMAND ${WAYLAND_SCANNER} client-header
-                ${XDG_SHELL_XML}
-                ${CMAKE_CURRENT_BINARY_DIR}/xdg-shell-client-protocol.h
-        DEPENDS ${XDG_SHELL_XML}
-    )
-
-    add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/xdg-shell-client-protocol.c
-        COMMAND ${WAYLAND_SCANNER} private-code
-                ${XDG_SHELL_XML}
-                ${CMAKE_CURRENT_BINARY_DIR}/xdg-shell-client-protocol.c
-        DEPENDS ${XDG_SHELL_XML}
-    )
-
-    target_sources(engine_lib PRIVATE
-        ${CMAKE_CURRENT_BINARY_DIR}/xdg-shell-client-protocol.h
-        ${CMAKE_CURRENT_BINARY_DIR}/xdg-shell-client-protocol.c
-    )
-
-    set_source_files_properties(
-        ${CMAKE_CURRENT_BINARY_DIR}/xdg-shell-client-protocol.c
-        PROPERTIES SKIP_PRECOMPILE_HEADERS ON
-    )
-
-    target_include_directories(engine_lib PRIVATE
-        ${CMAKE_CURRENT_BINARY_DIR}
-    )
-
-    target_link_libraries(engine_lib PRIVATE wayland-client)
-endif()
 
 if(ANDROID)
     find_package(game-activity REQUIRED CONFIG)

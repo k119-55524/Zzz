@@ -1,7 +1,7 @@
 #if defined(Z_LINUX)
 
-#include "xdg-shell-client-protocol.h"
 #include "LinuxWayland.h"
+#include "../../platforms/lLinux/Wayland/xdg-shell-client-protocol.h"
 
 using namespace zzz::engine;
 
