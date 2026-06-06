@@ -21,7 +21,7 @@ namespace zzz::engine
 
 		[[nodiscard]] std::expected<void, std::string> SaveConfig();
 
-		inline const EngineConfig& GetEngineConfig() const noexcept { return *m_EngineConfig; }
+		inline const std::shared_ptr<EngineConfig> GetEngineConfig() const noexcept { return m_EngineConfig; }
 		inline const PlatformConfig& GetPlatformConfig() const noexcept { return m_EngineConfig->GetPlatformConfig(); }
 
 	private:

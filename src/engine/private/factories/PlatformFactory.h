@@ -8,7 +8,7 @@
 namespace zzz::engine
 {
 #if defined(Z_WINDOWS)
-	typedef zzz::engine::MSWindows Window;
+	typedef zzz::engine::WinMSWindows Window;
 #elif defined(Z_LINUX)
 	typedef zzz::engine::WinLinux Window;
 #else

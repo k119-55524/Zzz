@@ -18,7 +18,10 @@ namespace zzz::engine
 		virtual ~IMainLoop() = default;
 
 		virtual void Run() = 0;
-		inline void Stop() noexcept { isRunning.store(false); }
+		inline void Stop()
+		{ 
+			isRunning.store(false);
+		}
 
 		Event<void> onUpdateSystem;
 

@@ -1,6 +1,7 @@
 #if defined(Z_WINDOWS)
 
 #include "WinMSWindows.h"
+#include "../../platforms/PlatformMSWindows.h"
 #include "../ScreenResolution.h"
 
 using namespace zzz::engine;
@@ -22,9 +23,12 @@ WinMSWindows::~WinMSWindows()
 
 [[nodiscard]] std::expected<void, std::string> WinMSWindows::Initialize(const std::string_view appName)
 {
+	std::shared_ptr<PlatformMSWindows> platform = std::dynamic_pointer_cast<PlatformMSWindows>(m_Platform);
+	ensure(platform != nullptr, "Platform is not PlatformLinux.");
+
 	HICON iconHandle = (HICON)LoadImage(
 		GetModuleHandle(NULL),
-		m_Config.GetPlatformConfig().GetIcoResourceName().c_str(),
+		platform->GetPlatformConfig().GetIcoResourceName().c_str(),
 		IMAGE_ICON,
 		0,
 		0,
@@ -32,19 +36,20 @@ WinMSWindows::~WinMSWindows()
 
 	WNDCLASS wc = { 0 };
 	wc.style = CS_HREDRAW | CS_VREDRAW;
-	wc.lpfnWndProc = MSWindows::WindowProc;
+	wc.lpfnWndProc = WinMSWindows::WindowProc;
 	wc.hInstance = GetModuleHandle(NULL);
 	wc.hIcon = iconHandle;
 	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-	wc.lpszClassName = m_Config.GetPlatformConfig().GetClassName().c_str();
+	wc.lpszClassName = platform->GetPlatformConfig().GetClassName().c_str();
 	ATOM Result = RegisterClass(&wc);
 	if (Result == 0)
 		return UNEXPECTED("Failed to register window class. Error code: {}.", GetLastError());
 
 	// Рассчитать размеры прямоугольника окна на основе запрошенных размеров клиентской области.
 	Size2D<LONG> winSize;
-	winSize.SetFrom(m_Config.GetWinSize());
+	// TODO: не правильная архитектура. Подумать как задавать размер окна
+	winSize.SetFrom(platform->GetWinSize());
 	RECT R = { 0, 0, winSize.width, winSize.height };
 	AdjustWindowRectEx(&R, WS_OVERLAPPEDWINDOW, false, 0);
 	int width = R.right - R.left;
@@ -56,7 +61,7 @@ WinMSWindows::~WinMSWindows()
 	int yPos = (screenHeight - height) / 2; // Расчет позиции по оси Y
 	m_hWnd = CreateWindowEx(
 		0,
-		m_Config.GetPlatformConfig().GetClassName().c_str(),
+		platform->GetPlatformConfig().GetClassName().c_str(),
 		appName.data(),
 		WS_OVERLAPPEDWINDOW,
 		xPos, yPos, width, height,
@@ -76,7 +81,7 @@ WinMSWindows::~WinMSWindows()
 
 LRESULT CALLBACK WinMSWindows::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept
 {
-	MSWindows* pThis = nullptr;
+	WinMSWindows* pThis = nullptr;
 
 	try
 	{
@@ -86,12 +91,12 @@ LRESULT CALLBACK WinMSWindows::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
 			if (!pCreate || !pCreate->lpCreateParams)
 				return FALSE; // Ошибка создания
 
-			pThis = static_cast<MSWindows*>(pCreate->lpCreateParams);
+			pThis = static_cast<WinMSWindows*>(pCreate->lpCreateParams);
 			SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
 			pThis->m_hWnd = hwnd;
 		}
 		else
-			pThis = reinterpret_cast<MSWindows*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+			pThis = reinterpret_cast<WinMSWindows*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
 
 		if (pThis)
 			return pThis->MsgProc(uMsg, wParam, lParam);
