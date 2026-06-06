@@ -4,6 +4,14 @@
 
 #include "IPlatform.h"
 
+struct wl_display;
+struct wl_registry;
+struct wl_compositor;
+struct wl_surface;
+struct xdg_wm_base;
+struct xdg_surface;
+struct xdg_toplevel;
+
 namespace zzz::engine
 {
 	class PlatformLinux final : public IPlatform
@@ -14,6 +22,13 @@ namespace zzz::engine
 
 	private:
 		void InitializeImpl() override;
+		void InitializeWayland();
+		void ShutdownWayland();
+
+		wl_display* m_Display;
+		wl_registry* m_Registry;
+		wl_compositor* m_Compositor;
+		xdg_wm_base* m_XdgWmBase;
 	};
 }
 #endif // defined(Z_LINUX)
