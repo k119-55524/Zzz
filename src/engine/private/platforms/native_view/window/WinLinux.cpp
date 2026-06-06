@@ -4,6 +4,9 @@
 #include "../../platforms/PlatformLinux.h"
 #include "../../platforms/lLinux/Wayland/xdg-shell-client-protocol.h"
 
+#include <sys/mman.h>
+#include <unistd.h>
+
 using namespace zzz::engine;
 
 namespace
@@ -19,6 +22,12 @@ namespace
 
 		auto* self = static_cast<WinLinux*>(data);
 
+		if (self->GetBuffer())
+		{
+			wl_surface_attach(self->GetSurface(), self->GetBuffer(), 0, 0);
+			wl_surface_damage(self->GetSurface(), 0, 0, 0x7FFFFFFF, 0x7FFFFFFF);
+		}
+
 		wl_surface_commit(self->GetSurface());
 	}
 
@@ -26,11 +35,26 @@ namespace
 	{
 		.configure = OnXdgSurfaceConfigure
 	};
+
+	void OnToplevelConfigure(void*, xdg_toplevel*, int32_t /*w*/, int32_t /*h*/, wl_array*)
+	{}
+
+	void OnToplevelClose(void* data, xdg_toplevel*)
+	{
+		static_cast<WinLinux*>(data)->onCloseRequested();
+	}
+
+	const xdg_toplevel_listener g_ToplevelListener =
+	{
+		.configure = OnToplevelConfigure,
+		.close     = OnToplevelClose,
+	};
 }
 
 WinLinux::WinLinux(const std::shared_ptr<IPlatform> platform) :
 	IWindow(platform),
 	m_Surface{nullptr},
+	m_Buffer{nullptr},
 	m_XdgSurface{nullptr},
 	m_XdgToplevel{nullptr}
 {
@@ -53,6 +77,12 @@ void WinLinux::Shutdown()
 	{
 		xdg_surface_destroy(m_XdgSurface);
 		m_XdgSurface = nullptr;
+	}
+
+	if (m_Buffer)
+	{
+		wl_buffer_destroy(m_Buffer);
+		m_Buffer = nullptr;
 	}
 
 	if (m_Surface)
@@ -90,8 +120,30 @@ std::expected<void, std::string> WinLinux::Initialize(const std::string_view app
 			return UNEXPECTED("xdg_surface_get_toplevel() failed.");
 
 		xdg_toplevel_set_title(m_XdgToplevel, appName.data());
+		xdg_toplevel_add_listener(m_XdgToplevel, &g_ToplevelListener, this);
+
+		{
+			constexpr int W = 800, H = 600, stride = W * 4;
+			constexpr int size = stride * H;
+
+			int fd = memfd_create("zzz_shm", MFD_CLOEXEC);
+			if (fd >= 0)
+			{
+				ftruncate(fd, size);
+				void* px = mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+				if (px != MAP_FAILED)
+				{
+					std::fill_n(static_cast<uint32_t*>(px), W * H, uint32_t{0xFF1E1E2E});
+					munmap(px, size);
+				}
+				wl_shm_pool* pool = wl_shm_create_pool(platform->GetShm(), fd, size);
+				close(fd);
+				m_Buffer = wl_shm_pool_create_buffer(pool, 0, W, H, stride, WL_SHM_FORMAT_ARGB8888);
+				wl_shm_pool_destroy(pool);
+			}
+		}
+
 		wl_surface_commit(m_Surface);
-		// wl_display_roundtrip(platform->GetDisplay());
 
 		wl_display_roundtrip(platform->GetDisplay());
 		wl_display_roundtrip(platform->GetDisplay());

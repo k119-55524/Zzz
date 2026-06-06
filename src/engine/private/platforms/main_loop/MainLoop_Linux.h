@@ -21,7 +21,6 @@ namespace zzz::engine
 
 	private:
 		wl_display* m_Display;
-		bool m_Running;
 	};
 }
 #endif // defined(Z_LINUX)

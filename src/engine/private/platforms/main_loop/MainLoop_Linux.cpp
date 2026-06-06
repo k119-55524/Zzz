@@ -7,8 +7,7 @@ using namespace zzz::engine;
 
 MainLoop_Linux::MainLoop_Linux(const std::shared_ptr<IPlatform> platform) :
 	IMainLoop(platform),
-	m_Display{ nullptr },
-	m_Running{ true }
+	m_Display{ nullptr }
 {
 	std::shared_ptr<PlatformLinux> platformLinux = std::dynamic_pointer_cast<PlatformLinux>(m_Platform);
 	ensure(platformLinux != nullptr, "Platform is not PlatformLinux.");
@@ -19,13 +18,12 @@ MainLoop_Linux::MainLoop_Linux(const std::shared_ptr<IPlatform> platform) :
 
 void MainLoop_Linux::Run()
 {
-	while (m_Running)
+	while (isRunning)
 	{
-		wl_display_dispatch_pending(m_Display);
+		if (wl_display_dispatch(m_Display) == -1)
+			break;
 
 		onUpdateSystem();
-
-		wl_display_flush(m_Display);
 	}
 }
 #endif // defined(Z_LINUX)

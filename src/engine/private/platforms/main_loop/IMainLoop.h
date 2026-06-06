@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <foundation.h>
 
 #include "../platforms/IPlatform.h"
@@ -17,10 +18,12 @@ namespace zzz::engine
 		virtual ~IMainLoop() = default;
 
 		virtual void Run() = 0;
+		inline void Stop() noexcept { isRunning.store(false); }
 
 		Event<void> onUpdateSystem;
 
 		protected:
+			std::atomic<bool> isRunning;
 			const std::shared_ptr<IPlatform> m_Platform;
 	};
 }

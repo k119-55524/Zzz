@@ -10,6 +10,7 @@ namespace
 	struct RegistryData
 	{
 		wl_compositor**	compositor;
+		wl_shm**		shm;
 		xdg_wm_base**	xdgWmBase;
 	};
 
@@ -25,6 +26,10 @@ namespace
 		if (std::string_view(interface) == wl_compositor_interface.name)
 		{
 			*rd->compositor = static_cast<wl_compositor*>(wl_registry_bind(registry, name, &wl_compositor_interface, 1));
+		}
+		else if (std::string_view(interface) == wl_shm_interface.name)
+		{
+			*rd->shm = static_cast<wl_shm*>(wl_registry_bind(registry, name, &wl_shm_interface, 1));
 		}
 		else if (std::string_view(interface) == xdg_wm_base_interface.name)
 		{
@@ -63,6 +68,7 @@ PlatformLinux::PlatformLinux(std::string_view appName, std::shared_ptr<void> pla
 	m_Display{nullptr},
 	m_Registry{nullptr},
 	m_Compositor{nullptr},
+	m_Shm{nullptr},
 	m_XdgWmBase{nullptr}
 {}
 
@@ -88,7 +94,7 @@ void PlatformLinux::InitializeWayland()
 		if (!m_Registry)
 			THROW_RUNTIME("wl_display_get_registry() failed.");
 
-		RegistryData rd{ &m_Compositor, &m_XdgWmBase };
+		RegistryData rd{ &m_Compositor, &m_Shm, &m_XdgWmBase };
 		if (wl_registry_add_listener(m_Registry, &g_RegistryListener, &rd) != 0)
 			THROW_RUNTIME("wl_registry_add_listener() failed.");
 
@@ -98,13 +104,13 @@ void PlatformLinux::InitializeWayland()
 		if (!m_Compositor)
 			THROW_RUNTIME("wl_compositor not found.");
 
+		if (!m_Shm)
+			THROW_RUNTIME("wl_shm not found.");
+
 		if (!m_XdgWmBase)
 			THROW_RUNTIME("xdg_wm_base not found.");
 
-		xdg_wm_base_add_listener(
-			m_XdgWmBase,
-			&g_WmBaseListener,
-			nullptr);
+		xdg_wm_base_add_listener(m_XdgWmBase, &g_WmBaseListener, nullptr);
 	}
 	catch (const std::exception& e)
 	{
@@ -132,6 +138,12 @@ void PlatformLinux::Shutdown()
 	{
 		wl_compositor_destroy(m_Compositor);
 		m_Compositor = nullptr;
+	}
+
+	if (m_Shm)
+	{
+		wl_shm_destroy(m_Shm);
+		m_Shm = nullptr;
 	}
 
 	if (m_Registry)

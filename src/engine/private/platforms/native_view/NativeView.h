@@ -17,6 +17,8 @@ namespace zzz::engine
 		NativeView(std::shared_ptr<IPlatform> platform);
 		~NativeView() = default;
 
+		inline std::shared_ptr<IWindow> GetWindow() const noexcept { return m_Window; }
+
 	private:
 		void Initialize();
 

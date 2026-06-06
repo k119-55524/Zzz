@@ -79,9 +79,10 @@ std::expected<void, std::string> Engine::Initialize()
 
 	try
 	{
-		m_NativeViews.push_back(zzz::safe_make_shared<NativeView>(m_Platform));
 		m_MainLoop = safe_make_shared<MainLoop>(m_Platform);
 		m_MainLoop->onUpdateSystem += std::bind(&Engine::OnUpdateSystem, this);
+
+		AddNativeView();
 
 		DOut("Engine initialized: OK.");
 		engineState.store(eInitState::Initialized);
@@ -135,6 +136,22 @@ std::expected<void, std::string> Engine::Initialize()
 	}
 
 	return {};
+}
+
+void Engine::AddNativeView()
+{
+	auto view = zzz::safe_make_shared<NativeView>(m_Platform);
+
+	view->GetWindow()->onCloseRequested += [this, weakView = std::weak_ptr(view)]()
+	{
+		if (auto v = weakView.lock())
+			m_NativeViews.remove(v);
+
+		if (m_NativeViews.empty())
+			m_MainLoop->Stop();
+	};
+
+	m_NativeViews.push_back(std::move(view));
 }
 
 void Engine::OnUpdateSystem()
