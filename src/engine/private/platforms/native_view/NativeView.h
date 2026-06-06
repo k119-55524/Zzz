@@ -2,7 +2,7 @@
 
 #include "../../../header.h"
 
-#include "../../core/config/EngineConfig.h"
+#include "../platforms/IPlatform.h"
 #include "../../factories/PlatformFactory.h"
 #include "../../platforms/native_view/window/IWindow.h"
 
@@ -14,13 +14,13 @@ namespace zzz::engine
 
 	public:
 		NativeView() = delete;
-		NativeView(const std::string_view appName, const EngineConfig& config);
+		NativeView(std::shared_ptr<IPlatform> platform);
 		~NativeView() = default;
 
 	private:
-		void Initialize(const std::string_view appName);
+		void Initialize();
 
-		const EngineConfig& m_Config;
+		std::shared_ptr<IPlatform> m_Platform;
 		PlatformFactory m_Factory;
 		std::shared_ptr<IWindow> m_Window;
 	};

@@ -79,28 +79,8 @@ std::expected<void, std::string> Engine::Initialize()
 
 	try
 	{
-		// Инициализация пути и менеджера конфигурации
-		//m_Path = zzz::safe_make_shared<Path>(m_AppName, m_PlatformData);
-		//m_ConfigManager = zzz::safe_make_shared<ConfigManager>(m_Path);
-		//auto res = m_ConfigManager->Initialize(configPath)
-		//	.and_then([this](eInitConfigState state)
-		//		{
-		//			if (state == eInitConfigState::InitDefault)
-		//				DOutWarning("Config initialized with default settings.");
-
-		//			m_NativeView.push_back(zzz::safe_make_shared<NativeView>(m_AppName, m_ConfigManager->GetEngineConfig()));
-
-		//			m_MainLoop = safe_make_shared<MainLoop>();
-
-		//			return std::expected<void, std::string>{};
-		//		})
-		//	.or_else([&](const std::string& error)
-		//		-> std::expected<void, std::string>
-		//		{
-		//			DOutError("Initialization failed: {}", error);
-		//			Shutdown();
-		//			return std::unexpected(error);
-		//		});
+		m_NativeViews.push_back(zzz::safe_make_shared<NativeView>(m_Platform));
+		m_MainLoop = safe_make_shared<MainLoop>();
 
 		DOut("Engine initialized: OK.");
 		engineState.store(eInitState::Initialized);

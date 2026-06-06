@@ -1,15 +1,16 @@
 ﻿#pragma once
 
 #include "../core/config/ConfigManager.h"
-#include "../platforms/native_view/window/MSWindows.h"
-#include "../platforms/native_view/window/LinuxWayland.h"
+#include "../platforms/platforms/IPlatform.h"
+#include "../platforms/native_view/window/WinLinux.h"
+#include "../platforms/native_view/window/WinMSWindows.h"
 
 namespace zzz::engine
 {
 #if defined(Z_WINDOWS)
 	typedef zzz::engine::MSWindows Window;
 #elif defined(Z_LINUX)
-	typedef zzz::engine::LinuxWayland Window;
+	typedef zzz::engine::WinLinux Window;
 #else
 #error >>>>> Unsupported platform. No window implementation available.
 #endif
@@ -17,6 +18,6 @@ namespace zzz::engine
 	class PlatformFactory final
 	{
 	public:
-		std::shared_ptr<IWindow> CreateAppWin(const EngineConfig& config);
+		std::shared_ptr<IWindow> CreateAppWin(const std::shared_ptr<IPlatform> platform);
 	};
 }

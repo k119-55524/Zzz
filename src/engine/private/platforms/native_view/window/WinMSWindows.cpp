@@ -1,17 +1,17 @@
 #if defined(Z_WINDOWS)
 
-#include "MSWindows.h"
+#include "WinMSWindows.h"
 #include "../ScreenResolution.h"
 
 using namespace zzz::engine;
 
-MSWindows::MSWindows(const EngineConfig& config) :
-	IWindow(config),
+WinMSWindows::WinMSWindows(const std::shared_ptr<IPlatform> platform) :
+	IWindow(platform),
 	m_hWnd(nullptr)
 {
 }
 
-[[nodiscard]] std::expected<void, std::string> MSWindows::Initialize(const std::string_view appName)
+[[nodiscard]] std::expected<void, std::string> WinMSWindows::Initialize(const std::string_view appName)
 {
 	HICON iconHandle = (HICON)LoadImage(
 		GetModuleHandle(NULL),
@@ -65,7 +65,7 @@ MSWindows::MSWindows(const EngineConfig& config) :
 	return std::expected<void, std::string>();
 }
 
-LRESULT CALLBACK MSWindows::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept
+LRESULT CALLBACK WinMSWindows::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept
 {
 	MSWindows* pThis = nullptr;
 
@@ -96,7 +96,7 @@ LRESULT CALLBACK MSWindows::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-LRESULT MSWindows::MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT WinMSWindows::MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{

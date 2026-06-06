@@ -7,10 +7,7 @@
 struct wl_display;
 struct wl_registry;
 struct wl_compositor;
-struct wl_surface;
 struct xdg_wm_base;
-struct xdg_surface;
-struct xdg_toplevel;
 
 namespace zzz::engine
 {

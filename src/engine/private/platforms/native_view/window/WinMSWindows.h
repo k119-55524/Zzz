@@ -9,12 +9,12 @@
 
 namespace zzz::engine
 {
-	class MSWindows final : public IWindow
+	class WinMSWindows final : public IWindow
 	{
 	public:
-		MSWindows() = delete;
-		MSWindows(const EngineConfig& config);
-		~MSWindows() = default;
+		WinMSWindows() = delete;
+		WinMSWindows(const std::shared_ptr<IPlatform> platform);
+		~WinMSWindows() = default;
 
 		[[nodiscard]] virtual std::expected<void, std::string> Initialize(const std::string_view appName) override;
 

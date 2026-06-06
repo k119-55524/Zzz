@@ -33,7 +33,7 @@ target_sources(engine_lib PRIVATE
     "headers/throwWrappers.h"
     "pch/pch.cpp"
     "private/platforms/native_view/window/IWindow.h" "private/platforms/native_view/window/IWindow.cpp"
-    "private/platforms/native_view/window/MSWindows.h" "private/platforms/native_view/window/MSWindows.cpp"
+    "private/platforms/native_view/window/WinMSWindows.h" "private/platforms/native_view/window/WinMSWindows.cpp"
     "private/factories/PlatformFactory.h" "private/factories/PlatformFactory.cpp"
     "private/platforms/native_view/NativeView.h" "private/platforms/native_view/NativeView.cpp"
     "private/core/config/platforms/ConfigMSWin.h" "private/core/config/platforms/ConfigMSWin.cpp"
@@ -42,7 +42,7 @@ target_sources(engine_lib PRIVATE
     "private/platforms/main_loop/IMainLoop.h"
     "private/platforms/main_loop/MainLoop_MSWin.h" "private/platforms/main_loop/MainLoop_MSWin.cpp"
     "private/platforms/main_loop/MainLoop_Linux.h" "private/platforms/main_loop/MainLoop_Linux.cpp"
-    "private/platforms/native_view/window/LinuxWayland.h" "private/platforms/native_view/window/LinuxWayland.cpp"
+    "private/platforms/native_view/window/WinLinux.h" "private/platforms/native_view/window/WinLinux.cpp"
     "private/core/config/platforms/ConfigLinux.h" "private/core/config/platforms/ConfigLinux.cpp"
     "private/platforms/platforms/lLinux/Wayland/xdg-shell-client-protocol.h" "private/platforms/platforms/lLinux/Wayland/xdg-shell-protocol.cpp" "private/platforms/platforms/IPlatform.h" "private/platforms/platforms/IPlatform.cpp" "private/platforms/platforms/PlatformMSWindows.h" "private/platforms/platforms/PlatformMSWindows.cpp" "private/platforms/platforms/PlatformLinux.h" "private/platforms/platforms/PlatformLinux.cpp")
 

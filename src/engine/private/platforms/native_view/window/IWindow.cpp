@@ -2,7 +2,7 @@
 
 using namespace zzz::engine;
 
-IWindow::IWindow(const EngineConfig& config) :
-	m_Config{ config }
+IWindow::IWindow(const std::shared_ptr<IPlatform> platform) :
+	m_Platform{ platform }
 {
 }

@@ -71,8 +71,10 @@ void PlatformLinux::InitializeWayland()
 		THROW_RUNTIME("wl_display_get_registry() failed.");
 
 	RegistryData rd{ &m_Compositor, &m_XdgWmBase };
-	wl_registry_add_listener(m_Registry, &g_RegistryListener, &rd);
-	wl_display_roundtrip(m_Display);
+	if (wl_registry_add_listener(m_Registry, &g_RegistryListener, &rd) != 0)
+		THROW_RUNTIME("wl_registry_add_listener() failed.");
+	if (wl_display_roundtrip(m_Display) == -1)
+		THROW_RUNTIME("wl_display_roundtrip() failed.");
 
 	if (!m_Compositor)
 		THROW_RUNTIME("wl_compositor not found.");

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../platforms/IPlatform.h"
 #include "../../../core/config/EngineConfig.h"
 
 namespace zzz::engine
@@ -8,12 +9,12 @@ namespace zzz::engine
 	{
 	public:
 		IWindow() = delete;
-		IWindow(const EngineConfig& config);
+		IWindow(const std::shared_ptr<IPlatform> platform);
 		virtual ~IWindow() = default;
 
 		[[nodiscard]] virtual std::expected<void, std::string> Initialize(const std::string_view appName) = 0;
 
 	protected:
-		const EngineConfig& m_Config;
+		const std::shared_ptr<IPlatform> m_Platform;
 	};
 }
