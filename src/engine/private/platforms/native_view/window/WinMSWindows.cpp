@@ -11,6 +11,15 @@ WinMSWindows::WinMSWindows(const std::shared_ptr<IPlatform> platform) :
 {
 }
 
+WinMSWindows::~WinMSWindows()
+{
+	if (m_hWnd)
+	{
+		DestroyWindow(m_hWnd);
+		m_hWnd = nullptr;
+	}
+}
+
 [[nodiscard]] std::expected<void, std::string> WinMSWindows::Initialize(const std::string_view appName)
 {
 	HICON iconHandle = (HICON)LoadImage(
@@ -103,8 +112,11 @@ LRESULT WinMSWindows::MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	//case WM_CREATE:
 	//	return InitRawInput();
 
+	case WM_CLOSE:
+		onCloseRequested();
+		return 0;
+
 	case WM_DESTROY:
-		PostQuitMessage(0);
 		return 0;
 
 		// Обрабатываем изменение размера окна

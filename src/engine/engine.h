@@ -84,6 +84,7 @@ namespace zzz::engine
 	private:
 		void Shutdown();
 		void OnUpdateSystem();
+		void AddNativeView();
 
 		std::mutex stateMutex;
 		std::atomic<eInitState> engineState;

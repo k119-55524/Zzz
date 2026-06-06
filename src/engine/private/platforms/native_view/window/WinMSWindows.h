@@ -14,7 +14,7 @@ namespace zzz::engine
 	public:
 		WinMSWindows() = delete;
 		WinMSWindows(const std::shared_ptr<IPlatform> platform);
-		~WinMSWindows() = default;
+		~WinMSWindows() override;
 
 		[[nodiscard]] virtual std::expected<void, std::string> Initialize(const std::string_view appName) override;
 
