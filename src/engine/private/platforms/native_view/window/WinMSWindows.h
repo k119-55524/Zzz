@@ -22,6 +22,8 @@ namespace zzz::engine
 			static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept;
 			LRESULT MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+			static size_t s_WindowCount;
+
 			HWND m_hWnd;
 	};
 }

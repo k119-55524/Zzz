@@ -6,6 +6,8 @@
 
 using namespace zzz::engine;
 
+size_t WinMSWindows::s_WindowCount = 0;
+
 WinMSWindows::WinMSWindows(const std::shared_ptr<IPlatform> platform) :
 	IWindow(platform),
 	m_hWnd(nullptr)
@@ -73,6 +75,8 @@ WinMSWindows::~WinMSWindows()
 	if (!m_hWnd)
 		THROW_RUNTIME("CreateWindowEx( ... ) failed. Error code (Windows): {}", ::GetLastError());
 
+	s_WindowCount++;
+
 	ShowWindow(m_hWnd, SW_SHOW);
 	UpdateWindow(m_hWnd);
 
@@ -119,9 +123,13 @@ LRESULT WinMSWindows::MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_CLOSE:
 		onCloseRequested();
+		DestroyWindow(m_hWnd);
 		return 0;
 
 	case WM_DESTROY:
+		s_WindowCount--;
+		if (s_WindowCount == 0)
+			PostQuitMessage(0);
 		return 0;
 
 		// Обрабатываем изменение размера окна

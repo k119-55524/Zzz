@@ -42,19 +42,27 @@ namespace zzz::engine
 
 		void operator()(Args... args)
 		{
-			std::lock_guard<std::mutex> lock(this->listenersMutex);
-			auto it = this->listeners.begin();
-			while (it != this->listeners.end())
+			std::vector<std::shared_ptr<CallbackType>> callbacksToRun;
 			{
-				if (auto cb = it->second.lock())
+				std::lock_guard<std::mutex> lock(this->listenersMutex);
+				auto it = this->listeners.begin();
+				while (it != this->listeners.end())
 				{
-					(*cb)(args...);
-					++it;
+					if (auto cb = it->second.lock())
+					{
+						callbacksToRun.push_back(cb);
+						++it;
+					}
+					else
+					{
+						it = this->listeners.erase(it);
+					}
 				}
-				else
-				{
-					it = this->listeners.erase(it);
-				}
+			}
+
+			for (auto& cb : callbacksToRun)
+			{
+				(*cb)(args...);
 			}
 		}
 	};
@@ -75,19 +83,27 @@ namespace zzz::engine
 
 		void operator()()
 		{
-			std::lock_guard<std::mutex> lock(this->listenersMutex);
-			auto it = this->listeners.begin();
-			while (it != this->listeners.end())
+			std::vector<std::shared_ptr<CallbackType>> callbacksToRun;
 			{
-				if (auto cb = it->second.lock())
+				std::lock_guard<std::mutex> lock(this->listenersMutex);
+				auto it = this->listeners.begin();
+				while (it != this->listeners.end())
 				{
-					(*cb)();
-					++it;
+					if (auto cb = it->second.lock())
+					{
+						callbacksToRun.push_back(cb);
+						++it;
+					}
+					else
+					{
+						it = this->listeners.erase(it);
+					}
 				}
-				else
-				{
-					it = this->listeners.erase(it);
-				}
+			}
+
+			for (auto& cb : callbacksToRun)
+			{
+				(*cb)();
 			}
 		}
 	};

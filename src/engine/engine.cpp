@@ -39,7 +39,7 @@ Engine::Engine(std::string_view appName, std::string_view configPath, std::share
 
 Engine::~Engine()
 {
-	Shutdown();
+Shutdown();
 }
 
 void Engine::Shutdown()
@@ -142,6 +142,7 @@ void Engine::AddNativeView()
 {
 	auto view = zzz::safe_make_shared<NativeView>(m_Platform);
 
+	// Обрабатываем закрытие очередного окна
 	view->GetWindow()->onCloseRequested += [this, weakView = std::weak_ptr(view)]()
 	{
 		if (auto v = weakView.lock())
@@ -164,6 +165,8 @@ void Engine::OnUpdateSystem()
 		i = 0;
 		DOut("Tick!!!");
 	}
+
+
 }
 
 #pragma region Mobile Lifecycle Events
