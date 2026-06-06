@@ -44,7 +44,7 @@ target_sources(engine_lib PRIVATE
     "private/platforms/main_loop/MainLoop_Linux.h" "private/platforms/main_loop/MainLoop_Linux.cpp"
     "private/platforms/native_view/window/WinLinux.h" "private/platforms/native_view/window/WinLinux.cpp"
     "private/core/config/platforms/ConfigLinux.h" "private/core/config/platforms/ConfigLinux.cpp"
-    "private/platforms/platforms/lLinux/Wayland/xdg-shell-client-protocol.h" "private/platforms/platforms/lLinux/Wayland/xdg-shell-protocol.cpp" "private/platforms/platforms/IPlatform.h" "private/platforms/platforms/IPlatform.cpp" "private/platforms/platforms/PlatformMSWindows.h" "private/platforms/platforms/PlatformMSWindows.cpp" "private/platforms/platforms/PlatformLinux.h" "private/platforms/platforms/PlatformLinux.cpp")
+    "private/platforms/platforms/lLinux/Wayland/xdg-shell-client-protocol.h" "private/platforms/platforms/lLinux/Wayland/xdg-shell-protocol.cpp" "private/platforms/platforms/IPlatform.h" "private/platforms/platforms/IPlatform.cpp" "private/platforms/platforms/PlatformMSWindows.h" "private/platforms/platforms/PlatformMSWindows.cpp" "private/platforms/platforms/PlatformLinux.h" "private/platforms/platforms/PlatformLinux.cpp" "private/platforms/main_loop/IMainLoop.cpp")
 
 target_compile_features(engine_lib PUBLIC cxx_std_23)
 

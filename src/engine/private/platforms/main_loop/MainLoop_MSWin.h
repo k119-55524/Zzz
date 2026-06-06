@@ -11,7 +11,8 @@ namespace zzz::engine
 		Z_NO_COPY_MOVE(MainLoop_MSWin);
 
 	public:
-		MainLoop_MSWin() = default;
+		MainLoop_MSWin() = delete;
+		MainLoop_MSWin(const std::shared_ptr<IPlatform> platform);
 		virtual ~MainLoop_MSWin() = default;
 
 		void Run() override;

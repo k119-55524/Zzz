@@ -80,7 +80,8 @@ std::expected<void, std::string> Engine::Initialize()
 	try
 	{
 		m_NativeViews.push_back(zzz::safe_make_shared<NativeView>(m_Platform));
-		m_MainLoop = safe_make_shared<MainLoop>();
+		m_MainLoop = safe_make_shared<MainLoop>(m_Platform);
+		m_MainLoop->onUpdateSystem += std::bind(&Engine::OnUpdateSystem, this);
 
 		DOut("Engine initialized: OK.");
 		engineState.store(eInitState::Initialized);
@@ -111,7 +112,7 @@ std::expected<void, std::string> Engine::Initialize()
 	bool isError = false;
 	try
 	{
-		//m_MainLoop->Run();
+		m_MainLoop->Run();
 	}
 	catch (const std::exception& e)
 	{
@@ -134,6 +135,18 @@ std::expected<void, std::string> Engine::Initialize()
 	}
 
 	return {};
+}
+
+void Engine::OnUpdateSystem()
+{
+	static int i = 0;
+	i++;
+
+	if (i == 1000000)
+	{
+		i = 0;
+		DOut("Tick!!!");
+	}
 }
 
 #pragma region Mobile Lifecycle Events

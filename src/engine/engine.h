@@ -83,6 +83,7 @@ namespace zzz::engine
 
 	private:
 		void Shutdown();
+		void OnUpdateSystem();
 
 		std::mutex stateMutex;
 		std::atomic<eInitState> engineState;

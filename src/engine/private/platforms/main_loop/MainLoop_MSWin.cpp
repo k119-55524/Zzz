@@ -4,6 +4,11 @@
 
 using namespace zzz::engine;
 
+MainLoop_MSWin::MainLoop_MSWin(const std::shared_ptr<IPlatform> platform) :
+	IMainLoop(platform)
+{
+}
+
 void MainLoop_MSWin::Run()
 {
 	MSG msg = { 0 };

@@ -4,6 +4,8 @@
 
 #include "IMainLoop.h"
 
+struct wl_display;
+
 namespace zzz::engine
 {
 	class MainLoop_Linux final : public IMainLoop
@@ -11,10 +13,15 @@ namespace zzz::engine
 		Z_NO_COPY_MOVE(MainLoop_Linux);
 
 	public:
-		MainLoop_Linux() = default;
+		MainLoop_Linux() = delete;
+		MainLoop_Linux(const std::shared_ptr<IPlatform> platform);
 		virtual ~MainLoop_Linux() = default;
 
 		void Run() override;
+
+	private:
+		wl_display* m_Display;
+		bool m_Running;
 	};
 }
 #endif // defined(Z_LINUX)
