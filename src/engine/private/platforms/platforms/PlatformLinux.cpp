@@ -9,8 +9,8 @@ namespace
 {
 	struct RegistryData
 	{
-		wl_compositor** compositor;
-		xdg_wm_base** xdgWmBase;
+		wl_compositor**	compositor;
+		xdg_wm_base**	xdgWmBase;
 	};
 
 	void OnRegistryGlobal(
@@ -33,26 +33,42 @@ namespace
 	}
 
 	void OnRegistryGlobalRemove(void* /*data*/, wl_registry* /*registry*/, uint32_t /*name*/)
-	{}
+	{
+	}
 
 	const wl_registry_listener g_RegistryListener =
 	{
-		.global = OnRegistryGlobal,
-		.global_remove = OnRegistryGlobalRemove,
+		.global			= OnRegistryGlobal,
+		.global_remove	= OnRegistryGlobalRemove,
+	};
+
+	void OnPing(
+		void*,
+		xdg_wm_base* wmBase,
+		uint32_t serial)
+	{
+		DOut("OnPing");
+
+		xdg_wm_base_pong(wmBase, serial);
+	}
+
+	const xdg_wm_base_listener g_WmBaseListener =
+	{
+		.ping = OnPing
 	};
 }
 
 PlatformLinux::PlatformLinux(std::string_view appName, std::shared_ptr<void> platformData) :
 	IPlatform(appName, platformData),
-	m_Display{ nullptr },
-	m_Registry{ nullptr },
-	m_Compositor{ nullptr },
-	m_XdgWmBase{ nullptr }
+	m_Display{nullptr},
+	m_Registry{nullptr},
+	m_Compositor{nullptr},
+	m_XdgWmBase{nullptr}
 {}
 
 PlatformLinux::~PlatformLinux()
 {
-	ShutdownWayland();
+	Shutdown();
 }
 
 void PlatformLinux::InitializeImpl()
@@ -62,30 +78,49 @@ void PlatformLinux::InitializeImpl()
 
 void PlatformLinux::InitializeWayland()
 {
-	m_Display = wl_display_connect(nullptr);
-	if (!m_Display)
-		THROW_RUNTIME("wl_display_connect() failed.");
+	try
+	{
+		m_Display = wl_display_connect(nullptr);
+		if (!m_Display)
+			THROW_RUNTIME("wl_display_connect() failed.");
 
-	m_Registry = wl_display_get_registry(m_Display);
-	if (!m_Registry)
-		THROW_RUNTIME("wl_display_get_registry() failed.");
+		m_Registry = wl_display_get_registry(m_Display);
+		if (!m_Registry)
+			THROW_RUNTIME("wl_display_get_registry() failed.");
 
-	RegistryData rd{ &m_Compositor, &m_XdgWmBase };
-	if (wl_registry_add_listener(m_Registry, &g_RegistryListener, &rd) != 0)
-		THROW_RUNTIME("wl_registry_add_listener() failed.");
-	if (wl_display_roundtrip(m_Display) == -1)
-		THROW_RUNTIME("wl_display_roundtrip() failed.");
+		RegistryData rd{ &m_Compositor, &m_XdgWmBase };
+		if (wl_registry_add_listener(m_Registry, &g_RegistryListener, &rd) != 0)
+			THROW_RUNTIME("wl_registry_add_listener() failed.");
 
-	if (!m_Compositor)
-		THROW_RUNTIME("wl_compositor not found.");
+		if (wl_display_roundtrip(m_Display) == -1)
+			THROW_RUNTIME("wl_display_roundtrip() failed.");
 
-	if (!m_XdgWmBase)
-		THROW_RUNTIME("xdg_wm_base not found.");
+		if (!m_Compositor)
+			THROW_RUNTIME("wl_compositor not found.");
+
+		if (!m_XdgWmBase)
+			THROW_RUNTIME("xdg_wm_base not found.");
+
+		xdg_wm_base_add_listener(
+			m_XdgWmBase,
+			&g_WmBaseListener,
+			nullptr);
+	}
+	catch (const std::exception& e)
+	{
+		Shutdown();
+		THROW_RUNTIME("Exception initialize: {}.", e.what());
+	}
+	catch (...)
+	{
+		Shutdown();
+		THROW_RUNTIME("Unknown exception occurred.");
+	}
 
 	DOut("PlatformLinux initialized: OK.");
 }
 
-void PlatformLinux::ShutdownWayland()
+void PlatformLinux::Shutdown()
 {
 	if (m_XdgWmBase)
 	{

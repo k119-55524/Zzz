@@ -9,7 +9,6 @@ struct xdg_surface;
 struct xdg_toplevel;
 
 #include "../../../../header.h"
-#include "../../../core/config/EngineConfig.h"
 
 namespace zzz::engine
 {
@@ -18,14 +17,17 @@ namespace zzz::engine
 	public:
 		WinLinux() = delete;
 		WinLinux(const std::shared_ptr<IPlatform> platform);
-		~WinLinux() = default;
+		~WinLinux() override;
 
 		[[nodiscard]] virtual std::expected<void, std::string> Initialize(const std::string_view appName) override;
+		inline wl_surface* GetSurface() const noexcept { return m_Surface; };
 
 	private:
-		wl_surface* m_Surface{};
-		xdg_surface* m_XdgSurface{};
-		xdg_toplevel* m_XdgToplevel{};
+		void Shutdown();
+
+		wl_surface* m_Surface;
+		xdg_surface* m_XdgSurface;
+		xdg_toplevel* m_XdgToplevel;
 	};
 }
 #endif // defined(Z_LINUX)
