@@ -1,21 +1,19 @@
 #pragma once
 
 #include <list>
-#include <mutex>
-#include <expected>
 #include <atomic>
-#include "headers/enums.h"
-#include "private/platforms/main_loop/IMainLoop.h"
-#include "private/platforms/native_view/NativeView.h"
+#include <expected>
 
-namespace zzz::io
+namespace zzz
 {
-	class Path;
+	enum class eInitState : zU8;
 }
 
 namespace zzz::engine
 {
-	class ConfigManager;
+	class IPlatform;
+	class IMainLoop;
+	class NativeView;
 }
 
 using namespace zzz;
@@ -26,10 +24,10 @@ namespace zzz::engine
 	{
 	public:
 		Engine() = delete;
-		Engine(std::string_view appName, std::shared_ptr<void> platformData = nullptr);
+		Engine(std::string_view appName, std::string_view configPath = {}, std::shared_ptr<void> platformData = nullptr);
 		~Engine();
 
-		[[nodiscard]] std::expected<void, std::string> Initialize(std::string_view configPath = {});
+		[[nodiscard]] std::expected<void, std::string> Initialize();
 		[[nodiscard]] std::expected<void, std::string> Run();
 
 #pragma region Mobile Lifecycle Events
@@ -83,15 +81,11 @@ namespace zzz::engine
 	private:
 		void Shutdown();
 
-		std::string_view m_AppName;
-		std::shared_ptr<void> m_PlatformData;
-
 		std::mutex stateMutex;
 		std::atomic<eInitState> engineState;
 
-		std::shared_ptr<io::Path> m_Path;
-		std::shared_ptr<ConfigManager> m_ConfigManager;
-		std::list<std::shared_ptr<NativeView>> m_NativeView;
+		std::shared_ptr<IPlatform> m_Platform;
+		std::list<std::shared_ptr<NativeView>> m_NativeViews;
 		std::shared_ptr<IMainLoop> m_MainLoop;
 	};
 }

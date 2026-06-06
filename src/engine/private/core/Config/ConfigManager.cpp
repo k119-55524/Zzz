@@ -15,7 +15,7 @@ ConfigManager::ConfigManager(std::shared_ptr<Path> path) :
 	m_Path(path),
 	m_IsDirty(true)
 {
-	ensure(m_Path, "Path must not be null.");
+	ensure(m_Path != nullptr, "Path must not be null.");
 }
 
 [[nodiscard]] std::expected<void, std::string> ConfigManager::SaveConfig()
@@ -64,17 +64,17 @@ ConfigManager::ConfigManager(std::shared_ptr<Path> path) :
 	return {};
 }
 
-[[nodiscard]] std::expected<eInitConfigState, std::string> ConfigManager::Initialize(std::string_view configPath)
+void ConfigManager::Initialize(std::string_view configPath)
 {
 	try
 	{
 		std::filesystem::path userPath(configPath);
 		if (userPath.is_absolute())
-			return UNEXPECTED("Config path must be relative.");
+			THROW_RUNTIME("Config path must be relative.");
 
 		auto resPath = GetSettingsDirectory();
 		if (!resPath)
-			return UNEXPECTED("Failed to get settings directory: {}.", resPath.error());
+			THROW_RUNTIME("Failed to get settings directory: {}.", resPath.error());
 
 		m_ConfigPath = resPath.value();
 		if (!userPath.empty())
@@ -87,17 +87,13 @@ ConfigManager::ConfigManager(std::shared_ptr<Path> path) :
 		m_EngineConfig = zzz::safe_make_shared<EngineConfig>();
 
 		if (!std::filesystem::exists(m_ConfigPath))
-		{
 			DOutWarning("Config file not found: {}. Using default config.", m_ConfigPath.string());
-			return eInitConfigState::InitDefault;
-		}
 
 		auto loadResult = LoadConfig(m_ConfigPath);
 		if (!loadResult)
 		{
 			DOutWarning("Failed to load config file: {}. Creating default config.", m_ConfigPath.string());
 			m_EngineConfig = zzz::safe_make_shared<EngineConfig>();
-			return eInitConfigState::InitDefault;
 		}
 	}
 	catch (const std::filesystem::filesystem_error& e)
@@ -105,26 +101,24 @@ ConfigManager::ConfigManager(std::shared_ptr<Path> path) :
 		DOutException("Filesystem error: {}. Setting to default config.", e.what());
 		m_EngineConfig = zzz::safe_make_shared<EngineConfig>();
 
-		return eInitConfigState::InitDefault;
+		return;
 	}
 	catch (const std::exception& e)
 	{
 		DOutException("Config loading error: {}. Setting to default config.", e.what());
 		m_EngineConfig = zzz::safe_make_shared<EngineConfig>();
 
-		return eInitConfigState::InitDefault;
+		return;
 	}
 	catch (...)
 	{
 		DOutException("Unknown config loading error. Setting to default config.");
 		m_EngineConfig = zzz::safe_make_shared<EngineConfig>();
 
-		return eInitConfigState::InitDefault;
+		return;
 	}
 
 	DOut("Config deserialized successfully from file: {}.", m_ConfigPath.string());
-
-	return eInitConfigState::InitOK;
 }
 
 std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path path)
@@ -177,11 +171,11 @@ std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path
 std::expected<std::filesystem::path, std::string> ConfigManager::GetSettingsDirectory()
 {
 	// На Apple и Android используем директорию данных пользователя
-#if defined(__APPLE__) || defined(__ANDROID__)
+#if defined(Z_MACOS) || defined(Z_IOS) || defined(Z_ANDROID)
 	return m_Path->GetUserDataDirectory();
 
 	// На Windows и Linux используем директорию с исполняемым файлом
-#elif defined(_WIN32) || defined(__linux__)
+#elif defined(Z_WINDOWS) || defined(Z_LINUX)
 	return m_Path->GetExecutableDirectory();
 #else
 #error >>>>> Unsupported platform

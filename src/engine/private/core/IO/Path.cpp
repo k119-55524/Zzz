@@ -13,6 +13,7 @@ namespace zzz::io
 		auto resPath = ResolveUserDataDirectory();
 		if (!resPath)
 			ensure(false, "Failed to resolve user data directory: {}.", resPath.error());
+
 		m_UserDataDirectory = *resPath;
 	}
 
@@ -51,17 +52,14 @@ namespace zzz::io
 	{
 		try
 		{
-#if defined(_WIN32)
+#if defined(Z_WINDOWS)
 			wchar_t buffer[MAX_PATH];
 			DWORD len = GetModuleFileNameW(nullptr, buffer, MAX_PATH);
 			if (len == 0)
 				return UNEXPECTED("Failed to get executable path.");
 
 			return std::filesystem::path(buffer).parent_path();
-#elif defined(__APPLE__)
-#if TARGET_OS_IPHONE
-			return UNEXPECTED("iOS is not supported.");
-#else
+#elif defined(Z_MACOS)
 			uint32_t size = 0;
 			_NSGetExecutablePath(nullptr, &size);
 
@@ -71,8 +69,7 @@ namespace zzz::io
 				return UNEXPECTED("Failed to get executable path.");
 
 			return std::filesystem::weakly_canonical(path).parent_path();
-#endif
-#elif defined(__linux__) && !defined(__ANDROID__)
+#elif defined(Z_LINUX)
 			char buffer[PATH_MAX];
 			ssize_t len = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
 			if (len == -1)

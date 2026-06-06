@@ -15,17 +15,19 @@ namespace zzz::engine
 
 	class ConfigManager final
 	{
+		friend class IPlatform;
+
 	public:
 		ConfigManager() = delete;
 		ConfigManager(std::shared_ptr<Path> path);
 
-		[[nodiscard]] std::expected<eInitConfigState, std::string> Initialize(std::string_view configPath);
 		[[nodiscard]] std::expected<void, std::string> SaveConfig();
 
 		inline const EngineConfig& GetEngineConfig() const noexcept { return *m_EngineConfig; }
 		inline const PlatformConfig& GetPlatformConfig() const noexcept { return m_EngineConfig->GetPlatformConfig(); }
 
 	private:
+		void Initialize(std::string_view configPath);
 		std::expected<std::filesystem::path, std::string> GetSettingsDirectory();
 		std::expected<void, std::string> LoadConfig(std::filesystem::path path);
 

@@ -1,32 +1,40 @@
 #include "pch.h"
 
+#include <foundation.h>
+
 #include "engine.h"
-#include "private/core/io/Path.h"
-#include "private/core/config/ConfigManager.h"
+#include "headers/enums.h"
+#include "private/platforms/native_view/NativeView.h"
+
+#pragma region Platform-specific includes and typedefs
 #include "private/platforms/main_loop/MainLoop_MSWin.h"
+#include "private/platforms/platforms/PlatformMSWindows.h"
+#include "private/platforms/platforms/PlatformLinux.h"
 #include "private/platforms/main_loop/MainLoop_Linux.h"
+
+namespace zzz::engine
+{
+#if defined(Z_WINDOWS)
+	typedef zzz::engine::PlatformMSWindows Platform;
+	typedef zzz::engine::MainLoop_MSWin MainLoop;
+#elif defined(Z_LINUX)
+	typedef zzz::engine::PlatformLinux Platform;
+	typedef zzz::engine::MainLoop_Linux MainLoop;
+#else
+#error ">>>>> [Compile error]. This branch requires implementation for the current platform"
+#endif
+}
+#pragma endregion
 
 using namespace zzz;
 using namespace zzz::io;
 using namespace zzz::engine;
 
-namespace zzz::engine
-{
-#if defined(Z_WINDOWS)
-	typedef MainLoop_MSWin MainLoop;
-#elif defined(Z_LINUX)
-	typedef MainLoop_Linux MainLoop;
-#else
-#error ">>>>> [Compile error]. This branch requires implementation for the current platform"
-#endif
-}
-
-Engine::Engine(std::string_view appName, std::shared_ptr<void> platformData) :
-	m_AppName{ appName },
-	m_PlatformData{ platformData },
+Engine::Engine(std::string_view appName, std::string_view configPath, std::shared_ptr<void> platformData) :
 	engineState{ eInitState::NotInitialized }
 {
-	ensure(m_AppName.empty() == false, "Application name must not be empty.");
+	m_Platform = safe_make_shared<Platform>(appName, platformData);
+	m_Platform->Initialize(configPath);
 }
 
 Engine::~Engine()
@@ -36,27 +44,17 @@ Engine::~Engine()
 
 void Engine::Shutdown()
 {
-	bool isSaveConfig = (engineState.load() != eInitState::NotInitialized && m_ConfigManager);
 	engineState.store(eInitState::Destroying);
 
 	try
 	{
-		if (isSaveConfig)
-		{
-			auto res = m_ConfigManager->SaveConfig();
-			if (!res)
-				DOutCritical("Failed to serialize config: {}.", res.error());
-		}
-
+		m_Platform = nullptr;
 		m_MainLoop = nullptr;
 
-		for (auto& view : m_NativeView)
+		for (auto& view : m_NativeViews)
 			view = nullptr;
 
-		m_NativeView.clear();
-
-		m_ConfigManager = nullptr;
-		m_Path = nullptr;
+		m_NativeViews.clear();
 	}
 	catch (const std::exception& e)
 	{
@@ -70,7 +68,7 @@ void Engine::Shutdown()
 	engineState.store(eInitState::NotInitialized);
 }
 
-std::expected<void, std::string> Engine::Initialize(std::string_view configPath)
+std::expected<void, std::string> Engine::Initialize()
 {
 	std::lock_guard lock(stateMutex);
 
@@ -82,27 +80,27 @@ std::expected<void, std::string> Engine::Initialize(std::string_view configPath)
 	try
 	{
 		// Инициализация пути и менеджера конфигурации
-		m_Path = zzz::safe_make_shared<Path>(m_AppName, m_PlatformData);
-		m_ConfigManager = zzz::safe_make_shared<ConfigManager>(m_Path);
-		auto res = m_ConfigManager->Initialize(configPath)
-			.and_then([this](eInitConfigState state)
-				{
-					if (state == eInitConfigState::InitDefault)
-						DOutWarning("Config initialized with default settings.");
+		//m_Path = zzz::safe_make_shared<Path>(m_AppName, m_PlatformData);
+		//m_ConfigManager = zzz::safe_make_shared<ConfigManager>(m_Path);
+		//auto res = m_ConfigManager->Initialize(configPath)
+		//	.and_then([this](eInitConfigState state)
+		//		{
+		//			if (state == eInitConfigState::InitDefault)
+		//				DOutWarning("Config initialized with default settings.");
 
-					m_NativeView.push_back(zzz::safe_make_shared<NativeView>(m_AppName, m_ConfigManager->GetEngineConfig()));
+		//			m_NativeView.push_back(zzz::safe_make_shared<NativeView>(m_AppName, m_ConfigManager->GetEngineConfig()));
 
-					m_MainLoop = safe_make_shared<MainLoop>();
+		//			m_MainLoop = safe_make_shared<MainLoop>();
 
-					return std::expected<void, std::string>{};
-				})
-			.or_else([&](const std::string& error)
-				-> std::expected<void, std::string>
-				{
-					DOutError("Initialization failed: {}", error);
-					Shutdown();
-					return std::unexpected(error);
-				});
+		//			return std::expected<void, std::string>{};
+		//		})
+		//	.or_else([&](const std::string& error)
+		//		-> std::expected<void, std::string>
+		//		{
+		//			DOutError("Initialization failed: {}", error);
+		//			Shutdown();
+		//			return std::unexpected(error);
+		//		});
 
 		DOut("Engine initialized: OK.");
 		engineState.store(eInitState::Initialized);
@@ -133,7 +131,7 @@ std::expected<void, std::string> Engine::Initialize(std::string_view configPath)
 	bool isError = false;
 	try
 	{
-		m_MainLoop->Run();
+		//m_MainLoop->Run();
 	}
 	catch (const std::exception& e)
 	{

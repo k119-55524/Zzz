@@ -25,7 +25,7 @@ namespace zzz::io
 
 		[[nodiscard]] std::expected<std::filesystem::path, std::string> ResolveUserDataDirectory();
 
-#if defined(__APPLE__)
+#if defined(Z_MACOS) || defined(Z_IOS)
 		[[nodiscard]] std::expected<std::filesystem::path, std::string> GetAppleUserDataDirectory();
 #endif
 	};
