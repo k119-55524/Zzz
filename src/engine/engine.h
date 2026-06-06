@@ -1,8 +1,11 @@
 #pragma once
 
 #include <list>
+#include <mutex>
 #include <atomic>
+#include <memory>
 #include <expected>
+#include <string_view>
 
 namespace zzz
 {
