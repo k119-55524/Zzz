@@ -11,11 +11,12 @@
 using namespace zzz::io;
 using namespace zzz::engine;
 
-ConfigManager::ConfigManager(std::shared_ptr<Path> path) :
+ConfigManager::ConfigManager(std::shared_ptr<Path> path, std::string_view configPath) :
 	m_Path(path),
 	m_IsDirty(true)
 {
 	ensure(m_Path != nullptr, "Path must not be null.");
+	Initialize(configPath);
 }
 
 [[nodiscard]] std::expected<void, std::string> ConfigManager::SaveConfig()

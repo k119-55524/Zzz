@@ -15,11 +15,9 @@ namespace zzz::engine
 
 	class ConfigManager final
 	{
-		friend class IPlatform;
-
 	public:
 		ConfigManager() = delete;
-		ConfigManager(std::shared_ptr<Path> path);
+		ConfigManager(std::shared_ptr<Path> path, std::string_view configPath);
 
 		[[nodiscard]] std::expected<void, std::string> SaveConfig();
 
