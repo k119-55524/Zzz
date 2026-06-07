@@ -43,7 +43,7 @@ int APIENTRY wWinMain(
 			return -1;
 		}
 	}
-	catch (const std::exception& e)
+	catch (const std::exception& /*e*/)
 	{
 		//DOutException("[Windows OS]. WinMain {}.", e.what());
 		return -1;

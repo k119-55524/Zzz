@@ -6,30 +6,8 @@
 #include "headers/enums.h"
 #include "private/platforms/native_view/NativeView.h"
 
-#pragma region Platform-specific includes and typedefs
-#include "private/platforms/main_loop/MainLoop_MSWin.h"
-#include "private/platforms/platforms/PlatformMSWindows.h"
-#include "private/platforms/platforms/PlatformLinux.h"
-#include "private/platforms/main_loop/MainLoop_Linux.h"
-#include "private/platforms/platforms/PlatformAndroid.h"
-#include "private/platforms/main_loop/MainLoop_Android.h"
-
-namespace zzz::engine
-{
-#if defined(Z_WINDOWS)
-	using Platform = PlatformMSWindows;
-	using MainLoop = MainLoop_MSWin;
-#elif defined(Z_LINUX)
-	using Platform = PlatformLinux;
-	using MainLoop = MainLoop_Linux;
-#elif defined(Z_ANDROID)
-	using Platform = PlatformAndroid;
-	using MainLoop = MainLoop_Android;
-#else
-#error ">>>>> [Compile error]. This branch requires implementation for the current platform"
-#endif
-}
-#pragma endregion
+#include "private/factories/PlatformFactory.h"
+#include "private/factories/EngineFactory.h"
 
 using namespace zzz;
 using namespace zzz::io;
@@ -38,8 +16,7 @@ using namespace zzz::engine;
 Engine::Engine(std::string_view appName, std::shared_ptr<void> platformData) :
 	engineState{ eInitState::NotInitialized }
 {
-	m_Platform = safe_make_shared<Platform>(appName, platformData);
-	m_Platform->Initialize();
+	m_Platform = PlatformFactory{}.Create(appName, platformData);
 }
 
 Engine::~Engine()
@@ -84,11 +61,11 @@ std::expected<void, std::string> Engine::Initialize()
 
 	try
 	{
-		m_MainLoop = safe_make_shared<MainLoop>(m_Platform);
+		m_MainLoop = m_Platform->GetFactory()->CreateMainLoop(m_Platform);
 		m_MainLoop->onUpdateSystem += std::bind(&Engine::OnUpdateSystem, this);
 
 		AddNativeView();
-		//AddNativeView();
+		AddNativeView();
 
 		DOut("Engine initialized: OK.");
 		engineState.store(eInitState::Initialized);

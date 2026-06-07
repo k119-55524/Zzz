@@ -8,11 +8,11 @@ using namespace zzz::io;
 namespace zzz::engine
 {
 	class Engine;
-	class PlatformFactory;
+	class EngineFactory;
 
 	class IPlatform
 	{
-		friend class Engine;
+		friend class PlatformFactory;
 
 	public:
 		IPlatform() = delete;
@@ -21,18 +21,17 @@ namespace zzz::engine
 
 		inline std::string_view GetAppName() const noexcept { return m_AppName; }
 		inline const PlatformConfig& GetPlatformConfig() const noexcept { return m_ConfigManager->GetPlatformConfig(); };
-		PlatformFactory& GetFactory() noexcept;
+		inline const std::shared_ptr<EngineFactory> GetFactory() const noexcept { return m_Factory; };
 
 		protected:
 			std::string_view m_AppName;
 			std::shared_ptr<void> m_PlatformData;
 			std::shared_ptr<Path> m_Path;
 			std::shared_ptr<ConfigManager> m_ConfigManager;
+			std::shared_ptr<EngineFactory> m_Factory;
 
 		private:
 			void Initialize();
 			virtual void InitializeImpl() = 0;
-
-			std::unique_ptr<PlatformFactory> m_Factory;
 	};
 }

@@ -1,26 +1,25 @@
-﻿#pragma once
+#pragma once
 
-#include "../core/config/ConfigManager.h"
 #include "../platforms/platforms/IPlatform.h"
-#include "../platforms/native_view/window/WinLinux.h"
-#include "../platforms/native_view/window/WinMSWindows.h"
-#include "../platforms/native_view/window/WinAndroid.h"
+#include "../platforms/platforms/PlatformMSWindows.h"
+#include "../platforms/platforms/PlatformLinux.h"
+#include "../platforms/platforms/PlatformAndroid.h"
 
 namespace zzz::engine
 {
 #if defined(Z_WINDOWS)
-	using Window = WinMSWindows;
+	using Platform = PlatformMSWindows;
 #elif defined(Z_LINUX)
-	using Window = WinLinux;
+	using Platform = PlatformLinux;
 #elif defined(Z_ANDROID)
-	using Window = WinAndroid;
+	using Platform = PlatformAndroid;
 #else
-#error >>>>> Unsupported platform. No window implementation available.
+#error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif
 
 	class PlatformFactory final
 	{
 	public:
-		std::shared_ptr<IWindow> CreateAppWin(const std::shared_ptr<IPlatform> platform);
+		std::shared_ptr<IPlatform> Create(std::string_view appName, std::shared_ptr<void> platformData);
 	};
 }
