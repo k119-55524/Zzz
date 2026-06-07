@@ -64,8 +64,8 @@ std::expected<void, std::string> Engine::Initialize()
 		m_MainLoop = m_Platform->GetFactory()->CreateMainLoop(m_Platform);
 		m_MainLoop->onUpdateSystem += std::bind(&Engine::OnUpdateSystem, this);
 
-		AddNativeView();
-		AddNativeView();
+		AddView();
+		//AddView();
 
 		DOut("Engine initialized: OK.");
 		engineState.store(eInitState::Initialized);
@@ -121,7 +121,7 @@ std::expected<void, std::string> Engine::Initialize()
 	return {};
 }
 
-void Engine::AddNativeView()
+void Engine::AddView()
 {
 	auto view = zzz::safe_make_shared<NativeView>(m_Platform);
 

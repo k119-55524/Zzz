@@ -2,6 +2,7 @@
 
 #include "../../core/io/Path.h"
 #include "../../core/config/ConfigManager.h"
+#include "../../core/config/platforms/IConfig.h"
 
 using namespace zzz::io;
 
@@ -20,7 +21,7 @@ namespace zzz::engine
 		virtual ~IPlatform();
 
 		inline std::string_view GetAppName() const noexcept { return m_AppName; }
-		inline const PlatformConfig& GetPlatformConfig() const noexcept { return m_ConfigManager->GetPlatformConfig(); };
+		inline const IConfig& GetPlatformConfig() const noexcept { return m_ConfigManager->GetPlatformConfig(); };
 		inline const std::shared_ptr<EngineFactory> GetFactory() const noexcept { return m_Factory; };
 
 		protected:

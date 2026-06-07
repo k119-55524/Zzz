@@ -2,6 +2,7 @@
 
 #if defined(Z_WINDOWS)
 
+#include "../../../header.h"
 #include "IPlatform.h"
 
 namespace zzz::engine

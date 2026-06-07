@@ -2,6 +2,7 @@
 
 #include "PlatformMSWindows.h"
 #include "../platforms/native_view/window/WinMSWindows.h"
+#include "../../core/config/platforms/ConfigMSWin.h"
 
 using namespace zzz::engine;
 
@@ -13,11 +14,11 @@ PlatformMSWindows::PlatformMSWindows(std::string_view appName, std::shared_ptr<v
 
 PlatformMSWindows::~PlatformMSWindows()
 {
-	const BOOL result = UnregisterClass(m_ConfigManager->GetPlatformConfig().GetClassName().c_str(), GetModuleHandle(nullptr));
+	const BOOL result = UnregisterClass(static_cast<const ConfigMSWin&>(m_ConfigManager->GetPlatformConfig()).GetClassName().c_str(), GetModuleHandle(nullptr));
 	if (!result)
 	{
 		const DWORD error = GetLastError();
-		DOutCritical("Failed to unregister window class '{}'. Error code: {}.", m_ConfigManager->GetPlatformConfig().GetClassName(), error);
+		DOutCritical("Failed to unregister window class '{}'. Error code: {}.", static_cast<const ConfigMSWin&>(m_ConfigManager->GetPlatformConfig()).GetClassName(), error);
 	}
 }
 
@@ -25,14 +26,14 @@ void PlatformMSWindows::InitializeImpl()
 {
 	HICON iconHandle = (HICON)LoadImage(
 		GetModuleHandle(NULL),
-		m_ConfigManager->GetPlatformConfig().GetIcoResourceName().c_str(),
+		static_cast<const ConfigMSWin&>(m_ConfigManager->GetPlatformConfig()).GetIcoResourceName().c_str(),
 		IMAGE_ICON,
 		0,
 		0,
 		LR_DEFAULTSIZE | LR_SHARED);
 
 	if (!iconHandle)
-		DOutWarning("Failed to load icon '{}'. Error: {}", m_ConfigManager->GetPlatformConfig().GetIcoResourceName(), GetLastError());
+		DOutWarning("Failed to load icon '{}'. Error: {}", static_cast<const ConfigMSWin&>(m_ConfigManager->GetPlatformConfig()).GetIcoResourceName(), GetLastError());
 
 	WNDCLASS wc = { 0 };
 	wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -41,7 +42,7 @@ void PlatformMSWindows::InitializeImpl()
 	wc.hIcon = iconHandle;
 	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-	wc.lpszClassName = m_ConfigManager->GetPlatformConfig().GetClassName().c_str();
+	wc.lpszClassName = static_cast<const ConfigMSWin&>(m_ConfigManager->GetPlatformConfig()).GetClassName().c_str();
 	ATOM Result = RegisterClass(&wc);
 	if (Result == 0)
 		THROW_RUNTIME("Failed to register window class. Error code: {}.", GetLastError());

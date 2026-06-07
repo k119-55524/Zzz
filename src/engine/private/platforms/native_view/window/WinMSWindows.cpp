@@ -3,6 +3,7 @@
 #include "WinMSWindows.h"
 #include "../../platforms/PlatformMSWindows.h"
 #include "../platforms/native_view/ScreenResolution.h"
+#include "../../../core/config/platforms/ConfigMSWin.h"
 
 using namespace zzz::engine;
 
@@ -36,7 +37,7 @@ WinMSWindows::~WinMSWindows()
 	int yPos = (screenHeight - height) / 2; // Расчет позиции по оси Y
 	CreateWindowEx(
 		0,
-		platform->GetPlatformConfig().GetClassName().c_str(),
+		static_cast<const ConfigMSWin&>(platform->GetPlatformConfig()).GetClassName().c_str(),
 		appName.data(),
 		WS_OVERLAPPEDWINDOW,
 		xPos, yPos, width, height,

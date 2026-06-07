@@ -11,7 +11,8 @@
 using namespace zzz::io;
 using namespace zzz::engine;
 
-ConfigManager::ConfigManager(std::shared_ptr<Path> path) :
+ConfigManager::ConfigManager(std::shared_ptr<Path> path, std::shared_ptr<IConfig> platformConfig) :
+	m_PlatformConfig(std::move(platformConfig)),
 	m_Path(path),
 	m_IsDirty(true)
 {
@@ -78,7 +79,7 @@ void ConfigManager::Initialize()
 			.make_preferred();
 
 		// Далее работаем с файлом
-		m_EngineConfig = zzz::safe_make_shared<EngineConfig>();
+		m_EngineConfig = zzz::safe_make_shared<EngineConfig>(m_PlatformConfig);
 
 		if (!std::filesystem::exists(m_ConfigPath))
 			DOutWarning("Config file not found: {}. Using default config.", m_ConfigPath.string());
@@ -87,27 +88,27 @@ void ConfigManager::Initialize()
 		if (!loadResult)
 		{
 			DOutWarning("Failed to load config file: {}. Creating default config.", m_ConfigPath.string());
-			m_EngineConfig = zzz::safe_make_shared<EngineConfig>();
+			m_EngineConfig = zzz::safe_make_shared<EngineConfig>(m_PlatformConfig);
 		}
 	}
 	catch (const std::filesystem::filesystem_error& e)
 	{
 		DOutException("Filesystem error: {}. Setting to default config.", e.what());
-		m_EngineConfig = zzz::safe_make_shared<EngineConfig>();
+		m_EngineConfig = zzz::safe_make_shared<EngineConfig>(m_PlatformConfig);
 
 		return;
 	}
 	catch (const std::exception& e)
 	{
 		DOutException("Config loading error: {}. Setting to default config.", e.what());
-		m_EngineConfig = zzz::safe_make_shared<EngineConfig>();
+		m_EngineConfig = zzz::safe_make_shared<EngineConfig>(m_PlatformConfig);
 
 		return;
 	}
 	catch (...)
 	{
 		DOutException("Unknown config loading error. Setting to default config.");
-		m_EngineConfig = zzz::safe_make_shared<EngineConfig>();
+		m_EngineConfig = zzz::safe_make_shared<EngineConfig>(m_PlatformConfig);
 
 		return;
 	}

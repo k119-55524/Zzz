@@ -38,6 +38,7 @@ target_sources(engine_lib PRIVATE
     "private/factories/EngineFactory.h" "private/factories/EngineFactory.cpp"
     "private/platforms/native_view/NativeView.h" "private/platforms/native_view/NativeView.cpp"
     "private/core/config/platforms/ConfigMSWin.h" "private/core/config/platforms/ConfigMSWin.cpp"
+    "private/core/config/platforms/IConfig.h"
     "private/core/templates/Size2D.h"  "private/platforms/native_view/ScreenResolution.h"
     "private/core/templates/Event.h"
     "private/platforms/main_loop/IMainLoop.h"

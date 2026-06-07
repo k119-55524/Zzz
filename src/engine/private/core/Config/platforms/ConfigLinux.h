@@ -3,11 +3,11 @@
 #if defined(Z_LINUX)
 
 #include "../../../../header.h"
-#include "../../serialize/Serializer.h"
+#include "IConfig.h"
 
 namespace zzz::engine
 {
-	class ConfigLinux final : public ISerializable
+	class ConfigLinux final : public IConfig
 	{
 	public:
 		ConfigLinux();

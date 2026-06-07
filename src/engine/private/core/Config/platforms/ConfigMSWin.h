@@ -3,11 +3,11 @@
 #if defined(Z_WINDOWS)
 
 #include "../../../../header.h"
-#include "../../serialize/Serializer.h"
+#include "IConfig.h"
 
 namespace zzz::engine
 {
-	class ConfigMSWin final : public ISerializable
+	class ConfigMSWin final : public IConfig
 	{
 	public:
 		ConfigMSWin();

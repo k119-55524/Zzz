@@ -22,15 +22,15 @@ IPlatform::~IPlatform()
 			DOutCritical("Failed to serialize config: {}.", res.error());
 	}
 
-	m_Path = nullptr;
+	//m_Path = nullptr;
 	m_ConfigManager = nullptr;
 }
 
 void IPlatform::Initialize()
 {
-	m_Path = zzz::safe_make_shared<Path>(m_AppName, m_PlatformData);
-	m_ConfigManager = zzz::safe_make_shared<ConfigManager>(m_Path);
 	m_Factory = zzz::safe_make_shared<EngineFactory>();
+	auto platformConfig = m_Factory->CreatePlatformConfig();
+	m_ConfigManager = zzz::safe_make_shared<ConfigManager>(m_Path, std::move(platformConfig));
 
 	InitializeImpl();
 }

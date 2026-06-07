@@ -32,12 +32,12 @@ int main(int argc, char* argv[])
 	}
 	catch (const std::exception& e)
 	{
-		DOut(">>>>> [Linux OS]. Game started exception: {}.", e.what());
+		//DOut(">>>>> [Linux OS]. Game started exception: {}.", e.what());
 		return -1;
 	}
 	catch (...)
 	{
-		DOut(">>>>> [Linux OS]. Game started unknown exception.");
+		//DOut(">>>>> [Linux OS]. Game started unknown exception.");
 		return -1;
 	}
 

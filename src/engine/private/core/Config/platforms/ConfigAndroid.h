@@ -3,11 +3,11 @@
 #if defined(Z_ANDROID)
 
 #include "../../../../header.h"
-#include "../../serialize/Serializer.h"
+#include "IConfig.h"
 
 namespace zzz::engine
 {
-	class ConfigAndroid final : public ISerializable
+	class ConfigAndroid final : public IConfig
 	{
 	public:
 		ConfigAndroid();
