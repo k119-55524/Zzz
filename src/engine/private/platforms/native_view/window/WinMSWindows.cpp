@@ -2,7 +2,7 @@
 
 #include "WinMSWindows.h"
 #include "../../platforms/PlatformMSWindows.h"
-#include "../ScreenResolution.h"
+#include "../platforms/native_view/ScreenResolution.h"
 
 using namespace zzz::engine;
 
@@ -28,26 +28,6 @@ WinMSWindows::~WinMSWindows()
 	std::shared_ptr<PlatformMSWindows> platform = std::dynamic_pointer_cast<PlatformMSWindows>(m_Platform);
 	ensure(platform != nullptr, "Platform is not PlatformLinux.");
 
-	HICON iconHandle = (HICON)LoadImage(
-		GetModuleHandle(NULL),
-		platform->GetPlatformConfig().GetIcoResourceName().c_str(),
-		IMAGE_ICON,
-		0,
-		0,
-		LR_DEFAULTSIZE | LR_SHARED);
-
-	WNDCLASS wc = { 0 };
-	wc.style = CS_HREDRAW | CS_VREDRAW;
-	wc.lpfnWndProc = WinMSWindows::WindowProc;
-	wc.hInstance = GetModuleHandle(NULL);
-	wc.hIcon = iconHandle;
-	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-	wc.lpszClassName = platform->GetPlatformConfig().GetClassName().c_str();
-	ATOM Result = RegisterClass(&wc);
-	if (Result == 0)
-		return UNEXPECTED("Failed to register window class. Error code: {}.", GetLastError());
-
 	// Рассчитать размеры прямоугольника окна на основе запрошенных размеров клиентской области.
 	Size2D<LONG> winSize;
 	// TODO: не правильная архитектура. Подумать как задавать размер окна
@@ -61,7 +41,7 @@ WinMSWindows::~WinMSWindows()
 	int screenHeight = GetSystemMetrics(SM_CYSCREEN); // Высота экрана
 	int xPos = (screenWidth - width) / 2;  // Расчет позиции по оси X
 	int yPos = (screenHeight - height) / 2; // Расчет позиции по оси Y
-	m_hWnd = CreateWindowEx(
+	CreateWindowEx(
 		0,
 		platform->GetPlatformConfig().GetClassName().c_str(),
 		appName.data(),
@@ -83,47 +63,20 @@ WinMSWindows::~WinMSWindows()
 	return std::expected<void, std::string>();
 }
 
-LRESULT CALLBACK WinMSWindows::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept
-{
-	WinMSWindows* pThis = nullptr;
-
-	try
-	{
-		if (uMsg == WM_NCCREATE)
-		{
-			const auto* pCreate = reinterpret_cast<CREATESTRUCT*>(lParam);
-			if (!pCreate || !pCreate->lpCreateParams)
-				return FALSE; // Ошибка создания
-
-			pThis = static_cast<WinMSWindows*>(pCreate->lpCreateParams);
-			SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
-			pThis->m_hWnd = hwnd;
-		}
-		else
-			pThis = reinterpret_cast<WinMSWindows*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
-
-		if (pThis)
-			return pThis->MsgProc(uMsg, wParam, lParam);
-	}
-	catch (...)
-	{
-		DOutException("An exception occurred in the window procedure.");
-		return DefWindowProc(hwnd, uMsg, wParam, lParam);
-	}
-
-	return DefWindowProc(hwnd, uMsg, wParam, lParam);
-}
-
-LRESULT WinMSWindows::MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
-	//case WM_CREATE:
-	//	return InitRawInput();
+	case WM_NCCREATE:
+		m_hWnd = hWnd;
+		return 0;
+
+		//case WM_CREATE:
+		//	return InitRawInput();
 
 	case WM_CLOSE:
 		onCloseRequested();
-		DestroyWindow(m_hWnd);
+		DestroyWindow(hWnd);
 		return 0;
 
 	case WM_DESTROY:
@@ -168,9 +121,9 @@ LRESULT WinMSWindows::MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		MINMAXINFO* pMinMaxInfo = reinterpret_cast<MINMAXINFO*>(lParam);
 
-		DWORD dwStyle = static_cast<DWORD>(GetWindowLongPtr(m_hWnd, GWL_STYLE));
-		DWORD dwExStyle = static_cast<DWORD>(GetWindowLongPtr(m_hWnd, GWL_EXSTYLE));
-		BOOL bMenu = (GetMenu(m_hWnd) != NULL);
+		DWORD dwStyle = static_cast<DWORD>(GetWindowLongPtr(hWnd, GWL_STYLE));
+		DWORD dwExStyle = static_cast<DWORD>(GetWindowLongPtr(hWnd, GWL_EXSTYLE));
+		BOOL bMenu = (GetMenu(hWnd) != NULL);
 
 		// Минимальный размер клиентской области
 		RECT minRect = { 0, 0, static_cast<LONG>(c_MinWinSize), static_cast<LONG>(c_MinWinSize) };
@@ -251,7 +204,6 @@ LRESULT WinMSWindows::MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	//	return 0;
 	}
 
-	return DefWindowProc(m_hWnd, uMsg, wParam, lParam);
+	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
-
 #endif // defined(Z_WINDOWS)

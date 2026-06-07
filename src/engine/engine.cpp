@@ -160,7 +160,7 @@ void Engine::OnUpdateSystem()
 	static int i = 0;
 	i++;
 
-	if (i == 1000000)
+	if (i == 1'000'000)
 	{
 		i = 0;
 		DOut("Tick!!!");

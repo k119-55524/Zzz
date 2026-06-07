@@ -17,13 +17,10 @@ namespace zzz::engine
 		~WinMSWindows() override;
 
 		[[nodiscard]] virtual std::expected<void, std::string> Initialize(const std::string_view appName) override;
+		LRESULT MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 		private:
-			static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept;
-			LRESULT MsgProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
-
 			static size_t s_WindowCount;
-
 			HWND m_hWnd;
 	};
 }

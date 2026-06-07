@@ -123,8 +123,12 @@ std::expected<void, std::string> WinLinux::Initialize(const std::string_view app
 		xdg_toplevel_add_listener(m_XdgToplevel, &g_ToplevelListener, this);
 
 		{
-			constexpr int W = 800, H = 600, stride = W * 4;
-			constexpr int size = stride * H;
+			const auto& winSize = platform->GetWinSize();
+			const int scale  = platform->GetScaleFactor();
+			const int W      = static_cast<int>(winSize.width)  * scale;
+			const int H      = static_cast<int>(winSize.height) * scale;
+			const int stride = W * 4;
+			const int size   = stride * H;
 
 			int fd = memfd_create("zzz_shm", MFD_CLOEXEC);
 			if (fd >= 0)
@@ -143,13 +147,15 @@ std::expected<void, std::string> WinLinux::Initialize(const std::string_view app
 			}
 		}
 
+		wl_surface_set_buffer_scale(m_Surface, platform->GetScaleFactor());
 		wl_surface_commit(m_Surface);
 
 		wl_display_roundtrip(platform->GetDisplay());
 		wl_display_roundtrip(platform->GetDisplay());
 
 		int err = wl_display_get_error(platform->GetDisplay());
-		DOut("Wayland error = {}", err);
+		if (err != 0)
+			return UNEXPECTED("Wayland display error: {}.", err);
 	}
 	catch (const std::exception& e)
 	{
