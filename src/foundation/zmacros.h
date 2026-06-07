@@ -10,9 +10,6 @@
 #define DOutCritical(...) ::zzz::logger::Logger::LogCritical(std::source_location::current(), __VA_ARGS__)
 
 #define THROW_RUNTIME(...) ::zzz::throw_runtime_error(std::format(__VA_ARGS__), std::source_location::current())
-#define THROW_INVALID_ARGUMENT(...) ::zzz::throw_invalid_argument(std::format(__VA_ARGS__), std::source_location::current())
-#define THROW_OUT_OF_RANGE(...) ::zzz::throw_out_of_range(std::format(__VA_ARGS__), std::source_location::current())
-#define THROW_OVERFLOW(...) ::zzz::throw_overflow_error(std::format(__VA_ARGS__), std::source_location::current())
 
 /// @brief Макрос для возврата std::unexpected с логированием ошибки.
 #define UNEXPECTED(fmt, ...) \

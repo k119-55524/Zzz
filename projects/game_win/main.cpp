@@ -45,12 +45,12 @@ int APIENTRY wWinMain(
 	}
 	catch (const std::exception& e)
 	{
-		DOutException("[Windows OS]. Game started exception: {}.", e.what());
+		//DOutException("[Windows OS]. WinMain {}.", e.what());
 		return -1;
 	}
 	catch (...)
 	{
-		DOutException("[Windows OS]. Game started unknown exception.");
+		//DOutException("[Windows OS]. WinMain exception.");
 		return -1;
 	}
 
