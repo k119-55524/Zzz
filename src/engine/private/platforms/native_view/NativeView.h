@@ -3,7 +3,6 @@
 #include "../../../header.h"
 
 #include "../platforms/IPlatform.h"
-#include "../../factories/PlatformFactory.h"
 #include "../../platforms/native_view/window/IWindow.h"
 
 namespace zzz::engine
@@ -23,7 +22,6 @@ namespace zzz::engine
 		void Initialize();
 
 		std::shared_ptr<IPlatform> m_Platform;
-		PlatformFactory m_Factory;
 		std::shared_ptr<IWindow> m_Window;
 	};
 }

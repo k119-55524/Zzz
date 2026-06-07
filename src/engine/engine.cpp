@@ -11,15 +11,20 @@
 #include "private/platforms/platforms/PlatformMSWindows.h"
 #include "private/platforms/platforms/PlatformLinux.h"
 #include "private/platforms/main_loop/MainLoop_Linux.h"
+#include "private/platforms/platforms/PlatformAndroid.h"
+#include "private/platforms/main_loop/MainLoop_Android.h"
 
 namespace zzz::engine
 {
 #if defined(Z_WINDOWS)
-	typedef zzz::engine::PlatformMSWindows Platform;
-	typedef zzz::engine::MainLoop_MSWin MainLoop;
+	using Platform = PlatformMSWindows;
+	using MainLoop = MainLoop_MSWin;
 #elif defined(Z_LINUX)
-	typedef zzz::engine::PlatformLinux Platform;
-	typedef zzz::engine::MainLoop_Linux MainLoop;
+	using Platform = PlatformLinux;
+	using MainLoop = MainLoop_Linux;
+#elif defined(Z_ANDROID)
+	using Platform = PlatformAndroid;
+	using MainLoop = MainLoop_Android;
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif
@@ -143,7 +148,7 @@ void Engine::AddNativeView()
 {
 	auto view = zzz::safe_make_shared<NativeView>(m_Platform);
 
-	// Обрабатываем закрытие очередного окна
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 	view->GetWindow()->onCloseRequested += [this, weakView = std::weak_ptr(view)]()
 	{
 		if (auto v = weakView.lock())

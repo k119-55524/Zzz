@@ -8,13 +8,16 @@
 
 #include "platforms/ConfigMSWin.h"
 #include "platforms/ConfigLinux.h"
+#include "platforms/ConfigAndroid.h"
 
 namespace zzz::engine
 {
 #if defined(Z_WINDOWS)
-	typedef zzz::engine::ConfigMSWin PlatformConfig;
+	using PlatformConfig = ConfigMSWin;
 #elif defined(Z_LINUX)
-	typedef zzz::engine::ConfigLinux PlatformConfig;
+	using PlatformConfig = ConfigLinux;
+#elif defined(Z_ANDROID)
+	using PlatformConfig = ConfigAndroid;
 #else
 #error >>>>> Unsupported platform. No window implementation available.
 #endif

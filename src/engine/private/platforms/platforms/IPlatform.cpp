@@ -1,6 +1,7 @@
 #include <foundation.h>
 
 #include "IPlatform.h"
+#include "../../factories/PlatformFactory.h"
 
 using namespace zzz::engine;
 
@@ -25,10 +26,16 @@ IPlatform::~IPlatform()
 	m_ConfigManager = nullptr;
 }
 
+PlatformFactory& IPlatform::GetFactory() noexcept
+{
+	return *m_Factory;
+}
+
 void IPlatform::Initialize()
 {
 	m_Path = zzz::safe_make_shared<Path>(m_AppName, m_PlatformData);
 	m_ConfigManager = zzz::safe_make_shared<ConfigManager>(m_Path);
+	m_Factory = std::make_unique<PlatformFactory>();
 
 	InitializeImpl();
 }
