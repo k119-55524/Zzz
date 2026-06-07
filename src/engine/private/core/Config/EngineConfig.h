@@ -25,7 +25,6 @@ namespace zzz::engine
 		EngineConfig();
 		~EngineConfig() = default;
 
-		inline const Size2D<zU32>& GetWinSize() const noexcept { return m_WinSize; }
 		inline const PlatformConfig& GetPlatformConfig() const noexcept { return m_PlatformConfig; }
 
 	private:
@@ -33,7 +32,6 @@ namespace zzz::engine
 		[[nodiscard]] std::expected<void, std::string> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override;
 
 		Version m_Version;
-		Size2D<zU32> m_WinSize;
 		PlatformConfig m_PlatformConfig;
 	};
 }

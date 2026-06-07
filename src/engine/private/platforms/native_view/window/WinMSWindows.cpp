@@ -24,7 +24,7 @@ WinMSWindows::~WinMSWindows()
 	// Рассчитать размеры прямоугольника окна на основе запрошенных размеров клиентской области.
 	Size2D<LONG> winSize;
 	// TODO: не правильная архитектура. Подумать как задавать размер окна
-	winSize.SetFrom(platform->GetWinSize());
+	winSize.SetFrom(c_DefaultWindowWidth, c_DefaultWindowHeicht);
 	RECT R = { 0, 0, winSize.width, winSize.height };
 	AdjustWindowRectEx(&R, WS_OVERLAPPEDWINDOW, false, 0);
 	int width = R.right - R.left;

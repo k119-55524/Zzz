@@ -123,7 +123,7 @@ std::expected<void, std::string> WinLinux::Initialize(const std::string_view app
 		xdg_toplevel_add_listener(m_XdgToplevel, &g_ToplevelListener, this);
 
 		{
-			const auto& winSize = platform->GetWinSize();
+			const Size2D<zU32> winSize(c_DefaultWindowWidth, c_DefaultWindowHeicht);
 			const int scale  = platform->GetScaleFactor();
 			const int W      = static_cast<int>(winSize.width)  * scale;
 			const int H      = static_cast<int>(winSize.height) * scale;

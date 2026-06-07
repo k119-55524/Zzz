@@ -19,8 +19,6 @@ namespace zzz::engine
 		virtual ~IPlatform();
 
 		inline std::string_view GetAppName() const noexcept { return m_AppName; }
-		// TODO: не правильная архитектура. Подумать как задавать размер окна
-		inline const Size2D<zU32>& GetWinSize() const noexcept { return m_ConfigManager->GetEngineConfig()->GetWinSize(); }
 		inline const PlatformConfig& GetPlatformConfig() const noexcept { return m_ConfigManager->GetPlatformConfig(); };
 
 		protected:

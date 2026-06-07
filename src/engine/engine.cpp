@@ -83,7 +83,7 @@ std::expected<void, std::string> Engine::Initialize()
 		m_MainLoop->onUpdateSystem += std::bind(&Engine::OnUpdateSystem, this);
 
 		AddNativeView();
-		AddNativeView();
+		//AddNativeView();
 
 		DOut("Engine initialized: OK.");
 		engineState.store(eInitState::Initialized);
@@ -239,4 +239,3 @@ void Engine::OnPlatformLowMemory()
 }
 #endif // defined(__ANDROID__)
 #pragma endregion
-
