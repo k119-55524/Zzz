@@ -18,5 +18,6 @@ namespace zzz::engine
 
 	protected:
 		const std::shared_ptr<IPlatform> m_Platform;
+		Size2D<> m_WinSize;
 	};
 }

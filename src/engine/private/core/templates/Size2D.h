@@ -1,5 +1,8 @@
 #pragma once
 
+#include <format>
+#include <string>
+
 #include <foundation.h>
 #include "../serialize/Serializer.h"
 
@@ -16,7 +19,7 @@ namespace zzz::engine
 	* @tparam T Тип данных для хранения ширины и высоты (должен быть арифметическим).
 	*			Значение по умолчанию: zU64.
 	*/
-	template<typename T = zU64, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+	template<typename T = zU32, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
 	class Size2D final : public ISerializable
 	{
 	public:
@@ -27,8 +30,13 @@ namespace zzz::engine
 		constexpr Size2D(Size2D&&) = default;
 
 		inline void Set(T _width, T _height) noexcept { width = _width; height = _height; }
-		// Копирует размеры из другого объекта Size2D с возможным приведением типов.
-		template<typename U>
+		template<typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
+		inline void SetFrom(U w, U h)
+		{
+			width = static_cast<T>(w);
+			height = static_cast<T>(h);
+		}
+		template<typename U, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
 		inline void SetFrom(const Size2D<U>& other)
 		{
 			width = static_cast<T>(other.width);
@@ -40,6 +48,8 @@ namespace zzz::engine
 
 		inline bool operator==(const Size2D& other) const noexcept { return width == other.width && height == other.height; }
 		inline bool operator!=(const Size2D& other) const noexcept { return !(*this == other); }
+
+		[[nodiscard]] inline std::string ToString() const noexcept { return std::format("Width: {}, Height: {}", width, height); }
 
 		T width;  // Ширина объекта.
 		T height; // Высота объекта.

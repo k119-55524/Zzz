@@ -20,7 +20,6 @@ namespace zzz::engine
 		LRESULT MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 		private:
-			static size_t s_WindowCount;
 			HWND m_hWnd;
 	};
 }

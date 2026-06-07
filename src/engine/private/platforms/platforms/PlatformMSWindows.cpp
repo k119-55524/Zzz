@@ -13,6 +13,12 @@ PlatformMSWindows::PlatformMSWindows(std::string_view appName, std::shared_ptr<v
 
 PlatformMSWindows::~PlatformMSWindows()
 {
+	const BOOL result = UnregisterClass(m_ConfigManager->GetPlatformConfig().GetClassName().c_str(), GetModuleHandle(nullptr));
+	if (!result)
+	{
+		const DWORD error = GetLastError();
+		DOutCritical("Failed to unregister window class '{}'. Error code: {}.", m_ConfigManager->GetPlatformConfig().GetClassName(), error);
+	}
 }
 
 void PlatformMSWindows::InitializeImpl()

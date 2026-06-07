@@ -83,6 +83,7 @@ std::expected<void, std::string> Engine::Initialize()
 		m_MainLoop->onUpdateSystem += std::bind(&Engine::OnUpdateSystem, this);
 
 		AddNativeView();
+		AddNativeView();
 
 		DOut("Engine initialized: OK.");
 		engineState.store(eInitState::Initialized);

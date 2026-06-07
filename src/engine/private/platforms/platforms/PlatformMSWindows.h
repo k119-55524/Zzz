@@ -14,7 +14,6 @@ namespace zzz::engine
 
 	private:
 		void InitializeImpl() override;
-
 		static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept;
 	};
 }

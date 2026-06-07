@@ -6,8 +6,6 @@
 
 using namespace zzz::engine;
 
-size_t WinMSWindows::s_WindowCount = 0;
-
 WinMSWindows::WinMSWindows(const std::shared_ptr<IPlatform> platform) :
 	IWindow(platform),
 	m_hWnd(nullptr)
@@ -16,11 +14,6 @@ WinMSWindows::WinMSWindows(const std::shared_ptr<IPlatform> platform) :
 
 WinMSWindows::~WinMSWindows()
 {
-	if (m_hWnd)
-	{
-		DestroyWindow(m_hWnd);
-		m_hWnd = nullptr;
-	}
 }
 
 [[nodiscard]] std::expected<void, std::string> WinMSWindows::Initialize(const std::string_view appName)
@@ -55,8 +48,6 @@ WinMSWindows::~WinMSWindows()
 	if (!m_hWnd)
 		THROW_RUNTIME("CreateWindowEx( ... ) failed. Error code (Windows): {}", ::GetLastError());
 
-	s_WindowCount++;
-
 	ShowWindow(m_hWnd, SW_SHOW);
 	UpdateWindow(m_hWnd);
 
@@ -69,7 +60,7 @@ LRESULT WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	{
 	case WM_NCCREATE:
 		m_hWnd = hWnd;
-		return 0;
+		break;
 
 		//case WM_CREATE:
 		//	return InitRawInput();
@@ -79,17 +70,15 @@ LRESULT WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		DestroyWindow(hWnd);
 		return 0;
 
-	case WM_DESTROY:
-		s_WindowCount--;
-		if (s_WindowCount == 0)
-			PostQuitMessage(0);
-		return 0;
+	// Engine сам считает к-во открытых окон
+	//case WM_DESTROY:
+	//	break;
 
-		// Обрабатываем изменение размера окна
-	//case WM_SIZE:
-	//{
-	//	m_WinSize.width = static_cast<zU64>(LOWORD(lParam));
-	//	m_WinSize.height = static_cast<zU64>(HIWORD(lParam));
+	// Обрабатываем изменение размера окна
+	case WM_SIZE:
+	{
+		m_WinSize.SetFrom(static_cast<zU32>(LOWORD(lParam)), static_cast<zU32>(HIWORD(lParam)));
+		DOut("WM_SIZE {}: {}.", static_cast<void*>(m_hWnd), m_WinSize.ToString());
 	//	if (wParam == SIZE_MINIMIZED)
 	//	{
 	//		OnResize(m_WinSize, eTypeWinResize::Hide);
@@ -108,8 +97,8 @@ LRESULT WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	//		}
 	//	}
 
-	//	return 0;
-	//}
+		return 0;
+	}
 
 	// Обрабатываем изменение размера окна в процессе изменения его пользователем.
 	//case WM_SIZING:
