@@ -11,12 +11,12 @@
 using namespace zzz::io;
 using namespace zzz::engine;
 
-ConfigManager::ConfigManager(std::shared_ptr<Path> path, std::string_view configPath) :
+ConfigManager::ConfigManager(std::shared_ptr<Path> path) :
 	m_Path(path),
 	m_IsDirty(true)
 {
 	ensure(m_Path != nullptr, "Path must not be null.");
-	Initialize(configPath);
+	Initialize();
 }
 
 [[nodiscard]] std::expected<void, std::string> ConfigManager::SaveConfig()
@@ -65,24 +65,17 @@ ConfigManager::ConfigManager(std::shared_ptr<Path> path, std::string_view config
 	return {};
 }
 
-void ConfigManager::Initialize(std::string_view configPath)
+void ConfigManager::Initialize()
 {
 	try
 	{
-		std::filesystem::path userPath(configPath);
-		if (userPath.is_absolute())
-			THROW_RUNTIME("Config path must be relative.");
-
 		auto resPath = GetSettingsDirectory();
 		if (!resPath)
 			THROW_RUNTIME("Failed to get settings directory: {}.", resPath.error());
 
-		m_ConfigPath = resPath.value();
-		if (!userPath.empty())
-			m_ConfigPath /= userPath;
-
-		m_ConfigPath /= configFileName;
-		m_ConfigPath = m_ConfigPath.lexically_normal();
+		m_ConfigPath = (resPath.value() / c_ConfigFileName)
+			.lexically_normal()
+			.make_preferred();
 
 		// Далее работаем с файлом
 		m_EngineConfig = zzz::safe_make_shared<EngineConfig>();

@@ -30,7 +30,7 @@ namespace zzz::engine
 			std::shared_ptr<ConfigManager> m_ConfigManager;
 
 		private:
-			void Initialize(std::string_view configPath);
+			void Initialize();
 			virtual void InitializeImpl() = 0;
 	};
 }

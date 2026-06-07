@@ -25,10 +25,10 @@ IPlatform::~IPlatform()
 	m_ConfigManager = nullptr;
 }
 
-void IPlatform::Initialize(std::string_view configPath)
+void IPlatform::Initialize()
 {
 	m_Path = zzz::safe_make_shared<Path>(m_AppName, m_PlatformData);
-	m_ConfigManager = zzz::safe_make_shared<ConfigManager>(m_Path, configPath);
+	m_ConfigManager = zzz::safe_make_shared<ConfigManager>(m_Path);
 
 	InitializeImpl();
 }

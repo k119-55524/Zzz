@@ -30,16 +30,16 @@ using namespace zzz;
 using namespace zzz::io;
 using namespace zzz::engine;
 
-Engine::Engine(std::string_view appName, std::string_view configPath, std::shared_ptr<void> platformData) :
+Engine::Engine(std::string_view appName, std::shared_ptr<void> platformData) :
 	engineState{ eInitState::NotInitialized }
 {
 	m_Platform = safe_make_shared<Platform>(appName, platformData);
-	m_Platform->Initialize(configPath);
+	m_Platform->Initialize();
 }
 
 Engine::~Engine()
 {
-Shutdown();
+	Shutdown();
 }
 
 void Engine::Shutdown()

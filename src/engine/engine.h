@@ -27,7 +27,7 @@ namespace zzz::engine
 	{
 	public:
 		Engine() = delete;
-		Engine(std::string_view appName, std::string_view configPath = {}, std::shared_ptr<void> platformData = nullptr);
+		Engine(std::string_view appName, std::shared_ptr<void> platformData = nullptr);
 		~Engine();
 
 		[[nodiscard]] std::expected<void, std::string> Initialize();
