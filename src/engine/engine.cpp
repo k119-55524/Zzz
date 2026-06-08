@@ -123,14 +123,20 @@ std::expected<void, std::string> Engine::Initialize()
 
 void Engine::AddView()
 {
+#if defined(Z_MOBILE)
+	if (m_NativeViews.size() >= 1)
+		THROW_RUNTIME("Mobile platforms support only one native window per application.");
+#endif
+
 	auto view = zzz::safe_make_shared<NativeView>(m_Platform);
 
-	// ������������ �������� ���������� ����
+	// Добавляем слушателя на закрытие окна
 	view->GetWindow()->onCloseRequested += [this, weakView = std::weak_ptr(view)]()
 	{
 		if (auto v = weakView.lock())
 			m_NativeViews.remove(v);
 
+		// Закрываем приложение в отсуутствии активных окон
 		if (m_NativeViews.empty())
 			m_MainLoop->Stop();
 	};

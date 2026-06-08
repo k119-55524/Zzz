@@ -6,7 +6,7 @@ using namespace zzz::engine;
 NativeView::NativeView(std::shared_ptr<IPlatform> platform) :
 	m_Platform{ platform }
 {
-	ensure(platform != nullptr, "Platform must not be null.");
+	ensure(m_Platform != nullptr, "Platform must not be null.");
 
 	Initialize();
 }
