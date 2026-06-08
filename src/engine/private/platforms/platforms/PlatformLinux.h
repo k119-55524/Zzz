@@ -16,7 +16,7 @@ namespace zzz::engine
 	class PlatformLinux final : public IPlatform
 	{
 	public:
-		PlatformLinux(std::string_view appName, std::shared_ptr<void> platformData = nullptr);
+		PlatformLinux(std::string_view appName, std::shared_ptr<PlatformNativeData> platformData = nullptr);
 		~PlatformLinux() override;
 
 		inline wl_compositor* GetCompositor()  const noexcept { return m_Compositor; };

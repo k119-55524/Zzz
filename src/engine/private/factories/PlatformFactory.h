@@ -20,6 +20,6 @@ namespace zzz::engine
 	class PlatformFactory final
 	{
 	public:
-		std::shared_ptr<IPlatform> Create(std::string_view appName, std::shared_ptr<void> platformData);
+		std::shared_ptr<IPlatform> Create(std::string_view appName, std::shared_ptr<PlatformNativeData> platformData);
 	};
 }

@@ -88,7 +88,7 @@ namespace
 	};
 }
 
-PlatformLinux::PlatformLinux(std::string_view appName, std::shared_ptr<void> platformData) :
+PlatformLinux::PlatformLinux(std::string_view appName, std::shared_ptr<PlatformNativeData> platformData) :
 	IPlatform(appName, platformData),
 	m_Display{nullptr},
 	m_Registry{nullptr},

@@ -6,7 +6,7 @@
 
 using namespace zzz::engine;
 
-PlatformMSWindows::PlatformMSWindows(std::string_view appName, std::shared_ptr<void> platformData) :
+PlatformMSWindows::PlatformMSWindows(std::string_view appName, std::shared_ptr<PlatformNativeData> platformData) :
 	IPlatform(appName, platformData)
 {
 	SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);

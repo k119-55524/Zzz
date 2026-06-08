@@ -1,12 +1,10 @@
 #pragma once
 
 #include "../../core/io/Path.h"
+#include "../../../platform_types.h"
 #include "../../core/config/ConfigManager.h"
 #include "../../core/config/platforms/IConfig.h"
 
-#if defined(Z_ANDROID)
-struct android_app;
-#endif
 
 using namespace zzz::io;
 
@@ -14,12 +12,6 @@ namespace zzz::engine
 {
 	class Engine;
 	class EngineFactory;
-
-#if defined(Z_ANDROID)
-	using PlatformNativeData = android_app;
-#else
-	using PlatformNativeData = void;
-#endif
 
 	class IPlatform
 	{
@@ -31,7 +23,7 @@ namespace zzz::engine
 		virtual ~IPlatform();
 
 		inline std::string_view GetAppName() const noexcept { return m_AppName; }
-		[[nodiscard]] inline PlatformNativeData GetPlatformData() const noexcept { return m_PlatformData.get(); }
+		[[nodiscard]] inline std::shared_ptr<PlatformNativeData> GetPlatformData() const noexcept { return m_PlatformData; }
 		inline const IConfig& GetPlatformConfig() const noexcept { return m_ConfigManager->GetPlatformConfig(); };
 		inline const std::shared_ptr<EngineFactory> GetFactory() const noexcept { return m_Factory; };
 

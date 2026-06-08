@@ -5,7 +5,7 @@
 using namespace zzz;
 using namespace zzz::engine;
 
-std::shared_ptr<IPlatform> PlatformFactory::Create(std::string_view appName, std::shared_ptr<void> platformData)
+std::shared_ptr<IPlatform> PlatformFactory::Create(std::string_view appName, std::shared_ptr<PlatformNativeData> platformData)
 {
 	try
 	{

@@ -10,7 +10,7 @@ namespace zzz::engine
 	class PlatformMSWindows final : public IPlatform
 	{
 	public:
-		PlatformMSWindows(std::string_view appName, std::shared_ptr<void> platformData = nullptr);
+		PlatformMSWindows(std::string_view appName, std::shared_ptr<PlatformNativeData> platformData = nullptr);
 		~PlatformMSWindows() override;
 
 	private:

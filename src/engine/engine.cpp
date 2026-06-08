@@ -13,7 +13,7 @@ using namespace zzz;
 using namespace zzz::io;
 using namespace zzz::engine;
 
-Engine::Engine(std::string_view appName, std::shared_ptr<void> platformData) :
+Engine::Engine(std::string_view appName, std::shared_ptr<PlatformNativeData> platformData) :
 	engineState{ eInitState::NotInitialized }
 {
 	m_Platform = PlatformFactory{}.Create(appName, platformData);

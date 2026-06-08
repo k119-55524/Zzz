@@ -7,6 +7,8 @@
 #include <expected>
 #include <string_view>
 
+#include "platform_types.h"
+
 namespace zzz
 {
 	enum class eInitState : zU8;
@@ -27,7 +29,7 @@ namespace zzz::engine
 	{
 	public:
 		Engine() = delete;
-		Engine(std::string_view appName, std::shared_ptr<void> platformData = nullptr);
+		Engine(std::string_view appName, std::shared_ptr<PlatformNativeData> platformData = nullptr);
 		~Engine();
 
 		[[nodiscard]] std::expected<void, std::string> Initialize();
