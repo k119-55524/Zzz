@@ -20,7 +20,7 @@ WinMSWindows::~WinMSWindows()
 [[nodiscard]] std::expected<void, std::string> WinMSWindows::Initialize(const std::string_view appName)
 {
 	std::shared_ptr<PlatformMSWindows> platform = std::dynamic_pointer_cast<PlatformMSWindows>(m_Platform);
-	ensure(platform != nullptr, "Platform is not PlatformLinux.");
+	ensure(platform != nullptr, "Platform is not PlatformMSWindows.");
 
 	// Рассчитать размеры прямоугольника окна на основе запрошенных размеров клиентской области.
 	Size2D<LONG> winSize;

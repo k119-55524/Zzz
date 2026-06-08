@@ -5,7 +5,7 @@
 
 using namespace zzz::engine;
 
-IPlatform::IPlatform(std::string_view appName, std::shared_ptr<void> platformData) :
+IPlatform::IPlatform(std::string_view appName, std::shared_ptr<PlatformNativeData> platformData) :
 	m_AppName(appName),
 	m_PlatformData(platformData),
 	m_Path(std::make_shared<Path>(appName, platformData))
@@ -21,9 +21,6 @@ IPlatform::~IPlatform()
 		if (!res)
 			DOutCritical("Failed to serialize config: {}.", res.error());
 	}
-
-	//m_Path = nullptr;
-	m_ConfigManager = nullptr;
 }
 
 void IPlatform::Initialize()

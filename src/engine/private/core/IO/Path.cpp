@@ -101,7 +101,7 @@ namespace zzz::io
 	{
 		try
 		{
-#if defined(_WIN32)
+#if defined(Z_WINDOWS)
 			wchar_t* localAppData = nullptr;
 			size_t len = 0;
 			_wdupenv_s(&localAppData, &len, L"LOCALAPPDATA");
@@ -112,13 +112,13 @@ namespace zzz::io
 			free(localAppData);
 
 			return result / m_AppName;
-#elif defined(__APPLE__)
+#elif defined(Z_APPLE)
 			auto path = GetAppleUserDataDirectory();
 			if (!path)
 				return std::unexpected(path.error());
 
 			return *path / m_AppName;
-#elif defined(__ANDROID__)
+#elif defined(Z_ANDROID)
 			auto app = static_cast<android_app*>(m_PlatformData.get());
 			if (!app)
 				return UNEXPECTED("Android app context is null.");
@@ -130,7 +130,7 @@ namespace zzz::io
 				return UNEXPECTED("Android internal data path is null.");
 
 			return std::filesystem::path(app->activity->internalDataPath) / m_AppName;
-#elif defined(__linux__)
+#elif defined(Z_LINUX)
 			const char* xdgConfigHome = std::getenv("XDG_CONFIG_HOME");
 			if (xdgConfigHome)
 				return std::filesystem::path(xdgConfigHome) / m_AppName;
@@ -141,7 +141,7 @@ namespace zzz::io
 
 			return std::filesystem::path(home) / ".config" / m_AppName;
 #else
-			return UNEXPECTED("Unsupported platform.");
+#error Unsupported platform.
 #endif
 		}
 		catch (const std::filesystem::filesystem_error& e)

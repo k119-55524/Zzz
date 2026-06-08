@@ -23,6 +23,41 @@ void android_main(struct android_app* app)
 			DOut("[Android]. Engine init error: {}.", res.error());
 			return;
 		}
+
+		// Устанавливаем обработчик команд, если Платформа сама его не ставит.
+		// Или передаем управление в Engine, который дернет Платформу.
+		app->onAppCmd = [](struct android_app* app, int32_t cmd) {
+			auto* engineInstance = static_cast<Engine*>(app->userData);
+			if (!engineInstance) return;
+
+			switch (cmd)
+			{
+			case APP_CMD_START:
+				engineInstance->OnPlatformActivityStarted();
+				break;
+			case APP_CMD_RESUME:
+				engineInstance->OnPlatformActivityResumed();
+				break;
+			case APP_CMD_PAUSE:
+				engineInstance->OnPlatformActivityPaused();
+				break;
+			case APP_CMD_STOP:
+				engineInstance->OnPlatformActivityStopped();
+				break;
+			case APP_CMD_LOW_MEMORY:
+				engineInstance->OnPlatformLowMemory();
+				break;
+			}
+		};
+
+		app->userData = engine.get();
+
+		// Запускаем движок. Он сам будет крутить цикл внутри MainLoop_Android
+		auto runRes = engine->Run();
+		if (!runRes)
+		{
+			DOut("[Android]. Engine run error: {}.", runRes.error());
+		}
 	}
 	catch (const std::exception& e)
 	{
@@ -35,51 +70,5 @@ void android_main(struct android_app* app)
 		return;
 	}
 
-	app->userData = engine.get();
-	app->onAppCmd = [](struct android_app* app, int32_t cmd) {
-		auto* engineInstance = static_cast<Engine*>(app->userData);
-		if (!engineInstance) return;
-
-		switch (cmd)
-		{
-		case APP_CMD_START:
-			engineInstance->OnPlatformActivityStarted();
-			break;
-		case APP_CMD_RESUME:
-			engineInstance->OnPlatformActivityResumed();
-			break;
-		case APP_CMD_PAUSE:
-			engineInstance->OnPlatformActivityPaused();
-			break;
-		case APP_CMD_STOP:
-			engineInstance->OnPlatformActivityStopped();
-			break;
-		case APP_CMD_LOW_MEMORY:
-			engineInstance->OnPlatformLowMemory();
-			break;
-		}
-	};
-
-	while (true)
-	{
-		int ident;
-		int events;
-		struct android_poll_source* source;
-
-		while ((ident = ALooper_pollOnce(0, nullptr, &events, (void**)&source)) >= 0)
-		{
-			if (source != nullptr)
-			{
-				source->process(app, source);
-			}
-
-			if (app->destroyRequested != 0)
-			{
-				DOut("[Android]. Game exiting.");
-				return;
-			}
-		}
-
-		// Тут будет логика кадра (Update/Render)
-	}
+	DOut("[Android]. Game exiting.");
 }

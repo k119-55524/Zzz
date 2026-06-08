@@ -166,7 +166,7 @@ std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path
 std::expected<std::filesystem::path, std::string> ConfigManager::GetSettingsDirectory()
 {
 	// На Apple и Android используем директорию данных пользователя
-#if defined(Z_MACOS) || defined(Z_IOS) || defined(Z_ANDROID)
+#if defined(Z_APPLE) || defined(Z_ANDROID)
 	return m_Path->GetUserDataDirectory();
 
 	// На Windows и Linux используем директорию с исполняемым файлом
