@@ -1,11 +1,12 @@
 #pragma once
 
 #include "../../platforms/IPlatform.h"
-#include "../../inputs/IInput.h"
 #include "../../../core/templates/Event.h"
 
 namespace zzz::engine
 {
+	class IInput;
+
 	class IWindow
 	{
 	public:

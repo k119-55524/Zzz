@@ -3,6 +3,7 @@
 #include "PlatformMSWindows.h"
 #include "../platforms/native_view/window/WinMSWindows.h"
 #include "../../core/config/platforms/ConfigMSWin.h"
+#include "../../inputs/platforms/InputMSWindows.h"
 
 using namespace zzz::engine;
 
@@ -50,9 +51,10 @@ void PlatformMSWindows::InitializeImpl()
 
 LRESULT CALLBACK PlatformMSWindows::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept
 {
-	struct WinInternalContext {
+	struct WinInternalContext
+	{
 		WinMSWindows* window;
-		IInput* input;
+		InputMSWindows* input;
 	};
 
 	WinInternalContext* ctx = nullptr;
@@ -78,7 +80,7 @@ LRESULT CALLBACK PlatformMSWindows::WindowProc(HWND hWnd, UINT uMsg, WPARAM wPar
 			LPARAM lParam;
 		} msg = { uMsg, wParam, lParam };
 
-		ctx->input->ProcessMessage(&msg, nullptr);
+		ctx->input->ProcessMessage(&msg);
 
 		return res;
 	}
