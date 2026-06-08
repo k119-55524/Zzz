@@ -5,6 +5,8 @@
 #include "../platforms/IPlatform.h"
 #include "../../platforms/native_view/window/IWindow.h"
 
+#include "../../inputs/IInput.h"
+
 namespace zzz::engine
 {
 	class NativeView final
@@ -17,11 +19,13 @@ namespace zzz::engine
 		~NativeView() = default;
 
 		inline std::shared_ptr<IWindow> GetWindow() const noexcept { return m_Window; }
+		inline std::shared_ptr<IInput>  GetInput()  const noexcept { return m_Input; }
 
 	private:
 		void Initialize();
 
 		std::shared_ptr<IPlatform> m_Platform;
 		std::shared_ptr<IWindow> m_Window;
+		std::shared_ptr<IInput>  m_Input;
 	};
 }

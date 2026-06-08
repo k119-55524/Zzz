@@ -51,8 +51,8 @@ namespace
 	};
 }
 
-WinLinux::WinLinux(const std::shared_ptr<IPlatform> platform) :
-	IWindow(platform),
+WinLinux::WinLinux(const std::shared_ptr<IPlatform> platform, const std::shared_ptr<IInput> input) :
+	IWindow(platform, input),
 	m_Surface{nullptr},
 	m_Buffer{nullptr},
 	m_XdgSurface{nullptr},

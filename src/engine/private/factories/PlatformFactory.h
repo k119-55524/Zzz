@@ -4,6 +4,8 @@
 #include "../platforms/platforms/PlatformMSWindows.h"
 #include "../platforms/platforms/PlatformLinux.h"
 #include "../platforms/platforms/PlatformAndroid.h"
+#include "../platforms/platforms/PlatformMacOS.h"
+#include "../platforms/platforms/PlatformiOS.h"
 
 namespace zzz::engine
 {
@@ -13,6 +15,10 @@ namespace zzz::engine
 	using Platform = PlatformLinux;
 #elif defined(Z_ANDROID)
 	using Platform = PlatformAndroid;
+#elif defined(Z_MACOS)
+	using Platform = PlatformMacOS;
+#elif defined(Z_IOS)
+	using Platform = PlatformiOS;
 #else
 #error ">>>>> [Compile error]. This branch requires implementation for the current platform"
 #endif

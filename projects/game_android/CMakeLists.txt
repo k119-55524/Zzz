@@ -12,6 +12,7 @@ target_include_directories(game_android PRIVATE
 )
 
 target_sources(game_android PRIVATE
+    pch/pch.h
     pch/pch.cpp
     src/android_main.h
     src/android_main.cpp

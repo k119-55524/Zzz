@@ -159,7 +159,7 @@ void Engine::OnUpdateSystem()
 }
 
 #pragma region Mobile Lifecycle Events
-#if defined(__APPLE__)
+#if defined(Z_APPLE)
 void Engine::OnPlatformApplicationDidBecomeActive()
 {
 	DOut("Application did become active.");
@@ -191,9 +191,9 @@ void Engine::OnPlatformApplicationDidReceiveMemoryWarning()
 {
 	DOut("Application did receive memory warning.");
 }
-#endif // defined(__APPLE__)
+#endif // defined(Z_APPLE)
 
-#if defined(__ANDROID__)
+#if defined(Z_ANDROID)
 void Engine::OnPlatformActivityResumed()
 {
 	DOut("Activity resumed.");
@@ -225,5 +225,5 @@ void Engine::OnPlatformLowMemory()
 {
 	DOut("Low memory warning.");
 }
-#endif // defined(__ANDROID__)
+#endif // defined(Z_ANDROID)
 #pragma endregion

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../platforms/IPlatform.h"
+#include "../../inputs/IInput.h"
 #include "../../../core/templates/Event.h"
 
 namespace zzz::engine
@@ -9,7 +10,7 @@ namespace zzz::engine
 	{
 	public:
 		IWindow() = delete;
-		IWindow(const std::shared_ptr<IPlatform> platform);
+		IWindow(const std::shared_ptr<IPlatform> platform, const std::shared_ptr<IInput> input);
 		virtual ~IWindow() = default;
 
 		[[nodiscard]] virtual std::expected<void, std::string> Initialize(const std::string_view appName) = 0;
@@ -18,6 +19,7 @@ namespace zzz::engine
 
 	protected:
 		const std::shared_ptr<IPlatform> m_Platform;
+		const std::shared_ptr<IInput>    m_Input;
 		Size2D<> m_WinSize;
 	};
 }

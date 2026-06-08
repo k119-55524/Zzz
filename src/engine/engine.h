@@ -36,7 +36,7 @@ namespace zzz::engine
 		[[nodiscard]] std::expected<void, std::string> Run();
 
 #pragma region Mobile Lifecycle Events
-#if defined(__APPLE__)
+#if defined(Z_APPLE)
 		// Приложение стало активным и может обрабатывать ввод, обновление и рендеринг.
 		// iOS: applicationDidBecomeActive:
 		void OnPlatformApplicationDidBecomeActive();
@@ -58,9 +58,9 @@ namespace zzz::engine
 		// Следует освободить кэши и временные ресурсы.
 		// iOS: applicationDidReceiveMemoryWarning:
 		void OnPlatformApplicationDidReceiveMemoryWarning();
-#endif // defined(__APPLE__)
+#endif // defined(Z_APPLE)
 
-#if defined(__ANDROID__)
+#if defined(Z_ANDROID)
 		// Activity получила фокус и переходит в активное состояние.
 		// Android: Activity.onResume()
 		void OnPlatformActivityResumed();
@@ -80,7 +80,7 @@ namespace zzz::engine
 		// Система испытывает нехватку памяти.
 		// Android: Activity.onLowMemory()
 		void OnPlatformLowMemory();
-#endif // defined(__ANDROID__)
+#endif // defined(Z_ANDROID)
 #pragma endregion
 
 	private:

@@ -6,8 +6,10 @@
 #include <iostream>
 #include <source_location>
 
-#if defined(_MSC_VER)
+#include <zdefines.h>
+
+#if defined(Z_WINDOWS)
 #include <Windows.h>
-#elif defined(__ANDROID__)
+#elif defined(Z_ANDROID)
 #include <android/log.h>
 #endif

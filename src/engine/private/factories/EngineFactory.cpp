@@ -10,11 +10,11 @@ std::shared_ptr<IConfig> EngineFactory::CreatePlatformConfig()
 	return safe_make_shared<PlatformConfig>();
 }
 
-std::shared_ptr<IWindow> EngineFactory::CreateAppWin(const std::shared_ptr<IPlatform> platform)
+std::shared_ptr<IWindow> EngineFactory::CreateAppWin(const std::shared_ptr<IPlatform> platform, const std::shared_ptr<IInput> input)
 {
 	try
 	{
-		return safe_make_shared<Window>(platform);
+		return safe_make_shared<Window>(platform, input);
 	}
 	catch (const std::exception& e)
 	{
@@ -39,5 +39,21 @@ std::shared_ptr<IMainLoop> EngineFactory::CreateMainLoop(std::shared_ptr<IPlatfo
 	catch (...)
 	{
 		THROW_RUNTIME("Unknown exception occurred while creating main loop.");
+	}
+}
+
+std::shared_ptr<IInput> EngineFactory::CreateInput()
+{
+	try
+	{
+		return safe_make_shared<Input>();
+	}
+	catch (const std::exception& e)
+	{
+		THROW_RUNTIME("Failed to create input system: {}.", e.what());
+	}
+	catch (...)
+	{
+		THROW_RUNTIME("Unknown exception occurred while creating input system.");
 	}
 }

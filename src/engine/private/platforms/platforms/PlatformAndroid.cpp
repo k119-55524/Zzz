@@ -9,6 +9,9 @@ PlatformAndroid::PlatformAndroid(std::string_view appName, std::shared_ptr<Platf
 	IPlatform(appName, platformData)
 {
 	ensure(m_PlatformData != nullptr, "Platform data for Android must not be null.");
+
+	ensure(m_PlatformData->activity != nullptr, "android_app->activity is null. Invalid platform data.");
+	ensure(m_PlatformData->looper != nullptr, "android_app->looper is null. Invalid platform data.");
 }
 
 PlatformAndroid::~PlatformAndroid()

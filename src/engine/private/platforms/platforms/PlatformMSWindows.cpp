@@ -50,19 +50,38 @@ void PlatformMSWindows::InitializeImpl()
 
 LRESULT CALLBACK PlatformMSWindows::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept
 {
-	WinMSWindows* pThis = nullptr;
+	struct WinInternalContext {
+		WinMSWindows* window;
+		IInput* input;
+	};
+
+	WinInternalContext* ctx = nullptr;
 
 	if (uMsg == WM_NCCREATE)
 	{
 		const auto* pCreate = reinterpret_cast<CREATESTRUCT*>(lParam);
-		pThis = static_cast<WinMSWindows*>(pCreate->lpCreateParams);
-		SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
+		ctx = static_cast<WinInternalContext*>(pCreate->lpCreateParams);
+		SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(ctx));
 	}
 	else
-		pThis = reinterpret_cast<WinMSWindows*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+		ctx = reinterpret_cast<WinInternalContext*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
-	if (pThis)
-		return pThis->MsgProc(hWnd, uMsg, wParam, lParam);
+	if (ctx)
+	{
+		LRESULT res = ctx->window->MsgProc(hWnd, uMsg, wParam, lParam);
+
+		// Если сообщение - это ввод, отдаем его инпуту
+		// В будущем тут будет фильтр, чтобы не слать WM_SIZE в инпут
+		struct WinMsg {
+			UINT uMsg;
+			WPARAM wParam;
+			LPARAM lParam;
+		} msg = { uMsg, wParam, lParam };
+
+		ctx->input->ProcessMessage(&msg, nullptr);
+
+		return res;
+	}
 
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }

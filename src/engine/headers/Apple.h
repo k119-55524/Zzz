@@ -1,6 +1,6 @@
 #pragma once
 
-#if defined(__APPLE__)
+#if defined(Z_APPLE)
 #include <mach-o/dyld.h>
 #include <TargetConditionals.h>
 #endif

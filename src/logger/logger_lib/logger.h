@@ -80,7 +80,7 @@ namespace zzz::logger
 
 			// Для Linux-подобных платформ (включая Android) символ '\n' не требуется,
 			// поскольку средства просмотра логов (IDE, Logcat и т.п.) сами разделяют записи.
-#if defined(__linux__)
+#if defined(Z_LINUX) || defined(Z_ANDROID)
 			end = "";
 #endif
 			return end;

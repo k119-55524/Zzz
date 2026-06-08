@@ -4,8 +4,8 @@
 
 using namespace zzz::engine;
 
-WinAndroid::WinAndroid(const std::shared_ptr<IPlatform> platform) :
-	IWindow(platform)
+WinAndroid::WinAndroid(const std::shared_ptr<IPlatform> platform, const std::shared_ptr<IInput> input) :
+	IWindow(platform, input)
 {
 }
 

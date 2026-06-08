@@ -7,8 +7,8 @@
 
 using namespace zzz::engine;
 
-WinMSWindows::WinMSWindows(const std::shared_ptr<IPlatform> platform) :
-	IWindow(platform),
+WinMSWindows::WinMSWindows(const std::shared_ptr<IPlatform> platform, const std::shared_ptr<IInput> input) :
+	IWindow(platform, input),
 	m_hWnd(nullptr)
 {
 }
@@ -35,6 +35,14 @@ WinMSWindows::~WinMSWindows()
 	int screenHeight = GetSystemMetrics(SM_CYSCREEN); // Высота экрана
 	int xPos = (screenWidth - width) / 2;  // Расчет позиции по оси X
 	int yPos = (screenHeight - height) / 2; // Расчет позиции по оси Y
+
+	// Контейнер для передачи в WindowProc
+	struct WinInternalContext {
+		WinMSWindows* window;
+		IInput* input;
+	};
+	WinInternalContext ctx = { this, m_Input.get() };
+
 	CreateWindowEx(
 		0,
 		static_cast<const ConfigMSWin&>(platform->GetPlatformConfig()).GetClassName().c_str(),
@@ -44,7 +52,7 @@ WinMSWindows::~WinMSWindows()
 		nullptr,
 		nullptr,
 		GetModuleHandle(NULL),
-		this);
+		&ctx);
 
 	if (!m_hWnd)
 		THROW_RUNTIME("CreateWindowEx( ... ) failed. Error code (Windows): {}", ::GetLastError());

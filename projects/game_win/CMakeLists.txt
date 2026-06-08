@@ -10,6 +10,7 @@ target_include_directories(game_win PRIVATE
 )
 
 target_sources(game_win PRIVATE
+    pch/pch.h
     pch/pch.cpp
     main.h
     main.cpp
