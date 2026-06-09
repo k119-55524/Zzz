@@ -7,7 +7,18 @@
 #include <expected>
 #include <string_view>
 
-#include "platform_types.h"
+#if defined(Z_ANDROID)
+struct android_app;
+#endif
+
+namespace zzz::engine
+{
+#if defined(Z_ANDROID)
+	using PlatformNativeData = android_app;
+#else
+	using PlatformNativeData = void;
+#endif
+}
 
 namespace zzz
 {
@@ -16,7 +27,7 @@ namespace zzz
 
 namespace zzz::engine
 {
-	class IPlatform;
+	class Platform;
 	class IMainLoop;
 	class NativeView;
 }
@@ -69,7 +80,7 @@ namespace zzz::engine
 		std::mutex stateMutex;
 		std::atomic<eInitState> engineState;
 
-		std::shared_ptr<IPlatform> m_Platform;
+		std::shared_ptr<Platform> m_Platform;
 		std::list<std::shared_ptr<NativeView>> m_NativeViews;
 		std::shared_ptr<IMainLoop> m_MainLoop;
 	};

@@ -1,11 +1,11 @@
 #if defined(Z_ANDROID)
 
 #include "WinAndroid.h"
-#include "../../platforms/PlatformAndroid.h"
+#include "../../Platform.h"
 
 using namespace zzz::engine;
 
-WinAndroid::WinAndroid(const std::shared_ptr<IPlatform> platform, const std::shared_ptr<IInput> input) :
+WinAndroid::WinAndroid(const std::shared_ptr<Platform> platform, const std::shared_ptr<IInput> input) :
 	IWindow(platform, input)
 {
 }

@@ -3,7 +3,7 @@
 #include <atomic>
 #include <foundation.h>
 
-#include "../platforms/IPlatform.h"
+#include "../Platform.h"
 #include "../../core/templates/Event.h"
 
 namespace zzz::engine
@@ -14,7 +14,7 @@ namespace zzz::engine
 
 	public:
 		IMainLoop() = delete;
-		IMainLoop(const std::shared_ptr<IPlatform> platform);
+		IMainLoop(const std::shared_ptr<Platform> platform);
 		virtual ~IMainLoop() = default;
 
 		virtual void Run() = 0;
@@ -27,6 +27,6 @@ namespace zzz::engine
 
 		protected:
 			std::atomic<bool> isRunning;
-			const std::shared_ptr<IPlatform> m_Platform;
+			const std::shared_ptr<Platform> m_Platform;
 	};
 }

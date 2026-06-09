@@ -2,7 +2,7 @@
 
 #include "../../../header.h"
 
-#include "../platforms/IPlatform.h"
+#include "../Platform.h"
 #include "../../platforms/native_view/window/IWindow.h"
 
 #include "../../inputs/IInput.h"
@@ -15,7 +15,7 @@ namespace zzz::engine
 
 	public:
 		NativeView() = delete;
-		NativeView(std::shared_ptr<IPlatform> platform);
+		NativeView(std::shared_ptr<Platform> platform);
 		~NativeView() = default;
 
 		inline std::shared_ptr<IWindow> GetWindow() const noexcept { return m_Window; }
@@ -24,7 +24,7 @@ namespace zzz::engine
 	private:
 		void Initialize();
 
-		std::shared_ptr<IPlatform> m_Platform;
+		std::shared_ptr<Platform> m_Platform;
 		std::shared_ptr<IWindow> m_Window;
 		std::shared_ptr<IInput>  m_Input;
 	};

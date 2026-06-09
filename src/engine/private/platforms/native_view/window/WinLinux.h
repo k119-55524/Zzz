@@ -17,7 +17,7 @@ namespace zzz::engine
 	{
 	public:
 		WinLinux() = delete;
-		WinLinux(const std::shared_ptr<IPlatform> platform, const std::shared_ptr<IInput> input);
+		WinLinux(const std::shared_ptr<Platform> platform, const std::shared_ptr<IInput> input);
 		~WinLinux() override;
 
 		[[nodiscard]] virtual std::expected<void, std::string> Initialize(const std::string_view appName) override;

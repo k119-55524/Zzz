@@ -21,7 +21,6 @@ target_sources(engine_lib PRIVATE
     engine.h
     engine.cpp
     header.h
-    platform_types.h
     pch/pch.h
     pch/pch.cpp
 
@@ -54,10 +53,8 @@ target_sources(engine_lib PRIVATE
     "private/inputs/platforms/InputAndroid.h"       "private/inputs/platforms/InputAndroid.cpp"
 
     # Platforms
-    "private/platforms/platforms/IPlatform.h"           "private/platforms/platforms/IPlatform.cpp"
-    "private/platforms/platforms/PlatformMSWindows.h"   "private/platforms/platforms/PlatformMSWindows.cpp"
-    "private/platforms/platforms/PlatformLinux.h"       "private/platforms/platforms/PlatformLinux.cpp"
-    "private/platforms/platforms/PlatformAndroid.h"     "private/platforms/platforms/PlatformAndroid.cpp"
+    "private/platforms/Platform.h"
+    "private/platforms/Platform_Common.cpp"
 
     # Main Loop
     "private/platforms/main_loop/IMainLoop.h"           "private/platforms/main_loop/IMainLoop.cpp"
@@ -74,13 +71,24 @@ target_sources(engine_lib PRIVATE
     "private/platforms/native_view/window/WinAndroid.h"      "private/platforms/native_view/window/WinAndroid.cpp"
 
     # Factories
-    "private/factories/PlatformFactory.h" "private/factories/PlatformFactory.cpp"
     "private/factories/EngineFactory.h"   "private/factories/EngineFactory.cpp"
 
     # Wayland (Linux)
-    "private/platforms/platforms/lLinux/Wayland/xdg-shell-client-protocol.h"
-    "private/platforms/platforms/lLinux/Wayland/xdg-shell-protocol.cpp"
+    "private/platforms/lLinux/Wayland/xdg-shell-client-protocol.h"
+    "private/platforms/lLinux/Wayland/xdg-shell-protocol.cpp"
 )
+
+if(WIN32)
+    target_sources(engine_lib PRIVATE "private/platforms/Platform_Windows.cpp")
+endif()
+
+if(UNIX AND NOT APPLE AND NOT ANDROID)
+    target_sources(engine_lib PRIVATE "private/platforms/Platform_Linux.cpp")
+endif()
+
+if(ANDROID)
+    target_sources(engine_lib PRIVATE "private/platforms/Platform_Android.cpp")
+endif()
 
 if(APPLE)
     target_sources(engine_lib PRIVATE
@@ -94,8 +102,8 @@ if(APPLE)
         "private/inputs/platforms/InputiOS.h"           "private/inputs/platforms/InputiOS.mm"
 
         # Platforms
-        "private/platforms/platforms/PlatformMacOS.h"   "private/platforms/platforms/PlatformMacOS.mm"
-        "private/platforms/platforms/PlatformiOS.h"     "private/platforms/platforms/PlatformiOS.mm"
+        "private/platforms/Platform_MacOS.mm"
+        "private/platforms/Platform_iOS.mm"
 
         # Main Loop
         "private/platforms/main_loop/MainLoop_MacOS.h"  "private/platforms/main_loop/MainLoop_MacOS.mm"
@@ -113,7 +121,7 @@ if(UNIX AND NOT APPLE AND NOT ANDROID)
     target_link_libraries(engine_lib PRIVATE wayland-client)
 
     set_source_files_properties(
-        "private/platforms/platforms/lLinux/Wayland/xdg-shell-protocol.cpp"
+        "private/platforms/lLinux/Wayland/xdg-shell-protocol.cpp"
         PROPERTIES COMPILE_OPTIONS "-Wno-attributes"
     )
 endif()

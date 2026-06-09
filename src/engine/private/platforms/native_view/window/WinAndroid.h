@@ -18,7 +18,7 @@ namespace zzz::engine
 		};
 
 		WinAndroid() = delete;
-		WinAndroid(const std::shared_ptr<IPlatform> platform, const std::shared_ptr<IInput> input);
+		WinAndroid(const std::shared_ptr<Platform> platform, const std::shared_ptr<IInput> input);
 		~WinAndroid() override;
 
 		[[nodiscard]] virtual std::expected<void, std::string> Initialize(const std::string_view appName) override;

@@ -1,5 +1,5 @@
 #include "MainLoop_Linux.h"
-#include "../platforms/PlatformLinux.h"
+#include "../Platform.h"
 
 #if defined(Z_LINUX)
 
@@ -7,7 +7,7 @@
 
 using namespace zzz::engine;
 
-MainLoop_Linux::MainLoop_Linux(const std::shared_ptr<IPlatform> platform) :
+MainLoop_Linux::MainLoop_Linux(const std::shared_ptr<Platform> platform) :
 	IMainLoop(platform),
 	m_Display{ nullptr }
 {

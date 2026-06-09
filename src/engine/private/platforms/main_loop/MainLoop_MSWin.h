@@ -12,7 +12,7 @@ namespace zzz::engine
 
 	public:
 		MainLoop_MSWin() = delete;
-		MainLoop_MSWin(const std::shared_ptr<IPlatform> platform);
+		MainLoop_MSWin(const std::shared_ptr<Platform> platform);
 		virtual ~MainLoop_MSWin() = default;
 
 		void Run() override;

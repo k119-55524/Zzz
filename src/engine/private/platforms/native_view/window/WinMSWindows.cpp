@@ -1,13 +1,13 @@
 #if defined(Z_WINDOWS)
 
 #include "WinMSWindows.h"
-#include "../../platforms/PlatformMSWindows.h"
+#include "../../Platform.h"
 #include "../platforms/native_view/ScreenResolution.h"
 #include "../../../core/config/platforms/ConfigMSWin.h"
 
 using namespace zzz::engine;
 
-WinMSWindows::WinMSWindows(const std::shared_ptr<IPlatform> platform, const std::shared_ptr<IInput> input) :
+WinMSWindows::WinMSWindows(const std::shared_ptr<Platform> platform, const std::shared_ptr<IInput> input) :
 	IWindow(platform, input),
 	m_hWnd(nullptr)
 {
@@ -19,9 +19,6 @@ WinMSWindows::~WinMSWindows()
 
 [[nodiscard]] std::expected<void, std::string> WinMSWindows::Initialize(const std::string_view appName)
 {
-	std::shared_ptr<PlatformMSWindows> platform = std::dynamic_pointer_cast<PlatformMSWindows>(m_Platform);
-	ensure(platform != nullptr, "Platform is not PlatformMSWindows.");
-
 	// Рассчитать размеры прямоугольника окна на основе запрошенных размеров клиентской области.
 	Size2D<LONG> winSize;
 	// TODO: не правильная архитектура. Подумать как задавать размер окна
@@ -40,7 +37,7 @@ WinMSWindows::~WinMSWindows()
 
 	CreateWindowEx(
 		0,
-		static_cast<const ConfigMSWin&>(platform->GetPlatformConfig()).GetClassName().c_str(),
+		static_cast<const ConfigMSWin&>(m_Platform->GetPlatformConfig()).GetClassName().c_str(),
 		appName.data(),
 		WS_OVERLAPPEDWINDOW,
 		xPos, yPos, width, height,

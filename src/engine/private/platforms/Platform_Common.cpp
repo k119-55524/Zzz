@@ -1,11 +1,11 @@
 #include <foundation.h>
 
-#include "IPlatform.h"
-#include "../../factories/EngineFactory.h"
+#include "Platform.h"
+#include "../factories/EngineFactory.h"
 
 using namespace zzz::engine;
 
-IPlatform::IPlatform(std::string_view appName, std::shared_ptr<PlatformNativeData> platformData) :
+Platform::Platform(std::string_view appName, std::shared_ptr<PlatformNativeData> platformData) :
 	m_AppName(appName),
 	m_PlatformData(platformData),
 	m_Path(std::make_shared<Path>(appName, platformData))
@@ -13,7 +13,7 @@ IPlatform::IPlatform(std::string_view appName, std::shared_ptr<PlatformNativeDat
 	ensure(m_AppName.empty() == false, "Application name must not be empty.");
 }
 
-IPlatform::~IPlatform()
+Platform::~Platform()
 {
 	if (m_ConfigManager != nullptr)
 	{
@@ -21,13 +21,14 @@ IPlatform::~IPlatform()
 		if (!res)
 			DOutCritical("Failed to serialize config: {}.", res.error());
 	}
+	ShutdownPlatformSpecific();
 }
 
-void IPlatform::Initialize()
+void Platform::Initialize()
 {
 	m_Factory = zzz::safe_make_shared<EngineFactory>();
 	auto platformConfig = m_Factory->CreatePlatformConfig();
 	m_ConfigManager = zzz::safe_make_shared<ConfigManager>(m_Path, std::move(platformConfig));
 
-	InitializeImpl();
+	InitializePlatformSpecific();
 }

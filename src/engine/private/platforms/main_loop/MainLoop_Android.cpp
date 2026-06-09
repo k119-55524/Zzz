@@ -3,11 +3,15 @@
 #include <android/looper.h>
 
 #include "MainLoop_Android.h"
-#include "../platforms/PlatformAndroid.h"
+#include "../Platform.h"
 
 using namespace zzz::engine;
 
-MainLoop_Android::MainLoop_Android(const std::shared_ptr<IPlatform> platform) :
+namespace zzz::engine {
+    void ProcessAndroidInput(struct android_app* app);
+}
+
+MainLoop_Android::MainLoop_Android(const std::shared_ptr<Platform> platform) :
 	IMainLoop(platform)
 {
 }
@@ -39,7 +43,7 @@ void MainLoop_Android::Run()
 			}
 		}
 
-		PlatformAndroid::ProcessInput(app);
+		ProcessAndroidInput(app);
 
 		if (!isRunning.load())
 			break;

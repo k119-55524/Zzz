@@ -1,8 +1,8 @@
 #if defined(Z_LINUX)
 
 #include "WinLinux.h"
-#include "../../platforms/PlatformLinux.h"
-#include "../../platforms/lLinux/Wayland/xdg-shell-client-protocol.h"
+#include "../../Platform.h"
+#include "../../lLinux/Wayland/xdg-shell-client-protocol.h"
 
 #include <sys/mman.h>
 #include <unistd.h>
@@ -51,7 +51,7 @@ namespace
 	};
 }
 
-WinLinux::WinLinux(const std::shared_ptr<IPlatform> platform, const std::shared_ptr<IInput> input) :
+WinLinux::WinLinux(const std::shared_ptr<Platform> platform, const std::shared_ptr<IInput> input) :
 	IWindow(platform, input),
 	m_Surface{nullptr},
 	m_Buffer{nullptr},

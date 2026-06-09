@@ -12,7 +12,7 @@ namespace zzz::engine
 
 	public:
 		MainLoop_Android() = delete;
-		MainLoop_Android(const std::shared_ptr<IPlatform> platform);
+		MainLoop_Android(const std::shared_ptr<Platform> platform);
 		virtual ~MainLoop_Android() = default;
 
 		void Run() override;

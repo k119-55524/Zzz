@@ -6,7 +6,6 @@
 #include "headers/enums.h"
 #include "private/platforms/native_view/NativeView.h"
 
-#include "private/factories/PlatformFactory.h"
 #include "private/factories/EngineFactory.h"
 
 using namespace zzz;
@@ -16,7 +15,8 @@ using namespace zzz::engine;
 Engine::Engine(std::string_view appName, std::shared_ptr<PlatformNativeData> platformData) :
 	engineState{ eInitState::NotInitialized }
 {
-	m_Platform = PlatformFactory{}.Create(appName, platformData);
+	m_Platform = zzz::safe_make_shared<Platform>(appName, platformData);
+	m_Platform->Initialize();
 }
 
 Engine::~Engine()

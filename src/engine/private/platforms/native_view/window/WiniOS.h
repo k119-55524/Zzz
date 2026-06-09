@@ -11,7 +11,7 @@ namespace zzz::engine
 	{
 	public:
 		WiniOS() = delete;
-		WiniOS(const std::shared_ptr<IPlatform> platform, const std::shared_ptr<IInput> input);
+		WiniOS(const std::shared_ptr<Platform> platform, const std::shared_ptr<IInput> input);
 		~WiniOS() override;
 
 		[[nodiscard]] virtual std::expected<void, std::string> Initialize(const std::string_view appName) override;

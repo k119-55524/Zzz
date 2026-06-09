@@ -1,7 +1,7 @@
 #pragma once
 
 #pragma region Include
-#include "../platforms/platforms/IPlatform.h"
+#include "../platforms/Platform.h"
 #include "../core/config/platforms/IConfig.h"
 #include "../platforms/native_view/window/WinLinux.h"
 #include "../platforms/native_view/window/WinMSWindows.h"
@@ -63,8 +63,8 @@ namespace zzz::engine
 	{
 	public:
 		std::shared_ptr<IConfig>   CreatePlatformConfig();
-		std::shared_ptr<IWindow>   CreateAppWin(const std::shared_ptr<IPlatform> platform, const std::shared_ptr<IInput> input);
-		std::shared_ptr<IMainLoop> CreateMainLoop(std::shared_ptr<IPlatform> platform);
+		std::shared_ptr<IWindow>   CreateAppWin(const std::shared_ptr<Platform> platform, const std::shared_ptr<IInput> input);
+		std::shared_ptr<IMainLoop> CreateMainLoop(std::shared_ptr<Platform> platform);
 		std::shared_ptr<IInput>    CreateInput();
 	};
 }

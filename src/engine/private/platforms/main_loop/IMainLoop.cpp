@@ -2,7 +2,7 @@
 
 using namespace zzz::engine;
 
-IMainLoop::IMainLoop(const std::shared_ptr<IPlatform> platform) :
+IMainLoop::IMainLoop(const std::shared_ptr<Platform> platform) :
 	m_Platform{platform},
 	isRunning{true}
 {

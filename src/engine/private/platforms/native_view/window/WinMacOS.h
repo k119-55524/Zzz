@@ -11,7 +11,7 @@ namespace zzz::engine
 	{
 	public:
 		WinMacOS() = delete;
-		WinMacOS(const std::shared_ptr<IPlatform> platform, const std::shared_ptr<IInput> input);
+		WinMacOS(const std::shared_ptr<Platform> platform, const std::shared_ptr<IInput> input);
 		~WinMacOS() override;
 
 		[[nodiscard]] virtual std::expected<void, std::string> Initialize(const std::string_view appName) override;

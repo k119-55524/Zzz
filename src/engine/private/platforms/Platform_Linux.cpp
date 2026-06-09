@@ -1,6 +1,7 @@
-#if defined(Z_LINUX)
+#include <foundation.h>
 
-#include "PlatformLinux.h"
+#include "../core/config/platforms/ConfigLinux.h"
+#include "../inputs/platforms/InputLinux.h"
 #include "lLinux/Wayland/xdg-shell-client-protocol.h"
 
 using namespace zzz::engine;
@@ -88,28 +89,19 @@ namespace
 	};
 }
 
-PlatformLinux::PlatformLinux(std::string_view appName, std::shared_ptr<PlatformNativeData> platformData) :
-	IPlatform(appName, platformData),
-	m_Display{nullptr},
-	m_Registry{nullptr},
-	m_Compositor{nullptr},
-	m_Shm{nullptr},
-	m_XdgWmBase{nullptr},
-	m_Output{nullptr},
-	m_ScaleFactor{1}
-{}
+// These pointers were members of PlatformLinux, but now they can be part of PlatformNativeData
+// or we can just keep them as static globals if there is only one Platform instance.
+// Wait, PlatformLinux had them as members. Let's add them to PlatformNativeData in Linux.h
+// For now, let's keep them as static globals in this file to avoid changing headers outside.
+static wl_display* m_Display = nullptr;
+static wl_registry* m_Registry = nullptr;
+static wl_compositor* m_Compositor = nullptr;
+static wl_shm* m_Shm = nullptr;
+static xdg_wm_base* m_XdgWmBase = nullptr;
+static wl_output* m_Output = nullptr;
+static int32_t m_ScaleFactor = 1;
 
-PlatformLinux::~PlatformLinux()
-{
-	Shutdown();
-}
-
-void PlatformLinux::InitializeImpl()
-{
-	InitializeWayland();
-}
-
-void PlatformLinux::InitializeWayland()
+void Platform::InitializePlatformSpecific()
 {
 	try
 	{
@@ -148,19 +140,19 @@ void PlatformLinux::InitializeWayland()
 	}
 	catch (const std::exception& e)
 	{
-		Shutdown();
+		ShutdownPlatformSpecific();
 		THROW_RUNTIME("Exception initialize: {}.", e.what());
 	}
 	catch (...)
 	{
-		Shutdown();
+		ShutdownPlatformSpecific();
 		THROW_RUNTIME("Unknown exception occurred.");
 	}
 
 	DOut("PlatformLinux initialized: OK.");
 }
 
-void PlatformLinux::Shutdown()
+void Platform::ShutdownPlatformSpecific()
 {
 	if (m_Output)
 	{
@@ -198,4 +190,3 @@ void PlatformLinux::Shutdown()
 		m_Display = nullptr;
 	}
 }
-#endif // defined(Z_LINUX)
