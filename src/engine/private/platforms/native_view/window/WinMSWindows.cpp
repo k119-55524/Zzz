@@ -36,8 +36,7 @@ WinMSWindows::~WinMSWindows()
 	int xPos = (screenWidth - width) / 2;  // Расчет позиции по оси X
 	int yPos = (screenHeight - height) / 2; // Расчет позиции по оси Y
 
-	// Контейнер для передачи в WindowProc
-	WinInternalContext ctx = { this, m_Input.get() };
+	m_Ctx = { this, m_Input.get() };
 
 	CreateWindowEx(
 		0,
@@ -48,7 +47,7 @@ WinMSWindows::~WinMSWindows()
 		nullptr,
 		nullptr,
 		GetModuleHandle(NULL),
-		&ctx);
+		&m_Ctx);
 
 	if (!m_hWnd)
 		THROW_RUNTIME("CreateWindowEx( ... ) failed. Error code (Windows): {}", ::GetLastError());

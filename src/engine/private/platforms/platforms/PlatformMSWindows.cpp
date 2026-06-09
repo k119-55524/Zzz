@@ -61,19 +61,20 @@ LRESULT CALLBACK PlatformMSWindows::WindowProc(HWND hWnd, UINT uMsg, WPARAM wPar
 	}
 	else
 		ctx = reinterpret_cast<WinMSWindows::WinInternalContext*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
-
+	
 	if (ctx)
 	{
+		static bool IsHandleInput = true;
+		if (uMsg == WM_CLOSE)
+			IsHandleInput = false;
+
 		auto procRes = ctx->window->MsgProc(hWnd, uMsg, wParam, lParam);
 		if (procRes.isContinue)
 		{
-			struct WinMsg
-			{
-				UINT uMsg;
-				WPARAM wParam;
-				LPARAM lParam;
-			} msg = { uMsg, wParam, lParam };
-			ctx->input->ProcessMessage(&msg);
+			if (IsHandleInput && ctx->input->ProcessMessage({ uMsg, wParam, lParam }))
+				DefWindowProc(hWnd, uMsg, wParam, lParam);
+			else
+				DefWindowProc(hWnd, uMsg, wParam, lParam);
 		}
 
 		return procRes.result;

@@ -13,7 +13,7 @@ namespace zzz::engine
 		~InputMSWindows() override = default;
 
 		[[nodiscard]] std::expected<void, std::string> Initialize() override;
-		bool ProcessMessage(void* nativeMsg) override;
+		bool ProcessMessage(const NativeMsg& nativeMsg) override;
 	};
 }
 #endif // defined(Z_WINDOWS)

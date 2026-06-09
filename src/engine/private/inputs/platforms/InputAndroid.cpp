@@ -9,7 +9,7 @@ std::expected<void, std::string> InputAndroid::Initialize()
 	return {};
 }
 
-bool InputAndroid::ProcessMessage(void* nativeMsg)
+bool InputAndroid::ProcessMessage(const NativeMsg& nativeMsg)
 {
 	// На Android это будет вызываться реже, так как основной вход через HandleInput
 	return false;

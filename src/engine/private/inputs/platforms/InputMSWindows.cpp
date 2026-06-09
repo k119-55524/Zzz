@@ -9,10 +9,10 @@ std::expected<void, std::string> InputMSWindows::Initialize()
 	return {};
 }
 
-bool InputMSWindows::ProcessMessage(void* nativeMsg)
+bool InputMSWindows::ProcessMessage(const NativeMsg& nativeMsg)
 {
 	// Здесь будет разбор MSG (uMsg, wParam, lParam)
-	return false;
+	return true;
 }
 
 #endif // defined(Z_WINDOWS)

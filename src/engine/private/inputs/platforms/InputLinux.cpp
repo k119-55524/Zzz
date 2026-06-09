@@ -9,7 +9,7 @@ std::expected<void, std::string> InputLinux::Initialize()
 	return {};
 }
 
-bool InputLinux::ProcessMessage(void* nativeMsg)
+bool InputLinux::ProcessMessage(const NativeMsg& nativeMsg)
 {
 	// Разбор событий Wayland/X11
 	return false;

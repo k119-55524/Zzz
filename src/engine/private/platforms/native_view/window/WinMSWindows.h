@@ -34,7 +34,8 @@ namespace zzz::engine
 		MsgProcResult MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 		private:
-			HWND m_hWnd;
+			HWND               m_hWnd;
+			WinInternalContext m_Ctx;
 	};
 }
 #endif // defined(Z_WINDOWS)
