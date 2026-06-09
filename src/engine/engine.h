@@ -59,28 +59,6 @@ namespace zzz::engine
 		// iOS: applicationDidReceiveMemoryWarning:
 		void OnPlatformApplicationDidReceiveMemoryWarning();
 #endif // defined(Z_APPLE)
-
-#if defined(Z_ANDROID)
-		// Activity получила фокус и переходит в активное состояние.
-		// Android: Activity.onResume()
-		void OnPlatformActivityResumed();
-
-		// Activity теряет фокус и переходит в неактивное состояние.
-		// Android: Activity.onPause()
-		void OnPlatformActivityPaused();
-
-		// Activity становится невидимой для пользователя.
-		// Android: Activity.onStop()
-		void OnPlatformActivityStopped();
-
-		// Activity снова становится видимой.
-		// Android: Activity.onStart()
-		void OnPlatformActivityStarted();
-
-		// Система испытывает нехватку памяти.
-		// Android: Activity.onLowMemory()
-		void OnPlatformLowMemory();
-#endif // defined(Z_ANDROID)
 #pragma endregion
 
 	private:

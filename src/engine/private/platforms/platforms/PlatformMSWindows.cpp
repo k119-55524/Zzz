@@ -51,38 +51,32 @@ void PlatformMSWindows::InitializeImpl()
 
 LRESULT CALLBACK PlatformMSWindows::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept
 {
-	struct WinInternalContext
-	{
-		WinMSWindows* window;
-		InputMSWindows* input;
-	};
-
-	WinInternalContext* ctx = nullptr;
+	WinMSWindows::WinInternalContext* ctx = nullptr;
 
 	if (uMsg == WM_NCCREATE)
 	{
 		const auto* pCreate = reinterpret_cast<CREATESTRUCT*>(lParam);
-		ctx = static_cast<WinInternalContext*>(pCreate->lpCreateParams);
+		ctx = static_cast<WinMSWindows::WinInternalContext*>(pCreate->lpCreateParams);
 		SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(ctx));
 	}
 	else
-		ctx = reinterpret_cast<WinInternalContext*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+		ctx = reinterpret_cast<WinMSWindows::WinInternalContext*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
 	if (ctx)
 	{
-		LRESULT res = ctx->window->MsgProc(hWnd, uMsg, wParam, lParam);
+		auto procRes = ctx->window->MsgProc(hWnd, uMsg, wParam, lParam);
+		if (procRes.isContinue)
+		{
+			struct WinMsg
+			{
+				UINT uMsg;
+				WPARAM wParam;
+				LPARAM lParam;
+			} msg = { uMsg, wParam, lParam };
+			ctx->input->ProcessMessage(&msg);
+		}
 
-		// Если сообщение - это ввод, отдаем его инпуту
-		// В будущем тут будет фильтр, чтобы не слать WM_SIZE в инпут
-		struct WinMsg {
-			UINT uMsg;
-			WPARAM wParam;
-			LPARAM lParam;
-		} msg = { uMsg, wParam, lParam };
-
-		ctx->input->ProcessMessage(&msg);
-
-		return res;
+		return procRes.result;
 	}
 
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);

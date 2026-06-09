@@ -192,38 +192,4 @@ void Engine::OnPlatformApplicationDidReceiveMemoryWarning()
 	DOut("Application did receive memory warning.");
 }
 #endif // defined(Z_APPLE)
-
-#if defined(Z_ANDROID)
-void Engine::OnPlatformActivityResumed()
-{
-	DOut("Activity resumed.");
-}
-
-void Engine::OnPlatformActivityPaused()
-{
-	DOut("Activity paused.");
-
-	if (engineState.load() == eInitState::Running)
-	{
-		auto res = m_ConfigManager->SaveConfig();
-		if (!res)
-			DOutCritical("Failed to save config on entering background: {}.", res.error());
-	}
-}
-
-void Engine::OnPlatformActivityStopped()
-{
-	DOut("Activity stopped.");
-}
-
-void Engine::OnPlatformActivityStarted()
-{
-	DOut("Activity started.");
-}
-
-void Engine::OnPlatformLowMemory()
-{
-	DOut("Low memory warning.");
-}
-#endif // defined(Z_ANDROID)
 #pragma endregion
