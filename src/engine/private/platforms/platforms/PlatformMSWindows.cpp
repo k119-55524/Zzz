@@ -51,16 +51,16 @@ void PlatformMSWindows::InitializeImpl()
 
 LRESULT CALLBACK PlatformMSWindows::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept
 {
-	WinMSWindows::WinInternalContext* ctx = nullptr;
+	WinMSWindows::MSWinCtx* ctx = nullptr;
 
 	if (uMsg == WM_NCCREATE)
 	{
 		const auto* pCreate = reinterpret_cast<CREATESTRUCT*>(lParam);
-		ctx = static_cast<WinMSWindows::WinInternalContext*>(pCreate->lpCreateParams);
+		ctx = static_cast<WinMSWindows::MSWinCtx*>(pCreate->lpCreateParams);
 		SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(ctx));
 	}
 	else
-		ctx = reinterpret_cast<WinMSWindows::WinInternalContext*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+		ctx = reinterpret_cast<WinMSWindows::MSWinCtx*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 	
 	if (ctx)
 	{

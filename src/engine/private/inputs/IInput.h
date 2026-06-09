@@ -2,12 +2,11 @@
 
 #include <string>
 #include <expected>
-#include <foundation.h>
 
 #if defined(Z_WINDOWS)
-#	include "../../headers/MSWin.h"
+#include "../../headers/MSWin.h"
 #elif defined(Z_ANDROID)
-#	include <android/input.h>
+#include <android/input.h>
 #endif
 
 namespace zzz::engine
@@ -23,7 +22,6 @@ namespace zzz::engine
 		LPARAM lParam;
 	};
 	using NativeMsg = WinMsg;
-
 #elif defined(Z_ANDROID)
 	struct AndroidMsg
 	{

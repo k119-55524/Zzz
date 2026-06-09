@@ -11,11 +11,22 @@ namespace zzz::engine
 	class WinAndroid final : public IWindow
 	{
 	public:
+		struct MSWinCtx
+		{
+			WinAndroid*	window;
+			IInput*		input;
+		};
+
 		WinAndroid() = delete;
 		WinAndroid(const std::shared_ptr<IPlatform> platform, const std::shared_ptr<IInput> input);
 		~WinAndroid() override;
 
 		[[nodiscard]] virtual std::expected<void, std::string> Initialize(const std::string_view appName) override;
+
+		void ProcessAppCmd(int32_t cmd);
+
+	private:
+		MSWinCtx m_Ctx;
 	};
 }
 #endif // defined(Z_ANDROID)

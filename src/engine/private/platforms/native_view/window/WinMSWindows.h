@@ -14,7 +14,7 @@ namespace zzz::engine
 	class WinMSWindows final : public IWindow
 	{
 	public:
-		struct WinInternalContext
+		struct MSWinCtx
 		{
 			WinMSWindows*	window;
 			IInput*			input;
@@ -34,8 +34,8 @@ namespace zzz::engine
 		MsgProcResult MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 		private:
-			HWND               m_hWnd;
-			WinInternalContext m_Ctx;
+			HWND m_hWnd;
+			MSWinCtx m_Ctx;
 	};
 }
 #endif // defined(Z_WINDOWS)

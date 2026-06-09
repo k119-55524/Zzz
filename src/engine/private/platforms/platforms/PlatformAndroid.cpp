@@ -2,6 +2,8 @@
 
 #include "PlatformAndroid.h"
 #include "../../platforms/main_loop/MainLoop_Android.h"
+#include "../native_view/window/WinAndroid.h"
+#include "../../inputs/platforms/InputAndroid.h"
 
 using namespace zzz::engine;
 
@@ -20,12 +22,32 @@ PlatformAndroid::~PlatformAndroid()
 
 void PlatformAndroid::InitializeImpl()
 {
-	android_app* app = GetNativeApp();
+	android_app* app = m_PlatformData.get();
 	if (app)
 	{
-		// Мы можем установить обработчик команд здесь или в Engine
-		// app->onAppCmd = ...
+		app->onAppCmd = PlatformAndroid::OnAppCmd;
+		app->onInputEvent = PlatformAndroid::OnInputEvent;
 	}
+}
+
+void PlatformAndroid::OnAppCmd(struct android_app* app, int32_t cmd)
+{
+	WinAndroid::MSWinCtx* ctx = reinterpret_cast<WinAndroid::MSWinCtx*>(app->userData);
+	if (ctx && ctx->window)
+	{
+		ctx->window->ProcessAppCmd(cmd);
+	}
+}
+
+int32_t PlatformAndroid::OnInputEvent(struct android_app* app, AInputEvent* event)
+{
+	WinAndroid::MSWinCtx* ctx = reinterpret_cast<WinAndroid::MSWinCtx*>(app->userData);
+	if (ctx && ctx->input)
+	{
+		return ctx->input->ProcessMessage({ event }) ? 1 : 0;
+	}
+
+	return 0;
 }
 
 #endif // defined(Z_ANDROID)

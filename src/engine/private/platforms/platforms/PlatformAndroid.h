@@ -15,6 +15,8 @@ namespace zzz::engine
 
 	private:
 		void InitializeImpl() override;
+		static void OnAppCmd(struct android_app* app, int32_t cmd);
+		static int32_t OnInputEvent(struct android_app* app, AInputEvent* event);
 	};
 }
 #endif // defined(Z_ANDROID)
