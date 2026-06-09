@@ -11,7 +11,7 @@ namespace zzz::engine
 	class WinAndroid final : public IWindow
 	{
 	public:
-		struct MSWinCtx
+		struct AndroidActinityCtx
 		{
 			WinAndroid*	window;
 			IInput*		input;
@@ -26,7 +26,7 @@ namespace zzz::engine
 		void ProcessAppCmd(int32_t cmd);
 
 	private:
-		MSWinCtx m_Ctx;
+		AndroidActinityCtx m_Ctx;
 	};
 }
 #endif // defined(Z_ANDROID)

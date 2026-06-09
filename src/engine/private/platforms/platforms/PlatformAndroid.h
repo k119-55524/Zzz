@@ -3,7 +3,7 @@
 #if defined(Z_ANDROID)
 
 #include "IPlatform.h"
-#include <android_native_app_glue.h>
+#include "headers/Android.h"
 
 namespace zzz::engine
 {
@@ -12,11 +12,12 @@ namespace zzz::engine
 	public:
 		PlatformAndroid(std::string_view appName, std::shared_ptr<PlatformNativeData> platformData = nullptr);
 		~PlatformAndroid() override;
+	public:
+		static void ProcessInput(struct android_app* app);
 
 	private:
 		void InitializeImpl() override;
 		static void OnAppCmd(struct android_app* app, int32_t cmd);
-		static int32_t OnInputEvent(struct android_app* app, AInputEvent* event);
 	};
 }
 #endif // defined(Z_ANDROID)

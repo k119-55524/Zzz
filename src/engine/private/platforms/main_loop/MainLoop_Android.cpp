@@ -1,8 +1,9 @@
 #if defined(Z_ANDROID)
 
+#include <android/looper.h>
+
 #include "MainLoop_Android.h"
 #include "../platforms/PlatformAndroid.h"
-#include <android/looper.h>
 
 using namespace zzz::engine;
 
@@ -15,7 +16,7 @@ void MainLoop_Android::Run()
 {
 	isRunning.store(true);
 
-	android_app* app = m_Platform->GetPlatformData();
+	android_app* app = m_Platform->GetPlatformData().get();
 	while (isRunning.load())
 	{
 		int ident;
@@ -37,6 +38,8 @@ void MainLoop_Android::Run()
 				break;
 			}
 		}
+
+		PlatformAndroid::ProcessInput(app);
 
 		if (!isRunning.load())
 			break;

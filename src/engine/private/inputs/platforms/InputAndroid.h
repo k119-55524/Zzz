@@ -16,8 +16,6 @@ namespace zzz::engine
 
 		bool ProcessMessage(const NativeMsg& nativeMsg) override;
 
-		// Специфичный для Android метод
-		int32_t HandleInput(AInputEvent* event);
 	};
 }
 #endif // defined(Z_ANDROID)

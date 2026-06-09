@@ -25,7 +25,8 @@ namespace zzz::engine
 #elif defined(Z_ANDROID)
 	struct AndroidMsg
 	{
-		AInputEvent* event;
+		void* motionEvent;
+		void* keyEvent;
 	};
 	using NativeMsg = AndroidMsg;
 #elif defined(Z_LINUX)

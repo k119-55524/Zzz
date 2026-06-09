@@ -26,28 +26,42 @@ void PlatformAndroid::InitializeImpl()
 	if (app)
 	{
 		app->onAppCmd = PlatformAndroid::OnAppCmd;
-		app->onInputEvent = PlatformAndroid::OnInputEvent;
 	}
 }
 
 void PlatformAndroid::OnAppCmd(struct android_app* app, int32_t cmd)
 {
-	WinAndroid::MSWinCtx* ctx = reinterpret_cast<WinAndroid::MSWinCtx*>(app->userData);
+	WinAndroid::AndroidActinityCtx* ctx = reinterpret_cast<WinAndroid::AndroidActinityCtx*>(app->userData);
 	if (ctx && ctx->window)
 	{
 		ctx->window->ProcessAppCmd(cmd);
 	}
 }
 
-int32_t PlatformAndroid::OnInputEvent(struct android_app* app, AInputEvent* event)
+void PlatformAndroid::ProcessInput(struct android_app* app)
 {
-	WinAndroid::MSWinCtx* ctx = reinterpret_cast<WinAndroid::MSWinCtx*>(app->userData);
+	if (!app) return;
+
+	auto* inputBuffer = android_app_swap_input_buffers(app);
+	if (!inputBuffer) return;
+
+	WinAndroid::AndroidActinityCtx* ctx = reinterpret_cast<WinAndroid::AndroidActinityCtx*>(app->userData);
 	if (ctx && ctx->input)
 	{
-		return ctx->input->ProcessMessage({ event }) ? 1 : 0;
+		for (uint64_t i = 0; i < inputBuffer->motionEventsCount; ++i)
+		{
+			AndroidMsg msg = { &inputBuffer->motionEvents[i], nullptr };
+			ctx->input->ProcessMessage(msg);
+		}
+		for (uint64_t i = 0; i < inputBuffer->keyEventsCount; ++i)
+		{
+			AndroidMsg msg = { nullptr, &inputBuffer->keyEvents[i] };
+			ctx->input->ProcessMessage(msg);
+		}
 	}
 
-	return 0;
+	android_app_clear_motion_events(inputBuffer);
+	android_app_clear_key_events(inputBuffer);
 }
 
 #endif // defined(Z_ANDROID)
