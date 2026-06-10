@@ -4,7 +4,7 @@
 
 using namespace zzz::engine;
 
-Platform::Platform(std::string_view appName, std::shared_ptr<NativeAppData> nativeData) :
+Platform::Platform(const std::string_view appName, std::shared_ptr<NativeAppData> nativeData) :
 	m_AppName(appName),
 	m_NativeData(nativeData),
 	m_Path(appName, nativeData)

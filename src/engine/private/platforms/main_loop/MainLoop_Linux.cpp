@@ -7,13 +7,10 @@
 using namespace zzz::engine;
 
 MainLoop_Linux::MainLoop_Linux(const std::shared_ptr<Platform> platform) :
-	MainLoop(platform),
+	MainLoopBase(platform),
 	m_Display{ nullptr }
 {
-	std::shared_ptr<PlatformLinux> platformLinux = std::dynamic_pointer_cast<PlatformLinux>(m_Platform);
-	ensure(platformLinux != nullptr, "Platform is not PlatformLinux.");
-
-	m_Display = platformLinux->GetDisplay();
+	m_Display = m_Platform->GetNativeData()->display;
 	ensure(m_Display != nullptr, "Display is not PlatformLinux.");
 }
 

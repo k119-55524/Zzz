@@ -51,7 +51,7 @@ namespace
 }
 
 WinLinux::WinLinux(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input) :
-	Window(platform, input),
+	WindowBase(platform, input),
 	m_Surface{nullptr},
 	m_Buffer{nullptr},
 	m_XdgSurface{nullptr},
@@ -95,14 +95,12 @@ std::expected<void, std::string> WinLinux::Initialize(const std::string_view app
 {
 	try
 	{
-		auto platform = std::dynamic_pointer_cast<PlatformLinux>(m_Platform);
-		ensure(platform != nullptr, "Platform is not PlatformLinux.");
-
-		m_Surface = wl_compositor_create_surface(platform->GetCompositor());
+		auto platform = m_Platform;
+		m_Surface = wl_compositor_create_surface(platform->GetNativeData()->compositor);
 		if (!m_Surface)
 			return UNEXPECTED("wl_compositor_create_surface() failed.");
 
-		m_XdgSurface = xdg_wm_base_get_xdg_surface(platform->GetXdgWmBase(), m_Surface);
+		m_XdgSurface = xdg_wm_base_get_xdg_surface(platform->GetNativeData()->xdgWmBase, m_Surface);
 		if (!m_XdgSurface)
 			return UNEXPECTED("xdg_wm_base_get_xdg_surface() failed.");
 
@@ -123,7 +121,7 @@ std::expected<void, std::string> WinLinux::Initialize(const std::string_view app
 
 		{
 			const Size2D<zU32> winSize(c_DefaultWindowWidth, c_DefaultWindowHeicht);
-			const int scale  = platform->GetScaleFactor();
+			const int scale  = platform->GetNativeData()->scaleFactor;
 			const int W      = static_cast<int>(winSize.width)  * scale;
 			const int H      = static_cast<int>(winSize.height) * scale;
 			const int stride = W * 4;
@@ -139,20 +137,20 @@ std::expected<void, std::string> WinLinux::Initialize(const std::string_view app
 					std::fill_n(static_cast<uint32_t*>(px), W * H, uint32_t{0xFF1E1E2E});
 					munmap(px, size);
 				}
-				wl_shm_pool* pool = wl_shm_create_pool(platform->GetShm(), fd, size);
+				wl_shm_pool* pool = wl_shm_create_pool(platform->GetNativeData()->shm, fd, size);
 				close(fd);
 				m_Buffer = wl_shm_pool_create_buffer(pool, 0, W, H, stride, WL_SHM_FORMAT_ARGB8888);
 				wl_shm_pool_destroy(pool);
 			}
 		}
 
-		wl_surface_set_buffer_scale(m_Surface, platform->GetScaleFactor());
+		wl_surface_set_buffer_scale(m_Surface, platform->GetNativeData()->scaleFactor);
 		wl_surface_commit(m_Surface);
 
-		wl_display_roundtrip(platform->GetDisplay());
-		wl_display_roundtrip(platform->GetDisplay());
+		wl_display_roundtrip(platform->GetNativeData()->display);
+		wl_display_roundtrip(platform->GetNativeData()->display);
 
-		int err = wl_display_get_error(platform->GetDisplay());
+		int err = wl_display_get_error(platform->GetNativeData()->display);
 		if (err != 0)
 			return UNEXPECTED("Wayland display error: {}.", err);
 	}

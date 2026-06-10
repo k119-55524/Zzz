@@ -1,4 +1,6 @@
 #include <foundation.h>
+#include <memory>
+#include "Platform.h"
 
 #include "../core/config/platforms/ConfigLinux.h"
 #include "input/platforms/InputLinux.h"
@@ -89,54 +91,43 @@ namespace
 	};
 }
 
-// These pointers were members of PlatformLinux, but now they can be part of NativeAppData
-// or we can just keep them as static globals if there is only one Platform instance.
-// Wait, PlatformLinux had them as members. Let's add them to NativeAppData in Linux.h
-// For now, let's keep them as static globals in this file to avoid changing headers outside.
-static wl_display* m_Display = nullptr;
-static wl_registry* m_Registry = nullptr;
-static wl_compositor* m_Compositor = nullptr;
-static wl_shm* m_Shm = nullptr;
-static xdg_wm_base* m_XdgWmBase = nullptr;
-static wl_output* m_Output = nullptr;
-static int32_t m_ScaleFactor = 1;
-
 void Platform::InitializePlatformSpecific()
 {
+	m_NativeData = std::make_shared<NativeAppData>();
 	try
 	{
-		m_Display = wl_display_connect(nullptr);
-		if (!m_Display)
+		m_NativeData->display = wl_display_connect(nullptr);
+		if (!m_NativeData->display)
 			THROW_RUNTIME("wl_display_connect() failed.");
 
-		m_Registry = wl_display_get_registry(m_Display);
-		if (!m_Registry)
+		m_NativeData->registry = wl_display_get_registry(m_NativeData->display);
+		if (!m_NativeData->registry)
 			THROW_RUNTIME("wl_display_get_registry() failed.");
 
-		RegistryData rd{ &m_Compositor, &m_Shm, &m_XdgWmBase, &m_Output };
-		if (wl_registry_add_listener(m_Registry, &g_RegistryListener, &rd) != 0)
+		RegistryData rd{ &m_NativeData->compositor, &m_NativeData->shm, &m_NativeData->xdgWmBase, &m_NativeData->output };
+		if (wl_registry_add_listener(m_NativeData->registry, &g_RegistryListener, &rd) != 0)
 			THROW_RUNTIME("wl_registry_add_listener() failed.");
 
 		// First roundtrip: receive registry globals
-		if (wl_display_roundtrip(m_Display) == -1)
+		if (wl_display_roundtrip(m_NativeData->display) == -1)
 			THROW_RUNTIME("wl_display_roundtrip() failed.");
 
-		if (!m_Compositor)
+		if (!m_NativeData->compositor)
 			THROW_RUNTIME("wl_compositor not found.");
 
-		if (!m_Shm)
+		if (!m_NativeData->shm)
 			THROW_RUNTIME("wl_shm not found.");
 
-		if (!m_XdgWmBase)
+		if (!m_NativeData->xdgWmBase)
 			THROW_RUNTIME("xdg_wm_base not found.");
 
-		xdg_wm_base_add_listener(m_XdgWmBase, &g_WmBaseListener, nullptr);
+		xdg_wm_base_add_listener(m_NativeData->xdgWmBase, &g_WmBaseListener, nullptr);
 
 		// Second roundtrip: receive wl_output properties (scale, geometry, etc.)
-		if (m_Output)
-			wl_output_add_listener(m_Output, &g_OutputListener, &m_ScaleFactor);
+		if (m_NativeData->output)
+			wl_output_add_listener(m_NativeData->output, &g_OutputListener, &m_NativeData->scaleFactor);
 
-		wl_display_roundtrip(m_Display);
+		wl_display_roundtrip(m_NativeData->display);
 	}
 	catch (const std::exception& e)
 	{
@@ -154,39 +145,39 @@ void Platform::InitializePlatformSpecific()
 
 void Platform::ShutdownPlatformSpecific()
 {
-	if (m_Output)
+	if (m_NativeData->output)
 	{
-		wl_output_destroy(m_Output);
-		m_Output = nullptr;
+		wl_output_destroy(m_NativeData->output);
+		m_NativeData->output = nullptr;
 	}
 
-	if (m_XdgWmBase)
+	if (m_NativeData->xdgWmBase)
 	{
-		xdg_wm_base_destroy(m_XdgWmBase);
-		m_XdgWmBase = nullptr;
+		xdg_wm_base_destroy(m_NativeData->xdgWmBase);
+		m_NativeData->xdgWmBase = nullptr;
 	}
 
-	if (m_Compositor)
+	if (m_NativeData->compositor)
 	{
-		wl_compositor_destroy(m_Compositor);
-		m_Compositor = nullptr;
+		wl_compositor_destroy(m_NativeData->compositor);
+		m_NativeData->compositor = nullptr;
 	}
 
-	if (m_Shm)
+	if (m_NativeData->shm)
 	{
-		wl_shm_destroy(m_Shm);
-		m_Shm = nullptr;
+		wl_shm_destroy(m_NativeData->shm);
+		m_NativeData->shm = nullptr;
 	}
 
-	if (m_Registry)
+	if (m_NativeData->registry)
 	{
-		wl_registry_destroy(m_Registry);
-		m_Registry = nullptr;
+		wl_registry_destroy(m_NativeData->registry);
+		m_NativeData->registry = nullptr;
 	}
 
-	if (m_Display)
+	if (m_NativeData->display)
 	{
-		wl_display_disconnect(m_Display);
-		m_Display = nullptr;
+		wl_display_disconnect(m_NativeData->display);
+		m_NativeData->display = nullptr;
 	}
 }

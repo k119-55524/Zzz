@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "Window.h"
+#include "Window_Common.h"
 
 struct wl_surface;
 struct wl_buffer;
@@ -12,14 +12,14 @@ struct xdg_toplevel;
 
 namespace zzz::engine
 {
-	class WinLinux final : public Window
+	class WinLinux final : public WindowBase
 	{
 	public:
 		WinLinux() = delete;
 		WinLinux(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input);
-		~WinLinux() override;
+		~WinLinux();
 
-		[[nodiscard]] virtual std::expected<void, std::string> Initialize(const std::string_view appName) override;
+		[[nodiscard]] std::expected<void, std::string> Initialize(const std::string_view appName);
 		inline wl_surface* GetSurface() const noexcept { return m_Surface; };
 		inline wl_buffer*  GetBuffer()  const noexcept { return m_Buffer; };
 
