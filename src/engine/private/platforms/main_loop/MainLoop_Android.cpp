@@ -20,7 +20,7 @@ void MainLoop_Android::Run()
 {
 	isRunning.store(true);
 
-	android_app* app = m_Platform->GetPlatformData().get();
+	android_app* app = m_Platform->GetNativeData().get();
 	while (isRunning.load())
 	{
 		int ident;

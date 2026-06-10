@@ -2,12 +2,13 @@
 
 #include "Platform.h"
 #include "native_view/window/WinMSWindows.h"
-#include "../core/config/platforms/ConfigMSWin.h"
 #include "../inputs/platforms/InputMSWindows.h"
+#include "../core/config/platforms/ConfigMSWin.h"
 
 using namespace zzz::engine;
 
-namespace {
+namespace
+{
 	LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept
 	{
 		WinMSWindows::MSWinCtx* ctx = nullptr;

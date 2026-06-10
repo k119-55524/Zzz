@@ -21,7 +21,7 @@ std::expected<void, std::string> WinAndroid::Initialize(const std::string_view a
 
 	m_Ctx = { this, m_Input.get() };
 
-	android_app* app = platform->GetPlatformData().get();
+	android_app* app = platform->GetNativeData().get();
 	if (app)
 	{
 		app->userData = &m_Ctx;

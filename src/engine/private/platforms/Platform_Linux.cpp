@@ -89,9 +89,9 @@ namespace
 	};
 }
 
-// These pointers were members of PlatformLinux, but now they can be part of PlatformNativeData
+// These pointers were members of PlatformLinux, but now they can be part of NativeAppData
 // or we can just keep them as static globals if there is only one Platform instance.
-// Wait, PlatformLinux had them as members. Let's add them to PlatformNativeData in Linux.h
+// Wait, PlatformLinux had them as members. Let's add them to NativeAppData in Linux.h
 // For now, let's keep them as static globals in this file to avoid changing headers outside.
 static wl_display* m_Display = nullptr;
 static wl_registry* m_Registry = nullptr;

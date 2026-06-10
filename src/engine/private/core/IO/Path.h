@@ -3,6 +3,8 @@
 #include <string>
 #include <filesystem>
 
+#include "../../NativeAppData.h"
+
 using namespace zzz;
 
 namespace zzz::io
@@ -11,16 +13,15 @@ namespace zzz::io
 	{
 	public:
 		Path() = delete;
-		Path(std::string_view appName, std::shared_ptr<void> platformData);
+		Path(std::string_view appName, std::shared_ptr<zzz::engine::NativeAppData> nativeData);
 
-		[[nodiscard]] static bool IsValidDirectoryName(std::string_view name);
-
-		[[nodiscard]] std::expected<std::filesystem::path, std::string> GetExecutableDirectory();
-		inline std::filesystem::path GetUserDataDirectory() noexcept { return m_UserDataDirectory; };
+		[[nodiscard]] bool IsValidDirectoryName(std::string_view name) const noexcept;
+		[[nodiscard]] const std::expected<std::filesystem::path, std::string> GetExecutableDirectory() const noexcept;
+		inline const std::filesystem::path GetUserDataDirectory() const noexcept { return m_UserDataDirectory; };
 
 	private:
 		std::string_view m_AppName;
-		std::shared_ptr<void>  m_PlatformData;
+		std::shared_ptr<zzz::engine::NativeAppData> m_NativeData;
 		std::filesystem::path m_UserDataDirectory;
 
 		[[nodiscard]] std::expected<std::filesystem::path, std::string> ResolveUserDataDirectory();

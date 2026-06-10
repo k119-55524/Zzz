@@ -12,10 +12,10 @@ using namespace zzz;
 using namespace zzz::io;
 using namespace zzz::engine;
 
-Engine::Engine(std::string_view appName, std::shared_ptr<PlatformNativeData> platformData) :
+Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeData) :
 	engineState{ eInitState::NotInitialized }
 {
-	m_Platform = zzz::safe_make_shared<Platform>(appName, platformData);
+	m_Platform = zzz::safe_make_shared<Platform>(appName, nativeData);
 	m_Platform->Initialize();
 }
 

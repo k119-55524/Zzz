@@ -5,10 +5,10 @@
 
 using namespace zzz::engine;
 
-Platform::Platform(std::string_view appName, std::shared_ptr<PlatformNativeData> platformData) :
+Platform::Platform(std::string_view appName, std::shared_ptr<NativeAppData> nativeData) :
 	m_AppName(appName),
-	m_PlatformData(platformData),
-	m_Path(std::make_shared<Path>(appName, platformData))
+	m_NativeData(nativeData),
+	m_Path(appName, nativeData)
 {
 	ensure(m_AppName.empty() == false, "Application name must not be empty.");
 }
@@ -21,6 +21,7 @@ Platform::~Platform()
 		if (!res)
 			DOutCritical("Failed to serialize config: {}.", res.error());
 	}
+
 	ShutdownPlatformSpecific();
 }
 

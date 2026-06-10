@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "../io/Path.h"
 #include "EngineConfig.h"
@@ -17,7 +17,7 @@ namespace zzz::engine
 	{
 	public:
 		ConfigManager() = delete;
-		ConfigManager(std::shared_ptr<Path> path, std::shared_ptr<IConfig> platformConfig);
+		ConfigManager(const Path& path, std::shared_ptr<IConfig> platformConfig);
 
 		[[nodiscard]] std::expected<void, std::string> SaveConfig();
 
@@ -30,7 +30,7 @@ namespace zzz::engine
 		std::expected<void, std::string> LoadConfig(std::filesystem::path path);
 
 		std::shared_ptr<IConfig> m_PlatformConfig;
-		std::shared_ptr<Path> m_Path;
+		Path m_Path;
 		std::filesystem::path m_ConfigPath;
 		std::shared_ptr<EngineConfig> m_EngineConfig;
 		Serializer m_Serializer;

@@ -4,9 +4,9 @@
 
 namespace zzz::io
 {
-	Path::Path(std::string_view appName, std::shared_ptr<void> platformData) :
+	Path::Path(std::string_view appName, std::shared_ptr<zzz::engine::NativeAppData> nativeData) :
 		m_AppName{ appName },
-		m_PlatformData{ platformData }
+		m_NativeData{ nativeData }
 	{	
 		ensure(IsValidDirectoryName(m_AppName) == true, "Invalid application name for directory: {}", m_AppName);
 
@@ -18,7 +18,7 @@ namespace zzz::io
 	}
 
 	/// @brief Проверяет корректность имени каталога для всех поддерживаемых платформ.
-	[[nodiscard]] bool Path::IsValidDirectoryName(std::string_view name)
+	[[nodiscard]] bool Path::IsValidDirectoryName(std::string_view name) const noexcept
 	{
 		if (name.empty())
 			return false;
@@ -48,7 +48,7 @@ namespace zzz::io
 	}
 
 	/// @brief Возвращает каталог, в котором расположен исполняемый файл приложения.
-	[[nodiscard]] std::expected<std::filesystem::path, std::string> Path::GetExecutableDirectory()
+	[[nodiscard]] const std::expected<std::filesystem::path, std::string> Path::GetExecutableDirectory() const noexcept
 	{
 		try
 		{
@@ -119,10 +119,7 @@ namespace zzz::io
 
 			return *path / m_AppName;
 #elif defined(Z_ANDROID)
-			auto app = static_cast<android_app*>(m_PlatformData.get());
-			if (!app)
-				return UNEXPECTED("Android app context is null.");
-
+			auto app = m_NativeData.get();
 			if (!app->activity)
 				return UNEXPECTED("Android activity is null.");
 

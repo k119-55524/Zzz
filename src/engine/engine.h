@@ -7,18 +7,7 @@
 #include <expected>
 #include <string_view>
 
-#if defined(Z_ANDROID)
-struct android_app;
-#endif
-
-namespace zzz::engine
-{
-#if defined(Z_ANDROID)
-	using PlatformNativeData = android_app;
-#else
-	using PlatformNativeData = void;
-#endif
-}
+#include "NativeAppData.h"
 
 namespace zzz
 {
@@ -40,7 +29,7 @@ namespace zzz::engine
 	{
 	public:
 		Engine() = delete;
-		Engine(std::string_view appName, std::shared_ptr<PlatformNativeData> platformData = nullptr);
+		Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeData = nullptr);
 		~Engine();
 
 		[[nodiscard]] std::expected<void, std::string> Initialize();

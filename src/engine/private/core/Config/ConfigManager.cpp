@@ -1,4 +1,4 @@
-﻿#include "pch.h"
+#include "pch.h"
 
 #include <fstream>
 #include <system_error>
@@ -11,12 +11,11 @@
 using namespace zzz::io;
 using namespace zzz::engine;
 
-ConfigManager::ConfigManager(std::shared_ptr<Path> path, std::shared_ptr<IConfig> platformConfig) :
+ConfigManager::ConfigManager(const Path& path, std::shared_ptr<IConfig> platformConfig) :
 	m_PlatformConfig(std::move(platformConfig)),
 	m_Path(path),
 	m_IsDirty(true)
 {
-	ensure(m_Path != nullptr, "Path must not be null.");
 	Initialize();
 }
 
@@ -45,7 +44,7 @@ ConfigManager::ConfigManager(std::shared_ptr<Path> path, std::shared_ptr<IConfig
 
 		file.write(reinterpret_cast<const char*>(buffer.data()), static_cast<std::streamsize>(buffer.size()));
 		if (!file)
-			return UNEXPECTED("Failed to write file: {}.", m_Path->GetUserDataDirectory().string());
+			return UNEXPECTED("Failed to write file: {}.", m_Path.GetUserDataDirectory().string());
 	}
 	catch (const std::filesystem::filesystem_error& e)
 	{
@@ -167,11 +166,11 @@ std::expected<std::filesystem::path, std::string> ConfigManager::GetSettingsDire
 {
 	// На Apple и Android используем директорию данных пользователя
 #if defined(Z_APPLE) || defined(Z_ANDROID)
-	return m_Path->GetUserDataDirectory();
+	return m_Path.GetUserDataDirectory();
 
 	// На Windows и Linux используем директорию с исполняемым файлом
 #elif defined(Z_WINDOWS) || defined(Z_LINUX)
-	return m_Path->GetExecutableDirectory();
+	return m_Path.GetExecutableDirectory();
 #else
 #error >>>>> Unsupported platform
 #endif

@@ -21,6 +21,7 @@ target_sources(engine_lib PRIVATE
     engine.h
     engine.cpp
     header.h
+    NativeAppData.h
     pch/pch.h
     pch/pch.cpp
 
