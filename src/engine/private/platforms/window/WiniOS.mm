@@ -4,7 +4,7 @@
 using namespace zzz::engine;
 
 WiniOS::WiniOS(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input) :
-	Window(platform, input)
+	WindowBase(platform, input)
 {
 }
 

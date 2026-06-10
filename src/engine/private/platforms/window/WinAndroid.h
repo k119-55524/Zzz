@@ -1,13 +1,13 @@
 #pragma once
 
 
-#include "Window.h"
+#include "Window_Common.h"
 
 #include "../../../header.h"
 
 namespace zzz::engine
 {
-	class WinAndroid final : public Window
+	class WinAndroid final : public WindowBase
 	{
 	public:
 		struct AndroidActinityCtx
@@ -20,7 +20,7 @@ namespace zzz::engine
 		WinAndroid(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input);
 		~WinAndroid() override;
 
-		[[nodiscard]] virtual std::expected<void, std::string> Initialize(const std::string_view appName) override;
+		[[nodiscard]] std::expected<void, std::string> Initialize(const std::string_view appName);
 
 		void ProcessAppCmd(int32_t cmd);
 

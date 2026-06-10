@@ -5,7 +5,7 @@
 using namespace zzz::engine;
 
 WinAndroid::WinAndroid(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input) :
-	Window(platform, input)
+	WindowBase(platform, input)
 {
 }
 
@@ -15,12 +15,8 @@ WinAndroid::~WinAndroid()
 
 std::expected<void, std::string> WinAndroid::Initialize(const std::string_view appName)
 {
-	std::shared_ptr<PlatformAndroid> platform = std::dynamic_pointer_cast<PlatformAndroid>(m_Platform);
-	ensure(platform != nullptr, "Platform is not PlatformAndroid.");
-
 	m_Ctx = { this, m_Input.get() };
-
-	android_app* app = platform->GetNativeData().get();
+	android_app* app = m_Platform->GetNativeData().get();
 	if (app)
 	{
 		app->userData = &m_Ctx;

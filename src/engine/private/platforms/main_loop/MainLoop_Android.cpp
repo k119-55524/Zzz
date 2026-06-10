@@ -11,7 +11,7 @@ namespace zzz::engine {
 }
 
 MainLoop_Android::MainLoop_Android(const std::shared_ptr<Platform> platform) :
-	MainLoop(platform)
+	MainLoopBase(platform)
 {
 }
 
