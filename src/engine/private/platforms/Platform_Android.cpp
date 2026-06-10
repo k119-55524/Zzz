@@ -2,10 +2,10 @@
 
 #include "Platform.h"
 #include "headers/Android.h"
-#include "main_loop/MainLoop_Android.h"
-#include "../core/config/platforms/ConfigAndroid.h"
-#include "input/platforms/InputAndroid.h"
 #include "window/WinAndroid.h"
+#include "input/InputAndroid.h"
+#include "config/ConfigAndroid.h"
+#include "main_loop/MainLoop_Android.h"
 
 using namespace zzz::engine;
 

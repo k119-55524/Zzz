@@ -33,9 +33,9 @@ target_sources(engine_lib PRIVATE
     "headers/throwWrappers.h"
 
     # Core
-    "private/core/config/ConfigManager.h"           "private/core/config/ConfigManager.cpp"
-    "private/core/config/EngineConfig.h"             "private/core/config/EngineConfig.cpp"
-    "private/core/config/platforms/PlatformConfig.h"
+    "private/platforms/config/ConfigManager.h"           "private/platforms/config/ConfigManager.cpp"
+    "private/platforms/config/EngineConfig.h"             "private/platforms/config/EngineConfig.cpp"
+    "private/platforms/config/PlatformConfig.h"
     "private/core/io/Path.h"                         "private/core/io/Path.cpp"
     "private/core/serialize/Serializer.h"            "private/core/serialize/Serializer.cpp"
     "private/core/utils/version.h"                   "private/core/utils/version.cpp"
@@ -59,15 +59,15 @@ target_sources(engine_lib PRIVATE
     "private/core/utils/ScreenResolution.h"
 
     # Wayland (Linux)
-    "private/platforms/specific/Wayland/xdg-shell-client-protocol.h"
-    "private/platforms/specific/Wayland/xdg-shell-protocol.cpp"
+    "private/core/specific/linux_wayland/xdg-shell-client-protocol.h"
+    "private/core/specific/linux_wayland/xdg-shell-protocol.cpp"
 )
 
 if(WIN32)
     target_sources(engine_lib PRIVATE 
         "private/platforms/Platform_Windows.cpp"
-        "private/core/config/platforms/ConfigMSWin.h" "private/core/config/platforms/ConfigMSWin.cpp"
-        "private/platforms/input/platforms/InputMSWindows.h" "private/platforms/input/platforms/InputMSWindows.cpp"
+        "private/platforms/config/ConfigMSWin.h" "private/platforms/config/ConfigMSWin.cpp"
+        "private/platforms/input/InputMSWindows.h" "private/platforms/input/InputMSWindows.cpp"
         "private/platforms/main_loop/MainLoop_MSWin.h" "private/platforms/main_loop/MainLoop_MSWin.cpp"
         "private/platforms/window/WinMSWindows.h" "private/platforms/window/WinMSWindows.cpp"
     )
@@ -76,8 +76,8 @@ endif()
 if(UNIX AND NOT APPLE AND NOT ANDROID)
     target_sources(engine_lib PRIVATE 
         "private/platforms/Platform_Linux.cpp"
-        "private/core/config/platforms/ConfigLinux.h" "private/core/config/platforms/ConfigLinux.cpp"
-        "private/platforms/input/platforms/InputLinux.h" "private/platforms/input/platforms/InputLinux.cpp"
+        "private/platforms/config/ConfigLinux.h" "private/platforms/config/ConfigLinux.cpp"
+        "private/platforms/input/InputLinux.h" "private/platforms/input/InputLinux.cpp"
         "private/platforms/main_loop/MainLoop_Linux.h" "private/platforms/main_loop/MainLoop_Linux.cpp"
         "private/platforms/window/WinLinux.h" "private/platforms/window/WinLinux.cpp"
     )
@@ -86,8 +86,8 @@ endif()
 if(ANDROID)
     target_sources(engine_lib PRIVATE 
         "private/platforms/Platform_Android.cpp"
-        "private/core/config/platforms/ConfigAndroid.h" "private/core/config/platforms/ConfigAndroid.cpp"
-        "private/platforms/input/platforms/InputAndroid.h" "private/platforms/input/platforms/InputAndroid.cpp"
+        "private/platforms/config/ConfigAndroid.h" "private/platforms/config/ConfigAndroid.cpp"
+        "private/platforms/input/InputAndroid.h" "private/platforms/input/InputAndroid.cpp"
         "private/platforms/main_loop/MainLoop_Android.h" "private/platforms/main_loop/MainLoop_Android.cpp"
         "private/platforms/window/WinAndroid.h" "private/platforms/window/WinAndroid.cpp"
     )
@@ -96,21 +96,21 @@ endif()
 if(APPLE)
     target_sources(engine_lib PRIVATE
         # Core
-        "private/core/io/platforms/Path_Apple.mm"
+        "private/core/io/apple/Path_Apple.mm"
     )
 
     if(IOS)
         target_sources(engine_lib PRIVATE
-            "private/core/config/platforms/ConfigiOS.h"     "private/core/config/platforms/ConfigiOS.mm"
-            "private/platforms/input/platforms/InputiOS.h"           "private/platforms/input/platforms/InputiOS.mm"
+            "private/platforms/config/ConfigiOS.h"     "private/platforms/config/ConfigiOS.mm"
+            "private/platforms/input/InputiOS.h"           "private/platforms/input/InputiOS.mm"
             "private/platforms/Platform_iOS.mm"
             "private/platforms/main_loop/MainLoop_iOS.h"    "private/platforms/main_loop/MainLoop_iOS.mm"
             "private/platforms/window/WiniOS.h"     "private/platforms/window/WiniOS.mm"
         )
     else()
         target_sources(engine_lib PRIVATE
-            "private/core/config/platforms/ConfigMacOS.h"   "private/core/config/platforms/ConfigMacOS.mm"
-            "private/platforms/input/platforms/InputMacOS.h"         "private/platforms/input/platforms/InputMacOS.mm"
+            "private/platforms/config/ConfigMacOS.h"   "private/platforms/config/ConfigMacOS.mm"
+            "private/platforms/input/InputMacOS.h"         "private/platforms/input/InputMacOS.mm"
             "private/platforms/Platform_MacOS.mm"
             "private/platforms/main_loop/MainLoop_MacOS.h"  "private/platforms/main_loop/MainLoop_MacOS.mm"
             "private/platforms/window/WinMacOS.h"   "private/platforms/window/WinMacOS.mm"
@@ -124,7 +124,7 @@ if(UNIX AND NOT APPLE AND NOT ANDROID)
     target_link_libraries(engine_lib PRIVATE wayland-client)
 
     set_source_files_properties(
-        "private/platforms/specific/Wayland/xdg-shell-protocol.cpp"
+        "private/core/specific/linux_wayland/xdg-shell-protocol.cpp"
         PROPERTIES COMPILE_OPTIONS "-Wno-attributes"
     )
 endif()

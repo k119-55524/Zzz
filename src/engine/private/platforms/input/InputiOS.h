@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "../Input_Common.h"
+#include "Input_Common.h"
 
 namespace zzz::engine
 {

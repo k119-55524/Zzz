@@ -2,11 +2,11 @@
 
 #include <foundation.h>
 
-#include "../utils/version.h"
-#include "../templates/Size2D.h"
-#include "../serialize/Serializer.h"
+#include "../../core/utils/version.h"
+#include "../../core/templates/Size2D.h"
+#include "../../core/serialize/Serializer.h"
 
-#include "platforms/PlatformConfig.h"
+#include "PlatformConfig.h"
 
 namespace zzz::engine
 {

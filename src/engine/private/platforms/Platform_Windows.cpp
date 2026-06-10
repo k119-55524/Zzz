@@ -2,8 +2,8 @@
 
 #include "Platform.h"
 #include "window/WinMSWindows.h"
-#include "input/platforms/InputMSWindows.h"
-#include "../core/config/platforms/ConfigMSWin.h"
+#include "input/InputMSWindows.h"
+#include "config/ConfigMSWin.h"
 
 using namespace zzz::engine;
 

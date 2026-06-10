@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../../../header.h"
-#include "../../core/config/EngineConfig.h"
+#include "../config/EngineConfig.h"
 
 #include "Window_Common.h"
 #include "../input/Input.h"

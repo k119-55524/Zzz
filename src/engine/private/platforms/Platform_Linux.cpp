@@ -2,9 +2,9 @@
 #include <memory>
 #include "Platform.h"
 
-#include "../core/config/platforms/ConfigLinux.h"
-#include "input/platforms/InputLinux.h"
-#include "specific/Wayland/xdg-shell-client-protocol.h"
+#include "config/ConfigLinux.h"
+#include "input/InputLinux.h"
+#include "../core/specific/linux_wayland/xdg-shell-client-protocol.h"
 
 using namespace zzz::engine;
 

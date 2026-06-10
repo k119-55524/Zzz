@@ -6,7 +6,7 @@
 #include "io/Path.h"
 #include "ConfigManager.h"
 #include "headers/constants.h"
-#include "../serialize/Serializer.h"
+#include "../../core/serialize/Serializer.h"
 
 using namespace zzz::io;
 using namespace zzz::engine;

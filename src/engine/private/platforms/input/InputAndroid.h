@@ -1,17 +1,19 @@
 #pragma once
 
 
-#include "../Input_Common.h"
+#include "Input_Common.h"
 
 namespace zzz::engine
 {
-	class InputMSWindows final
+	class InputAndroid final
 	{
 	public:
-		InputMSWindows() = default;
-		~InputMSWindows()  = default;
+		InputAndroid() = default;
+		~InputAndroid()  = default;
 
 		[[nodiscard]] std::expected<void, std::string> Initialize() ;
+
 		bool ProcessMessage(const NativeMsg& nativeMsg) ;
+
 	};
 }

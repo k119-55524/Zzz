@@ -1,7 +1,7 @@
 
 #include "WinLinux.h"
 #include "../Platform.h"
-#include "../specific/Wayland/xdg-shell-client-protocol.h"
+#include "../../core/specific/linux_wayland/xdg-shell-client-protocol.h"
 
 #include <sys/mman.h>
 #include <unistd.h>

@@ -1,15 +1,15 @@
 #pragma once
 
 
-#include "../Input_Common.h"
+#include "Input_Common.h"
 
 namespace zzz::engine
 {
-	class InputMacOS final
+	class InputMSWindows final
 	{
 	public:
-		InputMacOS() = default;
-		~InputMacOS()  = default;
+		InputMSWindows() = default;
+		~InputMSWindows()  = default;
 
 		[[nodiscard]] std::expected<void, std::string> Initialize() ;
 		bool ProcessMessage(const NativeMsg& nativeMsg) ;

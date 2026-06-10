@@ -2,8 +2,8 @@
 
 #include "../core/io/Path.h"
 #include "../../NativeAppData.h"
-#include "../core/config/ConfigManager.h"
-#include "../core/config/platforms/PlatformConfig.h"
+#include "config/ConfigManager.h"
+#include "config/PlatformConfig.h"
 
 using namespace zzz::io;
 

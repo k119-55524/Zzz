@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../io/Path.h"
+#include "../../core/io/Path.h"
 #include "EngineConfig.h"
 
 using namespace zzz::io;
