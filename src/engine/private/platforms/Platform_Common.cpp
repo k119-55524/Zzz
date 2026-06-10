@@ -1,7 +1,6 @@
 #include <foundation.h>
 
 #include "Platform.h"
-#include "../factories/EngineFactory.h"
 
 using namespace zzz::engine;
 
@@ -29,8 +28,7 @@ Platform::~Platform()
 
 void Platform::Initialize()
 {
-	m_Factory = zzz::safe_make_shared<EngineFactory>();
-	m_ConfigManager = zzz::safe_make_shared<ConfigManager>(m_Path);
+		m_ConfigManager = zzz::safe_make_shared<ConfigManager>(m_Path);
 
 	InitializePlatformSpecific();
 }

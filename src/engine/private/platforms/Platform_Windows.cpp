@@ -1,8 +1,8 @@
 #include <foundation.h>
 
 #include "Platform.h"
-#include "native_view/window/WinMSWindows.h"
-#include "../inputs/platforms/InputMSWindows.h"
+#include "window/WinMSWindows.h"
+#include "input/platforms/InputMSWindows.h"
 #include "../core/config/platforms/ConfigMSWin.h"
 
 using namespace zzz::engine;

@@ -1,6 +1,5 @@
 #pragma once
 
-#if defined(Z_ANDROID)
 
 #include "../../../../header.h"
 #include "../../serialize/Serializer.h"
@@ -19,4 +18,3 @@ namespace zzz::engine
 	};
 }
 
-#endif // Z_ANDROID

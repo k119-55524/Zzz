@@ -4,9 +4,9 @@
 
 #include "engine.h"
 #include "headers/enums.h"
-#include "private/platforms/native_view/NativeView.h"
+#include "private/core/native_view/NativeView.h"
 
-#include "private/factories/EngineFactory.h"
+#include "private/platforms/main_loop/MainLoop.h"
 
 using namespace zzz;
 using namespace zzz::io;
@@ -60,7 +60,7 @@ std::expected<void, std::string> Engine::Initialize()
 
 	try
 	{
-		m_MainLoop = m_Platform->GetFactory()->CreateMainLoop(m_Platform);
+		m_MainLoop = zzz::safe_make_shared<MainLoop>(m_Platform);
 		m_MainLoop->onUpdateSystem += std::bind(&Engine::OnUpdateSystem, this);
 
 		AddView();

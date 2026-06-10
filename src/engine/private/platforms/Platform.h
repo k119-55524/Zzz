@@ -10,8 +10,7 @@ using namespace zzz::io;
 namespace zzz::engine
 {
 	class Engine;
-	class EngineFactory;
-
+	
 	class Platform final
 	{
 	public:
@@ -22,8 +21,7 @@ namespace zzz::engine
 		inline std::string_view GetAppName() const noexcept { return m_AppName; }
 		[[nodiscard]] inline std::shared_ptr<NativeAppData> GetNativeData() const noexcept { return m_NativeData; }
 		inline const PlatformConfig& GetPlatformConfig() const noexcept { return m_ConfigManager->GetPlatformConfig(); };
-		inline const std::shared_ptr<EngineFactory> GetFactory() const noexcept { return m_Factory; };
-
+		
 	private:
 		void Initialize();
 		void InitializePlatformSpecific();
@@ -33,6 +31,5 @@ namespace zzz::engine
 		std::shared_ptr<NativeAppData> m_NativeData;
 		Path m_Path;
 		std::shared_ptr<ConfigManager> m_ConfigManager;
-		std::shared_ptr<EngineFactory> m_Factory;
-	};
+			};
 }

@@ -1,4 +1,3 @@
-#if defined(Z_LINUX)
 
 #include "ConfigLinux.h"
 
@@ -18,4 +17,3 @@ ConfigLinux::ConfigLinux()
 	return std::expected<void, std::string>{};
 }
 
-#endif // Z_LINUX

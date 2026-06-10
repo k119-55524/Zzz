@@ -1,7 +1,10 @@
 #pragma once
 
-#include "../../../header.h"
-
+#include <functional>
+#include <vector>
+#include <mutex>
+#include <memory>
+#include <algorithm>
 namespace zzz::engine
 {
 	template<typename CallbackType>

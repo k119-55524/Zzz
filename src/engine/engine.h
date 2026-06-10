@@ -14,14 +14,17 @@ namespace zzz
 	enum class eInitState : zU8;
 }
 
+#include "private/platforms/main_loop/MainLoop.h"
+
 namespace zzz::engine
 {
 	class Platform;
-	class IMainLoop;
 	class NativeView;
 }
 
 using namespace zzz;
+
+#include "private/platforms/main_loop/MainLoop.h"
 
 namespace zzz::engine
 {
@@ -71,6 +74,6 @@ namespace zzz::engine
 
 		std::shared_ptr<Platform> m_Platform;
 		std::list<std::shared_ptr<NativeView>> m_NativeViews;
-		std::shared_ptr<IMainLoop> m_MainLoop;
+		std::shared_ptr<MainLoop> m_MainLoop;
 	};
 }

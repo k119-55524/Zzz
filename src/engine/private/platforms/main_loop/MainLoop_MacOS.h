@@ -1,12 +1,11 @@
 #pragma once
 
-#if defined(Z_MACOS)
 
-#include "IMainLoop.h"
+#include "MainLoop_Common.h"
 
 namespace zzz::engine
 {
-	class MainLoop_MacOS final : public IMainLoop
+	class MainLoop_MacOS final : public MainLoopBase
 	{
 		Z_NO_COPY_MOVE(MainLoop_MacOS);
 
@@ -15,7 +14,6 @@ namespace zzz::engine
 		MainLoop_MacOS(const std::shared_ptr<Platform> platform);
 		virtual ~MainLoop_MacOS() = default;
 
-		void Run() override;
+		void Run() ;
 	};
 }
-#endif // defined(Z_MACOS)

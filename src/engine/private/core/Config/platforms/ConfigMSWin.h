@@ -1,6 +1,5 @@
 #pragma once
 
-#if defined(Z_WINDOWS)
 
 #include "../../../../header.h"
 #include "../../serialize/Serializer.h"
@@ -25,4 +24,3 @@ namespace zzz::engine
 	};
 }
 
-#endif // Z_WINDOWS

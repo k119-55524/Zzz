@@ -1,12 +1,11 @@
 #pragma once
 
-#if defined(Z_ANDROID)
 
-#include "IMainLoop.h"
+#include "MainLoop_Common.h"
 
 namespace zzz::engine
 {
-	class MainLoop_Android final : public IMainLoop
+	class MainLoop_Android final : public MainLoopBase
 	{
 		Z_NO_COPY_MOVE(MainLoop_Android);
 
@@ -15,7 +14,6 @@ namespace zzz::engine
 		MainLoop_Android(const std::shared_ptr<Platform> platform);
 		virtual ~MainLoop_Android() = default;
 
-		void Run() override;
+		void Run() ;
 	};
 }
-#endif // defined(Z_ANDROID)

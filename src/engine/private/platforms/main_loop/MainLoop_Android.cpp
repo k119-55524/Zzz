@@ -1,4 +1,3 @@
-#if defined(Z_ANDROID)
 
 #include <android/looper.h>
 
@@ -12,7 +11,7 @@ namespace zzz::engine {
 }
 
 MainLoop_Android::MainLoop_Android(const std::shared_ptr<Platform> platform) :
-	IMainLoop(platform)
+	MainLoop(platform)
 {
 }
 
@@ -52,4 +51,3 @@ void MainLoop_Android::Run()
 	}
 }
 
-#endif // defined(Z_ANDROID)

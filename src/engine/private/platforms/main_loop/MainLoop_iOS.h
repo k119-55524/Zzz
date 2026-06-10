@@ -1,12 +1,11 @@
 #pragma once
 
-#if defined(Z_IOS)
 
-#include "IMainLoop.h"
+#include "MainLoop_Common.h"
 
 namespace zzz::engine
 {
-	class MainLoop_iOS final : public IMainLoop
+	class MainLoop_iOS final : public MainLoopBase
 	{
 		Z_NO_COPY_MOVE(MainLoop_iOS);
 
@@ -15,7 +14,6 @@ namespace zzz::engine
 		MainLoop_iOS(const std::shared_ptr<Platform> platform);
 		virtual ~MainLoop_iOS() = default;
 
-		void Run() override;
+		void Run() ;
 	};
 }
-#endif // defined(Z_IOS)

@@ -45,41 +45,32 @@ target_sources(engine_lib PRIVATE
     "private/core/templates/Event.h"
 
     # Inputs
-    "private/inputs/IInput.h"
-    "private/inputs/platforms/InputMSWindows.h"     "private/inputs/platforms/InputMSWindows.cpp"
-    "private/inputs/platforms/InputLinux.h"         "private/inputs/platforms/InputLinux.cpp"
-    "private/inputs/platforms/InputAndroid.h"       "private/inputs/platforms/InputAndroid.cpp"
+    "private/platforms/input/Input.h" "private/platforms/input/Input_Common.h"
 
     # Platforms
     "private/platforms/Platform.h"
     "private/platforms/Platform_Common.cpp"
 
     # Main Loop
-    "private/platforms/main_loop/IMainLoop.h"           "private/platforms/main_loop/IMainLoop.cpp"
-    "private/platforms/main_loop/MainLoop_MSWin.h"      "private/platforms/main_loop/MainLoop_MSWin.cpp"
-    "private/platforms/main_loop/MainLoop_Linux.h"      "private/platforms/main_loop/MainLoop_Linux.cpp"
-    "private/platforms/main_loop/MainLoop_Android.h"    "private/platforms/main_loop/MainLoop_Android.cpp"
+    "private/platforms/main_loop/MainLoop.h" "private/platforms/main_loop/MainLoop_Common.h" "private/platforms/main_loop/MainLoop_Common.cpp"
 
     # Native View / Window
-    "private/platforms/native_view/NativeView.h"            "private/platforms/native_view/NativeView.cpp"
-    "private/platforms/native_view/ScreenResolution.h"
-    "private/platforms/native_view/window/IWindow.h"         "private/platforms/native_view/window/IWindow.cpp"
-    "private/platforms/native_view/window/WinMSWindows.h"    "private/platforms/native_view/window/WinMSWindows.cpp"
-    "private/platforms/native_view/window/WinLinux.h"        "private/platforms/native_view/window/WinLinux.cpp"
-    "private/platforms/native_view/window/WinAndroid.h"      "private/platforms/native_view/window/WinAndroid.cpp"
-
-    # Factories
-    "private/factories/EngineFactory.h"   "private/factories/EngineFactory.cpp"
+    "private/platforms/window/Window.h" "private/platforms/window/Window_Common.h" "private/platforms/window/Window_Common.cpp"
+    "private/core/native_view/NativeView.h"            "private/core/native_view/NativeView.cpp"
+    "private/core/utils/ScreenResolution.h"
 
     # Wayland (Linux)
-    "private/platforms/lLinux/Wayland/xdg-shell-client-protocol.h"
-    "private/platforms/lLinux/Wayland/xdg-shell-protocol.cpp"
+    "private/platforms/specific/Wayland/xdg-shell-client-protocol.h"
+    "private/platforms/specific/Wayland/xdg-shell-protocol.cpp"
 )
 
 if(WIN32)
     target_sources(engine_lib PRIVATE 
         "private/platforms/Platform_Windows.cpp"
         "private/core/config/platforms/ConfigMSWin.h" "private/core/config/platforms/ConfigMSWin.cpp"
+        "private/platforms/input/platforms/InputMSWindows.h" "private/platforms/input/platforms/InputMSWindows.cpp"
+        "private/platforms/main_loop/MainLoop_MSWin.h" "private/platforms/main_loop/MainLoop_MSWin.cpp"
+        "private/platforms/window/WinMSWindows.h" "private/platforms/window/WinMSWindows.cpp"
     )
 endif()
 
@@ -87,6 +78,9 @@ if(UNIX AND NOT APPLE AND NOT ANDROID)
     target_sources(engine_lib PRIVATE 
         "private/platforms/Platform_Linux.cpp"
         "private/core/config/platforms/ConfigLinux.h" "private/core/config/platforms/ConfigLinux.cpp"
+        "private/platforms/input/platforms/InputLinux.h" "private/platforms/input/platforms/InputLinux.cpp"
+        "private/platforms/main_loop/MainLoop_Linux.h" "private/platforms/main_loop/MainLoop_Linux.cpp"
+        "private/platforms/window/WinLinux.h" "private/platforms/window/WinLinux.cpp"
     )
 endif()
 
@@ -94,6 +88,9 @@ if(ANDROID)
     target_sources(engine_lib PRIVATE 
         "private/platforms/Platform_Android.cpp"
         "private/core/config/platforms/ConfigAndroid.h" "private/core/config/platforms/ConfigAndroid.cpp"
+        "private/platforms/input/platforms/InputAndroid.h" "private/platforms/input/platforms/InputAndroid.cpp"
+        "private/platforms/main_loop/MainLoop_Android.h" "private/platforms/main_loop/MainLoop_Android.cpp"
+        "private/platforms/window/WinAndroid.h" "private/platforms/window/WinAndroid.cpp"
     )
 endif()
 
@@ -105,20 +102,23 @@ if(APPLE)
         "private/core/config/platforms/ConfigiOS.h"     "private/core/config/platforms/ConfigiOS.mm"
 
         # Inputs
-        "private/inputs/platforms/InputMacOS.h"         "private/inputs/platforms/InputMacOS.mm"
-        "private/inputs/platforms/InputiOS.h"           "private/inputs/platforms/InputiOS.mm"
+    "private/platforms/input/Input.h" "private/platforms/input/Input_Common.h"
+        "private/platforms/input/platforms/InputMacOS.h"         "private/platforms/input/platforms/InputMacOS.mm"
+        "private/platforms/input/platforms/InputiOS.h"           "private/platforms/input/platforms/InputiOS.mm"
 
         # Platforms
         "private/platforms/Platform_MacOS.mm"
         "private/platforms/Platform_iOS.mm"
 
         # Main Loop
+    "private/platforms/main_loop/MainLoop.h" "private/platforms/main_loop/MainLoop_Common.h" "private/platforms/main_loop/MainLoop_Common.cpp"
         "private/platforms/main_loop/MainLoop_MacOS.h"  "private/platforms/main_loop/MainLoop_MacOS.mm"
         "private/platforms/main_loop/MainLoop_iOS.h"    "private/platforms/main_loop/MainLoop_iOS.mm"
 
         # Native View / Window
-        "private/platforms/native_view/window/WinMacOS.h"   "private/platforms/native_view/window/WinMacOS.mm"
-        "private/platforms/native_view/window/WiniOS.h"     "private/platforms/native_view/window/WiniOS.mm"
+    "private/platforms/window/Window.h" "private/platforms/window/Window_Common.h" "private/platforms/window/Window_Common.cpp"
+        "private/platforms/window/WinMacOS.h"   "private/platforms/window/WinMacOS.mm"
+        "private/platforms/window/WiniOS.h"     "private/platforms/window/WiniOS.mm"
     )
 endif()
 
@@ -128,7 +128,7 @@ if(UNIX AND NOT APPLE AND NOT ANDROID)
     target_link_libraries(engine_lib PRIVATE wayland-client)
 
     set_source_files_properties(
-        "private/platforms/lLinux/Wayland/xdg-shell-protocol.cpp"
+        "private/platforms/specific/Wayland/xdg-shell-protocol.cpp"
         PROPERTIES COMPILE_OPTIONS "-Wno-attributes"
     )
 endif()

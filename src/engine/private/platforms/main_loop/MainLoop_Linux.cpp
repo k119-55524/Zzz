@@ -1,14 +1,13 @@
 #include "MainLoop_Linux.h"
 #include "../Platform.h"
 
-#if defined(Z_LINUX)
 
 #include <poll.h>
 
 using namespace zzz::engine;
 
 MainLoop_Linux::MainLoop_Linux(const std::shared_ptr<Platform> platform) :
-	IMainLoop(platform),
+	MainLoop(platform),
 	m_Display{ nullptr }
 {
 	std::shared_ptr<PlatformLinux> platformLinux = std::dynamic_pointer_cast<PlatformLinux>(m_Platform);
@@ -41,4 +40,3 @@ void MainLoop_Linux::Run()
 		onUpdateSystem();
 	}
 }
-#endif // defined(Z_LINUX)

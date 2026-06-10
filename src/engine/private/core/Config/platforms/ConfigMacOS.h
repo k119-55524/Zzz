@@ -1,6 +1,5 @@
 #pragma once
 
-#if defined(Z_MACOS)
 
 #include "../../serialize/Serializer.h"
 
@@ -13,4 +12,4 @@ namespace zzz::engine
 		~ConfigMacOS() override = default;
 	};
 }
-#endif // defined(Z_MACOS)
+ // defined(Z_MACOS)

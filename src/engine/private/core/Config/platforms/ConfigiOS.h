@@ -1,6 +1,5 @@
 #pragma once
 
-#if defined(Z_IOS)
 
 #include "../../serialize/Serializer.h"
 
@@ -13,4 +12,4 @@ namespace zzz::engine
 		~ConfigiOS() override = default;
 	};
 }
-#endif // defined(Z_IOS)
+ // defined(Z_IOS)

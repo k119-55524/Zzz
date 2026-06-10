@@ -4,7 +4,7 @@
 #include "headers/Android.h"
 #include "main_loop/MainLoop_Android.h"
 #include "../core/config/platforms/ConfigAndroid.h"
-#include "../inputs/platforms/InputAndroid.h"
+#include "input/platforms/InputAndroid.h"
 
 using namespace zzz::engine;
 

@@ -1,4 +1,3 @@
-#if defined(Z_ANDROID)
 
 #include "ConfigAndroid.h"
 
@@ -18,4 +17,3 @@ ConfigAndroid::ConfigAndroid()
 	return std::expected<void, std::string>{};
 }
 
-#endif // Z_ANDROID

@@ -1,8 +1,8 @@
 #include <foundation.h>
 
 #include "../core/config/platforms/ConfigLinux.h"
-#include "../inputs/platforms/InputLinux.h"
-#include "lLinux/Wayland/xdg-shell-client-protocol.h"
+#include "input/platforms/InputLinux.h"
+#include "specific/Wayland/xdg-shell-client-protocol.h"
 
 using namespace zzz::engine;
 

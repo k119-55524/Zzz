@@ -1,4 +1,3 @@
-#if defined(Z_WINDOWS)
 
 #include "ConfigMSWin.h"
 
@@ -22,4 +21,3 @@ ConfigMSWin::ConfigMSWin() :
 	return s.DeSerialize(buffer, offset, m_IcoResourceName)
 		.and_then([&](void) { return s.DeSerialize(buffer, offset, m_ClassName); });
 }
-#endif // Z_WINDOWS

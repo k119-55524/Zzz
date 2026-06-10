@@ -1,11 +1,10 @@
 #include "MainLoop_MSWin.h"
 
-#if defined(Z_WINDOWS)
 
 using namespace zzz::engine;
 
 MainLoop_MSWin::MainLoop_MSWin(const std::shared_ptr<Platform> platform) :
-	IMainLoop(platform)
+	MainLoopBase(platform)
 {
 }
 
@@ -32,4 +31,3 @@ void MainLoop_MSWin::Run()
 		}
 	}
 }
-#endif // defined(Z_WINDOWS)
