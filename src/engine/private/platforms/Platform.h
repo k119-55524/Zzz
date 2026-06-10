@@ -3,7 +3,7 @@
 #include "../core/io/Path.h"
 #include "../../NativeAppData.h"
 #include "../core/config/ConfigManager.h"
-#include "../core/config/platforms/IConfig.h"
+#include "../core/config/platforms/PlatformConfig.h"
 
 using namespace zzz::io;
 
@@ -21,7 +21,7 @@ namespace zzz::engine
 
 		inline std::string_view GetAppName() const noexcept { return m_AppName; }
 		[[nodiscard]] inline std::shared_ptr<NativeAppData> GetNativeData() const noexcept { return m_NativeData; }
-		inline const IConfig& GetPlatformConfig() const noexcept { return m_ConfigManager->GetPlatformConfig(); };
+		inline const PlatformConfig& GetPlatformConfig() const noexcept { return m_ConfigManager->GetPlatformConfig(); };
 		inline const std::shared_ptr<EngineFactory> GetFactory() const noexcept { return m_Factory; };
 
 		void Initialize();

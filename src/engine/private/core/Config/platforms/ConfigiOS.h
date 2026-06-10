@@ -2,11 +2,11 @@
 
 #if defined(Z_IOS)
 
-#include "IConfig.h"
+#include "../../serialize/Serializer.h"
 
 namespace zzz::engine
 {
-	class ConfigiOS final : public IConfig
+	class ConfigiOS final : public ISerializable
 	{
 	public:
 		ConfigiOS() = default;

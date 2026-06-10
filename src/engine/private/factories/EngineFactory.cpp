@@ -5,11 +5,6 @@
 using namespace zzz;
 using namespace zzz::engine;
 
-std::shared_ptr<IConfig> EngineFactory::CreatePlatformConfig()
-{
-	return safe_make_shared<PlatformConfig>();
-}
-
 std::shared_ptr<IWindow> EngineFactory::CreateAppWin(const std::shared_ptr<Platform> platform, const std::shared_ptr<IInput> input)
 {
 	return safe_make_shared<Window>(platform, input);

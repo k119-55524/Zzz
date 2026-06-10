@@ -17,19 +17,19 @@ namespace zzz::engine
 	{
 	public:
 		ConfigManager() = delete;
-		ConfigManager(const Path& path, std::shared_ptr<IConfig> platformConfig);
+		ConfigManager(const Path& path, std::shared_ptr<PlatformConfig> platformConfig);
 
 		[[nodiscard]] std::expected<void, std::string> SaveConfig();
 
 		inline const std::shared_ptr<EngineConfig> GetEngineConfig() const noexcept { return m_EngineConfig; }
-		inline const IConfig& GetPlatformConfig() const noexcept { return m_EngineConfig->GetPlatformConfig(); }
+		inline const PlatformConfig& GetPlatformConfig() const noexcept { return m_EngineConfig->GetPlatformConfig(); }
 
 	private:
 		void Initialize();
 		std::expected<std::filesystem::path, std::string> GetSettingsDirectory();
 		std::expected<void, std::string> LoadConfig(std::filesystem::path path);
 
-		std::shared_ptr<IConfig> m_PlatformConfig;
+		std::shared_ptr<PlatformConfig> m_PlatformConfig;
 		Path m_Path;
 		std::filesystem::path m_ConfigPath;
 		std::shared_ptr<EngineConfig> m_EngineConfig;

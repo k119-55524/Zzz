@@ -28,7 +28,7 @@ Platform::~Platform()
 void Platform::Initialize()
 {
 	m_Factory = zzz::safe_make_shared<EngineFactory>();
-	auto platformConfig = m_Factory->CreatePlatformConfig();
+	auto platformConfig = zzz::safe_make_shared<PlatformConfig>();
 	m_ConfigManager = zzz::safe_make_shared<ConfigManager>(m_Path, std::move(platformConfig));
 
 	InitializePlatformSpecific();

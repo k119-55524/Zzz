@@ -5,7 +5,7 @@
 
 using namespace zzz::engine;
 
-EngineConfig::EngineConfig(std::shared_ptr<IConfig> platformConfig) :
+EngineConfig::EngineConfig(std::shared_ptr<PlatformConfig> platformConfig) :
 	m_Version(c_ConfigFileMajorVersion, c_ConfigFileMinorVersion, c_ConfigFilePatchVersion),
 	m_PlatformConfig(std::move(platformConfig))
 {

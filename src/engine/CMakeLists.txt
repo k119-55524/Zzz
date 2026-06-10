@@ -37,10 +37,7 @@ target_sources(engine_lib PRIVATE
     # Core
     "private/core/config/ConfigManager.h"           "private/core/config/ConfigManager.cpp"
     "private/core/config/EngineConfig.h"             "private/core/config/EngineConfig.cpp"
-    "private/core/config/platforms/IConfig.h"
-    "private/core/config/platforms/ConfigMSWin.h"   "private/core/config/platforms/ConfigMSWin.cpp"
-    "private/core/config/platforms/ConfigLinux.h"   "private/core/config/platforms/ConfigLinux.cpp"
-    "private/core/config/platforms/ConfigAndroid.h" "private/core/config/platforms/ConfigAndroid.cpp"
+    "private/core/config/platforms/PlatformConfig.h"
     "private/core/io/Path.h"                         "private/core/io/Path.cpp"
     "private/core/serialize/Serializer.h"            "private/core/serialize/Serializer.cpp"
     "private/core/utils/version.h"                   "private/core/utils/version.cpp"
@@ -80,15 +77,24 @@ target_sources(engine_lib PRIVATE
 )
 
 if(WIN32)
-    target_sources(engine_lib PRIVATE "private/platforms/Platform_Windows.cpp")
+    target_sources(engine_lib PRIVATE 
+        "private/platforms/Platform_Windows.cpp"
+        "private/core/config/platforms/ConfigMSWin.h" "private/core/config/platforms/ConfigMSWin.cpp"
+    )
 endif()
 
 if(UNIX AND NOT APPLE AND NOT ANDROID)
-    target_sources(engine_lib PRIVATE "private/platforms/Platform_Linux.cpp")
+    target_sources(engine_lib PRIVATE 
+        "private/platforms/Platform_Linux.cpp"
+        "private/core/config/platforms/ConfigLinux.h" "private/core/config/platforms/ConfigLinux.cpp"
+    )
 endif()
 
 if(ANDROID)
-    target_sources(engine_lib PRIVATE "private/platforms/Platform_Android.cpp")
+    target_sources(engine_lib PRIVATE 
+        "private/platforms/Platform_Android.cpp"
+        "private/core/config/platforms/ConfigAndroid.h" "private/core/config/platforms/ConfigAndroid.cpp"
+    )
 endif()
 
 if(APPLE)

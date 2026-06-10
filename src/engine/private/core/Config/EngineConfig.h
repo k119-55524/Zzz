@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <foundation.h>
 
@@ -6,7 +6,7 @@
 #include "../templates/Size2D.h"
 #include "../serialize/Serializer.h"
 
-#include "platforms/IConfig.h"
+#include "platforms/PlatformConfig.h"
 
 namespace zzz::engine
 {
@@ -14,16 +14,16 @@ namespace zzz::engine
 	{
 	public:
 		EngineConfig() = delete;
-		explicit EngineConfig(std::shared_ptr<IConfig> platformConfig);
+		explicit EngineConfig(std::shared_ptr<PlatformConfig> platformConfig);
 		~EngineConfig() = default;
 
-		inline const IConfig& GetPlatformConfig() const noexcept { return *m_PlatformConfig; }
+		inline const PlatformConfig& GetPlatformConfig() const noexcept { return *m_PlatformConfig; }
 
 	private:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override;
 		[[nodiscard]] std::expected<void, std::string> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override;
 
 		Version m_Version;
-		std::shared_ptr<IConfig> m_PlatformConfig;
+		std::shared_ptr<PlatformConfig> m_PlatformConfig;
 	};
 }

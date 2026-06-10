@@ -11,7 +11,7 @@
 using namespace zzz::io;
 using namespace zzz::engine;
 
-ConfigManager::ConfigManager(const Path& path, std::shared_ptr<IConfig> platformConfig) :
+ConfigManager::ConfigManager(const Path& path, std::shared_ptr<PlatformConfig> platformConfig) :
 	m_PlatformConfig(std::move(platformConfig)),
 	m_Path(path),
 	m_IsDirty(true)

@@ -2,11 +2,11 @@
 
 #if defined(Z_MACOS)
 
-#include "IConfig.h"
+#include "../../serialize/Serializer.h"
 
 namespace zzz::engine
 {
-	class ConfigMacOS final : public IConfig
+	class ConfigMacOS final : public ISerializable
 	{
 	public:
 		ConfigMacOS() = default;

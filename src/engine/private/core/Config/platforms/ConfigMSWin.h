@@ -1,13 +1,13 @@
-﻿#pragma once
+#pragma once
 
 #if defined(Z_WINDOWS)
 
 #include "../../../../header.h"
-#include "IConfig.h"
+#include "../../serialize/Serializer.h"
 
 namespace zzz::engine
 {
-	class ConfigMSWin final : public IConfig
+	class ConfigMSWin final : public ISerializable
 	{
 	public:
 		ConfigMSWin();
