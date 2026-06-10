@@ -12,8 +12,6 @@ target_include_directories(engine_lib
         pch
         ${CMAKE_CURRENT_SOURCE_DIR}/private/core
         ${CMAKE_CURRENT_SOURCE_DIR}/private/platforms
-        ${CMAKE_CURRENT_SOURCE_DIR}/private/factories
-        ${CMAKE_CURRENT_SOURCE_DIR}/private/inputs
 )
 
 target_sources(engine_lib PRIVATE
@@ -102,8 +100,7 @@ if(APPLE)
         "private/core/config/platforms/ConfigMacOS.h"   "private/core/config/platforms/ConfigMacOS.mm"
         "private/core/config/platforms/ConfigiOS.h"     "private/core/config/platforms/ConfigiOS.mm"
 
-        # Inputs
-    "private/platforms/input/Input.h" "private/platforms/input/Input_Common.h"
+    # Inputs
         "private/platforms/input/platforms/InputMacOS.h"         "private/platforms/input/platforms/InputMacOS.mm"
         "private/platforms/input/platforms/InputiOS.h"           "private/platforms/input/platforms/InputiOS.mm"
 
@@ -112,12 +109,10 @@ if(APPLE)
         "private/platforms/Platform_iOS.mm"
 
         # Main Loop
-    "private/platforms/main_loop/MainLoop.h" "private/platforms/main_loop/MainLoop_Common.h" "private/platforms/main_loop/MainLoop_Common.cpp"
         "private/platforms/main_loop/MainLoop_MacOS.h"  "private/platforms/main_loop/MainLoop_MacOS.mm"
         "private/platforms/main_loop/MainLoop_iOS.h"    "private/platforms/main_loop/MainLoop_iOS.mm"
 
         # Native View / Window
-    "private/platforms/window/Window.h" "private/platforms/window/Window_Common.h" "private/platforms/window/Window_Common.cpp"
         "private/platforms/window/WinMacOS.h"   "private/platforms/window/WinMacOS.mm"
         "private/platforms/window/WiniOS.h"     "private/platforms/window/WiniOS.mm"
     )

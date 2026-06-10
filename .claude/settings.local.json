@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dir \"c:\\\\Workspaces\\\\ZzzTest\")"
+      "Bash(dir \"c:\\\\Workspaces\\\\ZzzTest\")",
+      "Bash(Get-Item \"c:\\\\Workspaces\\\\ZzzTest\\\\build\\\\Windows\")"
     ]
   }
 }
