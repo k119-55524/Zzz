@@ -2,10 +2,6 @@ add_executable(game_ios
     MACOSX_BUNDLE
 
     main.mm
-    AppDelegate.h
-    AppDelegate.mm
-    ViewController.h
-    ViewController.mm
 )
 
 target_include_directories(game_ios PRIVATE
