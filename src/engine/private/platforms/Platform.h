@@ -24,9 +24,8 @@ namespace zzz::engine
 		inline const PlatformConfig& GetPlatformConfig() const noexcept { return m_ConfigManager->GetPlatformConfig(); };
 		inline const std::shared_ptr<EngineFactory> GetFactory() const noexcept { return m_Factory; };
 
-		void Initialize();
-
 	private:
+		void Initialize();
 		void InitializePlatformSpecific();
 		void ShutdownPlatformSpecific();
 

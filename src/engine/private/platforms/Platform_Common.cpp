@@ -11,6 +11,8 @@ Platform::Platform(std::string_view appName, std::shared_ptr<NativeAppData> nati
 	m_Path(appName, nativeData)
 {
 	ensure(m_AppName.empty() == false, "Application name must not be empty.");
+
+	Initialize();
 }
 
 Platform::~Platform()
@@ -28,8 +30,7 @@ Platform::~Platform()
 void Platform::Initialize()
 {
 	m_Factory = zzz::safe_make_shared<EngineFactory>();
-	auto platformConfig = zzz::safe_make_shared<PlatformConfig>();
-	m_ConfigManager = zzz::safe_make_shared<ConfigManager>(m_Path, std::move(platformConfig));
+	m_ConfigManager = zzz::safe_make_shared<ConfigManager>(m_Path);
 
 	InitializePlatformSpecific();
 }

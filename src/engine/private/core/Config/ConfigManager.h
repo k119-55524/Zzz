@@ -17,11 +17,10 @@ namespace zzz::engine
 	{
 	public:
 		ConfigManager() = delete;
-		ConfigManager(const Path& path, std::shared_ptr<PlatformConfig> platformConfig);
+		ConfigManager(const Path& path);
 
 		[[nodiscard]] std::expected<void, std::string> SaveConfig();
 
-		inline const std::shared_ptr<EngineConfig> GetEngineConfig() const noexcept { return m_EngineConfig; }
 		inline const PlatformConfig& GetPlatformConfig() const noexcept { return m_EngineConfig->GetPlatformConfig(); }
 
 	private:
@@ -29,12 +28,11 @@ namespace zzz::engine
 		std::expected<std::filesystem::path, std::string> GetSettingsDirectory();
 		std::expected<void, std::string> LoadConfig(std::filesystem::path path);
 
-		std::shared_ptr<PlatformConfig> m_PlatformConfig;
-		Path m_Path;
 		std::filesystem::path m_ConfigPath;
+		Path m_Path;
 		std::shared_ptr<EngineConfig> m_EngineConfig;
-		Serializer m_Serializer;
 
+		Serializer m_Serializer;
 		bool m_IsDirty;
 	};
 }

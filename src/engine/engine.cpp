@@ -16,7 +16,6 @@ Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeDa
 	engineState{ eInitState::NotInitialized }
 {
 	m_Platform = zzz::safe_make_shared<Platform>(appName, nativeData);
-	m_Platform->Initialize();
 }
 
 Engine::~Engine()
@@ -154,8 +153,6 @@ void Engine::OnUpdateSystem()
 		i = 0;
 		DOut("Tick!!!");
 	}
-
-
 }
 
 #pragma region Mobile Lifecycle Events
