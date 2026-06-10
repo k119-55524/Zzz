@@ -1,10 +1,10 @@
-#include "NativeView.h"
+#include "View.h"
 #include "../../platforms/input/Input.h"
 #include "../../platforms/window/Window.h"
 
 using namespace zzz::engine;
 
-NativeView::NativeView(std::shared_ptr<Platform> platform) :
+View::View(std::shared_ptr<Platform> platform) :
 	m_Platform{ platform }
 {
 	ensure(m_Platform != nullptr, "Platform must not be null.");
@@ -12,7 +12,7 @@ NativeView::NativeView(std::shared_ptr<Platform> platform) :
 	Initialize();
 }
 
-void NativeView::Initialize()
+void View::Initialize()
 {
 	m_Input = zzz::safe_make_shared<Input>();
 	auto inputRes = m_Input->Initialize();

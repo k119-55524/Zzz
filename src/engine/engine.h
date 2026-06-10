@@ -14,17 +14,15 @@ namespace zzz
 	enum class eInitState : zU8;
 }
 
-#include "private/platforms/main_loop/MainLoop.h"
-
 namespace zzz::engine
 {
 	class Platform;
-	class NativeView;
+	class ViewManager;
+	class MainLoopBase;
 }
 
 using namespace zzz;
 
-#include "private/platforms/main_loop/MainLoop.h"
 
 namespace zzz::engine
 {
@@ -67,13 +65,12 @@ namespace zzz::engine
 	private:
 		void Shutdown();
 		void OnUpdateSystem();
-		void AddView();
 
 		std::mutex stateMutex;
 		std::atomic<eInitState> engineState;
 
 		std::shared_ptr<Platform> m_Platform;
-		std::list<std::shared_ptr<NativeView>> m_NativeViews;
-		std::shared_ptr<MainLoop> m_MainLoop;
+		std::unique_ptr<ViewManager> m_ViewManager;
+		std::shared_ptr<MainLoopBase> m_MainLoop;
 	};
 }

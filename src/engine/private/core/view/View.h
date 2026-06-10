@@ -9,14 +9,14 @@
 
 namespace zzz::engine
 {
-	class NativeView final
+	class View final
 	{
-		Z_NO_MOVE(NativeView);
+		Z_NO_MOVE(View);
 
 	public:
-		NativeView() = delete;
-		NativeView(std::shared_ptr<Platform> platform);
-		~NativeView() = default;
+		View() = delete;
+		View(std::shared_ptr<Platform> platform);
+		~View() = default;
 
 		inline std::shared_ptr<Window> GetWindow() const noexcept { return m_Window; }
 		inline std::shared_ptr<Input>  GetInput()  const noexcept { return m_Input; }

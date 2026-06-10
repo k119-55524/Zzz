@@ -4,7 +4,7 @@
 
 #include "engine.h"
 #include "headers/enums.h"
-#include "private/core/native_view/NativeView.h"
+#include "private/core/view/ViewManager.h"
 
 #include "private/platforms/main_loop/MainLoop.h"
 
@@ -15,7 +15,7 @@ using namespace zzz::engine;
 Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeData) :
 	engineState{ eInitState::NotInitialized }
 {
-	m_Platform = zzz::safe_make_shared<Platform>(appName, nativeData);
+	m_Platform = safe_make_shared<Platform>(appName, nativeData);
 }
 
 Engine::~Engine()
@@ -30,12 +30,8 @@ void Engine::Shutdown()
 	try
 	{
 		m_Platform = nullptr;
+		m_ViewManager = nullptr;
 		m_MainLoop = nullptr;
-
-		for (auto& view : m_NativeViews)
-			view = nullptr;
-
-		m_NativeViews.clear();
 	}
 	catch (const std::exception& e)
 	{
@@ -60,11 +56,12 @@ std::expected<void, std::string> Engine::Initialize()
 
 	try
 	{
-		m_MainLoop = zzz::safe_make_shared<MainLoop>(m_Platform);
+		m_MainLoop = safe_make_shared<MainLoop>(m_Platform);
 		m_MainLoop->onUpdateSystem += std::bind(&Engine::OnUpdateSystem, this);
 
-		AddView();
-		//AddView();
+		m_ViewManager = safe_make_unique<ViewManager>(m_Platform);
+		m_ViewManager->onAllViewsClosed = [this]() { m_MainLoop->Stop(); };
+		m_ViewManager->CreateView();
 
 		DOut("Engine initialized: OK.");
 		engineState.store(eInitState::Initialized);
@@ -118,29 +115,6 @@ std::expected<void, std::string> Engine::Initialize()
 	}
 
 	return {};
-}
-
-void Engine::AddView()
-{
-#if defined(Z_MOBILE)
-	if (m_NativeViews.size() >= 1)
-		THROW_RUNTIME("Mobile platforms support only one native window per application.");
-#endif
-
-	auto view = zzz::safe_make_shared<NativeView>(m_Platform);
-
-	// Добавляем слушателя на закрытие окна
-	view->GetWindow()->onCloseRequested += [this, weakView = std::weak_ptr(view)]()
-	{
-		if (auto v = weakView.lock())
-			m_NativeViews.remove(v);
-
-		// Закрываем приложение в отсуутствии активных окон
-		if (m_NativeViews.empty())
-			m_MainLoop->Stop();
-	};
-
-	m_NativeViews.push_back(std::move(view));
 }
 
 void Engine::OnUpdateSystem()

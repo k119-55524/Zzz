@@ -14,6 +14,6 @@ namespace zzz::engine
 		MainLoop_Android(const std::shared_ptr<Platform> platform);
 		virtual ~MainLoop_Android() = default;
 
-		void Run() ;
+		void Run() override;
 	};
 }

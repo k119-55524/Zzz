@@ -56,7 +56,8 @@ target_sources(engine_lib PRIVATE
 
     # Native View / Window
     "private/platforms/window/Window.h" "private/platforms/window/Window_Common.h" "private/platforms/window/Window_Common.cpp"
-    "private/core/native_view/NativeView.h"            "private/core/native_view/NativeView.cpp"
+    "private/core/view/View.h"            "private/core/view/View.cpp"
+    "private/core/view/ViewManager.h" "private/core/view/ViewManager.cpp"
     "private/core/utils/ScreenResolution.h"
 
     # Wayland (Linux)

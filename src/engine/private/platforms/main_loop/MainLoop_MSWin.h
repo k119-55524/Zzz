@@ -14,6 +14,6 @@ namespace zzz::engine
 		MainLoop_MSWin(const std::shared_ptr<Platform> platform);
 		virtual ~MainLoop_MSWin() = default;
 
-		void Run() ;
+		void Run() override;
 	};
 }

@@ -14,6 +14,6 @@ namespace zzz::engine
 		MainLoop_iOS(const std::shared_ptr<Platform> platform);
 		virtual ~MainLoop_iOS() = default;
 
-		void Run() ;
+		void Run() override;
 	};
 }

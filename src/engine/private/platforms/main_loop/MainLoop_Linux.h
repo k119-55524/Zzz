@@ -16,7 +16,7 @@ namespace zzz::engine
 		MainLoop_Linux(const std::shared_ptr<Platform> platform);
 		virtual ~MainLoop_Linux() = default;
 
-		void Run() ;
+		void Run() override;
 
 	private:
 		wl_display* m_Display;

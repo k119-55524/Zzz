@@ -14,6 +14,6 @@ namespace zzz::engine
 		MainLoop_MacOS(const std::shared_ptr<Platform> platform);
 		virtual ~MainLoop_MacOS() = default;
 
-		void Run() ;
+		void Run() override;
 	};
 }

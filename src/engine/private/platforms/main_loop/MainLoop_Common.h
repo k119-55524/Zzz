@@ -17,6 +17,8 @@ namespace zzz::engine
 		MainLoopBase(const std::shared_ptr<Platform> platform);
 		virtual ~MainLoopBase() = default;
 
+		virtual void Run() = 0;
+
 		
 		inline void Stop()
 		{ 
