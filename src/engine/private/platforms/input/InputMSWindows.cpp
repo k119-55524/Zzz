@@ -10,5 +10,5 @@ std::expected<void, std::string> InputMSWindows::Initialize()
 
 bool InputMSWindows::ProcessMessage(const NativeMsg& nativeMsg)
 {
-	return true;
+	return false;
 }

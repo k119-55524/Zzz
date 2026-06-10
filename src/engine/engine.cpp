@@ -1,11 +1,8 @@
-#include "pch.h"
-
 #include <foundation.h>
 
 #include "engine.h"
 #include "headers/enums.h"
 #include "private/core/view/ViewManager.h"
-
 #include "private/platforms/main_loop/MainLoop.h"
 
 using namespace zzz;
@@ -130,5 +127,3 @@ void Engine::OnUpdateSystem()
 		DOut("Tick!!!");
 	}
 }
-
-

@@ -32,7 +32,6 @@ WinMSWindows::~WinMSWindows()
 	int yPos = (screenHeight - height) / 2; // Расчет позиции по оси Y
 
 	m_Ctx = { this, m_Input.get() };
-
 	CreateWindowEx(
 		0,
 		static_cast<const ConfigMSWin&>(m_Platform->GetPlatformConfig()).GetClassName().c_str(),
@@ -68,10 +67,15 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		return { false, DefWindowProc(hWnd, uMsg, wParam, lParam) };
 
 	case WM_SIZE:
-		m_WinSize.SetFrom(static_cast<zU32>(LOWORD(lParam)), static_cast<zU32>(HIWORD(lParam)));
+		//m_WinSize.SetFrom(static_cast<zU32>(LOWORD(lParam)), static_cast<zU32>(HIWORD(lParam)));
 		DOut("WM_SIZE {}: {}.", static_cast<void*>(m_hWnd), m_WinSize.ToString());
 
 		return { false, 0 };
+
+	// Обрабатываем изменение размера окна в процессе изменения его пользователем.
+	case WM_SIZING:
+		//OnResizing();
+		return { false, 0};
 
 	case WM_GETMINMAXINFO:
 		MINMAXINFO* pMinMaxInfo = reinterpret_cast<MINMAXINFO*>(lParam);

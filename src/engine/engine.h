@@ -23,7 +23,6 @@ namespace zzz::engine
 
 using namespace zzz;
 
-
 namespace zzz::engine
 {
 	class Engine final

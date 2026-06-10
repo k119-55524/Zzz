@@ -9,7 +9,8 @@
 
 using namespace zzz::engine;
 
-namespace {
+namespace
+{
 	void OnAppCmd(struct android_app* app, int32_t cmd)
 	{
 		WinAndroid::AndroidActinityCtx* ctx = reinterpret_cast<WinAndroid::AndroidActinityCtx*>(app->userData);
@@ -20,7 +21,8 @@ namespace {
 	}
 }
 
-namespace zzz::engine {
+namespace zzz::engine
+{
 	void ProcessAndroidInput(struct android_app* app)
 	{
 		if (!app) return;

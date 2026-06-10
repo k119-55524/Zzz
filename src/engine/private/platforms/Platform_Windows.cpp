@@ -32,9 +32,9 @@ namespace
 			if (procRes.isContinue)
 			{
 				if (IsHandleInput && ctx->input->ProcessMessage({ uMsg, wParam, lParam }))
-					DefWindowProc(hWnd, uMsg, wParam, lParam);
-				else
-					DefWindowProc(hWnd, uMsg, wParam, lParam);
+					return 0;
+
+				return DefWindowProc(hWnd, uMsg, wParam, lParam);
 			}
 
 			return procRes.result;
