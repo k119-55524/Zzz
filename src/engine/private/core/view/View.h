@@ -1,11 +1,8 @@
 #pragma once
 
-#include "../../../header.h"
-
 #include "../../platforms/Platform.h"
-#include "../../platforms/window/Window.h"
-
 #include "../../platforms/input/Input.h"
+#include "../../platforms/window/Window.h"
 
 namespace zzz::engine
 {
@@ -19,7 +16,6 @@ namespace zzz::engine
 		~View() = default;
 
 		inline std::shared_ptr<Window> GetWindow() const noexcept { return m_Window; }
-		inline std::shared_ptr<Input>  GetInput()  const noexcept { return m_Input; }
 
 	private:
 		void Initialize();

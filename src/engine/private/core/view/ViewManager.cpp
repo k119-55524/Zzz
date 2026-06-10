@@ -1,15 +1,16 @@
-#include "ViewManager.h"
+
 #include "View.h"
+#include "ViewManager.h"
 #include "../../platforms/Platform.h"
-#include "../../platforms/window/Window.h"
-#include <foundation.h>
 
 using namespace zzz::engine;
 
-ViewManager::ViewManager(std::shared_ptr<Platform> platform) :
-	m_Platform{ platform }
+ViewManager::ViewManager(std::shared_ptr<Platform> platform, std::function<void()> onAllViewsClosed) :
+	m_Platform{ platform },
+	OnAllViewsClosed{ onAllViewsClosed }
 {
 	ensure(m_Platform != nullptr, "Platform must not be null.");
+	ensure(OnAllViewsClosed != nullptr, "OnAllViewsClosed must not be null.");
 }
 
 ViewManager::~ViewManager()
@@ -36,8 +37,8 @@ void ViewManager::CreateView()
 			m_Views.remove(v);
 
 		// Если больше нет активных окон
-		if (m_Views.empty() && onAllViewsClosed)
-			onAllViewsClosed();
+		if (m_Views.empty())
+			OnAllViewsClosed();
 	};
 
 	m_Views.push_back(std::move(view));

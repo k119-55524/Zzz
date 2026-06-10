@@ -2,7 +2,6 @@
 
 #include <string>
 #include <filesystem>
-
 #include "../../NativeAppData.h"
 
 using namespace zzz;

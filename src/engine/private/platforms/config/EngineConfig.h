@@ -1,12 +1,8 @@
 #pragma once
 
-#include <foundation.h>
-
-#include "../../core/utils/version.h"
-#include "../../core/templates/Size2D.h"
-#include "../../core/serialize/Serializer.h"
-
 #include "PlatformConfig.h"
+#include "../../core/utils/version.h"
+#include "../../core/serialize/Serializer.h"
 
 namespace zzz::engine
 {

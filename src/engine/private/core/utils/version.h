@@ -46,9 +46,9 @@ namespace zzz::engine
 
 		constexpr bool operator==(const Version& other) const noexcept
 		{
-			return m_Major == other.m_Major &&
-			       m_Minor == other.m_Minor &&
-			       m_Patch == other.m_Patch;
+			return	m_Major == other.m_Major &&
+					m_Minor == other.m_Minor &&
+					m_Patch == other.m_Patch;
 		}
 
 		inline Version BumpMajor() const noexcept { return Version(m_Major + 1, 0, 0); }

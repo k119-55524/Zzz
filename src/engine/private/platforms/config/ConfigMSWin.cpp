@@ -7,7 +7,6 @@ ConfigMSWin::ConfigMSWin() :
 	m_IcoResourceName("IDI_ICON1"),
 	m_ClassName("ZzzEngineWindowClass")
 {
-
 }
 
 [[nodiscard]] std::expected<void, std::string> ConfigMSWin::Serialize(std::vector<std::byte>& buffer, const Serializer& s) const

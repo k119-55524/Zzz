@@ -1,4 +1,3 @@
-#include <foundation.h>
 
 #include "engine.h"
 #include "headers/enums.h"
@@ -56,8 +55,7 @@ std::expected<void, std::string> Engine::Initialize()
 		m_MainLoop = safe_make_shared<MainLoop>(m_Platform);
 		m_MainLoop->onUpdateSystem += std::bind(&Engine::OnUpdateSystem, this);
 
-		m_ViewManager = safe_make_unique<ViewManager>(m_Platform);
-		m_ViewManager->onAllViewsClosed = [this]() { m_MainLoop->Stop(); };
+		m_ViewManager = safe_make_unique<ViewManager>(m_Platform, [this]() { m_MainLoop->Stop(); });
 		m_ViewManager->CreateView();
 
 		DOut("Engine initialized: OK.");

@@ -1,9 +1,8 @@
-#include <foundation.h>
 
 #include "Platform.h"
+#include "config/ConfigMSWin.h"
 #include "window/WinMSWindows.h"
 #include "input/InputMSWindows.h"
-#include "config/ConfigMSWin.h"
 
 using namespace zzz::engine;
 
@@ -60,14 +59,14 @@ void Platform::InitializePlatformSpecific()
 
 	HICON iconHandle = (HICON)LoadImage(
 		GetModuleHandle(NULL),
-		static_cast<const ConfigMSWin&>(m_ConfigManager->GetPlatformConfig()).GetIcoResourceName().c_str(),
+		m_ConfigManager->GetPlatformConfig().GetIcoResourceName().c_str(),
 		IMAGE_ICON,
 		0,
 		0,
 		LR_DEFAULTSIZE | LR_SHARED);
 
 	if (!iconHandle)
-		DOutWarning("Failed to load icon '{}'. Error: {}", static_cast<const ConfigMSWin&>(m_ConfigManager->GetPlatformConfig()).GetIcoResourceName(), GetLastError());
+		DOutWarning("Failed to load icon '{}'. Error: {}", m_ConfigManager->GetPlatformConfig().GetIcoResourceName(), GetLastError());
 
 	WNDCLASS wc = { 0 };
 	wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -76,7 +75,7 @@ void Platform::InitializePlatformSpecific()
 	wc.hIcon = iconHandle;
 	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-	wc.lpszClassName = static_cast<const ConfigMSWin&>(m_ConfigManager->GetPlatformConfig()).GetClassName().c_str();
+	wc.lpszClassName = m_ConfigManager->GetPlatformConfig().GetClassName().c_str();
 	ATOM Result = RegisterClass(&wc);
 	if (Result == 0)
 		THROW_RUNTIME("Failed to register window class. Error code: {}.", GetLastError());

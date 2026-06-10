@@ -21,7 +21,6 @@ namespace zzz::engine
 		inline const std::string_view GetAppName() const noexcept { return m_AppName; }
 		[[nodiscard]] inline std::shared_ptr<NativeAppData> GetNativeData() const noexcept { return m_NativeData; }
 		inline const PlatformConfig& GetPlatformConfig() const noexcept { return m_ConfigManager->GetPlatformConfig(); };
-		[[nodiscard]] inline std::shared_ptr<ConfigManager> GetConfigManager() const noexcept { return m_ConfigManager; }
 		
 	private:
 		void Initialize();

@@ -2,6 +2,7 @@
 
 #include "../Platform.h"
 #include "../../core/templates/Event.h"
+#include "../../core/templates/Size2D.h"
 
 #include "../input/Input.h"
 

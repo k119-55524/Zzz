@@ -1,18 +1,12 @@
 #pragma once
 
-#include "../../core/io/Path.h"
 #include "EngineConfig.h"
+#include "../../core/io/Path.h"
 
 using namespace zzz::io;
 
 namespace zzz::engine
 {
-	enum class eInitConfigState
-	{
-		InitOK,
-		InitDefault,
-	};
-
 	class ConfigManager final
 	{
 	public:
@@ -28,12 +22,11 @@ namespace zzz::engine
 		std::expected<std::filesystem::path, std::string> GetSettingsDirectory();
 		std::expected<void, std::string> LoadConfig(std::filesystem::path path);
 
-		std::filesystem::path m_ConfigPath;
 		Path m_Path;
+		std::filesystem::path m_ConfigPath;
 		std::shared_ptr<EngineConfig> m_EngineConfig;
 
 		Serializer m_Serializer;
 		bool m_IsDirty;
 	};
 }
-

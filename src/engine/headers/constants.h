@@ -5,7 +5,7 @@
 
 namespace zzz
 {
-#pragma region Config File Constants
+#pragma region Config file constants
 	constexpr std::string_view c_ConfigFileName = "config.dat";
 	constexpr std::array<std::byte, 3> c_ConfigHeader
 	{
@@ -19,5 +19,9 @@ namespace zzz
 
 	constexpr zU32 c_DefaultWindowWidth = 800;
 	constexpr zU32 c_DefaultWindowHeicht = 600;
+#pragma endregion
+
+#pragma region Microsoft Windows constants
+
 #pragma endregion
 }
