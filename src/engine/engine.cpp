@@ -55,7 +55,7 @@ std::expected<void, std::string> Engine::Initialize()
 		m_MainLoop = safe_make_shared<MainLoop>(m_Platform, std::bind(&Engine::OnUpdateSystem, this));
 		m_ViewManager = safe_make_unique<ViewManager>(m_Platform, std::bind(&Engine::OnCloseAllViews, this));
 		m_ViewManager->CreateView();
-		//m_ViewManager->CreateView();
+		m_ViewManager->CreateView();
 
 		DOut("Engine initialized: OK.");
 		engineState.store(eInitState::Initialized);

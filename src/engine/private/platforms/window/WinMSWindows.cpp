@@ -58,7 +58,7 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 	{
 	case WM_NCCREATE:
 		m_hWnd = hWnd;
-		return { false, TRUE };
+		return { true, TRUE };
 
 	case WM_CLOSE:
 		OnWindowClose();

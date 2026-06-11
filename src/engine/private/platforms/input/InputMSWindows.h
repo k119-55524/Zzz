@@ -12,6 +12,12 @@ namespace zzz::engine
 		~InputMSWindows()  = default;
 
 		[[nodiscard]] std::expected<void, std::string> Initialize() ;
-		bool ProcessMessage(const NativeMsg& nativeMsg) ;
+		bool ProcessMessage(const NativeMsg& msg) ;
+
+		protected:
+			int InitRawInput(HWND hWnd);
+			void OnRawInput(HRAWINPUT hRawInput);
+			void HandleRawMouse(const RAWMOUSE& mouse);
+			void HandleRawKeyboard(const RAWKEYBOARD& kb);
 	};
 }

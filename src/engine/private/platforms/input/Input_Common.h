@@ -17,9 +17,10 @@ namespace zzz::engine
 #if defined(Z_WINDOWS)
 	struct WinMsg
 	{
-		UINT   uMsg;
-		WPARAM wParam;
-		LPARAM lParam;
+		HWND	hWnd;
+		UINT	uMsg;
+		WPARAM	wParam;
+		LPARAM	lParam;
 	};
 	using NativeMsg = WinMsg;
 #elif defined(Z_ANDROID)

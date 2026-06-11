@@ -30,7 +30,7 @@ namespace
 			auto procRes = ctx->window->MsgProc(hWnd, uMsg, wParam, lParam);
 			if (procRes.isContinue)
 			{
-				if (IsHandleInput && ctx->input->ProcessMessage({ uMsg, wParam, lParam }))
+				if (IsHandleInput && ctx->input->ProcessMessage({ hWnd, uMsg, wParam, lParam }))
 					return 0;
 
 				return DefWindowProc(hWnd, uMsg, wParam, lParam);
