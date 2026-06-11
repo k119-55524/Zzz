@@ -48,8 +48,7 @@ namespace zzz::engine
 	};
 	using NativeMsg = iOSMsg;
 #else
-#error ProcessMessage
+#error >>>>> Unsupported platform
 #endif
 #pragma endregion
-
 	}

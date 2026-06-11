@@ -38,6 +38,7 @@ namespace zzz::engine
 
 	private:
 		void Shutdown();
+		void OnCloseAllViews();
 		void OnUpdateSystem();
 
 		std::mutex stateMutex;

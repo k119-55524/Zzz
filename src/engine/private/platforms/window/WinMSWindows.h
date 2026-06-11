@@ -26,7 +26,7 @@ namespace zzz::engine
 		};
 
 		WinMSWindows() = delete;
-		WinMSWindows(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input);
+		WinMSWindows(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input, std::function<void()> onWindowClose);
 		~WinMSWindows();
 
 		[[nodiscard]] std::expected<void, std::string> Initialize(const std::string_view appName);

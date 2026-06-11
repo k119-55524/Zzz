@@ -25,5 +25,6 @@ namespace zzz::engine
 		std::list<std::shared_ptr<View>> m_Views;
 
 		std::function<void()> OnAllViewsClosed;
+		void HandleWindowClose(View& view);
 	};
 }

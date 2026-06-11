@@ -33,12 +33,12 @@ target_sources(engine_lib PRIVATE
     "headers/throwWrappers.h"
 
     # Core
-    "private/platforms/config/ConfigManager.h"           "private/platforms/config/ConfigManager.cpp"
-    "private/platforms/config/EngineConfig.h"             "private/platforms/config/EngineConfig.cpp"
+    "private/platforms/config/ConfigManager.h" "private/platforms/config/ConfigManager.cpp"
+    "private/platforms/config/EngineConfig.h" "private/platforms/config/EngineConfig.cpp"
     "private/platforms/config/PlatformConfig.h"
-    "private/core/io/Path.h"                         "private/core/io/Path.cpp"
-    "private/core/serialize/Serializer.h"            "private/core/serialize/Serializer.cpp"
-    "private/core/utils/version.h"                   "private/core/utils/version.cpp"
+    "private/core/io/Path.h" "private/core/io/Path.cpp"
+    "private/core/serialize/Serializer.h" "private/core/serialize/Serializer.cpp"
+    "private/core/utils/version.h" "private/core/utils/version.cpp"
     "private/core/templates/Size2D.h"
     "private/core/templates/Event.h"
 
@@ -54,7 +54,7 @@ target_sources(engine_lib PRIVATE
 
     # Native View / Window
     "private/platforms/window/Window.h" "private/platforms/window/Window_Common.h" "private/platforms/window/Window_Common.cpp"
-    "private/core/view/View.h"            "private/core/view/View.cpp"
+    "private/core/view/View.h" "private/core/view/View.cpp"
     "private/core/view/ViewManager.h" "private/core/view/ViewManager.cpp"
     "private/core/utils/ScreenResolution.h"
 
@@ -101,19 +101,19 @@ if(APPLE)
 
     if(IOS)
         target_sources(engine_lib PRIVATE
-            "private/platforms/config/ConfigiOS.h"     "private/platforms/config/ConfigiOS.mm"
-            "private/platforms/input/InputiOS.h"           "private/platforms/input/InputiOS.mm"
+            "private/platforms/config/ConfigiOS.h" "private/platforms/config/ConfigiOS.mm"
+            "private/platforms/input/InputiOS.h" "private/platforms/input/InputiOS.mm"
             "private/platforms/Platform_iOS.mm"
-            "private/platforms/main_loop/MainLoop_iOS.h"    "private/platforms/main_loop/MainLoop_iOS.mm"
-            "private/platforms/window/WiniOS.h"     "private/platforms/window/WiniOS.mm"
+            "private/platforms/main_loop/MainLoop_iOS.h" "private/platforms/main_loop/MainLoop_iOS.mm"
+            "private/platforms/window/WiniOS.h" "private/platforms/window/WiniOS.mm"
         )
     else()
         target_sources(engine_lib PRIVATE
-            "private/platforms/config/ConfigMacOS.h"   "private/platforms/config/ConfigMacOS.mm"
-            "private/platforms/input/InputMacOS.h"         "private/platforms/input/InputMacOS.mm"
+            "private/platforms/config/ConfigMacOS.h" "private/platforms/config/ConfigMacOS.mm"
+            "private/platforms/input/InputMacOS.h" "private/platforms/input/InputMacOS.mm"
             "private/platforms/Platform_MacOS.mm"
-            "private/platforms/main_loop/MainLoop_MacOS.h"  "private/platforms/main_loop/MainLoop_MacOS.mm"
-            "private/platforms/window/WinMacOS.h"   "private/platforms/window/WinMacOS.mm"
+            "private/platforms/main_loop/MainLoop_MacOS.h" "private/platforms/main_loop/MainLoop_MacOS.mm"
+            "private/platforms/window/WinMacOS.h" "private/platforms/window/WinMacOS.mm"
         )
     endif()
 endif()

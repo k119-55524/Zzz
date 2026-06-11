@@ -12,14 +12,14 @@ namespace zzz::engine
 	{
 	public:
 		WindowBase() = delete;
-		WindowBase(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input);
+		WindowBase(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input, std::function<void()> onWindowClose);
 		virtual ~WindowBase() = default;
-
-		Event<void> onCloseRequested;
 
 	protected:
 		const std::shared_ptr<Platform> m_Platform;
 		const std::shared_ptr<Input> m_Input;
 		Size2D<> m_WinSize;
+
+		std::function<void()> OnWindowClose;
 	};
 }

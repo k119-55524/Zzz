@@ -28,18 +28,24 @@ void ViewManager::CreateView()
 		THROW_RUNTIME("Mobile platforms support only one native window per application.");
 #endif
 
-	auto view = zzz::safe_make_shared<View>(m_Platform);
-
-	// Добавляем слушателя на закрытие окна
-	view->GetWindow()->onCloseRequested += [this, weakView = std::weak_ptr(view)]()
-	{
-		if (auto v = weakView.lock())
-			m_Views.remove(v);
-
-		// Если больше нет активных окон
-		if (m_Views.empty())
-			OnAllViewsClosed();
-	};
-
+	auto view = zzz::safe_make_shared<View>(m_Platform, std::bind(&ViewManager::HandleWindowClose, this, std::placeholders::_1));
 	m_Views.push_back(std::move(view));
+}
+
+void ViewManager::HandleWindowClose(View& view)
+{
+	auto it = std::ranges::find_if(
+		m_Views,
+		[&view](const auto& p)
+		{
+			return p.get() == &view;
+		});
+
+	if (it != m_Views.end())
+		m_Views.erase(it);
+	else
+		THROW_RUNTIME("View not found in m_Views.");
+
+	if (m_Views.empty())
+		OnAllViewsClosed();
 }

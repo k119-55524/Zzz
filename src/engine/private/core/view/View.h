@@ -12,10 +12,8 @@ namespace zzz::engine
 
 	public:
 		View() = delete;
-		View(std::shared_ptr<Platform> platform);
+		View(std::shared_ptr<Platform> platform, std::function<void(View&)> onWindowClose);
 		~View() = default;
-
-		inline std::shared_ptr<Window> GetWindow() const noexcept { return m_Window; }
 
 	private:
 		void Initialize();
@@ -23,5 +21,8 @@ namespace zzz::engine
 		std::shared_ptr<Platform> m_Platform;
 		std::shared_ptr<Window> m_Window;
 		std::shared_ptr<Input>  m_Input;
+
+		std::function<void(View&)> OnWindowClose;
+		void HandleWindowClose() { OnWindowClose(*this); }
 	};
 }

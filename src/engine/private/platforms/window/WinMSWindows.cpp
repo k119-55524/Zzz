@@ -5,8 +5,8 @@
 
 using namespace zzz::engine;
 
-WinMSWindows::WinMSWindows(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input) :
-	WindowBase(platform, input),
+WinMSWindows::WinMSWindows(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input, std::function<void()> onWindowClose) :
+	WindowBase(platform, input, onWindowClose),
 	m_hWnd(nullptr)
 {
 }
@@ -58,18 +58,16 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 	{
 	case WM_NCCREATE:
 		m_hWnd = hWnd;
-
 		return { false, TRUE };
 
 	case WM_CLOSE:
-		onCloseRequested();
-
+		OnWindowClose();
+		DestroyWindow(hWnd);
 		return { false, DefWindowProc(hWnd, uMsg, wParam, lParam) };
 
 	case WM_SIZE:
-		//m_WinSize.SetFrom(static_cast<zU32>(LOWORD(lParam)), static_cast<zU32>(HIWORD(lParam)));
+		m_WinSize.SetFrom(static_cast<zU32>(LOWORD(lParam)), static_cast<zU32>(HIWORD(lParam)));
 		DOut("WM_SIZE {}: {}.", static_cast<void*>(m_hWnd), m_WinSize.ToString());
-
 		return { false, 0 };
 
 	// Обрабатываем изменение размера окна в процессе изменения его пользователем.
