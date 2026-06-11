@@ -3,20 +3,16 @@
 
 using namespace zzz::engine;
 
-ConfigMSWin::ConfigMSWin() :
-	m_IcoResourceName("IDI_ICON1"),
-	m_ClassName("ZzzEngineWindowClass")
+ConfigMSWin::ConfigMSWin()
 {
 }
 
-[[nodiscard]] std::expected<void, std::string> ConfigMSWin::Serialize(std::vector<std::byte>& buffer, const Serializer& s) const
+[[nodiscard]] std::expected<void, std::string> ConfigMSWin::Serialize([[maybe_unused]] std::vector<std::byte>& buffer, [[maybe_unused]] const Serializer& s) const
 {
-	return s.Serialize(buffer, m_IcoResourceName)
-		.and_then([&](void) { return s.Serialize(buffer, m_ClassName); });
+	return {};
 }
 
-[[nodiscard]] std::expected<void, std::string> ConfigMSWin::DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s)
+[[nodiscard]] std::expected<void, std::string> ConfigMSWin::DeSerialize([[maybe_unused]] std::span<const std::byte> buffer, [[maybe_unused]] std::size_t& offset, [[maybe_unused]] const Serializer& s)
 {
-	return s.DeSerialize(buffer, offset, m_IcoResourceName)
-		.and_then([&](void) { return s.DeSerialize(buffer, offset, m_ClassName); });
+	return {};
 }

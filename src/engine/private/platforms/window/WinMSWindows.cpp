@@ -34,7 +34,7 @@ WinMSWindows::~WinMSWindows()
 	m_Ctx = { this, m_Input.get() };
 	CreateWindowEx(
 		0,
-		static_cast<const ConfigMSWin&>(m_Platform->GetPlatformConfig()).GetClassName().c_str(),
+		c_RegisterClassName.data(),
 		appName.data(),
 		WS_OVERLAPPEDWINDOW,
 		xPos, yPos, width, height,
