@@ -1,7 +1,7 @@
 #pragma once
 
-#include <format>
 #include <expected>
+#include "zdefines.h"
 
 #define DOut(...) ::zzz::logger::Logger::LogMessage(std::source_location::current(), __VA_ARGS__)
 #define DOutWarning(...) ::zzz::logger::Logger::LogWarning(std::source_location::current(), __VA_ARGS__)
@@ -11,6 +11,7 @@
 
 #define THROW_RUNTIME(...) ::zzz::throw_runtime_error(std::format(__VA_ARGS__), std::source_location::current())
 
+/// @brief Проверяет валидность функтора (в Debug/Development) и вызывает его.
 #if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
 #define VERIFY_AND_CALL(func, ...) \
 	do \

@@ -1,10 +1,9 @@
 #pragma once
 
 #include "../Platform.h"
-#include "../../core/templates/Event.h"
+#include "../input/Input.h"
 #include "../../core/templates/Size2D.h"
 
-#include "../input/Input.h"
 
 namespace zzz::engine
 {

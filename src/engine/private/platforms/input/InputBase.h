@@ -1,7 +1,5 @@
 ﻿#pragma once
 
-#include <string>
-#include <expected>
 #include <functional>
 
 #if Z_WINDOWS
@@ -57,7 +55,6 @@ namespace zzz::engine
 	class InputBase
 	{
 	public:
-		// РЎРѕР±С‹С‚РёСЏ
 		std::function<void(int)> OnKeyDown;
 		std::function<void(int)> OnKeyUp;
 		std::function<void(int, int)> OnMouseMove;
@@ -65,6 +62,5 @@ namespace zzz::engine
 	protected:
 		InputBase() = default;
 		~InputBase() = default;
-
 	};
 }

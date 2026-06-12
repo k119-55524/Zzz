@@ -1,7 +1,7 @@
+
 #include "WinMSWindows.h"
 #include "../Platform.h"
 #include "../../core/utils/ScreenResolution.h"
-#include "../config/ConfigMSWin.h"
 
 using namespace zzz::engine;
 
