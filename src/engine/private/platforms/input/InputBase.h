@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <functional>
+#include "InputHelpers.h"
 
 #if Z_WINDOWS
 #include "../../../headers/MSWin.h"

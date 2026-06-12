@@ -101,33 +101,33 @@ void InputMSWindows::HandleRawMouse(const RAWMOUSE& mouse)
 	// Обрабатываем сдвиг курсора(дельту)
 	if (mouse.usFlags == MOUSE_MOVE_RELATIVE)
 	{
-		//if (mouse.lLastX != 0 && mouse.lLastY != 0)
-		//	OnMouseDelta(mouse.lLastX, mouse.lLastY);
+		if (mouse.lLastX != 0 && mouse.lLastY != 0)
+			OnMouseDelta(mouse.lLastX, mouse.lLastY);
 	}
 
 	// Обрабатываем нажатие/отпускание кнопок мыши
 	{
-		//MouseButtonMask pressed = MouseButtonMask::None;
-		//MouseButtonMask released = MouseButtonMask::None;
+		MouseButtonMask pressed = MouseButtonMask::None;
+		MouseButtonMask released = MouseButtonMask::None;
 
-		//// Проверяем каждую кнопку и формируем маски
-		//if (mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_DOWN) pressed |= MouseButtonMask::Left;
-		//if (mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_UP) released |= MouseButtonMask::Left;
+		// Проверяем каждую кнопку и формируем маски
+		if (mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_DOWN) pressed |= MouseButtonMask::Left;
+		if (mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_UP) released |= MouseButtonMask::Left;
 
-		//if (mouse.usButtonFlags & RI_MOUSE_RIGHT_BUTTON_DOWN) pressed |= MouseButtonMask::Right;
-		//if (mouse.usButtonFlags & RI_MOUSE_RIGHT_BUTTON_UP) released |= MouseButtonMask::Right;
+		if (mouse.usButtonFlags & RI_MOUSE_RIGHT_BUTTON_DOWN) pressed |= MouseButtonMask::Right;
+		if (mouse.usButtonFlags & RI_MOUSE_RIGHT_BUTTON_UP) released |= MouseButtonMask::Right;
 
-		//if (mouse.usButtonFlags & RI_MOUSE_MIDDLE_BUTTON_DOWN) pressed |= MouseButtonMask::Middle;
-		//if (mouse.usButtonFlags & RI_MOUSE_MIDDLE_BUTTON_UP) released |= MouseButtonMask::Middle;
+		if (mouse.usButtonFlags & RI_MOUSE_MIDDLE_BUTTON_DOWN) pressed |= MouseButtonMask::Middle;
+		if (mouse.usButtonFlags & RI_MOUSE_MIDDLE_BUTTON_UP) released |= MouseButtonMask::Middle;
 
-		//if (mouse.usButtonFlags & RI_MOUSE_BUTTON_4_DOWN) pressed |= MouseButtonMask::Button4;
-		//if (mouse.usButtonFlags & RI_MOUSE_BUTTON_4_UP) released |= MouseButtonMask::Button4;
+		if (mouse.usButtonFlags & RI_MOUSE_BUTTON_4_DOWN) pressed |= MouseButtonMask::Button4;
+		if (mouse.usButtonFlags & RI_MOUSE_BUTTON_4_UP) released |= MouseButtonMask::Button4;
 
-		//if (mouse.usButtonFlags & RI_MOUSE_BUTTON_5_DOWN) pressed |= MouseButtonMask::Button5;
-		//if (mouse.usButtonFlags & RI_MOUSE_BUTTON_5_UP) released |= MouseButtonMask::Button5;
+		if (mouse.usButtonFlags & RI_MOUSE_BUTTON_5_DOWN) pressed |= MouseButtonMask::Button5;
+		if (mouse.usButtonFlags & RI_MOUSE_BUTTON_5_UP) released |= MouseButtonMask::Button5;
 
-		//if (pressed != MouseButtonMask::None || released != MouseButtonMask::None)
-		//	OnMouseButtonsChanged(pressed, released);
+		if (pressed != MouseButtonMask::None || released != MouseButtonMask::None)
+			OnMouseButtonsChanged(pressed, released);
 	}
 
 	// Колесо вертикальное
@@ -135,8 +135,8 @@ void InputMSWindows::HandleRawMouse(const RAWMOUSE& mouse)
 	{
 		zI32 delta = static_cast<zI32>(static_cast<SHORT>(mouse.usButtonData)) / WHEEL_DELTA;
 
-		//if (delta != 0)
-		//	OnMouseWheelVertical(delta);
+		if (delta != 0)
+			OnMouseWheelVertical(delta);
 	}
 
 	// Колесо горизонтальное (боковое колесо)
@@ -144,8 +144,8 @@ void InputMSWindows::HandleRawMouse(const RAWMOUSE& mouse)
 	{
 		zI32 delta = static_cast<zI32>(static_cast<SHORT>(mouse.usButtonData)) / WHEEL_DELTA;
 
-		//if (delta != 0)
-		//	OnMouseWheelHorizontal(delta);
+		if (delta != 0)
+			OnMouseWheelHorizontal(delta);
 	}
 }
 
@@ -159,8 +159,8 @@ void InputMSWindows::HandleRawKeyboard(const RAWKEYBOARD& kb)
 		return;
 
 	bool e0 = (kb.Flags & RI_KEY_E0) != 0;
-	//KeyCode key = TranslateMSWinKey(vk, e0);
-	//KeyState state = pressed ? KeyState::Down : KeyState::Up;
+	KeyCode key = TranslateMSWinKey(vk, e0);
+	KeyState state = pressed ? KeyState::Down : KeyState::Up;
 
-	//OnKeyStateChanged(key, state);
+	OnKeyStateChanged(key, state);
 }
