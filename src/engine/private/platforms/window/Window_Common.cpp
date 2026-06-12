@@ -5,11 +5,12 @@ using namespace zzz::engine;
 WindowBase::WindowBase(
 	const std::shared_ptr<Platform> platform,
 	const std::shared_ptr<Input> input,
-	std::function<void()> onWindowClose) :
+	WindowCallbacks callbacks) :
 	m_Platform{ platform },
 	m_Input{ input },
-	IsActivate{ false },
-	OnClose{ onWindowClose }
+	m_Callbacks{ std::move(callbacks) },
+	IsActivate{ false }
 {
-	ensure(OnClose != nullptr, "OnClose must not be null.");
+	ensure(m_Callbacks.OnClose != nullptr, "OnClose must not be null.");
+	ensure(m_Callbacks.OnSurfaceCreated != nullptr, "OnSurfaceCreated must not be null.");
 }

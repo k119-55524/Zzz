@@ -10,7 +10,7 @@ namespace zzz::engine
 	{
 	public:
 		WiniOS() = delete;
-		WiniOS(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input);
+		WiniOS(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks);
 		~WiniOS() override;
 
 		[[nodiscard]] std::expected<void, std::string> Initialize(const std::string_view appName);

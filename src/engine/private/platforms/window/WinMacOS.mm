@@ -10,14 +10,16 @@ using namespace zzz::engine;
 @implementation EngineWindowDelegate
 - (BOOL)windowShouldClose:(NSWindow *)sender {
     if (self.winEngine) {
-        self.winEngine->onCloseRequested();
+        // [macOS] Вызывается при нажатии на красную кнопку закрытия окна.
+        // Окно запрашивает у нас разрешение на закрытие. Передаем сигнал в движок.
+        VERIFY_AND_CALL(self.winEngine->m_Callbacks.OnClose);
     }
     return YES;
 }
 @end
 
-WinMacOS::WinMacOS(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input) :
-	WindowBase(platform, input)
+WinMacOS::WinMacOS(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks) :
+	WindowBase(platform, input, std::move(callbacks))
 {
 }
 

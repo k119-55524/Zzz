@@ -5,8 +5,8 @@
 
 using namespace zzz::engine;
 
-WinMSWindows::WinMSWindows(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input, std::function<void()> onWindowClose) :
-	WindowBase(platform, input, onWindowClose),
+WinMSWindows::WinMSWindows(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks) :
+	WindowBase(platform, input, std::move(callbacks)),
 	m_hWnd{ nullptr },
 	IsMinimized{ true }
 {}
@@ -95,7 +95,7 @@ LRESULT CALLBACK WinMSWindows::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 	// [Windows] Системное окно успешно создано.
 	// Передаем m_hWnd наверх (во View/Engine), чтобы графическое API (Vulkan/DirectX)
 	// могло привязаться к этому окну и создать Swapchain. Без этого рендеринг невозможен.
-	VERIFY_AND_CALL(OnSurfaceCreated, m_hWnd);
+	VERIFY_AND_CALL(m_Callbacks.OnSurfaceCreated, m_hWnd);
 
 	ShowWindow(m_hWnd, SW_SHOW);
 	UpdateWindow(m_hWnd);
@@ -112,57 +112,69 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		return { true, TRUE };
 
 	case WM_CLOSE:
-		// [Windows] Пользователь нажал крестик или Alt+F4. 
-		// Транслируем в OnClose, чтобы движок начал плавное завершение работы.
-		VERIFY_AND_CALL(OnClose);
+		/**
+		 * @brief [Windows] Пользователь нажал крестик или Alt+F4.
+		 * Транслируем в OnClose, чтобы движок начал плавное завершение работы.
+		 */
+		VERIFY_AND_CALL(m_Callbacks.OnClose);
 		DestroyWindow(hWnd);
 		return { false, DefWindowProc(hWnd, uMsg, wParam, lParam) };
 
 	case WM_DESTROY:
-		// [Windows] Окно физически уничтожается операционной системой.
-		// Транслируем в OnSurfaceDestroyed, чтобы убить Vulkan/Metal Swapchain 
-		// строго ДО того, как хэндл окна станет невалидным.
-		VERIFY_AND_CALL(OnSurfaceDestroyed);
+		/**
+		 * @brief [Windows] Окно физически уничтожается операционной системой.
+		 * Транслируем в OnSurfaceDestroyed, чтобы убить Vulkan/Metal Swapchain
+		 * строго ДО того, как хэндл окна станет невалидным.
+		 */
+		VERIFY_AND_CALL(m_Callbacks.OnSurfaceDestroyed);
 		PostQuitMessage(0);
 		return { true, TRUE };
 
 	case WM_SIZE:
-		// [Windows] Размер клиентской области изменился.
-		// Транслируем в OnResize. Также отслеживаем состояния минимизации (Hide) и восстановления (Show).
+		/**
+		 * @brief [Windows] Размер клиентской области изменился.
+		 * Транслируем в OnResize. Также отслеживаем состояния минимизации (Hide) и восстановления (Show).
+		 */
 		m_WinSize.SetFrom(static_cast<zU32>(LOWORD(lParam)), static_cast<zU32>(HIWORD(lParam)));
 		if (wParam == SIZE_MINIMIZED)
 		{
-			VERIFY_AND_CALL(OnResize, m_WinSize, eWinResize::Hide);
+			VERIFY_AND_CALL(m_Callbacks.OnResize, m_WinSize, eWinResize::Hide);
 			IsMinimized = true;
 		}
 		else
 		{
 			if ((wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED) && IsMinimized)
 			{
-				VERIFY_AND_CALL(OnResize, m_WinSize, eWinResize::Show);
+				VERIFY_AND_CALL(m_Callbacks.OnResize, m_WinSize, eWinResize::Show);
 				IsMinimized = false;
 			}
 			else
 			{
-				VERIFY_AND_CALL(OnResize, m_WinSize, eWinResize::Resize);
+				VERIFY_AND_CALL(m_Callbacks.OnResize, m_WinSize, eWinResize::Resize);
 			}
 		}
 		return { false, 0 };
 
 	case WM_ENTERSIZEMOVE:
-		// [Windows] Пользователь захватил рамку окна мышью.
-		VERIFY_AND_CALL(OnResizeStart);
+		/**
+		 * @brief [Windows] Пользователь захватил рамку окна мышью.
+		 */
+		VERIFY_AND_CALL(m_Callbacks.OnResizeStart);
 		return { false, 0 };
 
 	case WM_SIZING:
-		// [Windows] Пользователь активно перетаскивает рамку окна.
-		// Windows блокирует главный поток в этот момент, поэтому рендер может замирать.
-		VERIFY_AND_CALL(OnSizing);
+		/**
+		 * @brief [Windows] Пользователь активно перетаскивает рамку окна.
+		 * Windows блокирует главный поток в этот момент, поэтому рендер может замирать.
+		 */
+		VERIFY_AND_CALL(m_Callbacks.OnSizing);
 		return { false, 0 };
 
 	case WM_EXITSIZEMOVE:
-		// [Windows] Пользователь отпустил рамку окна.
-		VERIFY_AND_CALL(OnResizeEnd);
+		/**
+		 * @brief [Windows] Пользователь отпустил рамку окна.
+		 */
+		VERIFY_AND_CALL(m_Callbacks.OnResizeEnd);
 		return { false, 0 };
 
 	case WM_GETMINMAXINFO:
@@ -188,41 +200,53 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 	// Обрабатываем изменение DPI в системе
 	case WM_DPICHANGED:
 	{
-		// [Windows] Окно было перенесено на монитор с другим масштабом (DPI).
+		/**
+		 * @brief [Windows] Окно было перенесено на монитор с другим масштабом (DPI).
+		 */
 		m_WinSize.SetFrom(LOWORD(wParam), HIWORD(wParam));
-		VERIFY_AND_CALL(OnDpiChanged);
+		VERIFY_AND_CALL(m_Callbacks.OnDpiChanged);
 
 		return { false, FALSE };
 	}
 
 	case WM_SETFOCUS:
-		// [Windows] Окно получило фокус клавиатуры (пользователь кликнул по нему).
-		VERIFY_AND_CALL(OnFocus, true);
+		/**
+		 * @brief [Windows] Окно получило фокус клавиатуры (пользователь кликнул по нему).
+		 */
+		VERIFY_AND_CALL(m_Callbacks.OnFocus, true);
 		break;
 
 	case WM_KILLFOCUS:
-		// [Windows] Окно потеряло фокус клавиатуры (пользователь переключился на другое приложение).
-		VERIFY_AND_CALL(OnFocus, false);
+		/**
+		 * @brief [Windows] Окно потеряло фокус клавиатуры (пользователь переключился на другое приложение).
+		 */
+		VERIFY_AND_CALL(m_Callbacks.OnFocus, false);
 		break;
 
 	case WM_ACTIVATE:
-		// [Windows] Изменение активности окна (например, окно ушло на задний план, но всё ещё видно).
+		/**
+		 * @brief [Windows] Изменение активности окна (например, окно ушло на задний план, но всё ещё видно).
+		 */
 		IsActivate = (wParam != 0);
-		VERIFY_AND_CALL(OnActivate, IsActivate);
+		VERIFY_AND_CALL(m_Callbacks.OnActivate, IsActivate);
 		break;
 
 	case WM_POWERBROADCAST:
-		// [Windows] События электропитания системы.
+		/**
+		 * @brief [Windows] События электропитания системы.
+		 */
 		if (wParam == PBT_APMSUSPEND)
-			VERIFY_AND_CALL(OnSuspend); // ПК уходит в спящий/ждущий режим (Suspend).
+			VERIFY_AND_CALL(m_Callbacks.OnSuspend); // ПК уходит в спящий/ждущий режим (Suspend).
 		else if (wParam == PBT_APMRESUMESUSPEND)
-			VERIFY_AND_CALL(OnResume);  // ПК проснулся и восстановил работу (Resume).
+			VERIFY_AND_CALL(m_Callbacks.OnResume);  // ПК проснулся и восстановил работу (Resume).
 		return { true, TRUE };
 
 	case WM_COMPACTING:
-		// [Windows] ОС просит запущенные приложения попытаться освободить оперативную память.
-		// Транслируем в OnLowMemory, чтобы очистить кэши текстур.
-		VERIFY_AND_CALL(OnLowMemory);
+		/**
+		 * @brief [Windows] ОС просит запущенные приложения попытаться освободить оперативную память.
+		 * Транслируем в OnLowMemory, чтобы очистить кэши текстур.
+		 */
+		VERIFY_AND_CALL(m_Callbacks.OnLowMemory);
 		return { false, 0 };
 	}
 

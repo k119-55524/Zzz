@@ -22,11 +22,104 @@ void View::Initialize()
 	if (!inputRes)
 		THROW_RUNTIME("Failed to initialize input system: {}.", inputRes.error());
 
+	WindowCallbacks callbacks;
+	callbacks.OnClose            = [this]()                                 { HandleWindowClose(); };
+	callbacks.OnResize           = [this](Size2D<>& size, eWinResize type)  { OnWindowResize(size, type); };
+	callbacks.OnResizeStart      = [this]()                                 { OnWindowResizeStart(); };
+	callbacks.OnSizing           = [this]()                                 { OnWindowSizing(); };
+	callbacks.OnResizeEnd        = [this]()                                 { OnWindowResizeEnd(); };
+	callbacks.OnDpiChanged       = [this]()                                 { OnWindowDpiChanged(); };
+	callbacks.OnFocus            = [this](bool focus)                       { OnWindowFocus(focus); };
+	callbacks.OnActivate         = [this](bool active)                      { OnWindowActivate(active); };
+	callbacks.OnSurfaceCreated   = [this](void* handle)                     { OnWindowSurfaceCreated(handle); };
+	callbacks.OnSurfaceDestroyed = [this]()                                 { OnWindowSurfaceDestroyed(); };
+	callbacks.OnSuspend          = [this]()                                 { OnWindowSuspend(); };
+	callbacks.OnResume           = [this]()                                 { OnWindowResume(); };
+	callbacks.OnLowMemory        = [this]()                                 { OnWindowLowMemory(); };
+	callbacks.OnSafeAreaChanged  = [this](int t, int b, int l, int r)       { OnWindowSafeAreaChanged(t, b, l, r); };
+
 	m_Window = zzz::safe_make_shared<Window>(
 		m_Platform,
 		m_Input,
-		std::bind(&View::HandleWindowClose, this));
+		std::move(callbacks));
+
 	auto res = m_Window->Initialize(m_Platform->GetAppName());
 	if (!res)
 		THROW_RUNTIME("Failed to initialize window: {}.", res.error());
 }
+
+#pragma region Window Events
+void View::HandleWindowClose()
+{
+	DOut("Window Event: OnClose");
+	OnWindowClose(*this);
+}
+
+void View::OnWindowResize(Size2D<>& size, eWinResize type)
+{
+	DOut("Window Event: OnResize ({}x{}) Type: {}", size.width, size.height, static_cast<int>(type));
+}
+
+void View::OnWindowResizeStart()
+{
+	DOut("Window Event: OnResizeStart");
+}
+
+void View::OnWindowSizing()
+{
+	DOut("Window Event: OnSizing");
+}
+
+void View::OnWindowResizeEnd()
+{
+	DOut("Window Event: OnResizeEnd");
+}
+
+void View::OnWindowDpiChanged()
+{
+	DOut("Window Event: OnDpiChanged");
+}
+
+void View::OnWindowFocus(bool focus)
+{
+	DOut("Window Event: OnFocus ({})", focus ? "true" : "false");
+}
+
+void View::OnWindowActivate(bool active)
+{
+	DOut("Window Event: OnActivate ({})", active ? "true" : "false");
+}
+
+#pragma endregion
+
+#pragma region App Lifecycle & GPU Surface
+void View::OnWindowSurfaceCreated(void* handle)
+{
+	DOut("Window Event: OnSurfaceCreated (handle: {})", handle);
+}
+
+void View::OnWindowSurfaceDestroyed()
+{
+	DOut("Window Event: OnSurfaceDestroyed");
+}
+
+void View::OnWindowSuspend()
+{
+	DOut("Window Event: OnSuspend");
+}
+
+void View::OnWindowResume()
+{
+	DOut("Window Event: OnResume");
+}
+
+void View::OnWindowLowMemory()
+{
+	DOut("Window Event: OnLowMemory");
+}
+
+void View::OnWindowSafeAreaChanged(int top, int bottom, int left, int right)
+{
+	DOut("Window Event: OnSafeAreaChanged (t:{}, b:{}, l:{}, r:{})", top, bottom, left, right);
+}
+#pragma endregion

@@ -40,7 +40,9 @@ namespace
 
 	void OnToplevelClose(void* data, xdg_toplevel*)
 	{
-		static_cast<WinLinux*>(data)->onCloseRequested();
+		// [Linux/Wayland] Композитор запрашивает закрытие окна (например, пользователь нажал крестик).
+		// Передаем сигнал движку для корректного завершения.
+		VERIFY_AND_CALL(static_cast<WinLinux*>(data)->m_Callbacks.OnClose);
 	}
 
 	const xdg_toplevel_listener g_ToplevelListener =
@@ -50,8 +52,8 @@ namespace
 	};
 }
 
-WinLinux::WinLinux(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input) :
-	WindowBase(platform, input),
+WinLinux::WinLinux(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks) :
+	WindowBase(platform, input, std::move(callbacks)),
 	m_Surface{nullptr},
 	m_Buffer{nullptr},
 	m_XdgSurface{nullptr},
