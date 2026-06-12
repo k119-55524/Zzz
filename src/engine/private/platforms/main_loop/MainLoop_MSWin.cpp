@@ -14,7 +14,7 @@ void MainLoop_MSWin::Run()
 
 	while (isRunning)
 	{
-		if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+		while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
 		{
 			if (msg.message == WM_QUIT)
 			{
@@ -25,7 +25,8 @@ void MainLoop_MSWin::Run()
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-		else
+		
+		if (isRunning)
 			OnUpdate();
 	}
 }

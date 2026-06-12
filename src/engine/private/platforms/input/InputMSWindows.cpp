@@ -15,6 +15,34 @@ bool InputMSWindows::ProcessMessage(const NativeMsg& msg)
 	{
 	case WM_NCCREATE:
 		return InitRawInput(msg.hWnd);
+
+	case WM_MOUSEMOVE:
+		if (!IsMouseInside)
+		{
+			IsMouseInside = true;
+			OnMouseEnter(true);
+
+			TRACKMOUSEEVENT tme = {};
+			tme.cbSize = sizeof(tme);
+			tme.dwFlags = TME_LEAVE;
+			tme.hwndTrack = msg.hWnd;
+			TrackMouseEvent(&tme);
+		}
+
+		break;
+
+	case WM_MOUSELEAVE:
+	{
+		IsMouseInside = false;
+		OnMouseEnter(false);
+
+		break;
+	}
+
+	case WM_INPUT:
+		OnRawInput(reinterpret_cast<HRAWINPUT>(msg.lParam));
+
+		break;
 	}
 
 	return false;
@@ -101,33 +129,26 @@ void InputMSWindows::HandleRawMouse(const RAWMOUSE& mouse)
 	// Обрабатываем сдвиг курсора(дельту)
 	if (mouse.usFlags == MOUSE_MOVE_RELATIVE)
 	{
-		if (mouse.lLastX != 0 && mouse.lLastY != 0)
+		if (mouse.lLastX != 0 || mouse.lLastY != 0)
 			OnMouseDelta(mouse.lLastX, mouse.lLastY);
 	}
 
 	// Обрабатываем нажатие/отпускание кнопок мыши
 	{
-		MouseButtonMask pressed = MouseButtonMask::None;
-		MouseButtonMask released = MouseButtonMask::None;
+		if (mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_DOWN) UpdateMouseButtonState(MouseButton::Left, true);
+		if (mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_UP) UpdateMouseButtonState(MouseButton::Left, false);
 
-		// Проверяем каждую кнопку и формируем маски
-		if (mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_DOWN) pressed |= MouseButtonMask::Left;
-		if (mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_UP) released |= MouseButtonMask::Left;
+		if (mouse.usButtonFlags & RI_MOUSE_RIGHT_BUTTON_DOWN) UpdateMouseButtonState(MouseButton::Right, true);
+		if (mouse.usButtonFlags & RI_MOUSE_RIGHT_BUTTON_UP) UpdateMouseButtonState(MouseButton::Right, false);
 
-		if (mouse.usButtonFlags & RI_MOUSE_RIGHT_BUTTON_DOWN) pressed |= MouseButtonMask::Right;
-		if (mouse.usButtonFlags & RI_MOUSE_RIGHT_BUTTON_UP) released |= MouseButtonMask::Right;
+		if (mouse.usButtonFlags & RI_MOUSE_MIDDLE_BUTTON_DOWN) UpdateMouseButtonState(MouseButton::Middle, true);
+		if (mouse.usButtonFlags & RI_MOUSE_MIDDLE_BUTTON_UP) UpdateMouseButtonState(MouseButton::Middle, false);
 
-		if (mouse.usButtonFlags & RI_MOUSE_MIDDLE_BUTTON_DOWN) pressed |= MouseButtonMask::Middle;
-		if (mouse.usButtonFlags & RI_MOUSE_MIDDLE_BUTTON_UP) released |= MouseButtonMask::Middle;
+		if (mouse.usButtonFlags & RI_MOUSE_BUTTON_4_DOWN) UpdateMouseButtonState(MouseButton::Button4, true);
+		if (mouse.usButtonFlags & RI_MOUSE_BUTTON_4_UP) UpdateMouseButtonState(MouseButton::Button4, false);
 
-		if (mouse.usButtonFlags & RI_MOUSE_BUTTON_4_DOWN) pressed |= MouseButtonMask::Button4;
-		if (mouse.usButtonFlags & RI_MOUSE_BUTTON_4_UP) released |= MouseButtonMask::Button4;
-
-		if (mouse.usButtonFlags & RI_MOUSE_BUTTON_5_DOWN) pressed |= MouseButtonMask::Button5;
-		if (mouse.usButtonFlags & RI_MOUSE_BUTTON_5_UP) released |= MouseButtonMask::Button5;
-
-		if (pressed != MouseButtonMask::None || released != MouseButtonMask::None)
-			OnMouseButtonsChanged(pressed, released);
+		if (mouse.usButtonFlags & RI_MOUSE_BUTTON_5_DOWN) UpdateMouseButtonState(MouseButton::Button5, true);
+		if (mouse.usButtonFlags & RI_MOUSE_BUTTON_5_UP) UpdateMouseButtonState(MouseButton::Button5, false);
 	}
 
 	// Колесо вертикальное
@@ -159,7 +180,7 @@ void InputMSWindows::HandleRawKeyboard(const RAWKEYBOARD& kb)
 		return;
 
 	bool e0 = (kb.Flags & RI_KEY_E0) != 0;
-	KeyCode key = TranslateMSWinKey(vk, e0);
+	KeyCode key = TranslateMSWinKey(vk, e0, kb.MakeCode);
 	KeyState state = pressed ? KeyState::Down : KeyState::Up;
 
 	OnKeyStateChanged(key, state);

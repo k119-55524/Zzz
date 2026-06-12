@@ -61,7 +61,7 @@ target_sources(engine_lib PRIVATE
     # Wayland (Linux)
     "private/core/specific/linux_wayland/xdg-shell-client-protocol.h"
     "private/core/specific/linux_wayland/xdg-shell-protocol.cpp"
-  "private/core/utils/converters.h" "private/platforms/input/InputHelpers.h")
+  "private/core/utils/converters.h" "private/platforms/input/InputHelpers.h" "private/platforms/input/InputBase.cpp")
 
 if(WIN32)
     target_sources(engine_lib PRIVATE 

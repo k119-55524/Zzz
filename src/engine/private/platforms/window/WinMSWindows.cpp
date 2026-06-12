@@ -38,14 +38,14 @@ LRESULT CALLBACK WinMSWindows::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 
 		if (ctx)
 		{
-			static bool IsHandleInput = true;
+			bool isHandleInput = true;
 			if (uMsg == WM_CLOSE)
-				IsHandleInput = false;
+				isHandleInput = false;
 
 			auto procRes = ctx->window->MsgProc(hWnd, uMsg, wParam, lParam);
 			if (procRes.isContinue)
 			{
-				if (IsHandleInput && ctx->input->ProcessMessage({ hWnd, uMsg, wParam, lParam }))
+				if (isHandleInput && ctx->input->ProcessMessage({ hWnd, uMsg, wParam, lParam }))
 					return 0;
 
 				return DefWindowProc(hWnd, uMsg, wParam, lParam);
@@ -124,7 +124,7 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		 * Транслируем в OnClose, чтобы движок начал плавное завершение работы.
 		 */
 		VERIFY_AND_CALL(m_Callbacks.OnClose);
-		return { true, 0 };
+		return { false, 0 };
 
 	case WM_DESTROY:
 		/**

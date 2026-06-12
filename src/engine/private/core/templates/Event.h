@@ -48,6 +48,9 @@ namespace zzz::engine
 			std::vector<std::shared_ptr<CallbackType>> callbacksToRun;
 			{
 				std::lock_guard<std::mutex> lock(this->listenersMutex);
+				if (this->listeners.empty())
+					return;
+				
 				auto it = this->listeners.begin();
 				while (it != this->listeners.end())
 				{
@@ -89,6 +92,9 @@ namespace zzz::engine
 			std::vector<std::shared_ptr<CallbackType>> callbacksToRun;
 			{
 				std::lock_guard<std::mutex> lock(this->listenersMutex);
+				if (this->listeners.empty())
+					return;
+
 				auto it = this->listeners.begin();
 				while (it != this->listeners.end())
 				{
