@@ -5,8 +5,8 @@
         "Z_ADD_LOGGER",
         "Z_IDE_OUT_LOGS"
       ],
-      "description": "Включить код логера в сборку",
-      "name": "INCLUDE_LOGGER"
+      "description": "Включить проверки переменных и код логера в сборку",
+      "name": "DEVELOPMENT_BUILD"
     },
     {
       "activeDefines": [],
@@ -14,7 +14,7 @@
       "name": "NO LOGGER"
     }
   ],
-  "currentConfig": "INCLUDE_LOGGER",
+  "currentConfig": "DEVELOPMENT_BUILD",
   "defines": [
     {
       "description": "Включить код логера в сборку",
@@ -25,6 +25,16 @@
       "description": "Выводить логи в консоле IDE(при использовании логера)",
       "isArchived": false,
       "name": "Z_IDE_OUT_LOGS"
+    },
+    {
+      "description": "Релизная сборка с отладояными фичами(логи, проверки)",
+      "isArchived": false,
+      "name": "Z_DEVELOPMENT_BUILD"
+    },
+    {
+      "description": "Принудительное использование Vulkan вместо DirectX",
+      "isArchived": false,
+      "name": "Z_FORCE_VULKAN"
     }
   ]
 }

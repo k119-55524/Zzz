@@ -12,7 +12,7 @@ namespace zzz::logger
 		template<typename... Args>
 		static void LogMessage(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
 		{
-#if Z_ADD_LOGGER
+#if defined(Z_ADD_LOGGER) || defined(Z_DEVELOPMENT_BUILD)
 			auto formatted = std::format(fmt, std::forward<Args>(args)...);
 			auto output = MakeLogMessage(loc, eLogMessageType::Message, formatted);
 			DebugOutputIDE(output);
@@ -22,7 +22,7 @@ namespace zzz::logger
 		template<typename... Args>
 		static void LogWarning(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
 		{
-#if Z_ADD_LOGGER
+#if defined(Z_ADD_LOGGER) || defined(Z_DEVELOPMENT_BUILD)
 			auto formatted = std::format(fmt, std::forward<Args>(args)...);
 			auto output = MakeLogMessage(loc, eLogMessageType::Warning, formatted);
 			DebugOutputIDE(output);
@@ -32,7 +32,7 @@ namespace zzz::logger
 		template<typename... Args>
 		static void LogError(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
 		{
-#if Z_ADD_LOGGER
+#if defined(Z_ADD_LOGGER) || defined(Z_DEVELOPMENT_BUILD)
 			auto formatted = std::format(fmt, std::forward<Args>(args)...);
 			auto output = MakeLogMessageError(loc, eLogMessageType::Error, formatted);
 			DebugOutputIDE(output);
@@ -42,7 +42,7 @@ namespace zzz::logger
 		template<typename... Args>
 		static void LogException(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
 		{
-#if Z_ADD_LOGGER
+#if defined(Z_ADD_LOGGER) || defined(Z_DEVELOPMENT_BUILD)
 			auto formatted = std::format(fmt, std::forward<Args>(args)...);
 			auto output = MakeLogMessageError(loc, eLogMessageType::Exception, formatted);
 			DebugOutputIDE(output);

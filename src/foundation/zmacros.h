@@ -11,6 +11,18 @@
 
 #define THROW_RUNTIME(...) ::zzz::throw_runtime_error(std::format(__VA_ARGS__), std::source_location::current())
 
+#if defined(Z_DEBUG_BUILD) || defined (Z_DEVELOPMENT_BUILD)
+#define VERIFY_AND_CALL(func, ...) \
+	do \
+	{ \
+		if (!(func)) \
+			THROW_RUNTIME("Functor '{}' is not assigned.", #func); \
+		(func)(__VA_ARGS__); \
+	} while (false)
+#else
+#define VERIFY_AND_CALL(func, ...) (func)(__VA_ARGS__)
+#endif
+
 /// @brief Макрос для возврата std::unexpected с логированием ошибки.
 #define UNEXPECTED(fmt, ...) \
     ([&]() { \

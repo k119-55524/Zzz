@@ -43,7 +43,7 @@ target_sources(engine_lib PRIVATE
     "private/core/templates/Event.h"
 
     # Inputs
-    "private/platforms/input/Input.h" "private/platforms/input/Input_Common.h"
+    "private/platforms/input/Input.h" "private/platforms/input/InputBase.h"
 
     # Platforms
     "private/platforms/Platform.h"

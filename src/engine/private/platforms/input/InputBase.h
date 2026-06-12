@@ -2,6 +2,7 @@
 
 #include <string>
 #include <expected>
+#include <functional>
 
 #if defined(Z_WINDOWS)
 #include "../../../headers/MSWin.h"
@@ -49,7 +50,21 @@ namespace zzz::engine
 	};
 	using NativeMsg = iOSMsg;
 #else
-#error >>>>> Unsupported platform
+#error ">>>>> Unsupported platform"
 #endif
 #pragma endregion
-	}
+
+	class InputBase
+	{
+	public:
+		// События
+		std::function<void(int)> OnKeyDown;
+		std::function<void(int)> OnKeyUp;
+		std::function<void(int, int)> OnMouseMove;
+
+	protected:
+		InputBase() = default;
+		~InputBase() = default;
+
+	};
+}

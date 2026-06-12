@@ -1,5 +1,5 @@
 #pragma once
-#include "Input_Common.h"
+#include "InputBase.h"
 
 #if defined(Z_WINDOWS)
 #include "InputMSWindows.h"

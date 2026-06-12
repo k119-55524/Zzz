@@ -1,11 +1,11 @@
 #pragma once
 
 
-#include "Input_Common.h"
+#include "InputBase.h"
 
 namespace zzz::engine
 {
-	class InputAndroid final
+	class InputAndroid final : public InputBase
 	{
 	public:
 		InputAndroid() = default;

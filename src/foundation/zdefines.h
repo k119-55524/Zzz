@@ -2,8 +2,9 @@
 
 /* -------------------------------------------------------------
 
-	Макросы, задаваемые вручную (свойства проекта):
-	- ZVULKAN  - принудительно использовать Vulkan на Windows.
+	Макросы, задаваемые в current.cmake утилитами BuildConfigurator и build_configurator_switch:
+	- Z_FORCE_VULKAN  - принудительно использовать Vulkan на Windows.
+	- Z_IDE_OUT_LOGS - вывод логов в IDE в случае вывода логов
 
 	Макросы платформы (определяются автоматически):
 	- Z_WINDOWS - Windows x64
@@ -21,6 +22,11 @@
 	- Z_D3D12  - Direct3D 12 (Z_WINDOWS)
 	- Z_VULKAN - Vulkan      (Z_ANDROID, Z_LINUX)
 	- Z_METAL  - Metal       (Z_MACOS, Z_IOS)
+
+	Типы сборки (определяются автоматически или передаются из CMake):
+	- Z_DEBUG_BUILD       - Debug сборка (по умолчанию, если нет NDEBUG)
+	- Z_DEVELOPMENT_BUILD - Development сборка (оптимизированная с дебаг-фичами, задается извне)
+	- Z_RELEASE_BUILD     - Release сборка (если определен NDEBUG)
 
    ------------------------------------------------------------- */
 
@@ -77,8 +83,8 @@
 #define Z_APPLE
 #endif
 
-// Принудительное переопределение API через ZVULKAN
-#if defined(ZVULKAN) && defined(Z_WINDOWS)
+// Принудительное переопределение API через Z_FORCE_VULKAN
+#if defined(Z_FORCE_VULKAN) && Z_FORCE_VULKAN && defined(Z_WINDOWS)
 #undef Z_D3D12
 #undef Z_VULKAN
 #undef Z_METAL
@@ -101,6 +107,16 @@
 #error >>>>> No suitable graphics API defined for this platform.
 #endif
 #endif // render api selection
+
+// Автоматическое определение типа сборки (Debug / Release), 
+// если снаружи (через CMake) не включен Z_DEVELOPMENT_BUILD.
+#if !defined(Z_DEBUG_BUILD) && !defined(Z_RELEASE_BUILD) && (!defined(Z_DEVELOPMENT_BUILD) || Z_DEVELOPMENT_BUILD == 0)
+    #if defined(_DEBUG) || defined(DEBUG) || !defined(NDEBUG)
+        #define Z_DEBUG_BUILD 1
+    #else
+        #define Z_RELEASE_BUILD 1
+    #endif
+#endif
 
 // Вывод активных дефайнов
 #pragma message(">>>>> ------- [ zdefines.h : active defines ] -------")
@@ -136,5 +152,14 @@
 #endif
 #ifdef Z_METAL
 #pragma message(">>>>> Graphics : Z_METAL")
+#endif
+#if defined(Z_DEBUG_BUILD) && Z_DEBUG_BUILD
+#pragma message(">>>>> Build    : Z_DEBUG_BUILD")
+#endif
+#if defined(Z_DEVELOPMENT_BUILD) && Z_DEVELOPMENT_BUILD
+#pragma message(">>>>> Build    : Z_DEVELOPMENT_BUILD")
+#endif
+#if defined(Z_RELEASE_BUILD) && Z_RELEASE_BUILD
+#pragma message(">>>>> Build    : Z_RELEASE_BUILD")
 #endif
 #pragma message(">>>>> -----------------------------------------------")

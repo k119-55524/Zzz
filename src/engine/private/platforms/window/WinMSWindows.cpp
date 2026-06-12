@@ -7,7 +7,8 @@ using namespace zzz::engine;
 
 WinMSWindows::WinMSWindows(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input, std::function<void()> onWindowClose) :
 	WindowBase(platform, input, onWindowClose),
-	m_hWnd(nullptr)
+	m_hWnd{ nullptr },
+	IsMinimized{ true }
 {
 }
 
@@ -61,13 +62,29 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		return { true, TRUE };
 
 	case WM_CLOSE:
-		OnWindowClose();
+		VERIFY_AND_CALL(OnClose);
 		DestroyWindow(hWnd);
 		return { false, DefWindowProc(hWnd, uMsg, wParam, lParam) };
 
 	case WM_SIZE:
 		m_WinSize.SetFrom(static_cast<zU32>(LOWORD(lParam)), static_cast<zU32>(HIWORD(lParam)));
-		DOut("WM_SIZE {}: {}.", static_cast<void*>(m_hWnd), m_WinSize.ToString());
+		if (wParam == SIZE_MINIMIZED)
+		{
+			VERIFY_AND_CALL(OnResize, m_WinSize, eWinResize::Hide);
+			IsMinimized = true;
+		}
+		else
+		{
+			if ((wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED) && IsMinimized)
+			{
+				VERIFY_AND_CALL(OnResize, m_WinSize, eWinResize::Show);
+				IsMinimized = false;
+			}
+			else
+			{
+				VERIFY_AND_CALL(OnResize, m_WinSize, eWinResize::Resize);
+			}
+		}
 		return { false, 0 };
 
 	// Обрабатываем изменение размера окна в процессе изменения его пользователем.

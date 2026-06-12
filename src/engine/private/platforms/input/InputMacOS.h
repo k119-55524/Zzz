@@ -1,11 +1,11 @@
 #pragma once
 
 
-#include "Input_Common.h"
+#include "InputBase.h"
 
 namespace zzz::engine
 {
-	class InputMacOS final
+	class InputMacOS final : public InputBase
 	{
 	public:
 		InputMacOS() = default;
