@@ -83,6 +83,10 @@ void View::OnWindowDpiChanged()
 void View::OnWindowFocus(bool focus)
 {
 	DOut("Window Event: OnFocus ({})", focus ? "true" : "false");
+	if (!focus)
+	{
+		m_Input->ResetState();
+	}
 }
 
 void View::OnWindowActivate(bool active)

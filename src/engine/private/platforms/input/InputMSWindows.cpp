@@ -181,7 +181,5 @@ void InputMSWindows::HandleRawKeyboard(const RAWKEYBOARD& kb)
 
 	bool e0 = (kb.Flags & RI_KEY_E0) != 0;
 	KeyCode key = TranslateMSWinKey(vk, e0, kb.MakeCode);
-	KeyState state = pressed ? KeyState::Down : KeyState::Up;
-
-	OnKeyStateChanged(key, state);
+	UpdateKeyState(key, pressed);
 }
