@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <format>
 #include <string>
@@ -8,8 +8,8 @@
 
 #include <zdefines.h>
 
-#if defined(Z_WINDOWS)
+#if Z_WINDOWS
 #include <Windows.h>
-#elif defined(Z_ANDROID)
+#elif Z_ANDROID
 #include <android/log.h>
 #endif

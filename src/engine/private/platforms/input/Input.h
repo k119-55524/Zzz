@@ -1,19 +1,19 @@
-#pragma once
+﻿#pragma once
 #include "InputBase.h"
 
-#if defined(Z_WINDOWS)
+#if Z_WINDOWS
 #include "InputMSWindows.h"
 namespace zzz::engine { using Input = InputMSWindows; }
-#elif defined(Z_LINUX)
+#elif Z_LINUX
 #include "InputLinux.h"
 namespace zzz::engine { using Input = InputLinux; }
-#elif defined(Z_ANDROID)
+#elif Z_ANDROID
 #include "InputAndroid.h"
 namespace zzz::engine { using Input = InputAndroid; }
-#elif defined(Z_MACOS)
+#elif Z_MACOS
 #include "InputMacOS.h"
 namespace zzz::engine { using Input = InputMacOS; }
-#elif defined(Z_IOS)
+#elif Z_IOS
 #include "InputiOS.h"
 namespace zzz::engine { using Input = InputiOS; }
 #else

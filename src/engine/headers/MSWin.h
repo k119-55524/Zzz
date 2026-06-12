@@ -1,6 +1,6 @@
-#pragma once
+﻿#pragma once
 
-#if defined(Z_WINDOWS)
+#if Z_WINDOWS
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN 
 
@@ -11,4 +11,4 @@
 #include <wrl/client.h>
 #include <hidsdi.h>
 #include <hidusage.h>
-#endif // defined(Z_WINDOWS)
+#endif // Z_WINDOWS

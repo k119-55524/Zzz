@@ -18,6 +18,15 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
+    },
+    {
+      "name": "development",
+      "displayName": "Development",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${hostSystemName}/development",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Development"
+      }
     }
   ]
 }

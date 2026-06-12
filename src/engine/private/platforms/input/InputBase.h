@@ -1,12 +1,12 @@
-#pragma once
+﻿#pragma once
 
 #include <string>
 #include <expected>
 #include <functional>
 
-#if defined(Z_WINDOWS)
+#if Z_WINDOWS
 #include "../../../headers/MSWin.h"
-#elif defined(Z_ANDROID)
+#elif Z_ANDROID
 #include <android/input.h>
 #endif
 
@@ -15,7 +15,7 @@ namespace zzz::engine
 	class IWindow;
 
 #pragma region Type Aliases
-#if defined(Z_WINDOWS)
+#if Z_WINDOWS
 	struct WinMsg
 	{
 		HWND	hWnd;
@@ -24,26 +24,26 @@ namespace zzz::engine
 		LPARAM	lParam;
 	};
 	using NativeMsg = WinMsg;
-#elif defined(Z_ANDROID)
+#elif Z_ANDROID
 	struct AndroidMsg
 	{
 		void* motionEvent;
 		void* keyEvent;
 	};
 	using NativeMsg = AndroidMsg;
-#elif defined(Z_LINUX)
+#elif Z_LINUX
 	struct LinuxMsg
 	{
 		void* msg;
 	};
 	using NativeMsg = LinuxMsg;
-#elif defined(Z_MACOS)
+#elif Z_MACOS
 	struct MacOSMsg
 	{
 		void* msg;
 	};
 	using NativeMsg = MacOSMsg;
-#elif defined(Z_IOS)
+#elif Z_IOS
 	struct iOSMsg
 	{
 		void* msg;
@@ -57,7 +57,7 @@ namespace zzz::engine
 	class InputBase
 	{
 	public:
-		// События
+		// РЎРѕР±С‹С‚РёСЏ
 		std::function<void(int)> OnKeyDown;
 		std::function<void(int)> OnKeyUp;
 		std::function<void(int, int)> OnMouseMove;

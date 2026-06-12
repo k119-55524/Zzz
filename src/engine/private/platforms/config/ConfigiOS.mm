@@ -1,4 +1,4 @@
-#if defined(Z_IOS)
+﻿#if Z_IOS
 
 #include "ConfigiOS.h"
 
@@ -18,4 +18,4 @@ ConfigiOS::ConfigiOS()
 	return std::expected<void, std::string>{};
 }
 
-#endif // defined(Z_IOS)
+#endif // Z_IOS

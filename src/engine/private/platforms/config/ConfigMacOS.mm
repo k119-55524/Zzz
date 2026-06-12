@@ -1,4 +1,4 @@
-#if defined(Z_MACOS)
+﻿#if Z_MACOS
 
 #include "ConfigMacOS.h"
 
@@ -18,4 +18,4 @@ ConfigMacOS::ConfigMacOS()
 	return std::expected<void, std::string>{};
 }
 
-#endif // defined(Z_MACOS)
+#endif // Z_MACOS

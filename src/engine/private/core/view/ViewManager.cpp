@@ -1,4 +1,4 @@
-
+﻿
 #include "View.h"
 #include "ViewManager.h"
 #include "../../platforms/Platform.h"
@@ -23,7 +23,7 @@ ViewManager::~ViewManager()
 
 void ViewManager::CreateView()
 {
-#if defined(Z_MOBILE)
+#if Z_MOBILE
 	if (m_Views.size() >= 1)
 		THROW_RUNTIME("Mobile platforms support only one native window per application.");
 #endif

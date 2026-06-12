@@ -1,8 +1,8 @@
-#pragma once
+﻿#pragma once
 
-#if defined(Z_ANDROID)
+#if Z_ANDROID
 struct android_app;
-#elif defined(Z_LINUX)
+#elif Z_LINUX
 #include <stdint.h>
 struct wl_display;
 struct wl_registry;
@@ -14,9 +14,9 @@ struct wl_output;
 
 namespace zzz::engine
 {
-#if defined(Z_ANDROID)
+#if Z_ANDROID
 	using NativeAppData = android_app;
-#elif defined(Z_LINUX)
+#elif Z_LINUX
 	struct NativeAppData
 	{
 		wl_display* display = nullptr;

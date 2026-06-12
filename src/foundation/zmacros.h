@@ -11,7 +11,7 @@
 
 #define THROW_RUNTIME(...) ::zzz::throw_runtime_error(std::format(__VA_ARGS__), std::source_location::current())
 
-#if defined(Z_DEBUG_BUILD) || defined (Z_DEVELOPMENT_BUILD)
+#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
 #define VERIFY_AND_CALL(func, ...) \
 	do \
 	{ \

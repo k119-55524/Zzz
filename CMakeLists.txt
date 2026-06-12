@@ -18,6 +18,11 @@ endif()
 
 include(build_configs/current.cmake OPTIONAL)
 
+string(TOUPPER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_UPPER)
+if(CMAKE_BUILD_TYPE_UPPER STREQUAL "DEVELOPMENT")
+    add_compile_definitions(Z_DEVELOPMENT_BUILD=1)
+endif()
+
 add_subdirectory(src/logger/logger_lib)
 add_subdirectory(src/engine)
 

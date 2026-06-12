@@ -1,4 +1,4 @@
-
+﻿
 #include "engine.h"
 #include "headers/enums.h"
 #include "private/core/view/ViewManager.h"
@@ -99,7 +99,7 @@ std::expected<void, std::string> Engine::Initialize()
 		err = "Unknown exception occurred";
 	}
 
-#if !defined(Z_APPLE)
+#if !Z_APPLE
 	Shutdown();
 #endif
 

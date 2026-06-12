@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "header.h"
 
@@ -12,7 +12,7 @@ namespace zzz::logger
 		template<typename... Args>
 		static void LogMessage(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
 		{
-#if defined(Z_ADD_LOGGER) || defined(Z_DEVELOPMENT_BUILD)
+#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 			auto formatted = std::format(fmt, std::forward<Args>(args)...);
 			auto output = MakeLogMessage(loc, eLogMessageType::Message, formatted);
 			DebugOutputIDE(output);
@@ -22,7 +22,7 @@ namespace zzz::logger
 		template<typename... Args>
 		static void LogWarning(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
 		{
-#if defined(Z_ADD_LOGGER) || defined(Z_DEVELOPMENT_BUILD)
+#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 			auto formatted = std::format(fmt, std::forward<Args>(args)...);
 			auto output = MakeLogMessage(loc, eLogMessageType::Warning, formatted);
 			DebugOutputIDE(output);
@@ -32,7 +32,7 @@ namespace zzz::logger
 		template<typename... Args>
 		static void LogError(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
 		{
-#if defined(Z_ADD_LOGGER) || defined(Z_DEVELOPMENT_BUILD)
+#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 			auto formatted = std::format(fmt, std::forward<Args>(args)...);
 			auto output = MakeLogMessageError(loc, eLogMessageType::Error, formatted);
 			DebugOutputIDE(output);
@@ -42,7 +42,7 @@ namespace zzz::logger
 		template<typename... Args>
 		static void LogException(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
 		{
-#if defined(Z_ADD_LOGGER) || defined(Z_DEVELOPMENT_BUILD)
+#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 			auto formatted = std::format(fmt, std::forward<Args>(args)...);
 			auto output = MakeLogMessageError(loc, eLogMessageType::Exception, formatted);
 			DebugOutputIDE(output);
@@ -78,9 +78,9 @@ namespace zzz::logger
 		{
 			auto end = "\n";
 
-			// Для Linux-подобных платформ (включая Android) символ '\n' не требуется,
-			// поскольку средства просмотра логов (IDE, Logcat и т.п.) сами разделяют записи.
-#if defined(Z_LINUX) || defined(Z_ANDROID)
+			// Р”Р»СЏ Linux-РїРѕРґРѕР±РЅС‹С… РїР»Р°С‚С„РѕСЂРј (РІРєР»СЋС‡Р°СЏ Android) СЃРёРјРІРѕР» '\n' РЅРµ С‚СЂРµР±СѓРµС‚СЃСЏ,
+			// РїРѕСЃРєРѕР»СЊРєСѓ СЃСЂРµРґСЃС‚РІР° РїСЂРѕСЃРјРѕС‚СЂР° Р»РѕРіРѕРІ (IDE, Logcat Рё С‚.Рї.) СЃР°РјРё СЂР°Р·РґРµР»СЏСЋС‚ Р·Р°РїРёСЃРё.
+#if Z_LINUX || Z_ANDROID
 			end = "";
 #endif
 			return end;

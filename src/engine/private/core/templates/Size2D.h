@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <format>
 #include <string>
@@ -10,14 +10,14 @@ namespace zzz::engine
 {
 	/**
 	* @class size2D
-	* @brief Шаблонный класс для хранения и управления двумерными размерами.
+	* @brief РЁР°Р±Р»РѕРЅРЅС‹Р№ РєР»Р°СЃСЃ РґР»СЏ С…СЂР°РЅРµРЅРёСЏ Рё СѓРїСЂР°РІР»РµРЅРёСЏ РґРІСѓРјРµСЂРЅС‹РјРё СЂР°Р·РјРµСЂР°РјРё.
 	*
-	* Этот класс предназначен для работы с шириной и высотой, поддерживая различные числовые типы
-	* (например, int, unsigned long, float). Наследуется от zSerialize для поддержки
-	* сериализации и десериализации.
+	* Р­С‚РѕС‚ РєР»Р°СЃСЃ РїСЂРµРґРЅР°Р·РЅР°С‡РµРЅ РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ С€РёСЂРёРЅРѕР№ Рё РІС‹СЃРѕС‚РѕР№, РїРѕРґРґРµСЂР¶РёРІР°СЏ СЂР°Р·Р»РёС‡РЅС‹Рµ С‡РёСЃР»РѕРІС‹Рµ С‚РёРїС‹
+	* (РЅР°РїСЂРёРјРµСЂ, int, unsigned long, float). РќР°СЃР»РµРґСѓРµС‚СЃСЏ РѕС‚ zSerialize РґР»СЏ РїРѕРґРґРµСЂР¶РєРё
+	* СЃРµСЂРёР°Р»РёР·Р°С†РёРё Рё РґРµСЃРµСЂРёР°Р»РёР·Р°С†РёРё.
 	*
-	* @tparam T Тип данных для хранения ширины и высоты (должен быть арифметическим).
-	*			Значение по умолчанию: zU64.
+	* @tparam T РўРёРї РґР°РЅРЅС‹С… РґР»СЏ С…СЂР°РЅРµРЅРёСЏ С€РёСЂРёРЅС‹ Рё РІС‹СЃРѕС‚С‹ (РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ Р°СЂРёС„РјРµС‚РёС‡РµСЃРєРёРј).
+	*			Р—РЅР°С‡РµРЅРёРµ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ: zU64.
 	*/
 	template<typename T = zU32, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
 	class Size2D final : public ISerializable
@@ -51,10 +51,10 @@ namespace zzz::engine
 
 		[[nodiscard]] inline std::string ToString() const noexcept { return std::format("Width: {}, Height: {}", width, height); }
 
-		T width;  // Ширина объекта.
-		T height; // Высота объекта.
+		T width;  // РЁРёСЂРёРЅР° РѕР±СЉРµРєС‚Р°.
+		T height; // Р’С‹СЃРѕС‚Р° РѕР±СЉРµРєС‚Р°.
 
-//#if defined(Z_VULKAN)
+//#if Z_VULKAN
 //		Size2D(const VkExtent2D& extent)
 //			: width(static_cast<T>(extent.width))
 //			, height(static_cast<T>(extent.height))

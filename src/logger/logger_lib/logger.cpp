@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 
 #include "logger.h"
 
@@ -40,7 +40,7 @@ namespace zzz::logger
 #if defined(_MSC_VER)
 		if (IsDebuggerPresent())
 			OutputDebugStringA(output.c_str());
-#elif defined(Z_ANDROID)
+#elif Z_ANDROID
 		__android_log_write(ANDROID_LOG_DEBUG, "Zzz", output.c_str());
 #else
 		std::cerr << output << std::endl;

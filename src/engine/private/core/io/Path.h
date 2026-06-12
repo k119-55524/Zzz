@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <string>
 #include <filesystem>
@@ -25,7 +25,7 @@ namespace zzz::io
 
 		[[nodiscard]] std::expected<std::filesystem::path, std::string> ResolveUserDataDirectory();
 
-#if defined(Z_MACOS) || defined(Z_IOS)
+#if Z_MACOS || Z_IOS
 		[[nodiscard]] std::expected<std::filesystem::path, std::string> GetAppleUserDataDirectory();
 #endif
 	};

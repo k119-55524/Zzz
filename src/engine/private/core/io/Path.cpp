@@ -1,4 +1,4 @@
-
+﻿
 #include "header.h"
 #include "Path.h"
 
@@ -17,7 +17,7 @@ namespace zzz::io
 		m_UserDataDirectory = *resPath;
 	}
 
-	/// @brief Проверяет корректность имени каталога для всех поддерживаемых платформ.
+	/// @brief РџСЂРѕРІРµСЂСЏРµС‚ РєРѕСЂСЂРµРєС‚РЅРѕСЃС‚СЊ РёРјРµРЅРё РєР°С‚Р°Р»РѕРіР° РґР»СЏ РІСЃРµС… РїРѕРґРґРµСЂР¶РёРІР°РµРјС‹С… РїР»Р°С‚С„РѕСЂРј.
 	[[nodiscard]] bool Path::IsValidDirectoryName(std::string_view name) const noexcept
 	{
 		if (name.empty())
@@ -47,19 +47,19 @@ namespace zzz::io
 		return true;
 	}
 
-	/// @brief Возвращает каталог, в котором расположен исполняемый файл приложения.
+	/// @brief Р’РѕР·РІСЂР°С‰Р°РµС‚ РєР°С‚Р°Р»РѕРі, РІ РєРѕС‚РѕСЂРѕРј СЂР°СЃРїРѕР»РѕР¶РµРЅ РёСЃРїРѕР»РЅСЏРµРјС‹Р№ С„Р°Р№Р» РїСЂРёР»РѕР¶РµРЅРёСЏ.
 	[[nodiscard]] const std::expected<std::filesystem::path, std::string> Path::GetExecutableDirectory() const noexcept
 	{
 		try
 		{
-#if defined(Z_WINDOWS)
+#if Z_WINDOWS
 			wchar_t buffer[MAX_PATH];
 			DWORD len = GetModuleFileNameW(nullptr, buffer, MAX_PATH);
 			if (len == 0)
 				return UNEXPECTED("Failed to get executable path.");
 
 			return std::filesystem::path(buffer).parent_path();
-#elif defined(Z_MACOS)
+#elif Z_MACOS
 			uint32_t size = 0;
 			_NSGetExecutablePath(nullptr, &size);
 
@@ -69,7 +69,7 @@ namespace zzz::io
 				return UNEXPECTED("Failed to get executable path.");
 
 			return std::filesystem::weakly_canonical(path).parent_path();
-#elif defined(Z_LINUX)
+#elif Z_LINUX
 			char buffer[PATH_MAX];
 			ssize_t len = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
 			if (len == -1)
@@ -96,12 +96,12 @@ namespace zzz::io
 		}
 	}
 
-	/// @brief Возвращает каталог пользовательских данных приложения для текущей платформы.
+	/// @brief Р’РѕР·РІСЂР°С‰Р°РµС‚ РєР°С‚Р°Р»РѕРі РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРёС… РґР°РЅРЅС‹С… РїСЂРёР»РѕР¶РµРЅРёСЏ РґР»СЏ С‚РµРєСѓС‰РµР№ РїР»Р°С‚С„РѕСЂРјС‹.
 	[[nodiscard]] std::expected<std::filesystem::path, std::string> Path::ResolveUserDataDirectory()
 	{
 		try
 		{
-#if defined(Z_WINDOWS)
+#if Z_WINDOWS
 			wchar_t* localAppData = nullptr;
 			size_t len = 0;
 			_wdupenv_s(&localAppData, &len, L"LOCALAPPDATA");
@@ -112,13 +112,13 @@ namespace zzz::io
 			free(localAppData);
 
 			return result / m_AppName;
-#elif defined(Z_APPLE)
+#elif Z_APPLE
 			auto path = GetAppleUserDataDirectory();
 			if (!path)
 				return std::unexpected(path.error());
 
 			return *path / m_AppName;
-#elif defined(Z_ANDROID)
+#elif Z_ANDROID
 			auto app = m_NativeData.get();
 			if (!app->activity)
 				return UNEXPECTED("Android activity is null.");
@@ -127,7 +127,7 @@ namespace zzz::io
 				return UNEXPECTED("Android internal data path is null.");
 
 			return std::filesystem::path(app->activity->internalDataPath) / m_AppName;
-#elif defined(Z_LINUX)
+#elif Z_LINUX
 			const char* xdgConfigHome = std::getenv("XDG_CONFIG_HOME");
 			if (xdgConfigHome)
 				return std::filesystem::path(xdgConfigHome) / m_AppName;

@@ -1,6 +1,6 @@
-#pragma once
+﻿#pragma once
 
-#if defined(Z_WINDOWS)
+#if Z_WINDOWS
 
 #include "../../../headers/MSWin.h"
 
