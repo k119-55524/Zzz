@@ -6,43 +6,6 @@
 
 using namespace zzz::engine;
 
-namespace
-{
-	LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept
-	{
-		WinMSWindows::MSWinCtx* ctx = nullptr;
-
-		if (uMsg == WM_NCCREATE)
-		{
-			const auto* pCreate = reinterpret_cast<CREATESTRUCT*>(lParam);
-			ctx = static_cast<WinMSWindows::MSWinCtx*>(pCreate->lpCreateParams);
-			SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(ctx));
-		}
-		else
-			ctx = reinterpret_cast<WinMSWindows::MSWinCtx*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
-		
-		if (ctx)
-		{
-			static bool IsHandleInput = true;
-			if (uMsg == WM_CLOSE)
-				IsHandleInput = false;
-
-			auto procRes = ctx->window->MsgProc(hWnd, uMsg, wParam, lParam);
-			if (procRes.isContinue)
-			{
-				if (IsHandleInput && ctx->input->ProcessMessage({ hWnd, uMsg, wParam, lParam }))
-					return 0;
-
-				return DefWindowProc(hWnd, uMsg, wParam, lParam);
-			}
-
-			return procRes.result;
-		}
-
-		return DefWindowProc(hWnd, uMsg, wParam, lParam);
-	}
-}
-
 void Platform::ShutdownPlatformSpecific()
 {
 	const BOOL result = UnregisterClass(c_RegisterClassName.data(), GetModuleHandle(nullptr));
@@ -70,7 +33,7 @@ void Platform::InitializePlatformSpecific()
 
 	WNDCLASS wc = { 0 };
 	wc.style = CS_HREDRAW | CS_VREDRAW;
-	wc.lpfnWndProc = WindowProc;
+	wc.lpfnWndProc = WinMSWindows::WindowProc;
 	wc.hInstance = GetModuleHandle(NULL);
 	wc.hIcon = iconHandle;
 	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);

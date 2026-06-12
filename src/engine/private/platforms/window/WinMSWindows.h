@@ -31,6 +31,7 @@ namespace zzz::engine
 
 		[[nodiscard]] std::expected<void, std::string> Initialize(const std::string_view appName);
 		MsgProcResult MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+		static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept;
 
 		private:
 			HWND m_hWnd;

@@ -16,6 +16,53 @@ WinMSWindows::~WinMSWindows()
 {
 }
 
+LRESULT CALLBACK WinMSWindows::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept
+{
+	try
+	{
+		MSWinCtx* ctx = nullptr;
+
+		if (uMsg == WM_NCCREATE)
+		{
+			const auto* pCreate = reinterpret_cast<CREATESTRUCT*>(lParam);
+			ctx = static_cast<MSWinCtx*>(pCreate->lpCreateParams);
+			SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(ctx));
+		}
+		else
+			ctx = reinterpret_cast<MSWinCtx*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+		
+		if (ctx)
+		{
+			static bool IsHandleInput = true;
+			if (uMsg == WM_CLOSE)
+				IsHandleInput = false;
+
+			auto procRes = ctx->window->MsgProc(hWnd, uMsg, wParam, lParam);
+			if (procRes.isContinue)
+			{
+				if (IsHandleInput && ctx->input->ProcessMessage({ hWnd, uMsg, wParam, lParam }))
+					return 0;
+
+				return DefWindowProc(hWnd, uMsg, wParam, lParam);
+			}
+
+			return procRes.result;
+		}
+	}
+	catch (const std::exception& e)
+	{
+		DOutCritical("Exception in WindowProc: {}", e.what());
+		PostMessage(hWnd, WM_CLOSE, 0, 0);
+	}
+	catch (...)
+	{
+		DOutCritical("Unknown exception in WindowProc");
+		PostMessage(hWnd, WM_CLOSE, 0, 0);
+	}
+
+	return DefWindowProc(hWnd, uMsg, wParam, lParam);
+}
+
 [[nodiscard]] std::expected<void, std::string> WinMSWindows::Initialize(const std::string_view appName)
 {
 	// Рассчитать размеры прямоугольника окна на основе запрошенных размеров клиентской области.
@@ -112,4 +159,4 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 	}
 
 	return { true, 0 };
-}
+}
