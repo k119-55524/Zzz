@@ -12,7 +12,14 @@ WinMSWindows::WinMSWindows(const std::shared_ptr<Platform> platform, const std::
 {}
 
 WinMSWindows::~WinMSWindows()
-{}
+{
+	if (m_hWnd)
+	{
+		SetWindowLongPtr(m_hWnd, GWLP_USERDATA, 0);
+		DestroyWindow(m_hWnd);
+		m_hWnd = nullptr;
+	}
+}
 
 LRESULT CALLBACK WinMSWindows::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept
 {
@@ -117,8 +124,7 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		 * Транслируем в OnClose, чтобы движок начал плавное завершение работы.
 		 */
 		VERIFY_AND_CALL(m_Callbacks.OnClose);
-		DestroyWindow(hWnd);
-		return { false, DefWindowProc(hWnd, uMsg, wParam, lParam) };
+		return { true, 0 };
 
 	case WM_DESTROY:
 		/**
