@@ -9,12 +9,10 @@ WinMSWindows::WinMSWindows(const std::shared_ptr<Platform> platform, const std::
 	WindowBase(platform, input, onWindowClose),
 	m_hWnd{ nullptr },
 	IsMinimized{ true }
-{
-}
+{}
 
 WinMSWindows::~WinMSWindows()
-{
-}
+{}
 
 LRESULT CALLBACK WinMSWindows::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept
 {
@@ -30,7 +28,7 @@ LRESULT CALLBACK WinMSWindows::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 		}
 		else
 			ctx = reinterpret_cast<MSWinCtx*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
-		
+
 		if (ctx)
 		{
 			static bool IsHandleInput = true;
@@ -94,6 +92,11 @@ LRESULT CALLBACK WinMSWindows::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 	if (!m_hWnd)
 		THROW_RUNTIME("CreateWindowEx( ... ) failed. Error code (Windows): {}", ::GetLastError());
 
+	// [Windows] Системное окно успешно создано.
+	// Передаем m_hWnd наверх (во View/Engine), чтобы графическое API (Vulkan/DirectX)
+	// могло привязаться к этому окну и создать Swapchain. Без этого рендеринг невозможен.
+	VERIFY_AND_CALL(OnSurfaceCreated, m_hWnd);
+
 	ShowWindow(m_hWnd, SW_SHOW);
 	UpdateWindow(m_hWnd);
 
@@ -109,11 +112,23 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		return { true, TRUE };
 
 	case WM_CLOSE:
+		// [Windows] Пользователь нажал крестик или Alt+F4. 
+		// Транслируем в OnClose, чтобы движок начал плавное завершение работы.
 		VERIFY_AND_CALL(OnClose);
 		DestroyWindow(hWnd);
 		return { false, DefWindowProc(hWnd, uMsg, wParam, lParam) };
 
+	case WM_DESTROY:
+		// [Windows] Окно физически уничтожается операционной системой.
+		// Транслируем в OnSurfaceDestroyed, чтобы убить Vulkan/Metal Swapchain 
+		// строго ДО того, как хэндл окна станет невалидным.
+		VERIFY_AND_CALL(OnSurfaceDestroyed);
+		PostQuitMessage(0);
+		return { true, TRUE };
+
 	case WM_SIZE:
+		// [Windows] Размер клиентской области изменился.
+		// Транслируем в OnResize. Также отслеживаем состояния минимизации (Hide) и восстановления (Show).
 		m_WinSize.SetFrom(static_cast<zU32>(LOWORD(lParam)), static_cast<zU32>(HIWORD(lParam)));
 		if (wParam == SIZE_MINIMIZED)
 		{
@@ -134,12 +149,8 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		}
 		return { false, 0 };
 
-	// Обрабатываем изменение размера окна в процессе изменения его пользователем.
-	case WM_SIZING:
-		//OnResizing();
-		return { false, 0};
-
 	case WM_GETMINMAXINFO:
+	{
 		MINMAXINFO* pMinMaxInfo = reinterpret_cast<MINMAXINFO*>(lParam);
 		DWORD dwStyle = static_cast<DWORD>(GetWindowLongPtr(hWnd, GWL_STYLE));
 		DWORD dwExStyle = static_cast<DWORD>(GetWindowLongPtr(hWnd, GWL_EXSTYLE));
@@ -155,6 +166,47 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		pMinMaxInfo->ptMaxTrackSize.x = maxRect.right - maxRect.left;
 		pMinMaxInfo->ptMaxTrackSize.y = maxRect.bottom - maxRect.top;
 
+		return { false, 0 };
+	}
+
+	// Обрабатываем изменение DPI в системе
+	case WM_DPICHANGED:
+	{
+		// [Windows] Окно было перенесено на монитор с другим масштабом (DPI).
+		m_WinSize.SetFrom(LOWORD(wParam), HIWORD(wParam));
+		VERIFY_AND_CALL(OnDpiChanged);
+
+		return { false, FALSE };
+	}
+
+	case WM_SETFOCUS:
+		// [Windows] Окно получило фокус клавиатуры (пользователь кликнул по нему).
+		VERIFY_AND_CALL(OnFocus, true);
+		break;
+
+	case WM_KILLFOCUS:
+		// [Windows] Окно потеряло фокус клавиатуры (пользователь переключился на другое приложение).
+		VERIFY_AND_CALL(OnFocus, false);
+		break;
+
+	case WM_ACTIVATE:
+		// [Windows] Изменение активности окна (например, окно ушло на задний план, но всё ещё видно).
+		IsActivate = (wParam != 0);
+		VERIFY_AND_CALL(OnActivate, IsActivate);
+		break;
+
+	case WM_POWERBROADCAST:
+		// [Windows] События электропитания системы.
+		if (wParam == PBT_APMSUSPEND)
+			VERIFY_AND_CALL(OnSuspend); // ПК уходит в спящий/ждущий режим (Suspend).
+		else if (wParam == PBT_APMRESUMESUSPEND)
+			VERIFY_AND_CALL(OnResume);  // ПК проснулся и восстановил работу (Resume).
+		return { true, TRUE };
+
+	case WM_COMPACTING:
+		// [Windows] ОС просит запущенные приложения попытаться освободить оперативную память.
+		// Транслируем в OnLowMemory, чтобы очистить кэши текстур.
+		VERIFY_AND_CALL(OnLowMemory);
 		return { false, 0 };
 	}
 

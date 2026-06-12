@@ -22,7 +22,10 @@ void View::Initialize()
 	if (!inputRes)
 		THROW_RUNTIME("Failed to initialize input system: {}.", inputRes.error());
 
-	m_Window = zzz::safe_make_shared<Window>(m_Platform, m_Input, std::bind(&View::HandleWindowClose, this));
+	m_Window = zzz::safe_make_shared<Window>(
+		m_Platform,
+		m_Input,
+		std::bind(&View::HandleWindowClose, this));
 	auto res = m_Window->Initialize(m_Platform->GetAppName());
 	if (!res)
 		THROW_RUNTIME("Failed to initialize window: {}.", res.error());

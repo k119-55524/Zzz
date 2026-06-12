@@ -1,5 +1,6 @@
 #pragma once
 
+#include "zdefines.h"
 #include <format>
 #include <utility>
 #include <stdexcept>
@@ -50,10 +51,12 @@ namespace zzz
 			std::string_view message = "Pointer must not be null",
 			const std::source_location& loc = std::source_location::current())
 	{
+#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
 		if (condition) [[likely]]
 			return;
 
 		throw_ensure(message, loc);
+#endif
 	}
 
 	/**
@@ -73,10 +76,12 @@ namespace zzz
 		std::string_view message = "Ensure failed",
 		const std::source_location& loc = std::source_location::current())
 	{
+#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
 		if (condition) [[likely]]
 			return;
 
 		throw_ensure(message, loc);
+#endif
 	}
 
 	/**
@@ -98,9 +103,11 @@ namespace zzz
 			std::format_string<Args...> fmt,
 			Args&&... args)
 	{
+#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
 		if (condition) [[likely]]
 			return;
 
 		throw_ensure(std::format(fmt, std::forward<Args>(args)...), std::source_location::current());
+#endif
 	}
 }
