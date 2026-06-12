@@ -1,4 +1,4 @@
-﻿
+
 #include "header.h"
 #include "Path.h"
 
@@ -17,7 +17,7 @@ namespace zzz::io
 		m_UserDataDirectory = *resPath;
 	}
 
-	/// @brief РџСЂРѕРІРµСЂСЏРµС‚ РєРѕСЂСЂРµРєС‚РЅРѕСЃС‚СЊ РёРјРµРЅРё РєР°С‚Р°Р»РѕРіР° РґР»СЏ РІСЃРµС… РїРѕРґРґРµСЂР¶РёРІР°РµРјС‹С… РїР»Р°С‚С„РѕСЂРј.
+	/// @brief Проверяет корректность имени каталога для всех поддерживаемых платформ.
 	[[nodiscard]] bool Path::IsValidDirectoryName(std::string_view name) const noexcept
 	{
 		if (name.empty())
@@ -47,7 +47,7 @@ namespace zzz::io
 		return true;
 	}
 
-	/// @brief Р’РѕР·РІСЂР°С‰Р°РµС‚ РєР°С‚Р°Р»РѕРі, РІ РєРѕС‚РѕСЂРѕРј СЂР°СЃРїРѕР»РѕР¶РµРЅ РёСЃРїРѕР»РЅСЏРµРјС‹Р№ С„Р°Р№Р» РїСЂРёР»РѕР¶РµРЅРёСЏ.
+	/// @brief Возвращает каталог, в котором расположен исполняемый файл приложения.
 	[[nodiscard]] const std::expected<std::filesystem::path, std::string> Path::GetExecutableDirectory() const noexcept
 	{
 		try
@@ -96,7 +96,7 @@ namespace zzz::io
 		}
 	}
 
-	/// @brief Р’РѕР·РІСЂР°С‰Р°РµС‚ РєР°С‚Р°Р»РѕРі РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРёС… РґР°РЅРЅС‹С… РїСЂРёР»РѕР¶РµРЅРёСЏ РґР»СЏ С‚РµРєСѓС‰РµР№ РїР»Р°С‚С„РѕСЂРјС‹.
+	/// @brief Возвращает каталог пользовательских данных приложения для текущей платформы.
 	[[nodiscard]] std::expected<std::filesystem::path, std::string> Path::ResolveUserDataDirectory()
 	{
 		try

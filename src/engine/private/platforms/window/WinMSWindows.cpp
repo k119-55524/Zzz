@@ -149,6 +149,22 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		}
 		return { false, 0 };
 
+	case WM_ENTERSIZEMOVE:
+		// [Windows] Пользователь захватил рамку окна мышью.
+		VERIFY_AND_CALL(OnResizeStart);
+		return { false, 0 };
+
+	case WM_SIZING:
+		// [Windows] Пользователь активно перетаскивает рамку окна.
+		// Windows блокирует главный поток в этот момент, поэтому рендер может замирать.
+		VERIFY_AND_CALL(OnSizing);
+		return { false, 0 };
+
+	case WM_EXITSIZEMOVE:
+		// [Windows] Пользователь отпустил рамку окна.
+		VERIFY_AND_CALL(OnResizeEnd);
+		return { false, 0 };
+
 	case WM_GETMINMAXINFO:
 	{
 		MINMAXINFO* pMinMaxInfo = reinterpret_cast<MINMAXINFO*>(lParam);

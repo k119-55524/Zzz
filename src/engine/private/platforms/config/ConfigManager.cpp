@@ -1,4 +1,4 @@
-﻿
+
 #include <fstream>
 #include <system_error>
 
@@ -29,7 +29,7 @@ void ConfigManager::Initialize()
 			.lexically_normal()
 			.make_preferred();
 
-		// Р”Р°Р»РµРµ СЂР°Р±РѕС‚Р°РµРј СЃ С„Р°Р№Р»РѕРј
+		// Далее работаем с файлом
 		m_EngineConfig = zzz::safe_make_shared<EngineConfig>();
 
 		if (!std::filesystem::exists(m_ConfigPath))
@@ -122,14 +122,14 @@ std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path
 			return UNEXPECTED("Failed to open config file.");
 
 		std::streamsize fileSize = in.tellg();
-		in.seekg(0, std::ios::beg); // Р’РѕР·РІСЂР°С‰Р°РµРјСЃСЏ РІ РЅР°С‡Р°Р»Рѕ С„Р°Р№Р»Р°
+		in.seekg(0, std::ios::beg); // Возвращаемся в начало файла
 
-		// Р§РёС‚Р°РµРј РІРµСЃСЊ С„Р°Р№Р» РІ Р±СѓС„РµСЂ
+		// Читаем весь файл в буфер
 		std::vector<char> buffer(fileSize);
 		if (!in.read(buffer.data(), fileSize))
 			return UNEXPECTED("Failed to read config file.");
 
-		// РЎРѕР·РґР°РµРј РїРѕС‚РѕРє РґР»СЏ С‡С‚РµРЅРёСЏ РёР· Р±СѓС„РµСЂР°
+		// Создаем поток для чтения из буфера
 		std::istringstream bufStream(std::string(buffer.data(), buffer.size()));
 
 		std::size_t offset = 0;
@@ -162,11 +162,11 @@ std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path
 
 std::expected<std::filesystem::path, std::string> ConfigManager::GetSettingsDirectory()
 {
-	// РќР° Apple Рё Android РёСЃРїРѕР»СЊР·СѓРµРј РґРёСЂРµРєС‚РѕСЂРёСЋ РґР°РЅРЅС‹С… РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+	// На Apple и Android используем директорию данных пользователя
 #if Z_APPLE || Z_ANDROID
 	return m_Path.GetUserDataDirectory();
 
-	// РќР° Windows Рё Linux РёСЃРїРѕР»СЊР·СѓРµРј РґРёСЂРµРєС‚РѕСЂРёСЋ СЃ РёСЃРїРѕР»РЅСЏРµРјС‹Рј С„Р°Р№Р»РѕРј
+	// На Windows и Linux используем директорию с исполняемым файлом
 #elif Z_WINDOWS || Z_LINUX
 	return m_Path.GetExecutableDirectory();
 #else
