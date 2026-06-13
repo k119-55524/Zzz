@@ -74,10 +74,22 @@
                         <Path Data="M 8 2 V 14 M 2 8 H 14"
                               Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=TabItem}}"
                               StrokeThickness="1.5" Width="16" Height="16" Margin="0,0,6,0"/>
-                        <TextBlock Text="Дефайны"/>
+                        <TextBlock Text="Дефайны проекта"/>
                     </StackPanel>
                 </TabItem.Header>
-                <views:DefinesTabView DataContext="{Binding DefinesTab}"/>
+                <views:DefinesTabView DataContext="{Binding ProjectDefinesTab}"/>
+            </TabItem>
+
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <Path Data="M 8 2 V 14 M 2 8 H 14"
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=TabItem}}"
+                              StrokeThickness="1.5" Width="16" Height="16" Margin="0,0,6,0"/>
+                        <TextBlock Text="cmake дефайны"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <views:DefinesTabView DataContext="{Binding CMakeDefinesTab}"/>
             </TabItem>
         </TabControl>
 

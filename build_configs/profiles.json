@@ -1,47 +1,51 @@
 {
+  "defines": [
+    {
+      "name": "Z_ADD_LOGGER",
+      "description": "Включить код логера в сборку",
+      "isArchived": false,
+      "isCMake": false
+    },
+    {
+      "name": "Z_IDE_OUT_LOGS",
+      "description": "Выводить логи в консоле IDE(при использовании логера)",
+      "isArchived": false,
+      "isCMake": false
+    },
+    {
+      "name": "Z_FORCE_VULKAN",
+      "description": "Принудительное использование Vulkan вместо DirectX",
+      "isArchived": false,
+      "isCMake": false
+    },
+    {
+      "name": "Z_TESTS_ENABLE_TEMPLATES",
+      "description": "Тестирование шаблонов проекта",
+      "isArchived": false,
+      "isCMake": true
+    },
+    {
+      "name": "Z_TESTS_BENCH_ENABLE_TEMPLATES",
+      "description": "Тестирование производительности шаблонов проекта",
+      "isArchived": false,
+      "isCMake": true
+    }
+  ],
   "configurations": [
     {
+      "name": "WORKING_BUILD",
+      "description": "Добавление кода логера в сборку",
       "activeDefines": [
         "Z_ADD_LOGGER",
         "Z_IDE_OUT_LOGS",
         "Z_TESTS_ENABLE_TEMPLATES",
         "Z_TESTS_BENCH_ENABLE_TEMPLATES"
-      ],
-      "description": "Добавление кода логера в сборку",
-      "name": "ADD_LOGGER_IN_BUILD"
+      ]
     },
     {
-      "activeDefines": [],
+      "name": "NO LOGGER",
       "description": "Не исппользовать код логера в сборке",
-      "name": "NO LOGGER"
-    }
-  ],
-  "currentConfig": "ADD_LOGGER_IN_BUILD",
-  "defines": [
-    {
-      "description": "Включить код логера в сборку",
-      "isArchived": false,
-      "name": "Z_ADD_LOGGER"
-    },
-    {
-      "description": "Выводить логи в консоле IDE(при использовании логера)",
-      "isArchived": false,
-      "name": "Z_IDE_OUT_LOGS"
-    },
-    {
-      "description": "Принудительное использование Vulkan вместо DirectX",
-      "isArchived": false,
-      "name": "Z_FORCE_VULKAN"
-    },
-    {
-      "description": "Включить тесты шаблонрв проекта",
-      "isArchived": false,
-      "name": "Z_TESTS_ENABLE_TEMPLATES"
-    },
-    {
-      "description": "Включить тесты произвоодительности шаблонов проекта",
-      "isArchived": false,
-      "name": "Z_TESTS_BENCH_ENABLE_TEMPLATES"
+      "activeDefines": []
     }
   ]
 }

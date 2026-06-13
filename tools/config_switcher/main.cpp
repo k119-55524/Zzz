@@ -210,25 +210,34 @@ static void write_cmake(
         active_defines.insert(item.get<std::string>());
     }
 
-    file << "add_compile_definitions(\n";
+    for (const auto& def : data["defines"])
+    {
+        if (def.value("isArchived", false))
+            continue;
+
+        if (!def.value("isCMake", false))
+            continue;
+
+        const std::string name = def.at("name").get<std::string>();
+        const bool enabled = active_defines.contains(name);
+
+        file << "set(" << name << " " << (enabled ? "ON" : "OFF") << ")\n";
+    }
+
+    file << "\nadd_compile_definitions(\n";
 
     for (const auto& def : data["defines"])
     {
         if (def.value("isArchived", false))
             continue;
 
-        const std::string name =
-            def.at("name").get<std::string>();
+        if (def.value("isCMake", false))
+            continue;
 
-        const bool enabled =
-            active_defines.contains(name);
+        const std::string name = def.at("name").get<std::string>();
+        const bool enabled = active_defines.contains(name);
 
-        file
-            << "    "
-            << name
-            << '='
-            << (enabled ? "1" : "0")
-            << '\n';
+        file << "    " << name << '=' << (enabled ? "1" : "0") << '\n';
     }
 
     file << ")\n";

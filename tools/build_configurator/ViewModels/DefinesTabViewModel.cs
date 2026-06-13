@@ -10,7 +10,10 @@ public partial class DefinesTabViewModel : ViewModelBase
 {
     private readonly IFileService   _fileService;
     private readonly IDialogService _dialogService;
+    private readonly bool _isCMakeTab;
     private AppData _data;
+
+    public bool IsCMakeTab => _isCMakeTab;
 
     public ObservableCollection<DefineItemViewModel> Defines { get; } = new();
 
@@ -30,11 +33,12 @@ public partial class DefinesTabViewModel : ViewModelBase
 
     public event Action? DataChanged;
 
-    public DefinesTabViewModel(AppData data, IFileService fileService, IDialogService dialogService)
+    public DefinesTabViewModel(AppData data, IFileService fileService, IDialogService dialogService, bool isCMakeTab)
     {
         _data          = data;
         _fileService   = fileService;
         _dialogService = dialogService;
+        _isCMakeTab    = isCMakeTab;
         RebuildList();
     }
 
@@ -47,7 +51,7 @@ public partial class DefinesTabViewModel : ViewModelBase
     private void RebuildList()
     {
         Defines.Clear();
-        foreach (var d in _data.Defines)
+        foreach (var d in _data.Defines.Where(d => d.IsCMake == _isCMakeTab))
             Defines.Add(new DefineItemViewModel(d));
         OnPropertyChanged(nameof(FilteredDefines));
         RefreshStatus();
@@ -57,9 +61,9 @@ public partial class DefinesTabViewModel : ViewModelBase
 
     private string BuildStatusText()
     {
-        var total    = _data.Defines.Count;
-        var active   = _data.Defines.Count(d => !d.IsArchived);
-        var archived = _data.Defines.Count(d => d.IsArchived);
+        var total    = _data.Defines.Count(d => d.IsCMake == _isCMakeTab);
+        var active   = _data.Defines.Count(d => d.IsCMake == _isCMakeTab && !d.IsArchived);
+        var archived = _data.Defines.Count(d => d.IsCMake == _isCMakeTab && d.IsArchived);
         return $"Всего дефайнов: {total} (активных: {active}, в архиве: {archived})";
     }
 
@@ -115,7 +119,7 @@ public partial class DefinesTabViewModel : ViewModelBase
             return;
         }
 
-        var define = new Define { Name = name, Description = desc };
+        var define = new Define { Name = name, Description = desc, IsCMake = _isCMakeTab };
         _data.Defines.Add(define);
         _fileService.SaveData(_data);
 

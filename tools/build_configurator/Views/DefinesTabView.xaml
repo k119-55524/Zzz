@@ -18,19 +18,22 @@
                 Padding="12,8">
             <Grid>
                 <StackPanel Orientation="Horizontal">
-                    <Button Style="{StaticResource IconButtonStyle}"
+                    <Button Style="{StaticResource SecondaryButtonStyle}"
+                            Padding="6"
                             ToolTip="Добавить дефайн"
                             Click="AddDefine_Click">
-                        <TextBlock Text="+" FontSize="18" FontWeight="Bold" LineHeight="18"
-                                   Foreground="{StaticResource BrushTextSecondary}"/>
+                        <Path Data="M 3 8 L 13 8 M 8 3 L 8 13"
+                              Stroke="{StaticResource BrushTextPrimary}"
+                              StrokeThickness="2" Width="16" Height="16" Stretch="None"/>
                     </Button>
-                    <Button Style="{StaticResource IconButtonStyle}"
+                    <Button Style="{StaticResource SecondaryButtonStyle}"
+                            Padding="6"
                             ToolTip="Удалить дефайн"
                             Command="{Binding DeleteDefineCommand}"
-                            Margin="2,0,0,0">
+                            Margin="4,0,0,0">
                         <Path Data="M 3 3 L 13 13 M 13 3 L 3 13"
                               Stroke="{StaticResource BrushDanger}"
-                              StrokeThickness="2" Width="16" Height="16"/>
+                              StrokeThickness="2" Width="16" Height="16" Stretch="None"/>
                     </Button>
                 </StackPanel>
 
@@ -74,26 +77,43 @@
                       CellStyle="{StaticResource DarkDataGridCellStyle}"
                       IsReadOnly="False"
                       MouseDoubleClick="DefinesGrid_DoubleClick">
-                <DataGrid.RowStyle>
-                    <Style TargetType="DataGridRow" BasedOn="{StaticResource DarkDataGridRowStyle}">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsArchived}" Value="True">
-                                <Setter Property="Foreground" Value="{StaticResource BrushDanger}"/>
-                                <Setter Property="Background" Value="{StaticResource BrushDangerBg}"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </DataGrid.RowStyle>
+
                 <DataGrid.Columns>
-                    <!-- Archive checkbox — first column -->
-                    <DataGridTemplateColumn Header="Архив" Width="60" CanUserResize="False" CanUserSort="False">
+                    <!-- State button — first column -->
+                    <DataGridTemplateColumn Header="Состояние" Width="110" CanUserResize="False" CanUserSort="False">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <CheckBox IsChecked="{Binding IsArchived, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                          Style="{StaticResource DarkCheckBoxStyle}"
-                                          HorizontalAlignment="Center"
-                                          Checked="ArchiveCheckBox_Changed"
-                                          Unchecked="ArchiveCheckBox_Changed"/>
+                                <Button Click="ArchiveButton_Click"
+                                        Margin="4,2" Padding="8,4"
+                                        BorderThickness="0"
+                                        Foreground="White"
+                                        FontWeight="SemiBold"
+                                        Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Content" Value="Спрятать"/>
+                                            <Setter Property="Background" Value="#4CAF50"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsArchived}" Value="True">
+                                                    <Setter Property="Content" Value="Использовать"/>
+                                                    <Setter Property="Background" Value="#FF4C4C"/>
+                                                </DataTrigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Opacity" Value="0.8"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>

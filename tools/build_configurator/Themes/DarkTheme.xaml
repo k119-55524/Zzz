@@ -335,7 +335,8 @@
         <Setter Property="GridLinesVisibility"     Value="Horizontal"/>
         <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource BrushBorder}"/>
         <Setter Property="RowBackground"           Value="Transparent"/>
-        <Setter Property="AlternatingRowBackground" Value="Transparent"/>
+        <Setter Property="AlternatingRowBackground" Value="{StaticResource BrushSurfaceAlt}"/>
+        <Setter Property="AlternationCount"        Value="2"/>
         <Setter Property="SelectionMode"           Value="Single"/>
         <Setter Property="SelectionUnit"           Value="FullRow"/>
         <Setter Property="CanUserAddRows"          Value="False"/>
@@ -361,10 +362,12 @@
 
     <Style x:Key="DarkDataGridRowStyle" TargetType="DataGridRow">
         <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource BrushTextPrimary}"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Style.Triggers>
             <Trigger Property="IsSelected" Value="True">
                 <Setter Property="Background" Value="{StaticResource BrushAccent}"/>
+                <Setter Property="Foreground" Value="{StaticResource BrushTextPrimary}"/>
             </Trigger>
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background" Value="{StaticResource BrushSurfaceAlt}"/>
@@ -381,6 +384,7 @@
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Padding"         Value="10,7"/>
         <Setter Property="Background"      Value="Transparent"/>
+        <Setter Property="Foreground"      Value="{StaticResource BrushTextPrimary}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="DataGridCell">
@@ -393,7 +397,11 @@
         </Setter>
         <Style.Triggers>
             <Trigger Property="IsSelected" Value="True">
-                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Background" Value="{StaticResource BrushAccent}"/>
+                <Setter Property="Foreground" Value="{StaticResource BrushTextPrimary}"/>
+            </Trigger>
+            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                <Setter Property="BorderBrush" Value="Transparent"/>
             </Trigger>
         </Style.Triggers>
     </Style>

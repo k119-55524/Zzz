@@ -17,7 +17,8 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
     [ObservableProperty] private ConfigItemViewModel? _selectedConfigItem;
     [ObservableProperty] private string _definesSearchText = string.Empty;
 
-    // Computed from ConfigItems — set via RefreshHasUnsavedChanges()
+    // Computed from ConfigItems + list modifications
+    private bool _isListDirty;
     private bool _hasUnsavedChanges;
     public bool HasUnsavedChanges
     {
@@ -31,11 +32,16 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
 
     public ObservableCollection<DefineEntryViewModel> DefineEntries { get; } = new();
 
-    public IEnumerable<DefineEntryViewModel> FilteredEntries => string.IsNullOrWhiteSpace(DefinesSearchText)
-        ? DefineEntries
-        : DefineEntries.Where(e =>
-              e.Name.Contains(DefinesSearchText, StringComparison.OrdinalIgnoreCase) ||
-              e.Description.Contains(DefinesSearchText, StringComparison.OrdinalIgnoreCase));
+    public IEnumerable<DefineEntryViewModel> FilteredProjectEntries => DefineEntries
+        .Where(e => !e.IsArchived && !e.IsCMake && MatchesSearch(e));
+
+    public IEnumerable<DefineEntryViewModel> FilteredCMakeEntries => DefineEntries
+        .Where(e => !e.IsArchived && e.IsCMake && MatchesSearch(e));
+
+    private bool MatchesSearch(DefineEntryViewModel e) =>
+        string.IsNullOrWhiteSpace(DefinesSearchText) ||
+        e.Name.Contains(DefinesSearchText, StringComparison.OrdinalIgnoreCase) ||
+        e.Description.Contains(DefinesSearchText, StringComparison.OrdinalIgnoreCase);
 
     public string ActiveDefinesCountText => $"Активные дефайны ({DefineEntries.Count(e => e.IsActive && !e.IsArchived)})";
     public string TotalConfigsText       => $"Всего конфигураций: {ConfigItems.Count}";
@@ -78,7 +84,7 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
     }
 
     private void RefreshHasUnsavedChanges()
-        => HasUnsavedChanges = ConfigItems.Any(c => c.HasUnsavedChanges);
+        => HasUnsavedChanges = _isListDirty || ConfigItems.Any(c => c.HasUnsavedChanges);
 
     private void RebuildList(string? selectName)
     {
@@ -116,13 +122,14 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
         foreach (var d in _data.Defines)
         {
             var entry = DefineEntryViewModel.Create(
-                d.Name, d.Description, d.IsArchived,
+                d.Name, d.Description, d.IsArchived, d.IsCMake,
                 cfg.ActiveDefines.Contains(d.Name));
             entry.PropertyChanged += OnDefineEntryPropertyChanged;
             DefineEntries.Add(entry);
         }
 
-        OnPropertyChanged(nameof(FilteredEntries));
+        OnPropertyChanged(nameof(FilteredProjectEntries));
+        OnPropertyChanged(nameof(FilteredCMakeEntries));
         OnPropertyChanged(nameof(ActiveDefinesCountText));
         // Do NOT reset HasUnsavedChanges here — dirty state persists until global Save
     }
@@ -131,7 +138,8 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
     {
         UnsubscribeDefineEntries();
         DefineEntries.Clear();
-        OnPropertyChanged(nameof(FilteredEntries));
+        OnPropertyChanged(nameof(FilteredProjectEntries));
+        OnPropertyChanged(nameof(FilteredCMakeEntries));
     }
 
     private void UnsubscribeDefineEntries()
@@ -157,7 +165,10 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
     }
 
     partial void OnDefinesSearchTextChanged(string value)
-        => OnPropertyChanged(nameof(FilteredEntries));
+    {
+        OnPropertyChanged(nameof(FilteredProjectEntries));
+        OnPropertyChanged(nameof(FilteredCMakeEntries));
+    }
 
     // ── Commands ─────────────────────────────────────────────────────────────
 
@@ -187,12 +198,14 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
 
         var cfg = new BuildConfiguration { Name = name, Description = desc };
         _data.Configurations.Add(cfg);
-        _fileService.SaveData(_data);
 
         var item = CreateConfigItem(cfg);
         ConfigItems.Add(item);
         SelectedConfigItem = item;
         OnPropertyChanged(nameof(TotalConfigsText));
+        
+        _isListDirty = true;
+        RefreshHasUnsavedChanges();
         DataChanged?.Invoke();
     }
 
@@ -203,8 +216,9 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
         var cfg = SelectedConfigItem.Configuration;
         cfg.Name        = args.name;
         cfg.Description = args.description;
-        _fileService.SaveData(_data);
         SelectedConfigItem.RefreshName();
+        _isListDirty = true;
+        RefreshHasUnsavedChanges();
         MarkDirty();
         DataChanged?.Invoke();
     }
@@ -221,11 +235,13 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
 
         var cfg = SelectedConfigItem.Configuration;
         _data.Configurations.Remove(cfg);
-        _fileService.SaveData(_data);
 
         ConfigItems.Remove(SelectedConfigItem);
         SelectedConfigItem = ConfigItems.FirstOrDefault();
         OnPropertyChanged(nameof(TotalConfigsText));
+        
+        _isListDirty = true;
+        RefreshHasUnsavedChanges();
         DataChanged?.Invoke();
     }
 
@@ -234,9 +250,11 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(HasUnsavedChanges))]
     private void SaveConfiguration()
     {
-        if (SelectedConfigItem == null) return;
-        CommitActiveDefines();
+        if (SelectedConfigItem != null)
+            CommitActiveDefines();
         _fileService.SaveData(_data);
+        _isListDirty = false;
+        RefreshHasUnsavedChanges();
         DataChanged?.Invoke();
     }
 
@@ -286,8 +304,10 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
     // Clear all dirty flags after global file save
     public void ClearAllDirty()
     {
+        _isListDirty = false;
         foreach (var item in ConfigItems)
             item.HasUnsavedChanges = false;
+        RefreshHasUnsavedChanges();
     }
 
     public void DiscardChanges()

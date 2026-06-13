@@ -8,6 +8,7 @@ public partial class DefineEntryViewModel : ViewModelBase
     public string Name        { get; init; } = string.Empty;
     public string Description { get; init; } = string.Empty;
     public bool   IsArchived  { get; init; }
+    public bool   IsCMake     { get; init; }
 
     [ObservableProperty] private bool _isActive;
 
@@ -22,13 +23,14 @@ public partial class DefineEntryViewModel : ViewModelBase
         IsActive = _originalIsActive;
     }
 
-    public static DefineEntryViewModel Create(string name, string description, bool isArchived, bool isActive)
+    public static DefineEntryViewModel Create(string name, string description, bool isArchived, bool isCMake, bool isActive)
     {
         var vm = new DefineEntryViewModel
         {
             Name        = name,
             Description = description,
             IsArchived  = isArchived,
+            IsCMake     = isCMake,
             _originalIsActive = isActive
         };
         vm.IsActive = isActive;

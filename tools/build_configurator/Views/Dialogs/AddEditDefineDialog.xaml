@@ -28,10 +28,10 @@
 
         <TextBlock Text="Описание" Style="{StaticResource LabelStyle}" Margin="0,16,0,4"/>
         <Grid>
-            <TextBox x:Name="DescBox" MaxLength="150"
+            <TextBox x:Name="DescBox" MaxLength="256"
                      Style="{StaticResource DarkTextBoxStyle}"
                      TextChanged="DescBox_TextChanged"/>
-            <TextBlock x:Name="DescCounter" Text="0 / 150"
+            <TextBlock x:Name="DescCounter" Text="0 / 256"
                        HorizontalAlignment="Right" VerticalAlignment="Center"
                        Margin="0,0,8,0"
                        Foreground="{StaticResource BrushTextMuted}" FontSize="11"

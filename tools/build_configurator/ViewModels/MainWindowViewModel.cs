@@ -15,10 +15,12 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private string _windowTitle = "Build Configurator";
 
     public ConfigurationsTabViewModel ConfigurationsTab { get; private set; } = null!;
-    public DefinesTabViewModel        DefinesTab        { get; private set; } = null!;
+    public DefinesTabViewModel        ProjectDefinesTab { get; private set; } = null!;
+    public DefinesTabViewModel        CMakeDefinesTab   { get; private set; } = null!;
 
     public bool HasUnsavedChanges => ConfigurationsTab?.HasUnsavedChanges == true
-                                  || DefinesTab?.HasUnsavedChanges == true;
+                                  || ProjectDefinesTab?.HasUnsavedChanges == true
+                                  || CMakeDefinesTab?.HasUnsavedChanges == true;
 
     public MainWindowViewModel(IFileService fileService, IDialogService dialogService)
     {
@@ -43,10 +45,12 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         ConfigurationsTab = new ConfigurationsTabViewModel(_data, _fileService, _dialogService);
-        DefinesTab        = new DefinesTabViewModel(_data, _fileService, _dialogService);
+        ProjectDefinesTab = new DefinesTabViewModel(_data, _fileService, _dialogService, false);
+        CMakeDefinesTab   = new DefinesTabViewModel(_data, _fileService, _dialogService, true);
 
-        ConfigurationsTab.DataChanged  += OnDataChanged;
-        DefinesTab.DataChanged         += OnDefinesDataChanged;
+        ConfigurationsTab.DataChanged += OnDataChanged;
+        ProjectDefinesTab.DataChanged += OnDefinesDataChanged;
+        CMakeDefinesTab.DataChanged   += OnDefinesDataChanged;
         ConfigurationsTab.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(ConfigurationsTab.HasUnsavedChanges))
@@ -55,9 +59,17 @@ public partial class MainWindowViewModel : ViewModelBase
                 UpdateWindowTitle();
             }
         };
-        DefinesTab.PropertyChanged += (_, e) =>
+        ProjectDefinesTab.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName == nameof(DefinesTab.HasUnsavedChanges))
+            if (e.PropertyName == nameof(ProjectDefinesTab.HasUnsavedChanges))
+            {
+                OnPropertyChanged(nameof(HasUnsavedChanges));
+                UpdateWindowTitle();
+            }
+        };
+        CMakeDefinesTab.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(CMakeDefinesTab.HasUnsavedChanges))
             {
                 OnPropertyChanged(nameof(HasUnsavedChanges));
                 UpdateWindowTitle();
@@ -65,7 +77,8 @@ public partial class MainWindowViewModel : ViewModelBase
         };
 
         OnPropertyChanged(nameof(ConfigurationsTab));
-        OnPropertyChanged(nameof(DefinesTab));
+        OnPropertyChanged(nameof(ProjectDefinesTab));
+        OnPropertyChanged(nameof(CMakeDefinesTab));
         UpdateWindowTitle();
         return true;
     }
@@ -99,7 +112,8 @@ public partial class MainWindowViewModel : ViewModelBase
         if (!ConfigurationsTab.ApplyChanges()) return;
         _fileService.SaveData(_data);
         ConfigurationsTab.ClearAllDirty();
-        DefinesTab.MarkSaved();
+        ProjectDefinesTab.MarkSaved();
+        CMakeDefinesTab.MarkSaved();
         OnPropertyChanged(nameof(HasUnsavedChanges));
         UpdateWindowTitle();
     }
@@ -121,9 +135,11 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         ConfigurationsTab.UpdateData(_data);
-        DefinesTab.UpdateData(_data);
+        ProjectDefinesTab.UpdateData(_data);
+        CMakeDefinesTab.UpdateData(_data);
         ConfigurationsTab.ClearAllDirty();
-        DefinesTab.MarkSaved();
+        ProjectDefinesTab.MarkSaved();
+        CMakeDefinesTab.MarkSaved();
         OnPropertyChanged(nameof(HasUnsavedChanges));
         UpdateWindowTitle();
     }

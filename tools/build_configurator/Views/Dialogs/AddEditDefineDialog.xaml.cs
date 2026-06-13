@@ -10,16 +10,19 @@ public partial class AddEditDefineDialog : Window
 
     private readonly IReadOnlyCollection<string> _existingNames;
     private readonly string _originalName;
-    private static readonly Regex ValidName = new(@"^[A-Za-z_][A-Za-z0-9_]*$", RegexOptions.Compiled);
+    private readonly bool _isCMake;
+    private static readonly Regex ValidName = new(@"^[A-Z_][A-Z0-9_]*$", RegexOptions.Compiled);
 
     public AddEditDefineDialog(
         string title,
         IReadOnlyCollection<string> existingNames,
+        bool isCMake,
         string initialName = "",
         string initialDescription = "")
     {
         _existingNames = existingNames;
         _originalName  = initialName;
+        _isCMake       = isCMake;
         InitializeComponent();
         Title          = title;
         OkButton.Content = string.IsNullOrEmpty(initialName) ? "Добавить" : "Сохранить";
@@ -33,7 +36,7 @@ public partial class AddEditDefineDialog : Window
         => ValidateName();
 
     private void DescBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
-        => DescCounter.Text = $"{DescBox.Text.Length} / 150";
+        => DescCounter.Text = $"{DescBox.Text.Length} / 256";
 
     private void ValidateName()
     {

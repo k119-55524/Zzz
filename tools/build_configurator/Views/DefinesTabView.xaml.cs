@@ -16,7 +16,7 @@ public partial class DefinesTabView : UserControl
     private void AddDefine_Click(object sender, RoutedEventArgs e)
     {
         var existingNames = VM.Defines.Select(d => d.Name).ToList();
-        var dialog = new AddEditDefineDialog("Новый дефайн", existingNames)
+        var dialog = new AddEditDefineDialog("Новый дефайн", existingNames, VM.IsCMakeTab)
         {
             Owner = Window.GetWindow(this)
         };
@@ -39,6 +39,7 @@ public partial class DefinesTabView : UserControl
         var dialog = new AddEditDefineDialog(
             "Редактировать дефайн",
             existingNames,
+            VM.IsCMakeTab,
             VM.SelectedDefine.Name,
             VM.SelectedDefine.Description)
         {
@@ -48,10 +49,14 @@ public partial class DefinesTabView : UserControl
         VM.EditDefineCommand.Execute((dialog.DefineName, dialog.DefineDescription));
     }
 
-    private void ArchiveCheckBox_Changed(object sender, RoutedEventArgs e)
+    private void ArchiveButton_Click(object sender, RoutedEventArgs e)
     {
-        var define = (sender as System.Windows.Controls.CheckBox)?.DataContext as DefineItemViewModel;
-        VM?.OnIsArchivedChanged(define);
+        var define = (sender as FrameworkElement)?.DataContext as DefineItemViewModel;
+        if (define != null)
+        {
+            define.IsArchived = !define.IsArchived;
+            VM?.OnIsArchivedChanged(define);
+        }
     }
 
     private static T? FindVisualParent<T>(DependencyObject child) where T : DependencyObject
