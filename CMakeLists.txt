@@ -41,8 +41,6 @@ endif()
 # -----------------------------------------------------------------------------
 # Options
 # -----------------------------------------------------------------------------
-option(Z_BUILD_TESTS "Build tests" OFF)
-option(Z_BUILD_BENCHMARKS "Build benchmarks" OFF)
 option(Z_USE_ASAN "Enable AddressSanitizer (ASan)" OFF)
 
 if(Z_USE_ASAN)
@@ -58,14 +56,11 @@ endif()
 # -----------------------------------------------------------------------------
 # Tests & Benchmarks
 # -----------------------------------------------------------------------------
-if(Z_BUILD_TESTS OR Z_BUILD_BENCHMARKS)
+if(Z_ADD_PROJECT_TESTS_IN_BUILD)
     enable_testing()
-endif()
-
-if(Z_BUILD_TESTS)
     add_subdirectory(qa/tests)
 endif()
 
-if(Z_BUILD_BENCHMARKS)
+if(Z_ADD_PROJECT_BENCHMARKS_IN_BUILD)
     add_subdirectory(qa/benchmarks)
 endif()

@@ -17,23 +17,23 @@ FetchContent_MakeAvailable(googlebenchmark)
 # -----------------------------------------------------------------------------
 # Benchmarks Target
 # -----------------------------------------------------------------------------
-file(GLOB_RECURSE BENCH_SOURCES "*.cpp")
+set(BENCH_SOURCES "")
 
-if(NOT Z_TESTS_BENCH_ENABLE_TEMPLATES)
-    list(FILTER BENCH_SOURCES EXCLUDE REGEX ".*/templates/.*")
+if(Z_TESTS_BENCH_ENABLE_TEMPLATES)
+    file(GLOB_RECURSE TEMPLATES_BENCH_SOURCES "core/templates/*.cpp")
+    list(APPEND BENCH_SOURCES ${TEMPLATES_BENCH_SOURCES})
 endif()
 
-if(NOT BENCH_SOURCES)
-    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/dummy.cpp "")
-    set(BENCH_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/dummy.cpp)
+if(BENCH_SOURCES)
+    add_executable(TestBenchmarks
+        ${BENCH_SOURCES}
+    )
+
+    target_link_libraries(TestBenchmarks
+        PRIVATE
+            benchmark::benchmark_main
+            engine_lib
+    )
+else()
+    message(FATAL_ERROR "ОШИБКА: Сборка бенчмарков (Z_ADD_PROJECT_BENCHMARKS_IN_BUILD) включена, но ни один модуль бенчмарков (например, Z_TESTS_BENCH_ENABLE_TEMPLATES) не выбран! Включите хотя бы один модуль или выключите Z_ADD_PROJECT_BENCHMARKS_IN_BUILD.")
 endif()
-
-add_executable(TestBenchmarks
-    ${BENCH_SOURCES}
-)
-
-target_link_libraries(TestBenchmarks
-    PRIVATE
-        benchmark::benchmark_main
-        engine_lib
-)

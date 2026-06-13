@@ -1,51 +1,66 @@
 {
-  "defines": [
-    {
-      "name": "Z_ADD_LOGGER",
-      "description": "Включить код логера в сборку",
-      "isArchived": false,
-      "isCMake": false
-    },
-    {
-      "name": "Z_IDE_OUT_LOGS",
-      "description": "Выводить логи в консоле IDE(при использовании логера)",
-      "isArchived": false,
-      "isCMake": false
-    },
-    {
-      "name": "Z_FORCE_VULKAN",
-      "description": "Принудительное использование Vulkan вместо DirectX",
-      "isArchived": false,
-      "isCMake": false
-    },
-    {
-      "name": "Z_TESTS_ENABLE_TEMPLATES",
-      "description": "Тестирование шаблонов проекта",
-      "isArchived": false,
-      "isCMake": true
-    },
-    {
-      "name": "Z_TESTS_BENCH_ENABLE_TEMPLATES",
-      "description": "Тестирование производительности шаблонов проекта",
-      "isArchived": false,
-      "isCMake": true
-    }
-  ],
   "configurations": [
     {
-      "name": "WORKING_BUILD",
-      "description": "Ежедневные рабочие настройки",
       "activeDefines": [
         "Z_ADD_LOGGER",
         "Z_IDE_OUT_LOGS",
         "Z_TESTS_ENABLE_TEMPLATES",
-        "Z_TESTS_BENCH_ENABLE_TEMPLATES"
-      ]
+        "Z_TESTS_BENCH_ENABLE_TEMPLATES",
+        "Z_ADD_PROJECT_TESTS_IN_BUILD",
+        "Z_ADD_PROJECT_BENCHMARKS_IN_BUILD"
+      ],
+      "description": "Ежедневные рабочие настройки",
+      "name": "WORKING_BUILD"
     },
     {
-      "name": "NO LOGGER",
+      "activeDefines": [],
       "description": "Не исппользовать код логера в сборке",
-      "activeDefines": []
+      "name": "NO LOGGER"
+    }
+  ],
+  "currentConfig": "WORKING_BUILD",
+  "defines": [
+    {
+      "description": "Включить код логера в сборку",
+      "isArchived": false,
+      "isCMake": false,
+      "name": "Z_ADD_LOGGER"
+    },
+    {
+      "description": "Выводить логи в консоле IDE(при использовании логера)",
+      "isArchived": false,
+      "isCMake": false,
+      "name": "Z_IDE_OUT_LOGS"
+    },
+    {
+      "description": "Принудительное использование Vulkan вместо DirectX",
+      "isArchived": false,
+      "isCMake": false,
+      "name": "Z_FORCE_VULKAN"
+    },
+    {
+      "description": "Тестирование шаблонов проекта",
+      "isArchived": false,
+      "isCMake": true,
+      "name": "Z_TESTS_ENABLE_TEMPLATES"
+    },
+    {
+      "description": "Тестирование производительности шаблонов проекта",
+      "isArchived": false,
+      "isCMake": true,
+      "name": "Z_TESTS_BENCH_ENABLE_TEMPLATES"
+    },
+    {
+      "description": "Добаввить проект с тестами в сборку Cmake",
+      "isArchived": false,
+      "isCMake": true,
+      "name": "Z_ADD_PROJECT_TESTS_IN_BUILD"
+    },
+    {
+      "description": "Добавить проект теста производительности в сборку Cmake",
+      "isArchived": false,
+      "isCMake": true,
+      "name": "Z_ADD_PROJECT_BENCHMARKS_IN_BUILD"
     }
   ]
 }

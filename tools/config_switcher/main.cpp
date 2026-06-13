@@ -361,19 +361,17 @@ int main()
 		}
 
 		if (!cmake_defs.empty()) {
-			std::print("       [CMake Defines]   ");
-			for (size_t k = 0; k < cmake_defs.size(); ++k) {
-				std::print("{}{}", cmake_defs[k], k + 1 == cmake_defs.size() ? "" : ", ");
+			std::println("       [CMake Defines]");
+			for (const auto& def : cmake_defs) {
+				std::println("         - {}", def);
 			}
-			std::println("");
 		}
 
 		if (!proj_defs.empty()) {
-			std::print("       [Project Defines] ");
-			for (size_t k = 0; k < proj_defs.size(); ++k) {
-				std::print("{}{}", proj_defs[k], k + 1 == proj_defs.size() ? "" : ", ");
+			std::println("       [Project Defines]");
+			for (const auto& def : proj_defs) {
+				std::println("         - {}", def);
 			}
-			std::println("");
 		}
 		std::println("");
 	}

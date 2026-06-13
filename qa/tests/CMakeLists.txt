@@ -17,29 +17,29 @@ FetchContent_MakeAvailable(googletest)
 # -----------------------------------------------------------------------------
 # Tests Target
 # -----------------------------------------------------------------------------
-file(GLOB_RECURSE TEST_SOURCES "*.cpp")
+set(TEST_SOURCES "")
 
-if(NOT Z_TESTS_ENABLE_TEMPLATES)
-    list(FILTER TEST_SOURCES EXCLUDE REGEX ".*/templates/.*")
+if(Z_TESTS_ENABLE_TEMPLATES)
+    file(GLOB_RECURSE TEMPLATES_SOURCES "core/templates/*.cpp")
+    list(APPEND TEST_SOURCES ${TEMPLATES_SOURCES})
 endif()
 
-if(NOT TEST_SOURCES)
-    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/dummy.cpp "")
-    set(TEST_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/dummy.cpp)
+if(TEST_SOURCES)
+    add_executable(Tests
+        ${TEST_SOURCES}
+    )
+
+    target_link_libraries(Tests
+        PRIVATE
+            GTest::gtest_main
+            engine_lib
+    )
+
+    # -----------------------------------------------------------------------------
+    # CTest / IDE Integration
+    # -----------------------------------------------------------------------------
+    include(GoogleTest)
+    gtest_discover_tests(Tests)
+else()
+    message(FATAL_ERROR "ОШИБКА: Глобальная сборка тестов (Z_ADD_PROJECT_TESTS_IN_BUILD) включена, но ни один модуль тестов (например, Z_TESTS_ENABLE_TEMPLATES) не выбран! Включите хотя бы один модуль или выключите Z_ADD_PROJECT_TESTS_IN_BUILD.")
 endif()
-
-add_executable(Tests
-    ${TEST_SOURCES}
-)
-
-target_link_libraries(Tests
-    PRIVATE
-        GTest::gtest_main
-        engine_lib
-)
-
-# -----------------------------------------------------------------------------
-# CTest / IDE Integration
-# -----------------------------------------------------------------------------
-include(GoogleTest)
-gtest_discover_tests(Tests)
