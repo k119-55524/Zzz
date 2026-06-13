@@ -83,7 +83,7 @@ namespace zzz::engine
 
 #pragma endregion
 
-#pragma region App Lifecycle & GPU Surface
+#pragma region App Lifecycle & GPU Surface Events
 		/**
 		 * @brief Вызывается при выделении графической поверхности ОС.
 		 * @param handle Нативный хэндл (HWND, wl_surface*, CAMetalLayer*).

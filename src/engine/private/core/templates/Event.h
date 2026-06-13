@@ -1,31 +1,62 @@
 #pragma once
 
-#include <functional>
-#include <vector>
-#include <mutex>
 #include <memory>
+#include <vector>
 #include <algorithm>
+#include <functional>
+#include <typeinfo>
+#include <iostream>
+#include <cstdlib>
+
 namespace zzz::engine
 {
-	template<typename CallbackType>
+	template<typename FuncType>
+	struct CallbackEntry
+	{
+		FuncType func;
+		std::weak_ptr<void> context;
+		const char* subscriberName;
+		bool hasContext;
+	};
+
+	template<typename FuncType>
 	class eventBase
 	{
 	protected:
-		std::vector<std::pair<std::shared_ptr<CallbackType>, std::weak_ptr<CallbackType>>> listeners;
-		std::mutex listenersMutex;
-
-		void removeInvalid()
-		{
-			std::lock_guard<std::mutex> lock(listenersMutex);
-			listeners.erase(std::remove_if(listeners.begin(), listeners.end(),
-				[](const auto& entry) { return entry.second.expired(); }), listeners.end());
-		}
+		using EntryType = CallbackEntry<FuncType>;
+		using CallbackList = std::vector<EntryType>;
+		CallbackList listeners;
+		const char* ownerName = "Unknown";
+		const char* executingSubscriber = nullptr;
+		bool isInvoking = false;
 
 	public:
+		eventBase() = default;
+
+		template<typename OwnerType>
+		explicit eventBase(OwnerType* owner)
+		{
+			if (owner)
+			{
+				ownerName = typeid(*owner).name();
+			}
+		}
+
 		void clear()
 		{
-			std::lock_guard<std::mutex> lock(listenersMutex);
 			listeners.clear();
+		}
+
+	protected:
+		void CheckRecursion()
+		{
+			if (isInvoking)
+			{
+				std::cerr << "[FATAL ERROR] Recursive event invocation detected!\n"
+					<< "Event Owner: " << ownerName << "\n"
+					<< "Executing Subscriber: " << (executingSubscriber ? executingSubscriber : "Unknown") << "\n";
+				std::abort();
+			}
 		}
 	};
 
@@ -33,43 +64,68 @@ namespace zzz::engine
 	class Event : public eventBase<std::function<void(Args...)>>
 	{
 	public:
-		using CallbackType = std::function<void(Args...)>;
+		using FuncType = std::function<void(Args...)>;
+		using EntryType = CallbackEntry<FuncType>;
+		using CallbackList = std::vector<EntryType>;
 
+		Event() = default;
+
+		template<typename OwnerType>
+		explicit Event(OwnerType* owner) : eventBase<FuncType>(owner) {}
+
+		// НЕ потокобезопасная подписка статической функции
 		template<typename F>
-		void operator+=(F&& func)
+		void SubscribeStaticUnsafe(F&& func)
 		{
-			std::lock_guard<std::mutex> lock(this->listenersMutex);
-			auto handle = std::make_shared<CallbackType>(std::forward<F>(func));
-			this->listeners.push_back({ handle, handle });
+			this->listeners.push_back({ std::forward<F>(func), std::weak_ptr<void>(), "Static / No Context", false });
+		}
+
+		// НЕ потокобезопасная подписка функции с контекстом
+		template<typename ContextType, typename F>
+		void SubscribeUnsafe(std::weak_ptr<ContextType> context, F&& func)
+		{
+			this->listeners.push_back({ std::forward<F>(func), context, typeid(ContextType).name(), true });
+		}
+
+		template<typename ContextType, typename F>
+		void SubscribeUnsafe(std::shared_ptr<ContextType> context, F&& func)
+		{
+			this->listeners.push_back({ std::forward<F>(func), context, typeid(ContextType).name(), true });
 		}
 
 		void operator()(Args... args)
 		{
-			std::vector<std::shared_ptr<CallbackType>> callbacksToRun;
+			this->CheckRecursion();
+			this->isInvoking = true;
+
+			for (size_t i = 0; i < this->listeners.size();)
 			{
-				std::lock_guard<std::mutex> lock(this->listenersMutex);
-				if (this->listeners.empty())
-					return;
-				
-				auto it = this->listeners.begin();
-				while (it != this->listeners.end())
+				auto& cb = this->listeners[i];
+				if (cb.hasContext)
 				{
-					if (auto cb = it->second.lock())
+					if (cb.context.expired())
 					{
-						callbacksToRun.push_back(cb);
-						++it;
+						// Swap-and-pop $O(1)$ чистка
+						this->listeners[i] = std::move(this->listeners.back());
+						this->listeners.pop_back();
+						continue; // Не увеличиваем i, чтобы проверить перемещенный элемент
 					}
 					else
 					{
-						it = this->listeners.erase(it);
+						this->executingSubscriber = cb.subscriberName;
+						cb.func(args...);
 					}
 				}
+				else
+				{
+					this->executingSubscriber = cb.subscriberName;
+					cb.func(args...);
+				}
+				i++;
 			}
 
-			for (auto& cb : callbacksToRun)
-			{
-				(*cb)(args...);
-			}
+			this->executingSubscriber = nullptr;
+			this->isInvoking = false;
 		}
 	};
 
@@ -77,43 +133,66 @@ namespace zzz::engine
 	class Event<void> : public eventBase<std::function<void()>>
 	{
 	public:
-		using CallbackType = std::function<void()>;
+		using FuncType = std::function<void()>;
+		using EntryType = CallbackEntry<FuncType>;
+		using CallbackList = std::vector<EntryType>;
+
+		Event() = default;
+
+		template<typename OwnerType>
+		explicit Event(OwnerType* owner) : eventBase<FuncType>(owner) {}
 
 		template<typename F>
-		void operator+=(F&& func)
+		void SubscribeStaticUnsafe(F&& func)
 		{
-			std::lock_guard<std::mutex> lock(this->listenersMutex);
-			auto handle = std::make_shared<CallbackType>(std::forward<F>(func));
-			this->listeners.push_back({ handle, handle });
+			this->listeners.push_back({ std::forward<F>(func), std::weak_ptr<void>(), "Static / No Context", false });
+		}
+
+		template<typename ContextType, typename F>
+		void SubscribeUnsafe(std::weak_ptr<ContextType> context, F&& func)
+		{
+			this->listeners.push_back({ std::forward<F>(func), context, typeid(ContextType).name(), true });
+		}
+
+		template<typename ContextType, typename F>
+		void SubscribeUnsafe(std::shared_ptr<ContextType> context, F&& func)
+		{
+			this->listeners.push_back({ std::forward<F>(func), context, typeid(ContextType).name(), true });
 		}
 
 		void operator()()
 		{
-			std::vector<std::shared_ptr<CallbackType>> callbacksToRun;
-			{
-				std::lock_guard<std::mutex> lock(this->listenersMutex);
-				if (this->listeners.empty())
-					return;
+			this->CheckRecursion();
+			this->isInvoking = true;
 
-				auto it = this->listeners.begin();
-				while (it != this->listeners.end())
+			for (size_t i = 0; i < this->listeners.size();)
+			{
+				auto& cb = this->listeners[i];
+				if (cb.hasContext)
 				{
-					if (auto cb = it->second.lock())
+					if (cb.context.expired())
 					{
-						callbacksToRun.push_back(cb);
-						++it;
+						// Swap-and-pop $O(1)$ чистка
+						this->listeners[i] = std::move(this->listeners.back());
+						this->listeners.pop_back();
+						continue;
 					}
 					else
 					{
-						it = this->listeners.erase(it);
+						this->executingSubscriber = cb.subscriberName;
+						cb.func();
 					}
 				}
+				else
+				{
+					this->executingSubscriber = cb.subscriberName;
+					cb.func();
+				}
+				i++;
 			}
 
-			for (auto& cb : callbacksToRun)
-			{
-				(*cb)();
-			}
+			this->executingSubscriber = nullptr;
+			this->isInvoking = false;
 		}
 	};
 }

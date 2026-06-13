@@ -17,12 +17,22 @@ FetchContent_MakeAvailable(googletest)
 # -----------------------------------------------------------------------------
 # Tests Target
 # -----------------------------------------------------------------------------
-add_executable(ZzzTests
-    DummyTest.cpp
-    # EventTests.cpp будет добавлен позже, как мы и договаривались
+file(GLOB_RECURSE TEST_SOURCES "*.cpp")
+
+if(NOT Z_TESTS_ENABLE_TEMPLATES)
+    list(FILTER TEST_SOURCES EXCLUDE REGEX ".*/templates/.*")
+endif()
+
+if(NOT TEST_SOURCES)
+    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/dummy.cpp "")
+    set(TEST_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/dummy.cpp)
+endif()
+
+add_executable(Tests
+    ${TEST_SOURCES}
 )
 
-target_link_libraries(ZzzTests
+target_link_libraries(Tests
     PRIVATE
         GTest::gtest_main
         engine_lib
@@ -32,4 +42,4 @@ target_link_libraries(ZzzTests
 # CTest / IDE Integration
 # -----------------------------------------------------------------------------
 include(GoogleTest)
-gtest_discover_tests(ZzzTests)
+gtest_discover_tests(Tests)

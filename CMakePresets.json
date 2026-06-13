@@ -7,7 +7,10 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${hostSystemName}/debug",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "Z_BUILD_TESTS": "ON",
+        "Z_BUILD_BENCHMARKS": "ON",
+        "Z_USE_ASAN": "ON"
       }
     },
     {
@@ -16,7 +19,9 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${hostSystemName}/release",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
+        "CMAKE_BUILD_TYPE": "Release",
+        "Z_BUILD_TESTS": "ON",
+        "Z_BUILD_BENCHMARKS": "ON"
       }
     },
     {
@@ -25,37 +30,8 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${hostSystemName}/development",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Development"
-      }
-    },
-    {
-      "name": "debug-tests",
-      "displayName": "Debug Tests",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/${hostSystemName}/debug_tests",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_BUILD_TYPE": "Development",
         "Z_BUILD_TESTS": "ON",
-        "Z_USE_ASAN": "ON"
-      }
-    },
-    {
-      "name": "release-tests",
-      "displayName": "Release Tests",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/${hostSystemName}/release_tests",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "Z_BUILD_TESTS": "ON"
-      }
-    },
-    {
-      "name": "release-benchmarks",
-      "displayName": "Release Benchmarks",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/${hostSystemName}/release_benchmarks",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
         "Z_BUILD_BENCHMARKS": "ON"
       }
     }
