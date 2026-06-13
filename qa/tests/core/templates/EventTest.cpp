@@ -6,10 +6,10 @@ using namespace zzz::engine;
 
 TEST(EventTest, VoidEvent)
 {
-	Event<void> evt;
+	Event<> evt;
 	int callCount = 0;
 
-	evt.SubscribeStaticUnsafe([&callCount]()
+	evt.SubscribeStatic([&callCount]()
 	{
 		callCount++;
 	});
@@ -27,7 +27,7 @@ TEST(EventTest, ArgsEvent)
 	int lastInt = 0;
 	std::string lastStr = "";
 
-	evt.SubscribeStaticUnsafe([&lastInt, &lastStr](int i, std::string s)
+	evt.SubscribeStatic([&lastInt, &lastStr](int i, std::string s)
 	{
 		lastInt = i;
 		lastStr = s;
@@ -40,12 +40,12 @@ TEST(EventTest, ArgsEvent)
 
 TEST(EventTest, MultipleSubscribers)
 {
-	Event<void> evt;
+	Event<> evt;
 	int callCount1 = 0;
 	int callCount2 = 0;
 
-	evt.SubscribeStaticUnsafe([&callCount1]() { callCount1++; });
-	evt.SubscribeStaticUnsafe([&callCount2]() { callCount2++; });
+	evt.SubscribeStatic([&callCount1]() { callCount1++; });
+	evt.SubscribeStatic([&callCount2]() { callCount2++; });
 
 	evt();
 	EXPECT_EQ(callCount1, 1);
@@ -54,11 +54,11 @@ TEST(EventTest, MultipleSubscribers)
 
 TEST(EventTest, Clear)
 {
-	Event<void> evt;
+	Event<> evt;
 	int callCount = 0;
 
-	evt.SubscribeStaticUnsafe([&callCount]() { callCount++; });
-	evt.clear();
+	evt.SubscribeStatic([&callCount]() { callCount++; });
+	evt.Clear();
 	evt();
 
 	EXPECT_EQ(callCount, 0);
@@ -66,12 +66,12 @@ TEST(EventTest, Clear)
 
 TEST(EventTest, ContextUnsubscribe)
 {
-	Event<void> evt;
+	Event<> evt;
 	int callCount = 0;
 
 	{
 		auto contextObj = std::make_shared<int>(42);
-		evt.SubscribeUnsafe(contextObj, [&callCount]() { callCount++; });
+		evt.Subscribe(contextObj, [&callCount]() { callCount++; });
 
 		// Объект жив, вызов должен сработать
 		evt();

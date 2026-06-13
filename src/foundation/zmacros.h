@@ -1,6 +1,7 @@
 #pragma once
 
 #include <expected>
+#include <stdexcept>
 #include "zdefines.h"
 
 #define DOut(...) ::zzz::logger::Logger::LogMessage(std::source_location::current(), __VA_ARGS__)
@@ -48,3 +49,30 @@
 	ClassName& operator=(const ClassName&) = delete; \
 	ClassName(ClassName&&) = delete; \
 	ClassName& operator=(ClassName&&) = delete
+
+#if Z_WINDOWS
+#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#define CRT_LEAK_CHECK_BEGIN(...) \
+	_CrtMemState _crtLeakCtx{}; \
+	_CrtMemCheckpoint(&_crtLeakCtx)
+#define CRT_LEAK_CHECK_END() \
+	([&]() -> int { \
+		_CrtMemState _crtLeakCtxEnd{}; \
+		_CrtMemState _crtLeakCtxDiff{}; \
+		_CrtMemCheckpoint(&_crtLeakCtxEnd); \
+		int leakFound = _CrtMemDifference(&_crtLeakCtxDiff, &_crtLeakCtx, &_crtLeakCtxEnd); \
+		if (leakFound) { \
+			_CrtMemDumpStatistics(&_crtLeakCtxDiff); \
+			_CrtMemDumpAllObjectsSince(&_crtLeakCtx); \
+			return -1; \
+		} \
+		return 0; \
+	}())
+#else
+#define CRT_LEAK_CHECK_BEGIN(...)
+#define CRT_LEAK_CHECK_END() 0
+#endif
+#endif

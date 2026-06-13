@@ -1,45 +1,50 @@
 #include "main.h"
+#include "../../foundation/zmacros.h"
 
 using namespace zzz::engine;
 
 // Linux
 int main(int argc, char* argv[])
 {
-	DOut("[Linux OS]. Game started.");
+	int exitCode = 0;
 
-	try
 	{
-		Engine engine("GameLinux_ZzzEngine");
-		auto res = engine.Initialize();
-		if (res)
+		DOut("[Linux OS]. Game started.");
+
+		try
 		{
-			res = engine.Run();
-			if (!res)
+			Engine engine("GameLinux_ZzzEngine");
+			auto res = engine.Initialize();
+			if (res)
 			{
-				DOutError("[Linux OS]. Game runtime error: {}.", res.error());
-				return -1;
+				res = engine.Run();
+				if (!res)
+				{
+					DOutError("[Linux OS]. Game runtime error: {}.", res.error());
+					exitCode = -1;
+				}
+				else
+				{
+					DOut("[Linux OS]. Game exited successfully.");
+				}
 			}
 			else
 			{
-				DOut("[Linux OS]. Game exited successfully.");
+				DOutError("[Linux OS]. Game started error: {}.", res.error());
+				exitCode = -1;
 			}
 		}
-		else
+		catch (const std::exception& e)
 		{
-			DOutError("[Linux OS]. Game started error: {}.", res.error());
-			return -1;
+			DOutException("[Linux OS]. Game started exception: {}.", e.what());
+			exitCode = -1;
+		}
+		catch (...)
+		{
+			DOutException("[Linux OS]. Game started unknown exception.");
+			exitCode = -1;
 		}
 	}
-	catch (const std::exception& e)
-	{
-		DOutException("[Linux OS]. Game started exception: {}.", e.what());
-		return -1;
-	}
-	catch (...)
-	{
-		DOutException("[Linux OS]. Game started unknown exception.");
-		return -1;
-	}
 
-	return 0;
+	return exitCode;
 }

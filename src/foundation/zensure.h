@@ -46,10 +46,10 @@ namespace zzz
 	 * @endcode
 	 */
 	template<typename T>
-		inline void ensure(
-			T&& condition,
-			std::string_view message = "Pointer must not be null",
-			const std::source_location& loc = std::source_location::current())
+	inline void ensure(
+		T&& condition,
+		std::string_view message = "Pointer must not be null",
+		const std::source_location& loc = std::source_location::current())
 	{
 #if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
 		if (condition) [[likely]]
@@ -76,6 +76,12 @@ namespace zzz
 		std::string_view message = "Ensure failed",
 		const std::source_location& loc = std::source_location::current())
 	{
+		// Подавляем предупреждения о неиспользуемых параметрах
+		// Чтобы не засорять вывод компилятора
+		(void)condition;
+		(void)message;
+		(void)loc;
+
 #if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
 		if (condition) [[likely]]
 			return;
@@ -98,11 +104,17 @@ namespace zzz
 	 * @endcode
 	 */
 	template<typename... Args>
-		inline void ensure(
-			bool condition,
-			std::format_string<Args...> fmt,
-			Args&&... args)
+	inline void ensure(
+		bool condition,
+		std::format_string<Args...> fmt,
+		Args&&... args)
 	{
+		// Подавляем предупреждения о неиспользуемых параметрах
+		// Чтобы не засорять вывод компилятора
+		(void)condition;
+		(void)fmt;
+		((void)args, ...);
+
 #if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
 		if (condition) [[likely]]
 			return;

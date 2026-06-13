@@ -1,5 +1,12 @@
 #pragma once
 
+#include <string>
+#include <sstream>
+#include <source_location>
+#include <stdexcept>
+#include <logger.h>
+#include <zmacros.h>
+
 namespace zzz
 {
 	[[noreturn]]

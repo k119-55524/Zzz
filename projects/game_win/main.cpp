@@ -1,4 +1,5 @@
 #include "main.h"
+#include "../../foundation/zmacros.h"
 
 using namespace zzz;
 using namespace zzz::logger;
@@ -12,47 +13,52 @@ int APIENTRY wWinMain(
 	_In_		int			nCmdShow)
 {
 	// Подавляем предупреждения о неиспользуемых параметрах
-	// Чтобы не засорять вывод компилятора
 	(void)hInstance;
 	(void)hPrevInstance;
 	(void)lpCmdLine;
 	(void)nCmdShow;
 
-	DOut("[Windows OS]. Game started.");
+	CRT_LEAK_CHECK_BEGIN();
+	int exitCode = 0;
 
-	try
 	{
-		Engine engine("GameWin_ZzzEngine");
-		auto res = engine.Initialize();
-		if (res)
+		DOut("[Windows OS]. Game started.");
+
+		try
 		{
-			res = engine.Run();
-			if (!res)
+			Engine engine("GameWin_ZzzEngine");
+			auto res = engine.Initialize();
+			if (res)
 			{
-				DOutError("[Windows OS]. Game runtime error: {}.", res.error());
-				return -1;
+				res = engine.Run();
+				if (!res)
+				{
+					DOutError("[Windows OS]. Game runtime error: {}.", res.error());
+					exitCode = -1;
+				}
+				else
+				{
+					DOut("[Windows OS]. Game exited successfully.");
+				}
 			}
 			else
 			{
-				DOut("[Windows OS]. Game exited successfully.");
+				DOutError("[Windows OS]. Game started error: {}.", res.error());
+				exitCode = -1;
 			}
 		}
-		else
+		catch (const std::exception& e)
 		{
-			DOutError("[Windows OS]. Game started error: {}.", res.error());
-			return -1;
+			DOutException("[Windows OS]. WinMain {}.", e.what());
+			exitCode = -1;
+		}
+		catch (...)
+		{
+			DOutException("[Windows OS]. WinMain exception.");
+			exitCode = -1;
 		}
 	}
-	catch (const std::exception& e)
-	{
-		DOutException("[Windows OS]. WinMain {}.", e.what());
-		return -1;
-	}
-	catch (...)
-	{
-		DOutException("[Windows OS]. WinMain exception.");
-		return -1;
-	}
 
-	return 0;
+	auto leakResult = CRT_LEAK_CHECK_END();
+	return exitCode != 0 ? exitCode : leakResult;
 }

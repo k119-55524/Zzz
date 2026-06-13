@@ -23,6 +23,27 @@ if(CMAKE_BUILD_TYPE_UPPER STREQUAL "DEVELOPMENT")
     add_compile_definitions(Z_DEVELOPMENT_BUILD=1)
 endif()
 
+# -----------------------------------------------------------------------------
+# Options
+# -----------------------------------------------------------------------------
+if(CMAKE_BUILD_TYPE_UPPER STREQUAL "DEBUG" OR CMAKE_BUILD_TYPE_UPPER STREQUAL "DEVELOPMENT")
+    set(Z_ASAN_DEFAULT ON)
+else()
+    set(Z_ASAN_DEFAULT OFF)
+endif()
+
+option(Z_USE_ASAN "Enable AddressSanitizer (ASan)" ${Z_ASAN_DEFAULT})
+
+if(Z_USE_ASAN)
+    if(MSVC)
+        add_compile_options(/fsanitize=address)
+        add_link_options(/INCREMENTAL:NO)
+    else()
+        add_compile_options(-fsanitize=address)
+        add_link_options(-fsanitize=address)
+    endif()
+endif()
+
 add_subdirectory(src/logger/logger_lib)
 add_subdirectory(src/engine)
 
@@ -38,20 +59,7 @@ elseif(UNIX)
     add_subdirectory(projects/game_linux)
 endif()
 
-# -----------------------------------------------------------------------------
-# Options
-# -----------------------------------------------------------------------------
-option(Z_USE_ASAN "Enable AddressSanitizer (ASan)" OFF)
 
-if(Z_USE_ASAN)
-    if(MSVC)
-        add_compile_options(/fsanitize=address)
-        add_link_options(/INFERASANLIBS)
-    else()
-        add_compile_options(-fsanitize=address)
-        add_link_options(-fsanitize=address)
-    endif()
-endif()
 
 # -----------------------------------------------------------------------------
 # Tests & Benchmarks

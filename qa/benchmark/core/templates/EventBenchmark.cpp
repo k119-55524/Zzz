@@ -4,7 +4,7 @@
 
 using namespace zzz::engine;
 
-static void SymmetricRangeArgs(benchmark::internal::Benchmark* b) {
+static void SymmetricRangeArgs(benchmark::Benchmark* b) {
 	const std::vector<int> args = { 1, 8, 64, 512, 1024 };
 	for (int a : args) {
 		b->Arg(a);
@@ -15,10 +15,10 @@ static void BM_EventSubscribe(benchmark::State& state)
 {
 	for (auto _ : state)
 	{
-		Event<void> evt;
+		Event<> evt;
 		for (int i = 0; i < state.range(0); ++i)
 		{
-			evt.SubscribeStaticUnsafe([]() { benchmark::DoNotOptimize(1); });
+			evt.SubscribeStatic([]() { benchmark::DoNotOptimize(1); });
 		}
 	}
 }
@@ -29,7 +29,7 @@ static void BM_EventInvoke(benchmark::State& state)
 	Event<int> evt;
 	for (int i = 0; i < state.range(0); ++i)
 	{
-		evt.SubscribeStaticUnsafe([](int x) { benchmark::DoNotOptimize(x); });
+		evt.SubscribeStatic([](int x) { benchmark::DoNotOptimize(x); });
 	}
 
 	for (auto _ : state)
@@ -41,10 +41,10 @@ BENCHMARK(BM_EventInvoke)->Name("[UNSAFE] 2. Invoke(int)")->Apply(SymmetricRange
 
 static void BM_EventInvokeNoArgs(benchmark::State& state)
 {
-	Event<void> evt;
+	Event<> evt;
 	for (int i = 0; i < state.range(0); ++i)
 	{
-		evt.SubscribeStaticUnsafe([]() { benchmark::DoNotOptimize(1); });
+		evt.SubscribeStatic([]() { benchmark::DoNotOptimize(1); });
 	}
 
 	for (auto _ : state)
@@ -59,11 +59,11 @@ static void BM_EventAutoUnsubscribe(benchmark::State& state)
 	for (auto _ : state)
 	{
 		state.PauseTiming();
-		Event<void> evt;
+		Event<> evt;
 		for (int i = 0; i < state.range(0); ++i)
 		{
 			auto ctx = std::make_shared<int>(0);
-			evt.SubscribeUnsafe(ctx, []() { benchmark::DoNotOptimize(1); });
+			evt.Subscribe(ctx, []() { benchmark::DoNotOptimize(1); });
 		}
 		state.ResumeTiming();
 
