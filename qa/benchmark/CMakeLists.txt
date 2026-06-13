@@ -1,5 +1,5 @@
 include(FetchContent)
-
+# Trigger CMake reload for new benchmark files
 # -----------------------------------------------------------------------------
 # Google Benchmark
 # -----------------------------------------------------------------------------
@@ -25,11 +25,11 @@ if(Z_TESTS_BENCH_ENABLE_TEMPLATES)
 endif()
 
 if(BENCH_SOURCES)
-    add_executable(TestBenchmarks
+    add_executable(Benchmark
         ${BENCH_SOURCES}
     )
 
-    target_link_libraries(TestBenchmarks
+    target_link_libraries(Benchmark
         PRIVATE
             benchmark::benchmark_main
             engine_lib

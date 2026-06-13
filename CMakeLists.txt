@@ -62,5 +62,5 @@ if(Z_ADD_PROJECT_TESTS_IN_BUILD)
 endif()
 
 if(Z_ADD_PROJECT_BENCHMARKS_IN_BUILD)
-    add_subdirectory(qa/benchmarks)
+    add_subdirectory(qa/benchmark)
 endif()
