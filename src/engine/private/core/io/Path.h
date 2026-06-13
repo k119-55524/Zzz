@@ -19,7 +19,7 @@ namespace zzz::io
 		inline const std::filesystem::path GetUserDataDirectory() const noexcept { return m_UserDataDirectory; };
 
 	private:
-		std::string_view m_AppName;
+		std::string m_AppName;
 		std::shared_ptr<zzz::engine::NativeAppData> m_NativeData;
 		std::filesystem::path m_UserDataDirectory;
 

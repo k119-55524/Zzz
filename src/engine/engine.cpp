@@ -99,9 +99,8 @@ std::expected<void, std::string> Engine::Initialize()
 		err = "Unknown exception occurred";
 	}
 
-#if !Z_APPLE
-	Shutdown();
-#endif
+	if constexpr (!Platform::c_AsyncRunLoop)
+		Shutdown();
 
 	if (isError)
 	{

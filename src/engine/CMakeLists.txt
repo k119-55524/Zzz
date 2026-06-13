@@ -136,6 +136,4 @@ endif()
 target_link_libraries(engine_lib
     PUBLIC
         logger_lib
-    PRIVATE
-        $<$<PLATFORM_ID:Android>:game-activity::game-activity_static>
 )

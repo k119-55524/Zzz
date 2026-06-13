@@ -37,3 +37,35 @@ elseif(APPLE)
 elseif(UNIX)
     add_subdirectory(projects/game_linux)
 endif()
+
+# -----------------------------------------------------------------------------
+# Options
+# -----------------------------------------------------------------------------
+option(Z_BUILD_TESTS "Build tests" OFF)
+option(Z_BUILD_BENCHMARKS "Build benchmarks" OFF)
+option(Z_USE_ASAN "Enable AddressSanitizer (ASan)" OFF)
+
+if(Z_USE_ASAN)
+    if(MSVC)
+        add_compile_options(/fsanitize=address)
+        add_link_options(/INFERASANLIBS)
+    else()
+        add_compile_options(-fsanitize=address)
+        add_link_options(-fsanitize=address)
+    endif()
+endif()
+
+# -----------------------------------------------------------------------------
+# Tests & Benchmarks
+# -----------------------------------------------------------------------------
+if(Z_BUILD_TESTS OR Z_BUILD_BENCHMARKS)
+    enable_testing()
+endif()
+
+if(Z_BUILD_TESTS)
+    add_subdirectory(tests)
+endif()
+
+if(Z_BUILD_BENCHMARKS)
+    add_subdirectory(benchmarks)
+endif()

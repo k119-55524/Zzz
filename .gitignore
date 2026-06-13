@@ -74,6 +74,10 @@ tools/config_switcher/build/
 .DS_Store
 **/.DS_Store
 
+# Claude Code local settings
+
+.claude/settings.local.json
+
 # CMake generated rule files
 
 **/ReRunCMake.make

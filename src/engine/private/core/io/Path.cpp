@@ -102,16 +102,14 @@ namespace zzz::io
 		try
 		{
 #if Z_WINDOWS
-			wchar_t* localAppData = nullptr;
+			wchar_t* rawPtr = nullptr;
 			size_t len = 0;
-			_wdupenv_s(&localAppData, &len, L"LOCALAPPDATA");
+			_wdupenv_s(&rawPtr, &len, L"LOCALAPPDATA");
+			std::unique_ptr<wchar_t, decltype(&free)> localAppData(rawPtr, &free);
 			if (!localAppData)
 				return UNEXPECTED("Failed to get LOCALAPPDATA.");
 
-			std::filesystem::path result(localAppData);
-			free(localAppData);
-
-			return result / m_AppName;
+			return std::filesystem::path(localAppData.get()) / m_AppName;
 #elif Z_APPLE
 			auto path = GetAppleUserDataDirectory();
 			if (!path)
