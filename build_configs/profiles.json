@@ -34,7 +34,7 @@
   "configurations": [
     {
       "name": "WORKING_BUILD",
-      "description": "Добавление кода логера в сборку",
+      "description": "Ежедневные рабочие настройки",
       "activeDefines": [
         "Z_ADD_LOGGER",
         "Z_IDE_OUT_LOGS",

@@ -45,9 +45,9 @@
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,24,0,0">
             <Button Content="Отмена" Style="{StaticResource SecondaryButtonStyle}"
-                    Width="90" Margin="0,0,8,0" Click="Cancel_Click"/>
+                    MinWidth="90" Padding="12,6" Margin="0,0,8,0" Click="Cancel_Click"/>
             <Button x:Name="OkButton" Content="Создать" Style="{StaticResource PrimaryButtonStyle}"
-                    Width="90" IsDefault="True" Click="Ok_Click" IsEnabled="False"/>
+                    MinWidth="90" Padding="12,6" IsDefault="True" Click="Ok_Click" IsEnabled="False"/>
         </StackPanel>
     </StackPanel>
 </Window>
