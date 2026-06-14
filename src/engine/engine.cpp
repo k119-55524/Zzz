@@ -1,4 +1,4 @@
-﻿
+
 #include "engine.h"
 #include "headers/enums.h"
 #include "private/core/view/ViewManager.h"
@@ -6,17 +6,28 @@
 
 using namespace zzz;
 using namespace zzz::io;
+using namespace zzz::common;
 using namespace zzz::engine;
 
 Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeData) :
 	engineState{ eInitState::NotInitialized }
 {
+	ensure(s_Instance == nullptr, "Engine instance already exists!");
+	s_Instance = this;
+
 	m_Platform = safe_make_shared<Platform>(appName, nativeData);
 }
 
 Engine::~Engine()
 {
 	Shutdown();
+	s_Instance = nullptr;
+}
+
+Engine& Engine::Get()
+{
+	ensure(s_Instance != nullptr, "Engine is not initialized!");
+	return *s_Instance;
 }
 
 void Engine::Shutdown()

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <foundation.h>
+#include <common/common.h>
 
-namespace zzz
+namespace zzz::logger
 {
 	enum class eLogMessageType : zU8
 	{

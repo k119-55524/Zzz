@@ -1,5 +1,5 @@
 #include "main.h"
-#include "../../foundation/zmacros.h"
+#include <common/core_macros.h>
 
 using namespace zzz;
 using namespace zzz::logger;
@@ -26,6 +26,7 @@ int APIENTRY wWinMain(
 
 		try
 		{
+			Engine::SetLogStreamingEnabled(true);
 			Engine engine("GameWin_ZzzEngine");
 			auto res = engine.Initialize();
 			if (res)

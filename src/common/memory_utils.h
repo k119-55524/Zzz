@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <source_location>
 
-namespace zzz
+namespace zzz::common
 {
 	template<typename T>
 	inline void SafeRelease(T*& ptr)

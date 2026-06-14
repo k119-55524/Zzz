@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "header.h"
 
@@ -57,6 +57,14 @@ namespace zzz::logger
 			DebugOutputIDE(output);
 		}
 
+		inline static void SetLogStreamingEnabled(bool enabled)
+		{
+#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+			IsLogStreamEnabled = enabled;
+#endif
+		}
+		[[nodiscard]] inline static bool IsLogStreamingEnabled() { return IsLogStreamEnabled; }
+
 	private:
 		static std::string MakeLogMessage(const std::source_location& loc, eLogMessageType type, const std::string& msg);
 		static std::string MakeLogMessageError(const std::source_location& loc, eLogMessageType type, const std::string& msg);
@@ -78,8 +86,8 @@ namespace zzz::logger
 		{
 			auto end = "\n";
 
-			// Р”Р»СЏ Linux-РїРѕРґРѕР±РЅС‹С… РїР»Р°С‚С„РѕСЂРј (РІРєР»СЋС‡Р°СЏ Android) СЃРёРјРІРѕР» '\n' РЅРµ С‚СЂРµР±СѓРµС‚СЃСЏ,
-			// РїРѕСЃРєРѕР»СЊРєСѓ СЃСЂРµРґСЃС‚РІР° РїСЂРѕСЃРјРѕС‚СЂР° Р»РѕРіРѕРІ (IDE, Logcat Рё С‚.Рї.) СЃР°РјРё СЂР°Р·РґРµР»СЏСЋС‚ Р·Р°РїРёСЃРё.
+			// Для Linux-подобных платформ (включая Android) символ '\n' не требуется,
+			// поскольку средства просмотра логов (IDE, Logcat и т.п.) сами разделяют записи.
 #if Z_LINUX || Z_ANDROID
 			end = "";
 #endif
@@ -87,5 +95,7 @@ namespace zzz::logger
 		}
 
 		static void DebugOutputIDE(const std::string& output) noexcept;
+
+		static bool IsLogStreamEnabled;
 	};
 }

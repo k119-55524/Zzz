@@ -1,4 +1,4 @@
-﻿
+
 #include "View.h"
 #include "ViewManager.h"
 #include "../../platforms/Platform.h"
@@ -28,7 +28,7 @@ void ViewManager::CreateView()
 		THROW_RUNTIME("Mobile platforms support only one native window per application.");
 #endif
 
-	auto view = zzz::safe_make_shared<View>(m_Platform, std::bind(&ViewManager::HandleWindowClose, this, std::placeholders::_1));
+	auto view = safe_make_shared<View>(m_Platform, std::bind(&ViewManager::HandleWindowClose, this, std::placeholders::_1));
 	m_Views.push_back(std::move(view));
 }
 

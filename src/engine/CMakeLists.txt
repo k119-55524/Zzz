@@ -6,7 +6,6 @@ target_precompile_headers(engine_lib PRIVATE
 
 target_include_directories(engine_lib
     PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/../foundation
         ${CMAKE_CURRENT_SOURCE_DIR}
     PRIVATE
         pch
@@ -40,7 +39,6 @@ target_sources(engine_lib PRIVATE
     "private/core/serialize/Serializer.h" "private/core/serialize/Serializer.cpp"
     "private/core/utils/version.h" "private/core/utils/version.cpp"
     "private/core/templates/Size2D.h"
-    "private/core/templates/Event.h"
 
     # Inputs
     "private/platforms/input/Input.h" "private/platforms/input/InputBase.h"
@@ -136,4 +134,5 @@ endif()
 target_link_libraries(engine_lib
     PUBLIC
         logger_lib
+        common_lib
 )

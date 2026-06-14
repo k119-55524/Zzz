@@ -4,6 +4,8 @@
 
 namespace zzz::logger
 {
+	bool Logger::IsLogStreamEnabled = false;
+
 	std::string Logger::MakeLogMessage(const std::source_location& loc, eLogMessageType type, const std::string& msg)
 	{
 		if (type == eLogMessageType::Message)

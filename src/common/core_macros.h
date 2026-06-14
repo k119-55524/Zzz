@@ -2,7 +2,7 @@
 
 #include <expected>
 #include <stdexcept>
-#include "zdefines.h"
+#include "platform_defines.h"
 
 #define DOut(...) ::zzz::logger::Logger::LogMessage(std::source_location::current(), __VA_ARGS__)
 #define DOutWarning(...) ::zzz::logger::Logger::LogWarning(std::source_location::current(), __VA_ARGS__)

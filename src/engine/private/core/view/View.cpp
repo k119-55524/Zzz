@@ -17,7 +17,7 @@ View::View(std::shared_ptr<Platform> platform, std::function<void(View&)> onWind
 
 void View::Initialize()
 {
-	m_Input = zzz::safe_make_shared<Input>();
+	m_Input = safe_make_shared<Input>();
 	auto inputRes = m_Input->Initialize();
 	if (!inputRes)
 		THROW_RUNTIME("Failed to initialize input system: {}.", inputRes.error());
@@ -38,7 +38,7 @@ void View::Initialize()
 	callbacks.OnLowMemory        = [this]()                                 { OnWindowLowMemory(); };
 	callbacks.OnSafeAreaChanged  = [this](int t, int b, int l, int r)       { OnWindowSafeAreaChanged(t, b, l, r); };
 
-	m_Window = zzz::safe_make_shared<Window>(
+	m_Window = safe_make_shared<Window>(
 		m_Platform,
 		m_Input,
 		std::move(callbacks));

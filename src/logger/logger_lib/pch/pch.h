@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <format>
 #include <string>
@@ -6,7 +6,7 @@
 #include <iostream>
 #include <source_location>
 
-#include <zdefines.h>
+#include <common/platform_defines.h>
 
 #if Z_WINDOWS
 #include <Windows.h>

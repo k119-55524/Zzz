@@ -27,6 +27,6 @@ Platform::~Platform()
 
 void Platform::Initialize()
 {
-	m_ConfigManager = zzz::safe_make_shared<ConfigManager>(m_Path);
+	m_ConfigManager = safe_make_shared<ConfigManager>(m_Path);
 	InitializePlatformSpecific();
 }

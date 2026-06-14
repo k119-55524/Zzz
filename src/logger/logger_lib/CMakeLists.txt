@@ -6,7 +6,6 @@ target_precompile_headers(logger_lib PRIVATE
 
 target_include_directories(logger_lib PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../foundation
 )
 
 target_sources(logger_lib PRIVATE
@@ -18,6 +17,8 @@ target_sources(logger_lib PRIVATE
     "headers/enums.h")
 
 target_compile_features(logger_lib PUBLIC cxx_std_23)
+
+target_link_libraries(logger_lib PUBLIC common_lib)
 
 if(ZZZ_ENABLE_LOGGER)
     target_compile_definitions(logger_lib PUBLIC ZZZ_ENABLE_LOGGER=1)

@@ -1,8 +1,8 @@
-﻿#if Z_IOS
+#if Z_IOS
 
 #include "InputiOS.h"
 #import "../../window/iOSView.h"
-#include <foundation.h>
+#include <common/common.h>
 
 using namespace zzz::engine;
 

@@ -30,7 +30,7 @@ void ConfigManager::Initialize()
 			.make_preferred();
 
 		// Далее работаем с файлом
-		m_EngineConfig = zzz::safe_make_shared<EngineConfig>();
+		m_EngineConfig = safe_make_shared<EngineConfig>();
 
 		if (!std::filesystem::exists(m_ConfigPath))
 			DOutWarning("Config file not found: {}. Using default config.", m_ConfigPath.string());
@@ -39,27 +39,27 @@ void ConfigManager::Initialize()
 		if (!loadResult)
 		{
 			DOutWarning("Failed to load config file: {}. Creating default config.", m_ConfigPath.string());
-			m_EngineConfig = zzz::safe_make_shared<EngineConfig>();
+			m_EngineConfig = safe_make_shared<EngineConfig>();
 		}
 	}
 	catch (const std::filesystem::filesystem_error& e)
 	{
 		DOutException("Filesystem error: {}. Setting to default config.", e.what());
-		m_EngineConfig = zzz::safe_make_shared<EngineConfig>();
+		m_EngineConfig = safe_make_shared<EngineConfig>();
 
 		return;
 	}
 	catch (const std::exception& e)
 	{
 		DOutException("Config loading error: {}. Setting to default config.", e.what());
-		m_EngineConfig = zzz::safe_make_shared<EngineConfig>();
+		m_EngineConfig = safe_make_shared<EngineConfig>();
 
 		return;
 	}
 	catch (...)
 	{
 		DOutException("Unknown config loading error. Setting to default config.");
-		m_EngineConfig = zzz::safe_make_shared<EngineConfig>();
+		m_EngineConfig = safe_make_shared<EngineConfig>();
 
 		return;
 	}

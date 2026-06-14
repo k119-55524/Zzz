@@ -4,8 +4,8 @@
       "activeDefines": [
         "Z_ADD_LOGGER",
         "Z_IDE_OUT_LOGS",
-        "Z_TESTS_ENABLE_TEMPLATES",
-        "Z_TESTS_BENCH_ENABLE_TEMPLATES",
+        "Z_TESTS_ENABLE_COMMON",
+        "Z_TESTS_BENCH_ENABLE_COMMON",
         "Z_ADD_PROJECT_TESTS_IN_BUILD",
         "Z_ADD_PROJECT_BENCHMARKS_IN_BUILD"
       ],
@@ -42,13 +42,13 @@
       "description": "Тестирование шаблонов проекта",
       "isArchived": false,
       "isCMake": true,
-      "name": "Z_TESTS_ENABLE_TEMPLATES"
+      "name": "Z_TESTS_ENABLE_COMMON"
     },
     {
       "description": "Тестирование производительности шаблонов проекта",
       "isArchived": false,
       "isCMake": true,
-      "name": "Z_TESTS_BENCH_ENABLE_TEMPLATES"
+      "name": "Z_TESTS_BENCH_ENABLE_COMMON"
     },
     {
       "description": "Добаввить проект с тестами в сборку Cmake",

@@ -4,8 +4,8 @@
 #include <memory>
 #include <typeinfo>
 #include <functional>
-#include <foundation.h>
-#include "../../../headers/throwWrappers.h"
+#include <common/common.h>
+#include <engine/headers/throwWrappers.h>
 
 namespace zzz::engine
 {

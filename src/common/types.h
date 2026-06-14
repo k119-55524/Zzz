@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace zzz
+namespace zzz::common
 {
 	using zU8 = uint8_t;
 	using zU16 = uint16_t;

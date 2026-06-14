@@ -19,9 +19,9 @@ FetchContent_MakeAvailable(googlebenchmark)
 # -----------------------------------------------------------------------------
 set(BENCH_SOURCES "")
 
-if(Z_TESTS_BENCH_ENABLE_TEMPLATES)
-    file(GLOB_RECURSE TEMPLATES_BENCH_SOURCES "core/templates/*.cpp")
-    list(APPEND BENCH_SOURCES ${TEMPLATES_BENCH_SOURCES})
+if(Z_TESTS_BENCH_ENABLE_COMMON)
+    file(GLOB_RECURSE COMMON_BENCH_SOURCES "common/*.cpp")
+    list(APPEND BENCH_SOURCES ${COMMON_BENCH_SOURCES})
 endif()
 
 if(BENCH_SOURCES)
@@ -35,5 +35,5 @@ if(BENCH_SOURCES)
             engine_lib
     )
 else()
-    message(FATAL_ERROR "ОШИБКА: Сборка бенчмарков (Z_ADD_PROJECT_BENCHMARKS_IN_BUILD) включена, но ни один модуль бенчмарков (например, Z_TESTS_BENCH_ENABLE_TEMPLATES) не выбран! Включите хотя бы один модуль или выключите Z_ADD_PROJECT_BENCHMARKS_IN_BUILD.")
+    message(FATAL_ERROR "ОШИБКА: Сборка бенчмарков (Z_ADD_PROJECT_BENCHMARKS_IN_BUILD) включена, но ни один модуль бенчмарков (например, Z_TESTS_BENCH_ENABLE_COMMON) не выбран! Включите хотя бы один модуль или выключите Z_ADD_PROJECT_BENCHMARKS_IN_BUILD.")
 endif()

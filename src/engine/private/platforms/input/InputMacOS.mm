@@ -1,8 +1,8 @@
-﻿#if Z_MACOS
+#if Z_MACOS
 
 #include "InputMacOS.h"
 #import "../../window/MacOSView.h"
-#include <foundation.h>
+#include <common/common.h>
 
 using namespace zzz::engine;
 

@@ -1,6 +1,6 @@
 
 #include <gtest/gtest.h>
-#include "../../src/engine/private/core/templates/Event.h"
+#include <common/templates/Event.h>
 
 using namespace zzz::engine;
 

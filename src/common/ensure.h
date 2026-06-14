@@ -1,13 +1,13 @@
 #pragma once
 
-#include "zdefines.h"
+#include "platform_defines.h"
 #include <format>
 #include <utility>
 #include <stdexcept>
 #include <string_view>
 #include <source_location>
 
-namespace zzz
+namespace zzz::common
 {
 	/**
 	 * @brief Вспомогательная функция для генерации исключения std::runtime_error с информацией о месте вызова.
