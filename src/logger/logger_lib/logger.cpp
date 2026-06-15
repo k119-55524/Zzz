@@ -4,13 +4,18 @@
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 
 #include <common/common.h>
+#include "private/ConsoleBroadcaster.h"
+#include <iostream>
 
 using namespace zzz::common;
 using namespace zzz::logger;
 
 Logger::Logger()
 {
-	m_FilterMask.store(eLogMessageType::None);
+	m_FilterMask.store(eLogMessageType::All);
+#if Z_WINDOWS
+	AddBroadcasterImpl(safe_make_shared<ConsoleBroadcaster>());
+#endif
 }
 
 Logger::~Logger()
@@ -37,14 +42,10 @@ Logger::~Logger()
 
 void Logger::SetLogFilterMask(eLogMessageType filterMask)
 {
-	static std::once_flag createFlag;
-	std::call_once(createFlag, []()
-	{
-		g_Logger.emplace();
-	});
-	g_Logger->m_FilterMask.store(filterMask);
+	g_Logger.m_FilterMask.store(filterMask);
 }
 
+#pragma region LogXXX messages
 void Logger::LogMessage(const std::source_location& loc, std::string formatted)
 {
 	ProcessLog(loc, zzz::common::eLogMessageType::Message, std::move(formatted));
@@ -69,6 +70,7 @@ void Logger::LogCritical(const std::source_location& loc, std::string formatted)
 {
 	ProcessLog(loc, zzz::common::eLogMessageType::Critical, std::move(formatted));
 }
+#pragma endregion
 
 void Logger::ProcessLog(const std::source_location& loc, eLogMessageType type, std::string formatted)
 {
@@ -98,6 +100,60 @@ void Logger::AddToBroadcast(const std::source_location& loc, eLogMessageType typ
 	);
 
 	m_BroadcastCV.notify_one();
+}
+
+void Logger::DebugOutputIDE(const std::source_location& loc, eLogMessageType type, const std::string& formatted) noexcept
+{
+#if Z_IDE_OUT_LOGS
+	std::string output;
+	if (!!(type & (eLogMessageType::Message | eLogMessageType::Warning)))
+	{
+		output = MakeLogMessage(loc, type, formatted);
+	}
+	else
+	{
+		output = MakeLogMessageError(loc, type, formatted);
+	}
+
+#if defined(_MSC_VER)
+	if (IsDebuggerPresent())
+		OutputDebugStringA(output.c_str());
+#elif Z_ANDROID
+	__android_log_write(ANDROID_LOG_DEBUG, "Zzz", output.c_str());
+#else
+	std::cerr << output << std::endl;
+#endif
+#endif
+}
+
+std::string Logger::MakeLogMessage(const std::source_location& loc, eLogMessageType type, const std::string& msg)
+{
+	if (!!(type & eLogMessageType::Message))
+		return std::format(
+			">>>>> [{}] {}{}",
+			EnumToString::ToString(type),
+			msg,
+			GetPlatformLogLineEnding());
+	else
+		return std::format(
+			">>>>> [{}] {} -> line: {}, file: {}{}",
+			EnumToString::ToString(type),
+			msg,
+			loc.line(),
+			loc.file_name(),
+			GetPlatformLogLineEnding());
+}
+
+std::string Logger::MakeLogMessageError(const std::source_location& loc, eLogMessageType type, const std::string& msg)
+{
+	return std::format(
+		">>>>> [{}] {} -> [{}]. line: {}, file: {}{}",
+		EnumToString::ToString(type),
+		msg,
+		loc.function_name(),
+		loc.line(),
+		loc.file_name(),
+		GetPlatformLogLineEnding());
 }
 
 void Logger::BroadcastThreadLoop()
@@ -146,58 +202,25 @@ void Logger::BroadcastLogs(const std::vector<LogEntry>& logs)
 			listener->OnLog(entry);
 }
 
-void Logger::DebugOutputIDE(const std::source_location& loc, eLogMessageType type, const std::string& formatted) noexcept
+#pragma region Add broadcasters
+void Logger::AddBroadcasterImpl(std::shared_ptr<IBroadcaster> broadcaster)
 {
-#if Z_IDE_OUT_LOGS
-	std::string output;
-	if (!!(type & (eLogMessageType::Message | eLogMessageType::Warning)))
 	{
-		output = MakeLogMessage(loc, type, formatted);
-	}
-	else
-	{
-		output = MakeLogMessageError(loc, type, formatted);
+		std::lock_guard lock(m_ListenersMutex);
+		m_Listeners.push_back(std::move(broadcaster));
 	}
 
-#if defined(_MSC_VER)
-	if (IsDebuggerPresent())
-		OutputDebugStringA(output.c_str());
-#elif Z_ANDROID
-	__android_log_write(ANDROID_LOG_DEBUG, "Zzz", output.c_str());
+	StartBroadcastThreadIfNeeded();
+}
+
+void Logger::AddConsoleBroadcaster()
+{
+#if Z_WINDOWS
+	AddBroadcasterImpl(safe_make_shared<ConsoleBroadcaster>());
 #else
-	std::cerr << output << std::endl;
+	// No-op on non-Windows platforms since the standard output is already a console.
 #endif
-#endif
 }
-
-std::string Logger::MakeLogMessage(const std::source_location& loc, eLogMessageType type, const std::string& msg)
-{
-	if (!!(type & eLogMessageType::Message))
-		return std::format(
-			">>>>> [{}] {}{}",
-			LogMessageTypeToString(type),
-			msg,
-			GetPlatformLogLineEnding());
-	else
-		return std::format(
-			">>>>> [{}] {} -> line: {}, file: {}{}",
-			LogMessageTypeToString(type),
-			msg,
-			loc.line(),
-			loc.file_name(),
-			GetPlatformLogLineEnding());
-}
-
-std::string Logger::MakeLogMessageError(const std::source_location& loc, eLogMessageType type, const std::string& msg)
-{
-	return std::format(
-		">>>>> [{}] {} -> [{}]. line: {}, file: {}{}",
-		LogMessageTypeToString(type),
-		msg,
-		loc.function_name(),
-		loc.line(),
-		loc.file_name(),
-		GetPlatformLogLineEnding());
-}
+#pragma endregion
 
 #endif // Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD

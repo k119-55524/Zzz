@@ -13,7 +13,7 @@ namespace zzz::engine
 
 	public:
 		MainLoop_Linux() = delete;
-		MainLoop_Linux(const std::shared_ptr<Platform> platform);
+		MainLoop_Linux(const std::shared_ptr<Platform> platform, std::function<void()> onUpdate);
 		virtual ~MainLoop_Linux() = default;
 
 		void Run() override;

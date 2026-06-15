@@ -33,6 +33,7 @@ if(TEST_SOURCES)
         PRIVATE
             GTest::gtest_main
             engine_lib
+            logger_lib
     )
 
     # -----------------------------------------------------------------------------

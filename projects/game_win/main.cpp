@@ -1,6 +1,7 @@
 
 #include "main.h"
-#include <common/core_macros.h>
+#include <common/macroses.h>
+#include <iostream>
 
 using namespace zzz;
 using namespace zzz::logger;
@@ -23,7 +24,8 @@ int APIENTRY wWinMain(
 	int exitCode = 0;
 
 	{
-		Engine::SetLogFilterMask(eLogMessageType::All);
+		//Engine::SetLogFilterMask(eLogMessageType::All);
+		//Engine::AddConsoleBroadcaster();
 
 		DOut("[Windows OS]. Game started.");
 

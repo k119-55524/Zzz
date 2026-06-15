@@ -170,6 +170,6 @@ std::expected<std::filesystem::path, std::string> ConfigManager::GetSettingsDire
 #elif Z_WINDOWS || Z_LINUX
 	return m_Path.GetExecutableDirectory();
 #else
-#error >>>>> Unsupported platform
+#error >>>>> zzz::engine::ConfigManager::GetSettingsDirectory(): Unsupported platform.
 #endif
 }

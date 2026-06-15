@@ -16,6 +16,7 @@ target_sources(logger_lib PRIVATE
     header.h
     log_entry.h
     private/IBroadcaster.h
+    private/ConsoleBroadcaster.h
 )
 
 target_compile_features(logger_lib PUBLIC cxx_std_23)

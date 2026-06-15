@@ -13,7 +13,7 @@ target_link_libraries(your_target PUBLIC common_lib)
 ```cpp
 #include <common/types.h>
 #include <common/ensure.h>
-#include <common/core_macros.h>
+#include <common/macroses.h>
 ```
 
 Базовые сущности находятся в пространстве имён `zzz::common`.

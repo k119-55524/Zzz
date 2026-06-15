@@ -132,6 +132,6 @@ endif()
 
 target_link_libraries(engine_lib
     PUBLIC
-        logger_lib
         common_lib
+        logger_lib
 )

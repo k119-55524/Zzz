@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string_view>
+#include <stdexcept>
 #include "eLogMessageType.h"
 #include "eWinResize.h"
 
@@ -13,27 +14,27 @@ namespace zzz::common
 		{
 			switch (type)
 			{
-			case eLogMessageType::Message:   return "Message";
-			case eLogMessageType::Warning:   return "Warning";
-			case eLogMessageType::Error:     return "Error";
-			case eLogMessageType::Exception: return "Exception";
-			case eLogMessageType::Critical:  return "Critical";
-			case eLogMessageType::Fatal:     return "Fatal";
-			case eLogMessageType::All:       return "All";
-			case eLogMessageType::None:      return "None";
-			default:                         return "Unknown";
+			case eLogMessageType::Message:   return "MESSAGE";
+			case eLogMessageType::Warning:   return "WARNING";
+			case eLogMessageType::Error:     return "ERROR";
+			case eLogMessageType::Exception: return "EXCEPTION";
+			case eLogMessageType::Critical:  return "CRITICAL";
+			case eLogMessageType::Fatal:     return "FATAL";
+			case eLogMessageType::All:       return "ALL";
+			case eLogMessageType::None:      return "NONE";
 			}
+			throw std::invalid_argument("Unhandled eLogMessageType");
 		}
 
 		static constexpr std::string_view ToString(eWinResize type)
 		{
 			switch (type)
 			{
-			case eWinResize::Show:   return "Show";
-			case eWinResize::Hide:   return "Hide";
-			case eWinResize::Resize: return "Resize";
-			default:                 return "Unknown";
+			case eWinResize::Show:   return "SHOW";
+			case eWinResize::Hide:   return "HIDE";
+			case eWinResize::Resize: return "RESIZE";
 			}
+			throw std::invalid_argument("Unhandled eWinResize");
 		}
 	};
 }

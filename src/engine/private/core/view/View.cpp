@@ -1,9 +1,7 @@
 #include "View.h"
 #include "../../platforms/input/Input.h"
 #include "../../platforms/window/Window.h"
-#include <common/core_macros.h>
-
-#include <common/enums/enum_to_string.h>
+#include <common/common.h>
 
 using namespace zzz::engine;
 

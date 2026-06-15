@@ -3,7 +3,7 @@
 #include <stdexcept>
 //#include <common/common.h>
 #include <logger/logger_lib/logger.h>
-#include "core_macros.h"
+#include "macroses.h"
 
 #include "throw_wrappers.h"
 

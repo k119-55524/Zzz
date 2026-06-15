@@ -51,7 +51,7 @@ namespace zzz::engine
 	};
 	using NativeMsg = iOSMsg;
 #else
-#error ">>>>> Unsupported platform"
+#error ">>>>> zzz::engine::InputBase: Unsupported platform."
 #endif
 #pragma endregion
 

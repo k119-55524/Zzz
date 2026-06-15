@@ -136,7 +136,7 @@ namespace zzz::io
 
 			return std::filesystem::path(home) / ".config" / m_AppName;
 #else
-#error Unsupported platform.
+#error >>>>> zzz::io::Path::ResolveUserDataDirectory(): Unsupported platform.
 #endif
 		}
 		catch (const std::filesystem::filesystem_error& e)

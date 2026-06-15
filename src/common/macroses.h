@@ -11,8 +11,7 @@
  */
 #define DOut(...) \
 	do { \
-		if (!::zzz::logger::g_Logger) throw std::runtime_error("Logger is not initialized!"); \
-		::zzz::logger::g_Logger->LogMessage(std::source_location::current(), std::format(__VA_ARGS__)); \
+		::zzz::logger::g_Logger.LogMessage(std::source_location::current(), std::format(__VA_ARGS__)); \
 	} while (false)
 
 /**
@@ -20,8 +19,7 @@
  */
 #define DOutWarning(...) \
 	do { \
-		if (!::zzz::logger::g_Logger) throw std::runtime_error("Logger is not initialized!"); \
-		::zzz::logger::g_Logger->LogWarning(std::source_location::current(), std::format(__VA_ARGS__)); \
+		::zzz::logger::g_Logger.LogWarning(std::source_location::current(), std::format(__VA_ARGS__)); \
 	} while (false)
 
 /**
@@ -29,8 +27,7 @@
  */
 #define DOutError(...) \
 	do { \
-		if (!::zzz::logger::g_Logger) throw std::runtime_error("Logger is not initialized!"); \
-		::zzz::logger::g_Logger->LogError(std::source_location::current(), std::format(__VA_ARGS__)); \
+		::zzz::logger::g_Logger.LogError(std::source_location::current(), std::format(__VA_ARGS__)); \
 	} while (false)
 
 /**
@@ -38,8 +35,7 @@
  */
 #define DOutException(...) \
 	do { \
-		if (!::zzz::logger::g_Logger) throw std::runtime_error("Logger is not initialized!"); \
-		::zzz::logger::g_Logger->LogException(std::source_location::current(), std::format(__VA_ARGS__)); \
+		::zzz::logger::g_Logger.LogException(std::source_location::current(), std::format(__VA_ARGS__)); \
 	} while (false)
 
 /**
@@ -47,8 +43,7 @@
  */
 #define DOutCritical(...) \
 	do { \
-		if (!::zzz::logger::g_Logger) throw std::runtime_error("Logger is not initialized!"); \
-		::zzz::logger::g_Logger->LogCritical(std::source_location::current(), std::format(__VA_ARGS__)); \
+		::zzz::logger::g_Logger.LogCritical(std::source_location::current(), std::format(__VA_ARGS__)); \
 	} while (false)
 #else
 #define DOut(...)

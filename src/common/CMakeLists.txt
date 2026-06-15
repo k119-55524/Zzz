@@ -8,7 +8,7 @@ target_sources(common_lib PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/common.h
     ${CMAKE_CURRENT_SOURCE_DIR}/platform_defines.h
     ${CMAKE_CURRENT_SOURCE_DIR}/ensure.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/core_macros.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/macroses.h
     ${CMAKE_CURRENT_SOURCE_DIR}/memory_utils.h
     ${CMAKE_CURRENT_SOURCE_DIR}/throw_wrappers.h
     ${CMAKE_CURRENT_SOURCE_DIR}/throw_wrappers.cpp
@@ -19,3 +19,5 @@ target_sources(common_lib PRIVATE
 )
 
 target_compile_features(common_lib PUBLIC cxx_std_23)
+
+target_link_libraries(common_lib PUBLIC logger_lib)

@@ -60,16 +60,16 @@ elseif(UNIX)
     add_subdirectory(projects/game_linux)
 endif()
 
-
-
 # -----------------------------------------------------------------------------
 # Tests & Benchmarks
-# -----------------------------------------------------------------------------
-if(Z_ADD_PROJECT_TESTS_IN_BUILD)
+# Support both old and new variable names for backwards compatibility
+# Old names: Z_ADD_PROJECT_TESTS_IN_BUILD, Z_ADD_PROJECT_BENCHMARKS_IN_BUILD
+# New names: Z_BUILD_TESTS, Z_BUILD_BENCHMARKS
+if(Z_BUILD_TESTS OR Z_ADD_PROJECT_TESTS_IN_BUILD)
     enable_testing()
     add_subdirectory(qa/tests)
 endif()
 
-if(Z_ADD_PROJECT_BENCHMARKS_IN_BUILD)
+if(Z_BUILD_BENCHMARKS OR Z_ADD_PROJECT_BENCHMARKS_IN_BUILD)
     add_subdirectory(qa/benchmark)
 endif()
