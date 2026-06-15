@@ -6,26 +6,45 @@
 #include <format>
 
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+/**
+ * @brief Вывод информационного сообщения в лог.
+ */
 #define DOut(...) \
 	do { \
 		if (!::zzz::logger::g_Logger) throw std::runtime_error("Logger is not initialized!"); \
 		::zzz::logger::g_Logger->LogMessage(std::source_location::current(), std::format(__VA_ARGS__)); \
 	} while (false)
+
+/**
+ * @brief Вывод предупреждения в лог.
+ */
 #define DOutWarning(...) \
 	do { \
 		if (!::zzz::logger::g_Logger) throw std::runtime_error("Logger is not initialized!"); \
 		::zzz::logger::g_Logger->LogWarning(std::source_location::current(), std::format(__VA_ARGS__)); \
 	} while (false)
+
+/**
+ * @brief Вывод ошибки в лог.
+ */
 #define DOutError(...) \
 	do { \
 		if (!::zzz::logger::g_Logger) throw std::runtime_error("Logger is not initialized!"); \
 		::zzz::logger::g_Logger->LogError(std::source_location::current(), std::format(__VA_ARGS__)); \
 	} while (false)
+
+/**
+ * @brief Вывод исключения в лог.
+ */
 #define DOutException(...) \
 	do { \
 		if (!::zzz::logger::g_Logger) throw std::runtime_error("Logger is not initialized!"); \
 		::zzz::logger::g_Logger->LogException(std::source_location::current(), std::format(__VA_ARGS__)); \
 	} while (false)
+
+/**
+ * @brief Вывод критической ошибки в лог.
+ */
 #define DOutCritical(...) \
 	do { \
 		if (!::zzz::logger::g_Logger) throw std::runtime_error("Logger is not initialized!"); \
@@ -39,6 +58,9 @@
 #define DOutCritical(...)
 #endif
 
+/**
+ * @brief Выбрасывает std::runtime_error с форматированным сообщением и текущей позицией в коде (файл, строка).
+ */
 #define THROW_RUNTIME(...) ::zzz::throw_runtime_error(std::format(__VA_ARGS__), std::source_location::current())
 
 /// @brief Проверяет валидность функтора (в Debug/Development) и вызывает его.
@@ -84,9 +106,17 @@
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
+
+/**
+ * @brief Начало блока проверки утечек памяти (CRT). Только для Windows.
+ */
 #define CRT_LEAK_CHECK_BEGIN(...) \
 	_CrtMemState _crtLeakCtx{}; \
 	_CrtMemCheckpoint(&_crtLeakCtx)
+
+/**
+ * @brief Конец блока проверки утечек памяти. Возвращает -1 при обнаружении утечек и дампит статистику.
+ */
 #define CRT_LEAK_CHECK_END() \
 	([&]() -> int { \
 		_CrtMemState _crtLeakCtxEnd{}; \
