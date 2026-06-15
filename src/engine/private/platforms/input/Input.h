@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "InputBase.h"
 
 #if Z_WINDOWS
@@ -17,5 +17,6 @@ namespace zzz::engine { using Input = InputMacOS; }
 #include "InputiOS.h"
 namespace zzz::engine { using Input = InputiOS; }
 #else
-#error ">>>>> zzz::engine::Input: Unsupported platform."
+#error ">>>>> Input: Unsupported platform."
 #endif
+

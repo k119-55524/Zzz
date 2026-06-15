@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "MainLoop_Common.h"
 
 #if Z_WINDOWS
@@ -17,5 +17,6 @@ namespace zzz::engine { using MainLoop = MainLoop_MacOS; }
 #include "MainLoop_iOS.h"
 namespace zzz::engine { using MainLoop = MainLoop_iOS; }
 #else
-#error ">>>>> zzz::engine::MainLoop: Unsupported platform."
+#error ">>>>> MainLoop: Unsupported platform."
 #endif
+

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "IBroadcaster.h"
 
@@ -14,6 +14,7 @@
 
 namespace zzz::logger
 {
+	using namespace zzz::common;
 	class ConsoleBroadcaster final : public IBroadcaster
 	{
 	public:
@@ -109,7 +110,7 @@ namespace zzz::logger
 
 		void OnLog(const LogEntry& entry) override
 		{
-			using eType = zzz::common::eLogMessageType;
+			using eType = eLogMessageType;
 
 			const bool isWarning = (entry.type & eType::Warning) != eType::None;
 			const bool isError   = (entry.type & (eType::Error | eType::Exception | eType::Critical | eType::Fatal)) != eType::None;
@@ -143,9 +144,9 @@ namespace zzz::logger
 
 			std::string output;
 			if (isError)
-				output = std::format("{} [{}] {} -> [{}] {}:{}\n", timeStr, zzz::common::EnumToString::ToString(entry.type), entry.text, entry.function, entry.file, entry.line);
+				output = std::format("{} [{}] {} -> [{}] {}:{}\n", timeStr, EnumToString::ToString(entry.type), entry.text, entry.function, entry.file, entry.line);
 			else
-				output = std::format("{} [{}] {}\n", timeStr, zzz::common::EnumToString::ToString(entry.type), entry.text);
+				output = std::format("{} [{}] {}\n", timeStr, EnumToString::ToString(entry.type), entry.text);
 
 			auto& stream = isError ? std::cerr : std::cout;
 			stream << output;
@@ -160,3 +161,4 @@ namespace zzz::logger
 	};
 }
 #endif
+

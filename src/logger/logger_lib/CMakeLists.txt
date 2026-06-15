@@ -15,8 +15,11 @@ target_sources(logger_lib PRIVATE
     logger.cpp
     header.h
     log_entry.h
+    log_entry.cpp
     private/IBroadcaster.h
     private/ConsoleBroadcaster.h
+    private/NetworkBroadcaster.h
+    private/NetworkBroadcaster.cpp
 )
 
 target_compile_features(logger_lib PUBLIC cxx_std_23)
@@ -28,7 +31,7 @@ if(ZZZ_ENABLE_LOGGER)
 endif()
 
 if(WIN32)
-    target_link_libraries(logger_lib PRIVATE User32)
+    target_link_libraries(logger_lib PRIVATE User32 Ws2_32)
 endif()
 
 if(ANDROID)

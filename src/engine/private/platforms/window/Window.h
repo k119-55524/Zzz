@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #if Z_WINDOWS
 #include "WinMSWindows.h"
@@ -16,5 +16,6 @@ namespace zzz::engine { using Window = WinMacOS; }
 #include "WiniOS.h"
 namespace zzz::engine { using Window = WiniOS; }
 #else
-#error ">>>>> zzz::engine::Window: Unsupported platform."
+#error ">>>>> Window: Unsupported platform."
 #endif
+

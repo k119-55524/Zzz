@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <mutex>
 #include <atomic>
@@ -7,7 +7,6 @@
 #include <string_view>
 
 #include "NativeAppData.h"
-#include <common/common.h>
 #include <logger/logger_lib/logger.h>
 
 namespace zzz
@@ -60,7 +59,18 @@ namespace zzz::engine
 		static void AddConsoleBroadcaster()
 		{
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-			zzz::logger::g_Logger.AddConsoleBroadcaster();
+			g_Logger.AddConsoleBroadcaster();
+#endif
+		}
+
+		/**
+		 * @brief Добавляет транслятор логов в системную консоль.
+		 * @details В Windows аллоцирует отдельное окно консоли. Вызывается по желанию до или после инициализации движка.
+		 */
+		static void AddNetworkBroadcaster(std::string_view address, uint16_t port)
+		{
+#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+			g_Logger.AddNetworkBroadcaster(address, port);
 #endif
 		}
 #pragma endregion

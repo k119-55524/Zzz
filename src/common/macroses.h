@@ -65,7 +65,7 @@
 /**
  * @brief Выбрасывает std::runtime_error с форматированным сообщением и текущей позицией в коде (файл, строка).
  */
-#define THROW_RUNTIME(...) ::zzz::throw_runtime_error(std::format(__VA_ARGS__), std::source_location::current())
+#define THROW_RUNTIME(...) ::zzz::common::throw_runtime_error(std::format(__VA_ARGS__), std::source_location::current())
 
 /// @brief Проверяет валидность функтора (в Debug/Development) и вызывает его.
 #if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
@@ -139,3 +139,4 @@
 #define CRT_LEAK_CHECK_END() 0
 #endif
 #endif
+

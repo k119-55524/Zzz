@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <span>
 #include <vector>
@@ -6,7 +6,7 @@
 #include <cstring>
 #include <expected>
 
-namespace zzz::engine
+namespace zzz::common
 {
 	class Serializer;
 
@@ -19,7 +19,7 @@ namespace zzz::engine
 		[[nodiscard]] virtual std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const = 0;
 		[[nodiscard]] virtual std::expected<void, std::string> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& serializer) = 0;
 
-		friend class zzz::engine::Serializer;
+		friend class Serializer;
 	};
 
 	class Serializer
@@ -47,7 +47,7 @@ namespace zzz::engine
 		std::expected<void, std::string> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, T& value) const
 		{
 			if (offset + sizeof(T) > buffer.size())
-				return UNEXPECTED("Buffer too small.");
+				return std::unexpected("Buffer too small.");
 			std::memcpy(&value, buffer.data() + offset, sizeof(T));
 			offset += sizeof(T);
 
@@ -70,7 +70,7 @@ namespace zzz::engine
 		std::expected<void, std::string> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, std::array<std::byte, N>& value) const
 		{
 			if (offset + N > buffer.size())
-				return UNEXPECTED("Buffer too small.");
+				return std::unexpected("Buffer too small.");
 
 			std::memcpy(value.data(), buffer.data() + offset, N);
 			offset += N;

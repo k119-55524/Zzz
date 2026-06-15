@@ -1,7 +1,9 @@
-#include "View.h"
+﻿#include "View.h"
 #include "../../platforms/input/Input.h"
 #include "../../platforms/window/Window.h"
 #include <common/common.h>
+
+using namespace zzz::common;
 
 using namespace zzz::engine;
 
@@ -24,7 +26,7 @@ void View::Initialize()
 
 	WindowCallbacks callbacks;
 	callbacks.OnClose            = [this]()                                 { HandleWindowClose(); };
-	callbacks.OnResize           = [this](Size2D<>& size, zzz::common::eWinResize type)  { OnWindowResize(size, type); };
+	callbacks.OnResize           = [this](Size2D<>& size, eWinResize type)  { OnWindowResize(size, type); };
 	callbacks.OnResizeStart      = [this]()                                 { OnWindowResizeStart(); };
 	callbacks.OnSizing           = [this]()                                 { OnWindowSizing(); };
 	callbacks.OnResizeEnd        = [this]()                                 { OnWindowResizeEnd(); };
@@ -55,7 +57,7 @@ void View::HandleWindowClose()
 	OnWindowClose(*this);
 }
 
-void View::OnWindowResize(Size2D<>& size, zzz::common::eWinResize type)
+void View::OnWindowResize(Size2D<>& size, eWinResize type)
 {
 	DOut("Window Event: OnResize ({}x{}) Type: {}", size.width, size.height, EnumToString::ToString(type));
 }
@@ -127,3 +129,4 @@ void View::OnWindowSafeAreaChanged(int top, int bottom, int left, int right)
 	DOut("Window Event: OnSafeAreaChanged (t:{}, b:{}, l:{}, r:{})", top, bottom, left, right);
 }
 #pragma endregion
+

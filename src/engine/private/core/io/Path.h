@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <string>
 #include <filesystem>
@@ -12,7 +12,7 @@ namespace zzz::io
 	{
 	public:
 		Path() = delete;
-		Path(std::string_view appName, std::shared_ptr<zzz::engine::NativeAppData> nativeData);
+		Path(std::string_view appName, std::shared_ptr<engine::NativeAppData> nativeData);
 
 		[[nodiscard]] bool IsValidDirectoryName(std::string_view name) const noexcept;
 		[[nodiscard]] const std::expected<std::filesystem::path, std::string> GetExecutableDirectory() const noexcept;
@@ -20,7 +20,7 @@ namespace zzz::io
 
 	private:
 		std::string m_AppName;
-		std::shared_ptr<zzz::engine::NativeAppData> m_NativeData;
+		std::shared_ptr<engine::NativeAppData> m_NativeData;
 		std::filesystem::path m_UserDataDirectory;
 
 		[[nodiscard]] std::expected<std::filesystem::path, std::string> ResolveUserDataDirectory();
@@ -30,3 +30,4 @@ namespace zzz::io
 #endif
 	};
 }
+

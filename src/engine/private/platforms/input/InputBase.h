@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <functional>
 #include <bitset>
@@ -51,7 +51,7 @@ namespace zzz::engine
 	};
 	using NativeMsg = iOSMsg;
 #else
-#error ">>>>> zzz::engine::InputBase: Unsupported platform."
+#error ">>>>> InputBase: Unsupported platform."
 #endif
 #pragma endregion
 
@@ -185,3 +185,4 @@ namespace zzz::engine
 		std::bitset<static_cast<size_t>(KeyCode::Count)> m_KeyStates;
 	};
 }
+

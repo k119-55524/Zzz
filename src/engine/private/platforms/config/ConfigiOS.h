@@ -1,10 +1,11 @@
-#pragma once
+﻿#pragma once
 
 #include "../../../header.h"
-#include "../../core/serialize/Serializer.h"
+#include <common/serialize/Serializer.h>
 
 namespace zzz::engine
 {
+	using namespace zzz::common;
 	class ConfigiOS final : public ISerializable
 	{
 	public:
@@ -16,3 +17,6 @@ namespace zzz::engine
 		[[nodiscard]] std::expected<void, std::string> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override;
 	};
 }
+
+
+

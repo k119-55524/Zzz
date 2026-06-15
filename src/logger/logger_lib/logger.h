@@ -9,7 +9,6 @@
 #include <atomic>
 #include <vector>
 #include <memory>
-#include <optional>
 #include <common/common.h>
 #include <condition_variable>
 
@@ -42,6 +41,11 @@ namespace zzz::logger
 		 *          если оно отсутствует, и перенаправляет туда форматированный вывод.
 		 */
 		void AddConsoleBroadcaster();
+
+		/**
+		 * @brief Добавляет сетевой бродкастер (TCP).
+		 */
+		void AddNetworkBroadcaster(std::string_view address, uint16_t port);
 
 		void LogMessage(const std::source_location& loc, std::string formatted);
 		void LogWarning(const std::source_location& loc, std::string formatted);

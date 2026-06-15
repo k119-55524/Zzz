@@ -1,13 +1,14 @@
-#pragma once
+﻿#pragma once
 
 #include <format>
 #include <string>
 
 #include <common/common.h>
-#include "../serialize/Serializer.h"
+#include <common/serialize/Serializer.h>
 
 namespace zzz::engine
 {
+	using namespace zzz::common;
 	/**
 	 * @class size2D
 	 * @brief Шаблонный класс для хранения и управления двумерными размерами.
@@ -90,3 +91,5 @@ namespace zzz::engine
 		}
 	};
 }
+
+

@@ -1,11 +1,10 @@
-
+﻿
 #include "logger.h"
 
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 
-#include <common/common.h>
 #include "private/ConsoleBroadcaster.h"
-#include <iostream>
+#include "private/NetworkBroadcaster.h"
 
 using namespace zzz::common;
 using namespace zzz::logger;
@@ -45,32 +44,32 @@ void Logger::SetLogFilterMask(eLogMessageType filterMask)
 #pragma region LogXXX messages
 void Logger::LogMessage(const std::source_location& loc, std::string formatted)
 {
-	ProcessLog(loc, zzz::common::eLogMessageType::Message, std::move(formatted));
+	ProcessLog(loc, eLogMessageType::Message, std::move(formatted));
 }
 
 void Logger::LogWarning(const std::source_location& loc, std::string formatted)
 {
-	ProcessLog(loc, zzz::common::eLogMessageType::Warning, std::move(formatted));
+	ProcessLog(loc, eLogMessageType::Warning, std::move(formatted));
 }
 
 void Logger::LogError(const std::source_location& loc, std::string formatted)
 {
-	ProcessLog(loc, zzz::common::eLogMessageType::Error, std::move(formatted));
+	ProcessLog(loc, eLogMessageType::Error, std::move(formatted));
 }
 
 void Logger::LogException(const std::source_location& loc, std::string formatted)
 {
-	ProcessLog(loc, zzz::common::eLogMessageType::Exception, std::move(formatted));
+	ProcessLog(loc, eLogMessageType::Exception, std::move(formatted));
 }
 
 void Logger::LogCritical(const std::source_location& loc, std::string formatted)
 {
-	ProcessLog(loc, zzz::common::eLogMessageType::Critical, std::move(formatted));
+	ProcessLog(loc, eLogMessageType::Critical, std::move(formatted));
 }
 
 void Logger::LogFatal(const std::source_location& loc, std::string formatted)
 {
-	ProcessLog(loc, zzz::common::eLogMessageType::Fatal, std::move(formatted));
+	ProcessLog(loc, eLogMessageType::Fatal, std::move(formatted));
 	std::terminate();
 }
 #pragma endregion
@@ -221,9 +220,13 @@ void Logger::AddConsoleBroadcaster()
 #if Z_WINDOWS
 	AddBroadcasterImpl(safe_make_shared<ConsoleBroadcaster>());
 #else
-	// No-op on non-Windows platforms since the standard output is already a console.
+#error >>>>> Logger::AddConsoleBroadcaster(). ConsoleBroadcaster is currently supported only on Windows.
 #endif
 }
-#pragma endregion
 
+void Logger::AddNetworkBroadcaster(std::string_view address, uint16_t port)
+{
+	AddBroadcasterImpl(safe_make_shared<NetworkBroadcaster>(address, port));
+}
+#pragma endregion
 #endif // Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD

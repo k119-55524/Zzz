@@ -4,8 +4,8 @@
 
 #include "io/Path.h"
 #include "ConfigManager.h"
-#include "headers/constants.h"
-#include "../../core/serialize/Serializer.h"
+#include <common/constants.h>
+#include <common/serialize/Serializer.h>
 
 using namespace zzz::io;
 using namespace zzz::engine;
@@ -170,6 +170,9 @@ std::expected<std::filesystem::path, std::string> ConfigManager::GetSettingsDire
 #elif Z_WINDOWS || Z_LINUX
 	return m_Path.GetExecutableDirectory();
 #else
-#error >>>>> zzz::engine::ConfigManager::GetSettingsDirectory(): Unsupported platform.
+#error >>>>> ConfigManager::GetSettingsDirectory(): Unsupported platform.
 #endif
 }
+
+
+

@@ -1,8 +1,6 @@
-#include "pch.h"
-
 #include "Serializer.h"
 
-using namespace zzz::engine;
+using namespace zzz::common;
 
 std::expected<void, std::string> Serializer::Serialize(std::vector<std::byte>& buffer, const std::string& str) const
 {
@@ -30,7 +28,7 @@ std::expected<void, std::string> Serializer::DeSerialize(std::span<const std::by
 
 	// Проверяем, достаточно ли данных в буфере
 	if (offset + size > buffer.size())
-		return UNEXPECTED("Buffer too small for string data.");
+		return std::unexpected("Buffer too small for string data.");
 
 	// Читаем данные строки
 	str.resize(size);
@@ -70,7 +68,7 @@ std::expected<void, std::string> Serializer::DeSerialize(std::span<const std::by
 
 	// Проверяем, достаточно ли данных в буфере
 	if (offset + byte_size > buffer.size())
-		return UNEXPECTED("Buffer too small for wstring data.");
+		return std::unexpected("Buffer too small for wstring data.");
 
 	// Читаем данные строки
 	str.resize(size);

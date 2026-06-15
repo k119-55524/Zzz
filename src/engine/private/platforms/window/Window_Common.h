@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "../Platform.h"
 #include "../input/Input.h"
@@ -8,6 +8,7 @@
 
 namespace zzz::engine
 {
+	using namespace zzz::common;
 	/**
 	 * @brief Набор всех возможных колбэков жизненного цикла окна.
 	 * Передается из View в платформенную реализацию окна при создании.
@@ -27,7 +28,7 @@ namespace zzz::engine
 		 * @param size Новый размер клиентской области окна в пикселях.
 		 * @param type Тип изменения (Resize, Show, Hide).
 		 */
-		std::function<void(Size2D<>& size, zzz::common::eWinResize type)> OnResize;
+		std::function<void(Size2D<>& size, eWinResize type)> OnResize;
 
 		/**
 		 * @brief Вызывается, когда пользователь начинает перетаскивать рамку окна (захватил мышью).
@@ -131,3 +132,4 @@ namespace zzz::engine
 		bool IsActivate;
 	};
 }
+

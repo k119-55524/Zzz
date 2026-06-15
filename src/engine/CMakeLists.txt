@@ -27,7 +27,6 @@ target_sources(engine_lib PRIVATE
     "headers/MSWin.h"
     "headers/Linux.h"
     "headers/Android.h"
-    "headers/constants.h"
     "headers/enums.h"
 
     # Core
@@ -35,7 +34,6 @@ target_sources(engine_lib PRIVATE
     "private/platforms/config/EngineConfig.h" "private/platforms/config/EngineConfig.cpp"
     "private/platforms/config/PlatformConfig.h"
     "private/core/io/Path.h" "private/core/io/Path.cpp"
-    "private/core/serialize/Serializer.h" "private/core/serialize/Serializer.cpp"
     "private/core/utils/version.h" "private/core/utils/version.cpp"
     "private/core/templates/Size2D.h"
 

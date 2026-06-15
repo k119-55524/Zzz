@@ -6,6 +6,7 @@ target_include_directories(common_lib PUBLIC
 
 target_sources(common_lib PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/common.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/constants.h
     ${CMAKE_CURRENT_SOURCE_DIR}/platform_defines.h
     ${CMAKE_CURRENT_SOURCE_DIR}/ensure.h
     ${CMAKE_CURRENT_SOURCE_DIR}/macroses.h
@@ -16,6 +17,8 @@ target_sources(common_lib PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/enums/eLogMessageType.h
     ${CMAKE_CURRENT_SOURCE_DIR}/enums/eWinResize.h
     ${CMAKE_CURRENT_SOURCE_DIR}/enums/enum_to_string.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/serialize/Serializer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/serialize/Serializer.cpp
 )
 
 target_compile_features(common_lib PUBLIC cxx_std_23)

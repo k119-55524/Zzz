@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #if Z_WINDOWS
 #include "ConfigMSWin.h"
@@ -27,6 +27,7 @@ namespace zzz::engine
 #elif Z_IOS
 	using PlatformConfig = ConfigiOS;
 #else
-#error >>>>> zzz::engine::PlatformConfig alias: Unsupported platform.
+#error >>>>> PlatformConfig alias: Unsupported platform.
 #endif
 }
+

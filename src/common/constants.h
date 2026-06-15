@@ -3,7 +3,7 @@
 #include <array>
 #include <common/common.h>
 
-namespace zzz
+namespace zzz::common
 {
 #pragma region Config file constants
 	constexpr std::string_view c_ConfigFileName = "config.dat";
@@ -24,5 +24,9 @@ namespace zzz
 #pragma region Microsoft Windows constants
 	constexpr std::string_view c_IcoResourceName = "IDI_ICON1";
 	constexpr std::string_view c_RegisterClassName = "ZzzEngineWindowClass";
+#pragma endregion
+
+#pragma region Network constants
+	constexpr std::string_view c_LocalhostIPv4 = "127.0.0.1";
 #pragma endregion
 }

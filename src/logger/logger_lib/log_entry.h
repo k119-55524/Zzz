@@ -1,20 +1,30 @@
-#pragma once
+﻿#pragma once
 
 #include "header.h"
 
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 
+#include <common/serialize/Serializer.h>
+
 namespace zzz::logger
 {
-	struct LogEntry
+	using namespace zzz::common;
+	struct LogEntry final : public ISerializable
 	{
 		uint64_t timestamp;
-		zzz::common::eLogMessageType type;
+		eLogMessageType type;
 		std::string text;
 		std::string file;
 		std::string function;
 		uint32_t line;
+
+		LogEntry() = default;
+		LogEntry(uint64_t ts, eLogMessageType tp, std::string txt, std::string f, std::string func, uint32_t l)
+			: timestamp(ts), type(tp), text(std::move(txt)), file(std::move(f)), function(std::move(func)), line(l) {}
+
+	protected:
+		std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override;
+		std::expected<void, std::string> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& serializer) override;
 	};
 }
-
 #endif

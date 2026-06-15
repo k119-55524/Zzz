@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "../../platforms/Platform.h"
 #include "../../platforms/input/Input.h"
@@ -6,6 +6,7 @@
 
 namespace zzz::engine
 {
+	using namespace zzz::common;
 	class View final
 	{
 		Z_NO_MOVE(View);
@@ -26,9 +27,9 @@ namespace zzz::engine
 		 * 
 		 * @platforms Поддерживается везде (Windows, macOS, Linux, Android, iOS).
 		 * @usage Используется для перерасчета матриц проекции камеры (Aspect Ratio) и перекомпоновки UI-элементов.
-		 * При zzz::common::eWinResize::Hide рендер должен ставиться на паузу, при Show - возобновляться.
+		 * При eWinResize::Hide рендер должен ставиться на паузу, при Show - возобновляться.
 		 */
-		void OnWindowResize(Size2D<>& size, zzz::common::eWinResize type);
+		void OnWindowResize(Size2D<>& size, eWinResize type);
 
 		/**
 		 * @brief Обрабатывает момент начала перетаскивания рамки окна пользователем.
@@ -147,3 +148,4 @@ namespace zzz::engine
 		void HandleWindowClose();
 	};
 }
+

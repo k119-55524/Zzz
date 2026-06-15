@@ -1,9 +1,10 @@
 
-#include <common/macroses.h>
+#include <common/common.h>
 
 #include "main.h"
 
 using namespace zzz;
+using namespace zzz::common;
 using namespace zzz::logger;
 using namespace zzz::engine;
 
@@ -26,6 +27,7 @@ int APIENTRY wWinMain(
 	{
 		//Engine::SetLogFilterMask(eLogMessageType::All);
 		//Engine::AddConsoleBroadcaster();
+		Engine::AddNetworkBroadcaster(c_LocalhostIPv4, 3030);
 
 		DOut("[Windows OS]. Game started.");
 

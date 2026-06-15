@@ -1,7 +1,9 @@
-
+﻿
 #include "WinMSWindows.h"
 #include "../Platform.h"
 #include "../../core/utils/ScreenResolution.h"
+
+using namespace zzz::common;
 
 using namespace zzz::engine;
 
@@ -144,19 +146,19 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		m_WinSize.SetFrom(static_cast<zU32>(LOWORD(lParam)), static_cast<zU32>(HIWORD(lParam)));
 		if (wParam == SIZE_MINIMIZED)
 		{
-			VERIFY_AND_CALL(m_Callbacks.OnResize, m_WinSize, zzz::common::eWinResize::Hide);
+			VERIFY_AND_CALL(m_Callbacks.OnResize, m_WinSize, eWinResize::Hide);
 			IsMinimized = true;
 		}
 		else
 		{
 			if ((wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED) && IsMinimized)
 			{
-				VERIFY_AND_CALL(m_Callbacks.OnResize, m_WinSize, zzz::common::eWinResize::Show);
+				VERIFY_AND_CALL(m_Callbacks.OnResize, m_WinSize, eWinResize::Show);
 				IsMinimized = false;
 			}
 			else
 			{
-				VERIFY_AND_CALL(m_Callbacks.OnResize, m_WinSize, zzz::common::eWinResize::Resize);
+				VERIFY_AND_CALL(m_Callbacks.OnResize, m_WinSize, eWinResize::Resize);
 			}
 		}
 		return { false, 0 };
@@ -258,3 +260,4 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 
 	return { true, 0 };
 }
+

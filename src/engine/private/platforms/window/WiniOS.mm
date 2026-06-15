@@ -1,4 +1,4 @@
-#include "WiniOS.h"
+﻿#include "WiniOS.h"
 #import "iOSView.h"
 #include <common/common.h>
 
@@ -6,7 +6,7 @@ using namespace zzz::engine;
 
 @interface EngineViewController : UIViewController
 @property (nonatomic, assign) WiniOS* winEngine;
-@property (nonatomic, assign) zzz::engine::InputiOS* inputEngine;
+@property (nonatomic, assign) InputiOS* inputEngine;
 @end
 
 @implementation EngineViewController
@@ -43,3 +43,4 @@ std::expected<void, std::string> WiniOS::Initialize(const std::string_view appNa
     }
 	return {};
 }
+

@@ -1,10 +1,11 @@
-#pragma once
+﻿#pragma once
 
 #include <compare>
-#include "../serialize/Serializer.h"
+#include <common/serialize/Serializer.h>
 
 namespace zzz::engine
 {
+	using namespace zzz::common;
 	class Version final : public ISerializable
 	{
 	public:
@@ -64,3 +65,5 @@ namespace zzz::engine
 		zU32 m_Patch;
 	};
 }
+
+
