@@ -13,36 +13,28 @@
 #include <common/templates/double_buffered_vector.h>
 #include <condition_variable>
 
+#include "log_entry.h"
+#include "private/IBroadcaster.h"
+
+using namespace zzz::common;
+
 namespace zzz::logger
 {
-	struct LogEntry
-	{
-		uint64_t timestamp;
-		zzz::common::eLogMessageType type;
-		std::string text;
-		std::string file;
-		std::string function;
-		uint32_t line;
-	};
-
 	/**
 	 * @brief Централизованная система логирования с поддержкой асинхронной рассылки.
 	 */
 	class Logger
 	{
 	public:
-		Logger(bool enableStreaming, zzz::common::eLogMessageType filterMask);
+		Logger();
 		~Logger();
 
 		/**
-		 * @brief Инициализация логгера.
-		 * 
-		 * @note Это одноразовая операция (вызывать желательно до создания объекта движка).
-		 * 
-		 * @param enableStreaming Включает фоновый поток для рассылки логов.
+		 * @brief Устанавливает маску типов логов, проходящих через систему.
+		 * @note Создаёт глобальный экземпляр логера при первом вызове. Потокобезопасно.
 		 * @param filterMask Маска фильтрации для вывода сообщений.
 		 */
-		static void Initialize(bool enableStreaming = true, zzz::common::eLogMessageType filterMask = zzz::common::eLogMessageType::All);
+		static void SetLogFilterMask(eLogMessageType filterMask);
 
 		void LogMessage(const std::source_location& loc, std::string formatted);
 		void LogWarning(const std::source_location& loc, std::string formatted);
@@ -50,23 +42,41 @@ namespace zzz::logger
 		void LogException(const std::source_location& loc, std::string formatted);
 		void LogCritical(const std::source_location& loc, std::string formatted);
 
+		/**
+		 * @brief Добавляет бродкастер типа T, конструируя его с переданными аргументами.
+		 * При первом вызове автоматически запускает бродкаст-поток. Потокобезопасно.
+		 * @tparam T Конкретный тип бродкастера, должен реализовывать IBroadcaster.
+		 * @param args Аргументы конструктора T.
+		 */
+		template<typename T, typename... Args>
+		void AddBroadcaster(Args&&... args)
+		{
+			auto broadcaster = std::make_shared<T>(std::forward<Args>(args)...);
+			{
+				std::lock_guard lock(m_ListenersMutex);
+				m_Listeners.push_back(std::move(broadcaster));
+			}
+			StartBroadcastThreadIfNeeded();
+		}
+
 	private:
-		void ProcessLog(const std::source_location& loc, zzz::common::eLogMessageType type, std::string formatted);
-		void AddToBroadcast(const std::source_location& loc, zzz::common::eLogMessageType type, std::string msg);
+		void ProcessLog(const std::source_location& loc, eLogMessageType type, std::string formatted);
+		void AddToBroadcast(const std::source_location& loc, eLogMessageType type, std::string msg);
+		void StartBroadcastThreadIfNeeded();
 		void BroadcastThreadLoop();
 		void BroadcastLogs(const std::vector<LogEntry>& logs);
 
-		void DebugOutputIDE(const std::source_location& loc, zzz::common::eLogMessageType type, const std::string& formatted) noexcept;
-		std::string MakeLogMessage(const std::source_location& loc, zzz::common::eLogMessageType type, const std::string& msg);
-		std::string MakeLogMessageError(const std::source_location& loc, zzz::common::eLogMessageType type, const std::string& msg);
-		constexpr const char* LogMessageTypeToString(zzz::common::eLogMessageType type)
+		void DebugOutputIDE(const std::source_location& loc, eLogMessageType type, const std::string& formatted) noexcept;
+		std::string MakeLogMessage(const std::source_location& loc, eLogMessageType type, const std::string& msg);
+		std::string MakeLogMessageError(const std::source_location& loc, eLogMessageType type, const std::string& msg);
+		constexpr const char* LogMessageTypeToString(eLogMessageType type)
 		{
-			if (!!(type & zzz::common::eLogMessageType::Message))   return "MESSAGE";
-			if (!!(type & zzz::common::eLogMessageType::Warning))   return "WARNING";
-			if (!!(type & zzz::common::eLogMessageType::Error))     return "ERROR";
-			if (!!(type & zzz::common::eLogMessageType::Exception)) return "EXCEPTION";
-			if (!!(type & zzz::common::eLogMessageType::Critical))  return "CRITICAL";
-			if (!!(type & zzz::common::eLogMessageType::Fatal))     return "FATAL";
+			if (!!(type & eLogMessageType::Message))   return "MESSAGE";
+			if (!!(type & eLogMessageType::Warning))   return "WARNING";
+			if (!!(type & eLogMessageType::Error))     return "ERROR";
+			if (!!(type & eLogMessageType::Exception)) return "EXCEPTION";
+			if (!!(type & eLogMessageType::Critical))  return "CRITICAL";
+			if (!!(type & eLogMessageType::Fatal))     return "FATAL";
 			return "UNKNOWN";
 		}
 		constexpr const char* GetPlatformLogLineEnding()
@@ -77,17 +87,23 @@ namespace zzz::logger
 			return "\n";
 #endif
 		}
-		
-		std::atomic<zzz::common::eLogMessageType> m_AllowedOutputTypesMask;
-		
-		zzz::common::DoubleBufferedVector<LogEntry> m_LogBuffer;
+
+		std::atomic<eLogMessageType> m_FilterMask;
+
+		std::vector<std::shared_ptr<IBroadcaster>> m_Listeners;
+		std::mutex m_ListenersMutex;
+
+		DoubleBufferedVector<LogEntry> m_LogBuffer;
 		std::thread m_BroadcastThread;
 		std::condition_variable m_BroadcastCV;
 		std::mutex m_BroadcastMutex;
 		std::atomic<bool> m_BroadcastThreadRunning{false};
 	};
 
+	/**
+	 * @brief Глобальный экземпляр логгера.
+	 * Инициализируется один раз вызовом Logger::Initialize.
+	 */
 	inline std::optional<Logger> g_Logger;
 }
-
 #endif

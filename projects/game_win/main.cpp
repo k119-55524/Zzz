@@ -1,3 +1,4 @@
+
 #include "main.h"
 #include <common/core_macros.h>
 
@@ -22,7 +23,8 @@ int APIENTRY wWinMain(
 	int exitCode = 0;
 
 	{
-		Engine::CustomInitLogger(true);
+		Engine::SetLogFilterMask(eLogMessageType::All);
+
 		DOut("[Windows OS]. Game started.");
 
 		try

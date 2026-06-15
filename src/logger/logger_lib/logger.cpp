@@ -8,15 +8,9 @@
 using namespace zzz::common;
 using namespace zzz::logger;
 
-Logger::Logger(bool enableStreaming, zzz::common::eLogMessageType filterMask)
+Logger::Logger()
 {
-	m_AllowedOutputTypesMask.store(filterMask);
-
-	if (enableStreaming)
-	{
-		m_BroadcastThreadRunning.store(true);
-		m_BroadcastThread = std::thread(&Logger::BroadcastThreadLoop, this);
-	}
+	m_FilterMask.store(eLogMessageType::None);
 }
 
 Logger::~Logger()
@@ -41,18 +35,14 @@ Logger::~Logger()
 	}
 }
 
-void Logger::Initialize(bool enableStreaming, zzz::common::eLogMessageType filterMask)
+void Logger::SetLogFilterMask(eLogMessageType filterMask)
 {
-	static std::once_flag initFlag;
-	bool wasInitializedNow = false;
-
-	std::call_once(initFlag, [&]() {
-		g_Logger.emplace(enableStreaming, filterMask);
-		wasInitializedNow = true;
+	static std::once_flag createFlag;
+	std::call_once(createFlag, []()
+	{
+		g_Logger.emplace();
 	});
-
-	if (!wasInitializedNow)
-		throw std::runtime_error("Logger has already been initialized.");
+	g_Logger->m_FilterMask.store(filterMask);
 }
 
 void Logger::LogMessage(const std::source_location& loc, std::string formatted)
@@ -80,9 +70,9 @@ void Logger::LogCritical(const std::source_location& loc, std::string formatted)
 	ProcessLog(loc, zzz::common::eLogMessageType::Critical, std::move(formatted));
 }
 
-void Logger::ProcessLog(const std::source_location& loc, zzz::common::eLogMessageType type, std::string formatted)
+void Logger::ProcessLog(const std::source_location& loc, eLogMessageType type, std::string formatted)
 {
-	auto mask = m_AllowedOutputTypesMask.load();
+	auto mask = m_FilterMask.load();
 	if (!(mask & type))
 		return;
 
@@ -90,7 +80,7 @@ void Logger::ProcessLog(const std::source_location& loc, zzz::common::eLogMessag
 	AddToBroadcast(loc, type, std::move(formatted));
 }
 
-void Logger::AddToBroadcast(const std::source_location& loc, zzz::common::eLogMessageType type, std::string msg)
+void Logger::AddToBroadcast(const std::source_location& loc, eLogMessageType type, std::string msg)
 {
 	if (!m_BroadcastThreadRunning.load())
 		return;
@@ -134,11 +124,26 @@ void Logger::BroadcastThreadLoop()
 	}
 }
 
+void Logger::StartBroadcastThreadIfNeeded()
+{
+	std::lock_guard lock(m_BroadcastMutex);
+	if (m_BroadcastThreadRunning.load())
+		return;
+	m_BroadcastThreadRunning.store(true);
+	m_BroadcastThread = std::thread(&Logger::BroadcastThreadLoop, this);
+}
+
 void Logger::BroadcastLogs(const std::vector<LogEntry>& logs)
 {
-	// TODO: Сетевая отправка
-	// Заглушка, чтобы компилятор не ругался на неиспользуемый параметр
-	(void)logs;
+	std::vector<std::shared_ptr<IBroadcaster>> listeners;
+	{
+		std::lock_guard lock(m_ListenersMutex);
+		listeners = m_Listeners;
+	}
+
+	for (const auto& entry : logs)
+		for (const auto& listener : listeners)
+			listener->OnLog(entry);
 }
 
 void Logger::DebugOutputIDE(const std::source_location& loc, eLogMessageType type, const std::string& formatted) noexcept
