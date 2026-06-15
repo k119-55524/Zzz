@@ -119,7 +119,8 @@ void Logger::BroadcastThreadLoop()
 		if (!readBuffer.empty())
 		{
 			BroadcastLogs(readBuffer);
-			readBuffer.clear(); // Очищаем буфер после отправки
+			if (!m_BroadcastThreadRunning.load())
+				break;
 			continue;
 		}
 

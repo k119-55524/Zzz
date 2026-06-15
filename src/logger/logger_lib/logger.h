@@ -25,12 +25,23 @@ namespace zzz::logger
 		uint32_t line;
 	};
 
+	/**
+	 * @brief Централизованная система логирования с поддержкой асинхронной рассылки.
+	 */
 	class Logger
 	{
 	public:
 		Logger(bool enableStreaming, zzz::common::eLogMessageType filterMask);
 		~Logger();
 
+		/**
+		 * @brief Инициализация логгера.
+		 * 
+		 * @note Это одноразовая операция (вызывать желательно до создания объекта движка).
+		 * 
+		 * @param enableStreaming Включает фоновый поток для рассылки логов.
+		 * @param filterMask Маска фильтрации для вывода сообщений.
+		 */
 		static void Initialize(bool enableStreaming = true, zzz::common::eLogMessageType filterMask = zzz::common::eLogMessageType::All);
 
 		void LogMessage(const std::source_location& loc, std::string formatted);
