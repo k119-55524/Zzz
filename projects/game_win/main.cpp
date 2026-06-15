@@ -26,7 +26,7 @@ int APIENTRY wWinMain(
 
 		try
 		{
-			Engine::SetLogStreamingEnabled(true);
+			Engine::CustomInitLogger(true);
 			Engine engine("GameWin_ZzzEngine");
 			auto res = engine.Initialize();
 			if (res)

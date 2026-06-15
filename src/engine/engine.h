@@ -7,6 +7,8 @@
 #include <string_view>
 
 #include "NativeAppData.h"
+#include <common/common.h>
+#include <logger/logger_lib/logger.h>
 
 namespace zzz
 {
@@ -21,6 +23,7 @@ namespace zzz::engine
 }
 
 using namespace zzz;
+using namespace zzz::logger;
 
 namespace zzz::engine
 {
@@ -36,8 +39,7 @@ namespace zzz::engine
 		[[nodiscard]] std::expected<void, std::string> Initialize();
 		[[nodiscard]] std::expected<void, std::string> Run();
 
-		inline static void SetLogStreamingEnabled(bool enabled)	{ zzz::logger::Logger::SetLogStreamingEnabled(enabled); }
-		[[nodiscard]] inline static bool IsLogStreamingEnabled() { return zzz::logger::Logger::IsLogStreamingEnabled(); }
+		inline static void CustomInitLogger(bool enableStreaming, eLogMessageType filterMask = eLogMessageType::All) { zzz::logger::Logger::Initialize(filterMask, enableStreaming); }
 
 	private:
 		void Shutdown();

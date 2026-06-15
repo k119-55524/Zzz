@@ -29,7 +29,6 @@ target_sources(engine_lib PRIVATE
     "headers/Android.h"
     "headers/constants.h"
     "headers/enums.h"
-    "headers/throwWrappers.h"
 
     # Core
     "private/platforms/config/ConfigManager.h" "private/platforms/config/ConfigManager.cpp"

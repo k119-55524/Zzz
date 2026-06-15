@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <vector>
 #include <mutex>
@@ -58,6 +58,19 @@ namespace zzz::common
 			}
 
 			return m_ReadBuffer;
+		}
+
+		void Clear()
+		{
+			std::lock_guard lock(m_Mutex);
+			m_WriteBuffer.clear();
+			m_ReadBuffer.clear();
+		}
+
+		bool IsEmpty()
+		{
+			std::lock_guard lock(m_Mutex);
+			return m_WriteBuffer.empty() && m_ReadBuffer.empty();
 		}
 
 	private:

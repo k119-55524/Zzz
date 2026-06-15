@@ -10,6 +10,7 @@ target_sources(common_lib INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/ensure.h
     ${CMAKE_CURRENT_SOURCE_DIR}/core_macros.h
     ${CMAKE_CURRENT_SOURCE_DIR}/memory_utils.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/throwWrappers.h
     ${CMAKE_CURRENT_SOURCE_DIR}/types.h
 )
 

@@ -2,20 +2,28 @@
 
 #include "header.h"
 
-using namespace zzz;
-
 namespace zzz::logger
 {
+	struct LogEntry
+	{
+		uint64_t timestamp;
+		eLogMessageType type;
+		std::string text;
+		std::string file;
+		std::string function;
+		uint32_t line;
+	};
+
 	class Logger
 	{
 	public:
+		static void Initialize(eLogMessageType filterMask = eLogMessageType::All, bool enableStreaming = true);
+
 		template<typename... Args>
 		static void LogMessage(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
 		{
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-			auto formatted = std::format(fmt, std::forward<Args>(args)...);
-			auto output = MakeLogMessage(loc, eLogMessageType::Message, formatted);
-			DebugOutputIDE(output);
+			ProcessLog(loc, eLogMessageType::Message, std::format(fmt, std::forward<Args>(args)...));
 #endif
 		}
 
@@ -23,9 +31,7 @@ namespace zzz::logger
 		static void LogWarning(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
 		{
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-			auto formatted = std::format(fmt, std::forward<Args>(args)...);
-			auto output = MakeLogMessage(loc, eLogMessageType::Warning, formatted);
-			DebugOutputIDE(output);
+			ProcessLog(loc, eLogMessageType::Warning, std::format(fmt, std::forward<Args>(args)...));
 #endif
 		}
 
@@ -33,9 +39,7 @@ namespace zzz::logger
 		static void LogError(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
 		{
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-			auto formatted = std::format(fmt, std::forward<Args>(args)...);
-			auto output = MakeLogMessageError(loc, eLogMessageType::Error, formatted);
-			DebugOutputIDE(output);
+			ProcessLog(loc, eLogMessageType::Error, std::format(fmt, std::forward<Args>(args)...));
 #endif
 		}
 
@@ -43,59 +47,44 @@ namespace zzz::logger
 		static void LogException(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
 		{
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-			auto formatted = std::format(fmt, std::forward<Args>(args)...);
-			auto output = MakeLogMessageError(loc, eLogMessageType::Exception, formatted);
-			DebugOutputIDE(output);
+			ProcessLog(loc, eLogMessageType::Exception, std::format(fmt, std::forward<Args>(args)...));
 #endif
 		}
 
 		template<typename... Args>
 		static void LogCritical(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
 		{
-			auto formatted = std::format(fmt, std::forward<Args>(args)...);
-			auto output = MakeLogMessageError(loc, eLogMessageType::Critical, formatted);
-			DebugOutputIDE(output);
+			ProcessLog(loc, eLogMessageType::Critical, std::format(fmt, std::forward<Args>(args)...));
 		}
-
-		inline static void SetLogStreamingEnabled(bool enabled)
-		{
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-			IsLogStreamEnabled = enabled;
-#endif
-		}
-		[[nodiscard]] inline static bool IsLogStreamingEnabled() { return IsLogStreamEnabled; }
 
 	private:
+		static void ProcessLog(const std::source_location& loc, eLogMessageType type, std::string formatted);
+		static void AddToBroadcast(const std::source_location& loc, eLogMessageType type, std::string msg);
+		static void BroadcastThreadLoop();
+		static void BroadcastLogs(const std::vector<LogEntry>& logs);
+
+		static void DebugOutputIDE(const std::source_location& loc, eLogMessageType type, const std::string& formatted) noexcept;
 		static std::string MakeLogMessage(const std::source_location& loc, eLogMessageType type, const std::string& msg);
 		static std::string MakeLogMessageError(const std::source_location& loc, eLogMessageType type, const std::string& msg);
 		static constexpr const char* LogMessageTypeToString(eLogMessageType type)
 		{
-			switch (type)
-			{
-			case eLogMessageType::Message:		return "MESSAGE";
-			case eLogMessageType::Warning:		return "WARNING";
-			case eLogMessageType::Error:		return "ERROR";
-			case eLogMessageType::Exception:	return "EXCEPTION";
-			case eLogMessageType::Critical:		return "CRITICAL";
-			case eLogMessageType::Fatal:		return "FATAL";
-			}
-
-			std::unreachable();
+			if (!!(type & eLogMessageType::Message))   return "MESSAGE";
+			if (!!(type & eLogMessageType::Warning))   return "WARNING";
+			if (!!(type & eLogMessageType::Error))     return "ERROR";
+			if (!!(type & eLogMessageType::Exception)) return "EXCEPTION";
+			if (!!(type & eLogMessageType::Critical))  return "CRITICAL";
+			if (!!(type & eLogMessageType::Fatal))     return "FATAL";
+			return "UNKNOWN";
 		}
 		static constexpr const char* GetPlatformLogLineEnding()
 		{
-			auto end = "\n";
-
-			// Для Linux-подобных платформ (включая Android) символ '\n' не требуется,
-			// поскольку средства просмотра логов (IDE, Logcat и т.п.) сами разделяют записи.
 #if Z_LINUX || Z_ANDROID
-			end = "";
+			return "";
+#else
+			return "\n";
 #endif
-			return end;
 		}
-
-		static void DebugOutputIDE(const std::string& output) noexcept;
-
-		static bool IsLogStreamEnabled;
+		
+		static std::atomic<eLogMessageType> AllowedOutputTypesMask;
 	};
 }

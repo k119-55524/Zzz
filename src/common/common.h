@@ -11,3 +11,5 @@ namespace zzz
 {
 	using namespace common;
 }
+
+#include "throwWrappers.h"
