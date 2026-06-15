@@ -39,7 +39,12 @@ namespace zzz::engine
 		[[nodiscard]] std::expected<void, std::string> Initialize();
 		[[nodiscard]] std::expected<void, std::string> Run();
 
-		inline static void CustomInitLogger(bool enableStreaming, eLogMessageType filterMask = eLogMessageType::All) { zzz::logger::Logger::Initialize(filterMask, enableStreaming); }
+		inline static void CustomInitLogger(bool enableStreaming, zzz::common::eLogMessageType filterMask = zzz::common::eLogMessageType::All) 
+		{ 
+#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+			zzz::logger::Logger::Initialize(enableStreaming, filterMask);
+#endif
+		}
 
 	private:
 		void Shutdown();

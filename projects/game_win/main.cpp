@@ -22,11 +22,11 @@ int APIENTRY wWinMain(
 	int exitCode = 0;
 
 	{
+		Engine::CustomInitLogger(true);
 		DOut("[Windows OS]. Game started.");
 
 		try
 		{
-			Engine::CustomInitLogger(true);
 			Engine engine("GameWin_ZzzEngine");
 			auto res = engine.Initialize();
 			if (res)

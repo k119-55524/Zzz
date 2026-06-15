@@ -2,9 +2,9 @@
 
 #include <common/types.h>
 
-namespace zzz::logger
+namespace zzz::common
 {
-	enum class eLogMessageType : zzz::common::zU8
+	enum class eLogMessageType : zU8
 	{
 		None      = 0,
 		Message   = 1 << 0,
@@ -18,16 +18,16 @@ namespace zzz::logger
 
 	inline constexpr eLogMessageType operator|(eLogMessageType a, eLogMessageType b)
 	{
-		return static_cast<eLogMessageType>(static_cast<zzz::common::zU8>(a) | static_cast<zzz::common::zU8>(b));
+		return static_cast<eLogMessageType>(static_cast<zU8>(a) | static_cast<zU8>(b));
 	}
 
 	inline constexpr eLogMessageType operator&(eLogMessageType a, eLogMessageType b)
 	{
-		return static_cast<eLogMessageType>(static_cast<zzz::common::zU8>(a) & static_cast<zzz::common::zU8>(b));
+		return static_cast<eLogMessageType>(static_cast<zU8>(a) & static_cast<zU8>(b));
 	}
 
 	inline constexpr bool operator!(eLogMessageType a)
 	{
-		return static_cast<zzz::common::zU8>(a) == 0;
+		return static_cast<zU8>(a) == 0;
 	}
 }

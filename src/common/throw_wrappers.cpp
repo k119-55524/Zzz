@@ -1,18 +1,17 @@
-#pragma once
 
-#include <string>
 #include <sstream>
-#include <source_location>
 #include <stdexcept>
+//#include <common/common.h>
 #include <logger/logger_lib/logger.h>
-#include <common/core_macros.h>
+#include "core_macros.h"
 
-namespace zzz
+#include "throw_wrappers.h"
+
+namespace zzz::common
 {
-	[[noreturn]]
-	inline void throw_runtime_error(
-		const std::string& msg = "Throw runtime error",
-		const std::source_location& loc = std::source_location::current())
+	[[noreturn]] void throw_runtime_error(
+		const std::string& msg,
+		const std::source_location& loc)
 	{
 		std::ostringstream oss;
 		oss << "\n+-> " << msg

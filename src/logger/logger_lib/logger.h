@@ -2,12 +2,23 @@
 
 #include "header.h"
 
+#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+
+#include <thread>
+#include <mutex>
+#include <atomic>
+#include <vector>
+#include <memory>
+#include <optional>
+#include <common/templates/double_buffered_vector.h>
+#include <condition_variable>
+
 namespace zzz::logger
 {
 	struct LogEntry
 	{
 		uint64_t timestamp;
-		eLogMessageType type;
+		zzz::common::eLogMessageType type;
 		std::string text;
 		std::string file;
 		std::string function;
@@ -17,66 +28,37 @@ namespace zzz::logger
 	class Logger
 	{
 	public:
-		static void Initialize(eLogMessageType filterMask = eLogMessageType::All, bool enableStreaming = true);
+		Logger(bool enableStreaming, zzz::common::eLogMessageType filterMask);
+		~Logger();
 
-		template<typename... Args>
-		static void LogMessage(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
-		{
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-			ProcessLog(loc, eLogMessageType::Message, std::format(fmt, std::forward<Args>(args)...));
-#endif
-		}
+		static void Initialize(bool enableStreaming = true, zzz::common::eLogMessageType filterMask = zzz::common::eLogMessageType::All);
 
-		template<typename... Args>
-		static void LogWarning(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
-		{
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-			ProcessLog(loc, eLogMessageType::Warning, std::format(fmt, std::forward<Args>(args)...));
-#endif
-		}
-
-		template<typename... Args>
-		static void LogError(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
-		{
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-			ProcessLog(loc, eLogMessageType::Error, std::format(fmt, std::forward<Args>(args)...));
-#endif
-		}
-
-		template<typename... Args>
-		static void LogException(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
-		{
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-			ProcessLog(loc, eLogMessageType::Exception, std::format(fmt, std::forward<Args>(args)...));
-#endif
-		}
-
-		template<typename... Args>
-		static void LogCritical(const std::source_location& loc, std::format_string<Args...> fmt, Args&&... args)
-		{
-			ProcessLog(loc, eLogMessageType::Critical, std::format(fmt, std::forward<Args>(args)...));
-		}
+		void LogMessage(const std::source_location& loc, std::string formatted);
+		void LogWarning(const std::source_location& loc, std::string formatted);
+		void LogError(const std::source_location& loc, std::string formatted);
+		void LogException(const std::source_location& loc, std::string formatted);
+		void LogCritical(const std::source_location& loc, std::string formatted);
 
 	private:
-		static void ProcessLog(const std::source_location& loc, eLogMessageType type, std::string formatted);
-		static void AddToBroadcast(const std::source_location& loc, eLogMessageType type, std::string msg);
-		static void BroadcastThreadLoop();
-		static void BroadcastLogs(const std::vector<LogEntry>& logs);
+		void ProcessLog(const std::source_location& loc, zzz::common::eLogMessageType type, std::string formatted);
+		void AddToBroadcast(const std::source_location& loc, zzz::common::eLogMessageType type, std::string msg);
+		void BroadcastThreadLoop();
+		void BroadcastLogs(const std::vector<LogEntry>& logs);
 
-		static void DebugOutputIDE(const std::source_location& loc, eLogMessageType type, const std::string& formatted) noexcept;
-		static std::string MakeLogMessage(const std::source_location& loc, eLogMessageType type, const std::string& msg);
-		static std::string MakeLogMessageError(const std::source_location& loc, eLogMessageType type, const std::string& msg);
-		static constexpr const char* LogMessageTypeToString(eLogMessageType type)
+		void DebugOutputIDE(const std::source_location& loc, zzz::common::eLogMessageType type, const std::string& formatted) noexcept;
+		std::string MakeLogMessage(const std::source_location& loc, zzz::common::eLogMessageType type, const std::string& msg);
+		std::string MakeLogMessageError(const std::source_location& loc, zzz::common::eLogMessageType type, const std::string& msg);
+		constexpr const char* LogMessageTypeToString(zzz::common::eLogMessageType type)
 		{
-			if (!!(type & eLogMessageType::Message))   return "MESSAGE";
-			if (!!(type & eLogMessageType::Warning))   return "WARNING";
-			if (!!(type & eLogMessageType::Error))     return "ERROR";
-			if (!!(type & eLogMessageType::Exception)) return "EXCEPTION";
-			if (!!(type & eLogMessageType::Critical))  return "CRITICAL";
-			if (!!(type & eLogMessageType::Fatal))     return "FATAL";
+			if (!!(type & zzz::common::eLogMessageType::Message))   return "MESSAGE";
+			if (!!(type & zzz::common::eLogMessageType::Warning))   return "WARNING";
+			if (!!(type & zzz::common::eLogMessageType::Error))     return "ERROR";
+			if (!!(type & zzz::common::eLogMessageType::Exception)) return "EXCEPTION";
+			if (!!(type & zzz::common::eLogMessageType::Critical))  return "CRITICAL";
+			if (!!(type & zzz::common::eLogMessageType::Fatal))     return "FATAL";
 			return "UNKNOWN";
 		}
-		static constexpr const char* GetPlatformLogLineEnding()
+		constexpr const char* GetPlatformLogLineEnding()
 		{
 #if Z_LINUX || Z_ANDROID
 			return "";
@@ -85,6 +67,16 @@ namespace zzz::logger
 #endif
 		}
 		
-		static std::atomic<eLogMessageType> AllowedOutputTypesMask;
+		std::atomic<zzz::common::eLogMessageType> m_AllowedOutputTypesMask;
+		
+		zzz::common::DoubleBufferedVector<LogEntry> m_LogBuffer;
+		std::thread m_BroadcastThread;
+		std::condition_variable m_BroadcastCV;
+		std::mutex m_BroadcastMutex;
+		std::atomic<bool> m_BroadcastThreadRunning{false};
 	};
+
+	inline std::optional<Logger> g_Logger;
 }
+
+#endif

@@ -1,64 +1,88 @@
+
 #include "logger.h"
+
+#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+
 #include <common/common.h>
+
 using namespace zzz::common;
 using namespace zzz::logger;
 
-std::atomic<eLogMessageType> Logger::AllowedOutputTypesMask = eLogMessageType::All;
-
-namespace
+Logger::Logger(bool enableStreaming, zzz::common::eLogMessageType filterMask)
 {
-	DoubleBufferedVector<LogEntry> g_LogBuffer;
-	std::thread g_BroadcastThread;
-	std::condition_variable g_BroadcastCV;
-	std::mutex g_BroadcastMutex;
-	std::atomic<bool> g_BroadcastThreadRunning = false;
-
-	struct LoggerCleaner
-	{
-		~LoggerCleaner()
-		{
-			// Гарантируем остановку потока при выходе из приложения
-			bool needJoin = false;
-
-			{
-				std::lock_guard<std::mutex> lock(g_BroadcastMutex);
-
-				if (!g_BroadcastThreadRunning.load())
-					return;
-
-				g_BroadcastThreadRunning.store(false);
-				needJoin = g_BroadcastThread.joinable();
-			}
-
-			g_BroadcastCV.notify_one();
-
-			if (needJoin)
-			{
-				g_BroadcastThread.join();
-			}
-		}
-	} g_LoggerCleaner;
-}
-
-void Logger::Initialize(eLogMessageType filterMask, bool enableStreaming)
-{
-	static std::atomic<bool> isInit{false};
-	if (isInit.exchange(true))
-		THROW_RUNTIME("Logger has already been initialized.");
-
-	AllowedOutputTypesMask.store(filterMask);
+	m_AllowedOutputTypesMask.store(filterMask);
 
 	if (enableStreaming)
 	{
-		std::lock_guard<std::mutex> lock(g_BroadcastMutex);
-		g_BroadcastThreadRunning.store(true);
-		g_BroadcastThread = std::thread(&Logger::BroadcastThreadLoop);
+		m_BroadcastThreadRunning.store(true);
+		m_BroadcastThread = std::thread(&Logger::BroadcastThreadLoop, this);
 	}
 }
 
-void Logger::ProcessLog(const std::source_location& loc, eLogMessageType type, std::string formatted)
+Logger::~Logger()
 {
-	auto mask = AllowedOutputTypesMask.load();
+	bool needJoin = false;
+
+	{
+		std::lock_guard<std::mutex> lock(m_BroadcastMutex);
+
+		if (!m_BroadcastThreadRunning.load())
+			return;
+
+		m_BroadcastThreadRunning.store(false);
+		needJoin = m_BroadcastThread.joinable();
+	}
+
+	m_BroadcastCV.notify_one();
+
+	if (needJoin)
+	{
+		m_BroadcastThread.join();
+	}
+}
+
+void Logger::Initialize(bool enableStreaming, zzz::common::eLogMessageType filterMask)
+{
+	static std::once_flag initFlag;
+	bool wasInitializedNow = false;
+
+	std::call_once(initFlag, [&]() {
+		g_Logger.emplace(enableStreaming, filterMask);
+		wasInitializedNow = true;
+	});
+
+	if (!wasInitializedNow)
+		throw std::runtime_error("Logger has already been initialized.");
+}
+
+void Logger::LogMessage(const std::source_location& loc, std::string formatted)
+{
+	ProcessLog(loc, zzz::common::eLogMessageType::Message, std::move(formatted));
+}
+
+void Logger::LogWarning(const std::source_location& loc, std::string formatted)
+{
+	ProcessLog(loc, zzz::common::eLogMessageType::Warning, std::move(formatted));
+}
+
+void Logger::LogError(const std::source_location& loc, std::string formatted)
+{
+	ProcessLog(loc, zzz::common::eLogMessageType::Error, std::move(formatted));
+}
+
+void Logger::LogException(const std::source_location& loc, std::string formatted)
+{
+	ProcessLog(loc, zzz::common::eLogMessageType::Exception, std::move(formatted));
+}
+
+void Logger::LogCritical(const std::source_location& loc, std::string formatted)
+{
+	ProcessLog(loc, zzz::common::eLogMessageType::Critical, std::move(formatted));
+}
+
+void Logger::ProcessLog(const std::source_location& loc, zzz::common::eLogMessageType type, std::string formatted)
+{
+	auto mask = m_AllowedOutputTypesMask.load();
 	if (!(mask & type))
 		return;
 
@@ -66,15 +90,15 @@ void Logger::ProcessLog(const std::source_location& loc, eLogMessageType type, s
 	AddToBroadcast(loc, type, std::move(formatted));
 }
 
-void Logger::AddToBroadcast(const std::source_location& loc, eLogMessageType type, std::string msg)
+void Logger::AddToBroadcast(const std::source_location& loc, zzz::common::eLogMessageType type, std::string msg)
 {
-	if (!g_BroadcastThreadRunning.load())
+	if (!m_BroadcastThreadRunning.load())
 		return;
 
 	auto now = std::chrono::system_clock::now();
 	auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
 
-	g_LogBuffer.Emplace(
+	m_LogBuffer.Emplace(
 		timestamp,
 		type,
 		std::move(msg),
@@ -83,14 +107,14 @@ void Logger::AddToBroadcast(const std::source_location& loc, eLogMessageType typ
 		loc.line()
 	);
 
-	g_BroadcastCV.notify_one();
+	m_BroadcastCV.notify_one();
 }
 
 void Logger::BroadcastThreadLoop()
 {
 	for (;;)
 	{
-		auto& readBuffer = g_LogBuffer.SwapAndGetReadBuffer();
+		auto& readBuffer = m_LogBuffer.SwapAndGetReadBuffer();
 
 		if (!readBuffer.empty())
 		{
@@ -99,12 +123,12 @@ void Logger::BroadcastThreadLoop()
 			continue;
 		}
 
-		if (!g_BroadcastThreadRunning.load())
+		if (!m_BroadcastThreadRunning.load())
 			break;
 
-		std::unique_lock<std::mutex> lock(g_BroadcastMutex);
-		g_BroadcastCV.wait(lock, []() {
-			return !g_BroadcastThreadRunning.load() || !g_LogBuffer.IsEmpty();
+		std::unique_lock<std::mutex> lock(m_BroadcastMutex);
+		m_BroadcastCV.wait(lock, [this]() {
+			return !m_BroadcastThreadRunning.load() || !m_LogBuffer.IsEmpty();
 		});
 	}
 }
@@ -169,3 +193,5 @@ std::string Logger::MakeLogMessageError(const std::source_location& loc, eLogMes
 		loc.file_name(),
 		GetPlatformLogLineEnding());
 }
+
+#endif // Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD

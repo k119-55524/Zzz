@@ -3,12 +3,41 @@
 #include <expected>
 #include <stdexcept>
 #include "platform_defines.h"
+#include <format>
 
-#define DOut(...) ::zzz::logger::Logger::LogMessage(std::source_location::current(), __VA_ARGS__)
-#define DOutWarning(...) ::zzz::logger::Logger::LogWarning(std::source_location::current(), __VA_ARGS__)
-#define DOutError(...) ::zzz::logger::Logger::LogError(std::source_location::current(), __VA_ARGS__)
-#define DOutException(...) ::zzz::logger::Logger::LogException(std::source_location::current(), __VA_ARGS__)
-#define DOutCritical(...) ::zzz::logger::Logger::LogCritical(std::source_location::current(), __VA_ARGS__)
+#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+#define DOut(...) \
+	do { \
+		if (!::zzz::logger::g_Logger) throw std::runtime_error("Logger is not initialized!"); \
+		::zzz::logger::g_Logger->LogMessage(std::source_location::current(), std::format(__VA_ARGS__)); \
+	} while (false)
+#define DOutWarning(...) \
+	do { \
+		if (!::zzz::logger::g_Logger) throw std::runtime_error("Logger is not initialized!"); \
+		::zzz::logger::g_Logger->LogWarning(std::source_location::current(), std::format(__VA_ARGS__)); \
+	} while (false)
+#define DOutError(...) \
+	do { \
+		if (!::zzz::logger::g_Logger) throw std::runtime_error("Logger is not initialized!"); \
+		::zzz::logger::g_Logger->LogError(std::source_location::current(), std::format(__VA_ARGS__)); \
+	} while (false)
+#define DOutException(...) \
+	do { \
+		if (!::zzz::logger::g_Logger) throw std::runtime_error("Logger is not initialized!"); \
+		::zzz::logger::g_Logger->LogException(std::source_location::current(), std::format(__VA_ARGS__)); \
+	} while (false)
+#define DOutCritical(...) \
+	do { \
+		if (!::zzz::logger::g_Logger) throw std::runtime_error("Logger is not initialized!"); \
+		::zzz::logger::g_Logger->LogCritical(std::source_location::current(), std::format(__VA_ARGS__)); \
+	} while (false)
+#else
+#define DOut(...)
+#define DOutWarning(...)
+#define DOutError(...)
+#define DOutException(...)
+#define DOutCritical(...)
+#endif
 
 #define THROW_RUNTIME(...) ::zzz::throw_runtime_error(std::format(__VA_ARGS__), std::source_location::current())
 

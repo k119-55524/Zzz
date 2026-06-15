@@ -26,9 +26,9 @@ namespace zzz::engine
 		 * 
 		 * @platforms Поддерживается везде (Windows, macOS, Linux, Android, iOS).
 		 * @usage Используется для перерасчета матриц проекции камеры (Aspect Ratio) и перекомпоновки UI-элементов.
-		 * При eWinResize::Hide рендер должен ставиться на паузу, при Show - возобновляться.
+		 * При zzz::common::eWinResize::Hide рендер должен ставиться на паузу, при Show - возобновляться.
 		 */
-		void OnWindowResize(Size2D<>& size, eWinResize type);
+		void OnWindowResize(Size2D<>& size, zzz::common::eWinResize type);
 
 		/**
 		 * @brief Обрабатывает момент начала перетаскивания рамки окна пользователем.

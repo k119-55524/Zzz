@@ -4,16 +4,10 @@
 #include "../input/Input.h"
 #include "../../core/templates/Size2D.h"
 
+#include <common/enums/eWinResize.h>
 
 namespace zzz::engine
 {
-	enum class eWinResize : zU32
-	{
-		Show,
-		Hide,
-		Resize
-	};
-
 	/**
 	 * @brief Набор всех возможных колбэков жизненного цикла окна.
 	 * Передается из View в платформенную реализацию окна при создании.
@@ -33,7 +27,7 @@ namespace zzz::engine
 		 * @param size Новый размер клиентской области окна в пикселях.
 		 * @param type Тип изменения (Resize, Show, Hide).
 		 */
-		std::function<void(Size2D<>& size, eWinResize type)> OnResize;
+		std::function<void(Size2D<>& size, zzz::common::eWinResize type)> OnResize;
 
 		/**
 		 * @brief Вызывается, когда пользователь начинает перетаскивать рамку окна (захватил мышью).

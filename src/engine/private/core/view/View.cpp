@@ -1,7 +1,9 @@
-
 #include "View.h"
 #include "../../platforms/input/Input.h"
 #include "../../platforms/window/Window.h"
+#include <common/core_macros.h>
+
+#include <common/enums/enum_to_string.h>
 
 using namespace zzz::engine;
 
@@ -24,7 +26,7 @@ void View::Initialize()
 
 	WindowCallbacks callbacks;
 	callbacks.OnClose            = [this]()                                 { HandleWindowClose(); };
-	callbacks.OnResize           = [this](Size2D<>& size, eWinResize type)  { OnWindowResize(size, type); };
+	callbacks.OnResize           = [this](Size2D<>& size, zzz::common::eWinResize type)  { OnWindowResize(size, type); };
 	callbacks.OnResizeStart      = [this]()                                 { OnWindowResizeStart(); };
 	callbacks.OnSizing           = [this]()                                 { OnWindowSizing(); };
 	callbacks.OnResizeEnd        = [this]()                                 { OnWindowResizeEnd(); };
@@ -55,9 +57,9 @@ void View::HandleWindowClose()
 	OnWindowClose(*this);
 }
 
-void View::OnWindowResize(Size2D<>& size, eWinResize type)
+void View::OnWindowResize(Size2D<>& size, zzz::common::eWinResize type)
 {
-	DOut("Window Event: OnResize ({}x{}) Type: {}", size.width, size.height, static_cast<int>(type));
+	DOut("Window Event: OnResize ({}x{}) Type: {}", size.width, size.height, EnumToString::ToString(type));
 }
 
 void View::OnWindowResizeStart()
