@@ -29,7 +29,9 @@ namespace zzz::logger
 	{
 #if Z_WINDOWS
 		WSADATA wsaData;
-		WSAStartup(MAKEWORD(2, 2), &wsaData);
+		m_WsaInitialized = (WSAStartup(MAKEWORD(2, 2), &wsaData) == 0);
+		if (!m_WsaInitialized)
+			return;
 #endif
 		Connect();
 	}
@@ -38,7 +40,8 @@ namespace zzz::logger
 	{
 		Disconnect();
 #if Z_WINDOWS
-		WSACleanup();
+		if (m_WsaInitialized)
+			WSACleanup();
 #endif
 	}
 
@@ -75,6 +78,11 @@ namespace zzz::logger
 		ioctlsocket(sock, FIONBIO, &mode);
 #else
 		int flags = fcntl(sock, F_GETFL, 0);
+		if (flags == -1)
+		{
+			close(sock);
+			return;
+		}
 		fcntl(sock, F_SETFL, flags | O_NONBLOCK);
 #endif
 
@@ -149,17 +157,18 @@ namespace zzz::logger
 				return;
 		}
 
-		std::vector<std::byte> buffer;
-		auto res = m_Serializer.Serialize(buffer, entry);
+		std::vector<std::byte> entryBytes;
+		auto res = m_Serializer.Serialize(entryBytes, entry);
 		if (!res)
 			return;
 
 		// Сначала отправляем размер, затем данные для удобного разделения пакетов по TCP
-		uint32_t size = static_cast<uint32_t>(buffer.size());
+		uint32_t size = static_cast<uint32_t>(entryBytes.size());
 		std::vector<std::byte> packet;
 		auto sizeRes = m_Serializer.Serialize(packet, size);
 		if (!sizeRes) return;
-		packet.insert(packet.end(), buffer.begin(), buffer.end());
+		packet.reserve(packet.size() + entryBytes.size());
+		packet.insert(packet.end(), entryBytes.begin(), entryBytes.end());
 
 		SOCKET sock = (SOCKET)m_Socket;
 		const char* data = reinterpret_cast<const char*>(packet.data());
@@ -168,7 +177,11 @@ namespace zzz::logger
 
 		while (bytesSent < totalSize)
 		{
+#if Z_WINDOWS
 			int sent = send(sock, data + bytesSent, totalSize - bytesSent, 0);
+#else
+			int sent = send(sock, data + bytesSent, totalSize - bytesSent, MSG_NOSIGNAL);
+#endif
 			if (sent == SOCKET_ERROR)
 			{
 				Disconnect();
@@ -178,5 +191,4 @@ namespace zzz::logger
 		}
 	}
 }
-
 #endif

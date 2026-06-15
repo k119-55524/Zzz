@@ -10,9 +10,10 @@
 #include <chrono>
 #include <common/serialize/Serializer.h>
 
+using namespace zzz::common;
+
 namespace zzz::logger
 {
-	using namespace zzz::common;
 	class NetworkBroadcaster final : public IBroadcaster
 	{
 	public:
@@ -31,6 +32,9 @@ namespace zzz::logger
 		bool m_IsConnected;
 		std::chrono::time_point<std::chrono::steady_clock> m_LastConnectAttempt;
 		Serializer m_Serializer;
+#if Z_WINDOWS
+		bool m_WsaInitialized = false;
+#endif
 	};
 }
 #endif
