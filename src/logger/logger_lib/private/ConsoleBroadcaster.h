@@ -111,8 +111,8 @@ namespace zzz::logger
 		{
 			using eType = zzz::common::eLogMessageType;
 
-			const bool isWarning = !!(entry.type & eType::Warning);
-			const bool isError = !!(entry.type & (eType::Error | eType::Exception | eType::Critical | eType::Fatal));
+			const bool isWarning = (entry.type & eType::Warning) != eType::None;
+			const bool isError   = (entry.type & (eType::Error | eType::Exception | eType::Critical | eType::Fatal)) != eType::None;
 
 			HANDLE hConsole = GetStdHandle(isError ? STD_ERROR_HANDLE : STD_OUTPUT_HANDLE);
 			WORD colorAttribute = BACKGROUND_BLUE; // Синий фон

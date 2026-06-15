@@ -1,7 +1,7 @@
 
-#include "main.h"
 #include <common/macroses.h>
-#include <iostream>
+
+#include "main.h"
 
 using namespace zzz;
 using namespace zzz::logger;

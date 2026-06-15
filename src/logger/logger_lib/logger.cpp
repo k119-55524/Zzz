@@ -13,9 +13,6 @@ using namespace zzz::logger;
 Logger::Logger()
 {
 	m_FilterMask.store(eLogMessageType::All);
-#if Z_WINDOWS
-	AddBroadcasterImpl(safe_make_shared<ConsoleBroadcaster>());
-#endif
 }
 
 Logger::~Logger()
@@ -69,6 +66,12 @@ void Logger::LogException(const std::source_location& loc, std::string formatted
 void Logger::LogCritical(const std::source_location& loc, std::string formatted)
 {
 	ProcessLog(loc, zzz::common::eLogMessageType::Critical, std::move(formatted));
+}
+
+void Logger::LogFatal(const std::source_location& loc, std::string formatted)
+{
+	ProcessLog(loc, zzz::common::eLogMessageType::Fatal, std::move(formatted));
+	std::terminate();
 }
 #pragma endregion
 

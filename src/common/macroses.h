@@ -45,12 +45,21 @@
 	do { \
 		::zzz::logger::g_Logger.LogCritical(std::source_location::current(), std::format(__VA_ARGS__)); \
 	} while (false)
+
+/**
+ * @brief Вывод фатальной ошибки в лог с последующим завершением процесса.
+ */
+#define DOutFatal(...) \
+	do { \
+		::zzz::logger::g_Logger.LogFatal(std::source_location::current(), std::format(__VA_ARGS__)); \
+	} while (false)
 #else
 #define DOut(...)
 #define DOutWarning(...)
 #define DOutError(...)
 #define DOutException(...)
 #define DOutCritical(...)
+#define DOutFatal(...)
 #endif
 
 /**

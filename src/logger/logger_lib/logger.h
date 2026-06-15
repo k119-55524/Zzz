@@ -48,6 +48,7 @@ namespace zzz::logger
 		void LogError(const std::source_location& loc, std::string formatted);
 		void LogException(const std::source_location& loc, std::string formatted);
 		void LogCritical(const std::source_location& loc, std::string formatted);
+		void LogFatal(const std::source_location& loc, std::string formatted);
 
 	private:
 		void AddBroadcasterImpl(std::shared_ptr<IBroadcaster> broadcaster);
