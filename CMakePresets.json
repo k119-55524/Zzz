@@ -11,6 +11,12 @@
         "Z_BUILD_TESTS": "ON",
         "Z_BUILD_BENCHMARKS": "ON",
         "Z_USE_ASAN": "ON"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "remoteCopyExclude": "build_configs/*.exe;build_configs/*.pdb;tools/**;tools/*;**/bin/**;**/obj/**;**/publish/**;**/*BuildConfigurator.exe;*.exe",
+          "intelliSenseMode": "windows-msvc-x64"
+        }
       }
     },
     {
@@ -22,6 +28,12 @@
         "CMAKE_BUILD_TYPE": "Release",
         "Z_BUILD_TESTS": "ON",
         "Z_BUILD_BENCHMARKS": "ON"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "remoteCopyExclude": "build_configs/*.exe;build_configs/*.pdb;tools/**;tools/*;**/bin/**;**/obj/**;**/publish/**;**/*BuildConfigurator.exe;*.exe",
+          "intelliSenseMode": "windows-msvc-x64"
+        }
       }
     },
     {
@@ -33,6 +45,12 @@
         "CMAKE_BUILD_TYPE": "Development",
         "Z_BUILD_TESTS": "ON",
         "Z_BUILD_BENCHMARKS": "ON"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "remoteCopyExclude": "build_configs/*.exe;build_configs/*.pdb;tools/**;tools/*;**/bin/**;**/obj/**;**/publish/**;**/*BuildConfigurator.exe;*.exe",
+          "intelliSenseMode": "windows-msvc-x64"
+        }
       }
     }
   ]
