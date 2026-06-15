@@ -81,3 +81,17 @@ tools/config_switcher/build/
 # CMake generated rule files
 
 **/ReRunCMake.make
+
+# Build Configurator publish output
+
+dist/
+# Ignore BuildConfigurator build outputs and published artifacts
+# local build outputs
+tools/build_configurator/bin/
+tools/build_configurator/obj/
+# publish folders created by dotnet publish
+tools/build_configurator/**/publish/
+# specific exe artifacts
+tools/build_configurator/**/BuildConfigurator.exe
+# historical artifacts in build_configs
+build_configs/BuildConfigurator.exe
