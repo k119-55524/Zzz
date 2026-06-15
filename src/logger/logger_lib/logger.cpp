@@ -42,18 +42,15 @@ namespace
 
 void Logger::Initialize(eLogMessageType filterMask, bool enableStreaming)
 {
-	static bool hasBeenInitialized = false;
-
-	std::lock_guard<std::mutex> lock(g_BroadcastMutex);
-
-	if (hasBeenInitialized)
+	static std::atomic<bool> isInit{false};
+	if (isInit.exchange(true))
 		THROW_RUNTIME("Logger has already been initialized.");
 
-	hasBeenInitialized = true;
 	AllowedOutputTypesMask.store(filterMask);
 
 	if (enableStreaming)
 	{
+		std::lock_guard<std::mutex> lock(g_BroadcastMutex);
 		g_BroadcastThreadRunning.store(true);
 		g_BroadcastThread = std::thread(&Logger::BroadcastThreadLoop);
 	}
