@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 
 #include "MainLoop_Common.h"
@@ -11,7 +11,7 @@ namespace zzz::engine
 
 	public:
 		MainLoop_MacOS() = delete;
-		MainLoop_MacOS(const std::shared_ptr<Platform> platform);
+		MainLoop_MacOS(const Platform& platform);
 		virtual ~MainLoop_MacOS() = default;
 
 		void Run() override;

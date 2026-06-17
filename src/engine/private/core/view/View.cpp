@@ -7,11 +7,10 @@ using namespace zzz::common;
 
 using namespace zzz::engine;
 
-View::View(std::shared_ptr<Platform> platform, std::function<void(View&)> onWindowClose) :
+View::View(const Platform& platform, std::function<void(View&)> onWindowClose) :
 	m_Platform{ platform },
 	OnWindowClose(std::move(onWindowClose))
 {
-	ensure(m_Platform != nullptr, "Platform must not be null.");
 	ensure(OnWindowClose != nullptr, "OnWindowClose must not be null.");
 
 	Initialize();
@@ -45,7 +44,7 @@ void View::Initialize()
 		m_Input,
 		std::move(callbacks));
 
-	auto res = m_Window->Initialize(m_Platform->GetAppName());
+	auto res = m_Window->Initialize(m_Platform.GetAppName());
 	if (!res)
 		THROW_RUNTIME("Failed to initialize window: {}.", res.error());
 }

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <mutex>
 #include <atomic>
@@ -49,7 +49,7 @@ namespace zzz::engine
 		std::mutex stateMutex;
 		std::atomic<eInitState> engineState;
 
-		std::shared_ptr<Platform> m_Platform;
+		std::unique_ptr<Platform> m_Platform;
 		std::unique_ptr<ViewManager> m_ViewManager;
 		std::shared_ptr<MainLoopBase> m_MainLoop;
 	};

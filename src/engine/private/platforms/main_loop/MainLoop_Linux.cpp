@@ -1,4 +1,4 @@
-#include "MainLoop_Linux.h"
+﻿#include "MainLoop_Linux.h"
 #include "../Platform.h"
 
 
@@ -6,7 +6,7 @@
 
 using namespace zzz::engine;
 
-MainLoop_Linux::MainLoop_Linux(const std::shared_ptr<Platform> platform, std::function<void()> onUpdate) :
+MainLoop_Linux::MainLoop_Linux(const Platform& platform, std::function<void()> onUpdate) :
 	MainLoopBase(platform, std::move(onUpdate)),
 	m_Display{ nullptr }
 {

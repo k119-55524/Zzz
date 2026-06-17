@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 
 #include "MainLoop_Common.h"
@@ -13,7 +13,7 @@ namespace zzz::engine
 
 	public:
 		MainLoop_Linux() = delete;
-		MainLoop_Linux(const std::shared_ptr<Platform> platform, std::function<void()> onUpdate);
+		MainLoop_Linux(const Platform& platform, std::function<void()> onUpdate);
 		virtual ~MainLoop_Linux() = default;
 
 		void Run() override;

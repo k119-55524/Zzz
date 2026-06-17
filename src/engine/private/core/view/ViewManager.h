@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <list>
 #include <memory>
@@ -15,13 +15,13 @@ namespace zzz::engine
 
 	public:
 		ViewManager() = delete;
-		ViewManager(std::shared_ptr<Platform> platform, std::function<void()> onAllViewsClosed);
+		ViewManager(const Platform& platform, std::function<void()> onAllViewsClosed);
 		~ViewManager();
 
 		void CreateView();
 
 	private:
-		std::shared_ptr<Platform> m_Platform;
+		const Platform& m_Platform;
 		std::list<std::shared_ptr<View>> m_Views;
 
 		std::function<void()> OnAllViewsClosed;

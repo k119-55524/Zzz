@@ -21,7 +21,7 @@ using namespace zzz::engine;
 }
 @end
 
-WiniOS::WiniOS(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks) :
+WiniOS::WiniOS(const Platform& platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks) :
 	WindowBase(platform, input, std::move(callbacks))
 {
 }

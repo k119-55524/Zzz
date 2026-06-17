@@ -13,7 +13,7 @@ namespace zzz::engine
 
 	public:
 		View() = delete;
-		View(std::shared_ptr<Platform> platform, std::function<void(View&)> onWindowClose);
+		View(const Platform& platform, std::function<void(View&)> onWindowClose);
 		~View() = default;
 
 	private:
@@ -140,7 +140,7 @@ namespace zzz::engine
 		void OnWindowSafeAreaChanged(int top, int bottom, int left, int right);
 #pragma endregion
 
-		std::shared_ptr<Platform> m_Platform;
+		const Platform& m_Platform;
 		std::shared_ptr<Window> m_Window;
 		std::shared_ptr<Input>  m_Input;
 

@@ -1,9 +1,9 @@
-#include "MainLoop_MSWin.h"
+﻿#include "MainLoop_MSWin.h"
 
 
 using namespace zzz::engine;
 
-MainLoop_MSWin::MainLoop_MSWin(const std::shared_ptr<Platform> platform, std::function<void()> onUpdate) :
+MainLoop_MSWin::MainLoop_MSWin(const Platform& platform, std::function<void()> onUpdate) :
 	MainLoopBase(platform, onUpdate)
 {
 }

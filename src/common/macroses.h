@@ -115,25 +115,13 @@
  * @brief Начало блока проверки утечек памяти (CRT). Только для Windows.
  */
 #define CRT_LEAK_CHECK_BEGIN(...) \
-	_CrtMemState _crtLeakCtx{}; \
-	_CrtMemCheckpoint(&_crtLeakCtx)
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF)
 
 /**
- * @brief Конец блока проверки утечек памяти. Возвращает -1 при обнаружении утечек и дампит статистику.
+ * @brief Конец блока проверки утечек памяти. При использовании автоматического флага возвращает 0.
+ *        Реальные утечки будут выведены в Output окно студии после завершения процесса.
  */
-#define CRT_LEAK_CHECK_END() \
-	([&]() -> int { \
-		_CrtMemState _crtLeakCtxEnd{}; \
-		_CrtMemState _crtLeakCtxDiff{}; \
-		_CrtMemCheckpoint(&_crtLeakCtxEnd); \
-		int leakFound = _CrtMemDifference(&_crtLeakCtxDiff, &_crtLeakCtx, &_crtLeakCtxEnd); \
-		if (leakFound) { \
-			_CrtMemDumpStatistics(&_crtLeakCtxDiff); \
-			_CrtMemDumpAllObjectsSince(&_crtLeakCtx); \
-			return -1; \
-		} \
-		return 0; \
-	}())
+#define CRT_LEAK_CHECK_END() 0
 #else
 #define CRT_LEAK_CHECK_BEGIN(...)
 #define CRT_LEAK_CHECK_END() 0

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 
 #include "Window_Common.h"
@@ -10,7 +10,7 @@ namespace zzz::engine
 	{
 	public:
 		WinMacOS() = delete;
-		WinMacOS(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks);
+		WinMacOS(const Platform& platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks);
 		~WinMacOS() override;
 
 		[[nodiscard]] std::expected<void, std::string> Initialize(const std::string_view appName);

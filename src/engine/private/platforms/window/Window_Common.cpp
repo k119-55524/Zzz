@@ -1,9 +1,9 @@
-#include "Window_Common.h"
+﻿#include "Window_Common.h"
 
 using namespace zzz::engine;
 
 WindowBase::WindowBase(
-	const std::shared_ptr<Platform> platform,
+	const Platform& platform,
 	const std::shared_ptr<Input> input,
 	WindowCallbacks callbacks) :
 	m_Platform{ platform },

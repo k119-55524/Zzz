@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 
 #include "Window_Common.h"
@@ -16,7 +16,7 @@ namespace zzz::engine
 	{
 	public:
 		WinLinux() = delete;
-		WinLinux(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks);
+		WinLinux(const Platform& platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks);
 		~WinLinux();
 
 		[[nodiscard]] std::expected<void, std::string> Initialize(const std::string_view appName);

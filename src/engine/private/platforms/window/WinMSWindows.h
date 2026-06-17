@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Window_Common.h"
 #include "../input/Input.h"
@@ -23,7 +23,7 @@ namespace zzz::engine
 		};
 
 		WinMSWindows() = delete;
-		WinMSWindows(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks);
+		WinMSWindows(const Platform& platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks);
 		~WinMSWindows();
 
 		[[nodiscard]] std::expected<void, std::string> Initialize(const std::string_view appName);

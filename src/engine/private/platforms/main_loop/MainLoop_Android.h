@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 
 #include "MainLoop_Common.h"
@@ -11,7 +11,7 @@ namespace zzz::engine
 
 	public:
 		MainLoop_Android() = delete;
-		MainLoop_Android(const std::shared_ptr<Platform> platform);
+		MainLoop_Android(const Platform& platform);
 		virtual ~MainLoop_Android() = default;
 
 		void Run() override;

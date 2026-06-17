@@ -1,4 +1,4 @@
-#include "MainLoop_MacOS.h"
+﻿#include "MainLoop_MacOS.h"
 #import <Cocoa/Cocoa.h>
 #import <Foundation/Foundation.h>
 
@@ -20,7 +20,7 @@ using namespace zzz::engine;
 static NSTimer* g_DisplayTimer = nil;
 static DisplayLinkTarget_MacOS* g_DisplayTarget = nil;
 
-MainLoop_MacOS::MainLoop_MacOS(const std::shared_ptr<Platform> platform) :
+MainLoop_MacOS::MainLoop_MacOS(const Platform& platform) :
 	MainLoopBase(platform)
 {
 }

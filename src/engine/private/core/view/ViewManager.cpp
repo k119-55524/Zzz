@@ -1,15 +1,14 @@
-
+﻿
 #include "View.h"
 #include "ViewManager.h"
 #include "../../platforms/Platform.h"
 
 using namespace zzz::engine;
 
-ViewManager::ViewManager(std::shared_ptr<Platform> platform, std::function<void()> onAllViewsClosed) :
+ViewManager::ViewManager(const Platform& platform, std::function<void()> onAllViewsClosed) :
 	m_Platform{ platform },
 	OnAllViewsClosed{ onAllViewsClosed }
 {
-	ensure(m_Platform != nullptr, "Platform must not be null.");
 	ensure(OnAllViewsClosed != nullptr, "OnAllViewsClosed must not be null.");
 }
 

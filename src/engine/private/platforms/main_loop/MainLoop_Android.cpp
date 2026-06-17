@@ -1,4 +1,4 @@
-
+﻿
 #include <android/looper.h>
 
 #include "MainLoop_Android.h"
@@ -10,7 +10,7 @@ namespace zzz::engine {
     void ProcessAndroidInput(struct android_app* app);
 }
 
-MainLoop_Android::MainLoop_Android(const std::shared_ptr<Platform> platform) :
+MainLoop_Android::MainLoop_Android(const Platform& platform) :
 	MainLoopBase(platform)
 {
 }
@@ -26,7 +26,7 @@ void MainLoop_Android::Run()
 		int events;
 		struct android_poll_source* source;
 
-		// 0 - если событий нет)
+		// 0 - РµСЃР»Рё СЃРѕР±С‹С‚РёР№ РЅРµС‚)
 		while ((ident = ALooper_pollOnce(0, nullptr, &events, (void**)&source)) >= 0)
 		{
 			if (source != nullptr)

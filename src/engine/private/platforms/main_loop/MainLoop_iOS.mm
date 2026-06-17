@@ -1,4 +1,4 @@
-#include "MainLoop_iOS.h"
+﻿#include "MainLoop_iOS.h"
 #import <QuartzCore/QuartzCore.h>
 #import <Foundation/Foundation.h>
 
@@ -20,7 +20,7 @@ using namespace zzz::engine;
 static CADisplayLink* g_DisplayLink = nil;
 static DisplayLinkTarget_iOS* g_DisplayTarget = nil;
 
-MainLoop_iOS::MainLoop_iOS(const std::shared_ptr<Platform> platform) :
+MainLoop_iOS::MainLoop_iOS(const Platform& platform) :
 	MainLoopBase(platform)
 {
 }

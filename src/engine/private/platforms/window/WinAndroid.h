@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 
 #include "Window_Common.h"
@@ -17,7 +17,7 @@ namespace zzz::engine
 		};
 
 		WinAndroid() = delete;
-		WinAndroid(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks);
+		WinAndroid(const Platform& platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks);
 		~WinAndroid() override;
 
 		[[nodiscard]] std::expected<void, std::string> Initialize(const std::string_view appName);

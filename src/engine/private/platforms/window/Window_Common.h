@@ -115,7 +115,7 @@ namespace zzz::engine
 	public:
 		WindowBase() = delete;
 		WindowBase(
-			const std::shared_ptr<Platform> platform,
+			const Platform& platform,
 			const std::shared_ptr<Input> input,
 			WindowCallbacks callbacks);
 		virtual ~WindowBase() = default;
@@ -126,7 +126,7 @@ namespace zzz::engine
 		WindowCallbacks m_Callbacks;
 
 	protected:
-		const std::shared_ptr<Platform> m_Platform;
+		const Platform& m_Platform;
 		const std::shared_ptr<Input> m_Input;
 		Size2D<> m_WinSize;
 		bool IsActivate;

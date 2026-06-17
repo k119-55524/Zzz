@@ -14,7 +14,7 @@ Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeDa
 	ensure(s_Instance == nullptr, "Engine instance already exists!");
 	s_Instance = this;
 
-	m_Platform = safe_make_shared<Platform>(appName, nativeData);
+	m_Platform = safe_make_unique<Platform>(appName, nativeData);
 }
 
 Engine::~Engine()
@@ -35,9 +35,9 @@ void Engine::Shutdown()
 
 	try
 	{
-		m_Platform = nullptr;
-		m_ViewManager = nullptr;
 		m_MainLoop = nullptr;
+		m_ViewManager = nullptr;
+		m_Platform = nullptr;
 	}
 	catch (const std::exception& e)
 	{
@@ -62,8 +62,8 @@ std::expected<void, std::string> Engine::Initialize()
 
 	try
 	{
-		m_MainLoop = safe_make_shared<MainLoop>(m_Platform, std::bind(&Engine::OnUpdateSystem, this));
-		m_ViewManager = safe_make_unique<ViewManager>(m_Platform, std::bind(&Engine::OnCloseAllViews, this));
+		m_MainLoop = safe_make_shared<MainLoop>(*m_Platform, std::bind(&Engine::OnUpdateSystem, this));
+		m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, std::bind(&Engine::OnCloseAllViews, this));
 		m_ViewManager->CreateView();
 		m_ViewManager->CreateView();
 

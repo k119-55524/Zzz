@@ -7,7 +7,7 @@ using namespace zzz::common;
 
 using namespace zzz::engine;
 
-WinMSWindows::WinMSWindows(const std::shared_ptr<Platform> platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks) :
+WinMSWindows::WinMSWindows(const Platform& platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks) :
 	WindowBase(platform, input, std::move(callbacks)),
 	m_hWnd{ nullptr },
 	IsMinimized{ true }

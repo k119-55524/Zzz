@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <atomic>
 #include <common/common.h>
@@ -14,7 +14,7 @@ namespace zzz::engine
 
 	public:
 		MainLoopBase() = delete;
-		MainLoopBase(const std::shared_ptr<Platform> platform, std::function<void()> onUpdate);
+		MainLoopBase(const Platform& platform, std::function<void()> onUpdate);
 		virtual ~MainLoopBase() = default;
 
 		virtual void Run() = 0;
@@ -23,6 +23,6 @@ namespace zzz::engine
 		protected:
 			std::function<void()> OnUpdate;
 			std::atomic<bool> isRunning;
-			const std::shared_ptr<Platform> m_Platform;
+			const Platform& m_Platform;
 	};
 }
