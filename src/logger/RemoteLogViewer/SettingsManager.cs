@@ -1,15 +1,15 @@
 using System;
 using System.IO;
 using System.Text.Json;
-using NetworkLogListener.Models;
+using RemoteLogViewer.Models;
 
-namespace NetworkLogListener;
+namespace RemoteLogViewer;
 
 public static class SettingsManager
 {
     private static readonly string AppDataFolder = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), 
-        "NetworkLogListener");
+        "RemoteLogViewer");
         
     private static readonly string SettingsFilePath = Path.Combine(AppDataFolder, "appsettings.json");
 
@@ -18,6 +18,18 @@ public static class SettingsManager
         AppSettings settings = new AppSettings();
         try
         {
+            var oldAppDataFolder = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), 
+                "NetworkLogListener");
+            var oldSettingsFilePath = Path.Combine(oldAppDataFolder, "appsettings.json");
+            
+            if (!File.Exists(SettingsFilePath) && File.Exists(oldSettingsFilePath))
+            {
+                if (!Directory.Exists(AppDataFolder))
+                    Directory.CreateDirectory(AppDataFolder);
+                File.Copy(oldSettingsFilePath, SettingsFilePath);
+            }
+
             if (File.Exists(SettingsFilePath))
             {
                 var json = File.ReadAllText(SettingsFilePath);

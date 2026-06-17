@@ -1,4 +1,4 @@
-# .NET SDK channel matching <TargetFramework> in NetworkLogListener.csproj.
+# .NET SDK channel matching <TargetFramework> in RemoteLogViewer.csproj.
 set(Z_DOTNET_CHANNEL "10.0")
 
 find_program(DOTNET_EXECUTABLE dotnet)
@@ -39,7 +39,7 @@ if(NOT DOTNET_EXECUTABLE)
     if(Z_DOTNET_DOWNLOAD_CODE EQUAL 0 AND Z_DOTNET_INSTALL_RESULT EQUAL 0 AND EXISTS "${Z_DOTNET_LOCAL_EXE}")
         set(DOTNET_EXECUTABLE "${Z_DOTNET_LOCAL_EXE}")
     else()
-        message(WARNING "Не удалось автоматически установить .NET SDK (нет интернета или сбой dotnet-install) — цель NetworkLogListener недоступна")
+        message(WARNING "Не удалось автоматически установить .NET SDK (нет интернета или сбой dotnet-install) — цель RemoteLogViewer недоступна")
     endif()
 endif()
 
@@ -52,23 +52,23 @@ if(DOTNET_EXECUTABLE)
         file(WRITE "${SHORTCUT_PS1}"
 "param([string]$Config)
 $wshell = New-Object -ComObject WScript.Shell
-$lnk = $wshell.CreateShortcut('${CMAKE_SOURCE_DIR}/NetworkLogListener.lnk'.Replace('/', '\\'))
-$lnk.TargetPath = '${CMAKE_CURRENT_SOURCE_DIR}/bin/' + $Config + '/net10.0-windows/NetworkLogListener.exe'.Replace('/', '\\')
+$lnk = $wshell.CreateShortcut('${CMAKE_SOURCE_DIR}/RemoteLogViewer.lnk'.Replace('/', '\\'))
+$lnk.TargetPath = '${CMAKE_CURRENT_SOURCE_DIR}/bin/' + $Config + '/net10.0-windows/RemoteLogViewer.exe'.Replace('/', '\\')
 $lnk.WorkingDirectory = '${CMAKE_CURRENT_SOURCE_DIR}/bin/' + $Config + '/net10.0-windows'.Replace('/', '\\')
 $lnk.Save()
 ")
-        add_custom_target(NetworkLogListener ALL
-            COMMAND ${DOTNET_EXECUTABLE} build -c ${DOTNET_CONFIG} "${CMAKE_CURRENT_SOURCE_DIR}/NetworkLogListener.csproj"
+        add_custom_target(RemoteLogViewer ALL
+            COMMAND ${DOTNET_EXECUTABLE} build -c ${DOTNET_CONFIG} "${CMAKE_CURRENT_SOURCE_DIR}/RemoteLogViewer.csproj"
             COMMAND powershell -NoProfile -ExecutionPolicy Bypass -File "${SHORTCUT_PS1}" -Config ${DOTNET_CONFIG}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            COMMENT "Building NetworkLogListener (C#/WPF) and creating shortcut"
+            COMMENT "Building RemoteLogViewer (C#/WPF) and creating shortcut"
             VERBATIM
         )
     else()
-        add_custom_target(NetworkLogListener ALL
-            COMMAND ${DOTNET_EXECUTABLE} build -c ${DOTNET_CONFIG} "${CMAKE_CURRENT_SOURCE_DIR}/NetworkLogListener.csproj"
+        add_custom_target(RemoteLogViewer ALL
+            COMMAND ${DOTNET_EXECUTABLE} build -c ${DOTNET_CONFIG} "${CMAKE_CURRENT_SOURCE_DIR}/RemoteLogViewer.csproj"
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            COMMENT "Building NetworkLogListener (C#/WPF)"
+            COMMENT "Building RemoteLogViewer (C#/WPF)"
             VERBATIM
         )
     endif()

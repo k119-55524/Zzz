@@ -1,4 +1,4 @@
-<Window x:Class="NetworkLogListener.AddTabWindow"
+<Window x:Class="RemoteLogViewer.AddTabWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Новая вкладка" Height="150" Width="300" WindowStartupLocation="CenterOwner" ResizeMode="NoResize"

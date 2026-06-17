@@ -3,9 +3,9 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
-using NetworkLogListener.Models;
+using RemoteLogViewer.Models;
 
-namespace NetworkLogListener;
+namespace RemoteLogViewer;
 
 public partial class MainWindow : Window, INotifyPropertyChanged
 {

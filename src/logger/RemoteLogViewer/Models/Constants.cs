@@ -1,4 +1,4 @@
-namespace NetworkLogListener;
+namespace RemoteLogViewer;
 
 public static class Constants
 {

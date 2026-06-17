@@ -5,9 +5,9 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Data;
 using System.Text;
-using NetworkLogListener.Models;
+using RemoteLogViewer.Models;
 
-namespace NetworkLogListener;
+namespace RemoteLogViewer;
 
 public enum ConnectionState
 {

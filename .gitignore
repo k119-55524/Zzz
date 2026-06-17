@@ -96,8 +96,8 @@ tools/build_configurator/**/BuildConfigurator.exe
 # historical artifacts in build_configs
 build_configs/BuildConfigurator.exe
 
-# NetworkLogListener (C#/WPF) build outputs
-src/logger/NetworkLogListener/bin/
-src/logger/NetworkLogListener/obj/
-NetworkLogListener.lnk
+# RemoteLogViewer (C#/WPF) build outputs
+src/logger/RemoteLogViewer/bin/
+src/logger/RemoteLogViewer/obj/
+RemoteLogViewer.lnk
 

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Windows;
-using NetworkLogListener.Models;
+using RemoteLogViewer.Models;
 
-namespace NetworkLogListener;
+namespace RemoteLogViewer;
 
 public partial class AddTabWindow : Window
 {

@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace NetworkLogListener.Models;
+namespace RemoteLogViewer.Models;
 
 public enum LogLevel : byte
 {
