@@ -28,5 +28,6 @@ namespace zzz::common
 
 #pragma region Network constants
 	constexpr std::string_view c_LocalhostIPv4 = "127.0.0.1";
+	constexpr uint16_t c_DefaultLoggerPort = 3030;
 #pragma endregion
 }

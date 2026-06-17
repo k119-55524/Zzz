@@ -99,3 +99,5 @@ build_configs/BuildConfigurator.exe
 # NetworkLogListener (C#/WPF) build outputs
 src/logger/NetworkLogListener/bin/
 src/logger/NetworkLogListener/obj/
+NetworkLogListener.lnk
+

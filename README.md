@@ -46,3 +46,7 @@
 ```
 
 Инструмент позволяет выбрать конфигурацию(сохраняя её `build_configs/current.cmake`).
+
+### Network Log Listener
+
+Утилита для перехвата сетевых логов движка. Подробности сборки и пример использования см. в [DEVELOPMENT.md](DEVELOPMENT.md#networkloglistener-wpf).

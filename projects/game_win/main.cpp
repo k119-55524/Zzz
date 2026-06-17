@@ -27,7 +27,7 @@ int APIENTRY wWinMain(
 	{
 		//g_Logger.SetLogFilterMask(eLogMessageType::All);
 		//g_Logger.AddConsoleBroadcaster();
-		g_Logger.AddNetworkBroadcaster(c_LocalhostIPv4, 3030);
+		g_Logger.AddNetworkBroadcaster(c_LocalhostIPv4, c_DefaultLoggerPort);
 
 		DOut("[Windows OS]. Game started.");
 

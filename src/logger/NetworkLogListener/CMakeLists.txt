@@ -44,10 +44,32 @@ if(NOT DOTNET_EXECUTABLE)
 endif()
 
 if(DOTNET_EXECUTABLE)
-    add_custom_target(NetworkLogListener
-        COMMAND ${DOTNET_EXECUTABLE} build "${CMAKE_CURRENT_SOURCE_DIR}/NetworkLogListener.csproj"
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        COMMENT "Building NetworkLogListener (C#/WPF)"
-        VERBATIM
-    )
+    # Map CMake configuration to dotnet configuration (Debug or Release)
+    set(DOTNET_CONFIG "$<IF:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>,$<CONFIG:RelWithDebInfo>>,Release,Debug>")
+    
+    if(WIN32)
+        set(SHORTCUT_PS1 "${CMAKE_CURRENT_BINARY_DIR}/CreateShortcut.ps1")
+        file(WRITE "${SHORTCUT_PS1}"
+"param([string]$Config)
+$wshell = New-Object -ComObject WScript.Shell
+$lnk = $wshell.CreateShortcut('${CMAKE_SOURCE_DIR}/NetworkLogListener.lnk'.Replace('/', '\\'))
+$lnk.TargetPath = '${CMAKE_CURRENT_SOURCE_DIR}/bin/' + $Config + '/net10.0-windows/NetworkLogListener.exe'.Replace('/', '\\')
+$lnk.WorkingDirectory = '${CMAKE_CURRENT_SOURCE_DIR}/bin/' + $Config + '/net10.0-windows'.Replace('/', '\\')
+$lnk.Save()
+")
+        add_custom_target(NetworkLogListener ALL
+            COMMAND ${DOTNET_EXECUTABLE} build -c ${DOTNET_CONFIG} "${CMAKE_CURRENT_SOURCE_DIR}/NetworkLogListener.csproj"
+            COMMAND powershell -NoProfile -ExecutionPolicy Bypass -File "${SHORTCUT_PS1}" -Config ${DOTNET_CONFIG}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            COMMENT "Building NetworkLogListener (C#/WPF) and creating shortcut"
+            VERBATIM
+        )
+    else()
+        add_custom_target(NetworkLogListener ALL
+            COMMAND ${DOTNET_EXECUTABLE} build -c ${DOTNET_CONFIG} "${CMAKE_CURRENT_SOURCE_DIR}/NetworkLogListener.csproj"
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            COMMENT "Building NetworkLogListener (C#/WPF)"
+            VERBATIM
+        )
+    endif()
 endif()
