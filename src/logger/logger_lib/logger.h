@@ -86,9 +86,6 @@ namespace zzz::logger
 		std::atomic<bool> m_BroadcastThreadRunning{false};
 	};
 
-	/**
-	 * @brief Глобальный экземпляр логгера.
-	 */
 	inline Logger g_Logger;
 }
 #endif

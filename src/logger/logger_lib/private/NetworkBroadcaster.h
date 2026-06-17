@@ -3,11 +3,10 @@
 #include "IBroadcaster.h"
 
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-
+#include <chrono>
 #include <string>
 #include <cstdint>
 #include <string_view>
-#include <chrono>
 #include <common/serialize/Serializer.h>
 
 using namespace zzz::common;
@@ -28,7 +27,7 @@ namespace zzz::logger
 
 		std::string m_Address;
 		uint16_t m_Port;
-		uint64_t m_Socket; // используем uint64_t для безопасного хранения SOCKET (Windows) и int (POSIX)
+		uint64_t m_Socket;
 		bool m_IsConnected;
 		std::chrono::time_point<std::chrono::steady_clock> m_LastConnectAttempt;
 		Serializer m_Serializer;

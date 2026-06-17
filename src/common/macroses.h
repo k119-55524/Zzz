@@ -2,7 +2,7 @@
 
 #include <expected>
 #include <stdexcept>
-#include "platform_defines.h"
+#include "defines.h"
 #include <format>
 
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD

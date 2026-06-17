@@ -32,7 +32,7 @@
 
 // Определение платформы
 #if defined(_WIN32) && !defined(_WIN64)
-#error >>>>> platform_defines.h: 32-bit Windows is not supported.
+#error >>>>> defines.h: 32-bit Windows is not supported.
 #elif defined(_WIN64)
 #define Z_WINDOWS 1
 
@@ -57,7 +57,7 @@
 
 // Неизвестная платформа
 #else
-#error >>>>> platform_defines.h: Unknown or unsupported platform.
+#error >>>>> defines.h: Unknown or unsupported platform.
 #endif
 
 // Категории платформ
@@ -88,7 +88,7 @@
 #elif Z_MACOS || Z_IOS
 #define Z_METAL 1
 #else
-#error >>>>> platform_defines.h: No suitable graphics API defined for this platform.
+#error >>>>> defines.h: No suitable graphics API defined for this platform.
 #endif
 #endif // render api selection
 

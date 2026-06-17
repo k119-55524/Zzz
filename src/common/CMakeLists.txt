@@ -7,7 +7,7 @@ target_include_directories(common_lib PUBLIC
 target_sources(common_lib PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/common.h
     ${CMAKE_CURRENT_SOURCE_DIR}/constants.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/platform_defines.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/defines.h
     ${CMAKE_CURRENT_SOURCE_DIR}/ensure.h
     ${CMAKE_CURRENT_SOURCE_DIR}/macroses.h
     ${CMAKE_CURRENT_SOURCE_DIR}/memory_utils.h

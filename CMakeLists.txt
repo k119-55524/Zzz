@@ -46,6 +46,7 @@ endif()
 
 add_subdirectory(src/common)
 add_subdirectory(src/logger/logger_lib)
+add_subdirectory(src/logger/NetworkLogListener)
 add_subdirectory(src/engine)
 
 if(ANDROID)

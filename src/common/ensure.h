@@ -1,6 +1,6 @@
 #pragma once
 
-#include "platform_defines.h"
+#include "defines.h"
 #include <format>
 #include <utility>
 #include <stdexcept>

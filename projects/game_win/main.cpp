@@ -25,9 +25,9 @@ int APIENTRY wWinMain(
 	int exitCode = 0;
 
 	{
-		//Engine::SetLogFilterMask(eLogMessageType::All);
-		//Engine::AddConsoleBroadcaster();
-		Engine::AddNetworkBroadcaster(c_LocalhostIPv4, 3030);
+		//g_Logger.SetLogFilterMask(eLogMessageType::All);
+		//g_Logger.AddConsoleBroadcaster();
+		g_Logger.AddNetworkBroadcaster(c_LocalhostIPv4, 3030);
 
 		DOut("[Windows OS]. Game started.");
 

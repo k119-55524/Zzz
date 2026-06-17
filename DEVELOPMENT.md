@@ -161,3 +161,9 @@ vkcube
 3. Visual Studio автоматически обнаружит установленный WSL-дистрибутив
 
 После этого Linux-таргет (`game_linux`) будет доступен для сборки и удалённой отладки прямо из Visual Studio.
+
+## NetworkLogListener (WPF)
+
+`src/logger/NetworkLogListener` — отдельный C#/.NET (WPF) проект, не часть C++ сборки движка. NuGet-зависимости (если появятся) подтягиваются автоматически через `PackageReference`; сам .NET SDK при отсутствии на машине ставится автоматически при конфигурации CMake (см. `src/logger/NetworkLogListener/CMakeLists.txt`).
+
+Дизайнер окон (`MainWindow.xaml` и т.п.) встроен в Visual Studio для WPF «из коробки» — дополнительных расширений ставить не нужно, файл `.xaml` открывается со сплит-видом XAML + live-превью сразу.

@@ -12,11 +12,11 @@
 	#include <WS2tcpip.h>
 	typedef int socklen_t;
 #else
+	#include <fcntl.h>
+	#include <unistd.h>
+	#include <arpa/inet.h>
 	#include <sys/socket.h>
 	#include <netinet/in.h>
-	#include <arpa/inet.h>
-	#include <unistd.h>
-	#include <fcntl.h>
 	#define SOCKET_ERROR (-1)
 	#define INVALID_SOCKET (~0)
 	typedef int SOCKET;
@@ -52,7 +52,8 @@ namespace zzz::logger
 
 		auto now = std::chrono::steady_clock::now();
 		if (std::chrono::duration_cast<std::chrono::milliseconds>(now - m_LastConnectAttempt).count() < 1000)
-			return; // Не спамим попытками подключения (раз в секунду)
+			return; // Не спамим(раз в секунду)
+
 		m_LastConnectAttempt = now;
 
 		SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -83,6 +84,7 @@ namespace zzz::logger
 			close(sock);
 			return;
 		}
+
 		fcntl(sock, F_SETFL, flags | O_NONBLOCK);
 #endif
 
