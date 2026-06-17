@@ -38,11 +38,63 @@ android
         debug
         {
             debuggable true
+            externalNativeBuild
+            {
+                cmake
+                {
+                    arguments "-DCMAKE_BUILD_TYPE=Debug"
+                }
+            }
+        }
+
+        development
+        {
+            initWith debug
+            externalNativeBuild
+            {
+                cmake
+                {
+                    arguments "-DCMAKE_BUILD_TYPE=Development"
+                }
+            }
+        }
+
+        developmentAsan
+        {
+            initWith debug
+            externalNativeBuild
+            {
+                cmake
+                {
+                    arguments "-DCMAKE_BUILD_TYPE=Development_ASan"
+                }
+            }
+        }
+
+        developmentTsan
+        {
+            initWith debug
+            externalNativeBuild
+            {
+                cmake
+                {
+                    // Caveat: ThreadSanitizer support on Android NDK is limited/unstable
+                    // depending on NDK version and ABI.
+                    arguments "-DCMAKE_BUILD_TYPE=Development_TSan"
+                }
+            }
         }
 
         release
         {
             minifyEnabled false
+            externalNativeBuild
+            {
+                cmake
+                {
+                    arguments "-DCMAKE_BUILD_TYPE=Release"
+                }
+            }
         }
     }
 

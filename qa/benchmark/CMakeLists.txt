@@ -36,5 +36,5 @@ if(BENCH_SOURCES)
             engine_lib
     )
 else()
-    message(FATAL_ERROR "ОШИБКА: Сборка бенчмарков (Z_BUILD_BENCHMARKS или Z_ADD_PROJECT_BENCHMARKS_IN_BUILD) включена, но ни один модуль бенчмарков (например, Z_TESTS_BENCH_ENABLE_COMMON) не выбран! Включите хотя бы один модуль или выключите Z_BUILD_BENCHMARKS/Z_ADD_PROJECT_BENCHMARKS_IN_BUILD.")
+    message(FATAL_ERROR "ОШИБКА: Сборка бенчмарков (Z_ADD_PROJECT_BENCHMARKS_IN_BUILD) включена, но ни один модуль бенчмарков (например, Z_TESTS_BENCH_ENABLE_COMMON) не выбран! Включите хотя бы один модуль или выключите Z_ADD_PROJECT_BENCHMARKS_IN_BUILD.")
 endif()

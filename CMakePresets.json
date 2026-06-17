@@ -7,10 +7,7 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${hostSystemName}/debug",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "Z_BUILD_TESTS": "ON",
-        "Z_BUILD_BENCHMARKS": "ON",
-        "Z_USE_ASAN": "ON"
+        "CMAKE_BUILD_TYPE": "Debug"
       },
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -25,9 +22,7 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${hostSystemName}/release",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "Z_BUILD_TESTS": "ON",
-        "Z_BUILD_BENCHMARKS": "ON"
+        "CMAKE_BUILD_TYPE": "Release"
       },
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -42,9 +37,42 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${hostSystemName}/development",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Development",
-        "Z_BUILD_TESTS": "ON",
-        "Z_BUILD_BENCHMARKS": "ON"
+        "CMAKE_BUILD_TYPE": "Development"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "remoteCopyExclude": "build_configs/*.exe;build_configs/*.pdb;tools/**;tools/*;**/bin/**;**/obj/**;**/publish/**;**/*BuildConfigurator.exe;*.exe",
+          "intelliSenseMode": "windows-msvc-x64"
+        }
+      }
+    },
+    {
+      "name": "Development_ASan",
+      "displayName": "Development ASan",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${hostSystemName}/development_asan",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Development_ASan"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "remoteCopyExclude": "build_configs/*.exe;build_configs/*.pdb;tools/**;tools/*;**/bin/**;**/obj/**;**/publish/**;**/*BuildConfigurator.exe;*.exe",
+          "intelliSenseMode": "windows-msvc-x64"
+        }
+      }
+    },
+    {
+      "name": "Development_TSan",
+      "displayName": "Development TSan",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${hostSystemName}/development_tsan",
+      "condition": {
+        "type": "notEquals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Development_TSan"
       },
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
