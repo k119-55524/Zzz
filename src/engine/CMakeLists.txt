@@ -1,10 +1,11 @@
-add_library(engine_lib)
+﻿macro(setup_engine_target TARGET_NAME IS_EDITOR)
+add_library(${TARGET_NAME})
 
-target_precompile_headers(engine_lib PRIVATE
+target_precompile_headers(${TARGET_NAME} PRIVATE
     pch/pch.h
 )
 
-target_include_directories(engine_lib
+target_include_directories(${TARGET_NAME}
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
     PRIVATE
@@ -13,7 +14,7 @@ target_include_directories(engine_lib
         ${CMAKE_CURRENT_SOURCE_DIR}/private/platforms
 )
 
-target_sources(engine_lib PRIVATE
+target_sources(${TARGET_NAME} PRIVATE
     # Public
     engine.h
     engine.cpp
@@ -59,7 +60,7 @@ target_sources(engine_lib PRIVATE
   "private/core/utils/converters.h" "private/platforms/input/InputHelpers.h" "private/platforms/input/InputBase.cpp")
 
 if(WIN32)
-    target_sources(engine_lib PRIVATE 
+    target_sources(${TARGET_NAME} PRIVATE 
         "private/platforms/Platform_Windows.cpp"
         "private/platforms/config/ConfigMSWin.h" "private/platforms/config/ConfigMSWin.cpp"
         "private/platforms/input/InputMSWindows.h" "private/platforms/input/InputMSWindows.cpp"
@@ -69,7 +70,7 @@ if(WIN32)
 endif()
 
 if(UNIX AND NOT APPLE AND NOT ANDROID)
-    target_sources(engine_lib PRIVATE 
+    target_sources(${TARGET_NAME} PRIVATE 
         "private/platforms/Platform_Linux.cpp"
         "private/platforms/config/ConfigLinux.h" "private/platforms/config/ConfigLinux.cpp"
         "private/platforms/input/InputLinux.h" "private/platforms/input/InputLinux.cpp"
@@ -79,7 +80,7 @@ if(UNIX AND NOT APPLE AND NOT ANDROID)
 endif()
 
 if(ANDROID)
-    target_sources(engine_lib PRIVATE 
+    target_sources(${TARGET_NAME} PRIVATE 
         "private/platforms/Platform_Android.cpp"
         "private/platforms/config/ConfigAndroid.h" "private/platforms/config/ConfigAndroid.cpp"
         "private/platforms/input/InputAndroid.h" "private/platforms/input/InputAndroid.cpp"
@@ -89,13 +90,13 @@ if(ANDROID)
 endif()
 
 if(APPLE)
-    target_sources(engine_lib PRIVATE
+    target_sources(${TARGET_NAME} PRIVATE
         # Core
         "private/core/io/apple/Path_Apple.mm"
     )
 
     if(IOS)
-        target_sources(engine_lib PRIVATE
+        target_sources(${TARGET_NAME} PRIVATE
             "private/platforms/config/ConfigiOS.h" "private/platforms/config/ConfigiOS.mm"
             "private/platforms/input/InputiOS.h" "private/platforms/input/InputiOS.mm"
             "private/platforms/Platform_iOS.mm"
@@ -103,7 +104,7 @@ if(APPLE)
             "private/platforms/window/WiniOS.h" "private/platforms/window/WiniOS.mm"
         )
     else()
-        target_sources(engine_lib PRIVATE
+        target_sources(${TARGET_NAME} PRIVATE
             "private/platforms/config/ConfigMacOS.h" "private/platforms/config/ConfigMacOS.mm"
             "private/platforms/input/InputMacOS.h" "private/platforms/input/InputMacOS.mm"
             "private/platforms/Platform_MacOS.mm"
@@ -113,10 +114,10 @@ if(APPLE)
     endif()
 endif()
 
-target_compile_features(engine_lib PUBLIC cxx_std_23)
+target_compile_features(${TARGET_NAME} PUBLIC cxx_std_23)
 
 if(UNIX AND NOT APPLE AND NOT ANDROID)
-    target_link_libraries(engine_lib PRIVATE wayland-client)
+    target_link_libraries(${TARGET_NAME} PRIVATE wayland-client)
 
     set_source_files_properties(
         "private/core/specific/linux_wayland/xdg-shell-protocol.cpp"
@@ -128,8 +129,17 @@ if(ANDROID)
     find_package(game-activity REQUIRED CONFIG)
 endif()
 
-target_link_libraries(engine_lib
+target_link_libraries(${TARGET_NAME}
     PUBLIC
         common_lib
         logger_lib
 )
+
+    if(${IS_EDITOR})
+        target_compile_definitions(${TARGET_NAME} PUBLIC Z_EDITOR=1)
+    endif()
+endmacro()
+
+setup_engine_target(engine_lib FALSE)
+setup_engine_target(engine_lib_editor TRUE)
+

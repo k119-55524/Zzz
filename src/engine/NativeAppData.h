@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #if Z_ANDROID
 struct android_app;
@@ -10,6 +10,9 @@ struct wl_compositor;
 struct wl_shm;
 struct xdg_wm_base;
 struct wl_output;
+#elif Z_EDITOR
+struct HWND__;
+typedef HWND__* HWND;
 #endif
 
 namespace zzz::engine
@@ -26,6 +29,11 @@ namespace zzz::engine
 		xdg_wm_base* xdgWmBase = nullptr;
 		wl_output* output = nullptr;
 		int32_t scaleFactor = 1;
+	};
+#elif Z_EDITOR
+	struct NativeAppData
+	{
+		HWND hwnd = nullptr;
 	};
 #else
 	using NativeAppData = void;

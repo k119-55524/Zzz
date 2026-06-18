@@ -6,6 +6,9 @@
 	- Z_FORCE_VULKAN      - принудительно использовать Vulkan на Windows.
 	- Z_IDE_OUT_LOGS      - вывод логов в IDE в случае вывода логов
 
+	Режимы сборки:
+	- Z_EDITOR            - сборка движка для редактора
+
 	Макросы платформы (определяются автоматически):
 	- Z_WINDOWS - Windows x64
 	- Z_LINUX   - Linux (только десктоп)
@@ -145,5 +148,8 @@
 #endif
 #if Z_RELEASE_BUILD
 #pragma message(">>>>> Build    : Z_RELEASE_BUILD")
+#endif
+#if Z_EDITOR
+#pragma message(">>>>> Mode     : Z_EDITOR")
 #endif
 #pragma message(">>>>> -----------------------------------------------")
