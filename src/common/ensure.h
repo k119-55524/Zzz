@@ -47,9 +47,9 @@ namespace zzz::common
 	 */
 	template<typename T>
 	inline void ensure(
-		T&& condition,
-		std::string_view message = "Pointer must not be null",
-		const std::source_location& loc = std::source_location::current())
+		[[maybe_unused]] T&& condition,
+		[[maybe_unused]] std::string_view message = "Pointer must not be null",
+		[[maybe_unused]] const std::source_location& loc = std::source_location::current())
 	{
 #if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
 		if (condition) [[likely]]
@@ -72,15 +72,10 @@ namespace zzz::common
 	 * @endcode
 	 */
 	inline void ensure(
-		bool condition,
-		std::string_view message = "Ensure failed",
-		const std::source_location& loc = std::source_location::current())
+		[[maybe_unused]] bool condition,
+		[[maybe_unused]] std::string_view message = "Ensure failed",
+		[[maybe_unused]] const std::source_location& loc = std::source_location::current())
 	{
-		// Подавляем предупреждения о неиспользуемых параметрах
-		// Чтобы не засорять вывод компилятора
-		(void)condition;
-		(void)message;
-		(void)loc;
 
 #if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
 		if (condition) [[likely]]
@@ -105,15 +100,10 @@ namespace zzz::common
 	 */
 	template<typename... Args>
 	inline void ensure(
-		bool condition,
-		std::format_string<Args...> fmt,
-		Args&&... args)
+		[[maybe_unused]] bool condition,
+		[[maybe_unused]] std::format_string<Args...> fmt,
+		[[maybe_unused]] Args&&... args)
 	{
-		// Подавляем предупреждения о неиспользуемых параметрах
-		// Чтобы не засорять вывод компилятора
-		(void)condition;
-		(void)fmt;
-		((void)args, ...);
 
 #if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
 		if (condition) [[likely]]

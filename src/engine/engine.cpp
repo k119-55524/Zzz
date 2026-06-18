@@ -62,10 +62,13 @@ std::expected<void, std::string> Engine::Initialize()
 
 	try
 	{
-		m_MainLoop = safe_make_shared<MainLoop>(*m_Platform, std::bind(&Engine::OnUpdateSystem, this));
 		m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, std::bind(&Engine::OnCloseAllViews, this));
+
+#if !Z_EDITOR
+		m_MainLoop = safe_make_shared<MainLoop>(*m_Platform, std::bind(&Engine::OnUpdateSystem, this));
 		m_ViewManager->CreateView();
 		m_ViewManager->CreateView();
+#endif
 
 		DOut("Engine initialized: OK.");
 		engineState.store(eInitState::Initialized);
@@ -92,6 +95,25 @@ std::expected<void, std::string> Engine::Initialize()
 		return UNEXPECTED("Engine is not initialized. Call Initialize() before Run().");
 
 	engineState.store(eInitState::Running);
+
+#if Z_EDITOR
+	try
+	{
+		m_ViewManager->CreateView();
+	}
+	catch (const std::exception& e)
+	{
+		Shutdown();
+		return UNEXPECTED("Exception creating view in Editor Run: {}.", e.what());
+	}
+	catch (...)
+	{
+		Shutdown();
+		return UNEXPECTED("Unknown exception creating view in Editor Run.");
+	}
+
+	return {};
+#else
 	std::string err;
 	bool isError = false;
 	try
@@ -120,21 +142,35 @@ std::expected<void, std::string> Engine::Initialize()
 	}
 
 	return {};
+#endif
 }
 
 void Engine::OnCloseAllViews()
 {
+#if !Z_EDITOR
 	m_MainLoop->Stop();
+#endif
 }
 
 void Engine::OnUpdateSystem()
 {
-	static int i = 0;
+	const int ci = 10'000'000;
+	static int i = ci;
 	i++;
 
-	if (i == 10'000'000)
+	if (i > ci)
 	{
 		i = 0;
 		DOut("Tick!!!");
 	}
 }
+
+#if Z_EDITOR
+void Engine::Tick()
+{
+	if (engineState.load() == eInitState::Running)
+	{
+		OnUpdateSystem();
+	}
+}
+#endif

@@ -11,12 +11,10 @@ using System.Windows.Shapes;
 
 using System.Runtime.InteropServices;
 using System.Windows.Interop;
+using System;
 
 namespace editor;
 
-/// <summary>
-/// Interaction logic for MainWindow.xaml
-/// </summary>
 public partial class MainWindow : Window
 {
     [DllImport("editorDLL.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -24,6 +22,9 @@ public partial class MainWindow : Window
 
     [DllImport("editorDLL.dll", CallingConvention = CallingConvention.Cdecl)]
     private static extern void Deinitialize();
+
+    [DllImport("editorDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+    private static extern void Tick();
 
     public MainWindow()
     {
@@ -34,12 +35,24 @@ public partial class MainWindow : Window
 
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
-        var helper = new WindowInteropHelper(this);
-        Initialize(helper.Handle);
+        // Передаем Handle нашего дочернего окна HwndHost в движок,
+        // чтобы движок рисовал только в отведенной ему области, а не на всем окне.
+        bool res = Initialize(ViewHost.Handle);
+        if (res)
+        {
+            // Подписываемся на покадровое обновление от WPF
+            CompositionTarget.Rendering += CompositionTarget_Rendering;
+        }
+    }
+
+    private void CompositionTarget_Rendering(object? sender, EventArgs e)
+    {
+        Tick();
     }
 
     private void MainWindow_Closed(object? sender, EventArgs e)
     {
+        CompositionTarget.Rendering -= CompositionTarget_Rendering;
         Deinitialize();
     }
 }

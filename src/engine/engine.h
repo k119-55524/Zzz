@@ -39,6 +39,10 @@ namespace zzz::engine
 		[[nodiscard]] std::expected<void, std::string> Initialize();
 		[[nodiscard]] std::expected<void, std::string> Run();
 
+#if Z_EDITOR
+		void Tick();
+#endif
+
 	private:
 		void Shutdown();
 		void OnCloseAllViews();

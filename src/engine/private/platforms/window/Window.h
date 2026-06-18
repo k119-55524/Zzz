@@ -1,6 +1,9 @@
-﻿#pragma once
+#pragma once
 
-#if Z_WINDOWS
+#if Z_EDITOR
+#include "WinEditor.h"
+namespace zzz::engine { using Window = WinEditor; }
+#elif Z_WINDOWS
 #include "WinMSWindows.h"
 namespace zzz::engine { using Window = WinMSWindows; }
 #elif Z_LINUX

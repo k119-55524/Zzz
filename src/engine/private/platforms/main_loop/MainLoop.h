@@ -1,7 +1,9 @@
-﻿#pragma once
+#pragma once
 #include "MainLoop_Common.h"
 
-#if Z_WINDOWS
+#if Z_EDITOR
+namespace zzz::engine { using MainLoop = MainLoopBase; } // Заглушка, объект не создается
+#elif Z_WINDOWS
 #include "MainLoop_MSWin.h"
 namespace zzz::engine { using MainLoop = MainLoop_MSWin; }
 #elif Z_LINUX

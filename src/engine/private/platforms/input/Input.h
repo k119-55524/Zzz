@@ -1,7 +1,10 @@
-﻿#pragma once
+#pragma once
 #include "InputBase.h"
 
-#if Z_WINDOWS
+#if Z_EDITOR
+#include "InputEditor.h"
+namespace zzz::engine { using Input = InputEditor; }
+#elif Z_WINDOWS
 #include "InputMSWindows.h"
 namespace zzz::engine { using Input = InputMSWindows; }
 #elif Z_LINUX
