@@ -14,19 +14,15 @@ ConfigManager::ConfigManager(const Path& path) :
 	m_Path(path),
 	m_IsDirty(true)
 {
+#if !Z_EDITOR
 	Initialize();
+#endif
 }
 
 void ConfigManager::Initialize()
 {
 	try
 	{
-#if Z_EDITOR
-		m_EngineConfig = safe_make_shared<EngineConfig>();
-
-		return;
-#endif
-
 		auto resPath = GetSettingsDirectory();
 		if (!resPath)
 			THROW_RUNTIME("Failed to get settings directory: {}.", resPath.error());
@@ -77,8 +73,7 @@ void ConfigManager::Initialize()
 {
 #if Z_EDITOR
 	return {};
-#endif
-
+#else
 	if (!m_IsDirty)
 	{
 		DOut("Config is not dirty. No need to save.");
@@ -121,6 +116,7 @@ void ConfigManager::Initialize()
 	DOut("Config serialized successfully to file: {}.", m_ConfigPath.string());
 
 	return {};
+#endif
 }
 
 std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path path)

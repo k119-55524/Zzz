@@ -3,6 +3,7 @@
 build/
 Build/
 build-*/
+build_vs*/
 out/
 cmake-build-*/
 

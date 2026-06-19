@@ -132,4 +132,3 @@ namespace zzz::engine
 		bool IsActivate;
 	};
 }
-
