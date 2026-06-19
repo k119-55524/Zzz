@@ -64,9 +64,9 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         if(${IS_EDITOR})
             target_sources(${TARGET_NAME} PRIVATE 
                 "private/platforms/Platform_Editor.cpp"
-                "private/platforms/config/ConfigMSWin.h" "private/platforms/config/ConfigMSWin.cpp"
+                "private/platforms/config/ConfigEditor.h" "private/platforms/config/ConfigEditor.cpp"
                 "private/platforms/input/InputEditor.h" "private/platforms/input/InputEditor.cpp"
-                "private/platforms/window/WinEditor.h" "private/platforms/window/WinEditor.cpp"
+                "private/platforms/window/WinMSWindowEditor.h" "private/platforms/window/WinMSWindowEditor.cpp"
             )
         else()
             target_sources(${TARGET_NAME} PRIVATE 

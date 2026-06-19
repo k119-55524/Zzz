@@ -17,17 +17,14 @@ InputEditor::~InputEditor()
 
 void InputEditor::InjectKeyDown(int /*key*/)
 {
-	// TODO: маппинг WPF -> KeyCode и вызов UpdateKeyState(code, true)
 }
 
 void InputEditor::InjectKeyUp(int /*key*/)
 {
-	// TODO: маппинг WPF -> KeyCode и вызов UpdateKeyState(code, false)
 }
 
 void InputEditor::InjectMouseMove(int /*x*/, int /*y*/)
 {
-	// TODO: вызов OnMouseDelta(...)
 }
 
 void InputEditor::InjectMouseButtonDown(int /*button*/)

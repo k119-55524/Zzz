@@ -21,6 +21,12 @@ void ConfigManager::Initialize()
 {
 	try
 	{
+#if Z_EDITOR
+		m_EngineConfig = safe_make_shared<EngineConfig>();
+
+		return;
+#endif
+
 		auto resPath = GetSettingsDirectory();
 		if (!resPath)
 			THROW_RUNTIME("Failed to get settings directory: {}.", resPath.error());
@@ -69,6 +75,10 @@ void ConfigManager::Initialize()
 
 [[nodiscard]] std::expected<void, std::string> ConfigManager::SaveConfig()
 {
+#if Z_EDITOR
+	return {};
+#endif
+
 	if (!m_IsDirty)
 	{
 		DOut("Config is not dirty. No need to save.");
@@ -173,6 +183,3 @@ std::expected<std::filesystem::path, std::string> ConfigManager::GetSettingsDire
 #error >>>>> ConfigManager::GetSettingsDirectory(): Unsupported platform.
 #endif
 }
-
-
-

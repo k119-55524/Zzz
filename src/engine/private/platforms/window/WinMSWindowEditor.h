@@ -11,12 +11,12 @@ namespace zzz::engine
 {
 	class InputEditor;
 
-	class WinEditor final : public WindowBase
+	class WinMSWindowEditor final : public WindowBase
 	{
 	public:
-		WinEditor() = delete;
-		WinEditor(const Platform& platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks);
-		~WinEditor();
+		WinMSWindowEditor() = delete;
+		WinMSWindowEditor(const Platform& platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks);
+		~WinMSWindowEditor();
 
 		[[nodiscard]] std::expected<void, std::string> Initialize(const std::string_view appName);
 

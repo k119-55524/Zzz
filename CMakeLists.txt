@@ -10,6 +10,10 @@ endif()
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/$<CONFIG>")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/$<CONFIG>")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/$<CONFIG>")
+
 if(MSVC)
     add_compile_options(/Zc:preprocessor /W4 /w44062 /EHsc)
 else()
@@ -72,6 +76,13 @@ if(ANDROID)
 elseif(WIN32)
     add_subdirectory(projects/game_win)
     add_subdirectory(src/editorDLL)
+    
+    # Добавляем C# WPF проект в общий CMake Solution
+    if(IS_EDITOR OR Z_DEVELOPMENT_BUILD OR NOT DEFINED IS_EDITOR)
+        include_external_msproject(WPF_Editor "${CMAKE_CURRENT_SOURCE_DIR}/src/editor/editor.csproj")
+        # Указываем, что C# проект зависит от C++ DLL, чтобы студия собирала их в правильном порядке
+        add_dependencies(WPF_Editor editorDLL)
+    endif()
 elseif(IOS)
     add_subdirectory(projects/game_ios)
 elseif(APPLE)

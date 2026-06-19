@@ -1,8 +1,8 @@
 #pragma once
 
 #if Z_EDITOR
-#include "WinEditor.h"
-namespace zzz::engine { using Window = WinEditor; }
+#include "WinMSWindowEditor.h"
+namespace zzz::engine { using Window = WinMSWindowEditor; }
 #elif Z_WINDOWS
 #include "WinMSWindows.h"
 namespace zzz::engine { using Window = WinMSWindows; }

@@ -1,0 +1,17 @@
+#include "ConfigEditor.h"
+
+using namespace zzz::engine;
+
+ConfigEditor::ConfigEditor()
+{
+}
+
+[[nodiscard]] std::expected<void, std::string> ConfigEditor::Serialize([[maybe_unused]] std::vector<std::byte>& buffer, [[maybe_unused]] const Serializer& s) const
+{
+	return {};
+}
+
+[[nodiscard]] std::expected<void, std::string> ConfigEditor::DeSerialize([[maybe_unused]] std::span<const std::byte> buffer, [[maybe_unused]] std::size_t& offset, [[maybe_unused]] const Serializer& s)
+{
+	return {};
+}

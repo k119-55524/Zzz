@@ -14,10 +14,10 @@ extern "C"
 	{
 		try
 		{
-			auto data = std::make_shared<zzz::engine::NativeAppData>();
+			auto data = zzz::safe_make_shared<zzz::engine::NativeAppData>();
 			data->hwnd = static_cast<HWND>(hwnd);
 
-			g_Engine = std::make_unique<zzz::editor::EditorEngine>("ZzzEditorWin", data);
+			g_Engine = zzz::safe_make_unique<zzz::editor::EditorEngine>("ZzzEditorWin", data);
 
 			DOut("ZzzEditorDLL initialized.");
 

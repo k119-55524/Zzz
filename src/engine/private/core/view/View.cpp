@@ -39,11 +39,7 @@ void View::Initialize()
 	callbacks.OnLowMemory        = [this]()                                 { OnWindowLowMemory(); };
 	callbacks.OnSafeAreaChanged  = [this](int t, int b, int l, int r)       { OnWindowSafeAreaChanged(t, b, l, r); };
 
-	m_Window = safe_make_shared<Window>(
-		m_Platform,
-		m_Input,
-		std::move(callbacks));
-
+	m_Window = safe_make_shared<Window>(m_Platform, m_Input, std::move(callbacks));
 	auto res = m_Window->Initialize(m_Platform.GetAppName());
 	if (!res)
 		THROW_RUNTIME("Failed to initialize window: {}.", res.error());

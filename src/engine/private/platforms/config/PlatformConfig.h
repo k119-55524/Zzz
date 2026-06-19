@@ -1,6 +1,8 @@
-﻿#pragma once
+#pragma once
 
-#if Z_WINDOWS
+#if Z_EDITOR
+#include "ConfigEditor.h"
+#elif Z_WINDOWS
 #include "ConfigMSWin.h"
 #elif Z_LINUX
 #include "ConfigLinux.h"
@@ -16,7 +18,9 @@
 
 namespace zzz::engine
 {
-#if Z_WINDOWS
+#if Z_EDITOR
+	using PlatformConfig = ConfigEditor;
+#elif Z_WINDOWS
 	using PlatformConfig = ConfigMSWin;
 #elif Z_LINUX
 	using PlatformConfig = ConfigLinux;
