@@ -2,7 +2,7 @@
 #include <memory>
 #include <common/common.h>
 #include <engine/engine.h>
-#include "EditorEngine.h"
+#include "../EngineWrapper/EditorEngine.h"
 
 #include "editorDLL.h"
 

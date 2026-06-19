@@ -101,3 +101,5 @@ src/logger/RemoteLogViewer/bin/
 src/logger/RemoteLogViewer/obj/
 RemoteLogViewer.lnk
 
+# Editor centralized build output
+bin/

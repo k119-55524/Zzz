@@ -3,6 +3,10 @@
     "editor": {
       "commandName": "Project",
       "nativeDebugging": true
+    },
+    "editor.csproj": {
+      "commandName": "Project",
+      "nativeDebugging": true
     }
   }
 }
