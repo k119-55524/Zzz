@@ -3,6 +3,8 @@ add_library(editorDLL SHARED)
 target_sources(editorDLL PRIVATE
     editorDLL.h
     editorDLL.cpp
+    EditorEngine.h
+    EditorEngine.cpp
 )
 
 target_include_directories(editorDLL PRIVATE ${CMAKE_SOURCE_DIR}/src)

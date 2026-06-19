@@ -14,24 +14,15 @@ int main(int argc, char* argv[])
 		try
 		{
 			Engine engine("GameLinux_ZzzEngine");
-			auto res = engine.Initialize();
-			if (res)
+			auto res = engine.Run();
+			if (!res)
 			{
-				res = engine.Run();
-				if (!res)
-				{
-					DOutError("[Linux OS]. Game runtime error: {}.", res.error());
-					exitCode = -1;
-				}
-				else
-				{
-					DOut("[Linux OS]. Game exited successfully.");
-				}
+				DOutError("[Linux OS]. Game runtime error: {}.", res.error());
+				exitCode = -1;
 			}
 			else
 			{
-				DOutError("[Linux OS]. Game started error: {}.", res.error());
-				exitCode = -1;
+				DOut("[Linux OS]. Game exited successfully.");
 			}
 		}
 		catch (const std::exception& e)

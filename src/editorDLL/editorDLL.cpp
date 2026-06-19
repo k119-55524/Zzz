@@ -2,10 +2,11 @@
 #include <memory>
 #include <common/common.h>
 #include <engine/engine.h>
+#include "EditorEngine.h"
 
 #include "editorDLL.h"
 
-std::unique_ptr<zzz::engine::Engine> g_Engine;
+std::unique_ptr<zzz::editor::EditorEngine> g_Engine;
 
 extern "C"
 {
@@ -16,13 +17,7 @@ extern "C"
 			auto data = std::make_shared<zzz::engine::NativeAppData>();
 			data->hwnd = static_cast<HWND>(hwnd);
 
-			g_Engine = std::make_unique<zzz::engine::Engine>("ZzzEditorWin", data);
-
-			auto res = g_Engine->Initialize();
-			if (!res.has_value()) {
-				DOutError("Editor engine initialize error: {}.", res.error());
-				return false;
-			}
+			g_Engine = std::make_unique<zzz::editor::EditorEngine>("ZzzEditorWin", data);
 
 			DOut("ZzzEditorDLL initialized.");
 

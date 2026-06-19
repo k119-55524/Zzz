@@ -47,6 +47,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
 
         # Main Loop
         "private/platforms/main_loop/MainLoop.h" "private/platforms/main_loop/MainLoop_Common.h" "private/platforms/main_loop/MainLoop_Common.cpp"
+        "private/platforms/main_loop/MainLoop_Editor.h"
 
         # Native View / Window
         "private/platforms/window/Window.h" "private/platforms/window/Window_Common.h" "private/platforms/window/Window_Common.cpp"

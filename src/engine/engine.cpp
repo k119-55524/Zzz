@@ -15,6 +15,7 @@ Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeDa
 	s_Instance = this;
 
 	m_Platform = safe_make_unique<Platform>(appName, nativeData);
+	Initialize();
 }
 
 Engine::~Engine()
@@ -51,40 +52,13 @@ void Engine::Shutdown()
 	engineState.store(eInitState::NotInitialized);
 }
 
-std::expected<void, std::string> Engine::Initialize()
+void Engine::Initialize()
 {
-	std::lock_guard lock(stateMutex);
+	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, std::bind(&Engine::OnCloseAllViews, this));
+	m_MainLoop = safe_make_shared<MainLoop>(*m_Platform, std::bind(&Engine::OnUpdateSystem, this));
 
-	if (engineState.load() != eInitState::NotInitialized)
-		return UNEXPECTED("Engine is already initialized or running.");
-
-	engineState.store(eInitState::Initializing);
-
-	try
-	{
-		m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, std::bind(&Engine::OnCloseAllViews, this));
-
-#if !Z_EDITOR
-		m_MainLoop = safe_make_shared<MainLoop>(*m_Platform, std::bind(&Engine::OnUpdateSystem, this));
-		m_ViewManager->CreateView();
-		m_ViewManager->CreateView();
-#endif
-
-		DOut("Engine initialized: OK.");
-		engineState.store(eInitState::Initialized);
-
-		return {};
-	}
-	catch (const std::exception& e)
-	{
-		Shutdown();
-		return UNEXPECTED("Exception initialize: {}.", e.what());
-	}
-	catch (...)
-	{
-		Shutdown();
-		return UNEXPECTED("Unknown exception occurred.");
-	}
+	DOut("Engine initialized: OK.");
+	engineState.store(eInitState::Initialized);
 }
 
 [[nodiscard]] std::expected<void, std::string> Engine::Run()
@@ -96,28 +70,13 @@ std::expected<void, std::string> Engine::Initialize()
 
 	engineState.store(eInitState::Running);
 
-#if Z_EDITOR
-	try
-	{
-		m_ViewManager->CreateView();
-	}
-	catch (const std::exception& e)
-	{
-		Shutdown();
-		return UNEXPECTED("Exception creating view in Editor Run: {}.", e.what());
-	}
-	catch (...)
-	{
-		Shutdown();
-		return UNEXPECTED("Unknown exception creating view in Editor Run.");
-	}
-
-	return {};
-#else
 	std::string err;
 	bool isError = false;
 	try
 	{
+		m_ViewManager->CreateView();
+		m_ViewManager->CreateView();
+
 		m_MainLoop->Run();
 	}
 	catch (const std::exception& e)
@@ -142,7 +101,6 @@ std::expected<void, std::string> Engine::Initialize()
 	}
 
 	return {};
-#endif
 }
 
 void Engine::OnCloseAllViews()
@@ -164,13 +122,3 @@ void Engine::OnUpdateSystem()
 		DOut("Tick!!!");
 	}
 }
-
-#if Z_EDITOR
-void Engine::Tick()
-{
-	if (engineState.load() == eInitState::Running)
-	{
-		OnUpdateSystem();
-	}
-}
-#endif

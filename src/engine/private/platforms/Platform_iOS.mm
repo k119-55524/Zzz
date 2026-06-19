@@ -21,26 +21,21 @@ static std::unique_ptr<Engine> g_Engine;
     
     // Engine creation
     g_Engine = std::make_unique<Engine>("GameiOS_ZzzEngine");
-    auto initResult = g_Engine->Initialize();
-    if (initResult) {
-        NSLog(@"[EngineAppDelegate] Engine initialized successfully. Starting Run...");
-        // Here we could inject the self.window into NativeAppData or pass it to WiniOS
-        // WiniOS::Initialize will create the ViewController and View. 
-        // Then we can set the rootViewController.
-        // Wait, WiniOS does not expose ViewController. We can just set a dummy rootViewController for now,
-        // or assume WiniOS sets the self.window.rootViewController.
-        // Actually, let's just make WiniOS set up its own ViewController and we can fetch it, 
-        // or WiniOS sets it to key window. For now, just make key window.
-        [self.window makeKeyAndVisible];
-        
-        auto runResult = g_Engine->Run();
-        if (!runResult) {
-            NSLog(@"[EngineAppDelegate] Engine Run failed with error: %s", runResult.error().c_str());
-        } else {
-            NSLog(@"[EngineAppDelegate] Engine Run succeeded.");
-        }
+    NSLog(@"[EngineAppDelegate] Engine initialized successfully. Starting Run...");
+    // Here we could inject the self.window into NativeAppData or pass it to WiniOS
+    // WiniOS::Initialize will create the ViewController and View. 
+    // Then we can set the rootViewController.
+    // Wait, WiniOS does not expose ViewController. We can just set a dummy rootViewController for now,
+    // or assume WiniOS sets the self.window.rootViewController.
+    // Actually, let's just make WiniOS set up its own ViewController and we can fetch it, 
+    // or WiniOS sets it to key window. For now, just make key window.
+    [self.window makeKeyAndVisible];
+    
+    auto runResult = g_Engine->Run();
+    if (!runResult) {
+        NSLog(@"[EngineAppDelegate] Engine Run failed with error: %s", runResult.error().c_str());
     } else {
-        NSLog(@"[EngineAppDelegate] Engine initialization failed with error: %s", initResult.error().c_str());
+        NSLog(@"[EngineAppDelegate] Engine Run succeeded.");
     }
     
     return YES;

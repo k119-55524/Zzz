@@ -2,7 +2,8 @@
 #include "MainLoop_Common.h"
 
 #if Z_EDITOR
-namespace zzz::engine { using MainLoop = MainLoopBase; } // Заглушка, объект не создается
+#include "MainLoop_Editor.h"
+namespace zzz::engine { using MainLoop = MainLoop_Editor; } // Пустая заглушка
 #elif Z_WINDOWS
 #include "MainLoop_MSWin.h"
 namespace zzz::engine { using MainLoop = MainLoop_MSWin; }

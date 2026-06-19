@@ -27,7 +27,7 @@ using namespace zzz::logger;
 
 namespace zzz::engine
 {
-	class Engine final
+	class Engine
 	{
 	public:
 		Engine() = delete;
@@ -36,25 +36,22 @@ namespace zzz::engine
 
 		static Engine& Get();
 
-		[[nodiscard]] std::expected<void, std::string> Initialize();
 		[[nodiscard]] std::expected<void, std::string> Run();
 
-#if Z_EDITOR
-		void Tick();
-#endif
-
-	private:
+	protected:
 		void Shutdown();
-		void OnCloseAllViews();
 		void OnUpdateSystem();
 
 		inline static Engine* s_Instance = nullptr;
-
 		std::mutex stateMutex;
 		std::atomic<eInitState> engineState;
 
 		std::unique_ptr<Platform> m_Platform;
 		std::unique_ptr<ViewManager> m_ViewManager;
 		std::shared_ptr<MainLoopBase> m_MainLoop;
+
+	private:
+		void Initialize();
+		void OnCloseAllViews();
 	};
 }

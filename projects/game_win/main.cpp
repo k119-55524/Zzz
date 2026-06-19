@@ -28,24 +28,15 @@ int APIENTRY wWinMain(
 		try
 		{
 			Engine engine("GameWin_ZzzEngine");
-			auto res = engine.Initialize();
-			if (res)
+			auto res = engine.Run();
+			if (!res)
 			{
-				res = engine.Run();
-				if (!res)
-				{
-					DOutError("[Windows OS]. Game runtime error: {}.", res.error());
-					exitCode = -1;
-				}
-				else
-				{
-					DOut("[Windows OS]. Game exited successfully.");
-				}
+				DOutError("[Windows OS]. Game runtime error: {}.", res.error());
+				exitCode = -1;
 			}
 			else
 			{
-				DOutError("[Windows OS]. Game started error: {}.", res.error());
-				exitCode = -1;
+				DOut("[Windows OS]. Game exited successfully.");
 			}
 		}
 		catch (const std::exception& e)
