@@ -98,8 +98,8 @@ tools/build_configurator/**/BuildConfigurator.exe
 build_configs/BuildConfigurator.exe
 
 # RemoteLogViewer (C#/WPF) build outputs
-src/logger/RemoteLogViewer/bin/
-src/logger/RemoteLogViewer/obj/
+tools/RemoteLogViewer/bin/
+tools/RemoteLogViewer/obj/
 RemoteLogViewer.lnk
 
 # Editor centralized build output

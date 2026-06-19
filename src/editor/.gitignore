@@ -1,9 +1,0 @@
-bin/
-obj/
-.vs/
-*.user
-*.suo
-
-# Native editorDLL build artifacts, copied here by src/editorDLL's CMake post-build step
-editorDLL.dll
-editorDLL.pdb
