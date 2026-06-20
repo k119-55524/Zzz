@@ -31,14 +31,17 @@
     <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
 
-  <!-- editorDLL собирается через CMake/Ninja отдельно от этого проекта (include_external_msproject
-       не работает с генератором Ninja), поэтому пересборка native-зависимости вызывается явно. -->
-  <Target Name="BuildEditorDLL" BeforeTargets="Build">
+  <!-- editorDLL собирается через C++ проект (editorDLL.vcxproj) в решении Tools.sln.
+       Запуск cmake build отключается при сборке решения в VS/MSBuild, чтобы избежать ошибок с путями SDK. -->
+  <Target Name="BuildEditorDLL" BeforeTargets="Build" Condition="'$(BuildingSolutionFile)' != 'true' And '$(BuildingInsideVisualStudio)' != 'true'">
     <PropertyGroup>
+      <Z_TargetDir Condition="'$(Configuration)' == 'Debug'">$(MSBuildThisFileDirectory)..\..\..\bin\Debug</Z_TargetDir>
+      <Z_TargetDir Condition="'$(Configuration)' == 'Release'">$(MSBuildThisFileDirectory)..\..\..\bin\Release</Z_TargetDir>
       <Z_CMakeBuildDir Condition="'$(Configuration)' == 'Debug'">$(MSBuildThisFileDirectory)..\..\..\build\Windows\debug</Z_CMakeBuildDir>
       <Z_CMakeBuildDir Condition="'$(Configuration)' == 'Release'">$(MSBuildThisFileDirectory)..\..\..\build\Windows\release</Z_CMakeBuildDir>
     </PropertyGroup>
-    <Exec Command="cmake --build &quot;$(Z_CMakeBuildDir)&quot; --target editorDLL" Condition="'$(Z_CMakeBuildDir)' != '' And Exists('$(Z_CMakeBuildDir)')" />
+    <!-- Вызываем cmake build только если бинарник отсутствует и мы собираем проект отдельно -->
+    <Exec Command="cmake --build &quot;$(Z_CMakeBuildDir)&quot; --target editorDLL" Condition="'$(Z_CMakeBuildDir)' != '' And Exists('$(Z_CMakeBuildDir)') And !Exists('$(Z_TargetDir)\editorDLL.dll')" />
   </Target>
 
 </Project>

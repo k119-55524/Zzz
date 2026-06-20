@@ -10,4 +10,3 @@ namespace editor;
 public partial class App : Application
 {
 }
-
