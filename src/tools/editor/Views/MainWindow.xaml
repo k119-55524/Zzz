@@ -3,20 +3,235 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:editor"
+        xmlns:dock="clr-namespace:AvalonDock;assembly=AvalonDock"
+        xmlns:dockLayout="clr-namespace:AvalonDock.Layout;assembly=AvalonDock"
+        xmlns:vsTheme="clr-namespace:AvalonDock.Themes;assembly=AvalonDock.Themes.VS2013"
         mc:Ignorable="d"
-        Title="Zzz Engine Editor" Height="720" Width="1280">
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="250" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
+        Background="{DynamicResource Brush_Window_Background}"
+        Title="ZzzEditor" Height="720" Width="1280" Icon="pack://application:,,,/Properties/AppIcon.ico"
+        WindowStartupLocation="Manual"
+        WindowStyle="None"
+        AllowsTransparency="False">
 
-        <Border Grid.Column="0" Background="#2E2E2E">
-            <TextBlock Foreground="White" Margin="10" FontSize="16" FontWeight="Bold">Toolbar / Outliner</TextBlock>
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="30" 
+                      ResizeBorderThickness="5" 
+                      GlassFrameThickness="0" 
+                      CornerRadius="0"/>
+    </WindowChrome.WindowChrome>
+    
+    <Window.Resources>
+        <!-- Стилизация кнопок тулбара -->
+        <Style x:Key="ToolbarButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="Margin" Value="2,0" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Trigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <ColorAnimation Storyboard.TargetProperty="(Button.Background).(SolidColorBrush.Color)"
+                                                To="#3E3E42" Duration="0:0:0.1" />
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.EnterActions>
+                    <Trigger.ExitActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <ColorAnimation Storyboard.TargetProperty="(Button.Background).(SolidColorBrush.Color)"
+                                                To="Transparent" Duration="0:0:0.15" />
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.ExitActions>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Secondary}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Кнопки управления окном (свернуть/закрыть) -->
+        <Style x:Key="ChromeWindowButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}" />
+            <Setter Property="Width" Value="45" />
+            <Setter Property="Height" Value="30" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#3F3F41" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        
+        <Style x:Key="ChromeWindowCloseButtonStyle" TargetType="Button" BasedOn="{StaticResource ChromeWindowButtonStyle}">
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#E81123" />
+                    <Setter Property="Foreground" Value="White" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Window.InputBindings>
+        <!-- Хоткеи Undo / Redo -->
+        <KeyBinding Key="Z" Modifiers="Control" Command="{Binding UndoCommand}" />
+        <KeyBinding Key="Y" Modifiers="Control" Command="{Binding RedoCommand}" />
+    </Window.InputBindings>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" /> <!-- Заголовок и Меню -->
+            <RowDefinition Height="Auto" /> <!-- Панель инструментов (Toolbar) -->
+            <RowDefinition Height="*" />    <!-- Стыкуемые панели -->
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="#2D2D30" BorderBrush="{DynamicResource Brush_Border}" BorderThickness="0,0,0,1" Height="30">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" /> <!-- 0. Иконка, Имя и Звездочка -->
+                    <ColumnDefinition Width="Auto" /> <!-- 1. Меню (только под размер пунктов) -->
+                    <ColumnDefinition Width="*" />    <!-- 2. Свободная область для перетаскивания -->
+                    <ColumnDefinition Width="Auto" /> <!-- 3. Кнопки закрыть/свернуть -->
+                </Grid.ColumnDefinitions>
+
+                <!-- 1. Иконка приложения и Имя проекта + фиксированный зазор под звездочку -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
+                    <Image Source="pack://application:,,,/Properties/AppIcon.ico" Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center" />
+                    <TextBlock x:Name="TxtTitleAppName" Text="ZzzEditor" Foreground="{DynamicResource Brush_Text_Primary}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <TextBlock Text=" - [" Foreground="{DynamicResource Brush_Text_Secondary}" VerticalAlignment="Center" />
+                    <TextBlock x:Name="TxtTitleProjectInfo" Text="Нет проекта" Foreground="{DynamicResource Brush_Text_Primary}" VerticalAlignment="Center" />
+                    <TextBlock Text="]" Foreground="{DynamicResource Brush_Text_Secondary}" VerticalAlignment="Center" />
+                    <!-- Фиксированное текстовое поле для звездочки. Видимость/текст меняются, но ширина закреплена, чтобы меню не прыгало -->
+                    <Grid Width="10" Margin="1,0,10,0">
+                        <TextBlock x:Name="TxtTitleDirty" Text="*" Foreground="#E81123" FontWeight="Bold" FontSize="14" VerticalAlignment="Center" Visibility="Collapsed" />
+                    </Grid>
+                </StackPanel>
+
+                <!-- 2. Главное меню редактора (активно в Chrome) -->
+                <Menu Grid.Column="1" Background="Transparent" Foreground="{DynamicResource Brush_Text_Primary}" VerticalAlignment="Center" Margin="5,0,10,0"
+                      WindowChrome.IsHitTestVisibleInChrome="True">
+                    <MenuItem Header="{DynamicResource Menu_File}" Foreground="{DynamicResource Brush_Text_Primary}">
+                        <MenuItem Header="{DynamicResource Menu_File_Create}" Click="Menu_CreateProject_Click" />
+                        <MenuItem Header="{DynamicResource Menu_File_Open}" Click="Menu_OpenProject_Click" />
+                        <Separator Background="{DynamicResource Brush_Border}" />
+                        <MenuItem x:Name="MenuRecentProjects" Header="{DynamicResource Menu_File_Recent}" />
+                        <Separator Background="{DynamicResource Brush_Border}" />
+                        <MenuItem Header="{DynamicResource Menu_File_Exit}" Click="Menu_Exit_Click" />
+                    </MenuItem>
+                    <MenuItem x:Name="MenuWindow" Header="{DynamicResource Menu_Window}" Foreground="{DynamicResource Brush_Text_Primary}" />
+                    <MenuItem Header="{DynamicResource Menu_Help}" Foreground="{DynamicResource Brush_Text_Primary}">
+                        <MenuItem Header="{DynamicResource Menu_Help_About}" Click="Menu_About_Click" />
+                    </MenuItem>
+                </Menu>
+
+                <!-- Свободная область для перетаскивания (просто пустой Border, невидимый для хит-тестов XAML, чтобы клик шел в Chrome) -->
+                <Border Grid.Column="2" Background="Transparent" />
+
+                <!-- 3. Системные кнопки окна Windows -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button Content="—" Style="{StaticResource ChromeWindowButtonStyle}" Click="ChromeMinimize_Click" Focusable="False" />
+                    <Button x:Name="BtnChromeMaximize" Content="🗖" Style="{StaticResource ChromeWindowButtonStyle}" Click="ChromeMaximize_Click" Focusable="False" />
+                    <Button Content="✕" Style="{StaticResource ChromeWindowCloseButtonStyle}" Click="ChromeClose_Click" Focusable="False" />
+                </StackPanel>
+            </Grid>
         </Border>
 
-        <!-- Наш кастомный компонент для хостинга DirectX/Vulkan -->
-        <local:EngineViewHost x:Name="ViewHost" Grid.Column="1" />
+        <!-- Строка 1: Панель управления -->
+        <Border Grid.Row="1" Background="#252526" BorderBrush="{DynamicResource Brush_Border}" BorderThickness="0,0,0,1" Padding="5">
+            <Grid>
+                <!-- Левая часть: Undo, Redo и Трансформации -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                    <!-- Кнопка сохранения (Сохранить) в стиле VS -->
+                    <Button ToolTip="Сохранить (Ctrl+S)" Style="{StaticResource ToolbarButtonStyle}" Width="30" Height="25">
+                        <Path Data="M2,2 L10,2 L12,4 L12,12 L2,12 Z M4,2 L4,6 L8,6 L8,2 Z M5,12 L5,8 L9,8 L9,12 Z" 
+                              Stroke="#007ACC" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Button>
+                    <Separator Width="2" Margin="5,0,10,0" Background="{DynamicResource Brush_Border}" />
+
+                    <!-- Undo / Redo кнопки -->
+                    <Button Content="↩" ToolTip="Ctrl+Z" Style="{StaticResource ToolbarButtonStyle}" Click="Undo_Click" x:Name="BtnUndo" />
+                    <Button Content="↪" ToolTip="Ctrl+Y" Style="{StaticResource ToolbarButtonStyle}" Click="Redo_Click" x:Name="BtnRedo" />
+                    <Separator Width="2" Margin="10,0" Background="{DynamicResource Brush_Border}" />
+                </StackPanel>
+
+                <!-- Центральная часть: Управление симуляцией (Play, Pause, Stop) -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <!-- Запуск (Зеленый треугольник) -->
+                    <Button ToolTip="Запуск" Style="{StaticResource ToolbarButtonStyle}" Width="30" Height="25" Click="Play_Click">
+                        <Path Data="M 0,0 L 10,6 L 0,12 Z" Fill="#5CDB7B" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="2,0,0,0" />
+                    </Button>
+                    
+                    <!-- Пауза (Две закругленные вертикальные полосы) -->
+                    <Button ToolTip="Пауза" Style="{StaticResource ToolbarButtonStyle}" Width="30" Height="25" Click="Pause_Click">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Border Width="3" Height="10" Background="#E0E0E0" CornerRadius="1" Margin="0,0,2,0" />
+                            <Border Width="3" Height="10" Background="#E0E0E0" CornerRadius="1" />
+                        </StackPanel>
+                    </Button>
+                    
+                    <!-- Стоп (Красный закругленный квадрат) -->
+                    <Button ToolTip="Стоп" Style="{StaticResource ToolbarButtonStyle}" Width="30" Height="25" Click="Step_Click">
+                        <Border Width="9" Height="9" Background="#F25C5C" CornerRadius="1.5" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Строка 2: DockingManager -->
+        <dock:DockingManager x:Name="DockManager" Grid.Row="2" Background="{DynamicResource Brush_Window_Background}"
+                             AnchorableClosing="DockManager_AnchorableClosing">
+            <dock:DockingManager.Theme>
+                <vsTheme:Vs2013DarkTheme />
+            </dock:DockingManager.Theme>
+            <dockLayout:LayoutRoot>
+                <dockLayout:LayoutPanel Orientation="Horizontal">
+                    <!-- Левая панель: Иерархия (SceneTree) -->
+                    <dockLayout:LayoutAnchorablePane DockWidth="250">
+                        <dockLayout:LayoutAnchorable x:Name="PaneSceneTree" CanClose="True" Title="Иерархия" ContentId="SceneTreeWidget">
+                            <!-- Контент вставляется динамически -->
+                        </dockLayout:LayoutAnchorable>
+                    </dockLayout:LayoutAnchorablePane>
+
+                    <!-- Центральная и нижняя панели -->
+                    <dockLayout:LayoutPanel Orientation="Vertical" DockWidth="*">
+                        <!-- Центр: Сцена (Render), Настройки (Settings), Сборка (Build) -->
+                        <dockLayout:LayoutAnchorablePane>
+                            <dockLayout:LayoutAnchorable x:Name="PaneRender" CanClose="False" Title="Сцена" ContentId="RenderWidget">
+                                <!-- Контент вставляется динамически -->
+                            </dockLayout:LayoutAnchorable>
+                            <dockLayout:LayoutAnchorable x:Name="PaneSettings" CanClose="True" Title="Настройки" ContentId="SettingsWidget">
+                                <!-- Контент вставляется динамически -->
+                            </dockLayout:LayoutAnchorable>
+                            <dockLayout:LayoutAnchorable x:Name="PaneBuild" CanClose="True" Title="Сборка" ContentId="BuildWidget">
+                                <!-- Контент вставляется динамически -->
+                            </dockLayout:LayoutAnchorable>
+                        </dockLayout:LayoutAnchorablePane>
+
+                        <!-- Низ: Ресурсы (Assets) и Консоль (Console) -->
+                        <dockLayout:LayoutAnchorablePane DockHeight="200">
+                            <dockLayout:LayoutAnchorable x:Name="PaneAssets" CanClose="True" Title="Ресурсы" ContentId="AssetsWidget">
+                                <!-- Контент вставляется динамически -->
+                            </dockLayout:LayoutAnchorable>
+                            <dockLayout:LayoutAnchorable x:Name="PaneConsole" CanClose="True" Title="Консоль" ContentId="ConsoleWidget">
+                                <!-- Контент вставляется динамически -->
+                            </dockLayout:LayoutAnchorable>
+                        </dockLayout:LayoutAnchorablePane>
+                    </dockLayout:LayoutPanel>
+
+                    <!-- Правая панель: Инспектор (Inspector) -->
+                    <dockLayout:LayoutAnchorablePane DockWidth="300">
+                        <dockLayout:LayoutAnchorable x:Name="PaneInspector" CanClose="True" Title="Инспектор" ContentId="InspectorWidget">
+                            <!-- Контент вставляется динамически -->
+                        </dockLayout:LayoutAnchorable>
+                    </dockLayout:LayoutAnchorablePane>
+                </dockLayout:LayoutPanel>
+            </dockLayout:LayoutRoot>
+        </dock:DockingManager>
     </Grid>
 </Window>

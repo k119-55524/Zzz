@@ -48,9 +48,47 @@
     <!-- editorDLL CMake-сборка пишет в свою изолированную папку (см. src/editorDLL/CMakeLists.txt),
          чтобы не конфликтовать с editorDLL.vcxproj. Переносим результат в bin/$(Configuration) сами. -->
     <ItemGroup>
-      <Z_EditorDllStandaloneFiles Include="$(Z_CMakeStandaloneOutDir)\editorDLL.dll;$(Z_CMakeStandaloneOutDir)\editorDLL.pdb" Condition="Exists('$(Z_CMakeStandaloneOutDir)')" />
+      <Z_EditorDllStandaloneFiles Include="$(Z_CMakeStandaloneOutDir)\editorDLL.dll;$(Z_CMakeStandaloneOutDir)\editorDLL.pdb" />
+      <Z_EditorDllStandaloneExistingFiles Include="@(Z_EditorDllStandaloneFiles)" Condition="Exists('%(Identity)')" />
     </ItemGroup>
-    <Copy SourceFiles="@(Z_EditorDllStandaloneFiles)" DestinationFolder="$(Z_TargetDir)" Condition="'@(Z_EditorDllStandaloneFiles)' != ''" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(Z_EditorDllStandaloneExistingFiles)" DestinationFolder="$(Z_TargetDir)" Condition="'@(Z_EditorDllStandaloneExistingFiles)' != ''" SkipUnchangedFiles="true" />
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="Dirkster.AvalonDock" Version="4.72.1" />
+    <PackageReference Include="Dirkster.AvalonDock.Themes.VS2013" Version="4.72.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Properties\AppIcon.ico" />
+  </ItemGroup>
+
+  <!-- Автогенерация версии сборки на основе даты/времени перед компиляцией -->
+  <Target Name="GenerateVersionFile" BeforeTargets="BeforeBuild">
+    <PropertyGroup>
+      <Z_EpochTicks>639017376000000000</Z_EpochTicks> <!-- Ticks for 2026-01-01 00:00:00 UTC -->
+      <Z_NowTicks>$([System.DateTime]::UtcNow.Ticks)</Z_NowTicks>
+      <Z_DiffTicks>$([MSBuild]::Subtract($(Z_NowTicks), $(Z_EpochTicks)))</Z_DiffTicks>
+      <!-- Делим на 600,000,000 (количество Ticks в минуте), затем на 10 для 10-минутного интервала -->
+      <Z_BuildVersion>$([MSBuild]::Divide($(Z_DiffTicks), 6000000000))</Z_BuildVersion>
+      <Z_BuildVersion>$([System.Math]::Floor($(Z_BuildVersion)))</Z_BuildVersion>
+      <Z_VersionCode>1</Z_VersionCode>
+      <Z_BuildDate>$([System.DateTime]::Now.ToString("dd.MM.yyyy HH:mm:ss"))</Z_BuildDate>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Z_Lines Include="namespace editor%3B" />
+      <Z_Lines Include="public static class EditorConstants" />
+      <Z_Lines Include="{" />
+      <Z_Lines Include="    public const string ApplicationName = &quot;ZzzEditor&quot;%3B" />
+      <Z_Lines Include="    public const string Version = &quot;1.0.0:$(Z_BuildVersion)&quot;%3B" />
+      <Z_Lines Include="    public const int VersionCode = $(Z_VersionCode)%3B" />
+      <Z_Lines Include="    public const string BuildDate = &quot;$(Z_BuildDate)&quot;%3B" />
+      <Z_Lines Include="}" />
+    </ItemGroup>
+
+    <WriteLinesToFile File="$(MSBuildProjectDirectory)\Models\EditorVersion.cs" Lines="@(Z_Lines)" Overwrite="true" WriteOnlyWhenDifferent="true" />
   </Target>
 
 </Project>
+

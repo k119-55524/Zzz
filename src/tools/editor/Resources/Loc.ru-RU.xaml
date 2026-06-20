@@ -1,0 +1,41 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <!-- Меню и общие элементы -->
+    <sys:String x:Key="Menu_File">Файл</sys:String>
+    <sys:String x:Key="Menu_File_Create">Создать проект</sys:String>
+    <sys:String x:Key="Menu_File_Open">Открыть проект</sys:String>
+    <sys:String x:Key="Menu_File_Recent">Последние проекты</sys:String>
+    <sys:String x:Key="Menu_File_Exit">Выход</sys:String>
+    
+    <sys:String x:Key="Menu_Window">Окно</sys:String>
+    <sys:String x:Key="Menu_Window_Reset">Сбросить макет окон</sys:String>
+    <sys:String x:Key="Menu_File_NoProject">Нет проекта</sys:String>
+    
+    <sys:String x:Key="Menu_Help">Помощь</sys:String>
+    <sys:String x:Key="Menu_Help_About">О программе</sys:String>
+
+    <!-- Заголовки виджетов -->
+    <sys:String x:Key="Widget_Render_Title">Сцена</sys:String>
+    <sys:String x:Key="Widget_Inspector_Title">Инспектор</sys:String>
+    <sys:String x:Key="Widget_SceneTree_Title">Иерархия</sys:String>
+    <sys:String x:Key="Widget_Assets_Title">Ресурсы</sys:String>
+    <sys:String x:Key="Widget_Console_Title">Консоль</sys:String>
+    <sys:String x:Key="Widget_Settings_Title">Настройки</sys:String>
+    <sys:String x:Key="Widget_Build_Title">Сборка</sys:String>
+    
+    <!-- Содержимое-заглушки для шаблонов виджетов -->
+    <sys:String x:Key="Widget_Inspector_Placeholder">ИНСПЕКТОР СВОЙСТВ</sys:String>
+    <sys:String x:Key="Widget_SceneTree_Placeholder">ДЕРЕВО СЦЕНЫ (ИЕРАРХИЯ)</sys:String>
+    <sys:String x:Key="Widget_Assets_Placeholder">БРАУЗЕР АССЕТОВ / РЕСУРСОВ</sys:String>
+    <sys:String x:Key="Widget_Console_Placeholder">КОНСОЛЬ ВЫВОДА ЛОГОВ</sys:String>
+    <sys:String x:Key="Widget_Settings_Placeholder">НАСТРОЙКИ ПРОЕКТА И РЕДАКТОРА</sys:String>
+    <sys:String x:Key="Widget_Build_Placeholder">ПАРАМЕТРЫ СБОРКИ И ЭКСПОРТА</sys:String>
+
+    <!-- Диалоги -->
+    <sys:String x:Key="Dialog_About_Title">О программе ZzzEditor</sys:String>
+    <sys:String x:Key="Dialog_About_Message">Редактор игрового движка Zzz Engine</sys:String>
+    <sys:String x:Key="Dialog_About_Version">Версия: {0}</sys:String>
+    <sys:String x:Key="Dialog_Close_Title">Выход из редактора</sys:String>
+    <sys:String x:Key="Dialog_Close_Unsaved">Сохранить изменения проекта перед выходом?</sys:String>
+</ResourceDictionary>

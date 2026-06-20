@@ -1,0 +1,41 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <!-- Menu & Common -->
+    <sys:String x:Key="Menu_File">File</sys:String>
+    <sys:String x:Key="Menu_File_Create">New Project</sys:String>
+    <sys:String x:Key="Menu_File_Open">Open Project</sys:String>
+    <sys:String x:Key="Menu_File_Recent">Recent Projects</sys:String>
+    <sys:String x:Key="Menu_File_Exit">Exit</sys:String>
+    
+    <sys:String x:Key="Menu_Window">Window</sys:String>
+    <sys:String x:Key="Menu_Window_Reset">Reset Layout</sys:String>
+    <sys:String x:Key="Menu_File_NoProject">No Project</sys:String>
+    
+    <sys:String x:Key="Menu_Help">Help</sys:String>
+    <sys:String x:Key="Menu_Help_About">About</sys:String>
+
+    <!-- Widget Titles -->
+    <sys:String x:Key="Widget_Render_Title">Scene</sys:String>
+    <sys:String x:Key="Widget_Inspector_Title">Inspector</sys:String>
+    <sys:String x:Key="Widget_SceneTree_Title">Hierarchy</sys:String>
+    <sys:String x:Key="Widget_Assets_Title">Project</sys:String>
+    <sys:String x:Key="Widget_Console_Title">Console</sys:String>
+    <sys:String x:Key="Widget_Settings_Title">Settings</sys:String>
+    <sys:String x:Key="Widget_Build_Title">Build</sys:String>
+    
+    <!-- Widget Placeholders -->
+    <sys:String x:Key="Widget_Inspector_Placeholder">PROPERTIES INSPECTOR</sys:String>
+    <sys:String x:Key="Widget_SceneTree_Placeholder">SCENE HIERARCHY TREE</sys:String>
+    <sys:String x:Key="Widget_Assets_Placeholder">ASSETS / FILE BROWSER</sys:String>
+    <sys:String x:Key="Widget_Console_Placeholder">CONSOLE LOG OUTPUT</sys:String>
+    <sys:String x:Key="Widget_Settings_Placeholder">PROJECT &amp; EDITOR SETTINGS</sys:String>
+    <sys:String x:Key="Widget_Build_Placeholder">BUILD &amp; EXPORT CONFIGURATION</sys:String>
+
+    <!-- Dialogs -->
+    <sys:String x:Key="Dialog_About_Title">About ZzzEditor</sys:String>
+    <sys:String x:Key="Dialog_About_Message">Zzz Engine Game Editor</sys:String>
+    <sys:String x:Key="Dialog_About_Version">Version: {0}</sys:String>
+    <sys:String x:Key="Dialog_Close_Title">Exit Editor</sys:String>
+    <sys:String x:Key="Dialog_Close_Unsaved">Save project changes before exiting?</sys:String>
+</ResourceDictionary>
