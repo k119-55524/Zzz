@@ -8,4 +8,4 @@ cmake -S "$ROOT_DIR/src/tools/config_switcher" -B "$ROOT_DIR/src/tools/config_sw
 cmake --build "$ROOT_DIR/src/tools/config_switcher/build" --config Release
 
 echo ""
-echo "Done. build_configurator_switch is in the repository root."
+echo "Done. build_configurator_switch is in the build_configs folder."

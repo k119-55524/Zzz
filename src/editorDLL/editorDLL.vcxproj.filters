@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://www.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Core">
+      <UniqueIdentifier>{6d946dcd-087f-47bd-93c6-946927cfa4a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EngineWrapper">
+      <UniqueIdentifier>{36ea6d6d-6292-487b-83c9-f19b88931139}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Core\editorDLL.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="EngineWrapper\EditorEngine.h">
+      <Filter>EngineWrapper</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Core\editorDLL.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="EngineWrapper\EditorEngine.cpp">
+      <Filter>EngineWrapper</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

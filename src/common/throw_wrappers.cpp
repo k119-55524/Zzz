@@ -2,7 +2,7 @@
 #include <sstream>
 #include <stdexcept>
 //#include <common/common.h>
-#include <logger/logger_lib/logger.h>
+#include <logger/logger.h>
 #include "macroses.h"
 
 #include "throw_wrappers.h"

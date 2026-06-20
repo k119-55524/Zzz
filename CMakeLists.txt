@@ -67,7 +67,7 @@ else()
 endif()
 
 add_subdirectory(src/common)
-add_subdirectory(src/logger/logger_lib)
+add_subdirectory(src/logger)
 add_subdirectory(src/tools/RemoteLogViewer)
 add_subdirectory(src/engine)
 

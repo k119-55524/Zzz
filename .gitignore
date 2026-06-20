@@ -68,6 +68,8 @@ vcpkg_installed/
 
 build_configurator_switch
 build_configurator_switch.exe
+build_configs/build_configurator_switch
+build_configs/build_configurator_switch.exe
 src/tools/config_switcher/build/
 
 # macOS metadata (any developer on macOS)

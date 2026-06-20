@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{C66B24D1-A54D-4E10-B149-166D46C2B47C}</ProjectGuid>
+    <RootNamespace>engine_lib</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)..\..\bin\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\..\build\obj\$(ProjectName)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)..\..\bin\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\..\build\obj\$(ProjectName)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_LIB;WIN32;Z_EDITOR=1;Z_ADD_LOGGER=1;Z_IDE_OUT_LOGS=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp23</LanguageStandard>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <ForcedIncludeFiles>pch/pch.h</ForcedIncludeFiles>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\;$(MSBuildProjectDirectory)\..\common;$(MSBuildProjectDirectory)\..\logger;$(MSBuildProjectDirectory)\pch;$(MSBuildProjectDirectory)\private\core;$(MSBuildProjectDirectory)\private\platforms;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_LIB;WIN32;Z_EDITOR=1;Z_ADD_LOGGER=1;Z_IDE_OUT_LOGS=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp23</LanguageStandard>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <ForcedIncludeFiles>pch/pch.h</ForcedIncludeFiles>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\;$(MSBuildProjectDirectory)\..\common;$(MSBuildProjectDirectory)\..\logger;$(MSBuildProjectDirectory)\pch;$(MSBuildProjectDirectory)\private\core;$(MSBuildProjectDirectory)\private\platforms;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="engine.h" />
+    <ClInclude Include="header.h" />
+    <ClInclude Include="NativeAppData.h" />
+    <ClInclude Include="headers\MSWin.h" />
+    <ClInclude Include="headers\enums.h" />
+    <ClInclude Include="pch\pch.h" />
+    <ClInclude Include="private\platforms\config\ConfigManager.h" />
+    <ClInclude Include="private\platforms\config\EngineConfig.h" />
+    <ClInclude Include="private\platforms\config\PlatformConfig.h" />
+    <ClInclude Include="private\platforms\config\ConfigEditor.h" />
+    <ClInclude Include="private\core\io\Path.h" />
+    <ClInclude Include="private\core\utils\version.h" />
+    <ClInclude Include="private\core\templates\Size2D.h" />
+    <ClInclude Include="private\platforms\input\Input.h" />
+    <ClInclude Include="private\platforms\input\InputBase.h" />
+    <ClInclude Include="private\platforms\input\InputHelpers.h" />
+    <ClInclude Include="private\platforms\input\InputEditor.h" />
+    <ClInclude Include="private\platforms\Platform.h" />
+    <ClInclude Include="private\platforms\main_loop\MainLoop.h" />
+    <ClInclude Include="private\platforms\main_loop\MainLoop_Common.h" />
+    <ClInclude Include="private\platforms\main_loop\MainLoop_Editor.h" />
+    <ClInclude Include="private\platforms\window\Window.h" />
+    <ClInclude Include="private\platforms\window\Window_Common.h" />
+    <ClInclude Include="private\platforms\window\WinMSWindowEditor.h" />
+    <ClInclude Include="private\core\view\View.h" />
+    <ClInclude Include="private\core\view\ViewManager.h" />
+    <ClInclude Include="private\core\utils\ScreenResolution.h" />
+    <ClInclude Include="private\core\utils\converters.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="engine.cpp" />
+    <ClCompile Include="pch\pch.cpp" />
+    <ClCompile Include="private\platforms\config\ConfigManager.cpp" />
+    <ClCompile Include="private\platforms\config\EngineConfig.cpp" />
+    <ClCompile Include="private\platforms\config\ConfigEditor.cpp" />
+    <ClCompile Include="private\core\io\Path.cpp" />
+    <ClCompile Include="private\core\utils\version.cpp" />
+    <ClCompile Include="private\platforms\input\InputBase.cpp" />
+    <ClCompile Include="private\platforms\input\InputEditor.cpp" />
+    <ClCompile Include="private\platforms\Platform_Common.cpp" />
+    <ClCompile Include="private\platforms\Platform_Editor.cpp" />
+    <ClCompile Include="private\platforms\main_loop\MainLoop_Common.cpp" />
+    <ClCompile Include="private\platforms\window\Window_Common.cpp" />
+    <ClCompile Include="private\platforms\window\WinMSWindowEditor.cpp" />
+    <ClCompile Include="private\core\view\View.cpp" />
+    <ClCompile Include="private\core\view\ViewManager.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\common\common_lib.vcxproj">
+      <Project>{47E7A912-78A3-4B04-811F-436417A2A94C}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\logger\logger_lib.vcxproj">
+      <Project>{B88B46C3-4889-4E65-B86C-9A69D9CB5F50}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

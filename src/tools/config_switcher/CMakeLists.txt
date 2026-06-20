@@ -27,6 +27,6 @@ target_include_directories(build_configurator_switch PRIVATE "${CMAKE_CURRENT_BI
 add_custom_command(TARGET build_configurator_switch POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
         "$<TARGET_FILE:build_configurator_switch>"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../../../$<TARGET_FILE_NAME:build_configurator_switch>"
-    COMMENT "Copying build_configurator_switch to project root"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../../../build_configs/$<TARGET_FILE_NAME:build_configurator_switch>"
+    COMMENT "Copying build_configurator_switch to build_configs"
 )

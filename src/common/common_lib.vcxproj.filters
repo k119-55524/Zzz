@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://www.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="enums">
+      <UniqueIdentifier>{6ca6ec27-b50a-42fc-8e4a-95c5c1815d74}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="serialize">
+      <UniqueIdentifier>{4596b445-6677-4f6c-b3bf-1ca7b822c60c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="common.h" />
+    <ClInclude Include="constants.h" />
+    <ClInclude Include="defines.h" />
+    <ClInclude Include="ensure.h" />
+    <ClInclude Include="macroses.h" />
+    <ClInclude Include="memory_utils.h" />
+    <ClInclude Include="throw_wrappers.h" />
+    <ClInclude Include="types.h" />
+    <ClInclude Include="enums\eLogMessageType.h">
+      <Filter>enums</Filter>
+    </ClInclude>
+    <ClInclude Include="enums\eWinResize.h">
+      <Filter>enums</Filter>
+    </ClInclude>
+    <ClInclude Include="enums\enum_to_string.h">
+      <Filter>enums</Filter>
+    </ClInclude>
+    <ClInclude Include="serialize\Serializer.h">
+      <Filter>serialize</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="throw_wrappers.cpp" />
+    <ClCompile Include="serialize\Serializer.cpp">
+      <Filter>serialize</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

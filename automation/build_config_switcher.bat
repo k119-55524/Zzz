@@ -19,5 +19,5 @@ if %ERRORLEVEL% neq 0 (
 )
 
 echo.
-echo Done. build_configurator_switch.exe is in the repository root.
+echo Done. build_configurator_switch.exe is in the build_configs folder.
 pause

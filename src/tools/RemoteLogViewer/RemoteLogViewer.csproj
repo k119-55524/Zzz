@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -7,10 +7,21 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>icon.ico</ApplicationIcon>
+    <OutputPath>..\..\..\bin\$(Configuration)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
     <Content Include="icon.ico" />
   </ItemGroup>
+
+  <Target Name="CreateRootShortcut" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
+    <PropertyGroup>
+      <Z_ShortcutPath>$(MSBuildThisFileDirectory)..\..\..\RemoteLogViewer.lnk</Z_ShortcutPath>
+      <Z_TargetPath>$(TargetDir)RemoteLogViewer.exe</Z_TargetPath>
+      <Z_WorkDir>$(TargetDir)</Z_WorkDir>
+    </PropertyGroup>
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$wshell = New-Object -ComObject WScript.Shell; $lnk = $wshell.CreateShortcut('$(Z_ShortcutPath)'); $lnk.TargetPath = '$(Z_TargetPath)'; $lnk.WorkingDirectory = '$(Z_WorkDir)'; $lnk.Save()&quot;" />
+  </Target>
 
 </Project>

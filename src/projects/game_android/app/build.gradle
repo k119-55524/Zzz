@@ -102,7 +102,7 @@ android
     {
         cmake
         {
-            path "../../../CMakeLists.txt"
+            path "../../../../CMakeLists.txt"
             version "4.1.2"
         }
     }

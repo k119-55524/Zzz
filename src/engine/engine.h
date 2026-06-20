@@ -7,7 +7,7 @@
 #include <string_view>
 
 #include "NativeAppData.h"
-#include <logger/logger_lib/logger.h>
+#include <logger/logger.h>
 
 namespace zzz
 {

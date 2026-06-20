@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 echo "Cleaning macOS CMake files..."
 rm -rf src/projects/game_macos/CMakeFiles src/projects/game_macos/CMakeCache.txt src/projects/game_macos/*.xcodeproj src/projects/game_macos/build

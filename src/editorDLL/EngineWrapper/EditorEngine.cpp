@@ -1,7 +1,7 @@
 #include "EditorEngine.h"
 #include <engine/headers/enums.h>
 #include <engine/private/core/view/ViewManager.h>
-#include <logger/logger_lib/logger.h>
+#include <logger/logger.h>
 
 using namespace zzz;
 using namespace zzz::engine;
