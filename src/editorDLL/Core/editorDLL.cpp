@@ -18,7 +18,6 @@ extern "C"
 			data->hwnd = static_cast<HWND>(hwnd);
 
 			g_Engine = zzz::safe_make_unique<zzz::editor::EditorEngine>("ZzzEditorWin", data);
-
 			DOut("ZzzEditorDLL initialized.");
 
 			auto runRes = g_Engine->Run();
