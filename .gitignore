@@ -68,7 +68,7 @@ vcpkg_installed/
 
 build_configurator_switch
 build_configurator_switch.exe
-tools/config_switcher/build/
+src/tools/config_switcher/build/
 
 # macOS metadata (any developer on macOS)
 
@@ -88,18 +88,18 @@ tools/config_switcher/build/
 dist/
 # Ignore BuildConfigurator build outputs and published artifacts
 # local build outputs
-tools/build_configurator/bin/
-tools/build_configurator/obj/
+src/tools/build_configurator/bin/
+src/tools/build_configurator/obj/
 # publish folders created by dotnet publish
-tools/build_configurator/**/publish/
+src/tools/build_configurator/**/publish/
 # specific exe artifacts
-tools/build_configurator/**/BuildConfigurator.exe
+src/tools/build_configurator/**/BuildConfigurator.exe
 # historical artifacts in build_configs
 build_configs/BuildConfigurator.exe
 
 # RemoteLogViewer (C#/WPF) build outputs
-tools/RemoteLogViewer/bin/
-tools/RemoteLogViewer/obj/
+src/tools/RemoteLogViewer/bin/
+src/tools/RemoteLogViewer/obj/
 RemoteLogViewer.lnk
 
 # Editor centralized build output

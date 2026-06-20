@@ -7,12 +7,11 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${hostSystemName}/debug",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "IS_EDITOR": "OFF"
+        "CMAKE_BUILD_TYPE": "Debug"
       },
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "remoteCopyExclude": "build_configs/*.exe;build_configs/*.pdb;tools/**;tools/*;**/bin/**;**/obj/**;**/publish/**;**/*BuildConfigurator.exe;*.exe",
+          "remoteCopyExclude": "build_configs/*.exe;build_configs/*.pdb;src/tools/**;src/tools/*;**/bin/**;**/obj/**;**/publish/**;**/*BuildConfigurator.exe;*.exe",
           "intelliSenseMode": "windows-msvc-x64"
         }
       }
@@ -23,12 +22,11 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${hostSystemName}/release",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "IS_EDITOR": "OFF"
+        "CMAKE_BUILD_TYPE": "Release"
       },
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "remoteCopyExclude": "build_configs/*.exe;build_configs/*.pdb;tools/**;tools/*;**/bin/**;**/obj/**;**/publish/**;**/*BuildConfigurator.exe;*.exe",
+          "remoteCopyExclude": "build_configs/*.exe;build_configs/*.pdb;src/tools/**;src/tools/*;**/bin/**;**/obj/**;**/publish/**;**/*BuildConfigurator.exe;*.exe",
           "intelliSenseMode": "windows-msvc-x64"
         }
       }
@@ -39,12 +37,11 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${hostSystemName}/development",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Development",
-        "IS_EDITOR": "OFF"
+        "CMAKE_BUILD_TYPE": "Development"
       },
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "remoteCopyExclude": "build_configs/*.exe;build_configs/*.pdb;tools/**;tools/*;**/bin/**;**/obj/**;**/publish/**;**/*BuildConfigurator.exe;*.exe",
+          "remoteCopyExclude": "build_configs/*.exe;build_configs/*.pdb;src/tools/**;src/tools/*;**/bin/**;**/obj/**;**/publish/**;**/*BuildConfigurator.exe;*.exe",
           "intelliSenseMode": "windows-msvc-x64"
         }
       }
@@ -55,12 +52,11 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${hostSystemName}/development_asan",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Development_ASan",
-        "IS_EDITOR": "OFF"
+        "CMAKE_BUILD_TYPE": "Development_ASan"
       },
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "remoteCopyExclude": "build_configs/*.exe;build_configs/*.pdb;tools/**;tools/*;**/bin/**;**/obj/**;**/publish/**;**/*BuildConfigurator.exe;*.exe",
+          "remoteCopyExclude": "build_configs/*.exe;build_configs/*.pdb;src/tools/**;src/tools/*;**/bin/**;**/obj/**;**/publish/**;**/*BuildConfigurator.exe;*.exe",
           "intelliSenseMode": "windows-msvc-x64"
         }
       }
@@ -76,44 +72,11 @@
         "rhs": "Windows"
       },
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Development_TSan",
-        "IS_EDITOR": "OFF"
+        "CMAKE_BUILD_TYPE": "Development_TSan"
       },
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "remoteCopyExclude": "build_configs/*.exe;build_configs/*.pdb;tools/**;tools/*;**/bin/**;**/obj/**;**/publish/**;**/*BuildConfigurator.exe;*.exe",
-          "intelliSenseMode": "windows-msvc-x64"
-        }
-      }
-    },
-    {
-      "name": "debug_editor",
-      "displayName": "Debug Editor",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/${hostSystemName}/debug_editor",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "IS_EDITOR": "ON"
-      },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "remoteCopyExclude": "build_configs/*.exe;build_configs/*.pdb;tools/**;tools/*;**/bin/**;**/obj/**;**/publish/**;**/*BuildConfigurator.exe;*.exe",
-          "intelliSenseMode": "windows-msvc-x64"
-        }
-      }
-    },
-    {
-      "name": "release_editor",
-      "displayName": "Release Editor",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/${hostSystemName}/release_editor",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "IS_EDITOR": "ON"
-      },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "remoteCopyExclude": "build_configs/*.exe;build_configs/*.pdb;tools/**;tools/*;**/bin/**;**/obj/**;**/publish/**;**/*BuildConfigurator.exe;*.exe",
+          "remoteCopyExclude": "build_configs/*.exe;build_configs/*.pdb;src/tools/**;src/tools/*;**/bin/**;**/obj/**;**/publish/**;**/*BuildConfigurator.exe;*.exe",
           "intelliSenseMode": "windows-msvc-x64"
         }
       }

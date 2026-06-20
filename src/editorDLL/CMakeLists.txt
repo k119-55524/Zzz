@@ -11,7 +11,7 @@ target_include_directories(editorDLL PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 target_link_libraries(editorDLL
     PRIVATE
-        engine_lib
+        engine_lib_editor
 )
 
 

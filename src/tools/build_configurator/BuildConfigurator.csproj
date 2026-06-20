@@ -28,8 +28,8 @@
     <Message Importance="high" Text="[Auto-Publish] Генерация единого исполняемого файла (.exe) со всеми встроенными DLL..." />
     <MSBuild Projects="$(MSBuildProjectFile)" 
              Targets="Publish" 
-             Properties="PublishingAlready=true;Configuration=$(Configuration);PublishDir=$(MSBuildProjectDirectory)\..\..\build_configs" />
-    <Message Importance="high" Text="[Auto-Publish] Готово! Единый файл собран в папку: $(MSBuildProjectDirectory)\..\..\build_configs\" />
+             Properties="PublishingAlready=true;Configuration=$(Configuration);PublishDir=$(MSBuildProjectDirectory)\..\..\..\build_configs" />
+    <Message Importance="high" Text="[Auto-Publish] Готово! Единый файл собран в папку: $(MSBuildProjectDirectory)\..\..\..\build_configs\" />
   </Target>
 
 </Project>

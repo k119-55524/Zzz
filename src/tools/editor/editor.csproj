@@ -7,16 +7,16 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <EnableUnmanagedDebugging>true</EnableUnmanagedDebugging>
-    
-    <Configurations>Debug_Editor;Release_Editor</Configurations>
+
+    <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU;x64</Platforms>
 
-    <OutputPath>..\..\bin\$(Configuration)\</OutputPath>
+    <OutputPath>..\..\..\bin\$(Configuration)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
   <!-- Конфигурация с отладкой -->
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug_Editor'">
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <Optimize>false</Optimize>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>portable</DebugType>
@@ -24,7 +24,7 @@
   </PropertyGroup>
 
   <!-- Конфигурация без отладки -->
-  <PropertyGroup Condition="'$(Configuration)' == 'Release_Editor'">
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <Optimize>true</Optimize>
     <DebugSymbols>false</DebugSymbols>
     <DebugType>none</DebugType>
@@ -35,8 +35,8 @@
        не работает с генератором Ninja), поэтому пересборка native-зависимости вызывается явно. -->
   <Target Name="BuildEditorDLL" BeforeTargets="Build">
     <PropertyGroup>
-      <Z_CMakeBuildDir Condition="'$(Configuration)' == 'Debug_Editor'">$(MSBuildThisFileDirectory)..\..\build\Windows\debug_editor</Z_CMakeBuildDir>
-      <Z_CMakeBuildDir Condition="'$(Configuration)' == 'Release_Editor'">$(MSBuildThisFileDirectory)..\..\build\Windows\release_editor</Z_CMakeBuildDir>
+      <Z_CMakeBuildDir Condition="'$(Configuration)' == 'Debug'">$(MSBuildThisFileDirectory)..\..\..\build\Windows\debug</Z_CMakeBuildDir>
+      <Z_CMakeBuildDir Condition="'$(Configuration)' == 'Release'">$(MSBuildThisFileDirectory)..\..\..\build\Windows\release</Z_CMakeBuildDir>
     </PropertyGroup>
     <Exec Command="cmake --build &quot;$(Z_CMakeBuildDir)&quot; --target editorDLL" Condition="'$(Z_CMakeBuildDir)' != '' And Exists('$(Z_CMakeBuildDir)')" />
   </Target>

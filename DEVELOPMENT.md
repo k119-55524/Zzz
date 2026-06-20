@@ -30,8 +30,8 @@
 3. Открыть нужный проект:
 
    ```sh
-   open projects/game_macos/Zzz.xcodeproj  # macOS
-   open projects/game_ios/Zzz.xcodeproj    # iOS
+   open src/projects/game_macos/Zzz.xcodeproj  # macOS
+   open src/projects/game_ios/Zzz.xcodeproj    # iOS
    ```
 
 4. В Xcode выбрать соответствующую схему (`game_macos` или `game_ios`) и собрать/запустить.
@@ -164,7 +164,7 @@ vkcube
 
 ## RemoteLogViewer (WPF)
 
-`tools/RemoteLogViewer` — отдельный C#/.NET (WPF) проект, не часть C++ сборки движка. Утилита предназначена для перехвата и удобного просмотра сетевых логов игры в реальном времени.
+`src/tools/RemoteLogViewer` — отдельный C#/.NET (WPF) проект, не часть C++ сборки движка. Утилита предназначена для перехвата и удобного просмотра сетевых логов игры в реальном времени.
 
 **Сборка:**
 Собирается автоматически при сборке проекта в CMake (сборка `ALL`) на Windows. После успешной компиляции в корне репозитория появится ярлык `RemoteLogViewer.lnk`. NuGet-зависимости (если появятся) подтягиваются автоматически через `PackageReference`; сам .NET SDK при отсутствии на машине ставится автоматически при конфигурации CMake.
@@ -180,7 +180,7 @@ vkcube
 
 ### Пример использования (C++)
 
-В коде движка или игры необходимо добавить сетевой бродкастер в глобальный логгер. Пример из `projects/game_win/main.cpp`:
+В коде движка или игры необходимо добавить сетевой бродкастер в глобальный логгер. Пример из `src/projects/game_win/main.cpp`:
 
 ```cpp
 #include <common/common.h>

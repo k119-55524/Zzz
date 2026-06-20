@@ -8,7 +8,7 @@
 
 ## Тесты и бенчмарки
 
-В проекте используются Google Test и Google Benchmark, расположенные в папке `qa/` (`qa/tests` и `qa/benchmarks`).
+В проекте используются Google Test и Google Benchmark, расположенные в папке `src/qa/` (`src/qa/tests` и `src/qa/benchmarks`).
 
 Управление тем, какие модули тестов собираются, осуществляется через **CMake-дефайны** в **Build Configurator**:
 1. Основные рубильники (`Z_ADD_PROJECT_TESTS_IN_BUILD` и `Z_ADD_PROJECT_BENCHMARKS_IN_BUILD`) управляют глобальным включением подпроектов.
@@ -22,7 +22,7 @@
 
 > Только для Windows
 
-1. Открыть проект `tools/build_configurator/BuildConfigurator.csproj` в Visual Studio
+1. Открыть проект `src/tools/build_configurator/BuildConfigurator.csproj` в Visual Studio
 2. Выбрать конфигурацию **Release**
 3. Собрать проект: Build → Build Solution
 
