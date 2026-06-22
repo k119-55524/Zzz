@@ -282,7 +282,18 @@
                                                 Command="{Binding Path=LayoutItem.AutoHideCommand, RelativeSource={RelativeSource TemplatedParent}}"
                                                 Focusable="False" Background="Transparent" BorderThickness="0"
                                                 Foreground="{StaticResource Brush_Text_Secondary}" Padding="3,0" Content="📌"
-                                                ToolTip="Автоскрытие" />
+                                                ToolTip="Автоскрытие">
+                                                <Button.Style>
+                                                    <Style TargetType="{x:Type Button}">
+                                                        <Setter Property="Visibility" Value="{Binding Path=Model.CanAutoHide, RelativeSource={RelativeSource AncestorType=dockControls:AnchorablePaneTitle}, Converter={StaticResource BoolToVis}}" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Path=Model.IsFloating, RelativeSource={RelativeSource AncestorType=dockControls:AnchorablePaneTitle}}" Value="True">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
                                             <Button x:Name="PART_HidePin"
                                                 Command="{Binding Path=LayoutItem.HideCommand, RelativeSource={RelativeSource TemplatedParent}}"
                                                 Focusable="False" Background="Transparent" BorderThickness="0"

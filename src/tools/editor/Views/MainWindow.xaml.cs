@@ -1,16 +1,14 @@
-using System;
-using System.Linq;
+
 using System.Windows;
-using System.Windows.Controls;
+using editor.Services;
+using editor.ViewModels;
+using AvalonDock.Layout;
+using editor.Views.Widgets;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using System.Windows.Shell;
+using System.Windows.Controls;
 using System.Windows.Threading;
-using AvalonDock.Layout;
-using editor.Services;
-using editor.ViewModels;
-using editor.Views.Widgets;
 
 namespace editor
 {
@@ -20,11 +18,6 @@ namespace editor
 		private string _defaultLayoutXml = "";
 		private bool _isEngineInitialized = false;
 
-		// LayoutAnchorablePaneControl не подхватывает implicit-стиль ни по своему типу, ни по типу
-		// TabControl (от которого наследует DefaultStyleKey) — AvalonDock явно резолвит Style через
-		// внутренний механизм, минующий обычный resource lookup. Назначаем стиль самостоятельно через
-		// class handler на Loaded (это Direct-событие, не всплывает — обычный AddHandler на окне его
-		// не поймает, нужен RegisterClassHandler).
 		static MainWindow()
 		{
 			EventManager.RegisterClassHandler(
@@ -40,15 +33,42 @@ namespace editor
 
 		private static void OnFloatingWindowLoaded(object sender, RoutedEventArgs e)
 		{
-			if (sender is DependencyObject obj)
+			if (sender is Window window)
 			{
-				var button = FindVisualChild<FrameworkElement>(obj, "SinglePaneContextMenu");
-				if (button != null)
+				MainWindow? mainWin = null;
+				foreach (Window w in Application.Current.Windows)
 				{
-					button.Visibility = Visibility.Collapsed;
-					button.Width = 0;
-					button.Height = 0;
+					if (w is MainWindow mw)
+					{
+						mainWin = mw;
+						break;
+					}
 				}
+
+				if (mainWin != null)
+				{
+					var style = mainWin.DockManager.FindResource(typeof(AvalonDock.Controls.AnchorablePaneTitle));
+					if (style != null)
+					{
+						window.Resources[typeof(AvalonDock.Controls.AnchorablePaneTitle)] = style;
+					}
+					var paneStyle = mainWin.DockManager.FindResource("CompactAnchorablePaneStyle");
+					if (paneStyle != null)
+					{
+						window.Resources["CompactAnchorablePaneStyle"] = paneStyle;
+					}
+				}
+
+				Application.Current.Dispatcher.BeginInvoke(new System.Action(() =>
+				{
+					var button = FindVisualChild<FrameworkElement>(window, "SinglePaneContextMenu");
+					if (button != null)
+					{
+						button.Visibility = Visibility.Collapsed;
+						button.Width = 0;
+						button.Height = 0;
+					}
+				}), System.Windows.Threading.DispatcherPriority.Background);
 			}
 		}
 
@@ -74,15 +94,6 @@ namespace editor
 		{
 			var tabControl = (TabControl)sender;
 			tabControl.Style = (Style)tabControl.FindResource("CompactAnchorablePaneStyle");
-
-			// SizeChanged самого TabControl не срабатывает, когда меняется только внутреннее
-			// расположение закладок (например, после скрытия/восстановления соседней панели —
-			// общий размер строки закладок не меняется, а позиции внутри неё съезжают).
-			// LayoutUpdated ловит любой завершённый проход разметки в поддереве, включая такие случаи —
-			// но дёргать TranslatePoint прямо из самого LayoutUpdated реентерабельно форсирует ещё один
-			// проход разметки и может уйти в рекурсию до переполнения стека. Поэтому пересчёт всегда
-			// откладывается на отдельный тик диспетчера, и при этом схлопывается (не более одного
-			// отложенного пересчёта одновременно на один TabControl).
 			var scheduler = new OutlineUpdateScheduler(tabControl);
 			tabControl.SelectionChanged += (s, _) => scheduler.Schedule();
 			tabControl.LayoutUpdated += (s, _) => scheduler.Schedule();
@@ -92,11 +103,7 @@ namespace editor
 
 		private sealed class OutlineUpdateScheduler
 		{
-			// Защита от зацикливания диспетчера на случай непредвиденного сценария, где условие
-			// готовности контейнера так и не становится истинным (см. UpdateTabSelectionOutline) —
-			// после нескольких неудачных попыток просто ждём следующего настоящего события.
 			private const int MaxConsecutiveRetries = 5;
-
 			private readonly TabControl _tabControl;
 			private bool _isPending;
 			private int _retryCount;
@@ -106,16 +113,12 @@ namespace editor
 				_tabControl = tabControl;
 			}
 
-			// Вызывается из настоящих WPF-событий (SelectionChanged/LayoutUpdated/Loaded) — сбрасывает
-			// счётчик повторов, так как это новая попытка, не связанная с предыдущей серией неудач.
 			public void Schedule()
 			{
 				_retryCount = 0;
 				ScheduleCore();
 			}
 
-			// Вызывается только из UpdateTabSelectionOutline, когда контейнер закладки временно
-			// не готов сразу после Show()/Hide(). Ограничена числом попыток.
 			public void ScheduleRetry()
 			{
 				if (_retryCount >= MaxConsecutiveRetries)
@@ -143,12 +146,6 @@ namespace editor
 			}
 		}
 
-		// Контур вокруг активной закладки и поля контента — это одна непрерывная фигура "флажком"
-		// (закладка обычно уже области контента), а не два отдельных прямоугольника. Форма зависит
-		// от ширины и позиции активной закладки среди соседей, поэтому пересчитывается каждый раз,
-		// когда меняется выбор закладки или размер панели — обычный статичный Border её не нарисует.
-		// retryScheduler вызывается, если контейнер выбранной закладки ещё не пересоздан AvalonDock'ом
-		// (например, сразу после Show()/Hide()) — пробуем пересчитать ещё раз на следующем тике.
 		private static void UpdateTabSelectionOutline(TabControl tabControl, Action retryScheduler)
 		{
 			if (tabControl.Template == null)
@@ -169,16 +166,6 @@ namespace editor
 			if (selectedTab == null || selectedTab.ActualWidth <= 0 || contentPanel.ActualWidth <= 0)
 			{
 				outline.Data = null;
-
-				// Причина может быть как временной (сразу после Show()/Hide() контейнер выбранной
-				// закладки ещё не пересоздан AvalonDock'ом — ItemContainerGenerator отстаёт на один
-				// проход разметки), так и постоянной (панель целиком свёрнута в автоскрытие, и
-				// SelectedItem может оставаться null, пока её не раскроют обратно). Различать эти
-				// случаи здесь ненадёжно (например, IsVisible бывает временно false даже у панелей,
-				// которые вообще не трогали, — отдельная попытка так и сделать чуть выше привела
-				// к тому, что у них контур пропадал навсегда). Поэтому retryScheduler ограничен
-				// числом попыток (см. OutlineUpdateScheduler.ScheduleRetry) — этого достаточно,
-				// чтобы не зациклить диспетчер, и не важно, какая из причин сработала.
 				retryScheduler();
 				return;
 			}
@@ -187,11 +174,6 @@ namespace editor
 
 			Rect tabBounds = new Rect(selectedTab.TranslatePoint(new Point(0, 0), rootGrid), new Size(selectedTab.ActualWidth, selectedTab.ActualHeight));
 			Rect contentBounds = new Rect(contentPanel.TranslatePoint(new Point(0, 0), rootGrid), new Size(contentPanel.ActualWidth, contentPanel.ActualHeight));
-
-			// Каждый пересчёт создаёт новый объект PathGeometry, что инвалидирует Measure у Path
-			// и может спровоцировать ещё один проход разметки (а значит — ещё один LayoutUpdated).
-			// Если границы не изменились с прошлого раза, переприсваивать Data не нужно — это рвёт
-			// потенциальный цикл инвалидации.
 			if (outline.Tag is (Rect cachedTabBounds, Rect cachedContentBounds)
 				&& cachedTabBounds == tabBounds && cachedContentBounds == contentBounds)
 			{
@@ -266,13 +248,8 @@ namespace editor
 
 		private void MainWindow_Loaded(object sender, RoutedEventArgs e)
 		{
-			// Сохраняем исходную схему по умолчанию (раскладку, построенную PaneLayoutUpdateStrategy)
 			_defaultLayoutXml = AvalonDockLayoutPersistence.Serialize(DockManager);
-
-			// 1. Загружаем глобальную сессию (недавние проекты и т.п.)
 			_viewModel.LoadSession();
-
-			// 2. Загружаем локальный макет
 			var layoutState = EditorSessionManager.LoadLayoutSession();
 			if (layoutState.Width > 100 && layoutState.Height > 100)
 			{
@@ -288,8 +265,6 @@ namespace editor
 
 			_viewModel.IsDirty = layoutState.IsDirty;
 			RestoreLayout(layoutState.LayoutXml);
-
-			// 3. Инициализируем рендер движка (через хендл RenderWidget)
 			if (_viewModel.RenderPane.ViewContent is RenderWidget renderWidget)
 			{
 				_isEngineInitialized = EngineRuntime.TryInitialize(renderWidget.RenderHandle);
@@ -302,12 +277,9 @@ namespace editor
 
 		private void RestoreLayout(string layoutXml)
 		{
-			// При отсутствии сохранённой раскладки (или сбое десериализации) остаётся раскладка по умолчанию
 			AvalonDockLayoutPersistence.TryDeserialize(DockManager, layoutXml, _viewModel.Panes);
 		}
 
-		// AvalonDock не имеет MVVM-эквивалента для Show()/Float() — это единственное место,
-		// где код-бихайнд напрямую обращается к дереву раскладки AvalonDock.
 		private void ShowWidget(PaneViewModel pane)
 		{
 			var anchorable = DockManager.Layout.Descendents()
@@ -319,9 +291,6 @@ namespace editor
 				return;
 			}
 
-			// Show() сам возвращает панель в нужную статическую зону через PaneLayoutUpdateStrategy.
-			// Float() здесь не нужен — он создаёт новое плавающее окно в координатах (0,0) экрана,
-			// из-за чего панель визуально "не появлялась" для пользователя.
 			if (anchorable.IsHidden)
 			{
 				anchorable.Show();
@@ -376,7 +345,6 @@ namespace editor
 			}
 		}
 
-		// SystemCommands.XxxWindowCommand — это лишь токены команд, без CommandBinding они ничего не делают
 		private void MinimizeWindow_Executed(object sender, ExecutedRoutedEventArgs e) => SystemCommands.MinimizeWindow(this);
 		private void MaximizeWindow_Executed(object sender, ExecutedRoutedEventArgs e) => SystemCommands.MaximizeWindow(this);
 		private void RestoreWindow_Executed(object sender, ExecutedRoutedEventArgs e) => SystemCommands.RestoreWindow(this);

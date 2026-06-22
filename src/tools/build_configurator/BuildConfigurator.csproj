@@ -16,19 +16,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Resource Include="build_configurator.ico"/>
+    <Resource Include="build_configurator.ico" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
   </ItemGroup>
 
   <!-- Автоматический запуск публикации для создания единого EXE при сборке в Release -->
   <Target Name="PublishOnBuild" AfterTargets="Build" Condition="'$(PublishingAlready)' != 'true' And '$(Configuration)' == 'Release'">
     <Message Importance="high" Text="[Auto-Publish] Генерация единого исполняемого файла (.exe) со всеми встроенными DLL..." />
-    <MSBuild Projects="$(MSBuildProjectFile)" 
-             Targets="Publish" 
-             Properties="PublishingAlready=true;Configuration=$(Configuration);PublishDir=$(MSBuildProjectDirectory)\..\..\..\build_configs" />
+    <MSBuild Projects="$(MSBuildProjectFile)" Targets="Publish" Properties="PublishingAlready=true;Configuration=$(Configuration);PublishDir=$(MSBuildProjectDirectory)\..\..\..\build_configs" />
     <Message Importance="high" Text="[Auto-Publish] Готово! Единый файл собран в папку: $(MSBuildProjectDirectory)\..\..\..\build_configs\" />
   </Target>
 
