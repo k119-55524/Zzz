@@ -265,7 +265,9 @@
         <!-- Строка 2: DockingManager -->
         <dock:DockingManager x:Name="DockManager" Grid.Row="2" Background="{DynamicResource Brush_Window_Background}"
                              AnchorablesSource="{Binding Panes}"
-                             AnchorableClosing="DockManager_AnchorableClosing">
+                             AnchorableClosing="DockManager_AnchorableClosing"
+                             GridSplitterWidth="3"
+                             GridSplitterHeight="3">
             <dock:DockingManager.Resources>
                 <ResourceDictionary>
                     <!-- Компактная версия заголовка панели AvalonDock: только кнопки (▾ список / 📌 автоскрытие / ✕ скрыть),

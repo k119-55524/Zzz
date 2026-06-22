@@ -232,11 +232,6 @@ namespace editor
 			_viewModel.CloseRequested += (s, e) => Close();
 			_viewModel.ResetLayoutRequested += (s, e) =>
 			{
-				WindowState = WindowState.Normal;
-				Width = 1280;
-				Height = 720;
-				Left = (SystemParameters.PrimaryScreenWidth - Width) / 2;
-				Top = (SystemParameters.PrimaryScreenHeight - Height) / 2;
 				RestoreLayout(_defaultLayoutXml);
 			};
 			_viewModel.ShowWidgetRequested += (s, pane) => ShowWidget(pane);
@@ -264,7 +259,7 @@ namespace editor
 			}
 
 			_viewModel.IsDirty = layoutState.IsDirty;
-			RestoreLayout(layoutState.LayoutXml);
+			RestoreLayout(string.IsNullOrEmpty(layoutState.LayoutXml) ? _defaultLayoutXml : layoutState.LayoutXml);
 			if (_viewModel.RenderPane.ViewContent is RenderWidget renderWidget)
 			{
 				_isEngineInitialized = EngineRuntime.TryInitialize(renderWidget.RenderHandle);
