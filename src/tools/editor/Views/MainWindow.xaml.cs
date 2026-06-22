@@ -260,7 +260,9 @@ namespace editor
 
 			_viewModel.IsDirty = layoutState.IsDirty;
 			RestoreLayout(string.IsNullOrEmpty(layoutState.LayoutXml) ? _defaultLayoutXml : layoutState.LayoutXml);
-			if (_viewModel.RenderPane.ViewContent is RenderWidget renderWidget)
+			DockManager.UpdateLayout();
+			var renderWidget = FindVisualChild<RenderWidget>(DockManager);
+			if (renderWidget != null)
 			{
 				_isEngineInitialized = EngineRuntime.TryInitialize(renderWidget.RenderHandle);
 				if (_isEngineInitialized)
@@ -344,5 +346,23 @@ namespace editor
 		private void MaximizeWindow_Executed(object sender, ExecutedRoutedEventArgs e) => SystemCommands.MaximizeWindow(this);
 		private void RestoreWindow_Executed(object sender, ExecutedRoutedEventArgs e) => SystemCommands.RestoreWindow(this);
 		private void CloseWindow_Executed(object sender, ExecutedRoutedEventArgs e) => SystemCommands.CloseWindow(this);
+
+		private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+		{
+			for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+			{
+				var child = VisualTreeHelper.GetChild(parent, i);
+				if (child is T typedChild)
+				{
+					return typedChild;
+				}
+				var result = FindVisualChild<T>(child);
+				if (result != null)
+				{
+					return result;
+				}
+			}
+			return null;
+		}
 	}
 }

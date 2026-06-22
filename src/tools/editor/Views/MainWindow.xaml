@@ -9,6 +9,7 @@
         xmlns:dockControls="clr-namespace:AvalonDock.Controls;assembly=AvalonDock"
         xmlns:vsTheme="clr-namespace:AvalonDock.Themes;assembly=AvalonDock.Themes.VS2013"
         xmlns:svc="clr-namespace:editor.Services"
+        xmlns:conv="clr-namespace:editor.Views.Converters"
         mc:Ignorable="d"
         Background="{DynamicResource Brush_Window_Background}"
         Title="{Binding WindowTitle}" Height="720" Width="1280" Icon="pack://application:,,,/Properties/AppIcon.ico"
@@ -26,6 +27,7 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <CollectionViewSource x:Key="PanesCollection" Source="{Binding Panes}" />
+        <conv:WidgetTypeToViewConverter x:Key="WidgetTypeToViewConverter" />
 
         <!-- Стилизация кнопок тулбара -->
         <Style x:Key="ToolbarButtonStyle" TargetType="Button">
@@ -476,7 +478,7 @@
             </dock:DockingManager.LayoutUpdateStrategy>
             <dock:DockingManager.LayoutItemTemplate>
                 <DataTemplate>
-                    <ContentPresenter Content="{Binding ViewContent}" />
+                    <ContentPresenter Content="{Binding Type, Converter={StaticResource WidgetTypeToViewConverter}}" />
                 </DataTemplate>
             </dock:DockingManager.LayoutItemTemplate>
             <dockLayout:LayoutRoot>
