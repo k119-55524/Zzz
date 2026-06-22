@@ -1,4 +1,3 @@
-﻿
 #include "WinLinux.h"
 #include "../Platform.h"
 #include "../../core/specific/linux_wayland/xdg-shell-client-protocol.h"
@@ -40,8 +39,8 @@ namespace
 
 	void OnToplevelClose(void* data, xdg_toplevel*)
 	{
-		// [Linux/Wayland] РљРѕРјРїРѕР·РёС‚РѕСЂ Р·Р°РїСЂР°С€РёРІР°РµС‚ Р·Р°РєСЂС‹С‚РёРµ РѕРєРЅР° (РЅР°РїСЂРёРјРµСЂ, РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅР°Р¶Р°Р» РєСЂРµСЃС‚РёРє).
-		// РџРµСЂРµРґР°РµРј СЃРёРіРЅР°Р» РґРІРёР¶РєСѓ РґР»СЏ РєРѕСЂСЂРµРєС‚РЅРѕРіРѕ Р·Р°РІРµСЂС€РµРЅРёСЏ.
+		// [Linux/Wayland] Композитор запрашивает закрытие окна (например, пользователь нажал крестик).
+		// Передаем сигнал движку для корректного завершения.
 		VERIFY_AND_CALL(static_cast<WinLinux*>(data)->m_Callbacks.OnClose);
 	}
 

@@ -31,6 +31,43 @@ namespace editor
 				typeof(AvalonDock.Controls.LayoutAnchorablePaneControl),
 				LoadedEvent,
 				new RoutedEventHandler(OnAnchorablePaneControlLoaded));
+
+			EventManager.RegisterClassHandler(
+				typeof(AvalonDock.Controls.LayoutAnchorableFloatingWindowControl),
+				LoadedEvent,
+				new RoutedEventHandler(OnFloatingWindowLoaded));
+		}
+
+		private static void OnFloatingWindowLoaded(object sender, RoutedEventArgs e)
+		{
+			if (sender is DependencyObject obj)
+			{
+				var button = FindVisualChild<FrameworkElement>(obj, "SinglePaneContextMenu");
+				if (button != null)
+				{
+					button.Visibility = Visibility.Collapsed;
+					button.Width = 0;
+					button.Height = 0;
+				}
+			}
+		}
+
+		private static T? FindVisualChild<T>(DependencyObject obj, string name) where T : DependencyObject
+		{
+			for (int i = 0; i < VisualTreeHelper.GetChildrenCount(obj); i++)
+			{
+				var child = VisualTreeHelper.GetChild(obj, i);
+				if (child is T t && (child is FrameworkElement fe && fe.Name == name))
+				{
+					return t;
+				}
+				var descendant = FindVisualChild<T>(child, name);
+				if (descendant != null)
+				{
+					return descendant;
+				}
+			}
+			return null;
 		}
 
 		private static void OnAnchorablePaneControlLoaded(object sender, RoutedEventArgs e)

@@ -1,4 +1,3 @@
-﻿
 #include <android/looper.h>
 
 #include "MainLoop_Android.h"
@@ -26,7 +25,7 @@ void MainLoop_Android::Run()
 		int events;
 		struct android_poll_source* source;
 
-		// 0 - РµСЃР»Рё СЃРѕР±С‹С‚РёР№ РЅРµС‚)
+		// 0 - если событий нет)
 		while ((ident = ALooper_pollOnce(0, nullptr, &events, (void**)&source)) >= 0)
 		{
 			if (source != nullptr)

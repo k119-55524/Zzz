@@ -1,4 +1,4 @@
-﻿#include "WinMacOS.h"
+#include "WinMacOS.h"
 #import "MacOSView.h"
 
 using namespace zzz::engine;
@@ -10,8 +10,8 @@ using namespace zzz::engine;
 @implementation EngineWindowDelegate
 - (BOOL)windowShouldClose:(NSWindow *)sender {
     if (self.winEngine) {
-        // [macOS] Р’С‹Р·С‹РІР°РµС‚СЃСЏ РїСЂРё РЅР°Р¶Р°С‚РёРё РЅР° РєСЂР°СЃРЅСѓСЋ РєРЅРѕРїРєСѓ Р·Р°РєСЂС‹С‚РёСЏ РѕРєРЅР°.
-        // РћРєРЅРѕ Р·Р°РїСЂР°С€РёРІР°РµС‚ Сѓ РЅР°СЃ СЂР°Р·СЂРµС€РµРЅРёРµ РЅР° Р·Р°РєСЂС‹С‚РёРµ. РџРµСЂРµРґР°РµРј СЃРёРіРЅР°Р» РІ РґРІРёР¶РѕРє.
+        // [macOS] Вызывается при нажатии на красную кнопку закрытия окна.
+        // Окно запрашивает у нас разрешение на закрытие. Передаем сигнал в движок.
         VERIFY_AND_CALL(self.winEngine->m_Callbacks.OnClose);
     }
     return YES;

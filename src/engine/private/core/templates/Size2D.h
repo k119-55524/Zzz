@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <format>
 #include <string>
@@ -52,7 +52,7 @@ namespace zzz::engine
 
 		[[nodiscard]] inline std::string ToString() const noexcept { return std::format("Width: {}, Height: {}", width, height); }
 
-		T width;  // РЁРёСЂРёРЅР° РѕР±СЉРµРєС‚Р°.
+		T width;  // Ширина объекта.
 		T height; // Высота объекта.
 
 //#if Z_VULKAN

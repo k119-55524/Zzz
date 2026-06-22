@@ -22,5 +22,3 @@ target_sources(common_lib PRIVATE
 )
 
 target_compile_features(common_lib PUBLIC cxx_std_23)
-
-target_link_libraries(common_lib PUBLIC logger_lib)

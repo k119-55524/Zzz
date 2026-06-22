@@ -29,6 +29,15 @@ namespace editor.Services
             anchorableToShow.ContentId = pane.ContentId;
             anchorableToShow.CanClose = pane.CanClose;
 
+            anchorableToShow.PropertyChanged += (s, args) =>
+            {
+                if (args.PropertyName == nameof(LayoutAnchorable.IsFloating))
+                {
+                    anchorableToShow.CanAutoHide = !anchorableToShow.IsFloating;
+                }
+            };
+            anchorableToShow.CanAutoHide = !anchorableToShow.IsFloating;
+
             string targetPaneName = pane.Type switch
             {
                 WidgetType.SceneTree => LeftPaneName,

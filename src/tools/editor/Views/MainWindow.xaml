@@ -278,12 +278,6 @@
                                             BorderBrush="{TemplateBinding BorderBrush}"
                                             BorderThickness="{TemplateBinding BorderThickness}">
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="4,0,6,0">
-                                            <dockControls:DropDownButton
-                                                DropDownContextMenu="{Binding Model.Root.Manager.AnchorableContextMenu, RelativeSource={RelativeSource TemplatedParent}}"
-                                                DropDownContextMenuDataContext="{Binding Path=LayoutItem, RelativeSource={RelativeSource TemplatedParent}}"
-                                                Focusable="False" Background="Transparent" BorderThickness="0"
-                                                Foreground="{StaticResource Brush_Text_Secondary}" Padding="3,0" Content="▾"
-                                                ToolTip="Список панелей" />
                                             <Button x:Name="PART_AutoHidePin"
                                                 Command="{Binding Path=LayoutItem.AutoHideCommand, RelativeSource={RelativeSource TemplatedParent}}"
                                                 Focusable="False" Background="Transparent" BorderThickness="0"

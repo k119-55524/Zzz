@@ -398,7 +398,7 @@ enum xdg_wm_base_error {
 	 */
 	XDG_WM_BASE_ERROR_INVALID_POSITIONER = 5,
 	/**
-	 * the client didnвЂ™t respond to a ping event in time
+	 * the client didn't respond to a ping event in time
 	 */
 	XDG_WM_BASE_ERROR_UNRESPONSIVE = 6,
 };
@@ -421,7 +421,7 @@ struct xdg_wm_base_listener {
 	 * alive. It's unspecified what will happen if the client doesn't
 	 * respond to the ping request, or in what timeframe. Clients
 	 * should try to respond in a reasonable amount of time. The
-	 * вЂњunresponsiveвЂќ error is provided for compositors that wish
+	 * "unresponsive" error is provided for compositors that wish
 	 * to disconnect unresponsive clients.
 	 *
 	 * A compositor is free to ping in any way it wants, but a client
@@ -862,7 +862,7 @@ xdg_positioner_set_anchor(struct xdg_positioner *xdg_positioner, uint32_t anchor
  * specified (e.g. 'bottom_right' or 'top_left'), then the child surface
  * will be placed towards the specified gravity; otherwise, the child
  * surface will be centered over the anchor point on any axis that had no
- * gravity specified. If the gravity is not in the вЂgravityвЂ™ enum, an
+ * gravity specified. If the gravity is not in the 'gravity' enum, an
  * invalid_input error is raised.
  */
 static inline void
@@ -1340,7 +1340,7 @@ enum xdg_toplevel_state {
 	 */
 	XDG_TOPLEVEL_STATE_ACTIVATED = 4,
 	/**
-	 * the surfaceвЂ™s left edge is tiled
+	 * the surface's left edge is tiled
 	 *
 	 * The window is currently in a tiled layout and the left edge is
 	 * considered to be adjacent to another part of the tiling grid.
@@ -1351,7 +1351,7 @@ enum xdg_toplevel_state {
 	 */
 	XDG_TOPLEVEL_STATE_TILED_LEFT = 5,
 	/**
-	 * the surfaceвЂ™s right edge is tiled
+	 * the surface's right edge is tiled
 	 *
 	 * The window is currently in a tiled layout and the right edge
 	 * is considered to be adjacent to another part of the tiling grid.
@@ -1362,7 +1362,7 @@ enum xdg_toplevel_state {
 	 */
 	XDG_TOPLEVEL_STATE_TILED_RIGHT = 6,
 	/**
-	 * the surfaceвЂ™s top edge is tiled
+	 * the surface's top edge is tiled
 	 *
 	 * The window is currently in a tiled layout and the top edge is
 	 * considered to be adjacent to another part of the tiling grid.
@@ -1373,7 +1373,7 @@ enum xdg_toplevel_state {
 	 */
 	XDG_TOPLEVEL_STATE_TILED_TOP = 7,
 	/**
-	 * the surfaceвЂ™s bottom edge is tiled
+	 * the surface's bottom edge is tiled
 	 *
 	 * The window is currently in a tiled layout and the bottom edge
 	 * is considered to be adjacent to another part of the tiling grid.
@@ -1393,7 +1393,7 @@ enum xdg_toplevel_state {
 	 */
 	XDG_TOPLEVEL_STATE_SUSPENDED = 9,
 	/**
-	 * the surfaceвЂ™s left edge is constrained
+	 * the surface's left edge is constrained
 	 *
 	 * The left edge of the window is currently constrained, meaning
 	 * it shouldn't attempt to resize from that edge. It can for
@@ -1403,7 +1403,7 @@ enum xdg_toplevel_state {
 	 */
 	XDG_TOPLEVEL_STATE_CONSTRAINED_LEFT = 10,
 	/**
-	 * the surfaceвЂ™s right edge is constrained
+	 * the surface's right edge is constrained
 	 *
 	 * The right edge of the window is currently constrained, meaning
 	 * it shouldn't attempt to resize from that edge. It can for
@@ -1413,7 +1413,7 @@ enum xdg_toplevel_state {
 	 */
 	XDG_TOPLEVEL_STATE_CONSTRAINED_RIGHT = 11,
 	/**
-	 * the surfaceвЂ™s top edge is constrained
+	 * the surface's top edge is constrained
 	 *
 	 * The top edge of the window is currently constrained, meaning
 	 * it shouldn't attempt to resize from that edge. It can for
@@ -1423,7 +1423,7 @@ enum xdg_toplevel_state {
 	 */
 	XDG_TOPLEVEL_STATE_CONSTRAINED_TOP = 12,
 	/**
-	 * the surfaceвЂ™s bottom edge is tiled
+	 * the surface's bottom edge is tiled
 	 *
 	 * The bottom edge of the window is currently constrained,
 	 * meaning it shouldn't attempt to resize from that edge. It can
