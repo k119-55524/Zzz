@@ -1,0 +1,23 @@
+using System;
+using System.Runtime.InteropServices;
+
+namespace editor.Services
+{
+    public static class EngineRuntime
+    {
+        [DllImport("editorDLL.dll", EntryPoint = "Initialize", CallingConvention = CallingConvention.Cdecl)]
+        private static extern bool NativeInitialize(IntPtr hwnd);
+
+        [DllImport("editorDLL.dll", EntryPoint = "Deinitialize", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void NativeDeinitialize();
+
+        [DllImport("editorDLL.dll", EntryPoint = "Tick", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void NativeTick();
+
+        public static bool TryInitialize(IntPtr renderHandle) => NativeInitialize(renderHandle);
+
+        public static void Shutdown() => NativeDeinitialize();
+
+        public static void Tick() => NativeTick();
+    }
+}

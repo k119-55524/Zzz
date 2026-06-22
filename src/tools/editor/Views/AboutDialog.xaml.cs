@@ -1,4 +1,5 @@
 using System.Windows;
+using editor.ViewModels;
 
 namespace editor.Views
 {
@@ -7,14 +8,14 @@ namespace editor.Views
 		public AboutDialog()
 		{
 			InitializeComponent();
-			TxtVersion.Text = $"Версия: {EditorConstants.Version}";
-			TxtBuildDate.Text = $"Дата сборки: {EditorConstants.BuildDate}";
-		}
 
-		private void OkButton_Click(object sender, RoutedEventArgs e)
-		{
-			DialogResult = true;
-			Close();
+			var viewModel = new AboutDialogViewModel();
+			viewModel.CloseRequested += (s, e) =>
+			{
+				DialogResult = true;
+				Close();
+			};
+			DataContext = viewModel;
 		}
 	}
 }
