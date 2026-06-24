@@ -1,223 +1,240 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+
 using System.IO;
-using System.Linq;
-using System.Windows;
-using System.Windows.Input;
 using editor.Models;
+using System.Windows;
 using editor.Services;
+using System.Windows.Input;
+using System.Collections.ObjectModel;
 
 namespace editor.ViewModels
 {
-    public class MainWindowViewModel : ViewModelBase
-    {
-        private readonly IDialogService _dialogService;
-        private GlobalSessionState _globalState = new();
+	public class MainWindowViewModel : ViewModelBase
+	{
+		private readonly IDialogService _dialogService;
+		private GlobalSessionState _globalState = new();
 
-        private bool _isDirty;
-        private string? _currentProjectPath;
+		private bool _isDirty;
+		private string? _currentProjectPath;
 
-        public MainWindowViewModel(IDialogService dialogService)
-        {
-            _dialogService = dialogService;
+		public MainWindowViewModel(IDialogService dialogService)
+		{
+			_dialogService = dialogService;
 
-            Panes = new ObservableCollection<PaneViewModel>(
-                Enum.GetValues(typeof(WidgetType))
-                    .Cast<WidgetType>()
-                    .Select(type => new PaneViewModel(type)));
+			Panes = new ObservableCollection<PaneViewModel>(
+				Enum.GetValues(typeof(WidgetType))
+					.Cast<WidgetType>()
+					.Select(type => new PaneViewModel(type)));
 
-            RenderPane = Panes.First(p => p.Type == WidgetType.Render);
-            RecentProjects = new ObservableCollection<string>();
+			RenderPane = Panes.First(p => p.Type == WidgetType.Render);
+			RecentProjects = new ObservableCollection<string>();
 
-            NewProjectCommand = new RelayCommand(NewProject);
-            OpenProjectCommand = new RelayCommand(OpenProject);
-            OpenRecentProjectCommand = new RelayCommand<string>(OpenRecentProject);
-            ExitCommand = new RelayCommand(() => CloseRequested?.Invoke(this, EventArgs.Empty));
-            AboutCommand = new RelayCommand(_dialogService.ShowAbout);
-            UndoCommand = new RelayCommand(() => { /* Логика отмены действия (Undo) будет реализована позже */ }, () => IsDirty);
-            RedoCommand = new RelayCommand(() => { /* Логика повтора действия (Redo) будет реализована позже */ }, () => IsDirty);
-            PlayCommand = new RelayCommand(() => { /* Запуск симуляции */ });
-            PauseCommand = new RelayCommand(() => { /* Пауза симуляции */ });
-            StopCommand = new RelayCommand(() => { /* Остановка симуляции */ });
-            ShowWidgetCommand = new RelayCommand<PaneViewModel>(pane =>
-            {
-                if (pane != null)
-                {
-                    ShowWidgetRequested?.Invoke(this, pane);
-                }
-            });
-            ResetLayoutCommand = new RelayCommand(ResetLayout);
-        }
+			SaveCommand = new RelayCommand(Save, () => IsDirty);
 
-        public ObservableCollection<PaneViewModel> Panes { get; }
+			NewProjectCommand = new RelayCommand(NewProject);
+			OpenProjectCommand = new RelayCommand(OpenProject);
+			OpenRecentProjectCommand = new RelayCommand<string>(OpenRecentProject);
+			ExitCommand = new RelayCommand(() => CloseRequested?.Invoke(this, EventArgs.Empty));
+			AboutCommand = new RelayCommand(_dialogService.ShowAbout);
+			UndoCommand = new RelayCommand(() => { /* Логика отмены действия (Undo) будет реализована позже */ }, () => IsDirty);
+			RedoCommand = new RelayCommand(() => { /* Логика повтора действия (Redo) будет реализована позже */ }, () => IsDirty);
+			PlayCommand = new RelayCommand(() => { /* Запуск симуляции */ }, () => IsProjectOpen);
+			PauseCommand = new RelayCommand(() => { /* Пауза симуляции */ }, () => IsProjectOpen);
+			StopCommand = new RelayCommand(() => { /* Остановка симуляции */ }, () => IsProjectOpen);
+			ShowWidgetCommand = new RelayCommand<PaneViewModel>(pane =>
+			{
+				if (pane != null)
+				{
+					ShowWidgetRequested?.Invoke(this, pane);
+				}
+			});
+			ResetLayoutCommand = new RelayCommand(ResetLayout);
+		}
 
-        public PaneViewModel RenderPane { get; }
+		public ObservableCollection<PaneViewModel> Panes { get; }
 
-        public ObservableCollection<string> RecentProjects { get; }
+		public PaneViewModel RenderPane { get; }
 
-        public bool HasRecentProjects => RecentProjects.Count > 0;
+		public ObservableCollection<string> RecentProjects { get; }
 
-        public string AppName => EditorConstants.ApplicationName;
+		public bool HasRecentProjects => RecentProjects.Count > 0;
 
-        public string ProjectDisplayName
-        {
-            get
-            {
-                string noProjectText = Application.Current?.TryFindResource("Menu_File_NoProject") as string ?? "Нет проекта";
-                return string.IsNullOrEmpty(_currentProjectPath)
-                    ? noProjectText
-                    : Path.GetFileNameWithoutExtension(_currentProjectPath);
-            }
-        }
+		public string AppName => EditorConstants.ApplicationName;
 
-        public bool IsDirty
-        {
-            get => _isDirty;
-            set
-            {
-                if (SetField(ref _isDirty, value))
-                {
-                    OnPropertyChanged(nameof(WindowTitle));
-                    CommandManager.InvalidateRequerySuggested();
-                }
-            }
-        }
+		public string ProjectDisplayName
+		{
+			get
+			{
+				string noProjectText = Application.Current?.TryFindResource("Menu_File_NoProject") as string ?? "Нет проекта";
+				return string.IsNullOrEmpty(_currentProjectPath)
+					? noProjectText
+					: Path.GetFileNameWithoutExtension(_currentProjectPath);
+			}
+		}
 
-        public string WindowTitle => $"{AppName} - [{ProjectDisplayName}]{(IsDirty ? "*" : "")}";
+		public string? CurrentProjectPath
+		{
+			get => _currentProjectPath;
+			set
+			{
+				if (SetField(ref _currentProjectPath, value))
+				{
+					OnPropertyChanged(nameof(ProjectDisplayName));
+					OnPropertyChanged(nameof(WindowTitle));
+					OnPropertyChanged(nameof(IsProjectOpen));
+					CommandManager.InvalidateRequerySuggested();
+				}
+			}
+		}
 
-        public ICommand NewProjectCommand { get; }
-        public ICommand OpenProjectCommand { get; }
-        public ICommand OpenRecentProjectCommand { get; }
-        public ICommand ExitCommand { get; }
-        public ICommand AboutCommand { get; }
-        public ICommand UndoCommand { get; }
-        public ICommand RedoCommand { get; }
-        public ICommand PlayCommand { get; }
-        public ICommand PauseCommand { get; }
-        public ICommand StopCommand { get; }
-        public ICommand ShowWidgetCommand { get; }
-        public ICommand ResetLayoutCommand { get; }
+		public bool IsDirty
+		{
+			get => _isDirty;
+			set
+			{
+				if (SetField(ref _isDirty, value))
+				{
+					OnPropertyChanged(nameof(WindowTitle));
+					CommandManager.InvalidateRequerySuggested();
+				}
+			}
+		}
 
-        public event EventHandler? CloseRequested;
-        public event EventHandler? ResetLayoutRequested;
-        public event EventHandler<PaneViewModel>? ShowWidgetRequested;
+		public bool IsProjectOpen
+		{
+			get => !string.IsNullOrEmpty(_currentProjectPath);
+		}
 
-        public void LoadSession()
-        {
-            _globalState = EditorSessionManager.LoadGlobalSession();
-            RefreshRecentProjects();
-        }
+		public string WindowTitle => $"{AppName} - [{ProjectDisplayName}]{(IsDirty ? "*" : "")}";
 
-        public void SaveSession()
-        {
-            EditorSessionManager.SaveGlobalSession(_globalState);
-        }
+		public ICommand SaveCommand { get; }
 
-        // Возвращает false, если закрытие нужно отменить (пользователь нажал "Отмена" в диалоге сохранения)
-        public bool RequestClose()
-        {
-            if (!IsDirty)
-            {
-                return true;
-            }
+		public ICommand NewProjectCommand { get; }
+		public ICommand OpenProjectCommand { get; }
+		public ICommand OpenRecentProjectCommand { get; }
+		public ICommand ExitCommand { get; }
+		public ICommand AboutCommand { get; }
+		public ICommand UndoCommand { get; }
+		public ICommand RedoCommand { get; }
+		public ICommand PlayCommand { get; }
+		public ICommand PauseCommand { get; }
+		public ICommand StopCommand { get; }
+		public ICommand ShowWidgetCommand { get; }
+		public ICommand ResetLayoutCommand { get; }
 
-            string title = Application.Current?.TryFindResource("Dialog_Close_Title") as string ?? "Выход";
-            string message = Application.Current?.TryFindResource("Dialog_Close_Unsaved") as string ?? "Сохранить проект перед выходом?";
+		public event EventHandler? CloseRequested;
+		public event EventHandler? ResetLayoutRequested;
+		public event EventHandler<PaneViewModel>? ShowWidgetRequested;
 
-            var result = _dialogService.ShowMessage(message, title, MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
-            if (result == MessageBoxResult.Cancel)
-            {
-                return false;
-            }
+		public void LoadSession()
+		{
+			_globalState = EditorSessionManager.LoadGlobalSession();
+			RefreshRecentProjects();
+		}
 
-            if (result == MessageBoxResult.Yes)
-            {
-                IsDirty = false;
-            }
+		public void SaveSession()
+		{
+			EditorSessionManager.SaveGlobalSession(_globalState);
+		}
 
-            return true;
-        }
+		// Возвращает false, если закрытие нужно отменить (пользователь нажал "Отмена" в диалоге сохранения)
+		public bool RequestClose()
+		{
+			if (!IsDirty)
+			{
+				return true;
+			}
 
-        private void ResetLayout()
-        {
-            string layoutPath = EditorSessionManager.GetLayoutFilePath();
-            try
-            {
-                if (File.Exists(layoutPath))
-                {
-                    File.Delete(layoutPath);
-                }
-            }
-            catch
-            {
-                // Пропускаем сбой удаления файла раскладки
-            }
+			string title = Application.Current?.TryFindResource("Dialog_Close_Title") as string ?? "Выход";
+			string message = Application.Current?.TryFindResource("Dialog_Close_Unsaved") as string ?? "Сохранить проект перед выходом?";
 
-            ResetLayoutRequested?.Invoke(this, EventArgs.Empty);
-        }
+			var result = _dialogService.ShowMessage(message, title, MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+			if (result == MessageBoxResult.Cancel)
+			{
+				return false;
+			}
 
-        private void NewProject()
-        {
-            _dialogService.ShowMessage("Создание нового проекта (заглушка)", "Проект", MessageBoxButton.OK, MessageBoxImage.Information);
-            _currentProjectPath = @"C:\Projects\NewProject.zzz";
-            RaiseProjectChanged();
-            IsDirty = true;
-        }
+			if (result == MessageBoxResult.Yes)
+			{
+				IsDirty = false;
+			}
 
-        private void OpenProject()
-        {
-            _dialogService.ShowMessage("Открытие существующего проекта (заглушка)", "Проект", MessageBoxButton.OK, MessageBoxImage.Information);
-            string projectPath = @"C:\Projects\ZzzGame_" + Random.Shared.Next(100) + ".zzz";
-            _currentProjectPath = projectPath;
-            RaiseProjectChanged();
-            IsDirty = false;
+			return true;
+		}
 
-            AddRecentProject(projectPath);
-        }
+		private void ResetLayout()
+		{
+			string layoutPath = EditorSessionManager.GetLayoutFilePath();
+			try
+			{
+				if (File.Exists(layoutPath))
+				{
+					File.Delete(layoutPath);
+				}
+			}
+			catch
+			{
+				// Пропускаем сбой удаления файла раскладки
+			}
 
-        private void OpenRecentProject(string? path)
-        {
-            if (string.IsNullOrEmpty(path))
-            {
-                return;
-            }
+			ResetLayoutRequested?.Invoke(this, EventArgs.Empty);
+		}
 
-            _dialogService.ShowMessage($"Открываем последний проект: {path}", "Проект", MessageBoxButton.OK, MessageBoxImage.Information);
-            _currentProjectPath = path;
-            RaiseProjectChanged();
-            IsDirty = false;
-        }
+		private void NewProject()
+		{
+			_dialogService.ShowMessage("Создание нового проекта (заглушка)", "Проект", MessageBoxButton.OK, MessageBoxImage.Information);
+			CurrentProjectPath = @"C:\Projects\NewProject.zzz";
+			IsDirty = true;
+		}
 
-        private void AddRecentProject(string path)
-        {
-            var list = new List<string>(_globalState.RecentProjects ?? Array.Empty<string>());
-            list.Remove(path);
-            list.Insert(0, path);
-            if (list.Count > 10)
-            {
-                list.RemoveAt(10);
-            }
+		private void OpenProject()
+		{
+			_dialogService.ShowMessage("Открытие существующего проекта (заглушка)", "Проект", MessageBoxButton.OK, MessageBoxImage.Information);
+			string projectPath = @"C:\Projects\ZzzGame_" + Random.Shared.Next(100) + ".zzz";
+			CurrentProjectPath = projectPath;
+			IsDirty = false;
 
-            _globalState.RecentProjects = list.ToArray();
-            RefreshRecentProjects();
-        }
+			AddRecentProject(projectPath);
+		}
 
-        private void RaiseProjectChanged()
-        {
-            OnPropertyChanged(nameof(ProjectDisplayName));
-            OnPropertyChanged(nameof(WindowTitle));
-        }
+		private void OpenRecentProject(string? path)
+		{
+			if (string.IsNullOrEmpty(path))
+			{
+				return;
+			}
 
-        private void RefreshRecentProjects()
-        {
-            RecentProjects.Clear();
-            foreach (var path in _globalState.RecentProjects ?? Array.Empty<string>())
-            {
-                RecentProjects.Add(path);
-            }
+			_dialogService.ShowMessage($"Открываем последний проект: {path}", "Проект", MessageBoxButton.OK, MessageBoxImage.Information);
+			CurrentProjectPath = path;
+			IsDirty = false;
+		}
 
-            OnPropertyChanged(nameof(HasRecentProjects));
-        }
-    }
+		private void AddRecentProject(string path)
+		{
+			var list = new List<string>(_globalState.RecentProjects ?? Array.Empty<string>());
+			list.Remove(path);
+			list.Insert(0, path);
+			if (list.Count > 10)
+			{
+				list.RemoveAt(10);
+			}
+
+			_globalState.RecentProjects = list.ToArray();
+			RefreshRecentProjects();
+		}
+
+		private void RefreshRecentProjects()
+		{
+			RecentProjects.Clear();
+			foreach (var path in _globalState.RecentProjects ?? Array.Empty<string>())
+			{
+				RecentProjects.Add(path);
+			}
+
+			OnPropertyChanged(nameof(HasRecentProjects));
+		}
+
+		void Save()
+		{
+		}
+	}
 }
