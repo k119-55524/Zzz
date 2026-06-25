@@ -2,7 +2,8 @@ namespace editor.Models
 {
     public enum WidgetType
     {
-        Render,      // Сцена / Вьюпорт рендера
+        World,       // Мир / Вьюпорт рендера сцены
+        Game,        // Игра / Вьюпорт геймплея
         Inspector,   // Инспектор свойств объектов
         SceneTree,   // Дерево иерархии объектов
         Assets,      // Браузер файлов и ресурсов
@@ -38,7 +39,8 @@ namespace editor.Models
         {
             return type switch
             {
-                WidgetType.Render => new WidgetMetadata(WidgetType.Render, "Widget_Render_Title", "RenderWidget", WidgetMetadata.RequiredWidgetLimit),
+                WidgetType.World => new WidgetMetadata(WidgetType.World, "Widget_World_Title", "WorldWidget", WidgetMetadata.RequiredWidgetLimit),
+                WidgetType.Game => new WidgetMetadata(WidgetType.Game, "Widget_Game_Title", "GameWidget", WidgetMetadata.RequiredWidgetLimit),
                 WidgetType.Inspector => new WidgetMetadata(WidgetType.Inspector, "Widget_Inspector_Title", "InspectorWidget", 1),
                 WidgetType.SceneTree => new WidgetMetadata(WidgetType.SceneTree, "Widget_SceneTree_Title", "SceneTreeWidget", 1),
                 WidgetType.Assets => new WidgetMetadata(WidgetType.Assets, "Widget_Assets_Title", "AssetsWidget", int.MaxValue),

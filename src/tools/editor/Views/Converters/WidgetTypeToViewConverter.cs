@@ -14,7 +14,8 @@ namespace editor.Views.Converters
             {
                 return type switch
                 {
-                    WidgetType.Render => new RenderWidget(),
+                    WidgetType.World => new WorldWidget(),
+                    WidgetType.Game => new GameWidget(),
                     WidgetType.Inspector => new InspectorWidget(),
                     WidgetType.SceneTree => new SceneTreeWidget(),
                     WidgetType.Assets => new AssetsWidget(),

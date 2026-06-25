@@ -35,7 +35,12 @@ namespace editor.Services
 				var serializer = new XmlLayoutSerializer(dockManager);
 				serializer.LayoutSerializationCallback += (s, args) =>
 				{
-					var pane = panes.FirstOrDefault(p => p.ContentId == args.Model.ContentId);
+					string contentId = args.Model.ContentId;
+					if (contentId == "RenderWidget")
+					{
+						contentId = "WorldWidget";
+					}
+					var pane = panes.FirstOrDefault(p => p.ContentId == contentId);
 					if (pane != null)
 					{
 						args.Content = pane;

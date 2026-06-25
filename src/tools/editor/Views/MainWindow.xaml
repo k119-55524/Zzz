@@ -156,6 +156,7 @@
                     <MenuItem Header="{DynamicResource Menu_File}" Foreground="{DynamicResource Brush_Text_Primary}">
                         <MenuItem Header="{DynamicResource Menu_File_Create}" Command="{Binding NewProjectCommand}" />
                         <MenuItem Header="{DynamicResource Menu_File_Open}" Command="{Binding OpenProjectCommand}" />
+                        <MenuItem Header="{DynamicResource Menu_File_Close}" Command="{Binding CloseProjectCommand}" />
                         <Separator Background="{DynamicResource Brush_Border}" />
                         <MenuItem x:Name="MenuRecentProjects" Header="{DynamicResource Menu_File_Recent}"
                                   ItemsSource="{Binding RecentProjects}"

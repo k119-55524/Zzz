@@ -45,11 +45,17 @@ namespace editor
 				IntPtr.Zero,
 				0);
 
+			// Регистрируем вьюпорт в глобальной службе движка
+			App.EngineService?.AddViewport(hwndHost);
+
 			return new HandleRef(this, hwndHost);
 		}
 
 		protected override void DestroyWindowCore(HandleRef hwnd)
 		{
+			// Разрегистрируем вьюпорт при уничтожении
+			App.EngineService?.RemoveViewport(hwnd.Handle);
+
 			DestroyWindow(hwnd.Handle);
 		}
 	}

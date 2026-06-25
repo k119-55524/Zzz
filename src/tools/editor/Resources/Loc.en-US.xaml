@@ -5,6 +5,7 @@
     <sys:String x:Key="Menu_File">File</sys:String>
     <sys:String x:Key="Menu_File_Create">New Project</sys:String>
     <sys:String x:Key="Menu_File_Open">Open Project</sys:String>
+    <sys:String x:Key="Menu_File_Close">Unload Project</sys:String>
     <sys:String x:Key="Menu_File_Recent">Recent Projects</sys:String>
     <sys:String x:Key="Menu_File_Exit">Exit</sys:String>
     
@@ -16,7 +17,8 @@
     <sys:String x:Key="Menu_Help_About">About</sys:String>
 
     <!-- Widget Titles -->
-    <sys:String x:Key="Widget_Render_Title">Scene</sys:String>
+    <sys:String x:Key="Widget_World_Title">World</sys:String>
+    <sys:String x:Key="Widget_Game_Title">Game</sys:String>
     <sys:String x:Key="Widget_Inspector_Title">Inspector</sys:String>
     <sys:String x:Key="Widget_SceneTree_Title">Hierarchy</sys:String>
     <sys:String x:Key="Widget_Assets_Title">Project</sys:String>

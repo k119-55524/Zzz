@@ -25,7 +25,8 @@ namespace editor.ViewModels
 					.Cast<WidgetType>()
 					.Select(type => new PaneViewModel(type)));
 
-			RenderPane = Panes.First(p => p.Type == WidgetType.Render);
+			WorldPane = Panes.First(p => p.Type == WidgetType.World);
+			GamePane = Panes.First(p => p.Type == WidgetType.Game);
 			RecentProjects = new ObservableCollection<string>();
 
 			SaveCommand = new RelayCommand(Save, () => IsDirty);
@@ -33,6 +34,7 @@ namespace editor.ViewModels
 			NewProjectCommand = new RelayCommand(NewProject);
 			OpenProjectCommand = new RelayCommand(OpenProject);
 			OpenRecentProjectCommand = new RelayCommand<string>(OpenRecentProject);
+			CloseProjectCommand = new RelayCommand(CloseProject, () => IsProjectOpen);
 			ExitCommand = new RelayCommand(() => CloseRequested?.Invoke(this, EventArgs.Empty));
 			AboutCommand = new RelayCommand(_dialogService.ShowAbout);
 			UndoCommand = new RelayCommand(() => { /* Логика отмены действия (Undo) будет реализована позже */ }, () => IsDirty);
@@ -52,7 +54,8 @@ namespace editor.ViewModels
 
 		public ObservableCollection<PaneViewModel> Panes { get; }
 
-		public PaneViewModel RenderPane { get; }
+		public PaneViewModel WorldPane { get; }
+		public PaneViewModel GamePane { get; }
 
 		public ObservableCollection<string> RecentProjects { get; }
 
@@ -111,6 +114,7 @@ namespace editor.ViewModels
 		public ICommand NewProjectCommand { get; }
 		public ICommand OpenProjectCommand { get; }
 		public ICommand OpenRecentProjectCommand { get; }
+		public ICommand CloseProjectCommand { get; }
 		public ICommand ExitCommand { get; }
 		public ICommand AboutCommand { get; }
 		public ICommand UndoCommand { get; }
@@ -129,6 +133,14 @@ namespace editor.ViewModels
 		{
 			_globalState = EditorSessionManager.LoadGlobalSession();
 			RefreshRecentProjects();
+
+			if (!string.IsNullOrEmpty(_globalState.LastOpenProjectPath) && File.Exists(_globalState.LastOpenProjectPath))
+			{
+				Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+				{
+					OpenProjectInternal(_globalState.LastOpenProjectPath);
+				}), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+			}
 		}
 
 		public void SaveSession()
@@ -181,19 +193,57 @@ namespace editor.ViewModels
 
 		private void NewProject()
 		{
-			_dialogService.ShowMessage("Создание нового проекта (заглушка)", "Проект", MessageBoxButton.OK, MessageBoxImage.Information);
-			CurrentProjectPath = @"C:\Projects\NewProject.zzz";
-			IsDirty = true;
+			if (!RequestClose())
+			{
+				return;
+			}
+
+			var dialog = new Microsoft.Win32.SaveFileDialog
+			{
+				Filter = "Project File (*.zzz)|*.zzz",
+				Title = "Создать новый проект"
+			};
+
+			if (dialog.ShowDialog() == true)
+			{
+				string projectFilePath = dialog.FileName;
+				string projectDir = Path.GetDirectoryName(projectFilePath)!;
+				string projectName = Path.GetFileNameWithoutExtension(projectFilePath);
+
+				if (App.ProjectService.CreateProject(Path.GetDirectoryName(projectDir)!, projectName, out string error))
+				{
+					_globalState.LastOpenProjectPath = projectFilePath;
+					SaveSession();
+					CurrentProjectPath = projectFilePath;
+					IsDirty = true;
+					AddRecentProject(projectFilePath);
+
+					App.EngineService.OnProjectOpened(projectDir);
+				}
+				else
+				{
+					_dialogService.ShowMessage(error, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+				}
+			}
 		}
 
 		private void OpenProject()
 		{
-			_dialogService.ShowMessage("Открытие существующего проекта (заглушка)", "Проект", MessageBoxButton.OK, MessageBoxImage.Information);
-			string projectPath = @"C:\Projects\ZzzGame_" + Random.Shared.Next(100) + ".zzz";
-			CurrentProjectPath = projectPath;
-			IsDirty = false;
+			if (!RequestClose())
+			{
+				return;
+			}
 
-			AddRecentProject(projectPath);
+			var dialog = new Microsoft.Win32.OpenFileDialog
+			{
+				Filter = "Project File (*.zzz)|*.zzz",
+				Title = "Открыть проект"
+			};
+
+			if (dialog.ShowDialog() == true)
+			{
+				OpenProjectInternal(dialog.FileName);
+			}
 		}
 
 		private void OpenRecentProject(string? path)
@@ -203,8 +253,69 @@ namespace editor.ViewModels
 				return;
 			}
 
-			_dialogService.ShowMessage($"Открываем последний проект: {path}", "Проект", MessageBoxButton.OK, MessageBoxImage.Information);
-			CurrentProjectPath = path;
+			if (!RequestClose())
+			{
+				return;
+			}
+
+			OpenProjectInternal(path);
+		}
+
+		private void OpenProjectInternal(string projectFilePath)
+		{
+			if (CurrentProjectPath == projectFilePath)
+			{
+				return; // Защита от открытия самого себя
+			}
+
+			string projectDir = Path.GetDirectoryName(projectFilePath)!;
+
+			if (App.ProjectService.OpenProject(projectDir, out string scanError, out var validationErrors))
+			{
+				if (validationErrors.Count > 0)
+				{
+					var parentWindow = Application.Current.MainWindow;
+					var errorDialog = new editor.Views.ProjectValidationErrorDialog(parentWindow, validationErrors);
+					if (errorDialog.ShowDialog() == true)
+					{
+						if (errorDialog.Resolution == editor.Views.ProjectLoadResolution.RestoreDefaults)
+						{
+							App.ProjectService.RestoreDefaultFiles(projectDir, validationErrors);
+						}
+						// Если Ignore или RestoreDefaults - загружаем
+					}
+					else
+					{
+						// Отмена загрузки
+						return;
+					}
+				}
+
+				_globalState.LastOpenProjectPath = projectFilePath;
+				SaveSession();
+				CurrentProjectPath = projectFilePath;
+				IsDirty = false;
+				AddRecentProject(projectFilePath);
+
+				App.EngineService.OnProjectOpened(projectDir);
+			}
+			else
+			{
+				_dialogService.ShowMessage(scanError, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+			}
+		}
+
+		private void CloseProject()
+		{
+			if (!RequestClose())
+			{
+				return;
+			}
+
+			App.EngineService.OnProjectClosed();
+			_globalState.LastOpenProjectPath = string.Empty;
+			SaveSession();
+			CurrentProjectPath = null;
 			IsDirty = false;
 		}
 

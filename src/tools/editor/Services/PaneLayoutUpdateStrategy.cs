@@ -35,7 +35,8 @@ namespace editor.Services
 			string targetPaneName = pane.Type switch
 			{
 				WidgetType.SceneTree => LeftPaneName,
-				WidgetType.Render => CenterPaneName,
+				WidgetType.World => CenterPaneName,
+				WidgetType.Game => CenterPaneName,
 				WidgetType.Settings => CenterPaneName,
 				WidgetType.Build => CenterPaneName,
 				WidgetType.Assets => BottomPaneName,

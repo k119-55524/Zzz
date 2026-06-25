@@ -5,6 +5,7 @@
     <sys:String x:Key="Menu_File">Файл</sys:String>
     <sys:String x:Key="Menu_File_Create">Создать проект</sys:String>
     <sys:String x:Key="Menu_File_Open">Открыть проект</sys:String>
+    <sys:String x:Key="Menu_File_Close">Выгрузить проект</sys:String>
     <sys:String x:Key="Menu_File_Recent">Последние проекты</sys:String>
     <sys:String x:Key="Menu_File_Exit">Выход</sys:String>
     
@@ -16,7 +17,8 @@
     <sys:String x:Key="Menu_Help_About">О программе</sys:String>
 
     <!-- Заголовки виджетов -->
-    <sys:String x:Key="Widget_Render_Title">Сцена</sys:String>
+    <sys:String x:Key="Widget_World_Title">Мир</sys:String>
+    <sys:String x:Key="Widget_Game_Title">Игра</sys:String>
     <sys:String x:Key="Widget_Inspector_Title">Инспектор</sys:String>
     <sys:String x:Key="Widget_SceneTree_Title">Иерархия</sys:String>
     <sys:String x:Key="Widget_Assets_Title">Ресурсы</sys:String>

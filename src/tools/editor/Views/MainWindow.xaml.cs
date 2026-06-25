@@ -16,7 +16,6 @@ namespace editor
 	{
 		private readonly MainWindowViewModel _viewModel;
 		private string _defaultLayoutXml = "";
-		private bool _isEngineInitialized = false;
 
 		static MainWindow()
 		{
@@ -261,15 +260,6 @@ namespace editor
 			_viewModel.IsDirty = layoutState.IsDirty;
 			RestoreLayout(string.IsNullOrEmpty(layoutState.LayoutXml) ? _defaultLayoutXml : layoutState.LayoutXml);
 			DockManager.UpdateLayout();
-			var renderWidget = FindVisualChild<RenderWidget>(DockManager);
-			if (renderWidget != null)
-			{
-				_isEngineInitialized = EngineRuntime.TryInitialize(renderWidget.RenderHandle);
-				if (_isEngineInitialized)
-				{
-					CompositionTarget.Rendering += CompositionTarget_Rendering;
-				}
-			}
 		}
 
 		private void RestoreLayout(string layoutXml)
@@ -302,13 +292,7 @@ namespace editor
 			e.Anchorable.Hide();
 		}
 
-		private void CompositionTarget_Rendering(object? sender, EventArgs e)
-		{
-			if (_isEngineInitialized)
-			{
-				EngineRuntime.Tick();
-			}
-		}
+
 
 		private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
 		{
@@ -335,11 +319,6 @@ namespace editor
 
 		private void MainWindow_Closed(object? sender, EventArgs e)
 		{
-			if (_isEngineInitialized)
-			{
-				CompositionTarget.Rendering -= CompositionTarget_Rendering;
-				EngineRuntime.Shutdown();
-			}
 		}
 
 		private void MinimizeWindow_Executed(object sender, ExecutedRoutedEventArgs e) => SystemCommands.MinimizeWindow(this);
