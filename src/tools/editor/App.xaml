@@ -2,6 +2,9 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:editor"
+             xmlns:vm="clr-namespace:editor.ViewModels"
+             xmlns:widgets="clr-namespace:editor.Views.Widgets"
+             xmlns:conv="clr-namespace:editor.Views.Converters"
              StartupUri="Views/MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
@@ -9,6 +12,19 @@
                 <ResourceDictionary Source="Themes/DarkTheme.xaml" />
                 <ResourceDictionary Source="Resources/Loc.ru-RU.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- Глобальный конвертер видов -->
+            <conv:WidgetTypeToViewConverter x:Key="WidgetTypeToViewConverter" />
+
+            <DataTemplate DataType="{x:Type vm:WorldPaneViewModel}">
+                <ContentControl Content="{Binding View}" />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:GamePaneViewModel}">
+                <ContentControl Content="{Binding View}" />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:PaneViewModel}">
+                <ContentControl Content="{Binding Type, Converter={StaticResource WidgetTypeToViewConverter}}" />
+            </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

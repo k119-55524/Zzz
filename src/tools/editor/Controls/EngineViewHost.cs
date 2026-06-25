@@ -1,4 +1,3 @@
-
 using System;
 using System.Windows.Interop;
 using System.Runtime.InteropServices;
@@ -23,7 +22,7 @@ namespace editor
 			IntPtr hwndParent,
 			IntPtr hMenu,
 			IntPtr hInst,
-			[MarshalAs(UnmanagedType.AsAny)] object pvParam);
+			IntPtr pvParam);
 
 		[DllImport("user32.dll", EntryPoint = "DestroyWindow", CharSet = CharSet.Unicode)]
 		internal static extern bool DestroyWindow(IntPtr hwnd);
@@ -43,7 +42,7 @@ namespace editor
 				hwndParent.Handle,
 				(IntPtr)HOST_ID,
 				IntPtr.Zero,
-				0);
+				IntPtr.Zero);
 
 			// Регистрируем вьюпорт в глобальной службе движка
 			App.EngineService?.AddViewport(hwndHost);

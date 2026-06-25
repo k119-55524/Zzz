@@ -64,4 +64,15 @@
     <sys:String x:Key="Dialog_NewProject_Cancel">Cancel</sys:String>
     <sys:String x:Key="Dialog_OpenProject_Title">Open Project</sys:String>
     <sys:String x:Key="Dialog_NewProject_BrowseFolder_Title">Select project folder</sys:String>
+
+    <!-- Viewport Toolbars (World & Game) -->
+    <sys:String x:Key="Toolbar_Translate">Translate (W)</sys:String>
+    <sys:String x:Key="Toolbar_Rotate">Rotate (E)</sys:String>
+    <sys:String x:Key="Toolbar_Scale">Scale (R)</sys:String>
+    <sys:String x:Key="Toolbar_GridSnap">Grid Snapping</sys:String>
+    <sys:String x:Key="Toolbar_Play">Play Game</sys:String>
+    <sys:String x:Key="Toolbar_Pause">Pause</sys:String>
+    <sys:String x:Key="Toolbar_Stop">Stop</sys:String>
+    <sys:String x:Key="Toolbar_Mute">Mute Audio</sys:String>
+    <sys:String x:Key="Toolbar_CamSpeed">Camera Speed</sys:String>
 </ResourceDictionary>

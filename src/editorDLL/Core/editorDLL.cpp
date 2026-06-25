@@ -63,4 +63,19 @@ extern "C"
 			DOutException("Exception during ZzzEditorDLL Tick: {}", e.what());
 		}
 	}
+
+	EDITOR_API void ClearEngine()
+	{
+		try
+		{
+			if (g_Engine)
+			{
+				//g_Engine->ClearEngine();
+			}
+		}
+		catch (const std::exception& e)
+		{
+			DOutException("Exception during ZzzEditorDLL ClearEngine: {}", e.what());
+		}
+	}
 }

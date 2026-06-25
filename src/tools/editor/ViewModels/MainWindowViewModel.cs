@@ -23,10 +23,15 @@ namespace editor.ViewModels
 			Panes = new ObservableCollection<PaneViewModel>(
 				Enum.GetValues(typeof(WidgetType))
 					.Cast<WidgetType>()
-					.Select(type => new PaneViewModel(type)));
+					.Select<WidgetType, PaneViewModel>(type => type switch
+					{
+						WidgetType.World => new WorldPaneViewModel(),
+						WidgetType.Game => new GamePaneViewModel(),
+						_ => new PaneViewModel(type)
+					}));
 
-			WorldPane = Panes.First(p => p.Type == WidgetType.World);
-			GamePane = Panes.First(p => p.Type == WidgetType.Game);
+			WorldPane = (WorldPaneViewModel)Panes.First(p => p.Type == WidgetType.World);
+			GamePane = (GamePaneViewModel)Panes.First(p => p.Type == WidgetType.Game);
 			RecentProjects = new ObservableCollection<string>();
 
 			SaveCommand = new RelayCommand(Save, () => IsDirty);
@@ -61,8 +66,8 @@ namespace editor.ViewModels
 
 		public ObservableCollection<PaneViewModel> Panes { get; }
 
-		public PaneViewModel WorldPane { get; }
-		public PaneViewModel GamePane { get; }
+		public WorldPaneViewModel WorldPane { get; }
+		public GamePaneViewModel GamePane { get; }
 
 		public ObservableCollection<string> RecentProjects { get; }
 
@@ -133,6 +138,9 @@ namespace editor.ViewModels
 					OnPropertyChanged(nameof(IsProjectOpen));
 					OnPropertyChanged(nameof(IsDirty));
 					CommandManager.InvalidateRequerySuggested();
+
+					WorldPane.IsToolbarVisible = IsProjectOpen;
+					GamePane.IsToolbarVisible = IsProjectOpen;
 				}
 			}
 		}

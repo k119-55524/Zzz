@@ -53,19 +53,19 @@ namespace editor.Services
         public void OnProjectOpened(string projectPath)
         {
             _isProjectOpen = true;
-            TryInitializeEngine();
+            EngineRuntime.ClearEngine();
         }
 
         // Вызывается при закрытии/выгрузке проекта
         public void OnProjectClosed()
         {
             _isProjectOpen = false;
-            ShutdownEngine();
+            EngineRuntime.ClearEngine();
         }
 
         private void TryInitializeEngine()
         {
-            if (!_isProjectOpen || _isEngineInitialized || _activeViewports.Count == 0)
+            if (_isEngineInitialized || _activeViewports.Count == 0)
             {
                 return;
             }
@@ -80,7 +80,7 @@ namespace editor.Services
             }
         }
 
-        private void ShutdownEngine()
+        public void ShutdownEngine()
         {
             if (_isEngineInitialized)
             {
@@ -103,7 +103,7 @@ namespace editor.Services
 
         private void CompositionTarget_Rendering(object? sender, EventArgs e)
         {
-            if (_isEngineInitialized && _isProjectOpen)
+            if (_isEngineInitialized)
             {
                 EngineRuntime.Tick();
             }

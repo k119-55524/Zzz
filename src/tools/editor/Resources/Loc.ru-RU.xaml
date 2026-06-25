@@ -64,4 +64,15 @@
     <sys:String x:Key="Dialog_NewProject_Cancel">Отмена</sys:String>
     <sys:String x:Key="Dialog_OpenProject_Title">Открыть проект</sys:String>
     <sys:String x:Key="Dialog_NewProject_BrowseFolder_Title">Выберите папку для проекта</sys:String>
+
+    <!-- Тулбары вьюпортов (Мир и Игра) -->
+    <sys:String x:Key="Toolbar_Translate">Перемещение (W)</sys:String>
+    <sys:String x:Key="Toolbar_Rotate">Вращение (E)</sys:String>
+    <sys:String x:Key="Toolbar_Scale">Масштабирование (R)</sys:String>
+    <sys:String x:Key="Toolbar_GridSnap">Привязка к сетке</sys:String>
+    <sys:String x:Key="Toolbar_Play">Запустить игру</sys:String>
+    <sys:String x:Key="Toolbar_Pause">Приостановить</sys:String>
+    <sys:String x:Key="Toolbar_Stop">Остановить</sys:String>
+    <sys:String x:Key="Toolbar_Mute">Выключить звук</sys:String>
+    <sys:String x:Key="Toolbar_CamSpeed">Скорость камеры</sys:String>
 </ResourceDictionary>

@@ -12,5 +12,7 @@ namespace zzz::editor
 		[[nodiscard]] std::expected<void, std::string> Run();
 
 		void Tick();
+
+		void ClearEngine();
 	};
 }

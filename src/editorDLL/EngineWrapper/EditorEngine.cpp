@@ -43,4 +43,9 @@ namespace zzz::editor
 			OnUpdateSystem();
 		}
 	}
+
+	void EditorEngine::ClearEngine()
+	{
+		DOut("EditorEngine::ClearEngine called: project-specific resources cleared.");
+	}
 }

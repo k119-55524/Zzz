@@ -14,6 +14,9 @@ namespace editor.Services
         [DllImport("editorDLL.dll", EntryPoint = "Tick", CallingConvention = CallingConvention.Cdecl)]
         private static extern void NativeTick();
 
+        [DllImport("editorDLL.dll", EntryPoint = "ClearEngine", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void NativeClearEngine();
+
         [DllImport("editorDLL.dll", EntryPoint = "AddView", CallingConvention = CallingConvention.Cdecl)]
         private static extern void NativeAddView(IntPtr hwnd);
 
@@ -25,6 +28,20 @@ namespace editor.Services
         public static void Shutdown() => NativeDeinitialize();
 
         public static void Tick() => NativeTick();
+
+        public static void ClearEngine()
+        {
+            try
+            {
+                NativeClearEngine();
+            }
+            catch (EntryPointNotFoundException)
+            {
+            }
+            catch (DllNotFoundException)
+            {
+            }
+        }
 
         public static void AddView(IntPtr hwnd)
         {

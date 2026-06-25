@@ -315,6 +315,8 @@ namespace editor
 			EditorSessionManager.SaveLayoutSession(layoutState);
 
 			_viewModel.SaveSession();
+
+			App.EngineService.ShutdownEngine();
 		}
 
 		private void MainWindow_Closed(object? sender, EventArgs e)

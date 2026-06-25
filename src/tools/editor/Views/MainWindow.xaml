@@ -11,6 +11,7 @@
         xmlns:svc="clr-namespace:editor.Services"
         xmlns:conv="clr-namespace:editor.Views.Converters"
         xmlns:vm="clr-namespace:editor.ViewModels"
+        xmlns:widgets="clr-namespace:editor.Views.Widgets"
         mc:Ignorable="d"
         Background="{DynamicResource Brush_Window_Background}"
         Title="{Binding WindowTitle}" Height="720" Width="1280" Icon="pack://application:,,,/Properties/AppIcon.ico"
@@ -131,8 +132,6 @@
 
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <CollectionViewSource x:Key="PanesCollection" Source="{Binding Panes}" />
-        <conv:WidgetTypeToViewConverter x:Key="WidgetTypeToViewConverter" />
-
         <!-- Стилизация кнопок тулбара -->
         <Style x:Key="ToolbarButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
@@ -674,7 +673,7 @@
             </dock:DockingManager.LayoutUpdateStrategy>
             <dock:DockingManager.LayoutItemTemplate>
                 <DataTemplate>
-                    <ContentPresenter Content="{Binding Type, Converter={StaticResource WidgetTypeToViewConverter}}" />
+                    <ContentControl Content="{Binding}" />
                 </DataTemplate>
             </dock:DockingManager.LayoutItemTemplate>
             <dockLayout:LayoutRoot>
