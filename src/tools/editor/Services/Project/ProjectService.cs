@@ -1,26 +1,30 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using editor.Views;
 
 namespace editor.Services.Project
 {
     public class ProjectService
     {
+        private string GetLocString(string key)
+        {
+            return System.Windows.Application.Current?.TryFindResource(key) as string ?? string.Empty;
+        }
+
         // Проверяет валидность имени папки проекта
         public bool IsValidProjectName(string name, out string error)
         {
             error = string.Empty;
             if (string.IsNullOrWhiteSpace(name))
             {
-                error = "Имя проекта не может быть пустым.";
+                error = GetLocString("Validation_ProjectName_Empty");
                 return false;
             }
 
             char[] invalidChars = Path.GetInvalidFileNameChars();
             if (name.IndexOfAny(invalidChars) >= 0)
             {
-                error = "Имя проекта содержит недопустимые символы.";
+                error = GetLocString("Validation_ProjectName_InvalidChars");
                 return false;
             }
 
@@ -37,7 +41,8 @@ namespace editor.Services.Project
 
                 if (Directory.Exists(projectPath) && Directory.GetFileSystemEntries(projectPath).Length > 0)
                 {
-                    error = $"Папка '{projectPath}' уже существует и не пуста.";
+                    string format = GetLocString("Validation_Folder_Exists");
+                    error = string.Format(format, projectPath);
                     return false;
                 }
 
@@ -59,12 +64,20 @@ namespace editor.Services.Project
                     {
                         Directory.CreateDirectory(dirPath);
                     }
-                    File.WriteAllText(fullPath, fileSchema.DefaultContent);
+
+                    string content = fileSchema.DefaultContent;
+                    if (fileSchema.RelativePath == "project.zzz")
+                    {
+                        content = content.Replace("\"NewProject\"", $"\"{projectName}\"");
+                    }
+
+                    File.WriteAllText(fullPath, content);
                 }
             }
             catch (Exception ex)
             {
-                error = $"Не удалось создать проект: {ex.Message}";
+                string format = GetLocString("Validation_Create_Failed");
+                error = string.Format(format, ex.Message);
                 return false;
             }
 
@@ -74,16 +87,15 @@ namespace editor.Services.Project
         // Выполняет валидацию проекта при открытии.
         // Автоматически восстанавливает структуру папок (некритичные ошибки).
         // Возвращает список ошибок по файлам.
-        public bool OpenProject(string projectRootPath, out string error, out List<ValidationErrorItem> validationErrors)
+        public bool OpenProject(string projectRootPath, out string error)
         {
             error = string.Empty;
-            validationErrors = new List<ValidationErrorItem>();
 
             try
             {
                 if (!Directory.Exists(projectRootPath))
                 {
-                    error = "Указанная папка проекта не существует.";
+                    error = GetLocString("Validation_Folder_NotExist");
                     return false;
                 }
 
@@ -97,35 +109,40 @@ namespace editor.Services.Project
                     }
                 }
 
-                // 2. Валидация файлов проекта
+                // 2. Валидация и автовосстановление файлов проекта
+                List<ValidationErrorItem> toRestore = new List<ValidationErrorItem>();
                 foreach (var fileSchema in ProjectStructure.RequiredFiles)
                 {
                     string fullPath = Path.Combine(projectRootPath, fileSchema.RelativePath);
 
+                    bool needsRestore = false;
                     if (!File.Exists(fullPath))
                     {
-                        validationErrors.Add(new ValidationErrorItem
-                        {
-                            FilePath = fileSchema.RelativePath,
-                            ErrorMessage = "Файл отсутствует."
-                        });
+                        needsRestore = true;
                     }
                     else if (fileSchema.Parser != null)
                     {
-                        if (!fileSchema.Parser.Validate(fullPath, out string parserError))
+                        if (!fileSchema.Parser.Validate(fullPath, out _))
                         {
-                            validationErrors.Add(new ValidationErrorItem
-                            {
-                                FilePath = fileSchema.RelativePath,
-                                ErrorMessage = $"Ошибка валидации: {parserError}"
-                            });
+                            needsRestore = true;
                         }
                     }
+
+                    if (needsRestore)
+                    {
+                        toRestore.Add(new ValidationErrorItem { FilePath = fileSchema.RelativePath });
+                    }
+                }
+
+                if (toRestore.Count > 0)
+                {
+                    RestoreDefaultFiles(projectRootPath, toRestore);
                 }
             }
             catch (Exception ex)
             {
-                error = $"Ошибка при сканировании проекта: {ex.Message}";
+                string format = GetLocString("Validation_Load_Failed");
+                error = string.Format(format, ex.Message);
                 return false;
             }
 
@@ -157,6 +174,39 @@ namespace editor.Services.Project
             {
                 return false;
             }
+        }
+
+        // Читает имя проекта из файла настроек проекта (project.zzz) с валидацией
+        public string GetProjectName(string projectRootPath)
+        {
+            try
+            {
+                var schema = ProjectStructure.RequiredFiles.Find(f => f.RelativePath == "project.zzz");
+                if (schema != null)
+                {
+                    string fullPath = Path.Combine(projectRootPath, schema.RelativePath);
+                    if (File.Exists(fullPath))
+                    {
+                        string json = File.ReadAllText(fullPath);
+                        using (var doc = System.Text.Json.JsonDocument.Parse(json))
+                        {
+                            if (doc.RootElement.TryGetProperty("name", out var nameProp))
+                            {
+                                string name = nameProp.GetString()?.Trim() ?? string.Empty;
+                                if (IsValidProjectName(name, out _))
+                                {
+                                    return name;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Игнорируем и возвращаем имя папки
+            }
+            return Path.GetFileName(projectRootPath);
         }
     }
 }

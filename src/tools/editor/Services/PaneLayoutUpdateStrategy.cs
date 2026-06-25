@@ -19,7 +19,12 @@ namespace editor.Services
 				return false;
 			}
 
-			anchorableToShow.Title = pane.Title;
+			var titleBinding = new System.Windows.Data.Binding("Title")
+			{
+				Source = pane,
+				Mode = System.Windows.Data.BindingMode.OneWay
+			};
+			System.Windows.Data.BindingOperations.SetBinding(anchorableToShow, LayoutAnchorable.TitleProperty, titleBinding);
 			anchorableToShow.ContentId = pane.ContentId;
 			anchorableToShow.CanClose = pane.CanClose;
 			anchorableToShow.PropertyChanged += (s, args) =>

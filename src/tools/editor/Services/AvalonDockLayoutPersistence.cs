@@ -2,6 +2,7 @@
 using System.IO;
 using AvalonDock;
 using editor.ViewModels;
+using AvalonDock.Layout;
 using AvalonDock.Layout.Serialization;
 
 namespace editor.Services
@@ -44,6 +45,15 @@ namespace editor.Services
 					if (pane != null)
 					{
 						args.Content = pane;
+						if (args.Model is LayoutAnchorable anchorable)
+						{
+							var titleBinding = new System.Windows.Data.Binding("Title")
+							{
+								Source = pane,
+								Mode = System.Windows.Data.BindingMode.OneWay
+							};
+							System.Windows.Data.BindingOperations.SetBinding(anchorable, LayoutAnchorable.TitleProperty, titleBinding);
+						}
 					}
 				};
 

@@ -1,10 +1,10 @@
-<Window x:Class="editor.Views.ProjectValidationErrorDialog"
+<Window x:Class="editor.Views.NewProjectDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         mc:Ignorable="d"
-        Title="Проблемы при загрузке проекта" Height="400" Width="600"
+        Title="{DynamicResource Dialog_NewProject_Title}" Height="250" Width="500"
         WindowStartupLocation="CenterOwner"
         WindowStyle="None"
         ResizeMode="NoResize"
@@ -19,14 +19,13 @@
     </WindowChrome.WindowChrome>
 
     <Window.Resources>
-        <!-- Стилизация кнопок диалога -->
+        <!-- Общие стили кнопок -->
         <Style x:Key="DialogButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="#2D2D30" />
             <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}" />
             <Setter Property="BorderBrush" Value="{DynamicResource Brush_Border}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="15,6" />
-            <Setter Property="Margin" Value="5,0" />
+            <Setter Property="Padding" Value="12,5" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -109,70 +108,98 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Стилизация текстового поля -->
+        <Style x:Key="DialogTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="#252526" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush_Border}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="5,3" />
+            <Setter Property="SelectionBrush" Value="#007ACC" />
+            <Setter Property="CaretBrush" Value="{DynamicResource Brush_Text_Primary}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="1">
+                            <ScrollViewer x:Name="PART_ContentHost" Focusable="False"
+                                          HorizontalScrollBarVisibility="Hidden"
+                                          VerticalScrollBarVisibility="Hidden" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#007ACC" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" /> <!-- Заголовок окна -->
-            <RowDefinition Height="*" />    <!-- Контент -->
-            <RowDefinition Height="Auto" /> <!-- Кнопки внизу -->
+            <RowDefinition Height="Auto" /> <!-- Шапка -->
+            <RowDefinition Height="*" />    <!-- Поля ввода -->
+            <RowDefinition Height="Auto" /> <!-- Кнопки -->
         </Grid.RowDefinitions>
 
-        <!-- 1. Кастомная шапка окна (TitleBar) -->
+        <!-- 1. Заголовок (TitleBar) -->
         <Border Grid.Row="0" Background="#2D2D30" BorderBrush="{DynamicResource Brush_Border}" BorderThickness="0,0,0,1" Height="30">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0">
-                    <TextBlock Text="⚠️ Неполадки с файлами проекта" Foreground="{DynamicResource Brush_Text_Primary}" FontWeight="SemiBold" FontSize="12" />
-                </StackPanel>
-                <Button Grid.Column="1" Content="✕" Style="{StaticResource HeaderCloseButtonStyle}" Focusable="False" Click="Close_Click" WindowChrome.IsHitTestVisibleInChrome="True" />
+                <TextBlock Text="{DynamicResource Dialog_NewProject_Title}" Foreground="{DynamicResource Brush_Text_Primary}" FontWeight="SemiBold" FontSize="12" Margin="10,0" VerticalAlignment="Center" />
+                <Button Grid.Column="1" Content="✕" Style="{StaticResource HeaderCloseButtonStyle}" Focusable="False" Click="Cancel_Click" WindowChrome.IsHitTestVisibleInChrome="True" />
             </Grid>
         </Border>
 
-        <!-- 2. Основная рабочая область -->
-        <Grid Grid.Row="1" Margin="20,15,20,15">
+        <!-- 2. Форма ввода -->
+        <Grid Grid.Row="1" Margin="20,15,20,10">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" /> <!-- Имя проекта -->
+                <RowDefinition Height="10" />
+                <RowDefinition Height="Auto" /> <!-- Путь -->
+                <RowDefinition Height="*" />    <!-- Ошибка -->
             </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0" Margin="0,0,0,10" TextWrapping="Wrap" 
-                       Foreground="{DynamicResource Brush_Text_Primary}" FontSize="13">
-                При проверке целостности проекта были обнаружены отсутствующие или поврежденные файлы конфигурации:
-            </TextBlock>
+            <!-- Имя проекта -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="120" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{DynamicResource Dialog_NewProject_Name}" Foreground="{DynamicResource Brush_Text_Primary}" VerticalAlignment="Center" />
+                <TextBox Grid.Column="1" x:Name="ProjectNameTextBox" Style="{StaticResource DialogTextBoxStyle}" TextChanged="ValidateInput" />
+            </Grid>
 
-            <Border Grid.Row="1" Background="#252526" BorderBrush="{DynamicResource Brush_Border}" BorderThickness="1" CornerRadius="2">
-                <ListView x:Name="ErrorListView" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource Brush_Text_Primary}">
-                    <ListView.View>
-                        <GridView>
-                            <GridViewColumn Header="Относительный путь" Width="200" DisplayMemberBinding="{Binding FilePath}" />
-                            <GridViewColumn Header="Описание ошибки" Width="330" DisplayMemberBinding="{Binding ErrorMessage}" />
-                        </GridView>
-                    </ListView.View>
-                    <ListView.ItemContainerStyle>
-                        <Style TargetType="ListViewItem">
-                            <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}" />
-                            <Setter Property="Background" Value="Transparent" />
-                            <Setter Property="Focusable" Value="False" />
-                            <Style.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#2D2D30" />
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </ListView.ItemContainerStyle>
-                </ListView>
-            </Border>
+            <!-- Расположение -->
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="120" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="80" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{DynamicResource Dialog_NewProject_Location}" Foreground="{DynamicResource Brush_Text_Primary}" VerticalAlignment="Center" />
+                <TextBox Grid.Column="1" x:Name="ProjectPathTextBox" Style="{StaticResource DialogTextBoxStyle}" IsReadOnly="True" />
+                <Button Grid.Column="2" Content="{DynamicResource Dialog_NewProject_Browse}" Margin="5,0,0,0" Style="{StaticResource DialogButtonStyle}" Click="Browse_Click" WindowChrome.IsHitTestVisibleInChrome="True" />
+            </Grid>
+
+            <!-- Сообщение об ошибке -->
+            <TextBlock Grid.Row="3" x:Name="ErrorTextBlock" Foreground="#F25C5C" TextWrapping="Wrap" Margin="0,10,0,0" VerticalAlignment="Top" Visibility="Collapsed" />
         </Grid>
 
         <!-- 3. Кнопки управления -->
         <Border Grid.Row="2" Background="#2D2D30" BorderBrush="{DynamicResource Brush_Border}" BorderThickness="0,1,0,0" Padding="15,12">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" WindowChrome.IsHitTestVisibleInChrome="True">
-                <Button Content="Прекратить загрузку" Style="{StaticResource DialogButtonStyle}" Click="Abort_Click" />
-                <Button Content="Восстановить умолчания" Style="{StaticResource DialogAccentButtonStyle}" Click="RestoreDefaults_Click" />
+                <Button Content="{DynamicResource Dialog_NewProject_Create}" x:Name="CreateButton" Style="{StaticResource DialogAccentButtonStyle}" Click="Create_Click" Margin="0,0,8,0" IsEnabled="False" />
+                <Button Content="{DynamicResource Dialog_NewProject_Cancel}" Style="{StaticResource DialogButtonStyle}" Click="Cancel_Click" />
             </StackPanel>
         </Border>
     </Grid>

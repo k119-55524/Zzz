@@ -13,4 +13,11 @@ public partial class App : Application
 {
     public static EngineService EngineService { get; } = new EngineService();
     public static ProjectService ProjectService { get; } = new ProjectService();
+
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+        var globalState = EditorSessionManager.LoadGlobalSession();
+        LocalizationManager.Initialize(globalState.Language);
+    }
 }

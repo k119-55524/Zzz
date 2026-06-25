@@ -40,4 +40,28 @@
     <sys:String x:Key="Dialog_About_Version">Версия: {0}</sys:String>
     <sys:String x:Key="Dialog_Close_Title">Выход из редактора</sys:String>
     <sys:String x:Key="Dialog_Close_Unsaved">Сохранить изменения проекта перед выходом?</sys:String>
+
+    <!-- Ошибки и предупреждения проектов -->
+    <sys:String x:Key="Msg_Project_NotFound_Title">Проект не найден</sys:String>
+    <sys:String x:Key="Msg_Project_NotFound_Load">Последний проект по пути '{0}' не найден. Редактор будет запущен без проекта.</sys:String>
+    <sys:String x:Key="Msg_Project_NotFound_Recent">Проект не найден по пути '{0}'. Он будет удален из списка последних проектов.</sys:String>
+    <sys:String x:Key="Msg_Error_Title">Ошибка</sys:String>
+    
+    <!-- Валидация создания проекта -->
+    <sys:String x:Key="Validation_ProjectName_Empty">Имя проекта не может быть пустым.</sys:String>
+    <sys:String x:Key="Validation_ProjectName_InvalidChars">Имя проекта содержит недопустимые символы.</sys:String>
+    <sys:String x:Key="Validation_Folder_Exists">Папка '{0}' уже существует в указанном месте и не пуста.</sys:String>
+    <sys:String x:Key="Validation_Folder_NotExist">Указанная папка проекта не существует.</sys:String>
+    <sys:String x:Key="Validation_Create_Failed">Не удалось создать проект: {0}</sys:String>
+    <sys:String x:Key="Validation_Load_Failed">Ошибка при загрузке проекта: {0}</sys:String>
+    
+    <!-- Тексты NewProjectDialog -->
+    <sys:String x:Key="Dialog_NewProject_Title">Новый проект</sys:String>
+    <sys:String x:Key="Dialog_NewProject_Name">Имя проекта:</sys:String>
+    <sys:String x:Key="Dialog_NewProject_Location">Расположение:</sys:String>
+    <sys:String x:Key="Dialog_NewProject_Browse">Обзор...</sys:String>
+    <sys:String x:Key="Dialog_NewProject_Create">Создать</sys:String>
+    <sys:String x:Key="Dialog_NewProject_Cancel">Отмена</sys:String>
+    <sys:String x:Key="Dialog_OpenProject_Title">Открыть проект</sys:String>
+    <sys:String x:Key="Dialog_NewProject_BrowseFolder_Title">Выберите папку для проекта</sys:String>
 </ResourceDictionary>

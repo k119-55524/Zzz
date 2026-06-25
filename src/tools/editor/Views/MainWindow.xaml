@@ -10,6 +10,7 @@
         xmlns:vsTheme="clr-namespace:AvalonDock.Themes;assembly=AvalonDock.Themes.VS2013"
         xmlns:svc="clr-namespace:editor.Services"
         xmlns:conv="clr-namespace:editor.Views.Converters"
+        xmlns:vm="clr-namespace:editor.ViewModels"
         mc:Ignorable="d"
         Background="{DynamicResource Brush_Window_Background}"
         Title="{Binding WindowTitle}" Height="720" Width="1280" Icon="pack://application:,,,/Properties/AppIcon.ico"
@@ -25,6 +26,109 @@
     </WindowChrome.WindowChrome>
 
     <Window.Resources>
+        <!-- Шаблон для отображения элементов языков в выпадающем меню -->
+        <DataTemplate x:Key="LanguageTemplate" DataType="{x:Type vm:MainWindowViewModel+LanguageItem}">
+            <Grid Height="15" Margin="4,2,4,2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                
+                <ContentControl Content="{Binding Code}" Margin="0,0,8,0" VerticalAlignment="Center">
+                    <ContentControl.Style>
+                        <Style TargetType="ContentControl">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Code}" Value="ru-RU">
+                                    <Setter Property="ContentTemplate">
+                                        <Setter.Value>
+                                            <DataTemplate>
+                                                <Grid Width="16" Height="11">
+                                                    <Border ClipToBounds="True" BorderBrush="#88FFFFFF" BorderThickness="1">
+                                                        <Grid>
+                                                            <Grid.RowDefinitions>
+                                                                <RowDefinition Height="*" />
+                                                                <RowDefinition Height="*" />
+                                                                <RowDefinition Height="*" />
+                                                            </Grid.RowDefinitions>
+                                                            <Rectangle Grid.Row="0" Fill="#FFFFFF" />
+                                                            <Rectangle Grid.Row="1" Fill="#0039A6" />
+                                                            <Rectangle Grid.Row="2" Fill="#D52B1E" />
+                                                        </Grid>
+                                                    </Border>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Code}" Value="en-US">
+                                    <Setter Property="ContentTemplate">
+                                        <Setter.Value>
+                                            <DataTemplate>
+                                                <Grid Width="16" Height="11">
+                                                    <Border ClipToBounds="True" BorderBrush="#88FFFFFF" BorderThickness="1">
+                                                        <Grid>
+                                                            <Grid>
+                                                                <Grid.RowDefinitions>
+                                                                    <RowDefinition Height="*" />
+                                                                    <RowDefinition Height="*" />
+                                                                    <RowDefinition Height="*" />
+                                                                    <RowDefinition Height="*" />
+                                                                    <RowDefinition Height="*" />
+                                                                    <RowDefinition Height="*" />
+                                                                    <RowDefinition Height="*" />
+                                                                </Grid.RowDefinitions>
+                                                                <Rectangle Grid.Row="0" Fill="#B22234" />
+                                                                <Rectangle Grid.Row="1" Fill="#FFFFFF" />
+                                                                <Rectangle Grid.Row="2" Fill="#B22234" />
+                                                                <Rectangle Grid.Row="3" Fill="#FFFFFF" />
+                                                                <Rectangle Grid.Row="4" Fill="#B22234" />
+                                                                <Rectangle Grid.Row="5" Fill="#FFFFFF" />
+                                                                <Rectangle Grid.Row="6" Fill="#B22234" />
+                                                            </Grid>
+                                                            <Rectangle Width="8" Height="6" Fill="#3C3B6E" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                                        </Grid>
+                                                    </Border>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ContentControl.Style>
+                </ContentControl>
+                
+                <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" Foreground="{DynamicResource Brush_Text_Primary}" Margin="0,0,4,0" />
+            </Grid>
+        </DataTemplate>
+
+        <Style x:Key="LanguageMenuHeaderStyle" TargetType="MenuItem">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Grid x:Name="Grid" Background="Transparent">
+                            <ContentPresenter ContentSource="Header" Margin="4,2,4,2" />
+                            <Popup x:Name="PART_Popup"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                                   Placement="Bottom"
+                                   PopupAnimation="{DynamicResource {x:Static SystemParameters.MenuPopupAnimationKey}}">
+                                <Border Background="#2D2D30" BorderBrush="{DynamicResource Brush_Border}" BorderThickness="1" CornerRadius="4" Padding="2" Margin="0,4,0,0">
+                                    <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle" Grid.IsSharedSizeScope="True" />
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Grid" Property="Opacity" Value="0.8" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <CollectionViewSource x:Key="PanesCollection" Source="{Binding Panes}" />
         <conv:WidgetTypeToViewConverter x:Key="WidgetTypeToViewConverter" />
@@ -200,6 +304,99 @@
 
                 <!-- 3. Системные кнопки окна Windows -->
                 <StackPanel Grid.Column="3" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
+                    <!-- Выпадающий список выбора языка -->
+                    <Menu Background="Transparent" Margin="0,0,12,0" VerticalAlignment="Center">
+                        <MenuItem ItemsSource="{Binding AvailableLanguages}" 
+                                  Style="{StaticResource LanguageMenuHeaderStyle}">
+                            <MenuItem.Header>
+                                <ContentControl Content="{Binding SelectedLanguage.Code}">
+                                    <ContentControl.Style>
+                                        <Style TargetType="ContentControl">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedLanguage.Code}" Value="ru-RU">
+                                                    <Setter Property="ContentTemplate">
+                                                        <Setter.Value>
+                                                            <DataTemplate>
+                                                                <Grid Width="16" Height="11">
+                                                                    <Border ClipToBounds="True" BorderBrush="#88FFFFFF" BorderThickness="1" Cursor="Hand">
+                                                                        <Grid>
+                                                                            <Grid.RowDefinitions>
+                                                                                <RowDefinition Height="*" />
+                                                                                <RowDefinition Height="*" />
+                                                                                <RowDefinition Height="*" />
+                                                                            </Grid.RowDefinitions>
+                                                                            <Rectangle Grid.Row="0" Fill="#FFFFFF" />
+                                                                            <Rectangle Grid.Row="1" Fill="#0039A6" />
+                                                                            <Rectangle Grid.Row="2" Fill="#D52B1E" />
+                                                                        </Grid>
+                                                                    </Border>
+                                                                </Grid>
+                                                            </DataTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding SelectedLanguage.Code}" Value="en-US">
+                                                    <Setter Property="ContentTemplate">
+                                                        <Setter.Value>
+                                                            <DataTemplate>
+                                                                <Grid Width="16" Height="11">
+                                                                    <Border ClipToBounds="True" BorderBrush="#88FFFFFF" BorderThickness="1" Cursor="Hand">
+                                                                        <Grid>
+                                                                            <Grid>
+                                                                                <Grid.RowDefinitions>
+                                                                                    <RowDefinition Height="*" />
+                                                                                    <RowDefinition Height="*" />
+                                                                                    <RowDefinition Height="*" />
+                                                                                    <RowDefinition Height="*" />
+                                                                                    <RowDefinition Height="*" />
+                                                                                    <RowDefinition Height="*" />
+                                                                                    <RowDefinition Height="*" />
+                                                                                </Grid.RowDefinitions>
+                                                                                <Rectangle Grid.Row="0" Fill="#B22234" />
+                                                                                <Rectangle Grid.Row="1" Fill="#FFFFFF" />
+                                                                                <Rectangle Grid.Row="2" Fill="#B22234" />
+                                                                                <Rectangle Grid.Row="3" Fill="#FFFFFF" />
+                                                                                <Rectangle Grid.Row="4" Fill="#B22234" />
+                                                                                <Rectangle Grid.Row="5" Fill="#FFFFFF" />
+                                                                                <Rectangle Grid.Row="6" Fill="#B22234" />
+                                                                            </Grid>
+                                                                            <Rectangle Width="8" Height="6" Fill="#3C3B6E" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                                                        </Grid>
+                                                                    </Border>
+                                                                </Grid>
+                                                            </DataTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ContentControl.Style>
+                                </ContentControl>
+                            </MenuItem.Header>
+                            <MenuItem.ItemContainerStyle>
+                                <Style TargetType="MenuItem">
+                                    <Setter Property="Header" Value="{Binding}" />
+                                    <Setter Property="Command" Value="{Binding DataContext.SwitchLanguageCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                                    <Setter Property="CommandParameter" Value="{Binding}" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="MenuItem">
+                                                <Border x:Name="BgBorder" Background="Transparent" SnapsToDevicePixels="True" CornerRadius="3" Padding="6,4">
+                                                    <ContentPresenter ContentSource="Header" ContentTemplate="{StaticResource LanguageTemplate}" />
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="BgBorder" Property="Background" Value="#3E3E42" />
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </MenuItem.ItemContainerStyle>
+                        </MenuItem>
+                    </Menu>
+
                     <Button Content="—" Style="{StaticResource ChromeWindowButtonStyle}" Focusable="False"
                             Command="{x:Static SystemCommands.MinimizeWindowCommand}"
                             CommandTarget="{Binding RelativeSource={RelativeSource AncestorType=Window}}" />

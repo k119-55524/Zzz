@@ -50,6 +50,13 @@ namespace editor.ViewModels
 				}
 			});
 			ResetLayoutCommand = new RelayCommand(ResetLayout);
+			SwitchLanguageCommand = new RelayCommand<LanguageItem>((lang) =>
+			{
+				if (lang != null)
+				{
+					SelectedLanguage = lang;
+				}
+			});
 		}
 
 		public ObservableCollection<PaneViewModel> Panes { get; }
@@ -63,14 +70,54 @@ namespace editor.ViewModels
 
 		public string AppName => EditorConstants.ApplicationName;
 
+		public class LanguageItem
+		{
+			public string Name { get; set; } = string.Empty;
+			public string Code { get; set; } = string.Empty;
+		}
+
+		public System.Collections.Generic.List<LanguageItem> AvailableLanguages { get; } = new()
+		{
+			new LanguageItem { Name = "Русский", Code = "ru-RU" },
+			new LanguageItem { Name = "English", Code = "en-US" }
+		};
+
+		public LanguageItem SelectedLanguage
+		{
+			get => AvailableLanguages.Find(l => l.Code == LocalizationManager.CurrentCulture) ?? AvailableLanguages[1];
+			set
+			{
+				if (value != null && value.Code != LocalizationManager.CurrentCulture)
+				{
+					LocalizationManager.SetLanguage(value.Code);
+					_globalState.Language = value.Code;
+					SaveSession();
+
+					OnPropertyChanged(nameof(SelectedLanguage));
+					OnPropertyChanged(nameof(ProjectDisplayName));
+					OnPropertyChanged(nameof(WindowTitle));
+
+					foreach (var pane in Panes)
+					{
+						pane.UpdateTitle();
+					}
+				}
+			}
+		}
+
+		private string GetLocString(string key)
+		{
+			return Application.Current?.TryFindResource(key) as string ?? string.Empty;
+		}
+
 		public string ProjectDisplayName
 		{
 			get
 			{
-				string noProjectText = Application.Current?.TryFindResource("Menu_File_NoProject") as string ?? "Нет проекта";
+				string noProjectText = GetLocString("Menu_File_NoProject");
 				return string.IsNullOrEmpty(_currentProjectPath)
 					? noProjectText
-					: Path.GetFileNameWithoutExtension(_currentProjectPath);
+					: App.ProjectService.GetProjectName(_currentProjectPath);
 			}
 		}
 
@@ -84,6 +131,7 @@ namespace editor.ViewModels
 					OnPropertyChanged(nameof(ProjectDisplayName));
 					OnPropertyChanged(nameof(WindowTitle));
 					OnPropertyChanged(nameof(IsProjectOpen));
+					OnPropertyChanged(nameof(IsDirty));
 					CommandManager.InvalidateRequerySuggested();
 				}
 			}
@@ -91,7 +139,7 @@ namespace editor.ViewModels
 
 		public bool IsDirty
 		{
-			get => _isDirty;
+			get => _isDirty && IsProjectOpen;
 			set
 			{
 				if (SetField(ref _isDirty, value))
@@ -124,6 +172,7 @@ namespace editor.ViewModels
 		public ICommand StopCommand { get; }
 		public ICommand ShowWidgetCommand { get; }
 		public ICommand ResetLayoutCommand { get; }
+		public ICommand SwitchLanguageCommand { get; }
 
 		public event EventHandler? CloseRequested;
 		public event EventHandler? ResetLayoutRequested;
@@ -134,12 +183,26 @@ namespace editor.ViewModels
 			_globalState = EditorSessionManager.LoadGlobalSession();
 			RefreshRecentProjects();
 
-			if (!string.IsNullOrEmpty(_globalState.LastOpenProjectPath) && File.Exists(_globalState.LastOpenProjectPath))
+			if (!string.IsNullOrEmpty(_globalState.LastOpenProjectPath))
 			{
-				Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+				if (Directory.Exists(_globalState.LastOpenProjectPath))
 				{
-					OpenProjectInternal(_globalState.LastOpenProjectPath);
-				}), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+					Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+					{
+						OpenProjectInternal(_globalState.LastOpenProjectPath);
+					}), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+				}
+				else
+				{
+					string missingPath = _globalState.LastOpenProjectPath;
+					_globalState.LastOpenProjectPath = string.Empty;
+					SaveSession();
+
+					string format = GetLocString("Msg_Project_NotFound_Load");
+					string title = GetLocString("Msg_Project_NotFound_Title");
+					_dialogService.ShowMessage(string.Format(format, missingPath), title, MessageBoxButton.OK, MessageBoxImage.Warning);
+					RemoveRecentProject(missingPath);
+				}
 			}
 		}
 
@@ -156,8 +219,8 @@ namespace editor.ViewModels
 				return true;
 			}
 
-			string title = Application.Current?.TryFindResource("Dialog_Close_Title") as string ?? "Выход";
-			string message = Application.Current?.TryFindResource("Dialog_Close_Unsaved") as string ?? "Сохранить проект перед выходом?";
+			string title = GetLocString("Dialog_Close_Title");
+			string message = GetLocString("Dialog_Close_Unsaved");
 
 			var result = _dialogService.ShowMessage(message, title, MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
 			if (result == MessageBoxResult.Cancel)
@@ -198,31 +261,28 @@ namespace editor.ViewModels
 				return;
 			}
 
-			var dialog = new Microsoft.Win32.SaveFileDialog
-			{
-				Filter = "Project File (*.zzz)|*.zzz",
-				Title = "Создать новый проект"
-			};
+			var parentWindow = Application.Current.MainWindow;
+			var dialog = new editor.Views.NewProjectDialog(parentWindow, _globalState.LastCreatedProjectParentDir);
 
 			if (dialog.ShowDialog() == true)
 			{
-				string projectFilePath = dialog.FileName;
-				string projectDir = Path.GetDirectoryName(projectFilePath)!;
-				string projectName = Path.GetFileNameWithoutExtension(projectFilePath);
+				string projectDir = dialog.TargetProjectDirectory;
 
-				if (App.ProjectService.CreateProject(Path.GetDirectoryName(projectDir)!, projectName, out string error))
+				if (App.ProjectService.CreateProject(dialog.ParentDirectory, dialog.ProjectName, out string error))
 				{
-					_globalState.LastOpenProjectPath = projectFilePath;
+					_globalState.LastOpenProjectPath = projectDir;
+					_globalState.LastCreatedProjectParentDir = dialog.ParentDirectory;
 					SaveSession();
-					CurrentProjectPath = projectFilePath;
-					IsDirty = true;
-					AddRecentProject(projectFilePath);
+					CurrentProjectPath = projectDir;
+					IsDirty = false; // При создании проекта сохранять нечего
+					AddRecentProject(projectDir);
 
 					App.EngineService.OnProjectOpened(projectDir);
 				}
 				else
 				{
-					_dialogService.ShowMessage(error, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+					string errorTitle = GetLocString("Msg_Error_Title");
+					_dialogService.ShowMessage(error, errorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
 				}
 			}
 		}
@@ -234,15 +294,14 @@ namespace editor.ViewModels
 				return;
 			}
 
-			var dialog = new Microsoft.Win32.OpenFileDialog
+			var dialog = new Microsoft.Win32.OpenFolderDialog
 			{
-				Filter = "Project File (*.zzz)|*.zzz",
-				Title = "Открыть проект"
+				Title = GetLocString("Dialog_OpenProject_Title")
 			};
 
 			if (dialog.ShowDialog() == true)
 			{
-				OpenProjectInternal(dialog.FileName);
+				OpenProjectInternal(dialog.FolderName);
 			}
 		}
 
@@ -250,6 +309,15 @@ namespace editor.ViewModels
 		{
 			if (string.IsNullOrEmpty(path))
 			{
+				return;
+			}
+
+			if (!Directory.Exists(path))
+			{
+				string format = GetLocString("Msg_Project_NotFound_Recent");
+				string title = GetLocString("Msg_Project_NotFound_Title");
+				_dialogService.ShowMessage(string.Format(format, path), title, MessageBoxButton.OK, MessageBoxImage.Warning);
+				RemoveRecentProject(path);
 				return;
 			}
 
@@ -261,47 +329,27 @@ namespace editor.ViewModels
 			OpenProjectInternal(path);
 		}
 
-		private void OpenProjectInternal(string projectFilePath)
+		private void OpenProjectInternal(string projectDir)
 		{
-			if (CurrentProjectPath == projectFilePath)
+			if (CurrentProjectPath == projectDir)
 			{
 				return; // Защита от открытия самого себя
 			}
 
-			string projectDir = Path.GetDirectoryName(projectFilePath)!;
-
-			if (App.ProjectService.OpenProject(projectDir, out string scanError, out var validationErrors))
+			if (App.ProjectService.OpenProject(projectDir, out string error))
 			{
-				if (validationErrors.Count > 0)
-				{
-					var parentWindow = Application.Current.MainWindow;
-					var errorDialog = new editor.Views.ProjectValidationErrorDialog(parentWindow, validationErrors);
-					if (errorDialog.ShowDialog() == true)
-					{
-						if (errorDialog.Resolution == editor.Views.ProjectLoadResolution.RestoreDefaults)
-						{
-							App.ProjectService.RestoreDefaultFiles(projectDir, validationErrors);
-						}
-						// Если Ignore или RestoreDefaults - загружаем
-					}
-					else
-					{
-						// Отмена загрузки
-						return;
-					}
-				}
-
-				_globalState.LastOpenProjectPath = projectFilePath;
+				_globalState.LastOpenProjectPath = projectDir;
 				SaveSession();
-				CurrentProjectPath = projectFilePath;
+				CurrentProjectPath = projectDir;
 				IsDirty = false;
-				AddRecentProject(projectFilePath);
+				AddRecentProject(projectDir);
 
 				App.EngineService.OnProjectOpened(projectDir);
 			}
 			else
 			{
-				_dialogService.ShowMessage(scanError, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+				string errorTitle = GetLocString("Msg_Error_Title");
+				_dialogService.ShowMessage(error, errorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
 			}
 		}
 
@@ -317,6 +365,15 @@ namespace editor.ViewModels
 			SaveSession();
 			CurrentProjectPath = null;
 			IsDirty = false;
+		}
+
+		private void RemoveRecentProject(string path)
+		{
+			var list = new List<string>(_globalState.RecentProjects ?? Array.Empty<string>());
+			list.Remove(path);
+			_globalState.RecentProjects = list.ToArray();
+			SaveSession();
+			RefreshRecentProjects();
 		}
 
 		private void AddRecentProject(string path)

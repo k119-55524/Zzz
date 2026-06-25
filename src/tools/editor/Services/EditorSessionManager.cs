@@ -8,6 +8,8 @@ namespace editor.Services
 	{
 		public string LastOpenProjectPath { get; set; } = string.Empty;
 		public string[] RecentProjects { get; set; } = new string[0];
+		public string LastCreatedProjectParentDir { get; set; } = string.Empty;
+		public string Language { get; set; } = string.Empty;
 	}
 
 	public class LayoutSessionState
@@ -76,6 +78,15 @@ namespace editor.Services
 						state.RecentProjects[i] = reader.ReadString();
 					}
 
+					if (fs.Position < fs.Length)
+					{
+						state.LastCreatedProjectParentDir = reader.ReadString();
+					}
+					if (fs.Position < fs.Length)
+					{
+						state.Language = reader.ReadString();
+					}
+
 					return state;
 				}
 			}
@@ -103,6 +114,9 @@ namespace editor.Services
 					{
 						writer.Write(state.RecentProjects![i] ?? string.Empty);
 					}
+
+					writer.Write(state.LastCreatedProjectParentDir ?? string.Empty);
+					writer.Write(state.Language ?? string.Empty);
 				}
 			}
 			catch

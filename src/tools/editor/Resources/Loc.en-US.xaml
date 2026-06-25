@@ -40,4 +40,28 @@
     <sys:String x:Key="Dialog_About_Version">Version: {0}</sys:String>
     <sys:String x:Key="Dialog_Close_Title">Exit Editor</sys:String>
     <sys:String x:Key="Dialog_Close_Unsaved">Save project changes before exiting?</sys:String>
+
+    <!-- Project Errors & Warnings -->
+    <sys:String x:Key="Msg_Project_NotFound_Title">Project Not Found</sys:String>
+    <sys:String x:Key="Msg_Project_NotFound_Load">The last project at '{0}' was not found. Editor will start with no project.</sys:String>
+    <sys:String x:Key="Msg_Project_NotFound_Recent">Project not found at '{0}'. It will be removed from the recent projects list.</sys:String>
+    <sys:String x:Key="Msg_Error_Title">Error</sys:String>
+    
+    <!-- Project Creation & Validation -->
+    <sys:String x:Key="Validation_ProjectName_Empty">Project name cannot be empty.</sys:String>
+    <sys:String x:Key="Validation_ProjectName_InvalidChars">Project name contains invalid characters.</sys:String>
+    <sys:String x:Key="Validation_Folder_Exists">Folder '{0}' already exists at the specified location and is not empty.</sys:String>
+    <sys:String x:Key="Validation_Folder_NotExist">The specified project folder does not exist.</sys:String>
+    <sys:String x:Key="Validation_Create_Failed">Failed to create project: {0}</sys:String>
+    <sys:String x:Key="Validation_Load_Failed">Error loading project: {0}</sys:String>
+    
+    <!-- NewProjectDialog Texts -->
+    <sys:String x:Key="Dialog_NewProject_Title">New Project</sys:String>
+    <sys:String x:Key="Dialog_NewProject_Name">Project Name:</sys:String>
+    <sys:String x:Key="Dialog_NewProject_Location">Location:</sys:String>
+    <sys:String x:Key="Dialog_NewProject_Browse">Browse...</sys:String>
+    <sys:String x:Key="Dialog_NewProject_Create">Create</sys:String>
+    <sys:String x:Key="Dialog_NewProject_Cancel">Cancel</sys:String>
+    <sys:String x:Key="Dialog_OpenProject_Title">Open Project</sys:String>
+    <sys:String x:Key="Dialog_NewProject_BrowseFolder_Title">Select project folder</sys:String>
 </ResourceDictionary>

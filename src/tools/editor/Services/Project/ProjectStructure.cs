@@ -2,6 +2,12 @@ using System.Collections.Generic;
 
 namespace editor.Services.Project
 {
+    public class ValidationErrorItem
+    {
+        public string FilePath { get; set; } = string.Empty;
+        public string ErrorMessage { get; set; } = string.Empty;
+    }
+
     public class ProjectFileSchema
     {
         public string RelativePath { get; set; } = string.Empty;
