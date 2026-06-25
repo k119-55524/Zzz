@@ -88,4 +88,35 @@
     <sys:String x:Key="Console_Search_Placeholder">Поиск...</sys:String>
     <sys:String x:Key="Console_Clear_Confirm_Title">Очистка логов</sys:String>
     <sys:String x:Key="Console_Clear_Confirm_Message">Вы действительно хотите очистить все логи?</sys:String>
+
+    <!-- Логи движка -->
+    <sys:String x:Key="Log_Engine_Init_Start">Запуск инициализации движка...</sys:String>
+    <sys:String x:Key="Log_Engine_Init_Success">Движок успешно инициализирован.</sys:String>
+    <sys:String x:Key="Log_Engine_Init_Fail">Не удалось инициализировать движок.</sys:String>
+    <sys:String x:Key="Log_Engine_Stop">Движок остановлен.</sys:String>
+    <sys:String x:Key="Log_Viewport_Init">Инициализация вьюпорта {0} (HWND: {1})</sys:String>
+    <sys:String x:Key="Log_Viewport_Destroy">Прибитие вьюпорта {0} (HWND: {1})</sys:String>
+
+    <!-- Детали логов -->
+    <sys:String x:Key="Console_Details_Time">Время</sys:String>
+    <sys:String x:Key="Console_Details_Source">Источник</sys:String>
+    <sys:String x:Key="Console_Details_Level">Уровень</sys:String>
+    <sys:String x:Key="Console_Details_Message">Сообщение</sys:String>
+    <sys:String x:Key="Console_Details_File">Файл</sys:String>
+    <sys:String x:Key="Console_Details_Function">Функция</sys:String>
+    <sys:String x:Key="Console_Details_Line">Строка</sys:String>
+
+    <!-- Источники логов -->
+    <sys:String x:Key="LogSource_Editor">Редактор</sys:String>
+    <sys:String x:Key="LogSource_Engine">Движок</sys:String>
+    <sys:String x:Key="LogSource_Scripts">Скрипты</sys:String>
+
+    <!-- Уровни логов -->
+    <sys:String x:Key="LogLevel_Message">Сообщение</sys:String>
+    <sys:String x:Key="LogLevel_Warning">Предупреждение</sys:String>
+    <sys:String x:Key="LogLevel_Error">Ошибка</sys:String>
+    <sys:String x:Key="LogLevel_Exception">Исключение</sys:String>
+    <sys:String x:Key="LogLevel_Critical">Критическая ошибка</sys:String>
+    <sys:String x:Key="LogLevel_Fatal">Фатальная ошибка</sys:String>
+    <sys:String x:Key="Log_Viewport_Init_Failed">Критическая ошибка: не удалось инициализировать вьюпорт {0} (HWND: {1}) в движке.</sys:String>
 </ResourceDictionary>

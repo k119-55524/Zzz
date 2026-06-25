@@ -14,4 +14,6 @@ extern "C"
 	EDITOR_API void Deinitialize();
 	EDITOR_API void Tick();
 	EDITOR_API void ClearEngine();
+	EDITOR_API void* AddView(void* hwnd);
+	EDITOR_API void RemoveView(void* view);
 }

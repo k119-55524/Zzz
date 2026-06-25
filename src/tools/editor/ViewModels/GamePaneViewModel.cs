@@ -5,7 +5,7 @@ namespace editor.ViewModels
 {
     public class GamePaneViewModel : PaneViewModel
     {
-        private bool _isToolbarVisible;
+        private bool _isToolbarEnabled;
 
         public object View { get; } = new GameWidget();
 
@@ -13,10 +13,10 @@ namespace editor.ViewModels
         {
         }
 
-        public bool IsToolbarVisible
+        public bool IsToolbarEnabled
         {
-            get => _isToolbarVisible;
-            set => SetField(ref _isToolbarVisible, value);
+            get => _isToolbarEnabled;
+            set => SetField(ref _isToolbarEnabled, value);
         }
     }
 }

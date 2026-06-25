@@ -1,4 +1,4 @@
-﻿
+
 #include "View.h"
 #include "ViewManager.h"
 #include "../../platforms/Platform.h"
@@ -20,7 +20,7 @@ ViewManager::~ViewManager()
 	m_Views.clear();
 }
 
-void ViewManager::CreateView()
+View* ViewManager::CreateView()
 {
 #if Z_MOBILE
 	if (m_Views.size() >= 1)
@@ -28,8 +28,22 @@ void ViewManager::CreateView()
 #endif
 
 	auto view = safe_make_shared<View>(m_Platform, std::bind(&ViewManager::HandleWindowClose, this, std::placeholders::_1));
+	View* viewPtr = view.get();
 	m_Views.push_back(std::move(view));
+
+	return viewPtr;
 }
+
+#if Z_EDITOR
+View* ViewManager::CreateView(void* data)
+{
+	auto view = safe_make_shared<View>(m_Platform, data);
+	View* viewPtr = view.get();
+	m_Views.push_back(std::move(view));
+
+	return viewPtr;
+}
+#endif
 
 void ViewManager::HandleWindowClose(View& view)
 {
@@ -47,4 +61,22 @@ void ViewManager::HandleWindowClose(View& view)
 
 	if (m_Views.empty())
 		OnAllViewsClosed();
+}
+
+void ViewManager::DestroyView(View* view)
+{
+	if (!view) return;
+	auto it = std::ranges::find_if(
+		m_Views,
+		[view](const auto& p)
+		{
+			return p.get() == view;
+		});
+
+	if (it != m_Views.end())
+	{
+		m_Views.erase(it);
+		if (m_Views.empty())
+			OnAllViewsClosed();
+	}
 }

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <list>
 #include <memory>
@@ -18,7 +18,11 @@ namespace zzz::engine
 		ViewManager(const Platform& platform, std::function<void()> onAllViewsClosed);
 		~ViewManager();
 
-		void CreateView();
+		View* CreateView();
+#if Z_EDITOR
+		View* CreateView(void* data);
+#endif
+		void DestroyView(View* view);
 
 	private:
 		const Platform& m_Platform;

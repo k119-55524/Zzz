@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "Window_Common.h"
 #include "../input/Input.h"
@@ -26,7 +26,8 @@ namespace zzz::engine
 		WinMSWindows(const Platform& platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks);
 		~WinMSWindows();
 
-		[[nodiscard]] std::expected<void, std::string> Initialize(const std::string_view appName);
+		[[nodiscard]] std::expected<void, std::string> Initialize(const std::string_view appName, void* data = nullptr);
+		HWND GetHWnd() const noexcept { return m_hWnd; }
 		MsgProcResult MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept;
 

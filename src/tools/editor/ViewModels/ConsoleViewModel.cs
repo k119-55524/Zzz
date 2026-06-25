@@ -1,16 +1,16 @@
-using System;
-using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
+
 using System.IO;
-using System.Text.Json;
-using System.Windows;
-using System.Windows.Data;
-using System.Windows.Input;
-using System.Windows.Threading;
 using editor.Models;
+using System.Windows;
 using editor.Services;
 using Microsoft.Win32;
+using System.Text.Json;
+using System.Windows.Data;
+using System.Windows.Input;
+using System.ComponentModel;
+using System.Windows.Threading;
+using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 
 namespace editor.ViewModels
 {
@@ -105,6 +105,15 @@ namespace editor.ViewModels
 			};
 			_updateTimer.Tick += ProcessIncomingLogs;
 			_updateTimer.Start();
+		}
+
+		public override void UpdateTitle()
+		{
+			base.UpdateTitle();
+			foreach (var log in Logs)
+			{
+				log.RefreshLocalization();
+			}
 		}
 
 		private void OnLogReceived(LogMessage msg)

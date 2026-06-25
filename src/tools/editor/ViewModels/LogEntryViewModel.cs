@@ -41,35 +41,52 @@ namespace editor.ViewModels
             set => SetField(ref _isExpanded, value);
         }
 
-        public string LevelName => Level.ToString();
+        private static string GetLocString(string key)
+        {
+            if (System.Windows.Application.Current == null) return string.Empty;
+            if (System.Windows.Application.Current.Dispatcher.CheckAccess())
+            {
+                return System.Windows.Application.Current.TryFindResource(key) as string ?? string.Empty;
+            }
+            return System.Windows.Application.Current.Dispatcher.Invoke(() => System.Windows.Application.Current.TryFindResource(key) as string) ?? string.Empty;
+        }
 
-        public string SourceName => Source.ToString();
+        public string LevelName => GetLocString($"LogLevel_{Level}") is string s && !string.IsNullOrEmpty(s) ? s : Level.ToString();
+
+        public string SourceName => GetLocString($"LogSource_{Source}") is string s && !string.IsNullOrEmpty(s) ? s : Source.ToString();
 
         public string DetailsText
         {
             get
             {
                 var systemTime = DateTimeOffset.FromUnixTimeMilliseconds((long)Timestamp).LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
-                var details = $"[Время]: {systemTime}\n" +
-                              $"[Источник]: {Source}\n" +
-                              $"[Уровень]: {Level}\n" +
-                              $"[Сообщение]: {Text}";
+                var details = $"[{GetLocString("Console_Details_Time")}]: {systemTime}\n" +
+                              $"[{GetLocString("Console_Details_Source")}]: {SourceName}\n" +
+                              $"[{GetLocString("Console_Details_Level")}]: {LevelName}\n" +
+                              $"[{GetLocString("Console_Details_Message")}]: {Text}";
 
                 if (!string.IsNullOrEmpty(File))
                 {
-                    details += $"\n[Файл]: {File}";
+                    details += $"\n[{GetLocString("Console_Details_File")}]: {File}";
                 }
                 if (!string.IsNullOrEmpty(Function))
                 {
-                    details += $"\n[Функция]: {Function}";
+                    details += $"\n[{GetLocString("Console_Details_Function")}]: {Function}";
                 }
                 if (Line > 0)
                 {
-                    details += $"\n[Строка]: {Line}";
+                    details += $"\n[{GetLocString("Console_Details_Line")}]: {Line}";
                 }
 
                 return details;
             }
+        }
+
+        public void RefreshLocalization()
+        {
+            OnPropertyChanged(nameof(LevelName));
+            OnPropertyChanged(nameof(SourceName));
+            OnPropertyChanged(nameof(DetailsText));
         }
     }
 }

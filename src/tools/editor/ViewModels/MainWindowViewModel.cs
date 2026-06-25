@@ -140,8 +140,8 @@ namespace editor.ViewModels
 					OnPropertyChanged(nameof(IsDirty));
 					CommandManager.InvalidateRequerySuggested();
 
-					WorldPane.IsToolbarVisible = IsProjectOpen;
-					GamePane.IsToolbarVisible = IsProjectOpen;
+					WorldPane.IsToolbarEnabled = IsProjectOpen;
+					GamePane.IsToolbarEnabled = IsProjectOpen;
 				}
 			}
 		}

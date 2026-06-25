@@ -1,0 +1,10 @@
+25.06.2026 17:18:47: TryInitializeEngine: _isEngineInitialized=False
+25.06.2026 17:18:47: Calling EngineRuntime.TryInitialize...
+25.06.2026 17:18:47: EngineRuntime.TryInitialize returned: True
+25.06.2026 17:18:47: AddViewport: мира, hwnd: 1912322
+25.06.2026 17:18:55: AddViewport: игры, hwnd: 3157690
+25.06.2026 17:19:07: OnProjectOpened: C:\Workspaces\ZzzTest\src\editor_projects\super_game
+25.06.2026 17:21:00: TryInitializeEngine: _isEngineInitialized=False
+25.06.2026 17:21:00: Calling EngineRuntime.TryInitialize...
+25.06.2026 17:21:00: EngineRuntime.TryInitialize returned: True
+25.06.2026 17:21:00: AddViewport: мира, hwnd: 4731038

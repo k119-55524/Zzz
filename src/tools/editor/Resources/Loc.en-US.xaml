@@ -88,4 +88,35 @@
     <sys:String x:Key="Console_Search_Placeholder">Search...</sys:String>
     <sys:String x:Key="Console_Clear_Confirm_Title">Clear Logs</sys:String>
     <sys:String x:Key="Console_Clear_Confirm_Message">Are you sure you want to clear all logs?</sys:String>
+
+    <!-- Engine Logs -->
+    <sys:String x:Key="Log_Engine_Init_Start">Starting engine initialization...</sys:String>
+    <sys:String x:Key="Log_Engine_Init_Success">Engine initialized successfully.</sys:String>
+    <sys:String x:Key="Log_Engine_Init_Fail">Failed to initialize engine.</sys:String>
+    <sys:String x:Key="Log_Engine_Stop">Engine stopped.</sys:String>
+    <sys:String x:Key="Log_Viewport_Init">Initializing viewport {0} (HWND: {1})</sys:String>
+    <sys:String x:Key="Log_Viewport_Destroy">Destroying viewport {0} (HWND: {1})</sys:String>
+
+    <!-- Log Details -->
+    <sys:String x:Key="Console_Details_Time">Time</sys:String>
+    <sys:String x:Key="Console_Details_Source">Source</sys:String>
+    <sys:String x:Key="Console_Details_Level">Level</sys:String>
+    <sys:String x:Key="Console_Details_Message">Message</sys:String>
+    <sys:String x:Key="Console_Details_File">File</sys:String>
+    <sys:String x:Key="Console_Details_Function">Function</sys:String>
+    <sys:String x:Key="Console_Details_Line">Line</sys:String>
+
+    <!-- Log Sources -->
+    <sys:String x:Key="LogSource_Editor">Editor</sys:String>
+    <sys:String x:Key="LogSource_Engine">Engine</sys:String>
+    <sys:String x:Key="LogSource_Scripts">Scripts</sys:String>
+
+    <!-- Log Levels -->
+    <sys:String x:Key="LogLevel_Message">Message</sys:String>
+    <sys:String x:Key="LogLevel_Warning">Warning</sys:String>
+    <sys:String x:Key="LogLevel_Error">Error</sys:String>
+    <sys:String x:Key="LogLevel_Exception">Exception</sys:String>
+    <sys:String x:Key="LogLevel_Critical">Critical Error</sys:String>
+    <sys:String x:Key="LogLevel_Fatal">Fatal Error</sys:String>
+    <sys:String x:Key="Log_Viewport_Init_Failed">Critical Error: Failed to initialize viewport {0} (HWND: {1}) in engine.</sys:String>
 </ResourceDictionary>

@@ -30,7 +30,7 @@ namespace editor.ViewModels
 
         public bool CanClose { get; }
 
-        public void UpdateTitle()
+        public virtual void UpdateTitle()
         {
             var meta = WidgetRules.GetMetadata(Type);
             Title = Application.Current?.TryFindResource(meta.TitleKey) as string ?? meta.TitleKey;

@@ -61,6 +61,7 @@ void Engine::Initialize()
 	engineState.store(eInitState::Initialized);
 }
 
+// Run the engine loop
 [[nodiscard]] std::expected<void, std::string> Engine::Run()
 {
 	std::lock_guard lock(stateMutex);

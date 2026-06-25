@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "../../platforms/Platform.h"
 #include "../../platforms/input/Input.h"
@@ -14,10 +14,13 @@ namespace zzz::engine
 	public:
 		View() = delete;
 		View(const Platform& platform, std::function<void(View&)> onWindowClose);
+#if Z_EDITOR
+		View(const Platform& platform, void* data);
+#endif
 		~View() = default;
 
 	private:
-		void Initialize();
+		void Initialize(void* data = nullptr);
 
 #pragma region Window Events
 		/**

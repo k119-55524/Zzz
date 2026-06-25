@@ -1,4 +1,4 @@
-﻿
+
 #include "WinMSWindows.h"
 #include "../Platform.h"
 #include "../../core/utils/ScreenResolution.h"
@@ -70,7 +70,7 @@ LRESULT CALLBACK WinMSWindows::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-[[nodiscard]] std::expected<void, std::string> WinMSWindows::Initialize(const std::string_view appName)
+[[nodiscard]] std::expected<void, std::string> WinMSWindows::Initialize(const std::string_view appName, void* /*data*/)
 {
 	// Рассчитать размеры прямоугольника окна на основе запрошенных размеров клиентской области.
 	Size2D<LONG> winSize;

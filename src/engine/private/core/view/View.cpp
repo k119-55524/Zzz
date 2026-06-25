@@ -1,4 +1,4 @@
-﻿#include "View.h"
+#include "View.h"
 #include "../../platforms/input/Input.h"
 #include "../../platforms/window/Window.h"
 #include <common/common.h>
@@ -13,10 +13,18 @@ View::View(const Platform& platform, std::function<void(View&)> onWindowClose) :
 {
 	ensure(OnWindowClose != nullptr, "OnWindowClose must not be null.");
 
-	Initialize();
+	Initialize(nullptr);
 }
 
-void View::Initialize()
+#if Z_EDITOR
+View::View(const Platform& platform, void* data) :
+	m_Platform{ platform }
+{
+	Initialize(data);
+}
+#endif
+
+void View::Initialize(void* data)
 {
 	m_Input = safe_make_shared<Input>();
 	auto inputRes = m_Input->Initialize();
@@ -40,7 +48,7 @@ void View::Initialize()
 	callbacks.OnSafeAreaChanged  = [this](int t, int b, int l, int r)       { OnWindowSafeAreaChanged(t, b, l, r); };
 
 	m_Window = safe_make_shared<Window>(m_Platform, m_Input, std::move(callbacks));
-	auto res = m_Window->Initialize(m_Platform.GetAppName());
+	auto res = m_Window->Initialize(m_Platform.GetAppName(), data);
 	if (!res)
 		THROW_RUNTIME("Failed to initialize window: {}.", res.error());
 }
@@ -49,7 +57,10 @@ void View::Initialize()
 void View::HandleWindowClose()
 {
 	DOut("Window Event: OnClose");
-	OnWindowClose(*this);
+
+	// В редакторе управление происходит из вне поэтому колбэк может быть не инициализирован
+	if (OnWindowClose != nullptr)
+		OnWindowClose(*this);
 }
 
 void View::OnWindowResize(Size2D<>& size, eWinResize type)

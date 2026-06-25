@@ -35,10 +35,10 @@ namespace editor.Services
         private static extern void NativeClearEngine();
 
         [DllImport("editorDLL.dll", EntryPoint = "AddView", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void NativeAddView(IntPtr hwnd);
+        private static extern IntPtr NativeAddView(IntPtr hwnd);
 
         [DllImport("editorDLL.dll", EntryPoint = "RemoveView", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void NativeRemoveView(IntPtr hwnd);
+        private static extern void NativeRemoveView(IntPtr view);
 
         public static bool TryInitialize(LogCallback callback) => NativeInitialize(callback);
 
@@ -84,11 +84,11 @@ namespace editor.Services
             }
         }
 
-        public static void AddView(IntPtr hwnd)
+        public static IntPtr AddView(IntPtr hwnd)
         {
             try
             {
-                NativeAddView(hwnd);
+                return NativeAddView(hwnd);
             }
             catch (EntryPointNotFoundException)
             {
@@ -96,13 +96,14 @@ namespace editor.Services
             catch (DllNotFoundException)
             {
             }
+            return IntPtr.Zero;
         }
 
-        public static void RemoveView(IntPtr hwnd)
+        public static void RemoveView(IntPtr view)
         {
             try
             {
-                NativeRemoveView(hwnd);
+                NativeRemoveView(view);
             }
             catch (EntryPointNotFoundException)
             {

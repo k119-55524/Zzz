@@ -18,9 +18,25 @@
         
         <!-- Панель инструментов (Toolbar) -->
         <Border Grid.Row="0" Background="#2D2D30" Height="26" BorderBrush="#3F3F46" BorderThickness="0,0,0,1"
-                Visibility="{Binding IsToolbarVisible, Converter={StaticResource BoolToVis}}">
+                IsEnabled="{Binding IsToolbarEnabled}">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="5,0">
-                <Button Content="😊" Width="20" Height="20" Background="Transparent" BorderThickness="0" Foreground="#F1F1F1" ToolTip="Game Toolbar Active"/>
+                <Button Content="😊" Width="20" Height="20" Foreground="#F1F1F1" ToolTip="Game Toolbar Active">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="border" Background="Transparent" CornerRadius="3">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter TargetName="border" Property="Opacity" Value="0.4" />
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="border" Property="Background" Value="#3F3F46" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
             </StackPanel>
         </Border>
 

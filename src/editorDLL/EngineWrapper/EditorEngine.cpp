@@ -17,22 +17,6 @@ namespace zzz::editor
 			return UNEXPECTED("Engine is not initialized.");
 
 		engineState.store(eInitState::Running);
-
-		try
-		{
-			m_ViewManager->CreateView();
-		}
-		catch (const std::exception& e)
-		{
-			Shutdown();
-			return UNEXPECTED("Exception creating view in Editor Run: {}.", e.what());
-		}
-		catch (...)
-		{
-			Shutdown();
-			return UNEXPECTED("Unknown exception creating view in Editor Run.");
-		}
-
 		return {};
 	}
 
@@ -47,5 +31,24 @@ namespace zzz::editor
 	void EditorEngine::ClearEngine()
 	{
 		DOut("EditorEngine::ClearEngine called: project-specific resources cleared.");
+	}
+
+	zzz::engine::View* EditorEngine::AddView(void* hwnd)
+	{
+		if (engineState.load() != eInitState::Running)
+		{
+			DOutError("EditorEngine is not running. Cannot AddView.");
+			return nullptr;
+		}
+
+		return m_ViewManager->CreateView(hwnd);
+	}
+
+	void EditorEngine::RemoveView(void* view)
+	{
+		if (engineState.load() == eInitState::Running && view)
+		{
+			m_ViewManager->DestroyView(static_cast<zzz::engine::View*>(view));
+		}
 	}
 }

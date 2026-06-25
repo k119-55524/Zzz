@@ -18,9 +18,11 @@ namespace zzz::engine
 		WinMSWindowEditor(const Platform& platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks);
 		~WinMSWindowEditor();
 
-		[[nodiscard]] std::expected<void, std::string> Initialize(const std::string_view appName);
+		[[nodiscard]] std::expected<void, std::string> Initialize(const std::string_view appName, void* data = nullptr);
+
+		HWND GetHWnd() const noexcept { return m_hWnd; }
 
 	private:
-		HWND m_hWnd;
+		HWND m_hWnd = nullptr;
 	};
 }
