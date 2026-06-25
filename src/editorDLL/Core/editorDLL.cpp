@@ -10,14 +10,15 @@ std::unique_ptr<zzz::editor::EditorEngine> g_Engine;
 
 extern "C"
 {
-	EDITOR_API bool Initialize(void* hwnd)
+	EDITOR_API bool Initialize(zzz::logger::LogCallback callback)
 	{
 		try
 		{
-			auto data = zzz::safe_make_shared<zzz::engine::NativeAppData>();
-			data->hwnd = static_cast<HWND>(hwnd);
+#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+			zzz::logger::g_Logger.AddCallbackBroadcaster(callback);
+#endif
 
-			g_Engine = zzz::safe_make_unique<zzz::editor::EditorEngine>("ZzzEditorWin", data);
+			g_Engine = zzz::safe_make_unique<zzz::editor::EditorEngine>("ZzzEditorWin");
 			DOut("ZzzEditorDLL initialized.");
 
 			auto runRes = g_Engine->Run();
@@ -78,4 +79,5 @@ extern "C"
 			DOutException("Exception during ZzzEditorDLL ClearEngine: {}", e.what());
 		}
 	}
+
 }

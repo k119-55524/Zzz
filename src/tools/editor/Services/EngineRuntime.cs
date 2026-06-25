@@ -3,10 +3,27 @@ using System.Runtime.InteropServices;
 
 namespace editor.Services
 {
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+    public struct NativeLogEntry
+    {
+        public ulong Timestamp;
+        public int Type;
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string Text;
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string File;
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string Function;
+        public uint Line;
+    }
+
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+    public delegate void LogCallback(in NativeLogEntry entry);
+
     public static class EngineRuntime
     {
         [DllImport("editorDLL.dll", EntryPoint = "Initialize", CallingConvention = CallingConvention.Cdecl)]
-        private static extern bool NativeInitialize(IntPtr hwnd);
+        private static extern bool NativeInitialize(LogCallback callback);
 
         [DllImport("editorDLL.dll", EntryPoint = "Deinitialize", CallingConvention = CallingConvention.Cdecl)]
         private static extern void NativeDeinitialize();
@@ -23,11 +40,35 @@ namespace editor.Services
         [DllImport("editorDLL.dll", EntryPoint = "RemoveView", CallingConvention = CallingConvention.Cdecl)]
         private static extern void NativeRemoveView(IntPtr hwnd);
 
-        public static bool TryInitialize(IntPtr renderHandle) => NativeInitialize(renderHandle);
+        public static bool TryInitialize(LogCallback callback) => NativeInitialize(callback);
 
-        public static void Shutdown() => NativeDeinitialize();
+        public static void Shutdown()
+        {
+            try
+            {
+                NativeDeinitialize();
+            }
+            catch (EntryPointNotFoundException)
+            {
+            }
+            catch (DllNotFoundException)
+            {
+            }
+        }
 
-        public static void Tick() => NativeTick();
+        public static void Tick()
+        {
+            try
+            {
+                NativeTick();
+            }
+            catch (EntryPointNotFoundException)
+            {
+            }
+            catch (DllNotFoundException)
+            {
+            }
+        }
 
         public static void ClearEngine()
         {
@@ -51,11 +92,9 @@ namespace editor.Services
             }
             catch (EntryPointNotFoundException)
             {
-                // DLL пока не экспортирует этот метод
             }
             catch (DllNotFoundException)
             {
-                // DLL не найдена
             }
         }
 
@@ -67,11 +106,9 @@ namespace editor.Services
             }
             catch (EntryPointNotFoundException)
             {
-                // DLL пока не экспортирует этот метод
             }
             catch (DllNotFoundException)
             {
-                // DLL не найдена
             }
         }
     }

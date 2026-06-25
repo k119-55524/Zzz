@@ -6,6 +6,8 @@ namespace editor.Services
 {
     public class EngineService
     {
+        private static readonly LogCallback _logCallback = OnNativeLog;
+
         private readonly List<IntPtr> _activeViewports = new();
         private bool _isEngineInitialized;
         private bool _isProjectOpen;
@@ -16,12 +18,26 @@ namespace editor.Services
         {
         }
 
+        private static void OnNativeLog(in NativeLogEntry entry)
+        {
+            LogLevel level = (LogLevel)entry.Type;
+            EditorLogger.Log(
+                LogSource.Engine,
+                level,
+                entry.Text,
+                entry.File,
+                entry.Function,
+                entry.Line
+            );
+        }
+
         // Вызывается вьюпортом при создании HWND
-        public void AddViewport(IntPtr hwnd)
+        public void AddViewport(IntPtr hwnd, string viewName)
         {
             if (!_activeViewports.Contains(hwnd))
             {
                 _activeViewports.Add(hwnd);
+                EditorLogger.LogInfo($"Инициализация вьюпорта {viewName} (HWND: {hwnd})", LogSource.Editor);
                 
                 // Прокидываем в DLL (безопасный вызов с try-catch внутри)
                 EngineRuntime.AddView(hwnd);
@@ -32,11 +48,12 @@ namespace editor.Services
         }
 
         // Вызывается вьюпортом при уничтожении HWND
-        public void RemoveViewport(IntPtr hwnd)
+        public void RemoveViewport(IntPtr hwnd, string viewName)
         {
             if (_activeViewports.Contains(hwnd))
             {
                 _activeViewports.Remove(hwnd);
+                EditorLogger.LogInfo($"Прибитие вьюпорта {viewName} (HWND: {hwnd})", LogSource.Editor);
                 
                 // Прокидываем в DLL
                 EngineRuntime.RemoveView(hwnd);
@@ -65,18 +82,25 @@ namespace editor.Services
 
         private void TryInitializeEngine()
         {
-            if (_isEngineInitialized || _activeViewports.Count == 0)
+            if (_isEngineInitialized || _activeViewports.Count == 0 || !_isProjectOpen)
             {
                 return;
             }
 
             // Инициализируем движок самым первым доступным HWND вьюпорта
             IntPtr primaryHwnd = _activeViewports[0];
-            _isEngineInitialized = EngineRuntime.TryInitialize(primaryHwnd);
+            
+            EditorLogger.LogInfo("Запуск инициализации движка...", LogSource.Editor);
+            _isEngineInitialized = EngineRuntime.TryInitialize(_logCallback);
 
             if (_isEngineInitialized)
             {
+                EditorLogger.LogInfo("Движок успешно инициализирован.", LogSource.Editor);
                 StartRenderingLoop();
+            }
+            else
+            {
+                EditorLogger.LogError("Не удалось инициализировать движок.", LogSource.Editor);
             }
         }
 
@@ -87,6 +111,7 @@ namespace editor.Services
                 StopRenderingLoop();
                 EngineRuntime.Shutdown();
                 _isEngineInitialized = false;
+                EditorLogger.LogInfo("Движок остановлен.", LogSource.Editor);
             }
         }
 

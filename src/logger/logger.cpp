@@ -1,10 +1,11 @@
-﻿
+
 #include "logger.h"
 
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 
 #include "private/ConsoleBroadcaster.h"
 #include "private/NetworkBroadcaster.h"
+#include "private/CallbackBroadcaster.h"
 
 using namespace zzz::common;
 using namespace zzz::logger;
@@ -227,6 +228,11 @@ void Logger::AddConsoleBroadcaster()
 void Logger::AddNetworkBroadcaster(std::string_view address, uint16_t port)
 {
 	AddBroadcasterImpl(safe_make_shared<NetworkBroadcaster>(address, port));
+}
+
+void Logger::AddCallbackBroadcaster(LogCallback callback)
+{
+	AddBroadcasterImpl(safe_make_shared<CallbackBroadcaster>(callback));
 }
 #pragma endregion
 #endif // Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD

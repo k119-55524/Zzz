@@ -1,4 +1,4 @@
-using System;
+
 using System.Windows.Interop;
 using System.Runtime.InteropServices;
 
@@ -6,6 +6,7 @@ namespace editor
 {
 	public class EngineViewHost : HwndHost
 	{
+		public string ViewName { get; set; } = "Unknown";
 		// Константы стилей окна Win32 (WS_CHILD | WS_VISIBLE)
 		internal const int WS_CHILD = 0x40000000;
 		internal const int WS_VISIBLE = 0x10000000;
@@ -45,7 +46,7 @@ namespace editor
 				IntPtr.Zero);
 
 			// Регистрируем вьюпорт в глобальной службе движка
-			App.EngineService?.AddViewport(hwndHost);
+			App.EngineService?.AddViewport(hwndHost, ViewName);
 
 			return new HandleRef(this, hwndHost);
 		}
@@ -53,7 +54,7 @@ namespace editor
 		protected override void DestroyWindowCore(HandleRef hwnd)
 		{
 			// Разрегистрируем вьюпорт при уничтожении
-			App.EngineService?.RemoveViewport(hwnd.Handle);
+			App.EngineService?.RemoveViewport(hwnd.Handle, ViewName);
 
 			DestroyWindow(hwnd.Handle);
 		}

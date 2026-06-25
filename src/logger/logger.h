@@ -19,6 +19,18 @@ using namespace zzz::common;
 
 namespace zzz::logger
 {
+	struct LogCallbackEntry
+	{
+		uint64_t timestamp;
+		int type;
+		const char* text;
+		const char* file;
+		const char* function;
+		uint32_t line;
+	};
+
+	typedef void (__stdcall *LogCallback)(const LogCallbackEntry& entry);
+
 	/**
 	 * @brief Централизованная система логирования с поддержкой асинхронной рассылки.
 	 */
@@ -46,6 +58,11 @@ namespace zzz::logger
 		 * @brief Добавляет сетевой бродкастер (TCP).
 		 */
 		void AddNetworkBroadcaster(std::string_view address, uint16_t port);
+
+		/**
+		 * @brief Добавляет колбэк-бродкастер для перенаправления логов во внешнюю функцию.
+		 */
+		void AddCallbackBroadcaster(LogCallback callback);
 
 		void LogMessage(const std::source_location& loc, std::string formatted);
 		void LogWarning(const std::source_location& loc, std::string formatted);

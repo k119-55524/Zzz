@@ -75,4 +75,17 @@
     <sys:String x:Key="Toolbar_Stop">Остановить</sys:String>
     <sys:String x:Key="Toolbar_Mute">Выключить звук</sys:String>
     <sys:String x:Key="Toolbar_CamSpeed">Скорость камеры</sys:String>
+
+    <!-- Консоль / Console -->
+    <sys:String x:Key="Console_Clear">Очистить логи</sys:String>
+    <sys:String x:Key="Console_ExpandAll">Развернуть всё</sys:String>
+    <sys:String x:Key="Console_CollapseAll">Свернуть всё</sys:String>
+    <sys:String x:Key="Console_ExportAll">Экспортировать всё в JSON</sys:String>
+    <sys:String x:Key="Console_ExportFiltered">Экспортировать отфильтрованное в JSON</sys:String>
+    <sys:String x:Key="Console_Filter_Editor">Фильтр логов Редактора</sys:String>
+    <sys:String x:Key="Console_Filter_Engine">Фильтр логов Движка</sys:String>
+    <sys:String x:Key="Console_Filter_Scripts">Фильтр логов Скриптов</sys:String>
+    <sys:String x:Key="Console_Search_Placeholder">Поиск...</sys:String>
+    <sys:String x:Key="Console_Clear_Confirm_Title">Очистка логов</sys:String>
+    <sys:String x:Key="Console_Clear_Confirm_Message">Вы действительно хотите очистить все логи?</sys:String>
 </ResourceDictionary>

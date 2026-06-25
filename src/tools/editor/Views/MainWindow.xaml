@@ -678,15 +678,18 @@
             </dock:DockingManager.LayoutItemTemplate>
             <dockLayout:LayoutRoot>
                 <dockLayout:LayoutPanel Orientation="Horizontal">
-                    <!-- Левая панель: Иерархия (SceneTree) -->
-                    <dockLayout:LayoutAnchorablePane x:Name="PaneLeft" Name="PaneLeft" DockWidth="250" />
+                    <!-- Левая панель: Иерархия (SceneTree) и Проект (Assets) по горизонтали 50/50 -->
+                    <dockLayout:LayoutPanel Orientation="Vertical" DockWidth="250">
+                        <dockLayout:LayoutAnchorablePane x:Name="PaneLeft" Name="PaneLeft" DockHeight="*" />
+                        <dockLayout:LayoutAnchorablePane x:Name="PaneLeftBottom" Name="PaneLeftBottom" DockHeight="*" />
+                    </dockLayout:LayoutPanel>
 
                     <!-- Центральная и нижняя панели -->
                     <dockLayout:LayoutPanel Orientation="Vertical" DockWidth="*">
                         <!-- Центр: Сцена (Render), Настройки (Settings), Сборка (Build) -->
                         <dockLayout:LayoutAnchorablePane x:Name="PaneCenterTop" Name="PaneCenterTop" />
 
-                        <!-- Низ: Ресурсы (Assets) и Консоль (Console) -->
+                        <!-- Низ: Консоль (Console) -->
                         <dockLayout:LayoutAnchorablePane x:Name="PaneBottom" Name="PaneBottom" DockHeight="200" />
                     </dockLayout:LayoutPanel>
 

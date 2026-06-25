@@ -8,6 +8,7 @@ namespace editor.Services
 	public class PaneLayoutUpdateStrategy : ILayoutUpdateStrategy
 	{
 		public const string LeftPaneName = "PaneLeft";
+		public const string LeftBottomPaneName = "PaneLeftBottom";
 		public const string CenterPaneName = "PaneCenterTop";
 		public const string BottomPaneName = "PaneBottom";
 		public const string RightPaneName = "PaneRight";
@@ -44,7 +45,7 @@ namespace editor.Services
 				WidgetType.Game => CenterPaneName,
 				WidgetType.Settings => CenterPaneName,
 				WidgetType.Build => CenterPaneName,
-				WidgetType.Assets => BottomPaneName,
+				WidgetType.Assets => LeftBottomPaneName,
 				WidgetType.Console => BottomPaneName,
 				WidgetType.Inspector => RightPaneName,
 				_ => CenterPaneName

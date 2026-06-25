@@ -75,4 +75,17 @@
     <sys:String x:Key="Toolbar_Stop">Stop</sys:String>
     <sys:String x:Key="Toolbar_Mute">Mute Audio</sys:String>
     <sys:String x:Key="Toolbar_CamSpeed">Camera Speed</sys:String>
+
+    <!-- Console -->
+    <sys:String x:Key="Console_Clear">Clear logs</sys:String>
+    <sys:String x:Key="Console_ExpandAll">Expand all</sys:String>
+    <sys:String x:Key="Console_CollapseAll">Collapse all</sys:String>
+    <sys:String x:Key="Console_ExportAll">Export all to JSON</sys:String>
+    <sys:String x:Key="Console_ExportFiltered">Export filtered to JSON</sys:String>
+    <sys:String x:Key="Console_Filter_Editor">Editor log filter</sys:String>
+    <sys:String x:Key="Console_Filter_Engine">Engine log filter</sys:String>
+    <sys:String x:Key="Console_Filter_Scripts">Scripts log filter</sys:String>
+    <sys:String x:Key="Console_Search_Placeholder">Search...</sys:String>
+    <sys:String x:Key="Console_Clear_Confirm_Title">Clear Logs</sys:String>
+    <sys:String x:Key="Console_Clear_Confirm_Message">Are you sure you want to clear all logs?</sys:String>
 </ResourceDictionary>

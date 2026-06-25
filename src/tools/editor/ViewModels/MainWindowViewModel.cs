@@ -27,6 +27,7 @@ namespace editor.ViewModels
 					{
 						WidgetType.World => new WorldPaneViewModel(),
 						WidgetType.Game => new GamePaneViewModel(),
+						WidgetType.Console => new ConsoleViewModel(),
 						_ => new PaneViewModel(type)
 					}));
 

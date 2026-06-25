@@ -1,5 +1,7 @@
 #pragma once
 
+#include <logger/logger.h>
+
 #if defined(_WIN32)
 #define EDITOR_API __declspec(dllexport)
 #else
@@ -8,7 +10,7 @@
 
 extern "C"
 {
-	EDITOR_API bool Initialize(void* hwnd);
+	EDITOR_API bool Initialize(zzz::logger::LogCallback callback);
 	EDITOR_API void Deinitialize();
 	EDITOR_API void Tick();
 	EDITOR_API void ClearEngine();

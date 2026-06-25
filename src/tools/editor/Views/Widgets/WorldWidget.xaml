@@ -25,6 +25,6 @@
         </Border>
 
         <!-- Зона рендеринга -->
-        <local:EngineViewHost Grid.Row="1" x:Name="ViewHost" />
+        <local:EngineViewHost Grid.Row="1" x:Name="ViewHost" ViewName="мира" />
     </Grid>
 </UserControl>

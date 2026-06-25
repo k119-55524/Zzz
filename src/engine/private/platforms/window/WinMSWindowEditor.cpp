@@ -17,11 +17,5 @@ WinMSWindowEditor::~WinMSWindowEditor()
 
 [[nodiscard]] std::expected<void, std::string> WinMSWindowEditor::Initialize(std::string_view /*appName*/)
 {
-	auto nativeData = m_Platform.GetNativeData();
-	if (!nativeData || !nativeData->hwnd)
-		return UNEXPECTED("WinMSWindowEditor requires a valid HWND in NativeAppData.");
-
-	m_hWnd = nativeData->hwnd;
-
 	return {};
 }
