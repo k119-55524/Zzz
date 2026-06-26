@@ -28,6 +28,12 @@
     
     <!-- Содержимое-заглушки для шаблонов виджетов -->
     <sys:String x:Key="Widget_Inspector_Placeholder">ИНСПЕКТОР СВОЙСТВ</sys:String>
+    <sys:String x:Key="Inspector_Stats_Folder">Статистика папки</sys:String>
+    <sys:String x:Key="Inspector_Stats_Name">Имя:</sys:String>
+    <sys:String x:Key="Inspector_Stats_Path">Путь:</sys:String>
+    <sys:String x:Key="Inspector_Stats_Subfolders">Количество подпапок (на текущем уровне):</sys:String>
+    <sys:String x:Key="Inspector_Stats_Files">Количество файлов (на текущем уровне):</sys:String>
+    <sys:String x:Key="Inspector_Stats_TotalSize">Сумма размеров файлов:</sys:String>
     <sys:String x:Key="Widget_SceneTree_Placeholder">ДЕРЕВО СЦЕНЫ (ИЕРАРХИЯ)</sys:String>
     <sys:String x:Key="Widget_Assets_Placeholder">БРАУЗЕР АССЕТОВ / РЕСУРСОВ</sys:String>
     <sys:String x:Key="Widget_Console_Placeholder">КОНСОЛЬ ВЫВОДА ЛОГОВ</sys:String>

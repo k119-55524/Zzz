@@ -9,5 +9,10 @@ namespace editor.Views.Widgets
 		{
 			InitializeComponent();
 		}
+
+		private void TreeView_SelectedItemChanged(object sender, System.Windows.RoutedPropertyChangedEventArgs<object> e)
+		{
+			App.SelectionService.SelectedItem = e.NewValue;
+		}
 	}
 }

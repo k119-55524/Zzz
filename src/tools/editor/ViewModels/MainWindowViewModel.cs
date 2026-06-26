@@ -29,6 +29,7 @@ namespace editor.ViewModels
 						WidgetType.Game => new GamePaneViewModel(),
 						WidgetType.Console => new ConsoleViewModel(),
 						WidgetType.Assets => new AssetsViewModel(),
+						WidgetType.Inspector => new InspectorViewModel(),
 						_ => new PaneViewModel(type)
 					}));
 

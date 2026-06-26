@@ -2,10 +2,196 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:d="http://schemas.expression/blend/2008" 
+             xmlns:vm="clr-namespace:editor.ViewModels"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
+    
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        
+        <Style x:Key="StatsContainerStyle" TargetType="Grid">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ShowFolderStats}" Value="True">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="TomlPropertiesContainerStyle" TargetType="Grid">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ShowTomlProperties}" Value="True">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
     <Grid Background="{DynamicResource Brush_Panel_Background}">
-        <TextBlock Text="{DynamicResource Widget_Inspector_Placeholder}" Style="{DynamicResource WidgetPlaceholderText}" />
+        <Grid.ColumnDefinitions>
+            <!-- Колонки для регулирования ширины имени и значения с помощью сплиттера -->
+            <ColumnDefinition Width="150" MinWidth="80" x:Name="ColName"/>
+            <ColumnDefinition Width="4"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Разделитель (сплиттер) для интерактивного изменения ширины колонок -->
+        <GridSplitter Grid.Column="1" 
+                      HorizontalAlignment="Stretch" 
+                      VerticalAlignment="Stretch" 
+                      Background="{DynamicResource Brush_Border}" 
+                      Cursor="SizeWE"/>
+
+        <!-- Statistics View (занимает всю ширину, внутренние сетки привязаны к ColName) -->
+        <Grid Grid.ColumnSpan="3" Style="{StaticResource StatsContainerStyle}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="16" DataContext="{Binding}">
+                    
+                    <!-- Header -->
+                    <Border BorderBrush="{DynamicResource Brush_Border}" BorderThickness="0,0,0,1" Padding="0,0,0,12" Margin="0,0,0,16">
+                        <StackPanel Orientation="Horizontal">
+                            <!-- Векторная иконка папки -->
+                            <Rectangle Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center">
+                                <Rectangle.Fill>
+                                    <VisualBrush Stretch="Uniform">
+                                        <VisualBrush.Visual>
+                                            <Canvas Width="24" Height="24">
+                                                <Path Fill="#FFE0A96D" Data="M10 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
+                                            </Canvas>
+                                        </VisualBrush.Visual>
+                                    </VisualBrush>
+                                </Rectangle.Fill>
+                            </Rectangle>
+                            <TextBlock Text="{DynamicResource Inspector_Stats_Folder}" 
+                                       Foreground="{DynamicResource Brush_Text_Primary}" 
+                                       FontSize="18" 
+                                       FontWeight="Bold" 
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Info Grid -->
+                    <Grid DataContext="{Binding FolderStats}">
+                        <Grid.ColumnDefinitions>
+                            <!-- Ширина колонки имени жестко связана с мастер-колонкой ColName -->
+                            <ColumnDefinition Width="{Binding ElementName=ColName, Path=Width}"/>
+                            <ColumnDefinition Width="4"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Row 0: Name -->
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="{DynamicResource Inspector_Stats_Name}" Foreground="{DynamicResource Brush_Text_Secondary}" Margin="0,4,8,4" VerticalAlignment="Center" FontSize="13"/>
+                        <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding Name}" Foreground="{DynamicResource Brush_Text_Light}" Margin="0,4,0,4" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="13"/>
+
+                        <!-- Row 1: Path -->
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="{DynamicResource Inspector_Stats_Path}" Foreground="{DynamicResource Brush_Text_Secondary}" Margin="0,4,8,4" VerticalAlignment="Center" FontSize="13"/>
+                        <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding Path}" Foreground="{DynamicResource Brush_Text_Light}" Margin="0,4,0,4" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="13"/>
+
+                        <!-- Row 2: Subfolders -->
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="{DynamicResource Inspector_Stats_Subfolders}" Foreground="{DynamicResource Brush_Text_Secondary}" Margin="0,8,8,4" VerticalAlignment="Center" FontSize="13"/>
+                        <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding SubfoldersCount}" Foreground="{DynamicResource Brush_Text_Light}" Margin="0,8,0,4" VerticalAlignment="Center" FontSize="13"/>
+
+                        <!-- Row 3: Files -->
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="{DynamicResource Inspector_Stats_Files}" Foreground="{DynamicResource Brush_Text_Secondary}" Margin="0,4,8,4" VerticalAlignment="Center" FontSize="13"/>
+                        <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding FilesCount}" Foreground="{DynamicResource Brush_Text_Light}" Margin="0,4,0,4" VerticalAlignment="Center" FontSize="13"/>
+
+                        <!-- Row 4: Total Size -->
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="{DynamicResource Inspector_Stats_TotalSize}" Foreground="{DynamicResource Brush_Text_Secondary}" Margin="0,4,8,4" VerticalAlignment="Center" FontSize="13"/>
+                        <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding TotalSizeFormatted}" Foreground="{DynamicResource Brush_Text_Light}" Margin="0,4,0,4" VerticalAlignment="Center" FontWeight="Bold" FontSize="13"/>
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- TOML Properties View (занимает всю ширину, внутренние сетки привязаны к ColName) -->
+        <Grid Grid.ColumnSpan="3" Style="{StaticResource TomlPropertiesContainerStyle}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="16">
+                    
+                    <!-- Header -->
+                    <Border BorderBrush="{DynamicResource Brush_Border}" BorderThickness="0,0,0,1" Padding="0,0,0,12" Margin="0,0,0,16">
+                        <StackPanel Orientation="Horizontal">
+                            <!-- Векторная иконка файла -->
+                            <Rectangle Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center">
+                                <Rectangle.Fill>
+                                    <VisualBrush Stretch="Uniform">
+                                        <VisualBrush.Visual>
+                                            <Canvas Width="24" Height="24">
+                                                <Path Fill="#FF90A4AE" Data="M14 2H6c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                                            </Canvas>
+                                        </VisualBrush.Visual>
+                                    </VisualBrush>
+                                </Rectangle.Fill>
+                            </Rectangle>
+                            <TextBlock Text="{Binding SelectedItem.Name}" 
+                                       Foreground="{DynamicResource Brush_Text_Primary}" 
+                                       FontSize="18" 
+                                       FontWeight="Bold" 
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ItemsControl for properties -->
+                    <ItemsControl ItemsSource="{Binding TomlProperties}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,4,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <!-- Ширина колонки имени жестко связана с мастер-колонкой ColName -->
+                                        <ColumnDefinition Width="{Binding ElementName=ColName, Path=Width}"/>
+                                        <ColumnDefinition Width="4"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <!-- Текст заголовка выравнивается по верхней границе на случай многострочного значения -->
+                                    <TextBlock Grid.Column="0" 
+                                               Text="{Binding Name}" 
+                                               Foreground="{DynamicResource Brush_Text_Secondary}" 
+                                               VerticalAlignment="Top" 
+                                               Margin="0,4,8,4"
+                                               FontSize="13"/>
+                                               
+                                    <!-- Ввод поддерживает автоперенос строк (TextWrapping) и неограниченное число строк -->
+                                    <TextBox Grid.Column="2" 
+                                             Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
+                                             IsReadOnly="{Binding IsReadOnly}"
+                                             Background="{DynamicResource Brush_Panel_Header}"
+                                             Foreground="{DynamicResource Brush_Text_Light}"
+                                             BorderBrush="{DynamicResource Brush_Border}"
+                                             BorderThickness="1"
+                                             Padding="4,3"
+                                             FontSize="13"
+                                             TextWrapping="Wrap"
+                                             AcceptsReturn="True"
+                                             VerticalScrollBarVisibility="Auto"
+                                             VerticalAlignment="Stretch">
+                                        <TextBox.Style>
+                                            <Style TargetType="TextBox">
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsReadOnly" Value="True">
+                                                        <Setter Property="Opacity" Value="0.6"/>
+                                                        <Setter Property="BorderThickness" Value="0"/>
+                                                        <Setter Property="Background" Value="Transparent"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBox.Style>
+                                    </TextBox>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
     </Grid>
 </UserControl>

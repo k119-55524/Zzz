@@ -13,6 +13,7 @@ public partial class App : Application
 {
     public static EngineService EngineService { get; } = new EngineService();
     public static ProjectService ProjectService { get; } = new ProjectService();
+    public static SelectionService SelectionService { get; } = new SelectionService();
 
     protected override void OnStartup(StartupEventArgs e)
     {

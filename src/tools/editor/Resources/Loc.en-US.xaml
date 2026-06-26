@@ -28,6 +28,12 @@
     
     <!-- Widget Placeholders -->
     <sys:String x:Key="Widget_Inspector_Placeholder">PROPERTIES INSPECTOR</sys:String>
+    <sys:String x:Key="Inspector_Stats_Folder">Folder Statistics</sys:String>
+    <sys:String x:Key="Inspector_Stats_Name">Name:</sys:String>
+    <sys:String x:Key="Inspector_Stats_Path">Path:</sys:String>
+    <sys:String x:Key="Inspector_Stats_Subfolders">Subfolders (current level):</sys:String>
+    <sys:String x:Key="Inspector_Stats_Files">Files (current level):</sys:String>
+    <sys:String x:Key="Inspector_Stats_TotalSize">Total size of files:</sys:String>
     <sys:String x:Key="Widget_SceneTree_Placeholder">SCENE HIERARCHY TREE</sys:String>
     <sys:String x:Key="Widget_Assets_Placeholder">ASSETS / FILE BROWSER</sys:String>
     <sys:String x:Key="Widget_Console_Placeholder">CONSOLE LOG OUTPUT</sys:String>

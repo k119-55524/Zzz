@@ -236,7 +236,8 @@
                   ItemsSource="{Binding VirtualRootNodes}"
                   Background="Transparent"
                   BorderThickness="0"
-                  Padding="5">
+                  Padding="5"
+                  SelectedItemChanged="TreeView_SelectedItemChanged">
             
             <TreeView.ItemTemplate>
                 <HierarchicalDataTemplate DataType="{x:Type infra:VirtualNode}" ItemsSource="{Binding Children}">
