@@ -73,21 +73,7 @@ namespace editor.Views.Widgets
 
 
 
-        private void SearchBox_GotFocus(object sender, RoutedEventArgs e)
-        {
-            if (sender is TextBox textBox)
-            {
-                textBox.Background = new SolidColorBrush(Color.FromRgb(0x2D, 0x2D, 0x30));
-            }
-        }
 
-        private void SearchBox_LostFocus(object sender, RoutedEventArgs e)
-        {
-            if (sender is TextBox textBox)
-            {
-                textBox.Background = new SolidColorBrush(Color.FromRgb(0x1F, 0x1F, 0x20));
-            }
-        }
 
         private static T? FindVisualChild<T>(DependencyObject obj) where T : DependencyObject
         {

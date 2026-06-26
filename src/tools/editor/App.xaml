@@ -17,13 +17,28 @@
             <conv:WidgetTypeToViewConverter x:Key="WidgetTypeToViewConverter" />
 
             <DataTemplate DataType="{x:Type vm:WorldPaneViewModel}">
-                <ContentControl Content="{Binding View}" />
+                <Grid>
+                    <Grid.Resources>
+                        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+                    </Grid.Resources>
+                    <ContentControl Content="{Binding View}" Visibility="{Binding IsContentVisible, Converter={StaticResource BoolToVis}}" />
+                </Grid>
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:GamePaneViewModel}">
-                <ContentControl Content="{Binding View}" />
+                <Grid>
+                    <Grid.Resources>
+                        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+                    </Grid.Resources>
+                    <ContentControl Content="{Binding View}" Visibility="{Binding IsContentVisible, Converter={StaticResource BoolToVis}}" />
+                </Grid>
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:PaneViewModel}">
-                <ContentControl Content="{Binding Type, Converter={StaticResource WidgetTypeToViewConverter}}" />
+                <Grid>
+                    <Grid.Resources>
+                        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+                    </Grid.Resources>
+                    <ContentControl Content="{Binding Type, Converter={StaticResource WidgetTypeToViewConverter}}" Visibility="{Binding IsContentVisible, Converter={StaticResource BoolToVis}}" />
+                </Grid>
             </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>

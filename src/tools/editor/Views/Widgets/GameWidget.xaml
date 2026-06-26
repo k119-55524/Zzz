@@ -17,10 +17,10 @@
         </Grid.RowDefinitions>
         
         <!-- Панель инструментов (Toolbar) -->
-        <Border Grid.Row="0" Background="#2D2D30" Height="26" BorderBrush="#3F3F46" BorderThickness="0,0,0,1"
+        <Border Grid.Row="0" Background="{DynamicResource Brush_Panel_Header}" Height="26" BorderBrush="{DynamicResource Brush_Border}" BorderThickness="0,0,0,1"
                 IsEnabled="{Binding IsToolbarEnabled}">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="5,0">
-                <Button Content="😊" Width="20" Height="20" Foreground="#F1F1F1" ToolTip="Game Toolbar Active">
+                <Button Content="😊" Width="20" Height="20" Foreground="{DynamicResource Brush_Text_Primary}" ToolTip="Game Toolbar Active">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Border x:Name="border" Background="Transparent" CornerRadius="3">
@@ -31,7 +31,7 @@
                                     <Setter TargetName="border" Property="Opacity" Value="0.4" />
                                 </Trigger>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="border" Property="Background" Value="#3F3F46" />
+                                    <Setter TargetName="border" Property="Background" Value="{DynamicResource Brush_Hover}" />
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>

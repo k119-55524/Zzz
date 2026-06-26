@@ -35,5 +35,32 @@ namespace editor.ViewModels
             var meta = WidgetRules.GetMetadata(Type);
             Title = Application.Current?.TryFindResource(meta.TitleKey) as string ?? meta.TitleKey;
         }
+
+        private bool _isProjectOpen;
+        public bool IsProjectOpen
+        {
+            get => _isProjectOpen;
+            set
+            {
+                if (SetField(ref _isProjectOpen, value))
+                {
+                    OnPropertyChanged(nameof(IsContentVisible));
+                }
+            }
+        }
+
+        public bool IsVisibleWhenProjectClosed => Type == WidgetType.Console;
+
+        public bool IsContentVisible => IsProjectOpen || IsVisibleWhenProjectClosed;
+
+        public virtual void OnProjectOpened(string projectPath)
+        {
+            IsProjectOpen = true;
+        }
+
+        public virtual void OnProjectClosed()
+        {
+            IsProjectOpen = false;
+        }
     }
 }

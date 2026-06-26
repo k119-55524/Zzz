@@ -58,20 +58,21 @@ namespace editor.ViewModels
             
             // Команда принудительного обновления дерева
             RefreshCommand = new RelayCommand(RefreshTree);
-            
-            // Слушаем событие смены проекта, чтобы перегрузить дерево
-            var mainVm = Application.Current?.MainWindow?.DataContext as MainWindowViewModel;
-            if (mainVm != null)
-            {
-                mainVm.PropertyChanged += (s, e) =>
-                {
-                    if (e.PropertyName == nameof(MainWindowViewModel.CurrentProjectPath))
-                    {
-                        OnProjectChanged(mainVm.CurrentProjectPath);
-                    }
-                };
-                OnProjectChanged(mainVm.CurrentProjectPath);
-            }
+            ResetFiltersCommand = new RelayCommand(ResetCurrentFilters);
+        }
+
+        public ICommand ResetFiltersCommand { get; }
+
+        public override void OnProjectOpened(string projectPath)
+        {
+            base.OnProjectOpened(projectPath);
+            OnProjectChanged(projectPath);
+        }
+
+        public override void OnProjectClosed()
+        {
+            base.OnProjectClosed();
+            OnProjectChanged(null);
         }
 
         public ICommand RefreshCommand { get; }
@@ -250,6 +251,50 @@ namespace editor.ViewModels
             if (mainVm != null)
             {
                 mainVm.IsDirty = true;
+            }
+        }
+
+        private void ResetCurrentFilters()
+        {
+            var settings = App.ProjectService.CurrentSettings;
+            if (settings == null) return;
+
+            var folderPaths = IsSystemMode 
+                ? ProjectStructure.RequiredDirectories.Where(d => !d.StartsWith("Assets", StringComparison.OrdinalIgnoreCase))
+                : ProjectStructure.RequiredDirectories.Where(d => d.StartsWith("Assets", StringComparison.OrdinalIgnoreCase));
+            var currentModeFolderNames = folderPaths
+                .Select(d => System.IO.Path.GetFileName(d) ?? string.Empty)
+                .Where(n => n != string.Empty)
+                .ToList();
+
+            bool changed = false;
+            foreach (var name in currentModeFolderNames)
+            {
+                if (settings.DisabledFilters.Contains(name))
+                {
+                    settings.DisabledFilters.Remove(name);
+                    changed = true;
+                }
+            }
+
+            if (changed)
+            {
+                _isUpdatingFilters = true;
+                foreach (var filter in AvailableFilters)
+                {
+                    if (currentModeFolderNames.Contains(filter.Name))
+                    {
+                        filter.IsChecked = true;
+                    }
+                }
+                _isUpdatingFilters = false;
+
+                var mainVm = Application.Current?.MainWindow?.DataContext as MainWindowViewModel;
+                if (mainVm?.CurrentProjectPath != null)
+                {
+                    App.ProjectService.SaveProject(mainVm.CurrentProjectPath, out _);
+                }
+                RefreshTree();
             }
         }
     }

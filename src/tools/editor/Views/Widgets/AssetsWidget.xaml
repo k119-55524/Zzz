@@ -55,10 +55,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#3E3E40"/>
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource Brush_Hover}"/>
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#3F3F46"/>
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource Brush_Checked}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -89,23 +89,48 @@
                                    Focusable="False"
                                    IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}"
                                    Placement="Bottom">
-                                <Border Background="#252526"
+                                <Border Background="{DynamicResource Brush_Panel_Background}"
                                         BorderBrush="{DynamicResource Brush_Border}"
                                         BorderThickness="1"
                                         CornerRadius="4"
                                         Padding="2">
-                                    <ScrollViewer CanContentScroll="True">
-                                        <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle" />
-                                    </ScrollViewer>
+                                    <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle" />
                                 </Border>
                             </Popup>
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#3E3E40" />
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource Brush_Hover}" />
                             </Trigger>
                             <Trigger Property="IsSubmenuOpen" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#3E3E40" />
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource Brush_Hover}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Стиль для Button в стиле тулбара -->
+        <Style x:Key="ToolbarButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}"/>
+            <Setter Property="Padding" Value="4"/>
+            <Setter Property="Margin" Value="2,0"/>
+            <Setter Property="Width" Value="24"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource Brush_Hover}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -164,18 +189,44 @@
                         </MenuItem.ItemsSource>
                         <MenuItem.ItemContainerStyle>
                             <Style TargetType="MenuItem">
-                                <Setter Property="Header" Value="{Binding Name}"/>
-                                <Setter Property="IsCheckable" Value="True"/>
-                                <Setter Property="IsChecked" Value="{Binding IsChecked, Mode=TwoWay}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}"/>
-                                <Style.Resources>
-                                    <!-- Стилизация текста пунктов выпадающего меню -->
-                                    <SolidColorBrush x:Key="{x:Static SystemColors.MenuTextBrushKey}" Color="#F1F1F1"/>
-                                </Style.Resources>
+                                <Setter Property="HeaderTemplate">
+                                    <Setter.Value>
+                                        <DataTemplate>
+                                            <CheckBox Content="{Binding Name}" 
+                                                      IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                                                      Foreground="{DynamicResource Brush_Text_Primary}"
+                                                      Margin="4,2"/>
+                                        </DataTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter Property="StaysOpenOnClick" Value="True"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="MenuItem">
+                                            <Border x:Name="BgBorder" Background="Transparent" SnapsToDevicePixels="True" CornerRadius="3" Padding="2">
+                                                <ContentPresenter ContentSource="Header" />
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="BgBorder" Property="Background" Value="{DynamicResource Brush_Hover}" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
                             </Style>
                         </MenuItem.ItemContainerStyle>
                     </MenuItem>
                 </Menu>
+
+                <!-- Кнопка сброса фильтра для текущего дерева -->
+                <Button Style="{StaticResource ToolbarButtonStyle}" Command="{Binding ResetFiltersCommand}" Margin="2,0">
+                    <Button.ToolTip>
+                        <ToolTip Content="Reset Current Filters" Background="#2D2D30" Foreground="{DynamicResource Brush_Text_Primary}" BorderBrush="{DynamicResource Brush_Border}"/>
+                    </Button.ToolTip>
+                    <Path Data="M2,4 L14,4 L9,9 L9,15 L7,15 L7,9 Z M13,10 L17,14 M17,10 L13,14" 
+                          Stroke="{DynamicResource Brush_Text_Primary}" StrokeThickness="1.5" Fill="Transparent" Stretch="Uniform" Width="16" Height="16"/>
+                </Button>
 
             </StackPanel>
         </Border>
@@ -230,8 +281,8 @@
                     <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}"/>
                     <Setter Property="Background" Value="Transparent"/>
                     <Style.Resources>
-                        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#FF3F51B5"/>
-                        <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#FF455A64"/>
+                        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#1E3A63"/>
+                        <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#1B3252"/>
                     </Style.Resources>
                 </Style>
             </TreeView.ItemContainerStyle>

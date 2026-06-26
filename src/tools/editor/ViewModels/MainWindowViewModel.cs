@@ -36,6 +36,11 @@ namespace editor.ViewModels
 			GamePane = (GamePaneViewModel)Panes.First(p => p.Type == WidgetType.Game);
 			RecentProjects = new ObservableCollection<string>();
 
+			foreach (var pane in Panes)
+			{
+				pane.OnProjectClosed();
+			}
+
 			SaveCommand = new RelayCommand(Save, () => IsDirty);
 
 			NewProjectCommand = new RelayCommand(NewProject);
@@ -288,6 +293,10 @@ namespace editor.ViewModels
 					AddRecentProject(projectDir);
 
 					App.EngineService.OnProjectOpened(projectDir);
+					foreach (var pane in Panes)
+					{
+						pane.OnProjectOpened(projectDir);
+					}
 				}
 				else
 				{
@@ -355,6 +364,10 @@ namespace editor.ViewModels
 				AddRecentProject(projectDir);
 
 				App.EngineService.OnProjectOpened(projectDir);
+				foreach (var pane in Panes)
+				{
+					pane.OnProjectOpened(projectDir);
+				}
 			}
 			else
 			{
@@ -375,6 +388,10 @@ namespace editor.ViewModels
 			SaveSession();
 			CurrentProjectPath = null;
 			IsDirty = false;
+			foreach (var pane in Panes)
+			{
+				pane.OnProjectClosed();
+			}
 		}
 
 		private void RemoveRecentProject(string path)

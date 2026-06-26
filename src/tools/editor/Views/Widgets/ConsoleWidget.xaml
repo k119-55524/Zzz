@@ -11,6 +11,43 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
+        <!-- Специальный стиль для текстового поля поиска в консоли (вне общего оформления, не синий) -->
+        <Style x:Key="LogSearchTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="#060B13" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush_Border}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="20,4,6,4" />
+            <Setter Property="Height" Value="26" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="SelectionBrush" Value="#555555" />
+            <Setter Property="CaretBrush" Value="{DynamicResource Brush_Text_Primary}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="13">
+                            <ScrollViewer x:Name="PART_ContentHost" Focusable="False"
+                                          HorizontalScrollBarVisibility="Hidden"
+                                          VerticalScrollBarVisibility="Hidden" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#E2C08D" />
+                            </Trigger>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#E2C08D" />
+                                <Setter Property="Background" Value="#0D1929" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Стиль для кнопок на тулбаре -->
         <Style x:Key="ToolbarButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
@@ -31,10 +68,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#3E3E40"/>
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource Brush_Hover}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#505052"/>
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource Brush_Checked}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -62,10 +99,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#3E3E40"/>
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource Brush_Hover}"/>
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#3F3F46"/>
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource Brush_Checked}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -74,16 +111,12 @@
         </Style>
 
         <!-- Общий стиль для CheckBox в выпадающем меню -->
-        <Style x:Key="DropdownCheckBoxStyle" TargetType="CheckBox">
-            <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}"/>
+        <Style x:Key="DropdownCheckBoxStyle" TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
             <Setter Property="Margin" Value="4,3"/>
-            <Setter Property="Cursor" Value="Hand"/>
         </Style>
 
         <!-- Стиль для чекбоксов на тулбаре (прижатых к иконкам) -->
-        <Style x:Key="ToolbarCheckBoxStyle" TargetType="CheckBox">
-            <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}"/>
-            <Setter Property="Cursor" Value="Hand"/>
+        <Style x:Key="ToolbarCheckBoxStyle" TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
             <Setter Property="Padding" Value="0"/>
             <Setter Property="MinWidth" Value="0"/>
             <Setter Property="Width" Value="16"/>
@@ -206,7 +239,7 @@
                                 </Grid>
                             </ToggleButton>
                             <Popup IsOpen="{Binding IsChecked, ElementName=TglEditor, Mode=TwoWay}" StaysOpen="False" PlacementTarget="{Binding ElementName=TglEditor}" Placement="Bottom" Margin="0,2,0,0">
-                                <Border Background="#252526" BorderBrush="{DynamicResource Brush_Border}" BorderThickness="1" Padding="10,8" CornerRadius="4" MinWidth="130">
+                                <Border Background="{DynamicResource Brush_Panel_Background}" BorderBrush="{DynamicResource Brush_Border}" BorderThickness="1" Padding="10,8" CornerRadius="4" MinWidth="130">
                                     <StackPanel DataContext="{Binding EditorFilter}">
                                         <CheckBox Content="Message" IsChecked="{Binding ShowMessage}" Style="{StaticResource DropdownCheckBoxStyle}"/>
                                         <CheckBox Content="Warning" IsChecked="{Binding ShowWarning}" Style="{StaticResource DropdownCheckBoxStyle}"/>
@@ -247,7 +280,7 @@
                                 </Grid>
                             </ToggleButton>
                             <Popup IsOpen="{Binding IsChecked, ElementName=TglEngine, Mode=TwoWay}" StaysOpen="False" PlacementTarget="{Binding ElementName=TglEngine}" Placement="Bottom" Margin="0,2,0,0">
-                                <Border Background="#252526" BorderBrush="{DynamicResource Brush_Border}" BorderThickness="1" Padding="10,8" CornerRadius="4" MinWidth="130">
+                                <Border Background="{DynamicResource Brush_Panel_Background}" BorderBrush="{DynamicResource Brush_Border}" BorderThickness="1" Padding="10,8" CornerRadius="4" MinWidth="130">
                                     <StackPanel DataContext="{Binding EngineFilter}">
                                         <CheckBox Content="Message" IsChecked="{Binding ShowMessage}" Style="{StaticResource DropdownCheckBoxStyle}"/>
                                         <CheckBox Content="Warning" IsChecked="{Binding ShowWarning}" Style="{StaticResource DropdownCheckBoxStyle}"/>
@@ -288,7 +321,7 @@
                                 </Grid>
                             </ToggleButton>
                             <Popup IsOpen="{Binding IsChecked, ElementName=TglScripts, Mode=TwoWay}" StaysOpen="False" PlacementTarget="{Binding ElementName=TglScripts}" Placement="Bottom" Margin="0,2,0,0">
-                                <Border Background="#252526" BorderBrush="{DynamicResource Brush_Border}" BorderThickness="1" Padding="10,8" CornerRadius="4" MinWidth="130">
+                                <Border Background="{DynamicResource Brush_Panel_Background}" BorderBrush="{DynamicResource Brush_Border}" BorderThickness="1" Padding="10,8" CornerRadius="4" MinWidth="130">
                                     <StackPanel DataContext="{Binding ScriptsFilter}">
                                         <CheckBox Content="Message" IsChecked="{Binding ShowMessage}" Style="{StaticResource DropdownCheckBoxStyle}"/>
                                         <CheckBox Content="Warning" IsChecked="{Binding ShowWarning}" Style="{StaticResource DropdownCheckBoxStyle}"/>
@@ -307,18 +340,7 @@
 
                 <!-- Поиск (Растягивается на все оставшееся пространство) -->
                 <Grid Grid.Column="2" VerticalAlignment="Center" Margin="10,0,5,0">
-                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
-                             Background="#1F1F20" Foreground="{DynamicResource Brush_Text_Primary}" 
-                             BorderBrush="{DynamicResource Brush_Border}" BorderThickness="1" 
-                             Padding="20,4,6,4" Height="26" VerticalContentAlignment="Center"
-                             GotFocus="SearchBox_GotFocus" LostFocus="SearchBox_LostFocus"
-                             HorizontalAlignment="Stretch">
-                        <TextBox.Resources>
-                            <Style TargetType="{x:Type Border}">
-                                <Setter Property="CornerRadius" Value="4"/>
-                            </Style>
-                        </TextBox.Resources>
-                    </TextBox>
+                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource LogSearchTextBoxStyle}" HorizontalAlignment="Stretch" />
                     <Path Data="M15.5,14 L14.3,14 L13.9,13.6 C15.4,11.9 16,9.6 15.3,7.2 C14.3,3.8 11.4,1 8,0.3 C3.4,-0.6 -0.6,3.4 0.3,8 C1,11.4 3.8,14.3 7.2,15.3 C9.6,16 11.9,15.4 13.6,13.9 L14,14.3 L14,15.5 L19,20.5 L20.5,19 L15.5,14 Z M8,12 C5.8,12 4,10.2 4,8 C4,5.8 5.8,4 8,4 C10.2,4 12,5.8 12,8 C12,10.2 10.2,12 8,12 Z" 
                           Fill="{DynamicResource Brush_Text_Secondary}" Stretch="Uniform" Width="12" Height="12" HorizontalAlignment="Left" Margin="6,0,0,0" IsHitTestVisible="False"/>
                 </Grid>
@@ -353,19 +375,19 @@
                         <!-- Задаем чередующиеся цвета строк (зебра) для четных (0) и нечетных (1) элементов -->
                         <Trigger Property="ItemsControl.AlternationIndex" Value="0">
                             <!-- Базовый темно-серый фон для четных строк -->
-                            <Setter Property="Background" Value="#1B1B1C"/>
+                            <Setter Property="Background" Value="{DynamicResource Brush_Log_Even}"/>
                         </Trigger>
                         <Trigger Property="ItemsControl.AlternationIndex" Value="1">
                             <!-- Чуть более светлый фон для нечетных строк, повышающий читаемость -->
-                            <Setter Property="Background" Value="#222223"/>
+                            <Setter Property="Background" Value="{DynamicResource Brush_Log_Odd}"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <!-- Подсветка строки при наведении мыши -->
-                            <Setter Property="Background" Value="#2D2D30"/>
+                            <Setter Property="Background" Value="{DynamicResource Brush_Hover}"/>
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
                             <!-- Цвет выделенной строки -->
-                            <Setter Property="Background" Value="#3F3F46"/>
+                            <Setter Property="Background" Value="{DynamicResource Brush_Checked}"/>
                         </Trigger>
                     </Style.Triggers>
                 </Style>
@@ -410,16 +432,15 @@
                             <!-- Краткий Текст сообщения -->
                             <TextBlock Grid.Column="2" Text="{Binding Text}" 
                                        x:Name="TxtMessage"
-                                       Foreground="{DynamicResource Brush_Text_Primary}" 
+                                       Foreground="{DynamicResource Brush_Text_Light}" 
                                        FontFamily="Consolas" FontSize="12" VerticalAlignment="Center"
                                        TextTrimming="CharacterEllipsis"/>
                         </Grid>
 
-                        <!-- Детали лога (показываются при раскрытии) -->
                         <Border Grid.Row="1" Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVis}}" 
-                                Background="#1B1B1C" BorderThickness="1" BorderBrush="#3F3F46" Margin="32,2,8,6" Padding="10" CornerRadius="4">
+                                Background="{DynamicResource Brush_Log_Even}" BorderThickness="1" BorderBrush="{DynamicResource Brush_Border}" Margin="32,2,8,6" Padding="10" CornerRadius="4">
                             <TextBox Text="{Binding DetailsText, Mode=OneWay}" 
-                                     Background="Transparent" BorderThickness="0" Foreground="#CCCCCC" 
+                                     Background="Transparent" BorderThickness="0" Foreground="{DynamicResource Brush_Text_Primary}" 
                                      FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" IsReadOnly="True" 
                                      IsUndoEnabled="False" SelectionBrush="{DynamicResource Brush_Accent}"/>
                         </Border>
@@ -483,3 +504,4 @@
         </ListView>
     </Grid>
 </UserControl>
+
