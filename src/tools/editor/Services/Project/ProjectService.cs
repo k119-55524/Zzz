@@ -1,11 +1,24 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using editor.Services.Project.Infrastructure;
+using editor.Services.Project.FileTypes.ProjectSettings;
 
 namespace editor.Services.Project
 {
     public class ProjectService
     {
+        private readonly IFileStorage _storage;
+
+        public ProjectService() : this(new PhysicalFileStorage())
+        {
+        }
+
+        public ProjectService(IFileStorage storage)
+        {
+            _storage = storage;
+        }
+
         private string GetLocString(string key)
         {
             return System.Windows.Application.Current?.TryFindResource(key) as string ?? string.Empty;
@@ -39,7 +52,7 @@ namespace editor.Services.Project
             {
                 string projectPath = Path.Combine(parentDir, projectName);
 
-                if (Directory.Exists(projectPath) && Directory.GetFileSystemEntries(projectPath).Length > 0)
+                if (_storage.DirectoryExists(projectPath) && _storage.GetFileSystemEntries(projectPath).Length > 0)
                 {
                     string format = GetLocString("Validation_Folder_Exists");
                     error = string.Format(format, projectPath);
@@ -47,12 +60,12 @@ namespace editor.Services.Project
                 }
 
                 // Создаем корневую директорию
-                Directory.CreateDirectory(projectPath);
+                _storage.CreateDirectory(projectPath);
 
                 // Создаем обязательные папки
                 foreach (var dir in ProjectStructure.RequiredDirectories)
                 {
-                    Directory.CreateDirectory(Path.Combine(projectPath, dir));
+                    _storage.CreateDirectory(Path.Combine(projectPath, dir));
                 }
 
                 // Создаем обязательные файлы с контентом по умолчанию
@@ -60,18 +73,18 @@ namespace editor.Services.Project
                 {
                     string fullPath = Path.Combine(projectPath, fileSchema.RelativePath);
                     string dirPath = Path.GetDirectoryName(fullPath) ?? projectPath;
-                    if (!Directory.Exists(dirPath))
+                    if (!_storage.DirectoryExists(dirPath))
                     {
-                        Directory.CreateDirectory(dirPath);
+                        _storage.CreateDirectory(dirPath);
                     }
 
                     string content = fileSchema.DefaultContent;
-                    if (fileSchema.RelativePath == "project.zzz")
+                    if (fileSchema.RelativePath == ProjectConstants.Files.ProjectSettings)
                     {
-                        content = content.Replace("\"NewProject\"", $"\"{projectName}\"");
+                        content = content.Replace("NewProject", projectName);
                     }
 
-                    File.WriteAllText(fullPath, content);
+                    _storage.WriteAllText(fullPath, content);
                 }
             }
             catch (Exception ex)
@@ -93,7 +106,7 @@ namespace editor.Services.Project
 
             try
             {
-                if (!Directory.Exists(projectRootPath))
+                if (!_storage.DirectoryExists(projectRootPath))
                 {
                     error = GetLocString("Validation_Folder_NotExist");
                     return false;
@@ -103,9 +116,9 @@ namespace editor.Services.Project
                 foreach (var dir in ProjectStructure.RequiredDirectories)
                 {
                     string fullPath = Path.Combine(projectRootPath, dir);
-                    if (!Directory.Exists(fullPath))
+                    if (!_storage.DirectoryExists(fullPath))
                     {
-                        Directory.CreateDirectory(fullPath);
+                        _storage.CreateDirectory(fullPath);
                     }
                 }
 
@@ -116,13 +129,13 @@ namespace editor.Services.Project
                     string fullPath = Path.Combine(projectRootPath, fileSchema.RelativePath);
 
                     bool needsRestore = false;
-                    if (!File.Exists(fullPath))
+                    if (!_storage.FileExists(fullPath))
                     {
                         needsRestore = true;
                     }
                     else if (fileSchema.Parser != null)
                     {
-                        if (!fileSchema.Parser.Validate(fullPath, out _))
+                        if (!fileSchema.Parser.Validate(_storage, fullPath, out _))
                         {
                             needsRestore = true;
                         }
@@ -161,11 +174,17 @@ namespace editor.Services.Project
                     {
                         string fullPath = Path.Combine(projectRootPath, schema.RelativePath);
                         string dirPath = Path.GetDirectoryName(fullPath) ?? projectRootPath;
-                        if (!Directory.Exists(dirPath))
+                        if (!_storage.DirectoryExists(dirPath))
                         {
-                            Directory.CreateDirectory(dirPath);
+                            _storage.CreateDirectory(dirPath);
                         }
-                        File.WriteAllText(fullPath, schema.DefaultContent);
+                        string content = schema.DefaultContent;
+                        if (schema.RelativePath == ProjectConstants.Files.ProjectSettings)
+                        {
+                            string projectName = Path.GetFileName(projectRootPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+                            content = content.Replace("NewProject", projectName);
+                        }
+                        _storage.WriteAllText(fullPath, content);
                     }
                 }
                 return true;
@@ -176,28 +195,23 @@ namespace editor.Services.Project
             }
         }
 
-        // Читает имя проекта из файла настроек проекта (project.zzz) с валидацией
+        // Читает имя проекта из файла настроек проекта (Configs/project.toml) с валидацией
         public string GetProjectName(string projectRootPath)
         {
             try
             {
-                var schema = ProjectStructure.RequiredFiles.Find(f => f.RelativePath == "project.zzz");
+                var schema = ProjectStructure.RequiredFiles.Find(f => f.RelativePath == ProjectConstants.Files.ProjectSettings);
                 if (schema != null)
                 {
                     string fullPath = Path.Combine(projectRootPath, schema.RelativePath);
-                    if (File.Exists(fullPath))
+                    if (_storage.FileExists(fullPath))
                     {
-                        string json = File.ReadAllText(fullPath);
-                        using (var doc = System.Text.Json.JsonDocument.Parse(json))
+                        string toml = _storage.ReadAllText(fullPath);
+                        var data = ProjectSettingsParser.Deserialize(toml);
+                        string name = data.Name?.Trim() ?? string.Empty;
+                        if (IsValidProjectName(name, out _))
                         {
-                            if (doc.RootElement.TryGetProperty("name", out var nameProp))
-                            {
-                                string name = nameProp.GetString()?.Trim() ?? string.Empty;
-                                if (IsValidProjectName(name, out _))
-                                {
-                                    return name;
-                                }
-                            }
+                            return name;
                         }
                     }
                 }
