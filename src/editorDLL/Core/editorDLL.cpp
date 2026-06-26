@@ -73,7 +73,7 @@ extern "C"
 		{
 			if (g_Engine)
 			{
-				//g_Engine->ClearEngine();
+				g_Engine->ClearEngine();
 				DOut("ClearEngine: Successed.");
 			}
 			else

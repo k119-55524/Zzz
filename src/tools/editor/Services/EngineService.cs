@@ -32,14 +32,6 @@ namespace editor.Services
             );
         }
 
-        private static void DebugLog(string message)
-        {
-            try
-            {
-                System.IO.File.AppendAllText(@"c:\Workspaces\ZzzTest\debug_engine_service.txt", $"{DateTime.Now}: {message}\r\n");
-            }
-            catch {}
-        }
 
         private static string GetLocString(string key)
         {
@@ -51,10 +43,8 @@ namespace editor.Services
             return System.Windows.Application.Current.Dispatcher.Invoke(() => System.Windows.Application.Current.TryFindResource(key) as string) ?? string.Empty;
         }
 
-        // Вызывается вьюпортом при создании HWND
         public void AddViewport(IntPtr hwnd, string viewName)
         {
-            DebugLog($"AddViewport: {viewName}, hwnd: {hwnd}");
             if (!_activeViewports.Contains(hwnd))
             {
                 _activeViewports.Add(hwnd);
@@ -108,7 +98,6 @@ namespace editor.Services
         // Вызывается при успешном открытии/создании проекта
         public void OnProjectOpened(string projectPath)
         {
-            DebugLog($"OnProjectOpened: {projectPath}");
             EngineRuntime.ClearEngine();
         }
 
@@ -120,16 +109,13 @@ namespace editor.Services
 
         private void TryInitializeEngine()
         {
-            DebugLog($"TryInitializeEngine: _isEngineInitialized={_isEngineInitialized}");
             if (_isEngineInitialized)
             {
                 return;
             }
             
             EditorLogger.LogInfo(GetLocString("Log_Engine_Init_Start"), LogSource.Editor);
-            DebugLog("Calling EngineRuntime.TryInitialize...");
             _isEngineInitialized = EngineRuntime.TryInitialize(_logCallback);
-            DebugLog($"EngineRuntime.TryInitialize returned: {_isEngineInitialized}");
 
             if (_isEngineInitialized)
             {

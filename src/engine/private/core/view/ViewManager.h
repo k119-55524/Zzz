@@ -21,8 +21,8 @@ namespace zzz::engine
 		View* CreateView();
 #if Z_EDITOR
 		View* CreateView(void* data);
+		void RemoveView(View* view);
 #endif
-		void DestroyView(View* view);
 
 	private:
 		const Platform& m_Platform;

@@ -1,7 +1,8 @@
-#include "EditorEngine.h"
+
 #include <engine/headers/enums.h>
 #include <engine/private/core/view/ViewManager.h>
-#include <logger/logger.h>
+
+#include "EditorEngine.h"
 
 using namespace zzz;
 using namespace zzz::engine;
@@ -30,7 +31,7 @@ namespace zzz::editor
 
 	void EditorEngine::ClearEngine()
 	{
-		DOut("EditorEngine::ClearEngine called: project-specific resources cleared.");
+		
 	}
 
 	zzz::engine::View* EditorEngine::AddView(void* hwnd)
@@ -47,8 +48,6 @@ namespace zzz::editor
 	void EditorEngine::RemoveView(void* view)
 	{
 		if (engineState.load() == eInitState::Running && view)
-		{
-			m_ViewManager->DestroyView(static_cast<zzz::engine::View*>(view));
-		}
+			m_ViewManager->RemoveView(static_cast<zzz::engine::View*>(view));
 	}
 }

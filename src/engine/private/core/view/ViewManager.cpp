@@ -34,17 +34,6 @@ View* ViewManager::CreateView()
 	return viewPtr;
 }
 
-#if Z_EDITOR
-View* ViewManager::CreateView(void* data)
-{
-	auto view = safe_make_shared<View>(m_Platform, data);
-	View* viewPtr = view.get();
-	m_Views.push_back(std::move(view));
-
-	return viewPtr;
-}
-#endif
-
 void ViewManager::HandleWindowClose(View& view)
 {
 	auto it = std::ranges::find_if(
@@ -63,9 +52,21 @@ void ViewManager::HandleWindowClose(View& view)
 		OnAllViewsClosed();
 }
 
-void ViewManager::DestroyView(View* view)
+#if Z_EDITOR
+View* ViewManager::CreateView(void* data)
 {
-	if (!view) return;
+	auto view = safe_make_shared<View>(m_Platform, data);
+	View* viewPtr = view.get();
+	m_Views.push_back(std::move(view));
+
+	return viewPtr;
+}
+
+void ViewManager::RemoveView(View* view)
+{
+	if (!view)
+		return;
+
 	auto it = std::ranges::find_if(
 		m_Views,
 		[view](const auto& p)
@@ -74,9 +75,6 @@ void ViewManager::DestroyView(View* view)
 		});
 
 	if (it != m_Views.end())
-	{
 		m_Views.erase(it);
-		if (m_Views.empty())
-			OnAllViewsClosed();
-	}
 }
+#endif
