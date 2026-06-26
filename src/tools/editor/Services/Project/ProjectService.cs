@@ -19,6 +19,10 @@ namespace editor.Services.Project
             _storage = storage;
         }
 
+        public IFileStorage Storage => _storage;
+
+        public ProjectSettingsData CurrentSettings { get; private set; } = new();
+
         private string GetLocString(string key)
         {
             return System.Windows.Application.Current?.TryFindResource(key) as string ?? string.Empty;
@@ -86,6 +90,11 @@ namespace editor.Services.Project
 
                     _storage.WriteAllText(fullPath, content);
                 }
+                CurrentSettings = new ProjectSettingsData
+                {
+                    Version = ProjectConstants.ProjectVersionString,
+                    Name = projectName
+                };
             }
             catch (Exception ex)
             {
@@ -150,6 +159,20 @@ namespace editor.Services.Project
                 if (toRestore.Count > 0)
                 {
                     RestoreDefaultFiles(projectRootPath, toRestore);
+                }
+                string fullSettingsPath = Path.Combine(projectRootPath, ProjectConstants.Files.ProjectSettings);
+                if (_storage.FileExists(fullSettingsPath))
+                {
+                    string toml = _storage.ReadAllText(fullSettingsPath);
+                    CurrentSettings = ProjectSettingsParser.Deserialize(toml);
+                }
+                else
+                {
+                    CurrentSettings = new ProjectSettingsData
+                    {
+                        Version = ProjectConstants.ProjectVersionString,
+                        Name = Path.GetFileName(projectRootPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
+                    };
                 }
             }
             catch (Exception ex)
@@ -221,6 +244,27 @@ namespace editor.Services.Project
                 // Игнорируем и возвращаем имя папки
             }
             return Path.GetFileName(projectRootPath);
+        }
+
+        // Сохраняет текущие настройки проекта на диск в Configs/project.toml
+        public bool SaveProject(string projectRootPath, out string error)
+        {
+            error = string.Empty;
+            try
+            {
+                if (CurrentSettings == null)
+                    return true;
+
+                string fullPath = Path.Combine(projectRootPath, ProjectConstants.Files.ProjectSettings);
+                string toml = ProjectSettingsParser.Serialize(CurrentSettings);
+                _storage.WriteAllText(fullPath, toml);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                return false;
+            }
         }
     }
 }

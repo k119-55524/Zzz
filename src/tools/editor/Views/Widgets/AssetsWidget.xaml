@@ -3,9 +3,238 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:infra="clr-namespace:editor.Services.Project.Infrastructure"
+             xmlns:vm="clr-namespace:editor.ViewModels"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
+    
+    <UserControl.Resources>
+        <!-- Векторная иконка папки -->
+        <VisualBrush x:Key="Icon_Folder" Stretch="Uniform">
+            <VisualBrush.Visual>
+                <Canvas Width="24" Height="24">
+                    <Path Fill="#FFE0A96D" Data="M10 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
+                </Canvas>
+            </VisualBrush.Visual>
+        </VisualBrush>
+
+        <!-- Векторная иконка файла -->
+        <VisualBrush x:Key="Icon_File" Stretch="Uniform">
+            <VisualBrush.Visual>
+                <Canvas Width="24" Height="24">
+                    <Path Fill="#FF90A4AE" Data="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                </Canvas>
+            </VisualBrush.Visual>
+        </VisualBrush>
+
+        <!-- Векторная иконка пустой виртуальной папки (желтая) -->
+        <VisualBrush x:Key="Icon_Folder_EmptyVirtual" Stretch="Uniform">
+            <VisualBrush.Visual>
+                <Canvas Width="24" Height="24">
+                    <Path Fill="#FFFFD54F" Data="M10 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z M12 9v4H8v2h4v4h2v-4h4v-2h-4V9h-2z"/>
+                </Canvas>
+            </VisualBrush.Visual>
+        </VisualBrush>
+
+         <!-- Стиль для ToggleButton в стиле тулбара -->
+        <Style x:Key="ToolbarToggleButtonStyle" TargetType="ToggleButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}"/>
+            <Setter Property="Padding" Value="4"/>
+            <Setter Property="Margin" Value="2,0"/>
+            <Setter Property="Width" Value="24"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#3E3E40"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#3F3F46"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Стиль для MenuItem в шапке (Кнопка-меню фильтра) -->
+        <Style x:Key="FlatMenuItemStyle" TargetType="MenuItem">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="4" />
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Grid>
+                            <Border x:Name="border"
+                                    Background="{TemplateBinding Background}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="4"
+                                    SnapsToDevicePixels="True">
+                                <ContentPresenter ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <Popup x:Name="PART_Popup"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                                   Placement="Bottom">
+                                <Border Background="#252526"
+                                        BorderBrush="{DynamicResource Brush_Border}"
+                                        BorderThickness="1"
+                                        CornerRadius="4"
+                                        Padding="2">
+                                    <ScrollViewer CanContentScroll="True">
+                                        <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle" />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#3E3E40" />
+                            </Trigger>
+                            <Trigger Property="IsSubmenuOpen" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#3E3E40" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
     <Grid Background="{DynamicResource Brush_Panel_Background}">
-        <TextBlock Text="{DynamicResource Widget_Assets_Placeholder}" Style="{DynamicResource WidgetPlaceholderText}" />
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Панель управления (Toolbar) -->
+        <Border Grid.Row="0" 
+                Background="{DynamicResource Brush_Panel_Header}" 
+                BorderBrush="{DynamicResource Brush_Border}" 
+                BorderThickness="0,0,0,1" 
+                Padding="6,4">
+            <StackPanel Orientation="Horizontal">
+                
+                <!-- Переключатель режима: Ассеты / Система (с векторными иконками) -->
+                <ToggleButton IsChecked="{Binding IsSystemMode}"
+                               Style="{StaticResource ToolbarToggleButtonStyle}"
+                               Margin="2,0"
+                               Cursor="Hand">
+                    <ToggleButton.ToolTip>
+                        <ToolTip Content="Switch View Mode (Assets / System)" Background="#2D2D30" Foreground="{DynamicResource Brush_Text_Primary}" BorderBrush="{DynamicResource Brush_Border}"/>
+                    </ToggleButton.ToolTip>
+                    <Path Stroke="{DynamicResource Brush_Text_Primary}" StrokeThickness="1.5" Fill="Transparent" Stretch="Uniform" Margin="4">
+                        <Path.Style>
+                            <Style TargetType="Path">
+                                <Setter Property="Data" Value="M12,4 L20,8 L12,12 L4,8 Z M4,12 L12,16 L20,12 M4,16 L12,20 L20,16"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsSystemMode}" Value="True">
+                                        <Setter Property="Data" Value="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Path.Style>
+                    </Path>
+                </ToggleButton>
+
+                <!-- Фильтр обязательных папок (Плоская кнопка с иконкой воронки) -->
+                <Menu Background="Transparent" Margin="2,0">
+                    <MenuItem Style="{StaticResource FlatMenuItemStyle}" Cursor="Hand">
+                        <MenuItem.ToolTip>
+                            <ToolTip Content="Filter Resource Types" Background="#2D2D30" Foreground="{DynamicResource Brush_Text_Primary}" BorderBrush="{DynamicResource Brush_Border}"/>
+                        </MenuItem.ToolTip>
+                        <MenuItem.Header>
+                            <Path Data="M3,5 L21,5 L14,12 L14,19 L10,19 L10,12 Z" Stroke="{DynamicResource Brush_Text_Primary}" StrokeThickness="1.5" Fill="Transparent" Stretch="Uniform" Width="16" Height="16"/>
+                        </MenuItem.Header>
+                        <MenuItem.ItemsSource>
+                            <Binding Path="AvailableFilters"/>
+                        </MenuItem.ItemsSource>
+                        <MenuItem.ItemContainerStyle>
+                            <Style TargetType="MenuItem">
+                                <Setter Property="Header" Value="{Binding Name}"/>
+                                <Setter Property="IsCheckable" Value="True"/>
+                                <Setter Property="IsChecked" Value="{Binding IsChecked, Mode=TwoWay}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}"/>
+                                <Style.Resources>
+                                    <!-- Стилизация текста пунктов выпадающего меню -->
+                                    <SolidColorBrush x:Key="{x:Static SystemColors.MenuTextBrushKey}" Color="#F1F1F1"/>
+                                </Style.Resources>
+                            </Style>
+                        </MenuItem.ItemContainerStyle>
+                    </MenuItem>
+                </Menu>
+
+            </StackPanel>
+        </Border>
+
+        <!-- Дерево виртуальной файловой системы -->
+        <TreeView Grid.Row="1" 
+                  ItemsSource="{Binding VirtualRootNodes}"
+                  Background="Transparent"
+                  BorderThickness="0"
+                  Padding="5">
+            
+            <TreeView.ItemTemplate>
+                <HierarchicalDataTemplate DataType="{x:Type infra:VirtualNode}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal" Margin="2">
+                        <!-- Векторная иконка -->
+                        <Rectangle x:Name="NodeIcon" 
+                                   Width="16" 
+                                   Height="16" 
+                                   Margin="0,0,6,0" 
+                                   Fill="{StaticResource Icon_File}"/>
+                        
+                        <!-- Текст элемента -->
+                        <TextBlock x:Name="NodeText" 
+                                   Text="{Binding Name}" 
+                                   Foreground="{DynamicResource Brush_Text_Primary}" 
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                    
+                    <HierarchicalDataTemplate.Triggers>
+                        <!-- Триггер для обычных папок -->
+                        <DataTrigger Binding="{Binding IsFolder}" Value="True">
+                            <Setter TargetName="NodeIcon" Property="Fill" Value="{StaticResource Icon_Folder}"/>
+                        </DataTrigger>
+                        
+                        <!-- Триггер для пустых виртуальных папок (подсветка желтым) -->
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding IsFolder}" Value="True"/>
+                                <Condition Binding="{Binding IsEmptyVirtual}" Value="True"/>
+                            </MultiDataTrigger.Conditions>
+                            <Setter TargetName="NodeIcon" Property="Fill" Value="{StaticResource Icon_Folder_EmptyVirtual}"/>
+                            <Setter TargetName="NodeText" Property="Foreground" Value="#FFFFD54F"/>
+                        </MultiDataTrigger>
+                    </HierarchicalDataTemplate.Triggers>
+                </HierarchicalDataTemplate>
+            </TreeView.ItemTemplate>
+            
+            <!-- Стилизация элементов TreeViewItem под темную тему -->
+            <TreeView.ItemContainerStyle>
+                <Style TargetType="TreeViewItem">
+                    <Setter Property="IsExpanded" Value="True"/>
+                    <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Style.Resources>
+                        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#FF3F51B5"/>
+                        <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#FF455A64"/>
+                    </Style.Resources>
+                </Style>
+            </TreeView.ItemContainerStyle>
+        </TreeView>
     </Grid>
 </UserControl>

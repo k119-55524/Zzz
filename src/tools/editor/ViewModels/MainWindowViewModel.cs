@@ -28,6 +28,7 @@ namespace editor.ViewModels
 						WidgetType.World => new WorldPaneViewModel(),
 						WidgetType.Game => new GamePaneViewModel(),
 						WidgetType.Console => new ConsoleViewModel(),
+						WidgetType.Assets => new AssetsViewModel(),
 						_ => new PaneViewModel(type)
 					}));
 
@@ -412,6 +413,17 @@ namespace editor.ViewModels
 
 		void Save()
 		{
+			if (IsProjectOpen && !string.IsNullOrEmpty(CurrentProjectPath))
+			{
+				if (App.ProjectService.SaveProject(CurrentProjectPath, out string error))
+				{
+					IsDirty = false;
+				}
+				else
+				{
+					_dialogService.ShowMessage(error, GetLocString("Msg_Error_Title"), System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+				}
+			}
 		}
 	}
 }
