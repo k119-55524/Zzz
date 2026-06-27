@@ -28,6 +28,7 @@
     
     <!-- Widget Placeholders -->
     <sys:String x:Key="Widget_Inspector_Placeholder">PROPERTIES INSPECTOR</sys:String>
+    <sys:String x:Key="Inspector_ControlPanel">Control Panel</sys:String>
     <sys:String x:Key="Inspector_Stats_Folder">Folder Statistics</sys:String>
     <sys:String x:Key="Inspector_Stats_Name">Name:</sys:String>
     <sys:String x:Key="Inspector_Stats_Path">Path:</sys:String>

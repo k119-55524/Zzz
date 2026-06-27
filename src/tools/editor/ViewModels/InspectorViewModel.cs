@@ -57,10 +57,41 @@ namespace editor.ViewModels
         private bool _showFolderStats;
         private ObservableCollection<TomlPropertyViewModel>? _tomlProperties;
         private bool _showTomlProperties;
+        private List<TomlPropertyViewModel> _allTomlProperties = new();
+        private string _searchText = string.Empty;
 
         public InspectorViewModel() : base(WidgetType.Inspector)
         {
             App.SelectionService.SelectedItemChanged += OnSelectedItemChanged;
+        }
+
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                if (SetField(ref _searchText, value))
+                {
+                    ApplyFilter();
+                }
+            }
+        }
+
+        private void ApplyFilter()
+        {
+            if (string.IsNullOrWhiteSpace(_searchText))
+            {
+                TomlProperties = new ObservableCollection<TomlPropertyViewModel>(_allTomlProperties);
+            }
+            else
+            {
+                var query = _searchText.Trim();
+                var filtered = _allTomlProperties
+                    .Where(p => p.Name.Contains(query, StringComparison.OrdinalIgnoreCase) 
+                             || (p.Value?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false))
+                    .ToList();
+                TomlProperties = new ObservableCollection<TomlPropertyViewModel>(filtered);
+            }
         }
 
         private void OnSelectedItemChanged(object? item)
@@ -69,7 +100,10 @@ namespace editor.ViewModels
             ShowFolderStats = false;
             ShowTomlProperties = false;
             FolderStats = null;
+            _allTomlProperties.Clear();
             TomlProperties = null;
+            _searchText = string.Empty;
+            OnPropertyChanged(nameof(SearchText));
 
             if (item is VirtualNode node)
             {
@@ -105,7 +139,8 @@ namespace editor.ViewModels
                                 props.Add(new TomlPropertyViewModel(settings, prop, attr.Visibility, OnTomlSettingChanged));
                             }
                         }
-                        TomlProperties = new ObservableCollection<TomlPropertyViewModel>(props);
+                        _allTomlProperties = props;
+                        ApplyFilter();
                         ShowTomlProperties = true;
                     }
                 }
@@ -158,8 +193,11 @@ namespace editor.ViewModels
             SelectedItem = null;
             FolderStats = null;
             ShowFolderStats = false;
+            _allTomlProperties.Clear();
             TomlProperties = null;
             ShowTomlProperties = false;
+            _searchText = string.Empty;
+            OnPropertyChanged(nameof(SearchText));
         }
     }
 

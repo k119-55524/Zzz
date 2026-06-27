@@ -28,6 +28,7 @@
     
     <!-- Содержимое-заглушки для шаблонов виджетов -->
     <sys:String x:Key="Widget_Inspector_Placeholder">ИНСПЕКТОР СВОЙСТВ</sys:String>
+    <sys:String x:Key="Inspector_ControlPanel">Панель управления</sys:String>
     <sys:String x:Key="Inspector_Stats_Folder">Статистика папки</sys:String>
     <sys:String x:Key="Inspector_Stats_Name">Имя:</sys:String>
     <sys:String x:Key="Inspector_Stats_Path">Путь:</sys:String>

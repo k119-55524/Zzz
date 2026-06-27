@@ -27,49 +27,130 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+        
+        <!-- Специальный стиль для текстового поля поиска в инспекторе (по аналогии с логами) -->
+        <Style x:Key="InspectorSearchTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="#060B13" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush_Border}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="20,4,22,4" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="SelectionBrush" Value="#555555" />
+            <Setter Property="CaretBrush" Value="{DynamicResource Brush_Text_Primary}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <ScrollViewer x:Name="PART_ContentHost" Grid.Column="0" Focusable="False"
+                                              HorizontalScrollBarVisibility="Hidden"
+                                              VerticalScrollBarVisibility="Hidden" />
+                                
+                                <Button x:Name="ClearButton" Grid.Column="1"
+                                        Margin="0,0,6,0"
+                                        Width="12" Height="12"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Cursor="Hand"
+                                        Focusable="False"
+                                        Visibility="Visible"
+                                        Click="ClearSearch_Click">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="Transparent">
+                                                <Path Data="M1,1 L11,11 M11,1 L1,11" 
+                                                      Stroke="{DynamicResource Brush_Text_Secondary}" 
+                                                      StrokeThickness="1.5" 
+                                                      Stretch="Uniform" 
+                                                      Margin="2"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="Text" Value="">
+                                <Setter TargetName="ClearButton" Property="Visibility" Value="Collapsed"/>
+                            </Trigger>
+                            <Trigger Property="Text" Value="{x:Null}">
+                                <Setter TargetName="ClearButton" Property="Visibility" Value="Collapsed"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#E2C08D" />
+                            </Trigger>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#E2C08D" />
+                                <Setter Property="Background" Value="#0D1929" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <Grid Background="{DynamicResource Brush_Panel_Background}">
-        <Grid.ColumnDefinitions>
-            <!-- Колонки для регулирования ширины имени и значения с помощью сплиттера -->
-            <ColumnDefinition Width="150" MinWidth="80" x:Name="ColName"/>
-            <ColumnDefinition Width="4"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-        <!-- Разделитель (сплиттер) для интерактивного изменения ширины колонок -->
-        <GridSplitter Grid.Column="1" 
-                      HorizontalAlignment="Stretch" 
-                      VerticalAlignment="Stretch" 
-                      Background="{DynamicResource Brush_Border}" 
-                      Cursor="SizeWE"/>
+        <!-- Панель управления (показывается только при загруженном проекте) -->
+        <Border Grid.Row="0"
+                Background="{DynamicResource Brush_Panel_Header}"
+                BorderBrush="{DynamicResource Brush_Border}"
+                BorderThickness="0,0,0,1"
+                Padding="12,5"
+                Visibility="{Binding IsProjectOpen, Converter={StaticResource BoolToVis}}">
+            <Grid Height="24">
+                <!-- Поиск/Фильтр по аналогии с логами -->
+                <Grid VerticalAlignment="Center">
+                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource InspectorSearchTextBoxStyle}" HorizontalAlignment="Stretch" />
+                    <Path Data="M15.5,14 L14.3,14 L13.9,13.6 C15.4,11.9 16,9.6 15.3,7.2 C14.3,3.8 11.4,1 8,0.3 C3.4,-0.6 -0.6,3.4 0.3,8 C1,11.4 3.8,14.3 7.2,15.3 C9.6,16 11.9,15.4 13.6,13.9 L14,14.3 L14,15.5 L19,20.5 L20.5,19 L15.5,14 Z M8,12 C5.8,12 4,10.2 4,8 C4,5.8 5.8,4 8,4 C10.2,4 12,5.8 12,8 C12,10.2 10.2,12 8,12 Z" 
+                          Fill="{DynamicResource Brush_Text_Secondary}" Stretch="Uniform" Width="11" Height="11" HorizontalAlignment="Left" Margin="6,0,0,0" IsHitTestVisible="False"/>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- Основное содержимое инспектора -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <!-- Колонки для регулирования ширины имени и значения с помощью сплиттера -->
+                <ColumnDefinition Width="150" MinWidth="80" x:Name="ColName"/>
+                <ColumnDefinition Width="4"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+
 
         <!-- Statistics View (занимает всю ширину, внутренние сетки привязаны к ColName) -->
         <Grid Grid.ColumnSpan="3" Style="{StaticResource StatsContainerStyle}">
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                <StackPanel Margin="16" DataContext="{Binding}">
-                    
-                    <!-- Header -->
-                    <Border BorderBrush="{DynamicResource Brush_Border}" BorderThickness="0,0,0,1" Padding="0,0,0,12" Margin="0,0,0,16">
-                        <StackPanel Orientation="Horizontal">
-                            <!-- Векторная иконка папки -->
-                            <Rectangle Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center">
-                                <Rectangle.Fill>
-                                    <VisualBrush Stretch="Uniform">
-                                        <VisualBrush.Visual>
-                                            <Canvas Width="24" Height="24">
-                                                <Path Fill="#FFE0A96D" Data="M10 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
-                                            </Canvas>
-                                        </VisualBrush.Visual>
-                                    </VisualBrush>
-                                </Rectangle.Fill>
-                            </Rectangle>
-                            <TextBlock Text="{DynamicResource Inspector_Stats_Folder}" 
-                                       Foreground="{DynamicResource Brush_Text_Primary}" 
-                                       FontSize="18" 
-                                       FontWeight="Bold" 
-                                       VerticalAlignment="Center"/>
-                        </StackPanel>
+                <StackPanel Margin="0,0,0,16" DataContext="{Binding}">
+                    <!-- Table Header -->
+                    <Border Background="{DynamicResource Brush_Window_Background}" BorderBrush="{DynamicResource Brush_Border}" BorderThickness="0,0,0,1" Padding="0,6" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="{Binding ElementName=ColName, Path=Width}"/>
+                                <ColumnDefinition Width="4"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Имя" Foreground="{DynamicResource Brush_Text_Secondary}" FontWeight="SemiBold" FontSize="12" Margin="16,0,0,0"/>
+                            <Rectangle Grid.Column="1" Width="1" VerticalAlignment="Stretch" Fill="#555555" Margin="0,2"/>
+                            <TextBlock Grid.Column="2" Text="Значение" Foreground="{DynamicResource Brush_Text_Secondary}" FontWeight="SemiBold" FontSize="12" Margin="8,0,16,0"/>
+                        </Grid>
                     </Border>
 
                     <!-- Info Grid -->
@@ -88,25 +169,32 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
+                        <!-- Чередующиеся фоны строк (зебра) -->
+                        <Border Grid.Row="0" Grid.ColumnSpan="3" Background="{DynamicResource Brush_Log_Even}" Padding="0,6"/>
+                        <Border Grid.Row="1" Grid.ColumnSpan="3" Background="{DynamicResource Brush_Log_Odd}" Padding="0,6"/>
+                        <Border Grid.Row="2" Grid.ColumnSpan="3" Background="{DynamicResource Brush_Log_Even}" Padding="0,6"/>
+                        <Border Grid.Row="3" Grid.ColumnSpan="3" Background="{DynamicResource Brush_Log_Odd}" Padding="0,6"/>
+                        <Border Grid.Row="4" Grid.ColumnSpan="3" Background="{DynamicResource Brush_Log_Even}" Padding="0,6"/>
+
                         <!-- Row 0: Name -->
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="{DynamicResource Inspector_Stats_Name}" Foreground="{DynamicResource Brush_Text_Secondary}" Margin="0,4,8,4" VerticalAlignment="Center" FontSize="13"/>
-                        <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding Name}" Foreground="{DynamicResource Brush_Text_Light}" Margin="0,4,0,4" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="13"/>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="{DynamicResource Inspector_Stats_Name}" Foreground="{DynamicResource Brush_Text_Secondary}" Margin="16,6,8,6" VerticalAlignment="Center" FontSize="13" Panel.ZIndex="1"/>
+                        <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding Name}" Foreground="{DynamicResource Brush_Text_Light}" Margin="8,6,16,6" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="13" Panel.ZIndex="1"/>
 
                         <!-- Row 1: Path -->
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="{DynamicResource Inspector_Stats_Path}" Foreground="{DynamicResource Brush_Text_Secondary}" Margin="0,4,8,4" VerticalAlignment="Center" FontSize="13"/>
-                        <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding Path}" Foreground="{DynamicResource Brush_Text_Light}" Margin="0,4,0,4" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="13"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="{DynamicResource Inspector_Stats_Path}" Foreground="{DynamicResource Brush_Text_Secondary}" Margin="16,6,8,6" VerticalAlignment="Center" FontSize="13" Panel.ZIndex="1"/>
+                        <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding Path}" Foreground="{DynamicResource Brush_Text_Light}" Margin="8,6,16,6" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="13" Panel.ZIndex="1"/>
 
                         <!-- Row 2: Subfolders -->
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="{DynamicResource Inspector_Stats_Subfolders}" Foreground="{DynamicResource Brush_Text_Secondary}" Margin="0,8,8,4" VerticalAlignment="Center" FontSize="13"/>
-                        <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding SubfoldersCount}" Foreground="{DynamicResource Brush_Text_Light}" Margin="0,8,0,4" VerticalAlignment="Center" FontSize="13"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="{DynamicResource Inspector_Stats_Subfolders}" Foreground="{DynamicResource Brush_Text_Secondary}" Margin="16,6,8,6" VerticalAlignment="Center" FontSize="13" Panel.ZIndex="1"/>
+                        <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding SubfoldersCount}" Foreground="{DynamicResource Brush_Text_Light}" Margin="8,6,16,6" VerticalAlignment="Center" FontSize="13" Panel.ZIndex="1"/>
 
                         <!-- Row 3: Files -->
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="{DynamicResource Inspector_Stats_Files}" Foreground="{DynamicResource Brush_Text_Secondary}" Margin="0,4,8,4" VerticalAlignment="Center" FontSize="13"/>
-                        <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding FilesCount}" Foreground="{DynamicResource Brush_Text_Light}" Margin="0,4,0,4" VerticalAlignment="Center" FontSize="13"/>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="{DynamicResource Inspector_Stats_Files}" Foreground="{DynamicResource Brush_Text_Secondary}" Margin="16,6,8,6" VerticalAlignment="Center" FontSize="13" Panel.ZIndex="1"/>
+                        <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding FilesCount}" Foreground="{DynamicResource Brush_Text_Light}" Margin="8,6,16,6" VerticalAlignment="Center" FontSize="13" Panel.ZIndex="1"/>
 
                         <!-- Row 4: Total Size -->
-                        <TextBlock Grid.Row="4" Grid.Column="0" Text="{DynamicResource Inspector_Stats_TotalSize}" Foreground="{DynamicResource Brush_Text_Secondary}" Margin="0,4,8,4" VerticalAlignment="Center" FontSize="13"/>
-                        <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding TotalSizeFormatted}" Foreground="{DynamicResource Brush_Text_Light}" Margin="0,4,0,4" VerticalAlignment="Center" FontWeight="Bold" FontSize="13"/>
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="{DynamicResource Inspector_Stats_TotalSize}" Foreground="{DynamicResource Brush_Text_Secondary}" Margin="16,6,8,6" VerticalAlignment="Center" FontSize="13" Panel.ZIndex="1"/>
+                        <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding TotalSizeFormatted}" Foreground="{DynamicResource Brush_Text_Light}" Margin="8,6,16,6" VerticalAlignment="Center" FontWeight="Bold" FontSize="13" Panel.ZIndex="1"/>
                     </Grid>
                 </StackPanel>
             </ScrollViewer>
@@ -115,83 +203,91 @@
         <!-- TOML Properties View (занимает всю ширину, внутренние сетки привязаны к ColName) -->
         <Grid Grid.ColumnSpan="3" Style="{StaticResource TomlPropertiesContainerStyle}">
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                <StackPanel Margin="16">
-                    
-                    <!-- Header -->
-                    <Border BorderBrush="{DynamicResource Brush_Border}" BorderThickness="0,0,0,1" Padding="0,0,0,12" Margin="0,0,0,16">
-                        <StackPanel Orientation="Horizontal">
-                            <!-- Векторная иконка файла -->
-                            <Rectangle Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center">
-                                <Rectangle.Fill>
-                                    <VisualBrush Stretch="Uniform">
-                                        <VisualBrush.Visual>
-                                            <Canvas Width="24" Height="24">
-                                                <Path Fill="#FF90A4AE" Data="M14 2H6c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
-                                            </Canvas>
-                                        </VisualBrush.Visual>
-                                    </VisualBrush>
-                                </Rectangle.Fill>
-                            </Rectangle>
-                            <TextBlock Text="{Binding SelectedItem.Name}" 
-                                       Foreground="{DynamicResource Brush_Text_Primary}" 
-                                       FontSize="18" 
-                                       FontWeight="Bold" 
-                                       VerticalAlignment="Center"/>
-                        </StackPanel>
+                <StackPanel Margin="0,0,0,16">
+                    <!-- Table Header -->
+                    <Border Background="{DynamicResource Brush_Window_Background}" BorderBrush="{DynamicResource Brush_Border}" BorderThickness="0,0,0,1" Padding="0,6" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="{Binding ElementName=ColName, Path=Width}"/>
+                                <ColumnDefinition Width="4"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Имя" Foreground="{DynamicResource Brush_Text_Secondary}" FontWeight="SemiBold" FontSize="12" Margin="16,0,0,0"/>
+                            <Rectangle Grid.Column="1" Width="1" VerticalAlignment="Stretch" Fill="#555555" Margin="0,2"/>
+                            <TextBlock Grid.Column="2" Text="Значение" Foreground="{DynamicResource Brush_Text_Secondary}" FontWeight="SemiBold" FontSize="12" Margin="8,0,16,0"/>
+                        </Grid>
                     </Border>
 
                     <!-- ItemsControl for properties -->
-                    <ItemsControl ItemsSource="{Binding TomlProperties}">
+                    <ItemsControl ItemsSource="{Binding TomlProperties}" AlternationCount="2">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Grid Margin="0,4,0,8">
-                                    <Grid.ColumnDefinitions>
-                                        <!-- Ширина колонки имени жестко связана с мастер-колонкой ColName -->
-                                        <ColumnDefinition Width="{Binding ElementName=ColName, Path=Width}"/>
-                                        <ColumnDefinition Width="4"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    
-                                    <!-- Текст заголовка выравнивается по верхней границе на случай многострочного значения -->
-                                    <TextBlock Grid.Column="0" 
-                                               Text="{Binding Name}" 
-                                               Foreground="{DynamicResource Brush_Text_Secondary}" 
-                                               VerticalAlignment="Top" 
-                                               Margin="0,4,8,4"
-                                               FontSize="13"/>
-                                               
-                                    <!-- Ввод поддерживает автоперенос строк (TextWrapping) и неограниченное число строк -->
-                                    <TextBox Grid.Column="2" 
-                                             Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
-                                             IsReadOnly="{Binding IsReadOnly}"
-                                             Background="{DynamicResource Brush_Panel_Header}"
-                                             Foreground="{DynamicResource Brush_Text_Light}"
-                                             BorderBrush="{DynamicResource Brush_Border}"
-                                             BorderThickness="1"
-                                             Padding="4,3"
-                                             FontSize="13"
-                                             TextWrapping="Wrap"
-                                             AcceptsReturn="True"
-                                             VerticalScrollBarVisibility="Auto"
-                                             VerticalAlignment="Stretch">
-                                        <TextBox.Style>
-                                            <Style TargetType="TextBox">
-                                                <Style.Triggers>
-                                                    <Trigger Property="IsReadOnly" Value="True">
-                                                        <Setter Property="Opacity" Value="0.6"/>
-                                                        <Setter Property="BorderThickness" Value="0"/>
-                                                        <Setter Property="Background" Value="Transparent"/>
-                                                    </Trigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBox.Style>
-                                    </TextBox>
-                                </Grid>
+                                <Border x:Name="RowBorder" Padding="0,6">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <!-- Ширина колонки имени жестко связана с мастер-колонкой ColName -->
+                                            <ColumnDefinition Width="{Binding ElementName=ColName, Path=Width}"/>
+                                            <ColumnDefinition Width="4"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <!-- Текст заголовка выравнивается по верхней границе на случай многострочного значения -->
+                                        <TextBlock Grid.Column="0" 
+                                                   Text="{Binding Name}" 
+                                                   Foreground="{DynamicResource Brush_Text_Secondary}" 
+                                                   VerticalAlignment="Center" 
+                                                   Margin="16,0,8,0"
+                                                   FontSize="13"/>
+                                                   
+                                        <!-- Ввод поддерживает автоперенос строк (TextWrapping) и неограниченное число строк -->
+                                        <TextBox Grid.Column="2" 
+                                                 Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
+                                                 IsReadOnly="{Binding IsReadOnly}"
+                                                 Background="{DynamicResource Brush_Panel_Header}"
+                                                 Foreground="{DynamicResource Brush_Text_Light}"
+                                                 BorderBrush="{DynamicResource Brush_Border}"
+                                                 BorderThickness="1"
+                                                 Padding="4,3"
+                                                 Margin="8,0,16,0"
+                                                 FontSize="13"
+                                                 TextWrapping="Wrap"
+                                                 AcceptsReturn="True"
+                                                 VerticalScrollBarVisibility="Auto"
+                                                 VerticalAlignment="Center">
+                                            <TextBox.Style>
+                                                <Style TargetType="TextBox">
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsReadOnly" Value="True">
+                                                            <Setter Property="Opacity" Value="0.6"/>
+                                                            <Setter Property="BorderThickness" Value="0"/>
+                                                            <Setter Property="Background" Value="Transparent"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBox.Style>
+                                        </TextBox>
+                                    </Grid>
+                                </Border>
+                                <DataTemplate.Triggers>
+                                    <Trigger Property="ItemsControl.AlternationIndex" Value="0">
+                                        <Setter TargetName="RowBorder" Property="Background" Value="{DynamicResource Brush_Log_Even}"/>
+                                    </Trigger>
+                                    <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                                        <Setter TargetName="RowBorder" Property="Background" Value="{DynamicResource Brush_Log_Odd}"/>
+                                    </Trigger>
+                                </DataTemplate.Triggers>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </StackPanel>
             </ScrollViewer>
+        </Grid>
+        <!-- Разделитель (сплиттер) для интерактивного изменения ширины колонок -->
+        <GridSplitter Grid.Column="1" 
+                      HorizontalAlignment="Stretch" 
+                      VerticalAlignment="Stretch" 
+                      Background="Transparent" 
+                      Cursor="SizeWE"/>
         </Grid>
     </Grid>
 </UserControl>
