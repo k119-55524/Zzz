@@ -17,7 +17,8 @@
         Title="{Binding WindowTitle}" Height="720" Width="1280" Icon="pack://application:,,,/Properties/AppIcon.ico"
         WindowStartupLocation="Manual"
         WindowStyle="None"
-        AllowsTransparency="False">
+        AllowsTransparency="False"
+        FontFamily="Roboto Mono">
 
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="30"
@@ -223,12 +224,13 @@
         <CommandBinding Command="{x:Static SystemCommands.CloseWindowCommand}" Executed="CloseWindow_Executed" />
     </Window.CommandBindings>
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" /> <!-- Заголовок и Меню -->
-            <RowDefinition Height="Auto" /> <!-- Панель инструментов (Toolbar) -->
-            <RowDefinition Height="*" />    <!-- Стыкуемые панели -->
-        </Grid.RowDefinitions>
+    <Border BorderBrush="#E2C08D" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" /> <!-- Заголовок и Меню -->
+                <RowDefinition Height="Auto" /> <!-- Панель инструментов (Toolbar) -->
+                <RowDefinition Height="*" />    <!-- Стыкуемые панели -->
+            </Grid.RowDefinitions>
 
         <Border Grid.Row="0" Background="{DynamicResource Brush_Window_Background}" BorderBrush="{DynamicResource Brush_Border}" BorderThickness="0,0,0,1" Height="30">
             <Grid>
@@ -700,4 +702,5 @@
             </dockLayout:LayoutRoot>
         </dock:DockingManager>
     </Grid>
+    </Border>
 </Window>

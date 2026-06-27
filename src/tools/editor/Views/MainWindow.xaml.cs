@@ -58,6 +58,11 @@ namespace editor
 					}
 				}
 
+				// Жёлтая окантовка в 1 пиксель вокруг отсоединенного (плавающего) окна
+				window.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E2C08D"));
+				window.BorderThickness = new Thickness(1);
+				window.Padding = new Thickness(2);
+
 				Application.Current.Dispatcher.BeginInvoke(new System.Action(() =>
 				{
 					var button = FindVisualChild<FrameworkElement>(window, "SinglePaneContextMenu");

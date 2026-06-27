@@ -12,7 +12,8 @@
         AllowsTransparency="False"
         Background="{DynamicResource Brush_Panel_Background}"
         BorderBrush="{DynamicResource Brush_Border}"
-        BorderThickness="1">
+        BorderThickness="1"
+        FontFamily="Roboto Mono">
 
     <Window.Resources>
         <ResourceDictionary>

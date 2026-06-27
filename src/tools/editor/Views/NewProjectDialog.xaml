@@ -9,7 +9,8 @@
         WindowStyle="None"
         ResizeMode="NoResize"
         AllowsTransparency="False"
-        Background="{DynamicResource Brush_Window_Background}">
+        Background="{DynamicResource Brush_Window_Background}"
+        FontFamily="Roboto Mono">
 
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="30"
