@@ -4,4 +4,4 @@ name = "super_game"
 [editor]
 show_system_mode = false
 disabled_filters = []
-empty_folders = ["Global"]
+empty_folders = []

@@ -58,28 +58,27 @@ namespace editor.Services.Project.Infrastructure
                 {
                     return root.RelativePath;
                 }
-                var path = FindRelativePathFromRootInternal(root, target, root.RelativePath);
-                if (path != null)
+                var found = FindNodeInTree(root, target);
+                if (found != null)
                 {
-                    return path;
+                    return found.RelativePath;
                 }
             }
             return null;
         }
 
-        private static string? FindRelativePathFromRootInternal(VirtualNode current, VirtualNode target, string currentPath)
+        private static VirtualNode? FindNodeInTree(VirtualNode current, VirtualNode target)
         {
             foreach (var child in current.Children)
             {
-                string childPath = Path.Combine(currentPath, child.RelativePath).Replace('\\', '/');
                 if (child == target)
                 {
-                    return childPath;
+                    return child;
                 }
-                var path = FindRelativePathFromRootInternal(child, target, childPath);
-                if (path != null)
+                var found = FindNodeInTree(child, target);
+                if (found != null)
                 {
-                    return path;
+                    return found;
                 }
             }
             return null;

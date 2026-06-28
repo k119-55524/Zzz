@@ -317,6 +317,7 @@
                                 <MenuItem x:Name="CopyNameMenuItem" Header="{DynamicResource ContextMenu_CopyName}" Click="CopyName_Click" />
                                 <MenuItem x:Name="OpenInExplorerMenuItem" Header="{DynamicResource ContextMenu_OpenInExplorer}" Click="OpenInExplorer_Click" />
                                 <MenuItem x:Name="RenameMenuItem" Header="{DynamicResource ContextMenu_Rename}" Click="Rename_Click" />
+                                <MenuItem x:Name="DeleteMenuItem" Header="{DynamicResource ContextMenu_Delete}" Click="Delete_Click" />
                                 <MenuItem x:Name="AddMenuItem" Header="{DynamicResource ContextMenu_Add}">
                                     <MenuItem Header="{DynamicResource ContextMenu_Folder}" Click="AddFolder_Click" />
                                 </MenuItem>

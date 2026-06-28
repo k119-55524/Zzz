@@ -35,6 +35,8 @@
     <sys:String x:Key="Inspector_Stats_Subfolders">Количество подпапок (на текущем уровне):</sys:String>
     <sys:String x:Key="Inspector_Stats_Files">Количество файлов (на текущем уровне):</sys:String>
     <sys:String x:Key="Inspector_Stats_TotalSize">Сумма размеров файлов:</sys:String>
+    <sys:String x:Key="Inspector_Table_Name">Имя</sys:String>
+    <sys:String x:Key="Inspector_Table_Value">Значение</sys:String>
     <sys:String x:Key="Widget_SceneTree_Placeholder">ДЕРЕВО СЦЕНЫ (ИЕРАРХИЯ)</sys:String>
     <sys:String x:Key="Widget_Assets_Placeholder">БРАУЗЕР АССЕТОВ / РЕСУРСОВ</sys:String>
     <sys:String x:Key="Widget_Console_Placeholder">КОНСОЛЬ ВЫВОДА ЛОГОВ</sys:String>
@@ -47,6 +49,8 @@
     <sys:String x:Key="Dialog_About_Version">Версия: {0}</sys:String>
     <sys:String x:Key="Dialog_Close_Title">Выход из редактора</sys:String>
     <sys:String x:Key="Dialog_Close_Unsaved">Сохранить изменения проекта перед выходом?</sys:String>
+    <sys:String x:Key="Dialog_Delete_Title">Удаление</sys:String>
+    <sys:String x:Key="Dialog_Delete_Confirm">Вы уверены, что хотите удалить «{0}»?</sys:String>
 
     <!-- Ошибки и предупреждения проектов -->
     <sys:String x:Key="Msg_Project_NotFound_Title">Проект не найден</sys:String>
@@ -131,6 +135,7 @@
     <sys:String x:Key="ContextMenu_CopyName">Скопировать имя</sys:String>
     <sys:String x:Key="ContextMenu_OpenInExplorer">Открыть в проводнике</sys:String>
     <sys:String x:Key="ContextMenu_Rename">Переименовать</sys:String>
+    <sys:String x:Key="ContextMenu_Delete">Удалить</sys:String>
     <sys:String x:Key="ContextMenu_Add">Добавить</sys:String>
     <sys:String x:Key="ContextMenu_Folder">Папку</sys:String>
 </ResourceDictionary>

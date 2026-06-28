@@ -473,6 +473,12 @@ namespace editor.Views.Widgets
 											menuItem.Click -= Rename_Click;
 											menuItem.Click += Rename_Click;
 										}
+										else if (menuItem.Name == "DeleteMenuItem")
+										{
+											menuItem.Visibility = isSystem ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
+											menuItem.Click -= Delete_Click;
+											menuItem.Click += Delete_Click;
+										}
 										else if (menuItem.Name == "AddMenuItem")
 										{
 											menuItem.Visibility = (isSystem || !node.IsFolder) ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
@@ -518,6 +524,79 @@ namespace editor.Views.Widgets
 			if (parentObject == null) return null;
 			if (parentObject is T parent) return parent;
 			return FindVisualParent<T>(parentObject);
+		}
+
+		private void Delete_Click(object sender, System.Windows.RoutedEventArgs e)
+		{
+			if (sender is MenuItem menuItem)
+			{
+				var node = GetSelectedNode(menuItem);
+				if (node != null)
+				{
+					var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as ViewModels.MainWindowViewModel;
+					var mainAssetsVm = mainVm?.Panes.OfType<ViewModels.AssetsViewModel>().FirstOrDefault();
+					var settings = App.ProjectService.CurrentSettings;
+					if (mainVm != null && mainAssetsVm != null && settings != null)
+					{
+						string? projectRoot = mainVm.CurrentProjectPath;
+						if (string.IsNullOrEmpty(projectRoot)) return;
+
+						bool isSystemMode = mainAssetsVm.IsSystemMode;
+						var activeFilters = settings.DisabledFilters;
+
+						string title = System.Windows.Application.Current?.TryFindResource("Dialog_Delete_Title") as string ?? "Delete Item";
+						string confirmFormat = System.Windows.Application.Current?.TryFindResource("Dialog_Delete_Confirm") as string ?? "Are you sure you want to delete '{0}'?";
+						string confirmMsg = string.Format(confirmFormat, node.Name);
+
+						var result = System.Windows.MessageBox.Show(confirmMsg, title, System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
+						if (result == System.Windows.MessageBoxResult.Yes)
+						{
+							if (!isSystemMode && settings.EmptyFolders.Count > 0)
+							{
+								var emptyFolders = settings.EmptyFolders;
+								for (int i = emptyFolders.Count - 1; i >= 0; i--)
+								{
+									string path = emptyFolders[i];
+									if (path.Equals(node.RelativePath, StringComparison.OrdinalIgnoreCase) ||
+										path.StartsWith(node.RelativePath + "/", StringComparison.OrdinalIgnoreCase))
+									{
+										emptyFolders.RemoveAt(i);
+									}
+								}
+								App.ProjectService.SaveProject(projectRoot, out _);
+							}
+
+							var physicalPaths = GetPhysicalPaths(node, projectRoot, isSystemMode, activeFilters);
+							foreach (var physPath in physicalPaths)
+							{
+								try
+								{
+									if (node.IsFolder)
+									{
+										if (System.IO.Directory.Exists(physPath))
+										{
+											System.IO.Directory.Delete(physPath, true);
+										}
+									}
+									else
+									{
+										if (System.IO.File.Exists(physPath))
+										{
+											System.IO.File.Delete(physPath);
+										}
+									}
+								}
+								catch (Exception ex)
+								{
+									System.Windows.MessageBox.Show($"Не удалось удалить: {ex.Message}", "Ошибка удаления", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+								}
+							}
+
+							RefreshTree();
+						}
+					}
+				}
+			}
 		}
 
 		private void RefreshTree()

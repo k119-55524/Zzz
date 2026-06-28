@@ -35,6 +35,8 @@
     <sys:String x:Key="Inspector_Stats_Subfolders">Subfolders (current level):</sys:String>
     <sys:String x:Key="Inspector_Stats_Files">Files (current level):</sys:String>
     <sys:String x:Key="Inspector_Stats_TotalSize">Total size of files:</sys:String>
+    <sys:String x:Key="Inspector_Table_Name">Name</sys:String>
+    <sys:String x:Key="Inspector_Table_Value">Value</sys:String>
     <sys:String x:Key="Widget_SceneTree_Placeholder">SCENE HIERARCHY TREE</sys:String>
     <sys:String x:Key="Widget_Assets_Placeholder">ASSETS / FILE BROWSER</sys:String>
     <sys:String x:Key="Widget_Console_Placeholder">CONSOLE LOG OUTPUT</sys:String>
@@ -47,6 +49,8 @@
     <sys:String x:Key="Dialog_About_Version">Version: {0}</sys:String>
     <sys:String x:Key="Dialog_Close_Title">Exit Editor</sys:String>
     <sys:String x:Key="Dialog_Close_Unsaved">Save project changes before exiting?</sys:String>
+    <sys:String x:Key="Dialog_Delete_Title">Delete Item</sys:String>
+    <sys:String x:Key="Dialog_Delete_Confirm">Are you sure you want to delete '{0}'?</sys:String>
 
     <!-- Project Errors & Warnings -->
     <sys:String x:Key="Msg_Project_NotFound_Title">Project Not Found</sys:String>
@@ -131,6 +135,7 @@
     <sys:String x:Key="ContextMenu_CopyName">Copy Name</sys:String>
     <sys:String x:Key="ContextMenu_OpenInExplorer">Open in Explorer</sys:String>
     <sys:String x:Key="ContextMenu_Rename">Rename</sys:String>
+    <sys:String x:Key="ContextMenu_Delete">Delete</sys:String>
     <sys:String x:Key="ContextMenu_Add">Add</sys:String>
     <sys:String x:Key="ContextMenu_Folder">Folder</sys:String>
 </ResourceDictionary>

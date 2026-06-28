@@ -147,9 +147,9 @@
                                 <ColumnDefinition Width="4"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Имя" Foreground="{DynamicResource Brush_Text_Secondary}" FontWeight="SemiBold" FontSize="12" Margin="16,0,0,0"/>
+                            <TextBlock Grid.Column="0" Text="{DynamicResource Inspector_Table_Name}" Foreground="{DynamicResource Brush_Text_Secondary}" FontWeight="SemiBold" FontSize="12" Margin="16,0,0,0"/>
                             <Rectangle Grid.Column="1" Width="1" VerticalAlignment="Stretch" Fill="#555555" Margin="0,2"/>
-                            <TextBlock Grid.Column="2" Text="Значение" Foreground="{DynamicResource Brush_Text_Secondary}" FontWeight="SemiBold" FontSize="12" Margin="8,0,16,0"/>
+                            <TextBlock Grid.Column="2" Text="{DynamicResource Inspector_Table_Value}" Foreground="{DynamicResource Brush_Text_Secondary}" FontWeight="SemiBold" FontSize="12" Margin="8,0,16,0"/>
                         </Grid>
                     </Border>
 
@@ -212,9 +212,9 @@
                                 <ColumnDefinition Width="4"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Имя" Foreground="{DynamicResource Brush_Text_Secondary}" FontWeight="SemiBold" FontSize="12" Margin="16,0,0,0"/>
+                            <TextBlock Grid.Column="0" Text="{DynamicResource Inspector_Table_Name}" Foreground="{DynamicResource Brush_Text_Secondary}" FontWeight="SemiBold" FontSize="12" Margin="16,0,0,0"/>
                             <Rectangle Grid.Column="1" Width="1" VerticalAlignment="Stretch" Fill="#555555" Margin="0,2"/>
-                            <TextBlock Grid.Column="2" Text="Значение" Foreground="{DynamicResource Brush_Text_Secondary}" FontWeight="SemiBold" FontSize="12" Margin="8,0,16,0"/>
+                            <TextBlock Grid.Column="2" Text="{DynamicResource Inspector_Table_Value}" Foreground="{DynamicResource Brush_Text_Secondary}" FontWeight="SemiBold" FontSize="12" Margin="8,0,16,0"/>
                         </Grid>
                     </Border>
 
