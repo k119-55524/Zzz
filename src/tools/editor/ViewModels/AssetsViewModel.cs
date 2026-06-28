@@ -46,15 +46,16 @@ namespace editor.ViewModels
     /// </summary>
     public class AssetsViewModel : PaneViewModel
     {
-        private readonly VirtualFileSystem _vfs;
-        private ObservableCollection<VirtualNode> _virtualRootNodes = new();
+        private readonly ProjectFileSystem _vfs;
+        private ObservableCollection<ProjectNode> _assetRootNodes = new();
+        private ObservableCollection<ProjectNode> _systemRootNodes = new();
         private ObservableCollection<FilterItemViewModel> _availableFilters = new();
         private bool _isSystemMode;
         private bool _isUpdatingFilters;
 
         public AssetsViewModel() : base(WidgetType.Assets)
         {
-            _vfs = new VirtualFileSystem(App.ProjectService.Storage);
+            _vfs = new ProjectFileSystem(App.ProjectService.Storage);
             
             // Команда принудительного обновления дерева
             RefreshCommand = new RelayCommand(RefreshTree);
@@ -77,11 +78,31 @@ namespace editor.ViewModels
 
         public ICommand RefreshCommand { get; }
 
-        public ObservableCollection<VirtualNode> VirtualRootNodes
+        public ObservableCollection<ProjectNode> AssetRootNodes
         {
-            get => _virtualRootNodes;
-            set => SetField(ref _virtualRootNodes, value);
+            get => _assetRootNodes;
+            set
+            {
+                if (SetField(ref _assetRootNodes, value))
+                {
+                    OnPropertyChanged(nameof(RootNodes));
+                }
+            }
         }
+
+        public ObservableCollection<ProjectNode> SystemRootNodes
+        {
+            get => _systemRootNodes;
+            set
+            {
+                if (SetField(ref _systemRootNodes, value))
+                {
+                    OnPropertyChanged(nameof(RootNodes));
+                }
+            }
+        }
+
+        public ObservableCollection<ProjectNode> RootNodes => IsSystemMode ? SystemRootNodes : AssetRootNodes;
 
         public ObservableCollection<FilterItemViewModel> AvailableFilters
         {
@@ -105,6 +126,7 @@ namespace editor.ViewModels
                             App.ProjectService.SaveProject(mainVm.CurrentProjectPath, out _);
                         }
                     }
+                    OnPropertyChanged(nameof(RootNodes));
                     UpdateFiltersList();
                     RefreshTree();
                 }
@@ -115,7 +137,8 @@ namespace editor.ViewModels
         {
             if (string.IsNullOrEmpty(projectPath))
             {
-                VirtualRootNodes.Clear();
+                AssetRootNodes.Clear();
+                SystemRootNodes.Clear();
                 AvailableFilters.Clear();
                 return;
             }
@@ -147,12 +170,31 @@ namespace editor.ViewModels
                 return;
             }
 
-            // Выбираем обязательные папки для текущего режима
-            var folders = IsSystemMode ? ProjectStructure.SystemDirectories : ProjectStructure.AssetDirectories;
+            var folders = new List<ProjectFolderSchema>();
+            if (IsSystemMode)
+            {
+                folders = ProjectStructure.SystemDirectories;
+            }
+            else
+            {
+                var mainVm = Application.Current?.MainWindow?.DataContext as MainWindowViewModel;
+                string? projectRoot = mainVm?.CurrentProjectPath;
+                if (!string.IsNullOrEmpty(projectRoot))
+                {
+                    string assetsRoot = Path.Combine(projectRoot, "Assets");
+                    if (Directory.Exists(assetsRoot))
+                    {
+                        foreach (var dir in Directory.GetDirectories(assetsRoot))
+                        {
+                            string name = Path.GetFileName(dir);
+                            folders.Add(new ProjectFolderSchema { RelativePath = $"Assets/{name}" });
+                        }
+                    }
+                }
+            }
 
             foreach (var folder in folders)
             {
-                // Имя типа ресурса/папки — это последнее имя в пути (например, Scripts)
                 string name = Path.GetFileName(folder.RelativePath);
                 bool isChecked = !settings.DisabledFilters.Contains(name);
 
@@ -210,7 +252,7 @@ namespace editor.ViewModels
         }
 
         /// <summary>
-        /// Перестраивает виртуальное файловое дерево на основе текущих настроек.
+        /// Перестраивает файловое дерево на основе текущих настроек.
         /// </summary>
         public void RefreshTree()
         {
@@ -219,34 +261,51 @@ namespace editor.ViewModels
 
             if (string.IsNullOrEmpty(projectRoot) || App.ProjectService.CurrentSettings == null)
             {
-                VirtualRootNodes = new ObservableCollection<VirtualNode>();
+                AssetRootNodes = new ObservableCollection<ProjectNode>();
+                SystemRootNodes = new ObservableCollection<ProjectNode>();
                 return;
             }
 
             var settings = App.ProjectService.CurrentSettings;
-            var tree = _vfs.BuildTree(
-                projectRoot,
-                IsSystemMode,
-                settings.DisabledFilters);
+            
+            // Загружаем ассеты (IsSystemMode = false)
+            var assetsTree = _vfs.BuildTree(projectRoot, false, settings.DisabledFilters);
+            AssetRootNodes = new ObservableCollection<ProjectNode>(assetsTree);
 
-            VirtualRootNodes = new ObservableCollection<VirtualNode>(tree);
+            // Загружаем системные файлы (IsSystemMode = true)
+            var systemTree = _vfs.BuildTree(projectRoot, true, settings.DisabledFilters);
+            SystemRootNodes = new ObservableCollection<ProjectNode>(systemTree);
         }
 
-        private void NotifyDirty()
-        {
-            var mainVm = Application.Current?.MainWindow?.DataContext as MainWindowViewModel;
-            if (mainVm != null)
-            {
-                mainVm.IsDirty = true;
-            }
-        }
 
         private void ResetCurrentFilters()
         {
             var settings = App.ProjectService.CurrentSettings;
             if (settings == null) return;
 
-            var folders = IsSystemMode ? ProjectStructure.SystemDirectories : ProjectStructure.AssetDirectories;
+            var folders = new List<ProjectFolderSchema>();
+            if (IsSystemMode)
+            {
+                folders = ProjectStructure.SystemDirectories;
+            }
+            else
+            {
+                var mainVm = Application.Current?.MainWindow?.DataContext as MainWindowViewModel;
+                string? projectRoot = mainVm?.CurrentProjectPath;
+                if (!string.IsNullOrEmpty(projectRoot))
+                {
+                    string assetsRoot = Path.Combine(projectRoot, "Assets");
+                    if (Directory.Exists(assetsRoot))
+                    {
+                        foreach (var dir in Directory.GetDirectories(assetsRoot))
+                        {
+                            string name = Path.GetFileName(dir);
+                            folders.Add(new ProjectFolderSchema { RelativePath = $"Assets/{name}" });
+                        }
+                    }
+                }
+            }
+
             var currentModeFolderNames = folders
                 .Select(d => System.IO.Path.GetFileName(d.RelativePath) ?? string.Empty)
                 .Where(n => n != string.Empty)

@@ -13,7 +13,6 @@ namespace editor.ViewModels
 		private readonly IDialogService _dialogService;
 		private GlobalSessionState _globalState = new();
 
-		private bool _isDirty;
 		private string? _currentProjectPath;
 
 		public MainWindowViewModel(IDialogService dialogService)
@@ -42,7 +41,7 @@ namespace editor.ViewModels
 				pane.OnProjectClosed();
 			}
 
-			SaveCommand = new RelayCommand(Save, () => IsDirty);
+
 
 			NewProjectCommand = new RelayCommand(NewProject);
 			OpenProjectCommand = new RelayCommand(OpenProject);
@@ -144,24 +143,10 @@ namespace editor.ViewModels
 					OnPropertyChanged(nameof(ProjectDisplayName));
 					OnPropertyChanged(nameof(WindowTitle));
 					OnPropertyChanged(nameof(IsProjectOpen));
-					OnPropertyChanged(nameof(IsDirty));
 					CommandManager.InvalidateRequerySuggested();
 
 					WorldPane.IsToolbarEnabled = IsProjectOpen;
 					GamePane.IsToolbarEnabled = IsProjectOpen;
-				}
-			}
-		}
-
-		public bool IsDirty
-		{
-			get => (_isDirty || App.ProjectService.History.IsDirty) && IsProjectOpen;
-			set
-			{
-				if (SetField(ref _isDirty, value))
-				{
-					OnPropertyChanged(nameof(WindowTitle));
-					CommandManager.InvalidateRequerySuggested();
 				}
 			}
 		}
@@ -171,9 +156,7 @@ namespace editor.ViewModels
 			get => !string.IsNullOrEmpty(_currentProjectPath);
 		}
 
-		public string WindowTitle => $"{AppName} - [{ProjectDisplayName}]{(IsDirty ? "*" : "")}";
-
-		public ICommand SaveCommand { get; }
+		public string WindowTitle => $"{AppName} - [{ProjectDisplayName}]";
 
 		public ICommand NewProjectCommand { get; }
 		public ICommand OpenProjectCommand { get; }
@@ -227,28 +210,9 @@ namespace editor.ViewModels
 			EditorSessionManager.SaveGlobalSession(_globalState);
 		}
 
-		// Возвращает false, если закрытие нужно отменить (пользователь нажал "Отмена" в диалоге сохранения)
+		// Возвращает false, если закрытие нужно отменить
 		public bool RequestClose()
 		{
-			if (!IsDirty)
-			{
-				return true;
-			}
-
-			string title = GetLocString("Dialog_Close_Title");
-			string message = GetLocString("Dialog_Close_Unsaved");
-
-			var result = _dialogService.ShowMessage(message, title, MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
-			if (result == MessageBoxResult.Cancel)
-			{
-				return false;
-			}
-
-			if (result == MessageBoxResult.Yes)
-			{
-				IsDirty = false;
-			}
-
 			return true;
 		}
 
@@ -290,7 +254,6 @@ namespace editor.ViewModels
 					_globalState.LastCreatedProjectParentDir = dialog.ParentDirectory;
 					SaveSession();
 					CurrentProjectPath = projectDir;
-					IsDirty = false; // При создании проекта сохранять нечего
 					AddRecentProject(projectDir);
 
 					App.EngineService.OnProjectOpened(projectDir);
@@ -298,6 +261,8 @@ namespace editor.ViewModels
 					{
 						pane.OnProjectOpened(projectDir);
 					}
+
+					App.ProjectService.History.Clear();
 				}
 				else
 				{
@@ -361,8 +326,6 @@ namespace editor.ViewModels
 				_globalState.LastOpenProjectPath = projectDir;
 				SaveSession();
 				CurrentProjectPath = projectDir;
-				App.ProjectService.History.Clear();
-				IsDirty = false;
 				AddRecentProject(projectDir);
 
 				App.EngineService.OnProjectOpened(projectDir);
@@ -370,6 +333,8 @@ namespace editor.ViewModels
 				{
 					pane.OnProjectOpened(projectDir);
 				}
+
+				App.ProjectService.History.Clear();
 			}
 			else
 			{
@@ -390,7 +355,6 @@ namespace editor.ViewModels
 			SaveSession();
 			CurrentProjectPath = null;
 			App.ProjectService.History.Clear();
-			IsDirty = false;
 			foreach (var pane in Panes)
 			{
 				pane.OnProjectClosed();
@@ -431,29 +395,12 @@ namespace editor.ViewModels
 			OnPropertyChanged(nameof(HasRecentProjects));
 		}
 
-		void Save()
-		{
-			if (IsProjectOpen && !string.IsNullOrEmpty(CurrentProjectPath))
-			{
-				if (App.ProjectService.SaveProject(CurrentProjectPath, out string error))
-				{
-					App.ProjectService.History.MarkSavePoint();
-					IsDirty = false;
-					OnPropertyChanged(nameof(IsDirty));
-					OnPropertyChanged(nameof(WindowTitle));
-				}
-				else
-				{
-					_dialogService.ShowMessage(error, GetLocString("Msg_Error_Title"), System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-				}
-			}
-		}
+
 		private void Undo()
 		{
 			if (App.ProjectService.History.CanUndo)
 			{
 				App.ProjectService.History.Undo();
-				OnPropertyChanged(nameof(IsDirty));
 				OnPropertyChanged(nameof(WindowTitle));
 				CommandManager.InvalidateRequerySuggested();
 				RefreshAssetsTree();
@@ -465,7 +412,6 @@ namespace editor.ViewModels
 			if (App.ProjectService.History.CanRedo)
 			{
 				App.ProjectService.History.Redo();
-				OnPropertyChanged(nameof(IsDirty));
 				OnPropertyChanged(nameof(WindowTitle));
 				CommandManager.InvalidateRequerySuggested();
 				RefreshAssetsTree();
@@ -480,7 +426,6 @@ namespace editor.ViewModels
 
 		public void RefreshDirtyState()
 		{
-			OnPropertyChanged(nameof(IsDirty));
 			OnPropertyChanged(nameof(WindowTitle));
 			CommandManager.InvalidateRequerySuggested();
 		}

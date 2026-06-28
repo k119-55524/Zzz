@@ -138,4 +138,5 @@
     <sys:String x:Key="ContextMenu_Delete">Delete</sys:String>
     <sys:String x:Key="ContextMenu_Add">Add</sys:String>
     <sys:String x:Key="ContextMenu_Folder">Folder</sys:String>
+    <sys:String x:Key="ContextMenu_AddFolder">Add Folder</sys:String>
 </ResourceDictionary>

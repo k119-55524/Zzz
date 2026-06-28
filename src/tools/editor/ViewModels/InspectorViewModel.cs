@@ -105,7 +105,7 @@ namespace editor.ViewModels
             _searchText = string.Empty;
             OnPropertyChanged(nameof(SearchText));
 
-            if (item is VirtualNode node)
+            if (item is ProjectNode node)
             {
                 if (node.IsFolder)
                 {
@@ -116,9 +116,9 @@ namespace editor.ViewModels
                         var activeFilters = App.ProjectService.CurrentSettings.DisabledFilters;
                         var mainAssetsVm = mainVm.Panes.OfType<AssetsViewModel>().FirstOrDefault();
                         bool isSystemMode = mainAssetsVm?.IsSystemMode ?? false;
-                        var roots = mainAssetsVm?.VirtualRootNodes ?? new ObservableCollection<VirtualNode>();
+                        var roots = mainAssetsVm?.RootNodes ?? new ObservableCollection<ProjectNode>();
 
-                        var stats = FolderStatisticsCalculator.Calculate(node, roots, projectRoot, isSystemMode, activeFilters);
+                        var stats = FolderStatisticsCalculator.Calculate(node, roots, projectRoot);
                         FolderStats = new FolderStatisticsViewModel(node.Name, node.RelativePath, stats);
                         ShowFolderStats = true;
                     }

@@ -138,4 +138,5 @@
     <sys:String x:Key="ContextMenu_Delete">Удалить</sys:String>
     <sys:String x:Key="ContextMenu_Add">Добавить</sys:String>
     <sys:String x:Key="ContextMenu_Folder">Папку</sys:String>
+    <sys:String x:Key="ContextMenu_AddFolder">Добавить папку</sys:String>
 </ResourceDictionary>

@@ -262,7 +262,6 @@ namespace editor
 				}
 			}
 
-			_viewModel.IsDirty = layoutState.IsDirty;
 			RestoreLayout(string.IsNullOrEmpty(layoutState.LayoutXml) ? _defaultLayoutXml : layoutState.LayoutXml);
 			DockManager.UpdateLayout();
 		}
@@ -328,7 +327,7 @@ namespace editor
 				Left = saveLeft,
 				Top = saveTop,
 				IsMaximized = WindowState == WindowState.Maximized,
-				IsDirty = _viewModel.IsDirty,
+				IsDirty = false,
 				LayoutXml = AvalonDockLayoutPersistence.Serialize(DockManager)
 			};
 			EditorSessionManager.SaveLayoutSession(layoutState);

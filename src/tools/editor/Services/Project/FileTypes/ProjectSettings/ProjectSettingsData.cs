@@ -36,7 +36,14 @@ namespace editor.Services.Project.FileTypes.ProjectSettings
 		public bool ShowSystemMode
 		{
 			get => _showSystemMode;
-			set => SetProperty(ref _showSystemMode, value, val => _showSystemMode = val);
+			set
+			{
+				if (_showSystemMode != value)
+				{
+					_showSystemMode = value;
+					RaiseOnChanged();
+				}
+			}
 		}
 
 		/// <summary>

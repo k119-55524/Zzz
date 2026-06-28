@@ -248,11 +248,7 @@
                     <TextBlock Text=" - [" Foreground="{DynamicResource Brush_Text_Primary}" VerticalAlignment="Center" />
                     <TextBlock Text="{Binding ProjectDisplayName}" Foreground="{DynamicResource Brush_Text_Primary}" VerticalAlignment="Center" />
                     <TextBlock Text="]" Foreground="{DynamicResource Brush_Text_Primary}" VerticalAlignment="Center" />
-                    <!-- Фиксированное текстовое поле для звездочки. Видимость/текст меняются, но ширина закреплена, чтобы меню не прыгало -->
-                    <Grid Width="10" Margin="1,0,10,0">
-                        <TextBlock Text="*" Foreground="#E81123" FontWeight="Bold" FontSize="14" VerticalAlignment="Center"
-                                   Visibility="{Binding IsDirty, Converter={StaticResource BoolToVis}}" />
-                    </Grid>
+
                 </StackPanel>
 
                 <!-- 2. Главное меню редактора (активно в Chrome) -->
@@ -427,12 +423,6 @@
             <Grid>
                 <!-- Левая часть: Undo, Redo и Трансформации -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                    <!-- Кнопка сохранения (Сохранить) в стиле VS -->
-                    <Button Command="{Binding SaveCommand}" ToolTip="Сохранить (Ctrl+S)" Style="{StaticResource ToolbarButtonStyle}" Width="30" Height="25">
-                        <Path Data="M2,2 L10,2 L12,4 L12,12 L2,12 Z M4,2 L4,6 L8,6 L8,2 Z M5,12 L5,8 L9,8 L9,12 Z"
-                              Stroke="#007ACC" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Button>
-
                     <!-- Undo / Redo кнопки -->
                     <Button Content="↩" ToolTip="Ctrl+Z" Style="{StaticResource ToolbarButtonStyle}" Command="{Binding UndoCommand}" />
                     <Button Content="↪" ToolTip="Ctrl+Y" Style="{StaticResource ToolbarButtonStyle}" Command="{Binding RedoCommand}" />

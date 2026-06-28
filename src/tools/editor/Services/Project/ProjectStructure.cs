@@ -76,25 +76,12 @@ namespace editor.Services.Project
 			CreateFolderWithFile(ProjectConstants.SystemDirectories.ProjectSettings, new ProjectSettingsParser())
 		};
 
-		// Корневая папка ассетов, внутри которой лежат папки типов ресурсов
-		private const string AssetsRoot = "Assets";
-
-		// Папки типов ресурсов внутри Assets/
-		public static readonly List<ProjectFolderSchema> AssetDirectories = new()
-		{
-			CreateAssetFolder(ProjectConstants.AssetDirectories.Scripts),
-			CreateAssetFolder(ProjectConstants.AssetDirectories.EcsComponents),
-			CreateAssetFolder(ProjectConstants.AssetDirectories.EcsSystems),
-			CreateAssetFolder(ProjectConstants.AssetDirectories.EcsEntities),
-			CreateAssetFolder(ProjectConstants.AssetDirectories.Textures),
-			CreateAssetFolder(ProjectConstants.AssetDirectories.Geometry),
-			CreateAssetFolder(ProjectConstants.AssetDirectories.Shaders),
-			CreateAssetFolder(ProjectConstants.AssetDirectories.Materials)
-		};
+		// Корневая папка ассетов
+		public const string AssetsRoot = "Assets";
 
 		// Все обязательные папки проекта (системные + ассеты)
 		public static IEnumerable<ProjectFolderSchema> AllDirectories =>
-			SystemDirectories.Concat(AssetDirectories);
+			SystemDirectories.Concat(new[] { new ProjectFolderSchema { RelativePath = AssetsRoot } });
 
 		// Схемы всех файлов, привязанных к обязательным папкам
 		public static IEnumerable<ProjectFileSchema> AllFiles =>
@@ -116,15 +103,6 @@ namespace editor.Services.Project
 					Parser = parser,
 					DefaultContent = parser.GetDefaultContent()
 				}
-			};
-		}
-
-		// Строит схему папки типа ресурса, лежащей внутри Assets/.
-		private static ProjectFolderSchema CreateAssetFolder(string relativePathInsideAssets)
-		{
-			return new ProjectFolderSchema
-			{
-				RelativePath = $"{AssetsRoot}/{relativePathInsideAssets}"
 			};
 		}
 	}

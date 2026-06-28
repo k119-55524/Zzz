@@ -17,6 +17,11 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
         /// </summary>
         public event Action? OnChanged;
 
+        protected void RaiseOnChanged()
+        {
+            OnChanged?.Invoke();
+        }
+
         /// <summary>
         /// Установить менеджер истории. Если null, изменения будут происходить без записи истории.
         /// </summary>

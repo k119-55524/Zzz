@@ -11,7 +11,7 @@ namespace editor.Views.Widgets
 	public partial class AssetsWidget : UserControl
 	{
 		// Узлы, добавленные через "Добавить -> Папку" и еще не подтвержденные вводом имени.
-		private readonly HashSet<VirtualNode> _pendingNewNodes = new();
+		private readonly HashSet<ProjectNode> _pendingNewNodes = new();
 
 		public AssetsWidget()
 		{
@@ -23,9 +23,9 @@ namespace editor.Views.Widgets
 			App.SelectionService.SelectedItem = e.NewValue;
 		}
 
-		private VirtualNode? GetSelectedNode(MenuItem menuItem)
+		private ProjectNode? GetSelectedNode(MenuItem menuItem)
 		{
-			return menuItem.DataContext as VirtualNode;
+			return menuItem.DataContext as ProjectNode;
 		}
 
 		private void CopyName_Click(object sender, System.Windows.RoutedEventArgs e)
@@ -116,31 +116,31 @@ namespace editor.Views.Widgets
 					var mainAssetsVm = mainVm?.Panes.OfType<ViewModels.AssetsViewModel>().FirstOrDefault();
 					if (mainVm != null && mainAssetsVm != null)
 					{
-						VirtualNode parentNode;
-						string parentVirtualPath;
+						ProjectNode parentNode;
+						string parentRelativePath;
 
 						if (node.IsFolder)
 						{
 							parentNode = node;
-							parentVirtualPath = node.RelativePath;
+							parentRelativePath = node.RelativePath;
 						}
 						else
 						{
-							parentNode = FindParentNode(mainAssetsVm.VirtualRootNodes, node, out parentVirtualPath);
+							parentNode = FindParentNode(mainAssetsVm.RootNodes, node, out parentRelativePath);
 						}
 
 						string baseName = "Новая папка";
 						string folderName = baseName;
 						int index = 1;
-						var siblings = parentNode != null ? parentNode.Children.ToList() : mainAssetsVm.VirtualRootNodes.ToList();
+						var siblings = parentNode != null ? parentNode.Children.ToList() : mainAssetsVm.RootNodes.ToList();
 						while (siblings.Any(c => c.Name.Equals(folderName, StringComparison.OrdinalIgnoreCase)))
 						{
 							folderName = $"{baseName} {index++}";
 						}
 
-						string newRelPath = string.IsNullOrEmpty(parentVirtualPath) ? folderName : $"{parentVirtualPath}/{folderName}";
+						string newRelPath = string.IsNullOrEmpty(parentRelativePath) ? folderName : $"{parentRelativePath}/{folderName}";
 
-						var newFolderNode = new VirtualNode
+						var newFolderNode = new ProjectNode
 						{
 							Name = folderName,
 							RelativePath = newRelPath,
@@ -155,7 +155,7 @@ namespace editor.Views.Widgets
 						}
 						else
 						{
-							mainAssetsVm.VirtualRootNodes.Add(newFolderNode);
+							mainAssetsVm.RootNodes.Add(newFolderNode);
 						}
 					}
 				}
@@ -172,22 +172,25 @@ namespace editor.Views.Widgets
 				string baseName = "Новая папка";
 				string folderName = baseName;
 				int index = 1;
-				var siblings = mainAssetsVm.VirtualRootNodes.ToList();
+				var siblings = mainAssetsVm.RootNodes.ToList();
 				while (siblings.Any(c => c.Name.Equals(folderName, StringComparison.OrdinalIgnoreCase)))
 				{
 					folderName = $"{baseName} {index++}";
 				}
 
-				var newFolderNode = new VirtualNode
+				bool isSystemMode = mainAssetsVm.IsSystemMode;
+				string newRelPath = isSystemMode ? folderName : $"Assets/{folderName}";
+
+				var newFolderNode = new ProjectNode
 				{
 					Name = folderName,
-					RelativePath = folderName,
+					RelativePath = newRelPath,
 					IsFolder = true,
 					IsEditing = true
 				};
 				_pendingNewNodes.Add(newFolderNode);
 
-				mainAssetsVm.VirtualRootNodes.Add(newFolderNode);
+				mainAssetsVm.RootNodes.Add(newFolderNode);
 			}
 		}
 
@@ -202,7 +205,7 @@ namespace editor.Views.Widgets
 
 		private void NodeEditTextBox_LostFocus(object sender, System.Windows.RoutedEventArgs e)
 		{
-			if (sender is TextBox textBox && textBox.DataContext is VirtualNode node)
+			if (sender is TextBox textBox && textBox.DataContext is ProjectNode node)
 			{
 				if (node.IsEditing)
 				{
@@ -213,7 +216,7 @@ namespace editor.Views.Widgets
 
 		private void NodeEditTextBox_KeyDown(object sender, KeyEventArgs e)
 		{
-			if (sender is TextBox textBox && textBox.DataContext is VirtualNode node)
+			if (sender is TextBox textBox && textBox.DataContext is ProjectNode node)
 			{
 				if (e.Key == Key.Enter)
 				{
@@ -229,12 +232,15 @@ namespace editor.Views.Widgets
 			}
 		}
 
-		private void CommitRename(VirtualNode node, string newName)
+		private void CommitRename(ProjectNode node, string newName)
 		{
 			node.IsEditing = false;
+			bool isPendingNew = _pendingNewNodes.Contains(node);
+
 			newName = newName?.Trim();
 			if (string.IsNullOrEmpty(newName))
 			{
+				if (isPendingNew) _pendingNewNodes.Remove(node);
 				RefreshTree();
 				return;
 			}
@@ -243,6 +249,7 @@ namespace editor.Views.Widgets
 			if (newName.IndexOfAny(invalidChars) >= 0)
 			{
 				System.Windows.MessageBox.Show("Имя содержит недопустимые символы.", "Ошибка переименования", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+				if (isPendingNew) _pendingNewNodes.Remove(node);
 				RefreshTree();
 				return;
 			}
@@ -265,9 +272,6 @@ namespace editor.Views.Widgets
 				string ext = System.IO.Path.GetExtension(node.Name);
 				actualNewName = newName + ext;
 			}
-
-			bool isPendingNew = _pendingNewNodes.Contains(node);
-
 			if (actualNewName.Equals(node.Name, StringComparison.OrdinalIgnoreCase) && !isPendingNew)
 			{
 				RefreshTree();
@@ -287,24 +291,21 @@ namespace editor.Views.Widgets
 			{
 				_pendingNewNodes.Remove(node);
 
-				if (isSystemMode)
-				{
-					var cmd = new editor.Services.Project.Infrastructure.UndoRedo.CreateFolderCommand(
-						newRelPath,
-						projectRoot,
-						isSystemMode,
-						App.ProjectService.Storage
-					);
+				var cmd = new editor.Services.Project.Infrastructure.UndoRedo.CreateFolderCommand(
+					newRelPath,
+					projectRoot,
+					isSystemMode,
+					App.ProjectService.Storage
+				);
 
-					try
-					{
-						App.ProjectService.History.Execute(cmd);
-						if (mainVm != null) mainVm.RefreshDirtyState();
-					}
-					catch (Exception ex)
-					{
-						System.Windows.MessageBox.Show($"Не удалось создать папку: {ex.Message}", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-					}
+				try
+				{
+					App.ProjectService.History.Execute(cmd);
+					if (mainVm != null) mainVm.RefreshDirtyState();
+				}
+				catch (Exception ex)
+				{
+					System.Windows.MessageBox.Show($"Не удалось создать папку: {ex.Message}", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
 				}
 
 				RefreshTree();
@@ -342,11 +343,10 @@ namespace editor.Views.Widgets
 				}
 			}
 
-			if (mainVm != null) mainVm.IsDirty = true;
 			RefreshTree();
 		}
 
-		private VirtualNode FindParentNode(System.Collections.ObjectModel.ObservableCollection<VirtualNode> roots, VirtualNode target, out string parentPath)
+		private ProjectNode FindParentNode(System.Collections.ObjectModel.ObservableCollection<ProjectNode> roots, ProjectNode target, out string parentPath)
 		{
 			parentPath = "";
 			foreach (var root in roots)
@@ -365,7 +365,7 @@ namespace editor.Views.Widgets
 			return null;
 		}
 
-		private VirtualNode FindParentNodeInternal(VirtualNode current, VirtualNode target, out string parentPath)
+		private ProjectNode FindParentNodeInternal(ProjectNode current, ProjectNode target, out string parentPath)
 		{
 			parentPath = "";
 			foreach (var child in current.Children)
@@ -384,7 +384,7 @@ namespace editor.Views.Widgets
 			return null;
 		}
 
-		private bool IsSystemNode(VirtualNode node, bool isSystemMode)
+		private bool IsSystemNode(ProjectNode node, bool isSystemMode)
 		{
 			if (isSystemMode)
 			{
@@ -398,38 +398,13 @@ namespace editor.Views.Widgets
 			return false;
 		}
 
-		private List<string> GetPhysicalPaths(VirtualNode node, string projectRoot, bool isSystemMode, List<string> disabledFilters)
+		private List<string> GetPhysicalPaths(ProjectNode node, string projectRoot, bool isSystemMode, List<string> disabledFilters)
 		{
 			var paths = new List<string>();
 			string relPath = node.RelativePath;
 			if (string.IsNullOrEmpty(relPath)) return paths;
 
-			if (isSystemMode)
-			{
-				paths.Add(System.IO.Path.Combine(projectRoot, relPath));
-			}
-			else
-			{
-				foreach (var resourceFolder in editor.Services.Project.ProjectStructure.AssetDirectories)
-				{
-					string resTypeName = System.IO.Path.GetFileName(resourceFolder.RelativePath);
-					if (disabledFilters.Contains(resTypeName))
-						continue;
-
-					string resDir = System.IO.Path.Combine(projectRoot, resourceFolder.RelativePath);
-					string path = System.IO.Path.Combine(resDir, relPath);
-					if (node.IsFolder)
-					{
-						if (System.IO.Directory.Exists(path))
-							paths.Add(path);
-					}
-					else
-					{
-						if (System.IO.File.Exists(path))
-							paths.Add(path);
-					}
-				}
-			}
+			paths.Add(System.IO.Path.Combine(projectRoot, relPath));
 			return paths;
 		}
 
@@ -439,19 +414,18 @@ namespace editor.Views.Widgets
 			var mainAssetsVm = mainVm?.Panes.OfType<ViewModels.AssetsViewModel>().FirstOrDefault();
 			if (mainAssetsVm != null)
 			{
-				bool isSystemMode = mainAssetsVm.IsSystemMode;
-
 				if (e.OriginalSource is System.Windows.DependencyObject depObj)
 				{
 					var item = FindVisualParent<TreeViewItem>(depObj);
 					if (item != null)
 					{
-						if (item.Header is VirtualNode node)
+						if (item.Header is ProjectNode node)
 						{
 							var contextMenu = item.ContextMenu;
 							if (contextMenu != null)
 							{
-								bool isSystem = IsSystemNode(node, isSystemMode);
+								var tree = FindVisualParent<TreeView>(depObj);
+								bool isSystem = (tree == SystemTree);
 								foreach (var menuObj in contextMenu.Items)
 								{
 									if (menuObj is MenuItem menuItem)
@@ -499,9 +473,10 @@ namespace editor.Views.Widgets
 					}
 
 					// Clicking empty space
-					if (mainAssetsVm.IsSystemMode)
+					var treeControl = FindVisualParent<TreeView>(depObj);
+					if (treeControl == SystemTree)
 					{
-						e.Handled = true; // Block ContextMenu on empty space in SystemMode
+						e.Handled = true; // Block ContextMenu on empty space in SystemTree
 					}
 				}
 			}

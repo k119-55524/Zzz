@@ -24,20 +24,5 @@ namespace editor.Services.Project
 		{
 			public const string ProjectSettings = "Configs/project.toml";
 		}
-
-		/// <summary>
-		/// Имена директорий ассетов проекта.
-		/// </summary>
-		public static class AssetDirectories
-		{
-			public const string Scripts = "Scripts";
-			public const string EcsComponents = "Ecs/Components";
-			public const string EcsSystems = "Ecs/Systems";
-			public const string EcsEntities = "Ecs/Entities";
-			public const string Textures = "Textures";
-			public const string Geometry = "Geometry";
-			public const string Shaders = "Shaders";
-			public const string Materials = "Materials";
-		}
 	}
 }
