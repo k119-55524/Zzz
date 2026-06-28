@@ -361,6 +361,32 @@ namespace editor.ViewModels
 			}
 		}
 
+		// Вызывается после успешного App.ProjectService.RenameProject(): корневая папка проекта
+		// физически переехала на newPath - нужно обновить текущий путь, сессию и список
+		// последних проектов (иначе они продолжат указывать на несуществующую старую папку).
+		public void UpdateAfterProjectRename(string newPath)
+		{
+			string oldPath = _currentProjectPath ?? string.Empty;
+
+			CurrentProjectPath = newPath;
+			_globalState.LastOpenProjectPath = newPath;
+			SaveSession();
+
+			var list = new List<string>(_globalState.RecentProjects ?? Array.Empty<string>());
+			int idx = list.FindIndex(p => string.Equals(p, oldPath, StringComparison.OrdinalIgnoreCase));
+			if (idx >= 0)
+			{
+				list[idx] = newPath;
+			}
+			else
+			{
+				list.Insert(0, newPath);
+			}
+
+			_globalState.RecentProjects = list.ToArray();
+			RefreshRecentProjects();
+		}
+
 		private void RemoveRecentProject(string path)
 		{
 			var list = new List<string>(_globalState.RecentProjects ?? Array.Empty<string>());

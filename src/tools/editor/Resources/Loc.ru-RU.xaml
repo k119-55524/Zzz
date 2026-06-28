@@ -153,4 +153,14 @@
     <sys:String x:Key="Error_Rename_Failed">Не удалось переименовать: {0}</sys:String>
     <sys:String x:Key="Dialog_DeleteError_Title">Ошибка удаления</sys:String>
     <sys:String x:Key="Error_Delete_Failed">Не удалось выполнить удаление: {0}</sys:String>
+    <sys:String x:Key="Error_RenameProject_FolderInUse">Не удалось переименовать папку проекта - возможно, она открыта в Проводнике, терминале или другой программе. Закройте её там и попробуйте снова. ({0})</sys:String>
+
+    <!-- Типы ресурсов (фильтр в Project / Assets) -->
+    <sys:String x:Key="ResourceType_Texture">Текстуры</sys:String>
+    <sys:String x:Key="ResourceType_Model">Модели</sys:String>
+    <sys:String x:Key="ResourceType_Audio">Звук</sys:String>
+    <sys:String x:Key="ResourceType_Scene">Сцены</sys:String>
+    <sys:String x:Key="ResourceType_Script">Скрипты</sys:String>
+    <sys:String x:Key="ResourceType_Shader">Шейдеры</sys:String>
+    <sys:String x:Key="ResourceType_Material">Материалы</sys:String>
 </ResourceDictionary>

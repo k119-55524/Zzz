@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Input;
+using editor.Services;
 using editor.Services.Project.Infrastructure;
 
 namespace editor.Views.Widgets
@@ -95,7 +96,7 @@ namespace editor.Views.Widgets
 					if (mainVm != null && !string.IsNullOrEmpty(projectRoot) && mainAssetsVm != null)
 					{
 						bool isSystemMode = mainAssetsVm.IsSystemNode(node);
-						var activeFilters = App.ProjectService.CurrentSettings?.DisabledFilters ?? new List<string>();
+						var activeFilters = App.ProjectService.CurrentSettings.DisabledFilters;
 						var paths = GetPhysicalPaths(node, projectRoot, isSystemMode, activeFilters);
 						foreach (var path in paths)
 						{
@@ -286,7 +287,7 @@ namespace editor.Views.Widgets
 			char[] invalidChars = System.IO.Path.GetInvalidFileNameChars();
 			if (newName.IndexOfAny(invalidChars) >= 0)
 			{
-				System.Windows.MessageBox.Show(Loc("Validation_Name_InvalidChars", "Name contains invalid characters."), Loc("Dialog_RenameError_Title", "Rename Error"), System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+				EditorLogger.LogError(Loc("Validation_Name_InvalidChars", "Name contains invalid characters."));
 				if (isPendingNew) _pendingNewNodes.Remove(node);
 				RefreshTree();
 				return;
@@ -295,7 +296,7 @@ namespace editor.Views.Widgets
 			var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as ViewModels.MainWindowViewModel;
 			string? projectRoot = mainVm?.CurrentProjectPath;
 			var mainAssetsVm = mainVm?.Panes.OfType<ViewModels.AssetsViewModel>().FirstOrDefault();
-			if (mainVm == null || string.IsNullOrEmpty(projectRoot) || mainAssetsVm == null || App.ProjectService.CurrentSettings == null)
+			if (mainVm == null || string.IsNullOrEmpty(projectRoot) || mainAssetsVm == null)
 			{
 				RefreshTree();
 				return;
@@ -343,7 +344,7 @@ namespace editor.Views.Widgets
 				}
 				catch (Exception ex)
 				{
-					System.Windows.MessageBox.Show(string.Format(Loc("Error_CreateFolder_Failed", "Failed to create folder: {0}"), ex.Message), Loc("Msg_Error_Title", "Error"), System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+					EditorLogger.LogError(string.Format(Loc("Error_CreateFolder_Failed", "Failed to create folder: {0}"), ex.Message));
 				}
 
 				RefreshTree();
@@ -361,13 +362,13 @@ namespace editor.Views.Widgets
 					// Валидация: если целевой путь уже существует
 					if (node.IsFolder && System.IO.Directory.Exists(newPhysPath))
 					{
-						System.Windows.MessageBox.Show(Loc("Validation_FolderName_Exists", "A folder with this name already exists."), Loc("Dialog_RenameError_Title", "Rename Error"), System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+						EditorLogger.LogError(Loc("Validation_FolderName_Exists", "A folder with this name already exists."));
 						RefreshTree();
 						return;
 					}
 					else if (!node.IsFolder && System.IO.File.Exists(newPhysPath))
 					{
-						System.Windows.MessageBox.Show(Loc("Validation_FileName_Exists", "A file with this name already exists."), Loc("Dialog_RenameError_Title", "Rename Error"), System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+						EditorLogger.LogError(Loc("Validation_FileName_Exists", "A file with this name already exists."));
 						RefreshTree();
 						return;
 					}
@@ -385,7 +386,7 @@ namespace editor.Views.Widgets
 					}
 					catch (Exception ex)
 					{
-						System.Windows.MessageBox.Show(string.Format(Loc("Error_Rename_Failed", "Failed to rename: {0}"), ex.Message), Loc("Dialog_RenameError_Title", "Rename Error"), System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+						EditorLogger.LogError(string.Format(Loc("Error_Rename_Failed", "Failed to rename: {0}"), ex.Message));
 					}
 				}
 			}
@@ -500,7 +501,14 @@ namespace editor.Views.Widgets
 
 		private T? FindVisualParent<T>(System.Windows.DependencyObject child) where T : System.Windows.DependencyObject
 		{
-			System.Windows.DependencyObject parentObject = System.Windows.Media.VisualTreeHelper.GetParent(child);
+			// VisualTreeHelper.GetParent падает на элементах, которые не Visual/Visual3D
+			// (например, System.Windows.Documents.Run внутри TextBlock в заголовке MenuItem) -
+			// для них поднимаемся по логическому дереву, пока не дойдём до Visual.
+			System.Windows.DependencyObject? parentObject =
+				child is System.Windows.Media.Visual || child is System.Windows.Media.Media3D.Visual3D
+					? System.Windows.Media.VisualTreeHelper.GetParent(child)
+					: System.Windows.LogicalTreeHelper.GetParent(child);
+
 			if (parentObject == null) return null;
 			if (parentObject is T parent) return parent;
 			return FindVisualParent<T>(parentObject);
@@ -516,7 +524,7 @@ namespace editor.Views.Widgets
 					var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as ViewModels.MainWindowViewModel;
 					var mainAssetsVm = mainVm?.Panes.OfType<ViewModels.AssetsViewModel>().FirstOrDefault();
 					var settings = App.ProjectService.CurrentSettings;
-					if (mainVm != null && mainAssetsVm != null && settings != null)
+					if (mainVm != null && mainAssetsVm != null)
 					{
 						string? projectRoot = mainVm.CurrentProjectPath;
 						if (string.IsNullOrEmpty(projectRoot)) return;
@@ -546,7 +554,7 @@ namespace editor.Views.Widgets
 							}
 							catch (Exception ex)
 							{
-								System.Windows.MessageBox.Show(string.Format(Loc("Error_Delete_Failed", "Failed to delete: {0}"), ex.Message), Loc("Dialog_DeleteError_Title", "Delete Error"), System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+								EditorLogger.LogError(string.Format(Loc("Error_Delete_Failed", "Failed to delete: {0}"), ex.Message));
 							}
 
 							RefreshTree();
@@ -705,12 +713,12 @@ namespace editor.Views.Widgets
 
 			if (draggedNode.IsFolder && System.IO.Directory.Exists(newPhysPath))
 			{
-				System.Windows.MessageBox.Show(Loc("Validation_FolderName_Exists", "A folder with this name already exists."), Loc("Dialog_RenameError_Title", "Rename Error"), System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+				EditorLogger.LogError(Loc("Validation_FolderName_Exists", "A folder with this name already exists."));
 				return;
 			}
 			if (!draggedNode.IsFolder && System.IO.File.Exists(newPhysPath))
 			{
-				System.Windows.MessageBox.Show(Loc("Validation_FileName_Exists", "A file with this name already exists."), Loc("Dialog_RenameError_Title", "Rename Error"), System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+				EditorLogger.LogError(Loc("Validation_FileName_Exists", "A file with this name already exists."));
 				return;
 			}
 
@@ -722,7 +730,7 @@ namespace editor.Views.Widgets
 			}
 			catch (Exception ex)
 			{
-				System.Windows.MessageBox.Show(string.Format(Loc("Error_Rename_Failed", "Failed to rename: {0}"), ex.Message), Loc("Dialog_RenameError_Title", "Rename Error"), System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+				EditorLogger.LogError(string.Format(Loc("Error_Rename_Failed", "Failed to rename: {0}"), ex.Message));
 			}
 
 			RefreshTree();

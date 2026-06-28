@@ -153,4 +153,14 @@
     <sys:String x:Key="Error_Rename_Failed">Failed to rename: {0}</sys:String>
     <sys:String x:Key="Dialog_DeleteError_Title">Delete Error</sys:String>
     <sys:String x:Key="Error_Delete_Failed">Failed to delete: {0}</sys:String>
+    <sys:String x:Key="Error_RenameProject_FolderInUse">Failed to rename the project folder - it may be open in Explorer, a terminal, or another program. Close it there and try again. ({0})</sys:String>
+
+    <!-- Resource types (Project / Assets filter) -->
+    <sys:String x:Key="ResourceType_Texture">Textures</sys:String>
+    <sys:String x:Key="ResourceType_Model">Models</sys:String>
+    <sys:String x:Key="ResourceType_Audio">Audio</sys:String>
+    <sys:String x:Key="ResourceType_Scene">Scenes</sys:String>
+    <sys:String x:Key="ResourceType_Script">Scripts</sys:String>
+    <sys:String x:Key="ResourceType_Shader">Shaders</sys:String>
+    <sys:String x:Key="ResourceType_Material">Materials</sys:String>
 </ResourceDictionary>

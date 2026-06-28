@@ -19,14 +19,21 @@ namespace editor.ViewModels
         private bool _isChecked = true;
         private readonly Action _onCheckedChanged;
 
-        public FilterItemViewModel(string name, bool isChecked, Action onCheckedChanged)
+        public FilterItemViewModel(string name, string matchKey, bool isChecked, Action onCheckedChanged)
         {
             Name = name;
+            MatchKey = matchKey;
             _isChecked = isChecked;
             _onCheckedChanged = onCheckedChanged;
         }
 
+        // Отображаемое (локализованное) имя в чекбоксе.
         public string Name { get; }
+
+        // Ключ для сравнения с DisabledFilters/DisabledSystemFilters и именами папок на диске.
+        // Для типов ресурсов ассетов - это условное имя папки (см. AssetResourceTypeRules),
+        // для системных директорий - то же самое, что и Name (там локализации нет).
+        public string MatchKey { get; }
 
         public bool IsChecked
         {
@@ -64,6 +71,12 @@ namespace editor.ViewModels
         }
 
         public ICommand ResetFiltersCommand { get; }
+
+        public override void UpdateTitle()
+        {
+            base.UpdateTitle();
+            UpdateFiltersList(); // подписи типов ресурсов локализованы - пересчитываем при смене языка
+        }
 
         public override void OnProjectOpened(string projectPath)
         {
@@ -149,14 +162,11 @@ namespace editor.ViewModels
             {
                 if (SetField(ref _isSystemMode, value))
                 {
-                    if (App.ProjectService.CurrentSettings != null)
+                    App.ProjectService.CurrentSettings.ShowSystemMode = value;
+                    var mainVm = Application.Current?.MainWindow?.DataContext as MainWindowViewModel;
+                    if (mainVm?.CurrentProjectPath != null)
                     {
-                        App.ProjectService.CurrentSettings.ShowSystemMode = value;
-                        var mainVm = Application.Current?.MainWindow?.DataContext as MainWindowViewModel;
-                        if (mainVm?.CurrentProjectPath != null)
-                        {
-                            App.ProjectService.SaveProject(mainVm.CurrentProjectPath, out _);
-                        }
+                        App.ProjectService.SaveProject(mainVm.CurrentProjectPath, out _);
                     }
                     OnPropertyChanged(nameof(RootNodes));
                     UpdateFiltersList();
@@ -178,19 +188,24 @@ namespace editor.ViewModels
             }
 
             // Загружаем состояние сессии из настроек проекта
-            var settings = App.ProjectService.CurrentSettings;
-            if (settings != null)
-            {
-                _isSystemMode = settings.ShowSystemMode;
-                OnPropertyChanged(nameof(IsSystemMode));
-            }
+            _isSystemMode = App.ProjectService.CurrentSettings.ShowSystemMode;
+            OnPropertyChanged(nameof(IsSystemMode));
 
             UpdateFiltersList();
             RefreshTree();
         }
 
+        private static string Loc(string key, string fallback)
+        {
+            return Application.Current?.TryFindResource(key) as string ?? fallback;
+        }
+
         /// <summary>
-        /// Перестраивает список доступных фильтров в зависимости от текущего режима.
+        /// Перестраивает список доступных фильтров. Этот тулбар и его фильтр относятся только к
+        /// AssetsTree (System Files не имеет своего UI для фильтрации) - список фильтров всегда
+        /// фиксированный: enum AssetResourceType, а не то, что физически есть на диске.
+        /// Раньше список ошибочно переключался по IsSystemMode (раскрыт ли экспандер System Files)
+        /// и подменялся на системные папки - тот же класс ошибки, что и в операциях с деревом.
         /// </summary>
         private void UpdateFiltersList()
         {
@@ -198,42 +213,13 @@ namespace editor.ViewModels
             AvailableFilters.Clear();
 
             var settings = App.ProjectService.CurrentSettings;
-            if (settings == null)
+            var activeDisabledFilters = settings.DisabledFilters;
+            foreach (AssetResourceType type in System.Enum.GetValues(typeof(AssetResourceType)))
             {
-                _isUpdatingFilters = false;
-                return;
-            }
-
-            var folders = new List<ProjectFolderSchema>();
-            if (IsSystemMode)
-            {
-                folders = ProjectStructure.SystemDirectories;
-            }
-            else
-            {
-                var mainVm = Application.Current?.MainWindow?.DataContext as MainWindowViewModel;
-                string? projectRoot = mainVm?.CurrentProjectPath;
-                if (!string.IsNullOrEmpty(projectRoot))
-                {
-                    string assetsRoot = Path.Combine(projectRoot, "Assets");
-                    if (Directory.Exists(assetsRoot))
-                    {
-                        foreach (var dir in Directory.GetDirectories(assetsRoot))
-                        {
-                            string name = Path.GetFileName(dir);
-                            folders.Add(new ProjectFolderSchema { RelativePath = $"Assets/{name}" });
-                        }
-                    }
-                }
-            }
-
-            var activeDisabledFilters = IsSystemMode ? settings.DisabledSystemFilters : settings.DisabledFilters;
-            foreach (var folder in folders)
-            {
-                string name = Path.GetFileName(folder.RelativePath);
-                bool isChecked = !activeDisabledFilters.Contains(name);
-
-                AvailableFilters.Add(new FilterItemViewModel(name, isChecked, OnFilterCheckedChanged));
+                string matchKey = AssetResourceTypeRules.GetFolderName(type);
+                string name = Loc(AssetResourceTypeRules.GetTitleKey(type), matchKey);
+                bool isChecked = !activeDisabledFilters.Contains(matchKey);
+                AvailableFilters.Add(new FilterItemViewModel(name, matchKey, isChecked, OnFilterCheckedChanged));
             }
 
             _isUpdatingFilters = false;
@@ -244,20 +230,18 @@ namespace editor.ViewModels
             if (_isUpdatingFilters) return;
 
             var settings = App.ProjectService.CurrentSettings;
-            if (settings == null) return;
 
             var newDisabled = new List<string>();
             foreach (var filter in AvailableFilters)
             {
                 if (!filter.IsChecked)
                 {
-                    newDisabled.Add(filter.Name);
+                    newDisabled.Add(filter.MatchKey);
                 }
             }
 
-            // Фильтры для AssetsTree и SystemTree хранятся раздельно, чтобы переключение
-            // галочек в одном дереве никогда не скрывало папки в другом.
-            var activeDisabledFilters = IsSystemMode ? settings.DisabledSystemFilters : settings.DisabledFilters;
+            // Этот фильтр относится только к AssetsTree (см. UpdateFiltersList).
+            var activeDisabledFilters = settings.DisabledFilters;
 
             // Проверяем, изменился ли реальный список отключенных фильтров
             bool changed = false;
@@ -298,7 +282,7 @@ namespace editor.ViewModels
             var mainVm = Application.Current?.MainWindow?.DataContext as MainWindowViewModel;
             string? projectRoot = mainVm?.CurrentProjectPath;
 
-            if (string.IsNullOrEmpty(projectRoot) || App.ProjectService.CurrentSettings == null)
+            if (string.IsNullOrEmpty(projectRoot))
             {
                 AssetRootNodes = new ObservableCollection<ProjectNode>();
                 SystemRootNodes = new ObservableCollection<ProjectNode>();
@@ -346,44 +330,19 @@ namespace editor.ViewModels
         private void ResetCurrentFilters()
         {
             var settings = App.ProjectService.CurrentSettings;
-            if (settings == null) return;
 
-            var folders = new List<ProjectFolderSchema>();
-            if (IsSystemMode)
-            {
-                folders = ProjectStructure.SystemDirectories;
-            }
-            else
-            {
-                var mainVm = Application.Current?.MainWindow?.DataContext as MainWindowViewModel;
-                string? projectRoot = mainVm?.CurrentProjectPath;
-                if (!string.IsNullOrEmpty(projectRoot))
-                {
-                    string assetsRoot = Path.Combine(projectRoot, "Assets");
-                    if (Directory.Exists(assetsRoot))
-                    {
-                        foreach (var dir in Directory.GetDirectories(assetsRoot))
-                        {
-                            string name = Path.GetFileName(dir);
-                            folders.Add(new ProjectFolderSchema { RelativePath = $"Assets/{name}" });
-                        }
-                    }
-                }
-            }
-
-            var currentModeFolderNames = folders
-                .Select(d => System.IO.Path.GetFileName(d.RelativePath) ?? string.Empty)
-                .Where(n => n != string.Empty)
+            // Этот фильтр относится только к AssetsTree (см. UpdateFiltersList).
+            List<string> currentModeMatchKeys = ((AssetResourceType[])System.Enum.GetValues(typeof(AssetResourceType)))
+                .Select(AssetResourceTypeRules.GetFolderName)
                 .ToList();
-
-            var activeDisabledFilters = IsSystemMode ? settings.DisabledSystemFilters : settings.DisabledFilters;
+            List<string> activeDisabledFilters = settings.DisabledFilters;
 
             bool changed = false;
-            foreach (var name in currentModeFolderNames)
+            foreach (var key in currentModeMatchKeys)
             {
-                if (activeDisabledFilters.Contains(name))
+                if (activeDisabledFilters.Contains(key))
                 {
-                    activeDisabledFilters.Remove(name);
+                    activeDisabledFilters.Remove(key);
                     changed = true;
                 }
             }
@@ -393,7 +352,7 @@ namespace editor.ViewModels
                 _isUpdatingFilters = true;
                 foreach (var filter in AvailableFilters)
                 {
-                    if (currentModeFolderNames.Contains(filter.Name))
+                    if (currentModeMatchKeys.Contains(filter.MatchKey))
                     {
                         filter.IsChecked = true;
                     }

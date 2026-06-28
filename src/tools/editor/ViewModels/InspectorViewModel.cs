@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using editor.Models;
 using editor.Services.Project.Infrastructure;
+using editor.Services.Project.FileTypes.ProjectSettings;
 
 namespace editor.ViewModels
 {
@@ -14,6 +15,8 @@ namespace editor.ViewModels
         private readonly System.Reflection.PropertyInfo _propInfo;
         private readonly object _owner;
         private readonly Action _onChanged;
+        private readonly bool _isProjectNameField;
+        private readonly Action<string>? _onProjectRenamed;
 
         public TomlPropertyViewModel(object owner, System.Reflection.PropertyInfo propInfo, EditorVisibility visibility, Action onChanged)
         {
@@ -25,6 +28,17 @@ namespace editor.ViewModels
             _value = propInfo.GetValue(owner)?.ToString() ?? string.Empty;
         }
 
+        // Специальный конструктор для поля "Name" настроек проекта: вместо обычной записи
+        // значения свойства, переименовывает физическую корневую папку проекта на диске
+        // (см. ProjectService.RenameProject). При неудачной валидации ошибка уходит в лог
+        // (EditorLogger), а отображаемое значение откатывается на прежнее имя.
+        public TomlPropertyViewModel(object owner, System.Reflection.PropertyInfo propInfo, EditorVisibility visibility, Action<string> onProjectRenamed)
+            : this(owner, propInfo, visibility, (Action)(() => { }))
+        {
+            _isProjectNameField = true;
+            _onProjectRenamed = onProjectRenamed;
+        }
+
         public string Name { get; }
         public bool IsReadOnly { get; }
 
@@ -33,6 +47,24 @@ namespace editor.ViewModels
             get => _value;
             set
             {
+                if (_value == value) return;
+
+                if (_isProjectNameField)
+                {
+                    if (App.ProjectService.RenameProject(value, out string error))
+                    {
+                        _value = value;
+                        OnPropertyChanged(nameof(Value));
+                        _onProjectRenamed?.Invoke(App.ProjectService.CurrentProjectRootPath ?? value);
+                    }
+                    else
+                    {
+                        editor.Services.EditorLogger.LogError(error);
+                        OnPropertyChanged(nameof(Value)); // откатывает TextBox на прежнее (валидное) значение
+                    }
+                    return;
+                }
+
                 if (SetField(ref _value, value))
                 {
                     try
@@ -111,7 +143,7 @@ namespace editor.ViewModels
                 {
                     var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as MainWindowViewModel;
                     string? projectRoot = mainVm?.CurrentProjectPath;
-                    if (mainVm != null && !string.IsNullOrEmpty(projectRoot) && App.ProjectService.CurrentSettings != null)
+                    if (mainVm != null && !string.IsNullOrEmpty(projectRoot))
                     {
                         var activeFilters = App.ProjectService.CurrentSettings.DisabledFilters;
                         var mainAssetsVm = mainVm.Panes.OfType<AssetsViewModel>().FirstOrDefault();
@@ -128,23 +160,27 @@ namespace editor.ViewModels
                 else if (node.Name.EndsWith(".toml", StringComparison.OrdinalIgnoreCase))
                 {
                     var settings = App.ProjectService.CurrentSettings;
-                    if (settings != null)
+                    var props = new List<TomlPropertyViewModel>();
+                    var properties = settings.GetType().GetProperties();
+                    foreach (var prop in properties)
                     {
-                        var props = new List<TomlPropertyViewModel>();
-                        var properties = settings.GetType().GetProperties();
-                        foreach (var prop in properties)
+                        var attr = prop.GetCustomAttributes(typeof(EditorVisibilityAttribute), true)
+                                       .FirstOrDefault() as EditorVisibilityAttribute;
+                        if (attr != null && attr.Visibility != EditorVisibility.Hidden)
                         {
-                            var attr = prop.GetCustomAttributes(typeof(EditorVisibilityAttribute), true)
-                                           .FirstOrDefault() as EditorVisibilityAttribute;
-                            if (attr != null && attr.Visibility != EditorVisibility.Hidden)
+                            if (prop.Name == nameof(ProjectSettingsData.Name))
+                            {
+                                props.Add(new TomlPropertyViewModel(settings, prop, attr.Visibility, OnProjectRenamed));
+                            }
+                            else
                             {
                                 props.Add(new TomlPropertyViewModel(settings, prop, attr.Visibility, OnTomlSettingChanged));
                             }
                         }
-                        _allTomlProperties = props;
-                        ApplyFilter();
-                        ShowTomlProperties = true;
                     }
+                    _allTomlProperties = props;
+                    ApplyFilter();
+                    ShowTomlProperties = true;
                 }
             }
         }
@@ -153,6 +189,14 @@ namespace editor.ViewModels
         {
             // Свойство меняется через SetProperty -> HistoryManager, который сам
             // вызывает OnChanged (автосохранение) и отражает dirty-состояние через IsDirty.
+        }
+
+        // Вызывается после успешного ProjectService.RenameProject() (см. TomlPropertyViewModel) -
+        // корневая папка проекта переехала на newPath, нужно обновить MainWindowViewModel.
+        private void OnProjectRenamed(string newPath)
+        {
+            var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as MainWindowViewModel;
+            mainVm?.UpdateAfterProjectRename(newPath);
         }
 
         public object? SelectedItem

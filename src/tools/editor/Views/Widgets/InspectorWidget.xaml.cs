@@ -24,5 +24,16 @@ namespace editor.Views.Widgets
                 textBox.Focus();
             }
         }
+
+        // Применяет значение поля по Enter, не дожидаясь потери фокуса (AcceptsReturn=False,
+        // так что Enter иначе ничего не делает - поле однострочное).
+        private void ValueTextBox_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Enter && sender is TextBox textBox)
+            {
+                textBox.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+                e.Handled = true;
+            }
+        }
     }
 }

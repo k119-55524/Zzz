@@ -99,6 +99,7 @@ graph TD
 
 * `ProjectSettingsData.DisabledFilters` (ассеты) и `DisabledSystemFilters` (системные файлы) хранятся **раздельно** в `Configs/project.toml` (`disabled_filters` / `disabled_system_filters`). Это устраняет утечку: снятие галочки фильтра в одном дереве больше не может скрыть одноимённую папку в другом дереве, так как `RefreshTree()` передаёт каждому `BuildTree()` свой список.
 * Старые файлы `project.toml` без `disabled_system_filters` читаются нормально — поле по умолчанию пустое.
+* У `SystemTree` сейчас нет своего UI для редактирования `DisabledSystemFilters` (см. ниже) — поле сохраняется/применяется в дереве, но управлять им через чекбоксы пока нельзя.
 
 ### Drag & Drop (перенос узлов)
 
@@ -116,8 +117,13 @@ graph TD
 
 ### Фильтрация типов ресурсов
 
-* Выпадающий список с чекбоксами. Названия фильтров берутся из первого уровня подкаталогов папки `Assets/` (для режима ассетов) или списка системных каталогов (для системного режима).
-* Снятие галочки исключает соответствующий каталог из результирующего дерева отображения.
+* В тулбаре над `AssetsTree` одна кнопка-фильтр (воронка) и кнопка сброса — они привязаны к `AssetsViewModel.AvailableFilters`/`ResetFiltersCommand` и относятся **только** к `AssetsTree`. Список фильтра **всегда** показывает фиксированное перечисление `AssetResourceType` (`editor.Models/AssetResourceType.cs`: `Texture`, `Model`, `Audio`, `Scene`, `Script`, `Shader`, `Material`), независимо от того, развёрнута ли секция `SYSTEM FILES`.
+* Раньше `UpdateFiltersList()`/`OnFilterCheckedChanged()`/`ResetCurrentFilters()` переключали содержимое этой же кнопки на список системных папок (`ProjectStructure.SystemDirectories`) через `IsSystemMode` — тот же класс ошибки, что и с операциями над деревом (см. предупреждение про `IsSystemMode` выше): при раскрытом `SYSTEM FILES` пользователь видел в фильтре системные папки (например, «Config») вместо типов ресурсов. Исправлено: эта кнопка больше не смотрит на `IsSystemMode` и всегда работает с `AssetResourceType`/`settings.DisabledFilters`.
+* Список фильтра не зависит от того, какие папки физически существуют в `Assets/` на диске — он не сканирует диск.
+* `AssetResourceTypeRules.GetFolderName(type)` задаёт условное имя папки первого уровня, с которым тип сопоставляется при построении дерева (`disabled_filters` в `project.toml` хранит именно эти имена) — привязка конкретных файлов/папок к типу по содержимому/расширению не реализована, это будущая задача; пока соответствие чисто по имени папки.
+* `AssetResourceTypeRules.GetTitleKey(type)` даёт ключ локализации для подписи чекбокса (`Resources/Loc.*.xaml`, ключи `ResourceType_*`). `FilterItemViewModel` хранит локализованное `Name` (для UI) отдельно от `MatchKey` (условное имя папки, используется для сравнения с `DisabledFilters`/`DisabledSystemFilters` и для перестроения дерева) — иначе сравнение по `Name` ломалось бы при смене языка.
+* Снятие галочки исключает все папки, физически совпадающие по имени с `MatchKey` фильтра, из результирующего дерева отображения.
+* `AssetsViewModel.UpdateTitle()` переопределён и пересчитывает подписи фильтров (`UpdateFiltersList()`) при смене языка редактора, так как они локализованы.
 
 ### Сохранение сессии
 
@@ -126,3 +132,18 @@ graph TD
 ### Оформление (скроллбары)
 
 `ScrollBar` во всём редакторе (оба дерева `AssetsWidget`, консоль, инспектор и т.д.) оформлен одним неименованным (`без x:Key`) стилем `TargetType="{x:Type ScrollBar}"` в `Themes/DarkTheme.xaml`. Он применяется неявно ко всем скроллбарам приложения через `Application.Resources` (см. `App.xaml`) — отдельную стилизацию под тёмную тему в конкретных виджетах добавлять не нужно.
+
+### Сообщения об ошибках операций с файлами/папками — лог, не диалог
+
+Ошибки операций над файлами/папками в `AssetsWidget` (недопустимые символы, коллизия имени при переименовании/переносе, исключения при создании/переименовании/удалении) **не показываются всплывающим окном** — они уходят в `EditorLogger.LogError(...)` (`Services/EditorLogger.cs`), тот же канал, что используется для логов движка/скриптов, и отображаются в `Console`. Диалоговое окно осталось только для подтверждения удаления (`MessageBox.Show` с `YesNo` перед самим удалением) — это запрос подтверждения действия, а не вывод ошибки.
+
+### Inspector: редактирование `Configs/project.toml`
+
+* `InspectorViewModel` строит список редактируемых полей через reflection по свойствам `ProjectSettingsData`, помеченным `[EditorVisibility(EditorVisibility.Editable)]`/`ReadOnly` (см. `TomlPropertyViewModel`). Поля со `Hidden` (например, `DisabledFilters`) не попадают в список.
+* Текстовые поля в `InspectorWidget.xaml` однострочные (`TextWrapping="NoWrap"`, `AcceptsReturn="False"`) и применяют значение при потере фокуса (`UpdateSourceTrigger=LostFocus`) либо по Enter — `ValueTextBox_PreviewKeyDown` в `InspectorWidget.xaml.cs` вызывает `BindingExpression.UpdateSource()` вручную, так как однострочный `TextBox` без `AcceptsReturn` не реагирует на Enter сам.
+* Поле **`Name`** (имя проекта) обрабатывается особым образом — изменение этого поля не просто пишет строку в `project.toml`, а **физически переименовывает корневую папку проекта на диске** (`ProjectService.RenameProject(newName, out error)`):
+  * Валидация — `ProjectService.IsValidProjectName` (непустое имя, без недопустимых для имени файла символов) плюс проверка, что папка с новым именем ещё не существует (кроме переименования только регистра).
+  * При успехе: `Directory`/`IFileStorage.MoveDirectory` физически переименовывает папку, `ProjectService.CurrentProjectRootPath` обновляется (хранится как поле, а не захватывается замыканием по старому пути — иначе автосохранение `project.toml` после переименования продолжало бы писать в старую, уже не существующую папку), `CurrentSettings.Name` сохраняется в `project.toml` уже по новому пути. Затем `MainWindowViewModel.UpdateAfterProjectRename(newPath)` обновляет `CurrentProjectPath`, сессию (`LastOpenProjectPath`) и соответствующую запись в списке последних проектов.
+  * При неудаче: ошибка уходит в `EditorLogger.LogError` (не диалог), а отображаемое значение в поле откатывается на прежнее корректное имя.
+  * Связка реализована через специальный конструктор `TomlPropertyViewModel(owner, propInfo, visibility, Action<string> onProjectRenamed)`, выбираемый в `InspectorViewModel.OnSelectedItemChanged` только для свойства `ProjectSettingsData.Name` — остальные поля используют обычный путь (`_propInfo.SetValue` + `SetProperty`/`HistoryManager` для авто-Undo/автосохранения).
+  * `IFileStorage.MoveDirectory` (`Directory.Move`) может упасть с `IOException`/"Access denied", если папка проекта открыта в Проводнике, терминале или другой программе (ОС держит хендл на саму директорию, а не на её содержимое — это не связано с правами доступа). `RenameProject` ловит `IOException` отдельно и логирует более понятное сообщение (`Error_RenameProject_FolderInUse`) с подсказкой закрыть папку в других программах, вместо голого текста ОС.

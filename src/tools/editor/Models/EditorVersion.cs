@@ -2,7 +2,7 @@ namespace editor;
 public static class EditorConstants
 {
 public const string ApplicationName = "ZzzEditor";
-public const string Version = "1.0.0:27547";
+public const string Version = "1.0.0:27554";
 public const int VersionCode = 1;
-public const string BuildDate = "28.06.2026 22:50:37";
+public const string BuildDate = "29.06.2026 00:08:38";
 }

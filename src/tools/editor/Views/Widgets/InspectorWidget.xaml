@@ -239,9 +239,9 @@
                                                    Margin="16,0,8,0"
                                                    FontSize="13"/>
                                                    
-                                        <!-- Ввод поддерживает автоперенос строк (TextWrapping) и неограниченное число строк -->
-                                        <TextBox Grid.Column="2" 
-                                                 Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
+                                        <!-- Однострочное поле: применяется по потере фокуса или Enter (см. ValueTextBox_PreviewKeyDown) -->
+                                        <TextBox Grid.Column="2"
+                                                 Text="{Binding Value, UpdateSourceTrigger=LostFocus}"
                                                  IsReadOnly="{Binding IsReadOnly}"
                                                  Background="{DynamicResource Brush_Panel_Header}"
                                                  Foreground="{DynamicResource Brush_Text_Light}"
@@ -250,9 +250,9 @@
                                                  Padding="4,3"
                                                  Margin="8,0,16,0"
                                                  FontSize="13"
-                                                 TextWrapping="Wrap"
-                                                 AcceptsReturn="True"
-                                                 VerticalScrollBarVisibility="Auto"
+                                                 TextWrapping="NoWrap"
+                                                 AcceptsReturn="False"
+                                                 PreviewKeyDown="ValueTextBox_PreviewKeyDown"
                                                  VerticalAlignment="Center">
                                             <TextBox.Style>
                                                 <Style TargetType="TextBox">
