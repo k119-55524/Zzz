@@ -31,14 +31,6 @@
             </VisualBrush.Visual>
         </VisualBrush>
 
-        <VisualBrush x:Key="Icon_Folder_EmptyVirtual" Stretch="Uniform">
-            <VisualBrush.Visual>
-                <Canvas Width="24" Height="24">
-                    <Path Fill="#FFFFD54F" Data="M10 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
-                </Canvas>
-            </VisualBrush.Visual>
-        </VisualBrush>
-
          <!-- Стиль для ToggleButton в стиле тулбара -->
         <Style x:Key="ToolbarToggleButtonStyle" TargetType="ToggleButton">
             <Setter Property="Background" Value="Transparent"/>
@@ -287,16 +279,6 @@
                         <DataTrigger Binding="{Binding IsFolder}" Value="True">
                             <Setter TargetName="NodeIcon" Property="Fill" Value="{StaticResource Icon_Folder}"/>
                         </DataTrigger>
-                        
-                        <!-- Триггер для пустых виртуальных папок (подсветка желтым) -->
-                        <MultiDataTrigger>
-                            <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding IsFolder}" Value="True"/>
-                                <Condition Binding="{Binding IsEmptyVirtual}" Value="True"/>
-                            </MultiDataTrigger.Conditions>
-                            <Setter TargetName="NodeIcon" Property="Fill" Value="{StaticResource Icon_Folder_EmptyVirtual}"/>
-                            <Setter TargetName="NodeText" Property="Foreground" Value="#FFFFD54F"/>
-                        </MultiDataTrigger>
                     </HierarchicalDataTemplate.Triggers>
                 </HierarchicalDataTemplate>
             </TreeView.ItemTemplate>

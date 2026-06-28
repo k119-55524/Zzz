@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using editor.Services.Project;
 
 namespace editor.Services.Project.Infrastructure
 {
@@ -99,21 +100,17 @@ namespace editor.Services.Project.Infrastructure
                 else
                 {
                     // Assets mode
-                    string assetsRoot = Path.Combine(projectRoot, "Assets");
-                    if (Directory.Exists(assetsRoot))
+                    foreach (var resourceFolder in ProjectStructure.AssetDirectories)
                     {
-                        var resourceDirs = Directory.GetDirectories(assetsRoot);
-                        foreach (var resDir in resourceDirs)
-                        {
-                            string resTypeName = Path.GetFileName(resDir);
-                            if (disabledFilters.Contains(resTypeName))
-                                continue;
+                        string resTypeName = Path.GetFileName(resourceFolder.RelativePath);
+                        if (disabledFilters.Contains(resTypeName))
+                            continue;
 
-                            string path = Path.Combine(resDir, relativePath);
-                            if (File.Exists(path))
-                            {
-                                return new FileInfo(path).Length;
-                            }
+                        string resDir = Path.Combine(projectRoot, resourceFolder.RelativePath);
+                        string path = Path.Combine(resDir, relativePath);
+                        if (File.Exists(path))
+                        {
+                            return new FileInfo(path).Length;
                         }
                     }
                 }

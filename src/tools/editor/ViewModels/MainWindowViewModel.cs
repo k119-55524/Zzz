@@ -50,8 +50,8 @@ namespace editor.ViewModels
 			CloseProjectCommand = new RelayCommand(CloseProject, () => IsProjectOpen);
 			ExitCommand = new RelayCommand(() => CloseRequested?.Invoke(this, EventArgs.Empty));
 			AboutCommand = new RelayCommand(_dialogService.ShowAbout);
-			UndoCommand = new RelayCommand(() => { /* Логика отмены действия (Undo) будет реализована позже */ }, () => IsDirty);
-			RedoCommand = new RelayCommand(() => { /* Логика повтора действия (Redo) будет реализована позже */ }, () => IsDirty);
+			UndoCommand = new RelayCommand(Undo, () => App.ProjectService.History.CanUndo);
+			RedoCommand = new RelayCommand(Redo, () => App.ProjectService.History.CanRedo);
 			PlayCommand = new RelayCommand(() => { /* Запуск симуляции */ }, () => IsProjectOpen);
 			PauseCommand = new RelayCommand(() => { /* Пауза симуляции */ }, () => IsProjectOpen);
 			StopCommand = new RelayCommand(() => { /* Остановка симуляции */ }, () => IsProjectOpen);
@@ -155,7 +155,7 @@ namespace editor.ViewModels
 
 		public bool IsDirty
 		{
-			get => _isDirty && IsProjectOpen;
+			get => (_isDirty || App.ProjectService.History.IsDirty) && IsProjectOpen;
 			set
 			{
 				if (SetField(ref _isDirty, value))
@@ -361,6 +361,7 @@ namespace editor.ViewModels
 				_globalState.LastOpenProjectPath = projectDir;
 				SaveSession();
 				CurrentProjectPath = projectDir;
+				App.ProjectService.History.Clear();
 				IsDirty = false;
 				AddRecentProject(projectDir);
 
@@ -388,6 +389,7 @@ namespace editor.ViewModels
 			_globalState.LastOpenProjectPath = string.Empty;
 			SaveSession();
 			CurrentProjectPath = null;
+			App.ProjectService.History.Clear();
 			IsDirty = false;
 			foreach (var pane in Panes)
 			{
@@ -435,13 +437,52 @@ namespace editor.ViewModels
 			{
 				if (App.ProjectService.SaveProject(CurrentProjectPath, out string error))
 				{
+					App.ProjectService.History.MarkSavePoint();
 					IsDirty = false;
+					OnPropertyChanged(nameof(IsDirty));
+					OnPropertyChanged(nameof(WindowTitle));
 				}
 				else
 				{
 					_dialogService.ShowMessage(error, GetLocString("Msg_Error_Title"), System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
 				}
 			}
+		}
+		private void Undo()
+		{
+			if (App.ProjectService.History.CanUndo)
+			{
+				App.ProjectService.History.Undo();
+				OnPropertyChanged(nameof(IsDirty));
+				OnPropertyChanged(nameof(WindowTitle));
+				CommandManager.InvalidateRequerySuggested();
+				RefreshAssetsTree();
+			}
+		}
+
+		private void Redo()
+		{
+			if (App.ProjectService.History.CanRedo)
+			{
+				App.ProjectService.History.Redo();
+				OnPropertyChanged(nameof(IsDirty));
+				OnPropertyChanged(nameof(WindowTitle));
+				CommandManager.InvalidateRequerySuggested();
+				RefreshAssetsTree();
+			}
+		}
+
+		private void RefreshAssetsTree()
+		{
+			var assetsVm = Panes.OfType<AssetsViewModel>().FirstOrDefault();
+			assetsVm?.RefreshTree();
+		}
+
+		public void RefreshDirtyState()
+		{
+			OnPropertyChanged(nameof(IsDirty));
+			OnPropertyChanged(nameof(WindowTitle));
+			CommandManager.InvalidateRequerySuggested();
 		}
 	}
 }

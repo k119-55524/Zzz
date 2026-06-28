@@ -14,7 +14,7 @@ namespace editor.Services.Project.FileTypes.ProjectSettings
 
 		public bool CanParse(string relativePath)
 		{
-			return relativePath == ProjectConstants.Files.ProjectSettings;
+			return relativePath == ProjectConstants.SystemDirectories.ProjectSettings;
 		}
 
 		public bool Validate(IFileStorage storage, string filePath, out string errorMessage)
@@ -155,8 +155,7 @@ namespace editor.Services.Project.FileTypes.ProjectSettings
 					Name = !string.IsNullOrWhiteSpace(localData.Name) ? localData.Name : remoteData.Name,
 					Version = ProjectConstants.ProjectVersionString,
 					ShowSystemMode = localData.ShowSystemMode,
-					DisabledFilters = localData.DisabledFilters,
-					EmptyFolders = localData.EmptyFolders
+					DisabledFilters = localData.DisabledFilters
 				};
 
 				storage.WriteAllText(mergedOutputFilePath, Serialize(mergedData));
@@ -184,13 +183,6 @@ namespace editor.Services.Project.FileTypes.ProjectSettings
 			if (data.DisabledFilters != null && data.DisabledFilters.Count > 0)
 			{
 				sb.Append(string.Join(", ", data.DisabledFilters.ConvertAll(f => $"\"{f}\"")));
-			}
-			sb.AppendLine("]");
-
-			sb.Append("empty_folders = [");
-			if (data.EmptyFolders != null && data.EmptyFolders.Count > 0)
-			{
-				sb.Append(string.Join(", ", data.EmptyFolders.ConvertAll(f => $"\"{f}\"")));
 			}
 			sb.AppendLine("]");
 
@@ -228,7 +220,7 @@ namespace editor.Services.Project.FileTypes.ProjectSettings
 							data.ShowSystemMode = showMode;
 						}
 					}
-					else if (key == "disabled_filters" || key == "empty_folders")
+					else if (key == "disabled_filters")
 					{
 						var list = new List<string>();
 						var matches = Regex.Matches(valStr, "\"([^\"]*)\"");
@@ -236,14 +228,7 @@ namespace editor.Services.Project.FileTypes.ProjectSettings
 						{
 							list.Add(match.Groups[1].Value);
 						}
-						if (key == "disabled_filters")
-						{
-							data.DisabledFilters = list;
-						}
-						else
-						{
-							data.EmptyFolders = list;
-						}
+						data.DisabledFilters = list;
 					}
 				}
 			}

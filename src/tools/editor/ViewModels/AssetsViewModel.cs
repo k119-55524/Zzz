@@ -148,24 +148,12 @@ namespace editor.ViewModels
             }
 
             // Выбираем обязательные папки для текущего режима
-            IEnumerable<string> folderPaths;
-            if (IsSystemMode)
-            {
-                // Системные папки (не лежат в Assets/)
-                folderPaths = ProjectStructure.RequiredDirectories
-                    .Where(d => !d.StartsWith("Assets", StringComparison.OrdinalIgnoreCase));
-            }
-            else
-            {
-                // Папки ассетов (лежат в Assets/ или Assets/Scripts)
-                folderPaths = ProjectStructure.RequiredDirectories
-                    .Where(d => d.StartsWith("Assets", StringComparison.OrdinalIgnoreCase));
-            }
+            var folders = IsSystemMode ? ProjectStructure.SystemDirectories : ProjectStructure.AssetDirectories;
 
-            foreach (var path in folderPaths)
+            foreach (var folder in folders)
             {
                 // Имя типа ресурса/папки — это последнее имя в пути (например, Scripts)
-                string name = Path.GetFileName(path);
+                string name = Path.GetFileName(folder.RelativePath);
                 bool isChecked = !settings.DisabledFilters.Contains(name);
 
                 AvailableFilters.Add(new FilterItemViewModel(name, isChecked, OnFilterCheckedChanged));
@@ -237,10 +225,9 @@ namespace editor.ViewModels
 
             var settings = App.ProjectService.CurrentSettings;
             var tree = _vfs.BuildTree(
-                projectRoot, 
-                IsSystemMode, 
-                settings.DisabledFilters, 
-                settings.EmptyFolders);
+                projectRoot,
+                IsSystemMode,
+                settings.DisabledFilters);
 
             VirtualRootNodes = new ObservableCollection<VirtualNode>(tree);
         }
@@ -259,11 +246,9 @@ namespace editor.ViewModels
             var settings = App.ProjectService.CurrentSettings;
             if (settings == null) return;
 
-            var folderPaths = IsSystemMode 
-                ? ProjectStructure.RequiredDirectories.Where(d => !d.StartsWith("Assets", StringComparison.OrdinalIgnoreCase))
-                : ProjectStructure.RequiredDirectories.Where(d => d.StartsWith("Assets", StringComparison.OrdinalIgnoreCase));
-            var currentModeFolderNames = folderPaths
-                .Select(d => System.IO.Path.GetFileName(d) ?? string.Empty)
+            var folders = IsSystemMode ? ProjectStructure.SystemDirectories : ProjectStructure.AssetDirectories;
+            var currentModeFolderNames = folders
+                .Select(d => System.IO.Path.GetFileName(d.RelativePath) ?? string.Empty)
                 .Where(n => n != string.Empty)
                 .ToList();
 

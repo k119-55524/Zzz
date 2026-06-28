@@ -10,6 +10,9 @@ namespace editor.Views.Widgets
 {
 	public partial class AssetsWidget : UserControl
 	{
+		// Узлы, добавленные через "Добавить -> Папку" и еще не подтвержденные вводом имени.
+		private readonly HashSet<VirtualNode> _pendingNewNodes = new();
+
 		public AssetsWidget()
 		{
 			InitializeComponent();
@@ -129,7 +132,7 @@ namespace editor.Views.Widgets
 						string baseName = "Новая папка";
 						string folderName = baseName;
 						int index = 1;
-						var siblings = parentNode != null ? parentNode.Children : mainAssetsVm.VirtualRootNodes.ToList();
+						var siblings = parentNode != null ? parentNode.Children.ToList() : mainAssetsVm.VirtualRootNodes.ToList();
 						while (siblings.Any(c => c.Name.Equals(folderName, StringComparison.OrdinalIgnoreCase)))
 						{
 							folderName = $"{baseName} {index++}";
@@ -142,9 +145,9 @@ namespace editor.Views.Widgets
 							Name = folderName,
 							RelativePath = newRelPath,
 							IsFolder = true,
-							IsEditing = true,
-							IsEmptyVirtual = true
+							IsEditing = true
 						};
+						_pendingNewNodes.Add(newFolderNode);
 
 						if (parentNode != null)
 						{
@@ -180,9 +183,9 @@ namespace editor.Views.Widgets
 					Name = folderName,
 					RelativePath = folderName,
 					IsFolder = true,
-					IsEditing = true,
-					IsEmptyVirtual = true
+					IsEditing = true
 				};
+				_pendingNewNodes.Add(newFolderNode);
 
 				mainAssetsVm.VirtualRootNodes.Add(newFolderNode);
 			}
@@ -263,7 +266,9 @@ namespace editor.Views.Widgets
 				actualNewName = newName + ext;
 			}
 
-			if (actualNewName.Equals(node.Name, StringComparison.OrdinalIgnoreCase) && node.IsEmptyVirtual == false)
+			bool isPendingNew = _pendingNewNodes.Contains(node);
+
+			if (actualNewName.Equals(node.Name, StringComparison.OrdinalIgnoreCase) && !isPendingNew)
 			{
 				RefreshTree();
 				return;
@@ -278,45 +283,32 @@ namespace editor.Views.Widgets
 
 			string newRelPath = string.IsNullOrEmpty(parentPath) ? actualNewName : $"{parentPath}/{actualNewName}";
 
-			if (node.IsEmptyVirtual && !App.ProjectService.CurrentSettings.EmptyFolders.Contains(node.RelativePath))
+			if (isPendingNew)
 			{
-				if (!isSystemMode)
+				_pendingNewNodes.Remove(node);
+
+				if (isSystemMode)
 				{
-					App.ProjectService.CurrentSettings.EmptyFolders.Add(newRelPath);
-					App.ProjectService.SaveProject(projectRoot, out _);
-				}
-				else
-				{
-					string physPath = System.IO.Path.Combine(projectRoot, newRelPath);
+					var cmd = new editor.Services.Project.Infrastructure.UndoRedo.CreateFolderCommand(
+						newRelPath,
+						projectRoot,
+						isSystemMode,
+						App.ProjectService.Storage
+					);
+
 					try
 					{
-						System.IO.Directory.CreateDirectory(physPath);
+						App.ProjectService.History.Execute(cmd);
+						if (mainVm != null) mainVm.RefreshDirtyState();
 					}
 					catch (Exception ex)
 					{
 						System.Windows.MessageBox.Show($"Не удалось создать папку: {ex.Message}", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
 					}
 				}
+
 				RefreshTree();
 				return;
-			}
-
-			if (!isSystemMode && App.ProjectService.CurrentSettings.EmptyFolders.Count > 0)
-			{
-				var emptyFolders = App.ProjectService.CurrentSettings.EmptyFolders;
-				for (int i = 0; i < emptyFolders.Count; i++)
-				{
-					string path = emptyFolders[i];
-					if (path.Equals(node.RelativePath, StringComparison.OrdinalIgnoreCase))
-					{
-						emptyFolders[i] = newRelPath;
-					}
-					else if (path.StartsWith(node.RelativePath + "/", StringComparison.OrdinalIgnoreCase))
-					{
-						emptyFolders[i] = newRelPath + path.Substring(node.RelativePath.Length);
-					}
-				}
-				App.ProjectService.SaveProject(projectRoot, out _);
 			}
 
 			var physicalPaths = GetPhysicalPaths(node, projectRoot, isSystemMode, activeFilters);
@@ -350,6 +342,7 @@ namespace editor.Views.Widgets
 				}
 			}
 
+			if (mainVm != null) mainVm.IsDirty = true;
 			RefreshTree();
 		}
 
@@ -417,27 +410,23 @@ namespace editor.Views.Widgets
 			}
 			else
 			{
-				string assetsRoot = System.IO.Path.Combine(projectRoot, "Assets");
-				if (System.IO.Directory.Exists(assetsRoot))
+				foreach (var resourceFolder in editor.Services.Project.ProjectStructure.AssetDirectories)
 				{
-					var resourceDirs = System.IO.Directory.GetDirectories(assetsRoot);
-					foreach (var resDir in resourceDirs)
-					{
-						string resTypeName = System.IO.Path.GetFileName(resDir);
-						if (disabledFilters.Contains(resTypeName))
-							continue;
+					string resTypeName = System.IO.Path.GetFileName(resourceFolder.RelativePath);
+					if (disabledFilters.Contains(resTypeName))
+						continue;
 
-						string path = System.IO.Path.Combine(resDir, relPath);
-						if (node.IsFolder)
-						{
-							if (System.IO.Directory.Exists(path))
-								paths.Add(path);
-						}
-						else
-						{
-							if (System.IO.File.Exists(path))
-								paths.Add(path);
-						}
+					string resDir = System.IO.Path.Combine(projectRoot, resourceFolder.RelativePath);
+					string path = System.IO.Path.Combine(resDir, relPath);
+					if (node.IsFolder)
+					{
+						if (System.IO.Directory.Exists(path))
+							paths.Add(path);
+					}
+					else
+					{
+						if (System.IO.File.Exists(path))
+							paths.Add(path);
 					}
 				}
 			}
@@ -493,7 +482,7 @@ namespace editor.Views.Widgets
 										}
 										else if (menuItem.Name == "OpenInExplorerMenuItem")
 										{
-											menuItem.Visibility = node.IsEmptyVirtual ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
+											menuItem.Visibility = _pendingNewNodes.Contains(node) ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
 											menuItem.Click -= OpenInExplorer_Click;
 											menuItem.Click += OpenInExplorer_Click;
 										}
@@ -551,45 +540,22 @@ namespace editor.Views.Widgets
 						var result = System.Windows.MessageBox.Show(confirmMsg, title, System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
 						if (result == System.Windows.MessageBoxResult.Yes)
 						{
-							if (!isSystemMode && settings.EmptyFolders.Count > 0)
-							{
-								var emptyFolders = settings.EmptyFolders;
-								for (int i = emptyFolders.Count - 1; i >= 0; i--)
-								{
-									string path = emptyFolders[i];
-									if (path.Equals(node.RelativePath, StringComparison.OrdinalIgnoreCase) ||
-										path.StartsWith(node.RelativePath + "/", StringComparison.OrdinalIgnoreCase))
-									{
-										emptyFolders.RemoveAt(i);
-									}
-								}
-								App.ProjectService.SaveProject(projectRoot, out _);
-							}
-
 							var physicalPaths = GetPhysicalPaths(node, projectRoot, isSystemMode, activeFilters);
-							foreach (var physPath in physicalPaths)
+							var cmd = new editor.Services.Project.Infrastructure.UndoRedo.DeleteFileOrFolderCommand(
+								physicalPaths,
+								projectRoot,
+								node.IsFolder,
+								App.ProjectService.Storage
+							);
+
+							try
 							{
-								try
-								{
-									if (node.IsFolder)
-									{
-										if (System.IO.Directory.Exists(physPath))
-										{
-											System.IO.Directory.Delete(physPath, true);
-										}
-									}
-									else
-									{
-										if (System.IO.File.Exists(physPath))
-										{
-											System.IO.File.Delete(physPath);
-										}
-									}
-								}
-								catch (Exception ex)
-								{
-									System.Windows.MessageBox.Show($"Не удалось удалить: {ex.Message}", "Ошибка удаления", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-								}
+								App.ProjectService.History.Execute(cmd);
+								if (mainVm != null) mainVm.RefreshDirtyState();
+							}
+							catch (Exception ex)
+							{
+								System.Windows.MessageBox.Show($"Не удалось выполнить удаление: {ex.Message}", "Ошибка удаления", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
 							}
 
 							RefreshTree();

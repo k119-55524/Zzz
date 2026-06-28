@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using editor.Services.Project;
 
 namespace editor.Services.Project.Infrastructure
 {
@@ -13,9 +14,8 @@ namespace editor.Services.Project.Infrastructure
         private string _name = string.Empty;
         private string _relativePath = string.Empty;
         private bool _isFolder;
-        private bool _isEmptyVirtual;
         private bool _isEditing;
-        private List<VirtualNode> _children = new();
+        private System.Collections.ObjectModel.ObservableCollection<VirtualNode> _children = new();
 
         public string Name
         {
@@ -61,22 +61,6 @@ namespace editor.Services.Project.Infrastructure
             }
         }
         
-        /// <summary>
-        /// Флаг, указывающий, является ли папка пустой виртуальной (не существует на диске).
-        /// </summary>
-        public bool IsEmptyVirtual
-        {
-            get => _isEmptyVirtual;
-            set
-            {
-                if (_isEmptyVirtual != value)
-                {
-                    _isEmptyVirtual = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
         public bool IsEditing
         {
             get => _isEditing;
@@ -90,7 +74,7 @@ namespace editor.Services.Project.Infrastructure
             }
         }
         
-        public List<VirtualNode> Children
+        public System.Collections.ObjectModel.ObservableCollection<VirtualNode> Children
         {
             get => _children;
             set
@@ -131,13 +115,11 @@ namespace editor.Services.Project.Infrastructure
         /// <param name="projectRoot">Физический корень проекта.</param>
         /// <param name="showSystemMode">Режим отображения: true - системные файлы/папки (без Assets), false - режим ассетов.</param>
         /// <param name="disabledFilters">Список отключенных фильтров (названия папок типов ресурсов, например "Scripts").</param>
-        /// <param name="emptyFolders">Список виртуальных пустых папок для восстановления.</param>
         /// <returns>Список корневых узлов дерева.</returns>
         public List<VirtualNode> BuildTree(
-            string projectRoot, 
-            bool showSystemMode, 
-            List<string> disabledFilters, 
-            List<string> emptyFolders)
+            string projectRoot,
+            bool showSystemMode,
+            List<string> disabledFilters)
         {
             var roots = new List<VirtualNode>();
 
@@ -195,14 +177,14 @@ namespace editor.Services.Project.Infrastructure
                 // Временный плоский список всех виртуальных папок для слияния
                 var virtualFolders = new Dictionary<string, VirtualNode>();
 
-                // 1. Сканируем физические папки типов ресурсов (например, Assets/Scripts)
-                var resourceDirs = _storage.GetFileSystemEntries(assetsRoot);
-                foreach (var resDir in resourceDirs)
+                // 1. Сканируем известные папки типов ресурсов (Assets/Scripts, Assets/Ecs/Components и т.д.)
+                foreach (var resourceFolder in ProjectStructure.AssetDirectories)
                 {
+                    string resDir = Path.Combine(projectRoot, resourceFolder.RelativePath);
                     if (!_storage.DirectoryExists(resDir))
                         continue;
 
-                    string resTypeName = Path.GetFileName(resDir);
+                    string resTypeName = Path.GetFileName(resourceFolder.RelativePath);
                     if (disabledFilters.Contains(resTypeName))
                         continue; // Фильтр отключил отображение этого типа ресурса
 
@@ -210,16 +192,7 @@ namespace editor.Services.Project.Infrastructure
                     ScanAndMergeResourceDir(resDir, resDir, virtualFolders);
                 }
 
-                // 2. Добавляем сохраненные пустые виртуальные папки
-                foreach (var emptyPath in emptyFolders)
-                {
-                    string cleanPath = emptyPath.Replace('\\', '/').Trim('/');
-                    if (string.IsNullOrEmpty(cleanPath)) continue;
-
-                    EnsureVirtualFolder(cleanPath, virtualFolders, isVirtualOnly: true);
-                }
-
-                // 3. Строим древовидную структуру из плоского словаря виртуальных папок
+                // 2. Строим древовидную структуру из плоского словаря виртуальных папок
                 var folderNodes = virtualFolders.Values.ToList();
                 foreach (var folder in folderNodes)
                 {
@@ -287,7 +260,7 @@ namespace editor.Services.Project.Infrastructure
                 if (isDir)
                 {
                     // Гарантируем наличие виртуальной папки
-                    var folderNode = EnsureVirtualFolder(virtualRelPath, virtualFolders, isVirtualOnly: false);
+                    EnsureVirtualFolder(virtualRelPath, virtualFolders);
                     ScanAndMergeResourceDir(resourceRoot, entry, virtualFolders);
                 }
                 else
@@ -308,21 +281,17 @@ namespace editor.Services.Project.Infrastructure
                     }
                     else
                     {
-                        var parentFolder = EnsureVirtualFolder(parentVirtualPath, virtualFolders, isVirtualOnly: false);
+                        var parentFolder = EnsureVirtualFolder(parentVirtualPath, virtualFolders);
                         parentFolder.Children.Add(fileNode);
                     }
                 }
             }
         }
 
-        private VirtualNode EnsureVirtualFolder(string virtualPath, Dictionary<string, VirtualNode> virtualFolders, bool isVirtualOnly)
+        private VirtualNode EnsureVirtualFolder(string virtualPath, Dictionary<string, VirtualNode> virtualFolders)
         {
             if (virtualFolders.TryGetValue(virtualPath, out var existing))
             {
-                if (!isVirtualOnly)
-                {
-                    existing.IsEmptyVirtual = false; // Папка реально существует на диске хотя бы в одном типе ресурсов
-                }
                 return existing;
             }
 
@@ -330,15 +299,14 @@ namespace editor.Services.Project.Infrastructure
             string parentPath = GetParentVirtualPath(virtualPath);
             if (!string.IsNullOrEmpty(parentPath))
             {
-                EnsureVirtualFolder(parentPath, virtualFolders, isVirtualOnly);
+                EnsureVirtualFolder(parentPath, virtualFolders);
             }
 
             var node = new VirtualNode
             {
                 Name = Path.GetFileName(virtualPath),
                 RelativePath = virtualPath,
-                IsFolder = true,
-                IsEmptyVirtual = isVirtualOnly
+                IsFolder = true
             };
 
             virtualFolders[virtualPath] = node;
@@ -352,17 +320,19 @@ namespace editor.Services.Project.Infrastructure
             return virtualPath.Substring(0, idx);
         }
 
-        private void SortNodeChildren(List<VirtualNode> nodes)
+        private void SortNodeChildren(System.Collections.Generic.IList<VirtualNode> nodes)
         {
-            foreach (var node in nodes)
+            for (int i = 0; i < nodes.Count; i++)
             {
+                var node = nodes[i];
                 if (node.Children.Count > 0)
                 {
                     SortNodeChildren(node.Children);
-                    node.Children = node.Children
+                    var sorted = node.Children
                         .OrderByDescending(c => c.IsFolder)
                         .ThenBy(c => c.Name)
                         .ToList();
+                    node.Children = new System.Collections.ObjectModel.ObservableCollection<VirtualNode>(sorted);
                 }
             }
         }

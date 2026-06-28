@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace editor.Services.Project.Infrastructure.UndoRedo
@@ -8,101 +9,128 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
     /// </summary>
     public class DeleteFileOrFolderCommand : ICommand, IDisposable
     {
-        private readonly string _originalPath;
-        private readonly string _backupDirPath;
-        private readonly string _backupDestPath;
-        private readonly IFileStorage _storage;
+        private readonly List<string> _physicalPaths;
+        private readonly string _projectRoot;
         private readonly bool _isFolder;
+        private readonly IFileStorage _storage;
+
+        // Информация о резервных копиях для каждого физического пути
+        private readonly List<(string OriginalPath, string BackupDestPath, string BackupDirPath)> _backups = new();
         private bool _executed;
 
-        public DeleteFileOrFolderCommand(string originalPath, string projectRoot, IFileStorage storage)
+        public DeleteFileOrFolderCommand(
+            List<string> physicalPaths,
+            string projectRoot,
+            bool isFolder,
+            IFileStorage storage)
         {
-            _originalPath = originalPath;
+            _physicalPaths = physicalPaths;
+            _projectRoot = projectRoot;
+            _isFolder = isFolder;
             _storage = storage;
 
-            _isFolder = _storage.DirectoryExists(originalPath);
-
-            // Генерируем уникальный путь резервной копии внутри .editor/backup/
+            // Генерируем уникальные пути резервных копий для каждого физического пути
             string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            string uniqueId = Guid.NewGuid().ToString("N").Substring(0, 8);
-            
-            // Вся папка операции
-            _backupDirPath = Path.Combine(projectRoot, ".editor", "backup", $"delete_{timestamp}_{uniqueId}");
-
-            // Сохраняем структуру: имя файла/папки будет в корне этой уникальной папки
-            string name = Path.GetFileName(_originalPath);
-            _backupDestPath = Path.Combine(_backupDirPath, name);
+            int counter = 0;
+            foreach (var origPath in _physicalPaths)
+            {
+                string uniqueId = Guid.NewGuid().ToString("N").Substring(0, 8);
+                string backupDirPath = Path.Combine(_projectRoot, ".editor", "backup", $"delete_{timestamp}_{uniqueId}_{counter++}");
+                string name = Path.GetFileName(origPath);
+                string backupDestPath = Path.Combine(backupDirPath, name);
+                
+                _backups.Add((origPath, backupDestPath, backupDirPath));
+            }
         }
 
         public void Execute()
         {
             if (_executed) return;
 
-            // Создаем уникальную директорию бэкапа
-            _storage.CreateDirectory(_backupDirPath);
+            // Создаем бэкапы и удаляем физические файлы/папки
+            foreach (var backup in _backups)
+            {
+                try
+                {
+                    _storage.CreateDirectory(backup.BackupDirPath);
+                    if (_isFolder)
+                    {
+                        if (_storage.DirectoryExists(backup.OriginalPath))
+                        {
+                            _storage.MoveDirectory(backup.OriginalPath, backup.BackupDestPath);
+                        }
+                    }
+                    else
+                    {
+                        if (_storage.FileExists(backup.OriginalPath))
+                        {
+                            _storage.MoveFile(backup.OriginalPath, backup.BackupDestPath);
+                        }
+                    }
+                }
+                catch
+                {
+                    // Игнорируем или логируем ошибки, если пути уже не существуют
+                }
+            }
 
-            if (_isFolder)
-            {
-                if (_storage.DirectoryExists(_originalPath))
-                {
-                    _storage.MoveDirectory(_originalPath, _backupDestPath);
-                    _executed = true;
-                }
-            }
-            else
-            {
-                if (_storage.FileExists(_originalPath))
-                {
-                    _storage.MoveFile(_originalPath, _backupDestPath);
-                    _executed = true;
-                }
-            }
+            _executed = true;
         }
 
         public void Undo()
         {
             if (!_executed) return;
 
-            // Убеждаемся, что родительская папка назначения существует
-            string parentDir = Path.GetDirectoryName(_originalPath);
-            if (!string.IsNullOrEmpty(parentDir))
+            // Восстанавливаем элементы на диске
+            foreach (var backup in _backups)
             {
-                _storage.CreateDirectory(parentDir);
+                try
+                {
+                    string? parentDir = Path.GetDirectoryName(backup.OriginalPath);
+                    if (!string.IsNullOrEmpty(parentDir))
+                    {
+                        _storage.CreateDirectory(parentDir);
+                    }
+
+                    if (_isFolder)
+                    {
+                        if (_storage.DirectoryExists(backup.BackupDestPath))
+                        {
+                            _storage.MoveDirectory(backup.BackupDestPath, backup.OriginalPath);
+                        }
+                    }
+                    else
+                    {
+                        if (_storage.FileExists(backup.BackupDestPath))
+                        {
+                            _storage.MoveFile(backup.BackupDestPath, backup.OriginalPath);
+                        }
+                    }
+                }
+                catch
+                {
+                    // Игнорируем
+                }
             }
 
-            if (_isFolder)
-            {
-                if (_storage.DirectoryExists(_backupDestPath))
-                {
-                    _storage.MoveDirectory(_backupDestPath, _originalPath);
-                    _executed = false;
-                }
-            }
-            else
-            {
-                if (_storage.FileExists(_backupDestPath))
-                {
-                    _storage.MoveFile(_backupDestPath, _originalPath);
-                    _executed = false;
-                }
-            }
+            _executed = false;
         }
 
-        /// <summary>
-        /// Вызывается при удалении команды из истории (когда очищаются ресурсы бэкапа).
-        /// </summary>
         public void Dispose()
         {
             try
             {
-                if (_storage.DirectoryExists(_backupDirPath))
+                foreach (var backup in _backups)
                 {
-                    _storage.DeleteDirectory(_backupDirPath, recursive: true);
+                    if (_storage.DirectoryExists(backup.BackupDirPath))
+                    {
+                        _storage.DeleteDirectory(backup.BackupDirPath, recursive: true);
+                    }
                 }
             }
             catch
             {
-                // Игнорируем ошибки удаления бэкапа при очистке
+                // Игнорируем
             }
         }
     }

@@ -18,20 +18,26 @@ namespace editor.Services.Project
 		public static string ProjectVersionString => ProjectVersion.ToString(3);
 
 		/// <summary>
-		/// Относительные пути к обязательным файлам проекта.
+		/// Имена системных директорий проекта (лежат прямо в корне проекта, вне Assets).
 		/// </summary>
-		public static class Files
+		public static class SystemDirectories
 		{
 			public const string ProjectSettings = "Configs/project.toml";
 		}
 
 		/// <summary>
-		/// Имена обязательных директорий проекта.
+		/// Имена директорий ассетов проекта.
 		/// </summary>
-		public static class Directories
+		public static class AssetDirectories
 		{
-			public const string Assets = "Assets/Scripts";
-			public const string Configs = "Configs";
+			public const string Scripts = "Scripts";
+			public const string EcsComponents = "Ecs/Components";
+			public const string EcsSystems = "Ecs/Systems";
+			public const string EcsEntities = "Ecs/Entities";
+			public const string Textures = "Textures";
+			public const string Geometry = "Geometry";
+			public const string Shaders = "Shaders";
+			public const string Materials = "Materials";
 		}
 	}
 }

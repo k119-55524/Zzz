@@ -149,12 +149,8 @@ namespace editor.ViewModels
 
         private void OnTomlSettingChanged()
         {
-            var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as MainWindowViewModel;
-            if (mainVm?.CurrentProjectPath != null)
-            {
-                App.ProjectService.SaveProject(mainVm.CurrentProjectPath, out _);
-                mainVm.IsDirty = true;
-            }
+            // Свойство меняется через SetProperty -> HistoryManager, который сам
+            // вызывает OnChanged (автосохранение) и отражает dirty-состояние через IsDirty.
         }
 
         public object? SelectedItem

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using editor.Services.Project.Infrastructure;
 using editor.Services.Project.Infrastructure.UndoRedo;
 using editor.Services.Project.FileTypes.ProjectSettings;
@@ -65,13 +66,13 @@ namespace editor.Services.Project
                 _storage.CreateDirectory(projectPath);
 
                 // Создаем обязательные папки
-                foreach (var dir in ProjectStructure.RequiredDirectories)
+                foreach (var folder in ProjectStructure.AllDirectories)
                 {
-                    _storage.CreateDirectory(Path.Combine(projectPath, dir));
+                    _storage.CreateDirectory(Path.Combine(projectPath, folder.RelativePath));
                 }
 
                 // Создаем обязательные файлы с контентом по умолчанию
-                foreach (var fileSchema in ProjectStructure.RequiredFiles)
+                foreach (var fileSchema in ProjectStructure.AllFiles)
                 {
                     string fullPath = Path.Combine(projectPath, fileSchema.RelativePath);
                     string dirPath = Path.GetDirectoryName(fullPath) ?? projectPath;
@@ -81,7 +82,7 @@ namespace editor.Services.Project
                     }
 
                     string content = fileSchema.DefaultContent;
-                    if (fileSchema.RelativePath == ProjectConstants.Files.ProjectSettings)
+                    if (fileSchema.RelativePath == ProjectConstants.SystemDirectories.ProjectSettings)
                     {
                         content = content.Replace("NewProject", projectName);
                     }
@@ -128,9 +129,9 @@ namespace editor.Services.Project
                 }
 
                 // 1. Автовосстановление структуры папок
-                foreach (var dir in ProjectStructure.RequiredDirectories)
+                foreach (var folder in ProjectStructure.AllDirectories)
                 {
-                    string fullPath = Path.Combine(projectRootPath, dir);
+                    string fullPath = Path.Combine(projectRootPath, folder.RelativePath);
                     if (!_storage.DirectoryExists(fullPath))
                     {
                         _storage.CreateDirectory(fullPath);
@@ -139,7 +140,7 @@ namespace editor.Services.Project
 
                 // 2. Валидация и автовосстановление файлов проекта
                 List<ValidationErrorItem> toRestore = new List<ValidationErrorItem>();
-                foreach (var fileSchema in ProjectStructure.RequiredFiles)
+                foreach (var fileSchema in ProjectStructure.AllFiles)
                 {
                     string fullPath = Path.Combine(projectRootPath, fileSchema.RelativePath);
 
@@ -166,7 +167,7 @@ namespace editor.Services.Project
                 {
                     RestoreDefaultFiles(projectRootPath, toRestore);
                 }
-                string fullSettingsPath = Path.Combine(projectRootPath, ProjectConstants.Files.ProjectSettings);
+                string fullSettingsPath = Path.Combine(projectRootPath, ProjectConstants.SystemDirectories.ProjectSettings);
                 if (_storage.FileExists(fullSettingsPath))
                 {
                     string toml = _storage.ReadAllText(fullSettingsPath);
@@ -206,7 +207,7 @@ namespace editor.Services.Project
             {
                 foreach (var err in errors)
                 {
-                    var schema = ProjectStructure.RequiredFiles.Find(f => f.RelativePath == err.FilePath);
+                    var schema = ProjectStructure.AllFiles.FirstOrDefault(f => f.RelativePath == err.FilePath);
                     if (schema != null)
                     {
                         string fullPath = Path.Combine(projectRootPath, schema.RelativePath);
@@ -216,7 +217,7 @@ namespace editor.Services.Project
                             _storage.CreateDirectory(dirPath);
                         }
                         string content = schema.DefaultContent;
-                        if (schema.RelativePath == ProjectConstants.Files.ProjectSettings)
+                        if (schema.RelativePath == ProjectConstants.SystemDirectories.ProjectSettings)
                         {
                             string projectName = Path.GetFileName(projectRootPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
                             content = content.Replace("NewProject", projectName);
@@ -237,7 +238,7 @@ namespace editor.Services.Project
         {
             try
             {
-                var schema = ProjectStructure.RequiredFiles.Find(f => f.RelativePath == ProjectConstants.Files.ProjectSettings);
+                var schema = ProjectStructure.AllFiles.FirstOrDefault(f => f.RelativePath == ProjectConstants.SystemDirectories.ProjectSettings);
                 if (schema != null)
                 {
                     string fullPath = Path.Combine(projectRootPath, schema.RelativePath);
@@ -269,7 +270,7 @@ namespace editor.Services.Project
                 if (CurrentSettings == null)
                     return true;
 
-                string fullPath = Path.Combine(projectRootPath, ProjectConstants.Files.ProjectSettings);
+                string fullPath = Path.Combine(projectRootPath, ProjectConstants.SystemDirectories.ProjectSettings);
                 string toml = ProjectSettingsParser.Serialize(CurrentSettings);
                 _storage.WriteAllText(fullPath, toml);
                 return true;

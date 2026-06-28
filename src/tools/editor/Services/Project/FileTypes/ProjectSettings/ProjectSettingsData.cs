@@ -10,7 +10,6 @@ namespace editor.Services.Project.FileTypes.ProjectSettings
 	public class ProjectSettingsData : UndoableObject
 	{
 		private string _name = string.Empty;
-		private List<string> _emptyFolders = new();
 		private bool _showSystemMode;
 		private List<string> _disabledFilters = new();
 
@@ -28,16 +27,6 @@ namespace editor.Services.Project.FileTypes.ProjectSettings
 		{
 			get => _name;
 			set => SetProperty(ref _name, value, val => _name = val);
-		}
-
-		/// <summary>
-		/// Список относительных путей пустых виртуальных папок, сохраненных между сессиями.
-		/// </summary>
-		[EditorVisibility(EditorVisibility.Hidden)]
-		public List<string> EmptyFolders
-		{
-			get => _emptyFolders;
-			set => SetProperty(ref _emptyFolders, value, val => _emptyFolders = val);
 		}
 
 		/// <summary>
