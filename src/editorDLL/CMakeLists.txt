@@ -24,5 +24,6 @@ target_link_libraries(editorDLL
     PRIVATE
         engine_lib_editor
 )
+target_compile_definitions(editorDLL PRIVATE Z_TARGET_NAME="editorDLL")
 
 

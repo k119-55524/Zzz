@@ -1,4 +1,7 @@
 
+#define Z_PRINT_DEFINES
+#ifdef Z_PRINT_DEFINES
+#endif
 #include <memory>
 #include <common/common.h>
 #include <engine/engine.h>
