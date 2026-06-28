@@ -34,5 +34,25 @@ namespace editor.Services.Project.Infrastructure
         /// Возвращает все элементы (файлы и папки) внутри указанной директории.
         /// </summary>
         string[] GetFileSystemEntries(string path);
+
+        /// <summary>
+        /// Удаляет файл.
+        /// </summary>
+        void DeleteFile(string path);
+
+        /// <summary>
+        /// Удаляет директорию.
+        /// </summary>
+        void DeleteDirectory(string path, bool recursive);
+
+        /// <summary>
+        /// Перемещает файл.
+        /// </summary>
+        void MoveFile(string sourcePath, string destPath);
+
+        /// <summary>
+        /// Перемещает директорию.
+        /// </summary>
+        void MoveDirectory(string sourcePath, string destPath);
     }
 }

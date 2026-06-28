@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using editor.Services.Project.Infrastructure;
+using editor.Services.Project.Infrastructure.UndoRedo;
 using editor.Services.Project.FileTypes.ProjectSettings;
 
 namespace editor.Services.Project
@@ -15,6 +16,8 @@ namespace editor.Services.Project
         }
 
         public IFileStorage Storage => _storage;
+
+        public HistoryManager History { get; } = new();
 
         public ProjectSettingsData CurrentSettings { get; private set; } = new();
 
@@ -90,6 +93,14 @@ namespace editor.Services.Project
                     Version = ProjectConstants.ProjectVersionString,
                     Name = projectName
                 };
+
+                // Очищаем бэкапы редактора и историю для нового проекта
+                ClearBackupDirectory(projectPath);
+                History.Clear();
+
+                // Связываем с Undo/Redo и включаем автосохранение
+                CurrentSettings.SetHistoryManager(History);
+                CurrentSettings.OnChanged += () => SaveProject(projectPath, out _);
             }
             catch (Exception ex)
             {
@@ -169,6 +180,14 @@ namespace editor.Services.Project
                         Name = Path.GetFileName(projectRootPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
                     };
                 }
+
+                // Очищаем старые бэкапы и сбрасываем историю
+                ClearBackupDirectory(projectRootPath);
+                History.Clear();
+
+                // Связываем с Undo/Redo и автосохранением
+                CurrentSettings.SetHistoryManager(History);
+                CurrentSettings.OnChanged += () => SaveProject(projectRootPath, out _);
             }
             catch (Exception ex)
             {
@@ -259,6 +278,22 @@ namespace editor.Services.Project
             {
                 error = ex.Message;
                 return false;
+            }
+        }
+
+        private void ClearBackupDirectory(string projectRootPath)
+        {
+            try
+            {
+                string backupPath = Path.Combine(projectRootPath, ".editor", "backup");
+                if (_storage.DirectoryExists(backupPath))
+                {
+                    _storage.DeleteDirectory(backupPath, recursive: true);
+                }
+            }
+            catch
+            {
+                // Игнорируем ошибки при очистке бэкапов
             }
         }
     }

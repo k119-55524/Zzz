@@ -36,5 +36,31 @@ namespace editor.Services.Project.Infrastructure
         {
             return Directory.GetFileSystemEntries(path);
         }
+
+        public void DeleteFile(string path)
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+
+        public void DeleteDirectory(string path, bool recursive)
+        {
+            if (Directory.Exists(path))
+            {
+                Directory.Delete(path, recursive);
+            }
+        }
+
+        public void MoveFile(string sourcePath, string destPath)
+        {
+            File.Move(sourcePath, destPath);
+        }
+
+        public void MoveDirectory(string sourcePath, string destPath)
+        {
+            Directory.Move(sourcePath, destPath);
+        }
     }
 }

@@ -2,6 +2,6 @@ version = "1.0.0"
 name = "super_game"
 
 [editor]
-show_system_mode = true
+show_system_mode = false
 disabled_filters = []
 empty_folders = ["Global"]

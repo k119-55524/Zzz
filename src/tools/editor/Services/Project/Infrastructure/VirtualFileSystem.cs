@@ -152,9 +152,10 @@ namespace editor.Services.Project.Infrastructure
                 {
                     string name = Path.GetFileName(entry);
                     
-                    // Игнорируем технические директории IDE/VCS и папку ассетов
+                    // Игнорируем технические директории IDE/VCS, бэкапы редактора и папку ассетов
                     if (name.Equals("Assets", StringComparison.OrdinalIgnoreCase) ||
                         name.Equals(".git", StringComparison.OrdinalIgnoreCase) ||
+                        name.Equals(".editor", StringComparison.OrdinalIgnoreCase) || // Игнорируем бэкапы редактора
                         name.Equals(".vs", StringComparison.OrdinalIgnoreCase) ||
                         name.Equals("bin", StringComparison.OrdinalIgnoreCase) ||
                         name.Equals("obj", StringComparison.OrdinalIgnoreCase) ||
