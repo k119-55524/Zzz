@@ -23,6 +23,8 @@ target_sources(logger_lib PRIVATE
 )
 
 target_compile_features(logger_lib PUBLIC cxx_std_23)
+target_compile_definitions(logger_lib PRIVATE Z_TARGET_NAME="logger_lib")
+set_source_files_properties(pch/pch.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
 target_link_libraries(logger_lib PUBLIC common_lib)
 

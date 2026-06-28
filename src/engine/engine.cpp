@@ -11,9 +11,6 @@ using namespace zzz::engine;
 Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeData) :
 	engineState{ eInitState::NotInitialized }
 {
-	ensure(s_Instance == nullptr, "Engine instance already exists!");
-	s_Instance = this;
-
 	m_Platform = safe_make_unique<Platform>(appName, nativeData);
 	Initialize();
 }
@@ -21,13 +18,6 @@ Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeDa
 Engine::~Engine()
 {
 	Shutdown();
-	s_Instance = nullptr;
-}
-
-Engine& Engine::Get()
-{
-	ensure(s_Instance != nullptr, "Engine is not initialized!");
-	return *s_Instance;
 }
 
 void Engine::Shutdown()
@@ -54,8 +44,8 @@ void Engine::Shutdown()
 
 void Engine::Initialize()
 {
-	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, std::bind(&Engine::OnCloseAllViews, this));
-	m_MainLoop = safe_make_shared<MainLoop>(*m_Platform, std::bind(&Engine::OnUpdateSystem, this));
+	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, [this]() { OnCloseAllViews(); });
+	m_MainLoop = safe_make_shared<MainLoop>(*m_Platform, [this]() { OnUpdateSystem(); });
 
 	DOut("Engine initialized: OK.");
 	engineState.store(eInitState::Initialized);
@@ -104,7 +94,7 @@ void Engine::Initialize()
 	return {};
 }
 
-void Engine::OnCloseAllViews()
+void Engine::OnCloseAllViews() const
 {
 #if !Z_EDITOR
 	m_MainLoop->Stop();
@@ -113,6 +103,10 @@ void Engine::OnCloseAllViews()
 
 void Engine::OnUpdateSystem()
 {
+	zF64 currentTime = 0.0f;
+	if (m_ViewManager)
+		m_ViewManager->Update(currentTime);
+
 	const int ci = 10'000'000;
 	static int i = ci;
 	i++;

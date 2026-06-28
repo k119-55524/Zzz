@@ -24,3 +24,5 @@ target_link_libraries(game_linux
 )
 
 target_compile_features(game_linux PUBLIC cxx_std_23)
+target_compile_definitions(game_linux PRIVATE Z_TARGET_NAME="game_linux")
+set_source_files_properties(pch/pch.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)

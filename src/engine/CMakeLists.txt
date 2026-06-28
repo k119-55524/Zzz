@@ -145,6 +145,8 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
             logger_lib
     )
 
+    target_compile_definitions(${TARGET_NAME} PRIVATE Z_TARGET_NAME="${TARGET_NAME}")
+    set_source_files_properties(pch/pch.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
     if(${IS_EDITOR})
         target_compile_definitions(${TARGET_NAME} PUBLIC Z_EDITOR=1)
     endif()

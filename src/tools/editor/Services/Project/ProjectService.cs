@@ -6,17 +6,12 @@ using editor.Services.Project.FileTypes.ProjectSettings;
 
 namespace editor.Services.Project
 {
-    public class ProjectService
+    public class ProjectService(IFileStorage storage)
     {
-        private readonly IFileStorage _storage;
+        private readonly IFileStorage _storage = storage;
 
         public ProjectService() : this(new PhysicalFileStorage())
         {
-        }
-
-        public ProjectService(IFileStorage storage)
-        {
-            _storage = storage;
         }
 
         public IFileStorage Storage => _storage;

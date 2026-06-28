@@ -34,15 +34,12 @@ namespace zzz::engine
 		Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeData = nullptr);
 		~Engine();
 
-		static Engine& Get();
-
 		[[nodiscard]] std::expected<void, std::string> Run();
 
 	protected:
 		void Shutdown();
 		void OnUpdateSystem();
 
-		inline static Engine* s_Instance = nullptr;
 		std::mutex stateMutex;
 		std::atomic<eInitState> engineState;
 
@@ -52,6 +49,6 @@ namespace zzz::engine
 
 	private:
 		void Initialize();
-		void OnCloseAllViews();
+		void OnCloseAllViews() const;
 	};
 }

@@ -23,3 +23,5 @@ target_link_libraries(game_win PRIVATE
 )
 
 target_compile_features(game_win PUBLIC cxx_std_23)
+target_compile_definitions(game_win PRIVATE Z_TARGET_NAME="game_win")
+set_source_files_properties(pch/pch.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)

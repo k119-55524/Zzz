@@ -106,7 +106,11 @@
 #endif
 
 // Вывод активных дефайнов
+#if defined(Z_PRINT_DEFINES)
 #pragma message(">>>>> ------- [ zdefines.h : active defines ] -------")
+#ifdef Z_TARGET_NAME
+#pragma message(">>>>> Target   : " Z_TARGET_NAME)
+#endif
 #if Z_WINDOWS
 #pragma message(">>>>> Platform : Z_WINDOWS")
 #endif
@@ -153,3 +157,4 @@
 #pragma message(">>>>> Mode     : Z_EDITOR")
 #endif
 #pragma message(">>>>> -----------------------------------------------")
+#endif

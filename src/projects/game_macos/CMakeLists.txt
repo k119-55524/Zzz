@@ -37,3 +37,4 @@ set_target_properties(game_macos PROPERTIES
 )
 
 target_link_options(game_macos PRIVATE "-ObjC")
+target_compile_definitions(game_macos PRIVATE Z_TARGET_NAME="game_macos")

@@ -30,3 +30,5 @@ target_link_libraries(game_android PRIVATE
 )
 
 target_compile_features(game_android PUBLIC cxx_std_23)
+target_compile_definitions(game_android PRIVATE Z_TARGET_NAME="game_android")
+set_source_files_properties(pch/pch.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)

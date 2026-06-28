@@ -22,3 +22,4 @@ target_sources(common_lib PRIVATE
 )
 
 target_compile_features(common_lib PUBLIC cxx_std_23)
+target_compile_definitions(common_lib PRIVATE Z_TARGET_NAME="common_lib")

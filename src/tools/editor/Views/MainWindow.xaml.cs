@@ -307,12 +307,26 @@ namespace editor
 				return;
 			}
 
+			double saveWidth = Width;
+			double saveHeight = Height;
+			double saveLeft = Left;
+			double saveTop = Top;
+
+			if (WindowState != WindowState.Normal)
+			{
+				var restoreBounds = RestoreBounds;
+				saveWidth = restoreBounds.Width;
+				saveHeight = restoreBounds.Height;
+				saveLeft = restoreBounds.Left;
+				saveTop = restoreBounds.Top;
+			}
+
 			var layoutState = new LayoutSessionState
 			{
-				Width = Width,
-				Height = Height,
-				Left = Left,
-				Top = Top,
+				Width = saveWidth,
+				Height = saveHeight,
+				Left = saveLeft,
+				Top = saveTop,
 				IsMaximized = WindowState == WindowState.Maximized,
 				IsDirty = _viewModel.IsDirty,
 				LayoutXml = AvalonDockLayoutPersistence.Serialize(DockManager)

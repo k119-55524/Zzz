@@ -7,7 +7,7 @@ using namespace zzz::engine;
 
 ViewManager::ViewManager(const Platform& platform, std::function<void()> onAllViewsClosed) :
 	m_Platform{ platform },
-	OnAllViewsClosed{ onAllViewsClosed }
+	OnAllViewsClosed{ std::move(onAllViewsClosed) }
 {
 	ensure(OnAllViewsClosed != nullptr, "OnAllViewsClosed must not be null.");
 }
@@ -27,7 +27,7 @@ View* ViewManager::CreateView()
 		THROW_RUNTIME("Mobile platforms support only one native window per application.");
 #endif
 
-	auto view = safe_make_shared<View>(m_Platform, std::bind(&ViewManager::HandleWindowClose, this, std::placeholders::_1));
+	auto view = safe_make_shared<View>(m_Platform, [this](View& v) { HandleWindowClose(v); });
 	View* viewPtr = view.get();
 	m_Views.push_back(std::move(view));
 
@@ -78,3 +78,9 @@ void ViewManager::RemoveView(View* view)
 		m_Views.erase(it);
 }
 #endif
+
+void ViewManager::Update(zF64 currentTime)
+{
+	for (const auto& view : m_Views)
+		view->Update(currentTime);
+}

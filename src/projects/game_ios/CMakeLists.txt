@@ -41,3 +41,4 @@ set_target_properties(game_ios PROPERTIES
 )
 
 target_link_options(game_ios PRIVATE "-ObjC")
+target_compile_definitions(game_ios PRIVATE Z_TARGET_NAME="game_ios")

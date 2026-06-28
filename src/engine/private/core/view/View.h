@@ -19,6 +19,8 @@ namespace zzz::engine
 #endif
 		~View() = default;
 
+		void Update(zF64 currentTime);
+
 	private:
 		void Initialize(void* data = nullptr);
 

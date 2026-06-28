@@ -24,6 +24,8 @@ namespace zzz::engine
 		void RemoveView(View* view);
 #endif
 
+		void Update(zF64 currentTime);
+
 	private:
 		const Platform& m_Platform;
 		std::list<std::shared_ptr<View>> m_Views;

@@ -1,3 +1,8 @@
+#define Z_PRINT_DEFINES
+#ifdef Z_PRINT_DEFINES
+#endif
+#include <common/defines.h>
+
 #import <Cocoa/Cocoa.h>
 
 int main(int argc, const char* argv[])

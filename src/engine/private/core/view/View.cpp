@@ -136,3 +136,9 @@ void View::OnWindowSafeAreaChanged(int top, int bottom, int left, int right)
 }
 #pragma endregion
 
+void View::Update(zF64 currentTime)
+{
+	// TODO: Добавить обновление логики и рендеринга для конкретного вью
+	std::ignore = currentTime;
+}
+
