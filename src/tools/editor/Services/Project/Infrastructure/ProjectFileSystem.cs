@@ -15,6 +15,7 @@ namespace editor.Services.Project.Infrastructure
         private string _relativePath = string.Empty;
         private bool _isFolder;
         private bool _isEditing;
+        private bool _isSearchVisible = true;
         private System.Collections.ObjectModel.ObservableCollection<ProjectNode> _children = new();
 
         public string Name
@@ -74,6 +75,23 @@ namespace editor.Services.Project.Infrastructure
             }
         }
         
+        /// <summary>
+        /// Видимость узла в дереве при активном текстовом поиске (см. AssetsViewModel.SearchText).
+        /// Используется только для AssetsTree - на узлы SystemTree не влияет и никогда не пересчитывается.
+        /// </summary>
+        public bool IsSearchVisible
+        {
+            get => _isSearchVisible;
+            set
+            {
+                if (_isSearchVisible != value)
+                {
+                    _isSearchVisible = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public System.Collections.ObjectModel.ObservableCollection<ProjectNode> Children
         {
             get => _children;

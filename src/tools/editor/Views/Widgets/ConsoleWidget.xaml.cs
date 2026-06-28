@@ -75,20 +75,6 @@ namespace editor.Views.Widgets
 
 
 
-        private void ClearSearch_Click(object sender, RoutedEventArgs e)
-        {
-            var button = sender as DependencyObject;
-            while (button != null && !(button is TextBox))
-            {
-                button = VisualTreeHelper.GetParent(button);
-            }
-            if (button is TextBox textBox)
-            {
-                textBox.Text = string.Empty;
-                textBox.Focus();
-            }
-        }
-
         private static T? FindVisualChild<T>(DependencyObject obj) where T : DependencyObject
         {
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(obj); i++)

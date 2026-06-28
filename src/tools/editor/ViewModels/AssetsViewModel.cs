@@ -52,6 +52,7 @@ namespace editor.ViewModels
         private ObservableCollection<FilterItemViewModel> _availableFilters = new();
         private bool _isSystemMode;
         private bool _isUpdatingFilters;
+        private string _searchText = string.Empty;
 
         public AssetsViewModel() : base(WidgetType.Assets)
         {
@@ -127,6 +128,20 @@ namespace editor.ViewModels
             set => SetField(ref _availableFilters, value);
         }
 
+        // Поиск по имени - действует только на AssetsTree (см. ApplySearchFilter). SystemTree
+        // не должен зависеть ни от поиска, ни от фильтра типов ресурсов дерева ассетов.
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                if (SetField(ref _searchText, value))
+                {
+                    ApplySearchFilter(AssetRootNodes, _searchText);
+                }
+            }
+        }
+
         public bool IsSystemMode
         {
             get => _isSystemMode;
@@ -157,6 +172,8 @@ namespace editor.ViewModels
                 AssetRootNodes.Clear();
                 SystemRootNodes.Clear();
                 AvailableFilters.Clear();
+                _searchText = string.Empty;
+                OnPropertyChanged(nameof(SearchText));
                 return;
             }
 
@@ -210,10 +227,11 @@ namespace editor.ViewModels
                 }
             }
 
+            var activeDisabledFilters = IsSystemMode ? settings.DisabledSystemFilters : settings.DisabledFilters;
             foreach (var folder in folders)
             {
                 string name = Path.GetFileName(folder.RelativePath);
-                bool isChecked = !settings.DisabledFilters.Contains(name);
+                bool isChecked = !activeDisabledFilters.Contains(name);
 
                 AvailableFilters.Add(new FilterItemViewModel(name, isChecked, OnFilterCheckedChanged));
             }
@@ -237,9 +255,13 @@ namespace editor.ViewModels
                 }
             }
 
+            // Фильтры для AssetsTree и SystemTree хранятся раздельно, чтобы переключение
+            // галочек в одном дереве никогда не скрывало папки в другом.
+            var activeDisabledFilters = IsSystemMode ? settings.DisabledSystemFilters : settings.DisabledFilters;
+
             // Проверяем, изменился ли реальный список отключенных фильтров
             bool changed = false;
-            if (newDisabled.Count != settings.DisabledFilters.Count)
+            if (newDisabled.Count != activeDisabledFilters.Count)
             {
                 changed = true;
             }
@@ -247,7 +269,7 @@ namespace editor.ViewModels
             {
                 foreach (var item in newDisabled)
                 {
-                    if (!settings.DisabledFilters.Contains(item))
+                    if (!activeDisabledFilters.Contains(item))
                     {
                         changed = true;
                         break;
@@ -257,8 +279,8 @@ namespace editor.ViewModels
 
             if (changed)
             {
-                settings.DisabledFilters.Clear();
-                settings.DisabledFilters.AddRange(newDisabled);
+                activeDisabledFilters.Clear();
+                activeDisabledFilters.AddRange(newDisabled);
                 var mainVm = Application.Current?.MainWindow?.DataContext as MainWindowViewModel;
                 if (mainVm?.CurrentProjectPath != null)
                 {
@@ -284,16 +306,42 @@ namespace editor.ViewModels
             }
 
             var settings = App.ProjectService.CurrentSettings;
-            
-            // Загружаем ассеты (IsSystemMode = false)
+
+            // Загружаем ассеты (IsSystemMode = false). Список отключенных фильтров - свой,
+            // не пересекается со списком для системного дерева (см. DisabledSystemFilters).
             var assetsTree = _vfs.BuildTree(projectRoot, false, settings.DisabledFilters);
             AssetRootNodes = new ObservableCollection<ProjectNode>(assetsTree);
+            ApplySearchFilter(AssetRootNodes, SearchText);
 
-            // Загружаем системные файлы (IsSystemMode = true)
-            var systemTree = _vfs.BuildTree(projectRoot, true, settings.DisabledFilters);
+            // Загружаем системные файлы (IsSystemMode = true). Поиск и фильтр ассетов сюда не применяются.
+            var systemTree = _vfs.BuildTree(projectRoot, true, settings.DisabledSystemFilters);
             SystemRootNodes = new ObservableCollection<ProjectNode>(systemTree);
         }
 
+
+        // Пересчитывает IsSearchVisible по дереву ассетов: узел видим, если его имя содержит
+        // искомую подстроку, либо видим хотя бы один из его потомков (чтобы не скрывать
+        // папку, внутри которой есть совпадение). Вызывается только для AssetRootNodes -
+        // узлы SystemRootNodes этим методом никогда не трогаются.
+        private static bool ApplySearchFilter(ObservableCollection<ProjectNode> nodes, string searchText)
+        {
+            bool hasVisibleChild = false;
+            string search = (searchText ?? string.Empty).Trim().ToLowerInvariant();
+
+            foreach (var node in nodes)
+            {
+                bool childMatches = ApplySearchFilter(node.Children, search);
+                bool selfMatches = search.Length == 0 || node.Name.ToLowerInvariant().Contains(search);
+                node.IsSearchVisible = selfMatches || childMatches;
+
+                if (node.IsSearchVisible)
+                {
+                    hasVisibleChild = true;
+                }
+            }
+
+            return hasVisibleChild;
+        }
 
         private void ResetCurrentFilters()
         {
@@ -328,12 +376,14 @@ namespace editor.ViewModels
                 .Where(n => n != string.Empty)
                 .ToList();
 
+            var activeDisabledFilters = IsSystemMode ? settings.DisabledSystemFilters : settings.DisabledFilters;
+
             bool changed = false;
             foreach (var name in currentModeFolderNames)
             {
-                if (settings.DisabledFilters.Contains(name))
+                if (activeDisabledFilters.Contains(name))
                 {
-                    settings.DisabledFilters.Remove(name);
+                    activeDisabledFilters.Remove(name);
                     changed = true;
                 }
             }

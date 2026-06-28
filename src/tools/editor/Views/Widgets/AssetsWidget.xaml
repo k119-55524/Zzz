@@ -215,12 +215,18 @@
         </Grid.RowDefinitions>
 
         <!-- Панель управления (Toolbar) -->
-        <Border Grid.Row="0" 
-                Background="{DynamicResource Brush_Panel_Header}" 
-                BorderBrush="{DynamicResource Brush_Border}" 
-                BorderThickness="0,0,0,1" 
+        <Border Grid.Row="0"
+                Background="{DynamicResource Brush_Panel_Header}"
+                BorderBrush="{DynamicResource Brush_Border}"
+                BorderThickness="0,0,0,1"
                 Padding="6,4">
-            <StackPanel Orientation="Horizontal">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal">
 
                 <!-- Фильтр обязательных папок (Плоская кнопка с иконкой воронки) -->
                 <Menu Background="Transparent" Margin="2,0">
@@ -271,11 +277,19 @@
                     <Button.ToolTip>
                         <ToolTip Content="{DynamicResource Widget_Assets_ResetFilters}" Background="#2D2D30" Foreground="{DynamicResource Brush_Text_Primary}" BorderBrush="{DynamicResource Brush_Border}"/>
                     </Button.ToolTip>
-                    <Path Data="M2,4 L14,4 L9,9 L9,15 L7,15 L7,9 Z M13,10 L17,14 M17,10 L13,14" 
+                    <Path Data="M2,4 L14,4 L9,9 L9,15 L7,15 L7,9 Z M13,10 L17,14 M17,10 L13,14"
                           Stroke="{DynamicResource Brush_Text_Primary}" StrokeThickness="1.5" Fill="Transparent" Stretch="Uniform" Width="16" Height="16"/>
                 </Button>
 
             </StackPanel>
+
+                <!-- Поиск по имени - действует только на дерево ассетов (AssetsTree), не на System -->
+                <Grid Grid.Column="1" VerticalAlignment="Center" Margin="10,0,5,0">
+                    <TextBox x:Name="SearchTextBox" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Style_SearchTextBox}" HorizontalAlignment="Stretch" />
+                    <Path Data="M15.5,14 L14.3,14 L13.9,13.6 C15.4,11.9 16,9.6 15.3,7.2 C14.3,3.8 11.4,1 8,0.3 C3.4,-0.6 -0.6,3.4 0.3,8 C1,11.4 3.8,14.3 7.2,15.3 C9.6,16 11.9,15.4 13.6,13.9 L14,14.3 L14,15.5 L19,20.5 L20.5,19 L15.5,14 Z M8,12 C5.8,12 4,10.2 4,8 C4,5.8 5.8,4 8,4 C10.2,4 12,5.8 12,8 C12,10.2 10.2,12 8,12 Z"
+                          Fill="{DynamicResource Brush_Text_Secondary}" Stretch="Uniform" Width="12" Height="12" HorizontalAlignment="Left" Margin="6,0,0,0" IsHitTestVisible="False"/>
+                </Grid>
+            </Grid>
         </Border>
 
         <!-- Область просмотра -->
@@ -331,6 +345,8 @@
                         <Setter Property="IsExpanded" Value="True"/>
                         <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}"/>
                         <Setter Property="Background" Value="Transparent"/>
+                        <!-- Скрытие непрошедших поиск узлов - только для AssetsTree, см. AssetsViewModel.ApplySearchFilter -->
+                        <Setter Property="Visibility" Value="{Binding IsSearchVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                         <Setter Property="ContextMenu">
                             <Setter.Value>
                                 <ContextMenu>

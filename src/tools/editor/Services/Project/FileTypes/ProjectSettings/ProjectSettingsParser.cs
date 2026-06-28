@@ -155,7 +155,8 @@ namespace editor.Services.Project.FileTypes.ProjectSettings
 					Name = !string.IsNullOrWhiteSpace(localData.Name) ? localData.Name : remoteData.Name,
 					Version = ProjectConstants.ProjectVersionString,
 					ShowSystemMode = localData.ShowSystemMode,
-					DisabledFilters = localData.DisabledFilters
+					DisabledFilters = localData.DisabledFilters,
+					DisabledSystemFilters = localData.DisabledSystemFilters
 				};
 
 				storage.WriteAllText(mergedOutputFilePath, Serialize(mergedData));
@@ -183,6 +184,13 @@ namespace editor.Services.Project.FileTypes.ProjectSettings
 			if (data.DisabledFilters != null && data.DisabledFilters.Count > 0)
 			{
 				sb.Append(string.Join(", ", data.DisabledFilters.ConvertAll(f => $"\"{f}\"")));
+			}
+			sb.AppendLine("]");
+
+			sb.Append("disabled_system_filters = [");
+			if (data.DisabledSystemFilters != null && data.DisabledSystemFilters.Count > 0)
+			{
+				sb.Append(string.Join(", ", data.DisabledSystemFilters.ConvertAll(f => $"\"{f}\"")));
 			}
 			sb.AppendLine("]");
 
@@ -229,6 +237,16 @@ namespace editor.Services.Project.FileTypes.ProjectSettings
 							list.Add(match.Groups[1].Value);
 						}
 						data.DisabledFilters = list;
+					}
+					else if (key == "disabled_system_filters")
+					{
+						var list = new List<string>();
+						var matches = Regex.Matches(valStr, "\"([^\"]*)\"");
+						foreach (Match match in matches)
+						{
+							list.Add(match.Groups[1].Value);
+						}
+						data.DisabledSystemFilters = list;
 					}
 				}
 			}

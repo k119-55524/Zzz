@@ -12,6 +12,7 @@ namespace editor.Services.Project.FileTypes.ProjectSettings
 		private string _name = string.Empty;
 		private bool _showSystemMode;
 		private List<string> _disabledFilters = new();
+		private List<string> _disabledSystemFilters = new();
 
 		/// <summary>
 		/// Версия формата проекта.
@@ -47,13 +48,25 @@ namespace editor.Services.Project.FileTypes.ProjectSettings
 		}
 
 		/// <summary>
-		/// Список отключенных фильтров папок (типов ресурсов).
+		/// Список отключенных фильтров папок (типов ресурсов) для дерева ассетов (Assets/).
 		/// </summary>
 		[EditorVisibility(EditorVisibility.Hidden)]
 		public List<string> DisabledFilters
 		{
 			get => _disabledFilters;
 			set => SetProperty(ref _disabledFilters, value, val => _disabledFilters = val);
+		}
+
+		/// <summary>
+		/// Список отключенных фильтров папок для дерева системных файлов (SystemTree).
+		/// Хранится отдельно от <see cref="DisabledFilters"/>, чтобы фильтрация ассетов
+		/// никогда не затрагивала системное дерево, и наоборот.
+		/// </summary>
+		[EditorVisibility(EditorVisibility.Hidden)]
+		public List<string> DisabledSystemFilters
+		{
+			get => _disabledSystemFilters;
+			set => SetProperty(ref _disabledSystemFilters, value, val => _disabledSystemFilters = val);
 		}
 	}
 }

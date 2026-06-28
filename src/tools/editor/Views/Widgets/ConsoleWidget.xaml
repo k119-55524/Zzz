@@ -11,78 +11,6 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
-        <!-- Специальный стиль для текстового поля поиска в консоли (вне общего оформления, не синий) -->
-        <Style x:Key="LogSearchTextBoxStyle" TargetType="TextBox">
-            <Setter Property="Background" Value="#060B13" />
-            <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource Brush_Border}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="20,4,22,4" />
-            <Setter Property="Height" Value="26" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="SelectionBrush" Value="#555555" />
-            <Setter Property="CaretBrush" Value="{DynamicResource Brush_Text_Primary}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TextBox">
-                        <Border x:Name="border"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="13">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                
-                                <ScrollViewer x:Name="PART_ContentHost" Grid.Column="0" Focusable="False"
-                                              HorizontalScrollBarVisibility="Hidden"
-                                              VerticalScrollBarVisibility="Hidden" />
-                                
-                                <Button x:Name="ClearButton" Grid.Column="1"
-                                        Margin="0,0,6,0"
-                                        Width="14" Height="14"
-                                        Background="Transparent"
-                                        BorderThickness="0"
-                                        Cursor="Hand"
-                                        Focusable="False"
-                                        Visibility="Visible"
-                                        Click="ClearSearch_Click">
-                                    <Button.Template>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border Background="Transparent">
-                                                <Path Data="M1,1 L11,11 M11,1 L1,11" 
-                                                      Stroke="{DynamicResource Brush_Text_Secondary}" 
-                                                      StrokeThickness="1.5" 
-                                                      Stretch="Uniform" 
-                                                      Margin="2"/>
-                                            </Border>
-                                        </ControlTemplate>
-                                    </Button.Template>
-                                </Button>
-                            </Grid>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="Text" Value="">
-                                <Setter TargetName="ClearButton" Property="Visibility" Value="Collapsed"/>
-                            </Trigger>
-                            <Trigger Property="Text" Value="{x:Null}">
-                                <Setter TargetName="ClearButton" Property="Visibility" Value="Collapsed"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="BorderBrush" Value="#E2C08D" />
-                            </Trigger>
-                            <Trigger Property="IsFocused" Value="True">
-                                <Setter TargetName="border" Property="BorderBrush" Value="#E2C08D" />
-                                <Setter Property="Background" Value="#0D1929" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
         <!-- Стиль для кнопок на тулбаре -->
         <Style x:Key="ToolbarButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
@@ -375,7 +303,7 @@
 
                 <!-- Поиск (Растягивается на все оставшееся пространство) -->
                 <Grid Grid.Column="2" VerticalAlignment="Center" Margin="10,0,5,0">
-                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource LogSearchTextBoxStyle}" HorizontalAlignment="Stretch" />
+                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Style_SearchTextBox}" HorizontalAlignment="Stretch" />
                     <Path Data="M15.5,14 L14.3,14 L13.9,13.6 C15.4,11.9 16,9.6 15.3,7.2 C14.3,3.8 11.4,1 8,0.3 C3.4,-0.6 -0.6,3.4 0.3,8 C1,11.4 3.8,14.3 7.2,15.3 C9.6,16 11.9,15.4 13.6,13.9 L14,14.3 L14,15.5 L19,20.5 L20.5,19 L15.5,14 Z M8,12 C5.8,12 4,10.2 4,8 C4,5.8 5.8,4 8,4 C10.2,4 12,5.8 12,8 C12,10.2 10.2,12 8,12 Z" 
                           Fill="{DynamicResource Brush_Text_Secondary}" Stretch="Uniform" Width="12" Height="12" HorizontalAlignment="Left" Margin="6,0,0,0" IsHitTestVisible="False"/>
                 </Grid>
