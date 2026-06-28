@@ -8,23 +8,109 @@ namespace editor.Services.Project.Infrastructure
     /// <summary>
     /// Представляет узел в виртуальной файловой системе проекта.
     /// </summary>
-    public class VirtualNode
+    public class VirtualNode : System.ComponentModel.INotifyPropertyChanged
     {
-        public string Name { get; set; } = string.Empty;
+        private string _name = string.Empty;
+        private string _relativePath = string.Empty;
+        private bool _isFolder;
+        private bool _isEmptyVirtual;
+        private bool _isEditing;
+        private List<VirtualNode> _children = new();
+
+        public string Name
+        {
+            get => _name;
+            set
+            {
+                if (_name != value)
+                {
+                    _name = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(DisplayName));
+                }
+            }
+        }
         
         /// <summary>
         /// Виртуальный относительный путь (например, "Player/Controller.cs").
         /// </summary>
-        public string RelativePath { get; set; } = string.Empty;
+        public string RelativePath
+        {
+            get => _relativePath;
+            set
+            {
+                if (_relativePath != value)
+                {
+                    _relativePath = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
         
-        public bool IsFolder { get; set; }
+        public bool IsFolder
+        {
+            get => _isFolder;
+            set
+            {
+                if (_isFolder != value)
+                {
+                    _isFolder = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(DisplayName));
+                }
+            }
+        }
         
         /// <summary>
         /// Флаг, указывающий, является ли папка пустой виртуальной (не существует на диске).
         /// </summary>
-        public bool IsEmptyVirtual { get; set; }
+        public bool IsEmptyVirtual
+        {
+            get => _isEmptyVirtual;
+            set
+            {
+                if (_isEmptyVirtual != value)
+                {
+                    _isEmptyVirtual = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public bool IsEditing
+        {
+            get => _isEditing;
+            set
+            {
+                if (_isEditing != value)
+                {
+                    _isEditing = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
         
-        public List<VirtualNode> Children { get; set; } = new();
+        public List<VirtualNode> Children
+        {
+            get => _children;
+            set
+            {
+                if (_children != value)
+                {
+                    _children = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public string DisplayName => IsFolder ? Name : System.IO.Path.GetFileNameWithoutExtension(Name);
+
+        public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+
+        protected void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
+        }
     }
 
     /// <summary>
@@ -92,7 +178,7 @@ namespace editor.Services.Project.Infrastructure
 
                     if (isDir)
                     {
-                        ScanDirectoryPhysical(entry, entry, node, disabledFilters);
+                        ScanDirectoryPhysical(projectRoot, entry, node, disabledFilters);
                     }
 
                     roots.Add(node);

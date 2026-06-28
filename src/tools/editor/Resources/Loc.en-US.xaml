@@ -126,4 +126,11 @@
     <sys:String x:Key="LogLevel_Critical">Critical Error</sys:String>
     <sys:String x:Key="LogLevel_Fatal">Fatal Error</sys:String>
     <sys:String x:Key="Log_Viewport_Init_Failed">Critical Error: Failed to initialize viewport {0} (HWND: {1}) in engine.</sys:String>
+
+    <!-- Explorer context menu -->
+    <sys:String x:Key="ContextMenu_CopyName">Copy Name</sys:String>
+    <sys:String x:Key="ContextMenu_OpenInExplorer">Open in Explorer</sys:String>
+    <sys:String x:Key="ContextMenu_Rename">Rename</sys:String>
+    <sys:String x:Key="ContextMenu_Add">Add</sys:String>
+    <sys:String x:Key="ContextMenu_Folder">Folder</sys:String>
 </ResourceDictionary>

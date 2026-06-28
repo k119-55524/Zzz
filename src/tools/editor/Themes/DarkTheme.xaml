@@ -240,4 +240,131 @@
             </Setter.Value>
         </Setter>
     </Style>
+    <!-- Стилизация контекстного меню -->
+    <Style TargetType="{x:Type ContextMenu}">
+        <Style.Resources>
+            <!-- Стилизация элементов MenuItem только внутри ContextMenu -->
+            <Style TargetType="{x:Type MenuItem}">
+                <Setter Property="Foreground" Value="White" /> <!-- Белые буквы -->
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderBrush" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type MenuItem}">
+                            <Border x:Name="templateRoot" 
+                                    Background="{TemplateBinding Background}" 
+                                    BorderBrush="{TemplateBinding BorderBrush}" 
+                                    BorderThickness="{TemplateBinding BorderThickness}" 
+                                    SnapsToDevicePixels="True">
+                                <Grid VerticalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="MenuItemIconColumnGroup"/>
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="MenuHeaderColumnGroup"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto" SharedSizeGroup="MenuItemGestureColumnGroup"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <Grid x:Name="IconContainer" Width="22" Margin="3" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <ContentPresenter x:Name="Icon" 
+                                                          ContentSource="Icon" 
+                                                          Width="16" Height="16" 
+                                                          HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                                          SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                    </Grid>
+                                    
+                                    <ContentPresenter x:Name="ContentPresenter" 
+                                                      Grid.Column="1" 
+                                                      ContentSource="Header" 
+                                                      RecognizesAccessKey="True" 
+                                                      Margin="6,4" 
+                                                      VerticalAlignment="Center" 
+                                                      SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                    
+                                    <TextBlock x:Name="InputGestureText" 
+                                               Grid.Column="3" 
+                                               Text="{TemplateBinding InputGestureText}" 
+                                               Foreground="White" 
+                                               Margin="10,2,10,2" 
+                                               VerticalAlignment="Center"/>
+                                    
+                                    <Path x:Name="GlyphPanel" 
+                                          Grid.Column="4" 
+                                          Width="14"
+                                          Data="M0,0 L4,4 L0,8 Z" 
+                                          Fill="White" 
+                                          VerticalAlignment="Center" 
+                                          HorizontalAlignment="Center" 
+                                          Visibility="Collapsed"/>
+                                    
+                                    <Popup x:Name="PART_Popup" 
+                                           AllowsTransparency="True" 
+                                           Focusable="False" 
+                                           IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}" 
+                                           PopupAnimation="{DynamicResource {x:Static SystemParameters.MenuPopupAnimationKey}}" 
+                                           Placement="Right">
+                                        <Border x:Name="SubMenuBorder" 
+                                                Background="#1E3A63" 
+                                                BorderBrush="#FFFFD54F" 
+                                                BorderThickness="1" 
+                                                Padding="2">
+                                            <ScrollViewer x:Name="SubMenuScrollViewer" 
+                                                          CanContentScroll="True" 
+                                                          VerticalScrollBarVisibility="Disabled" 
+                                                          HorizontalScrollBarVisibility="Disabled">
+                                                <ItemsPresenter x:Name="ItemsPresenter" 
+                                                                KeyboardNavigation.DirectionalNavigation="Cycle" 
+                                                                KeyboardNavigation.TabNavigation="Cycle" 
+                                                                Grid.IsSharedSizeScope="True" 
+                                                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                            </ScrollViewer>
+                                        </Border>
+                                    </Popup>
+                                </Grid>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="Role" Value="SubmenuHeader">
+                                    <Setter TargetName="PART_Popup" Property="Placement" Value="Right"/>
+                                    <Setter TargetName="GlyphPanel" Property="Visibility" Value="Visible"/>
+                                </Trigger>
+                                <Trigger Property="Role" Value="SubmenuItem">
+                                    <Setter TargetName="PART_Popup" Property="Visibility" Value="Collapsed"/>
+                                    <Setter TargetName="GlyphPanel" Property="Visibility" Value="Collapsed"/>
+                                </Trigger>
+                                <Trigger Property="IsHighlighted" Value="True">
+                                    <Setter Property="Background" Value="#2A4D7C"/>
+                                    <Setter Property="BorderBrush" Value="Transparent"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#2A4D7C"/>
+                                    <Setter Property="BorderBrush" Value="Transparent"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Foreground" Value="#88FFFFFF"/>
+                                    <Setter TargetName="GlyphPanel" Property="Fill" Value="#88FFFFFF"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </Style.Resources>
+        <Setter Property="Background" Value="#1E3A63" />
+        <Setter Property="BorderBrush" Value="#FFFFD54F" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ContextMenu}">
+                    <Border Background="{TemplateBinding Background}" 
+                            BorderBrush="{TemplateBinding BorderBrush}" 
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="2"
+                            Padding="1">
+                        <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 </ResourceDictionary>

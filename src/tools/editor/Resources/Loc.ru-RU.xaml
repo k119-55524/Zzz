@@ -126,4 +126,11 @@
     <sys:String x:Key="LogLevel_Critical">Критическая ошибка</sys:String>
     <sys:String x:Key="LogLevel_Fatal">Фатальная ошибка</sys:String>
     <sys:String x:Key="Log_Viewport_Init_Failed">Критическая ошибка: не удалось инициализировать вьюпорт {0} (HWND: {1}) в движке.</sys:String>
+
+    <!-- Контекстное меню проводника -->
+    <sys:String x:Key="ContextMenu_CopyName">Скопировать имя</sys:String>
+    <sys:String x:Key="ContextMenu_OpenInExplorer">Открыть в проводнике</sys:String>
+    <sys:String x:Key="ContextMenu_Rename">Переименовать</sys:String>
+    <sys:String x:Key="ContextMenu_Add">Добавить</sys:String>
+    <sys:String x:Key="ContextMenu_Folder">Папку</sys:String>
 </ResourceDictionary>
