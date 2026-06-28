@@ -293,7 +293,13 @@
                       BorderThickness="0"
                       Padding="5"
                       SelectedItemChanged="TreeView_SelectedItemChanged"
-                      ContextMenuOpening="TreeView_ContextMenuOpening">
+                      ContextMenuOpening="TreeView_ContextMenuOpening"
+                      AllowDrop="True"
+                      PreviewMouseLeftButtonDown="AssetsTree_PreviewMouseLeftButtonDown"
+                      PreviewMouseMove="AssetsTree_PreviewMouseMove"
+                      DragOver="AssetsTree_DragOver"
+                      DragLeave="AssetsTree_DragLeave"
+                      Drop="AssetsTree_Drop">
                 <TreeView.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="{DynamicResource ContextMenu_AddFolder}" Click="AddFolderToRoot_Click" />

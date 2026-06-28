@@ -420,39 +420,6 @@ namespace editor.Views.Widgets
 			return null;
 		}
 
-		private ProjectNode FindParentNodeInternal(ProjectNode current, ProjectNode target, out string parentPath)
-		{
-			parentPath = "";
-			foreach (var child in current.Children)
-			{
-				if (child.Children.Contains(target))
-				{
-					parentPath = child.RelativePath;
-					return child;
-				}
-				var found = FindParentNodeInternal(child, target, out parentPath);
-				if (found != null)
-				{
-					return found;
-				}
-			}
-			return null;
-		}
-
-		private bool IsSystemNode(ProjectNode node, bool isSystemMode)
-		{
-			if (isSystemMode)
-			{
-				string relPath = node.RelativePath.Replace('\\', '/').Trim('/');
-				if (relPath.Equals("Configs", StringComparison.OrdinalIgnoreCase) ||
-					relPath.StartsWith("Configs/", StringComparison.OrdinalIgnoreCase))
-				{
-					return true;
-				}
-			}
-			return false;
-		}
-
 		private List<string> GetPhysicalPaths(ProjectNode node, string projectRoot, bool isSystemMode, List<string> disabledFilters)
 		{
 			var paths = new List<string>();
@@ -595,6 +562,170 @@ namespace editor.Views.Widgets
 			{
 				vm.RefreshTree();
 			}
+		}
+
+		// === Drag & Drop: перетаскивание узлов AssetsTree для изменения структуры проекта ===
+		// Работает для папок и файлов одинаково (MoveOrRenameCommand не различает их), но запускается
+		// только из AssetsTree - SystemTree остаётся read-only, как и для создания/удаления/переименования.
+
+		private ProjectNode? _dragCandidateNode;
+		private System.Windows.Point _dragStartPoint;
+		private TreeViewItem? _dropHighlightItem;
+
+		private void AssetsTree_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+		{
+			var item = FindVisualParent<TreeViewItem>(e.OriginalSource as System.Windows.DependencyObject);
+			var node = item?.DataContext as ProjectNode;
+			_dragCandidateNode = (node != null && !node.IsEditing) ? node : null;
+			_dragStartPoint = e.GetPosition(null);
+		}
+
+		private void AssetsTree_PreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+		{
+			if (_dragCandidateNode == null || e.LeftButton != System.Windows.Input.MouseButtonState.Pressed)
+			{
+				return;
+			}
+
+			var pos = e.GetPosition(null);
+			if (Math.Abs(pos.X - _dragStartPoint.X) < System.Windows.SystemParameters.MinimumHorizontalDragDistance &&
+				Math.Abs(pos.Y - _dragStartPoint.Y) < System.Windows.SystemParameters.MinimumVerticalDragDistance)
+			{
+				return;
+			}
+
+			var draggedNode = _dragCandidateNode;
+			_dragCandidateNode = null; // одна попытка перетаскивания на жест мыши
+
+			var data = new System.Windows.DataObject(typeof(ProjectNode), draggedNode);
+			System.Windows.DragDrop.DoDragDrop(AssetsTree, data, System.Windows.DragDropEffects.Move);
+		}
+
+		private void AssetsTree_DragOver(object sender, System.Windows.DragEventArgs e)
+		{
+			e.Handled = true;
+			var targetItem = FindVisualParent<TreeViewItem>(e.OriginalSource as System.Windows.DependencyObject);
+			bool isValid = TryResolveDropTarget(e, targetItem, out _, out _);
+			e.Effects = isValid ? System.Windows.DragDropEffects.Move : System.Windows.DragDropEffects.None;
+			SetDropHighlight(isValid ? targetItem : null);
+		}
+
+		private void AssetsTree_DragLeave(object sender, System.Windows.DragEventArgs e)
+		{
+			SetDropHighlight(null);
+		}
+
+		private void AssetsTree_Drop(object sender, System.Windows.DragEventArgs e)
+		{
+			e.Handled = true;
+			SetDropHighlight(null);
+
+			var targetItem = FindVisualParent<TreeViewItem>(e.OriginalSource as System.Windows.DependencyObject);
+			if (!TryResolveDropTarget(e, targetItem, out var draggedNode, out var targetFolderPath))
+			{
+				return;
+			}
+
+			// Коммитим чужое незакрытое редактирование до переноса - тот же порядок, что и в AddFolder_Click.
+			CommitActiveEditIfAny();
+			MoveNode(draggedNode, targetFolderPath);
+		}
+
+		// Определяет, можно ли перетащить узел из e.Data на targetItem, и вычисляет относительный путь
+		// папки назначения. Общая проверка для подсветки при DragOver и для самого Drop.
+		private bool TryResolveDropTarget(System.Windows.DragEventArgs e, TreeViewItem? targetItem, out ProjectNode draggedNode, out string targetFolderPath)
+		{
+			draggedNode = null;
+			targetFolderPath = null;
+
+			if (!e.Data.GetDataPresent(typeof(ProjectNode))) return false;
+			draggedNode = (ProjectNode)e.Data.GetData(typeof(ProjectNode));
+			if (draggedNode == null) return false;
+
+			var vm = DataContext as ViewModels.AssetsViewModel;
+			if (vm == null) return false;
+
+			var targetNode = targetItem?.DataContext as ProjectNode;
+			ProjectNode targetFolder = targetNode == null
+				? null
+				: (targetNode.IsFolder ? targetNode : FindParentNode(vm.AssetRootNodes, targetNode, out _));
+
+			targetFolderPath = targetFolder?.RelativePath ?? "Assets";
+
+			if (targetFolder == draggedNode) return false;
+
+			string currentParentPath = GetParentRelativePath(draggedNode.RelativePath);
+			if (targetFolderPath.Equals(currentParentPath, StringComparison.OrdinalIgnoreCase)) return false;
+
+			if (draggedNode.IsFolder && IsSameOrDescendantPath(targetFolderPath, draggedNode.RelativePath)) return false;
+
+			return true;
+		}
+
+		private static string GetParentRelativePath(string relativePath)
+		{
+			int lastSlash = relativePath.LastIndexOf('/');
+			return lastSlash == -1 ? "" : relativePath.Substring(0, lastSlash);
+		}
+
+		private static bool IsSameOrDescendantPath(string candidatePath, string basePath)
+		{
+			return candidatePath.Equals(basePath, StringComparison.OrdinalIgnoreCase) ||
+				   candidatePath.StartsWith(basePath + "/", StringComparison.OrdinalIgnoreCase);
+		}
+
+		private void SetDropHighlight(TreeViewItem? item)
+		{
+			if (_dropHighlightItem == item) return;
+
+			if (_dropHighlightItem != null)
+			{
+				_dropHighlightItem.ClearValue(System.Windows.Controls.Control.BackgroundProperty);
+			}
+
+			_dropHighlightItem = item;
+
+			if (_dropHighlightItem != null)
+			{
+				_dropHighlightItem.Background = (System.Windows.Media.Brush)System.Windows.Application.Current.FindResource("Brush_Hover");
+			}
+		}
+
+		// Физически переносит узел на диске в папку targetFolderPath, с фиксацией в Undo/Redo
+		// через тот же MoveOrRenameCommand, что используется при переименовании.
+		private void MoveNode(ProjectNode draggedNode, string targetFolderPath)
+		{
+			var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as ViewModels.MainWindowViewModel;
+			string? projectRoot = mainVm?.CurrentProjectPath;
+			if (mainVm == null || string.IsNullOrEmpty(projectRoot)) return;
+
+			string newRelPath = $"{targetFolderPath}/{draggedNode.Name}";
+			string oldPhysPath = System.IO.Path.Combine(projectRoot, draggedNode.RelativePath);
+			string newPhysPath = System.IO.Path.Combine(projectRoot, newRelPath.Replace('/', System.IO.Path.DirectorySeparatorChar));
+
+			if (draggedNode.IsFolder && System.IO.Directory.Exists(newPhysPath))
+			{
+				System.Windows.MessageBox.Show(Loc("Validation_FolderName_Exists", "A folder with this name already exists."), Loc("Dialog_RenameError_Title", "Rename Error"), System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+				return;
+			}
+			if (!draggedNode.IsFolder && System.IO.File.Exists(newPhysPath))
+			{
+				System.Windows.MessageBox.Show(Loc("Validation_FileName_Exists", "A file with this name already exists."), Loc("Dialog_RenameError_Title", "Rename Error"), System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+				return;
+			}
+
+			var cmd = new editor.Services.Project.Infrastructure.UndoRedo.MoveOrRenameCommand(oldPhysPath, newPhysPath, App.ProjectService.Storage);
+			try
+			{
+				App.ProjectService.History.Execute(cmd);
+				mainVm.RefreshDirtyState();
+			}
+			catch (Exception ex)
+			{
+				System.Windows.MessageBox.Show(string.Format(Loc("Error_Rename_Failed", "Failed to rename: {0}"), ex.Message), Loc("Dialog_RenameError_Title", "Rename Error"), System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+			}
+
+			RefreshTree();
 		}
 
 		private void NodeText_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
