@@ -115,8 +115,10 @@ namespace editor.ViewModels
                     {
                         var activeFilters = App.ProjectService.CurrentSettings.DisabledFilters;
                         var mainAssetsVm = mainVm.Panes.OfType<AssetsViewModel>().FirstOrDefault();
-                        bool isSystemMode = mainAssetsVm?.IsSystemMode ?? false;
-                        var roots = mainAssetsVm?.RootNodes ?? new ObservableCollection<ProjectNode>();
+                        bool isSystemMode = mainAssetsVm?.IsSystemNode(node) ?? false;
+                        var roots = isSystemMode
+                            ? (mainAssetsVm?.SystemRootNodes ?? new ObservableCollection<ProjectNode>())
+                            : (mainAssetsVm?.AssetRootNodes ?? new ObservableCollection<ProjectNode>());
 
                         var stats = FolderStatisticsCalculator.Calculate(node, roots, projectRoot);
                         FolderStats = new FolderStatisticsViewModel(node.Name, node.RelativePath, stats);

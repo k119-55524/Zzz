@@ -39,6 +39,9 @@
     <sys:String x:Key="Inspector_Table_Value">Значение</sys:String>
     <sys:String x:Key="Widget_SceneTree_Placeholder">ДЕРЕВО СЦЕНЫ (ИЕРАРХИЯ)</sys:String>
     <sys:String x:Key="Widget_Assets_Placeholder">БРАУЗЕР АССЕТОВ / РЕСУРСОВ</sys:String>
+    <sys:String x:Key="Widget_Assets_SystemFiles">СИСТЕМНЫЕ ФАЙЛЫ</sys:String>
+    <sys:String x:Key="Widget_Assets_FilterResourceTypes">Фильтр типов ресурсов</sys:String>
+    <sys:String x:Key="Widget_Assets_ResetFilters">Сбросить текущие фильтры</sys:String>
     <sys:String x:Key="Widget_Console_Placeholder">КОНСОЛЬ ВЫВОДА ЛОГОВ</sys:String>
     <sys:String x:Key="Widget_Settings_Placeholder">НАСТРОЙКИ ПРОЕКТА И РЕДАКТОРА</sys:String>
     <sys:String x:Key="Widget_Build_Placeholder">ПАРАМЕТРЫ СБОРКИ И ЭКСПОРТА</sys:String>
@@ -139,4 +142,15 @@
     <sys:String x:Key="ContextMenu_Add">Добавить</sys:String>
     <sys:String x:Key="ContextMenu_Folder">Папку</sys:String>
     <sys:String x:Key="ContextMenu_AddFolder">Добавить папку</sys:String>
+
+    <!-- Дерево ассетов: ошибки и значения по умолчанию -->
+    <sys:String x:Key="Tree_NewFolder_Name">Новая папка</sys:String>
+    <sys:String x:Key="Dialog_RenameError_Title">Ошибка переименования</sys:String>
+    <sys:String x:Key="Validation_Name_InvalidChars">Имя содержит недопустимые символы.</sys:String>
+    <sys:String x:Key="Error_CreateFolder_Failed">Не удалось создать папку: {0}</sys:String>
+    <sys:String x:Key="Validation_FolderName_Exists">Папка с таким именем уже существует.</sys:String>
+    <sys:String x:Key="Validation_FileName_Exists">Файл с таким именем уже существует.</sys:String>
+    <sys:String x:Key="Error_Rename_Failed">Не удалось переименовать: {0}</sys:String>
+    <sys:String x:Key="Dialog_DeleteError_Title">Ошибка удаления</sys:String>
+    <sys:String x:Key="Error_Delete_Failed">Не удалось выполнить удаление: {0}</sys:String>
 </ResourceDictionary>

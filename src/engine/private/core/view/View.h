@@ -153,4 +153,3 @@ namespace zzz::engine
 		void HandleWindowClose();
 	};
 }
-

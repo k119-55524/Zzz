@@ -104,6 +104,23 @@ namespace editor.ViewModels
 
         public ObservableCollection<ProjectNode> RootNodes => IsSystemMode ? SystemRootNodes : AssetRootNodes;
 
+        // Определяет принадлежность узла дереву системных файлов по факту, а не по тумблеру IsSystemMode.
+        // AssetsTree (ассеты) и SystemTree (секция "Project") видны одновременно в UI, поэтому
+        // действия над конкретным узлом (создание/удаление/статистика и т.п.) должны определять
+        // физическое расположение по тому, в каком дереве узел реально находится, а не по тому,
+        // развёрнута ли сейчас секция "Project".
+        public bool IsSystemNode(ProjectNode node) => ContainsNode(SystemRootNodes, node);
+
+        private static bool ContainsNode(ObservableCollection<ProjectNode> roots, ProjectNode target)
+        {
+            foreach (var root in roots)
+            {
+                if (root == target) return true;
+                if (ContainsNode(root.Children, target)) return true;
+            }
+            return false;
+        }
+
         public ObservableCollection<FilterItemViewModel> AvailableFilters
         {
             get => _availableFilters;
