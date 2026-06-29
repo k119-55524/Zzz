@@ -32,5 +32,6 @@ namespace zzz::editor
 	private:
 		void* m_ScriptsDll = nullptr;
 		std::string m_ProjectPath;
+		std::string m_LoadedTempDllPath;
 	};
 }

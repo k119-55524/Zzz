@@ -100,9 +100,11 @@ namespace editor.ViewModels
             // но это не проверяет актуальность самой scripts.dll - без явного вызова здесь она
             // пересобиралась бы только по возврату фокуса окна (MainWindow_Activated) или по
             // следующему созданию/удалению скрипта, а не сразу при открытии проекта.
+            // Передаём projectPath явно — CurrentProjectPath в MainWindowViewModel может ещё
+            // не быть установлен в момент этого вызова.
             if (Application.Current?.MainWindow is MainWindow mainWindow)
             {
-                _ = mainWindow.CheckAndCompileScriptsAsync();
+                _ = mainWindow.CheckAndCompileScriptsAsync(forceRebuild: true, projectRoot: projectPath);
             }
         }
 
@@ -128,6 +130,10 @@ namespace editor.ViewModels
                 // LastWrite — правка содержимого (.cpp/.hpp в IDE)
                 NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
             };
+            _assetsWatcher.Created += (s, e) => { if (IsScriptFile(e.FullPath)) ScriptRebuildCoordinator.RequestRebuild(projectPath); };
+            _assetsWatcher.Deleted += (s, e) => { if (IsScriptFile(e.FullPath)) ScriptRebuildCoordinator.RequestRebuild(projectPath); };
+            _assetsWatcher.Changed += (s, e) => { if (IsScriptFile(e.FullPath)) ScriptRebuildCoordinator.RequestRebuild(projectPath); };
+            _assetsWatcher.Renamed += (s, e) => { if (IsScriptFile(e.FullPath)) ScriptRebuildCoordinator.RequestRebuild(projectPath); };
             _assetsWatcher.Created += OnWatchedFileCreated;
             _assetsWatcher.Deleted += OnWatchedFileDeleted;
             _assetsWatcher.Renamed += OnWatchedFileRenamed;

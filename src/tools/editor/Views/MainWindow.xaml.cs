@@ -369,10 +369,11 @@ namespace editor
 
 		private bool _isCompiling = false;
 
-		private async void MainWindow_Activated(object? sender, EventArgs e)
-		{
-			await CheckAndCompileScriptsAsync();
-		}
+        private async void MainWindow_Activated(object? sender, EventArgs e)
+        {
+            // If a script change happened while window was not active, process it now.
+            await ScriptRebuildCoordinator.ProcessPendingAsync(this);
+        }
 
 		// Тот же чек запускается из AssetsViewModel при создании/удалении/переименовании .hpp/.cpp
 		// (см. AssetsViewModel.TriggerScriptCompileCheckIfRelevant) - иначе пользователь, который не
@@ -383,16 +384,27 @@ namespace editor
 		// УДАЛЕНИИ скрипта время записи оставшихся файлов не меняется, поэтому "тише" удалённого
 		// скрипта эвристика никогда не сочтёт DLL устаревшей. Вызывающая сторона (watcher) точно
 		// знает, что .hpp/.cpp изменился, и эвристика здесь не нужна.
-		public async System.Threading.Tasks.Task CheckAndCompileScriptsAsync(bool forceRebuild = false)
+		public async System.Threading.Tasks.Task CheckAndCompileScriptsAsync(bool forceRebuild = false, string? projectRoot = null)
 		{
-			string? projectRoot = _viewModel.CurrentProjectPath;
+			projectRoot ??= _viewModel.CurrentProjectPath;
 			if (string.IsNullOrEmpty(projectRoot) || !System.IO.Directory.Exists(projectRoot))
+			{
+				EditorLogger.LogInfo("[Scripts] CheckAndCompile: skip — project path is null or missing.");
 				return;
+			}
 
-			if (_isCompiling) return;
+			if (_isCompiling)
+			{
+				EditorLogger.LogInfo("[Scripts] CheckAndCompile: skip — already compiling.");
+				return;
+			}
 
 			string assetsDir = System.IO.Path.Combine(projectRoot, "Assets");
-			if (!System.IO.Directory.Exists(assetsDir)) return;
+			if (!System.IO.Directory.Exists(assetsDir))
+			{
+				EditorLogger.LogInfo("[Scripts] CheckAndCompile: skip — Assets dir not found.");
+				return;
+			}
 
 			string dllPath = System.IO.Path.Combine(projectRoot, ".editor", "bin", "scripts.dll");
 
@@ -405,7 +417,10 @@ namespace editor
 				var userHppFiles = System.IO.Directory.GetFiles(assetsDir, "*.hpp", System.IO.SearchOption.AllDirectories);
 
 				if (userHppFiles.Length == 0)
-					return; // нет скриптов — нечего собирать
+				{
+					EditorLogger.LogInfo("[Scripts] CheckAndCompile: skip — no .hpp scripts found in Assets.");
+					return;
+				}
 
 				// Ориентируемся на .hpp: именно изменения в заголовках требуют пересборки.
 				// .cpp тоже учитываем, но отдельно от RegisterAllScripts.cpp.
@@ -432,9 +447,22 @@ namespace editor
 					// изменился (добавили/удалили скрипт пока редактор был закрыт), но write-time .hpp
 					// не поменялся. RefreshTree уже обновил RegisterAllScripts.cpp — форсируем сборку.
 					string registerAllPath = System.IO.Path.Combine(projectRoot, ".editor", "RegisterAllScripts.cpp");
-					if (!System.IO.File.Exists(registerAllPath) ||
+					if (System.IO.File.Exists(registerAllPath) &&
 					    System.IO.File.GetLastWriteTime(registerAllPath) <= dllWriteTime)
-						return; // DLL актуальна и состав скриптов не менялся
+					{
+						EditorLogger.LogInfo($"[Scripts] CheckAndCompile: skip — DLL up to date (dll: {dllWriteTime:HH:mm:ss}, maxSrc: {maxWriteTime:HH:mm:ss}, register: {System.IO.File.GetLastWriteTime(registerAllPath):HH:mm:ss}).");
+						return;
+					}
+					// RegisterAllScripts.cpp не существует или новее DLL → пересобираем
+					EditorLogger.LogInfo("[Scripts] CheckAndCompile: RegisterAllScripts.cpp changed or missing — forcing rebuild.");
+				}
+				else if (!dllExists)
+				{
+					EditorLogger.LogInfo("[Scripts] CheckAndCompile: DLL doesn't exist — building.");
+				}
+				else
+				{
+					EditorLogger.LogInfo($"[Scripts] CheckAndCompile: sources newer than DLL (dll: {dllWriteTime:HH:mm:ss}, maxSrc: {maxWriteTime:HH:mm:ss}) — rebuilding.");
 				}
 			}
 
@@ -443,8 +471,10 @@ namespace editor
 
 		private async System.Threading.Tasks.Task CompileScriptsAsync(string projectRoot, string dllPath)
 		{
-			_isCompiling = true;
-			EditorLogger.LogInfo("Scripts modification detected. Starting background compilation...");
+			            _isCompiling = true;
+            // Ensure any previously loaded script DLL is unloaded before starting a new compilation to avoid file lock issues.
+            EngineRuntime.ClearEngine();
+            EditorLogger.LogInfo("Scripts modification detected. Starting background compilation...");
 
 			try
 			{
@@ -488,7 +518,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ""${{PROJECT_SOURCE_DIR}}/bin"")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ""${{PROJECT_SOURCE_DIR}}/bin"")
 
 add_library(scripts SHARED)
-
+set_target_properties(scripts PROPERTIES PDB_NAME ""scripts_${{PDB_SUFFIX}}"")
 target_include_directories(scripts PRIVATE
     ""{engineSourceDir}/src""
     ""{engineSourceDir}/src/engine""
@@ -526,15 +556,18 @@ target_link_libraries(scripts PRIVATE ""{editorDllLib}"")
 
 				await System.Threading.Tasks.Task.Run(() =>
 				{
+					string pdbSuffix = DateTime.Now.Ticks.ToString();
 					// Запуск конфигурации
 					var startInfoConfig = new System.Diagnostics.ProcessStartInfo
 					{
 						FileName = "cmake",
-						Arguments = $"-B \"{buildDir}\" -S \"{editorDir}\"",
+						Arguments = $"-B \"{buildDir}\" -S \"{editorDir}\" -DPDB_SUFFIX={pdbSuffix}",
 						CreateNoWindow = true,
 						UseShellExecute = false,
 						RedirectStandardError = true,
-						RedirectStandardOutput = true
+						RedirectStandardOutput = true,
+						StandardOutputEncoding = System.Text.Encoding.UTF8,
+						StandardErrorEncoding = System.Text.Encoding.UTF8
 					};
 					using (var proc = System.Diagnostics.Process.Start(startInfoConfig))
 					{
@@ -585,6 +618,7 @@ target_link_libraries(scripts PRIVATE ""{editorDllLib}"")
 
 				// 4. Оповещаем движок о перезагрузке DLL
 				EngineRuntime.SetProjectPath(projectRoot);
+				EngineRuntime.ClearEngine();
 				EngineRuntime.ReloadScripts();
 			}
 			catch (Exception ex)

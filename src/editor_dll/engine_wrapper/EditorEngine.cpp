@@ -40,7 +40,7 @@ namespace zzz::editor
 
 	void EditorEngine::ClearEngine()
 	{
-		
+		UnloadScripts();
 	}
 
 	zzz::engine::View* EditorEngine::AddView(void* hwnd)
@@ -76,23 +76,24 @@ namespace zzz::editor
 		}
 
 		std::string originDllPath = m_ProjectPath + "/.editor/bin/scripts.dll";
-		std::string tempDllPath = m_ProjectPath + "/.editor/bin/scripts_temp.dll";
+		std::string tempDllPath = m_ProjectPath + "/.editor/bin/scripts_temp_" + std::to_string(GetTickCount()) + ".dll";
 
 		// Копируем во временный файл, чтобы не лочить оригинальный DLL для компиляции
 		if (!CopyFileA(originDllPath.c_str(), tempDllPath.c_str(), FALSE))
 		{
-			DOutWarning("EditorEngine: Failed to copy scripts.dll to scripts_temp.dll. DLL might not exist yet.");
+			DOutWarning("EditorEngine: Failed to copy scripts.dll to scripts_temp.dll. DLL might not exist yet. Error: {}", GetLastError());
 			return;
 		}
 
 		HMODULE handle = LoadLibraryA(tempDllPath.c_str());
 		if (!handle)
 		{
-			DOutError("EditorEngine: Failed to load scripts_temp.dll. Error code: {}", GetLastError());
+			DOutError("EditorEngine: Failed to load {}. Error code: {}", tempDllPath, GetLastError());
 			return;
 		}
 
 		m_ScriptsDll = handle;
+		m_LoadedTempDllPath = tempDllPath;
 
 		using RegisterFunc = void(*)();
 		RegisterFunc registerAll = (RegisterFunc)GetProcAddress(handle, "RegisterAllScripts");
@@ -120,8 +121,11 @@ namespace zzz::editor
 			FreeLibrary((HMODULE)m_ScriptsDll);
 			m_ScriptsDll = nullptr;
 
-			std::string tempDllPath = m_ProjectPath + "/.editor/bin/scripts_temp.dll";
-			DeleteFileA(tempDllPath.c_str());
+			if (!m_LoadedTempDllPath.empty())
+			{
+				DeleteFileA(m_LoadedTempDllPath.c_str());
+				m_LoadedTempDllPath.clear();
+			}
 		}
 	}
 
