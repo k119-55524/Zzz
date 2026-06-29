@@ -94,8 +94,8 @@
     <sys:String x:Key="Console_Clear">Clear logs</sys:String>
     <sys:String x:Key="Console_ExpandAll">Expand all</sys:String>
     <sys:String x:Key="Console_CollapseAll">Collapse all</sys:String>
-    <sys:String x:Key="Console_ExportAll">Export all to JSON</sys:String>
-    <sys:String x:Key="Console_ExportFiltered">Export filtered to JSON</sys:String>
+    <sys:String x:Key="Console_ExportAll">Copy all to clipboard (TOML)</sys:String>
+    <sys:String x:Key="Console_ExportFiltered">Copy filtered to clipboard (TOML)</sys:String>
     <sys:String x:Key="Console_Filter_Editor">Editor log filter</sys:String>
     <sys:String x:Key="Console_Filter_Engine">Engine log filter</sys:String>
     <sys:String x:Key="Console_Filter_Scripts">Scripts log filter</sys:String>

@@ -94,6 +94,15 @@ namespace editor.ViewModels
 
             OnProjectChanged(projectPath);
             StartAssetsWatcher(projectPath);
+
+            // OnProjectChanged уже пересканировал Assets и перегенерировал RegisterAllScripts.cpp,
+            // но это не проверяет актуальность самой scripts.dll - без явного вызова здесь она
+            // пересобиралась бы только по возврату фокуса окна (MainWindow_Activated) или по
+            // следующему созданию/удалению скрипта, а не сразу при открытии проекта.
+            if (Application.Current?.MainWindow is MainWindow mainWindow)
+            {
+                _ = mainWindow.CheckAndCompileScriptsAsync();
+            }
         }
 
         public override void OnProjectClosed()
@@ -176,6 +185,8 @@ namespace editor.ViewModels
                     handler.OnCreated(fullPath, App.ProjectService.Storage);
                 }
             }
+
+            TriggerScriptCompileCheckIfRelevant(fullPath);
         }
 
         private void HandleExternalDelete(string fullPath)
@@ -186,6 +197,25 @@ namespace editor.ViewModels
                 {
                     handler.OnDeleted(fullPath, App.ProjectService.Storage);
                 }
+            }
+
+            TriggerScriptCompileCheckIfRelevant(fullPath);
+        }
+
+        // FileSystemWatcher не различает, кто реально написал файл - сам редактор (создание скрипта
+        // через UI) или внешний инструмент, поэтому это общий хук для пересборки в обоих случаях.
+        // Без него автокомпиляция запускалась бы только при возврате фокуса в окно редактора
+        // (MainWindow.MainWindow_Activated) - пользователь, не переключавший фокус после добавления
+        // скрипта, никогда не увидел бы автокомпиляцию.
+        private void TriggerScriptCompileCheckIfRelevant(string fullPath)
+        {
+            string ext = Path.GetExtension(fullPath);
+            if (!ext.Equals(".hpp", StringComparison.OrdinalIgnoreCase) && !ext.Equals(".cpp", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            if (Application.Current?.MainWindow is MainWindow mainWindow)
+            {
+                _ = mainWindow.CheckAndCompileScriptsAsync(forceRebuild: true);
             }
         }
 

@@ -371,6 +371,20 @@ namespace editor
 
 		private async void MainWindow_Activated(object? sender, EventArgs e)
 		{
+			await CheckAndCompileScriptsAsync();
+		}
+
+		// Тот же чек запускается из AssetsViewModel при создании/удалении/переименовании .hpp/.cpp
+		// (см. AssetsViewModel.TriggerScriptCompileCheckIfRelevant) - иначе пользователь, который не
+		// переключал фокус окна после добавления скрипта, никогда не увидел бы автокомпиляцию.
+		//
+		// forceRebuild=true пропускает эвристику по времени изменения файлов и пересобирает сразу.
+		// Эвристика (maxWriteTime > dllWriteTime) видит только ПРАВКУ существующих .hpp/.cpp - при
+		// УДАЛЕНИИ скрипта время записи оставшихся файлов не меняется, поэтому "тише" удалённого
+		// скрипта эвристика никогда не сочтёт DLL устаревшей. Вызывающая сторона (watcher) точно
+		// знает, что .hpp/.cpp изменился, и эвристика здесь не нужна.
+		public async System.Threading.Tasks.Task CheckAndCompileScriptsAsync(bool forceRebuild = false)
+		{
 			string? projectRoot = _viewModel.CurrentProjectPath;
 			if (string.IsNullOrEmpty(projectRoot) || !System.IO.Directory.Exists(projectRoot))
 				return;
@@ -380,40 +394,43 @@ namespace editor
 			string assetsDir = System.IO.Path.Combine(projectRoot, "Assets");
 			if (!System.IO.Directory.Exists(assetsDir)) return;
 
-			// Считаем только пользовательские .hpp — именно они говорят о наличии скриптов.
-			// RegisterAllScripts.cpp исключаем: он генерируется редактором автоматически
-			// и его write-time обновляется при любом изменении дерева — включать его в
-			// проверку означало бы пересобирать DLL на каждый чих.
-			var userHppFiles = System.IO.Directory.GetFiles(assetsDir, "*.hpp", System.IO.SearchOption.AllDirectories);
-
-			if (userHppFiles.Length == 0)
-				return; // нет скриптов — нечего собирать
-
-			// Ориентируемся на .hpp: именно изменения в заголовках требуют пересборки.
-			// .cpp тоже учитываем, но отдельно от RegisterAllScripts.cpp.
-			DateTime maxWriteTime = DateTime.MinValue;
-			var allUserSources = System.IO.Directory.GetFiles(assetsDir, "*.*", System.IO.SearchOption.AllDirectories)
-				.Where(f =>
-					(f.EndsWith(".hpp", StringComparison.OrdinalIgnoreCase) ||
-					 f.EndsWith(".cpp", StringComparison.OrdinalIgnoreCase)) &&
-					!System.IO.Path.GetFileName(f).Equals("RegisterAllScripts.cpp", StringComparison.OrdinalIgnoreCase));
-
-			foreach (var file in allUserSources)
-			{
-				var writeTime = System.IO.File.GetLastWriteTime(file);
-				if (writeTime > maxWriteTime)
-					maxWriteTime = writeTime;
-			}
-
 			string dllPath = System.IO.Path.Combine(projectRoot, ".editor", "bin", "scripts.dll");
-			bool dllExists = System.IO.File.Exists(dllPath);
-			DateTime dllWriteTime = dllExists ? System.IO.File.GetLastWriteTime(dllPath) : DateTime.MinValue;
 
-			if (!dllExists || maxWriteTime > dllWriteTime)
+			if (!forceRebuild)
 			{
-				// Требуется пересборка
-				await CompileScriptsAsync(projectRoot, dllPath);
+				// Считаем только пользовательские .hpp — именно они говорят о наличии скриптов.
+				// RegisterAllScripts.cpp исключаем: он генерируется редактором автоматически
+				// и его write-time обновляется при любом изменении дерева — включать его в
+				// проверку означало бы пересобирать DLL на каждый чих.
+				var userHppFiles = System.IO.Directory.GetFiles(assetsDir, "*.hpp", System.IO.SearchOption.AllDirectories);
+
+				if (userHppFiles.Length == 0)
+					return; // нет скриптов — нечего собирать
+
+				// Ориентируемся на .hpp: именно изменения в заголовках требуют пересборки.
+				// .cpp тоже учитываем, но отдельно от RegisterAllScripts.cpp.
+				DateTime maxWriteTime = DateTime.MinValue;
+				var allUserSources = System.IO.Directory.GetFiles(assetsDir, "*.*", System.IO.SearchOption.AllDirectories)
+					.Where(f =>
+						(f.EndsWith(".hpp", StringComparison.OrdinalIgnoreCase) ||
+						 f.EndsWith(".cpp", StringComparison.OrdinalIgnoreCase)) &&
+						!System.IO.Path.GetFileName(f).Equals("RegisterAllScripts.cpp", StringComparison.OrdinalIgnoreCase));
+
+				foreach (var file in allUserSources)
+				{
+					var writeTime = System.IO.File.GetLastWriteTime(file);
+					if (writeTime > maxWriteTime)
+						maxWriteTime = writeTime;
+				}
+
+				bool dllExists = System.IO.File.Exists(dllPath);
+				DateTime dllWriteTime = dllExists ? System.IO.File.GetLastWriteTime(dllPath) : DateTime.MinValue;
+
+				if (dllExists && maxWriteTime <= dllWriteTime)
+					return; // DLL уже актуальна
 			}
+
+			await CompileScriptsAsync(projectRoot, dllPath);
 		}
 
 		private async System.Threading.Tasks.Task CompileScriptsAsync(string projectRoot, string dllPath)

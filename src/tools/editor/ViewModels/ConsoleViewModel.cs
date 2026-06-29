@@ -1,10 +1,7 @@
 
-using System.IO;
 using editor.Models;
 using System.Windows;
 using editor.Services;
-using Microsoft.Win32;
-using System.Text.Json;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.ComponentModel;
@@ -246,44 +243,51 @@ namespace editor.ViewModels
 
 		private void ExportLogs(System.Collections.IEnumerable logList)
 		{
-			var saveFileDialog = new SaveFileDialog
+			try
 			{
-				Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
-				DefaultExt = "json",
-				FileName = $"logs_{DateTime.Now:yyyyMMdd_HHmmss}.json"
-			};
-
-			if (saveFileDialog.ShowDialog() == true)
-			{
-				try
+				var sb = new System.Text.StringBuilder();
+				foreach (var obj in logList)
 				{
-					var exportData = new System.Collections.Generic.List<object>();
-					foreach (var obj in logList)
-					{
-						if (obj is LogEntryViewModel entry)
-						{
-							exportData.Add(new
-							{
-								Timestamp = entry.Timestamp,
-								Time = entry.TimeFormatted,
-								Source = entry.SourceName,
-								Level = entry.LevelName,
-								Text = entry.Text,
-								File = entry.File,
-								Function = entry.Function,
-								Line = entry.Line
-							});
-						}
-					}
+					if (obj is not LogEntryViewModel entry) continue;
 
-					string jsonString = JsonSerializer.Serialize(exportData, new JsonSerializerOptions { WriteIndented = true });
-					File.WriteAllText(saveFileDialog.FileName, jsonString);
+					sb.AppendLine("[[logs]]");
+					sb.AppendLine($"timestamp = {entry.Timestamp}");
+					sb.AppendLine($"time = \"{EscapeTomlString(entry.TimeFormatted)}\"");
+					sb.AppendLine($"source = \"{EscapeTomlString(entry.SourceName)}\"");
+					sb.AppendLine($"level = \"{EscapeTomlString(entry.LevelName)}\"");
+					sb.AppendLine($"text = \"{EscapeTomlString(entry.Text)}\"");
+					sb.AppendLine($"file = \"{EscapeTomlString(entry.File)}\"");
+					sb.AppendLine($"function = \"{EscapeTomlString(entry.Function)}\"");
+					sb.AppendLine($"line = {entry.Line}");
+					sb.AppendLine();
 				}
-				catch (Exception ex)
+
+				Clipboard.SetText(sb.ToString());
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show($"Не удалось скопировать логи: {ex.Message}", "Ошибка экспорта", MessageBoxButton.OK, MessageBoxImage.Error);
+			}
+		}
+
+		// Минимальный ручной TOML-экранировщик строк - в проекте принят TOML как единый текстовый
+		// формат (см. Services/Project/README.md), без внешней библиотеки.
+		private static string EscapeTomlString(string s)
+		{
+			var sb = new System.Text.StringBuilder();
+			foreach (char c in s)
+			{
+				switch (c)
 				{
-					MessageBox.Show($"Не удалось сохранить логи: {ex.Message}", "Ошибка экспорта", MessageBoxButton.OK, MessageBoxImage.Error);
+					case '\\': sb.Append("\\\\"); break;
+					case '"': sb.Append("\\\""); break;
+					case '\n': sb.Append("\\n"); break;
+					case '\r': sb.Append("\\r"); break;
+					case '\t': sb.Append("\\t"); break;
+					default: sb.Append(c); break;
 				}
 			}
+			return sb.ToString();
 		}
 	}
 }

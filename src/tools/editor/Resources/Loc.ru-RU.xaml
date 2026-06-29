@@ -94,8 +94,8 @@
     <sys:String x:Key="Console_Clear">Очистить логи</sys:String>
     <sys:String x:Key="Console_ExpandAll">Развернуть всё</sys:String>
     <sys:String x:Key="Console_CollapseAll">Свернуть всё</sys:String>
-    <sys:String x:Key="Console_ExportAll">Экспортировать всё в JSON</sys:String>
-    <sys:String x:Key="Console_ExportFiltered">Экспортировать отфильтрованное в JSON</sys:String>
+    <sys:String x:Key="Console_ExportAll">Скопировать всё в буфер обмена (TOML)</sys:String>
+    <sys:String x:Key="Console_ExportFiltered">Скопировать отфильтрованное в буфер обмена (TOML)</sys:String>
     <sys:String x:Key="Console_Filter_Editor">Фильтр логов Редактора</sys:String>
     <sys:String x:Key="Console_Filter_Engine">Фильтр логов Движка</sys:String>
     <sys:String x:Key="Console_Filter_Scripts">Фильтр логов Скриптов</sys:String>
