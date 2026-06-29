@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using editor.Services;
 using editor.Services.Project;
 
 namespace editor.Services.Project.Infrastructure
@@ -95,8 +96,10 @@ namespace editor.Services.Project.Infrastructure
         private bool _isScript;
         private bool _hasHpp;
         private bool _hasCpp;
+        private bool _hasMeta;
         private string _hppRelativePath = string.Empty;
         private string _cppRelativePath = string.Empty;
+        private string _metaRelativePath = string.Empty;
 
         public bool IsScript
         {
@@ -158,6 +161,32 @@ namespace editor.Services.Project.Infrastructure
                 if (_cppRelativePath != value)
                 {
                     _cppRelativePath = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public bool HasMeta
+        {
+            get => _hasMeta;
+            set
+            {
+                if (_hasMeta != value)
+                {
+                    _hasMeta = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public string MetaRelativePath
+        {
+            get => _metaRelativePath;
+            set
+            {
+                if (_metaRelativePath != value)
+                {
+                    _metaRelativePath = value;
                     OnPropertyChanged();
                 }
             }
@@ -331,12 +360,14 @@ namespace editor.Services.Project.Infrastructure
 
                 if (ext == ".hpp")
                 {
-                    // Проверяем наличие .cpp в той же папке
+                    // Проверяем наличие .cpp и .meta в той же папке
                     string baseName = Path.GetFileNameWithoutExtension(filePath);
                     string dir = Path.GetDirectoryName(filePath) ?? "";
                     string cppPath = Path.Combine(dir, baseName + ".cpp");
+                    string metaPath = Path.Combine(dir, baseName + ".meta");
 
                     bool hasCpp = filePaths.Contains(cppPath, StringComparer.OrdinalIgnoreCase);
+                    bool hasMeta = filePaths.Contains(metaPath, StringComparer.OrdinalIgnoreCase);
 
                     var scriptNode = new ProjectNode
                     {
@@ -347,7 +378,9 @@ namespace editor.Services.Project.Infrastructure
                         HasHpp = true,
                         HppRelativePath = relPath,
                         HasCpp = hasCpp,
-                        CppRelativePath = hasCpp ? Path.GetRelativePath(rootPath, cppPath).Replace('\\', '/') : string.Empty
+                        CppRelativePath = hasCpp ? Path.GetRelativePath(rootPath, cppPath).Replace('\\', '/') : string.Empty,
+                        HasMeta = hasMeta,
+                        MetaRelativePath = hasMeta ? Path.GetRelativePath(rootPath, metaPath).Replace('\\', '/') : string.Empty
                     };
 
                     processedFiles.Add(filePath);
@@ -355,15 +388,24 @@ namespace editor.Services.Project.Infrastructure
                     {
                         processedFiles.Add(cppPath);
                     }
+                    if (hasMeta)
+                    {
+                        processedFiles.Add(metaPath);
+                    }
 
                     nodes.Add(scriptNode);
                 }
             }
 
-            // 3. Обрабатываем все остальные файлы
+            // 3. Обрабатываем все остальные файлы (.meta всегда скрыты - это служебные данные редактора,
+            // не ассет; включая "осиротевшие" .meta без пары .hpp - их подчищает SyncScriptMetaFiles)
             foreach (var filePath in filePaths)
             {
                 if (processedFiles.Contains(filePath))
+                    continue;
+
+                string ext = Path.GetExtension(filePath).ToLower();
+                if (ext == ".meta")
                     continue;
 
                 string name = Path.GetFileName(filePath);
@@ -406,6 +448,88 @@ namespace editor.Services.Project.Infrastructure
                     node.Children = new System.Collections.ObjectModel.ObservableCollection<ProjectNode>(sorted);
                 }
             }
+        }
+
+        /// <summary>
+        /// Полная синхронизация .meta файлов скриптов с диском: генерирует .meta для .hpp без пары
+        /// и удаляет "осиротевшие" .meta без .hpp. Вызывается только при открытии/смене проекта
+        /// (не на каждый RefreshTree) - это единственное место, где скан мутирует диск.
+        /// </summary>
+        public void SyncScriptMetaFiles(string projectRoot)
+        {
+            string assetsRoot = Path.Combine(projectRoot, "Assets");
+            if (!_storage.DirectoryExists(assetsRoot))
+                return;
+
+            var guidToPaths = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+            SyncScriptMetaFilesRecursive(assetsRoot, guidToPaths);
+
+            // Сканер коллизий GUID сознательно пока не обрабатывает найденные дубли (см. обсуждение
+            // архитектуры) - точка интеграции уже на месте, чтобы не искать её, когда дойдут руки.
+            GuidCollisionScanner.Scan(guidToPaths);
+        }
+
+        private void SyncScriptMetaFilesRecursive(string currentPath, Dictionary<string, List<string>> guidToPaths)
+        {
+            if (!_storage.DirectoryExists(currentPath))
+                return;
+
+            var entries = _storage.GetFileSystemEntries(currentPath);
+            var filePaths = entries.Where(e => !_storage.DirectoryExists(e)).ToList();
+
+            foreach (var hppPath in filePaths.Where(f => Path.GetExtension(f).Equals(".hpp", StringComparison.OrdinalIgnoreCase)))
+            {
+                string baseName = Path.GetFileNameWithoutExtension(hppPath);
+                string dir = Path.GetDirectoryName(hppPath) ?? currentPath;
+                string metaPath = Path.Combine(dir, baseName + ".meta");
+
+                if (!_storage.FileExists(metaPath))
+                {
+                    var data = ScriptMetaFile.CreateNew(baseName);
+                    ScriptMetaFile.Save(_storage, metaPath, data);
+                    EditorLogger.LogInfo($"[Meta System] Generated missing meta file '{baseName}.meta' for '{baseName}.hpp' (GUID: {data.Guid}).");
+                    AddGuid(guidToPaths, data.Guid, metaPath);
+                }
+                else
+                {
+                    var data = ScriptMetaFile.Load(_storage, metaPath);
+                    if (data != null)
+                    {
+                        AddGuid(guidToPaths, data.Guid, metaPath);
+                    }
+                }
+            }
+
+            foreach (var metaPath in filePaths.Where(f => Path.GetExtension(f).Equals(".meta", StringComparison.OrdinalIgnoreCase)))
+            {
+                string baseName = Path.GetFileNameWithoutExtension(metaPath);
+                string dir = Path.GetDirectoryName(metaPath) ?? currentPath;
+                string hppPath = Path.Combine(dir, baseName + ".hpp");
+
+                if (!_storage.FileExists(hppPath))
+                {
+                    _storage.DeleteFile(metaPath);
+                    EditorLogger.LogInfo($"[Meta System] Removed orphan meta file '{baseName}.meta' (no matching '{baseName}.hpp').");
+                }
+            }
+
+            foreach (var dirPath in entries.Where(e => _storage.DirectoryExists(e)))
+            {
+                SyncScriptMetaFilesRecursive(dirPath, guidToPaths);
+            }
+        }
+
+        private static void AddGuid(Dictionary<string, List<string>> guidToPaths, string guid, string path)
+        {
+            if (string.IsNullOrEmpty(guid))
+                return;
+
+            if (!guidToPaths.TryGetValue(guid, out var paths))
+            {
+                paths = new List<string>();
+                guidToPaths[guid] = paths;
+            }
+            paths.Add(path);
         }
     }
 }

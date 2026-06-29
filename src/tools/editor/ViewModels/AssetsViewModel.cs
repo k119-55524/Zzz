@@ -55,6 +55,11 @@ namespace editor.ViewModels
     public class AssetsViewModel : PaneViewModel
     {
         private readonly ProjectFileSystem _vfs;
+        private readonly List<IAssetWatchHandler> _assetWatchHandlers = new()
+        {
+            new ScriptAssetWatchHandler()
+        };
+        private FileSystemWatcher? _assetsWatcher;
         private ObservableCollection<ProjectNode> _assetRootNodes = new();
         private ObservableCollection<ProjectNode> _systemRootNodes = new();
         private ObservableCollection<FilterItemViewModel> _availableFilters = new();
@@ -65,7 +70,7 @@ namespace editor.ViewModels
         public AssetsViewModel() : base(WidgetType.Assets)
         {
             _vfs = new ProjectFileSystem(App.ProjectService.Storage);
-            
+
             // Команда принудительного обновления дерева
             RefreshCommand = new RelayCommand(RefreshTree);
             ResetFiltersCommand = new RelayCommand(ResetCurrentFilters);
@@ -82,13 +87,106 @@ namespace editor.ViewModels
         public override void OnProjectOpened(string projectPath)
         {
             base.OnProjectOpened(projectPath);
+
+            // Полный скан .meta - только здесь, на открытии/смене проекта (не на каждый RefreshTree)
+            EditorLogger.LogInfo("[Meta System] Running full project scan for script meta files...");
+            _vfs.SyncScriptMetaFiles(projectPath);
+
             OnProjectChanged(projectPath);
+            StartAssetsWatcher(projectPath);
         }
 
         public override void OnProjectClosed()
         {
+            StopAssetsWatcher();
             base.OnProjectClosed();
             OnProjectChanged(null);
+        }
+
+        private void StartAssetsWatcher(string projectPath)
+        {
+            StopAssetsWatcher();
+
+            string assetsRoot = Path.Combine(projectPath, "Assets");
+            if (!Directory.Exists(assetsRoot))
+                return;
+
+            _assetsWatcher = new FileSystemWatcher(assetsRoot)
+            {
+                IncludeSubdirectories = true,
+                NotifyFilter = NotifyFilters.FileName
+            };
+            _assetsWatcher.Created += OnWatchedFileCreated;
+            _assetsWatcher.Deleted += OnWatchedFileDeleted;
+            _assetsWatcher.Renamed += OnWatchedFileRenamed;
+            _assetsWatcher.EnableRaisingEvents = true;
+
+            EditorLogger.LogInfo($"[Meta System] Started watching '{assetsRoot}' for external changes.");
+        }
+
+        private void StopAssetsWatcher()
+        {
+            if (_assetsWatcher == null)
+                return;
+
+            _assetsWatcher.EnableRaisingEvents = false;
+            _assetsWatcher.Created -= OnWatchedFileCreated;
+            _assetsWatcher.Deleted -= OnWatchedFileDeleted;
+            _assetsWatcher.Renamed -= OnWatchedFileRenamed;
+            _assetsWatcher.Dispose();
+            _assetsWatcher = null;
+        }
+
+        private void OnWatchedFileCreated(object sender, FileSystemEventArgs e)
+        {
+            DispatchAssetEvent(() => HandleExternalCreate(e.FullPath));
+        }
+
+        private void OnWatchedFileDeleted(object sender, FileSystemEventArgs e)
+        {
+            DispatchAssetEvent(() => HandleExternalDelete(e.FullPath));
+        }
+
+        private void OnWatchedFileRenamed(object sender, RenamedEventArgs e)
+        {
+            DispatchAssetEvent(() =>
+            {
+                HandleExternalDelete(e.OldFullPath);
+                HandleExternalCreate(e.FullPath);
+            });
+        }
+
+        // События FileSystemWatcher приходят в фоновом потоке - переносим обработку в UI-поток,
+        // т.к. дальше идёт RefreshTree() с обновлением ObservableCollection.
+        private void DispatchAssetEvent(Action action)
+        {
+            Application.Current?.Dispatcher.BeginInvoke(() =>
+            {
+                action();
+                RefreshTree();
+            });
+        }
+
+        private void HandleExternalCreate(string fullPath)
+        {
+            foreach (var handler in _assetWatchHandlers)
+            {
+                if (handler.CanHandle(fullPath))
+                {
+                    handler.OnCreated(fullPath, App.ProjectService.Storage);
+                }
+            }
+        }
+
+        private void HandleExternalDelete(string fullPath)
+        {
+            foreach (var handler in _assetWatchHandlers)
+            {
+                if (handler.CanHandle(fullPath))
+                {
+                    handler.OnDeleted(fullPath, App.ProjectService.Storage);
+                }
+            }
         }
 
         public ICommand RefreshCommand { get; }
@@ -390,13 +488,30 @@ namespace editor.ViewModels
         {
             string filePath = Path.Combine(projectRoot, "Assets", "RegisterAllScripts.cpp");
 
+            // Два разных файла с одинаковым именем класса дали бы Register<>(name) с одним и тем же
+            // ключом - в реестре движка вторая фабрика молча перетрёт первую (см. ScriptRegistry.h).
+            // Такие классы исключаем из кодогена целиком и громко логируем, чтобы баг не маскировался.
+            var duplicateGroups = scriptNodes
+                .GroupBy(n => n.Name, StringComparer.Ordinal)
+                .Where(g => g.Count() > 1)
+                .ToList();
+
+            foreach (var group in duplicateGroups)
+            {
+                string paths = string.Join(", ", group.Select(n => n.HppRelativePath));
+                EditorLogger.LogError($"[Meta System] Duplicate script class name '{group.Key}' found in: {paths}. Rename one of them - skipping registration for both until resolved.");
+            }
+
+            var duplicateNames = new HashSet<string>(duplicateGroups.Select(g => g.Key), StringComparer.Ordinal);
+            var validNodes = scriptNodes.Where(n => !duplicateNames.Contains(n.Name)).ToList();
+
             var sb = new System.Text.StringBuilder();
             sb.AppendLine("// RegisterAllScripts.cpp — generated automatically by ZzzEngine Editor");
             sb.AppendLine("#include <ScriptRegistry.h>");
             sb.AppendLine();
 
             // Добавляем инклуды для каждого скрипта
-            foreach (var node in scriptNodes)
+            foreach (var node in validNodes)
             {
                 if (node.HasHpp && !string.IsNullOrEmpty(node.HppRelativePath))
                 {
@@ -413,7 +528,7 @@ namespace editor.ViewModels
             sb.AppendLine("extern \"C\" __declspec(dllexport) void RegisterAllScripts()");
             sb.AppendLine("{");
 
-            foreach (var node in scriptNodes)
+            foreach (var node in validNodes)
             {
                 sb.AppendLine($"    zzz::script::ScriptRegistry::Register<{node.Name}>(\"{node.Name}\");");
             }

@@ -317,7 +317,11 @@ namespace editor.Views.Widgets
 					return;
 				}
 
-				// Переименовываем hpp и cpp файлы
+				// Переименование hpp/cpp/meta выполняется одной атомарной командой (Undo/Redo одним
+				// шагом), поэтому сначала проверяем ВСЕ целевые пути и только потом что-либо исполняем.
+				var renameTargets = new List<(string OldPath, string NewPath)>();
+				string? newMetaPath = null;
+
 				if (node.HasHpp && !string.IsNullOrEmpty(node.HppRelativePath))
 				{
 					string oldPhysPath = System.IO.Path.Combine(projectRoot, node.HppRelativePath);
@@ -331,8 +335,7 @@ namespace editor.Views.Widgets
 							RefreshTree();
 							return;
 						}
-						var cmd = new editor.Services.Project.Infrastructure.UndoRedo.MoveOrRenameCommand(oldPhysPath, newPhysPath, App.ProjectService.Storage);
-						App.ProjectService.History.Execute(cmd);
+						renameTargets.Add((oldPhysPath, newPhysPath));
 					}
 				}
 				if (node.HasCpp && !string.IsNullOrEmpty(node.CppRelativePath))
@@ -348,10 +351,44 @@ namespace editor.Views.Widgets
 							RefreshTree();
 							return;
 						}
-						var cmd = new editor.Services.Project.Infrastructure.UndoRedo.MoveOrRenameCommand(oldPhysPath, newPhysPath, App.ProjectService.Storage);
-						App.ProjectService.History.Execute(cmd);
+						renameTargets.Add((oldPhysPath, newPhysPath));
 					}
 				}
+				if (node.HasMeta && !string.IsNullOrEmpty(node.MetaRelativePath))
+				{
+					string oldPhysPath = System.IO.Path.Combine(projectRoot, node.MetaRelativePath);
+					string? oldDir = System.IO.Path.GetDirectoryName(oldPhysPath);
+					if (oldDir != null)
+					{
+						string newPhysPath = System.IO.Path.Combine(oldDir, newName + ".meta");
+						if (System.IO.File.Exists(newPhysPath))
+						{
+							EditorLogger.LogError(Loc("Validation_FileName_Exists", "A file with this name already exists."));
+							RefreshTree();
+							return;
+						}
+						renameTargets.Add((oldPhysPath, newPhysPath));
+						newMetaPath = newPhysPath;
+					}
+				}
+
+				var commands = new List<editor.Services.Project.Infrastructure.UndoRedo.ICommand>();
+				foreach (var (oldPath, newPath) in renameTargets)
+				{
+					commands.Add(new editor.Services.Project.Infrastructure.UndoRedo.MoveOrRenameCommand(oldPath, newPath, App.ProjectService.Storage));
+				}
+				if (newMetaPath != null)
+				{
+					commands.Add(new editor.Services.Project.Infrastructure.UndoRedo.UpdateScriptMetaClassNameCommand(newMetaPath, newName, App.ProjectService.Storage));
+				}
+
+				if (commands.Count > 0)
+				{
+					var composite = new editor.Services.Project.Infrastructure.UndoRedo.CompositeCommand(commands);
+					App.ProjectService.History.Execute(composite);
+					EditorLogger.LogInfo($"[Meta System] Renamed script '{node.Name}' to '{newName}' (hpp/cpp/meta updated atomically).");
+				}
+
 				if (mainVm != null) mainVm.RefreshDirtyState();
 				RefreshTree();
 				return;
@@ -495,6 +532,8 @@ namespace editor.Views.Widgets
 					paths.Add(System.IO.Path.Combine(projectRoot, node.HppRelativePath));
 				if (node.HasCpp && !string.IsNullOrEmpty(node.CppRelativePath))
 					paths.Add(System.IO.Path.Combine(projectRoot, node.CppRelativePath));
+				if (node.HasMeta && !string.IsNullOrEmpty(node.MetaRelativePath))
+					paths.Add(System.IO.Path.Combine(projectRoot, node.MetaRelativePath));
 				return paths;
 			}
 			string relPath = node.RelativePath;
@@ -1078,15 +1117,14 @@ namespace editor.Views.Widgets
 			string finalCppPath = System.IO.Path.Combine(absoluteDir, newName + ".cpp");
 			string finalMetaPath = System.IO.Path.Combine(absoluteDir, newName + ".meta");
 
-			string guid = Guid.NewGuid().ToString();
-			string metaContent = $"{{\n  \"guid\": \"{guid}\",\n  \"class_name\": \"{newName}\"\n}}";
-
 			System.IO.File.WriteAllText(finalHppPath, finalHpp);
 			System.IO.File.WriteAllText(finalCppPath, finalCpp);
-			System.IO.File.WriteAllText(finalMetaPath, metaContent);
+
+			var metaData = editor.Services.Project.Infrastructure.ScriptMetaFile.CreateNew(newName);
+			editor.Services.Project.Infrastructure.ScriptMetaFile.Save(App.ProjectService.Storage, finalMetaPath, metaData);
 
 			EditorLogger.LogInfo($"Successfully created script '{newName}' from '{scriptType}' template.");
-			EditorLogger.LogInfo($"[Meta System] Generated meta file '{newName}.meta' with GUID: {guid} and class name: {newName}");
+			EditorLogger.LogInfo($"[Meta System] Generated meta file '{newName}.meta' with GUID: {metaData.Guid} and class name: {newName}");
 		}
 
 		private void UserControl_PreviewMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
