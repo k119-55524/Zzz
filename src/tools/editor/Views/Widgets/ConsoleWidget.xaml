@@ -148,23 +148,23 @@
                     <!-- Выразительный разделитель после кнопок сворачивания/развертывания -->
                     <Separator Style="{StaticResource ToolbarSeparatorStyle}"/>
 
-                    <!-- Экспорт всего -->
+                    <!-- Экспорт всего (Копировать всё) -->
                     <Button ToolTip="{DynamicResource Console_ExportAll}" Style="{StaticResource ToolbarButtonStyle}" Command="{Binding ExportAllCommand}">
-                        <Path Data="M4,17 L4,19 C4,19.5 4.5,20 5,20 L15,20 C15.5,20 16,19.5 16,19 L16,17 M10,3 L10,14 M6,10 L10,14 L14,10" 
-                              Stroke="{DynamicResource Brush_Text_Primary}" StrokeThickness="1.8" Fill="Transparent" Stretch="Uniform" Margin="5"/>
+                        <Path Data="M6,6 H15 V15 H6 Z M10,6 V2 H19 V11 H15" 
+                              Stroke="{DynamicResource Brush_Text_Primary}" StrokeThickness="1.5" Fill="Transparent" Stretch="Uniform" Margin="5"/>
                     </Button>
-                     <!-- Экспорт отфильтрованного (двухцветная иконка: стрелка загрузки и зеленый фильтр справа) -->
+                     <!-- Экспорт отфильтрованного (Копировать отфильтрованное) -->
                      <Button ToolTip="{DynamicResource Console_ExportFiltered}" Style="{StaticResource ToolbarButtonStyle}" Command="{Binding ExportFilteredCommand}">
                          <Grid>
-                             <!-- Точная копия левого значка скачивания -->
-                             <Path Data="M4,17 L4,19 C4,19.5 4.5,20 5,20 L15,20 C15.5,20 16,19.5 16,19 L16,17 M10,3 L10,14 M6,10 L10,14 L14,10" 
-                                   Stroke="{DynamicResource Brush_Text_Primary}" StrokeThickness="1.8" Fill="Transparent" Stretch="Uniform" Margin="5"/>
+                             <!-- Иконка копирования (один в один как левая) -->
+                             <Path Data="M6,6 H15 V15 H6 Z M10,6 V2 H19 V11 H15" 
+                                   Stroke="{DynamicResource Brush_Text_Primary}" StrokeThickness="1.5" Fill="Transparent" Stretch="Uniform" Margin="5"/>
                              
-                             <!-- Зеленые полоски поверх справа -->
-                             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,3,3,0">
-                                 <Border Background="#4CAF50" Width="6" Height="1.8" CornerRadius="0.9" Margin="0,0.8" HorizontalAlignment="Right"/>
-                                 <Border Background="#4CAF50" Width="4" Height="1.8" CornerRadius="0.9" Margin="0,0.8" HorizontalAlignment="Right"/>
-                                 <Border Background="#4CAF50" Width="2" Height="1.8" CornerRadius="0.9" Margin="0,0.8" HorizontalAlignment="Right"/>
+                             <!-- Зеленые полоски поверх справа внизу (воронка фильтра) -->
+                             <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,1,1">
+                                 <Border Background="#4CAF50" Width="8" Height="1.5" CornerRadius="0.75" Margin="0,1" HorizontalAlignment="Center"/>
+                                 <Border Background="#4CAF50" Width="5" Height="1.5" CornerRadius="0.75" Margin="0,1" HorizontalAlignment="Center"/>
+                                 <Border Background="#4CAF50" Width="2" Height="1.5" CornerRadius="0.75" Margin="0,1" HorizontalAlignment="Center"/>
                              </StackPanel>
                          </Grid>
                      </Button>
@@ -358,6 +358,11 @@
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <Grid MouseLeftButtonUp="LogItem_Click" Background="Transparent" Margin="0,1">
+                        <Grid.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="{DynamicResource Console_CopyLine}" Click="CopyLogItem_Click"/>
+                            </ContextMenu>
+                        </Grid.ContextMenu>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>

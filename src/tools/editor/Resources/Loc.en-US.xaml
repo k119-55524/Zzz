@@ -102,6 +102,7 @@
     <sys:String x:Key="Console_Search_Placeholder">Search...</sys:String>
     <sys:String x:Key="Console_Clear_Confirm_Title">Clear Logs</sys:String>
     <sys:String x:Key="Console_Clear_Confirm_Message">Are you sure you want to clear all logs?</sys:String>
+    <sys:String x:Key="Console_CopyLine">Copy line</sys:String>
 
     <!-- Engine Logs -->
     <sys:String x:Key="Log_Engine_Init_Start">Starting engine initialization...</sys:String>

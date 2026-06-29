@@ -78,8 +78,22 @@ namespace zzz::editor
 		std::string originDllPath = m_ProjectPath + "/.editor/bin/scripts.dll";
 		std::string tempDllPath = m_ProjectPath + "/.editor/bin/scripts_temp_" + std::to_string(GetTickCount()) + ".dll";
 
-		// Копируем во временный файл, чтобы не лочить оригинальный DLL для компиляции
-		if (!CopyFileA(originDllPath.c_str(), tempDllPath.c_str(), FALSE))
+		// Копируем во временный файл, чтобы не лочить оригинальный DLL для компиляции.
+		// Используем цикл с повторными попытками (retry loop), так как сразу после
+		// завершения компиляции (MSBuild) файл scripts.dll может быть кратковременно
+		// заблокирован антивирусом (Windows Defender) для сканирования (Sharing Violation).
+		bool copied = false;
+		for (int i = 0; i < 5; ++i)
+		{
+			if (CopyFileA(originDllPath.c_str(), tempDllPath.c_str(), FALSE))
+			{
+				copied = true;
+				break;
+			}
+			Sleep(100);
+		}
+
+		if (!copied)
 		{
 			DOutWarning("EditorEngine: Failed to copy scripts.dll to scripts_temp.dll. DLL might not exist yet. Error: {}", GetLastError());
 			return;

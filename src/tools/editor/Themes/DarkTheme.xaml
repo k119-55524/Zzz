@@ -345,6 +345,15 @@
                                     <Setter Property="Foreground" Value="#88FFFFFF"/>
                                     <Setter TargetName="GlyphPanel" Property="Fill" Value="#88FFFFFF"/>
                                 </Trigger>
+                                <Trigger Property="Icon" Value="{x:Null}">
+                                    <Setter TargetName="IconContainer" Property="Visibility" Value="Collapsed"/>
+                                </Trigger>
+                                <Trigger Property="InputGestureText" Value="">
+                                    <Setter TargetName="InputGestureText" Property="Visibility" Value="Collapsed"/>
+                                </Trigger>
+                                <Trigger Property="InputGestureText" Value="{x:Null}">
+                                    <Setter TargetName="InputGestureText" Property="Visibility" Value="Collapsed"/>
+                                </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </Setter.Value>

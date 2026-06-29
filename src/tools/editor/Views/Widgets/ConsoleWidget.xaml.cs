@@ -71,8 +71,25 @@ namespace editor.Views.Widgets
             }
         }
 
-
-
+        private void CopyLogItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement element && element.DataContext is LogEntryViewModel log)
+            {
+                try
+                {
+                    string logLine = $"[{log.TimeFormatted}] [{log.LevelName}] {log.Text}";
+                    if (!string.IsNullOrEmpty(log.File))
+                    {
+                        logLine += $" (in {log.File}:{log.Line})";
+                    }
+                    System.Windows.Clipboard.SetText(logLine);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Не удалось скопировать лог: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
 
 
         private static T? FindVisualChild<T>(DependencyObject obj) where T : DependencyObject

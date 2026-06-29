@@ -321,6 +321,37 @@ namespace editor.ViewModels
 				return; // Защита от открытия самого себя
 			}
 
+			// Очистка временных файлов сборки при открытии проекта
+			try
+			{
+				string editorDir = System.IO.Path.Combine(projectDir, ".editor");
+				string buildDir = System.IO.Path.Combine(editorDir, "build");
+				string binDir = System.IO.Path.Combine(editorDir, "bin");
+
+				if (System.IO.Directory.Exists(buildDir))
+				{
+					System.IO.Directory.Delete(buildDir, true);
+				}
+
+				if (System.IO.Directory.Exists(binDir))
+				{
+					var pdbs = System.IO.Directory.GetFiles(binDir, "*.pdb");
+					foreach (var pdb in pdbs)
+					{
+						try { System.IO.File.Delete(pdb); } catch { }
+					}
+					var tempDlls = System.IO.Directory.GetFiles(binDir, "scripts_temp_*.dll");
+					foreach (var tempDll in tempDlls)
+					{
+						try { System.IO.File.Delete(tempDll); } catch { }
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				EditorLogger.LogWarning($"[Project] Ошибка при очистке временных файлов сборки: {ex.Message}");
+			}
+
 			if (App.ProjectService.OpenProject(projectDir, out string error))
 			{
 				_globalState.LastOpenProjectPath = projectDir;

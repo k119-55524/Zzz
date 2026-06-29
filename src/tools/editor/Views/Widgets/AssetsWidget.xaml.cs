@@ -113,6 +113,7 @@ namespace editor.Views.Widgets
 										UseShellExecute = true
 									};
 									System.Diagnostics.Process.Start(psi);
+									break; // Only open one explorer window
 								}
 								catch { }
 							}
@@ -1058,12 +1059,43 @@ namespace editor.Views.Widgets
 		{
 			try
 			{
-				var psi = new System.Diagnostics.ProcessStartInfo
+				var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as ViewModels.MainWindowViewModel;
+				string? projectRoot = mainVm?.CurrentProjectPath;
+				if (!string.IsNullOrEmpty(projectRoot))
+				{
+					string buildDir = System.IO.Path.Combine(projectRoot, ".editor", "build");
+					
+					string? slnPath = null;
+					if (System.IO.Directory.Exists(buildDir))
+					{
+						var slnFiles = System.IO.Directory.GetFiles(buildDir, "*.sln");
+						if (slnFiles.Length > 0) slnPath = slnFiles[0];
+						else
+						{
+							var slnxFiles = System.IO.Directory.GetFiles(buildDir, "*.slnx");
+							if (slnxFiles.Length > 0) slnPath = slnxFiles[0];
+						}
+					}
+
+					if (!string.IsNullOrEmpty(slnPath))
+					{
+						var psi = new System.Diagnostics.ProcessStartInfo
+						{
+							FileName = "devenv",
+							Arguments = $"\"{slnPath}\" /edit \"{path}\"",
+							UseShellExecute = true
+						};
+						System.Diagnostics.Process.Start(psi);
+						return;
+					}
+				}
+
+				var psiFallback = new System.Diagnostics.ProcessStartInfo
 				{
 					FileName = path,
 					UseShellExecute = true
 				};
-				System.Diagnostics.Process.Start(psi);
+				System.Diagnostics.Process.Start(psiFallback);
 			}
 			catch (Exception ex)
 			{
