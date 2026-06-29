@@ -1,4 +1,6 @@
 
+using System;
+using System.Linq;
 using System.Windows;
 using editor.Services;
 using editor.ViewModels;
@@ -243,6 +245,7 @@ namespace editor
 			Loaded += MainWindow_Loaded;
 			Closing += MainWindow_Closing;
 			Closed += MainWindow_Closed;
+			Activated += MainWindow_Activated;
 		}
 
 		private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -362,6 +365,163 @@ namespace editor
 				}
 			}
 			return null;
+		}
+
+		private bool _isCompiling = false;
+
+		private async void MainWindow_Activated(object? sender, EventArgs e)
+		{
+			string? projectRoot = _viewModel.CurrentProjectPath;
+			if (string.IsNullOrEmpty(projectRoot) || !System.IO.Directory.Exists(projectRoot))
+				return;
+
+			if (_isCompiling) return;
+
+			// 1. Проверяем изменения в файлах
+			string assetsDir = System.IO.Path.Combine(projectRoot, "Assets");
+			if (!System.IO.Directory.Exists(assetsDir)) return;
+
+			var scriptFiles = System.IO.Directory.GetFiles(assetsDir, "*.*", System.IO.SearchOption.AllDirectories)
+				.Where(f => f.EndsWith(".hpp", StringComparison.OrdinalIgnoreCase) || 
+                            f.EndsWith(".cpp", StringComparison.OrdinalIgnoreCase));
+
+			DateTime maxWriteTime = DateTime.MinValue;
+			int fileCount = 0;
+			foreach (var file in scriptFiles)
+			{
+				var writeTime = System.IO.File.GetLastWriteTime(file);
+				if (writeTime > maxWriteTime)
+				{
+					maxWriteTime = writeTime;
+				}
+				fileCount++;
+			}
+
+			if (fileCount == 0) return; // нет скриптов для сборки
+
+			string dllPath = System.IO.Path.Combine(projectRoot, "bin", "scripts.dll");
+			bool dllExists = System.IO.File.Exists(dllPath);
+			DateTime dllWriteTime = dllExists ? System.IO.File.GetLastWriteTime(dllPath) : DateTime.MinValue;
+
+			if (!dllExists || maxWriteTime > dllWriteTime)
+			{
+				// Требуется пересборка!
+				await CompileScriptsAsync(projectRoot, dllPath);
+			}
+		}
+
+		private async System.Threading.Tasks.Task CompileScriptsAsync(string projectRoot, string dllPath)
+		{
+			_isCompiling = true;
+			EditorLogger.LogInfo("Scripts modification detected. Starting background compilation...");
+
+			try
+			{
+				// 1. Создаем папку .editor если не существует
+				string editorDir = System.IO.Path.Combine(projectRoot, ".editor");
+				System.IO.Directory.CreateDirectory(editorDir);
+
+				// 2. Генерируем CMakeLists.txt
+				string cmakePath = System.IO.Path.Combine(editorDir, "CMakeLists.txt");
+				string engineSourceDir = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..")).Replace('\\', '/');
+				
+				// Определяем конфигурацию сборки
+				string config = "Debug";
+				#if DEBUG
+				config = "Debug";
+				#else
+				config = "Release";
+				#endif
+
+				string editorDllLib = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "editorDLL.lib").Replace('\\', '/');
+
+				string cmakeContent = $@"cmake_minimum_required(VERSION 3.28)
+project(project_scripts LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ""${{PROJECT_SOURCE_DIR}}/../bin"")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ""${{PROJECT_SOURCE_DIR}}/../bin"")
+
+add_library(scripts SHARED)
+
+target_include_directories(scripts PRIVATE
+    ""{engineSourceDir}/src""
+    ""{engineSourceDir}/src/engine""
+    ""{engineSourceDir}/src/engine/private/core/scene""
+    ""{engineSourceDir}/src/engine/private/core/scene/scripts""
+    ""{engineSourceDir}/src/engine/private/core/scene/scripts/base_script""
+    ""{engineSourceDir}/src/engine/private/core""
+    ""{engineSourceDir}/src/common""
+    ""{engineSourceDir}/src/logger""
+)
+
+file(GLOB_RECURSIVE SCRIPT_SOURCES ""${{PROJECT_SOURCE_DIR}}/../Assets/*.cpp"")
+target_sources(scripts PRIVATE ${{SCRIPT_SOURCES}})
+
+target_compile_definitions(scripts PRIVATE Z_EDITOR=1)
+
+target_link_libraries(scripts PRIVATE ""{editorDllLib}"")
+";
+
+				System.IO.File.WriteAllText(cmakePath, cmakeContent);
+
+				// 3. Вызываем CMake конфигурирование и сборку в фоновом потоке
+				string buildDir = System.IO.Path.Combine(editorDir, "build");
+				System.IO.Directory.CreateDirectory(buildDir);
+
+				await System.Threading.Tasks.Task.Run(() =>
+				{
+					// Запуск конфигурации
+					var startInfoConfig = new System.Diagnostics.ProcessStartInfo
+					{
+						FileName = "cmake",
+						Arguments = $"-B \"{buildDir}\" -S \"{editorDir}\"",
+						CreateNoWindow = true,
+						UseShellExecute = false,
+						RedirectStandardError = true,
+						RedirectStandardOutput = true
+					};
+					using (var proc = System.Diagnostics.Process.Start(startInfoConfig))
+					{
+						proc?.WaitForExit();
+					}
+
+					// Запуск сборки
+					var startInfoBuild = new System.Diagnostics.ProcessStartInfo
+					{
+						FileName = "cmake",
+						Arguments = $"--build \"{buildDir}\" --config {config}",
+						CreateNoWindow = true,
+						UseShellExecute = false,
+						RedirectStandardError = true,
+						RedirectStandardOutput = true
+					};
+					using (var proc = System.Diagnostics.Process.Start(startInfoBuild))
+					{
+						proc?.WaitForExit();
+						if (proc?.ExitCode != 0)
+						{
+							throw new Exception($"CMake build failed with exit code {proc?.ExitCode}.");
+						}
+					}
+				});
+
+				EditorLogger.LogInfo("Compilation finished successfully. Reloading DLL...");
+
+				// 4. Оповещаем движок о перезагрузке DLL
+				EngineRuntime.SetProjectPath(projectRoot);
+				EngineRuntime.ReloadScripts();
+			}
+			catch (Exception ex)
+			{
+				EditorLogger.LogError($"Script compilation failed: {ex.Message}");
+			}
+			finally
+			{
+				_isCompiling = false;
+			}
 		}
 	}
 }

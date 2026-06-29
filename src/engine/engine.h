@@ -37,6 +37,7 @@ namespace zzz::engine
 		[[nodiscard]] std::expected<void, std::string> Run();
 
 	protected:
+		virtual void OnRegisterScripts();
 		void Shutdown();
 		void OnUpdateSystem();
 

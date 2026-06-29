@@ -8,6 +8,9 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
     target_include_directories(${TARGET_NAME}
         PUBLIC
             ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/private/core/scene
+            ${CMAKE_CURRENT_SOURCE_DIR}/private/core/scene/scripts
+            ${CMAKE_CURRENT_SOURCE_DIR}/private/core/scene/scripts/base_script
         PRIVATE
             pch
             ${CMAKE_CURRENT_SOURCE_DIR}/private/core
@@ -58,7 +61,14 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         # Wayland (Linux)
         "private/core/specific/linux_wayland/xdg-shell-client-protocol.h"
         "private/core/specific/linux_wayland/xdg-shell-protocol.cpp"
-      "private/core/utils/converters.h" "private/platforms/input/InputHelpers.h" "private/platforms/input/InputBase.cpp")
+      "private/core/utils/converters.h" "private/platforms/input/InputHelpers.h" "private/platforms/input/InputBase.cpp"
+
+        # Scripts & Scenes
+        "private/core/scene/GameObject.h"
+        "private/core/scene/Scene.h" "private/core/scene/Scene.cpp"
+        "private/core/scene/scripts/ScriptRegistry.h" "private/core/scene/scripts/ScriptRegistry.cpp"
+        "private/core/scene/scripts/base_script/Script.h" "private/core/scene/scripts/base_script/Script.cpp"
+        "private/core/scene/scripts/base_script/Game.h" "private/core/scene/scripts/base_script/Game.cpp")
 
     if(WIN32)
         if(${IS_EDITOR})

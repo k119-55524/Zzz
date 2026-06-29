@@ -40,7 +40,33 @@ namespace editor.Services
         [DllImport("editorDLL.dll", EntryPoint = "RemoveView", CallingConvention = CallingConvention.Cdecl)]
         private static extern void NativeRemoveView(IntPtr view);
 
+        [DllImport("editorDLL.dll", EntryPoint = "SetProjectPath", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        private static extern void NativeSetProjectPath(string projectPath);
+
+        [DllImport("editorDLL.dll", EntryPoint = "ReloadScripts", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void NativeReloadScripts();
+
         public static bool TryInitialize(LogCallback callback) => NativeInitialize(callback);
+
+        public static void SetProjectPath(string projectPath)
+        {
+            try
+            {
+                NativeSetProjectPath(projectPath);
+            }
+            catch (EntryPointNotFoundException) {}
+            catch (DllNotFoundException) {}
+        }
+
+        public static void ReloadScripts()
+        {
+            try
+            {
+                NativeReloadScripts();
+            }
+            catch (EntryPointNotFoundException) {}
+            catch (DllNotFoundException) {}
+        }
 
         public static void Shutdown()
         {

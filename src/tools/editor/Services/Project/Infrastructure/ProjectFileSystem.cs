@@ -92,6 +92,77 @@ namespace editor.Services.Project.Infrastructure
             }
         }
 
+        private bool _isScript;
+        private bool _hasHpp;
+        private bool _hasCpp;
+        private string _hppRelativePath = string.Empty;
+        private string _cppRelativePath = string.Empty;
+
+        public bool IsScript
+        {
+            get => _isScript;
+            set
+            {
+                if (_isScript != value)
+                {
+                    _isScript = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public bool HasHpp
+        {
+            get => _hasHpp;
+            set
+            {
+                if (_hasHpp != value)
+                {
+                    _hasHpp = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public bool HasCpp
+        {
+            get => _hasCpp;
+            set
+            {
+                if (_hasCpp != value)
+                {
+                    _hasCpp = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public string HppRelativePath
+        {
+            get => _hppRelativePath;
+            set
+            {
+                if (_hppRelativePath != value)
+                {
+                    _hppRelativePath = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public string CppRelativePath
+        {
+            get => _cppRelativePath;
+            set
+            {
+                if (_cppRelativePath != value)
+                {
+                    _cppRelativePath = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public System.Collections.ObjectModel.ObservableCollection<ProjectNode> Children
         {
             get => _children;
@@ -187,65 +258,136 @@ namespace editor.Services.Project.Infrastructure
             }
             else
             {
-                // Режим ассетов: просто сканируем физическую папку Assets
+                // Режим ассетов: сканируем физическую папку Assets с группировкой скриптов
                 string assetsRoot = Path.Combine(projectRoot, "Assets");
-                if (!_storage.DirectoryExists(assetsRoot))
-                    return roots;
-
-                var entries = _storage.GetFileSystemEntries(assetsRoot);
-                foreach (var entry in entries)
-                {
-                    string name = Path.GetFileName(entry);
-                    bool isDir = _storage.DirectoryExists(entry);
-                    string relPath = Path.GetRelativePath(projectRoot, entry).Replace('\\', '/');
-
-                    if (isDir && disabledFilters.Contains(name))
-                    {
-                        continue; // Фильтрация папок первого уровня в Assets
-                    }
-
-                    var node = new ProjectNode
-                    {
-                        Name = name,
-                        RelativePath = relPath,
-                        IsFolder = isDir
-                    };
-
-                    if (isDir)
-                    {
-                        ScanDirectoryPhysical(projectRoot, entry, node, disabledFilters);
-                    }
-
-                    roots.Add(node);
-                }
+                roots = ProcessDirectoryEntries(projectRoot, assetsRoot, disabledFilters);
             }
 
             SortNodeChildren(roots);
             return roots;
         }
 
-        private void ScanDirectoryPhysical(string rootPath, string currentPath, ProjectNode parentNode, List<string> disabledFilters)
+        private List<ProjectNode> ProcessDirectoryEntries(string rootPath, string currentPath, List<string> disabledFilters)
         {
+            var nodes = new List<ProjectNode>();
+            if (!_storage.DirectoryExists(currentPath))
+                return nodes;
+
             var entries = _storage.GetFileSystemEntries(currentPath);
+            
+            // Разделяем папки и файлы
+            var dirPaths = new List<string>();
+            var filePaths = new List<string>();
             foreach (var entry in entries)
             {
-                string name = Path.GetFileName(entry);
-                bool isDir = _storage.DirectoryExists(entry);
-                string relPath = Path.GetRelativePath(rootPath, entry).Replace('\\', '/');
+                if (_storage.DirectoryExists(entry))
+                    dirPaths.Add(entry);
+                else
+                    filePaths.Add(entry);
+            }
+
+            // 1. Обрабатываем папки
+            foreach (var dirPath in dirPaths)
+            {
+                string name = Path.GetFileName(dirPath);
+                if (disabledFilters != null && disabledFilters.Contains(name))
+                    continue;
+
+                string relPath = Path.GetRelativePath(rootPath, dirPath).Replace('\\', '/');
+                var node = new ProjectNode
+                {
+                    Name = name,
+                    RelativePath = relPath,
+                    IsFolder = true
+                };
+
+                // Рекурсивно сканируем
+                var children = ProcessDirectoryEntries(rootPath, dirPath, disabledFilters);
+                foreach (var child in children)
+                {
+                    node.Children.Add(child);
+                }
+
+                nodes.Add(node);
+            }
+
+            // 2. Обрабатываем файлы и группируем скрипты
+            var processedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var filePath in filePaths)
+            {
+                if (processedFiles.Contains(filePath))
+                    continue;
+
+                string ext = Path.GetExtension(filePath).ToLower();
+                string name = Path.GetFileName(filePath);
+                string relPath = Path.GetRelativePath(rootPath, filePath).Replace('\\', '/');
+
+                if (name.Equals("RegisterAllScripts.cpp", StringComparison.OrdinalIgnoreCase))
+                {
+                    processedFiles.Add(filePath);
+                    continue;
+                }
+
+                if (ext == ".hpp")
+                {
+                    // Проверяем наличие .cpp в той же папке
+                    string baseName = Path.GetFileNameWithoutExtension(filePath);
+                    string dir = Path.GetDirectoryName(filePath) ?? "";
+                    string cppPath = Path.Combine(dir, baseName + ".cpp");
+
+                    bool hasCpp = filePaths.Contains(cppPath, StringComparer.OrdinalIgnoreCase);
+
+                    var scriptNode = new ProjectNode
+                    {
+                        Name = baseName,
+                        RelativePath = relPath,
+                        IsFolder = false,
+                        IsScript = true,
+                        HasHpp = true,
+                        HppRelativePath = relPath,
+                        HasCpp = hasCpp,
+                        CppRelativePath = hasCpp ? Path.GetRelativePath(rootPath, cppPath).Replace('\\', '/') : string.Empty
+                    };
+
+                    processedFiles.Add(filePath);
+                    if (hasCpp)
+                    {
+                        processedFiles.Add(cppPath);
+                    }
+
+                    nodes.Add(scriptNode);
+                }
+            }
+
+            // 3. Обрабатываем все остальные файлы
+            foreach (var filePath in filePaths)
+            {
+                if (processedFiles.Contains(filePath))
+                    continue;
+
+                string name = Path.GetFileName(filePath);
+                string relPath = Path.GetRelativePath(rootPath, filePath).Replace('\\', '/');
 
                 var node = new ProjectNode
                 {
                     Name = name,
                     RelativePath = relPath,
-                    IsFolder = isDir
+                    IsFolder = false
                 };
 
-                if (isDir)
-                {
-                    ScanDirectoryPhysical(rootPath, entry, node, disabledFilters);
-                }
+                nodes.Add(node);
+            }
 
-                parentNode.Children.Add(node);
+            return nodes;
+        }
+
+        private void ScanDirectoryPhysical(string rootPath, string currentPath, ProjectNode parentNode, List<string> disabledFilters)
+        {
+            var children = ProcessDirectoryEntries(rootPath, currentPath, disabledFilters);
+            foreach (var child in children)
+            {
+                parentNode.Children.Add(child);
             }
         }
 

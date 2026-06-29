@@ -9,6 +9,7 @@ set_target_properties(editorDLL PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin_standalone"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin_standalone"
     PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin_standalone"
+    WINDOWS_EXPORT_ALL_SYMBOLS ON
 )
 
 target_sources(editorDLL PRIVATE

@@ -93,6 +93,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="SCRIPTING.md" />
     <ClInclude Include="engine.h" />
     <ClInclude Include="header.h" />
     <ClInclude Include="NativeAppData.h" />
@@ -121,6 +122,11 @@
     <ClInclude Include="private\core\view\ViewManager.h" />
     <ClInclude Include="private\core\utils\ScreenResolution.h" />
     <ClInclude Include="private\core\utils\converters.h" />
+    <ClInclude Include="private\core\scene\GameObject.h" />
+    <ClInclude Include="private\core\scene\Scene.h" />
+    <ClInclude Include="private\core\scene\scripts\ScriptRegistry.h" />
+    <ClInclude Include="private\core\scene\scripts\base_script\Script.h" />
+    <ClInclude Include="private\core\scene\scripts\base_script\Game.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine.cpp" />
@@ -142,6 +148,10 @@
     <ClCompile Include="private\platforms\window\WinMSWindowEditor.cpp" />
     <ClCompile Include="private\core\view\View.cpp" />
     <ClCompile Include="private\core\view\ViewManager.cpp" />
+    <ClCompile Include="private\core\scene\Scene.cpp" />
+    <ClCompile Include="private\core\scene\scripts\ScriptRegistry.cpp" />
+    <ClCompile Include="private\core\scene\scripts\base_script\Script.cpp" />
+    <ClCompile Include="private\core\scene\scripts\base_script\Game.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\common\common_lib.vcxproj">

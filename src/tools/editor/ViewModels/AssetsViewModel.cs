@@ -6,6 +6,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using editor.Models;
+using editor.Services;
 using editor.Services.Project;
 using editor.Services.Project.Infrastructure;
 
@@ -297,6 +298,11 @@ namespace editor.ViewModels
             AssetRootNodes = new ObservableCollection<ProjectNode>(assetsTree);
             ApplySearchFilter(AssetRootNodes, SearchText);
 
+            // Автогенерация RegisterAllScripts.cpp по списку найденных скриптов
+            var scriptNodes = new List<ProjectNode>();
+            FindScriptNodes(AssetRootNodes, scriptNodes);
+            GenerateRegisterAllScripts(projectRoot, scriptNodes);
+
             // Загружаем системные файлы (IsSystemMode = true). Поиск и фильтр ассетов сюда не применяются.
             var systemTree = _vfs.BuildTree(projectRoot, true, settings.DisabledSystemFilters);
             SystemRootNodes = new ObservableCollection<ProjectNode>(systemTree);
@@ -365,6 +371,77 @@ namespace editor.ViewModels
                     App.ProjectService.SaveProject(mainVm.CurrentProjectPath, out _);
                 }
                 RefreshTree();
+            }
+        }
+
+        private void FindScriptNodes(System.Collections.ObjectModel.ObservableCollection<ProjectNode> nodes, List<ProjectNode> scriptNodes)
+        {
+            foreach (var node in nodes)
+            {
+                if (node.IsScript)
+                {
+                    scriptNodes.Add(node);
+                }
+                FindScriptNodes(node.Children, scriptNodes);
+            }
+        }
+
+        private void GenerateRegisterAllScripts(string projectRoot, List<ProjectNode> scriptNodes)
+        {
+            string filePath = Path.Combine(projectRoot, "Assets", "RegisterAllScripts.cpp");
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("// RegisterAllScripts.cpp — generated automatically by ZzzEngine Editor");
+            sb.AppendLine("#include <ScriptRegistry.h>");
+            sb.AppendLine();
+
+            // Добавляем инклуды для каждого скрипта
+            foreach (var node in scriptNodes)
+            {
+                if (node.HasHpp && !string.IsNullOrEmpty(node.HppRelativePath))
+                {
+                    string includePath = node.HppRelativePath;
+                    if (includePath.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase))
+                    {
+                        includePath = includePath.Substring("Assets/".Length);
+                    }
+                    sb.AppendLine($"#include \"{includePath}\"");
+                }
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("extern \"C\" __declspec(dllexport) void RegisterAllScripts()");
+            sb.AppendLine("{");
+
+            foreach (var node in scriptNodes)
+            {
+                sb.AppendLine($"    zzz::script::ScriptRegistry::Register<{node.Name}>(\"{node.Name}\");");
+            }
+
+            sb.AppendLine("}");
+
+            try
+            {
+                string content = sb.ToString();
+
+                if (File.Exists(filePath))
+                {
+                    string oldContent = File.ReadAllText(filePath);
+                    if (oldContent == content) return;
+                }
+
+                string dir = Path.GetDirectoryName(filePath) ?? "";
+                if (!Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+
+                File.WriteAllText(filePath, content);
+                EditorLogger.LogInfo("Successfully generated RegisterAllScripts.cpp.");
+            }
+            catch (Exception ex)
+            {
+                EditorLogger.LogError($"Failed to generate RegisterAllScripts.cpp: {ex.Message}");
             }
         }
     }

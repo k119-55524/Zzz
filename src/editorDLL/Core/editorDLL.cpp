@@ -123,4 +123,34 @@ extern "C"
 			DOutException("Exception during RemoveView: {}", e.what());
 		}
 	}
+
+	EDITOR_API void SetProjectPath(const char* projectPath)
+	{
+		try
+		{
+			if (g_Engine && projectPath)
+			{
+				g_Engine->SetProjectPath(projectPath);
+			}
+		}
+		catch (const std::exception& e)
+		{
+			DOutException("Exception during SetProjectPath: {}", e.what());
+		}
+	}
+
+	EDITOR_API void ReloadScripts()
+	{
+		try
+		{
+			if (g_Engine)
+			{
+				g_Engine->ReloadScripts();
+			}
+		}
+		catch (const std::exception& e)
+		{
+			DOutException("Exception during ReloadScripts: {}", e.what());
+		}
+	}
 }

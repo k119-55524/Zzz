@@ -47,8 +47,15 @@ void Engine::Initialize()
 	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, [this]() { OnCloseAllViews(); });
 	m_MainLoop = safe_make_shared<MainLoop>(*m_Platform, [this]() { OnUpdateSystem(); });
 
+	OnRegisterScripts();
+
 	DOut("Engine initialized: OK.");
 	engineState.store(eInitState::Initialized);
+}
+
+void Engine::OnRegisterScripts()
+{
+	// Базовая реализация пуста. Будет переопределена в редакторе или в собранной игре.
 }
 
 // Run the engine loop

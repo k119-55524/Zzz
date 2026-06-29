@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using editor.Services;
@@ -13,6 +14,7 @@ namespace editor.Views.Widgets
 	{
 		// Узлы, добавленные через "Добавить -> Папку" и еще не подтвержденные вводом имени.
 		private readonly HashSet<ProjectNode> _pendingNewNodes = new();
+		private readonly Dictionary<ProjectNode, string> _pendingNewScripts = new();
 		private System.Windows.Window? _hostWindow;
 
 		public AssetsWidget()
@@ -280,6 +282,7 @@ namespace editor.Views.Widgets
 			if (string.IsNullOrEmpty(newName))
 			{
 				if (isPendingNew) _pendingNewNodes.Remove(node);
+				if (_pendingNewScripts.ContainsKey(node)) _pendingNewScripts.Remove(node);
 				RefreshTree();
 				return;
 			}
@@ -289,6 +292,7 @@ namespace editor.Views.Widgets
 			{
 				EditorLogger.LogError(Loc("Validation_Name_InvalidChars", "Name contains invalid characters."));
 				if (isPendingNew) _pendingNewNodes.Remove(node);
+				if (_pendingNewScripts.ContainsKey(node)) _pendingNewScripts.Remove(node);
 				RefreshTree();
 				return;
 			}
@@ -304,6 +308,54 @@ namespace editor.Views.Widgets
 
 			bool isSystemMode = mainAssetsVm.IsSystemNode(node);
 			var activeFilters = App.ProjectService.CurrentSettings.DisabledFilters;
+
+			if (node.IsScript)
+			{
+				if (newName.Equals(node.Name, StringComparison.OrdinalIgnoreCase))
+				{
+					RefreshTree();
+					return;
+				}
+
+				// Переименовываем hpp и cpp файлы
+				if (node.HasHpp && !string.IsNullOrEmpty(node.HppRelativePath))
+				{
+					string oldPhysPath = System.IO.Path.Combine(projectRoot, node.HppRelativePath);
+					string? oldDir = System.IO.Path.GetDirectoryName(oldPhysPath);
+					if (oldDir != null)
+					{
+						string newPhysPath = System.IO.Path.Combine(oldDir, newName + ".hpp");
+						if (System.IO.File.Exists(newPhysPath))
+						{
+							EditorLogger.LogError(Loc("Validation_FileName_Exists", "A file with this name already exists."));
+							RefreshTree();
+							return;
+						}
+						var cmd = new editor.Services.Project.Infrastructure.UndoRedo.MoveOrRenameCommand(oldPhysPath, newPhysPath, App.ProjectService.Storage);
+						App.ProjectService.History.Execute(cmd);
+					}
+				}
+				if (node.HasCpp && !string.IsNullOrEmpty(node.CppRelativePath))
+				{
+					string oldPhysPath = System.IO.Path.Combine(projectRoot, node.CppRelativePath);
+					string? oldDir = System.IO.Path.GetDirectoryName(oldPhysPath);
+					if (oldDir != null)
+					{
+						string newPhysPath = System.IO.Path.Combine(oldDir, newName + ".cpp");
+						if (System.IO.File.Exists(newPhysPath))
+						{
+							EditorLogger.LogError(Loc("Validation_FileName_Exists", "A file with this name already exists."));
+							RefreshTree();
+							return;
+						}
+						var cmd = new editor.Services.Project.Infrastructure.UndoRedo.MoveOrRenameCommand(oldPhysPath, newPhysPath, App.ProjectService.Storage);
+						App.ProjectService.History.Execute(cmd);
+					}
+				}
+				if (mainVm != null) mainVm.RefreshDirtyState();
+				RefreshTree();
+				return;
+			}
 
 			string actualNewName = newName;
 			if (!node.IsFolder)
@@ -328,6 +380,19 @@ namespace editor.Views.Widgets
 
 			if (isPendingNew)
 			{
+				if (_pendingNewScripts.ContainsKey(node))
+				{
+					string scriptType = _pendingNewScripts[node];
+					_pendingNewScripts.Remove(node);
+					_pendingNewNodes.Remove(node);
+
+					CreateScriptFromTemplates(newRelPath, newName, scriptType, projectRoot);
+
+					if (mainVm != null) mainVm.RefreshDirtyState();
+					RefreshTree();
+					return;
+				}
+
 				_pendingNewNodes.Remove(node);
 
 				var cmd = new editor.Services.Project.Infrastructure.UndoRedo.CreateFolderCommand(
@@ -424,6 +489,14 @@ namespace editor.Views.Widgets
 		private List<string> GetPhysicalPaths(ProjectNode node, string projectRoot, bool isSystemMode, List<string> disabledFilters)
 		{
 			var paths = new List<string>();
+			if (node.IsScript)
+			{
+				if (node.HasHpp && !string.IsNullOrEmpty(node.HppRelativePath))
+					paths.Add(System.IO.Path.Combine(projectRoot, node.HppRelativePath));
+				if (node.HasCpp && !string.IsNullOrEmpty(node.CppRelativePath))
+					paths.Add(System.IO.Path.Combine(projectRoot, node.CppRelativePath));
+				return paths;
+			}
 			string relPath = node.RelativePath;
 			if (string.IsNullOrEmpty(relPath)) return paths;
 
@@ -738,15 +811,276 @@ namespace editor.Views.Widgets
 
 		private void NodeText_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
 		{
-			if (sender is System.Windows.Controls.TextBlock textBlock && textBlock.DataContext is ProjectNode node)
+			if (sender is FrameworkElement element && element.DataContext is ProjectNode node)
 			{
-				if (App.SelectionService.SelectedItem == node)
+				if (e.ClickCount == 2)
+				{
+					OpenFileInVS(node);
+					e.Handled = true;
+					return;
+				}
+
+				if (sender is TextBlock && App.SelectionService.SelectedItem == node)
 				{
 					CommitActiveEditIfAny();
 					node.IsEditing = true;
 					e.Handled = true;
 				}
 			}
+		}
+
+		private void BtnH_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+		{
+			if (e.ClickCount == 2 && sender is FrameworkElement el && el.DataContext is ProjectNode node)
+			{
+				OpenHppOnly(node);
+				e.Handled = true;
+			}
+		}
+
+		private void BtnCpp_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+		{
+			if (e.ClickCount == 2 && sender is FrameworkElement el && el.DataContext is ProjectNode node)
+			{
+				OpenCppOnly(node);
+				e.Handled = true;
+			}
+		}
+
+		private void OpenFileInVS(ProjectNode node)
+		{
+			if (node.IsFolder) return;
+
+			var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as ViewModels.MainWindowViewModel;
+			string? projectRoot = mainVm?.CurrentProjectPath;
+			if (string.IsNullOrEmpty(projectRoot)) return;
+
+			if (node.IsScript)
+			{
+				if (node.HasHpp && !string.IsNullOrEmpty(node.HppRelativePath))
+				{
+					string path = System.IO.Path.Combine(projectRoot, node.HppRelativePath);
+					if (System.IO.File.Exists(path))
+					{
+						LaunchFile(path);
+					}
+				}
+				if (node.HasCpp && !string.IsNullOrEmpty(node.CppRelativePath))
+				{
+					string path = System.IO.Path.Combine(projectRoot, node.CppRelativePath);
+					if (System.IO.File.Exists(path))
+					{
+						LaunchFile(path);
+					}
+				}
+			}
+			else
+			{
+				string path = System.IO.Path.Combine(projectRoot, node.RelativePath);
+				if (System.IO.File.Exists(path))
+				{
+					LaunchFile(path);
+				}
+			}
+		}
+
+		private void OpenHppOnly(ProjectNode node)
+		{
+			var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as ViewModels.MainWindowViewModel;
+			string? projectRoot = mainVm?.CurrentProjectPath;
+			if (string.IsNullOrEmpty(projectRoot)) return;
+
+			if (node.IsScript && node.HasHpp && !string.IsNullOrEmpty(node.HppRelativePath))
+			{
+				string path = System.IO.Path.Combine(projectRoot, node.HppRelativePath);
+				if (System.IO.File.Exists(path))
+				{
+					LaunchFile(path);
+				}
+			}
+		}
+
+		private void OpenCppOnly(ProjectNode node)
+		{
+			var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as ViewModels.MainWindowViewModel;
+			string? projectRoot = mainVm?.CurrentProjectPath;
+			if (string.IsNullOrEmpty(projectRoot)) return;
+
+			if (node.IsScript && node.HasCpp && !string.IsNullOrEmpty(node.CppRelativePath))
+			{
+				string path = System.IO.Path.Combine(projectRoot, node.CppRelativePath);
+				if (System.IO.File.Exists(path))
+				{
+					LaunchFile(path);
+				}
+			}
+		}
+
+		private void LaunchFile(string path)
+		{
+			try
+			{
+				var psi = new System.Diagnostics.ProcessStartInfo
+				{
+					FileName = path,
+					UseShellExecute = true
+				};
+				System.Diagnostics.Process.Start(psi);
+			}
+			catch (Exception ex)
+			{
+				EditorLogger.LogError($"Failed to open file: {ex.Message}");
+			}
+		}
+
+		private void AddScript_Click(object sender, System.Windows.RoutedEventArgs e)
+		{
+			if (sender is MenuItem menuItem)
+			{
+				string scriptType = menuItem.Tag as string ?? "Script";
+				var clickedNode = GetSelectedNode(menuItem);
+				if (clickedNode != null)
+				{
+					string targetRelativePath = clickedNode.RelativePath;
+					CommitActiveEditIfAny();
+
+					var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as ViewModels.MainWindowViewModel;
+					var mainAssetsVm = mainVm?.Panes.OfType<ViewModels.AssetsViewModel>().FirstOrDefault();
+					if (mainVm != null && mainAssetsVm != null)
+					{
+						var node = FindNodeByPath(mainAssetsVm.AssetRootNodes, targetRelativePath);
+						var ownerRoots = mainAssetsVm.AssetRootNodes;
+						if (node == null)
+						{
+							node = FindNodeByPath(mainAssetsVm.SystemRootNodes, targetRelativePath);
+							ownerRoots = mainAssetsVm.SystemRootNodes;
+						}
+						if (node == null) return;
+
+						ProjectNode parentNode;
+						string parentRelativePath;
+
+						if (node.IsFolder)
+						{
+							parentNode = node;
+							parentRelativePath = node.RelativePath;
+						}
+						else
+						{
+							parentNode = FindParentNode(ownerRoots, node, out parentRelativePath);
+						}
+
+						string baseName = "NewScript";
+						if (scriptType == "Game") baseName = "NewGameScript";
+						else if (scriptType == "Scene") baseName = "NewSceneScript";
+
+						string scriptName = baseName;
+						int index = 1;
+						var siblings = parentNode != null ? parentNode.Children.ToList() : ownerRoots.ToList();
+						while (siblings.Any(c => c.Name.Equals(scriptName, StringComparison.OrdinalIgnoreCase)))
+						{
+							scriptName = $"{baseName}_{index++}";
+						}
+
+						string newRelPath = string.IsNullOrEmpty(parentRelativePath) ? scriptName : $"{parentRelativePath}/{scriptName}";
+
+						var newScriptNode = new ProjectNode
+						{
+							Name = scriptName,
+							RelativePath = newRelPath,
+							IsFolder = false,
+							IsScript = true,
+							IsEditing = true
+						};
+
+						_pendingNewNodes.Add(newScriptNode);
+						_pendingNewScripts[newScriptNode] = scriptType;
+
+						if (parentNode != null)
+						{
+							parentNode.Children.Add(newScriptNode);
+						}
+						else
+						{
+							ownerRoots.Add(newScriptNode);
+						}
+					}
+				}
+			}
+		}
+
+		private string GetTemplatesDirectory()
+		{
+			string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+			
+			// 1. Проверяем локальный путь (если развернуто с билдом)
+			string localPath = System.IO.Path.Combine(baseDir, "templates", "scripts");
+			if (System.IO.Directory.Exists(localPath)) return localPath;
+
+			// 2. Проверяем путь в репозитории разработчика
+			string devPath = System.IO.Path.Combine(baseDir, "..", "..", "..", "src", "editorDLL", "templates", "scripts");
+			devPath = System.IO.Path.GetFullPath(devPath);
+			if (System.IO.Directory.Exists(devPath)) return devPath;
+
+			return localPath; // fallback
+		}
+
+		private void CreateScriptFromTemplates(string newRelPath, string newName, string scriptType, string projectRoot)
+		{
+			string templatesDir = GetTemplatesDirectory();
+			string hppTemplatePath = System.IO.Path.Combine(templatesDir, $"{scriptType}.hpp.template");
+			string cppTemplatePath = System.IO.Path.Combine(templatesDir, $"{scriptType}.cpp.template");
+
+			if (!System.IO.File.Exists(hppTemplatePath) || !System.IO.File.Exists(cppTemplatePath))
+			{
+				EditorLogger.LogError($"Template files for type '{scriptType}' not found in: {templatesDir}");
+				return;
+			}
+
+			// Читаем шаблоны
+			string hppContent = System.IO.File.ReadAllText(hppTemplatePath);
+			string cppContent = System.IO.File.ReadAllText(cppTemplatePath);
+
+			// Определяем переменные подстановки
+			string includePath = "Script.h";
+			string baseClass = "zzz::script::Script";
+			if (scriptType == "Game")
+			{
+				includePath = "Game.h";
+				baseClass = "zzz::script::Game";
+			}
+			else if (scriptType == "Scene")
+			{
+				includePath = "Scene.h";
+				baseClass = "zzz::script::Scene";
+			}
+
+			string dateStr = DateTime.Now.ToString("yyyy-MM-dd");
+
+			// Выполняем замены
+			Func<string, string> replaceFunc = (content) => {
+				return content
+					.Replace("{ClassName}", newName)
+					.Replace("{BaseClass}", baseClass)
+					.Replace("{IncludePath}", includePath)
+					.Replace("{Date}", dateStr);
+			};
+
+			string finalHpp = replaceFunc(hppContent);
+			string finalCpp = replaceFunc(cppContent);
+
+			// Записываем на диск
+			string relativeDir = System.IO.Path.GetDirectoryName(newRelPath) ?? "";
+			string absoluteDir = System.IO.Path.Combine(projectRoot, relativeDir);
+			System.IO.Directory.CreateDirectory(absoluteDir);
+
+			string finalHppPath = System.IO.Path.Combine(absoluteDir, newName + ".hpp");
+			string finalCppPath = System.IO.Path.Combine(absoluteDir, newName + ".cpp");
+
+			System.IO.File.WriteAllText(finalHppPath, finalHpp);
+			System.IO.File.WriteAllText(finalCppPath, finalCpp);
+
+			EditorLogger.LogInfo($"Successfully created script '{newName}' from '{scriptType}' template.");
 		}
 
 		private void UserControl_PreviewMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)

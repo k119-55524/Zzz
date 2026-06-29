@@ -40,8 +40,18 @@
     <Filter Include="private\core\view">
       <UniqueIdentifier>{1cd6631b-7a38-4e89-bdc9-cb73289053cc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="private\core\scene">
+      <UniqueIdentifier>{e83bde28-12cd-41e7-9d7a-d0901e1cd7eb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private\core\scene\scripts">
+      <UniqueIdentifier>{e83bde28-12cd-41e7-9d7a-d0901e1cd7ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private\core\scene\scripts\base_script">
+      <UniqueIdentifier>{e83bde28-12cd-41e7-9d7a-d0901e1cd7ed}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
+    <None Include="SCRIPTING.md" />
     <ClInclude Include="engine.h" />
     <ClInclude Include="header.h" />
     <ClInclude Include="NativeAppData.h" />
@@ -120,6 +130,21 @@
     <ClInclude Include="private\core\utils\converters.h">
       <Filter>private\core\utils</Filter>
     </ClInclude>
+    <ClInclude Include="private\core\scene\GameObject.h">
+      <Filter>private\core\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="private\core\scene\Scene.h">
+      <Filter>private\core\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="private\core\scene\scripts\ScriptRegistry.h">
+      <Filter>private\core\scene\scripts</Filter>
+    </ClInclude>
+    <ClInclude Include="private\core\scene\scripts\base_script\Script.h">
+      <Filter>private\core\scene\scripts\base_script</Filter>
+    </ClInclude>
+    <ClInclude Include="private\core\scene\scripts\base_script\Game.h">
+      <Filter>private\core\scene\scripts\base_script</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine.cpp" />
@@ -167,6 +192,18 @@
     </ClCompile>
     <ClCompile Include="private\core\view\ViewManager.cpp">
       <Filter>private\core\view</Filter>
+    </ClCompile>
+    <ClCompile Include="private\core\scene\Scene.cpp">
+      <Filter>private\core\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="private\core\scene\scripts\ScriptRegistry.cpp">
+      <Filter>private\core\scene\scripts</Filter>
+    </ClCompile>
+    <ClCompile Include="private\core\scene\scripts\base_script\Script.cpp">
+      <Filter>private\core\scene\scripts\base_script</Filter>
+    </ClCompile>
+    <ClCompile Include="private\core\scene\scripts\base_script\Game.cpp">
+      <Filter>private\core\scene\scripts\base_script</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -25,8 +25,12 @@ int APIENTRY wWinMain(
 
 		DOut("[Windows OS]. Game started.");
 
+		// Объявляем автогенерированную функцию регистрации
+		extern void RegisterAllScripts();
+
 		try
 		{
+			RegisterAllScripts();
 			Engine engine("GameWin_ZzzEngine");
 			auto res = engine.Run();
 			if (!res)

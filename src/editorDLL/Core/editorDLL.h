@@ -16,4 +16,6 @@ extern "C"
 	EDITOR_API void ClearEngine();
 	EDITOR_API void* AddView(void* hwnd);
 	EDITOR_API void RemoveView(void* view);
+	EDITOR_API void SetProjectPath(const char* projectPath);
+	EDITOR_API void ReloadScripts();
 }
