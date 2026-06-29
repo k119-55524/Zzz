@@ -177,7 +177,7 @@ Script::Script(GameObject* owner) : m_Owner(owner) {
 
 Новые скрипты создаются через контекстное меню дерева ресурсов редактора (ПКМ → Add → Script / Game Script / Scene Script).
 
-Редактор генерирует файлы `.hpp`/`.cpp` на основе шаблонов, расположенных в папке `editorDLL/templates/scripts/`:
+Редактор генерирует файлы `.hpp`/`.cpp` на основе шаблонов, расположенных в папке `editor_dll/templates/scripts/`:
 - `{ClassName}` заменяется на имя класса, введенное пользователем.
 - `{BaseClass}` заменяется на базовый класс (например, `zzz::script::Script`).
 - `{IncludePath}` заменяется на путь подключения базового класса (`script/Script.hpp`).

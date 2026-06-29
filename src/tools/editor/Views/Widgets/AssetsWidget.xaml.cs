@@ -1018,7 +1018,7 @@ namespace editor.Views.Widgets
 			if (System.IO.Directory.Exists(localPath)) return localPath;
 
 			// 2. Проверяем путь в репозитории разработчика
-			string devPath = System.IO.Path.Combine(baseDir, "..", "..", "..", "src", "editorDLL", "templates", "scripts");
+			string devPath = System.IO.Path.Combine(baseDir, "..", "..", "..", "src", "editor_dll", "templates", "scripts");
 			devPath = System.IO.Path.GetFullPath(devPath);
 			if (System.IO.Directory.Exists(devPath)) return devPath;
 

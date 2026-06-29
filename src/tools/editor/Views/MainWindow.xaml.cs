@@ -433,7 +433,7 @@ namespace editor
 				config = "Release";
 				#endif
 
-				string editorDllLib = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "editorDLL.lib").Replace('\\', '/');
+				string editorDllLib = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "editor_dll.lib").Replace('\\', '/');
 
 				string cmakeContent = $@"cmake_minimum_required(VERSION 3.28)
 project(project_scripts LANGUAGES CXX)

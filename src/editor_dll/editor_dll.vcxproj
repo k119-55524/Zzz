@@ -14,7 +14,7 @@
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{4FEF72B5-D84D-4E10-B149-166D46C2B47C}</ProjectGuid>
-    <RootNamespace>editorDLL</RootNamespace>
+    <RootNamespace>editor_dll</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -91,12 +91,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Core\editorDLL.h" />
-    <ClInclude Include="EngineWrapper\EditorEngine.h" />
+    <ClInclude Include="core\editor_dll.h" />
+    <ClInclude Include="engine_wrapper\EditorEngine.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Core\editorDLL.cpp" />
-    <ClCompile Include="EngineWrapper\EditorEngine.cpp" />
+    <ClCompile Include="core\editor_dll.cpp" />
+    <ClCompile Include="engine_wrapper\EditorEngine.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\common\common_lib.vcxproj">

@@ -15,7 +15,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "logger_lib", "..\logger\log
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "engine_lib", "..\engine\engine_lib.vcxproj", "{C66B24D1-A54D-4E10-B149-166D46C2B47C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "editorDLL", "..\editorDLL\editorDLL.vcxproj", "{4FEF72B5-D84D-4E10-B149-166D46C2B47C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "editor_dll", "..\editor_dll\editor_dll.vcxproj", "{4FEF72B5-D84D-4E10-B149-166D46C2B47C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -5,9 +5,9 @@
 #include <memory>
 #include <common/common.h>
 #include <engine/engine.h>
-#include "../EngineWrapper/EditorEngine.h"
+#include "../engine_wrapper/EditorEngine.h"
 
-#include "editorDLL.h"
+#include "editor_dll.h"
 
 std::unique_ptr<zzz::editor::EditorEngine> g_Engine;
 

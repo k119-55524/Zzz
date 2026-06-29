@@ -31,7 +31,7 @@
     <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
 
-  <!-- editorDLL собирается через C++ проект (editorDLL.vcxproj) в решении Tools.sln.
+  <!-- editor_dll собирается через C++ проект (editor_dll.vcxproj) в решении Tools.sln.
        Запуск cmake build отключается при сборке решения в VS/MSBuild, чтобы избежать ошибок с путями SDK. -->
   <Target Name="BuildEditorDLL" BeforeTargets="Build" Condition="'$(BuildingSolutionFile)' != 'true' And '$(BuildingInsideVisualStudio)' != 'true'">
     <PropertyGroup>
@@ -44,11 +44,11 @@
     <PropertyGroup>
       <Z_CMakeStandaloneOutDir>$(Z_CMakeBuildDir)\bin_standalone</Z_CMakeStandaloneOutDir>
     </PropertyGroup>
-    <Exec Command="cmake --build &quot;$(Z_CMakeBuildDir)&quot; --target editorDLL" Condition="'$(Z_CMakeBuildDir)' != '' And Exists('$(Z_CMakeBuildDir)') And !Exists('$(Z_TargetDir)\editorDLL.dll')" />
-    <!-- editorDLL CMake-сборка пишет в свою изолированную папку (см. src/editorDLL/CMakeLists.txt),
-         чтобы не конфликтовать с editorDLL.vcxproj. Переносим результат в bin/$(Configuration) сами. -->
+    <Exec Command="cmake --build &quot;$(Z_CMakeBuildDir)&quot; --target editor_dll" Condition="'$(Z_CMakeBuildDir)' != '' And Exists('$(Z_CMakeBuildDir)') And !Exists('$(Z_TargetDir)\editor_dll.dll')" />
+    <!-- editor_dll CMake-сборка пишет в свою изолированную папку (см. src/editor_dll/CMakeLists.txt),
+         чтобы не конфликтовать с editor_dll.vcxproj. Переносим результат в bin/$(Configuration) сами. -->
     <ItemGroup>
-      <Z_EditorDllStandaloneFiles Include="$(Z_CMakeStandaloneOutDir)\editorDLL.dll;$(Z_CMakeStandaloneOutDir)\editorDLL.pdb" />
+      <Z_EditorDllStandaloneFiles Include="$(Z_CMakeStandaloneOutDir)\editor_dll.dll;$(Z_CMakeStandaloneOutDir)\editor_dll.pdb" />
       <Z_EditorDllStandaloneExistingFiles Include="@(Z_EditorDllStandaloneFiles)" Condition="Exists('%(Identity)')" />
     </ItemGroup>
     <Copy SourceFiles="@(Z_EditorDllStandaloneExistingFiles)" DestinationFolder="$(Z_TargetDir)" Condition="'@(Z_EditorDllStandaloneExistingFiles)' != ''" SkipUnchangedFiles="true" />

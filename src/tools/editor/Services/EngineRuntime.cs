@@ -22,28 +22,28 @@ namespace editor.Services
 
     public static class EngineRuntime
     {
-        [DllImport("editorDLL.dll", EntryPoint = "Initialize", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("editor_dll.dll", EntryPoint = "Initialize", CallingConvention = CallingConvention.Cdecl)]
         private static extern bool NativeInitialize(LogCallback callback);
 
-        [DllImport("editorDLL.dll", EntryPoint = "Deinitialize", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("editor_dll.dll", EntryPoint = "Deinitialize", CallingConvention = CallingConvention.Cdecl)]
         private static extern void NativeDeinitialize();
 
-        [DllImport("editorDLL.dll", EntryPoint = "Tick", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("editor_dll.dll", EntryPoint = "Tick", CallingConvention = CallingConvention.Cdecl)]
         private static extern void NativeTick();
 
-        [DllImport("editorDLL.dll", EntryPoint = "ClearEngine", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("editor_dll.dll", EntryPoint = "ClearEngine", CallingConvention = CallingConvention.Cdecl)]
         private static extern void NativeClearEngine();
 
-        [DllImport("editorDLL.dll", EntryPoint = "AddView", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("editor_dll.dll", EntryPoint = "AddView", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr NativeAddView(IntPtr hwnd);
 
-        [DllImport("editorDLL.dll", EntryPoint = "RemoveView", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("editor_dll.dll", EntryPoint = "RemoveView", CallingConvention = CallingConvention.Cdecl)]
         private static extern void NativeRemoveView(IntPtr view);
 
-        [DllImport("editorDLL.dll", EntryPoint = "SetProjectPath", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        [DllImport("editor_dll.dll", EntryPoint = "SetProjectPath", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         private static extern void NativeSetProjectPath(string projectPath);
 
-        [DllImport("editorDLL.dll", EntryPoint = "ReloadScripts", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("editor_dll.dll", EntryPoint = "ReloadScripts", CallingConvention = CallingConvention.Cdecl)]
         private static extern void NativeReloadScripts();
 
         public static bool TryInitialize(LogCallback callback) => NativeInitialize(callback);
