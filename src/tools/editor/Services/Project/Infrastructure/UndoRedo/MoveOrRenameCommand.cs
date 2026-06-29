@@ -12,12 +12,14 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
         private readonly string _destPath;
         private readonly IFileStorage _storage;
         private readonly bool _isFolder;
+        private readonly Action? _onScriptChanged;
 
-        public MoveOrRenameCommand(string sourcePath, string destPath, IFileStorage storage)
+        public MoveOrRenameCommand(string sourcePath, string destPath, IFileStorage storage, Action? onScriptChanged = null)
         {
             _sourcePath = sourcePath;
             _destPath = destPath;
             _storage = storage;
+            _onScriptChanged = onScriptChanged;
 
             // Определяем, папка это или файл на момент создания команды
             _isFolder = _storage.DirectoryExists(_sourcePath);
@@ -46,6 +48,9 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
                     _storage.MoveFile(_sourcePath, _destPath);
                 }
             }
+
+            if (_onScriptChanged != null && AffectsScripts())
+                _onScriptChanged();
         }
 
         public void Undo()
@@ -71,6 +76,23 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
                     _storage.MoveFile(_destPath, _sourcePath);
                 }
             }
+
+            if (_onScriptChanged != null && AffectsScripts())
+                _onScriptChanged();
+        }
+
+        private bool AffectsScripts()
+        {
+            // Папка может содержать скрипты — всегда триггерим пересборку
+            if (_isFolder) return true;
+            // Файл: проверяем расширение source или dest
+            static bool IsScript(string p)
+            {
+                string ext = Path.GetExtension(p);
+                return ext.Equals(".hpp", StringComparison.OrdinalIgnoreCase) ||
+                       ext.Equals(".cpp", StringComparison.OrdinalIgnoreCase);
+            }
+            return IsScript(_sourcePath) || IsScript(_destPath);
         }
     }
 }

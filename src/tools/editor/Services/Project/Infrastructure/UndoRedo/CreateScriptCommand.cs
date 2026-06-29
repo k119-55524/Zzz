@@ -20,7 +20,9 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
 		private readonly string _guid = Guid.NewGuid().ToString();
 		private readonly List<string> _createdPaths = new();
 
-		public CreateScriptCommand(string newRelPath, string className, string scriptType, string templatesDir, string projectRoot, IFileStorage storage)
+		private readonly Action? _onScriptChanged;
+
+		public CreateScriptCommand(string newRelPath, string className, string scriptType, string templatesDir, string projectRoot, IFileStorage storage, Action? onScriptChanged = null)
 		{
 			_newRelPath = newRelPath;
 			_className = className;
@@ -28,6 +30,7 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
 			_templatesDir = templatesDir;
 			_projectRoot = projectRoot;
 			_storage = storage;
+			_onScriptChanged = onScriptChanged;
 		}
 
 		public void Execute()
@@ -92,6 +95,8 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
 			metaData.Guid = _guid;
 			ScriptMetaFile.Save(_storage, finalMetaPath, metaData);
 			_createdPaths.Add(finalMetaPath);
+
+			_onScriptChanged?.Invoke();
 		}
 
 		public void Undo()
@@ -105,6 +110,8 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
 				}
 			}
 			_createdPaths.Clear();
+
+			_onScriptChanged?.Invoke();
 		}
 	}
 }

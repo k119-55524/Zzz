@@ -427,7 +427,15 @@ namespace editor
 				DateTime dllWriteTime = dllExists ? System.IO.File.GetLastWriteTime(dllPath) : DateTime.MinValue;
 
 				if (dllExists && maxWriteTime <= dllWriteTime)
-					return; // DLL уже актуальна
+				{
+					// Дополнительная проверка: если RegisterAllScripts.cpp новее DLL — состав скриптов
+					// изменился (добавили/удалили скрипт пока редактор был закрыт), но write-time .hpp
+					// не поменялся. RefreshTree уже обновил RegisterAllScripts.cpp — форсируем сборку.
+					string registerAllPath = System.IO.Path.Combine(projectRoot, ".editor", "RegisterAllScripts.cpp");
+					if (!System.IO.File.Exists(registerAllPath) ||
+					    System.IO.File.GetLastWriteTime(registerAllPath) <= dllWriteTime)
+						return; // DLL актуальна и состав скриптов не менялся
+				}
 			}
 
 			await CompileScriptsAsync(projectRoot, dllPath);

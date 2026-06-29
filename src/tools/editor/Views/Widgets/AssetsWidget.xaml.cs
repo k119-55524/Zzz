@@ -419,7 +419,7 @@ namespace editor.Views.Widgets
 				var commands = new List<editor.Services.Project.Infrastructure.UndoRedo.ICommand>();
 				foreach (var (oldPath, newPath) in renameTargets)
 				{
-					commands.Add(new editor.Services.Project.Infrastructure.UndoRedo.MoveOrRenameCommand(oldPath, newPath, App.ProjectService.Storage));
+					commands.Add(new editor.Services.Project.Infrastructure.UndoRedo.MoveOrRenameCommand(oldPath, newPath, App.ProjectService.Storage, onScriptChanged: TriggerScriptRebuild));
 				}
 				if (newMetaPath != null)
 				{
@@ -473,7 +473,8 @@ namespace editor.Views.Widgets
 						scriptType,
 						GetTemplatesDirectory(),
 						projectRoot,
-						App.ProjectService.Storage
+						App.ProjectService.Storage,
+						onScriptChanged: TriggerScriptRebuild
 					);
 
 					try
@@ -539,7 +540,8 @@ namespace editor.Views.Widgets
 					var cmd = new editor.Services.Project.Infrastructure.UndoRedo.MoveOrRenameCommand(
 						oldPhysPath,
 						newPhysPath,
-						App.ProjectService.Storage
+						App.ProjectService.Storage,
+						onScriptChanged: TriggerScriptRebuild
 					);
 
 					try
@@ -723,11 +725,28 @@ namespace editor.Views.Widgets
 						if (result == System.Windows.MessageBoxResult.Yes)
 						{
 							var physicalPaths = GetPhysicalPaths(node, projectRoot, isSystemMode, activeFilters);
+
+							// Для папок: проверяем наличие .hpp/.cpp до перемещения в backup
+							Func<bool>? containsScripts = node.IsFolder
+								? () => physicalPaths.Any(p =>
+									{
+										// После Execute файлы уже перемещены в backup;
+										// проверяем backup-папку или оригинал
+										string checkDir = System.IO.Directory.Exists(p) ? p
+											: System.IO.Path.Combine(projectRoot, ".editor", "backup");
+										return System.IO.Directory.Exists(checkDir) &&
+											(System.IO.Directory.GetFiles(checkDir, "*.hpp", System.IO.SearchOption.AllDirectories).Length > 0 ||
+											System.IO.Directory.GetFiles(checkDir, "*.cpp", System.IO.SearchOption.AllDirectories).Length > 0);
+									})
+								: (Func<bool>?)null;
+
 							var cmd = new editor.Services.Project.Infrastructure.UndoRedo.DeleteFileOrFolderCommand(
 								physicalPaths,
 								projectRoot,
 								node.IsFolder,
-								App.ProjectService.Storage
+								App.ProjectService.Storage,
+								onScriptChanged: TriggerScriptRebuild,
+								containsScripts: containsScripts
 							);
 
 							try
@@ -753,6 +772,15 @@ namespace editor.Views.Widgets
 			{
 				vm.RefreshTree();
 			}
+		}
+
+		// Колбэк для команд Undo/Redo: RefreshTree обновляет RegisterAllScripts.cpp,
+		// затем запускается forceRebuild-компиляция. Порядок важен!
+		private void TriggerScriptRebuild()
+		{
+			RefreshTree();
+			if (_hostWindow is MainWindow mw)
+				_ = mw.CheckAndCompileScriptsAsync(forceRebuild: true);
 		}
 
 		// === Drag & Drop: перетаскивание узлов AssetsTree для изменения структуры проекта ===
@@ -905,7 +933,7 @@ namespace editor.Views.Widgets
 				return;
 			}
 
-			var cmd = new editor.Services.Project.Infrastructure.UndoRedo.MoveOrRenameCommand(oldPhysPath, newPhysPath, App.ProjectService.Storage);
+			var cmd = new editor.Services.Project.Infrastructure.UndoRedo.MoveOrRenameCommand(oldPhysPath, newPhysPath, App.ProjectService.Storage, onScriptChanged: TriggerScriptRebuild);
 			try
 			{
 				App.ProjectService.History.Execute(cmd);

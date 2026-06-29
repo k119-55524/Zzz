@@ -13,6 +13,10 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
         private readonly string _projectRoot;
         private readonly bool _isFolder;
         private readonly IFileStorage _storage;
+        private readonly Action? _onScriptChanged;
+        // Для папок: лямбда, которая проверяет, есть ли внутри .hpp/.cpp (до удаления — до перемещения в backup).
+        // Для файлов: null, проверяем расширение самих путей.
+        private readonly Func<bool>? _containsScripts;
 
         // Информация о резервных копиях для каждого физического пути
         private readonly List<(string OriginalPath, string BackupDestPath, string BackupDirPath)> _backups = new();
@@ -22,12 +26,16 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
             List<string> physicalPaths,
             string projectRoot,
             bool isFolder,
-            IFileStorage storage)
+            IFileStorage storage,
+            Action? onScriptChanged = null,
+            Func<bool>? containsScripts = null)
         {
             _physicalPaths = physicalPaths;
             _projectRoot = projectRoot;
             _isFolder = isFolder;
             _storage = storage;
+            _onScriptChanged = onScriptChanged;
+            _containsScripts = containsScripts;
 
             // Генерируем уникальные пути резервных копий для каждого физического пути
             string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
@@ -75,6 +83,9 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
             }
 
             _executed = true;
+
+            if (_onScriptChanged != null && AffectsScripts())
+                _onScriptChanged();
         }
 
         public void Undo()
@@ -114,6 +125,27 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
             }
 
             _executed = false;
+
+            if (_onScriptChanged != null && AffectsScripts())
+                _onScriptChanged();
+        }
+
+        private bool AffectsScripts()
+        {
+            if (_isFolder)
+            {
+                // Папка: используем переданную лямбду (проверяется по backup-копии, которая уже перемещена)
+                return _containsScripts?.Invoke() ?? false;
+            }
+            // Файл: проверяем расширение
+            foreach (var path in _physicalPaths)
+            {
+                string ext = Path.GetExtension(path);
+                if (ext.Equals(".hpp", StringComparison.OrdinalIgnoreCase) ||
+                    ext.Equals(".cpp", StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            return false;
         }
 
         public void Dispose()

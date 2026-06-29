@@ -60,6 +60,7 @@ namespace editor.ViewModels
             new ScriptAssetWatchHandler()
         };
         private FileSystemWatcher? _assetsWatcher;
+        private System.Windows.Threading.DispatcherTimer? _compileDebounceTimer;
         private ObservableCollection<ProjectNode> _assetRootNodes = new();
         private ObservableCollection<ProjectNode> _systemRootNodes = new();
         private ObservableCollection<FilterItemViewModel> _availableFilters = new();
@@ -123,11 +124,14 @@ namespace editor.ViewModels
             _assetsWatcher = new FileSystemWatcher(assetsRoot)
             {
                 IncludeSubdirectories = true,
-                NotifyFilter = NotifyFilters.FileName
+                // FileName — создание/удаление/переименование файлов
+                // LastWrite — правка содержимого (.cpp/.hpp в IDE)
+                NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
             };
             _assetsWatcher.Created += OnWatchedFileCreated;
             _assetsWatcher.Deleted += OnWatchedFileDeleted;
             _assetsWatcher.Renamed += OnWatchedFileRenamed;
+            _assetsWatcher.Changed += OnWatchedFileChanged;
             _assetsWatcher.EnableRaisingEvents = true;
 
             EditorLogger.LogInfo($"[Meta System] Started watching '{assetsRoot}' for external changes.");
@@ -142,18 +146,23 @@ namespace editor.ViewModels
             _assetsWatcher.Created -= OnWatchedFileCreated;
             _assetsWatcher.Deleted -= OnWatchedFileDeleted;
             _assetsWatcher.Renamed -= OnWatchedFileRenamed;
+            _assetsWatcher.Changed -= OnWatchedFileChanged;
             _assetsWatcher.Dispose();
             _assetsWatcher = null;
+
+            _compileDebounceTimer?.Stop();
+            _compileDebounceTimer = null;
         }
 
         private void OnWatchedFileCreated(object sender, FileSystemEventArgs e)
         {
-            DispatchAssetEvent(() => HandleExternalCreate(e.FullPath));
+            // triggerCompile=true: создание .hpp/.cpp требует пересборки
+            DispatchAssetEvent(() => HandleExternalCreate(e.FullPath), triggerCompile: IsScriptFile(e.FullPath));
         }
 
         private void OnWatchedFileDeleted(object sender, FileSystemEventArgs e)
         {
-            DispatchAssetEvent(() => HandleExternalDelete(e.FullPath));
+            DispatchAssetEvent(() => HandleExternalDelete(e.FullPath), triggerCompile: IsScriptFile(e.FullPath));
         }
 
         private void OnWatchedFileRenamed(object sender, RenamedEventArgs e)
@@ -162,17 +171,61 @@ namespace editor.ViewModels
             {
                 HandleExternalDelete(e.OldFullPath);
                 HandleExternalCreate(e.FullPath);
-            });
+            }, triggerCompile: IsScriptFile(e.OldFullPath) || IsScriptFile(e.FullPath));
+        }
+
+        // Правка содержимого файла в IDE — только компиляция, дерево не перестраиваем
+        // (состав скриптов не менялся, только код внутри .cpp/.hpp).
+        // Debounce через DispatcherTimer: IDE может вызвать Changed несколько раз подряд
+        // при одном сохранении (write + flush) — ждём 500ms тишины перед запуском cmake.
+        private void OnWatchedFileChanged(object sender, FileSystemEventArgs e)
+        {
+            if (!IsScriptFile(e.FullPath))
+                return;
+
+            Application.Current?.Dispatcher.BeginInvoke(() => ScheduleCompileDebounced());
+        }
+
+        private void ScheduleCompileDebounced()
+        {
+            if (_compileDebounceTimer == null)
+            {
+                _compileDebounceTimer = new System.Windows.Threading.DispatcherTimer
+                {
+                    Interval = TimeSpan.FromMilliseconds(500)
+                };
+                _compileDebounceTimer.Tick += (s, e) =>
+                {
+                    _compileDebounceTimer.Stop();
+                    if (Application.Current?.MainWindow is MainWindow mw)
+                        _ = mw.CheckAndCompileScriptsAsync(forceRebuild: true);
+                };
+            }
+
+            // Перезапускаем таймер — каждый новый Changed сдвигает окно на 500ms
+            _compileDebounceTimer.Stop();
+            _compileDebounceTimer.Start();
+        }
+
+        private static bool IsScriptFile(string fullPath)
+        {
+            string ext = Path.GetExtension(fullPath);
+            return ext.Equals(".hpp", StringComparison.OrdinalIgnoreCase) ||
+                   ext.Equals(".cpp", StringComparison.OrdinalIgnoreCase);
         }
 
         // События FileSystemWatcher приходят в фоновом потоке - переносим обработку в UI-поток,
         // т.к. дальше идёт RefreshTree() с обновлением ObservableCollection.
-        private void DispatchAssetEvent(Action action)
+        // triggerCompile=true: ПОСЛЕ RefreshTree (который обновит RegisterAllScripts.cpp)
+        // запускаем компиляцию — порядок важен, иначе cmake соберёт устаревший RegisterAllScripts.cpp.
+        private void DispatchAssetEvent(Action action, bool triggerCompile = false)
         {
             Application.Current?.Dispatcher.BeginInvoke(() =>
             {
                 action();
-                RefreshTree();
+                RefreshTree();  // ← сначала обновляем RegisterAllScripts.cpp
+                if (triggerCompile && Application.Current?.MainWindow is MainWindow mw)
+                    _ = mw.CheckAndCompileScriptsAsync(forceRebuild: true); // ← потом cmake
             });
         }
 
@@ -185,8 +238,6 @@ namespace editor.ViewModels
                     handler.OnCreated(fullPath, App.ProjectService.Storage);
                 }
             }
-
-            TriggerScriptCompileCheckIfRelevant(fullPath);
         }
 
         private void HandleExternalDelete(string fullPath)
@@ -197,25 +248,6 @@ namespace editor.ViewModels
                 {
                     handler.OnDeleted(fullPath, App.ProjectService.Storage);
                 }
-            }
-
-            TriggerScriptCompileCheckIfRelevant(fullPath);
-        }
-
-        // FileSystemWatcher не различает, кто реально написал файл - сам редактор (создание скрипта
-        // через UI) или внешний инструмент, поэтому это общий хук для пересборки в обоих случаях.
-        // Без него автокомпиляция запускалась бы только при возврате фокуса в окно редактора
-        // (MainWindow.MainWindow_Activated) - пользователь, не переключавший фокус после добавления
-        // скрипта, никогда не увидел бы автокомпиляцию.
-        private void TriggerScriptCompileCheckIfRelevant(string fullPath)
-        {
-            string ext = Path.GetExtension(fullPath);
-            if (!ext.Equals(".hpp", StringComparison.OrdinalIgnoreCase) && !ext.Equals(".cpp", StringComparison.OrdinalIgnoreCase))
-                return;
-
-            if (Application.Current?.MainWindow is MainWindow mainWindow)
-            {
-                _ = mainWindow.CheckAndCompileScriptsAsync(forceRebuild: true);
             }
         }
 
