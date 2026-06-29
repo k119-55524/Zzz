@@ -1076,11 +1076,17 @@ namespace editor.Views.Widgets
 
 			string finalHppPath = System.IO.Path.Combine(absoluteDir, newName + ".hpp");
 			string finalCppPath = System.IO.Path.Combine(absoluteDir, newName + ".cpp");
+			string finalMetaPath = System.IO.Path.Combine(absoluteDir, newName + ".meta");
+
+			string guid = Guid.NewGuid().ToString();
+			string metaContent = $"{{\n  \"guid\": \"{guid}\",\n  \"class_name\": \"{newName}\"\n}}";
 
 			System.IO.File.WriteAllText(finalHppPath, finalHpp);
 			System.IO.File.WriteAllText(finalCppPath, finalCpp);
+			System.IO.File.WriteAllText(finalMetaPath, metaContent);
 
 			EditorLogger.LogInfo($"Successfully created script '{newName}' from '{scriptType}' template.");
+			EditorLogger.LogInfo($"[Meta System] Generated meta file '{newName}.meta' with GUID: {guid} and class name: {newName}");
 		}
 
 		private void UserControl_PreviewMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)

@@ -9,6 +9,9 @@ int main(int argc, char* argv[])
 {
     @autoreleasepool
     {
+        extern void RegisterAllScripts();
+        RegisterAllScripts();
+
         return UIApplicationMain(argc, argv, nil, @"EngineAppDelegate");
     }
 }
