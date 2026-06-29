@@ -71,7 +71,7 @@ namespace zzz::editor
 
 		if (m_ProjectPath.empty())
 		{
-			DOutError("EditorEngine: Project path is empty. Cannot load scripts DLL.");
+			DOutError("Project path is empty. Cannot load scripts DLL.");
 			return;
 		}
 
@@ -83,26 +83,28 @@ namespace zzz::editor
 		// завершения компиляции (MSBuild) файл scripts.dll может быть кратковременно
 		// заблокирован антивирусом (Windows Defender) для сканирования (Sharing Violation).
 		bool copied = false;
-		for (int i = 0; i < 5; ++i)
+		for (int i = 0; i < 50; ++i)
 		{
 			if (CopyFileA(originDllPath.c_str(), tempDllPath.c_str(), FALSE))
 			{
 				copied = true;
 				break;
 			}
+
+			DOutWarning("New iteration of DLL copy wait.");
 			Sleep(100);
 		}
 
 		if (!copied)
 		{
-			DOutWarning("EditorEngine: Failed to copy scripts.dll to scripts_temp.dll. DLL might not exist yet. Error: {}", GetLastError());
+			DOutWarning("Failed to copy scripts.dll to scripts_temp.dll. DLL might not exist yet. Error: {}", GetLastError());
 			return;
 		}
 
 		HMODULE handle = LoadLibraryA(tempDllPath.c_str());
 		if (!handle)
 		{
-			DOutError("EditorEngine: Failed to load {}. Error code: {}", tempDllPath, GetLastError());
+			DOutError("Failed to load {}. Error code: {}", tempDllPath, GetLastError());
 			return;
 		}
 
@@ -114,11 +116,11 @@ namespace zzz::editor
 		if (registerAll)
 		{
 			registerAll();
-			DOut("EditorEngine: Scripts DLL loaded and registered successfully.");
+			DOut("Scripts DLL loaded and registered successfully.");
 		}
 		else
 		{
-			DOutError("EditorEngine: Failed to find RegisterAllScripts export in scripts DLL.");
+			DOutError("Failed to find RegisterAllScripts export in scripts DLL.");
 			UnloadScripts();
 		}
 	}
@@ -127,7 +129,7 @@ namespace zzz::editor
 	{
 		if (m_ScriptsDll)
 		{
-			DOut("EditorEngine: Unloading scripts DLL...");
+			DOut("Unloading scripts DLL...");
 
 			// Очищаем зарегистрированные фабрики
 			zzz::script::ScriptRegistry::Clear();

@@ -996,21 +996,25 @@ namespace editor.Views.Widgets
 
 			if (node.IsScript)
 			{
+				var paths = new List<string>();
+
 				if (node.HasHpp && !string.IsNullOrEmpty(node.HppRelativePath))
 				{
 					string path = System.IO.Path.Combine(projectRoot, node.HppRelativePath);
-					if (System.IO.File.Exists(path))
-					{
-						LaunchFile(path);
-					}
+					if (System.IO.File.Exists(path)) paths.Add(path);
 				}
 				if (node.HasCpp && !string.IsNullOrEmpty(node.CppRelativePath))
 				{
 					string path = System.IO.Path.Combine(projectRoot, node.CppRelativePath);
-					if (System.IO.File.Exists(path))
-					{
-						LaunchFile(path);
-					}
+					if (System.IO.File.Exists(path)) paths.Add(path);
+				}
+
+				// Открываем hpp и cpp одним вызовом devenv — два отдельных Process.Start подряд
+				// запускали два разных экземпляра Visual Studio (второй стартует раньше, чем
+				// первый успевает зарегистрироваться как "запущенный" для этого решения).
+				if (paths.Count > 0)
+				{
+					LaunchFiles(paths.ToArray());
 				}
 			}
 			else
@@ -1018,7 +1022,7 @@ namespace editor.Views.Widgets
 				string path = System.IO.Path.Combine(projectRoot, node.RelativePath);
 				if (System.IO.File.Exists(path))
 				{
-					LaunchFile(path);
+					LaunchFiles(path);
 				}
 			}
 		}
@@ -1034,7 +1038,7 @@ namespace editor.Views.Widgets
 				string path = System.IO.Path.Combine(projectRoot, node.HppRelativePath);
 				if (System.IO.File.Exists(path))
 				{
-					LaunchFile(path);
+					LaunchFiles(path);
 				}
 			}
 		}
@@ -1050,21 +1054,83 @@ namespace editor.Views.Widgets
 				string path = System.IO.Path.Combine(projectRoot, node.CppRelativePath);
 				if (System.IO.File.Exists(path))
 				{
-					LaunchFile(path);
+					LaunchFiles(path);
 				}
 			}
 		}
 
-		private void LaunchFile(string path)
+		private static string? _cachedDevenvPath;
+		private static bool _devenvPathResolved;
+
+		// devenv.exe не зарегистрирован в PATH, поэтому ищем его через vswhere —
+		// стандартный инструмент, который ставится вместе с любой версией Visual Studio.
+		private static string? ResolveDevenvPath()
 		{
+			if (_devenvPathResolved) return _cachedDevenvPath;
+			_devenvPathResolved = true;
+
+			try
+			{
+				string vswherePath = System.IO.Path.Combine(
+					Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+					"Microsoft Visual Studio", "Installer", "vswhere.exe");
+
+				EditorLogger.LogInfo($"[LaunchFile] vswhere path: {vswherePath}");
+
+				if (!System.IO.File.Exists(vswherePath))
+				{
+					EditorLogger.LogWarning($"[LaunchFile] vswhere.exe not found at {vswherePath}");
+					return null;
+				}
+
+				var psi = new System.Diagnostics.ProcessStartInfo
+				{
+					FileName = vswherePath,
+					Arguments = "-latest -prerelease -property productPath",
+					RedirectStandardOutput = true,
+					RedirectStandardError = true,
+					UseShellExecute = false,
+					CreateNoWindow = true
+				};
+
+				using var process = System.Diagnostics.Process.Start(psi);
+				string output = process!.StandardOutput.ReadToEnd().Trim();
+				string error = process.StandardError.ReadToEnd().Trim();
+				process.WaitForExit(5000);
+
+				EditorLogger.LogInfo($"[LaunchFile] vswhere exit code: {process.ExitCode}, stdout: '{output}', stderr: '{error}'");
+
+				if (!string.IsNullOrEmpty(output) && System.IO.File.Exists(output))
+				{
+					_cachedDevenvPath = output;
+					EditorLogger.LogInfo($"[LaunchFile] Resolved devenv path: {_cachedDevenvPath}");
+				}
+				else
+				{
+					EditorLogger.LogWarning($"[LaunchFile] vswhere did not return a valid devenv path (output: '{output}')");
+				}
+			}
+			catch (Exception ex)
+			{
+				EditorLogger.LogError($"[LaunchFile] Exception while resolving devenv path: {ex}");
+			}
+
+			return _cachedDevenvPath;
+		}
+
+		private void LaunchFiles(params string[] paths)
+		{
+			EditorLogger.LogInfo($"[LaunchFile] Requested paths: {string.Join(", ", paths)}");
 			try
 			{
 				var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as ViewModels.MainWindowViewModel;
 				string? projectRoot = mainVm?.CurrentProjectPath;
+				EditorLogger.LogInfo($"[LaunchFile] projectRoot: {projectRoot}");
 				if (!string.IsNullOrEmpty(projectRoot))
 				{
 					string buildDir = System.IO.Path.Combine(projectRoot, ".editor", "build");
-					
+					EditorLogger.LogInfo($"[LaunchFile] buildDir: {buildDir} (exists: {System.IO.Directory.Exists(buildDir)})");
+
 					string? slnPath = null;
 					if (System.IO.Directory.Exists(buildDir))
 					{
@@ -1077,29 +1143,49 @@ namespace editor.Views.Widgets
 						}
 					}
 
+					EditorLogger.LogInfo($"[LaunchFile] slnPath: {slnPath ?? "(not found)"}");
+
 					if (!string.IsNullOrEmpty(slnPath))
 					{
+						string devenvPath = ResolveDevenvPath() ?? "devenv";
+
+						// /edit принципиально не грузит решение — он либо открывает файлы как
+						// голые тексты в новом экземпляре VS, либо (если экземпляр уже запущен)
+						// подключается к нему. Чтобы VS реально загрузила решение и открыла
+						// файлы в его контексте, путь к .slnx/.sln передаётся как обычный
+						// позиционный аргумент, без /edit. Все файлы передаются одним вызовом —
+						// раздельные Process.Start для hpp/cpp запускали два разных окна VS,
+						// потому что второй стартовал раньше, чем первый успевал
+						// зарегистрироваться как "открытый" для этого решения.
+						string arguments = $"\"{slnPath}\" " + string.Join(" ", paths.Select(p => $"\"{p}\""));
+						EditorLogger.LogInfo($"[LaunchFile] Launching: \"{devenvPath}\" {arguments}");
+
 						var psi = new System.Diagnostics.ProcessStartInfo
 						{
-							FileName = "devenv",
-							Arguments = $"\"{slnPath}\" /edit \"{path}\"",
+							FileName = devenvPath,
+							Arguments = arguments,
 							UseShellExecute = true
 						};
-						System.Diagnostics.Process.Start(psi);
+						var started = System.Diagnostics.Process.Start(psi);
+						EditorLogger.LogInfo($"[LaunchFile] Process.Start returned: {(started != null ? $"PID {started.Id}" : "null")}");
 						return;
 					}
 				}
 
-				var psiFallback = new System.Diagnostics.ProcessStartInfo
+				EditorLogger.LogInfo($"[LaunchFile] No solution found, falling back to shell-open for each path.");
+				foreach (string path in paths)
 				{
-					FileName = path,
-					UseShellExecute = true
-				};
-				System.Diagnostics.Process.Start(psiFallback);
+					var psiFallback = new System.Diagnostics.ProcessStartInfo
+					{
+						FileName = path,
+						UseShellExecute = true
+					};
+					System.Diagnostics.Process.Start(psiFallback);
+				}
 			}
 			catch (Exception ex)
 			{
-				EditorLogger.LogError($"Failed to open file: {ex.Message}");
+				EditorLogger.LogError($"[LaunchFile] Failed to open file: {ex}");
 			}
 		}
 

@@ -1,7 +1,6 @@
 #include "StartGame.hpp"
 
 StartGame::StartGame()
-    : zzz::script::Game()
+	: zzz::script::Game()
 {
-    // Инициализация синглтона
 }

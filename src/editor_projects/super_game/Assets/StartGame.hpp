@@ -4,7 +4,7 @@
 class StartGame : public zzz::script::Game
 {
 public:
-    StartGame();
+	StartGame();
 
-    std::string_view GetScriptTypeName() const override { return "StartGame"; }
+	std::string_view GetScriptTypeName() const override { return "StartGame"; }
 };

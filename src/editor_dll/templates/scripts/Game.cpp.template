@@ -3,5 +3,4 @@
 {ClassName}::{ClassName}()
     : {BaseClass}()
 {
-    // Инициализация синглтона
 }
