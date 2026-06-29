@@ -393,10 +393,11 @@
                                        FontFamily="Consolas" FontSize="11" VerticalAlignment="Center"/>
 
                             <!-- Краткий Текст сообщения -->
-                            <TextBlock Grid.Column="2" Text="{Binding Text}" 
+                            <TextBlock Grid.Column="2" Text="{Binding SummaryText}"
                                        x:Name="TxtMessage"
-                                       Foreground="{DynamicResource Brush_Text_Light}" 
+                                       Foreground="{DynamicResource Brush_Text_Light}"
                                        FontFamily="Consolas" FontSize="12" VerticalAlignment="Center"
+                                       TextWrapping="NoWrap"
                                        TextTrimming="CharacterEllipsis"/>
                         </Grid>
 

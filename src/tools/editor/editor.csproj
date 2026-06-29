@@ -63,6 +63,16 @@
     <Resource Include="Properties\AppIcon.ico" />
   </ItemGroup>
 
+  <!-- Шаблоны скриптов (см. AssetsWidget.GetTemplatesDirectory) хранятся в src/editor_dll/templates/scripts -
+       копируем их в выходную папку рядом с editor.exe, чтобы создание скриптов работало и в развёрнутом
+       (не из репозитория разработчика) билде, а не только благодаря fallback-пути внутрь репозитория. -->
+  <ItemGroup>
+    <None Include="..\..\editor_dll\templates\scripts\**\*.template">
+      <Link>templates\scripts\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <!-- Автогенерация версии сборки на основе даты/времени перед компиляцией -->
   <Target Name="GenerateVersionFile" BeforeTargets="BeforeBuild">
     <PropertyGroup>

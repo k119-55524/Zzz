@@ -158,7 +158,11 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
     target_compile_definitions(${TARGET_NAME} PRIVATE Z_TARGET_NAME="${TARGET_NAME}")
     set_source_files_properties(pch/pch.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
     if(${IS_EDITOR})
-        target_compile_definitions(${TARGET_NAME} PUBLIC Z_EDITOR=1)
+        # EDITORDLL_EXPORTS должен совпадать с тем же define в editor_dll.vcxproj/CMakeLists.txt -
+        # engine_lib_editor статический, но его символы (Script/ScriptRegistry, помеченные
+        # Z_ENGINE_API) линкуются только в editor_dll.dll, иначе Z_ENGINE_API соберёт здесь
+        # dllimport вместо dllexport (см. src/engine/private/core/scene/scripts/EngineExport.h).
+        target_compile_definitions(${TARGET_NAME} PUBLIC Z_EDITOR=1 EDITORDLL_EXPORTS)
     endif()
 endmacro()
 

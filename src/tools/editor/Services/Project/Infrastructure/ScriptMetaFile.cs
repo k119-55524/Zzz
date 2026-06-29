@@ -1,6 +1,5 @@
 using System;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using editor.Services;
 
 namespace editor.Services.Project.Infrastructure
@@ -12,21 +11,19 @@ namespace editor.Services.Project.Infrastructure
     /// </summary>
     public class ScriptMetaData
     {
-        [JsonPropertyName("guid")]
         public string Guid { get; set; } = string.Empty;
 
-        [JsonPropertyName("class_name")]
         public string ClassName { get; set; } = string.Empty;
     }
 
     /// <summary>
     /// Чтение/запись .meta файлов скриптов. Единая точка работы с форматом,
     /// чтобы создание, переименование и синхронизация при скане не расходились в деталях.
+    /// Формат - TOML, как и все остальные текстовые файлы проекта (см. README в Services/Project),
+    /// сериализация - тот же ручной key=value подход, что и у ProjectSettingsParser.
     /// </summary>
     public static class ScriptMetaFile
     {
-        private static readonly JsonSerializerOptions s_Options = new() { WriteIndented = true };
-
         public static ScriptMetaData CreateNew(string className)
         {
             return new ScriptMetaData
@@ -43,8 +40,8 @@ namespace editor.Services.Project.Infrastructure
 
             try
             {
-                string json = storage.ReadAllText(metaPath);
-                return JsonSerializer.Deserialize<ScriptMetaData>(json);
+                string toml = storage.ReadAllText(metaPath);
+                return Deserialize(toml);
             }
             catch (Exception ex)
             {
@@ -55,8 +52,47 @@ namespace editor.Services.Project.Infrastructure
 
         public static void Save(IFileStorage storage, string metaPath, ScriptMetaData data)
         {
-            string json = JsonSerializer.Serialize(data, s_Options);
-            storage.WriteAllText(metaPath, json);
+            storage.WriteAllText(metaPath, Serialize(data));
+        }
+
+        private static string Serialize(ScriptMetaData data)
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"guid = \"{data.Guid}\"");
+            sb.AppendLine($"class_name = \"{data.ClassName}\"");
+            return sb.ToString();
+        }
+
+        private static ScriptMetaData Deserialize(string toml)
+        {
+            var data = new ScriptMetaData();
+            var lines = toml.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var line in lines)
+            {
+                var trimmed = line.Trim();
+                if (trimmed.StartsWith("#") || trimmed.StartsWith("[") || string.IsNullOrWhiteSpace(trimmed))
+                    continue;
+
+                var parts = trimmed.Split(new[] { '=' }, 2);
+                if (parts.Length != 2)
+                    continue;
+
+                var key = parts[0].Trim().ToLower();
+                var match = Regex.Match(parts[1].Trim(), "\"([^\"]*)\"");
+                if (!match.Success)
+                    continue;
+
+                var value = match.Groups[1].Value;
+                if (key == "guid")
+                {
+                    data.Guid = value;
+                }
+                else if (key == "class_name")
+                {
+                    data.ClassName = value;
+                }
+            }
+            return data;
         }
     }
 }

@@ -5,4 +5,6 @@ class {ClassName} : public {BaseClass}
 {
 public:
     {ClassName}();
+
+    std::string_view GetScriptTypeName() const override { return "{ClassName}"; }
 };

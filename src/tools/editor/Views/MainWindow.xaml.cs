@@ -377,35 +377,41 @@ namespace editor
 
 			if (_isCompiling) return;
 
-			// 1. Проверяем изменения в файлах
 			string assetsDir = System.IO.Path.Combine(projectRoot, "Assets");
 			if (!System.IO.Directory.Exists(assetsDir)) return;
 
-			var scriptFiles = System.IO.Directory.GetFiles(assetsDir, "*.*", System.IO.SearchOption.AllDirectories)
-				.Where(f => f.EndsWith(".hpp", StringComparison.OrdinalIgnoreCase) || 
-                            f.EndsWith(".cpp", StringComparison.OrdinalIgnoreCase));
+			// Считаем только пользовательские .hpp — именно они говорят о наличии скриптов.
+			// RegisterAllScripts.cpp исключаем: он генерируется редактором автоматически
+			// и его write-time обновляется при любом изменении дерева — включать его в
+			// проверку означало бы пересобирать DLL на каждый чих.
+			var userHppFiles = System.IO.Directory.GetFiles(assetsDir, "*.hpp", System.IO.SearchOption.AllDirectories);
 
+			if (userHppFiles.Length == 0)
+				return; // нет скриптов — нечего собирать
+
+			// Ориентируемся на .hpp: именно изменения в заголовках требуют пересборки.
+			// .cpp тоже учитываем, но отдельно от RegisterAllScripts.cpp.
 			DateTime maxWriteTime = DateTime.MinValue;
-			int fileCount = 0;
-			foreach (var file in scriptFiles)
+			var allUserSources = System.IO.Directory.GetFiles(assetsDir, "*.*", System.IO.SearchOption.AllDirectories)
+				.Where(f =>
+					(f.EndsWith(".hpp", StringComparison.OrdinalIgnoreCase) ||
+					 f.EndsWith(".cpp", StringComparison.OrdinalIgnoreCase)) &&
+					!System.IO.Path.GetFileName(f).Equals("RegisterAllScripts.cpp", StringComparison.OrdinalIgnoreCase));
+
+			foreach (var file in allUserSources)
 			{
 				var writeTime = System.IO.File.GetLastWriteTime(file);
 				if (writeTime > maxWriteTime)
-				{
 					maxWriteTime = writeTime;
-				}
-				fileCount++;
 			}
 
-			if (fileCount == 0) return; // нет скриптов для сборки
-
-			string dllPath = System.IO.Path.Combine(projectRoot, "bin", "scripts.dll");
+			string dllPath = System.IO.Path.Combine(projectRoot, ".editor", "bin", "scripts.dll");
 			bool dllExists = System.IO.File.Exists(dllPath);
 			DateTime dllWriteTime = dllExists ? System.IO.File.GetLastWriteTime(dllPath) : DateTime.MinValue;
 
 			if (!dllExists || maxWriteTime > dllWriteTime)
 			{
-				// Требуется пересборка!
+				// Требуется пересборка
 				await CompileScriptsAsync(projectRoot, dllPath);
 			}
 		}
@@ -423,7 +429,10 @@ namespace editor
 
 				// 2. Генерируем CMakeLists.txt
 				string cmakePath = System.IO.Path.Combine(editorDir, "CMakeLists.txt");
-				string engineSourceDir = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..")).Replace('\\', '/');
+				// OutputPath editor.csproj = "..\..\..\bin\$(Configuration)\" относительно src/tools/editor,
+				// AppendTargetFrameworkToOutputPath=false - до корня репозитория от BaseDirectory всего
+				// два уровня вверх (см. аналогичный фикс в AssetsWidget.GetTemplatesDirectory).
+				string engineSourceDir = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..")).Replace('\\', '/');
 				
 				// Определяем конфигурацию сборки
 				string config = "Debug";
@@ -441,8 +450,17 @@ project(project_scripts LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ""${{PROJECT_SOURCE_DIR}}/../bin"")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ""${{PROJECT_SOURCE_DIR}}/../bin"")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ""${{PROJECT_SOURCE_DIR}}/bin"")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ""${{PROJECT_SOURCE_DIR}}/bin"")
+# Генератор CMake здесь - Visual Studio (multi-config), и по умолчанию он добавляет подпапку
+# конфигурации (Debug/Release) к CMAKE_RUNTIME_OUTPUT_DIRECTORY, даже если она задана явно выше.
+# EditorEngine::ReloadScripts (editor_dll) ищет scripts.dll по фиксированному пути
+# "".editor/bin/scripts.dll"" без подпапки конфигурации, поэтому для каждой конфигурации нужно
+# явно задать тот же путь без неё.
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ""${{PROJECT_SOURCE_DIR}}/bin"")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ""${{PROJECT_SOURCE_DIR}}/bin"")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ""${{PROJECT_SOURCE_DIR}}/bin"")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ""${{PROJECT_SOURCE_DIR}}/bin"")
 
 add_library(scripts SHARED)
 
@@ -457,15 +475,25 @@ target_include_directories(scripts PRIVATE
     ""{engineSourceDir}/src/logger""
 )
 
-file(GLOB_RECURSIVE SCRIPT_SOURCES ""${{PROJECT_SOURCE_DIR}}/../Assets/*.cpp"")
-target_sources(scripts PRIVATE ${{SCRIPT_SOURCES}})
+# RegisterAllScripts.cpp — системный файл редактора, генерируется рядом с CMakeLists.txt
+# Пользовательские .cpp скриптов — из Assets/
+file(GLOB_RECURSE SCRIPT_SOURCES ""${{PROJECT_SOURCE_DIR}}/../Assets/*.cpp"")
+target_sources(scripts PRIVATE
+    ""${{PROJECT_SOURCE_DIR}}/RegisterAllScripts.cpp""
+    ${{SCRIPT_SOURCES}}
+)
 
 target_compile_definitions(scripts PRIVATE Z_EDITOR=1)
 
 target_link_libraries(scripts PRIVATE ""{editorDllLib}"")
 ";
 
-				System.IO.File.WriteAllText(cmakePath, cmakeContent);
+				// Пишем CMakeLists.txt только если содержимое изменилось,
+				// чтобы не обновлять write-time файла без необходимости.
+				bool needWriteCmake = !System.IO.File.Exists(cmakePath) ||
+				                      System.IO.File.ReadAllText(cmakePath) != cmakeContent;
+				if (needWriteCmake)
+					System.IO.File.WriteAllText(cmakePath, cmakeContent);
 
 				// 3. Вызываем CMake конфигурирование и сборку в фоновом потоке
 				string buildDir = System.IO.Path.Combine(editorDir, "build");
@@ -485,7 +513,17 @@ target_link_libraries(scripts PRIVATE ""{editorDllLib}"")
 					};
 					using (var proc = System.Diagnostics.Process.Start(startInfoConfig))
 					{
+						string stdout = proc?.StandardOutput.ReadToEnd() ?? string.Empty;
+						string stderr = proc?.StandardError.ReadToEnd() ?? string.Empty;
 						proc?.WaitForExit();
+
+						if (!string.IsNullOrWhiteSpace(stdout))
+							EditorLogger.LogInfo($"[CMake Configure] {stdout.Trim()}");
+						if (!string.IsNullOrWhiteSpace(stderr))
+							EditorLogger.LogInfo($"[CMake Configure] {stderr.Trim()}");
+
+						if (proc?.ExitCode != 0)
+							throw new Exception($"CMake configure failed with exit code {proc?.ExitCode}.\n{stdout}\n{stderr}");
 					}
 
 					// Запуск сборки
@@ -500,11 +538,21 @@ target_link_libraries(scripts PRIVATE ""{editorDllLib}"")
 					};
 					using (var proc = System.Diagnostics.Process.Start(startInfoBuild))
 					{
+						string stdout = proc?.StandardOutput.ReadToEnd() ?? string.Empty;
+						string stderr = proc?.StandardError.ReadToEnd() ?? string.Empty;
 						proc?.WaitForExit();
+
+						// MSBuild (генератор Visual Studio) пишет ошибки компиляции в stdout, а не
+						// в stderr - в отличие от самого CMake. Без этого реальный текст ошибки
+						// (например, какая строка C++ не скомпилировалась) терялся, и пользователь
+						// видел только "exit code 1" без объяснения причины.
+						if (!string.IsNullOrWhiteSpace(stdout))
+							EditorLogger.LogInfo($"[CMake Build] {stdout.Trim()}");
+						if (!string.IsNullOrWhiteSpace(stderr))
+							EditorLogger.LogInfo($"[CMake Build] {stderr.Trim()}");
+
 						if (proc?.ExitCode != 0)
-						{
-							throw new Exception($"CMake build failed with exit code {proc?.ExitCode}.");
-						}
+							throw new Exception($"CMake build failed with exit code {proc?.ExitCode}.\n{stdout}\n{stderr}");
 					}
 				});
 

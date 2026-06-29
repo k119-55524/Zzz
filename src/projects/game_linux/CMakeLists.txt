@@ -3,8 +3,8 @@ add_executable(game_linux)
 set(Z_GAME_PROJECT_DIR "${CMAKE_SOURCE_DIR}/src/editor_projects/super_game" CACHE PATH "Path to the active game project")
 
 # Находим все файлы скриптов
-file(GLOB_RECURSIVE SCRIPT_HPPS "${Z_GAME_PROJECT_DIR}/Assets/*.hpp")
-file(GLOB_RECURSIVE SCRIPT_CPPS "${Z_GAME_PROJECT_DIR}/Assets/*.cpp")
+file(GLOB_RECURSE SCRIPT_HPPS "${Z_GAME_PROJECT_DIR}/Assets/*.hpp")
+file(GLOB_RECURSE SCRIPT_CPPS "${Z_GAME_PROJECT_DIR}/Assets/*.cpp")
 
 set(REGISTER_SCRIPTS_CONTENT "// RegisterAllScripts.cpp — generated automatically by CMake\n#include <ScriptRegistry.h>\n\n")
 

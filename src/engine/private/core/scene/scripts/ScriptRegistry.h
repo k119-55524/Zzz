@@ -8,6 +8,8 @@
 #include <type_traits>
 #include <unordered_map>
 
+#include "EngineExport.h"
+
 namespace zzz
 {
 	class GameObject;
@@ -19,7 +21,7 @@ namespace zzz::script
 	class Game;
 	class Scene;
 
-	class ScriptRegistry
+	class Z_ENGINE_API ScriptRegistry
 	{
 	public:
 		// Регистрация типов

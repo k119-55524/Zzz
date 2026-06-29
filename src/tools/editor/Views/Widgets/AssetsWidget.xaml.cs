@@ -235,6 +235,47 @@ namespace editor.Views.Widgets
 			}
 		}
 
+		private void AddScriptToRoot_Click(object sender, System.Windows.RoutedEventArgs e)
+		{
+			if (sender is not MenuItem menuItem) return;
+			string scriptType = menuItem.Tag as string ?? "Script";
+
+			CommitActiveEditIfAny();
+			var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as ViewModels.MainWindowViewModel;
+			var mainAssetsVm = mainVm?.Panes.OfType<ViewModels.AssetsViewModel>().FirstOrDefault();
+			if (mainVm == null || mainAssetsVm == null) return;
+
+			// Этот пункт меню навешан только на пустую область AssetsTree (см. XAML),
+			// поэтому он всегда добавляет скрипт в ассеты, как и AddFolderToRoot_Click.
+			string baseName = "NewScript";
+			if (scriptType == "Game") baseName = "NewGameScript";
+			else if (scriptType == "Scene") baseName = "NewSceneScript";
+
+			string scriptName = baseName;
+			int index = 1;
+			var siblings = mainAssetsVm.AssetRootNodes.ToList();
+			while (siblings.Any(c => c.Name.Equals(scriptName, StringComparison.OrdinalIgnoreCase)))
+			{
+				scriptName = $"{baseName}_{index++}";
+			}
+
+			string newRelPath = $"Assets/{scriptName}";
+
+			var newScriptNode = new ProjectNode
+			{
+				Name = scriptName,
+				RelativePath = newRelPath,
+				IsFolder = false,
+				IsScript = true,
+				IsEditing = true
+			};
+
+			_pendingNewNodes.Add(newScriptNode);
+			_pendingNewScripts[newScriptNode] = scriptType;
+
+			mainAssetsVm.AssetRootNodes.Add(newScriptNode);
+		}
+
 		private void NodeEditTextBox_Loaded(object sender, System.Windows.RoutedEventArgs e)
 		{
 			if (sender is TextBox textBox)
@@ -309,7 +350,10 @@ namespace editor.Views.Widgets
 			bool isSystemMode = mainAssetsVm.IsSystemNode(node);
 			var activeFilters = App.ProjectService.CurrentSettings.DisabledFilters;
 
-			if (node.IsScript)
+			// Новый ещё не созданный на диске скрипт тоже имеет IsScript=true (см. AddScript_Click/
+			// AddScriptToRoot_Click), но у него нет HasHpp/HasCpp/HasMeta - значит это не переименование,
+			// а первое сохранение имени, и его нужно обработать в ветке isPendingNew ниже.
+			if (node.IsScript && !isPendingNew)
 			{
 				if (newName.Equals(node.Name, StringComparison.OrdinalIgnoreCase))
 				{
@@ -423,9 +467,26 @@ namespace editor.Views.Widgets
 					_pendingNewScripts.Remove(node);
 					_pendingNewNodes.Remove(node);
 
-					CreateScriptFromTemplates(newRelPath, newName, scriptType, projectRoot);
+					var scriptCmd = new editor.Services.Project.Infrastructure.UndoRedo.CreateScriptCommand(
+						newRelPath,
+						newName,
+						scriptType,
+						GetTemplatesDirectory(),
+						projectRoot,
+						App.ProjectService.Storage
+					);
 
-					if (mainVm != null) mainVm.RefreshDirtyState();
+					try
+					{
+						App.ProjectService.History.Execute(scriptCmd);
+						EditorLogger.LogInfo($"Successfully created script '{newName}' from '{scriptType}' template.");
+						if (mainVm != null) mainVm.RefreshDirtyState();
+					}
+					catch (Exception ex)
+					{
+						EditorLogger.LogError($"Failed to create script: {ex.Message}");
+					}
+
 					RefreshTree();
 					return;
 				}
@@ -578,8 +639,18 @@ namespace editor.Views.Widgets
 											{
 												if (subObj is MenuItem subMenuItem)
 												{
-													subMenuItem.Click -= AddFolder_Click;
-													subMenuItem.Click += AddFolder_Click;
+													// Пункты скриптов помечены Tag (см. XAML: AddScriptMenuItem/AddGameScriptMenuItem/
+													// AddSceneScriptMenuItem), пункт папки - без Tag.
+													if (subMenuItem.Tag is string)
+													{
+														subMenuItem.Click -= AddScript_Click;
+														subMenuItem.Click += AddScript_Click;
+													}
+													else
+													{
+														subMenuItem.Click -= AddFolder_Click;
+														subMenuItem.Click += AddFolder_Click;
+													}
 												}
 											}
 										}
@@ -1057,74 +1128,11 @@ namespace editor.Views.Widgets
 			if (System.IO.Directory.Exists(localPath)) return localPath;
 
 			// 2. Проверяем путь в репозитории разработчика
-			string devPath = System.IO.Path.Combine(baseDir, "..", "..", "..", "src", "editor_dll", "templates", "scripts");
+			string devPath = System.IO.Path.Combine(baseDir, "..", "..", "src", "editor_dll", "templates", "scripts");
 			devPath = System.IO.Path.GetFullPath(devPath);
 			if (System.IO.Directory.Exists(devPath)) return devPath;
 
 			return localPath; // fallback
-		}
-
-		private void CreateScriptFromTemplates(string newRelPath, string newName, string scriptType, string projectRoot)
-		{
-			string templatesDir = GetTemplatesDirectory();
-			string hppTemplatePath = System.IO.Path.Combine(templatesDir, $"{scriptType}.hpp.template");
-			string cppTemplatePath = System.IO.Path.Combine(templatesDir, $"{scriptType}.cpp.template");
-
-			if (!System.IO.File.Exists(hppTemplatePath) || !System.IO.File.Exists(cppTemplatePath))
-			{
-				EditorLogger.LogError($"Template files for type '{scriptType}' not found in: {templatesDir}");
-				return;
-			}
-
-			// Читаем шаблоны
-			string hppContent = System.IO.File.ReadAllText(hppTemplatePath);
-			string cppContent = System.IO.File.ReadAllText(cppTemplatePath);
-
-			// Определяем переменные подстановки
-			string includePath = "Script.h";
-			string baseClass = "zzz::script::Script";
-			if (scriptType == "Game")
-			{
-				includePath = "Game.h";
-				baseClass = "zzz::script::Game";
-			}
-			else if (scriptType == "Scene")
-			{
-				includePath = "Scene.h";
-				baseClass = "zzz::script::Scene";
-			}
-
-			string dateStr = DateTime.Now.ToString("yyyy-MM-dd");
-
-			// Выполняем замены
-			Func<string, string> replaceFunc = (content) => {
-				return content
-					.Replace("{ClassName}", newName)
-					.Replace("{BaseClass}", baseClass)
-					.Replace("{IncludePath}", includePath)
-					.Replace("{Date}", dateStr);
-			};
-
-			string finalHpp = replaceFunc(hppContent);
-			string finalCpp = replaceFunc(cppContent);
-
-			// Записываем на диск
-			string relativeDir = System.IO.Path.GetDirectoryName(newRelPath) ?? "";
-			string absoluteDir = System.IO.Path.Combine(projectRoot, relativeDir);
-			System.IO.Directory.CreateDirectory(absoluteDir);
-
-			string finalHppPath = System.IO.Path.Combine(absoluteDir, newName + ".hpp");
-			string finalCppPath = System.IO.Path.Combine(absoluteDir, newName + ".cpp");
-			string finalMetaPath = System.IO.Path.Combine(absoluteDir, newName + ".meta");
-
-			System.IO.File.WriteAllText(finalHppPath, finalHpp);
-			System.IO.File.WriteAllText(finalCppPath, finalCpp);
-
-			var metaData = editor.Services.Project.Infrastructure.ScriptMetaFile.CreateNew(newName);
-			editor.Services.Project.Infrastructure.ScriptMetaFile.Save(App.ProjectService.Storage, finalMetaPath, metaData);
-
-			EditorLogger.LogInfo($"Successfully created script '{newName}' from '{scriptType}' template.");
-			EditorLogger.LogInfo($"[Meta System] Generated meta file '{newName}.meta' with GUID: {metaData.Guid} and class name: {newName}");
 		}
 
 		private void UserControl_PreviewMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)

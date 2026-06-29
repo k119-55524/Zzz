@@ -325,7 +325,11 @@
                       Drop="AssetsTree_Drop">
                 <TreeView.ContextMenu>
                     <ContextMenu>
-                        <MenuItem Header="{DynamicResource ContextMenu_AddFolder}" Click="AddFolderToRoot_Click" />
+                        <MenuItem Header="{DynamicResource ContextMenu_Folder}" Click="AddFolderToRoot_Click" />
+                        <Separator />
+                        <MenuItem Header="Script (MonoBehaviour)" Tag="Script" Click="AddScriptToRoot_Click" />
+                        <MenuItem Header="Game Script" Tag="Game" Click="AddScriptToRoot_Click" />
+                        <MenuItem Header="Scene Script" Tag="Scene" Click="AddScriptToRoot_Click" />
                     </ContextMenu>
                 </TreeView.ContextMenu>
                 
@@ -352,6 +356,11 @@
                             </DataTrigger>
                             <DataTrigger Binding="{Binding HasCpp}" Value="False">
                                 <Setter TargetName="BtnCpp" Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                            <!-- Пока узел редактируется (ввод имени нового скрипта), hpp/cpp ещё не
+                                 созданы на диске - кнопки H/CPP открытия файлов в этот момент бессмысленны. -->
+                            <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                                <Setter TargetName="ScriptButtons" Property="Visibility" Value="Collapsed"/>
                             </DataTrigger>
                         </HierarchicalDataTemplate.Triggers>
                     </HierarchicalDataTemplate>

@@ -486,7 +486,10 @@ namespace editor.ViewModels
 
         private void GenerateRegisterAllScripts(string projectRoot, List<ProjectNode> scriptNodes)
         {
-            string filePath = Path.Combine(projectRoot, "Assets", "RegisterAllScripts.cpp");
+            // .editor/ — системная папка редактора, не папка ассетов пользователя.
+            // RegisterAllScripts.cpp здесь рядом с CMakeLists.txt.
+            string editorDir = Path.Combine(projectRoot, ".editor");
+            string filePath = Path.Combine(editorDir, "RegisterAllScripts.cpp");
 
             // Два разных файла с одинаковым именем класса дали бы Register<>(name) с одним и тем же
             // ключом - в реестре движка вторая фабрика молча перетрёт первую (см. ScriptRegistry.h).
@@ -515,10 +518,11 @@ namespace editor.ViewModels
             {
                 if (node.HasHpp && !string.IsNullOrEmpty(node.HppRelativePath))
                 {
+                    // Путь инклуда относительно .editor/ — Assets/ на уровень выше
                     string includePath = node.HppRelativePath;
                     if (includePath.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase))
                     {
-                        includePath = includePath.Substring("Assets/".Length);
+                        includePath = "../" + includePath;
                     }
                     sb.AppendLine($"#include \"{includePath}\"");
                 }

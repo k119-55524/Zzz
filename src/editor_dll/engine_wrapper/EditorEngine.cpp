@@ -75,8 +75,8 @@ namespace zzz::editor
 			return;
 		}
 
-		std::string originDllPath = m_ProjectPath + "/bin/scripts.dll";
-		std::string tempDllPath = m_ProjectPath + "/bin/scripts_temp.dll";
+		std::string originDllPath = m_ProjectPath + "/.editor/bin/scripts.dll";
+		std::string tempDllPath = m_ProjectPath + "/.editor/bin/scripts_temp.dll";
 
 		// Копируем во временный файл, чтобы не лочить оригинальный DLL для компиляции
 		if (!CopyFileA(originDllPath.c_str(), tempDllPath.c_str(), FALSE))
@@ -120,7 +120,7 @@ namespace zzz::editor
 			FreeLibrary((HMODULE)m_ScriptsDll);
 			m_ScriptsDll = nullptr;
 
-			std::string tempDllPath = m_ProjectPath + "/bin/scripts_temp.dll";
+			std::string tempDllPath = m_ProjectPath + "/.editor/bin/scripts_temp.dll";
 			DeleteFileA(tempDllPath.c_str());
 		}
 	}

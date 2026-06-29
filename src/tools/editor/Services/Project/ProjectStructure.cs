@@ -79,9 +79,29 @@ namespace editor.Services.Project
 		// Корневая папка ассетов
 		public const string AssetsRoot = "Assets";
 
+		// .gitignore в корне проекта: без Parser (нет версии/формата для валидации/миграции) -
+		// см. логику восстановления в ProjectService.OpenProject, она перезаписывает файл из
+		// DefaultContent только если он отсутствует физически, не трогая существующий (даже
+		// отредактированный руками) .gitignore.
+		private static readonly ProjectFolderSchema RootGitignore = new()
+		{
+			RelativePath = string.Empty,
+			File = new ProjectFileSchema
+			{
+				RelativePath = ".gitignore",
+				IsRequired = true,
+				Parser = null,
+				DefaultContent =
+					"# Генерируется и собирается редактором по требованию: CMakeLists.txt содержит\n" +
+					"# абсолютные пути текущей машины, .editor/bin/ - скомпилированные scripts.dll/.lib\n" +
+					"# для Hot-Reload. Не предназначена для коммита.\n" +
+					".editor/\n"
+			}
+		};
+
 		// Все обязательные папки проекта (системные + ассеты)
 		public static IEnumerable<ProjectFolderSchema> AllDirectories =>
-			SystemDirectories.Concat(new[] { new ProjectFolderSchema { RelativePath = AssetsRoot } });
+			SystemDirectories.Concat(new[] { RootGitignore, new ProjectFolderSchema { RelativePath = AssetsRoot } });
 
 		// Схемы всех файлов, привязанных к обязательным папкам
 		public static IEnumerable<ProjectFileSchema> AllFiles =>

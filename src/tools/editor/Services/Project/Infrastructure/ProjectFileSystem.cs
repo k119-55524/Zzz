@@ -352,11 +352,6 @@ namespace editor.Services.Project.Infrastructure
                 string name = Path.GetFileName(filePath);
                 string relPath = Path.GetRelativePath(rootPath, filePath).Replace('\\', '/');
 
-                if (name.Equals("RegisterAllScripts.cpp", StringComparison.OrdinalIgnoreCase))
-                {
-                    processedFiles.Add(filePath);
-                    continue;
-                }
 
                 if (ext == ".hpp")
                 {

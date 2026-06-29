@@ -51,6 +51,18 @@ namespace editor.ViewModels
             return System.Windows.Application.Current.Dispatcher.Invoke(() => System.Windows.Application.Current.TryFindResource(key) as string) ?? string.Empty;
         }
 
+        // Краткая строка для свёрнутого вида: только первая строка, остальное доступно через
+        // DetailsText при разворачивании - иначе многострочные сообщения (например, ошибки CMake)
+        // ломают список логов на несколько визуальных строк.
+        public string SummaryText
+        {
+            get
+            {
+                int newlineIndex = Text.IndexOfAny(new[] { '\r', '\n' });
+                return newlineIndex >= 0 ? Text.Substring(0, newlineIndex) + " …" : Text;
+            }
+        }
+
         public string LevelName => GetLocString($"LogLevel_{Level}") is string s && !string.IsNullOrEmpty(s) ? s : Level.ToString();
 
         public string SourceName => GetLocString($"LogSource_{Source}") is string s && !string.IsNullOrEmpty(s) ? s : Source.ToString();

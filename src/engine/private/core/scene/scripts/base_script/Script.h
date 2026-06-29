@@ -5,6 +5,8 @@
 #include <string_view>
 #include <common/templates/Event.h>
 
+#include "../EngineExport.h"
+
 namespace zzz
 {
 	class GameObject;
@@ -19,7 +21,7 @@ namespace zzz::script
 		zzz::engine::Event<> OnDestroy;
 	};
 
-	class Script : public std::enable_shared_from_this<Script>
+	class Z_ENGINE_API Script : public std::enable_shared_from_this<Script>
 	{
 	public:
 		explicit Script(GameObject* owner);
