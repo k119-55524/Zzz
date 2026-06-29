@@ -499,8 +499,16 @@ namespace editor
 
 				string editorDllLib = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "editor_dll.lib").Replace('\\', '/');
 
+				// Имя CMake-проекта = имя папки игрового проекта, иначе .slnx у всех проектов
+				// называется одинаково ("project_scripts") и неотличимо в списке Recent Projects VS.
+				string gameProjectName = System.IO.Path.GetFileName(projectRoot.TrimEnd('\\', '/'));
+				string sanitizedProjectName = System.Text.RegularExpressions.Regex.Replace(gameProjectName, @"[^A-Za-z0-9_]", "_");
+				if (string.IsNullOrEmpty(sanitizedProjectName) || char.IsDigit(sanitizedProjectName[0]))
+					sanitizedProjectName = "_" + sanitizedProjectName;
+				string cmakeProjectName = $"{sanitizedProjectName}_scripts";
+
 				string cmakeContent = $@"cmake_minimum_required(VERSION 3.28)
-project(project_scripts LANGUAGES CXX)
+project({cmakeProjectName} LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
