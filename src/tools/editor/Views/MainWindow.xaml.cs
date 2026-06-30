@@ -488,6 +488,7 @@ namespace editor
 				// AppendTargetFrameworkToOutputPath=false - до корня репозитория от BaseDirectory всего
 				// два уровня вверх (см. аналогичный фикс в AssetsWidget.GetTemplatesDirectory).
 				string engineSourceDir = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..")).Replace('\\', '/');
+				string zlibsIncludeDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "libs", "zlibs", "include").Replace('\\', '/');
 				
 				// Определяем конфигурацию сборки
 				string config = "Debug";
@@ -522,14 +523,13 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ""${{PROJECT_SOURCE_DIR}}/bin"")
 
 add_library(scripts SHARED)
 target_include_directories(scripts PRIVATE
-    ""{engineSourceDir}/src""
-    ""{engineSourceDir}/src/engine""
-    ""{engineSourceDir}/src/engine/private/core/scene""
-    ""{engineSourceDir}/src/engine/private/core/scene/scripts""
-    ""{engineSourceDir}/src/engine/private/core/scene/scripts/base_script""
-    ""{engineSourceDir}/src/engine/private/core""
-    ""{engineSourceDir}/src/common""
-    ""{engineSourceDir}/src/logger""
+    ""{zlibsIncludeDir}""
+    ""{zlibsIncludeDir}/engine""
+    ""{zlibsIncludeDir}/engine/public/core/scene""
+    ""{zlibsIncludeDir}/engine/public/core/scene/scripts""
+    ""{zlibsIncludeDir}/engine/public/core/scene/scripts/base_script""
+    ""{zlibsIncludeDir}/common""
+    ""{zlibsIncludeDir}/logger""
 )
 
 file(GLOB_RECURSE SCRIPT_SOURCES ""${{PROJECT_SOURCE_DIR}}/../Assets/*.cpp"")
@@ -674,3 +674,4 @@ target_link_libraries(scripts PRIVATE ""{editorDllLib}"")
 		}
 	}
 }
+

@@ -74,6 +74,14 @@
       </SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+      <PostBuildEvent>
+        <Command>
+          if not exist "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\lib" mkdir "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\lib"
+          if not exist "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\engine" mkdir "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\engine"
+          copy /Y "$(OutDir)$(TargetName).lib" "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\lib\"
+          cmake -DSRC_DIR="$(ProjectDir)\" -DDST_DIR="$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\engine" -P "$(SolutionDir)..\..\copy_headers.cmake"
+        </Command>
+      </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -96,6 +104,14 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+      <PostBuildEvent>
+        <Command>
+          if not exist "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\lib" mkdir "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\lib"
+          if not exist "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\engine" mkdir "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\engine"
+          copy /Y "$(OutDir)$(TargetName).lib" "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\lib\"
+          cmake -DSRC_DIR="$(ProjectDir)\" -DDST_DIR="$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\engine" -P "$(SolutionDir)..\..\copy_headers.cmake"
+        </Command>
+      </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="SCRIPTING.md" />
