@@ -9,6 +9,5 @@ namespace zzz::script
 	public:
 		Game() = default;
 		virtual ~Game() = default;
-		virtual std::string_view GetScriptTypeName() const = 0;
 	};
 }

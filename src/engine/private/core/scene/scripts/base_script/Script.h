@@ -28,7 +28,6 @@ namespace zzz::script
 		virtual ~Script();
 
 		GameObject* GetOwner() const { return m_Owner; }
-		virtual std::string_view GetScriptTypeName() const = 0;
 
 		virtual std::string SerializeState() { return ""; }
 		virtual void DeserializeState(const std::string& /*data*/) {}

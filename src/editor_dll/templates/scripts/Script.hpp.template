@@ -6,5 +6,4 @@ class {ClassName} : public {BaseClass}
 public:
     explicit {ClassName}(zzz::GameObject* owner);
 
-    std::string_view GetScriptTypeName() const override { return "{ClassName}"; }
 };

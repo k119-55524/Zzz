@@ -9,6 +9,5 @@ namespace zzz::script
 	public:
 		Scene() = default;
 		virtual ~Scene() = default;
-		virtual std::string_view GetScriptTypeName() const = 0;
 	};
 }
