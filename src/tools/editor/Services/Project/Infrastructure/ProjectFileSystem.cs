@@ -252,14 +252,11 @@ namespace editor.Services.Project.Infrastructure
                 {
                     string name = Path.GetFileName(entry);
                     
-                    // Игнорируем технические директории IDE/VCS, бэкапы редактора и папку ассетов
-                    if (name.Equals("Assets", StringComparison.OrdinalIgnoreCase) ||
-                        name.Equals(".git", StringComparison.OrdinalIgnoreCase) ||
-                        name.Equals(".editor", StringComparison.OrdinalIgnoreCase) ||
-                        name.Equals(".vs", StringComparison.OrdinalIgnoreCase) ||
+                    // Игнорируем скрытые файлы/папки (начинающиеся с точки), папку ассетов и технические папки сборки
+                    if (name.StartsWith(".") ||
+                        name.Equals("Assets", StringComparison.OrdinalIgnoreCase) ||
                         name.Equals("bin", StringComparison.OrdinalIgnoreCase) ||
-                        name.Equals("obj", StringComparison.OrdinalIgnoreCase) ||
-                        name.Equals(".idea", StringComparison.OrdinalIgnoreCase))
+                        name.Equals("obj", StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
                     }

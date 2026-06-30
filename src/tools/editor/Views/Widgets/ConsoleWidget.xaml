@@ -315,6 +315,7 @@
                   AlternationCount="2"
                   Background="Transparent" BorderThickness="0" Padding="0,2"
                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                  ScrollViewer.VerticalScrollBarVisibility="Auto"
                   VirtualizingStackPanel.IsVirtualizing="True"
                   VirtualizingStackPanel.VirtualizationMode="Recycling"
                   SelectionMode="Single">

@@ -629,7 +629,13 @@ namespace editor.Views.Widgets
 								{
 									if (menuObj is MenuItem menuItem)
 									{
-										if (menuItem.Name == "DeleteMenuItem")
+										if (menuItem.Name == "OpenInVsMenuItem")
+										{
+											menuItem.Visibility = (!node.IsFolder && node.IsScript) ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+											menuItem.Click -= OpenInVs_Click;
+											menuItem.Click += OpenInVs_Click;
+										}
+										else if (menuItem.Name == "DeleteMenuItem")
 										{
 											menuItem.Visibility = isSystem ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
 											menuItem.Click -= Delete_Click;
@@ -698,6 +704,18 @@ namespace editor.Views.Widgets
 			if (parentObject == null) return null;
 			if (parentObject is T parent) return parent;
 			return FindVisualParent<T>(parentObject);
+		}
+
+		private void OpenInVs_Click(object sender, System.Windows.RoutedEventArgs e)
+		{
+			if (sender is MenuItem menuItem)
+			{
+				var node = GetSelectedNode(menuItem);
+				if (node != null)
+				{
+					OpenFileInVS(node);
+				}
+			}
 		}
 
 		private void Delete_Click(object sender, System.Windows.RoutedEventArgs e)
@@ -916,33 +934,52 @@ namespace editor.Views.Widgets
 		private void MoveNode(ProjectNode draggedNode, string targetFolderPath)
 		{
 			var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as ViewModels.MainWindowViewModel;
+			var mainAssetsVm = mainVm?.Panes.OfType<ViewModels.AssetsViewModel>().FirstOrDefault();
 			string? projectRoot = mainVm?.CurrentProjectPath;
-			if (mainVm == null || string.IsNullOrEmpty(projectRoot)) return;
+			if (mainVm == null || mainAssetsVm == null || string.IsNullOrEmpty(projectRoot)) return;
 
-			string newRelPath = $"{targetFolderPath}/{draggedNode.Name}";
-			string oldPhysPath = System.IO.Path.Combine(projectRoot, draggedNode.RelativePath);
-			string newPhysPath = System.IO.Path.Combine(projectRoot, newRelPath.Replace('/', System.IO.Path.DirectorySeparatorChar));
+			bool isSystemMode = mainAssetsVm.IsSystemNode(draggedNode);
+			var activeFilters = App.ProjectService.CurrentSettings.DisabledFilters;
 
-			if (draggedNode.IsFolder && System.IO.Directory.Exists(newPhysPath))
+			var physicalPaths = GetPhysicalPaths(draggedNode, projectRoot, isSystemMode, activeFilters);
+			var commands = new List<editor.Services.Project.Infrastructure.UndoRedo.ICommand>();
+
+			foreach (string oldPhysPath in physicalPaths)
 			{
-				EditorLogger.LogError(Loc("Validation_FolderName_Exists", "A folder with this name already exists."));
-				return;
-			}
-			if (!draggedNode.IsFolder && System.IO.File.Exists(newPhysPath))
-			{
-				EditorLogger.LogError(Loc("Validation_FileName_Exists", "A file with this name already exists."));
-				return;
+				string fileName = System.IO.Path.GetFileName(oldPhysPath);
+				string newRelPath = $"{targetFolderPath}/{fileName}";
+				string newPhysPath = System.IO.Path.Combine(projectRoot, newRelPath.Replace('/', System.IO.Path.DirectorySeparatorChar));
+
+				if (draggedNode.IsFolder && System.IO.Directory.Exists(newPhysPath))
+				{
+					EditorLogger.LogError(Loc("Validation_FolderName_Exists", "A folder with this name already exists."));
+					return;
+				}
+				if (!draggedNode.IsFolder && System.IO.File.Exists(newPhysPath))
+				{
+					EditorLogger.LogError(Loc("Validation_FileName_Exists", "A file with this name already exists."));
+					return;
+				}
+
+				commands.Add(new editor.Services.Project.Infrastructure.UndoRedo.MoveOrRenameCommand(
+					oldPhysPath, 
+					newPhysPath, 
+					App.ProjectService.Storage, 
+					onScriptChanged: TriggerScriptRebuild));
 			}
 
-			var cmd = new editor.Services.Project.Infrastructure.UndoRedo.MoveOrRenameCommand(oldPhysPath, newPhysPath, App.ProjectService.Storage, onScriptChanged: TriggerScriptRebuild);
+			if (commands.Count == 0) return;
+
+			var compositeCmd = new editor.Services.Project.Infrastructure.UndoRedo.CompositeCommand(commands);
+
 			try
 			{
-				App.ProjectService.History.Execute(cmd);
+				App.ProjectService.History.Execute(compositeCmd);
 				mainVm.RefreshDirtyState();
 			}
 			catch (Exception ex)
 			{
-				EditorLogger.LogError(string.Format(Loc("Error_Rename_Failed", "Failed to rename: {0}"), ex.Message));
+				EditorLogger.LogError(string.Format(Loc("Error_Rename_Failed", "Failed to move: {0}"), ex.Message));
 			}
 
 			RefreshTree();
@@ -1075,11 +1112,11 @@ namespace editor.Views.Widgets
 					Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
 					"Microsoft Visual Studio", "Installer", "vswhere.exe");
 
-				EditorLogger.LogInfo($"[LaunchFile] vswhere path: {vswherePath}");
+
 
 				if (!System.IO.File.Exists(vswherePath))
 				{
-					EditorLogger.LogWarning($"[LaunchFile] vswhere.exe not found at {vswherePath}");
+
 					return null;
 				}
 
@@ -1098,38 +1135,58 @@ namespace editor.Views.Widgets
 				string error = process.StandardError.ReadToEnd().Trim();
 				process.WaitForExit(5000);
 
-				EditorLogger.LogInfo($"[LaunchFile] vswhere exit code: {process.ExitCode}, stdout: '{output}', stderr: '{error}'");
+
 
 				if (!string.IsNullOrEmpty(output) && System.IO.File.Exists(output))
 				{
 					_cachedDevenvPath = output;
-					EditorLogger.LogInfo($"[LaunchFile] Resolved devenv path: {_cachedDevenvPath}");
+
 				}
 				else
 				{
-					EditorLogger.LogWarning($"[LaunchFile] vswhere did not return a valid devenv path (output: '{output}')");
+
 				}
 			}
 			catch (Exception ex)
 			{
-				EditorLogger.LogError($"[LaunchFile] Exception while resolving devenv path: {ex}");
+				// silently ignore
 			}
 
 			return _cachedDevenvPath;
 		}
 
+		public static string GetExactPathName(string pathName)
+		{
+			if (!System.IO.File.Exists(pathName) && !System.IO.Directory.Exists(pathName))
+				return pathName;
+
+			var di = new System.IO.DirectoryInfo(pathName);
+			if (di.Parent != null)
+			{
+				return System.IO.Path.Combine(
+					GetExactPathName(di.Parent.FullName), 
+					di.Parent.GetFileSystemInfos(di.Name)[0].Name);
+			}
+			else
+			{
+				return di.Name.ToUpper();
+			}
+		}
+
 		private void LaunchFiles(params string[] paths)
 		{
-			EditorLogger.LogInfo($"[LaunchFile] Requested paths: {string.Join(", ", paths)}");
+			// Нормализуем пути (слэши и регистр букв), чтобы VS не дублировала вкладки
+			paths = paths.Select(p => GetExactPathName(System.IO.Path.GetFullPath(p))).ToArray();
+
 			try
 			{
 				var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as ViewModels.MainWindowViewModel;
 				string? projectRoot = mainVm?.CurrentProjectPath;
-				EditorLogger.LogInfo($"[LaunchFile] projectRoot: {projectRoot}");
+
 				if (!string.IsNullOrEmpty(projectRoot))
 				{
 					string buildDir = System.IO.Path.Combine(projectRoot, ".editor", "build");
-					EditorLogger.LogInfo($"[LaunchFile] buildDir: {buildDir} (exists: {System.IO.Directory.Exists(buildDir)})");
+
 
 					string? slnPath = null;
 					if (System.IO.Directory.Exists(buildDir))
@@ -1143,36 +1200,45 @@ namespace editor.Views.Widgets
 						}
 					}
 
-					EditorLogger.LogInfo($"[LaunchFile] slnPath: {slnPath ?? "(not found)"}");
+
 
 					if (!string.IsNullOrEmpty(slnPath))
 					{
 						string devenvPath = ResolveDevenvPath() ?? "devenv";
 
-						// /edit принципиально не грузит решение — он либо открывает файлы как
-						// голые тексты в новом экземпляре VS, либо (если экземпляр уже запущен)
-						// подключается к нему. Чтобы VS реально загрузила решение и открыла
-						// файлы в его контексте, путь к .slnx/.sln передаётся как обычный
-						// позиционный аргумент, без /edit. Все файлы передаются одним вызовом —
-						// раздельные Process.Start для hpp/cpp запускали два разных окна VS,
-						// потому что второй стартовал раньше, чем первый успевал
-						// зарегистрироваться как "открытый" для этого решения.
-						string arguments = $"\"{slnPath}\" " + string.Join(" ", paths.Select(p => $"\"{p}\""));
-						EditorLogger.LogInfo($"[LaunchFile] Launching: \"{devenvPath}\" {arguments}");
-
-						var psi = new System.Diagnostics.ProcessStartInfo
+						// Пытаемся открыть файлы через COM-интерфейс, если VS с этим решением уже запущена.
+						// Это гарантирует, что вкладки не будут дублироваться и не откроется новая копия VS.
+						bool openedViaCom = editor.Services.VisualStudioInterop.OpenFileInSolution(slnPath, paths);
+						
+						if (!openedViaCom)
 						{
-							FileName = devenvPath,
-							Arguments = arguments,
-							UseShellExecute = true
-						};
-						var started = System.Diagnostics.Process.Start(psi);
-						EditorLogger.LogInfo($"[LaunchFile] Process.Start returned: {(started != null ? $"PID {started.Id}" : "null")}");
+							var psi = new System.Diagnostics.ProcessStartInfo
+							{
+								FileName = devenvPath,
+								Arguments = $"\"{slnPath}\"",
+								UseShellExecute = true
+							};
+							System.Diagnostics.Process.Start(psi);
+
+							// Запускаем фоновую задачу ожидания запуска студии
+							System.Threading.Tasks.Task.Run(async () =>
+							{
+								for (int i = 0; i < 30; i++) // Ждем до 15 секунд
+								{
+									await System.Threading.Tasks.Task.Delay(500);
+									if (editor.Services.VisualStudioInterop.OpenFileInSolution(slnPath, paths))
+									{
+										break;
+									}
+								}
+							});
+						}
+
 						return;
 					}
 				}
 
-				EditorLogger.LogInfo($"[LaunchFile] No solution found, falling back to shell-open for each path.");
+
 				foreach (string path in paths)
 				{
 					var psiFallback = new System.Diagnostics.ProcessStartInfo
@@ -1185,7 +1251,7 @@ namespace editor.Views.Widgets
 			}
 			catch (Exception ex)
 			{
-				EditorLogger.LogError($"[LaunchFile] Failed to open file: {ex}");
+				// silently ignore
 			}
 		}
 

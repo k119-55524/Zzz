@@ -137,6 +137,7 @@
 
     <!-- Контекстное меню проводника -->
     <sys:String x:Key="ContextMenu_CopyName">Скопировать имя</sys:String>
+    <sys:String x:Key="ContextMenu_OpenInVS">Открыть в VS</sys:String>
     <sys:String x:Key="ContextMenu_OpenInExplorer">Открыть в проводнике</sys:String>
     <sys:String x:Key="ContextMenu_Rename">Переименовать</sys:String>
     <sys:String x:Key="ContextMenu_Delete">Удалить</sys:String>

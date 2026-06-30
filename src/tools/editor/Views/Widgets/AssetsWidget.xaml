@@ -325,11 +325,13 @@
                       Drop="AssetsTree_Drop">
                 <TreeView.ContextMenu>
                     <ContextMenu>
-                        <MenuItem Header="{DynamicResource ContextMenu_Folder}" Click="AddFolderToRoot_Click" />
-                        <Separator />
-                        <MenuItem Header="Script (MonoBehaviour)" Tag="Script" Click="AddScriptToRoot_Click" />
-                        <MenuItem Header="Game Script" Tag="Game" Click="AddScriptToRoot_Click" />
-                        <MenuItem Header="Scene Script" Tag="Scene" Click="AddScriptToRoot_Click" />
+                        <MenuItem Header="{DynamicResource ContextMenu_Add}">
+                            <MenuItem Header="{DynamicResource ContextMenu_Folder}" Click="AddFolderToRoot_Click" />
+                            <Separator Margin="-35,0,-5,0" />
+                            <MenuItem Header="Script (MonoBehaviour)" Tag="Script" Click="AddScriptToRoot_Click" />
+                            <MenuItem Header="Game Script" Tag="Game" Click="AddScriptToRoot_Click" />
+                            <MenuItem Header="Scene Script" Tag="Scene" Click="AddScriptToRoot_Click" />
+                        </MenuItem>
                     </ContextMenu>
                 </TreeView.ContextMenu>
                 
@@ -381,11 +383,12 @@
                                 <ContextMenu>
                                     <MenuItem Name="AddMenuItem" Header="{DynamicResource ContextMenu_Add}">
                                         <MenuItem Header="{DynamicResource ContextMenu_Folder}" Name="AddFolderMenuItem" />
-                                        <Separator />
+                                        <Separator Margin="-35,0,-5,0" />
                                         <MenuItem Header="Script (MonoBehaviour)" Name="AddScriptMenuItem" Tag="Script" />
                                         <MenuItem Header="Game Script" Name="AddGameScriptMenuItem" Tag="Game" />
                                         <MenuItem Header="Scene Script" Name="AddSceneScriptMenuItem" Tag="Scene" />
                                     </MenuItem>
+                                    <MenuItem Name="OpenInVsMenuItem" Header="{DynamicResource ContextMenu_OpenInVS}" />
                                     <MenuItem Name="CopyNameMenuItem" Header="{DynamicResource ContextMenu_CopyName}" />
                                     <MenuItem Name="OpenInExplorerMenuItem" Header="{DynamicResource ContextMenu_OpenInExplorer}" />
                                     <MenuItem Name="DeleteMenuItem" Header="{DynamicResource ContextMenu_Delete}" />
@@ -438,6 +441,7 @@
                             <Setter Property="ContextMenu">
                                 <Setter.Value>
                                     <ContextMenu>
+                                        <MenuItem Name="OpenInVsMenuItem" Header="{DynamicResource ContextMenu_OpenInVS}" />
                                         <MenuItem Name="CopyNameMenuItem" Header="{DynamicResource ContextMenu_CopyName}" />
                                         <MenuItem Name="OpenInExplorerMenuItem" Header="{DynamicResource ContextMenu_OpenInExplorer}" />
                                         <MenuItem Name="DeleteMenuItem" Header="{DynamicResource ContextMenu_Delete}" />

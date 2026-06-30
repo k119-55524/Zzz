@@ -137,6 +137,7 @@
 
     <!-- Explorer context menu -->
     <sys:String x:Key="ContextMenu_CopyName">Copy Name</sys:String>
+    <sys:String x:Key="ContextMenu_OpenInVS">Open in VS</sys:String>
     <sys:String x:Key="ContextMenu_OpenInExplorer">Open in Explorer</sys:String>
     <sys:String x:Key="ContextMenu_Rename">Rename</sys:String>
     <sys:String x:Key="ContextMenu_Delete">Delete</sys:String>

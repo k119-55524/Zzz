@@ -415,8 +415,6 @@
 
     <Style TargetType="{x:Type ScrollBar}">
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Width" Value="12" />
-        <Setter Property="Height" Value="12" />
         <Setter Property="MinWidth" Value="12" />
         <Setter Property="MinHeight" Value="12" />
         <Setter Property="Template">
@@ -436,8 +434,14 @@
                         </Track>
                     </Grid>
                     <ControlTemplate.Triggers>
+                        <!-- Для вертикального скроллбара -->
+                        <Trigger Property="Orientation" Value="Vertical">
+                            <Setter Property="Width" Value="12" />
+                            <Setter Property="Height" Value="NaN" />
+                        </Trigger>
+                        <!-- Для горизонтального скроллбара -->
                         <Trigger Property="Orientation" Value="Horizontal">
-                            <Setter Property="Width" Value="Auto" />
+                            <Setter Property="Width" Value="NaN" />
                             <Setter Property="Height" Value="12" />
                             <Setter TargetName="PART_Track" Property="IsDirectionReversed" Value="False" />
                             <Setter TargetName="PART_Track" Property="Orientation" Value="Horizontal" />

@@ -600,7 +600,9 @@ target_link_libraries(scripts PRIVATE ""{editorDllLib}"")
 						CreateNoWindow = true,
 						UseShellExecute = false,
 						RedirectStandardError = true,
-						RedirectStandardOutput = true
+						RedirectStandardOutput = true,
+						StandardOutputEncoding = System.Text.Encoding.UTF8,
+						StandardErrorEncoding = System.Text.Encoding.UTF8
 					};
 					using (var proc = System.Diagnostics.Process.Start(startInfoBuild))
 					{
