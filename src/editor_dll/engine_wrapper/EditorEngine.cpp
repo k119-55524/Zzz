@@ -1,7 +1,7 @@
 
 #include <engine/headers/enums.h>
 #include <engine/private/core/view/ViewManager.h>
-#include <engine/private/core/scene/scripts/ScriptRegistry.h>
+#include <engine/public/core/scene/scripts/ScriptRegistry.h>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>

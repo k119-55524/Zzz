@@ -67,7 +67,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <ForcedIncludeFiles>pch/pch.h</ForcedIncludeFiles>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\;$(MSBuildProjectDirectory)\..\common;$(MSBuildProjectDirectory)\..\logger;$(MSBuildProjectDirectory)\pch;$(MSBuildProjectDirectory)\private\core;$(MSBuildProjectDirectory)\private\platforms;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\;$(MSBuildProjectDirectory)\..\common;$(MSBuildProjectDirectory)\..\logger;$(MSBuildProjectDirectory)\pch;$(MSBuildProjectDirectory)\public\core;$(MSBuildProjectDirectory)\public\core\scene;$(MSBuildProjectDirectory)\public\core\scene\scripts;$(MSBuildProjectDirectory)\public\core\scene\scripts\base_script;$(MSBuildProjectDirectory)\private\core;$(MSBuildProjectDirectory)\private\platforms;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -87,7 +87,7 @@
       <LanguageStandard>stdcpp23</LanguageStandard>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <ForcedIncludeFiles>pch/pch.h</ForcedIncludeFiles>
-      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\;$(MSBuildProjectDirectory)\..\common;$(MSBuildProjectDirectory)\..\logger;$(MSBuildProjectDirectory)\pch;$(MSBuildProjectDirectory)\private\core;$(MSBuildProjectDirectory)\private\platforms;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\;$(MSBuildProjectDirectory)\..\common;$(MSBuildProjectDirectory)\..\logger;$(MSBuildProjectDirectory)\pch;$(MSBuildProjectDirectory)\public\core;$(MSBuildProjectDirectory)\public\core\scene;$(MSBuildProjectDirectory)\public\core\scene\scripts;$(MSBuildProjectDirectory)\public\core\scene\scripts\base_script;$(MSBuildProjectDirectory)\private\core;$(MSBuildProjectDirectory)\private\platforms;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>

@@ -1,9 +1,9 @@
 
 #include <algorithm>
 
-#include "base_script/Game.h"
+#include "Game.h"
 #include "../Scene.h"
-#include "base_script/Script.h"
+#include "Script.h"
 #include "ScriptRegistry.h"
 
 namespace zzz::script

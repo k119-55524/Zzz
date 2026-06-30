@@ -39,7 +39,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "private/platforms/config/PlatformConfig.h"
         "private/core/io/Path.h" "private/core/io/Path.cpp"
         "private/core/utils/version.h" "private/core/utils/version.cpp"
-        "private/core/templates/Size2D.h"
+        "public/core/templates/Size2D.h"
 
         # Inputs
         "private/platforms/input/Input.h" "private/platforms/input/InputBase.h"
@@ -56,7 +56,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "private/platforms/window/Window.h" "private/platforms/window/Window_Common.h" "private/platforms/window/Window_Common.cpp"
         "private/core/view/View.h" "private/core/view/View.cpp"
         "private/core/view/ViewManager.h" "private/core/view/ViewManager.cpp"
-        "private/core/utils/ScreenResolution.h"
+        "public/core/utils/ScreenResolution.h"
 
         # Wayland (Linux)
         "private/core/specific/linux_wayland/xdg-shell-client-protocol.h"
@@ -65,10 +65,10 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
 
         # Scripts & Scenes
         "public/core/scene/GameObject.h"
-        "public/core/scene/Scene.h" "public/core/scene/Scene.cpp"
-        "public/core/scene/scripts/ScriptRegistry.h" "public/core/scene/scripts/ScriptRegistry.cpp"
-        "public/core/scene/scripts/base_script/Script.h" "public/core/scene/scripts/base_script/Script.cpp"
-        "public/core/scene/scripts/base_script/Game.h" "public/core/scene/scripts/base_script/Game.cpp")
+        "public/core/scene/Scene.h" "private/core/scene/Scene.cpp"
+        "public/core/scene/scripts/ScriptRegistry.h" "private/core/scene/scripts/ScriptRegistry.cpp"
+        "public/core/scene/scripts/base_script/Script.h" "private/core/scene/scripts/base_script/Script.cpp"
+        "public/core/scene/scripts/base_script/Game.h" "private/core/scene/scripts/base_script/Game.cpp")
 
     if(WIN32)
         if(${IS_EDITOR})
