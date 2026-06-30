@@ -4,18 +4,24 @@ add_executable(game_ios
     main.mm
 )
 
-set(Z_GAME_PROJECT_DIR "${CMAKE_SOURCE_DIR}/src/editor_projects/super_game" CACHE PATH "Path to the active game project")
+set(Z_GAME_PROJECT_DIR "" CACHE PATH "Path to the active game project")
 
 # Находим все файлы скриптов
-file(GLOB_RECURSE SCRIPT_HPPS "${Z_GAME_PROJECT_DIR}/Assets/*.hpp")
-file(GLOB_RECURSE SCRIPT_CPPS "${Z_GAME_PROJECT_DIR}/Assets/*.cpp")
+set(SCRIPT_HPPS "")
+set(SCRIPT_CPPS "")
+if(Z_GAME_PROJECT_DIR)
+    file(GLOB_RECURSE SCRIPT_HPPS "${Z_GAME_PROJECT_DIR}/Assets/*.hpp")
+    file(GLOB_RECURSE SCRIPT_CPPS "${Z_GAME_PROJECT_DIR}/Assets/*.cpp")
+endif()
 
 set(REGISTER_SCRIPTS_CONTENT "// RegisterAllScripts.cpp — generated automatically by CMake\n#include <ScriptRegistry.h>\n\n")
 
 # Собираем список имен классов и инклуды
 set(SCRIPT_NAMES "")
 foreach(HPP_FILE ${SCRIPT_HPPS})
-    file(RELATIVE_PATH REL_PATH "${Z_GAME_PROJECT_DIR}/Assets" "${HPP_FILE}")
+    if(Z_GAME_PROJECT_DIR)`n        if(Z_GAME_PROJECT_DIR)
+        file(RELATIVE_PATH REL_PATH "${Z_GAME_PROJECT_DIR}/Assets" "${HPP_FILE}")
+    endif()`n    endif()
     get_filename_component(CLASS_NAME "${HPP_FILE}" NAME_WE)
     string(APPEND REGISTER_SCRIPTS_CONTENT "#include \"${REL_PATH}\"\n")
     list(APPEND SCRIPT_NAMES "${CLASS_NAME}")
@@ -33,10 +39,9 @@ file(WRITE "${GENERATED_REGISTER_CPP}" "${REGISTER_SCRIPTS_CONTENT}")
 target_include_directories(game_ios PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     "${CMAKE_SOURCE_DIR}/src/engine/private/core"
-    "${CMAKE_SOURCE_DIR}/src/engine/private/core/scene"
-    "${CMAKE_SOURCE_DIR}/src/engine/private/core/scene/scripts"
-    "${CMAKE_SOURCE_DIR}/src/engine/private/core/scene/scripts/base_script"
-    "${Z_GAME_PROJECT_DIR}/Assets"
+    "${CMAKE_SOURCE_DIR}/src/engine/public/core/scene"
+    "${CMAKE_SOURCE_DIR}/src/engine/public/core/scene/scripts"
+    "${CMAKE_SOURCE_DIR}/src/engine/public/core/scene/scripts/base_script"
 )
 
 target_sources(game_ios PRIVATE
@@ -78,3 +83,11 @@ set_target_properties(game_ios PROPERTIES
 
 target_link_options(game_ios PRIVATE "-ObjC")
 target_compile_definitions(game_ios PRIVATE Z_TARGET_NAME="game_ios")
+
+
+if(Z_GAME_PROJECT_DIR)
+    target_include_directories(game_ios PRIVATE "${Z_GAME_PROJECT_DIR}/Assets")
+endif()
+
+
+

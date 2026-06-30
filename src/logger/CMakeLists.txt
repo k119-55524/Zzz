@@ -35,3 +35,5 @@ endif()
 if(ANDROID)
     target_link_libraries(logger_lib PRIVATE log)
 endif()
+
+export_to_editor_sdk(logger_lib "${CMAKE_CURRENT_SOURCE_DIR}" "logger")

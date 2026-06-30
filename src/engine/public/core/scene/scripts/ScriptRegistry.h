@@ -21,6 +21,8 @@ namespace zzz::script
 	class Game;
 	class Scene;
 
+#pragma warning(push)
+#pragma warning(disable: 4251)
 	class Z_ENGINE_API ScriptRegistry
 	{
 	public:
@@ -80,4 +82,5 @@ namespace zzz::script
 		static std::vector<Script*> s_ActiveInstances;
 #endif
 	};
+#pragma warning(pop)
 }

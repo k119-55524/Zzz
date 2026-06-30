@@ -15,7 +15,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/$<CONFIG>")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/$<CONFIG>")
 
 if(MSVC)
-    add_compile_options(/Zc:preprocessor /W4 /w44062 /EHsc)
+    add_compile_options(/Zc:preprocessor /W4 /w44062 /EHsc /wd4251)
 else()
     add_compile_options(-Wswitch-enum)
 endif()
@@ -65,6 +65,30 @@ else()
     set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG" CACHE STRING "" FORCE)
     set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG" CACHE STRING "" FORCE)
 endif()
+
+# -----------------------------------------------------------------------------
+# Автоматический экспорт SDK в папку редактора
+# -----------------------------------------------------------------------------
+macro(export_to_editor_sdk TARGET_NAME SRC_INCLUDE_DIR DST_SUBDIR)
+    set(SDK_DIR "${CMAKE_SOURCE_DIR}/bin/$<CONFIG>/libs/zlibs")
+    
+    # Копируем .dll (если это shared библиотека на Windows) или .so (на Linux)
+    add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${SDK_DIR}/bin"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${TARGET_NAME}> "${SDK_DIR}/bin/"
+    )
+    
+    # Копируем .lib / .a
+    add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${SDK_DIR}/lib"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_LINKER_FILE:${TARGET_NAME}> "${SDK_DIR}/lib/"
+    )
+
+    # Копируем только .h файлы через внешний скрипт
+    add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -DSRC_DIR="${SRC_INCLUDE_DIR}" -DDST_DIR="${SDK_DIR}/include/${DST_SUBDIR}" -P "${CMAKE_SOURCE_DIR}/copy_headers.cmake"
+    )
+endmacro()
 
 add_subdirectory(src/common)
 add_subdirectory(src/logger)

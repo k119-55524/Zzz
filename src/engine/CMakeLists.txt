@@ -8,9 +8,9 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
     target_include_directories(${TARGET_NAME}
         PUBLIC
             ${CMAKE_CURRENT_SOURCE_DIR}
-            ${CMAKE_CURRENT_SOURCE_DIR}/private/core/scene
-            ${CMAKE_CURRENT_SOURCE_DIR}/private/core/scene/scripts
-            ${CMAKE_CURRENT_SOURCE_DIR}/private/core/scene/scripts/base_script
+            ${CMAKE_CURRENT_SOURCE_DIR}/public/core/scene
+            ${CMAKE_CURRENT_SOURCE_DIR}/public/core/scene/scripts
+            ${CMAKE_CURRENT_SOURCE_DIR}/public/core/scene/scripts/base_script
         PRIVATE
             pch
             ${CMAKE_CURRENT_SOURCE_DIR}/private/core
@@ -64,11 +64,11 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
       "private/core/utils/converters.h" "private/platforms/input/InputHelpers.h" "private/platforms/input/InputBase.cpp"
 
         # Scripts & Scenes
-        "private/core/scene/GameObject.h"
-        "private/core/scene/Scene.h" "private/core/scene/Scene.cpp"
-        "private/core/scene/scripts/ScriptRegistry.h" "private/core/scene/scripts/ScriptRegistry.cpp"
-        "private/core/scene/scripts/base_script/Script.h" "private/core/scene/scripts/base_script/Script.cpp"
-        "private/core/scene/scripts/base_script/Game.h" "private/core/scene/scripts/base_script/Game.cpp")
+        "public/core/scene/GameObject.h"
+        "public/core/scene/Scene.h" "public/core/scene/Scene.cpp"
+        "public/core/scene/scripts/ScriptRegistry.h" "public/core/scene/scripts/ScriptRegistry.cpp"
+        "public/core/scene/scripts/base_script/Script.h" "public/core/scene/scripts/base_script/Script.cpp"
+        "public/core/scene/scripts/base_script/Game.h" "public/core/scene/scripts/base_script/Game.cpp")
 
     if(WIN32)
         if(${IS_EDITOR})
@@ -161,10 +161,13 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         # EDITORDLL_EXPORTS должен совпадать с тем же define в editor_dll.vcxproj/CMakeLists.txt -
         # engine_lib_editor статический, но его символы (Script/ScriptRegistry, помеченные
         # Z_ENGINE_API) линкуются только в editor_dll.dll, иначе Z_ENGINE_API соберёт здесь
-        # dllimport вместо dllexport (см. src/engine/private/core/scene/scripts/EngineExport.h).
+        # dllimport вместо dllexport (см. src/engine/public/core/scene/scripts/EngineExport.h).
         target_compile_definitions(${TARGET_NAME} PUBLIC Z_EDITOR=1 EDITORDLL_EXPORTS)
     endif()
 endmacro()
 
 setup_engine_target(engine_lib FALSE)
 setup_engine_target(engine_lib_editor TRUE)
+
+export_to_editor_sdk(engine_lib "${CMAKE_CURRENT_SOURCE_DIR}" "engine")
+export_to_editor_sdk(engine_lib_editor "${CMAKE_CURRENT_SOURCE_DIR}" "engine")

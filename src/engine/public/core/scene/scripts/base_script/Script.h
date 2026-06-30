@@ -21,6 +21,8 @@ namespace zzz::script
 		zzz::engine::Event<> OnDestroy;
 	};
 
+#pragma warning(push)
+#pragma warning(disable: 4251)
 	class Z_ENGINE_API Script : public std::enable_shared_from_this<Script>
 	{
 	public:
@@ -37,4 +39,5 @@ namespace zzz::script
 	private:
 		GameObject* m_Owner;
 	};
+#pragma warning(pop)
 }

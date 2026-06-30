@@ -127,11 +127,11 @@
     <ClInclude Include="private\core\view\ViewManager.h" />
     <ClInclude Include="private\core\utils\ScreenResolution.h" />
     <ClInclude Include="private\core\utils\converters.h" />
-    <ClInclude Include="private\core\scene\GameObject.h" />
-    <ClInclude Include="private\core\scene\Scene.h" />
-    <ClInclude Include="private\core\scene\scripts\ScriptRegistry.h" />
-    <ClInclude Include="private\core\scene\scripts\base_script\Script.h" />
-    <ClInclude Include="private\core\scene\scripts\base_script\Game.h" />
+    <ClInclude Include="public\core\scene\GameObject.h" />
+    <ClInclude Include="public\core\scene\Scene.h" />
+    <ClInclude Include="public\core\scene\scripts\ScriptRegistry.h" />
+    <ClInclude Include="public\core\scene\scripts\base_script\Script.h" />
+    <ClInclude Include="public\core\scene\scripts\base_script\Game.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine.cpp" />

@@ -3,7 +3,7 @@
 StartGame1::StartGame1() :
 	zzz::script::Game()
 {
-	int i;
+	int i = 0;
 	i++;
 	i++;
 }
