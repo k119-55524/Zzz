@@ -596,6 +596,35 @@ target_link_libraries(scripts PRIVATE ""{editorDllLib}"")
 						}
 					}
 
+					// Before building, try to rename existing DLL and PDB to avoid MSVC linker lock issues (LNK1201).
+					// If the engine has the PDB locked via DbgHelp, we can't overwrite it, but we CAN rename it!
+					string binDir = System.IO.Path.Combine(editorDir, "bin");
+					string dllPath = System.IO.Path.Combine(binDir, "scripts.dll");
+					string pdbPath = System.IO.Path.Combine(binDir, "scripts.pdb");
+					string tick = DateTime.Now.Ticks.ToString();
+
+					if (System.IO.File.Exists(dllPath))
+					{
+						try { System.IO.File.Move(dllPath, System.IO.Path.Combine(binDir, $"scripts_old_{tick}.dll")); } catch { }
+					}
+					if (System.IO.File.Exists(pdbPath))
+					{
+						try { System.IO.File.Move(pdbPath, System.IO.Path.Combine(binDir, $"scripts_old_{tick}.pdb")); } catch { }
+					}
+
+					// Cleanup old files in a background thread so we don't block
+					System.Threading.Tasks.Task.Run(() =>
+					{
+						try
+						{
+							foreach (var file in System.IO.Directory.GetFiles(binDir, "scripts_old_*.dll"))
+								try { System.IO.File.Delete(file); } catch { }
+							foreach (var file in System.IO.Directory.GetFiles(binDir, "scripts_old_*.pdb"))
+								try { System.IO.File.Delete(file); } catch { }
+						}
+						catch { }
+					});
+
 					var startInfoBuild = new System.Diagnostics.ProcessStartInfo
 					{
 						FileName = "cmake",
