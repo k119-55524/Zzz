@@ -515,18 +515,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ""${{PROJECT_SOURCE_DIR}}/bin"")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ""${{PROJECT_SOURCE_DIR}}/bin"")
-# Генератор CMake здесь - Visual Studio (multi-config), и по умолчанию он добавляет подпапку
-# конфигурации (Debug/Release) к CMAKE_RUNTIME_OUTPUT_DIRECTORY, даже если она задана явно выше.
-# EditorEngine::ReloadScripts (editor_dll) ищет scripts.dll по фиксированному пути
-# "".editor/bin/scripts.dll"" без подпапки конфигурации, поэтому для каждой конфигурации нужно
-# явно задать тот же путь без неё.
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ""${{PROJECT_SOURCE_DIR}}/bin"")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ""${{PROJECT_SOURCE_DIR}}/bin"")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ""${{PROJECT_SOURCE_DIR}}/bin"")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ""${{PROJECT_SOURCE_DIR}}/bin"")
 
 add_library(scripts SHARED)
-set_target_properties(scripts PROPERTIES PDB_NAME ""scripts_${{PDB_SUFFIX}}"")
 target_include_directories(scripts PRIVATE
     ""{engineSourceDir}/src""
     ""{engineSourceDir}/src/engine""
@@ -538,8 +532,6 @@ target_include_directories(scripts PRIVATE
     ""{engineSourceDir}/src/logger""
 )
 
-# RegisterAllScripts.cpp — системный файл редактора, генерируется рядом с CMakeLists.txt
-# Пользовательские .cpp скриптов — из Assets/
 file(GLOB_RECURSE SCRIPT_SOURCES ""${{PROJECT_SOURCE_DIR}}/../Assets/*.cpp"")
 target_sources(scripts PRIVATE
     ""${{PROJECT_SOURCE_DIR}}/RegisterAllScripts.cpp""
@@ -551,48 +543,59 @@ target_compile_definitions(scripts PRIVATE Z_EDITOR=1)
 target_link_libraries(scripts PRIVATE ""{editorDllLib}"")
 ";
 
-				// Пишем CMakeLists.txt только если содержимое изменилось,
-				// чтобы не обновлять write-time файла без необходимости.
 				bool needWriteCmake = !System.IO.File.Exists(cmakePath) ||
 				                      System.IO.File.ReadAllText(cmakePath) != cmakeContent;
 				if (needWriteCmake)
 					System.IO.File.WriteAllText(cmakePath, cmakeContent);
 
-				// 3. Вызываем CMake конфигурирование и сборку в фоновом потоке
 				string buildDir = System.IO.Path.Combine(editorDir, "build");
 				System.IO.Directory.CreateDirectory(buildDir);
+				
+				// We need to configure if CMakeLists changed, OR if RegisterAllScripts.cpp was just written
+				// (which implies scripts were added/removed, so the GLOB needs to be re-evaluated).
+				bool needConfigure = needWriteCmake || !System.IO.File.Exists(System.IO.Path.Combine(buildDir, "CMakeCache.txt"));
+				
+				// Quick check if RegisterAllScripts.cpp was recently modified (within last 2 seconds)
+				string registerPath = System.IO.Path.Combine(editorDir, "RegisterAllScripts.cpp");
+				if (System.IO.File.Exists(registerPath))
+				{
+					if ((DateTime.Now - System.IO.File.GetLastWriteTime(registerPath)).TotalSeconds < 2)
+					{
+						needConfigure = true;
+					}
+				}
 
 				await System.Threading.Tasks.Task.Run(() =>
 				{
-					string pdbSuffix = DateTime.Now.Ticks.ToString();
-					// Запуск конфигурации
-					var startInfoConfig = new System.Diagnostics.ProcessStartInfo
+					if (needConfigure)
 					{
-						FileName = "cmake",
-						Arguments = $"-B \"{buildDir}\" -S \"{editorDir}\" -DPDB_SUFFIX={pdbSuffix}",
-						CreateNoWindow = true,
-						UseShellExecute = false,
-						RedirectStandardError = true,
-						RedirectStandardOutput = true,
-						StandardOutputEncoding = System.Text.Encoding.UTF8,
-						StandardErrorEncoding = System.Text.Encoding.UTF8
-					};
-					using (var proc = System.Diagnostics.Process.Start(startInfoConfig))
-					{
-						string stdout = proc?.StandardOutput.ReadToEnd() ?? string.Empty;
-						string stderr = proc?.StandardError.ReadToEnd() ?? string.Empty;
-						proc?.WaitForExit();
+						var startInfoConfig = new System.Diagnostics.ProcessStartInfo
+						{
+							FileName = "cmake",
+							Arguments = $"-B \"{buildDir}\" -S \"{editorDir}\"",
+							CreateNoWindow = true,
+							UseShellExecute = false,
+							RedirectStandardError = true,
+							RedirectStandardOutput = true,
+							StandardOutputEncoding = System.Text.Encoding.UTF8,
+							StandardErrorEncoding = System.Text.Encoding.UTF8
+						};
+						using (var proc = System.Diagnostics.Process.Start(startInfoConfig))
+						{
+							string stdout = proc?.StandardOutput.ReadToEnd() ?? string.Empty;
+							string stderr = proc?.StandardError.ReadToEnd() ?? string.Empty;
+							proc?.WaitForExit();
 
-						if (!string.IsNullOrWhiteSpace(stdout))
-							EditorLogger.LogInfo($"[CMake Configure] {stdout.Trim()}");
-						if (!string.IsNullOrWhiteSpace(stderr))
-							EditorLogger.LogInfo($"[CMake Configure] {stderr.Trim()}");
+							if (!string.IsNullOrWhiteSpace(stdout))
+								EditorLogger.LogInfo($"[CMake Configure] {stdout.Trim()}");
+							if (!string.IsNullOrWhiteSpace(stderr))
+								EditorLogger.LogInfo($"[CMake Configure] {stderr.Trim()}");
 
-						if (proc?.ExitCode != 0)
-							throw new Exception($"CMake configure failed with exit code {proc?.ExitCode}.\n{stdout}\n{stderr}");
+							if (proc?.ExitCode != 0)
+								throw new Exception($"CMake configure failed with exit code {proc?.ExitCode}.\n{stdout}\n{stderr}");
+						}
 					}
 
-					// Запуск сборки
 					var startInfoBuild = new System.Diagnostics.ProcessStartInfo
 					{
 						FileName = "cmake",

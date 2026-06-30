@@ -918,14 +918,30 @@ namespace editor.Views.Widgets
 
 			if (_dropHighlightItem != null)
 			{
-				_dropHighlightItem.ClearValue(System.Windows.Controls.Control.BackgroundProperty);
+				var tb = FindVisualChildren<TextBlock>(_dropHighlightItem).FirstOrDefault();
+				if (tb != null)
+				{
+					tb.ClearValue(System.Windows.Controls.TextBlock.ForegroundProperty);
+				}
+				else
+				{
+					_dropHighlightItem.ClearValue(System.Windows.Controls.Control.BackgroundProperty);
+				}
 			}
 
 			_dropHighlightItem = item;
 
 			if (_dropHighlightItem != null)
 			{
-				_dropHighlightItem.Background = (System.Windows.Media.Brush)System.Windows.Application.Current.FindResource("Brush_Hover");
+				var tb = FindVisualChildren<TextBlock>(_dropHighlightItem).FirstOrDefault();
+				if (tb != null)
+				{
+					tb.Foreground = (System.Windows.Media.Brush)System.Windows.Application.Current.FindResource("Brush_Accent");
+				}
+				else
+				{
+					_dropHighlightItem.Background = (System.Windows.Media.Brush)System.Windows.Application.Current.FindResource("Brush_Accent");
+				}
 			}
 		}
 

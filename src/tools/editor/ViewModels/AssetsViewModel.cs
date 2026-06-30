@@ -130,10 +130,6 @@ namespace editor.ViewModels
                 // LastWrite — правка содержимого (.cpp/.hpp в IDE)
                 NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
             };
-            _assetsWatcher.Created += (s, e) => { if (IsScriptFile(e.FullPath)) ScriptRebuildCoordinator.RequestRebuild(projectPath); };
-            _assetsWatcher.Deleted += (s, e) => { if (IsScriptFile(e.FullPath)) ScriptRebuildCoordinator.RequestRebuild(projectPath); };
-            _assetsWatcher.Changed += (s, e) => { if (IsScriptFile(e.FullPath)) ScriptRebuildCoordinator.RequestRebuild(projectPath); };
-            _assetsWatcher.Renamed += (s, e) => { if (IsScriptFile(e.FullPath)) ScriptRebuildCoordinator.RequestRebuild(projectPath); };
             _assetsWatcher.Created += OnWatchedFileCreated;
             _assetsWatcher.Deleted += OnWatchedFileDeleted;
             _assetsWatcher.Renamed += OnWatchedFileRenamed;
@@ -204,7 +200,16 @@ namespace editor.ViewModels
                 {
                     _compileDebounceTimer.Stop();
                     if (Application.Current?.MainWindow is MainWindow mw)
-                        _ = mw.CheckAndCompileScriptsAsync(forceRebuild: true);
+                    {
+                        if (mw.IsActive)
+                        {
+                            _ = mw.CheckAndCompileScriptsAsync(forceRebuild: true);
+                        }
+                        else if (mw.DataContext is MainWindowViewModel vm && vm.CurrentProjectPath != null)
+                        {
+                            ScriptRebuildCoordinator.RequestRebuild(vm.CurrentProjectPath);
+                        }
+                    }
                 };
             }
 
@@ -231,7 +236,16 @@ namespace editor.ViewModels
                 action();
                 RefreshTree();  // ← сначала обновляем RegisterAllScripts.cpp
                 if (triggerCompile && Application.Current?.MainWindow is MainWindow mw)
-                    _ = mw.CheckAndCompileScriptsAsync(forceRebuild: true); // ← потом cmake
+                {
+                    if (mw.IsActive)
+                    {
+                        _ = mw.CheckAndCompileScriptsAsync(forceRebuild: true); // ← потом cmake
+                    }
+                    else if (mw.DataContext is MainWindowViewModel vm && vm.CurrentProjectPath != null)
+                    {
+                        ScriptRebuildCoordinator.RequestRebuild(vm.CurrentProjectPath);
+                    }
+                }
             });
         }
 
