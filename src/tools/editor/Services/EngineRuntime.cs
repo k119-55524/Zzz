@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace editor.Services
@@ -22,6 +23,9 @@ namespace editor.Services
 
     public static class EngineRuntime
     {
+        private static readonly HashSet<string> _reportedNativeFailures = new();
+        private static readonly object _nativeFailureLock = new();
+
         [DllImport("editor_dll.dll", EntryPoint = "Initialize", CallingConvention = CallingConvention.Cdecl)]
         private static extern bool NativeInitialize(LogCallback callback);
 
@@ -46,7 +50,18 @@ namespace editor.Services
         [DllImport("editor_dll.dll", EntryPoint = "ReloadScripts", CallingConvention = CallingConvention.Cdecl)]
         private static extern void NativeReloadScripts();
 
-        public static bool TryInitialize(LogCallback callback) => NativeInitialize(callback);
+        public static bool TryInitialize(LogCallback callback)
+        {
+            try
+            {
+                return NativeInitialize(callback);
+            }
+            catch (Exception ex) when (IsNativeInteropException(ex))
+            {
+                ReportNativeInteropFailure(nameof(NativeInitialize), ex);
+                return false;
+            }
+        }
 
         public static void SetProjectPath(string projectPath)
         {
@@ -54,8 +69,10 @@ namespace editor.Services
             {
                 NativeSetProjectPath(projectPath);
             }
-            catch (EntryPointNotFoundException) {}
-            catch (DllNotFoundException) {}
+            catch (Exception ex) when (IsNativeInteropException(ex))
+            {
+                ReportNativeInteropFailure(nameof(NativeSetProjectPath), ex);
+            }
         }
 
         public static void ReloadScripts()
@@ -64,8 +81,10 @@ namespace editor.Services
             {
                 NativeReloadScripts();
             }
-            catch (EntryPointNotFoundException) {}
-            catch (DllNotFoundException) {}
+            catch (Exception ex) when (IsNativeInteropException(ex))
+            {
+                ReportNativeInteropFailure(nameof(NativeReloadScripts), ex);
+            }
         }
 
         public static void Shutdown()
@@ -74,11 +93,9 @@ namespace editor.Services
             {
                 NativeDeinitialize();
             }
-            catch (EntryPointNotFoundException)
+            catch (Exception ex) when (IsNativeInteropException(ex))
             {
-            }
-            catch (DllNotFoundException)
-            {
+                ReportNativeInteropFailure(nameof(NativeDeinitialize), ex);
             }
         }
 
@@ -88,11 +105,9 @@ namespace editor.Services
             {
                 NativeTick();
             }
-            catch (EntryPointNotFoundException)
+            catch (Exception ex) when (IsNativeInteropException(ex))
             {
-            }
-            catch (DllNotFoundException)
-            {
+                ReportNativeInteropFailure(nameof(NativeTick), ex);
             }
         }
 
@@ -102,11 +117,9 @@ namespace editor.Services
             {
                 NativeClearEngine();
             }
-            catch (EntryPointNotFoundException)
+            catch (Exception ex) when (IsNativeInteropException(ex))
             {
-            }
-            catch (DllNotFoundException)
-            {
+                ReportNativeInteropFailure(nameof(NativeClearEngine), ex);
             }
         }
 
@@ -116,11 +129,9 @@ namespace editor.Services
             {
                 return NativeAddView(hwnd);
             }
-            catch (EntryPointNotFoundException)
+            catch (Exception ex) when (IsNativeInteropException(ex))
             {
-            }
-            catch (DllNotFoundException)
-            {
+                ReportNativeInteropFailure(nameof(NativeAddView), ex);
             }
             return IntPtr.Zero;
         }
@@ -131,12 +142,31 @@ namespace editor.Services
             {
                 NativeRemoveView(view);
             }
-            catch (EntryPointNotFoundException)
+            catch (Exception ex) when (IsNativeInteropException(ex))
             {
+                ReportNativeInteropFailure(nameof(NativeRemoveView), ex);
             }
-            catch (DllNotFoundException)
+        }
+
+        private static bool IsNativeInteropException(Exception ex)
+        {
+            return ex is DllNotFoundException
+                or EntryPointNotFoundException
+                or BadImageFormatException;
+        }
+
+        private static void ReportNativeInteropFailure(string operation, Exception ex)
+        {
+            string key = $"{operation}:{ex.GetType().FullName}";
+            lock (_nativeFailureLock)
             {
+                if (!_reportedNativeFailures.Add(key))
+                {
+                    return;
+                }
             }
+
+            EditorLogger.LogError($"[EngineRuntime] Native call '{operation}' failed: {ex.Message}", LogSource.Editor);
         }
     }
 }

@@ -72,33 +72,35 @@
         </ResourceDictionary>
     </Window.Resources>
 
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+    <Border BorderBrush="{DynamicResource Brush_Text_Primary}" BorderThickness="1">
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-        <!-- Текстовое описание по центру -->
-        <StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center">
-            <TextBlock Text="Редактор на основе ZzzEngine" 
-                       Foreground="{DynamicResource Brush_Text_Primary}" 
-                       FontSize="15" FontWeight="SemiBold" 
-                       HorizontalAlignment="Center" Margin="0,0,0,8" />
-            <TextBlock Text="{Binding VersionText}"
-                       Foreground="{DynamicResource Brush_Text_Secondary}"
-                       FontSize="12"
-                       HorizontalAlignment="Center" Margin="0,0,0,4" />
-            <TextBlock Text="{Binding BuildDateText}"
-                       Foreground="{DynamicResource Brush_Text_Secondary}"
-                       FontSize="11"
-                       HorizontalAlignment="Center" />
-        </StackPanel>
+            <!-- Текстовое описание по центру -->
+            <StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="Редактор на основе ZzzEngine"
+                           Foreground="{DynamicResource Brush_Text_Primary}"
+                           FontSize="15" FontWeight="SemiBold"
+                           HorizontalAlignment="Center" Margin="0,0,0,8" />
+                <TextBlock Text="{Binding VersionText}"
+                           Foreground="{DynamicResource Brush_Text_Secondary}"
+                           FontSize="12"
+                           HorizontalAlignment="Center" Margin="0,0,0,4" />
+                <TextBlock Text="{Binding BuildDateText}"
+                           Foreground="{DynamicResource Brush_Text_Secondary}"
+                           FontSize="11"
+                           HorizontalAlignment="Center" />
+            </StackPanel>
 
-        <!-- Отцентрированная кнопка ОК -->
-        <Button Grid.Row="1" Content="ОК"
-                Style="{StaticResource DialogButtonStyle}"
-                HorizontalAlignment="Center"
-                Command="{Binding OkCommand}"
-                IsDefault="True" />
-    </Grid>
+            <!-- Отцентрированная кнопка ОК -->
+            <Button Grid.Row="1" Content="ОК"
+                    Style="{StaticResource DialogButtonStyle}"
+                    HorizontalAlignment="Center"
+                    Command="{Binding OkCommand}"
+                    IsDefault="True" />
+        </Grid>
+    </Border>
 </Window>

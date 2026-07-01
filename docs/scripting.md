@@ -170,7 +170,7 @@
  *
  * Редактор ([`AssetsViewModel.GenerateRegisterAllScripts`](../src/tools/editor/ViewModels/AssetsViewModel.cs))
  * на каждое обновление дерева ассетов сканирует найденные скрипты и генерирует
- * `Assets/RegisterAllScripts.cpp`:
+ * `.editor/RegisterAllScripts.cpp`:
  *
  * ```cpp
  * #include <ScriptRegistry.h>

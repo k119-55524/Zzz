@@ -4,6 +4,6 @@
 class StartGame2 : public zzz::script::Game
 {
 public:
-    StartGame2();
+	StartGame2();
 
 };

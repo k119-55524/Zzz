@@ -8,7 +8,8 @@ namespace editor.Services
 	/// </summary>
 	public static class ScriptRebuildCoordinator
 	{
-		private static volatile bool _pendingRebuild = false;
+		private static readonly object _pendingLock = new();
+		private static bool _pendingRebuild = false;
 		private static string? _pendingProjectRoot;
 
 		/// <summary>
@@ -17,8 +18,11 @@ namespace editor.Services
 		/// </summary>
 		public static void RequestRebuild(string projectRoot)
 		{
-			_pendingRebuild = true;
-			_pendingProjectRoot = projectRoot;
+			lock (_pendingLock)
+			{
+				_pendingRebuild = true;
+				_pendingProjectRoot = projectRoot;
+			}
 		}
 
 		/// <summary>
@@ -26,14 +30,23 @@ namespace editor.Services
 		/// </summary>
 		public static async Task ProcessPendingAsync(MainWindow mainWindow)
 		{
-			if (_pendingRebuild && _pendingProjectRoot != null)
+			string? lockedRoot = null;
+			lock (_pendingLock)
 			{
-				// Сбросить перед ожиданием, чтобы избежать гонок, если придёт новый запрос.
-				_pendingRebuild = false;
-				var root = _pendingProjectRoot;
-				_pendingProjectRoot = null;
-				await mainWindow.CheckAndCompileScriptsAsync(forceRebuild: true, projectRoot: root);
+				if (_pendingRebuild && _pendingProjectRoot != null)
+				{
+					_pendingRebuild = false;
+					lockedRoot = _pendingProjectRoot;
+					_pendingProjectRoot = null;
+				}
 			}
+
+			if (lockedRoot != null)
+			{
+				await mainWindow.CheckAndCompileScriptsAsync(forceRebuild: true, projectRoot: lockedRoot);
+				return;
+			}
+
 		}
 	}
 }

@@ -368,6 +368,9 @@ namespace editor
 		}
 
 		private bool _isCompiling = false;
+		private bool _compileRequestedAgain = false;
+		private bool _queuedForceRebuild = false;
+		private string? _queuedCompileProjectRoot;
 
         private async void MainWindow_Activated(object? sender, EventArgs e)
         {
@@ -395,7 +398,10 @@ namespace editor
 
 			if (_isCompiling)
 			{
-				EditorLogger.LogInfo("[Scripts] CheckAndCompile: skip — already compiling.");
+				_compileRequestedAgain = true;
+				_queuedForceRebuild |= forceRebuild;
+				_queuedCompileProjectRoot = projectRoot;
+				EditorLogger.LogInfo("[Scripts] CheckAndCompile: queued — already compiling.");
 				return;
 			}
 
@@ -469,17 +475,32 @@ namespace editor
 			await CompileScriptsAsync(projectRoot, dllPath);
 		}
 
+		private static string ToCMakePath(string path)
+		{
+			return path.Replace('\\', '/').Replace("\"", "\\\"");
+		}
+
+		private static string BuildCMakeSourceList(string assetsDir)
+		{
+			var scriptSources = System.IO.Directory
+				.GetFiles(assetsDir, "*.cpp", System.IO.SearchOption.AllDirectories)
+				.OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+				.Select(path => $"    \"{ToCMakePath(path)}\"");
+
+			return string.Join(Environment.NewLine, scriptSources);
+		}
+
 		private async System.Threading.Tasks.Task CompileScriptsAsync(string projectRoot, string dllPath)
 		{
-			            _isCompiling = true;
-            // Ensure any previously loaded script DLL is unloaded before starting a new compilation to avoid file lock issues.
-            EngineRuntime.ClearEngine();
-            EditorLogger.LogInfo("Scripts modification detected. Starting background compilation...");
+			_isCompiling = true;
+			EditorLogger.LogInfo("Scripts modification detected. Starting background compilation...");
 
 			try
 			{
 				// 1. Создаем папку .editor если не существует
 				string editorDir = System.IO.Path.Combine(projectRoot, ".editor");
+				string assetsDir = System.IO.Path.Combine(projectRoot, "Assets");
+				string scriptSources = BuildCMakeSourceList(assetsDir);
 				System.IO.Directory.CreateDirectory(editorDir);
 
 				// 2. Генерируем CMakeLists.txt
@@ -514,12 +535,12 @@ project({cmakeProjectName} LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ""${{PROJECT_SOURCE_DIR}}/bin"")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ""${{PROJECT_SOURCE_DIR}}/bin"")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ""${{PROJECT_SOURCE_DIR}}/bin"")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ""${{PROJECT_SOURCE_DIR}}/bin"")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ""${{PROJECT_SOURCE_DIR}}/bin"")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ""${{PROJECT_SOURCE_DIR}}/bin"")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ""${{PROJECT_SOURCE_DIR}}/bin_build"")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ""${{PROJECT_SOURCE_DIR}}/bin_build"")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ""${{PROJECT_SOURCE_DIR}}/bin_build"")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ""${{PROJECT_SOURCE_DIR}}/bin_build"")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ""${{PROJECT_SOURCE_DIR}}/bin_build"")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ""${{PROJECT_SOURCE_DIR}}/bin_build"")
 
 add_library(scripts SHARED)
 target_include_directories(scripts PRIVATE
@@ -532,10 +553,9 @@ target_include_directories(scripts PRIVATE
     ""{zlibsIncludeDir}/logger""
 )
 
-file(GLOB_RECURSE SCRIPT_SOURCES ""${{PROJECT_SOURCE_DIR}}/../Assets/*.cpp"")
 target_sources(scripts PRIVATE
     ""${{PROJECT_SOURCE_DIR}}/RegisterAllScripts.cpp""
-    ${{SCRIPT_SOURCES}}
+{scriptSources}
 )
 
 target_compile_definitions(scripts PRIVATE Z_EDITOR=1)
@@ -550,20 +570,7 @@ target_link_libraries(scripts PRIVATE ""{editorDllLib}"")
 
 				string buildDir = System.IO.Path.Combine(editorDir, "build");
 				System.IO.Directory.CreateDirectory(buildDir);
-				
-				// We need to configure if CMakeLists changed, OR if RegisterAllScripts.cpp was just written
-				// (which implies scripts were added/removed, so the GLOB needs to be re-evaluated).
 				bool needConfigure = needWriteCmake || !System.IO.File.Exists(System.IO.Path.Combine(buildDir, "CMakeCache.txt"));
-				
-				// Quick check if RegisterAllScripts.cpp was recently modified (within last 2 seconds)
-				string registerPath = System.IO.Path.Combine(editorDir, "RegisterAllScripts.cpp");
-				if (System.IO.File.Exists(registerPath))
-				{
-					if ((DateTime.Now - System.IO.File.GetLastWriteTime(registerPath)).TotalSeconds < 2)
-					{
-						needConfigure = true;
-					}
-				}
 
 				await System.Threading.Tasks.Task.Run(() =>
 				{
@@ -596,27 +603,19 @@ target_link_libraries(scripts PRIVATE ""{editorDllLib}"")
 						}
 					}
 
-					// Before building, try to rename existing DLL and PDB to avoid MSVC linker lock issues (LNK1201).
-					// If the engine has the PDB locked via DbgHelp, we can't overwrite it, but we CAN rename it!
-					string binDir = System.IO.Path.Combine(editorDir, "bin");
-					string dllPath = System.IO.Path.Combine(binDir, "scripts.dll");
-					string pdbPath = System.IO.Path.Combine(binDir, "scripts.pdb");
-					string tick = DateTime.Now.Ticks.ToString();
+					string stagingDir = System.IO.Path.Combine(editorDir, "bin_build");
+					System.IO.Directory.CreateDirectory(stagingDir);
+					string stagedDllPath = System.IO.Path.Combine(stagingDir, "scripts.dll");
+					string stagedPdbPath = System.IO.Path.Combine(stagingDir, "scripts.pdb");
 
-					if (System.IO.File.Exists(dllPath))
-					{
-						try { System.IO.File.Move(dllPath, System.IO.Path.Combine(binDir, $"scripts_old_{tick}.dll")); } catch { }
-					}
-					if (System.IO.File.Exists(pdbPath))
-					{
-						try { System.IO.File.Move(pdbPath, System.IO.Path.Combine(binDir, $"scripts_old_{tick}.pdb")); } catch { }
-					}
+					try { if (System.IO.File.Exists(stagedDllPath)) System.IO.File.Delete(stagedDllPath); } catch { }
+					try { if (System.IO.File.Exists(stagedPdbPath)) System.IO.File.Delete(stagedPdbPath); } catch { }
 
-					// Cleanup old files in a background thread so we don't block
 					System.Threading.Tasks.Task.Run(() =>
 					{
 						try
 						{
+							string binDir = System.IO.Path.Combine(editorDir, "bin");
 							foreach (var file in System.IO.Directory.GetFiles(binDir, "scripts_old_*.dll"))
 								try { System.IO.File.Delete(file); } catch { }
 							foreach (var file in System.IO.Directory.GetFiles(binDir, "scripts_old_*.pdb"))
@@ -660,7 +659,55 @@ target_link_libraries(scripts PRIVATE ""{editorDllLib}"")
 
 				// 4. Оповещаем движок о перезагрузке DLL
 				EngineRuntime.SetProjectPath(projectRoot);
+				string finalBinDir = System.IO.Path.GetDirectoryName(dllPath) ?? System.IO.Path.Combine(projectRoot, ".editor", "bin");
+				string finalPdbPath = System.IO.Path.ChangeExtension(dllPath, ".pdb");
+				string acceptStagingDir = System.IO.Path.Combine(projectRoot, ".editor", "bin_build");
+				string acceptStagedDllPath = System.IO.Path.Combine(acceptStagingDir, "scripts.dll");
+				string acceptStagedPdbPath = System.IO.Path.Combine(acceptStagingDir, "scripts.pdb");
+
+				if (!System.IO.File.Exists(acceptStagedDllPath))
+					throw new Exception($"CMake build did not produce expected DLL: {acceptStagedDllPath}");
+
 				EngineRuntime.ClearEngine();
+				System.IO.Directory.CreateDirectory(finalBinDir);
+				string tick = DateTime.Now.Ticks.ToString();
+				string? oldDllPath = null;
+				string? oldPdbPath = null;
+
+				try
+				{
+					if (System.IO.File.Exists(dllPath))
+					{
+						oldDllPath = System.IO.Path.Combine(finalBinDir, $"scripts_old_{tick}.dll");
+						System.IO.File.Move(dllPath, oldDllPath);
+					}
+
+					if (System.IO.File.Exists(finalPdbPath))
+					{
+						oldPdbPath = System.IO.Path.Combine(finalBinDir, $"scripts_old_{tick}.pdb");
+						System.IO.File.Move(finalPdbPath, oldPdbPath);
+					}
+
+					System.IO.File.Move(acceptStagedDllPath, dllPath);
+					if (System.IO.File.Exists(acceptStagedPdbPath))
+						System.IO.File.Move(acceptStagedPdbPath, finalPdbPath);
+				}
+				catch
+				{
+					try
+					{
+						if (!System.IO.File.Exists(dllPath) && oldDllPath != null && System.IO.File.Exists(oldDllPath))
+							System.IO.File.Move(oldDllPath, dllPath);
+						if (!System.IO.File.Exists(finalPdbPath) && oldPdbPath != null && System.IO.File.Exists(oldPdbPath))
+							System.IO.File.Move(oldPdbPath, finalPdbPath);
+						if (System.IO.File.Exists(dllPath))
+							EngineRuntime.ReloadScripts();
+					}
+					catch { }
+
+					throw;
+				}
+
 				EngineRuntime.ReloadScripts();
 			}
 			catch (Exception ex)
@@ -670,6 +717,17 @@ target_link_libraries(scripts PRIVATE ""{editorDllLib}"")
 			finally
 			{
 				_isCompiling = false;
+			}
+
+			if (_compileRequestedAgain)
+			{
+				bool forceQueuedRebuild = _queuedForceRebuild;
+				string? queuedProjectRoot = _queuedCompileProjectRoot;
+				_compileRequestedAgain = false;
+				_queuedForceRebuild = false;
+				_queuedCompileProjectRoot = null;
+
+				await CheckAndCompileScriptsAsync(forceQueuedRebuild, queuedProjectRoot);
 			}
 		}
 	}

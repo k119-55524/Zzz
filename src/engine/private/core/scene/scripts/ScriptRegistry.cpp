@@ -48,6 +48,9 @@ namespace zzz::script
 		s_ScriptFactories.clear();
 		s_GameFactories.clear();
 		s_SceneFactories.clear();
+#if Z_EDITOR
+		s_ActiveInstances.clear();
+#endif
 	}
 
 #if Z_EDITOR

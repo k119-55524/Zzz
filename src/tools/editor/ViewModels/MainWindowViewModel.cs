@@ -51,9 +51,23 @@ namespace editor.ViewModels
 			AboutCommand = new RelayCommand(_dialogService.ShowAbout);
 			UndoCommand = new RelayCommand(Undo, () => App.ProjectService.History.CanUndo);
 			RedoCommand = new RelayCommand(Redo, () => App.ProjectService.History.CanRedo);
-			PlayCommand = new RelayCommand(() => { /* Запуск симуляции */ }, () => IsProjectOpen);
-			PauseCommand = new RelayCommand(() => { /* Пауза симуляции */ }, () => IsProjectOpen);
-			StopCommand = new RelayCommand(() => { /* Остановка симуляции */ }, () => IsProjectOpen);
+			PlayCommand = new RelayCommand(() =>
+			{
+				/* Запуск симуляции */
+				IsRunning = true;
+				IsPaused = false;
+			}, () => IsProjectOpen && !IsRunning);
+			PauseCommand = new RelayCommand(() =>
+			{
+				/* Пауза симуляции */
+				IsPaused = !IsPaused;
+			}, () => IsProjectOpen && IsRunning);
+			StopCommand = new RelayCommand(() =>
+			{
+				/* Остановка симуляции */
+				IsRunning = false;
+				IsPaused = false;
+			}, () => IsProjectOpen && IsRunning);
 			ShowWidgetCommand = new RelayCommand<PaneViewModel>(pane =>
 			{
 				if (pane != null)
@@ -143,6 +157,8 @@ namespace editor.ViewModels
 					OnPropertyChanged(nameof(ProjectDisplayName));
 					OnPropertyChanged(nameof(WindowTitle));
 					OnPropertyChanged(nameof(IsProjectOpen));
+					IsRunning = false;
+					IsPaused = false;
 					CommandManager.InvalidateRequerySuggested();
 
 					WorldPane.IsToolbarEnabled = IsProjectOpen;
@@ -154,6 +170,28 @@ namespace editor.ViewModels
 		public bool IsProjectOpen
 		{
 			get => !string.IsNullOrEmpty(_currentProjectPath);
+		}
+
+		private bool _isRunning;
+		public bool IsRunning
+		{
+			get => _isRunning;
+			set
+			{
+				if (SetField(ref _isRunning, value))
+					CommandManager.InvalidateRequerySuggested();
+			}
+		}
+
+		private bool _isPaused;
+		public bool IsPaused
+		{
+			get => _isPaused;
+			set
+			{
+				if (SetField(ref _isPaused, value))
+					CommandManager.InvalidateRequerySuggested();
+			}
 		}
 
 		public string WindowTitle => $"{AppName} - [{ProjectDisplayName}]";
