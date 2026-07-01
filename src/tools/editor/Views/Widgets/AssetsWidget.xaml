@@ -327,7 +327,7 @@
                     <ContextMenu>
                         <MenuItem Header="{DynamicResource ContextMenu_Add}">
                             <MenuItem Header="{DynamicResource ContextMenu_Folder}" Click="AddFolderToRoot_Click" />
-                            <Separator Margin="-35,0,-5,0" />
+                            <Separator Style="{StaticResource ThemedSeparatorStyle}" />
                             <MenuItem Header="Script (MonoBehaviour)" Tag="Script" Click="AddScriptToRoot_Click" />
                             <MenuItem Header="Game Script" Tag="Game" Click="AddScriptToRoot_Click" />
                             <MenuItem Header="Scene Script" Tag="Scene" Click="AddScriptToRoot_Click" />
@@ -383,7 +383,7 @@
                                 <ContextMenu>
                                     <MenuItem Name="AddMenuItem" Header="{DynamicResource ContextMenu_Add}">
                                         <MenuItem Header="{DynamicResource ContextMenu_Folder}" Name="AddFolderMenuItem" />
-                                        <Separator Margin="-35,0,-5,0" />
+                                        <Separator Style="{StaticResource ThemedSeparatorStyle}" />
                                         <MenuItem Header="Script (MonoBehaviour)" Name="AddScriptMenuItem" Tag="Script" />
                                         <MenuItem Header="Game Script" Name="AddGameScriptMenuItem" Tag="Game" />
                                         <MenuItem Header="Scene Script" Name="AddSceneScriptMenuItem" Tag="Scene" />

@@ -258,33 +258,41 @@
                         <MenuItem Header="{DynamicResource Menu_File_Create}" Command="{Binding NewProjectCommand}" />
                         <MenuItem Header="{DynamicResource Menu_File_Open}" Command="{Binding OpenProjectCommand}" />
                         <MenuItem Header="{DynamicResource Menu_File_Close}" Command="{Binding CloseProjectCommand}" />
-                        <Separator Background="{DynamicResource Brush_Border}" />
+                        <Separator Style="{StaticResource ThemedSeparatorStyle}" />
                         <MenuItem x:Name="MenuRecentProjects" Header="{DynamicResource Menu_File_Recent}"
                                   ItemsSource="{Binding RecentProjects}"
                                   IsEnabled="{Binding HasRecentProjects}">
                             <MenuItem.ItemContainerStyle>
-                                <Style TargetType="MenuItem">
+                                <!-- BasedOn обязателен: ItemContainerStyle не наследует implicit-стиль темы
+                                     автоматически - без него пункты откатываются к нативному шаблону Windows. -->
+                                <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
                                     <Setter Property="Header" Value="{Binding}" />
                                     <Setter Property="Command" Value="{Binding DataContext.OpenRecentProjectCommand, ElementName=RootWindow}" />
                                     <Setter Property="CommandParameter" Value="{Binding}" />
                                 </Style>
                             </MenuItem.ItemContainerStyle>
                         </MenuItem>
-                        <Separator Background="{DynamicResource Brush_Border}" />
+                        <Separator Style="{StaticResource ThemedSeparatorStyle}" />
                         <MenuItem Header="{DynamicResource Menu_File_Exit}" Command="{Binding ExitCommand}" />
                     </MenuItem>
                     <MenuItem x:Name="MenuWindow" Header="{DynamicResource Menu_Window}" Foreground="{DynamicResource Brush_Text_Primary}">
                         <MenuItem.ItemsSource>
                             <CompositeCollection>
-                                <MenuItem Header="{DynamicResource Menu_Window_Reset}" 
-                                          Command="{Binding ResetLayoutCommand}" 
-                                          Style="{x:Null}" />
-                                <Separator Background="{DynamicResource Brush_Border}" Style="{x:Null}" />
+                                <!-- Style задан явно (а не оставлен неявным), чтобы перебить MenuItem.ItemContainerStyle
+                                     ниже (он рассчитан на элементы из PanesCollection: Header/Command оттуда) -
+                                     но при этом остаться в теме приложения, а не откатываться к нативному виду Windows. -->
+                                <MenuItem Header="{DynamicResource Menu_Window_Reset}"
+                                          Command="{Binding ResetLayoutCommand}"
+                                          Style="{StaticResource {x:Type MenuItem}}" />
+                                <Separator Style="{StaticResource ThemedSeparatorStyle}" />
                                 <CollectionContainer Collection="{Binding Source={StaticResource PanesCollection}}" />
                             </CompositeCollection>
                         </MenuItem.ItemsSource>
                         <MenuItem.ItemContainerStyle>
-                            <Style TargetType="MenuItem">
+                            <!-- BasedOn обязателен: ItemContainerStyle не наследует implicit-стиль темы
+                                 автоматически - без него пункты (World/Game/Console/Assets/Inspector)
+                                 откатываются к нативному шаблону Windows. -->
+                            <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
                                 <Setter Property="Header" Value="{Binding Title}" />
                                 <Setter Property="Command" Value="{Binding DataContext.ShowWidgetCommand, ElementName=RootWindow}" />
                                 <Setter Property="CommandParameter" Value="{Binding}" />
