@@ -6,11 +6,13 @@ using editor.Services.Project.Infrastructure;
 namespace editor.Services.Project.FileTypes.ProjectSettings
 {
 	/// <summary>
-	/// Парсер настроек проекта (управляет Configs/project.toml).
+	/// Парсер настроек проекта (управляет Configs/project_config.toml).
 	/// </summary>
-	public class ProjectSettingsParser : IFileParser
+	public class ProjectSettingsParser : IFileParser, IEditorConfigParser
 	{
 		public string FileExtension => ".toml";
+
+		public Type DataType => typeof(ProjectSettingsData);
 
 		public bool CanParse(string relativePath)
 		{
@@ -51,7 +53,7 @@ namespace editor.Services.Project.FileTypes.ProjectSettings
 			}
 			catch (Exception ex)
 			{
-				errorMessage = $"Ошибка валидации project.toml: {ex.Message}";
+				errorMessage = $"Ошибка валидации project_config.toml: {ex.Message}";
 				return false;
 			}
 			return true;
@@ -251,6 +253,16 @@ namespace editor.Services.Project.FileTypes.ProjectSettings
 				}
 			}
 			return data;
+		}
+
+		public object DeserializeForEditor(string content)
+		{
+			return Deserialize(content);
+		}
+
+		public string SerializeFromEditor(object data)
+		{
+			return Serialize((ProjectSettingsData)data);
 		}
 
 		#endregion

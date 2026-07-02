@@ -1,0 +1,5 @@
+version = "1.0.0"
+
+defines = []
+log_listener = ""
+global_script_guids = []

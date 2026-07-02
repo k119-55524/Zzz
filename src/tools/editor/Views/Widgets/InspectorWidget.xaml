@@ -256,7 +256,11 @@
                                                  VerticalAlignment="Center">
                                             <TextBox.Style>
                                                 <Style TargetType="TextBox">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
                                                     <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsStringValue}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
                                                         <Trigger Property="IsReadOnly" Value="True">
                                                             <Setter Property="Opacity" Value="0.6"/>
                                                             <Setter Property="BorderThickness" Value="0"/>
@@ -266,6 +270,99 @@
                                                 </Style>
                                             </TextBox.Style>
                                         </TextBox>
+
+                                        <ComboBox Grid.Column="2"
+                                                  ItemsSource="{Binding OptionItems}"
+                                                  SelectedItem="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                                                  Background="{DynamicResource Brush_Panel_Header}"
+                                                  Foreground="{DynamicResource Brush_Text_Light}"
+                                                  BorderBrush="{DynamicResource Brush_Border}"
+                                                  BorderThickness="1"
+                                                  Padding="4,2"
+                                                  Margin="8,0,16,0"
+                                                  FontSize="13"
+                                                  VerticalAlignment="Center">
+                                            <ComboBox.Style>
+                                                <Style TargetType="ComboBox">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasOptions}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsReadOnly}" Value="True">
+                                                            <Setter Property="IsEnabled" Value="False"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </ComboBox.Style>
+                                        </ComboBox>
+
+                                        <StackPanel Grid.Column="2" Margin="8,0,16,0">
+                                            <StackPanel.Style>
+                                                <Style TargetType="StackPanel">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsCollection}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </StackPanel.Style>
+
+                                            <ItemsControl ItemsSource="{Binding CollectionItems}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid Margin="0,0,0,4">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="24"/>
+                                                                <ColumnDefinition Width="24"/>
+                                                                <ColumnDefinition Width="24"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBox Grid.Column="0"
+                                                                     Text="{Binding Value, UpdateSourceTrigger=LostFocus}"
+                                                                     Background="{DynamicResource Brush_Panel_Header}"
+                                                                     Foreground="{DynamicResource Brush_Text_Light}"
+                                                                     BorderBrush="{DynamicResource Brush_Border}"
+                                                                     BorderThickness="1"
+                                                                     Padding="4,3"
+                                                                     FontSize="13"
+                                                                     PreviewKeyDown="ValueTextBox_PreviewKeyDown"/>
+                                                            <Button Grid.Column="1" Content="^"
+                                                                    Command="{Binding DataContext.MoveCollectionItemUpCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Margin="4,0,0,0"/>
+                                                            <Button Grid.Column="2" Content="v"
+                                                                    Command="{Binding DataContext.MoveCollectionItemDownCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Margin="4,0,0,0"/>
+                                                            <Button Grid.Column="3" Content="x"
+                                                                    Command="{Binding DataContext.RemoveCollectionItemCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Margin="4,0,0,0"/>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="32"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox Grid.Column="0"
+                                                         Text="{Binding NewCollectionItemValue, UpdateSourceTrigger=PropertyChanged}"
+                                                         Background="{DynamicResource Brush_Panel_Header}"
+                                                         Foreground="{DynamicResource Brush_Text_Light}"
+                                                         BorderBrush="{DynamicResource Brush_Border}"
+                                                         BorderThickness="1"
+                                                         Padding="4,3"
+                                                         FontSize="13"/>
+                                                <Button Grid.Column="1" Content="+"
+                                                        Command="{Binding AddCollectionItemCommand}"
+                                                        Margin="4,0,0,0"/>
+                                            </Grid>
+                                        </StackPanel>
                                     </Grid>
                                 </Border>
                                 <DataTemplate.Triggers>

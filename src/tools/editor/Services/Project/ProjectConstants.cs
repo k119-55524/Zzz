@@ -1,4 +1,3 @@
-using System;
 
 namespace editor.Services.Project
 {
@@ -22,7 +21,9 @@ namespace editor.Services.Project
 		/// </summary>
 		public static class SystemDirectories
 		{
-			public const string ProjectSettings = "Configs/project.toml";
+			public const string ProjectSettings = "Configs/project_config.toml";
+
+			public const string GameConfigs = "Configs/game_config.toml";
 		}
 	}
 }

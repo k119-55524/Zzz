@@ -56,4 +56,26 @@ namespace editor.Services.Project.Infrastructure
             string mergedOutputFilePath, 
             out string errorMessage);
     }
+
+    /// <summary>
+    /// Optional editor bridge for project files that can be shown as reflected
+    /// property models in the inspector.
+    /// </summary>
+    public interface IEditorConfigParser
+    {
+        /// <summary>
+        /// CLR type returned by <see cref="DeserializeForEditor"/>.
+        /// </summary>
+        Type DataType { get; }
+
+        /// <summary>
+        /// Parses text content into a data object for reflection-based editing.
+        /// </summary>
+        object DeserializeForEditor(string content);
+
+        /// <summary>
+        /// Serializes a reflected data object back to file text.
+        /// </summary>
+        string SerializeFromEditor(object data);
+    }
 }

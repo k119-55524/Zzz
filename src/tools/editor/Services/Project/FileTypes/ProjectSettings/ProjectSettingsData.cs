@@ -5,7 +5,7 @@ using editor.Services.Project.Infrastructure.UndoRedo;
 namespace editor.Services.Project.FileTypes.ProjectSettings
 {
 	/// <summary>
-	/// Данные настроек проекта (представление Configs/project.toml в памяти).
+	/// Данные настроек проекта (представление Configs/project_config.toml в памяти).
 	/// </summary>
 	public class ProjectSettingsData : UndoableObject
 	{

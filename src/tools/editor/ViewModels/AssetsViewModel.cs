@@ -8,6 +8,7 @@ using System.Windows.Input;
 using editor.Models;
 using editor.Services;
 using editor.Services.Project;
+using editor.Services.Project.Assets;
 using editor.Services.Project.Infrastructure;
 
 namespace editor.ViewModels
@@ -55,11 +56,6 @@ namespace editor.ViewModels
     public class AssetsViewModel : PaneViewModel
     {
         private readonly ProjectFileSystem _vfs;
-        private readonly List<IAssetWatchHandler> _assetWatchHandlers = new()
-        {
-            new ScriptAssetWatchHandler()
-        };
-        private FileSystemWatcher? _assetsWatcher;
         private System.Windows.Threading.DispatcherTimer? _compileDebounceTimer;
         private ObservableCollection<ProjectNode> _assetRootNodes = new();
         private ObservableCollection<ProjectNode> _systemRootNodes = new();
@@ -75,6 +71,8 @@ namespace editor.ViewModels
             // Команда принудительного обновления дерева
             RefreshCommand = new RelayCommand(RefreshTree);
             ResetFiltersCommand = new RelayCommand(ResetCurrentFilters);
+            App.ProjectFileWatcherService.FileChanged += OnProjectFileChanged;
+            App.ScriptAssetIndexService.Changed += OnScriptAssetIndexChanged;
         }
 
         public ICommand ResetFiltersCommand { get; }
@@ -89,12 +87,10 @@ namespace editor.ViewModels
         {
             base.OnProjectOpened(projectPath);
 
-            // Полный скан .meta - только здесь, на открытии/смене проекта (не на каждый RefreshTree)
-            EditorLogger.LogInfo("[Meta System] Running full project scan for script meta files...");
-            _vfs.SyncScriptMetaFiles(projectPath);
+            App.ScriptAssetIndexService.OpenProject(projectPath);
+            App.ProjectFileWatcherService.OpenProject(projectPath);
 
             OnProjectChanged(projectPath);
-            StartAssetsWatcher(projectPath);
 
             // OnProjectChanged уже пересканировал Assets и перегенерировал RegisterAllScripts.cpp,
             // но это не проверяет актуальность самой scripts.dll - без явного вызова здесь она
@@ -110,82 +106,29 @@ namespace editor.ViewModels
 
         public override void OnProjectClosed()
         {
-            StopAssetsWatcher();
+            App.ProjectFileWatcherService.CloseProject();
+            App.ScriptAssetIndexService.CloseProject();
+            _compileDebounceTimer?.Stop();
+            _compileDebounceTimer = null;
             base.OnProjectClosed();
             OnProjectChanged(null);
         }
 
-        private void StartAssetsWatcher(string projectPath)
+        private void OnProjectFileChanged(object? sender, ProjectFileChangedEventArgs e)
         {
-            StopAssetsWatcher();
+            Application.Current?.Dispatcher.BeginInvoke(() => RefreshTree());
+        }
 
-            string assetsRoot = Path.Combine(projectPath, "Assets");
-            if (!Directory.Exists(assetsRoot))
-                return;
-
-            _assetsWatcher = new FileSystemWatcher(assetsRoot)
+        private void OnScriptAssetIndexChanged(object? sender, ScriptAssetIndexChangedEventArgs e)
+        {
+            Application.Current?.Dispatcher.BeginInvoke(() =>
             {
-                IncludeSubdirectories = true,
-                // FileName — создание/удаление/переименование файлов
-                // LastWrite — правка содержимого (.cpp/.hpp в IDE)
-                NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
-            };
-            _assetsWatcher.Created += OnWatchedFileCreated;
-            _assetsWatcher.Deleted += OnWatchedFileDeleted;
-            _assetsWatcher.Renamed += OnWatchedFileRenamed;
-            _assetsWatcher.Changed += OnWatchedFileChanged;
-            _assetsWatcher.EnableRaisingEvents = true;
-
-            EditorLogger.LogInfo($"[Meta System] Started watching '{assetsRoot}' for external changes.");
-        }
-
-        private void StopAssetsWatcher()
-        {
-            if (_assetsWatcher == null)
-                return;
-
-            _assetsWatcher.EnableRaisingEvents = false;
-            _assetsWatcher.Created -= OnWatchedFileCreated;
-            _assetsWatcher.Deleted -= OnWatchedFileDeleted;
-            _assetsWatcher.Renamed -= OnWatchedFileRenamed;
-            _assetsWatcher.Changed -= OnWatchedFileChanged;
-            _assetsWatcher.Dispose();
-            _assetsWatcher = null;
-
-            _compileDebounceTimer?.Stop();
-            _compileDebounceTimer = null;
-        }
-
-        private void OnWatchedFileCreated(object sender, FileSystemEventArgs e)
-        {
-            // triggerCompile=true: создание .hpp/.cpp требует пересборки
-            DispatchAssetEvent(() => HandleExternalCreate(e.FullPath), triggerCompile: IsScriptFile(e.FullPath));
-        }
-
-        private void OnWatchedFileDeleted(object sender, FileSystemEventArgs e)
-        {
-            DispatchAssetEvent(() => HandleExternalDelete(e.FullPath), triggerCompile: IsScriptFile(e.FullPath));
-        }
-
-        private void OnWatchedFileRenamed(object sender, RenamedEventArgs e)
-        {
-            DispatchAssetEvent(() =>
-            {
-                HandleExternalDelete(e.OldFullPath);
-                HandleExternalCreate(e.FullPath);
-            }, triggerCompile: IsScriptFile(e.OldFullPath) || IsScriptFile(e.FullPath));
-        }
-
-        // Правка содержимого файла в IDE — только компиляция, дерево не перестраиваем
-        // (состав скриптов не менялся, только код внутри .cpp/.hpp).
-        // Debounce через DispatcherTimer: IDE может вызвать Changed несколько раз подряд
-        // при одном сохранении (write + flush) — ждём 500ms тишины перед запуском cmake.
-        private void OnWatchedFileChanged(object sender, FileSystemEventArgs e)
-        {
-            if (!IsScriptFile(e.FullPath))
-                return;
-
-            Application.Current?.Dispatcher.BeginInvoke(() => ScheduleCompileDebounced());
+                RefreshTree();
+                if (e.AffectsCompilation)
+                {
+                    ScheduleCompileDebounced();
+                }
+            });
         }
 
         private void ScheduleCompileDebounced()
@@ -216,59 +159,6 @@ namespace editor.ViewModels
             // Перезапускаем таймер — каждый новый Changed сдвигает окно на 500ms
             _compileDebounceTimer.Stop();
             _compileDebounceTimer.Start();
-        }
-
-        private static bool IsScriptFile(string fullPath)
-        {
-            string ext = Path.GetExtension(fullPath);
-            return ext.Equals(".hpp", StringComparison.OrdinalIgnoreCase) ||
-                   ext.Equals(".cpp", StringComparison.OrdinalIgnoreCase);
-        }
-
-        // События FileSystemWatcher приходят в фоновом потоке - переносим обработку в UI-поток,
-        // т.к. дальше идёт RefreshTree() с обновлением ObservableCollection.
-        // triggerCompile=true: ПОСЛЕ RefreshTree (который обновит RegisterAllScripts.cpp)
-        // запускаем компиляцию — порядок важен, иначе cmake соберёт устаревший RegisterAllScripts.cpp.
-        private void DispatchAssetEvent(Action action, bool triggerCompile = false)
-        {
-            Application.Current?.Dispatcher.BeginInvoke(() =>
-            {
-                action();
-                RefreshTree();  // ← сначала обновляем RegisterAllScripts.cpp
-                if (triggerCompile && Application.Current?.MainWindow is MainWindow mw)
-                {
-                    if (mw.IsActive)
-                    {
-                        _ = mw.CheckAndCompileScriptsAsync(forceRebuild: true); // ← потом cmake
-                    }
-                    else if (mw.DataContext is MainWindowViewModel vm && vm.CurrentProjectPath != null)
-                    {
-                        ScriptRebuildCoordinator.RequestRebuild(vm.CurrentProjectPath);
-                    }
-                }
-            });
-        }
-
-        private void HandleExternalCreate(string fullPath)
-        {
-            foreach (var handler in _assetWatchHandlers)
-            {
-                if (handler.CanHandle(fullPath))
-                {
-                    handler.OnCreated(fullPath, App.ProjectService.Storage);
-                }
-            }
-        }
-
-        private void HandleExternalDelete(string fullPath)
-        {
-            foreach (var handler in _assetWatchHandlers)
-            {
-                if (handler.CanHandle(fullPath))
-                {
-                    handler.OnDeleted(fullPath, App.ProjectService.Storage);
-                }
-            }
         }
 
         public ICommand RefreshCommand { get; }

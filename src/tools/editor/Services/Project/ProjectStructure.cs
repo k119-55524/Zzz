@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using editor.Services.Project.FileTypes.GameConfig;
 using editor.Services.Project.Infrastructure;
 using editor.Services.Project.FileTypes.ProjectSettings;
 
@@ -73,7 +74,8 @@ namespace editor.Services.Project
 		// Системные папки проекта (вне Assets)
 		public static readonly List<ProjectFolderSchema> SystemDirectories = new()
 		{
-			CreateFolderWithFile(ProjectConstants.SystemDirectories.ProjectSettings, new ProjectSettingsParser())
+			CreateFolderWithFile(ProjectConstants.SystemDirectories.ProjectSettings, new ProjectSettingsParser()),
+			CreateFolderWithFile(ProjectConstants.SystemDirectories.GameConfigs, new GameConfigParser())
 		};
 
 		// Корневая папка ассетов

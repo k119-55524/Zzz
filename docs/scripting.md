@@ -390,4 +390,22 @@
  * #endif
  * }
  * ```
+ *
+ * ---
+ *
+ * ## 7. Resource model note
+ *
+ * Scripts are asset resources under `Assets/`, but the general asset identity model is
+ * documented separately in [`resources.md`](resources.md).
+ *
+ * Key rules:
+ *
+ * - Script references in project/game configuration should use `.meta` GUIDs, not paths.
+ * - Folders are containers only: they do not have GUIDs and do not have an asset type.
+ * - `AssetResourceType.Script` is the asset classification for script files, not for
+ *   folders named `Scripts`.
+ * - When a script is selected from settings, the editor should resolve its GUID and
+ *   highlight the corresponding file node in the Assets tree.
+ * - The editor-side script GUID/class/path cache is owned by `ScriptAssetIndexService`,
+ *   not by `AssetsViewModel`; filesystem updates come from `ProjectFileWatcherService`.
  */
