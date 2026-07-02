@@ -37,6 +37,10 @@
     <sys:String x:Key="Inspector_Stats_TotalSize">Сумма размеров файлов:</sys:String>
     <sys:String x:Key="Inspector_Table_Name">Имя</sys:String>
     <sys:String x:Key="Inspector_Table_Value">Значение</sys:String>
+    <sys:String x:Key="Inspector_Apply_Button">Применить</sys:String>
+    <sys:String x:Key="Inspector_Reset_Button">Сбросить</sys:String>
+    <sys:String x:Key="Inspector_ApplyChanges_Confirm_Title">Несохранённые изменения</sys:String>
+    <sys:String x:Key="Inspector_ApplyChanges_Confirm_Message">Есть несохранённые изменения в «{0}». Применить их? Нажмите «Нет», чтобы отменить изменения и вернуть значение, сохранённое на диске.</sys:String>
     <sys:String x:Key="Widget_SceneTree_Placeholder">ДЕРЕВО СЦЕНЫ (ИЕРАРХИЯ)</sys:String>
     <sys:String x:Key="Widget_Assets_Placeholder">БРАУЗЕР АССЕТОВ / РЕСУРСОВ</sys:String>
     <sys:String x:Key="Widget_Assets_SystemFiles">СИСТЕМНЫЕ ФАЙЛЫ</sys:String>

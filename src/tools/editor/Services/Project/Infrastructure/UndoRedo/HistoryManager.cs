@@ -39,27 +39,31 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
         }
 
         /// <summary>
-        /// Отменить последнее действие (Undo).
+        /// Отменить последнее действие (Undo). Возвращает отменённую команду (или null, если
+        /// стек пуст) - вызывающий код использует её тип, чтобы решить, нужно ли перестраивать
+        /// дерево ассетов (см. IAssetsTreeCommand).
         /// </summary>
-        public void Undo()
+        public ICommand? Undo()
         {
-            if (_undoStack.Count == 0) return;
+            if (_undoStack.Count == 0) return null;
 
             ICommand command = _undoStack.Pop();
             command.Undo();
             _redoStack.Push(command);
+            return command;
         }
 
         /// <summary>
-        /// Повторить последнее отмененное действие (Redo).
+        /// Повторить последнее отмененное действие (Redo). Возвращает выполненную команду (см. Undo).
         /// </summary>
-        public void Redo()
+        public ICommand? Redo()
         {
-            if (_redoStack.Count == 0) return;
+            if (_redoStack.Count == 0) return null;
 
             ICommand command = _redoStack.Pop();
             command.Execute();
             _undoStack.Push(command);
+            return command;
         }
 
         public void Clear()

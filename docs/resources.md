@@ -210,6 +210,8 @@ Config data classes use editor-only attributes from
 `Services/Project/Infrastructure/EditorVisibilityAttribute.cs`:
 
 - `EditorVisibilityAttribute` controls hidden/read-only/editable fields.
+- `EditorDisplayNameAttribute` replaces reflected CLR names with human-readable
+  inspector labels without changing serialized TOML keys.
 - `EditorOptionsAttribute` renders scalar properties as combo boxes.
 - `EditorCollectionAttribute` renders list properties and describes sorting,
   duplicate policy, and optional asset type hints.
@@ -224,3 +226,15 @@ global_script_guids = []
 
 `global_script_guids` is ordered and stores only global game scripts. Future picker
 and tree-highlight UI should resolve these GUIDs through `ScriptAssetIndexService`.
+
+Collection fields can choose different editor behaviour by attribute kind.
+
+`defines` is an editable text list. Each item has a remove button, text edits are
+validated as C/C++ preprocessor defines, invalid edits are logged and rolled back in
+the field. `+` adds an empty row, `Reset` reloads the last applied value, and `Apply`
+writes the whole block through undo/redo.
+
+`global_script_guids` is a GUID list rendered as script names. Scripts are added by
+dragging script assets from the project tree, removed with the row remove button, and
+sorted by drag-and-drop. Script add/remove/sort actions save immediately through
+undo/redo.

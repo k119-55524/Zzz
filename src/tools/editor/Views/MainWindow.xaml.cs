@@ -3,6 +3,8 @@ using System;
 using System.Linq;
 using System.Windows;
 using editor.Services;
+using editor.Services.Project;
+using editor.Services.Project.FileTypes.GameConfig;
 using editor.ViewModels;
 using AvalonDock.Layout;
 using editor.Views.Widgets;
@@ -529,6 +531,26 @@ namespace editor
 					sanitizedProjectName = "_" + sanitizedProjectName;
 				string cmakeProjectName = $"{sanitizedProjectName}_scripts";
 
+				// Defines из Configs/game_config.toml (см. GameConfigData.Defines) должны попадать
+				// в реальную сборку scripts.dll - иначе поле в инспекторе ничего не значит.
+				string gameConfigPath = System.IO.Path.Combine(projectRoot, ProjectConstants.SystemDirectories.GameConfigs);
+				var userDefines = new System.Collections.Generic.List<string>();
+				if (System.IO.File.Exists(gameConfigPath))
+				{
+					try
+					{
+						userDefines = GameConfigParser.Deserialize(System.IO.File.ReadAllText(gameConfigPath)).Defines;
+					}
+					catch (Exception ex)
+					{
+						EditorLogger.LogError($"[Scripts] Failed to read defines from game_config.toml: {ex.Message}");
+					}
+				}
+
+				string userDefinesLines = userDefines.Count > 0
+					? Environment.NewLine + string.Join(Environment.NewLine, userDefines.Select(d => $"    \"{d}\""))
+					: string.Empty;
+
 				string cmakeContent = $@"cmake_minimum_required(VERSION 3.28)
 project({cmakeProjectName} LANGUAGES CXX)
 
@@ -558,7 +580,9 @@ target_sources(scripts PRIVATE
 {scriptSources}
 )
 
-target_compile_definitions(scripts PRIVATE Z_EDITOR=1)
+target_compile_definitions(scripts PRIVATE
+    Z_EDITOR=1{userDefinesLines}
+)
 
 target_link_libraries(scripts PRIVATE ""{editorDllLib}"")
 ";

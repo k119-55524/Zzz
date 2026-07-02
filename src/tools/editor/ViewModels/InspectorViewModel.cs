@@ -5,11 +5,14 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
 using editor.Models;
 using editor.Services;
 using editor.Services.Project;
+using editor.Services.Project.Assets;
+using editor.Services.Project.FileTypes.GameConfig;
 using editor.Services.Project.Infrastructure;
 using editor.Services.Project.FileTypes.ProjectSettings;
 
@@ -17,13 +20,13 @@ namespace editor.ViewModels
 {
     public class CollectionItemViewModel : ViewModelBase
     {
-        private readonly Action<CollectionItemViewModel, string> _onChanged;
+        private readonly Func<CollectionItemViewModel, string, bool> _onChanging;
         private string _value;
 
-        public CollectionItemViewModel(string value, Action<CollectionItemViewModel, string> onChanged)
+        public CollectionItemViewModel(string value, Func<CollectionItemViewModel, string, bool> onChanging)
         {
             _value = value;
-            _onChanged = onChanged;
+            _onChanging = onChanging;
         }
 
         public string Value
@@ -31,24 +34,45 @@ namespace editor.ViewModels
             get => _value;
             set
             {
-                if (SetField(ref _value, value))
+                if (_value == value)
                 {
-                    _onChanged(this, value);
+                    return;
+                }
+
+                string oldValue = _value;
+                _value = value;
+                if (_onChanging(this, value))
+                {
+                    OnPropertyChanged(nameof(Value));
+                    OnPropertyChanged(nameof(DisplayValue));
+                }
+                else
+                {
+                    _value = oldValue;
+                    OnPropertyChanged(nameof(Value));
+                    OnPropertyChanged(nameof(DisplayValue));
                 }
             }
         }
+
+        public string DisplayValue
+        {
+            get;
+            set;
+        } = string.Empty;
     }
 
     public class TomlPropertyViewModel : ViewModelBase
     {
         private string _value = string.Empty;
-        private string _newCollectionItemValue = string.Empty;
+        private CollectionItemViewModel? _selectedCollectionItem;
         private readonly PropertyInfo _propInfo;
         private readonly object _owner;
         private readonly Action _onChanged;
         private readonly bool _isProjectNameField;
         private readonly Action<string>? _onProjectRenamed;
         private readonly EditorCollectionAttribute? _collectionAttribute;
+        private List<string> _appliedCollectionValues = new();
 
         public TomlPropertyViewModel(object owner, PropertyInfo propInfo, EditorVisibility visibility, Action onChanged)
         {
@@ -56,10 +80,12 @@ namespace editor.ViewModels
             _propInfo = propInfo;
             _onChanged = onChanged;
             _collectionAttribute = propInfo.GetCustomAttribute<EditorCollectionAttribute>();
-            Name = propInfo.Name;
+            Name = propInfo.GetCustomAttribute<EditorDisplayNameAttribute>()?.DisplayName ?? propInfo.Name;
             IsReadOnly = visibility == EditorVisibility.ReadOnly;
             IsCollection = _collectionAttribute != null && typeof(IEnumerable).IsAssignableFrom(propInfo.PropertyType) && propInfo.PropertyType != typeof(string);
             IsSortableCollection = _collectionAttribute?.IsSortable == true;
+            IsAssetGuidCollection = _collectionAttribute?.Kind == EditorCollectionKind.AssetGuidList;
+            IsStringCollection = _collectionAttribute?.Kind == EditorCollectionKind.StringList;
 
             var options = propInfo.GetCustomAttribute<EditorOptionsAttribute>();
             OptionItems = options != null
@@ -68,10 +94,8 @@ namespace editor.ViewModels
             HasOptions = OptionItems.Count > 0;
             IsStringValue = !IsCollection && !HasOptions;
 
-            RemoveCollectionItemCommand = new RelayCommand<CollectionItemViewModel>(RemoveCollectionItem);
-            MoveCollectionItemUpCommand = new RelayCommand<CollectionItemViewModel>(MoveCollectionItemUp);
-            MoveCollectionItemDownCommand = new RelayCommand<CollectionItemViewModel>(MoveCollectionItemDown);
             AddCollectionItemCommand = new RelayCommand(AddCollectionItem);
+            DeleteCollectionItemCommand = new RelayCommand<CollectionItemViewModel>(DeleteCollectionItem);
 
             RefreshFromOwner();
         }
@@ -91,19 +115,24 @@ namespace editor.ViewModels
         public bool IsReadOnly { get; }
         public bool IsCollection { get; }
         public bool IsSortableCollection { get; }
+        public bool IsAssetGuidCollection { get; }
+        public bool IsStringCollection { get; }
         public bool HasOptions { get; }
         public bool IsStringValue { get; }
         public ObservableCollection<string> OptionItems { get; }
         public ObservableCollection<CollectionItemViewModel> CollectionItems { get; } = new();
-        public ICommand RemoveCollectionItemCommand { get; }
-        public ICommand MoveCollectionItemUpCommand { get; }
-        public ICommand MoveCollectionItemDownCommand { get; }
         public ICommand AddCollectionItemCommand { get; }
+        public ICommand DeleteCollectionItemCommand { get; }
 
-        public string NewCollectionItemValue
+        // Нет пользовательского Apply/Reset на само поле - незавершённые правки коллекции
+        // (например, Defines) фиксируются парой Apply/Reset под всем конфигом
+        // (InspectorViewModel.ApplyPendingChangesCommand/ResetPendingChangesCommand) либо диалогом
+        // при уходе с этого файла (см. InspectorViewModel.CommitOrDiscardPendingTomlChanges).
+
+        public CollectionItemViewModel? SelectedCollectionItem
         {
-            get => _newCollectionItemValue;
-            set => SetField(ref _newCollectionItemValue, value);
+            get => _selectedCollectionItem;
+            set => SetField(ref _selectedCollectionItem, value);
         }
 
         public string Value
@@ -140,11 +169,24 @@ namespace editor.ViewModels
         {
             if (IsCollection)
             {
+                // RefreshFromOwner запускается часто (после каждого удаления, Reset/Apply) - если
+                // каждый раз выделять что-то по умолчанию, жёлтая рамка выделения ListBoxItem
+                // (см. InspectorCollectionListBoxItemStyle) подсвечивает элемент, который
+                // пользователь не выбирал (например, первый дефайн сразу при открытии файла).
+                // Поэтому только сохраняем позицию (индекс) прежнего выделения, если оно было -
+                // если выделения не было (первая загрузка, Reset без предварительного клика по
+                // элементу), после обновления тоже ничего не выделяем.
+                int previousIndex = SelectedCollectionItem != null ? CollectionItems.IndexOf(SelectedCollectionItem) : -1;
+
                 CollectionItems.Clear();
                 foreach (var item in ReadCollectionValues())
                 {
-                    CollectionItems.Add(new CollectionItemViewModel(item, OnCollectionItemChanged));
+                    CollectionItems.Add(CreateCollectionItem(item));
                 }
+                _appliedCollectionValues = ReadCollectionValues();
+                SelectedCollectionItem = previousIndex >= 0 && previousIndex < CollectionItems.Count
+                    ? CollectionItems[previousIndex]
+                    : null;
                 return;
             }
 
@@ -191,7 +233,61 @@ namespace editor.ViewModels
             return new List<string>();
         }
 
+        // Коллекции GameSettings (Defines, Global scripts) сознательно не проходят через
+        // App.ProjectService.History - у них своя собственная пара Apply/Reset, отдельная от
+        // общего Undo/Redo редактора, поэтому пишем значение напрямую, без ICommand.
         private void WriteCollectionValues()
+        {
+            var values = BuildCollectionValues();
+            if (values.SequenceEqual(_appliedCollectionValues, StringComparer.Ordinal))
+            {
+                return;
+            }
+
+            _propInfo.SetValue(_owner, values);
+            SaveAndRefreshCollection();
+        }
+
+        // Есть ли в коллекции черновая правка (добавление/удаление/переименование элемента),
+        // ещё не записанная во владельца. Используется как для CanExecute кнопок Apply/Reset
+        // (InspectorViewModel.ApplyPendingChangesCommand/ResetPendingChangesCommand), так и для
+        // диалога при уходе с файла (InspectorViewModel.CommitOrDiscardPendingTomlChanges).
+        public bool HasPendingChanges => IsCollection && !BuildCollectionValues().SequenceEqual(_appliedCollectionValues, StringComparer.Ordinal);
+
+        // Фиксирует черновую правку коллекции (кнопка "Применить" или "Да" в диалоге при уходе
+        // с файла).
+        public void ApplyPendingChanges()
+        {
+            if (HasPendingChanges)
+            {
+                WriteCollectionValues();
+            }
+        }
+
+        // Отбрасывает черновую правку и возвращает список к значению, сохранённому на диске
+        // (кнопка "Сбросить" или "Нет" в диалоге при уходе с файла).
+        public void DiscardPendingChanges()
+        {
+            if (HasPendingChanges)
+            {
+                RefreshFromOwner();
+            }
+        }
+
+        // Пишет файл на диск и, для дефайнов, перезапускает сборку scripts.dll - без пересборки
+        // правка в инспекторе ни на что не влияет (см. MainWindow.CompileScriptsAsync).
+        private void SaveAndRefreshCollection()
+        {
+            _onChanged?.Invoke();
+            RefreshFromOwner();
+
+            if (_collectionAttribute?.ItemValidation == EditorCollectionItemValidation.CppDefine)
+            {
+                RequestScriptsRebuild();
+            }
+        }
+
+        private List<string> BuildCollectionValues()
         {
             var values = CollectionItems
                 .Select(item => item.Value.Trim())
@@ -205,58 +301,164 @@ namespace editor.ViewModels
                     .ToList();
             }
 
-            _propInfo.SetValue(_owner, values);
-            _onChanged?.Invoke();
+            return values;
         }
 
-        private void OnCollectionItemChanged(CollectionItemViewModel item, string value)
+        private bool OnCollectionItemChanging(CollectionItemViewModel item, string value)
         {
-            WriteCollectionValues();
+            if (_collectionAttribute?.ItemValidation == EditorCollectionItemValidation.CppDefine &&
+                !IsValidCppDefine(value, out string error))
+            {
+                EditorLogger.LogError(error);
+                return false;
+            }
+
+            return true;
         }
 
         private void AddCollectionItem()
         {
-            var value = NewCollectionItemValue.Trim();
-            if (value.Length == 0)
+            var item = CreateCollectionItem(string.Empty);
+            CollectionItems.Add(item);
+            SelectedCollectionItem = item;
+        }
+
+        public void DeleteCollectionItem(CollectionItemViewModel? item)
+        {
+            if (item == null) return;
+            int index = CollectionItems.IndexOf(item);
+            CollectionItems.Remove(item);
+            if (CollectionItems.Count == 0)
             {
+                SelectedCollectionItem = null;
+            }
+            else
+            {
+                SelectedCollectionItem = CollectionItems[Math.Min(index, CollectionItems.Count - 1)];
+            }
+
+            WriteCollectionValues();
+        }
+
+        public void MoveCollectionItem(CollectionItemViewModel? draggedItem, CollectionItemViewModel? targetItem)
+        {
+            if (draggedItem == null || targetItem == null || draggedItem == targetItem || !IsSortableCollection)
+            {
+                return;
+            }
+
+            int oldIndex = CollectionItems.IndexOf(draggedItem);
+            int newIndex = CollectionItems.IndexOf(targetItem);
+            if (oldIndex < 0 || newIndex < 0 || oldIndex == newIndex)
+            {
+                return;
+            }
+
+            CollectionItems.Move(oldIndex, newIndex);
+            SelectedCollectionItem = draggedItem;
+            if (IsAssetGuidCollection)
+            {
+                WriteCollectionValues();
+            }
+        }
+
+        public void TryAddProjectNode(ProjectNode? node)
+        {
+            if (!IsAssetGuidCollection)
+            {
+                return;
+            }
+
+            if (node == null || !node.IsScript)
+            {
+                EditorLogger.LogError("[Game Config] Only script assets can be added to Global scripts.");
+                return;
+            }
+
+            var script = App.ScriptAssetIndexService.ByGuid.Values.FirstOrDefault(info =>
+                string.Equals(info.HppPath, node.HppRelativePath, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(info.MetaPath, node.MetaRelativePath, StringComparison.OrdinalIgnoreCase));
+            if (script == null)
+            {
+                EditorLogger.LogError($"[Game Config] Script '{node.DisplayName}' has no valid GUID in the script index.");
                 return;
             }
 
             if (_collectionAttribute?.AllowDuplicates != true &&
-                CollectionItems.Any(item => string.Equals(item.Value, value, StringComparison.OrdinalIgnoreCase)))
+                CollectionItems.Any(item => string.Equals(item.Value, script.Guid, StringComparison.OrdinalIgnoreCase)))
             {
-                NewCollectionItemValue = string.Empty;
+                EditorLogger.LogError($"[Game Config] Script '{script.ClassName}' is already in Global scripts.");
                 return;
             }
 
-            CollectionItems.Add(new CollectionItemViewModel(value, OnCollectionItemChanged));
-            NewCollectionItemValue = string.Empty;
+            CollectionItems.Add(CreateCollectionItem(script.Guid));
+            SelectedCollectionItem = CollectionItems.LastOrDefault();
             WriteCollectionValues();
         }
 
-        private void RemoveCollectionItem(CollectionItemViewModel? item)
+        // Дефайны попадают в CMakeLists.txt scripts.dll (см. MainWindow.CompileScriptsAsync) - без
+        // пересборки правка в инспекторе ни на что не влияет. Явно логируем запуск - иначе для
+        // пользователя пересборка выглядит так, будто ничего не произошло.
+        private static void RequestScriptsRebuild()
         {
-            if (item == null) return;
-            CollectionItems.Remove(item);
-            WriteCollectionValues();
+            if (Application.Current?.MainWindow is not MainWindow mainWindow)
+            {
+                return;
+            }
+
+            EditorLogger.LogInfo("[Game Config] Defines changed - rebuilding scripts.dll...");
+
+            if (mainWindow.IsActive)
+            {
+                _ = mainWindow.CheckAndCompileScriptsAsync(forceRebuild: true);
+            }
+            else if (mainWindow.DataContext is MainWindowViewModel vm && vm.CurrentProjectPath != null)
+            {
+                ScriptRebuildCoordinator.RequestRebuild(vm.CurrentProjectPath);
+            }
         }
 
-        private void MoveCollectionItemUp(CollectionItemViewModel? item)
+        private CollectionItemViewModel CreateCollectionItem(string value)
         {
-            if (item == null || !IsSortableCollection) return;
-            int index = CollectionItems.IndexOf(item);
-            if (index <= 0) return;
-            CollectionItems.Move(index, index - 1);
-            WriteCollectionValues();
+            var item = new CollectionItemViewModel(value, OnCollectionItemChanging)
+            {
+                DisplayValue = ResolveCollectionDisplayValue(value)
+            };
+            return item;
         }
 
-        private void MoveCollectionItemDown(CollectionItemViewModel? item)
+        private string ResolveCollectionDisplayValue(string value)
         {
-            if (item == null || !IsSortableCollection) return;
-            int index = CollectionItems.IndexOf(item);
-            if (index < 0 || index >= CollectionItems.Count - 1) return;
-            CollectionItems.Move(index, index + 1);
-            WriteCollectionValues();
+            if (IsAssetGuidCollection)
+            {
+                if (App.ScriptAssetIndexService.TryGetByGuid(value, out ScriptAssetInfo info))
+                {
+                    return info.ClassName;
+                }
+
+                return string.IsNullOrWhiteSpace(value) ? "<missing script>" : $"<missing> {value}";
+            }
+
+            return value;
+        }
+
+        private static bool IsValidCppDefine(string value, out string error)
+        {
+            error = string.Empty;
+            string trimmed = value.Trim();
+            if (trimmed.Length == 0)
+            {
+                return true;
+            }
+
+            var match = Regex.Match(trimmed, @"^([A-Za-z_][A-Za-z0-9_]*)(=.*)?$");
+            if (!match.Success)
+            {
+                error = $"[Game Config] Invalid C++ define '{value}'. Use NAME or NAME=value; NAME must be a valid C/C++ identifier.";
+                return false;
+            }
+
+            return true;
         }
 
         private static IEnumerable<string> ResolveOptions(EditorOptionsAttribute attribute)
@@ -291,6 +493,34 @@ namespace editor.ViewModels
         public InspectorViewModel() : base(WidgetType.Inspector)
         {
             App.SelectionService.SelectedItemChanged += OnSelectedItemChanged;
+            ApplyPendingChangesCommand = new RelayCommand(ApplyAllPendingTomlChanges, HasAnyPendingTomlChanges);
+            ResetPendingChangesCommand = new RelayCommand(DiscardAllPendingTomlChanges, HasAnyPendingTomlChanges);
+        }
+
+        // Reset/Apply на весь открытый конфиг (см. InspectorWidget.xaml) - фиксируют или
+        // отбрасывают черновые правки любых коллекций текущего файла (например, Defines).
+        public ICommand ApplyPendingChangesCommand { get; }
+        public ICommand ResetPendingChangesCommand { get; }
+
+        private bool HasAnyPendingTomlChanges()
+        {
+            return _allTomlProperties.Any(p => p.HasPendingChanges);
+        }
+
+        private void ApplyAllPendingTomlChanges()
+        {
+            foreach (var prop in _allTomlProperties)
+            {
+                prop.ApplyPendingChanges();
+            }
+        }
+
+        private void DiscardAllPendingTomlChanges()
+        {
+            foreach (var prop in _allTomlProperties)
+            {
+                prop.DiscardPendingChanges();
+            }
         }
 
         public string SearchText
@@ -325,6 +555,11 @@ namespace editor.ViewModels
 
         private void OnSelectedItemChanged(object? item)
         {
+            // Гарантируем, что незавершённая правка коллекции (Apply ещё не нажат) не потеряется
+            // молча при переключении на другой узел дерева - иначе _allTomlProperties сейчас
+            // очистится вместе с несохранённым состоянием (см. CommitOrDiscardPendingTomlChanges).
+            CommitOrDiscardPendingTomlChanges();
+
             SelectedItem = item;
             ShowFolderStats = false;
             ShowTomlProperties = false;
@@ -492,8 +727,40 @@ namespace editor.ViewModels
             set => SetField(ref _showTomlProperties, value);
         }
 
+        // Спрашивает один раз за все накопленные черновые правки текущего файла (обычно это
+        // только Defines) - предлагает применить их или отбросить и вернуть значение с диска.
+        // Вызывается при выборе другого узла дерева и при закрытии проекта.
+        private void CommitOrDiscardPendingTomlChanges()
+        {
+            var pending = _allTomlProperties.Where(p => p.HasPendingChanges).ToList();
+            if (pending.Count == 0)
+            {
+                return;
+            }
+
+            string title = Application.Current?.TryFindResource("Inspector_ApplyChanges_Confirm_Title") as string
+                ?? "Unsaved changes";
+            string messageFormat = Application.Current?.TryFindResource("Inspector_ApplyChanges_Confirm_Message") as string
+                ?? "There are unsaved changes in '{0}'. Apply them now? Choose \"No\" to discard them and revert to the value saved on disk.";
+            string names = string.Join(", ", pending.Select(p => p.Name));
+
+            var result = MessageBox.Show(string.Format(messageFormat, names), title, MessageBoxButton.YesNo, MessageBoxImage.Question);
+            foreach (var prop in pending)
+            {
+                if (result == MessageBoxResult.Yes)
+                {
+                    prop.ApplyPendingChanges();
+                }
+                else
+                {
+                    prop.DiscardPendingChanges();
+                }
+            }
+        }
+
         public override void OnProjectClosed()
         {
+            CommitOrDiscardPendingTomlChanges();
             base.OnProjectClosed();
             SelectedItem = null;
             FolderStats = null;

@@ -10,17 +10,21 @@ namespace editor.Services.Project.FileTypes.GameConfig
 	public class GameConfigData
 	{
 		[EditorVisibility(EditorVisibility.ReadOnly)]
+		[EditorDisplayName("Version")]
 		public string Version { get; set; } = string.Empty;
 
 		[EditorVisibility(EditorVisibility.Editable)]
-		[EditorCollection(EditorCollectionKind.StringList, AllowDuplicates = false)]
+		[EditorDisplayName("Defines")]
+		[EditorCollection(EditorCollectionKind.StringList, AllowDuplicates = false, IsSortable = true, ItemValidation = EditorCollectionItemValidation.CppDefine)]
 		public List<string> Defines { get; set; } = new();
 
 		[EditorVisibility(EditorVisibility.Editable)]
+		[EditorDisplayName("Log listener")]
 		[EditorOptions(EditorOptionsSource.LogListeners, AllowNone = true)]
 		public string LogListener { get; set; } = string.Empty;
 
 		[EditorVisibility(EditorVisibility.Editable)]
+		[EditorDisplayName("Global scripts")]
 		[EditorCollection(
 			EditorCollectionKind.AssetGuidList,
 			AssetType = AssetResourceType.Script,

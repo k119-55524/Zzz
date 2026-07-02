@@ -49,7 +49,40 @@ namespace editor.Views.Widgets
 
 		private void TreeView_SelectedItemChanged(object sender, System.Windows.RoutedPropertyChangedEventArgs<object> e)
 		{
+			// AssetsTree и SystemTree видны одновременно и независимо друг от друга хранят
+			// собственный SelectedItem. Если не сбрасывать выделение в другом дереве, то повторный
+			// клик по узлу, оставшемуся "выделенным" там с прошлого раза, не поднимет
+			// SelectedItemChanged (для WPF это не изменение значения) - и SelectionService/Inspector
+			// не узнают о клике, хотя визуально этот узел даже не выглядел выделенным (фокус был
+			// в другом дереве).
+			var otherTree = sender == AssetsTree ? SystemTree : AssetsTree;
+			if (otherTree.SelectedItem != null)
+			{
+				otherTree.SelectedItemChanged -= TreeView_SelectedItemChanged;
+				ClearTreeSelection(otherTree);
+				otherTree.SelectedItemChanged += TreeView_SelectedItemChanged;
+			}
+
 			App.SelectionService.SelectedItem = e.NewValue;
+		}
+
+		private static void ClearTreeSelection(ItemsControl container)
+		{
+			foreach (var item in container.Items)
+			{
+				if (container.ItemContainerGenerator.ContainerFromItem(item) is not TreeViewItem treeViewItem)
+				{
+					continue;
+				}
+
+				if (treeViewItem.IsSelected)
+				{
+					treeViewItem.IsSelected = false;
+					return;
+				}
+
+				ClearTreeSelection(treeViewItem);
+			}
 		}
 
 		private ProjectNode? GetSelectedNode(MenuItem menuItem)

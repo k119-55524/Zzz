@@ -3,6 +3,7 @@ using System.IO;
 using editor.Models;
 using System.Windows;
 using editor.Services;
+using IAssetsTreeCommand = editor.Services.Project.Infrastructure.UndoRedo.IAssetsTreeCommand;
 using System.Windows.Input;
 using System.Collections.ObjectModel;
 
@@ -495,10 +496,17 @@ namespace editor.ViewModels
 		{
 			if (App.ProjectService.History.CanUndo)
 			{
-				App.ProjectService.History.Undo();
+				var command = App.ProjectService.History.Undo();
 				OnPropertyChanged(nameof(WindowTitle));
 				CommandManager.InvalidateRequerySuggested();
-				RefreshAssetsTree();
+
+				// Дерево ассетов перестраиваем только для команд, которые реально создают/удаляют/
+				// переименовывают файлы - иначе, например, Undo правки поля конфига без нужды
+				// пересобирает дерево, роняя текущее выделение в AssetsWidget (см. IAssetsTreeCommand).
+				if (command is IAssetsTreeCommand)
+				{
+					RefreshAssetsTree();
+				}
 			}
 		}
 
@@ -506,10 +514,14 @@ namespace editor.ViewModels
 		{
 			if (App.ProjectService.History.CanRedo)
 			{
-				App.ProjectService.History.Redo();
+				var command = App.ProjectService.History.Redo();
 				OnPropertyChanged(nameof(WindowTitle));
 				CommandManager.InvalidateRequerySuggested();
-				RefreshAssetsTree();
+
+				if (command is IAssetsTreeCommand)
+				{
+					RefreshAssetsTree();
+				}
 			}
 		}
 

@@ -4,7 +4,7 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
     /// Обновляет поле "class_name" в .meta файле скрипта (GUID не трогает).
     /// Применяется после физического переименования .meta на новый путь.
     /// </summary>
-    public class UpdateScriptMetaClassNameCommand : ICommand
+    public class UpdateScriptMetaClassNameCommand : IAssetsTreeCommand
     {
         private readonly string _metaPath;
         private readonly string _newClassName;

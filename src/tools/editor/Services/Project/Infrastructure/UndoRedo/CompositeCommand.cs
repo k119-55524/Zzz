@@ -7,7 +7,7 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
     /// Объединяет несколько команд в одну атомарную операцию для Undo/Redo
     /// (например, переименование триады hpp+cpp+meta одним действием Ctrl+Z).
     /// </summary>
-    public class CompositeCommand : ICommand, IDisposable
+    public class CompositeCommand : IAssetsTreeCommand, IDisposable
     {
         private readonly List<ICommand> _commands;
 

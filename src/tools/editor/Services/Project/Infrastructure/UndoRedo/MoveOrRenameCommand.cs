@@ -6,7 +6,7 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
     /// <summary>
     /// Команда перемещения или переименования файла/директории.
     /// </summary>
-    public class MoveOrRenameCommand : ICommand
+    public class MoveOrRenameCommand : IAssetsTreeCommand
     {
         private readonly string _sourcePath;
         private readonly string _destPath;

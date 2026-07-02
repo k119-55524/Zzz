@@ -7,7 +7,7 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
     /// <summary>
     /// Команда удаления файла или папки с поддержкой перемещения в резервную копию и восстановления.
     /// </summary>
-    public class DeleteFileOrFolderCommand : ICommand, IDisposable
+    public class DeleteFileOrFolderCommand : IAssetsTreeCommand, IDisposable
     {
         private readonly List<string> _physicalPaths;
         private readonly string _projectRoot;

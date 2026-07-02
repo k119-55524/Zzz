@@ -7,7 +7,7 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
     /// <summary>
     /// Команда создания физической папки на диске с поддержкой Undo/Redo.
     /// </summary>
-    public class CreateFolderCommand : ICommand
+    public class CreateFolderCommand : IAssetsTreeCommand
     {
         private readonly string _relativePath;
         private readonly string _projectRoot;

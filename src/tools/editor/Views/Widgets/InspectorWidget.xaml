@@ -99,6 +99,190 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style x:Key="InspectorComboBoxItemStyle" TargetType="ComboBoxItem">
+            <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Light}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="ItemBorder"
+                                Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource Brush_Hover}" />
+                                <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource Brush_Checked}" />
+                                <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Secondary}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="InspectorComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Light}" />
+            <Setter Property="Background" Value="{DynamicResource Brush_Panel_Header}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush_Border}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="4,2" />
+            <Setter Property="MinHeight" Value="24" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="ItemContainerStyle" Value="{StaticResource InspectorComboBoxItemStyle}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton x:Name="ToggleButton"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                          Focusable="False"
+                                          ClickMode="Press"
+                                          Background="{TemplateBinding Background}"
+                                          BorderBrush="{TemplateBinding BorderBrush}"
+                                          BorderThickness="{TemplateBinding BorderThickness}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="ComboBorder"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="22" />
+                                                </Grid.ColumnDefinitions>
+                                                <ContentPresenter Grid.Column="0"
+                                                                  Margin="6,0,4,0"
+                                                                  VerticalAlignment="Center"
+                                                                  HorizontalAlignment="Left"
+                                                                  RecognizesAccessKey="True"
+                                                                  Content="{Binding SelectionBoxItem, RelativeSource={RelativeSource TemplatedParent}}" />
+                                                <Path Grid.Column="1"
+                                                      Width="8"
+                                                      Height="5"
+                                                      VerticalAlignment="Center"
+                                                      HorizontalAlignment="Center"
+                                                      Fill="{DynamicResource Brush_Text_Secondary}"
+                                                      Data="M0,0 L4,5 L8,0 Z" />
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="ComboBorder" Property="BorderBrush" Value="{DynamicResource Brush_Text_Primary}" />
+                                            </Trigger>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="ComboBorder" Property="BorderBrush" Value="{DynamicResource Brush_Text_Primary}" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+
+                            <Popup x:Name="PART_Popup"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   Placement="Bottom"
+                                   PopupAnimation="Fade">
+                                <Border Background="{DynamicResource Brush_Panel_Background}"
+                                        BorderBrush="{DynamicResource Brush_Border}"
+                                        BorderThickness="1"
+                                        MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
+                                    <ScrollViewer MaxHeight="220" VerticalScrollBarVisibility="Auto">
+                                        <ItemsPresenter />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.6" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="InspectorToolButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource Brush_Panel_Header}" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Light}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush_Border}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="MinWidth" Value="28" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="Padding" Value="8,2" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              RecognizesAccessKey="True" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource Brush_Hover}" />
+                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource Brush_Text_Primary}" />
+                                <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource Brush_Checked}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                                <Setter Property="Cursor" Value="Arrow" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="InspectorCollectionListBoxItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Light}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="ItemBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="Transparent"
+                                BorderThickness="1"
+                                Padding="0"
+                                Margin="0,0,0,4">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!-- Специально без триггера IsSelected - SelectedCollectionItem это чисто
+                                 внутреннее состояние (для delete/add/drag), пользователю не нужно
+                                 видеть жёлтую рамку "выделения" на элементе списка дефайнов/скриптов. -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource Brush_Hover}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <Grid Background="{DynamicResource Brush_Panel_Background}">
@@ -232,11 +416,11 @@
                                         </Grid.ColumnDefinitions>
                                         
                                         <!-- Текст заголовка выравнивается по верхней границе на случай многострочного значения -->
-                                        <TextBlock Grid.Column="0" 
-                                                   Text="{Binding Name}" 
-                                                   Foreground="{DynamicResource Brush_Text_Secondary}" 
-                                                   VerticalAlignment="Center" 
-                                                   Margin="16,0,8,0"
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding Name}"
+                                                   Foreground="{DynamicResource Brush_Text_Secondary}"
+                                                   VerticalAlignment="Top"
+                                                   Margin="16,4,8,0"
                                                    FontSize="13"/>
                                                    
                                         <!-- Однострочное поле: применяется по потере фокуса или Enter (см. ValueTextBox_PreviewKeyDown) -->
@@ -274,16 +458,11 @@
                                         <ComboBox Grid.Column="2"
                                                   ItemsSource="{Binding OptionItems}"
                                                   SelectedItem="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
-                                                  Background="{DynamicResource Brush_Panel_Header}"
-                                                  Foreground="{DynamicResource Brush_Text_Light}"
-                                                  BorderBrush="{DynamicResource Brush_Border}"
-                                                  BorderThickness="1"
-                                                  Padding="4,2"
                                                   Margin="8,0,16,0"
                                                   FontSize="13"
                                                   VerticalAlignment="Center">
                                             <ComboBox.Style>
-                                                <Style TargetType="ComboBox">
+                                                <Style TargetType="ComboBox" BasedOn="{StaticResource InspectorComboBoxStyle}">
                                                     <Setter Property="Visibility" Value="Collapsed"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding HasOptions}" Value="True">
@@ -309,59 +488,126 @@
                                                 </Style>
                                             </StackPanel.Style>
 
-                                            <ItemsControl ItemsSource="{Binding CollectionItems}">
-                                                <ItemsControl.ItemTemplate>
+                                            <ListBox ItemsSource="{Binding CollectionItems}"
+                                                     SelectedItem="{Binding SelectedCollectionItem, Mode=TwoWay}"
+                                                     ItemContainerStyle="{StaticResource InspectorCollectionListBoxItemStyle}"
+                                                     AlternationCount="2"
+                                                     Background="Transparent"
+                                                     BorderThickness="0"
+                                                     AllowDrop="True"
+                                                     PreviewMouseLeftButtonDown="CollectionListBox_PreviewMouseLeftButtonDown"
+                                                     PreviewMouseMove="CollectionListBox_PreviewMouseMove"
+                                                     Drop="CollectionListBox_Drop">
+                                                <ListBox.ItemTemplate>
                                                     <DataTemplate>
-                                                        <Grid Margin="0,0,0,4">
+                                                        <Grid>
                                                             <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="*"/>
-                                                                <ColumnDefinition Width="24"/>
-                                                                <ColumnDefinition Width="24"/>
-                                                                <ColumnDefinition Width="24"/>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="28" />
                                                             </Grid.ColumnDefinitions>
-                                                            <TextBox Grid.Column="0"
+
+                                                            <!-- Ручка для drag-n-drop сортировки - перетаскивание начинается только с неё
+                                                                 (см. InspectorWidget.CollectionListBox_PreviewMouseLeftButtonDown), иначе
+                                                                 клик мышью по TextBox дефайна конфликтовал бы с постановкой курсора текста. -->
+                                                            <TextBlock Grid.Column="0"
+                                                                       Text="&#x22EE;"
+                                                                       Tag="CollectionDragHandle"
+                                                                       Foreground="{DynamicResource Brush_Text_Secondary}"
+                                                                       FontWeight="Bold"
+                                                                       Cursor="SizeAll"
+                                                                       VerticalAlignment="Center"
+                                                                       HorizontalAlignment="Center"
+                                                                       Width="16"
+                                                                       Margin="0,0,4,0">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding DataContext.IsSortableCollection, RelativeSource={RelativeSource AncestorType=ListBox}}" Value="True">
+                                                                                <Setter Property="Visibility" Value="Visible" />
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+
+                                                            <TextBox Grid.Column="1"
                                                                      Text="{Binding Value, UpdateSourceTrigger=LostFocus}"
-                                                                     Background="{DynamicResource Brush_Panel_Header}"
                                                                      Foreground="{DynamicResource Brush_Text_Light}"
                                                                      BorderBrush="{DynamicResource Brush_Border}"
                                                                      BorderThickness="1"
                                                                      Padding="4,3"
                                                                      FontSize="13"
-                                                                     PreviewKeyDown="ValueTextBox_PreviewKeyDown"/>
-                                                            <Button Grid.Column="1" Content="^"
-                                                                    Command="{Binding DataContext.MoveCollectionItemUpCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                                    CommandParameter="{Binding}"
-                                                                    Margin="4,0,0,0"/>
-                                                            <Button Grid.Column="2" Content="v"
-                                                                    Command="{Binding DataContext.MoveCollectionItemDownCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                                    CommandParameter="{Binding}"
-                                                                    Margin="4,0,0,0"/>
-                                                            <Button Grid.Column="3" Content="x"
-                                                                    Command="{Binding DataContext.RemoveCollectionItemCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                     PreviewKeyDown="ValueTextBox_PreviewKeyDown">
+                                                                <TextBox.Style>
+                                                                    <Style TargetType="TextBox">
+                                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                                        <Setter Property="Background" Value="{DynamicResource Brush_Panel_Header}" />
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding DataContext.IsStringCollection, RelativeSource={RelativeSource AncestorType=ListBox}}" Value="True">
+                                                                                <Setter Property="Visibility" Value="Visible" />
+                                                                            </DataTrigger>
+                                                                            <!-- Чередующийся фон поля ввода дефайна - как в основной таблице
+                                                                                 свойств инспектора (см. Brush_Log_Even/Odd в TomlProperties). -->
+                                                                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=(ItemsControl.AlternationIndex)}" Value="0">
+                                                                                <Setter Property="Background" Value="{DynamicResource Brush_Log_Even}" />
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=(ItemsControl.AlternationIndex)}" Value="1">
+                                                                                <Setter Property="Background" Value="{DynamicResource Brush_Log_Odd}" />
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBox.Style>
+                                                            </TextBox>
+
+                                                            <Border Grid.Column="1"
+                                                                    Background="{DynamicResource Brush_Panel_Header}"
+                                                                    BorderBrush="{DynamicResource Brush_Border}"
+                                                                    BorderThickness="1"
+                                                                    Padding="6,3">
+                                                                <Border.Style>
+                                                                    <Style TargetType="Border">
+                                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding DataContext.IsAssetGuidCollection, RelativeSource={RelativeSource AncestorType=ListBox}}" Value="True">
+                                                                                <Setter Property="Visibility" Value="Visible" />
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </Border.Style>
+                                                                <TextBlock Text="{Binding DisplayValue}"
+                                                                           Foreground="{DynamicResource Brush_Text_Light}"
+                                                                           FontSize="13"
+                                                                           VerticalAlignment="Center" />
+                                                            </Border>
+
+                                                            <Button Grid.Column="2"
+                                                                    Content="x"
+                                                                    Style="{StaticResource InspectorToolButtonStyle}"
+                                                                    Command="{Binding DataContext.DeleteCollectionItemCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
                                                                     CommandParameter="{Binding}"
                                                                     Margin="4,0,0,0"/>
                                                         </Grid>
                                                     </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
 
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="32"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBox Grid.Column="0"
-                                                         Text="{Binding NewCollectionItemValue, UpdateSourceTrigger=PropertyChanged}"
-                                                         Background="{DynamicResource Brush_Panel_Header}"
-                                                         Foreground="{DynamicResource Brush_Text_Light}"
-                                                         BorderBrush="{DynamicResource Brush_Border}"
-                                                         BorderThickness="1"
-                                                         Padding="4,3"
-                                                         FontSize="13"/>
-                                                <Button Grid.Column="1" Content="+"
-                                                        Command="{Binding AddCollectionItemCommand}"
-                                                        Margin="4,0,0,0"/>
-                                            </Grid>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
+                                                <StackPanel.Style>
+                                                    <Style TargetType="StackPanel">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsStringCollection}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </StackPanel.Style>
+                                                <Button Content="+"
+                                                        Style="{StaticResource InspectorToolButtonStyle}"
+                                                        Command="{Binding AddCollectionItemCommand}"/>
+                                            </StackPanel>
                                         </StackPanel>
                                     </Grid>
                                 </Border>
@@ -376,6 +622,21 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
+
+                    <!-- Reset/Apply на весь конфиг - активны, только пока есть черновые правки
+                         коллекций (например, Defines). Apply фиксирует их и запускает пересборку
+                         scripts.dll (см. InspectorViewModel.ApplyPendingChangesCommand/ResetPendingChangesCommand).
+                         При уходе с этого файла в инспекторе показывается тот же выбор Apply/Reset
+                         в виде диалога (см. CommitOrDiscardPendingChanges). -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,16,0">
+                        <Button Content="{DynamicResource Inspector_Reset_Button}"
+                                Style="{StaticResource InspectorToolButtonStyle}"
+                                Command="{Binding ResetPendingChangesCommand}"
+                                Margin="0,0,4,0"/>
+                        <Button Content="{DynamicResource Inspector_Apply_Button}"
+                                Style="{StaticResource InspectorToolButtonStyle}"
+                                Command="{Binding ApplyPendingChangesCommand}"/>
+                    </StackPanel>
                 </StackPanel>
             </ScrollViewer>
         </Grid>

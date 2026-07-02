@@ -39,6 +39,21 @@ namespace editor.Services.Project.Infrastructure
 	}
 
 	/// <summary>
+	/// Overrides the label shown for a property in the inspector. Without this
+	/// attribute the raw property name is used.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
+	public class EditorDisplayNameAttribute : Attribute
+	{
+		public string DisplayName { get; }
+
+		public EditorDisplayNameAttribute(string displayName)
+		{
+			DisplayName = displayName;
+		}
+	}
+
+	/// <summary>
 	/// Describes how the editor should render a collection property. The data model
 	/// still owns the real value; this attribute only selects the inspector control
 	/// and validation hints.
@@ -54,6 +69,22 @@ namespace editor.Services.Project.Infrastructure
 		/// A list of GUID references to assets from the project asset tree.
 		/// </summary>
 		AssetGuidList
+	}
+
+	/// <summary>
+	/// Names a validation rule applied to individual items of a string collection.
+	/// </summary>
+	public enum EditorCollectionItemValidation
+	{
+		/// <summary>
+		/// No validation is performed on item values.
+		/// </summary>
+		None,
+
+		/// <summary>
+		/// The item must look like a C/C++ preprocessor define (NAME or NAME=value).
+		/// </summary>
+		CppDefine
 	}
 
 	/// <summary>
@@ -88,6 +119,11 @@ namespace editor.Services.Project.Infrastructure
 		/// use it to choose a picker and to resolve display names.
 		/// </summary>
 		public AssetResourceType AssetType { get; set; }
+
+		/// <summary>
+		/// Optional per-item validation rule applied before an edit is accepted.
+		/// </summary>
+		public EditorCollectionItemValidation ItemValidation { get; set; } = EditorCollectionItemValidation.None;
 
 		public EditorCollectionAttribute(EditorCollectionKind kind)
 		{

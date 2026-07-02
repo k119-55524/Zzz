@@ -37,6 +37,10 @@
     <sys:String x:Key="Inspector_Stats_TotalSize">Total size of files:</sys:String>
     <sys:String x:Key="Inspector_Table_Name">Name</sys:String>
     <sys:String x:Key="Inspector_Table_Value">Value</sys:String>
+    <sys:String x:Key="Inspector_Apply_Button">Apply</sys:String>
+    <sys:String x:Key="Inspector_Reset_Button">Reset</sys:String>
+    <sys:String x:Key="Inspector_ApplyChanges_Confirm_Title">Unsaved changes</sys:String>
+    <sys:String x:Key="Inspector_ApplyChanges_Confirm_Message">There are unsaved changes in '{0}'. Apply them now? Choose "No" to discard them and revert to the value saved on disk.</sys:String>
     <sys:String x:Key="Widget_SceneTree_Placeholder">SCENE HIERARCHY TREE</sys:String>
     <sys:String x:Key="Widget_Assets_Placeholder">ASSETS / FILE BROWSER</sys:String>
     <sys:String x:Key="Widget_Assets_SystemFiles">SYSTEM FILES</sys:String>

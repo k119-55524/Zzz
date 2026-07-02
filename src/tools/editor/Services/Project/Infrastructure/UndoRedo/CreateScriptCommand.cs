@@ -7,7 +7,7 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
 	/// <summary>
 	/// Команда создания пары hpp/cpp скрипта из шаблонов и .meta файла с GUID, с поддержкой Undo/Redo.
 	/// </summary>
-	public class CreateScriptCommand : ICommand
+	public class CreateScriptCommand : IAssetsTreeCommand
 	{
 		private readonly string _newRelPath;
 		private readonly string _className;
