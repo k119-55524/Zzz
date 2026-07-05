@@ -7,13 +7,9 @@ build_vs*/
 out/
 cmake-build-*/
 
-# Visual Studio
+# Служебные dot-папки IDE/инструментов (.vs, .idea, .claude, .agents, .continue и т.п.)
 
-.vs/
-
-# JetBrains
-
-.idea/
+.*/
 
 # CMake generated files
 
@@ -76,10 +72,6 @@ src/tools/config_switcher/build/
 
 .DS_Store
 **/.DS_Store
-
-# Claude Code local settings
-
-.claude/settings.local.json
 
 # CMake generated rule files
 
