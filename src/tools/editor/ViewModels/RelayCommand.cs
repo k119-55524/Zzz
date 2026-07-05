@@ -1,4 +1,4 @@
-
+﻿
 using System.Windows.Input;
 
 namespace editor.ViewModels

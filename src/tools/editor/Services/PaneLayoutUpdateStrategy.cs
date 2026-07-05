@@ -1,4 +1,4 @@
-
+﻿
 using editor.Models;
 using editor.ViewModels;
 using AvalonDock.Layout;

@@ -1,4 +1,4 @@
-namespace editor.Services.Project.Assets
+﻿namespace editor.Services.Project.Assets
 {
 	public sealed class ScriptAssetInfo
 	{

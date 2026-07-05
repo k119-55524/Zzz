@@ -1,4 +1,4 @@
-namespace editor.Services.Project.Infrastructure
+﻿namespace editor.Services.Project.Infrastructure
 {
     /// <summary>
     /// Интерфейс хранилища файлов для абстрагирования дисковых операций (I/O).

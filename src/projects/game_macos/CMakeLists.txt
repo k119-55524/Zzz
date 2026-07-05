@@ -38,7 +38,6 @@ file(WRITE "${GENERATED_REGISTER_CPP}" "${REGISTER_SCRIPTS_CONTENT}")
 target_include_directories(game_macos PRIVATE
     pch
     ${CMAKE_CURRENT_SOURCE_DIR}
-    "${CMAKE_SOURCE_DIR}/src/engine/private/core"
     "${CMAKE_SOURCE_DIR}/src/engine/public/core/scene"
     "${CMAKE_SOURCE_DIR}/src/engine/public/core/scene/scripts"
     "${CMAKE_SOURCE_DIR}/src/engine/public/core/scene/scripts/base_script"

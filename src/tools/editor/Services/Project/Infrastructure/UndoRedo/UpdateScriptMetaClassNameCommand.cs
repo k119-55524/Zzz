@@ -1,4 +1,4 @@
-namespace editor.Services.Project.Infrastructure.UndoRedo
+﻿namespace editor.Services.Project.Infrastructure.UndoRedo
 {
     /// <summary>
     /// Обновляет поле "class_name" в .meta файле скрипта (GUID не трогает).

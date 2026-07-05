@@ -1,4 +1,4 @@
-namespace editor.Models
+﻿namespace editor.Models
 {
     public enum WidgetType
     {

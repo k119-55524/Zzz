@@ -1,3 +1,3 @@
-namespace BuildConfigurator.Services;
+﻿namespace BuildConfigurator.Services;
 
 public class CMakeService { }

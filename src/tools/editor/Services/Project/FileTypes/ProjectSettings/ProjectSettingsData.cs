@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using editor.Services.Project.Infrastructure;
 using editor.Services.Project.Infrastructure.UndoRedo;
 

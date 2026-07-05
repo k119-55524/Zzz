@@ -1,4 +1,4 @@
-
+﻿
 namespace editor.Services
 {
 	public enum LogSource

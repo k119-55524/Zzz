@@ -1,4 +1,4 @@
-namespace BuildConfigurator.Services;
+﻿namespace BuildConfigurator.Services;
 
 public enum ConfirmResult { Yes, No, Cancel }
 

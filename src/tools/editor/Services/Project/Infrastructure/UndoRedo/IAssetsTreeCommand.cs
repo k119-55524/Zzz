@@ -1,4 +1,4 @@
-namespace editor.Services.Project.Infrastructure.UndoRedo
+﻿namespace editor.Services.Project.Infrastructure.UndoRedo
 {
     /// <summary>
     /// Marks commands that create/delete/rename/move files or folders, so that Undo/Redo

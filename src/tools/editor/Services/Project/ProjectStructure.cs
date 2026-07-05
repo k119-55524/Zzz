@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using editor.Services.Project.FileTypes.GameConfig;
 using editor.Services.Project.Infrastructure;

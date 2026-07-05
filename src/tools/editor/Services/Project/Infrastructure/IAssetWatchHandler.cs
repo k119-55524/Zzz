@@ -1,4 +1,4 @@
-namespace editor.Services.Project.Infrastructure
+﻿namespace editor.Services.Project.Infrastructure
 {
     /// <summary>
     /// Обрабатывает внешние изменения файлов конкретного типа ассета (обнаруженные через

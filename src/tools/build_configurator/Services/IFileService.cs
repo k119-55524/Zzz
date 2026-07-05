@@ -1,4 +1,4 @@
-using BuildConfigurator.Models;
+﻿using BuildConfigurator.Models;
 
 namespace BuildConfigurator.Services;
 

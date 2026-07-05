@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using editor.Models;
 
 namespace editor.Services.Project.Infrastructure

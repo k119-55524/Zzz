@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Windows;
 using BuildConfigurator.Services;
 using BuildConfigurator.ViewModels;

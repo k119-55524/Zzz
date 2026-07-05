@@ -1,4 +1,4 @@
-namespace editor.Services.Project.Infrastructure.UndoRedo
+﻿namespace editor.Services.Project.Infrastructure.UndoRedo
 {
     /// <summary>
     /// Интерфейс для всех выполняемых и отменяемых команд в редакторе.

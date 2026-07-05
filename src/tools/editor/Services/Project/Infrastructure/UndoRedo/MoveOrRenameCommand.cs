@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 
 namespace editor.Services.Project.Infrastructure.UndoRedo

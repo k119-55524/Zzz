@@ -92,6 +92,16 @@ endmacro()
 
 add_subdirectory(src/common)
 add_subdirectory(src/logger)
+
+# throw_wrappers.cpp (common_lib) логирует через DOutException (logger_lib) - реальная,
+# а не только CMake-графовая, зависимость common_lib -> logger_lib в дополнение к уже
+# объявленной logger_lib -> common_lib (src/logger/CMakeLists.txt). Объявляем её здесь (после
+# того как оба таргета уже созданы), чтобы генераторы Ninja/Makefiles сами сгенерировали
+# корректный (сгруппированный) порядок линковки для этой пары статических библиотек - без
+# этого GNU ld на Linux/Android может не разрешить символы Logger, найденные уже после
+# однопроходного сканирования logger_lib.
+target_link_libraries(common_lib PUBLIC logger_lib)
+
 add_subdirectory(src/tools/RemoteLogViewer)
 add_subdirectory(src/engine)
 

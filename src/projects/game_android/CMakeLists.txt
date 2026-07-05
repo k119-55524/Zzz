@@ -41,7 +41,6 @@ target_precompile_headers(game_android PRIVATE
 target_include_directories(game_android PRIVATE
     pch
     ${CMAKE_CURRENT_SOURCE_DIR}
-    "${CMAKE_SOURCE_DIR}/src/engine/private/core"
     "${CMAKE_SOURCE_DIR}/src/engine/public/core/scene"
     "${CMAKE_SOURCE_DIR}/src/engine/public/core/scene/scripts"
     "${CMAKE_SOURCE_DIR}/src/engine/public/core/scene/scripts/base_script"

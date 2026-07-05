@@ -1,4 +1,4 @@
-namespace editor;
+﻿namespace editor;
 public static class EditorConstants
 {
 public const string ApplicationName = "ZzzEditor";

@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using BuildConfigurator.Models;
 
 namespace BuildConfigurator.ViewModels;

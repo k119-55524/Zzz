@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -233,9 +233,6 @@ namespace editor.ViewModels
             return new List<string>();
         }
 
-        // Коллекции GameSettings (Defines, Global scripts) сознательно не проходят через
-        // App.ProjectService.History - у них своя собственная пара Apply/Reset, отдельная от
-        // общего Undo/Redo редактора, поэтому пишем значение напрямую, без ICommand.
         private void WriteCollectionValues()
         {
             var values = BuildCollectionValues();
@@ -244,8 +241,14 @@ namespace editor.ViewModels
                 return;
             }
 
-            _propInfo.SetValue(_owner, values);
-            SaveAndRefreshCollection();
+            var oldValues = new List<string>(_appliedCollectionValues);
+            var command = new editor.Services.Project.Infrastructure.UndoRedo.PropertyChangeCommand<List<string>>(
+                setValueDirectly: v => _propInfo.SetValue(_owner, v),
+                oldValue: oldValues,
+                newValue: values,
+                onChanged: SaveAndRefreshCollection);
+
+            App.ProjectService.History.Execute(command);
         }
 
         // Есть ли в коллекции черновая правка (добавление/удаление/переименование элемента),

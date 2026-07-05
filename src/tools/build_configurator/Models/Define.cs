@@ -1,4 +1,4 @@
-namespace BuildConfigurator.Models;
+﻿namespace BuildConfigurator.Models;
 
 public class Define
 {

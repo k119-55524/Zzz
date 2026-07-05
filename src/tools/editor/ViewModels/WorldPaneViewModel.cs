@@ -1,4 +1,4 @@
-using editor.Models;
+﻿using editor.Models;
 using editor.Views.Widgets;
 
 namespace editor.ViewModels

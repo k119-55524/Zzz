@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using editor.ViewModels;
 
 namespace editor.Views

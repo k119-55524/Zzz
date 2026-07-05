@@ -1,3 +1,3 @@
-namespace BuildConfigurator.ViewModels;
+﻿namespace BuildConfigurator.ViewModels;
 
 public class SettingsTabViewModel { }

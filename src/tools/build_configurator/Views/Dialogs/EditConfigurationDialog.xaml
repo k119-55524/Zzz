@@ -1,4 +1,4 @@
-<Window x:Class="BuildConfigurator.Views.Dialogs.EditConfigurationDialog"
+﻿<Window x:Class="BuildConfigurator.Views.Dialogs.EditConfigurationDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Редактировать конфигурацию"
