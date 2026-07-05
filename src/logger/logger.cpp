@@ -221,7 +221,7 @@ void Logger::AddConsoleBroadcaster()
 #if Z_WINDOWS
 	AddBroadcasterImpl(safe_make_shared<ConsoleBroadcaster>());
 #else
-#error >>>>> Logger::AddConsoleBroadcaster(). ConsoleBroadcaster is currently supported only on Windows.
+	DOutWarning("Logger::AddConsoleBroadcaster(). ConsoleBroadcaster is currently supported only on Windows.");
 #endif
 }
 

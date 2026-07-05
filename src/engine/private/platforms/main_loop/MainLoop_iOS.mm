@@ -12,7 +12,7 @@ using namespace zzz::engine;
 @implementation DisplayLinkTarget_iOS
 - (void)update:(CADisplayLink *)displayLink {
     if (self.loop) {
-        self.loop->onUpdateSystem();
+        self.loop->OnUpdate();
     }
 }
 @end
@@ -20,8 +20,8 @@ using namespace zzz::engine;
 static CADisplayLink* g_DisplayLink = nil;
 static DisplayLinkTarget_iOS* g_DisplayTarget = nil;
 
-MainLoop_iOS::MainLoop_iOS(const Platform& platform) :
-	MainLoopBase(platform)
+MainLoop_iOS::MainLoop_iOS(const Platform& platform, std::function<void()> onUpdate) :
+	MainLoopBase(platform, std::move(onUpdate))
 {
 }
 

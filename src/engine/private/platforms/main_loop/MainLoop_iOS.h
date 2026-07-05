@@ -11,7 +11,7 @@ namespace zzz::engine
 
 	public:
 		MainLoop_iOS() = delete;
-		MainLoop_iOS(const Platform& platform);
+		MainLoop_iOS(const Platform& platform, std::function<void()> onUpdate);
 		virtual ~MainLoop_iOS() = default;
 
 		void Run() override;

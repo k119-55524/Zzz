@@ -12,7 +12,7 @@ using namespace zzz::engine;
 @implementation DisplayLinkTarget_MacOS
 - (void)update:(NSTimer *)timer {
     if (self.loop) {
-        self.loop->onUpdateSystem();
+        self.loop->OnUpdate();
     }
 }
 @end
@@ -20,8 +20,8 @@ using namespace zzz::engine;
 static NSTimer* g_DisplayTimer = nil;
 static DisplayLinkTarget_MacOS* g_DisplayTarget = nil;
 
-MainLoop_MacOS::MainLoop_MacOS(const Platform& platform) :
-	MainLoopBase(platform)
+MainLoop_MacOS::MainLoop_MacOS(const Platform& platform, std::function<void()> onUpdate) :
+	MainLoopBase(platform, std::move(onUpdate))
 {
 }
 

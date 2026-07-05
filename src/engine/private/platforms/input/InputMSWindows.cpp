@@ -90,7 +90,7 @@ int InputMSWindows::InitRawInput(HWND hWnd)
 			message = std::format("Error code: {}", err);
 
 		//MsgBox::Error(err);
-		THROW_RUNTIME("Raw Input registration failed.", message);
+		THROW_RUNTIME("Raw Input registration failed. {}", message);
 
 		// Отмена создания окна
 		return -1;

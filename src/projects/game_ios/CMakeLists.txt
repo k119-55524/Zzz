@@ -19,9 +19,9 @@ set(REGISTER_SCRIPTS_CONTENT "// RegisterAllScripts.cpp — generated automatica
 # Собираем список имен классов и инклуды
 set(SCRIPT_NAMES "")
 foreach(HPP_FILE ${SCRIPT_HPPS})
-    if(Z_GAME_PROJECT_DIR)`n        if(Z_GAME_PROJECT_DIR)
+    if(Z_GAME_PROJECT_DIR)
         file(RELATIVE_PATH REL_PATH "${Z_GAME_PROJECT_DIR}/Assets" "${HPP_FILE}")
-    endif()`n    endif()
+    endif()
     get_filename_component(CLASS_NAME "${HPP_FILE}" NAME_WE)
     string(APPEND REGISTER_SCRIPTS_CONTENT "#include \"${REL_PATH}\"\n")
     list(APPEND SCRIPT_NAMES "${CLASS_NAME}")
@@ -83,6 +83,7 @@ set_target_properties(game_ios PROPERTIES
 
 target_link_options(game_ios PRIVATE "-ObjC")
 target_compile_definitions(game_ios PRIVATE Z_TARGET_NAME="game_ios")
+target_compile_features(game_ios PUBLIC cxx_std_23)
 
 
 if(Z_GAME_PROJECT_DIR)

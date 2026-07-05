@@ -10,7 +10,7 @@ MainLoop_Linux::MainLoop_Linux(const Platform& platform, std::function<void()> o
 	MainLoopBase(platform, std::move(onUpdate)),
 	m_Display{ nullptr }
 {
-	m_Display = m_Platform->GetNativeData()->display;
+	m_Display = m_Platform.GetNativeData()->display;
 	ensure(m_Display != nullptr, "Display is not PlatformLinux.");
 }
 

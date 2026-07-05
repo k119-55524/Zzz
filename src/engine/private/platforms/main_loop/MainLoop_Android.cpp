@@ -9,8 +9,8 @@ namespace zzz::engine {
     void ProcessAndroidInput(struct android_app* app);
 }
 
-MainLoop_Android::MainLoop_Android(const Platform& platform) :
-	MainLoopBase(platform)
+MainLoop_Android::MainLoop_Android(const Platform& platform, std::function<void()> onUpdate) :
+	MainLoopBase(platform, std::move(onUpdate))
 {
 }
 
@@ -18,7 +18,7 @@ void MainLoop_Android::Run()
 {
 	isRunning.store(true);
 
-	android_app* app = m_Platform->GetNativeData().get();
+	android_app* app = m_Platform.GetNativeData().get();
 	while (isRunning.load())
 	{
 		int ident;
@@ -46,7 +46,7 @@ void MainLoop_Android::Run()
 		if (!isRunning.load())
 			break;
 
-		onUpdateSystem();
+		OnUpdate();
 	}
 }
 

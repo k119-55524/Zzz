@@ -11,7 +11,7 @@ namespace zzz::engine
 
 	public:
 		MainLoop_Android() = delete;
-		MainLoop_Android(const Platform& platform);
+		MainLoop_Android(const Platform& platform, std::function<void()> onUpdate);
 		virtual ~MainLoop_Android() = default;
 
 		void Run() override;

@@ -11,7 +11,7 @@ namespace zzz::engine
 
 	public:
 		MainLoop_MacOS() = delete;
-		MainLoop_MacOS(const Platform& platform);
+		MainLoop_MacOS(const Platform& platform, std::function<void()> onUpdate);
 		virtual ~MainLoop_MacOS() = default;
 
 		void Run() override;
