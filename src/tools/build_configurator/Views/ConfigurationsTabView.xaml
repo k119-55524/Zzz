@@ -11,7 +11,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- ── Left: Config List ── -->
+        <!-- ── Слева: список конфигураций ── -->
         <Border Grid.Column="0"
                 Background="{StaticResource BrushSurface}"
                 BorderBrush="{StaticResource BrushBorder}"
@@ -23,7 +23,7 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Header -->
+                <!-- Заголовок -->
                 <Grid Grid.Row="0" Margin="12,10">
                     <TextBlock Text="Конфигурации" Style="{StaticResource HeadingStyle}" VerticalAlignment="Center"/>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
@@ -46,7 +46,7 @@
 
                 <Separator Grid.Row="0" VerticalAlignment="Bottom" Margin="0,0,0,0"/>
 
-                <!-- List -->
+                <!-- Список -->
                 <ListBox Grid.Row="1"
                          x:Name="ConfigListBox"
                          ItemsSource="{Binding ConfigItems}"
@@ -87,7 +87,7 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
 
-                <!-- Footer -->
+                <!-- Подвал -->
                 <TextBlock Grid.Row="2"
                            Text="{Binding TotalConfigsText}"
                            Style="{StaticResource MutedTextStyle}"
@@ -95,15 +95,15 @@
             </Grid>
         </Border>
 
-        <!-- ── Splitter ── -->
+        <!-- ── Разделитель ── -->
         <GridSplitter Grid.Column="1" Width="4"
                       Background="{StaticResource BrushBorder}"
                       HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
 
-        <!-- ── Right: Defines Panel ── -->
+        <!-- ── Справа: панель дефайнов ── -->
         <Border Grid.Column="2" Background="{StaticResource BrushBackground}">
             <Grid>
-                <!-- No selection placeholder -->
+                <!-- Заглушка при отсутствии выбора -->
                 <TextBlock Text="Выберите конфигурацию"
                            HorizontalAlignment="Center" VerticalAlignment="Center"
                            Foreground="{StaticResource BrushTextMuted}" FontSize="14">
@@ -119,7 +119,7 @@
                     </TextBlock.Style>
                 </TextBlock>
 
-                <!-- Content -->
+                <!-- Содержимое -->
                 <Grid>
                     <Grid.Style>
                         <Style TargetType="Grid">
@@ -136,7 +136,7 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Defines heading + search -->
+                    <!-- Заголовок дефайнов + поиск -->
                     <Grid Grid.Row="0" Margin="20,16,20,8">
                         <TextBlock Text="{Binding ActiveDefinesCountText}"
                                    Style="{StaticResource HeadingStyle}"
@@ -169,14 +169,14 @@
                         </Grid>
                     </Grid>
 
-                    <!-- Defines DataGrids -->
+                    <!-- Таблицы дефайнов -->
                     <Grid Grid.Row="1" Margin="20,0,20,0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
-                        <!-- Project Defines -->
+                        <!-- Дефайны проекта -->
                         <Border Grid.Row="0" Margin="0,0,0,10"
                                 BorderBrush="{StaticResource BrushBorder}"
                                 BorderThickness="1" CornerRadius="6"
@@ -212,7 +212,7 @@
                             </Grid>
                         </Border>
 
-                        <!-- CMake Defines -->
+                        <!-- CMake дефайны -->
                         <Border Grid.Row="1" Margin="0,10,0,20"
                                 BorderBrush="{StaticResource BrushBorder}"
                                 BorderThickness="1" CornerRadius="6"

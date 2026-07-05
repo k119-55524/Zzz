@@ -29,8 +29,8 @@ namespace
 
 		if (std::string_view(interface) == wl_compositor_interface.name)
 		{
-			// version 3+ required for wl_surface_set_buffer_scale
-		*rd->compositor = static_cast<wl_compositor*>(wl_registry_bind(registry, name, &wl_compositor_interface, 3));
+			// Версия 3+ нужна для wl_surface_set_buffer_scale
+			*rd->compositor = static_cast<wl_compositor*>(wl_registry_bind(registry, name, &wl_compositor_interface, 3));
 		}
 		else if (std::string_view(interface) == wl_shm_interface.name)
 		{
@@ -42,7 +42,7 @@ namespace
 		}
 		else if (std::string_view(interface) == wl_output_interface.name && !*rd->output)
 		{
-			// version 2 required for the scale event
+			// Версия 2 нужна для события scale
 			*rd->output = static_cast<wl_output*>(wl_registry_bind(registry, name, &wl_output_interface, 2));
 		}
 	}
@@ -108,7 +108,7 @@ void Platform::InitializePlatformSpecific()
 		if (wl_registry_add_listener(m_NativeData->registry, &g_RegistryListener, &rd) != 0)
 			THROW_RUNTIME("wl_registry_add_listener() failed.");
 
-		// First roundtrip: receive registry globals
+		// Первый roundtrip: получаем глобальные объекты реестра
 		if (wl_display_roundtrip(m_NativeData->display) == -1)
 			THROW_RUNTIME("wl_display_roundtrip() failed.");
 
@@ -123,7 +123,7 @@ void Platform::InitializePlatformSpecific()
 
 		xdg_wm_base_add_listener(m_NativeData->xdgWmBase, &g_WmBaseListener, nullptr);
 
-		// Second roundtrip: receive wl_output properties (scale, geometry, etc.)
+		// Второй roundtrip: получаем свойства wl_output (scale, geometry и т.д.)
 		if (m_NativeData->output)
 			wl_output_add_listener(m_NativeData->output, &g_OutputListener, &m_NativeData->scaleFactor);
 

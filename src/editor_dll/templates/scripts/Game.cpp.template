@@ -1,6 +1,6 @@
 #include "{ClassName}.hpp"
 
 {ClassName}::{ClassName}()
-    : {BaseClass}()
+	: {BaseClass}()
 {
 }

@@ -65,7 +65,7 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <!-- Controls -->
+                        <!-- Управление -->
                         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5">
                             <Button Content="Старт" Command="{Binding DataContext.StartCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" />
                             <Button Content="Стоп" Command="{Binding DataContext.StopCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" />
@@ -74,7 +74,7 @@
                             <TextBlock Text="{Binding StatusText}" Foreground="{Binding StatusColor}" VerticalAlignment="Center" Margin="10,0" FontWeight="Bold"/>
                         </StackPanel>
 
-                        <!-- Filters -->
+                        <!-- Фильтры -->
                         <Expander Grid.Row="1" Header="Фильтры" Foreground="{StaticResource TextPrimary}" Margin="5">
                             <Grid Margin="5">
                                 <Grid.RowDefinitions>
@@ -114,7 +114,7 @@
                             </Grid>
                         </Expander>
 
-                        <!-- DataGrid -->
+                        <!-- Таблица -->
                         <DataGrid Grid.Row="2" ItemsSource="{Binding LogsView}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" Margin="5" RowDetailsVisibilityMode="Visible" AlternationCount="2">
                             <DataGrid.RowStyle>
                                 <Style TargetType="DataGridRow">
@@ -185,7 +185,7 @@
                             </DataGrid.Columns>
                         </DataGrid>
 
-                        <!-- Bottom Panel -->
+                        <!-- Нижняя панель -->
                         <Grid Grid.Row="3" Margin="5">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>

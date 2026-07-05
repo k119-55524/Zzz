@@ -1,6 +1,4 @@
 
-#include <algorithm>
-
 #include "Game.h"
 #include "../Scene.h"
 #include "Script.h"
@@ -62,11 +60,12 @@ namespace zzz::script
 
 	void ScriptRegistry::UnregisterInstance(Script* instance)
 	{
-		if (instance) 
-			s_ActiveInstances.erase(std::remove(s_ActiveInstances.begin(), s_ActiveInstances.end(), instance), s_ActiveInstances.end());
+		if (instance)
+			std::erase(s_ActiveInstances, instance);
 	}
 
-	const std::vector<Script*>& ScriptRegistry::GetActiveInstances() {
+	const std::vector<Script*>& ScriptRegistry::GetActiveInstances()
+	{
 		return s_ActiveInstances;
 	}
 #endif

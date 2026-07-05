@@ -96,7 +96,7 @@ public partial class MainWindowViewModel : ViewModelBase
         UpdateWindowTitle();
     }
 
-    // ── Global Save / Reload ─────────────────────────────────────────────────
+    // ── Общее сохранение / перезагрузка ─────────────────────────────────────
 
     [RelayCommand]
     private void SaveAll()
@@ -106,7 +106,7 @@ public partial class MainWindowViewModel : ViewModelBase
         ExecuteSave();
     }
 
-    // Called without confirmation from CanClose
+    // Вызывается без подтверждения из CanClose
     private void ExecuteSave()
     {
         if (!ConfigurationsTab.ApplyChanges()) return;
@@ -144,7 +144,7 @@ public partial class MainWindowViewModel : ViewModelBase
         UpdateWindowTitle();
     }
 
-    // ── Window close ────────────────────────────────────────────────────────
+    // ── Закрытие окна ────────────────────────────────────────────────────────
 
     public bool CanClose()
     {
@@ -157,7 +157,7 @@ public partial class MainWindowViewModel : ViewModelBase
         switch (result)
         {
             case ConfirmResult.Yes:
-                ExecuteSave(); // no double confirmation
+                ExecuteSave(); // без повторного подтверждения
                 return true;
             case ConfirmResult.No:
                 return true;

@@ -5,7 +5,7 @@ using editor.Services.Project.Infrastructure;
 namespace editor.Services.Project.FileTypes.GameConfig
 {
 	/// <summary>
-	/// Parser for Configs/game_config.toml.
+	/// Парсер Configs/game_config.toml.
 	/// </summary>
 	public class GameConfigParser : IFileParser, IEditorConfigParser
 	{
@@ -25,20 +25,20 @@ namespace editor.Services.Project.FileTypes.GameConfig
 			{
 				if (!storage.FileExists(filePath))
 				{
-					errorMessage = $"Game config file is missing: {filePath}";
+					errorMessage = $"Файл конфигурации игры отсутствует: {filePath}";
 					return false;
 				}
 
 				var data = Deserialize(storage.ReadAllText(filePath));
 				if (string.IsNullOrWhiteSpace(data.Version))
 				{
-					errorMessage = "Game config file does not contain a version.";
+					errorMessage = "Файл конфигурации игры не содержит версию.";
 					return false;
 				}
 			}
 			catch (Exception ex)
 			{
-				errorMessage = $"Game config validation failed: {ex.Message}";
+				errorMessage = $"Ошибка валидации game_config.toml: {ex.Message}";
 				return false;
 			}
 
@@ -53,7 +53,7 @@ namespace editor.Services.Project.FileTypes.GameConfig
 			{
 				if (!storage.FileExists(filePath))
 				{
-					errorMessage = "Game config file is missing.";
+					errorMessage = "Файл конфигурации игры отсутствует.";
 					return false;
 				}
 
@@ -64,7 +64,7 @@ namespace editor.Services.Project.FileTypes.GameConfig
 					return true;
 				}
 
-				errorMessage = $"Could not read game config version: '{data.Version}'";
+				errorMessage = $"Не удалось прочесть версию конфигурации игры: '{data.Version}'";
 				return false;
 			}
 			catch (Exception ex)
@@ -97,7 +97,7 @@ namespace editor.Services.Project.FileTypes.GameConfig
 			}
 			catch (Exception ex)
 			{
-				errorMessage = $"Game config migration failed: {ex.Message}";
+				errorMessage = $"Ошибка при миграции файла конфигурации игры: {ex.Message}";
 				return false;
 			}
 		}
@@ -127,7 +127,7 @@ namespace editor.Services.Project.FileTypes.GameConfig
 			}
 			catch (Exception ex)
 			{
-				errorMessage = $"Game config merge failed: {ex.Message}";
+				errorMessage = $"Не удалось выполнить слияние конфигурации игры: {ex.Message}";
 				return false;
 			}
 		}

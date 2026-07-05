@@ -18,7 +18,7 @@ namespace editor.Services
 
             if (string.IsNullOrEmpty(targetCulture))
             {
-                // Auto-detect system language (Russian or English default)
+                // Автоопределение языка системы (по умолчанию русский или английский)
                 string systemLang = CultureInfo.CurrentUICulture.Name;
                 if (systemLang.StartsWith("ru", StringComparison.OrdinalIgnoreCase))
                 {
@@ -42,14 +42,14 @@ namespace editor.Services
 
             CurrentCulture = cultureCode;
 
-            // Load the new dictionary
+            // Загружаем новый словарь
             string uriStr = $"Resources/Loc.{cultureCode}.xaml";
             var newDict = new ResourceDictionary
             {
                 Source = new Uri(uriStr, UriKind.RelativeOrAbsolute)
             };
 
-            // Remove old localization dictionary from merged dictionaries
+            // Удаляем старый словарь локализации из объединённых словарей
             var mergedDicts = Application.Current.Resources.MergedDictionaries;
             var oldDict = mergedDicts.FirstOrDefault(d => d.Source != null && 
                 (d.Source.OriginalString.Contains("Loc.ru-RU.xaml") || d.Source.OriginalString.Contains("Loc.en-US.xaml")));

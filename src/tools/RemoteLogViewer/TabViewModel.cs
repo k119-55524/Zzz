@@ -43,9 +43,9 @@ public class TabViewModel : INotifyPropertyChanged
 
 	public string StatusColor => State switch
 	{
-		ConnectionState.Connected => "#00CC00", // Green
-		ConnectionState.Waiting => "#CCCC00",   // Yellow
-		_ => "#808080"                          // Gray
+		ConnectionState.Connected => "#00CC00", // Зелёный
+		ConnectionState.Waiting => "#CCCC00",   // Жёлтый
+		_ => "#808080"                          // Серый
 	};
 
 	public bool IsAutoConnect

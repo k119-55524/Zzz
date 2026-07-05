@@ -87,7 +87,7 @@ public partial class DefinesTabViewModel : ViewModelBase
     partial void OnSearchTextChanged(string value)      => OnPropertyChanged(nameof(FilteredDefines));
     partial void OnShowArchivedOnlyChanged(bool value)  => OnPropertyChanged(nameof(FilteredDefines));
 
-    // Called from view when IsArchived checkbox is toggled
+    // Вызывается из представления при переключении чекбокса IsArchived
     public void OnIsArchivedChanged(DefineItemViewModel? changedItem)
     {
         changedItem?.MarkDirty();
@@ -97,7 +97,7 @@ public partial class DefinesTabViewModel : ViewModelBase
         DataChanged?.Invoke();
     }
 
-    // ── Commands ─────────────────────────────────────────────────────────────
+    // ── Команды ──────────────────────────────────────────────────────────────
 
     [RelayCommand]
     private void AddDefine((string name, string description) args)

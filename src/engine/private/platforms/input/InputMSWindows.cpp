@@ -17,9 +17,9 @@ bool InputMSWindows::ProcessMessage(const NativeMsg& msg)
 		return InitRawInput(msg.hWnd);
 
 	case WM_MOUSEMOVE:
-		if (!IsMouseInside)
+		if (!m_IsMouseInside)
 		{
-			IsMouseInside = true;
+			m_IsMouseInside = true;
 			OnMouseEnter(true);
 
 			TRACKMOUSEEVENT tme = {};
@@ -33,7 +33,7 @@ bool InputMSWindows::ProcessMessage(const NativeMsg& msg)
 
 	case WM_MOUSELEAVE:
 	{
-		IsMouseInside = false;
+		m_IsMouseInside = false;
 		OnMouseEnter(false);
 
 		break;

@@ -1,11 +1,12 @@
 ﻿namespace editor.Services.Project.Infrastructure.UndoRedo
 {
     /// <summary>
-    /// Marks commands that create/delete/rename/move files or folders, so that Undo/Redo
-    /// know they must rebuild the Assets/System tree afterwards. Commands that only rewrite
-    /// the contents of an existing file (e.g. config property edits) don't implement this -
-    /// rebuilding the tree for them would replace unrelated ProjectNode instances and drop
-    /// the current TreeView selection for no reason.
+    /// Помечает команды, создающие/удаляющие/переименовывающие/перемещающие файлы или папки,
+    /// чтобы Undo/Redo знал, что после них нужно перестроить дерево Assets/System. Команды,
+    /// которые только переписывают содержимое существующего файла (например, правки свойств
+    /// конфига), этот интерфейс не реализуют - перестройка дерева для них заменила бы
+    /// не связанные с правкой экземпляры ProjectNode и без причины сбросила бы текущее
+    /// выделение в TreeView.
     /// </summary>
     public interface IAssetsTreeCommand : ICommand
     {

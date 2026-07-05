@@ -26,7 +26,7 @@ namespace fs = std::filesystem;
 using json = nlohmann::json;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// terminal raw mode
+// Терминал в "сыром" (raw) режиме
 // ─────────────────────────────────────────────────────────────────────────────
 
 #ifndef _WIN32
@@ -54,10 +54,10 @@ private:
 #endif
 
 // ─────────────────────────────────────────────────────────────────────────────
-// helpers
+// Вспомогательные функции
 // ─────────────────────────────────────────────────────────────────────────────
 
-static void pause()
+static void Pause()
 {
 	std::print("Нажмите любую клавишу...");
 	std::fflush(stdout);
@@ -74,14 +74,14 @@ static void pause()
 }
 
 [[noreturn]]
-static void fail(std::string_view msg)
+static void Fail(std::string_view msg)
 {
 	std::println(stderr, "Ошибка: {}", msg);
-	pause();
+	Pause();
 	std::exit(1);
 }
 
-static fs::path find_project_root()
+static fs::path FindProjectRoot()
 {
 	fs::path current = fs::current_path();
 
@@ -93,19 +93,19 @@ static fs::path find_project_root()
 		current = current.parent_path();
 	}
 
-	fail("Не удалось найти build_configs/profiles.json");
+	Fail("Не удалось найти build_configs/profiles.json");
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// input
+// Ввод с клавиатуры
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Enter  -> confirm input
-// Esc    -> cancel
-// Digits -> append
-// Backspace -> remove last digit
+// Enter     -> подтвердить ввод
+// Esc       -> отменить
+// Цифры     -> добавить к вводу
+// Backspace -> удалить последнюю цифру
 
-static std::string read_digits()
+static std::string ReadDigits()
 {
 	std::string buffer;
 
@@ -185,10 +185,10 @@ static std::string read_digits()
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// cmake
+// Генерация current.cmake
 // ─────────────────────────────────────────────────────────────────────────────
 
-static void write_cmake(
+static void WriteCmake(
 	const fs::path& path,
 	const json& data,
 	const json& config)
@@ -196,18 +196,18 @@ static void write_cmake(
 	std::ofstream file(path);
 
 	if (!file)
-		fail("Не удалось открыть current.cmake");
+		Fail("Не удалось открыть current.cmake");
 
 	file << "# Auto-generated file.\n";
 	file << "# Configuration: "
 		<< config["name"].get<std::string>()
 		<< "\n\n";
 
-	std::unordered_set<std::string> active_defines;
+	std::unordered_set<std::string> activeDefines;
 
 	for (const auto& item : config["activeDefines"])
 	{
-		active_defines.insert(item.get<std::string>());
+		activeDefines.insert(item.get<std::string>());
 	}
 
 	for (const auto& def : data["defines"])
@@ -219,7 +219,7 @@ static void write_cmake(
 			continue;
 
 		const std::string name = def.at("name").get<std::string>();
-		const bool enabled = active_defines.contains(name);
+		const bool enabled = activeDefines.contains(name);
 
 		file << "set(" << name << " " << (enabled ? "ON" : "OFF") << ")\n";
 	}
@@ -235,7 +235,7 @@ static void write_cmake(
 			continue;
 
 		const std::string name = def.at("name").get<std::string>();
-		const bool enabled = active_defines.contains(name);
+		const bool enabled = activeDefines.contains(name);
 
 		file << "    " << name << '=' << (enabled ? "1" : "0") << '\n';
 	}
@@ -244,7 +244,7 @@ static void write_cmake(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// main
+// Точка входа
 // ─────────────────────────────────────────────────────────────────────────────
 
 int main()
@@ -255,62 +255,62 @@ int main()
 #endif
 
 	const fs::path root =
-		find_project_root();
+		FindProjectRoot();
 
-	const fs::path profiles_path =
+	const fs::path profilesPath =
 		root / "build_configs" / "profiles.json";
 
-	const fs::path cmake_path =
+	const fs::path cmakePath =
 		root / "build_configs" / "current.cmake";
 
-	const fs::path build_dir =
+	const fs::path buildDir =
 		root / "build";
 
 	json data;
 
 	try
 	{
-		std::ifstream file(profiles_path);
+		std::ifstream file(profilesPath);
 
 		if (!file)
-			fail("Не удалось открыть profiles.json");
+			Fail("Не удалось открыть profiles.json");
 
 		data = json::parse(file);
 	}
 	catch (const json::exception& e)
 	{
-		fail(std::string("Ошибка чтения profiles.json: ") + e.what());
+		Fail(std::string("Ошибка чтения profiles.json: ") + e.what());
 	}
 
 	if (!data.contains("defines") ||
 		!data["defines"].is_array())
 	{
-		fail("profiles.json: отсутствует массив defines");
+		Fail("profiles.json: отсутствует массив defines");
 	}
 
 	if (!data.contains("configurations") ||
 		!data["configurations"].is_array())
 	{
-		fail("profiles.json: отсутствует массив configurations");
+		Fail("profiles.json: отсутствует массив configurations");
 	}
 
 	const auto& configs =
 		data["configurations"];
 
 	if (configs.empty())
-		fail("Нет конфигураций.");
+		Fail("Нет конфигураций.");
 
-	std::string current_config;
+	std::string currentConfig;
 
 	if (data.contains("currentConfig") &&
 		data["currentConfig"].is_string())
 	{
-		current_config =
+		currentConfig =
 			data["currentConfig"].get<std::string>();
 	}
 
 	// ─────────────────────────────────────────────────────────────────────
-	// menu
+	// Меню
 	// ─────────────────────────────────────────────────────────────────────
 
 	std::println("Конфигурации сборки:\n");
@@ -326,7 +326,7 @@ int main()
 			cfg.value("description", "");
 
 		const bool active =
-			(name == current_config);
+			(name == currentConfig);
 
 		std::println(
 			"  [{}] {:<20} — {}{}",
@@ -335,54 +335,64 @@ int main()
 			desc,
 			active ? "  ← активная" : "");
 
-		std::unordered_set<std::string> cfg_active_defines;
-		if (cfg.contains("activeDefines")) {
-			for (const auto& item : cfg["activeDefines"]) {
-				cfg_active_defines.insert(item.get<std::string>());
+		std::unordered_set<std::string> cfgActiveDefines;
+		if (cfg.contains("activeDefines"))
+		{
+			for (const auto& item : cfg["activeDefines"])
+			{
+				cfgActiveDefines.insert(item.get<std::string>());
 			}
 		}
 
-		std::vector<std::string> proj_defs;
-		std::vector<std::string> cmake_defs;
+		std::vector<std::string> projDefs;
+		std::vector<std::string> cmakeDefs;
 
-		if (data.contains("defines")) {
-			for (const auto& def : data["defines"]) {
+		if (data.contains("defines"))
+		{
+			for (const auto& def : data["defines"])
+			{
 				if (def.value("isArchived", false)) continue;
 				std::string dname = def.value("name", "");
-				if (dname.empty() || !cfg_active_defines.contains(dname)) continue;
+				if (dname.empty() || !cfgActiveDefines.contains(dname)) continue;
 
-				if (def.value("isCMake", false)) {
-					cmake_defs.push_back(dname);
+				if (def.value("isCMake", false))
+				{
+					cmakeDefs.push_back(dname);
 				}
-				else {
-					proj_defs.push_back(dname);
+				else
+				{
+					projDefs.push_back(dname);
 				}
 			}
 		}
 
-		if (!cmake_defs.empty()) {
+		if (!cmakeDefs.empty())
+		{
 			std::println("       [CMake Defines]");
-			for (const auto& def : cmake_defs) {
+			for (const auto& def : cmakeDefs)
+			{
 				std::println("         - {}", def);
 			}
 		}
 
-		if (!proj_defs.empty()) {
+		if (!projDefs.empty())
+		{
 			std::println("       [Project Defines]");
-			for (const auto& def : proj_defs) {
+			for (const auto& def : projDefs)
+			{
 				std::println("         - {}", def);
 			}
 		}
 		std::println("");
 	}
 
-	if (!current_config.empty())
-		std::println("Текущая: {}", current_config);
+	if (!currentConfig.empty())
+		std::println("Текущая: {}", currentConfig);
 
 	std::print("Введите номер: ");
 
 	const std::string input =
-		read_digits();
+		ReadDigits();
 
 	if (input.empty())
 	{
@@ -399,7 +409,7 @@ int main()
 	catch (...)
 	{
 		std::println("Некорректный ввод.");
-		pause();
+		Pause();
 		return 1;
 	}
 
@@ -410,7 +420,7 @@ int main()
 			"Нет конфигурации с номером {}.",
 			choice);
 
-		pause();
+		Pause();
 		return 1;
 	}
 
@@ -418,19 +428,19 @@ int main()
 		configs[choice - 1];
 
 	// ─────────────────────────────────────────────────────────────────────
-	// apply
+	// Применение
 	// ─────────────────────────────────────────────────────────────────────
 
-	write_cmake(cmake_path, data, selected);
+	WriteCmake(cmakePath, data, selected);
 
 	data["currentConfig"] =
 		selected["name"];
 
 	{
-		std::ofstream file(profiles_path);
+		std::ofstream file(profilesPath);
 
 		if (!file)
-			fail("Не удалось записать profiles.json");
+			Fail("Не удалось записать profiles.json");
 
 		file << data.dump(2, ' ', false) << '\n';
 	}
@@ -441,7 +451,7 @@ int main()
 
 	std::println("Готово.");
 
-	pause();
+	Pause();
 
 	return 0;
 }

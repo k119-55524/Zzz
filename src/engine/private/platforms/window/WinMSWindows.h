@@ -35,6 +35,6 @@ namespace zzz::engine
 			HWND m_hWnd;
 			MSWinCtx m_Ctx;
 
-			bool IsMinimized;
+			bool m_IsMinimized;
 	};
 }

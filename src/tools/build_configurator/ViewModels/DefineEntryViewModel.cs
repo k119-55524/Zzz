@@ -2,7 +2,7 @@
 
 namespace BuildConfigurator.ViewModels;
 
-// One row in the config editor's defines table (Tab 1)
+// Одна строка таблицы дефайнов в редакторе конфигураций (вкладка 1)
 public partial class DefineEntryViewModel : ViewModelBase
 {
     public string Name        { get; init; } = string.Empty;

@@ -479,7 +479,7 @@ namespace editor.Services.Project.Infrastructure
                 {
                     var data = ScriptMetaFile.CreateNew(baseName);
                     ScriptMetaFile.Save(_storage, metaPath, data);
-                    EditorLogger.LogInfo($"[Meta System] Generated missing meta file '{baseName}.meta' for '{baseName}.hpp' (GUID: {data.Guid}).");
+                    EditorLogger.LogInfo($"[Meta System] Сгенерирован недостающий meta-файл '{baseName}.meta' для '{baseName}.hpp' (GUID: {data.Guid}).");
                     AddGuid(guidToPaths, data.Guid, metaPath);
                 }
                 else
@@ -501,7 +501,7 @@ namespace editor.Services.Project.Infrastructure
                 if (!_storage.FileExists(hppPath))
                 {
                     _storage.DeleteFile(metaPath);
-                    EditorLogger.LogInfo($"[Meta System] Removed orphan meta file '{baseName}.meta' (no matching '{baseName}.hpp').");
+                    EditorLogger.LogInfo($"[Meta System] Удалён осиротевший meta-файл '{baseName}.meta' (нет соответствующего '{baseName}.hpp').");
                 }
             }
 

@@ -10,7 +10,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- ── Toolbar ── -->
+        <!-- ── Панель инструментов ── -->
         <Border Grid.Row="0"
                 Background="{StaticResource BrushSurface}"
                 BorderBrush="{StaticResource BrushBorder}"
@@ -37,7 +37,7 @@
                     </Button>
                 </StackPanel>
 
-                <!-- Search -->
+                <!-- Поиск -->
                 <Grid HorizontalAlignment="Right" Width="240">
                     <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                              Style="{StaticResource DarkTextBoxStyle}"
@@ -66,7 +66,7 @@
             </Grid>
         </Border>
 
-        <!-- ── DataGrid ── -->
+        <!-- ── Таблица ── -->
         <Border Grid.Row="1" Margin="16" BorderBrush="{StaticResource BrushBorder}"
                 BorderThickness="1" CornerRadius="6" ClipToBounds="True">
             <DataGrid x:Name="DefinesGrid"
@@ -79,7 +79,7 @@
                       MouseDoubleClick="DefinesGrid_DoubleClick">
 
                 <DataGrid.Columns>
-                    <!-- State button — first column -->
+                    <!-- Кнопка состояния — первая колонка -->
                     <DataGridTemplateColumn Header="Состояние" Width="110" CanUserResize="False" CanUserSort="False">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
@@ -123,7 +123,7 @@
             </DataGrid>
         </Border>
 
-        <!-- ── Status Bar ── -->
+        <!-- ── Строка состояния ── -->
         <Border Grid.Row="2"
                 Background="{StaticResource BrushSurface}"
                 BorderBrush="{StaticResource BrushBorder}"

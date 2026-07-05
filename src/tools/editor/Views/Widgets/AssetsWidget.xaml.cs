@@ -103,7 +103,7 @@ namespace editor.Views.Widgets
 					}
 					catch (Exception)
 					{
-						// Robust fallback for clipboard locking
+						// Надёжный запасной вариант на случай блокировки буфера обмена
 						for (int i = 0; i < 10; i++)
 						{
 							try
@@ -146,7 +146,7 @@ namespace editor.Views.Widgets
 										UseShellExecute = true
 									};
 									System.Diagnostics.Process.Start(psi);
-									break; // Only open one explorer window
+									break; // Открываем только одно окно проводника
 								}
 								catch { }
 							}
@@ -514,12 +514,12 @@ namespace editor.Views.Widgets
 					try
 					{
 						App.ProjectService.History.Execute(scriptCmd);
-						EditorLogger.LogInfo($"Successfully created script '{newName}' from '{scriptType}' template.");
+						EditorLogger.LogInfo(string.Format(Loc("ScriptCreate_Success", "Successfully created script '{0}' from '{1}' template."), newName, scriptType));
 						if (mainVm != null) mainVm.RefreshDirtyState();
 					}
 					catch (Exception ex)
 					{
-						EditorLogger.LogError($"Failed to create script: {ex.Message}");
+						EditorLogger.LogError(string.Format(Loc("Error_CreateScript_Failed", "Failed to create script: {0}"), ex.Message));
 					}
 
 					RefreshTree();
@@ -714,11 +714,11 @@ namespace editor.Views.Widgets
 						return;
 					}
 
-					// Clicking empty space
+					// Клик по пустому месту
 					var treeControl = FindVisualParent<TreeView>(depObj);
 					if (treeControl == SystemTree)
 					{
-						e.Handled = true; // Block ContextMenu on empty space in SystemTree
+						e.Handled = true; // Блокируем ContextMenu на пустом месте в SystemTree
 					}
 				}
 			}
@@ -1198,7 +1198,7 @@ namespace editor.Views.Widgets
 			}
 			catch (Exception ex)
 			{
-				// silently ignore
+				// молча игнорируем
 			}
 
 			return _cachedDevenvPath;
@@ -1300,7 +1300,7 @@ namespace editor.Views.Widgets
 			}
 			catch (Exception ex)
 			{
-				// silently ignore
+				// молча игнорируем
 			}
 		}
 
@@ -1393,7 +1393,7 @@ namespace editor.Views.Widgets
 			devPath = System.IO.Path.GetFullPath(devPath);
 			if (System.IO.Directory.Exists(devPath)) return devPath;
 
-			return localPath; // fallback
+			return localPath; // запасной вариант
 		}
 
 		private void UserControl_PreviewMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)

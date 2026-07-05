@@ -3,7 +3,7 @@ using BuildConfigurator.Models;
 
 namespace BuildConfigurator.ViewModels;
 
-// Used in Tab 2 (Defines list)
+// Используется во вкладке 2 (список дефайнов)
 public partial class DefineItemViewModel : ViewModelBase
 {
     public Define Model { get; }

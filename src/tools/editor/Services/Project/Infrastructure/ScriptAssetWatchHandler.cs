@@ -35,7 +35,7 @@ namespace editor.Services.Project.Infrastructure
 
             var data = ScriptMetaFile.CreateNew(baseName);
             ScriptMetaFile.Save(storage, metaPath, data);
-            EditorLogger.LogInfo($"[Meta System] Detected external '{baseName}.hpp' - generated '{baseName}.meta' (GUID: {data.Guid}).");
+            EditorLogger.LogInfo($"[Meta System] Обнаружен внешний '{baseName}.hpp' - сгенерирован '{baseName}.meta' (GUID: {data.Guid}).");
         }
 
         public void OnDeleted(string filePath, IFileStorage storage)
@@ -53,7 +53,7 @@ namespace editor.Services.Project.Infrastructure
                 return;
 
             storage.DeleteFile(metaPath);
-            EditorLogger.LogInfo($"[Meta System] Detected external deletion of '{baseName}.hpp' - removed orphan '{baseName}.meta'.");
+            EditorLogger.LogInfo($"[Meta System] Обнаружено внешнее удаление '{baseName}.hpp' - удалён осиротевший '{baseName}.meta'.");
         }
     }
 }

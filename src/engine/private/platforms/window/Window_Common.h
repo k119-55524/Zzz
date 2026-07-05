@@ -129,6 +129,6 @@ namespace zzz::engine
 		const Platform& m_Platform;
 		const std::shared_ptr<Input> m_Input;
 		Size2D<> m_WinSize;
-		bool IsActivate;
+		bool m_IsActivate;
 	};
 }

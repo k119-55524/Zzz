@@ -17,7 +17,7 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
     [ObservableProperty] private ConfigItemViewModel? _selectedConfigItem;
     [ObservableProperty] private string _definesSearchText = string.Empty;
 
-    // Computed from ConfigItems + list modifications
+    // Вычисляется из ConfigItems + изменений списка
     private bool _isListDirty;
     private bool _hasUnsavedChanges;
     public bool HasUnsavedChanges
@@ -66,7 +66,7 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
     public void RefreshDefineEntries()
     {
         if (SelectedConfigItem == null) return;
-        // Preserve pending checkbox changes by flushing them to the model first
+        // Сохраняем несохранённые изменения чекбоксов, записав их в модель
         if (SelectedConfigItem.HasUnsavedChanges)
             CommitDefineEntriesToModel(SelectedConfigItem.Configuration);
         LoadDefineEntries(SelectedConfigItem.Configuration);
@@ -98,7 +98,7 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
         SelectedConfigItem = toSelect;
     }
 
-    // Auto-commit DefineEntries to model BEFORE switching away from a config
+    // Автоматически записываем DefineEntries в модель ДО переключения на другую конфигурацию
     partial void OnSelectedConfigItemChanging(ConfigItemViewModel? oldValue, ConfigItemViewModel? newValue)
     {
         if (oldValue != null && DefineEntries.Any())
@@ -131,7 +131,7 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
         OnPropertyChanged(nameof(FilteredProjectEntries));
         OnPropertyChanged(nameof(FilteredCMakeEntries));
         OnPropertyChanged(nameof(ActiveDefinesCountText));
-        // Do NOT reset HasUnsavedChanges here — dirty state persists until global Save
+        // НЕ сбрасываем HasUnsavedChanges здесь - грязное состояние сохраняется до общего Save
     }
 
     private void ClearDefineEntries()
@@ -161,7 +161,7 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
     {
         if (SelectedConfigItem != null)
             SelectedConfigItem.HasUnsavedChanges = true;
-        // HasUnsavedChanges computed via subscription
+        // HasUnsavedChanges вычисляется через подписку
     }
 
     partial void OnDefinesSearchTextChanged(string value)
@@ -170,7 +170,7 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
         OnPropertyChanged(nameof(FilteredCMakeEntries));
     }
 
-    // ── Commands ─────────────────────────────────────────────────────────────
+    // ── Команды ──────────────────────────────────────────────────────────────
 
     [RelayCommand]
     private void AddConfiguration((string name, string description) args)
@@ -262,14 +262,14 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
     private void CancelChanges()
     {
         if (SelectedConfigItem == null) return;
-        // Reload from model (discards uncommitted checkbox changes)
+        // Перезагружаем из модели (отбрасывает незакоммиченные изменения чекбоксов)
         SelectedConfigItem.HasUnsavedChanges = false;
         LoadDefineEntries(SelectedConfigItem.Configuration);
     }
 
-    // ── Commit helpers ───────────────────────────────────────────────────────
+    // ── Вспомогательные методы коммита ──────────────────────────────────────
 
-    // Writes current DefineEntries to model without touching dirty flags
+    // Записывает текущие DefineEntries в модель, не трогая флаги "грязного" состояния
     private void CommitDefineEntriesToModel(BuildConfiguration cfg)
     {
         cfg.ActiveDefines = DefineEntries
@@ -282,7 +282,7 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
         foreach (var e in DefineEntries) e.AcceptChanges();
     }
 
-    // Commits current config and clears its dirty flag
+    // Коммитит текущую конфигурацию и сбрасывает её флаг "грязного" состояния
     private void CommitActiveDefines()
     {
         if (SelectedConfigItem == null) return;
@@ -290,18 +290,18 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
         SelectedConfigItem.HasUnsavedChanges = false;
     }
 
-    // ── Public API for MainWindowViewModel ──────────────────────────────────
+    // ── Публичный API для MainWindowViewModel ───────────────────────────────
 
-    // Commit current config before global file save
+    // Коммитим текущую конфигурацию перед общим сохранением файла
     public bool ApplyChanges()
     {
         if (!HasUnsavedChanges) return true;
         CommitActiveDefines();
-        // All other configs were auto-committed in OnSelectedConfigItemChanging
+        // Все остальные конфигурации уже закоммичены автоматически в OnSelectedConfigItemChanging
         return true;
     }
 
-    // Clear all dirty flags after global file save
+    // Сбрасывает все флаги "грязного" состояния после общего сохранения файла
     public void ClearAllDirty()
     {
         _isListDirty = false;

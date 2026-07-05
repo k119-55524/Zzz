@@ -4,6 +4,6 @@
 using namespace zzz::engine;
 
 InputBase::InputBase() :
-	IsMouseInside{ false }
+	m_IsMouseInside{ false }
 {
 }

@@ -17,7 +17,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- ── Tabs ── -->
+        <!-- ── Вкладки ── -->
         <TabControl Grid.Row="0"
                     Background="Transparent"
                     BorderThickness="0"
@@ -93,7 +93,7 @@
             </TabItem>
         </TabControl>
 
-        <!-- ── Bottom bar: global Save / Reload ── -->
+        <!-- ── Нижняя панель: общие Save / Reload ── -->
         <Border Grid.Row="1"
                 Background="{StaticResource BrushSurface}"
                 BorderBrush="{StaticResource BrushBorder}"

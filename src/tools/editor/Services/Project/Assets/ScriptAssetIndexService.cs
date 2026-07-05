@@ -7,8 +7,8 @@ using editor.Services.Project.Infrastructure;
 namespace editor.Services.Project.Assets
 {
 	/// <summary>
-	/// Runtime cache of script assets discovered under Assets/. It owns script .meta
-	/// synchronization and gives UI/build/game-config code one GUID-based lookup source.
+	/// Рантайм-кэш скриптовых ассетов, обнаруженных под Assets/. Владеет синхронизацией
+	/// .meta файлов скриптов и даёт коду UI/сборки/game-config единый источник поиска по GUID.
 	/// </summary>
 	public sealed class ScriptAssetIndexService
 	{
@@ -36,7 +36,7 @@ namespace editor.Services.Project.Assets
 		{
 			_projectRoot = projectRoot;
 
-			EditorLogger.LogInfo("[Script Index] Running full project scan for script meta files...");
+			EditorLogger.LogInfo("[Script Index] Запуск полного скана проекта на .meta файлы скриптов...");
 			var vfs = new ProjectFileSystem(_storage);
 			vfs.SyncScriptMetaFiles(projectRoot);
 
@@ -73,7 +73,7 @@ namespace editor.Services.Project.Assets
 			foreach (var duplicate in _byClassName.Where(pair => pair.Value.Count > 1))
 			{
 				string paths = string.Join(", ", duplicate.Value.Select(info => info.HppPath));
-				EditorLogger.LogError($"[Script Index] Duplicate script class name '{duplicate.Key}' found in: {paths}.");
+				EditorLogger.LogError($"[Script Index] Дублирующееся имя класса скрипта '{duplicate.Key}' найдено в: {paths}.");
 			}
 
 			Changed?.Invoke(this, new ScriptAssetIndexChangedEventArgs(affectsCompilation));
@@ -189,7 +189,7 @@ namespace editor.Services.Project.Assets
 
 			if (_byGuid.TryGetValue(info.Guid, out var existing))
 			{
-				EditorLogger.LogError($"[Script Index] Duplicate script GUID '{info.Guid}' found in '{existing.MetaPath}' and '{info.MetaPath}'.");
+				EditorLogger.LogError($"[Script Index] Дублирующийся GUID скрипта '{info.Guid}' найден в '{existing.MetaPath}' и '{info.MetaPath}'.");
 				return;
 			}
 

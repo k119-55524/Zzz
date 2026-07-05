@@ -9,7 +9,7 @@ namespace zzz::engine
 		Left = 0,
 		Right = 1,
 		Middle = 2,
-		Button3 = 2, // Alias for Middle
+		Button3 = 2, // Синоним для Middle
 		Button4 = 3,
 		Button5 = 4,
 
@@ -27,7 +27,7 @@ namespace zzz::engine
 		Unknown = 0,
 
 		// -----------------------------
-		// Alphabet
+		// Буквы алфавита
 		// -----------------------------
 		A, B, C, D, E, F, G,
 		H, I, J, K, L, M, N,
@@ -35,7 +35,7 @@ namespace zzz::engine
 		U, V, W, X, Y, Z,
 
 		// -----------------------------
-		// Number row (not numpad)
+		// Ряд цифр (не Numpad)
 		// -----------------------------
 		Digit0,
 		Digit1,
@@ -49,7 +49,7 @@ namespace zzz::engine
 		Digit9,
 
 		// -----------------------------
-		// Function keys
+		// Функциональные клавиши
 		// -----------------------------
 		F1, F2, F3, F4,
 		F5, F6, F7, F8,
@@ -60,7 +60,7 @@ namespace zzz::engine
 		F22, F23, F24,
 
 		// -----------------------------
-		// Control keys
+		// Управляющие клавиши
 		// -----------------------------
 		Escape,
 		Enter,
@@ -76,7 +76,7 @@ namespace zzz::engine
 		PageDown,
 
 		// -----------------------------
-		// Arrow keys
+		// Клавиши стрелок
 		// -----------------------------
 		ArrowUp,
 		ArrowDown,
@@ -84,7 +84,7 @@ namespace zzz::engine
 		ArrowRight,
 
 		// -----------------------------
-		// Modifier keys
+		// Клавиши-модификаторы
 		// -----------------------------
 		LeftShift,
 		RightShift,
@@ -96,14 +96,14 @@ namespace zzz::engine
 		RightMeta,
 
 		// -----------------------------
-		// Lock keys
+		// Клавиши-фиксаторы
 		// -----------------------------
 		CapsLock,
 		NumLock,
 		ScrollLock,
 
 		// -----------------------------
-		// Numpad
+		// Цифровая клавиатура (Numpad)
 		// -----------------------------
 		Numpad0,
 		Numpad1,
@@ -124,7 +124,7 @@ namespace zzz::engine
 		NumpadEnter,
 
 		// -----------------------------
-		// Symbols (US layout logical)
+		// Символы (логическая US-раскладка)
 		// -----------------------------
 		Minus,        // -
 		Equals,       // =
@@ -139,14 +139,14 @@ namespace zzz::engine
 		Grave,        // `
 
 		// -----------------------------
-		// System / special
+		// Системные / особые
 		// -----------------------------
 		PrintScreen,
 		Pause,
 		Menu,
 
 		// -----------------------------
-		// Media keys (optional)
+		// Медиа-клавиши (опционально)
 		// -----------------------------
 		VolumeUp,
 		VolumeDown,
@@ -158,7 +158,7 @@ namespace zzz::engine
 		MediaPrevious,
 
 		// -----------------------------
-		// Mouse pseudo-keys (optional)
+		// Псевдо-клавиши мыши (опционально)
 		// -----------------------------
 		MouseLeft,
 		MouseRight,
@@ -167,7 +167,7 @@ namespace zzz::engine
 		MouseButton5,
 
 		// -----------------------------
-		// Sentinel
+		// Технический элемент-ограничитель (для подсчёта количества)
 		// -----------------------------
 		Count
 	};
@@ -183,19 +183,19 @@ namespace zzz::engine
 		for (auto& k : arr) k = KeyCode::Unknown;
 
 		// -----------------------------
-		// Alphabet A-Z
+		// Буквы A-Z
 		// -----------------------------
 		for (int i = 0; i < 26; ++i)
 			arr['A' + i] = static_cast<KeyCode>(static_cast<zI32>(KeyCode::A) + i);
 
 		// -----------------------------
-		// Digits 0-9 (row)
+		// Цифры 0-9 (верхний ряд)
 		// -----------------------------
 		for (int i = 0; i < 10; ++i)
 			arr['0' + i] = static_cast<KeyCode>(static_cast<zI32>(KeyCode::Digit0) + i);
 
 		// -----------------------------
-		// Function keys
+		// Функциональные клавиши
 		// -----------------------------
 		arr[0x70] = KeyCode::F1;  arr[0x71] = KeyCode::F2;
 		arr[0x72] = KeyCode::F3;  arr[0x73] = KeyCode::F4;
@@ -211,7 +211,7 @@ namespace zzz::engine
 		arr[0x86] = KeyCode::F23; arr[0x87] = KeyCode::F24;
 
 		// -----------------------------
-		// Control keys
+		// Управляющие клавиши
 		// -----------------------------
 		arr[0x1B] = KeyCode::Escape;
 		arr[0x0D] = KeyCode::Enter;
@@ -226,7 +226,7 @@ namespace zzz::engine
 		arr[0x22] = KeyCode::PageDown;
 
 		// -----------------------------
-		// Arrow keys
+		// Клавиши стрелок
 		// -----------------------------
 		arr[0x26] = KeyCode::ArrowUp;
 		arr[0x28] = KeyCode::ArrowDown;
@@ -234,21 +234,21 @@ namespace zzz::engine
 		arr[0x27] = KeyCode::ArrowRight;
 
 		// -----------------------------
-		// Modifiers
+		// Модификаторы
 		// -----------------------------
 		arr[0xA0] = KeyCode::LeftShift;  arr[0xA1] = KeyCode::RightShift;
 		arr[0xA2] = KeyCode::LeftCtrl;   arr[0xA3] = KeyCode::RightCtrl;
 		arr[0xA4] = KeyCode::LeftAlt;    arr[0xA5] = KeyCode::RightAlt;
 
 		// -----------------------------
-		// Locks
+		// Фиксаторы
 		// -----------------------------
 		arr[0x14] = KeyCode::CapsLock;
 		arr[0x90] = KeyCode::NumLock;
 		arr[0x91] = KeyCode::ScrollLock;
 
 		// -----------------------------
-		// NumPad
+		// Цифровая клавиатура (Numpad)
 		// -----------------------------
 		arr[0x60] = KeyCode::Numpad0; arr[0x61] = KeyCode::Numpad1; arr[0x62] = KeyCode::Numpad2;
 		arr[0x63] = KeyCode::Numpad3; arr[0x64] = KeyCode::Numpad4; arr[0x65] = KeyCode::Numpad5;
@@ -260,7 +260,7 @@ namespace zzz::engine
 		// NumPad Enter – расширенный Enter (E0). Обрабатывается в TranslateMSWinKey.
 
 		// -----------------------------
-		// Symbols
+		// Символы
 		// -----------------------------
 		arr[0xBD] = KeyCode::Minus;    arr[0xBB] = KeyCode::Equals;
 		arr[0xDB] = KeyCode::LeftBracket; arr[0xDD] = KeyCode::RightBracket;
@@ -270,7 +270,7 @@ namespace zzz::engine
 		arr[0xC0] = KeyCode::Grave;
 
 		// -----------------------------
-		// System / special
+		// Системные / особые
 		// -----------------------------
 		arr[0x2C] = KeyCode::PrintScreen;
 		arr[0x13] = KeyCode::Pause;

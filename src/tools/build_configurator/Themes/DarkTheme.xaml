@@ -1,7 +1,7 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- ── Colors (Visual Studio Dark) ─────────────────────────────────────── -->
+    <!-- ── Цвета (тёмная тема Visual Studio) ───────────────────────────────── -->
     <Color x:Key="ColorBackground">#FF1E1E1E</Color>
     <Color x:Key="ColorSurface">#FF252526</Color>
     <Color x:Key="ColorSurfaceAlt">#FF333337</Color>
@@ -17,7 +17,7 @@
     <Color x:Key="ColorDangerBg">#FF3A1515</Color>
     <Color x:Key="ColorSuccess">#FF4EC9B0</Color>
 
-    <!-- ── Brushes ──────────────────────────────────────────────────────────── -->
+    <!-- ── Кисти ────────────────────────────────────────────────────────────── -->
     <SolidColorBrush x:Key="BrushBackground"      Color="{StaticResource ColorBackground}"/>
     <SolidColorBrush x:Key="BrushSurface"         Color="{StaticResource ColorSurface}"/>
     <SolidColorBrush x:Key="BrushSurfaceAlt"      Color="{StaticResource ColorSurfaceAlt}"/>
@@ -33,7 +33,7 @@
     <SolidColorBrush x:Key="BrushSuccess"         Color="{StaticResource ColorSuccess}"/>
     <SolidColorBrush x:Key="BrushTransparent"     Color="Transparent"/>
 
-    <!-- ── Typography ──────────────────────────────────────────────────────── -->
+    <!-- ── Типографика ─────────────────────────────────────────────────────── -->
     <Style x:Key="LabelStyle" TargetType="TextBlock">
         <Setter Property="Foreground"  Value="{StaticResource BrushTextSecondary}"/>
         <Setter Property="FontSize"    Value="12"/>
@@ -160,7 +160,7 @@
         </Setter>
     </Style>
 
-    <!-- ── Buttons ─────────────────────────────────────────────────────────── -->
+    <!-- ── Кнопки ──────────────────────────────────────────────────────────── -->
     <Style x:Key="PrimaryButtonStyle" TargetType="Button">
         <Setter Property="Background"        Value="{StaticResource BrushAccent}"/>
         <Setter Property="Foreground"        Value="{StaticResource BrushTextPrimary}"/>
@@ -234,7 +234,7 @@
         </Style.Triggers>
     </Style>
 
-    <!-- Icon button (small square, no border) -->
+    <!-- Кнопка-иконка (маленький квадрат, без рамки) -->
     <Style x:Key="IconButtonStyle" TargetType="Button">
         <Setter Property="Background"      Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
@@ -406,7 +406,7 @@
         </Style.Triggers>
     </Style>
 
-    <!-- ── ListBoxItem for config list ────────────────────────────────────── -->
+    <!-- ── ListBoxItem для списка конфигураций ─────────────────────────────── -->
     <Style x:Key="ConfigListItemStyle" TargetType="ListBoxItem">
         <Setter Property="Background"    Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>

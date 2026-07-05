@@ -376,7 +376,7 @@ namespace editor
 
         private async void MainWindow_Activated(object? sender, EventArgs e)
         {
-            // If a script change happened while window was not active, process it now.
+            // Если изменение скрипта произошло, пока окно было неактивно, обрабатываем его сейчас.
             await ScriptRebuildCoordinator.ProcessPendingAsync(this);
         }
 
@@ -394,7 +394,7 @@ namespace editor
 			projectRoot ??= _viewModel.CurrentProjectPath;
 			if (string.IsNullOrEmpty(projectRoot) || !System.IO.Directory.Exists(projectRoot))
 			{
-				EditorLogger.LogInfo("[Scripts] CheckAndCompile: skip — project path is null or missing.");
+				EditorLogger.LogInfo("[Scripts] CheckAndCompile: пропуск — путь проекта пуст или не существует.");
 				return;
 			}
 
@@ -403,14 +403,14 @@ namespace editor
 				_compileRequestedAgain = true;
 				_queuedForceRebuild |= forceRebuild;
 				_queuedCompileProjectRoot = projectRoot;
-				EditorLogger.LogInfo("[Scripts] CheckAndCompile: queued — already compiling.");
+				EditorLogger.LogInfo("[Scripts] CheckAndCompile: поставлено в очередь — уже идёт компиляция.");
 				return;
 			}
 
 			string assetsDir = System.IO.Path.Combine(projectRoot, "Assets");
 			if (!System.IO.Directory.Exists(assetsDir))
 			{
-				EditorLogger.LogInfo("[Scripts] CheckAndCompile: skip — Assets dir not found.");
+				EditorLogger.LogInfo("[Scripts] CheckAndCompile: пропуск — папка Assets не найдена.");
 				return;
 			}
 
@@ -426,7 +426,7 @@ namespace editor
 
 				if (userHppFiles.Length == 0)
 				{
-					EditorLogger.LogInfo("[Scripts] CheckAndCompile: skip — no .hpp scripts found in Assets.");
+					EditorLogger.LogInfo("[Scripts] CheckAndCompile: пропуск — в Assets не найдено .hpp скриптов.");
 					return;
 				}
 
@@ -458,19 +458,19 @@ namespace editor
 					if (System.IO.File.Exists(registerAllPath) &&
 					    System.IO.File.GetLastWriteTime(registerAllPath) <= dllWriteTime)
 					{
-						EditorLogger.LogInfo($"[Scripts] CheckAndCompile: skip — DLL up to date (dll: {dllWriteTime:HH:mm:ss}, maxSrc: {maxWriteTime:HH:mm:ss}, register: {System.IO.File.GetLastWriteTime(registerAllPath):HH:mm:ss}).");
+						EditorLogger.LogInfo($"[Scripts] CheckAndCompile: пропуск — DLL актуальна (dll: {dllWriteTime:HH:mm:ss}, maxSrc: {maxWriteTime:HH:mm:ss}, register: {System.IO.File.GetLastWriteTime(registerAllPath):HH:mm:ss}).");
 						return;
 					}
 					// RegisterAllScripts.cpp не существует или новее DLL → пересобираем
-					EditorLogger.LogInfo("[Scripts] CheckAndCompile: RegisterAllScripts.cpp changed or missing — forcing rebuild.");
+					EditorLogger.LogInfo("[Scripts] CheckAndCompile: RegisterAllScripts.cpp изменён или отсутствует — форсируем пересборку.");
 				}
 				else if (!dllExists)
 				{
-					EditorLogger.LogInfo("[Scripts] CheckAndCompile: DLL doesn't exist — building.");
+					EditorLogger.LogInfo("[Scripts] CheckAndCompile: DLL не существует — собираем.");
 				}
 				else
 				{
-					EditorLogger.LogInfo($"[Scripts] CheckAndCompile: sources newer than DLL (dll: {dllWriteTime:HH:mm:ss}, maxSrc: {maxWriteTime:HH:mm:ss}) — rebuilding.");
+					EditorLogger.LogInfo($"[Scripts] CheckAndCompile: исходники новее DLL (dll: {dllWriteTime:HH:mm:ss}, maxSrc: {maxWriteTime:HH:mm:ss}) — пересобираем.");
 				}
 			}
 
@@ -495,7 +495,7 @@ namespace editor
 		private async System.Threading.Tasks.Task CompileScriptsAsync(string projectRoot, string dllPath)
 		{
 			_isCompiling = true;
-			EditorLogger.LogInfo("Scripts modification detected. Starting background compilation...");
+			EditorLogger.LogInfo("Обнаружено изменение скриптов. Запускаем фоновую компиляцию...");
 
 			try
 			{
@@ -543,7 +543,7 @@ namespace editor
 					}
 					catch (Exception ex)
 					{
-						EditorLogger.LogError($"[Scripts] Failed to read defines from game_config.toml: {ex.Message}");
+						EditorLogger.LogError($"[Scripts] Не удалось прочитать дефайны из game_config.toml: {ex.Message}");
 					}
 				}
 
@@ -679,7 +679,7 @@ target_link_libraries(scripts PRIVATE ""{editorDllLib}"")
 					}
 				});
 
-				EditorLogger.LogInfo("Compilation finished successfully. Reloading DLL...");
+				EditorLogger.LogInfo("Компиляция успешно завершена. Перезагружаем DLL...");
 
 				// 4. Оповещаем движок о перезагрузке DLL
 				EngineRuntime.SetProjectPath(projectRoot);
@@ -736,7 +736,7 @@ target_link_libraries(scripts PRIVATE ""{editorDllLib}"")
 			}
 			catch (Exception ex)
 			{
-				EditorLogger.LogError($"Script compilation failed: {ex.Message}");
+				EditorLogger.LogError($"Компиляция скриптов не удалась: {ex.Message}");
 			}
 			finally
 			{

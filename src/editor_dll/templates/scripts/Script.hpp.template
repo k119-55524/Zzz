@@ -4,6 +4,6 @@
 class {ClassName} : public {BaseClass}
 {
 public:
-    explicit {ClassName}(zzz::GameObject* owner);
+	explicit {ClassName}(zzz::GameObject* owner);
 
 };

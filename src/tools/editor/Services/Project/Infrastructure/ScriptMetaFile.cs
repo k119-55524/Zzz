@@ -44,7 +44,7 @@ namespace editor.Services.Project.Infrastructure
             }
             catch (Exception ex)
             {
-                EditorLogger.LogError($"[Meta System] Failed to parse meta file '{metaPath}': {ex.Message}");
+                EditorLogger.LogError($"[Meta System] Не удалось разобрать meta-файл '{metaPath}': {ex.Message}");
                 return null;
             }
         }

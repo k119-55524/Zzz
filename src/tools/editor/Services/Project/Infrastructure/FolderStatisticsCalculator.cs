@@ -97,7 +97,7 @@ namespace editor.Services.Project.Infrastructure
             }
             catch
             {
-                // ignore
+                // игнорируем
             }
             return 0;
         }

@@ -178,7 +178,7 @@ namespace zzz::engine
 			}
 		}
 
-		bool IsMouseInside;
+		bool m_IsMouseInside;
 
 	private:
 		zU32 m_MouseButtonsMask = 0;

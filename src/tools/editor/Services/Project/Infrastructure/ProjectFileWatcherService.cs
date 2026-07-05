@@ -26,8 +26,8 @@ namespace editor.Services.Project.Infrastructure
 	}
 
 	/// <summary>
-	/// Owns the project Assets/ watcher and publishes raw filesystem events to project services.
-	/// Consumers decide how to mutate caches, configs, and UI in response.
+	/// Владеет наблюдателем за Assets/ проекта и публикует сырые события файловой системы
+	/// сервисам проекта. Потребители сами решают, как в ответ менять кэши, конфиги и UI.
 	/// </summary>
 	public sealed class ProjectFileWatcherService : IDisposable
 	{
@@ -60,7 +60,7 @@ namespace editor.Services.Project.Infrastructure
 			_assetsWatcher.Changed += OnChanged;
 			_assetsWatcher.EnableRaisingEvents = true;
 
-			EditorLogger.LogInfo($"[Project Watcher] Started watching '{assetsRoot}'.");
+			EditorLogger.LogInfo($"[Project Watcher] Начато наблюдение за '{assetsRoot}'.");
 		}
 
 		public void CloseProject()

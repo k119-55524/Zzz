@@ -5,7 +5,7 @@ using editor.Services.Project.Infrastructure;
 namespace editor.Services.Project.FileTypes.GameConfig
 {
 	/// <summary>
-	/// Game-wide configuration stored in Configs/game_config.toml.
+	/// Общая конфигурация игры, хранящаяся в Configs/game_config.toml.
 	/// </summary>
 	public class GameConfigData
 	{

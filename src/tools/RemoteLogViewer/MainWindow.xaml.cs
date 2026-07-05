@@ -128,7 +128,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 			while (depObj != null && depObj != row)
 			{
 				if (depObj is System.Windows.Controls.Primitives.DataGridDetailsPresenter)
-					return; // Clicked inside details, ignore
+					return; // Клик внутри деталей, игнорируем
 				depObj = System.Windows.Media.VisualTreeHelper.GetParent(depObj);
 			}
 			entry.IsExpanded = !entry.IsExpanded;

@@ -39,8 +39,8 @@ namespace editor.Services.Project.Infrastructure
 	}
 
 	/// <summary>
-	/// Overrides the label shown for a property in the inspector. Without this
-	/// attribute the raw property name is used.
+	/// Переопределяет подпись, отображаемую для свойства в инспекторе. Без этого
+	/// атрибута используется исходное имя свойства.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
 	public class EditorDisplayNameAttribute : Attribute
@@ -54,42 +54,42 @@ namespace editor.Services.Project.Infrastructure
 	}
 
 	/// <summary>
-	/// Describes how the editor should render a collection property. The data model
-	/// still owns the real value; this attribute only selects the inspector control
-	/// and validation hints.
+	/// Описывает, как редактору отрисовывать свойство-коллекцию. Реальным значением
+	/// по-прежнему владеет модель данных; этот атрибут только выбирает элемент управления
+	/// инспектора и подсказки для валидации.
 	/// </summary>
 	public enum EditorCollectionKind
 	{
 		/// <summary>
-		/// A plain editable list of strings.
+		/// Обычный редактируемый список строк.
 		/// </summary>
 		StringList,
 
 		/// <summary>
-		/// A list of GUID references to assets from the project asset tree.
+		/// Список GUID-ссылок на ассеты из дерева ассетов проекта.
 		/// </summary>
 		AssetGuidList
 	}
 
 	/// <summary>
-	/// Names a validation rule applied to individual items of a string collection.
+	/// Задаёт правило валидации, применяемое к отдельным элементам строковой коллекции.
 	/// </summary>
 	public enum EditorCollectionItemValidation
 	{
 		/// <summary>
-		/// No validation is performed on item values.
+		/// Валидация значений элементов не выполняется.
 		/// </summary>
 		None,
 
 		/// <summary>
-		/// The item must look like a C/C++ preprocessor define (NAME or NAME=value).
+		/// Элемент должен выглядеть как C/C++ preprocessor define (NAME или NAME=value).
 		/// </summary>
 		CppDefine
 	}
 
 	/// <summary>
-	/// Marks a list/array property as editable in the inspector and describes list
-	/// behaviour that reflection cannot infer, such as sorting and duplicate rules.
+	/// Помечает свойство-список/массив как редактируемое в инспекторе и описывает поведение
+	/// списка, которое рефлексия вывести не может, например сортировку и правила дублей.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
 	public class EditorCollectionAttribute : Attribute
@@ -97,31 +97,31 @@ namespace editor.Services.Project.Infrastructure
 		public EditorCollectionKind Kind { get; }
 
 		/// <summary>
-		/// Allows the inspector to expose move up/down controls. Useful for ordered
-		/// runtime lists such as global scripts.
+		/// Позволяет инспектору показывать элементы управления перемещения вверх/вниз.
+		/// Полезно для упорядоченных рантайм-списков, таких как глобальные скрипты.
 		/// </summary>
 		public bool IsSortable { get; set; }
 
 		/// <summary>
-		/// Allows repeated values in the list. Disabled by default because most config
-		/// references and defines should be unique.
+		/// Разрешает повторяющиеся значения в списке. По умолчанию выключено, т.к.
+		/// большинство ссылок в конфигах и дефайнов должны быть уникальными.
 		/// </summary>
 		public bool AllowDuplicates { get; set; }
 
 		/// <summary>
-		/// Lets the editor keep entries that no longer resolve to live assets. This is
-		/// normally false so validation can remove broken GUID references.
+		/// Позволяет редактору сохранять записи, которые больше не разрешаются в реальные
+		/// ассеты. Обычно false, чтобы валидация могла убирать битые GUID-ссылки.
 		/// </summary>
 		public bool AllowMissingItems { get; set; }
 
 		/// <summary>
-		/// Optional asset type hint for asset GUID lists. The inspector and validators
-		/// use it to choose a picker and to resolve display names.
+		/// Необязательная подсказка типа ассета для списков GUID ассетов. Инспектор
+		/// и валидаторы используют её, чтобы выбрать пикер и разрешить отображаемые имена.
 		/// </summary>
 		public AssetResourceType AssetType { get; set; }
 
 		/// <summary>
-		/// Optional per-item validation rule applied before an edit is accepted.
+		/// Необязательное правило валидации отдельного элемента, применяемое перед принятием правки.
 		/// </summary>
 		public EditorCollectionItemValidation ItemValidation { get; set; } = EditorCollectionItemValidation.None;
 
@@ -132,19 +132,19 @@ namespace editor.Services.Project.Infrastructure
 	}
 
 	/// <summary>
-	/// Names a provider that supplies selectable values for a scalar property.
+	/// Задаёт источник, поставляющий доступные для выбора значения для скалярного свойства.
 	/// </summary>
 	public enum EditorOptionsSource
 	{
 		/// <summary>
-		/// Available log listener backends, plus optional "None".
+		/// Доступные бэкенды log listener'ов, плюс опциональный "None".
 		/// </summary>
 		LogListeners
 	}
 
 	/// <summary>
-	/// Marks a scalar property as an option field. The inspector renders it as a
-	/// combo box and asks the named source for valid values.
+	/// Помечает скалярное свойство как поле с вариантами выбора. Инспектор отрисовывает
+	/// его как combo box и запрашивает допустимые значения у указанного источника.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
 	public class EditorOptionsAttribute : Attribute
@@ -152,7 +152,7 @@ namespace editor.Services.Project.Infrastructure
 		public EditorOptionsSource Source { get; }
 
 		/// <summary>
-		/// Adds an empty "None" option for optional settings.
+		/// Добавляет пустой вариант "None" для необязательных настроек.
 		/// </summary>
 		public bool AllowNone { get; set; }
 

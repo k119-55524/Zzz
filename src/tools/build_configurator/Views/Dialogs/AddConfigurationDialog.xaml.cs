@@ -7,7 +7,7 @@ public partial class AddConfigurationDialog : Window
     public string ConfigName        { get; private set; } = string.Empty;
     public string ConfigDescription { get; private set; } = string.Empty;
 
-    // Pass existing names for uniqueness validation
+    // Существующие имена передаются для проверки на уникальность
     private readonly IReadOnlyCollection<string> _existingNames;
 
     public AddConfigurationDialog(IReadOnlyCollection<string> existingNames)

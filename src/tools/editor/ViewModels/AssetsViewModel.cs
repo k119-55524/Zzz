@@ -474,14 +474,14 @@ namespace editor.ViewModels
             foreach (var group in duplicateGroups)
             {
                 string paths = string.Join(", ", group.Select(n => n.HppRelativePath));
-                EditorLogger.LogError($"[Meta System] Duplicate script class name '{group.Key}' found in: {paths}. Rename one of them - skipping registration for both until resolved.");
+                EditorLogger.LogError($"[Meta System] Дублирующееся имя класса скрипта '{group.Key}' найдено в: {paths}. Переименуйте один из них - регистрация обоих пропущена до разрешения конфликта.");
             }
 
             var duplicateNames = new HashSet<string>(duplicateGroups.Select(g => g.Key), StringComparer.Ordinal);
             var validNodes = scriptNodes.Where(n => !duplicateNames.Contains(n.Name)).ToList();
 
             var sb = new System.Text.StringBuilder();
-            sb.AppendLine("// RegisterAllScripts.cpp — generated automatically by ZzzEngine Editor");
+            sb.AppendLine("// RegisterAllScripts.cpp — генерируется автоматически ZzzEngine Editor");
             sb.AppendLine("#include <ScriptRegistry.h>");
             sb.AppendLine();
 
@@ -528,11 +528,11 @@ namespace editor.ViewModels
                 }
 
                 File.WriteAllText(filePath, content);
-                EditorLogger.LogInfo("Successfully generated RegisterAllScripts.cpp.");
+                EditorLogger.LogInfo("RegisterAllScripts.cpp успешно сгенерирован.");
             }
             catch (Exception ex)
             {
-                EditorLogger.LogError($"Failed to generate RegisterAllScripts.cpp: {ex.Message}");
+                EditorLogger.LogError($"Не удалось сгенерировать RegisterAllScripts.cpp: {ex.Message}");
             }
         }
     }

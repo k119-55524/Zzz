@@ -65,7 +65,7 @@ public class NetworkReceiver
             while (!token.IsCancellationRequested)
             {
                 var client = await _listener!.AcceptTcpClientAsync(token);
-                // New connection accepted = Session Started
+                // Принято новое подключение = начало сессии
                 SessionStarted?.Invoke(this, EventArgs.Empty);
                 StateChanged?.Invoke(this, ConnectionState.Connected);
                 
@@ -96,14 +96,14 @@ public class NetworkReceiver
             {
                 while (!token.IsCancellationRequested)
                 {
-                    // Read 4 bytes length
+                    // Читаем 4 байта длины
                     byte[] lengthBuffer = new byte[4];
                     int read = await stream.ReadAsync(lengthBuffer, 0, 4, token);
-                    if (read == 0) break; // Client disconnected
-                    
+                    if (read == 0) break; // Клиент отключился
+
                     uint length = BitConverter.ToUInt32(lengthBuffer, 0);
-                    
-                    // Read payload
+
+                    // Читаем полезную нагрузку
                     byte[] payload = new byte[length];
                     int totalRead = 0;
                     while (totalRead < length)
@@ -112,8 +112,8 @@ public class NetworkReceiver
                         if (read == 0) throw new EndOfStreamException();
                         totalRead += read;
                     }
-                    
-                    // Parse payload
+
+                    // Разбираем полезную нагрузку
                     ParseLogEntry(payload);
                 }
             }
@@ -135,20 +135,20 @@ public class NetworkReceiver
             using var ms = new MemoryStream(payload);
             using var reader = new BinaryReader(ms);
             
-            var timestampMs = reader.ReadUInt64(); // Assuming timestamp is ms
+            var timestampMs = reader.ReadUInt64(); // Предполагаем, что timestamp в мс
             var typeRaw = reader.ReadUInt64();
             var text = ReadSizePrefixedString(reader);
             var file = ReadSizePrefixedString(reader);
             var function = ReadSizePrefixedString(reader);
             var line = reader.ReadUInt32();
             
-            // Assume timestamp is milliseconds since epoch or system boot, convert to DateTime
-            // For now, let's just use DateTime.Now to reflect when it arrived, since engine timestamp might be relative
-            // Actually, let's try to add it to a base date. If it's a small number, it's relative.
-            
+            // Предполагаем, что timestamp - миллисекунды от эпохи или от загрузки системы, конвертируем в DateTime
+            // Пока просто используем DateTime.Now (момент получения), т.к. timestamp движка может быть относительным
+            // На самом деле стоило бы попробовать прибавить его к базовой дате - если число маленькое, оно относительное.
+
             var entry = new LogEntry
             {
-                Timestamp = DateTime.Now, // Use local time for UI display
+                Timestamp = DateTime.Now, // Локальное время для отображения в UI
                 Level = (LogLevel)typeRaw,
                 MessageSummary = text.Length > 100 ? text.Substring(0, 100) + "..." : text,
                 MessageFull = text,

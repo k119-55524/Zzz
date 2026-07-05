@@ -10,7 +10,7 @@ using namespace zzz::engine;
 WinMSWindows::WinMSWindows(const Platform& platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks) :
 	WindowBase(platform, input, std::move(callbacks)),
 	m_hWnd{ nullptr },
-	IsMinimized{ true }
+	m_IsMinimized{ true }
 {}
 
 WinMSWindows::~WinMSWindows()
@@ -147,14 +147,14 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		if (wParam == SIZE_MINIMIZED)
 		{
 			VERIFY_AND_CALL(m_Callbacks.OnResize, m_WinSize, eWinResize::Hide);
-			IsMinimized = true;
+			m_IsMinimized = true;
 		}
 		else
 		{
-			if ((wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED) && IsMinimized)
+			if ((wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED) && m_IsMinimized)
 			{
 				VERIFY_AND_CALL(m_Callbacks.OnResize, m_WinSize, eWinResize::Show);
-				IsMinimized = false;
+				m_IsMinimized = false;
 			}
 			else
 			{
@@ -235,8 +235,8 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		/**
 		 * @brief [Windows] Изменение активности окна (например, окно ушло на задний план, но всё ещё видно).
 		 */
-		IsActivate = (wParam != 0);
-		VERIFY_AND_CALL(m_Callbacks.OnActivate, IsActivate);
+		m_IsActivate = (wParam != 0);
+		VERIFY_AND_CALL(m_Callbacks.OnActivate, m_IsActivate);
 		break;
 
 	case WM_POWERBROADCAST:

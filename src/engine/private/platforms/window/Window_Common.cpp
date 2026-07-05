@@ -9,7 +9,7 @@ WindowBase::WindowBase(
 	m_Platform{ platform },
 	m_Input{ input },
 	m_Callbacks{ std::move(callbacks) },
-	IsActivate{ false }
+	m_IsActivate{ false }
 {
 	ensure(m_Callbacks.OnClose != nullptr, "OnClose must not be null.");
 	ensure(m_Callbacks.OnSurfaceCreated != nullptr, "OnSurfaceCreated must not be null.");

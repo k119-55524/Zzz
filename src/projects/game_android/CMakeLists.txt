@@ -12,7 +12,7 @@ if(Z_GAME_PROJECT_DIR)
     file(GLOB_RECURSE SCRIPT_CPPS "${Z_GAME_PROJECT_DIR}/Assets/*.cpp")
 endif()
 
-set(REGISTER_SCRIPTS_CONTENT "// RegisterAllScripts.cpp — generated automatically by CMake\n#include <ScriptRegistry.h>\n\n")
+set(REGISTER_SCRIPTS_CONTENT "// RegisterAllScripts.cpp — генерируется автоматически CMake\n#include <ScriptRegistry.h>\n\n")
 
 # Собираем список имен классов и инклуды
 set(SCRIPT_NAMES "")

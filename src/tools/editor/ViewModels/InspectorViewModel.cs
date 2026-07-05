@@ -217,7 +217,7 @@ namespace editor.ViewModels
             }
             catch (Exception ex)
             {
-                EditorLogger.LogError($"Failed to edit '{Name}': {ex.Message}");
+                EditorLogger.LogError($"Не удалось изменить '{Name}': {ex.Message}");
             }
         }
 
@@ -374,7 +374,7 @@ namespace editor.ViewModels
 
             if (node == null || !node.IsScript)
             {
-                EditorLogger.LogError("[Game Config] Only script assets can be added to Global scripts.");
+                EditorLogger.LogError("[Game Config] В Global scripts можно добавлять только скриптовые ассеты.");
                 return;
             }
 
@@ -383,14 +383,14 @@ namespace editor.ViewModels
                 string.Equals(info.MetaPath, node.MetaRelativePath, StringComparison.OrdinalIgnoreCase));
             if (script == null)
             {
-                EditorLogger.LogError($"[Game Config] Script '{node.DisplayName}' has no valid GUID in the script index.");
+                EditorLogger.LogError($"[Game Config] У скрипта '{node.DisplayName}' нет корректного GUID в индексе скриптов.");
                 return;
             }
 
             if (_collectionAttribute?.AllowDuplicates != true &&
                 CollectionItems.Any(item => string.Equals(item.Value, script.Guid, StringComparison.OrdinalIgnoreCase)))
             {
-                EditorLogger.LogError($"[Game Config] Script '{script.ClassName}' is already in Global scripts.");
+                EditorLogger.LogError($"[Game Config] Скрипт '{script.ClassName}' уже есть в Global scripts.");
                 return;
             }
 
@@ -409,7 +409,7 @@ namespace editor.ViewModels
                 return;
             }
 
-            EditorLogger.LogInfo("[Game Config] Defines changed - rebuilding scripts.dll...");
+            EditorLogger.LogInfo("[Game Config] Дефайны изменились - пересобираем scripts.dll...");
 
             if (mainWindow.IsActive)
             {
@@ -457,7 +457,7 @@ namespace editor.ViewModels
             var match = Regex.Match(trimmed, @"^([A-Za-z_][A-Za-z0-9_]*)(=.*)?$");
             if (!match.Success)
             {
-                error = $"[Game Config] Invalid C++ define '{value}'. Use NAME or NAME=value; NAME must be a valid C/C++ identifier.";
+                error = $"[Game Config] Некорректный C++ дефайн '{value}'. Используйте NAME или NAME=value; NAME должен быть корректным идентификатором C/C++.";
                 return false;
             }
 
@@ -644,7 +644,7 @@ namespace editor.ViewModels
             }
             catch (Exception ex)
             {
-                EditorLogger.LogError($"Failed to inspect config '{node.RelativePath}': {ex.Message}");
+                EditorLogger.LogError($"Не удалось открыть конфиг '{node.RelativePath}' в инспекторе: {ex.Message}");
                 return false;
             }
         }
@@ -689,7 +689,7 @@ namespace editor.ViewModels
             }
             catch (Exception ex)
             {
-                EditorLogger.LogError($"Failed to save inspected config: {ex.Message}");
+                EditorLogger.LogError($"Не удалось сохранить конфиг из инспектора: {ex.Message}");
             }
         }
 

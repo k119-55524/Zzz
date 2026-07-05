@@ -73,7 +73,7 @@ namespace editor.Services
 											}
 											catch (Exception ex)
 											{
-												EditorLogger.LogWarning($"[VisualStudioInterop] Failed to check documents for {file}: {ex.Message}");
+												EditorLogger.LogWarning($"[VisualStudioInterop] Не удалось проверить открытые документы для {file}: {ex.Message}");
 											}
 
 											// 2. Ищем через ProjectItem
@@ -96,7 +96,7 @@ namespace editor.Services
 												}
 												catch (Exception ex)
 												{
-													EditorLogger.LogWarning($"[VisualStudioInterop] Failed to find or open ProjectItem for {file}: {ex.Message}");
+													EditorLogger.LogWarning($"[VisualStudioInterop] Не удалось найти или открыть ProjectItem для {file}: {ex.Message}");
 												}
 											}
 
@@ -111,7 +111,7 @@ namespace editor.Services
 												}
 												catch (Exception ex)
 												{
-													EditorLogger.LogError($"[VisualStudioInterop] Failed to open file via ItemOperations {file}: {ex.Message}");
+													EditorLogger.LogError($"[VisualStudioInterop] Не удалось открыть файл через ItemOperations {file}: {ex.Message}");
 												}
 											}
 										}
@@ -124,7 +124,7 @@ namespace editor.Services
 										}
 										catch (Exception ex)
 										{
-											EditorLogger.LogWarning($"[VisualStudioInterop] Failed to activate main window: {ex.Message}");
+											EditorLogger.LogWarning($"[VisualStudioInterop] Не удалось активировать главное окно: {ex.Message}");
 										}
 
 										return true;
@@ -134,7 +134,7 @@ namespace editor.Services
 							catch (Exception ex)
 							{
 								// Игнорируем ошибки доступа к COM-объектам конкретного инстанса
-								EditorLogger.LogWarning($"[VisualStudioInterop] Failed to access DTE instance: {ex.Message}");
+								EditorLogger.LogWarning($"[VisualStudioInterop] Не удалось получить доступ к инстансу DTE: {ex.Message}");
 							}
 						}
 					}
@@ -142,7 +142,7 @@ namespace editor.Services
 			}
 			catch (Exception ex)
 			{
-				EditorLogger.LogError($"[VisualStudioInterop] COM Exception: {ex.Message}");
+				EditorLogger.LogError($"[VisualStudioInterop] COM-исключение: {ex.Message}");
 			}
 
 			return false;
