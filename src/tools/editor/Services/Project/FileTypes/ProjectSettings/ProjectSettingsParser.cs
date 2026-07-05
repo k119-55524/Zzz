@@ -1,6 +1,5 @@
 ﻿using System;
-
-using System.Text.RegularExpressions;
+using System.Collections.Generic;
 using editor.Services.Project.Infrastructure;
 
 namespace editor.Services.Project.FileTypes.ProjectSettings
@@ -176,25 +175,13 @@ namespace editor.Services.Project.FileTypes.ProjectSettings
 		public static string Serialize(ProjectSettingsData data)
 		{
 			var sb = new System.Text.StringBuilder();
-			sb.AppendLine($"version = \"{data.Version}\"");
-			sb.AppendLine($"name = \"{data.Name}\"");
+			sb.AppendLine($"version = \"{TomlLineParser.Escape(data.Version)}\"");
+			sb.AppendLine($"name = \"{TomlLineParser.Escape(data.Name)}\"");
 			sb.AppendLine();
 			sb.AppendLine("[editor]");
 			sb.AppendLine($"show_system_mode = {data.ShowSystemMode.ToString().ToLower()}");
-
-			sb.Append("disabled_filters = [");
-			if (data.DisabledFilters != null && data.DisabledFilters.Count > 0)
-			{
-				sb.Append(string.Join(", ", data.DisabledFilters.ConvertAll(f => $"\"{f}\"")));
-			}
-			sb.AppendLine("]");
-
-			sb.Append("disabled_system_filters = [");
-			if (data.DisabledSystemFilters != null && data.DisabledSystemFilters.Count > 0)
-			{
-				sb.Append(string.Join(", ", data.DisabledSystemFilters.ConvertAll(f => $"\"{f}\"")));
-			}
-			sb.AppendLine("]");
+			sb.AppendLine($"disabled_filters = {TomlLineParser.SerializeStringArray(data.DisabledFilters)}");
+			sb.AppendLine($"disabled_system_filters = {TomlLineParser.SerializeStringArray(data.DisabledSystemFilters)}");
 
 			return sb.ToString();
 		}
@@ -202,54 +189,30 @@ namespace editor.Services.Project.FileTypes.ProjectSettings
 		public static ProjectSettingsData Deserialize(string toml)
 		{
 			var data = new ProjectSettingsData();
-			var lines = toml.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-			foreach (var line in lines)
+			foreach (var (key, valStr) in TomlLineParser.ParseKeyValueLines(toml))
 			{
-				var trimmed = line.Trim();
-				if (trimmed.StartsWith("#") || trimmed.StartsWith("[") || string.IsNullOrWhiteSpace(trimmed))
-					continue;
-
-				var parts = trimmed.Split(new[] { '=' }, 2);
-				if (parts.Length == 2)
+				if (key == "version")
 				{
-					var key = parts[0].Trim().ToLower();
-					var valStr = parts[1].Trim();
-
-					if (key == "version")
+					data.Version = valStr.Trim('"');
+				}
+				else if (key == "name")
+				{
+					data.Name = valStr.Trim('"');
+				}
+				else if (key == "show_system_mode")
+				{
+					if (bool.TryParse(valStr, out bool showMode))
 					{
-						data.Version = valStr.Trim('"');
+						data.ShowSystemMode = showMode;
 					}
-					else if (key == "name")
-					{
-						data.Name = valStr.Trim('"');
-					}
-					else if (key == "show_system_mode")
-					{
-						if (bool.TryParse(valStr, out bool showMode))
-						{
-							data.ShowSystemMode = showMode;
-						}
-					}
-					else if (key == "disabled_filters")
-					{
-						var list = new List<string>();
-						var matches = Regex.Matches(valStr, "\"([^\"]*)\"");
-						foreach (Match match in matches)
-						{
-							list.Add(match.Groups[1].Value);
-						}
-						data.DisabledFilters = list;
-					}
-					else if (key == "disabled_system_filters")
-					{
-						var list = new List<string>();
-						var matches = Regex.Matches(valStr, "\"([^\"]*)\"");
-						foreach (Match match in matches)
-						{
-							list.Add(match.Groups[1].Value);
-						}
-						data.DisabledSystemFilters = list;
-					}
+				}
+				else if (key == "disabled_filters")
+				{
+					data.DisabledFilters = TomlLineParser.ParseStringArray(valStr);
+				}
+				else if (key == "disabled_system_filters")
+				{
+					data.DisabledSystemFilters = TomlLineParser.ParseStringArray(valStr);
 				}
 			}
 			return data;

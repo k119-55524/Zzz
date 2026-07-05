@@ -93,7 +93,7 @@ namespace
 
 void Platform::InitializePlatformSpecific()
 {
-	m_NativeData = std::make_shared<NativeAppData>();
+	m_NativeData = safe_make_shared<NativeAppData>();
 	try
 	{
 		m_NativeData->display = wl_display_connect(nullptr);

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text.RegularExpressions;
 using editor.Services;
 
 namespace editor.Services.Project.Infrastructure
@@ -66,30 +65,15 @@ namespace editor.Services.Project.Infrastructure
         private static ScriptMetaData Deserialize(string toml)
         {
             var data = new ScriptMetaData();
-            var lines = toml.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var line in lines)
+            foreach (var (key, value) in TomlLineParser.ParseKeyValueLines(toml))
             {
-                var trimmed = line.Trim();
-                if (trimmed.StartsWith("#") || trimmed.StartsWith("[") || string.IsNullOrWhiteSpace(trimmed))
-                    continue;
-
-                var parts = trimmed.Split(new[] { '=' }, 2);
-                if (parts.Length != 2)
-                    continue;
-
-                var key = parts[0].Trim().ToLower();
-                var match = Regex.Match(parts[1].Trim(), "\"([^\"]*)\"");
-                if (!match.Success)
-                    continue;
-
-                var value = match.Groups[1].Value;
                 if (key == "guid")
                 {
-                    data.Guid = value;
+                    data.Guid = value.Trim('"');
                 }
                 else if (key == "class_name")
                 {
-                    data.ClassName = value;
+                    data.ClassName = value.Trim('"');
                 }
             }
             return data;

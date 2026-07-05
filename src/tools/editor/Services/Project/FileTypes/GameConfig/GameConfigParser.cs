@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using editor.Services.Project.Infrastructure;
 
 namespace editor.Services.Project.FileTypes.GameConfig
@@ -136,41 +135,26 @@ namespace editor.Services.Project.FileTypes.GameConfig
 		public static string Serialize(GameConfigData data)
 		{
 			var sb = new System.Text.StringBuilder();
-			sb.AppendLine($"version = \"{Escape(data.Version)}\"");
+			sb.AppendLine($"version = \"{TomlLineParser.Escape(data.Version)}\"");
 			sb.AppendLine();
-			sb.AppendLine($"defines = {SerializeStringArray(data.Defines)}");
-			sb.AppendLine($"log_listener = \"{Escape(data.LogListener)}\"");
-			sb.AppendLine($"global_script_guids = {SerializeStringArray(data.GlobalScriptGuids)}");
+			sb.AppendLine($"defines = {TomlLineParser.SerializeStringArray(data.Defines)}");
+			sb.AppendLine($"log_listener = \"{TomlLineParser.Escape(data.LogListener)}\"");
+			sb.AppendLine($"global_script_guids = {TomlLineParser.SerializeStringArray(data.GlobalScriptGuids)}");
 			return sb.ToString();
 		}
 
 		public static GameConfigData Deserialize(string toml)
 		{
 			var data = new GameConfigData();
-			var lines = toml.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-			foreach (var line in lines)
+			foreach (var (key, value) in TomlLineParser.ParseKeyValueLines(toml))
 			{
-				var trimmed = line.Trim();
-				if (trimmed.StartsWith("#") || trimmed.StartsWith("[") || string.IsNullOrWhiteSpace(trimmed))
-				{
-					continue;
-				}
-
-				var parts = trimmed.Split(new[] { '=' }, 2);
-				if (parts.Length != 2)
-				{
-					continue;
-				}
-
-				var key = parts[0].Trim().ToLowerInvariant();
-				var value = parts[1].Trim();
 				if (key == "version")
 				{
 					data.Version = value.Trim('"');
 				}
 				else if (key == "defines")
 				{
-					data.Defines = ParseStringArray(value);
+					data.Defines = TomlLineParser.ParseStringArray(value);
 				}
 				else if (key == "log_listener")
 				{
@@ -178,7 +162,7 @@ namespace editor.Services.Project.FileTypes.GameConfig
 				}
 				else if (key == "global_script_guids")
 				{
-					data.GlobalScriptGuids = ParseStringArray(value);
+					data.GlobalScriptGuids = TomlLineParser.ParseStringArray(value);
 				}
 			}
 
@@ -193,32 +177,6 @@ namespace editor.Services.Project.FileTypes.GameConfig
 		public string SerializeFromEditor(object data)
 		{
 			return Serialize((GameConfigData)data);
-		}
-
-		private static string SerializeStringArray(List<string>? items)
-		{
-			if (items == null || items.Count == 0)
-			{
-				return "[]";
-			}
-
-			return "[" + string.Join(", ", items.ConvertAll(item => $"\"{Escape(item)}\"")) + "]";
-		}
-
-		private static List<string> ParseStringArray(string value)
-		{
-			var list = new List<string>();
-			var matches = Regex.Matches(value, "\"([^\"]*)\"");
-			foreach (Match match in matches)
-			{
-				list.Add(match.Groups[1].Value);
-			}
-			return list;
-		}
-
-		private static string Escape(string? value)
-		{
-			return (value ?? string.Empty).Replace("\\", "\\\\").Replace("\"", "\\\"");
 		}
 	}
 }

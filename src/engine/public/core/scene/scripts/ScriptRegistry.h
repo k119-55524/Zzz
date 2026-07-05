@@ -8,6 +8,8 @@
 #include <type_traits>
 #include <unordered_map>
 
+#include <common/memory_utils.h>
+
 #include "EngineExport.h"
 
 namespace zzz
@@ -35,21 +37,21 @@ namespace zzz::script
 			{
 				s_GameFactories[nameStr] = []()
 				{
-					return std::make_shared<T>();
+					return zzz::common::safe_make_shared<T>();
 				};
 			}
 			else if constexpr (std::is_base_of_v<Scene, T>)
 			{
 				s_SceneFactories[nameStr] = []()
 				{
-					return std::make_shared<T>();
+					return zzz::common::safe_make_shared<T>();
 				};
 			}
 			else if constexpr (std::is_base_of_v<Script, T>)
 			{
 				s_ScriptFactories[nameStr] = [](GameObject* owner)
 				{
-					return std::make_shared<T>(owner);
+					return zzz::common::safe_make_shared<T>(owner);
 				};
 			}
 			else

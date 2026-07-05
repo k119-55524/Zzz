@@ -1,9 +1,10 @@
 #pragma once
 
 #include <string_view>
-#include <stdexcept>
 #include "eLogMessageType.h"
 #include "eWinResize.h"
+#include "../macroses.h"
+#include "../throw_wrappers.h"
 
 namespace zzz::common
 {
@@ -23,7 +24,7 @@ namespace zzz::common
 			case eLogMessageType::All:       return "ALL";
 			case eLogMessageType::None:      return "NONE";
 			}
-			throw std::invalid_argument("Unhandled eLogMessageType");
+			THROW_RUNTIME("Unhandled eLogMessageType");
 		}
 
 		static constexpr std::string_view ToString(eWinResize type)
@@ -34,7 +35,7 @@ namespace zzz::common
 			case eWinResize::Hide:   return "HIDE";
 			case eWinResize::Resize: return "RESIZE";
 			}
-			throw std::invalid_argument("Unhandled eWinResize");
+			THROW_RUNTIME("Unhandled eWinResize");
 		}
 	};
 }

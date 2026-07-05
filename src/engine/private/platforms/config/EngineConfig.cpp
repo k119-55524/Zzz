@@ -24,7 +24,7 @@ EngineConfig::EngineConfig() :
 		.and_then([&]() -> std::expected<void, std::string>
 			{
 				if (header != c_ConfigHeader)
-					return std::unexpected("Invalid config header.");
+					return UNEXPECTED("Invalid config header.");
 
 				return s.DeSerialize(buffer, offset, m_Version);
 			})

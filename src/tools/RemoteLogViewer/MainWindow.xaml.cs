@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Input;
 using System.ComponentModel;
+using editor.ViewModels;
 using RemoteLogViewer.Models;
 using System.Collections.ObjectModel;
 
@@ -133,13 +134,4 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 			entry.IsExpanded = !entry.IsExpanded;
 		}
 	}
-}
-
-public class RelayCommand<T> : ICommand
-{
-	private readonly Action<T> _execute;
-	public RelayCommand(Action<T> execute) => _execute = execute;
-	public bool CanExecute(object? parameter) => true;
-	public void Execute(object? parameter) { if (parameter is T t) _execute(t); }
-	public event EventHandler? CanExecuteChanged { add { } remove { } }
 }

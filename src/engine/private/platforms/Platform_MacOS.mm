@@ -3,7 +3,6 @@
 #include "Platform.h"
 #include "../../engine.h"
 #import <Cocoa/Cocoa.h>
-#import <iostream>
 
 using namespace zzz::engine;
 
@@ -15,15 +14,15 @@ static std::unique_ptr<Engine> g_Engine;
 @implementation EngineAppDelegate
 
 - (void)applicationDidFinishLaunching:(NSNotification *)notification {
-    std::cerr << "[EngineAppDelegate] Application did finish launching. Initializing engine..." << std::endl;
-    g_Engine = std::make_unique<Engine>("GameMacOS_ZzzEngine");
-    
-    std::cerr << "[EngineAppDelegate] Engine initialized successfully. Starting Run..." << std::endl;
+    DOut("[EngineAppDelegate] Application did finish launching. Initializing engine...");
+    g_Engine = safe_make_unique<Engine>("GameMacOS_ZzzEngine");
+
+    DOut("[EngineAppDelegate] Engine initialized successfully. Starting Run...");
     auto runResult = g_Engine->Run();
     if (!runResult) {
-        std::cerr << "[EngineAppDelegate] Engine Run failed with error: " << runResult.error() << std::endl;
+        DOutError("[EngineAppDelegate] Engine Run failed with error: {}.", runResult.error());
     } else {
-        std::cerr << "[EngineAppDelegate] Engine Run succeeded." << std::endl;
+        DOut("[EngineAppDelegate] Engine Run succeeded.");
     }
 }
 
@@ -32,7 +31,7 @@ static std::unique_ptr<Engine> g_Engine;
 }
 
 - (void)applicationDidResignActive:(NSNotification *)notification {
-    std::cerr << "[EngineAppDelegate] Application did resign active." << std::endl;
+    DOut("[EngineAppDelegate] Application did resign active.");
 }
 
 - (void)applicationWillTerminate:(NSNotification *)notification {
