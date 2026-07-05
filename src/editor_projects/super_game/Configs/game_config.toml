@@ -2,4 +2,4 @@ version = "1.0.0"
 
 defines = ["AA", "BB", "CC", "DD"]
 log_listener = ""
-global_script_guids = []
+global_script_guids = ["1f98218c-096c-447b-9c84-21022fc251e0", "55abc029-67d2-4a3f-bd46-871d66a54c1b", "606951d8-3850-45f2-89a4-136614aee7aa"]

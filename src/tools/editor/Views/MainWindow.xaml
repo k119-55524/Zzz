@@ -1,4 +1,4 @@
-﻿<Window x:Class="editor.MainWindow"
+<Window x:Class="editor.MainWindow"
         x:Name="RootWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -230,6 +230,7 @@
                 <RowDefinition Height="Auto" /> <!-- Заголовок и Меню -->
                 <RowDefinition Height="Auto" /> <!-- Панель инструментов (Toolbar) -->
                 <RowDefinition Height="*" />    <!-- Стыкуемые панели -->
+                <RowDefinition Height="Auto" /> <!-- Строка состояния -->
             </Grid.RowDefinitions>
 
         <Border Grid.Row="0" Background="{DynamicResource Brush_Window_Background}" BorderBrush="{DynamicResource Brush_Border}" BorderThickness="0,0,0,1" Height="30">
@@ -252,7 +253,7 @@
                 </StackPanel>
 
                 <!-- 2. Главное меню редактора (активно в Chrome) -->
-                <Menu Grid.Column="1" Background="Transparent" Foreground="{DynamicResource Brush_Text_Primary}" VerticalAlignment="Center" Margin="5,0,10,0"
+                <Menu x:Name="MainMenu" Grid.Column="1" Background="Transparent" Foreground="{DynamicResource Brush_Text_Primary}" VerticalAlignment="Center" Margin="5,0,10,0"
                       WindowChrome.IsHitTestVisibleInChrome="True">
                     <MenuItem Header="{DynamicResource Menu_File}" Foreground="{DynamicResource Brush_Text_Primary}">
                         <MenuItem Header="{DynamicResource Menu_File_Create}" Command="{Binding NewProjectCommand}" />
@@ -699,6 +700,19 @@
                 </dockLayout:LayoutPanel>
             </dockLayout:LayoutRoot>
         </dock:DockingManager>
+
+        <!-- Оверлей компиляции для блокировки UI -->
+        <Grid x:Name="CompilationOverlay" Grid.Row="1" Grid.RowSpan="2" Visibility="Collapsed" Panel.ZIndex="1000" Background="#A0000000" />
+
+        <!-- Строка состояния -->
+        <StatusBar Grid.Row="3" Background="{DynamicResource Brush_Panel_Background}" Foreground="{DynamicResource Brush_Text_Secondary}" BorderBrush="{DynamicResource Brush_Border}" BorderThickness="0,1,0,0">
+            <StatusBarItem>
+                <TextBlock x:Name="StatusText" Text="Готово" />
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <ProgressBar x:Name="CompilationProgressBar" IsIndeterminate="True" Width="100" Height="12" Visibility="Collapsed" />
+            </StatusBarItem>
+        </StatusBar>
     </Grid>
     </Border>
 </Window>

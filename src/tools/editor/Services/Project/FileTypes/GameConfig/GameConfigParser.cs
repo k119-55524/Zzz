@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿
 using editor.Services.Project.Infrastructure;
 
 namespace editor.Services.Project.FileTypes.GameConfig

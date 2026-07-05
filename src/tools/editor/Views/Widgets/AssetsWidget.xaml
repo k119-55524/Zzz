@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="editor.Views.Widgets.AssetsWidget"
+<UserControl x:Class="editor.Views.Widgets.AssetsWidget"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -319,6 +319,7 @@
                       ContextMenuOpening="TreeView_ContextMenuOpening"
                       AllowDrop="True"
                       PreviewMouseLeftButtonDown="AssetsTree_PreviewMouseLeftButtonDown"
+                      PreviewMouseLeftButtonUp="AssetsTree_PreviewMouseLeftButtonUp"
                       PreviewMouseMove="AssetsTree_PreviewMouseMove"
                       DragOver="AssetsTree_DragOver"
                       DragLeave="AssetsTree_DragLeave"

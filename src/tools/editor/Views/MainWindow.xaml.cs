@@ -1,4 +1,4 @@
-﻿
+
 using System;
 using System.Linq;
 using System.Windows;
@@ -495,6 +495,12 @@ namespace editor
 		private async System.Threading.Tasks.Task CompileScriptsAsync(string projectRoot, string dllPath)
 		{
 			_isCompiling = true;
+			Application.Current.Dispatcher.Invoke(() => { 
+				StatusText.Text = "Компиляция скриптов..."; 
+				CompilationProgressBar.Visibility = Visibility.Visible;
+				CompilationOverlay.Visibility = Visibility.Visible; 
+				if (MainMenu != null) MainMenu.IsEnabled = false;
+			});
 			EditorLogger.LogInfo("Обнаружено изменение скриптов. Запускаем фоновую компиляцию...");
 
 			try
@@ -741,6 +747,12 @@ target_link_libraries(scripts PRIVATE ""{editorDllLib}"")
 			finally
 			{
 				_isCompiling = false;
+				Application.Current.Dispatcher.Invoke(() => { 
+					StatusText.Text = "Готово"; 
+					CompilationProgressBar.Visibility = Visibility.Collapsed;
+					CompilationOverlay.Visibility = Visibility.Collapsed; 
+					if (MainMenu != null) MainMenu.IsEnabled = true;
+				});
 			}
 
 			if (_compileRequestedAgain)

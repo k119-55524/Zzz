@@ -1,4 +1,4 @@
-﻿
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -830,6 +830,7 @@ namespace editor.Views.Widgets
 		// затем запускается forceRebuild-компиляция. Порядок важен!
 		private void TriggerScriptRebuild()
 		{
+			App.ScriptAssetIndexService.Rebuild(false);
 			RefreshTree();
 			if (_hostWindow is MainWindow mw)
 				_ = mw.CheckAndCompileScriptsAsync(forceRebuild: true);
@@ -846,9 +847,42 @@ namespace editor.Views.Widgets
 		private void AssetsTree_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
 		{
 			var item = FindVisualParent<TreeViewItem>(e.OriginalSource as System.Windows.DependencyObject);
+			
+			// Игнорируем клики по стрелочке разворачивания (ToggleButton)
+			if (e.OriginalSource is System.Windows.DependencyObject source && FindVisualParent<System.Windows.Controls.Primitives.ToggleButton>(source) != null)
+			{
+				_dragCandidateNode = null;
+				return;
+			}
+
 			var node = item?.DataContext as ProjectNode;
 			_dragCandidateNode = (node != null && !node.IsEditing) ? node : null;
 			_dragStartPoint = e.GetPosition(null);
+
+			if (item != null && !item.IsSelected)
+			{
+				// Откладываем выделение до MouseUp, чтобы при перетаскивании (Drag&Drop) 
+				// не переключался Inspector на перетаскиваемый узел сразу.
+				e.Handled = true;
+			}
+		}
+
+		private void AssetsTree_PreviewMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+		{
+			if (_dragCandidateNode == null)
+				return;
+
+			var item = FindVisualParent<TreeViewItem>(e.OriginalSource as System.Windows.DependencyObject);
+			if (item != null && item.DataContext == _dragCandidateNode)
+			{
+				if (!item.IsSelected)
+				{
+					item.IsSelected = true;
+				}
+				item.Focus();
+			}
+
+			_dragCandidateNode = null;
 		}
 
 		private void AssetsTree_PreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -81,39 +81,42 @@ namespace editor.Services.Project.Assets
 
 		private void OnProjectFileChanged(object? sender, ProjectFileChangedEventArgs e)
 		{
-			if (string.IsNullOrEmpty(_projectRoot))
+			System.Windows.Application.Current?.Dispatcher.InvokeAsync(() =>
 			{
-				return;
-			}
+				if (string.IsNullOrEmpty(_projectRoot))
+				{
+					return;
+				}
 
-			bool affectsCompilation = IsScriptSourceFile(e.FullPath) ||
-				(e.OldFullPath != null && IsScriptSourceFile(e.OldFullPath));
-			bool affectsIndex = affectsCompilation || IsScriptMetaFile(e.FullPath) ||
-				(e.OldFullPath != null && IsScriptMetaFile(e.OldFullPath));
+				bool affectsCompilation = IsScriptSourceFile(e.FullPath) ||
+					(e.OldFullPath != null && IsScriptSourceFile(e.OldFullPath));
+				bool affectsIndex = affectsCompilation || IsScriptMetaFile(e.FullPath) ||
+					(e.OldFullPath != null && IsScriptMetaFile(e.OldFullPath));
 
-			if (!affectsIndex)
-			{
-				return;
-			}
+				if (!affectsIndex)
+				{
+					return;
+				}
 
-			switch (e.Kind)
-			{
-				case ProjectFileChangeKind.Created:
-					HandleExternalCreate(e.FullPath);
-					break;
-				case ProjectFileChangeKind.Deleted:
-					HandleExternalDelete(e.FullPath);
-					break;
-				case ProjectFileChangeKind.Renamed:
-					if (e.OldFullPath != null)
-					{
-						HandleExternalDelete(e.OldFullPath);
-					}
-					HandleExternalCreate(e.FullPath);
-					break;
-			}
+				switch (e.Kind)
+				{
+					case ProjectFileChangeKind.Created:
+						HandleExternalCreate(e.FullPath);
+						break;
+					case ProjectFileChangeKind.Deleted:
+						HandleExternalDelete(e.FullPath);
+						break;
+					case ProjectFileChangeKind.Renamed:
+						if (e.OldFullPath != null)
+						{
+							HandleExternalDelete(e.OldFullPath);
+						}
+						HandleExternalCreate(e.FullPath);
+						break;
+				}
 
-			Rebuild(affectsCompilation);
+				Rebuild(affectsCompilation);
+			});
 		}
 
 		private void HandleExternalCreate(string fullPath)
