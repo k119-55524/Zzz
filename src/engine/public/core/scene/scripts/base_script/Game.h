@@ -9,5 +9,8 @@ namespace zzz::script
 	public:
 		Game() = default;
 		virtual ~Game() = default;
+
+		virtual void OnStart() {}
+		virtual void OnUpdate(float /*deltaTime*/) {}
 	};
 }

@@ -13,9 +13,6 @@ int main(int argc, char* argv[])
 
 		try
 		{
-			extern void RegisterAllScripts();
-			RegisterAllScripts();
-
 			Engine engine("GameLinux_ZzzEngine");
 			auto res = engine.Run();
 			if (!res)

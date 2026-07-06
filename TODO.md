@@ -17,6 +17,13 @@
 - Явно отмечено в `docs/scripting.md` §6 как «в реализации нет».
 - Нужно: сериализация полей скрипта → clear → reload DLL → создание нового инстанса → десериализация полей. Требует reflection/introspection на поля скрипта (макро-based или C++26 reflection в будущем).
 
+## Автостарт глобальных скриптов в билде игры игнорирует выбор пользователя
+`Engine::Initialize` (`src/engine/engine.cpp`) под `#if !Z_EDITOR` стартует **все** зарегистрированные `Game`-скрипты через `ScriptRegistry::GetAllGameNames()`. Редакторский Play (`MainWindowViewModel.PlayCommand`) стартует только то, что выбрано в `game_config.toml` → `global_script_guids`. Это разные наборы, если в проекте есть `Game`-скрипты, которые существуют как ассеты, но сознательно не отмечены как глобальные — билд игры их всё равно запустит, а Play в редакторе — нет.
+
+- Нужен кодоген, параллельный `RegisterAllScripts.cpp` (`AssetsViewModel.GenerateRegisterAllScripts`): резолвить `GlobalScriptGuids` → имена классов на этапе сборки игры и передавать их в `Engine::Initialize` вместо `GetAllGameNames()`.
+- Инвалидация такого кодогена должна триггериться не только сканом Assets (как сейчас у `RegisterAllScripts.cpp`), но и изменением `GlobalScriptGuids` в `game_config.toml` — сейчас `RefreshTree()` о конфиге ничего не знает.
+- Пока сознательно отложено: реальный билд игры стартует всё зарегистрированное.
+
 ## Тесты движка
 Сейчас в `src/qa/` ~241 строка. При кроссплатформенности (5 ОС) и кодогене (`RegisterAllScripts.cpp`, `.meta` синхронизация) отсутствие тестов рискованно — регрессии на macOS/Android/iOS найдёт только пользователь.
 

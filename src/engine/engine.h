@@ -5,6 +5,7 @@
 #include <memory>
 #include <expected>
 #include <string_view>
+#include <vector>
 
 #include "NativeAppData.h"
 #include <logger/logger.h>
@@ -12,6 +13,11 @@
 namespace zzz
 {
 	enum class eInitState : zU8;
+}
+
+namespace zzz::script
+{
+	class Game;
 }
 
 namespace zzz::engine
@@ -34,15 +40,22 @@ namespace zzz::engine
 		Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeData = nullptr);
 		~Engine();
 
-		[[nodiscard]] std::expected<void, std::string> Run();
+		[[nodiscard]] virtual std::expected<void, std::string> Run();
 
 	protected:
 		virtual void OnRegisterScripts();
 		void Shutdown();
 		void OnUpdateSystem();
 
+		void StartGame(const std::vector<std::string>& globalScripts);
+		void StopGame();
+		void PauseGame(bool isPaused);
+
 		std::mutex stateMutex;
 		std::atomic<eInitState> engineState;
+
+		bool m_IsTimePaused = false;
+		std::vector<std::shared_ptr<zzz::script::Game>> m_GlobalGames;
 
 		std::unique_ptr<Platform> m_Platform;
 		std::unique_ptr<ViewManager> m_ViewManager;

@@ -494,6 +494,12 @@ namespace editor
 
 		private async System.Threading.Tasks.Task CompileScriptsAsync(string projectRoot, string dllPath)
 		{
+			if (_viewModel.IsRunning && _viewModel.StopCommand.CanExecute(null))
+			{
+				EditorLogger.LogInfo("Остановка Play Mode перед рекомпиляцией скриптов...");
+				_viewModel.StopCommand.Execute(null);
+			}
+
 			_isCompiling = true;
 			Application.Current.Dispatcher.Invoke(() => { 
 				StatusText.Text = "Компиляция скриптов..."; 

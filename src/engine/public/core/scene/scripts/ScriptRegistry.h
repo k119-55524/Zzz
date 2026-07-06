@@ -65,6 +65,10 @@ namespace zzz::script
 		static std::shared_ptr<Game> CreateGame(std::string_view name);
 		static std::shared_ptr<Scene> CreateScene(std::string_view name);
 
+		// Имена всех зарегистрированных глобальных (Game) скриптов - используется статической
+		// сборкой игры для автостарта всех скриптов проекта (см. Engine::Initialize).
+		static std::vector<std::string> GetAllGameNames();
+
 		// Очистка реестра фабрик
 		static void Clear();
 

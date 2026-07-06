@@ -41,6 +41,17 @@ namespace zzz::script
 		return nullptr;
 	}
 
+	std::vector<std::string> ScriptRegistry::GetAllGameNames()
+	{
+		std::vector<std::string> names;
+		names.reserve(s_GameFactories.size());
+
+		for (const auto& [name, factory] : s_GameFactories)
+			names.push_back(name);
+
+		return names;
+	}
+
 	void ScriptRegistry::Clear()
 	{
 		s_ScriptFactories.clear();

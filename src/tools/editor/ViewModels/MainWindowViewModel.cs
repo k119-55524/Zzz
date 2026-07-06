@@ -54,20 +54,35 @@ namespace editor.ViewModels
 			RedoCommand = new RelayCommand(Redo, () => App.ProjectService.History.CanRedo);
 			PlayCommand = new RelayCommand(() =>
 			{
-				/* Запуск симуляции */
 				IsRunning = true;
 				IsPaused = false;
+
+				var guids = App.ProjectService.CurrentGameConfig.GlobalScriptGuids;
+				var classNames = new System.Collections.Generic.List<string>();
+
+				if (guids != null)
+				{
+					foreach (var guid in guids)
+					{
+						if (App.ScriptAssetIndexService.TryGetByGuid(guid, out var info) && !string.IsNullOrEmpty(info.ClassName))
+						{
+							classNames.Add(info.ClassName);
+						}
+					}
+				}
+
+				EngineRuntime.Play(classNames.ToArray());
 			}, () => IsProjectOpen && !IsRunning);
 			PauseCommand = new RelayCommand(() =>
 			{
-				/* Пауза симуляции */
 				IsPaused = !IsPaused;
+				EngineRuntime.Pause(IsPaused);
 			}, () => IsProjectOpen && IsRunning);
 			StopCommand = new RelayCommand(() =>
 			{
-				/* Остановка симуляции */
 				IsRunning = false;
 				IsPaused = false;
+				EngineRuntime.Stop();
 			}, () => IsProjectOpen && IsRunning);
 			ShowWidgetCommand = new RelayCommand<PaneViewModel>(pane =>
 			{
@@ -158,6 +173,12 @@ namespace editor.ViewModels
 					OnPropertyChanged(nameof(ProjectDisplayName));
 					OnPropertyChanged(nameof(WindowTitle));
 					OnPropertyChanged(nameof(IsProjectOpen));
+
+					if (IsRunning && StopCommand.CanExecute(null))
+					{
+						StopCommand.Execute(null);
+					}
+
 					IsRunning = false;
 					IsPaused = false;
 					CommandManager.InvalidateRequerySuggested();

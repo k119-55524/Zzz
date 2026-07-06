@@ -15,7 +15,7 @@ namespace zzz::editor
 		using Engine::Engine;
 		~EditorEngine();
 
-		[[nodiscard]] std::expected<void, std::string> Run();
+		[[nodiscard]] std::expected<void, std::string> Run() override;
 
 		void Tick();
 		void ClearEngine();
@@ -25,6 +25,10 @@ namespace zzz::editor
 		void SetProjectPath(std::string_view path);
 		void ReloadScripts();
 		void UnloadScripts();
+
+		void Play(const char** scriptClasses, int count);
+		void Stop();
+		void Pause(bool isPaused);
 
 	protected:
 		void OnRegisterScripts() override;

@@ -50,6 +50,15 @@ namespace editor.Services
         [DllImport("editor_dll.dll", EntryPoint = "ReloadScripts", CallingConvention = CallingConvention.Cdecl)]
         private static extern void NativeReloadScripts();
 
+        [DllImport("editor_dll.dll", EntryPoint = "Play", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        private static extern void NativePlay(string[] scriptClasses, int count);
+
+        [DllImport("editor_dll.dll", EntryPoint = "Stop", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void NativeStop();
+
+        [DllImport("editor_dll.dll", EntryPoint = "Pause", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void NativePause([MarshalAs(UnmanagedType.I1)] bool isPaused);
+
         public static bool TryInitialize(LogCallback callback)
         {
             try
@@ -84,6 +93,42 @@ namespace editor.Services
             catch (Exception ex) when (IsNativeInteropException(ex))
             {
                 ReportNativeInteropFailure(nameof(NativeReloadScripts), ex);
+            }
+        }
+
+        public static void Play(string[] scriptClasses)
+        {
+            try
+            {
+                NativePlay(scriptClasses, scriptClasses?.Length ?? 0);
+            }
+            catch (Exception ex) when (IsNativeInteropException(ex))
+            {
+                ReportNativeInteropFailure(nameof(NativePlay), ex);
+            }
+        }
+
+        public static void Stop()
+        {
+            try
+            {
+                NativeStop();
+            }
+            catch (Exception ex) when (IsNativeInteropException(ex))
+            {
+                ReportNativeInteropFailure(nameof(NativeStop), ex);
+            }
+        }
+
+        public static void Pause(bool isPaused)
+        {
+            try
+            {
+                NativePause(isPaused);
+            }
+            catch (Exception ex) when (IsNativeInteropException(ex))
+            {
+                ReportNativeInteropFailure(nameof(NativePause), ex);
             }
         }
 

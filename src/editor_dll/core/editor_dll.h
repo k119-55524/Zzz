@@ -18,4 +18,7 @@ extern "C"
 	EDITOR_API void RemoveView(void* view);
 	EDITOR_API void SetProjectPath(const char* projectPath);
 	EDITOR_API void ReloadScripts();
+	EDITOR_API void Play(const char** scriptClasses, int count);
+	EDITOR_API void Stop();
+	EDITOR_API void Pause(bool isPaused);
 }

@@ -153,4 +153,49 @@ extern "C"
 			DOutException("Exception during ReloadScripts: {}", e.what());
 		}
 	}
+
+	EDITOR_API void Play(const char** scriptClasses, int count)
+	{
+		try
+		{
+			if (g_Engine)
+			{
+				g_Engine->Play(scriptClasses, count);
+			}
+		}
+		catch (const std::exception& e)
+		{
+			DOutException("Exception during Play: {}", e.what());
+		}
+	}
+
+	EDITOR_API void Stop()
+	{
+		try
+		{
+			if (g_Engine)
+			{
+				g_Engine->Stop();
+			}
+		}
+		catch (const std::exception& e)
+		{
+			DOutException("Exception during Stop: {}", e.what());
+		}
+	}
+
+	EDITOR_API void Pause(bool isPaused)
+	{
+		try
+		{
+			if (g_Engine)
+			{
+				g_Engine->Pause(isPaused);
+			}
+		}
+		catch (const std::exception& e)
+		{
+			DOutException("Exception during Pause: {}", e.what());
+		}
+	}
 }

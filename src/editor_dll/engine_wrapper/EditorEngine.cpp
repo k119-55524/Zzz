@@ -34,6 +34,7 @@ namespace zzz::editor
 	{
 		if (engineState.load() == eInitState::Running)
 		{
+			std::lock_guard lock(stateMutex);
 			OnUpdateSystem();
 		}
 	}
@@ -78,10 +79,6 @@ namespace zzz::editor
 		std::string originDllPath = m_ProjectPath + "/.editor/bin/scripts.dll";
 		std::string tempDllPath = m_ProjectPath + "/.editor/bin/scripts_temp_" + std::to_string(GetTickCount()) + ".dll";
 
-		// Копируем во временный файл, чтобы не лочить оригинальный DLL для компиляции.
-		// Используем цикл с повторными попытками (retry loop), так как сразу после
-		// завершения компиляции (MSBuild) файл scripts.dll может быть кратковременно
-		// заблокирован антивирусом (Windows Defender) для сканирования (Sharing Violation).
 		bool copied = false;
 		for (int i = 0; i < 50; ++i)
 		{
@@ -131,9 +128,7 @@ namespace zzz::editor
 		{
 			DOut("Unloading scripts DLL...");
 
-			// Очищаем зарегистрированные фабрики
 			zzz::script::ScriptRegistry::Clear();
-
 			FreeLibrary((HMODULE)m_ScriptsDll);
 			m_ScriptsDll = nullptr;
 
@@ -151,5 +146,32 @@ namespace zzz::editor
 		{
 			ReloadScripts();
 		}
+	}
+
+	void EditorEngine::Play(const char** scriptClasses, int count)
+	{
+		std::vector<std::string> classes;
+		for (int i = 0; i < count; ++i)
+		{
+			if (scriptClasses[i])
+			{
+				classes.push_back(scriptClasses[i]);
+			}
+		}
+
+		std::lock_guard lock(stateMutex);
+		StartGame(classes);
+	}
+
+	void EditorEngine::Stop()
+	{
+		std::lock_guard lock(stateMutex);
+		StopGame();
+	}
+
+	void EditorEngine::Pause(bool isPaused)
+	{
+		std::lock_guard lock(stateMutex);
+		PauseGame(isPaused);
 	}
 }

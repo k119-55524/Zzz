@@ -15,9 +15,6 @@ void android_main(struct android_app* app)
 
 	try
 	{
-		extern void RegisterAllScripts();
-		RegisterAllScripts();
-
 		auto platformData = std::shared_ptr<android_app>(app, [](android_app*) {});
 		engine = safe_make_unique<Engine>("GameAndroid_ZzzEngine", platformData);
 		// Запускаем движок. Он сам будет крутить цикл внутри MainLoop_Android
