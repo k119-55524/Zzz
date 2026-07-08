@@ -101,6 +101,8 @@ namespace editor.Views.Widgets
             if (e.Data.GetData(typeof(ProjectNode)) is ProjectNode projectNode)
             {
                 property.TryAddProjectNode(projectNode);
+                property.IsAssetDropTargetHighlighted = false;
+                e.Handled = true;
                 return;
             }
 
@@ -108,6 +110,46 @@ namespace editor.Views.Widgets
             {
                 var targetItem = FindVisualParent<ListBoxItem>(e.OriginalSource as DependencyObject)?.DataContext as CollectionItemViewModel;
                 property.MoveCollectionItem(draggedItem, targetItem);
+                e.Handled = true;
+            }
+        }
+
+        private void CollectionDropZone_DragOver(object sender, DragEventArgs e)
+        {
+            if (sender is not FrameworkElement { DataContext: TomlPropertyViewModel property } ||
+                !e.Data.GetDataPresent(typeof(ProjectNode)))
+            {
+                return;
+            }
+
+            bool canDrop = property.CanAddProjectNode(e.Data.GetData(typeof(ProjectNode)) as ProjectNode);
+            property.IsAssetDropTargetHighlighted = canDrop;
+            e.Effects = canDrop ? DragDropEffects.Move : DragDropEffects.None;
+            e.Handled = true;
+        }
+
+        private void CollectionDropZone_DragLeave(object sender, DragEventArgs e)
+        {
+            if (sender is FrameworkElement { DataContext: TomlPropertyViewModel property } element &&
+                !element.IsMouseOver)
+            {
+                property.IsAssetDropTargetHighlighted = false;
+            }
+        }
+
+        private void CollectionDropZone_Drop(object sender, DragEventArgs e)
+        {
+            if (sender is not FrameworkElement { DataContext: TomlPropertyViewModel property } ||
+                !e.Data.GetDataPresent(typeof(ProjectNode)))
+            {
+                return;
+            }
+
+            property.IsAssetDropTargetHighlighted = false;
+            if (e.Data.GetData(typeof(ProjectNode)) is ProjectNode projectNode)
+            {
+                property.TryAddProjectNode(projectNode);
+                e.Handled = true;
             }
         }
 

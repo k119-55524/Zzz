@@ -73,6 +73,7 @@ namespace editor.ViewModels
         private readonly Action<string>? _onProjectRenamed;
         private readonly EditorCollectionAttribute? _collectionAttribute;
         private List<string> _appliedCollectionValues = new();
+        private bool _isAssetDropTargetHighlighted;
 
         public TomlPropertyViewModel(object owner, PropertyInfo propInfo, EditorVisibility visibility, Action onChanged)
         {
@@ -123,6 +124,11 @@ namespace editor.ViewModels
         public ObservableCollection<CollectionItemViewModel> CollectionItems { get; } = new();
         public ICommand AddCollectionItemCommand { get; }
         public ICommand DeleteCollectionItemCommand { get; }
+        public bool IsAssetDropTargetHighlighted
+        {
+            get => _isAssetDropTargetHighlighted;
+            set => SetField(ref _isAssetDropTargetHighlighted, value);
+        }
 
         // Нет пользовательского Apply/Reset на само поле - незавершённые правки коллекции
         // (например, Defines) фиксируются парой Apply/Reset под всем конфигом
@@ -329,6 +335,16 @@ namespace editor.ViewModels
         public void DeleteCollectionItem(CollectionItemViewModel? item)
         {
             if (item == null) return;
+
+            string displayName = !string.IsNullOrEmpty(item.DisplayValue) ? item.DisplayValue : item.Value;
+            string title = Application.Current?.TryFindResource("Dialog_Delete_Title") as string ?? "Delete Item";
+            string confirmFormat = Application.Current?.TryFindResource("Dialog_Delete_Confirm") as string ?? "Are you sure you want to delete '{0}'?";
+            var confirmResult = MessageBox.Show(string.Format(confirmFormat, displayName), title, MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (confirmResult != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
             int index = CollectionItems.IndexOf(item);
             CollectionItems.Remove(item);
             if (CollectionItems.Count == 0)
@@ -367,36 +383,59 @@ namespace editor.ViewModels
 
         public void TryAddProjectNode(ProjectNode? node)
         {
+            if (!TryResolveProjectNodeScript(node, out ScriptAssetInfo? script, out string error))
+            {
+                if (!string.IsNullOrWhiteSpace(error))
+                {
+                    EditorLogger.LogError(error);
+                }
+                return;
+            }
+
+            CollectionItems.Add(CreateCollectionItem(script!.Guid));
+            SelectedCollectionItem = CollectionItems.LastOrDefault();
+            WriteCollectionValues();
+        }
+
+        public bool CanAddProjectNode(ProjectNode? node)
+        {
+            return TryResolveProjectNodeScript(node, out _, out _);
+        }
+
+        private bool TryResolveProjectNodeScript(ProjectNode? node, out ScriptAssetInfo? script, out string error)
+        {
+            script = null;
+            error = string.Empty;
+
             if (!IsAssetGuidCollection)
             {
-                return;
+                return false;
             }
 
             if (node == null || !node.IsScript)
             {
-                EditorLogger.LogError("[Game Config] В Global scripts можно добавлять только скриптовые ассеты.");
-                return;
+                error = "[Game Config] В Global scripts можно добавлять только скриптовые ассеты.";
+                return false;
             }
 
-            var script = App.ScriptAssetIndexService.ByGuid.Values.FirstOrDefault(info =>
+            script = App.ScriptAssetIndexService.ByGuid.Values.FirstOrDefault(info =>
                 string.Equals(info.HppPath, node.HppRelativePath, StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(info.MetaPath, node.MetaRelativePath, StringComparison.OrdinalIgnoreCase));
             if (script == null)
             {
-                EditorLogger.LogError($"[Game Config] У скрипта '{node.DisplayName}' нет корректного GUID в индексе скриптов.");
-                return;
+                error = $"[Game Config] У скрипта '{node.DisplayName}' нет корректного GUID в индексе скриптов.";
+                return false;
             }
 
+            string scriptGuid = script.Guid;
             if (_collectionAttribute?.AllowDuplicates != true &&
-                CollectionItems.Any(item => string.Equals(item.Value, script.Guid, StringComparison.OrdinalIgnoreCase)))
+                CollectionItems.Any(item => string.Equals(item.Value, scriptGuid, StringComparison.OrdinalIgnoreCase)))
             {
-                EditorLogger.LogError($"[Game Config] Скрипт '{script.ClassName}' уже есть в Global scripts.");
-                return;
+                error = $"[Game Config] Скрипт '{script.ClassName}' уже есть в Global scripts.";
+                return false;
             }
 
-            CollectionItems.Add(CreateCollectionItem(script.Guid));
-            SelectedCollectionItem = CollectionItems.LastOrDefault();
-            WriteCollectionValues();
+            return true;
         }
 
         // Дефайны попадают в CMakeLists.txt scripts.dll (см. MainWindow.CompileScriptsAsync) - без
@@ -637,7 +676,25 @@ namespace editor.ViewModels
             {
                 _currentParser = editorParser;
                 _currentConfigFullPath = fullPath;
-                _currentConfigData = editorParser.DeserializeForEditor(App.ProjectService.Storage.ReadAllText(fullPath));
+
+                // Для двух известных системных конфигов инспектор редактирует напрямую живой объект
+                // ProjectService (а не свежую десериализованную копию) - иначе правки через инспектор
+                // расходятся с CurrentGameConfig/CurrentSettings, которыми пользуются PlayCommand,
+                // AssetsWidget.Delete_Click и т.д. Для гипотетических будущих конфигов, не привязанных
+                // к полю ProjectService, остаётся общий путь через DeserializeForEditor.
+                if (node.RelativePath == ProjectConstants.SystemDirectories.GameConfigs)
+                {
+                    _currentConfigData = App.ProjectService.CurrentGameConfig;
+                }
+                else if (node.RelativePath == ProjectConstants.SystemDirectories.ProjectSettings)
+                {
+                    _currentConfigData = App.ProjectService.CurrentSettings;
+                }
+                else
+                {
+                    _currentConfigData = editorParser.DeserializeForEditor(App.ProjectService.Storage.ReadAllText(fullPath));
+                }
+
                 BuildTomlProperties(node.RelativePath, _currentConfigData);
                 ShowTomlProperties = true;
                 return true;
@@ -665,6 +722,10 @@ namespace editor.ViewModels
                 {
                     props.Add(new TomlPropertyViewModel(settings, prop, attr.Visibility, OnProjectRenamed));
                 }
+                else if (relativePath == ProjectConstants.SystemDirectories.GameConfigs)
+                {
+                    props.Add(new TomlPropertyViewModel(settings, prop, attr.Visibility, SaveGameConfigAndLog));
+                }
                 else
                 {
                     props.Add(new TomlPropertyViewModel(settings, prop, attr.Visibility, SaveCurrentConfigFile));
@@ -673,6 +734,20 @@ namespace editor.ViewModels
 
             _allTomlProperties = props;
             ApplyFilter();
+        }
+
+        // Персистентность game_config.toml идёт через ProjectService (единственная точка записи,
+        // см. ProjectService.SaveGameConfig), а не через SaveCurrentConfigFile ниже: PropertyChangeCommand
+        // из TomlPropertyViewModel.WriteCollectionValues лежит в общем App.ProjectService.History и может
+        // выполниться/откатиться (Undo/Redo) уже после того, как пользователь переключил инспектор на
+        // другой узел - к этому моменту _currentConfigData/_currentConfigFullPath уже обнулены, и
+        // SaveCurrentConfigFile() молча ничего не сделает.
+        private void SaveGameConfigAndLog()
+        {
+            if (!App.ProjectService.SaveGameConfig(out string error))
+            {
+                EditorLogger.LogError($"Не удалось сохранить game_config.toml: {error}");
+            }
         }
 
         private void SaveCurrentConfigFile()

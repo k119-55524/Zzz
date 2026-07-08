@@ -476,36 +476,57 @@
                                             </ComboBox.Style>
                                         </ComboBox>
 
-                                        <StackPanel Grid.Column="2" Margin="8,0,16,0">
-                                            <StackPanel.Style>
-                                                <Style TargetType="StackPanel">
+                                        <Border Grid.Column="2"
+                                                Margin="8,0,16,0"
+                                                CornerRadius="3"
+                                                AllowDrop="{Binding IsAssetGuidCollection}"
+                                                DragOver="CollectionDropZone_DragOver"
+                                                DragLeave="CollectionDropZone_DragLeave"
+                                                Drop="CollectionDropZone_Drop">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
                                                     <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                    <Setter Property="BorderBrush" Value="Transparent"/>
+                                                    <Setter Property="BorderThickness" Value="1"/>
+                                                    <Setter Property="Padding" Value="0"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsCollection}" Value="True">
                                                             <Setter Property="Visibility" Value="Visible"/>
                                                         </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsAssetGuidCollection}" Value="True">
+                                                            <Setter Property="MinHeight" Value="44"/>
+                                                            <Setter Property="Padding" Value="6"/>
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource Brush_Border}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsAssetDropTargetHighlighted}" Value="True">
+                                                            <Setter Property="Background" Value="#223B7A57"/>
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource Brush_Accent}"/>
+                                                        </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
-                                            </StackPanel.Style>
+                                            </Border.Style>
 
-                                            <ListBox ItemsSource="{Binding CollectionItems}"
-                                                     SelectedItem="{Binding SelectedCollectionItem, Mode=TwoWay}"
-                                                     ItemContainerStyle="{StaticResource InspectorCollectionListBoxItemStyle}"
-                                                     AlternationCount="2"
-                                                     Background="Transparent"
-                                                     BorderThickness="0"
-                                                     AllowDrop="True"
-                                                     PreviewMouseLeftButtonDown="CollectionListBox_PreviewMouseLeftButtonDown"
-                                                     PreviewMouseMove="CollectionListBox_PreviewMouseMove"
-                                                     Drop="CollectionListBox_Drop">
-                                                <ListBox.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Grid>
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="Auto" />
-                                                                <ColumnDefinition Width="*" />
-                                                                <ColumnDefinition Width="28" />
-                                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <ListBox ItemsSource="{Binding CollectionItems}"
+                                                         SelectedItem="{Binding SelectedCollectionItem, Mode=TwoWay}"
+                                                         ItemContainerStyle="{StaticResource InspectorCollectionListBoxItemStyle}"
+                                                         AlternationCount="2"
+                                                         Background="Transparent"
+                                                         BorderThickness="0"
+                                                         AllowDrop="True"
+                                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                         PreviewMouseLeftButtonDown="CollectionListBox_PreviewMouseLeftButtonDown"
+                                                         PreviewMouseMove="CollectionListBox_PreviewMouseMove"
+                                                         Drop="CollectionListBox_Drop">
+                                                    <ListBox.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto" />
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="28" />
+                                                                </Grid.ColumnDefinitions>
 
                                                             <!-- Ручка для drag-n-drop сортировки - перетаскивание начинается только с неё
                                                                  (см. InspectorWidget.CollectionListBox_PreviewMouseLeftButtonDown), иначе
@@ -579,7 +600,9 @@
                                                                 <TextBlock Text="{Binding DisplayValue}"
                                                                            Foreground="{DynamicResource Brush_Text_Light}"
                                                                            FontSize="13"
-                                                                           VerticalAlignment="Center" />
+                                                                           VerticalAlignment="Center"
+                                                                           TextTrimming="CharacterEllipsis"
+                                                                           ToolTip="{Binding DisplayValue}" />
                                                             </Border>
 
                                                             <Button Grid.Column="2"
@@ -588,27 +611,28 @@
                                                                     Command="{Binding DataContext.DeleteCollectionItemCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
                                                                     CommandParameter="{Binding}"
                                                                     Margin="4,0,0,0"/>
-                                                        </Grid>
-                                                    </DataTemplate>
-                                                </ListBox.ItemTemplate>
-                                            </ListBox>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ListBox.ItemTemplate>
+                                                </ListBox>
 
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
-                                                <StackPanel.Style>
-                                                    <Style TargetType="StackPanel">
-                                                        <Setter Property="Visibility" Value="Collapsed" />
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsStringCollection}" Value="True">
-                                                                <Setter Property="Visibility" Value="Visible" />
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </StackPanel.Style>
-                                                <Button Content="+"
-                                                        Style="{StaticResource InspectorToolButtonStyle}"
-                                                        Command="{Binding AddCollectionItemCommand}"/>
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
+                                                    <StackPanel.Style>
+                                                        <Style TargetType="StackPanel">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsStringCollection}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </StackPanel.Style>
+                                                    <Button Content="+"
+                                                            Style="{StaticResource InspectorToolButtonStyle}"
+                                                            Command="{Binding AddCollectionItemCommand}"/>
+                                                </StackPanel>
                                             </StackPanel>
-                                        </StackPanel>
+                                        </Border>
                                     </Grid>
                                 </Border>
                                 <DataTemplate.Triggers>

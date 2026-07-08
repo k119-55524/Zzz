@@ -108,6 +108,8 @@ namespace editor.ViewModels
 
 		public ObservableCollection<string> RecentProjects { get; }
 
+		public IReadOnlyList<string> RecentScriptNamespaces => _globalState.RecentScriptNamespaces ?? Array.Empty<string>();
+
 		public bool HasRecentProjects => RecentProjects.Count > 0;
 
 		public string AppName => EditorConstants.ApplicationName;
@@ -268,6 +270,44 @@ namespace editor.ViewModels
 		public void SaveSession()
 		{
 			EditorSessionManager.SaveGlobalSession(_globalState);
+		}
+
+		public void AddRecentScriptNamespace(string scriptNamespace)
+		{
+			scriptNamespace = scriptNamespace?.Trim() ?? string.Empty;
+			if (string.IsNullOrEmpty(scriptNamespace))
+			{
+				return;
+			}
+
+			var list = new List<string>(_globalState.RecentScriptNamespaces ?? Array.Empty<string>());
+			list.RemoveAll(item => string.Equals(item, scriptNamespace, StringComparison.Ordinal));
+			list.Insert(0, scriptNamespace);
+			if (list.Count > 20)
+			{
+				list.RemoveRange(20, list.Count - 20);
+			}
+
+			_globalState.RecentScriptNamespaces = list.ToArray();
+			SaveSession();
+			OnPropertyChanged(nameof(RecentScriptNamespaces));
+		}
+
+		public void RemoveRecentScriptNamespace(string scriptNamespace)
+		{
+			scriptNamespace = scriptNamespace?.Trim() ?? string.Empty;
+			if (string.IsNullOrEmpty(scriptNamespace))
+			{
+				return;
+			}
+
+			var list = new List<string>(_globalState.RecentScriptNamespaces ?? Array.Empty<string>());
+			if (list.RemoveAll(item => string.Equals(item, scriptNamespace, StringComparison.Ordinal)) > 0)
+			{
+				_globalState.RecentScriptNamespaces = list.ToArray();
+				SaveSession();
+				OnPropertyChanged(nameof(RecentScriptNamespaces));
+			}
 		}
 
 		// Возвращает false, если закрытие нужно отменить

@@ -1,7 +1,16 @@
 #include "{ClassName}.hpp"
 
+{NamespaceOpenCpp}
 {ClassName}::{ClassName}()
 	: {BaseClass}()
 {
-	// Инициализация скрипта сцены
 }
+
+void {ClassName}::OnLoad()
+{
+}
+
+void {ClassName}::OnUnload()
+{
+}
+{NamespaceCloseCpp}

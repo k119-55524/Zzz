@@ -1,9 +1,13 @@
 #pragma once
 #include <{IncludePath}>
 
-class {ClassName} : public {BaseClass}
-{
-public:
-	{ClassName}();
+{NamespaceOpenHpp}{NamespaceIndent}class {ClassName} : public {BaseClass}
+{NamespaceIndent}{
+{NamespaceIndent}public:
+{NamespaceIndent}	{ClassName}();
+{NamespaceIndent}
+{NamespaceIndent}	void OnStart() override;
+{NamespaceIndent}	void OnUpdate(float deltaTime) override;
 
-};
+{NamespaceIndent}};
+{NamespaceCloseHpp}

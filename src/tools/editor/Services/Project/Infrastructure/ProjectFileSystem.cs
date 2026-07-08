@@ -29,6 +29,7 @@ namespace editor.Services.Project.Infrastructure
                     _name = value;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(DisplayName));
+                    OnPropertyChanged(nameof(QualifiedName));
                 }
             }
         }
@@ -97,6 +98,7 @@ namespace editor.Services.Project.Infrastructure
         private bool _hasHpp;
         private bool _hasCpp;
         private bool _hasMeta;
+        private string _scriptNamespace = string.Empty;
         private string _hppRelativePath = string.Empty;
         private string _cppRelativePath = string.Empty;
         private string _metaRelativePath = string.Empty;
@@ -192,6 +194,21 @@ namespace editor.Services.Project.Infrastructure
             }
         }
 
+        public string ScriptNamespace
+        {
+            get => _scriptNamespace;
+            set
+            {
+                string normalized = value?.Trim() ?? string.Empty;
+                if (_scriptNamespace != normalized)
+                {
+                    _scriptNamespace = normalized;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(QualifiedName));
+                }
+            }
+        }
+
         public System.Collections.ObjectModel.ObservableCollection<ProjectNode> Children
         {
             get => _children;
@@ -206,6 +223,10 @@ namespace editor.Services.Project.Infrastructure
         }
 
         public string DisplayName => IsFolder ? Name : System.IO.Path.GetFileNameWithoutExtension(Name);
+
+        public string QualifiedName => IsScript && !string.IsNullOrWhiteSpace(ScriptNamespace)
+            ? $"{ScriptNamespace}::{DisplayName}"
+            : DisplayName;
 
         public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
 
@@ -360,6 +381,16 @@ namespace editor.Services.Project.Infrastructure
 
                     bool hasCpp = filePaths.Contains(cppPath, StringComparer.OrdinalIgnoreCase);
                     bool hasMeta = filePaths.Contains(metaPath, StringComparer.OrdinalIgnoreCase);
+                    string scriptNamespace = string.Empty;
+                    if (hasMeta)
+                    {
+                        var meta = ScriptMetaFile.Load(_storage, metaPath);
+                        scriptNamespace = meta?.Namespace ?? string.Empty;
+                    }
+                    if (string.IsNullOrWhiteSpace(scriptNamespace))
+                    {
+                        scriptNamespace = ScriptMetaFile.InferNamespaceFromHeader(_storage.ReadAllText(filePath), baseName);
+                    }
 
                     var scriptNode = new ProjectNode
                     {
@@ -372,7 +403,8 @@ namespace editor.Services.Project.Infrastructure
                         HasCpp = hasCpp,
                         CppRelativePath = hasCpp ? Path.GetRelativePath(rootPath, cppPath).Replace('\\', '/') : string.Empty,
                         HasMeta = hasMeta,
-                        MetaRelativePath = hasMeta ? Path.GetRelativePath(rootPath, metaPath).Replace('\\', '/') : string.Empty
+                        MetaRelativePath = hasMeta ? Path.GetRelativePath(rootPath, metaPath).Replace('\\', '/') : string.Empty,
+                        ScriptNamespace = scriptNamespace
                     };
 
                     processedFiles.Add(filePath);

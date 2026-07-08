@@ -17,6 +17,7 @@ namespace editor.Services.Project.Assets
 		private readonly ScriptAssetWatchHandler _scriptWatchHandler = new();
 		private readonly Dictionary<string, ScriptAssetInfo> _byGuid = new(StringComparer.OrdinalIgnoreCase);
 		private readonly Dictionary<string, List<ScriptAssetInfo>> _byClassName = new(StringComparer.Ordinal);
+		private readonly Dictionary<string, List<ScriptAssetInfo>> _byQualifiedName = new(StringComparer.Ordinal);
 
 		private string? _projectRoot;
 
@@ -29,6 +30,7 @@ namespace editor.Services.Project.Assets
 
 		public IReadOnlyDictionary<string, ScriptAssetInfo> ByGuid => _byGuid;
 		public IReadOnlyDictionary<string, List<ScriptAssetInfo>> ByClassName => _byClassName;
+		public IReadOnlyDictionary<string, List<ScriptAssetInfo>> ByQualifiedName => _byQualifiedName;
 
 		public event EventHandler<ScriptAssetIndexChangedEventArgs>? Changed;
 
@@ -48,6 +50,7 @@ namespace editor.Services.Project.Assets
 			_projectRoot = null;
 			_byGuid.Clear();
 			_byClassName.Clear();
+			_byQualifiedName.Clear();
 			Changed?.Invoke(this, new ScriptAssetIndexChangedEventArgs(affectsCompilation: false));
 		}
 
@@ -60,6 +63,7 @@ namespace editor.Services.Project.Assets
 		{
 			_byGuid.Clear();
 			_byClassName.Clear();
+			_byQualifiedName.Clear();
 
 			if (string.IsNullOrEmpty(_projectRoot))
 			{
@@ -70,7 +74,7 @@ namespace editor.Services.Project.Assets
 			string assetsRoot = Path.Combine(_projectRoot, "Assets");
 			ScanDirectory(assetsRoot);
 
-			foreach (var duplicate in _byClassName.Where(pair => pair.Value.Count > 1))
+			foreach (var duplicate in _byQualifiedName.Where(pair => pair.Value.Count > 1))
 			{
 				string paths = string.Join(", ", duplicate.Value.Select(info => info.HppPath));
 				EditorLogger.LogError($"[Script Index] Дублирующееся имя класса скрипта '{duplicate.Key}' найдено в: {paths}.");
@@ -181,10 +185,17 @@ namespace editor.Services.Project.Assets
 			}
 
 			string cppPath = basePath + ".cpp";
+			string scriptNamespace = meta.Namespace;
+			if (string.IsNullOrWhiteSpace(scriptNamespace))
+			{
+				scriptNamespace = ScriptMetaFile.InferNamespaceFromHeader(_storage.ReadAllText(hppPath), meta.ClassName);
+			}
+
 			var info = new ScriptAssetInfo
 			{
 				Guid = meta.Guid,
 				ClassName = meta.ClassName,
+				Namespace = scriptNamespace,
 				HppPath = ToProjectRelativePath(hppPath),
 				CppPath = _storage.FileExists(cppPath) ? ToProjectRelativePath(cppPath) : string.Empty,
 				MetaPath = ToProjectRelativePath(metaPath)
@@ -203,6 +214,13 @@ namespace editor.Services.Project.Assets
 				_byClassName[info.ClassName] = classItems;
 			}
 			classItems.Add(info);
+
+			if (!_byQualifiedName.TryGetValue(info.QualifiedName, out var qualifiedItems))
+			{
+				qualifiedItems = new List<ScriptAssetInfo>();
+				_byQualifiedName[info.QualifiedName] = qualifiedItems;
+			}
+			qualifiedItems.Add(info);
 		}
 
 		private string ToProjectRelativePath(string fullPath)

@@ -14,7 +14,6 @@ namespace editor.Views.Widgets
 	{
 		// Узлы, добавленные через "Добавить -> Папку" и еще не подтвержденные вводом имени.
 		private readonly HashSet<ProjectNode> _pendingNewNodes = new();
-		private readonly Dictionary<ProjectNode, string> _pendingNewScripts = new();
 		private System.Windows.Window? _hostWindow;
 
 		public AssetsWidget()
@@ -275,47 +274,24 @@ namespace editor.Views.Widgets
 			string scriptType = menuItem.Tag as string ?? "Script";
 
 			CommitActiveEditIfAny();
-			var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as ViewModels.MainWindowViewModel;
-			var mainAssetsVm = mainVm?.Panes.OfType<ViewModels.AssetsViewModel>().FirstOrDefault();
-			if (mainVm == null || mainAssetsVm == null) return;
-
-			// Этот пункт меню навешан только на пустую область AssetsTree (см. XAML),
-			// поэтому он всегда добавляет скрипт в ассеты, как и AddFolderToRoot_Click.
-			string baseName = "NewScript";
-			if (scriptType == "Game") baseName = "NewGameScript";
-			else if (scriptType == "Scene") baseName = "NewSceneScript";
-
-			string scriptName = baseName;
-			int index = 1;
-			var siblings = mainAssetsVm.AssetRootNodes.ToList();
-			while (siblings.Any(c => c.Name.Equals(scriptName, StringComparison.OrdinalIgnoreCase)))
-			{
-				scriptName = $"{baseName}_{index++}";
-			}
-
-			string newRelPath = $"Assets/{scriptName}";
-
-			var newScriptNode = new ProjectNode
-			{
-				Name = scriptName,
-				RelativePath = newRelPath,
-				IsFolder = false,
-				IsScript = true,
-				IsEditing = true
-			};
-
-			_pendingNewNodes.Add(newScriptNode);
-			_pendingNewScripts[newScriptNode] = scriptType;
-
-			mainAssetsVm.AssetRootNodes.Add(newScriptNode);
+			ShowNewScriptDialog("Assets", scriptType);
 		}
 
 		private void NodeEditTextBox_Loaded(object sender, System.Windows.RoutedEventArgs e)
 		{
-			if (sender is TextBox textBox)
+			if (sender is TextBox textBox && textBox.DataContext is ProjectNode node)
 			{
 				textBox.Focus();
 				textBox.SelectAll();
+				UpdateEditValidation(textBox, node);
+			}
+		}
+
+		private void NodeEditTextBox_TextChanged(object sender, TextChangedEventArgs e)
+		{
+			if (sender is TextBox textBox && textBox.DataContext is ProjectNode node)
+			{
+				UpdateEditValidation(textBox, node);
 			}
 		}
 
@@ -337,6 +313,11 @@ namespace editor.Views.Widgets
 				if (e.Key == Key.Enter)
 				{
 					e.Handled = true;
+					if (GetEditValidationError(node, textBox.Text) != null)
+					{
+						UpdateEditValidation(textBox, node);
+						return;
+					}
 					CommitRename(node, textBox.Text);
 				}
 				else if (e.Key == Key.Escape)
@@ -357,21 +338,12 @@ namespace editor.Views.Widgets
 			if (string.IsNullOrEmpty(newName))
 			{
 				if (isPendingNew) _pendingNewNodes.Remove(node);
-				if (_pendingNewScripts.ContainsKey(node)) _pendingNewScripts.Remove(node);
 				RefreshTree();
 				return;
 			}
 
-			char[] invalidChars = System.IO.Path.GetInvalidFileNameChars();
-			if (newName.IndexOfAny(invalidChars) >= 0)
-			{
-				EditorLogger.LogError(Loc("Validation_Name_InvalidChars", "Name contains invalid characters."));
-				if (isPendingNew) _pendingNewNodes.Remove(node);
-				if (_pendingNewScripts.ContainsKey(node)) _pendingNewScripts.Remove(node);
-				RefreshTree();
-				return;
-			}
-
+			// Невалидные символы и (для скриптов) некорректный C++-идентификатор проверяет
+			// GetEditValidationError ниже - здесь их не дублируем.
 			var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as ViewModels.MainWindowViewModel;
 			string? projectRoot = mainVm?.CurrentProjectPath;
 			var mainAssetsVm = mainVm?.Panes.OfType<ViewModels.AssetsViewModel>().FirstOrDefault();
@@ -384,90 +356,20 @@ namespace editor.Views.Widgets
 			bool isSystemMode = mainAssetsVm.IsSystemNode(node);
 			var activeFilters = App.ProjectService.CurrentSettings.DisabledFilters;
 
+			string? validationError = GetEditValidationError(node, newName);
+			if (validationError != null)
+			{
+				EditorLogger.LogError(validationError);
+				if (isPendingNew) _pendingNewNodes.Remove(node);
+				RefreshTree();
+				return;
+			}
+
 			// Новый ещё не созданный на диске скрипт тоже имеет IsScript=true (см. AddScript_Click/
 			// AddScriptToRoot_Click), но у него нет HasHpp/HasCpp/HasMeta - значит это не переименование,
 			// а первое сохранение имени, и его нужно обработать в ветке isPendingNew ниже.
 			if (node.IsScript && !isPendingNew)
 			{
-				if (newName.Equals(node.Name, StringComparison.OrdinalIgnoreCase))
-				{
-					RefreshTree();
-					return;
-				}
-
-				// Переименование hpp/cpp/meta выполняется одной атомарной командой (Undo/Redo одним
-				// шагом), поэтому сначала проверяем ВСЕ целевые пути и только потом что-либо исполняем.
-				var renameTargets = new List<(string OldPath, string NewPath)>();
-				string? newMetaPath = null;
-
-				if (node.HasHpp && !string.IsNullOrEmpty(node.HppRelativePath))
-				{
-					string oldPhysPath = System.IO.Path.Combine(projectRoot, node.HppRelativePath);
-					string? oldDir = System.IO.Path.GetDirectoryName(oldPhysPath);
-					if (oldDir != null)
-					{
-						string newPhysPath = System.IO.Path.Combine(oldDir, newName + ".hpp");
-						if (System.IO.File.Exists(newPhysPath))
-						{
-							EditorLogger.LogError(Loc("Validation_FileName_Exists", "A file with this name already exists."));
-							RefreshTree();
-							return;
-						}
-						renameTargets.Add((oldPhysPath, newPhysPath));
-					}
-				}
-				if (node.HasCpp && !string.IsNullOrEmpty(node.CppRelativePath))
-				{
-					string oldPhysPath = System.IO.Path.Combine(projectRoot, node.CppRelativePath);
-					string? oldDir = System.IO.Path.GetDirectoryName(oldPhysPath);
-					if (oldDir != null)
-					{
-						string newPhysPath = System.IO.Path.Combine(oldDir, newName + ".cpp");
-						if (System.IO.File.Exists(newPhysPath))
-						{
-							EditorLogger.LogError(Loc("Validation_FileName_Exists", "A file with this name already exists."));
-							RefreshTree();
-							return;
-						}
-						renameTargets.Add((oldPhysPath, newPhysPath));
-					}
-				}
-				if (node.HasMeta && !string.IsNullOrEmpty(node.MetaRelativePath))
-				{
-					string oldPhysPath = System.IO.Path.Combine(projectRoot, node.MetaRelativePath);
-					string? oldDir = System.IO.Path.GetDirectoryName(oldPhysPath);
-					if (oldDir != null)
-					{
-						string newPhysPath = System.IO.Path.Combine(oldDir, newName + ".meta");
-						if (System.IO.File.Exists(newPhysPath))
-						{
-							EditorLogger.LogError(Loc("Validation_FileName_Exists", "A file with this name already exists."));
-							RefreshTree();
-							return;
-						}
-						renameTargets.Add((oldPhysPath, newPhysPath));
-						newMetaPath = newPhysPath;
-					}
-				}
-
-				var commands = new List<editor.Services.Project.Infrastructure.UndoRedo.ICommand>();
-				foreach (var (oldPath, newPath) in renameTargets)
-				{
-					commands.Add(new editor.Services.Project.Infrastructure.UndoRedo.MoveOrRenameCommand(oldPath, newPath, App.ProjectService.Storage, onScriptChanged: TriggerScriptRebuild));
-				}
-				if (newMetaPath != null)
-				{
-					commands.Add(new editor.Services.Project.Infrastructure.UndoRedo.UpdateScriptMetaClassNameCommand(newMetaPath, newName, App.ProjectService.Storage));
-				}
-
-				if (commands.Count > 0)
-				{
-					var composite = new editor.Services.Project.Infrastructure.UndoRedo.CompositeCommand(commands);
-					App.ProjectService.History.Execute(composite);
-					EditorLogger.LogInfo($"[Meta System] Renamed script '{node.Name}' to '{newName}' (hpp/cpp/meta updated atomically).");
-				}
-
-				if (mainVm != null) mainVm.RefreshDirtyState();
 				RefreshTree();
 				return;
 			}
@@ -495,37 +397,6 @@ namespace editor.Views.Widgets
 
 			if (isPendingNew)
 			{
-				if (_pendingNewScripts.ContainsKey(node))
-				{
-					string scriptType = _pendingNewScripts[node];
-					_pendingNewScripts.Remove(node);
-					_pendingNewNodes.Remove(node);
-
-					var scriptCmd = new editor.Services.Project.Infrastructure.UndoRedo.CreateScriptCommand(
-						newRelPath,
-						newName,
-						scriptType,
-						GetTemplatesDirectory(),
-						projectRoot,
-						App.ProjectService.Storage,
-						onScriptChanged: TriggerScriptRebuild
-					);
-
-					try
-					{
-						App.ProjectService.History.Execute(scriptCmd);
-						EditorLogger.LogInfo(string.Format(Loc("ScriptCreate_Success", "Successfully created script '{0}' from '{1}' template."), newName, scriptType));
-						if (mainVm != null) mainVm.RefreshDirtyState();
-					}
-					catch (Exception ex)
-					{
-						EditorLogger.LogError(string.Format(Loc("Error_CreateScript_Failed", "Failed to create script: {0}"), ex.Message));
-					}
-
-					RefreshTree();
-					return;
-				}
-
 				_pendingNewNodes.Remove(node);
 
 				var cmd = new editor.Services.Project.Infrastructure.UndoRedo.CreateFolderCommand(
@@ -681,8 +552,8 @@ namespace editor.Views.Widgets
 											{
 												if (subObj is MenuItem subMenuItem)
 												{
-													// Пункты скриптов помечены Tag (см. XAML: AddScriptMenuItem/AddGameScriptMenuItem/
-													// AddSceneScriptMenuItem), пункт папки - без Tag.
+													// Пункт скрипта помечен Tag (см. XAML: AddScriptMenuItem) - базовый тип
+													// (Script/Game/Scene) выбирается внутри NewScriptDialog, пункт папки - без Tag.
 													if (subMenuItem.Tag is string)
 													{
 														subMenuItem.Click -= AddScript_Click;
@@ -792,7 +663,7 @@ namespace editor.Views.Widgets
 									})
 								: (Func<bool>?)null;
 
-							var cmd = new editor.Services.Project.Infrastructure.UndoRedo.DeleteFileOrFolderCommand(
+							var deleteCmd = new editor.Services.Project.Infrastructure.UndoRedo.DeleteFileOrFolderCommand(
 								physicalPaths,
 								projectRoot,
 								node.IsFolder,
@@ -800,6 +671,37 @@ namespace editor.Views.Widgets
 								onScriptChanged: TriggerScriptRebuild,
 								containsScripts: containsScripts
 							);
+
+							// Удаляемый скрипт (или скрипты внутри удаляемой папки) может быть отмечен как
+							// глобальный в game_config.toml - без этого шага GlobalScriptGuids оставался бы
+							// с "мёртвым" GUID (см. docs/resources.md "Game config references"). Список читаем
+							// заново с диска, а не из App.ProjectService.CurrentGameConfig: этот кэш не
+							// обновляется, когда правки вносятся через инспектор (InspectorViewModel держит
+							// свою отдельную десериализованную копию game_config.toml и пишет сразу на диск,
+							// минуя CurrentGameConfig) - иначе удаление не находило бы только что добавленный
+							// туда GUID.
+							string gameConfigPath = System.IO.Path.Combine(projectRoot, editor.Services.Project.ProjectConstants.SystemDirectories.GameConfigs);
+							var currentGameConfig = App.ProjectService.Storage.FileExists(gameConfigPath)
+								? editor.Services.Project.FileTypes.GameConfig.GameConfigParser.Deserialize(App.ProjectService.Storage.ReadAllText(gameConfigPath))
+								: App.ProjectService.CurrentGameConfig;
+							var oldGuids = new List<string>(currentGameConfig.GlobalScriptGuids);
+							var affectedGuids = CollectScriptGuidsUnderNode(node)
+								.Where(guid => oldGuids.Contains(guid))
+								.ToList();
+
+							editor.Services.Project.Infrastructure.UndoRedo.ICommand cmd = deleteCmd;
+							if (affectedGuids.Count > 0)
+							{
+								var newGuids = oldGuids.Where(guid => !affectedGuids.Contains(guid)).ToList();
+								var guidCmd = new editor.Services.Project.Infrastructure.UndoRedo.PropertyChangeCommand<List<string>>(
+									setValueDirectly: v => App.ProjectService.CurrentGameConfig.GlobalScriptGuids = v,
+									oldValue: oldGuids,
+									newValue: newGuids,
+									onChanged: SaveGameConfig);
+
+								cmd = new editor.Services.Project.Infrastructure.UndoRedo.CompositeCommand(
+									new List<editor.Services.Project.Infrastructure.UndoRedo.ICommand> { deleteCmd, guidCmd });
+							}
 
 							try
 							{
@@ -816,6 +718,41 @@ namespace editor.Views.Widgets
 					}
 				}
 			}
+		}
+
+		// Собирает GUID скриптов, лежащих под удаляемым узлом (сам узел - для одиночного скрипта,
+		// либо все скрипты внутри - для папки), по уже построенному ScriptAssetIndexService -
+		// единому источнику GUID в редакторе (см. docs/resources.md "ScriptAssetIndexService"),
+		// а не через повторное чтение .meta с диска.
+		private static List<string> CollectScriptGuidsUnderNode(ProjectNode node)
+		{
+			string nodePath = node.RelativePath;
+			var guids = new List<string>();
+			foreach (var info in App.ScriptAssetIndexService.ByGuid.Values)
+			{
+				bool matches = node.IsFolder
+					? info.HppPath.StartsWith(nodePath + "/", StringComparison.OrdinalIgnoreCase)
+					: string.Equals(info.HppPath, nodePath, StringComparison.OrdinalIgnoreCase);
+				if (matches)
+				{
+					guids.Add(info.Guid);
+				}
+			}
+			return guids;
+		}
+
+		private void SaveGameConfig()
+		{
+			var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as ViewModels.MainWindowViewModel;
+			string? projectRoot = mainVm?.CurrentProjectPath;
+			if (string.IsNullOrEmpty(projectRoot))
+			{
+				return;
+			}
+
+			string configPath = System.IO.Path.Combine(projectRoot, editor.Services.Project.ProjectConstants.SystemDirectories.GameConfigs);
+			string content = editor.Services.Project.FileTypes.GameConfig.GameConfigParser.Serialize(App.ProjectService.CurrentGameConfig);
+			App.ProjectService.Storage.WriteAllText(configPath, content);
 		}
 
 		private void RefreshTree()
@@ -1079,7 +1016,7 @@ namespace editor.Views.Widgets
 					return;
 				}
 
-				if (sender is TextBlock && App.SelectionService.SelectedItem == node)
+				if (sender is TextBlock && App.SelectionService.SelectedItem == node && !node.IsScript)
 				{
 					CommitActiveEditIfAny();
 					node.IsEditing = true;
@@ -1340,78 +1277,96 @@ namespace editor.Views.Widgets
 
 		private void AddScript_Click(object sender, System.Windows.RoutedEventArgs e)
 		{
-			if (sender is MenuItem menuItem)
+			if (sender is not MenuItem menuItem) return;
+
+			string scriptType = menuItem.Tag as string ?? "Script";
+			var clickedNode = GetSelectedNode(menuItem);
+			if (clickedNode == null) return;
+
+			string targetRelativePath = clickedNode.RelativePath;
+			CommitActiveEditIfAny();
+
+			var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as ViewModels.MainWindowViewModel;
+			var mainAssetsVm = mainVm?.Panes.OfType<ViewModels.AssetsViewModel>().FirstOrDefault();
+			if (mainVm == null || mainAssetsVm == null) return;
+
+			var node = FindNodeByPath(mainAssetsVm.AssetRootNodes, targetRelativePath);
+			var ownerRoots = mainAssetsVm.AssetRootNodes;
+			if (node == null)
 			{
-				string scriptType = menuItem.Tag as string ?? "Script";
-				var clickedNode = GetSelectedNode(menuItem);
-				if (clickedNode != null)
-				{
-					string targetRelativePath = clickedNode.RelativePath;
-					CommitActiveEditIfAny();
-
-					var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as ViewModels.MainWindowViewModel;
-					var mainAssetsVm = mainVm?.Panes.OfType<ViewModels.AssetsViewModel>().FirstOrDefault();
-					if (mainVm != null && mainAssetsVm != null)
-					{
-						var node = FindNodeByPath(mainAssetsVm.AssetRootNodes, targetRelativePath);
-						var ownerRoots = mainAssetsVm.AssetRootNodes;
-						if (node == null)
-						{
-							node = FindNodeByPath(mainAssetsVm.SystemRootNodes, targetRelativePath);
-							ownerRoots = mainAssetsVm.SystemRootNodes;
-						}
-						if (node == null) return;
-
-						ProjectNode parentNode;
-						string parentRelativePath;
-
-						if (node.IsFolder)
-						{
-							parentNode = node;
-							parentRelativePath = node.RelativePath;
-						}
-						else
-						{
-							parentNode = FindParentNode(ownerRoots, node, out parentRelativePath);
-						}
-
-						string baseName = "NewScript";
-						if (scriptType == "Game") baseName = "NewGameScript";
-						else if (scriptType == "Scene") baseName = "NewSceneScript";
-
-						string scriptName = baseName;
-						int index = 1;
-						var siblings = parentNode != null ? parentNode.Children.ToList() : ownerRoots.ToList();
-						while (siblings.Any(c => c.Name.Equals(scriptName, StringComparison.OrdinalIgnoreCase)))
-						{
-							scriptName = $"{baseName}_{index++}";
-						}
-
-						string newRelPath = string.IsNullOrEmpty(parentRelativePath) ? scriptName : $"{parentRelativePath}/{scriptName}";
-
-						var newScriptNode = new ProjectNode
-						{
-							Name = scriptName,
-							RelativePath = newRelPath,
-							IsFolder = false,
-							IsScript = true,
-							IsEditing = true
-						};
-
-						_pendingNewNodes.Add(newScriptNode);
-						_pendingNewScripts[newScriptNode] = scriptType;
-
-						if (parentNode != null)
-						{
-							parentNode.Children.Add(newScriptNode);
-						}
-						else
-						{
-							ownerRoots.Add(newScriptNode);
-						}
-					}
-				}
+				node = FindNodeByPath(mainAssetsVm.SystemRootNodes, targetRelativePath);
+				ownerRoots = mainAssetsVm.SystemRootNodes;
 			}
+			if (node == null) return;
+
+			string parentRelativePath;
+			if (node.IsFolder)
+			{
+				parentRelativePath = node.RelativePath;
+			}
+			else
+			{
+				FindParentNode(ownerRoots, node, out parentRelativePath);
+			}
+
+			ShowNewScriptDialog(parentRelativePath, scriptType);
+		}
+
+		private void ShowNewScriptDialog(string parentRelativePath, string scriptType)
+		{
+			var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as ViewModels.MainWindowViewModel;
+			string? projectRoot = mainVm?.CurrentProjectPath;
+			if (mainVm == null || string.IsNullOrEmpty(projectRoot)) return;
+
+			var dialog = new editor.Views.NewScriptDialog(
+				System.Windows.Window.GetWindow(this),
+				projectRoot,
+				parentRelativePath,
+				scriptType,
+				mainVm.RecentScriptNamespaces);
+
+			bool? result = dialog.ShowDialog();
+			foreach (string removedNamespace in dialog.RemovedNamespaces)
+			{
+				mainVm.RemoveRecentScriptNamespace(removedNamespace);
+			}
+
+			if (result != true)
+			{
+				return;
+			}
+
+			string newRelPath = string.IsNullOrEmpty(parentRelativePath)
+				? dialog.ScriptName
+				: $"{parentRelativePath}/{dialog.ScriptName}";
+
+			var scriptCmd = new editor.Services.Project.Infrastructure.UndoRedo.CreateScriptCommand(
+				newRelPath,
+				dialog.ScriptName,
+				dialog.ScriptType,
+				dialog.ScriptNamespace,
+				GetTemplatesDirectory(),
+				projectRoot,
+				App.ProjectService.Storage,
+				onScriptChanged: TriggerScriptRebuild
+			);
+
+			try
+			{
+				App.ProjectService.History.Execute(scriptCmd);
+				if (!string.IsNullOrWhiteSpace(dialog.ScriptNamespace))
+				{
+					mainVm.AddRecentScriptNamespace(dialog.ScriptNamespace);
+				}
+				EditorLogger.LogInfo(string.Format(Loc("ScriptCreate_Success", "Successfully created script '{0}' from '{1}' template."), dialog.ScriptName, dialog.ScriptType));
+				mainVm.RefreshDirtyState();
+			}
+			catch (Exception ex)
+			{
+				EditorLogger.LogError(string.Format(Loc("Error_CreateScript_Failed", "Failed to create script: {0}"), ex.Message));
+			}
+
+			RefreshTree();
 		}
 
 		private string GetTemplatesDirectory()
@@ -1474,6 +1429,117 @@ namespace editor.Views.Widgets
 					}
 				}
 			}
+		}
+
+		private void UpdateEditValidation(TextBox textBox, ProjectNode node)
+		{
+			string? error = GetEditValidationError(node, textBox.Text);
+			if (error == null)
+			{
+				textBox.ClearValue(Control.BorderBrushProperty);
+				textBox.ToolTip = null;
+				return;
+			}
+
+			textBox.BorderBrush = System.Windows.Media.Brushes.IndianRed;
+			textBox.ToolTip = error;
+		}
+
+		private string? GetEditValidationError(ProjectNode node, string? rawName)
+		{
+			string newName = rawName?.Trim() ?? string.Empty;
+			if (string.IsNullOrEmpty(newName))
+			{
+				return Loc("Validation_Name_Empty", "Name cannot be empty.");
+			}
+
+			if (newName.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) >= 0)
+			{
+				return Loc("Validation_Name_InvalidChars", "Name contains invalid characters.");
+			}
+
+			if (node.IsScript && !CppIdentifierValidation.IsValidIdentifier(newName))
+			{
+				return Loc("Validation_ScriptName_InvalidIdentifier", "Script name must be a valid C++ class name.");
+			}
+
+			bool isPendingNew = _pendingNewNodes.Contains(node);
+			if (node.IsScript && !isPendingNew && !newName.Equals(node.Name, StringComparison.OrdinalIgnoreCase))
+			{
+				return Loc("Validation_ScriptRename_Disabled", "Script names can only be set when the script is created.");
+			}
+
+			var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as ViewModels.MainWindowViewModel;
+			string? projectRoot = mainVm?.CurrentProjectPath;
+			var mainAssetsVm = mainVm?.Panes.OfType<ViewModels.AssetsViewModel>().FirstOrDefault();
+			if (string.IsNullOrEmpty(projectRoot) || mainAssetsVm == null)
+			{
+				return null;
+			}
+
+			bool isSystemMode = mainAssetsVm.IsSystemNode(node);
+			string parentPath = GetParentRelativePath(node.RelativePath);
+			string targetRelPath = string.IsNullOrEmpty(parentPath) ? newName : $"{parentPath}/{newName}";
+			string targetBasePath = System.IO.Path.Combine(projectRoot, targetRelPath.Replace('/', System.IO.Path.DirectorySeparatorChar));
+
+			if (node.IsScript)
+			{
+				if (ScriptFileExists(targetBasePath, ".hpp", node.HppRelativePath, projectRoot) ||
+					ScriptFileExists(targetBasePath, ".cpp", node.CppRelativePath, projectRoot) ||
+					ScriptFileExists(targetBasePath, ".meta", node.MetaRelativePath, projectRoot))
+				{
+					return Loc("Validation_FileName_Exists", "A file with this name already exists.");
+				}
+				return null;
+			}
+
+			string actualNewName = node.IsFolder ? newName : newName + System.IO.Path.GetExtension(node.Name);
+			string actualTargetRelPath = string.IsNullOrEmpty(parentPath) ? actualNewName : $"{parentPath}/{actualNewName}";
+			string targetPath = System.IO.Path.Combine(projectRoot, actualTargetRelPath.Replace('/', System.IO.Path.DirectorySeparatorChar));
+
+			if (node.IsFolder)
+			{
+				string currentPath = System.IO.Path.Combine(projectRoot, node.RelativePath.Replace('/', System.IO.Path.DirectorySeparatorChar));
+				if (!PathsEqual(targetPath, currentPath) && System.IO.Directory.Exists(targetPath))
+				{
+					return Loc("Validation_FolderName_Exists", "A folder with this name already exists.");
+				}
+			}
+			else
+			{
+				var currentPaths = GetPhysicalPaths(node, projectRoot, isSystemMode, App.ProjectService.CurrentSettings.DisabledFilters);
+				if (!currentPaths.Any(path => PathsEqual(path, targetPath)) && System.IO.File.Exists(targetPath))
+				{
+					return Loc("Validation_FileName_Exists", "A file with this name already exists.");
+				}
+			}
+
+			return null;
+		}
+
+		private static bool ScriptFileExists(string targetBasePath, string extension, string currentRelativePath, string projectRoot)
+		{
+			string targetPath = targetBasePath + extension;
+			if (!System.IO.File.Exists(targetPath))
+			{
+				return false;
+			}
+
+			if (string.IsNullOrEmpty(currentRelativePath))
+			{
+				return true;
+			}
+
+			string currentPath = System.IO.Path.Combine(projectRoot, currentRelativePath.Replace('/', System.IO.Path.DirectorySeparatorChar));
+			return !PathsEqual(targetPath, currentPath);
+		}
+
+		private static bool PathsEqual(string left, string right)
+		{
+			return string.Equals(
+				System.IO.Path.GetFullPath(left).TrimEnd(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar),
+				System.IO.Path.GetFullPath(right).TrimEnd(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar),
+				StringComparison.OrdinalIgnoreCase);
 		}
 
 		private ProjectNode FindEditingNode(System.Collections.ObjectModel.ObservableCollection<ProjectNode> nodes)

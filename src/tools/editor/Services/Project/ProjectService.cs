@@ -379,6 +379,34 @@ namespace editor.Services.Project
 			}
 		}
 
+		// Сохраняет текущую конфигурацию игры на диск в Configs/game_config.toml. Единственная точка
+		// записи этого файла - CurrentGameConfig теперь единственный источник правды (инспектор
+		// редактирует его напрямую, см. InspectorViewModel.TryShowConfigFile), поэтому без параметра
+		// пути (в отличие от SaveProject): вызывающая точка - обычно onChanged-колбэк History-команды -
+		// может сработать позже, когда UI уже переключился на другой узел/проект.
+		public bool SaveGameConfig(out string error)
+		{
+			error = string.Empty;
+			if (CurrentProjectRootPath == null)
+			{
+				error = GetLocString("Validation_Folder_NotExist");
+				return false;
+			}
+
+			try
+			{
+				string fullPath = Path.Combine(CurrentProjectRootPath, ProjectConstants.SystemDirectories.GameConfigs);
+				string toml = GameConfigParser.Serialize(CurrentGameConfig);
+				_storage.WriteAllText(fullPath, toml);
+				return true;
+			}
+			catch (Exception ex)
+			{
+				error = ex.Message;
+				return false;
+			}
+		}
+
 		private void ClearBackupDirectory(string projectRootPath)
 		{
 			try

@@ -10,6 +10,7 @@ namespace editor.Services
 		public string[] RecentProjects { get; set; } = new string[0];
 		public string LastCreatedProjectParentDir { get; set; } = string.Empty;
 		public string Language { get; set; } = string.Empty;
+		public string[] RecentScriptNamespaces { get; set; } = new string[0];
 	}
 
 	public class LayoutSessionState
@@ -86,6 +87,15 @@ namespace editor.Services
 					{
 						state.Language = reader.ReadString();
 					}
+					if (fs.Position < fs.Length)
+					{
+						int namespaceCount = reader.ReadInt32();
+						state.RecentScriptNamespaces = new string[namespaceCount];
+						for (int i = 0; i < namespaceCount; i++)
+						{
+							state.RecentScriptNamespaces[i] = reader.ReadString();
+						}
+					}
 
 					return state;
 				}
@@ -117,6 +127,13 @@ namespace editor.Services
 
 					writer.Write(state.LastCreatedProjectParentDir ?? string.Empty);
 					writer.Write(state.Language ?? string.Empty);
+
+					int namespaceCount = state.RecentScriptNamespaces?.Length ?? 0;
+					writer.Write(namespaceCount);
+					for (int i = 0; i < namespaceCount; i++)
+					{
+						writer.Write(state.RecentScriptNamespaces![i] ?? string.Empty);
+					}
 				}
 			}
 			catch

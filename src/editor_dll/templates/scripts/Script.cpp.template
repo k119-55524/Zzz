@@ -1,7 +1,21 @@
 #include "{ClassName}.hpp"
 
+{NamespaceOpenCpp}
 {ClassName}::{ClassName}(zzz::GameObject* owner)
 	: {BaseClass}(owner)
 {
-	// Подписка на события жизненного цикла
+	// Subscribe to lifecycle events after construction when the script is owned by shared_ptr.
 }
+
+void {ClassName}::OnStart()
+{
+}
+
+void {ClassName}::OnUpdate(float deltaTime)
+{
+}
+
+void {ClassName}::OnDestroy()
+{
+}
+{NamespaceCloseCpp}

@@ -1,9 +1,15 @@
 #pragma once
 #include <{IncludePath}>
 
-class {ClassName} : public {BaseClass}
-{
-public:
-	explicit {ClassName}(zzz::GameObject* owner);
+{NamespaceOpenHpp}{NamespaceIndent}class {ClassName} : public {BaseClass}
+{NamespaceIndent}{
+{NamespaceIndent}public:
+{NamespaceIndent}	explicit {ClassName}(zzz::GameObject* owner);
+{NamespaceIndent}
+{NamespaceIndent}private:
+{NamespaceIndent}	void OnStart();
+{NamespaceIndent}	void OnUpdate(float deltaTime);
+{NamespaceIndent}	void OnDestroy();
 
-};
+{NamespaceIndent}};
+{NamespaceCloseHpp}

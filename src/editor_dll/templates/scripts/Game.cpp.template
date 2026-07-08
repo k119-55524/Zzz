@@ -1,6 +1,16 @@
 #include "{ClassName}.hpp"
 
+{NamespaceOpenCpp}
 {ClassName}::{ClassName}()
 	: {BaseClass}()
 {
 }
+
+void {ClassName}::OnStart()
+{
+}
+
+void {ClassName}::OnUpdate(float deltaTime)
+{
+}
+{NamespaceCloseCpp}

@@ -463,22 +463,22 @@ namespace editor.ViewModels
             string editorDir = Path.Combine(projectRoot, ".editor");
             string filePath = Path.Combine(editorDir, "RegisterAllScripts.cpp");
 
-            // Два разных файла с одинаковым именем класса дали бы Register<>(name) с одним и тем же
+            // Два разных файла с одинаковым полным именем класса дали бы Register<>(name) с одним и тем же
             // ключом - в реестре движка вторая фабрика молча перетрёт первую (см. ScriptRegistry.h).
             // Такие классы исключаем из кодогена целиком и громко логируем, чтобы баг не маскировался.
             var duplicateGroups = scriptNodes
-                .GroupBy(n => n.Name, StringComparer.Ordinal)
+                .GroupBy(n => n.QualifiedName, StringComparer.Ordinal)
                 .Where(g => g.Count() > 1)
                 .ToList();
 
             foreach (var group in duplicateGroups)
             {
                 string paths = string.Join(", ", group.Select(n => n.HppRelativePath));
-                EditorLogger.LogError($"[Meta System] Дублирующееся имя класса скрипта '{group.Key}' найдено в: {paths}. Переименуйте один из них - регистрация обоих пропущена до разрешения конфликта.");
+                EditorLogger.LogError($"[Meta System] Дублирующееся полное имя класса скрипта '{group.Key}' найдено в: {paths}. Измените namespace или имя одного из них - регистрация обоих пропущена до разрешения конфликта.");
             }
 
             var duplicateNames = new HashSet<string>(duplicateGroups.Select(g => g.Key), StringComparer.Ordinal);
-            var validNodes = scriptNodes.Where(n => !duplicateNames.Contains(n.Name)).ToList();
+            var validNodes = scriptNodes.Where(n => !duplicateNames.Contains(n.QualifiedName)).ToList();
 
             var sb = new System.Text.StringBuilder();
             sb.AppendLine("// RegisterAllScripts.cpp — генерируется автоматически ZzzEngine Editor");
@@ -506,7 +506,7 @@ namespace editor.ViewModels
 
             foreach (var node in validNodes)
             {
-                sb.AppendLine($"    zzz::script::ScriptRegistry::Register<{node.Name}>(\"{node.Name}\");");
+                sb.AppendLine($"    zzz::script::ScriptRegistry::Register<{node.QualifiedName}>(\"{node.QualifiedName}\");");
             }
 
             sb.AppendLine("}");

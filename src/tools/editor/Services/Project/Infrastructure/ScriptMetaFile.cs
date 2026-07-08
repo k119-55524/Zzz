@@ -1,34 +1,32 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using editor.Services;
 
 namespace editor.Services.Project.Infrastructure
 {
-    /// <summary>
-    /// Содержимое файла метаданных скрипта (Player.meta), привязанного к паре Player.hpp/Player.cpp.
-    /// GUID используется только редактором/сборщиком (для устойчивости ссылок при переименовании);
-    /// в скомпилированный движок не попадает.
-    /// </summary>
     public class ScriptMetaData
     {
         public string Guid { get; set; } = string.Empty;
 
         public string ClassName { get; set; } = string.Empty;
+
+        public string Namespace { get; set; } = string.Empty;
+
+        public string QualifiedName => string.IsNullOrWhiteSpace(Namespace)
+            ? ClassName
+            : $"{Namespace}::{ClassName}";
     }
 
-    /// <summary>
-    /// Чтение/запись .meta файлов скриптов. Единая точка работы с форматом,
-    /// чтобы создание, переименование и синхронизация при скане не расходились в деталях.
-    /// Формат - TOML, как и все остальные текстовые файлы проекта (см. README в Services/Project),
-    /// сериализация - тот же ручной key=value подход, что и у ProjectSettingsParser.
-    /// </summary>
     public static class ScriptMetaFile
     {
-        public static ScriptMetaData CreateNew(string className)
+        public static ScriptMetaData CreateNew(string className, string scriptNamespace = "")
         {
             return new ScriptMetaData
             {
                 Guid = System.Guid.NewGuid().ToString(),
-                ClassName = className
+                ClassName = className,
+                Namespace = scriptNamespace?.Trim() ?? string.Empty
             };
         }
 
@@ -44,7 +42,7 @@ namespace editor.Services.Project.Infrastructure
             }
             catch (Exception ex)
             {
-                EditorLogger.LogError($"[Meta System] Не удалось разобрать meta-файл '{metaPath}': {ex.Message}");
+                EditorLogger.LogError($"[Meta System] Failed to parse script meta file '{metaPath}': {ex.Message}");
                 return null;
             }
         }
@@ -54,11 +52,64 @@ namespace editor.Services.Project.Infrastructure
             storage.WriteAllText(metaPath, Serialize(data));
         }
 
+        public static string InferNamespaceFromHeader(string hppContent, string className)
+        {
+            if (string.IsNullOrWhiteSpace(hppContent) || string.IsNullOrWhiteSpace(className))
+            {
+                return string.Empty;
+            }
+
+            var namespaceStack = new List<string>();
+            string? pendingNamespace = null;
+            var classPattern = new Regex(@"\b(class|struct)\s+" + Regex.Escape(className) + @"\b");
+
+            foreach (string rawLine in hppContent.Replace("\r\n", "\n").Split('\n'))
+            {
+                string line = rawLine.Trim();
+                if (classPattern.IsMatch(line))
+                {
+                    return string.Join("::", namespaceStack);
+                }
+
+                bool openedNamespaceOnLine = false;
+                foreach (Match match in Regex.Matches(line, @"\bnamespace\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{"))
+                {
+                    namespaceStack.Add(match.Groups[1].Value);
+                    openedNamespaceOnLine = true;
+                }
+
+                if (!openedNamespaceOnLine)
+                {
+                    var pendingMatch = Regex.Match(line, @"^namespace\s+([A-Za-z_][A-Za-z0-9_]*)$");
+                    if (pendingMatch.Success)
+                    {
+                        pendingNamespace = pendingMatch.Groups[1].Value;
+                        continue;
+                    }
+                }
+
+                if (pendingNamespace != null && line.StartsWith("{", StringComparison.Ordinal))
+                {
+                    namespaceStack.Add(pendingNamespace);
+                    pendingNamespace = null;
+                    continue;
+                }
+
+                if (pendingNamespace == null && line.StartsWith("}", StringComparison.Ordinal) && namespaceStack.Count > 0)
+                {
+                    namespaceStack.RemoveAt(namespaceStack.Count - 1);
+                }
+            }
+
+            return string.Empty;
+        }
+
         private static string Serialize(ScriptMetaData data)
         {
             var sb = new System.Text.StringBuilder();
-            sb.AppendLine($"guid = \"{data.Guid}\"");
-            sb.AppendLine($"class_name = \"{data.ClassName}\"");
+            sb.AppendLine($"guid = \"{TomlLineParser.Escape(data.Guid)}\"");
+            sb.AppendLine($"class_name = \"{TomlLineParser.Escape(data.ClassName)}\"");
+            sb.AppendLine($"namespace = \"{TomlLineParser.Escape(data.Namespace)}\"");
             return sb.ToString();
         }
 
@@ -74,6 +125,10 @@ namespace editor.Services.Project.Infrastructure
                 else if (key == "class_name")
                 {
                     data.ClassName = value.Trim('"');
+                }
+                else if (key == "namespace")
+                {
+                    data.Namespace = value.Trim('"');
                 }
             }
             return data;

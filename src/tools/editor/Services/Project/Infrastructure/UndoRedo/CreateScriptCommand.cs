@@ -11,6 +11,7 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
 	{
 		private readonly string _newRelPath;
 		private readonly string _className;
+		private readonly string _scriptNamespace;
 		private readonly string _scriptType;
 		private readonly string _templatesDir;
 		private readonly string _projectRoot;
@@ -22,10 +23,11 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
 
 		private readonly Action? _onScriptChanged;
 
-		public CreateScriptCommand(string newRelPath, string className, string scriptType, string templatesDir, string projectRoot, IFileStorage storage, Action? onScriptChanged = null)
+		public CreateScriptCommand(string newRelPath, string className, string scriptType, string scriptNamespace, string templatesDir, string projectRoot, IFileStorage storage, Action? onScriptChanged = null)
 		{
 			_newRelPath = newRelPath;
 			_className = className;
+			_scriptNamespace = scriptNamespace?.Trim() ?? string.Empty;
 			_scriptType = scriptType;
 			_templatesDir = templatesDir;
 			_projectRoot = projectRoot;
@@ -62,9 +64,20 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
 			}
 
 			string dateStr = DateTime.Now.ToString("yyyy-MM-dd");
+			string[] namespaceParts = SplitNamespace(_scriptNamespace);
+			string namespaceOpenHpp = BuildNamespaceOpenHpp(namespaceParts);
+			string namespaceCloseHpp = BuildNamespaceCloseHpp(namespaceParts);
+			string namespaceOpenCpp = BuildNamespaceOpenCpp(namespaceParts);
+			string namespaceCloseCpp = BuildNamespaceCloseCpp(namespaceParts);
+			string namespaceIndent = namespaceParts.Length == 0 ? string.Empty : "\t";
 
 			string Replace(string content) => content
 				.Replace("{ClassName}", _className)
+				.Replace("{NamespaceOpenHpp}", namespaceOpenHpp)
+				.Replace("{NamespaceCloseHpp}", namespaceCloseHpp)
+				.Replace("{NamespaceOpenCpp}", namespaceOpenCpp)
+				.Replace("{NamespaceCloseCpp}", namespaceCloseCpp)
+				.Replace("{NamespaceIndent}", namespaceIndent)
 				.Replace("{BaseClass}", baseClass)
 				.Replace("{IncludePath}", includePath)
 				.Replace("{Date}", dateStr);
@@ -91,12 +104,76 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
 			_storage.WriteAllText(finalCppPath, finalCpp);
 			_createdPaths.Add(finalCppPath);
 
-			var metaData = ScriptMetaFile.CreateNew(_className);
+			var metaData = ScriptMetaFile.CreateNew(_className, _scriptNamespace);
 			metaData.Guid = _guid;
 			ScriptMetaFile.Save(_storage, finalMetaPath, metaData);
 			_createdPaths.Add(finalMetaPath);
 
 			_onScriptChanged?.Invoke();
+		}
+
+		private static string[] SplitNamespace(string scriptNamespace)
+		{
+			if (string.IsNullOrWhiteSpace(scriptNamespace))
+			{
+				return Array.Empty<string>();
+			}
+
+			return scriptNamespace
+				.Split(new[] { "::" }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+		}
+
+		private static string BuildNamespaceOpenHpp(string[] namespaceParts)
+		{
+			if (namespaceParts.Length == 0)
+			{
+				return string.Empty;
+			}
+
+			var sb = new System.Text.StringBuilder();
+			string indent = string.Empty;
+			foreach (string part in namespaceParts)
+			{
+				sb.Append(indent).Append("namespace ").Append(part).Append("\r\n");
+				sb.Append(indent).Append("{\r\n");
+				indent += "\t";
+			}
+			return sb.ToString();
+		}
+
+		private static string BuildNamespaceCloseHpp(string[] namespaceParts)
+		{
+			if (namespaceParts.Length == 0)
+			{
+				return string.Empty;
+			}
+
+			var sb = new System.Text.StringBuilder();
+			for (int i = namespaceParts.Length - 1; i >= 0; i--)
+			{
+				sb.Append(new string('\t', i)).Append("}\r\n");
+			}
+			return sb.ToString();
+		}
+
+		private static string BuildNamespaceOpenCpp(string[] namespaceParts)
+		{
+			if (namespaceParts.Length == 0)
+			{
+				return string.Empty;
+			}
+
+			return "namespace " + string.Join(" { namespace ", namespaceParts) + " {\r\n\r\n";
+		}
+
+		private static string BuildNamespaceCloseCpp(string[] namespaceParts)
+		{
+			if (namespaceParts.Length == 0)
+			{
+				return string.Empty;
+			}
+
+			return new string('}', namespaceParts.Length) + "\r\n";
 		}
 
 		public void Undo()

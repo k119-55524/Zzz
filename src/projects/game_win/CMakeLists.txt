@@ -13,21 +13,42 @@ endif()
 set(REGISTER_SCRIPTS_CONTENT "// RegisterAllScripts.cpp — генерируется автоматически CMake\n#include <ScriptRegistry.h>\n\n")
 
 # Собираем список имен классов и инклуды
-set(SCRIPT_NAMES "")
+set(REGISTER_SCRIPT_LINES "")
 foreach(HPP_FILE ${SCRIPT_HPPS})
     if(Z_GAME_PROJECT_DIR)
         file(RELATIVE_PATH REL_PATH "${Z_GAME_PROJECT_DIR}/Assets" "${HPP_FILE}")
     endif()
     get_filename_component(CLASS_NAME "${HPP_FILE}" NAME_WE)
-    string(APPEND REGISTER_SCRIPTS_CONTENT "#include \"${REL_PATH}\"\n")
-    list(APPEND SCRIPT_NAMES "${CLASS_NAME}")
+    get_filename_component(SCRIPT_DIR "${HPP_FILE}" DIRECTORY)
+    set(SCRIPT_NAMESPACE "")
+    set(META_FILE "${SCRIPT_DIR}/${CLASS_NAME}.meta")
+    if(EXISTS "${META_FILE}")
+        file(READ "${META_FILE}" META_CONTENT)
+        string(REGEX MATCH "namespace[ \t]*=[ \t]*\"([^\"]*)\"" META_NAMESPACE_MATCH "${META_CONTENT}")
+        if(META_NAMESPACE_MATCH)
+            set(SCRIPT_NAMESPACE "${CMAKE_MATCH_1}")
+        endif()
+    endif()
+
+    if(SCRIPT_NAMESPACE STREQUAL "")
+        set(QUALIFIED_NAME "${CLASS_NAME}")
+    else()
+        set(QUALIFIED_NAME "${SCRIPT_NAMESPACE}::${CLASS_NAME}")
+    endif()
+
+    string(APPEND REGISTER_SCRIPTS_CONTENT "#include \"${REL_PATH}\"
+")
+    string(APPEND REGISTER_SCRIPT_LINES "    zzz::script::ScriptRegistry::Register<${QUALIFIED_NAME}>(\"${QUALIFIED_NAME}\");
+")
 endforeach()
 
-string(APPEND REGISTER_SCRIPTS_CONTENT "\nvoid RegisterAllScripts()\n{\n")
-foreach(CLASS_NAME ${SCRIPT_NAMES})
-    string(APPEND REGISTER_SCRIPTS_CONTENT "    zzz::script::ScriptRegistry::Register<${CLASS_NAME}>(\"${CLASS_NAME}\");\n")
-endforeach()
-string(APPEND REGISTER_SCRIPTS_CONTENT "}\n")
+string(APPEND REGISTER_SCRIPTS_CONTENT "
+void RegisterAllScripts()
+{
+")
+string(APPEND REGISTER_SCRIPTS_CONTENT "${REGISTER_SCRIPT_LINES}")
+string(APPEND REGISTER_SCRIPTS_CONTENT "}
+")
 
 set(GENERATED_REGISTER_CPP "${CMAKE_CURRENT_BINARY_DIR}/RegisterAllScripts.cpp")
 file(WRITE "${GENERATED_REGISTER_CPP}" "${REGISTER_SCRIPTS_CONTENT}")

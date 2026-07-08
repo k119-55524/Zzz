@@ -83,6 +83,17 @@
     <sys:String x:Key="Dialog_OpenProject_Title">Открыть проект</sys:String>
     <sys:String x:Key="Dialog_NewProject_BrowseFolder_Title">Выберите папку для проекта</sys:String>
 
+    <!-- Тексты NewScriptDialog -->
+    <sys:String x:Key="Dialog_NewScript_Title">Добавить скрипт</sys:String>
+    <sys:String x:Key="Dialog_NewScript_Base">Базовый скрипт:</sys:String>
+    <sys:String x:Key="Dialog_NewScript_Namespace">Namespace:</sys:String>
+    <sys:String x:Key="Dialog_NewScript_Name">Имя скрипта:</sys:String>
+    <sys:String x:Key="Dialog_NewScript_Add">Добавить</sys:String>
+    <sys:String x:Key="Dialog_NewScript_Cancel">Отмена</sys:String>
+    <sys:String x:Key="ScriptType_Script">Скрипт (MonoBehaviour)</sys:String>
+    <sys:String x:Key="ScriptType_Game">Игровой скрипт</sys:String>
+    <sys:String x:Key="ScriptType_Scene">Скрипт сцены</sys:String>
+
     <!-- Тулбары вьюпортов (Мир и Игра) -->
     <sys:String x:Key="Toolbar_Translate">Перемещение (W)</sys:String>
     <sys:String x:Key="Toolbar_Rotate">Вращение (E)</sys:String>
@@ -152,7 +163,14 @@
     <!-- Дерево ассетов: ошибки и значения по умолчанию -->
     <sys:String x:Key="Tree_NewFolder_Name">Новая папка</sys:String>
     <sys:String x:Key="Dialog_RenameError_Title">Ошибка переименования</sys:String>
+    <sys:String x:Key="Validation_Name_Empty">Имя не может быть пустым.</sys:String>
     <sys:String x:Key="Validation_Name_InvalidChars">Имя содержит недопустимые символы.</sys:String>
+    <sys:String x:Key="Validation_ScriptName_InvalidIdentifier">Имя скрипта должно быть корректным именем C++ класса.</sys:String>
+    <sys:String x:Key="Validation_ScriptRename_Disabled">Имя скрипта можно задать только при создании.</sys:String>
+    <sys:String x:Key="Validation_ScriptNamespace_Invalid">Namespace должен состоять из C++ имён, разделённых ::.</sys:String>
+    <sys:String x:Key="Validation_ScriptQualifiedName_Exists">Скрипт с таким namespace и именем уже есть в проекте.</sys:String>
+    <sys:String x:Key="Error_CreateScript_Failed">Не удалось создать скрипт: {0}</sys:String>
+    <sys:String x:Key="ScriptCreate_Success">Скрипт «{0}» успешно создан из шаблона «{1}».</sys:String>
     <sys:String x:Key="Error_CreateFolder_Failed">Не удалось создать папку: {0}</sys:String>
     <sys:String x:Key="Validation_FolderName_Exists">Папка с таким именем уже существует.</sys:String>
     <sys:String x:Key="Validation_FileName_Exists">Файл с таким именем уже существует.</sys:String>
