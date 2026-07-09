@@ -40,6 +40,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "private/core/io/Path.h" "private/core/io/Path.cpp"
         "private/core/utils/version.h" "private/core/utils/version.cpp"
         "public/core/templates/Size2D.h"
+        "public/core/EngineTime.h" "public/core/EngineTime.cpp"
 
         # Inputs
         "private/platforms/input/Input.h" "private/platforms/input/InputBase.h"
@@ -66,9 +67,14 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         # Scripts & Scenes
         "public/core/scene/GameObject.h"
         "public/core/scene/Scene.h" "private/core/scene/Scene.cpp"
+        "public/core/events/EventBus.h"
         "public/core/scene/scripts/ScriptRegistry.h" "private/core/scene/scripts/ScriptRegistry.cpp"
-        "public/core/scene/scripts/base_script/Script.h" "private/core/scene/scripts/base_script/Script.cpp"
-        "public/core/scene/scripts/base_script/Game.h" "private/core/scene/scripts/base_script/Game.cpp")
+        "public/core/scene/scripts/base_script/Script.h"
+        "private/core/scene/scripts/base_script/Script.cpp"
+        "public/core/scene/scripts/base_script/GameScript.h"
+        "private/core/scene/scripts/base_script/GameScript.cpp"
+        "public/core/scene/scripts/base_script/SceneScript.h"
+        "private/core/scene/scripts/base_script/SceneScript.cpp")
 
     if(WIN32)
         if(${IS_EDITOR})
@@ -149,11 +155,23 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         find_package(game-activity REQUIRED CONFIG)
     endif()
 
-    target_link_libraries(${TARGET_NAME}
-        PUBLIC
-            common_lib
-            logger_lib
-    )
+    if(${IS_EDITOR})
+        # common_lib_editor/logger_lib_editor - editor-варианты (см. src/common/CMakeLists.txt) с
+        # EDITORDLL_EXPORTS, чтобы Z_COMMON_API (например throw_runtime_error) собрался как
+        # dllexport и был виден из scripts.dll. Смешивать с обычными common_lib/logger_lib нельзя -
+        # в editor_dll.dll попадут два набора одинаковых символов и линковщик упадёт на дублях.
+        target_link_libraries(${TARGET_NAME}
+            PUBLIC
+                common_lib_editor
+                logger_lib_editor
+        )
+    else()
+        target_link_libraries(${TARGET_NAME}
+            PUBLIC
+                common_lib
+                logger_lib
+        )
+    endif()
 
     target_compile_definitions(${TARGET_NAME} PRIVATE Z_TARGET_NAME="${TARGET_NAME}")
     set_source_files_properties(pch/pch.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)

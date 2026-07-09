@@ -32,8 +32,10 @@ namespace zzz::editor
 
 	protected:
 		void OnRegisterScripts() override;
+		void OnUpdateSystem() override;
 
 	private:
+		bool m_IsPaused = false;
 		void* m_ScriptsDll = nullptr;
 		std::string m_ProjectPath;
 		std::string m_LoadedTempDllPath;

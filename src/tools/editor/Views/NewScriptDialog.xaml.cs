@@ -14,6 +14,7 @@ namespace editor.Views
 		private readonly string _projectRoot;
 		private readonly string _targetFolderRelativePath;
 		private readonly List<string> _recentNamespaces;
+		private readonly string _defaultScriptType;
 		private bool _isUpdatingNamespaceItems;
 
 		public NewScriptDialog(
@@ -32,8 +33,18 @@ namespace editor.Views
 				.Where(ns => !string.IsNullOrWhiteSpace(ns))
 				.Distinct(StringComparer.Ordinal)
 				.ToList();
+			_defaultScriptType = defaultScriptType;
 
-			SetScriptType(defaultScriptType);
+			// SelectedItem выставляем только после Loaded: до этого момента визуальное дерево
+			// ComboBoxItem'ов ещё не построено, DynamicResource-содержимое (ScriptType_*) ещё не
+			// зарезолвлено, и SelectionBoxItem (то, что рисуется в закрытом ComboBox) захватывает
+			// пустое значение - выпадающий список визуально выглядит пустым до первого открытия.
+			Loaded += NewScriptDialog_Loaded;
+		}
+
+		private void NewScriptDialog_Loaded(object sender, RoutedEventArgs e)
+		{
+			SetScriptType(_defaultScriptType);
 			RefreshNamespaceItems();
 			ScriptNameTextBox.Focus();
 			ValidateInput(this, new RoutedEventArgs());
@@ -72,7 +83,11 @@ namespace editor.Views
 
 		private void ValidateInput(object sender, RoutedEventArgs e)
 		{
-			if (_isUpdatingNamespaceItems)
+			// IsSelected="True" на первом ComboBoxItem (см. NewScriptDialog.xaml) может дёрнуть
+			// SelectionChanged ещё во время InitializeComponent(), раньше, чем в XAML объявлены
+			// NamespaceComboBox/ScriptNameTextBox/StatusTextBlock/AddButton - до Loaded выходим,
+			// чтобы не словить NullReferenceException на ещё не подключённых полях.
+			if (!IsLoaded || _isUpdatingNamespaceItems)
 			{
 				return;
 			}
@@ -139,7 +154,14 @@ namespace editor.Views
 
 		private static void SetFieldState(Control control, bool hasError)
 		{
-			control.BorderBrush = hasError ? Brushes.IndianRed : Brushes.White;
+			if (hasError)
+			{
+				control.BorderBrush = Brushes.IndianRed;
+			}
+			else
+			{
+				control.ClearValue(Control.BorderBrushProperty);
+			}
 		}
 
 		private void DeleteNamespace_Click(object sender, RoutedEventArgs e)

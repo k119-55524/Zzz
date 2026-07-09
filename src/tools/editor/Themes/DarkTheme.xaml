@@ -417,6 +417,7 @@
     <Style x:Key="EditorDialogAccentButtonStyle" TargetType="Button" BasedOn="{StaticResource EditorDialogButtonStyle}">
         <Setter Property="Background" Value="{DynamicResource Brush_Accent}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Brush_Accent}" />
+        <Setter Property="Foreground" Value="White" />
         <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
 
@@ -444,16 +445,19 @@
         </Setter>
     </Style>
 
+    <!-- Правило обводок полей ввода (TextBox, ComboBox): 
+         По умолчанию обводка должна быть Transparent (не белая, не синяя, не желтая). 
+         Синяя обводка (Brush_Accent) появляется ТОЛЬКО при фокусе. -->
     <Style x:Key="EditorDialogTextBoxStyle" TargetType="TextBox">
         <Setter Property="Background" Value="{DynamicResource Brush_Panel_Background}" />
-        <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}" />
-        <Setter Property="BorderBrush" Value="White" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="5,3" />
         <Setter Property="MinHeight" Value="24" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="SelectionBrush" Value="{DynamicResource Brush_Accent}" />
-        <Setter Property="CaretBrush" Value="{DynamicResource Brush_Text_Primary}" />
+        <Setter Property="CaretBrush" Value="White" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
@@ -485,7 +489,7 @@
     </Style>
 
     <Style x:Key="EditorDialogComboBoxItemStyle" TargetType="ComboBoxItem">
-        <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Light}" />
+        <Setter Property="Foreground" Value="White" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Padding" Value="8,4" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -495,16 +499,16 @@
                     <Border x:Name="ItemBorder"
                             Background="{TemplateBinding Background}"
                             Padding="{TemplateBinding Padding}">
-                        <ContentPresenter />
+                        <ContentPresenter TextElement.Foreground="{TemplateBinding Foreground}" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsHighlighted" Value="True">
                             <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource Brush_Hover}" />
-                            <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}" />
+                            <Setter Property="Foreground" Value="White" />
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource Brush_Checked}" />
-                            <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}" />
+                            <Setter Property="Foreground" Value="White" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Secondary}" />
@@ -517,18 +521,21 @@
 
     <Style x:Key="EditorDialogComboBoxEditableTextBoxStyle" TargetType="TextBox">
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}" />
+        <Setter Property="Foreground" Value="White" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Padding" Value="6,2,4,2" />
         <Setter Property="SelectionBrush" Value="{DynamicResource Brush_Accent}" />
-        <Setter Property="CaretBrush" Value="{DynamicResource Brush_Text_Primary}" />
+        <Setter Property="CaretBrush" Value="White" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
 
+    <!-- Правило обводок полей ввода (TextBox, ComboBox): 
+         По умолчанию обводка должна быть Transparent (не белая, не синяя, не желтая). 
+         Синяя обводка (Brush_Accent) появляется ТОЛЬКО при фокусе. -->
     <Style x:Key="EditorDialogComboBoxStyle" TargetType="ComboBox">
-        <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Light}" />
+        <Setter Property="Foreground" Value="White" />
         <Setter Property="Background" Value="{DynamicResource Brush_Panel_Background}" />
-        <Setter Property="BorderBrush" Value="White" />
+        <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="4,2" />
         <Setter Property="MinHeight" Value="24" />
@@ -563,7 +570,8 @@
                                                               VerticalAlignment="Center"
                                                               HorizontalAlignment="Left"
                                                               RecognizesAccessKey="True"
-                                                              Content="{Binding SelectionBoxItem, RelativeSource={RelativeSource TemplatedParent}}" />
+                                                              TextElement.Foreground="White"
+                                                              Content="{Binding SelectionBoxItem, RelativeSource={RelativeSource FindAncestor, AncestorType=ComboBox}}" />
                                             <Path Grid.Column="1"
                                                   Width="8"
                                                   Height="5"
@@ -574,12 +582,18 @@
                                         </Grid>
                                     </Border>
                                     <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
+                                        <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource FindAncestor, AncestorType=ComboBox}}" Value="True">
                                             <Setter TargetName="ComboBorder" Property="BorderBrush" Value="{DynamicResource Brush_Text_Primary}" />
-                                        </Trigger>
+                                        </DataTrigger>
                                         <Trigger Property="IsChecked" Value="True">
                                             <Setter TargetName="ComboBorder" Property="BorderBrush" Value="{DynamicResource Brush_Accent}" />
                                         </Trigger>
+                                        <DataTrigger Binding="{Binding IsKeyboardFocusWithin, RelativeSource={RelativeSource FindAncestor, AncestorType=ComboBox}}" Value="True">
+                                            <Setter TargetName="ComboBorder" Property="BorderBrush" Value="{DynamicResource Brush_Accent}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsEditable, RelativeSource={RelativeSource FindAncestor, AncestorType=ComboBox}}" Value="True">
+                                            <Setter TargetName="ContentSite" Property="Visibility" Value="Hidden" />
+                                        </DataTrigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
                             </ToggleButton.Template>

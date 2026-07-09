@@ -1,7 +1,7 @@
-
 #include <engine/headers/enums.h>
 #include <engine/private/core/view/ViewManager.h>
 #include <engine/public/core/scene/scripts/ScriptRegistry.h>
+#include <engine/public/core/events/EventBus.h>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -140,6 +140,17 @@ namespace zzz::editor
 		}
 	}
 
+	void EditorEngine::OnUpdateSystem()
+	{
+		m_Time->Update();
+
+		if (!m_IsPaused)
+			m_EventBus->OnUpdate(*m_Time);
+
+		if (m_ViewManager)
+			m_ViewManager->Update(m_Time->GetTimeSinceStartup());
+	}
+
 	void EditorEngine::OnRegisterScripts()
 	{
 		if (!m_ProjectPath.empty())
@@ -161,6 +172,7 @@ namespace zzz::editor
 
 		std::lock_guard lock(stateMutex);
 		StartGame(classes);
+		m_Time->ResetFrameTimer();
 	}
 
 	void EditorEngine::Stop()
@@ -172,6 +184,6 @@ namespace zzz::editor
 	void EditorEngine::Pause(bool isPaused)
 	{
 		std::lock_guard lock(stateMutex);
-		PauseGame(isPaused);
+		m_IsPaused = isPaused;
 	}
 }

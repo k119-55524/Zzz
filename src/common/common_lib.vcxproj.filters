@@ -13,6 +13,7 @@
     <ClInclude Include="constants.h" />
     <ClInclude Include="defines.h" />
     <ClInclude Include="ensure.h" />
+    <ClInclude Include="CommonExport.h" />
     <ClInclude Include="macroses.h" />
     <ClInclude Include="memory_utils.h" />
     <ClInclude Include="throw_wrappers.h" />

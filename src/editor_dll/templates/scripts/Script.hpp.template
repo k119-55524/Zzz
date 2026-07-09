@@ -7,9 +7,11 @@
 {NamespaceIndent}	explicit {ClassName}(zzz::GameObject* owner);
 {NamespaceIndent}
 {NamespaceIndent}private:
+{NamespaceIndent}	void Init(std::shared_ptr<zzz::engine::GameObjectEventBus> bus) override;
+{NamespaceIndent}
 {NamespaceIndent}	void OnStart();
 {NamespaceIndent}	void OnUpdate(float deltaTime);
-{NamespaceIndent}	void OnDestroy();
+{NamespaceIndent}	void OnStop();
 
 {NamespaceIndent}};
 {NamespaceCloseHpp}

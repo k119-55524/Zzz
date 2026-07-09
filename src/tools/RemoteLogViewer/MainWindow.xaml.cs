@@ -54,16 +54,19 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
 		CloseTabCommand = new RelayCommand<TabViewModel>(tab =>
 		{
+			if (tab == null)
+				return;
+
 			tab.Dispose();
 			Tabs.Remove(tab);
 		});
 
-		StartCommand = new RelayCommand<TabViewModel>(tab => tab.Start());
-		StopCommand = new RelayCommand<TabViewModel>(tab => tab.Stop());
-		ClearCommand = new RelayCommand<TabViewModel>(tab => tab.Clear());
-		CopyCommand = new RelayCommand<TabViewModel>(tab => tab.CopyAll());
-		ExpandAllCommand = new RelayCommand<TabViewModel>(tab => tab.ExpandAll());
-		CollapseAllCommand = new RelayCommand<TabViewModel>(tab => tab.CollapseAll());
+		StartCommand = new RelayCommand<TabViewModel>(tab => tab?.Start());
+		StopCommand = new RelayCommand<TabViewModel>(tab => tab?.Stop());
+		ClearCommand = new RelayCommand<TabViewModel>(tab => tab?.Clear());
+		CopyCommand = new RelayCommand<TabViewModel>(tab => tab?.CopyAll());
+		ExpandAllCommand = new RelayCommand<TabViewModel>(tab => tab?.ExpandAll());
+		CollapseAllCommand = new RelayCommand<TabViewModel>(tab => tab?.CollapseAll());
 
 		DataContext = this;
 

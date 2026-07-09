@@ -5,9 +5,13 @@
 {NamespaceIndent}{
 {NamespaceIndent}public:
 {NamespaceIndent}	{ClassName}();
+{NamespaceIndent}	virtual ~{ClassName}() = default;
 {NamespaceIndent}
-{NamespaceIndent}	void OnStart() override;
-{NamespaceIndent}	void OnUpdate(float deltaTime) override;
+{NamespaceIndent}private:
+{NamespaceIndent}	void Init(std::shared_ptr<zzz::engine::ProjectEventBus> bus) override;
+{NamespaceIndent}
+{NamespaceIndent}	void OnStart();
+{NamespaceIndent}	void OnUpdate(const zzz::engine::Time& time);
 
 {NamespaceIndent}};
 {NamespaceCloseHpp}

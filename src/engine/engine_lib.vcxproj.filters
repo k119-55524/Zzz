@@ -136,14 +136,23 @@
     <ClInclude Include="private\core\scene\Scene.h">
       <Filter>private\core\scene</Filter>
     </ClInclude>
+    <ClInclude Include="public\core\events\EventBus.h">
+      <Filter>private\core\scene</Filter>
+    </ClInclude>
     <ClInclude Include="private\core\scene\scripts\ScriptRegistry.h">
       <Filter>private\core\scene\scripts</Filter>
     </ClInclude>
     <ClInclude Include="private\core\scene\scripts\base_script\Script.h">
       <Filter>private\core\scene\scripts\base_script</Filter>
     </ClInclude>
-    <ClInclude Include="private\core\scene\scripts\base_script\Game.h">
-      <Filter>private\core\scene\scripts\base_script</Filter>
+    <ClInclude Include="public\core\scene\scripts\base_script\GameScript.h">
+      <Filter>public\core\scene\scripts\base_script</Filter>
+    </ClInclude>
+    <ClInclude Include="public\core\scene\scripts\base_script\SceneScript.h">
+      <Filter>public\core\scene\scripts\base_script</Filter>
+    </ClInclude>
+    <ClInclude Include="public\core\EngineTime.h">
+      <Filter>public\core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -202,8 +211,14 @@
     <ClCompile Include="private\core\scene\scripts\base_script\Script.cpp">
       <Filter>private\core\scene\scripts\base_script</Filter>
     </ClCompile>
-    <ClCompile Include="private\core\scene\scripts\base_script\Game.cpp">
+    <ClCompile Include="private\core\scene\scripts\base_script\GameScript.cpp">
       <Filter>private\core\scene\scripts\base_script</Filter>
+    </ClCompile>
+    <ClCompile Include="private\core\scene\scripts\base_script\SceneScript.cpp">
+      <Filter>private\core\scene\scripts\base_script</Filter>
+    </ClCompile>
+    <ClCompile Include="public\core\EngineTime.cpp">
+      <Filter>public\core</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

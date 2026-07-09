@@ -8,7 +8,7 @@
         ResizeMode="NoResize"
         AllowsTransparency="False"
         Background="{DynamicResource Brush_Window_Background}"
-        BorderBrush="{DynamicResource Brush_Border}"
+        BorderBrush="{DynamicResource Brush_Text_Primary}"
         BorderThickness="1"
         FontFamily="Roboto Mono">
 
@@ -62,7 +62,7 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="{DynamicResource Dialog_NewScript_Base}" Foreground="{DynamicResource Brush_Text_Primary}" VerticalAlignment="Center" />
                 <ComboBox Grid.Column="1" x:Name="ScriptTypeComboBox" Style="{StaticResource EditorDialogComboBoxStyle}" SelectionChanged="ValidateInput">
-                    <ComboBoxItem Tag="Script" Content="{DynamicResource ScriptType_Script}" />
+                    <ComboBoxItem Tag="Script" Content="{DynamicResource ScriptType_Script}" IsSelected="True" />
                     <ComboBoxItem Tag="Game" Content="{DynamicResource ScriptType_Game}" />
                     <ComboBoxItem Tag="Scene" Content="{DynamicResource ScriptType_Scene}" />
                 </ComboBox>
@@ -93,7 +93,7 @@
                                         Style="{StaticResource EditorDialogButtonStyle}"
                                         CommandParameter="{Binding}"
                                         Click="DeleteNamespace_Click" />
-                                <TextBlock Text="{Binding}" VerticalAlignment="Center" Foreground="{DynamicResource Brush_Text_Primary}" />
+                                <TextBlock Text="{Binding}" VerticalAlignment="Center" Foreground="White" />
                             </DockPanel>
                         </DataTemplate>
                     </ComboBox.ItemTemplate>

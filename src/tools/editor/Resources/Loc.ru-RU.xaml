@@ -90,7 +90,7 @@
     <sys:String x:Key="Dialog_NewScript_Name">Имя скрипта:</sys:String>
     <sys:String x:Key="Dialog_NewScript_Add">Добавить</sys:String>
     <sys:String x:Key="Dialog_NewScript_Cancel">Отмена</sys:String>
-    <sys:String x:Key="ScriptType_Script">Скрипт (MonoBehaviour)</sys:String>
+    <sys:String x:Key="ScriptType_Script">Скрипт</sys:String>
     <sys:String x:Key="ScriptType_Game">Игровой скрипт</sys:String>
     <sys:String x:Key="ScriptType_Scene">Скрипт сцены</sys:String>
 

@@ -6,11 +6,17 @@
 {
 }
 
-void {ClassName}::OnLoad()
+void {ClassName}::Init(std::shared_ptr<zzz::engine::SceneEventBus> bus)
+{
+	bus->OnStart.Subscribe(shared_from_this(), [this]() { OnStart(); });
+	bus->OnUpdate.Subscribe(shared_from_this(), [this](const zzz::engine::Time& time) { OnUpdate(time); });
+}
+
+void {ClassName}::OnStart()
 {
 }
 
-void {ClassName}::OnUnload()
+void {ClassName}::OnUpdate(const zzz::engine::Time& time)
 {
 }
 {NamespaceCloseCpp}

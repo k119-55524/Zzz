@@ -67,6 +67,13 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalDependencies>Ws2_32.lib;User32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <!-- common_lib/logger_lib/engine_lib помечают cross-DLL API как Z_COMMON_API/Z_ENGINE_API
+           (dllexport), чтобы scripts.dll (Hot-Reload) мог импортировать его из editor_dll.dll.
+           Обычная статическая линковка подтягивает из .lib только те .obj, чьи символы уже на
+           что-то ссылаются из editor_dll.cpp/EditorEngine.cpp - символы, используемые только
+           шаблонным кодом (Event<>::Subscribe), инстанцируемым в самих скриптах (например
+           throw_runtime_error), иначе тихо выпадают из экспортов editor_dll.dll. -->
+      <AdditionalOptions>/WHOLEARCHIVE:common_lib.lib /WHOLEARCHIVE:logger_lib.lib /WHOLEARCHIVE:engine_lib.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -88,6 +95,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalDependencies>Ws2_32.lib;User32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/WHOLEARCHIVE:common_lib.lib /WHOLEARCHIVE:logger_lib.lib /WHOLEARCHIVE:engine_lib.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

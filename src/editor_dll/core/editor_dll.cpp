@@ -25,7 +25,8 @@ extern "C"
 			DOut("EditorDLL initialized: Successed.");
 
 			auto runRes = g_Engine->Run();
-			if (!runRes.has_value()) {
+			if (!runRes.has_value())
+			{
 				DOutError("Failed to initialized EditorDLL: {}.", runRes.error());
 				return false;
 			}
@@ -112,9 +113,7 @@ extern "C"
 		try
 		{
 			if (g_Engine)
-			{
 				g_Engine->RemoveView(view);
-			}
 			else
 				DOutWarning("RemoveView: g_Engine == nullptr.");
 		}
@@ -129,9 +128,7 @@ extern "C"
 		try
 		{
 			if (g_Engine && projectPath)
-			{
 				g_Engine->SetProjectPath(projectPath);
-			}
 		}
 		catch (const std::exception& e)
 		{
@@ -159,9 +156,7 @@ extern "C"
 		try
 		{
 			if (g_Engine)
-			{
 				g_Engine->Play(scriptClasses, count);
-			}
 		}
 		catch (const std::exception& e)
 		{
@@ -174,9 +169,7 @@ extern "C"
 		try
 		{
 			if (g_Engine)
-			{
 				g_Engine->Stop();
-			}
 		}
 		catch (const std::exception& e)
 		{
@@ -189,9 +182,7 @@ extern "C"
 		try
 		{
 			if (g_Engine)
-			{
 				g_Engine->Pause(isPaused);
-			}
 		}
 		catch (const std::exception& e)
 		{

@@ -20,8 +20,8 @@ namespace zzz
 namespace zzz::script
 {
 	class Script;
-	class Game;
-	class Scene;
+	class GameScript;
+	class SceneScript;
 
 #pragma warning(push)
 #pragma warning(disable: 4251)
@@ -33,16 +33,16 @@ namespace zzz::script
 		static void Register(std::string_view name)
 		{
 			std::string nameStr(name);
-			if constexpr (std::is_base_of_v<Game, T>)
+			if constexpr (std::is_base_of_v<GameScript, T>)
 			{
-				s_GameFactories[nameStr] = []()
+				s_GameScriptFactories[nameStr] = []()
 				{
 					return zzz::common::safe_make_shared<T>();
 				};
 			}
-			else if constexpr (std::is_base_of_v<Scene, T>)
+			else if constexpr (std::is_base_of_v<SceneScript, T>)
 			{
-				s_SceneFactories[nameStr] = []()
+				s_SceneScriptFactories[nameStr] = []()
 				{
 					return zzz::common::safe_make_shared<T>();
 				};
@@ -62,12 +62,12 @@ namespace zzz::script
 
 		// Создание объектов
 		static std::shared_ptr<Script> CreateScript(std::string_view name, GameObject* owner);
-		static std::shared_ptr<Game> CreateGame(std::string_view name);
-		static std::shared_ptr<Scene> CreateScene(std::string_view name);
+		static std::shared_ptr<GameScript> CreateGameScript(std::string_view name);
+		static std::shared_ptr<SceneScript> CreateSceneScript(std::string_view name);
 
 		// Имена всех зарегистрированных глобальных (Game) скриптов - используется статической
 		// сборкой игры для автостарта всех скриптов проекта (см. Engine::Initialize).
-		static std::vector<std::string> GetAllGameNames();
+		static std::vector<std::string> GetAllGameScriptNames();
 
 		// Очистка реестра фабрик
 		static void Clear();
@@ -81,8 +81,8 @@ namespace zzz::script
 
 	private:
 		static std::unordered_map<std::string, std::function<std::shared_ptr<Script>(GameObject*)>> s_ScriptFactories;
-		static std::unordered_map<std::string, std::function<std::shared_ptr<Game>()>> s_GameFactories;
-		static std::unordered_map<std::string, std::function<std::shared_ptr<Scene>()>> s_SceneFactories;
+		static std::unordered_map<std::string, std::function<std::shared_ptr<GameScript>()>> s_GameScriptFactories;
+		static std::unordered_map<std::string, std::function<std::shared_ptr<SceneScript>()>> s_SceneScriptFactories;
 
 #if Z_EDITOR
 		static std::vector<Script*> s_ActiveInstances;

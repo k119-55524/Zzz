@@ -54,13 +54,13 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
 			string baseClass = "zzz::script::Script";
 			if (_scriptType == "Game")
 			{
-				includePath = "Game.h";
-				baseClass = "zzz::script::Game";
+				includePath = "GameScript.h";
+				baseClass = "zzz::script::GameScript";
 			}
 			else if (_scriptType == "Scene")
 			{
-				includePath = "Scene.h";
-				baseClass = "zzz::script::Scene";
+				includePath = "SceneScript.h";
+				baseClass = "zzz::script::SceneScript";
 			}
 
 			string dateStr = DateTime.Now.ToString("yyyy-MM-dd");

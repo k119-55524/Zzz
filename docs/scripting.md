@@ -10,12 +10,18 @@
  * ## 1. Общие принципы
  *
  * - **Язык разработки:** C++ (`.hpp` + `.cpp`).
- * - **Отсутствие виртуальных функций для событий:** обновления/старт/уничтожение подписываются
- *   через `Event<>` в конструкторах классов, без vtable.
+ * - **Отсутствие виртуальных функций для событий:** обновления/старт/остановка подписываются через
+ *   `Event<>`, без vtable. События сгруппированы по уровню в `EventBus`-классах
+ *   (`ProjectEventBus`/`SceneEventBus`/`GameObjectEventBus`, см.
+ *   [`EventBus.h`](../src/engine/public/core/events/EventBus.h)). Каждый скрипт подписывается на
+ *   нужные события не в конструкторе, а в приватном переопределении
+ *   `Init(std::shared_ptr<...EventBus> bus)`, которое вызывает владелец скрипта после его создания
+ *   (например `Engine::StartGame` - для `GameScript`).
  * - **Владение:** Один `GameObject` может иметь несколько прикрепленных скриптов типа
  *   `script::Script` (владение через `std::shared_ptr`).
- * - **Множественность:** Глобальные скрипты (`script::Game`) и скрипты сцены (`script::Scene`) не
- *   являются синглтонами - одновременно может существовать несколько разных экземпляров каждого.
+ * - **Множественность:** Глобальные скрипты (`script::GameScript`) и скрипты сцены
+ *   (`script::SceneScript`) не являются синглтонами - одновременно может существовать несколько
+ *   разных экземпляров каждого.
  * - **Интеграция в игру:** В финальном билде игры все скрипты компилируются статически напрямую в
  *   исполняемый файл без использования DLL.
  * - **Интеграция в редактор:** В редакторе скрипты собираются в отдельную `scripts.dll` для
@@ -26,48 +32,66 @@
  * ## 2. Иерархия классов скриптов
  *
  * Все скрипты находятся в пространстве имён `zzz::script` и наследуются от трёх базовых классов.
- * Физическая структура файлов движка (`src/engine/private/core/`):
+ * Физическая структура файлов движка (`src/engine/public/core/` и `private/core/`):
  * - `scene/GameObject.h` - базовый игровой объект (`zzz::GameObject`).
- * - `scene/Scene.h` / `Scene.cpp` - базовый скрипт уровня/сцены (`zzz::script::Scene`).
  * - `scene/scripts/ScriptRegistry.h` / `ScriptRegistry.cpp` - единый реестр фабрик скриптов.
  * - `scene/scripts/base_script/Script.h` / `Script.cpp` - компонентный скрипт (`zzz::script::Script`).
- * - `scene/scripts/base_script/Game.h` / `Game.cpp` - глобальный скрипт игры (`zzz::script::Game`).
+ * - `scene/scripts/base_script/GameScript.h` / `GameScript.cpp` - глобальный скрипт игры (`zzz::script::GameScript`).
+ * - `scene/scripts/base_script/SceneScript.h` / `SceneScript.cpp` - скрипт сцены (`zzz::script::SceneScript`).
+ * - `events/EventBus.h` - `ProjectEventBus`/`SceneEventBus`/`GameObjectEventBus`, через которые
+ *   скрипты каждого уровня получают `OnStart`/`OnStop`/`OnUpdate`.
+ *
+ * `zzz::script::Scene` (`scene/Scene.h`) - отдельный, пока не используемый класс; несмотря на
+ * похожее имя, это не базовый класс для скриптов сцены (им является `SceneScript`).
  *
  * @mermaid
  * graph TD
  *     GameObject["zzz::GameObject"]
  *     Script["zzz::script::Script (MonoBehaviour-like)"]
- *     Game["zzz::script::Game (Global Script)"]
- *     Scene["zzz::script::Scene (Scene Script)"]
+ *     GameScript["zzz::script::GameScript (Global Script)"]
+ *     SceneScript["zzz::script::SceneScript (Scene Script)"]
  *     Registry["zzz::script::ScriptRegistry"]
+ *     ProjectBus["zzz::engine::ProjectEventBus"]
+ *     SceneBus["zzz::engine::SceneEventBus"]
+ *     ObjectBus["zzz::engine::GameObjectEventBus"]
  *
  *     GameObject -->|Содержит список| Script
  *     Script -->|Ссылается на| GameObject
  *     Registry -->|Регистрирует фабрики| Script
- *     Registry -->|Регистрирует фабрики| Game
- *     Registry -->|Регистрирует фабрики| Scene
+ *     Registry -->|Регистрирует фабрики| GameScript
+ *     Registry -->|Регистрирует фабрики| SceneScript
+ *     GameScript -->|Init подписывается на| ProjectBus
+ *     SceneScript -->|Init подписывается на| SceneBus
+ *     Script -->|Init подписывается на| ObjectBus
  * @endmermaid
  *
  * ### 2.1. `zzz::script::Script` (аналог MonoBehaviour)
  *
  * Применяется для логики конкретных игровых объектов. Конструктор принимает указатель на
- * объект-владелец `GameObject`. Содержит структуру событий жизненного цикла `Events`
- * (`OnStart`, `OnUpdate(float dt)`, `OnDestroy`); подписка на события - в конструкторе
- * класса-наследника. В режиме редактора (`Z_EDITOR`) инстансы отслеживаются реестром для
+ * объект-владелец `GameObject`. Подписка на `OnStart`/`OnUpdate(float dt)`/`OnStop` происходит не
+ * в конструкторе, а в приватном переопределении
+ * `Init(std::shared_ptr<zzz::engine::GameObjectEventBus> bus)`, которое должен вызвать владелец
+ * скрипта после его создания. В режиме редактора (`Z_EDITOR`) инстансы отслеживаются реестром для
  * корректного сброса при Hot-Reload.
+ *
+ * > **Текущее состояние:** привязка `Script` к `GameObject` (`GameObject::AddScript`) пока не
+ * > создаёт `GameObjectEventBus` и не вызывает `Init` - это часть ещё не реализованной интеграции
+ * > `GameObject`/`Scene` в рантайме (см. TODO.md, тема ECS). Сгенерированный по шаблону `Script`
+ * > компилируется, но его `OnStart`/`OnUpdate`/`OnStop` пока не вызываются ни для одного экземпляра.
  *
  * ```cpp
  * namespace zzz::script {
  *     class Script : public std::enable_shared_from_this<Script> {
  *     public:
+ *         Script() = delete;
  *         explicit Script(GameObject* owner);
  *         virtual ~Script();
  *
  *         GameObject* GetOwner() const { return m_Owner; }
- *         virtual std::string_view GetScriptTypeName() const = 0;
  *
- *         ScriptEvents Events;
  *     private:
+ *         virtual void Init(std::shared_ptr<zzz::engine::GameObjectEventBus> bus) = 0;
+ *
  *         GameObject* m_Owner;
  *     };
  * }
@@ -77,14 +101,17 @@
  * ```cpp
  * // PlayerController.hpp
  * #pragma once
- * #include <script/Script.hpp>
+ * #include <Script.h>
  *
  * class PlayerController : public zzz::script::Script {
  * public:
  *     explicit PlayerController(zzz::GameObject* owner);
  * private:
+ *     void Init(std::shared_ptr<zzz::engine::GameObjectEventBus> bus) override;
+ *
  *     void OnStart();
  *     void OnUpdate(float dt);
+ *     void OnStop();
  * };
  *
  * // PlayerController.cpp
@@ -93,43 +120,62 @@
  * PlayerController::PlayerController(zzz::GameObject* owner)
  *     : Script(owner)
  * {
- *     Events.OnStart.Subscribe(shared_from_this(), [this] { OnStart(); });
- *     Events.OnUpdate.Subscribe(shared_from_this(), [this](float dt) { OnUpdate(dt); });
+ * }
+ *
+ * void PlayerController::Init(std::shared_ptr<zzz::engine::GameObjectEventBus> bus)
+ * {
+ *     bus->OnStart.Subscribe(shared_from_this(), [this] { OnStart(); });
+ *     bus->OnUpdate.Subscribe(shared_from_this(), [this](float dt) { OnUpdate(dt); });
+ *     bus->OnStop.Subscribe(shared_from_this(), [this] { OnStop(); });
  * }
  *
  * void PlayerController::OnStart() { }
  * void PlayerController::OnUpdate(float dt) { }
+ * void PlayerController::OnStop() { }
  * ```
  *
- * ### 2.2. `zzz::script::Game` - глобальный скрипт
+ * ### 2.2. `zzz::script::GameScript` - глобальный скрипт
  *
  * Существует на протяжении всей жизни приложения, не привязан к `GameObject`. Не синглтон: может
  * существовать и работать одновременно несколько разных экземпляров. Подходит для высокоуровневых
  * систем (аудио-менеджер, менеджер сохранений, инициализаторы).
+ * `Init(std::shared_ptr<zzz::engine::ProjectEventBus> bus)` вызывается движком
+ * (`Engine::StartGame`, который хранит `shared_ptr<GameScript>` в `m_GlobalGameScripts` и является
+ * `friend`-ом класса) - подписываться на `OnStart`/`OnUpdate(const zzz::engine::Time&)` нужно там.
  *
  * ```cpp
  * namespace zzz::script {
- *     class Game {
+ *     class GameScript : public std::enable_shared_from_this<GameScript> {
  *     public:
- *         Game() = default;
- *         virtual ~Game() = default;
- *         virtual std::string_view GetScriptTypeName() const = 0;
+ *         GameScript() = default;
+ *         virtual ~GameScript() = default;
+ *
+ *     private:
+ *         friend class zzz::engine::Engine;
+ *         virtual void Init(std::shared_ptr<zzz::engine::ProjectEventBus> bus) = 0;
  *     };
  * }
  * ```
  *
- * ### 2.3. `zzz::script::Scene` - скрипт сцены
+ * ### 2.3. `zzz::script::SceneScript` - скрипт сцены
  *
  * Время жизни ограничено активностью конкретной сцены (карты). Не синглтон: на сцене может быть
  * запущено несколько скриптов сцены одновременно. Подходит для логики уровня, спавнеров, квестов.
+ * Как и у `Script`/`GameScript`, подписка на события идёт через приватный
+ * `Init(std::shared_ptr<zzz::engine::SceneEventBus> bus)`.
+ *
+ * > **Текущее состояние:** система сцен ещё не реализована (см. §5.1) - `SceneScript::Init` пока
+ * > никем не вызывается; вызывающий код появится вместе со Scene-рантаймом.
  *
  * ```cpp
  * namespace zzz::script {
- *     class Scene {
+ *     class SceneScript : public std::enable_shared_from_this<SceneScript> {
  *     public:
- *         Scene() = default;
- *         virtual ~Scene() = default;
- *         virtual std::string_view GetScriptTypeName() const = 0;
+ *         SceneScript() = default;
+ *         virtual ~SceneScript() = default;
+ *
+ *     private:
+ *         virtual void Init(std::shared_ptr<zzz::engine::SceneEventBus> bus) = 0;
  *     };
  * }
  * ```
@@ -143,27 +189,28 @@
  * неиспользуемого кода линкером (dead code stripping) в статической сборке игры.
  *
  * Шаблонный метод `ScriptRegistry::Register<T>(name)` на основе базового класса `T` через
- * `if constexpr` сам определяет, в какой из трёх отдельных реестров (`s_GameFactories`,
- * `s_SceneFactories`, `s_ScriptFactories`) положить фабрику - см.
- * [`ScriptRegistry.h`](../src/engine/private/core/scene/scripts/ScriptRegistry.h):
+ * `if constexpr` сам определяет, в какой из трёх отдельных реестров (`s_GameScriptFactories`,
+ * `s_SceneScriptFactories`, `s_ScriptFactories`) положить фабрику - см.
+ * [`ScriptRegistry.h`](../src/engine/public/core/scene/scripts/ScriptRegistry.h):
  *
  * ```cpp
  * template<typename T>
  * static void Register(std::string_view name)
  * {
  *     std::string nameStr(name);
- *     if constexpr (std::is_base_of_v<Game, T>)
- *         s_GameFactories[nameStr] = []() { return std::make_shared<T>(); };
- *     else if constexpr (std::is_base_of_v<Scene, T>)
- *         s_SceneFactories[nameStr] = []() { return std::make_shared<T>(); };
+ *     if constexpr (std::is_base_of_v<GameScript, T>)
+ *         s_GameScriptFactories[nameStr] = []() { return safe_make_shared<T>(); };
+ *     else if constexpr (std::is_base_of_v<SceneScript, T>)
+ *         s_SceneScriptFactories[nameStr] = []() { return safe_make_shared<T>(); };
  *     else if constexpr (std::is_base_of_v<Script, T>)
- *         s_ScriptFactories[nameStr] = [](GameObject* owner) { return std::make_shared<T>(owner); };
+ *         s_ScriptFactories[nameStr] = [](GameObject* owner) { return safe_make_shared<T>(owner); };
  *     else
  *         static_assert(sizeof(T) == 0, "Unknown script base type");
  * }
  * ```
  *
- * Создание объектов по сохранённому имени класса: `ScriptRegistry::CreateScript/CreateGame/CreateScene(name, ...)`.
+ * Создание объектов по сохранённому имени класса:
+ * `ScriptRegistry::CreateScript/CreateGameScript/CreateSceneScript(name, ...)`.
  * `ScriptRegistry::Clear()` сбрасывает все три реестра (используется при Hot-Reload).
  *
  * ### Генерация `RegisterAllScripts.cpp`

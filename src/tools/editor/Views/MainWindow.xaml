@@ -705,7 +705,7 @@
         <Grid x:Name="CompilationOverlay" Grid.Row="1" Grid.RowSpan="2" Visibility="Collapsed" Panel.ZIndex="1000" Background="#A0000000" />
 
         <!-- Строка состояния -->
-        <StatusBar Grid.Row="3" Background="{DynamicResource Brush_Panel_Background}" Foreground="{DynamicResource Brush_Text_Secondary}" BorderBrush="{DynamicResource Brush_Border}" BorderThickness="0,1,0,0">
+        <StatusBar Grid.Row="3" Background="{DynamicResource Brush_Panel_Background}" Foreground="White" BorderBrush="{DynamicResource Brush_Border}" BorderThickness="0,1,0,0">
             <StatusBarItem>
                 <TextBlock x:Name="StatusText" Text="Готово" />
             </StatusBarItem>

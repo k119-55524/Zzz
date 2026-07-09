@@ -3,10 +3,11 @@
 #include <mutex>
 #include <atomic>
 #include <memory>
+#include <vector>
 #include <expected>
 #include <string_view>
-#include <vector>
 
+#include "public/core/EngineTime.h"
 #include "NativeAppData.h"
 #include <logger/logger.h>
 
@@ -17,7 +18,7 @@ namespace zzz
 
 namespace zzz::script
 {
-	class Game;
+	class GameScript;
 }
 
 namespace zzz::engine
@@ -25,6 +26,7 @@ namespace zzz::engine
 	class Platform;
 	class ViewManager;
 	class MainLoopBase;
+	class ProjectEventBus;
 }
 
 using namespace zzz;
@@ -43,23 +45,23 @@ namespace zzz::engine
 		[[nodiscard]] virtual std::expected<void, std::string> Run();
 
 	protected:
-		virtual void OnRegisterScripts();
 		void Shutdown();
-		void OnUpdateSystem();
+		virtual void OnRegisterScripts();
+		virtual void OnUpdateSystem();
 
 		void StartGame(const std::vector<std::string>& globalScripts);
 		void StopGame();
-		void PauseGame(bool isPaused);
 
 		std::mutex stateMutex;
 		std::atomic<eInitState> engineState;
 
-		bool m_IsTimePaused = false;
-		std::vector<std::shared_ptr<zzz::script::Game>> m_GlobalGames;
+		std::vector<std::shared_ptr<zzz::script::GameScript>> m_Scripts;
 
 		std::unique_ptr<Platform> m_Platform;
 		std::unique_ptr<ViewManager> m_ViewManager;
 		std::shared_ptr<MainLoopBase> m_MainLoop;
+		std::shared_ptr<ProjectEventBus> m_EventBus;
+		std::shared_ptr<Time> m_Time;
 
 	private:
 		void Initialize();

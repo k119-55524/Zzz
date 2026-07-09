@@ -1,14 +1,14 @@
 
-#include "Game.h"
-#include "../Scene.h"
+#include "GameScript.h"
+#include "SceneScript.h"
 #include "Script.h"
 #include "ScriptRegistry.h"
 
 namespace zzz::script
 {
 	std::unordered_map<std::string, std::function<std::shared_ptr<Script>(GameObject*)>> ScriptRegistry::s_ScriptFactories;
-	std::unordered_map<std::string, std::function<std::shared_ptr<Game>()>> ScriptRegistry::s_GameFactories;
-	std::unordered_map<std::string, std::function<std::shared_ptr<Scene>()>> ScriptRegistry::s_SceneFactories;
+	std::unordered_map<std::string, std::function<std::shared_ptr<GameScript>()>> ScriptRegistry::s_GameScriptFactories;
+	std::unordered_map<std::string, std::function<std::shared_ptr<SceneScript>()>> ScriptRegistry::s_SceneScriptFactories;
 
 #if Z_EDITOR
 	std::vector<Script*> ScriptRegistry::s_ActiveInstances;
@@ -23,30 +23,30 @@ namespace zzz::script
 		return nullptr;
 	}
 
-	std::shared_ptr<Game> ScriptRegistry::CreateGame(std::string_view name)
+	std::shared_ptr<GameScript> ScriptRegistry::CreateGameScript(std::string_view name)
 	{
-		auto it = s_GameFactories.find(std::string(name));
-		if (it != s_GameFactories.end())
+		auto it = s_GameScriptFactories.find(std::string(name));
+		if (it != s_GameScriptFactories.end())
 			return it->second();
 
 		return nullptr;
 	}
 
-	std::shared_ptr<Scene> ScriptRegistry::CreateScene(std::string_view name)
+	std::shared_ptr<SceneScript> ScriptRegistry::CreateSceneScript(std::string_view name)
 	{
-		auto it = s_SceneFactories.find(std::string(name));
-		if (it != s_SceneFactories.end())
+		auto it = s_SceneScriptFactories.find(std::string(name));
+		if (it != s_SceneScriptFactories.end())
 			return it->second();
 
 		return nullptr;
 	}
 
-	std::vector<std::string> ScriptRegistry::GetAllGameNames()
+	std::vector<std::string> ScriptRegistry::GetAllGameScriptNames()
 	{
 		std::vector<std::string> names;
-		names.reserve(s_GameFactories.size());
+		names.reserve(s_GameScriptFactories.size());
 
-		for (const auto& [name, factory] : s_GameFactories)
+		for (const auto& [name, factory] : s_GameScriptFactories)
 			names.push_back(name);
 
 		return names;
@@ -55,8 +55,8 @@ namespace zzz::script
 	void ScriptRegistry::Clear()
 	{
 		s_ScriptFactories.clear();
-		s_GameFactories.clear();
-		s_SceneFactories.clear();
+		s_GameScriptFactories.clear();
+		s_SceneScriptFactories.clear();
 #if Z_EDITOR
 		s_ActiveInstances.clear();
 #endif

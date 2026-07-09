@@ -4,7 +4,8 @@
 #include "private/core/view/ViewManager.h"
 #include "private/platforms/main_loop/MainLoop.h"
 #include "public/core/scene/scripts/ScriptRegistry.h"
-#include "public/core/scene/scripts/base_script/Game.h"
+#include "public/core/scene/scripts/base_script/GameScript.h"
+#include "public/core/events/EventBus.h"
 
 using namespace zzz;
 using namespace zzz::common;
@@ -30,6 +31,8 @@ void Engine::Shutdown()
 	{
 		m_MainLoop = nullptr;
 		m_ViewManager = nullptr;
+		m_EventBus = nullptr;
+		m_Time = nullptr;
 		m_Platform = nullptr;
 	}
 	catch (const std::exception& e)
@@ -48,6 +51,8 @@ void Engine::Initialize()
 {
 	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, [this]() { OnCloseAllViews(); });
 	m_MainLoop = safe_make_shared<MainLoop>(*m_Platform, [this]() { OnUpdateSystem(); });
+	m_EventBus = safe_make_shared<ProjectEventBus>();
+	m_Time = safe_make_shared<Time>();
 
 	DOut("Engine initialized: OK.");
 	engineState.store(eInitState::Initialized);
@@ -68,30 +73,29 @@ void Engine::OnRegisterScripts()
 
 void Engine::StartGame(const std::vector<std::string>& globalScripts)
 {
+	OnRegisterScripts();
+
 	for (const auto& scriptName : globalScripts)
 	{
-		if (auto game = zzz::script::ScriptRegistry::CreateGame(scriptName))
+		if (auto script = zzz::script::ScriptRegistry::CreateGameScript(scriptName))
 		{
-			m_GlobalGames.push_back(game);
-			game->OnStart();
-			DOut("Global script started: {}", scriptName);
+			m_Scripts.push_back(script);
+			script->Init(m_EventBus);
+			DOut("Global script initialized: {}", scriptName);
 		}
 		else
 		{
 			DOutError("Failed to create global script: {}", scriptName);
 		}
 	}
+	
+	m_EventBus->OnStart();
 }
 
 void Engine::StopGame()
 {
-	m_GlobalGames.clear();
-	m_IsTimePaused = false;
-}
-
-void Engine::PauseGame(bool isPaused)
-{
-	m_IsTimePaused = isPaused;
+	m_EventBus->OnStop();
+	m_Scripts.clear();
 }
 
 [[nodiscard]] std::expected<void, std::string> Engine::Run()
@@ -112,9 +116,9 @@ void Engine::PauseGame(bool isPaused)
 		m_ViewManager->CreateView();
 		m_ViewManager->CreateView();
 
-		OnRegisterScripts();
-		StartGame(zzz::script::ScriptRegistry::GetAllGameNames());
+		StartGame(zzz::script::ScriptRegistry::GetAllGameScriptNames());
 
+		m_Time->ResetFrameTimer();
 		m_MainLoop->Run();
 
 		if constexpr (!Platform::c_AsyncRunLoop)
@@ -153,25 +157,9 @@ void Engine::OnCloseAllViews() const
 
 void Engine::OnUpdateSystem()
 {
-	zF64 currentTime = 0.0f; // TODO: Calculate actual delta time
+	m_Time->Update();
+	m_EventBus->OnUpdate(*m_Time);
+
 	if (m_ViewManager)
-		m_ViewManager->Update(currentTime);
-
-	if (!m_IsTimePaused)
-	{
-		for (auto& game : m_GlobalGames)
-		{
-			game->OnUpdate(static_cast<float>(currentTime));
-		}
-	}
-
-	const int ci = 10'000'000;
-	static int i = ci;
-	i++;
-
-	if (i > ci)
-	{
-		i = 0;
-		// DOut("Tick!!!");
-	}
+		m_ViewManager->Update(m_Time->GetTimeSinceStartup());
 }

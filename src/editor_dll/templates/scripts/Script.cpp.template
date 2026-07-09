@@ -4,7 +4,13 @@
 {ClassName}::{ClassName}(zzz::GameObject* owner)
 	: {BaseClass}(owner)
 {
-	// Subscribe to lifecycle events after construction when the script is owned by shared_ptr.
+}
+
+void {ClassName}::Init(std::shared_ptr<zzz::engine::GameObjectEventBus> bus)
+{
+	bus->OnStart.Subscribe(shared_from_this(), [this]() { OnStart(); });
+	bus->OnUpdate.Subscribe(shared_from_this(), [this](float deltaTime) { OnUpdate(deltaTime); });
+	bus->OnStop.Subscribe(shared_from_this(), [this]() { OnStop(); });
 }
 
 void {ClassName}::OnStart()
@@ -15,7 +21,7 @@ void {ClassName}::OnUpdate(float deltaTime)
 {
 }
 
-void {ClassName}::OnDestroy()
+void {ClassName}::OnStop()
 {
 }
 {NamespaceCloseCpp}

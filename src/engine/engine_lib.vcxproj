@@ -145,9 +145,12 @@
     <ClInclude Include="private\core\utils\converters.h" />
     <ClInclude Include="public\core\scene\GameObject.h" />
     <ClInclude Include="public\core\scene\Scene.h" />
+    <ClInclude Include="public\core\events\EventBus.h" />
     <ClInclude Include="public\core\scene\scripts\ScriptRegistry.h" />
     <ClInclude Include="public\core\scene\scripts\base_script\Script.h" />
-    <ClInclude Include="public\core\scene\scripts\base_script\Game.h" />
+    <ClInclude Include="public\core\scene\scripts\base_script\GameScript.h" />
+    <ClInclude Include="public\core\scene\scripts\base_script\SceneScript.h" />
+    <ClInclude Include="public\core\EngineTime.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine.cpp" />
@@ -172,7 +175,9 @@
     <ClCompile Include="private\core\scene\Scene.cpp" />
     <ClCompile Include="private\core\scene\scripts\ScriptRegistry.cpp" />
     <ClCompile Include="private\core\scene\scripts\base_script\Script.cpp" />
-    <ClCompile Include="private\core\scene\scripts\base_script\Game.cpp" />
+    <ClCompile Include="private\core\scene\scripts\base_script\GameScript.cpp" />
+    <ClCompile Include="private\core\scene\scripts\base_script\SceneScript.cpp" />
+    <ClCompile Include="public\core\EngineTime.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\common\common_lib.vcxproj">

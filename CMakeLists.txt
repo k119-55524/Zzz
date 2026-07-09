@@ -101,6 +101,7 @@ add_subdirectory(src/logger)
 # этого GNU ld на Linux/Android может не разрешить символы Logger, найденные уже после
 # однопроходного сканирования logger_lib.
 target_link_libraries(common_lib PUBLIC logger_lib)
+target_link_libraries(common_lib_editor PUBLIC logger_lib_editor)
 
 add_subdirectory(src/tools/RemoteLogViewer)
 add_subdirectory(src/engine)
