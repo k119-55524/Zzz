@@ -17,11 +17,11 @@ std::expected<std::filesystem::path, std::string> zzz::io::Path::GetAppleUserDat
 				YES);
 
 		if (paths.count == 0)
-			return UNEXPECTED("Failed to get Application Support directory.");
+			return UNEXPECTED("Не удалось получить каталог Application Support.");
 
 		NSString* path = paths.firstObject;
 		if (!path)
-			return UNEXPECTED("Failed to get Application Support directory.");
+			return UNEXPECTED("Не удалось получить каталог Application Support.");
 
 		return std::filesystem::path(std::string(path.UTF8String));
 	}

@@ -22,7 +22,7 @@ namespace zzz
 			nullptr);
 
 		if (size_needed <= 0)
-			THROW_RUNTIME("WideCharToMultiByte size query failed.");
+			THROW_RUNTIME("Не удалось получить размер строки через WideCharToMultiByte.");
 
 		std::string result(static_cast<size_t>(size_needed), '\0');
 
@@ -37,7 +37,7 @@ namespace zzz
 			nullptr);
 
 		if (converted != size_needed)
-			THROW_RUNTIME("WideCharToMultiByte conversion failed.");
+			THROW_RUNTIME("Ошибка преобразования WideCharToMultiByte.");
 
 		return result;
 	}

@@ -1,0 +1,93 @@
+Microsoft (R) COFF/PE Dumper Version 14.51.36248.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file c:\Workspaces\ZzzTest\bin\Debug\editor_dll.lib
+
+File Type: LIBRARY
+
+     Exports
+
+       ordinal    name
+
+                  ??0?$enable_shared_from_this@VBaseScript@script@zzz@@@std@@IEAA@AEBV01@@Z (protected: __cdecl std::enable_shared_from_this<class zzz::script::BaseScript>::enable_shared_from_this<class zzz::script::BaseScript>(class std::enable_shared_from_this<class zzz::script::BaseScript> const &))
+                  ??0?$enable_shared_from_this@VBaseScript@script@zzz@@@std@@IEAA@XZ (protected: __cdecl std::enable_shared_from_this<class zzz::script::BaseScript>::enable_shared_from_this<class zzz::script::BaseScript>(void))
+                  ??0BaseScript@script@zzz@@QEAA@AEBV012@@Z (public: __cdecl zzz::script::BaseScript::BaseScript(class zzz::script::BaseScript const &))
+                  ??0BaseScript@script@zzz@@QEAA@XZ (public: __cdecl zzz::script::BaseScript::BaseScript(void))
+                  ??0GameScript@script@zzz@@QEAA@AEBV012@@Z (public: __cdecl zzz::script::GameScript::GameScript(class zzz::script::GameScript const &))
+                  ??0GameScript@script@zzz@@QEAA@XZ (public: __cdecl zzz::script::GameScript::GameScript(void))
+                  ??0SceneScript@script@zzz@@QEAA@AEBV012@@Z (public: __cdecl zzz::script::SceneScript::SceneScript(class zzz::script::SceneScript const &))
+                  ??0SceneScript@script@zzz@@QEAA@XZ (public: __cdecl zzz::script::SceneScript::SceneScript(void))
+                  ??0Script@script@zzz@@QEAA@AEBV012@@Z (public: __cdecl zzz::script::Script::Script(class zzz::script::Script const &))
+                  ??0Script@script@zzz@@QEAA@PEAVGameObject@2@@Z (public: __cdecl zzz::script::Script::Script(class zzz::GameObject *))
+                  ??1?$enable_shared_from_this@VBaseScript@script@zzz@@@std@@IEAA@XZ (protected: __cdecl std::enable_shared_from_this<class zzz::script::BaseScript>::~enable_shared_from_this<class zzz::script::BaseScript>(void))
+                  ??1BaseScript@script@zzz@@UEAA@XZ (public: virtual __cdecl zzz::script::BaseScript::~BaseScript(void))
+                  ??1GameScript@script@zzz@@UEAA@XZ (public: virtual __cdecl zzz::script::GameScript::~GameScript(void))
+                  ??1SceneScript@script@zzz@@UEAA@XZ (public: virtual __cdecl zzz::script::SceneScript::~SceneScript(void))
+                  ??1Script@script@zzz@@UEAA@XZ (public: virtual __cdecl zzz::script::Script::~Script(void))
+                  ??4?$enable_shared_from_this@VBaseScript@script@zzz@@@std@@IEAAAEAV01@AEBV01@@Z (protected: class std::enable_shared_from_this<class zzz::script::BaseScript> & __cdecl std::enable_shared_from_this<class zzz::script::BaseScript>::operator=(class std::enable_shared_from_this<class zzz::script::BaseScript> const &))
+                  ??4BaseScript@script@zzz@@QEAAAEAV012@AEBV012@@Z (public: class zzz::script::BaseScript & __cdecl zzz::script::BaseScript::operator=(class zzz::script::BaseScript const &))
+                  ??4GameScript@script@zzz@@QEAAAEAV012@AEBV012@@Z (public: class zzz::script::GameScript & __cdecl zzz::script::GameScript::operator=(class zzz::script::GameScript const &))
+                  ??4SceneScript@script@zzz@@QEAAAEAV012@AEBV012@@Z (public: class zzz::script::SceneScript & __cdecl zzz::script::SceneScript::operator=(class zzz::script::SceneScript const &))
+                  ??4Script@script@zzz@@QEAAAEAV012@AEBV012@@Z (public: class zzz::script::Script & __cdecl zzz::script::Script::operator=(class zzz::script::Script const &))
+                  ??4ScriptRegistry@script@zzz@@QEAAAEAV012@$$QEAV012@@Z (public: class zzz::script::ScriptRegistry & __cdecl zzz::script::ScriptRegistry::operator=(class zzz::script::ScriptRegistry &&))
+                  ??4ScriptRegistry@script@zzz@@QEAAAEAV012@AEBV012@@Z (public: class zzz::script::ScriptRegistry & __cdecl zzz::script::ScriptRegistry::operator=(class zzz::script::ScriptRegistry const &))
+                  ??_7BaseScript@script@zzz@@6B@ (const zzz::script::BaseScript::`vftable')
+                  ??_7GameScript@script@zzz@@6B@ (const zzz::script::GameScript::`vftable')
+                  ??_7SceneScript@script@zzz@@6B@ (const zzz::script::SceneScript::`vftable')
+                  ??_7Script@script@zzz@@6B@ (const zzz::script::Script::`vftable')
+                  ?Clear@ScriptRegistry@script@zzz@@SAXXZ (public: static void __cdecl zzz::script::ScriptRegistry::Clear(void))
+                  ?CreateGameScript@ScriptRegistry@script@zzz@@SA?AV?$shared_ptr@VGameScript@script@zzz@@@std@@V?$basic_string_view@DU?$char_traits@D@std@@@5@@Z (public: static class std::shared_ptr<class zzz::script::GameScript> __cdecl zzz::script::ScriptRegistry::CreateGameScript(class std::basic_string_view<char,struct std::char_traits<char> >))
+                  ?CreateSceneScript@ScriptRegistry@script@zzz@@SA?AV?$shared_ptr@VSceneScript@script@zzz@@@std@@V?$basic_string_view@DU?$char_traits@D@std@@@5@@Z (public: static class std::shared_ptr<class zzz::script::SceneScript> __cdecl zzz::script::ScriptRegistry::CreateSceneScript(class std::basic_string_view<char,struct std::char_traits<char> >))
+                  ?CreateScript@ScriptRegistry@script@zzz@@SA?AV?$shared_ptr@VScript@script@zzz@@@std@@V?$basic_string_view@DU?$char_traits@D@std@@@5@PEAVGameObject@3@@Z (public: static class std::shared_ptr<class zzz::script::Script> __cdecl zzz::script::ScriptRegistry::CreateScript(class std::basic_string_view<char,struct std::char_traits<char> >,class zzz::GameObject *))
+                  ?GetActiveGameScripts@ScriptRegistry@script@zzz@@SAAEBV?$vector@PEAVGameScript@script@zzz@@V?$allocator@PEAVGameScript@script@zzz@@@std@@@std@@XZ (public: static class std::vector<class zzz::script::GameScript *,class std::allocator<class zzz::script::GameScript *> > const & __cdecl zzz::script::ScriptRegistry::GetActiveGameScripts(void))
+                  ?GetActiveInstances@ScriptRegistry@script@zzz@@SAAEBV?$vector@PEAVScript@script@zzz@@V?$allocator@PEAVScript@script@zzz@@@std@@@std@@XZ (public: static class std::vector<class zzz::script::Script *,class std::allocator<class zzz::script::Script *> > const & __cdecl zzz::script::ScriptRegistry::GetActiveInstances(void))
+                  ?GetActiveSceneScripts@ScriptRegistry@script@zzz@@SAAEBV?$vector@PEAVSceneScript@script@zzz@@V?$allocator@PEAVSceneScript@script@zzz@@@std@@@std@@XZ (public: static class std::vector<class zzz::script::SceneScript *,class std::allocator<class zzz::script::SceneScript *> > const & __cdecl zzz::script::ScriptRegistry::GetActiveSceneScripts(void))
+                  ?GetAllGameScriptNames@ScriptRegistry@script@zzz@@SA?AV?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@XZ (public: static class std::vector<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >,class std::allocator<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > > > __cdecl zzz::script::ScriptRegistry::GetAllGameScriptNames(void))
+                  ?GetOwner@Script@script@zzz@@QEBAPEAVGameObject@3@XZ (public: class zzz::GameObject * __cdecl zzz::script::Script::GetOwner(void)const )
+                  ?Init@GameScript@script@zzz@@AEAAXV?$shared_ptr@VProjectEventBus@engine@zzz@@@std@@@Z (private: void __cdecl zzz::script::GameScript::Init(class std::shared_ptr<class zzz::engine::ProjectEventBus>))
+                  ?Init@SceneScript@script@zzz@@AEAAXV?$shared_ptr@VSceneEventBus@engine@zzz@@@std@@@Z (private: void __cdecl zzz::script::SceneScript::Init(class std::shared_ptr<class zzz::engine::SceneEventBus>))
+                  ?Init@Script@script@zzz@@AEAAXV?$shared_ptr@VGameObjectEventBus@engine@zzz@@@std@@@Z (private: void __cdecl zzz::script::Script::Init(class std::shared_ptr<class zzz::engine::GameObjectEventBus>))
+                  ?IsActive@BaseScript@script@zzz@@QEBA_NXZ (public: bool __cdecl zzz::script::BaseScript::IsActive(void)const )
+                  ?OnUnbindEvents@GameScript@script@zzz@@MEAAXXZ (protected: virtual void __cdecl zzz::script::GameScript::OnUnbindEvents(void))
+                  ?OnUnbindEvents@SceneScript@script@zzz@@MEAAXXZ (protected: virtual void __cdecl zzz::script::SceneScript::OnUnbindEvents(void))
+                  ?OnUnbindEvents@Script@script@zzz@@MEAAXXZ (protected: virtual void __cdecl zzz::script::Script::OnUnbindEvents(void))
+                  ?RegisterInstance@ScriptRegistry@script@zzz@@SAXPEAVGameScript@23@@Z (public: static void __cdecl zzz::script::ScriptRegistry::RegisterInstance(class zzz::script::GameScript *))
+                  ?RegisterInstance@ScriptRegistry@script@zzz@@SAXPEAVSceneScript@23@@Z (public: static void __cdecl zzz::script::ScriptRegistry::RegisterInstance(class zzz::script::SceneScript *))
+                  ?RegisterInstance@ScriptRegistry@script@zzz@@SAXPEAVScript@23@@Z (public: static void __cdecl zzz::script::ScriptRegistry::RegisterInstance(class zzz::script::Script *))
+                  ?SetActive@BaseScript@script@zzz@@QEAAX_N@Z (public: void __cdecl zzz::script::BaseScript::SetActive(bool))
+                  ?UnregisterInstance@ScriptRegistry@script@zzz@@SAXPEAVGameScript@23@@Z (public: static void __cdecl zzz::script::ScriptRegistry::UnregisterInstance(class zzz::script::GameScript *))
+                  ?UnregisterInstance@ScriptRegistry@script@zzz@@SAXPEAVSceneScript@23@@Z (public: static void __cdecl zzz::script::ScriptRegistry::UnregisterInstance(class zzz::script::SceneScript *))
+                  ?UnregisterInstance@ScriptRegistry@script@zzz@@SAXPEAVScript@23@@Z (public: static void __cdecl zzz::script::ScriptRegistry::UnregisterInstance(class zzz::script::Script *))
+                  ?s_ActiveGameScripts@ScriptRegistry@script@zzz@@0V?$vector@PEAVGameScript@script@zzz@@V?$allocator@PEAVGameScript@script@zzz@@@std@@@std@@A (private: static class std::vector<class zzz::script::GameScript *,class std::allocator<class zzz::script::GameScript *> > zzz::script::ScriptRegistry::s_ActiveGameScripts)
+                  ?s_ActiveInstances@ScriptRegistry@script@zzz@@0V?$vector@PEAVScript@script@zzz@@V?$allocator@PEAVScript@script@zzz@@@std@@@std@@A (private: static class std::vector<class zzz::script::Script *,class std::allocator<class zzz::script::Script *> > zzz::script::ScriptRegistry::s_ActiveInstances)
+                  ?s_ActiveSceneScripts@ScriptRegistry@script@zzz@@0V?$vector@PEAVSceneScript@script@zzz@@V?$allocator@PEAVSceneScript@script@zzz@@@std@@@std@@A (private: static class std::vector<class zzz::script::SceneScript *,class std::allocator<class zzz::script::SceneScript *> > zzz::script::ScriptRegistry::s_ActiveSceneScripts)
+                  ?s_GameScriptFactories@ScriptRegistry@script@zzz@@0V?$unordered_map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$function@$$A6A?AV?$shared_ptr@VGameScript@script@zzz@@@std@@XZ@2@U?$hash@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@U?$equal_to@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$function@$$A6A?AV?$shared_ptr@VGameScript@script@zzz@@@std@@XZ@2@@std@@@2@@std@@A (private: static class std::unordered_map<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >,class std::function<class std::shared_ptr<class zzz::script::GameScript> __cdecl(void)>,struct std::hash<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > >,struct std::equal_to<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > >,class std::allocator<struct std::pair<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const ,class std::function<class std::shared_ptr<class zzz::script::GameScript> __cdecl(void)> > > > zzz::script::ScriptRegistry::s_GameScriptFactories)
+                  ?s_SceneScriptFactories@ScriptRegistry@script@zzz@@0V?$unordered_map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$function@$$A6A?AV?$shared_ptr@VSceneScript@script@zzz@@@std@@XZ@2@U?$hash@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@U?$equal_to@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$function@$$A6A?AV?$shared_ptr@VSceneScript@script@zzz@@@std@@XZ@2@@std@@@2@@std@@A (private: static class std::unordered_map<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >,class std::function<class std::shared_ptr<class zzz::script::SceneScript> __cdecl(void)>,struct std::hash<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > >,struct std::equal_to<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > >,class std::allocator<struct std::pair<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const ,class std::function<class std::shared_ptr<class zzz::script::SceneScript> __cdecl(void)> > > > zzz::script::ScriptRegistry::s_SceneScriptFactories)
+                  ?s_ScriptFactories@ScriptRegistry@script@zzz@@0V?$unordered_map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$function@$$A6A?AV?$shared_ptr@VScript@script@zzz@@@std@@PEAVGameObject@zzz@@@Z@2@U?$hash@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@U?$equal_to@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$function@$$A6A?AV?$shared_ptr@VScript@script@zzz@@@std@@PEAVGameObject@zzz@@@Z@2@@std@@@2@@std@@A (private: static class std::unordered_map<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >,class std::function<class std::shared_ptr<class zzz::script::Script> __cdecl(class zzz::GameObject *)>,struct std::hash<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > >,struct std::equal_to<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > >,class std::allocator<struct std::pair<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const ,class std::function<class std::shared_ptr<class zzz::script::Script> __cdecl(class zzz::GameObject *)> > > > zzz::script::ScriptRegistry::s_ScriptFactories)
+                  ?shared_from_this@?$enable_shared_from_this@VBaseScript@script@zzz@@@std@@QEAA?AV?$shared_ptr@VBaseScript@script@zzz@@@2@XZ (public: class std::shared_ptr<class zzz::script::BaseScript> __cdecl std::enable_shared_from_this<class zzz::script::BaseScript>::shared_from_this(void))
+                  ?shared_from_this@?$enable_shared_from_this@VBaseScript@script@zzz@@@std@@QEBA?AV?$shared_ptr@$$CBVBaseScript@script@zzz@@@2@XZ (public: class std::shared_ptr<class zzz::script::BaseScript const > __cdecl std::enable_shared_from_this<class zzz::script::BaseScript>::shared_from_this(void)const )
+                  ?throw_runtime_error@common@zzz@@YAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBUsource_location@4@@Z (void __cdecl zzz::common::throw_runtime_error(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,struct std::source_location const &))
+                  ?weak_from_this@?$enable_shared_from_this@VBaseScript@script@zzz@@@std@@QEAA?AV?$weak_ptr@VBaseScript@script@zzz@@@2@XZ (public: class std::weak_ptr<class zzz::script::BaseScript> __cdecl std::enable_shared_from_this<class zzz::script::BaseScript>::weak_from_this(void))
+                  ?weak_from_this@?$enable_shared_from_this@VBaseScript@script@zzz@@@std@@QEBA?AV?$weak_ptr@$$CBVBaseScript@script@zzz@@@2@XZ (public: class std::weak_ptr<class zzz::script::BaseScript const > __cdecl std::enable_shared_from_this<class zzz::script::BaseScript>::weak_from_this(void)const )
+                  AddView
+                  ClearEngine
+                  Deinitialize
+                  ForceExport_ThrowRuntimeError
+                  Initialize
+                  Pause
+                  Play
+                  ReloadScripts
+                  RemoveView
+                  SetProjectPath
+                  Stop
+                  Tick
+
+  Summary
+
+          CC .debug$S
+          14 .idata$2
+          14 .idata$3
+           8 .idata$4
+           8 .idata$5
+          10 .idata$6

@@ -98,28 +98,28 @@ void Platform::InitializePlatformSpecific()
 	{
 		m_NativeData->display = wl_display_connect(nullptr);
 		if (!m_NativeData->display)
-			THROW_RUNTIME("wl_display_connect() failed.");
+			THROW_RUNTIME("Ошибка wl_display_connect().");
 
 		m_NativeData->registry = wl_display_get_registry(m_NativeData->display);
 		if (!m_NativeData->registry)
-			THROW_RUNTIME("wl_display_get_registry() failed.");
+			THROW_RUNTIME("Ошибка wl_display_get_registry().");
 
 		RegistryData rd{ &m_NativeData->compositor, &m_NativeData->shm, &m_NativeData->xdgWmBase, &m_NativeData->output };
 		if (wl_registry_add_listener(m_NativeData->registry, &g_RegistryListener, &rd) != 0)
-			THROW_RUNTIME("wl_registry_add_listener() failed.");
+			THROW_RUNTIME("Ошибка wl_registry_add_listener().");
 
 		// Первый roundtrip: получаем глобальные объекты реестра
 		if (wl_display_roundtrip(m_NativeData->display) == -1)
-			THROW_RUNTIME("wl_display_roundtrip() failed.");
+			THROW_RUNTIME("Ошибка wl_display_roundtrip().");
 
 		if (!m_NativeData->compositor)
-			THROW_RUNTIME("wl_compositor not found.");
+			THROW_RUNTIME("wl_compositor не найден.");
 
 		if (!m_NativeData->shm)
-			THROW_RUNTIME("wl_shm not found.");
+			THROW_RUNTIME("wl_shm не найден.");
 
 		if (!m_NativeData->xdgWmBase)
-			THROW_RUNTIME("xdg_wm_base not found.");
+			THROW_RUNTIME("xdg_wm_base не найден.");
 
 		xdg_wm_base_add_listener(m_NativeData->xdgWmBase, &g_WmBaseListener, nullptr);
 
@@ -132,15 +132,15 @@ void Platform::InitializePlatformSpecific()
 	catch (const std::exception& e)
 	{
 		ShutdownPlatformSpecific();
-		THROW_RUNTIME("Exception initialize: {}.", e.what());
+		THROW_RUNTIME("Исключение при инициализации: {}.", e.what());
 	}
 	catch (...)
 	{
 		ShutdownPlatformSpecific();
-		THROW_RUNTIME("Unknown exception occurred.");
+		THROW_RUNTIME("Произошло неизвестное исключение.");
 	}
 
-	DOut("PlatformLinux initialized: OK.");
+	DOut("PlatformLinux инициализирован: OK.");
 }
 
 void Platform::ShutdownPlatformSpecific()

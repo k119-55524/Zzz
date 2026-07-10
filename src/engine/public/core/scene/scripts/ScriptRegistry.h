@@ -77,6 +77,14 @@ namespace zzz::script
 		static void RegisterInstance(Script* instance);
 		static void UnregisterInstance(Script* instance);
 		static const std::vector<Script*>& GetActiveInstances();
+
+		static void RegisterInstance(GameScript* instance);
+		static void UnregisterInstance(GameScript* instance);
+		static const std::vector<GameScript*>& GetActiveGameScripts();
+
+		static void RegisterInstance(SceneScript* instance);
+		static void UnregisterInstance(SceneScript* instance);
+		static const std::vector<SceneScript*>& GetActiveSceneScripts();
 #endif
 
 	private:
@@ -86,6 +94,8 @@ namespace zzz::script
 
 #if Z_EDITOR
 		static std::vector<Script*> s_ActiveInstances;
+		static std::vector<GameScript*> s_ActiveGameScripts;
+		static std::vector<SceneScript*> s_ActiveSceneScripts;
 #endif
 	};
 #pragma warning(pop)

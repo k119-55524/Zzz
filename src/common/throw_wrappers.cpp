@@ -9,15 +9,15 @@
 
 namespace zzz::common
 {
-	[[noreturn]] void throw_runtime_error(
+	[[noreturn]] Z_COMMON_API void throw_runtime_error(
 		const std::string& msg,
 		const std::source_location& loc)
 	{
 		std::ostringstream oss;
 		oss << "\n+-> " << msg
-			<< "\n+-> Method: " << loc.function_name()
-			<< ",\n+-> line: " << loc.line()
-			<< ",\n+-> file: " << loc.file_name()
+			<< "\n+-> Метод: " << loc.function_name()
+			<< ",\n+-> строка: " << loc.line()
+			<< ",\n+-> файл: " << loc.file_name()
 			<< "\n";
 
 		DOutException("{}", oss.str());

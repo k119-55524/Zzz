@@ -12,7 +12,7 @@ View::View(const Platform& platform, std::function<void(View&)> onWindowClose) :
 	m_Platform{ platform },
 	OnWindowClose(std::move(onWindowClose))
 {
-	ensure(OnWindowClose != nullptr, "OnWindowClose must not be null.");
+	ensure(OnWindowClose != nullptr, "OnWindowClose не должен быть null.");
 
 	Initialize(nullptr);
 }
@@ -30,7 +30,7 @@ void View::Initialize(void* data)
 	m_Input = safe_make_shared<Input>();
 	auto inputRes = m_Input->Initialize();
 	if (!inputRes)
-		THROW_RUNTIME("Failed to initialize input system: {}.", inputRes.error());
+		THROW_RUNTIME("Не удалось инициализировать систему ввода: {}.", inputRes.error());
 
 	WindowCallbacks callbacks;
 	callbacks.OnClose            = [this]()                                 { HandleWindowClose(); };
@@ -51,13 +51,13 @@ void View::Initialize(void* data)
 	m_Window = safe_make_shared<Window>(m_Platform, m_Input, std::move(callbacks));
 	auto res = m_Window->Initialize(m_Platform.GetAppName(), data);
 	if (!res)
-		THROW_RUNTIME("Failed to initialize window: {}.", res.error());
+		THROW_RUNTIME("Не удалось инициализировать окно: {}.", res.error());
 }
 
 #pragma region Window Events
 void View::HandleWindowClose()
 {
-	DOut("Window Event: OnClose");
+	DOut("Событие окна: OnClose");
 
 	// В редакторе управление происходит из вне поэтому колбэк может быть не инициализирован
 	if (OnWindowClose != nullptr)
@@ -66,32 +66,32 @@ void View::HandleWindowClose()
 
 void View::OnWindowResize(Size2D<>& size, eWinResize type)
 {
-	DOut("Window Event: OnResize ({}x{}) Type: {}", size.width, size.height, EnumToString::ToString(type));
+	DOut("Событие окна: OnResize ({}x{}) Тип: {}", size.width, size.height, EnumToString::ToString(type));
 }
 
 void View::OnWindowResizeStart()
 {
-	DOut("Window Event: OnResizeStart");
+	DOut("Событие окна: OnResizeStart");
 }
 
 void View::OnWindowSizing()
 {
-	DOut("Window Event: OnSizing");
+	DOut("Событие окна: OnSizing");
 }
 
 void View::OnWindowResizeEnd()
 {
-	DOut("Window Event: OnResizeEnd");
+	DOut("Событие окна: OnResizeEnd");
 }
 
 void View::OnWindowDpiChanged()
 {
-	DOut("Window Event: OnDpiChanged");
+	DOut("Событие окна: OnDpiChanged");
 }
 
 void View::OnWindowFocus(bool focus)
 {
-	DOut("Window Event: OnFocus ({})", focus ? "true" : "false");
+	DOut("Событие окна: OnFocus ({})", focus ? "true" : "false");
 	if (!focus)
 	{
 		m_Input->ResetState();
@@ -100,7 +100,7 @@ void View::OnWindowFocus(bool focus)
 
 void View::OnWindowActivate(bool active)
 {
-	DOut("Window Event: OnActivate ({})", active ? "true" : "false");
+	DOut("Событие окна: OnActivate ({})", active ? "true" : "false");
 }
 
 #pragma endregion
@@ -108,32 +108,32 @@ void View::OnWindowActivate(bool active)
 #pragma region App Lifecycle & GPU Surface
 void View::OnWindowSurfaceCreated(void* handle)
 {
-	DOut("Window Event: OnSurfaceCreated (handle: {})", handle);
+	DOut("Событие окна: OnSurfaceCreated (handle: {})", handle);
 }
 
 void View::OnWindowSurfaceDestroyed()
 {
-	DOut("Window Event: OnSurfaceDestroyed");
+	DOut("Событие окна: OnSurfaceDestroyed");
 }
 
 void View::OnWindowSuspend()
 {
-	DOut("Window Event: OnSuspend");
+	DOut("Событие окна: OnSuspend");
 }
 
 void View::OnWindowResume()
 {
-	DOut("Window Event: OnResume");
+	DOut("Событие окна: OnResume");
 }
 
 void View::OnWindowLowMemory()
 {
-	DOut("Window Event: OnLowMemory");
+	DOut("Событие окна: OnLowMemory");
 }
 
 void View::OnWindowSafeAreaChanged(int top, int bottom, int left, int right)
 {
-	DOut("Window Event: OnSafeAreaChanged (t:{}, b:{}, l:{}, r:{})", top, bottom, left, right);
+	DOut("Событие окна: OnSafeAreaChanged (t:{}, b:{}, l:{}, r:{})", top, bottom, left, right);
 }
 #pragma endregion
 

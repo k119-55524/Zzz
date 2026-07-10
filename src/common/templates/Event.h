@@ -79,13 +79,13 @@ namespace zzz::engine
 		void CheckRecursion(std::thread::id thisThread)
 		{
 			if (std::find(invokingThreads.begin(), invokingThreads.end(), thisThread) != invokingThreads.end())
-				THROW_RUNTIME("[FATAL ERROR] Recursive invocation detected!");
+				THROW_RUNTIME("[КРИТИЧЕСКАЯ ОШИБКА] Обнаружен рекурсивный вызов!");
 		}
 
 		void CheckModifying()
 		{
 			if (!invokingThreads.empty())
-				THROW_RUNTIME("[FATAL ERROR] Cannot modify Event while invoking!");
+				THROW_RUNTIME("[КРИТИЧЕСКАЯ ОШИБКА] Невозможно изменить Event во время вызова!");
 		}
 
 		struct InvocationGuard
@@ -226,7 +226,7 @@ namespace zzz::engine
 		{
 			FuncType f(std::forward<F>(func));
 			if (!f)
-				THROW_RUNTIME("[FATAL ERROR] Cannot subscribe an empty callback to Event!");
+				THROW_RUNTIME("[КРИТИЧЕСКАЯ ОШИБКА] Невозможно подписать пустой колбэк на Event!");
 
 			std::lock_guard<std::mutex> lock(this->eventMutex);
 			if (!this->invokingThreads.empty())

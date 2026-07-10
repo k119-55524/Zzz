@@ -7,8 +7,8 @@ class Test : public zzz::script::GameScript
 		Test();
 		virtual ~Test() = default;
 
-	private:
-		void Init(std::shared_ptr<zzz::engine::ProjectEventBus> bus) override;
+		const char* GetScriptTypeName() const override { return "Test"; }
+		void OnBindEvents() override;
 
 		void OnStart();
 		void OnUpdate(const zzz::engine::Time& time);

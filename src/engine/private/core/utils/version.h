@@ -33,7 +33,7 @@ namespace zzz::engine
 			char dot1, dot2;
 			std::istringstream iss{ std::string{str} };
 			if (!(iss >> v.m_Major >> dot1 >> v.m_Minor >> dot2 >> v.m_Patch) || dot1 != '.' || dot2 != '.')
-				return UNEXPECTED("Invalid version format");
+				return UNEXPECTED("Некорректный формат версии");
 
 			return v;
 		}

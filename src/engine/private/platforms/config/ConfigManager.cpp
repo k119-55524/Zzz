@@ -25,7 +25,7 @@ void ConfigManager::Initialize()
 	{
 		auto resPath = GetSettingsDirectory();
 		if (!resPath)
-			THROW_RUNTIME("Failed to get settings directory: {}.", resPath.error());
+			THROW_RUNTIME("Не удалось получить каталог настроек: {}.", resPath.error());
 
 		m_ConfigPath = (resPath.value() / c_ConfigFileName)
 			.lexically_normal()
@@ -35,38 +35,38 @@ void ConfigManager::Initialize()
 		m_EngineConfig = safe_make_shared<EngineConfig>();
 
 		if (!std::filesystem::exists(m_ConfigPath))
-			DOutWarning("Config file not found: {}. Using default config.", m_ConfigPath.string());
+			DOutWarning("Файл конфигурации не найден: {}. Используется конфигурация по умолчанию.", m_ConfigPath.string());
 
 		auto loadResult = LoadConfig(m_ConfigPath);
 		if (!loadResult)
 		{
-			DOutWarning("Failed to load config file: {}. Creating default config.", m_ConfigPath.string());
+			DOutWarning("Не удалось загрузить файл конфигурации: {}. Создаётся конфигурация по умолчанию.", m_ConfigPath.string());
 			m_EngineConfig = safe_make_shared<EngineConfig>();
 		}
 	}
 	catch (const std::filesystem::filesystem_error& e)
 	{
-		DOutException("Filesystem error: {}. Setting to default config.", e.what());
+		DOutException("Ошибка файловой системы: {}. Установка конфигурации по умолчанию.", e.what());
 		m_EngineConfig = safe_make_shared<EngineConfig>();
 
 		return;
 	}
 	catch (const std::exception& e)
 	{
-		DOutException("Config loading error: {}. Setting to default config.", e.what());
+		DOutException("Ошибка загрузки конфигурации: {}. Установка конфигурации по умолчанию.", e.what());
 		m_EngineConfig = safe_make_shared<EngineConfig>();
 
 		return;
 	}
 	catch (...)
 	{
-		DOutException("Unknown config loading error. Setting to default config.");
+		DOutException("Неизвестная ошибка загрузки конфигурации. Установка конфигурации по умолчанию.");
 		m_EngineConfig = safe_make_shared<EngineConfig>();
 
 		return;
 	}
 
-	DOut("Config deserialized successfully from file: {}.", m_ConfigPath.string());
+	DOut("Конфигурация успешно десериализована из файла: {}.", m_ConfigPath.string());
 }
 
 [[nodiscard]] std::expected<void, std::string> ConfigManager::SaveConfig()
@@ -76,7 +76,7 @@ void ConfigManager::Initialize()
 #else
 	if (!m_IsDirty)
 	{
-		DOut("Config is not dirty. No need to save.");
+		DOut("Конфигурация не изменена. Сохранение не требуется.");
 		return {};
 	}
 
@@ -84,36 +84,36 @@ void ConfigManager::Initialize()
 	{
 		std::vector<std::byte> buffer;
 		if (auto res = m_Serializer.Serialize(buffer, *m_EngineConfig); !res)
-			return UNEXPECTED("Failed to serialize config: {}.", res.error());
+			return UNEXPECTED("Не удалось сериализовать конфигурацию: {}.", res.error());
 
 		std::error_code ec;
 		std::filesystem::create_directories(m_ConfigPath.parent_path(), ec);
 		if (ec)
-			return UNEXPECTED("Failed to create directories: {}. Error: {}", m_ConfigPath.parent_path().string(), ec.message());
+			return UNEXPECTED("Не удалось создать директории: {}. Ошибка: {}", m_ConfigPath.parent_path().string(), ec.message());
 
 		std::ofstream file(m_ConfigPath, std::ios::binary);
 		if (!file)
-			return UNEXPECTED("Failed to open file: {}.", m_ConfigPath.string());
+			return UNEXPECTED("Не удалось открыть файл: {}.", m_ConfigPath.string());
 
 		file.write(reinterpret_cast<const char*>(buffer.data()), static_cast<std::streamsize>(buffer.size()));
 		if (!file)
-			return UNEXPECTED("Failed to write file: {}.", m_Path.GetUserDataDirectory().string());
+			return UNEXPECTED("Не удалось записать файл: {}.", m_Path.GetUserDataDirectory().string());
 	}
 	catch (const std::filesystem::filesystem_error& e)
 	{
-		return UNEXPECTED("Filesystem error: {}.", std::string(e.what()));
+		return UNEXPECTED("Ошибка файловой системы: {}.", std::string(e.what()));
 	}
 	catch (const std::exception& e)
 	{
-		return UNEXPECTED("Config serialization error: {}.", std::string(e.what()));
+		return UNEXPECTED("Ошибка сериализации конфигурации: {}.", std::string(e.what()));
 	}
 	catch (...)
 	{
-		return UNEXPECTED("Unknown config serialization error.");
+		return UNEXPECTED("Неизвестная ошибка сериализации конфигурации.");
 	}
 
 	m_IsDirty = false;
-	DOut("Config serialized successfully to file: {}.", m_ConfigPath.string());
+	DOut("Конфигурация успешно сериализована в файл: {}.", m_ConfigPath.string());
 
 	return {};
 #endif
@@ -125,7 +125,7 @@ std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path
 	{
 		std::ifstream in(path, std::ios::binary | std::ios::ate);
 		if (!in)
-			return UNEXPECTED("Failed to open config file.");
+			return UNEXPECTED("Не удалось открыть файл конфигурации.");
 
 		std::streamsize fileSize = in.tellg();
 		in.seekg(0, std::ios::beg); // Возвращаемся в начало файла
@@ -133,7 +133,7 @@ std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path
 		// Читаем весь файл в буфер
 		std::vector<char> buffer(fileSize);
 		if (!in.read(buffer.data(), fileSize))
-			return UNEXPECTED("Failed to read config file.");
+			return UNEXPECTED("Не удалось прочитать файл конфигурации.");
 
 		// Создаем поток для чтения из буфера
 		std::istringstream bufStream(std::string(buffer.data(), buffer.size()));
@@ -148,19 +148,19 @@ std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path
 			*m_EngineConfig);
 
 		if (!result)
-			return UNEXPECTED("Failed to deserialize config: {}", result.error());
+			return UNEXPECTED("Не удалось десериализовать конфигурацию: {}", result.error());
 	}
 	catch (const std::filesystem::filesystem_error& e)
 	{
-		return UNEXPECTED("Filesystem error: {}", std::string(e.what()));
+		return UNEXPECTED("Ошибка файловой системы: {}", std::string(e.what()));
 	}
 	catch (const std::exception& e)
 	{
-		return UNEXPECTED("Config loading error: {}", std::string(e.what()));
+		return UNEXPECTED("Ошибка загрузки конфигурации: {}", std::string(e.what()));
 	}
 	catch (...)
 	{
-		return UNEXPECTED("Unknown config loading error.");
+		return UNEXPECTED("Неизвестная ошибка загрузки конфигурации.");
 	}
 
 	return {};

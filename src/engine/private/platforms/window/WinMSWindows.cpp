@@ -58,12 +58,12 @@ LRESULT CALLBACK WinMSWindows::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 	}
 	catch (const std::exception& e)
 	{
-		DOutCritical("Exception in WindowProc: {}", e.what());
+		DOutCritical("Исключение в WindowProc: {}", e.what());
 		PostMessage(hWnd, WM_CLOSE, 0, 0);
 	}
 	catch (...)
 	{
-		DOutCritical("Unknown exception in WindowProc");
+		DOutCritical("Неизвестное исключение в WindowProc");
 		PostMessage(hWnd, WM_CLOSE, 0, 0);
 	}
 
@@ -99,7 +99,7 @@ LRESULT CALLBACK WinMSWindows::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 		&m_Ctx);
 
 	if (!m_hWnd)
-		THROW_RUNTIME("CreateWindowEx( ... ) failed. Error code (Windows): {}", ::GetLastError());
+		THROW_RUNTIME("CreateWindowEx( ... ) завершился ошибкой. Код ошибки (Windows): {}", ::GetLastError());
 
 	// [Windows] Системное окно успешно создано.
 	// Передаем m_hWnd наверх (во View/Engine), чтобы графическое API (Vulkan/DirectX)

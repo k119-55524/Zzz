@@ -11,6 +11,6 @@ WindowBase::WindowBase(
 	m_Callbacks{ std::move(callbacks) },
 	m_IsActivate{ false }
 {
-	ensure(m_Callbacks.OnClose != nullptr, "OnClose must not be null.");
-	ensure(m_Callbacks.OnSurfaceCreated != nullptr, "OnSurfaceCreated must not be null.");
+	ensure(m_Callbacks.OnClose != nullptr, "OnClose не должен быть null.");
+	ensure(m_Callbacks.OnSurfaceCreated != nullptr, "OnSurfaceCreated не должен быть null.");
 }

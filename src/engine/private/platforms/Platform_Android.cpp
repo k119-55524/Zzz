@@ -52,9 +52,9 @@ namespace zzz::engine
 
 void Platform::InitializePlatformSpecific()
 {
-	ensure(m_NativeData != nullptr, "Platform data for Android must not be null.");
-	ensure(m_NativeData->activity != nullptr, "android_app->activity is null. Invalid platform data.");
-	ensure(m_NativeData->looper != nullptr, "android_app->looper is null. Invalid platform data.");
+	ensure(m_NativeData != nullptr, "Данные платформы для Android не должны быть null.");
+	ensure(m_NativeData->activity != nullptr, "android_app->activity равен null. Некорректные данные платформы.");
+	ensure(m_NativeData->looper != nullptr, "android_app->looper равен null. Некорректные данные платформы.");
 
 	android_app* app = m_NativeData.get();
 	if (app)

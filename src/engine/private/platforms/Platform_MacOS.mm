@@ -14,15 +14,15 @@ static std::unique_ptr<Engine> g_Engine;
 @implementation EngineAppDelegate
 
 - (void)applicationDidFinishLaunching:(NSNotification *)notification {
-    DOut("[EngineAppDelegate] Application did finish launching. Initializing engine...");
+    DOut("[EngineAppDelegate] Приложение завершило запуск. Инициализация движка...");
     g_Engine = safe_make_unique<Engine>("GameMacOS_ZzzEngine");
 
-    DOut("[EngineAppDelegate] Engine initialized successfully. Starting Run...");
+    DOut("[EngineAppDelegate] Движок инициализирован успешно. Запуск Run...");
     auto runResult = g_Engine->Run();
     if (!runResult) {
-        DOutError("[EngineAppDelegate] Engine Run failed with error: {}.", runResult.error());
+        DOutError("[EngineAppDelegate] Run движка завершился ошибкой: {}.", runResult.error());
     } else {
-        DOut("[EngineAppDelegate] Engine Run succeeded.");
+        DOut("[EngineAppDelegate] Run движка выполнен успешно.");
     }
 }
 
@@ -31,7 +31,7 @@ static std::unique_ptr<Engine> g_Engine;
 }
 
 - (void)applicationDidResignActive:(NSNotification *)notification {
-    DOut("[EngineAppDelegate] Application did resign active.");
+    DOut("[EngineAppDelegate] Приложение потеряло активность.");
 }
 
 - (void)applicationWillTerminate:(NSNotification *)notification {

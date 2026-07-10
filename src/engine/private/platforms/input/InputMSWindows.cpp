@@ -83,14 +83,14 @@ int InputMSWindows::InitRawInput(HWND hWnd)
 		std::string message;
 		if (sysMsg)
 		{
-			message = std::format("Error({}): {}", err, zzz::wstring_to_string(sysMsg));
+			message = std::format("Ошибка({}): {}", err, zzz::wstring_to_string(sysMsg));
 			LocalFree(sysMsg);
 		}
 		else
-			message = std::format("Error code: {}", err);
+			message = std::format("Код ошибки: {}", err);
 
 		//MsgBox::Error(err);
-		THROW_RUNTIME("Raw Input registration failed. {}", message);
+		THROW_RUNTIME("Не удалось зарегистрировать Raw Input. {}", message);
 
 		// Отмена создания окна
 		return -1;

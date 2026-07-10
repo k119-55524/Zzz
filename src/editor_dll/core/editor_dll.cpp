@@ -11,6 +11,17 @@
 
 std::unique_ptr<zzz::editor::EditorEngine> g_Engine;
 
+// Эта функция никогда не вызывается, но нужна, чтобы линкер не выбросил throw_runtime_error.
+// Так как шаблон EventImpl<1>::Subscribe инстанцируется в scripts.dll, он требует экспорта 
+// этой функции из editor_dll.dll. Из-за багов MSBuild с /WHOLEARCHIVE это самый надежный способ.
+#pragma comment(linker, "/EXPORT:?throw_runtime_error@common@zzz@@YAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBUsource_location@4@@Z")
+extern "C" __declspec(dllexport) void ForceExport_ThrowRuntimeError()
+{
+	auto dummyPtr = reinterpret_cast<void(*)(const std::string&, const std::source_location&)>(&zzz::common::throw_runtime_error);
+	volatile void* force = reinterpret_cast<void*>(dummyPtr);
+	(void)force;
+}
+
 extern "C"
 {
 	EDITOR_API bool Initialize(zzz::logger::LogCallback callback)
@@ -22,12 +33,12 @@ extern "C"
 #endif
 
 			g_Engine = zzz::safe_make_unique<zzz::editor::EditorEngine>("ZzzEditorWin");
-			DOut("EditorDLL initialized: Successed.");
+			DOut("EditorDLL инициализирован: успешно.");
 
 			auto runRes = g_Engine->Run();
 			if (!runRes.has_value())
 			{
-				DOutError("Failed to initialized EditorDLL: {}.", runRes.error());
+				DOutError("Не удалось инициализировать EditorDLL: {}.", runRes.error());
 				return false;
 			}
 
@@ -35,12 +46,12 @@ extern "C"
 		}
 		catch (const std::exception& e)
 		{
-			DOutException("Exception during EditorDLL initialization: {}", e.what());
+			DOutException("Исключение при инициализации EditorDLL: {}", e.what());
 			return false;
 		}
 		catch (...)
 		{
-			DOutError("Unknown exception during EditorDLL Initialization");
+			DOutError("Неизвестное исключение при инициализации EditorDLL");
 			return false;
 		}
 	}
@@ -50,7 +61,7 @@ extern "C"
 		if (g_Engine)
 		{
 			g_Engine.reset();
-			DOut("EditorDLL deinitialized.");
+			DOut("EditorDLL деинициализирован.");
 		}
 	}
 
@@ -67,7 +78,7 @@ extern "C"
 		}
 		catch (const std::exception& e)
 		{
-			DOutException("Exception during Tick: {}", e.what());
+			DOutException("Исключение во время Tick: {}", e.what());
 		}
 	}
 
@@ -78,14 +89,14 @@ extern "C"
 			if (g_Engine)
 			{
 				g_Engine->ClearEngine();
-				DOut("ClearEngine: Successed.");
+				DOut("ClearEngine: успешно.");
 			}
 			else
 				DOutWarning("ClearEngine: g_Engine == nullptr.");
 		}
 		catch (const std::exception& e)
 		{
-			DOutException("Exception during ClearEngine: {}", e.what());
+			DOutException("Исключение во время ClearEngine: {}", e.what());
 		}
 	}
 
@@ -95,7 +106,7 @@ extern "C"
 		{
 			if (g_Engine)
 			{
-				DOut("AddView({}). START.", hwnd);
+				DOut("AddView({}). Начало.", hwnd);
 				return g_Engine->AddView(hwnd);
 			}
 			else
@@ -103,7 +114,7 @@ extern "C"
 		}
 		catch (const std::exception& e)
 		{
-			DOutException("Exception during AddView: {}", e.what());
+			DOutException("Исключение во время AddView: {}", e.what());
 		}
 		return nullptr;
 	}
@@ -119,7 +130,7 @@ extern "C"
 		}
 		catch (const std::exception& e)
 		{
-			DOutException("Exception during RemoveView: {}", e.what());
+			DOutException("Исключение во время RemoveView: {}", e.what());
 		}
 	}
 
@@ -132,7 +143,7 @@ extern "C"
 		}
 		catch (const std::exception& e)
 		{
-			DOutException("Exception during SetProjectPath: {}", e.what());
+			DOutException("Исключение во время SetProjectPath: {}", e.what());
 		}
 	}
 
@@ -147,7 +158,7 @@ extern "C"
 		}
 		catch (const std::exception& e)
 		{
-			DOutException("Exception during ReloadScripts: {}", e.what());
+			DOutException("Исключение во время ReloadScripts: {}", e.what());
 		}
 	}
 
@@ -160,7 +171,7 @@ extern "C"
 		}
 		catch (const std::exception& e)
 		{
-			DOutException("Exception during Play: {}", e.what());
+			DOutException("Исключение во время Play: {}", e.what());
 		}
 	}
 
@@ -173,7 +184,7 @@ extern "C"
 		}
 		catch (const std::exception& e)
 		{
-			DOutException("Exception during Stop: {}", e.what());
+			DOutException("Исключение во время Stop: {}", e.what());
 		}
 	}
 
@@ -186,7 +197,7 @@ extern "C"
 		}
 		catch (const std::exception& e)
 		{
-			DOutException("Exception during Pause: {}", e.what());
+			DOutException("Исключение во время Pause: {}", e.what());
 		}
 	}
 }

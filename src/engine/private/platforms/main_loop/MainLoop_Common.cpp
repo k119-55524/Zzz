@@ -7,5 +7,5 @@ MainLoopBase::MainLoopBase(const Platform& platform, std::function<void()> onUpd
 	OnUpdate{onUpdate},
 	isRunning{true}
 {
-	ensure(OnUpdate != nullptr, "OnUpdate must not be null.");
+	ensure(OnUpdate != nullptr, "OnUpdate не должен быть null.");
 }

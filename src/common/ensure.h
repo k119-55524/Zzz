@@ -23,7 +23,7 @@ namespace zzz::common
 	{
 		throw std::runtime_error(
 			std::format(
-				">>>> [{}]\nLine: {}\nFile: {}\n\n{}",
+				">>>> [{}]\nСтрока: {}\nФайл: {}\n\n{}",
 				loc.function_name(),
 				loc.line(),
 				loc.file_name(),
@@ -42,13 +42,13 @@ namespace zzz::common
 	 * Пример использования:
 	 * @code
 	 * std::shared_ptr<PlatfotmConfig> appConfig;
-	 * ensure(appConfig, "PlatfotmConfig cannot be null");
+	 * ensure(appConfig, "PlatfotmConfig не должен быть null");
 	 * @endcode
 	 */
 	template<typename T>
 	inline void ensure(
 		[[maybe_unused]] T&& condition,
-		[[maybe_unused]] std::string_view message = "Pointer must not be null",
+		[[maybe_unused]] std::string_view message = "Указатель не должен быть null",
 		[[maybe_unused]] const std::source_location& loc = std::source_location::current())
 	{
 #if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
@@ -68,12 +68,12 @@ namespace zzz::common
 	 *
 	 * Пример использования:
 	 * @code
-	 * ensure(x > 0, "x must be positive");
+	 * ensure(x > 0, "x должен быть положительным");
 	 * @endcode
 	 */
 	inline void ensure(
 		[[maybe_unused]] bool condition,
-		[[maybe_unused]] std::string_view message = "Ensure failed",
+		[[maybe_unused]] std::string_view message = "Условие не выполнено",
 		[[maybe_unused]] const std::source_location& loc = std::source_location::current())
 	{
 
@@ -95,7 +95,7 @@ namespace zzz::common
 	 *
 	 * Пример использования:
 	 * @code
-	 * ensure(x > 0, "Invalid value x={}, y={}", x, y);
+	 * ensure(x > 0, "Некорректное значение x={}, y={}", x, y);
 	 * @endcode
 	 */
 	template<typename... Args>

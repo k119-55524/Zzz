@@ -8,7 +8,7 @@ Platform::Platform(const std::string_view appName, std::shared_ptr<NativeAppData
 	m_NativeData(nativeData),
 	m_Path(appName, nativeData)
 {
-	ensure(m_AppName.empty() == false, "Application name must not be empty.");
+	ensure(m_AppName.empty() == false, "Имя приложения не должно быть пустым.");
 
 	Initialize();
 }
@@ -19,7 +19,7 @@ Platform::~Platform()
 	{
 		auto res = m_ConfigManager->SaveConfig();
 		if (!res)
-			DOutCritical("Failed to serialize config: {}.", res.error());
+			DOutCritical("Не удалось сериализовать конфигурацию: {}.", res.error());
 	}
 
 	ShutdownPlatformSpecific();

@@ -15,13 +15,13 @@ static std::unique_ptr<Engine> g_Engine;
 @implementation EngineAppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    DOut("[EngineAppDelegate] Application did finish launching. Initializing engine...");
+    DOut("[EngineAppDelegate] Приложение завершило запуск. Инициализация движка...");
     // UIWindow на iOS должен создаваться в AppDelegate
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
 
     // Создание движка
     g_Engine = safe_make_unique<Engine>("GameiOS_ZzzEngine");
-    DOut("[EngineAppDelegate] Engine initialized successfully. Starting Run...");
+    DOut("[EngineAppDelegate] Движок инициализирован успешно. Запуск Run...");
     // Здесь можно было бы прокинуть self.window в NativeAppData или в WiniOS.
     // WiniOS::Initialize создаст ViewController и View, после чего можно выставить rootViewController.
     // Но WiniOS не экспонирует ViewController - пока просто делаем окно key-окном,
@@ -30,38 +30,38 @@ static std::unique_ptr<Engine> g_Engine;
 
     auto runResult = g_Engine->Run();
     if (!runResult) {
-        DOutError("[EngineAppDelegate] Engine Run failed with error: {}.", runResult.error());
+        DOutError("[EngineAppDelegate] Run движка завершился ошибкой: {}.", runResult.error());
     } else {
-        DOut("[EngineAppDelegate] Engine Run succeeded.");
+        DOut("[EngineAppDelegate] Run движка выполнен успешно.");
     }
 
     return YES;
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {
-    DOut("[EngineAppDelegate] Application did become active.");
+    DOut("[EngineAppDelegate] Приложение стало активным.");
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application {
-    DOut("[EngineAppDelegate] Application will resign active.");
+    DOut("[EngineAppDelegate] Приложение теряет активность.");
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application {
-    DOut("[EngineAppDelegate] Application did enter background.");
+    DOut("[EngineAppDelegate] Приложение перешло в фон.");
     if (g_Engine) {
         auto res = g_Engine->GetPlatform()->GetConfigManager()->SaveConfig();
         if (!res) {
-            DOutError("[EngineAppDelegate] Failed to save config on entering background: {}.", res.error());
+            DOutError("[EngineAppDelegate] Не удалось сохранить конфигурацию при переходе в фон: {}.", res.error());
         }
     }
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application {
-    DOut("[EngineAppDelegate] Application will enter foreground.");
+    DOut("[EngineAppDelegate] Приложение возвращается на передний план.");
 }
 
 - (void)applicationDidReceiveMemoryWarning:(UIApplication *)application {
-    DOut("[EngineAppDelegate] Application did receive memory warning.");
+    DOut("[EngineAppDelegate] Приложение получило предупреждение о нехватке памяти.");
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application {

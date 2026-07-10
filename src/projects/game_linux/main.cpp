@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
 	int exitCode = 0;
 
 	{
-		DOut("[Linux OS]. Game started.");
+		DOut("[Linux OS]. Игра запущена.");
 
 		try
 		{
@@ -17,22 +17,22 @@ int main(int argc, char* argv[])
 			auto res = engine.Run();
 			if (!res)
 			{
-				DOutError("[Linux OS]. Game runtime error: {}.", res.error());
+				DOutError("[Linux OS]. Ошибка выполнения игры: {}.", res.error());
 				exitCode = -1;
 			}
 			else
 			{
-				DOut("[Linux OS]. Game exited successfully.");
+				DOut("[Linux OS]. Игра завершена успешно.");
 			}
 		}
 		catch (const std::exception& e)
 		{
-			DOutException("[Linux OS]. Game started exception: {}.", e.what());
+			DOutException("[Linux OS]. Исключение при запуске игры: {}.", e.what());
 			exitCode = -1;
 		}
 		catch (...)
 		{
-			DOutException("[Linux OS]. Game started unknown exception.");
+			DOutException("[Linux OS]. Неизвестное исключение при запуске игры.");
 			exitCode = -1;
 		}
 	}

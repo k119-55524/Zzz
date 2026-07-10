@@ -7,7 +7,9 @@
 {NamespaceIndent}	explicit {ClassName}(zzz::GameObject* owner);
 {NamespaceIndent}
 {NamespaceIndent}public:
-{NamespaceIndent}	void InitScript() override;
+{NamespaceIndent}	const char* GetScriptTypeName() const override { return "{ClassName}"; }
+
+{NamespaceIndent}	void OnBindEvents() override;
 {NamespaceIndent}
 {NamespaceIndent}	void OnStart();
 {NamespaceIndent}	void OnUpdate(float deltaTime);

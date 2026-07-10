@@ -9,7 +9,7 @@ __attribute__((visibility("default")))
 __attribute__((used))
 void android_main(struct android_app* app)
 {
-	DOut("[Android]. Game started.");
+	DOut("[Android]. Игра запущена.");
 
 	std::unique_ptr<Engine> engine;
 
@@ -21,19 +21,19 @@ void android_main(struct android_app* app)
 		auto runRes = engine->Run();
 		if (!runRes)
 		{
-			DOut("[Android]. Engine run error: {}.", runRes.error());
+			DOut("[Android]. Ошибка запуска движка: {}.", runRes.error());
 		}
 	}
 	catch (const std::exception& e)
 	{
-		DOut("[Android]. Game started exception: {}.", e.what());
+		DOut("[Android]. Исключение при запуске игры: {}.", e.what());
 		return;
 	}
 	catch (...)
 	{
-		DOut("[Android]. Game started unknown exception.");
+		DOut("[Android]. Неизвестное исключение при запуске игры.");
 		return;
 	}
 
-	DOut("[Android]. Game exiting.");
+	DOut("[Android]. Завершение игры.");
 }

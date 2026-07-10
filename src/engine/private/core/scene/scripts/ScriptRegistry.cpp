@@ -12,6 +12,8 @@ namespace zzz::script
 
 #if Z_EDITOR
 	std::vector<Script*> ScriptRegistry::s_ActiveInstances;
+	std::vector<GameScript*> ScriptRegistry::s_ActiveGameScripts;
+	std::vector<SceneScript*> ScriptRegistry::s_ActiveSceneScripts;
 #endif
 
 	std::shared_ptr<Script> ScriptRegistry::CreateScript(std::string_view name, GameObject* owner)
@@ -59,6 +61,8 @@ namespace zzz::script
 		s_SceneScriptFactories.clear();
 #if Z_EDITOR
 		s_ActiveInstances.clear();
+		s_ActiveGameScripts.clear();
+		s_ActiveSceneScripts.clear();
 #endif
 	}
 
@@ -78,6 +82,40 @@ namespace zzz::script
 	const std::vector<Script*>& ScriptRegistry::GetActiveInstances()
 	{
 		return s_ActiveInstances;
+	}
+
+	void ScriptRegistry::RegisterInstance(GameScript* instance)
+	{
+		if (instance)
+			s_ActiveGameScripts.push_back(instance);
+	}
+
+	void ScriptRegistry::UnregisterInstance(GameScript* instance)
+	{
+		if (instance)
+			std::erase(s_ActiveGameScripts, instance);
+	}
+
+	const std::vector<GameScript*>& ScriptRegistry::GetActiveGameScripts()
+	{
+		return s_ActiveGameScripts;
+	}
+
+	void ScriptRegistry::RegisterInstance(SceneScript* instance)
+	{
+		if (instance)
+			s_ActiveSceneScripts.push_back(instance);
+	}
+
+	void ScriptRegistry::UnregisterInstance(SceneScript* instance)
+	{
+		if (instance)
+			std::erase(s_ActiveSceneScripts, instance);
+	}
+
+	const std::vector<SceneScript*>& ScriptRegistry::GetActiveSceneScripts()
+	{
+		return s_ActiveSceneScripts;
 	}
 #endif
 }

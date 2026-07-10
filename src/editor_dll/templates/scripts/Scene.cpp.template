@@ -6,7 +6,7 @@
 {
 }
 
-void {ClassName}::InitScript()
+void {ClassName}::OnBindEvents()
 {
 	SubscribeToStart([this]() { OnStart(); });
 	SubscribeToUpdate([this](const zzz::engine::Time& time) { OnUpdate(time); });

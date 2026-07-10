@@ -9,7 +9,7 @@ ViewManager::ViewManager(const Platform& platform, std::function<void()> onAllVi
 	m_Platform{ platform },
 	OnAllViewsClosed{ std::move(onAllViewsClosed) }
 {
-	ensure(OnAllViewsClosed != nullptr, "OnAllViewsClosed must not be null.");
+	ensure(OnAllViewsClosed != nullptr, "OnAllViewsClosed не должен быть null.");
 }
 
 ViewManager::~ViewManager()
@@ -24,7 +24,7 @@ View* ViewManager::CreateView()
 {
 #if Z_MOBILE
 	if (m_Views.size() >= 1)
-		THROW_RUNTIME("Mobile platforms support only one native window per application.");
+		THROW_RUNTIME("Мобильные платформы поддерживают только одно нативное окно на приложение.");
 #endif
 
 	auto view = safe_make_shared<View>(m_Platform, [this](View& v) { HandleWindowClose(v); });
@@ -46,7 +46,7 @@ void ViewManager::HandleWindowClose(View& view)
 	if (it != m_Views.end())
 		m_Views.erase(it);
 	else
-		THROW_RUNTIME("View not found in m_Views.");
+		THROW_RUNTIME("View не найден в m_Views.");
 
 	if (m_Views.empty())
 		OnAllViewsClosed();

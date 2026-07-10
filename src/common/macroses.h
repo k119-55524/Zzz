@@ -73,7 +73,7 @@
 	do \
 	{ \
 		if (!(func)) \
-			THROW_RUNTIME("Functor '{}' is not assigned.", #func); \
+			THROW_RUNTIME("Функтор '{}' не назначен.", #func); \
 		(func)(__VA_ARGS__); \
 	} while (false)
 #else

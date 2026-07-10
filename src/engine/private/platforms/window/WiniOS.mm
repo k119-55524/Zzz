@@ -39,7 +39,7 @@ std::expected<void, std::string> WiniOS::Initialize(const std::string_view appNa
         viewController.inputEngine = m_Input.get();
         window.rootViewController = viewController;
     } else {
-        return UNEXPECTED("UIWindow is not initialized on iOS.");
+        return UNEXPECTED("UIWindow не инициализирован на iOS.");
     }
 	return {};
 }

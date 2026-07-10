@@ -3,6 +3,7 @@
 #include <memory>
 #include "../EngineExport.h"
 
+#include "BaseScript.h"
 #include "public/core/events/EventBus.h"
 
 namespace zzz
@@ -15,7 +16,7 @@ namespace zzz::script
 
 #pragma warning(push)
 #pragma warning(disable: 4251)
-	class Z_ENGINE_API Script : public std::enable_shared_from_this<Script>
+	class Z_ENGINE_API Script : public BaseScript
 	{
 	public:
 		Script() = delete;
@@ -24,10 +25,12 @@ namespace zzz::script
 
 		GameObject* GetOwner() const { return m_Owner; }
 
-	public:
-		virtual void InitScript() = 0;
-
 	protected:
+		virtual void OnUnbindEvents() override
+		{
+			if (m_Bus) m_Bus->UnsubscribeAll(shared_from_this());
+		}
+
 		template<typename F>
 		void SubscribeToStart(F&& func) { if (m_Bus) m_Bus->OnStart.Subscribe(shared_from_this(), std::forward<F>(func)); }
 		template<typename F>
@@ -37,11 +40,10 @@ namespace zzz::script
 
 	private:
 		friend class zzz::GameObject;
-		
 		void Init(std::shared_ptr<zzz::engine::GameObjectEventBus> bus)
 		{
 			m_Bus = bus;
-			InitScript();
+			OnBindEvents();
 		}
 
 		GameObject* m_Owner;

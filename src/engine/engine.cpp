@@ -37,11 +37,11 @@ void Engine::Shutdown()
 	}
 	catch (const std::exception& e)
 	{
-		DOutException("Exception during shutdown: {}.", e.what());
+		DOutException("Исключение при завершении работы: {}.", e.what());
 	}
 	catch (...)
 	{
-		DOutException("Unknown exception during shutdown.");
+		DOutException("Неизвестное исключение при завершении работы.");
 	}
 
 	engineState.store(eInitState::NotInitialized);
@@ -54,7 +54,7 @@ void Engine::Initialize()
 	m_EventBus = safe_make_shared<ProjectEventBus>();
 	m_Time = safe_make_shared<Time>();
 
-	DOut("Engine initialized: OK.");
+	DOut("Движок инициализирован: OK.");
 	engineState.store(eInitState::Initialized);
 }
 
@@ -81,11 +81,11 @@ void Engine::StartGame(const std::vector<std::string>& globalScripts)
 		{
 			m_Scripts.push_back(script);
 			script->Init(m_EventBus);
-			DOut("Global script initialized: {}", scriptName);
+			DOut("Глобальный скрипт инициализирован: {}", scriptName);
 		}
 		else
 		{
-			DOutError("Failed to create global script: {}", scriptName);
+			DOutError("Не удалось создать глобальный скрипт: {}", scriptName);
 		}
 	}
 	
@@ -104,7 +104,7 @@ void Engine::StopGame()
 		std::lock_guard lock(stateMutex);
 
 		if (engineState.load() != eInitState::Initialized)
-			return UNEXPECTED("Engine is not initialized. Call Initialize() before Run().");
+			return UNEXPECTED("Движок не инициализирован. Вызовите Initialize() перед Run().");
 
 		engineState.store(eInitState::Running);
 	}
@@ -132,7 +132,7 @@ void Engine::StopGame()
 	catch (...)
 	{
 		isError = true;
-		err = "Unknown exception occurred";
+		err = "Произошло неизвестное исключение";
 	}
 
 	if constexpr (!Platform::c_AsyncRunLoop)
@@ -140,9 +140,9 @@ void Engine::StopGame()
 
 	if (isError)
 	{
-		DOutException("Exception during Run: {}.", err);
+		DOutException("Исключение во время Run: {}.", err);
 		//MsgBox::Error(err);
-		return UNEXPECTED("Exception during Run: {}.", err);
+		return UNEXPECTED("Исключение во время Run: {}.", err);
 	}
 
 	return {};

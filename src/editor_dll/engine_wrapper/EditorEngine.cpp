@@ -2,6 +2,8 @@
 #include <engine/private/core/view/ViewManager.h>
 #include <engine/public/core/scene/scripts/ScriptRegistry.h>
 #include <engine/public/core/events/EventBus.h>
+#include <engine/public/core/scene/GameObject.h>
+#include <engine/public/core/scene/scripts/base_script/Script.h>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -24,7 +26,7 @@ namespace zzz::editor
 		std::lock_guard lock(stateMutex);
 
 		if (engineState.load() != eInitState::Initialized)
-			return UNEXPECTED("Engine is not initialized.");
+			return UNEXPECTED("Движок не инициализирован.");
 
 		engineState.store(eInitState::Running);
 		return {};
@@ -48,7 +50,7 @@ namespace zzz::editor
 	{
 		if (engineState.load() != eInitState::Running)
 		{
-			DOutError("EditorEngine is not running. Cannot AddView.");
+			DOutError("EditorEngine не запущен. Невозможно выполнить AddView.");
 			return nullptr;
 		}
 
@@ -72,7 +74,7 @@ namespace zzz::editor
 
 		if (m_ProjectPath.empty())
 		{
-			DOutError("Project path is empty. Cannot load scripts DLL.");
+			DOutError("Путь проекта пуст. Невозможно загрузить scripts DLL.");
 			return;
 		}
 
@@ -88,20 +90,20 @@ namespace zzz::editor
 				break;
 			}
 
-			DOutWarning("New iteration of DLL copy wait.");
+			DOutWarning("Новая попытка ожидания копирования DLL.");
 			Sleep(100);
 		}
 
 		if (!copied)
 		{
-			DOutWarning("Failed to copy scripts.dll to scripts_temp.dll. DLL might not exist yet. Error: {}", GetLastError());
+			DOutWarning("Не удалось скопировать scripts.dll в scripts_temp.dll. Возможно, DLL ещё не существует. Ошибка: {}", GetLastError());
 			return;
 		}
 
 		HMODULE handle = LoadLibraryA(tempDllPath.c_str());
 		if (!handle)
 		{
-			DOutError("Failed to load {}. Error code: {}", tempDllPath, GetLastError());
+			DOutError("Не удалось загрузить {}. Код ошибки: {}", tempDllPath, GetLastError());
 			return;
 		}
 
@@ -113,11 +115,11 @@ namespace zzz::editor
 		if (registerAll)
 		{
 			registerAll();
-			DOut("Scripts DLL loaded and registered successfully.");
+			DOut("Scripts DLL загружена и зарегистрирована успешно.");
 		}
 		else
 		{
-			DOutError("Failed to find RegisterAllScripts export in scripts DLL.");
+			DOutError("Не удалось найти экспорт RegisterAllScripts в scripts DLL.");
 			UnloadScripts();
 		}
 	}
@@ -126,7 +128,24 @@ namespace zzz::editor
 	{
 		if (m_ScriptsDll)
 		{
-			DOut("Unloading scripts DLL...");
+			DOut("Выгрузка scripts DLL...");
+
+#if Z_EDITOR
+			// 1. Удаляем все активные GameObject-скрипты
+			auto activeScripts = zzz::script::ScriptRegistry::GetActiveInstances();
+			for (auto* scriptRaw : activeScripts)
+			{
+				if (auto owner = scriptRaw->GetOwner())
+				{
+					owner->RemoveScript(std::static_pointer_cast<zzz::script::Script>(scriptRaw->shared_from_this()));
+				}
+			}
+
+			// 2. Удаляем все активные GameScript-ы
+			ClearGameScripts();
+
+			// 3. (TODO Phase 3: Сцен пока нет, но тут будет удаление SceneScripts)
+#endif
 
 			zzz::script::ScriptRegistry::Clear();
 			FreeLibrary((HMODULE)m_ScriptsDll);

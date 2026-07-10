@@ -99,23 +99,23 @@ std::expected<void, std::string> WinLinux::Initialize(const std::string_view app
 		const Platform& platform = m_Platform;
 		m_Surface = wl_compositor_create_surface(platform.GetNativeData()->compositor);
 		if (!m_Surface)
-			return UNEXPECTED("wl_compositor_create_surface() failed.");
+			return UNEXPECTED("Ошибка wl_compositor_create_surface().");
 
 		m_XdgSurface = xdg_wm_base_get_xdg_surface(platform.GetNativeData()->xdgWmBase, m_Surface);
 		if (!m_XdgSurface)
-			return UNEXPECTED("xdg_wm_base_get_xdg_surface() failed.");
+			return UNEXPECTED("Ошибка xdg_wm_base_get_xdg_surface().");
 
 		if (xdg_surface_add_listener(
 			m_XdgSurface,
 			&g_XdgSurfaceListener,
 			this) != 0)
 		{
-			return UNEXPECTED("xdg_surface_add_listener() failed.");
+			return UNEXPECTED("Ошибка xdg_surface_add_listener().");
 		}
 
 		m_XdgToplevel = xdg_surface_get_toplevel(m_XdgSurface);
 		if (!m_XdgToplevel)
-			return UNEXPECTED("xdg_surface_get_toplevel() failed.");
+			return UNEXPECTED("Ошибка xdg_surface_get_toplevel().");
 
 		xdg_toplevel_set_title(m_XdgToplevel, appName.data());
 		xdg_toplevel_add_listener(m_XdgToplevel, &g_ToplevelListener, this);
@@ -153,20 +153,20 @@ std::expected<void, std::string> WinLinux::Initialize(const std::string_view app
 
 		int err = wl_display_get_error(platform.GetNativeData()->display);
 		if (err != 0)
-			return UNEXPECTED("Wayland display error: {}.", err);
+			return UNEXPECTED("Ошибка дисплея Wayland: {}.", err);
 	}
 	catch (const std::exception& e)
 	{
 		Shutdown();
-		return UNEXPECTED("Exception initialize: {}.", e.what());
+		return UNEXPECTED("Исключение при инициализации: {}.", e.what());
 	}
 	catch (...)
 	{
 		Shutdown();
-		return UNEXPECTED("Unknown exception occurred.");
+		return UNEXPECTED("Произошло неизвестное исключение.");
 	}
 
-	DOut("WinLinux initialized: OK.");
+	DOut("WinLinux инициализирован: OK.");
 
 	return {};
 }

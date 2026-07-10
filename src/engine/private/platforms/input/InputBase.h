@@ -84,7 +84,7 @@ namespace zzz::engine
 		{
 			if (key == KeyCode::Unknown)
 			{
-				DOut("KeyCode::Unknown passed");
+				DOut("Передан KeyCode::Unknown");
 				return false;
 			}
 
@@ -93,7 +93,7 @@ namespace zzz::engine
 			if (index < static_cast<zU32>(KeyCode::Count))
 				return m_KeyStates[index];
 
-			DOut("Invalid key code value ({})", static_cast<zI32>(key));
+			DOut("Некорректное значение кода клавиши ({})", static_cast<zI32>(key));
 			return false;
 		}
 

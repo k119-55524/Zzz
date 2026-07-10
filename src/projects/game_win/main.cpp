@@ -23,7 +23,7 @@ int APIENTRY wWinMain(
 		//g_Logger.AddConsoleBroadcaster();
 		g_Logger.AddNetworkBroadcaster(c_LocalhostIPv4, c_DefaultLoggerPort);
 
-		DOut("[Windows OS]. Game started.");
+		DOut("[Windows OS]. Игра запущена.");
 
 		try
 		{
@@ -31,22 +31,22 @@ int APIENTRY wWinMain(
 			auto res = engine.Run();
 			if (!res)
 			{
-				DOutError("[Windows OS]. Game runtime error: {}.", res.error());
+				DOutError("[Windows OS]. Ошибка выполнения игры: {}.", res.error());
 				exitCode = -1;
 			}
 			else
 			{
-				DOut("[Windows OS]. Game exited successfully.");
+				DOut("[Windows OS]. Игра завершена успешно.");
 			}
 		}
 		catch (const std::exception& e)
 		{
-			DOutException("[Windows OS]. WinMain {}.", e.what());
+			DOutException("[Windows OS]. Исключение в WinMain: {}.", e.what());
 			exitCode = -1;
 		}
 		catch (...)
 		{
-			DOutException("[Windows OS]. WinMain exception.");
+			DOutException("[Windows OS]. Исключение в WinMain.");
 			exitCode = -1;
 		}
 	}

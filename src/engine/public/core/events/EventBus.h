@@ -19,6 +19,13 @@ namespace zzz::engine
 		void InvokeStop() { OnStop(); }
 		void InvokeUpdate(const zzz::engine::Time& t) { OnUpdate(t); }
 
+		void UnsubscribeAll(const std::shared_ptr<void>& context)
+		{
+			OnStart.Unsubscribe(context);
+			OnStop.Unsubscribe(context);
+			OnUpdate.Unsubscribe(context);
+		}
+
 	private:
 		friend class zzz::script::GameScript;
 		zzz::engine::Event<> OnStart;
@@ -33,6 +40,13 @@ namespace zzz::engine
 		void InvokeStop() { OnStop(); }
 		void InvokeUpdate(const zzz::engine::Time& t) { OnUpdate(t); }
 
+		void UnsubscribeAll(const std::shared_ptr<void>& context)
+		{
+			OnStart.Unsubscribe(context);
+			OnStop.Unsubscribe(context);
+			OnUpdate.Unsubscribe(context);
+		}
+
 	private:
 		friend class zzz::script::SceneScript;
 		zzz::engine::Event<> OnStart;
@@ -46,6 +60,13 @@ namespace zzz::engine
 		void InvokeStart() { OnStart(); }
 		void InvokeStop() { OnStop(); }
 		void InvokeUpdate(float t) { OnUpdate(t); }
+
+		void UnsubscribeAll(const std::shared_ptr<void>& context)
+		{
+			OnStart.Unsubscribe(context);
+			OnStop.Unsubscribe(context);
+			OnUpdate.Unsubscribe(context);
+		}
 
 	private:
 		friend class zzz::script::Script;

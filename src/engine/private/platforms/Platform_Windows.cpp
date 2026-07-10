@@ -11,7 +11,7 @@ void Platform::ShutdownPlatformSpecific()
 	if (!result)
 	{
 		const DWORD error = GetLastError();
-		DOutCritical("Failed to unregister window class '{}'. Error code: {}.", c_RegisterClassName.data(), error);
+		DOutCritical("Не удалось отменить регистрацию класса окна '{}'. Код ошибки: {}.", c_RegisterClassName.data(), error);
 	}
 }
 
@@ -28,7 +28,7 @@ void Platform::InitializePlatformSpecific()
 		LR_DEFAULTSIZE | LR_SHARED);
 
 	if (!iconHandle)
-		DOutWarning("Failed to load icon '{}'. Error: {}", c_IcoResourceName.data(), GetLastError());
+		DOutWarning("Не удалось загрузить иконку '{}'. Ошибка: {}", c_IcoResourceName.data(), GetLastError());
 
 	WNDCLASS wc = { 0 };
 	wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -40,5 +40,5 @@ void Platform::InitializePlatformSpecific()
 	wc.lpszClassName = c_RegisterClassName.data();
 	ATOM Result = RegisterClass(&wc);
 	if (Result == 0)
-		THROW_RUNTIME("Failed to register window class. Error code: {}.", GetLastError());
+		THROW_RUNTIME("Не удалось зарегистрировать класс окна. Код ошибки: {}.", GetLastError());
 }

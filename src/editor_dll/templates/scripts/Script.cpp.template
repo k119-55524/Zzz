@@ -6,7 +6,7 @@
 {
 }
 
-void {ClassName}::InitScript()
+void {ClassName}::OnBindEvents()
 {
 	SubscribeToStart([this]() { OnStart(); });
 	SubscribeToUpdate([this](float deltaTime) { OnUpdate(deltaTime); });

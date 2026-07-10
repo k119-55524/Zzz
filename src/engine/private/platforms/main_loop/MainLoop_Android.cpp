@@ -35,7 +35,7 @@ void MainLoop_Android::Run()
 
 			if (app->destroyRequested != 0)
 			{
-				DOut("[Android Loop]. Destroy requested.");
+				DOut("[Android Loop]. Запрошено уничтожение.");
 				Stop();
 				break;
 			}

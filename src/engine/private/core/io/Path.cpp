@@ -8,11 +8,11 @@ namespace zzz::io
 		m_AppName{ appName },
 		m_NativeData{ nativeData }
 	{	
-		ensure(IsValidDirectoryName(m_AppName) == true, "Invalid application name for directory: {}", m_AppName);
+		ensure(IsValidDirectoryName(m_AppName) == true, "Некорректное имя приложения для каталога: {}", m_AppName);
 
 		auto resPath = ResolveUserDataDirectory();
 		if (!resPath)
-			ensure(false, "Failed to resolve user data directory: {}.", resPath.error());
+			ensure(false, "Не удалось определить каталог пользовательских данных: {}.", resPath.error());
 
 		m_UserDataDirectory = *resPath;
 	}
@@ -56,7 +56,7 @@ namespace zzz::io
 			wchar_t buffer[MAX_PATH];
 			DWORD len = GetModuleFileNameW(nullptr, buffer, MAX_PATH);
 			if (len == 0)
-				return UNEXPECTED("Failed to get executable path.");
+				return UNEXPECTED("Не удалось получить путь к исполняемому файлу.");
 
 			return std::filesystem::path(buffer).parent_path();
 #elif Z_MACOS
@@ -66,33 +66,33 @@ namespace zzz::io
 			std::string path(size, '\0');
 
 			if (_NSGetExecutablePath(path.data(), &size) != 0)
-				return UNEXPECTED("Failed to get executable path.");
+				return UNEXPECTED("Не удалось получить путь к исполняемому файлу.");
 
 			return std::filesystem::weakly_canonical(path).parent_path();
 #elif Z_LINUX
 			char buffer[PATH_MAX];
 			ssize_t len = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
 			if (len == -1)
-				return UNEXPECTED("Failed to get executable path.");
+				return UNEXPECTED("Не удалось получить путь к исполняемому файлу.");
 
 			buffer[len] = '\0';
 
 			return std::filesystem::weakly_canonical(buffer).parent_path();
 #else
-			return UNEXPECTED("Unsupported platform.");
+			return UNEXPECTED("Неподдерживаемая платформа.");
 #endif
 		}
 		catch (const std::filesystem::filesystem_error& e)
 		{
-			return UNEXPECTED("Filesystem error: {}.", e.what());
+			return UNEXPECTED("Ошибка файловой системы: {}.", e.what());
 		}
 		catch (const std::exception& e)
 		{
-			return UNEXPECTED("Failed to get executable path: {}.", e.what());
+			return UNEXPECTED("Не удалось получить путь к исполняемому файлу: {}.", e.what());
 		}
 		catch (...)
 		{
-			return UNEXPECTED("Unknown error while getting executable path.");
+			return UNEXPECTED("Неизвестная ошибка при получении пути к исполняемому файлу.");
 		}
 	}
 
@@ -107,7 +107,7 @@ namespace zzz::io
 			_wdupenv_s(&rawPtr, &len, L"LOCALAPPDATA");
 			std::unique_ptr<wchar_t, decltype(&free)> localAppData(rawPtr, &free);
 			if (!localAppData)
-				return UNEXPECTED("Failed to get LOCALAPPDATA.");
+				return UNEXPECTED("Не удалось получить LOCALAPPDATA.");
 
 			return std::filesystem::path(localAppData.get()) / m_AppName;
 #elif Z_APPLE
@@ -119,10 +119,10 @@ namespace zzz::io
 #elif Z_ANDROID
 			auto app = m_NativeData.get();
 			if (!app->activity)
-				return UNEXPECTED("Android activity is null.");
+				return UNEXPECTED("Android activity равен null.");
 
 			if (!app->activity->internalDataPath)
-				return UNEXPECTED("Android internal data path is null.");
+				return UNEXPECTED("Внутренний путь данных Android равен null.");
 
 			return std::filesystem::path(app->activity->internalDataPath) / m_AppName;
 #elif Z_LINUX
@@ -132,7 +132,7 @@ namespace zzz::io
 
 			const char* home = std::getenv("HOME");
 			if (!home)
-				return UNEXPECTED("Failed to get HOME.");
+				return UNEXPECTED("Не удалось получить HOME.");
 
 			return std::filesystem::path(home) / ".config" / m_AppName;
 #else
@@ -141,15 +141,15 @@ namespace zzz::io
 		}
 		catch (const std::filesystem::filesystem_error& e)
 		{
-			return UNEXPECTED("Filesystem error: {}.", e.what());
+			return UNEXPECTED("Ошибка файловой системы: {}.", e.what());
 		}
 		catch (const std::exception& e)
 		{
-			return UNEXPECTED("Failed to get user data directory: {}", e.what());
+			return UNEXPECTED("Не удалось получить каталог пользовательских данных: {}", e.what());
 		}
 		catch (...)
 		{
-			return UNEXPECTED("Unknown error while getting user data directory.");
+			return UNEXPECTED("Неизвестная ошибка при получении каталога пользовательских данных.");
 		}
 	}
 }

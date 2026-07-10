@@ -5,10 +5,10 @@ Test::Test()
 {
 }
 
-void Test::Init(std::shared_ptr<zzz::engine::ProjectEventBus> bus)
+void Test::OnBindEvents()
 {
-	bus->OnStart.Subscribe(shared_from_this(), [this]() { OnStart(); });
-	bus->OnUpdate.Subscribe(shared_from_this(), [this](const zzz::engine::Time& time) { OnUpdate(time); });
+	SubscribeToStart([this]() { OnStart(); });
+	SubscribeToUpdate([this](const zzz::engine::Time& time) { OnUpdate(time); });
 }
 
 void Test::OnStart()

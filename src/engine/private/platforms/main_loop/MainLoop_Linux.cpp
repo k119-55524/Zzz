@@ -11,7 +11,7 @@ MainLoop_Linux::MainLoop_Linux(const Platform& platform, std::function<void()> o
 	m_Display{ nullptr }
 {
 	m_Display = m_Platform.GetNativeData()->display;
-	ensure(m_Display != nullptr, "Display is not PlatformLinux.");
+	ensure(m_Display != nullptr, "Display не получен от PlatformLinux.");
 }
 
 void MainLoop_Linux::Run()
