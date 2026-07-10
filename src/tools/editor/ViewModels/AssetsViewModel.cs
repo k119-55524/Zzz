@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -483,6 +483,7 @@ namespace editor.ViewModels
             var sb = new System.Text.StringBuilder();
             sb.AppendLine("// RegisterAllScripts.cpp — генерируется автоматически ZzzEngine Editor");
             sb.AppendLine("#include <ScriptRegistry.h>");
+            sb.AppendLine("#include <logger/logger.h>");
             sb.AppendLine();
 
             // Добавляем инклуды для каждого скрипта
@@ -499,6 +500,12 @@ namespace editor.ViewModels
                     sb.AppendLine($"#include \"{includePath}\"");
                 }
             }
+
+            sb.AppendLine();
+            sb.AppendLine("extern \"C\" __declspec(dllexport) void InitScriptLogger(void* callback)");
+            sb.AppendLine("{");
+            sb.AppendLine("    zzz::logger::g_Logger.AddCallbackBroadcaster((zzz::logger::LogCallback)callback);");
+            sb.AppendLine("}");
 
             sb.AppendLine();
             sb.AppendLine("extern \"C\" __declspec(dllexport) void RegisterAllScripts()");

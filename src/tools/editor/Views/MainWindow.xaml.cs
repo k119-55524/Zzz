@@ -534,6 +534,8 @@ namespace editor
 				#endif
 
 				string editorDllLib = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "editor_dll.lib").Replace('\\', '/');
+				string loggerLib = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logger_lib.lib").Replace('\\', '/');
+				string commonLib = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "common_lib.lib").Replace('\\', '/');
 
 				// Имя CMake-проекта = имя папки игрового проекта, иначе .slnx у всех проектов
 				// называется одинаково ("project_scripts") и неотличимо в списке Recent Projects VS.
@@ -593,10 +595,12 @@ target_sources(scripts PRIVATE
 )
 
 target_compile_definitions(scripts PRIVATE
-    Z_EDITOR=1{userDefinesLines}
+    Z_EDITOR=1
+    Z_ADD_LOGGER=1
+    Z_DEVELOPMENT_BUILD=1{userDefinesLines}
 )
 
-target_link_libraries(scripts PRIVATE ""{editorDllLib}"")
+target_link_libraries(scripts PRIVATE ""{editorDllLib}"" ""{loggerLib}"" ""{commonLib}"" ws2_32.lib)
 ";
 
 				bool needWriteCmake = !System.IO.File.Exists(cmakePath) ||
@@ -623,6 +627,7 @@ target_link_libraries(scripts PRIVATE ""{editorDllLib}"")
 							StandardOutputEncoding = System.Text.Encoding.UTF8,
 							StandardErrorEncoding = System.Text.Encoding.UTF8
 						};
+						startInfoConfig.EnvironmentVariables["VSLANG"] = "1033"; // Force MSVC to output in English
 						using (var proc = System.Diagnostics.Process.Start(startInfoConfig))
 						{
 							string stdout = proc?.StandardOutput.ReadToEnd() ?? string.Empty;
@@ -671,6 +676,7 @@ target_link_libraries(scripts PRIVATE ""{editorDllLib}"")
 						StandardOutputEncoding = System.Text.Encoding.UTF8,
 						StandardErrorEncoding = System.Text.Encoding.UTF8
 					};
+					startInfoBuild.EnvironmentVariables["VSLANG"] = "1033"; // Force MSVC to output in English
 					using (var proc = System.Diagnostics.Process.Start(startInfoBuild))
 					{
 						string stdout = proc?.StandardOutput.ReadToEnd() ?? string.Empty;

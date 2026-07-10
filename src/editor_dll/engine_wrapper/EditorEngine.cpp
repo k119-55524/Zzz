@@ -110,6 +110,14 @@ namespace zzz::editor
 		m_ScriptsDll = handle;
 		m_LoadedTempDllPath = tempDllPath;
 
+		extern zzz::logger::LogCallback g_EditorLogCallback;
+		using InitLogFunc = void(*)(void*);
+		InitLogFunc initLogger = (InitLogFunc)GetProcAddress(handle, "InitScriptLogger");
+		if (initLogger && g_EditorLogCallback)
+		{
+			initLogger((void*)g_EditorLogCallback);
+		}
+
 		using RegisterFunc = void(*)();
 		RegisterFunc registerAll = (RegisterFunc)GetProcAddress(handle, "RegisterAllScripts");
 		if (registerAll)

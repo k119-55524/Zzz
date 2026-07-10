@@ -13,12 +13,13 @@
 #include <condition_variable>
 
 #include "log_entry.h"
-#include "private/IBroadcaster.h"
 
 using namespace zzz::common;
 
 namespace zzz::logger
 {
+	class IBroadcaster;
+
 	struct LogCallbackEntry
 	{
 		uint64_t timestamp;

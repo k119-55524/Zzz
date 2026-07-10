@@ -3,6 +3,7 @@
 
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 
+#include "private/IBroadcaster.h"
 #include "private/ConsoleBroadcaster.h"
 #include "private/NetworkBroadcaster.h"
 #include "private/CallbackBroadcaster.h"

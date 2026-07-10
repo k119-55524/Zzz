@@ -10,6 +10,7 @@
 #include "editor_dll.h"
 
 std::unique_ptr<zzz::editor::EditorEngine> g_Engine;
+zzz::logger::LogCallback g_EditorLogCallback = nullptr;
 
 // Эта функция никогда не вызывается, но нужна, чтобы линкер не выбросил throw_runtime_error.
 // Так как шаблон EventImpl<1>::Subscribe инстанцируется в scripts.dll, он требует экспорта 
@@ -28,6 +29,7 @@ extern "C"
 	{
 		try
 		{
+			g_EditorLogCallback = callback;
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 			zzz::logger::g_Logger.AddCallbackBroadcaster(callback);
 #endif

@@ -1,5 +1,6 @@
 #include "Test.hpp"
-
+#include <logger/logger.h>
+#include <common/macroses.h>
 Test::Test()
 	: zzz::script::GameScript()
 {
@@ -13,6 +14,7 @@ void Test::OnBindEvents()
 
 void Test::OnStart()
 {
+	DOut("Test script started!");
 }
 
 void Test::OnUpdate(const zzz::engine::Time& time)

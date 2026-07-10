@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Windows.Media;
 
@@ -22,8 +22,15 @@ namespace editor.Services
         private static void OnNativeLog(in NativeLogEntry entry)
         {
             LogLevel level = (LogLevel)entry.Type;
+            LogSource source = LogSource.Engine;
+
+            if (!string.IsNullOrEmpty(entry.File) && entry.File.Replace('\\', '/').Contains("/" + Project.ProjectStructure.AssetsRoot + "/", StringComparison.OrdinalIgnoreCase))
+            {
+                source = LogSource.Scripts;
+            }
+
             EditorLogger.Log(
-                LogSource.Engine,
+                source,
                 level,
                 entry.Text,
                 entry.File,
