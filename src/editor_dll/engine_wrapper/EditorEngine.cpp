@@ -145,7 +145,7 @@ namespace zzz::editor
 		m_Time->Update();
 
 		if (!m_IsPaused)
-			m_EventBus->OnUpdate(*m_Time);
+			m_EventBus->InvokeUpdate(*m_Time);
 
 		if (m_ViewManager)
 			m_ViewManager->Update(m_Time->GetTimeSinceStartup());

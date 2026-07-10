@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <functional>
 #include <bitset>
@@ -59,26 +59,26 @@ namespace zzz::engine
 	{
 	public:
 #pragma region Mouse events
-		Event<bool> OnMouseEnter{ this };
+		Event<bool> OnMouseEnter;
 
-		Event<zI32, zI32> OnMouseDelta{ this };
-		Event<zI32> OnMouseWheelVertical{ this };
-		Event<zI32> OnMouseWheelHorizontal{ this };
+		Event<zI32, zI32> OnMouseDelta;
+		Event<zI32> OnMouseWheelVertical;
+		Event<zI32> OnMouseWheelHorizontal;
 
-		Event<MouseButton, bool> OnMouseButton{ this };
-		Event<bool> OnMouseLeftButton{ this };
-		Event<bool> OnMouseRightButton{ this };
-		Event<bool> OnMouseMiddleButton{ this };
-		Event<bool> OnMouseButton4{ this };
-		Event<bool> OnMouseButton5{ this };
+		Event<MouseButton, bool> OnMouseButton;
+		Event<bool> OnMouseLeftButton;
+		Event<bool> OnMouseRightButton;
+		Event<bool> OnMouseMiddleButton;
+		Event<bool> OnMouseButton4;
+		Event<bool> OnMouseButton5;
 
 		[[nodiscard]] bool IsMouseButtonDown(MouseButton button) const { return (m_MouseButtonsMask & (1 << static_cast<zU32>(button))) != 0; }
 #pragma endregion
 
 #pragma region Keyboard events
-		Event<KeyCode, KeyState> OnKeyStateChanged{ this };
-		Event<KeyCode> OnKeyDown{ this };
-		Event<KeyCode> OnKeyUp{ this };
+		Event<KeyCode, KeyState> OnKeyStateChanged;
+		Event<KeyCode> OnKeyDown;
+		Event<KeyCode> OnKeyUp;
 
 		[[nodiscard]] bool IsKeyDown(KeyCode key) const
 		{

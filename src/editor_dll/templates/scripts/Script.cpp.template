@@ -6,11 +6,11 @@
 {
 }
 
-void {ClassName}::Init(std::shared_ptr<zzz::engine::GameObjectEventBus> bus)
+void {ClassName}::InitScript()
 {
-	bus->OnStart.Subscribe(shared_from_this(), [this]() { OnStart(); });
-	bus->OnUpdate.Subscribe(shared_from_this(), [this](float deltaTime) { OnUpdate(deltaTime); });
-	bus->OnStop.Subscribe(shared_from_this(), [this]() { OnStop(); });
+	SubscribeToStart([this]() { OnStart(); });
+	SubscribeToUpdate([this](float deltaTime) { OnUpdate(deltaTime); });
+	SubscribeToStop([this]() { OnStop(); });
 }
 
 void {ClassName}::OnStart()

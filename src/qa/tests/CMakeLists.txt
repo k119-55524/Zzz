@@ -25,11 +25,11 @@ if(Z_TESTS_ENABLE_COMMON)
 endif()
 
 if(TEST_SOURCES)
-    add_executable(Tests
+    add_executable(EngineTests
         ${TEST_SOURCES}
     )
 
-    target_link_libraries(Tests
+    target_link_libraries(EngineTests
         PRIVATE
             GTest::gtest_main
             engine_lib
@@ -40,7 +40,7 @@ if(TEST_SOURCES)
     # CTest / IDE Integration
     # -----------------------------------------------------------------------------
     include(GoogleTest)
-    gtest_discover_tests(Tests)
+    gtest_discover_tests(EngineTests)
 else()
     message(FATAL_ERROR "ОШИБКА: Глобальная сборка тестов (Z_ADD_PROJECT_TESTS_IN_BUILD) включена, но ни один модуль тестов (например, Z_TESTS_ENABLE_COMMON) не выбран! Включите хотя бы один модуль или выключите Z_ADD_PROJECT_TESTS_IN_BUILD.")
 endif()

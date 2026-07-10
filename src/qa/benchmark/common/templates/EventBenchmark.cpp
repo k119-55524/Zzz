@@ -4,6 +4,8 @@
 
 using namespace zzz::engine;
 
+static std::shared_ptr<int> g_ctx = std::make_shared<int>(0);
+
 static void SymmetricRangeArgs(benchmark::Benchmark* b) {
 	const std::vector<int> args = { 1, 8, 64, 512, 1024 };
 	for (int a : args) {
@@ -18,7 +20,7 @@ static void BM_EventSubscribe(benchmark::State& state)
 		Event<> evt;
 		for (int i = 0; i < state.range(0); ++i)
 		{
-			evt.SubscribeStatic([]() { benchmark::DoNotOptimize(1); });
+			evt.Subscribe(g_ctx, []() { benchmark::DoNotOptimize(1); });
 		}
 	}
 }
@@ -29,7 +31,7 @@ static void BM_EventInvoke(benchmark::State& state)
 	Event<int> evt;
 	for (int i = 0; i < state.range(0); ++i)
 	{
-		evt.SubscribeStatic([](int x) { benchmark::DoNotOptimize(x); });
+		evt.Subscribe(g_ctx, [](int x) { benchmark::DoNotOptimize(x); });
 	}
 
 	for (auto _ : state)
@@ -44,7 +46,7 @@ static void BM_EventInvokeNoArgs(benchmark::State& state)
 	Event<> evt;
 	for (int i = 0; i < state.range(0); ++i)
 	{
-		evt.SubscribeStatic([]() { benchmark::DoNotOptimize(1); });
+		evt.Subscribe(g_ctx, []() { benchmark::DoNotOptimize(1); });
 	}
 
 	for (auto _ : state)
@@ -71,3 +73,58 @@ static void BM_EventAutoUnsubscribe(benchmark::State& state)
 	}
 }
 BENCHMARK(BM_EventAutoUnsubscribe)->Name("[UNSAFE] 4. AutoUnsubscribe")->Apply(SymmetricRangeArgs);
+
+static void BM_OrderedEventCleanup(benchmark::State& state)
+{
+	for (auto _ : state)
+	{
+		state.PauseTiming();
+		Event<> evt;
+		std::vector<std::shared_ptr<int>> contexts;
+		for (int i = 0; i < state.range(0); ++i)
+		{
+			auto ctx = std::make_shared<int>(0);
+			contexts.push_back(ctx);
+			evt.Subscribe(ctx, []() { benchmark::DoNotOptimize(1); });
+		}
+		
+		// "Убиваем" половину подписчиков
+		for (int i = 0; i < state.range(0); i += 2)
+		{
+			contexts[i].reset();
+		}
+		state.ResumeTiming();
+
+		// Этот вызов спровоцирует O(N) cleanup через std::remove_if
+		evt();
+	}
+}
+BENCHMARK(BM_OrderedEventCleanup)->Name("[SAFE] 5. Ordered Cleanup (remove_if)")->Apply(SymmetricRangeArgs);
+
+static void BM_UnorderedEventCleanup(benchmark::State& state)
+{
+	for (auto _ : state)
+	{
+		state.PauseTiming();
+		UnorderedEvent<> evt;
+		std::vector<std::shared_ptr<int>> contexts;
+		for (int i = 0; i < state.range(0); ++i)
+		{
+			auto ctx = std::make_shared<int>(0);
+			contexts.push_back(ctx);
+			evt.Subscribe(ctx, []() { benchmark::DoNotOptimize(1); });
+		}
+		
+		// "Убиваем" половину подписчиков
+		for (int i = 0; i < state.range(0); i += 2)
+		{
+			contexts[i].reset();
+		}
+		state.ResumeTiming();
+
+		// Этот вызов спровоцирует O(1) cleanup через Swap-and-Pop
+		evt();
+	}
+}
+BENCHMARK(BM_UnorderedEventCleanup)->Name("[SAFE] 6. Unordered Cleanup (Swap-and-Pop)")->Apply(SymmetricRangeArgs);
+

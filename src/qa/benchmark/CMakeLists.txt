@@ -26,11 +26,11 @@ if(Z_TESTS_BENCH_ENABLE_COMMON)
 endif()
 
 if(BENCH_SOURCES)
-    add_executable(Benchmark
+    add_executable(EngineBenchmarks
         ${BENCH_SOURCES}
     )
 
-    target_link_libraries(Benchmark
+    target_link_libraries(EngineBenchmarks
         PRIVATE
             benchmark::benchmark_main
             engine_lib

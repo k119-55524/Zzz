@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <algorithm>
 
 #if Z_EDITOR
 namespace zzz::editor
@@ -31,7 +32,7 @@ namespace zzz::engine
 		float GetTimeSinceStartup() const noexcept { return m_TimeSinceStartup; }
 
 		float GetTimeScale() const noexcept { return m_TimeScale; }
-		void SetTimeScale(float scale) noexcept { m_TimeScale = std::max(scale, 0.0f); }
+		void SetTimeScale(float scale) noexcept { m_TimeScale = (std::max)(scale, 0.0f); }
 
 	private:
 		friend class Engine;

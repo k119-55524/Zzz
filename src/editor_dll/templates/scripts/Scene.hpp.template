@@ -7,8 +7,8 @@
 {NamespaceIndent}	{ClassName}();
 {NamespaceIndent}	virtual ~{ClassName}() = default;
 {NamespaceIndent}
-{NamespaceIndent}private:
-{NamespaceIndent}	void Init(std::shared_ptr<zzz::engine::SceneEventBus> bus) override;
+{NamespaceIndent}public:
+{NamespaceIndent}	void InitScript() override;
 {NamespaceIndent}
 {NamespaceIndent}	void OnStart();
 {NamespaceIndent}	void OnUpdate(const zzz::engine::Time& time);

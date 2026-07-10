@@ -89,12 +89,12 @@ void Engine::StartGame(const std::vector<std::string>& globalScripts)
 		}
 	}
 	
-	m_EventBus->OnStart();
+	m_EventBus->InvokeStart();
 }
 
 void Engine::StopGame()
 {
-	m_EventBus->OnStop();
+	m_EventBus->InvokeStop();
 	m_Scripts.clear();
 }
 
@@ -158,7 +158,7 @@ void Engine::OnCloseAllViews() const
 void Engine::OnUpdateSystem()
 {
 	m_Time->Update();
-	m_EventBus->OnUpdate(*m_Time);
+	m_EventBus->InvokeUpdate(*m_Time);
 
 	if (m_ViewManager)
 		m_ViewManager->Update(m_Time->GetTimeSinceStartup());

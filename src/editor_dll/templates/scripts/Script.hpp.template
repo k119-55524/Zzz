@@ -6,8 +6,8 @@
 {NamespaceIndent}public:
 {NamespaceIndent}	explicit {ClassName}(zzz::GameObject* owner);
 {NamespaceIndent}
-{NamespaceIndent}private:
-{NamespaceIndent}	void Init(std::shared_ptr<zzz::engine::GameObjectEventBus> bus) override;
+{NamespaceIndent}public:
+{NamespaceIndent}	void InitScript() override;
 {NamespaceIndent}
 {NamespaceIndent}	void OnStart();
 {NamespaceIndent}	void OnUpdate(float deltaTime);
