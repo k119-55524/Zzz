@@ -84,6 +84,28 @@ namespace editor.Services
 						EditorLogger.LogInfo($"[Debugger] Найден целевой процесс: {process.Name} (PID: {process.ProcessID})");
 						try
 						{
+							try
+							{
+								dynamic engines = dte.Debugger.Transports.Item("Default").Engines;
+								dynamic nativeEngine = null;
+								foreach (dynamic engine in engines)
+								{
+									string name = engine.Name;
+									if (name.Contains("Native") || name.Contains("Нативный") || name.Contains("Собственный"))
+									{
+										nativeEngine = engine;
+										break;
+									}
+								}
+								if (nativeEngine != null)
+								{
+									process.Attach2(new object[] { nativeEngine });
+									EditorLogger.LogInfo("[Debugger] Отладчик Visual Studio успешно прикреплен (Native Engine)!");
+									return;
+								}
+							}
+							catch { }
+
 							process.Attach();
 							EditorLogger.LogInfo("[Debugger] Отладчик Visual Studio успешно прикреплен (Default Engine)!");
 							return;
@@ -92,7 +114,8 @@ namespace editor.Services
 						{
 							EditorLogger.LogWarning($"[Debugger] COMException при прикреплении: HRESULT 0x{comEx.ErrorCode:X}, Message: {comEx.Message}");
 							// HRESULT 0x89710016 = Debugger is already attached
-							if (comEx.ErrorCode == unchecked((int)0x89710016) || comEx.Message.Contains("уже присоединен") || comEx.Message.Contains("already attached"))
+							// HRESULT 0x80040001 = E_NOTIMPL (can also mean already attached or bad engine state)
+							if (comEx.ErrorCode == unchecked((int)0x89710016) || comEx.ErrorCode == unchecked((int)0x80040001) || comEx.Message.Contains("уже присоединен") || comEx.Message.Contains("already attached"))
 							{
 								EditorLogger.LogInfo("[Debugger] Отладчик Visual Studio уже прикреплен к этому процессу.");
 								return;

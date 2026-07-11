@@ -454,7 +454,14 @@ namespace editor.ViewModels
 
 				if (System.IO.Directory.Exists(buildDir))
 				{
-					System.IO.Directory.Delete(buildDir, true);
+					try 
+					{ 
+						System.IO.Directory.Delete(buildDir, true); 
+					} 
+					catch (Exception ex) 
+					{ 
+						EditorLogger.LogWarning($"[Project] Не удалось полностью очистить папку build: {ex.Message}"); 
+					}
 				}
 
 				if (System.IO.Directory.Exists(binDir))

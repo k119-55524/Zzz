@@ -33,7 +33,7 @@ void Test::OnUpdate(const zzz::engine::Time& time)
 	timer += time.GetDeltaTime();
 	if (timer >= 1.0f)
 	{
-		DOut("Test script tick! (1 second)");
+		//DOut("Test script tick! (1 second)");
 		timer -= 1.0f;
 	}
 }

@@ -121,7 +121,12 @@ void Logger::DebugOutputIDE(const std::source_location& loc, eLogMessageType typ
 
 #if defined(_MSC_VER)
 	if (IsDebuggerPresent())
-		OutputDebugStringA(output.c_str());
+	{
+		int size_needed = MultiByteToWideChar(CP_UTF8, 0, output.c_str(), (int)output.size(), NULL, 0);
+		std::wstring wstrTo(size_needed, 0);
+		MultiByteToWideChar(CP_UTF8, 0, output.c_str(), (int)output.size(), &wstrTo[0], size_needed);
+		OutputDebugStringW(wstrTo.c_str());
+	}
 #elif Z_ANDROID
 	__android_log_write(ANDROID_LOG_DEBUG, "Zzz", output.c_str());
 #else
