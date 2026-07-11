@@ -212,5 +212,6 @@ namespace zzz::editor
 	{
 		std::lock_guard lock(stateMutex);
 		m_IsPaused = isPaused;
+		DOut("EditorEngine::Pause called with: {}", isPaused);
 	}
 }

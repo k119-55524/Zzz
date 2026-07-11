@@ -134,6 +134,45 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <CollectionViewSource x:Key="PanesCollection" Source="{Binding Panes}" />
         <!-- Стилизация кнопок тулбара -->
+        <Style x:Key="ToolbarToggleButtonStyle" TargetType="ToggleButton">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="Margin" Value="2,0" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#3E3E42" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1E4A28" />
+                                <Setter TargetName="border" Property="BorderBrush" Value="#5CDB7B" />
+                                <Setter TargetName="border" Property="BorderThickness" Value="1" />
+                                <Setter TargetName="border" Property="CornerRadius" Value="2" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Background" Value="Transparent" />
+                                <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Secondary}" />
+                                <Setter Property="Opacity" Value="0.5" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="ToolbarButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
@@ -439,13 +478,21 @@
 
                 <!-- Центральная часть: Управление симуляцией (Play, Pause, Stop) -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <!-- Прикрепить отладчик (Шестеренка) -->
+                    <ToggleButton ToolTip="{DynamicResource Toolbar_AttachDebugger}" Style="{StaticResource ToolbarToggleButtonStyle}" Width="30" Height="25" IsChecked="{Binding AttachDebuggerOnPlay}" IsEnabled="{Binding IsNotRunning}">
+                        <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Margin="2,0,0,0">
+                            <!-- Иконка гаечного ключа (на переднем плане) -->
+                            <Path Data="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z" Fill="#5CDB7B" Stretch="Uniform" Width="10" Height="10" />
+                        </Grid>
+                    </ToggleButton>
+
                     <!-- Запуск (Зеленый треугольник) -->
-                    <Button ToolTip="Запуск" Style="{StaticResource ToolbarButtonStyle}" Width="30" Height="25" Command="{Binding PlayCommand}">
+                    <Button ToolTip="{DynamicResource Toolbar_Play}" Style="{StaticResource ToolbarButtonStyle}" Width="30" Height="25" Command="{Binding PlayCommand}">
                         <Path Data="M 0,0 L 10,6 L 0,12 Z" Fill="#5CDB7B" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="2,0,0,0" />
                     </Button>
 
                     <!-- Пауза (Две закругленные вертикальные полосы) -->
-                    <Button ToolTip="Пауза" Style="{StaticResource ToolbarButtonStyle}" Width="30" Height="25" Command="{Binding PauseCommand}">
+                    <Button ToolTip="{DynamicResource Toolbar_Pause}" Style="{StaticResource ToolbarButtonStyle}" Width="30" Height="25" Command="{Binding PauseCommand}">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <Border Width="3" Height="10" Background="#E0E0E0" CornerRadius="1" Margin="0,0,2,0" />
                             <Border Width="3" Height="10" Background="#E0E0E0" CornerRadius="1" />
@@ -453,7 +500,7 @@
                     </Button>
 
                     <!-- Стоп (Красный закругленный квадрат) -->
-                    <Button ToolTip="Стоп" Style="{StaticResource ToolbarButtonStyle}" Width="30" Height="25" Command="{Binding StopCommand}">
+                    <Button ToolTip="{DynamicResource Toolbar_Stop}" Style="{StaticResource ToolbarButtonStyle}" Width="30" Height="25" Command="{Binding StopCommand}">
                         <Border Width="9" Height="9" Background="#F25C5C" CornerRadius="1.5" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Button>
                 </StackPanel>

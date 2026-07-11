@@ -6,6 +6,7 @@
              xmlns:infra="clr-namespace:editor.Services.Project.Infrastructure"
              xmlns:vm="clr-namespace:editor.ViewModels"
              xmlns:converters="clr-namespace:editor.Views.Converters"
+             xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800"
              Loaded="AssetsWidget_Loaded"
@@ -373,6 +374,10 @@
                             <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#1B3252"/>
                         </Style.Resources>
                         <Setter Property="IsExpanded" Value="True"/>
+                        <!-- Подавляем ложные ошибки привязки WPF (Cannot find source for binding) для TreeViewItem. 
+                             Они возникают при перестроении дерева (например, после перекомпиляции скрипта), когда элементы временно отсоединены. -->
+                        <Setter Property="HorizontalContentAlignment" Value="{Binding Path=HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}, diag:PresentationTraceSources.TraceLevel=None}" />
+                        <Setter Property="VerticalContentAlignment" Value="{Binding Path=VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}, diag:PresentationTraceSources.TraceLevel=None}" />
                         <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}"/>
                         <Setter Property="Background" Value="Transparent"/>
                         <!-- Скрытие непрошедших поиск узлов - только для AssetsTree, см. AssetsViewModel.ApplySearchFilter -->
@@ -433,6 +438,9 @@
                                 <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#1B3252"/>
                             </Style.Resources>
                             <Setter Property="IsExpanded" Value="True"/>
+                            <!-- Подавляем ложные ошибки привязки WPF (Cannot find source for binding) для TreeViewItem. -->
+                            <Setter Property="HorizontalContentAlignment" Value="{Binding Path=HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}, diag:PresentationTraceSources.TraceLevel=None}" />
+                            <Setter Property="VerticalContentAlignment" Value="{Binding Path=VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}, diag:PresentationTraceSources.TraceLevel=None}" />
                             <Setter Property="Foreground" Value="{DynamicResource Brush_Text_Primary}"/>
                             <Setter Property="Background" Value="Transparent"/>
                             <Setter Property="ContextMenu">

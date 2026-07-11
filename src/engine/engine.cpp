@@ -11,6 +11,14 @@ using namespace zzz;
 using namespace zzz::common;
 using namespace zzz::engine;
 
+#if defined(_MSC_VER)
+#pragma comment(linker, "/alternatename:RegisterAllScripts=DefaultRegisterAllScripts")
+extern "C" void DefaultRegisterAllScripts() {}
+extern "C" void RegisterAllScripts();
+#else
+extern "C" __attribute__((weak)) void RegisterAllScripts() {}
+#endif
+
 Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeData) :
 	engineState{ eInitState::NotInitialized }
 {
@@ -54,42 +62,8 @@ void Engine::Initialize()
 	m_EventBus = safe_make_shared<ProjectEventBus>();
 	m_Time = safe_make_shared<Time>();
 
-	DOut("Движок инициализирован: OK.");
+	DOut("Инициализация: OK.");
 	engineState.store(eInitState::Initialized);
-}
-
-#if defined(_MSC_VER)
-#pragma comment(linker, "/alternatename:RegisterAllScripts=DefaultRegisterAllScripts")
-extern "C" void DefaultRegisterAllScripts() {}
-extern "C" void RegisterAllScripts();
-#else
-extern "C" __attribute__((weak)) void RegisterAllScripts() {}
-#endif
-
-void Engine::OnRegisterScripts()
-{
-	RegisterAllScripts();
-}
-
-void Engine::StartGame(const std::vector<std::string>& globalScripts)
-{
-	OnRegisterScripts();
-
-	for (const auto& scriptName : globalScripts)
-	{
-		if (auto script = zzz::script::ScriptRegistry::CreateGameScript(scriptName))
-		{
-			m_Scripts.push_back(script);
-			script->Init(m_EventBus);
-			DOut("Глобальный скрипт инициализирован: {}", scriptName);
-		}
-		else
-		{
-			DOutError("Не удалось создать глобальный скрипт: {}", scriptName);
-		}
-	}
-	
-	m_EventBus->InvokeStart();
 }
 
 void Engine::StopGame()
@@ -146,6 +120,42 @@ void Engine::StopGame()
 	}
 
 	return {};
+}
+
+void Engine::OnRegisterScripts()
+{
+	RegisterAllScripts();
+}
+
+void Engine::StartGame(const std::vector<std::string>& globalScripts)
+{
+	OnRegisterScripts();
+
+#ifdef _WIN32
+	if (IsDebuggerPresent())
+	{
+		// Даем время Visual Studio загрузить .pdb символы и расставить брейкпоинты
+		// после перезагрузки scripts.dll
+		Sleep(500); 
+	}
+#endif
+
+
+	for (const auto& scriptName : globalScripts)
+	{
+		if (auto script = zzz::script::ScriptRegistry::CreateGameScript(scriptName))
+		{
+			m_Scripts.push_back(script);
+			script->Init(m_EventBus);
+			DOut("Глобальный скрипт инициализирован: {}", scriptName);
+		}
+		else
+		{
+			DOutError("Не удалось создать глобальный скрипт: {}", scriptName);
+		}
+	}
+
+	m_EventBus->InvokeStart();
 }
 
 void Engine::OnCloseAllViews() const

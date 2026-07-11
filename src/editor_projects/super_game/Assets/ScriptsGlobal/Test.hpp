@@ -11,6 +11,7 @@ class Test : public zzz::script::GameScript
 		void OnBindEvents() override;
 
 		void OnStart();
+		void OnStop();
 		void OnUpdate(const zzz::engine::Time& time);
 
 		int i;

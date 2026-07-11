@@ -75,3 +75,9 @@
 - `noexcept` там, где применимо, для проверки инвариантов компилятором.
 
 Файлы, затронутые пунктом: `src/engine/engine.cpp`, `src/common/throw_wrappers.{h,cpp}`, `src/common/ensure.h`, `src/common/macroses.h`, `src/engine/private/platforms/config/ConfigManager.cpp`, `src/engine/private/core/io/Path.cpp`, все конструкторы `Platform_*`, `Window_*`, `Config*` (потенциально).
+
+## Выбор варианта сборки скриптов
+Сейчас скрипты в редакторе жестко пересобираются в режиме `Debug` (чтобы корректно работала отладка в студии).
+Необходимо:
+- Добавить в настройки проекта/редактора (или в UI сборщика) возможность ручного выбора конфигурации сборки (`Debug`, `Release`, `RelWithDebInfo`) для пользовательских скриптов.
+- При запуске PlayMode или фоновой перекомпиляции читать этот параметр и пробрасывать в аргумент `--config` для CMake-вызова в `MainWindow.xaml.cs`.

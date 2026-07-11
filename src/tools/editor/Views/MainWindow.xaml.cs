@@ -525,13 +525,9 @@ namespace editor
 				string engineSourceDir = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..")).Replace('\\', '/');
 				string zlibsIncludeDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "libs", "zlibs", "include").Replace('\\', '/');
 				
-				// Определяем конфигурацию сборки
+				// Всегда собираем скрипты в режиме Debug при работе в редакторе (чтобы работали точки останова)
+				// TODO: Добавить в настройки проекта/редактора возможность выбора режима сборки скриптов (Debug/Release/RelWithDebInfo)
 				string config = "Debug";
-				#if DEBUG
-				config = "Debug";
-				#else
-				config = "Release";
-				#endif
 
 				string editorDllLib = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "editor_dll.lib").Replace('\\', '/');
 				string loggerLib = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logger_lib.lib").Replace('\\', '/');

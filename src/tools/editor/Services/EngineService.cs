@@ -165,6 +165,8 @@ namespace editor.Services
             if (_isEngineInitialized)
             {
                 EngineRuntime.Tick();
+                // Заставляем WPF продолжать рендеринг в следующем кадре
+                System.Windows.Application.Current.MainWindow?.InvalidateVisual();
             }
         }
     }

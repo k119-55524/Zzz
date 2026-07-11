@@ -1,4 +1,4 @@
-﻿
+
 using System.IO;
 using editor.Models;
 using System.Windows;
@@ -54,8 +54,19 @@ namespace editor.ViewModels
 			RedoCommand = new RelayCommand(Redo, () => App.ProjectService.History.CanRedo);
 			PlayCommand = new RelayCommand(() =>
 			{
+				if (AttachDebuggerOnPlay)
+				{
+					EditorLogger.LogInfo("Запущен режим с отладкой (Debug Play).");
+					VisualStudioDebuggerService.AttachToCurrentProcess(_currentProjectPath);
+				}
+				else
+				{
+					EditorLogger.LogInfo("Запущен обычный режим (Play).");
+				}
+
 				IsRunning = true;
 				IsPaused = false;
+				EngineRuntime.Pause(false);
 
 				var guids = App.ProjectService.CurrentGameConfig.GlobalScriptGuids;
 				var classNames = new System.Collections.Generic.List<string>();
@@ -82,6 +93,7 @@ namespace editor.ViewModels
 			{
 				IsRunning = false;
 				IsPaused = false;
+				EngineRuntime.Pause(true);
 				EngineRuntime.Stop();
 			}, () => IsProjectOpen && IsRunning);
 			ShowWidgetCommand = new RelayCommand<PaneViewModel>(pane =>
@@ -203,8 +215,20 @@ namespace editor.ViewModels
 			set
 			{
 				if (SetField(ref _isRunning, value))
+				{
 					CommandManager.InvalidateRequerySuggested();
+					OnPropertyChanged(nameof(IsNotRunning));
+				}
 			}
+		}
+
+		public bool IsNotRunning => !IsRunning;
+
+		private bool _attachDebuggerOnPlay;
+		public bool AttachDebuggerOnPlay
+		{
+			get => _attachDebuggerOnPlay;
+			set => SetField(ref _attachDebuggerOnPlay, value);
 		}
 
 		private bool _isPaused;
