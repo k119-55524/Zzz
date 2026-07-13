@@ -478,13 +478,50 @@
 
                 <!-- Центральная часть: Управление симуляцией (Play, Pause, Stop) -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <!-- Прикрепить отладчик (Шестеренка) -->
-                    <ToggleButton ToolTip="{DynamicResource Toolbar_AttachDebugger}" Style="{StaticResource ToolbarToggleButtonStyle}" Width="30" Height="25" IsChecked="{Binding AttachDebuggerOnPlay}" IsEnabled="{Binding IsNotRunning}">
+                    <!-- Прикрепить отладчик Visual Studio -->
+                    <Button ToolTip="{Binding AttachDebuggerStatusText}" Style="{StaticResource ToolbarButtonStyle}" Width="30" Height="25" Command="{Binding AttachDebuggerCommand}">
                         <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Margin="2,0,0,0">
                             <!-- Иконка гаечного ключа (на переднем плане) -->
-                            <Path Data="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z" Fill="#5CDB7B" Stretch="Uniform" Width="10" Height="10" />
+                            <Path Data="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z" Stretch="Uniform" Width="10" Height="10">
+                                <Path.Style>
+                                    <Style TargetType="Path">
+                                        <Setter Property="Fill" Value="#8A8A8A" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsAttachingDebugger}" Value="True">
+                                                <Setter Property="Fill" Value="#D7BA7D" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsDebuggerAttached}" Value="True">
+                                                <Setter Property="Fill" Value="#5CDB7B" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding DebuggerAttachFailed}" Value="True">
+                                                <Setter Property="Fill" Value="#E06C75" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Path.Style>
+                            </Path>
+                            <Ellipse Width="5" Height="5" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-3,-3">
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Setter Property="Fill" Value="#8A8A8A" />
+                                        <Setter Property="Stroke" Value="#1E1E1E" />
+                                        <Setter Property="StrokeThickness" Value="1" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsAttachingDebugger}" Value="True">
+                                                <Setter Property="Fill" Value="#D7BA7D" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsDebuggerAttached}" Value="True">
+                                                <Setter Property="Fill" Value="#5CDB7B" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding DebuggerAttachFailed}" Value="True">
+                                                <Setter Property="Fill" Value="#E06C75" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
                         </Grid>
-                    </ToggleButton>
+                    </Button>
 
                     <!-- Запуск (Зеленый треугольник) -->
                     <Button ToolTip="{DynamicResource Toolbar_Play}" Style="{StaticResource ToolbarButtonStyle}" Width="30" Height="25" Command="{Binding PlayCommand}">

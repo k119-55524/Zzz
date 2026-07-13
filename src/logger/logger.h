@@ -65,6 +65,17 @@ namespace zzz::logger
 		 */
 		void AddCallbackBroadcaster(LogCallback callback);
 
+		/**
+		 * @brief Останавливает и джойнит фоновый поток рассылки логов (если он запущен).
+		 * @details Нужно вызывать явно до FreeLibrary() модуля, который содержит этот
+		 *          экземпляр Logger (например, scripts.dll) - ждать поток внутри
+		 *          DllMain(DLL_PROCESS_DETACH), как это делает деструктор, небезопасно:
+		 *          и основной поток, и завершающийся фоновый поток претендуют на loader lock,
+		 *          что даёт гарантированный deadlock. Вызов отсюда, из обычного кода вне
+		 *          DllMain, безопасен, а деструктор после этого просто не найдёт что джойнить.
+		 */
+		void StopBroadcastThread();
+
 		void LogMessage(const std::source_location& loc, std::string formatted);
 		void LogWarning(const std::source_location& loc, std::string formatted);
 		void LogError(const std::source_location& loc, std::string formatted);

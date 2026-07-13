@@ -18,6 +18,14 @@ Logger::Logger()
 
 Logger::~Logger()
 {
+	// Если StopBroadcastThread() уже был вызван явно (см. её описание) - поток уже
+	// остановлен и joinable() вернёт false, так что join() здесь не потребуется и
+	// deadlock с loader lock не возникнет.
+	StopBroadcastThread();
+}
+
+void Logger::StopBroadcastThread()
+{
 	bool needJoin = false;
 
 	{

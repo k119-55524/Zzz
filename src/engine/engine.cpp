@@ -69,6 +69,19 @@ void Engine::Initialize()
 void Engine::StopGame()
 {
 	m_EventBus->InvokeStop();
+
+	// SetActive(false) отвязывает подписки скрипта от EventBus (OnUnbindEvents) ДО того,
+	// как m_Scripts.clear() уронит последний shared_ptr и разрушит объект. Без этого
+	// подписка на OnUpdate/OnStart/OnStop остаётся висеть в EventBus и указывает на код
+	// внутри scripts.dll - при следующей выгрузке DLL это чтение по невалидному адресу.
+	for (const auto& script : m_Scripts)
+	{
+		if (script)
+		{
+			script->SetActive(false);
+		}
+	}
+
 	m_Scripts.clear();
 }
 
@@ -135,11 +148,15 @@ void Engine::StartGame(const std::vector<std::string>& globalScripts)
 	if (IsDebuggerPresent())
 	{
 		// Даем время Visual Studio загрузить .pdb символы и расставить брейкпоинты
-		// после перезагрузки scripts.dll
-		Sleep(500); 
+		// после перезагрузки scripts.dll. Делаем это до захвата stateMutex, иначе
+		// Tick() (крутится на UI-потоке редактора каждый кадр и тоже берет stateMutex)
+		// стопорится на все 2 секунды и редактор выглядит зависшим.
+		DOut("[Debugger] Visual Studio attached. Waiting for script symbols to bind before Start...");
+		Sleep(2000);
 	}
 #endif
 
+	std::lock_guard lock(stateMutex);
 
 	for (const auto& scriptName : globalScripts)
 	{

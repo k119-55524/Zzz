@@ -504,7 +504,23 @@ namespace editor.ViewModels
             sb.AppendLine();
             sb.AppendLine("extern \"C\" __declspec(dllexport) void InitScriptLogger(void* callback)");
             sb.AppendLine("{");
+            sb.AppendLine("    static bool initialized = false;");
+            sb.AppendLine("    if (initialized || callback == nullptr)");
+            sb.AppendLine("        return;");
+            sb.AppendLine();
+            sb.AppendLine("    initialized = true;");
             sb.AppendLine("    zzz::logger::g_Logger.AddCallbackBroadcaster((zzz::logger::LogCallback)callback);");
+            sb.AppendLine("}");
+
+            // Вызывается редактором перед FreeLibrary() этого модуля. AddCallbackBroadcaster
+            // выше запускает фоновый поток рассылки логов внутри самой scripts.dll (свой
+            // g_Logger, т.к. logger_lib линкуется статически) - без явной остановки потока
+            // здесь деструктор g_Logger попытается его join() уже во время
+            // DllMain(DLL_PROCESS_DETACH), а это гарантированный deadlock на loader lock.
+            sb.AppendLine();
+            sb.AppendLine("extern \"C\" __declspec(dllexport) void ShutdownScriptLogger()");
+            sb.AppendLine("{");
+            sb.AppendLine("    zzz::logger::g_Logger.StopBroadcastThread();");
             sb.AppendLine("}");
 
             sb.AppendLine();

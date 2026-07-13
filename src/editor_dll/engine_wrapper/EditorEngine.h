@@ -1,5 +1,6 @@
 #pragma once
 #include <engine/engine.h>
+#include <mutex>
 #include <string>
 
 namespace zzz::engine
@@ -39,5 +40,13 @@ namespace zzz::editor
 		void* m_ScriptsDll = nullptr;
 		std::string m_ProjectPath;
 		std::string m_LoadedTempDllPath;
+
+		// Защищает m_ScriptsDll/m_LoadedTempDllPath и сам FreeLibrary/LoadLibraryA
+		// от параллельных вызовов ReloadScripts()/ClearEngine() - например, когда
+		// перезагрузка после attach ещё не завершилась (VS может подолгу обрабатывать
+		// отладочные события), а пользователь уже нажал Play, который тоже пытается
+		// перезагрузить scripts.dll. Отдельный от stateMutex, чтобы не стопорить
+		// Tick() на UI-потоке на время (потенциально долгой) перезагрузки DLL.
+		std::mutex m_ScriptsMutex;
 	};
 }

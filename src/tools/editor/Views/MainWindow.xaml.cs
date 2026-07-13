@@ -596,6 +596,11 @@ target_compile_definitions(scripts PRIVATE
     Z_DEVELOPMENT_BUILD=1{userDefinesLines}
 )
 
+if(MSVC)
+    target_compile_options(scripts PRIVATE /Zi /Od)
+    target_link_options(scripts PRIVATE /DEBUG:FULL /INCREMENTAL:NO ""/PDB:${{PROJECT_SOURCE_DIR}}/bin_build/scripts.pdb"")
+endif()
+
 target_link_libraries(scripts PRIVATE ""{editorDllLib}"" ""{loggerLib}"" ""{commonLib}"" ws2_32.lib)
 ";
 
@@ -728,7 +733,10 @@ target_link_libraries(scripts PRIVATE ""{editorDllLib}"" ""{loggerLib}"" ""{comm
 
 					System.IO.File.Move(acceptStagedDllPath, dllPath);
 					if (System.IO.File.Exists(acceptStagedPdbPath))
-						System.IO.File.Move(acceptStagedPdbPath, finalPdbPath);
+					{
+						System.IO.File.Copy(acceptStagedPdbPath, finalPdbPath, overwrite: true);
+						EditorLogger.LogInfo($"[Scripts] PDB kept at linker path '{acceptStagedPdbPath}' and copied to '{finalPdbPath}'.");
+					}
 				}
 				catch
 				{

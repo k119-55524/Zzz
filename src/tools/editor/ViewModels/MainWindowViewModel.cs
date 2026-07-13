@@ -6,6 +6,7 @@ using editor.Services;
 using IAssetsTreeCommand = editor.Services.Project.Infrastructure.UndoRedo.IAssetsTreeCommand;
 using System.Windows.Input;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 namespace editor.ViewModels
 {
@@ -52,21 +53,16 @@ namespace editor.ViewModels
 			AboutCommand = new RelayCommand(_dialogService.ShowAbout);
 			UndoCommand = new RelayCommand(Undo, () => App.ProjectService.History.CanUndo);
 			RedoCommand = new RelayCommand(Redo, () => App.ProjectService.History.CanRedo);
+			AttachDebuggerCommand = new RelayCommand(AttachDebugger, () => IsProjectOpen && !IsRunning && !IsAttachingDebugger);
 			PlayCommand = new RelayCommand(() =>
 			{
-				if (AttachDebuggerOnPlay)
-				{
-					EditorLogger.LogInfo("Запущен режим с отладкой (Debug Play).");
-					VisualStudioDebuggerService.AttachToCurrentProcess(_currentProjectPath);
-				}
-				else
-				{
-					EditorLogger.LogInfo("Запущен обычный режим (Play).");
-				}
+				bool debuggerAttached = IsDebuggerAttached;
+				EditorLogger.LogInfo(debuggerAttached
+					? "Запущен режим с подключенным отладчиком Visual Studio."
+					: "Запущен обычный режим (Play).");
 
 				IsRunning = true;
 				IsPaused = false;
-				EngineRuntime.Pause(false);
 
 				var guids = App.ProjectService.CurrentGameConfig.GlobalScriptGuids;
 				var classNames = new System.Collections.Generic.List<string>();
@@ -82,8 +78,22 @@ namespace editor.ViewModels
 					}
 				}
 
-				EngineRuntime.Play(classNames.ToArray());
-			}, () => IsProjectOpen && !IsRunning);
+				string[] playClassNames = classNames.ToArray();
+				string? projectPath = _currentProjectPath;
+				_ = Task.Run(() =>
+				{
+					EngineRuntime.Pause(false);
+					EngineRuntime.Play(playClassNames);
+
+					// Диагностический лог состояния VS - после Play, а не параллельно с ним:
+					// одновременный COM-вызов в VS ровно в момент старта только создавал лишнюю
+					// конкуренцию за занятый COM-объект (RPC_E_SERVERCALL_RETRYLATER в логах).
+					if (debuggerAttached)
+					{
+						VisualStudioDebuggerService.LogCurrentDebuggerState(projectPath);
+					}
+				});
+			}, () => IsProjectOpen && !IsRunning && !IsAttachingDebugger);
 			PauseCommand = new RelayCommand(() =>
 			{
 				IsPaused = !IsPaused;
@@ -195,6 +205,7 @@ namespace editor.ViewModels
 
 					IsRunning = false;
 					IsPaused = false;
+					SetDebuggerState(attached: false, attaching: false, failed: false);
 					CommandManager.InvalidateRequerySuggested();
 
 					WorldPane.IsToolbarEnabled = IsProjectOpen;
@@ -224,11 +235,54 @@ namespace editor.ViewModels
 
 		public bool IsNotRunning => !IsRunning;
 
-		private bool _attachDebuggerOnPlay;
-		public bool AttachDebuggerOnPlay
+		private bool _isDebuggerAttached;
+		public bool IsDebuggerAttached
 		{
-			get => _attachDebuggerOnPlay;
-			set => SetField(ref _attachDebuggerOnPlay, value);
+			get => _isDebuggerAttached;
+			private set
+			{
+				if (SetField(ref _isDebuggerAttached, value))
+					OnPropertyChanged(nameof(AttachDebuggerStatusText));
+			}
+		}
+
+		private bool _isAttachingDebugger;
+		public bool IsAttachingDebugger
+		{
+			get => _isAttachingDebugger;
+			private set
+			{
+				if (SetField(ref _isAttachingDebugger, value))
+				{
+					OnPropertyChanged(nameof(AttachDebuggerStatusText));
+					CommandManager.InvalidateRequerySuggested();
+				}
+			}
+		}
+
+		private bool _debuggerAttachFailed;
+		public bool DebuggerAttachFailed
+		{
+			get => _debuggerAttachFailed;
+			private set
+			{
+				if (SetField(ref _debuggerAttachFailed, value))
+					OnPropertyChanged(nameof(AttachDebuggerStatusText));
+			}
+		}
+
+		public string AttachDebuggerStatusText
+		{
+			get
+			{
+				if (IsAttachingDebugger)
+					return "Visual Studio: подключение...";
+				if (IsDebuggerAttached)
+					return "Visual Studio: подключена к editor";
+				if (DebuggerAttachFailed)
+					return "Visual Studio: подключение не удалось";
+				return "Подключить Visual Studio к editor";
+			}
 		}
 
 		private bool _isPaused;
@@ -252,6 +306,7 @@ namespace editor.ViewModels
 		public ICommand AboutCommand { get; }
 		public ICommand UndoCommand { get; }
 		public ICommand RedoCommand { get; }
+		public ICommand AttachDebuggerCommand { get; }
 		public ICommand PlayCommand { get; }
 		public ICommand PauseCommand { get; }
 		public ICommand StopCommand { get; }
@@ -262,6 +317,70 @@ namespace editor.ViewModels
 		public event EventHandler? CloseRequested;
 		public event EventHandler? ResetLayoutRequested;
 		public event EventHandler<PaneViewModel>? ShowWidgetRequested;
+
+		private async void AttachDebugger()
+		{
+			if (IsDebuggerAttached)
+			{
+				SetDebuggerState(attached: true, attaching: true, failed: false);
+				try
+				{
+					EditorLogger.LogInfo("[Debugger] Detaching Visual Studio from editor...");
+					string? projectPath = _currentProjectPath;
+					bool detached = await Task.Run(() => VisualStudioDebuggerService.DetachFromCurrentProcess(projectPath));
+					if (detached)
+					{
+						SetDebuggerState(attached: false, attaching: true, failed: false);
+						EditorLogger.LogInfo("[Debugger] Visual Studio detached from editor.");
+					}
+					else
+					{
+						SetDebuggerState(attached: true, attaching: true, failed: true);
+						EditorLogger.LogError("[Debugger] Visual Studio detach failed.");
+					}
+				}
+				finally
+				{
+					IsAttachingDebugger = false;
+				}
+
+				return;
+			}
+
+			SetDebuggerState(attached: false, attaching: true, failed: false);
+			try
+			{
+				EditorLogger.LogInfo("[Debugger] Подключаем Visual Studio к процессу editor...");
+				string? projectPath = _currentProjectPath;
+				bool attached = await Task.Run(() => VisualStudioDebuggerService.AttachToCurrentProcess(projectPath));
+				if (attached)
+				{
+					SetDebuggerState(attached: true, attaching: true, failed: false);
+					// Перезагрузку scripts.dll на оригинальный модуль (не временную копию) специально
+					// не делаем прямо тут: сразу после attach это регулярно подвисало навсегда (VS
+					// ещё занята только что подключенным процессом). EditorEngine::OnRegisterScripts
+					// сама переключит DLL на следующем Play - там для этого больше времени и это
+					// ожидаемое пользователем действие, а не фоновая операция сразу после клика.
+					EditorLogger.LogInfo("[Debugger] Visual Studio подключена. scripts.dll переключится на оригинальный модуль при следующем Play.");
+				}
+				else
+				{
+					SetDebuggerState(attached: false, attaching: true, failed: true);
+					EditorLogger.LogError("[Debugger] Visual Studio не подключилась к процессу editor.");
+				}
+			}
+			finally
+			{
+				IsAttachingDebugger = false;
+			}
+		}
+
+		private void SetDebuggerState(bool attached, bool attaching, bool failed)
+		{
+			IsDebuggerAttached = attached;
+			DebuggerAttachFailed = failed;
+			IsAttachingDebugger = attaching;
+		}
 
 		public void LoadSession()
 		{
@@ -337,6 +456,30 @@ namespace editor.ViewModels
 		// Возвращает false, если закрытие нужно отменить
 		public bool RequestClose()
 		{
+			if (IsDebuggerAttached)
+			{
+				EditorLogger.LogInfo("[Debugger] Detaching Visual Studio before editor shutdown...");
+				string? projectPath = _currentProjectPath;
+				try
+				{
+					// Detach - это COM-вызов в VS через DTE, который иногда подвисает надолго
+					// (см. проблемы с ReloadScripts после attach - природа та же). Закрытие
+					// редактора не должно зависеть от того, ответит ли VS вовремя: ждём максимум
+					// несколько секунд, а дальше закрываемся в любом случае.
+					var detachTask = Task.Run(() => VisualStudioDebuggerService.DetachFromCurrentProcess(projectPath));
+					if (!detachTask.Wait(TimeSpan.FromSeconds(3)))
+					{
+						EditorLogger.LogWarning("[Debugger] Detach didn't finish in time; closing editor without waiting further.");
+					}
+				}
+				catch (Exception ex)
+				{
+					EditorLogger.LogWarning($"[Debugger] Detach threw during shutdown: {ex.Message}");
+				}
+
+				SetDebuggerState(attached: false, attaching: false, failed: false);
+			}
+
 			return true;
 		}
 
@@ -445,24 +588,16 @@ namespace editor.ViewModels
 				return; // Защита от открытия самого себя
 			}
 
-			// Очистка временных файлов сборки при открытии проекта
+			// Очистка временных файлов сборки при открытии проекта.
+			// Папку .editor/build не трогаем: в ней лежит CMake-решение user-scripts
+			// вместе со скрытой .vs (там Visual Studio хранит точки останова и прочее
+			// состояние сессии) - удаление buildDir каждый раз при открытии проекта
+			// сбрасывало точки останова после каждого перезапуска редактора. CMake сам
+			// решает, нужен ли reconfigure (см. needWriteCmake/needConfigure в CompileScriptsAsync).
 			try
 			{
 				string editorDir = System.IO.Path.Combine(projectDir, ".editor");
-				string buildDir = System.IO.Path.Combine(editorDir, "build");
 				string binDir = System.IO.Path.Combine(editorDir, "bin");
-
-				if (System.IO.Directory.Exists(buildDir))
-				{
-					try 
-					{ 
-						System.IO.Directory.Delete(buildDir, true); 
-					} 
-					catch (Exception ex) 
-					{ 
-						EditorLogger.LogWarning($"[Project] Не удалось полностью очистить папку build: {ex.Message}"); 
-					}
-				}
 
 				if (System.IO.Directory.Exists(binDir))
 				{

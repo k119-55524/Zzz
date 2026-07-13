@@ -8,6 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <EnableUnmanagedDebugging>true</EnableUnmanagedDebugging>
+    <ApplicationIcon>Properties\AppIcon.ico</ApplicationIcon>
 
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU;x64</Platforms>

@@ -106,6 +106,7 @@ namespace editor.Services
         public void OnProjectOpened(string projectPath)
         {
             EngineRuntime.ClearEngine();
+            EngineRuntime.SetProjectPath(projectPath);
         }
 
         // Вызывается при закрытии/выгрузке проекта

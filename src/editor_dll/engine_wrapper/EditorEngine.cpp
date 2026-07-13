@@ -4,9 +4,15 @@
 #include <engine/public/core/events/EventBus.h>
 #include <engine/public/core/scene/GameObject.h>
 #include <engine/public/core/scene/scripts/base_script/Script.h>
+#include <engine/public/core/scene/scripts/base_script/GameScript.h>
+#include <algorithm>
+#include <cctype>
+#include <utility>
+#include <vector>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <tlhelp32.h>
 
 #include "EditorEngine.h"
 
@@ -16,6 +22,121 @@ using namespace zzz::logger;
 
 namespace zzz::editor
 {
+	namespace
+	{
+		std::string NormalizeModulePath(std::string path)
+		{
+			std::replace(path.begin(), path.end(), '\\', '/');
+			std::transform(path.begin(), path.end(), path.begin(), [](unsigned char ch) {
+				return static_cast<char>(std::tolower(ch));
+			});
+			return path;
+		}
+
+		bool IsScriptTempModulePath(const char* rawPath)
+		{
+			if (!rawPath || !*rawPath)
+				return false;
+
+			std::string path = NormalizeModulePath(rawPath);
+			return path.find("/.editor/bin/scripts_temp_") != std::string::npos &&
+				path.ends_with(".dll");
+		}
+
+		std::string WideToUtf8(const wchar_t* value)
+		{
+			if (!value || !*value)
+				return {};
+
+			int size = WideCharToMultiByte(CP_UTF8, 0, value, -1, nullptr, 0, nullptr, nullptr);
+			if (size <= 1)
+				return {};
+
+			std::string result(static_cast<size_t>(size - 1), '\0');
+			WideCharToMultiByte(CP_UTF8, 0, value, -1, result.data(), size, nullptr, nullptr);
+			return result;
+		}
+
+		// Каждый загруженный модуль scripts.dll/scripts_temp_*.dll держит свой собственный
+		// g_Logger (logger_lib линкуется статически) с фоновым потоком рассылки логов,
+		// запущенным через InitScriptLogger(). Если не остановить этот поток явно ДО
+		// FreeLibrary(), деструктор g_Logger попытается join() его уже внутри
+		// DllMain(DLL_PROCESS_DETACH) - а это гарантированный deadlock на loader lock
+		// (поток, чтобы завершиться, тоже претендует на loader lock, который уже держит
+		// поток, вызвавший FreeLibrary). ShutdownScriptLogger может отсутствовать в старых,
+		// собранных до этого фикса DLL - тогда просто ничего не делаем.
+		void ShutdownScriptModuleLogger(HMODULE module)
+		{
+			using ShutdownLogFunc = void(*)();
+			if (ShutdownLogFunc shutdownLogger = (ShutdownLogFunc)GetProcAddress(module, "ShutdownScriptLogger"))
+			{
+				shutdownLogger();
+			}
+		}
+
+		void UnloadScriptModuleUntilGone(HMODULE module, const char* path)
+		{
+			ShutdownScriptModuleLogger(module);
+
+			for (int i = 0; i < 16; ++i)
+			{
+				if (!FreeLibrary(module))
+				{
+					DOutWarning("[Scripts Debug] FreeLibrary failed for stale script module '{}'. Error: {}", path, GetLastError());
+					return;
+				}
+
+				if (!GetModuleHandleA(path))
+				{
+					DOut("[Scripts Debug] Unloaded stale script module '{}'.", path);
+					return;
+				}
+			}
+
+			DOutWarning("[Scripts Debug] Stale script module '{}' is still loaded after repeated FreeLibrary calls.", path);
+		}
+
+		void UnloadStaleScriptTempModules()
+		{
+			HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
+			if (snapshot == INVALID_HANDLE_VALUE)
+			{
+				DOutWarning("[Scripts Debug] Failed to enumerate loaded modules. Error: {}", GetLastError());
+				return;
+			}
+
+			MODULEENTRY32W entry{};
+			entry.dwSize = sizeof(entry);
+
+			if (!Module32FirstW(snapshot, &entry))
+			{
+				CloseHandle(snapshot);
+				return;
+			}
+
+			std::vector<std::pair<HMODULE, std::string>> staleModules;
+			do
+			{
+				std::string path = WideToUtf8(entry.szExePath);
+				if (IsScriptTempModulePath(path.c_str()))
+				{
+					staleModules.emplace_back(entry.hModule, std::move(path));
+				}
+			}
+			while (Module32NextW(snapshot, &entry));
+
+			CloseHandle(snapshot);
+
+			for (const auto& [module, path] : staleModules)
+			{
+				UnloadScriptModuleUntilGone(module, path.c_str());
+				std::string pdbPath = path.substr(0, path.find_last_of('.')) + ".pdb";
+				DeleteFileA(path.c_str());
+				DeleteFileA(pdbPath.c_str());
+			}
+		}
+	}
+
 	EditorEngine::~EditorEngine()
 	{
 		UnloadScripts();
@@ -43,6 +164,7 @@ namespace zzz::editor
 
 	void EditorEngine::ClearEngine()
 	{
+		std::lock_guard lock(m_ScriptsMutex);
 		UnloadScripts();
 	}
 
@@ -70,6 +192,14 @@ namespace zzz::editor
 
 	void EditorEngine::ReloadScripts()
 	{
+		// Захватываем на всю перезагрузку (а не только на мутацию m_ScriptsDll): FreeLibrary/
+		// LoadLibraryA сами по себе могут надолго заблокироваться, если только что подключенная
+		// VS ещё не разгребла очередь отладочных событий - и если в этот момент параллельно
+		// прилетит ещё один ReloadScripts() (например, из Play, пока висит перезагрузка после
+		// attach), два потока начнут одновременно дёргать FreeLibrary/LoadLibraryA на одном и
+		// том же модуле. Это уже само по себе гонка данных и надёжный способ подвесить процесс.
+		std::lock_guard lock(m_ScriptsMutex);
+
 		UnloadScripts();
 
 		if (m_ProjectPath.empty())
@@ -80,36 +210,66 @@ namespace zzz::editor
 
 		std::string originDllPath = m_ProjectPath + "/.editor/bin/scripts.dll";
 		std::string tempDllPath = m_ProjectPath + "/.editor/bin/scripts_temp_" + std::to_string(GetTickCount()) + ".dll";
+		std::string originPdbPath = m_ProjectPath + "/.editor/bin/scripts.pdb";
+		std::string tempPdbPath = tempDllPath.substr(0, tempDllPath.find_last_of('.')) + ".pdb";
+		bool debuggerAttached = IsDebuggerPresent() != FALSE;
+		std::string loadDllPath = originDllPath;
 
-		bool copied = false;
-		for (int i = 0; i < 50; ++i)
+		DOut("[Scripts Debug] Reload requested. dll='{}', pdb='{}', debuggerAttached={}", originDllPath, originPdbPath, debuggerAttached);
+
+		if (!debuggerAttached)
 		{
-			if (CopyFileA(originDllPath.c_str(), tempDllPath.c_str(), FALSE))
+			bool copied = false;
+			for (int i = 0; i < 50; ++i)
 			{
-				copied = true;
-				break;
+				if (CopyFileA(originDllPath.c_str(), tempDllPath.c_str(), FALSE))
+				{
+					copied = true;
+					break;
+				}
+
+				DOutWarning("Retrying scripts DLL copy for hot reload.");
+				Sleep(100);
 			}
 
-			DOutWarning("Новая попытка ожидания копирования DLL.");
-			Sleep(100);
-		}
+			if (!copied)
+			{
+				DOutWarning("Failed to copy scripts.dll to temporary DLL. Error: {}", GetLastError());
+				return;
+			}
 
-		if (!copied)
+			DOut("[Scripts Debug] Copied DLL to '{}'.", tempDllPath);
+
+			if (GetFileAttributesA(originPdbPath.c_str()) != INVALID_FILE_ATTRIBUTES)
+			{
+				if (!CopyFileA(originPdbPath.c_str(), tempPdbPath.c_str(), FALSE))
+					DOutWarning("Failed to copy scripts PDB for temporary DLL. Error: {}", GetLastError());
+				else
+					DOut("[Scripts Debug] Copied PDB to '{}'.", tempPdbPath);
+			}
+			else
+			{
+				DOutWarning("[Scripts Debug] PDB not found near scripts.dll: '{}'. Breakpoints may not bind.", originPdbPath);
+			}
+
+			loadDllPath = tempDllPath;
+		}
+		else
 		{
-			DOutWarning("Не удалось скопировать scripts.dll в scripts_temp.dll. Возможно, DLL ещё не существует. Ошибка: {}", GetLastError());
-			return;
+			UnloadStaleScriptTempModules();
+			DOut("[Scripts Debug] Debugger attached; loading original scripts.dll so Visual Studio can bind breakpoints to the project output module.");
 		}
 
-		HMODULE handle = LoadLibraryA(tempDllPath.c_str());
+		HMODULE handle = LoadLibraryA(loadDllPath.c_str());
 		if (!handle)
 		{
-			DOutError("Не удалось загрузить {}. Код ошибки: {}", tempDllPath, GetLastError());
+			DOutError("Failed to load scripts module '{}'. Error: {}", loadDllPath, GetLastError());
 			return;
 		}
 
 		m_ScriptsDll = handle;
-		m_LoadedTempDllPath = tempDllPath;
-
+		m_LoadedTempDllPath = debuggerAttached ? std::string{} : tempDllPath;
+		DOut("[Scripts Debug] Loaded module '{}', handle={}.", loadDllPath, static_cast<void*>(handle));
 		extern zzz::logger::LogCallback g_EditorLogCallback;
 		using InitLogFunc = void(*)(void*);
 		InitLogFunc initLogger = (InitLogFunc)GetProcAddress(handle, "InitScriptLogger");
@@ -140,28 +300,49 @@ namespace zzz::editor
 
 #if Z_EDITOR
 			// 1. Удаляем все активные GameObject-скрипты
+			// SetActive(false) вызывает OnUnbindEvents() -> EventBus::UnsubscribeAll() ДО того,
+			// как объект скрипта будет разрушен - иначе подписка на OnUpdate/OnStart/OnStop
+			// остаётся висеть в EventBus и указывает на код внутри scripts.dll, которую мы
+			// вот-вот выгрузим FreeLibrary(). Разрушение скрипта без предварительной отписки
+			// не роняло ничего, пока сама DLL оставалась в памяти (адрес ещё валиден), но как
+			// только модуль реально выгружается - это чтение по невалидному адресу.
 			auto activeScripts = zzz::script::ScriptRegistry::GetActiveInstances();
 			for (auto* scriptRaw : activeScripts)
 			{
+				scriptRaw->SetActive(false);
 				if (auto owner = scriptRaw->GetOwner())
 				{
 					owner->RemoveScript(std::static_pointer_cast<zzz::script::Script>(scriptRaw->shared_from_this()));
 				}
 			}
 
-			// 2. Удаляем все активные GameScript-ы
+			// 2. Удаляем все активные GameScript-ы (та же логика: сначала отписка, потом очистка)
+			auto activeGameScripts = zzz::script::ScriptRegistry::GetActiveGameScripts();
+			for (auto* gameScriptRaw : activeGameScripts)
+			{
+				gameScriptRaw->SetActive(false);
+			}
 			ClearGameScripts();
 
 			// 3. (TODO Phase 3: Сцен пока нет, но тут будет удаление SceneScripts)
 #endif
 
 			zzz::script::ScriptRegistry::Clear();
-			FreeLibrary((HMODULE)m_ScriptsDll);
+			HMODULE module = (HMODULE)m_ScriptsDll;
+			ShutdownScriptModuleLogger(module);
+			FreeLibrary(module);
 			m_ScriptsDll = nullptr;
 
 			if (!m_LoadedTempDllPath.empty())
 			{
+				if (HMODULE staleModule = GetModuleHandleA(m_LoadedTempDllPath.c_str()))
+				{
+					UnloadScriptModuleUntilGone(staleModule, m_LoadedTempDllPath.c_str());
+				}
+
+				std::string tempPdbPath = m_LoadedTempDllPath.substr(0, m_LoadedTempDllPath.find_last_of('.')) + ".pdb";
 				DeleteFileA(m_LoadedTempDllPath.c_str());
+				DeleteFileA(tempPdbPath.c_str());
 				m_LoadedTempDllPath.clear();
 			}
 		}
@@ -182,6 +363,18 @@ namespace zzz::editor
 	{
 		if (!m_ProjectPath.empty())
 		{
+			// m_LoadedTempDllPath.empty() значит, что уже загружен оригинальный scripts.dll (а не
+			// временная копия) - именно его и нужно, если подключен отладчик. Если сейчас всё ещё
+			// загружена временная копия (attach произошёл, но своп ещё не делался), перезагрузка
+			// всё равно нужна - но делаем её тут, при Play, а не сразу после attach: сразу после
+			// attach VS может быть занята обработкой только что подключенного процесса, и
+			// FreeLibrary/LoadLibraryA в этот момент рискуют подвиснуть надолго (см. AttachDebugger).
+			if (IsDebuggerPresent() && m_ScriptsDll && m_LoadedTempDllPath.empty())
+			{
+				DOut("[Scripts Debug] Debugger attached and original scripts.dll is already loaded; keeping module loaded so Visual Studio breakpoints stay bound.");
+				return;
+			}
+
 			ReloadScripts();
 		}
 	}
@@ -197,7 +390,8 @@ namespace zzz::editor
 			}
 		}
 
-		std::lock_guard lock(stateMutex);
+		// stateMutex захватывается уже внутри StartGame() - только вокруг мутации
+		// m_Scripts/EventBus, а не вокруг ожидания отладчика (см. Engine::StartGame).
 		StartGame(classes);
 		m_Time->ResetFrameTimer();
 	}

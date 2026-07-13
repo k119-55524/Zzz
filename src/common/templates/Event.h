@@ -206,6 +206,7 @@ namespace zzz::engine
 					if (this->invokingThreads.empty())
 					{
 						entry.func = nullptr;
+						entry.context.reset();
 					}
 				}
 			}
@@ -249,19 +250,23 @@ namespace zzz::engine
 			bool destroyed = false;
 			typename Base::InvocationGuard guard(this, &destroyed);
 
-			for (size_t i = 0; i < this->listeners.size(); ++i)
+			// Snapshot под тем же eventMutex, что и Subscribe/Unsubscribe. Play()/Stop() вызываются
+			// с фонового потока и внутри Init()/OnUnbindEvents() дёргают Subscribe/Unsubscribe,
+			// пока Tick() на UI-потоке может в это же время идти через этот цикл - без снимка
+			// цикл читал бы this->listeners (индексация, entry.func) без какой-либо блокировки,
+			// пока push_back с другого потока реаллоцирует тот же vector. Классическая гонка
+			// данных, которая долгое время маскировалась и проявлялась только как access violation
+			// при чтении памяти уже выгруженной scripts.dll.
+			typename Base::CallbackList snapshot;
 			{
-				auto& entry = this->listeners[i];
+				std::lock_guard<std::mutex> lock(this->eventMutex);
+				snapshot = this->listeners;
+			}
 
-				if (entry.isDead.load())
+			for (auto& entry : snapshot)
+			{
+				if (entry.isDead.load() || entry.context.expired())
 					continue;
-
-				if (entry.context.expired())
-				{
-					entry.isDead.store(true);
-					this->needsCleanup.store(true);
-					continue;
-				}
 
 				auto func = entry.func;
 				func(args...);
