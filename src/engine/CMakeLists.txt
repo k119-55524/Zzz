@@ -9,8 +9,8 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         PUBLIC
             ${CMAKE_CURRENT_SOURCE_DIR}
             ${CMAKE_CURRENT_SOURCE_DIR}/public/core/scene
-            ${CMAKE_CURRENT_SOURCE_DIR}/public/core/scene/scripts
-            ${CMAKE_CURRENT_SOURCE_DIR}/public/core/scene/scripts/base_script
+            ${CMAKE_CURRENT_SOURCE_DIR}/public/core/userscripts
+            ${CMAKE_CURRENT_SOURCE_DIR}/public/core/userscripts/base_script
         PRIVATE
             pch
             ${CMAKE_CURRENT_SOURCE_DIR}/private/core
@@ -68,13 +68,13 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "public/core/scene/GameObject.h"
         "public/core/scene/Scene.h" "private/core/scene/Scene.cpp"
         "public/core/events/EventBus.h"
-        "public/core/scene/scripts/ScriptRegistry.h" "private/core/scene/scripts/ScriptRegistry.cpp"
-        "public/core/scene/scripts/base_script/Script.h"
-        "private/core/scene/scripts/base_script/Script.cpp"
-        "public/core/scene/scripts/base_script/GameScript.h"
-        "private/core/scene/scripts/base_script/GameScript.cpp"
-        "public/core/scene/scripts/base_script/SceneScript.h"
-        "private/core/scene/scripts/base_script/SceneScript.cpp")
+        "public/core/userscripts/ScriptRegistry.h" "public/core/userscripts/ScriptRegistry.cpp"
+        "public/core/userscripts/base_script/Script.h"
+        "public/core/userscripts/base_script/Script.cpp"
+        "public/core/userscripts/base_script/GameScript.h"
+        "public/core/userscripts/base_script/GameScript.cpp"
+        "public/core/userscripts/base_script/SceneScript.h"
+        "public/core/userscripts/base_script/SceneScript.cpp")
 
     if(WIN32)
         if(${IS_EDITOR})
@@ -179,7 +179,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         # EDITORDLL_EXPORTS должен совпадать с тем же define в editor_dll.vcxproj/CMakeLists.txt -
         # engine_lib_editor статический, но его символы (Script/ScriptRegistry, помеченные
         # Z_ENGINE_API) линкуются только в editor_dll.dll, иначе Z_ENGINE_API соберёт здесь
-        # dllimport вместо dllexport (см. src/engine/public/core/scene/scripts/EngineExport.h).
+        # dllimport вместо dllexport (см. src/engine/public/core/userscripts/EngineExport.h).
         target_compile_definitions(${TARGET_NAME} PUBLIC Z_EDITOR=1 EDITORDLL_EXPORTS)
     endif()
 endmacro()

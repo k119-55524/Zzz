@@ -67,7 +67,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <ForcedIncludeFiles>pch/pch.h</ForcedIncludeFiles>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\;$(MSBuildProjectDirectory)\..\common;$(MSBuildProjectDirectory)\..\logger;$(MSBuildProjectDirectory)\pch;$(MSBuildProjectDirectory)\public\core;$(MSBuildProjectDirectory)\public\core\scene;$(MSBuildProjectDirectory)\public\core\scene\scripts;$(MSBuildProjectDirectory)\public\core\scene\scripts\base_script;$(MSBuildProjectDirectory)\private\core;$(MSBuildProjectDirectory)\private\platforms;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\;$(MSBuildProjectDirectory)\..\common;$(MSBuildProjectDirectory)\..\logger;$(MSBuildProjectDirectory)\pch;$(MSBuildProjectDirectory)\public\core;$(MSBuildProjectDirectory)\public\core\scene;$(MSBuildProjectDirectory)\public\core\userscripts;$(MSBuildProjectDirectory)\public\core\userscripts\base_script;$(MSBuildProjectDirectory)\private\core;$(MSBuildProjectDirectory)\private\platforms;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -95,7 +95,7 @@
       <LanguageStandard>stdcpp23</LanguageStandard>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <ForcedIncludeFiles>pch/pch.h</ForcedIncludeFiles>
-      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\;$(MSBuildProjectDirectory)\..\common;$(MSBuildProjectDirectory)\..\logger;$(MSBuildProjectDirectory)\pch;$(MSBuildProjectDirectory)\public\core;$(MSBuildProjectDirectory)\public\core\scene;$(MSBuildProjectDirectory)\public\core\scene\scripts;$(MSBuildProjectDirectory)\public\core\scene\scripts\base_script;$(MSBuildProjectDirectory)\private\core;$(MSBuildProjectDirectory)\private\platforms;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\;$(MSBuildProjectDirectory)\..\common;$(MSBuildProjectDirectory)\..\logger;$(MSBuildProjectDirectory)\pch;$(MSBuildProjectDirectory)\public\core;$(MSBuildProjectDirectory)\public\core\scene;$(MSBuildProjectDirectory)\public\core\userscripts;$(MSBuildProjectDirectory)\public\core\userscripts\base_script;$(MSBuildProjectDirectory)\private\core;$(MSBuildProjectDirectory)\private\platforms;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -146,10 +146,10 @@
     <ClInclude Include="public\core\scene\GameObject.h" />
     <ClInclude Include="public\core\scene\Scene.h" />
     <ClInclude Include="public\core\events\EventBus.h" />
-    <ClInclude Include="public\core\scene\scripts\ScriptRegistry.h" />
-    <ClInclude Include="public\core\scene\scripts\base_script\Script.h" />
-    <ClInclude Include="public\core\scene\scripts\base_script\GameScript.h" />
-    <ClInclude Include="public\core\scene\scripts\base_script\SceneScript.h" />
+    <ClInclude Include="public\core\userscripts\ScriptRegistry.h" />
+    <ClInclude Include="public\core\userscripts\base_script\Script.h" />
+    <ClInclude Include="public\core\userscripts\base_script\GameScript.h" />
+    <ClInclude Include="public\core\userscripts\base_script\SceneScript.h" />
     <ClInclude Include="public\core\EngineTime.h" />
   </ItemGroup>
   <ItemGroup>
@@ -173,10 +173,10 @@
     <ClCompile Include="private\core\view\View.cpp" />
     <ClCompile Include="private\core\view\ViewManager.cpp" />
     <ClCompile Include="private\core\scene\Scene.cpp" />
-    <ClCompile Include="private\core\scene\scripts\ScriptRegistry.cpp" />
-    <ClCompile Include="private\core\scene\scripts\base_script\Script.cpp" />
-    <ClCompile Include="private\core\scene\scripts\base_script\GameScript.cpp" />
-    <ClCompile Include="private\core\scene\scripts\base_script\SceneScript.cpp" />
+    <ClCompile Include="public\core\userscripts\ScriptRegistry.cpp" />
+    <ClCompile Include="public\core\userscripts\base_script\Script.cpp" />
+    <ClCompile Include="public\core\userscripts\base_script\GameScript.cpp" />
+    <ClCompile Include="public\core\userscripts\base_script\SceneScript.cpp" />
     <ClCompile Include="public\core\EngineTime.cpp" />
   </ItemGroup>
   <ItemGroup>

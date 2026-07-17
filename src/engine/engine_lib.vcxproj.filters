@@ -43,10 +43,10 @@
     <Filter Include="private\core\scene">
       <UniqueIdentifier>{e83bde28-12cd-41e7-9d7a-d0901e1cd7eb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="private\core\scene\scripts">
+    <Filter Include="public\core\userscripts">
       <UniqueIdentifier>{e83bde28-12cd-41e7-9d7a-d0901e1cd7ec}</UniqueIdentifier>
     </Filter>
-    <Filter Include="private\core\scene\scripts\base_script">
+    <Filter Include="public\core\userscripts\base_script">
       <UniqueIdentifier>{e83bde28-12cd-41e7-9d7a-d0901e1cd7ed}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -139,17 +139,17 @@
     <ClInclude Include="public\core\events\EventBus.h">
       <Filter>private\core\scene</Filter>
     </ClInclude>
-    <ClInclude Include="private\core\scene\scripts\ScriptRegistry.h">
-      <Filter>private\core\scene\scripts</Filter>
+    <ClInclude Include="public\core\userscripts\ScriptRegistry.h">
+      <Filter>public\core\userscripts</Filter>
     </ClInclude>
-    <ClInclude Include="private\core\scene\scripts\base_script\Script.h">
-      <Filter>private\core\scene\scripts\base_script</Filter>
+    <ClInclude Include="public\core\userscripts\base_script\Script.h">
+      <Filter>public\core\userscripts\base_script</Filter>
     </ClInclude>
-    <ClInclude Include="public\core\scene\scripts\base_script\GameScript.h">
-      <Filter>public\core\scene\scripts\base_script</Filter>
+    <ClInclude Include="public\core\userscripts\base_script\GameScript.h">
+      <Filter>public\core\userscripts\base_script</Filter>
     </ClInclude>
-    <ClInclude Include="public\core\scene\scripts\base_script\SceneScript.h">
-      <Filter>public\core\scene\scripts\base_script</Filter>
+    <ClInclude Include="public\core\userscripts\base_script\SceneScript.h">
+      <Filter>public\core\userscripts\base_script</Filter>
     </ClInclude>
     <ClInclude Include="public\core\EngineTime.h">
       <Filter>public\core</Filter>
@@ -205,17 +205,17 @@
     <ClCompile Include="private\core\scene\Scene.cpp">
       <Filter>private\core\scene</Filter>
     </ClCompile>
-    <ClCompile Include="private\core\scene\scripts\ScriptRegistry.cpp">
-      <Filter>private\core\scene\scripts</Filter>
+    <ClCompile Include="public\core\userscripts\ScriptRegistry.cpp">
+      <Filter>public\core\userscripts</Filter>
     </ClCompile>
-    <ClCompile Include="private\core\scene\scripts\base_script\Script.cpp">
-      <Filter>private\core\scene\scripts\base_script</Filter>
+    <ClCompile Include="public\core\userscripts\base_script\Script.cpp">
+      <Filter>public\core\userscripts\base_script</Filter>
     </ClCompile>
-    <ClCompile Include="private\core\scene\scripts\base_script\GameScript.cpp">
-      <Filter>private\core\scene\scripts\base_script</Filter>
+    <ClCompile Include="public\core\userscripts\base_script\GameScript.cpp">
+      <Filter>public\core\userscripts\base_script</Filter>
     </ClCompile>
-    <ClCompile Include="private\core\scene\scripts\base_script\SceneScript.cpp">
-      <Filter>private\core\scene\scripts\base_script</Filter>
+    <ClCompile Include="public\core\userscripts\base_script\SceneScript.cpp">
+      <Filter>public\core\userscripts\base_script</Filter>
     </ClCompile>
     <ClCompile Include="public\core\EngineTime.cpp">
       <Filter>public\core</Filter>

@@ -6,7 +6,7 @@
 // в scripts.dll и вызывают функции common_lib (throw_runtime_error). В статической сборке игры
 // (game_win/macos/linux/ios/android) Z_EDITOR не определён, common_lib линкуется статически -
 // макрос должен быть пустым. См. также аналогичный макрос
-// src/engine/public/core/scene/scripts/EngineExport.h.
+// src/engine/public/core/userscripts/EngineExport.h.
 #if defined(_WIN32) && defined(Z_EDITOR)
 	#if defined(EDITORDLL_EXPORTS) || defined(editor_dll_EXPORTS)
 		#define Z_COMMON_API __declspec(dllexport)
