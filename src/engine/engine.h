@@ -46,25 +46,17 @@ namespace zzz::engine
 
 	protected:
 		void Shutdown();
+
+		virtual void StartGame(const std::vector<std::string>& globalScripts);
 		virtual void OnRegisterScripts();
 		virtual void OnUpdateSystem();
 
-		void StartGame(const std::vector<std::string>& globalScripts);
+		void LoadGlobalScripts(const std::vector<std::string>& globalScripts);
 		void StopGame();
 
 		std::mutex stateMutex;
 		std::atomic<eInitState> engineState;
-
 		std::vector<std::shared_ptr<zzz::script::GameScript>> m_Scripts;
-
-	public:
-		void ClearGameScripts() { m_Scripts.clear(); }
-		void AddGameScript(const std::shared_ptr<zzz::script::GameScript>& script)
-		{
-			if (script) m_Scripts.push_back(script);
-		}
-		std::shared_ptr<ProjectEventBus> GetEventBus() const { return m_EventBus; }
-		const std::vector<std::shared_ptr<zzz::script::GameScript>>& GetGameScripts() const { return m_Scripts; }
 
 	protected:
 		std::unique_ptr<Platform> m_Platform;

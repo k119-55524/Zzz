@@ -322,7 +322,7 @@ namespace zzz::editor
 			{
 				gameScriptRaw->SetActive(false);
 			}
-			ClearGameScripts();
+			m_Scripts.clear();
 
 			// 3. (TODO Phase 3: Сцен пока нет, но тут будет удаление SceneScripts)
 #endif
@@ -377,6 +377,26 @@ namespace zzz::editor
 
 			ReloadScripts();
 		}
+	}
+
+	void EditorEngine::StartGame(const std::vector<std::string>& globalScripts)
+	{
+		OnRegisterScripts();
+
+#ifdef _WIN32
+		if (IsDebuggerPresent())
+		{
+			// Даем время Visual Studio загрузить .pdb символы и расставить брейкпоинты
+			// после перезагрузки scripts.dll. Делаем это до захвата stateMutex, иначе
+			// Tick() (крутится на UI-потоке редактора каждый кадр и тоже берет stateMutex)
+			// стопорится на все 2 секунды и редактор выглядит зависшим.
+			DOut("[Debugger] Visual Studio attached. Waiting for script symbols to bind before Start...");
+			Sleep(2000);
+		}
+#endif
+
+		LoadGlobalScripts(globalScripts);
+		m_EventBus->InvokeStart();
 	}
 
 	void EditorEngine::Play(const char** scriptClasses, int count)

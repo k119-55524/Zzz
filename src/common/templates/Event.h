@@ -7,6 +7,7 @@
 #include <functional>
 #include <common/common.h>
 #include <common/throw_wrappers.h>
+#include <logger/logger.h>
 
 namespace zzz::engine
 {

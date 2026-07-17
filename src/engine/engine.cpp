@@ -135,27 +135,20 @@ void Engine::StopGame()
 	return {};
 }
 
+void Engine::StartGame(const std::vector<std::string>& globalScripts)
+{
+	OnRegisterScripts();
+	LoadGlobalScripts(globalScripts);
+	m_EventBus->InvokeStart();
+}
+
 void Engine::OnRegisterScripts()
 {
 	RegisterAllScripts();
 }
 
-void Engine::StartGame(const std::vector<std::string>& globalScripts)
+void Engine::LoadGlobalScripts(const std::vector<std::string>& globalScripts)
 {
-	OnRegisterScripts();
-
-#ifdef _WIN32
-	if (IsDebuggerPresent())
-	{
-		// Даем время Visual Studio загрузить .pdb символы и расставить брейкпоинты
-		// после перезагрузки scripts.dll. Делаем это до захвата stateMutex, иначе
-		// Tick() (крутится на UI-потоке редактора каждый кадр и тоже берет stateMutex)
-		// стопорится на все 2 секунды и редактор выглядит зависшим.
-		DOut("[Debugger] Visual Studio attached. Waiting for script symbols to bind before Start...");
-		Sleep(2000);
-	}
-#endif
-
 	std::lock_guard lock(stateMutex);
 
 	for (const auto& scriptName : globalScripts)
@@ -171,8 +164,6 @@ void Engine::StartGame(const std::vector<std::string>& globalScripts)
 			DOutError("Не удалось создать глобальный скрипт: {}", scriptName);
 		}
 	}
-
-	m_EventBus->InvokeStart();
 }
 
 void Engine::OnCloseAllViews() const
