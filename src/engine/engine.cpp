@@ -68,7 +68,7 @@ void Engine::Initialize()
 
 void Engine::StopGame()
 {
-	m_EventBus->InvokeStop();
+	m_EventBus->InvokeDestroy();
 	for (const auto& script : m_Scripts)
 	{
 		if (script)

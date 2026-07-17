@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <memory>
 #include "../EngineExport.h"
@@ -34,7 +34,11 @@ namespace zzz::script
 		template<typename F>
 		void SubscribeToStart(F&& func) { if (m_Bus) m_Bus->OnStart.Subscribe(shared_from_this(), std::forward<F>(func)); }
 		template<typename F>
-		void SubscribeToStop(F&& func) { if (m_Bus) m_Bus->OnStop.Subscribe(shared_from_this(), std::forward<F>(func)); }
+		void SubscribeToDestroy(F&& func) { if (m_Bus) m_Bus->OnDestroy.Subscribe(shared_from_this(), std::forward<F>(func)); }
+		template<typename F>
+		void SubscribeToEnable(F&& func) { if (m_Bus) m_Bus->OnEnable.Subscribe(shared_from_this(), std::forward<F>(func)); }
+		template<typename F>
+		void SubscribeToDisable(F&& func) { if (m_Bus) m_Bus->OnDisable.Subscribe(shared_from_this(), std::forward<F>(func)); }
 		template<typename F>
 		void SubscribeToUpdate(F&& func) { if (m_Bus) m_Bus->OnUpdate.Subscribe(shared_from_this(), std::forward<F>(func)); }
 

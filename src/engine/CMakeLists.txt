@@ -74,7 +74,9 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "public/core/userscripts/base_script/GameScript.h"
         "public/core/userscripts/base_script/GameScript.cpp"
         "public/core/userscripts/base_script/SceneScript.h"
-        "public/core/userscripts/base_script/SceneScript.cpp")
+        "public/core/userscripts/base_script/SceneScript.cpp"
+        "public/core/userscripts/base_script/ViewScript.h"
+        "public/core/userscripts/base_script/ViewScript.cpp")
 
     if(WIN32)
         if(${IS_EDITOR})

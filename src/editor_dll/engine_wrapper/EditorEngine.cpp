@@ -301,7 +301,7 @@ namespace zzz::editor
 #if Z_EDITOR
 			// 1. Удаляем все активные GameObject-скрипты
 			// SetActive(false) вызывает OnUnbindEvents() -> EventBus::UnsubscribeAll() ДО того,
-			// как объект скрипта будет разрушен - иначе подписка на OnUpdate/OnStart/OnStop
+			// как объект скрипта будет разрушен - иначе подписка на OnUpdate/OnStart/OnDestroy
 			// остаётся висеть в EventBus и указывает на код внутри scripts.dll, которую мы
 			// вот-вот выгрузим FreeLibrary(). Разрушение скрипта без предварительной отписки
 			// не роняло ничего, пока сама DLL оставалась в памяти (адрес ещё валиден), но как

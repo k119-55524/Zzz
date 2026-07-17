@@ -93,6 +93,7 @@
     <sys:String x:Key="ScriptType_Script">Скрипт</sys:String>
     <sys:String x:Key="ScriptType_Game">Игровой скрипт</sys:String>
     <sys:String x:Key="ScriptType_Scene">Скрипт сцены</sys:String>
+    <sys:String x:Key="ScriptType_View">Скрипт вью (View)</sys:String>
 
     <!-- Тулбары вьюпортов (Мир и Игра) -->
     <sys:String x:Key="Toolbar_Translate">Перемещение (W)</sys:String>

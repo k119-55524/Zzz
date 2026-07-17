@@ -22,6 +22,7 @@ namespace zzz::script
 	class Script;
 	class GameScript;
 	class SceneScript;
+	class ViewScript;
 
 #pragma warning(push)
 #pragma warning(disable: 4251)
@@ -47,6 +48,13 @@ namespace zzz::script
 					return zzz::common::safe_make_shared<T>();
 				};
 			}
+			else if constexpr (std::is_base_of_v<ViewScript, T>)
+			{
+				s_ViewScriptFactories[nameStr] = []()
+				{
+					return zzz::common::safe_make_shared<T>();
+				};
+			}
 			else if constexpr (std::is_base_of_v<Script, T>)
 			{
 				s_ScriptFactories[nameStr] = [](GameObject* owner)
@@ -64,6 +72,7 @@ namespace zzz::script
 		static std::shared_ptr<Script> CreateScript(std::string_view name, GameObject* owner);
 		static std::shared_ptr<GameScript> CreateGameScript(std::string_view name);
 		static std::shared_ptr<SceneScript> CreateSceneScript(std::string_view name);
+		static std::shared_ptr<ViewScript> CreateViewScript(std::string_view name);
 
 		// Имена всех зарегистрированных глобальных (Game) скриптов - используется статической
 		// сборкой игры для автостарта всех скриптов проекта (см. Engine::Initialize).
@@ -85,17 +94,23 @@ namespace zzz::script
 		static void RegisterInstance(SceneScript* instance);
 		static void UnregisterInstance(SceneScript* instance);
 		static const std::vector<SceneScript*>& GetActiveSceneScripts();
+
+		static void RegisterInstance(ViewScript* instance);
+		static void UnregisterInstance(ViewScript* instance);
+		static const std::vector<ViewScript*>& GetActiveViewScripts();
 #endif
 
 	private:
 		static std::unordered_map<std::string, std::function<std::shared_ptr<Script>(GameObject*)>> s_ScriptFactories;
 		static std::unordered_map<std::string, std::function<std::shared_ptr<GameScript>()>> s_GameScriptFactories;
 		static std::unordered_map<std::string, std::function<std::shared_ptr<SceneScript>()>> s_SceneScriptFactories;
+		static std::unordered_map<std::string, std::function<std::shared_ptr<ViewScript>()>> s_ViewScriptFactories;
 
 #if Z_EDITOR
 		static std::vector<Script*> s_ActiveInstances;
 		static std::vector<GameScript*> s_ActiveGameScripts;
 		static std::vector<SceneScript*> s_ActiveSceneScripts;
+		static std::vector<ViewScript*> s_ActiveViewScripts;
 #endif
 	};
 #pragma warning(pop)

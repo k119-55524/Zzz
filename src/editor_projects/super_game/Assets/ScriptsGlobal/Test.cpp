@@ -13,7 +13,7 @@ void Test::OnBindEvents()
 {
 	DOut("Test script OnBindEvents called!");
 	SubscribeToStart([this]() { OnStart(); });
-	SubscribeToStop([this]() { OnStop(); });
+	SubscribeToDestroy([this]() { OnDestroy(); });
 	SubscribeToUpdate([this](const zzz::engine::Time& time) { OnUpdate(time); });
 }
 
@@ -22,7 +22,7 @@ void Test::OnStart()
 	DOut("Test script started!");
 }
 
-void Test::OnStop()
+void Test::OnDestroy()
 {
 	DOut("Test script stopped!");
 }

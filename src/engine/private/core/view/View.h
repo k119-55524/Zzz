@@ -4,6 +4,14 @@
 #include "../../platforms/input/Input.h"
 #include "../../platforms/window/Window.h"
 
+#include <vector>
+
+namespace zzz::script
+{
+	class Scene;
+	class ViewScript;
+}
+
 namespace zzz::engine
 {
 	using namespace zzz::common;
@@ -20,6 +28,12 @@ namespace zzz::engine
 		~View() = default;
 
 		void Update(zF64 currentTime);
+
+		void SetActive(bool active) { m_IsActive = active; }
+		bool IsActive() const { return m_IsActive; }
+
+		void SetScene(std::shared_ptr<zzz::script::Scene> scene);
+		std::shared_ptr<zzz::script::Scene> GetScene() const { return m_ActiveScene; }
 
 	private:
 		void Initialize(void* data = nullptr);
@@ -151,5 +165,9 @@ namespace zzz::engine
 
 		std::function<void(View&)> OnWindowClose;
 		void HandleWindowClose();
+
+		bool m_IsActive = true;
+		std::shared_ptr<zzz::script::Scene> m_ActiveScene;
+		std::vector<std::shared_ptr<zzz::script::ViewScript>> m_Scripts;
 	};
 }

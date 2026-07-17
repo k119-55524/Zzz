@@ -4,18 +4,19 @@
 {NamespaceOpenHpp}{NamespaceIndent}class {ClassName} : public {BaseClass}
 {NamespaceIndent}{
 {NamespaceIndent}public:
-{NamespaceIndent}	explicit {ClassName}(zzz::GameObject* owner);
+{NamespaceIndent}	{ClassName}();
+{NamespaceIndent}	virtual ~{ClassName}() = default;
 {NamespaceIndent}
 {NamespaceIndent}public:
 {NamespaceIndent}	const char* GetScriptTypeName() const override { return "{ClassName}"; }
-
+{NamespaceIndent}
 {NamespaceIndent}	void OnBindEvents() override;
 {NamespaceIndent}
 {NamespaceIndent}	void OnStart();
-{NamespaceIndent}	void OnUpdate(float deltaTime);
 {NamespaceIndent}	void OnDestroy();
 {NamespaceIndent}	void OnEnable();
 {NamespaceIndent}	void OnDisable();
-
+{NamespaceIndent}	void OnUpdate(const zzz::engine::Time& time);
+{NamespaceIndent}
 {NamespaceIndent}};
 {NamespaceCloseHpp}

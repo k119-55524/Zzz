@@ -7,7 +7,7 @@
 
 namespace zzz::engine
 {
-	class Scene;
+	class View;
 }
 
 namespace zzz::script
@@ -15,11 +15,11 @@ namespace zzz::script
 
 #pragma warning(push)
 #pragma warning(disable: 4251)
-	class Z_ENGINE_API SceneScript : public BaseScript
+	class Z_ENGINE_API ViewScript : public BaseScript
 	{
 	public:
-		SceneScript();
-		virtual ~SceneScript();
+		ViewScript();
+		virtual ~ViewScript();
 
 	protected:
 		virtual void OnUnbindEvents() override
@@ -39,14 +39,14 @@ namespace zzz::script
 		void SubscribeToUpdate(F&& func) { if (m_Bus) m_Bus->OnUpdate.Subscribe(shared_from_this(), std::forward<F>(func)); }
 
 	private:
-		friend class zzz::engine::Scene;
-		void Init(std::shared_ptr<zzz::engine::SceneEventBus> bus)
+		friend class zzz::engine::View;
+		void Init(std::shared_ptr<zzz::engine::ViewEventBus> bus)
 		{
 			m_Bus = bus;
 			OnBindEvents();
 		}
 
-		std::shared_ptr<zzz::engine::SceneEventBus> m_Bus;
+		std::shared_ptr<zzz::engine::ViewEventBus> m_Bus;
 	};
 #pragma warning(pop)
 

@@ -65,6 +65,7 @@
                     <ComboBoxItem Tag="Script" Content="{DynamicResource ScriptType_Script}" IsSelected="True" />
                     <ComboBoxItem Tag="Game" Content="{DynamicResource ScriptType_Game}" />
                     <ComboBoxItem Tag="Scene" Content="{DynamicResource ScriptType_Scene}" />
+                    <ComboBoxItem Tag="View" Content="{DynamicResource ScriptType_View}" />
                 </ComboBox>
             </Grid>
 

@@ -84,15 +84,16 @@
     <sys:String x:Key="Dialog_NewProject_BrowseFolder_Title">Select project folder</sys:String>
 
     <!-- NewScriptDialog Texts -->
-    <sys:String x:Key="Dialog_NewScript_Title">Add Script</sys:String>
-    <sys:String x:Key="Dialog_NewScript_Base">Base script:</sys:String>
+    <sys:String x:Key="Dialog_NewScript_Title">Create Script</sys:String>
+    <sys:String x:Key="Dialog_NewScript_Base">Base Class:</sys:String>
     <sys:String x:Key="Dialog_NewScript_Namespace">Namespace:</sys:String>
-    <sys:String x:Key="Dialog_NewScript_Name">Script name:</sys:String>
+    <sys:String x:Key="Dialog_NewScript_Name">Name:</sys:String>
     <sys:String x:Key="Dialog_NewScript_Add">Add</sys:String>
     <sys:String x:Key="Dialog_NewScript_Cancel">Cancel</sys:String>
-    <sys:String x:Key="ScriptType_Script">Script</sys:String>
-    <sys:String x:Key="ScriptType_Game">Game Script</sys:String>
-    <sys:String x:Key="ScriptType_Scene">Scene Script</sys:String>
+    <sys:String x:Key="ScriptType_Script">General Script (Script)</sys:String>
+    <sys:String x:Key="ScriptType_Game">Game Script (Global)</sys:String>
+    <sys:String x:Key="ScriptType_Scene">Scene Script (Level)</sys:String>
+    <sys:String x:Key="ScriptType_View">View Script (UI/View)</sys:String>
 
     <!-- Viewport Toolbars (World & Game) -->
     <sys:String x:Key="Toolbar_Translate">Translate (W)</sys:String>

@@ -1,4 +1,4 @@
-#include "{ClassName}.hpp"
+﻿#include "{ClassName}.hpp"
 
 {NamespaceOpenCpp}
 {ClassName}::{ClassName}(zzz::GameObject* owner)
@@ -10,7 +10,9 @@ void {ClassName}::OnBindEvents()
 {
 	SubscribeToStart([this]() { OnStart(); });
 	SubscribeToUpdate([this](float deltaTime) { OnUpdate(deltaTime); });
-	SubscribeToStop([this]() { OnStop(); });
+	SubscribeToDestroy([this]() { OnDestroy(); });
+	SubscribeToEnable([this]() { OnEnable(); });
+	SubscribeToDisable([this]() { OnDisable(); });
 }
 
 void {ClassName}::OnStart()
@@ -21,7 +23,14 @@ void {ClassName}::OnUpdate(float deltaTime)
 {
 }
 
-void {ClassName}::OnStop()
+void {ClassName}::OnDestroy()
+{
+}
+void {ClassName}::OnEnable()
+{
+}
+
+void {ClassName}::OnDisable()
 {
 }
 {NamespaceCloseCpp}

@@ -3,6 +3,8 @@
 #include "../../platforms/input/Input.h"
 #include "../../platforms/window/Window.h"
 #include <common/common.h>
+#include "public/core/scene/Scene.h"
+#include "public/core/userscripts/base_script/ViewScript.h"
 
 using namespace zzz::common;
 
@@ -137,8 +139,16 @@ void View::OnWindowSafeAreaChanged(int top, int bottom, int left, int right)
 }
 #pragma endregion
 
+void View::SetScene(std::shared_ptr<zzz::script::Scene> scene)
+{
+	m_ActiveScene = std::move(scene);
+}
+
 void View::Update(zF64 currentTime)
 {
+	if (!m_IsActive)
+		return;
+
 	// TODO: Добавить обновление логики и рендеринга для конкретного вью
 	std::ignore = currentTime;
 }
