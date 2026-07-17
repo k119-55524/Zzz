@@ -5,29 +5,30 @@
 #include <common/common.h>
 #include "public/core/scene/Scene.h"
 #include "public/core/userscripts/base_script/ViewScript.h"
+#include "public/core/events/EventBus.h"
 
 using namespace zzz::common;
 
 using namespace zzz::engine;
 
-View::View(const Platform& platform, std::function<void(View&)> onWindowClose) :
+View::View(const Platform& platform, std::function<void(View&)> onWindowClose, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts) :
 	m_Platform{ platform },
 	OnWindowClose(std::move(onWindowClose))
 {
 	ensure(OnWindowClose != nullptr, "OnWindowClose не должен быть null.");
 
-	Initialize(nullptr);
+	Initialize(nullptr, scripts);
 }
 
 #if Z_EDITOR
-View::View(const Platform& platform, void* data) :
+View::View(const Platform& platform, void* data, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts) :
 	m_Platform{ platform }
 {
-	Initialize(data);
+	Initialize(data, scripts);
 }
 #endif
 
-void View::Initialize(void* data)
+void View::Initialize(void* data, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts)
 {
 	m_Input = safe_make_shared<Input>();
 	auto inputRes = m_Input->Initialize();
@@ -54,6 +55,17 @@ void View::Initialize(void* data)
 	auto res = m_Window->Initialize(m_Platform.GetAppName(), data);
 	if (!res)
 		THROW_RUNTIME("Не удалось инициализировать окно: {}.", res.error());
+
+	for (const auto& script : scripts)
+	{
+		if (!script)
+			continue;
+
+		script->Init(&m_EventBus);
+		m_Scripts.push_back(script);
+	}
+	
+	m_EventBus.InvokeStart();
 }
 
 #pragma region Window Events
@@ -144,12 +156,13 @@ void View::SetScene(std::shared_ptr<zzz::script::Scene> scene)
 	m_ActiveScene = std::move(scene);
 }
 
-void View::Update(zF64 currentTime)
+void View::Update(const zzz::engine::Time& time)
 {
 	if (!m_IsActive)
 		return;
 
-	// TODO: Добавить обновление логики и рендеринга для конкретного вью
-	std::ignore = currentTime;
-}
+	m_EventBus.InvokeUpdate(time);
 
+	if (m_ActiveScene)
+		m_ActiveScene->Update(time);
+}

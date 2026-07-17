@@ -173,5 +173,5 @@ void Engine::OnUpdateSystem()
 	m_EventBus->InvokeUpdate(*m_Time);
 
 	if (m_ViewManager)
-		m_ViewManager->Update(m_Time->GetTimeSinceStartup());
+		m_ViewManager->Update(*m_Time);
 }

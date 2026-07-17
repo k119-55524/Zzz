@@ -4,10 +4,18 @@
 #include <memory>
 #include <functional>
 
+#include <vector>
+
+namespace zzz::script
+{
+	class ViewScript;
+}
+
 namespace zzz::engine
 {
 	class Platform;
 	class View;
+	class Time;
 
 	class ViewManager final
 	{
@@ -18,13 +26,13 @@ namespace zzz::engine
 		ViewManager(const Platform& platform, std::function<void()> onAllViewsClosed);
 		~ViewManager();
 
-		View* CreateView();
+		View* CreateView(const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts = {});
 #if Z_EDITOR
-		View* CreateView(void* data);
+		View* CreateView(void* data, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts = {});
 		void RemoveView(View* view);
 #endif
 
-		void Update(zF64 currentTime);
+		void Update(const zzz::engine::Time& time);
 
 	private:
 		const Platform& m_Platform;

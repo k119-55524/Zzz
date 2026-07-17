@@ -20,14 +20,14 @@ ViewManager::~ViewManager()
 	m_Views.clear();
 }
 
-View* ViewManager::CreateView()
+View* ViewManager::CreateView(const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts)
 {
 #if Z_MOBILE
 	if (m_Views.size() >= 1)
 		THROW_RUNTIME("Мобильные платформы поддерживают только одно нативное окно на приложение.");
 #endif
 
-	auto view = safe_make_shared<View>(m_Platform, [this](View& v) { HandleWindowClose(v); });
+	auto view = safe_make_shared<View>(m_Platform, [this](View& v) { HandleWindowClose(v); }, scripts);
 	View* viewPtr = view.get();
 	m_Views.push_back(std::move(view));
 
@@ -53,9 +53,9 @@ void ViewManager::HandleWindowClose(View& view)
 }
 
 #if Z_EDITOR
-View* ViewManager::CreateView(void* data)
+View* ViewManager::CreateView(void* data, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts)
 {
-	auto view = safe_make_shared<View>(m_Platform, data);
+	auto view = safe_make_shared<View>(m_Platform, data, scripts);
 	View* viewPtr = view.get();
 	m_Views.push_back(std::move(view));
 
@@ -79,8 +79,10 @@ void ViewManager::RemoveView(View* view)
 }
 #endif
 
-void ViewManager::Update(zF64 currentTime)
+void ViewManager::Update(const zzz::engine::Time& time)
 {
 	for (const auto& view : m_Views)
-		view->Update(currentTime);
+	{
+		view->Update(time);
+	}
 }

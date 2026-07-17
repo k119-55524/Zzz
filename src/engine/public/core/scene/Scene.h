@@ -2,10 +2,12 @@
 
 #include <string_view>
 #include <memory>
+#include <common/types.h>
 
 namespace zzz::engine
 {
 	class SceneEventBus;
+	class Time;
 }
 
 namespace zzz::script
@@ -17,5 +19,6 @@ namespace zzz::script
 		virtual ~Scene() = default;
 
 		virtual void Init(zzz::engine::SceneEventBus* /*bus*/) {}
+		virtual void Update(const zzz::engine::Time& /*time*/) {}
 	};
 }

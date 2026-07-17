@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <memory>
 #include "../EngineExport.h"
@@ -12,7 +12,6 @@ namespace zzz::engine
 
 namespace zzz::script
 {
-
 #pragma warning(push)
 #pragma warning(disable: 4251)
 	class Z_ENGINE_API ViewScript : public BaseScript
@@ -40,13 +39,13 @@ namespace zzz::script
 
 	private:
 		friend class zzz::engine::View;
-		void Init(std::shared_ptr<zzz::engine::ViewEventBus> bus)
+		void Init(zzz::engine::ViewEventBus* bus)
 		{
 			m_Bus = bus;
 			OnBindEvents();
 		}
 
-		std::shared_ptr<zzz::engine::ViewEventBus> m_Bus;
+		zzz::engine::ViewEventBus* m_Bus = nullptr;
 	};
 #pragma warning(pop)
 
