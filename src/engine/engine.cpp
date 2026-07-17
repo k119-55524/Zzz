@@ -62,18 +62,13 @@ void Engine::Initialize()
 	m_EventBus = safe_make_shared<ProjectEventBus>();
 	m_Time = safe_make_shared<Time>();
 
-	DOut("Инициализация: OK.");
 	engineState.store(eInitState::Initialized);
+	DOut("Инициализация: OK.");
 }
 
 void Engine::StopGame()
 {
 	m_EventBus->InvokeStop();
-
-	// SetActive(false) отвязывает подписки скрипта от EventBus (OnUnbindEvents) ДО того,
-	// как m_Scripts.clear() уронит последний shared_ptr и разрушит объект. Без этого
-	// подписка на OnUpdate/OnStart/OnStop остаётся висеть в EventBus и указывает на код
-	// внутри scripts.dll - при следующей выгрузке DLL это чтение по невалидному адресу.
 	for (const auto& script : m_Scripts)
 	{
 		if (script)
@@ -104,7 +99,6 @@ void Engine::StopGame()
 		m_ViewManager->CreateView();
 
 		StartGame(zzz::script::ScriptRegistry::GetAllGameScriptNames());
-
 		m_Time->ResetFrameTimer();
 		m_MainLoop->Run();
 
