@@ -56,9 +56,11 @@ namespace zzz::engine
 		CallbackList pendingAdditions;
 
 		std::mutex eventMutex;
-		std::vector<std::thread::id> invokingThreads;
+		size_t invokingCount = 0;
 		std::atomic<bool> needsCleanup = false;
-		std::atomic<bool*> destroyFlag = nullptr;
+		
+		struct InvocationGuard;
+		InvocationGuard* activeGuards = nullptr; // Интрузивный список для безопасного удаления
 
 	public:
 		EventBase() = default;
@@ -71,39 +73,58 @@ namespace zzz::engine
 	protected:
 		~EventBase()
 		{
-			bool* flag = destroyFlag.load();
-			if (flag)
-				*flag = true;
-		}
-
-		void CheckRecursion(std::thread::id thisThread)
-		{
-			if (std::find(invokingThreads.begin(), invokingThreads.end(), thisThread) != invokingThreads.end())
-				THROW_RUNTIME("[КРИТИЧЕСКАЯ ОШИБКА] Обнаружен рекурсивный вызов!");
+			// Блокируем мьютекс, чтобы безопасно пройтись по списку гардов.
+			std::lock_guard<std::mutex> lock(eventMutex);
+			
+			// Если объект события удаляется прямо во время вызова колбэка, мы проходим по всем 
+			// активным вызовам (их может быть несколько при рекурсии или многопоточности)
+			// и поднимаем у них флаг. Это заставит их немедленно прервать цикл и безопасно выйти.
+			InvocationGuard* curr = activeGuards;
+			while (curr)
+			{
+				*(curr->destroyed) = true;
+				curr = curr->next;
+			}
 		}
 
 		void CheckModifying()
 		{
-			if (!invokingThreads.empty())
+			if (invokingCount > 0)
 				THROW_RUNTIME("[КРИТИЧЕСКАЯ ОШИБКА] Невозможно изменить Event во время вызова!");
 		}
 
+		/// @brief RAII-обертка для безопасного вызова события.
+		/// Выполняет три функции:
+		/// 1. Гарантирует откат счетчика invokingCount даже при выбросе исключений (Exception Safety).
+		/// 2. Служит узлом интрузивного списка для безопасного удаления события (destroyFlag).
+		/// 3. Применяет отложенные изменения (добавление/очистку подписчиков), когда счетчик вызовов падает до 0.
 		struct InvocationGuard
 		{
 			EventBase* event;
 			bool* destroyed;
-			std::thread::id thisThread;
+			InvocationGuard* next;
 
+			/// @brief Захватывает мьютекс, увеличивает счетчик активных вызовов 
+			/// и регистрирует текущий вызов в цепочке активных гардов (activeGuards).
 			explicit InvocationGuard(EventBase* e, bool* d)
-				: event(e), destroyed(d), thisThread(std::this_thread::get_id())
+				: event(e), destroyed(d), next(nullptr)
 			{
 				std::lock_guard<std::mutex> lock(event->eventMutex);
-				event->CheckRecursion(thisThread);
-
-				event->destroyFlag.store(destroyed);
-				event->invokingThreads.push_back(thisThread);
+				
+				// Добавляем текущий вызов в голову интрузивного списка.
+				// Список нужен для того, чтобы деструктор ~EventBase мог безопасно 
+				// прервать работу всех потоков при удалении объекта из памяти.
+				this->next = event->activeGuards;
+				event->activeGuards = this;
+				
+				event->invokingCount++;
 			}
 
+			/// @brief При штатном завершении вызова (или при раскрутке стека из-за исключения):
+			/// 1. Убирает себя из списка активных гардов.
+			/// 2. Уменьшает счетчик вызовов.
+			/// 3. Если счетчик упал до 0 (последний вызов завершен), производит 
+			///    реальное удаление "мертвых" подписчиков и вливает отложенные подписки.
 			~InvocationGuard()
 			{
 				if (*destroyed)
@@ -111,14 +132,21 @@ namespace zzz::engine
 
 				std::lock_guard<std::mutex> lock(event->eventMutex);
 
-				auto itThread = std::find(event->invokingThreads.begin(), event->invokingThreads.end(), thisThread);
-				if (itThread != event->invokingThreads.end())
-					event->invokingThreads.erase(itThread);
-
-				if (event->invokingThreads.empty())
+				// Вызов завершился штатно — удаляем себя из списка активных гардов
+				InvocationGuard** curr = &event->activeGuards;
+				while (*curr)
 				{
-					event->destroyFlag.store(nullptr);
+					if (*curr == this)
+					{
+						*curr = this->next;
+						break;
+					}
+					curr = &(*curr)->next;
+				}
 
+				event->invokingCount--;
+				if (event->invokingCount == 0)
+				{
 					if (event->needsCleanup.load())
 					{
 						if constexpr (Ordered)
@@ -203,7 +231,7 @@ namespace zzz::engine
 					entry.isDead.store(true);
 					this->needsCleanup.store(true);
 
-					if (this->invokingThreads.empty())
+					if (this->invokingCount == 0)
 					{
 						entry.func = nullptr;
 						entry.context.reset();
@@ -230,7 +258,7 @@ namespace zzz::engine
 				THROW_RUNTIME("[КРИТИЧЕСКАЯ ОШИБКА] Невозможно подписать пустой колбэк на Event!");
 
 			std::lock_guard<std::mutex> lock(this->eventMutex);
-			if (!this->invokingThreads.empty())
+			if (this->invokingCount > 0)
 				this->pendingAdditions.push_back({ std::move(f), context, false });
 			else
 				this->listeners.push_back({ std::move(f), context, false });
@@ -250,26 +278,29 @@ namespace zzz::engine
 			bool destroyed = false;
 			typename Base::InvocationGuard guard(this, &destroyed);
 
-			// Snapshot под тем же eventMutex, что и Subscribe/Unsubscribe. Play()/Stop() вызываются
-			// с фонового потока и внутри Init()/OnUnbindEvents() дёргают Subscribe/Unsubscribe,
-			// пока Tick() на UI-потоке может в это же время идти через этот цикл - без снимка
-			// цикл читал бы this->listeners (индексация, entry.func) без какой-либо блокировки,
-			// пока push_back с другого потока реаллоцирует тот же vector. Классическая гонка
-			// данных, которая долгое время маскировалась и проявлялась только как access violation
-			// при чтении памяти уже выгруженной scripts.dll.
-			typename Base::CallbackList snapshot;
+			size_t count = this->listeners.size();
+			for (size_t i = 0; i < count; ++i)
 			{
-				std::lock_guard<std::mutex> lock(this->eventMutex);
-				snapshot = this->listeners;
-			}
-
-			for (auto& entry : snapshot)
-			{
+				auto& entry = this->listeners[i];
 				if (entry.isDead.load() || entry.context.expired())
 					continue;
 
-				auto func = entry.func;
-				func(args...);
+				try
+				{
+					entry.func(args...);
+				}
+				catch (const std::exception& e)
+				{
+					DOutException("[Event] Исключение в колбэке: {}. Подписчик будет отписан.", e.what());
+					entry.isDead.store(true);
+					this->needsCleanup.store(true);
+				}
+				catch (...)
+				{
+					DOutException("[Event] Неизвестное исключение в колбэке. Подписчик будет отписан.");
+					entry.isDead.store(true);
+					this->needsCleanup.store(true);
+				}
 
 				if (destroyed)
 					return;
@@ -280,9 +311,14 @@ namespace zzz::engine
 		using Base = EventBase<std::function<void(Args...)>, Ordered>;
 	};
 
+	/// @brief Упорядоченное событие. Гарантирует сохранение порядка подписчиков 
+	/// (кто подписался первым, тот вызывается первым). 
+	/// При очистке использует сдвиг элементов (чуть медленнее).
 	template<typename... Args>
 	using Event = EventImpl<true, Args...>;
 
+	/// @brief Неупорядоченное событие. Порядок вызова подписчиков не гарантируется. 
+	/// При очистке меняет удаляемый элемент местами с последним (работает за O(1), быстрее).
 	template<typename... Args>
 	using UnorderedEvent = EventImpl<false, Args...>;
 }
