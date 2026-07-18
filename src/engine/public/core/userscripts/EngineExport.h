@@ -1,5 +1,7 @@
 #pragma once
 
+#include <common/defines.h>
+
 // Скрипты компилируются в отдельный scripts.dll и линкуются против editor_dll.lib (Hot-Reload,
 // см. docs/scripting.md) - только в этом сценарии (Z_EDITOR) engine_lib пересекает границу DLL.
 // В статической сборке игры (game_win/macos/linux/ios/android) Z_EDITOR не определён, engine_lib

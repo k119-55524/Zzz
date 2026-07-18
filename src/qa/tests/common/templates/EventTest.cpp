@@ -1,7 +1,7 @@
 
+#include <thread>
 #include <gtest/gtest.h>
 #include <common/templates/Event.h>
-#include <thread>
 
 using namespace zzz::engine;
 
@@ -148,13 +148,13 @@ TEST(EventTest, OrderedVsUnordered)
 	auto ctx2 = std::make_shared<int>(2);
 	auto ctx3 = std::make_shared<int>(3);
 
-	orderedEvt.Subscribe(ctx1, [&](int val) { orderedResult.push_back(1); });
-	orderedEvt.Subscribe(ctx2, [&](int val) { orderedResult.push_back(2); });
-	orderedEvt.Subscribe(ctx3, [&](int val) { orderedResult.push_back(3); });
+	orderedEvt.Subscribe(ctx1, [&](int) { orderedResult.push_back(1); });
+	orderedEvt.Subscribe(ctx2, [&](int) { orderedResult.push_back(2); });
+	orderedEvt.Subscribe(ctx3, [&](int) { orderedResult.push_back(3); });
 
-	unorderedEvt.Subscribe(ctx1, [&](int val) { unorderedResult.push_back(1); });
-	unorderedEvt.Subscribe(ctx2, [&](int val) { unorderedResult.push_back(2); });
-	unorderedEvt.Subscribe(ctx3, [&](int val) { unorderedResult.push_back(3); });
+	unorderedEvt.Subscribe(ctx1, [&](int) { unorderedResult.push_back(1); });
+	unorderedEvt.Subscribe(ctx2, [&](int) { unorderedResult.push_back(2); });
+	unorderedEvt.Subscribe(ctx3, [&](int) { unorderedResult.push_back(3); });
 
 	// Удаляем средний элемент
 	orderedEvt.Unsubscribe(ctx2);
@@ -163,18 +163,10 @@ TEST(EventTest, OrderedVsUnordered)
 	orderedEvt(0);
 	unorderedEvt(0);
 
-	// Ordered должен сохранить порядок оставшихся: 1, 3
 	ASSERT_EQ(orderedResult.size(), 2);
 	EXPECT_EQ(orderedResult[0], 1);
 	EXPECT_EQ(orderedResult[1], 3);
 
-	// Unordered использует Swap-and-Pop, поэтому на место 2 встанет 3.
-	// Результат будет: 1, 3. Подождите...
-	// Индексы: [0]=1, [1]=2, [2]=3.
-	// Удаляем [1]. На место [1] встает [2].
-	// Вектор становится: [0]=1, [1]=3.
-	// Ого, в данном конкретном случае порядок совпадёт.
-	// Чтобы точно сбить порядок, подпишем 4 элемента и удалим первый!
 	unorderedResult.clear();
 	UnorderedEvent<int> uEvt2;
 	auto c1 = std::make_shared<int>(1);
@@ -182,15 +174,13 @@ TEST(EventTest, OrderedVsUnordered)
 	auto c3 = std::make_shared<int>(3);
 	auto c4 = std::make_shared<int>(4);
 
-	uEvt2.Subscribe(c1, [&](int val) { unorderedResult.push_back(1); });
-	uEvt2.Subscribe(c2, [&](int val) { unorderedResult.push_back(2); });
-	uEvt2.Subscribe(c3, [&](int val) { unorderedResult.push_back(3); });
-	uEvt2.Subscribe(c4, [&](int val) { unorderedResult.push_back(4); });
+	uEvt2.Subscribe(c1, [&](int) { unorderedResult.push_back(1); });
+	uEvt2.Subscribe(c2, [&](int) { unorderedResult.push_back(2); });
+	uEvt2.Subscribe(c3, [&](int) { unorderedResult.push_back(3); });
+	uEvt2.Subscribe(c4, [&](int) { unorderedResult.push_back(4); });
 
 	uEvt2.Unsubscribe(c1); 
 	
-	// Первый вызов: c1 помечен мертвым, просто пропускается.
-	// Результат вызова: 2, 3, 4
 	uEvt2(0); 
 
 	ASSERT_EQ(unorderedResult.size(), 3);
@@ -198,10 +188,6 @@ TEST(EventTest, OrderedVsUnordered)
 	EXPECT_EQ(unorderedResult[1], 3);
 	EXPECT_EQ(unorderedResult[2], 4);
 
-	// После первого вызова срабатывает очистка (Swap-and-Pop).
-	// Последний элемент (4) ставится на место удаленного (1).
-	// Порядок в памяти становится: 4, 2, 3.
-	
 	unorderedResult.clear();
 	uEvt2(0);
 
@@ -210,4 +196,3 @@ TEST(EventTest, OrderedVsUnordered)
 	EXPECT_EQ(unorderedResult[1], 2);
 	EXPECT_EQ(unorderedResult[2], 3);
 }
-

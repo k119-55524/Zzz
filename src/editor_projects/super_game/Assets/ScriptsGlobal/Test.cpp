@@ -1,5 +1,5 @@
 
-#include <logger/logger.h>
+#include <logger/logger.h> 
 #include <common/macroses.h>
 
 #include "Test.hpp"
@@ -13,7 +13,7 @@ void Test::OnBindEvents()
 {
 	DOut("Test script OnBindEvents called!");
 	SubscribeToStart([this]() { OnStart(); });
-	SubscribeToDestroy([this]() { OnDestroy(); });
+	SubscribeToDestroy([this]() { OnStop(); });
 	SubscribeToUpdate([this](const zzz::engine::Time& time) { OnUpdate(time); });
 }
 
@@ -22,7 +22,7 @@ void Test::OnStart()
 	DOut("Test script started!");
 }
 
-void Test::OnDestroy()
+void Test::OnStop()
 {
 	DOut("Test script stopped!");
 }

@@ -579,8 +579,8 @@ target_include_directories(scripts PRIVATE
     ""{zlibsIncludeDir}""
     ""{zlibsIncludeDir}/engine""
     ""{zlibsIncludeDir}/engine/public/core/scene""
-    ""{zlibsIncludeDir}/engine/public/core/scene/scripts""
-    ""{zlibsIncludeDir}/engine/public/core/scene/scripts/base_script""
+    ""{zlibsIncludeDir}/engine/public/core/userscripts""
+    ""{zlibsIncludeDir}/engine/public/core/userscripts/base_script""
     ""{zlibsIncludeDir}/common""
     ""{zlibsIncludeDir}/logger""
 )
