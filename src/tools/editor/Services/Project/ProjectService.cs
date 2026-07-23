@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -170,6 +170,29 @@ namespace editor.Services.Project
 				{
 					Version = ProjectConstants.ProjectVersionString
 				};
+
+				// Создаем Main.zs
+				string mainScenePath = Path.Combine(projectPath, "Assets", "Scenes", "Main.zs");
+				string scenesDirPath = Path.GetDirectoryName(mainScenePath)!;
+				if (!_storage.DirectoryExists(scenesDirPath)) _storage.CreateDirectory(scenesDirPath);
+				var mainSceneData = new editor.Services.Project.FileTypes.Assets.SceneAssetData { Version = "1.0" };
+				_storage.WriteAllText(mainScenePath, editor.Services.Project.FileTypes.Assets.SceneAssetParser.Serialize(mainSceneData));
+
+				var mainSceneMeta = AssetMetaFile.CreateNew("Main");
+				AssetMetaFile.Save(_storage, mainScenePath + ".meta", mainSceneMeta);
+
+				// Создаем Main.zv
+				string mainViewPath = Path.Combine(projectPath, "Assets", "Views", "Main.zv");
+				string viewsDirPath = Path.GetDirectoryName(mainViewPath)!;
+				if (!_storage.DirectoryExists(viewsDirPath)) _storage.CreateDirectory(viewsDirPath);
+				var mainViewData = new editor.Services.Project.FileTypes.Assets.ViewAssetData { Version = "1.0", SceneGuid = mainSceneMeta.Guid };
+				_storage.WriteAllText(mainViewPath, editor.Services.Project.FileTypes.Assets.ViewAssetParser.Serialize(mainViewData));
+
+				var mainViewMeta = AssetMetaFile.CreateNew("Main");
+				AssetMetaFile.Save(_storage, mainViewPath + ".meta", mainViewMeta);
+
+				// Добавляем Main.zv в GameConfig
+				CurrentGameConfig.ViewGuids.Add(mainViewMeta.Guid);
 
 				// Очищаем бэкапы редактора и историю для нового проекта
 				ClearBackupDirectory(projectPath);

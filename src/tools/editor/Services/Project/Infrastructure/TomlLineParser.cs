@@ -6,7 +6,7 @@ namespace editor.Services.Project.Infrastructure
 {
     /// <summary>
     /// Общий ручной построчный парсер простых TOML-файлов проекта (без секций и вложенных таблиц),
-    /// используемый GameConfigParser, ProjectSettingsParser и ScriptMetaFile, чтобы разбор
+    /// используемый GameConfigParser, ProjectSettingsParser и AssetMetaFile, чтобы разбор
     /// "key = value" и строковых массивов не расходился в деталях между ними.
     /// </summary>
     public static class TomlLineParser

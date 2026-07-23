@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using editor.Models;
 
 namespace editor.Services.Project.Infrastructure
@@ -159,6 +159,21 @@ namespace editor.Services.Project.Infrastructure
 		public EditorOptionsAttribute(EditorOptionsSource source)
 		{
 			Source = source;
+		}
+	}
+
+	/// <summary>
+	/// Помечает строковое свойство как одиночную ссылку на GUID ассета.
+	/// Инспектор отрисовывает его с возможностью Drag-and-Drop ассета из дерева.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
+	public class EditorAssetGuidAttribute : Attribute
+	{
+		public AssetResourceType AssetType { get; }
+
+		public EditorAssetGuidAttribute(AssetResourceType assetType)
+		{
+			AssetType = assetType;
 		}
 	}
 }

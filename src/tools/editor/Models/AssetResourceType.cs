@@ -1,4 +1,4 @@
-﻿namespace editor.Models
+namespace editor.Models
 {
 	// Типы ресурсов ассетов. Пока чисто внутренний классификатор для фильтра в Project/Assets -
 	// привязки конкретных файлов к типу (по расширению и т.п.) ещё нет, это будущая задача.
@@ -8,6 +8,7 @@
 		Model,
 		Audio,
 		Scene,
+		View,
 		Script,
 		Shader,
 		Material
@@ -15,6 +16,11 @@
 
 	public static class AssetResourceTypeRules
 	{
+		public const string ExtScene = ".zs";
+		public const string ExtView = ".zv";
+		public const string ExtScriptCpp = ".cpp";
+		public const string ExtScriptHpp = ".hpp";
+
 		// Условное имя папки первого уровня в Assets/, по которому фильтр сейчас сопоставляет
 		// тип с деревом (пока нет классификации по файлам - см. AssetResourceType).
 		public static string GetFolderName(AssetResourceType type)
@@ -25,6 +31,7 @@
 				AssetResourceType.Model => "Models",
 				AssetResourceType.Audio => "Audio",
 				AssetResourceType.Scene => "Scenes",
+				AssetResourceType.View => "Views",
 				AssetResourceType.Script => "Scripts",
 				AssetResourceType.Shader => "Shaders",
 				AssetResourceType.Material => "Materials",
@@ -40,10 +47,27 @@
 				AssetResourceType.Model => "ResourceType_Model",
 				AssetResourceType.Audio => "ResourceType_Audio",
 				AssetResourceType.Scene => "ResourceType_Scene",
+				AssetResourceType.View => "ResourceType_View",
 				AssetResourceType.Script => "ResourceType_Script",
 				AssetResourceType.Shader => "ResourceType_Shader",
 				AssetResourceType.Material => "ResourceType_Material",
 				_ => throw new System.ArgumentOutOfRangeException(nameof(type), type, null)
+			};
+		}
+
+		public static string[] GetExtensions(AssetResourceType type)
+		{
+			return type switch
+			{
+				AssetResourceType.Scene => new[] { ExtScene },
+				AssetResourceType.View => new[] { ExtView },
+				AssetResourceType.Script => new[] { ExtScriptCpp, ExtScriptHpp },
+				AssetResourceType.Texture => new[] { ".png", ".jpg", ".jpeg", ".tga", ".bmp" },
+				AssetResourceType.Model => new[] { ".fbx", ".obj", ".gltf", ".glb" },
+				AssetResourceType.Audio => new[] { ".wav", ".mp3", ".ogg" },
+				AssetResourceType.Shader => new[] { ".hlsl", ".glsl", ".shader" },
+				AssetResourceType.Material => new[] { ".mat" },
+				_ => System.Array.Empty<string>()
 			};
 		}
 	}

@@ -40,7 +40,7 @@ namespace editor.Services.Project.Assets
 
 			EditorLogger.LogInfo("[Script Index] Запуск полного скана проекта на .meta файлы скриптов...");
 			var vfs = new ProjectFileSystem(_storage);
-			vfs.SyncScriptMetaFiles(projectRoot);
+			vfs.SyncAssetMetaFiles(projectRoot);
 
 			Rebuild(affectsCompilation: false);
 		}
@@ -94,8 +94,8 @@ namespace editor.Services.Project.Assets
 
 				bool affectsCompilation = IsScriptSourceFile(e.FullPath) ||
 					(e.OldFullPath != null && IsScriptSourceFile(e.OldFullPath));
-				bool affectsIndex = affectsCompilation || IsScriptMetaFile(e.FullPath) ||
-					(e.OldFullPath != null && IsScriptMetaFile(e.OldFullPath));
+				bool affectsIndex = affectsCompilation || IsAssetMetaFile(e.FullPath) ||
+					(e.OldFullPath != null && IsAssetMetaFile(e.OldFullPath));
 
 				if (!affectsIndex)
 				{
@@ -169,26 +169,48 @@ namespace editor.Services.Project.Assets
 				return;
 			}
 
-			string basePath = Path.Combine(
-				Path.GetDirectoryName(metaPath) ?? string.Empty,
-				Path.GetFileNameWithoutExtension(metaPath));
-			string hppPath = basePath + ".hpp";
-			if (!_storage.FileExists(hppPath))
+			string baseName = Path.GetFileNameWithoutExtension(metaPath);
+			string dir = Path.GetDirectoryName(metaPath) ?? string.Empty;
+			string ext = Path.GetExtension(baseName).ToLower();
+			
+			bool isAsset = ext == ".zs" || ext == ".zv";
+			string hppPath = string.Empty;
+			string cppPath = string.Empty;
+			string assetPath = string.Empty;
+
+			if (isAsset)
 			{
-				return;
+				assetPath = Path.Combine(dir, baseName);
+				if (!_storage.FileExists(assetPath))
+				{
+					return;
+				}
+			}
+			else
+			{
+				string basePath = Path.Combine(dir, baseName);
+				hppPath = basePath + ".hpp";
+				cppPath = basePath + ".cpp";
+				if (!_storage.FileExists(hppPath))
+				{
+					return;
+				}
 			}
 
-			var meta = ScriptMetaFile.Load(_storage, metaPath);
+			var meta = AssetMetaFile.Load(_storage, metaPath);
 			if (meta == null || string.IsNullOrWhiteSpace(meta.Guid))
 			{
 				return;
 			}
 
-			string cppPath = basePath + ".cpp";
-			string scriptNamespace = meta.Namespace;
-			if (string.IsNullOrWhiteSpace(scriptNamespace))
+			string scriptNamespace = string.Empty;
+			if (!isAsset)
 			{
-				scriptNamespace = ScriptMetaFile.InferNamespaceFromHeader(_storage.ReadAllText(hppPath), meta.ClassName);
+				scriptNamespace = meta.Namespace;
+				if (string.IsNullOrWhiteSpace(scriptNamespace))
+				{
+					scriptNamespace = AssetMetaFile.InferNamespaceFromHeader(_storage.ReadAllText(hppPath), meta.ClassName);
+				}
 			}
 
 			var info = new ScriptAssetInfo
@@ -196,8 +218,9 @@ namespace editor.Services.Project.Assets
 				Guid = meta.Guid,
 				ClassName = meta.ClassName,
 				Namespace = scriptNamespace,
-				HppPath = ToProjectRelativePath(hppPath),
-				CppPath = _storage.FileExists(cppPath) ? ToProjectRelativePath(cppPath) : string.Empty,
+				AssetPath = isAsset ? ToProjectRelativePath(assetPath) : string.Empty,
+				HppPath = !isAsset ? ToProjectRelativePath(hppPath) : string.Empty,
+				CppPath = !isAsset && _storage.FileExists(cppPath) ? ToProjectRelativePath(cppPath) : string.Empty,
 				MetaPath = ToProjectRelativePath(metaPath)
 			};
 
@@ -208,19 +231,23 @@ namespace editor.Services.Project.Assets
 			}
 
 			_byGuid[info.Guid] = info;
-			if (!_byClassName.TryGetValue(info.ClassName, out var classItems))
+			
+			if (!isAsset)
 			{
-				classItems = new List<ScriptAssetInfo>();
-				_byClassName[info.ClassName] = classItems;
-			}
-			classItems.Add(info);
+				if (!_byClassName.TryGetValue(info.ClassName, out var classItems))
+				{
+					classItems = new List<ScriptAssetInfo>();
+					_byClassName[info.ClassName] = classItems;
+				}
+				classItems.Add(info);
 
-			if (!_byQualifiedName.TryGetValue(info.QualifiedName, out var qualifiedItems))
-			{
-				qualifiedItems = new List<ScriptAssetInfo>();
-				_byQualifiedName[info.QualifiedName] = qualifiedItems;
+				if (!_byQualifiedName.TryGetValue(info.QualifiedName, out var qualifiedItems))
+				{
+					qualifiedItems = new List<ScriptAssetInfo>();
+					_byQualifiedName[info.QualifiedName] = qualifiedItems;
+				}
+				qualifiedItems.Add(info);
 			}
-			qualifiedItems.Add(info);
 		}
 
 		private string ToProjectRelativePath(string fullPath)
@@ -230,12 +257,11 @@ namespace editor.Services.Project.Assets
 
 		private static bool IsScriptSourceFile(string fullPath)
 		{
-			string ext = Path.GetExtension(fullPath);
-			return ext.Equals(".hpp", StringComparison.OrdinalIgnoreCase) ||
-				ext.Equals(".cpp", StringComparison.OrdinalIgnoreCase);
+			string ext = Path.GetExtension(fullPath).ToLower();
+			return ext == ".hpp" || ext == ".cpp";
 		}
 
-		private static bool IsScriptMetaFile(string fullPath)
+		private static bool IsAssetMetaFile(string fullPath)
 		{
 			return Path.GetExtension(fullPath).Equals(".meta", StringComparison.OrdinalIgnoreCase);
 		}

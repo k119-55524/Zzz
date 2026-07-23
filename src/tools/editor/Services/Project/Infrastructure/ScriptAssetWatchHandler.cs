@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace editor.Services.Project.Infrastructure
@@ -33,8 +33,8 @@ namespace editor.Services.Project.Infrastructure
             if (storage.FileExists(metaPath))
                 return;
 
-            var data = ScriptMetaFile.CreateNew(baseName);
-            ScriptMetaFile.Save(storage, metaPath, data);
+            var data = AssetMetaFile.CreateNew(baseName);
+            AssetMetaFile.Save(storage, metaPath, data);
             EditorLogger.LogInfo($"[Meta System] Обнаружен внешний '{baseName}.hpp' - сгенерирован '{baseName}.meta' (GUID: {data.Guid}).");
         }
 

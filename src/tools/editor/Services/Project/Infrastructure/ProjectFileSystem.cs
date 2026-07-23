@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -18,6 +18,7 @@ namespace editor.Services.Project.Infrastructure
         private bool _isEditing;
         private bool _isSearchVisible = true;
         private System.Collections.ObjectModel.ObservableCollection<ProjectNode> _children = new();
+        public string? PendingAssetExtension { get; set; }
 
         public string Name
         {
@@ -111,6 +112,34 @@ namespace editor.Services.Project.Infrastructure
                 if (_isScript != value)
                 {
                     _isScript = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private bool _isScene;
+        public bool IsScene
+        {
+            get => _isScene;
+            set
+            {
+                if (_isScene != value)
+                {
+                    _isScene = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private bool _isView;
+        public bool IsView
+        {
+            get => _isView;
+            set
+            {
+                if (_isView != value)
+                {
+                    _isView = value;
                     OnPropertyChanged();
                 }
             }
@@ -384,12 +413,12 @@ namespace editor.Services.Project.Infrastructure
                     string scriptNamespace = string.Empty;
                     if (hasMeta)
                     {
-                        var meta = ScriptMetaFile.Load(_storage, metaPath);
+                        var meta = AssetMetaFile.Load(_storage, metaPath);
                         scriptNamespace = meta?.Namespace ?? string.Empty;
                     }
                     if (string.IsNullOrWhiteSpace(scriptNamespace))
                     {
-                        scriptNamespace = ScriptMetaFile.InferNamespaceFromHeader(_storage.ReadAllText(filePath), baseName);
+                        scriptNamespace = AssetMetaFile.InferNamespaceFromHeader(_storage.ReadAllText(filePath), baseName);
                     }
 
                     var scriptNode = new ProjectNode
@@ -422,7 +451,7 @@ namespace editor.Services.Project.Infrastructure
             }
 
             // 3. Обрабатываем все остальные файлы (.meta всегда скрыты - это служебные данные редактора,
-            // не ассет; включая "осиротевшие" .meta без пары .hpp - их подчищает SyncScriptMetaFiles)
+            // не ассет; включая "осиротевшие" .meta без пары .hpp - их подчищает SyncAssetMetaFiles)
             foreach (var filePath in filePaths)
             {
                 if (processedFiles.Contains(filePath))
@@ -439,7 +468,9 @@ namespace editor.Services.Project.Infrastructure
                 {
                     Name = name,
                     RelativePath = relPath,
-                    IsFolder = false
+                    IsFolder = false,
+                    IsScene = ext == ".zs",
+                    IsView = ext == ".zv"
                 };
 
                 nodes.Add(node);
@@ -479,21 +510,21 @@ namespace editor.Services.Project.Infrastructure
         /// и удаляет "осиротевшие" .meta без .hpp. Вызывается только при открытии/смене проекта
         /// (не на каждый RefreshTree) - это единственное место, где скан мутирует диск.
         /// </summary>
-        public void SyncScriptMetaFiles(string projectRoot)
+        public void SyncAssetMetaFiles(string projectRoot)
         {
             string assetsRoot = Path.Combine(projectRoot, "Assets");
             if (!_storage.DirectoryExists(assetsRoot))
                 return;
 
             var guidToPaths = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
-            SyncScriptMetaFilesRecursive(assetsRoot, guidToPaths);
+            SyncAssetMetaFilesRecursive(assetsRoot, guidToPaths);
 
             // Сканер коллизий GUID сознательно пока не обрабатывает найденные дубли (см. обсуждение
             // архитектуры) - точка интеграции уже на месте, чтобы не искать её, когда дойдут руки.
             GuidCollisionScanner.Scan(guidToPaths);
         }
 
-        private void SyncScriptMetaFilesRecursive(string currentPath, Dictionary<string, List<string>> guidToPaths)
+        private void SyncAssetMetaFilesRecursive(string currentPath, Dictionary<string, List<string>> guidToPaths)
         {
             if (!_storage.DirectoryExists(currentPath))
                 return;
@@ -501,22 +532,27 @@ namespace editor.Services.Project.Infrastructure
             var entries = _storage.GetFileSystemEntries(currentPath);
             var filePaths = entries.Where(e => !_storage.DirectoryExists(e)).ToList();
 
-            foreach (var hppPath in filePaths.Where(f => Path.GetExtension(f).Equals(".hpp", StringComparison.OrdinalIgnoreCase)))
+            var assetExtensions = new[] { ".hpp", ".zs", ".zv" };
+            foreach (var assetPath in filePaths.Where(f => assetExtensions.Contains(Path.GetExtension(f).ToLower())))
             {
-                string baseName = Path.GetFileNameWithoutExtension(hppPath);
-                string dir = Path.GetDirectoryName(hppPath) ?? currentPath;
-                string metaPath = Path.Combine(dir, baseName + ".meta");
+                string baseName = Path.GetFileNameWithoutExtension(assetPath);
+                string dir = Path.GetDirectoryName(assetPath) ?? currentPath;
+                string ext = Path.GetExtension(assetPath).ToLower();
+                
+                string metaPath = ext == ".hpp"
+                    ? Path.Combine(dir, baseName + ".meta")
+                    : Path.Combine(dir, baseName + ext + ".meta");
 
                 if (!_storage.FileExists(metaPath))
                 {
-                    var data = ScriptMetaFile.CreateNew(baseName);
-                    ScriptMetaFile.Save(_storage, metaPath, data);
-                    EditorLogger.LogInfo($"[Meta System] Сгенерирован недостающий meta-файл '{baseName}.meta' для '{baseName}.hpp' (GUID: {data.Guid}).");
+                    var data = AssetMetaFile.CreateNew(baseName);
+                    AssetMetaFile.Save(_storage, metaPath, data);
+                    EditorLogger.LogInfo($"[Meta System] Сгенерирован недостающий meta-файл '{Path.GetFileName(metaPath)}' для '{Path.GetFileName(assetPath)}' (GUID: {data.Guid}).");
                     AddGuid(guidToPaths, data.Guid, metaPath);
                 }
                 else
                 {
-                    var data = ScriptMetaFile.Load(_storage, metaPath);
+                    var data = AssetMetaFile.Load(_storage, metaPath);
                     if (data != null)
                     {
                         AddGuid(guidToPaths, data.Guid, metaPath);
@@ -526,20 +562,34 @@ namespace editor.Services.Project.Infrastructure
 
             foreach (var metaPath in filePaths.Where(f => Path.GetExtension(f).Equals(".meta", StringComparison.OrdinalIgnoreCase)))
             {
+                // Для ассетов с расширением (например, Main.zs.meta) baseName будет "Main.zs"
+                // Для скриптов (Main.meta) baseName будет "Main", и мы ищем Main.hpp
                 string baseName = Path.GetFileNameWithoutExtension(metaPath);
                 string dir = Path.GetDirectoryName(metaPath) ?? currentPath;
-                string hppPath = Path.Combine(dir, baseName + ".hpp");
-
-                if (!_storage.FileExists(hppPath))
+                
+                string ext = Path.GetExtension(baseName).ToLower();
+                string assetPath;
+                
+                if (ext == ".zs" || ext == ".zv")
                 {
+                    assetPath = Path.Combine(dir, baseName);
+                }
+                else
+                {
+                    assetPath = Path.Combine(dir, baseName + ".hpp");
+                }
+
+                if (!_storage.FileExists(assetPath))
+                {
+                    EditorLogger.LogInfo($"[Meta System Debug] _storage.FileExists returned false for assetPath: '{assetPath}'. MetaPath: '{metaPath}'");
                     _storage.DeleteFile(metaPath);
-                    EditorLogger.LogInfo($"[Meta System] Удалён осиротевший meta-файл '{baseName}.meta' (нет соответствующего '{baseName}.hpp').");
+                    EditorLogger.LogInfo($"[Meta System] Удалён осиротевший meta-файл '{Path.GetFileName(metaPath)}' (нет соответствующего ассета).");
                 }
             }
 
             foreach (var dirPath in entries.Where(e => _storage.DirectoryExists(e)))
             {
-                SyncScriptMetaFilesRecursive(dirPath, guidToPaths);
+                SyncAssetMetaFilesRecursive(dirPath, guidToPaths);
             }
         }
 

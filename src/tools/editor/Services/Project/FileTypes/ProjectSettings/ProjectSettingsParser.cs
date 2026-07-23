@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using editor.Services.Project.Infrastructure;
 
@@ -157,7 +157,8 @@ namespace editor.Services.Project.FileTypes.ProjectSettings
 					Version = ProjectConstants.ProjectVersionString,
 					ShowSystemMode = localData.ShowSystemMode,
 					DisabledFilters = localData.DisabledFilters,
-					DisabledSystemFilters = localData.DisabledSystemFilters
+					DisabledSystemFilters = localData.DisabledSystemFilters,
+					ActiveViewGuid = !string.IsNullOrWhiteSpace(localData.ActiveViewGuid) ? localData.ActiveViewGuid : remoteData.ActiveViewGuid
 				};
 
 				storage.WriteAllText(mergedOutputFilePath, Serialize(mergedData));
@@ -182,6 +183,10 @@ namespace editor.Services.Project.FileTypes.ProjectSettings
 			sb.AppendLine($"show_system_mode = {data.ShowSystemMode.ToString().ToLower()}");
 			sb.AppendLine($"disabled_filters = {TomlLineParser.SerializeStringArray(data.DisabledFilters)}");
 			sb.AppendLine($"disabled_system_filters = {TomlLineParser.SerializeStringArray(data.DisabledSystemFilters)}");
+			if (!string.IsNullOrEmpty(data.ActiveViewGuid))
+			{
+				sb.AppendLine($"active_view_guid = \"{TomlLineParser.Escape(data.ActiveViewGuid)}\"");
+			}
 
 			return sb.ToString();
 		}
@@ -213,6 +218,10 @@ namespace editor.Services.Project.FileTypes.ProjectSettings
 				else if (key == "disabled_system_filters")
 				{
 					data.DisabledSystemFilters = TomlLineParser.ParseStringArray(valStr);
+				}
+				else if (key == "active_view_guid")
+				{
+					data.ActiveViewGuid = valStr.Trim('"');
 				}
 			}
 			return data;

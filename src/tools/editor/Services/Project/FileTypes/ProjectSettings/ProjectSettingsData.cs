@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using editor.Services.Project.Infrastructure;
 using editor.Services.Project.Infrastructure.UndoRedo;
 
@@ -13,6 +13,7 @@ namespace editor.Services.Project.FileTypes.ProjectSettings
 		private bool _showSystemMode;
 		private List<string> _disabledFilters = new();
 		private List<string> _disabledSystemFilters = new();
+		private string _activeViewGuid = string.Empty;
 
 		/// <summary>
 		/// Версия формата проекта.
@@ -67,6 +68,16 @@ namespace editor.Services.Project.FileTypes.ProjectSettings
 		{
 			get => _disabledSystemFilters;
 			set => SetProperty(ref _disabledSystemFilters, value, val => _disabledSystemFilters = val);
+		}
+
+		/// <summary>
+		/// GUID активного вида (View), выбранного двойным кликом.
+		/// </summary>
+		[EditorVisibility(EditorVisibility.Hidden)]
+		public string ActiveViewGuid
+		{
+			get => _activeViewGuid;
+			set => SetProperty(ref _activeViewGuid, value, val => _activeViewGuid = val);
 		}
 	}
 }

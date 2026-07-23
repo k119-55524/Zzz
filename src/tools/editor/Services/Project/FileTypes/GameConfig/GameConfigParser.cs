@@ -1,4 +1,4 @@
-﻿
+
 using editor.Services.Project.Infrastructure;
 
 namespace editor.Services.Project.FileTypes.GameConfig
@@ -138,6 +138,7 @@ namespace editor.Services.Project.FileTypes.GameConfig
 			sb.AppendLine();
 			sb.AppendLine($"defines = {TomlLineParser.SerializeStringArray(data.Defines)}");
 			sb.AppendLine($"log_listener = \"{TomlLineParser.Escape(data.LogListener)}\"");
+			sb.AppendLine($"view_guids = {TomlLineParser.SerializeStringArray(data.ViewGuids)}");
 			sb.AppendLine($"global_script_guids = {TomlLineParser.SerializeStringArray(data.GlobalScriptGuids)}");
 			return sb.ToString();
 		}
@@ -158,6 +159,10 @@ namespace editor.Services.Project.FileTypes.GameConfig
 				else if (key == "log_listener")
 				{
 					data.LogListener = value.Trim('"');
+				}
+				else if (key == "view_guids")
+				{
+					data.ViewGuids = TomlLineParser.ParseStringArray(value);
 				}
 				else if (key == "global_script_guids")
 				{

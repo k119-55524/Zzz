@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -148,6 +148,7 @@ namespace editor.Views.Widgets
             property.IsAssetDropTargetHighlighted = false;
             if (e.Data.GetData(typeof(ProjectNode)) is ProjectNode projectNode)
             {
+                editor.Services.EditorLogger.LogInfo($"[Drop Debug] CollectionDropZone_Drop called for ProjectNode: {projectNode.RelativePath}");
                 property.TryAddProjectNode(projectNode);
                 e.Handled = true;
             }

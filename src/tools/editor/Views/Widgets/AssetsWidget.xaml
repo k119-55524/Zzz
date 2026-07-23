@@ -44,6 +44,24 @@
             </VisualBrush.Visual>
         </VisualBrush>
 
+        <!-- Векторная иконка сцены (фиолетовая) -->
+        <VisualBrush x:Key="Icon_Scene" Stretch="Uniform">
+            <VisualBrush.Visual>
+                <Canvas Width="24" Height="24">
+                    <Path Fill="#FF9C27B0" Data="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                </Canvas>
+            </VisualBrush.Visual>
+        </VisualBrush>
+
+        <!-- Векторная иконка представления (синяя) -->
+        <VisualBrush x:Key="Icon_View" Stretch="Uniform">
+            <VisualBrush.Visual>
+                <Canvas Width="24" Height="24">
+                    <Path Fill="#FF03A9F4" Data="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                </Canvas>
+            </VisualBrush.Visual>
+        </VisualBrush>
+
          <!-- Стиль для ToggleButton в стиле тулбара -->
         <Style x:Key="ToolbarToggleButtonStyle" TargetType="ToggleButton">
             <Setter Property="Background" Value="Transparent"/>
@@ -331,6 +349,8 @@
                             <MenuItem Header="{DynamicResource ContextMenu_Folder}" Click="AddFolderToRoot_Click" />
                             <Separator Style="{StaticResource ThemedSeparatorStyle}" />
                             <MenuItem Header="{DynamicResource Dialog_NewScript_Title}" Tag="Script" Click="AddScriptToRoot_Click" />
+                            <MenuItem Header="New Scene" Click="AddSceneToRoot_Click" />
+                            <MenuItem Header="New View" Click="AddViewToRoot_Click" />
                         </MenuItem>
                     </ContextMenu>
                 </TreeView.ContextMenu>
@@ -355,6 +375,12 @@
                             <DataTrigger Binding="{Binding IsScript}" Value="True">
                                 <Setter TargetName="NodeIcon" Property="Fill" Value="{StaticResource Icon_Script}"/>
                                 <Setter TargetName="ScriptButtons" Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsScene}" Value="True">
+                                <Setter TargetName="NodeIcon" Property="Fill" Value="{StaticResource Icon_Scene}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsView}" Value="True">
+                                <Setter TargetName="NodeIcon" Property="Fill" Value="{StaticResource Icon_View}"/>
                             </DataTrigger>
                             <DataTrigger Binding="{Binding HasCpp}" Value="False">
                                 <Setter TargetName="BtnCpp" Property="Visibility" Value="Collapsed"/>
@@ -389,6 +415,8 @@
                                         <MenuItem Header="{DynamicResource ContextMenu_Folder}" Name="AddFolderMenuItem" />
                                         <Separator Style="{StaticResource ThemedSeparatorStyle}" />
                                         <MenuItem Header="{DynamicResource Dialog_NewScript_Title}" Name="AddScriptMenuItem" Tag="Script" />
+                                        <MenuItem Header="New Scene" Name="AddSceneMenuItem" />
+                                        <MenuItem Header="New View" Name="AddViewMenuItem" />
                                     </MenuItem>
                                     <MenuItem Name="OpenInVsMenuItem" Header="{DynamicResource ContextMenu_OpenInVS}" />
                                     <MenuItem Name="CopyNameMenuItem" Header="{DynamicResource ContextMenu_CopyName}" />

@@ -277,6 +277,39 @@ namespace editor.Views.Widgets
 			ShowNewScriptDialog("Assets", scriptType);
 		}
 
+		private void AddSceneToRoot_Click(object sender, System.Windows.RoutedEventArgs e) => AddAssetToRoot(".zs", "New Scene");
+		private void AddViewToRoot_Click(object sender, System.Windows.RoutedEventArgs e) => AddAssetToRoot(".zv", "New View");
+
+		private void AddAssetToRoot(string extension, string baseName)
+		{
+			var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as ViewModels.MainWindowViewModel;
+			var mainAssetsVm = mainVm?.Panes.OfType<ViewModels.AssetsViewModel>().FirstOrDefault();
+			if (mainVm != null && mainAssetsVm != null)
+			{
+				string fileName = baseName + extension;
+				int index = 1;
+				var siblings = mainAssetsVm.AssetRootNodes.ToList();
+				while (siblings.Any(c => c.Name.Equals(fileName, StringComparison.OrdinalIgnoreCase)))
+				{
+					fileName = $"{baseName} {index++}{extension}";
+				}
+
+				string newRelPath = $"Assets/{fileName}";
+
+				var newNode = new ProjectNode
+				{
+					Name = fileName,
+					RelativePath = newRelPath,
+					IsFolder = false,
+					IsEditing = true,
+					PendingAssetExtension = extension
+				};
+				_pendingNewNodes.Add(newNode);
+
+				mainAssetsVm.AssetRootNodes.Add(newNode);
+			}
+		}
+
 		private void NodeEditTextBox_Loaded(object sender, System.Windows.RoutedEventArgs e)
 		{
 			if (sender is TextBox textBox && textBox.DataContext is ProjectNode node)
@@ -399,12 +432,25 @@ namespace editor.Views.Widgets
 			{
 				_pendingNewNodes.Remove(node);
 
-				var cmd = new editor.Services.Project.Infrastructure.UndoRedo.CreateFolderCommand(
-					newRelPath,
-					projectRoot,
-					isSystemMode,
-					App.ProjectService.Storage
-				);
+				editor.Services.Project.Infrastructure.UndoRedo.IAssetsTreeCommand cmd;
+				if (!string.IsNullOrEmpty(node.PendingAssetExtension))
+				{
+					cmd = new editor.Services.Project.Infrastructure.UndoRedo.CreateAssetCommand(
+						newRelPath,
+						projectRoot,
+						node.PendingAssetExtension,
+						App.ProjectService.Storage
+					);
+				}
+				else
+				{
+					cmd = new editor.Services.Project.Infrastructure.UndoRedo.CreateFolderCommand(
+						newRelPath,
+						projectRoot,
+						isSystemMode,
+						App.ProjectService.Storage
+					);
+				}
 
 				try
 				{
@@ -558,6 +604,16 @@ namespace editor.Views.Widgets
 													{
 														subMenuItem.Click -= AddScript_Click;
 														subMenuItem.Click += AddScript_Click;
+													}
+													else if (subMenuItem.Name == "AddSceneMenuItem")
+													{
+														subMenuItem.Click -= AddScene_Click;
+														subMenuItem.Click += AddScene_Click;
+													}
+													else if (subMenuItem.Name == "AddViewMenuItem")
+													{
+														subMenuItem.Click -= AddView_Click;
+														subMenuItem.Click += AddView_Click;
 													}
 													else
 													{
@@ -1011,6 +1067,54 @@ namespace editor.Views.Widgets
 			{
 				if (e.ClickCount == 2)
 				{
+					if (node.RelativePath.EndsWith(".zv", StringComparison.OrdinalIgnoreCase))
+					{
+						var info = App.ScriptAssetIndexService.ByGuid.Values.FirstOrDefault(i => string.Equals(i.AssetPath, node.RelativePath, StringComparison.OrdinalIgnoreCase));
+						if (info != null)
+						{
+							App.ProjectService.CurrentSettings.ActiveViewGuid = info.Guid;
+							EditorLogger.LogInfo($"[Editor] Активный вид изменен: {System.IO.Path.GetFileName(node.RelativePath)}");
+						}
+						e.Handled = true;
+						return;
+					}
+					else if (node.RelativePath.EndsWith(".zs", StringComparison.OrdinalIgnoreCase))
+					{
+						var sceneInfo = App.ScriptAssetIndexService.ByGuid.Values.FirstOrDefault(i => string.Equals(i.AssetPath, node.RelativePath, StringComparison.OrdinalIgnoreCase));
+						if (sceneInfo != null)
+						{
+							string viewGuid = App.ProjectService.CurrentSettings.ActiveViewGuid;
+							if (string.IsNullOrEmpty(viewGuid))
+							{
+								viewGuid = App.ProjectService.CurrentGameConfig.ViewGuids.FirstOrDefault() ?? string.Empty;
+							}
+
+							if (!string.IsNullOrEmpty(viewGuid) && App.ScriptAssetIndexService.TryGetByGuid(viewGuid, out var viewInfo))
+							{
+								var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as ViewModels.MainWindowViewModel;
+								string? projectRoot = mainVm?.CurrentProjectPath;
+								if (!string.IsNullOrEmpty(projectRoot))
+								{
+									string viewPath = System.IO.Path.Combine(projectRoot, viewInfo.AssetPath);
+									if (App.ProjectService.Storage.FileExists(viewPath))
+									{
+										var toml = App.ProjectService.Storage.ReadAllText(viewPath);
+										var viewData = editor.Services.Project.FileTypes.Assets.ViewAssetParser.Deserialize(toml);
+										viewData.SceneGuid = sceneInfo.Guid;
+										App.ProjectService.Storage.WriteAllText(viewPath, editor.Services.Project.FileTypes.Assets.ViewAssetParser.Serialize(viewData));
+										EditorLogger.LogInfo($"[Editor] Сцена '{System.IO.Path.GetFileName(node.RelativePath)}' привязана к виду '{System.IO.Path.GetFileName(viewInfo.AssetPath)}'");
+									}
+								}
+							}
+							else
+							{
+								EditorLogger.LogWarning("[Editor] Нет активного вида для привязки сцены.");
+							}
+						}
+						e.Handled = true;
+						return;
+					}
+
 					OpenFileInVS(node);
 					e.Handled = true;
 					return;
@@ -1160,7 +1264,6 @@ namespace editor.Views.Widgets
 				if (!string.IsNullOrEmpty(output) && System.IO.File.Exists(output))
 				{
 					_cachedDevenvPath = output;
-
 				}
 				else
 				{
@@ -1173,6 +1276,63 @@ namespace editor.Views.Widgets
 			}
 
 			return _cachedDevenvPath;
+		}
+
+		private void AddScene_Click(object sender, System.Windows.RoutedEventArgs e) => AddAsset_Click(sender, ".zs", "New Scene");
+		private void AddView_Click(object sender, System.Windows.RoutedEventArgs e) => AddAsset_Click(sender, ".zv", "New View");
+
+		private void AddAsset_Click(object sender, string extension, string baseName)
+		{
+			if (sender is not MenuItem menuItem) return;
+			var clickedNode = GetSelectedNode(menuItem);
+			if (clickedNode == null) return;
+
+			CommitActiveEditIfAny();
+
+			var mainVm = System.Windows.Application.Current?.MainWindow?.DataContext as ViewModels.MainWindowViewModel;
+			var mainAssetsVm = mainVm?.Panes.OfType<ViewModels.AssetsViewModel>().FirstOrDefault();
+			if (mainVm == null || mainAssetsVm == null) return;
+
+			string targetRelativePath = clickedNode.RelativePath;
+			var parentNode = FindNodeByPath(mainAssetsVm.AssetRootNodes, targetRelativePath);
+			var ownerRoots = mainAssetsVm.AssetRootNodes;
+
+			if (parentNode == null)
+			{
+				parentNode = FindNodeByPath(mainAssetsVm.SystemRootNodes, targetRelativePath);
+				ownerRoots = mainAssetsVm.SystemRootNodes;
+			}
+			if (parentNode == null) return;
+
+			if (!parentNode.IsFolder)
+			{
+				string parentRelPath = GetParentRelativePath(parentNode.RelativePath);
+				parentNode = string.IsNullOrEmpty(parentRelPath) ? null : FindNodeByPath(ownerRoots, parentRelPath);
+			}
+
+			var childrenCollection = parentNode != null ? parentNode.Children : ownerRoots;
+			string parentPrefix = parentNode != null ? parentNode.RelativePath + "/" : "Assets/";
+
+			string fileName = baseName + extension;
+			int index = 1;
+			while (childrenCollection.Any(c => c.Name.Equals(fileName, StringComparison.OrdinalIgnoreCase)))
+			{
+				fileName = $"{baseName} {index++}{extension}";
+			}
+
+			string newRelPath = parentPrefix + fileName;
+
+			var newNode = new ProjectNode
+			{
+				Name = fileName,
+				RelativePath = newRelPath,
+				IsFolder = false,
+				IsEditing = true,
+				PendingAssetExtension = extension
+			};
+			_pendingNewNodes.Add(newNode);
+
+			childrenCollection.Add(newNode);
 		}
 
 		public static string GetExactPathName(string pathName)

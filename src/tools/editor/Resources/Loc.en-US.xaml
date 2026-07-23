@@ -90,10 +90,11 @@
     <sys:String x:Key="Dialog_NewScript_Name">Name:</sys:String>
     <sys:String x:Key="Dialog_NewScript_Add">Add</sys:String>
     <sys:String x:Key="Dialog_NewScript_Cancel">Cancel</sys:String>
-    <sys:String x:Key="ScriptType_Script">General Script (Script)</sys:String>
-    <sys:String x:Key="ScriptType_Game">Game Script (Global)</sys:String>
-    <sys:String x:Key="ScriptType_Scene">Scene Script (Level)</sys:String>
-    <sys:String x:Key="ScriptType_View">View Script (UI/View)</sys:String>
+    <sys:String x:Key="ScriptType_Script">Script</sys:String>
+    <sys:String x:Key="ScriptType_Game">Game script</sys:String>
+    <sys:String x:Key="ScriptType_Scene">Scene script</sys:String>
+    <sys:String x:Key="ScriptType_View">View script</sys:String>
+    <sys:String x:Key="ScriptType_CppClass">C++ class</sys:String>
 
     <!-- Viewport Toolbars (World & Game) -->
     <sys:String x:Key="Toolbar_Translate">Translate (W)</sys:String>
@@ -182,11 +183,12 @@
     <sys:String x:Key="Error_RenameProject_FolderInUse">Failed to rename the project folder - it may be open in Explorer, a terminal, or another program. Close it there and try again. ({0})</sys:String>
 
     <!-- Resource types (Project / Assets filter) -->
-    <sys:String x:Key="ResourceType_Texture">Textures</sys:String>
-    <sys:String x:Key="ResourceType_Model">Models</sys:String>
+    <sys:String x:Key="ResourceType_Texture">Texture</sys:String>
+    <sys:String x:Key="ResourceType_Model">Model</sys:String>
     <sys:String x:Key="ResourceType_Audio">Audio</sys:String>
-    <sys:String x:Key="ResourceType_Scene">Scenes</sys:String>
-    <sys:String x:Key="ResourceType_Script">Scripts</sys:String>
-    <sys:String x:Key="ResourceType_Shader">Shaders</sys:String>
-    <sys:String x:Key="ResourceType_Material">Materials</sys:String>
+    <sys:String x:Key="ResourceType_Scene">Scene</sys:String>
+    <sys:String x:Key="ResourceType_View">View</sys:String>
+    <sys:String x:Key="ResourceType_Script">Script</sys:String>
+    <sys:String x:Key="ResourceType_Shader">Shader</sys:String>
+    <sys:String x:Key="ResourceType_Material">Material</sys:String>
 </ResourceDictionary>

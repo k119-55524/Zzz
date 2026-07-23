@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -72,6 +72,7 @@ namespace editor.ViewModels
         private readonly bool _isProjectNameField;
         private readonly Action<string>? _onProjectRenamed;
         private readonly EditorCollectionAttribute? _collectionAttribute;
+        private readonly EditorAssetGuidAttribute? _assetGuidAttribute;
         private List<string> _appliedCollectionValues = new();
         private bool _isAssetDropTargetHighlighted;
 
@@ -81,19 +82,21 @@ namespace editor.ViewModels
             _propInfo = propInfo;
             _onChanged = onChanged;
             _collectionAttribute = propInfo.GetCustomAttribute<EditorCollectionAttribute>();
+            _assetGuidAttribute = propInfo.GetCustomAttribute<EditorAssetGuidAttribute>();
             Name = propInfo.GetCustomAttribute<EditorDisplayNameAttribute>()?.DisplayName ?? propInfo.Name;
             IsReadOnly = visibility == EditorVisibility.ReadOnly;
             IsCollection = _collectionAttribute != null && typeof(IEnumerable).IsAssignableFrom(propInfo.PropertyType) && propInfo.PropertyType != typeof(string);
             IsSortableCollection = _collectionAttribute?.IsSortable == true;
             IsAssetGuidCollection = _collectionAttribute?.Kind == EditorCollectionKind.AssetGuidList;
             IsStringCollection = _collectionAttribute?.Kind == EditorCollectionKind.StringList;
+            IsAssetGuid = _assetGuidAttribute != null;
 
             var options = propInfo.GetCustomAttribute<EditorOptionsAttribute>();
             OptionItems = options != null
                 ? new ObservableCollection<string>(ResolveOptions(options))
                 : new ObservableCollection<string>();
             HasOptions = OptionItems.Count > 0;
-            IsStringValue = !IsCollection && !HasOptions;
+            IsStringValue = !IsCollection && !HasOptions && !IsAssetGuid;
 
             AddCollectionItemCommand = new RelayCommand(AddCollectionItem);
             DeleteCollectionItemCommand = new RelayCommand<CollectionItemViewModel>(DeleteCollectionItem);
@@ -118,8 +121,10 @@ namespace editor.ViewModels
         public bool IsSortableCollection { get; }
         public bool IsAssetGuidCollection { get; }
         public bool IsStringCollection { get; }
+        public bool IsAssetGuid { get; }
         public bool HasOptions { get; }
         public bool IsStringValue { get; }
+        public string DisplayValue => ResolveCollectionDisplayValue(Value);
         public ObservableCollection<string> OptionItems { get; }
         public ObservableCollection<CollectionItemViewModel> CollectionItems { get; } = new();
         public ICommand AddCollectionItemCommand { get; }
@@ -196,8 +201,12 @@ namespace editor.ViewModels
                 return;
             }
 
-            _value = _propInfo.GetValue(_owner)?.ToString() ?? string.Empty;
+            if (_value == null)
+            {
+                _value = string.Empty;
+            }
             OnPropertyChanged(nameof(Value));
+            OnPropertyChanged(nameof(DisplayValue));
         }
 
         private void ApplyScalarValue(string value)
@@ -383,7 +392,7 @@ namespace editor.ViewModels
 
         public void TryAddProjectNode(ProjectNode? node)
         {
-            if (!TryResolveProjectNodeScript(node, out ScriptAssetInfo? script, out string error))
+            if (!TryResolveProjectNodeGuid(node, out ScriptAssetInfo? info, out string error))
             {
                 if (!string.IsNullOrWhiteSpace(error))
                 {
@@ -392,46 +401,112 @@ namespace editor.ViewModels
                 return;
             }
 
-            CollectionItems.Add(CreateCollectionItem(script!.Guid));
-            SelectedCollectionItem = CollectionItems.LastOrDefault();
-            WriteCollectionValues();
+            if (IsAssetGuidCollection)
+            {
+                CollectionItems.Add(CreateCollectionItem(info!.Guid));
+                SelectedCollectionItem = CollectionItems.LastOrDefault();
+                WriteCollectionValues();
+            }
+            else if (IsAssetGuid)
+            {
+                Value = info!.Guid;
+            }
         }
 
         public bool CanAddProjectNode(ProjectNode? node)
         {
-            return TryResolveProjectNodeScript(node, out _, out _);
+            return TryResolveProjectNodeGuid(node, out _, out _);
         }
 
-        private bool TryResolveProjectNodeScript(ProjectNode? node, out ScriptAssetInfo? script, out string error)
+        private bool TryResolveProjectNodeGuid(ProjectNode? node, out ScriptAssetInfo? info, out string error)
         {
-            script = null;
+            info = null;
             error = string.Empty;
 
-            if (!IsAssetGuidCollection)
+            if ((!IsAssetGuidCollection && !IsAssetGuid) || node == null)
             {
                 return false;
             }
 
-            if (node == null || !node.IsScript)
+            AssetResourceType? assetType = null;
+            bool allowDuplicates = false;
+            string propName = Name;
+
+            if (IsAssetGuidCollection && _collectionAttribute != null)
             {
-                error = "[Game Config] В Global scripts можно добавлять только скриптовые ассеты.";
+                assetType = _collectionAttribute.AssetType;
+                allowDuplicates = _collectionAttribute.AllowDuplicates;
+            }
+            else if (IsAssetGuid && _assetGuidAttribute != null)
+            {
+                assetType = _assetGuidAttribute.AssetType;
+                allowDuplicates = true;
+            }
+
+            if (assetType == null)
+            {
                 return false;
             }
 
-            script = App.ScriptAssetIndexService.ByGuid.Values.FirstOrDefault(info =>
-                string.Equals(info.HppPath, node.HppRelativePath, StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(info.MetaPath, node.MetaRelativePath, StringComparison.OrdinalIgnoreCase));
-            if (script == null)
+            if (assetType == AssetResourceType.Script)
             {
-                error = $"[Game Config] У скрипта '{node.DisplayName}' нет корректного GUID в индексе скриптов.";
+                if (!node.IsScript)
+                {
+                    error = $"[{propName}] В данный список можно добавлять только скриптовые ассеты.";
+                    return false;
+                }
+
+                info = App.ScriptAssetIndexService.ByGuid.Values.FirstOrDefault(i =>
+                    string.Equals(i.HppPath, node.HppRelativePath, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(i.MetaPath, node.MetaRelativePath, StringComparison.OrdinalIgnoreCase));
+            }
+            else if (assetType == AssetResourceType.View)
+            {
+                if (!node.RelativePath.EndsWith(".zv", StringComparison.OrdinalIgnoreCase))
+                {
+                    error = $"[{propName}] В данный список можно добавлять только представления (.zv).";
+                    return false;
+                }
+                
+                info = App.ScriptAssetIndexService.ByGuid.Values.FirstOrDefault(i =>
+                    string.Equals(i.AssetPath, node.RelativePath, StringComparison.OrdinalIgnoreCase));
+            }
+            else if (assetType == AssetResourceType.Scene)
+            {
+                if (!node.RelativePath.EndsWith(".zs", StringComparison.OrdinalIgnoreCase))
+                {
+                    error = $"[{propName}] В данный список можно добавлять только сцены (.zs). Node path: {node.RelativePath}";
+                    return false;
+                }
+                
+                info = App.ScriptAssetIndexService.ByGuid.Values.FirstOrDefault(i =>
+                    string.Equals(i.AssetPath, node.RelativePath, StringComparison.OrdinalIgnoreCase));
+                    
+                if (info == null)
+                {
+                    EditorLogger.LogInfo($"[Drop Debug] Failed to find Scene for path: {node.RelativePath}. Total in ByGuid: {App.ScriptAssetIndexService.ByGuid.Count}");
+                }
+                else
+                {
+                    EditorLogger.LogInfo($"[Drop Debug] Successfully found Scene for path: {node.RelativePath}. Guid: {info.Guid}");
+                }
+            }
+            else
+            {
                 return false;
             }
 
-            string scriptGuid = script.Guid;
-            if (_collectionAttribute?.AllowDuplicates != true &&
-                CollectionItems.Any(item => string.Equals(item.Value, scriptGuid, StringComparison.OrdinalIgnoreCase)))
+            if (info == null)
             {
-                error = $"[Game Config] Скрипт '{script.ClassName}' уже есть в Global scripts.";
+                error = $"[{propName}] У ассета '{node.DisplayName}' нет корректного GUID в индексе.";
+                return false;
+            }
+
+            string assetGuid = info.Guid;
+            if (!allowDuplicates && IsAssetGuidCollection &&
+                CollectionItems.Any(item => string.Equals(item.Value, assetGuid, StringComparison.OrdinalIgnoreCase)))
+            {
+                error = $"[{propName}] Ассет '{node.DisplayName}' уже добавлен в список.";
                 return false;
             }
 
@@ -471,14 +546,16 @@ namespace editor.ViewModels
 
         private string ResolveCollectionDisplayValue(string value)
         {
-            if (IsAssetGuidCollection)
+            if (IsAssetGuidCollection || IsAssetGuid)
             {
                 if (App.ScriptAssetIndexService.TryGetByGuid(value, out ScriptAssetInfo info))
                 {
+                    if (!string.IsNullOrEmpty(info.AssetPath))
+                        return System.IO.Path.GetFileNameWithoutExtension(info.AssetPath);
                     return info.ClassName;
                 }
 
-                return string.IsNullOrWhiteSpace(value) ? "<missing script>" : $"<missing> {value}";
+                return string.IsNullOrWhiteSpace(value) ? "<missing asset>" : $"<missing> {value}";
             }
 
             return value;
@@ -634,7 +711,9 @@ namespace editor.ViewModels
                         ShowFolderStats = true;
                     }
                 }
-                else if (node.Name.EndsWith(".toml", StringComparison.OrdinalIgnoreCase))
+                else if (node.Name.EndsWith(".toml", StringComparison.OrdinalIgnoreCase) ||
+                         node.Name.EndsWith(".zs", StringComparison.OrdinalIgnoreCase) ||
+                         node.Name.EndsWith(".zv", StringComparison.OrdinalIgnoreCase))
                 {
                     TryShowConfigFile(node);
                 }
@@ -659,15 +738,29 @@ namespace editor.ViewModels
                 return false;
             }
 
-            var schema = ProjectStructure.AllFiles.FirstOrDefault(file =>
-                string.Equals(file.RelativePath, node.RelativePath, StringComparison.OrdinalIgnoreCase));
-            if (schema?.Parser is not IEditorConfigParser editorParser)
+            string fullPath = Path.Combine(projectRoot, node.RelativePath);
+            if (!App.ProjectService.Storage.FileExists(fullPath))
             {
                 return false;
             }
 
-            string fullPath = Path.Combine(projectRoot, node.RelativePath);
-            if (!App.ProjectService.Storage.FileExists(fullPath))
+            IEditorConfigParser? editorParser = null;
+            if (node.Name.EndsWith(".zs", StringComparison.OrdinalIgnoreCase))
+            {
+                editorParser = new editor.Services.Project.FileTypes.Assets.SceneAssetParser();
+            }
+            else if (node.Name.EndsWith(".zv", StringComparison.OrdinalIgnoreCase))
+            {
+                editorParser = new editor.Services.Project.FileTypes.Assets.ViewAssetParser();
+            }
+            else
+            {
+                var schema = ProjectStructure.AllFiles.FirstOrDefault(file =>
+                    string.Equals(file.RelativePath, node.RelativePath, StringComparison.OrdinalIgnoreCase));
+                editorParser = schema?.Parser as IEditorConfigParser;
+            }
+
+            if (editorParser == null)
             {
                 return false;
             }
@@ -760,6 +853,7 @@ namespace editor.ViewModels
             try
             {
                 string content = _currentParser.SerializeFromEditor(_currentConfigData);
+                EditorLogger.LogInfo($"[Save Debug] Writing config to '{_currentConfigFullPath}':\n{content}");
                 App.ProjectService.Storage.WriteAllText(_currentConfigFullPath, content);
             }
             catch (Exception ex)

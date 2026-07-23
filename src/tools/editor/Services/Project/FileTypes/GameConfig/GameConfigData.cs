@@ -1,4 +1,4 @@
-﻿
+
 using editor.Models;
 using editor.Services.Project.Infrastructure;
 
@@ -22,6 +22,15 @@ namespace editor.Services.Project.FileTypes.GameConfig
 		[EditorDisplayName("Log listener")]
 		[EditorOptions(EditorOptionsSource.LogListeners, AllowNone = true)]
 		public string LogListener { get; set; } = string.Empty;
+
+		[EditorVisibility(EditorVisibility.Editable)]
+		[EditorDisplayName("Views")]
+		[EditorCollection(
+			EditorCollectionKind.AssetGuidList,
+			AssetType = AssetResourceType.View,
+			IsSortable = true,
+			AllowDuplicates = false)]
+		public List<string> ViewGuids { get; set; } = new();
 
 		[EditorVisibility(EditorVisibility.Editable)]
 		[EditorDisplayName("Global scripts")]

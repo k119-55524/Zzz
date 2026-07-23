@@ -91,9 +91,10 @@
     <sys:String x:Key="Dialog_NewScript_Add">Добавить</sys:String>
     <sys:String x:Key="Dialog_NewScript_Cancel">Отмена</sys:String>
     <sys:String x:Key="ScriptType_Script">Скрипт</sys:String>
-    <sys:String x:Key="ScriptType_Game">Игровой скрипт</sys:String>
-    <sys:String x:Key="ScriptType_Scene">Скрипт сцены</sys:String>
-    <sys:String x:Key="ScriptType_View">Скрипт вью (View)</sys:String>
+    <sys:String x:Key="ScriptType_Game">Гейм скрипт</sys:String>
+    <sys:String x:Key="ScriptType_Scene">Сцен скрипт</sys:String>
+    <sys:String x:Key="ScriptType_View">Вью скрипт</sys:String>
+    <sys:String x:Key="ScriptType_CppClass">С++ класс</sys:String>
 
     <!-- Тулбары вьюпортов (Мир и Игра) -->
     <sys:String x:Key="Toolbar_Translate">Перемещение (W)</sys:String>
@@ -184,8 +185,9 @@
     <!-- Типы ресурсов (фильтр в Project / Assets) -->
     <sys:String x:Key="ResourceType_Texture">Текстуры</sys:String>
     <sys:String x:Key="ResourceType_Model">Модели</sys:String>
-    <sys:String x:Key="ResourceType_Audio">Звук</sys:String>
+    <sys:String x:Key="ResourceType_Audio">Звуки</sys:String>
     <sys:String x:Key="ResourceType_Scene">Сцены</sys:String>
+    <sys:String x:Key="ResourceType_View">Вьюшки</sys:String>
     <sys:String x:Key="ResourceType_Script">Скрипты</sys:String>
     <sys:String x:Key="ResourceType_Shader">Шейдеры</sys:String>
     <sys:String x:Key="ResourceType_Material">Материалы</sys:String>

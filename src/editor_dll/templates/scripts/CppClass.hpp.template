@@ -1,0 +1,9 @@
+#pragma once
+
+{NamespaceOpenHpp}{NamespaceIndent}class {ClassName}
+{NamespaceIndent}{
+{NamespaceIndent}public:
+{NamespaceIndent}	{ClassName}();
+{NamespaceIndent}	~{ClassName}();
+{NamespaceIndent}};
+{NamespaceCloseHpp}

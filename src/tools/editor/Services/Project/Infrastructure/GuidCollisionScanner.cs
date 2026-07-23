@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace editor.Services.Project.Infrastructure
 {
@@ -10,13 +10,13 @@ namespace editor.Services.Project.Infrastructure
     public class GuidCollisionGroup
     {
         public string Guid { get; set; } = string.Empty;
-        public List<string> ConflictingMetaPaths { get; set; } = new();
+        public List<string> ConflictingAssetMetaPaths { get; set; } = new();
     }
 
     /// <summary>
     /// Точка интеграции для будущей проверки дублей GUID. Сейчас намеренно не делает ничего -
     /// решение по обработке коллизий ещё не принято (см. обсуждение архитектуры meta/GUID),
-    /// поэтому сканер уже встроен в SyncScriptMetaFiles, но возвращает пустой результат.
+    /// поэтому сканер уже встроен в SyncAssetMetaFiles, но возвращает пустой результат.
     /// </summary>
     public static class GuidCollisionScanner
     {

@@ -1,0 +1,10 @@
+#include "{ClassName}.hpp"
+
+{NamespaceOpenCpp}{NamespaceIndent}{ClassName}::{ClassName}()
+{NamespaceIndent}{
+{NamespaceIndent}}
+
+{NamespaceIndent}{ClassName}::~{ClassName}()
+{NamespaceIndent}{
+{NamespaceIndent}}
+{NamespaceCloseCpp}

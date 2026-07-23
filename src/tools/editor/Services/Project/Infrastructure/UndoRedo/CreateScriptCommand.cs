@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -104,9 +104,9 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
 			_storage.WriteAllText(finalCppPath, finalCpp);
 			_createdPaths.Add(finalCppPath);
 
-			var metaData = ScriptMetaFile.CreateNew(_className, _scriptNamespace);
+			AssetMetaData metaData = AssetMetaFile.CreateNew(_className, _scriptNamespace);
 			metaData.Guid = _guid;
-			ScriptMetaFile.Save(_storage, finalMetaPath, metaData);
+			AssetMetaFile.Save(_storage, finalMetaPath, metaData);
 			_createdPaths.Add(finalMetaPath);
 
 			_onScriptChanged?.Invoke();

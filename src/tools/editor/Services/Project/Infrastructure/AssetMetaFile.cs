@@ -5,9 +5,11 @@ using editor.Services;
 
 namespace editor.Services.Project.Infrastructure
 {
-    public class ScriptMetaData
+    public class AssetMetaData
     {
         public string Guid { get; set; } = string.Empty;
+
+        public string ResourceType { get; set; } = string.Empty;
 
         public string ClassName { get; set; } = string.Empty;
 
@@ -18,19 +20,20 @@ namespace editor.Services.Project.Infrastructure
             : $"{Namespace}::{ClassName}";
     }
 
-    public static class ScriptMetaFile
+    public static class AssetMetaFile
     {
-        public static ScriptMetaData CreateNew(string className, string scriptNamespace = "")
+        public static AssetMetaData CreateNew(string className, string scriptNamespace = "", string resourceType = "")
         {
-            return new ScriptMetaData
+            return new AssetMetaData
             {
                 Guid = System.Guid.NewGuid().ToString(),
                 ClassName = className,
-                Namespace = scriptNamespace?.Trim() ?? string.Empty
+                Namespace = scriptNamespace?.Trim() ?? string.Empty,
+                ResourceType = resourceType
             };
         }
 
-        public static ScriptMetaData? Load(IFileStorage storage, string metaPath)
+        public static AssetMetaData? Load(IFileStorage storage, string metaPath)
         {
             if (!storage.FileExists(metaPath))
                 return null;
@@ -42,12 +45,12 @@ namespace editor.Services.Project.Infrastructure
             }
             catch (Exception ex)
             {
-                EditorLogger.LogError($"[Meta System] Failed to parse script meta file '{metaPath}': {ex.Message}");
+                EditorLogger.LogError($"[Meta System] Failed to parse asset meta file '{metaPath}': {ex.Message}");
                 return null;
             }
         }
 
-        public static void Save(IFileStorage storage, string metaPath, ScriptMetaData data)
+        public static void Save(IFileStorage storage, string metaPath, AssetMetaData data)
         {
             storage.WriteAllText(metaPath, Serialize(data));
         }
@@ -104,23 +107,31 @@ namespace editor.Services.Project.Infrastructure
             return string.Empty;
         }
 
-        private static string Serialize(ScriptMetaData data)
+        private static string Serialize(AssetMetaData data)
         {
             var sb = new System.Text.StringBuilder();
             sb.AppendLine($"guid = \"{TomlLineParser.Escape(data.Guid)}\"");
-            sb.AppendLine($"class_name = \"{TomlLineParser.Escape(data.ClassName)}\"");
-            sb.AppendLine($"namespace = \"{TomlLineParser.Escape(data.Namespace)}\"");
+            if (!string.IsNullOrEmpty(data.ResourceType))
+                sb.AppendLine($"resource_type = \"{TomlLineParser.Escape(data.ResourceType)}\"");
+            if (!string.IsNullOrEmpty(data.ClassName))
+                sb.AppendLine($"class_name = \"{TomlLineParser.Escape(data.ClassName)}\"");
+            if (!string.IsNullOrEmpty(data.Namespace))
+                sb.AppendLine($"namespace = \"{TomlLineParser.Escape(data.Namespace)}\"");
             return sb.ToString();
         }
 
-        private static ScriptMetaData Deserialize(string toml)
+        private static AssetMetaData Deserialize(string toml)
         {
-            var data = new ScriptMetaData();
+            var data = new AssetMetaData();
             foreach (var (key, value) in TomlLineParser.ParseKeyValueLines(toml))
             {
                 if (key == "guid")
                 {
                     data.Guid = value.Trim('"');
+                }
+                else if (key == "resource_type")
+                {
+                    data.ResourceType = value.Trim('"');
                 }
                 else if (key == "class_name")
                 {
