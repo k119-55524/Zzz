@@ -52,7 +52,6 @@ namespace zzz::engine
 		virtual void OnUpdateSystem();
 
 		void LoadGlobalScripts(const std::vector<std::string>& globalScripts);
-		void StopGame();
 
 		std::mutex stateMutex;
 		std::atomic<eInitState> engineState;

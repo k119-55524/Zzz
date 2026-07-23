@@ -1,7 +1,0 @@
-version = "1.0.0"
-name = "super_game"
-
-[editor]
-show_system_mode = true
-disabled_filters = []
-disabled_system_filters = []

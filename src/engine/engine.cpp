@@ -39,17 +39,25 @@ void Engine::Shutdown()
 	{
 		m_MainLoop = nullptr;
 		m_ViewManager = nullptr;
-		m_EventBus = nullptr;
+
+		{
+			if (m_EventBus)
+				m_EventBus->InvokeDestroy();
+
+			for (const auto& script : m_Scripts)
+				if (script)
+					script->SetActive(false);
+
+			m_Scripts.clear();
+			m_EventBus = nullptr;
+		}
+
 		m_Time = nullptr;
 		m_Platform = nullptr;
 	}
 	catch (const std::exception& e)
 	{
 		DOutException("Исключение при завершении работы: {}.", e.what());
-	}
-	catch (...)
-	{
-		DOutException("Неизвестное исключение при завершении работы.");
 	}
 
 	engineState.store(eInitState::NotInitialized);
@@ -64,20 +72,6 @@ void Engine::Initialize()
 
 	engineState.store(eInitState::Initialized);
 	DOut("Инициализация: OK.");
-}
-
-void Engine::StopGame()
-{
-	m_EventBus->InvokeDestroy();
-	for (const auto& script : m_Scripts)
-	{
-		if (script)
-		{
-			script->SetActive(false);
-		}
-	}
-
-	m_Scripts.clear();
 }
 
 [[nodiscard]] std::expected<void, std::string> Engine::Run()
@@ -96,14 +90,10 @@ void Engine::StopGame()
 	try
 	{
 		m_ViewManager->CreateView();
-		m_ViewManager->CreateView();
 
 		StartGame(zzz::script::ScriptRegistry::GetAllGameScriptNames());
 		m_Time->ResetFrameTimer();
 		m_MainLoop->Run();
-
-		if constexpr (!Platform::c_AsyncRunLoop)
-			StopGame();
 	}
 	catch (const std::exception& e)
 	{
@@ -154,9 +144,7 @@ void Engine::LoadGlobalScripts(const std::vector<std::string>& globalScripts)
 			DOut("Глобальный скрипт инициализирован: {}", scriptName);
 		}
 		else
-		{
 			DOutError("Не удалось создать глобальный скрипт: {}", scriptName);
-		}
 	}
 }
 

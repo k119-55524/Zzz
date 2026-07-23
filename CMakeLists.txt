@@ -105,6 +105,8 @@ target_link_libraries(common_lib_editor PUBLIC logger_lib_editor)
 
 add_subdirectory(src/tools/RemoteLogViewer)
 add_subdirectory(src/engine)
+add_subdirectory(src/projects/libs_user_scripts/zzz_scripts)
+
 
 if(ANDROID)
     add_subdirectory(src/projects/game_android)
