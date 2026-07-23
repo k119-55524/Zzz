@@ -116,7 +116,7 @@ void ConfigManager::Initialize()
 	DOut("Конфигурация успешно сериализована в файл: {}.", m_ConfigPath.string());
 
 	return {};
-#endif
+#endif // Z_EDITOR
 }
 
 std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path path)

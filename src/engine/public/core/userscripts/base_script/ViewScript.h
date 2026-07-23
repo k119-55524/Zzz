@@ -17,11 +17,9 @@ namespace zzz::script
 	class Z_ENGINE_API ViewScript : public BaseScript
 	{
 	public:
-		ViewScript() = default;
-		virtual ~ViewScript()
-		{
-			if (m_Bus) m_Bus->UnsubscribeAll(shared_from_this());
-		}
+		ViewScript();
+		virtual ~ViewScript();
+
 
 	protected:
 		virtual void OnUnbindEvents() override
