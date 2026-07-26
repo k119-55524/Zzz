@@ -34,7 +34,7 @@ namespace editor.Services
 			// Берем только мажорную/минорную версию без сборки
 			string versionStr = "1.0.0";
 			string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-			string folder = Path.Combine(appData, "Zzz", "Editor", versionStr);
+			string folder = Path.Combine(appData, "Zzz", "Editor");
 			if (!Directory.Exists(folder))
 			{
 				Directory.CreateDirectory(folder);

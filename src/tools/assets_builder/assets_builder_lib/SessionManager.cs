@@ -5,10 +5,15 @@ namespace assets_builder_lib;
 
 public class SessionConfig
 {
-    public string SourceProjectPath { get; set; } = string.Empty;
-    public string DestinationPath { get; set; } = string.Empty;
-    public List<string> RecentSourcePaths { get; set; } = new();
-    public List<string> RecentDestinationPaths { get; set; } = new();
+    public List<BuildProfile> Profiles { get; set; } = new();
+    public string SelectedProfileId { get; set; } = string.Empty;
+
+    // Геометрия окна
+    public double WindowWidth { get; set; } = 860;
+    public double WindowHeight { get; set; } = 720;
+    public double WindowLeft { get; set; } = 100;
+    public double WindowTop { get; set; } = 100;
+    public bool IsWindowMaximized { get; set; } = false;
 }
 
 public static class SessionManager
@@ -16,8 +21,7 @@ public static class SessionManager
     private static readonly string AppDataFolder = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "Zzz",
-        "AssetsBuilder",
-        "1.0.0"
+        "AssetsBuilder"
     );
 
     private static readonly string ConfigFilePath = Path.Combine(AppDataFolder, "session_config.json");
@@ -30,7 +34,7 @@ public static class SessionManager
             {
                 string json = File.ReadAllText(ConfigFilePath);
                 var config = JsonSerializer.Deserialize<SessionConfig>(json);
-                if (config != null)
+                if (config != null && config.Profiles != null && config.Profiles.Count > 0)
                     return config;
             }
         }
@@ -62,15 +66,24 @@ public static class SessionManager
 
     public static SessionConfig GetDefaultConfig()
     {
-        string defaultSource = @"C:\Workspaces\ZzzTest\src\projects\assets_projects\zzz_assets_test_000";
-        string defaultDest = @"C:\Workspaces\ZzzTest\bin\packages\zzz_assets_test_000";
+        var defaultProfile = new BuildProfile
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = "zzz_assets_test_000",
+            ScriptsPath = @"C:\Workspaces\ZzzTest\src\projects\assets_projects\zzz_assets_test_000\Scripts",
+            AssetsPath = @"C:\Workspaces\ZzzTest\src\projects\assets_projects\zzz_assets_test_000\Assets",
+            DestinationPath = @"C:\Workspaces\ZzzTest\bin\packages\zzz_assets_test_000"
+        };
 
         return new SessionConfig
         {
-            SourceProjectPath = defaultSource,
-            DestinationPath = defaultDest,
-            RecentSourcePaths = new List<string> { defaultSource },
-            RecentDestinationPaths = new List<string> { defaultDest }
+            Profiles = new List<BuildProfile> { defaultProfile },
+            SelectedProfileId = defaultProfile.Id,
+            WindowWidth = 860,
+            WindowHeight = 720,
+            WindowLeft = 100,
+            WindowTop = 100,
+            IsWindowMaximized = false
         };
     }
 }

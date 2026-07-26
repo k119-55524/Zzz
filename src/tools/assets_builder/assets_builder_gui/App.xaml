@@ -1,17 +1,11 @@
 <Application x:Class="assets_builder_gui.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             StartupUri="MainWindow.xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Application.Resources>
         <ResourceDictionary>
-            <SolidColorBrush x:Key="WindowBackground" Color="#060B13" />
-            <SolidColorBrush x:Key="PanelBackground" Color="#0D1929" />
-            <SolidColorBrush x:Key="PanelHeaderBackground" Color="#112035" />
-            <SolidColorBrush x:Key="BorderBrush" Color="#182E4B" />
-            <SolidColorBrush x:Key="TextPrimary" Color="#E2C08D" />
-            <SolidColorBrush x:Key="TextSecondary" Color="#627A9C" />
-            <SolidColorBrush x:Key="TextLight" Color="#CDD9E5" />
-            <SolidColorBrush x:Key="AccentBrush" Color="#388AF6" />
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/DarkTheme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
