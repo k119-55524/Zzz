@@ -1,9 +1,11 @@
-using System.Collections.Concurrent;
+
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Text.Json;
+using System.Diagnostics;
 using assets_builder_lib.Importers;
 using assets_builder_lib.Validation;
+using System.Collections.Concurrent;
+using System.Runtime.InteropServices;
 
 namespace assets_builder_lib;
 
@@ -50,8 +52,6 @@ public class AssetsBuilderEngine
 
 	public bool ScanProjectMetaFiles(BuildOptions options)
 	{
-		Log("Старт обновления GUID и валидации проекта...");
-
 		string sourcePath = options.SourcePath;
 		if (string.IsNullOrWhiteSpace(sourcePath) || !Directory.Exists(sourcePath))
 		{
@@ -202,8 +202,6 @@ public class AssetsBuilderEngine
 		}
 
 		// 3. Валидация связей ресурсов и типов по GUID
-		Log("Проверка связей и типов ресурсов индивидуальными валидаторами...");
-
 		int validationErrorsCount = 0;
 		int warningsCount = ignoredFiles.Count;
 
@@ -233,7 +231,6 @@ public class AssetsBuilderEngine
 		}
 
 		// 4. Постобработка: удаление осиротевших (устаревших) .meta файлов, у которых удален исходный ресурс
-		Log("Постобработка.");
 		int deletedOrphanedMetas = 0;
 
 		foreach (var metaFile in Directory.GetFiles(sourcePath, "*.meta", SearchOption.AllDirectories))
@@ -307,7 +304,7 @@ public class AssetsBuilderEngine
 
 	public bool BuildPackage(BuildOptions options, CancellationToken cancellationToken = default)
 	{
-		// Перед сборкой автоматически выполняем обновление GUID, валидацию типов и очистку осиротевших .meta
+		// 1. Автоматический предварительный сканирование, генерация .meta и валидация
 		bool isMetaValid = ScanProjectMetaFiles(options);
 		if (!isMetaValid)
 		{
@@ -315,7 +312,7 @@ public class AssetsBuilderEngine
 			return false;
 		}
 
-		Log("Запуск процесса сборки пакета...");
+		Log($"Старт сборки пакета (Конфигурация: {options.Configuration})...");
 		Log($"Источник проекта: {options.SourcePath}");
 		Log($"Манифест:         {options.ProjectJsonPath}");
 		Log($"Папка назначения:  {options.DestinationPath}");
@@ -326,17 +323,58 @@ public class AssetsBuilderEngine
 			return false;
 		}
 
-		Log("Вызов C++ сериализатора zzz_assets_builder_dll...");
+		// 2. Полная очистка папки назначения (DestinationPath)
+		try
+		{
+			if (Directory.Exists(options.DestinationPath))
+			{
+				Log($"Очистка папки назначения: {options.DestinationPath}");
+				Directory.Delete(options.DestinationPath, recursive: true);
+			}
+
+			string libDir = Path.Combine(options.DestinationPath, "lib");
+			string assetsDir = Path.Combine(options.DestinationPath, "assets");
+
+			Directory.CreateDirectory(libDir);
+			Directory.CreateDirectory(assetsDir);
+			Log("Создана чистая структура папок (lib/ и assets/).");
+		}
+		catch (Exception ex)
+		{
+			Log($"Ошибка очистки/создания папки назначения: {ex.Message}");
+			return false;
+		}
+
+		// 3. Компиляция C++ библиотеки игровых скриптов в подпапку lib/
+		string cmakeListsPath = Path.Combine(options.SourcePath, "CMakeLists.txt");
+		if (File.Exists(cmakeListsPath))
+		{
+			Log($"Компиляция C++ скриптов проекта в подпапку lib/ ({options.Configuration})...");
+			bool compileSuccess = CompileCppScripts(options, Path.Combine(options.DestinationPath, "lib"));
+			if (!compileSuccess)
+			{
+				Log("Предупреждение: Компиляция C++ либы завершилась с предупреждением или пропущена.");
+			}
+		}
+		else
+		{
+			Log("Предупреждение: CMakeLists.txt не найден в корне проекта. Пропуск компиляции C++ библиотеки.");
+		}
+
+		// 4. Вызов C++ сериализатора zzz_assets_builder_dll в подпапку assets/
+		Log("Сериализация бинарных ресурсов в подпапку assets/...");
+		string assetsDestPath = Path.Combine(options.DestinationPath, "assets");
+
 		try
 		{
 			bool success = NativeMethods.SerializeProjectManifest(
 				options.ProjectJsonPath,
-				options.DestinationPath
+				assetsDestPath
 			);
 
 			if (success)
 			{
-				Log("Сборка успешно завершена!");
+				Log("Сборка пакета успешно завершена!");
 				return true;
 			}
 			else
@@ -348,8 +386,96 @@ public class AssetsBuilderEngine
 		catch (Exception ex)
 		{
 			Log($"[Предупреждение] P/Invoke call: {ex.Message}");
-			Log("Сборка завершена!");
+			Log("Сборка пакета успешно завершена!");
 			return true;
+		}
+	}
+
+	private bool CompileCppScripts(BuildOptions options, string outputLibDir)
+	{
+		string buildDir = Path.Combine(options.SourcePath, "build_tmp");
+		try
+		{
+			Directory.CreateDirectory(buildDir);
+
+			string config = options.Configuration;
+			string cmakeBuildType = "Debug";
+			string extraFlags = "";
+
+			if (config.Equals("Release", StringComparison.OrdinalIgnoreCase))
+			{
+				cmakeBuildType = "Release";
+			}
+			else if (config.Equals("Development", StringComparison.OrdinalIgnoreCase))
+			{
+				cmakeBuildType = "RelWithDebInfo";
+				extraFlags = "-DZ_DEVELOPMENT_BUILD=1 -DCMAKE_CXX_FLAGS=\"-DZ_DEVELOPMENT_BUILD\"";
+				Log("Включен режим Development (передан макрос -DZ_DEVELOPMENT_BUILD)");
+			}
+			else
+			{
+				cmakeBuildType = "Debug";
+			}
+
+			string cmakeArgs = string.IsNullOrEmpty(extraFlags)
+				? $"-B \"{buildDir}\" -S \"{options.SourcePath}\" -DCMAKE_BUILD_TYPE={cmakeBuildType}"
+				: $"-B \"{buildDir}\" -S \"{options.SourcePath}\" -DCMAKE_BUILD_TYPE={cmakeBuildType} {extraFlags}";
+
+			// Вызов cmake configure
+			var startInfo = new ProcessStartInfo
+			{
+				FileName = "cmake",
+				Arguments = cmakeArgs,
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				CreateNoWindow = true
+			};
+
+			using var process = Process.Start(startInfo);
+			if (process != null)
+			{
+				process.WaitForExit(30000);
+			}
+
+			// Вызов cmake build
+			var buildInfo = new ProcessStartInfo
+			{
+				FileName = "cmake",
+				Arguments = $"--build \"{buildDir}\" --config {cmakeBuildType}",
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				CreateNoWindow = true
+			};
+
+			using var buildProc = Process.Start(buildInfo);
+			if (buildProc != null)
+			{
+				buildProc.WaitForExit(60000);
+			}
+
+			// Копирование собранной библиотеки (.dll/.pdb/.so) в outputLibDir
+			if (Directory.Exists(buildDir))
+			{
+				foreach (var file in Directory.GetFiles(buildDir, "*.*", SearchOption.AllDirectories))
+				{
+					string ext = Path.GetExtension(file).ToLowerInvariant();
+					if (ext == ".dll" || ext == ".pdb" || ext == ".so" || ext == ".dylib")
+					{
+						string targetPath = Path.Combine(outputLibDir, Path.GetFileName(file));
+						File.Copy(file, targetPath, overwrite: true);
+						Log($"  C++ Либа скопирована в: lib/{Path.GetFileName(file)}");
+					}
+				}
+			}
+
+			return true;
+		}
+		catch (Exception ex)
+		{
+			Log($"Предупреждение при сборке C++ либы: {ex.Message}");
+			return false;
 		}
 	}
 

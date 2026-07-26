@@ -307,7 +307,8 @@ public class MainWindowViewModel : ViewModelBase
         var options = new BuildOptions
         {
             SourcePath = SelectedProfile.SourcePath,
-            DestinationPath = SelectedProfile.DestinationPath
+            DestinationPath = SelectedProfile.DestinationPath,
+            Configuration = SelectedProfile.Configuration
         };
 
         Task.Run(() => _engine.ScanProjectMetaFiles(options));
@@ -326,7 +327,7 @@ public class MainWindowViewModel : ViewModelBase
 
         bool confirmed = _dialogService.ShowConfirmation(
             "Подтверждение сборки",
-            $"Папка назначения '{SelectedProfile.DestinationPath}' будет перезаписана при сборке.\n\nПродолжить сборку для '{SelectedProfile.Name}'?"
+            $"Папка назначения '{SelectedProfile.DestinationPath}' будет вычищена и перезаписана при сборке ({SelectedProfile.Configuration}).\n\nПродолжить сборку для '{SelectedProfile.Name}'?"
         );
 
         if (confirmed)
@@ -336,7 +337,8 @@ public class MainWindowViewModel : ViewModelBase
             var options = new BuildOptions
             {
                 SourcePath = SelectedProfile.SourcePath,
-                DestinationPath = SelectedProfile.DestinationPath
+                DestinationPath = SelectedProfile.DestinationPath,
+                Configuration = SelectedProfile.Configuration
             };
 
             Task.Run(() =>

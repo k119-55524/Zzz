@@ -44,6 +44,117 @@
         <Setter Property="FontSize" Value="12" />
     </Style>
 
+    <!-- Стиль пунктов выпадающего списка ComboBoxItem -->
+    <Style x:Key="DarkComboBoxItemStyle" TargetType="ComboBoxItem">
+        <Setter Property="Background" Value="#161B22" />
+        <Setter Property="Foreground" Value="{StaticResource TextLight}" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBoxItem">
+                    <Border x:Name="Border" 
+                            Background="{TemplateBinding Background}" 
+                            Padding="{TemplateBinding Padding}" 
+                            SnapsToDevicePixels="True">
+                        <ContentPresenter />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Border" Property="Background" Value="#21262D" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Border" Property="Background" Value="#1F6FEB" />
+                            <Setter Property="Foreground" Value="#FFFFFF" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Стиль выпадающих списков ComboBox -->
+    <Style x:Key="DarkComboBoxStyle" TargetType="ComboBox">
+        <Setter Property="Background" Value="#0D1117" />
+        <Setter Property="Foreground" Value="{StaticResource TextLight}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="ItemContainerStyle" Value="{StaticResource DarkComboBoxItemStyle}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid x:Name="MainGrid" SnapsToDevicePixels="True">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="20" />
+                        </Grid.ColumnDefinitions>
+                        <ToggleButton x:Name="ToggleButton" 
+                                      Grid.ColumnSpan="2" 
+                                      Focusable="False" 
+                                      IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" 
+                                      ClickMode="Press">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border x:Name="templateBorder" 
+                                            Background="#0D1117" 
+                                            BorderBrush="{StaticResource BorderBrush}" 
+                                            BorderThickness="1" 
+                                            CornerRadius="3">
+                                        <Border x:Name="splitBorder" 
+                                                Width="20" 
+                                                HorizontalAlignment="Right" 
+                                                BorderThickness="0">
+                                            <Path x:Name="arrow" 
+                                                  Data="F1 M 0,0 L 4,4 L 8,0 Z" 
+                                                  Fill="{StaticResource TextSecondary}" 
+                                                  HorizontalAlignment="Center" 
+                                                  VerticalAlignment="Center" />
+                                        </Border>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="templateBorder" Property="BorderBrush" Value="{StaticResource TextPrimary}" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+                        <ContentPresenter x:Name="contentPresenter" 
+                                          Grid.Column="0" 
+                                          Margin="{TemplateBinding Padding}" 
+                                          Content="{TemplateBinding SelectionBoxItem}" 
+                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" 
+                                          ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" 
+                                          HorizontalAlignment="Left" 
+                                          VerticalAlignment="Center" 
+                                          IsHitTestVisible="False" />
+                        <Popup x:Name="PART_Popup" 
+                               Grid.ColumnSpan="2" 
+                               IsOpen="{TemplateBinding IsDropDownOpen}" 
+                               Placement="Bottom" 
+                               AllowsTransparency="True" 
+                               Focusable="False" 
+                               PopupAnimation="Slide">
+                            <Border x:Name="dropDownBorder" 
+                                    MinWidth="{Binding Path=ActualWidth, ElementName=MainGrid}" 
+                                    MaxHeight="{TemplateBinding MaxDropDownHeight}" 
+                                    Background="#161B22" 
+                                    BorderBrush="{StaticResource BlockBorderBrush}" 
+                                    BorderThickness="1" 
+                                    CornerRadius="3">
+                                <ScrollViewer x:Name="DropDownScrollViewer">
+                                    <ItemsPresenter x:Name="ItemsPresenter" KeyboardNavigation.DirectionalNavigation="Contained" />
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Стиль обычных кнопок -->
     <Style x:Key="ActionButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="#21262D" />
@@ -77,35 +188,22 @@
         </Style.Triggers>
     </Style>
 
-    <!-- Стиль акцентных кнопок (Старт сборки / Сохранить) -->
-    <Style x:Key="AccentButtonStyle" TargetType="Button">
+    <!-- Стиль акцентных синих кнопок (+Добавить / Сохранить / Старт сборки) -->
+    <Style x:Key="AccentButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonStyle}">
         <Setter Property="Background" Value="#1F6FEB" />
         <Setter Property="Foreground" Value="#FFFFFF" />
         <Setter Property="BorderBrush" Value="#388BFD" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Padding" Value="12,5" />
-        <Setter Property="FontSize" Value="12" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="3"
-                            Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background" Value="#388BFD" />
+                <Setter Property="BorderBrush" Value="#58A6FF" />
             </Trigger>
             <Trigger Property="IsEnabled" Value="False">
-                <Setter Property="Opacity" Value="0.4" />
+                <Setter Property="Background" Value="#161B22" />
+                <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+                <Setter Property="Foreground" Value="{StaticResource TextSecondary}" />
+                <Setter Property="Opacity" Value="0.5" />
             </Trigger>
         </Style.Triggers>
     </Style>
@@ -116,12 +214,10 @@
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Width" Value="36" />
         <Setter Property="Height" Value="30" />
-        <Setter Property="VerticalAlignment" Value="Center" />
-        <Setter Property="HorizontalAlignment" Value="Center" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border Background="{TemplateBinding Background}">
+                    <Border Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                 </ControlTemplate>
@@ -134,12 +230,11 @@
         </Style.Triggers>
     </Style>
 
-    <!-- Кнопка закрытия окна (Красная при наведении) -->
+    <!-- Кнопка Закрыть в шапке (Красный при наведении) -->
     <Style x:Key="ChromeCloseButtonStyle" TargetType="Button" BasedOn="{StaticResource ChromeButtonStyle}">
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background" Value="#DA3633" />
-                <Setter Property="Foreground" Value="#FFFFFF" />
             </Trigger>
         </Style.Triggers>
     </Style>

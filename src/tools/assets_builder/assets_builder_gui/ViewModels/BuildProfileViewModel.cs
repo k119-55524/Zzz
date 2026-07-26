@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using assets_builder_gui.Models;
 
@@ -8,8 +9,11 @@ public class BuildProfileViewModel : ViewModelBase
     private readonly BuildProfile _model;
 
     private string _name = string.Empty;
+    private string _configuration = "Debug";
     private string _sourcePath = string.Empty;
     private string _destinationPath = string.Empty;
+
+    public static List<string> AvailableConfigurations { get; } = new() { "Debug", "Development", "Release" };
 
     public BuildProfileViewModel(BuildProfile model)
     {
@@ -37,6 +41,20 @@ public class BuildProfileViewModel : ViewModelBase
         }
     }
 
+    public string Configuration
+    {
+        get => _configuration;
+        set
+        {
+            if (SetProperty(ref _configuration, value))
+            {
+                OnPropertyChanged(nameof(DisplayName));
+                OnPropertyChanged(nameof(IsDirty));
+                OnPropertyChanged(nameof(IsValid));
+            }
+        }
+    }
+
     public string SourcePath
     {
         get => _sourcePath;
@@ -45,6 +63,7 @@ public class BuildProfileViewModel : ViewModelBase
             if (SetProperty(ref _sourcePath, value))
             {
                 OnPropertyChanged(nameof(IsSourcePathValid));
+                OnPropertyChanged(nameof(DisplayName));
                 OnPropertyChanged(nameof(IsDirty));
                 OnPropertyChanged(nameof(IsValid));
             }
@@ -59,6 +78,7 @@ public class BuildProfileViewModel : ViewModelBase
             if (SetProperty(ref _destinationPath, value))
             {
                 OnPropertyChanged(nameof(IsDestinationPathValid));
+                OnPropertyChanged(nameof(DisplayName));
                 OnPropertyChanged(nameof(IsDirty));
                 OnPropertyChanged(nameof(IsValid));
             }
@@ -68,16 +88,24 @@ public class BuildProfileViewModel : ViewModelBase
     // Источниковый путь к папке проекта должен существовать на диске
     public bool IsSourcePathValid => !string.IsNullOrWhiteSpace(_sourcePath) && Directory.Exists(_sourcePath);
 
-    // Валидация пути назначения: не обязан существовать, но синтаксис пути должен быть правильным
+    // Валидация пути назначения: проверяем ТОЛЬКО корректность синтаксиса и имён пути, наличие папки на диске НЕ требуется!
     public bool IsDestinationPathValid
     {
         get
         {
             if (string.IsNullOrWhiteSpace(_destinationPath))
                 return false;
+
             try
             {
-                var fullPath = Path.GetFullPath(_destinationPath);
+                // Проверка синтаксиса полного пути
+                string fullPath = Path.GetFullPath(_destinationPath);
+                
+                // Проверка недопустимых символов в пути Windows
+                char[] invalidChars = Path.GetInvalidPathChars();
+                if (_destinationPath.IndexOfAny(invalidChars) >= 0)
+                    return false;
+
                 return true;
             }
             catch
@@ -87,9 +115,10 @@ public class BuildProfileViewModel : ViewModelBase
         }
     }
 
-    public bool IsValid => !string.IsNullOrWhiteSpace(_name) && IsSourcePathValid && IsDestinationPathValid;
+    public bool IsValid => !string.IsNullOrWhiteSpace(_name) && !string.IsNullOrWhiteSpace(_configuration) && IsSourcePathValid && IsDestinationPathValid;
 
     public bool IsDirty => _name != _model.Name ||
+                           _configuration != _model.Configuration ||
                            _sourcePath != _model.SourcePath ||
                            _destinationPath != _model.DestinationPath;
 
@@ -98,10 +127,12 @@ public class BuildProfileViewModel : ViewModelBase
     public void ResetFromModel()
     {
         _name = _model.Name;
+        _configuration = string.IsNullOrWhiteSpace(_model.Configuration) ? "Debug" : _model.Configuration;
         _sourcePath = _model.SourcePath;
         _destinationPath = _model.DestinationPath;
 
         OnPropertyChanged(nameof(Name));
+        OnPropertyChanged(nameof(Configuration));
         OnPropertyChanged(nameof(SourcePath));
         OnPropertyChanged(nameof(DestinationPath));
         OnPropertyChanged(nameof(DisplayName));
@@ -114,6 +145,7 @@ public class BuildProfileViewModel : ViewModelBase
     public void ApplyToModel()
     {
         _model.Name = _name;
+        _model.Configuration = _configuration;
         _model.SourcePath = _sourcePath;
         _model.DestinationPath = _destinationPath;
 

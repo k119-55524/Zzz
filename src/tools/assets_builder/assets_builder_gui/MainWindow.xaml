@@ -163,6 +163,7 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
                             <!-- а. Имя настройки -->
@@ -175,8 +176,23 @@
                                 <TextBox Grid.Column="1" Text="{Binding SelectedProfile.Name, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource PathTextBoxStyle}" MaxLength="255"/>
                             </Grid>
 
-                            <!-- б. Путь к проекту (Источник) -->
+                            <!-- б. Конфигурация сборки (Debug, Development, Release) -->
                             <Grid Grid.Row="1" Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="130" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Конфигурация:" Foreground="{StaticResource TextLight}" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12"/>
+                                <ComboBox Grid.Column="1" 
+                                          ItemsSource="{Binding SelectedProfile.AvailableConfigurations}" 
+                                          SelectedItem="{Binding SelectedProfile.Configuration, UpdateSourceTrigger=PropertyChanged}" 
+                                          Style="{StaticResource DarkComboBoxStyle}"
+                                          HorizontalAlignment="Left"
+                                          Width="200"/>
+                            </Grid>
+
+                            <!-- в. Путь к проекту (Источник) -->
+                            <Grid Grid.Row="2" Margin="0,0,0,8">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="130" />
                                     <ColumnDefinition Width="*" />
@@ -198,8 +214,8 @@
                                 <Button Grid.Column="2" Content="📂 Обзор..." Command="{Binding BrowseSourcePathCommand}" Style="{StaticResource AccentButtonStyle}" Margin="8,0,0,0" Padding="12,4"/>
                             </Grid>
 
-                            <!-- в. Путь назначения -->
-                            <Grid Grid.Row="2" Margin="0,0,0,8">
+                            <!-- г. Путь назначения -->
+                            <Grid Grid.Row="3" Margin="0,0,0,8">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="130" />
                                     <ColumnDefinition Width="*" />
@@ -221,8 +237,8 @@
                                 <Button Grid.Column="2" Content="📂 Обзор..." Command="{Binding BrowseDestinationPathCommand}" Style="{StaticResource AccentButtonStyle}" Margin="8,0,0,0" Padding="12,4"/>
                             </Grid>
 
-                            <!-- г. Кнопки Сохранить и Отмена -->
-                            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
+                            <!-- д. Кнопки Сохранить и Отмена -->
+                            <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
                                 <Button Content="↩ Отмена" Command="{Binding CancelProfileCommand}" Style="{StaticResource AccentButtonStyle}" Margin="0,0,8,0" Padding="14,4"/>
                                 <Button Content="💾 Сохранить" Command="{Binding SaveProfileCommand}" Style="{StaticResource AccentButtonStyle}" Padding="14,4"/>
                             </StackPanel>
