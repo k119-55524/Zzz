@@ -38,7 +38,6 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "private/platforms/config/EngineConfig.h" "private/platforms/config/EngineConfig.cpp"
         "private/platforms/config/PlatformConfig.h"
         "private/core/io/Path.h" "private/core/io/Path.cpp"
-        "private/core/utils/version.h" "private/core/utils/version.cpp"
         "public/core/templates/Size2D.h"
         "public/core/EngineTime.h" "public/core/EngineTime.cpp"
 

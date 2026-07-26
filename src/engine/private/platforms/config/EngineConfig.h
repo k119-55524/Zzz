@@ -1,7 +1,7 @@
-﻿#pragma once
+#pragma once
 
 #include "PlatformConfig.h"
-#include "../../core/utils/version.h"
+#include <common/version.h>
 #include <common/serialize/Serializer.h>
 
 namespace zzz::engine
@@ -23,5 +23,3 @@ namespace zzz::engine
 		PlatformConfig m_PlatformConfig;
 	};
 }
-
-

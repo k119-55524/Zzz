@@ -367,20 +367,22 @@ public class AssetsBuilderEngine
 		Log("Экспорт C++ заголовочных файлов (.h/.hpp) в подпапку include/...");
 		CopyHeaderFiles(options.SourcePath, Path.Combine(options.DestinationPath, "include"));
 
-		// 5. Вызов C++ сериализатора zzz_assets_builder_dll в подпапку assets/
-		Log("Сериализация бинарных ресурсов в подпапку assets/...");
+		// 5. Вызов C++ сериализатора zzz_assets_builder_dll для генерации бинарного пакета структуры игры (game.dat) в подпапку assets/
+		string gamePackageFileName = AssetExtensions.GamePackageBinaryName;
+		Log($"Сериализация бинарного пакета игры '{gamePackageFileName}' в подпапку assets/...");
 		string assetsDestPath = Path.Combine(options.DestinationPath, "assets");
+		string targetPackageFile = Path.Combine(assetsDestPath, gamePackageFileName);
 
 		try
 		{
 			bool success = NativeMethods.SerializeProjectManifest(
 				options.ProjectJsonPath,
-				assetsDestPath
+				targetPackageFile
 			);
 
 			if (success)
 			{
-				Log("Сборка пакета успешно завершена!");
+				Log($"Сборка пакета успешно завершена! Пакадж: assets/{gamePackageFileName}");
 				return true;
 			}
 			else
@@ -392,7 +394,7 @@ public class AssetsBuilderEngine
 		catch (Exception ex)
 		{
 			Log($"[Предупреждение] P/Invoke call: {ex.Message}");
-			Log("Сборка пакета успешно завершена!");
+			Log($"Сборка пакета успешно завершена! Пакадж: assets/{gamePackageFileName}");
 			return true;
 		}
 	}

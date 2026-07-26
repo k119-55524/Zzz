@@ -26,7 +26,8 @@ namespace zzz::engine
 		static constexpr bool c_AsyncRunLoop = true;
 #else
 		static constexpr bool c_AsyncRunLoop = false;
-#endif		
+#endif
+
 	private:
 		void Initialize();
 		void InitializePlatformSpecific();
