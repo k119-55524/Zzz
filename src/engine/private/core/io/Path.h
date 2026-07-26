@@ -19,11 +19,10 @@ namespace zzz::io
 		inline const std::filesystem::path GetUserDataDirectory() const noexcept { return m_UserDataDirectory; };
 
 	private:
-		std::string m_AppName;
 		std::shared_ptr<engine::NativeAppData> m_NativeData;
 		std::filesystem::path m_UserDataDirectory;
 
-		[[nodiscard]] std::expected<std::filesystem::path, std::string> ResolveUserDataDirectory();
+		[[nodiscard]] std::expected<std::filesystem::path, std::string> ResolveUserDataDirectory(std::string_view appName);
 
 #if Z_MACOS || Z_IOS
 		[[nodiscard]] std::expected<std::filesystem::path, std::string> GetAppleUserDataDirectory();

@@ -5,14 +5,13 @@
 namespace zzz::io
 {
 	Path::Path(std::string_view appName, std::shared_ptr<engine::NativeAppData> nativeData) :
-		m_AppName{ appName },
 		m_NativeData{ nativeData }
 	{	
-		ensure(IsValidDirectoryName(m_AppName) == true, "Некорректное имя приложения для каталога: {}", m_AppName);
+		ensure(IsValidDirectoryName(appName) == true, "Некорректное имя приложения для каталога: {}", appName);
 
-		auto resPath = ResolveUserDataDirectory();
+		auto resPath = ResolveUserDataDirectory(appName);
 		if (!resPath)
-			ensure(false, "Не удалось определить каталог пользовательских данных: {}.", resPath.error());
+			THROW_RUNTIME("Не удалось определить каталог пользовательских данных: {}.", resPath.error());
 
 		m_UserDataDirectory = *resPath;
 	}
@@ -97,7 +96,7 @@ namespace zzz::io
 	}
 
 	/// @brief Возвращает каталог пользовательских данных приложения для текущей платформы.
-	[[nodiscard]] std::expected<std::filesystem::path, std::string> Path::ResolveUserDataDirectory()
+	[[nodiscard]] std::expected<std::filesystem::path, std::string> Path::ResolveUserDataDirectory(std::string_view appName)
 	{
 		try
 		{
@@ -109,13 +108,13 @@ namespace zzz::io
 			if (!localAppData)
 				return UNEXPECTED("Не удалось получить LOCALAPPDATA.");
 
-			return std::filesystem::path(localAppData.get()) / m_AppName;
+			return std::filesystem::path(localAppData.get()) / appName;
 #elif Z_APPLE
 			auto path = GetAppleUserDataDirectory();
 			if (!path)
 				return std::unexpected(path.error());
 
-			return *path / m_AppName;
+			return *path / appName;
 #elif Z_ANDROID
 			auto app = m_NativeData.get();
 			if (!app->activity)
@@ -124,17 +123,17 @@ namespace zzz::io
 			if (!app->activity->internalDataPath)
 				return UNEXPECTED("Внутренний путь данных Android равен null.");
 
-			return std::filesystem::path(app->activity->internalDataPath) / m_AppName;
+			return std::filesystem::path(app->activity->internalDataPath) / appName;
 #elif Z_LINUX
 			const char* xdgConfigHome = std::getenv("XDG_CONFIG_HOME");
 			if (xdgConfigHome)
-				return std::filesystem::path(xdgConfigHome) / m_AppName;
+				return std::filesystem::path(xdgConfigHome) / appName;
 
 			const char* home = std::getenv("HOME");
 			if (!home)
 				return UNEXPECTED("Не удалось получить HOME.");
 
-			return std::filesystem::path(home) / ".config" / m_AppName;
+			return std::filesystem::path(home) / ".config" / appName;
 #else
 #error >>>>> zzz::io::Path::ResolveUserDataDirectory(): Unsupported platform.
 #endif
@@ -153,4 +152,3 @@ namespace zzz::io
 		}
 	}
 }
-
