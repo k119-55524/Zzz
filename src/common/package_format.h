@@ -1,6 +1,8 @@
 #pragma once
 
 #include <array>
+#include <string>
+#include <string_view>
 #include <common/common.h>
 #include <common/constants.h>
 #include <common/version.h>
@@ -16,6 +18,8 @@ namespace zzz::package
 		BinaryAsset = 5
 	};
 
+	using BinaryGuid = std::array<uint8_t, 16>;
+
 	struct PackageHeader
 	{
 		std::array<std::byte, 3> magic = zzz::common::c_GamePackageHeader;
@@ -30,7 +34,7 @@ namespace zzz::package
 	#pragma pack(push, 1)
 	struct PackageEntry
 	{
-		char guid[36] = {0};
+		BinaryGuid guid = {0};
 		zU32 assetType = 0;
 		zU64 offset = 0;
 		zU64 size = 0;

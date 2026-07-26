@@ -270,7 +270,7 @@
                         <!-- Содержимое Блока 3 -->
                         <Grid Grid.Row="1" Margin="10">
                             <Border BorderBrush="{StaticResource BlockBorderBrush}" BorderThickness="1" CornerRadius="3" Background="#060B13">
-                                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Padding="6">
+                                <ScrollViewer x:Name="LogScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Padding="6">
                                     <ItemsControl ItemsSource="{Binding LogItems}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>

@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
@@ -15,10 +16,21 @@ public partial class MainWindow : Window
 
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
-        if (DataContext is MainWindowViewModel vm && vm.IsWindowMaximized)
+        if (DataContext is MainWindowViewModel vm)
         {
-            WindowState = WindowState.Maximized;
-            UpdateMaximizeButtons();
+            if (vm.IsWindowMaximized)
+            {
+                WindowState = WindowState.Maximized;
+                UpdateMaximizeButtons();
+            }
+
+            vm.LogItems.CollectionChanged += (s, ev) =>
+            {
+                Dispatcher.InvokeAsync(() =>
+                {
+                    LogScrollViewer.ScrollToBottom();
+                });
+            };
         }
     }
 

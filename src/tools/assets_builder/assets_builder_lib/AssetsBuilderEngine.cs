@@ -367,35 +367,18 @@ public class AssetsBuilderEngine
 		Log("Экспорт C++ заголовочных файлов (.h/.hpp) в подпапку include/...");
 		CopyHeaderFiles(options.SourcePath, Path.Combine(options.DestinationPath, "include"));
 
-		// 5. Вызов C++ сериализатора zzz_assets_builder_dll для генерации бинарного пакета структуры игры (game.dat) в подпапку assets/
-		string gamePackageFileName = AssetExtensions.GamePackageBinaryName;
-		Log($"Сериализация бинарного пакета игры '{gamePackageFileName}' в подпапку assets/...");
-		string assetsDestPath = Path.Combine(options.DestinationPath, "assets");
-		string targetPackageFile = Path.Combine(assetsDestPath, gamePackageFileName);
-
-		try
+		// 5. Вызов C# запаковщика PackagePacker для генерации бинарного пакета структуры игры (package.dat) в подпапку assets/
+		Log($"Сериализация бинарного пакета игры '{AssetExtensions.GamePackageBinaryName}' в подпапку assets/...");
+		bool packageSuccess = PackagePacker.PackProject(options.SourcePath, options.DestinationPath, Log);
+		if (packageSuccess)
 		{
-			bool success = NativeMethods.SerializeProjectManifest(
-				options.ProjectJsonPath,
-				targetPackageFile
-			);
-
-			if (success)
-			{
-				Log($"Сборка пакета успешно завершена! Пакадж: assets/{gamePackageFileName}");
-				return true;
-			}
-			else
-			{
-				Log("Ошибка: C++ сериализация вернула ошибку.");
-				return false;
-			}
-		}
-		catch (Exception ex)
-		{
-			Log($"[Предупреждение] P/Invoke call: {ex.Message}");
-			Log($"Сборка пакета успешно завершена! Пакадж: assets/{gamePackageFileName}");
+			Log($"Сборка пакета успешно завершена! Пакадж: assets/{AssetExtensions.GamePackageBinaryName}");
 			return true;
+		}
+		else
+		{
+			Log("Ошибка: Сериализация бинарного пакета вернула ошибку.");
+			return false;
 		}
 	}
 

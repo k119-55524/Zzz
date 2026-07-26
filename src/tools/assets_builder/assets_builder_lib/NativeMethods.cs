@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.InteropServices;
 
 namespace assets_builder_lib;
@@ -13,5 +14,30 @@ internal static class NativeMethods
     public static extern IntPtr GetGamePackageFileName();
 
     [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-    public static extern bool SerializeProjectManifest(string projectJsonPath, string outputBinaryPath);
+    public static extern IntPtr GetGamePackageMagicBytes();
+
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+    public static extern uint GetGamePackageMajorVersion();
+
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+    public static extern uint GetGamePackageMinorVersion();
+
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+    public static extern uint GetGamePackagePatchVersion();
+
+    // AssetType enum values P/Invoke
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+    public static extern uint GetAssetTypeProjectManifest();
+
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+    public static extern uint GetAssetTypeScene();
+
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+    public static extern uint GetAssetTypeView();
+
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+    public static extern uint GetAssetTypeScript();
+
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+    public static extern uint GetAssetTypeBinaryAsset();
 }
