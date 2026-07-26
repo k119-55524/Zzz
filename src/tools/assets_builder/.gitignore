@@ -1,0 +1,7 @@
+# Visual Studio & .NET build output
+bin/
+obj/
+.vs/
+
+# WPF temporary project files
+*_wpftmp.csproj

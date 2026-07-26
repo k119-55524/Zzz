@@ -1,6 +1,6 @@
 #include "SampleSceneScript.h"
 
-namespace zzz_scripts
+namespace zzz_assets_test_000
 {
 	void SampleSceneScript::OnBindEvents()
 	{
@@ -9,7 +9,7 @@ namespace zzz_scripts
 			// Логика при старте сцены
 		});
 
-		SubscribeToUpdate([this](float dt)
+		SubscribeToUpdate([this](const zzz::engine::Time& time)
 		{
 			// Логика каждого кадра сцены
 		});

@@ -1,6 +1,6 @@
 #include "SampleObjectScript.h"
 
-namespace zzz_scripts
+namespace zzz_assets_test_000
 {
 	SampleObjectScript::SampleObjectScript(zzz::GameObject* owner)
 		: Script(owner)

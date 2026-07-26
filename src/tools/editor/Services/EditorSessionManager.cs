@@ -1,4 +1,4 @@
-﻿
+
 using System.IO;
 using System.Text;
 
@@ -34,7 +34,7 @@ namespace editor.Services
 			// Берем только мажорную/минорную версию без сборки
 			string versionStr = "1.0.0";
 			string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-			string folder = Path.Combine(appData, "ZzzEditor", versionStr);
+			string folder = Path.Combine(appData, "Zzz", "Editor", versionStr);
 			if (!Directory.Exists(folder))
 			{
 				Directory.CreateDirectory(folder);
