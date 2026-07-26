@@ -372,7 +372,7 @@ public class MainWindowViewModel : ViewModelBase
     public void AppendLog(string message)
     {
         string timestamp = DateTime.Now.ToString("HH:mm:ss");
-        string color = "#CDD9E5";
+        string color = "#CDD9E5"; // Стандартный нейтральный светлый цвет
         string weight = "Normal";
 
         if (message.Contains("Ошибка", StringComparison.OrdinalIgnoreCase) || message.Contains("error", StringComparison.OrdinalIgnoreCase))
@@ -389,14 +389,6 @@ public class MainWindowViewModel : ViewModelBase
         {
             color = "#4CAF50"; // Зеленый цвет успеха
             weight = "SemiBold";
-        }
-        else if (message.Contains("GUID:", StringComparison.OrdinalIgnoreCase) || message.Contains("Новый GUID:", StringComparison.OrdinalIgnoreCase) || message.StartsWith("Старт"))
-        {
-            color = "#E5C07B"; // Желтый/Золотой
-        }
-        else if (message.StartsWith("==") || message.StartsWith("--"))
-        {
-            color = "#388BFD"; // Синий разделитель
         }
 
         System.Windows.Application.Current?.Dispatcher.Invoke(() =>

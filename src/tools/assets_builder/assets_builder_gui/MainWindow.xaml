@@ -258,9 +258,7 @@
                                     <ItemsControl ItemsSource="{Binding LogItems}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <TextBlock Foreground="{Binding Color}" FontWeight="{Binding FontWeight}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" Margin="0,1">
-                                                    <Run Text="[" Foreground="#8B949E"/><Run Text="{Binding Timestamp}" Foreground="#8B949E"/><Run Text="] "/><Run Text="{Binding Message}"/>
-                                                </TextBlock>
+                                                <TextBlock Text="{Binding FullText}" Foreground="{Binding Color}" FontWeight="{Binding FontWeight}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" Margin="0,1"/>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>

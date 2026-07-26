@@ -24,83 +24,46 @@ public class ProjectJsonValidator : IAssetValidator
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
-            // 1. Проверка главного скрипта игры (game_script) — разрешено имя скрипта ИЛИ GUID скрипта
+            // 1. Проверка главного скрипта игры (game_script) — ТРЕБУЕТСЯ СТРОГИЙ GUID
             if (root.TryGetProperty("game_script", out var gameScriptProp))
             {
                 string scriptRef = gameScriptProp.GetString() ?? string.Empty;
                 if (!string.IsNullOrEmpty(scriptRef))
                 {
-                    bool isByName = scriptNameToGuidMap.ContainsKey(scriptRef);
-                    bool isByGuid = guidToFileMap.ContainsKey(scriptRef);
-
-                    if (!isByName && !isByGuid)
-                    {
-                        result.AddError(filePath, $"project.json: Указанный главный скрипт 'game_script': '{scriptRef}' не найден в проекте ни по имени, ни по GUID!");
-                    }
-                    else if (isByGuid)
-                    {
-                        // Проверка типа ресурса по GUID
-                        string targetType = guidToTypeMap.GetValueOrDefault(scriptRef, string.Empty);
-                        if (targetType != "script")
-                        {
-                            result.AddError(filePath, $"project.json: Поле 'game_script' указывает на GUID типа '{targetType}' вместо 'script'!");
-                        }
-                    }
+                    ValidateStrictGuid(filePath, "project.json", "game_script", scriptRef, "script", guidToFileMap, guidToTypeMap, scriptNameToGuidMap, result);
                 }
             }
+            else
+            {
+                result.AddError(filePath, "project.json: Отсутствует обязательное поле 'game_script'.");
+            }
 
-            // 2. Проверка начальных сцен (scenes) — разрешен относительный путь ИЛИ GUID сцены
+            // 2. Проверка начальных сцен (scenes) — ТРЕБУЕТСЯ СТРОГИЙ GUID
             if (root.TryGetProperty("scenes", out var scenesProp) && scenesProp.ValueKind == JsonValueKind.Array)
             {
-                string projectDir = Path.GetDirectoryName(filePath) ?? string.Empty;
+                int index = 0;
                 foreach (var sceneElem in scenesProp.EnumerateArray())
                 {
+                    index++;
                     string sceneRef = sceneElem.GetString() ?? string.Empty;
-                    bool isByGuid = guidToFileMap.ContainsKey(sceneRef);
-
-                    if (isByGuid)
+                    if (!string.IsNullOrEmpty(sceneRef))
                     {
-                        string targetType = guidToTypeMap.GetValueOrDefault(sceneRef, string.Empty);
-                        if (targetType != "scene")
-                        {
-                            result.AddError(filePath, $"project.json: Элемент в 'scenes' ссылается на GUID типа '{targetType}' вместо 'scene'!");
-                        }
-                    }
-                    else
-                    {
-                        string fullScenePath = Path.Combine(projectDir, sceneRef);
-                        if (!File.Exists(fullScenePath))
-                        {
-                            result.AddError(filePath, $"project.json: Указанный файл сцены '{sceneRef}' не существует на диске!");
-                        }
+                        ValidateStrictGuid(filePath, "project.json", $"scenes[{index}]", sceneRef, "scene", guidToFileMap, guidToTypeMap, scriptNameToGuidMap, result);
                     }
                 }
             }
 
-            // 3. Проверка стартовых вьюшек (views) — разрешен относительный путь ИЛИ GUID вьюшки
+            // 3. Проверка стартовых вьюшек (views) — ТРЕБУЕТСЯ СТРОГИЙ GUID
             if (root.TryGetProperty("views", out var viewsProp) && viewsProp.ValueKind == JsonValueKind.Array)
             {
-                string projectDir = Path.GetDirectoryName(filePath) ?? string.Empty;
+                int index = 0;
                 foreach (var viewElem in viewsProp.EnumerateArray())
                 {
+                    index++;
                     string viewRef = viewElem.GetString() ?? string.Empty;
-                    bool isByGuid = guidToFileMap.ContainsKey(viewRef);
-
-                    if (isByGuid)
+                    if (!string.IsNullOrEmpty(viewRef))
                     {
-                        string targetType = guidToTypeMap.GetValueOrDefault(viewRef, string.Empty);
-                        if (targetType != "view")
-                        {
-                            result.AddError(filePath, $"project.json: Элемент в 'views' ссылается на GUID типа '{targetType}' вместо 'view'!");
-                        }
-                    }
-                    else
-                    {
-                        string fullViewPath = Path.Combine(projectDir, viewRef);
-                        if (!File.Exists(fullViewPath))
-                        {
-                            result.AddError(filePath, $"project.json: Указанный файл вьюшки '{viewRef}' не существует на диске!");
-                        }
+                        ValidateStrictGuid(filePath, "project.json", $"views[{index}]", viewRef, "view", guidToFileMap, guidToTypeMap, scriptNameToGuidMap, result);
                     }
                 }
             }
@@ -111,5 +74,39 @@ public class ProjectJsonValidator : IAssetValidator
         }
 
         return result;
+    }
+
+    private void ValidateStrictGuid(
+        string filePath,
+        string fileName,
+        string fieldName,
+        string referenceValue,
+        string expectedType,
+        IReadOnlyDictionary<string, string> guidToFileMap,
+        IReadOnlyDictionary<string, string> guidToTypeMap,
+        IReadOnlyDictionary<string, string> scriptNameToGuidMap,
+        ValidationResult result)
+    {
+        bool isGuidPresent = guidToFileMap.ContainsKey(referenceValue);
+
+        if (!isGuidPresent)
+        {
+            if (scriptNameToGuidMap.ContainsKey(referenceValue))
+            {
+                result.AddError(filePath, $"{fileName}: Поле '{fieldName}' использует имя скрипта '{referenceValue}' вместо обязательного GUID!");
+            }
+            else
+            {
+                result.AddError(filePath, $"{fileName}: Поле '{fieldName}' ссылается на неизвестный GUID или имя '{referenceValue}'!");
+            }
+        }
+        else
+        {
+            string actualType = guidToTypeMap.GetValueOrDefault(referenceValue, string.Empty);
+            if (!actualType.Equals(expectedType, StringComparison.OrdinalIgnoreCase))
+            {
+                result.AddError(filePath, $"{fileName}: Поле '{fieldName}' ссылается на GUID '{referenceValue}' типа '{actualType}' вместо ожидаемого типа '{expectedType}'!");
+            }
+        }
     }
 }

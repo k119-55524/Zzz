@@ -1,11 +1,11 @@
 {
   "name": "zzz_assets_test_000",
   "version": "1.0.0",
-  "game_script": "SampleGameScript",
+  "game_script": "ea7db1a4-97e2-48a9-8b36-cdf455e2ff68",
   "scenes": [
-    "Assets/Scenes/MainScene.zs"
+    "3cbf41ff-f608-47ca-b383-ea5698648aca"
   ],
   "views": [
-    "Assets/Views/MainHUD.zv"
+    "57ae9b6c-5ff9-4e01-b45a-30a7501265c9"
   ]
 }
