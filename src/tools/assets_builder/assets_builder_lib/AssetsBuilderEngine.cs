@@ -25,7 +25,7 @@ public class AssetsBuilderEngine
 			new ViewAssetImporter(),
 			new ProjectAssetImporter(),
 			new DefaultAssetImporter() // Fallback
-        };
+		};
 
 		_validators = new List<IAssetValidator>
 		{
@@ -34,7 +34,7 @@ public class AssetsBuilderEngine
 			new SceneAssetValidator(),
 			new ViewAssetValidator(),
 			new DefaultAssetValidator() // Fallback
-        };
+		};
 	}
 
 	public string GetVersion()
@@ -304,7 +304,7 @@ public class AssetsBuilderEngine
 
 	public bool BuildPackage(BuildOptions options, CancellationToken cancellationToken = default)
 	{
-		// 1. Автоматический предварительный сканирование, генерация .meta и валидация
+		// 1. Автоматическое предварительное сканирование, генерация .meta и валидация
 		bool isMetaValid = ScanProjectMetaFiles(options);
 		if (!isMetaValid)
 		{
@@ -334,10 +334,12 @@ public class AssetsBuilderEngine
 
 			string libDir = Path.Combine(options.DestinationPath, "lib");
 			string assetsDir = Path.Combine(options.DestinationPath, "assets");
+			string includeDir = Path.Combine(options.DestinationPath, "include");
 
 			Directory.CreateDirectory(libDir);
 			Directory.CreateDirectory(assetsDir);
-			Log("Создана чистая структура папок (lib/ и assets/).");
+			Directory.CreateDirectory(includeDir);
+			Log("Создана чистая структура папок (lib/, assets/ и include/).");
 		}
 		catch (Exception ex)
 		{
@@ -345,11 +347,11 @@ public class AssetsBuilderEngine
 			return false;
 		}
 
-		// 3. Компиляция C++ библиотеки игровых скриптов в подпапку lib/
+		// 3. Компиляция статической C++ библиотеки (AssetExtensions.UserScriptsLibraryName = zzz_user_scripts) в подпапку lib/
 		string cmakeListsPath = Path.Combine(options.SourcePath, "CMakeLists.txt");
 		if (File.Exists(cmakeListsPath))
 		{
-			Log($"Компиляция C++ скриптов проекта в подпапку lib/ ({options.Configuration})...");
+			Log($"Компиляция статической C++ библиотеки '{AssetExtensions.UserScriptsLibraryName}.lib' в подпапку lib/ ({options.Configuration})...");
 			bool compileSuccess = CompileCppScripts(options, Path.Combine(options.DestinationPath, "lib"));
 			if (!compileSuccess)
 			{
@@ -361,7 +363,11 @@ public class AssetsBuilderEngine
 			Log("Предупреждение: CMakeLists.txt не найден в корне проекта. Пропуск компиляции C++ библиотеки.");
 		}
 
-		// 4. Вызов C++ сериализатора zzz_assets_builder_dll в подпапку assets/
+		// 4. Экспорт C++ заголовочных файлов (.h / .hpp) в подпапку include/
+		Log("Экспорт C++ заголовочных файлов (.h/.hpp) в подпапку include/...");
+		CopyHeaderFiles(options.SourcePath, Path.Combine(options.DestinationPath, "include"));
+
+		// 5. Вызов C++ сериализатора zzz_assets_builder_dll в подпапку assets/
 		Log("Сериализация бинарных ресурсов в подпапку assets/...");
 		string assetsDestPath = Path.Combine(options.DestinationPath, "assets");
 
@@ -388,6 +394,45 @@ public class AssetsBuilderEngine
 			Log($"[Предупреждение] P/Invoke call: {ex.Message}");
 			Log("Сборка пакета успешно завершена!");
 			return true;
+		}
+	}
+
+	private void CopyHeaderFiles(string sourcePath, string outputIncludeDir)
+	{
+		try
+		{
+			string scriptsPath = Path.Combine(sourcePath, "Assets", "Scripts");
+			if (Directory.Exists(scriptsPath))
+			{
+				foreach (var file in Directory.GetFiles(scriptsPath, "*.*", SearchOption.AllDirectories))
+				{
+					string ext = Path.GetExtension(file).ToLowerInvariant();
+					if (ext == ".h" || ext == ".hpp")
+					{
+						string relPath = Path.GetRelativePath(scriptsPath, file);
+						string targetPath = Path.Combine(outputIncludeDir, relPath);
+						Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+						File.Copy(file, targetPath, overwrite: true);
+						Log($"  C++ Заголовок экспортирован в: include/{relPath.Replace('\\', '/')}");
+					}
+				}
+			}
+
+			// Проверяем корневые заголовочные файлы (.h / .hpp)
+			foreach (var file in Directory.GetFiles(sourcePath, "*.*", SearchOption.TopDirectoryOnly))
+			{
+				string ext = Path.GetExtension(file).ToLowerInvariant();
+				if (ext == ".h" || ext == ".hpp")
+				{
+					string targetPath = Path.Combine(outputIncludeDir, Path.GetFileName(file));
+					File.Copy(file, targetPath, overwrite: true);
+					Log($"  C++ Заголовок экспортирован в: include/{Path.GetFileName(file)}");
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			Log($"Предупреждение при экспорте заголовочных файлов: {ex.Message}");
 		}
 	}
 
@@ -455,13 +500,16 @@ public class AssetsBuilderEngine
 				buildProc.WaitForExit(60000);
 			}
 
-			// Копирование собранной библиотеки (.dll/.pdb/.so) в outputLibDir
+			// Копирование собранной статической библиотеки zzz_user_scripts (.lib/.a/.pdb) в outputLibDir
 			if (Directory.Exists(buildDir))
 			{
 				foreach (var file in Directory.GetFiles(buildDir, "*.*", SearchOption.AllDirectories))
 				{
 					string ext = Path.GetExtension(file).ToLowerInvariant();
-					if (ext == ".dll" || ext == ".pdb" || ext == ".so" || ext == ".dylib")
+					string fileName = Path.GetFileNameWithoutExtension(file);
+
+					if ((ext == ".lib" || ext == ".a" || ext == ".pdb") &&
+						(fileName.Equals(AssetExtensions.UserScriptsLibraryName, StringComparison.OrdinalIgnoreCase) || ext == ".pdb"))
 					{
 						string targetPath = Path.Combine(outputLibDir, Path.GetFileName(file));
 						File.Copy(file, targetPath, overwrite: true);
