@@ -35,6 +35,15 @@ namespace zzz::engine
 			OnUpdate.Unsubscribe(context);
 		}
 
+		void ClearAll()
+		{
+			OnStart.Clear();
+			OnDestroy.Clear();
+			OnEnable.Clear();
+			OnDisable.Clear();
+			OnUpdate.Clear();
+		}
+
 	private:
 		friend class zzz::script::GameScript;
 		zzz::engine::Event<> OnStart;

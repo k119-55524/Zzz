@@ -122,6 +122,7 @@
     <ClInclude Include="headers\enums.h" />
     <ClInclude Include="pch\pch.h" />
     <ClInclude Include="private\platforms\config\ConfigManager.h" />
+    <ClInclude Include="private\platforms\package\PackageManager.h" />
     <ClInclude Include="private\platforms\config\EngineConfig.h" />
     <ClInclude Include="private\platforms\config\PlatformConfig.h" />
     <ClInclude Include="private\platforms\config\ConfigEditor.h" />
@@ -159,6 +160,7 @@
       <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'"></ForcedIncludeFiles>
     </ClCompile>
     <ClCompile Include="private\platforms\config\ConfigManager.cpp" />
+    <ClCompile Include="private\platforms\package\PackageManager.cpp" />
     <ClCompile Include="private\platforms\config\EngineConfig.cpp" />
     <ClCompile Include="private\platforms\config\ConfigEditor.cpp" />
     <ClCompile Include="private\core\io\Path.cpp" />

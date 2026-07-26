@@ -1,16 +1,20 @@
 #pragma once
 
-#include <string>
-#include <format>
 #include <compare>
-#include <sstream>
-#include <expected>
+#include <string>
 #include <string_view>
+#include <sstream>
+#include <format>
+#include <expected>
+#include <vector>
+#include <span>
+#include <cstddef>
 #include <common/common.h>
+#include <common/serialize/Serializer.h>
 
 namespace zzz::common
 {
-	class Version final
+	class Version final : public ISerializable
 	{
 	public:
 		constexpr Version() :
@@ -24,7 +28,7 @@ namespace zzz::common
 			m_Patch(patch)
 		{}
 
-		~Version() = default;
+		~Version() override = default;
 
 		inline zU32 GetMajor() const noexcept { return m_Major; }
 		inline zU32 GetMinor() const noexcept { return m_Minor; }
@@ -59,7 +63,22 @@ namespace zzz::common
 
 		inline Version BumpMajor() const noexcept { return Version(m_Major + 1, 0, 0); }
 		inline Version BumpMinor() const noexcept { return Version(m_Major, m_Minor + 1, 0); }
-		inline Version BumpPatch() const noexcept { return Version(m_Major, m_Minor + 1, 0); }
+		inline Version BumpPatch() const noexcept { return Version(m_Major, m_Minor, m_Patch + 1); }
+
+	protected:
+		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override
+		{
+			return s.Serialize(buffer, m_Major)
+				.and_then([&]() { return s.Serialize(buffer, m_Minor); })
+				.and_then([&]() { return s.Serialize(buffer, m_Patch); });
+		}
+
+		[[nodiscard]] std::expected<void, std::string> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override
+		{
+			return s.DeSerialize(buffer, offset, m_Major)
+				.and_then([&]() { return s.DeSerialize(buffer, offset, m_Minor); })
+				.and_then([&]() { return s.DeSerialize(buffer, offset, m_Patch); });
+		}
 
 	private:
 		zU32 m_Major;

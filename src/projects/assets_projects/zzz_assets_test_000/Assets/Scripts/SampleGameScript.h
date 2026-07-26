@@ -1,7 +1,12 @@
 #pragma once
+#include <GameScript.h>
 
-class SampleGameScript {
+class SampleGameScript : public zzz::script::GameScript
+{
 public:
-    void OnInit();
-    void OnUpdate(float deltaTime);
+	using GameScript::GameScript;
+	const char* GetScriptTypeName() const override { return "SampleGameScript"; }
+	void OnBindEvents() override {}
+	void OnInit();
+	void OnUpdate(float dt);
 };

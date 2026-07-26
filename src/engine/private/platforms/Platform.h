@@ -4,6 +4,7 @@
 #include "../../NativeAppData.h"
 #include "config/ConfigManager.h"
 #include "config/PlatformConfig.h"
+#include "package/PackageManager.h"
 
 using namespace zzz::io;
 
@@ -37,5 +38,6 @@ namespace zzz::engine
 		std::shared_ptr<NativeAppData> m_NativeData;
 		Path m_Path;
 		std::shared_ptr<ConfigManager> m_ConfigManager;
+		std::shared_ptr<PackageManager> m_PackageManager;
 	};
 }

@@ -67,6 +67,9 @@
     <ClInclude Include="private\platforms\config\ConfigManager.h">
       <Filter>private\platforms\config</Filter>
     </ClInclude>
+    <ClInclude Include="private\platforms\package\PackageManager.h">
+      <Filter>private\platforms\package</Filter>
+    </ClInclude>
     <ClInclude Include="private\platforms\config\EngineConfig.h">
       <Filter>private\platforms\config</Filter>
     </ClInclude>
@@ -162,6 +165,9 @@
     </ClCompile>
     <ClCompile Include="private\platforms\config\ConfigManager.cpp">
       <Filter>private\platforms\config</Filter>
+    </ClCompile>
+    <ClCompile Include="private\platforms\package\PackageManager.cpp">
+      <Filter>private\platforms\package</Filter>
     </ClCompile>
     <ClCompile Include="private\platforms\config\EngineConfig.cpp">
       <Filter>private\platforms\config</Filter>

@@ -136,7 +136,9 @@ extern "C"
 			inFile.read(buffer.data(), fileSize);
 
 			zzz::package::PackageEntry entry{};
-			std::strncpy(entry.guid, item.guid.c_str(), sizeof(entry.guid) - 1);
+			const auto copyLen = (std::min)(item.guid.size(), sizeof(entry.guid) - 1);
+			std::memcpy(entry.guid, item.guid.data(), copyLen);
+			entry.guid[copyLen] = '\0';
 			entry.assetType = item.type;
 			entry.offset = currentOffset;
 			entry.size = fileSize;

@@ -48,6 +48,7 @@ namespace zzz::engine
 		void Shutdown();
 
 		virtual void StartGame(const std::vector<std::string>& globalScripts);
+		virtual void StopGame() {};
 		virtual void OnRegisterScripts();
 		virtual void OnUpdateSystem();
 
@@ -57,7 +58,6 @@ namespace zzz::engine
 		std::atomic<eInitState> engineState;
 		std::vector<std::shared_ptr<zzz::script::GameScript>> m_Scripts;
 
-	protected:
 		std::unique_ptr<Platform> m_Platform;
 		std::unique_ptr<ViewManager> m_ViewManager;
 		std::shared_ptr<MainLoopBase> m_MainLoop;

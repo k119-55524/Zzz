@@ -3,7 +3,7 @@
 build/
 Build/
 build-*/
-build_tmp/
+build_tmp*/
 *_build/
 build_vs*/
 out/

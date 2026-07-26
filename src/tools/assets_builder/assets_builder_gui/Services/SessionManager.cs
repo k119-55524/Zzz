@@ -72,7 +72,7 @@ public static class SessionManager
             Id = Guid.NewGuid().ToString(),
             Name = "zzz_assets_test_000",
             SourcePath = @"C:\Workspaces\ZzzTest\src\projects\assets_projects\zzz_assets_test_000",
-            DestinationPath = @"C:\Workspaces\ZzzTest\bin\packages\zzz_assets_test_000"
+            DestinationPath = @"C:\Workspaces\ZzzTest\src\projects\assets_projects\zzz_assets_test_000_build"
         };
 
         return new SessionConfig

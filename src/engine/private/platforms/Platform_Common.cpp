@@ -29,4 +29,5 @@ void Platform::Initialize()
 {
 	m_ConfigManager = safe_make_shared<ConfigManager>(m_Path);
 	InitializePlatformSpecific();
+	m_PackageManager = safe_make_shared<PackageManager>(m_Path);
 }

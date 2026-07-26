@@ -16,12 +16,10 @@ namespace zzz::package
 		BinaryAsset = 5
 	};
 
-	#pragma pack(push, 1)
 	struct PackageHeader
 	{
 		std::array<std::byte, 3> magic = zzz::common::c_GamePackageHeader;
-		zzz::common::Version version
-		{
+		zzz::common::Version version{
 			zzz::common::c_GamePackageFileMajorVersion,
 			zzz::common::c_GamePackageFileMinorVersion,
 			zzz::common::c_GamePackageFilePatchVersion
@@ -29,6 +27,7 @@ namespace zzz::package
 		zU32 entryCount = 0;
 	};
 
+	#pragma pack(push, 1)
 	struct PackageEntry
 	{
 		char guid[36] = {0};

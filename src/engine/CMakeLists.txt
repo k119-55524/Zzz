@@ -35,6 +35,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
 
         # Core
         "private/platforms/config/ConfigManager.h" "private/platforms/config/ConfigManager.cpp"
+        "private/platforms/package/PackageManager.h" "private/platforms/package/PackageManager.cpp"
         "private/platforms/config/EngineConfig.h" "private/platforms/config/EngineConfig.cpp"
         "private/platforms/config/PlatformConfig.h"
         "private/core/io/Path.h" "private/core/io/Path.cpp"
