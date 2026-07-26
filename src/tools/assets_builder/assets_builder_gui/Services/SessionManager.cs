@@ -1,7 +1,8 @@
 using System.IO;
 using System.Text.Json;
+using assets_builder_gui.Models;
 
-namespace assets_builder_lib;
+namespace assets_builder_gui.Services;
 
 public class SessionConfig
 {
@@ -70,8 +71,7 @@ public static class SessionManager
         {
             Id = Guid.NewGuid().ToString(),
             Name = "zzz_assets_test_000",
-            ScriptsPath = @"C:\Workspaces\ZzzTest\src\projects\assets_projects\zzz_assets_test_000\Scripts",
-            AssetsPath = @"C:\Workspaces\ZzzTest\src\projects\assets_projects\zzz_assets_test_000\Assets",
+            SourcePath = @"C:\Workspaces\ZzzTest\src\projects\assets_projects\zzz_assets_test_000",
             DestinationPath = @"C:\Workspaces\ZzzTest\bin\packages\zzz_assets_test_000"
         };
 

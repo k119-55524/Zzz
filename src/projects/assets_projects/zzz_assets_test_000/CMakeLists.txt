@@ -1,35 +1,43 @@
-add_library(zzz_assets_test_000 SHARED
-    Scripts/SampleGameScript.h
-    Scripts/SampleGameScript.cpp
-    Scripts/SampleSceneScript.h
-    Scripts/SampleSceneScript.cpp
-    Scripts/SampleViewScript.h
-    Scripts/SampleViewScript.cpp
-    Scripts/SampleObjectScript.h
-    Scripts/SampleObjectScript.cpp
+cmake_minimum_required(VERSION 3.20)
+
+project(zzz_assets_test_000 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(SOURCES
     RegisterAllScripts.cpp
+    Assets/Scripts/SampleGameScript.cpp
+    Assets/Scripts/SampleSceneScript.cpp
+    Assets/Scripts/SampleViewScript.cpp
+    Assets/Scripts/SampleObjectScript.cpp
 )
 
-target_include_directories(zzz_assets_test_000 PRIVATE
+set(HEADERS
+    Assets/Scripts/SampleGameScript.h
+    Assets/Scripts/SampleSceneScript.h
+    Assets/Scripts/SampleViewScript.h
+    Assets/Scripts/SampleObjectScript.h
+)
+
+add_library(${PROJECT_NAME} SHARED ${SOURCES} ${HEADERS})
+
+target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/Scripts
-    "${CMAKE_SOURCE_DIR}/src/engine"
-    "${CMAKE_SOURCE_DIR}/src/engine/public/core/scene"
-    "${CMAKE_SOURCE_DIR}/src/engine/public/core/userscripts"
-    "${CMAKE_SOURCE_DIR}/src/engine/public/core/userscripts/base_script"
+    ${CMAKE_CURRENT_SOURCE_DIR}/Assets/Scripts
+    ${CMAKE_SOURCE_DIR}/src
 )
 
-target_link_libraries(zzz_assets_test_000 PRIVATE
-    engine_lib
-    logger_lib
-    common_lib
+target_link_libraries(${PROJECT_NAME} PRIVATE engine_lib)
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIG>"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIG>"
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIG>"
 )
 
-target_compile_features(zzz_assets_test_000 PUBLIC cxx_std_23)
-target_compile_definitions(zzz_assets_test_000 PRIVATE Z_TARGET_NAME="zzz_assets_test_000")
-
-add_custom_command(TARGET zzz_assets_test_000 POST_BUILD
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_CURRENT_SOURCE_DIR}/Assets"
-        "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/Assets"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Assets"
+    "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/Assets"
 )

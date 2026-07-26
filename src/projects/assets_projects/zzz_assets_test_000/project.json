@@ -1,0 +1,11 @@
+{
+  "name": "zzz_assets_test_000",
+  "version": "1.0.0",
+  "game_script": "SampleGameScript",
+  "scenes": [
+    "Assets/Scenes/MainScene.zs"
+  ],
+  "views": [
+    "Assets/Views/MainHUD.zv"
+  ]
+}

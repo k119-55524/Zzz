@@ -30,7 +30,7 @@
     </Window.CommandBindings>
 
     <!-- Внешняя желтая рамка в стиле редактора -->
-    <Border BorderBrush="{StaticResource TextPrimary}" BorderThickness="1">
+    <Border BorderBrush="{StaticResource TextPrimary}" BorderThickness="1.5">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="30" /> <!-- Кастомная шапка -->
@@ -39,7 +39,7 @@
             </Grid.RowDefinitions>
 
             <!-- 1. Кастомная шапка (TitleBar) -->
-            <Border Grid.Row="0" Background="{StaticResource PanelHeaderBackground}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+            <Border Grid.Row="0" Background="{StaticResource PanelHeaderBackground}" BorderBrush="{StaticResource BlockBorderBrush}" BorderThickness="0,0,0,1.5">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -54,7 +54,10 @@
                     </StackPanel>
 
                     <!-- Кнопки управления окном (Свернуть, Развернуть, Закрыть) -->
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <StackPanel Grid.Column="2" 
+                                Orientation="Horizontal" 
+                                HorizontalAlignment="Right" 
+                                WindowChrome.IsHitTestVisibleInChrome="True">
                         <Button Style="{StaticResource ChromeButtonStyle}" 
                                 Command="{x:Static SystemCommands.MinimizeWindowCommand}" 
                                 ToolTip="Свернуть">
@@ -79,7 +82,7 @@
                         <Button Style="{StaticResource ChromeCloseButtonStyle}" 
                                 Command="{x:Static SystemCommands.CloseWindowCommand}" 
                                 ToolTip="Закрыть">
-                            <TextBlock Text="✕" FontSize="11" />
+                            <TextBlock Text="✕" FontSize="12" Foreground="{StaticResource TextLight}" FontWeight="Bold"/>
                         </Button>
                     </StackPanel>
                 </Grid>
@@ -88,181 +91,205 @@
             <!-- 2. Центральное окно UI -->
             <Grid Grid.Row="1" Background="{StaticResource PanelBackground}" Margin="10">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="130" /> <!-- 1. Список настроек + кнопки -->
-                    <RowDefinition Height="Auto" /> <!-- 2. Разделитель -->
-                    <RowDefinition Height="Auto" /> <!-- 3. Редактор текущей настройки -->
-                    <RowDefinition Height="Auto" /> <!-- 4. Кнопка Старт Сборки -->
-                    <RowDefinition Height="*" />    <!-- 5. Панель Логов -->
+                    <RowDefinition Height="180" /> <!-- БЛОК 1: Список настроек + кнопки -->
+                    <RowDefinition Height="Auto" /> <!-- БЛОК 2: Редактор параметров настройки -->
+                    <RowDefinition Height="*" />    <!-- БЛОК 3: Панель Логов -->
+                    <RowDefinition Height="Auto" /> <!-- Кнопки действий в самом низу -->
                 </Grid.RowDefinitions>
 
-                <!-- 1. Список настроек с прокруткой и кнопками -->
-                <Grid Grid.Row="0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
+                <!-- ========================================================================= -->
+                <!--  БЛОК 1: СПИСОК НАСТРОЕК СБОРОК И КНОПКИ УПРАВЛЕНИЯ                       -->
+                <!-- ========================================================================= -->
+                <Border Grid.Row="0" Style="{StaticResource BlockCardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
 
-                    <ListBox ItemsSource="{Binding ProfilesView}" 
-                             SelectedItem="{Binding SelectedProfile}"
-                             Background="#0A1321" 
-                             BorderBrush="{StaticResource BorderBrush}" 
-                             BorderThickness="1" 
-                             Margin="0,0,0,6">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding DisplayName}" Foreground="{StaticResource TextLight}" Padding="4,2"/>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                        <!-- Шапка Блока 1 -->
+                        <Border Grid.Row="0" Style="{StaticResource BlockHeaderStyle}">
+                            <TextBlock Text="СПИСОК НАСТРОЕК СБОРОК" Foreground="{StaticResource TextPrimary}" FontWeight="Bold" FontSize="11"/>
+                        </Border>
 
-                    <!-- Кнопки под списком -->
-                    <StackPanel Grid.Row="1" Orientation="Horizontal">
-                        <Button Content="+ Добавить" Command="{Binding AddProfileCommand}" Style="{StaticResource ActionButtonStyle}" Margin="0,0,8,0"/>
-                        <Button Content="🗑 Удалить выделенное" Command="{Binding DeleteProfileCommand}" Style="{StaticResource ActionButtonStyle}"/>
-                    </StackPanel>
-                </Grid>
+                        <!-- Содержимое Блока 1 -->
+                        <Grid Grid.Row="1" Margin="10">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
 
-                <!-- 2. Разделитель -->
-                <Separator Grid.Row="1" Background="{StaticResource BorderBrush}" Margin="0,10,0,10"/>
+                            <ListBox Grid.Row="0" 
+                                     ItemsSource="{Binding ProfilesView}" 
+                                     SelectedItem="{Binding SelectedProfile}"
+                                     Background="#060B13" 
+                                     BorderBrush="{StaticResource BlockBorderBrush}" 
+                                     BorderThickness="1" 
+                                     Margin="0,0,0,8">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding DisplayName}" Foreground="{StaticResource TextLight}" Padding="6,3" FontSize="12"/>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
 
-                <!-- 3. Редактор выделенной настройки -->
-                <Grid Grid.Row="2" IsEnabled="{Binding HasSelectedProfile}">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <!-- а. Имя настройки -->
-                    <Grid Grid.Row="0" Margin="0,0,0,8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="140" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Имя настройки:" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                        <TextBox Grid.Column="1" Text="{Binding SelectedProfile.Name, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource PathTextBoxStyle}" MaxLength="255"/>
+                            <StackPanel Grid.Row="1" Orientation="Horizontal">
+                                <Button Content="+ Добавить" Command="{Binding AddProfileCommand}" Style="{StaticResource AccentButtonStyle}" Margin="0,0,8,0" Padding="12,4"/>
+                                <Button Content="🗑 Удалить выделенное" Command="{Binding DeleteProfileCommand}" Style="{StaticResource AccentButtonStyle}" Padding="12,4"/>
+                            </StackPanel>
+                        </Grid>
                     </Grid>
+                </Border>
 
-                    <!-- б. Путь к скриптам -->
-                    <Grid Grid.Row="1" Margin="0,0,0,8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="140" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Путь к скриптам:" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                        <TextBox Grid.Column="1" Text="{Binding SelectedProfile.ScriptsPath, UpdateSourceTrigger=PropertyChanged}">
-                            <TextBox.Style>
-                                <Style TargetType="TextBox" BasedOn="{StaticResource PathTextBoxStyle}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding SelectedProfile.IsScriptsPathValid}" Value="False">
-                                            <Setter Property="Foreground" Value="#FF5252" />
-                                            <Setter Property="BorderBrush" Value="#FF5252" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBox.Style>
-                        </TextBox>
-                        <Button Grid.Column="2" Content="📂 Обзор..." Command="{Binding BrowseScriptsPathCommand}" Style="{StaticResource ActionButtonStyle}" Margin="8,0,0,0"/>
+                <!-- ========================================================================= -->
+                <!--  БЛОК 2: ПАРАМЕТРЫ ВЫБРАННОЙ НАСТРОЙКИ                                    -->
+                <!-- ========================================================================= -->
+                <Border Grid.Row="1" Style="{StaticResource BlockCardStyle}" IsEnabled="{Binding HasSelectedProfile}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Шапка Блока 2 -->
+                        <Border Grid.Row="0" Style="{StaticResource BlockHeaderStyle}">
+                            <TextBlock Text="ПАРАМЕТРЫ ВЫБРАННОЙ НАСТРОЙКИ" Foreground="{StaticResource TextPrimary}" FontWeight="Bold" FontSize="11"/>
+                        </Border>
+
+                        <!-- Содержимое Блока 2 -->
+                        <Grid Grid.Row="1" Margin="10">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <!-- а. Имя настройки -->
+                            <Grid Grid.Row="0" Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="130" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Имя настройки:" Foreground="{StaticResource TextLight}" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12"/>
+                                <TextBox Grid.Column="1" Text="{Binding SelectedProfile.Name, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource PathTextBoxStyle}" MaxLength="255"/>
+                            </Grid>
+
+                            <!-- б. Путь к проекту (Источник) -->
+                            <Grid Grid.Row="1" Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="130" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Путь к проекту:" Foreground="{StaticResource TextLight}" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12"/>
+                                <TextBox Grid.Column="1" Text="{Binding SelectedProfile.SourcePath, UpdateSourceTrigger=PropertyChanged}">
+                                    <TextBox.Style>
+                                        <Style TargetType="TextBox" BasedOn="{StaticResource PathTextBoxStyle}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedProfile.IsSourcePathValid}" Value="False">
+                                                    <Setter Property="Foreground" Value="#FF5252" />
+                                                    <Setter Property="BorderBrush" Value="#FF5252" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
+                                <Button Grid.Column="2" Content="📂 Обзор..." Command="{Binding BrowseSourcePathCommand}" Style="{StaticResource AccentButtonStyle}" Margin="8,0,0,0" Padding="12,4"/>
+                            </Grid>
+
+                            <!-- в. Путь назначения -->
+                            <Grid Grid.Row="2" Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="130" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Путь назначения:" Foreground="{StaticResource TextLight}" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12"/>
+                                <TextBox Grid.Column="1" Text="{Binding SelectedProfile.DestinationPath, UpdateSourceTrigger=PropertyChanged}">
+                                    <TextBox.Style>
+                                        <Style TargetType="TextBox" BasedOn="{StaticResource PathTextBoxStyle}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedProfile.IsDestinationPathValid}" Value="False">
+                                                    <Setter Property="Foreground" Value="#FF5252" />
+                                                    <Setter Property="BorderBrush" Value="#FF5252" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
+                                <Button Grid.Column="2" Content="📂 Обзор..." Command="{Binding BrowseDestinationPathCommand}" Style="{StaticResource AccentButtonStyle}" Margin="8,0,0,0" Padding="12,4"/>
+                            </Grid>
+
+                            <!-- г. Кнопки Сохранить и Отмена -->
+                            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
+                                <Button Content="↩ Отмена" Command="{Binding CancelProfileCommand}" Style="{StaticResource AccentButtonStyle}" Margin="0,0,8,0" Padding="14,4"/>
+                                <Button Content="💾 Сохранить" Command="{Binding SaveProfileCommand}" Style="{StaticResource AccentButtonStyle}" Padding="14,4"/>
+                            </StackPanel>
+                        </Grid>
                     </Grid>
+                </Border>
 
-                    <!-- в. Путь к ассетам -->
-                    <Grid Grid.Row="2" Margin="0,0,0,8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="140" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Путь к ассетам:" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                        <TextBox Grid.Column="1" Text="{Binding SelectedProfile.AssetsPath, UpdateSourceTrigger=PropertyChanged}">
-                            <TextBox.Style>
-                                <Style TargetType="TextBox" BasedOn="{StaticResource PathTextBoxStyle}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding SelectedProfile.IsAssetsPathValid}" Value="False">
-                                            <Setter Property="Foreground" Value="#FF5252" />
-                                            <Setter Property="BorderBrush" Value="#FF5252" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBox.Style>
-                        </TextBox>
-                        <Button Grid.Column="2" Content="📂 Обзор..." Command="{Binding BrowseAssetsPathCommand}" Style="{StaticResource ActionButtonStyle}" Margin="8,0,0,0"/>
+                <!-- ========================================================================= -->
+                <!--  БЛОК 3: ЛОГИ СБОРКИ                                                      -->
+                <!-- ========================================================================= -->
+                <Border Grid.Row="2" Style="{StaticResource BlockCardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Шапка Блока 3 с кнопками скопировать/очистить логи -->
+                        <Border Grid.Row="0" Style="{StaticResource BlockHeaderStyle}">
+                            <Grid>
+                                <TextBlock Text="ЛОГИ СБОРКИ" Foreground="{StaticResource TextPrimary}" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Content="📋 Скопировать логи" Command="{Binding CopyLogsCommand}" Style="{StaticResource AccentButtonStyle}" Padding="8,2" FontSize="11" Margin="0,0,6,0"/>
+                                    <Button Content="🗑 Очистить логи" Command="{Binding ClearLogsCommand}" Style="{StaticResource AccentButtonStyle}" Padding="8,2" FontSize="11"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Содержимое Блока 3 -->
+                        <Grid Grid.Row="1" Margin="10">
+                            <Border BorderBrush="{StaticResource BlockBorderBrush}" BorderThickness="1" CornerRadius="3" Background="#060B13">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Padding="6">
+                                    <ItemsControl ItemsSource="{Binding LogItems}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Foreground="{Binding Color}" FontWeight="{Binding FontWeight}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" Margin="0,1">
+                                                    <Run Text="[" Foreground="#8B949E"/><Run Text="{Binding Timestamp}" Foreground="#8B949E"/><Run Text="] "/><Run Text="{Binding Message}"/>
+                                                </TextBlock>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Border>
+                        </Grid>
                     </Grid>
+                </Border>
 
-                    <!-- г. Путь назначения -->
-                    <Grid Grid.Row="3" Margin="0,0,0,8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="140" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Путь назначения:" Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                        <TextBox Grid.Column="1" Text="{Binding SelectedProfile.DestinationPath, UpdateSourceTrigger=PropertyChanged}">
-                            <TextBox.Style>
-                                <Style TargetType="TextBox" BasedOn="{StaticResource PathTextBoxStyle}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding SelectedProfile.IsDestinationPathValid}" Value="False">
-                                            <Setter Property="Foreground" Value="#FF5252" />
-                                            <Setter Property="BorderBrush" Value="#FF5252" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBox.Style>
-                        </TextBox>
-                        <Button Grid.Column="2" Content="📂 Обзор..." Command="{Binding BrowseDestinationPathCommand}" Style="{StaticResource ActionButtonStyle}" Margin="8,0,0,0"/>
-                    </Grid>
-
-                    <!-- д. Кнопки Сохранить и Отмена -->
-                    <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
-                        <Button Content="↩ Отмена" Command="{Binding CancelProfileCommand}" Style="{StaticResource ActionButtonStyle}" Margin="0,0,8,0"/>
-                        <Button Content="💾 Сохранить" Command="{Binding SaveProfileCommand}" Style="{StaticResource ActionButtonStyle}"/>
-                    </StackPanel>
-                </Grid>
-
-                <!-- 4. Кнопка Старт/Прерывание сборки справа -->
-                <Grid Grid.Row="3" Margin="0,10,0,10">
+                <!-- ========================================================================= -->
+                <!--  ГЛАВНЫЕ ДЕЙСТВИЯ (В САМОМ НИЗУ ПОД БЛОКОМ ЛОГОВ)                         -->
+                <!-- ========================================================================= -->
+                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,10">
+                    <Button Content="🔄 Обновить GUIDы" 
+                            Command="{Binding UpdateGuidsCommand}" 
+                            Style="{StaticResource AccentButtonStyle}" 
+                            FontSize="13" 
+                            Padding="18,6" 
+                            Margin="0,0,10,0"/>
                     <Button Content="{Binding BuildButtonText}" 
                             Command="{Binding StartOrCancelBuildCommand}" 
                             Style="{StaticResource AccentButtonStyle}" 
-                            HorizontalAlignment="Right" 
                             FontSize="13" 
-                            Padding="16,6"/>
-                </Grid>
-
-                <!-- 5. Панель логов сборки -->
-                <Grid Grid.Row="4">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-
-                    <Grid Grid.Row="0" Margin="0,0,0,4">
-                        <TextBlock Text="Логи сборки:" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Content="📋 Скопировать логи" Command="{Binding CopyLogsCommand}" Style="{StaticResource ActionButtonStyle}" Padding="8,2" FontSize="11" Margin="0,0,6,0"/>
-                            <Button Content="🗑 Очистить логи" Command="{Binding ClearLogsCommand}" Style="{StaticResource ActionButtonStyle}" Padding="8,2" FontSize="11"/>
-                        </StackPanel>
-                    </Grid>
-
-                    <TextBox Grid.Row="1" 
-                             Text="{Binding LogText}" 
-                             IsReadOnly="True" 
-                             TextWrapping="Wrap" 
-                             VerticalScrollBarVisibility="Auto" 
-                             Background="#0A1321" 
-                             Foreground="#CDD9E5" 
-                             FontFamily="Consolas" 
-                             FontSize="11" 
-                             BorderBrush="{StaticResource BorderBrush}" 
-                             BorderThickness="1" 
-                             Padding="6"/>
-                </Grid>
+                            Padding="18,6"/>
+                </StackPanel>
             </Grid>
 
             <!-- 3. Панель состояния (Status Bar) -->
-            <Border Grid.Row="2" Background="{StaticResource PanelHeaderBackground}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0">
+            <Border Grid.Row="2" Background="{StaticResource PanelHeaderBackground}" BorderBrush="{StaticResource BlockBorderBrush}" BorderThickness="0,1.5,0,0">
                 <Grid Margin="10,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />

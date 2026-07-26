@@ -1,5 +1,5 @@
 using System.IO;
-using assets_builder_lib;
+using assets_builder_gui.Models;
 
 namespace assets_builder_gui.ViewModels;
 
@@ -8,8 +8,7 @@ public class BuildProfileViewModel : ViewModelBase
     private readonly BuildProfile _model;
 
     private string _name = string.Empty;
-    private string _scriptsPath = string.Empty;
-    private string _assetsPath = string.Empty;
+    private string _sourcePath = string.Empty;
     private string _destinationPath = string.Empty;
 
     public BuildProfileViewModel(BuildProfile model)
@@ -38,28 +37,14 @@ public class BuildProfileViewModel : ViewModelBase
         }
     }
 
-    public string ScriptsPath
+    public string SourcePath
     {
-        get => _scriptsPath;
+        get => _sourcePath;
         set
         {
-            if (SetProperty(ref _scriptsPath, value))
+            if (SetProperty(ref _sourcePath, value))
             {
-                OnPropertyChanged(nameof(IsScriptsPathValid));
-                OnPropertyChanged(nameof(IsDirty));
-                OnPropertyChanged(nameof(IsValid));
-            }
-        }
-    }
-
-    public string AssetsPath
-    {
-        get => _assetsPath;
-        set
-        {
-            if (SetProperty(ref _assetsPath, value))
-            {
-                OnPropertyChanged(nameof(IsAssetsPathValid));
+                OnPropertyChanged(nameof(IsSourcePathValid));
                 OnPropertyChanged(nameof(IsDirty));
                 OnPropertyChanged(nameof(IsValid));
             }
@@ -80,9 +65,10 @@ public class BuildProfileViewModel : ViewModelBase
         }
     }
 
-    public bool IsScriptsPathValid => !string.IsNullOrWhiteSpace(_scriptsPath) && Directory.Exists(_scriptsPath);
-    public bool IsAssetsPathValid => !string.IsNullOrWhiteSpace(_assetsPath) && Directory.Exists(_assetsPath);
+    // Источниковый путь к папке проекта должен существовать на диске
+    public bool IsSourcePathValid => !string.IsNullOrWhiteSpace(_sourcePath) && Directory.Exists(_sourcePath);
 
+    // Валидация пути назначения: не обязан существовать, но синтаксис пути должен быть правильным
     public bool IsDestinationPathValid
     {
         get
@@ -101,11 +87,10 @@ public class BuildProfileViewModel : ViewModelBase
         }
     }
 
-    public bool IsValid => !string.IsNullOrWhiteSpace(_name) && IsScriptsPathValid && IsAssetsPathValid && IsDestinationPathValid;
+    public bool IsValid => !string.IsNullOrWhiteSpace(_name) && IsSourcePathValid && IsDestinationPathValid;
 
     public bool IsDirty => _name != _model.Name ||
-                           _scriptsPath != _model.ScriptsPath ||
-                           _assetsPath != _model.AssetsPath ||
+                           _sourcePath != _model.SourcePath ||
                            _destinationPath != _model.DestinationPath;
 
     public string DisplayName => IsDirty ? $"{_name} *" : _name;
@@ -113,17 +98,14 @@ public class BuildProfileViewModel : ViewModelBase
     public void ResetFromModel()
     {
         _name = _model.Name;
-        _scriptsPath = _model.ScriptsPath;
-        _assetsPath = _model.AssetsPath;
+        _sourcePath = _model.SourcePath;
         _destinationPath = _model.DestinationPath;
 
         OnPropertyChanged(nameof(Name));
-        OnPropertyChanged(nameof(ScriptsPath));
-        OnPropertyChanged(nameof(AssetsPath));
+        OnPropertyChanged(nameof(SourcePath));
         OnPropertyChanged(nameof(DestinationPath));
         OnPropertyChanged(nameof(DisplayName));
-        OnPropertyChanged(nameof(IsScriptsPathValid));
-        OnPropertyChanged(nameof(IsAssetsPathValid));
+        OnPropertyChanged(nameof(IsSourcePathValid));
         OnPropertyChanged(nameof(IsDestinationPathValid));
         OnPropertyChanged(nameof(IsDirty));
         OnPropertyChanged(nameof(IsValid));
@@ -132,8 +114,7 @@ public class BuildProfileViewModel : ViewModelBase
     public void ApplyToModel()
     {
         _model.Name = _name;
-        _model.ScriptsPath = _scriptsPath;
-        _model.AssetsPath = _assetsPath;
+        _model.SourcePath = _sourcePath;
         _model.DestinationPath = _destinationPath;
 
         OnPropertyChanged(nameof(DisplayName));

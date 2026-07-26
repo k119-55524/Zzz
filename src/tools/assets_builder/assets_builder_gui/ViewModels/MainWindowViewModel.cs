@@ -2,14 +2,25 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Data;
 using System.Windows.Input;
+using assets_builder_gui.Models;
 using assets_builder_gui.Services;
 using assets_builder_lib;
 
 namespace assets_builder_gui.ViewModels;
 
+public class LogItem
+{
+    public string Timestamp { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+    public string Color { get; set; } = "#CDD9E5";
+    public string FontWeight { get; set; } = "Normal";
+    public string FullText => $"[{Timestamp}] {Message}";
+}
+
 public class MainWindowViewModel : ViewModelBase
 {
     private readonly IDialogService _dialogService;
+    private readonly AssetsBuilderEngine _engine;
     private readonly SessionConfig _sessionConfig;
     private BuildProfileViewModel? _selectedProfile;
     private bool _isBuilding = false;
@@ -28,6 +39,11 @@ public class MainWindowViewModel : ViewModelBase
     public MainWindowViewModel(IDialogService dialogService)
     {
         _dialogService = dialogService;
+        _engine = new AssetsBuilderEngine();
+
+        // Подписка на стрим логов от ядра сборщика
+        _engine.LogReceived += message => AppendLog(message);
+
         _sessionConfig = SessionManager.LoadSession();
 
         _windowWidth = _sessionConfig.WindowWidth;
@@ -62,16 +78,17 @@ public class MainWindowViewModel : ViewModelBase
         SaveProfileCommand = new RelayCommand(_ => SaveProfile(), _ => HasAnyUnsavedChanges && (SelectedProfile == null || SelectedProfile.IsValid));
         CancelProfileCommand = new RelayCommand(_ => CancelProfile(), _ => SelectedProfile != null && SelectedProfile.IsDirty);
 
-        BrowseScriptsPathCommand = new RelayCommand(_ => BrowseScriptsPath(), _ => SelectedProfile != null);
-        BrowseAssetsPathCommand = new RelayCommand(_ => BrowseAssetsPath(), _ => SelectedProfile != null);
+        BrowseSourcePathCommand = new RelayCommand(_ => BrowseSourcePath(), _ => SelectedProfile != null);
         BrowseDestinationPathCommand = new RelayCommand(_ => BrowseDestinationPath(), _ => SelectedProfile != null);
 
+        UpdateGuidsCommand = new RelayCommand(_ => UpdateGuids(), _ => SelectedProfile != null && SelectedProfile.IsValid);
         StartOrCancelBuildCommand = new RelayCommand(_ => ToggleBuild(), _ => SelectedProfile != null && SelectedProfile.IsValid);
-        CopyLogsCommand = new RelayCommand(_ => CopyLogs(), _ => !string.IsNullOrEmpty(LogText));
-        ClearLogsCommand = new RelayCommand(_ => ClearLogs(), _ => !string.IsNullOrEmpty(LogText));
+        CopyLogsCommand = new RelayCommand(_ => CopyLogs(), _ => LogItems.Count > 0);
+        ClearLogsCommand = new RelayCommand(_ => ClearLogs(), _ => LogItems.Count > 0);
     }
 
     public ObservableCollection<BuildProfileViewModel> Profiles { get; }
+    public ObservableCollection<LogItem> LogItems { get; } = new();
 
     public ICollectionView ProfilesView { get; }
 
@@ -164,10 +181,10 @@ public class MainWindowViewModel : ViewModelBase
     public ICommand SaveProfileCommand { get; }
     public ICommand CancelProfileCommand { get; }
 
-    public ICommand BrowseScriptsPathCommand { get; }
-    public ICommand BrowseAssetsPathCommand { get; }
+    public ICommand BrowseSourcePathCommand { get; }
     public ICommand BrowseDestinationPathCommand { get; }
 
+    public ICommand UpdateGuidsCommand { get; }
     public ICommand StartOrCancelBuildCommand { get; }
     public ICommand CopyLogsCommand { get; }
     public ICommand ClearLogsCommand { get; }
@@ -263,23 +280,13 @@ public class MainWindowViewModel : ViewModelBase
         SessionManager.SaveSession(_sessionConfig);
     }
 
-    private void BrowseScriptsPath()
+    private void BrowseSourcePath()
     {
         if (SelectedProfile == null) return;
-        var folder = _dialogService.SelectFolder("Выберите папку со скриптами", SelectedProfile.ScriptsPath);
+        var folder = _dialogService.SelectFolder("Выберите папку проекта (содержащую project.json)", SelectedProfile.SourcePath);
         if (!string.IsNullOrEmpty(folder))
         {
-            SelectedProfile.ScriptsPath = folder;
-        }
-    }
-
-    private void BrowseAssetsPath()
-    {
-        if (SelectedProfile == null) return;
-        var folder = _dialogService.SelectFolder("Выберите папку с ассетами", SelectedProfile.AssetsPath);
-        if (!string.IsNullOrEmpty(folder))
-        {
-            SelectedProfile.AssetsPath = folder;
+            SelectedProfile.SourcePath = folder;
         }
     }
 
@@ -291,6 +298,19 @@ public class MainWindowViewModel : ViewModelBase
         {
             SelectedProfile.DestinationPath = folder;
         }
+    }
+
+    private void UpdateGuids()
+    {
+        if (SelectedProfile == null) return;
+
+        var options = new BuildOptions
+        {
+            SourcePath = SelectedProfile.SourcePath,
+            DestinationPath = SelectedProfile.DestinationPath
+        };
+
+        Task.Run(() => _engine.ScanProjectMetaFiles(options));
     }
 
     private void ToggleBuild()
@@ -312,20 +332,25 @@ public class MainWindowViewModel : ViewModelBase
         if (confirmed)
         {
             IsBuilding = true;
-            AppendLog($"Запуск сборки настройки '{SelectedProfile.Name}'...");
-            AppendLog($"Скрипты: {SelectedProfile.ScriptsPath}");
-            AppendLog($"Ассеты:  {SelectedProfile.AssetsPath}");
-            AppendLog($"Назначение: {SelectedProfile.DestinationPath}");
 
-            AppendLog("Сериализация макета проекта через zzz_engine_builder_dll...");
-            AppendLog("Сборка успешно завершена!");
-            IsBuilding = false;
+            var options = new BuildOptions
+            {
+                SourcePath = SelectedProfile.SourcePath,
+                DestinationPath = SelectedProfile.DestinationPath
+            };
+
+            Task.Run(() =>
+            {
+                _engine.BuildPackage(options);
+                System.Windows.Application.Current?.Dispatcher.Invoke(() => IsBuilding = false);
+            });
         }
     }
 
     private void CopyLogs()
     {
-        _dialogService.CopyToClipboard(LogText);
+        string fullLog = string.Join("\n", LogItems.Select(item => item.FullText));
+        _dialogService.CopyToClipboard(fullLog);
         AppendLog("Логи скопированы в буфер обмена.");
     }
 
@@ -338,6 +363,7 @@ public class MainWindowViewModel : ViewModelBase
 
         if (confirmed)
         {
+            LogItems.Clear();
             LogText = string.Empty;
             AppendLog("Логи очищены.");
         }
@@ -346,7 +372,44 @@ public class MainWindowViewModel : ViewModelBase
     public void AppendLog(string message)
     {
         string timestamp = DateTime.Now.ToString("HH:mm:ss");
-        LogText += $"[{timestamp}] {message}\n";
+        string color = "#CDD9E5";
+        string weight = "Normal";
+
+        if (message.Contains("Ошибка", StringComparison.OrdinalIgnoreCase) || message.Contains("error", StringComparison.OrdinalIgnoreCase))
+        {
+            color = "#FF5252"; // Красный цвет ошибок
+            weight = "Bold";
+        }
+        else if (message.Contains("Предупреждение", StringComparison.OrdinalIgnoreCase) || message.Contains("warning", StringComparison.OrdinalIgnoreCase))
+        {
+            color = "#FFC107"; // Яркий желтый цвет предупреждений
+            weight = "SemiBold";
+        }
+        else if (message.Contains("успешно", StringComparison.OrdinalIgnoreCase))
+        {
+            color = "#4CAF50"; // Зеленый цвет успеха
+            weight = "SemiBold";
+        }
+        else if (message.Contains("GUID:", StringComparison.OrdinalIgnoreCase) || message.Contains("Новый GUID:", StringComparison.OrdinalIgnoreCase) || message.StartsWith("Старт"))
+        {
+            color = "#E5C07B"; // Желтый/Золотой
+        }
+        else if (message.StartsWith("==") || message.StartsWith("--"))
+        {
+            color = "#388BFD"; // Синий разделитель
+        }
+
+        System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+        {
+            LogItems.Add(new LogItem
+            {
+                Timestamp = timestamp,
+                Message = message,
+                Color = color,
+                FontWeight = weight
+            });
+            LogText += $"[{timestamp}] {message}\n";
+        });
     }
 
     public bool ConfirmWindowClose()
