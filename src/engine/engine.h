@@ -6,10 +6,11 @@
 #include <vector>
 #include <expected>
 #include <string_view>
-
-#include "public/core/EngineTime.h"
-#include "NativeAppData.h"
 #include <logger/logger.h>
+
+#include "NativeAppData.h"
+#include "public/core/EngineTime.h"
+
 
 namespace zzz
 {
@@ -49,7 +50,7 @@ namespace zzz::engine
 
 		virtual void StartGame(const std::vector<std::string>& globalScripts);
 		virtual void StopGame() {};
-		virtual void OnRegisterScripts();
+		virtual void RegisterScripts();
 		virtual void OnUpdateSystem();
 
 		void LoadGlobalScripts(const std::vector<std::string>& globalScripts);

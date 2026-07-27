@@ -121,12 +121,12 @@ void Engine::Initialize()
 
 void Engine::StartGame(const std::vector<std::string>& globalScripts)
 {
-	OnRegisterScripts();
+	RegisterScripts();
 	LoadGlobalScripts(globalScripts);
 	m_EventBus->InvokeStart();
 }
 
-void Engine::OnRegisterScripts()
+void Engine::RegisterScripts()
 {
 	RegisterAllScripts();
 }

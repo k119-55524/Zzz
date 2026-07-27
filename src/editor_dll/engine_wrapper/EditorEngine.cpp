@@ -359,7 +359,7 @@ namespace zzz::editor
 			m_ViewManager->Update(*m_Time);
 	}
 
-	void EditorEngine::OnRegisterScripts()
+	void EditorEngine::RegisterScripts()
 	{
 		if (!m_ProjectPath.empty())
 		{
@@ -381,7 +381,7 @@ namespace zzz::editor
 
 	void EditorEngine::StartGame(const std::vector<std::string>& globalScripts)
 	{
-		OnRegisterScripts();
+		RegisterScripts();
 
 #ifdef _WIN32
 		if (IsDebuggerPresent())

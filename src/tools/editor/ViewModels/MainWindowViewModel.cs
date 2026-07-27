@@ -356,11 +356,6 @@ namespace editor.ViewModels
 				if (attached)
 				{
 					SetDebuggerState(attached: true, attaching: true, failed: false);
-					// Перезагрузку scripts.dll на оригинальный модуль (не временную копию) специально
-					// не делаем прямо тут: сразу после attach это регулярно подвисало навсегда (VS
-					// ещё занята только что подключенным процессом). EditorEngine::OnRegisterScripts
-					// сама переключит DLL на следующем Play - там для этого больше времени и это
-					// ожидаемое пользователем действие, а не фоновая операция сразу после клика.
 					EditorLogger.LogInfo("[Debugger] Visual Studio подключена. scripts.dll переключится на оригинальный модуль при следующем Play.");
 				}
 				else

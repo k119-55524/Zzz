@@ -127,7 +127,6 @@
     <ClInclude Include="private\platforms\config\PlatformConfig.h" />
     <ClInclude Include="private\platforms\config\ConfigEditor.h" />
     <ClInclude Include="private\core\io\Path.h" />
-    <ClInclude Include="private\core\utils\version.h" />
     <ClInclude Include="private\core\templates\Size2D.h" />
     <ClInclude Include="private\platforms\input\Input.h" />
     <ClInclude Include="private\platforms\input\InputBase.h" />
@@ -151,6 +150,7 @@
     <ClInclude Include="public\core\userscripts\base_script\Script.h" />
     <ClInclude Include="public\core\userscripts\base_script\GameScript.h" />
     <ClInclude Include="public\core\userscripts\base_script\SceneScript.h" />
+    <ClInclude Include="public\core\userscripts\base_script\ViewScript.h" />
     <ClInclude Include="public\core\EngineTime.h" />
   </ItemGroup>
   <ItemGroup>
@@ -164,7 +164,6 @@
     <ClCompile Include="private\platforms\config\EngineConfig.cpp" />
     <ClCompile Include="private\platforms\config\ConfigEditor.cpp" />
     <ClCompile Include="private\core\io\Path.cpp" />
-    <ClCompile Include="private\core\utils\version.cpp" />
     <ClCompile Include="private\platforms\input\InputBase.cpp" />
     <ClCompile Include="private\platforms\input\InputEditor.cpp" />
     <ClCompile Include="private\platforms\Platform_Common.cpp" />
@@ -179,6 +178,7 @@
     <ClCompile Include="public\core\userscripts\base_script\Script.cpp" />
     <ClCompile Include="public\core\userscripts\base_script\GameScript.cpp" />
     <ClCompile Include="public\core\userscripts\base_script\SceneScript.cpp" />
+    <ClCompile Include="public\core\userscripts\base_script\ViewScript.cpp" />
     <ClCompile Include="public\core\EngineTime.cpp" />
   </ItemGroup>
   <ItemGroup>

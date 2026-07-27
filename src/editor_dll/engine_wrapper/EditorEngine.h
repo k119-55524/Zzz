@@ -32,7 +32,7 @@ namespace zzz::editor
 		void Pause(bool isPaused);
 
 	protected:
-		void OnRegisterScripts() override;
+		void RegisterScripts() override;
 		void OnUpdateSystem() override;
 		void StartGame(const std::vector<std::string>& globalScripts) override;
 
