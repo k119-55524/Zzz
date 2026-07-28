@@ -164,6 +164,7 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
                             <!-- а. Имя настройки -->
@@ -237,8 +238,86 @@
                                 <Button Grid.Column="2" Content="📂 Обзор..." Command="{Binding BrowseDestinationPathCommand}" Style="{StaticResource AccentButtonStyle}" Margin="8,0,0,0" Padding="12,4"/>
                             </Grid>
 
-                            <!-- д. Кнопки Сохранить и Отмена -->
-                            <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
+                            <!-- д. Целевые проекты -->
+                            <Grid Grid.Row="4" Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="130" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Целевые проекты:" Foreground="{StaticResource TextLight}" VerticalAlignment="Top" Margin="0,6,0,0" FontWeight="SemiBold" FontSize="12"/>
+                                <StackPanel Grid.Column="1" Orientation="Vertical">
+                                    <ItemsControl ItemsSource="{Binding SelectedProfile.TargetProjects}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,0,0,6">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    
+                                                    <!-- Галочка активности -->
+                                                    <CheckBox Grid.Column="0" 
+                                                              IsChecked="{Binding IsEnabled, Mode=TwoWay}" 
+                                                              VerticalAlignment="Center" 
+                                                              Margin="0,0,8,0" 
+                                                              ToolTip="Включить/выключить проект"/>
+
+                                                    <!-- Путь к конфигу проекта (assets_config.json) -->
+                                                    <TextBox Grid.Column="1" 
+                                                             Text="{Binding ConfigJsonPath, UpdateSourceTrigger=PropertyChanged}" 
+                                                             ToolTip="Путь к assets_config.json целевого проекта">
+                                                        <TextBox.Style>
+                                                            <Style TargetType="TextBox" BasedOn="{StaticResource PathTextBoxStyle}">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsConfigJsonPathValid}" Value="False">
+                                                                        <Setter Property="Foreground" Value="#FF5252" />
+                                                                        <Setter Property="BorderBrush" Value="#FF5252" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBox.Style>
+                                                    </TextBox>
+
+                                                    <!-- Кнопка Обзор... -->
+                                                    <Button Grid.Column="2" 
+                                                            Content="📂 Обзор..." 
+                                                            Command="{Binding BrowseConfigJsonPathCommand}" 
+                                                            Style="{StaticResource AccentButtonStyle}" 
+                                                            Margin="8,0,0,0" 
+                                                            Padding="10,3"/>
+
+                                                    <!-- Кнопка Удалить (✕) -->
+                                                    <Button Grid.Column="3" 
+                                                            Content="✕" 
+                                                            Command="{Binding DataContext.SelectedProfile.RemoveTargetProjectCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip="Удалить целевой проект"
+                                                            Foreground="#FF5252"
+                                                            Background="Transparent"
+                                                            BorderThickness="0"
+                                                            FontSize="12"
+                                                            FontWeight="Bold"
+                                                            Margin="8,0,0,0"
+                                                            Cursor="Hand"
+                                                            VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <Button Content="➕ Добавить целевой проект" 
+                                            Command="{Binding SelectedProfile.AddTargetProjectCommand}" 
+                                            Style="{StaticResource AccentButtonStyle}" 
+                                            HorizontalAlignment="Left" 
+                                            Margin="0,4,0,0" 
+                                            Padding="12,4" 
+                                            FontSize="12"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- е. Кнопки Сохранить и Отмена -->
+                            <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
                                 <Button Content="↩ Отмена" Command="{Binding CancelProfileCommand}" Style="{StaticResource AccentButtonStyle}" Margin="0,0,8,0" Padding="14,4"/>
                                 <Button Content="💾 Сохранить" Command="{Binding SaveProfileCommand}" Style="{StaticResource AccentButtonStyle}" Padding="14,4"/>
                             </StackPanel>

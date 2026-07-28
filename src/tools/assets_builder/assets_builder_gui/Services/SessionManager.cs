@@ -67,12 +67,21 @@ public static class SessionManager
 
     public static SessionConfig GetDefaultConfig()
     {
+        string workspaceProjects = @"C:\Workspaces\ZzzTest\src\projects";
         var defaultProfile = new BuildProfile
         {
             Id = Guid.NewGuid().ToString(),
             Name = "zzz_assets_test_000",
-            SourcePath = @"C:\Workspaces\ZzzTest\src\projects\assets_projects\zzz_assets_test_000",
-            DestinationPath = @"C:\Workspaces\ZzzTest\src\projects\assets_projects\zzz_assets_test_000_build"
+            SourcePath = Path.Combine(workspaceProjects, "assets_projects", "zzz_assets_test_000"),
+            DestinationPath = Path.Combine(workspaceProjects, "assets_projects", "zzz_assets_test_000_build"),
+            TargetProjects = new List<TargetProjectItem>
+            {
+                new TargetProjectItem { IsEnabled = true, Name = "game_win", ConfigJsonPath = Path.Combine(workspaceProjects, "game_win", "assets_config.json") },
+                new TargetProjectItem { IsEnabled = true, Name = "game_linux", ConfigJsonPath = Path.Combine(workspaceProjects, "game_linux", "assets_config.json") },
+                new TargetProjectItem { IsEnabled = true, Name = "game_android", ConfigJsonPath = Path.Combine(workspaceProjects, "game_android", "assets_config.json") },
+                new TargetProjectItem { IsEnabled = true, Name = "game_ios", ConfigJsonPath = Path.Combine(workspaceProjects, "game_ios", "assets_config.json") },
+                new TargetProjectItem { IsEnabled = true, Name = "game_macos", ConfigJsonPath = Path.Combine(workspaceProjects, "game_macos", "assets_config.json") }
+            }
         };
 
         return new SessionConfig

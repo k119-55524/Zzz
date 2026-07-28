@@ -1,24 +1,188 @@
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using assets_builder_gui.Models;
 
 namespace assets_builder_gui.ViewModels;
 
+public class TargetProjectViewModel : ViewModelBase
+{
+    private readonly Services.IDialogService? _dialogService;
+    private bool _isEnabled;
+    private string _name;
+    private string _configJsonPath;
+
+    public TargetProjectViewModel(TargetProjectItem model, Services.IDialogService? dialogService = null)
+    {
+        Model = model;
+        _dialogService = dialogService;
+        _isEnabled = model.IsEnabled;
+        _name = model.Name;
+        _configJsonPath = model.ConfigJsonPath;
+
+        BrowseConfigJsonPathCommand = new RelayCommand(_ => BrowseConfigJsonPath());
+    }
+
+    public TargetProjectItem Model { get; }
+
+    public System.Windows.Input.ICommand BrowseConfigJsonPathCommand { get; }
+
+    private void BrowseConfigJsonPath()
+    {
+        string currentFolder = string.IsNullOrWhiteSpace(_configJsonPath) ? string.Empty : Path.GetDirectoryName(_configJsonPath) ?? string.Empty;
+        string selectedFolder = _dialogService?.SelectFolder("Выберите папку целевого проекта", currentFolder) ?? string.Empty;
+        if (!string.IsNullOrEmpty(selectedFolder))
+        {
+            if (string.IsNullOrWhiteSpace(_name))
+            {
+                Name = Path.GetFileName(selectedFolder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            }
+            ConfigJsonPath = Path.Combine(selectedFolder, "assets_config.json");
+        }
+    }
+
+    public bool IsConfigJsonPathValid
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(_configJsonPath))
+                return false;
+
+            try
+            {
+                string fullPath = Path.GetFullPath(_configJsonPath);
+                char[] invalidChars = Path.GetInvalidPathChars();
+                if (_configJsonPath.IndexOfAny(invalidChars) >= 0)
+                    return false;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
+
+    public bool IsEnabled
+    {
+        get => _isEnabled;
+        set
+        {
+            if (SetProperty(ref _isEnabled, value))
+            {
+                OnPropertyChanged(nameof(IsDirty));
+            }
+        }
+    }
+
+    public string Name
+    {
+        get => _name;
+        set
+        {
+            if (SetProperty(ref _name, value))
+            {
+                OnPropertyChanged(nameof(IsDirty));
+            }
+        }
+    }
+
+    public string ConfigJsonPath
+    {
+        get => _configJsonPath;
+        set
+        {
+            if (SetProperty(ref _configJsonPath, value))
+            {
+                OnPropertyChanged(nameof(IsConfigJsonPathValid));
+                OnPropertyChanged(nameof(IsDirty));
+            }
+        }
+    }
+
+    public bool IsDirty => _isEnabled != Model.IsEnabled || _name != Model.Name || _configJsonPath != Model.ConfigJsonPath;
+
+    public void ApplyToModel()
+    {
+        Model.IsEnabled = _isEnabled;
+        Model.Name = _name;
+        Model.ConfigJsonPath = _configJsonPath;
+    }
+
+    public void ResetFromModel()
+    {
+        IsEnabled = Model.IsEnabled;
+        Name = Model.Name;
+        ConfigJsonPath = Model.ConfigJsonPath;
+        OnPropertyChanged(nameof(IsConfigJsonPathValid));
+        OnPropertyChanged(nameof(IsDirty));
+    }
+}
+
 public class BuildProfileViewModel : ViewModelBase
 {
     private readonly BuildProfile _model;
+    private readonly Services.IDialogService? _dialogService;
 
     private string _name = string.Empty;
     private string _configuration = "Debug";
     private string _sourcePath = string.Empty;
     private string _destinationPath = string.Empty;
+    private bool _isTargetProjectsModified = false;
+
+    public ObservableCollection<TargetProjectViewModel> TargetProjects { get; } = new();
 
     public static List<string> AvailableConfigurations { get; } = new() { "Debug", "Development", "Release" };
 
-    public BuildProfileViewModel(BuildProfile model)
+    public BuildProfileViewModel(BuildProfile model, Services.IDialogService? dialogService = null)
     {
         _model = model;
+        _dialogService = dialogService;
+
+        AddTargetProjectCommand = new RelayCommand(_ => AddTargetProject());
+        RemoveTargetProjectCommand = new RelayCommand(param => RemoveTargetProject(param as TargetProjectViewModel));
+
         ResetFromModel();
+    }
+
+    public System.Windows.Input.ICommand AddTargetProjectCommand { get; }
+    public System.Windows.Input.ICommand RemoveTargetProjectCommand { get; }
+
+    private void AddTargetProject()
+    {
+        string path = _dialogService?.SelectFolder("Выберите папку целевого проекта", string.Empty) ?? string.Empty;
+        if (!string.IsNullOrEmpty(path))
+        {
+            string projName = Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            string jsonPath = Path.Combine(path, "assets_config.json");
+
+            var item = new TargetProjectItem
+            {
+                IsEnabled = true,
+                Name = projName,
+                ConfigJsonPath = jsonPath
+            };
+
+            var vm = new TargetProjectViewModel(item, _dialogService);
+            vm.PropertyChanged += (s, e) => OnPropertyChanged(nameof(IsDirty));
+            TargetProjects.Add(vm);
+
+            _isTargetProjectsModified = true;
+            OnPropertyChanged(nameof(IsDirty));
+            OnPropertyChanged(nameof(DisplayName));
+        }
+    }
+
+    private void RemoveTargetProject(TargetProjectViewModel? item)
+    {
+        if (item != null && TargetProjects.Contains(item))
+        {
+            TargetProjects.Remove(item);
+            _isTargetProjectsModified = true;
+            OnPropertyChanged(nameof(IsDirty));
+            OnPropertyChanged(nameof(DisplayName));
+        }
     }
 
     public BuildProfile Model => _model;
@@ -120,7 +284,9 @@ public class BuildProfileViewModel : ViewModelBase
     public bool IsDirty => _name != _model.Name ||
                            _configuration != _model.Configuration ||
                            _sourcePath != _model.SourcePath ||
-                           _destinationPath != _model.DestinationPath;
+                           _destinationPath != _model.DestinationPath ||
+                           _isTargetProjectsModified ||
+                           TargetProjects.Any(tp => tp.IsDirty);
 
     public string DisplayName => IsDirty ? $"{_name} *" : _name;
 
@@ -130,6 +296,18 @@ public class BuildProfileViewModel : ViewModelBase
         _configuration = string.IsNullOrWhiteSpace(_model.Configuration) ? "Debug" : _model.Configuration;
         _sourcePath = _model.SourcePath;
         _destinationPath = _model.DestinationPath;
+        _isTargetProjectsModified = false;
+
+        TargetProjects.Clear();
+        if (_model.TargetProjects != null)
+        {
+            foreach (var item in _model.TargetProjects)
+            {
+                var vm = new TargetProjectViewModel(item, _dialogService);
+                vm.PropertyChanged += (s, e) => OnPropertyChanged(nameof(IsDirty));
+                TargetProjects.Add(vm);
+            }
+        }
 
         OnPropertyChanged(nameof(Name));
         OnPropertyChanged(nameof(Configuration));
@@ -148,6 +326,13 @@ public class BuildProfileViewModel : ViewModelBase
         _model.Configuration = _configuration;
         _model.SourcePath = _sourcePath;
         _model.DestinationPath = _destinationPath;
+
+        _model.TargetProjects = TargetProjects.Select(tp => {
+            tp.ApplyToModel();
+            return tp.Model;
+        }).ToList();
+
+        _isTargetProjectsModified = false;
 
         OnPropertyChanged(nameof(DisplayName));
         OnPropertyChanged(nameof(IsDirty));

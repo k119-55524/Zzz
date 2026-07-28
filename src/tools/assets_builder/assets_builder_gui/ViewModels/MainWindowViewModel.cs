@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Windows.Data;
 using System.Windows.Input;
 using assets_builder_gui.Models;
@@ -56,7 +57,7 @@ public class MainWindowViewModel : ViewModelBase
 
         foreach (var profile in _sessionConfig.Profiles)
         {
-            var vm = new BuildProfileViewModel(profile);
+            var vm = new BuildProfileViewModel(profile, _dialogService);
             vm.PropertyChanged += OnProfilePropertyChanged;
             Profiles.Add(vm);
         }
@@ -191,8 +192,12 @@ public class MainWindowViewModel : ViewModelBase
 
     private void AddProfile()
     {
-        var model = new BuildProfile { Name = "Новая настройка" };
-        var vm = new BuildProfileViewModel(model);
+        var model = new BuildProfile 
+        { 
+            Name = "Новая настройка",
+            TargetProjects = new List<TargetProjectItem>()
+        };
+        var vm = new BuildProfileViewModel(model, _dialogService);
         vm.PropertyChanged += OnProfilePropertyChanged;
         Profiles.Add(vm);
         SelectedProfile = vm;
@@ -343,9 +348,62 @@ public class MainWindowViewModel : ViewModelBase
 
             Task.Run(() =>
             {
-                _engine.BuildPackage(options);
+                bool success = _engine.BuildPackage(options);
+                if (success)
+                {
+                    UpdateTargetProjectsConfig(SelectedProfile);
+                }
                 System.Windows.Application.Current?.Dispatcher.Invoke(() => IsBuilding = false);
             });
+        }
+    }
+
+    private void UpdateTargetProjectsConfig(BuildProfileViewModel profile)
+    {
+        foreach (var target in profile.TargetProjects.Where(t => t.IsEnabled && !string.IsNullOrWhiteSpace(t.ConfigJsonPath)))
+        {
+            try
+            {
+                string jsonPath = target.ConfigJsonPath;
+                string dir = Path.GetDirectoryName(jsonPath)!;
+                if (!Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+
+                List<string> activeBuilds = new();
+                if (File.Exists(jsonPath))
+                {
+                    try
+                    {
+                        string existingJson = File.ReadAllText(jsonPath);
+                        using var doc = System.Text.Json.JsonDocument.Parse(existingJson);
+                        if (doc.RootElement.TryGetProperty("active_build_directories", out var arr))
+                        {
+                            foreach (var elem in arr.EnumerateArray())
+                            {
+                                string str = elem.GetString() ?? "";
+                                if (!string.IsNullOrEmpty(str) && !str.Equals(profile.DestinationPath, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    activeBuilds.Add(str);
+                                }
+                            }
+                        }
+                    }
+                    catch { }
+                }
+
+                activeBuilds.Add(profile.DestinationPath);
+
+                var jsonObj = new { active_build_directories = activeBuilds };
+                string outputJson = System.Text.Json.JsonSerializer.Serialize(jsonObj, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(jsonPath, outputJson);
+                AppendLog($"Обновлен конфиг целевого проекта ({target.Name}): {jsonPath}");
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"Ошибка записи конфига целевого проекта ({target.Name}): {ex.Message}");
+            }
         }
     }
 

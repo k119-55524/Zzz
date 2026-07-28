@@ -1,23 +1,52 @@
 add_executable(game_linux)
 
-set(Z_GAME_PROJECT_DIR "" CACHE PATH "Path to the active game project")
+set(Z_ASSET_BUILD_DIRS "")
+set(ASSETS_CONFIG_JSON "${CMAKE_CURRENT_SOURCE_DIR}/assets_config.json")
 
-# Находим все файлы скриптов
-set(SCRIPT_HPPS "")
-set(SCRIPT_CPPS "")
-if(Z_GAME_PROJECT_DIR)
-    file(GLOB_RECURSE SCRIPT_HPPS "${Z_GAME_PROJECT_DIR}/Assets/*.hpp")
-    file(GLOB_RECURSE SCRIPT_CPPS "${Z_GAME_PROJECT_DIR}/Assets/*.cpp")
+if(EXISTS "${ASSETS_CONFIG_JSON}")
+    file(READ "${ASSETS_CONFIG_JSON}" JSON_CONTENT)
+    string(JSON DIRS_COUNT ERROR_VARIABLE JSON_ERR LENGTH "${JSON_CONTENT}" "active_build_directories")
+    if(NOT JSON_ERR AND DIRS_COUNT GREATER 0)
+        math(EXPR DIRS_MAX "${DIRS_COUNT} - 1")
+        foreach(INDEX RANGE ${DIRS_MAX})
+            string(JSON B_DIR GET "${JSON_CONTENT}" "active_build_directories" ${INDEX})
+            list(APPEND Z_ASSET_BUILD_DIRS "${B_DIR}")
+        endforeach()
+    endif()
 endif()
 
-set(REGISTER_SCRIPTS_CONTENT "// RegisterAllScripts.cpp — генерируется автоматически CMake\n#include <ScriptRegistry.h>\n\n")
+if(Z_GAME_PROJECT_DIR)
+    get_filename_component(FALLBACK_BUILD_DIR "${Z_GAME_PROJECT_DIR}/../zzz_assets_test_000_build" ABSOLUTE)
+    if(EXISTS "${FALLBACK_BUILD_DIR}")
+        list(APPEND Z_ASSET_BUILD_DIRS "${FALLBACK_BUILD_DIR}")
+    endif()
+endif()
 
-# Собираем список имен классов и инклуды
+list(REMOVE_DUPLICATES Z_ASSET_BUILD_DIRS)
+
+set(SCRIPT_HPPS "")
+set(SCRIPT_CPPS "")
+
+foreach(BUILD_DIR ${Z_ASSET_BUILD_DIRS})
+    if(EXISTS "${BUILD_DIR}/Scripts.cmake")
+        include("${BUILD_DIR}/Scripts.cmake")
+        list(APPEND SCRIPT_CPPS ${GAME_SCRIPT_SOURCES})
+        list(APPEND SCRIPT_HPPS ${GAME_SCRIPT_HEADERS})
+        target_include_directories(game_linux PRIVATE ${GAME_SCRIPT_INCLUDES})
+    endif()
+
+    if(EXISTS "${BUILD_DIR}/assets")
+        add_custom_command(TARGET game_linux POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${BUILD_DIR}/assets"
+            "$<TARGET_FILE_DIR:game_linux>/assets"
+        )
+    endif()
+endforeach()
+
+set(REGISTER_SCRIPTS_CONTENT "// RegisterAllScripts.cpp — генерируется автоматически CMake\n#include <ScriptRegistry.h>\n\n")
 set(REGISTER_SCRIPT_LINES "")
 foreach(HPP_FILE ${SCRIPT_HPPS})
-    if(Z_GAME_PROJECT_DIR)
-        file(RELATIVE_PATH REL_PATH "${Z_GAME_PROJECT_DIR}/Assets" "${HPP_FILE}")
-    endif()
     get_filename_component(CLASS_NAME "${HPP_FILE}" NAME_WE)
     get_filename_component(SCRIPT_DIR "${HPP_FILE}" DIRECTORY)
     set(SCRIPT_NAMESPACE "")
@@ -36,20 +65,11 @@ foreach(HPP_FILE ${SCRIPT_HPPS})
         set(QUALIFIED_NAME "${SCRIPT_NAMESPACE}::${CLASS_NAME}")
     endif()
 
-    string(APPEND REGISTER_SCRIPTS_CONTENT "#include \"${REL_PATH}\"
-")
-    string(APPEND REGISTER_SCRIPT_LINES "    zzz::script::ScriptRegistry::Register<${QUALIFIED_NAME}>(\"${QUALIFIED_NAME}\");
-")
+    string(APPEND REGISTER_SCRIPTS_CONTENT "#include \"${HPP_FILE}\"\n")
+    string(APPEND REGISTER_SCRIPT_LINES "    zzz::script::ScriptRegistry::Register<${QUALIFIED_NAME}>(\"${QUALIFIED_NAME}\");\n")
 endforeach()
 
-string(APPEND REGISTER_SCRIPTS_CONTENT "
-void RegisterAllScripts()
-{
-")
-string(APPEND REGISTER_SCRIPTS_CONTENT "${REGISTER_SCRIPT_LINES}")
-string(APPEND REGISTER_SCRIPTS_CONTENT "}
-")
-
+string(APPEND REGISTER_SCRIPTS_CONTENT "\nvoid RegisterAllScripts()\n{\n${REGISTER_SCRIPT_LINES}}\n")
 set(GENERATED_REGISTER_CPP "${CMAKE_CURRENT_BINARY_DIR}/RegisterAllScripts.cpp")
 file(WRITE "${GENERATED_REGISTER_CPP}" "${REGISTER_SCRIPTS_CONTENT}")
 
@@ -84,10 +104,6 @@ target_link_libraries(game_linux
 target_compile_features(game_linux PUBLIC cxx_std_23)
 target_compile_definitions(game_linux PRIVATE Z_TARGET_NAME="game_linux")
 set_source_files_properties(pch/pch.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
-
-if(Z_GAME_PROJECT_DIR)
-    target_include_directories(game_linux PRIVATE "${Z_GAME_PROJECT_DIR}/Assets")
-endif()
 
 
 

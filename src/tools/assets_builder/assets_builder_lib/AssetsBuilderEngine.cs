@@ -370,6 +370,10 @@ public class AssetsBuilderEngine
 		// 5. Вызов C# запаковщика PackagePacker для генерации бинарного пакета структуры игры (package.dat) в подпапку assets/
 		Log($"Сериализация бинарного пакета игры '{AssetExtensions.GamePackageBinaryName}' в подпапку assets/...");
 		bool packageSuccess = PackagePacker.PackProject(options.SourcePath, options.DestinationPath, Log);
+
+		// 6. Генерация Scripts.cmake в корне папки назначения (options.DestinationPath)
+		GenerateScriptsCmake(options.SourcePath, options.DestinationPath);
+
 		if (packageSuccess)
 		{
 			Log($"Сборка пакета успешно завершена! Пакадж: assets/{AssetExtensions.GamePackageBinaryName}");
@@ -379,6 +383,73 @@ public class AssetsBuilderEngine
 		{
 			Log("Ошибка: Сериализация бинарного пакета вернула ошибку.");
 			return false;
+		}
+	}
+
+	private void GenerateScriptsCmake(string sourcePath, string destinationPath)
+	{
+		try
+		{
+			string scriptsPath = Path.Combine(sourcePath, "Assets", "Scripts");
+			var cppFiles = new List<string>();
+			var hppFiles = new List<string>();
+
+			if (Directory.Exists(scriptsPath))
+			{
+				foreach (var file in Directory.GetFiles(scriptsPath, "*.*", SearchOption.AllDirectories))
+				{
+					string ext = Path.GetExtension(file).ToLowerInvariant();
+					string fullPathNormalized = file.Replace('\\', '/');
+
+					if (ext == ".cpp" || ext == ".c")
+					{
+						cppFiles.Add(fullPathNormalized);
+					}
+					else if (ext == ".h" || ext == ".hpp")
+					{
+						hppFiles.Add(fullPathNormalized);
+					}
+				}
+			}
+
+			// Также проверяем корень проекта на наличие RegisterAllScripts.cpp если есть
+			string regCpp = Path.Combine(sourcePath, "RegisterAllScripts.cpp").Replace('\\', '/');
+			if (File.Exists(regCpp))
+			{
+				cppFiles.Add(regCpp);
+			}
+
+			var sb = new System.Text.StringBuilder();
+			sb.AppendLine("# Автогенерируемый файл от Assets Builder");
+			sb.AppendLine("set(GAME_SCRIPT_SOURCES");
+			foreach (var cpp in cppFiles)
+			{
+				sb.AppendLine($"    \"{cpp}\"");
+			}
+			sb.AppendLine(")");
+			sb.AppendLine();
+			sb.AppendLine("set(GAME_SCRIPT_HEADERS");
+			foreach (var hpp in hppFiles)
+			{
+				sb.AppendLine($"    \"{hpp}\"");
+			}
+			sb.AppendLine(")");
+			sb.AppendLine();
+			sb.AppendLine("set(GAME_SCRIPT_INCLUDES");
+			if (Directory.Exists(scriptsPath))
+			{
+				sb.AppendLine($"    \"{scriptsPath.Replace('\\', '/')}\"");
+			}
+			sb.AppendLine($"    \"{sourcePath.Replace('\\', '/')}\"");
+			sb.AppendLine(")");
+
+			string cmakeFilePath = Path.Combine(destinationPath, "Scripts.cmake");
+			File.WriteAllText(cmakeFilePath, sb.ToString());
+			Log($"Сгенерирован CMake-файл скриптов: Scripts.cmake ({cppFiles.Count} .cpp, {hppFiles.Count} .hpp)");
+		}
+		catch (Exception ex)
+		{
+			Log($"Предупреждение при генерации Scripts.cmake: {ex.Message}");
 		}
 	}
 
