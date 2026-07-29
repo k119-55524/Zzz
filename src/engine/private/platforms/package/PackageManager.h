@@ -24,11 +24,11 @@ namespace zzz::engine
 		//[[nodiscard]] bool HasAsset(const zzz::package::BinaryGuid& guid) const noexcept;
 		//[[nodiscard]] std::expected<std::vector<std::byte>, std::string> ReadAssetData(const zzz::package::BinaryGuid& guid) const;
 
-		//[[nodiscard]] const std::map<zzz::package::BinaryGuid, zzz::package::PackageEntry>& GetEntries() const noexcept { return m_Entries; }
+		[[nodiscard]] const std::map<zzz::package::AssetType, std::vector<zzz::package::PackageEntry>>& GetEntriesByType() const noexcept { return m_EntriesByType; }
 
 	private:
 		void Initialize(const Path& path);
 
-		std::map<zzz::package::BinaryGuid, zzz::package::PackageEntry> m_Entries;
+		std::map<zzz::package::AssetType, std::vector<zzz::package::PackageEntry>> m_EntriesByType;
 	};
 }

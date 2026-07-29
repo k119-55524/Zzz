@@ -93,13 +93,6 @@ endmacro()
 add_subdirectory(src/common)
 add_subdirectory(src/logger)
 
-# throw_wrappers.cpp (common_lib) логирует через DOutException (logger_lib) - реальная,
-# а не только CMake-графовая, зависимость common_lib -> logger_lib в дополнение к уже
-# объявленной logger_lib -> common_lib (src/logger/CMakeLists.txt). Объявляем её здесь (после
-# того как оба таргета уже созданы), чтобы генераторы Ninja/Makefiles сами сгенерировали
-# корректный (сгруппированный) порядок линковки для этой пары статических библиотек - без
-# этого GNU ld на Linux/Android может не разрешить символы Logger, найденные уже после
-# однопроходного сканирования logger_lib.
 target_link_libraries(common_lib PUBLIC logger_lib)
 target_link_libraries(common_lib_editor PUBLIC logger_lib_editor)
 
@@ -114,6 +107,14 @@ elseif(WIN32)
     add_subdirectory(src/editor_dll)
     add_subdirectory(src/tools/assets_builder/assets_builder_dll)
     add_subdirectory(src/projects/game_win)
+
+    # Авто-сборка C# AssetsBuilderGUI в CMake с зависимостью от C++ assets_builder_dll
+    add_custom_target(assets_builder_gui_build ALL
+        COMMAND dotnet build "${CMAKE_SOURCE_DIR}/src/tools/assets_builder/assets_builder_gui/assets_builder_gui.csproj" -c $<CONFIG>
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        COMMENT "Building Assets Builder C# GUI..."
+    )
+    add_dependencies(assets_builder_gui_build assets_builder_dll)
 elseif(IOS)
     add_subdirectory(src/projects/game_ios)
 elseif(APPLE)

@@ -100,15 +100,14 @@ public static class PackagePacker
 			using var fs = new FileStream(outPath, FileMode.Create, FileAccess.Write, FileShare.None);
 			using var writer = new BinaryWriter(fs, Encoding.UTF8, leaveOpen: false);
 
-			// PackageHeader (magic: 3 байта, version: 3x uint32_t, entryCount: uint32_t)
 			writer.Write(magic, 0, 3);
 			writer.Write(major);
 			writer.Write(minor);
 			writer.Write(patch);
 			writer.Write((uint)pendingAssets.Count);
 
-			long headerSize = 3 + 4 + 4 + 4 + 4; // 19 байт
-			long indexTableSize = pendingAssets.Count * 36; // PackageEntry = 16(guid) + 4(type) + 8(offset) + 8(size) = 36 байт
+			long headerSize = 3 + 4 + 4 + 4 + 4;
+			long indexTableSize = pendingAssets.Count * 36;
 			long currentOffset = headerSize + indexTableSize;
 
 			var validPayloads = new List<(PendingItem Item, byte[] Data, long Offset)>();
@@ -127,15 +126,14 @@ public static class PackagePacker
 			writer.Write((uint)validPayloads.Count);
 			fs.Seek(headerSize, SeekOrigin.Begin);
 
-			// Запись таблицы записей PackageEntry (36 байт на запись, GUID = 16 байт)
 			foreach (var payload in validPayloads)
 			{
 				byte[] guidBytes = Guid.TryParse(payload.Item.Guid, out var parsed) ? parsed.ToByteArray() : new byte[16];
 
-				writer.Write(guidBytes); // 16 байт бинарного GUID
-				writer.Write(payload.Item.Type); // 4 байта тип
-				writer.Write((ulong)payload.Offset); // 8 байт смещение
-				writer.Write((ulong)payload.Data.Length); // 8 байт размер
+				writer.Write(guidBytes);
+				writer.Write(payload.Item.Type);
+				writer.Write((ulong)payload.Offset);
+				writer.Write((ulong)payload.Data.Length);
 			}
 
 			// Запись чистых бинарных блоков данных ассетов
