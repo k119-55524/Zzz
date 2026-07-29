@@ -14,11 +14,14 @@ namespace zzz::io
 		Path() = delete;
 		Path(std::string_view appName, std::shared_ptr<engine::NativeAppData> nativeData);
 
+		inline std::string_view GetAppName() const noexcept { return m_AppName; }
+
 		[[nodiscard]] bool IsValidDirectoryName(std::string_view name) const noexcept;
 		[[nodiscard]] const std::expected<std::filesystem::path, std::string> GetExecutableDirectory() const noexcept;
 		inline const std::filesystem::path GetUserDataDirectory() const noexcept { return m_UserDataDirectory; };
 
 	private:
+		std::string m_AppName;
 		std::shared_ptr<engine::NativeAppData> m_NativeData;
 		std::filesystem::path m_UserDataDirectory;
 

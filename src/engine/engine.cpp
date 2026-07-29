@@ -4,6 +4,7 @@
 #include "public/core/events/EventBus.h"
 #include "private/core/view/ViewManager.h"
 #include "private/platforms/main_loop/MainLoop.h"
+#include "private/platforms/package/PackageManager.h"
 #include "public/core/userscripts/ScriptRegistry.h"
 #include "public/core/userscripts/base_script/GameScript.h"
 
@@ -22,8 +23,11 @@ extern "C" __attribute__((weak)) void RegisterAllScripts() {}
 Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeData) :
 	engineState{ eInitState::NotInitialized }
 {
+	ensure(appName.empty() == false, "Имя приложения не должно быть пустым.");
+
 	m_Path = safe_make_shared<Path>(appName, nativeData);
-	m_Platform = safe_make_unique<Platform>(appName, nativeData);
+	m_PackageManager = safe_make_shared<PackageManager>(*m_Path);
+	m_Platform = safe_make_unique<Platform>(*m_Path, nativeData);
 	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, [this]() { OnCloseAllViews(); });
 	m_MainLoop = safe_make_shared<MainLoop>(*m_Platform, [this]() { OnUpdateSystem(); });
 	m_EventBus = safe_make_shared<ProjectEventBus>();
@@ -87,7 +91,7 @@ void Engine::Shutdown()
 	{
 		m_ViewManager->CreateView();
 
-		StartGame(zzz::script::ScriptRegistry::GetAllGameScriptNames());
+		StartGame();
 		m_Time->ResetFrameTimer();
 		m_MainLoop->Run();
 	}
@@ -115,10 +119,10 @@ void Engine::Shutdown()
 	return {};
 }
 
-void Engine::StartGame(const std::vector<std::string>& globalScripts)
+void Engine::StartGame()
 {
 	RegisterScripts();
-	LoadGlobalScripts(globalScripts);
+	LoadGlobalScripts();
 	m_EventBus->InvokeStart();
 }
 
@@ -127,10 +131,11 @@ void Engine::RegisterScripts()
 	RegisterAllScripts();
 }
 
-void Engine::LoadGlobalScripts(const std::vector<std::string>& globalScripts)
+void Engine::LoadGlobalScripts()
 {
 	std::lock_guard lock(stateMutex);
 
+	auto globalScripts = zzz::script::ScriptRegistry::GetAllGameScriptNames();
 	for (const auto& scriptName : globalScripts)
 	{
 		if (auto script = zzz::script::ScriptRegistry::CreateGameScript(scriptName))

@@ -379,7 +379,7 @@ namespace zzz::editor
 		}
 	}
 
-	void EditorEngine::StartGame(const std::vector<std::string>& globalScripts)
+	void EditorEngine::StartGame()
 	{
 		RegisterScripts();
 
@@ -395,24 +395,13 @@ namespace zzz::editor
 		}
 #endif
 
-		LoadGlobalScripts(globalScripts);
+		LoadGlobalScripts();
 		m_EventBus->InvokeStart();
 	}
 
-	void EditorEngine::Play(const char** scriptClasses, int count)
+	void EditorEngine::Play(const char** /*scriptClasses*/, int /*count*/)
 	{
-		std::vector<std::string> classes;
-		for (int i = 0; i < count; ++i)
-		{
-			if (scriptClasses[i])
-			{
-				classes.push_back(scriptClasses[i]);
-			}
-		}
-
-		// stateMutex захватывается уже внутри StartGame() - только вокруг мутации
-		// m_Scripts/EventBus, а не вокруг ожидания отладчика (см. Engine::StartGame).
-		StartGame(classes);
+		StartGame();
 		m_Time->ResetFrameTimer();
 	}
 

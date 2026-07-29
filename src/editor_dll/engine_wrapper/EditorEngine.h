@@ -34,7 +34,7 @@ namespace zzz::editor
 	protected:
 		void RegisterScripts() override;
 		void OnUpdateSystem() override;
-		void StartGame(const std::vector<std::string>& globalScripts) override;
+		void StartGame() override;
 
 	private:
 		bool m_IsPaused = false;

@@ -20,10 +20,6 @@ namespace zzz::engine
 		PackageManager(const Path& path);
 		~PackageManager() = default;
 
-		//[[nodiscard]] std::expected<void, std::string> Initialize(const std::filesystem::path& packagePath);
-		//[[nodiscard]] bool HasAsset(const zzz::package::BinaryGuid& guid) const noexcept;
-		//[[nodiscard]] std::expected<std::vector<std::byte>, std::string> ReadAssetData(const zzz::package::BinaryGuid& guid) const;
-
 		[[nodiscard]] const std::map<zzz::package::AssetType, std::vector<zzz::package::PackageEntry>>& GetEntriesByType() const noexcept { return m_EntriesByType; }
 
 	private:

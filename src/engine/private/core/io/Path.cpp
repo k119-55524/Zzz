@@ -5,6 +5,7 @@
 namespace zzz::io
 {
 	Path::Path(std::string_view appName, std::shared_ptr<engine::NativeAppData> nativeData) :
+		m_AppName{appName},
 		m_NativeData{ nativeData }
 	{	
 		ensure(IsValidDirectoryName(appName) == true, "Некорректное имя приложения для каталога: {}", appName);

@@ -32,6 +32,7 @@ namespace zzz::engine
 	class Platform;
 	class ViewManager;
 	class MainLoopBase;
+	class PackageManager;
 	class ProjectEventBus;
 }
 
@@ -49,18 +50,19 @@ namespace zzz::engine
 	protected:
 		void Shutdown();
 
-		virtual void StartGame(const std::vector<std::string>& globalScripts);
+		virtual void StartGame();
 		virtual void StopGame() {};
 		virtual void RegisterScripts();
 		virtual void OnUpdateSystem();
 
-		void LoadGlobalScripts(const std::vector<std::string>& globalScripts);
+		void LoadGlobalScripts();
 
 		std::mutex stateMutex;
 		std::atomic<eInitState> engineState;
 		std::vector<std::shared_ptr<zzz::script::GameScript>> m_Scripts;
 
 		std::shared_ptr<zzz::io::Path> m_Path;
+		std::shared_ptr<PackageManager> m_PackageManager;
 		std::unique_ptr<Platform> m_Platform;
 		std::unique_ptr<ViewManager> m_ViewManager;
 		std::shared_ptr<MainLoopBase> m_MainLoop;

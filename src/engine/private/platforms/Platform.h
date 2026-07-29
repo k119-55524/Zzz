@@ -4,7 +4,6 @@
 #include "../../NativeAppData.h"
 #include "config/ConfigManager.h"
 #include "config/PlatformConfig.h"
-#include "package/PackageManager.h"
 
 using namespace zzz::io;
 
@@ -16,10 +15,10 @@ namespace zzz::engine
 	{
 	public:
 		Platform() = delete;
-		Platform(std::string_view appName, std::shared_ptr<NativeAppData> nativeData);
+		Platform(const Path& path, std::shared_ptr<NativeAppData> nativeData);
 		~Platform();
 
-		inline std::string_view GetAppName() const noexcept { return m_AppName; }
+		inline std::string_view GetAppName() const noexcept { return m_Path.GetAppName(); }
 		[[nodiscard]] inline std::shared_ptr<NativeAppData> GetNativeData() const noexcept { return m_NativeData; }
 		inline const PlatformConfig& GetPlatformConfig() const noexcept { return m_ConfigManager->GetPlatformConfig(); };
 
@@ -34,10 +33,8 @@ namespace zzz::engine
 		void InitializePlatformSpecific();
 		void ShutdownPlatformSpecific();
 
-		std::string m_AppName;
+		const Path& m_Path;
 		std::shared_ptr<NativeAppData> m_NativeData;
-		Path m_Path;
 		std::shared_ptr<ConfigManager> m_ConfigManager;
-		std::shared_ptr<PackageManager> m_PackageManager;
 	};
 }

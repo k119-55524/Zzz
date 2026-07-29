@@ -229,44 +229,4 @@ namespace zzz::engine
 #endif
 	}
 #pragma endregion
-
-	//bool PackageManager::HasAsset(const zzz::package::BinaryGuid& guid) const noexcept
-	//{
-	//	if (!m_IsInitialized)
-	//		return false;
-
-	//	return m_Entries.contains(guid);
-	//}
-
-	//std::expected<std::vector<std::byte>, std::string> PackageManager::ReadAssetData(const zzz::package::BinaryGuid& guid) const
-	//{
-	//	if (!m_IsInitialized)
-	//	{
-	//		return std::unexpected("PackageManager is not initialized");
-	//	}
-
-	//	auto it = m_Entries.find(guid);
-	//	if (it == m_Entries.end())
-	//	{
-	//		return std::unexpected("Asset GUID not found in package");
-	//	}
-
-	//	const auto& entry = it->second;
-	//	std::ifstream file(m_PackagePath, std::ios::binary);
-	//	if (!file.is_open())
-	//	{
-	//		return std::unexpected("Failed to open package file: " + m_PackagePath.string());
-	//	}
-
-	//	file.seekg(entry.offset, std::ios::beg);
-	//	std::vector<std::byte> buffer(entry.size);
-	//	file.read(reinterpret_cast<char*>(buffer.data()), entry.size);
-
-	//	if (!file.good() && file.gcount() != static_cast<std::streamsize>(entry.size))
-	//	{
-	//		return std::unexpected("Failed to read asset data block for GUID");
-	//	}
-
-	//	return buffer;
-	//}
 }
