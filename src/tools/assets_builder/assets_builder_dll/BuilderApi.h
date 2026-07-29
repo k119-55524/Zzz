@@ -12,10 +12,8 @@ extern "C"
 	BUILDER_API uint32_t GetGamePackageMinorVersion();
 	BUILDER_API uint32_t GetGamePackagePatchVersion();
 
-	// AssetType enum values
 	BUILDER_API uint32_t GetAssetTypeProjectManifest();
 	BUILDER_API uint32_t GetAssetTypeScene();
 	BUILDER_API uint32_t GetAssetTypeView();
-	BUILDER_API uint32_t GetAssetTypeScript();
 	BUILDER_API uint32_t GetAssetTypeBinaryAsset();
 }

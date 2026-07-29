@@ -21,6 +21,9 @@ public class ViewSerializer : IAssetSerializer
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;
 
+        string sceneGuid = root.TryGetProperty("scene", out var scProp) ? scProp.GetString() ?? "" : "";
+        writer.Write(ParseGuidTo16Bytes(sceneGuid));
+
         // ViewScripts GUIDs array (16 bytes binary each)
         var scriptsList = new List<string>();
         if (root.TryGetProperty("scripts", out var scArr) && scArr.ValueKind == JsonValueKind.Array)

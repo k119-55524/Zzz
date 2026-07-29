@@ -14,7 +14,6 @@ public static class PackageAssetTypes
 	public static uint ProjectManifest => NativeMethods.GetAssetTypeProjectManifest();
 	public static uint Scene => NativeMethods.GetAssetTypeScene();
 	public static uint View => NativeMethods.GetAssetTypeView();
-	public static uint Script => NativeMethods.GetAssetTypeScript();
 	public static uint BinaryAsset => NativeMethods.GetAssetTypeBinaryAsset();
 }
 
@@ -41,19 +40,7 @@ public static class PackagePacker
 
 			var pendingAssets = new List<PendingItem>();
 
-			// 1. project.json под фиксированным GUID манифеста
-			string projJsonPath = Path.Combine(sourceDir, AssetExtensions.ProjectJsonName);
-			if (File.Exists(projJsonPath))
-			{
-				pendingAssets.Add(new PendingItem
-				{
-					Guid = "00000000-0000-0000-0000-000000000001",
-					Type = PackageAssetTypes.ProjectManifest,
-					FilePath = projJsonPath
-				});
-			}
-
-			// 2. Сканирование сцен (*.zs) и вьюх (*.zv)
+			// Сканирование сцен (*.zs) и вьюх (*.zv)
 			if (Directory.Exists(sourceDir))
 			{
 				foreach (var file in Directory.GetFiles(sourceDir, "*.*", SearchOption.AllDirectories))

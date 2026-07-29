@@ -2,10 +2,8 @@
 
 #include <array>
 #include <string>
-#include <string_view>
-#include <common/common.h>
-#include <common/constants.h>
 #include <common/version.h>
+#include <common/constants.h>
 
 namespace zzz::package
 {
@@ -14,8 +12,7 @@ namespace zzz::package
 		ProjectManifest = 1,
 		Scene = 2,
 		View = 3,
-		Script = 4,
-		BinaryAsset = 5
+		BinaryAsset = 4
 	};
 
 	using BinaryGuid = std::array<uint8_t, 16>;
@@ -40,4 +37,24 @@ namespace zzz::package
 		zU64 size = 0;
 	};
 	#pragma pack(pop)
+
+	// Структуры запеченных данных ассетов
+	struct ProjectManifestData
+	{
+		BinaryGuid gameScriptGuid = {0};
+		std::vector<BinaryGuid> sceneGuids;
+		std::vector<BinaryGuid> viewGuids;
+	};
+
+	struct SceneData
+	{
+		BinaryGuid sceneScriptGuid = {0};
+	};
+
+	struct ViewData
+	{
+		BinaryGuid sceneGuid = {0};
+		std::vector<BinaryGuid> uiScriptGuids;
+		zU32 elementsCount = 0;
+	};
 }

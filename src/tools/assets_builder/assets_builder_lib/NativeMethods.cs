@@ -36,8 +36,5 @@ internal static class NativeMethods
     public static extern uint GetAssetTypeView();
 
     [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-    public static extern uint GetAssetTypeScript();
-
-    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
     public static extern uint GetAssetTypeBinaryAsset();
 }

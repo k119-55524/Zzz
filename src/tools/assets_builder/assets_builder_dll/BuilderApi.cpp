@@ -54,11 +54,6 @@ extern "C"
 		return static_cast<uint32_t>(zzz::package::AssetType::View);
 	}
 
-	BUILDER_API uint32_t GetAssetTypeScript()
-	{
-		return static_cast<uint32_t>(zzz::package::AssetType::Script);
-	}
-
 	BUILDER_API uint32_t GetAssetTypeBinaryAsset()
 	{
 		return static_cast<uint32_t>(zzz::package::AssetType::BinaryAsset);

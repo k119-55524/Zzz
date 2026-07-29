@@ -22,8 +22,15 @@ extern "C" __attribute__((weak)) void RegisterAllScripts() {}
 Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeData) :
 	engineState{ eInitState::NotInitialized }
 {
+	m_Path = safe_make_shared<Path>(appName, nativeData);
 	m_Platform = safe_make_unique<Platform>(appName, nativeData);
-	Initialize();
+	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, [this]() { OnCloseAllViews(); });
+	m_MainLoop = safe_make_shared<MainLoop>(*m_Platform, [this]() { OnUpdateSystem(); });
+	m_EventBus = safe_make_shared<ProjectEventBus>();
+	m_Time = safe_make_shared<Time>();
+
+	engineState.store(eInitState::Initialized);
+	DOut("Инициализация: OK.");
 }
 
 Engine::~Engine()
@@ -61,17 +68,6 @@ void Engine::Shutdown()
 	}
 
 	engineState.store(eInitState::NotInitialized);
-}
-
-void Engine::Initialize()
-{
-	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, [this]() { OnCloseAllViews(); });
-	m_MainLoop = safe_make_shared<MainLoop>(*m_Platform, [this]() { OnUpdateSystem(); });
-	m_EventBus = safe_make_shared<ProjectEventBus>();
-	m_Time = safe_make_shared<Time>();
-
-	engineState.store(eInitState::Initialized);
-	DOut("Инициализация: OK.");
 }
 
 [[nodiscard]] std::expected<void, std::string> Engine::Run()

@@ -22,6 +22,11 @@ namespace zzz::script
 	class GameScript;
 }
 
+namespace zzz::io
+{
+	class Path;	
+}
+
 namespace zzz::engine
 {
 	class Platform;
@@ -29,10 +34,6 @@ namespace zzz::engine
 	class MainLoopBase;
 	class ProjectEventBus;
 }
-
-using namespace zzz;
-using namespace zzz::common;
-using namespace zzz::logger;
 
 namespace zzz::engine
 {
@@ -59,6 +60,7 @@ namespace zzz::engine
 		std::atomic<eInitState> engineState;
 		std::vector<std::shared_ptr<zzz::script::GameScript>> m_Scripts;
 
+		std::shared_ptr<zzz::io::Path> m_Path;
 		std::unique_ptr<Platform> m_Platform;
 		std::unique_ptr<ViewManager> m_ViewManager;
 		std::shared_ptr<MainLoopBase> m_MainLoop;
@@ -66,7 +68,6 @@ namespace zzz::engine
 		std::shared_ptr<Time> m_Time;
 
 	private:
-		void Initialize();
 		void OnCloseAllViews() const;
 	};
 }
