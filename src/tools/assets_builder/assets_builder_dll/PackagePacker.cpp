@@ -19,7 +19,7 @@ namespace zzz::builder
 
 	bool PackagePacker::PackProject(const fs::path& sourceDir, const fs::path& destinationDir)
 	{
-		fs::path outPath = destinationDir / "assets" / zzz::common::c_GamePackageFileName;
+		fs::path outPath = destinationDir / zzz::common::c_GamePackageFileName;
 		std::vector<PendingAsset> pendingAssets;
 
 		// 1. Упаковка project.json под служебным GUID манифеста

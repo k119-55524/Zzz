@@ -367,8 +367,8 @@ public class AssetsBuilderEngine
 		Log("Экспорт C++ заголовочных файлов (.h/.hpp) в подпапку include/...");
 		CopyHeaderFiles(options.SourcePath, Path.Combine(options.DestinationPath, "include"));
 
-		// 5. Вызов C# запаковщика PackagePacker для генерации бинарного пакета структуры игры (package.dat) в подпапку assets/
-		Log($"Сериализация бинарного пакета игры '{AssetExtensions.GamePackageBinaryName}' в подпапку assets/...");
+		// 5. Вызов C# запаковщика PackagePacker для генерации бинарного пакета структуры игры
+		Log($"Сериализация бинарного пакета игры '{AssetExtensions.GamePackageBinaryName}'...");
 		bool packageSuccess = PackagePacker.PackProject(options.SourcePath, options.DestinationPath, Log);
 
 		// 6. Генерация Scripts.cmake в корне папки назначения (options.DestinationPath)
@@ -376,7 +376,7 @@ public class AssetsBuilderEngine
 
 		if (packageSuccess)
 		{
-			Log($"Сборка пакета успешно завершена! Пакадж: assets/{AssetExtensions.GamePackageBinaryName}");
+			Log($"Сборка пакета успешно завершена! Пакадж: {AssetExtensions.GamePackageBinaryName}");
 			return true;
 		}
 		else

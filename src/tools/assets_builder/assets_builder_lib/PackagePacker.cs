@@ -32,9 +32,12 @@ public static class PackagePacker
 		try
 		{
 			string packageFileName = AssetExtensions.GamePackageBinaryName;
-			string targetAssetsDir = Path.Combine(destinationDir, "assets");
-			Directory.CreateDirectory(targetAssetsDir);
-			string outPath = Path.Combine(targetAssetsDir, packageFileName);
+			string outPath = Path.Combine(destinationDir, packageFileName);
+			string? parentDir = Path.GetDirectoryName(outPath);
+			if (!string.IsNullOrEmpty(parentDir))
+			{
+				Directory.CreateDirectory(parentDir);
+			}
 
 			var pendingAssets = new List<PendingItem>();
 
