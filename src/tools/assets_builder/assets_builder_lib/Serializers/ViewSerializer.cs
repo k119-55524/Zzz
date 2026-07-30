@@ -18,16 +18,20 @@ public class ViewSerializer : IAssetSerializer
 		using var writer = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true);
 
 		string viewName = Path.GetFileNameWithoutExtension(filePath);
-		byte[] nameBytes = System.Text.Encoding.UTF8.GetBytes(viewName);
-		writer.Write((uint)nameBytes.Length);
-		writer.Write(nameBytes);
+		writer.WriteStringUtf8(viewName);
 
 		string json = File.ReadAllText(filePath);
 		using var doc = JsonDocument.Parse(json);
 		var root = doc.RootElement;
 
+		uint width = root.GetProperty("width").GetUInt32();
+		uint height = root.GetProperty("height").GetUInt32();
+
+		writer.Write(width);
+		writer.Write(height);
+
 		string sceneGuid = root.TryGetProperty("scene", out var scProp) ? scProp.GetString() ?? "" : "";
-		writer.Write(ParseGuidTo16Bytes(sceneGuid));
+		writer.WriteGuid(sceneGuid);
 
 		// ViewScripts GUIDs array (16 bytes binary each)
 		var scriptsList = new List<string>();
@@ -43,18 +47,10 @@ public class ViewSerializer : IAssetSerializer
 		writer.Write((uint)scriptsList.Count);
 		foreach (var scGuid in scriptsList)
 		{
-			writer.Write(ParseGuidTo16Bytes(scGuid));
+			writer.WriteGuid(scGuid);
 		}
 
 		writer.Flush();
 		return ms.ToArray();
-	}
-
-	private static byte[] ParseGuidTo16Bytes(string guidStr)
-	{
-		if (Guid.TryParse(guidStr, out var parsed))
-			return parsed.ToByteArray();
-
-		return new byte[16];
 	}
 }

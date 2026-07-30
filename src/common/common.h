@@ -10,6 +10,7 @@
 #include "serialize/Serializer.h"
 #include "guid.h"
 #include "templates/double_buffered_vector.h"
+#include "templates/Size2D.h"
 
 namespace zzz
 {

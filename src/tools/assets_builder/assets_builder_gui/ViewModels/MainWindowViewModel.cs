@@ -43,7 +43,20 @@ public class MainWindowViewModel : ViewModelBase
         _engine = new AssetsBuilderEngine();
 
         // Подписка на стрим логов от ядра сборщика
-        _engine.LogReceived += message => AppendLog(message);
+        _engine.LogReceived += msg =>
+        {
+            AppendLog(msg);
+            if (IsBuilding && !string.IsNullOrWhiteSpace(msg))
+            {
+                string cleanMsg = msg.Trim();
+                if (cleanMsg.StartsWith("Старт сборки") || cleanMsg.StartsWith("Сканирование") || 
+                    cleanMsg.StartsWith("Упаковка") || cleanMsg.StartsWith("Очистка") || 
+                    cleanMsg.StartsWith("Сгенерирован") || cleanMsg.StartsWith("Копирование"))
+                {
+                    StatusText = cleanMsg;
+                }
+            }
+        };
 
         _sessionConfig = SessionManager.LoadSession();
 
@@ -116,11 +129,15 @@ public class MainWindowViewModel : ViewModelBase
             if (SetProperty(ref _isBuilding, value))
             {
                 OnPropertyChanged(nameof(BuildButtonText));
+                OnPropertyChanged(nameof(IsNotBuilding));
                 StatusText = _isBuilding ? "Идет сборка..." : "Готов";
                 StatusColor = _isBuilding ? "#FFC107" : "#4CAF50";
+                CommandManager.InvalidateRequerySuggested();
             }
         }
     }
+
+    public bool IsNotBuilding => !IsBuilding;
 
     public string BuildButtonText => IsBuilding ? "⏹ Прервать" : "▶ Старт сборки";
 

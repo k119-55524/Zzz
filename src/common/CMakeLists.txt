@@ -22,6 +22,8 @@ macro(setup_common_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/guid.h
         ${CMAKE_CURRENT_SOURCE_DIR}/serialize/Serializer.h
         ${CMAKE_CURRENT_SOURCE_DIR}/serialize/Serializer.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/templates/double_buffered_vector.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/templates/Size2D.h
     )
 
     target_compile_features(${TARGET_NAME} PUBLIC cxx_std_23)

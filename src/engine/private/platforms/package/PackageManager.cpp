@@ -86,7 +86,9 @@ namespace zzz::engine
 			for (size_t idx = 0; idx < entries.size(); ++idx)
 			{
 				const auto& e = entries[idx];
-				DOut("       [{}] GUID: {} | Offset: {} | Size: {} байт", idx, e.guid.ToString(), e.offset, e.size);
+				DOut("       [{}] GUID: {}", idx, e.GetGuid().ToString());
+				DOut("           Offset: {} байт", e.offset);
+				DOut("           Size:   {} байт", e.size);
 
 				if (type == zzz::package::AssetType::ProjectManifest)
 				{
@@ -105,6 +107,16 @@ namespace zzz::engine
 #endif
 	}
 
+	namespace
+	{
+		zzz::package::BinaryGuid ReadGuid(std::ifstream& file)
+		{
+			zzz::package::BinaryGuid::RawBytes bytes{};
+			file.read(reinterpret_cast<char*>(bytes.data()), 16);
+			return zzz::package::BinaryGuid{ bytes };
+		}
+	}
+
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 	void PackageManager::LogProjectManifestDetails([[maybe_unused]] const std::filesystem::path& packagePath, [[maybe_unused]] const zzz::package::PackageEntry& entry) const
 	{
@@ -113,8 +125,7 @@ namespace zzz::engine
 
 		file.seekg(entry.offset, std::ios::beg);
 
-		zzz::package::BinaryGuid gameScriptGuid;
-		file.read(reinterpret_cast<char*>(&gameScriptGuid), 16);
+		zzz::package::BinaryGuid gameScriptGuid = ReadGuid(file);
 
 		DOut("           [ProjectManifest] GameScript GUID: {}", gameScriptGuid.ToString());
 
@@ -124,8 +135,7 @@ namespace zzz::engine
 
 		for (zU32 i = 0; i < scenesCount; ++i)
 		{
-			zzz::package::BinaryGuid scGuid;
-			file.read(reinterpret_cast<char*>(&scGuid), 16);
+			zzz::package::BinaryGuid scGuid = ReadGuid(file);
 			DOut("             Scene #{}: {}", i, scGuid.ToString());
 		}
 
@@ -135,8 +145,7 @@ namespace zzz::engine
 
 		for (zU32 i = 0; i < viewsCount; ++i)
 		{
-			zzz::package::BinaryGuid vGuid;
-			file.read(reinterpret_cast<char*>(&vGuid), 16);
+			zzz::package::BinaryGuid vGuid = ReadGuid(file);
 			DOut("             View #{}: {}", i, vGuid.ToString());
 		}
 	}
@@ -156,8 +165,7 @@ namespace zzz::engine
 			file.read(sceneName.data(), nameLen);
 		}
 
-		zzz::package::BinaryGuid sceneScriptGuid;
-		file.read(reinterpret_cast<char*>(&sceneScriptGuid), 16);
+		zzz::package::BinaryGuid sceneScriptGuid = ReadGuid(file);
 
 		DOut("           [SceneData] Имя сцены: '{}' | Скрипт сцены GUID: {}", sceneName, sceneScriptGuid.ToString());
 	}
@@ -177,10 +185,14 @@ namespace zzz::engine
 			file.read(viewName.data(), viewNameLen);
 		}
 
-		zzz::package::BinaryGuid sceneGuid;
-		file.read(reinterpret_cast<char*>(&sceneGuid), 16);
+		zU32 width = 0, height = 0;
+		file.read(reinterpret_cast<char*>(&width), sizeof(width));
+		file.read(reinterpret_cast<char*>(&height), sizeof(height));
+		zzz::common::Size2D<zU32> viewSize(width, height);
 
-		DOut("           [ViewData] '{}' | Сцена GUID: {}", viewName, sceneGuid.ToString());
+		zzz::package::BinaryGuid sceneGuid = ReadGuid(file);
+
+		DOut("           [ViewData] '{}' | Размер: {}x{} | Сцена GUID: {}", viewName, viewSize.width, viewSize.height, sceneGuid.ToString());
 
 		zU32 scriptsCount = 0;
 		file.read(reinterpret_cast<char*>(&scriptsCount), sizeof(scriptsCount));
@@ -188,8 +200,7 @@ namespace zzz::engine
 
 		for (zU32 i = 0; i < scriptsCount; ++i)
 		{
-			zzz::package::BinaryGuid scriptGuid;
-			file.read(reinterpret_cast<char*>(&scriptGuid), 16);
+			zzz::package::BinaryGuid scriptGuid = ReadGuid(file);
 
 			DOut("             UI Script #{}: {}", i, scriptGuid.ToString());
 		}

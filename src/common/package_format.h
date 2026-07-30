@@ -5,7 +5,9 @@
 #include <common/guid.h>
 #include <common/version.h>
 #include <common/constants.h>
+#include <common/templates/Size2D.h>
 
+using namespace zzz::common;
 
 namespace zzz::package
 {
@@ -33,10 +35,17 @@ namespace zzz::package
 	#pragma pack(push, 1)
 	struct PackageEntry
 	{
-		BinaryGuid guid = {};
+		std::array<std::byte, 16> guidBytes = {};
 		zU32 assetType = 0;
 		zU64 offset = 0;
 		zU64 size = 0;
+
+		[[nodiscard]] BinaryGuid GetGuid() const noexcept
+		{
+			BinaryGuid::RawBytes raw{};
+			std::memcpy(raw.data(), guidBytes.data(), 16);
+			return BinaryGuid{ raw };
+		}
 	};
 	#pragma pack(pop)
 
@@ -54,8 +63,9 @@ namespace zzz::package
 
 	struct ViewData
 	{
-		BinaryGuid sceneGuid = {};
 		std::string name;
+		Size2D<zU32> size;
+		BinaryGuid sceneGuid;
 		std::vector<BinaryGuid> uiScriptGuids;
 	};
 }

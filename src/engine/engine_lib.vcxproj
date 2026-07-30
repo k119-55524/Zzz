@@ -127,7 +127,6 @@
     <ClInclude Include="private\platforms\config\PlatformConfig.h" />
     <ClInclude Include="private\platforms\config\ConfigEditor.h" />
     <ClInclude Include="private\core\io\Path.h" />
-    <ClInclude Include="private\core\templates\Size2D.h" />
     <ClInclude Include="private\platforms\input\Input.h" />
     <ClInclude Include="private\platforms\input\InputBase.h" />
     <ClInclude Include="private\platforms\input\InputHelpers.h" />

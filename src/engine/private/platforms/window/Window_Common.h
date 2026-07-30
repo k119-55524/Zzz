@@ -2,7 +2,7 @@
 
 #include "../Platform.h"
 #include "../input/Input.h"
-#include "../../../public/core/templates/Size2D.h"
+#include <common/templates/Size2D.h>
 
 #include <common/enums/eWinResize.h>
 

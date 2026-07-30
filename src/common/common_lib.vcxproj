@@ -119,6 +119,8 @@
     <ClInclude Include="enums\enum_to_string.h" />
     <ClInclude Include="guid.h" />
     <ClInclude Include="serialize\Serializer.h" />
+    <ClInclude Include="templates\double_buffered_vector.h" />
+    <ClInclude Include="templates\Size2D.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="throw_wrappers.cpp" />

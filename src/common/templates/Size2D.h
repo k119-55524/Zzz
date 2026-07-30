@@ -6,9 +6,8 @@
 #include <common/common.h>
 #include <common/serialize/Serializer.h>
 
-namespace zzz::engine
+namespace zzz::common
 {
-	using namespace zzz::common;
 	/**
 	 * @class size2D
 	 * @brief Шаблонный класс для хранения и управления двумерными размерами.

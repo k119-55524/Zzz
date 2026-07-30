@@ -100,7 +100,7 @@
                 <!-- ========================================================================= -->
                 <!--  БЛОК 1: СПИСОК НАСТРОЕК СБОРОК И КНОПКИ УПРАВЛЕНИЯ                       -->
                 <!-- ========================================================================= -->
-                <Border Grid.Row="0" Style="{StaticResource BlockCardStyle}">
+                <Border Grid.Row="0" Style="{StaticResource BlockCardStyle}" IsEnabled="{Binding IsNotBuilding}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -144,7 +144,21 @@
                 <!-- ========================================================================= -->
                 <!--  БЛОК 2: ПАРАМЕТРЫ ВЫБРАННОЙ НАСТРОЙКИ                                    -->
                 <!-- ========================================================================= -->
-                <Border Grid.Row="1" Style="{StaticResource BlockCardStyle}" IsEnabled="{Binding HasSelectedProfile}">
+                <Border Grid.Row="1">
+                    <Border.Style>
+                        <Style TargetType="Border" BasedOn="{StaticResource BlockCardStyle}">
+                            <Setter Property="IsEnabled" Value="False"/>
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding HasSelectedProfile}" Value="True"/>
+                                        <Condition Binding="{Binding IsNotBuilding}" Value="True"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="IsEnabled" Value="True"/>
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -369,6 +383,7 @@
                 <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,10">
                     <Button Content="🔄 Обновить GUIDы" 
                             Command="{Binding UpdateGuidsCommand}" 
+                            IsEnabled="{Binding IsNotBuilding}"
                             Style="{StaticResource AccentButtonStyle}" 
                             FontSize="13" 
                             Padding="18,6" 

@@ -93,7 +93,7 @@ public static class PackagePacker
 			writer.Write(patch);
 			writer.Write((uint)pendingAssets.Count);
 
-			long headerSize = 3 + 4 + 4 + 4 + 4;
+			long headerSize = 3 + 4 + 4 + 4 + 4; // 19 bytes
 			long indexTableSize = pendingAssets.Count * 36;
 			long currentOffset = headerSize + indexTableSize;
 
@@ -108,16 +108,14 @@ public static class PackagePacker
 				currentOffset += binaryData.Length;
 			}
 
-			// Перезапись количества элементов в заголовке
+			// Перезапись количества валидных элементов в заголовке (на смещении 15 = 3 + 4 + 4 + 4)
 			fs.Seek(3 + 4 + 4 + 4, SeekOrigin.Begin);
 			writer.Write((uint)validPayloads.Count);
 			fs.Seek(headerSize, SeekOrigin.Begin);
 
 			foreach (var payload in validPayloads)
 			{
-				byte[] guidBytes = Guid.TryParse(payload.Item.Guid, out var parsed) ? parsed.ToByteArray() : new byte[16];
-
-				writer.Write(guidBytes);
+				writer.WriteGuid(payload.Item.Guid);
 				writer.Write(payload.Item.Type);
 				writer.Write((ulong)payload.Offset);
 				writer.Write((ulong)payload.Data.Length);

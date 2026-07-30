@@ -24,7 +24,7 @@ public class ProjectManifestSerializer : IAssetSerializer
         string gameScript = root.TryGetProperty("game_script", out var gsProp) ? gsProp.GetString() ?? "" : "";
 
         // Write GameScript GUID (16 bytes binary)
-        writer.Write(ParseGuidTo16Bytes(gameScript));
+        writer.WriteGuid(gameScript);
 
         // Write Scenes GUIDs array (16 bytes binary each)
         var scenesList = new List<string>();
@@ -40,7 +40,7 @@ public class ProjectManifestSerializer : IAssetSerializer
         writer.Write((uint)scenesList.Count);
         foreach (var scGuid in scenesList)
         {
-            writer.Write(ParseGuidTo16Bytes(scGuid));
+            writer.WriteGuid(scGuid);
         }
 
         // Write Views GUIDs array (16 bytes binary each)
@@ -57,18 +57,10 @@ public class ProjectManifestSerializer : IAssetSerializer
         writer.Write((uint)viewsList.Count);
         foreach (var vGuid in viewsList)
         {
-            writer.Write(ParseGuidTo16Bytes(vGuid));
+            writer.WriteGuid(vGuid);
         }
 
         writer.Flush();
         return ms.ToArray();
-    }
-
-    private static byte[] ParseGuidTo16Bytes(string guidStr)
-    {
-        if (Guid.TryParse(guidStr, out var parsed))
-            return parsed.ToByteArray();
-
-        return new byte[16];
     }
 }

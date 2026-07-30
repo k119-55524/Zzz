@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 
@@ -22,24 +21,14 @@ public class SceneSerializer : IAssetSerializer
         var root = doc.RootElement;
 
         string sceneName = Path.GetFileNameWithoutExtension(filePath);
-        byte[] nameBytes = System.Text.Encoding.UTF8.GetBytes(sceneName);
-        writer.Write((uint)nameBytes.Length);
-        writer.Write(nameBytes);
+        writer.WriteStringUtf8(sceneName);
 
         string sceneScript = root.TryGetProperty("script", out var scProp) ? scProp.GetString() ?? "" : "";
 
         // Write SceneScript GUID (16 bytes binary)
-        writer.Write(ParseGuidTo16Bytes(sceneScript));
+        writer.WriteGuid(sceneScript);
 
         writer.Flush();
         return ms.ToArray();
-    }
-
-    private static byte[] ParseGuidTo16Bytes(string guidStr)
-    {
-        if (Guid.TryParse(guidStr, out var parsed))
-            return parsed.ToByteArray();
-
-        return new byte[16];
     }
 }
