@@ -22,10 +22,10 @@ View::View(const std::string_view viewName, const Platform& platform, const std:
 }
 
 #if Z_EDITOR
-View::View(const Platform& platform, void* data, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts) :
+View::View(const Platform& platform, void* data) :
 	m_Platform{ platform }
 {
-	Initialize("", sdata, scripts);
+	Initialize("", data, {});
 }
 #endif
 

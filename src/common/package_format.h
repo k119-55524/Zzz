@@ -53,7 +53,7 @@ namespace zzz::package
 	struct ViewData
 	{
 		BinaryGuid sceneGuid = {0};
+		std::string name;
 		std::vector<BinaryGuid> uiScriptGuids;
-		zU32 elementsCount = 0;
 	};
 }

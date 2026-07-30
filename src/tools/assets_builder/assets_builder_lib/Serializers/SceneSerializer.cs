@@ -21,6 +21,11 @@ public class SceneSerializer : IAssetSerializer
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;
 
+        string sceneName = Path.GetFileNameWithoutExtension(filePath);
+        byte[] nameBytes = System.Text.Encoding.UTF8.GetBytes(sceneName);
+        writer.Write((uint)nameBytes.Length);
+        writer.Write(nameBytes);
+
         string sceneScript = root.TryGetProperty("script", out var scProp) ? scProp.GetString() ?? "" : "";
 
         // Write SceneScript GUID (16 bytes binary)

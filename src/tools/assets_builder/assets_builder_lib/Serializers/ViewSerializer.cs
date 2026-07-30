@@ -7,57 +7,54 @@ namespace assets_builder_lib.Serializers;
 
 public class ViewSerializer : IAssetSerializer
 {
-    public bool CanSerialize(string filePath)
-    {
-        return filePath.EndsWith(".zv", StringComparison.OrdinalIgnoreCase);
-    }
+	public bool CanSerialize(string filePath)
+	{
+		return filePath.EndsWith(".zv", StringComparison.OrdinalIgnoreCase);
+	}
 
-    public byte[] SerializeToBinary(string filePath, string guid)
-    {
-        using var ms = new MemoryStream();
-        using var writer = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true);
+	public byte[] SerializeToBinary(string filePath, string guid)
+	{
+		using var ms = new MemoryStream();
+		using var writer = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true);
 
-        string json = File.ReadAllText(filePath);
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
+		string viewName = Path.GetFileNameWithoutExtension(filePath);
+		byte[] nameBytes = System.Text.Encoding.UTF8.GetBytes(viewName);
+		writer.Write((uint)nameBytes.Length);
+		writer.Write(nameBytes);
 
-        string sceneGuid = root.TryGetProperty("scene", out var scProp) ? scProp.GetString() ?? "" : "";
-        writer.Write(ParseGuidTo16Bytes(sceneGuid));
+		string json = File.ReadAllText(filePath);
+		using var doc = JsonDocument.Parse(json);
+		var root = doc.RootElement;
 
-        // ViewScripts GUIDs array (16 bytes binary each)
-        var scriptsList = new List<string>();
-        if (root.TryGetProperty("scripts", out var scArr) && scArr.ValueKind == JsonValueKind.Array)
-        {
-            foreach (var elem in scArr.EnumerateArray())
-            {
-                if (elem.GetString() is string scGuid)
-                    scriptsList.Add(scGuid);
-            }
-        }
+		string sceneGuid = root.TryGetProperty("scene", out var scProp) ? scProp.GetString() ?? "" : "";
+		writer.Write(ParseGuidTo16Bytes(sceneGuid));
 
-        writer.Write((uint)scriptsList.Count);
-        foreach (var scGuid in scriptsList)
-        {
-            writer.Write(ParseGuidTo16Bytes(scGuid));
-        }
+		// ViewScripts GUIDs array (16 bytes binary each)
+		var scriptsList = new List<string>();
+		if (root.TryGetProperty("scripts", out var scArr) && scArr.ValueKind == JsonValueKind.Array)
+		{
+			foreach (var elem in scArr.EnumerateArray())
+			{
+				if (elem.GetString() is string scGuid)
+					scriptsList.Add(scGuid);
+			}
+		}
 
-        // Elements count
-        uint elemCount = 0;
-        if (root.TryGetProperty("elements", out var elemArr) && elemArr.ValueKind == JsonValueKind.Array)
-        {
-            elemCount = (uint)elemArr.GetArrayLength();
-        }
-        writer.Write(elemCount);
+		writer.Write((uint)scriptsList.Count);
+		foreach (var scGuid in scriptsList)
+		{
+			writer.Write(ParseGuidTo16Bytes(scGuid));
+		}
 
-        writer.Flush();
-        return ms.ToArray();
-    }
+		writer.Flush();
+		return ms.ToArray();
+	}
 
-    private static byte[] ParseGuidTo16Bytes(string guidStr)
-    {
-        if (Guid.TryParse(guidStr, out var parsed))
-            return parsed.ToByteArray();
+	private static byte[] ParseGuidTo16Bytes(string guidStr)
+	{
+		if (Guid.TryParse(guidStr, out var parsed))
+			return parsed.ToByteArray();
 
-        return new byte[16];
-    }
+		return new byte[16];
+	}
 }

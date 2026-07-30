@@ -1,10 +1,9 @@
 #pragma once
 
+#include <map>
 #include <string>
 #include <vector>
-#include <expected>
 #include <filesystem>
-#include <map>
 #include <common/package_format.h>
 
 #include "../core/io/Path.h"
@@ -24,13 +23,16 @@ namespace zzz::engine
 
 	private:
 		void Initialize(const Path& path);
-
 		void LogPackageEntriesSummary(const std::filesystem::path& packagePath) const;
-		void LogProjectManifestDetails(const std::filesystem::path& packagePath, const zzz::package::PackageEntry& entry) const;
-		void LogSceneDetails(const std::filesystem::path& packagePath, const zzz::package::PackageEntry& entry) const;
-		void LogViewDetails(const std::filesystem::path& packagePath, const zzz::package::PackageEntry& entry) const;
 
 		std::map<zzz::package::AssetType, std::vector<zzz::package::PackageEntry>> m_EntriesByType;
 		zzz::package::PackageHeader m_Header;
+
+#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+		void LogProjectManifestDetails(const std::filesystem::path& packagePath, const zzz::package::PackageEntry& entry) const;
+		void LogSceneDetails(const std::filesystem::path& packagePath, const zzz::package::PackageEntry& entry) const;
+		void LogViewDetails(const std::filesystem::path& packagePath, const zzz::package::PackageEntry& entry) const;
+		std::string LogGuidToString(const zzz::package::BinaryGuid& guid) const;
+#endif // Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 	};
 }

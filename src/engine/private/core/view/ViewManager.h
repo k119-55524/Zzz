@@ -28,7 +28,7 @@ namespace zzz::engine
 
 		View* CreateView(const std::string_view viewName, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts);
 #if Z_EDITOR
-		View* CreateView(void* data, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts);
+		View* CreateView(void* data);
 		void RemoveView(View* view);
 #endif
 

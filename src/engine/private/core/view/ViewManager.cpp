@@ -53,9 +53,9 @@ void ViewManager::OnWindowClose(View& view)
 }
 
 #if Z_EDITOR
-View* ViewManager::CreateView(void* data, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts)
+View* ViewManager::CreateView(void* data)
 {
-	auto view = safe_make_shared<View>(m_Platform, data, scripts);
+	auto view = safe_make_shared<View>(m_Platform, data);
 	View* viewPtr = view.get();
 	m_Views.push_back(std::move(view));
 

@@ -27,7 +27,7 @@ namespace zzz::engine
 		View() = delete;
 		View(const std::string_view viewName, const Platform& platform, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts, std::function<void(View&)> onWindowClose);
 #if Z_EDITOR
-		View(const Platform& platform, void* data, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts = {});
+		View(const Platform& platform, void* data);
 #endif
 		~View() { m_EventBus.InvokeDestroy(); }
 
