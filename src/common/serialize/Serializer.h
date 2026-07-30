@@ -11,7 +11,13 @@
 namespace zzz::common
 {
 	/// @brief Концепт для типов примитивов и enum, подлежащих сериализации.
-	/// @details Исключает bool, wchar_t и long double из-за платформозависимости и проблем с представлением.
+	/// @details Рассчитан на 64-битные системы (x64 / ARM64, Little-Endian: Windows, Linux, macOS, Android, iOS).
+	/// Поддерживает: целочисленные типы фиксированной ширины, float, double, enum/enum class.
+	/// Исключает (для обеспечения кроссплатформенности):
+	/// - bool (сериализуется отдельно через 1 байт uint8_t);
+	/// - wchar_t / std::wstring (различаются 2B MSVC / 4B GCC);
+	/// - long double (различается 8B MSVC / 16B GCC);
+	/// - указатели.
 	template<typename T>
 	concept SerializablePrimitive =
 		(std::integral<T> || std::floating_point<T> || std::is_enum_v<T>) &&
