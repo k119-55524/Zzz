@@ -18,13 +18,14 @@ namespace zzz::engine
 {
 	class Time;
 	using namespace zzz::common;
+
 	class View final
 	{
 		Z_NO_MOVE(View);
 
 	public:
 		View() = delete;
-		View(const Platform& platform, std::function<void(View&)> onWindowClose, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts = {});
+		View(const std::string_view viewName, const Platform& platform, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts, std::function<void(View&)> onWindowClose);
 #if Z_EDITOR
 		View(const Platform& platform, void* data, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts = {});
 #endif
@@ -50,7 +51,7 @@ namespace zzz::engine
 		inline std::shared_ptr<zzz::script::Scene> GetScene() const noexcept { return m_ActiveScene; }
 
 	private:
-		void Initialize(void* data = nullptr, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts = {});
+		void Initialize(const std::string_view viewName, void* data = nullptr, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts = {});
 
 #pragma region Window Events
 		/**

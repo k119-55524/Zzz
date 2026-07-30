@@ -38,7 +38,6 @@ namespace zzz::package
 	};
 	#pragma pack(pop)
 
-	// Структуры запеченных данных ассетов
 	struct ProjectManifestData
 	{
 		BinaryGuid gameScriptGuid = {0};

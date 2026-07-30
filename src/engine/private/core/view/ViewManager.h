@@ -26,9 +26,9 @@ namespace zzz::engine
 		ViewManager(const Platform& platform, std::function<void()> onAllViewsClosed);
 		~ViewManager();
 
-		View* CreateView(const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts = {});
+		View* CreateView(const std::string_view viewName, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts);
 #if Z_EDITOR
-		View* CreateView(void* data, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts = {});
+		View* CreateView(void* data, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts);
 		void RemoveView(View* view);
 #endif
 
@@ -39,6 +39,6 @@ namespace zzz::engine
 		std::list<std::shared_ptr<View>> m_Views;
 
 		std::function<void()> OnAllViewsClosed;
-		void HandleWindowClose(View& view);
+		void OnWindowClose(View& view);
 	};
 }

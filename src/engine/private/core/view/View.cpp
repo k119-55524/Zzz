@@ -1,34 +1,35 @@
 
-#include "View.h"
-#include "../../platforms/input/Input.h"
-#include "../../platforms/window/Window.h"
 #include <common/common.h>
+
+#include "View.h"
 #include "public/core/scene/Scene.h"
-#include "public/core/userscripts/base_script/ViewScript.h"
+#include "../../platforms/input/Input.h"
 #include "public/core/events/EventBus.h"
+#include "../../platforms/window/Window.h"
+#include "public/core/userscripts/base_script/ViewScript.h"
 
 using namespace zzz::common;
 
 using namespace zzz::engine;
 
-View::View(const Platform& platform, std::function<void(View&)> onWindowClose, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts) :
+View::View(const std::string_view viewName, const Platform& platform, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts, std::function<void(View&)> onWindowClose) :
 	m_Platform{ platform },
 	OnWindowClose(std::move(onWindowClose))
 {
 	ensure(OnWindowClose != nullptr, "OnWindowClose не должен быть null.");
 
-	Initialize(nullptr, scripts);
+	Initialize(viewName, nullptr, scripts);
 }
 
 #if Z_EDITOR
 View::View(const Platform& platform, void* data, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts) :
 	m_Platform{ platform }
 {
-	Initialize(data, scripts);
+	Initialize("", sdata, scripts);
 }
 #endif
 
-void View::Initialize(void* data, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts)
+void View::Initialize(const std::string_view viewName, void* data, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts)
 {
 	m_Input = safe_make_shared<Input>();
 	auto inputRes = m_Input->Initialize();
@@ -52,7 +53,7 @@ void View::Initialize(void* data, const std::vector<std::shared_ptr<zzz::script:
 	callbacks.OnSafeAreaChanged  = [this](int t, int b, int l, int r)       { OnWindowSafeAreaChanged(t, b, l, r); };
 
 	m_Window = safe_make_shared<Window>(m_Platform, m_Input, std::move(callbacks));
-	auto res = m_Window->Initialize(m_Platform.GetAppName(), data);
+	auto res = m_Window->Initialize(viewName, data);
 	if (!res)
 		THROW_RUNTIME("Не удалось инициализировать окно: {}.", res.error());
 

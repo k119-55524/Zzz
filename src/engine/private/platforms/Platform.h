@@ -18,7 +18,6 @@ namespace zzz::engine
 		Platform(const Path& path, std::shared_ptr<NativeAppData> nativeData);
 		~Platform();
 
-		inline std::string_view GetAppName() const noexcept { return m_Path.GetAppName(); }
 		[[nodiscard]] inline std::shared_ptr<NativeAppData> GetNativeData() const noexcept { return m_NativeData; }
 		inline const PlatformConfig& GetPlatformConfig() const noexcept { return m_ConfigManager->GetPlatformConfig(); };
 
@@ -29,11 +28,10 @@ namespace zzz::engine
 #endif
 
 	private:
-		void Initialize();
+		void Initialize(const Path& path);
 		void InitializePlatformSpecific();
 		void ShutdownPlatformSpecific();
 
-		const Path& m_Path;
 		std::shared_ptr<NativeAppData> m_NativeData;
 		std::shared_ptr<ConfigManager> m_ConfigManager;
 	};

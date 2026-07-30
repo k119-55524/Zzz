@@ -89,7 +89,7 @@ void Engine::Shutdown()
 	bool isError = false;
 	try
 	{
-		m_ViewManager->CreateView();
+		m_ViewManager->CreateView("", {});
 
 		StartGame();
 		m_Time->ResetFrameTimer();

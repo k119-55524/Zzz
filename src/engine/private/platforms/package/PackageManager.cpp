@@ -1,5 +1,5 @@
+
 #include <fstream>
-#include <cstring>
 
 #include "PackageManager.h"
 
@@ -27,7 +27,6 @@ namespace zzz::engine
 
 		m_Header = {};
 
-		// 1. Читаем magic (3 байта)
 		file.read(reinterpret_cast<char*>(m_Header.magic.data()), 3);
 		if (!file.good())
 			THROW_RUNTIME("Не удалось прочитать сигнатуру пакета из: {}", packagePath.string());
@@ -35,7 +34,6 @@ namespace zzz::engine
 		if (m_Header.magic != zzz::common::c_GamePackageHeader)
 			THROW_RUNTIME("Некорректная сигнатура (magic) заголовка пакета в файле: {}", packagePath.string());
 
-		// 2. Читаем 12 байт версии через движковый Serializer::DeSerialize
 		std::vector<std::byte> versionBuffer(12);
 		file.read(reinterpret_cast<char*>(versionBuffer.data()), 12);
 		if (!file.good())

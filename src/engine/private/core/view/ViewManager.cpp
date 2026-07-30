@@ -20,21 +20,21 @@ ViewManager::~ViewManager()
 	m_Views.clear();
 }
 
-View* ViewManager::CreateView(const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts)
+View* ViewManager::CreateView(const std::string_view viewName, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts)
 {
 #if Z_MOBILE
 	if (m_Views.size() >= 1)
 		THROW_RUNTIME("Мобильные платформы поддерживают только одно нативное окно на приложение.");
 #endif
 
-	auto view = safe_make_shared<View>(m_Platform, [this](View& v) { HandleWindowClose(v); }, scripts);
+	auto view = safe_make_shared<View>(viewName, m_Platform, scripts, [this](View& v) { OnWindowClose(v); });
 	View* viewPtr = view.get();
 	m_Views.push_back(std::move(view));
 
 	return viewPtr;
 }
 
-void ViewManager::HandleWindowClose(View& view)
+void ViewManager::OnWindowClose(View& view)
 {
 	auto it = std::ranges::find_if(
 		m_Views,
@@ -77,7 +77,7 @@ void ViewManager::RemoveView(View* view)
 	if (it != m_Views.end())
 		m_Views.erase(it);
 }
-#endif
+#endif // Z_EDITOR
 
 void ViewManager::Update(const zzz::engine::Time& time)
 {
