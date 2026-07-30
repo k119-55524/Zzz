@@ -73,11 +73,11 @@ namespace zzz::common
 				.and_then([&]() { return s.Serialize(buffer, m_Patch); });
 		}
 
-		[[nodiscard]] std::expected<void, std::string> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override
+		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override
 		{
-			return s.DeSerialize(buffer, offset, m_Major)
-				.and_then([&]() { return s.DeSerialize(buffer, offset, m_Minor); })
-				.and_then([&]() { return s.DeSerialize(buffer, offset, m_Patch); });
+			return s.Deserialize(buffer, offset, m_Major)
+				.and_then([&]() { return s.Deserialize(buffer, offset, m_Minor); })
+				.and_then([&]() { return s.Deserialize(buffer, offset, m_Patch); });
 		}
 
 	private:

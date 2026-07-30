@@ -2,8 +2,10 @@
 
 #include <array>
 #include <string>
+#include <common/guid.h>
 #include <common/version.h>
 #include <common/constants.h>
+
 
 namespace zzz::package
 {
@@ -15,7 +17,7 @@ namespace zzz::package
 		BinaryAsset = 4
 	};
 
-	using BinaryGuid = std::array<uint8_t, 16>;
+	using BinaryGuid = zzz::common::Guid;
 
 	struct PackageHeader
 	{
@@ -31,7 +33,7 @@ namespace zzz::package
 	#pragma pack(push, 1)
 	struct PackageEntry
 	{
-		BinaryGuid guid = {0};
+		BinaryGuid guid = {};
 		zU32 assetType = 0;
 		zU64 offset = 0;
 		zU64 size = 0;
@@ -40,19 +42,19 @@ namespace zzz::package
 
 	struct ProjectManifestData
 	{
-		BinaryGuid gameScriptGuid = {0};
+		BinaryGuid gameScriptGuid = {};
 		std::vector<BinaryGuid> sceneGuids;
 		std::vector<BinaryGuid> viewGuids;
 	};
 
 	struct SceneData
 	{
-		BinaryGuid sceneScriptGuid = {0};
+		BinaryGuid sceneScriptGuid = {};
 	};
 
 	struct ViewData
 	{
-		BinaryGuid sceneGuid = {0};
+		BinaryGuid sceneGuid = {};
 		std::string name;
 		std::vector<BinaryGuid> uiScriptGuids;
 	};

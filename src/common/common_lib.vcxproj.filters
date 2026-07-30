@@ -27,6 +27,7 @@
     <ClInclude Include="enums\enum_to_string.h">
       <Filter>enums</Filter>
     </ClInclude>
+    <ClInclude Include="guid.h" />
     <ClInclude Include="serialize\Serializer.h">
       <Filter>serialize</Filter>
     </ClInclude>

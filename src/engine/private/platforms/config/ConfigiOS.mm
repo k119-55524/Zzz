@@ -1,4 +1,4 @@
-﻿#if Z_IOS
+#if Z_IOS
 
 #include "ConfigiOS.h"
 
@@ -13,7 +13,7 @@ ConfigiOS::ConfigiOS()
 	return std::expected<void, std::string>{};
 }
 
-[[nodiscard]] std::expected<void, std::string> ConfigiOS::DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s)
+[[nodiscard]] std::expected<void, std::string> ConfigiOS::Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s)
 {
 	return std::expected<void, std::string>{};
 }

@@ -12,7 +12,7 @@ ConfigAndroid::ConfigAndroid()
 	return std::expected<void, std::string>{};
 }
 
-[[nodiscard]] std::expected<void, std::string> ConfigAndroid::DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s)
+[[nodiscard]] std::expected<void, std::string> ConfigAndroid::Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s)
 {
 	return std::expected<void, std::string>{};
 }

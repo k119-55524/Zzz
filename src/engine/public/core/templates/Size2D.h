@@ -84,10 +84,10 @@ namespace zzz::engine
 				.and_then([&]() {return s.Serialize(buffer, height); });
 		}
 
-		[[nodiscard]] std::expected<void, std::string> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override
+		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override
 		{
-			return s.DeSerialize(buffer, offset, width)
-				.and_then([&]() {return s.DeSerialize(buffer, offset, height); });
+			return s.Deserialize(buffer, offset, width)
+				.and_then([&]() {return s.Deserialize(buffer, offset, height); });
 		}
 	};
 }

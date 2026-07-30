@@ -41,7 +41,7 @@ namespace zzz::engine
 
 		std::size_t offset = 0;
 		zzz::common::Serializer serializer;
-		auto deSerRes = serializer.DeSerialize(versionBuffer, offset, m_Header.version);
+		auto deSerRes = serializer.Deserialize(versionBuffer, offset, m_Header.version);
 		if (!deSerRes)
 			THROW_RUNTIME("Ошибка десериализации версии пакета в файле {}: {}", packagePath.string(), deSerRes.error());
 
@@ -86,8 +86,7 @@ namespace zzz::engine
 			for (size_t idx = 0; idx < entries.size(); ++idx)
 			{
 				const auto& e = entries[idx];
-				DOut("       [{}] GUID: {} | Offset: {} | Size: {} байт",
-					idx, LogGuidToString(e.guid), e.offset, e.size);
+				DOut("       [{}] GUID: {} | Offset: {} | Size: {} байт", idx, e.guid.ToString(), e.offset, e.size);
 
 				if (type == zzz::package::AssetType::ProjectManifest)
 				{
@@ -114,10 +113,10 @@ namespace zzz::engine
 
 		file.seekg(entry.offset, std::ios::beg);
 
-		zzz::package::BinaryGuid gameScriptGuid = {0};
-		file.read(reinterpret_cast<char*>(gameScriptGuid.data()), 16);
+		zzz::package::BinaryGuid gameScriptGuid;
+		file.read(reinterpret_cast<char*>(&gameScriptGuid), 16);
 
-		DOut("           [ProjectManifest] GameScript GUID: {}", LogGuidToString(gameScriptGuid));
+		DOut("           [ProjectManifest] GameScript GUID: {}", gameScriptGuid.ToString());
 
 		zU32 scenesCount = 0;
 		file.read(reinterpret_cast<char*>(&scenesCount), sizeof(scenesCount));
@@ -125,9 +124,9 @@ namespace zzz::engine
 
 		for (zU32 i = 0; i < scenesCount; ++i)
 		{
-			zzz::package::BinaryGuid scGuid = {0};
-			file.read(reinterpret_cast<char*>(scGuid.data()), 16);
-			DOut("             Scene #{}: {}", i, LogGuidToString(scGuid));
+			zzz::package::BinaryGuid scGuid;
+			file.read(reinterpret_cast<char*>(&scGuid), 16);
+			DOut("             Scene #{}: {}", i, scGuid.ToString());
 		}
 
 		zU32 viewsCount = 0;
@@ -136,9 +135,9 @@ namespace zzz::engine
 
 		for (zU32 i = 0; i < viewsCount; ++i)
 		{
-			zzz::package::BinaryGuid vGuid = {0};
-			file.read(reinterpret_cast<char*>(vGuid.data()), 16);
-			DOut("             View #{}: {}", i, LogGuidToString(vGuid));
+			zzz::package::BinaryGuid vGuid;
+			file.read(reinterpret_cast<char*>(&vGuid), 16);
+			DOut("             View #{}: {}", i, vGuid.ToString());
 		}
 	}
 
@@ -157,10 +156,10 @@ namespace zzz::engine
 			file.read(sceneName.data(), nameLen);
 		}
 
-		zzz::package::BinaryGuid sceneScriptGuid = {0};
-		file.read(reinterpret_cast<char*>(sceneScriptGuid.data()), 16);
+		zzz::package::BinaryGuid sceneScriptGuid;
+		file.read(reinterpret_cast<char*>(&sceneScriptGuid), 16);
 
-		DOut("           [SceneData] Имя сцены: '{}' | Скрипт сцены GUID: {}", sceneName, LogGuidToString(sceneScriptGuid));
+		DOut("           [SceneData] Имя сцены: '{}' | Скрипт сцены GUID: {}", sceneName, sceneScriptGuid.ToString());
 	}
 
 	void PackageManager::LogViewDetails([[maybe_unused]] const std::filesystem::path& packagePath, [[maybe_unused]] const zzz::package::PackageEntry& entry) const
@@ -178,10 +177,10 @@ namespace zzz::engine
 			file.read(viewName.data(), viewNameLen);
 		}
 
-		zzz::package::BinaryGuid sceneGuid = {0};
-		file.read(reinterpret_cast<char*>(sceneGuid.data()), 16);
+		zzz::package::BinaryGuid sceneGuid;
+		file.read(reinterpret_cast<char*>(&sceneGuid), 16);
 
-		DOut("           [ViewData] '{}' | Сцена GUID: {}", viewName, LogGuidToString(sceneGuid));
+		DOut("           [ViewData] '{}' | Сцена GUID: {}", viewName, sceneGuid.ToString());
 
 		zU32 scriptsCount = 0;
 		file.read(reinterpret_cast<char*>(&scriptsCount), sizeof(scriptsCount));
@@ -189,25 +188,11 @@ namespace zzz::engine
 
 		for (zU32 i = 0; i < scriptsCount; ++i)
 		{
-			zzz::package::BinaryGuid scriptGuid = {0};
-			file.read(reinterpret_cast<char*>(scriptGuid.data()), 16);
+			zzz::package::BinaryGuid scriptGuid;
+			file.read(reinterpret_cast<char*>(&scriptGuid), 16);
 
-			DOut("             UI Script #{}: {}", i, LogGuidToString(scriptGuid));
+			DOut("             UI Script #{}: {}", i, scriptGuid.ToString());
 		}
-	}
-
-	std::string PackageManager::LogGuidToString(const zzz::package::BinaryGuid& guid) const
-	{
-		char buf[37];
-		std::snprintf(buf, sizeof(buf),
-			"%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-			guid[0], guid[1], guid[2], guid[3],
-			guid[4], guid[5],
-			guid[6], guid[7],
-			guid[8], guid[9],
-			guid[10], guid[11], guid[12], guid[13], guid[14], guid[15]);
-
-		return std::string(buf, 36);
 	}
 #endif // Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 #pragma endregion

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 
 #include "../../../header.h"
@@ -15,7 +15,7 @@ namespace zzz::engine
 
 	private:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override;
-		[[nodiscard]] std::expected<void, std::string> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override;
+		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override;
 	};
 }
 

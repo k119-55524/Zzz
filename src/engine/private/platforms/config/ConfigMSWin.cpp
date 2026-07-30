@@ -12,7 +12,7 @@ ConfigMSWin::ConfigMSWin()
 	return {};
 }
 
-[[nodiscard]] std::expected<void, std::string> ConfigMSWin::DeSerialize([[maybe_unused]] std::span<const std::byte> buffer, [[maybe_unused]] std::size_t& offset, [[maybe_unused]] const Serializer& s)
+[[nodiscard]] std::expected<void, std::string> ConfigMSWin::Deserialize([[maybe_unused]] std::span<const std::byte> buffer, [[maybe_unused]] std::size_t& offset, [[maybe_unused]] const Serializer& s)
 {
 	return {};
 }

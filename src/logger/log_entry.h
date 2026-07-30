@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "header.h"
 
@@ -23,8 +23,8 @@ namespace zzz::logger
 			: timestamp(ts), type(tp), text(std::move(txt)), file(std::move(f)), function(std::move(func)), line(l) {}
 
 	protected:
-		std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override;
-		std::expected<void, std::string> DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& serializer) override;
+		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override;
+		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& serializer) override;
 	};
 }
 #endif

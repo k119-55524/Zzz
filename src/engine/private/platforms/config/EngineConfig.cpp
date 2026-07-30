@@ -16,17 +16,17 @@ EngineConfig::EngineConfig() :
 		.and_then([&]() { return s.Serialize(buffer, m_PlatformConfig); });
 }
 
-[[nodiscard]] std::expected<void, std::string> EngineConfig::DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s)
+[[nodiscard]] std::expected<void, std::string> EngineConfig::Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s)
 {
 	std::array<std::byte, c_ConfigHeader.size()> header;
 
-	return s.DeSerialize(buffer, offset, header)
+	return s.Deserialize(buffer, offset, header)
 		.and_then([&]() -> std::expected<void, std::string>
 			{
 				if (header != c_ConfigHeader)
 					return UNEXPECTED("Некорректный заголовок конфигурации.");
 
-				return s.DeSerialize(buffer, offset, m_Version);
+				return s.Deserialize(buffer, offset, m_Version);
 			})
-		.and_then([&]() { return s.DeSerialize(buffer, offset, m_PlatformConfig); });
+		.and_then([&]() { return s.Deserialize(buffer, offset, m_PlatformConfig); });
 }

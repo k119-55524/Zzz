@@ -140,7 +140,7 @@ std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path
 
 		std::size_t offset = 0;
 
-		auto result = m_Serializer.DeSerialize(
+		auto result = m_Serializer.Deserialize(
 			std::span(
 				reinterpret_cast<const std::byte*>(buffer.data()),
 				buffer.size()),

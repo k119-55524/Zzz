@@ -1,4 +1,4 @@
-﻿#if Z_MACOS
+#if Z_MACOS
 
 #include "ConfigMacOS.h"
 
@@ -13,7 +13,7 @@ ConfigMacOS::ConfigMacOS()
 	return std::expected<void, std::string>{};
 }
 
-[[nodiscard]] std::expected<void, std::string> ConfigMacOS::DeSerialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s)
+[[nodiscard]] std::expected<void, std::string> ConfigMacOS::Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s)
 {
 	return std::expected<void, std::string>{};
 }

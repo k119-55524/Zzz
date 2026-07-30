@@ -19,6 +19,7 @@ macro(setup_common_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eLogMessageType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eWinResize.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/enum_to_string.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/guid.h
         ${CMAKE_CURRENT_SOURCE_DIR}/serialize/Serializer.h
         ${CMAKE_CURRENT_SOURCE_DIR}/serialize/Serializer.cpp
     )

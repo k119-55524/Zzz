@@ -11,7 +11,7 @@ ConfigEditor::ConfigEditor()
 	return {};
 }
 
-[[nodiscard]] std::expected<void, std::string> ConfigEditor::DeSerialize([[maybe_unused]] std::span<const std::byte> buffer, [[maybe_unused]] std::size_t& offset, [[maybe_unused]] const Serializer& s)
+[[nodiscard]] std::expected<void, std::string> ConfigEditor::Deserialize([[maybe_unused]] std::span<const std::byte> buffer, [[maybe_unused]] std::size_t& offset, [[maybe_unused]] const Serializer& s)
 {
 	return {};
 }

@@ -8,6 +8,7 @@
 #include "memory_utils.h"
 #include "enums/enum_to_string.h"
 #include "serialize/Serializer.h"
+#include "guid.h"
 #include "templates/double_buffered_vector.h"
 
 namespace zzz
