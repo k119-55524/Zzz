@@ -39,6 +39,11 @@ namespace zzz::core
 			return {};
 		}
 
+	private:
+		zFileHeader<3> m_Magic{};
+		Version m_Version{};
+		zU32 m_EntryCount = 0;
+
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override
 		{
@@ -72,10 +77,5 @@ namespace zzz::core
 
 			return {};
 		}
-
-	private:
-		zFileHeader<3> m_Magic{};
-		Version m_Version{};
-		zU32 m_EntryCount = 0;
 	};
 }
