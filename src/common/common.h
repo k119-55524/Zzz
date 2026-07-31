@@ -6,10 +6,10 @@
 #include "macroses.h"
 #include "constants.h"
 #include "memory_utils.h"
-#include "enums/enum_to_string.h"
+#include "enums/eEnumToString.h"
 #include "serialize/Serializer.h"
 #include "guid.h"
-#include "templates/double_buffered_vector.h"
+#include "templates/DoubleBufferedVector.h"
 #include "templates/Size2D.h"
 
 namespace zzz

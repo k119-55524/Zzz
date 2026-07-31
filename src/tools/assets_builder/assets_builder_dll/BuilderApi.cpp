@@ -1,6 +1,6 @@
 #include "BuilderApi.h"
 #include <common/constants.h>
-#include <common/package_format.h>
+#include <common/enums/ePackage.h>
 
 extern "C"
 {
@@ -17,9 +17,9 @@ extern "C"
 	BUILDER_API const uint8_t* GetGamePackageMagicBytes()
 	{
 		static const uint8_t magic[3] = {
-			static_cast<uint8_t>(zzz::common::c_GamePackageHeader[0]),
-			static_cast<uint8_t>(zzz::common::c_GamePackageHeader[1]),
-			static_cast<uint8_t>(zzz::common::c_GamePackageHeader[2])
+			static_cast<uint8_t>(zzz::common::c_GamePackageHeader.GetMagic()[0]),
+			static_cast<uint8_t>(zzz::common::c_GamePackageHeader.GetMagic()[1]),
+			static_cast<uint8_t>(zzz::common::c_GamePackageHeader.GetMagic()[2])
 		};
 		return magic;
 	}
@@ -41,21 +41,21 @@ extern "C"
 
 	BUILDER_API uint32_t GetAssetTypeProjectManifest()
 	{
-		return static_cast<uint32_t>(zzz::package::AssetType::ProjectManifest);
+		return static_cast<uint32_t>(zzz::common::ePackage::ProjectManifest);
 	}
 
 	BUILDER_API uint32_t GetAssetTypeScene()
 	{
-		return static_cast<uint32_t>(zzz::package::AssetType::Scene);
+		return static_cast<uint32_t>(zzz::common::ePackage::Scene);
 	}
 
 	BUILDER_API uint32_t GetAssetTypeView()
 	{
-		return static_cast<uint32_t>(zzz::package::AssetType::View);
+		return static_cast<uint32_t>(zzz::common::ePackage::View);
 	}
 
 	BUILDER_API uint32_t GetAssetTypeBinaryAsset()
 	{
-		return static_cast<uint32_t>(zzz::package::AssetType::BinaryAsset);
+		return static_cast<uint32_t>(zzz::common::ePackage::BinaryAsset);
 	}
 }

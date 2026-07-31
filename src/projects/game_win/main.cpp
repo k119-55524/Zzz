@@ -16,6 +16,9 @@ int APIENTRY wWinMain(
 	_In_		int			/*nCmdShow*/)
 {
 	CRT_LEAK_CHECK_BEGIN();
+#if defined(_DEBUG) && defined(_MSC_VER)
+	//_CrtSetBreakAlloc(292);
+#endif
 	int exitCode = 0;
 
 	{

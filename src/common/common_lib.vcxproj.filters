@@ -4,8 +4,17 @@
     <Filter Include="enums">
       <UniqueIdentifier>{6ca6ec27-b50a-42fc-8e4a-95c5c1815d74}</UniqueIdentifier>
     </Filter>
+    <Filter Include="io">
+      <UniqueIdentifier>{12345678-9abc-def0-1234-56789abcdef0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="package">
+      <UniqueIdentifier>{7a561e89-1234-4567-89ab-cdef01234567}</UniqueIdentifier>
+    </Filter>
     <Filter Include="serialize">
       <UniqueIdentifier>{4596b445-6677-4f6c-b3bf-1ca7b822c60c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="templates">
+      <UniqueIdentifier>{89abcde0-1234-5678-9abc-def012345678}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -24,8 +33,32 @@
     <ClInclude Include="enums\eWinResize.h">
       <Filter>enums</Filter>
     </ClInclude>
-    <ClInclude Include="enums\enum_to_string.h">
+    <ClInclude Include="enums\ePackage.h">
       <Filter>enums</Filter>
+    </ClInclude>
+    <ClInclude Include="enums\eEnumToString.h">
+      <Filter>enums</Filter>
+    </ClInclude>
+    <ClInclude Include="io\zFileHeader.h">
+      <Filter>io</Filter>
+    </ClInclude>
+    <ClInclude Include="templates\DoubleBufferedVector.h">
+      <Filter>templates</Filter>
+    </ClInclude>
+    <ClInclude Include="package\PackageHeader.h">
+      <Filter>package</Filter>
+    </ClInclude>
+    <ClInclude Include="package\PackageEntry.h">
+      <Filter>package</Filter>
+    </ClInclude>
+    <ClInclude Include="package\ViewData.h">
+      <Filter>package</Filter>
+    </ClInclude>
+    <ClInclude Include="package\ProjectManifestData.h">
+      <Filter>package</Filter>
+    </ClInclude>
+    <ClInclude Include="package\SceneData.h">
+      <Filter>package</Filter>
     </ClInclude>
     <ClInclude Include="guid.h" />
     <ClInclude Include="serialize\Serializer.h">

@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <cstring>
 #include <vector>
-#include <common/package_format.h>
+#include <common/enums/ePackage.h>
+#include <common/package/PackageHeader.h>
+#include <common/package/PackageEntry.h>
 #include <common/constants.h>
 
 namespace zzz::builder
@@ -28,7 +30,7 @@ namespace zzz::builder
 		{
 			pendingAssets.push_back({
 				"00000000-0000-0000-0000-000000000001",
-				static_cast<uint32_t>(zzz::package::AssetType::ProjectManifest),
+				static_cast<uint32_t>(zzz::common::ePackage::ProjectManifest),
 				projJsonPath
 			});
 		}
@@ -46,11 +48,11 @@ namespace zzz::builder
 
 				if (ext == ".zs")
 				{
-					typeVal = static_cast<uint32_t>(zzz::package::AssetType::Scene);
+					typeVal = static_cast<uint32_t>(zzz::common::ePackage::Scene);
 				}
 				else if (ext == ".zv")
 				{
-					typeVal = static_cast<uint32_t>(zzz::package::AssetType::View);
+					typeVal = static_cast<uint32_t>(zzz::common::ePackage::View);
 				}
 				else
 				{
@@ -97,14 +99,14 @@ namespace zzz::builder
 		if (!outFile.is_open())
 			return false;
 
-		zzz::package::PackageHeader header{};
-		header.entryCount = static_cast<uint32_t>(pendingAssets.size());
+		// Сначала вычисляем смещение первого payload.
+		// Размер сериализованного заголовка: 3 (magic) + 12 (version) + 4 (entryCount) = 19 байт.
+		// Размер каждой сериализованной записи PackageEntry: 16 (guid) + 4 (assetType) + 8 (offset) + 8 (size) = 36 байт.
+		constexpr uint64_t headerSize = 19;
+		constexpr uint64_t entrySize = 36;
+		uint64_t currentOffset = headerSize + (pendingAssets.size() * entrySize);
 
-		uint64_t headerSize = sizeof(zzz::package::PackageHeader);
-		uint64_t indexTableSize = pendingAssets.size() * sizeof(zzz::package::PackageEntry);
-		uint64_t currentOffset = headerSize + indexTableSize;
-
-		std::vector<zzz::package::PackageEntry> indexTable;
+		std::vector<zzz::core::PackageEntry> indexTable;
 		std::vector<std::vector<char>> payloads;
 
 		for (const auto& item : pendingAssets)
@@ -119,10 +121,9 @@ namespace zzz::builder
 			std::vector<char> buffer(fileSize);
 			inFile.read(buffer.data(), fileSize);
 
-			zzz::package::PackageEntry entry{};
-			const auto copyLen = (std::min)(item.guid.size(), sizeof(entry.guid) - 1);
-			std::memcpy(entry.guid, item.guid.data(), copyLen);
-			entry.guid[copyLen] = '\0';
+			zzz::core::PackageEntry entry{};
+			const auto copyLen = (std::min)(item.guid.size(), entry.guidBytes.size());
+			std::memcpy(entry.guidBytes.data(), item.guid.data(), copyLen);
 			entry.assetType = item.type;
 			entry.offset = currentOffset;
 			entry.size = fileSize;
@@ -133,15 +134,26 @@ namespace zzz::builder
 			currentOffset += fileSize;
 		}
 
-		// Записываем заголовок
-		header.entryCount = static_cast<uint32_t>(indexTable.size());
-		outFile.write(reinterpret_cast<const char*>(&header), sizeof(zzz::package::PackageHeader));
+		zzz::core::PackageHeader header(
+			c_GamePackageHeader,
+			Version{ c_GamePackageFileMajorVersion, c_GamePackageFileMinorVersion, c_GamePackageFilePatchVersion },
+			static_cast<uint32_t>(indexTable.size())
+		);
 
-		// Записываем таблицу индексов
+		// Сериализуем заголовок и таблицу индексов в буфер байт с помощью Serializer
+		Serializer serializer;
+		std::vector<std::byte> headerBuffer;
+		if (!serializer.Serialize(headerBuffer, header))
+			return false;
+
 		for (const auto& entry : indexTable)
 		{
-			outFile.write(reinterpret_cast<const char*>(&entry), sizeof(zzz::package::PackageEntry));
+			if (!serializer.Serialize(headerBuffer, entry))
+				return false;
 		}
+
+		// Записываем сериализованный заголовок и таблицу в файл
+		outFile.write(reinterpret_cast<const char*>(headerBuffer.data()), headerBuffer.size());
 
 		// Записываем блоки данных
 		for (const auto& payload : payloads)

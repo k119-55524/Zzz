@@ -2,16 +2,19 @@
 
 #include <array>
 #include <common/common.h>
+#include <common/io/zFileHeader.h>
 
 namespace zzz::common
 {
 #pragma region Config file constants
 	constexpr std::string_view c_ConfigFileName = "config.dat";
-	constexpr std::array<std::byte, 3> c_ConfigHeader
+	constexpr zzz::io::zFileHeader<3> c_ConfigHeader
 	{
-		static_cast<std::byte>(0x5A),	// 'Z'
-		static_cast<std::byte>(0x5A),	// 'Z'
-		static_cast<std::byte>(0x5A)	// 'Z'
+		std::array<std::byte, 3>{
+			static_cast<std::byte>('Z'),
+			static_cast<std::byte>('Z'),
+			static_cast<std::byte>('Z')
+		}
 	};
 	constexpr zU8 c_ConfigFileMajorVersion = 1;
 	constexpr zU8 c_ConfigFileMinorVersion = 0;
@@ -23,11 +26,13 @@ namespace zzz::common
 
 #pragma region Game Package file constants
 	constexpr std::string_view c_GamePackageFileName = "assets/package.dat";
-	constexpr std::array<std::byte, 3> c_GamePackageHeader
+	constexpr zzz::io::zFileHeader<3> c_GamePackageHeader
 	{
-		static_cast<std::byte>(0x5A),	// 'Z'
-		static_cast<std::byte>(0x5A),	// 'Z'
-		static_cast<std::byte>(0x50)	// 'P'
+		std::array<std::byte, 3>{
+			static_cast<std::byte>('Z'),
+			static_cast<std::byte>('Z'),
+			static_cast<std::byte>('P')
+		}
 	};
 	constexpr zU8 c_GamePackageFileMajorVersion = 1;
 	constexpr zU8 c_GamePackageFileMinorVersion = 0;

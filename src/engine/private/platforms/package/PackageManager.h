@@ -1,14 +1,17 @@
 #pragma once
 
 #include <map>
-#include <string>
 #include <vector>
 #include <filesystem>
-#include <common/package_format.h>
+#include <common/enums/ePackage.h>
+#include <common/package/PackageHeader.h>
+#include <common/package/PackageEntry.h>
 
 #include "../core/io/Path.h"
 
 using namespace zzz::io;
+using namespace zzz::core;
+using namespace zzz::common;
 
 namespace zzz::engine
 {
@@ -19,19 +22,19 @@ namespace zzz::engine
 		PackageManager(const Path& path);
 		~PackageManager() = default;
 
-		[[nodiscard]] const std::map<zzz::package::AssetType, std::vector<zzz::package::PackageEntry>>& GetEntriesByType() const noexcept { return m_EntriesByType; }
+		[[nodiscard]] const std::map<ePackage, std::vector<PackageEntry>>& GetEntriesByType() const noexcept { return m_EntriesByType; }
 
 	private:
 		void Initialize(const Path& path);
 		void LogPackageEntriesSummary(const std::filesystem::path& packagePath) const;
 
-		std::map<zzz::package::AssetType, std::vector<zzz::package::PackageEntry>> m_EntriesByType;
-		zzz::package::PackageHeader m_Header;
+		PackageHeader m_Header;
+		std::map<ePackage, std::vector<PackageEntry>> m_EntriesByType;
 
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-		void LogProjectManifestDetails(const std::filesystem::path& packagePath, const zzz::package::PackageEntry& entry) const;
-		void LogSceneDetails(const std::filesystem::path& packagePath, const zzz::package::PackageEntry& entry) const;
-		void LogViewDetails(const std::filesystem::path& packagePath, const zzz::package::PackageEntry& entry) const;
+		void LogProjectManifestDetails(const std::filesystem::path& packagePath, const PackageEntry& entry) const;
+		void LogSceneDetails(const std::filesystem::path& packagePath, const PackageEntry& entry) const;
+		void LogViewDetails(const std::filesystem::path& packagePath, const PackageEntry& entry) const;
 #endif // Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 	};
 }

@@ -1,0 +1,58 @@
+#pragma once
+
+#include <array>
+#include <span>
+#include <vector>
+#include <string>
+#include <expected>
+#include <cstddef>
+#include <common/serialize/Serializer.h>
+
+using namespace zzz::common;
+
+namespace zzz::io
+{
+	template<std::size_t N>
+	class zFileHeader final : public ISerializable
+	{
+	public:
+		constexpr zFileHeader() = default;
+		constexpr explicit zFileHeader(const std::array<std::byte, N>& magic) noexcept
+			: m_Magic(magic)
+		{}
+
+		[[nodiscard]] constexpr const std::array<std::byte, N>& GetMagic() const noexcept
+		{
+			return m_Magic;
+		}
+
+		constexpr void SetMagic(const std::array<std::byte, N>& magic) noexcept
+		{
+			m_Magic = magic;
+		}
+
+		[[nodiscard]] constexpr bool operator==(const zFileHeader& other) const noexcept
+		{
+			return m_Magic == other.m_Magic;
+		}
+
+		[[nodiscard]] constexpr bool operator==(const std::array<std::byte, N>& expectedMagic) const noexcept
+		{
+			return m_Magic == expectedMagic;
+		}
+
+	protected:
+		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override
+		{
+			return serializer.Serialize(buffer, m_Magic);
+		}
+
+		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& serializer) override
+		{
+			return serializer.Deserialize(buffer, offset, m_Magic);
+		}
+
+	private:
+		std::array<std::byte, N> m_Magic = {};
+	};
+}

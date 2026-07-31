@@ -65,6 +65,8 @@ void Engine::Shutdown()
 
 		m_Time = nullptr;
 		m_Platform = nullptr;
+		m_PackageManager = nullptr;
+		m_Path = nullptr;
 	}
 	catch (const std::exception& e)
 	{
