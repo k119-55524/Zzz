@@ -2,6 +2,7 @@
 #include "EngineConfig.h"
 #include <common/constants.h>
 
+using namespace zzz::io;
 using namespace zzz::engine;
 
 EngineConfig::EngineConfig() :
@@ -18,7 +19,7 @@ EngineConfig::EngineConfig() :
 
 [[nodiscard]] std::expected<void, std::string> EngineConfig::Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s)
 {
-	std::array<std::byte, c_ConfigHeader.size()> header;
+	zFileHeader<3> header{};
 
 	return s.Deserialize(buffer, offset, header)
 		.and_then([&]() -> std::expected<void, std::string>

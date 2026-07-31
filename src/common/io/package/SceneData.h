@@ -2,13 +2,15 @@
 
 #include <string>
 #include <common/guid.h>
+#include <common/io/IFileBlockLoggable.h>
 #include <common/serialize/Serializer.h>
 
+using namespace zzz::io;
 using namespace zzz::common;
 
 namespace zzz::core
 {
-	class SceneData final : public ISerializable
+	class SceneData final : public ISerializable, public IFileBlockLoggable
 	{
 	public:
 		SceneData() = default;
@@ -19,6 +21,13 @@ namespace zzz::core
 
 		std::string name;
 		Guid sceneScriptGuid;
+
+		void LogFileBlock() const override
+		{
+#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+			DOut("           [SceneData] Имя сцены: '{}' | Скрипт сцены GUID: {}", name, sceneScriptGuid.ToString());
+#endif
+		}
 
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override

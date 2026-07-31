@@ -45,20 +45,23 @@
     <ClInclude Include="templates\DoubleBufferedVector.h">
       <Filter>templates</Filter>
     </ClInclude>
-    <ClInclude Include="package\PackageHeader.h">
-      <Filter>package</Filter>
+    <ClInclude Include="io\IFileBlockLoggable.h">
+      <Filter>io</Filter>
     </ClInclude>
-    <ClInclude Include="package\PackageEntry.h">
-      <Filter>package</Filter>
+    <ClInclude Include="io\package\PackageHeader.h">
+      <Filter>io</Filter>
     </ClInclude>
-    <ClInclude Include="package\ViewData.h">
-      <Filter>package</Filter>
+    <ClInclude Include="io\package\PackageEntry.h">
+      <Filter>io</Filter>
     </ClInclude>
-    <ClInclude Include="package\ProjectManifestData.h">
-      <Filter>package</Filter>
+    <ClInclude Include="io\package\ViewData.h">
+      <Filter>io</Filter>
     </ClInclude>
-    <ClInclude Include="package\SceneData.h">
-      <Filter>package</Filter>
+    <ClInclude Include="io\package\ProjectManifestData.h">
+      <Filter>io</Filter>
+    </ClInclude>
+    <ClInclude Include="io\package\SceneData.h">
+      <Filter>io</Filter>
     </ClInclude>
     <ClInclude Include="guid.h" />
     <ClInclude Include="serialize\Serializer.h">

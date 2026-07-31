@@ -21,10 +21,26 @@ public class ProjectManifestSerializer : IAssetSerializer
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;
 
-        string gameScript = root.TryGetProperty("game_script", out var gsProp) ? gsProp.GetString() ?? "" : "";
+        // Write GameScripts GUIDs array (16 bytes binary each)
+        var gameScriptsList = new List<string>();
+        if (root.TryGetProperty("game_scripts", out var gsArr) && gsArr.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var elem in gsArr.EnumerateArray())
+            {
+                if (elem.GetString() is string gsGuid)
+                    gameScriptsList.Add(gsGuid);
+            }
+        }
+        else if (root.TryGetProperty("game_script", out var gsProp) && gsProp.GetString() is string singleScript && !string.IsNullOrEmpty(singleScript))
+        {
+            gameScriptsList.Add(singleScript);
+        }
 
-        // Write GameScript GUID (16 bytes binary)
-        writer.WriteGuid(gameScript);
+        writer.Write((uint)gameScriptsList.Count);
+        foreach (var gsGuid in gameScriptsList)
+        {
+            writer.WriteGuid(gsGuid);
+        }
 
         // Write Scenes GUIDs array (16 bytes binary each)
         var scenesList = new List<string>();

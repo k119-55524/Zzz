@@ -24,8 +24,21 @@ public class ProjectJsonValidator : IAssetValidator
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
-            // 1. Проверка главного скрипта игры (game_script) — ТРЕБУЕТСЯ СТРОГИЙ GUID
-            if (root.TryGetProperty("game_script", out var gameScriptProp))
+            // 1. Проверка главных скриптов игры (game_scripts или game_script) — ТРЕБУЕТСЯ СТРОГИЙ GUID
+            if (root.TryGetProperty("game_scripts", out var gameScriptsProp) && gameScriptsProp.ValueKind == JsonValueKind.Array)
+            {
+                int index = 0;
+                foreach (var scriptElem in gameScriptsProp.EnumerateArray())
+                {
+                    index++;
+                    string scriptRef = scriptElem.GetString() ?? string.Empty;
+                    if (!string.IsNullOrEmpty(scriptRef))
+                    {
+                        ValidateStrictGuid(filePath, "project.json", $"game_scripts[{index}]", scriptRef, "script", guidToFileMap, guidToTypeMap, scriptNameToGuidMap, result);
+                    }
+                }
+            }
+            else if (root.TryGetProperty("game_script", out var gameScriptProp))
             {
                 string scriptRef = gameScriptProp.GetString() ?? string.Empty;
                 if (!string.IsNullOrEmpty(scriptRef))
@@ -35,7 +48,7 @@ public class ProjectJsonValidator : IAssetValidator
             }
             else
             {
-                result.AddError(filePath, "project.json: Отсутствует обязательное поле 'game_script'.");
+                result.AddError(filePath, "project.json: Отсутствует обязательное поле 'game_scripts' или 'game_script'.");
             }
 
             // 2. Проверка начальных сцен (scenes) — ТРЕБУЕТСЯ СТРОГИЙ GUID
@@ -103,7 +116,12 @@ public class ProjectJsonValidator : IAssetValidator
         else
         {
             string actualType = guidToTypeMap.GetValueOrDefault(referenceValue, string.Empty);
-            if (!actualType.Equals(expectedType, StringComparison.OrdinalIgnoreCase))
+            bool isScriptTypeMatch = expectedType.Equals("script", StringComparison.OrdinalIgnoreCase) &&
+                                     (actualType.Equals("script", StringComparison.OrdinalIgnoreCase) ||
+                                      actualType.Equals("h", StringComparison.OrdinalIgnoreCase) ||
+                                      actualType.Equals("hpp", StringComparison.OrdinalIgnoreCase));
+
+            if (!actualType.Equals(expectedType, StringComparison.OrdinalIgnoreCase) && !isScriptTypeMatch)
             {
                 result.AddError(filePath, $"{fileName}: Поле '{fieldName}' ссылается на GUID '{referenceValue}' типа '{actualType}' вместо ожидаемого типа '{expectedType}'!");
             }

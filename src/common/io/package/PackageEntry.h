@@ -1,13 +1,15 @@
 #pragma once
 
 #include <common/guid.h>
+#include <common/io/IFileBlockLoggable.h>
 #include <common/serialize/Serializer.h>
 
+using namespace zzz::io;
 using namespace zzz::common;
 
 namespace zzz::core
 {
-	class PackageEntry final : public ISerializable
+	class PackageEntry final : public ISerializable, public IFileBlockLoggable
 	{
 	public:
 		PackageEntry() = default;
@@ -22,6 +24,14 @@ namespace zzz::core
 		zU32 assetType = 0;
 		zU64 offset = 0;
 		zU64 size = 0;
+
+		void LogFileBlock() const override
+		{
+#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+			DOut("        [PackageEntry] GUID: {} | Тип: {} | Смещение: {} байт | Размер: {} байт",
+				guid.ToString(), assetType, offset, size);
+#endif
+		}
 
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override

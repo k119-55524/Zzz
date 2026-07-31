@@ -4,13 +4,15 @@
 #include <vector>
 #include <common/guid.h>
 #include <common/templates/Size2D.h>
+#include <common/io/IFileBlockLoggable.h>
 #include <common/serialize/Serializer.h>
 
+using namespace zzz::io;
 using namespace zzz::common;
 
 namespace zzz::core
 {
-	class ViewData final : public ISerializable
+	class ViewData final : public ISerializable, public IFileBlockLoggable
 	{
 	public:
 		ViewData() = default;
@@ -25,6 +27,18 @@ namespace zzz::core
 		Size2D<zU32> size;
 		Guid sceneGuid;
 		std::vector<Guid> uiScriptGuids;
+
+		void LogFileBlock() const override
+		{
+#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+			DOut("           [ViewData] '{}' | Размер: {}x{} | Сцена GUID: {}", name, size.width, size.height, sceneGuid.ToString());
+			DOut("           [ViewData] Прикрепленных UI-скриптов: {}", uiScriptGuids.size());
+			for (zU32 i = 0; i < uiScriptGuids.size(); ++i)
+			{
+				DOut("             UI Script #{}: {}", i, uiScriptGuids[i].ToString());
+			}
+#endif
+		}
 
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override

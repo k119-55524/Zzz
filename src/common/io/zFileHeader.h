@@ -21,6 +21,9 @@ namespace zzz::io
 			: m_Magic(magic)
 		{}
 
+		[[nodiscard]] constexpr static std::size_t size() noexcept { return N; }
+		[[nodiscard]] constexpr static std::size_t Size() noexcept { return N; }
+
 		[[nodiscard]] constexpr const std::array<std::byte, N>& GetMagic() const noexcept
 		{
 			return m_Magic;
@@ -29,6 +32,17 @@ namespace zzz::io
 		constexpr void SetMagic(const std::array<std::byte, N>& magic) noexcept
 		{
 			m_Magic = magic;
+		}
+
+		[[nodiscard]] std::string ToString() const
+		{
+			std::string str;
+			str.reserve(N);
+			for (const auto& b : m_Magic)
+			{
+				str.push_back(static_cast<char>(b));
+			}
+			return str;
 		}
 
 		[[nodiscard]] constexpr bool operator==(const zFileHeader& other) const noexcept

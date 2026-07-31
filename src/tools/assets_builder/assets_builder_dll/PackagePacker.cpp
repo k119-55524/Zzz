@@ -4,8 +4,8 @@
 #include <cstring>
 #include <vector>
 #include <common/enums/ePackage.h>
-#include <common/package/PackageHeader.h>
-#include <common/package/PackageEntry.h>
+#include <common/io/package/PackageHeader.h>
+#include <common/io/package/PackageEntry.h>
 #include <common/constants.h>
 
 namespace zzz::builder

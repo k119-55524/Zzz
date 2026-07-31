@@ -4,8 +4,8 @@
 #include <vector>
 #include <filesystem>
 #include <common/enums/ePackage.h>
-#include <common/package/PackageHeader.h>
-#include <common/package/PackageEntry.h>
+#include <common/io/package/PackageHeader.h>
+#include <common/io/package/PackageEntry.h>
 
 #include "../core/io/Path.h"
 
@@ -32,9 +32,7 @@ namespace zzz::engine
 		std::map<ePackage, std::vector<PackageEntry>> m_EntriesByType;
 
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-		void LogProjectManifestDetails(const std::filesystem::path& packagePath, const PackageEntry& entry) const;
-		void LogSceneDetails(const std::filesystem::path& packagePath, const PackageEntry& entry) const;
-		void LogViewDetails(const std::filesystem::path& packagePath, const PackageEntry& entry) const;
+		void LogAssetDetails(const std::filesystem::path& packagePath, const PackageEntry& entry) const;
 #endif // Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 	};
 }

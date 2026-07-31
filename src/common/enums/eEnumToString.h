@@ -3,6 +3,7 @@
 #include <string_view>
 #include "eLogMessageType.h"
 #include "eWinResize.h"
+#include "ePackage.h"
 #include "../macroses.h"
 #include "../throw_wrappers.h"
 
@@ -36,6 +37,18 @@ namespace zzz::common
 			case eWinResize::Resize: return "RESIZE";
 			}
 			THROW_RUNTIME("Необработанный eWinResize");
+		}
+
+		static constexpr std::string_view ToString(ePackage type)
+		{
+			switch (type)
+			{
+			case ePackage::ProjectManifest: return "ProjectManifest";
+			case ePackage::Scene:           return "Scene";
+			case ePackage::View:            return "View";
+			case ePackage::BinaryAsset:     return "BinaryAsset";
+			}
+			THROW_RUNTIME("Необработанный ePackage");
 		}
 	};
 }

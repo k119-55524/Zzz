@@ -1,7 +1,11 @@
 {
   "name": "zzz_assets_test_000",
   "version": "1.0.0",
-  "game_script": "ea7db1a4-97e2-48a9-8b36-cdf455e2ff68",
+  "game_scripts": [
+    "a8f94d12-e5b1-4c92-bf38-71e4029410ad",
+    "b73c891e-42f0-410a-9d66-88c9a3b01e74",
+    "f4710b65-c9e8-4632-8419-3d027f918e2c"
+  ],
   "scenes": [
     "3cbf41ff-f608-47ca-b383-ea5698648aca"
   ],

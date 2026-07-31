@@ -1,11 +1,11 @@
 #pragma once
 #include <GameScript.h>
 
-class SampleGameScript : public zzz::script::GameScript
+class GlobalGameScript_000 : public zzz::script::GameScript
 {
 public:
 	using GameScript::GameScript;
-	const char* GetScriptTypeName() const override { return "SampleGameScript"; }
+	const char* GetScriptTypeName() const override { return "GlobalGameScript_000"; }
 	void OnBindEvents() override;
 
 	void OnInit();

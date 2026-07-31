@@ -45,10 +45,13 @@ public static class PackagePacker
 			{
 				foreach (var file in Directory.GetFiles(sourceDir, "*.*", SearchOption.AllDirectories))
 				{
+					string fileName = Path.GetFileName(file);
 					string ext = Path.GetExtension(file).ToLowerInvariant();
 					uint typeVal = 0;
 
-					if (ext == ".zs")
+					if (fileName.Equals(AssetExtensions.ProjectJsonName, StringComparison.OrdinalIgnoreCase))
+						typeVal = PackageAssetTypes.ProjectManifest;
+					else if (ext == ".zs")
 						typeVal = PackageAssetTypes.Scene;
 					else if (ext == ".zv")
 						typeVal = PackageAssetTypes.View;
