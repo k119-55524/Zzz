@@ -121,12 +121,13 @@ namespace zzz::builder
 			std::vector<char> buffer(fileSize);
 			inFile.read(buffer.data(), fileSize);
 
-			zzz::core::PackageEntry entry{};
-			const auto copyLen = (std::min)(item.guid.size(), entry.guidBytes.size());
-			std::memcpy(entry.guidBytes.data(), item.guid.data(), copyLen);
-			entry.assetType = item.type;
-			entry.offset = currentOffset;
-			entry.size = fileSize;
+			auto parsedGuid = Guid::Parse(item.guid);
+			zzz::core::PackageEntry entry(
+				parsedGuid ? *parsedGuid : Guid{},
+				item.type,
+				currentOffset,
+				fileSize
+			);
 
 			indexTable.push_back(entry);
 			payloads.push_back(std::move(buffer));

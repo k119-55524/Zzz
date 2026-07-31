@@ -23,27 +23,14 @@ namespace zzz::core
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override
 		{
-			auto res = serializer.Serialize(buffer, name);
-			if (!res)
-				return res;
-
-			res = serializer.Serialize(buffer, sceneScriptGuid);
-			if (!res)
-				return res;
-
-			return {};
+			return serializer.Serialize(buffer, name)
+				.and_then([&]() { return serializer.Serialize(buffer, sceneScriptGuid); });
 		}
+
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& serializer) override
 		{
-			auto res = serializer.Deserialize(buffer, offset, name);
-			if (!res)
-				return res;
-
-			res = serializer.Deserialize(buffer, offset, sceneScriptGuid);
-			if (!res)
-				return res;
-
-			return {};
+			return serializer.Deserialize(buffer, offset, name)
+				.and_then([&]() { return serializer.Deserialize(buffer, offset, sceneScriptGuid); });
 		}
 	};
 }

@@ -47,35 +47,16 @@ namespace zzz::core
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override
 		{
-			auto res = serializer.Serialize(buffer, m_Magic);
-			if (!res)
-				return res;
-
-			res = serializer.Serialize(buffer, m_Version);
-			if (!res)
-				return res;
-
-			res = serializer.Serialize(buffer, m_EntryCount);
-			if (!res)
-				return res;
-
-			return {};
+			return serializer.Serialize(buffer, m_Magic)
+				.and_then([&]() { return serializer.Serialize(buffer, m_Version); })
+				.and_then([&]() { return serializer.Serialize(buffer, m_EntryCount); });
 		}
+
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& serializer) override
 		{
-			auto res = serializer.Deserialize(buffer, offset, m_Magic);
-			if (!res)
-				return res;
-
-			res = serializer.Deserialize(buffer, offset, m_Version);
-			if (!res)
-				return res;
-
-			res = serializer.Deserialize(buffer, offset, m_EntryCount);
-			if (!res)
-				return res;
-
-			return {};
+			return serializer.Deserialize(buffer, offset, m_Magic)
+				.and_then([&]() { return serializer.Deserialize(buffer, offset, m_Version); })
+				.and_then([&]() { return serializer.Deserialize(buffer, offset, m_EntryCount); });
 		}
 	};
 }
