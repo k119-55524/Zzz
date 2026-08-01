@@ -12,7 +12,7 @@ namespace zzz::core
 	public:
 		PrefabData() = default;
 
-		void LogFileBlock() const
+		inline void LogFileBlock() const
 		{
 			DOut("           [PrefabData] Префаб");
 		}

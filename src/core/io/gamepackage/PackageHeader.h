@@ -28,13 +28,10 @@ namespace zzz::core
 		[[nodiscard]] const FileHeader<3>& GetMagic() const noexcept { return m_Magic; }
 		[[nodiscard]] const Version& GetVersion() const noexcept { return m_Version; }
 		[[nodiscard]] zU32 GetEntryCount() const noexcept { return m_EntryCount; }
-
-		void SetEntryCount(zU32 count) noexcept { m_EntryCount = count; }
-
 		[[nodiscard]] std::expected<void, std::string> Validate() const
 		{
 			if (m_Magic != c_GamePackageHeader)
-				return std::unexpected("Некорректная сигнатура (magic) заголовка пакета");
+				return std::unexpected("Некорректная сигнатура заголовка");
 
 			return {};
 		}

@@ -20,7 +20,7 @@ namespace zzz::core
 
 		[[nodiscard]] const std::vector<Guid>& GetSceneScriptGuids() const noexcept { return sceneScriptGuids; }
 
-		void LogFileBlock() const
+		inline void LogFileBlock() const
 		{
 			DOut("           [SceneData] Скрипты({})", sceneScriptGuids.size());
 			for (zU32 i = 0; i < sceneScriptGuids.size(); ++i)
@@ -47,7 +47,6 @@ namespace zzz::core
 					return {};
 				});
 		}
-
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& serializer) override
 		{
 			zU32 scriptsCount = 0;

@@ -23,7 +23,7 @@ namespace zzz::core
 		[[nodiscard]] const std::vector<Guid>& GetSceneGuids() const noexcept { return sceneGuids; }
 		[[nodiscard]] const std::vector<Guid>& GetViewGuids() const noexcept { return viewGuids; }
 
-		void LogFileBlock(std::string_view = {}) const
+		inline void LogFileBlock(std::string_view = {}) const
 		{
 			DOut("           [ProjectManifest] Зарегистрировано глобальных скриптов (GameScripts): {}", gameScriptGuids.size());
 			for (zU32 i = 0; i < gameScriptGuids.size(); ++i)
