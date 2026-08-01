@@ -26,52 +26,20 @@
     <ClInclude Include="Macroses.h" />
     <ClInclude Include="MemoryUtils.h" />
     <ClInclude Include="ThrowWrappers.h" />
-    <ClInclude Include="Types.h" />
-    <ClInclude Include="enums\eLogMessageType.h">
+    <ClInclude Include="Enums\eLogMessageType.h">
       <Filter>enums</Filter>
     </ClInclude>
-    <ClInclude Include="enums\eWinResize.h">
+    <ClInclude Include="Enums\eWinResize.h">
       <Filter>enums</Filter>
     </ClInclude>
-    <ClInclude Include="enums\ePackage.h">
-      <Filter>enums</Filter>
-    </ClInclude>
-    <ClInclude Include="enums\eEnumToString.h">
-      <Filter>enums</Filter>
-    </ClInclude>
-    <ClInclude Include="io\zFileHeader.h">
-      <Filter>io</Filter>
-    </ClInclude>
-    <ClInclude Include="templates\DoubleBufferedVector.h">
+    <ClInclude Include="Templates\DoubleBufferedVector.h">
       <Filter>templates</Filter>
     </ClInclude>
-    <ClInclude Include="io\package\PackageHeader.h">
-      <Filter>io</Filter>
-    </ClInclude>
-    <ClInclude Include="io\package\PackageEntry.h">
-      <Filter>io</Filter>
-    </ClInclude>
-    <ClInclude Include="io\package\ViewData.h">
-      <Filter>io</Filter>
-    </ClInclude>
-    <ClInclude Include="io\package\ProjectManifestData.h">
-      <Filter>io</Filter>
-    </ClInclude>
-    <ClInclude Include="io\package\SceneData.h">
-      <Filter>io</Filter>
-    </ClInclude>
-    <ClInclude Include="io\package\PrefabData.h">
-      <Filter>io</Filter>
-    </ClInclude>
-    <ClInclude Include="guid.h" />
-    <ClInclude Include="serialize\Serializer.h">
-      <Filter>serialize</Filter>
+    <ClInclude Include="Templates\Size2D.h">
+      <Filter>templates</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="throw_wrappers.cpp" />
-    <ClCompile Include="serialize\Serializer.cpp">
-      <Filter>serialize</Filter>
-    </ClCompile>
+    <ClCompile Include="ThrowWrappers.cpp" />
   </ItemGroup>
 </Project>

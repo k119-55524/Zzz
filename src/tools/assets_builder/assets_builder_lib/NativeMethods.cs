@@ -38,6 +38,6 @@ internal static class NativeMethods
     [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
     public static extern uint GetAssetTypePrefab();
 
-    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-    public static extern uint GetAssetTypeBinaryAsset();
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    public static extern bool PackProjectNative(string sourceDir, string destinationDir);
 }

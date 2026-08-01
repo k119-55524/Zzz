@@ -7,6 +7,9 @@
 using namespace zzz::io;
 using namespace zzz::common;
 
+#include <core/Enums/ePackage.h>
+#include <core/Enums/eEnumToString.h>
+
 namespace zzz::core
 {
 	class PackageEntry final : public ISerializable
@@ -21,19 +24,24 @@ namespace zzz::core
 			, size(size)
 		{}
 
+		[[nodiscard]] const std::string& GetName() const noexcept { return name; }
+		[[nodiscard]] const Guid& GetGuid() const noexcept { return guid; }
+		[[nodiscard]] zU32 GetAssetType() const noexcept { return assetType; }
+		[[nodiscard]] zU64 GetOffset() const noexcept { return offset; }
+		[[nodiscard]] zU64 GetSize() const noexcept { return size; }
+
+		inline void LogFileBlock() const 
+		{ 
+			DOut("        [PackageEntry] Имя: '{}' | GUID: {} | Тип: {} | Смещение: {} байт | Размер: {} байт", 
+				name, guid.ToString(), EnumToString::ToString(static_cast<ePackage>(assetType)), offset, size); 
+		}
+
+	private:
 		std::string name;
 		Guid guid{};
 		zU32 assetType = 0;
 		zU64 offset = 0;
 		zU64 size = 0;
-
-		void LogFileBlock() const
-		{
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-			DOut("        [PackageEntry] Имя: '{}' | GUID: {} | Тип: {} | Смещение: {} байт | Размер: {} байт",
-				name, guid.ToString(), assetType, offset, size);
-#endif
-		}
 
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override
@@ -44,7 +52,6 @@ namespace zzz::core
 				.and_then([&]() { return serializer.Serialize(buffer, offset); })
 				.and_then([&]() { return serializer.Serialize(buffer, size); });
 		}
-
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset_, const Serializer& serializer) override
 		{
 			return serializer.Deserialize(buffer, offset_, name)

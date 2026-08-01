@@ -2,6 +2,8 @@
 #include <core/Constants.h>
 #include <core/Enums/ePackage.h>
 
+#include "PackagePacker.h"
+
 extern "C"
 {
 	BUILDER_API const char* GetBuilderEngineVersion()
@@ -62,5 +64,11 @@ extern "C"
 	BUILDER_API uint32_t GetAssetTypeBinaryAsset()
 	{
 		return static_cast<uint32_t>(zzz::common::ePackage::BinaryAsset);
+	}
+
+	BUILDER_API bool PackProjectNative(const char* sourceDir, const char* destinationDir)
+	{
+		if (!sourceDir || !destinationDir) return false;
+		return zzz::builder::PackagePacker::PackProject(sourceDir, destinationDir);
 	}
 }

@@ -39,12 +39,7 @@ namespace zzz::core
 			return {};
 		}
 
-		void LogFileBlock() const
-		{
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-			DOut("[PackageHeader] Сигнатура: {} | Версия: {} | Количество записей: {}", m_Magic.ToString(), m_Version.ToString(), m_EntryCount);
-#endif
-		}
+		inline void LogFileBlock() const { DOut("[PackageHeader] Сигнатура: {} | Версия: {} | Количество записей: {}", m_Magic.ToString(), m_Version.ToString(), m_EntryCount); }
 
 	private:
 		FileHeader<3> m_Magic{};
@@ -58,7 +53,6 @@ namespace zzz::core
 				.and_then([&]() { return serializer.Serialize(buffer, m_Version); })
 				.and_then([&]() { return serializer.Serialize(buffer, m_EntryCount); });
 		}
-
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& serializer) override
 		{
 			return serializer.Deserialize(buffer, offset, m_Magic)

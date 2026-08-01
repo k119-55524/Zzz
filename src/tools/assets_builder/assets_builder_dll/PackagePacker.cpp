@@ -3,14 +3,22 @@
 #include <algorithm>
 #include <cstring>
 #include <vector>
+#include <json.hpp>
+
+#include <logger/logger.h>
 #include <core/Enums/ePackage.h>
 #include <core/IO/GamePackage/PackageHeader.h>
 #include <core/IO/GamePackage/PackageEntry.h>
+#include <core/IO/GamePackage/ProjectManifestData.h>
+#include <core/IO/GamePackage/SceneData.h>
+#include <core/IO/GamePackage/ViewData.h>
+#include <core/IO/GamePackage/PrefabData.h>
 #include <core/Constants.h>
 
 namespace zzz::builder
 {
 	namespace fs = std::filesystem;
+	using json = nlohmann::json;
 
 	struct PendingAsset
 	{
@@ -20,13 +28,168 @@ namespace zzz::builder
 		fs::path filePath;
 	};
 
+	static std::vector<std::byte> SerializeAssetToBinary(const PendingAsset& item)
+	{
+		Serializer serializer;
+		std::vector<std::byte> result;
+
+		try
+		{
+			std::ifstream inFile(item.filePath);
+			if (!inFile.is_open())
+				return {};
+
+			json root = json::parse(inFile, nullptr, false);
+			if (root.is_discarded())
+			{
+				// Если это невалидный JSON, читаем как обычный бинарник
+				std::ifstream rawFile(item.filePath, std::ios::binary | std::ios::ate);
+				if (!rawFile.is_open()) return {};
+				uint64_t size = static_cast<uint64_t>(rawFile.tellg());
+				rawFile.seekg(0, std::ios::beg);
+				result.resize(size);
+				rawFile.read(reinterpret_cast<char*>(result.data()), size);
+				return result;
+			}
+
+			auto assetType = static_cast<zzz::common::ePackage>(item.type);
+
+			if (assetType == zzz::common::ePackage::ProjectManifest)
+			{
+				std::vector<Guid> gameScriptGuids;
+				if (root.contains("game_scripts") && root["game_scripts"].is_array())
+				{
+					for (const auto& elem : root["game_scripts"])
+					{
+						if (elem.is_string())
+						{
+							if (auto parsed = Guid::Parse(elem.get<std::string>()))
+								gameScriptGuids.push_back(*parsed);
+						}
+					}
+				}
+				else if (root.contains("game_script") && root["game_script"].is_string())
+				{
+					if (auto parsed = Guid::Parse(root["game_script"].get<std::string>()))
+						gameScriptGuids.push_back(*parsed);
+				}
+
+				std::vector<Guid> sceneGuids;
+				if (root.contains("scenes") && root["scenes"].is_array())
+				{
+					for (const auto& elem : root["scenes"])
+					{
+						if (elem.is_string())
+						{
+							if (auto parsed = Guid::Parse(elem.get<std::string>()))
+								sceneGuids.push_back(*parsed);
+						}
+					}
+				}
+
+				std::vector<Guid> viewGuids;
+				if (root.contains("views") && root["views"].is_array())
+				{
+					for (const auto& elem : root["views"])
+					{
+						if (elem.is_string())
+						{
+							if (auto parsed = Guid::Parse(elem.get<std::string>()))
+								viewGuids.push_back(*parsed);
+						}
+					}
+				}
+
+				zzz::core::ProjectManifestData manifestData(gameScriptGuids, sceneGuids, viewGuids);
+				serializer.Serialize(result, manifestData);
+			}
+			else if (assetType == zzz::common::ePackage::Scene)
+			{
+				std::vector<Guid> sceneScriptGuids;
+				if (root.contains("scripts") && root["scripts"].is_array())
+				{
+					for (const auto& elem : root["scripts"])
+					{
+						if (elem.is_string())
+						{
+							if (auto parsed = Guid::Parse(elem.get<std::string>()))
+								sceneScriptGuids.push_back(*parsed);
+						}
+					}
+				}
+				else if (root.contains("script") && root["script"].is_string())
+				{
+					if (auto parsed = Guid::Parse(root["script"].get<std::string>()))
+						sceneScriptGuids.push_back(*parsed);
+				}
+
+				zzz::core::SceneData sceneData(sceneScriptGuids);
+				serializer.Serialize(result, sceneData);
+			}
+			else if (assetType == zzz::common::ePackage::View)
+			{
+				zU32 width = root.value("width", 800u);
+				zU32 height = root.value("height", 600u);
+
+				Guid sceneGuid{};
+				if (root.contains("scene") && root["scene"].is_string())
+				{
+					if (auto parsed = Guid::Parse(root["scene"].get<std::string>()))
+						sceneGuid = *parsed;
+				}
+
+				std::vector<Guid> uiScriptGuids;
+				if (root.contains("scripts") && root["scripts"].is_array())
+				{
+					for (const auto& elem : root["scripts"])
+					{
+						if (elem.is_string())
+						{
+							if (auto parsed = Guid::Parse(elem.get<std::string>()))
+								uiScriptGuids.push_back(*parsed);
+						}
+					}
+				}
+
+				zzz::core::ViewData viewData(Size2D<zU32>{ width, height }, sceneGuid, uiScriptGuids);
+				serializer.Serialize(result, viewData);
+			}
+			else if (assetType == zzz::common::ePackage::Prefab)
+			{
+				zzz::core::PrefabData prefabData;
+				serializer.Serialize(result, prefabData);
+			}
+			else
+			{
+				std::ifstream rawFile(item.filePath, std::ios::binary | std::ios::ate);
+				if (!rawFile.is_open()) return {};
+				uint64_t size = static_cast<uint64_t>(rawFile.tellg());
+				rawFile.seekg(0, std::ios::beg);
+				result.resize(size);
+				rawFile.read(reinterpret_cast<char*>(result.data()), size);
+			}
+		}
+		catch (...)
+		{
+			// При исключении считываем исходные бинарные байты
+			std::ifstream rawFile(item.filePath, std::ios::binary | std::ios::ate);
+			if (!rawFile.is_open()) return {};
+			uint64_t size = static_cast<uint64_t>(rawFile.tellg());
+			rawFile.seekg(0, std::ios::beg);
+			result.resize(size);
+			rawFile.read(reinterpret_cast<char*>(result.data()), size);
+		}
+
+		return result;
+	}
+
 	bool PackagePacker::PackProject(const fs::path& sourceDir, const fs::path& destinationDir)
 	{
 		fs::path outPath = destinationDir / zzz::common::c_GamePackageFileName;
 		std::vector<PendingAsset> pendingAssets;
 
 		// 1. Упаковка project.json под служебным GUID манифеста
-		fs::path projJsonPath = sourceDir / zzz::common::c_ProjectJsonFileName;
+		fs::path projJsonPath = sourceDir / "project.json";
 		if (fs::exists(projJsonPath))
 		{
 			pendingAssets.push_back({
@@ -62,7 +225,7 @@ namespace zzz::builder
 				}
 				else
 				{
-					continue; // Упаковываем сцены, вьюхи, префабы и манифест
+					continue;
 				}
 
 				fs::path path = entry.path();
@@ -106,30 +269,19 @@ namespace zzz::builder
 		if (!outFile.is_open())
 			return false;
 
-		std::vector<std::vector<char>> payloads;
+		std::vector<std::vector<std::byte>> payloads;
 		std::vector<uint64_t> fileSizes;
 
 		for (const auto& item : pendingAssets)
 		{
-			std::ifstream inFile(item.filePath, std::ios::binary | std::ios::ate);
-			if (!inFile.is_open())
-			{
-				payloads.push_back({});
-				fileSizes.push_back(0);
-				continue;
-			}
+			std::vector<std::byte> payload = SerializeAssetToBinary(item);
+			uint64_t payloadSize = payload.size();
 
-			uint64_t fileSize = static_cast<uint64_t>(inFile.tellg());
-			inFile.seekg(0, std::ios::beg);
-
-			std::vector<char> buffer(fileSize);
-			inFile.read(buffer.data(), fileSize);
-
-			payloads.push_back(std::move(buffer));
-			fileSizes.push_back(fileSize);
+			payloads.push_back(std::move(payload));
+			fileSizes.push_back(payloadSize);
 		}
 
-		// Пасс 1: Создаем предварительный список PackageEntry и измеряем размер serialized header + entries.
+		// Пасс 1: Измеряем размер serialized header + entries
 		Serializer serializer;
 		std::vector<zzz::core::PackageEntry> dummyEntries;
 		dummyEntries.reserve(pendingAssets.size());
@@ -142,7 +294,7 @@ namespace zzz::builder
 				item.name,
 				parsedGuid ? *parsedGuid : Guid{},
 				item.type,
-				0, // Смещение измерим далее
+				0,
 				fileSizes[i]
 			);
 		}
@@ -199,11 +351,11 @@ namespace zzz::builder
 		// Записываем сериализованный заголовок и таблицу в файл
 		outFile.write(reinterpret_cast<const char*>(headerBuffer.data()), headerBuffer.size());
 
-		// Записываем блоки данных
+		// Записываем бинарные блоки данных
 		for (const auto& payload : payloads)
 		{
 			if (!payload.empty())
-				outFile.write(payload.data(), payload.size());
+				outFile.write(reinterpret_cast<const char*>(payload.data()), payload.size());
 		}
 
 		return true;

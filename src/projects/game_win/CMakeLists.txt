@@ -99,6 +99,8 @@ target_sources(game_win PRIVATE
 
 target_link_libraries(game_win PRIVATE
     engine_lib
+    core_lib
+    common_lib
     logger_lib
 )
 

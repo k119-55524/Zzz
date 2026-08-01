@@ -11,28 +11,20 @@ namespace zzz::core
 	{
 	public:
 		PrefabData() = default;
-		explicit PrefabData(std::string name)
-			: name(std::move(name))
-		{}
-
-		std::string name;
 
 		void LogFileBlock() const
 		{
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-			DOut("           [PrefabData] Префаб: '{}'", name);
-#endif
+			DOut("           [PrefabData] Префаб");
 		}
 
 	protected:
-		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override
+		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>&, const Serializer&) const override
 		{
-			return serializer.Serialize(buffer, name);
+			return {};
 		}
-
-		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& serializer) override
+		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte>, std::size_t&, const Serializer&) override
 		{
-			return serializer.Deserialize(buffer, offset, name);
+			return {};
 		}
 	};
 }

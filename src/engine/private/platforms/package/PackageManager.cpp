@@ -58,9 +58,9 @@ namespace zzz::engine
 			if (!entryRes)
 				THROW_RUNTIME("Ошибка десериализации записи пакета #{} в файле {}: {}", i, m_PackagePath.string(), entryRes.error());
 
-			auto type = static_cast<ePackage>(entry.assetType);
-			m_EntriesByName[type][entry.name] = entry;
-			m_EntriesByGuid[type][entry.guid] = entry;
+			auto type = static_cast<ePackage>(entry.GetAssetType());
+			m_EntriesByName[type][entry.GetName()] = entry;
+			m_EntriesByGuid[type][entry.GetGuid()] = entry;
 		}
 
 		LogPackageEntriesSummary();
@@ -90,6 +90,29 @@ namespace zzz::engine
 			return std::nullopt;
 
 		return entryIt->second;
+	}
+
+	template <typename T> requires std::derived_from<T, ISerializable>
+	[[nodiscard]] std::optional<T> PackageManager::LoadAssetData(const PackageEntry& entry) const
+	{
+		if (m_PackagePath.empty()) return std::nullopt;
+
+		std::ifstream file(m_PackagePath, std::ios::binary);
+		if (!file.is_open()) return std::nullopt;
+
+		file.seekg(entry.GetOffset(), std::ios::beg);
+		std::vector<std::byte> buffer(entry.GetSize());
+		file.read(reinterpret_cast<char*>(buffer.data()), entry.GetSize());
+		if (!file.good()) return std::nullopt;
+
+		std::size_t offset = 0;
+		Serializer serializer;
+		T data{};
+		if (serializer.Deserialize(buffer, offset, data))
+		{
+			return data;
+		}
+		return std::nullopt;
 	}
 
 #pragma region Logging
@@ -127,5 +150,5 @@ namespace zzz::engine
 			}
 		}
 	}
-#pragma region
+#pragma endregion
 }

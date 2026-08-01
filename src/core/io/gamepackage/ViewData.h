@@ -15,22 +15,18 @@ namespace zzz::core
 	{
 	public:
 		ViewData() = default;
-		ViewData(std::string name, Size2D<zU32> size, Guid sceneGuid, std::vector<Guid> uiScriptGuids)
-			: name(std::move(name))
-			, size(size)
+		ViewData(Size2D<zU32> size, Guid sceneGuid, std::vector<Guid> uiScriptGuids)
+			: size(size)
 			, sceneGuid(sceneGuid)
 			, uiScriptGuids(std::move(uiScriptGuids))
 		{}
 
-		std::string name;
-		Size2D<zU32> size;
-		Guid sceneGuid;
-		std::vector<Guid> uiScriptGuids;
+		[[nodiscard]] const Size2D<zU32>& GetSize() const noexcept { return size; }
+		[[nodiscard]] const Guid& GetSceneGuid() const noexcept { return sceneGuid; }
+		[[nodiscard]] const std::vector<Guid>& GetUiScriptGuids() const noexcept { return uiScriptGuids; }
 
-		void LogFileBlock() const
+		inline void LogFileBlock() const
 		{
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-			DOut("           [ViewData] Имя вида: '{}'", name);
 			DOut("           [ViewData] Размер: {}x{}", size.width, size.height);
 			DOut("           [ViewData] Привязанная сцена(GUID): {}", sceneGuid.ToString());
 			DOut("           [ViewData] Скрипты({})", uiScriptGuids.size());
@@ -38,14 +34,17 @@ namespace zzz::core
 			{
 				DOut("             Script #{}: {}", i, uiScriptGuids[i].ToString());
 			}
-#endif
 		}
+
+	private:
+		Size2D<zU32> size;
+		Guid sceneGuid;
+		std::vector<Guid> uiScriptGuids;
 
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override
 		{
-			return serializer.Serialize(buffer, name)
-				.and_then([&]() { return serializer.Serialize(buffer, size); })
+			return serializer.Serialize(buffer, size)
 				.and_then([&]() { return serializer.Serialize(buffer, sceneGuid); })
 				.and_then([&]() {
 					const zU32 scriptsCount = static_cast<zU32>(uiScriptGuids.size());
@@ -60,13 +59,11 @@ namespace zzz::core
 					return {};
 				});
 		}
-
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& serializer) override
 		{
 			zU32 scriptsCount = 0;
 
-			return serializer.Deserialize(buffer, offset, name)
-				.and_then([&]() { return serializer.Deserialize(buffer, offset, size); })
+			return serializer.Deserialize(buffer, offset, size)
 				.and_then([&]() { return serializer.Deserialize(buffer, offset, sceneGuid); })
 				.and_then([&]() {
 					return serializer.Deserialize(buffer, offset, scriptsCount);

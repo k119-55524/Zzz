@@ -9,6 +9,7 @@
 #include <string_view>
 #include <logger/logger.h>
 
+#include "public/core/userscripts/EngineExport.h"
 #include "NativeAppData.h"
 #include "public/core/EngineTime.h"
 

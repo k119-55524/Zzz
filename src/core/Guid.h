@@ -3,6 +3,7 @@
 #include <array>
 #include <format>
 #include <string>
+#include <optional>
 #include <cstdint>
 #include <core/Serialize/Serializer.h>
 
@@ -35,6 +36,39 @@ namespace zzz::common
 				if (b != 0) return false;
 
 			return true;
+		}
+
+		/// @brief Парсит GUID из 36-символьной дефисной строки (8-4-4-4-12).
+		[[nodiscard]] static std::optional<Guid> Parse(std::string_view str) noexcept
+		{
+			if (str.length() != 36 || str[8] != '-' || str[13] != '-' || str[18] != '-' || str[23] != '-')
+				return std::nullopt;
+
+			RawBytes bytes{};
+			size_t byteIdx = 0;
+
+			auto hexToNibble = [](char c) -> int {
+				if (c >= '0' && c <= '9') return c - '0';
+				if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+				if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+				return -1;
+			};
+
+			for (size_t i = 0; i < str.length(); ++i)
+			{
+				if (str[i] == '-') continue;
+				if (byteIdx >= 16) return std::nullopt;
+
+				int high = hexToNibble(str[i]);
+				if (high < 0 || i + 1 >= str.length()) return std::nullopt;
+				int low = hexToNibble(str[++i]);
+				if (low < 0) return std::nullopt;
+
+				bytes[byteIdx++] = static_cast<uint8_t>((high << 4) | low);
+			}
+
+			if (byteIdx != 16) return std::nullopt;
+			return Guid(bytes);
 		}
 
 		/// @brief Форматирует GUID в стандартную дефисную шестнадцатеричную строку (8-4-4-4-12).

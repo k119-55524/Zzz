@@ -113,25 +113,13 @@
     <ClInclude Include="Macroses.h" />
     <ClInclude Include="MemoryUtils.h" />
     <ClInclude Include="ThrowWrappers.h" />
-    <ClInclude Include="Types.h" />
-    <ClInclude Include="enums\eLogMessageType.h" />
-    <ClInclude Include="enums\eWinResize.h" />
-    <ClInclude Include="enums\ePackage.h" />
-    <ClInclude Include="enums\eEnumToString.h" />
-    <ClInclude Include="io\zFileHeader.h" />
-    <ClInclude Include="io\package\PackageHeader.h" />
-    <ClInclude Include="io\package\PackageEntry.h" />
-    <ClInclude Include="io\package\ViewData.h" />
-    <ClInclude Include="io\package\ProjectManifestData.h" />
-    <ClInclude Include="io\package\SceneData.h" />
-    <ClInclude Include="io\package\PrefabData.h" />
-    <ClInclude Include="serialize\Serializer.h" />
-    <ClInclude Include="templates\DoubleBufferedVector.h" />
-    <ClInclude Include="templates\Size2D.h" />
+    <ClInclude Include="Enums\eLogMessageType.h" />
+    <ClInclude Include="Enums\eWinResize.h" />
+    <ClInclude Include="Templates\DoubleBufferedVector.h" />
+    <ClInclude Include="Templates\Size2D.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="throw_wrappers.cpp" />
-    <ClCompile Include="serialize\Serializer.cpp" />
+    <ClCompile Include="ThrowWrappers.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
