@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../core/io/Path.h"
+#include "../core/IO/Path.h"
 #include "../../NativeAppData.h"
 #include "config/ConfigManager.h"
 #include "config/PlatformConfig.h"

@@ -1,4 +1,4 @@
-#include <common/common.h>
+#include <common/Common.h>
 
 #include "Platform.h"
 #include "../../engine.h"

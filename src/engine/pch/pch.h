@@ -11,7 +11,7 @@
 #include <logger.h>
 #include <filesystem>
 
-#include <common/common.h>
+#include <common/Common.h>
 
-#include "headers/enums.h"
-#include <common/throw_wrappers.h>
+#include "headers/Enums.h"
+#include <common/ThrowWrappers.h>

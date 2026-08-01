@@ -3,7 +3,7 @@
 #include <functional>
 #include <bitset>
 #include "InputHelpers.h"
-#include <common/templates/Event.h>
+#include <common/Templates/Event.h>
 
 #if Z_WINDOWS
 #include "../../../headers/MSWin.h"

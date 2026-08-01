@@ -1,6 +1,6 @@
 
 #include "engine.h"
-#include "headers/enums.h"
+#include "headers/Enums.h"
 #include "public/core/events/EventBus.h"
 #include "private/core/view/ViewManager.h"
 #include "private/platforms/main_loop/MainLoop.h"

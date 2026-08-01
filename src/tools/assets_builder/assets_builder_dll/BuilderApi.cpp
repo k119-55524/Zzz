@@ -1,6 +1,6 @@
 #include "BuilderApi.h"
-#include <core/constants.h>
-#include <core/enums/ePackage.h>
+#include <core/Constants.h>
+#include <core/Enums/ePackage.h>
 
 extern "C"
 {

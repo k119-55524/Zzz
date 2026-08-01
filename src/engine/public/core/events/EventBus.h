@@ -1,6 +1,6 @@
 #pragma once
 
-#include <common/templates/Event.h>
+#include <common/Templates/Event.h>
 #include "public/core/EngineTime.h"
 
 namespace zzz::script

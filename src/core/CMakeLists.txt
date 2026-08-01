@@ -6,20 +6,22 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
     )
 
     target_sources(${TARGET_NAME} PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/constants.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/Types.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/Fwd.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/Constants.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Guid.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/version.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/enums/ePackage.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eEnumToString.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/FileHeader.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/gamepackage/PackageHeader.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/gamepackage/PackageEntry.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/gamepackage/ViewData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/gamepackage/ProjectManifestData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/gamepackage/SceneData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/gamepackage/PrefabData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/serialize/Serializer.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/serialize/Serializer.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Version.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/Enums/ePackage.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/Enums/eEnumToString.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileHeader.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/GamePackage/PackageHeader.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/GamePackage/PackageEntry.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/GamePackage/ViewData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/GamePackage/ProjectManifestData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/GamePackage/SceneData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/GamePackage/PrefabData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/Serialize/Serializer.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/Serialize/Serializer.cpp
     )
 
     target_compile_features(${TARGET_NAME} PUBLIC cxx_std_23)

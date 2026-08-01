@@ -1,8 +1,8 @@
 #pragma once
 
 #include <array>
-#include <common/common.h>
-#include <core/io/FileHeader.h>
+#include <common/Common.h>
+#include <core/IO/FileHeader.h>
 
 namespace zzz::common
 {

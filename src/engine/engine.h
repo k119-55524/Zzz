@@ -5,36 +5,12 @@
 #include <memory>
 #include <vector>
 #include <expected>
+#include <core/Fwd.h>
 #include <string_view>
 #include <logger/logger.h>
 
 #include "NativeAppData.h"
 #include "public/core/EngineTime.h"
-
-
-namespace zzz
-{
-	enum class eInitState : zU8;
-}
-
-namespace zzz::script
-{
-	class GameScript;
-}
-
-namespace zzz::io
-{
-	class Path;	
-}
-
-namespace zzz::engine
-{
-	class Platform;
-	class ViewManager;
-	class MainLoopBase;
-	class PackageManager;
-	class ProjectEventBus;
-}
 
 namespace zzz::engine
 {

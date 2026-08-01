@@ -18,15 +18,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="common.h" />
-    <ClInclude Include="constants.h" />
-    <ClInclude Include="defines.h" />
-    <ClInclude Include="ensure.h" />
+    <ClInclude Include="Common.h" />
+    <ClInclude Include="Constants.h" />
+    <ClInclude Include="Defines.h" />
+    <ClInclude Include="Ensure.h" />
     <ClInclude Include="CommonExport.h" />
-    <ClInclude Include="macroses.h" />
-    <ClInclude Include="memory_utils.h" />
-    <ClInclude Include="throw_wrappers.h" />
-    <ClInclude Include="types.h" />
+    <ClInclude Include="Macroses.h" />
+    <ClInclude Include="MemoryUtils.h" />
+    <ClInclude Include="ThrowWrappers.h" />
+    <ClInclude Include="Types.h" />
     <ClInclude Include="enums\eLogMessageType.h">
       <Filter>enums</Filter>
     </ClInclude>

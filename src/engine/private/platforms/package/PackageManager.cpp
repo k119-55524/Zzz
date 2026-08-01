@@ -1,8 +1,8 @@
 #include <fstream>
-#include <core/io/gamepackage/ViewData.h>
-#include <core/io/gamepackage/SceneData.h>
-#include <core/io/gamepackage/PrefabData.h>
-#include <core/io/gamepackage/ProjectManifestData.h>
+#include <core/IO/GamePackage/ViewData.h>
+#include <core/IO/GamePackage/SceneData.h>
+#include <core/IO/GamePackage/PrefabData.h>
+#include <core/IO/GamePackage/ProjectManifestData.h>
 
 #include "PackageManager.h"
 

@@ -11,9 +11,9 @@ target_link_libraries(your_target PUBLIC common_lib)
 
 В коде подключайте нужные заголовочные файлы с префиксом `common/`:
 ```cpp
-#include <common/types.h>
-#include <common/ensure.h>
-#include <common/macroses.h>
+#include <common/Types.h>
+#include <common/Ensure.h>
+#include <common/Macroses.h>
 ```
 
 Базовые сущности находятся в пространстве имён `zzz::common`.

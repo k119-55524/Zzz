@@ -1,10 +1,10 @@
-﻿#pragma once
+#pragma once
 
 #include <atomic>
-#include <common/common.h>
+#include <common/Common.h>
 
 #include "../Platform.h"
-#include <common/templates/Event.h>
+#include <common/Templates/Event.h>
 
 namespace zzz::engine
 {

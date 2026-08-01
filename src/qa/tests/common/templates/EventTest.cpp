@@ -1,7 +1,7 @@
 
 #include <thread>
 #include <gtest/gtest.h>
-#include <common/templates/Event.h>
+#include <common/Templates/Event.h>
 
 using namespace zzz::engine;
 

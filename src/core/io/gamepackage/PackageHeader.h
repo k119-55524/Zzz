@@ -1,9 +1,9 @@
 #pragma once
 
-#include <core/version.h>
-#include <core/constants.h>
-#include <core/io/FileHeader.h>
-#include <core/serialize/Serializer.h>
+#include <core/Version.h>
+#include <core/Constants.h>
+#include <core/IO/FileHeader.h>
+#include <core/Serialize/Serializer.h>
 
 using namespace zzz::io;
 using namespace zzz::common;

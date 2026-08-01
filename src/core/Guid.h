@@ -4,7 +4,7 @@
 #include <format>
 #include <string>
 #include <cstdint>
-#include <core/serialize/Serializer.h>
+#include <core/Serialize/Serializer.h>
 
 namespace zzz::common
 {

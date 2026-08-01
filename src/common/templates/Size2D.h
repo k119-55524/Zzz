@@ -3,8 +3,8 @@
 #include <format>
 #include <string>
 
-#include <common/common.h>
-#include <core/serialize/Serializer.h>
+#include <common/Common.h>
+#include <core/Serialize/Serializer.h>
 
 namespace zzz::common
 {

@@ -38,15 +38,15 @@
 
 Одновременно живут три параллельных механизма, каждый со своей семантикой:
 
-1. **`std::expected<T, std::string>`** — используется в 55 файлах. Помощник `UNEXPECTED(fmt, ...)` (`src/common/macroses.h:84`) логирует через `DOutError` и возвращает `std::unexpected(msg)`.
-2. **Исключения** — `THROW_RUNTIME(fmt, ...)` → `throw_runtime_error` (`src/common/throw_wrappers.cpp:12`) логирует через `DOutException` и кидает `std::runtime_error`. `try/catch` встречается 103 раза в 28 C++ файлах.
-3. **`ensure(cond, msg)`** — `src/common/ensure.h`. Кидает `runtime_error`, но **только в Debug/Development** (внутри `#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD`). В Release это NO-OP: `condition` даже не вычисляется.
+1. **`std::expected<T, std::string>`** — используется в 55 файлах. Помощник `UNEXPECTED(fmt, ...)` (`src/common/Macroses.h:84`) логирует через `DOutError` и возвращает `std::unexpected(msg)`.
+2. **Исключения** — `THROW_RUNTIME(fmt, ...)` → `throw_runtime_error` (`src/common/ThrowWrappers.cpp:12`) логирует через `DOutException` и кидает `std::runtime_error`. `try/catch` встречается 103 раза в 28 C++ файлах.
+3. **`ensure(cond, msg)`** — `src/common/Ensure.h`. Кидает `runtime_error`, но **только в Debug/Development** (внутри `#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD`). В Release это NO-OP: `condition` даже не вычисляется.
 
 ### Конкретные места, где это торчит
 
 - **Смесь в одной функции**: `ConfigManager::SaveConfig`/`LoadConfig` (`src/engine/private/platforms/config/ConfigManager.cpp:72,122`) возвращают `expected`, но внутри `try` с тремя `catch`, каждый конвертирует исключение обратно в `UNEXPECTED`.
 - **Expected → throw → catch → expected → default**: `ConfigManager::Initialize` (стр. 22) получает `expected` от `GetSettingsDirectory`, вручную вызывает `THROW_RUNTIME` вместо возврата `expected.error()`, ловит в общем catch и молча ставит дефолтный конфиг. По пути логи задваиваются: `UNEXPECTED` пишет `DOutError`, потом `THROW_RUNTIME` пишет `DOutException`, потом `DOutException("Config loading error")` в catch.
-- **Throw из конструктора без noexcept-эквивалента**: `Path::Path` (`src/engine/private/core/io/Path.cpp:7`) использует `ensure(...)` для валидации `appName` и `ResolveUserDataDirectory()`. В Debug/Development конструктор бросает. **В Release** `ensure` = NO-OP: конструктор молча продолжает с `m_UserDataDirectory` в дефолтном состоянии, дальше движок работает с невалидным `Path`, падение случится где-то в другом месте с непонятной трассой. Тихая порча — худший сценарий.
+- **Throw из конструктора без noexcept-эквивалента**: `Path::Path` (`src/engine/private/core/IO/Path.cpp:7`) использует `ensure(...)` для валидации `appName` и `ResolveUserDataDirectory()`. В Debug/Development конструктор бросает. **В Release** `ensure` = NO-OP: конструктор молча продолжает с `m_UserDataDirectory` в дефолтном состоянии, дальше движок работает с невалидным `Path`, падение случится где-то в другом месте с непонятной трассой. Тихая порча — худший сценарий.
 - **Двойной уровень защиты в `Engine::Run`** (`src/engine/engine.cpp:62`): возвращает `expected`, но должен ловить исключения — потому что `MainLoop::Run`, `CreateView` не возвращают `expected`, они кидают. На границе подсистем идёт конверсия.
 
 ### Проблемы, которые это создаёт
@@ -74,7 +74,7 @@
 - Границы с STL/OS обёрнуты в `try_call([]{ ... }) -> expected<T, ...>`, единая точка конверсии.
 - `noexcept` там, где применимо, для проверки инвариантов компилятором.
 
-Файлы, затронутые пунктом: `src/engine/engine.cpp`, `src/common/throw_wrappers.{h,cpp}`, `src/common/ensure.h`, `src/common/macroses.h`, `src/engine/private/platforms/config/ConfigManager.cpp`, `src/engine/private/core/io/Path.cpp`, все конструкторы `Platform_*`, `Window_*`, `Config*` (потенциально).
+Файлы, затронутые пунктом: `src/engine/engine.cpp`, `src/common/throw_wrappers.{h,cpp}`, `src/common/Ensure.h`, `src/common/Macroses.h`, `src/engine/private/platforms/config/ConfigManager.cpp`, `src/engine/private/core/IO/Path.cpp`, все конструкторы `Platform_*`, `Window_*`, `Config*` (потенциально).
 
 ## Выбор варианта сборки скриптов
 Сейчас скрипты в редакторе жестко пересобираются в режиме `Debug` (чтобы корректно работала отладка в студии).

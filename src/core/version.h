@@ -1,16 +1,16 @@
 #pragma once
 
-#include <compare>
-#include <string>
-#include <string_view>
-#include <sstream>
-#include <format>
-#include <expected>
-#include <vector>
 #include <span>
+#include <vector>
+#include <string>
+#include <format>
 #include <cstddef>
-#include <common/common.h>
-#include <core/serialize/Serializer.h>
+#include <compare>
+#include <sstream>
+#include <expected>
+#include <string_view>
+#include <common/Common.h>
+#include <core/Serialize/Serializer.h>
 
 namespace zzz::common
 {

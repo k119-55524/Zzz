@@ -8,5 +8,5 @@
 #include <string_view>
 #include <source_location>
 
-#include <common/defines.h>
-#include <common/enums/eLogMessageType.h>
+#include <common/Defines.h>
+#include <common/Enums/eLogMessageType.h>

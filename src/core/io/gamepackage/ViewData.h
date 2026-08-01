@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 #include <core/Guid.h>
-#include <common/templates/Size2D.h>
-#include <core/serialize/Serializer.h>
+#include <common/Templates/Size2D.h>
+#include <core/Serialize/Serializer.h>
 
 using namespace zzz::io;
 using namespace zzz::common;

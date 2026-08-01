@@ -1,6 +1,6 @@
 
 #include <thread>
-#include <common/common.h>
+#include <common/Common.h>
 #include <benchmark/benchmark.h>
 
 using namespace zzz;

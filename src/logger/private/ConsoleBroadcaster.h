@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "IBroadcaster.h"
 
@@ -6,7 +6,7 @@
 #include <format>
 #include <chrono>
 #include <iostream>
-#include <common/common.h>
+#include <common/Common.h>
 
 #define WIN32_LEAN_AND_MEAN
 #include <stdio.h>

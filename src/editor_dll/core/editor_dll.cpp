@@ -3,7 +3,7 @@
 #ifdef Z_PRINT_DEFINES
 #endif
 #include <memory>
-#include <common/common.h>
+#include <common/Common.h>
 #include <engine/engine.h>
 #include "../engine_wrapper/EditorEngine.h"
 

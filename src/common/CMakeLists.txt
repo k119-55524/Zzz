@@ -6,19 +6,18 @@ macro(setup_common_target TARGET_NAME IS_EDITOR)
     )
 
     target_sources(${TARGET_NAME} PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/common.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/defines.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/ensure.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/Common.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/Defines.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/Ensure.h
         ${CMAKE_CURRENT_SOURCE_DIR}/CommonExport.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/macroses.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/memory_utils.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/throw_wrappers.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/throw_wrappers.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/types.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eLogMessageType.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eWinResize.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/templates/DoubleBufferedVector.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/templates/Size2D.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/Macroses.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/MemoryUtils.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/ThrowWrappers.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/ThrowWrappers.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Enums/eLogMessageType.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/Enums/eWinResize.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/Templates/DoubleBufferedVector.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/Templates/Size2D.h
     )
 
     target_compile_features(${TARGET_NAME} PUBLIC cxx_std_23)

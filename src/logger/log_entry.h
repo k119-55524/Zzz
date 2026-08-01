@@ -4,7 +4,7 @@
 
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 
-#include <core/serialize/Serializer.h>
+#include <core/Serialize/Serializer.h>
 
 namespace zzz::logger
 {

@@ -31,14 +31,14 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "headers/MSWin.h"
         "headers/Linux.h"
         "headers/Android.h"
-        "headers/enums.h"
+        "headers/Enums.h"
 
         # Core
         "private/platforms/config/ConfigManager.h" "private/platforms/config/ConfigManager.cpp"
         "private/platforms/package/PackageManager.h" "private/platforms/package/PackageManager.cpp"
         "private/platforms/config/EngineConfig.h" "private/platforms/config/EngineConfig.cpp"
         "private/platforms/config/PlatformConfig.h"
-        "private/core/io/Path.h" "private/core/io/Path.cpp"
+        "private/core/IO/Path.h" "private/core/IO/Path.cpp"
         "public/core/EngineTime.h" "public/core/EngineTime.cpp"
 
         # Inputs
@@ -119,7 +119,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
     if(APPLE)
         target_sources(${TARGET_NAME} PRIVATE
             # Core
-            "private/core/io/apple/Path_Apple.mm"
+            "private/core/IO/apple/Path_Apple.mm"
         )
 
         if(IOS)

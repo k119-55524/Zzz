@@ -9,7 +9,7 @@
 #include <atomic>
 #include <vector>
 #include <memory>
-#include <common/common.h>
+#include <common/Common.h>
 #include <condition_variable>
 
 #include "log_entry.h"

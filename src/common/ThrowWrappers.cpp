@@ -1,11 +1,11 @@
 
 #include <sstream>
 #include <stdexcept>
-//#include <common/common.h>
+//#include <common/Common.h>
 #include <logger/logger.h>
-#include "macroses.h"
+#include "Macroses.h"
 
-#include "throw_wrappers.h"
+#include "ThrowWrappers.h"
 
 namespace zzz::common
 {

@@ -1,4 +1,4 @@
-#include <engine/headers/enums.h>
+#include <engine/headers/Enums.h>
 #include <engine/private/core/view/ViewManager.h>
 #include <engine/public/core/userscripts/ScriptRegistry.h>
 #include <engine/public/core/events/EventBus.h>

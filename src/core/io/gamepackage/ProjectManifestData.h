@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <core/Guid.h>
-#include <core/serialize/Serializer.h>
+#include <core/Serialize/Serializer.h>
 
 using namespace zzz::io;
 using namespace zzz::common;

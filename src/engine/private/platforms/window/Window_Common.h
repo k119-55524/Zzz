@@ -2,9 +2,9 @@
 
 #include "../Platform.h"
 #include "../input/Input.h"
-#include <common/templates/Size2D.h>
+#include <common/Templates/Size2D.h>
 
-#include <common/enums/eWinResize.h>
+#include <common/Enums/eWinResize.h>
 
 namespace zzz::engine
 {
