@@ -21,12 +21,12 @@ macro(setup_common_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/ePackage.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eEnumToString.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/zFileHeader.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/IFileBlockLoggable.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/PackageHeader.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/PackageEntry.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/ViewData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/ProjectManifestData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/SceneData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/PrefabData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/guid.h
         ${CMAKE_CURRENT_SOURCE_DIR}/serialize/Serializer.h
         ${CMAKE_CURRENT_SOURCE_DIR}/serialize/Serializer.cpp

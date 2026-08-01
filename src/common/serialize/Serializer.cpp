@@ -1,11 +1,12 @@
 #include "Serializer.h"
+#include <common/types.h>
 
 using namespace zzz::common;
 
 std::expected<void, std::string> Serializer::Serialize(std::vector<std::byte>& buffer, const std::string& str) const
 {
-	// Сначала записываем размер строки
-	const std::size_t size = str.size();
+	// Сначала записываем размер строки как zU32 (4 байта)
+	const zU32 size = static_cast<zU32>(str.size());
 	auto res = Serialize(buffer, size);
 	if (!res)
 		return res;
@@ -20,8 +21,8 @@ std::expected<void, std::string> Serializer::Serialize(std::vector<std::byte>& b
 
 std::expected<void, std::string> Serializer::Deserialize(std::span<const std::byte> buffer, std::size_t& offset, std::string& str) const
 {
-	// Сначала читаем размер строки
-	std::size_t size = 0;
+	// Сначала читаем размер строки как zU32 (4 байта)
+	zU32 size = 0;
 	auto res = Deserialize(buffer, offset, size);
 	if (!res)
 		return res;

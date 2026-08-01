@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 
@@ -23,10 +24,25 @@ public class SceneSerializer : IAssetSerializer
         string sceneName = Path.GetFileNameWithoutExtension(filePath);
         writer.WriteStringUtf8(sceneName);
 
-        string sceneScript = root.TryGetProperty("script", out var scProp) ? scProp.GetString() ?? "" : "";
+        var scriptsList = new List<string>();
+        if (root.TryGetProperty("scripts", out var scArr) && scArr.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var elem in scArr.EnumerateArray())
+            {
+                if (elem.GetString() is string scGuid)
+                    scriptsList.Add(scGuid);
+            }
+        }
+        else if (root.TryGetProperty("script", out var scProp) && scProp.GetString() is string singleScript && !string.IsNullOrEmpty(singleScript))
+        {
+            scriptsList.Add(singleScript);
+        }
 
-        // Write SceneScript GUID (16 bytes binary)
-        writer.WriteGuid(sceneScript);
+        writer.Write((uint)scriptsList.Count);
+        foreach (var scGuid in scriptsList)
+        {
+            writer.WriteGuid(scGuid);
+        }
 
         writer.Flush();
         return ms.ToArray();

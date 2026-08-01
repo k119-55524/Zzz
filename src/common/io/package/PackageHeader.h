@@ -3,7 +3,6 @@
 #include <common/version.h>
 #include <common/constants.h>
 #include <common/io/zFileHeader.h>
-#include <common/io/IFileBlockLoggable.h>
 #include <common/serialize/Serializer.h>
 
 using namespace zzz::io;
@@ -11,7 +10,7 @@ using namespace zzz::common;
 
 namespace zzz::core
 {
-	class PackageHeader final : public ISerializable, public IFileBlockLoggable
+	class PackageHeader final : public ISerializable
 	{
 	public:
 		PackageHeader() = default;
@@ -40,11 +39,10 @@ namespace zzz::core
 			return {};
 		}
 
-		void LogFileBlock() const override
+		void LogFileBlock() const
 		{
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-			DOut("[PackageHeader] Сигнатура (Magic): {} | Версия: {} | Количество записей: {}",
-				m_Magic.ToString(), m_Version.ToString(), m_EntryCount);
+			DOut("[PackageHeader] Сигнатура: {} | Версия: {} | Количество записей: {}", m_Magic.ToString(), m_Version.ToString(), m_EntryCount);
 #endif
 		}
 

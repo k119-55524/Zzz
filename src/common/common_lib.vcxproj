@@ -119,12 +119,12 @@
     <ClInclude Include="enums\ePackage.h" />
     <ClInclude Include="enums\eEnumToString.h" />
     <ClInclude Include="io\zFileHeader.h" />
-    <ClInclude Include="io\IFileBlockLoggable.h" />
     <ClInclude Include="io\package\PackageHeader.h" />
     <ClInclude Include="io\package\PackageEntry.h" />
     <ClInclude Include="io\package\ViewData.h" />
     <ClInclude Include="io\package\ProjectManifestData.h" />
     <ClInclude Include="io\package\SceneData.h" />
+    <ClInclude Include="io\package\PrefabData.h" />
     <ClInclude Include="serialize\Serializer.h" />
     <ClInclude Include="templates\DoubleBufferedVector.h" />
     <ClInclude Include="templates\Size2D.h" />

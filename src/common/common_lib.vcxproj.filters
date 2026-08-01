@@ -45,9 +45,6 @@
     <ClInclude Include="templates\DoubleBufferedVector.h">
       <Filter>templates</Filter>
     </ClInclude>
-    <ClInclude Include="io\IFileBlockLoggable.h">
-      <Filter>io</Filter>
-    </ClInclude>
     <ClInclude Include="io\package\PackageHeader.h">
       <Filter>io</Filter>
     </ClInclude>
@@ -61,6 +58,9 @@
       <Filter>io</Filter>
     </ClInclude>
     <ClInclude Include="io\package\SceneData.h">
+      <Filter>io</Filter>
+    </ClInclude>
+    <ClInclude Include="io\package\PrefabData.h">
       <Filter>io</Filter>
     </ClInclude>
     <ClInclude Include="guid.h" />

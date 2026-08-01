@@ -9,6 +9,7 @@ namespace zzz::common
 		ProjectManifest = 1,
 		Scene = 2,
 		View = 3,
-		BinaryAsset = 4
+		Prefab = 4,
+		BinaryAsset = 5
 	};
 }

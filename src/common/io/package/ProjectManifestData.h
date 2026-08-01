@@ -2,7 +2,6 @@
 
 #include <vector>
 #include <common/guid.h>
-#include <common/io/IFileBlockLoggable.h>
 #include <common/serialize/Serializer.h>
 
 using namespace zzz::io;
@@ -10,7 +9,7 @@ using namespace zzz::common;
 
 namespace zzz::core
 {
-	class ProjectManifestData final : public ISerializable, public IFileBlockLoggable
+	class ProjectManifestData final : public ISerializable
 	{
 	public:
 		ProjectManifestData() = default;
@@ -24,7 +23,7 @@ namespace zzz::core
 		std::vector<Guid> sceneGuids;
 		std::vector<Guid> viewGuids;
 
-		void LogFileBlock() const override
+		void LogFileBlock() const
 		{
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 			DOut("           [ProjectManifest] Зарегистрировано глобальных скриптов (GameScripts): {}", gameScriptGuids.size());

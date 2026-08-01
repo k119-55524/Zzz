@@ -49,7 +49,18 @@ namespace zzz::common
 				m_Bytes[10], m_Bytes[11], m_Bytes[12], m_Bytes[13], m_Bytes[14], m_Bytes[15]);
 		}
 
-		/// @brief Трехстороннее сравнение C++20 (spaceship operator). Автоматически генерирует ==, !=, <, <=, >, >=.
+		/// @brief Сравнение на равенство и неравенство.
+		[[nodiscard]] constexpr bool operator==(const Guid& other) const noexcept
+		{
+			return m_Bytes == other.m_Bytes;
+		}
+
+		[[nodiscard]] constexpr bool operator!=(const Guid& other) const noexcept
+		{
+			return m_Bytes != other.m_Bytes;
+		}
+
+		/// @brief Трехстороннее сравнение C++20 (spaceship operator).
 		[[nodiscard]] constexpr auto operator<=>(const Guid&) const noexcept = default;
 
 	protected:
@@ -74,5 +85,21 @@ namespace zzz::common
 
 	private:
 		RawBytes m_Bytes;
+	};
+}
+
+namespace std
+{
+	template <>
+	struct hash<zzz::common::Guid>
+	{
+		size_t operator()(const zzz::common::Guid& guid) const noexcept
+		{
+			const auto& bytes = guid.GetBytes();
+			uint64_t low = 0, high = 0;
+			std::memcpy(&low, bytes.data(), sizeof(uint64_t));
+			std::memcpy(&high, bytes.data() + sizeof(uint64_t), sizeof(uint64_t));
+			return static_cast<size_t>(low ^ (high + 0x9e3779b97f4a7c15ULL + (low << 6) + (low >> 2)));
+		}
 	};
 }

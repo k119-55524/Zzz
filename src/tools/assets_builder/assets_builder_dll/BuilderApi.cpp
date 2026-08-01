@@ -54,6 +54,11 @@ extern "C"
 		return static_cast<uint32_t>(zzz::common::ePackage::View);
 	}
 
+	BUILDER_API uint32_t GetAssetTypePrefab()
+	{
+		return static_cast<uint32_t>(zzz::common::ePackage::Prefab);
+	}
+
 	BUILDER_API uint32_t GetAssetTypeBinaryAsset()
 	{
 		return static_cast<uint32_t>(zzz::common::ePackage::BinaryAsset);

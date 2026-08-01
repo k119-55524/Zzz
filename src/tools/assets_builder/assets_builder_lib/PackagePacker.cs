@@ -14,6 +14,7 @@ public static class PackageAssetTypes
 	public static uint ProjectManifest => NativeMethods.GetAssetTypeProjectManifest();
 	public static uint Scene => NativeMethods.GetAssetTypeScene();
 	public static uint View => NativeMethods.GetAssetTypeView();
+	public static uint Prefab => NativeMethods.GetAssetTypePrefab();
 	public static uint BinaryAsset => NativeMethods.GetAssetTypeBinaryAsset();
 }
 
@@ -21,6 +22,7 @@ public static class PackagePacker
 {
 	private class PendingItem
 	{
+		public string Name { get; set; } = string.Empty;
 		public string Guid { get; set; } = string.Empty;
 		public uint Type { get; set; }
 		public string FilePath { get; set; } = string.Empty;
@@ -40,7 +42,7 @@ public static class PackagePacker
 
 			var pendingAssets = new List<PendingItem>();
 
-			// Сканирование сцен (*.zs) и вьюх (*.zv)
+			// Сканирование сцен (*.zs), вьюх (*.zv) и префабов (*.zp)
 			if (Directory.Exists(sourceDir))
 			{
 				foreach (var file in Directory.GetFiles(sourceDir, "*.*", SearchOption.AllDirectories))
@@ -48,13 +50,19 @@ public static class PackagePacker
 					string fileName = Path.GetFileName(file);
 					string ext = Path.GetExtension(file).ToLowerInvariant();
 					uint typeVal = 0;
+					string nameVal = Path.GetFileNameWithoutExtension(file);
 
 					if (fileName.Equals(AssetExtensions.ProjectJsonName, StringComparison.OrdinalIgnoreCase))
+					{
 						typeVal = PackageAssetTypes.ProjectManifest;
+						nameVal = "ProjectManifest";
+					}
 					else if (ext == ".zs")
 						typeVal = PackageAssetTypes.Scene;
 					else if (ext == ".zv")
 						typeVal = PackageAssetTypes.View;
+					else if (ext == ".zp")
+						typeVal = PackageAssetTypes.Prefab;
 					else
 						continue;
 
@@ -65,6 +73,7 @@ public static class PackagePacker
 					{
 						pendingAssets.Add(new PendingItem
 						{
+							Name = nameVal,
 							Guid = guid,
 							Type = typeVal,
 							FilePath = file
@@ -73,7 +82,7 @@ public static class PackagePacker
 				}
 			}
 
-			// 3. Бинарная сериализация ассетов через цепочку IAssetSerializer (GUID-ы в 16-байтовом бинарном виде)
+			// 3. Бинарная сериализация ассетов через цепочку IAssetSerializer
 			var serializers = new List<IAssetSerializer>
 			{
 				new ProjectManifestSerializer(),
@@ -87,6 +96,35 @@ public static class PackagePacker
 			uint minor = NativeMethods.GetGamePackageMinorVersion();
 			uint patch = NativeMethods.GetGamePackagePatchVersion();
 
+			var validPayloadsData = new List<(PendingItem Item, byte[] Data)>();
+			foreach (var item in pendingAssets)
+			{
+				var serializer = serializers.FirstOrDefault(s => s.CanSerialize(item.FilePath)) ?? serializers.Last();
+				byte[] binaryData = serializer.SerializeToBinary(item.FilePath, item.Guid);
+				validPayloadsData.Add((item, binaryData));
+			}
+
+			// Вычисляем точно размер заголовка и оглавления PackageEntry:
+			// PackageHeader: 3 (magic) + 4 (major) + 4 (minor) + 4 (patch) + 4 (count) = 19 байт
+			long headerSize = 3 + 4 + 4 + 4 + 4;
+			long indexTableSize = 0;
+
+			foreach (var payload in validPayloadsData)
+			{
+				byte[] nameBytes = Encoding.UTF8.GetBytes(payload.Item.Name);
+				// PackageEntry: 4 (length of name) + nameBytes.Length + 16 (guid) + 4 (type) + 8 (offset) + 8 (size)
+				indexTableSize += 4 + nameBytes.Length + 16 + 4 + 8 + 8;
+			}
+
+			long currentOffset = headerSize + indexTableSize;
+			var validPayloads = new List<(PendingItem Item, byte[] Data, long Offset)>();
+
+			foreach (var payload in validPayloadsData)
+			{
+				validPayloads.Add((payload.Item, payload.Data, currentOffset));
+				currentOffset += payload.Data.Length;
+			}
+
 			using var fs = new FileStream(outPath, FileMode.Create, FileAccess.Write, FileShare.None);
 			using var writer = new BinaryWriter(fs, Encoding.UTF8, leaveOpen: false);
 
@@ -94,30 +132,13 @@ public static class PackagePacker
 			writer.Write(major);
 			writer.Write(minor);
 			writer.Write(patch);
-			writer.Write((uint)pendingAssets.Count);
-
-			long headerSize = 3 + 4 + 4 + 4 + 4; // 19 bytes
-			long indexTableSize = pendingAssets.Count * 36;
-			long currentOffset = headerSize + indexTableSize;
-
-			var validPayloads = new List<(PendingItem Item, byte[] Data, long Offset)>();
-
-			foreach (var item in pendingAssets)
-			{
-				var serializer = serializers.First(s => s.CanSerialize(item.FilePath));
-				byte[] binaryData = serializer.SerializeToBinary(item.FilePath, item.Guid);
-
-				validPayloads.Add((item, binaryData, currentOffset));
-				currentOffset += binaryData.Length;
-			}
-
-			// Перезапись количества валидных элементов в заголовке (на смещении 15 = 3 + 4 + 4 + 4)
-			fs.Seek(3 + 4 + 4 + 4, SeekOrigin.Begin);
 			writer.Write((uint)validPayloads.Count);
-			fs.Seek(headerSize, SeekOrigin.Begin);
 
 			foreach (var payload in validPayloads)
 			{
+				byte[] nameBytes = Encoding.UTF8.GetBytes(payload.Item.Name);
+				writer.Write((uint)nameBytes.Length);
+				writer.Write(nameBytes);
 				writer.WriteGuid(payload.Item.Guid);
 				writer.Write(payload.Item.Type);
 				writer.Write((ulong)payload.Offset);

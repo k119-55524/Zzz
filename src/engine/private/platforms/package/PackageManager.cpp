@@ -1,6 +1,7 @@
 #include <fstream>
 #include <common/io/package/ViewData.h>
 #include <common/io/package/SceneData.h>
+#include <common/io/package/PrefabData.h>
 #include <common/io/package/ProjectManifestData.h>
 
 #include "PackageManager.h"
@@ -38,43 +39,71 @@ namespace zzz::engine
 
 		std::size_t offset = 0;
 		Serializer serializer;
-
-		auto headerRes = serializer.Deserialize(fileBuffer, offset, m_Header);
+		PackageHeader header;
+		auto headerRes = serializer.Deserialize(fileBuffer, offset, header);
 		if (!headerRes)
 			THROW_RUNTIME("Ошибка десериализации заголовка пакета {}: {}", packagePath.string(), headerRes.error());
 
-		auto validRes = m_Header.Validate();
+		auto validRes = header.Validate();
 		if (!validRes)
 			THROW_RUNTIME("Некорректный заголовок в файле {}: {}", packagePath.string(), validRes.error());
 
-		for (zU32 i = 0; i < m_Header.GetEntryCount(); ++i)
+		m_EntriesByName.clear();
+		m_EntriesByGuid.clear();
+
+		for (zU32 i = 0; i < header.GetEntryCount(); ++i)
 		{
 			PackageEntry entry{};
 			auto entryRes = serializer.Deserialize(fileBuffer, offset, entry);
 			if (!entryRes)
 				THROW_RUNTIME("Ошибка десериализации записи пакета #{} в файле {}: {}", i, packagePath.string(), entryRes.error());
 
-			m_EntriesByType[static_cast<ePackage>(entry.assetType)].push_back(entry);
+			auto type = static_cast<ePackage>(entry.assetType);
+			m_EntriesByName[type][entry.name] = entry;
+			m_EntriesByGuid[type][entry.guid] = entry;
 		}
 
-		LogPackageEntriesSummary(packagePath);
+		//LogPackageEntriesSummary(packagePath);
+	}
+
+	std::optional<PackageEntry> PackageManager::GetEntryByName(ePackage type, std::string_view name) const
+	{
+		auto typeIt = m_EntriesByName.find(type);
+		if (typeIt == m_EntriesByName.end())
+			return std::nullopt;
+
+		auto entryIt = typeIt->second.find(std::string(name));
+		if (entryIt == typeIt->second.end())
+			return std::nullopt;
+
+		return entryIt->second;
+	}
+
+	std::optional<PackageEntry> PackageManager::GetEntryByGuid(ePackage type, const Guid& guid) const
+	{
+		auto typeIt = m_EntriesByGuid.find(type);
+		if (typeIt == m_EntriesByGuid.end())
+			return std::nullopt;
+
+		auto entryIt = typeIt->second.find(guid);
+		if (entryIt == typeIt->second.end())
+			return std::nullopt;
+
+		return entryIt->second;
 	}
 
 #pragma region Logging
 	void PackageManager::LogPackageEntriesSummary([[maybe_unused]] const std::filesystem::path& packagePath) const
 	{
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-		DOut("[PackageManager] Инициализация пакета: {}", packagePath.string());
-		m_Header.LogFileBlock();
-
-		for (const auto& [type, entries] : m_EntriesByType)
+		for (const auto& [type, entriesMap] : m_EntriesByName)
 		{
-			DOut("  -> AssetType: {}: {} штук", EnumToString::ToString(type), entries.size());
+			DOut("  -> AssetType: {}: {} штук", EnumToString::ToString(type), entriesMap.size());
 
-			for (size_t idx = 0; idx < entries.size(); ++idx)
+			size_t idx = 0;
+			for (const auto& [name, entry] : entriesMap)
 			{
-				const auto& entry = entries[idx];
-				DOut("     [{}]", idx);
+				DOut("     [{}]", idx++);
 				entry.LogFileBlock();
 				LogAssetDetails(packagePath, entry);
 			}
@@ -83,7 +112,7 @@ namespace zzz::engine
 	}
 
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-	template <typename T> requires std::derived_from<T, ISerializable> && std::derived_from<T, IFileBlockLoggable>
+	template <typename T> requires std::derived_from<T, ISerializable>
 	static void LogBlockData(const std::filesystem::path& packagePath, const PackageEntry& entry)
 	{
 		std::ifstream file(packagePath, std::ios::binary);
@@ -112,6 +141,7 @@ namespace zzz::engine
 			case ePackage::ProjectManifest: LogBlockData<ProjectManifestData>(packagePath, entry); break;
 			case ePackage::Scene:           LogBlockData<SceneData>(packagePath, entry); break;
 			case ePackage::View:            LogBlockData<ViewData>(packagePath, entry); break;
+			case ePackage::Prefab:          LogBlockData<PrefabData>(packagePath, entry); break;
 			default: break;
 		}
 	}

@@ -35,7 +35,7 @@ public static class BinarySerializationExtensions
 	}
 
 	/// <summary>
-	/// Сериализует UTF-8 строку с предварительной записью ее длины uint32.
+	/// Сериализует UTF-8 строку с предварительной записью ее длины uint (zU32).
 	/// </summary>
 	public static void WriteStringUtf8(this BinaryWriter writer, string str)
 	{

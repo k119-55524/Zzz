@@ -46,6 +46,7 @@ namespace zzz::common
 			case ePackage::ProjectManifest: return "ProjectManifest";
 			case ePackage::Scene:           return "Scene";
 			case ePackage::View:            return "View";
+			case ePackage::Prefab:          return "Prefab";
 			case ePackage::BinaryAsset:     return "BinaryAsset";
 			}
 			THROW_RUNTIME("Необработанный ePackage");
