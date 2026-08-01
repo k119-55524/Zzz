@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <common/serialize/Serializer.h>
+#include <core/serialize/Serializer.h>
 
 using namespace zzz::common;
 

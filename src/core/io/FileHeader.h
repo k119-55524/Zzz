@@ -6,18 +6,18 @@
 #include <string>
 #include <expected>
 #include <cstddef>
-#include <common/serialize/Serializer.h>
+#include <core/serialize/Serializer.h>
 
 using namespace zzz::common;
 
 namespace zzz::io
 {
 	template<std::size_t N>
-	class zFileHeader final : public ISerializable
+	class FileHeader final : public ISerializable
 	{
 	public:
-		constexpr zFileHeader() = default;
-		constexpr explicit zFileHeader(const std::array<std::byte, N>& magic) noexcept
+		constexpr FileHeader() = default;
+		constexpr explicit FileHeader(const std::array<std::byte, N>& magic) noexcept
 			: m_Magic(magic)
 		{}
 
@@ -45,7 +45,7 @@ namespace zzz::io
 			return str;
 		}
 
-		[[nodiscard]] constexpr bool operator==(const zFileHeader& other) const noexcept
+		[[nodiscard]] constexpr bool operator==(const FileHeader& other) const noexcept
 		{
 			return m_Magic == other.m_Magic;
 		}

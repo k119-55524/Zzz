@@ -3,10 +3,10 @@
 #include <algorithm>
 #include <cstring>
 #include <vector>
-#include <common/enums/ePackage.h>
-#include <common/io/package/PackageHeader.h>
-#include <common/io/package/PackageEntry.h>
-#include <common/constants.h>
+#include <core/enums/ePackage.h>
+#include <core/io/gamepackage/PackageHeader.h>
+#include <core/io/gamepackage/PackageEntry.h>
+#include <core/constants.h>
 
 namespace zzz::builder
 {

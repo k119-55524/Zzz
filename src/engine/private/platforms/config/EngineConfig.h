@@ -1,8 +1,8 @@
 #pragma once
 
 #include "PlatformConfig.h"
-#include <common/version.h>
-#include <common/serialize/Serializer.h>
+#include <core/version.h>
+#include <core/serialize/Serializer.h>
 
 namespace zzz::engine
 {

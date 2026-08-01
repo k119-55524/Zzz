@@ -2,8 +2,8 @@
 
 #include <string>
 #include <vector>
-#include <common/guid.h>
-#include <common/serialize/Serializer.h>
+#include <core/Guid.h>
+#include <core/serialize/Serializer.h>
 
 using namespace zzz::io;
 using namespace zzz::common;

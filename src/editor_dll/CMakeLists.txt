@@ -31,6 +31,7 @@ target_include_directories(editor_dll PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(editor_dll
     PRIVATE
         $<LINK_LIBRARY:WHOLE_ARCHIVE,engine_lib_editor>
+        $<LINK_LIBRARY:WHOLE_ARCHIVE,core_lib_editor>
         $<LINK_LIBRARY:WHOLE_ARCHIVE,common_lib_editor>
         $<LINK_LIBRARY:WHOLE_ARCHIVE,logger_lib_editor>
 )

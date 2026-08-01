@@ -1,4 +1,4 @@
-macro(setup_logger_target TARGET_NAME COMMON_TARGET_NAME IS_EDITOR)
+macro(setup_logger_target TARGET_NAME CORE_TARGET_NAME IS_EDITOR)
     add_library(${TARGET_NAME})
 
     target_precompile_headers(${TARGET_NAME} PRIVATE
@@ -27,7 +27,7 @@ macro(setup_logger_target TARGET_NAME COMMON_TARGET_NAME IS_EDITOR)
     target_compile_definitions(${TARGET_NAME} PRIVATE Z_TARGET_NAME="${TARGET_NAME}")
     set_source_files_properties(pch/pch.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
-    target_link_libraries(${TARGET_NAME} PUBLIC ${COMMON_TARGET_NAME})
+    target_link_libraries(${TARGET_NAME} PUBLIC ${CORE_TARGET_NAME})
 
     if(WIN32)
         target_link_libraries(${TARGET_NAME} PRIVATE User32 Ws2_32)
@@ -47,5 +47,5 @@ macro(setup_logger_target TARGET_NAME COMMON_TARGET_NAME IS_EDITOR)
     export_to_editor_sdk(${TARGET_NAME} "${CMAKE_CURRENT_SOURCE_DIR}" "logger")
 endmacro()
 
-setup_logger_target(logger_lib common_lib FALSE)
-setup_logger_target(logger_lib_editor common_lib_editor TRUE)
+setup_logger_target(logger_lib core_lib FALSE)
+setup_logger_target(logger_lib_editor core_lib_editor TRUE)

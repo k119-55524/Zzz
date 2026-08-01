@@ -1,11 +1,12 @@
 #pragma once
 
 #include <string_view>
-#include "eLogMessageType.h"
-#include "eWinResize.h"
+#include <common/macroses.h>
+#include <common/throw_wrappers.h>
+#include <common/enums/eWinResize.h>
+#include <common/enums/eLogMessageType.h>
+
 #include "ePackage.h"
-#include "../macroses.h"
-#include "../throw_wrappers.h"
 
 namespace zzz::common
 {

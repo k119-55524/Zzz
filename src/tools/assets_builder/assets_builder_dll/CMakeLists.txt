@@ -13,6 +13,7 @@ target_include_directories(assets_builder_dll PRIVATE
 
 target_link_libraries(assets_builder_dll PRIVATE
     common_lib
+    core_lib
     logger_lib
     engine_lib
 )

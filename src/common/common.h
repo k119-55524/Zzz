@@ -4,11 +4,11 @@
 #include "ensure.h"
 #include "defines.h"
 #include "macroses.h"
-#include "constants.h"
+#include <core/constants.h>
 #include "memory_utils.h"
-#include "enums/eEnumToString.h"
-#include "serialize/Serializer.h"
-#include "guid.h"
+#include <core/enums/eEnumToString.h>
+#include <core/serialize/Serializer.h>
+#include <core/Guid.h>
 #include "templates/DoubleBufferedVector.h"
 #include "templates/Size2D.h"
 

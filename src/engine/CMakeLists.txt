@@ -157,19 +157,21 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
     endif()
 
     if(${IS_EDITOR})
-        # common_lib_editor/logger_lib_editor - editor-варианты (см. src/common/CMakeLists.txt) с
+        # common_lib_editor/core_lib_editor/logger_lib_editor - editor-варианты (см. src/common/CMakeLists.txt) с
         # EDITORDLL_EXPORTS, чтобы Z_COMMON_API (например throw_runtime_error) собрался как
         # dllexport и был виден из scripts.dll. Смешивать с обычными common_lib/logger_lib нельзя -
         # в editor_dll.dll попадут два набора одинаковых символов и линковщик упадёт на дублях.
         target_link_libraries(${TARGET_NAME}
             PUBLIC
                 common_lib_editor
+                core_lib_editor
                 logger_lib_editor
         )
     else()
         target_link_libraries(${TARGET_NAME}
             PUBLIC
                 common_lib
+                core_lib
                 logger_lib
         )
     endif()

@@ -4,8 +4,8 @@
 
 #include "io/Path.h"
 #include "ConfigManager.h"
-#include <common/constants.h>
-#include <common/serialize/Serializer.h>
+#include <core/constants.h>
+#include <core/serialize/Serializer.h>
 
 using namespace zzz::io;
 using namespace zzz::engine;

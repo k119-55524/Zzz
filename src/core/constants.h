@@ -2,13 +2,13 @@
 
 #include <array>
 #include <common/common.h>
-#include <common/io/zFileHeader.h>
+#include <core/io/FileHeader.h>
 
 namespace zzz::common
 {
 #pragma region Config file constants
 	constexpr std::string_view c_ConfigFileName = "config.dat";
-	constexpr zzz::io::zFileHeader<3> c_ConfigHeader
+	constexpr zzz::io::FileHeader<3> c_ConfigHeader
 	{
 		std::array<std::byte, 3>{
 			static_cast<std::byte>('Z'),
@@ -26,7 +26,7 @@ namespace zzz::common
 
 #pragma region Game Package file constants
 	constexpr std::string_view c_GamePackageFileName = "assets/package.dat";
-	constexpr zzz::io::zFileHeader<3> c_GamePackageHeader
+	constexpr zzz::io::FileHeader<3> c_GamePackageHeader
 	{
 		std::array<std::byte, 3>{
 			static_cast<std::byte>('Z'),

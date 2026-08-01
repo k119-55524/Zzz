@@ -4,7 +4,7 @@
 #include <string>
 
 #include <common/common.h>
-#include <common/serialize/Serializer.h>
+#include <core/serialize/Serializer.h>
 
 namespace zzz::common
 {

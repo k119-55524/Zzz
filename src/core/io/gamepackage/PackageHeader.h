@@ -1,9 +1,9 @@
 #pragma once
 
-#include <common/version.h>
-#include <common/constants.h>
-#include <common/io/zFileHeader.h>
-#include <common/serialize/Serializer.h>
+#include <core/version.h>
+#include <core/constants.h>
+#include <core/io/FileHeader.h>
+#include <core/serialize/Serializer.h>
 
 using namespace zzz::io;
 using namespace zzz::common;
@@ -14,7 +14,7 @@ namespace zzz::core
 	{
 	public:
 		PackageHeader() = default;
-		PackageHeader(const zFileHeader<3>& magic, const Version& version, zU32 entryCount)
+		PackageHeader(const FileHeader<3>& magic, const Version& version, zU32 entryCount)
 			: m_Magic(magic)
 			, m_Version(version)
 			, m_EntryCount(entryCount)
@@ -25,7 +25,7 @@ namespace zzz::core
 			, m_EntryCount(entryCount)
 		{}
 
-		[[nodiscard]] const zFileHeader<3>& GetMagic() const noexcept { return m_Magic; }
+		[[nodiscard]] const FileHeader<3>& GetMagic() const noexcept { return m_Magic; }
 		[[nodiscard]] const Version& GetVersion() const noexcept { return m_Version; }
 		[[nodiscard]] zU32 GetEntryCount() const noexcept { return m_EntryCount; }
 
@@ -47,7 +47,7 @@ namespace zzz::core
 		}
 
 	private:
-		zFileHeader<3> m_Magic{};
+		FileHeader<3> m_Magic{};
 		Version m_Version{};
 		zU32 m_EntryCount = 0;
 

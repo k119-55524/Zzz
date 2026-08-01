@@ -7,7 +7,6 @@ macro(setup_common_target TARGET_NAME IS_EDITOR)
 
     target_sources(${TARGET_NAME} PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/common.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/constants.h
         ${CMAKE_CURRENT_SOURCE_DIR}/defines.h
         ${CMAKE_CURRENT_SOURCE_DIR}/ensure.h
         ${CMAKE_CURRENT_SOURCE_DIR}/CommonExport.h
@@ -18,18 +17,6 @@ macro(setup_common_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/types.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eLogMessageType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eWinResize.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/enums/ePackage.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eEnumToString.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/zFileHeader.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/PackageHeader.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/PackageEntry.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/ViewData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/ProjectManifestData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/SceneData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/PrefabData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/guid.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/serialize/Serializer.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/serialize/Serializer.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/templates/DoubleBufferedVector.h
         ${CMAKE_CURRENT_SOURCE_DIR}/templates/Size2D.h
     )

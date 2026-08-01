@@ -7,7 +7,7 @@
 #include <string>
 #include <cstdint>
 #include <string_view>
-#include <common/serialize/Serializer.h>
+#include <core/serialize/Serializer.h>
 
 using namespace zzz::common;
 

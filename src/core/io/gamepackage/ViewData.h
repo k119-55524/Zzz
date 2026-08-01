@@ -2,9 +2,9 @@
 
 #include <string>
 #include <vector>
-#include <common/guid.h>
+#include <core/Guid.h>
 #include <common/templates/Size2D.h>
-#include <common/serialize/Serializer.h>
+#include <core/serialize/Serializer.h>
 
 using namespace zzz::io;
 using namespace zzz::common;

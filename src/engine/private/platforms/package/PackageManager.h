@@ -6,9 +6,9 @@
 #include <string_view>
 #include <optional>
 #include <filesystem>
-#include <common/enums/ePackage.h>
-#include <common/io/package/PackageHeader.h>
-#include <common/io/package/PackageEntry.h>
+#include <core/enums/ePackage.h>
+#include <core/io/gamepackage/PackageHeader.h>
+#include <core/io/gamepackage/PackageEntry.h>
 
 #include "../core/io/Path.h"
 
