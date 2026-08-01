@@ -22,31 +22,31 @@ namespace zzz::engine
 		if (!execDir)
 			THROW_RUNTIME("Не удалось определить путь к бинарному файлу приложения: {}", execDir.error());
 
-		std::filesystem::path packagePath = *execDir / c_GamePackageFileName;
+		m_PackagePath = *execDir / c_GamePackageFileName;
 
-		if (!std::filesystem::exists(packagePath))
-			THROW_RUNTIME("Файл пакета не существует: {}", packagePath.string());
+		if (!std::filesystem::exists(m_PackagePath))
+			THROW_RUNTIME("Файл пакета не существует: {}", m_PackagePath.string());
 
-		std::ifstream file(packagePath, std::ios::binary);
+		std::ifstream file(m_PackagePath, std::ios::binary);
 		if (!file.is_open())
-			THROW_RUNTIME("Не удалось открыть файл пакета: {}", packagePath.string());
+			THROW_RUNTIME("Не удалось открыть файл пакета: {}", m_PackagePath.string());
 
-		const auto fileSize = std::filesystem::file_size(packagePath);
+		const auto fileSize = std::filesystem::file_size(m_PackagePath);
 		std::vector<std::byte> fileBuffer(fileSize);
 		file.read(reinterpret_cast<char*>(fileBuffer.data()), fileSize);
 		if (!file.good())
-			THROW_RUNTIME("Не удалось прочитать файл пакета из: {}", packagePath.string());
+			THROW_RUNTIME("Не удалось прочитать файл пакета из: {}", m_PackagePath.string());
 
 		std::size_t offset = 0;
 		Serializer serializer;
 		PackageHeader header;
 		auto headerRes = serializer.Deserialize(fileBuffer, offset, header);
 		if (!headerRes)
-			THROW_RUNTIME("Ошибка десериализации заголовка пакета {}: {}", packagePath.string(), headerRes.error());
+			THROW_RUNTIME("Ошибка десериализации заголовка пакета {}: {}", m_PackagePath.string(), headerRes.error());
 
 		auto validRes = header.Validate();
 		if (!validRes)
-			THROW_RUNTIME("Некорректный заголовок в файле {}: {}", packagePath.string(), validRes.error());
+			THROW_RUNTIME("Некорректный заголовок в файле {}: {}", m_PackagePath.string(), validRes.error());
 
 		m_EntriesByName.clear();
 		m_EntriesByGuid.clear();
@@ -56,14 +56,14 @@ namespace zzz::engine
 			PackageEntry entry{};
 			auto entryRes = serializer.Deserialize(fileBuffer, offset, entry);
 			if (!entryRes)
-				THROW_RUNTIME("Ошибка десериализации записи пакета #{} в файле {}: {}", i, packagePath.string(), entryRes.error());
+				THROW_RUNTIME("Ошибка десериализации записи пакета #{} в файле {}: {}", i, m_PackagePath.string(), entryRes.error());
 
 			auto type = static_cast<ePackage>(entry.assetType);
 			m_EntriesByName[type][entry.name] = entry;
 			m_EntriesByGuid[type][entry.guid] = entry;
 		}
 
-		//LogPackageEntriesSummary(packagePath);
+		LogPackageEntriesSummary();
 	}
 
 	std::optional<PackageEntry> PackageManager::GetEntryByName(ePackage type, std::string_view name) const
@@ -93,58 +93,39 @@ namespace zzz::engine
 	}
 
 #pragma region Logging
-	void PackageManager::LogPackageEntriesSummary([[maybe_unused]] const std::filesystem::path& packagePath) const
+	void PackageManager::LogPackageEntriesSummary() const
 	{
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-		for (const auto& [type, entriesMap] : m_EntriesByName)
-		{
-			DOut("  -> AssetType: {}: {} штук", EnumToString::ToString(type), entriesMap.size());
-
-			size_t idx = 0;
-			for (const auto& [name, entry] : entriesMap)
-			{
-				DOut("     [{}]", idx++);
-				entry.LogFileBlock();
-				LogAssetDetails(packagePath, entry);
-			}
-		}
+		// Закомментируй тот тип ресурса, который не хочешь логировать
+		LogEntriesSummaryForType<ProjectManifestData>(ePackage::ProjectManifest);
+		LogEntriesSummaryForType<SceneData>(ePackage::Scene);
+		LogEntriesSummaryForType<ViewData>(ePackage::View);
+		LogEntriesSummaryForType<PrefabData>(ePackage::Prefab);
 #endif
 	}
 
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 	template <typename T> requires std::derived_from<T, ISerializable>
-	static void LogBlockData(const std::filesystem::path& packagePath, const PackageEntry& entry)
+	void PackageManager::LogEntriesSummaryForType(ePackage type) const
 	{
-		std::ifstream file(packagePath, std::ios::binary);
-		if (!file.is_open()) return;
+		auto typeIt = m_EntriesByName.find(type);
+		const size_t count = (typeIt != m_EntriesByName.end()) ? typeIt->second.size() : 0;
+		DOut("  -> AssetType: {}: {} штук", EnumToString::ToString(type), count);
 
-		file.seekg(entry.offset, std::ios::beg);
+		if (typeIt == m_EntriesByName.end() || typeIt->second.empty())
+			return;
 
-		std::vector<std::byte> buffer(entry.size);
-		file.read(reinterpret_cast<char*>(buffer.data()), entry.size);
-		if (!file.good()) return;
-
-		std::size_t offset = 0;
-		Serializer serializer;
-		T data{};
-
-		if (serializer.Deserialize(buffer, offset, data))
+		const auto& entriesMap = typeIt->second;
+		size_t idx = 0;
+		for (const auto& [name, entry] : entriesMap)
 		{
-			data.LogFileBlock();
+			DOut("     [{}]", idx++);
+			entry.LogFileBlock();
+
+			if (auto dataOpt = LoadAssetData<T>(entry))
+			{
+				dataOpt->LogFileBlock();
+			}
 		}
 	}
-
-	void PackageManager::LogAssetDetails([[maybe_unused]] const std::filesystem::path& packagePath, [[maybe_unused]] const PackageEntry& entry) const
-	{
-		switch (static_cast<ePackage>(entry.assetType))
-		{
-			case ePackage::ProjectManifest: LogBlockData<ProjectManifestData>(packagePath, entry); break;
-			case ePackage::Scene:           LogBlockData<SceneData>(packagePath, entry); break;
-			case ePackage::View:            LogBlockData<ViewData>(packagePath, entry); break;
-			case ePackage::Prefab:          LogBlockData<PrefabData>(packagePath, entry); break;
-			default: break;
-		}
-	}
-#endif // Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 #pragma region
 }
