@@ -21,10 +21,13 @@ namespace zzz::script
 		 * @brief Включает или выключает скрипт.
 		 * ВНИМАНИЕ: Деактивация и последующая активация скрипта ломает изначальный порядок 
 		 * вызовов событий, так как скрипт будет помещен в конец очереди EventBus!
+		 * TODO: Разработать механизм сохранения изначального порядка (например, флаг паузы/деактивации внутри CallbackEntry вместо отписки).
 		 */
 		void SetActive(bool active)
 		{
-			if (m_IsActive == active) return;
+			if (m_IsActive == active)
+				return;
+
 			m_IsActive = active;
 
 			if (m_IsActive)
