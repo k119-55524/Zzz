@@ -1,17 +1,17 @@
 #pragma once
 
 
-#include "../../../header.h"
+#include <logger/logger.h>
 #include <core/Serialize/Serializer.h>
 
 namespace zzz::engine
 {
 	using namespace zzz::common;
-	class ConfigLinux final : public ISerializable
+	class ConfigAndroid final : public ISerializable
 	{
 	public:
-		ConfigLinux();
-		~ConfigLinux() = default;
+		ConfigAndroid();
+		~ConfigAndroid() = default;
 
 	private:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override;

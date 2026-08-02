@@ -22,10 +22,10 @@ namespace zzz::core
 
 		inline void LogFileBlock() const
 		{
-			DOut("           [SceneData] Скрипты({})", sceneScriptGuids.size());
+			DOut("           [SceneData] sceneScriptGuids({})", sceneScriptGuids.size());
 			for (zU32 i = 0; i < sceneScriptGuids.size(); ++i)
 			{
-				DOut("             Script #{}: {}", i, sceneScriptGuids[i].ToString());
+				DOut("             sceneScriptGuid #{}: {}", i, sceneScriptGuids[i].ToString());
 			}
 		}
 

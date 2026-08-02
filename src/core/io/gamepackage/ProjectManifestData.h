@@ -13,42 +13,38 @@ namespace zzz::core
 	{
 	public:
 		ProjectManifestData() = default;
-		ProjectManifestData(Guid startViewGuid, std::vector<Guid> gameScriptGuids, std::vector<Guid> sceneGuids, std::vector<Guid> viewGuids)
-			: startViewGuid(startViewGuid)
-			, gameScriptGuids(std::move(gameScriptGuids))
+		ProjectManifestData(std::vector<Guid> gameScriptGuids, std::vector<Guid> sceneGuids, std::vector<Guid> viewGuids)
+			: gameScriptGuids(std::move(gameScriptGuids))
 			, sceneGuids(std::move(sceneGuids))
 			, viewGuids(std::move(viewGuids))
 		{}
 
-		[[nodiscard]] const Guid& GetStartViewGuid() const noexcept { return startViewGuid; }
 		[[nodiscard]] const std::vector<Guid>& GetGameScriptGuids() const noexcept { return gameScriptGuids; }
 		[[nodiscard]] const std::vector<Guid>& GetSceneGuids() const noexcept { return sceneGuids; }
 		[[nodiscard]] const std::vector<Guid>& GetViewGuids() const noexcept { return viewGuids; }
 
 		inline void LogFileBlock(std::string_view = {}) const
 		{
-			DOut("           [ProjectManifest] Стартовый View(GUID): {}", startViewGuid.ToString());
-			DOut("           [ProjectManifest] Зарегистрировано глобальных скриптов (GameScripts): {}", gameScriptGuids.size());
+			DOut("           [ProjectManifest] gameScriptGuids({})", gameScriptGuids.size());
 			for (zU32 i = 0; i < gameScriptGuids.size(); ++i)
 			{
-				DOut("             GameScript #{}: {}", i, gameScriptGuids[i].ToString());
+				DOut("             gameScriptGuid #{}: {}", i, gameScriptGuids[i].ToString());
 			}
 
-			DOut("           [ProjectManifest] Зарегистрировано сцен: {}", sceneGuids.size());
+			DOut("           [ProjectManifest] sceneGuids({})", sceneGuids.size());
 			for (zU32 i = 0; i < sceneGuids.size(); ++i)
 			{
-				DOut("             Scene #{}: {}", i, sceneGuids[i].ToString());
+				DOut("             sceneGuid #{}: {}", i, sceneGuids[i].ToString());
 			}
 
-			DOut("           [ProjectManifest] Зарегистрировано видов (views): {}", viewGuids.size());
+			DOut("           [ProjectManifest] viewGuids({})", viewGuids.size());
 			for (zU32 i = 0; i < viewGuids.size(); ++i)
 			{
-				DOut("             View #{}: {}", i, viewGuids[i].ToString());
+				DOut("             viewGuid #{}: {}", i, viewGuids[i].ToString());
 			}
 		}
 
 	private:
-		Guid startViewGuid{};
 		std::vector<Guid> gameScriptGuids;
 		std::vector<Guid> sceneGuids;
 		std::vector<Guid> viewGuids;
@@ -56,11 +52,8 @@ namespace zzz::core
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override
 		{
-			return serializer.Serialize(buffer, startViewGuid)
-				.and_then([&]() -> std::expected<void, std::string> {
-					const zU32 scriptsCount = static_cast<zU32>(gameScriptGuids.size());
-					return serializer.Serialize(buffer, scriptsCount);
-				})
+			const zU32 scriptsCount = static_cast<zU32>(gameScriptGuids.size());
+			return serializer.Serialize(buffer, scriptsCount)
 				.and_then([&]() -> std::expected<void, std::string> {
 					for (const auto& gsGuid : gameScriptGuids)
 					{
@@ -100,11 +93,7 @@ namespace zzz::core
 			zU32 scenesCount = 0;
 			zU32 viewsCount = 0;
 
-			return serializer.Deserialize(buffer, offset, startViewGuid)
-				.and_then([&]()
-				{
-					return serializer.Deserialize(buffer, offset, scriptsCount);
-				})
+			return serializer.Deserialize(buffer, offset, scriptsCount)
 				.and_then([&]() -> std::expected<void, std::string>
 				{
 					gameScriptGuids.clear();

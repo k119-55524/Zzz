@@ -2,7 +2,7 @@
 #include <fstream>
 #include <system_error>
 
-#include "io/Path.h"
+#include <engine/private/core/IO/Path.h>
 #include "ConfigManager.h"
 #include <core/Constants.h>
 #include <core/Serialize/Serializer.h>
@@ -66,7 +66,7 @@ void ConfigManager::Initialize()
 		return;
 	}
 
-	DOut("Конфигурация успешно десериализована из файла: {}.", m_ConfigPath.string());
+	DOut("[ConfigManager] Конфигурация десериализована: {}.", m_ConfigPath.string());
 }
 
 [[nodiscard]] std::expected<void, std::string> ConfigManager::SaveConfig()
@@ -74,9 +74,10 @@ void ConfigManager::Initialize()
 #if Z_EDITOR
 	return {};
 #else
+
 	if (!m_IsDirty)
 	{
-		DOut("Конфигурация не изменена. Сохранение не требуется.");
+		DOut("[ConfigManager] Конфигурация не изменена. Сохранение не требуется.");
 		return {};
 	}
 
@@ -113,7 +114,7 @@ void ConfigManager::Initialize()
 	}
 
 	m_IsDirty = false;
-	DOut("Конфигурация успешно сериализована в файл: {}.", m_ConfigPath.string());
+	DOut("[ConfigManager] Конфигурация сериализована: {}.", m_ConfigPath.string());
 
 	return {};
 #endif // Z_EDITOR

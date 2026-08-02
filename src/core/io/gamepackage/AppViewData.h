@@ -9,34 +9,36 @@
 using namespace zzz::io;
 using namespace zzz::common;
 
-namespace zzz::engine
-{
-	class PackageManager;
-}
-
 namespace zzz::core
 {
-	class ViewData final : public ISerializable
+	class AppViewData final : public ISerializable
 	{
 	public:
-		ViewData() = default;
-		ViewData(Size2D<zU32> size, Guid sceneGuid, std::vector<Guid> uiScriptGuids)
-			: size(size)
+		AppViewData() = default;
+		AppViewData(std::string title, Size2D<zU32> defaultSize, Guid sceneGuid, std::vector<Guid> uiScriptGuids, bool isFullscreenByDefault = false, bool resizable = true)
+			: title(std::move(title))
+			, defaultSize(defaultSize)
 			, sceneGuid(sceneGuid)
 			, uiScriptGuids(std::move(uiScriptGuids))
+			, isFullscreenByDefault(isFullscreenByDefault)
+			, resizable(resizable)
 		{}
 
-		[[nodiscard]] const std::string& GetName() const noexcept { return name; }
-		[[nodiscard]] const Size2D<zU32>& GetSize() const noexcept { return size; }
+		[[nodiscard]] const std::string& GetTitle() const noexcept { return title; }
+		[[nodiscard]] const Size2D<zU32>& GetDefaultSize() const noexcept { return defaultSize; }
 		[[nodiscard]] const Guid& GetSceneGuid() const noexcept { return sceneGuid; }
 		[[nodiscard]] const std::vector<Guid>& GetUiScriptGuids() const noexcept { return uiScriptGuids; }
+		[[nodiscard]] bool IsFullscreenByDefault() const noexcept { return isFullscreenByDefault; }
+		[[nodiscard]] bool IsResizable() const noexcept { return resizable; }
 
 		inline void LogFileBlock() const
 		{
-			DOut("           [ViewData] name: {}", name);
-			DOut("           [ViewData] size: {}x{}", size.width, size.height);
-			DOut("           [ViewData] sceneGuid: {}", sceneGuid.ToString());
-			DOut("           [ViewData] uiScriptGuids({})", uiScriptGuids.size());
+			DOut("           [AppViewData] title: {}", title);
+			DOut("           [AppViewData] defaultSize: {}x{}", defaultSize.width, defaultSize.height);
+			DOut("           [AppViewData] isFullscreenByDefault: {}", isFullscreenByDefault);
+			DOut("           [AppViewData] resizable: {}", resizable);
+			DOut("           [AppViewData] sceneGuid: {}", sceneGuid.ToString());
+			DOut("           [AppViewData] uiScriptGuids({})", uiScriptGuids.size());
 			for (zU32 i = 0; i < uiScriptGuids.size(); ++i)
 			{
 				DOut("             uiScriptGuid #{}: {}", i, uiScriptGuids[i].ToString());
@@ -44,19 +46,21 @@ namespace zzz::core
 		}
 
 	private:
-		std::string name;
-		Size2D<zU32> size;
+		std::string title;
+		Size2D<zU32> defaultSize;
 		Guid sceneGuid;
 		std::vector<Guid> uiScriptGuids;
-
-		void SetName(std::string_view viewName) { name = viewName; }
-		friend class zzz::engine::PackageManager;
+		bool isFullscreenByDefault = false;
+		bool resizable = true;
 
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override
 		{
-			return serializer.Serialize(buffer, size)
+			return serializer.Serialize(buffer, title)
+				.and_then([&]() { return serializer.Serialize(buffer, defaultSize); })
 				.and_then([&]() { return serializer.Serialize(buffer, sceneGuid); })
+				.and_then([&]() { return serializer.Serialize(buffer, isFullscreenByDefault); })
+				.and_then([&]() { return serializer.Serialize(buffer, resizable); })
 				.and_then([&]() {
 					const zU32 scriptsCount = static_cast<zU32>(uiScriptGuids.size());
 					return serializer.Serialize(buffer, scriptsCount);
@@ -74,8 +78,11 @@ namespace zzz::core
 		{
 			zU32 scriptsCount = 0;
 
-			return serializer.Deserialize(buffer, offset, size)
+			return serializer.Deserialize(buffer, offset, title)
+				.and_then([&]() { return serializer.Deserialize(buffer, offset, defaultSize); })
 				.and_then([&]() { return serializer.Deserialize(buffer, offset, sceneGuid); })
+				.and_then([&]() { return serializer.Deserialize(buffer, offset, isFullscreenByDefault); })
+				.and_then([&]() { return serializer.Deserialize(buffer, offset, resizable); })
 				.and_then([&]() {
 					return serializer.Deserialize(buffer, offset, scriptsCount);
 				})
@@ -94,4 +101,3 @@ namespace zzz::core
 		}
 	};
 }
-

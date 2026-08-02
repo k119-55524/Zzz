@@ -10,6 +10,7 @@ namespace zzz::common
 		Scene = 2,
 		View = 3,
 		Prefab = 4,
-		BinaryAsset = 5
+		BinaryAsset = 5,
+		AppView = 6
 	};
 }

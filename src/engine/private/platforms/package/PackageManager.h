@@ -9,6 +9,7 @@
 #include <core/Enums/ePackage.h>
 #include <core/IO/GamePackage/PackageEntry.h>
 #include <core/IO/GamePackage/PackageHeader.h>
+#include <core/IO/GamePackage/AppViewData.h>
 
 #include "../core/IO/Path.h"
 
@@ -43,7 +44,7 @@ namespace zzz::engine
 		[[nodiscard]] std::optional<PackageEntry> GetEntryByName(ePackage type, std::string_view name) const;
 		[[nodiscard]] std::optional<PackageEntry> GetEntryByGuid(ePackage type, const Guid& guid) const;
 
-		[[nodiscard]] std::optional<Guid> GetDefaultViewGuid() const;
+		[[nodiscard]] std::optional<AppViewData> GetAppViewData() const;
 
 	private:
 		void Initialize(const Path& path);

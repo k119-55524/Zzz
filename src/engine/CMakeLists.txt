@@ -34,10 +34,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "headers/Enums.h"
 
         # Core
-        "private/platforms/config/ConfigManager.h" "private/platforms/config/ConfigManager.cpp"
         "private/platforms/package/PackageManager.h" "private/platforms/package/PackageManager.cpp"
-        "private/platforms/config/EngineConfig.h" "private/platforms/config/EngineConfig.cpp"
-        "private/platforms/config/PlatformConfig.h"
         "private/core/IO/Path.h" "private/core/IO/Path.cpp"
         "public/core/EngineTime.h" "public/core/EngineTime.cpp"
 
@@ -81,14 +78,12 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         if(${IS_EDITOR})
             target_sources(${TARGET_NAME} PRIVATE 
                 "private/platforms/Platform_Editor.cpp"
-                "private/platforms/config/ConfigEditor.h" "private/platforms/config/ConfigEditor.cpp"
                 "private/platforms/input/InputEditor.h" "private/platforms/input/InputEditor.cpp"
                 "private/platforms/window/WinMSWindowEditor.h" "private/platforms/window/WinMSWindowEditor.cpp"
             )
         else()
             target_sources(${TARGET_NAME} PRIVATE 
                 "private/platforms/Platform_Windows.cpp"
-                "private/platforms/config/ConfigMSWin.h" "private/platforms/config/ConfigMSWin.cpp"
                 "private/platforms/input/InputMSWindows.h" "private/platforms/input/InputMSWindows.cpp"
                 "private/platforms/main_loop/MainLoop_MSWin.h" "private/platforms/main_loop/MainLoop_MSWin.cpp"
                 "private/platforms/window/WinMSWindows.h" "private/platforms/window/WinMSWindows.cpp"
@@ -99,7 +94,6 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
     if(UNIX AND NOT APPLE AND NOT ANDROID)
         target_sources(${TARGET_NAME} PRIVATE 
             "private/platforms/Platform_Linux.cpp"
-            "private/platforms/config/ConfigLinux.h" "private/platforms/config/ConfigLinux.cpp"
             "private/platforms/input/InputLinux.h" "private/platforms/input/InputLinux.cpp"
             "private/platforms/main_loop/MainLoop_Linux.h" "private/platforms/main_loop/MainLoop_Linux.cpp"
             "private/platforms/window/WinLinux.h" "private/platforms/window/WinLinux.cpp"
@@ -109,7 +103,6 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
     if(ANDROID)
         target_sources(${TARGET_NAME} PRIVATE 
             "private/platforms/Platform_Android.cpp"
-            "private/platforms/config/ConfigAndroid.h" "private/platforms/config/ConfigAndroid.cpp"
             "private/platforms/input/InputAndroid.h" "private/platforms/input/InputAndroid.cpp"
             "private/platforms/main_loop/MainLoop_Android.h" "private/platforms/main_loop/MainLoop_Android.cpp"
             "private/platforms/window/WinAndroid.h" "private/platforms/window/WinAndroid.cpp"
@@ -124,7 +117,6 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
 
         if(IOS)
             target_sources(${TARGET_NAME} PRIVATE
-                "private/platforms/config/ConfigiOS.h" "private/platforms/config/ConfigiOS.mm"
                 "private/platforms/input/InputiOS.h" "private/platforms/input/InputiOS.mm"
                 "private/platforms/Platform_iOS.mm"
                 "private/platforms/main_loop/MainLoop_iOS.h" "private/platforms/main_loop/MainLoop_iOS.mm"
@@ -132,7 +124,6 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
             )
         else()
             target_sources(${TARGET_NAME} PRIVATE
-                "private/platforms/config/ConfigMacOS.h" "private/platforms/config/ConfigMacOS.mm"
                 "private/platforms/input/InputMacOS.h" "private/platforms/input/InputMacOS.mm"
                 "private/platforms/Platform_MacOS.mm"
                 "private/platforms/main_loop/MainLoop_MacOS.h" "private/platforms/main_loop/MainLoop_MacOS.mm"

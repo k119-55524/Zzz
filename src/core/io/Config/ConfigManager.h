@@ -1,7 +1,7 @@
 #pragma once
 
 #include "EngineConfig.h"
-#include "../../core/IO/Path.h"
+#include <engine/private/core/IO/Path.h>
 
 using namespace zzz::io;
 
@@ -13,9 +13,8 @@ namespace zzz::engine
 		ConfigManager() = delete;
 		ConfigManager(const Path& path);
 
-		[[nodiscard]] std::expected<void, std::string> SaveConfig();
-
 		inline const PlatformConfig& GetPlatformConfig() const noexcept { return m_EngineConfig->GetPlatformConfig(); }
+		[[nodiscard]] std::expected<void, std::string> SaveConfig();
 
 	private:
 		void Initialize();

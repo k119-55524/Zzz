@@ -32,7 +32,7 @@ namespace zzz::core
 
 		inline void LogFileBlock() const 
 		{ 
-			DOut("        [PackageEntry] Имя: '{}' | GUID: {} | Тип: {} | Смещение: {} байт | Размер: {} байт", 
+			DOut("        [PackageEntry] name: '{}' | guid: {} | type: {} | offset: {} | size: {}", 
 				name, guid.ToString(), EnumToString::ToString(static_cast<ePackage>(assetType)), offset, size); 
 		}
 

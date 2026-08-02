@@ -91,6 +91,7 @@ target_precompile_headers(game_win PRIVATE
 target_include_directories(game_win PRIVATE
     pch
     ${CMAKE_CURRENT_SOURCE_DIR}
+    "${CMAKE_SOURCE_DIR}/src/engine"
     "${CMAKE_SOURCE_DIR}/src/engine/public/core/scene"
     "${CMAKE_SOURCE_DIR}/src/engine/public/core/userscripts"
     "${CMAKE_SOURCE_DIR}/src/engine/public/core/userscripts/base_script"

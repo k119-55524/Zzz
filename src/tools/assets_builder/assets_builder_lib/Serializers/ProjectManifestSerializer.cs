@@ -21,15 +21,6 @@ public class ProjectManifestSerializer : IAssetSerializer
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;
 
-        // Write startView GUID (16 bytes)
-        string startViewStr = string.Empty;
-        if (root.TryGetProperty("start_view", out var svProp1) && svProp1.GetString() is string s1)
-            startViewStr = s1;
-        else if (root.TryGetProperty("startView", out var svProp2) && svProp2.GetString() is string s2)
-            startViewStr = s2;
-
-        writer.WriteGuid(startViewStr);
-
         // Write GameScripts GUIDs array (16 bytes binary each)
         var gameScriptsList = new List<string>();
         if (root.TryGetProperty("game_scripts", out var gsArr) && gsArr.ValueKind == JsonValueKind.Array)

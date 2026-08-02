@@ -27,7 +27,8 @@ Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeDa
 
 	m_Path = safe_make_shared<Path>(appName, nativeData);
 	m_PackageManager = safe_make_shared<PackageManager>(*m_Path);
-	m_Platform = safe_make_unique<Platform>(*m_Path, nativeData);
+	m_ConfigManager = safe_make_shared<ConfigManager>(*m_Path);
+	m_Platform = safe_make_unique<Platform>(nativeData);
 	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, [this]() { OnCloseAllViews(); });
 	m_MainLoop = safe_make_shared<MainLoop>(*m_Platform, [this]() { OnUpdateSystem(); });
 	m_EventBus = safe_make_shared<ProjectEventBus>();
@@ -65,6 +66,11 @@ void Engine::Shutdown()
 
 		m_Time = nullptr;
 		m_Platform = nullptr;
+
+		if (m_ConfigManager)
+			m_ConfigManager->SaveConfig();
+		m_ConfigManager = nullptr;
+
 		m_PackageManager = nullptr;
 		m_Path = nullptr;
 	}

@@ -10,6 +10,7 @@
 #include <core/IO/GamePackage/PackageHeader.h>
 #include <core/IO/GamePackage/PackageEntry.h>
 #include <core/IO/GamePackage/ProjectManifestData.h>
+#include <core/IO/GamePackage/AppViewData.h>
 #include <core/IO/GamePackage/SceneData.h>
 #include <core/IO/GamePackage/ViewData.h>
 #include <core/IO/GamePackage/PrefabData.h>
@@ -100,20 +101,40 @@ namespace zzz::builder
 					}
 				}
 
-				Guid startViewGuid{};
-				if (root.contains("start_view") && root["start_view"].is_string())
+				zzz::core::ProjectManifestData manifestData(gameScriptGuids, sceneGuids, viewGuids);
+				if (auto res = serializer.Serialize(result, manifestData); !res)
+					return {};
+			}
+			else if (assetType == zzz::common::ePackage::AppView)
+			{
+				std::string title = root.value("title", "Game Window");
+				zU32 width = root.value("width", 1280u);
+				zU32 height = root.value("height", 720u);
+				bool isFullscreen = root.value("fullscreen", false);
+				bool resizable = root.value("resizable", true);
+
+				Guid sceneGuid{};
+				if (root.contains("scene") && root["scene"].is_string())
 				{
-					if (auto parsed = Guid::Parse(root["start_view"].get<std::string>()))
-						startViewGuid = *parsed;
-				}
-				else if (root.contains("startView") && root["startView"].is_string())
-				{
-					if (auto parsed = Guid::Parse(root["startView"].get<std::string>()))
-						startViewGuid = *parsed;
+					if (auto parsed = Guid::Parse(root["scene"].get<std::string>()))
+						sceneGuid = *parsed;
 				}
 
-				zzz::core::ProjectManifestData manifestData(startViewGuid, gameScriptGuids, sceneGuids, viewGuids);
-				if (auto res = serializer.Serialize(result, manifestData); !res)
+				std::vector<Guid> uiScriptGuids;
+				if (root.contains("scripts") && root["scripts"].is_array())
+				{
+					for (const auto& elem : root["scripts"])
+					{
+						if (elem.is_string())
+						{
+							if (auto parsed = Guid::Parse(elem.get<std::string>()))
+								uiScriptGuids.push_back(*parsed);
+						}
+					}
+				}
+
+				zzz::core::AppViewData appViewData(title, Size2D<zU32>{ width, height }, sceneGuid, uiScriptGuids, isFullscreen, resizable);
+				if (auto res = serializer.Serialize(result, appViewData); !res)
 					return {};
 			}
 			else if (assetType == zzz::common::ePackage::Scene)
@@ -239,6 +260,10 @@ namespace zzz::builder
 				{
 					typeVal = static_cast<uint32_t>(zzz::common::ePackage::Prefab);
 				}
+				else if (ext == ".zav")
+				{
+					typeVal = static_cast<uint32_t>(zzz::common::ePackage::AppView);
+				}
 				else
 				{
 					continue;
@@ -277,6 +302,20 @@ namespace zzz::builder
 					pendingAssets.push_back({ assetName, guid, typeVal, path });
 				}
 			}
+		}
+
+		bool hasAppView = std::any_of(pendingAssets.begin(), pendingAssets.end(), [](const PendingAsset& item) {
+			return item.type == static_cast<uint32_t>(zzz::common::ePackage::AppView);
+		});
+
+		if (!hasAppView)
+		{
+			pendingAssets.push_back({
+				"MainAppView",
+				"00000000-0000-0000-0000-000000000002",
+				static_cast<uint32_t>(zzz::common::ePackage::AppView),
+				projJsonPath
+			});
 		}
 
 		// 3. Формирование бинарного файла package.dat в подпапке destinationDir/assets/

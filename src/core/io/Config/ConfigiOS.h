@@ -1,16 +1,16 @@
 #pragma once
 
-#include "../../../header.h"
+#include <logger/logger.h>
 #include <core/Serialize/Serializer.h>
 
 namespace zzz::engine
 {
 	using namespace zzz::common;
-	class ConfigMacOS final : public ISerializable
+	class ConfigiOS final : public ISerializable
 	{
 	public:
-		ConfigMacOS();
-		~ConfigMacOS() override = default;
+		ConfigiOS();
+		~ConfigiOS() override = default;
 
 	private:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override;

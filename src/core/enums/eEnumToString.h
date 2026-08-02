@@ -49,6 +49,7 @@ namespace zzz::common
 			case ePackage::View:            return "View";
 			case ePackage::Prefab:          return "Prefab";
 			case ePackage::BinaryAsset:     return "BinaryAsset";
+			case ePackage::AppView:         return "AppView";
 			}
 			THROW_RUNTIME("Необработанный ePackage");
 		}

@@ -1,25 +1,25 @@
 #pragma once
 
-#include "PlatformConfig.h"
-#include <core/Version.h>
+
+#include <logger/logger.h>
+#include <engine/headers/MSWin.h>
 #include <core/Serialize/Serializer.h>
 
 namespace zzz::engine
 {
 	using namespace zzz::common;
-	class EngineConfig final : public ISerializable
+	class ConfigMSWin final : public ISerializable
 	{
 	public:
-		explicit EngineConfig();
-		~EngineConfig() = default;
-
-		inline const PlatformConfig& GetPlatformConfig() const noexcept { return m_PlatformConfig; }
+		ConfigMSWin();
+		~ConfigMSWin() = default;
 
 	private:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override;
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override;
-
-		Version m_Version;
-		PlatformConfig m_PlatformConfig;
 	};
 }
+
+
+
+

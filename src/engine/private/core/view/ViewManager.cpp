@@ -4,6 +4,7 @@
 #include "../../platforms/Platform.h"
 #include "../../platforms/package/PackageManager.h"
 #include <core/IO/GamePackage/ProjectManifestData.h>
+#include <core/IO/GamePackage/AppViewData.h>
 #include <core/IO/GamePackage/ViewData.h>
 #include "public/core/userscripts/ScriptRegistry.h"
 #include "public/core/userscripts/base_script/ViewScript.h"
@@ -30,30 +31,21 @@ ViewManager::~ViewManager()
 
 std::expected<std::shared_ptr<View>, std::string> ViewManager::InitializeFromPackage(const PackageManager& packageManager)
 {
-	auto defaultGuid = packageManager.GetDefaultViewGuid();
-	if (!defaultGuid)
+	auto appViewData = packageManager.GetAppViewData();
+	if (!appViewData)
 	{
-		std::string err = "Стартовый View GUID не найден в манифесте пакета.";
-		DOutError("{}", err);
-		return std::unexpected(err);
-	}
-
-	const Guid& viewGuid = *defaultGuid;
-	auto viewData = packageManager.LoadAssetDataByGuid<ViewData>(ePackage::View, viewGuid);
-	if (!viewData)
-	{
-		std::string err = std::format("Не удалось загрузить ViewData по стартовому GUID: {}. Ошибка: {}", viewGuid.ToString(), "Не удалось найти запись пакета или десериализовать данные.");
+		std::string err = "Обязательный ресурс AppViewData не найден в пакете.";
 		DOutError("{}", err);
 		return std::unexpected(err);
 	}
 
 	std::vector<std::shared_ptr<ViewScript>> scripts;
-	for (const auto& scriptGuid : viewData->GetUiScriptGuids())
+	for (const auto& scriptGuid : appViewData->GetUiScriptGuids())
 	{
 		auto script = ScriptRegistry::CreateViewScript(scriptGuid);
 		if (!script)
 		{
-			std::string err = std::format("Не удалось создать ViewScript по GUID {} для вида '{}'.", scriptGuid.ToString(), viewData->GetName());
+			std::string err = std::format("Не удалось создать ViewScript по GUID {} для главного вида '{}'.", scriptGuid.ToString(), appViewData->GetTitle());
 			DOutError("{}", err);
 			return std::unexpected(err);
 		}
@@ -61,7 +53,8 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::InitializeFromPac
 		scripts.push_back(script);
 	}
 
-	return CreateView(*viewData, scripts);
+	ViewData viewData(appViewData->GetDefaultSize(), appViewData->GetSceneGuid(), appViewData->GetUiScriptGuids());
+	return CreateView(viewData, scripts);
 }
 
 std::expected <std::shared_ptr<View>, std::string> ViewManager::CreateView(const zzz::core::ViewData& viewData, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts)

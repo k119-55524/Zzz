@@ -14,6 +14,23 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/ePackage.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/eEnumToString.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileHeader.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigManager.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigManager.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/EngineConfig.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/EngineConfig.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/PlatformConfig.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigMSWin.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigMSWin.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigLinux.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigLinux.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigAndroid.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigAndroid.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigMacOS.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigMacOS.mm
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigiOS.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigiOS.mm
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigEditor.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigEditor.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/GamePackage/PackageHeader.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/GamePackage/PackageEntry.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/GamePackage/ViewData.h

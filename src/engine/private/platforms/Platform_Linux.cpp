@@ -2,7 +2,6 @@
 #include <memory>
 #include "Platform.h"
 
-#include "config/ConfigLinux.h"
 #include "input/InputLinux.h"
 #include "../core/specific/linux_wayland/xdg-shell-client-protocol.h"
 

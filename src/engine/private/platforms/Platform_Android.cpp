@@ -4,7 +4,6 @@
 #include "headers/Android.h"
 #include "window/WinAndroid.h"
 #include "input/InputAndroid.h"
-#include "config/ConfigAndroid.h"
 #include "main_loop/MainLoop_Android.h"
 
 using namespace zzz::engine;

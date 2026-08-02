@@ -4,11 +4,13 @@
 #include <common/Common.h>
 #include <core/IO/FileHeader.h>
 
+using namespace zzz::io;
+
 namespace zzz::common
 {
 #pragma region Config file constants
 	constexpr std::string_view c_ConfigFileName = "config.dat";
-	constexpr zzz::io::FileHeader<3> c_ConfigHeader
+	constexpr FileHeader<3> c_ConfigHeader
 	{
 		std::array<std::byte, 3>{
 			static_cast<std::byte>('Z'),
@@ -26,7 +28,7 @@ namespace zzz::common
 
 #pragma region Game Package file constants
 	constexpr std::string_view c_GamePackageFileName = "assets/package.dat";
-	constexpr zzz::io::FileHeader<3> c_GamePackageHeader
+	constexpr FileHeader<3> c_GamePackageHeader
 	{
 		std::array<std::byte, 3>{
 			static_cast<std::byte>('Z'),
@@ -46,6 +48,6 @@ namespace zzz::common
 
 #pragma region Network constants
 	constexpr std::string_view c_LocalhostIPv4 = "127.0.0.1";
-	constexpr uint16_t c_DefaultLoggerPort = 3030;
+	constexpr zU16 c_DefaultLoggerPort = 3030;
 #pragma endregion
 }

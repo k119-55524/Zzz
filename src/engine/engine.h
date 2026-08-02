@@ -7,11 +7,13 @@
 #include <expected>
 #include <core/Fwd.h>
 #include <string_view>
-#include <logger/logger.h>
 
-#include "public/core/userscripts/EngineExport.h"
 #include "NativeAppData.h"
 #include "public/core/EngineTime.h"
+#include <core/IO/Config/ConfigManager.h>
+
+using namespace zzz::io;
+using namespace zzz::script;
 
 namespace zzz::engine
 {
@@ -36,10 +38,11 @@ namespace zzz::engine
 
 		std::mutex stateMutex;
 		std::atomic<eInitState> engineState;
-		std::vector<std::shared_ptr<zzz::script::GameScript>> m_Scripts;
+		std::vector<std::shared_ptr<GameScript>> m_Scripts;
 
-		std::shared_ptr<zzz::io::Path> m_Path;
+		std::shared_ptr<Path> m_Path;
 		std::shared_ptr<PackageManager> m_PackageManager;
+		std::shared_ptr<ConfigManager> m_ConfigManager;
 		std::unique_ptr<Platform> m_Platform;
 		std::unique_ptr<ViewManager> m_ViewManager;
 		std::shared_ptr<MainLoopBase> m_MainLoop;

@@ -63,6 +63,16 @@ namespace zzz::engine
 			m_EntriesByGuid[type][entry.GetGuid()] = entry;
 		}
 
+		auto appViewIt = m_EntriesByName.find(ePackage::AppView);
+		if (appViewIt == m_EntriesByName.end() || appViewIt->second.empty())
+		{
+			THROW_RUNTIME("Ошибка пакета {}: Обязательный ресурс AppViewData отсутствует.", m_PackagePath.string());
+		}
+		if (appViewIt->second.size() > 1)
+		{
+			THROW_RUNTIME("Ошибка пакета {}: Ресурс AppViewData не уникален (найдено {} штук).", m_PackagePath.string(), appViewIt->second.size());
+		}
+
 		LogPackageEntriesSummary();
 	}
 
@@ -92,22 +102,14 @@ namespace zzz::engine
 		return entryIt->second;
 	}
 
-	std::optional<Guid> PackageManager::GetDefaultViewGuid() const
+	std::optional<AppViewData> PackageManager::GetAppViewData() const
 	{
-		auto typeIt = m_EntriesByName.find(ePackage::ProjectManifest);
+		auto typeIt = m_EntriesByName.find(ePackage::AppView);
 		if (typeIt == m_EntriesByName.end() || typeIt->second.empty())
 			return std::nullopt;
 
 		const auto& entry = typeIt->second.begin()->second;
-		auto manifest = LoadAssetData<ProjectManifestData>(entry);
-		if (!manifest)
-			return std::nullopt;
-
-		const Guid& startGuid = manifest->GetStartViewGuid();
-		if (startGuid.IsEmpty())
-			return std::nullopt;
-
-		return startGuid;
+		return LoadAssetData<AppViewData>(entry);
 	}
 
 	template <typename T> requires std::derived_from<T, ISerializable>
@@ -147,6 +149,7 @@ namespace zzz::engine
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 		// Закомментируй тот тип ресурса, который не хочешь логировать
 		LogEntriesSummaryForType<ProjectManifestData>(ePackage::ProjectManifest);
+		LogEntriesSummaryForType<AppViewData>(ePackage::AppView);
 		LogEntriesSummaryForType<SceneData>(ePackage::Scene);
 		LogEntriesSummaryForType<ViewData>(ePackage::View);
 		LogEntriesSummaryForType<PrefabData>(ePackage::Prefab);
