@@ -40,12 +40,14 @@ namespace zzz::engine
 			return LoadAssetData<T>(*entryOpt);
 		}
 
+		[[nodiscard]] std::optional<PackageEntry> GetEntryByName(ePackage type, std::string_view name) const;
+		[[nodiscard]] std::optional<PackageEntry> GetEntryByGuid(ePackage type, const Guid& guid) const;
+
+		[[nodiscard]] std::optional<Guid> GetDefaultViewGuid() const;
+
 	private:
 		void Initialize(const Path& path);
 		void LogPackageEntriesSummary() const;
-
-		[[nodiscard]] std::optional<PackageEntry> GetEntryByName(ePackage type, std::string_view name) const;
-		[[nodiscard]] std::optional<PackageEntry> GetEntryByGuid(ePackage type, const Guid& guid) const;
 		template <typename T> requires std::derived_from<T, ISerializable>
 		void LogEntriesSummaryForType(ePackage type) const;
 		template <typename T> requires std::derived_from<T, ISerializable>

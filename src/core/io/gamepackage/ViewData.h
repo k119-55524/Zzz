@@ -15,19 +15,21 @@ namespace zzz::core
 	{
 	public:
 		ViewData() = default;
-		ViewData(Size2D<zU32> size, Guid sceneGuid, std::vector<Guid> uiScriptGuids)
+		ViewData(Size2D<zU32> size, Guid sceneGuid, std::vector<Guid> uiScriptGuids, bool isActive = true)
 			: size(size)
 			, sceneGuid(sceneGuid)
 			, uiScriptGuids(std::move(uiScriptGuids))
+			, isActive(isActive)
 		{}
 
 		[[nodiscard]] const Size2D<zU32>& GetSize() const noexcept { return size; }
 		[[nodiscard]] const Guid& GetSceneGuid() const noexcept { return sceneGuid; }
 		[[nodiscard]] const std::vector<Guid>& GetUiScriptGuids() const noexcept { return uiScriptGuids; }
+		[[nodiscard]] bool IsActive() const noexcept { return isActive; }
 
 		inline void LogFileBlock() const
 		{
-			DOut("           [ViewData] Размер: {}x{}", size.width, size.height);
+			DOut("           [ViewData] Размер: {}x{} | Активен: {}", size.width, size.height, isActive);
 			DOut("           [ViewData] Привязанная сцена(GUID): {}", sceneGuid.ToString());
 			DOut("           [ViewData] Скрипты({})", uiScriptGuids.size());
 			for (zU32 i = 0; i < uiScriptGuids.size(); ++i)
@@ -40,12 +42,14 @@ namespace zzz::core
 		Size2D<zU32> size;
 		Guid sceneGuid;
 		std::vector<Guid> uiScriptGuids;
+		bool isActive = true;
 
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override
 		{
 			return serializer.Serialize(buffer, size)
 				.and_then([&]() { return serializer.Serialize(buffer, sceneGuid); })
+				.and_then([&]() { return serializer.Serialize(buffer, isActive); })
 				.and_then([&]() {
 					const zU32 scriptsCount = static_cast<zU32>(uiScriptGuids.size());
 					return serializer.Serialize(buffer, scriptsCount);
@@ -65,6 +69,7 @@ namespace zzz::core
 
 			return serializer.Deserialize(buffer, offset, size)
 				.and_then([&]() { return serializer.Deserialize(buffer, offset, sceneGuid); })
+				.and_then([&]() { return serializer.Deserialize(buffer, offset, isActive); })
 				.and_then([&]() {
 					return serializer.Deserialize(buffer, offset, scriptsCount);
 				})

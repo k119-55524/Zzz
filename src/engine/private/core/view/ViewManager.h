@@ -11,11 +11,15 @@ namespace zzz::script
 	class ViewScript;
 }
 
+#include <expected>
+#include <string>
+
 namespace zzz::engine
 {
 	class Platform;
 	class View;
 	class Time;
+	class PackageManager;
 
 	class ViewManager final
 	{
@@ -26,9 +30,10 @@ namespace zzz::engine
 		ViewManager(const Platform& platform, std::function<void()> onAllViewsClosed);
 		~ViewManager();
 
-		View* CreateView(const std::string_view viewName, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts);
+		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> InitializeFromPackage(const PackageManager& packageManager);
+		[[nodiscard]] std::expected <std::shared_ptr<View>, std::string> CreateView(const std::string_view viewName, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts);
 #if Z_EDITOR
-		View* CreateView(void* data);
+		[[nodiscard]] std::expected <std::shared_ptr<View>, std::string> CreateView(void* data);
 		void RemoveView(View* view);
 #endif
 

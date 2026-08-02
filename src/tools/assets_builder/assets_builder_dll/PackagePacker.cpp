@@ -100,7 +100,19 @@ namespace zzz::builder
 					}
 				}
 
-				zzz::core::ProjectManifestData manifestData(gameScriptGuids, sceneGuids, viewGuids);
+				Guid startViewGuid{};
+				if (root.contains("start_view") && root["start_view"].is_string())
+				{
+					if (auto parsed = Guid::Parse(root["start_view"].get<std::string>()))
+						startViewGuid = *parsed;
+				}
+				else if (root.contains("startView") && root["startView"].is_string())
+				{
+					if (auto parsed = Guid::Parse(root["startView"].get<std::string>()))
+						startViewGuid = *parsed;
+				}
+
+				zzz::core::ProjectManifestData manifestData(startViewGuid, gameScriptGuids, sceneGuids, viewGuids);
 				serializer.Serialize(result, manifestData);
 			}
 			else if (assetType == zzz::common::ePackage::Scene)
@@ -130,6 +142,7 @@ namespace zzz::builder
 			{
 				zU32 width = root.value("width", 800u);
 				zU32 height = root.value("height", 600u);
+				bool isActive = root.value("is_active", root.value("active", true));
 
 				Guid sceneGuid{};
 				if (root.contains("scene") && root["scene"].is_string())
@@ -151,7 +164,7 @@ namespace zzz::builder
 					}
 				}
 
-				zzz::core::ViewData viewData(Size2D<zU32>{ width, height }, sceneGuid, uiScriptGuids);
+				zzz::core::ViewData viewData(Size2D<zU32>{ width, height }, sceneGuid, uiScriptGuids, isActive);
 				serializer.Serialize(result, viewData);
 			}
 			else if (assetType == zzz::common::ePackage::Prefab)

@@ -2,8 +2,16 @@
 #include "View.h"
 #include "ViewManager.h"
 #include "../../platforms/Platform.h"
+#include "../../platforms/package/PackageManager.h"
+#include <core/IO/GamePackage/ProjectManifestData.h>
+#include <core/IO/GamePackage/ViewData.h>
+#include "public/core/userscripts/ScriptRegistry.h"
+#include "public/core/userscripts/base_script/ViewScript.h"
 
 using namespace zzz::engine;
+using namespace zzz::core;
+using namespace zzz::script;
+using zzz::common::ePackage;
 
 ViewManager::ViewManager(const Platform& platform, std::function<void()> onAllViewsClosed) :
 	m_Platform{ platform },
@@ -20,7 +28,44 @@ ViewManager::~ViewManager()
 	m_Views.clear();
 }
 
-View* ViewManager::CreateView(const std::string_view viewName, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts)
+std::expected<std::shared_ptr<View>, std::string> ViewManager::InitializeFromPackage(const PackageManager& packageManager)
+{
+	auto defaultGuid = packageManager.GetDefaultViewGuid();
+	if (!defaultGuid)
+	{
+		DOutWarning("Стартовый View GUID не найден в манифесте пакета. Выполняется фолбек на дефолтный View.");
+		return CreateView("Main View", {});
+	}
+
+	const Guid& viewGuid = *defaultGuid;
+	auto viewData = packageManager.LoadAssetDataByGuid<ViewData>(ePackage::View, viewGuid);
+	if (!viewData)
+	{
+		DOutError("Не удалось загрузить ViewData по стартовому GUID: {}. Выполняется фолбек на дефолтный View.", viewGuid.ToString());
+		return CreateView("Main View", {});
+	}
+
+	auto entryOpt = packageManager.GetEntryByGuid(ePackage::View, viewGuid);
+	std::string viewName = entryOpt ? entryOpt->GetName() : "Main View";
+
+	std::vector<std::shared_ptr<ViewScript>> scripts;
+	for (const auto& scriptGuid : viewData->GetUiScriptGuids())
+	{
+		auto scriptEntryOpt = packageManager.GetEntryByGuid(ePackage::BinaryAsset, scriptGuid);
+		std::string scriptName = scriptEntryOpt ? scriptEntryOpt->GetName() : "";
+		if (!scriptName.empty())
+		{
+			if (auto script = ScriptRegistry::CreateViewScript(scriptName))
+				scripts.push_back(script);
+			else
+				DOutError("Не удалось создать ViewScript '{}' для вида '{}'", scriptName, viewName);
+		}
+	}
+
+	return CreateView(viewName, scripts);
+}
+
+std::expected <std::shared_ptr<View>, std::string> ViewManager::CreateView(const std::string_view viewName, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts)
 {
 #if Z_MOBILE
 	if (m_Views.size() >= 1)
@@ -28,10 +73,9 @@ View* ViewManager::CreateView(const std::string_view viewName, const std::vector
 #endif
 
 	auto view = safe_make_shared<View>(viewName, m_Platform, scripts, [this](View& v) { OnWindowClose(v); });
-	View* viewPtr = view.get();
 	m_Views.push_back(std::move(view));
 
-	return viewPtr;
+	return view;
 }
 
 void ViewManager::OnWindowClose(View& view)
@@ -53,13 +97,12 @@ void ViewManager::OnWindowClose(View& view)
 }
 
 #if Z_EDITOR
-View* ViewManager::CreateView(void* data)
+[[nodiscard]] std::expected <std::shared_ptr<View>, std::string> ViewManager::CreateView(void* data)
 {
 	auto view = safe_make_shared<View>(m_Platform, data);
-	View* viewPtr = view.get();
 	m_Views.push_back(std::move(view));
 
-	return viewPtr;
+	return view;
 }
 
 void ViewManager::RemoveView(View* view)

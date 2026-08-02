@@ -92,26 +92,46 @@ namespace zzz::engine
 		return entryIt->second;
 	}
 
+	std::optional<Guid> PackageManager::GetDefaultViewGuid() const
+	{
+		auto typeIt = m_EntriesByName.find(ePackage::ProjectManifest);
+		if (typeIt == m_EntriesByName.end() || typeIt->second.empty())
+			return std::nullopt;
+
+		const auto& entry = typeIt->second.begin()->second;
+		auto manifest = LoadAssetData<ProjectManifestData>(entry);
+		if (!manifest)
+			return std::nullopt;
+
+		const Guid& startGuid = manifest->GetStartViewGuid();
+		if (startGuid.IsEmpty())
+			return std::nullopt;
+
+		return startGuid;
+	}
+
 	template <typename T> requires std::derived_from<T, ISerializable>
 	[[nodiscard]] std::optional<T> PackageManager::LoadAssetData(const PackageEntry& entry) const
 	{
-		if (m_PackagePath.empty()) return std::nullopt;
+		if (m_PackagePath.empty())
+			return std::nullopt;
 
 		std::ifstream file(m_PackagePath, std::ios::binary);
-		if (!file.is_open()) return std::nullopt;
+		if (!file.is_open())
+			return std::nullopt;
 
 		file.seekg(entry.GetOffset(), std::ios::beg);
 		std::vector<std::byte> buffer(entry.GetSize());
 		file.read(reinterpret_cast<char*>(buffer.data()), entry.GetSize());
-		if (!file.good()) return std::nullopt;
+		if (!file.good())
+			return std::nullopt;
 
 		std::size_t offset = 0;
 		Serializer serializer;
 		T data{};
 		if (serializer.Deserialize(buffer, offset, data))
-		{
 			return data;
-		}
+
 		return std::nullopt;
 	}
 

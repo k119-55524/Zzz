@@ -176,7 +176,14 @@ namespace zzz::editor
 			return nullptr;
 		}
 
-		return m_ViewManager->CreateView(hwnd);
+		auto res = m_ViewManager->CreateView(hwnd);
+		if (!res)
+		{
+			DOutError("Не удалось создать View в редакторе: {}", res.error());
+			return nullptr;
+		}
+
+		return res.value().get();
 	}
 
 	void EditorEngine::RemoveView(void* view)

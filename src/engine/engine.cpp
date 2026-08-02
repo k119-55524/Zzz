@@ -91,7 +91,11 @@ void Engine::Shutdown()
 	bool isError = false;
 	try
 	{
-		m_ViewManager->CreateView("Main View", {});
+		auto initView = m_ViewManager->InitializeFromPackage(*m_PackageManager);
+		if (!initView)
+		{
+			DOutWarning("Ошибка инициализации ViewManager из пакета: {}", initView.error());
+		}
 
 		StartGame();
 		m_Time->ResetFrameTimer();
