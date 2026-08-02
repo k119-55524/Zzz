@@ -48,9 +48,6 @@ namespace zzz::engine
 		}
 		inline bool IsActive() const noexcept { return m_IsActive; }
 
-		void SetScene(std::shared_ptr<zzz::script::Scene> scene);
-		inline std::shared_ptr<zzz::script::Scene> GetScene() const noexcept { return m_ActiveScene; }
-
 	private:
 		void Initialize(const std::string_view viewName, void* data = nullptr, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts = {});
 
@@ -182,7 +179,7 @@ namespace zzz::engine
 		std::function<void(View&)> OnWindowClose;
 		void HandleWindowClose();
 
-		bool m_IsActive = true;
+		bool m_IsActive;
 		ViewEventBus m_EventBus;
 		std::shared_ptr<zzz::script::Scene> m_ActiveScene;
 		std::vector<std::shared_ptr<zzz::script::ViewScript>> m_Scripts;

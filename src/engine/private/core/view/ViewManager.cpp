@@ -33,23 +33,26 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::InitializeFromPac
 	auto defaultGuid = packageManager.GetDefaultViewGuid();
 	if (!defaultGuid)
 	{
-		DOutWarning("Стартовый View GUID не найден в манифесте пакета. Выполняется фолбек на дефолтный View.");
-		return CreateView("Main View", {});
+		std::string err = "Стартовый View GUID не найден в манифесте пакета.";
+		DOutError("{}", err);
+		return std::unexpected(err);
 	}
 
 	const Guid& viewGuid = *defaultGuid;
 	auto viewData = packageManager.LoadAssetDataByGuid<ViewData>(ePackage::View, viewGuid);
 	if (!viewData)
 	{
-		DOutError("Не удалось загрузить ViewData по стартовому GUID: {}. Выполняется фолбек на дефолтный View.", viewGuid.ToString());
-		return CreateView("Main View", {});
+		std::string err = std::format("Не удалось загрузить ViewData по стартовому GUID: {}. Ошибка: {}", viewGuid.ToString(), "Не удалось найти запись пакета или десериализовать данные.");
+		DOutError("{}", err);
+		return std::unexpected(err);
 	}
 
 	auto entryOpt = packageManager.GetEntryByGuid(ePackage::View, viewGuid);
 	if (!entryOpt)
 	{
-		DOutError("Запись пакета View с GUID {} не найдена. Выполняется фолбек на дефолтный View.", viewGuid.ToString());
-		return CreateView("Main View", {});
+		std::string err = std::format("Запись пакета View с GUID {} не найдена.", viewGuid.ToString());
+		DOutError("{}", err);
+		return std::unexpected(err);
 	}
 
 	std::string viewName = entryOpt->GetName();
@@ -59,8 +62,9 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::InitializeFromPac
 		auto script = ScriptRegistry::CreateViewScript(scriptGuid);
 		if (!script)
 		{
-			DOutError("Не удалось создать ViewScript по GUID {} для вида '{}'", scriptGuid.ToString(), viewName);
-			return std::unexpected(std::format("Не удалось создать ViewScript по GUID {} для вида '{}'", scriptGuid.ToString(), viewName));
+			std::string err = std::format("Не удалось создать ViewScript по GUID {} для вида '{}'.", scriptGuid.ToString(), viewName);
+			DOutError("{}", err);
+			return std::unexpected(err);
 		}
 
 		scripts.push_back(script);

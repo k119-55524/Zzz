@@ -14,6 +14,7 @@ using namespace zzz::engine;
 
 View::View(const std::string_view viewName, const Platform& platform, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts, std::function<void(View&)> onWindowClose) :
 	m_Platform{ platform },
+	m_IsActive{ true },
 	OnWindowClose(std::move(onWindowClose))
 {
 	ensure(OnWindowClose != nullptr, "OnWindowClose не должен быть null.");
@@ -23,6 +24,7 @@ View::View(const std::string_view viewName, const Platform& platform, const std:
 
 #if Z_EDITOR
 View::View(const Platform& platform, void* data) :
+	m_IsActive{ true },
 	m_Platform{ platform }
 {
 	Initialize("", data, {});
@@ -154,11 +156,6 @@ void View::OnWindowSafeAreaChanged(int top, int bottom, int left, int right)
 	DOut("Событие окна: OnSafeAreaChanged (t:{}, b:{}, l:{}, r:{})", top, bottom, left, right);
 }
 #pragma endregion
-
-void View::SetScene(std::shared_ptr<zzz::script::Scene> scene)
-{
-	m_ActiveScene = std::move(scene);
-}
 
 void View::Update(const zzz::engine::Time& time)
 {

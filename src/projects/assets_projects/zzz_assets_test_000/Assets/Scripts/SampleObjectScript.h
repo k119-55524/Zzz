@@ -5,6 +5,13 @@ class SampleObjectScript : public zzz::script::Script {
 public:
     using Script::Script;
     const char* GetScriptTypeName() const override { return "SampleObjectScript"; }
-    void OnBindEvents() override {}
+    void OnBindEvents() override;
+
+private:
+    void OnInit();
     void OnStart();
+    void OnEnable();
+    void OnDisable();
+    void OnUpdate(float deltaTime);
+    void OnDestroy();
 };

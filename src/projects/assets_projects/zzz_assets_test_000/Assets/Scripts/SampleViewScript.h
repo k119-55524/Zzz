@@ -10,6 +10,7 @@ protected:
 	void OnBindEvents() override;
 
 private:
+	void OnInit();
 	void OnStart();
 	void OnEnable();
 	void OnDisable();

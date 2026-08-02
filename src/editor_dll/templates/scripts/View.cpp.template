@@ -1,4 +1,4 @@
-﻿#include "{ClassName}.hpp"
+#include "{ClassName}.hpp"
 
 {NamespaceOpenCpp}
 {ClassName}::{ClassName}()
@@ -13,6 +13,12 @@ void {ClassName}::OnBindEvents()
 	SubscribeToEnable([this]() { OnEnable(); });
 	SubscribeToDisable([this]() { OnDisable(); });
 	SubscribeToUpdate([this](const zzz::engine::Time& time) { OnUpdate(time); });
+
+	OnInit();
+}
+
+void {ClassName}::OnInit()
+{
 }
 
 void {ClassName}::OnStart()

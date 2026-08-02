@@ -1,4 +1,4 @@
-﻿#include "{ClassName}.hpp"
+#include "{ClassName}.hpp"
 
 {NamespaceOpenCpp}
 {ClassName}::{ClassName}(zzz::GameObject* owner)
@@ -13,6 +13,12 @@ void {ClassName}::OnBindEvents()
 	SubscribeToDestroy([this]() { OnDestroy(); });
 	SubscribeToEnable([this]() { OnEnable(); });
 	SubscribeToDisable([this]() { OnDisable(); });
+
+	OnInit();
+}
+
+void {ClassName}::OnInit()
+{
 }
 
 void {ClassName}::OnStart()

@@ -10,36 +10,42 @@ void SampleViewScript::OnBindEvents()
 	SubscribeToDisable([this]() { OnDisable(); });
 	SubscribeToUpdate([this](const zzz::engine::Time& t) { OnUpdate(t.GetDeltaTime()); });
 	SubscribeToDestroy([this]() { OnDestroy(); });
+
+	OnInit();
+}
+
+void SampleViewScript::OnInit()
+{
+	DOut("[SampleViewScript] - OnInit");
 }
 
 void SampleViewScript::OnStart()
 {
-	DOut("[SampleViewScript] Событие: OnStart");
+	DOut("[SampleViewScript] - OnStart");
 }
 
 void SampleViewScript::OnEnable()
 {
-	DOut("[SampleViewScript] Событие: OnEnable");
+	DOut("[SampleViewScript] - OnEnable");
 }
 
 void SampleViewScript::OnDisable()
 {
-	DOut("[SampleViewScript] Событие: OnDisable");
+	DOut("[SampleViewScript] - OnDisable");
 }
 
-void SampleViewScript::OnUpdate(float deltaTime)
+void SampleViewScript::OnUpdate(float /*deltaTime*/)
 {
-	// Отключаем логгер в каждом кадре, чтобы не забивать консоль, либо пишем периодически
-	static float timer = 0.0f;
-	timer += deltaTime;
-	if (timer >= 2.0f)
-	{
-		DOut("[SampleViewScript] Событие: OnUpdate (dt: {})", deltaTime);
-		timer = 0.0f;
-	}
+	//static float timer = 0.0f;
+	//timer += deltaTime;
+	//if (timer >= 2.0f)
+	//{
+	//	DOut("[SampleViewScript] - OnUpdate (dt: {:.12f})", deltaTime);
+	//	timer = 0.0f;
+	//}
 }
 
 void SampleViewScript::OnDestroy()
 {
-	DOut("[SampleViewScript] Событие: OnDestroy");
+	DOut("[SampleViewScript] - OnDestroy");
 }

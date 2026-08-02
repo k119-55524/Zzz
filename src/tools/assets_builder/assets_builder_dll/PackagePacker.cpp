@@ -113,7 +113,8 @@ namespace zzz::builder
 				}
 
 				zzz::core::ProjectManifestData manifestData(startViewGuid, gameScriptGuids, sceneGuids, viewGuids);
-				serializer.Serialize(result, manifestData);
+				if (auto res = serializer.Serialize(result, manifestData); !res)
+					return {};
 			}
 			else if (assetType == zzz::common::ePackage::Scene)
 			{
@@ -136,7 +137,8 @@ namespace zzz::builder
 				}
 
 				zzz::core::SceneData sceneData(sceneScriptGuids);
-				serializer.Serialize(result, sceneData);
+				if (auto res = serializer.Serialize(result, sceneData); !res)
+					return {};
 			}
 			else if (assetType == zzz::common::ePackage::View)
 			{
@@ -165,12 +167,14 @@ namespace zzz::builder
 				}
 
 				zzz::core::ViewData viewData(Size2D<zU32>{ width, height }, sceneGuid, uiScriptGuids, isActive);
-				serializer.Serialize(result, viewData);
+				if (auto res = serializer.Serialize(result, viewData); !res)
+					return {};
 			}
 			else if (assetType == zzz::common::ePackage::Prefab)
 			{
 				zzz::core::PrefabData prefabData;
-				serializer.Serialize(result, prefabData);
+				if (auto res = serializer.Serialize(result, prefabData); !res)
+					return {};
 			}
 			else
 			{
@@ -210,7 +214,7 @@ namespace zzz::builder
 				"00000000-0000-0000-0000-000000000001",
 				static_cast<uint32_t>(zzz::common::ePackage::ProjectManifest),
 				projJsonPath
-			});
+				});
 		}
 
 		// 2. Поиск сцен (*.zs), вьюх (*.zv) и префабов (*.zp) в исходной директории

@@ -94,14 +94,14 @@ void Engine::Shutdown()
 		RegisterScripts();
 		LoadGlobalScripts();
 
-		auto initView = m_ViewManager->InitializeFromPackage(*m_PackageManager);
-		if (!initView)
+		auto view = m_ViewManager->InitializeFromPackage(*m_PackageManager);
+		if (!view)
 		{
-			DOutWarning("Ошибка инициализации ViewManager из пакета: {}", initView.error());
+			DOutError("{}", view.error());
+			return std::unexpected(view.error());
 		}
 
 		m_EventBus->InvokeStart();
-
 		m_Time->ResetFrameTimer();
 		m_MainLoop->Run();
 	}
@@ -145,7 +145,7 @@ void Engine::LoadGlobalScripts()
 		{
 			m_Scripts.push_back(script);
 			script->Init(m_EventBus);
-			DOut("Глобальный скрипт инициализирован: {}", scriptName);
+			//DOut("Глобальный скрипт инициализирован: {}", scriptName);
 		}
 		else
 			DOutError("Не удалось создать глобальный скрипт: {}", scriptName);

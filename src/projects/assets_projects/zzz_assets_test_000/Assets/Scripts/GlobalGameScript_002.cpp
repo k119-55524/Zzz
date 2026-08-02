@@ -14,29 +14,36 @@ void GlobalGameScript_002::OnBindEvents()
 
 void GlobalGameScript_002::OnInit()
 {
-	DOut("[GlobalGameScript_002] OnInit вызван.");
+	DOut("[GlobalGameScript_002] - OnInit");
 }
 
 void GlobalGameScript_002::OnStart()
 {
-	DOut("[GlobalGameScript_002] OnStart получен!");
+	DOut("[GlobalGameScript_002] - OnStart");
 }
 
 void GlobalGameScript_002::OnEnable()
 {
-	DOut("[GlobalGameScript_002] OnEnable получен!");
+	DOut("[GlobalGameScript_002] - OnEnable");
 }
 
 void GlobalGameScript_002::OnDisable()
 {
-	DOut("[GlobalGameScript_002] OnDisable получен!");
+	DOut("[GlobalGameScript_002] - OnDisable");
 }
 
-void GlobalGameScript_002::OnUpdate(float /*dt*/)
+void GlobalGameScript_002::OnUpdate(float deltaTime)
 {
+	//static float timer = 0.0f;
+	//timer += deltaTime;
+	//if (timer >= 2.0f)
+	//{
+	//	DOut("[GlobalGameScript_002] - OnUpdate (dt: {:.4f})", deltaTime);
+	//	timer = 0.0f;
+	//}
 }
 
 void GlobalGameScript_002::OnDestroy()
 {
-	DOut("[GlobalGameScript_002] OnDestroy получен!");
+	DOut("[GlobalGameScript_002] - OnDestroy");
 }

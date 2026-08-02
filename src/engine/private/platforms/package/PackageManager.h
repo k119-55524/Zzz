@@ -1,14 +1,14 @@
 #pragma once
 
 #include <map>
-#include <unordered_map>
 #include <string>
-#include <string_view>
 #include <optional>
 #include <filesystem>
+#include <string_view>
+#include <unordered_map>
 #include <core/Enums/ePackage.h>
-#include <core/IO/GamePackage/PackageHeader.h>
 #include <core/IO/GamePackage/PackageEntry.h>
+#include <core/IO/GamePackage/PackageHeader.h>
 
 #include "../core/IO/Path.h"
 

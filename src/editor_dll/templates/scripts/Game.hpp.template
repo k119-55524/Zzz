@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <{IncludePath}>
 
 {NamespaceOpenHpp}{NamespaceIndent}class {ClassName} : public {BaseClass}
@@ -12,6 +12,7 @@
 
 {NamespaceIndent}	void OnBindEvents() override;
 {NamespaceIndent}
+{NamespaceIndent}	void OnInit();
 {NamespaceIndent}	void OnStart();
 {NamespaceIndent}	void OnDestroy();
 {NamespaceIndent}	void OnEnable();
