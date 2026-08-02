@@ -33,10 +33,6 @@ public class ViewSerializer : IAssetSerializer
 		string sceneGuid = root.TryGetProperty("scene", out var scProp) ? scProp.GetString() ?? "" : "";
 		writer.WriteGuid(sceneGuid);
 
-		bool isActive = root.TryGetProperty("is_active", out var actProp1) ? actProp1.GetBoolean() :
-						(root.TryGetProperty("active", out var actProp2) ? actProp2.GetBoolean() : true);
-		writer.Write(isActive);
-
 		// ViewScripts GUIDs array (16 bytes binary each)
 		var scriptsList = new List<string>();
 		if (root.TryGetProperty("scripts", out var scArr) && scArr.ValueKind == JsonValueKind.Array)

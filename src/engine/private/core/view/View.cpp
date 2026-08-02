@@ -8,18 +8,20 @@
 #include "../../platforms/window/Window.h"
 #include "public/core/userscripts/base_script/ViewScript.h"
 
+#include <core/IO/GamePackage/ViewData.h>
+
 using namespace zzz::common;
 
 using namespace zzz::engine;
 
-View::View(const std::string_view viewName, const Platform& platform, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts, std::function<void(View&)> onWindowClose) :
+View::View(const zzz::core::ViewData& viewData, const Platform& platform, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts, std::function<void(View&)> onWindowClose) :
 	m_Platform{ platform },
 	m_IsActive{ true },
 	OnWindowClose(std::move(onWindowClose))
 {
 	ensure(OnWindowClose != nullptr, "OnWindowClose не должен быть null.");
 
-	Initialize(viewName, nullptr, scripts);
+	Initialize(&viewData, nullptr, scripts);
 }
 
 #if Z_EDITOR
@@ -27,7 +29,7 @@ View::View(const Platform& platform, void* data) :
 	m_IsActive{ true },
 	m_Platform{ platform }
 {
-	Initialize("", data, {});
+	Initialize(nullptr, data, {});
 }
 #endif
 
@@ -36,7 +38,7 @@ View::~View()
 	m_EventBus.InvokeDestroy();
 }
 
-void View::Initialize(const std::string_view viewName, void* data, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts)
+void View::Initialize(const zzz::core::ViewData* viewData, void* data, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts)
 {
 	m_Input = safe_make_shared<Input>();
 	auto inputRes = m_Input->Initialize();
@@ -59,8 +61,10 @@ void View::Initialize(const std::string_view viewName, void* data, const std::ve
 	callbacks.OnLowMemory        = [this]()                                 { OnWindowLowMemory(); };
 	callbacks.OnSafeAreaChanged  = [this](int t, int b, int l, int r)       { OnWindowSafeAreaChanged(t, b, l, r); };
 
+	std::string_view windowTitle = viewData ? std::string_view(viewData->GetName()) : std::string_view("");
+
 	m_Window = safe_make_shared<Window>(m_Platform, m_Input, std::move(callbacks));
-	auto res = m_Window->Initialize(viewName, data);
+	auto res = m_Window->Initialize(windowTitle, data);
 	if (!res)
 		THROW_RUNTIME("Не удалось инициализировать окно: {}.", res.error());
 

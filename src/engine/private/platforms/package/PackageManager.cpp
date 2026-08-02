@@ -130,7 +130,13 @@ namespace zzz::engine
 		Serializer serializer;
 		T data{};
 		if (serializer.Deserialize(buffer, offset, data))
+		{
+			if constexpr (std::is_same_v<T, ViewData>)
+			{
+				data.SetName(entry.GetName());
+			}
 			return data;
+		}
 
 		return std::nullopt;
 	}

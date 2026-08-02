@@ -144,7 +144,6 @@ namespace zzz::builder
 			{
 				zU32 width = root.value("width", 800u);
 				zU32 height = root.value("height", 600u);
-				bool isActive = root.value("is_active", root.value("active", true));
 
 				Guid sceneGuid{};
 				if (root.contains("scene") && root["scene"].is_string())
@@ -166,7 +165,7 @@ namespace zzz::builder
 					}
 				}
 
-				zzz::core::ViewData viewData(Size2D<zU32>{ width, height }, sceneGuid, uiScriptGuids, isActive);
+				zzz::core::ViewData viewData(Size2D<zU32>{ width, height }, sceneGuid, uiScriptGuids);
 				if (auto res = serializer.Serialize(result, viewData); !res)
 					return {};
 			}

@@ -9,27 +9,31 @@
 using namespace zzz::io;
 using namespace zzz::common;
 
+namespace zzz::engine
+{
+	class PackageManager;
+}
+
 namespace zzz::core
 {
 	class ViewData final : public ISerializable
 	{
 	public:
 		ViewData() = default;
-		ViewData(Size2D<zU32> size, Guid sceneGuid, std::vector<Guid> uiScriptGuids, bool isActive = true)
+		ViewData(Size2D<zU32> size, Guid sceneGuid, std::vector<Guid> uiScriptGuids)
 			: size(size)
 			, sceneGuid(sceneGuid)
 			, uiScriptGuids(std::move(uiScriptGuids))
-			, isActive(isActive)
 		{}
 
+		[[nodiscard]] const std::string& GetName() const noexcept { return name; }
 		[[nodiscard]] const Size2D<zU32>& GetSize() const noexcept { return size; }
 		[[nodiscard]] const Guid& GetSceneGuid() const noexcept { return sceneGuid; }
 		[[nodiscard]] const std::vector<Guid>& GetUiScriptGuids() const noexcept { return uiScriptGuids; }
-		[[nodiscard]] bool IsActive() const noexcept { return isActive; }
 
 		inline void LogFileBlock() const
 		{
-			DOut("           [ViewData] Размер: {}x{} | Активен: {}", size.width, size.height, isActive);
+			DOut("           [ViewData] Имя: {} | Размер: {}x{}", name, size.width, size.height);
 			DOut("           [ViewData] Привязанная сцена(GUID): {}", sceneGuid.ToString());
 			DOut("           [ViewData] Скрипты({})", uiScriptGuids.size());
 			for (zU32 i = 0; i < uiScriptGuids.size(); ++i)
@@ -39,17 +43,19 @@ namespace zzz::core
 		}
 
 	private:
+		std::string name;
 		Size2D<zU32> size;
 		Guid sceneGuid;
 		std::vector<Guid> uiScriptGuids;
-		bool isActive = true;
+
+		void SetName(std::string_view viewName) { name = viewName; }
+		friend class zzz::engine::PackageManager;
 
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override
 		{
 			return serializer.Serialize(buffer, size)
 				.and_then([&]() { return serializer.Serialize(buffer, sceneGuid); })
-				.and_then([&]() { return serializer.Serialize(buffer, isActive); })
 				.and_then([&]() {
 					const zU32 scriptsCount = static_cast<zU32>(uiScriptGuids.size());
 					return serializer.Serialize(buffer, scriptsCount);
@@ -69,7 +75,6 @@ namespace zzz::core
 
 			return serializer.Deserialize(buffer, offset, size)
 				.and_then([&]() { return serializer.Deserialize(buffer, offset, sceneGuid); })
-				.and_then([&]() { return serializer.Deserialize(buffer, offset, isActive); })
 				.and_then([&]() {
 					return serializer.Deserialize(buffer, offset, scriptsCount);
 				})
@@ -88,3 +93,4 @@ namespace zzz::core
 		}
 	};
 }
+

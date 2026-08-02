@@ -47,22 +47,13 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::InitializeFromPac
 		return std::unexpected(err);
 	}
 
-	auto entryOpt = packageManager.GetEntryByGuid(ePackage::View, viewGuid);
-	if (!entryOpt)
-	{
-		std::string err = std::format("Запись пакета View с GUID {} не найдена.", viewGuid.ToString());
-		DOutError("{}", err);
-		return std::unexpected(err);
-	}
-
-	std::string viewName = entryOpt->GetName();
 	std::vector<std::shared_ptr<ViewScript>> scripts;
 	for (const auto& scriptGuid : viewData->GetUiScriptGuids())
 	{
 		auto script = ScriptRegistry::CreateViewScript(scriptGuid);
 		if (!script)
 		{
-			std::string err = std::format("Не удалось создать ViewScript по GUID {} для вида '{}'.", scriptGuid.ToString(), viewName);
+			std::string err = std::format("Не удалось создать ViewScript по GUID {} для вида '{}'.", scriptGuid.ToString(), viewData->GetName());
 			DOutError("{}", err);
 			return std::unexpected(err);
 		}
@@ -70,17 +61,17 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::InitializeFromPac
 		scripts.push_back(script);
 	}
 
-	return CreateView(viewName, scripts);
+	return CreateView(*viewData, scripts);
 }
 
-std::expected <std::shared_ptr<View>, std::string> ViewManager::CreateView(const std::string_view viewName, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts)
+std::expected <std::shared_ptr<View>, std::string> ViewManager::CreateView(const zzz::core::ViewData& viewData, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts)
 {
 #if Z_MOBILE
 	if (m_Views.size() >= 1)
 		THROW_RUNTIME("Мобильные платформы поддерживают только одно нативное окно на приложение.");
 #endif
 
-	auto view = safe_make_shared<View>(viewName, m_Platform, scripts, [this](View& v) { OnWindowClose(v); });
+	auto view = safe_make_shared<View>(viewData, m_Platform, scripts, [this](View& v) { OnWindowClose(v); });
 	m_Views.push_back(view);
 	view->InvokeStart();
 

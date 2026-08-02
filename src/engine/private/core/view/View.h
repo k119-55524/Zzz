@@ -14,6 +14,11 @@ namespace zzz::script
 
 #include "public/core/events/EventBus.h"
 
+namespace zzz::core
+{
+	class ViewData;
+}
+
 namespace zzz::engine
 {
 	class Time;
@@ -25,7 +30,7 @@ namespace zzz::engine
 
 	public:
 		View() = delete;
-		View(const std::string_view viewName, const Platform& platform, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts, std::function<void(View&)> onWindowClose);
+		View(const zzz::core::ViewData& viewData, const Platform& platform, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts, std::function<void(View&)> onWindowClose);
 #if Z_EDITOR
 		View(const Platform& platform, void* data);
 #endif // Z_EDITOR
@@ -49,7 +54,7 @@ namespace zzz::engine
 		inline bool IsActive() const noexcept { return m_IsActive; }
 
 	private:
-		void Initialize(const std::string_view viewName, void* data = nullptr, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts = {});
+		void Initialize(const zzz::core::ViewData* viewData = nullptr, void* data = nullptr, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts = {});
 
 #pragma region Window Events
 		/**
