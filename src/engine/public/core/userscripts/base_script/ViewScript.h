@@ -24,7 +24,8 @@ namespace zzz::script
 	protected:
 		virtual void OnUnbindEvents() override
 		{
-			if (m_Bus) m_Bus->UnsubscribeAll(shared_from_this());
+			if (m_Bus)
+				m_Bus->UnsubscribeAll(shared_from_this());
 		}
 
 		template<typename F>
