@@ -9,7 +9,7 @@ using namespace zzz::io;
 namespace zzz::common
 {
 #pragma region Config file constants
-	constexpr std::string_view c_ConfigFileName = "config.dat";
+	constexpr std::string_view c_ConfigFileName = "user.dat";
 	constexpr FileHeader<3> c_ConfigHeader
 	{
 		std::array<std::byte, 3>{

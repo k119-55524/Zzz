@@ -68,7 +68,7 @@ void Engine::Shutdown()
 		m_Platform = nullptr;
 
 		if (m_ConfigManager)
-			m_ConfigManager->SaveConfig();
+			auto res = m_ConfigManager->SaveConfig();
 		m_ConfigManager = nullptr;
 
 		m_PackageManager = nullptr;

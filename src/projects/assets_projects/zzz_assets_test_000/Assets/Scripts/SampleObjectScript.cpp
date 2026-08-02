@@ -6,7 +6,7 @@ void SampleObjectScript::OnBindEvents()
 	SubscribeToStart([this]() { OnStart(); });
 	SubscribeToEnable([this]() { OnEnable(); });
 	SubscribeToDisable([this]() { OnDisable(); });
-	SubscribeToUpdate([this](float dt) { OnUpdate(dt); });
+	SubscribeToUpdate([this](const zzz::engine::Time& time) { OnUpdate(time); });
 	SubscribeToDestroy([this]() { OnDestroy(); });
 
 	OnInit();
@@ -32,13 +32,13 @@ void SampleObjectScript::OnDisable()
 	DOut("[SampleObjectScript] - OnDisable");
 }
 
-void SampleObjectScript::OnUpdate(float deltaTime)
+void SampleObjectScript::OnUpdate(const zzz::engine::Time& /*time*/)
 {
 	//static float timer = 0.0f;
-	//timer += deltaTime;
+	//timer += time.GetDeltaTime();
 	//if (timer >= 2.0f)
 	//{
-	//	DOut("[SampleObjectScript] - OnUpdate (dt: {:.4f})", deltaTime);
+	//	DOut("[SampleObjectScript] - OnUpdate (dt: {:.4f})", time.GetDeltaTime());
 	//	timer = 0.0f;
 	//}
 }

@@ -8,7 +8,7 @@ void SampleViewScript::OnBindEvents()
 	SubscribeToStart([this]() { OnStart(); });
 	SubscribeToEnable([this]() { OnEnable(); });
 	SubscribeToDisable([this]() { OnDisable(); });
-	SubscribeToUpdate([this](const zzz::engine::Time& t) { OnUpdate(t.GetDeltaTime()); });
+	SubscribeToUpdate([this](const zzz::engine::Time& time) { OnUpdate(time); });
 	SubscribeToDestroy([this]() { OnDestroy(); });
 
 	OnInit();
@@ -34,13 +34,13 @@ void SampleViewScript::OnDisable()
 	DOut("[SampleViewScript] - OnDisable");
 }
 
-void SampleViewScript::OnUpdate(float /*deltaTime*/)
+void SampleViewScript::OnUpdate(const zzz::engine::Time& /*time*/)
 {
 	//static float timer = 0.0f;
-	//timer += deltaTime;
+	//timer += time.GetDeltaTime();
 	//if (timer >= 2.0f)
 	//{
-	//	DOut("[SampleViewScript] - OnUpdate (dt: {:.12f})", deltaTime);
+	//	DOut("[SampleViewScript] - OnUpdate (dt: {:.12f})", time.GetDeltaTime());
 	//	timer = 0.0f;
 	//}
 }

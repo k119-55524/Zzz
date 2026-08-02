@@ -32,7 +32,7 @@ void SampleSceneScript::OnDisable()
 	DOut("[SampleSceneScript] - OnDisable");
 }
 
-void SampleSceneScript::OnUpdate(const zzz::engine::Time& time)
+void SampleSceneScript::OnUpdate(const zzz::engine::Time& /*time*/)
 {
 	//static float timer = 0.0f;
 	//timer += time.GetDeltaTime();

@@ -9,7 +9,7 @@
 void {ClassName}::OnBindEvents()
 {
 	SubscribeToStart([this]() { OnStart(); });
-	SubscribeToUpdate([this](float deltaTime) { OnUpdate(deltaTime); });
+	SubscribeToUpdate([this](const zzz::engine::Time& time) { OnUpdate(time); });
 	SubscribeToDestroy([this]() { OnDestroy(); });
 	SubscribeToEnable([this]() { OnEnable(); });
 	SubscribeToDisable([this]() { OnDisable(); });
@@ -25,7 +25,7 @@ void {ClassName}::OnStart()
 {
 }
 
-void {ClassName}::OnUpdate(float deltaTime)
+void {ClassName}::OnUpdate(const zzz::engine::Time& time)
 {
 }
 

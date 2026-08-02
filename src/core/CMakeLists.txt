@@ -16,8 +16,8 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileHeader.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigManager.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigManager.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/EngineConfig.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/EngineConfig.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/UserSettings.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/UserSettings.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/PlatformConfig.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigMSWin.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigMSWin.cpp

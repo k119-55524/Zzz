@@ -96,7 +96,7 @@ namespace zzz::engine
 		void InvokeDestroy() { OnDestroy(); }
 		void InvokeEnable() { OnEnable(); }
 		void InvokeDisable() { OnDisable(); }
-		void InvokeUpdate(float t) { OnUpdate(t); }
+		void InvokeUpdate(const zzz::engine::Time& t) { OnUpdate(t); }
 
 		void UnsubscribeAll(const std::shared_ptr<void>& context)
 		{
@@ -113,7 +113,7 @@ namespace zzz::engine
 		zzz::engine::UnorderedEvent<> OnDestroy;
 		zzz::engine::UnorderedEvent<> OnEnable;
 		zzz::engine::UnorderedEvent<> OnDisable;
-		zzz::engine::UnorderedEvent<float> OnUpdate;
+		zzz::engine::UnorderedEvent<const zzz::engine::Time&> OnUpdate;
 	};
 
 	/**

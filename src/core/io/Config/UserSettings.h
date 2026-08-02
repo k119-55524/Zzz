@@ -1,18 +1,18 @@
 #pragma once
 
+#include <core/Version.h>
 #include <logger/logger.h>
 #include "PlatformConfig.h"
-#include <core/Version.h>
 #include <core/Serialize/Serializer.h>
 
 namespace zzz::engine
 {
 	using namespace zzz::common;
-	class EngineConfig final : public ISerializable
+	class UserSettings final : public ISerializable
 	{
 	public:
-		explicit EngineConfig();
-		~EngineConfig() = default;
+		explicit UserSettings();
+		~UserSettings() = default;
 
 		inline const PlatformConfig& GetPlatformConfig() const noexcept { return m_PlatformConfig; }
 

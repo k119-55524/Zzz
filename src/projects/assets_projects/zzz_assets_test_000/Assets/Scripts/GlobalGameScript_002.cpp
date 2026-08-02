@@ -6,7 +6,7 @@ void GlobalGameScript_002::OnBindEvents()
 	SubscribeToStart([this]() { OnStart(); });
 	SubscribeToEnable([this]() { OnEnable(); });
 	SubscribeToDisable([this]() { OnDisable(); });
-	SubscribeToUpdate([this](const zzz::engine::Time& t) { OnUpdate(t.GetDeltaTime()); });
+	SubscribeToUpdate([this](const zzz::engine::Time& time) { OnUpdate(time); });
 	SubscribeToDestroy([this]() { OnDestroy(); });
 
 	OnInit();
@@ -32,13 +32,13 @@ void GlobalGameScript_002::OnDisable()
 	DOut("[GlobalGameScript_002] - OnDisable");
 }
 
-void GlobalGameScript_002::OnUpdate(float deltaTime)
+void GlobalGameScript_002::OnUpdate(const zzz::engine::Time& time /*time*/)
 {
 	//static float timer = 0.0f;
-	//timer += deltaTime;
+	//timer += time.GetDeltaTime();
 	//if (timer >= 2.0f)
 	//{
-	//	DOut("[GlobalGameScript_002] - OnUpdate (dt: {:.4f})", deltaTime);
+	//	DOut("[GlobalGameScript_002] - OnUpdate (dt: {:.4f})", time.GetDeltaTime());
 	//	timer = 0.0f;
 	//}
 }

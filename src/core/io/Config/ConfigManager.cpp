@@ -23,45 +23,45 @@ void ConfigManager::Initialize()
 {
 	try
 	{
-		auto resPath = GetSettingsDirectory();
-		if (!resPath)
-			THROW_RUNTIME("Не удалось получить каталог настроек: {}.", resPath.error());
+		auto path = GetSettingsDirectory();
+		if (!path)
+			THROW_RUNTIME("Не удалось получить каталог настроек: {}.", path.error());
 
-		m_ConfigPath = (resPath.value() / c_ConfigFileName)
+		m_ConfigPath = (path.value() / c_ConfigFileName)
 			.lexically_normal()
 			.make_preferred();
 
 		// Далее работаем с файлом
-		m_EngineConfig = safe_make_shared<EngineConfig>();
+		m_UserSettings = safe_make_shared<UserSettings>();
 
 		if (!std::filesystem::exists(m_ConfigPath))
 			DOutWarning("Файл конфигурации не найден: {}. Используется конфигурация по умолчанию.", m_ConfigPath.string());
 
-		auto loadResult = LoadConfig(m_ConfigPath);
-		if (!loadResult)
+		auto res = LoadConfig(m_ConfigPath);
+		if (!res)
 		{
 			DOutWarning("Не удалось загрузить файл конфигурации: {}. Создаётся конфигурация по умолчанию.", m_ConfigPath.string());
-			m_EngineConfig = safe_make_shared<EngineConfig>();
+			m_UserSettings = safe_make_shared<UserSettings>();
 		}
 	}
 	catch (const std::filesystem::filesystem_error& e)
 	{
 		DOutException("Ошибка файловой системы: {}. Установка конфигурации по умолчанию.", e.what());
-		m_EngineConfig = safe_make_shared<EngineConfig>();
+		m_UserSettings = safe_make_shared<UserSettings>();
 
 		return;
 	}
 	catch (const std::exception& e)
 	{
 		DOutException("Ошибка загрузки конфигурации: {}. Установка конфигурации по умолчанию.", e.what());
-		m_EngineConfig = safe_make_shared<EngineConfig>();
+		m_UserSettings = safe_make_shared<UserSettings>();
 
 		return;
 	}
 	catch (...)
 	{
 		DOutException("Неизвестная ошибка загрузки конфигурации. Установка конфигурации по умолчанию.");
-		m_EngineConfig = safe_make_shared<EngineConfig>();
+		m_UserSettings = safe_make_shared<UserSettings>();
 
 		return;
 	}
@@ -84,7 +84,7 @@ void ConfigManager::Initialize()
 	try
 	{
 		std::vector<std::byte> buffer;
-		if (auto res = m_Serializer.Serialize(buffer, *m_EngineConfig); !res)
+		if (auto res = m_Serializer.Serialize(buffer, *m_UserSettings); !res)
 			return UNEXPECTED("Не удалось сериализовать конфигурацию: {}.", res.error());
 
 		std::error_code ec;
@@ -146,7 +146,7 @@ std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path
 				reinterpret_cast<const std::byte*>(buffer.data()),
 				buffer.size()),
 			offset,
-			*m_EngineConfig);
+			*m_UserSettings);
 
 		if (!result)
 			return UNEXPECTED("Не удалось десериализовать конфигурацию: {}", result.error());

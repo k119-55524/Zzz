@@ -12,6 +12,6 @@ public:
 	void OnStart();
 	void OnEnable();
 	void OnDisable();
-	void OnUpdate(float dt);
+	void OnUpdate(const zzz::engine::Time& time);
 	void OnDestroy();
 };

@@ -1,23 +1,23 @@
 
-#include "EngineConfig.h"
+#include "UserSettings.h"
 #include <core/Constants.h>
 
 using namespace zzz::io;
 using namespace zzz::engine;
 
-EngineConfig::EngineConfig() :
+UserSettings::UserSettings() :
 	m_Version(c_ConfigFileMajorVersion, c_ConfigFileMinorVersion, c_ConfigFilePatchVersion)
 {
 }
 
-[[nodiscard]] std::expected<void, std::string> EngineConfig::Serialize(std::vector<std::byte>& buffer, const Serializer& s) const
+[[nodiscard]] std::expected<void, std::string> UserSettings::Serialize(std::vector<std::byte>& buffer, const Serializer& s) const
 {
 	return s.Serialize(buffer, c_ConfigHeader)
 		.and_then([&]() { return s.Serialize(buffer, m_Version); })
 		.and_then([&]() { return s.Serialize(buffer, m_PlatformConfig); });
 }
 
-[[nodiscard]] std::expected<void, std::string> EngineConfig::Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s)
+[[nodiscard]] std::expected<void, std::string> UserSettings::Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s)
 {
 	FileHeader<3> header{};
 
