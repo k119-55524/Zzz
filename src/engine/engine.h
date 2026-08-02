@@ -10,7 +10,7 @@
 
 #include "NativeAppData.h"
 #include "public/core/EngineTime.h"
-#include <core/IO/Config/ConfigManager.h>
+#include <core/IO/config/ConfigManager.h>
 
 using namespace zzz::io;
 using namespace zzz::script;

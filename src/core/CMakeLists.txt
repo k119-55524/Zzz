@@ -14,29 +14,31 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/ePackage.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/eEnumToString.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileHeader.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigManager.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigManager.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/UserSettings.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/UserSettings.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/PlatformConfig.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigMSWin.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigMSWin.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigLinux.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigLinux.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigAndroid.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigAndroid.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigMacOS.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigMacOS.mm
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigiOS.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigiOS.mm
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigEditor.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Config/ConfigEditor.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/GamePackage/PackageHeader.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/GamePackage/PackageEntry.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/GamePackage/ViewData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/GamePackage/ProjectManifestData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/GamePackage/SceneData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/GamePackage/PrefabData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigManager.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigManager.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/UserSettings.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/UserSettings.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/PlatformConfig.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigMSWin.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigMSWin.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigLinux.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigLinux.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigAndroid.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigAndroid.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigMacOS.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigMacOS.mm
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigiOS.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigiOS.mm
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigEditor.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigEditor.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PackageHeader.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PackageEntry.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/AppViewData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/AppViewUserData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/ViewData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/ProjectManifestData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/SceneData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PrefabData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Serialize/Serializer.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Serialize/Serializer.cpp
     )

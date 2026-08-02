@@ -7,13 +7,13 @@
 
 #include <logger/logger.h>
 #include <core/Enums/ePackage.h>
-#include <core/IO/GamePackage/PackageHeader.h>
-#include <core/IO/GamePackage/PackageEntry.h>
-#include <core/IO/GamePackage/ProjectManifestData.h>
-#include <core/IO/GamePackage/AppViewData.h>
-#include <core/IO/GamePackage/SceneData.h>
-#include <core/IO/GamePackage/ViewData.h>
-#include <core/IO/GamePackage/PrefabData.h>
+#include <core/IO/package/PackageHeader.h>
+#include <core/IO/package/PackageEntry.h>
+#include <core/IO/package/ProjectManifestData.h>
+#include <core/IO/package/AppViewData.h>
+#include <core/IO/package/SceneData.h>
+#include <core/IO/package/ViewData.h>
+#include <core/IO/package/PrefabData.h>
 #include <core/Constants.h>
 
 namespace zzz::builder

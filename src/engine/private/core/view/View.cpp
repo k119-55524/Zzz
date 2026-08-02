@@ -8,7 +8,7 @@
 #include "../../platforms/window/Window.h"
 #include "public/core/userscripts/base_script/ViewScript.h"
 
-#include <core/IO/GamePackage/ViewData.h>
+#include <core/IO/package/ViewData.h>
 
 using namespace zzz::common;
 

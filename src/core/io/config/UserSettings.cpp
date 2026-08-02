@@ -10,10 +10,17 @@ UserSettings::UserSettings() :
 {
 }
 
+UserSettings::UserSettings(const zzz::core::AppViewData& appViewData) :
+	m_Version(c_ConfigFileMajorVersion, c_ConfigFileMinorVersion, c_ConfigFilePatchVersion),
+	m_AppViewUserData(appViewData)
+{
+}
+
 [[nodiscard]] std::expected<void, std::string> UserSettings::Serialize(std::vector<std::byte>& buffer, const Serializer& s) const
 {
 	return s.Serialize(buffer, c_ConfigHeader)
 		.and_then([&]() { return s.Serialize(buffer, m_Version); })
+		.and_then([&]() { return s.Serialize(buffer, m_AppViewUserData); })
 		.and_then([&]() { return s.Serialize(buffer, m_PlatformConfig); });
 }
 
@@ -29,5 +36,6 @@ UserSettings::UserSettings() :
 
 				return s.Deserialize(buffer, offset, m_Version);
 			})
+		.and_then([&]() { return s.Deserialize(buffer, offset, m_AppViewUserData); })
 		.and_then([&]() { return s.Deserialize(buffer, offset, m_PlatformConfig); });
 }

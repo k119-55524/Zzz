@@ -7,11 +7,11 @@
 #include <string_view>
 #include <unordered_map>
 #include <core/Enums/ePackage.h>
-#include <core/IO/GamePackage/PackageEntry.h>
-#include <core/IO/GamePackage/PackageHeader.h>
-#include <core/IO/GamePackage/AppViewData.h>
+#include <core/IO/package/PackageEntry.h>
+#include <core/IO/package/PackageHeader.h>
+#include <core/IO/package/AppViewData.h>
 
-#include "../core/IO/Path.h"
+#include <engine/private/core/io/Path.h>
 
 using namespace zzz::io;
 using namespace zzz::core;

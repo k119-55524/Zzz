@@ -35,7 +35,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
 
         # Core
         "private/platforms/package/PackageManager.h" "private/platforms/package/PackageManager.cpp"
-        "private/core/IO/Path.h" "private/core/IO/Path.cpp"
+        "private/core/io/Path.h" "private/core/io/Path.cpp"
         "public/core/EngineTime.h" "public/core/EngineTime.cpp"
 
         # Inputs

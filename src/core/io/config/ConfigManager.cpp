@@ -1,25 +1,25 @@
 
 #include <fstream>
-#include <system_error>
 
-#include <engine/private/core/IO/Path.h>
 #include "ConfigManager.h"
 #include <core/Constants.h>
 #include <core/Serialize/Serializer.h>
+#include <engine/private/core/io/Path.h>
+#include <engine/private/platforms/package/PackageManager.h>
 
 using namespace zzz::io;
 using namespace zzz::engine;
 
-ConfigManager::ConfigManager(const Path& path) :
+ConfigManager::ConfigManager(const Path& path, const PackageManager& packageManager) :
 	m_Path(path),
 	m_IsDirty(true)
 {
 #if !Z_EDITOR
-	Initialize();
+	Initialize(packageManager);
 #endif
 }
 
-void ConfigManager::Initialize()
+void ConfigManager::Initialize(const PackageManager& packageManager)
 {
 	try
 	{
@@ -31,42 +31,52 @@ void ConfigManager::Initialize()
 			.lexically_normal()
 			.make_preferred();
 
-		// Далее работаем с файлом
-		m_UserSettings = safe_make_shared<UserSettings>();
-
+		m_UserSettings = CreateDefaultUserSettings(packageManager);
 		if (!std::filesystem::exists(m_ConfigPath))
+		{
 			DOutWarning("Файл конфигурации не найден: {}. Используется конфигурация по умолчанию.", m_ConfigPath.string());
+			return;
+		}
 
 		auto res = LoadConfig(m_ConfigPath);
 		if (!res)
 		{
 			DOutWarning("Не удалось загрузить файл конфигурации: {}. Создаётся конфигурация по умолчанию.", m_ConfigPath.string());
-			m_UserSettings = safe_make_shared<UserSettings>();
+			m_UserSettings = CreateDefaultUserSettings(packageManager);
 		}
 	}
 	catch (const std::filesystem::filesystem_error& e)
 	{
 		DOutException("Ошибка файловой системы: {}. Установка конфигурации по умолчанию.", e.what());
-		m_UserSettings = safe_make_shared<UserSettings>();
+		m_UserSettings = CreateDefaultUserSettings(packageManager);
 
 		return;
 	}
 	catch (const std::exception& e)
 	{
 		DOutException("Ошибка загрузки конфигурации: {}. Установка конфигурации по умолчанию.", e.what());
-		m_UserSettings = safe_make_shared<UserSettings>();
+		m_UserSettings = CreateDefaultUserSettings(packageManager);
 
 		return;
 	}
 	catch (...)
 	{
 		DOutException("Неизвестная ошибка загрузки конфигурации. Установка конфигурации по умолчанию.");
-		m_UserSettings = safe_make_shared<UserSettings>();
+		m_UserSettings = CreateDefaultUserSettings(packageManager);
 
 		return;
 	}
 
 	DOut("[ConfigManager] Конфигурация десериализована: {}.", m_ConfigPath.string());
+}
+
+std::shared_ptr<UserSettings> ConfigManager::CreateDefaultUserSettings(const PackageManager& packageManager) const
+{
+	auto appViewData = packageManager.GetAppViewData();
+	if (!appViewData)
+		THROW_RUNTIME("Required AppViewData resource is not found in package.");
+
+	return safe_make_shared<UserSettings>(*appViewData);
 }
 
 [[nodiscard]] std::expected<void, std::string> ConfigManager::SaveConfig()

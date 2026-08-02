@@ -3,9 +3,9 @@
 #include "ViewManager.h"
 #include "../../platforms/Platform.h"
 #include "../../platforms/package/PackageManager.h"
-#include <core/IO/GamePackage/ProjectManifestData.h>
-#include <core/IO/GamePackage/AppViewData.h>
-#include <core/IO/GamePackage/ViewData.h>
+#include <core/IO/package/ProjectManifestData.h>
+#include <core/IO/package/AppViewData.h>
+#include <core/IO/package/ViewData.h>
 #include "public/core/userscripts/ScriptRegistry.h"
 #include "public/core/userscripts/base_script/ViewScript.h"
 

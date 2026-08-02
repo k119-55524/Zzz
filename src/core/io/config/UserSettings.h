@@ -4,6 +4,12 @@
 #include <logger/logger.h>
 #include "PlatformConfig.h"
 #include <core/Serialize/Serializer.h>
+#include <core/IO/package/AppViewUserData.h>
+
+namespace zzz::core
+{
+	class AppViewData;
+}
 
 namespace zzz::engine
 {
@@ -12,8 +18,10 @@ namespace zzz::engine
 	{
 	public:
 		explicit UserSettings();
+		explicit UserSettings(const zzz::core::AppViewData& appViewData);
 		~UserSettings() = default;
 
+		inline const AppViewUserData& GetAppViewUserData() const noexcept { return m_AppViewUserData; }
 		inline const PlatformConfig& GetPlatformConfig() const noexcept { return m_PlatformConfig; }
 
 	private:
@@ -21,6 +29,7 @@ namespace zzz::engine
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override;
 
 		Version m_Version;
+		AppViewUserData m_AppViewUserData;
 		PlatformConfig m_PlatformConfig;
 	};
 }
