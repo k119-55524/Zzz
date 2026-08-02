@@ -29,6 +29,11 @@ View::View(const Platform& platform, void* data) :
 }
 #endif
 
+View::~View()
+{
+	m_EventBus.InvokeDestroy();
+}
+
 void View::Initialize(const std::string_view viewName, void* data, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts)
 {
 	m_Input = safe_make_shared<Input>();
@@ -65,8 +70,6 @@ void View::Initialize(const std::string_view viewName, void* data, const std::ve
 		script->Init(&m_EventBus);
 		m_Scripts.push_back(script);
 	}
-	
-	m_EventBus.InvokeStart();
 }
 
 #pragma region Window Events

@@ -91,13 +91,17 @@ void Engine::Shutdown()
 	bool isError = false;
 	try
 	{
+		RegisterScripts();
+		LoadGlobalScripts();
+
 		auto initView = m_ViewManager->InitializeFromPackage(*m_PackageManager);
 		if (!initView)
 		{
 			DOutWarning("Ошибка инициализации ViewManager из пакета: {}", initView.error());
 		}
 
-		StartGame();
+		m_EventBus->InvokeStart();
+
 		m_Time->ResetFrameTimer();
 		m_MainLoop->Run();
 	}
@@ -123,13 +127,6 @@ void Engine::Shutdown()
 	}
 
 	return {};
-}
-
-void Engine::StartGame()
-{
-	RegisterScripts();
-	LoadGlobalScripts();
-	m_EventBus->InvokeStart();
 }
 
 void Engine::RegisterScripts()

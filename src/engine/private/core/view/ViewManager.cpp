@@ -46,20 +46,24 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::InitializeFromPac
 	}
 
 	auto entryOpt = packageManager.GetEntryByGuid(ePackage::View, viewGuid);
-	std::string viewName = entryOpt ? entryOpt->GetName() : "Main View";
+	if (!entryOpt)
+	{
+		DOutError("Запись пакета View с GUID {} не найдена. Выполняется фолбек на дефолтный View.", viewGuid.ToString());
+		return CreateView("Main View", {});
+	}
 
+	std::string viewName = entryOpt->GetName();
 	std::vector<std::shared_ptr<ViewScript>> scripts;
 	for (const auto& scriptGuid : viewData->GetUiScriptGuids())
 	{
-		auto scriptEntryOpt = packageManager.GetEntryByGuid(ePackage::BinaryAsset, scriptGuid);
-		std::string scriptName = scriptEntryOpt ? scriptEntryOpt->GetName() : "";
-		if (!scriptName.empty())
+		auto script = ScriptRegistry::CreateViewScript(scriptGuid);
+		if (!script)
 		{
-			if (auto script = ScriptRegistry::CreateViewScript(scriptName))
-				scripts.push_back(script);
-			else
-				DOutError("Не удалось создать ViewScript '{}' для вида '{}'", scriptName, viewName);
+			DOutError("Не удалось создать ViewScript по GUID {} для вида '{}'", scriptGuid.ToString(), viewName);
+			return std::unexpected(std::format("Не удалось создать ViewScript по GUID {} для вида '{}'", scriptGuid.ToString(), viewName));
 		}
+
+		scripts.push_back(script);
 	}
 
 	return CreateView(viewName, scripts);
@@ -73,7 +77,8 @@ std::expected <std::shared_ptr<View>, std::string> ViewManager::CreateView(const
 #endif
 
 	auto view = safe_make_shared<View>(viewName, m_Platform, scripts, [this](View& v) { OnWindowClose(v); });
-	m_Views.push_back(std::move(view));
+	m_Views.push_back(view);
+	view->InvokeStart();
 
 	return view;
 }

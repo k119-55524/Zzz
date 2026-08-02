@@ -13,19 +13,19 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{47E7A912-78A3-4B04-811F-436417A2A94C}</ProjectGuid>
-    <RootNamespace>common_lib</RootNamespace>
+    <ProjectGuid>{B5D4E2F1-A890-4123-9876-C5D4E3F21A09}</ProjectGuid>
+    <RootNamespace>assets_builder_dll</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -56,25 +56,18 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_LIB;WIN32;Z_EDITOR=1;Z_ADD_LOGGER=1;Z_IDE_OUT_LOGS=1;EDITORDLL_EXPORTS;Z_TARGET_NAME=&quot;$(ProjectName)&quot;;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;ASSETS_BUILDER_EXPORTS;WIN32;Z_EDITOR=1;Z_ADD_LOGGER=1;Z_IDE_OUT_LOGS=1;Z_TARGET_NAME=&quot;$(ProjectName)&quot;;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory)\..;$(MSBuildProjectDirectory)\..\logger;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\..\..\;$(MSBuildProjectDirectory)\..\..\..\common;$(MSBuildProjectDirectory)\..\..\..\engine;$(SolutionDir)..\..\build\packages\nlohmann_json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>
-      </SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalDependencies>Ws2_32.lib;User32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-      <PostBuildEvent>
-        <Command>
-          if not exist "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\lib" mkdir "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\lib"
-          if not exist "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\common" mkdir "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\common"
-          copy /Y "$(OutDir)$(TargetName).lib" "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\lib\"
-          cmake -DSRC_DIR="$(ProjectDir)\" -DDST_DIR="$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\common" -P "$(SolutionDir)..\..\copy_headers.cmake"
-        </Command>
-      </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -83,45 +76,40 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_LIB;WIN32;Z_EDITOR=1;Z_ADD_LOGGER=1;Z_IDE_OUT_LOGS=1;EDITORDLL_EXPORTS;Z_TARGET_NAME=&quot;$(ProjectName)&quot;;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;ASSETS_BUILDER_EXPORTS;WIN32;Z_EDITOR=1;Z_ADD_LOGGER=1;Z_IDE_OUT_LOGS=1;Z_TARGET_NAME=&quot;$(ProjectName)&quot;;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
-      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory)\..;$(MSBuildProjectDirectory)\..\logger;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\..\..\;$(MSBuildProjectDirectory)\..\..\..\common;$(MSBuildProjectDirectory)\..\..\..\engine;$(SolutionDir)..\..\build\packages\nlohmann_json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>
-      </SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalDependencies>Ws2_32.lib;User32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-      <PostBuildEvent>
-        <Command>
-          if not exist "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\lib" mkdir "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\lib"
-          if not exist "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\common" mkdir "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\common"
-          copy /Y "$(OutDir)$(TargetName).lib" "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\lib\"
-          cmake -DSRC_DIR="$(ProjectDir)\" -DDST_DIR="$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\common" -P "$(SolutionDir)..\..\copy_headers.cmake"
-        </Command>
-      </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Common.h" />
-    <ClInclude Include="Constants.h" />
-    <ClInclude Include="Defines.h" />
-    <ClInclude Include="Ensure.h" />
-    <ClInclude Include="CommonExport.h" />
-    <ClInclude Include="Macroses.h" />
-    <ClInclude Include="MemoryUtils.h" />
-    <ClInclude Include="ThrowWrappers.h" />
-    <ClInclude Include="Enums\eLogMessageType.h" />
-    <ClInclude Include="Enums\eWinResize.h" />
-    <ClInclude Include="Templates\DoubleBufferedVector.h" />
-    <ClInclude Include="Templates\Size2D.h" />
-    <ClInclude Include="..\core\Serialize\Serializer.h" />
+    <ClInclude Include="BuilderExport.h" />
+    <ClInclude Include="BuilderApi.h" />
+    <ClInclude Include="PackagePacker.h" />
+    <ClInclude Include="json.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ThrowWrappers.cpp" />
-    <ClCompile Include="..\core\Serialize\Serializer.cpp" />
+    <ClCompile Include="BuilderApi.cpp" />
+    <ClCompile Include="PackagePacker.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\common\common_lib.vcxproj">
+      <Project>{47E7A912-78A3-4B04-811F-436417A2A94C}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\logger\logger_lib.vcxproj">
+      <Project>{B88B46C3-4889-4E65-B86C-9A69D9CB5F50}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\engine\engine_lib.vcxproj">
+      <Project>{C66B24D1-A54D-4E10-B149-166D46C2B47C}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

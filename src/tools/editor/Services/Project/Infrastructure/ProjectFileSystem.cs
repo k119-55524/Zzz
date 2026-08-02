@@ -238,6 +238,8 @@ namespace editor.Services.Project.Infrastructure
             }
         }
 
+        public string Guid { get; set; } = string.Empty;
+
         public System.Collections.ObjectModel.ObservableCollection<ProjectNode> Children
         {
             get => _children;
@@ -411,10 +413,12 @@ namespace editor.Services.Project.Infrastructure
                     bool hasCpp = filePaths.Contains(cppPath, StringComparer.OrdinalIgnoreCase);
                     bool hasMeta = filePaths.Contains(metaPath, StringComparer.OrdinalIgnoreCase);
                     string scriptNamespace = string.Empty;
+                    string scriptGuid = string.Empty;
                     if (hasMeta)
                     {
                         var meta = AssetMetaFile.Load(_storage, metaPath);
                         scriptNamespace = meta?.Namespace ?? string.Empty;
+                        scriptGuid = meta?.Guid ?? string.Empty;
                     }
                     if (string.IsNullOrWhiteSpace(scriptNamespace))
                     {
@@ -433,7 +437,8 @@ namespace editor.Services.Project.Infrastructure
                         CppRelativePath = hasCpp ? Path.GetRelativePath(rootPath, cppPath).Replace('\\', '/') : string.Empty,
                         HasMeta = hasMeta,
                         MetaRelativePath = hasMeta ? Path.GetRelativePath(rootPath, metaPath).Replace('\\', '/') : string.Empty,
-                        ScriptNamespace = scriptNamespace
+                        ScriptNamespace = scriptNamespace,
+                        Guid = scriptGuid
                     };
 
                     processedFiles.Add(filePath);

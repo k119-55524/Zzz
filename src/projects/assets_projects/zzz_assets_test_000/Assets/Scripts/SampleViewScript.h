@@ -3,8 +3,16 @@
 
 class SampleViewScript : public zzz::script::ViewScript {
 public:
-    using ViewScript::ViewScript;
-    const char* GetScriptTypeName() const override { return "SampleViewScript"; }
-    void OnBindEvents() override {}
-    void OnShow();
+	using ViewScript::ViewScript;
+	const char* GetScriptTypeName() const override { return "SampleViewScript"; }
+
+protected:
+	void OnBindEvents() override;
+
+private:
+	void OnStart();
+	void OnEnable();
+	void OnDisable();
+	void OnUpdate(float deltaTime);
+	void OnDestroy();
 };

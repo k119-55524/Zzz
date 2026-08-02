@@ -27,7 +27,7 @@ namespace zzz::engine
 	protected:
 		void Shutdown();
 
-		virtual void StartGame();
+		virtual void StartGame() {};
 		virtual void StopGame() {};
 		virtual void RegisterScripts();
 		virtual void OnUpdateSystem();

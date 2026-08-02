@@ -28,9 +28,10 @@ namespace zzz::engine
 		View(const std::string_view viewName, const Platform& platform, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts, std::function<void(View&)> onWindowClose);
 #if Z_EDITOR
 		View(const Platform& platform, void* data);
-#endif
-		~View() { m_EventBus.InvokeDestroy(); }
+#endif // Z_EDITOR
+		~View();
 
+		inline void InvokeStart() { m_EventBus.InvokeStart(); }
 		void Update(const zzz::engine::Time& time);
 
 		inline void SetActive(bool active)
