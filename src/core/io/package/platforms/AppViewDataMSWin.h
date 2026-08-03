@@ -23,6 +23,13 @@ namespace zzz::core
 		[[nodiscard]] eMSWinWindowMode GetWindowMode() const noexcept { return windowMode; }
 		[[nodiscard]] bool IsResizable() const noexcept { return resizable; }
 
+		inline void LogFileBlock() const
+		{
+			DOut("           [AppViewDataMSWin] defaultSize: {}x{}", defaultSize.width, defaultSize.height);
+			DOut("           [AppViewDataMSWin] windowMode: {}", EnumToString::ToString(windowMode));
+			DOut("           [AppViewDataMSWin] resizable: {}", resizable);
+		}
+
 	private:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override
 		{

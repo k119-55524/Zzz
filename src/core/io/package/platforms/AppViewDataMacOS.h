@@ -23,6 +23,13 @@ namespace zzz::core
 		[[nodiscard]] eMacOSWindowMode GetWindowMode() const noexcept { return windowMode; }
 		[[nodiscard]] bool IsResizable() const noexcept { return resizable; }
 
+		inline void LogFileBlock() const
+		{
+			DOut("           [AppViewDataMacOS] defaultSize: {}x{}", defaultSize.width, defaultSize.height);
+			DOut("           [AppViewDataMacOS] windowMode: {}", EnumToString::ToString(windowMode));
+			DOut("           [AppViewDataMacOS] resizable: {}", resizable);
+		}
+
 	private:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override
 		{

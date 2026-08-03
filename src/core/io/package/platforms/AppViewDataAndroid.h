@@ -24,6 +24,14 @@ namespace zzz::core
 		[[nodiscard]] eAndroidCutoutMode GetCutoutMode() const noexcept { return cutoutMode; }
 		[[nodiscard]] bool KeepScreenOn() const noexcept { return keepScreenOn; }
 
+		inline void LogFileBlock() const
+		{
+			DOut("           [AppViewDataAndroid] orientation: {}", EnumToString::ToString(orientation));
+			DOut("           [AppViewDataAndroid] targetFPS: {}", targetFPS);
+			DOut("           [AppViewDataAndroid] cutoutMode: {}", EnumToString::ToString(cutoutMode));
+			DOut("           [AppViewDataAndroid] keepScreenOn: {}", keepScreenOn);
+		}
+
 	private:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override
 		{
@@ -32,7 +40,6 @@ namespace zzz::core
 				.and_then([&]() { return s.Serialize(buffer, cutoutMode); })
 				.and_then([&]() { return s.Serialize(buffer, keepScreenOn); });
 		}
-
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override
 		{
 			return s.Deserialize(buffer, offset, orientation)

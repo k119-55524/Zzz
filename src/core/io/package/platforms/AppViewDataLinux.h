@@ -25,6 +25,14 @@ namespace zzz::core
 		[[nodiscard]] bool IsResizable() const noexcept { return resizable; }
 		[[nodiscard]] eLinuxDisplayServer GetDisplayServer() const noexcept { return displayServer; }
 
+		inline void LogFileBlock() const
+		{
+			DOut("           [AppViewDataLinux] defaultSize: {}x{}", defaultSize.width, defaultSize.height);
+			DOut("           [AppViewDataLinux] windowMode: {}", EnumToString::ToString(windowMode));
+			DOut("           [AppViewDataLinux] resizable: {}", resizable);
+			DOut("           [AppViewDataLinux] displayServer: {}", EnumToString::ToString(displayServer));
+		}
+
 	private:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override
 		{

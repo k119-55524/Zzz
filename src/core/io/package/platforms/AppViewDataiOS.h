@@ -22,6 +22,13 @@ namespace zzz::core
 		[[nodiscard]] eiOSSafeAreaMode GetSafeAreaMode() const noexcept { return safeAreaMode; }
 		[[nodiscard]] eiOSHomeIndicatorMode GetHomeIndicatorMode() const noexcept { return homeIndicatorMode; }
 
+		inline void LogFileBlock() const
+		{
+			DOut("           [AppViewDataiOS] orientation: {}", EnumToString::ToString(orientation));
+			DOut("           [AppViewDataiOS] safeAreaMode: {}", EnumToString::ToString(safeAreaMode));
+			DOut("           [AppViewDataiOS] homeIndicatorMode: {}", EnumToString::ToString(homeIndicatorMode));
+		}
+
 	private:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override
 		{

@@ -58,6 +58,7 @@ namespace zzz::core
 			{
 				DOut("             uiScriptGuid #{}: {}", i, uiScriptGuids[i].ToString());
 			}
+			platformData.LogFileBlock();
 		}
 
 	private:
