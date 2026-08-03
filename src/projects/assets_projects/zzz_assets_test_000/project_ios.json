@@ -5,7 +5,7 @@
     "icon": "Assets/Icons/ios_icon.png"
   },
   "appView": {
-    "title": "Zzz Test App (iOS)",
+    "title": "GameZzz",
     "orientation": "LandscapeLeft",
     "safeAreaMode": "ExtendIntoSafeArea",
     "homeIndicatorMode": "AutoHidden"

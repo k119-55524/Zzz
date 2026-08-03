@@ -6,7 +6,7 @@
     "icon": "Assets/Icons/android_icon.png"
   },
   "appView": {
-    "title": "Zzz Test App (Android)",
+    "title": "GameZzz",
     "orientation": "LandscapeLeft",
     "targetFPS": 60,
     "cutoutMode": "ShortEdges",

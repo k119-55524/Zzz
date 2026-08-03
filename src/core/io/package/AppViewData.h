@@ -38,14 +38,7 @@ namespace zzz::core
 				return Size2D<zU32>{ 1280, 720 };
 		}
 
-		// Хелпер для получения флага полноэкранности по умолчанию
-		[[nodiscard]] bool IsFullscreenByDefault() const noexcept
-		{
-			if constexpr (requires { platformData.IsFullscreenByDefault(); })
-				return platformData.IsFullscreenByDefault();
-			else
-				return false;
-		}
+
 
 		// Хелпер для получения флага изменяемости размера
 		[[nodiscard]] bool IsResizable() const noexcept

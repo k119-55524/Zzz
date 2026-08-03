@@ -1,16 +1,16 @@
 {
   "build": {
-    "executableName": "zzz_assets_test_000",
+    "executableName": "GameZzz",
     "icon": "Assets/Icons/linux_icon.png"
   },
   "appView": {
-    "title": "Zzz Test App (Linux)",
+    "title": "GameZzz",
     "defaultSize": {
       "width": 1280,
       "height": 720
     },
+    "windowMode": "Windowed",
     "displayServer": "Auto",
-    "resizable": true,
-    "isFullscreenByDefault": false
+    "resizable": true
   }
 }

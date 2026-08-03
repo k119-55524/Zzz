@@ -12,16 +12,16 @@ namespace zzz::core
 	{
 	public:
 		AppViewDataAndroid() = default;
-		AppViewDataAndroid(eAndroidScreenOrientation orientation, zU32 targetFPS = 60, bool renderIntoCutout = true, bool keepScreenOn = true)
+		AppViewDataAndroid(eAndroidScreenOrientation orientation, zU32 targetFPS = 60, eAndroidCutoutMode cutoutMode = eAndroidCutoutMode::ShortEdges, bool keepScreenOn = true)
 			: orientation(orientation)
 			, targetFPS(targetFPS)
-			, renderIntoCutout(renderIntoCutout)
+			, cutoutMode(cutoutMode)
 			, keepScreenOn(keepScreenOn)
 		{}
 
 		[[nodiscard]] eAndroidScreenOrientation GetOrientation() const noexcept { return orientation; }
 		[[nodiscard]] zU32 GetTargetFPS() const noexcept { return targetFPS; }
-		[[nodiscard]] bool RenderIntoCutout() const noexcept { return renderIntoCutout; }
+		[[nodiscard]] eAndroidCutoutMode GetCutoutMode() const noexcept { return cutoutMode; }
 		[[nodiscard]] bool KeepScreenOn() const noexcept { return keepScreenOn; }
 
 	private:
@@ -29,7 +29,7 @@ namespace zzz::core
 		{
 			return s.Serialize(buffer, orientation)
 				.and_then([&]() { return s.Serialize(buffer, targetFPS); })
-				.and_then([&]() { return s.Serialize(buffer, renderIntoCutout); })
+				.and_then([&]() { return s.Serialize(buffer, cutoutMode); })
 				.and_then([&]() { return s.Serialize(buffer, keepScreenOn); });
 		}
 
@@ -37,13 +37,13 @@ namespace zzz::core
 		{
 			return s.Deserialize(buffer, offset, orientation)
 				.and_then([&]() { return s.Deserialize(buffer, offset, targetFPS); })
-				.and_then([&]() { return s.Deserialize(buffer, offset, renderIntoCutout); })
+				.and_then([&]() { return s.Deserialize(buffer, offset, cutoutMode); })
 				.and_then([&]() { return s.Deserialize(buffer, offset, keepScreenOn); });
 		}
 
 		eAndroidScreenOrientation orientation = eAndroidScreenOrientation::LandscapeLeft;
 		zU32 targetFPS = 60;
-		bool renderIntoCutout = true;
+		eAndroidCutoutMode cutoutMode = eAndroidCutoutMode::ShortEdges;
 		bool keepScreenOn = true;
 	};
 }

@@ -1,17 +1,16 @@
 {
   "build": {
-    "executableName": "zzz_assets_test_000.exe",
+    "executableName": "GameZzz.exe",
     "icon": "Assets/Icons/win_icon.ico",
     "visualStudioToolset": "v143"
   },
   "appView": {
-    "title": "Zzz Test App (Windows)",
+    "title": "GameZzz",
     "defaultSize": {
       "width": 1280,
       "height": 720
     },
     "windowMode": "Windowed",
-    "resizable": true,
-    "isFullscreenByDefault": false
+    "resizable": true
   }
 }

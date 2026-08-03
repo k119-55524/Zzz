@@ -134,7 +134,7 @@ namespace zzz::builder
 					}
 				}
 
-				AppViewPlatformData platformData(Size2D<zU32>{ width, height }, isFullscreen, resizable);
+				AppViewPlatformData platformData(Size2D<zU32>{ width, height }, isFullscreen ? eMSWinWindowMode::BorderlessFullscreen : eMSWinWindowMode::Windowed, resizable);
 				zzz::core::AppViewData appViewData(title, sceneGuid, uiScriptGuids, platformData);
 				if (auto res = serializer.Serialize(result, appViewData); !res)
 					return {};

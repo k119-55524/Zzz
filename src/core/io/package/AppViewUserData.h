@@ -14,7 +14,7 @@ namespace zzz::engine
 		AppViewUserData() = default;
 		explicit AppViewUserData(const zzz::core::AppViewData& appViewData)
 			: m_Size(appViewData.GetDefaultSize())
-			, m_IsFullscreen(appViewData.IsFullscreenByDefault())
+			, m_IsFullscreen(appViewData.GetPlatformData().GetWindowMode() != eMSWinWindowMode::Windowed)
 			, m_IsResizable(appViewData.IsResizable())
 		{}
 
