@@ -5,7 +5,6 @@ namespace assets_builder_lib;
 public static class AssetExtensions
 {
 	public const string ProjectJsonName = "project.json";
-	public const string UserScriptsLibraryName = "zzz_user_scripts";
 
 	public static string GamePackageBinaryName
 	{

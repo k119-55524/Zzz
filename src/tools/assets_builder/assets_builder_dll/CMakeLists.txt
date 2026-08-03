@@ -28,7 +28,6 @@ target_link_libraries(assets_builder_dll PRIVATE
     common_lib
     core_lib
     logger_lib
-    engine_lib
 )
 
 target_compile_definitions(assets_builder_dll PRIVATE ASSETS_BUILDER_EXPORTS Z_TARGET_NAME="assets_builder_dll")

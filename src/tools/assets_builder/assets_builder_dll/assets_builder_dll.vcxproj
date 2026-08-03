@@ -107,9 +107,6 @@
     <ProjectReference Include="..\..\..\logger\logger_lib.vcxproj">
       <Project>{B88B46C3-4889-4E65-B86C-9A69D9CB5F50}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\engine\engine_lib.vcxproj">
-      <Project>{C66B24D1-A54D-4E10-B149-166D46C2B47C}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

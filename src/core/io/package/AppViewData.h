@@ -4,8 +4,8 @@
 #include <vector>
 #include <core/Guid.h>
 #include <logger/logger.h>
-#include <common/Templates/Size2D.h>
 #include <core/Serialize/Serializer.h>
+
 #include "platforms/AppViewPlatformConfig.h"
 
 using namespace zzz::io;
@@ -18,94 +18,76 @@ namespace zzz::core
 	public:
 		AppViewData() = default;
 		AppViewData(std::string title, Guid sceneGuid, std::vector<Guid> uiScriptGuids, AppViewPlatformData platformData = {})
-			: title(std::move(title))
-			, sceneGuid(sceneGuid)
-			, uiScriptGuids(std::move(uiScriptGuids))
-			, platformData(std::move(platformData))
+			: m_Title(std::move(title))
+			, m_SceneGuid(sceneGuid)
+			, m_UiScriptGuids(std::move(uiScriptGuids))
+			, m_PlatformData(std::move(platformData))
 		{}
 
-		[[nodiscard]] const std::string& GetTitle() const noexcept { return title; }
-		[[nodiscard]] const Guid& GetSceneGuid() const noexcept { return sceneGuid; }
-		[[nodiscard]] const std::vector<Guid>& GetUiScriptGuids() const noexcept { return uiScriptGuids; }
-		[[nodiscard]] const AppViewPlatformData& GetPlatformData() const noexcept { return platformData; }
-
-		// Хелпер для получения дефолтного размера (если поддерживается платформой)
-		[[nodiscard]] Size2D<zU32> GetDefaultSize() const noexcept
-		{
-			if constexpr (requires { platformData.GetDefaultSize(); })
-				return platformData.GetDefaultSize();
-			else
-				return Size2D<zU32>{ 1280, 720 };
-		}
-
-		// Хелпер для получения флага изменяемости размера
-		[[nodiscard]] bool IsResizable() const noexcept
-		{
-			if constexpr (requires { platformData.IsResizable(); })
-				return platformData.IsResizable();
-			else
-				return true;
-		}
+		[[nodiscard]] const std::string& GetTitle() const noexcept { return m_Title; }
+		[[nodiscard]] const Guid& GetSceneGuid() const noexcept { return m_SceneGuid; }
+		[[nodiscard]] const std::vector<Guid>& GetUiScriptGuids() const noexcept { return m_UiScriptGuids; }
+		[[nodiscard]] const AppViewPlatformData& GetPlatformData() const noexcept { return m_PlatformData; }
 
 		inline void LogFileBlock() const
 		{
-			DOut("           [AppViewData] title: {}", title);
-			DOut("           [AppViewData] sceneGuid: {}", sceneGuid.ToString());
-			DOut("           [AppViewData] uiScriptGuids({})", uiScriptGuids.size());
-			for (zU32 i = 0; i < uiScriptGuids.size(); ++i)
+			DOut("           [AppViewData] title: {}", m_Title);
+			DOut("           [AppViewData] sceneGuid: {}", m_SceneGuid.ToString());
+			DOut("           [AppViewData] uiScriptGuids({})", m_UiScriptGuids.size());
+			for (zU32 i = 0; i < m_UiScriptGuids.size(); ++i)
 			{
-				DOut("             uiScriptGuid #{}: {}", i, uiScriptGuids[i].ToString());
+				DOut("             uiScriptGuid #{}: {}", i, m_UiScriptGuids[i].ToString());
 			}
-			platformData.LogFileBlock();
+			m_PlatformData.LogFileBlock();
 		}
 
 	private:
-		std::string title;
-		Guid sceneGuid;
-		std::vector<Guid> uiScriptGuids;
-		AppViewPlatformData platformData;
+		std::string m_Title;
+		Guid m_SceneGuid;
+		std::vector<Guid> m_UiScriptGuids;
+		AppViewPlatformData m_PlatformData;
 
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override
 		{
-			return serializer.Serialize(buffer, title)
-				.and_then([&]() { return serializer.Serialize(buffer, sceneGuid); })
+			return serializer.Serialize(buffer, m_Title)
+				.and_then([&]() { return serializer.Serialize(buffer, m_SceneGuid); })
 				.and_then([&]() {
-					const zU32 scriptsCount = static_cast<zU32>(uiScriptGuids.size());
+					const zU32 scriptsCount = static_cast<zU32>(m_UiScriptGuids.size());
 					return serializer.Serialize(buffer, scriptsCount);
 				})
 				.and_then([&]() -> std::expected<void, std::string> {
-					for (const auto& scriptGuid : uiScriptGuids)
+					for (const auto& scriptGuid : m_UiScriptGuids)
 					{
 						auto res = serializer.Serialize(buffer, scriptGuid);
 						if (!res) return res;
 					}
 					return {};
 				})
-				.and_then([&]() { return serializer.Serialize(buffer, platformData); });
+				.and_then([&]() { return serializer.Serialize(buffer, m_PlatformData); });
 		}
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& serializer) override
 		{
 			zU32 scriptsCount = 0;
 
-			return serializer.Deserialize(buffer, offset, title)
-				.and_then([&]() { return serializer.Deserialize(buffer, offset, sceneGuid); })
+			return serializer.Deserialize(buffer, offset, m_Title)
+				.and_then([&]() { return serializer.Deserialize(buffer, offset, m_SceneGuid); })
 				.and_then([&]() {
 					return serializer.Deserialize(buffer, offset, scriptsCount);
 				})
 				.and_then([&]() -> std::expected<void, std::string> {
-					uiScriptGuids.clear();
-					uiScriptGuids.reserve(scriptsCount);
+					m_UiScriptGuids.clear();
+					m_UiScriptGuids.reserve(scriptsCount);
 					for (zU32 i = 0; i < scriptsCount; ++i)
 					{
 						Guid scriptGuid{};
 						auto res = serializer.Deserialize(buffer, offset, scriptGuid);
 						if (!res) return res;
-						uiScriptGuids.push_back(scriptGuid);
+						m_UiScriptGuids.push_back(scriptGuid);
 					}
 					return {};
 				})
-				.and_then([&]() { return serializer.Deserialize(buffer, offset, platformData); });
+				.and_then([&]() { return serializer.Deserialize(buffer, offset, m_PlatformData); });
 		}
 	};
 }

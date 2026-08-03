@@ -155,14 +155,11 @@ public class BuildProfileViewModel : ViewModelBase
     private readonly Services.IDialogService? _dialogService;
 
     private string _name = string.Empty;
-    private string _configuration = "Debug";
     private string _sourcePath = string.Empty;
     private string _destinationPath = string.Empty;
     private bool _isTargetProjectsModified = false;
 
     public ObservableCollection<TargetProjectViewModel> TargetProjects { get; } = new();
-
-    public static List<string> AvailableConfigurations { get; } = new() { "Debug", "Development", "Release" };
 
     public BuildProfileViewModel(BuildProfile model, Services.IDialogService? dialogService = null)
     {
@@ -201,6 +198,7 @@ public class BuildProfileViewModel : ViewModelBase
             _isTargetProjectsModified = true;
             OnPropertyChanged(nameof(IsDirty));
             OnPropertyChanged(nameof(DisplayName));
+            OnPropertyChanged(nameof(IsValid));
         }
     }
 
@@ -212,6 +210,7 @@ public class BuildProfileViewModel : ViewModelBase
             _isTargetProjectsModified = true;
             OnPropertyChanged(nameof(IsDirty));
             OnPropertyChanged(nameof(DisplayName));
+            OnPropertyChanged(nameof(IsValid));
         }
     }
 
@@ -227,20 +226,6 @@ public class BuildProfileViewModel : ViewModelBase
             if (value.Length > 255)
                 value = value.Substring(0, 255);
             if (SetProperty(ref _name, value))
-            {
-                OnPropertyChanged(nameof(DisplayName));
-                OnPropertyChanged(nameof(IsDirty));
-                OnPropertyChanged(nameof(IsValid));
-            }
-        }
-    }
-
-    public string Configuration
-    {
-        get => _configuration;
-        set
-        {
-            if (SetProperty(ref _configuration, value))
             {
                 OnPropertyChanged(nameof(DisplayName));
                 OnPropertyChanged(nameof(IsDirty));
@@ -322,10 +307,9 @@ public class BuildProfileViewModel : ViewModelBase
         }
     }
 
-    public bool IsValid => !string.IsNullOrWhiteSpace(_name) && !string.IsNullOrWhiteSpace(_configuration) && IsSourcePathValid && IsDestinationPathValid;
+    public bool IsValid => !string.IsNullOrWhiteSpace(_name) && IsSourcePathValid && IsDestinationPathValid && TargetProjects.Any(tp => tp.IsEnabled);
 
     public bool IsDirty => _name != _model.Name ||
-                           _configuration != _model.Configuration ||
                            _sourcePath != _model.SourcePath ||
                            _destinationPath != _model.DestinationPath ||
                            _isTargetProjectsModified ||
@@ -336,7 +320,6 @@ public class BuildProfileViewModel : ViewModelBase
     public void ResetFromModel()
     {
         _name = _model.Name;
-        _configuration = string.IsNullOrWhiteSpace(_model.Configuration) ? "Debug" : _model.Configuration;
         _sourcePath = _model.SourcePath;
         _destinationPath = _model.DestinationPath;
         _isTargetProjectsModified = false;
@@ -353,7 +336,6 @@ public class BuildProfileViewModel : ViewModelBase
         }
 
         OnPropertyChanged(nameof(Name));
-        OnPropertyChanged(nameof(Configuration));
         OnPropertyChanged(nameof(SourcePath));
         OnPropertyChanged(nameof(DestinationPath));
         OnPropertyChanged(nameof(DisplayName));
@@ -369,13 +351,13 @@ public class BuildProfileViewModel : ViewModelBase
         {
             OnPropertyChanged(nameof(IsDirty));
             OnPropertyChanged(nameof(DisplayName));
+            OnPropertyChanged(nameof(IsValid));
         }
     }
 
     public void ApplyToModel()
     {
         _model.Name = _name;
-        _model.Configuration = _configuration;
         _model.SourcePath = _sourcePath;
         _model.DestinationPath = _destinationPath;
 

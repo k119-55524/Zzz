@@ -21,7 +21,7 @@ namespace zzz::engine
 		UserSettingsManager() = delete;
 		UserSettingsManager(const Path& path, const PackageManager& packageManager);
 
-		inline const AppViewUserData& GetAppViewUserData() const noexcept { return m_AppViewUserData; }
+		inline const zzz::core::AppViewUserData& GetAppViewUserData() const noexcept { return m_AppViewUserData; }
 		inline const PlatformConfig& GetPlatformConfig() const noexcept { return m_PlatformConfig; }
 
 		[[nodiscard]] std::expected<void, std::string> SaveConfig();
@@ -39,7 +39,7 @@ namespace zzz::engine
 		std::filesystem::path m_ConfigPath;
 
 		Version m_Version;
-		AppViewUserData m_AppViewUserData;
+		zzz::core::AppViewUserData m_AppViewUserData;
 		PlatformConfig m_PlatformConfig;
 
 		Serializer m_Serializer;

@@ -1,5 +1,7 @@
-#include "GlobalGameScript_002.h"
+
 #include <common/Macroses.h>
+
+#include "GlobalGameScript_002.h"
 
 void GlobalGameScript_002::OnBindEvents()
 {

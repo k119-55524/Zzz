@@ -1,7 +1,6 @@
 
 using System.IO;
 using System.Text.Json;
-using System.Diagnostics;
 using assets_builder_lib.Importers;
 using assets_builder_lib.Validation;
 using System.Collections.Concurrent;
@@ -312,7 +311,7 @@ public class AssetsBuilderEngine
 			return false;
 		}
 
-		Log($"Старт сборки пакета (Конфигурация: {options.Configuration}, Платформа: {options.TargetPlatform})...");
+		Log($"Старт сборки пакета (Платформа: {options.TargetPlatform})...");
 		Log($"Источник проекта: {options.SourcePath}");
 		Log($"Манифест:         {options.ProjectJsonPath}");
 		Log($"Папка назначения:  {options.DestinationPath}");
@@ -332,14 +331,12 @@ public class AssetsBuilderEngine
 				Directory.Delete(options.DestinationPath, recursive: true);
 			}
 
-			string libDir = Path.Combine(options.DestinationPath, "lib");
 			string assetsDir = Path.Combine(options.DestinationPath, "assets");
 			string includeDir = Path.Combine(options.DestinationPath, "include");
 
-			Directory.CreateDirectory(libDir);
 			Directory.CreateDirectory(assetsDir);
 			Directory.CreateDirectory(includeDir);
-			Log("Создана чистая структура папок (lib/, assets/ и include/).");
+			Log("Создана чистая структура папок (assets/ и include/).");
 		}
 		catch (Exception ex)
 		{
@@ -347,31 +344,15 @@ public class AssetsBuilderEngine
 			return false;
 		}
 
-		// 3. Компиляция статической C++ библиотеки (AssetExtensions.UserScriptsLibraryName = zzz_user_scripts) в подпапку lib/
-		string cmakeListsPath = Path.Combine(options.SourcePath, "CMakeLists.txt");
-		if (File.Exists(cmakeListsPath))
-		{
-			Log($"Компиляция статической C++ библиотеки '{AssetExtensions.UserScriptsLibraryName}.lib' в подпапку lib/ ({options.Configuration})...");
-			bool compileSuccess = CompileCppScripts(options, Path.Combine(options.DestinationPath, "lib"));
-			if (!compileSuccess)
-			{
-				Log("Предупреждение: Компиляция C++ либы завершилась с предупреждением или пропущена.");
-			}
-		}
-		else
-		{
-			Log("Предупреждение: CMakeLists.txt не найден в корне проекта. Пропуск компиляции C++ библиотеки.");
-		}
-
-		// 4. Экспорт C++ заголовочных файлов (.h / .hpp) в подпапку include/
+		// 3. Экспорт C++ заголовочных файлов (.h / .hpp) в подпапку include/
 		Log("Экспорт C++ заголовочных файлов (.h/.hpp) в подпапку include/...");
 		CopyHeaderFiles(options.SourcePath, Path.Combine(options.DestinationPath, "include"));
 
-		// 5. Вызов C# запаковщика PackagePacker для генерации бинарного пакета структуры игры
+		// 4. Вызов C# запаковщика PackagePacker для генерации бинарного пакета структуры игры
 		Log($"Сериализация бинарного пакета игры '{AssetExtensions.GamePackageBinaryName}'...");
 		bool packageSuccess = PackagePacker.PackProject(options.SourcePath, options.DestinationPath, options.TargetPlatform, Log);
 
-		// 6. Генерация Scripts.cmake в корне папки назначения (options.DestinationPath)
+		// 5. Генерация Scripts.cmake в корне папки назначения (options.DestinationPath)
 		GenerateScriptsCmake(options.SourcePath, options.DestinationPath);
 
 		if (packageSuccess)
@@ -489,97 +470,6 @@ public class AssetsBuilderEngine
 		catch (Exception ex)
 		{
 			Log($"Предупреждение при экспорте заголовочных файлов: {ex.Message}");
-		}
-	}
-
-	private bool CompileCppScripts(BuildOptions options, string outputLibDir)
-	{
-		string buildDir = Path.Combine(options.SourcePath, "build_tmp");
-		try
-		{
-			Directory.CreateDirectory(buildDir);
-
-			string config = options.Configuration;
-			string cmakeBuildType = "Debug";
-			string extraFlags = "";
-
-			if (config.Equals("Release", StringComparison.OrdinalIgnoreCase))
-			{
-				cmakeBuildType = "Release";
-			}
-			else if (config.Equals("Development", StringComparison.OrdinalIgnoreCase))
-			{
-				cmakeBuildType = "RelWithDebInfo";
-				extraFlags = "-DZ_DEVELOPMENT_BUILD=1 -DCMAKE_CXX_FLAGS=\"-DZ_DEVELOPMENT_BUILD\"";
-				Log("Включен режим Development (передан макрос -DZ_DEVELOPMENT_BUILD)");
-			}
-			else
-			{
-				cmakeBuildType = "Debug";
-			}
-
-			string cmakeArgs = string.IsNullOrEmpty(extraFlags)
-				? $"-B \"{buildDir}\" -S \"{options.SourcePath}\" -DCMAKE_BUILD_TYPE={cmakeBuildType}"
-				: $"-B \"{buildDir}\" -S \"{options.SourcePath}\" -DCMAKE_BUILD_TYPE={cmakeBuildType} {extraFlags}";
-
-			// Вызов cmake configure
-			var startInfo = new ProcessStartInfo
-			{
-				FileName = "cmake",
-				Arguments = cmakeArgs,
-				UseShellExecute = false,
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				CreateNoWindow = true
-			};
-
-			using var process = Process.Start(startInfo);
-			if (process != null)
-			{
-				process.WaitForExit(30000);
-			}
-
-			// Вызов cmake build
-			var buildInfo = new ProcessStartInfo
-			{
-				FileName = "cmake",
-				Arguments = $"--build \"{buildDir}\" --config {cmakeBuildType}",
-				UseShellExecute = false,
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				CreateNoWindow = true
-			};
-
-			using var buildProc = Process.Start(buildInfo);
-			if (buildProc != null)
-			{
-				buildProc.WaitForExit(60000);
-			}
-
-			// Копирование собранной статической библиотеки zzz_user_scripts (.lib/.a/.pdb) в outputLibDir
-			if (Directory.Exists(buildDir))
-			{
-				foreach (var file in Directory.GetFiles(buildDir, "*.*", SearchOption.AllDirectories))
-				{
-					string ext = Path.GetExtension(file).ToLowerInvariant();
-					string fileName = Path.GetFileNameWithoutExtension(file);
-
-					if ((ext == ".lib" || ext == ".a" || ext == ".pdb") &&
-						(fileName.Equals(AssetExtensions.UserScriptsLibraryName, StringComparison.OrdinalIgnoreCase) || ext == ".pdb"))
-					{
-						string targetPath = Path.Combine(outputLibDir, Path.GetFileName(file));
-						File.Copy(file, targetPath, overwrite: true);
-						Log($"  C++ Либа скопирована в: lib/{Path.GetFileName(file)}");
-					}
-				}
-			}
-
-			return true;
-		}
-		catch (Exception ex)
-		{
-			Log($"Предупреждение при сборке C++ либы: {ex.Message}");
-			return false;
 		}
 	}
 

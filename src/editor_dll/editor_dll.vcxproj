@@ -73,7 +73,7 @@
            что-то ссылаются из editor_dll.cpp/EditorEngine.cpp - символы, используемые только
            шаблонным кодом (Event<>::Subscribe), инстанцируемым в самих скриптах (например
            throw_runtime_error), иначе тихо выпадают из экспортов editor_dll.dll. -->
-      <AdditionalOptions>/WHOLEARCHIVE:"$(OutDir)common_lib_editor.lib" /WHOLEARCHIVE:"$(OutDir)logger_lib_editor.lib" /WHOLEARCHIVE:"$(OutDir)core_lib_editor.lib" /WHOLEARCHIVE:"$(OutDir)engine_lib_editor.lib" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/WHOLEARCHIVE:"$(OutDir)common_lib_editor.lib" /WHOLEARCHIVE:"$(OutDir)logger_lib_editor.lib" /WHOLEARCHIVE:"$(OutDir)engine_lib_editor.lib" %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -95,7 +95,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalDependencies>Ws2_32.lib;User32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalOptions>/WHOLEARCHIVE:"$(OutDir)common_lib_editor.lib" /WHOLEARCHIVE:"$(OutDir)logger_lib_editor.lib" /WHOLEARCHIVE:"$(OutDir)core_lib_editor.lib" /WHOLEARCHIVE:"$(OutDir)engine_lib_editor.lib" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/WHOLEARCHIVE:"$(OutDir)common_lib_editor.lib" /WHOLEARCHIVE:"$(OutDir)logger_lib_editor.lib" /WHOLEARCHIVE:"$(OutDir)engine_lib_editor.lib" %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -109,9 +109,6 @@
   <ItemGroup>
     <ProjectReference Include="..\common\common_lib.vcxproj">
       <Project>{47E7A912-78A3-4B04-811F-436417A2A94C}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\core\core_lib.vcxproj">
-      <Project>{9F8E3C1B-89E0-4E66-9666-BBF25C599901}</Project>
     </ProjectReference>
     <ProjectReference Include="..\logger\logger_lib.vcxproj">
       <Project>{B88B46C3-4889-4E65-B86C-9A69D9CB5F50}</Project>

@@ -20,6 +20,14 @@ public class LogItem
 
 public class MainWindowViewModel : ViewModelBase
 {
+    private sealed class TargetBuildSnapshot
+    {
+        public string Name { get; init; } = string.Empty;
+        public eTargetPlatform TargetPlatform { get; init; }
+        public string ConfigJsonPath { get; init; } = string.Empty;
+        public string BuildDirectory { get; init; } = string.Empty;
+    }
+
     private readonly IDialogService _dialogService;
     private readonly AssetsBuilderEngine _engine;
     private readonly SessionConfig _sessionConfig;
@@ -319,38 +327,122 @@ public class MainWindowViewModel : ViewModelBase
         if (SelectedProfile == null) return;
         if (IsBuilding) return;
 
+        var enabledTargets = SelectedProfile.TargetProjects
+            .Where(t => t.IsEnabled)
+            .Select(t => new TargetBuildSnapshot
+            {
+                Name = t.Name,
+                TargetPlatform = t.TargetPlatform,
+                ConfigJsonPath = t.ConfigJsonPath,
+                BuildDirectory = GetTargetBuildDirectory(SelectedProfile.DestinationPath, t.Name, t.TargetPlatform)
+            })
+            .ToList();
+
+        if (enabledTargets.Count == 0)
+        {
+            AppendLog("Ошибка: нет включенных целевых проектов для сборки.");
+            return;
+        }
+
+        string baseDestinationPath = SelectedProfile.DestinationPath;
+        string sourcePath = SelectedProfile.SourcePath;
+
         bool confirmed = _dialogService.ShowConfirmation(
             "Подтверждение сборки",
-            $"Папка назначения '{SelectedProfile.DestinationPath}' будет вычищена и перезаписана при сборке ({SelectedProfile.Configuration}).\n\nПродолжить сборку для '{SelectedProfile.Name}'?"
+            $"Папка назначения '{SelectedProfile.DestinationPath}' будет вычищена и перезаписана.\n\nПродолжить сборку ассетов для '{SelectedProfile.Name}'?"
         );
 
         if (confirmed)
         {
             IsBuilding = true;
 
-            var options = new BuildOptions
-            {
-                SourcePath = SelectedProfile.SourcePath,
-                DestinationPath = SelectedProfile.DestinationPath,
-                Configuration = SelectedProfile.Configuration,
-                TargetPlatform = SelectedProfile.TargetProjects.FirstOrDefault(t => t.IsEnabled)?.TargetPlatform ?? eTargetPlatform.Windows
-            };
-
             Task.Run(() =>
             {
-                bool success = _engine.BuildPackage(options);
+                bool success = PrepareBuildRoot(baseDestinationPath);
+                foreach (var target in enabledTargets)
+                {
+                    if (!success)
+                    {
+                        break;
+                    }
+
+                    var options = new BuildOptions
+                    {
+                        SourcePath = sourcePath,
+                        DestinationPath = target.BuildDirectory,
+                        TargetProjectName = target.Name,
+                        TargetPlatform = target.TargetPlatform
+                    };
+
+                    success = _engine.BuildPackage(options);
+                }
+
                 if (success)
                 {
-                    UpdateTargetProjectsConfig(SelectedProfile);
+                    UpdateTargetProjectsConfig(enabledTargets, baseDestinationPath);
                 }
                 System.Windows.Application.Current?.Dispatcher.Invoke(() => IsBuilding = false);
             });
         }
     }
 
-    private void UpdateTargetProjectsConfig(BuildProfileViewModel profile)
+    private bool PrepareBuildRoot(string destinationPath)
     {
-        foreach (var target in profile.TargetProjects.Where(t => t.IsEnabled && !string.IsNullOrWhiteSpace(t.ConfigJsonPath)))
+        try
+        {
+            if (Directory.Exists(destinationPath))
+            {
+                AppendLog($"Очистка папки назначения: {destinationPath}");
+                Directory.Delete(destinationPath, recursive: true);
+            }
+
+            Directory.CreateDirectory(destinationPath);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"Ошибка очистки папки назначения: {ex.Message}");
+            return false;
+        }
+    }
+
+    private static string GetTargetBuildDirectory(string destinationPath, string targetName, eTargetPlatform targetPlatform)
+    {
+        string safeName = SanitizeDirectoryName(targetName);
+        if (string.IsNullOrWhiteSpace(safeName))
+        {
+            safeName = "target";
+        }
+
+        return Path.Combine(destinationPath, $"{safeName}_{targetPlatform}");
+    }
+
+    private static string SanitizeDirectoryName(string value)
+    {
+        char[] invalidChars = Path.GetInvalidFileNameChars();
+        string trimmed = value.Trim();
+        return new string(trimmed.Select(ch => invalidChars.Contains(ch) ? '_' : ch).ToArray());
+    }
+
+    private static bool IsSameOrInsideDirectory(string path, string directory)
+    {
+        try
+        {
+            string fullPath = Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            string fullDirectory = Path.GetFullPath(directory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            return fullPath.Equals(fullDirectory, StringComparison.OrdinalIgnoreCase) ||
+                   fullPath.StartsWith(fullDirectory + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) ||
+                   fullPath.StartsWith(fullDirectory + Path.AltDirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private void UpdateTargetProjectsConfig(IEnumerable<TargetBuildSnapshot> targets, string baseDestinationPath)
+    {
+        foreach (var target in targets.Where(t => !string.IsNullOrWhiteSpace(t.ConfigJsonPath)))
         {
             try
             {
@@ -373,7 +465,7 @@ public class MainWindowViewModel : ViewModelBase
                             foreach (var elem in arr.EnumerateArray())
                             {
                                 string str = elem.GetString() ?? "";
-                                if (!string.IsNullOrEmpty(str) && !str.Equals(profile.DestinationPath, StringComparison.OrdinalIgnoreCase))
+                                if (!string.IsNullOrEmpty(str) && !IsSameOrInsideDirectory(str, baseDestinationPath))
                                 {
                                     activeBuilds.Add(str);
                                 }
@@ -383,7 +475,7 @@ public class MainWindowViewModel : ViewModelBase
                     catch { }
                 }
 
-                activeBuilds.Add(profile.DestinationPath);
+                activeBuilds.Add(target.BuildDirectory);
 
                 var jsonObj = new { active_build_directories = activeBuilds };
                 string outputJson = System.Text.Json.JsonSerializer.Serialize(jsonObj, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });

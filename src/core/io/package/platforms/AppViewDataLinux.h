@@ -2,6 +2,7 @@
 
 #include <common/Templates/Size2D.h>
 #include <core/Serialize/Serializer.h>
+#include <core/Enums/eEnumToString.h>
 #include <core/Enums/platforms/eLinuxEnums.h>
 
 namespace zzz::core

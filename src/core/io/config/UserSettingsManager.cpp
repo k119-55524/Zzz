@@ -9,6 +9,7 @@
 
 using namespace zzz::io;
 using namespace zzz::engine;
+using zzz::core::AppViewUserData;
 
 UserSettingsManager::UserSettingsManager(const Path& path, const PackageManager& packageManager) :
 	m_Path(path),

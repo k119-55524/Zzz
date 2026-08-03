@@ -14,6 +14,17 @@ using namespace zzz::core;
 using namespace zzz::script;
 using zzz::common::ePackage;
 
+namespace
+{
+	[[nodiscard]] zzz::common::Size2D<zzz::common::zU32> GetDefaultViewSize(const zzz::core::AppViewPlatformData& platformData) noexcept
+	{
+		if constexpr (requires { platformData.GetDefaultSize(); })
+			return platformData.GetDefaultSize();
+		else
+			return zzz::common::Size2D<zzz::common::zU32>{ 1280, 720 };
+	}
+}
+
 ViewManager::ViewManager(const Platform& platform, std::function<void()> onAllViewsClosed) :
 	m_Platform{ platform },
 	OnAllViewsClosed{ std::move(onAllViewsClosed) }
@@ -50,7 +61,7 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::InitializeFromPac
 		scripts.push_back(script);
 	}
 
-	ViewData viewData(appViewData->GetDefaultSize(), appViewData->GetSceneGuid(), appViewData->GetUiScriptGuids());
+	ViewData viewData(GetDefaultViewSize(appViewData->GetPlatformData()), appViewData->GetSceneGuid(), appViewData->GetUiScriptGuids());
 	return CreateView(viewData, scripts);
 }
 
