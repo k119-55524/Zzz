@@ -1,17 +1,18 @@
 #pragma once
 
-#include "ePackage.h"
 #include <string_view>
 #include <common/Macroses.h>
-#include "platforms/eiOSEnums.h"
 #include <common/ThrowWrappers.h>
+#include <common/Enums/eWinResize.h>
+#include <common/Enums/eLogMessageType.h>
+
+#include "ePackage.h"
+#include "eTargetPlatform.h"
+#include "platforms/eiOSEnums.h"
 #include "platforms/eLinuxEnums.h"
 #include "platforms/eMacOSEnums.h"
 #include "platforms/eMSWinEnums.h"
-#include <common/Enums/eWinResize.h>
 #include "platforms/eAndroidEnums.h"
-#include <common/Enums/eLogMessageType.h>
-#include "eTargetPlatform.h"
 
 namespace zzz::common
 {

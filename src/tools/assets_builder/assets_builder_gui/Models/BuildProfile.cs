@@ -1,9 +1,12 @@
+using assets_builder_lib;
+
 namespace assets_builder_gui.Models;
 
 public class TargetProjectItem
 {
     public bool IsEnabled { get; set; } = false;
     public string Name { get; set; } = string.Empty;
+    public eTargetPlatform TargetPlatform { get; set; } = eTargetPlatform.Windows;
     public string ConfigJsonPath { get; set; } = string.Empty;
 }
 

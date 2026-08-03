@@ -38,8 +38,6 @@ namespace zzz::core
 				return Size2D<zU32>{ 1280, 720 };
 		}
 
-
-
 		// Хелпер для получения флага изменяемости размера
 		[[nodiscard]] bool IsResizable() const noexcept
 		{

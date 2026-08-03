@@ -76,11 +76,11 @@ public static class SessionManager
             DestinationPath = Path.Combine(workspaceProjects, "assets_projects", "zzz_assets_test_000_build"),
             TargetProjects = new List<TargetProjectItem>
             {
-                new TargetProjectItem { IsEnabled = true, Name = "game_win", ConfigJsonPath = Path.Combine(workspaceProjects, "game_win", "assets_config.json") },
-                new TargetProjectItem { IsEnabled = true, Name = "game_linux", ConfigJsonPath = Path.Combine(workspaceProjects, "game_linux", "assets_config.json") },
-                new TargetProjectItem { IsEnabled = true, Name = "game_android", ConfigJsonPath = Path.Combine(workspaceProjects, "game_android", "assets_config.json") },
-                new TargetProjectItem { IsEnabled = true, Name = "game_ios", ConfigJsonPath = Path.Combine(workspaceProjects, "game_ios", "assets_config.json") },
-                new TargetProjectItem { IsEnabled = true, Name = "game_macos", ConfigJsonPath = Path.Combine(workspaceProjects, "game_macos", "assets_config.json") }
+                new TargetProjectItem { IsEnabled = true, Name = "game_win", TargetPlatform = assets_builder_lib.eTargetPlatform.Windows, ConfigJsonPath = Path.Combine(workspaceProjects, "game_win", "assets_config.json") },
+                new TargetProjectItem { IsEnabled = true, Name = "game_linux", TargetPlatform = assets_builder_lib.eTargetPlatform.Linux, ConfigJsonPath = Path.Combine(workspaceProjects, "game_linux", "assets_config.json") },
+                new TargetProjectItem { IsEnabled = true, Name = "game_android", TargetPlatform = assets_builder_lib.eTargetPlatform.Android, ConfigJsonPath = Path.Combine(workspaceProjects, "game_android", "assets_config.json") },
+                new TargetProjectItem { IsEnabled = true, Name = "game_ios", TargetPlatform = assets_builder_lib.eTargetPlatform.iOS, ConfigJsonPath = Path.Combine(workspaceProjects, "game_ios", "assets_config.json") },
+                new TargetProjectItem { IsEnabled = true, Name = "game_macos", TargetPlatform = assets_builder_lib.eTargetPlatform.MacOS, ConfigJsonPath = Path.Combine(workspaceProjects, "game_macos", "assets_config.json") }
             }
         };
 

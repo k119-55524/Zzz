@@ -5,11 +5,11 @@ namespace assets_builder_lib;
 
 public static class PackagePacker
 {
-	public static bool PackProject(string sourceDir, string destinationDir, Action<string>? logCallback = null)
+	public static bool PackProject(string sourceDir, string destinationDir, eTargetPlatform targetPlatform, Action<string>? logCallback = null)
 	{
 		try
 		{
-			bool result = NativeMethods.PackProjectNative(sourceDir, destinationDir);
+			bool result = NativeMethods.PackProjectNative(sourceDir, destinationDir, (uint)targetPlatform);
 			if (result)
 			{
 				logCallback?.Invoke($"Генерация чистого бинарного пакета '{AssetExtensions.GamePackageBinaryName}' в 'assets/' завершена.");

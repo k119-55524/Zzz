@@ -312,7 +312,7 @@ public class AssetsBuilderEngine
 			return false;
 		}
 
-		Log($"Старт сборки пакета (Конфигурация: {options.Configuration})...");
+		Log($"Старт сборки пакета (Конфигурация: {options.Configuration}, Платформа: {options.TargetPlatform})...");
 		Log($"Источник проекта: {options.SourcePath}");
 		Log($"Манифест:         {options.ProjectJsonPath}");
 		Log($"Папка назначения:  {options.DestinationPath}");
@@ -369,7 +369,7 @@ public class AssetsBuilderEngine
 
 		// 5. Вызов C# запаковщика PackagePacker для генерации бинарного пакета структуры игры
 		Log($"Сериализация бинарного пакета игры '{AssetExtensions.GamePackageBinaryName}'...");
-		bool packageSuccess = PackagePacker.PackProject(options.SourcePath, options.DestinationPath, Log);
+		bool packageSuccess = PackagePacker.PackProject(options.SourcePath, options.DestinationPath, options.TargetPlatform, Log);
 
 		// 6. Генерация Scripts.cmake в корне папки назначения (options.DestinationPath)
 		GenerateScriptsCmake(options.SourcePath, options.DestinationPath);

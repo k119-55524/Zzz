@@ -95,8 +95,7 @@ public class MainWindowViewModel : ViewModelBase
         BrowseSourcePathCommand = new RelayCommand(_ => BrowseSourcePath(), _ => SelectedProfile != null);
         BrowseDestinationPathCommand = new RelayCommand(_ => BrowseDestinationPath(), _ => SelectedProfile != null);
 
-        UpdateGuidsCommand = new RelayCommand(_ => UpdateGuids(), _ => SelectedProfile != null && SelectedProfile.IsValid);
-        StartOrCancelBuildCommand = new RelayCommand(_ => ToggleBuild(), _ => SelectedProfile != null && SelectedProfile.IsValid);
+        StartOrCancelBuildCommand = new RelayCommand(_ => StartBuild(), _ => SelectedProfile != null && SelectedProfile.IsValid && !IsBuilding);
         CopyLogsCommand = new RelayCommand(_ => CopyLogs(), _ => LogItems.Count > 0);
         ClearLogsCommand = new RelayCommand(_ => ClearLogs(), _ => LogItems.Count > 0);
     }
@@ -128,18 +127,12 @@ public class MainWindowViewModel : ViewModelBase
         {
             if (SetProperty(ref _isBuilding, value))
             {
-                OnPropertyChanged(nameof(BuildButtonText));
-                OnPropertyChanged(nameof(IsNotBuilding));
                 StatusText = _isBuilding ? "Идет сборка..." : "Готов";
                 StatusColor = _isBuilding ? "#FFC107" : "#4CAF50";
                 CommandManager.InvalidateRequerySuggested();
             }
         }
     }
-
-    public bool IsNotBuilding => !IsBuilding;
-
-    public string BuildButtonText => IsBuilding ? "⏹ Прервать" : "▶ Старт сборки";
 
     public string LogText
     {
@@ -202,7 +195,6 @@ public class MainWindowViewModel : ViewModelBase
     public ICommand BrowseSourcePathCommand { get; }
     public ICommand BrowseDestinationPathCommand { get; }
 
-    public ICommand UpdateGuidsCommand { get; }
     public ICommand StartOrCancelBuildCommand { get; }
     public ICommand CopyLogsCommand { get; }
     public ICommand ClearLogsCommand { get; }
@@ -322,30 +314,10 @@ public class MainWindowViewModel : ViewModelBase
         }
     }
 
-    private void UpdateGuids()
+    private void StartBuild()
     {
         if (SelectedProfile == null) return;
-
-        var options = new BuildOptions
-        {
-            SourcePath = SelectedProfile.SourcePath,
-            DestinationPath = SelectedProfile.DestinationPath,
-            Configuration = SelectedProfile.Configuration
-        };
-
-        Task.Run(() => _engine.ScanProjectMetaFiles(options));
-    }
-
-    private void ToggleBuild()
-    {
-        if (SelectedProfile == null) return;
-
-        if (IsBuilding)
-        {
-            IsBuilding = false;
-            AppendLog("Сборка прервана пользователем.");
-            return;
-        }
+        if (IsBuilding) return;
 
         bool confirmed = _dialogService.ShowConfirmation(
             "Подтверждение сборки",
@@ -360,7 +332,8 @@ public class MainWindowViewModel : ViewModelBase
             {
                 SourcePath = SelectedProfile.SourcePath,
                 DestinationPath = SelectedProfile.DestinationPath,
-                Configuration = SelectedProfile.Configuration
+                Configuration = SelectedProfile.Configuration,
+                TargetPlatform = SelectedProfile.TargetProjects.FirstOrDefault(t => t.IsEnabled)?.TargetPlatform ?? eTargetPlatform.Windows
             };
 
             Task.Run(() =>

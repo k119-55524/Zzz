@@ -30,7 +30,57 @@ namespace zzz::builder
 		fs::path filePath;
 	};
 
-	static std::vector<std::byte> SerializeAssetToBinary(const PendingAsset& item)
+	static std::string ToPlatformString(zzz::common::eTargetPlatform targetPlatform)
+	{
+		switch (targetPlatform)
+		{
+		case zzz::common::eTargetPlatform::Windows: return "Windows";
+		case zzz::common::eTargetPlatform::Linux: return "Linux";
+		case zzz::common::eTargetPlatform::Android: return "Android";
+		case zzz::common::eTargetPlatform::MacOS: return "MacOS";
+		case zzz::common::eTargetPlatform::iOS: return "iOS";
+		}
+
+		return "Windows";
+	}
+
+	static json ResolveAppViewJson(const json& root, const fs::path& projectDir, zzz::common::eTargetPlatform targetPlatform)
+	{
+		const std::string platformName = ToPlatformString(targetPlatform);
+
+		if (root.contains("platform_configs") && root["platform_configs"].is_array())
+		{
+			for (const auto& configEntry : root["platform_configs"])
+			{
+				if (!configEntry.is_object())
+					continue;
+
+				if (configEntry.value("platform", "") != platformName)
+					continue;
+
+				std::string configFileName = configEntry.value("file", "");
+				if (configFileName.empty())
+					break;
+
+				fs::path configPath = projectDir / configFileName;
+				std::ifstream configFile(configPath);
+				if (!configFile.is_open())
+					break;
+
+				json platformRoot = json::parse(configFile, nullptr, false);
+				if (!platformRoot.is_discarded() && platformRoot.contains("appView") && platformRoot["appView"].is_object())
+					return platformRoot["appView"];
+
+				break;
+			}
+		}
+
+		return root.contains("appView") && root["appView"].is_object()
+			? root["appView"]
+			: root;
+	}
+
+	static std::vector<std::byte> SerializeAssetToBinary(const PendingAsset& item, zzz::common::eTargetPlatform targetPlatform)
 	{
 		Serializer serializer;
 		std::vector<std::byte> result;
@@ -108,23 +158,25 @@ namespace zzz::builder
 			}
 			else if (assetType == zzz::common::ePackage::AppView)
 			{
-				std::string title = root.value("title", "Game Window");
-				zU32 width = root.value("width", 1280u);
-				zU32 height = root.value("height", 720u);
-				bool isFullscreen = root.value("fullscreen", false);
-				bool resizable = root.value("resizable", true);
+				json appViewRoot = ResolveAppViewJson(root, item.filePath.parent_path(), targetPlatform);
+
+				std::string title = appViewRoot.value("title", "Game Window");
+				zU32 width = appViewRoot.value("width", appViewRoot.value("defaultSize", json::object()).value("width", 1280u));
+				zU32 height = appViewRoot.value("height", appViewRoot.value("defaultSize", json::object()).value("height", 720u));
+				bool isFullscreen = appViewRoot.value("fullscreen", false);
+				bool resizable = appViewRoot.value("resizable", true);
 
 				Guid sceneGuid{};
-				if (root.contains("scene") && root["scene"].is_string())
+				if (appViewRoot.contains("scene") && appViewRoot["scene"].is_string())
 				{
-					if (auto parsed = Guid::Parse(root["scene"].get<std::string>()))
+					if (auto parsed = Guid::Parse(appViewRoot["scene"].get<std::string>()))
 						sceneGuid = *parsed;
 				}
 
 				std::vector<Guid> uiScriptGuids;
-				if (root.contains("scripts") && root["scripts"].is_array())
+				if (appViewRoot.contains("scripts") && appViewRoot["scripts"].is_array())
 				{
-					for (const auto& elem : root["scripts"])
+					for (const auto& elem : appViewRoot["scripts"])
 					{
 						if (elem.is_string())
 						{
@@ -222,7 +274,7 @@ namespace zzz::builder
 		return result;
 	}
 
-	bool PackagePacker::PackProject(const fs::path& sourceDir, const fs::path& destinationDir)
+	bool PackagePacker::PackProject(const fs::path& sourceDir, const fs::path& destinationDir, zzz::common::eTargetPlatform targetPlatform)
 	{
 		fs::path outPath = destinationDir / zzz::common::c_GamePackageFileName;
 		std::vector<PendingAsset> pendingAssets;
@@ -331,7 +383,7 @@ namespace zzz::builder
 
 		for (const auto& item : pendingAssets)
 		{
-			std::vector<std::byte> payload = SerializeAssetToBinary(item);
+			std::vector<std::byte> payload = SerializeAssetToBinary(item, targetPlatform);
 			uint64_t payloadSize = payload.size();
 
 			payloads.push_back(std::move(payload));

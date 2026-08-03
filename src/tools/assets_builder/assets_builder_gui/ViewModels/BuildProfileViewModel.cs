@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using assets_builder_gui.Models;
+using assets_builder_lib;
 
 namespace assets_builder_gui.ViewModels;
 
@@ -11,6 +12,7 @@ public class TargetProjectViewModel : ViewModelBase
     private readonly Services.IDialogService? _dialogService;
     private bool _isEnabled;
     private string _name;
+    private eTargetPlatform _targetPlatform;
     private string _configJsonPath;
 
     public TargetProjectViewModel(TargetProjectItem model, Services.IDialogService? dialogService = null)
@@ -19,12 +21,22 @@ public class TargetProjectViewModel : ViewModelBase
         _dialogService = dialogService;
         _isEnabled = model.IsEnabled;
         _name = model.Name;
+        _targetPlatform = model.TargetPlatform;
         _configJsonPath = model.ConfigJsonPath;
 
         BrowseConfigJsonPathCommand = new RelayCommand(_ => BrowseConfigJsonPath());
     }
 
     public TargetProjectItem Model { get; }
+
+    public static List<eTargetPlatform> AvailableTargetPlatforms { get; } = new()
+    {
+        eTargetPlatform.Windows,
+        eTargetPlatform.Linux,
+        eTargetPlatform.Android,
+        eTargetPlatform.MacOS,
+        eTargetPlatform.iOS
+    };
 
     public System.Windows.Input.ICommand BrowseConfigJsonPathCommand { get; }
 
@@ -88,6 +100,18 @@ public class TargetProjectViewModel : ViewModelBase
         }
     }
 
+    public eTargetPlatform TargetPlatform
+    {
+        get => _targetPlatform;
+        set
+        {
+            if (SetProperty(ref _targetPlatform, value))
+            {
+                OnPropertyChanged(nameof(IsDirty));
+            }
+        }
+    }
+
     public string ConfigJsonPath
     {
         get => _configJsonPath;
@@ -101,12 +125,16 @@ public class TargetProjectViewModel : ViewModelBase
         }
     }
 
-    public bool IsDirty => _isEnabled != Model.IsEnabled || _name != Model.Name || _configJsonPath != Model.ConfigJsonPath;
+    public bool IsDirty => _isEnabled != Model.IsEnabled ||
+                           _name != Model.Name ||
+                           _targetPlatform != Model.TargetPlatform ||
+                           _configJsonPath != Model.ConfigJsonPath;
 
     public void ApplyToModel()
     {
         Model.IsEnabled = _isEnabled;
         Model.Name = _name;
+        Model.TargetPlatform = _targetPlatform;
         Model.ConfigJsonPath = _configJsonPath;
     }
 
@@ -114,6 +142,7 @@ public class TargetProjectViewModel : ViewModelBase
     {
         IsEnabled = Model.IsEnabled;
         Name = Model.Name;
+        TargetPlatform = Model.TargetPlatform;
         ConfigJsonPath = Model.ConfigJsonPath;
         OnPropertyChanged(nameof(IsConfigJsonPathValid));
         OnPropertyChanged(nameof(IsDirty));
@@ -161,11 +190,12 @@ public class BuildProfileViewModel : ViewModelBase
             {
                 IsEnabled = true,
                 Name = projName,
+                TargetPlatform = InferTargetPlatform(projName),
                 ConfigJsonPath = jsonPath
             };
 
             var vm = new TargetProjectViewModel(item, _dialogService);
-            vm.PropertyChanged += (s, e) => OnPropertyChanged(nameof(IsDirty));
+            vm.PropertyChanged += OnTargetProjectPropertyChanged;
             TargetProjects.Add(vm);
 
             _isTargetProjectsModified = true;
@@ -217,6 +247,19 @@ public class BuildProfileViewModel : ViewModelBase
                 OnPropertyChanged(nameof(IsValid));
             }
         }
+    }
+
+    private static eTargetPlatform InferTargetPlatform(string name)
+    {
+        if (name.Contains("linux", StringComparison.OrdinalIgnoreCase))
+            return eTargetPlatform.Linux;
+        if (name.Contains("android", StringComparison.OrdinalIgnoreCase))
+            return eTargetPlatform.Android;
+        if (name.Contains("ios", StringComparison.OrdinalIgnoreCase))
+            return eTargetPlatform.iOS;
+        if (name.Contains("macos", StringComparison.OrdinalIgnoreCase) || name.Contains("mac", StringComparison.OrdinalIgnoreCase))
+            return eTargetPlatform.MacOS;
+        return eTargetPlatform.Windows;
     }
 
     public string SourcePath
@@ -304,7 +347,7 @@ public class BuildProfileViewModel : ViewModelBase
             foreach (var item in _model.TargetProjects)
             {
                 var vm = new TargetProjectViewModel(item, _dialogService);
-                vm.PropertyChanged += (s, e) => OnPropertyChanged(nameof(IsDirty));
+                vm.PropertyChanged += OnTargetProjectPropertyChanged;
                 TargetProjects.Add(vm);
             }
         }
@@ -318,6 +361,15 @@ public class BuildProfileViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsDestinationPathValid));
         OnPropertyChanged(nameof(IsDirty));
         OnPropertyChanged(nameof(IsValid));
+    }
+
+    private void OnTargetProjectPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(TargetProjectViewModel.IsDirty))
+        {
+            OnPropertyChanged(nameof(IsDirty));
+            OnPropertyChanged(nameof(DisplayName));
+        }
     }
 
     public void ApplyToModel()

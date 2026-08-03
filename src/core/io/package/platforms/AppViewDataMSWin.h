@@ -37,7 +37,6 @@ namespace zzz::core
 				.and_then([&]() { return s.Serialize(buffer, windowMode); })
 				.and_then([&]() { return s.Serialize(buffer, resizable); });
 		}
-
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override
 		{
 			return s.Deserialize(buffer, offset, defaultSize)

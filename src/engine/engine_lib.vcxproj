@@ -110,9 +110,13 @@
           if not exist "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\engine" mkdir "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\engine"
           copy /Y "$(OutDir)$(TargetName).lib" "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\lib\"
           cmake -DSRC_DIR="$(ProjectDir)\" -DDST_DIR="$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\engine" -P "$(SolutionDir)..\..\copy_headers.cmake"
-    <ClCompile Include="private\platforms\Platform_Editor.cpp" />
-    <ClCompile Include="private\platforms\main_loop\MainLoop_Common.cpp" />
-    <ClCompile Include="private\platforms\window\Window_Common.cpp" />
+        </Command>
+      </PostBuildEvent>
+    </ItemDefinitionGroup>
+    <ItemGroup>
+      <ClCompile Include="private\platforms\Platform_Editor.cpp" />
+      <ClCompile Include="private\platforms\main_loop\MainLoop_Common.cpp" />
+      <ClCompile Include="private\platforms\window\Window_Common.cpp" />
     <ClCompile Include="private\platforms\window\WinMSWindowEditor.cpp" />
     <ClCompile Include="private\core\view\View.cpp" />
     <ClCompile Include="private\core\view\ViewManager.cpp" />

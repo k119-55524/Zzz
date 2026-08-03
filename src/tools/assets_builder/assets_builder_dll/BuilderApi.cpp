@@ -1,6 +1,8 @@
 #include "BuilderApi.h"
 #include <core/Constants.h>
 #include <core/Enums/ePackage.h>
+#include <core/Types.h>
+#include <core/Enums/eTargetPlatform.h>
 
 #include "PackagePacker.h"
 
@@ -66,9 +68,12 @@ extern "C"
 		return static_cast<uint32_t>(zzz::common::ePackage::BinaryAsset);
 	}
 
-	BUILDER_API bool PackProjectNative(const char* sourceDir, const char* destinationDir)
+	BUILDER_API bool PackProjectNative(const char* sourceDir, const char* destinationDir, uint32_t targetPlatform)
 	{
 		if (!sourceDir || !destinationDir) return false;
-		return zzz::builder::PackagePacker::PackProject(sourceDir, destinationDir);
+		return zzz::builder::PackagePacker::PackProject(
+			sourceDir,
+			destinationDir,
+			static_cast<zzz::common::eTargetPlatform>(targetPlatform));
 	}
 }
