@@ -10,7 +10,7 @@
 
 #include "NativeAppData.h"
 #include "public/core/EngineTime.h"
-#include <core/IO/config/ConfigManager.h>
+#include <core/IO/config/UserSettingsManager.h>
 
 using namespace zzz::io;
 using namespace zzz::script;
@@ -42,7 +42,7 @@ namespace zzz::engine
 
 		std::shared_ptr<Path> m_Path;
 		std::shared_ptr<PackageManager> m_PackageManager;
-		std::shared_ptr<ConfigManager> m_ConfigManager;
+		std::shared_ptr<UserSettingsManager> m_UserSettingsManager;
 		std::unique_ptr<Platform> m_Platform;
 		std::unique_ptr<ViewManager> m_ViewManager;
 		std::shared_ptr<MainLoopBase> m_MainLoop;

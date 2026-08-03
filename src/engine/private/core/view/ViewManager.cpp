@@ -23,9 +23,6 @@ ViewManager::ViewManager(const Platform& platform, std::function<void()> onAllVi
 
 ViewManager::~ViewManager()
 {
-	for (auto& view : m_Views)
-		view = nullptr;
-
 	m_Views.clear();
 }
 
@@ -34,7 +31,7 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::InitializeFromPac
 	auto appViewData = packageManager.GetAppViewData();
 	if (!appViewData)
 	{
-		std::string err = "Обязательный ресурс AppViewData не найден в пакете.";
+		std::string err = std::format("Обязательный ресурс AppViewData не найден в пакете: {}", appViewData.error());
 		DOutError("{}", err);
 		return std::unexpected(err);
 	}

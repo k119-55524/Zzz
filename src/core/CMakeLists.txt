@@ -14,10 +14,8 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/ePackage.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/eEnumToString.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileHeader.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigManager.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigManager.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/UserSettings.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/UserSettings.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/UserSettingsManager.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/UserSettingsManager.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/PlatformConfig.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigMSWin.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigMSWin.cpp

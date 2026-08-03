@@ -110,62 +110,6 @@
           if not exist "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\engine" mkdir "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\engine"
           copy /Y "$(OutDir)$(TargetName).lib" "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\lib\"
           cmake -DSRC_DIR="$(ProjectDir)\" -DDST_DIR="$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\engine" -P "$(SolutionDir)..\..\copy_headers.cmake"
-        </Command>
-      </PostBuildEvent>
-  </ItemDefinitionGroup>
-  <ItemGroup>
-    <None Include="SCRIPTING.md" />
-    <ClInclude Include="engine.h" />
-    <ClInclude Include="header.h" />
-    <ClInclude Include="NativeAppData.h" />
-    <ClInclude Include="headers\MSWin.h" />
-    <ClInclude Include="headers\enums.h" />
-    <ClInclude Include="pch\pch.h" />
-    <ClInclude Include="private\platforms\config\ConfigManager.h" />
-    <ClInclude Include="private\platforms\package\PackageManager.h" />
-    <ClInclude Include="private\platforms\config\UserSettings.h" />
-    <ClInclude Include="private\platforms\config\PlatformConfig.h" />
-    <ClInclude Include="private\platforms\config\ConfigEditor.h" />
-    <ClInclude Include="private\core\io\Path.h" />
-    <ClInclude Include="private\platforms\input\Input.h" />
-    <ClInclude Include="private\platforms\input\InputBase.h" />
-    <ClInclude Include="private\platforms\input\InputHelpers.h" />
-    <ClInclude Include="private\platforms\input\InputEditor.h" />
-    <ClInclude Include="private\platforms\Platform.h" />
-    <ClInclude Include="private\platforms\main_loop\MainLoop.h" />
-    <ClInclude Include="private\platforms\main_loop\MainLoop_Common.h" />
-    <ClInclude Include="private\platforms\main_loop\MainLoop_Editor.h" />
-    <ClInclude Include="private\platforms\window\Window.h" />
-    <ClInclude Include="private\platforms\window\Window_Common.h" />
-    <ClInclude Include="private\platforms\window\WinMSWindowEditor.h" />
-    <ClInclude Include="private\core\view\View.h" />
-    <ClInclude Include="private\core\view\ViewManager.h" />
-    <ClInclude Include="private\core\utils\ScreenResolution.h" />
-    <ClInclude Include="private\core\utils\converters.h" />
-    <ClInclude Include="public\core\scene\GameObject.h" />
-    <ClInclude Include="public\core\scene\Scene.h" />
-    <ClInclude Include="public\core\events\EventBus.h" />
-    <ClInclude Include="public\core\userscripts\ScriptRegistry.h" />
-    <ClInclude Include="public\core\userscripts\base_script\Script.h" />
-    <ClInclude Include="public\core\userscripts\base_script\GameScript.h" />
-    <ClInclude Include="public\core\userscripts\base_script\SceneScript.h" />
-    <ClInclude Include="public\core\userscripts\base_script\ViewScript.h" />
-    <ClInclude Include="public\core\EngineTime.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="engine.cpp" />
-    <ClCompile Include="pch\pch.cpp">
-      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'"></ForcedIncludeFiles>
-      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'"></ForcedIncludeFiles>
-    </ClCompile>
-    <ClCompile Include="private\platforms\config\ConfigManager.cpp" />
-    <ClCompile Include="private\platforms\package\PackageManager.cpp" />
-    <ClCompile Include="private\platforms\config\UserSettings.cpp" />
-    <ClCompile Include="private\platforms\config\ConfigEditor.cpp" />
-    <ClCompile Include="private\core\io\Path.cpp" />
-    <ClCompile Include="private\platforms\input\InputBase.cpp" />
-    <ClCompile Include="private\platforms\input\InputEditor.cpp" />
-    <ClCompile Include="private\platforms\Platform_Common.cpp" />
     <ClCompile Include="private\platforms\Platform_Editor.cpp" />
     <ClCompile Include="private\platforms\main_loop\MainLoop_Common.cpp" />
     <ClCompile Include="private\platforms\window\Window_Common.cpp" />

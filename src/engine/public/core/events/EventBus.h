@@ -1,6 +1,7 @@
 #pragma once
 
 #include <common/Templates/Event.h>
+
 #include "public/core/EngineTime.h"
 
 namespace zzz::script
@@ -46,11 +47,11 @@ namespace zzz::engine
 
 	private:
 		friend class zzz::script::GameScript;
-		zzz::engine::Event<> OnStart;
-		zzz::engine::Event<> OnDestroy;
-		zzz::engine::Event<> OnEnable;
-		zzz::engine::Event<> OnDisable;
-		zzz::engine::Event<const zzz::engine::Time&> OnUpdate;
+		Event<> OnStart;
+		Event<> OnDestroy;
+		Event<> OnEnable;
+		Event<> OnDisable;
+		Event<const zzz::engine::Time&> OnUpdate;
 	};
 
 	/**
@@ -77,11 +78,11 @@ namespace zzz::engine
 
 	private:
 		friend class zzz::script::SceneScript;
-		zzz::engine::Event<> OnStart;
-		zzz::engine::Event<> OnDestroy;
-		zzz::engine::Event<> OnEnable;
-		zzz::engine::Event<> OnDisable;
-		zzz::engine::Event<const zzz::engine::Time&> OnUpdate;
+		Event<> OnStart;
+		Event<> OnDestroy;
+		Event<> OnEnable;
+		Event<> OnDisable;
+		Event<const zzz::engine::Time&> OnUpdate;
 	};
 
 	/**
@@ -109,11 +110,11 @@ namespace zzz::engine
 
 	private:
 		friend class zzz::script::Script;
-		zzz::engine::UnorderedEvent<> OnStart;
-		zzz::engine::UnorderedEvent<> OnDestroy;
-		zzz::engine::UnorderedEvent<> OnEnable;
-		zzz::engine::UnorderedEvent<> OnDisable;
-		zzz::engine::UnorderedEvent<const zzz::engine::Time&> OnUpdate;
+		UnorderedEvent<> OnStart;
+		UnorderedEvent<> OnDestroy;
+		UnorderedEvent<> OnEnable;
+		UnorderedEvent<> OnDisable;
+		UnorderedEvent<const zzz::engine::Time&> OnUpdate;
 	};
 
 	/**
@@ -140,10 +141,10 @@ namespace zzz::engine
 
 	private:
 		friend class zzz::script::ViewScript;
-		zzz::engine::Event<> OnStart;
-		zzz::engine::Event<> OnDestroy;
-		zzz::engine::Event<> OnEnable;
-		zzz::engine::Event<> OnDisable;
-		zzz::engine::Event<const zzz::engine::Time&> OnUpdate;
+		Event<> OnStart;
+		Event<> OnDestroy;
+		Event<> OnEnable;
+		Event<> OnDisable;
+		Event<const zzz::engine::Time&> OnUpdate;
 	};
 }

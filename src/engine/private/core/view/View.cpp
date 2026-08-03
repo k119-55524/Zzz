@@ -36,6 +36,7 @@ View::View(const Platform& platform, void* data) :
 View::~View()
 {
 	m_EventBus.InvokeDestroy();
+	m_Scripts.clear();
 }
 
 void View::Initialize(const zzz::core::ViewData* viewData, void* data, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts)

@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <optional>
+#include <expected>
 #include <filesystem>
 #include <string_view>
 #include <unordered_map>
@@ -27,24 +28,24 @@ namespace zzz::engine
 		~PackageManager() = default;
 
 		template <typename T> requires std::derived_from<T, ISerializable>
-		[[nodiscard]] std::optional<T> LoadAssetDataByName(ePackage type, std::string_view name) const
+		[[nodiscard]] std::expected<T, std::string> LoadAssetDataByName(ePackage type, std::string_view name) const
 		{
 			auto entryOpt = GetEntryByName(type, name);
-			if (!entryOpt) return std::nullopt;
+			if (!entryOpt) return UNEXPECTED("Ассет типа {} с именем '{}' не найден в пакете.", EnumToString::ToString(type), name);
 			return LoadAssetData<T>(*entryOpt);
 		}
 		template <typename T> requires std::derived_from<T, ISerializable>
-		[[nodiscard]] std::optional<T> LoadAssetDataByGuid(ePackage type, const Guid& guid) const
+		[[nodiscard]] std::expected<T, std::string> LoadAssetDataByGuid(ePackage type, const Guid& guid) const
 		{
 			auto entryOpt = GetEntryByGuid(type, guid);
-			if (!entryOpt) return std::nullopt;
+			if (!entryOpt) return UNEXPECTED("Ассет типа {} с GUID '{}' не найден в пакете.", EnumToString::ToString(type), guid.ToString());
 			return LoadAssetData<T>(*entryOpt);
 		}
 
 		[[nodiscard]] std::optional<PackageEntry> GetEntryByName(ePackage type, std::string_view name) const;
 		[[nodiscard]] std::optional<PackageEntry> GetEntryByGuid(ePackage type, const Guid& guid) const;
 
-		[[nodiscard]] std::optional<AppViewData> GetAppViewData() const;
+		[[nodiscard]] std::expected<AppViewData, std::string> GetAppViewData() const;
 
 	private:
 		void Initialize(const Path& path);
@@ -52,7 +53,7 @@ namespace zzz::engine
 		template <typename T> requires std::derived_from<T, ISerializable>
 		void LogEntriesSummaryForType(ePackage type) const;
 		template <typename T> requires std::derived_from<T, ISerializable>
-		[[nodiscard]] std::optional<T> LoadAssetData(const PackageEntry& entry) const;
+		[[nodiscard]] std::expected<T, std::string> LoadAssetData(const PackageEntry& entry) const;
 
 		std::filesystem::path m_PackagePath;
 		std::map<ePackage, std::unordered_map<std::string, PackageEntry>> m_EntriesByName;

@@ -102,45 +102,44 @@ namespace zzz::engine
 		return entryIt->second;
 	}
 
-	std::optional<AppViewData> PackageManager::GetAppViewData() const
+	std::expected<AppViewData, std::string> PackageManager::GetAppViewData() const
 	{
 		auto typeIt = m_EntriesByName.find(ePackage::AppView);
 		if (typeIt == m_EntriesByName.end() || typeIt->second.empty())
-			return std::nullopt;
+			return UNEXPECTED("Ресурс AppViewData не найден в манифесте пакета.");
 
 		const auto& entry = typeIt->second.begin()->second;
 		return LoadAssetData<AppViewData>(entry);
 	}
 
 	template <typename T> requires std::derived_from<T, ISerializable>
-	[[nodiscard]] std::optional<T> PackageManager::LoadAssetData(const PackageEntry& entry) const
+	[[nodiscard]] std::expected<T, std::string> PackageManager::LoadAssetData(const PackageEntry& entry) const
 	{
 		if (m_PackagePath.empty())
-			return std::nullopt;
+			return UNEXPECTED("Путь к пакету ресурсов не задан.");
 
 		std::ifstream file(m_PackagePath, std::ios::binary);
 		if (!file.is_open())
-			return std::nullopt;
+			return UNEXPECTED("Не удалось открыть файл пакета: {}.", m_PackagePath.string());
 
 		file.seekg(entry.GetOffset(), std::ios::beg);
 		std::vector<std::byte> buffer(entry.GetSize());
 		file.read(reinterpret_cast<char*>(buffer.data()), entry.GetSize());
 		if (!file.good())
-			return std::nullopt;
+			return UNEXPECTED("Ошибка ввода-вывода при чтении блока ассета '{}' из пакета (offset: {}, size: {}).", entry.GetName(), entry.GetOffset(), entry.GetSize());
 
 		std::size_t offset = 0;
 		Serializer serializer;
 		T data{};
-		if (serializer.Deserialize(buffer, offset, data))
-		{
-			if constexpr (std::is_same_v<T, ViewData>)
-			{
-				data.SetName(entry.GetName());
-			}
-			return data;
-		}
+		auto res = serializer.Deserialize(buffer, offset, data);
+		if (!res)
+			return UNEXPECTED("Ошибка десериализации ассета '{}': {}.", entry.GetName(), res.error());
 
-		return std::nullopt;
+		if constexpr (std::is_same_v<T, ViewData>)
+		{
+			data.SetName(entry.GetName());
+		}
+		return data;
 	}
 
 #pragma region Logging
@@ -173,9 +172,9 @@ namespace zzz::engine
 			DOut("     [{}]", idx++);
 			entry.LogFileBlock();
 
-			if (auto dataOpt = LoadAssetData<T>(entry))
+			if (auto dataRes = LoadAssetData<T>(entry))
 			{
-				dataOpt->LogFileBlock();
+				dataRes->LogFileBlock();
 			}
 		}
 	}

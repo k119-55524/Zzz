@@ -49,41 +49,6 @@
     <Filter Include="public\core\userscripts\base_script">
       <UniqueIdentifier>{e83bde28-12cd-41e7-9d7a-d0901e1cd7ed}</UniqueIdentifier>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="SCRIPTING.md" />
-    <ClInclude Include="engine.h" />
-    <ClInclude Include="header.h" />
-    <ClInclude Include="NativeAppData.h" />
-    <ClInclude Include="headers\MSWin.h">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\enums.h">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="pch\pch.h">
-      <Filter>pch</Filter>
-    </ClInclude>
-    <ClInclude Include="private\platforms\config\ConfigManager.h">
-      <Filter>private\platforms\config</Filter>
-    </ClInclude>
-    <ClInclude Include="private\platforms\package\PackageManager.h">
-      <Filter>private\platforms\package</Filter>
-    </ClInclude>
-    <ClInclude Include="private\platforms\config\UserSettings.h">
-      <Filter>private\platforms\config</Filter>
-    </ClInclude>
-    <ClInclude Include="private\platforms\config\PlatformConfig.h">
-      <Filter>private\platforms\config</Filter>
-    </ClInclude>
-    <ClInclude Include="private\platforms\config\ConfigEditor.h">
-      <Filter>private\platforms\config</Filter>
-    </ClInclude>
-    <ClInclude Include="private\core\io\Path.h">
-      <Filter>private\core\io</Filter>
-    </ClInclude>
-    <ClInclude Include="private\core\templates\Size2D.h">
-      <Filter>private\core\templates</Filter>
     </ClInclude>
     <ClInclude Include="private\platforms\input\Input.h">
       <Filter>private\platforms\input</Filter>

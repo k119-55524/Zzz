@@ -1,6 +1,7 @@
 #pragma once
 
 #include <core/Version.h>
+#include <logger/logger.h>
 #include <core/Constants.h>
 #include <core/IO/FileHeader.h>
 #include <core/Serialize/Serializer.h>

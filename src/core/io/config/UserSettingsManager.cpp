@@ -1,25 +1,28 @@
 
 #include <fstream>
-
-#include "ConfigManager.h"
 #include <core/Constants.h>
 #include <core/Serialize/Serializer.h>
 #include <engine/private/core/io/Path.h>
 #include <engine/private/platforms/package/PackageManager.h>
 
+#include "UserSettingsManager.h"
+
 using namespace zzz::io;
 using namespace zzz::engine;
 
-ConfigManager::ConfigManager(const Path& path, const PackageManager& packageManager) :
+UserSettingsManager::UserSettingsManager(const Path& path, const PackageManager& packageManager) :
 	m_Path(path),
+	m_Version(c_ConfigFileMajorVersion, c_ConfigFileMinorVersion, c_ConfigFilePatchVersion),
 	m_IsDirty(true)
 {
-#if !Z_EDITOR
+#if Z_EDITOR
+	(void)packageManager;
+#else
 	Initialize(packageManager);
 #endif
 }
 
-void ConfigManager::Initialize(const PackageManager& packageManager)
+void UserSettingsManager::Initialize(const PackageManager& packageManager)
 {
 	try
 	{
@@ -31,7 +34,7 @@ void ConfigManager::Initialize(const PackageManager& packageManager)
 			.lexically_normal()
 			.make_preferred();
 
-		m_UserSettings = CreateDefaultUserSettings(packageManager);
+		SetDefaultUserSettings(packageManager);
 		if (!std::filesystem::exists(m_ConfigPath))
 		{
 			DOutWarning("Файл конфигурации не найден: {}. Используется конфигурация по умолчанию.", m_ConfigPath.string());
@@ -42,44 +45,43 @@ void ConfigManager::Initialize(const PackageManager& packageManager)
 		if (!res)
 		{
 			DOutWarning("Не удалось загрузить файл конфигурации: {}. Создаётся конфигурация по умолчанию.", m_ConfigPath.string());
-			m_UserSettings = CreateDefaultUserSettings(packageManager);
+			SetDefaultUserSettings(packageManager);
 		}
 	}
 	catch (const std::filesystem::filesystem_error& e)
 	{
 		DOutException("Ошибка файловой системы: {}. Установка конфигурации по умолчанию.", e.what());
-		m_UserSettings = CreateDefaultUserSettings(packageManager);
-
+		SetDefaultUserSettings(packageManager);
 		return;
 	}
 	catch (const std::exception& e)
 	{
 		DOutException("Ошибка загрузки конфигурации: {}. Установка конфигурации по умолчанию.", e.what());
-		m_UserSettings = CreateDefaultUserSettings(packageManager);
-
+		SetDefaultUserSettings(packageManager);
 		return;
 	}
 	catch (...)
 	{
 		DOutException("Неизвестная ошибка загрузки конфигурации. Установка конфигурации по умолчанию.");
-		m_UserSettings = CreateDefaultUserSettings(packageManager);
-
+		SetDefaultUserSettings(packageManager);
 		return;
 	}
 
-	DOut("[ConfigManager] Конфигурация десериализована: {}.", m_ConfigPath.string());
+	DOut("[UserSettingsManager] Конфигурация десериализована: {}.", m_ConfigPath.string());
 }
 
-std::shared_ptr<UserSettings> ConfigManager::CreateDefaultUserSettings(const PackageManager& packageManager) const
+void UserSettingsManager::SetDefaultUserSettings(const PackageManager& packageManager)
 {
 	auto appViewData = packageManager.GetAppViewData();
 	if (!appViewData)
-		THROW_RUNTIME("Required AppViewData resource is not found in package.");
+		THROW_RUNTIME("Не удалось загрузить AppViewData: {}", appViewData.error());
 
-	return safe_make_shared<UserSettings>(*appViewData);
+	m_AppViewUserData = AppViewUserData(*appViewData);
+	m_PlatformConfig = PlatformConfig();
+	m_Version = Version(c_ConfigFileMajorVersion, c_ConfigFileMinorVersion, c_ConfigFilePatchVersion);
 }
 
-[[nodiscard]] std::expected<void, std::string> ConfigManager::SaveConfig()
+[[nodiscard]] std::expected<void, std::string> UserSettingsManager::SaveConfig()
 {
 #if Z_EDITOR
 	return {};
@@ -87,14 +89,14 @@ std::shared_ptr<UserSettings> ConfigManager::CreateDefaultUserSettings(const Pac
 
 	if (!m_IsDirty)
 	{
-		DOut("[ConfigManager] Конфигурация не изменена. Сохранение не требуется.");
+		DOut("[UserSettingsManager] Конфигурация не изменена. Сохранение не требуется.");
 		return {};
 	}
 
 	try
 	{
 		std::vector<std::byte> buffer;
-		if (auto res = m_Serializer.Serialize(buffer, *m_UserSettings); !res)
+		if (auto res = m_Serializer.Serialize(buffer, *this); !res)
 			return UNEXPECTED("Не удалось сериализовать конфигурацию: {}.", res.error());
 
 		std::error_code ec;
@@ -124,13 +126,13 @@ std::shared_ptr<UserSettings> ConfigManager::CreateDefaultUserSettings(const Pac
 	}
 
 	m_IsDirty = false;
-	DOut("[ConfigManager] Конфигурация сериализована: {}.", m_ConfigPath.string());
+	DOut("[UserSettingsManager] Конфигурация сериализована: {}.", m_ConfigPath.string());
 
 	return {};
 #endif // Z_EDITOR
 }
 
-std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path path)
+std::expected<void, std::string> UserSettingsManager::LoadConfig(std::filesystem::path path)
 {
 	try
 	{
@@ -139,15 +141,11 @@ std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path
 			return UNEXPECTED("Не удалось открыть файл конфигурации.");
 
 		std::streamsize fileSize = in.tellg();
-		in.seekg(0, std::ios::beg); // Возвращаемся в начало файла
+		in.seekg(0, std::ios::beg);
 
-		// Читаем весь файл в буфер
 		std::vector<char> buffer(fileSize);
 		if (!in.read(buffer.data(), fileSize))
 			return UNEXPECTED("Не удалось прочитать файл конфигурации.");
-
-		// Создаем поток для чтения из буфера
-		std::istringstream bufStream(std::string(buffer.data(), buffer.size()));
 
 		std::size_t offset = 0;
 
@@ -156,7 +154,7 @@ std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path
 				reinterpret_cast<const std::byte*>(buffer.data()),
 				buffer.size()),
 			offset,
-			*m_UserSettings);
+			*this);
 
 		if (!result)
 			return UNEXPECTED("Не удалось десериализовать конфигурацию: {}", result.error());
@@ -177,16 +175,37 @@ std::expected<void, std::string> ConfigManager::LoadConfig(std::filesystem::path
 	return {};
 }
 
-std::expected<std::filesystem::path, std::string> ConfigManager::GetSettingsDirectory()
+std::expected<std::filesystem::path, std::string> UserSettingsManager::GetSettingsDirectory()
 {
-	// На Apple и Android используем директорию данных пользователя
 #if Z_APPLE || Z_ANDROID
 	return m_Path.GetUserDataDirectory();
-
-	// На Windows и Linux используем директорию с исполняемым файлом
 #elif Z_WINDOWS || Z_LINUX
 	return m_Path.GetExecutableDirectory();
 #else
-#error >>>>> ConfigManager::GetSettingsDirectory(): Unsupported platform.
+#error >>>>> UserSettingsManager::GetSettingsDirectory(): Unsupported platform.
 #endif
+}
+
+[[nodiscard]] std::expected<void, std::string> UserSettingsManager::Serialize(std::vector<std::byte>& buffer, const Serializer& s) const
+{
+	return s.Serialize(buffer, c_ConfigHeader)
+		.and_then([&]() { return s.Serialize(buffer, m_Version); })
+		.and_then([&]() { return s.Serialize(buffer, m_AppViewUserData); })
+		.and_then([&]() { return s.Serialize(buffer, m_PlatformConfig); });
+}
+
+[[nodiscard]] std::expected<void, std::string> UserSettingsManager::Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s)
+{
+	FileHeader<3> header{};
+
+	return s.Deserialize(buffer, offset, header)
+		.and_then([&]() -> std::expected<void, std::string>
+			{
+				if (header != c_ConfigHeader)
+					return UNEXPECTED("Некорректный заголовок конфигурации.");
+
+				return s.Deserialize(buffer, offset, m_Version);
+			})
+		.and_then([&]() { return s.Deserialize(buffer, offset, m_AppViewUserData); })
+		.and_then([&]() { return s.Deserialize(buffer, offset, m_PlatformConfig); });
 }

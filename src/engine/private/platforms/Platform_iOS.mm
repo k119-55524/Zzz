@@ -49,7 +49,7 @@ static std::unique_ptr<Engine> g_Engine;
 - (void)applicationDidEnterBackground:(UIApplication *)application {
     DOut("[EngineAppDelegate] Приложение перешло в фон.");
     if (g_Engine) {
-        auto res = g_Engine->GetPlatform()->GetConfigManager()->SaveConfig();
+        auto res = g_Engine->GetPlatform()->GetUserSettingsManager()->SaveConfig();
         if (!res) {
             DOutError("[EngineAppDelegate] Не удалось сохранить конфигурацию при переходе в фон: {}.", res.error());
         }
