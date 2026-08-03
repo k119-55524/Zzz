@@ -11,5 +11,27 @@
   ],
   "views": [
     "57ae9b6c-5ff9-4e01-b45a-30a7501265c9"
+  ],
+  "platform_configs": [
+    {
+      "platform": "Windows",
+      "file": "project_windows.json"
+    },
+    {
+      "platform": "Android",
+      "file": "project_android.json"
+    },
+    {
+      "platform": "iOS",
+      "file": "project_ios.json"
+    },
+    {
+      "platform": "Linux",
+      "file": "project_linux.json"
+    },
+    {
+      "platform": "MacOS",
+      "file": "project_macos.json"
+    }
   ]
 }

@@ -1,12 +1,17 @@
 #pragma once
 
+#include "ePackage.h"
 #include <string_view>
 #include <common/Macroses.h>
+#include "platforms/eiOSEnums.h"
 #include <common/ThrowWrappers.h>
+#include "platforms/eLinuxEnums.h"
+#include "platforms/eMacOSEnums.h"
+#include "platforms/eMSWinEnums.h"
 #include <common/Enums/eWinResize.h>
+#include "platforms/eAndroidEnums.h"
 #include <common/Enums/eLogMessageType.h>
-
-#include "ePackage.h"
+#include "eTargetPlatform.h"
 
 namespace zzz::common
 {
@@ -52,6 +57,127 @@ namespace zzz::common
 			case ePackage::AppView:         return "AppView";
 			}
 			THROW_RUNTIME("Необработанный ePackage");
+		}
+
+		static constexpr std::string_view ToString(eTargetPlatform type)
+		{
+			switch (type)
+			{
+			case eTargetPlatform::Windows: return "Windows";
+			case eTargetPlatform::Linux:   return "Linux";
+			case eTargetPlatform::Android: return "Android";
+			case eTargetPlatform::MacOS:   return "MacOS";
+			case eTargetPlatform::iOS:     return "iOS";
+			}
+			THROW_RUNTIME("Необработанный eTargetPlatform");
+		}
+
+		static constexpr std::string_view ToString(eMSWinWindowMode type)
+		{
+			switch (type)
+			{
+			case eMSWinWindowMode::Windowed:            return "Windowed";
+			case eMSWinWindowMode::BorderlessFullscreen:return "BorderlessFullscreen";
+			case eMSWinWindowMode::ExclusiveFullscreen: return "ExclusiveFullscreen";
+			}
+			THROW_RUNTIME("Необработанный eMSWinWindowMode");
+		}
+
+		static constexpr std::string_view ToString(eMSWinWindowStyle type)
+		{
+			switch (type)
+			{
+			case eMSWinWindowStyle::OverlappedWindow: return "OverlappedWindow";
+			case eMSWinWindowStyle::PopUp:            return "PopUp";
+			case eMSWinWindowStyle::ToolWindow:       return "ToolWindow";
+			}
+			THROW_RUNTIME("Необработанный eMSWinWindowStyle");
+		}
+
+		static constexpr std::string_view ToString(eAndroidScreenOrientation type)
+		{
+			switch (type)
+			{
+			case eAndroidScreenOrientation::Sensor:        return "Sensor";
+			case eAndroidScreenOrientation::Portrait:      return "Portrait";
+			case eAndroidScreenOrientation::LandscapeLeft: return "LandscapeLeft";
+			case eAndroidScreenOrientation::LandscapeRight:return "LandscapeRight";
+			}
+			THROW_RUNTIME("Необработанный eAndroidScreenOrientation");
+		}
+
+		static constexpr std::string_view ToString(eAndroidCutoutMode type)
+		{
+			switch (type)
+			{
+			case eAndroidCutoutMode::Default:   return "Default";
+			case eAndroidCutoutMode::ShortEdges:return "ShortEdges";
+			case eAndroidCutoutMode::Never:     return "Never";
+			}
+			THROW_RUNTIME("Необработанный eAndroidCutoutMode");
+		}
+
+		static constexpr std::string_view ToString(eiOSScreenOrientation type)
+		{
+			switch (type)
+			{
+			case eiOSScreenOrientation::AutoRotate:    return "AutoRotate";
+			case eiOSScreenOrientation::Portrait:      return "Portrait";
+			case eiOSScreenOrientation::LandscapeLeft: return "LandscapeLeft";
+			case eiOSScreenOrientation::LandscapeRight:return "LandscapeRight";
+			}
+			THROW_RUNTIME("Необработанный eiOSScreenOrientation");
+		}
+
+		static constexpr std::string_view ToString(eiOSSafeAreaMode type)
+		{
+			switch (type)
+			{
+			case eiOSSafeAreaMode::UseSafeArea:       return "UseSafeArea";
+			case eiOSSafeAreaMode::ExtendIntoSafeArea: return "ExtendIntoSafeArea";
+			}
+			THROW_RUNTIME("Необработанный eiOSSafeAreaMode");
+		}
+
+		static constexpr std::string_view ToString(eiOSHomeIndicatorMode type)
+		{
+			switch (type)
+			{
+			case eiOSHomeIndicatorMode::Visible:   return "Visible";
+			case eiOSHomeIndicatorMode::AutoHidden:return "AutoHidden";
+			}
+			THROW_RUNTIME("Необработанный eiOSHomeIndicatorMode");
+		}
+
+		static constexpr std::string_view ToString(eLinuxDisplayServer type)
+		{
+			switch (type)
+			{
+			case eLinuxDisplayServer::Auto:   return "Auto";
+			case eLinuxDisplayServer::Wayland:return "Wayland";
+			case eLinuxDisplayServer::X11:    return "X11";
+			}
+			THROW_RUNTIME("Необработанный eLinuxDisplayServer");
+		}
+
+		static constexpr std::string_view ToString(eLinuxWindowMode type)
+		{
+			switch (type)
+			{
+			case eLinuxWindowMode::Windowed:  return "Windowed";
+			case eLinuxWindowMode::Fullscreen:return "Fullscreen";
+			}
+			THROW_RUNTIME("Необработанный eLinuxWindowMode");
+		}
+
+		static constexpr std::string_view ToString(eMacOSWindowMode type)
+		{
+			switch (type)
+			{
+			case eMacOSWindowMode::Windowed:  return "Windowed";
+			case eMacOSWindowMode::Fullscreen:return "Fullscreen";
+			}
+			THROW_RUNTIME("Необработанный eMacOSWindowMode");
 		}
 	};
 }

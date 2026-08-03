@@ -1,0 +1,15 @@
+{
+  "build": {
+    "packageName": "com.zzz.assetstest",
+    "minSdkVersion": 24,
+    "targetSdkVersion": 34,
+    "icon": "Assets/Icons/android_icon.png"
+  },
+  "appView": {
+    "title": "Zzz Test App (Android)",
+    "orientation": "LandscapeLeft",
+    "targetFPS": 60,
+    "cutoutMode": "ShortEdges",
+    "keepScreenOn": true
+  }
+}

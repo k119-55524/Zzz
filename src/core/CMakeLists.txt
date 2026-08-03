@@ -12,26 +12,33 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/Guid.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Version.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/ePackage.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/Enums/eTargetPlatform.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/eEnumToString.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileHeader.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/UserSettingsManager.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/UserSettingsManager.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/PlatformConfig.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigMSWin.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigMSWin.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigLinux.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigLinux.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigAndroid.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigAndroid.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigMacOS.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigMacOS.mm
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigiOS.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigiOS.mm
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigEditor.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/ConfigEditor.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigMSWin.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigMSWin.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigLinux.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigLinux.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigAndroid.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigAndroid.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigMacOS.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigMacOS.mm
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigiOS.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigiOS.mm
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigEditor.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigEditor.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PackageHeader.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PackageEntry.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/AppViewData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/AppViewPlatformConfig.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/AppViewDataMSWin.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/AppViewDataAndroid.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/AppViewDataiOS.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/AppViewDataLinux.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/AppViewDataMacOS.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/AppViewUserData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/ViewData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/ProjectManifestData.h

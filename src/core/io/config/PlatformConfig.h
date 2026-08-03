@@ -1,17 +1,17 @@
 #pragma once
 
 #if Z_EDITOR
-#include "ConfigEditor.h"
+#include "platforms/ConfigEditor.h"
 #elif Z_WINDOWS
-#include "ConfigMSWin.h"
+#include "platforms/ConfigMSWin.h"
 #elif Z_LINUX
-#include "ConfigLinux.h"
+#include "platforms/ConfigLinux.h"
 #elif Z_ANDROID
-#include "ConfigAndroid.h"
+#include "platforms/ConfigAndroid.h"
 #elif Z_MACOS
-#include "ConfigMacOS.h"
+#include "platforms/ConfigMacOS.h"
 #elif Z_IOS
-#include "ConfigiOS.h"
+#include "platforms/ConfigiOS.h"
 #else
 #error >>>>> PlatformConfig header inclusion: Unsupported platform.
 #endif

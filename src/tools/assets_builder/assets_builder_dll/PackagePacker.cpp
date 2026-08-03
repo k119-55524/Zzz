@@ -20,6 +20,7 @@ namespace zzz::builder
 {
 	namespace fs = std::filesystem;
 	using json = nlohmann::json;
+	using namespace zzz::core;
 
 	struct PendingAsset
 	{
@@ -133,7 +134,8 @@ namespace zzz::builder
 					}
 				}
 
-				zzz::core::AppViewData appViewData(title, Size2D<zU32>{ width, height }, sceneGuid, uiScriptGuids, isFullscreen, resizable);
+				AppViewPlatformData platformData(Size2D<zU32>{ width, height }, isFullscreen, resizable);
+				zzz::core::AppViewData appViewData(title, sceneGuid, uiScriptGuids, platformData);
 				if (auto res = serializer.Serialize(result, appViewData); !res)
 					return {};
 			}
