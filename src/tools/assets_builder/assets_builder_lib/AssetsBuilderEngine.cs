@@ -447,7 +447,7 @@ public class AssetsBuilderEngine
 				regSb.AppendLine(inc);
 			}
 			regSb.AppendLine();
-			regSb.AppendLine("void RegisterAllScripts()");
+			regSb.AppendLine("extern \"C\" void RegisterAllScripts()");
 			regSb.AppendLine("{");
 			foreach (var line in registerLines)
 			{
