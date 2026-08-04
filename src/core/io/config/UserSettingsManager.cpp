@@ -1,9 +1,9 @@
 
 #include <fstream>
-#include <core/Constants.h>
+#include <core/utils/Constants.h>
 #include <core/Serialize/Serializer.h>
-#include <engine/private/core/io/Path.h>
-#include <engine/private/platforms/package/PackageManager.h>
+#include <core/io/Path.h>
+#include <engine/platforms/package/PackageManager.h>
 
 #include "UserSettingsManager.h"
 

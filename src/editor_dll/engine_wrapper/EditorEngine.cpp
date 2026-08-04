@@ -1,10 +1,10 @@
-#include <engine/headers/Enums.h>
-#include <engine/private/core/view/ViewManager.h>
-#include <engine/public/core/userscripts/ScriptRegistry.h>
-#include <engine/public/core/events/EventBus.h>
-#include <engine/public/core/scene/GameObject.h>
-#include <engine/public/core/userscripts/base_script/Script.h>
-#include <engine/public/core/userscripts/base_script/GameScript.h>
+#include <core/headers/Enums.h>
+#include <engine/view/ViewManager.h>
+#include <core/userscripts/ScriptRegistry.h>
+#include <core/events/EventBus.h>
+#include <engine/scene/GameObject.h>
+#include <core/userscripts/base_script/Script.h>
+#include <core/userscripts/base_script/GameScript.h>
 #include <algorithm>
 #include <cctype>
 #include <utility>

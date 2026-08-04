@@ -1,7 +1,7 @@
 #include "BuilderApi.h"
-#include <core/Constants.h>
+#include <core/utils/Constants.h>
 #include <core/Enums/ePackage.h>
-#include <core/Types.h>
+#include <core/utils/Types.h>
 #include <core/Enums/eTargetPlatform.h>
 
 #include "PackagePacker.h"

@@ -6,11 +6,21 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
     )
 
     target_sources(${TARGET_NAME} PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/Types.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/Fwd.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/Constants.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/Guid.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/Version.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/core.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/Types.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/Fwd.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/Constants.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/Guid.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/Version.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/headers/Apple.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/headers/MSWin.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/headers/Linux.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/headers/Android.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/headers/Enums.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/time/Time.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/time/Time.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/events/Event.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/events/EventBus.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/ePackage.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/eTargetPlatform.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/eEnumToString.h
@@ -20,6 +30,8 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverterLinuxTypes.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverterMacOSTypes.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileHeader.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Path.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Path.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/UserSettingsManager.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/UserSettingsManager.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/PlatformConfig.h
@@ -52,6 +64,12 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/Serialize/Serializer.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Serialize/Serializer.cpp
     )
+
+    if(APPLE)
+        target_sources(${TARGET_NAME} PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/IO/apple/Path_Apple.mm
+        )
+    endif()
 
     target_compile_features(${TARGET_NAME} PUBLIC cxx_std_23)
     target_compile_definitions(${TARGET_NAME} PRIVATE Z_TARGET_NAME="${TARGET_NAME}")

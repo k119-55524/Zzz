@@ -1,195 +1,173 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://www.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="headers">
-      <UniqueIdentifier>{6f971b3e-e67c-482a-a9a7-581b2df94cd6}</UniqueIdentifier>
-    </Filter>
     <Filter Include="pch">
       <UniqueIdentifier>{ea867fa2-1678-43d9-95fe-4f11e9569fa1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="private">
-      <UniqueIdentifier>{95b87cc8-cde8-48b4-9279-d5c417937402}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="private\platforms">
+    <Filter Include="platforms">
       <UniqueIdentifier>{d3c11e3b-d53c-47fc-8f7d-8be94f509e53}</UniqueIdentifier>
     </Filter>
-    <Filter Include="private\platforms\config">
+    <Filter Include="platforms\config">
       <UniqueIdentifier>{9a16f2c6-d922-4a00-abeb-a63e6e3c509b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="private\platforms\input">
+    <Filter Include="platforms\input">
       <UniqueIdentifier>{bb45f91f-0e12-4217-bfbe-d45094244fbe}</UniqueIdentifier>
     </Filter>
-    <Filter Include="private\platforms\main_loop">
+    <Filter Include="platforms\main_loop">
       <UniqueIdentifier>{e83bde28-12cd-41e7-9d7a-d0901e1cd7ea}</UniqueIdentifier>
     </Filter>
-    <Filter Include="private\platforms\window">
+    <Filter Include="platforms\window">
       <UniqueIdentifier>{e7d8d217-cbe2-47d0-a0f1-0a4db7c8236d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="private\core">
+    <Filter Include="core">
       <UniqueIdentifier>{c06497ec-0f04-4c6e-8d82-b36d0de4b3ec}</UniqueIdentifier>
     </Filter>
-    <Filter Include="private\core\io">
-      <UniqueIdentifier>{3a9cb7e7-f1ab-43b8-80f4-d586715fbc9a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="private\core\utils">
+    <Filter Include="core\utils">
       <UniqueIdentifier>{72b0c367-27b0-4df2-a3c3-d9fb48f5728a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="private\core\templates">
+    <Filter Include="core\templates">
       <UniqueIdentifier>{79a32c28-98e3-4638-b789-f538e1215b2e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="private\core\view">
+    <Filter Include="view">
       <UniqueIdentifier>{1cd6631b-7a38-4e89-bdc9-cb73289053cc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="private\core\scene">
+    <Filter Include="scene">
       <UniqueIdentifier>{e83bde28-12cd-41e7-9d7a-d0901e1cd7eb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="public\core\userscripts">
+    <Filter Include="core\userscripts">
       <UniqueIdentifier>{e83bde28-12cd-41e7-9d7a-d0901e1cd7ec}</UniqueIdentifier>
     </Filter>
-    <Filter Include="public\core\userscripts\base_script">
+    <Filter Include="core\userscripts\base_script">
       <UniqueIdentifier>{e83bde28-12cd-41e7-9d7a-d0901e1cd7ed}</UniqueIdentifier>
     </Filter>
+    <ClInclude Include="platforms\input\Input.h">
+      <Filter>platforms\input</Filter>
     </ClInclude>
-    <ClInclude Include="private\platforms\input\Input.h">
-      <Filter>private\platforms\input</Filter>
+    <ClInclude Include="platforms\input\InputBase.h">
+      <Filter>platforms\input</Filter>
     </ClInclude>
-    <ClInclude Include="private\platforms\input\InputBase.h">
-      <Filter>private\platforms\input</Filter>
+    <ClInclude Include="platforms\input\InputHelpers.h">
+      <Filter>platforms\input</Filter>
     </ClInclude>
-    <ClInclude Include="private\platforms\input\InputHelpers.h">
-      <Filter>private\platforms\input</Filter>
+    <ClInclude Include="platforms\input\InputEditor.h">
+      <Filter>platforms\input</Filter>
     </ClInclude>
-    <ClInclude Include="private\platforms\input\InputEditor.h">
-      <Filter>private\platforms\input</Filter>
+    <ClInclude Include="platforms\Platform.h">
+      <Filter>platforms</Filter>
     </ClInclude>
-    <ClInclude Include="private\platforms\Platform.h">
-      <Filter>private\platforms</Filter>
+    <ClInclude Include="platforms\main_loop\MainLoop.h">
+      <Filter>platforms\main_loop</Filter>
     </ClInclude>
-    <ClInclude Include="private\platforms\main_loop\MainLoop.h">
-      <Filter>private\platforms\main_loop</Filter>
+    <ClInclude Include="platforms\main_loop\MainLoop_Common.h">
+      <Filter>platforms\main_loop</Filter>
     </ClInclude>
-    <ClInclude Include="private\platforms\main_loop\MainLoop_Common.h">
-      <Filter>private\platforms\main_loop</Filter>
+    <ClInclude Include="platforms\main_loop\MainLoop_Editor.h">
+      <Filter>platforms\main_loop</Filter>
     </ClInclude>
-    <ClInclude Include="private\platforms\main_loop\MainLoop_Editor.h">
-      <Filter>private\platforms\main_loop</Filter>
+    <ClInclude Include="platforms\window\Window.h">
+      <Filter>platforms\window</Filter>
     </ClInclude>
-    <ClInclude Include="private\platforms\window\Window.h">
-      <Filter>private\platforms\window</Filter>
+    <ClInclude Include="platforms\window\Window_Common.h">
+      <Filter>platforms\window</Filter>
     </ClInclude>
-    <ClInclude Include="private\platforms\window\Window_Common.h">
-      <Filter>private\platforms\window</Filter>
+    <ClInclude Include="platforms\window\WinMSWindowEditor.h">
+      <Filter>platforms\window</Filter>
     </ClInclude>
-    <ClInclude Include="private\platforms\window\WinMSWindowEditor.h">
-      <Filter>private\platforms\window</Filter>
+    <ClInclude Include="view\View.h">
+      <Filter>view</Filter>
     </ClInclude>
-    <ClInclude Include="private\core\view\View.h">
-      <Filter>private\core\view</Filter>
+    <ClInclude Include="view\ViewManager.h">
+      <Filter>view</Filter>
     </ClInclude>
-    <ClInclude Include="private\core\view\ViewManager.h">
-      <Filter>private\core\view</Filter>
+    <ClInclude Include="..\core\utils\ScreenResolution.h">
+      <Filter>core\utils</Filter>
     </ClInclude>
-    <ClInclude Include="private\core\utils\ScreenResolution.h">
-      <Filter>private\core\utils</Filter>
+    <ClInclude Include="..\core\utils\converters.h">
+      <Filter>core\utils</Filter>
     </ClInclude>
-    <ClInclude Include="private\core\utils\converters.h">
-      <Filter>private\core\utils</Filter>
+    <ClInclude Include="scene\GameObject.h">
+      <Filter>scene</Filter>
     </ClInclude>
-    <ClInclude Include="private\core\scene\GameObject.h">
-      <Filter>private\core\scene</Filter>
+    <ClInclude Include="scene\Scene.h">
+      <Filter>scene</Filter>
     </ClInclude>
-    <ClInclude Include="private\core\scene\Scene.h">
-      <Filter>private\core\scene</Filter>
+    <ClInclude Include="..\core\userscripts\ScriptRegistry.h">
+      <Filter>core\userscripts</Filter>
     </ClInclude>
-    <ClInclude Include="public\core\events\EventBus.h">
-      <Filter>private\core\scene</Filter>
+    <ClInclude Include="..\core\userscripts\base_script\Script.h">
+      <Filter>core\userscripts\base_script</Filter>
     </ClInclude>
-    <ClInclude Include="public\core\userscripts\ScriptRegistry.h">
-      <Filter>public\core\userscripts</Filter>
+    <ClInclude Include="..\core\userscripts\base_script\GameScript.h">
+      <Filter>core\userscripts\base_script</Filter>
     </ClInclude>
-    <ClInclude Include="public\core\userscripts\base_script\Script.h">
-      <Filter>public\core\userscripts\base_script</Filter>
+    <ClInclude Include="..\core\userscripts\base_script\SceneScript.h">
+      <Filter>core\userscripts\base_script</Filter>
     </ClInclude>
-    <ClInclude Include="public\core\userscripts\base_script\GameScript.h">
-      <Filter>public\core\userscripts\base_script</Filter>
+    <ClInclude Include="..\core\userscripts\base_script\ViewScript.h">
+      <Filter>core\userscripts\base_script</Filter>
     </ClInclude>
-    <ClInclude Include="public\core\userscripts\base_script\SceneScript.h">
-      <Filter>public\core\userscripts\base_script</Filter>
-    </ClInclude>
-    <ClInclude Include="public\core\userscripts\base_script\ViewScript.h">
-      <Filter>public\core\userscripts\base_script</Filter>
-    </ClInclude>
-    <ClInclude Include="public\core\EngineTime.h">
-      <Filter>public\core</Filter>
-    </ClInclude>
-  </ItemGroup>
+    </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine.cpp" />
     <ClCompile Include="pch\pch.cpp">
       <Filter>pch</Filter>
     </ClCompile>
-    <ClCompile Include="private\platforms\config\ConfigManager.cpp">
-      <Filter>private\platforms\config</Filter>
+    <ClCompile Include="platforms\config\ConfigManager.cpp">
+      <Filter>platforms\config</Filter>
     </ClCompile>
-    <ClCompile Include="private\platforms\package\PackageManager.cpp">
-      <Filter>private\platforms\package</Filter>
+    <ClCompile Include="platforms\package\PackageManager.cpp">
+      <Filter>platforms\package</Filter>
     </ClCompile>
-    <ClCompile Include="private\platforms\config\UserSettings.cpp">
-      <Filter>private\platforms\config</Filter>
+    <ClCompile Include="platforms\config\UserSettings.cpp">
+      <Filter>platforms\config</Filter>
     </ClCompile>
-    <ClCompile Include="private\platforms\config\ConfigEditor.cpp">
-      <Filter>private\platforms\config</Filter>
+    <ClCompile Include="platforms\config\ConfigEditor.cpp">
+      <Filter>platforms\config</Filter>
     </ClCompile>
-    <ClCompile Include="private\core\io\Path.cpp">
-      <Filter>private\core\io</Filter>
+    <ClCompile Include="platforms\input\InputBase.cpp">
+      <Filter>platforms\input</Filter>
     </ClCompile>
-    <ClCompile Include="private\platforms\input\InputBase.cpp">
-      <Filter>private\platforms\input</Filter>
+    <ClCompile Include="platforms\input\InputEditor.cpp">
+      <Filter>platforms\input</Filter>
     </ClCompile>
-    <ClCompile Include="private\platforms\input\InputEditor.cpp">
-      <Filter>private\platforms\input</Filter>
+    <ClCompile Include="platforms\Platform_Common.cpp">
+      <Filter>platforms</Filter>
     </ClCompile>
-    <ClCompile Include="private\platforms\Platform_Common.cpp">
-      <Filter>private\platforms</Filter>
+    <ClCompile Include="platforms\Platform_Editor.cpp">
+      <Filter>platforms</Filter>
     </ClCompile>
-    <ClCompile Include="private\platforms\Platform_Editor.cpp">
-      <Filter>private\platforms</Filter>
+    <ClCompile Include="platforms\main_loop\MainLoop_Common.cpp">
+      <Filter>platforms\main_loop</Filter>
     </ClCompile>
-    <ClCompile Include="private\platforms\main_loop\MainLoop_Common.cpp">
-      <Filter>private\platforms\main_loop</Filter>
+    <ClCompile Include="platforms\window\Window_Common.cpp">
+      <Filter>platforms\window</Filter>
     </ClCompile>
-    <ClCompile Include="private\platforms\window\Window_Common.cpp">
-      <Filter>private\platforms\window</Filter>
+    <ClCompile Include="platforms\window\WinMSWindowEditor.cpp">
+      <Filter>platforms\window</Filter>
     </ClCompile>
-    <ClCompile Include="private\platforms\window\WinMSWindowEditor.cpp">
-      <Filter>private\platforms\window</Filter>
+    <ClCompile Include="view\View.cpp">
+      <Filter>view</Filter>
     </ClCompile>
-    <ClCompile Include="private\core\view\View.cpp">
-      <Filter>private\core\view</Filter>
+    <ClCompile Include="view\ViewManager.cpp">
+      <Filter>view</Filter>
     </ClCompile>
-    <ClCompile Include="private\core\view\ViewManager.cpp">
-      <Filter>private\core\view</Filter>
+    <ClCompile Include="scene\Scene.cpp">
+      <Filter>scene</Filter>
     </ClCompile>
-    <ClCompile Include="private\core\scene\Scene.cpp">
-      <Filter>private\core\scene</Filter>
+    <ClCompile Include="..\core\userscripts\ScriptRegistry.cpp">
+      <Filter>core\userscripts</Filter>
     </ClCompile>
-    <ClCompile Include="public\core\userscripts\ScriptRegistry.cpp">
-      <Filter>public\core\userscripts</Filter>
+    <ClCompile Include="..\core\userscripts\base_script\Script.cpp">
+      <Filter>core\userscripts\base_script</Filter>
     </ClCompile>
-    <ClCompile Include="public\core\userscripts\base_script\Script.cpp">
-      <Filter>public\core\userscripts\base_script</Filter>
+    <ClCompile Include="..\core\userscripts\base_script\GameScript.cpp">
+      <Filter>core\userscripts\base_script</Filter>
     </ClCompile>
-    <ClCompile Include="public\core\userscripts\base_script\GameScript.cpp">
-      <Filter>public\core\userscripts\base_script</Filter>
+    <ClCompile Include="..\core\userscripts\base_script\SceneScript.cpp">
+      <Filter>core\userscripts\base_script</Filter>
     </ClCompile>
-    <ClCompile Include="public\core\userscripts\base_script\SceneScript.cpp">
-      <Filter>public\core\userscripts\base_script</Filter>
+    <ClCompile Include="..\core\userscripts\base_script\ViewScript.cpp">
+      <Filter>core\userscripts\base_script</Filter>
     </ClCompile>
-    <ClCompile Include="public\core\userscripts\base_script\ViewScript.cpp">
-      <Filter>public\core\userscripts\base_script</Filter>
-    </ClCompile>
-    <ClCompile Include="public\core\EngineTime.cpp">
-      <Filter>public\core</Filter>
-    </ClCompile>
-  </ItemGroup>
+    </ItemGroup>
 </Project>

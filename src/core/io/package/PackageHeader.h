@@ -1,8 +1,8 @@
 #pragma once
 
-#include <core/Version.h>
+#include <core/utils/Version.h>
 #include <logger/logger.h>
-#include <core/Constants.h>
+#include <core/utils/Constants.h>
 #include <core/IO/FileHeader.h>
 #include <core/Serialize/Serializer.h>
 

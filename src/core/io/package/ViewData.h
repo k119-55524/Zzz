@@ -3,7 +3,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
-#include <core/Guid.h>
+#include <core/utils/Guid.h>
 #include <common/Templates/Size2D.h>
 #include <core/Serialize/Serializer.h>
 

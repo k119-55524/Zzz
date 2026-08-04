@@ -482,7 +482,7 @@ namespace editor.ViewModels
 
             var sb = new System.Text.StringBuilder();
             sb.AppendLine("// RegisterAllScripts.cpp — генерируется автоматически ZzzEngine Editor");
-            sb.AppendLine("#include <core/Guid.h>");
+            sb.AppendLine("#include <core/utils/Guid.h>");
             sb.AppendLine("#include <ScriptRegistry.h>");
             sb.AppendLine("#include <logger/logger.h>");
             sb.AppendLine();

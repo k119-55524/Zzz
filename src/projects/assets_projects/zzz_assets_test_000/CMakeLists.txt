@@ -27,9 +27,9 @@ target_include_directories(zzz_user_scripts PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/Assets/Scripts
     "${WORKSPACE_SRC_DIR}/engine"
-    "${WORKSPACE_SRC_DIR}/engine/public"
-    "${WORKSPACE_SRC_DIR}/engine/public/core/userscripts"
-    "${WORKSPACE_SRC_DIR}/engine/public/core/userscripts/base_script"
+    "${WORKSPACE_SRC_DIR}/engine"
+    "${WORKSPACE_SRC_DIR}/core/userscripts"
+    "${WORKSPACE_SRC_DIR}/core/userscripts/base_script"
     "${WORKSPACE_SRC_DIR}/common"
     "${WORKSPACE_SRC_DIR}"
 )

@@ -14,7 +14,7 @@
 #include <core/IO/package/SceneData.h>
 #include <core/IO/package/ViewData.h>
 #include <core/IO/package/PrefabData.h>
-#include <core/Constants.h>
+#include <core/utils/Constants.h>
 
 #include <core/IO/package/platforms/AppViewDataMSWin.h>
 #include <core/IO/package/platforms/AppViewDataAndroid.h>

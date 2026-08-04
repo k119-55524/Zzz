@@ -2,7 +2,7 @@
 
 #include <string>
 #include <string_view>
-#include <core/Guid.h>
+#include <core/utils/Guid.h>
 #include <logger/logger.h>
 #include <core/Enums/ePackage.h>
 #include <core/Enums/eEnumToString.h>

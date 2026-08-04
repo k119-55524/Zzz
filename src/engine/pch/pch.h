@@ -13,5 +13,5 @@
 
 #include <common/Common.h>
 
-#include "headers/Enums.h"
+#include <core/headers/Enums.h>
 #include <common/ThrowWrappers.h>

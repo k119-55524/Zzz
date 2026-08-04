@@ -578,9 +578,9 @@ add_library(scripts SHARED)
 target_include_directories(scripts PRIVATE
     ""{zlibsIncludeDir}""
     ""{zlibsIncludeDir}/engine""
-    ""{zlibsIncludeDir}/engine/public/core/scene""
-    ""{zlibsIncludeDir}/engine/public/core/userscripts""
-    ""{zlibsIncludeDir}/engine/public/core/userscripts/base_script""
+    ""{zlibsIncludeDir}/engine/scene""
+    ""{zlibsIncludeDir}/core/userscripts""
+    ""{zlibsIncludeDir}/core/userscripts/base_script""
     ""{zlibsIncludeDir}/common""
     ""{zlibsIncludeDir}/logger""
 )

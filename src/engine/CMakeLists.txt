@@ -8,13 +8,13 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
     target_include_directories(${TARGET_NAME}
         PUBLIC
             ${CMAKE_CURRENT_SOURCE_DIR}
-            ${CMAKE_CURRENT_SOURCE_DIR}/public/core/scene
-            ${CMAKE_CURRENT_SOURCE_DIR}/public/core/userscripts
-            ${CMAKE_CURRENT_SOURCE_DIR}/public/core/userscripts/base_script
+            ${CMAKE_CURRENT_SOURCE_DIR}/scene
+            ${CMAKE_CURRENT_SOURCE_DIR}/../core/userscripts
+            ${CMAKE_CURRENT_SOURCE_DIR}/../core/userscripts/base_script
         PRIVATE
             pch
-            ${CMAKE_CURRENT_SOURCE_DIR}/private/core
-            ${CMAKE_CURRENT_SOURCE_DIR}/private/platforms
+            ${CMAKE_CURRENT_SOURCE_DIR}/view
+            ${CMAKE_CURRENT_SOURCE_DIR}/platforms
     )
 
     target_sources(${TARGET_NAME} PRIVATE
@@ -26,108 +26,93 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         pch/pch.h
         pch/pch.cpp
 
-        # Headers
-        "headers/Apple.h"
-        "headers/MSWin.h"
-        "headers/Linux.h"
-        "headers/Android.h"
-        "headers/Enums.h"
-
         # Core
-        "private/platforms/package/PackageManager.h" "private/platforms/package/PackageManager.cpp"
-        "private/core/io/Path.h" "private/core/io/Path.cpp"
-        "public/core/EngineTime.h" "public/core/EngineTime.cpp"
+        "platforms/package/PackageManager.h" "platforms/package/PackageManager.cpp"
 
         # Inputs
-        "private/platforms/input/Input.h" "private/platforms/input/InputBase.h"
+        "platforms/input/Input.h" "platforms/input/InputBase.h"
 
         # Platforms
-        "private/platforms/Platform.h"
-        "private/platforms/Platform_Common.cpp"
+        "platforms/Platform.h"
+        "platforms/Platform_Common.cpp"
 
         # Main Loop
-        "private/platforms/main_loop/MainLoop.h" "private/platforms/main_loop/MainLoop_Common.h" "private/platforms/main_loop/MainLoop_Common.cpp"
-        "private/platforms/main_loop/MainLoop_Editor.h"
+        "platforms/main_loop/MainLoop.h" "platforms/main_loop/MainLoop_Common.h" "platforms/main_loop/MainLoop_Common.cpp"
+        "platforms/main_loop/MainLoop_Editor.h"
 
         # Native View / Window
-        "private/platforms/window/Window.h" "private/platforms/window/Window_Common.h" "private/platforms/window/Window_Common.cpp"
-        "private/core/view/View.h" "private/core/view/View.cpp"
-        "private/core/view/ViewManager.h" "private/core/view/ViewManager.cpp"
-        "public/core/utils/ScreenResolution.h"
+        "platforms/window/Window.h" "platforms/window/Window_Common.h" "platforms/window/Window_Common.cpp"
+        "view/View.h" "view/View.cpp"
+        "view/ViewManager.h" "view/ViewManager.cpp"
+        "../core/utils/ScreenResolution.h"
 
         # Wayland (Linux)
-        "private/core/specific/linux_wayland/xdg-shell-client-protocol.h"
-        "private/core/specific/linux_wayland/xdg-shell-protocol.cpp"
-      "private/core/utils/converters.h" "private/platforms/input/InputHelpers.h" "private/platforms/input/InputBase.cpp"
+        "../core/specific/linux_wayland/xdg-shell-client-protocol.h"
+        "../core/specific/linux_wayland/xdg-shell-protocol.cpp"
+        "../core/utils/converters.h" "platforms/input/InputHelpers.h" "platforms/input/InputBase.cpp"
 
         # Scripts & Scenes
-        "public/core/scene/GameObject.h"
-        "public/core/scene/Scene.h" "private/core/scene/Scene.cpp"
-        "public/core/events/EventBus.h"
-        "public/core/userscripts/ScriptRegistry.h" "public/core/userscripts/ScriptRegistry.cpp"
-        "public/core/userscripts/base_script/Script.h"
-        "public/core/userscripts/base_script/Script.cpp"
-        "public/core/userscripts/base_script/GameScript.h"
-        "public/core/userscripts/base_script/GameScript.cpp"
-        "public/core/userscripts/base_script/SceneScript.h"
-        "public/core/userscripts/base_script/SceneScript.cpp"
-        "public/core/userscripts/base_script/ViewScript.h"
-        "public/core/userscripts/base_script/ViewScript.cpp")
+        "scene/GameObject.h"
+        "scene/Scene.h" "scene/Scene.cpp"
+        "../core/userscripts/ScriptRegistry.h" "../core/userscripts/ScriptRegistry.cpp"
+        "../core/userscripts/base_script/Script.h"
+        "../core/userscripts/base_script/Script.cpp"
+        "../core/userscripts/base_script/GameScript.h"
+        "../core/userscripts/base_script/GameScript.cpp"
+        "../core/userscripts/base_script/SceneScript.h"
+        "../core/userscripts/base_script/SceneScript.cpp"
+        "../core/userscripts/base_script/ViewScript.h"
+        "../core/userscripts/base_script/ViewScript.cpp")
 
     if(WIN32)
         if(${IS_EDITOR})
             target_sources(${TARGET_NAME} PRIVATE 
-                "private/platforms/Platform_Editor.cpp"
-                "private/platforms/input/InputEditor.h" "private/platforms/input/InputEditor.cpp"
-                "private/platforms/window/WinMSWindowEditor.h" "private/platforms/window/WinMSWindowEditor.cpp"
+                "platforms/Platform_Editor.cpp"
+                "platforms/input/InputEditor.h" "platforms/input/InputEditor.cpp"
+                "platforms/window/WinMSWindowEditor.h" "platforms/window/WinMSWindowEditor.cpp"
             )
         else()
             target_sources(${TARGET_NAME} PRIVATE 
-                "private/platforms/Platform_Windows.cpp"
-                "private/platforms/input/InputMSWindows.h" "private/platforms/input/InputMSWindows.cpp"
-                "private/platforms/main_loop/MainLoop_MSWin.h" "private/platforms/main_loop/MainLoop_MSWin.cpp"
-                "private/platforms/window/WinMSWindows.h" "private/platforms/window/WinMSWindows.cpp"
+                "platforms/Platform_Windows.cpp"
+                "platforms/input/InputMSWindows.h" "platforms/input/InputMSWindows.cpp"
+                "platforms/main_loop/MainLoop_MSWin.h" "platforms/main_loop/MainLoop_MSWin.cpp"
+                "platforms/window/WinMSWindows.h" "platforms/window/WinMSWindows.cpp"
             )
         endif()
     endif()
 
     if(UNIX AND NOT APPLE AND NOT ANDROID)
         target_sources(${TARGET_NAME} PRIVATE 
-            "private/platforms/Platform_Linux.cpp"
-            "private/platforms/input/InputLinux.h" "private/platforms/input/InputLinux.cpp"
-            "private/platforms/main_loop/MainLoop_Linux.h" "private/platforms/main_loop/MainLoop_Linux.cpp"
-            "private/platforms/window/WinLinux.h" "private/platforms/window/WinLinux.cpp"
+            "platforms/Platform_Linux.cpp"
+            "platforms/input/InputLinux.h" "platforms/input/InputLinux.cpp"
+            "platforms/main_loop/MainLoop_Linux.h" "platforms/main_loop/MainLoop_Linux.cpp"
+            "platforms/window/WinLinux.h" "platforms/window/WinLinux.cpp"
         )
     endif()
 
     if(ANDROID)
         target_sources(${TARGET_NAME} PRIVATE 
-            "private/platforms/Platform_Android.cpp"
-            "private/platforms/input/InputAndroid.h" "private/platforms/input/InputAndroid.cpp"
-            "private/platforms/main_loop/MainLoop_Android.h" "private/platforms/main_loop/MainLoop_Android.cpp"
-            "private/platforms/window/WinAndroid.h" "private/platforms/window/WinAndroid.cpp"
+            "platforms/Platform_Android.cpp"
+            "platforms/input/InputAndroid.h" "platforms/input/InputAndroid.cpp"
+            "platforms/main_loop/MainLoop_Android.h" "platforms/main_loop/MainLoop_Android.cpp"
+            "platforms/window/WinAndroid.h" "platforms/window/WinAndroid.cpp"
         )
     endif()
 
     if(APPLE)
-        target_sources(${TARGET_NAME} PRIVATE
-            # Core
-            "private/core/IO/apple/Path_Apple.mm"
-        )
-
         if(IOS)
             target_sources(${TARGET_NAME} PRIVATE
-                "private/platforms/input/InputiOS.h" "private/platforms/input/InputiOS.mm"
-                "private/platforms/Platform_iOS.mm"
-                "private/platforms/main_loop/MainLoop_iOS.h" "private/platforms/main_loop/MainLoop_iOS.mm"
-                "private/platforms/window/WiniOS.h" "private/platforms/window/WiniOS.mm"
+                "platforms/input/InputiOS.h" "platforms/input/InputiOS.mm"
+                "platforms/Platform_iOS.mm"
+                "platforms/main_loop/MainLoop_iOS.h" "platforms/main_loop/MainLoop_iOS.mm"
+                "platforms/window/WiniOS.h" "platforms/window/WiniOS.mm"
             )
         else()
             target_sources(${TARGET_NAME} PRIVATE
-                "private/platforms/input/InputMacOS.h" "private/platforms/input/InputMacOS.mm"
-                "private/platforms/Platform_MacOS.mm"
-                "private/platforms/main_loop/MainLoop_MacOS.h" "private/platforms/main_loop/MainLoop_MacOS.mm"
-                "private/platforms/window/WinMacOS.h" "private/platforms/window/WinMacOS.mm"
+                "platforms/input/InputMacOS.h" "platforms/input/InputMacOS.mm"
+                "platforms/Platform_MacOS.mm"
+                "platforms/main_loop/MainLoop_MacOS.h" "platforms/main_loop/MainLoop_MacOS.mm"
+                "platforms/window/WinMacOS.h" "platforms/window/WinMacOS.mm"
             )
         endif()
     endif()
@@ -138,7 +123,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         target_link_libraries(${TARGET_NAME} PRIVATE wayland-client)
 
         set_source_files_properties(
-            "private/core/specific/linux_wayland/xdg-shell-protocol.cpp"
+            "../core/specific/linux_wayland/xdg-shell-protocol.cpp"
             PROPERTIES COMPILE_OPTIONS "-Wno-attributes"
         )
     endif()
@@ -173,7 +158,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         # EDITORDLL_EXPORTS должен совпадать с тем же define в editor_dll.vcxproj/CMakeLists.txt -
         # engine_lib_editor статический, но его символы (Script/ScriptRegistry, помеченные
         # Z_ENGINE_API) линкуются только в editor_dll.dll, иначе Z_ENGINE_API соберёт здесь
-        # dllimport вместо dllexport (см. src/engine/public/core/userscripts/EngineExport.h).
+        # dllimport вместо dllexport (см. src/core/userscripts/EngineExport.h).
         target_compile_definitions(${TARGET_NAME} PUBLIC Z_EDITOR=1 EDITORDLL_EXPORTS)
     endif()
 endmacro()

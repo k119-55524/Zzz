@@ -1,8 +1,8 @@
 #pragma once
 
-#include <core/Version.h>
+#include <core/utils/Version.h>
 #include <core/Serialize/Serializer.h>
-#include <engine/private/core/io/Path.h>
+#include <core/io/Path.h>
 #include <core/IO/package/AppViewUserData.h>
 
 #include "PlatformConfig.h"

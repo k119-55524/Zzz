@@ -5,11 +5,11 @@
 #include <memory>
 #include <vector>
 #include <expected>
-#include <core/Fwd.h>
+#include <core/utils/Fwd.h>
 #include <string_view>
 
 #include "NativeAppData.h"
-#include "public/core/EngineTime.h"
+#include <core/time/Time.h>
 #include <core/IO/config/UserSettingsManager.h>
 
 using namespace zzz::io;
