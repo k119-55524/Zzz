@@ -32,7 +32,7 @@ void SampleObjectScript::OnDisable()
 	DOut("[SampleObjectScript] - OnDisable");
 }
 
-void SampleObjectScript::OnUpdate(const zzz::engine::Time& /*time*/)
+void SampleObjectScript::OnUpdate([[maybe_unused]] const zzz::engine::Time& time)
 {
 	//static float timer = 0.0f;
 	//timer += time.GetDeltaTime();

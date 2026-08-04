@@ -32,7 +32,7 @@ void GlobalGameScript_001::OnDisable()
 	DOut("[GlobalGameScript_001] - OnDisable");
 }
 
-void GlobalGameScript_001::OnUpdate(const zzz::engine::Time& /*time*/)
+void GlobalGameScript_001::OnUpdate([[maybe_unused]] const zzz::engine::Time& time)
 {
 	//static float timer = 0.0f;
 	//timer += time.GetDeltaTime();

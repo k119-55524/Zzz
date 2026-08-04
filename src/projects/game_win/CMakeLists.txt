@@ -29,6 +29,7 @@ set(SCRIPT_HPPS "")
 set(SCRIPT_CPPS "")
 
 foreach(BUILD_DIR ${Z_ASSET_BUILD_DIRS})
+    # 1. Подключаем автогенерируемый Сборщиком файл скриптов и C++ регистрации RegisterAllScripts.cpp
     if(EXISTS "${BUILD_DIR}/Scripts.cmake")
         include("${BUILD_DIR}/Scripts.cmake")
         list(APPEND SCRIPT_CPPS ${GAME_SCRIPT_SOURCES})
@@ -36,6 +37,7 @@ foreach(BUILD_DIR ${Z_ASSET_BUILD_DIRS})
         target_include_directories(game_win PRIVATE ${GAME_SCRIPT_INCLUDES})
     endif()
 
+    # 2. Копирование папки с бинарным пакетом ресурсов assets/при сборке целевого проекта
     if(EXISTS "${BUILD_DIR}/assets")
         add_custom_command(TARGET game_win POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -45,44 +47,7 @@ foreach(BUILD_DIR ${Z_ASSET_BUILD_DIRS})
     endif()
 endforeach()
 
-# Единая генерация RegisterAllScripts.cpp для всех подтянутых скриптов
-set(REGISTER_SCRIPTS_CONTENT "// RegisterAllScripts.cpp — генерируется автоматически CMake\n#include <ScriptRegistry.h>\n\n")
-set(REGISTER_SCRIPT_LINES "")
-foreach(HPP_FILE ${SCRIPT_HPPS})
-    get_filename_component(CLASS_NAME "${HPP_FILE}" NAME_WE)
-    get_filename_component(SCRIPT_DIR "${HPP_FILE}" DIRECTORY)
-    set(SCRIPT_NAMESPACE "")
-    set(META_FILE "${SCRIPT_DIR}/${CLASS_NAME}.meta")
-    set(SCRIPT_GUID "")
-    if(EXISTS "${META_FILE}")
-        file(READ "${META_FILE}" META_CONTENT)
-        string(REGEX MATCH "namespace[ \t]*=[ \t]*\"([^\"]*)\"" META_NAMESPACE_MATCH "${META_CONTENT}")
-        if(META_NAMESPACE_MATCH)
-            set(SCRIPT_NAMESPACE "${CMAKE_MATCH_1}")
-        endif()
-        string(REGEX MATCH "\"guid\"[ \t]*:[ \t]*\"([^\"]*)\"" META_GUID_MATCH "${META_CONTENT}")
-        if(META_GUID_MATCH)
-            set(SCRIPT_GUID "${CMAKE_MATCH_1}")
-        endif()
-    endif()
-
-    if(SCRIPT_NAMESPACE STREQUAL "")
-        set(QUALIFIED_NAME "${CLASS_NAME}")
-    else()
-        set(QUALIFIED_NAME "${SCRIPT_NAMESPACE}::${CLASS_NAME}")
-    endif()
-
-    string(APPEND REGISTER_SCRIPTS_CONTENT "#include \"${HPP_FILE}\"\n")
-    if(NOT SCRIPT_GUID STREQUAL "")
-        string(APPEND REGISTER_SCRIPT_LINES "    if (auto g = zzz::common::Guid::Parse(\"${SCRIPT_GUID}\"))\n        zzz::script::ScriptRegistry::Register<${QUALIFIED_NAME}>(\"${QUALIFIED_NAME}\", *g);\n    else\n        zzz::script::ScriptRegistry::Register<${QUALIFIED_NAME}>(\"${QUALIFIED_NAME}\");\n")
-    else()
-        string(APPEND REGISTER_SCRIPT_LINES "    zzz::script::ScriptRegistry::Register<${QUALIFIED_NAME}>(\"${QUALIFIED_NAME}\");\n")
-    endif()
-endforeach()
-
-string(APPEND REGISTER_SCRIPTS_CONTENT "\nvoid RegisterAllScripts()\n{\n${REGISTER_SCRIPT_LINES}}\n")
-set(GENERATED_REGISTER_CPP "${CMAKE_CURRENT_BINARY_DIR}/RegisterAllScripts.cpp")
-file(WRITE "${GENERATED_REGISTER_CPP}" "${REGISTER_SCRIPTS_CONTENT}")
+# RegisterAllScripts.cpp сгенерирован сборщиком ассетов в destinationPath и включен через GAME_SCRIPT_SOURCES в Scripts.cmake
 
 target_precompile_headers(game_win PRIVATE
     pch/pch.h
@@ -104,7 +69,6 @@ target_sources(game_win PRIVATE
     main.cpp
     resource/app.rc
     ${SCRIPT_CPPS}
-    ${GENERATED_REGISTER_CPP}
 )
 
 target_link_libraries(game_win PRIVATE

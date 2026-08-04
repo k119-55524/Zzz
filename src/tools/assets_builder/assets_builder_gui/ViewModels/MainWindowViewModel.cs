@@ -377,24 +377,24 @@ public class MainWindowViewModel : ViewModelBase
                         AppendLog("Ошибка: Сборка отменена из-за ошибок валидации или GUID.");
                         success = false;
                     }
-                    else
-                    {
-                        string includeDir = Path.Combine(baseDestinationPath, "include");
-                        Directory.CreateDirectory(includeDir);
-                        _engine.CopyHeaderFiles(sourcePath, includeDir);
-                        _engine.GenerateScriptsCmake(sourcePath, baseDestinationPath);
-                    }
                 }
 
-                // 2. Для каждого таргета собираем индивидуальный package.dat в его подпапке <DestinationPath>/<TargetName>_<TargetPlatform>/
+                // 2. Для каждого таргета собираем индивидуальный package.dat, include/ и Scripts.cmake в его подпапке <DestinationPath>/<TargetName>_<TargetPlatform>/
                 if (success)
                 {
                     foreach (var target in enabledTargets)
                     {
                         Directory.CreateDirectory(target.BuildDirectory);
+                        string targetIncludeDir = Path.Combine(target.BuildDirectory, "include");
+                        Directory.CreateDirectory(targetIncludeDir);
+                        string targetAssetsDir = Path.Combine(target.BuildDirectory, "assets");
+                        Directory.CreateDirectory(targetAssetsDir);
+
+                        _engine.CopyHeaderFiles(sourcePath, targetIncludeDir);
+                        _engine.GenerateScriptsCmake(sourcePath, target.BuildDirectory);
 
                         AppendLog($"Сериализация индивидуального бинарного пакета для '{target.Name}' ({target.TargetPlatform})...");
-                        bool packSuccess = PackagePacker.PackProject(sourcePath, target.BuildDirectory, target.TargetPlatform, AppendLog);
+                        bool packSuccess = PackagePacker.PackProject(sourcePath, targetAssetsDir, target.TargetPlatform, AppendLog);
                         if (!packSuccess)
                         {
                             AppendLog($"Ошибка упаковки для таргета '{target.Name}'!");

@@ -394,12 +394,69 @@ public class AssetsBuilderEngine
 				}
 			}
 
-			// Также проверяем корень проекта на наличие RegisterAllScripts.cpp если есть
-			string regCpp = Path.Combine(sourcePath, "RegisterAllScripts.cpp").Replace('\\', '/');
-			if (File.Exists(regCpp))
+			// ГенерацияRegisterAllScripts.cpp с полной регистрацией классов и GUID напрямую в C# Сборщике
+			var registerLines = new List<string>();
+			var headerIncludes = new List<string>();
+
+			foreach (var headerFile in hppFiles)
 			{
-				cppFiles.Add(regCpp);
+				string className = Path.GetFileNameWithoutExtension(headerFile);
+				string metaFile = headerFile + ".meta";
+				if (!File.Exists(metaFile))
+				{
+					metaFile = Path.Combine(Path.GetDirectoryName(headerFile)!, className + ".meta");
+				}
+
+				string scriptGuid = "";
+				string scriptNamespace = "";
+
+				if (File.Exists(metaFile))
+				{
+					try
+					{
+						string metaJson = File.ReadAllText(metaFile);
+						using var doc = System.Text.Json.JsonDocument.Parse(metaJson);
+						if (doc.RootElement.TryGetProperty("guid", out var gElem))
+							scriptGuid = gElem.GetString() ?? "";
+						if (doc.RootElement.TryGetProperty("namespace", out var nElem))
+							scriptNamespace = nElem.GetString() ?? "";
+					}
+					catch { }
+				}
+
+				string qualifiedName = string.IsNullOrWhiteSpace(scriptNamespace) ? className : $"{scriptNamespace}::{className}";
+				headerIncludes.Add($"#include \"{headerFile}\"");
+
+				if (!string.IsNullOrWhiteSpace(scriptGuid))
+				{
+					registerLines.Add($"    if (auto g = zzz::common::Guid::Parse(\"{scriptGuid}\"))\n        zzz::script::ScriptRegistry::Register<{qualifiedName}>(\"{qualifiedName}\", *g);\n    else\n        zzz::script::ScriptRegistry::Register<{qualifiedName}>(\"{qualifiedName}\");");
+				}
+				else
+				{
+					registerLines.Add($"    zzz::script::ScriptRegistry::Register<{qualifiedName}>(\"{qualifiedName}\");");
+				}
 			}
+
+			string registerCppPath = Path.Combine(destinationPath, "RegisterAllScripts.cpp").Replace('\\', '/');
+			var regSb = new System.Text.StringBuilder();
+			regSb.AppendLine("// RegisterAllScripts.cpp — сгенерировано Assets Builder");
+			regSb.AppendLine("#include <ScriptRegistry.h>");
+			regSb.AppendLine();
+			foreach (var inc in headerIncludes)
+			{
+				regSb.AppendLine(inc);
+			}
+			regSb.AppendLine();
+			regSb.AppendLine("void RegisterAllScripts()");
+			regSb.AppendLine("{");
+			foreach (var line in registerLines)
+			{
+				regSb.AppendLine(line);
+			}
+			regSb.AppendLine("}");
+
+			File.WriteAllText(registerCppPath, regSb.ToString());
+			cppFiles.Add(registerCppPath);
 
 			var sb = new System.Text.StringBuilder();
 			sb.AppendLine("# Автогенерируемый файл от Assets Builder");
@@ -423,11 +480,12 @@ public class AssetsBuilderEngine
 				sb.AppendLine($"    \"{scriptsPath.Replace('\\', '/')}\"");
 			}
 			sb.AppendLine($"    \"{sourcePath.Replace('\\', '/')}\"");
+			sb.AppendLine($"    \"{destinationPath.Replace('\\', '/')}\"");
 			sb.AppendLine(")");
 
 			string cmakeFilePath = Path.Combine(destinationPath, "Scripts.cmake");
 			File.WriteAllText(cmakeFilePath, sb.ToString());
-			Log($"Сгенерирован CMake-файл скриптов: Scripts.cmake ({cppFiles.Count} .cpp, {hppFiles.Count} .hpp)");
+			Log($"Сгенерирован C++ файл регистрации: RegisterAllScripts.cpp и Scripts.cmake ({cppFiles.Count} .cpp, {hppFiles.Count} .hpp)");
 		}
 		catch (Exception ex)
 		{

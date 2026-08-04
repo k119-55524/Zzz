@@ -8,12 +8,12 @@ ConfigiOS::ConfigiOS()
 {
 }
 
-[[nodiscard]] std::expected<void, std::string> ConfigiOS::Serialize(std::vector<std::byte>& buffer, const Serializer& s) const
+[[nodiscard]] std::expected<void, std::string> ConfigiOS::Serialize([[maybe_unused]] std::vector<std::byte>& buffer, [[maybe_unused]] const Serializer& s) const
 {
 	return std::expected<void, std::string>{};
 }
 
-[[nodiscard]] std::expected<void, std::string> ConfigiOS::Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s)
+[[nodiscard]] std::expected<void, std::string> ConfigiOS::Deserialize([[maybe_unused]] std::span<const std::byte> buffer, [[maybe_unused]] std::size_t& offset, [[maybe_unused]] const Serializer& s)
 {
 	return std::expected<void, std::string>{};
 }

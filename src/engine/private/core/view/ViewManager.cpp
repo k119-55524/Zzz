@@ -1,27 +1,28 @@
 
+#include <core/IO/package/ViewData.h>
+#include <core/IO/package/AppViewData.h>
+#include <core/IO/package/ProjectManifestData.h>
+
 #include "View.h"
 #include "ViewManager.h"
 #include "../../platforms/Platform.h"
 #include "../../platforms/package/PackageManager.h"
-#include <core/IO/package/ProjectManifestData.h>
-#include <core/IO/package/AppViewData.h>
-#include <core/IO/package/ViewData.h>
 #include "public/core/userscripts/ScriptRegistry.h"
 #include "public/core/userscripts/base_script/ViewScript.h"
 
-using namespace zzz::engine;
 using namespace zzz::core;
+using namespace zzz::engine;
 using namespace zzz::script;
-using zzz::common::ePackage;
+using namespace zzz::common;
 
 namespace
 {
-	[[nodiscard]] zzz::common::Size2D<zzz::common::zU32> GetDefaultViewSize(const zzz::core::AppViewPlatformData& platformData) noexcept
+	[[nodiscard]] Size2D<zU32> GetDefaultViewSize(const AppViewPlatformData& platformData) noexcept
 	{
 		if constexpr (requires { platformData.GetDefaultSize(); })
 			return platformData.GetDefaultSize();
 		else
-			return zzz::common::Size2D<zzz::common::zU32>{ 1280, 720 };
+			return Size2D<zU32>{ 1280, 720 };
 	}
 }
 
