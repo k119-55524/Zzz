@@ -1,10 +1,10 @@
 #pragma once
 
 #include <string_view>
-#include <common/Macroses.h>
-#include <common/ThrowWrappers.h>
-#include <common/Enums/eWinResize.h>
-#include <common/Enums/eLogMessageType.h>
+#include <core/utils/Macroses.h>
+#include <core/utils/ThrowWrappers.h>
+#include <core/enums/eWinResize.h>
+#include <core/enums/eLogMessageType.h>
 
 #include "ePackage.h"
 #include "eTargetPlatform.h"

@@ -9,7 +9,7 @@
 #include <unordered_map>
 
 #include <core/utils/Guid.h>
-#include <common/MemoryUtils.h>
+#include <core/utils/MemoryUtils.h>
 
 #include "EngineExport.h"
 

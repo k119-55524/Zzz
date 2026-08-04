@@ -9,8 +9,15 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/core.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Types.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Fwd.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/Export.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Constants.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/Defines.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/Ensure.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Guid.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/Macroses.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/MemoryUtils.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/ThrowWrappers.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/ThrowWrappers.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Version.h
         ${CMAKE_CURRENT_SOURCE_DIR}/headers/Apple.h
         ${CMAKE_CURRENT_SOURCE_DIR}/headers/MSWin.h
@@ -21,6 +28,8 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/time/Time.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/events/Event.h
         ${CMAKE_CURRENT_SOURCE_DIR}/events/EventBus.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eLogMessageType.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eWinResize.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/ePackage.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/eTargetPlatform.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/eEnumToString.h
@@ -29,6 +38,8 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverteriOSTypes.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverterLinuxTypes.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverterMacOSTypes.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/templates/DoubleBufferedVector.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/templates/Size2D.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileHeader.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/Path.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/Path.cpp

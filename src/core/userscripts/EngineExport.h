@@ -1,6 +1,6 @@
 #pragma once
 
-#include <common/Defines.h>
+#include <core/utils/Defines.h>
 
 // Скрипты компилируются в отдельный scripts.dll и линкуются против editor_dll.lib (Hot-Reload,
 // см. docs/scripting.md) - только в этом сценарии (Z_EDITOR) engine_lib пересекает границу DLL.

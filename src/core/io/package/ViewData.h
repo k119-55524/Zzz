@@ -4,7 +4,7 @@
 #include <string_view>
 #include <vector>
 #include <core/utils/Guid.h>
-#include <common/Templates/Size2D.h>
+#include <core/templates/Size2D.h>
 #include <core/Serialize/Serializer.h>
 
 using namespace zzz::io;

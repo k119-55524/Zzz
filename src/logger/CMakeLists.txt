@@ -38,9 +38,8 @@ macro(setup_logger_target TARGET_NAME CORE_TARGET_NAME IS_EDITOR)
     endif()
 
     if(${IS_EDITOR})
-        # См. комментарий в src/common/CMakeLists.txt - logger_lib_editor должен совпадать по
-        # define'ам с common_lib_editor, который он линкует, иначе в editor_dll.dll попадут сразу
-        # обе версии common_lib (обычная и editor) и линковщик упадёт на дублирующихся символах.
+        # logger_lib_editor должен совпадать по define'ам с editor-вариантами core/engine,
+        # иначе в editor_dll.dll попадут разные варианты экспортируемых символов.
         target_compile_definitions(${TARGET_NAME} PUBLIC Z_EDITOR=1 EDITORDLL_EXPORTS)
     endif()
 

@@ -1,5 +1,5 @@
 
-#include <common/Macroses.h>
+#include <core/utils/Macroses.h>
 
 #include "GlobalGameScript_002.h"
 

@@ -60,7 +60,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\..\..\;$(MSBuildProjectDirectory)\..\..\..\common;$(MSBuildProjectDirectory)\..\..\..\engine;$(SolutionDir)..\..\build\packages\nlohmann_json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\..\..\;$(MSBuildProjectDirectory)\..\..\..\engine;$(SolutionDir)..\..\build\packages\nlohmann_json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -79,7 +79,7 @@
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;ASSETS_BUILDER_EXPORTS;WIN32;Z_ADD_LOGGER=1;Z_IDE_OUT_LOGS=1;Z_TARGET_NAME=&quot;$(ProjectName)&quot;;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
-      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\..\..\;$(MSBuildProjectDirectory)\..\..\..\common;$(MSBuildProjectDirectory)\..\..\..\engine;$(SolutionDir)..\..\build\packages\nlohmann_json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\..\..\;$(MSBuildProjectDirectory)\..\..\..\engine;$(SolutionDir)..\..\build\packages\nlohmann_json\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -101,9 +101,6 @@
     <ClCompile Include="PackagePacker.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\common\common_lib.vcxproj">
-      <Project>{47E7A912-78A3-4B04-811F-436417A2A94C}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\core\core_lib.vcxproj">
       <Project>{8A9B6C5D-4E10-4B14-B149-166D46C2B47C}</Project>
     </ProjectReference>

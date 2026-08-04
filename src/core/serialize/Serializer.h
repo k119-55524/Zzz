@@ -8,7 +8,7 @@
 #include <concepts>
 #include <type_traits>
 
-#include <common/CommonExport.h>
+#include <core/utils/Export.h>
 
 namespace zzz::common
 {
@@ -30,7 +30,7 @@ namespace zzz::common
 	class Serializer;
 
 	/// @brief Интерфейс для сериализуемых объектов движка.
-	class Z_COMMON_API ISerializable
+	class Z_CORE_API ISerializable
 	{
 	public:
 		virtual ~ISerializable() = default;
@@ -53,7 +53,7 @@ namespace zzz::common
 	};
 
 	/// @brief Класс для бинарной сериализации и десериализации данных.
-	class Z_COMMON_API Serializer
+	class Z_CORE_API Serializer
 	{
 	public:
 		/// @brief Сериализует примитивные типы и enum в буфер байт.

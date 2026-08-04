@@ -531,7 +531,6 @@ namespace editor
 
 				string editorDllLib = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "editor_dll.lib").Replace('\\', '/');
 				string loggerLib = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logger_lib.lib").Replace('\\', '/');
-				string commonLib = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "common_lib.lib").Replace('\\', '/');
 
 				// Имя CMake-проекта = имя папки игрового проекта, иначе .slnx у всех проектов
 				// называется одинаково ("project_scripts") и неотличимо в списке Recent Projects VS.
@@ -581,7 +580,6 @@ target_include_directories(scripts PRIVATE
     ""{zlibsIncludeDir}/engine/scene""
     ""{zlibsIncludeDir}/core/userscripts""
     ""{zlibsIncludeDir}/core/userscripts/base_script""
-    ""{zlibsIncludeDir}/common""
     ""{zlibsIncludeDir}/logger""
 )
 
@@ -601,7 +599,7 @@ if(MSVC)
     target_link_options(scripts PRIVATE /DEBUG:FULL /INCREMENTAL:NO ""/PDB:${{PROJECT_SOURCE_DIR}}/bin_build/scripts.pdb"")
 endif()
 
-target_link_libraries(scripts PRIVATE ""{editorDllLib}"" ""{loggerLib}"" ""{commonLib}"" ws2_32.lib)
+target_link_libraries(scripts PRIVATE ""{editorDllLib}"" ""{loggerLib}"" ws2_32.lib)
 ";
 
 				bool needWriteCmake = !System.IO.File.Exists(cmakePath) ||

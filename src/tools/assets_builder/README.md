@@ -5,7 +5,7 @@
 ## 📁 Структура компонентов
 
 * **`assets_builder_dll/`** *(C++ Dynamic Library)*  
-  Нативный C-API мост к C++ движку Zzz. Подключает `common_lib` и вызывает оригинальный сериализатор `zzz::serialize::Serializer`.
+  Нативный C-API мост к C++ движку Zzz. Подключает `core_lib` и вызывает оригинальный сериализатор `zzz::serialize::Serializer`.
 
 * **`assets_builder_lib/`** *(C# Class Library — `.dll`)*  
   Ядро сборщика (`AssetsBuilderEngine`). Отвечает за логику оркестрации сборки, обработку конфигов, вызов C++ сериализации через P/Invoke (`NativeMethods.cs`) и управление сессией (`SessionManager`).

@@ -90,14 +90,11 @@ macro(export_to_editor_sdk TARGET_NAME SRC_INCLUDE_DIR DST_SUBDIR)
     )
 endmacro()
 
-add_subdirectory(src/common)
 add_subdirectory(src/core)
 add_subdirectory(src/logger)
 
-target_link_libraries(core_lib PUBLIC common_lib logger_lib)
-target_link_libraries(core_lib_editor PUBLIC common_lib_editor logger_lib_editor)
-target_link_libraries(common_lib PUBLIC logger_lib)
-target_link_libraries(common_lib_editor PUBLIC logger_lib_editor)
+target_link_libraries(core_lib PUBLIC logger_lib)
+target_link_libraries(core_lib_editor PUBLIC logger_lib_editor)
 
 add_subdirectory(src/tools/RemoteLogViewer)
 add_subdirectory(src/engine)

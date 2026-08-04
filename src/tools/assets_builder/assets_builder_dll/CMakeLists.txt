@@ -20,12 +20,10 @@ target_include_directories(assets_builder_dll PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
     "${CMAKE_SOURCE_DIR}/src"
-    "${CMAKE_SOURCE_DIR}/src/common"
     "${CMAKE_SOURCE_DIR}/src/engine"
 )
 
 target_link_libraries(assets_builder_dll PRIVATE
-    common_lib
     core_lib
     logger_lib
 )

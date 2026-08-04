@@ -9,8 +9,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildConfigurator", "build_
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteLogViewer", "RemoteLogViewer\RemoteLogViewer.csproj", "{C328C6A6-8B3E-3CE8-4349-171CDC5EF00F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "common_lib", "..\common\common_lib.vcxproj", "{47E7A912-78A3-4B04-811F-436417A2A94C}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "logger_lib", "..\logger\logger_lib.vcxproj", "{B88B46C3-4889-4E65-B86C-9A69D9CB5F50}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "engine_lib", "..\engine\engine_lib.vcxproj", "{C66B24D1-A54D-4E10-B149-166D46C2B47C}"
@@ -43,10 +41,6 @@ Global
 		{C328C6A6-8B3E-3CE8-4349-171CDC5EF00F}.Debug|x64.Build.0 = Debug|Any CPU
 		{C328C6A6-8B3E-3CE8-4349-171CDC5EF00F}.Release|x64.ActiveCfg = Release|Any CPU
 		{C328C6A6-8B3E-3CE8-4349-171CDC5EF00F}.Release|x64.Build.0 = Release|Any CPU
-		{47E7A912-78A3-4B04-811F-436417A2A94C}.Debug|x64.ActiveCfg = Debug|x64
-		{47E7A912-78A3-4B04-811F-436417A2A94C}.Debug|x64.Build.0 = Debug|x64
-		{47E7A912-78A3-4B04-811F-436417A2A94C}.Release|x64.ActiveCfg = Release|x64
-		{47E7A912-78A3-4B04-811F-436417A2A94C}.Release|x64.Build.0 = Release|x64
 		{B88B46C3-4889-4E65-B86C-9A69D9CB5F50}.Debug|x64.ActiveCfg = Debug|x64
 		{B88B46C3-4889-4E65-B86C-9A69D9CB5F50}.Debug|x64.Build.0 = Debug|x64
 		{B88B46C3-4889-4E65-B86C-9A69D9CB5F50}.Release|x64.ActiveCfg = Release|x64

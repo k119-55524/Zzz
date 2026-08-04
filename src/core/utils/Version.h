@@ -9,7 +9,12 @@
 #include <sstream>
 #include <expected>
 #include <string_view>
-#include <common/Common.h>
+#include <core/utils/Types.h>
+#include <core/utils/Ensure.h>
+#include <core/utils/Defines.h>
+#include <core/utils/Macroses.h>
+#include <core/utils/MemoryUtils.h>
+#include <core/utils/ThrowWrappers.h>
 #include <core/Serialize/Serializer.h>
 
 namespace zzz::common

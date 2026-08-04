@@ -187,7 +187,7 @@ vkcube
 В коде движка или игры необходимо добавить сетевой бродкастер в глобальный логгер. Пример из `src/projects/game_win/main.cpp`:
 
 ```cpp
-#include <common/common.h>
+#include <core/core.h>
 
 using namespace zzz::logger;
 
@@ -218,7 +218,7 @@ int APIENTRY wWinMain(...)
 Движок поддерживает автоматическое формирование SDK для редактора, который используется игровыми проектами для компиляции и горячей перезагрузки (Hot Reloading).
 
 **Как это работает:**
-При сборке основных модулей движка (`common_lib`, `logger_lib`, `engine_lib`) CMake автоматически копирует необходимые бинарные файлы (`.dll`, `.lib`) и публичные заголовочные файлы (`.h`) в директорию `bin/<Config>/libs/zlibs/`.
+При сборке основных модулей движка (`core_lib`, `logger_lib`, `engine_lib`) CMake автоматически копирует необходимые бинарные файлы (`.dll`, `.lib`) и публичные заголовочные файлы (`.h`) в директорию `bin/<Config>/libs/zlibs/`.
 При копировании заголовков применяется скрипт `copy_headers.cmake`, который отсеивает все `.cpp` и прочие служебные файлы, оставляя папку `include` чистой и готовой к использованию (сохраняя оригинальную структуру папок `src`).
 
 **Подключение в проектах игры:**
@@ -236,7 +236,7 @@ target_include_directories(GameTarget PRIVATE "${Z_EDITOR_PATH}/libs/zlibs/inclu
 link_directories("${Z_EDITOR_PATH}/libs/zlibs/lib")
 
 # Линкуем игру с движком
-target_link_libraries(GameTarget PRIVATE engine_lib common_lib logger_lib)
+target_link_libraries(GameTarget PRIVATE engine_lib core_lib logger_lib)
 ```
 
 Такой подход гарантирует, что проект игры 100% переносим, а горячая перезагрузка работает стабильно как на этапе разработки движка, так и при использовании установленного дистрибутива.

@@ -38,9 +38,9 @@
 
 Одновременно живут три параллельных механизма, каждый со своей семантикой:
 
-1. **`std::expected<T, std::string>`** — используется в 55 файлах. Помощник `UNEXPECTED(fmt, ...)` (`src/common/Macroses.h:84`) логирует через `DOutError` и возвращает `std::unexpected(msg)`.
-2. **Исключения** — `THROW_RUNTIME(fmt, ...)` → `throw_runtime_error` (`src/common/ThrowWrappers.cpp:12`) логирует через `DOutException` и кидает `std::runtime_error`. `try/catch` встречается 103 раза в 28 C++ файлах.
-3. **`ensure(cond, msg)`** — `src/common/Ensure.h`. Кидает `runtime_error`, но **только в Debug/Development** (внутри `#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD`). В Release это NO-OP: `condition` даже не вычисляется.
+1. **`std::expected<T, std::string>`** — используется в 55 файлах. Помощник `UNEXPECTED(fmt, ...)` (`src/core/utils/Macroses.h`) логирует через `DOutError` и возвращает `std::unexpected(msg)`.
+2. **Исключения** — `THROW_RUNTIME(fmt, ...)` → `throw_runtime_error` (`src/core/utils/ThrowWrappers.cpp`) логирует через `DOutException` и кидает `std::runtime_error`. `try/catch` встречается 103 раза в 28 C++ файлах.
+3. **`ensure(cond, msg)`** — `src/core/utils/Ensure.h`. Кидает `runtime_error`, но **только в Debug/Development** (внутри `#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD`). В Release это NO-OP: `condition` даже не вычисляется.
 
 ### Конкретные места, где это торчит
 
@@ -74,7 +74,7 @@
 - Границы с STL/OS обёрнуты в `try_call([]{ ... }) -> expected<T, ...>`, единая точка конверсии.
 - `noexcept` там, где применимо, для проверки инвариантов компилятором.
 
-Файлы, затронутые пунктом: `src/engine/engine.cpp`, `src/common/throw_wrappers.{h,cpp}`, `src/common/Ensure.h`, `src/common/Macroses.h`, `src/engine/private/platforms/config/ConfigManager.cpp`, `src/engine/private/core/IO/Path.cpp`, все конструкторы `Platform_*`, `Window_*`, `Config*` (потенциально).
+Файлы, затронутые пунктом: `src/engine/engine.cpp`, `src/core/utils/ThrowWrappers.{h,cpp}`, `src/core/utils/Ensure.h`, `src/core/utils/Macroses.h`, все конструкторы `Platform_*`, `Window_*`, `Config*` (потенциально).
 
 ## Выбор варианта сборки скриптов
 Сейчас скрипты в редакторе жестко пересобираются в режиме `Debug` (чтобы корректно работала отладка в студии).

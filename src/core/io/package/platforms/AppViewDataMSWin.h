@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string_view>
-#include <common/Templates/Size2D.h>
+#include <core/templates/Size2D.h>
 #include <core/Serialize/Serializer.h>
 #include <core/Enums/eEnumToString.h>
 #include <core/Enums/platforms/eMSWinEnums.h>

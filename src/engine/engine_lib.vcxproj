@@ -69,7 +69,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <ForcedIncludeFiles>pch/pch.h</ForcedIncludeFiles>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\;$(MSBuildProjectDirectory)\..\common;$(MSBuildProjectDirectory)\..\logger;$(MSBuildProjectDirectory)\pch;$(MSBuildProjectDirectory)\scene;$(MSBuildProjectDirectory)\view;$(MSBuildProjectDirectory)\..\core\userscripts;$(MSBuildProjectDirectory)\..\core\userscripts\base_script;$(MSBuildProjectDirectory)\platforms;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\;$(MSBuildProjectDirectory)\..\logger;$(MSBuildProjectDirectory)\pch;$(MSBuildProjectDirectory)\scene;$(MSBuildProjectDirectory)\view;$(MSBuildProjectDirectory)\..\core\userscripts;$(MSBuildProjectDirectory)\..\core\userscripts\base_script;$(MSBuildProjectDirectory)\platforms;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -97,7 +97,7 @@
       <LanguageStandard>stdcpp23</LanguageStandard>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <ForcedIncludeFiles>pch/pch.h</ForcedIncludeFiles>
-      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\;$(MSBuildProjectDirectory)\..\common;$(MSBuildProjectDirectory)\..\logger;$(MSBuildProjectDirectory)\pch;$(MSBuildProjectDirectory)\scene;$(MSBuildProjectDirectory)\view;$(MSBuildProjectDirectory)\..\core\userscripts;$(MSBuildProjectDirectory)\..\core\userscripts\base_script;$(MSBuildProjectDirectory)\platforms;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\..\;$(MSBuildProjectDirectory)\..\logger;$(MSBuildProjectDirectory)\pch;$(MSBuildProjectDirectory)\scene;$(MSBuildProjectDirectory)\view;$(MSBuildProjectDirectory)\..\core\userscripts;$(MSBuildProjectDirectory)\..\core\userscripts\base_script;$(MSBuildProjectDirectory)\platforms;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -135,9 +135,6 @@
       <ClCompile Include="..\core\userscripts\base_script\ViewScript.cpp" />
       </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\common\common_lib.vcxproj">
-      <Project>{47E7A912-78A3-4B04-811F-436417A2A94C}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\logger\logger_lib.vcxproj">
       <Project>{B88B46C3-4889-4E65-B86C-9A69D9CB5F50}</Project>
     </ProjectReference>
