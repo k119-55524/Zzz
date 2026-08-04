@@ -19,8 +19,8 @@ namespace
 {
 	[[nodiscard]] Size2D<zU32> GetDefaultViewSize(const AppViewPlatformData& platformData) noexcept
 	{
-		if constexpr (requires { platformData.GetDefaultSize(); })
-			return platformData.GetDefaultSize();
+		if constexpr (requires { platformData.GetSize(); })
+			return platformData.GetSize();
 		else
 			return Size2D<zU32>{ 1280, 720 };
 	}

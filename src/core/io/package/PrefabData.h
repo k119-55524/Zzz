@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <core/Serialize/Serializer.h>
 
 using namespace zzz::common;
@@ -12,9 +13,9 @@ namespace zzz::core
 	public:
 		PrefabData() = default;
 
-		inline void LogFileBlock() const
+		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			DOut("           [PrefabData] Префаб");
+			DOut("{}[PrefabData] Префаб", indentation);
 		}
 
 	protected:

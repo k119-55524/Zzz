@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+#include <string_view>
 #include <vector>
 #include <core/Guid.h>
 #include <core/Serialize/Serializer.h>
@@ -23,24 +25,25 @@ namespace zzz::core
 		[[nodiscard]] const std::vector<Guid>& GetSceneGuids() const noexcept { return sceneGuids; }
 		[[nodiscard]] const std::vector<Guid>& GetViewGuids() const noexcept { return viewGuids; }
 
-		inline void LogFileBlock(std::string_view = {}) const
+		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			DOut("           [ProjectManifest] gameScriptGuids({})", gameScriptGuids.size());
+			const std::string nestedIndentation = std::string(indentation) + "  ";
+			DOut("{}[ProjectManifest] gameScriptGuids({})", indentation, gameScriptGuids.size());
 			for (zU32 i = 0; i < gameScriptGuids.size(); ++i)
 			{
-				DOut("             gameScriptGuid #{}: {}", i, gameScriptGuids[i].ToString());
+				DOut("{}gameScriptGuid #{}: {}", nestedIndentation, i, gameScriptGuids[i].ToString());
 			}
 
-			DOut("           [ProjectManifest] sceneGuids({})", sceneGuids.size());
+			DOut("{}[ProjectManifest] sceneGuids({})", indentation, sceneGuids.size());
 			for (zU32 i = 0; i < sceneGuids.size(); ++i)
 			{
-				DOut("             sceneGuid #{}: {}", i, sceneGuids[i].ToString());
+				DOut("{}sceneGuid #{}: {}", nestedIndentation, i, sceneGuids[i].ToString());
 			}
 
-			DOut("           [ProjectManifest] viewGuids({})", viewGuids.size());
+			DOut("{}[ProjectManifest] viewGuids({})", indentation, viewGuids.size());
 			for (zU32 i = 0; i < viewGuids.size(); ++i)
 			{
-				DOut("             viewGuid #{}: {}", i, viewGuids[i].ToString());
+				DOut("{}viewGuid #{}: {}", nestedIndentation, i, viewGuids[i].ToString());
 			}
 		}
 

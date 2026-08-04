@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include <string_view>
 #include <logger/logger.h>
 #include <core/Serialize/Serializer.h>
 
@@ -12,6 +12,11 @@ namespace zzz::engine
 	public:
 		ConfigAndroid();
 		~ConfigAndroid() = default;
+
+		inline void LogFileBlock(std::string_view indentation = {}) const
+		{
+			DOut("{}[ConfigAndroid]", indentation);
+		}
 
 	private:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override;

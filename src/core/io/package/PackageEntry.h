@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <core/Guid.h>
 #include <logger/logger.h>
 #include <core/Enums/ePackage.h>
@@ -30,10 +31,10 @@ namespace zzz::core
 		[[nodiscard]] zU64 GetOffset() const noexcept { return offset; }
 		[[nodiscard]] zU64 GetSize() const noexcept { return size; }
 
-		inline void LogFileBlock() const 
-		{ 
-			DOut("        [PackageEntry] name: '{}' | guid: {} | type: {} | offset: {} | size: {}", 
-				name, guid.ToString(), EnumToString::ToString(static_cast<ePackage>(assetType)), offset, size); 
+		inline void LogFileBlock(std::string_view indentation = {}) const
+		{
+			DOut("{}[PackageEntry] name: '{}' | guid: {} | type: {} | offset: {} | size: {}",
+				indentation, name, guid.ToString(), EnumToString::ToString(static_cast<ePackage>(assetType)), offset, size);
 		}
 
 	private:

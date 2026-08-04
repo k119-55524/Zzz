@@ -20,6 +20,7 @@ UserSettingsManager::UserSettingsManager(const Path& path, const PackageManager&
 	(void)packageManager;
 #else
 	Initialize(packageManager);
+	LogUserData();
 #endif
 }
 
@@ -210,3 +211,15 @@ std::expected<std::filesystem::path, std::string> UserSettingsManager::GetSettin
 		.and_then([&]() { return s.Deserialize(buffer, offset, m_AppViewUserData); })
 		.and_then([&]() { return s.Deserialize(buffer, offset, m_PlatformConfig); });
 }
+
+#pragma region Logging
+void UserSettingsManager::LogUserData() const
+{
+#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+	DOut("========== User Data: {} ==========", m_ConfigPath.string());
+	m_AppViewUserData.LogFileBlock("  ");
+	DOut("  [PlatformConfig]");
+	m_PlatformConfig.LogFileBlock("    ");
+#endif
+}
+#pragma endregion

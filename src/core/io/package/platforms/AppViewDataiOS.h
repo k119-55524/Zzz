@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string_view>
 #include <core/Serialize/Serializer.h>
 #include <core/Enums/eEnumToString.h>
 #include <core/Enums/platforms/eiOSEnums.h>
@@ -23,11 +24,11 @@ namespace zzz::core
 		[[nodiscard]] eiOSSafeAreaMode GetSafeAreaMode() const noexcept { return safeAreaMode; }
 		[[nodiscard]] eiOSHomeIndicatorMode GetHomeIndicatorMode() const noexcept { return homeIndicatorMode; }
 
-		inline void LogFileBlock() const
+		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			DOut("           [AppViewDataiOS] orientation: {}", EnumToString::ToString(orientation));
-			DOut("           [AppViewDataiOS] safeAreaMode: {}", EnumToString::ToString(safeAreaMode));
-			DOut("           [AppViewDataiOS] homeIndicatorMode: {}", EnumToString::ToString(homeIndicatorMode));
+			DOut("{}[AppViewDataiOS] orientation: {}", indentation, EnumToString::ToString(orientation));
+			DOut("{}[AppViewDataiOS] safeAreaMode: {}", indentation, EnumToString::ToString(safeAreaMode));
+			DOut("{}[AppViewDataiOS] homeIndicatorMode: {}", indentation, EnumToString::ToString(homeIndicatorMode));
 		}
 
 	private:

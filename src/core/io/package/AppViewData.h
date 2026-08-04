@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <vector>
 #include <core/Guid.h>
 #include <logger/logger.h>
@@ -29,16 +30,17 @@ namespace zzz::core
 		[[nodiscard]] const std::vector<Guid>& GetUiScriptGuids() const noexcept { return m_UiScriptGuids; }
 		[[nodiscard]] const AppViewPlatformData& GetPlatformData() const noexcept { return m_PlatformData; }
 
-		inline void LogFileBlock() const
+		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			DOut("           [AppViewData] title: {}", m_Title);
-			DOut("           [AppViewData] sceneGuid: {}", m_SceneGuid.ToString());
-			DOut("           [AppViewData] uiScriptGuids({})", m_UiScriptGuids.size());
+			const std::string nestedIndentation = std::string(indentation) + "  ";
+			DOut("{}[AppViewData] title: {}", indentation, m_Title);
+			DOut("{}[AppViewData] sceneGuid: {}", indentation, m_SceneGuid.ToString());
+			DOut("{}[AppViewData] uiScriptGuids({})", indentation, m_UiScriptGuids.size());
 			for (zU32 i = 0; i < m_UiScriptGuids.size(); ++i)
 			{
-				DOut("             uiScriptGuid #{}: {}", i, m_UiScriptGuids[i].ToString());
+				DOut("{}uiScriptGuid #{}: {}", nestedIndentation, i, m_UiScriptGuids[i].ToString());
 			}
-			m_PlatformData.LogFileBlock();
+			m_PlatformData.LogFileBlock(nestedIndentation);
 		}
 
 	private:

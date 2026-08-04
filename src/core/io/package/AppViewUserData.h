@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+#include <string_view>
 #include <core/Serialize/Serializer.h>
 #include <core/IO/package/AppViewData.h>
 
@@ -15,10 +17,10 @@ namespace zzz::core
 
 		[[nodiscard]] const AppViewPlatformData& GetPlatformData() const noexcept { return m_PlatformData; }
 
-		inline void LogFileBlock() const
+		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			DOut("           [AppViewUserData]");
-			m_PlatformData.LogFileBlock();
+			DOut("{}[AppViewUserData]", indentation);
+			m_PlatformData.LogFileBlock(std::string(indentation) + "  ");
 		}
 
 	private:

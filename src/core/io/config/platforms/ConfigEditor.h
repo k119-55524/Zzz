@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string_view>
 #include <logger/logger.h>
 #include <core/Serialize/Serializer.h>
 
@@ -12,9 +13,9 @@ namespace zzz::engine
 		ConfigEditor();
 		~ConfigEditor() = default;
 
-		inline void LogFileBlock() const
+		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			// Reserved for editor-specific configuration details.
+			DOut("{}[ConfigEditor]", indentation);
 		}
 
 	private:

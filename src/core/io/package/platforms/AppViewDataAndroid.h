@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string_view>
 #include <core/Serialize/Serializer.h>
 #include <core/Enums/eEnumToString.h>
 #include <core/Enums/platforms/eAndroidEnums.h>
@@ -25,12 +26,12 @@ namespace zzz::core
 		[[nodiscard]] eAndroidCutoutMode GetCutoutMode() const noexcept { return cutoutMode; }
 		[[nodiscard]] bool KeepScreenOn() const noexcept { return keepScreenOn; }
 
-		inline void LogFileBlock() const
+		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			DOut("           [AppViewDataAndroid] orientation: {}", EnumToString::ToString(orientation));
-			DOut("           [AppViewDataAndroid] targetFPS: {}", targetFPS);
-			DOut("           [AppViewDataAndroid] cutoutMode: {}", EnumToString::ToString(cutoutMode));
-			DOut("           [AppViewDataAndroid] keepScreenOn: {}", keepScreenOn);
+			DOut("{}[AppViewDataAndroid] orientation: {}", indentation, EnumToString::ToString(orientation));
+			DOut("{}[AppViewDataAndroid] targetFPS: {}", indentation, targetFPS);
+			DOut("{}[AppViewDataAndroid] cutoutMode: {}", indentation, EnumToString::ToString(cutoutMode));
+			DOut("{}[AppViewDataAndroid] keepScreenOn: {}", indentation, keepScreenOn);
 		}
 
 	private:

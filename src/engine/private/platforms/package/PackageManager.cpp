@@ -146,6 +146,7 @@ namespace zzz::engine
 	void PackageManager::LogPackageEntriesSummary() const
 	{
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+		DOut("========== Package Data: {} ==========", m_PackagePath.string());
 		// Закомментируй тот тип ресурса, который не хочешь логировать
 		LogEntriesSummaryForType<ProjectManifestData>(ePackage::ProjectManifest);
 		LogEntriesSummaryForType<AppViewData>(ePackage::AppView);
@@ -160,7 +161,7 @@ namespace zzz::engine
 	{
 		auto typeIt = m_EntriesByName.find(type);
 		const size_t count = (typeIt != m_EntriesByName.end()) ? typeIt->second.size() : 0;
-		DOut("  -> AssetType: {}: {} штук", EnumToString::ToString(type), count);
+		DOut("  [AssetType: {}] count: {}", EnumToString::ToString(type), count);
 
 		if (typeIt == m_EntriesByName.end() || typeIt->second.empty())
 			return;
@@ -169,12 +170,12 @@ namespace zzz::engine
 		size_t idx = 0;
 		for (const auto& [name, entry] : entriesMap)
 		{
-			DOut("     [{}]", idx++);
-			entry.LogFileBlock();
+			DOut("    [Entry #{}]", idx++);
+			entry.LogFileBlock("      ");
 
 			if (auto dataRes = LoadAssetData<T>(entry))
 			{
-				dataRes->LogFileBlock();
+				dataRes->LogFileBlock("      ");
 			}
 		}
 	}

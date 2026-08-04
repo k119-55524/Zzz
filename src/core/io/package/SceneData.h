@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <vector>
 #include <core/Guid.h>
 #include <core/Serialize/Serializer.h>
@@ -20,12 +21,13 @@ namespace zzz::core
 
 		[[nodiscard]] const std::vector<Guid>& GetSceneScriptGuids() const noexcept { return sceneScriptGuids; }
 
-		inline void LogFileBlock() const
+		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			DOut("           [SceneData] sceneScriptGuids({})", sceneScriptGuids.size());
+			const std::string nestedIndentation = std::string(indentation) + "  ";
+			DOut("{}[SceneData] sceneScriptGuids({})", indentation, sceneScriptGuids.size());
 			for (zU32 i = 0; i < sceneScriptGuids.size(); ++i)
 			{
-				DOut("             sceneScriptGuid #{}: {}", i, sceneScriptGuids[i].ToString());
+				DOut("{}sceneScriptGuid #{}: {}", nestedIndentation, i, sceneScriptGuids[i].ToString());
 			}
 		}
 

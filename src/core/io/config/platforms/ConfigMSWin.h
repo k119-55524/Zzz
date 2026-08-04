@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include <string_view>
 #include <logger/logger.h>
 #include <engine/headers/MSWin.h>
 #include <core/Serialize/Serializer.h>
@@ -13,6 +13,11 @@ namespace zzz::engine
 	public:
 		ConfigMSWin();
 		~ConfigMSWin() = default;
+
+		inline void LogFileBlock(std::string_view indentation = {}) const
+		{
+			DOut("{}[ConfigMSWin]", indentation);
+		}
 
 	private:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override;

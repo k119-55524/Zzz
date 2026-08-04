@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <vector>
 #include <core/Guid.h>
 #include <common/Templates/Size2D.h>
@@ -31,15 +32,16 @@ namespace zzz::core
 		[[nodiscard]] const Guid& GetSceneGuid() const noexcept { return sceneGuid; }
 		[[nodiscard]] const std::vector<Guid>& GetUiScriptGuids() const noexcept { return uiScriptGuids; }
 
-		inline void LogFileBlock() const
+		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			DOut("           [ViewData] name: {}", name);
-			DOut("           [ViewData] size: {}x{}", size.width, size.height);
-			DOut("           [ViewData] sceneGuid: {}", sceneGuid.ToString());
-			DOut("           [ViewData] uiScriptGuids({})", uiScriptGuids.size());
+			const std::string nestedIndentation = std::string(indentation) + "  ";
+			DOut("{}[ViewData] name: {}", indentation, name);
+			DOut("{}[ViewData] size: {}x{}", indentation, size.width, size.height);
+			DOut("{}[ViewData] sceneGuid: {}", indentation, sceneGuid.ToString());
+			DOut("{}[ViewData] uiScriptGuids({})", indentation, uiScriptGuids.size());
 			for (zU32 i = 0; i < uiScriptGuids.size(); ++i)
 			{
-				DOut("             uiScriptGuid #{}: {}", i, uiScriptGuids[i].ToString());
+				DOut("{}uiScriptGuid #{}: {}", nestedIndentation, i, uiScriptGuids[i].ToString());
 			}
 		}
 
