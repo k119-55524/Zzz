@@ -1,5 +1,6 @@
 
 #include <common/Common.h>
+#include <core/IO/package/ViewData.h>
 
 #include "View.h"
 #include "public/core/scene/Scene.h"
@@ -8,10 +9,7 @@
 #include "../../platforms/window/Window.h"
 #include "public/core/userscripts/base_script/ViewScript.h"
 
-#include <core/IO/package/ViewData.h>
-
 using namespace zzz::common;
-
 using namespace zzz::engine;
 
 View::View(const zzz::core::ViewData& viewData, const Platform& platform, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts, std::function<void(View&)> onWindowClose) :

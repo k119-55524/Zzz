@@ -359,22 +359,51 @@ public class MainWindowViewModel : ViewModelBase
             Task.Run(() =>
             {
                 bool success = PrepareBuildRoot(baseDestinationPath);
-                foreach (var target in enabledTargets)
+                if (success)
                 {
-                    if (!success)
-                    {
-                        break;
-                    }
-
-                    var options = new BuildOptions
+                    // 1. Предварительное сканирование и создание единых файлов (include/, Scripts.cmake) в корне DestinationPath
+                    var firstTarget = enabledTargets.First();
+                    var commonOptions = new BuildOptions
                     {
                         SourcePath = sourcePath,
-                        DestinationPath = target.BuildDirectory,
-                        TargetProjectName = target.Name,
-                        TargetPlatform = target.TargetPlatform
+                        DestinationPath = baseDestinationPath,
+                        TargetProjectName = firstTarget.Name,
+                        TargetPlatform = firstTarget.TargetPlatform
                     };
 
-                    success = _engine.BuildPackage(options);
+                    bool metaValid = _engine.ScanProjectMetaFiles(commonOptions);
+                    if (!metaValid)
+                    {
+                        AppendLog("Ошибка: Сборка отменена из-за ошибок валидации или GUID.");
+                        success = false;
+                    }
+                    else
+                    {
+                        string includeDir = Path.Combine(baseDestinationPath, "include");
+                        Directory.CreateDirectory(includeDir);
+                        _engine.CopyHeaderFiles(sourcePath, includeDir);
+                        _engine.GenerateScriptsCmake(sourcePath, baseDestinationPath);
+                    }
+                }
+
+                // 2. Для каждого таргета собираем индивидуальный game.pkg в его подпапке <DestinationPath>/<TargetName>_<TargetPlatform>/assets/
+                if (success)
+                {
+                    foreach (var target in enabledTargets)
+                    {
+                        Directory.CreateDirectory(target.BuildDirectory);
+                        string targetAssetsDir = Path.Combine(target.BuildDirectory, "assets");
+                        Directory.CreateDirectory(targetAssetsDir);
+
+                        AppendLog($"Сериализация индивидуального бинарного пакета для '{target.Name}' ({target.TargetPlatform})...");
+                        bool packSuccess = PackagePacker.PackProject(sourcePath, target.BuildDirectory, target.TargetPlatform, AppendLog);
+                        if (!packSuccess)
+                        {
+                            AppendLog($"Ошибка упаковки для таргета '{target.Name}'!");
+                            success = false;
+                            break;
+                        }
+                    }
                 }
 
                 if (success)

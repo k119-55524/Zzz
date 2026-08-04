@@ -112,6 +112,7 @@ public class AssetsBuilderEngine
 				{
 					string fileName = Path.GetFileName(file);
 					if (fileName.Equals(AssetExtensions.ProjectJsonName, StringComparison.OrdinalIgnoreCase) ||
+						(fileName.StartsWith("project_", StringComparison.OrdinalIgnoreCase) && fileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) ||
 						fileName.Equals("CMakeLists.txt", StringComparison.OrdinalIgnoreCase) ||
 						fileName.StartsWith("RegisterAllScripts", StringComparison.OrdinalIgnoreCase))
 					{
@@ -367,7 +368,7 @@ public class AssetsBuilderEngine
 		}
 	}
 
-	private void GenerateScriptsCmake(string sourcePath, string destinationPath)
+	public void GenerateScriptsCmake(string sourcePath, string destinationPath)
 	{
 		try
 		{
@@ -434,7 +435,7 @@ public class AssetsBuilderEngine
 		}
 	}
 
-	private void CopyHeaderFiles(string sourcePath, string outputIncludeDir)
+	public void CopyHeaderFiles(string sourcePath, string outputIncludeDir)
 	{
 		try
 		{

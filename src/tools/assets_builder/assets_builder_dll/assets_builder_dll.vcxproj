@@ -104,6 +104,9 @@
     <ProjectReference Include="..\..\..\common\common_lib.vcxproj">
       <Project>{47E7A912-78A3-4B04-811F-436417A2A94C}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\core\core_lib.vcxproj">
+      <Project>{8A9B6C5D-4E10-4B14-B149-166D46C2B47C}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\logger\logger_lib.vcxproj">
       <Project>{B88B46C3-4889-4E65-B86C-9A69D9CB5F50}</Project>
     </ProjectReference>

@@ -116,20 +116,26 @@
       </PostBuildEvent>
     </ItemDefinitionGroup>
     <ItemGroup>
+      <ClCompile Include="engine.cpp" />
       <ClCompile Include="private\platforms\Platform_Editor.cpp" />
+      <ClCompile Include="private\platforms\Platform_Common.cpp" />
       <ClCompile Include="private\platforms\main_loop\MainLoop_Common.cpp" />
       <ClCompile Include="private\platforms\window\Window_Common.cpp" />
-    <ClCompile Include="private\platforms\window\WinMSWindowEditor.cpp" />
-    <ClCompile Include="private\core\view\View.cpp" />
-    <ClCompile Include="private\core\view\ViewManager.cpp" />
-    <ClCompile Include="private\core\scene\Scene.cpp" />
-    <ClCompile Include="public\core\userscripts\ScriptRegistry.cpp" />
-    <ClCompile Include="public\core\userscripts\base_script\Script.cpp" />
-    <ClCompile Include="public\core\userscripts\base_script\GameScript.cpp" />
-    <ClCompile Include="public\core\userscripts\base_script\SceneScript.cpp" />
-    <ClCompile Include="public\core\userscripts\base_script\ViewScript.cpp" />
-    <ClCompile Include="public\core\EngineTime.cpp" />
-  </ItemGroup>
+      <ClCompile Include="private\platforms\window\WinMSWindowEditor.cpp" />
+      <ClCompile Include="private\platforms\package\PackageManager.cpp" />
+      <ClCompile Include="private\platforms\input\InputBase.cpp" />
+      <ClCompile Include="private\platforms\input\InputEditor.cpp" />
+      <ClCompile Include="private\core\io\Path.cpp" />
+      <ClCompile Include="private\core\view\View.cpp" />
+      <ClCompile Include="private\core\view\ViewManager.cpp" />
+      <ClCompile Include="private\core\scene\Scene.cpp" />
+      <ClCompile Include="public\core\userscripts\ScriptRegistry.cpp" />
+      <ClCompile Include="public\core\userscripts\base_script\Script.cpp" />
+      <ClCompile Include="public\core\userscripts\base_script\GameScript.cpp" />
+      <ClCompile Include="public\core\userscripts\base_script\SceneScript.cpp" />
+      <ClCompile Include="public\core\userscripts\base_script\ViewScript.cpp" />
+      <ClCompile Include="public\core\EngineTime.cpp" />
+    </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\common\common_lib.vcxproj">
       <Project>{47E7A912-78A3-4B04-811F-436417A2A94C}</Project>

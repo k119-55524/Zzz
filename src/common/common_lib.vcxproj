@@ -119,22 +119,9 @@
     <ClInclude Include="Enums\eWinResize.h" />
     <ClInclude Include="Templates\DoubleBufferedVector.h" />
     <ClInclude Include="Templates\Size2D.h" />
-    <ClInclude Include="..\core\IO\config\UserSettingsManager.h" />
-    <ClInclude Include="..\core\IO\config\PlatformConfig.h" />
-    <ClInclude Include="..\core\IO\config\platforms\ConfigAndroid.h" />
-    <ClInclude Include="..\core\IO\config\platforms\ConfigEditor.h" />
-    <ClInclude Include="..\core\IO\config\platforms\ConfigLinux.h" />
-    <ClInclude Include="..\core\IO\config\platforms\ConfigMSWin.h" />
-    <ClInclude Include="..\core\Serialize\Serializer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ThrowWrappers.cpp" />
-    <ClCompile Include="..\core\IO\config\UserSettingsManager.cpp" />
-    <ClCompile Include="..\core\IO\config\platforms\ConfigAndroid.cpp" />
-    <ClCompile Include="..\core\IO\config\platforms\ConfigEditor.cpp" />
-    <ClCompile Include="..\core\IO\config\platforms\ConfigLinux.cpp" />
-    <ClCompile Include="..\core\IO\config\platforms\ConfigMSWin.cpp" />
-    <ClCompile Include="..\core\Serialize\Serializer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
