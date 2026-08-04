@@ -1,5 +1,5 @@
 #pragma once
-#include <GameScript.h>
+#include <core/Core.h>
 
 class GlobalGameScript_001 : public zzz::core::GameScript
 {

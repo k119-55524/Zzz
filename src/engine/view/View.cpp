@@ -1,18 +1,7 @@
-
-#include <core/utils/Types.h>
-#include <core/utils/Ensure.h>
-#include <core/utils/Defines.h>
-#include <core/utils/Macroses.h>
-#include <core/utils/MemoryUtils.h>
-#include <core/utils/ThrowWrappers.h>
-#include <core/IO/package/ViewData.h>
-
 #include "View.h"
 #include "scene/Scene.h"
 #include "../platforms/input/Input.h"
-#include <core/events/EventBus.h>
 #include "../platforms/window/Window.h"
-#include <core/userscripts/base_script/ViewScript.h>
 
 using namespace zzz::core;
 using namespace zzz::engine;

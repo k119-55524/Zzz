@@ -1,9 +1,9 @@
 
 #include <thread>
 #include <gtest/gtest.h>
-#include <core/events/Event.h>
+#include <core/Core.h>
 
-using namespace zzz::engine;
+using namespace zzz::core;
 
 static std::shared_ptr<int> g_ctx = std::make_shared<int>(0);
 

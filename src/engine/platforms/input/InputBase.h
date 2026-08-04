@@ -3,11 +3,9 @@
 #include <functional>
 #include <bitset>
 #include "InputHelpers.h"
-#include <core/events/Event.h>
+#include <engine/header.h>
 
-#if Z_WINDOWS
-#include <core/headers/MSWin.h>
-#elif Z_ANDROID
+#if Z_ANDROID
 #include <android/input.h>
 #endif
 

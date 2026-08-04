@@ -1,5 +1,5 @@
 #pragma once
-#include <Script.h>
+#include <core/Core.h>
 
 class SampleObjectScript : public zzz::core::Script {
 public:

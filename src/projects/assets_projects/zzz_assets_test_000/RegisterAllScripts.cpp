@@ -4,7 +4,7 @@
 #include "SampleSceneScript.h"
 #include "SampleObjectScript.h"
 #include "SampleViewScript.h"
-#include <core/utils/Guid.h>
+#include <core/Core.h>
 #include <ScriptRegistry.h>
 
 extern "C" void RegisterAllScripts()

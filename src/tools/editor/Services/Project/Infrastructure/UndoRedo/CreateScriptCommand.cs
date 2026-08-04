@@ -50,16 +50,14 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
 			string hppContent = _storage.ReadAllText(hppTemplatePath);
 			string cppContent = _storage.ReadAllText(cppTemplatePath);
 
-			string includePath = "Script.h";
+			string includePath = "core/Core.h";
 			string baseClass = "zzz::core::Script";
 			if (_scriptType == "Game")
 			{
-				includePath = "GameScript.h";
 				baseClass = "zzz::core::GameScript";
 			}
 			else if (_scriptType == "Scene")
 			{
-				includePath = "SceneScript.h";
 				baseClass = "zzz::core::SceneScript";
 			}
 

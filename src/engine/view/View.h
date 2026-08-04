@@ -1,8 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <core/events/EventBus.h>
-#include <core/utils/Fwd.h>
+#include <engine/header.h>
 #include <engine/utils/Fwd.h>
 
 #include "../platforms/Platform.h"

@@ -1,14 +1,7 @@
-
-#include <core/IO/package/ViewData.h>
-#include <core/IO/package/AppViewData.h>
-#include <core/IO/package/ProjectManifestData.h>
-
 #include "View.h"
 #include "ViewManager.h"
 #include "../platforms/Platform.h"
 #include "../platforms/package/PackageManager.h"
-#include <core/userscripts/ScriptRegistry.h>
-#include <core/userscripts/base_script/ViewScript.h>
 
 using namespace zzz::core;
 using namespace zzz::engine;

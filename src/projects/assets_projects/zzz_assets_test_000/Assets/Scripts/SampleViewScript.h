@@ -1,5 +1,5 @@
 #pragma once
-#include <ViewScript.h>
+#include <core/Core.h>
 
 class SampleViewScript : public zzz::core::ViewScript {
 public:

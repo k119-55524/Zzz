@@ -7,12 +7,9 @@
 #include <filesystem>
 #include <string_view>
 #include <unordered_map>
-#include <core/Enums/ePackage.h>
-#include <core/IO/package/PackageEntry.h>
-#include <core/IO/package/PackageHeader.h>
+#include <engine/header.h>
 #include <core/IO/package/AppViewData.h>
-
-#include <core/io/Path.h>
+#include <core/IO/package/PackageEntry.h>
 
 using namespace zzz::core;
 

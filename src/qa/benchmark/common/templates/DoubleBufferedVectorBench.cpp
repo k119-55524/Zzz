@@ -1,14 +1,9 @@
 
 #include <thread>
-#include <core/utils/Types.h>
-#include <core/utils/Ensure.h>
-#include <core/utils/Defines.h>
-#include <core/utils/Macroses.h>
-#include <core/utils/MemoryUtils.h>
-#include <core/utils/ThrowWrappers.h>
+#include <core/Core.h>
 #include <benchmark/benchmark.h>
 
-using namespace zzz;
+using namespace zzz::core;
 
 static void BM_DoubleBufferedVector_Push(benchmark::State& state) {
 	DoubleBufferedVector<int> vec(1000000);

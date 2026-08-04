@@ -3,12 +3,7 @@
 #ifdef Z_PRINT_DEFINES
 #endif
 #include <memory>
-#include <core/utils/Types.h>
-#include <core/utils/Ensure.h>
-#include <core/utils/Defines.h>
-#include <core/utils/Macroses.h>
-#include <core/utils/MemoryUtils.h>
-#include <core/utils/ThrowWrappers.h>
+#include <core/Core.h>
 #include <engine/engine.h>
 #include "../engine_wrapper/EditorEngine.h"
 
@@ -20,7 +15,7 @@ zzz::logger::LogCallback g_EditorLogCallback = nullptr;
 // Эта функция никогда не вызывается, но нужна, чтобы линкер не выбросил throw_runtime_error.
 // Так как шаблон EventImpl<1>::Subscribe инстанцируется в scripts.dll, он требует экспорта 
 // этой функции из editor_dll.dll. Из-за багов MSBuild с /WHOLEARCHIVE это самый надежный способ.
-#pragma comment(linker, "/EXPORT:?throw_runtime_error@common@zzz@@YAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBUsource_location@4@@Z")
+#pragma comment(linker, "/EXPORT:?throw_runtime_error@core@zzz@@YAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBUsource_location@4@@Z")
 extern "C" __declspec(dllexport) void ForceExport_ThrowRuntimeError()
 {
 	auto dummyPtr = reinterpret_cast<void(*)(const std::string&, const std::source_location&)>(&zzz::core::throw_runtime_error);

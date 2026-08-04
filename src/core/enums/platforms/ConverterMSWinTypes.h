@@ -20,7 +20,7 @@ namespace zzz::core
 			{
 			case eMSWinWindowStyle::OverlappedWindow: return WS_OVERLAPPEDWINDOW;
 			case eMSWinWindowStyle::PopUp:            return WS_POPUP | WS_VISIBLE;
-			case eMSWinWindowStyle::ToolWindow:       return WS_TOOLWINDOW | WS_CAPTION | WS_SYSMENU;
+			case eMSWinWindowStyle::ToolWindow:       return WS_EX_TOOLWINDOW | WS_CAPTION | WS_SYSMENU;
 			}
 			return WS_OVERLAPPEDWINDOW;
 		}
@@ -28,7 +28,7 @@ namespace zzz::core
 		[[nodiscard]] static constexpr eMSWinWindowStyle ToEngine(DWORD nativeStyle) noexcept
 		{
 			if (nativeStyle & WS_POPUP)      return eMSWinWindowStyle::PopUp;
-			if (nativeStyle & WS_TOOLWINDOW) return eMSWinWindowStyle::ToolWindow;
+			if (nativeStyle & WS_EX_TOOLWINDOW) return eMSWinWindowStyle::ToolWindow;
 			return eMSWinWindowStyle::OverlappedWindow;
 		}
 

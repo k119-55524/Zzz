@@ -6,20 +6,18 @@
 #include <json.hpp>
 
 #include <logger/logger.h>
-#include <core/Enums/ePackage.h>
-#include <core/IO/package/PackageHeader.h>
-#include <core/IO/package/PackageEntry.h>
-#include <core/IO/package/ProjectManifestData.h>
+#include <core/Core.h>
 #include <core/IO/package/AppViewData.h>
+#include <core/IO/package/PackageEntry.h>
+#include <core/IO/package/PackageHeader.h>
+#include <core/IO/package/PrefabData.h>
+#include <core/IO/package/ProjectManifestData.h>
 #include <core/IO/package/SceneData.h>
 #include <core/IO/package/ViewData.h>
-#include <core/IO/package/PrefabData.h>
-#include <core/utils/Constants.h>
-
-#include <core/IO/package/platforms/AppViewDataMSWin.h>
 #include <core/IO/package/platforms/AppViewDataAndroid.h>
 #include <core/IO/package/platforms/AppViewDataLinux.h>
 #include <core/IO/package/platforms/AppViewDataMacOS.h>
+#include <core/IO/package/platforms/AppViewDataMSWin.h>
 #include <core/IO/package/platforms/AppViewDataiOS.h>
 
 namespace zzz::builder

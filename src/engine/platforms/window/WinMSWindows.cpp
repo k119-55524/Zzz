@@ -1,7 +1,6 @@
 
 #include "WinMSWindows.h"
 #include "../Platform.h"
-#include <core/utils/ScreenResolution.h>
 
 using namespace zzz::core;
 

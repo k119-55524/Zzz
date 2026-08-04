@@ -1,5 +1,5 @@
 #pragma once
-#include <SceneScript.h>
+#include <core/Core.h>
 
 class SampleSceneScript : public zzz::core::SceneScript {
 public:

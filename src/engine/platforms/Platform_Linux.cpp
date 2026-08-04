@@ -1,14 +1,9 @@
-#include <core/utils/Types.h>
-#include <core/utils/Ensure.h>
-#include <core/utils/Defines.h>
-#include <core/utils/Macroses.h>
-#include <core/utils/MemoryUtils.h>
-#include <core/utils/ThrowWrappers.h>
+#include <engine/header.h>
 #include <memory>
 #include "Platform.h"
 
 #include "input/InputLinux.h"
-#include <core/specific/linux_wayland/xdg-shell-client-protocol.h>
+#include <core/specific/linux_wayland/Xdg-shell-client-protocol.h>
 
 using namespace zzz::engine;
 

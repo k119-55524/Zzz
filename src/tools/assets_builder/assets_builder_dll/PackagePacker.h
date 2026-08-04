@@ -2,8 +2,7 @@
 
 #include <string>
 #include <filesystem>
-#include <core/utils/Types.h>
-#include <core/Enums/eTargetPlatform.h>
+#include <core/Core.h>
 
 namespace zzz::builder
 {

@@ -1,12 +1,8 @@
 
 #include "engine.h"
-#include <core/headers/Enums.h>
-#include <core/events/EventBus.h>
 #include "view/ViewManager.h"
 #include "platforms/main_loop/MainLoop.h"
 #include "platforms/package/PackageManager.h"
-#include <core/userscripts/ScriptRegistry.h>
-#include <core/userscripts/base_script/GameScript.h>
 
 using namespace zzz;
 using namespace zzz::core;

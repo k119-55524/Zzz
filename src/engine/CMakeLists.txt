@@ -48,9 +48,9 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "../core/utils/ScreenResolution.h"
 
         # Wayland (Linux)
-        "../core/specific/linux_wayland/xdg-shell-client-protocol.h"
-        "../core/specific/linux_wayland/xdg-shell-protocol.cpp"
-        "../core/utils/converters.h" "platforms/input/InputHelpers.h" "platforms/input/InputBase.cpp"
+        "../core/specific/linux_wayland/Xdg-shell-client-protocol.h"
+        "../core/specific/linux_wayland/Xdg-shell-protocol.cpp"
+        "../core/utils/Converters.h" "platforms/input/InputHelpers.h" "platforms/input/InputBase.cpp"
 
         # Scripts & Scenes
         "scene/GameObject.h"
@@ -115,7 +115,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         target_link_libraries(${TARGET_NAME} PRIVATE wayland-client)
 
         set_source_files_properties(
-            "../core/specific/linux_wayland/xdg-shell-protocol.cpp"
+            "../core/specific/linux_wayland/Xdg-shell-protocol.cpp"
             PROPERTIES COMPILE_OPTIONS "-Wno-attributes"
         )
     endif()

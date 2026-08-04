@@ -4,8 +4,6 @@
 
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 
-#include <core/Serialize/Serializer.h>
-
 namespace zzz::logger
 {
 	using namespace zzz::core;

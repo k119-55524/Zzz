@@ -1,7 +1,7 @@
 #define Z_PRINT_DEFINES
 #ifdef Z_PRINT_DEFINES
 #endif
-#include <core/utils/Defines.h>
+#include <core/Core.h>
 
 #import <Cocoa/Cocoa.h>
 
