@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- EDITORDLL_EXPORTS определён здесь намеренно: engine_lib - статическая библиотека, но её .obj
-     (включая Script.cpp/ScriptRegistry.cpp с классами, помеченными Z_ENGINE_API) линкуются только
+     (включая Script.cpp/ScriptRegistry.cpp с классами, помеченными Z_CORE_API) линкуются только
      в editor_dll.dll (см. editor_dll.vcxproj) - этот define должен совпадать с тем, что определяет
-     editor_dll.vcxproj, иначе Z_ENGINE_API скомпилирует здесь dllimport вместо dllexport, и символы
+     editor_dll.vcxproj, иначе Z_CORE_API скомпилирует здесь dllimport вместо dllexport, и символы
      не попадут в экспорт editor_dll.lib (нужные scripts.dll при сборке скриптов проекта). -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">

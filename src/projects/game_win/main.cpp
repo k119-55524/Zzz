@@ -9,7 +9,7 @@
 #include "main.h"
 
 using namespace zzz;
-using namespace zzz::common;
+using namespace zzz::core;
 using namespace zzz::logger;
 using namespace zzz::engine;
 

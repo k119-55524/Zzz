@@ -3,7 +3,7 @@
 #include <core/time/Time.h>
 #include <core/events/Event.h>
 
-namespace zzz::script
+namespace zzz::core
 {
 	class GameScript;
 	class SceneScript;
@@ -11,7 +11,7 @@ namespace zzz::script
 	class Script;
 }
 
-namespace zzz::engine
+namespace zzz::core
 {
 	/**
 	 * @brief Шина событий глобального уровня (уровня проекта).
@@ -24,7 +24,7 @@ namespace zzz::engine
 		void InvokeDestroy() { OnDestroy(); }
 		void InvokeEnable() { OnEnable(); }
 		void InvokeDisable() { OnDisable(); }
-		void InvokeUpdate(const zzz::engine::Time& t) { OnUpdate(t); }
+		void InvokeUpdate(const zzz::core::Time& t) { OnUpdate(t); }
 
 		void UnsubscribeAll(const std::shared_ptr<void>& context)
 		{
@@ -45,12 +45,12 @@ namespace zzz::engine
 		}
 
 	private:
-		friend class zzz::script::GameScript;
+		friend class zzz::core::GameScript;
 		Event<> OnStart;
 		Event<> OnDestroy;
 		Event<> OnEnable;
 		Event<> OnDisable;
-		Event<const zzz::engine::Time&> OnUpdate;
+		Event<const zzz::core::Time&> OnUpdate;
 	};
 
 	/**
@@ -64,7 +64,7 @@ namespace zzz::engine
 		void InvokeDestroy() { OnDestroy(); }
 		void InvokeEnable() { OnEnable(); }
 		void InvokeDisable() { OnDisable(); }
-		void InvokeUpdate(const zzz::engine::Time& t) { OnUpdate(t); }
+		void InvokeUpdate(const zzz::core::Time& t) { OnUpdate(t); }
 
 		void UnsubscribeAll(const std::shared_ptr<void>& context)
 		{
@@ -76,12 +76,12 @@ namespace zzz::engine
 		}
 
 	private:
-		friend class zzz::script::SceneScript;
+		friend class zzz::core::SceneScript;
 		Event<> OnStart;
 		Event<> OnDestroy;
 		Event<> OnEnable;
 		Event<> OnDisable;
-		Event<const zzz::engine::Time&> OnUpdate;
+		Event<const zzz::core::Time&> OnUpdate;
 	};
 
 	/**
@@ -96,7 +96,7 @@ namespace zzz::engine
 		void InvokeDestroy() { OnDestroy(); }
 		void InvokeEnable() { OnEnable(); }
 		void InvokeDisable() { OnDisable(); }
-		void InvokeUpdate(const zzz::engine::Time& t) { OnUpdate(t); }
+		void InvokeUpdate(const zzz::core::Time& t) { OnUpdate(t); }
 
 		void UnsubscribeAll(const std::shared_ptr<void>& context)
 		{
@@ -108,12 +108,12 @@ namespace zzz::engine
 		}
 
 	private:
-		friend class zzz::script::Script;
+		friend class zzz::core::Script;
 		UnorderedEvent<> OnStart;
 		UnorderedEvent<> OnDestroy;
 		UnorderedEvent<> OnEnable;
 		UnorderedEvent<> OnDisable;
-		UnorderedEvent<const zzz::engine::Time&> OnUpdate;
+		UnorderedEvent<const zzz::core::Time&> OnUpdate;
 	};
 
 	/**
@@ -127,7 +127,7 @@ namespace zzz::engine
 		void InvokeDestroy() { OnDestroy(); }
 		void InvokeEnable() { OnEnable(); }
 		void InvokeDisable() { OnDisable(); }
-		void InvokeUpdate(const zzz::engine::Time& t) { OnUpdate(t); }
+		void InvokeUpdate(const zzz::core::Time& t) { OnUpdate(t); }
 
 		void UnsubscribeAll(const std::shared_ptr<void>& context)
 		{
@@ -139,11 +139,11 @@ namespace zzz::engine
 		}
 
 	private:
-		friend class zzz::script::ViewScript;
+		friend class zzz::core::ViewScript;
 		Event<> OnStart;
 		Event<> OnDestroy;
 		Event<> OnEnable;
 		Event<> OnDisable;
-		Event<const zzz::engine::Time&> OnUpdate;
+		Event<const zzz::core::Time&> OnUpdate;
 	};
 }

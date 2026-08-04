@@ -15,7 +15,7 @@
 #include <core/headers/MSWin.h>
 #include <core/io/Path.h>
 
-namespace zzz::io
+namespace zzz::core
 {
 	Path::Path(std::string_view appName, std::shared_ptr<zzz::engine::NativeAppData> nativeData) :
 		m_AppName{appName},
@@ -149,7 +149,7 @@ namespace zzz::io
 
 			return std::filesystem::path(home) / ".config" / appName;
 #else
-#error >>>>> zzz::io::Path::ResolveUserDataDirectory(): Unsupported platform.
+#error >>>>> zzz::core::Path::ResolveUserDataDirectory(): Unsupported platform.
 #endif
 		}
 		catch (const std::filesystem::filesystem_error& e)

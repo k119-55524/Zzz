@@ -9,9 +9,9 @@
 #include <core/utils/ThrowWrappers.h>
 #include <core/IO/FileHeader.h>
 
-using namespace zzz::io;
+using namespace zzz::core;
 
-namespace zzz::common
+namespace zzz::core
 {
 #pragma region Config file constants
 	constexpr std::string_view c_ConfigFileName = "user.dat";

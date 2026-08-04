@@ -6,14 +6,14 @@
 #include <vector>
 #include <expected>
 #include <core/utils/Fwd.h>
+#include <engine/utils/Fwd.h>
 #include <string_view>
 
 #include "NativeAppData.h"
 #include <core/time/Time.h>
 #include <core/IO/config/UserSettingsManager.h>
 
-using namespace zzz::io;
-using namespace zzz::script;
+using namespace zzz::core;
 
 namespace zzz::engine
 {

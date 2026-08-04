@@ -9,7 +9,7 @@
 #include <string_view>
 #include <core/Serialize/Serializer.h>
 
-using namespace zzz::common;
+using namespace zzz::core;
 
 namespace zzz::logger
 {

@@ -2,7 +2,7 @@
 #include "Script.h"
 #include "../ScriptRegistry.h"
 
-using namespace zzz::script;
+using namespace zzz::core;
 
 Script::Script(GameObject* owner) : m_Owner(owner)
 {

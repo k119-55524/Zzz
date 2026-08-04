@@ -1,7 +1,7 @@
 
 #include "ConfigAndroid.h"
 
-using namespace zzz::engine;
+using namespace zzz::core;
 
 ConfigAndroid::ConfigAndroid()
 {

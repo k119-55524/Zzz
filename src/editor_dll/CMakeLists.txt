@@ -21,7 +21,7 @@ target_sources(editor_dll PRIVATE
 target_include_directories(editor_dll PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 # WHOLE_ARCHIVE - core_lib_editor/logger_lib_editor/engine_lib_editor помечают своё API
-# Z_CORE_API/Z_ENGINE_API (dllexport, см. Export.h/EngineExport.h) специально для того,
+# Z_CORE_API (dllexport, см. core/utils/Export.h) специально для того,
 # чтобы scripts.dll (Hot-Reload) мог импортировать его из editor_dll.dll. Обычная статическая
 # линковка подтягивает из .lib только те .obj, чьи символы уже на что-то ссылаются из
 # editor_dll.cpp/EditorEngine.cpp - throw_runtime_error и подобные символы, используемые только

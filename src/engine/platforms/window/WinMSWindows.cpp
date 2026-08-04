@@ -3,7 +3,7 @@
 #include "../Platform.h"
 #include <core/utils/ScreenResolution.h>
 
-using namespace zzz::common;
+using namespace zzz::core;
 
 using namespace zzz::engine;
 

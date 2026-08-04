@@ -7,7 +7,7 @@
 #include <string_view>
 #include <source_location>
 
-namespace zzz::common
+namespace zzz::core
 {
 	/**
 	 * @brief Вспомогательная функция для генерации исключения std::runtime_error с информацией о месте вызова.

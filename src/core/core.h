@@ -38,6 +38,13 @@
 #include <core/events/Event.h>
 #include <core/events/EventBus.h>
 
+#include <core/userscripts/ScriptRegistry.h>
+#include <core/userscripts/base_script/BaseScript.h>
+#include <core/userscripts/base_script/Script.h>
+#include <core/userscripts/base_script/GameScript.h>
+#include <core/userscripts/base_script/SceneScript.h>
+#include <core/userscripts/base_script/ViewScript.h>
+
 #include <core/IO/FileHeader.h>
 #include <core/io/Path.h>
 #include <core/IO/package/PackageHeader.h>

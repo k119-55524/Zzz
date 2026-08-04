@@ -13,7 +13,7 @@
 {NamespaceIndent}
 {NamespaceIndent}	void OnInit();
 {NamespaceIndent}	void OnStart();
-{NamespaceIndent}	void OnUpdate(const zzz::engine::Time& time);
+{NamespaceIndent}	void OnUpdate(const zzz::core::Time& time);
 {NamespaceIndent}	void OnDestroy();
 {NamespaceIndent}	void OnEnable();
 {NamespaceIndent}	void OnDisable();

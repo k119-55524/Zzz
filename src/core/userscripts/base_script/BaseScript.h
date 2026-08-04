@@ -1,13 +1,13 @@
 #pragma once
 
 #include <memory>
-#include "../EngineExport.h"
+#include <core/utils/Export.h>
 
-namespace zzz::script
+namespace zzz::core
 {
 #pragma warning(push)
 #pragma warning(disable: 4251)
-	class Z_ENGINE_API BaseScript : public std::enable_shared_from_this<BaseScript>
+	class Z_CORE_API BaseScript : public std::enable_shared_from_this<BaseScript>
 	{
 	public:
 		BaseScript() = default;

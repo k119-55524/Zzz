@@ -16,7 +16,7 @@
 #error >>>>> PlatformConfig header inclusion: Unsupported platform.
 #endif
 
-namespace zzz::engine
+namespace zzz::core
 {
 #if Z_EDITOR
 	using PlatformConfig = ConfigEditor;

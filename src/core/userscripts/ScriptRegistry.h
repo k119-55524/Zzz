@@ -11,14 +11,14 @@
 #include <core/utils/Guid.h>
 #include <core/utils/MemoryUtils.h>
 
-#include "EngineExport.h"
+#include <core/utils/Export.h>
 
 namespace zzz
 {
 	class GameObject;
 }
 
-namespace zzz::script
+namespace zzz::core
 {
 	class Script;
 	class GameScript;
@@ -27,45 +27,45 @@ namespace zzz::script
 
 #pragma warning(push)
 #pragma warning(disable: 4251)
-	class Z_ENGINE_API ScriptRegistry
+	class Z_CORE_API ScriptRegistry
 	{
 	public:
 		// Регистрация типов по имени
 		template<typename T>
 		static void Register(std::string_view name)
 		{
-			Register<T>(name, zzz::common::Guid{});
+			Register<T>(name, zzz::core::Guid{});
 		}
 
 		// Регистрация типов по имени и GUID
 		template<typename T>
-		static void Register(std::string_view name, const zzz::common::Guid& guid)
+		static void Register(std::string_view name, const zzz::core::Guid& guid)
 		{
 			std::string nameStr(name);
-			if constexpr (std::is_base_of_v<zzz::script::ViewScript, T>)
+			if constexpr (std::is_base_of_v<zzz::core::ViewScript, T>)
 			{
-				auto factory = []() { return zzz::common::safe_make_shared<T>(); };
+				auto factory = []() { return zzz::core::safe_make_shared<T>(); };
 				s_ViewScriptFactories[nameStr] = factory;
 				if (!guid.IsEmpty())
 					s_ViewScriptGuidFactories[guid] = factory;
 			}
-			else if constexpr (std::is_base_of_v<zzz::script::SceneScript, T>)
+			else if constexpr (std::is_base_of_v<zzz::core::SceneScript, T>)
 			{
-				auto factory = []() { return zzz::common::safe_make_shared<T>(); };
+				auto factory = []() { return zzz::core::safe_make_shared<T>(); };
 				s_SceneScriptFactories[nameStr] = factory;
 				if (!guid.IsEmpty())
 					s_SceneScriptGuidFactories[guid] = factory;
 			}
-			else if constexpr (std::is_base_of_v<zzz::script::GameScript, T>)
+			else if constexpr (std::is_base_of_v<zzz::core::GameScript, T>)
 			{
-				auto factory = []() { return zzz::common::safe_make_shared<T>(); };
+				auto factory = []() { return zzz::core::safe_make_shared<T>(); };
 				s_GameScriptFactories[nameStr] = factory;
 				if (!guid.IsEmpty())
 					s_GameScriptGuidFactories[guid] = factory;
 			}
-			else if constexpr (std::is_base_of_v<zzz::script::Script, T>)
+			else if constexpr (std::is_base_of_v<zzz::core::Script, T>)
 			{
-				auto factory = [](GameObject* owner) { return zzz::common::safe_make_shared<T>(owner); };
+				auto factory = [](GameObject* owner) { return zzz::core::safe_make_shared<T>(owner); };
 				s_ScriptFactories[nameStr] = factory;
 				if (!guid.IsEmpty())
 					s_ScriptGuidFactories[guid] = factory;
@@ -83,10 +83,10 @@ namespace zzz::script
 		static std::shared_ptr<ViewScript> CreateViewScript(std::string_view name);
 
 		// Создание объектов по GUID
-		static std::shared_ptr<Script> CreateScript(const zzz::common::Guid& guid, GameObject* owner);
-		static std::shared_ptr<GameScript> CreateGameScript(const zzz::common::Guid& guid);
-		static std::shared_ptr<SceneScript> CreateSceneScript(const zzz::common::Guid& guid);
-		static std::shared_ptr<ViewScript> CreateViewScript(const zzz::common::Guid& guid);
+		static std::shared_ptr<Script> CreateScript(const zzz::core::Guid& guid, GameObject* owner);
+		static std::shared_ptr<GameScript> CreateGameScript(const zzz::core::Guid& guid);
+		static std::shared_ptr<SceneScript> CreateSceneScript(const zzz::core::Guid& guid);
+		static std::shared_ptr<ViewScript> CreateViewScript(const zzz::core::Guid& guid);
 
 		// Имена всех зарегистрированных глобальных (Game) скриптов - используется статической
 		// сборкой игры для автостарта всех скриптов проекта (см. Engine::Initialize).
@@ -120,10 +120,10 @@ namespace zzz::script
 		static std::unordered_map<std::string, std::function<std::shared_ptr<SceneScript>()>> s_SceneScriptFactories;
 		static std::unordered_map<std::string, std::function<std::shared_ptr<ViewScript>()>> s_ViewScriptFactories;
 
-		static std::unordered_map<zzz::common::Guid, std::function<std::shared_ptr<Script>(GameObject*)>> s_ScriptGuidFactories;
-		static std::unordered_map<zzz::common::Guid, std::function<std::shared_ptr<GameScript>()>> s_GameScriptGuidFactories;
-		static std::unordered_map<zzz::common::Guid, std::function<std::shared_ptr<SceneScript>()>> s_SceneScriptGuidFactories;
-		static std::unordered_map<zzz::common::Guid, std::function<std::shared_ptr<ViewScript>()>> s_ViewScriptGuidFactories;
+		static std::unordered_map<zzz::core::Guid, std::function<std::shared_ptr<Script>(GameObject*)>> s_ScriptGuidFactories;
+		static std::unordered_map<zzz::core::Guid, std::function<std::shared_ptr<GameScript>()>> s_GameScriptGuidFactories;
+		static std::unordered_map<zzz::core::Guid, std::function<std::shared_ptr<SceneScript>()>> s_SceneScriptGuidFactories;
+		static std::unordered_map<zzz::core::Guid, std::function<std::shared_ptr<ViewScript>()>> s_ViewScriptGuidFactories;
 
 #if Z_EDITOR
 		static std::vector<Script*> s_ActiveInstances;

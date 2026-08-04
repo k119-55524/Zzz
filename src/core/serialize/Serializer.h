@@ -10,7 +10,7 @@
 
 #include <core/utils/Export.h>
 
-namespace zzz::common
+namespace zzz::core
 {
 	/// @brief Концепт для типов примитивов и enum, подлежащих сериализации.
 	/// @details Рассчитан на 64-битные системы (x64 / ARM64, Little-Endian: Windows, Linux, macOS, Android, iOS).

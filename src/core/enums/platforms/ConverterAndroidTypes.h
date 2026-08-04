@@ -2,9 +2,9 @@
 
 #include <core/enums/platforms/eAndroidEnums.h>
 
-namespace zzz::engine
+namespace zzz::core
 {
-	using namespace zzz::common;
+	using namespace zzz::core;
 
 	class ConverterAndroidTypes final
 	{

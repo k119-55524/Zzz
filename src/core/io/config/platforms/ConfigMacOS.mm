@@ -2,7 +2,7 @@
 
 #include "ConfigMacOS.h"
 
-using namespace zzz::engine;
+using namespace zzz::core;
 
 ConfigMacOS::ConfigMacOS()
 {

@@ -14,10 +14,10 @@
 #include "../platforms/window/Window.h"
 #include <core/userscripts/base_script/ViewScript.h>
 
-using namespace zzz::common;
+using namespace zzz::core;
 using namespace zzz::engine;
 
-View::View(const zzz::core::ViewData& viewData, const Platform& platform, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts, std::function<void(View&)> onWindowClose) :
+View::View(const ViewData& viewData, const Platform& platform, const std::vector<std::shared_ptr<ViewScript>>& scripts, std::function<void(View&)> onWindowClose) :
 	m_Platform{ platform },
 	m_IsActive{ true },
 	OnWindowClose(std::move(onWindowClose))
@@ -42,7 +42,7 @@ View::~View()
 	m_Scripts.clear();
 }
 
-void View::Initialize(const zzz::core::ViewData* viewData, void* data, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts)
+void View::Initialize(const ViewData* viewData, void* data, const std::vector<std::shared_ptr<ViewScript>>& scripts)
 {
 	m_Input = safe_make_shared<Input>();
 	auto inputRes = m_Input->Initialize();
@@ -165,7 +165,7 @@ void View::OnWindowSafeAreaChanged(int top, int bottom, int left, int right)
 }
 #pragma endregion
 
-void View::Update(const zzz::engine::Time& time)
+void View::Update(const Time& time)
 {
 	if (!m_IsActive)
 		return;

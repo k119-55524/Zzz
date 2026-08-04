@@ -8,7 +8,7 @@
 #include "private/NetworkBroadcaster.h"
 #include "private/CallbackBroadcaster.h"
 
-using namespace zzz::common;
+using namespace zzz::core;
 using namespace zzz::logger;
 
 Logger::Logger()

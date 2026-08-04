@@ -8,7 +8,7 @@
 
 #include <engine/NativeAppData.h>
 
-namespace zzz::io
+namespace zzz::core
 {
 	class Path final
 	{

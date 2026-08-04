@@ -5,9 +5,9 @@
 #include <core/headers/MSWin.h>
 #include <core/Serialize/Serializer.h>
 
-namespace zzz::engine
+namespace zzz::core
 {
-	using namespace zzz::common;
+	using namespace zzz::core;
 	class ConfigMSWin final : public ISerializable
 	{
 	public:

@@ -5,7 +5,7 @@
 
 namespace zzz::logger
 {
-	using namespace zzz::common;
+	using namespace zzz::core;
 	[[nodiscard]] std::expected<void, std::string> LogEntry::Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const
 	{
 		if (auto res = serializer.Serialize(buffer, timestamp); !res) return res;

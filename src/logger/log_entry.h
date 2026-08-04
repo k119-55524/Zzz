@@ -8,7 +8,7 @@
 
 namespace zzz::logger
 {
-	using namespace zzz::common;
+	using namespace zzz::core;
 	struct LogEntry final : public ISerializable
 	{
 		uint64_t timestamp;

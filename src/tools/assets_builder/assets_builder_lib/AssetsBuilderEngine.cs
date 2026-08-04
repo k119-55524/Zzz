@@ -429,11 +429,11 @@ public class AssetsBuilderEngine
 
 				if (!string.IsNullOrWhiteSpace(scriptGuid))
 				{
-					registerLines.Add($"    if (auto g = zzz::common::Guid::Parse(\"{scriptGuid}\"))\n        zzz::script::ScriptRegistry::Register<{qualifiedName}>(\"{qualifiedName}\", *g);\n    else\n        zzz::script::ScriptRegistry::Register<{qualifiedName}>(\"{qualifiedName}\");");
+					registerLines.Add($"    if (auto g = zzz::core::Guid::Parse(\"{scriptGuid}\"))\n        zzz::core::ScriptRegistry::Register<{qualifiedName}>(\"{qualifiedName}\", *g);\n    else\n        zzz::core::ScriptRegistry::Register<{qualifiedName}>(\"{qualifiedName}\");");
 				}
 				else
 				{
-					registerLines.Add($"    zzz::script::ScriptRegistry::Register<{qualifiedName}>(\"{qualifiedName}\");");
+					registerLines.Add($"    zzz::core::ScriptRegistry::Register<{qualifiedName}>(\"{qualifiedName}\");");
 				}
 			}
 

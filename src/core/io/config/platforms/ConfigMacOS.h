@@ -4,9 +4,9 @@
 #include <logger/logger.h>
 #include <core/Serialize/Serializer.h>
 
-namespace zzz::engine
+namespace zzz::core
 {
-	using namespace zzz::common;
+	using namespace zzz::core;
 	class ConfigMacOS final : public ISerializable
 	{
 	public:

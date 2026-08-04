@@ -1,7 +1,7 @@
 #include "WinMSWindowEditor.h"
 #include "../Platform.h"
 
-using namespace zzz::common;
+using namespace zzz::core;
 using namespace zzz::engine;
 
 WinMSWindowEditor::WinMSWindowEditor(const Platform& platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks) :

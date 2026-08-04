@@ -14,6 +14,6 @@ namespace zzz::builder
 		static bool PackProject(
 			const std::filesystem::path& sourceDir,
 			const std::filesystem::path& destinationDir,
-			zzz::common::eTargetPlatform targetPlatform);
+			zzz::core::eTargetPlatform targetPlatform);
 	};
 }

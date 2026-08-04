@@ -15,57 +15,57 @@ extern "C"
 
 	BUILDER_API const char* GetGamePackageFileName()
 	{
-		return zzz::common::c_GamePackageFileName.data();
+		return zzz::core::c_GamePackageFileName.data();
 	}
 
 	BUILDER_API const uint8_t* GetGamePackageMagicBytes()
 	{
 		static const uint8_t magic[3] = {
-			static_cast<uint8_t>(zzz::common::c_GamePackageHeader.GetMagic()[0]),
-			static_cast<uint8_t>(zzz::common::c_GamePackageHeader.GetMagic()[1]),
-			static_cast<uint8_t>(zzz::common::c_GamePackageHeader.GetMagic()[2])
+			static_cast<uint8_t>(zzz::core::c_GamePackageHeader.GetMagic()[0]),
+			static_cast<uint8_t>(zzz::core::c_GamePackageHeader.GetMagic()[1]),
+			static_cast<uint8_t>(zzz::core::c_GamePackageHeader.GetMagic()[2])
 		};
 		return magic;
 	}
 
 	BUILDER_API uint32_t GetGamePackageMajorVersion()
 	{
-		return zzz::common::c_GamePackageFileMajorVersion;
+		return zzz::core::c_GamePackageFileMajorVersion;
 	}
 
 	BUILDER_API uint32_t GetGamePackageMinorVersion()
 	{
-		return zzz::common::c_GamePackageFileMinorVersion;
+		return zzz::core::c_GamePackageFileMinorVersion;
 	}
 
 	BUILDER_API uint32_t GetGamePackagePatchVersion()
 	{
-		return zzz::common::c_GamePackageFilePatchVersion;
+		return zzz::core::c_GamePackageFilePatchVersion;
 	}
 
 	BUILDER_API uint32_t GetAssetTypeProjectManifest()
 	{
-		return static_cast<uint32_t>(zzz::common::ePackage::ProjectManifest);
+		return static_cast<uint32_t>(zzz::core::ePackage::ProjectManifest);
 	}
 
 	BUILDER_API uint32_t GetAssetTypeScene()
 	{
-		return static_cast<uint32_t>(zzz::common::ePackage::Scene);
+		return static_cast<uint32_t>(zzz::core::ePackage::Scene);
 	}
 
 	BUILDER_API uint32_t GetAssetTypeView()
 	{
-		return static_cast<uint32_t>(zzz::common::ePackage::View);
+		return static_cast<uint32_t>(zzz::core::ePackage::View);
 	}
 
 	BUILDER_API uint32_t GetAssetTypePrefab()
 	{
-		return static_cast<uint32_t>(zzz::common::ePackage::Prefab);
+		return static_cast<uint32_t>(zzz::core::ePackage::Prefab);
 	}
 
 	BUILDER_API uint32_t GetAssetTypeBinaryAsset()
 	{
-		return static_cast<uint32_t>(zzz::common::ePackage::BinaryAsset);
+		return static_cast<uint32_t>(zzz::core::ePackage::BinaryAsset);
 	}
 
 	BUILDER_API bool PackProjectNative(const char* sourceDir, const char* destinationDir, uint32_t targetPlatform)
@@ -74,6 +74,6 @@ extern "C"
 		return zzz::builder::PackagePacker::PackProject(
 			sourceDir,
 			destinationDir,
-			static_cast<zzz::common::eTargetPlatform>(targetPlatform));
+			static_cast<zzz::core::eTargetPlatform>(targetPlatform));
 	}
 }

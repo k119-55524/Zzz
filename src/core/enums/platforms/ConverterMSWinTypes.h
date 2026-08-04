@@ -4,9 +4,9 @@
 #include <windows.h>
 #include <core/enums/platforms/eMSWinEnums.h>
 
-namespace zzz::engine
+namespace zzz::core
 {
-	using namespace zzz::common;
+	using namespace zzz::core;
 
 	class ConverterMSWinTypes final
 	{

@@ -68,7 +68,7 @@ foreach(HPP_FILE ${SCRIPT_HPPS})
     endif()
 
     string(APPEND REGISTER_SCRIPTS_CONTENT "#include \"${HPP_FILE}\"\n")
-    string(APPEND REGISTER_SCRIPT_LINES "    zzz::script::ScriptRegistry::Register<${QUALIFIED_NAME}>(\"${QUALIFIED_NAME}\");\n")
+    string(APPEND REGISTER_SCRIPT_LINES "    zzz::core::ScriptRegistry::Register<${QUALIFIED_NAME}>(\"${QUALIFIED_NAME}\");\n")
 endforeach()
 
 string(APPEND REGISTER_SCRIPTS_CONTENT "\nvoid RegisterAllScripts()\n{\n${REGISTER_SCRIPT_LINES}}\n")

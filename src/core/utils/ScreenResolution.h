@@ -7,7 +7,7 @@
 #include <core/utils/MemoryUtils.h>
 #include <core/utils/ThrowWrappers.h>
 
-namespace zzz::engine
+namespace zzz::core
 {
 	class ScreenResolution final
 	{

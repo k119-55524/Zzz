@@ -9,7 +9,7 @@
 #include <core/userscripts/base_script/GameScript.h>
 
 using namespace zzz;
-using namespace zzz::common;
+using namespace zzz::core;
 using namespace zzz::engine;
 
 #if defined(_MSC_VER)
@@ -139,10 +139,10 @@ void Engine::LoadGlobalScripts()
 {
 	std::lock_guard lock(stateMutex);
 
-	auto globalScripts = zzz::script::ScriptRegistry::GetAllGameScriptNames();
+	auto globalScripts = zzz::core::ScriptRegistry::GetAllGameScriptNames();
 	for (const auto& scriptName : globalScripts)
 	{
-		if (auto script = zzz::script::ScriptRegistry::CreateGameScript(scriptName))
+		if (auto script = zzz::core::ScriptRegistry::CreateGameScript(scriptName))
 		{
 			m_Scripts.push_back(script);
 			script->Init(m_EventBus);

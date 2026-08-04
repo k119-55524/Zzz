@@ -14,7 +14,7 @@
 #include <core/utils/ThrowWrappers.h>
 #include <logger/logger.h>
 
-namespace zzz::engine
+namespace zzz::core
 {
 	template<typename FuncType>
 	struct CallbackEntry

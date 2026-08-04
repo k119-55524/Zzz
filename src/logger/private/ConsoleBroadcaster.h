@@ -19,7 +19,7 @@
 
 namespace zzz::logger
 {
-	using namespace zzz::common;
+	using namespace zzz::core;
 	class ConsoleBroadcaster final : public IBroadcaster
 	{
 	public:

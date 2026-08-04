@@ -3,7 +3,7 @@
 
 #include <core/time/Time.h>
 
-namespace zzz::engine
+namespace zzz::core
 {
 	Time::Time()
 	{

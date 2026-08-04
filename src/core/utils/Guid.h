@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <core/Serialize/Serializer.h>
 
-namespace zzz::common
+namespace zzz::core
 {
 	/// @brief Представляет 128-битный глобальный уникальный идентификатор (GUID/UUID).
 	/// @details Обеспечивает неиммутабельность хранения байтов, безопасную сериализацию и операторы сравнения C++20.
@@ -125,9 +125,9 @@ namespace zzz::common
 namespace std
 {
 	template <>
-	struct hash<zzz::common::Guid>
+	struct hash<zzz::core::Guid>
 	{
-		size_t operator()(const zzz::common::Guid& guid) const noexcept
+		size_t operator()(const zzz::core::Guid& guid) const noexcept
 		{
 			const auto& bytes = guid.GetBytes();
 			uint64_t low = 0, high = 0;

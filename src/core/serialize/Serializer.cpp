@@ -1,7 +1,7 @@
 #include "Serializer.h"
 #include <core/utils/Types.h>
 
-using namespace zzz::common;
+using namespace zzz::core;
 
 std::expected<void, std::string> Serializer::Serialize(std::vector<std::byte>& buffer, const std::string& str) const
 {

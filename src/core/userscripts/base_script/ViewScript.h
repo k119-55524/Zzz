@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include "../EngineExport.h"
+#include <core/utils/Export.h>
 #include "BaseScript.h"
 #include <core/events/EventBus.h>
 
@@ -10,11 +10,11 @@ namespace zzz::engine
 	class View;
 }
 
-namespace zzz::script
+namespace zzz::core
 {
 #pragma warning(push)
 #pragma warning(disable: 4251)
-	class Z_ENGINE_API ViewScript : public BaseScript
+	class Z_CORE_API ViewScript : public BaseScript
 	{
 	public:
 		ViewScript();
@@ -41,13 +41,13 @@ namespace zzz::script
 
 	private:
 		friend class zzz::engine::View;
-		void Init(zzz::engine::ViewEventBus* bus)
+		void Init(zzz::core::ViewEventBus* bus)
 		{
 			m_Bus = bus;
 			OnBindEvents();
 		}
 
-		zzz::engine::ViewEventBus* m_Bus = nullptr;
+		zzz::core::ViewEventBus* m_Bus = nullptr;
 	};
 #pragma warning(pop)
 

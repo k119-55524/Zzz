@@ -1,28 +1,17 @@
 #pragma once
 
+#include <vector>
+#include <core/events/EventBus.h>
+#include <core/utils/Fwd.h>
+#include <engine/utils/Fwd.h>
+
 #include "../platforms/Platform.h"
 #include "../platforms/input/Input.h"
 #include "../platforms/window/Window.h"
 
-#include <vector>
-
-namespace zzz::script
-{
-	class Scene;
-	class ViewScript;
-}
-
-#include <core/events/EventBus.h>
-
-namespace zzz::core
-{
-	class ViewData;
-}
-
 namespace zzz::engine
 {
-	class Time;
-	using namespace zzz::common;
+	using namespace zzz::core;
 
 	class View final
 	{
@@ -30,14 +19,14 @@ namespace zzz::engine
 
 	public:
 		View() = delete;
-		View(const zzz::core::ViewData& viewData, const Platform& platform, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts, std::function<void(View&)> onWindowClose);
+		View(const ViewData& viewData, const Platform& platform, const std::vector<std::shared_ptr<ViewScript>>& scripts, std::function<void(View&)> onWindowClose);
 #if Z_EDITOR
 		View(const Platform& platform, void* data);
 #endif // Z_EDITOR
 		~View();
 
 		inline void InvokeStart() { m_EventBus.InvokeStart(); }
-		void Update(const zzz::engine::Time& time);
+		void Update(const Time& time);
 
 		inline void SetActive(bool active)
 		{
@@ -54,7 +43,7 @@ namespace zzz::engine
 		inline bool IsActive() const noexcept { return m_IsActive; }
 
 	private:
-		void Initialize(const zzz::core::ViewData* viewData = nullptr, void* data = nullptr, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts = {});
+		void Initialize(const ViewData* viewData = nullptr, void* data = nullptr, const std::vector<std::shared_ptr<ViewScript>>& scripts = {});
 
 #pragma region Window Events
 		/**
@@ -186,7 +175,7 @@ namespace zzz::engine
 
 		bool m_IsActive;
 		ViewEventBus m_EventBus;
-		std::shared_ptr<zzz::script::Scene> m_ActiveScene;
-		std::vector<std::shared_ptr<zzz::script::ViewScript>> m_Scripts;
+		std::shared_ptr<Scene> m_ActiveScene;
+		std::vector<std::shared_ptr<ViewScript>> m_Scripts;
 	};
 }

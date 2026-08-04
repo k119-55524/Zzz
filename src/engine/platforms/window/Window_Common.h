@@ -8,7 +8,7 @@
 
 namespace zzz::engine
 {
-	using namespace zzz::common;
+	using namespace zzz::core;
 	/**
 	 * @brief Набор всех возможных колбэков жизненного цикла окна.
 	 * Передается из View в платформенную реализацию окна при создании.

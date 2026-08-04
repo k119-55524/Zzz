@@ -17,7 +17,7 @@
 {NamespaceIndent}	void OnDestroy();
 {NamespaceIndent}	void OnEnable();
 {NamespaceIndent}	void OnDisable();
-{NamespaceIndent}	void OnUpdate(const zzz::engine::Time& time);
+{NamespaceIndent}	void OnUpdate(const zzz::core::Time& time);
 {NamespaceIndent}
 {NamespaceIndent}};
 {NamespaceCloseHpp}

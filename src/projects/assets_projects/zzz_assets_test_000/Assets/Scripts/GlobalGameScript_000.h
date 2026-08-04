@@ -1,7 +1,7 @@
 #pragma once
 #include <GameScript.h>
 
-class GlobalGameScript_000 : public zzz::script::GameScript
+class GlobalGameScript_000 : public zzz::core::GameScript
 {
 public:
 	using GameScript::GameScript;
@@ -12,6 +12,6 @@ public:
 	void OnStart();
 	void OnEnable();
 	void OnDisable();
-	void OnUpdate(const zzz::engine::Time& time);
+	void OnUpdate(const zzz::core::Time& time);
 	void OnDestroy();
 };

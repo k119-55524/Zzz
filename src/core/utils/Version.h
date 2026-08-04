@@ -17,7 +17,7 @@
 #include <core/utils/ThrowWrappers.h>
 #include <core/Serialize/Serializer.h>
 
-namespace zzz::common
+namespace zzz::core
 {
 	class Version final : public ISerializable
 	{

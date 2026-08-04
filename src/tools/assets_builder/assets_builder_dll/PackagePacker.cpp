@@ -36,21 +36,21 @@ namespace zzz::builder
 		fs::path filePath;
 	};
 
-	static std::string ToPlatformString(zzz::common::eTargetPlatform targetPlatform)
+	static std::string ToPlatformString(zzz::core::eTargetPlatform targetPlatform)
 	{
 		switch (targetPlatform)
 		{
-		case zzz::common::eTargetPlatform::Windows: return "Windows";
-		case zzz::common::eTargetPlatform::Linux: return "Linux";
-		case zzz::common::eTargetPlatform::Android: return "Android";
-		case zzz::common::eTargetPlatform::MacOS: return "MacOS";
-		case zzz::common::eTargetPlatform::iOS: return "iOS";
+		case zzz::core::eTargetPlatform::Windows: return "Windows";
+		case zzz::core::eTargetPlatform::Linux: return "Linux";
+		case zzz::core::eTargetPlatform::Android: return "Android";
+		case zzz::core::eTargetPlatform::MacOS: return "MacOS";
+		case zzz::core::eTargetPlatform::iOS: return "iOS";
 		}
 
 		return "Windows";
 	}
 
-	static json ResolveAppViewJson(const json& root, const fs::path& projectDir, zzz::common::eTargetPlatform targetPlatform)
+	static json ResolveAppViewJson(const json& root, const fs::path& projectDir, zzz::core::eTargetPlatform targetPlatform)
 	{
 		const std::string platformName = ToPlatformString(targetPlatform);
 
@@ -86,7 +86,7 @@ namespace zzz::builder
 			: root;
 	}
 
-	static std::vector<std::byte> SerializeAssetToBinary(const PendingAsset& item, zzz::common::eTargetPlatform targetPlatform)
+	static std::vector<std::byte> SerializeAssetToBinary(const PendingAsset& item, zzz::core::eTargetPlatform targetPlatform)
 	{
 		Serializer serializer;
 		std::vector<std::byte> result;
@@ -110,9 +110,9 @@ namespace zzz::builder
 				return result;
 			}
 
-			auto assetType = static_cast<zzz::common::ePackage>(item.type);
+			auto assetType = static_cast<zzz::core::ePackage>(item.type);
 
-			if (assetType == zzz::common::ePackage::ProjectManifest)
+			if (assetType == zzz::core::ePackage::ProjectManifest)
 			{
 				std::vector<Guid> gameScriptGuids;
 				if (root.contains("game_scripts") && root["game_scripts"].is_array())
@@ -162,7 +162,7 @@ namespace zzz::builder
 				if (auto res = serializer.Serialize(result, manifestData); !res)
 					return {};
 			}
-			else if (assetType == zzz::common::ePackage::AppView)
+			else if (assetType == zzz::core::ePackage::AppView)
 			{
 				json appViewRoot = ResolveAppViewJson(root, item.filePath.parent_path(), targetPlatform);
 
@@ -200,7 +200,7 @@ namespace zzz::builder
 				// Сериализация платформенно-зависимых данных
 				switch (targetPlatform)
 				{
-				case zzz::common::eTargetPlatform::Android:
+				case zzz::core::eTargetPlatform::Android:
 				{
 					std::string orientStr = appViewRoot.value("orientation", "LandscapeLeft");
 					eAndroidScreenOrientation orient = eAndroidScreenOrientation::LandscapeLeft;
@@ -215,7 +215,7 @@ namespace zzz::builder
 					if (auto res = serializer.Serialize(result, androidData); !res) return {};
 					break;
 				}
-				case zzz::common::eTargetPlatform::Linux:
+				case zzz::core::eTargetPlatform::Linux:
 				{
 					zU32 width = appViewRoot.value("width", 1280u);
 					zU32 height = appViewRoot.value("height", 720u);
@@ -225,7 +225,7 @@ namespace zzz::builder
 					if (auto res = serializer.Serialize(result, linuxData); !res) return {};
 					break;
 				}
-				case zzz::common::eTargetPlatform::MacOS:
+				case zzz::core::eTargetPlatform::MacOS:
 				{
 					zU32 width = appViewRoot.value("width", 1280u);
 					zU32 height = appViewRoot.value("height", 720u);
@@ -235,7 +235,7 @@ namespace zzz::builder
 					if (auto res = serializer.Serialize(result, macData); !res) return {};
 					break;
 				}
-				case zzz::common::eTargetPlatform::iOS:
+				case zzz::core::eTargetPlatform::iOS:
 				{
 					std::string orientStr = appViewRoot.value("orientation", "LandscapeLeft");
 					eiOSScreenOrientation orient = eiOSScreenOrientation::LandscapeLeft;
@@ -245,7 +245,7 @@ namespace zzz::builder
 					if (auto res = serializer.Serialize(result, iosData); !res) return {};
 					break;
 				}
-				case zzz::common::eTargetPlatform::Windows:
+				case zzz::core::eTargetPlatform::Windows:
 				default:
 				{
 					zU32 width = appViewRoot.value("width", appViewRoot.value("defaultSize", json::object()).value("width", 1280u));
@@ -259,7 +259,7 @@ namespace zzz::builder
 				}
 				}
 			}
-			else if (assetType == zzz::common::ePackage::Scene)
+			else if (assetType == zzz::core::ePackage::Scene)
 			{
 				std::vector<Guid> sceneScriptGuids;
 				if (root.contains("scripts") && root["scripts"].is_array())
@@ -283,7 +283,7 @@ namespace zzz::builder
 				if (auto res = serializer.Serialize(result, sceneData); !res)
 					return {};
 			}
-			else if (assetType == zzz::common::ePackage::View)
+			else if (assetType == zzz::core::ePackage::View)
 			{
 				zU32 width = root.value("width", 800u);
 				zU32 height = root.value("height", 600u);
@@ -312,7 +312,7 @@ namespace zzz::builder
 				if (auto res = serializer.Serialize(result, viewData); !res)
 					return {};
 			}
-			else if (assetType == zzz::common::ePackage::Prefab)
+			else if (assetType == zzz::core::ePackage::Prefab)
 			{
 				zzz::core::PrefabData prefabData;
 				if (auto res = serializer.Serialize(result, prefabData); !res)
@@ -342,9 +342,9 @@ namespace zzz::builder
 		return result;
 	}
 
-	bool PackagePacker::PackProject(const fs::path& sourceDir, const fs::path& destinationDir, zzz::common::eTargetPlatform targetPlatform)
+	bool PackagePacker::PackProject(const fs::path& sourceDir, const fs::path& destinationDir, zzz::core::eTargetPlatform targetPlatform)
 	{
-		fs::path outPath = destinationDir / zzz::common::c_GamePackageFileName;
+		fs::path outPath = destinationDir / zzz::core::c_GamePackageFileName;
 		std::vector<PendingAsset> pendingAssets;
 
 		// 1. Упаковка project.json под служебным GUID манифеста
@@ -354,7 +354,7 @@ namespace zzz::builder
 			pendingAssets.push_back({
 				"ProjectManifest",
 				"00000000-0000-0000-0000-000000000001",
-				static_cast<uint32_t>(zzz::common::ePackage::ProjectManifest),
+				static_cast<uint32_t>(zzz::core::ePackage::ProjectManifest),
 				projJsonPath
 				});
 		}
@@ -372,19 +372,19 @@ namespace zzz::builder
 
 				if (ext == ".zs")
 				{
-					typeVal = static_cast<uint32_t>(zzz::common::ePackage::Scene);
+					typeVal = static_cast<uint32_t>(zzz::core::ePackage::Scene);
 				}
 				else if (ext == ".zv")
 				{
-					typeVal = static_cast<uint32_t>(zzz::common::ePackage::View);
+					typeVal = static_cast<uint32_t>(zzz::core::ePackage::View);
 				}
 				else if (ext == ".zp")
 				{
-					typeVal = static_cast<uint32_t>(zzz::common::ePackage::Prefab);
+					typeVal = static_cast<uint32_t>(zzz::core::ePackage::Prefab);
 				}
 				else if (ext == ".zav")
 				{
-					typeVal = static_cast<uint32_t>(zzz::common::ePackage::AppView);
+					typeVal = static_cast<uint32_t>(zzz::core::ePackage::AppView);
 				}
 				else
 				{
@@ -427,7 +427,7 @@ namespace zzz::builder
 		}
 
 		bool hasAppView = std::any_of(pendingAssets.begin(), pendingAssets.end(), [](const PendingAsset& item) {
-			return item.type == static_cast<uint32_t>(zzz::common::ePackage::AppView);
+			return item.type == static_cast<uint32_t>(zzz::core::ePackage::AppView);
 		});
 
 		if (!hasAppView)
@@ -435,7 +435,7 @@ namespace zzz::builder
 			pendingAssets.push_back({
 				"MainAppView",
 				"00000000-0000-0000-0000-000000000002",
-				static_cast<uint32_t>(zzz::common::ePackage::AppView),
+				static_cast<uint32_t>(zzz::core::ePackage::AppView),
 				projJsonPath
 			});
 		}

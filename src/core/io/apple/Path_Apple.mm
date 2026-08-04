@@ -6,7 +6,7 @@
 
 #include "../Path.h"
 
-std::expected<std::filesystem::path, std::string> zzz::io::Path::GetAppleUserDataDirectory()
+std::expected<std::filesystem::path, std::string> zzz::core::Path::GetAppleUserDataDirectory()
 {
 	@autoreleasepool
 	{

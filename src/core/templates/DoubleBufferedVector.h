@@ -4,7 +4,7 @@
 #include <mutex>
 #include <utility>
 
-namespace zzz::common
+namespace zzz::core
 {
 	/**
 	 * @brief Потокобезопасный вектор с двойной буферизацией (пинг-понг буфер).

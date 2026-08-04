@@ -3,6 +3,8 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
 
     target_include_directories(${TARGET_NAME} PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}/userscripts
+        ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/base_script
     )
 
     target_sources(${TARGET_NAME} PRIVATE
@@ -28,6 +30,17 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/time/Time.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/events/Event.h
         ${CMAKE_CURRENT_SOURCE_DIR}/events/EventBus.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/ScriptRegistry.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/ScriptRegistry.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/base_script/BaseScript.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/base_script/Script.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/base_script/Script.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/base_script/GameScript.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/base_script/GameScript.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/base_script/SceneScript.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/base_script/SceneScript.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/base_script/ViewScript.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/base_script/ViewScript.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eLogMessageType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eWinResize.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/ePackage.h

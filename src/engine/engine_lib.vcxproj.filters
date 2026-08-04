@@ -34,6 +34,9 @@
     <Filter Include="scene">
       <UniqueIdentifier>{e83bde28-12cd-41e7-9d7a-d0901e1cd7eb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{2bf5a28f-1d06-4d92-a91e-27147f1d2b58}</UniqueIdentifier>
+    </Filter>
     <Filter Include="core\userscripts">
       <UniqueIdentifier>{e83bde28-12cd-41e7-9d7a-d0901e1cd7ec}</UniqueIdentifier>
     </Filter>
@@ -90,6 +93,9 @@
     </ClInclude>
     <ClInclude Include="scene\Scene.h">
       <Filter>scene</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\Fwd.h">
+      <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\core\userscripts\ScriptRegistry.h">
       <Filter>core\userscripts</Filter>

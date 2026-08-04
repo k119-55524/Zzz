@@ -1,7 +1,7 @@
-﻿#pragma once
+#pragma once
 
 #include <memory>
-#include "../EngineExport.h"
+#include <core/utils/Export.h>
 
 #include "BaseScript.h"
 #include <core/events/EventBus.h>
@@ -11,12 +11,12 @@ namespace zzz
 	class GameObject;
 }
 
-namespace zzz::script
+namespace zzz::core
 {
 
 #pragma warning(push)
 #pragma warning(disable: 4251)
-	class Z_ENGINE_API Script : public BaseScript
+	class Z_CORE_API Script : public BaseScript
 	{
 	public:
 		Script() = delete;
@@ -44,14 +44,14 @@ namespace zzz::script
 
 	private:
 		friend class zzz::GameObject;
-		void Init(std::shared_ptr<zzz::engine::GameObjectEventBus> bus)
+		void Init(std::shared_ptr<zzz::core::GameObjectEventBus> bus)
 		{
 			m_Bus = bus;
 			OnBindEvents();
 		}
 
 		GameObject* m_Owner;
-		std::shared_ptr<zzz::engine::GameObjectEventBus> m_Bus;
+		std::shared_ptr<zzz::core::GameObjectEventBus> m_Bus;
 	};
 #pragma warning(pop)
 }

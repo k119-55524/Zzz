@@ -2,7 +2,7 @@
 
 #include <core/utils/Types.h>
 
-namespace zzz::common
+namespace zzz::core
 {
 	enum class ePackage : zU32
 	{

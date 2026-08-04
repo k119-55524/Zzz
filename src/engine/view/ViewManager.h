@@ -3,28 +3,16 @@
 #include <list>
 #include <memory>
 #include <functional>
-
 #include <vector>
-
-namespace zzz::script
-{
-	class ViewScript;
-}
-
 #include <expected>
 #include <string>
 
-namespace zzz::core
-{
-	class ViewData;
-}
+#include <core/utils/Fwd.h>
+#include <engine/utils/Fwd.h>
 
 namespace zzz::engine
 {
-	class Platform;
-	class View;
-	class Time;
-	class PackageManager;
+	using namespace zzz::core;
 
 	class ViewManager final
 	{
@@ -36,13 +24,13 @@ namespace zzz::engine
 		~ViewManager();
 
 		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> InitializeFromPackage(const PackageManager& packageManager);
-		[[nodiscard]] std::expected <std::shared_ptr<View>, std::string> CreateView(const zzz::core::ViewData& viewData, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts);
+		[[nodiscard]] std::expected <std::shared_ptr<View>, std::string> CreateView(const ViewData& viewData, const std::vector<std::shared_ptr<ViewScript>>& scripts);
 #if Z_EDITOR
 		[[nodiscard]] std::expected <std::shared_ptr<View>, std::string> CreateView(void* data);
 		void RemoveView(View* view);
 #endif
 
-		void Update(const zzz::engine::Time& time);
+		void Update(const Time& time);
 
 	private:
 		const Platform& m_Platform;

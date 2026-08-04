@@ -14,7 +14,7 @@
 #include "platforms/eMSWinEnums.h"
 #include "platforms/eAndroidEnums.h"
 
-namespace zzz::common
+namespace zzz::core
 {
 	class EnumToString
 	{

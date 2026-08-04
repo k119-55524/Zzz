@@ -7,11 +7,10 @@
 
 #include "UserSettingsManager.h"
 
-using namespace zzz::io;
-using namespace zzz::engine;
+using namespace zzz::core;
 using zzz::core::AppViewUserData;
 
-UserSettingsManager::UserSettingsManager(const Path& path, const PackageManager& packageManager) :
+UserSettingsManager::UserSettingsManager(const Path& path, const zzz::engine::PackageManager& packageManager) :
 	m_Path(path),
 	m_Version(c_ConfigFileMajorVersion, c_ConfigFileMinorVersion, c_ConfigFilePatchVersion),
 	m_IsDirty(true)
@@ -24,7 +23,7 @@ UserSettingsManager::UserSettingsManager(const Path& path, const PackageManager&
 #endif
 }
 
-void UserSettingsManager::Initialize(const PackageManager& packageManager)
+void UserSettingsManager::Initialize(const zzz::engine::PackageManager& packageManager)
 {
 	try
 	{
@@ -72,7 +71,7 @@ void UserSettingsManager::Initialize(const PackageManager& packageManager)
 	DOut("[UserSettingsManager] Конфигурация десериализована: {}.", m_ConfigPath.string());
 }
 
-void UserSettingsManager::SetDefaultUserSettings(const PackageManager& packageManager)
+void UserSettingsManager::SetDefaultUserSettings(const zzz::engine::PackageManager& packageManager)
 {
 	auto appViewData = packageManager.GetAppViewData();
 	if (!appViewData)

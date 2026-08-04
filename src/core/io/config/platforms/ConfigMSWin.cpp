@@ -1,7 +1,7 @@
 
 #include "ConfigMSWin.h"
 
-using namespace zzz::engine;
+using namespace zzz::core;
 
 ConfigMSWin::ConfigMSWin()
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace zzz::common
+namespace zzz::core
 {
 	enum class eiOSScreenOrientation : zU8
 	{

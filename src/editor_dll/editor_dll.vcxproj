@@ -67,7 +67,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalDependencies>Ws2_32.lib;User32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <!-- core_lib/logger_lib/engine_lib помечают cross-DLL API как Z_CORE_API/Z_ENGINE_API
+      <!-- core_lib/logger_lib/engine_lib помечают cross-DLL API как Z_CORE_API
            (dllexport), чтобы scripts.dll (Hot-Reload) мог импортировать его из editor_dll.dll.
            Обычная статическая линковка подтягивает из .lib только те .obj, чьи символы уже на
            что-то ссылаются из editor_dll.cpp/EditorEngine.cpp - символы, используемые только

@@ -1,6 +1,6 @@
 #include "ConfigEditor.h"
 
-using namespace zzz::engine;
+using namespace zzz::core;
 
 ConfigEditor::ConfigEditor()
 {

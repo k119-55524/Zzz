@@ -7,21 +7,15 @@ namespace zzz
 	enum class eInitState : zU8;
 }
 
-namespace zzz::script
+namespace zzz::core
 {
+	class GameObjectEventBus;
 	class GameScript;
-}
-
-namespace zzz::io
-{
 	class Path;
-}
-
-namespace zzz::engine
-{
-	class Platform;
-	class ViewManager;
-	class MainLoopBase;
-	class PackageManager;
 	class ProjectEventBus;
+	class SceneEventBus;
+	class Time;
+	class ViewData;
+	class ViewEventBus;
+	class ViewScript;
 }

@@ -23,6 +23,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         engine.cpp
         header.h
         NativeAppData.h
+        utils/Fwd.h
         pch/pch.h
         pch/pch.cpp
 
@@ -53,16 +54,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
 
         # Scripts & Scenes
         "scene/GameObject.h"
-        "scene/Scene.h" "scene/Scene.cpp"
-        "../core/userscripts/ScriptRegistry.h" "../core/userscripts/ScriptRegistry.cpp"
-        "../core/userscripts/base_script/Script.h"
-        "../core/userscripts/base_script/Script.cpp"
-        "../core/userscripts/base_script/GameScript.h"
-        "../core/userscripts/base_script/GameScript.cpp"
-        "../core/userscripts/base_script/SceneScript.h"
-        "../core/userscripts/base_script/SceneScript.cpp"
-        "../core/userscripts/base_script/ViewScript.h"
-        "../core/userscripts/base_script/ViewScript.cpp")
+        "scene/Scene.h" "scene/Scene.cpp")
 
     if(WIN32)
         if(${IS_EDITOR})
@@ -154,9 +146,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
     set_source_files_properties(pch/pch.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
     if(${IS_EDITOR})
         # EDITORDLL_EXPORTS должен совпадать с тем же define в editor_dll.vcxproj/CMakeLists.txt -
-        # engine_lib_editor статический, но его символы (Script/ScriptRegistry, помеченные
-        # Z_ENGINE_API) линкуются только в editor_dll.dll, иначе Z_ENGINE_API соберёт здесь
-        # dllimport вместо dllexport (см. src/core/userscripts/EngineExport.h).
+        # core_lib_editor содержит core userscripts и экспортирует их через Z_CORE_API.
         target_compile_definitions(${TARGET_NAME} PUBLIC Z_EDITOR=1 EDITORDLL_EXPORTS)
     endif()
 endmacro()

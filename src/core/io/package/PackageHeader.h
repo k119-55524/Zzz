@@ -6,8 +6,7 @@
 #include <core/IO/FileHeader.h>
 #include <core/Serialize/Serializer.h>
 
-using namespace zzz::io;
-using namespace zzz::common;
+using namespace zzz::core;
 
 namespace zzz::core
 {

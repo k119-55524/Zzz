@@ -2,7 +2,7 @@
 #include <core/events/EventBus.h>
 #include "../ScriptRegistry.h"
 
-namespace zzz::script
+namespace zzz::core
 {
 
 	ViewScript::ViewScript() : BaseScript()

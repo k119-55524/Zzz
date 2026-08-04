@@ -5,17 +5,17 @@
 #include "Script.h"
 #include "ScriptRegistry.h"
 
-namespace zzz::script
+namespace zzz::core
 {
 	std::unordered_map<std::string, std::function<std::shared_ptr<Script>(GameObject*)>> ScriptRegistry::s_ScriptFactories;
 	std::unordered_map<std::string, std::function<std::shared_ptr<GameScript>()>> ScriptRegistry::s_GameScriptFactories;
 	std::unordered_map<std::string, std::function<std::shared_ptr<SceneScript>()>> ScriptRegistry::s_SceneScriptFactories;
 	std::unordered_map<std::string, std::function<std::shared_ptr<ViewScript>()>> ScriptRegistry::s_ViewScriptFactories;
 
-	std::unordered_map<zzz::common::Guid, std::function<std::shared_ptr<Script>(GameObject*)>> ScriptRegistry::s_ScriptGuidFactories;
-	std::unordered_map<zzz::common::Guid, std::function<std::shared_ptr<GameScript>()>> ScriptRegistry::s_GameScriptGuidFactories;
-	std::unordered_map<zzz::common::Guid, std::function<std::shared_ptr<SceneScript>()>> ScriptRegistry::s_SceneScriptGuidFactories;
-	std::unordered_map<zzz::common::Guid, std::function<std::shared_ptr<ViewScript>()>> ScriptRegistry::s_ViewScriptGuidFactories;
+	std::unordered_map<zzz::core::Guid, std::function<std::shared_ptr<Script>(GameObject*)>> ScriptRegistry::s_ScriptGuidFactories;
+	std::unordered_map<zzz::core::Guid, std::function<std::shared_ptr<GameScript>()>> ScriptRegistry::s_GameScriptGuidFactories;
+	std::unordered_map<zzz::core::Guid, std::function<std::shared_ptr<SceneScript>()>> ScriptRegistry::s_SceneScriptGuidFactories;
+	std::unordered_map<zzz::core::Guid, std::function<std::shared_ptr<ViewScript>()>> ScriptRegistry::s_ViewScriptGuidFactories;
 
 #if Z_EDITOR
 	std::vector<Script*> ScriptRegistry::s_ActiveInstances;
@@ -60,7 +60,7 @@ namespace zzz::script
 		return nullptr;
 	}
 
-	std::shared_ptr<Script> ScriptRegistry::CreateScript(const zzz::common::Guid& guid, GameObject* owner)
+	std::shared_ptr<Script> ScriptRegistry::CreateScript(const zzz::core::Guid& guid, GameObject* owner)
 	{
 		auto it = s_ScriptGuidFactories.find(guid);
 		if (it != s_ScriptGuidFactories.end())
@@ -69,7 +69,7 @@ namespace zzz::script
 		return nullptr;
 	}
 
-	std::shared_ptr<GameScript> ScriptRegistry::CreateGameScript(const zzz::common::Guid& guid)
+	std::shared_ptr<GameScript> ScriptRegistry::CreateGameScript(const zzz::core::Guid& guid)
 	{
 		auto it = s_GameScriptGuidFactories.find(guid);
 		if (it != s_GameScriptGuidFactories.end())
@@ -78,7 +78,7 @@ namespace zzz::script
 		return nullptr;
 	}
 
-	std::shared_ptr<SceneScript> ScriptRegistry::CreateSceneScript(const zzz::common::Guid& guid)
+	std::shared_ptr<SceneScript> ScriptRegistry::CreateSceneScript(const zzz::core::Guid& guid)
 	{
 		auto it = s_SceneScriptGuidFactories.find(guid);
 		if (it != s_SceneScriptGuidFactories.end())
@@ -87,7 +87,7 @@ namespace zzz::script
 		return nullptr;
 	}
 
-	std::shared_ptr<ViewScript> ScriptRegistry::CreateViewScript(const zzz::common::Guid& guid)
+	std::shared_ptr<ViewScript> ScriptRegistry::CreateViewScript(const zzz::core::Guid& guid)
 	{
 		auto it = s_ViewScriptGuidFactories.find(guid);
 		if (it != s_ViewScriptGuidFactories.end())

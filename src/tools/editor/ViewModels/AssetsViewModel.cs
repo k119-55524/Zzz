@@ -532,14 +532,14 @@ namespace editor.ViewModels
             {
                 if (!string.IsNullOrWhiteSpace(node.Guid) && System.Guid.TryParse(node.Guid, out _))
                 {
-                    sb.AppendLine($"    if (auto g = zzz::common::Guid::Parse(\"{node.Guid}\"))");
-                    sb.AppendLine($"        zzz::script::ScriptRegistry::Register<{node.QualifiedName}>(\"{node.QualifiedName}\", *g);");
+                    sb.AppendLine($"    if (auto g = zzz::core::Guid::Parse(\"{node.Guid}\"))");
+                    sb.AppendLine($"        zzz::core::ScriptRegistry::Register<{node.QualifiedName}>(\"{node.QualifiedName}\", *g);");
                     sb.AppendLine("    else");
-                    sb.AppendLine($"        zzz::script::ScriptRegistry::Register<{node.QualifiedName}>(\"{node.QualifiedName}\");");
+                    sb.AppendLine($"        zzz::core::ScriptRegistry::Register<{node.QualifiedName}>(\"{node.QualifiedName}\");");
                 }
                 else
                 {
-                    sb.AppendLine($"    zzz::script::ScriptRegistry::Register<{node.QualifiedName}>(\"{node.QualifiedName}\");");
+                    sb.AppendLine($"    zzz::core::ScriptRegistry::Register<{node.QualifiedName}>(\"{node.QualifiedName}\");");
                 }
             }
 

@@ -7,8 +7,7 @@
 #include <core/templates/Size2D.h>
 #include <core/Serialize/Serializer.h>
 
-using namespace zzz::io;
-using namespace zzz::common;
+using namespace zzz::core;
 
 namespace zzz::engine
 {

@@ -1,7 +1,7 @@
 #pragma once
 #include <ViewScript.h>
 
-class SampleViewScript : public zzz::script::ViewScript {
+class SampleViewScript : public zzz::core::ViewScript {
 public:
 	using ViewScript::ViewScript;
 	const char* GetScriptTypeName() const override { return "SampleViewScript"; }
@@ -14,6 +14,6 @@ private:
 	void OnStart();
 	void OnEnable();
 	void OnDisable();
-	void OnUpdate(const zzz::engine::Time& time);
+	void OnUpdate(const zzz::core::Time& time);
 	void OnDestroy();
 };

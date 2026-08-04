@@ -14,9 +14,7 @@
 
 #include <core/io/Path.h>
 
-using namespace zzz::io;
 using namespace zzz::core;
-using namespace zzz::common;
 
 namespace zzz::engine
 {

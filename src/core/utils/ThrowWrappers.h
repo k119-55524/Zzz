@@ -4,7 +4,7 @@
 #include <source_location>
 #include "Export.h"
 
-namespace zzz::common
+namespace zzz::core
 {
 	[[noreturn]] Z_CORE_API void throw_runtime_error(
 		const std::string& msg = "Throw runtime error",

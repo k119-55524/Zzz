@@ -12,8 +12,6 @@
 
 using namespace zzz::core;
 using namespace zzz::engine;
-using namespace zzz::script;
-using namespace zzz::common;
 
 namespace
 {
@@ -66,7 +64,7 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::InitializeFromPac
 	return CreateView(viewData, scripts);
 }
 
-std::expected <std::shared_ptr<View>, std::string> ViewManager::CreateView(const zzz::core::ViewData& viewData, const std::vector<std::shared_ptr<zzz::script::ViewScript>>& scripts)
+std::expected <std::shared_ptr<View>, std::string> ViewManager::CreateView(const ViewData& viewData, const std::vector<std::shared_ptr<ViewScript>>& scripts)
 {
 #if Z_MOBILE
 	if (m_Views.size() >= 1)
@@ -124,7 +122,7 @@ void ViewManager::RemoveView(View* view)
 }
 #endif // Z_EDITOR
 
-void ViewManager::Update(const zzz::engine::Time& time)
+void ViewManager::Update(const Time& time)
 {
 	for (const auto& view : m_Views)
 	{

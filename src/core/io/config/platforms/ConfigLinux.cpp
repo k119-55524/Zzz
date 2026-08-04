@@ -1,7 +1,7 @@
 
 #include "ConfigLinux.h"
 
-using namespace zzz::engine;
+using namespace zzz::core;
 
 ConfigLinux::ConfigLinux()
 {

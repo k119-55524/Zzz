@@ -13,7 +13,10 @@ namespace zzz::editor
 namespace zzz::engine
 {
 	class Engine;
+}
 
+namespace zzz::core
+{
 	class Time
 	{
 	public:
@@ -35,7 +38,7 @@ namespace zzz::engine
 		void SetTimeScale(float scale) noexcept { m_TimeScale = (std::max)(scale, 0.0f); }
 
 	private:
-		friend class Engine;
+		friend class zzz::engine::Engine;
 #if Z_EDITOR
 		friend class zzz::editor::EditorEngine;
 #endif

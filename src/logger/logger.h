@@ -19,7 +19,7 @@
 
 #include "log_entry.h"
 
-using namespace zzz::common;
+using namespace zzz::core;
 
 namespace zzz::logger
 {

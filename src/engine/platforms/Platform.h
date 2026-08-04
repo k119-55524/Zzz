@@ -2,7 +2,7 @@
 
 #include "../NativeAppData.h"
 
-using namespace zzz::io;
+using namespace zzz::core;
 
 namespace zzz::engine
 {

@@ -23,7 +23,7 @@ zzz::logger::LogCallback g_EditorLogCallback = nullptr;
 #pragma comment(linker, "/EXPORT:?throw_runtime_error@common@zzz@@YAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBUsource_location@4@@Z")
 extern "C" __declspec(dllexport) void ForceExport_ThrowRuntimeError()
 {
-	auto dummyPtr = reinterpret_cast<void(*)(const std::string&, const std::source_location&)>(&zzz::common::throw_runtime_error);
+	auto dummyPtr = reinterpret_cast<void(*)(const std::string&, const std::source_location&)>(&zzz::core::throw_runtime_error);
 	volatile void* force = reinterpret_cast<void*>(dummyPtr);
 	(void)force;
 }

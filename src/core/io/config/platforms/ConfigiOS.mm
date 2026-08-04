@@ -2,7 +2,7 @@
 
 #include "ConfigiOS.h"
 
-using namespace zzz::engine;
+using namespace zzz::core;
 
 ConfigiOS::ConfigiOS()
 {

@@ -1,7 +1,7 @@
-﻿#pragma once
+#pragma once
 
 #include <memory>
-#include "../EngineExport.h"
+#include <core/utils/Export.h>
 #include "BaseScript.h"
 #include <core/events/EventBus.h>
 
@@ -10,12 +10,12 @@ namespace zzz::engine
 	class Scene;
 }
 
-namespace zzz::script
+namespace zzz::core
 {
 
 #pragma warning(push)
 #pragma warning(disable: 4251)
-	class Z_ENGINE_API SceneScript : public BaseScript
+	class Z_CORE_API SceneScript : public BaseScript
 	{
 	public:
 		SceneScript();
@@ -40,13 +40,13 @@ namespace zzz::script
 
 	private:
 		friend class zzz::engine::Scene;
-		void Init(std::shared_ptr<zzz::engine::SceneEventBus> bus)
+		void Init(std::shared_ptr<zzz::core::SceneEventBus> bus)
 		{
 			m_Bus = bus;
 			OnBindEvents();
 		}
 
-		std::shared_ptr<zzz::engine::SceneEventBus> m_Bus;
+		std::shared_ptr<zzz::core::SceneEventBus> m_Bus;
 	};
 #pragma warning(pop)
 

@@ -8,9 +8,9 @@
 #include <cstddef>
 #include <core/Serialize/Serializer.h>
 
-using namespace zzz::common;
+using namespace zzz::core;
 
-namespace zzz::io
+namespace zzz::core
 {
 	template<std::size_t N>
 	class FileHeader final : public ISerializable

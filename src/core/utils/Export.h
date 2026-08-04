@@ -6,7 +6,7 @@
 // в scripts.dll и вызывают функции core_lib (throw_runtime_error). В статической сборке игры
 // (game_win/macos/linux/ios/android) Z_EDITOR не определён, core_lib линкуется статически -
 // макрос должен быть пустым. См. также аналогичный макрос
-// src/core/userscripts/EngineExport.h.
+// core/utils/Export.h.
 #if defined(_WIN32) && defined(Z_EDITOR)
 	#if defined(EDITORDLL_EXPORTS) || defined(editor_dll_EXPORTS)
 		#define Z_CORE_API __declspec(dllexport)

@@ -9,8 +9,7 @@
 
 #include "platforms/AppViewPlatformConfig.h"
 
-using namespace zzz::io;
-using namespace zzz::common;
+using namespace zzz::core;
 
 namespace zzz::core
 {

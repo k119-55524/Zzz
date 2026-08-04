@@ -51,16 +51,16 @@ namespace editor.Services.Project.Infrastructure.UndoRedo
 			string cppContent = _storage.ReadAllText(cppTemplatePath);
 
 			string includePath = "Script.h";
-			string baseClass = "zzz::script::Script";
+			string baseClass = "zzz::core::Script";
 			if (_scriptType == "Game")
 			{
 				includePath = "GameScript.h";
-				baseClass = "zzz::script::GameScript";
+				baseClass = "zzz::core::GameScript";
 			}
 			else if (_scriptType == "Scene")
 			{
 				includePath = "SceneScript.h";
-				baseClass = "zzz::script::SceneScript";
+				baseClass = "zzz::core::SceneScript";
 			}
 
 			string dateStr = DateTime.Now.ToString("yyyy-MM-dd");

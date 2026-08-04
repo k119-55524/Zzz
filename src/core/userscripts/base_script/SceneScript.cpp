@@ -1,7 +1,7 @@
 #include "SceneScript.h"
 #include "../ScriptRegistry.h"
 
-namespace zzz::script
+namespace zzz::core
 {
 	SceneScript::SceneScript()
 	{

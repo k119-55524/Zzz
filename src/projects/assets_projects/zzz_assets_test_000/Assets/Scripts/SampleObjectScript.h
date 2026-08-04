@@ -1,7 +1,7 @@
 #pragma once
 #include <Script.h>
 
-class SampleObjectScript : public zzz::script::Script {
+class SampleObjectScript : public zzz::core::Script {
 public:
     using Script::Script;
     const char* GetScriptTypeName() const override { return "SampleObjectScript"; }
@@ -12,6 +12,6 @@ private:
     void OnStart();
     void OnEnable();
     void OnDisable();
-    void OnUpdate(const zzz::engine::Time& time);
+    void OnUpdate(const zzz::core::Time& time);
     void OnDestroy();
 };

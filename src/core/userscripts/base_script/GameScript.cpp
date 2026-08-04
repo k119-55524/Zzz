@@ -1,7 +1,7 @@
 #include "GameScript.h"
 #include "../ScriptRegistry.h"
 
-namespace zzz::script
+namespace zzz::core
 {
 	GameScript::GameScript()
 	{
