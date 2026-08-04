@@ -27,7 +27,7 @@ namespace zzz::common
 #pragma endregion
 
 #pragma region Game Package file constants
-	constexpr std::string_view c_GamePackageFileName = "assets/package.dat";
+	constexpr std::string_view c_GamePackageFileName = "package.dat";
 	constexpr FileHeader<3> c_GamePackageHeader
 	{
 		std::array<std::byte, 3>{

@@ -16,6 +16,12 @@
 #include <core/IO/package/PrefabData.h>
 #include <core/Constants.h>
 
+#include <core/IO/package/platforms/AppViewDataMSWin.h>
+#include <core/IO/package/platforms/AppViewDataAndroid.h>
+#include <core/IO/package/platforms/AppViewDataLinux.h>
+#include <core/IO/package/platforms/AppViewDataMacOS.h>
+#include <core/IO/package/platforms/AppViewDataiOS.h>
+
 namespace zzz::builder
 {
 	namespace fs = std::filesystem;
@@ -161,11 +167,6 @@ namespace zzz::builder
 				json appViewRoot = ResolveAppViewJson(root, item.filePath.parent_path(), targetPlatform);
 
 				std::string title = appViewRoot.value("title", "Game Window");
-				zU32 width = appViewRoot.value("width", appViewRoot.value("defaultSize", json::object()).value("width", 1280u));
-				zU32 height = appViewRoot.value("height", appViewRoot.value("defaultSize", json::object()).value("height", 720u));
-				bool isFullscreen = appViewRoot.value("fullscreen", false);
-				bool resizable = appViewRoot.value("resizable", true);
-
 				Guid sceneGuid{};
 				if (appViewRoot.contains("scene") && appViewRoot["scene"].is_string())
 				{
@@ -186,10 +187,77 @@ namespace zzz::builder
 					}
 				}
 
-				AppViewPlatformData platformData(Size2D<zU32>{ width, height }, isFullscreen ? eMSWinWindowMode::BorderlessFullscreen : eMSWinWindowMode::Windowed, resizable);
-				zzz::core::AppViewData appViewData(title, sceneGuid, uiScriptGuids, platformData);
-				if (auto res = serializer.Serialize(result, appViewData); !res)
-					return {};
+				// Сначала сериализуем общие поля AppViewData (Title, SceneGuid, ScriptGuids)
+				if (auto res = serializer.Serialize(result, title); !res) return {};
+				if (auto res = serializer.Serialize(result, sceneGuid); !res) return {};
+				zU32 scriptsCount = static_cast<zU32>(uiScriptGuids.size());
+				if (auto res = serializer.Serialize(result, scriptsCount); !res) return {};
+				for (const auto& guid : uiScriptGuids)
+				{
+					if (auto res = serializer.Serialize(result, guid); !res) return {};
+				}
+
+				// Сериализация платформенно-зависимых данных
+				switch (targetPlatform)
+				{
+				case zzz::common::eTargetPlatform::Android:
+				{
+					std::string orientStr = appViewRoot.value("orientation", "LandscapeLeft");
+					eAndroidScreenOrientation orient = eAndroidScreenOrientation::LandscapeLeft;
+					if (orientStr == "Portrait") orient = eAndroidScreenOrientation::Portrait;
+					else if (orientStr == "LandscapeRight") orient = eAndroidScreenOrientation::LandscapeRight;
+
+					zU32 fps = appViewRoot.value("targetFPS", 60u);
+					eAndroidCutoutMode cutout = eAndroidCutoutMode::ShortEdges;
+					bool keepOn = appViewRoot.value("keepScreenOn", true);
+
+					AppViewDataAndroid androidData(orient, fps, cutout, keepOn);
+					if (auto res = serializer.Serialize(result, androidData); !res) return {};
+					break;
+				}
+				case zzz::common::eTargetPlatform::Linux:
+				{
+					zU32 width = appViewRoot.value("width", 1280u);
+					zU32 height = appViewRoot.value("height", 720u);
+					bool resizable = appViewRoot.value("resizable", true);
+
+					AppViewDataLinux linuxData(Size2D<zU32>{ width, height }, eLinuxWindowMode::Windowed, resizable);
+					if (auto res = serializer.Serialize(result, linuxData); !res) return {};
+					break;
+				}
+				case zzz::common::eTargetPlatform::MacOS:
+				{
+					zU32 width = appViewRoot.value("width", 1280u);
+					zU32 height = appViewRoot.value("height", 720u);
+					bool resizable = appViewRoot.value("resizable", true);
+
+					AppViewDataMacOS macData(Size2D<zU32>{ width, height }, eMacOSWindowMode::Windowed, resizable);
+					if (auto res = serializer.Serialize(result, macData); !res) return {};
+					break;
+				}
+				case zzz::common::eTargetPlatform::iOS:
+				{
+					std::string orientStr = appViewRoot.value("orientation", "LandscapeLeft");
+					eiOSScreenOrientation orient = eiOSScreenOrientation::LandscapeLeft;
+					if (orientStr == "Portrait") orient = eiOSScreenOrientation::Portrait;
+
+					AppViewDataiOS iosData(orient);
+					if (auto res = serializer.Serialize(result, iosData); !res) return {};
+					break;
+				}
+				case zzz::common::eTargetPlatform::Windows:
+				default:
+				{
+					zU32 width = appViewRoot.value("width", appViewRoot.value("defaultSize", json::object()).value("width", 1280u));
+					zU32 height = appViewRoot.value("height", appViewRoot.value("defaultSize", json::object()).value("height", 720u));
+					bool isFullscreen = appViewRoot.value("fullscreen", false);
+					bool resizable = appViewRoot.value("resizable", true);
+
+					AppViewDataMSWin winData(Size2D<zU32>{ width, height }, isFullscreen ? eMSWinWindowMode::BorderlessFullscreen : eMSWinWindowMode::Windowed, resizable);
+					if (auto res = serializer.Serialize(result, winData); !res) return {};
+					break;
+				}
+				}
 			}
 			else if (assetType == zzz::common::ePackage::Scene)
 			{

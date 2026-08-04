@@ -386,14 +386,12 @@ public class MainWindowViewModel : ViewModelBase
                     }
                 }
 
-                // 2. Для каждого таргета собираем индивидуальный game.pkg в его подпапке <DestinationPath>/<TargetName>_<TargetPlatform>/assets/
+                // 2. Для каждого таргета собираем индивидуальный package.dat в его подпапке <DestinationPath>/<TargetName>_<TargetPlatform>/
                 if (success)
                 {
                     foreach (var target in enabledTargets)
                     {
                         Directory.CreateDirectory(target.BuildDirectory);
-                        string targetAssetsDir = Path.Combine(target.BuildDirectory, "assets");
-                        Directory.CreateDirectory(targetAssetsDir);
 
                         AppendLog($"Сериализация индивидуального бинарного пакета для '{target.Name}' ({target.TargetPlatform})...");
                         bool packSuccess = PackagePacker.PackProject(sourcePath, target.BuildDirectory, target.TargetPlatform, AppendLog);
