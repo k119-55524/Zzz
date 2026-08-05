@@ -1,15 +1,6 @@
 #pragma once
 
-#include <map>
-#include <string>
-#include <optional>
-#include <expected>
-#include <filesystem>
-#include <string_view>
-#include <unordered_map>
-#include <engine/EngineIncludes.h>
-#include <core/IO/package/AppViewData.h>
-#include <core/IO/package/PackageEntry.h>
+#include "engine/EngineIncludes.h"
 
 using namespace zzz::core;
 

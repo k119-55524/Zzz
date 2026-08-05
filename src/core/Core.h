@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "core/CoreIncludes.h"
 
@@ -45,7 +45,6 @@
 #include "core/io/FileHeader.h"
 #include "core/io/Path.h"
 #include "core/io/config/PlatformConfig.h"
-#include "core/io/config/UserSettingsManager.h"
 #include "core/io/config/platforms/ConfigAndroid.h"
 #include "core/io/config/platforms/ConfigEditor.h"
 #include "core/io/config/platforms/ConfigLinux.h"

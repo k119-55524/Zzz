@@ -59,8 +59,6 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileHeader.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/Path.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/Path.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/UserSettingsManager.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/UserSettingsManager.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/PlatformConfig.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigMSWin.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigMSWin.cpp
@@ -104,6 +102,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
 
     target_compile_features(${TARGET_NAME} PUBLIC cxx_std_23)
     target_compile_definitions(${TARGET_NAME} PRIVATE Z_TARGET_NAME="${TARGET_NAME}")
+    set_source_files_properties(pch.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
     if(${IS_EDITOR})
         target_compile_definitions(${TARGET_NAME} PUBLIC Z_EDITOR=1 EDITORDLL_EXPORTS)

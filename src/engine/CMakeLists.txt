@@ -26,8 +26,9 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         pch/Pch.h
         pch/Pch.cpp
 
-        # Core
-        "platforms/package/PackageManager.h" "platforms/package/PackageManager.cpp"
+        # Package & Settings
+        "package/PackageManager.h" "package/PackageManager.cpp"
+        "package/UserSettingsManager.h" "package/UserSettingsManager.cpp"
 
         # Inputs
         "platforms/input/Input.h" "platforms/input/InputBase.h"

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 // C++ Standard Library Includes
 #include <cstdint>
@@ -8,6 +8,7 @@
 #include <string_view>
 #include <vector>
 #include <array>
+#include <list>
 #include <map>
 #include <unordered_map>
 #include <set>

@@ -1,9 +1,6 @@
 #pragma once
 
-#include <string>
-#include <vector>
-#include <memory>
-#include <engine/EngineIncludes.h>
+#include "engine/EngineIncludes.h"
 
 namespace zzz::core
 {

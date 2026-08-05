@@ -1,7 +1,8 @@
 #include "Engine.h"
 #include "view/ViewManager.h"
 #include "platforms/mainloop/MainLoop.h"
-#include "platforms/package/PackageManager.h"
+#include "package/PackageManager.h"
+#include "package/UserSettingsManager.h"
 
 using namespace zzz;
 using namespace zzz::core;

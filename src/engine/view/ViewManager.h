@@ -1,14 +1,7 @@
 #pragma once
 
-#include <list>
-#include <memory>
-#include <functional>
-#include <vector>
-#include <expected>
-#include <string>
-
-#include <engine/EngineIncludes.h>
-#include <engine/utils/Fwd.h>
+#include "engine/EngineIncludes.h"
+#include "engine/utils/Fwd.h"
 
 namespace zzz::engine
 {

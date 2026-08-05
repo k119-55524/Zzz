@@ -1,7 +1,7 @@
 #include "View.h"
 #include "ViewManager.h"
 #include "../platforms/Platform.h"
-#include "../platforms/package/PackageManager.h"
+#include "../package/PackageManager.h"
 
 using namespace zzz::core;
 using namespace zzz::engine;

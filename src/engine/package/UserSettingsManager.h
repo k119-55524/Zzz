@@ -1,24 +1,16 @@
-﻿#pragma once
+#pragma once
 
-#include "core/io/Path.h"
-#include "core/utils/Version.h"
-#include "core/Serialize/Serializer.h"
-#include "core/IO/package/AppViewUserData.h"
-
-#include "PlatformConfig.h"
+#include "engine/EngineIncludes.h"
 
 namespace zzz::engine
 {
 	class PackageManager;
-}
 
-namespace zzz::core
-{
 	class UserSettingsManager final : public ISerializable
 	{
 	public:
 		UserSettingsManager() = delete;
-		UserSettingsManager(const Path& path, const zzz::engine::PackageManager& packageManager);
+		UserSettingsManager(const Path& path, const PackageManager& packageManager);
 
 		inline const AppViewUserData& GetAppViewUserData() const noexcept { return m_AppViewUserData; }
 		inline const PlatformConfig& GetPlatformConfig() const noexcept { return m_PlatformConfig; }
@@ -26,9 +18,9 @@ namespace zzz::core
 		[[nodiscard]] std::expected<void, std::string> SaveConfig();
 
 	private:
-		void Initialize(const zzz::engine::PackageManager& packageManager);
+		void Initialize(const PackageManager& packageManager);
 		void LogUserData() const;
-		void SetDefaultUserSettings(const zzz::engine::PackageManager& packageManager);
+		void SetDefaultUserSettings(const PackageManager& packageManager);
 		std::expected<std::filesystem::path, std::string> GetSettingsDirectory();
 		std::expected<void, std::string> LoadConfig(std::filesystem::path path);
 
