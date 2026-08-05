@@ -128,11 +128,6 @@
       <ClCompile Include="view\View.cpp" />
       <ClCompile Include="view\ViewManager.cpp" />
       <ClCompile Include="scene\Scene.cpp" />
-      <ClCompile Include="..\core\userscripts\ScriptRegistry.cpp" />
-      <ClCompile Include="..\core\userscripts\base_script\Script.cpp" />
-      <ClCompile Include="..\core\userscripts\base_script\GameScript.cpp" />
-      <ClCompile Include="..\core\userscripts\base_script\SceneScript.cpp" />
-      <ClCompile Include="..\core\userscripts\base_script\ViewScript.cpp" />
       </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\logger\logger_lib.vcxproj">

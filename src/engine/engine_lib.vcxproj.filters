@@ -97,21 +97,6 @@
     <ClInclude Include="utils\Fwd.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\core\userscripts\ScriptRegistry.h">
-      <Filter>core\userscripts</Filter>
-    </ClInclude>
-    <ClInclude Include="..\core\userscripts\base_script\Script.h">
-      <Filter>core\userscripts\base_script</Filter>
-    </ClInclude>
-    <ClInclude Include="..\core\userscripts\base_script\GameScript.h">
-      <Filter>core\userscripts\base_script</Filter>
-    </ClInclude>
-    <ClInclude Include="..\core\userscripts\base_script\SceneScript.h">
-      <Filter>core\userscripts\base_script</Filter>
-    </ClInclude>
-    <ClInclude Include="..\core\userscripts\base_script\ViewScript.h">
-      <Filter>core\userscripts\base_script</Filter>
-    </ClInclude>
     </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine.cpp" />
@@ -160,20 +145,5 @@
     <ClCompile Include="scene\Scene.cpp">
       <Filter>scene</Filter>
     </ClCompile>
-    <ClCompile Include="..\core\userscripts\ScriptRegistry.cpp">
-      <Filter>core\userscripts</Filter>
-    </ClCompile>
-    <ClCompile Include="..\core\userscripts\base_script\Script.cpp">
-      <Filter>core\userscripts\base_script</Filter>
-    </ClCompile>
-    <ClCompile Include="..\core\userscripts\base_script\GameScript.cpp">
-      <Filter>core\userscripts\base_script</Filter>
-    </ClCompile>
-    <ClCompile Include="..\core\userscripts\base_script\SceneScript.cpp">
-      <Filter>core\userscripts\base_script</Filter>
-    </ClCompile>
-    <ClCompile Include="..\core\userscripts\base_script\ViewScript.cpp">
-      <Filter>core\userscripts\base_script</Filter>
-    </ClCompile>
-    </ItemGroup>
+      </ItemGroup>
 </Project>
