@@ -4,7 +4,7 @@
 #endif
 #include <memory>
 #include <core/Core.h>
-#include <engine/engine.h>
+#include <engine/Engine.h>
 #include "../engine_wrapper/EditorEngine.h"
 
 #include "editor_dll.h"

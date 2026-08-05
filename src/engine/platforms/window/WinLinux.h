@@ -1,7 +1,7 @@
-﻿#pragma once
+#pragma once
 
 
-#include "Window_Common.h"
+#include "WindowCommon.h"
 
 struct wl_surface;
 struct wl_buffer;

@@ -6,7 +6,7 @@
 #include <filesystem>
 #include <memory>
 
-#include <engine/NativeAppData.h>
+#include <core/utils/NativeAppData.h>
 
 namespace zzz::core
 {
@@ -14,7 +14,7 @@ namespace zzz::core
 	{
 	public:
 		Path() = delete;
-		Path(std::string_view appName, std::shared_ptr<zzz::engine::NativeAppData> nativeData);
+		Path(std::string_view appName, std::shared_ptr<NativeAppData> nativeData);
 
 		inline std::string_view GetAppName() const noexcept { return m_AppName; }
 
@@ -24,7 +24,7 @@ namespace zzz::core
 
 	private:
 		std::string m_AppName;
-		std::shared_ptr<zzz::engine::NativeAppData> m_NativeData;
+		std::shared_ptr<NativeAppData> m_NativeData;
 		std::filesystem::path m_UserDataDirectory;
 
 		[[nodiscard]] std::expected<std::filesystem::path, std::string> ResolveUserDataDirectory(std::string_view appName);

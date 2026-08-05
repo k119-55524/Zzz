@@ -1,7 +1,6 @@
-#include <engine/header.h>
-
+#include <engine/EngineIncludes.h>
+#include <engine/Engine.h>
 #include "Platform.h"
-#include "../engine.h"
 #import <UIKit/UIKit.h>
 
 using namespace zzz::engine;

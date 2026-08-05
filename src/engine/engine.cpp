@@ -1,7 +1,6 @@
-
-#include "engine.h"
+#include "Engine.h"
 #include "view/ViewManager.h"
-#include "platforms/main_loop/MainLoop.h"
+#include "platforms/mainloop/MainLoop.h"
 #include "platforms/package/PackageManager.h"
 
 using namespace zzz;

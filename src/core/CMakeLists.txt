@@ -13,6 +13,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/CoreIncludes.h
         ${CMAKE_CURRENT_SOURCE_DIR}/core.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Types.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/NativeAppData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Export.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Constants.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Defines.h

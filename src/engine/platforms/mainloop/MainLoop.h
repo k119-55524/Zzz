@@ -1,23 +1,23 @@
 #pragma once
-#include "MainLoop_Common.h"
+#include "MainLoopCommon.h"
 
 #if Z_EDITOR
-#include "MainLoop_Editor.h"
+#include "MainLoopEditor.h"
 namespace zzz::engine { using MainLoop = MainLoop_Editor; } // Пустая заглушка
 #elif Z_WINDOWS
-#include "MainLoop_MSWin.h"
+#include "MainLoopMSWin.h"
 namespace zzz::engine { using MainLoop = MainLoop_MSWin; }
 #elif Z_LINUX
-#include "MainLoop_Linux.h"
+#include "MainLoopLinux.h"
 namespace zzz::engine { using MainLoop = MainLoop_Linux; }
 #elif Z_ANDROID
-#include "MainLoop_Android.h"
+#include "MainLoopAndroid.h"
 namespace zzz::engine { using MainLoop = MainLoop_Android; }
 #elif Z_MACOS
-#include "MainLoop_MacOS.h"
+#include "MainLoopMacOS.h"
 namespace zzz::engine { using MainLoop = MainLoop_MacOS; }
 #elif Z_IOS
-#include "MainLoop_iOS.h"
+#include "MainLoopiOS.h"
 namespace zzz::engine { using MainLoop = MainLoop_iOS; }
 #else
 #error ">>>>> MainLoop: Unsupported platform."

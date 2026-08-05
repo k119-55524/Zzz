@@ -18,7 +18,7 @@
 
 namespace zzz::core
 {
-	Path::Path(std::string_view appName, std::shared_ptr<zzz::engine::NativeAppData> nativeData) :
+	Path::Path(std::string_view appName, std::shared_ptr<NativeAppData> nativeData) :
 		m_AppName{appName},
 		m_NativeData{ nativeData }
 	{	

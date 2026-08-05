@@ -3,7 +3,7 @@
 #if Z_ANDROID
 struct android_app;
 #elif Z_LINUX
-#include <stdint.h>
+#include <cstdint>
 struct wl_display;
 struct wl_registry;
 struct wl_compositor;
@@ -15,7 +15,7 @@ struct HWND__;
 typedef HWND__* HWND;
 #endif
 
-namespace zzz::engine
+namespace zzz::core
 {
 #if Z_ANDROID
 	using NativeAppData = android_app;

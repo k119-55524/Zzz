@@ -60,7 +60,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory)\..\;$(MSBuildProjectDirectory)\..\engine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory)\..\;$(MSBuildProjectDirectory)\..\logger;$(MSBuildProjectDirectory)\..\engine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -86,7 +86,7 @@
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;EDITORDLL_EXPORTS;WIN32;Z_EDITOR=1;Z_ADD_LOGGER=1;Z_IDE_OUT_LOGS=1;Z_TARGET_NAME=&quot;$(ProjectName)&quot;;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
-      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory)\..\;$(MSBuildProjectDirectory)\..\engine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory)\..\;$(MSBuildProjectDirectory)\..\logger;$(MSBuildProjectDirectory)\..\engine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

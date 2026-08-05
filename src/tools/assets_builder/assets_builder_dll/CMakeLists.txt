@@ -1,13 +1,3 @@
-set(JSON_HPP "${CMAKE_CURRENT_BINARY_DIR}/json.hpp")
-if(NOT EXISTS "${JSON_HPP}")
-    message(STATUS "Downloading nlohmann/json 3.11.3 for assets_builder_dll...")
-    file(DOWNLOAD
-        "https://github.com/nlohmann/json/releases/download/v3.11.3/json.hpp"
-        "${JSON_HPP}"
-        STATUS download_status
-    )
-endif()
-
 add_library(assets_builder_dll SHARED
     BuilderExport.h
     BuilderApi.h
@@ -18,7 +8,6 @@ add_library(assets_builder_dll SHARED
 
 target_include_directories(assets_builder_dll PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}
     "${CMAKE_SOURCE_DIR}/src"
     "${CMAKE_SOURCE_DIR}/src/engine"
 )

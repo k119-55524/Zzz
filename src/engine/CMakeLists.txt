@@ -2,7 +2,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
     add_library(${TARGET_NAME})
 
     target_precompile_headers(${TARGET_NAME} PRIVATE
-        pch/pch.h
+        pch/Pch.h
     )
 
     target_include_directories(${TARGET_NAME}
@@ -19,13 +19,12 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
 
     target_sources(${TARGET_NAME} PRIVATE
         # Public
-        engine.h
-        engine.cpp
-        header.h
-        NativeAppData.h
+        Engine.h
+        Engine.cpp
+        EngineIncludes.h
         utils/Fwd.h
-        pch/pch.h
-        pch/pch.cpp
+        pch/Pch.h
+        pch/Pch.cpp
 
         # Core
         "platforms/package/PackageManager.h" "platforms/package/PackageManager.cpp"
@@ -35,14 +34,14 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
 
         # Platforms
         "platforms/Platform.h"
-        "platforms/Platform_Common.cpp"
+        "platforms/PlatformCommon.cpp"
 
         # Main Loop
-        "platforms/main_loop/MainLoop.h" "platforms/main_loop/MainLoop_Common.h" "platforms/main_loop/MainLoop_Common.cpp"
-        "platforms/main_loop/MainLoop_Editor.h"
+        "platforms/mainloop/MainLoop.h" "platforms/mainloop/MainLoopCommon.h" "platforms/mainloop/MainLoopCommon.cpp"
+        "platforms/mainloop/MainLoopEditor.h"
 
         # Native View / Window
-        "platforms/window/Window.h" "platforms/window/Window_Common.h" "platforms/window/Window_Common.cpp"
+        "platforms/window/Window.h" "platforms/window/WindowCommon.h" "platforms/window/WindowCommon.cpp"
         "view/View.h" "view/View.cpp"
         "view/ViewManager.h" "view/ViewManager.cpp"
         "../core/utils/ScreenResolution.h"
@@ -59,15 +58,15 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
     if(WIN32)
         if(${IS_EDITOR})
             target_sources(${TARGET_NAME} PRIVATE 
-                "platforms/Platform_Editor.cpp"
+                "platforms/PlatformEditor.cpp"
                 "platforms/input/InputEditor.h" "platforms/input/InputEditor.cpp"
                 "platforms/window/WinMSWindowEditor.h" "platforms/window/WinMSWindowEditor.cpp"
             )
         else()
             target_sources(${TARGET_NAME} PRIVATE 
-                "platforms/Platform_Windows.cpp"
+                "platforms/PlatformWindows.cpp"
                 "platforms/input/InputMSWindows.h" "platforms/input/InputMSWindows.cpp"
-                "platforms/main_loop/MainLoop_MSWin.h" "platforms/main_loop/MainLoop_MSWin.cpp"
+                "platforms/mainloop/MainLoopMSWin.h" "platforms/mainloop/MainLoopMSWin.cpp"
                 "platforms/window/WinMSWindows.h" "platforms/window/WinMSWindows.cpp"
             )
         endif()
@@ -75,18 +74,18 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
 
     if(UNIX AND NOT APPLE AND NOT ANDROID)
         target_sources(${TARGET_NAME} PRIVATE 
-            "platforms/Platform_Linux.cpp"
+            "platforms/PlatformLinux.cpp"
             "platforms/input/InputLinux.h" "platforms/input/InputLinux.cpp"
-            "platforms/main_loop/MainLoop_Linux.h" "platforms/main_loop/MainLoop_Linux.cpp"
+            "platforms/mainloop/MainLoopLinux.h" "platforms/mainloop/MainLoopLinux.cpp"
             "platforms/window/WinLinux.h" "platforms/window/WinLinux.cpp"
         )
     endif()
 
     if(ANDROID)
         target_sources(${TARGET_NAME} PRIVATE 
-            "platforms/Platform_Android.cpp"
+            "platforms/PlatformAndroid.cpp"
             "platforms/input/InputAndroid.h" "platforms/input/InputAndroid.cpp"
-            "platforms/main_loop/MainLoop_Android.h" "platforms/main_loop/MainLoop_Android.cpp"
+            "platforms/mainloop/MainLoopAndroid.h" "platforms/mainloop/MainLoopAndroid.cpp"
             "platforms/window/WinAndroid.h" "platforms/window/WinAndroid.cpp"
         )
     endif()
@@ -95,15 +94,15 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         if(IOS)
             target_sources(${TARGET_NAME} PRIVATE
                 "platforms/input/InputiOS.h" "platforms/input/InputiOS.mm"
-                "platforms/Platform_iOS.mm"
-                "platforms/main_loop/MainLoop_iOS.h" "platforms/main_loop/MainLoop_iOS.mm"
+                "platforms/PlatformiOS.mm"
+                "platforms/mainloop/MainLoopiOS.h" "platforms/mainloop/MainLoopiOS.mm"
                 "platforms/window/WiniOS.h" "platforms/window/WiniOS.mm"
             )
         else()
             target_sources(${TARGET_NAME} PRIVATE
                 "platforms/input/InputMacOS.h" "platforms/input/InputMacOS.mm"
-                "platforms/Platform_MacOS.mm"
-                "platforms/main_loop/MainLoop_MacOS.h" "platforms/main_loop/MainLoop_MacOS.mm"
+                "platforms/PlatformMacOS.mm"
+                "platforms/mainloop/MainLoopMacOS.h" "platforms/mainloop/MainLoopMacOS.mm"
                 "platforms/window/WinMacOS.h" "platforms/window/WinMacOS.mm"
             )
         endif()
@@ -125,10 +124,6 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
     endif()
 
     if(${IS_EDITOR})
-        # core_lib_editor/logger_lib_editor - editor-варианты с
-        # EDITORDLL_EXPORTS, чтобы Z_CORE_API (например throw_runtime_error) собрался как
-        # dllexport и был виден из scripts.dll. Смешивать с обычными logger_lib нельзя -
-        # в editor_dll.dll попадут два набора одинаковых символов и линковщик упадёт на дублях.
         target_link_libraries(${TARGET_NAME}
             PUBLIC
                 core_lib_editor
@@ -143,10 +138,8 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
     endif()
 
     target_compile_definitions(${TARGET_NAME} PRIVATE Z_TARGET_NAME="${TARGET_NAME}")
-    set_source_files_properties(pch/pch.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+    set_source_files_properties(pch/Pch.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
     if(${IS_EDITOR})
-        # EDITORDLL_EXPORTS должен совпадать с тем же define в editor_dll.vcxproj/CMakeLists.txt -
-        # core_lib_editor содержит core userscripts и экспортирует их через Z_CORE_API.
         target_compile_definitions(${TARGET_NAME} PUBLIC Z_EDITOR=1 EDITORDLL_EXPORTS)
     endif()
 endmacro()
