@@ -1,6 +1,6 @@
-#pragma once
+﻿#pragma once
 
-#include <core/enums/platforms/eLinuxEnums.h>
+#include "core/enums/platforms/eLinuxEnums.h"
 
 namespace zzz::core
 {

@@ -1,9 +1,9 @@
-#pragma once
+﻿#pragma once
 
 #include <memory>
-#include <core/utils/Export.h>
+#include "core/utils/Export.h"
 #include "BaseScript.h"
-#include <core/events/EventBus.h>
+#include "core/events/EventBus.h"
 
 namespace zzz::engine
 {

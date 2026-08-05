@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <memory>
 #include <vector>
@@ -8,10 +8,10 @@
 #include <type_traits>
 #include <unordered_map>
 
-#include <core/utils/Guid.h>
-#include <core/utils/MemoryUtils.h>
+#include "core/utils/Guid.h"
+#include "core/utils/MemoryUtils.h"
 
-#include <core/utils/Export.h>
+#include "core/utils/Export.h"
 
 namespace zzz
 {

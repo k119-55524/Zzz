@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <span>
 #include <vector>
@@ -8,7 +8,7 @@
 #include <concepts>
 #include <type_traits>
 
-#include <core/utils/Export.h>
+#include "core/utils/Export.h"
 
 namespace zzz::core
 {

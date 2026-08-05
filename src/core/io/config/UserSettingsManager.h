@@ -1,9 +1,9 @@
-#pragma once
+﻿#pragma once
 
-#include <core/io/Path.h>
-#include <core/utils/Version.h>
-#include <core/Serialize/Serializer.h>
-#include <core/IO/package/AppViewUserData.h>
+#include "core/io/Path.h"
+#include "core/utils/Version.h"
+#include "core/Serialize/Serializer.h"
+#include "core/IO/package/AppViewUserData.h"
 
 #include "PlatformConfig.h"
 

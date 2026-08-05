@@ -1,5 +1,5 @@
-#include "ViewScript.h"
-#include <core/events/EventBus.h>
+﻿#include "ViewScript.h"
+#include "core/events/EventBus.h"
 #include "../ScriptRegistry.h"
 
 namespace zzz::core

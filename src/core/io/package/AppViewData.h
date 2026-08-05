@@ -1,11 +1,11 @@
-#pragma once
+﻿#pragma once
 
 #include <string>
 #include <string_view>
 #include <vector>
-#include <core/utils/Guid.h>
+#include "core/utils/Guid.h"
 #include <logger/logger.h>
-#include <core/Serialize/Serializer.h>
+#include "core/Serialize/Serializer.h"
 
 #include "platforms/AppViewPlatformConfig.h"
 

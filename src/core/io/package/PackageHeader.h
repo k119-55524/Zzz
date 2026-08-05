@@ -1,10 +1,10 @@
-#pragma once
+﻿#pragma once
 
-#include <core/utils/Version.h>
+#include "core/utils/Version.h"
 #include <logger/logger.h>
-#include <core/utils/Constants.h>
-#include <core/IO/FileHeader.h>
-#include <core/Serialize/Serializer.h>
+#include "core/utils/Constants.h"
+#include "core/IO/FileHeader.h"
+#include "core/Serialize/Serializer.h"
 
 namespace zzz::core
 {

@@ -1,9 +1,9 @@
-#pragma once
+﻿#pragma once
 
 #include <string_view>
-#include <core/Serialize/Serializer.h>
-#include <core/Enums/eEnumToString.h>
-#include <core/Enums/platforms/eiOSEnums.h>
+#include "core/Serialize/Serializer.h"
+#include "core/Enums/eEnumToString.h"
+#include "core/Enums/platforms/eiOSEnums.h"
 
 namespace zzz::core
 {

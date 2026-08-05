@@ -1,7 +1,7 @@
-#pragma once
+﻿#pragma once
 
-#include <core/time/Time.h>
-#include <core/events/Event.h>
+#include "core/time/Time.h"
+#include "core/events/Event.h"
 
 namespace zzz::core
 {

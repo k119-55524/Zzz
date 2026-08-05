@@ -1,12 +1,12 @@
-#pragma once
+﻿#pragma once
 
 #include <string>
 #include <string_view>
-#include <core/utils/Guid.h>
+#include "core/utils/Guid.h"
 #include <logger/logger.h>
-#include <core/Enums/ePackage.h>
-#include <core/Enums/eEnumToString.h>
-#include <core/Serialize/Serializer.h>
+#include "core/Enums/ePackage.h"
+#include "core/Enums/eEnumToString.h"
+#include "core/Serialize/Serializer.h"
 
 namespace zzz::core
 {

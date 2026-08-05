@@ -1,10 +1,10 @@
-#pragma once
+﻿#pragma once
 
 #include <string_view>
-#include <core/templates/Size2D.h>
-#include <core/Serialize/Serializer.h>
-#include <core/Enums/eEnumToString.h>
-#include <core/Enums/platforms/eLinuxEnums.h>
+#include "core/templates/Size2D.h"
+#include "core/Serialize/Serializer.h"
+#include "core/Enums/eEnumToString.h"
+#include "core/Enums/platforms/eLinuxEnums.h"
 
 namespace zzz::core
 {

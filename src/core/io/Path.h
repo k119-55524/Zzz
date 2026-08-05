@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <string>
 #include <string_view>
@@ -6,7 +6,7 @@
 #include <filesystem>
 #include <memory>
 
-#include <core/utils/NativeAppData.h>
+#include "core/utils/NativeAppData.h"
 
 namespace zzz::core
 {

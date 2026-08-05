@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <array>
 #include <span>
@@ -6,7 +6,7 @@
 #include <string>
 #include <expected>
 #include <cstddef>
-#include <core/Serialize/Serializer.h>
+#include "core/Serialize/Serializer.h"
 
 namespace zzz::core
 {

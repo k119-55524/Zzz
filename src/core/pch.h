@@ -1,3 +1,3 @@
-#pragma once
+﻿#pragma once
 
-#include <core/CoreIncludes.h>
+#include "core/CoreIncludes.h"

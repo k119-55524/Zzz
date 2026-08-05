@@ -1,10 +1,10 @@
-#pragma once
+﻿#pragma once
 
 #include <string>
 #include <string_view>
 #include <vector>
-#include <core/utils/Guid.h>
-#include <core/Serialize/Serializer.h>
+#include "core/utils/Guid.h"
+#include "core/Serialize/Serializer.h"
 
 namespace zzz::core
 {

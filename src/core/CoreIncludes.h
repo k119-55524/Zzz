@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 // C++ Standard Library Includes
 #include <cstdint>
@@ -33,13 +33,13 @@
 #include <concepts>
 
 // Core Defines
-#include <core/utils/Defines.h>
-#include <core/utils/Types.h>
-#include <core/utils/NativeAppData.h>
+#include "core/utils/Defines.h"
+#include "core/utils/Types.h"
+#include "core/utils/NativeAppData.h"
 
 // Platform Headers
-#include <core/headers/Apple.h>
-#include <core/headers/MSWin.h>
-#include <core/headers/Linux.h>
-#include <core/headers/Android.h>
-#include <core/headers/Enums.h>
+#include "core/headers/Apple.h"
+#include "core/headers/MSWin.h"
+#include "core/headers/Linux.h"
+#include "core/headers/Android.h"
+#include "core/headers/Enums.h"
