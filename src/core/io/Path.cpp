@@ -14,6 +14,7 @@
 #include <core/headers/Linux.h>
 #include <core/headers/MSWin.h>
 #include <core/io/Path.h>
+#include <logger/logger.h>
 
 namespace zzz::core
 {

@@ -7,8 +7,6 @@
 
 namespace zzz::core
 {
-	using namespace zzz::core;
-	using namespace zzz::core;
 
 	class AppViewDataiOS final : public ISerializable
 	{

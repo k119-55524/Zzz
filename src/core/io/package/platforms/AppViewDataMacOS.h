@@ -8,8 +8,6 @@
 
 namespace zzz::core
 {
-	using namespace zzz::core;
-	using namespace zzz::core;
 
 	class AppViewDataMacOS final : public ISerializable
 	{

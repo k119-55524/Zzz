@@ -9,8 +9,6 @@
 
 #include "platforms/AppViewPlatformConfig.h"
 
-using namespace zzz::core;
-
 namespace zzz::core
 {
 	class AppViewData final : public ISerializable

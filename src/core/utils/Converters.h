@@ -6,7 +6,7 @@
 
 namespace zzz
 {
-	const std::string wstring_to_string(const std::wstring& wstr)
+	inline const std::string wstring_to_string(const std::wstring& wstr)
 	{
 		if (wstr.empty())
 			return {};

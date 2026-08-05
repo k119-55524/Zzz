@@ -4,8 +4,6 @@
 #include <string_view>
 #include <core/Serialize/Serializer.h>
 
-using namespace zzz::core;
-
 namespace zzz::core
 {
 	class PrefabData final : public ISerializable

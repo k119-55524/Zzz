@@ -7,8 +7,6 @@
 #include <core/templates/Size2D.h>
 #include <core/Serialize/Serializer.h>
 
-using namespace zzz::core;
-
 namespace zzz::engine
 {
 	class PackageManager;

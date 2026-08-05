@@ -4,7 +4,6 @@
 
 namespace zzz::core
 {
-	using namespace zzz::core;
 
 	class ConverterMacOSTypes final
 	{

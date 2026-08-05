@@ -7,7 +7,6 @@
 
 namespace zzz::core
 {
-	using namespace zzz::core;
 	class ConfigMSWin final : public ISerializable
 	{
 	public:

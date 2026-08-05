@@ -6,8 +6,6 @@
 #include <core/IO/FileHeader.h>
 #include <core/Serialize/Serializer.h>
 
-using namespace zzz::core;
-
 namespace zzz::core
 {
 	class PackageHeader final : public ISerializable

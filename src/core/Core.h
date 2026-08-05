@@ -19,18 +19,18 @@
 #include <core/headers/Android.h>
 #include <core/headers/Enums.h>
 
-#include <core/Enums/ePackage.h>
-#include <core/Enums/eTargetPlatform.h>
-#include <core/Enums/eEnumToString.h>
+#include <core/enums/ePackage.h>
+#include <core/enums/eTargetPlatform.h>
+#include <core/enums/eEnumToString.h>
 #include <core/enums/eLogMessageType.h>
 #include <core/enums/eWinResize.h>
-#include <core/Enums/platforms/ConverterMSWinTypes.h>
-#include <core/Enums/platforms/ConverterAndroidTypes.h>
-#include <core/Enums/platforms/ConverteriOSTypes.h>
-#include <core/Enums/platforms/ConverterLinuxTypes.h>
-#include <core/Enums/platforms/ConverterMacOSTypes.h>
+#include <core/enums/platforms/ConverterMSWinTypes.h>
+#include <core/enums/platforms/ConverterAndroidTypes.h>
+#include <core/enums/platforms/ConverteriOSTypes.h>
+#include <core/enums/platforms/ConverterLinuxTypes.h>
+#include <core/enums/platforms/ConverterMacOSTypes.h>
 
-#include <core/Serialize/Serializer.h>
+#include <core/serialize/Serializer.h>
 
 #include <core/templates/DoubleBufferedVector.h>
 #include <core/templates/Size2D.h>
@@ -46,5 +46,27 @@
 #include <core/userscripts/base_script/SceneScript.h>
 #include <core/userscripts/base_script/ViewScript.h>
 
-#include <core/IO/FileHeader.h>
+#include <core/io/FileHeader.h>
 #include <core/io/Path.h>
+#include <core/io/config/PlatformConfig.h>
+#include <core/io/config/UserSettingsManager.h>
+#include <core/io/config/platforms/ConfigAndroid.h>
+#include <core/io/config/platforms/ConfigEditor.h>
+#include <core/io/config/platforms/ConfigLinux.h>
+#include <core/io/config/platforms/ConfigMSWin.h>
+#include <core/io/config/platforms/ConfigMacOS.h>
+#include <core/io/config/platforms/ConfigiOS.h>
+#include <core/io/package/PackageHeader.h>
+#include <core/io/package/PackageEntry.h>
+#include <core/io/package/AppViewData.h>
+#include <core/io/package/AppViewUserData.h>
+#include <core/io/package/ViewData.h>
+#include <core/io/package/ProjectManifestData.h>
+#include <core/io/package/SceneData.h>
+#include <core/io/package/PrefabData.h>
+#include <core/io/package/platforms/AppViewPlatformConfig.h>
+#include <core/io/package/platforms/AppViewDataAndroid.h>
+#include <core/io/package/platforms/AppViewDataLinux.h>
+#include <core/io/package/platforms/AppViewDataMSWin.h>
+#include <core/io/package/platforms/AppViewDataMacOS.h>
+#include <core/io/package/platforms/AppViewDataiOS.h>

@@ -6,7 +6,6 @@
 
 namespace zzz::core
 {
-	using namespace zzz::core;
 	class ConfigEditor final : public ISerializable
 	{
 	public:

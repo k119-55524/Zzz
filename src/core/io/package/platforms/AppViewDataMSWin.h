@@ -8,8 +8,6 @@
 
 namespace zzz::core
 {
-	using namespace zzz::core;
-	using namespace zzz::core;
 
 	class AppViewDataMSWin final : public ISerializable
 	{

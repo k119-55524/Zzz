@@ -9,7 +9,7 @@
 
 namespace zzz
 {
-	enum class eInitState : zU8
+	enum class eInitState : core::zU8
 	{
 		NotInitialized,	// Готов к инициализации
 		Initializing,	// Процесс инициализации

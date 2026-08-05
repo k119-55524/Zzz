@@ -6,8 +6,6 @@
 #include <core/utils/Guid.h>
 #include <core/Serialize/Serializer.h>
 
-using namespace zzz::core;
-
 namespace zzz::core
 {
 	class ProjectManifestData final : public ISerializable

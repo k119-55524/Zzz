@@ -1,5 +1,10 @@
 #pragma once
 
+#include <expected>
+#include <span>
+
+#include <core/serialize/Serializer.h>
+
 #include "header.h"
 
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD

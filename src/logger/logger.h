@@ -11,6 +11,8 @@
 #include <memory>
 #include <condition_variable>
 
+#include <core/templates/DoubleBufferedVector.h>
+
 #include "log_entry.h"
 
 using namespace zzz::core;

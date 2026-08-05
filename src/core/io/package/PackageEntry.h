@@ -8,8 +8,6 @@
 #include <core/Enums/eEnumToString.h>
 #include <core/Serialize/Serializer.h>
 
-using namespace zzz::core;
-
 namespace zzz::core
 {
 	class PackageEntry final : public ISerializable

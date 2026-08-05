@@ -34,7 +34,7 @@ extern "C"
 			zzz::logger::g_Logger.AddCallbackBroadcaster(callback);
 #endif
 
-			g_Engine = zzz::safe_make_unique<zzz::editor::EditorEngine>("ZzzEditorWin");
+			g_Engine = zzz::core::safe_make_unique<zzz::editor::EditorEngine>("ZzzEditorWin");
 			DOut("EditorDLL инициализирован: успешно.");
 
 			auto runRes = g_Engine->Run();
