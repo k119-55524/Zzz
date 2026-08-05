@@ -8,6 +8,9 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
     )
 
     target_sources(${TARGET_NAME} PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/pch.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/pch.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/CoreIncludes.h
         ${CMAKE_CURRENT_SOURCE_DIR}/core.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Types.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Export.h
@@ -86,6 +89,10 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PrefabData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Serialize/Serializer.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Serialize/Serializer.cpp
+    )
+
+    target_precompile_headers(${TARGET_NAME} PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/pch.h
     )
 
     if(APPLE)

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <core/CoreIncludes.h>
+
 #include <core/utils/Types.h>
 #include <core/utils/Export.h>
 #include <core/utils/Constants.h>
@@ -12,12 +14,6 @@
 #include <core/utils/ThrowWrappers.h>
 #include <core/utils/Version.h>
 #include <core/utils/Converters.h>
-
-#include <core/headers/Apple.h>
-#include <core/headers/MSWin.h>
-#include <core/headers/Linux.h>
-#include <core/headers/Android.h>
-#include <core/headers/Enums.h>
 
 #include <core/enums/ePackage.h>
 #include <core/enums/eTargetPlatform.h>
