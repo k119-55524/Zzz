@@ -20,7 +20,9 @@ else()
     add_compile_options(-Wswitch-enum)
 endif()
 
+include(package_versions.cmake)
 include(build_configs/current.cmake OPTIONAL)
+include(build_configs/setup_d3d12_packages.cmake OPTIONAL)
 
 # Multi-config generators (Xcode) need to know about our custom configurations up front;
 # single-config generators (Ninja) just ignore this and use CMAKE_BUILD_TYPE instead.
@@ -95,6 +97,16 @@ add_subdirectory(src/logger)
 
 target_link_libraries(core_lib PUBLIC logger_lib)
 target_link_libraries(core_lib_editor PUBLIC logger_lib_editor)
+
+if(TARGET Microsoft::WinPixEventRuntime)
+    target_link_libraries(core_lib PUBLIC Microsoft::WinPixEventRuntime)
+    target_link_libraries(core_lib_editor PUBLIC Microsoft::WinPixEventRuntime)
+endif()
+
+if(TARGET Microsoft::DXC)
+    target_link_libraries(core_lib PUBLIC Microsoft::DXC)
+    target_link_libraries(core_lib_editor PUBLIC Microsoft::DXC)
+endif()
 
 add_subdirectory(src/tools/RemoteLogViewer)
 add_subdirectory(src/engine)

@@ -6,7 +6,7 @@ include(FetchContent)
 FetchContent_Declare(
   googlebenchmark
   GIT_REPOSITORY https://github.com/google/benchmark.git
-  GIT_TAG        v1.9.5
+  GIT_TAG        ${Z_GBENCH_VERSION}
 )
 
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)

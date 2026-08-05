@@ -1,10 +1,11 @@
-﻿#pragma once
+#pragma once
 
 #include <string_view>
 #include "core/utils/Macroses.h"
 #include "core/utils/ThrowWrappers.h"
 #include "core/enums/eWinResize.h"
 #include "core/enums/eLogMessageType.h"
+#include "core/enums/eInitState.h"
 
 #include "ePackage.h"
 #include "eTargetPlatform.h"
@@ -19,6 +20,19 @@ namespace zzz::core
 	class EnumToString
 	{
 	public:
+		static constexpr std::string_view ToString(eInitState type)
+		{
+			switch (type)
+			{
+			case eInitState::NotInitialized: return "NotInitialized";
+			case eInitState::Initializing:   return "Initializing";
+			case eInitState::Initialized:    return "Initialized";
+			case eInitState::Running:        return "Running";
+			case eInitState::Destroying:     return "Destroying";
+			}
+			THROW_RUNTIME("Необработанный eInitState");
+		}
+
 		static constexpr std::string_view ToString(eLogMessageType type)
 		{
 			switch (type)

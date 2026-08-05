@@ -1,5 +1,7 @@
 # .NET SDK channel matching <TargetFramework> in RemoteLogViewer.csproj.
-set(Z_DOTNET_CHANNEL "10.0")
+if(NOT DEFINED Z_DOTNET_CHANNEL)
+    set(Z_DOTNET_CHANNEL "10.0")
+endif()
 
 find_program(DOTNET_EXECUTABLE dotnet)
 

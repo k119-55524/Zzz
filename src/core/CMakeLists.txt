@@ -28,7 +28,10 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/headers/MSWin.h
         ${CMAKE_CURRENT_SOURCE_DIR}/headers/Linux.h
         ${CMAKE_CURRENT_SOURCE_DIR}/headers/Android.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/headers/Enums.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/headers/DirectX12.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/headers/Vulkan.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/headers/Metal.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eInitState.h
         ${CMAKE_CURRENT_SOURCE_DIR}/time/Time.h
         ${CMAKE_CURRENT_SOURCE_DIR}/time/Time.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/events/Event.h
