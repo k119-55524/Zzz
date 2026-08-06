@@ -1,7 +1,8 @@
-﻿#pragma once
+#pragma once
 
-#include "engine/EngineIncludes.h"
 #include "engine/utils/Fwd.h"
+#include "engine/gapi/GAPI.h"
+#include "engine/EngineIncludes.h"
 
 using namespace zzz::core;
 
@@ -34,6 +35,7 @@ namespace zzz::engine
 		std::shared_ptr<PackageManager> m_PackageManager;
 		std::shared_ptr<UserSettingsManager> m_UserSettingsManager;
 		std::unique_ptr<Platform> m_Platform;
+		std::shared_ptr<GAPI> m_GAPI;
 		std::unique_ptr<ViewManager> m_ViewManager;
 		std::shared_ptr<MainLoopBase> m_MainLoop;
 		std::shared_ptr<ProjectEventBus> m_EventBus;

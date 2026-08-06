@@ -1,4 +1,5 @@
 #include "Engine.h"
+#include "gapi/GAPI.h"
 #include "view/ViewManager.h"
 #include "platforms/mainloop/MainLoop.h"
 #include "package/PackageManager.h"
@@ -25,7 +26,14 @@ Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeDa
 	m_PackageManager = safe_make_shared<PackageManager>(*m_Path);
 	m_UserSettingsManager = safe_make_shared<UserSettingsManager>(*m_Path, *m_PackageManager);
 	m_Platform = safe_make_unique<Platform>(nativeData);
-	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, [this]() { OnCloseAllViews(); });
+	m_GAPI = safe_make_shared<GAPI>(m_UserSettingsManager);
+	auto gapiInitRes = m_GAPI->Initialize();
+	if (!gapiInitRes)
+	{
+		THROW_RUNTIME("Ошибка инициализации GAPI: {}", gapiInitRes.error());
+	}
+
+	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, m_GAPI, [this]() { OnCloseAllViews(); });
 	m_MainLoop = safe_make_shared<MainLoop>(*m_Platform, [this]() { OnUpdateSystem(); });
 	m_EventBus = safe_make_shared<ProjectEventBus>();
 	m_Time = safe_make_shared<Time>();
@@ -47,6 +55,7 @@ void Engine::Shutdown()
 	{
 		m_MainLoop = nullptr;
 		m_ViewManager = nullptr;
+		m_GAPI = nullptr;
 
 		{
 			if (m_EventBus)
@@ -57,11 +66,12 @@ void Engine::Shutdown()
 		}
 
 		m_Time = nullptr;
+
 		if (m_UserSettingsManager)
 			auto res = m_UserSettingsManager->SaveConfig();
 		m_UserSettingsManager = nullptr;
-		m_Platform = nullptr;
 
+		m_Platform = nullptr;
 		m_PackageManager = nullptr;
 		m_Path = nullptr;
 	}

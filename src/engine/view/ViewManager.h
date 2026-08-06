@@ -13,8 +13,10 @@ namespace zzz::engine
 
 	public:
 		ViewManager() = delete;
-		ViewManager(const Platform& platform, std::function<void()> onAllViewsClosed);
+		ViewManager(const Platform& platform, std::shared_ptr<IGAPI> gapi, std::function<void()> onAllViewsClosed);
 		~ViewManager();
+
+		[[nodiscard]] inline std::shared_ptr<IGAPI> GetGAPI() const noexcept { return m_GAPI; }
 
 		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> InitializeFromPackage(const PackageManager& packageManager);
 		[[nodiscard]] std::expected <std::shared_ptr<View>, std::string> CreateView(const ViewData& viewData, const std::vector<std::shared_ptr<ViewScript>>& scripts);
@@ -27,6 +29,7 @@ namespace zzz::engine
 
 	private:
 		const Platform& m_Platform;
+		std::shared_ptr<IGAPI> m_GAPI;
 		std::list<std::shared_ptr<View>> m_Views;
 
 		std::function<void()> OnAllViewsClosed;

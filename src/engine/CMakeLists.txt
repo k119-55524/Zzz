@@ -52,6 +52,13 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "../core/specific/linux_wayland/Xdg-shell-protocol.cpp"
         "../core/utils/Converters.h" "platforms/input/InputHelpers.h" "platforms/input/InputBase.cpp"
 
+        # GAPI
+        "gapi/IGAPI.h" "gapi/IGAPI.cpp"
+        "gapi/GAPI.h"
+        "gapi/vulkan/VulkanAPI.h" "gapi/vulkan/VulkanAPI.cpp"
+        "gapi/directx12/DirectX12API.h" "gapi/directx12/DirectX12API.cpp"
+        "gapi/metal/MetalAPI.h" "gapi/metal/MetalAPI.mm"
+
         # Scripts & Scenes
         "scene/GameObject.h"
         "scene/Scene.h" "scene/Scene.cpp")

@@ -10,4 +10,5 @@ namespace zzz::engine
 	class Scene;
 	class View;
 	class ViewManager;
+	class IGAPI;
 }

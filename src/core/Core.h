@@ -17,6 +17,7 @@
 
 #include "core/enums/ePackage.h"
 #include "core/enums/eTargetPlatform.h"
+#include "core/enums/eGAPIType.h"
 #include "core/enums/eEnumToString.h"
 #include "core/enums/eLogMessageType.h"
 #include "core/enums/eWinResize.h"

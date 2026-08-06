@@ -3,6 +3,8 @@
 #include "../platforms/Platform.h"
 #include "../package/PackageManager.h"
 
+#include "../gapi/IGAPI.h"
+
 using namespace zzz::core;
 using namespace zzz::engine;
 
@@ -17,10 +19,12 @@ namespace
 	}
 }
 
-ViewManager::ViewManager(const Platform& platform, std::function<void()> onAllViewsClosed) :
+ViewManager::ViewManager(const Platform& platform, std::shared_ptr<IGAPI> gapi, std::function<void()> onAllViewsClosed) :
 	m_Platform{ platform },
+	m_GAPI{ std::move(gapi) },
 	OnAllViewsClosed{ std::move(onAllViewsClosed) }
 {
+	ensure(m_GAPI != nullptr, "IGAPI не должен быть null.");
 	ensure(OnAllViewsClosed != nullptr, "OnAllViewsClosed не должен быть null.");
 }
 

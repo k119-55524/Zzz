@@ -1,19 +1,20 @@
 #pragma once
 
 #include <string_view>
-#include "core/utils/Macroses.h"
-#include "core/utils/ThrowWrappers.h"
-#include "core/enums/eWinResize.h"
-#include "core/enums/eLogMessageType.h"
-#include "core/enums/eInitState.h"
 
 #include "ePackage.h"
+#include "eGAPIType.h"
 #include "eTargetPlatform.h"
+#include "core/utils/Macroses.h"
 #include "platforms/eiOSEnums.h"
+#include "core/enums/eWinResize.h"
+#include "core/enums/eInitState.h"
 #include "platforms/eLinuxEnums.h"
 #include "platforms/eMacOSEnums.h"
 #include "platforms/eMSWinEnums.h"
 #include "platforms/eAndroidEnums.h"
+#include "core/utils/ThrowWrappers.h"
+#include "core/enums/eLogMessageType.h"
 
 namespace zzz::core
 {
@@ -58,6 +59,17 @@ namespace zzz::core
 			case eWinResize::Resize: return "RESIZE";
 			}
 			THROW_RUNTIME("Необработанный eWinResize");
+		}
+
+		static constexpr std::string_view ToString(eGAPIType type)
+		{
+			switch (type)
+			{
+			case eGAPIType::DirectX12: return "DirectX12";
+			case eGAPIType::Vulkan:    return "Vulkan";
+			case eGAPIType::Metal:     return "Metal";
+			}
+			THROW_RUNTIME("Необработанный eGAPIType");
 		}
 
 		static constexpr std::string_view ToString(ePackage type)

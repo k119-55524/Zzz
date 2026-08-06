@@ -49,6 +49,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/base_script/ViewScript.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eLogMessageType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eWinResize.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eGAPIType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/ePackage.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/eTargetPlatform.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/eEnumToString.h
