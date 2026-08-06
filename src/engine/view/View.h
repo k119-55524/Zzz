@@ -1,8 +1,7 @@
 #pragma once
 
-#include "engine/EngineIncludes.h"
 #include "engine/utils/Fwd.h"
-
+#include "engine/EngineIncludes.h"
 #include "../platforms/Platform.h"
 #include "../platforms/input/Input.h"
 #include "../platforms/window/Window.h"
