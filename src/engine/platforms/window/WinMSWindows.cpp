@@ -91,7 +91,7 @@ LRESULT CALLBACK WinMSWindows::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 	m_Ctx = { this, m_Input.get() };
 	CreateWindowEx(
 		0,
-		c_RegisterClassName.data(),
+		m_Platform.GetProjectPlatformData().GetWindowClassName().c_str(),
 		startWindowSettings.GetTitle().c_str(),
 		windowStyle,
 		xPos, yPos, width, height,

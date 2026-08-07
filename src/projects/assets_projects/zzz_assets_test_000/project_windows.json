@@ -4,6 +4,9 @@
     "icon": "Assets/Icons/win_icon.ico",
     "visualStudioToolset": "v143"
   },
+  "platform": {
+    "windowClassName": "ZzzEngineWindowClass"
+  },
   "startView": {
     "title": "GameZzz",
     "defaultSize": {

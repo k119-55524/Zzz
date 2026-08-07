@@ -3,8 +3,9 @@
 
 using namespace zzz::engine;
 
-Platform::Platform(std::shared_ptr<NativeAppData> nativeData) :
-	m_NativeData(nativeData)
+Platform::Platform(std::shared_ptr<NativeAppData> nativeData, const ProjectPlatformData& platformData) :
+	m_NativeData(nativeData),
+	m_PlatformData(platformData)
 {
 	Initialize();
 }

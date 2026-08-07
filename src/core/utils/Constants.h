@@ -40,13 +40,12 @@ namespace zzz::core
 		}
 	};
 	constexpr zU8 c_GamePackageFileMajorVersion = 1;
-	constexpr zU8 c_GamePackageFileMinorVersion = 0;
+	constexpr zU8 c_GamePackageFileMinorVersion = 1;
 	constexpr zU8 c_GamePackageFilePatchVersion = 0;
 #pragma endregion
 
 #pragma region Microsoft Windows constants
 	constexpr std::string_view c_IcoResourceName = "IDI_ICON1";
-	constexpr std::string_view c_RegisterClassName = "ZzzEngineWindowClass";
 #pragma endregion
 
 #pragma region Network constants

@@ -24,8 +24,12 @@ Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeDa
 
 	m_Path = safe_make_shared<Path>(appName, nativeData);
 	m_PackageManager = safe_make_shared<PackageManager>(*m_Path);
+	auto projectManifestData = m_PackageManager->GetProjectManifestData();
+	if (!projectManifestData)
+		THROW_RUNTIME("Failed to load ProjectManifestData: {}", projectManifestData.error());
+
 	m_UserSettingsManager = safe_make_shared<UserSettingsManager>(*m_Path, *m_PackageManager);
-	m_Platform = safe_make_unique<Platform>(nativeData);
+	m_Platform = safe_make_unique<Platform>(nativeData, projectManifestData->GetPlatformData());
 	m_GAPI = safe_make_shared<GAPI>(m_UserSettingsManager);
 	m_GAPI->Initialize();
 	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, m_GAPI, [this]() { OnCloseAllViews(); });

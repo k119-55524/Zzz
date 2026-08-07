@@ -5,6 +5,7 @@
 #include <vector>
 #include "core/utils/Guid.h"
 #include "core/Serialize/Serializer.h"
+#include "core/IO/package/platforms/project/ProjectPlatformConfig.h"
 
 namespace zzz::core
 {
@@ -12,15 +13,17 @@ namespace zzz::core
 	{
 	public:
 		ProjectManifestData() = default;
-		ProjectManifestData(std::vector<Guid> gameScriptGuids, std::vector<Guid> sceneGuids, std::vector<Guid> viewGuids)
+		ProjectManifestData(std::vector<Guid> gameScriptGuids, std::vector<Guid> sceneGuids, std::vector<Guid> viewGuids, ProjectPlatformData platformData = {})
 			: gameScriptGuids(std::move(gameScriptGuids))
 			, sceneGuids(std::move(sceneGuids))
 			, viewGuids(std::move(viewGuids))
+			, platformData(std::move(platformData))
 		{}
 
 		[[nodiscard]] const std::vector<Guid>& GetGameScriptGuids() const noexcept { return gameScriptGuids; }
 		[[nodiscard]] const std::vector<Guid>& GetSceneGuids() const noexcept { return sceneGuids; }
 		[[nodiscard]] const std::vector<Guid>& GetViewGuids() const noexcept { return viewGuids; }
+		[[nodiscard]] const ProjectPlatformData& GetPlatformData() const noexcept { return platformData; }
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
@@ -42,12 +45,15 @@ namespace zzz::core
 			{
 				DOut("{}viewGuid #{}: {}", nestedIndentation, i, viewGuids[i].ToString());
 			}
+
+			platformData.LogFileBlock(nestedIndentation);
 		}
 
 	private:
 		std::vector<Guid> gameScriptGuids;
 		std::vector<Guid> sceneGuids;
 		std::vector<Guid> viewGuids;
+		ProjectPlatformData platformData;
 
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override
@@ -85,6 +91,9 @@ namespace zzz::core
 						if (!res) return res;
 					}
 					return {};
+				})
+				.and_then([&]() {
+					return serializer.Serialize(buffer, platformData);
 				});
 		}
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& serializer) override
@@ -147,6 +156,10 @@ namespace zzz::core
 					}
 
 					return {};
+				})
+				.and_then([&]()
+				{
+					return serializer.Deserialize(buffer, offset, platformData);
 				});
 		}
 	};

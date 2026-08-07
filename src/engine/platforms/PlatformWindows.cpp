@@ -6,11 +6,12 @@ using namespace zzz::engine;
 
 void Platform::ShutdownPlatformSpecific()
 {
-	const BOOL result = UnregisterClass(c_RegisterClassName.data(), GetModuleHandle(nullptr));
+	const auto& windowClassName = m_PlatformData.GetWindowClassName();
+	const BOOL result = UnregisterClass(windowClassName.c_str(), GetModuleHandle(nullptr));
 	if (!result)
 	{
 		const DWORD error = GetLastError();
-		DOutCritical("Не удалось отменить регистрацию класса окна '{}'. Код ошибки: {}.", c_RegisterClassName.data(), error);
+		DOutCritical("Не удалось отменить регистрацию класса окна '{}'. Код ошибки: {}.", windowClassName, error);
 	}
 }
 
@@ -36,7 +37,7 @@ void Platform::InitializePlatformSpecific()
 	wc.hIcon = iconHandle;
 	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-	wc.lpszClassName = c_RegisterClassName.data();
+	wc.lpszClassName = m_PlatformData.GetWindowClassName().c_str();
 	ATOM Result = RegisterClass(&wc);
 	if (Result == 0)
 		THROW_RUNTIME("Не удалось зарегистрировать класс окна. Код ошибки: {}.", GetLastError());

@@ -106,6 +106,16 @@ namespace zzz::engine
 		return LoadPackageData<StartViewData>(entry);
 	}
 
+	std::expected<ProjectManifestData, std::string> PackageManager::GetProjectManifestData() const
+	{
+		auto typeIt = m_EntriesByName.find(ePackage::ProjectManifest);
+		if (typeIt == m_EntriesByName.end() || typeIt->second.empty())
+			return UNEXPECTED("ProjectManifestData was not found in package manifest.");
+
+		const auto& entry = typeIt->second.begin()->second;
+		return LoadPackageData<ProjectManifestData>(entry);
+	}
+
 	template <typename T> requires std::derived_from<T, ISerializable>
 	[[nodiscard]] std::expected<T, std::string> PackageManager::LoadPackageData(const PackageEntry& entry) const
 	{

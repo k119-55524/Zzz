@@ -6,7 +6,7 @@
 #include <logger/logger.h>
 #include "core/Serialize/Serializer.h"
 
-#include "platforms/StartViewPlatformConfig.h"
+#include "platforms/start_view/StartViewPlatformConfig.h"
 
 namespace zzz::core
 {

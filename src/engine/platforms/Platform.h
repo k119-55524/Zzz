@@ -12,10 +12,11 @@ namespace zzz::engine
 	{
 	public:
 		Platform() = delete;
-		Platform(std::shared_ptr<NativeAppData> nativeData);
+		Platform(std::shared_ptr<NativeAppData> nativeData, const ProjectPlatformData& platformData);
 		~Platform();
 
 		[[nodiscard]] inline std::shared_ptr<NativeAppData> GetNativeData() const noexcept { return m_NativeData; }
+		[[nodiscard]] inline const ProjectPlatformData& GetProjectPlatformData() const noexcept { return m_PlatformData; }
 
 #if Z_APPLE
 		static constexpr bool c_AsyncRunLoop = true;
@@ -29,5 +30,6 @@ namespace zzz::engine
 		void ShutdownPlatformSpecific();
 
 		std::shared_ptr<NativeAppData> m_NativeData;
+		ProjectPlatformData m_PlatformData;
 	};
 }

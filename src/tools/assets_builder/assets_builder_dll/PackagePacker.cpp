@@ -12,13 +12,18 @@
 #include <core/IO/package/PackageHeader.h>
 #include <core/IO/package/PrefabData.h>
 #include <core/IO/package/ProjectManifestData.h>
+#include <core/IO/package/platforms/project/ProjectPlatformDataAndroid.h>
+#include <core/IO/package/platforms/project/ProjectPlatformDataLinux.h>
+#include <core/IO/package/platforms/project/ProjectPlatformDataMacOS.h>
+#include <core/IO/package/platforms/project/ProjectPlatformDataMSWin.h>
+#include <core/IO/package/platforms/project/ProjectPlatformDataiOS.h>
 #include <core/IO/package/SceneData.h>
 #include <core/IO/package/ViewData.h>
-#include <core/IO/package/platforms/StartViewDataAndroid.h>
-#include <core/IO/package/platforms/StartViewDataLinux.h>
-#include <core/IO/package/platforms/StartViewDataMacOS.h>
-#include <core/IO/package/platforms/StartViewDataMSWin.h>
-#include <core/IO/package/platforms/StartViewDataiOS.h>
+#include <core/IO/package/platforms/start_view/StartViewDataAndroid.h>
+#include <core/IO/package/platforms/start_view/StartViewDataLinux.h>
+#include <core/IO/package/platforms/start_view/StartViewDataMacOS.h>
+#include <core/IO/package/platforms/start_view/StartViewDataMSWin.h>
+#include <core/IO/package/platforms/start_view/StartViewDataiOS.h>
 
 namespace zzz::builder
 {
@@ -46,6 +51,83 @@ namespace zzz::builder
 		}
 
 		return "Windows";
+	}
+
+	static json ResolvePlatformJson(const json& root, const fs::path& projectDir, zzz::core::eTargetPlatform targetPlatform)
+	{
+		const std::string platformName = ToPlatformString(targetPlatform);
+		json platformRoot = root.contains("platform") && root["platform"].is_object()
+			? root["platform"]
+			: json::object();
+
+		if (root.contains("platform_configs") && root["platform_configs"].is_array())
+		{
+			for (const auto& configEntry : root["platform_configs"])
+			{
+				if (!configEntry.is_object())
+					continue;
+
+				if (configEntry.value("platform", "") != platformName)
+					continue;
+
+				std::string configFileName = configEntry.value("file", "");
+				if (configFileName.empty())
+					break;
+
+				fs::path configPath = projectDir / configFileName;
+				std::ifstream configFile(configPath);
+				if (!configFile.is_open())
+					break;
+
+				json configRoot = json::parse(configFile, nullptr, false);
+				if (!configRoot.is_discarded() && configRoot.contains("platform") && configRoot["platform"].is_object())
+				{
+					for (const auto& [key, value] : configRoot["platform"].items())
+					{
+						platformRoot[key] = value;
+					}
+				}
+
+				break;
+			}
+		}
+
+		return platformRoot;
+	}
+
+	static std::expected<void, std::string> SerializeProjectPlatformData(std::vector<std::byte>& result, const Serializer& serializer, const json& platformRoot, zzz::core::eTargetPlatform targetPlatform)
+	{
+		switch (targetPlatform)
+		{
+		case zzz::core::eTargetPlatform::Windows:
+		{
+			ProjectPlatformDataMSWin winData(platformRoot.value("windowClassName", "ZzzEngineWindowClass"));
+			return serializer.Serialize(result, winData);
+		}
+		case zzz::core::eTargetPlatform::Linux:
+		{
+			ProjectPlatformDataLinux linuxData;
+			return serializer.Serialize(result, linuxData);
+		}
+		case zzz::core::eTargetPlatform::Android:
+		{
+			ProjectPlatformDataAndroid androidData;
+			return serializer.Serialize(result, androidData);
+		}
+		case zzz::core::eTargetPlatform::MacOS:
+		{
+			ProjectPlatformDataMacOS macData;
+			return serializer.Serialize(result, macData);
+		}
+		case zzz::core::eTargetPlatform::iOS:
+		{
+			ProjectPlatformDataiOS iosData;
+			return serializer.Serialize(result, iosData);
+		}
+		}
+
+		ProjectPlatformDataMSWin winData(platformRoot.value("windowClassName", "ZzzEngineWindowClass"));
+		return serializer.Serialize(result, winData);
 	}
 
 	static json ResolveStartViewJson(const json& root, const fs::path& projectDir, zzz::core::eTargetPlatform targetPlatform)
@@ -247,8 +329,29 @@ namespace zzz::builder
 					}
 				}
 
-				zzz::core::ProjectManifestData manifestData(gameScriptGuids, sceneGuids, viewGuids);
-				if (auto res = serializer.Serialize(result, manifestData); !res)
+				zU32 scriptsCount = static_cast<zU32>(gameScriptGuids.size());
+				if (auto res = serializer.Serialize(result, scriptsCount); !res) return {};
+				for (const auto& guid : gameScriptGuids)
+				{
+					if (auto res = serializer.Serialize(result, guid); !res) return {};
+				}
+
+				zU32 scenesCount = static_cast<zU32>(sceneGuids.size());
+				if (auto res = serializer.Serialize(result, scenesCount); !res) return {};
+				for (const auto& guid : sceneGuids)
+				{
+					if (auto res = serializer.Serialize(result, guid); !res) return {};
+				}
+
+				zU32 viewsCount = static_cast<zU32>(viewGuids.size());
+				if (auto res = serializer.Serialize(result, viewsCount); !res) return {};
+				for (const auto& guid : viewGuids)
+				{
+					if (auto res = serializer.Serialize(result, guid); !res) return {};
+				}
+
+				json platformRoot = ResolvePlatformJson(root, projectDir, targetPlatform);
+				if (auto res = SerializeProjectPlatformData(result, serializer, platformRoot, targetPlatform); !res)
 					return {};
 			}
 			else if (assetType == zzz::core::ePackage::StartView)
