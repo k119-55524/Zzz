@@ -92,7 +92,7 @@ void WinLinux::Shutdown()
 	}
 }
 
-std::expected<void, std::string> WinLinux::Initialize(const std::string_view appName)
+std::expected<void, std::string> WinLinux::Initialize(const StartViewPlatformData& settings)
 {
 	try
 	{
@@ -117,11 +117,11 @@ std::expected<void, std::string> WinLinux::Initialize(const std::string_view app
 		if (!m_XdgToplevel)
 			return UNEXPECTED("Ошибка xdg_surface_get_toplevel().");
 
-		xdg_toplevel_set_title(m_XdgToplevel, appName.data());
+		xdg_toplevel_set_title(m_XdgToplevel, settings.GetTitle().c_str());
 		xdg_toplevel_add_listener(m_XdgToplevel, &g_ToplevelListener, this);
 
 		{
-			const Size2D<zU32> winSize(c_DefaultWindowWidth, c_DefaultWindowHeicht);
+			const Size2D<zU32> winSize(settings.GetSize());
 			const int scale  = platform.GetNativeData()->scaleFactor;
 			const int W      = static_cast<int>(winSize.width)  * scale;
 			const int H      = static_cast<int>(winSize.height) * scale;

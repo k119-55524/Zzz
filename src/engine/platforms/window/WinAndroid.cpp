@@ -12,7 +12,7 @@ WinAndroid::~WinAndroid()
 {
 }
 
-std::expected<void, std::string> WinAndroid::Initialize(const std::string_view appName)
+std::expected<void, std::string> WinAndroid::Initialize(const StartViewPlatformData& /*settings*/)
 {
 	m_Ctx = { this, m_Input.get() };
 	android_app* app = m_Platform.GetNativeData().get();

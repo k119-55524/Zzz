@@ -19,7 +19,7 @@ namespace zzz::engine
 		WinLinux(const Platform& platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks);
 		~WinLinux();
 
-		[[nodiscard]] std::expected<void, std::string> Initialize(const std::string_view appName);
+		[[nodiscard]] std::expected<void, std::string> Initialize(const StartViewPlatformData& settings);
 		inline wl_surface* GetSurface() const noexcept { return m_Surface; };
 		inline wl_buffer*  GetBuffer()  const noexcept { return m_Buffer; };
 

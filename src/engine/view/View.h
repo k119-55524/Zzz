@@ -1,10 +1,8 @@
 #pragma once
 
-#include "engine/utils/Fwd.h"
-#include "engine/EngineIncludes.h"
 #include "../platforms/Platform.h"
 #include "../platforms/input/Input.h"
-#include "../platforms/window/Window.h"
+#include "../platforms/window/NativeWindow.h"
 
 namespace zzz::engine
 {
@@ -16,7 +14,7 @@ namespace zzz::engine
 
 	public:
 		View() = delete;
-		View(const ViewData& viewData, const Platform& platform, const std::vector<std::shared_ptr<ViewScript>>& scripts, std::function<void(View&)> onWindowClose);
+		View(const StartViewPlatformData& settings, const std::vector<Guid>& scripts, const Platform& platform, std::function<void(View&)> onWindowClose);
 #if Z_EDITOR
 		View(const Platform& platform, void* data);
 #endif // Z_EDITOR
@@ -40,7 +38,10 @@ namespace zzz::engine
 		inline bool IsActive() const noexcept { return m_IsActive; }
 
 	private:
-		void Initialize(const ViewData* viewData = nullptr, void* data = nullptr, const std::vector<std::shared_ptr<ViewScript>>& scripts = {});
+		void Initialize(const StartViewPlatformData& settings, const std::vector<std::shared_ptr<ViewScript>>& scripts);
+#if Z_EDITOR
+		void Initialize(void* data);
+#endif
 
 #pragma region Window Events
 		/**
@@ -164,7 +165,7 @@ namespace zzz::engine
 #pragma endregion
 
 		const Platform& m_Platform;
-		std::shared_ptr<Window> m_Window;
+		std::shared_ptr<NativeWindow> m_NativeWindow;
 		std::shared_ptr<Input>  m_Input;
 
 		std::function<void(View&)> OnWindowClose;

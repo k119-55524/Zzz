@@ -69,14 +69,17 @@ LRESULT CALLBACK WinMSWindows::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-[[nodiscard]] std::expected<void, std::string> WinMSWindows::Initialize(const std::string_view appName, void* /*data*/)
+[[nodiscard]] std::expected<void, std::string> WinMSWindows::Initialize(const StartViewPlatformData& startWindowSettings, void* /*data*/)
 {
 	// Рассчитать размеры прямоугольника окна на основе запрошенных размеров клиентской области.
 	Size2D<LONG> winSize;
 	// TODO: не правильная архитектура. Подумать как задавать размер окна
-	winSize.SetFrom(c_DefaultWindowWidth, c_DefaultWindowHeicht);
+	winSize.SetFrom(static_cast<LONG>(startWindowSettings.GetSize().width), static_cast<LONG>(startWindowSettings.GetSize().height));
+	DWORD windowStyle = ConverterMSWinTypes::ToNative(startWindowSettings.GetWindowMode());
+	if (!startWindowSettings.IsResizable())
+		windowStyle &= ~(WS_THICKFRAME | WS_MAXIMIZEBOX);
 	RECT R = { 0, 0, winSize.width, winSize.height };
-	AdjustWindowRectEx(&R, WS_OVERLAPPEDWINDOW, false, 0);
+	AdjustWindowRectEx(&R, windowStyle, false, 0);
 	int width = R.right - R.left;
 	int height = R.bottom - R.top;
 
@@ -89,8 +92,8 @@ LRESULT CALLBACK WinMSWindows::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 	CreateWindowEx(
 		0,
 		c_RegisterClassName.data(),
-		appName.data(),
-		WS_OVERLAPPEDWINDOW,
+		startWindowSettings.GetTitle().c_str(),
+		windowStyle,
 		xPos, yPos, width, height,
 		nullptr,
 		nullptr,

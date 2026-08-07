@@ -27,9 +27,9 @@ WinMacOS::~WinMacOS()
 {
 }
 
-std::expected<void, std::string> WinMacOS::Initialize(const std::string_view appName)
+std::expected<void, std::string> WinMacOS::Initialize(const StartViewPlatformData& settings)
 {
-    NSRect frame = NSMakeRect(0, 0, 1280, 720);
+    NSRect frame = NSMakeRect(0, 0, settings.GetSize().width, settings.GetSize().height);
 
     NSUInteger style =
         NSWindowStyleMaskTitled |
@@ -42,7 +42,7 @@ std::expected<void, std::string> WinMacOS::Initialize(const std::string_view app
         backing:NSBackingStoreBuffered
         defer:NO];
 
-    [window setTitle:[NSString stringWithUTF8String:appName.data()]];
+    [window setTitle:[NSString stringWithUTF8String:settings.GetTitle().c_str()]];
     [window setReleasedWhenClosed:NO];
 
     EngineWindowDelegate* delegate = [[EngineWindowDelegate alloc] init];

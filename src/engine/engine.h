@@ -1,8 +1,12 @@
 #pragma once
 
-#include "engine/utils/Fwd.h"
-#include "engine/gapi/GAPI.h"
 #include "engine/EngineIncludes.h"
+#include "engine/gapi/GAPI.h"
+#include "engine/package/PackageManager.h"
+#include "engine/package/UserSettingsManager.h"
+#include "engine/platforms/Platform.h"
+#include "engine/platforms/mainloop/MainLoop.h"
+#include "engine/view/ViewManager.h"
 
 using namespace zzz::core;
 

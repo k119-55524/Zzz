@@ -20,7 +20,7 @@ namespace zzz::engine
 		WinAndroid(const Platform& platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks);
 		~WinAndroid() override;
 
-		[[nodiscard]] std::expected<void, std::string> Initialize(const std::string_view appName);
+		[[nodiscard]] std::expected<void, std::string> Initialize(const StartViewPlatformData& settings);
 
 		void ProcessAppCmd(int32_t cmd);
 

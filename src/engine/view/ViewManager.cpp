@@ -34,40 +34,27 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateStartView(c
 		return std::unexpected(err);
 	}
 
-	std::vector<std::shared_ptr<ViewScript>> scripts;
-	for (const auto& scriptGuid : startViewData->GetUiScriptGuids())
-	{
-		auto script = ScriptRegistry::CreateViewScript(scriptGuid);
-		if (!script)
-		{
-			std::string err = std::format("Не удалось создать ViewScript по GUID {} для стартового вида.", scriptGuid.ToString());
-			DOutError("{}", err);
-			return std::unexpected(err);
-		}
-
-		scripts.push_back(script);
-	}
-
-	const auto& userPlatformData = userSettingsManager.GetStartViewUserData().GetPlatformData();
-#if Z_DESKTOP
-	ViewData viewData(userPlatformData.GetSize(), startViewData->GetSceneGuid(), startViewData->GetUiScriptGuids());
-#else
-	ViewData viewData(Size2D<zU32>{ 0, 0 }, startViewData->GetSceneGuid(), startViewData->GetUiScriptGuids());
-#endif
-
-	return CreateView(viewData, scripts);
+	return CreateView(userSettingsManager.GetStartViewUserData().GetPlatformData(), startViewData->GetUiScriptGuids());
 }
 
-std::expected <std::shared_ptr<View>, std::string> ViewManager::CreateView(const ViewData& viewData, const std::vector<std::shared_ptr<ViewScript>>& scripts)
+std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateView(const StartViewPlatformData& settings, const std::vector<Guid>& scripts)
 {
 #if Z_MOBILE
 	if (m_Views.size() >= 1)
 		THROW_RUNTIME("Мобильные платформы поддерживают только одно нативное окно на приложение.");
 #endif
 
-	auto view = safe_make_shared<View>(viewData, m_Platform, scripts, [this](View& v) { OnWindowClose(v); });
-	m_Views.push_back(view);
-	view->InvokeStart();
+	std::shared_ptr<View> view;
+	try
+	{
+		view = safe_make_shared<View>(settings, scripts, m_Platform, [this](View& v) { OnWindowClose(v); });
+		m_Views.push_back(view);
+		view->InvokeStart();
+	}
+	catch (const std::exception& e)
+	{
+		return std::unexpected(e.what());
+	}
 
 	return view;
 }

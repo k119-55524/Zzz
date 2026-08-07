@@ -13,6 +13,6 @@ namespace zzz::engine
 		WiniOS(const Platform& platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks);
 		~WiniOS() override;
 
-		[[nodiscard]] std::expected<void, std::string> Initialize(const std::string_view appName);
+		[[nodiscard]] std::expected<void, std::string> Initialize(const StartViewPlatformData& settings);
 	};
 }

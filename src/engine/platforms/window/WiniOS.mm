@@ -30,7 +30,7 @@ WiniOS::~WiniOS()
 {
 }
 
-std::expected<void, std::string> WiniOS::Initialize(const std::string_view appName)
+std::expected<void, std::string> WiniOS::Initialize(const StartViewPlatformData& /*settings*/)
 {
     UIWindow* window = [(id)[[UIApplication sharedApplication] delegate] window];
     if (window != nil) {

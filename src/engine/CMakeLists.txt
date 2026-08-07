@@ -42,7 +42,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "platforms/mainloop/MainLoopEditor.h"
 
         # Native View / Window
-        "platforms/window/Window.h" "platforms/window/WindowCommon.h" "platforms/window/WindowCommon.cpp"
+        "platforms/window/NativeWindow.h" "platforms/window/WindowCommon.h" "platforms/window/WindowCommon.cpp"
         "view/View.h" "view/View.cpp"
         "view/ViewManager.h" "view/ViewManager.cpp"
         "../core/utils/ScreenResolution.h"
