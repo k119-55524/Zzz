@@ -16,26 +16,27 @@ namespace zzz::engine
 		[[nodiscard]] std::expected<StartViewData, std::string> GetStartViewData() const;
 
 		template <typename T> requires std::derived_from<T, ISerializable>
-		[[nodiscard]] std::expected<T, std::string> LoadAssetDataByName(ePackage type, std::string_view name) const
+		[[nodiscard]] std::expected<T, std::string> LoadPackageDataByName(ePackage type, std::string_view name) const
 		{
 			auto entryOpt = GetEntryByName(type, name);
-			if (!entryOpt) return UNEXPECTED("Ассет типа {} с именем '{}' не найден в пакете.", EnumToString::ToString(type), name);
-			return LoadAssetData<T>(*entryOpt);
+			if (!entryOpt) return UNEXPECTED("Package entry of type {} with name '{}' was not found.", EnumToString::ToString(type), name);
+			return LoadPackageData<T>(*entryOpt);
 		}
 		template <typename T> requires std::derived_from<T, ISerializable>
-		[[nodiscard]] std::expected<T, std::string> LoadAssetDataByGuid(ePackage type, const Guid& guid) const
+		[[nodiscard]] std::expected<T, std::string> LoadPackageDataByGuid(ePackage type, const Guid& guid) const
 		{
 			auto entryOpt = GetEntryByGuid(type, guid);
-			if (!entryOpt) return UNEXPECTED("Ассет типа {} с GUID '{}' не найден в пакете.", EnumToString::ToString(type), guid.ToString());
-			return LoadAssetData<T>(*entryOpt);
+			if (!entryOpt) return UNEXPECTED("Package entry of type {} with GUID '{}' was not found.", EnumToString::ToString(type), guid.ToString());
+			return LoadPackageData<T>(*entryOpt);
 		}
-		[[nodiscard]] std::optional<PackageEntry> GetEntryByName(ePackage type, std::string_view name) const;
-		[[nodiscard]] std::optional<PackageEntry> GetEntryByGuid(ePackage type, const Guid& guid) const;
 
 	private:
 		void Initialize(const Path& path);
+		[[nodiscard]] std::optional<PackageEntry> GetEntryByName(ePackage type, std::string_view name) const;
+		[[nodiscard]] std::optional<PackageEntry> GetEntryByGuid(ePackage type, const Guid& guid) const;
+
 		template <typename T> requires std::derived_from<T, ISerializable>
-		[[nodiscard]] std::expected<T, std::string> LoadAssetData(const PackageEntry& entry) const;
+		[[nodiscard]] std::expected<T, std::string> LoadPackageData(const PackageEntry& entry) const;
 
 		void LogPackageEntriesSummary() const;
 		template <typename T> requires std::derived_from<T, ISerializable>

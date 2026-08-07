@@ -103,11 +103,11 @@ namespace zzz::engine
 			return UNEXPECTED("Ресурс StartViewData не найден в манифесте пакета.");
 
 		const auto& entry = typeIt->second.begin()->second;
-		return LoadAssetData<StartViewData>(entry);
+		return LoadPackageData<StartViewData>(entry);
 	}
 
 	template <typename T> requires std::derived_from<T, ISerializable>
-	[[nodiscard]] std::expected<T, std::string> PackageManager::LoadAssetData(const PackageEntry& entry) const
+	[[nodiscard]] std::expected<T, std::string> PackageManager::LoadPackageData(const PackageEntry& entry) const
 	{
 		if (m_PackagePath.empty())
 			return UNEXPECTED("Путь к пакету ресурсов не задан.");
@@ -120,14 +120,14 @@ namespace zzz::engine
 		std::vector<std::byte> buffer(entry.GetSize());
 		file.read(reinterpret_cast<char*>(buffer.data()), entry.GetSize());
 		if (!file.good())
-			return UNEXPECTED("Ошибка ввода-вывода при чтении блока ассета '{}' из пакета (offset: {}, size: {}).", entry.GetName(), entry.GetOffset(), entry.GetSize());
+			return UNEXPECTED("Ошибка ввода-вывода при чтении блока данных '{}' из пакета (offset: {}, size: {}).", entry.GetName(), entry.GetOffset(), entry.GetSize());
 
 		std::size_t offset = 0;
 		Serializer serializer;
 		T data{};
 		auto res = serializer.Deserialize(buffer, offset, data);
 		if (!res)
-			return UNEXPECTED("Ошибка десериализации ассета '{}': {}.", entry.GetName(), res.error());
+			return UNEXPECTED("Ошибка десериализации данных пакета '{}': {}.", entry.GetName(), res.error());
 
 		if constexpr (std::is_same_v<T, ViewData>)
 		{
@@ -155,7 +155,7 @@ namespace zzz::engine
 	{
 		auto typeIt = m_EntriesByName.find(type);
 		const size_t count = (typeIt != m_EntriesByName.end()) ? typeIt->second.size() : 0;
-		DOut("  [AssetType: {}] count: {}", EnumToString::ToString(type), count);
+		DOut("  [PackageType: {}] count: {}", EnumToString::ToString(type), count);
 
 		if (typeIt == m_EntriesByName.end() || typeIt->second.empty())
 			return;
@@ -167,7 +167,7 @@ namespace zzz::engine
 			DOut("    [Entry #{}]", idx++);
 			entry.LogFileBlock("      ");
 
-			if (auto dataRes = LoadAssetData<T>(entry))
+			if (auto dataRes = LoadPackageData<T>(entry))
 			{
 				dataRes->LogFileBlock("      ");
 			}
