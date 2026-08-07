@@ -7,18 +7,18 @@
 
 #include <logger/logger.h>
 #include <core/Core.h>
-#include <core/IO/package/AppViewData.h>
+#include <core/IO/package/StartViewData.h>
 #include <core/IO/package/PackageEntry.h>
 #include <core/IO/package/PackageHeader.h>
 #include <core/IO/package/PrefabData.h>
 #include <core/IO/package/ProjectManifestData.h>
 #include <core/IO/package/SceneData.h>
 #include <core/IO/package/ViewData.h>
-#include <core/IO/package/platforms/AppViewDataAndroid.h>
-#include <core/IO/package/platforms/AppViewDataLinux.h>
-#include <core/IO/package/platforms/AppViewDataMacOS.h>
-#include <core/IO/package/platforms/AppViewDataMSWin.h>
-#include <core/IO/package/platforms/AppViewDataiOS.h>
+#include <core/IO/package/platforms/StartViewDataAndroid.h>
+#include <core/IO/package/platforms/StartViewDataLinux.h>
+#include <core/IO/package/platforms/StartViewDataMacOS.h>
+#include <core/IO/package/platforms/StartViewDataMSWin.h>
+#include <core/IO/package/platforms/StartViewDataiOS.h>
 
 namespace zzz::builder
 {
@@ -48,13 +48,28 @@ namespace zzz::builder
 		return "Windows";
 	}
 
-	static json ResolveAppViewJson(const json& root, const fs::path& projectDir, zzz::core::eTargetPlatform targetPlatform)
+	static json ResolveStartViewJson(const json& root, const fs::path& projectDir, zzz::core::eTargetPlatform targetPlatform)
 	{
 		const std::string platformName = ToPlatformString(targetPlatform);
+		json startViewRoot = root.contains("startView") && root["startView"].is_object()
+			? root["startView"]
+			: root;
+		json configRoot = root;
 
-		if (root.contains("platform_configs") && root["platform_configs"].is_array())
+		if (!configRoot.contains("platform_configs"))
 		{
-			for (const auto& configEntry : root["platform_configs"])
+			std::ifstream projectFile(projectDir / "project.json");
+			if (projectFile.is_open())
+			{
+				json projectRoot = json::parse(projectFile, nullptr, false);
+				if (!projectRoot.is_discarded())
+					configRoot = std::move(projectRoot);
+			}
+		}
+
+		if (configRoot.contains("platform_configs") && configRoot["platform_configs"].is_array())
+		{
+			for (const auto& configEntry : configRoot["platform_configs"])
 			{
 				if (!configEntry.is_object())
 					continue;
@@ -72,19 +87,95 @@ namespace zzz::builder
 					break;
 
 				json platformRoot = json::parse(configFile, nullptr, false);
-				if (!platformRoot.is_discarded() && platformRoot.contains("appView") && platformRoot["appView"].is_object())
-					return platformRoot["appView"];
+				if (!platformRoot.is_discarded() && platformRoot.contains("startView") && platformRoot["startView"].is_object())
+				{
+					for (const auto& [key, value] : platformRoot["startView"].items())
+					{
+						startViewRoot[key] = value;
+					}
+					return startViewRoot;
+				}
 
 				break;
 			}
 		}
 
-		return root.contains("appView") && root["appView"].is_object()
-			? root["appView"]
-			: root;
+		return startViewRoot;
 	}
 
-	static std::vector<std::byte> SerializeAssetToBinary(const PendingAsset& item, zzz::core::eTargetPlatform targetPlatform)
+	static Size2D<zU32> ReadSize(const json& root, zU32 defaultWidth = 1280, zU32 defaultHeight = 720)
+	{
+		const auto defaultSize = root.value("defaultSize", json::object());
+		return Size2D<zU32>{
+			root.value("width", defaultSize.value("width", defaultWidth)),
+			root.value("height", defaultSize.value("height", defaultHeight))
+		};
+	}
+
+	static eAndroidScreenOrientation ReadAndroidOrientation(std::string_view value)
+	{
+		if (value == "Sensor") return eAndroidScreenOrientation::Sensor;
+		if (value == "Portrait") return eAndroidScreenOrientation::Portrait;
+		if (value == "LandscapeRight") return eAndroidScreenOrientation::LandscapeRight;
+		return eAndroidScreenOrientation::LandscapeLeft;
+	}
+
+	static eAndroidCutoutMode ReadAndroidCutoutMode(std::string_view value)
+	{
+		if (value == "Default") return eAndroidCutoutMode::Default;
+		if (value == "Never") return eAndroidCutoutMode::Never;
+		return eAndroidCutoutMode::ShortEdges;
+	}
+
+	static eLinuxWindowMode ReadLinuxWindowMode(std::string_view value)
+	{
+		if (value == "Fullscreen") return eLinuxWindowMode::Fullscreen;
+		return eLinuxWindowMode::Windowed;
+	}
+
+	static eLinuxDisplayServer ReadLinuxDisplayServer(std::string_view value)
+	{
+		if (value == "Wayland") return eLinuxDisplayServer::Wayland;
+		if (value == "X11") return eLinuxDisplayServer::X11;
+		return eLinuxDisplayServer::Auto;
+	}
+
+	static eMacOSWindowMode ReadMacOSWindowMode(std::string_view value)
+	{
+		if (value == "Fullscreen") return eMacOSWindowMode::Fullscreen;
+		return eMacOSWindowMode::Windowed;
+	}
+
+	static eiOSScreenOrientation ReadiOSOrientation(std::string_view value)
+	{
+		if (value == "AutoRotate") return eiOSScreenOrientation::AutoRotate;
+		if (value == "Portrait") return eiOSScreenOrientation::Portrait;
+		if (value == "LandscapeRight") return eiOSScreenOrientation::LandscapeRight;
+		return eiOSScreenOrientation::LandscapeLeft;
+	}
+
+	static eiOSSafeAreaMode ReadiOSSafeAreaMode(std::string_view value)
+	{
+		if (value == "UseSafeArea") return eiOSSafeAreaMode::UseSafeArea;
+		return eiOSSafeAreaMode::ExtendIntoSafeArea;
+	}
+
+	static eiOSHomeIndicatorMode ReadiOSHomeIndicatorMode(std::string_view value)
+	{
+		if (value == "Visible") return eiOSHomeIndicatorMode::Visible;
+		return eiOSHomeIndicatorMode::AutoHidden;
+	}
+
+	static eMSWinWindowMode ReadMSWinWindowMode(const json& root)
+	{
+		const std::string windowMode = root.value("windowMode", "");
+		if (windowMode == "BorderlessFullscreen") return eMSWinWindowMode::BorderlessFullscreen;
+		if (windowMode == "ExclusiveFullscreen") return eMSWinWindowMode::ExclusiveFullscreen;
+		if (root.value("fullscreen", false)) return eMSWinWindowMode::BorderlessFullscreen;
+		return eMSWinWindowMode::Windowed;
+	}
+
+	static std::vector<std::byte> SerializeAssetToBinary(const PendingAsset& item, const fs::path& projectDir, zzz::core::eTargetPlatform targetPlatform)
 	{
 		Serializer serializer;
 		std::vector<std::byte> result;
@@ -160,22 +251,21 @@ namespace zzz::builder
 				if (auto res = serializer.Serialize(result, manifestData); !res)
 					return {};
 			}
-			else if (assetType == zzz::core::ePackage::AppView)
+			else if (assetType == zzz::core::ePackage::StartView)
 			{
-				json appViewRoot = ResolveAppViewJson(root, item.filePath.parent_path(), targetPlatform);
+				json startViewRoot = ResolveStartViewJson(root, projectDir, targetPlatform);
 
-				std::string title = appViewRoot.value("title", "Game Window");
 				Guid sceneGuid{};
-				if (appViewRoot.contains("scene") && appViewRoot["scene"].is_string())
+				if (startViewRoot.contains("scene") && startViewRoot["scene"].is_string())
 				{
-					if (auto parsed = Guid::Parse(appViewRoot["scene"].get<std::string>()))
+					if (auto parsed = Guid::Parse(startViewRoot["scene"].get<std::string>()))
 						sceneGuid = *parsed;
 				}
 
 				std::vector<Guid> uiScriptGuids;
-				if (appViewRoot.contains("scripts") && appViewRoot["scripts"].is_array())
+				if (startViewRoot.contains("scripts") && startViewRoot["scripts"].is_array())
 				{
-					for (const auto& elem : appViewRoot["scripts"])
+					for (const auto& elem : startViewRoot["scripts"])
 					{
 						if (elem.is_string())
 						{
@@ -185,8 +275,7 @@ namespace zzz::builder
 					}
 				}
 
-				// Сначала сериализуем общие поля AppViewData (Title, SceneGuid, ScriptGuids)
-				if (auto res = serializer.Serialize(result, title); !res) return {};
+				// Сначала сериализуем общие поля StartViewData (SceneGuid, ScriptGuids)
 				if (auto res = serializer.Serialize(result, sceneGuid); !res) return {};
 				zU32 scriptsCount = static_cast<zU32>(uiScriptGuids.size());
 				if (auto res = serializer.Serialize(result, scriptsCount); !res) return {};
@@ -200,58 +289,57 @@ namespace zzz::builder
 				{
 				case zzz::core::eTargetPlatform::Android:
 				{
-					std::string orientStr = appViewRoot.value("orientation", "LandscapeLeft");
-					eAndroidScreenOrientation orient = eAndroidScreenOrientation::LandscapeLeft;
-					if (orientStr == "Portrait") orient = eAndroidScreenOrientation::Portrait;
-					else if (orientStr == "LandscapeRight") orient = eAndroidScreenOrientation::LandscapeRight;
+					const auto orient = ReadAndroidOrientation(startViewRoot.value("orientation", "LandscapeLeft"));
+					zU32 fps = startViewRoot.value("targetFPS", 60u);
+					const auto cutout = ReadAndroidCutoutMode(startViewRoot.value("cutoutMode", "ShortEdges"));
+					bool keepOn = startViewRoot.value("keepScreenOn", true);
 
-					zU32 fps = appViewRoot.value("targetFPS", 60u);
-					eAndroidCutoutMode cutout = eAndroidCutoutMode::ShortEdges;
-					bool keepOn = appViewRoot.value("keepScreenOn", true);
-
-					AppViewDataAndroid androidData(orient, fps, cutout, keepOn);
+					StartViewDataAndroid androidData(orient, fps, cutout, keepOn);
 					if (auto res = serializer.Serialize(result, androidData); !res) return {};
 					break;
 				}
 				case zzz::core::eTargetPlatform::Linux:
 				{
-					zU32 width = appViewRoot.value("width", 1280u);
-					zU32 height = appViewRoot.value("height", 720u);
-					bool resizable = appViewRoot.value("resizable", true);
+					std::string title = startViewRoot.value("title", "Game Window");
+					auto size = ReadSize(startViewRoot);
+					auto windowMode = ReadLinuxWindowMode(startViewRoot.value("windowMode", "Windowed"));
+					bool resizable = startViewRoot.value("resizable", true);
+					auto displayServer = ReadLinuxDisplayServer(startViewRoot.value("displayServer", "Auto"));
 
-					AppViewDataLinux linuxData(Size2D<zU32>{ width, height }, eLinuxWindowMode::Windowed, resizable);
+					StartViewDataLinux linuxData(title, size, windowMode, resizable, displayServer);
 					if (auto res = serializer.Serialize(result, linuxData); !res) return {};
 					break;
 				}
 				case zzz::core::eTargetPlatform::MacOS:
 				{
-					zU32 width = appViewRoot.value("width", 1280u);
-					zU32 height = appViewRoot.value("height", 720u);
-					bool resizable = appViewRoot.value("resizable", true);
+					std::string title = startViewRoot.value("title", "Game Window");
+					auto size = ReadSize(startViewRoot);
+					auto windowMode = ReadMacOSWindowMode(startViewRoot.value("windowMode", "Windowed"));
+					bool resizable = startViewRoot.value("resizable", true);
 
-					AppViewDataMacOS macData(Size2D<zU32>{ width, height }, eMacOSWindowMode::Windowed, resizable);
+					StartViewDataMacOS macData(title, size, windowMode, resizable);
 					if (auto res = serializer.Serialize(result, macData); !res) return {};
 					break;
 				}
 				case zzz::core::eTargetPlatform::iOS:
 				{
-					std::string orientStr = appViewRoot.value("orientation", "LandscapeLeft");
-					eiOSScreenOrientation orient = eiOSScreenOrientation::LandscapeLeft;
-					if (orientStr == "Portrait") orient = eiOSScreenOrientation::Portrait;
+					const auto orient = ReadiOSOrientation(startViewRoot.value("orientation", "LandscapeLeft"));
+					const auto safeAreaMode = ReadiOSSafeAreaMode(startViewRoot.value("safeAreaMode", "ExtendIntoSafeArea"));
+					const auto homeIndicatorMode = ReadiOSHomeIndicatorMode(startViewRoot.value("homeIndicatorMode", "AutoHidden"));
 
-					AppViewDataiOS iosData(orient);
+					StartViewDataiOS iosData(orient, safeAreaMode, homeIndicatorMode);
 					if (auto res = serializer.Serialize(result, iosData); !res) return {};
 					break;
 				}
 				case zzz::core::eTargetPlatform::Windows:
 				default:
 				{
-					zU32 width = appViewRoot.value("width", appViewRoot.value("defaultSize", json::object()).value("width", 1280u));
-					zU32 height = appViewRoot.value("height", appViewRoot.value("defaultSize", json::object()).value("height", 720u));
-					bool isFullscreen = appViewRoot.value("fullscreen", false);
-					bool resizable = appViewRoot.value("resizable", true);
+					std::string title = startViewRoot.value("title", "Game Window");
+					auto size = ReadSize(startViewRoot);
+					auto windowMode = ReadMSWinWindowMode(startViewRoot);
+					bool resizable = startViewRoot.value("resizable", true);
 
-					AppViewDataMSWin winData(Size2D<zU32>{ width, height }, isFullscreen ? eMSWinWindowMode::BorderlessFullscreen : eMSWinWindowMode::Windowed, resizable);
+					StartViewDataMSWin winData(title, size, windowMode, resizable);
 					if (auto res = serializer.Serialize(result, winData); !res) return {};
 					break;
 				}
@@ -382,7 +470,7 @@ namespace zzz::builder
 				}
 				else if (ext == ".zav")
 				{
-					typeVal = static_cast<uint32_t>(zzz::core::ePackage::AppView);
+					typeVal = static_cast<uint32_t>(zzz::core::ePackage::StartView);
 				}
 				else
 				{
@@ -424,16 +512,16 @@ namespace zzz::builder
 			}
 		}
 
-		bool hasAppView = std::any_of(pendingAssets.begin(), pendingAssets.end(), [](const PendingAsset& item) {
-			return item.type == static_cast<uint32_t>(zzz::core::ePackage::AppView);
+		bool hasStartView = std::any_of(pendingAssets.begin(), pendingAssets.end(), [](const PendingAsset& item) {
+			return item.type == static_cast<uint32_t>(zzz::core::ePackage::StartView);
 		});
 
-		if (!hasAppView)
+		if (!hasStartView)
 		{
 			pendingAssets.push_back({
-				"MainAppView",
+				"MainStartView",
 				"00000000-0000-0000-0000-000000000002",
-				static_cast<uint32_t>(zzz::core::ePackage::AppView),
+				static_cast<uint32_t>(zzz::core::ePackage::StartView),
 				projJsonPath
 			});
 		}
@@ -449,7 +537,7 @@ namespace zzz::builder
 
 		for (const auto& item : pendingAssets)
 		{
-			std::vector<std::byte> payload = SerializeAssetToBinary(item, targetPlatform);
+			std::vector<std::byte> payload = SerializeAssetToBinary(item, sourceDir, targetPlatform);
 			uint64_t payloadSize = payload.size();
 
 			payloads.push_back(std::move(payload));

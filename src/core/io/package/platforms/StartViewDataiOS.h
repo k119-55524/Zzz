@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <string_view>
 #include "core/Serialize/Serializer.h"
@@ -8,11 +8,11 @@
 namespace zzz::core
 {
 
-	class AppViewDataiOS final : public ISerializable
+	class StartViewDataiOS final : public ISerializable
 	{
 	public:
-		AppViewDataiOS() = default;
-		AppViewDataiOS(eiOSScreenOrientation orientation, eiOSSafeAreaMode safeAreaMode = eiOSSafeAreaMode::ExtendIntoSafeArea, eiOSHomeIndicatorMode homeIndicatorMode = eiOSHomeIndicatorMode::AutoHidden)
+		StartViewDataiOS() = default;
+		StartViewDataiOS(eiOSScreenOrientation orientation, eiOSSafeAreaMode safeAreaMode = eiOSSafeAreaMode::ExtendIntoSafeArea, eiOSHomeIndicatorMode homeIndicatorMode = eiOSHomeIndicatorMode::AutoHidden)
 			: orientation(orientation)
 			, safeAreaMode(safeAreaMode)
 			, homeIndicatorMode(homeIndicatorMode)
@@ -24,9 +24,9 @@ namespace zzz::core
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			DOut("{}[AppViewDataiOS] orientation: {}", indentation, EnumToString::ToString(orientation));
-			DOut("{}[AppViewDataiOS] safeAreaMode: {}", indentation, EnumToString::ToString(safeAreaMode));
-			DOut("{}[AppViewDataiOS] homeIndicatorMode: {}", indentation, EnumToString::ToString(homeIndicatorMode));
+			DOut("{}[StartViewDataiOS] orientation: {}", indentation, EnumToString::ToString(orientation));
+			DOut("{}[StartViewDataiOS] safeAreaMode: {}", indentation, EnumToString::ToString(safeAreaMode));
+			DOut("{}[StartViewDataiOS] homeIndicatorMode: {}", indentation, EnumToString::ToString(homeIndicatorMode));
 		}
 
 	private:

@@ -18,7 +18,7 @@ namespace zzz::engine
 
 		[[nodiscard]] inline std::shared_ptr<IGAPI> GetGAPI() const noexcept { return m_GAPI; }
 
-		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> InitializeFromPackage(const PackageManager& packageManager);
+		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> CreateStartView(const PackageManager& packageManager, const UserSettingsManager& userSettingsManager);
 		[[nodiscard]] std::expected <std::shared_ptr<View>, std::string> CreateView(const ViewData& viewData, const std::vector<std::shared_ptr<ViewScript>>& scripts);
 #if Z_EDITOR
 		[[nodiscard]] std::expected <std::shared_ptr<View>, std::string> CreateView(void* data);

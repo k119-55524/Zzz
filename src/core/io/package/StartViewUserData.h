@@ -1,25 +1,25 @@
-﻿#pragma once
+#pragma once
 
 #include <string>
 #include <string_view>
 #include "core/Serialize/Serializer.h"
-#include "core/IO/package/AppViewData.h"
+#include "core/IO/package/StartViewData.h"
 
 namespace zzz::core
 {
-	class AppViewUserData final : public ISerializable
+	class StartViewUserData final : public ISerializable
 	{
 	public:
-		AppViewUserData() = default;
-		explicit AppViewUserData(const AppViewData& appViewData)
-			: m_PlatformData(appViewData.GetPlatformData())
+		StartViewUserData() = default;
+		explicit StartViewUserData(const StartViewData& startViewData)
+			: m_PlatformData(startViewData.GetPlatformData())
 		{}
 
-		[[nodiscard]] const AppViewPlatformData& GetPlatformData() const noexcept { return m_PlatformData; }
+		[[nodiscard]] const StartViewPlatformData& GetPlatformData() const noexcept { return m_PlatformData; }
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			DOut("{}[AppViewUserData]", indentation);
+			DOut("{}[StartViewUserData]", indentation);
 			m_PlatformData.LogFileBlock(std::string(indentation) + "  ");
 		}
 
@@ -33,6 +33,6 @@ namespace zzz::core
 			return s.Deserialize(buffer, offset, m_PlatformData);
 		}
 
-		AppViewPlatformData m_PlatformData;
+		StartViewPlatformData m_PlatformData;
 	};
 }

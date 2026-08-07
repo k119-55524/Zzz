@@ -4,7 +4,7 @@
     "bundleIdentifier": "com.zzz.assetstest",
     "icon": "Assets/Icons/macos_icon.icns"
   },
-  "appView": {
+  "startView": {
     "title": "GameZzz",
     "defaultSize": {
       "width": 1280,

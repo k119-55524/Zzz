@@ -17,8 +17,11 @@ namespace zzz::engine
 		void EndRender() override;
 
 	protected:
-		[[nodiscard]] std::expected<void, std::string> Init() override;
 		void WaitForGpu() override;
+
+	private:
+		friend class Engine;
+		void Initialize() override;
 	};
 }
 

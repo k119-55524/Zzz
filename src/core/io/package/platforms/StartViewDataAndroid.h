@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <string_view>
 #include "core/Serialize/Serializer.h"
@@ -8,11 +8,11 @@
 namespace zzz::core
 {
 
-	class AppViewDataAndroid final : public ISerializable
+	class StartViewDataAndroid final : public ISerializable
 	{
 	public:
-		AppViewDataAndroid() = default;
-		AppViewDataAndroid(eAndroidScreenOrientation orientation, zU32 targetFPS = 60, eAndroidCutoutMode cutoutMode = eAndroidCutoutMode::ShortEdges, bool keepScreenOn = true)
+		StartViewDataAndroid() = default;
+		StartViewDataAndroid(eAndroidScreenOrientation orientation, zU32 targetFPS = 60, eAndroidCutoutMode cutoutMode = eAndroidCutoutMode::ShortEdges, bool keepScreenOn = true)
 			: orientation(orientation)
 			, targetFPS(targetFPS)
 			, cutoutMode(cutoutMode)
@@ -26,10 +26,10 @@ namespace zzz::core
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			DOut("{}[AppViewDataAndroid] orientation: {}", indentation, EnumToString::ToString(orientation));
-			DOut("{}[AppViewDataAndroid] targetFPS: {}", indentation, targetFPS);
-			DOut("{}[AppViewDataAndroid] cutoutMode: {}", indentation, EnumToString::ToString(cutoutMode));
-			DOut("{}[AppViewDataAndroid] keepScreenOn: {}", indentation, keepScreenOn);
+			DOut("{}[StartViewDataAndroid] orientation: {}", indentation, EnumToString::ToString(orientation));
+			DOut("{}[StartViewDataAndroid] targetFPS: {}", indentation, targetFPS);
+			DOut("{}[StartViewDataAndroid] cutoutMode: {}", indentation, EnumToString::ToString(cutoutMode));
+			DOut("{}[StartViewDataAndroid] keepScreenOn: {}", indentation, keepScreenOn);
 		}
 
 	private:

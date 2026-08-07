@@ -4,7 +4,7 @@
     "icon": "Assets/Icons/win_icon.ico",
     "visualStudioToolset": "v143"
   },
-  "appView": {
+  "startView": {
     "title": "GameZzz",
     "defaultSize": {
       "width": 1280,

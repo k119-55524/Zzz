@@ -5,7 +5,7 @@
 namespace zzz::engine
 {
 	MetalAPI::MetalAPI(std::shared_ptr<UserSettingsManager> userSettings)
-		: IGAPI(std::move(userSettings), eGAPIType::Metal)
+		: IGAPI(std::move(userSettings))
 	{
 	}
 
@@ -13,9 +13,8 @@ namespace zzz::engine
 	{
 	}
 
-	std::expected<void, std::string> MetalAPI::Init()
+	void MetalAPI::Initialize()
 	{
-		return {};
 	}
 
 	void MetalAPI::SubmitCommandLists()

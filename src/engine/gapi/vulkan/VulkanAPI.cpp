@@ -5,7 +5,7 @@
 namespace zzz::engine
 {
 	VulkanAPI::VulkanAPI(std::shared_ptr<UserSettingsManager> userSettings)
-		: IGAPI(std::move(userSettings), eGAPIType::Vulkan)
+		: IGAPI(std::move(userSettings))
 	{
 	}
 
@@ -13,9 +13,8 @@ namespace zzz::engine
 	{
 	}
 
-	std::expected<void, std::string> VulkanAPI::Init()
+	void VulkanAPI::Initialize()
 	{
-		return {};
 	}
 
 	void VulkanAPI::SubmitCommandLists()

@@ -27,18 +27,14 @@ Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeDa
 	m_UserSettingsManager = safe_make_shared<UserSettingsManager>(*m_Path, *m_PackageManager);
 	m_Platform = safe_make_unique<Platform>(nativeData);
 	m_GAPI = safe_make_shared<GAPI>(m_UserSettingsManager);
-	auto gapiInitRes = m_GAPI->Initialize();
-	if (!gapiInitRes)
-	{
-		THROW_RUNTIME("Ошибка инициализации GAPI: {}", gapiInitRes.error());
-	}
-
+	m_GAPI->Initialize();
 	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, m_GAPI, [this]() { OnCloseAllViews(); });
 	m_MainLoop = safe_make_shared<MainLoop>(*m_Platform, [this]() { OnUpdateSystem(); });
 	m_EventBus = safe_make_shared<ProjectEventBus>();
 	m_Time = safe_make_shared<Time>();
 
 	engineState.store(eInitState::Initialized);
+
 	DOut("Инициализация: OK.");
 }
 
@@ -101,7 +97,7 @@ void Engine::Shutdown()
 		RegisterScripts();
 		LoadGlobalScripts();
 
-		auto view = m_ViewManager->InitializeFromPackage(*m_PackageManager);
+		auto view = m_ViewManager->CreateStartView(*m_PackageManager, *m_UserSettingsManager);
 		if (!view)
 		{
 			DOutError("{}", view.error());

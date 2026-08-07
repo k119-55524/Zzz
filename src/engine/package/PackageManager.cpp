@@ -1,3 +1,4 @@
+
 #include "PackageManager.h"
 
 using namespace zzz::core;
@@ -56,14 +57,14 @@ namespace zzz::engine
 			m_EntriesByGuid[type][entry.GetGuid()] = entry;
 		}
 
-		auto appViewIt = m_EntriesByName.find(ePackage::AppView);
-		if (appViewIt == m_EntriesByName.end() || appViewIt->second.empty())
+		auto startViewIt = m_EntriesByName.find(ePackage::StartView);
+		if (startViewIt == m_EntriesByName.end() || startViewIt->second.empty())
 		{
-			THROW_RUNTIME("Ошибка пакета {}: Обязательный ресурс AppViewData отсутствует.", m_PackagePath.string());
+			THROW_RUNTIME("Ошибка пакета {}: Обязательный ресурс StartViewData отсутствует.", m_PackagePath.string());
 		}
-		if (appViewIt->second.size() > 1)
+		if (startViewIt->second.size() > 1)
 		{
-			THROW_RUNTIME("Ошибка пакета {}: Ресурс AppViewData не уникален (найдено {} штук).", m_PackagePath.string(), appViewIt->second.size());
+			THROW_RUNTIME("Ошибка пакета {}: Ресурс StartViewData не уникален (найдено {} штук).", m_PackagePath.string(), startViewIt->second.size());
 		}
 
 		LogPackageEntriesSummary();
@@ -95,14 +96,14 @@ namespace zzz::engine
 		return entryIt->second;
 	}
 
-	std::expected<AppViewData, std::string> PackageManager::GetAppViewData() const
+	std::expected<StartViewData, std::string> PackageManager::GetStartViewData() const
 	{
-		auto typeIt = m_EntriesByName.find(ePackage::AppView);
+		auto typeIt = m_EntriesByName.find(ePackage::StartView);
 		if (typeIt == m_EntriesByName.end() || typeIt->second.empty())
-			return UNEXPECTED("Ресурс AppViewData не найден в манифесте пакета.");
+			return UNEXPECTED("Ресурс StartViewData не найден в манифесте пакета.");
 
 		const auto& entry = typeIt->second.begin()->second;
-		return LoadAssetData<AppViewData>(entry);
+		return LoadAssetData<StartViewData>(entry);
 	}
 
 	template <typename T> requires std::derived_from<T, ISerializable>
@@ -142,7 +143,7 @@ namespace zzz::engine
 		DOut("========== Package Data: {} ==========", m_PackagePath.string());
 		// Закомментируй тот тип ресурса, который не хочешь логировать
 		LogEntriesSummaryForType<ProjectManifestData>(ePackage::ProjectManifest);
-		LogEntriesSummaryForType<AppViewData>(ePackage::AppView);
+		LogEntriesSummaryForType<StartViewData>(ePackage::StartView);
 		LogEntriesSummaryForType<SceneData>(ePackage::Scene);
 		LogEntriesSummaryForType<ViewData>(ePackage::View);
 		LogEntriesSummaryForType<PrefabData>(ePackage::Prefab);

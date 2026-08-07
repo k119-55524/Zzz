@@ -3,7 +3,7 @@
     "executableName": "GameZzz",
     "icon": "Assets/Icons/linux_icon.png"
   },
-  "appView": {
+  "startView": {
     "title": "GameZzz",
     "defaultSize": {
       "width": 1280,

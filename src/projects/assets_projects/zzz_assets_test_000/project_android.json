@@ -5,8 +5,7 @@
     "targetSdkVersion": 34,
     "icon": "Assets/Icons/android_icon.png"
   },
-  "appView": {
-    "title": "GameZzz",
+  "startView": {
     "orientation": "LandscapeLeft",
     "targetFPS": 60,
     "cutoutMode": "ShortEdges",

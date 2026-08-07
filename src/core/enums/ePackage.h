@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "core/utils/Types.h"
 
@@ -11,6 +11,6 @@ namespace zzz::core
 		View = 3,
 		Prefab = 4,
 		BinaryAsset = 5,
-		AppView = 6
+		StartView = 6
 	};
 }

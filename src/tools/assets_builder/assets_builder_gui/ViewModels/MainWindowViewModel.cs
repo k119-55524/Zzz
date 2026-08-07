@@ -394,7 +394,7 @@ public class MainWindowViewModel : ViewModelBase
                         _engine.GenerateScriptsCmake(sourcePath, target.BuildDirectory);
 
                         AppendLog($"Сериализация индивидуального бинарного пакета для '{target.Name}' ({target.TargetPlatform})...");
-                        bool packSuccess = PackagePacker.PackProject(sourcePath, targetAssetsDir, target.TargetPlatform, AppendLog);
+                        bool packSuccess = PackagePacker.PackProject(sourcePath, target.BuildDirectory, target.TargetPlatform, AppendLog);
                         if (!packSuccess)
                         {
                             AppendLog($"Ошибка упаковки для таргета '{target.Name}'!");

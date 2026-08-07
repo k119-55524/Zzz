@@ -1,5 +1,6 @@
-﻿#pragma once
+#pragma once
 
+#include <string>
 #include <string_view>
 #include "core/templates/Size2D.h"
 #include "core/Serialize/Serializer.h"
@@ -9,41 +10,47 @@
 namespace zzz::core
 {
 
-	class AppViewDataMSWin final : public ISerializable
+	class StartViewDataMSWin final : public ISerializable
 	{
 	public:
-		AppViewDataMSWin() = default;
-		AppViewDataMSWin(Size2D<zU32> size, eMSWinWindowMode windowMode = eMSWinWindowMode::Windowed, bool resizable = true)
-			: size(size)
+		StartViewDataMSWin() = default;
+		StartViewDataMSWin(std::string title, Size2D<zU32> size, eMSWinWindowMode windowMode = eMSWinWindowMode::Windowed, bool resizable = true)
+			: title(std::move(title))
+			, size(size)
 			, windowMode(windowMode)
 			, resizable(resizable)
 		{}
 
+		[[nodiscard]] const std::string& GetTitle() const noexcept { return title; }
 		[[nodiscard]] const Size2D<zU32>& GetSize() const noexcept { return size; }
 		[[nodiscard]] eMSWinWindowMode GetWindowMode() const noexcept { return windowMode; }
 		[[nodiscard]] bool IsResizable() const noexcept { return resizable; }
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			DOut("{}[AppViewDataMSWin] size: {}x{}", indentation, size.width, size.height);
-			DOut("{}[AppViewDataMSWin] windowMode: {}", indentation, EnumToString::ToString(windowMode));
-			DOut("{}[AppViewDataMSWin] resizable: {}", indentation, resizable);
+			DOut("{}[StartViewDataMSWin] title: {}", indentation, title);
+			DOut("{}[StartViewDataMSWin] size: {}x{}", indentation, size.width, size.height);
+			DOut("{}[StartViewDataMSWin] windowMode: {}", indentation, EnumToString::ToString(windowMode));
+			DOut("{}[StartViewDataMSWin] resizable: {}", indentation, resizable);
 		}
 
 	private:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override
 		{
-			return s.Serialize(buffer, size)
+			return s.Serialize(buffer, title)
+				.and_then([&]() { return s.Serialize(buffer, size); })
 				.and_then([&]() { return s.Serialize(buffer, windowMode); })
 				.and_then([&]() { return s.Serialize(buffer, resizable); });
 		}
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override
 		{
-			return s.Deserialize(buffer, offset, size)
+			return s.Deserialize(buffer, offset, title)
+				.and_then([&]() { return s.Deserialize(buffer, offset, size); })
 				.and_then([&]() { return s.Deserialize(buffer, offset, windowMode); })
 				.and_then([&]() { return s.Deserialize(buffer, offset, resizable); });
 		}
 
+		std::string title{ "Game Window" };
 		Size2D<zU32> size{ 1280, 720 };
 		eMSWinWindowMode windowMode = eMSWinWindowMode::Windowed;
 		bool resizable = true;

@@ -1,23 +1,14 @@
+
 #include "View.h"
 #include "ViewManager.h"
 #include "../platforms/Platform.h"
 #include "../package/PackageManager.h"
+#include "../package/UserSettingsManager.h"
 
 #include "../gapi/IGAPI.h"
 
 using namespace zzz::core;
 using namespace zzz::engine;
-
-namespace
-{
-	[[nodiscard]] Size2D<zU32> GetDefaultViewSize(const AppViewPlatformData& platformData) noexcept
-	{
-		if constexpr (requires { platformData.GetSize(); })
-			return platformData.GetSize();
-		else
-			return Size2D<zU32>{ 1280, 720 };
-	}
-}
 
 ViewManager::ViewManager(const Platform& platform, std::shared_ptr<IGAPI> gapi, std::function<void()> onAllViewsClosed) :
 	m_Platform{ platform },
@@ -33,23 +24,23 @@ ViewManager::~ViewManager()
 	m_Views.clear();
 }
 
-std::expected<std::shared_ptr<View>, std::string> ViewManager::InitializeFromPackage(const PackageManager& packageManager)
+std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateStartView(const PackageManager& packageManager, const UserSettingsManager& userSettingsManager)
 {
-	auto appViewData = packageManager.GetAppViewData();
-	if (!appViewData)
+	auto startViewData = packageManager.GetStartViewData();
+	if (!startViewData)
 	{
-		std::string err = std::format("Обязательный ресурс AppViewData не найден в пакете: {}", appViewData.error());
+		std::string err = std::format("Обязательный ресурс StartViewData не найден в пакете: {}", startViewData.error());
 		DOutError("{}", err);
 		return std::unexpected(err);
 	}
 
 	std::vector<std::shared_ptr<ViewScript>> scripts;
-	for (const auto& scriptGuid : appViewData->GetUiScriptGuids())
+	for (const auto& scriptGuid : startViewData->GetUiScriptGuids())
 	{
 		auto script = ScriptRegistry::CreateViewScript(scriptGuid);
 		if (!script)
 		{
-			std::string err = std::format("Не удалось создать ViewScript по GUID {} для главного вида '{}'.", scriptGuid.ToString(), appViewData->GetTitle());
+			std::string err = std::format("Не удалось создать ViewScript по GUID {} для стартового вида.", scriptGuid.ToString());
 			DOutError("{}", err);
 			return std::unexpected(err);
 		}
@@ -57,7 +48,13 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::InitializeFromPac
 		scripts.push_back(script);
 	}
 
-	ViewData viewData(GetDefaultViewSize(appViewData->GetPlatformData()), appViewData->GetSceneGuid(), appViewData->GetUiScriptGuids());
+	const auto& userPlatformData = userSettingsManager.GetStartViewUserData().GetPlatformData();
+#if Z_DESKTOP
+	ViewData viewData(userPlatformData.GetSize(), startViewData->GetSceneGuid(), startViewData->GetUiScriptGuids());
+#else
+	ViewData viewData(Size2D<zU32>{ 0, 0 }, startViewData->GetSceneGuid(), startViewData->GetUiScriptGuids());
+#endif
+
 	return CreateView(viewData, scripts);
 }
 

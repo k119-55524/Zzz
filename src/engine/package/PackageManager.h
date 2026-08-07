@@ -13,6 +13,8 @@ namespace zzz::engine
 		PackageManager(const Path& path);
 		~PackageManager() = default;
 
+		[[nodiscard]] std::expected<StartViewData, std::string> GetStartViewData() const;
+
 		template <typename T> requires std::derived_from<T, ISerializable>
 		[[nodiscard]] std::expected<T, std::string> LoadAssetDataByName(ePackage type, std::string_view name) const
 		{
@@ -27,19 +29,17 @@ namespace zzz::engine
 			if (!entryOpt) return UNEXPECTED("Ассет типа {} с GUID '{}' не найден в пакете.", EnumToString::ToString(type), guid.ToString());
 			return LoadAssetData<T>(*entryOpt);
 		}
-
 		[[nodiscard]] std::optional<PackageEntry> GetEntryByName(ePackage type, std::string_view name) const;
 		[[nodiscard]] std::optional<PackageEntry> GetEntryByGuid(ePackage type, const Guid& guid) const;
 
-		[[nodiscard]] std::expected<AppViewData, std::string> GetAppViewData() const;
-
 	private:
 		void Initialize(const Path& path);
+		template <typename T> requires std::derived_from<T, ISerializable>
+		[[nodiscard]] std::expected<T, std::string> LoadAssetData(const PackageEntry& entry) const;
+
 		void LogPackageEntriesSummary() const;
 		template <typename T> requires std::derived_from<T, ISerializable>
 		void LogEntriesSummaryForType(ePackage type) const;
-		template <typename T> requires std::derived_from<T, ISerializable>
-		[[nodiscard]] std::expected<T, std::string> LoadAssetData(const PackageEntry& entry) const;
 
 		std::filesystem::path m_PackagePath;
 		std::map<ePackage, std::unordered_map<std::string, PackageEntry>> m_EntriesByName;

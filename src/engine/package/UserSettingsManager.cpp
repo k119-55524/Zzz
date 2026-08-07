@@ -4,7 +4,7 @@
 
 
 using namespace zzz::core;
-using zzz::core::AppViewUserData;
+using zzz::core::StartViewUserData;
 
 namespace zzz::engine
 {
@@ -71,11 +71,11 @@ namespace zzz::engine
 
 	void UserSettingsManager::SetDefaultUserSettings(const PackageManager& packageManager)
 	{
-		auto appViewData = packageManager.GetAppViewData();
-		if (!appViewData)
-			THROW_RUNTIME("Не удалось загрузить AppViewData: {}", appViewData.error());
+		auto startViewData = packageManager.GetStartViewData();
+		if (!startViewData)
+			THROW_RUNTIME("Не удалось загрузить StartViewData: {}", startViewData.error());
 
-		m_AppViewUserData = AppViewUserData(*appViewData);
+		m_StartViewUserData = StartViewUserData(*startViewData);
 		m_PlatformConfig = PlatformConfig();
 		m_Version = Version(c_ConfigFileMajorVersion, c_ConfigFileMinorVersion, c_ConfigFilePatchVersion);
 	}
@@ -189,7 +189,7 @@ namespace zzz::engine
 	{
 		return s.Serialize(buffer, c_ConfigHeader)
 			.and_then([&]() { return s.Serialize(buffer, m_Version); })
-			.and_then([&]() { return s.Serialize(buffer, m_AppViewUserData); })
+			.and_then([&]() { return s.Serialize(buffer, m_StartViewUserData); })
 			.and_then([&]() { return s.Serialize(buffer, m_PlatformConfig); });
 	}
 
@@ -205,7 +205,7 @@ namespace zzz::engine
 
 					return s.Deserialize(buffer, offset, m_Version);
 				})
-			.and_then([&]() { return s.Deserialize(buffer, offset, m_AppViewUserData); })
+			.and_then([&]() { return s.Deserialize(buffer, offset, m_StartViewUserData); })
 			.and_then([&]() { return s.Deserialize(buffer, offset, m_PlatformConfig); });
 	}
 
@@ -214,7 +214,7 @@ namespace zzz::engine
 	{
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 		DOut("========== User Data: {} ==========", m_ConfigPath.string());
-		m_AppViewUserData.LogFileBlock("  ");
+		m_StartViewUserData.LogFileBlock("  ");
 		DOut("  [PlatformConfig]");
 		m_PlatformConfig.LogFileBlock("    ");
 #endif
