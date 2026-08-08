@@ -21,11 +21,13 @@ namespace zzz::core
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut("{}[SceneData] sceneScriptGuids({})", indentation, sceneScriptGuids.size());
+			DOut("{}[SceneData]", indentation);
+			DOut("{}sceneScriptGuids({})", nestedIndentation, sceneScriptGuids.size());
 			for (zU32 i = 0; i < sceneScriptGuids.size(); ++i)
 			{
-				DOut("{}sceneScriptGuid #{}: {}", nestedIndentation, i, sceneScriptGuids[i].ToString());
+				DOut("{}  sceneScriptGuid #{}: {}", nestedIndentation, i, sceneScriptGuids[i].ToString());
 			}
+			DOut("{}---", indentation);
 		}
 
 	private:

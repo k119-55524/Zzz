@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <string_view>
 #include "core/Serialize/Serializer.h"
 #include "core/Enums/eEnumToString.h"
@@ -24,9 +25,12 @@ namespace zzz::core
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			DOut("{}[StartViewDataiOS] orientation: {}", indentation, EnumToString::ToString(orientation));
-			DOut("{}[StartViewDataiOS] safeAreaMode: {}", indentation, EnumToString::ToString(safeAreaMode));
-			DOut("{}[StartViewDataiOS] homeIndicatorMode: {}", indentation, EnumToString::ToString(homeIndicatorMode));
+			const std::string nestedIndentation = std::string(indentation) + "  ";
+			DOut("{}[StartViewDataiOS]", indentation);
+			DOut("{}orientation: {}", nestedIndentation, EnumToString::ToString(orientation));
+			DOut("{}safeAreaMode: {}", nestedIndentation, EnumToString::ToString(safeAreaMode));
+			DOut("{}homeIndicatorMode: {}", nestedIndentation, EnumToString::ToString(homeIndicatorMode));
+			DOut("{}---", indentation);
 		}
 
 	private:

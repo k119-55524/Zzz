@@ -15,6 +15,7 @@ namespace zzz::core
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
 			DOut("{}[ConfigEditor]", indentation);
+			DOut("{}---", indentation);
 		}
 
 	private:

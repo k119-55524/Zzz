@@ -150,7 +150,7 @@ namespace zzz::engine
 	void PackageManager::LogPackageEntriesSummary() const
 	{
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-		DOut("========== Package Data: {} ==========", m_PackagePath.string());
+		DOut("========== [PackageManager] Package Data: {} ==========", m_PackagePath.string());
 		// Закомментируй тот тип ресурса, который не хочешь логировать
 		LogEntriesSummaryForType<ProjectManifestData>(ePackage::ProjectManifest);
 		LogEntriesSummaryForType<StartViewData>(ePackage::StartView);
@@ -165,16 +165,20 @@ namespace zzz::engine
 	{
 		auto typeIt = m_EntriesByName.find(type);
 		const size_t count = (typeIt != m_EntriesByName.end()) ? typeIt->second.size() : 0;
-		DOut("  [PackageType: {}] count: {}", EnumToString::ToString(type), count);
+		DOut("  [PackageType] {}({})", EnumToString::ToString(type), count);
 
 		if (typeIt == m_EntriesByName.end() || typeIt->second.empty())
+		{
+			DOut("  ---");
 			return;
+		}
 
 		const auto& entriesMap = typeIt->second;
-		size_t idx = 0;
-		for (const auto& [name, entry] : entriesMap)
+		size_t index = 0;
+		for (const auto& entryPair : entriesMap)
 		{
-			DOut("    [Entry #{}]", idx++);
+			const auto& entry = entryPair.second;
+			DOut("    entry: PackageEntry({}/{})", index++, count);
 			entry.LogFileBlock("      ");
 
 			if (auto dataRes = LoadPackageData<T>(entry))
@@ -182,6 +186,7 @@ namespace zzz::engine
 				dataRes->LogFileBlock("      ");
 			}
 		}
+		DOut("  ---");
 	}
 #pragma endregion
 }

@@ -32,14 +32,16 @@ namespace zzz::core
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut("{}[ViewData] name: {}", indentation, name);
-			DOut("{}[ViewData] size: {}x{}", indentation, size.width, size.height);
-			DOut("{}[ViewData] sceneGuid: {}", indentation, sceneGuid.ToString());
-			DOut("{}[ViewData] uiScriptGuids({})", indentation, uiScriptGuids.size());
+			DOut("{}[ViewData]", indentation);
+			DOut("{}name: {}", nestedIndentation, name);
+			DOut("{}size: {}x{}", nestedIndentation, size.width, size.height);
+			DOut("{}sceneGuid: {}", nestedIndentation, sceneGuid.ToString());
+			DOut("{}uiScriptGuids({})", nestedIndentation, uiScriptGuids.size());
 			for (zU32 i = 0; i < uiScriptGuids.size(); ++i)
 			{
-				DOut("{}uiScriptGuid #{}: {}", nestedIndentation, i, uiScriptGuids[i].ToString());
+				DOut("{}  uiScriptGuid #{}: {}", nestedIndentation, i, uiScriptGuids[i].ToString());
 			}
+			DOut("{}---", indentation);
 		}
 
 	private:

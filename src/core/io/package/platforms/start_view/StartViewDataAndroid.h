@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <string_view>
 #include "core/Serialize/Serializer.h"
 #include "core/Enums/eEnumToString.h"
@@ -26,10 +27,13 @@ namespace zzz::core
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			DOut("{}[StartViewDataAndroid] orientation: {}", indentation, EnumToString::ToString(orientation));
-			DOut("{}[StartViewDataAndroid] targetFPS: {}", indentation, targetFPS);
-			DOut("{}[StartViewDataAndroid] cutoutMode: {}", indentation, EnumToString::ToString(cutoutMode));
-			DOut("{}[StartViewDataAndroid] keepScreenOn: {}", indentation, keepScreenOn);
+			const std::string nestedIndentation = std::string(indentation) + "  ";
+			DOut("{}[StartViewDataAndroid]", indentation);
+			DOut("{}orientation: {}", nestedIndentation, EnumToString::ToString(orientation));
+			DOut("{}targetFPS: {}", nestedIndentation, targetFPS);
+			DOut("{}cutoutMode: {}", nestedIndentation, EnumToString::ToString(cutoutMode));
+			DOut("{}keepScreenOn: {}", nestedIndentation, keepScreenOn);
+			DOut("{}---", indentation);
 		}
 
 	private:

@@ -34,7 +34,14 @@ namespace zzz::core
 			return {};
 		}
 
-		inline void LogFileBlock() const { DOut("[PackageHeader] Сигнатура: {} | Версия: {} | Количество записей: {}", m_Magic.ToString(), m_Version.ToString(), m_EntryCount); }
+		inline void LogFileBlock() const
+		{
+			DOut("[PackageHeader]");
+			DOut("  magic: {}", m_Magic.ToString());
+			DOut("  version: {}", m_Version.ToString());
+			DOut("  entryCount: {}", m_EntryCount);
+			DOut("---");
+		}
 
 	private:
 		FileHeader<3> m_Magic{};

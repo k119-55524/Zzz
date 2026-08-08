@@ -30,11 +30,14 @@ namespace zzz::core
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			DOut("{}[StartViewDataLinux] title: {}", indentation, title);
-			DOut("{}[StartViewDataLinux] size: {}x{}", indentation, size.width, size.height);
-			DOut("{}[StartViewDataLinux] windowMode: {}", indentation, EnumToString::ToString(windowMode));
-			DOut("{}[StartViewDataLinux] resizable: {}", indentation, resizable);
-			DOut("{}[StartViewDataLinux] displayServer: {}", indentation, EnumToString::ToString(displayServer));
+			const std::string nestedIndentation = std::string(indentation) + "  ";
+			DOut("{}[StartViewDataLinux]", indentation);
+			DOut("{}title: {}", nestedIndentation, title);
+			DOut("{}size: {}x{}", nestedIndentation, size.width, size.height);
+			DOut("{}windowMode: {}", nestedIndentation, EnumToString::ToString(windowMode));
+			DOut("{}resizable: {}", nestedIndentation, resizable);
+			DOut("{}displayServer: {}", nestedIndentation, EnumToString::ToString(displayServer));
+			DOut("{}---", indentation);
 		}
 
 	private:

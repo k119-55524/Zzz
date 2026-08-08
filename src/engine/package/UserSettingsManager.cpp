@@ -213,10 +213,9 @@ namespace zzz::engine
 	void UserSettingsManager::LogUserData() const
 	{
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-		DOut("========== User Data: {} ==========", m_ConfigPath.string());
+		DOut("========== [UserSettingsManager] User Data: {} ==========", m_ConfigPath.string());
 		m_StartViewUserData.LogFileBlock("  ");
-		DOut("  [PlatformConfig]");
-		m_PlatformConfig.LogFileBlock("    ");
+		m_PlatformConfig.LogFileBlock("  ");
 #endif
 	}
 #pragma endregion

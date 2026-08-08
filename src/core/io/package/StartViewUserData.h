@@ -21,6 +21,7 @@ namespace zzz::core
 		{
 			DOut("{}[StartViewUserData]", indentation);
 			m_PlatformData.LogFileBlock(std::string(indentation) + "  ");
+			DOut("{}---", indentation);
 		}
 
 	private:
