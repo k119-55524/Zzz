@@ -13,7 +13,6 @@ namespace zzz::engine
 		UserSettingsManager(const Path& path, const PackageManager& packageManager);
 
 		inline const StartViewUserData& GetStartViewUserData() const noexcept { return m_StartViewUserData; }
-		inline const PlatformConfig& GetPlatformConfig() const noexcept { return m_PlatformConfig; }
 
 		[[nodiscard]] std::expected<void, std::string> SaveConfig();
 
@@ -32,7 +31,6 @@ namespace zzz::engine
 
 		Version m_Version;
 		StartViewUserData m_StartViewUserData;
-		PlatformConfig m_PlatformConfig;
 
 		Serializer m_Serializer;
 		bool m_IsDirty;

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <string>
 #include <string_view>
@@ -30,14 +30,13 @@ namespace zzz::core
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut("{}[PackageEntry]", indentation);
-			DOut("{}name: '{}'", nestedIndentation, name);
-			DOut("{}guid: {}", nestedIndentation, guid.ToString());
-			DOut("{}type: {}", nestedIndentation, EnumToString::ToString(static_cast<ePackage>(assetType)));
-			DOut("{}offset: {}", nestedIndentation, offset);
-			DOut("{}size: {}", nestedIndentation, size);
-			DOut("{}---", indentation);
+			DOut("{}[PackageEntry] name: '{}', guid: {}, type: {}, offset: {}, size: {}",
+				indentation,
+				name,
+				guid.ToString(),
+				EnumToString::ToString(static_cast<ePackage>(assetType)),
+				offset,
+				size);
 		}
 
 	private:

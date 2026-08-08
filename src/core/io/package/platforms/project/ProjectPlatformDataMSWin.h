@@ -23,7 +23,6 @@ namespace zzz::core
 			const std::string nestedIndentation = std::string(indentation) + "  ";
 			DOut("{}[ProjectPlatformDataMSWin]", indentation);
 			DOut("{}windowClassName: {}", nestedIndentation, windowClassName);
-			DOut("{}---", indentation);
 		}
 
 	private:

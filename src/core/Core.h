@@ -45,13 +45,6 @@
 
 #include "core/io/FileHeader.h"
 #include "core/io/Path.h"
-#include "core/io/config/PlatformConfig.h"
-#include "core/io/config/platforms/ConfigAndroid.h"
-#include "core/io/config/platforms/ConfigEditor.h"
-#include "core/io/config/platforms/ConfigLinux.h"
-#include "core/io/config/platforms/ConfigMSWin.h"
-#include "core/io/config/platforms/ConfigMacOS.h"
-#include "core/io/config/platforms/ConfigiOS.h"
 #include "core/io/package/PackageHeader.h"
 #include "core/io/package/PackageEntry.h"
 #include "core/io/package/StartViewData.h"

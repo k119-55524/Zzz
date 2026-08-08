@@ -14,7 +14,6 @@ namespace zzz::core
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
 			DOut("{}[ProjectPlatformDataAndroid]", indentation);
-			DOut("{}---", indentation);
 		}
 
 	private:

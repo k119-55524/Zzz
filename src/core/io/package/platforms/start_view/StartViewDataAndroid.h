@@ -33,7 +33,6 @@ namespace zzz::core
 			DOut("{}targetFPS: {}", nestedIndentation, targetFPS);
 			DOut("{}cutoutMode: {}", nestedIndentation, EnumToString::ToString(cutoutMode));
 			DOut("{}keepScreenOn: {}", nestedIndentation, keepScreenOn);
-			DOut("{}---", indentation);
 		}
 
 	private:

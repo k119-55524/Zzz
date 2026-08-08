@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <string>
 #include <string_view>
@@ -27,7 +27,6 @@ namespace zzz::core
 			{
 				DOut("{}  sceneScriptGuid #{}: {}", nestedIndentation, i, sceneScriptGuids[i].ToString());
 			}
-			DOut("{}---", indentation);
 		}
 
 	private:

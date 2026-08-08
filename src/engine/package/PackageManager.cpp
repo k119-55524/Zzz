@@ -178,8 +178,7 @@ namespace zzz::engine
 		for (const auto& entryPair : entriesMap)
 		{
 			const auto& entry = entryPair.second;
-			DOut("    entry: PackageEntry({}/{})", index++, count);
-			entry.LogFileBlock("      ");
+			entry.LogFileBlock("    ");
 
 			if (auto dataRes = LoadPackageData<T>(entry))
 			{

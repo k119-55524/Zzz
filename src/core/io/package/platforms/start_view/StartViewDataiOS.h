@@ -30,7 +30,6 @@ namespace zzz::core
 			DOut("{}orientation: {}", nestedIndentation, EnumToString::ToString(orientation));
 			DOut("{}safeAreaMode: {}", nestedIndentation, EnumToString::ToString(safeAreaMode));
 			DOut("{}homeIndicatorMode: {}", nestedIndentation, EnumToString::ToString(homeIndicatorMode));
-			DOut("{}---", indentation);
 		}
 
 	private:

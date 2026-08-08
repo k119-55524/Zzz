@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <string>
 #include <string_view>
@@ -14,7 +14,6 @@ namespace zzz::core
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
 			DOut("{}[PrefabData]", indentation);
-			DOut("{}---", indentation);
 		}
 
 	protected:

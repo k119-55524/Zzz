@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <string>
 #include <string_view>
@@ -48,7 +48,6 @@ namespace zzz::core
 			}
 
 			platformData.LogFileBlock(nestedIndentation);
-			DOut("{}---", indentation);
 		}
 
 	private:

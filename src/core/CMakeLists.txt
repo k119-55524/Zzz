@@ -63,19 +63,6 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileHeader.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/Path.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/Path.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/PlatformConfig.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigMSWin.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigMSWin.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigLinux.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigLinux.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigAndroid.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigAndroid.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigMacOS.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigMacOS.mm
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigiOS.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigiOS.mm
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigEditor.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/config/platforms/ConfigEditor.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PackageHeader.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PackageEntry.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/StartViewData.h

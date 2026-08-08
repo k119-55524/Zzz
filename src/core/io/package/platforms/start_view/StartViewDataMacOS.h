@@ -34,7 +34,6 @@ namespace zzz::core
 			DOut("{}size: {}x{}", nestedIndentation, size.width, size.height);
 			DOut("{}windowMode: {}", nestedIndentation, EnumToString::ToString(windowMode));
 			DOut("{}resizable: {}", nestedIndentation, resizable);
-			DOut("{}---", indentation);
 		}
 
 	private:

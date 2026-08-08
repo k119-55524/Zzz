@@ -37,7 +37,6 @@ namespace zzz::core
 			DOut("{}windowMode: {}", nestedIndentation, EnumToString::ToString(windowMode));
 			DOut("{}resizable: {}", nestedIndentation, resizable);
 			DOut("{}displayServer: {}", nestedIndentation, EnumToString::ToString(displayServer));
-			DOut("{}---", indentation);
 		}
 
 	private:
@@ -49,7 +48,6 @@ namespace zzz::core
 				.and_then([&]() { return s.Serialize(buffer, resizable); })
 				.and_then([&]() { return s.Serialize(buffer, displayServer); });
 		}
-
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override
 		{
 			return s.Deserialize(buffer, offset, title)

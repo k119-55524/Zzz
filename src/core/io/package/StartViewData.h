@@ -35,7 +35,6 @@ namespace zzz::core
 				DOut("{}  uiScriptGuid #{}: {}", nestedIndentation, i, m_UiScriptGuids[i].ToString());
 			}
 			m_PlatformData.LogFileBlock(nestedIndentation);
-			DOut("{}---", indentation);
 		}
 
 	private:
