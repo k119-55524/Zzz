@@ -75,8 +75,8 @@ namespace zzz::engine
 		if (!startViewData)
 			THROW_RUNTIME("Не удалось загрузить StartViewData: {}", startViewData.error());
 
-		m_StartViewUserData = StartViewUserData(*startViewData);
 		m_Version = Version(c_ConfigFileMajorVersion, c_ConfigFileMinorVersion, c_ConfigFilePatchVersion);
+		m_StartViewUserData = StartViewUserData(*startViewData);
 	}
 
 	[[nodiscard]] std::expected<void, std::string> UserSettingsManager::SaveConfig()
@@ -188,7 +188,8 @@ namespace zzz::engine
 	{
 		return s.Serialize(buffer, c_ConfigHeader)
 			.and_then([&]() { return s.Serialize(buffer, m_Version); })
-			.and_then([&]() { return s.Serialize(buffer, m_StartViewUserData); });
+			.and_then([&]() { return s.Serialize(buffer, m_StartViewUserData); })
+			.and_then([&]() { return s.Serialize(buffer, m_HardwareState); });
 	}
 
 	[[nodiscard]] std::expected<void, std::string> UserSettingsManager::Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s)
@@ -203,7 +204,8 @@ namespace zzz::engine
 
 					return s.Deserialize(buffer, offset, m_Version);
 				})
-			.and_then([&]() { return s.Deserialize(buffer, offset, m_StartViewUserData); });
+			.and_then([&]() { return s.Deserialize(buffer, offset, m_StartViewUserData); })
+			.and_then([&]() { return s.Deserialize(buffer, offset, m_HardwareState); });
 	}
 
 #pragma region Logging
@@ -212,6 +214,7 @@ namespace zzz::engine
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 		DOut("========== [UserSettingsManager] User Data: {} ==========", m_ConfigPath.string());
 		m_StartViewUserData.LogFileBlock("  ");
+		m_HardwareState.LogFileBlock("  ");
 #endif
 	}
 #pragma endregion

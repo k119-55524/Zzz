@@ -59,7 +59,14 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverterLinuxTypes.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverterMacOSTypes.h
         ${CMAKE_CURRENT_SOURCE_DIR}/templates/DoubleBufferedVector.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/templates/Size2D.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/hardware/CpuInfo.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/hardware/GpuInfo.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/hardware/RamInfo.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/hardware/MotherboardInfo.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/hardware/DisplayMonitorInfo.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/hardware/StorageInfo.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/hardware/NetworkAdapterInfo.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/hardware/PlatformHardwareState.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileHeader.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/Path.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/Path.cpp

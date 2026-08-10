@@ -1,4 +1,4 @@
-﻿#include "engine/EngineIncludes.h"
+#include "engine/EngineIncludes.h"
 #include "Platform.h"
 #include "window/WinAndroid.h"
 #include "input/InputAndroid.h"
@@ -62,4 +62,11 @@ void Platform::InitializePlatformSpecific()
 
 void Platform::ShutdownPlatformSpecific()
 {
+}
+
+PlatformHardwareState Platform::GatherHardwareState() const
+{
+	PlatformHardwareState state{};
+	state.cpu.architecture = "ARM64";
+	return state;
 }

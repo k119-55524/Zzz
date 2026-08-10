@@ -65,3 +65,12 @@
 #include "core/io/package/platforms/start_view/StartViewDataMSWin.h"
 #include "core/io/package/platforms/start_view/StartViewDataMacOS.h"
 #include "core/io/package/platforms/start_view/StartViewDataiOS.h"
+
+#include "core/hardware/CpuInfo.h"
+#include "core/hardware/GpuInfo.h"
+#include "core/hardware/RamInfo.h"
+#include "core/hardware/MotherboardInfo.h"
+#include "core/hardware/DisplayMonitorInfo.h"
+#include "core/hardware/StorageInfo.h"
+#include "core/hardware/NetworkAdapterInfo.h"
+#include "core/hardware/PlatformHardwareState.h"

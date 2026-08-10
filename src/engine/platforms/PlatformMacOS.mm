@@ -1,4 +1,4 @@
-﻿#include "engine/EngineIncludes.h"
+#include "engine/EngineIncludes.h"
 #include "engine/Engine.h"
 #include "Platform.h"
 #import <Cocoa/Cocoa.h>
@@ -45,4 +45,11 @@ void Platform::InitializePlatformSpecific()
 
 void Platform::ShutdownPlatformSpecific()
 {
+}
+
+PlatformHardwareState Platform::GatherHardwareState() const
+{
+	PlatformHardwareState state{};
+	state.cpu.architecture = "ARM64";
+	return state;
 }

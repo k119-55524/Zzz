@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "engine/EngineIncludes.h"
 
@@ -17,6 +17,8 @@ namespace zzz::engine
 
 		[[nodiscard]] inline std::shared_ptr<NativeAppData> GetNativeData() const noexcept { return m_NativeData; }
 		[[nodiscard]] inline const ProjectPlatformData& GetProjectPlatformData() const noexcept { return m_PlatformData; }
+
+		[[nodiscard]] PlatformHardwareState GatherHardwareState() const;
 
 #if Z_APPLE
 		static constexpr bool c_AsyncRunLoop = true;

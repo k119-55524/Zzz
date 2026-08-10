@@ -1,8 +1,9 @@
+
 #include "Engine.h"
 #include "gapi/GAPI.h"
 #include "view/ViewManager.h"
-#include "platforms/mainloop/MainLoop.h"
 #include "package/PackageManager.h"
+#include "platforms/mainloop/MainLoop.h"
 #include "package/UserSettingsManager.h"
 
 using namespace zzz;
@@ -30,6 +31,13 @@ Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeDa
 
 	m_UserSettingsManager = safe_make_shared<UserSettingsManager>(*m_Path, *m_PackageManager);
 	m_Platform = safe_make_unique<Platform>(nativeData, projectManifestData->GetPlatformData());
+
+	// Проверка и применение конфигурации оборудования
+	PlatformHardwareState currentHardware = m_Platform->GatherHardwareState();
+	auto& savedHardware = m_UserSettingsManager->GetHardwareState();
+	savedHardware.CheckAndApplySoftChanges(currentHardware);
+	savedHardware.LogFileBlock();
+
 	m_GAPI = safe_make_shared<GAPI>(m_UserSettingsManager);
 	m_GAPI->Initialize();
 	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, m_GAPI, [this]() { OnCloseAllViews(); });

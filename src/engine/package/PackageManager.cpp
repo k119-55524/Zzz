@@ -169,12 +169,11 @@ namespace zzz::engine
 
 		if (typeIt == m_EntriesByName.end() || typeIt->second.empty())
 		{
-			DOut("  ---");
+			DOut("");
 			return;
 		}
 
 		const auto& entriesMap = typeIt->second;
-		size_t index = 0;
 		for (const auto& entryPair : entriesMap)
 		{
 			const auto& entry = entryPair.second;
@@ -185,7 +184,7 @@ namespace zzz::engine
 				dataRes->LogFileBlock("      ");
 			}
 		}
-		DOut("  ---");
+		DOut("");
 	}
 #pragma endregion
 }

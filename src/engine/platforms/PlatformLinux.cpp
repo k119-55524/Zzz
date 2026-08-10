@@ -1,4 +1,4 @@
-﻿#include "engine/EngineIncludes.h"
+#include "engine/EngineIncludes.h"
 #include <memory>
 #include "Platform.h"
 
@@ -179,4 +179,12 @@ void Platform::ShutdownPlatformSpecific()
 		wl_display_disconnect(m_NativeData->display);
 		m_NativeData->display = nullptr;
 	}
+}
+
+PlatformHardwareState Platform::GatherHardwareState() const
+{
+	PlatformHardwareState state{};
+	// Базовая информация для Linux
+	state.cpu.architecture = "x86_64";
+	return state;
 }
