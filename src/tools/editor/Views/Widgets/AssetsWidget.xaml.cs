@@ -730,7 +730,7 @@ namespace editor.Views.Widgets
 
 							// Удаляемый скрипт (или скрипты внутри удаляемой папки) может быть отмечен как
 							// глобальный в game_config.toml - без этого шага GlobalScriptGuids оставался бы
-							// с "мёртвым" GUID (см. docs/resources.md "Game config references"). Список читаем
+							// с "мёртвым" GUID (см. docs/ARCHITECTURE.md "Game config references"). Список читаем
 							// заново с диска, а не из App.ProjectService.CurrentGameConfig: этот кэш не
 							// обновляется, когда правки вносятся через инспектор (InspectorViewModel держит
 							// свою отдельную десериализованную копию game_config.toml и пишет сразу на диск,
@@ -778,7 +778,7 @@ namespace editor.Views.Widgets
 
 		// Собирает GUID скриптов, лежащих под удаляемым узлом (сам узел - для одиночного скрипта,
 		// либо все скрипты внутри - для папки), по уже построенному ScriptAssetIndexService -
-		// единому источнику GUID в редакторе (см. docs/resources.md "ScriptAssetIndexService"),
+		// единому источнику GUID в редакторе (см. docs/ARCHITECTURE.md "ScriptAssetIndexService"),
 		// а не через повторное чтение .meta с диска.
 		private static List<string> CollectScriptGuidsUnderNode(ProjectNode node)
 		{

@@ -1,7 +1,7 @@
 #pragma once
 
 // Скрипты компилируются в отдельный scripts.dll и линкуются против editor_dll.lib (Hot-Reload,
-// см. docs/scripting.md) - core_lib_editor пересекает границу DLL только в этом сценарии
+// см. docs/ARCHITECTURE.md) - core_lib_editor пересекает границу DLL только в этом сценарии
 // (Z_EDITOR), когда шаблоны из core/templates инстанцируются уже
 // в scripts.dll и вызывают функции core_lib (throw_runtime_error). В статической сборке игры
 // (game_win/macos/linux/ios/android) Z_EDITOR не определён, core_lib линкуется статически -
