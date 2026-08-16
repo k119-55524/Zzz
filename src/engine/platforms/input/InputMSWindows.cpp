@@ -1,6 +1,8 @@
 
 #include "InputMSWindows.h"
 
+#if Z_WINDOWS
+
 using namespace zzz::engine;
 
 std::expected<void, std::string> InputMSWindows::Initialize()
@@ -182,3 +184,5 @@ void InputMSWindows::HandleRawKeyboard(const RAWKEYBOARD& kb)
 	KeyCode key = TranslateMSWinKey(vk, e0, kb.MakeCode);
 	UpdateKeyState(key, pressed);
 }
+
+#endif

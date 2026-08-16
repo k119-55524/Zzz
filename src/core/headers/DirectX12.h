@@ -19,7 +19,9 @@
 using namespace DirectX;
 using namespace Microsoft::WRL;
 
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 
 namespace zzz::dx
 {

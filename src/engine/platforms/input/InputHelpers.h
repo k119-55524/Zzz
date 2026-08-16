@@ -1,9 +1,10 @@
 #pragma once
 
-#include <array>
+#include "engine/EngineIncludes.h"
 
 namespace zzz::engine
 {
+	using namespace zzz::core;
 	enum class MouseButton : zU8
 	{
 		Left = 0,

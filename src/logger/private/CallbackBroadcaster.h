@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../log_entry.h"
+#include "log_entry.h"
 
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 namespace zzz::logger

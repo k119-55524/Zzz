@@ -1,4 +1,5 @@
-#include <core/Core.h>
+﻿#include <core/Core.h>
+#include <logger.h>
 #include "main.h"
 
 using namespace zzz;

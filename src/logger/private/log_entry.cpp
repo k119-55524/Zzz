@@ -1,8 +1,7 @@
 
-#include "log_entry.h"
+#include "private/log_entry.h"
 
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-
 namespace zzz::logger
 {
 	using namespace zzz::core;

@@ -5,7 +5,7 @@
 
 #include <core/serialize/Serializer.h>
 
-#include "header.h"
+#include "../LoggerIncludes.h"
 
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 

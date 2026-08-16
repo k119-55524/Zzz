@@ -2,6 +2,7 @@
 
 #include "InputBase.h"
 
+#if Z_WINDOWS
 namespace zzz::engine
 {
 	class InputMSWindows final : public InputBase
@@ -38,3 +39,4 @@ namespace zzz::engine
 		}
 	};
 }
+#endif

@@ -95,14 +95,19 @@
 #endif
 #endif // render api selection
 
-// Автоматическое определение типа сборки (Debug / Release), 
-// если снаружи (через CMake) не включен Z_DEVELOPMENT_BUILD.
-#if !Z_DEBUG_BUILD && !Z_RELEASE_BUILD && !Z_DEVELOPMENT_BUILD
-    #if defined(_DEBUG) || defined(DEBUG) || !defined(NDEBUG)
-        #define Z_DEBUG_BUILD 1
-    #else
-        #define Z_RELEASE_BUILD 1
-    #endif
+#if defined(NDEBUG)
+    #define Z_RELEASE_BUILD 1
+#elif defined(_DEBUG) || defined(DEBUG)
+    #define Z_DEBUG_BUILD 1
+#endif
+
+// Если компилируется Release-сборка — гарантированно выключаем все виды отладочных проверок и логов,
+// даже если они случайно были переданы через настройки проекта или CMake.
+#if Z_RELEASE_BUILD
+    #undef Z_ADD_LOGGER
+    #define Z_ADD_LOGGER 0
+    #undef Z_IDE_OUT_LOGS
+    #define Z_IDE_OUT_LOGS 0
 #endif
 
 // Вывод активных дефайнов
@@ -152,6 +157,12 @@
 #endif
 #if Z_RELEASE_BUILD
 #pragma message(">>>>> Build    : Z_RELEASE_BUILD")
+#endif
+#if Z_ADD_LOGGER
+#pragma message(">>>>> Logger   : Z_ADD_LOGGER")
+#endif
+#if Z_IDE_OUT_LOGS
+#pragma message(">>>>> Logger   : Z_IDE_OUT_LOGS")
 #endif
 #if Z_EDITOR
 #pragma message(">>>>> Mode     : Z_EDITOR")

@@ -31,6 +31,7 @@
 #include <stdexcept>
 #include <system_error>
 #include <format>
+#include <expected>
 #include <concepts>
 
 // Core Defines

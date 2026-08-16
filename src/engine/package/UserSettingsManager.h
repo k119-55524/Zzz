@@ -2,6 +2,8 @@
 
 #include "engine/EngineIncludes.h"
 
+using namespace zzz::core;
+
 namespace zzz::engine
 {
 	class UserSettingsManager final : public ISerializable

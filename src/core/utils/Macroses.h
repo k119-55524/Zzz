@@ -1,9 +1,6 @@
 #pragma once
 
-#include <expected>
-#include <stdexcept>
-#include "Defines.h"
-#include <format>
+#include <core/CoreIncludes.h>
 
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 /**
@@ -53,14 +50,14 @@
 	do { \
 		::zzz::logger::g_Logger.LogFatal(std::source_location::current(), std::format(__VA_ARGS__)); \
 	} while (false)
-#else
+#else // Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 #define DOut(...)
 #define DOutWarning(...)
 #define DOutError(...)
 #define DOutException(...)
 #define DOutCritical(...)
 #define DOutFatal(...)
-#endif
+#endif // Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 
 /**
  * @brief Выбрасывает std::runtime_error с форматированным сообщением и текущей позицией в коде (файл, строка).
@@ -127,4 +124,3 @@
 #define CRT_LEAK_CHECK_END() 0
 #endif
 #endif
-

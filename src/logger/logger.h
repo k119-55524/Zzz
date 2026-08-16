@@ -1,6 +1,10 @@
 #pragma once
 
-#include "header.h"
+#include <core/enums/eLogMessageType.h>
+
+#include "LoggerIncludes.h"
+
+using namespace zzz::core;
 
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 
@@ -13,25 +17,11 @@
 
 #include <core/templates/DoubleBufferedVector.h>
 
-#include "log_entry.h"
-
-using namespace zzz::core;
+#include "private/log_entry.h"
 
 namespace zzz::logger
 {
 	class IBroadcaster;
-
-	struct LogCallbackEntry
-	{
-		uint64_t timestamp;
-		int type;
-		const char* text;
-		const char* file;
-		const char* function;
-		uint32_t line;
-	};
-
-	typedef void (__stdcall *LogCallback)(const LogCallbackEntry& entry);
 
 	/**
 	 * @brief Централизованная система логирования с поддержкой асинхронной рассылки.
@@ -68,12 +58,6 @@ namespace zzz::logger
 
 		/**
 		 * @brief Останавливает и джойнит фоновый поток рассылки логов (если он запущен).
-		 * @details Нужно вызывать явно до FreeLibrary() модуля, который содержит этот
-		 *          экземпляр Logger (например, scripts.dll) - ждать поток внутри
-		 *          DllMain(DLL_PROCESS_DETACH), как это делает деструктор, небезопасно:
-		 *          и основной поток, и завершающийся фоновый поток претендуют на loader lock,
-		 *          что даёт гарантированный deadlock. Вызов отсюда, из обычного кода вне
-		 *          DllMain, безопасен, а деструктор после этого просто не найдёт что джойнить.
 		 */
 		void StopBroadcastThread();
 
@@ -118,4 +102,32 @@ namespace zzz::logger
 
 	inline Logger g_Logger;
 }
-#endif
+#else // Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+namespace zzz::logger
+{
+	/**
+	 * @brief Заглушка Logger для релизных сборок без поддержки логирования.
+	 */
+	class Logger
+	{
+	public:
+		Logger() = default;
+		~Logger() = default;
+
+		static void SetLogFilterMask(eLogMessageType /*filterMask*/) {}
+		void AddConsoleBroadcaster() {}
+		void AddNetworkBroadcaster(std::string_view /*address*/, uint16_t /*port*/) {}
+		void AddCallbackBroadcaster(LogCallback /*callback*/) {}
+		void StopBroadcastThread() {}
+
+		void LogMessage(const std::source_location& /*loc*/, std::string /*formatted*/) {}
+		void LogWarning(const std::source_location& /*loc*/, std::string /*formatted*/) {}
+		void LogError(const std::source_location& /*loc*/, std::string /*formatted*/) {}
+		void LogException(const std::source_location& /*loc*/, std::string /*formatted*/) {}
+		void LogCritical(const std::source_location& /*loc*/, std::string /*formatted*/) {}
+		void LogFatal(const std::source_location& /*loc*/, std::string /*formatted*/) {}
+	};
+
+	inline Logger g_Logger;
+}
+#endif // Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD

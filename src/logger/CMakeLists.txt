@@ -12,9 +12,9 @@ macro(setup_logger_target TARGET_NAME CORE_TARGET_NAME IS_EDITOR)
     target_sources(${TARGET_NAME} PRIVATE
         logger.h
         logger.cpp
-        header.h
-        log_entry.h
-        log_entry.cpp
+        LoggerIncludes.h
+        private/log_entry.h
+        private/log_entry.cpp
         private/IBroadcaster.h
         private/ConsoleBroadcaster.h
         private/NetworkBroadcaster.h
