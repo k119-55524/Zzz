@@ -102,5 +102,8 @@ RemoteLogViewer.lnk
 # Editor centralized build output
 bin/
 
-# WPF temporary project files
+# WPF temporary project files and C# build folders
 *_wpftmp.csproj
+**/bin/
+**/obj/
+
