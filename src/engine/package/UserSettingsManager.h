@@ -32,7 +32,6 @@ namespace zzz::engine
 		StartViewUserData m_StartViewUserData;
 		PlatformHardwareState m_HardwareState;
 
-		Serializer m_Serializer;
 		bool m_IsDirty;
 	};
 }
