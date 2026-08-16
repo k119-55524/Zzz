@@ -6,8 +6,6 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
     )
 
     target_sources(${TARGET_NAME} PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/pch.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/pch.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/CoreIncludes.h
         ${CMAKE_CURRENT_SOURCE_DIR}/core.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Types.h
@@ -97,7 +95,43 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
     )
 
     target_precompile_headers(${TARGET_NAME} PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/pch.h
+        "Core.h"
+        <cstdint>
+        <cstddef>
+        <cstring>
+        <string>
+        <string_view>
+        <vector>
+        <array>
+        <list>
+        <map>
+        <unordered_map>
+        <set>
+        <unordered_set>
+        <memory>
+        <utility>
+        <algorithm>
+        <functional>
+        <type_traits>
+        <chrono>
+        <thread>
+        <mutex>
+        <atomic>
+        <filesystem>
+        <fstream>
+        <sstream>
+        <iostream>
+        <variant>
+        <optional>
+        <stdexcept>
+        <system_error>
+        <format>
+        <concepts>
+        $<$<BOOL:${WIN32}>:<winsock2.h>>
+        $<$<BOOL:${WIN32}>:<ws2tcpip.h>>
+        $<$<BOOL:${WIN32}>:<windows.h>>
+        $<$<BOOL:${WIN32}>:<d3d12.h>>
+        $<$<BOOL:${WIN32}>:<dxcapi.h>>
     )
 
     if(UNIX AND NOT APPLE AND NOT ANDROID)
@@ -119,7 +153,6 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
 
     target_compile_features(${TARGET_NAME} PUBLIC cxx_std_23)
     target_compile_definitions(${TARGET_NAME} PRIVATE Z_TARGET_NAME="${TARGET_NAME}")
-    set_source_files_properties(pch.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
     if(${IS_EDITOR})
         target_compile_definitions(${TARGET_NAME} PUBLIC Z_EDITOR=1 EDITORDLL_EXPORTS)

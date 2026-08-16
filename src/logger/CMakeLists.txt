@@ -10,8 +10,6 @@ macro(setup_logger_target TARGET_NAME CORE_TARGET_NAME IS_EDITOR)
     )
 
     target_sources(${TARGET_NAME} PRIVATE
-        pch/pch.h
-        pch/pch.cpp
         logger.h
         logger.cpp
         header.h

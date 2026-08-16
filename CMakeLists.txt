@@ -17,14 +17,15 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/dist/$<CONFIG>")
 set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/.cache" CACHE PATH "Directory for downloaded external packages")
 
 
+# Отключаем сканирование модулей C++20, так как они не используются в проекте и вызывают спам иерархии зависимостей в Ninja
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+
 if(WIN32)
     add_compile_definitions(WIN32_LEAN_AND_MEAN NOMINMAX)
 endif()
 
 if(MSVC)
     add_compile_options(/Zc:preprocessor /W4 /w44062 /EHsc /wd4251)
-else()
-    add_compile_options(-Wswitch-enum)
 endif()
 
 include(package_versions.cmake)

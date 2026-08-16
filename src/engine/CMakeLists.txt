@@ -2,7 +2,43 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
     add_library(${TARGET_NAME})
 
     target_precompile_headers(${TARGET_NAME} PRIVATE
-        pch/Pch.h
+        "EngineIncludes.h"
+        <cstdint>
+        <cstddef>
+        <cstring>
+        <string>
+        <string_view>
+        <vector>
+        <array>
+        <list>
+        <map>
+        <unordered_map>
+        <set>
+        <unordered_set>
+        <memory>
+        <utility>
+        <algorithm>
+        <functional>
+        <type_traits>
+        <chrono>
+        <thread>
+        <mutex>
+        <atomic>
+        <filesystem>
+        <fstream>
+        <sstream>
+        <iostream>
+        <variant>
+        <optional>
+        <stdexcept>
+        <system_error>
+        <format>
+        <concepts>
+        $<$<BOOL:${WIN32}>:<winsock2.h>>
+        $<$<BOOL:${WIN32}>:<ws2tcpip.h>>
+        $<$<BOOL:${WIN32}>:<windows.h>>
+        $<$<BOOL:${WIN32}>:<d3d12.h>>
+        $<$<BOOL:${WIN32}>:<dxcapi.h>>
     )
 
     target_include_directories(${TARGET_NAME}

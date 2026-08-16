@@ -10,10 +10,14 @@ if(NOT DEFINED SRC_DIR OR NOT DEFINED DST_DIR)
 endif()
 
 file(GLOB_RECURSE HEADERS RELATIVE "${SRC_DIR}" "${SRC_DIR}/*.h")
-message("Found: ${HEADERS}")
 foreach(HEADER ${HEADERS})
     # Игнорируем приватные хедеры и предкомпилированные хедеры
     if(NOT "${HEADER}" MATCHES "private/" AND NOT "${HEADER}" MATCHES "pch/")
-        configure_file("${SRC_DIR}/${HEADER}" "${DST_DIR}/${HEADER}" COPYONLY)
+        get_filename_component(HEADER_DIR "${DST_DIR}/${HEADER}" DIRECTORY)
+        file(MAKE_DIRECTORY "${HEADER_DIR}")
+        file(COPY_FILE "${SRC_DIR}/${HEADER}" "${DST_DIR}/${HEADER}" ONLY_IF_DIFFERENT)
     endif()
 endforeach()
+
+
+
