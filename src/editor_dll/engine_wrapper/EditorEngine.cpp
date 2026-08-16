@@ -309,7 +309,7 @@ namespace zzz::editor
 			// вот-вот выгрузим FreeLibrary(). Разрушение скрипта без предварительной отписки
 			// не роняло ничего, пока сама DLL оставалась в памяти (адрес ещё валиден), но как
 			// только модуль реально выгружается - это чтение по невалидному адресу.
-			auto activeScripts = zzz::core::ScriptRegistry::GetActiveInstances();
+			auto activeScripts = zzz::core::ScriptFactory::GetActiveInstances();
 			for (auto* scriptRaw : activeScripts)
 			{
 				scriptRaw->SetActive(false);
@@ -320,7 +320,7 @@ namespace zzz::editor
 			}
 
 			// 2. Удаляем все активные GameScript-ы (та же логика: сначала отписка, потом очистка)
-			auto activeGameScripts = zzz::core::ScriptRegistry::GetActiveGameScripts();
+			auto activeGameScripts = zzz::core::ScriptFactory::GetActiveGameScripts();
 			for (auto* gameScriptRaw : activeGameScripts)
 			{
 				gameScriptRaw->SetActive(false);

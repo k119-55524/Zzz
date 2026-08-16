@@ -1,8 +1,5 @@
 #pragma once
 
-#include <logger/logger.h>
-
-#include "core/CoreIncludes.h"
 #include "core/hardware/CpuInfo.h"
 #include "core/hardware/GpuInfo.h"
 #include "core/hardware/RamInfo.h"
@@ -237,7 +234,6 @@ namespace zzz::core
 			return s.Serialize(buffer, m_SelectedGpuId)
 				.and_then([&]() { return s.Serialize(buffer, m_SelectedMonitorId); });
 		}
-
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override
 		{
 			return s.Deserialize(buffer, offset, m_SelectedGpuId)

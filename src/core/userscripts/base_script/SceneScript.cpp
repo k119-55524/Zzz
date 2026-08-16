@@ -1,19 +1,19 @@
 #include "SceneScript.h"
-#include "../ScriptRegistry.h"
+#include "../ScriptFactory.h"
 
 namespace zzz::core
 {
 	SceneScript::SceneScript()
 	{
 #if Z_EDITOR
-		ScriptRegistry::RegisterInstance(this);
+		ScriptFactory::RegisterInstance(this);
 #endif
 	}
 
 	SceneScript::~SceneScript()
 	{
 #if Z_EDITOR
-		ScriptRegistry::UnregisterInstance(this);
+		ScriptFactory::UnregisterInstance(this);
 #endif
 	}
 }

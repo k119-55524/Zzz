@@ -36,6 +36,8 @@
 #include "core/events/Event.h"
 #include "core/events/EventBus.h"
 
+#include "core/userscripts/ScriptStorage.h"
+#include "core/userscripts/ScriptFactory.h"
 #include "core/userscripts/ScriptRegistry.h"
 #include "core/userscripts/base_script/BaseScript.h"
 #include "core/userscripts/base_script/Script.h"

@@ -1,19 +1,19 @@
 
 #include "Script.h"
-#include "../ScriptRegistry.h"
+#include "../ScriptFactory.h"
 
 using namespace zzz::core;
 
 Script::Script(GameObject* owner) : m_Owner(owner)
 {
 #if Z_EDITOR
-	ScriptRegistry::RegisterInstance(this);
+	ScriptFactory::RegisterInstance(this);
 #endif
 }
 
 Script::~Script()
 {
 #if Z_EDITOR
-	ScriptRegistry::UnregisterInstance(this);
+	ScriptFactory::UnregisterInstance(this);
 #endif
 }

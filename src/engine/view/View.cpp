@@ -17,7 +17,7 @@ View::View(const StartViewPlatformData& settings, const std::vector<Guid>& scrip
 	std::vector<std::shared_ptr<ViewScript>> viewScripts;
 	for (const auto& viewScriptGuid : scripts)
 	{
-		auto viewScript = ScriptRegistry::CreateViewScript(viewScriptGuid);
+		auto viewScript = ScriptFactory::CreateViewScript(viewScriptGuid);
 		if (!viewScript)
 			THROW_RUNTIME("Не удалось создать ViewScript по GUID {}.", viewScriptGuid.ToString());
 

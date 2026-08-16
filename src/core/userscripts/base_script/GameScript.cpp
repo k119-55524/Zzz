@@ -1,19 +1,19 @@
 #include "GameScript.h"
-#include "../ScriptRegistry.h"
+#include "../ScriptFactory.h"
 
 namespace zzz::core
 {
 	GameScript::GameScript()
 	{
 #if Z_EDITOR
-		ScriptRegistry::RegisterInstance(this);
+		ScriptFactory::RegisterInstance(this);
 #endif
 	}
 
 	GameScript::~GameScript()
 	{
 #if Z_EDITOR
-		ScriptRegistry::UnregisterInstance(this);
+		ScriptFactory::UnregisterInstance(this);
 #endif
 	}
 }

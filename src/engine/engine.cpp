@@ -34,10 +34,7 @@ Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeDa
 
 	// Проверка и применение конфигурации оборудования
 	PlatformHardwareState currentHardware = m_Platform->GatherHardwareState();
-	auto& savedHardware = m_UserSettingsManager->GetHardwareState();
-	savedHardware.CheckAndApplySoftChanges(currentHardware);
-	savedHardware.LogFileBlock();
-
+	m_UserSettingsManager->ApplyHardwareStateChanges(currentHardware);
 	m_GAPI = safe_make_shared<GAPI>(m_UserSettingsManager);
 	m_GAPI->Initialize();
 	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, m_GAPI, [this]() { OnCloseAllViews(); });
@@ -153,10 +150,10 @@ void Engine::LoadGlobalScripts()
 {
 	std::lock_guard lock(stateMutex);
 
-	auto globalScripts = zzz::core::ScriptRegistry::GetAllGameScriptNames();
+	auto globalScripts = zzz::core::ScriptFactory::GetAllGameScriptNames();
 	for (const auto& scriptName : globalScripts)
 	{
-		if (auto script = zzz::core::ScriptRegistry::CreateGameScript(scriptName))
+		if (auto script = zzz::core::ScriptFactory::CreateGameScript(scriptName))
 		{
 			m_Scripts.push_back(script);
 			script->Init(m_EventBus);
