@@ -281,11 +281,11 @@ namespace zzz::editor
 			initLogger((void*)g_EditorLogCallback);
 		}
 
-		using RegisterFunc = void(*)();
+		using RegisterFunc = void(*)(zzz::core::ScriptRegistry&);
 		RegisterFunc registerAll = (RegisterFunc)GetProcAddress(handle, "RegisterAllScripts");
-		if (registerAll)
+		if (registerAll && m_ScriptRegistry)
 		{
-			registerAll();
+			registerAll(*m_ScriptRegistry);
 			DOut("Scripts DLL загружена и зарегистрирована успешно.");
 		}
 		else
@@ -309,28 +309,32 @@ namespace zzz::editor
 			// вот-вот выгрузим FreeLibrary(). Разрушение скрипта без предварительной отписки
 			// не роняло ничего, пока сама DLL оставалась в памяти (адрес ещё валиден), но как
 			// только модуль реально выгружается - это чтение по невалидному адресу.
-			auto activeScripts = zzz::core::ScriptFactory::GetActiveInstances();
-			for (auto* scriptRaw : activeScripts)
+			if (m_ScriptFactory)
 			{
-				scriptRaw->SetActive(false);
-				if (auto owner = scriptRaw->GetOwner())
+				auto activeScripts = m_ScriptFactory->GetActiveInstances();
+				for (auto* scriptRaw : activeScripts)
 				{
-					owner->RemoveScript(std::static_pointer_cast<zzz::core::Script>(scriptRaw->shared_from_this()));
+					scriptRaw->SetActive(false);
+					if (auto owner = scriptRaw->GetOwner())
+					{
+						owner->RemoveScript(std::static_pointer_cast<zzz::core::Script>(scriptRaw->shared_from_this()));
+					}
 				}
-			}
 
-			// 2. Удаляем все активные GameScript-ы (та же логика: сначала отписка, потом очистка)
-			auto activeGameScripts = zzz::core::ScriptFactory::GetActiveGameScripts();
-			for (auto* gameScriptRaw : activeGameScripts)
-			{
-				gameScriptRaw->SetActive(false);
+				// 2. Удаляем все активные GameScript-ы (та же логика: сначала отписка, потом очистка)
+				auto activeGameScripts = m_ScriptFactory->GetActiveGameScripts();
+				for (auto* gameScriptRaw : activeGameScripts)
+				{
+					gameScriptRaw->SetActive(false);
+				}
 			}
 			m_Scripts.clear();
 
 			// 3. (TODO Phase 3: Сцен пока нет, но тут будет удаление SceneScripts)
 #endif
 
-			zzz::core::ScriptRegistry::Clear();
+			if (m_ScriptStorage)
+				m_ScriptStorage->Clear();
 			HMODULE module = (HMODULE)m_ScriptsDll;
 			ShutdownScriptModuleLogger(module);
 			FreeLibrary(module);

@@ -1,4 +1,4 @@
-﻿#include "engine/gapi/directx12/DirectX12API.h"
+#include "engine/gapi/directx12/DirectX12API.h"
 
 #if defined(Z_D3D12)
 
@@ -30,7 +30,7 @@ namespace zzz::engine
 			debugController->EnableDebugLayer();
 			dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
 
-			DOut("DirectX debug layer enabled.");
+			DOut("[DirectX12API::EnableDebugLayer] - DirectX debug layer enabled.");
 		}
 		else
 			THROW_RUNTIME("Failed to enable DirectX debug layer.");
@@ -91,7 +91,7 @@ namespace zzz::engine
 
 			if (SUCCEEDED(D3D12CreateDevice(candidate, D3D_FEATURE_LEVEL_12_0, __uuidof(ID3D12Device), nullptr)))
 			{
-				DOut("Selected adapter: {} VRAM: {} MB", std::string(desc.Description, desc.Description + wcslen(desc.Description)), desc.DedicatedVideoMemory / (1024 * 1024));
+				DOut("[DirectX12API::GetAdapter] - Selected adapter: {} VRAM: {} MB", std::string(desc.Description, desc.Description + wcslen(desc.Description)), desc.DedicatedVideoMemory / (1024 * 1024));
 				outAdapter = candidate;
 				return true;
 			}
@@ -143,7 +143,7 @@ namespace zzz::engine
 		std::string levelName = (outFeatureLevel == D3D_FEATURE_LEVEL_12_2) ? "12.2 (DirectX 12 Ultimate)" :
 			(outFeatureLevel == D3D_FEATURE_LEVEL_12_1) ? "12.1" :
 			(outFeatureLevel == D3D_FEATURE_LEVEL_12_0) ? "12.0" : "Unknown";
-		DOut("Created D3D12 device with feature level: {}", levelName);
+		DOut("[DirectX12API::CreateDevice] - Created D3D12 device with feature level: {}", levelName);
 #endif
 	}
 #pragma endregion

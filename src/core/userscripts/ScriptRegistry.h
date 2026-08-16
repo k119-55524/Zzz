@@ -7,6 +7,7 @@
 #include "core/utils/Guid.h"
 #include "core/utils/Export.h"
 #include "core/utils/MemoryUtils.h"
+#include "core/utils/Macroses.h"
 #include "ScriptStorage.h"
 
 namespace zzz::core
@@ -16,36 +17,41 @@ namespace zzz::core
 	class GameScript;
 	class Script;
 
-	class Z_CORE_API ScriptRegistry
+	class Z_CORE_API ScriptRegistry final
 	{
+		Z_NO_COPY_MOVE(ScriptRegistry);
+
 	public:
+		ScriptRegistry() = delete;
+		explicit ScriptRegistry(ScriptStorage& storage) : m_Storage(storage) {}
+
 		// Регистрация типов по имени
 		template<typename T>
-		static void Register(std::string_view name)
+		void Register(std::string_view name)
 		{
 			Register<T>(name, zzz::core::Guid{});
 		}
 
 		// Регистрация типов по имени и GUID
 		template<typename T>
-		static void Register(std::string_view name, const zzz::core::Guid& guid)
+		void Register(std::string_view name, const zzz::core::Guid& guid)
 		{
 			std::string nameStr(name);
 			if constexpr (std::is_base_of_v<zzz::core::ViewScript, T>)
 			{
-				ScriptStorage::RegisterViewScriptFactory(nameStr, guid, []() { return zzz::core::safe_make_shared<T>(); });
+				m_Storage.RegisterViewScriptFactory(nameStr, guid, []() { return zzz::core::safe_make_shared<T>(); });
 			}
 			else if constexpr (std::is_base_of_v<zzz::core::SceneScript, T>)
 			{
-				ScriptStorage::RegisterSceneScriptFactory(nameStr, guid, []() { return zzz::core::safe_make_shared<T>(); });
+				m_Storage.RegisterSceneScriptFactory(nameStr, guid, []() { return zzz::core::safe_make_shared<T>(); });
 			}
 			else if constexpr (std::is_base_of_v<zzz::core::GameScript, T>)
 			{
-				ScriptStorage::RegisterGameScriptFactory(nameStr, guid, []() { return zzz::core::safe_make_shared<T>(); });
+				m_Storage.RegisterGameScriptFactory(nameStr, guid, []() { return zzz::core::safe_make_shared<T>(); });
 			}
 			else if constexpr (std::is_base_of_v<zzz::core::Script, T>)
 			{
-				ScriptStorage::RegisterScriptFactory(nameStr, guid, [](GameObject* owner) { return zzz::core::safe_make_shared<T>(owner); });
+				m_Storage.RegisterScriptFactory(nameStr, guid, [](GameObject* owner) { return zzz::core::safe_make_shared<T>(owner); });
 			}
 			else
 			{
@@ -53,9 +59,12 @@ namespace zzz::core
 			}
 		}
 
-		static void Clear()
+		void Clear()
 		{
-			ScriptStorage::Clear();
+			m_Storage.Clear();
 		}
+
+	private:
+		ScriptStorage& m_Storage;
 	};
 }

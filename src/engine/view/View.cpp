@@ -7,7 +7,7 @@
 using namespace zzz::core;
 using namespace zzz::engine;
 
-View::View(const StartViewPlatformData& settings, const std::vector<Guid>& scripts, const Platform& platform, std::function<void(View&)> onWindowClose) :
+View::View(const StartViewPlatformData& settings, const std::vector<Guid>& scripts, const Platform& platform, const ScriptFactory& scriptFactory, std::function<void(View&)> onWindowClose) :
 	m_Platform{ platform },
 	m_IsActive{ true },
 	OnWindowClose(std::move(onWindowClose))
@@ -17,7 +17,7 @@ View::View(const StartViewPlatformData& settings, const std::vector<Guid>& scrip
 	std::vector<std::shared_ptr<ViewScript>> viewScripts;
 	for (const auto& viewScriptGuid : scripts)
 	{
-		auto viewScript = ScriptFactory::CreateViewScript(viewScriptGuid);
+		auto viewScript = scriptFactory.CreateViewScript(viewScriptGuid);
 		if (!viewScript)
 			THROW_RUNTIME("Не удалось создать ViewScript по GUID {}.", viewScriptGuid.ToString());
 
@@ -114,7 +114,7 @@ void View::Initialize(void* data)
 #pragma region Window Events
 void View::HandleWindowClose()
 {
-	DOut("Событие окна: OnClose");
+	DOut("[View::HandleWindowClose] - OnClose");
 
 	// В редакторе управление происходит из вне поэтому колбэк может быть не инициализирован
 	if (OnWindowClose != nullptr)
@@ -123,32 +123,32 @@ void View::HandleWindowClose()
 
 void View::OnWindowResize(Size2D<>& size, eWinResize type)
 {
-	DOut("Событие окна: OnResize ({}x{}) Тип: {}", size.width, size.height, EnumToString::ToString(type));
+	DOut("[View::OnWindowResize] - {}x{} (Type: {})", size.width, size.height, EnumToString::ToString(type));
 }
 
 void View::OnWindowResizeStart()
 {
-	DOut("Событие окна: OnResizeStart");
+	DOut("[View::OnWindowResizeStart]");
 }
 
 void View::OnWindowSizing()
 {
-	DOut("Событие окна: OnSizing");
+	DOut("[View::OnWindowSizing]");
 }
 
 void View::OnWindowResizeEnd()
 {
-	DOut("Событие окна: OnResizeEnd");
+	DOut("[View::OnWindowResizeEnd]");
 }
 
 void View::OnWindowDpiChanged()
 {
-	DOut("Событие окна: OnDpiChanged");
+	DOut("[View::OnWindowDpiChanged]");
 }
 
 void View::OnWindowFocus(bool focus)
 {
-	DOut("Событие окна: OnFocus ({})", focus ? "true" : "false");
+	DOut("[View::OnWindowFocus] - Focus: {}", focus ? "true" : "false");
 	if (!focus)
 	{
 		m_Input->ResetState();
@@ -157,7 +157,7 @@ void View::OnWindowFocus(bool focus)
 
 void View::OnWindowActivate(bool active)
 {
-	DOut("Событие окна: OnActivate ({})", active ? "true" : "false");
+	DOut("[View::OnWindowActivate] - Active: {}", active ? "true" : "false");
 }
 
 #pragma endregion
@@ -165,32 +165,32 @@ void View::OnWindowActivate(bool active)
 #pragma region App Lifecycle & GPU Surface
 void View::OnWindowSurfaceCreated(void* handle)
 {
-	DOut("Событие окна: OnSurfaceCreated (handle: {})", handle);
+	DOut("[View::OnWindowSurfaceCreated] - Handle: {}", handle);
 }
 
 void View::OnWindowSurfaceDestroyed()
 {
-	DOut("Событие окна: OnSurfaceDestroyed");
+	DOut("[View::OnWindowSurfaceDestroyed]");
 }
 
 void View::OnWindowSuspend()
 {
-	DOut("Событие окна: OnSuspend");
+	DOut("[View::OnWindowSuspend]");
 }
 
 void View::OnWindowResume()
 {
-	DOut("Событие окна: OnResume");
+	DOut("[View::OnWindowResume]");
 }
 
 void View::OnWindowLowMemory()
 {
-	DOut("Событие окна: OnLowMemory");
+	DOut("[View::OnWindowLowMemory]");
 }
 
 void View::OnWindowSafeAreaChanged(int top, int bottom, int left, int right)
 {
-	DOut("Событие окна: OnSafeAreaChanged (t:{}, b:{}, l:{}, r:{})", top, bottom, left, right);
+	DOut("[View::OnWindowSafeAreaChanged] - Top: {}, Bottom: {}, Left: {}, Right: {}", top, bottom, left, right);
 }
 #pragma endregion
 

@@ -42,7 +42,7 @@ foreach(BUILD_DIR ${Z_ASSET_BUILD_DIRS})
     endif()
 endforeach()
 
-set(REGISTER_SCRIPTS_CONTENT "// RegisterAllScripts.cpp — генерируется автоматически CMake\n#include <ScriptRegistry.h>\n\n")
+set(REGISTER_SCRIPTS_CONTENT "// RegisterAllScripts.cpp — генерируется автоматически CMake\n#include <ScriptRegistrar.h>\n\n")
 set(REGISTER_SCRIPT_LINES "")
 foreach(HPP_FILE ${SCRIPT_HPPS})
     get_filename_component(CLASS_NAME "${HPP_FILE}" NAME_WE)
@@ -64,10 +64,10 @@ foreach(HPP_FILE ${SCRIPT_HPPS})
     endif()
 
     string(APPEND REGISTER_SCRIPTS_CONTENT "#include \"${HPP_FILE}\"\n")
-    string(APPEND REGISTER_SCRIPT_LINES "    zzz::core::ScriptRegistry::Register<${QUALIFIED_NAME}>(\"${QUALIFIED_NAME}\");\n")
+    string(APPEND REGISTER_SCRIPT_LINES "    registrar.Register<${QUALIFIED_NAME}>(\"${QUALIFIED_NAME}\");\n")
 endforeach()
 
-string(APPEND REGISTER_SCRIPTS_CONTENT "\nvoid RegisterAllScripts()\n{\n${REGISTER_SCRIPT_LINES}}\n")
+string(APPEND REGISTER_SCRIPTS_CONTENT "\nvoid RegisterAllScripts(zzz::core::ScriptRegistrar& registrar)\n{\n${REGISTER_SCRIPT_LINES}}\n")
 set(GENERATED_REGISTER_CPP "${CMAKE_CURRENT_BINARY_DIR}/RegisterAllScripts.cpp")
 file(WRITE "${GENERATED_REGISTER_CPP}" "${REGISTER_SCRIPTS_CONTENT}")
 

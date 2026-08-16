@@ -35,6 +35,10 @@ namespace zzz::engine
 		std::atomic<eInitState> engineState;
 		std::vector<std::shared_ptr<GameScript>> m_Scripts;
 
+		std::shared_ptr<ScriptStorage> m_ScriptStorage;
+		std::unique_ptr<ScriptRegistry> m_ScriptRegistry;
+		std::shared_ptr<ScriptFactory> m_ScriptFactory;
+
 		std::shared_ptr<Path> m_Path;
 		std::shared_ptr<PackageManager> m_PackageManager;
 		std::shared_ptr<UserSettingsManager> m_UserSettingsManager;

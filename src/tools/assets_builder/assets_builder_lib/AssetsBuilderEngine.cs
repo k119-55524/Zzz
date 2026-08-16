@@ -429,25 +429,25 @@ public class AssetsBuilderEngine
 
 				if (!string.IsNullOrWhiteSpace(scriptGuid))
 				{
-					registerLines.Add($"    if (auto g = zzz::core::Guid::Parse(\"{scriptGuid}\"))\n        zzz::core::ScriptRegistry::Register<{qualifiedName}>(\"{qualifiedName}\", *g);\n    else\n        zzz::core::ScriptRegistry::Register<{qualifiedName}>(\"{qualifiedName}\");");
+					registerLines.Add($"    if (auto g = zzz::core::Guid::Parse(\"{scriptGuid}\"))\n        registrar.Register<{qualifiedName}>(\"{qualifiedName}\", *g);\n    else\n        registrar.Register<{qualifiedName}>(\"{qualifiedName}\");");
 				}
 				else
 				{
-					registerLines.Add($"    zzz::core::ScriptRegistry::Register<{qualifiedName}>(\"{qualifiedName}\");");
+					registerLines.Add($"    registrar.Register<{qualifiedName}>(\"{qualifiedName}\");");
 				}
 			}
 
 			string registerCppPath = Path.Combine(destinationPath, "RegisterAllScripts.cpp").Replace('\\', '/');
 			var regSb = new System.Text.StringBuilder();
 			regSb.AppendLine("// RegisterAllScripts.cpp — сгенерировано Assets Builder");
-			regSb.AppendLine("#include <ScriptRegistry.h>");
+			regSb.AppendLine("#include <ScriptRegistrar.h>");
 			regSb.AppendLine();
 			foreach (var inc in headerIncludes)
 			{
 				regSb.AppendLine(inc);
 			}
 			regSb.AppendLine();
-			regSb.AppendLine("extern \"C\" void RegisterAllScripts()");
+			regSb.AppendLine("extern \"C\" void RegisterAllScripts(zzz::core::ScriptRegistry& registry)");
 			regSb.AppendLine("{");
 			foreach (var line in registerLines)
 			{

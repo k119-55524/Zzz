@@ -4,6 +4,8 @@
 #include "../platforms/input/Input.h"
 #include "../platforms/window/NativeWindow.h"
 
+#include "core/userscripts/ScriptFactory.h"
+
 namespace zzz::engine
 {
 	using namespace zzz::core;
@@ -14,7 +16,7 @@ namespace zzz::engine
 
 	public:
 		View() = delete;
-		View(const StartViewPlatformData& settings, const std::vector<Guid>& scripts, const Platform& platform, std::function<void(View&)> onWindowClose);
+		View(const StartViewPlatformData& settings, const std::vector<Guid>& scripts, const Platform& platform, const ScriptFactory& scriptFactory, std::function<void(View&)> onWindowClose);
 #if Z_EDITOR
 		View(const Platform& platform, void* data);
 #endif // Z_EDITOR

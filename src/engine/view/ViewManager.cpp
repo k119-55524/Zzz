@@ -10,12 +10,14 @@
 using namespace zzz::core;
 using namespace zzz::engine;
 
-ViewManager::ViewManager(const Platform& platform, std::shared_ptr<IGAPI> gapi, std::function<void()> onAllViewsClosed) :
+ViewManager::ViewManager(const Platform& platform, std::shared_ptr<IGAPI> gapi, std::shared_ptr<ScriptFactory> scriptFactory, std::function<void()> onAllViewsClosed) :
 	m_Platform{ platform },
 	m_GAPI{ std::move(gapi) },
+	m_ScriptFactory{ std::move(scriptFactory) },
 	OnAllViewsClosed{ std::move(onAllViewsClosed) }
 {
 	ensure(m_GAPI != nullptr, "IGAPI не должен быть null.");
+	ensure(m_ScriptFactory != nullptr, "ScriptFactory не должен быть null.");
 	ensure(OnAllViewsClosed != nullptr, "OnAllViewsClosed не должен быть null.");
 }
 
@@ -47,7 +49,7 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateView(const 
 	std::shared_ptr<View> view;
 	try
 	{
-		view = safe_make_shared<View>(settings, scripts, m_Platform, [this](View& v) { OnWindowClose(v); });
+		view = safe_make_shared<View>(settings, scripts, m_Platform, *m_ScriptFactory, [this](View& v) { OnWindowClose(v); });
 		m_Views.push_back(view);
 		view->InvokeStart();
 	}

@@ -6,6 +6,8 @@
 #include "engine/package/PackageManager.h"
 #include "engine/package/UserSettingsManager.h"
 
+#include "core/userscripts/ScriptFactory.h"
+
 namespace zzz::engine
 {
 	using namespace zzz::core;
@@ -16,7 +18,7 @@ namespace zzz::engine
 
 	public:
 		ViewManager() = delete;
-		ViewManager(const Platform& platform, std::shared_ptr<IGAPI> gapi, std::function<void()> onAllViewsClosed);
+		ViewManager(const Platform& platform, std::shared_ptr<IGAPI> gapi, std::shared_ptr<ScriptFactory> scriptFactory, std::function<void()> onAllViewsClosed);
 		~ViewManager();
 
 		[[nodiscard]] inline std::shared_ptr<IGAPI> GetGAPI() const noexcept { return m_GAPI; }
@@ -43,6 +45,7 @@ namespace zzz::engine
 	private:
 		const Platform& m_Platform;
 		std::shared_ptr<IGAPI> m_GAPI;
+		std::shared_ptr<ScriptFactory> m_ScriptFactory;
 		std::list<std::shared_ptr<View>> m_Views;
 
 		std::function<void()> OnAllViewsClosed;

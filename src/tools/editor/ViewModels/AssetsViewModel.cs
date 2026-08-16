@@ -483,7 +483,7 @@ namespace editor.ViewModels
             var sb = new System.Text.StringBuilder();
             sb.AppendLine("// RegisterAllScripts.cpp — генерируется автоматически ZzzEngine Editor");
             sb.AppendLine("#include <core/Core.h>");
-            sb.AppendLine("#include <ScriptRegistry.h>");
+            sb.AppendLine("#include <ScriptRegistrar.h>");
             sb.AppendLine("#include <logger/logger.h>");
             sb.AppendLine();
 
@@ -525,7 +525,7 @@ namespace editor.ViewModels
             sb.AppendLine("}");
 
             sb.AppendLine();
-            sb.AppendLine("extern \"C\" __declspec(dllexport) void RegisterAllScripts()");
+            sb.AppendLine("extern \"C\" __declspec(dllexport) void RegisterAllScripts(zzz::core::ScriptRegistry& registry)");
             sb.AppendLine("{");
 
             foreach (var node in validNodes)
@@ -533,13 +533,13 @@ namespace editor.ViewModels
                 if (!string.IsNullOrWhiteSpace(node.Guid) && System.Guid.TryParse(node.Guid, out _))
                 {
                     sb.AppendLine($"    if (auto g = zzz::core::Guid::Parse(\"{node.Guid}\"))");
-                    sb.AppendLine($"        zzz::core::ScriptRegistry::Register<{node.QualifiedName}>(\"{node.QualifiedName}\", *g);");
+                    sb.AppendLine($"        registrar.Register<{node.QualifiedName}>(\"{node.QualifiedName}\", *g);");
                     sb.AppendLine("    else");
-                    sb.AppendLine($"        zzz::core::ScriptRegistry::Register<{node.QualifiedName}>(\"{node.QualifiedName}\");");
+                    sb.AppendLine($"        registrar.Register<{node.QualifiedName}>(\"{node.QualifiedName}\");");
                 }
                 else
                 {
-                    sb.AppendLine($"    zzz::core::ScriptRegistry::Register<{node.QualifiedName}>(\"{node.QualifiedName}\");");
+                    sb.AppendLine($"    registrar.Register<{node.QualifiedName}>(\"{node.QualifiedName}\");");
                 }
             }
 

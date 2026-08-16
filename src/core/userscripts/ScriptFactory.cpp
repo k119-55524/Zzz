@@ -1,68 +1,67 @@
 #include "ScriptFactory.h"
-#include "ScriptStorage.h"
 
 namespace zzz::core
 {
-	std::shared_ptr<Script> ScriptFactory::CreateScript(std::string_view name, GameObject* owner)
+	std::shared_ptr<Script> ScriptFactory::CreateScript(std::string_view name, GameObject* owner) const
 	{
-		return ScriptStorage::CreateScript(name, owner);
+		return m_Storage.CreateScript(name, owner);
 	}
 
-	std::shared_ptr<GameScript> ScriptFactory::CreateGameScript(std::string_view name)
+	std::shared_ptr<GameScript> ScriptFactory::CreateGameScript(std::string_view name) const
 	{
-		return ScriptStorage::CreateGameScript(name);
+		return m_Storage.CreateGameScript(name);
 	}
 
-	std::shared_ptr<SceneScript> ScriptFactory::CreateSceneScript(std::string_view name)
+	std::shared_ptr<SceneScript> ScriptFactory::CreateSceneScript(std::string_view name) const
 	{
-		return ScriptStorage::CreateSceneScript(name);
+		return m_Storage.CreateSceneScript(name);
 	}
 
-	std::shared_ptr<ViewScript> ScriptFactory::CreateViewScript(std::string_view name)
+	std::shared_ptr<ViewScript> ScriptFactory::CreateViewScript(std::string_view name) const
 	{
-		return ScriptStorage::CreateViewScript(name);
+		return m_Storage.CreateViewScript(name);
 	}
 
-	std::shared_ptr<Script> ScriptFactory::CreateScript(const zzz::core::Guid& guid, GameObject* owner)
+	std::shared_ptr<Script> ScriptFactory::CreateScript(const zzz::core::Guid& guid, GameObject* owner) const
 	{
-		return ScriptStorage::CreateScript(guid, owner);
+		return m_Storage.CreateScript(guid, owner);
 	}
 
-	std::shared_ptr<GameScript> ScriptFactory::CreateGameScript(const zzz::core::Guid& guid)
+	std::shared_ptr<GameScript> ScriptFactory::CreateGameScript(const zzz::core::Guid& guid) const
 	{
-		return ScriptStorage::CreateGameScript(guid);
+		return m_Storage.CreateGameScript(guid);
 	}
 
-	std::shared_ptr<SceneScript> ScriptFactory::CreateSceneScript(const zzz::core::Guid& guid)
+	std::shared_ptr<SceneScript> ScriptFactory::CreateSceneScript(const zzz::core::Guid& guid) const
 	{
-		return ScriptStorage::CreateSceneScript(guid);
+		return m_Storage.CreateSceneScript(guid);
 	}
 
-	std::shared_ptr<ViewScript> ScriptFactory::CreateViewScript(const zzz::core::Guid& guid)
+	std::shared_ptr<ViewScript> ScriptFactory::CreateViewScript(const zzz::core::Guid& guid) const
 	{
-		return ScriptStorage::CreateViewScript(guid);
+		return m_Storage.CreateViewScript(guid);
 	}
 
-	std::vector<std::string> ScriptFactory::GetAllGameScriptNames()
+	std::vector<std::string> ScriptFactory::GetAllGameScriptNames() const
 	{
-		return ScriptStorage::GetAllGameScriptNames();
+		return m_Storage.GetAllGameScriptNames();
 	}
 
 #if Z_EDITOR
-	void ScriptFactory::RegisterInstance(Script* instance)       { ScriptStorage::RegisterInstance(instance); }
-	void ScriptFactory::UnregisterInstance(Script* instance)     { ScriptStorage::UnregisterInstance(instance); }
-	const std::vector<Script*>& ScriptFactory::GetActiveInstances() { return ScriptStorage::GetActiveInstances(); }
+	void ScriptFactory::RegisterInstance(Script* instance)       { m_Storage.RegisterInstance(instance); }
+	void ScriptFactory::UnregisterInstance(Script* instance)     { m_Storage.UnregisterInstance(instance); }
+	const std::vector<Script*>& ScriptFactory::GetActiveInstances() const { return m_Storage.GetActiveInstances(); }
 
-	void ScriptFactory::RegisterInstance(GameScript* instance)   { ScriptStorage::RegisterInstance(instance); }
-	void ScriptFactory::UnregisterInstance(GameScript* instance) { ScriptStorage::UnregisterInstance(instance); }
-	const std::vector<GameScript*>& ScriptFactory::GetActiveGameScripts() { return ScriptStorage::GetActiveGameScripts(); }
+	void ScriptFactory::RegisterInstance(GameScript* instance)   { m_Storage.RegisterInstance(instance); }
+	void ScriptFactory::UnregisterInstance(GameScript* instance) { m_Storage.UnregisterInstance(instance); }
+	const std::vector<GameScript*>& ScriptFactory::GetActiveGameScripts() const { return m_Storage.GetActiveGameScripts(); }
 
-	void ScriptFactory::RegisterInstance(SceneScript* instance)  { ScriptStorage::RegisterInstance(instance); }
-	void ScriptFactory::UnregisterInstance(SceneScript* instance){ ScriptStorage::UnregisterInstance(instance); }
-	const std::vector<SceneScript*>& ScriptFactory::GetActiveSceneScripts() { return ScriptStorage::GetActiveSceneScripts(); }
+	void ScriptFactory::RegisterInstance(SceneScript* instance)  { m_Storage.RegisterInstance(instance); }
+	void ScriptFactory::UnregisterInstance(SceneScript* instance){ m_Storage.UnregisterInstance(instance); }
+	const std::vector<SceneScript*>& ScriptFactory::GetActiveSceneScripts() const { return m_Storage.GetActiveSceneScripts(); }
 
-	void ScriptFactory::RegisterInstance(ViewScript* instance)   { ScriptStorage::RegisterInstance(instance); }
-	void ScriptFactory::UnregisterInstance(ViewScript* instance) { ScriptStorage::UnregisterInstance(instance); }
-	const std::vector<ViewScript*>& ScriptFactory::GetActiveViewScripts() { return ScriptStorage::GetActiveViewScripts(); }
+	void ScriptFactory::RegisterInstance(ViewScript* instance)   { m_Storage.RegisterInstance(instance); }
+	void ScriptFactory::UnregisterInstance(ViewScript* instance) { m_Storage.UnregisterInstance(instance); }
+	const std::vector<ViewScript*>& ScriptFactory::GetActiveViewScripts() const { return m_Storage.GetActiveViewScripts(); }
 #endif
 }

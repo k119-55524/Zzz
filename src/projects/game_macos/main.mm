@@ -9,8 +9,7 @@ int main(int argc, const char* argv[])
 {
     @autoreleasepool
     {
-        extern void RegisterAllScripts();
-        RegisterAllScripts();
+        // RegisterAllScripts is called automatically by Engine::Run(*m_ScriptRegistrar)
 
         NSApplication* app = [NSApplication sharedApplication];
         id delegate = [[NSClassFromString(@"EngineAppDelegate") alloc] init];
