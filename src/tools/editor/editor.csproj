@@ -13,7 +13,7 @@
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU;x64</Platforms>
 
-    <OutputPath>..\..\..\bin\$(Configuration)\</OutputPath>
+    <OutputPath>..\..\..\dist\$(Configuration)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
@@ -37,8 +37,8 @@
        Запуск cmake build отключается при сборке решения в VS/MSBuild, чтобы избежать ошибок с путями SDK. -->
   <Target Name="BuildEditorDLL" BeforeTargets="Build" Condition="'$(BuildingSolutionFile)' != 'true' And '$(BuildingInsideVisualStudio)' != 'true'">
     <PropertyGroup>
-      <Z_TargetDir Condition="'$(Configuration)' == 'Debug'">$(MSBuildThisFileDirectory)..\..\..\bin\Debug</Z_TargetDir>
-      <Z_TargetDir Condition="'$(Configuration)' == 'Release'">$(MSBuildThisFileDirectory)..\..\..\bin\Release</Z_TargetDir>
+      <Z_TargetDir Condition="'$(Configuration)' == 'Debug'">$(MSBuildThisFileDirectory)..\..\..\dist\Debug</Z_TargetDir>
+      <Z_TargetDir Condition="'$(Configuration)' == 'Release'">$(MSBuildThisFileDirectory)..\..\..\dist\Release</Z_TargetDir>
       <Z_CMakeBuildDir Condition="'$(Configuration)' == 'Debug'">$(MSBuildThisFileDirectory)..\..\..\build\Windows\debug</Z_CMakeBuildDir>
       <Z_CMakeBuildDir Condition="'$(Configuration)' == 'Release'">$(MSBuildThisFileDirectory)..\..\..\build\Windows\release</Z_CMakeBuildDir>
     </PropertyGroup>

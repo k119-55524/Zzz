@@ -8,7 +8,7 @@
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU;x64</Platforms>
 
-    <OutputPath>..\..\..\..\bin\$(Configuration)\</OutputPath>
+    <OutputPath>..\..\..\..\dist\$(Configuration)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 

@@ -90,7 +90,8 @@ namespace zzz::engine
 		try
 		{
 			std::vector<std::byte> buffer;
-			if (auto res = m_Serializer.Serialize(buffer, *this); !res)
+			Serializer serializer;
+			if (auto res = serializer.Serialize(buffer, *this); !res)
 				return UNEXPECTED("Не удалось сериализовать конфигурацию: {}.", res.error());
 
 			std::error_code ec;
@@ -143,7 +144,8 @@ namespace zzz::engine
 
 			std::size_t offset = 0;
 
-			auto result = m_Serializer.Deserialize(
+			Serializer serializer;
+			auto result = serializer.Deserialize(
 				std::span(
 					reinterpret_cast<const std::byte*>(buffer.data()),
 					buffer.size()),

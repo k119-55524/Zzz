@@ -44,13 +44,13 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)..\..\bin\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)..\..\build\obj\$(ProjectName)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)..\..\dist\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\..\.build\obj\$(ProjectName)\$(Configuration)\</IntDir>
     <TargetName>logger_lib_editor</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)..\..\bin\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)..\..\build\obj\$(ProjectName)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)..\..\dist\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\..\.build\obj\$(ProjectName)\$(Configuration)\</IntDir>
     <TargetName>logger_lib_editor</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -73,10 +73,10 @@
     </Link>
       <PostBuildEvent>
         <Command>
-          if not exist "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\lib" mkdir "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\lib"
-          if not exist "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\logger" mkdir "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\logger"
-          copy /Y "$(OutDir)$(TargetName).lib" "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\lib\"
-          cmake -DSRC_DIR="$(ProjectDir)\" -DDST_DIR="$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\logger" -P "$(SolutionDir)..\..\copy_headers.cmake"
+          if not exist "$(SolutionDir)..\..\dist\$(Configuration)\libs\zlibs\lib" mkdir "$(SolutionDir)..\..\dist\$(Configuration)\libs\zlibs\lib"
+          if not exist "$(SolutionDir)..\..\dist\$(Configuration)\libs\zlibs\include\logger" mkdir "$(SolutionDir)..\..\dist\$(Configuration)\libs\zlibs\include\logger"
+          copy /Y "$(OutDir)$(TargetName).lib" "$(SolutionDir)..\..\dist\$(Configuration)\libs\zlibs\lib\"
+          cmake -DSRC_DIR="$(ProjectDir)\" -DDST_DIR="$(SolutionDir)..\..\dist\$(Configuration)\libs\zlibs\include\logger" -P "$(SolutionDir)..\..\copy_headers.cmake"
         </Command>
       </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -103,10 +103,10 @@
     </Link>
       <PostBuildEvent>
         <Command>
-          if not exist "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\lib" mkdir "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\lib"
-          if not exist "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\logger" mkdir "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\logger"
-          copy /Y "$(OutDir)$(TargetName).lib" "$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\lib\"
-          cmake -DSRC_DIR="$(ProjectDir)\" -DDST_DIR="$(SolutionDir)..\..\bin\$(Configuration)\libs\zlibs\include\logger" -P "$(SolutionDir)..\..\copy_headers.cmake"
+          if not exist "$(SolutionDir)..\..\dist\$(Configuration)\libs\zlibs\lib" mkdir "$(SolutionDir)..\..\dist\$(Configuration)\libs\zlibs\lib"
+          if not exist "$(SolutionDir)..\..\dist\$(Configuration)\libs\zlibs\include\logger" mkdir "$(SolutionDir)..\..\dist\$(Configuration)\libs\zlibs\include\logger"
+          copy /Y "$(OutDir)$(TargetName).lib" "$(SolutionDir)..\..\dist\$(Configuration)\libs\zlibs\lib\"
+          cmake -DSRC_DIR="$(ProjectDir)\" -DDST_DIR="$(SolutionDir)..\..\dist\$(Configuration)\libs\zlibs\include\logger" -P "$(SolutionDir)..\..\copy_headers.cmake"
         </Command>
       </PostBuildEvent>
   </ItemDefinitionGroup>

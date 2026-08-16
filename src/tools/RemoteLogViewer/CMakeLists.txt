@@ -55,8 +55,8 @@ if(DOTNET_EXECUTABLE)
 "param([string]$Config)
 $wshell = New-Object -ComObject WScript.Shell
 $lnk = $wshell.CreateShortcut('${CMAKE_SOURCE_DIR}/RemoteLogViewer.lnk'.Replace('/', '\\'))
-$lnk.TargetPath = '${CMAKE_SOURCE_DIR}/bin/' + $Config + '/RemoteLogViewer.exe'.Replace('/', '\\')
-$lnk.WorkingDirectory = '${CMAKE_SOURCE_DIR}/bin/' + $Config.Replace('/', '\\')
+$lnk.TargetPath = '${CMAKE_SOURCE_DIR}/dist/' + $Config + '/RemoteLogViewer.exe'.Replace('/', '\\')
+$lnk.WorkingDirectory = '${CMAKE_SOURCE_DIR}/dist/' + $Config.Replace('/', '\\')
 $lnk.Save()
 ")
         add_custom_target(RemoteLogViewer ALL

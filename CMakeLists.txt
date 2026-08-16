@@ -10,9 +10,16 @@ endif()
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/$<CONFIG>")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/$<CONFIG>")
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/$<CONFIG>")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/dist/$<CONFIG>")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/dist/$<CONFIG>")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/dist/$<CONFIG>")
+
+set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/.cache" CACHE PATH "Directory for downloaded external packages")
+
+
+if(WIN32)
+    add_compile_definitions(WIN32_LEAN_AND_MEAN NOMINMAX)
+endif()
 
 if(MSVC)
     add_compile_options(/Zc:preprocessor /W4 /w44062 /EHsc /wd4251)
@@ -72,7 +79,7 @@ endif()
 # Автоматический экспорт SDK в папку редактора
 # -----------------------------------------------------------------------------
 macro(export_to_editor_sdk TARGET_NAME SRC_INCLUDE_DIR DST_SUBDIR)
-    set(SDK_DIR "${CMAKE_SOURCE_DIR}/bin/$<CONFIG>/libs/zlibs")
+    set(SDK_DIR "${CMAKE_SOURCE_DIR}/dist/$<CONFIG>/libs/zlibs")
     
     # Копируем .dll (если это shared библиотека на Windows) или .so (на Linux)
     add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
@@ -118,7 +125,9 @@ endif()
 
 add_subdirectory(src/tools/RemoteLogViewer)
 add_subdirectory(src/engine)
+add_subdirectory(src/server)
 add_subdirectory(src/projects/assets_projects/zzz_assets_test_000)
+
 
 
 if(ANDROID)

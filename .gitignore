@@ -9,8 +9,9 @@ build_vs*/
 out/
 cmake-build-*/
 
-# Служебные dot-папки IDE/инструментов (.vs, .idea, .claude, .agents, .continue и т.п.)
+# Служебные dot-папки IDE/инструментов (.vs, .idea, .claude, .agents, .continue, .cache и т.п.)
 
+.cache/
 .*/
 
 # CMake generated files
