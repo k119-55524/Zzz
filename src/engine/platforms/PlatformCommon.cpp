@@ -18,4 +18,5 @@ Platform::~Platform()
 void Platform::Initialize()
 {
 	InitializePlatformSpecific();
+	m_HardwareState = GatherHardwareState();
 }
