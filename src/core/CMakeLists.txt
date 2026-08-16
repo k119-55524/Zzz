@@ -3,8 +3,6 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
 
     target_include_directories(${TARGET_NAME} PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/..
-        ${CMAKE_CURRENT_SOURCE_DIR}/userscripts
-        ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/base_script
     )
 
     target_sources(${TARGET_NAME} PRIVATE
@@ -101,6 +99,17 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
     target_precompile_headers(${TARGET_NAME} PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/pch.h
     )
+
+    if(UNIX AND NOT APPLE AND NOT ANDROID)
+        target_sources(${TARGET_NAME} PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/specific/linux_wayland/Xdg-shell-client-protocol.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/specific/linux_wayland/Xdg-shell-protocol.cpp
+        )
+        set_source_files_properties(
+            "${CMAKE_CURRENT_SOURCE_DIR}/specific/linux_wayland/Xdg-shell-protocol.cpp"
+            PROPERTIES COMPILE_OPTIONS "-Wno-attributes"
+        )
+    endif()
 
     if(APPLE)
         target_sources(${TARGET_NAME} PRIVATE

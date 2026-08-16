@@ -8,20 +8,20 @@ using zzz::core::StartViewUserData;
 
 namespace zzz::engine
 {
-	UserSettingsManager::UserSettingsManager(const Path& path, const PackageManager& packageManager) :
+	UserSettingsManager::UserSettingsManager(const Path& path, const StartViewData& defaultStartViewData) :
 		m_Path(path),
 		m_Version(c_ConfigFileMajorVersion, c_ConfigFileMinorVersion, c_ConfigFilePatchVersion),
 		m_IsDirty(true)
 	{
 #if Z_EDITOR
-		(void)packageManager;
+		(void)defaultStartViewData;
 #else
-		Initialize(packageManager);
+		Initialize(defaultStartViewData);
 		LogUserData();
 #endif
 	}
 
-	void UserSettingsManager::Initialize(const PackageManager& packageManager)
+	void UserSettingsManager::Initialize(const StartViewData& defaultStartViewData)
 	{
 		try
 		{
@@ -33,7 +33,7 @@ namespace zzz::engine
 				.lexically_normal()
 				.make_preferred();
 
-			SetDefaultUserSettings(packageManager);
+			SetDefaultUserSettings(defaultStartViewData);
 			if (!std::filesystem::exists(m_ConfigPath))
 			{
 				DOutWarning("Файл конфигурации не найден: {}. Используется конфигурация по умолчанию.", m_ConfigPath.string());
@@ -44,39 +44,35 @@ namespace zzz::engine
 			if (!res)
 			{
 				DOutWarning("Не удалось загрузить файл конфигурации: {}. Создаётся конфигурация по умолчанию.", m_ConfigPath.string());
-				SetDefaultUserSettings(packageManager);
+				SetDefaultUserSettings(defaultStartViewData);
 			}
 		}
 		catch (const std::filesystem::filesystem_error& e)
 		{
 			DOutException("Ошибка файловой системы: {}. Установка конфигурации по умолчанию.", e.what());
-			SetDefaultUserSettings(packageManager);
+			SetDefaultUserSettings(defaultStartViewData);
 			return;
 		}
 		catch (const std::exception& e)
 		{
 			DOutException("Ошибка загрузки конфигурации: {}. Установка конфигурации по умолчанию.", e.what());
-			SetDefaultUserSettings(packageManager);
+			SetDefaultUserSettings(defaultStartViewData);
 			return;
 		}
 		catch (...)
 		{
 			DOutException("Неизвестная ошибка загрузки конфигурации. Установка конфигурации по умолчанию.");
-			SetDefaultUserSettings(packageManager);
+			SetDefaultUserSettings(defaultStartViewData);
 			return;
 		}
 
 		DOut("[UserSettingsManager] Конфигурация десериализована: {}.", m_ConfigPath.string());
 	}
 
-	void UserSettingsManager::SetDefaultUserSettings(const PackageManager& packageManager)
+	void UserSettingsManager::SetDefaultUserSettings(const StartViewData& defaultStartViewData)
 	{
-		auto startViewData = packageManager.GetStartViewData();
-		if (!startViewData)
-			THROW_RUNTIME("Не удалось загрузить StartViewData: {}", startViewData.error());
-
 		m_Version = Version(c_ConfigFileMajorVersion, c_ConfigFileMinorVersion, c_ConfigFilePatchVersion);
-		m_StartViewUserData = StartViewUserData(*startViewData);
+		m_StartViewUserData = StartViewUserData(defaultStartViewData);
 	}
 
 	[[nodiscard]] std::expected<void, std::string> UserSettingsManager::SaveConfig()

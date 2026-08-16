@@ -4,13 +4,11 @@
 
 namespace zzz::engine
 {
-	class PackageManager;
-
 	class UserSettingsManager final : public ISerializable
 	{
 	public:
 		UserSettingsManager() = delete;
-		UserSettingsManager(const Path& path, const PackageManager& packageManager);
+		UserSettingsManager(const Path& path, const StartViewData& defaultStartViewData);
 
 		inline const StartViewUserData& GetStartViewUserData() const noexcept { return m_StartViewUserData; }
 		inline void ApplyHardwareStateChanges(const PlatformHardwareState& currentHardware) { m_HardwareState.CheckAndApplySoftChanges(currentHardware); m_HardwareState.LogFileBlock(); }
@@ -18,9 +16,9 @@ namespace zzz::engine
 		[[nodiscard]] std::expected<void, std::string> SaveConfig();
 
 	private:
-		void Initialize(const PackageManager& packageManager);
+		void Initialize(const StartViewData& defaultStartViewData);
 		void LogUserData() const;
-		void SetDefaultUserSettings(const PackageManager& packageManager);
+		void SetDefaultUserSettings(const StartViewData& defaultStartViewData);
 		std::expected<std::filesystem::path, std::string> GetSettingsDirectory();
 		std::expected<void, std::string> LoadConfig(std::filesystem::path path);
 

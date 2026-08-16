@@ -7,12 +7,11 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
 
     target_include_directories(${TARGET_NAME}
         PUBLIC
-            ${CMAKE_CURRENT_SOURCE_DIR}
-            ${CMAKE_CURRENT_SOURCE_DIR}/scene
-            ${CMAKE_CURRENT_SOURCE_DIR}/../core/userscripts
-            ${CMAKE_CURRENT_SOURCE_DIR}/../core/userscripts/base_script
+            ${CMAKE_CURRENT_SOURCE_DIR}/..
         PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
             pch
+            ${CMAKE_CURRENT_SOURCE_DIR}/scene
             ${CMAKE_CURRENT_SOURCE_DIR}/view
             ${CMAKE_CURRENT_SOURCE_DIR}/platforms
     )
@@ -45,12 +44,9 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "platforms/window/NativeWindow.h" "platforms/window/WindowCommon.h" "platforms/window/WindowCommon.cpp"
         "view/View.h" "view/View.cpp"
         "view/ViewManager.h" "view/ViewManager.cpp"
-        "../core/utils/ScreenResolution.h"
 
-        # Wayland (Linux)
-        "../core/specific/linux_wayland/Xdg-shell-client-protocol.h"
-        "../core/specific/linux_wayland/Xdg-shell-protocol.cpp"
-        "../core/utils/Converters.h" "platforms/input/InputHelpers.h" "platforms/input/InputBase.cpp"
+        # Helpers
+        "platforms/input/InputHelpers.h" "platforms/input/InputBase.cpp"
 
         # GAPI
         "gapi/IGAPI.h" "gapi/IGAPI.cpp"
@@ -120,11 +116,6 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
 
     if(UNIX AND NOT APPLE AND NOT ANDROID)
         target_link_libraries(${TARGET_NAME} PRIVATE wayland-client)
-
-        set_source_files_properties(
-            "../core/specific/linux_wayland/Xdg-shell-protocol.cpp"
-            PROPERTIES COMPILE_OPTIONS "-Wno-attributes"
-        )
     endif()
 
     if(ANDROID)

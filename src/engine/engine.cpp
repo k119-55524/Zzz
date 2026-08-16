@@ -32,8 +32,12 @@ Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeDa
 	if (!projectManifestData)
 		THROW_RUNTIME("Failed to load ProjectManifestData: {}", projectManifestData.error());
 
+	auto startViewData = m_PackageManager->GetStartViewData();
+	if (!startViewData)
+		THROW_RUNTIME("Failed to load StartViewData: {}", startViewData.error());
+
 	// Загрузка пользовательских настроек (UserSettings.dat)
-	m_UserSettingsManager = safe_make_shared<UserSettingsManager>(*m_Path, *m_PackageManager);
+	m_UserSettingsManager = safe_make_shared<UserSettingsManager>(*m_Path, *startViewData);
 
 	// Создание платформенного слоя абстракции ОС (native windows, ввод, системные события)
 	m_Platform = safe_make_unique<Platform>(nativeData, projectManifestData->GetPlatformData());

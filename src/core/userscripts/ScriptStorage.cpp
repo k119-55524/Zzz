@@ -1,8 +1,8 @@
 #include "ScriptStorage.h"
-#include "Script.h"
-#include "ViewScript.h"
-#include "GameScript.h"
-#include "SceneScript.h"
+#include "core/userscripts/base_script/Script.h"
+#include "core/userscripts/base_script/ViewScript.h"
+#include "core/userscripts/base_script/GameScript.h"
+#include "core/userscripts/base_script/SceneScript.h"
 
 namespace zzz::core
 {
