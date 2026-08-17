@@ -1,8 +1,8 @@
 #pragma once
 
-#include "core/CoreIncludes.h"
 #include <logger/logger.h>
-#include "core/enums/eEnumToString.h"
+
+#include "core/CoreIncludes.h"
 #include "core/Serialize/Serializer.h"
 
 namespace zzz::core
@@ -64,7 +64,7 @@ namespace zzz::core
 			DOut("{}name: {}", nestedIndentation, m_Name);
 			DOut("{}vendorId: 0x{:04X}", nestedIndentation, m_VendorId);
 			DOut("{}deviceId: 0x{:04X}", nestedIndentation, m_DeviceId);
-			DOut("{}type: {}", nestedIndentation, static_cast<zU32>(m_Type));
+			DOut("{}type: {}", nestedIndentation, (m_Type == eGPUType::Discrete) ? "Discrete" : (m_Type == eGPUType::Integrated) ? "Integrated" : (m_Type == eGPUType::CpuSoftware) ? "CpuSoftware" : "Unknown");
 			DOut("{}dedicatedVideoMemoryBytes: {} MB", nestedIndentation, m_DedicatedVideoMemoryBytes / (1024 * 1024));
 			DOut("{}sharedSystemMemoryBytes: {} MB", nestedIndentation, m_SharedSystemMemoryBytes / (1024 * 1024));
 			DOut("{}dedicatedSystemMemoryBytes: {} MB", nestedIndentation, m_DedicatedSystemMemoryBytes / (1024 * 1024));

@@ -4,21 +4,16 @@
 
 namespace zzz::engine
 {
-	DirectX12API::DirectX12API(std::shared_ptr<UserSettingsManager> userSettings)
-		: IGAPI(std::move(userSettings))
-	{
-	}
-
 	DirectX12API::~DirectX12API()
 	{
 	}
 
 #pragma region Initialize
-	void DirectX12API::Initialize()
+	void DirectX12API::Initialize(std::shared_ptr<UserSettingsManager> userSettings)
 	{
 		UINT dxgiFactoryFlags = 0;
 		EnableDebugLayer(dxgiFactoryFlags);
-		InitializeDevice(dxgiFactoryFlags);
+		InitializeDevice(std::move(userSettings), dxgiFactoryFlags);
 	}
 
 	void DirectX12API::EnableDebugLayer(UINT& dxgiFactoryFlags)
@@ -37,18 +32,17 @@ namespace zzz::engine
 #endif
 	}
 
-	void DirectX12API::InitializeDevice(UINT dxgiFactoryFlags)
+	void DirectX12API::InitializeDevice(std::shared_ptr<UserSettingsManager> userSettings, UINT dxgiFactoryFlags)
 	{
-		CreateFactory(dxgiFactoryFlags, m_Factory);
+		m_Factory = CreateFactory(dxgiFactoryFlags);
 
-		Microsoft::WRL::ComPtr<IDXGIAdapter1> adapter;
-		GetAdapter(m_Factory.Get(), adapter);
+		Microsoft::WRL::ComPtr<IDXGIAdapter1> adapter = GetAdapter(m_Factory.Get(), userSettings);
 
 		HRESULT hr = adapter.As(&m_Adapter3);
 		if (FAILED(hr))
 			THROW_RUNTIME("Failed to query IDXGIAdapter3. HRESULT = 0x{:08X}", static_cast<unsigned int>(hr));
 
-		CreateDevice(adapter, m_Device, m_FeatureLevel);
+		CreateDevice(adapter.Get());
 
 		// Проверка поддержки отмены VSYNC (Allow Tearing)
 		BOOL allowTearing = FALSE;
@@ -57,8 +51,9 @@ namespace zzz::engine
 			m_IsCanDisableVSync = allowTearing;
 	}
 
-	void DirectX12API::CreateFactory(UINT dxgiFactoryFlags, Microsoft::WRL::ComPtr<IDXGIFactory7>& outFactory)
+	Microsoft::WRL::ComPtr<IDXGIFactory7> DirectX12API::CreateFactory(UINT dxgiFactoryFlags)
 	{
+		Microsoft::WRL::ComPtr<IDXGIFactory7> outFactory;
 		HRESULT hr = CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&outFactory));
 		if (FAILED(hr))
 		{
@@ -71,53 +66,43 @@ namespace zzz::engine
 			if (FAILED(hr))
 				THROW_RUNTIME("Failed to query IDXGIFactory7");
 		}
+		return outFactory;
 	}
 
-	void DirectX12API::GetAdapter(IDXGIFactory1* pFactory, Microsoft::WRL::ComPtr<IDXGIAdapter1>& outAdapter)
+	Microsoft::WRL::ComPtr<IDXGIAdapter1> DirectX12API::GetAdapter(IDXGIFactory1* pFactory, const std::shared_ptr<UserSettingsManager>& userSettings)
 	{
 		if (!pFactory)
 			THROW_RUNTIME("Invalid DXGI Factory argument");
 
+		DirectX12GpuSelector selector(userSettings);
+
 		Microsoft::WRL::ComPtr<IDXGIAdapter1> adapter;
 		Microsoft::WRL::ComPtr<IDXGIFactory6> factory6;
 
-		auto trySelectAdapter = [&](IDXGIAdapter1* candidate) -> bool
-		{
-			DXGI_ADAPTER_DESC1 desc{};
-			candidate->GetDesc1(&desc);
-
-			if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
-				return false;
-
-			if (SUCCEEDED(D3D12CreateDevice(candidate, D3D_FEATURE_LEVEL_12_0, __uuidof(ID3D12Device), nullptr)))
-			{
-				DOut("[DirectX12API::GetAdapter] - Selected adapter: {} VRAM: {} MB", std::string(desc.Description, desc.Description + wcslen(desc.Description)), desc.DedicatedVideoMemory / (1024 * 1024));
-				outAdapter = candidate;
-				return true;
-			}
-			return false;
-		};
-
+		// 1. Сначала опрашиваем через IDXGIFactory6 (с приоритетом дискретных GPU)
 		if (SUCCEEDED(pFactory->QueryInterface(IID_PPV_ARGS(&factory6))))
 		{
 			for (UINT adapterIndex = 0; SUCCEEDED(factory6->EnumAdapterByGpuPreference(adapterIndex, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&adapter))); ++adapterIndex)
 			{
-				if (trySelectAdapter(adapter.Get()))
-					return;
+				selector.AddCandidate(adapter);
 			}
 		}
 
+		// 2. Дозаполняем оставшиеся графические адаптеры через обычное перечисление (встройка и т.д.)
 		for (UINT adapterIndex = 0; SUCCEEDED(pFactory->EnumAdapters1(adapterIndex, &adapter)); ++adapterIndex)
 		{
-			if (trySelectAdapter(adapter.Get()))
-				return;
+			selector.AddCandidate(adapter);
 		}
 
-		THROW_RUNTIME("Failed to find suitable D3D12 GPU adapter");
+		// Выбор лучшего или ранее сохраненного адаптера через селектор
+		return selector.SelectAdapter();
 	}
 
-	void DirectX12API::CreateDevice(Microsoft::WRL::ComPtr<IDXGIAdapter1> adapter, Microsoft::WRL::ComPtr<ID3D12Device>& outDevice, D3D_FEATURE_LEVEL& outFeatureLevel)
+	void DirectX12API::CreateDevice(IDXGIAdapter1* adapter)
 	{
+		if (!adapter)
+			THROW_RUNTIME("Invalid DXGI Adapter argument");
+
 		static constexpr D3D_FEATURE_LEVEL levels[] =
 		{
 			D3D_FEATURE_LEVEL_12_2,
@@ -128,10 +113,10 @@ namespace zzz::engine
 		HRESULT hr = E_FAIL;
 		for (auto level : levels)
 		{
-			hr = D3D12CreateDevice(adapter.Get(), level, IID_PPV_ARGS(&outDevice));
+			hr = D3D12CreateDevice(adapter, level, IID_PPV_ARGS(&m_Device));
 			if (SUCCEEDED(hr))
 			{
-				outFeatureLevel = level;
+				m_FeatureLevel = level;
 				break;
 			}
 		}
@@ -140,9 +125,9 @@ namespace zzz::engine
 			THROW_RUNTIME("Failed to create D3D12 device. HRESULT = 0x{:08X}", static_cast<unsigned int>(hr));
 
 #if defined(Z_DEBUG_BUILD)
-		std::string levelName = (outFeatureLevel == D3D_FEATURE_LEVEL_12_2) ? "12.2 (DirectX 12 Ultimate)" :
-			(outFeatureLevel == D3D_FEATURE_LEVEL_12_1) ? "12.1" :
-			(outFeatureLevel == D3D_FEATURE_LEVEL_12_0) ? "12.0" : "Unknown";
+		std::string levelName = (m_FeatureLevel == D3D_FEATURE_LEVEL_12_2) ? "12.2 (DirectX 12 Ultimate)" :
+			(m_FeatureLevel == D3D_FEATURE_LEVEL_12_1) ? "12.1" :
+			(m_FeatureLevel == D3D_FEATURE_LEVEL_12_0) ? "12.0" : "Unknown";
 		DOut("[DirectX12API::CreateDevice] - Created D3D12 device with feature level: {}", levelName);
 #endif
 	}

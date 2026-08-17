@@ -46,8 +46,8 @@ Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeDa
 	m_Platform = safe_make_unique<Platform>(nativeData, projectManifestData->GetPlatformData());
 
 	// Инициализация графического интерфейса (DirectX 12 / Vulkan / Metal)
-	m_GAPI = safe_make_shared<GAPI>(m_UserSettingsManager);
-	m_GAPI->Initialize();
+	m_GAPI = safe_make_shared<GAPI>();
+	m_GAPI->Initialize(m_UserSettingsManager);
 
 	// Инициализация изолированной подсистемы скриптов (хранилище, регистратор и фабрика экземпляра движка)
 	m_ScriptStorage = safe_make_shared<ScriptStorage>();

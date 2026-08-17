@@ -5,6 +5,7 @@
 #include "ePackage.h"
 #include "eGAPIType.h"
 #include "eTargetPlatform.h"
+#include "core/hardware/GpuInfo.h"
 #include "core/utils/Macroses.h"
 #include "platforms/eiOSEnums.h"
 #include "core/enums/eWinResize.h"
@@ -70,6 +71,18 @@ namespace zzz::core
 			case eGAPIType::Metal:     return "Metal";
 			}
 			THROW_RUNTIME("Необработанный eGAPIType");
+		}
+
+		static constexpr std::string_view ToString(eGPUType type)
+		{
+			switch (type)
+			{
+			case eGPUType::Discrete:    return "Discrete";
+			case eGPUType::Integrated:  return "Integrated";
+			case eGPUType::CpuSoftware: return "CpuSoftware";
+			case eGPUType::Unknown:     return "Unknown";
+			}
+			THROW_RUNTIME("Необработанный eGPUType");
 		}
 
 		static constexpr std::string_view ToString(ePackage type)

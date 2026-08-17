@@ -14,8 +14,7 @@ namespace zzz::engine
 		friend class Engine;
 
 	public:
-		explicit IGAPI() = delete;
-		explicit IGAPI(std::shared_ptr<UserSettingsManager> userSettings);
+		explicit IGAPI() = default;
 		virtual ~IGAPI() = default;
 
 		[[nodiscard]] static constexpr eGAPIType GetGAPIType() noexcept
@@ -29,6 +28,8 @@ namespace zzz::engine
 #endif
 		}
 
+		[[nodiscard]] inline bool IsCanDisableVSync() const noexcept { return m_IsCanDisableVSync; }
+
 		virtual void SubmitCommandLists() = 0;
 		virtual void BeginRender() = 0;
 		virtual void EndRender() = 0;
@@ -36,9 +37,9 @@ namespace zzz::engine
 	protected:
 		virtual void WaitForGpu() = 0;
 
-		std::shared_ptr<UserSettingsManager> m_UserSettings;
+		bool m_IsCanDisableVSync{ false };
 
 	private:
-		virtual void Initialize() = 0;
+		virtual void Initialize(std::shared_ptr<UserSettingsManager> userSettings) = 0;
 	};
 }
