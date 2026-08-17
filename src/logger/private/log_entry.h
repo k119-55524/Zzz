@@ -4,8 +4,6 @@
 
 #include "../LoggerIncludes.h"
 
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-
 namespace zzz::logger
 {
 	using namespace zzz::core;
@@ -27,4 +25,3 @@ namespace zzz::logger
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& serializer) override;
 	};
 }
-#endif
