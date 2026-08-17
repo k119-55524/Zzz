@@ -15,6 +15,12 @@ namespace zzz::engine
 	{
 	public:
 		Engine() = delete;
+
+		/**
+		 * @brief Инициализирует подсистемы движка (сетевой логер, пути, манифест, GAPI, скрипты и окна).
+		 * @param appName Имя приложения.
+		 * @param nativeData Нативные данные платформы.
+		 */
 		Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeData = nullptr);
 		~Engine();
 

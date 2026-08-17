@@ -18,19 +18,21 @@ extern "C" __attribute__((weak)) void RegisterAllScripts(zzz::core::ScriptRegist
 Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeData) :
 	engineState{ eInitState::NotInitialized }
 {
+	// Регистрация локального сетевого бродкастера логов (127.0.0.1)
 	g_Logger.AddNetworkBroadcaster(c_LocalhostIPv4, c_DefaultLoggerPort);
 
 	ensure(appName.empty() == false, "Имя приложения не должно быть пустым.");
 
-	// Инициализация подсистемы путей приложения (хранение конфигурации, логов и пакетов)
+	// Инициализация подсистемы путей приложения
 	m_Path = safe_make_shared<Path>(appName, nativeData);
 
-	// Загрузка менеджера пакетов ресурсов и проверка манифеста проекта
+	// Загрузка менеджера пакетов ресурсов и манифеста проекта
 	m_PackageManager = safe_make_shared<PackageManager>(*m_Path);
 	auto projectManifestData = m_PackageManager->GetProjectManifestData();
 	if (!projectManifestData)
 		THROW_RUNTIME("Failed to load ProjectManifestData: {}", projectManifestData.error());
 
+	// Установка максимального размера сетевой очереди логов из манифеста
 	g_Logger.SetMaxNetworkLogQueueSize(projectManifestData->GetMaxLogQueueSize());
 
 	auto startViewData = m_PackageManager->GetStartViewData();
