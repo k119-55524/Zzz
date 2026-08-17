@@ -104,16 +104,16 @@ PlatformHardwareState Platform::GatherHardwareState() const
 			DXGI_ADAPTER_DESC1 desc{};
 			adapter->GetDesc1(&desc);
 
+			// Игнорируем программные адаптеры (WARP) и невалидные устройства
+			if ((desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) || (desc.VendorId == 0 && desc.DeviceId == 0))
+				continue;
+
 			std::wstring descW(desc.Description);
 			std::string name(descW.begin(), descW.end());
 
-			eGPUType type = eGPUType::Unknown;
-			if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
-				type = eGPUType::CpuSoftware;
-			else if (desc.DedicatedVideoMemory > 512 * 1024 * 1024)
+			eGPUType type = eGPUType::Integrated;
+			if (desc.DedicatedVideoMemory >= 256 * 1024 * 1024)
 				type = eGPUType::Discrete;
-			else
-				type = eGPUType::Integrated;
 
 			std::string platformGpuId = std::format("PCI\\VEN_{:04X}&DEV_{:04X}&SUBSYS_{:08X}&REV_{:02X}",
 				desc.VendorId, desc.DeviceId, desc.SubSysId, desc.Revision);

@@ -13,7 +13,8 @@ namespace zzz::engine
 		UserSettingsManager(const Path& path, const StartViewData& defaultStartViewData);
 
 		inline const StartViewUserData& GetStartViewUserData() const noexcept { return m_StartViewUserData; }
-		inline void ApplyHardwareStateChanges(const PlatformHardwareState& currentHardware) { m_HardwareState.CheckAndApplySoftChanges(currentHardware); m_HardwareState.LogFileBlock(); }
+		inline PlatformHardwareState& GetHardwareState() noexcept { return m_HardwareState; }
+		inline const PlatformHardwareState& GetHardwareState() const noexcept { return m_HardwareState; }
 
 		[[nodiscard]] std::expected<void, std::string> SaveConfig();
 

@@ -45,9 +45,6 @@ Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeDa
 	// Создание платформенного слоя абстракции ОС (native windows, ввод, системные события)
 	m_Platform = safe_make_unique<Platform>(nativeData, projectManifestData->GetPlatformData());
 
-	// Сверка конфигурации оборудования с сохраненными пользовательскими настройками
-	m_UserSettingsManager->ApplyHardwareStateChanges(m_Platform->GetHardwareState());
-
 	// Инициализация графического интерфейса (DirectX 12 / Vulkan / Metal)
 	m_GAPI = safe_make_shared<GAPI>(m_UserSettingsManager);
 	m_GAPI->Initialize();
