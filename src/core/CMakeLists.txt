@@ -156,9 +156,24 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
 
     if(${IS_EDITOR})
         target_compile_definitions(${TARGET_NAME} PUBLIC Z_EDITOR=1 EDITORDLL_EXPORTS)
+        target_link_libraries(${TARGET_NAME} PUBLIC logger_lib_editor)
+    else()
+        target_link_libraries(${TARGET_NAME} PUBLIC logger_lib)
     endif()
 
-    export_to_editor_sdk(${TARGET_NAME} "${CMAKE_CURRENT_SOURCE_DIR}" "core")
+    if(TARGET Microsoft::WinPixEventRuntime)
+        target_link_libraries(${TARGET_NAME} PUBLIC Microsoft::WinPixEventRuntime)
+    endif()
+
+    if(TARGET Microsoft::DXC)
+        target_link_libraries(${TARGET_NAME} PUBLIC Microsoft::DXC)
+    endif()
+
+    if(NOT WIN32 OR Z_FORCE_VULKAN)
+        find_package(Vulkan REQUIRED)
+        target_link_libraries(${TARGET_NAME} PUBLIC Vulkan::Vulkan)
+        target_compile_definitions(${TARGET_NAME} PUBLIC Z_HAS_VULKAN_SDK=1)
+    endif()
 endmacro()
 
 setup_core_target(core_lib FALSE)

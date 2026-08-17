@@ -55,6 +55,9 @@ if(MSVC)
     set(CMAKE_EXE_LINKER_FLAGS_DEVELOPMENT_ASAN "/debug /INCREMENTAL:NO" CACHE STRING "" FORCE)
     set(CMAKE_SHARED_LINKER_FLAGS_DEVELOPMENT_ASAN "/debug /INCREMENTAL:NO" CACHE STRING "" FORCE)
 
+    set(CMAKE_CXX_FLAGS_RELEASE "/O2 /DNDEBUG" CACHE STRING "" FORCE)
+    set(CMAKE_C_FLAGS_RELEASE "/O2 /DNDEBUG" CACHE STRING "" FORCE)
+
     # ThreadSanitizer is not supported by MSVC. Development_TSan has no flags here
     # and its preset is hidden on Windows (see CMakePresets.json).
 else()
@@ -76,56 +79,8 @@ else()
     set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG" CACHE STRING "" FORCE)
 endif()
 
-set(CMAKE_CXX_FLAGS_RELEASE "/O2 /DNDEBUG" CACHE STRING "" FORCE)
-set(CMAKE_C_FLAGS_RELEASE "/O2 /DNDEBUG" CACHE STRING "" FORCE)
-
-# -----------------------------------------------------------------------------
-# Автоматический экспорт SDK в папку редактора
-# -----------------------------------------------------------------------------
-macro(export_to_editor_sdk TARGET_NAME SRC_INCLUDE_DIR DST_SUBDIR)
-    set(SDK_DIR "${CMAKE_SOURCE_DIR}/dist/$<CONFIG>/libs/zlibs")
-    
-    # Копируем .dll (если это shared библиотека на Windows) или .so (на Linux)
-    add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${SDK_DIR}/bin"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${TARGET_NAME}> "${SDK_DIR}/bin/"
-    )
-    
-    # Копируем .lib / .a
-    add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${SDK_DIR}/lib"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_LINKER_FILE:${TARGET_NAME}> "${SDK_DIR}/lib/"
-    )
-
-    # Копируем только .h файлы через внешний скрипт
-    add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -DSRC_DIR="${SRC_INCLUDE_DIR}" -DDST_DIR="${SDK_DIR}/include/${DST_SUBDIR}" -P "${CMAKE_SOURCE_DIR}/copy_headers.cmake"
-    )
-endmacro()
-
-add_subdirectory(src/core)
 add_subdirectory(src/logger)
-
-target_link_libraries(core_lib PUBLIC logger_lib)
-target_link_libraries(core_lib_editor PUBLIC logger_lib_editor)
-
-if(TARGET Microsoft::WinPixEventRuntime)
-    target_link_libraries(core_lib PUBLIC Microsoft::WinPixEventRuntime)
-    target_link_libraries(core_lib_editor PUBLIC Microsoft::WinPixEventRuntime)
-endif()
-
-if(TARGET Microsoft::DXC)
-    target_link_libraries(core_lib PUBLIC Microsoft::DXC)
-    target_link_libraries(core_lib_editor PUBLIC Microsoft::DXC)
-endif()
-
-if(NOT WIN32 OR Z_FORCE_VULKAN)
-    find_package(Vulkan REQUIRED)
-    target_link_libraries(core_lib PUBLIC Vulkan::Vulkan)
-    target_link_libraries(core_lib_editor PUBLIC Vulkan::Vulkan)
-    target_compile_definitions(core_lib PUBLIC Z_HAS_VULKAN_SDK=1)
-    target_compile_definitions(core_lib_editor PUBLIC Z_HAS_VULKAN_SDK=1)
-endif()
+add_subdirectory(src/core)
 
 add_subdirectory(src/tools/RemoteLogViewer)
 add_subdirectory(src/engine)

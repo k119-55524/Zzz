@@ -40,8 +40,6 @@ macro(setup_logger_target TARGET_NAME CORE_TARGET_NAME IS_EDITOR)
         # иначе в editor_dll.dll попадут разные варианты экспортируемых символов.
         target_compile_definitions(${TARGET_NAME} PUBLIC Z_EDITOR=1 EDITORDLL_EXPORTS)
     endif()
-
-    export_to_editor_sdk(${TARGET_NAME} "${CMAKE_CURRENT_SOURCE_DIR}" "logger")
 endmacro()
 
 setup_logger_target(logger_lib core_lib FALSE)

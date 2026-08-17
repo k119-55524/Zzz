@@ -181,6 +181,3 @@ endmacro()
 
 setup_engine_target(engine_lib FALSE)
 setup_engine_target(engine_lib_editor TRUE)
-
-export_to_editor_sdk(engine_lib "${CMAKE_CURRENT_SOURCE_DIR}" "engine")
-export_to_editor_sdk(engine_lib_editor "${CMAKE_CURRENT_SOURCE_DIR}" "engine")
