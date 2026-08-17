@@ -1,9 +1,11 @@
 
 #include "Engine.h"
+#include <logger/logger.h>
 
 using namespace zzz;
 using namespace zzz::core;
 using namespace zzz::engine;
+using namespace zzz::logger;
 
 #if defined(_MSC_VER)
 #pragma comment(linker, "/alternatename:RegisterAllScripts=DefaultRegisterAllScripts")
@@ -16,6 +18,8 @@ extern "C" __attribute__((weak)) void RegisterAllScripts(zzz::core::ScriptRegist
 Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeData) :
 	engineState{ eInitState::NotInitialized }
 {
+	g_Logger.AddNetworkBroadcaster(c_LocalhostIPv4, c_DefaultLoggerPort);
+
 	ensure(appName.empty() == false, "Имя приложения не должно быть пустым.");
 
 	// Инициализация подсистемы путей приложения (хранение конфигурации, логов и пакетов)
@@ -26,6 +30,8 @@ Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeDa
 	auto projectManifestData = m_PackageManager->GetProjectManifestData();
 	if (!projectManifestData)
 		THROW_RUNTIME("Failed to load ProjectManifestData: {}", projectManifestData.error());
+
+	g_Logger.SetMaxNetworkLogQueueSize(projectManifestData->GetMaxLogQueueSize());
 
 	auto startViewData = m_PackageManager->GetStartViewData();
 	if (!startViewData)

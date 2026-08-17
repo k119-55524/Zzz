@@ -329,28 +329,43 @@ namespace zzz::builder
 					}
 				}
 
-				zU32 scriptsCount = static_cast<zU32>(gameScriptGuids.size());
+				json platformRoot = ResolvePlatformJson(root, projectDir, targetPlatform);
+				zU32 maxQueueSize = c_MaxNetworkLogQueueSize;
+				zU16 loggerPort = c_DefaultLoggerPort;
+
+				json loggerRoot = root.contains("logger") && root["logger"].is_object()
+					? root["logger"]
+					: (platformRoot.contains("logger") && platformRoot["logger"].is_object() ? platformRoot["logger"] : json::object());
+
+				if (loggerRoot.contains("maxQueueSize") && loggerRoot["maxQueueSize"].is_number_integer())
+					maxQueueSize = loggerRoot["maxQueueSize"].get<zU32>();
+				if (loggerRoot.contains("port") && loggerRoot["port"].is_number_integer())
+					loggerPort = loggerRoot["port"].get<zU16>();
+
+				const zU32 scriptsCount = static_cast<zU32>(gameScriptGuids.size());
 				if (auto res = serializer.Serialize(result, scriptsCount); !res) return {};
 				for (const auto& guid : gameScriptGuids)
 				{
 					if (auto res = serializer.Serialize(result, guid); !res) return {};
 				}
 
-				zU32 scenesCount = static_cast<zU32>(sceneGuids.size());
+				const zU32 scenesCount = static_cast<zU32>(sceneGuids.size());
 				if (auto res = serializer.Serialize(result, scenesCount); !res) return {};
 				for (const auto& guid : sceneGuids)
 				{
 					if (auto res = serializer.Serialize(result, guid); !res) return {};
 				}
 
-				zU32 viewsCount = static_cast<zU32>(viewGuids.size());
+				const zU32 viewsCount = static_cast<zU32>(viewGuids.size());
 				if (auto res = serializer.Serialize(result, viewsCount); !res) return {};
 				for (const auto& guid : viewGuids)
 				{
 					if (auto res = serializer.Serialize(result, guid); !res) return {};
 				}
 
-				json platformRoot = ResolvePlatformJson(root, projectDir, targetPlatform);
+				if (auto res = serializer.Serialize(result, maxQueueSize); !res) return {};
+				if (auto res = serializer.Serialize(result, loggerPort); !res) return {};
+
 				if (auto res = SerializeProjectPlatformData(result, serializer, platformRoot, targetPlatform); !res)
 					return {};
 			}

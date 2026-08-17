@@ -44,7 +44,7 @@ foreach(BUILD_DIR ${Z_ASSET_BUILD_DIRS})
     endif()
 endforeach()
 
-set(REGISTER_SCRIPTS_CONTENT "// RegisterAllScripts.cpp — генерируется автоматически CMake\n#include <ScriptRegistrar.h>\n\n")
+set(REGISTER_SCRIPTS_CONTENT "// RegisterAllScripts.cpp — генерируется автоматически CMake\n#include <core/Core.h>\n#include <ScriptRegistry.h>\n\n")
 set(REGISTER_SCRIPT_LINES "")
 foreach(HPP_FILE ${SCRIPT_HPPS})
     get_filename_component(CLASS_NAME "${HPP_FILE}" NAME_WE)

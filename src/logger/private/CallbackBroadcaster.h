@@ -1,8 +1,7 @@
 #pragma once
 
-#include "log_entry.h"
+#include "IBroadcaster.h"
 
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 namespace zzz::logger
 {
 	class CallbackBroadcaster : public IBroadcaster
@@ -29,4 +28,3 @@ namespace zzz::logger
 		LogCallback m_Callback;
 	};
 }
-#endif

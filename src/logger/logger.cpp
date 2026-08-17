@@ -1,12 +1,10 @@
 
-#include "logger.h"
-
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-
 #include "private/IBroadcaster.h"
 #include "private/ConsoleBroadcaster.h"
 #include "private/NetworkBroadcaster.h"
 #include "private/CallbackBroadcaster.h"
+
+#include "logger.h"
 
 using namespace zzz::core;
 using namespace zzz::logger;
@@ -18,9 +16,6 @@ Logger::Logger()
 
 Logger::~Logger()
 {
-	// Если StopBroadcastThread() уже был вызван явно (см. её описание) - поток уже
-	// остановлен и joinable() вернёт false, так что join() здесь не потребуется и
-	// deadlock с loader lock не возникнет.
 	StopBroadcastThread();
 }
 
@@ -51,10 +46,32 @@ void Logger::SetLogFilterMask(eLogMessageType filterMask)
 	g_Logger.m_FilterMask.store(filterMask);
 }
 
+void Logger::SetMaxNetworkLogQueueSize(zU32 newSize)
+{
+	if (newSize == 0)
+		return;
+
+	std::vector<std::shared_ptr<IBroadcaster>> listeners;
+	{
+		std::lock_guard lock(m_ListenersMutex);
+		listeners = m_Listeners;
+	}
+
+	for (const auto& listener : listeners)
+	{
+		listener->SetMaxQueueSize(newSize);
+	}
+}
+
 #pragma region LogXXX messages
 void Logger::LogMessage(const std::source_location& loc, std::string formatted)
 {
+#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 	ProcessLog(loc, eLogMessageType::Message, std::move(formatted));
+#else
+	(void)loc;
+	(void)formatted;
+#endif
 }
 
 void Logger::LogWarning(const std::source_location& loc, std::string formatted)
@@ -91,7 +108,17 @@ void Logger::ProcessLog(const std::source_location& loc, eLogMessageType type, s
 		return;
 
 	DebugOutputIDE(loc, type, formatted);
-	AddToBroadcast(loc, type, std::move(formatted));
+
+	bool hasListeners = false;
+	{
+		std::lock_guard lock(m_ListenersMutex);
+		hasListeners = !m_Listeners.empty();
+	}
+
+	if (hasListeners)
+	{
+		AddToBroadcast(loc, type, std::move(formatted));
+	}
 }
 
 void Logger::AddToBroadcast(const std::source_location& loc, eLogMessageType type, std::string msg)
@@ -214,9 +241,14 @@ void Logger::BroadcastLogs(const std::vector<LogEntry>& logs)
 		listeners = m_Listeners;
 	}
 
-	for (const auto& entry : logs)
-		for (const auto& listener : listeners)
-			listener->OnLog(entry);
+	if (listeners.empty() || logs.empty())
+		return;
+
+	std::span<const LogEntry> batchSpan(logs.data(), logs.size());
+	for (const auto& listener : listeners)
+	{
+		listener->PushLogsBatch(batchSpan);
+	}
 }
 
 #pragma region Add broadcasters
@@ -239,9 +271,9 @@ void Logger::AddConsoleBroadcaster()
 #endif
 }
 
-void Logger::AddNetworkBroadcaster(std::string_view address, uint16_t port)
+void Logger::AddNetworkBroadcaster(std::string_view address, uint16_t port, zU32 maxQueueSize)
 {
-	AddBroadcasterImpl(safe_make_shared<NetworkBroadcaster>(address, port));
+	AddBroadcasterImpl(safe_make_shared<NetworkBroadcaster>(address, port, maxQueueSize));
 }
 
 void Logger::AddCallbackBroadcaster(LogCallback callback)
@@ -249,4 +281,3 @@ void Logger::AddCallbackBroadcaster(LogCallback callback)
 	AddBroadcasterImpl(safe_make_shared<CallbackBroadcaster>(callback));
 }
 #pragma endregion
-#endif // Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD

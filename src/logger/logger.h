@@ -1,23 +1,9 @@
 #pragma once
 
-#include <core/enums/eLogMessageType.h>
-
 #include "LoggerIncludes.h"
+#include "private/log_entry.h"
 
 using namespace zzz::core;
-
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-
-#include <thread>
-#include <mutex>
-#include <atomic>
-#include <vector>
-#include <memory>
-#include <condition_variable>
-
-#include <core/templates/DoubleBufferedVector.h>
-
-#include "private/log_entry.h"
 
 namespace zzz::logger
 {
@@ -25,6 +11,26 @@ namespace zzz::logger
 
 	/**
 	 * @brief Централизованная система логирования с поддержкой асинхронной рассылки.
+	 *
+	 * @details Архитектура и принципы работы подсистемы логирования:
+	 * 
+	 * 1. **Потоковая модель**:
+	 *    - **Игровой поток (Engine)**: Записывает сообщения в `DoubleBufferedVector<LogEntry>` (lock-free swap, без длительных блокировок).
+	 *      Основной поток игры никогда не занимается выводом в консоль или ожиданием сетевых сокетов.
+	 *    - **Поток раздатчика (Logger)**: Работает событийно (Event-driven) по `std::condition_variable`. При появлении логов 
+	 *      делает `swap` буферов и передает текущий пакет каждому слушателю через `IBroadcaster::PushLogsBatch`.
+	 *    - **Поток сетевого бродкастера (NetworkBroadcaster)**: Имеет собственную очередь и отдельный фоновый поток I/O.
+	 *      Это исключает задержки сетевого соединения на главный поток или другие бродкастеры.
+	 *
+	 * 2. **Правила гарантированного вывода логов**:
+	 *    - `LogWarning`, `LogError`, `LogException`, `LogCritical`, `LogFatal` — обрабатываются **всегда** во всех сборках.
+	 *    - `LogMessage` — обрабатывается только при наличии дефайнов `Z_ADD_LOGGER` или `Z_DEVELOPMENT_BUILD`.
+	 *    - Если взведен макрос `Z_IDE_OUT_LOGS`, лог напрямую выводится в отладочную консоль IDE (`OutputDebugString` / `__android_log`),
+	 *      даже если список слушателей `m_Listeners` пуст.
+	 *
+	 * 3. **Управление очередью**:
+	 *    - Если слушатели отсутствуют (`m_Listeners.empty()`), логи в память фонового буфера рассылки не записываются.
+	 *    - Размер сетевой очереди управляется значением из `ProjectManifestData` через вызов `SetMaxNetworkLogQueueSize`.
 	 */
 	class Logger
 	{
@@ -34,25 +40,26 @@ namespace zzz::logger
 
 		/**
 		 * @brief Устанавливает маску типов логов, проходящих через систему.
-		 * @note Создаёт глобальный экземпляр логера при первом вызове. Потокобезопасно.
 		 * @param filterMask Маска фильтрации для вывода сообщений.
 		 */
 		static void SetLogFilterMask(eLogMessageType filterMask);
 
 		/**
-		 * @brief Добавляет бродкастер для вывода логов в консоль.
-		 * @details Работает на Windows. Автоматически аллоцирует консольное окно,
-		 *          если оно отсутствует, и перенаправляет туда форматированный вывод.
+		 * @brief Добавляет бродкастер для вывода логов в системную консоль.
 		 */
 		void AddConsoleBroadcaster();
 
 		/**
-		 * @brief Добавляет сетевой бродкастер (TCP).
+		 * @brief Добавляет сетевой бродкастер (TCP) с собственной очередью и фоновым потоком.
+		 * @param address IP-адрес приемника (по умолчанию 127.0.0.1).
+		 * @param port TCP порт приемника (по умолчанию 3030).
+		 * @param maxQueueSize Максимальное количество логов в изолированной очереди отправки.
 		 */
-		void AddNetworkBroadcaster(std::string_view address, uint16_t port);
+		void AddNetworkBroadcaster(std::string_view address, uint16_t port, zU32 maxQueueSize = c_MaxNetworkLogQueueSize);
 
 		/**
 		 * @brief Добавляет колбэк-бродкастер для перенаправления логов во внешнюю функцию.
+		 * @param callback Функция-обработчик входящих логов.
 		 */
 		void AddCallbackBroadcaster(LogCallback callback);
 
@@ -61,11 +68,24 @@ namespace zzz::logger
 		 */
 		void StopBroadcastThread();
 
+		/**
+		 * @brief Динамически обновляет размер очереди для всех зарегистрированных сетевых бродкастеров.
+		 * @details Если newSize меньше текущего размера накопившейся очереди, старые логи обрезаются с головы очереди (Drop Oldest).
+		 * @param newSize Новый максимальный размер очереди (игнорируется при 0).
+		 */
+		void SetMaxNetworkLogQueueSize(zU32 newSize);
+
+		/** @brief Регистрирует информационное сообщение (выводится при Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD). */
 		void LogMessage(const std::source_location& loc, std::string formatted);
+		/** @brief Регистрирует предупреждение (гарантированный вывод). */
 		void LogWarning(const std::source_location& loc, std::string formatted);
+		/** @brief Регистрирует ошибку (гарантированный вывод). */
 		void LogError(const std::source_location& loc, std::string formatted);
+		/** @brief Регистрирует исключение (гарантированный вывод). */
 		void LogException(const std::source_location& loc, std::string formatted);
+		/** @brief Регистрирует критическую ошибку (гарантированный вывод). */
 		void LogCritical(const std::source_location& loc, std::string formatted);
+		/** @brief Регистрирует фатальную ошибку с вызовом std::terminate() (гарантированный вывод). */
 		void LogFatal(const std::source_location& loc, std::string formatted);
 
 	private:
@@ -102,32 +122,3 @@ namespace zzz::logger
 
 	inline Logger g_Logger;
 }
-#else // Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
-namespace zzz::logger
-{
-	/**
-	 * @brief Заглушка Logger для релизных сборок без поддержки логирования.
-	 */
-	class Logger
-	{
-	public:
-		Logger() = default;
-		~Logger() = default;
-
-		static void SetLogFilterMask(eLogMessageType /*filterMask*/) {}
-		void AddConsoleBroadcaster() {}
-		void AddNetworkBroadcaster(std::string_view /*address*/, uint16_t /*port*/) {}
-		void AddCallbackBroadcaster(LogCallback /*callback*/) {}
-		void StopBroadcastThread() {}
-
-		void LogMessage(const std::source_location& /*loc*/, std::string /*formatted*/) {}
-		void LogWarning(const std::source_location& /*loc*/, std::string /*formatted*/) {}
-		void LogError(const std::source_location& /*loc*/, std::string /*formatted*/) {}
-		void LogException(const std::source_location& /*loc*/, std::string /*formatted*/) {}
-		void LogCritical(const std::source_location& /*loc*/, std::string /*formatted*/) {}
-		void LogFatal(const std::source_location& /*loc*/, std::string /*formatted*/) {}
-	};
-
-	inline Logger g_Logger;
-}
-#endif // Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD

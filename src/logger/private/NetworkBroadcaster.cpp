@@ -1,15 +1,10 @@
-
 #include "NetworkBroadcaster.h"
-
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 
 #include <iostream>
 #include <vector>
+#include <algorithm>
 
 #if Z_WINDOWS
-	#define WIN32_LEAN_AND_MEAN
-	#include <WinSock2.h>
-	#include <WS2tcpip.h>
 	typedef int socklen_t;
 #else
 	#include <fcntl.h>
@@ -24,8 +19,12 @@
 
 namespace zzz::logger
 {
-	NetworkBroadcaster::NetworkBroadcaster(std::string_view address, uint16_t port)
-		: m_Address(address), m_Port(port), m_Socket((uint64_t)INVALID_SOCKET), m_IsConnected(false)
+	NetworkBroadcaster::NetworkBroadcaster(std::string_view address, uint16_t port, zU32 maxQueueSize)
+		: m_Address(address)
+		, m_Port(port)
+		, m_MaxQueueSize(maxQueueSize > 0 ? maxQueueSize : c_MaxNetworkLogQueueSize)
+		, m_Socket((uint64_t)INVALID_SOCKET)
+		, m_IsConnected(false)
 	{
 #if Z_WINDOWS
 		WSADATA wsaData;
@@ -33,16 +32,113 @@ namespace zzz::logger
 		if (!m_WsaInitialized)
 			return;
 #endif
-		Connect();
+
+		m_SendThreadRunning.store(true);
+		m_SendThread = std::thread(&NetworkBroadcaster::SendThreadLoop, this);
 	}
 
 	NetworkBroadcaster::~NetworkBroadcaster()
 	{
+		bool needJoin = false;
+		{
+			std::lock_guard<std::mutex> lock(m_SendMutex);
+			if (m_SendThreadRunning.load())
+			{
+				m_SendThreadRunning.store(false);
+				needJoin = m_SendThread.joinable();
+			}
+		}
+
+		m_SendCV.notify_one();
+		if (needJoin)
+		{
+			m_SendThread.join();
+		}
+
 		Disconnect();
 #if Z_WINDOWS
 		if (m_WsaInitialized)
 			WSACleanup();
 #endif
+	}
+
+	void NetworkBroadcaster::SetMaxQueueSize(zU32 newSize)
+	{
+		if (newSize == 0 || m_MaxQueueSize.load() == newSize)
+			return;
+
+		m_MaxQueueSize.store(newSize);
+		m_SendCV.notify_one();
+	}
+
+	void NetworkBroadcaster::OnLog(const LogEntry& entry)
+	{
+		PushLogsBatch(std::span<const LogEntry>(&entry, 1));
+	}
+
+	void NetworkBroadcaster::PushLogsBatch(std::span<const LogEntry> entries)
+	{
+		if (entries.empty() || !m_SendThreadRunning.load())
+			return;
+
+		for (const auto& entry : entries)
+		{
+			m_PendingLogsBuffer.Push(entry);
+		}
+
+		m_SendCV.notify_one();
+	}
+
+	void NetworkBroadcaster::SendThreadLoop()
+	{
+		for (;;)
+		{
+			auto& newBatch = m_PendingLogsBuffer.SwapAndGetReadBuffer();
+
+			if (!newBatch.empty())
+			{
+				m_UnsentLogs.insert(m_UnsentLogs.end(), newBatch.begin(), newBatch.end());
+			}
+
+			zU32 maxQueue = m_MaxQueueSize.load();
+			if (m_UnsentLogs.size() > maxQueue)
+			{
+				size_t overflow = m_UnsentLogs.size() - maxQueue;
+				m_UnsentLogs.erase(m_UnsentLogs.begin(), m_UnsentLogs.begin() + overflow);
+			}
+
+			if (!m_UnsentLogs.empty())
+			{
+				Connect();
+				if (m_IsConnected)
+				{
+					size_t sentCount = 0;
+					for (const auto& entry : m_UnsentLogs)
+					{
+						ProcessLogSend(entry);
+						if (!m_IsConnected)
+							break;
+						sentCount++;
+					}
+
+					if (sentCount > 0)
+					{
+						m_UnsentLogs.erase(m_UnsentLogs.begin(), m_UnsentLogs.begin() + sentCount);
+					}
+				}
+			}
+
+			if (!m_SendThreadRunning.load())
+				break;
+
+			if (m_PendingLogsBuffer.IsEmpty() && (m_UnsentLogs.empty() || !m_IsConnected))
+			{
+				std::unique_lock<std::mutex> lock(m_SendMutex);
+				m_SendCV.wait_for(lock, std::chrono::milliseconds(500), [this]() {
+					return !m_SendThreadRunning.load() || !m_PendingLogsBuffer.IsEmpty();
+				});
+			}
+		}
 	}
 
 	void NetworkBroadcaster::Connect()
@@ -52,7 +148,7 @@ namespace zzz::logger
 
 		auto now = std::chrono::steady_clock::now();
 		if (std::chrono::duration_cast<std::chrono::milliseconds>(now - m_LastConnectAttempt).count() < 1000)
-			return; // Не спамим(раз в секунду)
+			return;
 
 		m_LastConnectAttempt = now;
 
@@ -111,7 +207,7 @@ namespace zzz::logger
 
 		timeval tv;
 		tv.tv_sec = 0;
-		tv.tv_usec = 50000; // 50 ms timeout
+		tv.tv_usec = 50000;
 
 		if (select((int)sock + 1, nullptr, &writeSet, nullptr, &tv) > 0)
 		{
@@ -149,22 +245,16 @@ namespace zzz::logger
 		m_IsConnected = false;
 	}
 
-	void NetworkBroadcaster::OnLog(const LogEntry& entry)
+	void NetworkBroadcaster::ProcessLogSend(const LogEntry& entry)
 	{
 		if (!m_IsConnected)
-		{
-			// Пытаемся переподключиться
-			Connect();
-			if (!m_IsConnected)
-				return;
-		}
+			return;
 
 		std::vector<std::byte> entryBytes;
 		auto res = m_Serializer.Serialize(entryBytes, entry);
 		if (!res)
 			return;
 
-		// Сначала отправляем размер, затем данные для удобного разделения пакетов по TCP
 		uint32_t size = static_cast<uint32_t>(entryBytes.size());
 		std::vector<std::byte> packet;
 		auto sizeRes = m_Serializer.Serialize(packet, size);
@@ -193,4 +283,3 @@ namespace zzz::logger
 		}
 	}
 }
-#endif

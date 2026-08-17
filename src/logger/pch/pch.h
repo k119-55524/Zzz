@@ -1,6 +1,7 @@
 #pragma once
 
 #include <core/Core.h>
+#include "../LoggerIncludes.h"
 
 #if Z_WINDOWS
 #ifndef WIN32_LEAN_AND_MEAN

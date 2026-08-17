@@ -429,18 +429,19 @@ public class AssetsBuilderEngine
 
 				if (!string.IsNullOrWhiteSpace(scriptGuid))
 				{
-					registerLines.Add($"    if (auto g = zzz::core::Guid::Parse(\"{scriptGuid}\"))\n        registrar.Register<{qualifiedName}>(\"{qualifiedName}\", *g);\n    else\n        registrar.Register<{qualifiedName}>(\"{qualifiedName}\");");
+					registerLines.Add($"    if (auto g = zzz::core::Guid::Parse(\"{scriptGuid}\"))\n        registry.Register<{qualifiedName}>(\"{qualifiedName}\", *g);\n    else\n        registry.Register<{qualifiedName}>(\"{qualifiedName}\");");
 				}
 				else
 				{
-					registerLines.Add($"    registrar.Register<{qualifiedName}>(\"{qualifiedName}\");");
+					registerLines.Add($"    registry.Register<{qualifiedName}>(\"{qualifiedName}\");");
 				}
 			}
 
 			string registerCppPath = Path.Combine(destinationPath, "RegisterAllScripts.cpp").Replace('\\', '/');
 			var regSb = new System.Text.StringBuilder();
 			regSb.AppendLine("// RegisterAllScripts.cpp — сгенерировано Assets Builder");
-			regSb.AppendLine("#include <ScriptRegistrar.h>");
+			regSb.AppendLine("#include <core/Core.h>");
+			regSb.AppendLine("#include <ScriptRegistry.h>");
 			regSb.AppendLine();
 			foreach (var inc in headerIncludes)
 			{

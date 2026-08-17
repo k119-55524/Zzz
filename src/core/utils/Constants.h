@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <array>
 #include "core/utils/Types.h"
@@ -48,8 +48,14 @@ namespace zzz::core
 	constexpr std::string_view c_IcoResourceName = "IDI_ICON1";
 #pragma endregion
 
-#pragma region Network constants
+#pragma region Network & Logger constants
 	constexpr std::string_view c_LocalhostIPv4 = "127.0.0.1";
 	constexpr zU16 c_DefaultLoggerPort = 3030;
+
+#if Z_DESKTOP
+	constexpr zU32 c_MaxNetworkLogQueueSize = 2000;
+#elif Z_MOBILE
+	constexpr zU32 c_MaxNetworkLogQueueSize = 500;
+#endif
 #pragma endregion
 }

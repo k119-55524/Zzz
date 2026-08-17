@@ -13,17 +13,21 @@ namespace zzz::core
 	{
 	public:
 		ProjectManifestData() = default;
-		ProjectManifestData(std::vector<Guid> gameScriptGuids, std::vector<Guid> sceneGuids, std::vector<Guid> viewGuids, ProjectPlatformData platformData = {})
+		ProjectManifestData(std::vector<Guid> gameScriptGuids, std::vector<Guid> sceneGuids, std::vector<Guid> viewGuids, ProjectPlatformData platformData = {}, zU32 maxLogQueueSize = c_MaxNetworkLogQueueSize, zU16 loggerPort = c_DefaultLoggerPort)
 			: gameScriptGuids(std::move(gameScriptGuids))
 			, sceneGuids(std::move(sceneGuids))
 			, viewGuids(std::move(viewGuids))
 			, platformData(std::move(platformData))
+			, maxLogQueueSize(maxLogQueueSize)
+			, loggerPort(loggerPort)
 		{}
 
 		[[nodiscard]] const std::vector<Guid>& GetGameScriptGuids() const noexcept { return gameScriptGuids; }
 		[[nodiscard]] const std::vector<Guid>& GetSceneGuids() const noexcept { return sceneGuids; }
 		[[nodiscard]] const std::vector<Guid>& GetViewGuids() const noexcept { return viewGuids; }
 		[[nodiscard]] const ProjectPlatformData& GetPlatformData() const noexcept { return platformData; }
+		[[nodiscard]] zU32 GetMaxLogQueueSize() const noexcept { return maxLogQueueSize; }
+		[[nodiscard]] zU16 GetLoggerPort() const noexcept { return loggerPort; }
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
@@ -47,6 +51,9 @@ namespace zzz::core
 				DOut("{}  viewGuid #{}: {}", nestedIndentation, i, viewGuids[i].ToString());
 			}
 
+			DOut("{}maxLogQueueSize: {}", nestedIndentation, maxLogQueueSize);
+			DOut("{}loggerPort: {}", nestedIndentation, loggerPort);
+
 			platformData.LogFileBlock(nestedIndentation);
 		}
 
@@ -55,6 +62,8 @@ namespace zzz::core
 		std::vector<Guid> sceneGuids;
 		std::vector<Guid> viewGuids;
 		ProjectPlatformData platformData;
+		zU32 maxLogQueueSize{ c_MaxNetworkLogQueueSize };
+		zU16 loggerPort{ c_DefaultLoggerPort };
 
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override
@@ -92,6 +101,12 @@ namespace zzz::core
 						if (!res) return res;
 					}
 					return {};
+				})
+				.and_then([&]() {
+					return serializer.Serialize(buffer, maxLogQueueSize);
+				})
+				.and_then([&]() {
+					return serializer.Serialize(buffer, loggerPort);
 				})
 				.and_then([&]() {
 					return serializer.Serialize(buffer, platformData);
@@ -157,6 +172,14 @@ namespace zzz::core
 					}
 
 					return {};
+				})
+				.and_then([&]()
+				{
+					return serializer.Deserialize(buffer, offset, maxLogQueueSize);
+				})
+				.and_then([&]()
+				{
+					return serializer.Deserialize(buffer, offset, loggerPort);
 				})
 				.and_then([&]()
 				{
