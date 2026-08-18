@@ -75,6 +75,38 @@ namespace zzz::engine
 		m_StartViewUserData = StartViewUserData(defaultStartViewData);
 	}
 
+	void UserSettingsManager::SetSelectedGpuId(std::string gpuId)
+	{
+		if (m_HardwareState.GetSelectedGpuId() != gpuId)
+		{
+			m_HardwareState.SetSelectedGpuId(std::move(gpuId));
+			m_IsDirty = true;
+		}
+	}
+
+	void UserSettingsManager::SetSelectedMonitorId(std::string monitorId)
+	{
+		if (m_HardwareState.GetSelectedMonitorId() != monitorId)
+		{
+			m_HardwareState.SetSelectedMonitorId(std::move(monitorId));
+			m_IsDirty = true;
+		}
+	}
+
+	void UserSettingsManager::UpdateStartViewData(zU32 monitorIndex, const std::vector<DisplayMonitorInfo>& availableMonitors)
+	{
+		auto& platformData = m_StartViewUserData.GetPlatformData();
+		platformData.SetMonitorIndex(monitorIndex);
+		platformData.ValidateAndAdjustWindowRect(availableMonitors);
+		m_IsDirty = true;
+	}
+
+	void UserSettingsManager::UpdateStartWindowRect(const Rect2D<zI32>& rect)
+	{
+		m_StartViewUserData.GetPlatformData().SetWindowRect(rect);
+		m_IsDirty = true;
+	}
+
 	[[nodiscard]] std::expected<void, std::string> UserSettingsManager::SaveConfig()
 	{
 #if Z_EDITOR

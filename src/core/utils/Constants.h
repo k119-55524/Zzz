@@ -23,6 +23,7 @@ namespace zzz::core
 
 	constexpr zU32 c_DefaultWindowWidth = 800;
 	constexpr zU32 c_DefaultWindowHeight = 600;
+	constexpr zzz::math::Size2D<zU32> c_DefaultWindowSize{ c_DefaultWindowWidth, c_DefaultWindowHeight };
 
 #if Z_DESKTOP
 	// Минимальный размер окна (клиентской области) в пикселях.

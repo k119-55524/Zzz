@@ -1,6 +1,7 @@
 
 #include "Platform.h"
 #include "window/WinMSWindows.h"
+#include "engine/utils/DisplayMonitorUtils.h"
 
 using namespace zzz::engine;
 
@@ -64,18 +65,7 @@ namespace
 			};
 			bool isPrimary = (mi.dwFlags & MONITORINFOF_PRIMARY) != 0;
 
-			std::string platformMonitorId = systemId;
-			DISPLAY_DEVICEW dd{};
-			dd.cb = sizeof(DISPLAY_DEVICEW);
-			if (EnumDisplayDevicesW(mi.szDevice, 0, &dd, 0))
-			{
-				std::wstring monitorIdW(dd.DeviceID);
-				if (!monitorIdW.empty())
-				{
-					platformMonitorId = std::string(monitorIdW.begin(), monitorIdW.end());
-				}
-			}
-
+			std::string platformMonitorId = DisplayMonitorUtils::MakePlatformMonitorId(systemId);
 			DisplayMonitorInfo info(platformMonitorId, systemId, resolution, mi.rcMonitor.left, mi.rcMonitor.top, isPrimary);
 			monitors->push_back(info);
 		}

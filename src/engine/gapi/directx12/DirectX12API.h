@@ -28,8 +28,10 @@ namespace zzz::engine
 		[[nodiscard]] Microsoft::WRL::ComPtr<IDXGIAdapter1> GetAdapter(IDXGIFactory1* pFactory, const std::shared_ptr<UserSettingsManager>& userSettings);
 		void CreateDevice(IDXGIAdapter1* adapter);
 		void InitializeDevice(std::shared_ptr<UserSettingsManager> userSettings, UINT dxgiFactoryFlags);
+		void SelectMonitor(IDXGIAdapter1* adapter, const std::shared_ptr<UserSettingsManager>& userSettings);
 
 		Microsoft::WRL::ComPtr<IDXGIFactory7> m_Factory;
+		Microsoft::WRL::ComPtr<IDXGIAdapter1> m_Adapter1;
 		Microsoft::WRL::ComPtr<IDXGIAdapter3> m_Adapter3;
 		Microsoft::WRL::ComPtr<ID3D12Device> m_Device;
 		Microsoft::WRL::ComPtr<ID3D12CommandQueue> m_CommandQueue;

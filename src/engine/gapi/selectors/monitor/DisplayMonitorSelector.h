@@ -9,6 +9,7 @@ namespace zzz::engine
 
 	/**
 	 * @brief Селектор целевого монитора (дисплея) приложения.
+	 * Накапливает кандидаты-мониторы (по аналогии с GpuSelector) и выполняет выбор.
 	 */
 	class DisplayMonitorSelector final
 	{
@@ -19,82 +20,81 @@ namespace zzz::engine
 		{}
 
 		/**
-		 * @brief Принимает актуальный список мониторов системы и отдает целевой для отображения.
-		 * 1. Проверяет наличие сохраненного selectedMonitorId в UserSettingsManager.
-		 * 2. Если сохраненный монитор подключен — отдает его.
-		 * 3. Если сохраненного нет — выбирает монитор с флагом IsPrimary(), обновляет UserSettingsManager и сохраняет на диск.
+		 * @brief Добавляет кандидат-монитор в список доступных выходов.
 		 */
-		[[nodiscard]] DisplayMonitorInfo SelectMonitor(const std::vector<DisplayMonitorInfo>& availableMonitors)
+		void AddMonitor(DisplayMonitorInfo monitor)
 		{
-			ensure(!availableMonitors.empty(), "DisplayMonitorSelector: список доступных мониторов не может быть пустым.");
+			m_Monitors.push_back(std::move(monitor));
+		}
 
-			// Быстрый путь: всего 1 монитор в системе
-			if (availableMonitors.size() == 1)
-			{
-				const auto& singleMonitor = availableMonitors[0];
-				DOut("[DisplayMonitorSelector] - Единственный доступный монитор: {} ({}x{}, ID: {})",
-					singleMonitor.GetName(), singleMonitor.GetResolution().width, singleMonitor.GetResolution().height, singleMonitor.GetPlatformMonitorId());
+		/**
+		 * @brief Выполняет выбор целевого монитора и валидацию пользовательских настроек.
+		 */
+		void SelectMonitor()
+		{
+			if (m_Monitors.empty())
+				return;
 
-				if (m_UserSettings && m_UserSettings->GetHardwareState().GetSelectedMonitorId() != singleMonitor.GetPlatformMonitorId())
-				{
-					m_UserSettings->GetHardwareState().SetSelectedMonitorId(singleMonitor.GetPlatformMonitorId());
-					auto saveRes = m_UserSettings->SaveConfig();
-					if (!saveRes)
-					{
-						DOutWarning("[DisplayMonitorSelector] - Не удалось сохранить выбор монитора в конфигурацию: {}", saveRes.error());
-					}
-				}
-
-				return singleMonitor;
-			}
+			zU32 selectedIndex = 0;
+			bool monitorFound = false;
 
 			const std::string& savedMonitorId = m_UserSettings ? m_UserSettings->GetHardwareState().GetSelectedMonitorId() : "";
 
-			// 1. Поиск сохраненного монитора
 			if (!savedMonitorId.empty())
 			{
-				for (const auto& monitor : availableMonitors)
+				for (std::size_t i = 0; i < m_Monitors.size(); ++i)
 				{
-					if (monitor.GetPlatformMonitorId() == savedMonitorId)
+					if (m_Monitors[i].GetPlatformMonitorId() == savedMonitorId)
 					{
-						DOut("[DisplayMonitorSelector] - Выбран сохраненный монитор: {} ({}x{}, Primary: {})",
-							monitor.GetName(), monitor.GetResolution().width, monitor.GetResolution().height, monitor.IsPrimary());
-						return monitor;
+						selectedIndex = static_cast<zU32>(i);
+						monitorFound = true;
+						DOut("[DisplayMonitorSelector] Сохраненный монитор найден: {} [#{}, ID: {}]",
+							m_Monitors[i].GetName(), selectedIndex, savedMonitorId);
+						break;
+					}
+				}
+			}
+
+			if (!monitorFound)
+			{
+				DOutWarning("[DisplayMonitorSelector] Сохраненный монитор с ID '{}' не найден или состав мониторов изменился.", savedMonitorId);
+				
+				// Ищем Primary монитор
+				for (std::size_t i = 0; i < m_Monitors.size(); ++i)
+				{
+					if (m_Monitors[i].IsPrimary())
+					{
+						selectedIndex = static_cast<zU32>(i);
+						break;
 					}
 				}
 
-				DOutWarning("[DisplayMonitorSelector] - Сохраненный монитор с ID '{}' не найден. Переключение на Primary экран...", savedMonitorId);
-			}
+				DOut("[DisplayMonitorSelector] Выбран Primary монитор: {} [#{}, ID: {}]",
+					m_Monitors[selectedIndex].GetName(), selectedIndex, m_Monitors[selectedIndex].GetPlatformMonitorId());
 
-			// 2. Выбор Primary монитора (или первого попавшегося)
-			const DisplayMonitorInfo* targetMonitor = &availableMonitors[0];
-			for (const auto& monitor : availableMonitors)
-			{
-				if (monitor.IsPrimary())
+				if (m_UserSettings)
 				{
-					targetMonitor = &monitor;
-					break;
+					m_UserSettings->SetSelectedMonitorId(m_Monitors[selectedIndex].GetPlatformMonitorId());
+					m_UserSettings->UpdateStartViewData(selectedIndex, m_Monitors);
 				}
 			}
-
-			DOut("[DisplayMonitorSelector] - Автоматически выбран целевой монитор: {} ({}x{}, ID: {})",
-				targetMonitor->GetName(), targetMonitor->GetResolution().width, targetMonitor->GetResolution().height, targetMonitor->GetPlatformMonitorId());
-
-			// 3. Сохранение выбранного монитора
-			if (m_UserSettings)
+			else
 			{
-				m_UserSettings->GetHardwareState().SetSelectedMonitorId(targetMonitor->GetPlatformMonitorId());
-				auto saveRes = m_UserSettings->SaveConfig();
-				if (!saveRes)
+				// Если сохраненный монитор на месте — валидируем координаты окна относительно текущего состава
+				if (m_UserSettings)
 				{
-					DOutWarning("[DisplayMonitorSelector] - Не удалось сохранить выбор монитора в конфигурацию: {}", saveRes.error());
+					m_UserSettings->UpdateStartViewData(selectedIndex, m_Monitors);
 				}
 			}
-
-			return *targetMonitor;
 		}
+
+		/**
+		 * @brief Возвращает список всех добавленных мониторов-кандидатов.
+		 */
+		[[nodiscard]] const std::vector<DisplayMonitorInfo>& GetMonitors() const noexcept { return m_Monitors; }
 
 	private:
 		std::shared_ptr<UserSettingsManager> m_UserSettings;
+		std::vector<DisplayMonitorInfo> m_Monitors;
 	};
 }

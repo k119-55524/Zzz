@@ -61,13 +61,26 @@ namespace zzz::engine
 		if (desc.DedicatedVideoMemory >= 256 * 1024 * 1024)
 			type = eGPUType::Discrete;
 
-		// Расчёт рейтинга через DirectX12GpuRatingEvaluator
-		const zU64 score = DirectX12GpuRatingEvaluator::CalculateScore(type, desc.DedicatedVideoMemory, maxLevel);
+		// Подсчет количества подключенных выходов/мониторов к данному видеоадаптеру
+		zU32 outputsCount = 0;
+		Microsoft::WRL::ComPtr<IDXGIOutput> output;
+		while (SUCCEEDED(adapter->EnumOutputs(outputsCount, &output)))
+		{
+			++outputsCount;
+		}
+
+		// Если к видеоадаптеру не подключено ни одного монитора (Headless), отбраковываем его
+		if (outputsCount == 0)
+			return;
+
+		// Расчёт рейтинга через DirectX12GpuRatingEvaluator с учетом выходов
+		const zU64 score = DirectX12GpuRatingEvaluator::CalculateScore(type, desc.DedicatedVideoMemory, maxLevel, outputsCount);
 
 		DirectX12GpuCandidate candidate{};
 		candidate.adapter = adapter;
 		candidate.desc = desc;
 		candidate.maxFeatureLevel = maxLevel;
+		candidate.outputsCount = outputsCount;
 		candidate.platformGpuId = std::move(platformGpuId);
 		candidate.score = score;
 
@@ -88,14 +101,9 @@ namespace zzz::engine
 				singleCandidate.desc.DedicatedVideoMemory / (1024 * 1024),
 				singleCandidate.platformGpuId);
 
-			if (m_UserSettings && m_UserSettings->GetHardwareState().GetSelectedGpuId() != singleCandidate.platformGpuId)
+			if (m_UserSettings)
 			{
-				m_UserSettings->GetHardwareState().SetSelectedGpuId(singleCandidate.platformGpuId);
-				auto saveRes = m_UserSettings->SaveConfig();
-				if (!saveRes)
-				{
-					DOutWarning("[DirectX12GpuSelector] - Не удалось сохранить выбор GPU в конфигурацию: {}", saveRes.error());
-				}
+				m_UserSettings->SetSelectedGpuId(singleCandidate.platformGpuId);
 			}
 
 			return singleCandidate.adapter;
@@ -137,15 +145,10 @@ namespace zzz::engine
 			bestCandidate->desc.DedicatedVideoMemory / (1024 * 1024),
 			bestCandidate->platformGpuId);
 
-		// 3. Обновляем настройки и сохраняем на диск
+		// 3. Обновляем настройки
 		if (m_UserSettings)
 		{
-			m_UserSettings->GetHardwareState().SetSelectedGpuId(bestCandidate->platformGpuId);
-			auto saveRes = m_UserSettings->SaveConfig();
-			if (!saveRes)
-			{
-				DOutWarning("[DirectX12GpuSelector] - Не удалось сохранить выбор GPU в конфигурацию: {}", saveRes.error());
-			}
+			m_UserSettings->SetSelectedGpuId(bestCandidate->platformGpuId);
 		}
 
 		return bestCandidate->adapter;

@@ -18,7 +18,7 @@ namespace zzz::engine
 	public:
 		DirectX12GpuRatingEvaluator() = delete;
 
-		[[nodiscard]] static zU64 CalculateScore(eGPUType type, zU64 dedicatedVramBytes, D3D_FEATURE_LEVEL featureLevel) noexcept
+		[[nodiscard]] static zU64 CalculateScore(eGPUType type, zU64 dedicatedVramBytes, D3D_FEATURE_LEVEL featureLevel, zU32 outputsCount) noexcept
 		{
 			const zU64 baseScore = CalculateBaseScore(type, dedicatedVramBytes);
 			zU64 featureScore = 0;
@@ -39,7 +39,10 @@ namespace zzz::engine
 				break;
 			}
 
-			return baseScore + featureScore;
+			// Адаптеры с реально подключенными мониторами получают значительный приоритет (+50000)
+			const zU64 monitorBonus = (outputsCount > 0) ? 50000ULL : 0ULL;
+
+			return baseScore + featureScore + monitorBonus;
 		}
 	};
 
@@ -51,6 +54,7 @@ namespace zzz::engine
 		Microsoft::WRL::ComPtr<IDXGIAdapter1> adapter;
 		DXGI_ADAPTER_DESC1 desc{};
 		D3D_FEATURE_LEVEL maxFeatureLevel{ D3D_FEATURE_LEVEL_12_0 };
+		zU32 outputsCount{ 0 };
 		std::string platformGpuId;
 		zU64 score{ 0 };
 	};

@@ -12,9 +12,13 @@ namespace zzz::engine
 		UserSettingsManager() = delete;
 		UserSettingsManager(const Path& path, const StartViewData& defaultStartViewData);
 
-		inline const StartViewUserData& GetStartViewUserData() const noexcept { return m_StartViewUserData; }
-		inline PlatformHardwareState& GetHardwareState() noexcept { return m_HardwareState; }
-		inline const PlatformHardwareState& GetHardwareState() const noexcept { return m_HardwareState; }
+		[[nodiscard]] inline const StartViewUserData& GetStartViewUserData() const noexcept { return m_StartViewUserData; }
+		[[nodiscard]] inline const PlatformHardwareState& GetHardwareState() const noexcept { return m_HardwareState; }
+
+		void SetSelectedGpuId(std::string gpuId);
+		void SetSelectedMonitorId(std::string monitorId);
+		void UpdateStartViewData(zU32 monitorIndex, const std::vector<DisplayMonitorInfo>& availableMonitors);
+		void UpdateStartWindowRect(const Rect2D<zI32>& rect);
 
 		[[nodiscard]] std::expected<void, std::string> SaveConfig();
 

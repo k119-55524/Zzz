@@ -16,6 +16,7 @@ namespace zzz::core
 		{}
 
 		[[nodiscard]] const StartViewPlatformData& GetPlatformData() const noexcept { return m_PlatformData; }
+		[[nodiscard]] StartViewPlatformData& GetPlatformData() noexcept { return m_PlatformData; }
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{

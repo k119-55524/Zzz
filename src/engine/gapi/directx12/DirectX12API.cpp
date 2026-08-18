@@ -2,6 +2,9 @@
 
 #if defined(Z_D3D12)
 
+#include "engine/gapi/selectors/monitor/DisplayMonitorSelector.h"
+#include "engine/utils/DisplayMonitorUtils.h"
+
 namespace zzz::engine
 {
 	DirectX12API::~DirectX12API()
@@ -13,7 +16,8 @@ namespace zzz::engine
 	{
 		UINT dxgiFactoryFlags = 0;
 		EnableDebugLayer(dxgiFactoryFlags);
-		InitializeDevice(std::move(userSettings), dxgiFactoryFlags);
+		InitializeDevice(userSettings, dxgiFactoryFlags);
+		SelectMonitor(m_Adapter1.Get(), userSettings);
 	}
 
 	void DirectX12API::EnableDebugLayer(UINT& dxgiFactoryFlags)
@@ -36,19 +40,52 @@ namespace zzz::engine
 	{
 		m_Factory = CreateFactory(dxgiFactoryFlags);
 
-		Microsoft::WRL::ComPtr<IDXGIAdapter1> adapter = GetAdapter(m_Factory.Get(), userSettings);
+		m_Adapter1 = GetAdapter(m_Factory.Get(), userSettings);
 
-		HRESULT hr = adapter.As(&m_Adapter3);
+		HRESULT hr = m_Adapter1.As(&m_Adapter3);
 		if (FAILED(hr))
 			THROW_RUNTIME("Failed to query IDXGIAdapter3. HRESULT = 0x{:08X}", static_cast<unsigned int>(hr));
 
-		CreateDevice(adapter.Get());
+		CreateDevice(m_Adapter1.Get());
 
 		// Проверка поддержки отмены VSYNC (Allow Tearing)
 		BOOL allowTearing = FALSE;
 		hr = m_Factory->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
 		if (SUCCEEDED(hr))
 			m_IsCanDisableVSync = allowTearing;
+	}
+
+	void DirectX12API::SelectMonitor(IDXGIAdapter1* adapter, const std::shared_ptr<UserSettingsManager>& userSettings)
+	{
+		if (!adapter || !userSettings)
+			return;
+
+		DisplayMonitorSelector selector(userSettings);
+
+		Microsoft::WRL::ComPtr<IDXGIOutput> output;
+		for (UINT i = 0; SUCCEEDED(adapter->EnumOutputs(i, &output)); ++i)
+		{
+			DXGI_OUTPUT_DESC desc{};
+			if (SUCCEEDED(output->GetDesc(&desc)))
+			{
+				std::wstring deviceNameW(desc.DeviceName);
+				std::string systemId(deviceNameW.begin(), deviceNameW.end());
+				std::string platformMonitorId = DisplayMonitorUtils::MakePlatformMonitorId(systemId);
+
+				Size2D<zU32> resolution{
+					static_cast<zU32>(desc.DesktopCoordinates.right - desc.DesktopCoordinates.left),
+					static_cast<zU32>(desc.DesktopCoordinates.bottom - desc.DesktopCoordinates.top)
+				};
+
+				zI32 posX = desc.DesktopCoordinates.left;
+				zI32 posY = desc.DesktopCoordinates.top;
+				bool isPrimary = (posX == 0 && posY == 0);
+
+				selector.AddMonitor(DisplayMonitorInfo(platformMonitorId, systemId, resolution, posX, posY, isPrimary));
+			}
+		}
+
+		selector.SelectMonitor();
 	}
 
 	Microsoft::WRL::ComPtr<IDXGIFactory7> DirectX12API::CreateFactory(UINT dxgiFactoryFlags)

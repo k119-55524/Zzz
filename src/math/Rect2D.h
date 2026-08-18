@@ -55,6 +55,24 @@ namespace zzz::math
 		[[nodiscard]] inline T Right() const noexcept { return m_Position.GetX() + static_cast<T>(m_Size.GetWidth()); }
 		[[nodiscard]] inline T Bottom() const noexcept { return m_Position.GetY() + static_cast<T>(m_Size.GetHeight()); }
 
+		template<Arithmetic U1, Arithmetic U2, Arithmetic U3, Arithmetic U4>
+		inline void SetFrom(U1 x, U2 y, U3 w, U4 h) noexcept
+		{
+			m_Position.SetFrom(x, y);
+			m_Size.SetFrom(w, h);
+		}
+
+		[[nodiscard]] inline bool Contains(T x, T y) const noexcept
+		{
+			return x >= Left() && x < Right() && y >= Top() && y < Bottom();
+		}
+
+		[[nodiscard]] inline bool Intersects(const Rect2D& other) const noexcept
+		{
+			return Left() < other.Right() && Right() > other.Left() &&
+				Top() < other.Bottom() && Bottom() > other.Top();
+		}
+
 		[[nodiscard]] inline std::string ToString() const noexcept
 		{
 			return std::format("X: {}, Y: {}, Width: {}, Height: {}", m_Position.GetX(), m_Position.GetY(), m_Size.GetWidth(), m_Size.GetHeight());

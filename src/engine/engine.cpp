@@ -62,6 +62,10 @@ Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeDa
 	m_EventBus = safe_make_shared<ProjectEventBus>();
 	m_Time = safe_make_shared<Time>();
 
+	// Сохраняем пользовательскую конфигурацию на диск, если в процессе инициализации были изменения
+	if (auto res = m_UserSettingsManager->SaveConfig(); !res)
+		DOutWarning("[Engine::Engine] Не удалось сохранить пользовательские настройки после инициализации: {}", res.error());
+
 	engineState.store(eInitState::Initialized);
 
 	DOut("[Engine::Engine] - Инициализация: OK.");
