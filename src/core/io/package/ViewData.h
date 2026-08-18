@@ -4,7 +4,7 @@
 #include <string_view>
 #include <vector>
 #include "core/utils/Guid.h"
-#include "core/templates/Size2D.h"
+#include "math/Size2D.h"
 #include "core/Serialize/Serializer.h"
 
 namespace zzz::engine
@@ -34,7 +34,7 @@ namespace zzz::core
 			const std::string nestedIndentation = std::string(indentation) + "  ";
 			DOut("{}[ViewData]", indentation);
 			DOut("{}name: {}", nestedIndentation, name);
-			DOut("{}size: {}x{}", nestedIndentation, size.width, size.height);
+			DOut("{}size: {}x{}", nestedIndentation, size.GetWidth(), size.GetHeight());
 			DOut("{}sceneGuid: {}", nestedIndentation, sceneGuid.ToString());
 			DOut("{}uiScriptGuids({})", nestedIndentation, uiScriptGuids.size());
 			for (zU32 i = 0; i < uiScriptGuids.size(); ++i)

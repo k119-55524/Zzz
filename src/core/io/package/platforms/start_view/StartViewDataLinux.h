@@ -2,13 +2,14 @@
 
 #include <string>
 #include <string_view>
-#include "core/templates/Size2D.h"
+#include "math/Size2D.h"
 #include "core/Serialize/Serializer.h"
 #include "core/Enums/eEnumToString.h"
 #include "core/Enums/platforms/eLinuxEnums.h"
 
 namespace zzz::core
 {
+	using namespace zzz::math;
 
 	class StartViewDataLinux final : public ISerializable
 	{
@@ -33,7 +34,7 @@ namespace zzz::core
 			const std::string nestedIndentation = std::string(indentation) + "  ";
 			DOut("{}[StartViewDataLinux]", indentation);
 			DOut("{}title: {}", nestedIndentation, title);
-			DOut("{}size: {}x{}", nestedIndentation, size.width, size.height);
+			DOut("{}size: {}x{}", nestedIndentation, size.GetWidth(), size.GetHeight());
 			DOut("{}windowMode: {}", nestedIndentation, EnumToString::ToString(windowMode));
 			DOut("{}resizable: {}", nestedIndentation, resizable);
 			DOut("{}displayServer: {}", nestedIndentation, EnumToString::ToString(displayServer));

@@ -1,13 +1,9 @@
 #pragma once
 
 #include <array>
-#include "core/utils/Types.h"
-#include "core/utils/Ensure.h"
-#include "core/utils/Defines.h"
-#include "core/utils/Macroses.h"
-#include "core/utils/MemoryUtils.h"
-#include "core/utils/ThrowWrappers.h"
+
 #include "core/IO/FileHeader.h"
+#include "core/utils/Defines.h"
 
 namespace zzz::core
 {
@@ -26,7 +22,15 @@ namespace zzz::core
 	constexpr zU8 c_ConfigFilePatchVersion = 0;
 
 	constexpr zU32 c_DefaultWindowWidth = 800;
-	constexpr zU32 c_DefaultWindowHeicht = 600;
+	constexpr zU32 c_DefaultWindowHeight = 600;
+
+#if Z_DESKTOP
+	// Минимальный размер окна (клиентской области) в пикселях.
+	constexpr zU32 c_MinWinSize = 150;
+#endif
+
+	constexpr zzz::math::Size2D<zU32> c_UHD_4K{ 3840, 2160 };
+	constexpr zzz::math::Size2D<zU32> c_UHD_8K{ 7680, 4320 };
 #pragma endregion
 
 #pragma region Game Package file constants

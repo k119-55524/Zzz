@@ -123,7 +123,7 @@ void View::HandleWindowClose()
 
 void View::OnWindowResize(Size2D<>& size, eWinResize type)
 {
-	DOut("[View::OnWindowResize] - {}x{} (Type: {})", size.width, size.height, EnumToString::ToString(type));
+	DOut("[View::OnWindowResize] - {}x{} (Type: {})", size.GetWidth(), size.GetHeight(), EnumToString::ToString(type));
 }
 
 void View::OnWindowResizeStart()

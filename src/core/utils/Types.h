@@ -1,19 +1,19 @@
 #pragma once
 
-#include <cstdint>
+#include "math/Types.h"
 
 namespace zzz::core
 {
-	using zU8 = uint8_t;
-	using zU16 = uint16_t;
-	using zU32 = uint32_t;
-	using zU64 = uint64_t;
+	using zzz::zU8;
+	using zzz::zU16;
+	using zzz::zU32;
+	using zzz::zU64;
 
-	using zI8 = int8_t;
-	using zI16 = int16_t;
-	using zI32 = int32_t;
-	using zI64 = int64_t;
+	using zzz::zI8;
+	using zzz::zI16;
+	using zzz::zI32;
+	using zzz::zI64;
 
-	using zF32 = float;
-	using zF64 = double;
+	using zzz::zF32;
+	using zzz::zF64;
 }

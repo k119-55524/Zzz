@@ -3,11 +3,12 @@
 #include <logger/logger.h>
 
 #include "core/CoreIncludes.h"
-#include "core/templates/Size2D.h"
+#include "math/Size2D.h"
 #include "core/Serialize/Serializer.h"
 
 namespace zzz::core
 {
+	using namespace zzz::math;
 	class DisplayMonitorInfo final : public ISerializable
 	{
 	public:
@@ -49,7 +50,7 @@ namespace zzz::core
 			DOut("{}[DisplayMonitorInfo]", indentation);
 			DOut("{}platformMonitorId: {}", nestedIndentation, m_PlatformMonitorId);
 			DOut("{}name: {}", nestedIndentation, m_Name);
-			DOut("{}resolution: {}x{}", nestedIndentation, m_Resolution.width, m_Resolution.height);
+			DOut("{}resolution: {}x{}", nestedIndentation, m_Resolution.GetWidth(), m_Resolution.GetHeight());
 			DOut("{}position: ({},{})", nestedIndentation, m_PositionX, m_PositionY);
 			DOut("{}isPrimary: {}", nestedIndentation, m_IsPrimary);
 			DOut("{}scaleFactor: {}", nestedIndentation, m_ScaleFactor);

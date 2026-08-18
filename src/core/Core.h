@@ -10,8 +10,6 @@
 #include "core/utils/Guid.h"
 #include "core/utils/Macroses.h"
 #include "core/utils/MemoryUtils.h"
-#include "core/utils/ScreenResolution.h"
-#include "core/utils/ThrowWrappers.h"
 #include "core/utils/Version.h"
 #include "core/utils/Converters.h"
 
@@ -30,7 +28,6 @@
 #include "core/serialize/Serializer.h"
 
 #include "core/templates/DoubleBufferedVector.h"
-#include "core/templates/Size2D.h"
 
 #include "core/time/Time.h"
 #include "core/events/Event.h"
@@ -76,3 +73,6 @@
 #include "core/hardware/StorageInfo.h"
 #include "core/hardware/NetworkAdapterInfo.h"
 #include "core/hardware/PlatformHardwareState.h"
+
+using namespace zzz::math;
+

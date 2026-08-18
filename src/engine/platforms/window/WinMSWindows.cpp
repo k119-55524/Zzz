@@ -73,12 +73,11 @@ LRESULT CALLBACK WinMSWindows::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 {
 	// Рассчитать размеры прямоугольника окна на основе запрошенных размеров клиентской области.
 	Size2D<LONG> winSize;
-	// TODO: не правильная архитектура. Подумать как задавать размер окна
-	winSize.SetFrom(static_cast<LONG>(startWindowSettings.GetSize().width), static_cast<LONG>(startWindowSettings.GetSize().height));
+	winSize.SetFrom(startWindowSettings.GetSize());
 	DWORD windowStyle = ConverterMSWinTypes::ToNative(startWindowSettings.GetWindowMode());
 	if (!startWindowSettings.IsResizable())
 		windowStyle &= ~(WS_THICKFRAME | WS_MAXIMIZEBOX);
-	RECT R = { 0, 0, winSize.width, winSize.height };
+	RECT R = { 0, 0, winSize.GetWidth(), winSize.GetHeight() };
 	AdjustWindowRectEx(&R, windowStyle, false, 0);
 	int width = R.right - R.left;
 	int height = R.bottom - R.top;

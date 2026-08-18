@@ -79,6 +79,7 @@ else()
     set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG" CACHE STRING "" FORCE)
 endif()
 
+add_subdirectory(src/math)
 add_subdirectory(src/logger)
 add_subdirectory(src/core)
 

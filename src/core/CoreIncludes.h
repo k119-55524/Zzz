@@ -38,6 +38,7 @@
 #include "core/utils/Defines.h"
 #include "core/utils/Types.h"
 #include "core/utils/NativeAppData.h"
+#include <math/Math.h>
 
 // Platform Headers
 #include "core/headers/Apple.h"

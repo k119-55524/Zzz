@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <span>
 #include <vector>
@@ -9,6 +9,7 @@
 #include <type_traits>
 
 #include "core/utils/Export.h"
+#include <math/Math.h>
 
 namespace zzz::core
 {
@@ -211,5 +212,47 @@ namespace zzz::core
 		/// @param obj Объект для десериализации.
 		/// @return Результат десериализации.
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, ISerializable& obj) const;
+
+		template<typename T>
+		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const zzz::math::Size2D<T>& size) const
+		{
+			return Serialize(buffer, size.m_Width)
+				.and_then([&]() { return Serialize(buffer, size.m_Height); });
+		}
+
+		template<typename T>
+		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, zzz::math::Size2D<T>& size) const
+		{
+			return Deserialize(buffer, offset, size.m_Width)
+				.and_then([&]() { return Deserialize(buffer, offset, size.m_Height); });
+		}
+
+		template<typename T>
+		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const zzz::math::Point2D<T>& pt) const
+		{
+			return Serialize(buffer, pt.m_X)
+				.and_then([&]() { return Serialize(buffer, pt.m_Y); });
+		}
+
+		template<typename T>
+		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, zzz::math::Point2D<T>& pt) const
+		{
+			return Deserialize(buffer, offset, pt.m_X)
+				.and_then([&]() { return Deserialize(buffer, offset, pt.m_Y); });
+		}
+
+		template<typename T>
+		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const zzz::math::Rect2D<T>& rect) const
+		{
+			return Serialize(buffer, rect.m_Position)
+				.and_then([&]() { return Serialize(buffer, rect.m_Size); });
+		}
+
+		template<typename T>
+		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, zzz::math::Rect2D<T>& rect) const
+		{
+			return Deserialize(buffer, offset, rect.m_Position)
+				.and_then([&]() { return Deserialize(buffer, offset, rect.m_Size); });
+		}
 	};
 }
