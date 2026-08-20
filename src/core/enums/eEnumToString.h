@@ -108,7 +108,7 @@ namespace zzz::core
 			case ePackage::View:            return "View";
 			case ePackage::Prefab:          return "Prefab";
 			case ePackage::BinaryAsset:     return "BinaryAsset";
-			case ePackage::StartView:         return "StartView";
+			case ePackage::PrimaryView:       return "PrimaryView";
 			}
 			THROW_RUNTIME("Необработанный ePackage");
 		}

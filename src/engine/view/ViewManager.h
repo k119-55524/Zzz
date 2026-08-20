@@ -18,20 +18,18 @@ namespace zzz::engine
 
 	public:
 		ViewManager() = delete;
-		ViewManager(const Platform& platform, std::shared_ptr<IGAPI> gapi, std::shared_ptr<ScriptFactory> scriptFactory, std::shared_ptr<UserSettingsManager> userSettingsManager, std::function<void()> onAllViewsClosed);
+		ViewManager(const Platform& platform, std::shared_ptr<IGAPI> gapi, std::shared_ptr<ScriptFactory> scriptFactory, std::shared_ptr<PackageManager> packageManager, std::shared_ptr<UserSettingsManager> userSettingsManager, std::function<void()> onAllViewsClosed);
 		~ViewManager();
 
 		[[nodiscard]] inline std::shared_ptr<IGAPI> GetGAPI() const noexcept { return m_GAPI; }
 
 		/**
-		 * @brief Создаёт главный View приложения из стартового ресурса пакета и пользовательских настроек окна.
-		 * @details Берёт GUID'ы ViewScript из PackageManager, а параметры native window — из UserSettingsManager.
+		 * @brief Создаёт первичное (основное) окно приложения из стартового ресурса пакета и пользовательских настроек окна.
 		 */
-		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> CreateStartView(const PackageManager& packageManager, const UserSettingsManager& userSettingsManager);
-		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> CreateChildView(Guid viewGuid, const ViewPlatformData& settings, const std::vector<Guid>& scripts);
-		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> CreateIndependentView(Guid viewGuid, const ViewPlatformData& settings, const std::vector<Guid>& scripts);
+		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> CreatePrimaryView();
+		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> CreateChildView(const Guid& viewGuid);
+		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> CreateIndependentView(const Guid& viewGuid);
 
-		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> CreateView(Guid viewGuid, const ViewPlatformData& settings, const std::vector<Guid>& scripts);
 #if Z_EDITOR
 		[[nodiscard]] std::expected <std::shared_ptr<View>, std::string> CreateView(void* data);
 		void RemoveView(View* view);
@@ -43,6 +41,7 @@ namespace zzz::engine
 		const Platform& m_Platform;
 		std::shared_ptr<IGAPI> m_GAPI;
 		std::shared_ptr<ScriptFactory> m_ScriptFactory;
+		std::shared_ptr<PackageManager> m_PackageManager;
 		std::shared_ptr<UserSettingsManager> m_UserSettingsManager;
 
 		std::shared_ptr<View> m_PrimaryView;
@@ -52,5 +51,6 @@ namespace zzz::engine
 
 		std::function<void()> OnAllViewsClosed;
 		void OnWindowClose(View& view);
+		[[nodiscard]] std::vector<std::shared_ptr<ViewScript>> CreateViewScripts(const std::vector<Guid>& scriptGuids) const;
 	};
 }

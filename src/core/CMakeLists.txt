@@ -72,7 +72,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/Path.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PackageHeader.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PackageEntry.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/StartViewData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PrimaryViewData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/project/ProjectPlatformConfig.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/project/ProjectPlatformDataMSWin.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/project/ProjectPlatformDataAndroid.h
@@ -85,7 +85,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/start_view/ViewDataiOS.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/start_view/ViewDataLinux.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/start_view/ViewDataMacOS.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/StartViewUserData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PrimaryViewUserData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/ViewUserData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/ViewData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/ProjectManifestData.h

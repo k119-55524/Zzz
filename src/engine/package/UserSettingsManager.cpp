@@ -4,24 +4,24 @@
 #include "engine/view/View.h"
 
 using namespace zzz::core;
-using zzz::core::StartViewUserData;
+using zzz::core::PrimaryViewUserData;
 
 namespace zzz::engine
 {
-	UserSettingsManager::UserSettingsManager(const Path& path, const StartViewData& defaultStartViewData) :
+	UserSettingsManager::UserSettingsManager(const Path& path, const PrimaryViewData& defaultPrimaryViewData) :
 		m_Path(path),
 		m_Version(c_ConfigFileMajorVersion, c_ConfigFileMinorVersion, c_ConfigFilePatchVersion),
 		m_IsDirty(true)
 	{
 #if Z_EDITOR
-		(void)defaultStartViewData;
+		(void)defaultPrimaryViewData;
 #else
-		Initialize(defaultStartViewData);
+		Initialize(defaultPrimaryViewData);
 		LogUserData();
 #endif
 	}
 
-	void UserSettingsManager::Initialize(const StartViewData& defaultStartViewData)
+	void UserSettingsManager::Initialize(const PrimaryViewData& defaultPrimaryViewData)
 	{
 		try
 		{
@@ -33,7 +33,7 @@ namespace zzz::engine
 				.lexically_normal()
 				.make_preferred();
 
-			SetDefaultUserSettings(defaultStartViewData);
+			SetDefaultUserSettings(defaultPrimaryViewData);
 			if (!std::filesystem::exists(m_ConfigPath))
 			{
 				DOutWarning("Файл конфигурации не найден: {}. Используется конфигурация по умолчанию.", m_ConfigPath.string());
@@ -44,35 +44,35 @@ namespace zzz::engine
 			if (!res)
 			{
 				DOutWarning("Не удалось загрузить файл конфигурации: {}. Создаётся конфигурация по умолчанию.", m_ConfigPath.string());
-				SetDefaultUserSettings(defaultStartViewData);
+				SetDefaultUserSettings(defaultPrimaryViewData);
 			}
 		}
 		catch (const std::filesystem::filesystem_error& e)
 		{
 			DOutException("Ошибка файловой системы: {}. Установка конфигурации по умолчанию.", e.what());
-			SetDefaultUserSettings(defaultStartViewData);
+			SetDefaultUserSettings(defaultPrimaryViewData);
 			return;
 		}
 		catch (const std::exception& e)
 		{
 			DOutException("Ошибка загрузки конфигурации: {}. Установка конфигурации по умолчанию.", e.what());
-			SetDefaultUserSettings(defaultStartViewData);
+			SetDefaultUserSettings(defaultPrimaryViewData);
 			return;
 		}
 		catch (...)
 		{
 			DOutException("Неизвестная ошибка загрузки конфигурации. Установка конфигурации по умолчанию.");
-			SetDefaultUserSettings(defaultStartViewData);
+			SetDefaultUserSettings(defaultPrimaryViewData);
 			return;
 		}
 
 		DOut("[UserSettingsManager] Конфигурация десериализована: {}.", m_ConfigPath.string());
 	}
 
-	void UserSettingsManager::SetDefaultUserSettings(const StartViewData& defaultStartViewData)
+	void UserSettingsManager::SetDefaultUserSettings(const PrimaryViewData& defaultPrimaryViewData)
 	{
 		m_Version = Version(c_ConfigFileMajorVersion, c_ConfigFileMinorVersion, c_ConfigFilePatchVersion);
-		m_StartViewUserData = StartViewUserData(defaultStartViewData);
+		m_PrimaryViewUserData = PrimaryViewUserData(defaultPrimaryViewData);
 	}
 
 	void UserSettingsManager::SetSelectedGpuId(std::string gpuId)
@@ -139,7 +139,7 @@ namespace zzz::engine
 		}
 
 		m_IsDirty = false;
-		DOut("[UserSettingsManager] Конфигурация сериализована: {}.", m_ConfigPath.string());
+		DOut("[UserSettingsManager] Конфигурация сохранена: {}.", m_ConfigPath.string());
 
 		return {};
 #endif // Z_EDITOR
@@ -149,16 +149,18 @@ namespace zzz::engine
 	{
 		try
 		{
-			std::ifstream in(path, std::ios::binary | std::ios::ate);
-			if (!in)
-				return UNEXPECTED("Не удалось открыть файл конфигурации.");
+			if (!std::filesystem::exists(path))
+				return UNEXPECTED("Файл конфигурации не существует: {}", path.string());
 
-			std::streamsize fileSize = in.tellg();
-			in.seekg(0, std::ios::beg);
+			std::ifstream file(path, std::ios::binary);
+			if (!file.is_open())
+				return UNEXPECTED("Не удалось открыть файл конфигурации: {}", path.string());
 
-			std::vector<char> buffer(fileSize);
-			if (!in.read(buffer.data(), fileSize))
-				return UNEXPECTED("Не удалось прочитать файл конфигурации.");
+			const auto fileSize = std::filesystem::file_size(path);
+			std::vector<std::byte> buffer(fileSize);
+			file.read(reinterpret_cast<char*>(buffer.data()), fileSize);
+			if (!file.good())
+				return UNEXPECTED("Не удалось прочитать файл конфигурации: {}", path.string());
 
 			std::size_t offset = 0;
 
@@ -174,7 +176,7 @@ namespace zzz::engine
 				return UNEXPECTED("Не удалось десериализовать конфигурацию: {}", result.error());
 
 			// Санитария состояния стартового окна для релиза: Closed или Minimized исправление на Normal
-			auto& startPlatformData = m_StartViewUserData.GetPlatformData();
+			auto& startPlatformData = m_PrimaryViewUserData.GetPlatformData();
 			auto state = startPlatformData.GetWindowState();
 			if (state == eWindowState::Closed || state == eWindowState::Minimized)
 			{
@@ -209,25 +211,15 @@ namespace zzz::engine
 #endif
 	}
 
-	const ViewUserData* UserSettingsManager::FindViewUserData(const Guid& viewGuid) const noexcept
-	{
-		for (const auto& data : m_ViewsUserData)
-		{
-			if (data.GetViewGuid() == viewGuid)
-				return &data;
-		}
-		return nullptr;
-	}
-
 	void UserSettingsManager::StoreViewState(const View& view)
 	{
 		const ViewWindowState viewState = view.GetState();
 		const Guid& guid = viewState.GetViewGuid();
 		const NativeWindowState& navState = viewState.GetNativeState();
 
-		if (m_StartViewUserData.GetViewGuid() == guid)
+		if (m_PrimaryViewUserData.GetViewGuid() == guid)
 		{
-			auto& platformData = m_StartViewUserData.GetPlatformData();
+			auto& platformData = m_PrimaryViewUserData.GetPlatformData();
 			platformData.SetWindowRect(navState.GetWindowRect());
 			platformData.SetMonitorId(navState.GetMonitorId());
 
@@ -239,14 +231,18 @@ namespace zzz::engine
 			return;
 		}
 
-		for (auto& userData : m_ViewsUserData)
+		if (auto it = m_ChildViewsUserData.find(guid); it != m_ChildViewsUserData.end())
 		{
-			if (userData.GetViewGuid() == guid)
-			{
-				userData.GetWindowState() = viewState;
-				m_IsDirty = true;
-				return;
-			}
+			it->second.GetWindowState() = viewState;
+			m_IsDirty = true;
+			return;
+		}
+
+		if (auto it = m_IndependentViewsUserData.find(guid); it != m_IndependentViewsUserData.end())
+		{
+			it->second.GetWindowState() = viewState;
+			m_IsDirty = true;
+			return;
 		}
 
 		THROW_RUNTIME("Не удалось сохранить состояние окна: View с GUID {} не найдено в конфигурации пользователя.", guid.ToString());
@@ -256,17 +252,29 @@ namespace zzz::engine
 	{
 		auto res = s.Serialize(buffer, c_ConfigHeader)
 			.and_then([&]() { return s.Serialize(buffer, m_Version); })
-			.and_then([&]() { return s.Serialize(buffer, m_StartViewUserData); });
+			.and_then([&]() { return s.Serialize(buffer, m_PrimaryViewUserData); });
 
 		if (!res)
 			return res;
 
-		zU32 count = static_cast<zU32>(m_ViewsUserData.size());
-		res = s.Serialize(buffer, count);
+		zU32 childCount = static_cast<zU32>(m_ChildViewsUserData.size());
+		res = s.Serialize(buffer, childCount);
 		if (!res)
 			return res;
 
-		for (const auto& item : m_ViewsUserData)
+		for (const auto& [guid, item] : m_ChildViewsUserData)
+		{
+			res = s.Serialize(buffer, item);
+			if (!res)
+				return res;
+		}
+
+		zU32 independentCount = static_cast<zU32>(m_IndependentViewsUserData.size());
+		res = s.Serialize(buffer, independentCount);
+		if (!res)
+			return res;
+
+		for (const auto& [guid, item] : m_IndependentViewsUserData)
 		{
 			res = s.Serialize(buffer, item);
 			if (!res)
@@ -288,25 +296,43 @@ namespace zzz::engine
 
 					return s.Deserialize(buffer, offset, m_Version);
 				})
-			.and_then([&]() { return s.Deserialize(buffer, offset, m_StartViewUserData); });
+			.and_then([&]() { return s.Deserialize(buffer, offset, m_PrimaryViewUserData); });
 
 		if (!res)
 			return res;
 
-		zU32 count = 0;
-		res = s.Deserialize(buffer, offset, count);
+		zU32 childCount = 0;
+		res = s.Deserialize(buffer, offset, childCount);
 		if (!res)
 			return res;
 
-		m_ViewsUserData.clear();
-		m_ViewsUserData.reserve(count);
-		for (zU32 i = 0; i < count; ++i)
+		m_ChildViewsUserData.clear();
+		m_ChildViewsUserData.reserve(childCount);
+		for (zU32 i = 0; i < childCount; ++i)
 		{
 			ViewUserData item;
 			res = s.Deserialize(buffer, offset, item);
 			if (!res)
 				return res;
-			m_ViewsUserData.push_back(std::move(item));
+			Guid guid = item.GetViewGuid();
+			m_ChildViewsUserData.emplace(std::move(guid), std::move(item));
+		}
+
+		zU32 independentCount = 0;
+		res = s.Deserialize(buffer, offset, independentCount);
+		if (!res)
+			return res;
+
+		m_IndependentViewsUserData.clear();
+		m_IndependentViewsUserData.reserve(independentCount);
+		for (zU32 i = 0; i < independentCount; ++i)
+		{
+			ViewUserData item;
+			res = s.Deserialize(buffer, offset, item);
+			if (!res)
+				return res;
+			Guid guid = item.GetViewGuid();
+			m_IndependentViewsUserData.emplace(std::move(guid), std::move(item));
 		}
 
 		return s.Deserialize(buffer, offset, m_HardwareState);
@@ -317,8 +343,12 @@ namespace zzz::engine
 	{
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 		DOut("========== [UserSettingsManager] User Data: {} ==========", m_ConfigPath.string());
-		m_StartViewUserData.LogFileBlock("  ");
-		for (const auto& viewData : m_ViewsUserData)
+		m_PrimaryViewUserData.LogFileBlock("  ");
+		for (const auto& [guid, viewData] : m_ChildViewsUserData)
+		{
+			viewData.LogFileBlock("  ");
+		}
+		for (const auto& [guid, viewData] : m_IndependentViewsUserData)
 		{
 			viewData.LogFileBlock("  ");
 		}

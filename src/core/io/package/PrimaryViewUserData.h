@@ -3,17 +3,17 @@
 #include <string>
 #include <string_view>
 #include "core/Serialize/Serializer.h"
-#include "core/IO/package/StartViewData.h"
+#include "core/IO/package/PrimaryViewData.h"
 
 namespace zzz::core
 {
-	class StartViewUserData final : public ISerializable
+	class PrimaryViewUserData final : public ISerializable
 	{
 	public:
-		StartViewUserData() = default;
-		explicit StartViewUserData(const StartViewData& startViewData)
-			: m_ViewGuid(startViewData.GetViewGuid())
-			, m_PlatformData(startViewData.GetPlatformData())
+		PrimaryViewUserData() = default;
+		explicit PrimaryViewUserData(const PrimaryViewData& primaryViewData)
+			: m_ViewGuid(primaryViewData.GetViewGuid())
+			, m_PlatformData(primaryViewData.GetPlatformData())
 		{}
 
 		[[nodiscard]] const Guid& GetViewGuid() const noexcept { return m_ViewGuid; }
@@ -22,7 +22,7 @@ namespace zzz::core
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			DOut("{}[StartViewUserData]", indentation);
+			DOut("{}[PrimaryViewUserData]", indentation);
 			DOut("{}viewGuid: {}", std::string(indentation) + "  ", m_ViewGuid.ToString());
 			m_PlatformData.LogFileBlock(std::string(indentation) + "  ");
 		}

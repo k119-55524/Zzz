@@ -9,7 +9,7 @@
 using namespace zzz::core;
 using namespace zzz::engine;
 
-View::View(Guid guid, const ViewPlatformData& settings, const std::vector<Guid>& scripts, const Platform& platform, const ScriptFactory& scriptFactory, std::shared_ptr<UserSettingsManager> userSettingsManager, std::function<void(View&)> onWindowClose, const View* parentView) :
+View::View(Guid guid, const ViewPlatformData& settings, std::vector<std::shared_ptr<ViewScript>> scripts, const Platform& platform, std::shared_ptr<UserSettingsManager> userSettingsManager, std::function<void(View&)> onWindowClose, const View* parentView) :
 	m_Platform{ platform },
 	m_Guid{ std::move(guid) },
 	m_Input{ nullptr },
@@ -20,16 +20,7 @@ View::View(Guid guid, const ViewPlatformData& settings, const std::vector<Guid>&
 {
 	ensure(OnWindowClose != nullptr, "OnWindowClose не должен быть null.");
 
-	std::vector<std::shared_ptr<ViewScript>> viewScripts;
-	viewScripts.reserve(scripts.size());
-	for (const auto& scriptGuid : scripts)
-	{
-		auto script = scriptFactory.CreateViewScript(scriptGuid);
-		ensure(script != nullptr, "Не удалось создать экземпляр ViewScript с GUID: " + scriptGuid.ToString());
-		viewScripts.push_back(std::move(script));
-	}
-
-	Initialize(settings, viewScripts, parentView);
+	Initialize(settings, scripts, parentView);
 }
 
 ViewWindowState View::GetState() const
@@ -85,8 +76,7 @@ void View::Initialize(const ViewPlatformData& settings, const std::vector<std::s
 
 	for (const auto& script : scripts)
 	{
-		if (!script)
-			continue;
+		ensure(script != nullptr, "ViewScript не должен быть null.");
 
 		script->Init(&m_EventBus);
 		m_Scripts.push_back(script);

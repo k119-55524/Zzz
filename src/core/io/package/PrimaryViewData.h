@@ -10,11 +10,11 @@
 
 namespace zzz::core
 {
-	class StartViewData final : public ISerializable
+	class PrimaryViewData final : public ISerializable
 	{
 	public:
-		StartViewData() = default;
-		StartViewData(Guid viewGuid, Guid sceneGuid, std::vector<Guid> uiScriptGuids, ViewPlatformData platformData = {})
+		PrimaryViewData() = default;
+		PrimaryViewData(Guid viewGuid, Guid sceneGuid, std::vector<Guid> uiScriptGuids, ViewPlatformData platformData = {})
 			: m_ViewGuid(viewGuid)
 			, m_SceneGuid(sceneGuid)
 			, m_UiScriptGuids(std::move(uiScriptGuids))
@@ -29,7 +29,7 @@ namespace zzz::core
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut("{}[StartViewData]", indentation);
+			DOut("{}[PrimaryViewData]", indentation);
 			DOut("{}viewGuid: {}", nestedIndentation, m_ViewGuid.ToString());
 			DOut("{}sceneGuid: {}", nestedIndentation, m_SceneGuid.ToString());
 			DOut("{}uiScriptGuids({})", nestedIndentation, m_UiScriptGuids.size());

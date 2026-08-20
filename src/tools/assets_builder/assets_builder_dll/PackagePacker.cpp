@@ -7,7 +7,7 @@
 
 #include <logger/logger.h>
 #include <core/Core.h>
-#include <core/IO/package/StartViewData.h>
+#include <core/IO/package/PrimaryViewData.h>
 #include <core/IO/package/PackageEntry.h>
 #include <core/IO/package/PackageHeader.h>
 #include <core/IO/package/PrefabData.h>
@@ -369,7 +369,7 @@ namespace zzz::builder
 				if (auto res = SerializeProjectPlatformData(result, serializer, platformRoot, targetPlatform); !res)
 					return {};
 			}
-			else if (assetType == zzz::core::ePackage::StartView)
+			else if (assetType == zzz::core::ePackage::PrimaryView)
 			{
 				json startViewRoot = ResolveStartViewJson(root, projectDir, targetPlatform);
 
@@ -397,7 +397,7 @@ namespace zzz::builder
 				if (auto parsed = Guid::Parse(item.guid))
 					viewGuid = *parsed;
 
-				// Сначала сериализуем общие поля StartViewData (ViewGuid, SceneGuid, ScriptGuids)
+				// Сначала сериализуем общие поля PrimaryViewData (ViewGuid, SceneGuid, ScriptGuids)
 				if (auto res = serializer.Serialize(result, viewGuid); !res) return {};
 				if (auto res = serializer.Serialize(result, sceneGuid); !res) return {};
 				zU32 scriptsCount = static_cast<zU32>(uiScriptGuids.size());
@@ -593,7 +593,7 @@ namespace zzz::builder
 				}
 				else if (ext == ".zav")
 				{
-					typeVal = static_cast<uint32_t>(zzz::core::ePackage::StartView);
+					typeVal = static_cast<uint32_t>(zzz::core::ePackage::PrimaryView);
 				}
 				else
 				{
@@ -635,16 +635,16 @@ namespace zzz::builder
 			}
 		}
 
-		bool hasStartView = std::any_of(pendingAssets.begin(), pendingAssets.end(), [](const PendingAsset& item) {
-			return item.type == static_cast<uint32_t>(zzz::core::ePackage::StartView);
+		bool hasPrimaryView = std::any_of(pendingAssets.begin(), pendingAssets.end(), [](const PendingAsset& item) {
+			return item.type == static_cast<uint32_t>(zzz::core::ePackage::PrimaryView);
 		});
 
-		if (!hasStartView)
+		if (!hasPrimaryView)
 		{
 			pendingAssets.push_back({
-				"MainStartView",
+				"MainPrimaryView",
 				"00000000-0000-0000-0000-000000000002",
-				static_cast<uint32_t>(zzz::core::ePackage::StartView),
+				static_cast<uint32_t>(zzz::core::ePackage::PrimaryView),
 				projJsonPath
 			});
 		}

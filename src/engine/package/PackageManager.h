@@ -14,7 +14,7 @@ namespace zzz::engine
 		~PackageManager() = default;
 
 		[[nodiscard]] std::expected<ProjectManifestData, std::string> GetProjectManifestData() const;
-		[[nodiscard]] std::expected<StartViewData, std::string> GetStartViewData() const;
+		[[nodiscard]] std::expected<PrimaryViewData, std::string> GetPrimaryViewData() const;
 
 		template <typename T> requires std::derived_from<T, ISerializable>
 		[[nodiscard]] std::expected<T, std::string> LoadPackageDataByName(ePackage type, std::string_view name) const

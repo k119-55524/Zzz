@@ -11,6 +11,6 @@ namespace zzz::core
 		View = 3,
 		Prefab = 4,
 		BinaryAsset = 5,
-		StartView = 6
+		PrimaryView = 6
 	};
 }

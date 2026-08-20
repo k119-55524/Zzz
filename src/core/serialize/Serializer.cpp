@@ -1,4 +1,4 @@
-﻿#include "Serializer.h"
+#include "Serializer.h"
 #include "core/utils/Types.h"
 
 using namespace zzz::core;
@@ -29,7 +29,7 @@ std::expected<void, std::string> Serializer::Deserialize(std::span<const std::by
 
 	// Проверяем, достаточно ли данных в буфере
 	if (offset > buffer.size() || buffer.size() - offset < size)
-		return std::unexpected("Buffer too small for string data.");
+		return UNEXPECTED("Buffer too small for string data.");
 
 	// Читаем данные строки
 	str.resize(size);

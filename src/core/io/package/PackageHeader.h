@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "core/utils/Version.h"
 #include <logger/logger.h>
@@ -29,7 +29,7 @@ namespace zzz::core
 		[[nodiscard]] std::expected<void, std::string> Validate() const
 		{
 			if (m_Magic != c_GamePackageHeader)
-				return std::unexpected("Некорректная сигнатура заголовка");
+				return UNEXPECTED("Некорректная сигнатура заголовка");
 
 			return {};
 		}

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <array>
 #include <format>
@@ -83,6 +83,15 @@ namespace zzz::core
 				m_Bytes[10], m_Bytes[11], m_Bytes[12], m_Bytes[13], m_Bytes[14], m_Bytes[15]);
 		}
 
+		/// @brief Возвращает хэш-код GUID.
+		[[nodiscard]] inline size_t GetHash() const noexcept
+		{
+			uint64_t low = 0, high = 0;
+			std::memcpy(&low, m_Bytes.data(), sizeof(uint64_t));
+			std::memcpy(&high, m_Bytes.data() + sizeof(uint64_t), sizeof(uint64_t));
+			return static_cast<size_t>(low ^ (high + 0x9e3779b97f4a7c15ULL + (low << 6) + (low >> 2)));
+		}
+
 		/// @brief Сравнение на равенство и неравенство.
 		[[nodiscard]] constexpr bool operator==(const Guid& other) const noexcept
 		{
@@ -129,11 +138,7 @@ namespace std
 	{
 		size_t operator()(const zzz::core::Guid& guid) const noexcept
 		{
-			const auto& bytes = guid.GetBytes();
-			uint64_t low = 0, high = 0;
-			std::memcpy(&low, bytes.data(), sizeof(uint64_t));
-			std::memcpy(&high, bytes.data() + sizeof(uint64_t), sizeof(uint64_t));
-			return static_cast<size_t>(low ^ (high + 0x9e3779b97f4a7c15ULL + (low << 6) + (low >> 2)));
+			return guid.GetHash();
 		}
 	};
 }

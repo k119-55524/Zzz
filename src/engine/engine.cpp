@@ -35,12 +35,12 @@ Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeDa
 	// Установка максимального размера сетевой очереди логов из манифеста
 	g_Logger.SetMaxNetworkLogQueueSize(projectManifestData->GetMaxLogQueueSize());
 
-	auto startViewData = m_PackageManager->GetStartViewData();
-	if (!startViewData)
-		THROW_RUNTIME("Failed to load StartViewData: {}", startViewData.error());
+	auto primaryViewData = m_PackageManager->GetPrimaryViewData();
+	if (!primaryViewData)
+		THROW_RUNTIME("Failed to load PrimaryViewData: {}", primaryViewData.error());
 
 	// Загрузка пользовательских настроек (UserSettings.dat)
-	m_UserSettingsManager = safe_make_shared<UserSettingsManager>(*m_Path, *startViewData);
+	m_UserSettingsManager = safe_make_shared<UserSettingsManager>(*m_Path, *primaryViewData);
 
 	// Создание платформенного слоя абстракции ОС (native windows, ввод, системные события)
 	m_Platform = safe_make_unique<Platform>(nativeData, projectManifestData->GetPlatformData());
@@ -54,8 +54,8 @@ Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeDa
 	m_ScriptRegistry = safe_make_unique<ScriptRegistry>(*m_ScriptStorage);
 	m_ScriptFactory = safe_make_shared<ScriptFactory>(*m_ScriptStorage);
 
-	// Инициализация менеджера отображения окон (ViewManager) с пробросом графического API и фабрики скриптов
-	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, m_GAPI, m_ScriptFactory, m_UserSettingsManager, [this]() { OnCloseAllViews(); });
+	// Инициализация менеджера отображения окон (ViewManager) с пробросом графического API, фабрики скриптов и пакета ресурсов
+	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, m_GAPI, m_ScriptFactory, m_PackageManager, m_UserSettingsManager, [this]() { OnCloseAllViews(); });
 
 	// Инициализация главного кадрового цикла, шины событий проекта и игрового таймера
 	m_MainLoop = safe_make_shared<MainLoop>(*m_Platform, [this]() { OnUpdateSystem(); });
@@ -130,11 +130,11 @@ void Engine::Shutdown()
 		RegisterScripts();
 		LoadGlobalScripts();
 
-		auto view = m_ViewManager->CreateStartView(*m_PackageManager, *m_UserSettingsManager);
+		auto view = m_ViewManager->CreatePrimaryView();
 		if (!view)
 		{
 			DOutError("{}", view.error());
-			return std::unexpected(view.error());
+			return UNEXPECTED("{}", view.error());
 		}
 
 		m_EventBus->InvokeStart();

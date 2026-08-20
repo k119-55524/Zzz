@@ -18,7 +18,7 @@ namespace zzz::engine
 
 	public:
 		View() = delete;
-		View(zzz::core::Guid guid, const zzz::core::ViewPlatformData& settings, const std::vector<zzz::core::Guid>& scripts, const Platform& platform, const zzz::core::ScriptFactory& scriptFactory, std::shared_ptr<UserSettingsManager> userSettingsManager, std::function<void(View&)> onWindowClose, const View* parentView = nullptr);
+		View(zzz::core::Guid guid, const zzz::core::ViewPlatformData& settings, std::vector<std::shared_ptr<zzz::core::ViewScript>> scripts, const Platform& platform, std::shared_ptr<UserSettingsManager> userSettingsManager, std::function<void(View&)> onWindowClose, const View* parentView = nullptr);
 #if Z_EDITOR
 		View(const Platform& platform, void* data);
 #endif // Z_EDITOR

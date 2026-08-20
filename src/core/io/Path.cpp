@@ -1,4 +1,4 @@
-﻿
+
 #include <cstdlib>
 #include <memory>
 
@@ -127,7 +127,7 @@ namespace zzz::core
 #elif Z_APPLE
 			auto path = GetAppleUserDataDirectory();
 			if (!path)
-				return std::unexpected(path.error());
+				return UNEXPECTED("{}", path.error());
 
 			return *path / appName;
 #elif Z_ANDROID
