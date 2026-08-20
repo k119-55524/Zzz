@@ -6,9 +6,11 @@
 #include "../platforms/input/Input.h"
 #include "../platforms/window/NativeWindow.h"
 
+#include "engine/view/ViewWindowState.h"
+
 namespace zzz::engine
 {
-	using namespace zzz::core;
+	class UserSettingsManager;
 
 	class View final
 	{
@@ -16,14 +18,17 @@ namespace zzz::engine
 
 	public:
 		View() = delete;
-		View(const ViewPlatformData& settings, const std::vector<Guid>& scripts, const Platform& platform, const ScriptFactory& scriptFactory, std::function<void(View&)> onWindowClose, const View* parentView = nullptr);
+		View(zzz::core::Guid guid, const zzz::core::ViewPlatformData& settings, const std::vector<zzz::core::Guid>& scripts, const Platform& platform, const zzz::core::ScriptFactory& scriptFactory, std::shared_ptr<UserSettingsManager> userSettingsManager, std::function<void(View&)> onWindowClose, const View* parentView = nullptr);
 #if Z_EDITOR
 		View(const Platform& platform, void* data);
 #endif // Z_EDITOR
 		~View();
 
 		inline void InvokeStart() { m_EventBus.InvokeStart(); }
-		void Update(const Time& time);
+		void Update(const zzz::core::Time& time);
+
+		[[nodiscard]] const zzz::core::Guid& GetGuid() const noexcept { return m_Guid; }
+		[[nodiscard]] ViewWindowState GetState() const;
 
 		[[nodiscard]] const NativeWindow& GetNativeWindow() const noexcept { return *m_NativeWindow; }
 		[[nodiscard]] NativeWindow& GetNativeWindow() noexcept { return *m_NativeWindow; }
@@ -170,8 +175,10 @@ namespace zzz::engine
 #pragma endregion
 
 		const Platform& m_Platform;
-		std::shared_ptr<NativeWindow> m_NativeWindow;
+		zzz::core::Guid m_Guid;
 		std::shared_ptr<Input>  m_Input;
+		std::shared_ptr<NativeWindow> m_NativeWindow;
+		std::shared_ptr<UserSettingsManager> m_UserSettingsManager;
 
 		std::function<void(View&)> OnWindowClose;
 		void HandleWindowClose();

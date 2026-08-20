@@ -9,14 +9,16 @@
 using namespace zzz::core;
 using namespace zzz::engine;
 
-ViewManager::ViewManager(const Platform& platform, std::shared_ptr<IGAPI> gapi, std::shared_ptr<ScriptFactory> scriptFactory, std::function<void()> onAllViewsClosed) :
+ViewManager::ViewManager(const Platform& platform, std::shared_ptr<IGAPI> gapi, std::shared_ptr<ScriptFactory> scriptFactory, std::shared_ptr<UserSettingsManager> userSettingsManager, std::function<void()> onAllViewsClosed) :
 	m_Platform{ platform },
 	m_GAPI{ std::move(gapi) },
 	m_ScriptFactory{ std::move(scriptFactory) },
+	m_UserSettingsManager{ std::move(userSettingsManager) },
 	OnAllViewsClosed{ std::move(onAllViewsClosed) }
 {
 	ensure(m_GAPI != nullptr, "IGAPI не должен быть null.");
 	ensure(m_ScriptFactory != nullptr, "ScriptFactory не должен быть null.");
+	ensure(m_UserSettingsManager != nullptr, "UserSettingsManager не должен быть null.");
 	ensure(OnAllViewsClosed != nullptr, "OnAllViewsClosed не должен быть null.");
 }
 
@@ -38,7 +40,12 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateStartView(c
 		return std::unexpected(err);
 	}
 
-	auto res = CreateView(userSettingsManager.GetStartViewUserData().GetPlatformData(), startViewData->GetUiScriptGuids());
+	const auto& startUserData = userSettingsManager.GetStartViewUserData();
+	const auto startState = startUserData.GetPlatformData().GetWindowState();
+	ensure(startState != eWindowState::Closed && startState != eWindowState::Minimized,
+		"КРИТИЧЕСКАЯ ОШИБКА РАЗРАБОТЧИКА: Попытка создать стартовое окно в статусе Closed или Minimized!");
+
+	auto res = CreateView(startUserData.GetViewGuid(), startUserData.GetPlatformData(), startViewData->GetUiScriptGuids());
 	if (res)
 	{
 		m_PrimaryView = *res;
@@ -46,7 +53,7 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateStartView(c
 	return res;
 }
 
-std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateChildView(const ViewPlatformData& settings, const std::vector<Guid>& scripts)
+std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateChildView(Guid viewGuid, const ViewPlatformData& settings, const std::vector<Guid>& scripts)
 {
 #if Z_MOBILE
 	THROW_RUNTIME("Мобильные платформы (Android/iOS) поддерживают только одно Основное окно.");
@@ -56,7 +63,7 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateChildView(c
 	std::shared_ptr<View> view;
 	try
 	{
-		view = safe_make_shared<View>(settings, scripts, m_Platform, *m_ScriptFactory, [this](View& v) { OnWindowClose(v); }, m_PrimaryView.get());
+		view = safe_make_shared<View>(std::move(viewGuid), settings, scripts, m_Platform, *m_ScriptFactory, m_UserSettingsManager, [this](View& v) { OnWindowClose(v); }, m_PrimaryView.get());
 		m_ChildViews.push_back(view);
 		m_Views.push_back(view);
 		view->InvokeStart();
@@ -70,7 +77,7 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateChildView(c
 #endif
 }
 
-std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateIndependentView(const ViewPlatformData& settings, const std::vector<Guid>& scripts)
+std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateIndependentView(Guid viewGuid, const ViewPlatformData& settings, const std::vector<Guid>& scripts)
 {
 #if Z_MOBILE
 	THROW_RUNTIME("Мобильные платформы (Android/iOS) поддерживают только одно Основное окно.");
@@ -78,7 +85,7 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateIndependent
 	std::shared_ptr<View> view;
 	try
 	{
-		view = safe_make_shared<View>(settings, scripts, m_Platform, *m_ScriptFactory, [this](View& v) { OnWindowClose(v); });
+		view = safe_make_shared<View>(std::move(viewGuid), settings, scripts, m_Platform, *m_ScriptFactory, m_UserSettingsManager, [this](View& v) { OnWindowClose(v); });
 		m_IndependentViews.push_back(view);
 		m_Views.push_back(view);
 		view->InvokeStart();
@@ -92,7 +99,7 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateIndependent
 #endif
 }
 
-std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateView(const ViewPlatformData& settings, const std::vector<Guid>& scripts)
+std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateView(Guid viewGuid, const ViewPlatformData& settings, const std::vector<Guid>& scripts)
 {
 #if Z_MOBILE
 	if (m_Views.size() >= 1)
@@ -102,7 +109,7 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateView(const 
 	std::shared_ptr<View> view;
 	try
 	{
-		view = safe_make_shared<View>(settings, scripts, m_Platform, *m_ScriptFactory, [this](View& v) { OnWindowClose(v); });
+		view = safe_make_shared<View>(std::move(viewGuid), settings, scripts, m_Platform, *m_ScriptFactory, m_UserSettingsManager, [this](View& v) { OnWindowClose(v); });
 		m_Views.push_back(view);
 		view->InvokeStart();
 	}
@@ -114,18 +121,14 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateView(const 
 	return view;
 }
 
-void ViewManager::SaveViewsStates(UserSettingsManager& userSettingsManager)
-{
-	(void)userSettingsManager;
-	// При выходе считываем нативные статусы окон через GetNativeWindow()
-	// и обновляем UserSettingsManager перед сохранением в user.dat
-}
+
 
 void ViewManager::OnWindowClose(View& view)
 {
-	if (m_PrimaryView && m_PrimaryView.get() == &view)
+	if (m_PrimaryView.get() == &view)
 	{
 		DOut("[ViewManager] Закрывается Первичное (Основное) окно приложения.");
+
 		m_ChildViews.clear();
 		m_IndependentViews.clear();
 		m_Views.clear();
@@ -133,6 +136,7 @@ void ViewManager::OnWindowClose(View& view)
 
 		if (OnAllViewsClosed)
 			OnAllViewsClosed();
+
 		return;
 	}
 
@@ -148,9 +152,6 @@ void ViewManager::OnWindowClose(View& view)
 
 	if (it != m_Views.end())
 		m_Views.erase(it);
-
-	if (m_Views.empty() && OnAllViewsClosed)
-		OnAllViewsClosed();
 }
 
 #if Z_EDITOR

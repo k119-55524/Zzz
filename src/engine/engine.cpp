@@ -55,7 +55,7 @@ Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeDa
 	m_ScriptFactory = safe_make_shared<ScriptFactory>(*m_ScriptStorage);
 
 	// Инициализация менеджера отображения окон (ViewManager) с пробросом графического API и фабрики скриптов
-	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, m_GAPI, m_ScriptFactory, [this]() { OnCloseAllViews(); });
+	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, m_GAPI, m_ScriptFactory, m_UserSettingsManager, [this]() { OnCloseAllViews(); });
 
 	// Инициализация главного кадрового цикла, шины событий проекта и игрового таймера
 	m_MainLoop = safe_make_shared<MainLoop>(*m_Platform, [this]() { OnUpdateSystem(); });

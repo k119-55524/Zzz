@@ -18,7 +18,7 @@ namespace zzz::engine
 
 	public:
 		ViewManager() = delete;
-		ViewManager(const Platform& platform, std::shared_ptr<IGAPI> gapi, std::shared_ptr<ScriptFactory> scriptFactory, std::function<void()> onAllViewsClosed);
+		ViewManager(const Platform& platform, std::shared_ptr<IGAPI> gapi, std::shared_ptr<ScriptFactory> scriptFactory, std::shared_ptr<UserSettingsManager> userSettingsManager, std::function<void()> onAllViewsClosed);
 		~ViewManager();
 
 		[[nodiscard]] inline std::shared_ptr<IGAPI> GetGAPI() const noexcept { return m_GAPI; }
@@ -28,22 +28,22 @@ namespace zzz::engine
 		 * @details Берёт GUID'ы ViewScript из PackageManager, а параметры native window — из UserSettingsManager.
 		 */
 		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> CreateStartView(const PackageManager& packageManager, const UserSettingsManager& userSettingsManager);
-		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> CreateChildView(const ViewPlatformData& settings, const std::vector<Guid>& scripts);
-		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> CreateIndependentView(const ViewPlatformData& settings, const std::vector<Guid>& scripts);
+		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> CreateChildView(Guid viewGuid, const ViewPlatformData& settings, const std::vector<Guid>& scripts);
+		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> CreateIndependentView(Guid viewGuid, const ViewPlatformData& settings, const std::vector<Guid>& scripts);
 
-		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> CreateView(const ViewPlatformData& settings, const std::vector<Guid>& scripts);
+		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> CreateView(Guid viewGuid, const ViewPlatformData& settings, const std::vector<Guid>& scripts);
 #if Z_EDITOR
 		[[nodiscard]] std::expected <std::shared_ptr<View>, std::string> CreateView(void* data);
 		void RemoveView(View* view);
 #endif
 
 		void Update(const Time& time);
-		void SaveViewsStates(UserSettingsManager& userSettingsManager);
 
 	private:
 		const Platform& m_Platform;
 		std::shared_ptr<IGAPI> m_GAPI;
 		std::shared_ptr<ScriptFactory> m_ScriptFactory;
+		std::shared_ptr<UserSettingsManager> m_UserSettingsManager;
 
 		std::shared_ptr<View> m_PrimaryView;
 		std::vector<std::shared_ptr<View>> m_ChildViews;

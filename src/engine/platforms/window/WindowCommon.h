@@ -3,10 +3,10 @@
 #include "../Platform.h"
 #include "../input/Input.h"
 #include "engine/EngineIncludes.h"
+#include "NativeWindowState.h"
 
 namespace zzz::engine
 {
-	using namespace zzz::core;
 	/**
 	 * @brief Набор всех возможных колбэков жизненного цикла окна.
 	 * Передается из View в платформенную реализацию окна при создании.
@@ -120,10 +120,13 @@ namespace zzz::engine
 			WindowCallbacks callbacks);
 		virtual ~WindowBase() = default;
 
-		[[nodiscard]] virtual std::expected<void, std::string> Initialize(const ViewPlatformData& platformData, const View* parentView = nullptr) = 0;
+		[[nodiscard]] virtual std::expected<void, std::string> Initialize(const zzz::core::ViewPlatformData& platformData, const View* parentView = nullptr) = 0;
 		[[nodiscard]] virtual bool IsMinimized() const noexcept = 0;
 		[[nodiscard]] virtual bool IsMaximized() const = 0;
-		[[nodiscard]] virtual Rect2D<zI32> GetNormalWindowRect() const = 0;
+		[[nodiscard]] virtual zzz::math::Rect2D<zzz::core::zI32> GetNormalWindowRect() const = 0;
+
+		[[nodiscard]] const NativeWindowState& GetState() const noexcept { return m_NativeState; }
+		[[nodiscard]] NativeWindowState& GetState() noexcept { return m_NativeState; }
 
 		// Public для того, чтобы глобальные Си-функции (Wayland/Android) 
 		// и Objective-C делегаты (macOS/iOS) могли вызывать события окна 
@@ -133,7 +136,8 @@ namespace zzz::engine
 	protected:
 		const Platform& m_Platform;
 		const std::shared_ptr<Input> m_Input;
-		Size2D<> m_WinSize;
+		NativeWindowState m_NativeState;
+		zzz::math::Size2D<> m_WinSize;
 		bool m_IsActivate;
 	};
 }

@@ -1,11 +1,14 @@
 #pragma once
 
 #include "engine/EngineIncludes.h"
+#include "core/io/package/ViewUserData.h"
 
 using namespace zzz::core;
 
 namespace zzz::engine
 {
+	class View;
+
 	class UserSettingsManager final : public ISerializable
 	{
 	public:
@@ -19,7 +22,7 @@ namespace zzz::engine
 
 		void SetSelectedGpuId(std::string gpuId);
 		void SetSelectedMonitorId(std::string monitorId);
-		void UpdateViewUserData(Guid viewGuid, std::string platformMonitorId, Rect2D<zI32> windowRect, bool isMaximized);
+		void StoreViewState(const View& view);
 
 		[[nodiscard]] std::expected<void, std::string> SaveConfig();
 

@@ -32,6 +32,7 @@
 #include <system_error>
 #include <format>
 #include <expected>
+#include <bitset>
 #include <concepts>
 
 // Core Defines

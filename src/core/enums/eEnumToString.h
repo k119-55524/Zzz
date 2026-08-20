@@ -16,12 +16,26 @@
 #include "platforms/eAndroidEnums.h"
 #include "core/utils/ThrowWrappers.h"
 #include "core/enums/eLogMessageType.h"
+#include "core/enums/eWindowState.h"
 
 namespace zzz::core
 {
 	class EnumToString
 	{
 	public:
+		static constexpr std::string_view ToString(eWindowState state)
+		{
+			switch (state)
+			{
+			case eWindowState::Normal:               return "Normal";
+			case eWindowState::Maximized:            return "Maximized";
+			case eWindowState::BorderlessFullscreen: return "BorderlessFullscreen";
+			case eWindowState::ExclusiveFullscreen:  return "ExclusiveFullscreen";
+			case eWindowState::Minimized:            return "Minimized";
+			case eWindowState::Closed:               return "Closed";
+			}
+			THROW_RUNTIME("Необработанный eWindowState");
+		}
 		static constexpr std::string_view ToString(eInitState type)
 		{
 			switch (type)

@@ -1,6 +1,7 @@
 
 #include "PackageManager.h"
 #include "UserSettingsManager.h"
+#include "engine/view/View.h"
 
 using namespace zzz::core;
 using zzz::core::StartViewUserData;
@@ -171,6 +172,15 @@ namespace zzz::engine
 
 			if (!result)
 				return UNEXPECTED("Не удалось десериализовать конфигурацию: {}", result.error());
+
+			// Санитария состояния стартового окна для релиза: Closed или Minimized исправление на Normal
+			auto& startPlatformData = m_StartViewUserData.GetPlatformData();
+			auto state = startPlatformData.GetWindowState();
+			if (state == eWindowState::Closed || state == eWindowState::Minimized)
+			{
+				DOutWarning("[UserSettingsManager] Зафиксирован невалидный статус стартового окна ('{}'). Автоматический сброс на 'Normal'.", EnumToString::ToString(state));
+				startPlatformData.SetWindowState(eWindowState::Normal);
+			}
 		}
 		catch (const std::filesystem::filesystem_error& e)
 		{
@@ -209,22 +219,37 @@ namespace zzz::engine
 		return nullptr;
 	}
 
-	void UserSettingsManager::UpdateViewUserData(Guid viewGuid, std::string platformMonitorId, Rect2D<zI32> windowRect, bool isMaximized)
+	void UserSettingsManager::StoreViewState(const View& view)
 	{
-		for (auto& data : m_ViewsUserData)
+		const ViewWindowState viewState = view.GetState();
+		const Guid& guid = viewState.GetViewGuid();
+		const NativeWindowState& navState = viewState.GetNativeState();
+
+		if (m_StartViewUserData.GetViewGuid() == guid)
 		{
-			if (data.GetViewGuid() == viewGuid)
+			auto& platformData = m_StartViewUserData.GetPlatformData();
+			platformData.SetWindowRect(navState.GetWindowRect());
+			platformData.SetMonitorId(navState.GetMonitorId());
+
+			auto state = navState.GetState();
+			if (state != eWindowState::Closed && state != eWindowState::Minimized)
+				platformData.SetWindowState(state);
+
+			m_IsDirty = true;
+			return;
+		}
+
+		for (auto& userData : m_ViewsUserData)
+		{
+			if (userData.GetViewGuid() == guid)
 			{
-				data.SetPlatformMonitorId(std::move(platformMonitorId));
-				data.SetWindowRect(windowRect);
-				data.SetIsMaximized(isMaximized);
+				userData.GetWindowState() = viewState;
 				m_IsDirty = true;
 				return;
 			}
 		}
 
-		m_ViewsUserData.emplace_back(std::move(viewGuid), std::move(platformMonitorId), windowRect, isMaximized);
-		m_IsDirty = true;
+		THROW_RUNTIME("Не удалось сохранить состояние окна: View с GUID {} не найдено в конфигурации пользователя.", guid.ToString());
 	}
 
 	[[nodiscard]] std::expected<void, std::string> UserSettingsManager::Serialize(std::vector<std::byte>& buffer, const Serializer& s) const

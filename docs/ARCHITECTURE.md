@@ -99,3 +99,11 @@ namespace = "Gameplay"
    Унификация использования `std::expected`, `throw` и `ensure`. Введение единого `Z_FATAL` или полный переход на `std::expected` с кодами ошибок `ErrorCode`.
 4. **Покрытие тестами (`src/qa/`):**
    Написание тестов для `ScriptRegistry`, `.meta`/GUID синхронизации, логгера и команд Undo/Redo.
+5. **Оптимизация производительности и функционала `zzz::core::EventImpl` (`src/core/events/Event.h`):**
+   * **Проблема:** На длинных циклах (10 000+ подписчиков) вызов события создает CPU overhead из-за `std::function` (Type Erasure / косвенный вызов), атомарного `isDead.load()` (`seq_cst`) и `weak_ptr::expired()` (атомарное чтение control block). Дополнительно при `SetActive(false/true)` в `BaseScript` происходит полная отписка/подписка, что ломает порядок вызова подписчиков.
+   * **Планируемые решения:**
+     - Ослабление атомарного порядка вызовов: замена `isDead.load()` на `std::memory_order_relaxed`.
+     - Избавление от проверки `weak_ptr.expired()` во внутреннем цикле за счет явной отписки объектов в деструкторах (Smart Unsubscribe on Destroy).
+     - Поддержка флага паузы (`isPaused` / `isEnabled`) внутри `CallbackEntry`, чтобы `BaseScript::SetActive` не пересоздавал подписку и сохранял исходный порядок вызова в очереди.
+     - Разделение данных на Hot/Cold массивы (Data-Oriented Structure: `vector<FuncType>` отдельно от метаданных отписки).
+     - Замена `std::function` на легкий кастомный делегат (`void* instance` + static trampoline) для ликвидации SBO-аллокаций и ускорения вызова.

@@ -4,13 +4,17 @@
 #include "../platforms/input/Input.h"
 #include "../platforms/window/NativeWindow.h"
 
+#include "engine/package/UserSettingsManager.h"
+
 using namespace zzz::core;
 using namespace zzz::engine;
 
-View::View(const ViewPlatformData& settings, const std::vector<Guid>& scripts, const Platform& platform, const ScriptFactory& scriptFactory, std::function<void(View&)> onWindowClose, const View* parentView) :
+View::View(Guid guid, const ViewPlatformData& settings, const std::vector<Guid>& scripts, const Platform& platform, const ScriptFactory& scriptFactory, std::shared_ptr<UserSettingsManager> userSettingsManager, std::function<void(View&)> onWindowClose, const View* parentView) :
 	m_Platform{ platform },
-	m_Input{ safe_make_shared<Input>() },
-	m_NativeWindow{ safe_make_shared<NativeWindow>(platform, m_Input, WindowCallbacks{}) },
+	m_Guid{ std::move(guid) },
+	m_Input{ nullptr },
+	m_NativeWindow{ nullptr },
+	m_UserSettingsManager{ std::move(userSettingsManager) },
 	OnWindowClose{ std::move(onWindowClose) },
 	m_IsActive{ true }
 {
@@ -18,21 +22,26 @@ View::View(const ViewPlatformData& settings, const std::vector<Guid>& scripts, c
 
 	std::vector<std::shared_ptr<ViewScript>> viewScripts;
 	viewScripts.reserve(scripts.size());
-	for (const auto& guid : scripts)
+	for (const auto& scriptGuid : scripts)
 	{
-		auto script = scriptFactory.CreateViewScript(guid);
-		ensure(script != nullptr, "Не удалось создать экземпляр ViewScript с GUID: " + guid.ToString());
+		auto script = scriptFactory.CreateViewScript(scriptGuid);
+		ensure(script != nullptr, "Не удалось создать экземпляр ViewScript с GUID: " + scriptGuid.ToString());
 		viewScripts.push_back(std::move(script));
 	}
 
 	Initialize(settings, viewScripts, parentView);
 }
 
+ViewWindowState View::GetState() const
+{
+	return ViewWindowState{ m_Guid, m_NativeWindow ? m_NativeWindow->GetState() : NativeWindowState{} };
+}
+
 #if Z_EDITOR
 View::View(const Platform& platform, void* data) :
 	m_Platform{ platform },
-	m_Input{ safe_make_shared<Input>() },
-	m_NativeWindow{ safe_make_shared<NativeWindow>(platform, m_Input, WindowCallbacks{}) },
+	m_Input{ nullptr },
+	m_NativeWindow{ nullptr },
 	m_IsActive{ true }
 {
 	Initialize(data);
@@ -121,6 +130,9 @@ void View::HandleWindowClose()
 {
 	DOut("[View::HandleWindowClose] - OnClose");
 
+	if (m_UserSettingsManager)
+		m_UserSettingsManager->StoreViewState(*this);
+
 	// В редакторе управление происходит из вне поэтому колбэк может быть не инициализирован
 	if (OnWindowClose != nullptr)
 		OnWindowClose(*this);
@@ -144,6 +156,9 @@ void View::OnWindowSizing()
 void View::OnWindowResizeEnd()
 {
 	DOut("[View::OnWindowResizeEnd]");
+
+	if (m_UserSettingsManager)
+		m_UserSettingsManager->StoreViewState(*this);
 }
 
 void View::OnWindowDpiChanged()

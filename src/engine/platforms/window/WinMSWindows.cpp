@@ -107,8 +107,9 @@ std::expected<void, std::string> WinMSWindows::Initialize(const ViewPlatformData
 
 	// Только первичное окно может быть в режиме Fullscreen/Borderless. Дочерние всегда Windowed.
 	eMSWinWindowMode winMode = isChild ? eMSWinWindowMode::Windowed : platformData.GetWindowMode();
-	// Только первичное/независимое окно может разворачиваться на весь экран. Дочернее окно не может.
-	bool isMaximized = isChild ? false : platformData.IsMaximized();
+	eWindowState targetState = isChild ? eWindowState::Normal : platformData.GetWindowState();
+	if (targetState == eWindowState::Closed || targetState == eWindowState::Minimized)
+		targetState = eWindowState::Normal;
 
 	const auto& windowRect = platformData.GetWindowRect();
 	int xPos = windowRect.GetPosition().GetX();
@@ -136,12 +137,17 @@ std::expected<void, std::string> WinMSWindows::Initialize(const ViewPlatformData
 	if (!m_hWnd)
 		THROW_RUNTIME("CreateWindowEx( ... ) завершился ошибкой. Код ошибки (Windows): {}", ::GetLastError());
 
+	m_NativeState.SetWindowRect(GetNormalWindowRect());
+	m_NativeState.SetState(targetState);
+	if (!platformData.GetMonitorId().empty())
+		m_NativeState.SetMonitorId(platformData.GetMonitorId());
+
 	// [Windows] Системное окно успешно создано.
 	// Передаем m_hWnd наверх (во View/Engine), чтобы графическое API (Vulkan/DirectX)
 	// могло привязаться к этому окну и создать Swapchain. Без этого рендеринг невозможен.
 	VERIFY_AND_CALL(m_Callbacks.OnSurfaceCreated, m_hWnd);
 
-	int showCmd = isMaximized ? SW_MAXIMIZE : SW_SHOW;
+	int showCmd = (targetState == eWindowState::Maximized) ? SW_MAXIMIZE : ((targetState == eWindowState::Minimized) ? SW_MINIMIZE : SW_SHOW);
 	ShowWindow(m_hWnd, showCmd);
 	UpdateWindow(m_hWnd);
 
@@ -179,19 +185,32 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		 * @brief [Windows] Размер клиентской области изменился.
 		 * Транслируем в OnResize. Также отслеживаем состояния минимизации (Hide) и восстановления (Show).
 		 */
-		m_WinSize.SetFrom(static_cast<zU32>(LOWORD(lParam)), static_cast<zU32>(HIWORD(lParam)));
-		if (wParam == SIZE_MINIMIZED)
 		{
-			VERIFY_AND_CALL(m_Callbacks.OnResize, m_WinSize, eWinResize::Hide);
+			Size2D<> winSize(static_cast<zU32>(LOWORD(lParam)), static_cast<zU32>(HIWORD(lParam)));
+			if (wParam == SIZE_MINIMIZED)
+			{
+				m_NativeState.SetState(eWindowState::Minimized);
+				VERIFY_AND_CALL(m_Callbacks.OnResize, winSize, eWinResize::Hide);
+			}
+			else if (wParam == SIZE_MAXIMIZED)
+			{
+				m_NativeState.SetState(eWindowState::Maximized);
+				VERIFY_AND_CALL(m_Callbacks.OnResize, winSize, eWinResize::Show);
+			}
+			else if (wParam == SIZE_RESTORED)
+			{
+				m_NativeState.SetState(eWindowState::Normal);
+				VERIFY_AND_CALL(m_Callbacks.OnResize, winSize, eWinResize::Show);
+			}
+			else
+			{
+				VERIFY_AND_CALL(m_Callbacks.OnResize, winSize, eWinResize::Resize);
+			}
 		}
-		else if (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED)
-		{
-			VERIFY_AND_CALL(m_Callbacks.OnResize, m_WinSize, eWinResize::Show);
-		}
-		else
-		{
-			VERIFY_AND_CALL(m_Callbacks.OnResize, m_WinSize, eWinResize::Resize);
-		}
+		return { false, 0 };
+
+	case WM_MOVE:
+		m_NativeState.SetWindowRect(GetNormalWindowRect());
 		return { false, 0 };
 
 	case WM_ENTERSIZEMOVE:
@@ -213,6 +232,7 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		/**
 		 * @brief [Windows] Пользователь отпустил рамку окна.
 		 */
+		m_NativeState.SetWindowRect(GetNormalWindowRect());
 		VERIFY_AND_CALL(m_Callbacks.OnResizeEnd);
 		return { false, 0 };
 
@@ -242,7 +262,6 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		/**
 		 * @brief [Windows] Окно было перенесено на монитор с другим масштабом (DPI).
 		 */
-		m_WinSize.SetFrom(LOWORD(wParam), HIWORD(wParam));
 		VERIFY_AND_CALL(m_Callbacks.OnDpiChanged);
 
 		return { false, FALSE };

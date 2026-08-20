@@ -393,7 +393,12 @@ namespace zzz::builder
 					}
 				}
 
-				// Сначала сериализуем общие поля StartViewData (SceneGuid, ScriptGuids)
+				Guid viewGuid{};
+				if (auto parsed = Guid::Parse(item.guid))
+					viewGuid = *parsed;
+
+				// Сначала сериализуем общие поля StartViewData (ViewGuid, SceneGuid, ScriptGuids)
+				if (auto res = serializer.Serialize(result, viewGuid); !res) return {};
 				if (auto res = serializer.Serialize(result, sceneGuid); !res) return {};
 				zU32 scriptsCount = static_cast<zU32>(uiScriptGuids.size());
 				if (auto res = serializer.Serialize(result, scriptsCount); !res) return {};
