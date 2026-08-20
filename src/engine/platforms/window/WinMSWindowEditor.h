@@ -9,6 +9,7 @@
 
 namespace zzz::engine
 {
+	class View;
 	class InputEditor;
 
 	class WinMSWindowEditor final : public WindowBase
@@ -18,7 +19,10 @@ namespace zzz::engine
 		WinMSWindowEditor(const Platform& platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks);
 		~WinMSWindowEditor();
 
-		[[nodiscard]] std::expected<void, std::string> Initialize(const StartViewPlatformData& settings, void* data = nullptr);
+		[[nodiscard]] std::expected<void, std::string> Initialize(const ViewPlatformData& settings, const View* parentView = nullptr) override;
+		[[nodiscard]] bool IsMinimized() const noexcept override { return false; }
+		[[nodiscard]] bool IsMaximized() const override { return false; }
+		[[nodiscard]] Rect2D<zI32> GetNormalWindowRect() const override { return Rect2D<zI32>{ Point2D<zI32>{0, 0}, Size2D<zI32>{static_cast<zI32>(m_WinSize.GetWidth()), static_cast<zI32>(m_WinSize.GetHeight())} }; }
 
 		HWND GetHWnd() const noexcept { return m_hWnd; }
 

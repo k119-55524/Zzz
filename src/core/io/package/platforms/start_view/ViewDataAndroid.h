@@ -9,11 +9,11 @@
 namespace zzz::core
 {
 
-	class StartViewDataAndroid final : public ISerializable
+	class ViewDataAndroid final : public ISerializable
 	{
 	public:
-		StartViewDataAndroid() = default;
-		StartViewDataAndroid(eAndroidScreenOrientation orientation, zU32 targetFPS = 60, eAndroidCutoutMode cutoutMode = eAndroidCutoutMode::ShortEdges, bool keepScreenOn = true)
+		ViewDataAndroid() = default;
+		ViewDataAndroid(eAndroidScreenOrientation orientation, zU32 targetFPS = 60, eAndroidCutoutMode cutoutMode = eAndroidCutoutMode::ShortEdges, bool keepScreenOn = true)
 			: orientation(orientation)
 			, targetFPS(targetFPS)
 			, cutoutMode(cutoutMode)
@@ -23,12 +23,20 @@ namespace zzz::core
 		[[nodiscard]] eAndroidScreenOrientation GetOrientation() const noexcept { return orientation; }
 		[[nodiscard]] zU32 GetTargetFPS() const noexcept { return targetFPS; }
 		[[nodiscard]] eAndroidCutoutMode GetCutoutMode() const noexcept { return cutoutMode; }
-		[[nodiscard]] bool KeepScreenOn() const noexcept { return keepScreenOn; }
+		[[nodiscard]] bool IsKeepScreenOn() const noexcept { return keepScreenOn; }
+
+		[[nodiscard]] bool operator==(const ViewDataAndroid& other) const noexcept
+		{
+			return orientation == other.orientation &&
+				targetFPS == other.targetFPS &&
+				cutoutMode == other.cutoutMode &&
+				keepScreenOn == other.keepScreenOn;
+		}
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut("{}[StartViewDataAndroid]", indentation);
+			DOut("{}[ViewDataAndroid]", indentation);
 			DOut("{}orientation: {}", nestedIndentation, EnumToString::ToString(orientation));
 			DOut("{}targetFPS: {}", nestedIndentation, targetFPS);
 			DOut("{}cutoutMode: {}", nestedIndentation, EnumToString::ToString(cutoutMode));

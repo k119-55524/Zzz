@@ -14,11 +14,12 @@ namespace zzz::engine
 
 		[[nodiscard]] inline const StartViewUserData& GetStartViewUserData() const noexcept { return m_StartViewUserData; }
 		[[nodiscard]] inline const HardwareState& GetHardwareState() const noexcept { return m_HardwareState; }
+		[[nodiscard]] const std::vector<ViewUserData>& GetViewsUserData() const noexcept { return m_ViewsUserData; }
+		[[nodiscard]] const ViewUserData* FindViewUserData(const Guid& viewGuid) const noexcept;
 
 		void SetSelectedGpuId(std::string gpuId);
 		void SetSelectedMonitorId(std::string monitorId);
-		void UpdateStartViewData(zU32 monitorIndex, const std::vector<MonitorInfo>& availableMonitors);
-		void UpdateStartWindowRect(const Rect2D<zI32>& rect);
+		void UpdateViewUserData(Guid viewGuid, std::string platformMonitorId, Rect2D<zI32> windowRect, bool isMaximized);
 
 		[[nodiscard]] std::expected<void, std::string> SaveConfig();
 
@@ -37,6 +38,7 @@ namespace zzz::engine
 
 		Version m_Version;
 		StartViewUserData m_StartViewUserData;
+		std::vector<ViewUserData> m_ViewsUserData;
 		HardwareState m_HardwareState;
 
 		bool m_IsDirty;

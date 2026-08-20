@@ -2,7 +2,6 @@
 #include "PackageManager.h"
 #include "UserSettingsManager.h"
 
-
 using namespace zzz::core;
 using zzz::core::StartViewUserData;
 
@@ -91,20 +90,6 @@ namespace zzz::engine
 			m_HardwareState.SetSelectedMonitorId(std::move(monitorId));
 			m_IsDirty = true;
 		}
-	}
-
-	void UserSettingsManager::UpdateStartViewData(zU32 monitorIndex, const std::vector<MonitorInfo>& availableMonitors)
-	{
-		auto& platformData = m_StartViewUserData.GetPlatformData();
-		platformData.SetMonitorIndex(monitorIndex);
-		platformData.ValidateAndAdjustWindowRect(availableMonitors);
-		m_IsDirty = true;
-	}
-
-	void UserSettingsManager::UpdateStartWindowRect(const Rect2D<zI32>& rect)
-	{
-		m_StartViewUserData.GetPlatformData().SetWindowRect(rect);
-		m_IsDirty = true;
 	}
 
 	[[nodiscard]] std::expected<void, std::string> UserSettingsManager::SaveConfig()
@@ -214,19 +199,63 @@ namespace zzz::engine
 #endif
 	}
 
+	const ViewUserData* UserSettingsManager::FindViewUserData(const Guid& viewGuid) const noexcept
+	{
+		for (const auto& data : m_ViewsUserData)
+		{
+			if (data.GetViewGuid() == viewGuid)
+				return &data;
+		}
+		return nullptr;
+	}
+
+	void UserSettingsManager::UpdateViewUserData(Guid viewGuid, std::string platformMonitorId, Rect2D<zI32> windowRect, bool isMaximized)
+	{
+		for (auto& data : m_ViewsUserData)
+		{
+			if (data.GetViewGuid() == viewGuid)
+			{
+				data.SetPlatformMonitorId(std::move(platformMonitorId));
+				data.SetWindowRect(windowRect);
+				data.SetIsMaximized(isMaximized);
+				m_IsDirty = true;
+				return;
+			}
+		}
+
+		m_ViewsUserData.emplace_back(std::move(viewGuid), std::move(platformMonitorId), windowRect, isMaximized);
+		m_IsDirty = true;
+	}
+
 	[[nodiscard]] std::expected<void, std::string> UserSettingsManager::Serialize(std::vector<std::byte>& buffer, const Serializer& s) const
 	{
-		return s.Serialize(buffer, c_ConfigHeader)
+		auto res = s.Serialize(buffer, c_ConfigHeader)
 			.and_then([&]() { return s.Serialize(buffer, m_Version); })
-			.and_then([&]() { return s.Serialize(buffer, m_StartViewUserData); })
-			.and_then([&]() { return s.Serialize(buffer, m_HardwareState); });
+			.and_then([&]() { return s.Serialize(buffer, m_StartViewUserData); });
+
+		if (!res)
+			return res;
+
+		zU32 count = static_cast<zU32>(m_ViewsUserData.size());
+		res = s.Serialize(buffer, count);
+		if (!res)
+			return res;
+
+		for (const auto& item : m_ViewsUserData)
+		{
+			res = s.Serialize(buffer, item);
+			if (!res)
+				return res;
+		}
+
+		return s.Serialize(buffer, m_HardwareState);
 	}
 
 	[[nodiscard]] std::expected<void, std::string> UserSettingsManager::Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s)
 	{
 		FileHeader<3> header{};
 
-		return s.Deserialize(buffer, offset, header)
+		auto res = s.Deserialize(buffer, offset, header)
 			.and_then([&]() -> std::expected<void, std::string>
 				{
 					if (header != c_ConfigHeader)
@@ -234,8 +263,28 @@ namespace zzz::engine
 
 					return s.Deserialize(buffer, offset, m_Version);
 				})
-			.and_then([&]() { return s.Deserialize(buffer, offset, m_StartViewUserData); })
-			.and_then([&]() { return s.Deserialize(buffer, offset, m_HardwareState); });
+			.and_then([&]() { return s.Deserialize(buffer, offset, m_StartViewUserData); });
+
+		if (!res)
+			return res;
+
+		zU32 count = 0;
+		res = s.Deserialize(buffer, offset, count);
+		if (!res)
+			return res;
+
+		m_ViewsUserData.clear();
+		m_ViewsUserData.reserve(count);
+		for (zU32 i = 0; i < count; ++i)
+		{
+			ViewUserData item;
+			res = s.Deserialize(buffer, offset, item);
+			if (!res)
+				return res;
+			m_ViewsUserData.push_back(std::move(item));
+		}
+
+		return s.Deserialize(buffer, offset, m_HardwareState);
 	}
 
 #pragma region Logging
@@ -244,6 +293,10 @@ namespace zzz::engine
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 		DOut("========== [UserSettingsManager] User Data: {} ==========", m_ConfigPath.string());
 		m_StartViewUserData.LogFileBlock("  ");
+		for (const auto& viewData : m_ViewsUserData)
+		{
+			viewData.LogFileBlock("  ");
+		}
 		m_HardwareState.LogFileBlock("  ");
 #endif
 	}

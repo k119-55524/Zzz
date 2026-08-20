@@ -16,11 +16,11 @@ namespace zzz::core
 {
 	using namespace zzz::math;
 
-	class StartViewDataLinux final : public ISerializable
+	class ViewDataLinux final : public ISerializable
 	{
 	public:
-		StartViewDataLinux() = default;
-		StartViewDataLinux(std::string title, Size2D<zU32> size, eLinuxWindowMode windowMode = eLinuxWindowMode::Windowed, bool resizable = true, eLinuxDisplayServer displayServer = eLinuxDisplayServer::Auto)
+		ViewDataLinux() = default;
+		ViewDataLinux(std::string title, Size2D<zU32> size, eLinuxWindowMode windowMode = eLinuxWindowMode::Windowed, bool resizable = true, eLinuxDisplayServer displayServer = eLinuxDisplayServer::Auto)
 			: title(std::move(title))
 			, size(size)
 			, windowMode(windowMode)

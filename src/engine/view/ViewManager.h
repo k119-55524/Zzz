@@ -1,12 +1,12 @@
 #pragma once
 
+#include "engine/EngineIncludes.h"
+
 #include "engine/view/View.h"
 #include "engine/gapi/IGAPI.h"
 #include "engine/platforms/Platform.h"
 #include "engine/package/PackageManager.h"
 #include "engine/package/UserSettingsManager.h"
-
-#include "core/userscripts/ScriptFactory.h"
 
 namespace zzz::engine
 {
@@ -28,24 +28,26 @@ namespace zzz::engine
 		 * @details Берёт GUID'ы ViewScript из PackageManager, а параметры native window — из UserSettingsManager.
 		 */
 		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> CreateStartView(const PackageManager& packageManager, const UserSettingsManager& userSettingsManager);
+		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> CreateChildView(const ViewPlatformData& settings, const std::vector<Guid>& scripts);
+		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> CreateIndependentView(const ViewPlatformData& settings, const std::vector<Guid>& scripts);
 
-		/**
-		 * @brief Создаёт View с native window и привязанными ViewScript.
-		 * @param settings Параметры создания native window.
-		 * @param scripts GUID'ы ViewScript, которые будут созданы и подключены к ViewEventBus этого View.
-		 */
-		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> CreateView(const StartViewPlatformData& settings, const std::vector<Guid>& scripts);
+		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> CreateView(const ViewPlatformData& settings, const std::vector<Guid>& scripts);
 #if Z_EDITOR
 		[[nodiscard]] std::expected <std::shared_ptr<View>, std::string> CreateView(void* data);
 		void RemoveView(View* view);
 #endif
 
 		void Update(const Time& time);
+		void SaveViewsStates(UserSettingsManager& userSettingsManager);
 
 	private:
 		const Platform& m_Platform;
 		std::shared_ptr<IGAPI> m_GAPI;
 		std::shared_ptr<ScriptFactory> m_ScriptFactory;
+
+		std::shared_ptr<View> m_PrimaryView;
+		std::vector<std::shared_ptr<View>> m_ChildViews;
+		std::vector<std::shared_ptr<View>> m_IndependentViews;
 		std::list<std::shared_ptr<View>> m_Views;
 
 		std::function<void()> OnAllViewsClosed;

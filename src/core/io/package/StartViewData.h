@@ -6,7 +6,7 @@
 #include <logger/logger.h>
 #include "core/Serialize/Serializer.h"
 
-#include "platforms/start_view/StartViewPlatformConfig.h"
+#include "platforms/start_view/ViewPlatformConfig.h"
 
 namespace zzz::core
 {
@@ -14,7 +14,7 @@ namespace zzz::core
 	{
 	public:
 		StartViewData() = default;
-		StartViewData(Guid sceneGuid, std::vector<Guid> uiScriptGuids, StartViewPlatformData platformData = {})
+		StartViewData(Guid sceneGuid, std::vector<Guid> uiScriptGuids, ViewPlatformData platformData = {})
 			: m_SceneGuid(sceneGuid)
 			, m_UiScriptGuids(std::move(uiScriptGuids))
 			, m_PlatformData(std::move(platformData))
@@ -22,7 +22,7 @@ namespace zzz::core
 
 		[[nodiscard]] const Guid& GetSceneGuid() const noexcept { return m_SceneGuid; }
 		[[nodiscard]] const std::vector<Guid>& GetUiScriptGuids() const noexcept { return m_UiScriptGuids; }
-		[[nodiscard]] const StartViewPlatformData& GetPlatformData() const noexcept { return m_PlatformData; }
+		[[nodiscard]] const ViewPlatformData& GetPlatformData() const noexcept { return m_PlatformData; }
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
@@ -40,7 +40,7 @@ namespace zzz::core
 	private:
 		Guid m_SceneGuid;
 		std::vector<Guid> m_UiScriptGuids;
-		StartViewPlatformData m_PlatformData;
+		ViewPlatformData m_PlatformData;
 
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override

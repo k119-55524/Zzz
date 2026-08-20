@@ -68,8 +68,12 @@ namespace zzz::engine
 			DXGI_OUTPUT_DESC desc{};
 			if (SUCCEEDED(output->GetDesc(&desc)))
 			{
-				std::wstring deviceNameW(desc.DeviceName);
-				std::string systemId(deviceNameW.begin(), deviceNameW.end());
+				int sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, desc.DeviceName, -1, NULL, 0, NULL, NULL);
+				std::string systemId(sizeNeeded > 1 ? sizeNeeded - 1 : 0, 0);
+				if (sizeNeeded > 1)
+				{
+					WideCharToMultiByte(CP_UTF8, 0, desc.DeviceName, -1, systemId.data(), sizeNeeded, NULL, NULL);
+				}
 				std::string platformMonitorId = MonitorUtils::MakeId(systemId);
 
 				Size2D<zU32> resolution{

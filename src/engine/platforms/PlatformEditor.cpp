@@ -11,8 +11,8 @@ void Platform::InitializePlatformSpecific()
 {
 }
 
-PlatformHardwareState Platform::GatherHardwareState() const
+HardwareState Platform::GatherHardwareState() const
 {
-	PlatformHardwareState state{};
+	HardwareState state{};
 	return state;
 }

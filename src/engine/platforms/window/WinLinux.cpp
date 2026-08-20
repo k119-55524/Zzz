@@ -1,4 +1,4 @@
-﻿#include "WinLinux.h"
+#include "WinLinux.h"
 #include "../Platform.h"
 #include "core/specific/linux_wayland/Xdg-shell-client-protocol.h"
 
@@ -92,7 +92,7 @@ void WinLinux::Shutdown()
 	}
 }
 
-std::expected<void, std::string> WinLinux::Initialize(const StartViewPlatformData& settings)
+std::expected<void, std::string> WinLinux::Initialize(const ViewPlatformData& windowSettings, const View* parentView)
 {
 	try
 	{

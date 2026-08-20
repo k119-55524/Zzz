@@ -1,8 +1,6 @@
 #pragma once
 
-#include "core/CoreIncludes.h"
-#include "core/hardware/GpuInfo.h"
-#include "core/enums/eEnumToString.h"
+#include "engine/EngineIncludes.h"
 
 using namespace zzz::core;
 

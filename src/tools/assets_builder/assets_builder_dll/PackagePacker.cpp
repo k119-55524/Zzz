@@ -19,11 +19,11 @@
 #include <core/IO/package/platforms/project/ProjectPlatformDataiOS.h>
 #include <core/IO/package/SceneData.h>
 #include <core/IO/package/ViewData.h>
-#include <core/IO/package/platforms/start_view/StartViewDataAndroid.h>
-#include <core/IO/package/platforms/start_view/StartViewDataLinux.h>
-#include <core/IO/package/platforms/start_view/StartViewDataMacOS.h>
-#include <core/IO/package/platforms/start_view/StartViewDataMSWin.h>
-#include <core/IO/package/platforms/start_view/StartViewDataiOS.h>
+#include <core/IO/package/platforms/start_view/ViewDataAndroid.h>
+#include <core/IO/package/platforms/start_view/ViewDataLinux.h>
+#include <core/IO/package/platforms/start_view/ViewDataMacOS.h>
+#include <core/IO/package/platforms/start_view/ViewDataMSWin.h>
+#include <core/IO/package/platforms/start_view/ViewDataiOS.h>
 
 namespace zzz::builder
 {
@@ -412,7 +412,7 @@ namespace zzz::builder
 					const auto cutout = ReadAndroidCutoutMode(startViewRoot.value("cutoutMode", "ShortEdges"));
 					bool keepOn = startViewRoot.value("keepScreenOn", true);
 
-					StartViewDataAndroid androidData(orient, fps, cutout, keepOn);
+					ViewDataAndroid androidData(orient, fps, cutout, keepOn);
 					if (auto res = serializer.Serialize(result, androidData); !res) return {};
 					break;
 				}
@@ -424,7 +424,7 @@ namespace zzz::builder
 					bool resizable = startViewRoot.value("resizable", true);
 					auto displayServer = ReadLinuxDisplayServer(startViewRoot.value("displayServer", "Auto"));
 
-					StartViewDataLinux linuxData(title, size, windowMode, resizable, displayServer);
+					ViewDataLinux linuxData(title, size, windowMode, resizable, displayServer);
 					if (auto res = serializer.Serialize(result, linuxData); !res) return {};
 					break;
 				}
@@ -435,7 +435,7 @@ namespace zzz::builder
 					auto windowMode = ReadMacOSWindowMode(startViewRoot.value("windowMode", "Windowed"));
 					bool resizable = startViewRoot.value("resizable", true);
 
-					StartViewDataMacOS macData(title, size, windowMode, resizable);
+					ViewDataMacOS macData(title, size, windowMode, resizable);
 					if (auto res = serializer.Serialize(result, macData); !res) return {};
 					break;
 				}
@@ -445,7 +445,7 @@ namespace zzz::builder
 					const auto safeAreaMode = ReadiOSSafeAreaMode(startViewRoot.value("safeAreaMode", "ExtendIntoSafeArea"));
 					const auto homeIndicatorMode = ReadiOSHomeIndicatorMode(startViewRoot.value("homeIndicatorMode", "AutoHidden"));
 
-					StartViewDataiOS iosData(orient, safeAreaMode, homeIndicatorMode);
+					ViewDataiOS iosData(orient, safeAreaMode, homeIndicatorMode);
 					if (auto res = serializer.Serialize(result, iosData); !res) return {};
 					break;
 				}
@@ -457,7 +457,7 @@ namespace zzz::builder
 					auto windowMode = ReadMSWinWindowMode(startViewRoot);
 					bool resizable = startViewRoot.value("resizable", true);
 
-					StartViewDataMSWin winData(title, size, windowMode, resizable);
+					ViewDataMSWin winData(title, size, windowMode, resizable);
 					if (auto res = serializer.Serialize(result, winData); !res) return {};
 					break;
 				}

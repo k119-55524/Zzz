@@ -16,11 +16,11 @@ namespace zzz::core
 {
 	using namespace zzz::math;
 
-	class StartViewDataMacOS final : public ISerializable
+	class ViewDataMacOS final : public ISerializable
 	{
 	public:
-		StartViewDataMacOS() = default;
-		StartViewDataMacOS(std::string title, Size2D<zU32> size, eMacOSWindowMode windowMode = eMacOSWindowMode::Windowed, bool resizable = true)
+		ViewDataMacOS() = default;
+		ViewDataMacOS(std::string title, Size2D<zU32> size, eMacOSWindowMode windowMode = eMacOSWindowMode::Windowed, bool resizable = true)
 			: title(std::move(title))
 			, size(size)
 			, windowMode(windowMode)

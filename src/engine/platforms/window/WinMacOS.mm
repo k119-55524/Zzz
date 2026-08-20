@@ -27,9 +27,9 @@ WinMacOS::~WinMacOS()
 {
 }
 
-std::expected<void, std::string> WinMacOS::Initialize(const StartViewPlatformData& settings)
+std::expected<void, std::string> WinMacOS::Initialize(const ViewPlatformData& windowSettings, const View* parentView)
 {
-    NSRect frame = NSMakeRect(0, 0, settings.GetSize().width, settings.GetSize().height);
+    NSRect frame = NSMakeRect(0, 0, windowSettings.GetSize().width, windowSettings.GetSize().height);
 
     NSUInteger style =
         NSWindowStyleMaskTitled |

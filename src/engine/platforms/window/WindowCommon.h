@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "../Platform.h"
 #include "../input/Input.h"
@@ -108,6 +108,8 @@ namespace zzz::engine
 #pragma endregion
 	};
 
+	class View;
+
 	class WindowBase
 	{
 	public:
@@ -117,6 +119,11 @@ namespace zzz::engine
 			const std::shared_ptr<Input> input,
 			WindowCallbacks callbacks);
 		virtual ~WindowBase() = default;
+
+		[[nodiscard]] virtual std::expected<void, std::string> Initialize(const ViewPlatformData& platformData, const View* parentView = nullptr) = 0;
+		[[nodiscard]] virtual bool IsMinimized() const noexcept = 0;
+		[[nodiscard]] virtual bool IsMaximized() const = 0;
+		[[nodiscard]] virtual Rect2D<zI32> GetNormalWindowRect() const = 0;
 
 		// Public для того, чтобы глобальные Си-функции (Wayland/Android) 
 		// и Objective-C делегаты (macOS/iOS) могли вызывать события окна 

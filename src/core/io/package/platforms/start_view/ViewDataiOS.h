@@ -9,11 +9,11 @@
 namespace zzz::core
 {
 
-	class StartViewDataiOS final : public ISerializable
+	class ViewDataiOS final : public ISerializable
 	{
 	public:
-		StartViewDataiOS() = default;
-		StartViewDataiOS(eiOSScreenOrientation orientation, eiOSSafeAreaMode safeAreaMode = eiOSSafeAreaMode::ExtendIntoSafeArea, eiOSHomeIndicatorMode homeIndicatorMode = eiOSHomeIndicatorMode::AutoHidden)
+		ViewDataiOS() = default;
+		ViewDataiOS(eiOSScreenOrientation orientation, eiOSSafeAreaMode safeAreaMode = eiOSSafeAreaMode::ExtendIntoSafeArea, eiOSHomeIndicatorMode homeIndicatorMode = eiOSHomeIndicatorMode::AutoHidden)
 			: orientation(orientation)
 			, safeAreaMode(safeAreaMode)
 			, homeIndicatorMode(homeIndicatorMode)

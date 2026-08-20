@@ -13,9 +13,7 @@ WinMSWindowEditor::~WinMSWindowEditor()
 {
 }
 
-[[nodiscard]] std::expected<void, std::string> WinMSWindowEditor::Initialize(const StartViewPlatformData& /*settings*/, void* data)
+std::expected<void, std::string> WinMSWindowEditor::Initialize(const ViewPlatformData& /*settings*/, const View* /*parentView*/)
 {
-	ensure(data != nullptr, "Данные инициализации окна (hwnd) не должны быть null.");
-	m_hWnd = reinterpret_cast<HWND>(data);
 	return {};
 }

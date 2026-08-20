@@ -79,13 +79,14 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/project/ProjectPlatformDataiOS.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/project/ProjectPlatformDataLinux.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/project/ProjectPlatformDataMacOS.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/start_view/StartViewPlatformConfig.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/start_view/StartViewDataMSWin.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/start_view/StartViewDataAndroid.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/start_view/StartViewDataiOS.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/start_view/StartViewDataLinux.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/start_view/StartViewDataMacOS.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/start_view/ViewPlatformConfig.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/start_view/ViewDataMSWin.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/start_view/ViewDataAndroid.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/start_view/ViewDataiOS.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/start_view/ViewDataLinux.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/start_view/ViewDataMacOS.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/StartViewUserData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/ViewUserData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/ViewData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/ProjectManifestData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/SceneData.h

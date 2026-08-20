@@ -58,8 +58,12 @@ namespace
 
 		if (GetMonitorInfoW(hMonitor, &mi))
 		{
-			std::wstring deviceNameW(mi.szDevice);
-			std::string systemId(deviceNameW.begin(), deviceNameW.end());
+			int sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, mi.szDevice, -1, NULL, 0, NULL, NULL);
+			std::string systemId(sizeNeeded > 1 ? sizeNeeded - 1 : 0, 0);
+			if (sizeNeeded > 1)
+			{
+				WideCharToMultiByte(CP_UTF8, 0, mi.szDevice, -1, systemId.data(), sizeNeeded, NULL, NULL);
+			}
 			Size2D<zU32> resolution{
 				static_cast<zU32>(mi.rcMonitor.right - mi.rcMonitor.left),
 				static_cast<zU32>(mi.rcMonitor.bottom - mi.rcMonitor.top)
@@ -97,8 +101,12 @@ HardwareState Platform::GatherHardwareState() const
 			if ((desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) || (desc.VendorId == 0 && desc.DeviceId == 0))
 				continue;
 
-			std::wstring descW(desc.Description);
-			std::string name(descW.begin(), descW.end());
+			int nameSizeNeeded = WideCharToMultiByte(CP_UTF8, 0, desc.Description, -1, NULL, 0, NULL, NULL);
+			std::string name(nameSizeNeeded > 1 ? nameSizeNeeded - 1 : 0, 0);
+			if (nameSizeNeeded > 1)
+			{
+				WideCharToMultiByte(CP_UTF8, 0, desc.Description, -1, name.data(), nameSizeNeeded, NULL, NULL);
+			}
 
 			eGPUType type = eGPUType::Integrated;
 			if (desc.DedicatedVideoMemory >= 256 * 1024 * 1024)
@@ -193,6 +201,16 @@ HardwareState Platform::GatherHardwareState() const
 	std::string mbModel = "Unknown";
 	std::string sysUuid = "00000000-0000-0000-0000-000000000000";
 
+	auto WCharToUtf8 = [](const WCHAR* wstr) -> std::string {
+		if (!wstr || !*wstr) return "";
+		int sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
+		std::string result(sizeNeeded > 1 ? sizeNeeded - 1 : 0, 0);
+		if (sizeNeeded > 1) {
+			WideCharToMultiByte(CP_UTF8, 0, wstr, -1, result.data(), sizeNeeded, NULL, NULL);
+		}
+		return result;
+	};
+
 	HKEY hKey = nullptr;
 	if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
 	{
@@ -201,15 +219,15 @@ HardwareState Platform::GatherHardwareState() const
 
 		if (RegQueryValueExW(hKey, L"BaseBoardManufacturer", nullptr, nullptr, reinterpret_cast<LPBYTE>(buffer), &bufSize) == ERROR_SUCCESS)
 		{
-			std::wstring wStr(buffer);
-			if (!wStr.empty()) mbVendor = std::string(wStr.begin(), wStr.end());
+			std::string s = WCharToUtf8(buffer);
+			if (!s.empty()) mbVendor = std::move(s);
 		}
 
 		bufSize = sizeof(buffer);
 		if (RegQueryValueExW(hKey, L"BaseBoardProduct", nullptr, nullptr, reinterpret_cast<LPBYTE>(buffer), &bufSize) == ERROR_SUCCESS)
 		{
-			std::wstring wStr(buffer);
-			if (!wStr.empty()) mbModel = std::string(wStr.begin(), wStr.end());
+			std::string s = WCharToUtf8(buffer);
+			if (!s.empty()) mbModel = std::move(s);
 		}
 
 		bufSize = sizeof(buffer);
@@ -277,13 +295,11 @@ HardwareState Platform::GatherHardwareState() const
 				ULARGE_INTEGER freeBytes{}, totalBytes{}, totalFreeBytes{};
 				if (GetDiskFreeSpaceExW(drive, &freeBytes, &totalBytes, &totalFreeBytes))
 				{
-					std::wstring driveW(drive);
-					std::string mountPath(driveW.begin(), driveW.end());
+						std::string mountPath = WCharToUtf8(drive);
 
 					WCHAR volumeNameBuf[MAX_PATH]{};
 					GetVolumeInformationW(drive, volumeNameBuf, MAX_PATH, nullptr, nullptr, nullptr, nullptr, 0);
-					std::wstring volW(volumeNameBuf);
-					std::string volName(volW.begin(), volW.end());
+					std::string volName = WCharToUtf8(volumeNameBuf);
 					if (volName.empty())
 						volName = mountPath;
 
@@ -379,8 +395,7 @@ HardwareState Platform::GatherHardwareState() const
 		{
 			if (pCurrAddresses->IfType != IF_TYPE_SOFTWARE_LOOPBACK)
 			{
-				std::wstring friendlyW(pCurrAddresses->FriendlyName);
-				std::string adapterName(friendlyW.begin(), friendlyW.end());
+				std::string adapterName = WCharToUtf8(pCurrAddresses->FriendlyName);
 
 				std::string macAddress;
 				if (pCurrAddresses->PhysicalAddressLength > 0)

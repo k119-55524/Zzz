@@ -15,8 +15,8 @@ namespace zzz::core
 			: m_PlatformData(startViewData.GetPlatformData())
 		{}
 
-		[[nodiscard]] const StartViewPlatformData& GetPlatformData() const noexcept { return m_PlatformData; }
-		[[nodiscard]] StartViewPlatformData& GetPlatformData() noexcept { return m_PlatformData; }
+		[[nodiscard]] const ViewPlatformData& GetPlatformData() const noexcept { return m_PlatformData; }
+		[[nodiscard]] ViewPlatformData& GetPlatformData() noexcept { return m_PlatformData; }
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
@@ -34,6 +34,6 @@ namespace zzz::core
 			return s.Deserialize(buffer, offset, m_PlatformData);
 		}
 
-		StartViewPlatformData m_PlatformData;
+		ViewPlatformData m_PlatformData;
 	};
 }

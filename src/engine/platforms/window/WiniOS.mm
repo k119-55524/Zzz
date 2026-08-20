@@ -1,4 +1,4 @@
-﻿#include "WiniOS.h"
+#include "WiniOS.h"
 #import "iOSView.h"
 #include "engine/EngineIncludes.h"
 
@@ -30,7 +30,7 @@ WiniOS::~WiniOS()
 {
 }
 
-std::expected<void, std::string> WiniOS::Initialize(const StartViewPlatformData& /*settings*/)
+std::expected<void, std::string> WiniOS::Initialize(const ViewPlatformData& windowSettings, const View* parentView)
 {
     UIWindow* window = [(id)[[UIApplication sharedApplication] delegate] window];
     if (window != nil) {

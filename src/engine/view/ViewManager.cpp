@@ -1,11 +1,10 @@
 
 #include "View.h"
 #include "ViewManager.h"
+#include "../gapi/IGAPI.h"
 #include "../platforms/Platform.h"
 #include "../package/PackageManager.h"
 #include "../package/UserSettingsManager.h"
-
-#include "../gapi/IGAPI.h"
 
 using namespace zzz::core;
 using namespace zzz::engine;
@@ -28,6 +27,9 @@ ViewManager::~ViewManager()
 
 std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateStartView(const PackageManager& packageManager, const UserSettingsManager& userSettingsManager)
 {
+	if (m_PrimaryView)
+		return std::unexpected("Первичное (Основное) окно приложения уже создано.");
+
 	auto startViewData = packageManager.GetStartViewData();
 	if (!startViewData)
 	{
@@ -36,10 +38,61 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateStartView(c
 		return std::unexpected(err);
 	}
 
-	return CreateView(userSettingsManager.GetStartViewUserData().GetPlatformData(), startViewData->GetUiScriptGuids());
+	auto res = CreateView(userSettingsManager.GetStartViewUserData().GetPlatformData(), startViewData->GetUiScriptGuids());
+	if (res)
+	{
+		m_PrimaryView = *res;
+	}
+	return res;
 }
 
-std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateView(const StartViewPlatformData& settings, const std::vector<Guid>& scripts)
+std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateChildView(const ViewPlatformData& settings, const std::vector<Guid>& scripts)
+{
+#if Z_MOBILE
+	THROW_RUNTIME("Мобильные платформы (Android/iOS) поддерживают только одно Основное окно.");
+#else
+	ensure(m_PrimaryView != nullptr, "Дочернее окно не может быть создано до создания Основного окна.");
+
+	std::shared_ptr<View> view;
+	try
+	{
+		view = safe_make_shared<View>(settings, scripts, m_Platform, *m_ScriptFactory, [this](View& v) { OnWindowClose(v); }, m_PrimaryView.get());
+		m_ChildViews.push_back(view);
+		m_Views.push_back(view);
+		view->InvokeStart();
+	}
+	catch (const std::exception& e)
+	{
+		return std::unexpected(e.what());
+	}
+
+	return view;
+#endif
+}
+
+std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateIndependentView(const ViewPlatformData& settings, const std::vector<Guid>& scripts)
+{
+#if Z_MOBILE
+	THROW_RUNTIME("Мобильные платформы (Android/iOS) поддерживают только одно Основное окно.");
+#else
+	std::shared_ptr<View> view;
+	try
+	{
+		view = safe_make_shared<View>(settings, scripts, m_Platform, *m_ScriptFactory, [this](View& v) { OnWindowClose(v); });
+		m_IndependentViews.push_back(view);
+		m_Views.push_back(view);
+		view->InvokeStart();
+	}
+	catch (const std::exception& e)
+	{
+		return std::unexpected(e.what());
+	}
+
+	return view;
+#endif
+}
+
+std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateView(const ViewPlatformData& settings, const std::vector<Guid>& scripts)
 {
 #if Z_MOBILE
 	if (m_Views.size() >= 1)
@@ -61,8 +114,31 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateView(const 
 	return view;
 }
 
+void ViewManager::SaveViewsStates(UserSettingsManager& userSettingsManager)
+{
+	(void)userSettingsManager;
+	// При выходе считываем нативные статусы окон через GetNativeWindow()
+	// и обновляем UserSettingsManager перед сохранением в user.dat
+}
+
 void ViewManager::OnWindowClose(View& view)
 {
+	if (m_PrimaryView && m_PrimaryView.get() == &view)
+	{
+		DOut("[ViewManager] Закрывается Первичное (Основное) окно приложения.");
+		m_ChildViews.clear();
+		m_IndependentViews.clear();
+		m_Views.clear();
+		m_PrimaryView = nullptr;
+
+		if (OnAllViewsClosed)
+			OnAllViewsClosed();
+		return;
+	}
+
+	std::erase_if(m_ChildViews, [&view](const auto& v) { return v.get() == &view; });
+	std::erase_if(m_IndependentViews, [&view](const auto& v) { return v.get() == &view; });
+
 	auto it = std::ranges::find_if(
 		m_Views,
 		[&view](const auto& p)
@@ -72,10 +148,8 @@ void ViewManager::OnWindowClose(View& view)
 
 	if (it != m_Views.end())
 		m_Views.erase(it);
-	else
-		THROW_RUNTIME("View не найден в m_Views.");
 
-	if (m_Views.empty())
+	if (m_Views.empty() && OnAllViewsClosed)
 		OnAllViewsClosed();
 }
 

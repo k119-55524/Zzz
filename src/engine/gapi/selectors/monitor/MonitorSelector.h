@@ -1,7 +1,7 @@
 #pragma once
 
+#include "engine/EngineIncludes.h"
 #include "engine/package/UserSettingsManager.h"
-#include "core/hardware/MonitorInfo.h"
 
 namespace zzz::engine
 {
@@ -17,7 +17,9 @@ namespace zzz::engine
 		MonitorSelector() = delete;
 		explicit MonitorSelector(const std::shared_ptr<UserSettingsManager>& userSettings)
 			: m_UserSettings(userSettings)
-		{}
+		{
+			ensure(m_UserSettings, "UserSettingsManager is null");
+		}
 
 		/**
 		 * @brief Добавляет кандидат-монитор в список доступных выходов.
@@ -32,9 +34,6 @@ namespace zzz::engine
 		 */
 		void SelectMonitor()
 		{
-			if (m_Monitors.empty())
-				return;
-
 			zU32 selectedIndex = 0;
 			bool monitorFound = false;
 
@@ -69,22 +68,8 @@ namespace zzz::engine
 					}
 				}
 
-				DOut("[MonitorSelector] Выбран Primary монитор: {} [#{}, ID: {}]",
-					m_Monitors[selectedIndex].GetName(), selectedIndex, m_Monitors[selectedIndex].GetPlatformMonitorId());
-
-				if (m_UserSettings)
-				{
-					m_UserSettings->SetSelectedMonitorId(m_Monitors[selectedIndex].GetPlatformMonitorId());
-					m_UserSettings->UpdateStartViewData(selectedIndex, m_Monitors);
-				}
-			}
-			else
-			{
-				// Если сохраненный монитор на месте — валидируем координаты окна относительно текущего состава
-				if (m_UserSettings)
-				{
-					m_UserSettings->UpdateStartViewData(selectedIndex, m_Monitors);
-				}
+				DOut("[MonitorSelector] Выбран Primary монитор: {} [#{}, ID: {}]", m_Monitors[selectedIndex].GetName(), selectedIndex, m_Monitors[selectedIndex].GetPlatformMonitorId());
+				m_UserSettings->SetSelectedMonitorId(m_Monitors[selectedIndex].GetPlatformMonitorId());
 			}
 		}
 

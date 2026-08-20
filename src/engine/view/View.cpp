@@ -7,42 +7,46 @@
 using namespace zzz::core;
 using namespace zzz::engine;
 
-View::View(const StartViewPlatformData& settings, const std::vector<Guid>& scripts, const Platform& platform, const ScriptFactory& scriptFactory, std::function<void(View&)> onWindowClose) :
+View::View(const ViewPlatformData& settings, const std::vector<Guid>& scripts, const Platform& platform, const ScriptFactory& scriptFactory, std::function<void(View&)> onWindowClose, const View* parentView) :
 	m_Platform{ platform },
-	m_IsActive{ true },
-	OnWindowClose(std::move(onWindowClose))
+	m_Input{ safe_make_shared<Input>() },
+	m_NativeWindow{ safe_make_shared<NativeWindow>(platform, m_Input, WindowCallbacks{}) },
+	OnWindowClose{ std::move(onWindowClose) },
+	m_IsActive{ true }
 {
 	ensure(OnWindowClose != nullptr, "OnWindowClose не должен быть null.");
 
 	std::vector<std::shared_ptr<ViewScript>> viewScripts;
-	for (const auto& viewScriptGuid : scripts)
+	viewScripts.reserve(scripts.size());
+	for (const auto& guid : scripts)
 	{
-		auto viewScript = scriptFactory.CreateViewScript(viewScriptGuid);
-		if (!viewScript)
-			THROW_RUNTIME("Не удалось создать ViewScript по GUID {}.", viewScriptGuid.ToString());
-
-		viewScripts.push_back(viewScript);
+		auto script = scriptFactory.CreateViewScript(guid);
+		ensure(script != nullptr, "Не удалось создать экземпляр ViewScript с GUID: " + guid.ToString());
+		viewScripts.push_back(std::move(script));
 	}
 
-	Initialize(settings, viewScripts);
+	Initialize(settings, viewScripts, parentView);
 }
 
 #if Z_EDITOR
 View::View(const Platform& platform, void* data) :
-	m_IsActive{ true },
-	m_Platform{ platform }
+	m_Platform{ platform },
+	m_Input{ safe_make_shared<Input>() },
+	m_NativeWindow{ safe_make_shared<NativeWindow>(platform, m_Input, WindowCallbacks{}) },
+	m_IsActive{ true }
 {
 	Initialize(data);
 }
-#endif
+#endif // Z_EDITOR
 
 View::~View()
 {
 	m_EventBus.InvokeDestroy();
 	m_Scripts.clear();
+	m_ActiveScene = nullptr;
 }
 
-void View::Initialize(const StartViewPlatformData& settings, const std::vector<std::shared_ptr<ViewScript>>& scripts)
+void View::Initialize(const ViewPlatformData& settings, const std::vector<std::shared_ptr<ViewScript>>& scripts, const View* parentView)
 {
 	m_Input = safe_make_shared<Input>();
 	auto inputRes = m_Input->Initialize();
@@ -66,7 +70,7 @@ void View::Initialize(const StartViewPlatformData& settings, const std::vector<s
 	callbacks.OnSafeAreaChanged  = [this](int t, int b, int l, int r)       { OnWindowSafeAreaChanged(t, b, l, r); };
 
 	m_NativeWindow = safe_make_shared<NativeWindow>(m_Platform, m_Input, std::move(callbacks));
-	auto res = m_NativeWindow->Initialize(settings);
+	auto res = m_NativeWindow->Initialize(settings, parentView);
 	if (!res)
 		THROW_RUNTIME("Не удалось инициализировать окно: {}.", res.error());
 
@@ -83,6 +87,7 @@ void View::Initialize(const StartViewPlatformData& settings, const std::vector<s
 #if Z_EDITOR
 void View::Initialize(void* data)
 {
+	(void)data;
 	m_Input = safe_make_shared<Input>();
 	auto inputRes = m_Input->Initialize();
 	if (!inputRes)
@@ -105,7 +110,7 @@ void View::Initialize(void* data)
 	callbacks.OnSafeAreaChanged  = [this](int t, int b, int l, int r)       { OnWindowSafeAreaChanged(t, b, l, r); };
 
 	m_NativeWindow = safe_make_shared<NativeWindow>(m_Platform, m_Input, std::move(callbacks));
-	auto res = m_NativeWindow->Initialize(StartViewPlatformData{}, data);
+	auto res = m_NativeWindow->Initialize(ViewPlatformData{});
 	if (!res)
 		THROW_RUNTIME("Не удалось инициализировать окно: {}.", res.error());
 }

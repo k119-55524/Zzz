@@ -1,6 +1,7 @@
 
 #include "WinMSWindows.h"
 #include "../Platform.h"
+#include "engine/view/View.h"
 
 using namespace zzz::core;
 
@@ -8,8 +9,7 @@ using namespace zzz::engine;
 
 WinMSWindows::WinMSWindows(const Platform& platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks) :
 	WindowBase(platform, input, std::move(callbacks)),
-	m_hWnd{ nullptr },
-	m_IsMinimized{ true }
+	m_hWnd{ nullptr }
 {}
 
 WinMSWindows::~WinMSWindows()
@@ -69,32 +69,66 @@ LRESULT CALLBACK WinMSWindows::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-[[nodiscard]] std::expected<void, std::string> WinMSWindows::Initialize(const StartViewPlatformData& startWindowSettings, void* /*data*/)
+[[nodiscard]] bool WinMSWindows::IsMaximized() const
 {
-	// Рассчитать размеры прямоугольника окна на основе запрошенных размеров клиентской области.
-	Size2D<LONG> winSize;
-	winSize.SetFrom(startWindowSettings.GetSize());
-	DWORD windowStyle = ConverterMSWinTypes::ToNative(startWindowSettings.GetWindowMode());
-	if (!startWindowSettings.IsResizable())
-		windowStyle &= ~(WS_THICKFRAME | WS_MAXIMIZEBOX);
-	RECT R = { 0, 0, winSize.GetWidth(), winSize.GetHeight() };
-	AdjustWindowRectEx(&R, windowStyle, false, 0);
-	int width = R.right - R.left;
-	int height = R.bottom - R.top;
+	ensure(m_hWnd != nullptr, "WinMSWindows::IsMaximized вызван для неинициализированного окна (m_hWnd == nullptr).");
 
-	int screenWidth = GetSystemMetrics(SM_CXSCREEN);  // Ширина экрана
-	int screenHeight = GetSystemMetrics(SM_CYSCREEN); // Высота экрана
-	int xPos = (screenWidth - width) / 2;  // Расчет позиции по оси X
-	int yPos = (screenHeight - height) / 2; // Расчет позиции по оси Y
+	WINDOWPLACEMENT wp{};
+	wp.length = sizeof(WINDOWPLACEMENT);
+	if (GetWindowPlacement(m_hWnd, &wp))
+		return (wp.showCmd == SW_SHOWMAXIMIZED);
+
+	return false;
+}
+
+Rect2D<zI32> WinMSWindows::GetNormalWindowRect() const
+{
+	ensure(m_hWnd != nullptr, "WinMSWindows::GetNormalWindowRect вызван для неинициализированного окна (m_hWnd == nullptr).");
+
+	WINDOWPLACEMENT wp{};
+	wp.length = sizeof(WINDOWPLACEMENT);
+	if (GetWindowPlacement(m_hWnd, &wp))
+	{
+		const RECT& r = wp.rcNormalPosition;
+		return Rect2D<zI32>{ Point2D<zI32>{r.left, r.top}, Size2D<zI32>{r.right - r.left, r.bottom - r.top} };
+	}
+
+	RECT r{};
+	if (!GetWindowRect(m_hWnd, &r))
+		THROW_RUNTIME("GetWindowRect завершился ошибкой.");
+
+	return Rect2D<zI32>{ Point2D<zI32>{r.left, r.top}, Size2D<zI32>{r.right - r.left, r.bottom - r.top} };
+}
+
+std::expected<void, std::string> WinMSWindows::Initialize(const ViewPlatformData& platformData, const View* parentView)
+{
+	HWND parentHWnd = parentView ? parentView->GetNativeWindow().GetHWnd() : nullptr;
+	bool isChild = (parentHWnd != nullptr);
+
+	// Только первичное окно может быть в режиме Fullscreen/Borderless. Дочерние всегда Windowed.
+	eMSWinWindowMode winMode = isChild ? eMSWinWindowMode::Windowed : platformData.GetWindowMode();
+	// Только первичное/независимое окно может разворачиваться на весь экран. Дочернее окно не может.
+	bool isMaximized = isChild ? false : platformData.IsMaximized();
+
+	const auto& windowRect = platformData.GetWindowRect();
+	int xPos = windowRect.GetPosition().GetX();
+	int yPos = windowRect.GetPosition().GetY();
+	int width = windowRect.GetSize().GetWidth();
+	int height = windowRect.GetSize().GetHeight();
+
+	DWORD windowStyle = ConverterMSWinTypes::ToNative(winMode);
+	// Флаг IsResizable строго берется из ProjectData (platformData)
+	if (!platformData.IsResizable())
+		windowStyle &= ~(WS_THICKFRAME | WS_MAXIMIZEBOX);
 
 	m_Ctx = { this, m_Input.get() };
 	CreateWindowEx(
 		0,
 		m_Platform.GetProjectPlatformData().GetWindowClassName().c_str(),
-		startWindowSettings.GetTitle().c_str(),
+		platformData.GetTitle().c_str(),
 		windowStyle,
 		xPos, yPos, width, height,
-		nullptr,
+		parentHWnd,
 		nullptr,
 		GetModuleHandle(NULL),
 		&m_Ctx);
@@ -107,7 +141,8 @@ LRESULT CALLBACK WinMSWindows::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 	// могло привязаться к этому окну и создать Swapchain. Без этого рендеринг невозможен.
 	VERIFY_AND_CALL(m_Callbacks.OnSurfaceCreated, m_hWnd);
 
-	ShowWindow(m_hWnd, SW_SHOW);
+	int showCmd = isMaximized ? SW_MAXIMIZE : SW_SHOW;
+	ShowWindow(m_hWnd, showCmd);
 	UpdateWindow(m_hWnd);
 
 	return std::expected<void, std::string>();
@@ -148,19 +183,14 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		if (wParam == SIZE_MINIMIZED)
 		{
 			VERIFY_AND_CALL(m_Callbacks.OnResize, m_WinSize, eWinResize::Hide);
-			m_IsMinimized = true;
+		}
+		else if (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED)
+		{
+			VERIFY_AND_CALL(m_Callbacks.OnResize, m_WinSize, eWinResize::Show);
 		}
 		else
 		{
-			if ((wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED) && m_IsMinimized)
-			{
-				VERIFY_AND_CALL(m_Callbacks.OnResize, m_WinSize, eWinResize::Show);
-				m_IsMinimized = false;
-			}
-			else
-			{
-				VERIFY_AND_CALL(m_Callbacks.OnResize, m_WinSize, eWinResize::Resize);
-			}
+			VERIFY_AND_CALL(m_Callbacks.OnResize, m_WinSize, eWinResize::Resize);
 		}
 		return { false, 0 };
 
@@ -261,4 +291,3 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 
 	return { true, 0 };
 }
-

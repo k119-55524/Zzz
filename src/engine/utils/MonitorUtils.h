@@ -2,11 +2,7 @@
 
 #include <string>
 #include <string_view>
-#include "core/CoreIncludes.h"
-
-#if Z_WINDOWS
-#include "core/headers/MSWin.h"
-#endif
+#include "engine/EngineIncludes.h"
 
 namespace zzz::engine
 {
@@ -26,7 +22,10 @@ namespace zzz::engine
 				std::wstring monitorIdW(dd.DeviceID);
 				if (!monitorIdW.empty())
 				{
-					return std::string(monitorIdW.begin(), monitorIdW.end());
+					int sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, monitorIdW.c_str(), static_cast<int>(monitorIdW.size()), NULL, 0, NULL, NULL);
+					std::string result(sizeNeeded, 0);
+					WideCharToMultiByte(CP_UTF8, 0, monitorIdW.c_str(), static_cast<int>(monitorIdW.size()), result.data(), sizeNeeded, NULL, NULL);
+					return result;
 				}
 			}
 			return std::string(deviceName);

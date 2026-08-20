@@ -96,8 +96,14 @@ namespace zzz::engine
 		if (m_Candidates.size() == 1)
 		{
 			const auto& singleCandidate = m_Candidates[0];
+			int nameSizeNeeded = WideCharToMultiByte(CP_UTF8, 0, singleCandidate.desc.Description, -1, NULL, 0, NULL, NULL);
+			std::string gpuName(nameSizeNeeded > 1 ? nameSizeNeeded - 1 : 0, 0);
+			if (nameSizeNeeded > 1) {
+				WideCharToMultiByte(CP_UTF8, 0, singleCandidate.desc.Description, -1, gpuName.data(), nameSizeNeeded, NULL, NULL);
+			}
+
 			DOut("[DirectX12GpuSelector] - Единственный доступный видеоадаптер: {} (VRAM: {} MB, ID: {})",
-				std::string(singleCandidate.desc.Description, singleCandidate.desc.Description + wcslen(singleCandidate.desc.Description)),
+				gpuName,
 				singleCandidate.desc.DedicatedVideoMemory / (1024 * 1024),
 				singleCandidate.platformGpuId);
 
@@ -118,8 +124,14 @@ namespace zzz::engine
 			{
 				if (candidate.platformGpuId == savedGpuId)
 				{
+					int nameSizeNeeded = WideCharToMultiByte(CP_UTF8, 0, candidate.desc.Description, -1, NULL, 0, NULL, NULL);
+					std::string gpuName(nameSizeNeeded > 1 ? nameSizeNeeded - 1 : 0, 0);
+					if (nameSizeNeeded > 1) {
+						WideCharToMultiByte(CP_UTF8, 0, candidate.desc.Description, -1, gpuName.data(), nameSizeNeeded, NULL, NULL);
+					}
+
 					DOut("[DirectX12GpuSelector] - Выбран сохранённый адаптер: {} (VRAM: {} MB, ID: {})",
-						std::string(candidate.desc.Description, candidate.desc.Description + wcslen(candidate.desc.Description)),
+						gpuName,
 						candidate.desc.DedicatedVideoMemory / (1024 * 1024),
 						candidate.platformGpuId);
 					return candidate.adapter;
@@ -139,17 +151,23 @@ namespace zzz::engine
 			}
 		}
 
-		DOut("[DirectX12GpuSelector] - Автоматически выбран лучший адаптер по рейтингу: {} (Score: {}, VRAM: {} MB, ID: {})",
-			std::string(bestCandidate->desc.Description, bestCandidate->desc.Description + wcslen(bestCandidate->desc.Description)),
-			bestCandidate->score,
-			bestCandidate->desc.DedicatedVideoMemory / (1024 * 1024),
-			bestCandidate->platformGpuId);
-
 		// 3. Обновляем настройки
 		if (m_UserSettings)
 		{
 			m_UserSettings->SetSelectedGpuId(bestCandidate->platformGpuId);
 		}
+
+		int bestNameSizeNeeded = WideCharToMultiByte(CP_UTF8, 0, bestCandidate->desc.Description, -1, NULL, 0, NULL, NULL);
+		std::string bestGpuName(bestNameSizeNeeded > 1 ? bestNameSizeNeeded - 1 : 0, 0);
+		if (bestNameSizeNeeded > 1) {
+			WideCharToMultiByte(CP_UTF8, 0, bestCandidate->desc.Description, -1, bestGpuName.data(), bestNameSizeNeeded, NULL, NULL);
+		}
+
+		DOut("[DirectX12GpuSelector] - Автоматически выбран лучший адаптер по рейтингу: {} (Score: {}, VRAM: {} MB, ID: {})",
+			bestGpuName,
+			bestCandidate->score,
+			bestCandidate->desc.DedicatedVideoMemory / (1024 * 1024),
+			bestCandidate->platformGpuId);
 
 		return bestCandidate->adapter;
 	}

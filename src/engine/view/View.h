@@ -1,10 +1,10 @@
 #pragma once
 
+#include "engine/EngineIncludes.h"
+
 #include "../platforms/Platform.h"
 #include "../platforms/input/Input.h"
 #include "../platforms/window/NativeWindow.h"
-
-#include "core/userscripts/ScriptFactory.h"
 
 namespace zzz::engine
 {
@@ -16,7 +16,7 @@ namespace zzz::engine
 
 	public:
 		View() = delete;
-		View(const StartViewPlatformData& settings, const std::vector<Guid>& scripts, const Platform& platform, const ScriptFactory& scriptFactory, std::function<void(View&)> onWindowClose);
+		View(const ViewPlatformData& settings, const std::vector<Guid>& scripts, const Platform& platform, const ScriptFactory& scriptFactory, std::function<void(View&)> onWindowClose, const View* parentView = nullptr);
 #if Z_EDITOR
 		View(const Platform& platform, void* data);
 #endif // Z_EDITOR
@@ -24,6 +24,9 @@ namespace zzz::engine
 
 		inline void InvokeStart() { m_EventBus.InvokeStart(); }
 		void Update(const Time& time);
+
+		[[nodiscard]] const NativeWindow& GetNativeWindow() const noexcept { return *m_NativeWindow; }
+		[[nodiscard]] NativeWindow& GetNativeWindow() noexcept { return *m_NativeWindow; }
 
 		inline void SetActive(bool active)
 		{
@@ -40,7 +43,7 @@ namespace zzz::engine
 		inline bool IsActive() const noexcept { return m_IsActive; }
 
 	private:
-		void Initialize(const StartViewPlatformData& settings, const std::vector<std::shared_ptr<ViewScript>>& scripts);
+		void Initialize(const ViewPlatformData& settings, const std::vector<std::shared_ptr<ViewScript>>& scripts, const View* parentView = nullptr);
 #if Z_EDITOR
 		void Initialize(void* data);
 #endif

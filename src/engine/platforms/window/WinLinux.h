@@ -12,6 +12,8 @@ struct xdg_toplevel;
 
 namespace zzz::engine
 {
+	class View;
+
 	class WinLinux final : public WindowBase
 	{
 	public:
@@ -19,7 +21,11 @@ namespace zzz::engine
 		WinLinux(const Platform& platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks);
 		~WinLinux();
 
-		[[nodiscard]] std::expected<void, std::string> Initialize(const StartViewPlatformData& settings);
+		[[nodiscard]] std::expected<void, std::string> Initialize(const ViewPlatformData& windowSettings, const View* parentView = nullptr) override;
+		[[nodiscard]] bool IsMinimized() const noexcept override { return false; }
+		[[nodiscard]] bool IsMaximized() const override { return false; }
+		[[nodiscard]] Rect2D<zI32> GetNormalWindowRect() const override { return Rect2D<zI32>{ Point2D<zI32>{0, 0}, Size2D<zI32>{static_cast<zI32>(m_WinSize.GetWidth()), static_cast<zI32>(m_WinSize.GetHeight())} }; }
+
 		inline wl_surface* GetSurface() const noexcept { return m_Surface; };
 		inline wl_buffer*  GetBuffer()  const noexcept { return m_Buffer; };
 
