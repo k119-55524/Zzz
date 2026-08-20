@@ -9,7 +9,7 @@
 #include "core/Serialize/Serializer.h"
 #include "core/Enums/eEnumToString.h"
 #include "core/Enums/platforms/eMacOSEnums.h"
-#include "core/hardware/DisplayMonitorInfo.h"
+#include "core/hardware/MonitorInfo.h"
 #include "core/utils/Constants.h"
 
 namespace zzz::core
@@ -39,7 +39,7 @@ namespace zzz::core
 		void SetMonitorIndex(zU32 index) noexcept { monitorIndex = index; }
 		void SetWindowMode(eMacOSWindowMode mode) noexcept { windowMode = mode; }
 
-		void ValidateAndAdjustWindowRect(const std::vector<DisplayMonitorInfo>& monitors)
+		void ValidateAndAdjustWindowRect(const std::vector<MonitorInfo>& monitors)
 		{
 			if (monitors.empty())
 				return;

@@ -92,7 +92,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "gapi/selectors/gpu/directx12/DirectX12GpuSelector.h" "gapi/selectors/gpu/directx12/DirectX12GpuSelector.cpp"
         "gapi/selectors/gpu/vulkan/VulkanGpuSelector.h"
         "gapi/selectors/gpu/metal/MetalGpuSelector.h"
-        "gapi/selectors/monitor/DisplayMonitorSelector.h"
+        "gapi/selectors/monitor/MonitorSelector.h"
         "gapi/vulkan/VulkanAPI.h" "gapi/vulkan/VulkanAPI.cpp"
         "gapi/directx12/DirectX12API.h" "gapi/directx12/DirectX12API.cpp"
         "gapi/metal/MetalAPI.h" "gapi/metal/MetalAPI.mm"

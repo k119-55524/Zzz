@@ -17,7 +17,7 @@ namespace zzz::engine
 
 		[[nodiscard]] inline std::shared_ptr<NativeAppData> GetNativeData() const noexcept { return m_NativeData; }
 		[[nodiscard]] inline const ProjectPlatformData& GetProjectPlatformData() const noexcept { return m_PlatformData; }
-		[[nodiscard]] inline const PlatformHardwareState& GetHardwareState() const noexcept { return m_HardwareState; }
+		[[nodiscard]] inline const HardwareState& GetHardwareState() const noexcept { return m_HardwareState; }
 
 #if Z_APPLE
 		static constexpr bool c_AsyncRunLoop = true;
@@ -29,10 +29,10 @@ namespace zzz::engine
 		void Initialize();
 		void InitializePlatformSpecific();
 		void ShutdownPlatformSpecific();
-		[[nodiscard]] PlatformHardwareState GatherHardwareState() const;
+		[[nodiscard]] HardwareState GatherHardwareState() const;
 
 		std::shared_ptr<NativeAppData> m_NativeData;
 		ProjectPlatformData m_PlatformData;
-		PlatformHardwareState m_HardwareState;
+		HardwareState m_HardwareState;
 	};
 }

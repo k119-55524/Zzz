@@ -1,7 +1,8 @@
 
 #include "Platform.h"
 #include "window/WinMSWindows.h"
-#include "engine/utils/DisplayMonitorUtils.h"
+#include "engine/utils/MonitorUtils.h"
+#include "engine/utils/GpuUtils.h"
 
 using namespace zzz::engine;
 
@@ -51,7 +52,7 @@ namespace
 		(void)hdcMonitor;
 		(void)lprcMonitor;
 
-		auto* monitors = reinterpret_cast<std::vector<DisplayMonitorInfo>*>(dwData);
+		auto* monitors = reinterpret_cast<std::vector<MonitorInfo>*>(dwData);
 		MONITORINFOEXW mi{};
 		mi.cbSize = sizeof(MONITORINFOEXW);
 
@@ -65,17 +66,17 @@ namespace
 			};
 			bool isPrimary = (mi.dwFlags & MONITORINFOF_PRIMARY) != 0;
 
-			std::string platformMonitorId = DisplayMonitorUtils::MakePlatformMonitorId(systemId);
-			DisplayMonitorInfo info(platformMonitorId, systemId, resolution, mi.rcMonitor.left, mi.rcMonitor.top, isPrimary);
+			std::string platformMonitorId = MonitorUtils::MakeId(systemId);
+			MonitorInfo info(platformMonitorId, systemId, resolution, mi.rcMonitor.left, mi.rcMonitor.top, isPrimary);
 			monitors->push_back(info);
 		}
 		return TRUE;
 	}
 }
 
-PlatformHardwareState Platform::GatherHardwareState() const
+HardwareState Platform::GatherHardwareState() const
 {
-	std::vector<DisplayMonitorInfo> monitors;
+	std::vector<MonitorInfo> monitors;
 	std::vector<GpuInfo> gpus;
 	std::vector<CpuInfo> cpus;
 	std::vector<StorageInfo> storages;
@@ -83,8 +84,6 @@ PlatformHardwareState Platform::GatherHardwareState() const
 
 	// 1. Мониторы (Windows API)
 	EnumDisplayMonitors(nullptr, nullptr, MonitorEnumProc, reinterpret_cast<LPARAM>(&monitors));
-
-	// 2. Видеокарты (DXGI API)
 	Microsoft::WRL::ComPtr<IDXGIFactory1> factory;
 	if (SUCCEEDED(CreateDXGIFactory1(IID_PPV_ARGS(&factory))))
 	{
@@ -105,8 +104,7 @@ PlatformHardwareState Platform::GatherHardwareState() const
 			if (desc.DedicatedVideoMemory >= 256 * 1024 * 1024)
 				type = eGPUType::Discrete;
 
-			std::string platformGpuId = std::format("PCI\\VEN_{:04X}&DEV_{:04X}&SUBSYS_{:08X}&REV_{:02X}",
-				desc.VendorId, desc.DeviceId, desc.SubSysId, desc.Revision);
+			std::string platformGpuId = GpuUtils::MakeId(desc.VendorId, desc.DeviceId, desc.SubSysId, desc.Revision);
 
 			GpuInfo gpu(platformGpuId, name, desc.VendorId, desc.DeviceId, type,
 				desc.DedicatedVideoMemory, desc.SharedSystemMemory, desc.DedicatedSystemMemory);
@@ -416,7 +414,7 @@ PlatformHardwareState Platform::GatherHardwareState() const
 		}
 	}
 
-	return PlatformHardwareState(
+	return HardwareState(
 		std::move(cpus),
 		std::move(ram),
 		std::move(motherboard),

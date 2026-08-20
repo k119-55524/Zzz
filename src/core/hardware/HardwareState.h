@@ -1,23 +1,20 @@
 #pragma once
 
+#include <vector>
+#include <string>
 #include "core/hardware/CpuInfo.h"
-#include "core/hardware/GpuInfo.h"
 #include "core/hardware/RamInfo.h"
+#include "core/hardware/GpuInfo.h"
 #include "core/hardware/StorageInfo.h"
 #include "core/Serialize/Serializer.h"
 #include "core/hardware/MotherboardInfo.h"
-#include "core/hardware/DisplayMonitorInfo.h"
+#include "core/hardware/MonitorInfo.h"
 #include "core/hardware/NetworkAdapterInfo.h"
 
 namespace zzz::core
 {
 	/**
-	 * @brief Состояние оборудования платформы и сохраненный выбор пользователя.
-	 * 
-	 * В файле пользовательских настроек (UserSettings.dat) сохраняются только выборы целевых устройств:
-	 *  - m_SelectedGpuId (Системный ID выбранной видеокарты)
-	 *  - m_SelectedMonitorId (Системный ID выбранного монитора)
-	 * 
+	 * @brief Состояние оборудования платформы.
 	 * Во время работы приложения объект хранит полный актуальный срез текущей системы (CPU, RAM, GPU, Мониторы).
 	 * 
 	 * @note Смысл пустой строки (id.empty() == true):
@@ -27,17 +24,17 @@ namespace zzz::core
 	 *  - m_SelectedGpuId.empty() == true  -> Подсистема GAPI должна выполнить автовыбор лучшей графической карты.
 	 *  - m_SelectedMonitorId.empty() == true -> Оконная система должна привязать окно к Главным монитору (Primary Display).
 	 */
-	class PlatformHardwareState final : public ISerializable
+	class HardwareState final : public ISerializable
 	{
 	public:
-		PlatformHardwareState() = default;
+		HardwareState() = default;
 
-		PlatformHardwareState(
+		HardwareState(
 			std::vector<CpuInfo> cpus,
 			RamInfo ram,
 			MotherboardInfo motherboard,
 			std::vector<GpuInfo> gpus,
-			std::vector<DisplayMonitorInfo> monitors,
+			std::vector<MonitorInfo> monitors,
 			std::vector<StorageInfo> storages = {},
 			std::vector<NetworkAdapterInfo> networkAdapters = {})
 			: m_Cpus(std::move(cpus))
@@ -48,12 +45,12 @@ namespace zzz::core
 			, m_Storages(std::move(storages))
 			, m_NetworkAdapters(std::move(networkAdapters))
 		{
-			ensure(!m_Cpus.empty(), "PlatformHardwareState: список процессоров не может быть пустым.");
-			ensure(!m_Gpus.empty(), "PlatformHardwareState: список видеокарт не может быть пустым.");
-			ensure(!m_Monitors.empty(), "PlatformHardwareState: список мониторов не может быть пустым.");
-			ensure(m_Ram.GetTotalRamBytes() > 0, "PlatformHardwareState: объем ОЗУ должен быть больше 0.");
+			ensure(!m_Cpus.empty(), "HardwareState: список процессоров не может быть пустым.");
+			ensure(!m_Gpus.empty(), "HardwareState: список видеокарт не может быть пустым.");
+			ensure(!m_Monitors.empty(), "HardwareState: список мониторов не может быть пустым.");
+			ensure(m_Ram.GetTotalRamBytes() > 0, "HardwareState: объем ОЗУ должен быть больше 0.");
 			ensure(!m_Motherboard.GetVendor().empty() || !m_Motherboard.GetModel().empty() || !m_Motherboard.GetSystemUuid().empty(),
-				"PlatformHardwareState: данные материнской платы должны быть корректно заданы.");
+				"HardwareState: данные материнской платы должны быть корректно заданы.");
 		}
 
 		// Геттеры данных оборудования
@@ -61,37 +58,34 @@ namespace zzz::core
 		[[nodiscard]] const RamInfo& GetRam() const noexcept { return m_Ram; }
 		[[nodiscard]] const MotherboardInfo& GetMotherboard() const noexcept { return m_Motherboard; }
 		[[nodiscard]] const std::vector<GpuInfo>& GetGpus() const noexcept { return m_Gpus; }
-		[[nodiscard]] const std::vector<DisplayMonitorInfo>& GetMonitors() const noexcept { return m_Monitors; }
+		[[nodiscard]] const std::vector<MonitorInfo>& GetMonitors() const noexcept { return m_Monitors; }
 		[[nodiscard]] const std::vector<StorageInfo>& GetStorages() const noexcept { return m_Storages; }
 		[[nodiscard]] const std::vector<NetworkAdapterInfo>& GetNetworkAdapters() const noexcept { return m_NetworkAdapters; }
-
-		/**
-		 * @brief Возвращает системный ID выбранного видеоадаптера.
-		 * @return Если строка пустая (empty() == true), это означает необходимость запуска автовыбора GPU.
-		 */
 		[[nodiscard]] const std::string& GetSelectedGpuId() const noexcept { return m_SelectedGpuId; }
-
-		/**
-		 * @brief Устанавливает системный ID выбранного видеоадаптера.
-		 */
-		void SetSelectedGpuId(std::string platformGpuId) { m_SelectedGpuId = std::move(platformGpuId); }
-
-		/**
-		 * @brief Возвращает системный ID выбранного монитора.
-		 * @return Если строка пустая (empty() == true), это означает необходимость выбора Primary монитора.
-		 */
 		[[nodiscard]] const std::string& GetSelectedMonitorId() const noexcept { return m_SelectedMonitorId; }
 
-		/**
-		 * @brief Устанавливает системный ID выбранного монитора.
-		 */
-		void SetSelectedMonitorId(std::string platformMonitorId) { m_SelectedMonitorId = std::move(platformMonitorId); }
+		void SetSelectedGpuId(std::string gpuId) { m_SelectedGpuId = std::move(gpuId); }
+		void SetSelectedMonitorId(std::string monitorId) { m_SelectedMonitorId = std::move(monitorId); }
+
+		[[nodiscard]] bool operator==(const HardwareState& other) const noexcept
+		{
+			return m_Cpus == other.m_Cpus &&
+				m_Ram == other.m_Ram &&
+				m_Motherboard == other.m_Motherboard &&
+				m_Gpus == other.m_Gpus &&
+				m_Monitors == other.m_Monitors &&
+				m_Storages == other.m_Storages &&
+				m_NetworkAdapters == other.m_NetworkAdapters &&
+				m_SelectedGpuId == other.m_SelectedGpuId &&
+				m_SelectedMonitorId == other.m_SelectedMonitorId;
+		}
 
 		inline void LogFileBlock([[maybe_unused]] std::string_view indentation = {}) const
 		{
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			
+			DOut("{}[HardwareState]", indentation);
+
 			if (!m_Cpus.empty())
 			{
 				DOut("{}cpus({})", nestedIndentation, m_Cpus.size());
@@ -103,17 +97,13 @@ namespace zzz::core
 				DOut("{}", nestedIndentation);
 			}
 
-			if (m_Ram.GetTotalRamBytes() > 0)
-			{
-				m_Ram.LogFileBlock(nestedIndentation);
-				DOut("{}", nestedIndentation);
-			}
+			DOut("{}ram:", nestedIndentation);
+			m_Ram.LogFileBlock(nestedIndentation + "  ");
+			DOut("{}", nestedIndentation);
 
-			if (!m_Motherboard.GetVendor().empty())
-			{
-				m_Motherboard.LogFileBlock(nestedIndentation);
-				DOut("{}", nestedIndentation);
-			}
+			DOut("{}motherboard:", nestedIndentation);
+			m_Motherboard.LogFileBlock(nestedIndentation + "  ");
+			DOut("{}", nestedIndentation);
 
 			if (!m_Gpus.empty())
 			{
@@ -180,7 +170,7 @@ namespace zzz::core
 		RamInfo m_Ram;
 		MotherboardInfo m_Motherboard;
 		std::vector<GpuInfo> m_Gpus;
-		std::vector<DisplayMonitorInfo> m_Monitors;
+		std::vector<MonitorInfo> m_Monitors;
 		std::vector<StorageInfo> m_Storages;
 		std::vector<NetworkAdapterInfo> m_NetworkAdapters;
 

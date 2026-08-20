@@ -93,7 +93,7 @@ namespace zzz::engine
 		}
 	}
 
-	void UserSettingsManager::UpdateStartViewData(zU32 monitorIndex, const std::vector<DisplayMonitorInfo>& availableMonitors)
+	void UserSettingsManager::UpdateStartViewData(zU32 monitorIndex, const std::vector<MonitorInfo>& availableMonitors)
 	{
 		auto& platformData = m_StartViewUserData.GetPlatformData();
 		platformData.SetMonitorIndex(monitorIndex);

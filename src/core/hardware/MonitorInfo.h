@@ -9,11 +9,12 @@
 namespace zzz::core
 {
 	using namespace zzz::math;
-	class DisplayMonitorInfo final : public ISerializable
+
+	class MonitorInfo final : public ISerializable
 	{
 	public:
-		DisplayMonitorInfo() = default;
-		DisplayMonitorInfo(std::string platformMonitorId, std::string name, Size2D<zU32> resolution,
+		MonitorInfo() = default;
+		MonitorInfo(std::string platformMonitorId, std::string name, Size2D<zU32> resolution,
 			zI32 positionX, zI32 positionY, bool isPrimary, float scaleFactor = 1.0f)
 			: m_PlatformMonitorId(std::move(platformMonitorId))
 			, m_Name(std::move(name))
@@ -32,7 +33,7 @@ namespace zzz::core
 		[[nodiscard]] bool IsPrimary() const noexcept { return m_IsPrimary; }
 		[[nodiscard]] float GetScaleFactor() const noexcept { return m_ScaleFactor; }
 
-		[[nodiscard]] bool operator==(const DisplayMonitorInfo& other) const noexcept
+		[[nodiscard]] bool operator==(const MonitorInfo& other) const noexcept
 		{
 			return m_PlatformMonitorId == other.m_PlatformMonitorId &&
 				m_Name == other.m_Name &&
@@ -47,7 +48,7 @@ namespace zzz::core
 		{
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut("{}[DisplayMonitorInfo]", indentation);
+			DOut("{}[MonitorInfo]", indentation);
 			DOut("{}platformMonitorId: {}", nestedIndentation, m_PlatformMonitorId);
 			DOut("{}name: {}", nestedIndentation, m_Name);
 			DOut("{}resolution: {}x{}", nestedIndentation, m_Resolution.GetWidth(), m_Resolution.GetHeight());

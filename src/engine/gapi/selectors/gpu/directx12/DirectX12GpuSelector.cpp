@@ -1,4 +1,5 @@
 #include "engine/gapi/selectors/gpu/directx12/DirectX12GpuSelector.h"
+#include "engine/utils/GpuUtils.h"
 
 #if defined(Z_D3D12)
 
@@ -47,8 +48,7 @@ namespace zzz::engine
 			return;
 
 		// Формируем уникальный идентификатор platformGpuId
-		std::string platformGpuId = std::format("PCI\\VEN_{:04X}&DEV_{:04X}&SUBSYS_{:08X}&REV_{:02X}",
-			desc.VendorId, desc.DeviceId, desc.SubSysId, desc.Revision);
+		std::string platformGpuId = GpuUtils::MakeId(desc.VendorId, desc.DeviceId, desc.SubSysId, desc.Revision);
 
 		// Избегаем дубликатов при комбинированном перечислении
 		for (const auto& existing : m_Candidates)

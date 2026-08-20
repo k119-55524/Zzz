@@ -2,7 +2,7 @@
 
 #include <string>
 #include <string_view>
-#include "core/utils/Defines.h"
+#include "core/CoreIncludes.h"
 
 #if Z_WINDOWS
 #include "core/headers/MSWin.h"
@@ -10,15 +10,15 @@
 
 namespace zzz::engine
 {
-	class DisplayMonitorUtils final
+	class MonitorUtils final
 	{
 	public:
-		DisplayMonitorUtils() = delete;
+		MonitorUtils() = delete;
 
-		[[nodiscard]] static inline std::string MakePlatformMonitorId(std::string_view systemDeviceName)
+		[[nodiscard]] static inline std::string MakeId(std::string_view deviceName)
 		{
 #if Z_WINDOWS
-			std::wstring deviceNameW(systemDeviceName.begin(), systemDeviceName.end());
+			std::wstring deviceNameW(deviceName.begin(), deviceName.end());
 			DISPLAY_DEVICEW dd{};
 			dd.cb = sizeof(DISPLAY_DEVICEW);
 			if (EnumDisplayDevicesW(deviceNameW.c_str(), 0, &dd, 0))
@@ -29,13 +29,13 @@ namespace zzz::engine
 					return std::string(monitorIdW.begin(), monitorIdW.end());
 				}
 			}
-			return std::string(systemDeviceName);
+			return std::string(deviceName);
 #elif Z_LINUX
-			return std::string(systemDeviceName);
+			return std::string(deviceName);
 #elif Z_MACOS
-			return std::string(systemDeviceName);
+			return std::string(deviceName);
 #else
-			return std::string(systemDeviceName);
+			return std::string(deviceName);
 #endif
 		}
 	};

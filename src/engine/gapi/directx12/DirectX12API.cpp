@@ -2,8 +2,8 @@
 
 #if defined(Z_D3D12)
 
-#include "engine/gapi/selectors/monitor/DisplayMonitorSelector.h"
-#include "engine/utils/DisplayMonitorUtils.h"
+#include "engine/gapi/selectors/monitor/MonitorSelector.h"
+#include "engine/utils/MonitorUtils.h"
 
 namespace zzz::engine
 {
@@ -60,7 +60,7 @@ namespace zzz::engine
 		if (!adapter || !userSettings)
 			return;
 
-		DisplayMonitorSelector selector(userSettings);
+		MonitorSelector selector(userSettings);
 
 		Microsoft::WRL::ComPtr<IDXGIOutput> output;
 		for (UINT i = 0; SUCCEEDED(adapter->EnumOutputs(i, &output)); ++i)
@@ -70,7 +70,7 @@ namespace zzz::engine
 			{
 				std::wstring deviceNameW(desc.DeviceName);
 				std::string systemId(deviceNameW.begin(), deviceNameW.end());
-				std::string platformMonitorId = DisplayMonitorUtils::MakePlatformMonitorId(systemId);
+				std::string platformMonitorId = MonitorUtils::MakeId(systemId);
 
 				Size2D<zU32> resolution{
 					static_cast<zU32>(desc.DesktopCoordinates.right - desc.DesktopCoordinates.left),
@@ -81,7 +81,7 @@ namespace zzz::engine
 				zI32 posY = desc.DesktopCoordinates.top;
 				bool isPrimary = (posX == 0 && posY == 0);
 
-				selector.AddMonitor(DisplayMonitorInfo(platformMonitorId, systemId, resolution, posX, posY, isPrimary));
+				selector.AddMonitor(MonitorInfo(platformMonitorId, systemId, resolution, posX, posY, isPrimary));
 			}
 		}
 

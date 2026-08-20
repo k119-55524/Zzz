@@ -69,10 +69,10 @@
 #include "core/hardware/GpuInfo.h"
 #include "core/hardware/RamInfo.h"
 #include "core/hardware/MotherboardInfo.h"
-#include "core/hardware/DisplayMonitorInfo.h"
+#include "core/hardware/MonitorInfo.h"
 #include "core/hardware/StorageInfo.h"
 #include "core/hardware/NetworkAdapterInfo.h"
-#include "core/hardware/PlatformHardwareState.h"
+#include "core/hardware/HardwareState.h"
 
 using namespace zzz::math;
 

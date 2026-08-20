@@ -1,7 +1,7 @@
 #pragma once
 
 #include "engine/package/UserSettingsManager.h"
-#include "core/hardware/DisplayMonitorInfo.h"
+#include "core/hardware/MonitorInfo.h"
 
 namespace zzz::engine
 {
@@ -11,18 +11,18 @@ namespace zzz::engine
 	 * @brief Селектор целевого монитора (дисплея) приложения.
 	 * Накапливает кандидаты-мониторы (по аналогии с GpuSelector) и выполняет выбор.
 	 */
-	class DisplayMonitorSelector final
+	class MonitorSelector final
 	{
 	public:
-		DisplayMonitorSelector() = delete;
-		explicit DisplayMonitorSelector(const std::shared_ptr<UserSettingsManager>& userSettings)
+		MonitorSelector() = delete;
+		explicit MonitorSelector(const std::shared_ptr<UserSettingsManager>& userSettings)
 			: m_UserSettings(userSettings)
 		{}
 
 		/**
 		 * @brief Добавляет кандидат-монитор в список доступных выходов.
 		 */
-		void AddMonitor(DisplayMonitorInfo monitor)
+		void AddMonitor(MonitorInfo monitor)
 		{
 			m_Monitors.push_back(std::move(monitor));
 		}
@@ -48,7 +48,7 @@ namespace zzz::engine
 					{
 						selectedIndex = static_cast<zU32>(i);
 						monitorFound = true;
-						DOut("[DisplayMonitorSelector] Сохраненный монитор найден: {} [#{}, ID: {}]",
+						DOut("[MonitorSelector] Сохраненный монитор найден: {} [#{}, ID: {}]",
 							m_Monitors[i].GetName(), selectedIndex, savedMonitorId);
 						break;
 					}
@@ -57,7 +57,7 @@ namespace zzz::engine
 
 			if (!monitorFound)
 			{
-				DOutWarning("[DisplayMonitorSelector] Сохраненный монитор с ID '{}' не найден или состав мониторов изменился.", savedMonitorId);
+				DOutWarning("[MonitorSelector] Сохраненный монитор с ID '{}' не найден или состав мониторов изменился.", savedMonitorId);
 				
 				// Ищем Primary монитор
 				for (std::size_t i = 0; i < m_Monitors.size(); ++i)
@@ -69,7 +69,7 @@ namespace zzz::engine
 					}
 				}
 
-				DOut("[DisplayMonitorSelector] Выбран Primary монитор: {} [#{}, ID: {}]",
+				DOut("[MonitorSelector] Выбран Primary монитор: {} [#{}, ID: {}]",
 					m_Monitors[selectedIndex].GetName(), selectedIndex, m_Monitors[selectedIndex].GetPlatformMonitorId());
 
 				if (m_UserSettings)
@@ -91,10 +91,10 @@ namespace zzz::engine
 		/**
 		 * @brief Возвращает список всех добавленных мониторов-кандидатов.
 		 */
-		[[nodiscard]] const std::vector<DisplayMonitorInfo>& GetMonitors() const noexcept { return m_Monitors; }
+		[[nodiscard]] const std::vector<MonitorInfo>& GetMonitors() const noexcept { return m_Monitors; }
 
 	private:
 		std::shared_ptr<UserSettingsManager> m_UserSettings;
-		std::vector<DisplayMonitorInfo> m_Monitors;
+		std::vector<MonitorInfo> m_Monitors;
 	};
 }
