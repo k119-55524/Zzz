@@ -33,7 +33,7 @@ namespace zzz::engine
 
 		std::shared_ptr<NativeAppData> m_NativeData;
 		ProjectPlatformData m_PlatformData;
-		HardwareState m_HardwareState;
 		std::shared_ptr<IMonitorProvider> m_MonitorProvider;
+		HardwareState m_HardwareState;
 	};
 }

@@ -1,14 +1,12 @@
 #pragma once
 
-#include <vector>
-#include <string>
+#include "core/CoreIncludes.h"
 #include "core/hardware/CpuInfo.h"
 #include "core/hardware/RamInfo.h"
 #include "core/hardware/GpuInfo.h"
 #include "core/hardware/StorageInfo.h"
-#include "core/Serialize/Serializer.h"
-#include "core/hardware/MotherboardInfo.h"
 #include "core/hardware/MonitorInfo.h"
+#include "core/hardware/MotherboardInfo.h"
 #include "core/hardware/NetworkAdapterInfo.h"
 
 namespace zzz::core
@@ -16,19 +14,11 @@ namespace zzz::core
 	/**
 	 * @brief Состояние оборудования платформы.
 	 * Во время работы приложения объект хранит полный актуальный срез текущей системы (CPU, RAM, GPU, Мониторы).
-	 * 
-	 * @note Смысл пустой строки (id.empty() == true):
-	 * Пустая строка может быть ИСКЛЮЧИТЕЛЬНО у m_SelectedGpuId и m_SelectedMonitorId.
-	 * Она выставляется в случае первичного запуска приложения или в случае ИЗМЕНЕНИЯ КОНФИГУРАЦИИ ОБОРУДОВАНИЯ (пропажи/замены сохраненного устройства).
-	 * Наличие пустой строки указывает подсистемам на необходимость совершить новый выбор устройства:
-	 *  - m_SelectedGpuId.empty() == true  -> Подсистема GAPI должна выполнить автовыбор лучшей графической карты.
-	 *  - m_SelectedMonitorId.empty() == true -> Оконная система должна привязать окно к Главным монитору (Primary Display).
 	 */
-	class HardwareState final : public ISerializable
+	class HardwareState final
 	{
 	public:
-		HardwareState() = default;
-
+		HardwareState() = delete;
 		HardwareState(
 			std::vector<CpuInfo> cpus,
 			RamInfo ram,
@@ -61,9 +51,6 @@ namespace zzz::core
 		[[nodiscard]] const std::vector<MonitorInfo>& GetMonitors() const noexcept { return m_Monitors; }
 		[[nodiscard]] const std::vector<StorageInfo>& GetStorages() const noexcept { return m_Storages; }
 		[[nodiscard]] const std::vector<NetworkAdapterInfo>& GetNetworkAdapters() const noexcept { return m_NetworkAdapters; }
-		[[nodiscard]] const std::string& GetSelectedGpuId() const noexcept { return m_SelectedGpuId; }
-
-		void SetSelectedGpuId(std::string gpuId) { m_SelectedGpuId = std::move(gpuId); }
 
 		[[nodiscard]] bool operator==(const HardwareState& other) const noexcept
 		{
@@ -73,14 +60,14 @@ namespace zzz::core
 				m_Gpus == other.m_Gpus &&
 				m_Monitors == other.m_Monitors &&
 				m_Storages == other.m_Storages &&
-				m_NetworkAdapters == other.m_NetworkAdapters &&
-				m_SelectedGpuId == other.m_SelectedGpuId;
+				m_NetworkAdapters == other.m_NetworkAdapters;
 		}
 
 		inline void LogFileBlock([[maybe_unused]] std::string_view indentation = {}) const
 		{
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 			const std::string nestedIndentation = std::string(indentation) + "  ";
+			DOut("========== [HardwareState] Platform Hardware State ==========");
 			DOut("{}[HardwareState]", indentation);
 
 			if (!m_Cpus.empty())
@@ -145,21 +132,10 @@ namespace zzz::core
 				}
 				DOut("{}", nestedIndentation);
 			}
-
-			DOut("{}selectedGpuId: {}", nestedIndentation, m_SelectedGpuId);
 #endif
 		}
 
 	private:
-		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override
-		{
-			return s.Serialize(buffer, m_SelectedGpuId);
-		}
-		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override
-		{
-			return s.Deserialize(buffer, offset, m_SelectedGpuId);
-		}
-
 		std::vector<CpuInfo> m_Cpus;
 		RamInfo m_Ram;
 		MotherboardInfo m_Motherboard;
@@ -167,7 +143,5 @@ namespace zzz::core
 		std::vector<MonitorInfo> m_Monitors;
 		std::vector<StorageInfo> m_Storages;
 		std::vector<NetworkAdapterInfo> m_NetworkAdapters;
-
-		std::string m_SelectedGpuId;
 	};
 }

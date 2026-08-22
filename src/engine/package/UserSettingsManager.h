@@ -19,7 +19,7 @@ namespace zzz::engine
 		UserSettingsManager(const Path& path, const PrimaryViewData& defaultPrimaryViewData);
 
 		[[nodiscard]] inline const PrimaryViewUserData& GetPrimaryViewUserData() const noexcept { return m_PrimaryViewUserData; }
-		[[nodiscard]] inline const HardwareState& GetHardwareState() const noexcept { return m_HardwareState; }
+		[[nodiscard]] inline const std::string& GetSelectedGpuId() const noexcept { return m_SelectedGpuId; }
 		[[nodiscard]] inline const ViewUserDataMap& GetChildViewsUserData() const noexcept { return m_ChildViewsUserData; }
 		[[nodiscard]] inline const ViewUserDataMap& GetIndependentViewsUserData() const noexcept { return m_IndependentViewsUserData; }
 		[[nodiscard]] inline bool IsFirstRun() const noexcept { return m_IsFirstRun; }
@@ -46,7 +46,7 @@ namespace zzz::engine
 		PrimaryViewUserData m_PrimaryViewUserData;
 		ViewUserDataMap m_ChildViewsUserData;
 		ViewUserDataMap m_IndependentViewsUserData;
-		HardwareState m_HardwareState;
+		std::string m_SelectedGpuId;
 
 		bool m_IsDirty;
 		bool m_IsFirstRun = true;

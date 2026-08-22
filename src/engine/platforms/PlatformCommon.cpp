@@ -11,16 +11,18 @@ using namespace zzz::engine;
 
 Platform::Platform(std::shared_ptr<NativeAppData> nativeData, const ProjectPlatformData& platformData) :
 	m_NativeData(nativeData),
-	m_PlatformData(platformData)
-{
+	m_PlatformData(platformData),
+	m_MonitorProvider(
 #if Z_WINDOWS
-	m_MonitorProvider = std::make_shared<MonitorProviderMSWin>();
+		std::make_shared<MonitorProviderMSWin>()
 #elif Z_ANDROID || Z_IOS
-	m_MonitorProvider = std::make_shared<MonitorProviderMobile>();
+		std::make_shared<MonitorProviderMobile>()
 #else
-	m_MonitorProvider = std::make_shared<MonitorProviderMSWin>();
+		std::make_shared<MonitorProviderMSWin>()
 #endif
-
+	),
+	m_HardwareState(GatherHardwareState())
+{
 	Initialize();
 }
 
@@ -37,5 +39,4 @@ const IMonitorProvider& Platform::GetMonitorProvider() const noexcept
 void Platform::Initialize()
 {
 	InitializePlatformSpecific();
-	m_HardwareState = GatherHardwareState();
 }

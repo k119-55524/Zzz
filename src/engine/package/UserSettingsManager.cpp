@@ -81,9 +81,9 @@ namespace zzz::engine
 
 	void UserSettingsManager::SetSelectedGpuId(std::string gpuId)
 	{
-		if (m_HardwareState.GetSelectedGpuId() != gpuId)
+		if (m_SelectedGpuId != gpuId)
 		{
-			m_HardwareState.SetSelectedGpuId(std::move(gpuId));
+			m_SelectedGpuId = std::move(gpuId);
 			m_IsDirty = true;
 		}
 	}
@@ -276,7 +276,7 @@ namespace zzz::engine
 				return res;
 		}
 
-		return s.Serialize(buffer, m_HardwareState);
+		return s.Serialize(buffer, m_SelectedGpuId);
 	}
 
 	[[nodiscard]] std::expected<void, std::string> UserSettingsManager::Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s)
@@ -330,7 +330,7 @@ namespace zzz::engine
 			m_IndependentViewsUserData.emplace(std::move(guid), std::move(item));
 		}
 
-		return s.Deserialize(buffer, offset, m_HardwareState);
+		return s.Deserialize(buffer, offset, m_SelectedGpuId);
 	}
 
 #pragma region Logging

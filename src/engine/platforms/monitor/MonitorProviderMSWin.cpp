@@ -30,10 +30,24 @@ namespace
 				WideCharToMultiByte(CP_UTF8, 0, mi.szDevice, -1, systemId.data(), sizeNeeded, NULL, NULL);
 			}
 
-			Size2D<zU32> resolution{
+			Size2D<zU32> logicalResolution{
 				static_cast<zU32>(mi.rcMonitor.right - mi.rcMonitor.left),
 				static_cast<zU32>(mi.rcMonitor.bottom - mi.rcMonitor.top)
 			};
+
+			Size2D<zU32> physicalResolution = logicalResolution;
+			DEVMODEW devMode{};
+			devMode.dmSize = sizeof(DEVMODEW);
+			if (EnumDisplaySettingsW(mi.szDevice, ENUM_CURRENT_SETTINGS, &devMode))
+			{
+				if (devMode.dmPelsWidth > 0 && devMode.dmPelsHeight > 0)
+				{
+					physicalResolution = Size2D<zU32>{
+						static_cast<zU32>(devMode.dmPelsWidth),
+						static_cast<zU32>(devMode.dmPelsHeight)
+					};
+				}
+			}
 
 			bool isPrimary = (mi.dwFlags & MONITORINFOF_PRIMARY) != 0;
 			std::string platformMonitorId = zzz::engine::MonitorUtils::MakeId(systemId);
@@ -51,8 +65,12 @@ namespace
 				}
 			}
 			float scaleFactor = static_cast<float>(dpiX) / 96.0f;
+			if (scaleFactor <= 1.0001f && logicalResolution.GetWidth() > 0 && physicalResolution.GetWidth() > logicalResolution.GetWidth())
+			{
+				scaleFactor = static_cast<float>(physicalResolution.GetWidth()) / static_cast<float>(logicalResolution.GetWidth());
+			}
 
-			MonitorInfo info(platformMonitorId, systemId, resolution, mi.rcMonitor.left, mi.rcMonitor.top, isPrimary, scaleFactor);
+			MonitorInfo info(platformMonitorId, systemId, physicalResolution, logicalResolution, mi.rcMonitor.left, mi.rcMonitor.top, isPrimary, scaleFactor);
 			ctx->monitors->push_back(info);
 		}
 		return TRUE;
@@ -76,7 +94,7 @@ namespace zzz::engine
 		if (m_Monitors.empty())
 		{
 			DOutWarning("[MonitorProviderMSWin] Мониторы не найдены через API. Создан первичный монитор по умолчанию 1920x1080.");
-			m_Monitors.emplace_back("PRIMARY_DEFAULT", "Default Monitor", Size2D<zU32>{1920, 1080}, 0, 0, true, 1.0f);
+			m_Monitors.emplace_back("PRIMARY_DEFAULT", "Default Monitor", Size2D<zU32>{1920, 1080}, Size2D<zU32>{1920, 1080}, 0, 0, true, 1.0f);
 		}
 	}
 

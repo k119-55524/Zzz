@@ -112,7 +112,8 @@ namespace zzz::engine
 			return singleCandidate.adapter;
 		}
 
-		const std::string& savedGpuId = m_UserSettings ? m_UserSettings->GetHardwareState().GetSelectedGpuId() : "";
+		const std::string& savedGpuId = m_UserSettings ? m_UserSettings->GetSelectedGpuId() : "";
+		bool isGpuReplaced = false;
 
 		// 1. Проверяем, есть ли ранее сохранённый ID и присутствует ли он среди кандидатов
 		if (!savedGpuId.empty())
@@ -123,7 +124,7 @@ namespace zzz::engine
 				{
 					const std::string gpuName = GpuUtils::GpuNameToString(candidate.desc.Description);
 
-					DOut("[DirectX12GpuSelector] - Выбран сохранённый адаптер: {} (VRAM: {} MB, ID: {})",
+					DOut("[DirectX12GpuSelector] - [ГПУ ВОССТАНОВЛЕН]: Использован сохранённый видеоадаптер '{}' (VRAM: {} MB, ID: {})",
 						gpuName,
 						candidate.desc.DedicatedVideoMemory / (1024 * 1024),
 						candidate.platformGpuId);
@@ -131,7 +132,8 @@ namespace zzz::engine
 				}
 			}
 
-			DOutWarning("[DirectX12GpuSelector] - Сохранённый адаптер с ID '{}' не найден в системе. Запуск автовыбора по рейтингу...", savedGpuId);
+			isGpuReplaced = true;
+			DOutWarning("[DirectX12GpuSelector] - [ГПУ НЕ НАЙДЕН]: Сохранённый адаптер с ID '{}' отсутствует в системе.", savedGpuId);
 		}
 
 		// 2. Автовыбор по наибольшему рейтингу (Score)
@@ -152,11 +154,22 @@ namespace zzz::engine
 
 		const std::string bestGpuName = GpuUtils::GpuNameToString(bestCandidate->desc.Description);
 
-		DOut("[DirectX12GpuSelector] - Автоматически выбран лучший адаптер по рейтингу: {} (Score: {}, VRAM: {} MB, ID: {})",
-			bestGpuName,
-			bestCandidate->score,
-			bestCandidate->desc.DedicatedVideoMemory / (1024 * 1024),
-			bestCandidate->platformGpuId);
+		if (isGpuReplaced)
+		{
+			DOut("[DirectX12GpuSelector] - [ГПУ ЗАМЕНЁН]: Видеоадаптер автоматически заменён на лучший в системе: '{}' (Score: {}, VRAM: {} MB, ID: {})",
+				bestGpuName,
+				bestCandidate->score,
+				bestCandidate->desc.DedicatedVideoMemory / (1024 * 1024),
+				bestCandidate->platformGpuId);
+		}
+		else
+		{
+			DOut("[DirectX12GpuSelector] - [ГПУ ВЫБРАН]: Выполнен первичный автовыбор наилучшего видеоадаптера: '{}' (Score: {}, VRAM: {} MB, ID: {})",
+				bestGpuName,
+				bestCandidate->score,
+				bestCandidate->desc.DedicatedVideoMemory / (1024 * 1024),
+				bestCandidate->platformGpuId);
+		}
 
 		return bestCandidate->adapter;
 	}
