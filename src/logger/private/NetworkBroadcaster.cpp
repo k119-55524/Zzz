@@ -109,6 +109,11 @@ namespace zzz::logger
 
 			if (!m_UnsentLogs.empty())
 			{
+				if (!m_IsConnected && !m_SendThreadRunning.load())
+				{
+					break; // При закрытии приложения не пытаемся подключаться к отсутствующему серверу
+				}
+
 				Connect();
 				if (m_IsConnected)
 				{
