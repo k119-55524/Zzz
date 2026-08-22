@@ -80,6 +80,9 @@ src/tools/config_switcher/build/
 
 **/ReRunCMake.make
 
+# Assets Builder config
+assets_config.json
+
 # Build Configurator publish output
 
 dist/

@@ -38,38 +38,9 @@ foreach(BUILD_DIR ${Z_ASSET_BUILD_DIRS})
     endif()
 
     if(EXISTS "${BUILD_DIR}/assets")
-        file(COPY "${BUILD_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/android_studio/app/src/main/assets")
+        file(COPY "${BUILD_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/app/src/main/assets")
     endif()
 endforeach()
-
-set(REGISTER_SCRIPTS_CONTENT "// RegisterAllScripts.cpp — генерируется автоматически CMake\n#include <core/Core.h>\n#include <ScriptRegistry.h>\n\n")
-set(REGISTER_SCRIPT_LINES "")
-foreach(HPP_FILE ${SCRIPT_HPPS})
-    get_filename_component(CLASS_NAME "${HPP_FILE}" NAME_WE)
-    get_filename_component(SCRIPT_DIR "${HPP_FILE}" DIRECTORY)
-    set(SCRIPT_NAMESPACE "")
-    set(META_FILE "${SCRIPT_DIR}/${CLASS_NAME}.meta")
-    if(EXISTS "${META_FILE}")
-        file(READ "${META_FILE}" META_CONTENT)
-        string(REGEX MATCH "namespace[ \t]*=[ \t]*\"([^\"]*)\"" META_NAMESPACE_MATCH "${META_CONTENT}")
-        if(META_NAMESPACE_MATCH)
-            set(SCRIPT_NAMESPACE "${CMAKE_MATCH_1}")
-        endif()
-    endif()
-
-    if(SCRIPT_NAMESPACE STREQUAL "")
-        set(QUALIFIED_NAME "${CLASS_NAME}")
-    else()
-        set(QUALIFIED_NAME "${SCRIPT_NAMESPACE}::${CLASS_NAME}")
-    endif()
-
-    string(APPEND REGISTER_SCRIPTS_CONTENT "#include \"${HPP_FILE}\"\n")
-    string(APPEND REGISTER_SCRIPT_LINES "    registrar.Register<${QUALIFIED_NAME}>(\"${QUALIFIED_NAME}\");\n")
-endforeach()
-
-string(APPEND REGISTER_SCRIPTS_CONTENT "\nvoid RegisterAllScripts(zzz::core::ScriptRegistrar& registrar)\n{\n${REGISTER_SCRIPT_LINES}}\n")
-set(GENERATED_REGISTER_CPP "${CMAKE_CURRENT_BINARY_DIR}/RegisterAllScripts.cpp")
-file(WRITE "${GENERATED_REGISTER_CPP}" "${REGISTER_SCRIPTS_CONTENT}")
 
 target_precompile_headers(game_android PRIVATE
     "$<$<COMPILE_LANGUAGE:CXX>:pch/pch.h>"
@@ -89,7 +60,6 @@ target_sources(game_android PRIVATE
     src/android_main.h
     src/android_main.cpp
     ${SCRIPT_CPPS}
-    ${GENERATED_REGISTER_CPP}
 )
 
 target_link_libraries(game_android PRIVATE

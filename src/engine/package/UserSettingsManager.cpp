@@ -347,7 +347,10 @@ namespace zzz::engine
 		{
 			viewData.LogFileBlock("  ");
 		}
-		m_HardwareState.LogFileBlock("  ");
+		if (!m_SelectedGpuId.empty())
+		{
+			DOut("  selectedGpuId: {}", m_SelectedGpuId);
+		}
 #endif
 	}
 #pragma endregion

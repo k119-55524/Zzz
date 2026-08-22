@@ -25,5 +25,20 @@ namespace zzz::engine
 			return std::format("GPU_{:04X}_{:04X}", vendorId, deviceId);
 #endif
 		}
+
+		[[nodiscard]] static inline std::string GpuNameToString(const wchar_t* wname)
+		{
+#if Z_WINDOWS
+			if (!wname) return "Unknown GPU";
+			int sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, wname, -1, NULL, 0, NULL, NULL);
+			if (sizeNeeded <= 1) return "Unknown GPU";
+			std::string result(sizeNeeded - 1, 0);
+			WideCharToMultiByte(CP_UTF8, 0, wname, -1, result.data(), sizeNeeded, NULL, NULL);
+			return result;
+#else
+			(void)wname;
+			return "Unknown GPU";
+#endif
+		}
 	};
 }

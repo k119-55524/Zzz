@@ -175,6 +175,11 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         target_link_libraries(${TARGET_NAME} PUBLIC Vulkan::Vulkan)
         target_compile_definitions(${TARGET_NAME} PUBLIC Z_HAS_VULKAN_SDK=1)
     endif()
+
+    if(ANDROID)
+        find_package(game-activity REQUIRED CONFIG)
+        target_link_libraries(${TARGET_NAME} PUBLIC game-activity::game-activity)
+    endif()
 endmacro()
 
 setup_core_target(core_lib FALSE)

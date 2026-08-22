@@ -1,4 +1,4 @@
-
+п»ї
 #pragma once
 
 #if defined(Z_D3D12)
@@ -73,7 +73,7 @@ namespace zzz::dx
 	};
 }
 
-#pragma region Обёртки над структурами DirectX
+#pragma region DirectX Helpers
 namespace zzz::dx
 {
 #if defined(_DEBUG)

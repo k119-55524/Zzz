@@ -1,5 +1,6 @@
-#include "engine/gapi/selectors/gpu/directx12/DirectX12GpuSelector.h"
+
 #include "engine/utils/GpuUtils.h"
+#include "engine/gapi/selectors/gpu/directx12/DirectX12GpuSelector.h"
 
 #if defined(Z_D3D12)
 
@@ -96,11 +97,7 @@ namespace zzz::engine
 		if (m_Candidates.size() == 1)
 		{
 			const auto& singleCandidate = m_Candidates[0];
-			int nameSizeNeeded = WideCharToMultiByte(CP_UTF8, 0, singleCandidate.desc.Description, -1, NULL, 0, NULL, NULL);
-			std::string gpuName(nameSizeNeeded > 1 ? nameSizeNeeded - 1 : 0, 0);
-			if (nameSizeNeeded > 1) {
-				WideCharToMultiByte(CP_UTF8, 0, singleCandidate.desc.Description, -1, gpuName.data(), nameSizeNeeded, NULL, NULL);
-			}
+			const std::string gpuName = GpuUtils::GpuNameToString(singleCandidate.desc.Description);
 
 			DOut("[DirectX12GpuSelector] - Единственный доступный видеоадаптер: {} (VRAM: {} MB, ID: {})",
 				gpuName,
@@ -124,11 +121,7 @@ namespace zzz::engine
 			{
 				if (candidate.platformGpuId == savedGpuId)
 				{
-					int nameSizeNeeded = WideCharToMultiByte(CP_UTF8, 0, candidate.desc.Description, -1, NULL, 0, NULL, NULL);
-					std::string gpuName(nameSizeNeeded > 1 ? nameSizeNeeded - 1 : 0, 0);
-					if (nameSizeNeeded > 1) {
-						WideCharToMultiByte(CP_UTF8, 0, candidate.desc.Description, -1, gpuName.data(), nameSizeNeeded, NULL, NULL);
-					}
+					const std::string gpuName = GpuUtils::GpuNameToString(candidate.desc.Description);
 
 					DOut("[DirectX12GpuSelector] - Выбран сохранённый адаптер: {} (VRAM: {} MB, ID: {})",
 						gpuName,
@@ -157,11 +150,7 @@ namespace zzz::engine
 			m_UserSettings->SetSelectedGpuId(bestCandidate->platformGpuId);
 		}
 
-		int bestNameSizeNeeded = WideCharToMultiByte(CP_UTF8, 0, bestCandidate->desc.Description, -1, NULL, 0, NULL, NULL);
-		std::string bestGpuName(bestNameSizeNeeded > 1 ? bestNameSizeNeeded - 1 : 0, 0);
-		if (bestNameSizeNeeded > 1) {
-			WideCharToMultiByte(CP_UTF8, 0, bestCandidate->desc.Description, -1, bestGpuName.data(), bestNameSizeNeeded, NULL, NULL);
-		}
+		const std::string bestGpuName = GpuUtils::GpuNameToString(bestCandidate->desc.Description);
 
 		DOut("[DirectX12GpuSelector] - Автоматически выбран лучший адаптер по рейтингу: {} (Score: {}, VRAM: {} MB, ID: {})",
 			bestGpuName,

@@ -84,7 +84,6 @@ target_include_directories(game_ios PRIVATE
 
 target_sources(game_ios PRIVATE
     ${SCRIPT_CPPS}
-    ${GENERATED_REGISTER_CPP}
     ${ASSET_FILES}
 )
 

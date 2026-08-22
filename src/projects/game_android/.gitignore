@@ -10,3 +10,7 @@ local.properties
 # Android profiling captures
 
 captures/
+
+# Generated assets
+app/src/main/assets/
+android_studio/app/src/main/assets/

@@ -25,7 +25,7 @@ if(WIN32)
 endif()
 
 if(MSVC)
-    add_compile_options(/Zc:preprocessor /W4 /w44062 /EHsc /wd4251)
+    add_compile_options(/utf-8 /Zc:preprocessor /W4 /w44062 /EHsc /wd4251)
 endif()
 
 include(package_versions.cmake)
