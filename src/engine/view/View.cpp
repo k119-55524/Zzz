@@ -62,6 +62,7 @@ void View::Initialize(const ViewPlatformData& settings, const std::vector<std::s
 	callbacks.OnDpiChanged       = [this]()                                 { OnWindowDpiChanged(); };
 	callbacks.OnFocus            = [this](bool focus)                       { OnWindowFocus(focus); };
 	callbacks.OnActivate         = [this](bool active)                      { OnWindowActivate(active); };
+	callbacks.OnDisplayChanged   = [this]()                                 { OnWindowDisplayChanged(); };
 	callbacks.OnSurfaceCreated   = [this](void* handle)                     { OnWindowSurfaceCreated(handle); };
 	callbacks.OnSurfaceDestroyed = [this]()                                 { OnWindowSurfaceDestroyed(); };
 	callbacks.OnSuspend          = [this]()                                 { OnWindowSuspend(); };
@@ -168,6 +169,15 @@ void View::OnWindowFocus(bool focus)
 void View::OnWindowActivate(bool active)
 {
 	DOut("[View::OnWindowActivate] - Active: {}", active ? "true" : "false");
+}
+
+void View::OnWindowDisplayChanged()
+{
+	DOut("[View::OnWindowDisplayChanged]");
+	if (m_UserSettingsManager)
+	{
+		m_UserSettingsManager->StoreViewState(*this);
+	}
 }
 
 #pragma endregion

@@ -1,4 +1,6 @@
 #include "WindowCommon.h"
+#include "../Platform.h"
+#include "../monitor/IMonitorProvider.h"
 
 using namespace zzz::engine;
 
@@ -12,4 +14,17 @@ WindowBase::WindowBase(
 {
 	ensure(m_Callbacks.OnClose != nullptr, "OnClose не должен быть null.");
 	ensure(m_Callbacks.OnSurfaceCreated != nullptr, "OnSurfaceCreated не должен быть null.");
+}
+
+zzz::math::Size2D<zzz::core::zU32> WindowBase::GetPhysicalClientSize() const noexcept
+{
+	const auto clientSize = GetClientRect().GetSize();
+	const auto& monitorProvider = m_Platform.GetMonitorProvider();
+	const auto monitor = monitorProvider.GetMonitorForRect(GetClientRect());
+	const float scale = monitor.GetScaleFactor();
+
+	return zzz::math::Size2D<zzz::core::zU32>{
+		static_cast<zzz::core::zU32>(static_cast<float>(clientSize.GetWidth()) * scale),
+		static_cast<zzz::core::zU32>(static_cast<float>(clientSize.GetHeight()) * scale)
+	};
 }

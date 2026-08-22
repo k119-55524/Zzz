@@ -22,9 +22,9 @@ namespace zzz::engine
 		[[nodiscard]] inline const HardwareState& GetHardwareState() const noexcept { return m_HardwareState; }
 		[[nodiscard]] inline const ViewUserDataMap& GetChildViewsUserData() const noexcept { return m_ChildViewsUserData; }
 		[[nodiscard]] inline const ViewUserDataMap& GetIndependentViewsUserData() const noexcept { return m_IndependentViewsUserData; }
+		[[nodiscard]] inline bool IsFirstRun() const noexcept { return m_IsFirstRun; }
 
 		void SetSelectedGpuId(std::string gpuId);
-		void SetSelectedMonitorId(std::string monitorId);
 		void StoreViewState(const View& view);
 
 		[[nodiscard]] std::expected<void, std::string> SaveConfig();
@@ -49,5 +49,6 @@ namespace zzz::engine
 		HardwareState m_HardwareState;
 
 		bool m_IsDirty;
+		bool m_IsFirstRun = true;
 	};
 }

@@ -116,6 +116,11 @@ namespace zzz::engine
 		 */
 		void OnWindowActivate(bool active);
 
+		/**
+		 * @brief Обрабатывает изменение разрешения или конфигурации монитора.
+		 */
+		void OnWindowDisplayChanged();
+
 #pragma endregion
 
 #pragma region App Lifecycle & GPU Surface Events

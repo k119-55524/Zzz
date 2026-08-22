@@ -3,6 +3,7 @@
 #include "ViewManager.h"
 #include "../gapi/IGAPI.h"
 #include "../platforms/Platform.h"
+#include "../platforms/monitor/IMonitorProvider.h"
 #include "../package/PackageManager.h"
 #include "../package/UserSettingsManager.h"
 #include "core/io/package/ViewData.h"
@@ -47,11 +48,21 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::CreatePrimaryView
 		return UNEXPECTED("{}", err);
 	}
 
+	ViewPlatformData platformData = primaryUserData.GetPlatformData();
+	const auto& monitorProvider = m_Platform.GetMonitorProvider();
+	MonitorInfo targetMonitor = monitorProvider.GetMonitorById(platformData.GetMonitorId());
+	Rect2D<zI32> targetRect = m_UserSettingsManager->IsFirstRun()
+		? monitorProvider.CenterOnWorkArea(platformData.GetWindowRect(), targetMonitor)
+		: monitorProvider.FitToWorkArea(platformData.GetWindowRect(), targetMonitor);
+
+	platformData.SetWindowRect(targetRect);
+	platformData.SetMonitorId(targetMonitor.GetPlatformMonitorId());
+
 	std::shared_ptr<View> view;
 	try
 	{
 		auto scripts = CreateViewScripts(primaryViewData->GetUiScriptGuids());
-		view = safe_make_shared<View>(primaryUserData.GetViewGuid(), primaryUserData.GetPlatformData(), std::move(scripts), m_Platform, m_UserSettingsManager, [this](View& v) { OnWindowClose(v); });
+		view = safe_make_shared<View>(primaryUserData.GetViewGuid(), platformData, std::move(scripts), m_Platform, m_UserSettingsManager, [this](View& v) { OnWindowClose(v); });
 		m_Views.push_back(view);
 		view->InvokeStart();
 	}
@@ -82,11 +93,16 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateChildView(c
 
 	const ViewUserData& userData = it->second;
 
+	const auto& monitorProvider = m_Platform.GetMonitorProvider();
+	MonitorInfo targetMonitor = monitorProvider.GetMonitorById(userData.GetWindowState().GetNativeState().GetMonitorId());
+
 	ViewPlatformData platformSettings;
-	platformSettings.SetWindowRect(userData.GetWindowState().GetNativeState().GetWindowRect());
+	Rect2D<zI32> targetRect = m_UserSettingsManager->IsFirstRun()
+		? monitorProvider.CenterOnWorkArea(userData.GetWindowState().GetNativeState().GetWindowRect(), targetMonitor)
+		: monitorProvider.FitToWorkArea(userData.GetWindowState().GetNativeState().GetWindowRect(), targetMonitor);
+	platformSettings.SetWindowRect(targetRect);
 	platformSettings.SetWindowState(userData.GetWindowState().GetNativeState().GetState());
-	if (!userData.GetWindowState().GetNativeState().GetMonitorId().empty())
-		platformSettings.SetMonitorId(userData.GetWindowState().GetNativeState().GetMonitorId());
+	platformSettings.SetMonitorId(targetMonitor.GetPlatformMonitorId());
 
 	std::shared_ptr<View> view;
 	try
@@ -121,11 +137,16 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateIndependent
 
 	const ViewUserData& userData = it->second;
 
+	const auto& monitorProvider = m_Platform.GetMonitorProvider();
+	MonitorInfo targetMonitor = monitorProvider.GetMonitorById(userData.GetWindowState().GetNativeState().GetMonitorId());
+
 	ViewPlatformData platformSettings;
-	platformSettings.SetWindowRect(userData.GetWindowState().GetNativeState().GetWindowRect());
+	Rect2D<zI32> targetRect = m_UserSettingsManager->IsFirstRun()
+		? monitorProvider.CenterOnWorkArea(userData.GetWindowState().GetNativeState().GetWindowRect(), targetMonitor)
+		: monitorProvider.FitToWorkArea(userData.GetWindowState().GetNativeState().GetWindowRect(), targetMonitor);
+	platformSettings.SetWindowRect(targetRect);
 	platformSettings.SetWindowState(userData.GetWindowState().GetNativeState().GetState());
-	if (!userData.GetWindowState().GetNativeState().GetMonitorId().empty())
-		platformSettings.SetMonitorId(userData.GetWindowState().GetNativeState().GetMonitorId());
+	platformSettings.SetMonitorId(targetMonitor.GetPlatformMonitorId());
 
 	std::shared_ptr<View> view;
 	try

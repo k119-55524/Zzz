@@ -71,6 +71,8 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         # Platforms
         "platforms/Platform.h"
         "platforms/PlatformCommon.cpp"
+        "platforms/monitor/IMonitorProvider.h"
+        "platforms/monitor/MonitorProviderMobile.h"
 
         # Main Loop
         "platforms/mainloop/MainLoop.h" "platforms/mainloop/MainLoopCommon.h" "platforms/mainloop/MainLoopCommon.cpp"
@@ -107,6 +109,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
                 "platforms/PlatformEditor.cpp"
                 "platforms/input/InputEditor.h" "platforms/input/InputEditor.cpp"
                 "platforms/window/WinMSWindowEditor.h" "platforms/window/WinMSWindowEditor.cpp"
+                "platforms/monitor/MonitorProviderMSWin.h" "platforms/monitor/MonitorProviderMSWin.cpp"
             )
         else()
             target_sources(${TARGET_NAME} PRIVATE 
@@ -114,6 +117,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
                 "platforms/input/InputMSWindows.h" "platforms/input/InputMSWindows.cpp"
                 "platforms/mainloop/MainLoopMSWin.h" "platforms/mainloop/MainLoopMSWin.cpp"
                 "platforms/window/WinMSWindows.h" "platforms/window/WinMSWindows.cpp"
+                "platforms/monitor/MonitorProviderMSWin.h" "platforms/monitor/MonitorProviderMSWin.cpp"
             )
         endif()
     endif()

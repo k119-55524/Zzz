@@ -1,6 +1,7 @@
 
 #include "WinMSWindows.h"
 #include "../Platform.h"
+#include "../monitor/IMonitorProvider.h"
 #include "engine/view/View.h"
 
 using namespace zzz::core;
@@ -81,16 +82,19 @@ LRESULT CALLBACK WinMSWindows::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 	return false;
 }
 
-Rect2D<zI32> WinMSWindows::GetNormalWindowRect() const
+Rect2D<zI32> WinMSWindows::GetFullWindowRect() const
 {
-	ensure(m_hWnd != nullptr, "WinMSWindows::GetNormalWindowRect вызван для неинициализированного окна (m_hWnd == nullptr).");
+	ensure(m_hWnd != nullptr, "WinMSWindows::GetFullWindowRect вызван для неинициализированного окна (m_hWnd == nullptr).");
 
 	WINDOWPLACEMENT wp{};
 	wp.length = sizeof(WINDOWPLACEMENT);
 	if (GetWindowPlacement(m_hWnd, &wp))
 	{
-		const RECT& r = wp.rcNormalPosition;
-		return Rect2D<zI32>{ Point2D<zI32>{r.left, r.top}, Size2D<zI32>{r.right - r.left, r.bottom - r.top} };
+		if (wp.showCmd == SW_SHOWMINIMIZED)
+		{
+			const RECT& r = wp.rcNormalPosition;
+			return Rect2D<zI32>{ Point2D<zI32>{r.left, r.top}, Size2D<zI32>{r.right - r.left, r.bottom - r.top} };
+		}
 	}
 
 	RECT r{};
@@ -98,6 +102,20 @@ Rect2D<zI32> WinMSWindows::GetNormalWindowRect() const
 		THROW_RUNTIME("GetWindowRect завершился ошибкой.");
 
 	return Rect2D<zI32>{ Point2D<zI32>{r.left, r.top}, Size2D<zI32>{r.right - r.left, r.bottom - r.top} };
+}
+
+Rect2D<zI32> WinMSWindows::GetClientRect() const
+{
+	ensure(m_hWnd != nullptr, "WinMSWindows::GetClientRect вызван для неинициализированного окна (m_hWnd == nullptr).");
+
+	RECT clientRect{};
+	if (!::GetClientRect(m_hWnd, &clientRect))
+		THROW_RUNTIME("GetClientRect завершился ошибкой.");
+
+	POINT pt{ clientRect.left, clientRect.top };
+	ClientToScreen(m_hWnd, &pt);
+
+	return Rect2D<zI32>{ Point2D<zI32>{pt.x, pt.y}, Size2D<zI32>{clientRect.right - clientRect.left, clientRect.bottom - clientRect.top} };
 }
 
 std::expected<void, std::string> WinMSWindows::Initialize(const ViewPlatformData& platformData, const View* parentView)
@@ -137,7 +155,7 @@ std::expected<void, std::string> WinMSWindows::Initialize(const ViewPlatformData
 	if (!m_hWnd)
 		THROW_RUNTIME("CreateWindowEx( ... ) завершился ошибкой. Код ошибки (Windows): {}", ::GetLastError());
 
-	m_NativeState.SetWindowRect(GetNormalWindowRect());
+	m_NativeState.SetWindowRect(GetFullWindowRect());
 	m_NativeState.SetState(targetState);
 	if (!platformData.GetMonitorId().empty())
 		m_NativeState.SetMonitorId(platformData.GetMonitorId());
@@ -210,7 +228,7 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		return { false, 0 };
 
 	case WM_MOVE:
-		m_NativeState.SetWindowRect(GetNormalWindowRect());
+		m_NativeState.SetWindowRect(GetFullWindowRect());
 		return { false, 0 };
 
 	case WM_ENTERSIZEMOVE:
@@ -232,7 +250,7 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		/**
 		 * @brief [Windows] Пользователь отпустил рамку окна.
 		 */
-		m_NativeState.SetWindowRect(GetNormalWindowRect());
+		m_NativeState.SetWindowRect(GetFullWindowRect());
 		VERIFY_AND_CALL(m_Callbacks.OnResizeEnd);
 		return { false, 0 };
 
@@ -256,15 +274,35 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		return { false, 0 };
 	}
 
+	// Обрабатываем изменение разрешения и конфигурации мониторов
+	case WM_DISPLAYCHANGE:
+	{
+		OnMonitorResolutionChanged();
+		VERIFY_AND_CALL(m_Callbacks.OnDisplayChanged);
+		return { false, 0 };
+	}
+
 	// Обрабатываем изменение DPI в системе
 	case WM_DPICHANGED:
 	{
 		/**
 		 * @brief [Windows] Окно было перенесено на монитор с другим масштабом (DPI).
 		 */
+		const auto* suggestedRect = reinterpret_cast<const RECT*>(lParam);
+		if (suggestedRect)
+		{
+			SetWindowPos(m_hWnd, nullptr,
+				suggestedRect->left, suggestedRect->top,
+				suggestedRect->right - suggestedRect->left,
+				suggestedRect->bottom - suggestedRect->top,
+				SWP_NOZORDER | SWP_NOACTIVATE);
+			m_NativeState.SetWindowRect(GetFullWindowRect());
+		}
+
+		OnMonitorResolutionChanged();
 		VERIFY_AND_CALL(m_Callbacks.OnDpiChanged);
 
-		return { false, FALSE };
+		return { false, 0 };
 	}
 
 	case WM_SETFOCUS:
@@ -310,3 +348,31 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 
 	return { true, 0 };
 }
+
+void WinMSWindows::OnMonitorResolutionChanged()
+{
+	const auto& monitorProvider = m_Platform.GetMonitorProvider();
+	// Обновляем нативный список мониторов
+	const_cast<IMonitorProvider&>(monitorProvider).RefreshMonitors();
+
+	Rect2D<zI32> normalRect = GetFullWindowRect();
+	MonitorInfo monitor = monitorProvider.GetMonitorForRect(normalRect);
+
+	// Обновляем идентификатор текущего монитора окна в NativeState
+	m_NativeState.SetMonitorId(monitor.GetPlatformMonitorId());
+
+	// Если окно в обычным оконном режиме и вылезает за новую WorkArea - ужимаем его
+	if (!IsMaximized() && !IsMinimized())
+	{
+		Rect2D<zI32> fittedRect = monitorProvider.FitToWorkArea(normalRect, monitor);
+		if (normalRect != fittedRect)
+		{
+			SetWindowPos(m_hWnd, nullptr,
+				fittedRect.GetPosition().GetX(), fittedRect.GetPosition().GetY(),
+				static_cast<int>(fittedRect.GetSize().GetWidth()), static_cast<int>(fittedRect.GetSize().GetHeight()),
+				SWP_NOZORDER | SWP_NOACTIVATE);
+			m_NativeState.SetWindowRect(fittedRect);
+		}
+	}
+}
+

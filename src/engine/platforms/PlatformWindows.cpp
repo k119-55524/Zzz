@@ -1,6 +1,7 @@
 
 #include "Platform.h"
 #include "window/WinMSWindows.h"
+#include "monitor/IMonitorProvider.h"
 #include "engine/utils/MonitorUtils.h"
 #include "engine/utils/GpuUtils.h"
 
@@ -86,8 +87,9 @@ HardwareState Platform::GatherHardwareState() const
 	std::vector<StorageInfo> storages;
 	std::vector<NetworkAdapterInfo> networkAdapters;
 
-	// 1. Мониторы (Windows API)
-	EnumDisplayMonitors(nullptr, nullptr, MonitorEnumProc, reinterpret_cast<LPARAM>(&monitors));
+	// 1. Мониторы (из подсистемы IMonitorProvider)
+	monitors = m_MonitorProvider ? m_MonitorProvider->GetMonitors() : std::vector<MonitorInfo>{};
+
 	Microsoft::WRL::ComPtr<IDXGIFactory1> factory;
 	if (SUCCEEDED(CreateDXGIFactory1(IID_PPV_ARGS(&factory))))
 	{

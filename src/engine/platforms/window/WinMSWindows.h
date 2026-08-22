@@ -30,7 +30,9 @@ namespace zzz::engine
 		[[nodiscard]] std::expected<void, std::string> Initialize(const ViewPlatformData& platformData, const View* parentView = nullptr) override;
 		[[nodiscard]] bool IsMinimized() const noexcept override { return m_hWnd && ::IsIconic(m_hWnd); }
 		[[nodiscard]] bool IsMaximized() const override;
-		[[nodiscard]] Rect2D<zI32> GetNormalWindowRect() const override;
+		[[nodiscard]] Rect2D<zI32> GetFullWindowRect() const override;
+		[[nodiscard]] Rect2D<zI32> GetClientRect() const override;
+		void OnMonitorResolutionChanged() override;
 
 		HWND GetHWnd() const noexcept { return m_hWnd; }
 

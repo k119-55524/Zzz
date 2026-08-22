@@ -37,7 +37,7 @@ namespace zzz::engine
 			zU32 selectedIndex = 0;
 			bool monitorFound = false;
 
-			const std::string& savedMonitorId = m_UserSettings ? m_UserSettings->GetHardwareState().GetSelectedMonitorId() : "";
+			const std::string& savedMonitorId = m_UserSettings ? m_UserSettings->GetPrimaryViewUserData().GetPlatformData().GetMonitorId() : "";
 
 			if (!savedMonitorId.empty())
 			{
@@ -69,7 +69,6 @@ namespace zzz::engine
 				}
 
 				DOut("[MonitorSelector] Выбран Primary монитор: {} [#{}, ID: {}]", m_Monitors[selectedIndex].GetName(), selectedIndex, m_Monitors[selectedIndex].GetPlatformMonitorId());
-				m_UserSettings->SetSelectedMonitorId(m_Monitors[selectedIndex].GetPlatformMonitorId());
 			}
 		}
 

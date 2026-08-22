@@ -62,10 +62,8 @@ namespace zzz::core
 		[[nodiscard]] const std::vector<StorageInfo>& GetStorages() const noexcept { return m_Storages; }
 		[[nodiscard]] const std::vector<NetworkAdapterInfo>& GetNetworkAdapters() const noexcept { return m_NetworkAdapters; }
 		[[nodiscard]] const std::string& GetSelectedGpuId() const noexcept { return m_SelectedGpuId; }
-		[[nodiscard]] const std::string& GetSelectedMonitorId() const noexcept { return m_SelectedMonitorId; }
 
 		void SetSelectedGpuId(std::string gpuId) { m_SelectedGpuId = std::move(gpuId); }
-		void SetSelectedMonitorId(std::string monitorId) { m_SelectedMonitorId = std::move(monitorId); }
 
 		[[nodiscard]] bool operator==(const HardwareState& other) const noexcept
 		{
@@ -76,8 +74,7 @@ namespace zzz::core
 				m_Monitors == other.m_Monitors &&
 				m_Storages == other.m_Storages &&
 				m_NetworkAdapters == other.m_NetworkAdapters &&
-				m_SelectedGpuId == other.m_SelectedGpuId &&
-				m_SelectedMonitorId == other.m_SelectedMonitorId;
+				m_SelectedGpuId == other.m_SelectedGpuId;
 		}
 
 		inline void LogFileBlock([[maybe_unused]] std::string_view indentation = {}) const
@@ -150,20 +147,17 @@ namespace zzz::core
 			}
 
 			DOut("{}selectedGpuId: {}", nestedIndentation, m_SelectedGpuId);
-			DOut("{}selectedMonitorId: {}", nestedIndentation, m_SelectedMonitorId);
 #endif
 		}
 
 	private:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override
 		{
-			return s.Serialize(buffer, m_SelectedGpuId)
-				.and_then([&]() { return s.Serialize(buffer, m_SelectedMonitorId); });
+			return s.Serialize(buffer, m_SelectedGpuId);
 		}
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override
 		{
-			return s.Deserialize(buffer, offset, m_SelectedGpuId)
-				.and_then([&]() { return s.Deserialize(buffer, offset, m_SelectedMonitorId); });
+			return s.Deserialize(buffer, offset, m_SelectedGpuId);
 		}
 
 		std::vector<CpuInfo> m_Cpus;
@@ -175,6 +169,5 @@ namespace zzz::core
 		std::vector<NetworkAdapterInfo> m_NetworkAdapters;
 
 		std::string m_SelectedGpuId;
-		std::string m_SelectedMonitorId;
 	};
 }

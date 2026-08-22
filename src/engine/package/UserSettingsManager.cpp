@@ -46,6 +46,10 @@ namespace zzz::engine
 				DOutWarning("Не удалось загрузить файл конфигурации: {}. Создаётся конфигурация по умолчанию.", m_ConfigPath.string());
 				SetDefaultUserSettings(defaultPrimaryViewData);
 			}
+			else
+			{
+				m_IsFirstRun = false;
+			}
 		}
 		catch (const std::filesystem::filesystem_error& e)
 		{
@@ -80,15 +84,6 @@ namespace zzz::engine
 		if (m_HardwareState.GetSelectedGpuId() != gpuId)
 		{
 			m_HardwareState.SetSelectedGpuId(std::move(gpuId));
-			m_IsDirty = true;
-		}
-	}
-
-	void UserSettingsManager::SetSelectedMonitorId(std::string monitorId)
-	{
-		if (m_HardwareState.GetSelectedMonitorId() != monitorId)
-		{
-			m_HardwareState.SetSelectedMonitorId(std::move(monitorId));
 			m_IsDirty = true;
 		}
 	}

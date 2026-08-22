@@ -62,6 +62,11 @@ namespace zzz::engine
 		 * @param active true, если окно стало активным; false, если ушло в фон.
 		 */
 		std::function<void(bool active)> OnActivate;
+
+		/**
+		 * @brief Вызывается при изменении разрешения или конфигурации мониторов в системе.
+		 */
+		std::function<void()> OnDisplayChanged;
 #pragma endregion
 
 #pragma region App Lifecycle & GPU Surface (All Platforms)
@@ -123,7 +128,27 @@ namespace zzz::engine
 		[[nodiscard]] virtual std::expected<void, std::string> Initialize(const zzz::core::ViewPlatformData& platformData, const View* parentView = nullptr) = 0;
 		[[nodiscard]] virtual bool IsMinimized() const noexcept = 0;
 		[[nodiscard]] virtual bool IsMaximized() const = 0;
-		[[nodiscard]] virtual zzz::math::Rect2D<zzz::core::zI32> GetNormalWindowRect() const = 0;
+
+		/**
+		 * @brief Возвращает полный прямоугольник окна, включая внешние рамки и заголовок (Window Rect).
+		 */
+		[[nodiscard]] virtual zzz::math::Rect2D<zzz::core::zI32> GetFullWindowRect() const = 0;
+
+		/**
+		 * @brief Возвращает прямоугольник клиентской области окна без учета рамок и заголовка (Client Rect / Surface Rect).
+		 */
+		[[nodiscard]] virtual zzz::math::Rect2D<zzz::core::zI32> GetClientRect() const = 0;
+
+		/**
+		 * @brief Возвращает точный физический размер клиентской области в пикселях для GAPI (Vulkan / DirectX 12 / Metal).
+		 * Вычисляется как GetClientRect().GetSize() * Monitor.ScaleFactor.
+		 */
+		[[nodiscard]] zzz::math::Size2D<zzz::core::zU32> GetPhysicalClientSize() const noexcept;
+
+		/**
+		 * @brief Обрабатывает событие смены разрешения или конфигурации монитора.
+		 */
+		virtual void OnMonitorResolutionChanged() = 0;
 
 		[[nodiscard]] const NativeWindowState& GetState() const noexcept { return m_NativeState; }
 		[[nodiscard]] NativeWindowState& GetState() noexcept { return m_NativeState; }
