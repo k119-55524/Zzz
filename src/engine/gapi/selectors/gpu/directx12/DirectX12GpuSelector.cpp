@@ -98,11 +98,23 @@ namespace zzz::engine
 		{
 			const auto& singleCandidate = m_Candidates[0];
 			const std::string gpuName = GpuUtils::GpuNameToString(singleCandidate.desc.Description);
+			const std::string& savedGpuId = m_UserSettings ? m_UserSettings->GetSelectedGpuId() : "";
 
-			DOut("[DirectX12GpuSelector] - Единственный доступный видеоадаптер: {} (VRAM: {} MB, ID: {})",
-				gpuName,
-				singleCandidate.desc.DedicatedVideoMemory / (1024 * 1024),
-				singleCandidate.platformGpuId);
+			if (!savedGpuId.empty() && savedGpuId == singleCandidate.platformGpuId)
+			{
+				DOut("[GPU(old detected)] '{}' (VRAM: {} MB, ID: {})",
+					gpuName, singleCandidate.desc.DedicatedVideoMemory / (1024 * 1024), singleCandidate.platformGpuId);
+			}
+			else if (!savedGpuId.empty())
+			{
+				DOutWarning("[GPU(replaced detected)] '{}' (VRAM: {} MB, ID: {})",
+					gpuName, singleCandidate.desc.DedicatedVideoMemory / (1024 * 1024), singleCandidate.platformGpuId);
+			}
+			else
+			{
+				DOut("[GPU(auto detected)] '{}' (VRAM: {} MB, ID: {})",
+					gpuName, singleCandidate.desc.DedicatedVideoMemory / (1024 * 1024), singleCandidate.platformGpuId);
+			}
 
 			if (m_UserSettings)
 			{
@@ -123,17 +135,13 @@ namespace zzz::engine
 				if (candidate.platformGpuId == savedGpuId)
 				{
 					const std::string gpuName = GpuUtils::GpuNameToString(candidate.desc.Description);
-
-					DOut("[DirectX12GpuSelector] - [ГПУ ВОССТАНОВЛЕН]: Использован сохранённый видеоадаптер '{}' (VRAM: {} MB, ID: {})",
-						gpuName,
-						candidate.desc.DedicatedVideoMemory / (1024 * 1024),
-						candidate.platformGpuId);
+					DOut("[GPU(old detected)] '{}' (VRAM: {} MB, ID: {})",
+						gpuName, candidate.desc.DedicatedVideoMemory / (1024 * 1024), candidate.platformGpuId);
 					return candidate.adapter;
 				}
 			}
 
 			isGpuReplaced = true;
-			DOutWarning("[DirectX12GpuSelector] - [ГПУ НЕ НАЙДЕН]: Сохранённый адаптер с ID '{}' отсутствует в системе.", savedGpuId);
 		}
 
 		// 2. Автовыбор по наибольшему рейтингу (Score)
@@ -156,19 +164,13 @@ namespace zzz::engine
 
 		if (isGpuReplaced)
 		{
-			DOut("[DirectX12GpuSelector] - [ГПУ ЗАМЕНЁН]: Видеоадаптер автоматически заменён на лучший в системе: '{}' (Score: {}, VRAM: {} MB, ID: {})",
-				bestGpuName,
-				bestCandidate->score,
-				bestCandidate->desc.DedicatedVideoMemory / (1024 * 1024),
-				bestCandidate->platformGpuId);
+			DOutWarning("[GPU(replaced detected)] '{}' (Score: {}, VRAM: {} MB, ID: {})",
+				bestGpuName, bestCandidate->score, bestCandidate->desc.DedicatedVideoMemory / (1024 * 1024), bestCandidate->platformGpuId);
 		}
 		else
 		{
-			DOut("[DirectX12GpuSelector] - [ГПУ ВЫБРАН]: Выполнен первичный автовыбор наилучшего видеоадаптера: '{}' (Score: {}, VRAM: {} MB, ID: {})",
-				bestGpuName,
-				bestCandidate->score,
-				bestCandidate->desc.DedicatedVideoMemory / (1024 * 1024),
-				bestCandidate->platformGpuId);
+			DOut("[GPU(auto detected)] '{}' (Score: {}, VRAM: {} MB, ID: {})",
+				bestGpuName, bestCandidate->score, bestCandidate->desc.DedicatedVideoMemory / (1024 * 1024), bestCandidate->platformGpuId);
 		}
 
 		return bestCandidate->adapter;
