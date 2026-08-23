@@ -6,6 +6,7 @@
 #include "../platforms/input/Input.h"
 #include "../platforms/window/NativeWindow.h"
 
+#include "engine/gapi/SurfView.h"
 #include "engine/view/ViewWindowState.h"
 
 namespace zzz::engine
@@ -18,20 +19,25 @@ namespace zzz::engine
 
 	public:
 		View() = delete;
-		View(zzz::core::Guid guid, const zzz::core::ViewPlatformData& settings, std::vector<std::shared_ptr<zzz::core::ViewScript>> scripts, const Platform& platform, std::shared_ptr<UserSettingsManager> userSettingsManager, std::function<void(View&)> onWindowClose, const View* parentView = nullptr);
+		View(zzz::core::Guid guid, const zzz::core::ViewPlatformData& settings, std::vector<std::shared_ptr<zzz::core::ViewScript>> scripts, const Platform& platform, std::shared_ptr<IGAPI> gapi, std::shared_ptr<UserSettingsManager> userSettingsManager, std::function<void(View&)> onWindowClose, const View* parentView = nullptr);
 #if Z_EDITOR
-		View(const Platform& platform, void* data);
+		View(const Platform& platform, std::shared_ptr<IGAPI> gapi, void* data);
 #endif // Z_EDITOR
 		~View();
 
 		inline void InvokeStart() { m_EventBus.InvokeStart(); }
 		void Update(const zzz::core::Time& time);
 
+		void PrepareFrame();
+		void RenderFrame();
+
 		[[nodiscard]] const zzz::core::Guid& GetGuid() const noexcept { return m_Guid; }
 		[[nodiscard]] ViewWindowState GetState() const;
 
 		[[nodiscard]] const NativeWindow& GetNativeWindow() const noexcept { return *m_NativeWindow; }
 		[[nodiscard]] NativeWindow& GetNativeWindow() noexcept { return *m_NativeWindow; }
+
+		[[nodiscard]] std::shared_ptr<ISurfView> GetSurfView() const noexcept { return m_SurfView; }
 
 		inline void SetActive(bool active)
 		{
@@ -180,17 +186,20 @@ namespace zzz::engine
 #pragma endregion
 
 		const Platform& m_Platform;
-		zzz::core::Guid m_Guid;
+		Guid m_Guid;
+		std::shared_ptr<IGAPI> m_GAPI;
+		std::shared_ptr<ISurfView> m_SurfView;
 		std::shared_ptr<Input>  m_Input;
 		std::shared_ptr<NativeWindow> m_NativeWindow;
 		std::shared_ptr<UserSettingsManager> m_UserSettingsManager;
-
-		std::function<void(View&)> OnWindowClose;
-		void HandleWindowClose();
+		zzz::templates::ThreadPool m_ThreadsUpdate;
 
 		bool m_IsActive;
 		ViewEventBus m_EventBus;
 		std::shared_ptr<Scene> m_ActiveScene;
 		std::vector<std::shared_ptr<ViewScript>> m_Scripts;
+
+		std::function<void(View&)> OnWindowClose;
+		void HandleWindowClose();
 	};
 }

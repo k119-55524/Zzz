@@ -1,7 +1,8 @@
-﻿#pragma once
+#pragma once
 
 #include "core/time/Time.h"
 #include "core/events/Event.h"
+#include "core/enums/eWinResize.h"
 
 namespace zzz::core
 {
@@ -128,6 +129,7 @@ namespace zzz::core
 		void InvokeEnable() { OnEnable(); }
 		void InvokeDisable() { OnDisable(); }
 		void InvokeUpdate(const zzz::core::Time& t) { OnUpdate(t); }
+		void InvokeResize(const zzz::math::Size2D<>& size, eWinResize type) { OnResize(size, type); }
 
 		void UnsubscribeAll(const std::shared_ptr<void>& context)
 		{
@@ -136,6 +138,7 @@ namespace zzz::core
 			OnEnable.Unsubscribe(context);
 			OnDisable.Unsubscribe(context);
 			OnUpdate.Unsubscribe(context);
+			OnResize.Unsubscribe(context);
 		}
 
 	private:
@@ -145,5 +148,6 @@ namespace zzz::core
 		Event<> OnEnable;
 		Event<> OnDisable;
 		Event<const zzz::core::Time&> OnUpdate;
+		Event<const zzz::math::Size2D<>&, zzz::core::eWinResize> OnResize;
 	};
 }

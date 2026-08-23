@@ -1,23 +1,26 @@
 
-#include "View.h"
 #include "scene/Scene.h"
 #include "../platforms/input/Input.h"
 #include "../platforms/window/NativeWindow.h"
-
 #include "engine/package/UserSettingsManager.h"
+
+#include "View.h"
 
 using namespace zzz::core;
 using namespace zzz::engine;
 
-View::View(Guid guid, const ViewPlatformData& settings, std::vector<std::shared_ptr<ViewScript>> scripts, const Platform& platform, std::shared_ptr<UserSettingsManager> userSettingsManager, std::function<void(View&)> onWindowClose, const View* parentView) :
+View::View(Guid guid, const ViewPlatformData& settings, std::vector<std::shared_ptr<ViewScript>> scripts, const Platform& platform, std::shared_ptr<IGAPI> gapi, std::shared_ptr<UserSettingsManager> userSettingsManager, std::function<void(View&)> onWindowClose, const View* parentView) :
 	m_Platform{ platform },
 	m_Guid{ std::move(guid) },
+	m_GAPI{ std::move(gapi) },
 	m_Input{ nullptr },
 	m_NativeWindow{ nullptr },
 	m_UserSettingsManager{ std::move(userSettingsManager) },
+	m_ThreadsUpdate{ "View", 2 },
 	OnWindowClose{ std::move(onWindowClose) },
 	m_IsActive{ true }
 {
+	ensure(m_GAPI != nullptr, "IGAPI не должен быть null.");
 	ensure(OnWindowClose != nullptr, "OnWindowClose не должен быть null.");
 
 	Initialize(settings, scripts, parentView);
@@ -29,12 +32,15 @@ ViewWindowState View::GetState() const
 }
 
 #if Z_EDITOR
-View::View(const Platform& platform, void* data) :
+View::View(const Platform& platform, std::shared_ptr<IGAPI> gapi, void* data) :
 	m_Platform{ platform },
+	m_GAPI{ std::move(gapi) },
 	m_Input{ nullptr },
 	m_NativeWindow{ nullptr },
+	m_ThreadsUpdate{ "View", 2 },
 	m_IsActive{ true }
 {
+	ensure(m_GAPI != nullptr, "IGAPI не должен быть null.");
 	Initialize(data);
 }
 #endif // Z_EDITOR
@@ -74,6 +80,8 @@ void View::Initialize(const ViewPlatformData& settings, const std::vector<std::s
 	auto res = m_NativeWindow->Initialize(settings, parentView);
 	if (!res)
 		THROW_RUNTIME("Не удалось инициализировать окно: {}.", res.error());
+
+	m_SurfView = safe_make_shared<SurfView>(m_NativeWindow, m_GAPI);
 
 	for (const auto& script : scripts)
 	{
@@ -131,6 +139,11 @@ void View::HandleWindowClose()
 
 void View::OnWindowResize(Size2D<>& size, eWinResize type)
 {
+	m_EventBus.InvokeResize(size, type);
+
+	if (m_SurfView)
+		m_SurfView->OnResize(size);
+
 	DOut("[View::OnWindowResize] - {}x{} (Type: {})", size.GetWidth(), size.GetHeight(), EnumToString::ToString(type));
 }
 
@@ -223,4 +236,34 @@ void View::Update(const Time& time)
 
 	if (m_ActiveScene)
 		m_ActiveScene->Update(time);
+
+	PrepareFrame();
+	RenderFrame();
+}
+
+void View::PrepareFrame()
+{
+	if (!m_IsActive || !m_SurfView)
+		return;
+
+	m_SurfView->PreRender();
+
+	m_ThreadsUpdate.Submit([this]()
+	{
+		m_SurfView->PrepareFrame();
+	});
+}
+
+void View::RenderFrame()
+{
+	if (!m_IsActive || !m_SurfView)
+		return;
+
+	m_ThreadsUpdate.Submit([this]()
+	{
+		m_SurfView->RenderFrame();
+	});
+	m_ThreadsUpdate.Join();
+
+	m_SurfView->PostRender();
 }

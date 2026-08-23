@@ -1,12 +1,12 @@
 
-#include "View.h"
 #include "ViewManager.h"
 #include "../gapi/IGAPI.h"
 #include "../platforms/Platform.h"
-#include "../platforms/monitor/IMonitorProvider.h"
 #include "../package/PackageManager.h"
 #include "../package/UserSettingsManager.h"
-#include "core/io/package/ViewData.h"
+#include "../platforms/monitor/IMonitorProvider.h"
+
+#include "View.h"
 
 using namespace zzz::core;
 using namespace zzz::engine;
@@ -17,6 +17,7 @@ ViewManager::ViewManager(const Platform& platform, std::shared_ptr<IGAPI> gapi, 
 	m_ScriptFactory{ std::move(scriptFactory) },
 	m_PackageManager{ std::move(packageManager) },
 	m_UserSettingsManager{ std::move(userSettingsManager) },
+	m_ThreadsUpdate{ "ViewManager", 2 },
 	OnAllViewsClosed{ std::move(onAllViewsClosed) }
 {
 	ensure(m_GAPI != nullptr, "IGAPI не должен быть null.");
@@ -62,7 +63,7 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::CreatePrimaryView
 	try
 	{
 		auto scripts = CreateViewScripts(primaryViewData->GetUiScriptGuids());
-		view = safe_make_shared<View>(primaryUserData.GetViewGuid(), platformData, std::move(scripts), m_Platform, m_UserSettingsManager, [this](View& v) { OnWindowClose(v); });
+		view = safe_make_shared<View>(primaryUserData.GetViewGuid(), platformData, std::move(scripts), m_Platform, m_GAPI, m_UserSettingsManager, [this](View& v) { OnWindowClose(v); });
 		m_Views.push_back(view);
 		view->InvokeStart();
 	}
@@ -108,7 +109,7 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateChildView(c
 	try
 	{
 		auto viewScripts = CreateViewScripts(viewDataRes->GetUiScriptGuids());
-		view = safe_make_shared<View>(viewGuid, platformSettings, std::move(viewScripts), m_Platform, m_UserSettingsManager, [this](View& v) { OnWindowClose(v); }, m_PrimaryView.get());
+		view = safe_make_shared<View>(viewGuid, platformSettings, std::move(viewScripts), m_Platform, m_GAPI, m_UserSettingsManager, [this](View& v) { OnWindowClose(v); }, m_PrimaryView.get());
 		m_ChildViews.push_back(view);
 		m_Views.push_back(view);
 		view->InvokeStart();
@@ -152,7 +153,7 @@ std::expected<std::shared_ptr<View>, std::string> ViewManager::CreateIndependent
 	try
 	{
 		auto viewScripts = CreateViewScripts(viewDataRes->GetUiScriptGuids());
-		view = safe_make_shared<View>(viewGuid, platformSettings, std::move(viewScripts), m_Platform, m_UserSettingsManager, [this](View& v) { OnWindowClose(v); });
+		view = safe_make_shared<View>(viewGuid, platformSettings, std::move(viewScripts), m_Platform, m_GAPI, m_UserSettingsManager, [this](View& v) { OnWindowClose(v); });
 		m_IndependentViews.push_back(view);
 		m_Views.push_back(view);
 		view->InvokeStart();
@@ -215,7 +216,7 @@ void ViewManager::OnWindowClose(View& view)
 #if Z_EDITOR
 [[nodiscard]] std::expected <std::shared_ptr<View>, std::string> ViewManager::CreateView(void* data)
 {
-	auto view = safe_make_shared<View>(m_Platform, data);
+	auto view = safe_make_shared<View>(m_Platform, m_GAPI, data);
 	m_Views.push_back(std::move(view));
 
 	return view;
@@ -240,8 +241,22 @@ void ViewManager::RemoveView(View* view)
 
 void ViewManager::Update(const Time& time)
 {
-	for (const auto& view : m_Views)
+	m_ThreadsUpdate.Submit([this, &time]()
 	{
-		view->Update(time);
-	}
+		for (const auto& view : m_Views)
+		{
+			view->Update(time);
+			view->PrepareFrame();
+		}
+	});
+
+	m_ThreadsUpdate.Submit([this]()
+	{
+		for (const auto& view : m_Views)
+		{
+			view->RenderFrame();
+		}
+	});
+
+	m_ThreadsUpdate.Join();
 }

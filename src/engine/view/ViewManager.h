@@ -1,17 +1,17 @@
 #pragma once
 
-#include "engine/EngineIncludes.h"
-
 #include "engine/view/View.h"
 #include "engine/gapi/IGAPI.h"
+#include "engine/EngineIncludes.h"
 #include "engine/platforms/Platform.h"
 #include "engine/package/PackageManager.h"
 #include "engine/package/UserSettingsManager.h"
 
+using namespace zzz::core;
+using namespace zzz::templates;
+
 namespace zzz::engine
 {
-	using namespace zzz::core;
-
 	class ViewManager final
 	{
 		Z_NO_MOVE(ViewManager);
@@ -48,6 +48,7 @@ namespace zzz::engine
 		std::vector<std::shared_ptr<View>> m_ChildViews;
 		std::vector<std::shared_ptr<View>> m_IndependentViews;
 		std::list<std::shared_ptr<View>> m_Views;
+		ThreadPool m_ThreadsUpdate;
 
 		std::function<void()> OnAllViewsClosed;
 		void OnWindowClose(View& view);

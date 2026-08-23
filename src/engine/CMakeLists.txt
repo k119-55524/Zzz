@@ -52,6 +52,8 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
 
         # GAPI
         "gapi/IGAPI.h" "gapi/IGAPI.cpp"
+        "gapi/ISurfView.h"
+        "gapi/SurfView.h"
         "gapi/GAPI.h"
         "gapi/selectors/gpu/GpuRatingEvaluator.h"
         "gapi/selectors/gpu/IGpuSelector.h"
@@ -60,7 +62,11 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "gapi/selectors/gpu/metal/MetalGpuSelector.h"
         "gapi/selectors/monitor/MonitorSelector.h"
         "gapi/vulkan/VulkanAPI.h" "gapi/vulkan/VulkanAPI.cpp"
+        "gapi/vulkan/Swapchain_VK.h" "gapi/vulkan/Swapchain_VK.cpp"
+        "gapi/vulkan/DepthBuffer_VK.h"
+        "gapi/vulkan/SurfView_VK.h" "gapi/vulkan/SurfView_VK.cpp"
         "gapi/directx12/DirectX12API.h" "gapi/directx12/DirectX12API.cpp"
+        "gapi/directx12/SurfView_DX.h" "gapi/directx12/SurfView_DX.cpp"
         "gapi/metal/MetalAPI.h" "gapi/metal/MetalAPI.mm"
 
         # Scripts & Scenes
