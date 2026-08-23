@@ -2,6 +2,12 @@
 
 #include <core/CoreIncludes.h>
 
+namespace zzz::logger
+{
+	class Logger;
+	extern Logger g_Logger;
+}
+
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 /**
  * @brief Вывод информационного сообщения в лог.

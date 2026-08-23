@@ -3,6 +3,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
 
     target_include_directories(${TARGET_NAME} PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}/pch
     )
 
     target_sources(${TARGET_NAME} PRIVATE
@@ -93,46 +94,14 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PrefabData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Serialize/Serializer.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Serialize/Serializer.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/pch/pch.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/pch/pch.cpp
     )
 
+    set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/pch/pch.cpp" PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+
     target_precompile_headers(${TARGET_NAME} PRIVATE
-        "Core.h"
-        <cstdint>
-        <cstddef>
-        <cstring>
-        <string>
-        <string_view>
-        <vector>
-        <array>
-        <list>
-        <map>
-        <unordered_map>
-        <set>
-        <unordered_set>
-        <memory>
-        <utility>
-        <algorithm>
-        <functional>
-        <type_traits>
-        <chrono>
-        <thread>
-        <mutex>
-        <atomic>
-        <filesystem>
-        <fstream>
-        <sstream>
-        <iostream>
-        <variant>
-        <optional>
-        <stdexcept>
-        <system_error>
-        <format>
-        <concepts>
-        $<$<BOOL:${WIN32}>:<winsock2.h>>
-        $<$<BOOL:${WIN32}>:<ws2tcpip.h>>
-        $<$<BOOL:${WIN32}>:<windows.h>>
-        $<$<BOOL:${WIN32}>:<d3d12.h>>
-        $<$<BOOL:${WIN32}>:<dxcapi.h>>
+        "pch/pch.h"
     )
 
     if(UNIX AND NOT APPLE AND NOT ANDROID)

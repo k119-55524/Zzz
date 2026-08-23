@@ -2,43 +2,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
     add_library(${TARGET_NAME})
 
     target_precompile_headers(${TARGET_NAME} PRIVATE
-        "EngineIncludes.h"
-        <cstdint>
-        <cstddef>
-        <cstring>
-        <string>
-        <string_view>
-        <vector>
-        <array>
-        <list>
-        <map>
-        <unordered_map>
-        <set>
-        <unordered_set>
-        <memory>
-        <utility>
-        <algorithm>
-        <functional>
-        <type_traits>
-        <chrono>
-        <thread>
-        <mutex>
-        <atomic>
-        <filesystem>
-        <fstream>
-        <sstream>
-        <iostream>
-        <variant>
-        <optional>
-        <stdexcept>
-        <system_error>
-        <format>
-        <concepts>
-        $<$<BOOL:${WIN32}>:<winsock2.h>>
-        $<$<BOOL:${WIN32}>:<ws2tcpip.h>>
-        $<$<BOOL:${WIN32}>:<windows.h>>
-        $<$<BOOL:${WIN32}>:<d3d12.h>>
-        $<$<BOOL:${WIN32}>:<dxcapi.h>>
+        "pch/pch.h"
     )
 
     target_include_directories(${TARGET_NAME}
@@ -53,13 +17,13 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
     )
 
     target_sources(${TARGET_NAME} PRIVATE
+        pch/pch.h
+        pch/pch.cpp
         # Public
         Engine.h
         Engine.cpp
         EngineIncludes.h
         utils/Fwd.h
-        pch/Pch.h
-        pch/Pch.cpp
 
         # Package & Settings
         "package/PackageManager.h" "package/PackageManager.cpp"
@@ -183,7 +147,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
     endif()
 
     target_compile_definitions(${TARGET_NAME} PRIVATE Z_TARGET_NAME="${TARGET_NAME}")
-    set_source_files_properties(pch/Pch.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+    set_source_files_properties(pch/pch.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
     if(${IS_EDITOR})
         target_compile_definitions(${TARGET_NAME} PUBLIC Z_EDITOR=1 EDITORDLL_EXPORTS)
     endif()

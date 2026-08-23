@@ -9,6 +9,7 @@
 #include <type_traits>
 
 #include "core/utils/Export.h"
+#include "core/utils/Macroses.h"
 #include <math/Math.h>
 
 namespace zzz::core
@@ -206,12 +207,19 @@ namespace zzz::core
 		/// @return Результат сериализации.
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const ISerializable& obj) const;
 
-		/// @brief Десериализует пользовательский объект, реализующий ISerializable.
-		/// @param buffer Исходный буфер байт.
-		/// @param offset Текущее смещение в буфере.
-		/// @param obj Объект для десериализации.
-		/// @return Результат десериализации.
+		template<typename T> requires std::derived_from<std::remove_cvref_t<T>, ISerializable> && (!std::same_as<std::remove_cvref_t<T>, ISerializable>)
+		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const T& obj) const
+		{
+			return Serialize(buffer, static_cast<const ISerializable&>(obj));
+		}
+
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, ISerializable& obj) const;
+
+		template<typename T> requires std::derived_from<std::remove_cvref_t<T>, ISerializable> && (!std::same_as<std::remove_cvref_t<T>, ISerializable>)
+		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, T& obj) const
+		{
+			return Deserialize(buffer, offset, static_cast<ISerializable&>(obj));
+		}
 
 		template<typename T>
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const zzz::math::Size2D<T>& size) const
