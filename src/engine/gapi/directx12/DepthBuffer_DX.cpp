@@ -2,8 +2,13 @@
 
 #if defined(Z_D3D12)
 
-namespace zzz::dx12
+namespace zzz::engine
 {
+	DepthBuffer_DX::DepthBuffer_DX(std::shared_ptr<DirectX12API> gapi, const Size2D<>& size)
+	{
+		Initialize(gapi, size);
+	}
+
 	DepthBuffer_DX::~DepthBuffer_DX()
 	{
 		Release();
@@ -15,9 +20,16 @@ namespace zzz::dx12
 		m_DsvHeap.Reset();
 	}
 
-	std::expected<void, std::string> DepthBuffer_DX::Initialize(std::shared_ptr<zzz::engine::DirectX12API> gapi, const Size2D<>& size)
+	void DepthBuffer_DX::OnResize(const Size2D<>& size)
+	{
+		Initialize(m_GAPI, size);
+	}
+
+	void DepthBuffer_DX::Initialize(std::shared_ptr<DirectX12API> gapi, const Size2D<>& size)
 	{
 		ensure(gapi, "DirectX12API cannot be null.");
+		m_GAPI = gapi;
+
 		ID3D12Device* device = gapi->GetDevice();
 		ensure(device, "DirectX12 Device cannot be null.");
 
@@ -30,7 +42,7 @@ namespace zzz::dx12
 
 		HRESULT hr = device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_DsvHeap));
 		if (FAILED(hr))
-			return std::unexpected(std::format("Failed to create DSV Descriptor Heap: 0x{:08X}", static_cast<uint32_t>(hr)));
+			THROW_RUNTIME("Failed to create DSV Descriptor Heap: 0x{:08X}", static_cast<uint32_t>(hr));
 
 		m_DsvHandle = m_DsvHeap->GetCPUDescriptorHandleForHeapStart();
 
@@ -65,11 +77,9 @@ namespace zzz::dx12
 		);
 
 		if (FAILED(hr))
-			return std::unexpected(std::format("Failed to create Depth Stencil Buffer Resource: 0x{:08X}", static_cast<uint32_t>(hr)));
+			THROW_RUNTIME("Failed to create Depth Stencil Buffer Resource: 0x{:08X}", static_cast<uint32_t>(hr));
 
 		device->CreateDepthStencilView(m_DepthStencilBuffer.Get(), nullptr, m_DsvHandle);
-
-		return {};
 	}
 }
 

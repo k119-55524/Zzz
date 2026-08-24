@@ -4,7 +4,7 @@
 
 #if defined(Z_VULKAN)
 
-namespace zzz::vk
+namespace zzz::engine
 {
 	class DepthBuffer_VK
 	{

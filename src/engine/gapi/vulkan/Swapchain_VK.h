@@ -4,7 +4,7 @@
 
 #if defined(Z_VULKAN)
 
-namespace zzz::vk
+namespace zzz::engine
 {
 	constexpr uint32_t FRAMES_IN_FLIGHT = 3;
 

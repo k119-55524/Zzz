@@ -1,10 +1,12 @@
 #include "Swapchain_DX.h"
 
 #if defined(Z_D3D12)
-
-namespace zzz::dx12
+namespace zzz::engine
 {
-	Swapchain_DX::Swapchain_DX() = default;
+	Swapchain_DX::Swapchain_DX(std::shared_ptr<DirectX12API> gapi, std::shared_ptr<NativeWindow> window)
+	{
+		Initialize(gapi, window);
+	}
 
 	Swapchain_DX::~Swapchain_DX()
 	{
@@ -21,7 +23,7 @@ namespace zzz::dx12
 		m_SwapChain.Reset();
 	}
 
-	std::expected<Size2D<>, std::string> Swapchain_DX::Initialize(std::shared_ptr<zzz::engine::DirectX12API> gapi, std::shared_ptr<zzz::engine::NativeWindow> window)
+	void Swapchain_DX::Initialize(std::shared_ptr<DirectX12API> gapi, std::shared_ptr<NativeWindow> window)
 	{
 		ensure(gapi, "DirectX12API cannot be null.");
 		ensure(window, "Window cannot be null.");
@@ -37,17 +39,17 @@ namespace zzz::dx12
 
 		Release();
 
-		Size2D winSize = window->GetClientRect().GetSize();
+		m_Size = window->GetClientRect().GetSize();
 
 		Microsoft::WRL::ComPtr<IDXGIFactory4> factory;
 		HRESULT hr = CreateDXGIFactory1(IID_PPV_ARGS(&factory));
 		if (FAILED(hr))
-			return std::unexpected(std::format("Failed to CreateDXGIFactory1: 0x{:08X}", static_cast<uint32_t>(hr)));
+			THROW_RUNTIME("Failed to CreateDXGIFactory1: 0x{:08X}", static_cast<uint32_t>(hr));
 
 		DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
 		swapChainDesc.BufferCount = DX12_FRAMES_IN_FLIGHT;
-		swapChainDesc.Width = static_cast<UINT>(winSize.GetWidth());
-		swapChainDesc.Height = static_cast<UINT>(winSize.GetHeight());
+		swapChainDesc.Width = static_cast<UINT>(m_Size.GetWidth());
+		swapChainDesc.Height = static_cast<UINT>(m_Size.GetHeight());
 		swapChainDesc.Format = m_BackBufferFormat;
 		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
@@ -64,11 +66,11 @@ namespace zzz::dx12
 		);
 
 		if (FAILED(hr))
-			return std::unexpected(std::format("Failed to CreateSwapChainForHwnd: 0x{:08X}", static_cast<uint32_t>(hr)));
+			THROW_RUNTIME("Failed to CreateSwapChainForHwnd: 0x{:08X}", static_cast<uint32_t>(hr));
 
 		hr = swapChain1.As(&m_SwapChain);
 		if (FAILED(hr))
-			return std::unexpected("Failed to query IDXGISwapChain3 interface.");
+			THROW_RUNTIME("Failed to query IDXGISwapChain3 interface.");
 
 		m_FrameIndex = m_SwapChain->GetCurrentBackBufferIndex();
 
@@ -79,7 +81,7 @@ namespace zzz::dx12
 
 		hr = device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_RtvHeap));
 		if (FAILED(hr))
-			return std::unexpected(std::format("Failed to create RTV Descriptor Heap: 0x{:08X}", static_cast<uint32_t>(hr)));
+			THROW_RUNTIME("Failed to create RTV Descriptor Heap: 0x{:08X}", static_cast<uint32_t>(hr));
 
 		m_RtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
@@ -88,14 +90,12 @@ namespace zzz::dx12
 		{
 			hr = m_SwapChain->GetBuffer(i, IID_PPV_ARGS(&m_RenderTargets[i]));
 			if (FAILED(hr))
-				return std::unexpected(std::format("Failed to get Swapchain Buffer {}: 0x{:08X}", i, static_cast<uint32_t>(hr)));
+				THROW_RUNTIME("Failed to get Swapchain Buffer {}: 0x{:08X}", i, static_cast<uint32_t>(hr));
 
 			D3D12_CPU_DESCRIPTOR_HANDLE currentHandle = rtvHandle;
 			currentHandle.ptr += static_cast<SIZE_T>(i * m_RtvDescriptorSize);
 			device->CreateRenderTargetView(m_RenderTargets[i].Get(), nullptr, currentHandle);
 		}
-
-		return winSize;
 	}
 
 	ID3D12Resource* Swapchain_DX::GetCurrentBackBuffer() const noexcept
@@ -130,26 +130,31 @@ namespace zzz::dx12
 			rt.Reset();
 		}
 
-		m_SwapChain->ResizeBuffers(
+		HRESULT hr = m_SwapChain->ResizeBuffers(
 			DX12_FRAMES_IN_FLIGHT,
 			static_cast<UINT>(size.GetWidth()),
 			static_cast<UINT>(size.GetHeight()),
 			m_BackBufferFormat,
 			0
 		);
+		if (FAILED(hr))
+			THROW_RUNTIME("[Swapchain_DX::OnResize] Failed to ResizeBuffers: 0x{:08X}", static_cast<uint32_t>(hr));
 
+		m_Size = size;
 		m_FrameIndex = m_SwapChain->GetCurrentBackBufferIndex();
 
 		ID3D12Device* device = m_GAPI->GetDevice();
 		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_RtvHeap->GetCPUDescriptorHandleForHeapStart();
 		for (UINT i = 0; i < DX12_FRAMES_IN_FLIGHT; i++)
 		{
-			m_SwapChain->GetBuffer(i, IID_PPV_ARGS(&m_RenderTargets[i]));
+			hr = m_SwapChain->GetBuffer(i, IID_PPV_ARGS(&m_RenderTargets[i]));
+			if (FAILED(hr))
+				THROW_RUNTIME("[Swapchain_DX::OnResize] Failed to get Swapchain Buffer {}: 0x{:08X}", i, static_cast<uint32_t>(hr));
+
 			D3D12_CPU_DESCRIPTOR_HANDLE currentHandle = rtvHandle;
 			currentHandle.ptr += static_cast<SIZE_T>(i * m_RtvDescriptorSize);
 			device->CreateRenderTargetView(m_RenderTargets[i].Get(), nullptr, currentHandle);
 		}
 	}
 }
-
 #endif // Z_D3D12

@@ -2,7 +2,7 @@
 
 #if defined(Z_VULKAN)
 
-namespace zzz::vk
+namespace zzz::engine
 {
 	constexpr std::array<VkFormat, 3> PREFERRED_FORMATS = {
 		VK_FORMAT_B8G8R8A8_SRGB,
