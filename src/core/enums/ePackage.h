@@ -8,9 +8,10 @@ namespace zzz::core
 	{
 		ProjectManifest = 1,
 		Scene = 2,
-		View = 3,
 		Prefab = 4,
 		BinaryAsset = 5,
-		PrimaryView = 6
+		PrimaryView = 6,
+		ChildView = 7,
+		IndependentView = 8
 	};
 }

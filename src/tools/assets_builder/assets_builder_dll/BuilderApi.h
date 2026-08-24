@@ -14,7 +14,8 @@ extern "C"
 
 	BUILDER_API uint32_t GetAssetTypeProjectManifest();
 	BUILDER_API uint32_t GetAssetTypeScene();
-	BUILDER_API uint32_t GetAssetTypeView();
+	BUILDER_API uint32_t GetAssetTypeChildView();
+	BUILDER_API uint32_t GetAssetTypeIndependentView();
 	BUILDER_API uint32_t GetAssetTypePrefab();
 	BUILDER_API uint32_t GetAssetTypeBinaryAsset();
 	BUILDER_API bool PackProjectNative(const char* sourceDir, const char* destinationDir, uint32_t targetPlatform);

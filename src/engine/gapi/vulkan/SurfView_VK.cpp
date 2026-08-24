@@ -5,8 +5,7 @@
 namespace zzz::engine
 {
 	SurfView_VK::SurfView_VK(std::shared_ptr<NativeWindow> window, std::shared_ptr<IGAPI> gapi) :
-		ISurfView(gapi),
-		m_Window(window),
+		ISurfView(window, gapi),
 		m_VulkanAPI(std::dynamic_pointer_cast<VulkanAPI>(gapi))
 	{
 		ensure(m_Window, "Window cannot be null.");

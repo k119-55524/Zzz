@@ -17,6 +17,9 @@ namespace zzz::engine
 		void BeginRender() override;
 		void EndRender() override;
 
+		[[nodiscard]] ID3D12Device* GetDevice() const noexcept { return m_Device.Get(); }
+		[[nodiscard]] ID3D12CommandQueue* GetCommandQueue() const noexcept { return m_CommandQueue.Get(); }
+
 	protected:
 		void WaitForGpu() override;
 

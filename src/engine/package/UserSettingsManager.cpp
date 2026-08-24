@@ -50,6 +50,16 @@ namespace zzz::engine
 			{
 				m_IsFirstRun = false;
 			}
+
+			auto& primaryPlatformData = m_PrimaryViewUserData.GetPlatformData();
+			const auto currentState = primaryPlatformData.GetWindowState();
+			if (currentState == eWindowState::Closed || currentState == eWindowState::Minimized)
+			{
+				const auto defaultState = defaultPrimaryViewData.GetPlatformData().GetWindowState();
+				const bool isFullscreen = (defaultState == eWindowState::BorderlessFullscreen || defaultState == eWindowState::ExclusiveFullscreen);
+				primaryPlatformData.SetWindowState(isFullscreen ? defaultState : eWindowState::Normal);
+				m_IsDirty = true;
+			}
 		}
 		catch (const std::filesystem::filesystem_error& e)
 		{
@@ -86,6 +96,20 @@ namespace zzz::engine
 			m_SelectedGpuId = std::move(gpuId);
 			m_IsDirty = true;
 		}
+	}
+
+	const ViewUserData& UserSettingsManager::GetChildViewUserData(const Guid& guid) const
+	{
+		auto it = m_ChildViewsUserData.find(guid);
+		ensure(it != m_ChildViewsUserData.end(), "Пользовательские настройки для View с GUID '" + guid.ToString() + "' не найдены в UserSettingsManager (ChildViews).");
+		return it->second;
+	}
+
+	const ViewUserData& UserSettingsManager::GetIndependentViewUserData(const Guid& guid) const
+	{
+		auto it = m_IndependentViewsUserData.find(guid);
+		ensure(it != m_IndependentViewsUserData.end(), "Пользовательские настройки для View с GUID '" + guid.ToString() + "' не найдены в UserSettingsManager (IndependentViews).");
+		return it->second;
 	}
 
 	[[nodiscard]] std::expected<void, std::string> UserSettingsManager::SaveConfig()

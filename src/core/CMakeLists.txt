@@ -88,7 +88,8 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/start_view/ViewDataMacOS.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PrimaryViewUserData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/ViewUserData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/ViewData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/ChildViewData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/IndependentViewData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/ProjectManifestData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/SceneData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PrefabData.h

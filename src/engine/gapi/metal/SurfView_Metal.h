@@ -1,19 +1,19 @@
 #pragma once
 
 #include "engine/gapi/ISurfView.h"
-#include "engine/gapi/vulkan/VulkanAPI.h"
+#include "engine/gapi/metal/MetalAPI.h"
 #include "engine/platforms/window/NativeWindow.h"
 
-#if defined(Z_VULKAN)
+#if defined(Z_METAL)
 namespace zzz::engine
 {
-	class SurfView_VK final : public ISurfView
+	class SurfView_Metal final : public ISurfView
 	{
-		Z_NO_COPY_MOVE(SurfView_VK);
+		Z_NO_COPY_MOVE(SurfView_Metal);
 
 	public:
-		SurfView_VK(std::shared_ptr<NativeWindow> window, std::shared_ptr<IGAPI> gapi);
-		~SurfView_VK() override = default;
+		SurfView_Metal(std::shared_ptr<NativeWindow> window, std::shared_ptr<IGAPI> gapi);
+		~SurfView_Metal() override = default;
 
 		void PrepareFrame() override;
 		void RenderFrame() override;
@@ -24,7 +24,7 @@ namespace zzz::engine
 
 	private:
 		std::shared_ptr<NativeWindow> m_Window;
-		std::shared_ptr<VulkanAPI> m_VulkanAPI;
+		std::shared_ptr<MetalAPI> m_MetalAPI;
 	};
 }
-#endif // Z_VULKAN
+#endif // Z_METAL

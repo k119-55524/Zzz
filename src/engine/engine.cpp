@@ -132,13 +132,7 @@ void Engine::Shutdown()
 		RegisterScripts();
 		LoadGlobalScripts();
 
-		auto view = m_ViewManager->CreatePrimaryView();
-		if (!view)
-		{
-			DOutError("{}", view.error());
-			return UNEXPECTED("{}", view.error());
-		}
-
+		m_ViewManager->CreatePrimaryView();
 		m_EventBus->InvokeStart();
 		m_Time->ResetFrameTimer();
 		m_MainLoop->Run();

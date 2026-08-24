@@ -7,7 +7,9 @@ public class ViewAssetValidator : IAssetValidator
 {
     public bool CanValidate(string filePath)
     {
-        return Path.GetExtension(filePath).Equals(AssetExtensions.View, StringComparison.OrdinalIgnoreCase);
+        string ext = Path.GetExtension(filePath);
+        return ext.Equals(AssetExtensions.ChildView, StringComparison.OrdinalIgnoreCase) ||
+               ext.Equals(AssetExtensions.IndependentView, StringComparison.OrdinalIgnoreCase);
     }
 
     public ValidationResult Validate(

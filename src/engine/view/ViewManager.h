@@ -22,16 +22,17 @@ namespace zzz::engine
 		~ViewManager();
 
 		[[nodiscard]] inline std::shared_ptr<IGAPI> GetGAPI() const noexcept { return m_GAPI; }
+		[[nodiscard]] inline std::shared_ptr<View> GetPrimaryView() const noexcept { return m_PrimaryView; }
 
 		/**
 		 * @brief Создаёт первичное (основное) окно приложения из стартового ресурса пакета и пользовательских настроек окна.
 		 */
-		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> CreatePrimaryView();
-		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> CreateChildView(const Guid& viewGuid);
-		[[nodiscard]] std::expected<std::shared_ptr<View>, std::string> CreateIndependentView(const Guid& viewGuid);
+		void CreatePrimaryView();
+		void CreateChildView(const Guid& viewGuid);
+		void CreateIndependentView(const Guid& viewGuid);
 
 #if Z_EDITOR
-		[[nodiscard]] std::expected <std::shared_ptr<View>, std::string> CreateView(void* data);
+		std::shared_ptr<View> CreateView(void* data);
 		void RemoveView(View* view);
 #endif
 
@@ -47,11 +48,11 @@ namespace zzz::engine
 		std::shared_ptr<View> m_PrimaryView;
 		std::vector<std::shared_ptr<View>> m_ChildViews;
 		std::vector<std::shared_ptr<View>> m_IndependentViews;
-		std::list<std::shared_ptr<View>> m_Views;
 		ThreadPool m_ThreadsUpdate;
 
 		std::function<void()> OnAllViewsClosed;
 		void OnWindowClose(View& view);
 		[[nodiscard]] std::vector<std::shared_ptr<ViewScript>> CreateViewScripts(const std::vector<Guid>& scriptGuids) const;
+		std::shared_ptr<View> CreateViewInstance(const Guid& viewGuid, const ViewPlatformData& platformData, const std::vector<Guid>& uiScriptGuids, const View* parentView = nullptr);
 	};
 }

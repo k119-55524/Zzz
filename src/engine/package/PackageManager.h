@@ -20,14 +20,18 @@ namespace zzz::engine
 		[[nodiscard]] std::expected<T, std::string> LoadPackageDataByName(ePackage type, std::string_view name) const
 		{
 			auto entryOpt = GetEntryByName(type, name);
-			if (!entryOpt) return UNEXPECTED("Package entry of type {} with name '{}' was not found.", EnumToString::ToString(type), name);
+			if (!entryOpt)
+				return UNEXPECTED("Package entry of type {} with name '{}' was not found.", EnumToString::ToString(type), name);
+
 			return LoadPackageData<T>(*entryOpt);
 		}
 		template <typename T> requires std::derived_from<T, ISerializable>
 		[[nodiscard]] std::expected<T, std::string> LoadPackageDataByGuid(ePackage type, const Guid& guid) const
 		{
 			auto entryOpt = GetEntryByGuid(type, guid);
-			if (!entryOpt) return UNEXPECTED("Package entry of type {} with GUID '{}' was not found.", EnumToString::ToString(type), guid.ToString());
+			if (!entryOpt)
+				return UNEXPECTED("Package entry of type {} with GUID '{}' was not found.", EnumToString::ToString(type), guid.ToString());
+
 			return LoadPackageData<T>(*entryOpt);
 		}
 

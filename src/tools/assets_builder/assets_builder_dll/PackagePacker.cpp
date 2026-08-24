@@ -18,7 +18,8 @@
 #include <core/IO/package/platforms/project/ProjectPlatformDataMSWin.h>
 #include <core/IO/package/platforms/project/ProjectPlatformDataiOS.h>
 #include <core/IO/package/SceneData.h>
-#include <core/IO/package/ViewData.h>
+#include <core/IO/package/ChildViewData.h>
+#include <core/IO/package/IndependentViewData.h>
 #include <core/IO/package/platforms/start_view/ViewDataAndroid.h>
 #include <core/IO/package/platforms/start_view/ViewDataLinux.h>
 #include <core/IO/package/platforms/start_view/ViewDataMacOS.h>
@@ -492,10 +493,11 @@ namespace zzz::builder
 				if (auto res = serializer.Serialize(result, sceneData); !res)
 					return {};
 			}
-			else if (assetType == zzz::core::ePackage::View)
+			else if (assetType == zzz::core::ePackage::ChildView || assetType == zzz::core::ePackage::IndependentView)
 			{
-				zU32 width = root.value("width", 800u);
-				zU32 height = root.value("height", 600u);
+				Guid viewGuid{};
+				if (auto parsed = Guid::Parse(item.guid))
+					viewGuid = *parsed;
 
 				Guid sceneGuid{};
 				if (root.contains("scene") && root["scene"].is_string())
@@ -517,9 +519,75 @@ namespace zzz::builder
 					}
 				}
 
-				zzz::core::ViewData viewData(Size2D<zU32>{ width, height }, sceneGuid, uiScriptGuids);
-				if (auto res = serializer.Serialize(result, viewData); !res)
-					return {};
+				if (auto res = serializer.Serialize(result, viewGuid); !res) return {};
+				if (auto res = serializer.Serialize(result, sceneGuid); !res) return {};
+				zU32 scriptsCount = static_cast<zU32>(uiScriptGuids.size());
+				if (auto res = serializer.Serialize(result, scriptsCount); !res) return {};
+				for (const auto& guid : uiScriptGuids)
+				{
+					if (auto res = serializer.Serialize(result, guid); !res) return {};
+				}
+
+				json platformViewRoot = ResolveStartViewJson(root, projectDir, targetPlatform);
+				switch (targetPlatform)
+				{
+				case zzz::core::eTargetPlatform::Android:
+				{
+					const auto orient = ReadAndroidOrientation(platformViewRoot.value("orientation", "LandscapeLeft"));
+					zU32 fps = platformViewRoot.value("targetFPS", 60u);
+					const auto cutout = ReadAndroidCutoutMode(platformViewRoot.value("cutoutMode", "ShortEdges"));
+					bool keepOn = platformViewRoot.value("keepScreenOn", true);
+
+					ViewDataAndroid androidData(orient, fps, cutout, keepOn);
+					if (auto res = serializer.Serialize(result, androidData); !res) return {};
+					break;
+				}
+				case zzz::core::eTargetPlatform::Linux:
+				{
+					std::string title = platformViewRoot.value("title", "Game Window");
+					auto size = ReadSize(platformViewRoot);
+					auto windowMode = ReadLinuxWindowMode(platformViewRoot.value("windowMode", "Windowed"));
+					bool resizable = platformViewRoot.value("resizable", true);
+					auto displayServer = ReadLinuxDisplayServer(platformViewRoot.value("displayServer", "Auto"));
+
+					ViewDataLinux linuxData(title, size, windowMode, resizable, displayServer);
+					if (auto res = serializer.Serialize(result, linuxData); !res) return {};
+					break;
+				}
+				case zzz::core::eTargetPlatform::MacOS:
+				{
+					std::string title = platformViewRoot.value("title", "Game Window");
+					auto size = ReadSize(platformViewRoot);
+					auto windowMode = ReadMacOSWindowMode(platformViewRoot.value("windowMode", "Windowed"));
+					bool resizable = platformViewRoot.value("resizable", true);
+
+					ViewDataMacOS macData(title, size, windowMode, resizable);
+					if (auto res = serializer.Serialize(result, macData); !res) return {};
+					break;
+				}
+				case zzz::core::eTargetPlatform::iOS:
+				{
+					const auto orient = ReadiOSOrientation(platformViewRoot.value("orientation", "LandscapeLeft"));
+					const auto safeAreaMode = ReadiOSSafeAreaMode(platformViewRoot.value("safeAreaMode", "ExtendIntoSafeArea"));
+					const auto homeIndicatorMode = ReadiOSHomeIndicatorMode(platformViewRoot.value("homeIndicatorMode", "AutoHidden"));
+
+					ViewDataiOS iosData(orient, safeAreaMode, homeIndicatorMode);
+					if (auto res = serializer.Serialize(result, iosData); !res) return {};
+					break;
+				}
+				case zzz::core::eTargetPlatform::Windows:
+				default:
+				{
+					std::string title = platformViewRoot.value("title", "Game Window");
+					auto size = ReadSize(platformViewRoot);
+					auto windowMode = ReadMSWinWindowMode(platformViewRoot);
+					bool resizable = platformViewRoot.value("resizable", true);
+
+					ViewDataMSWin winData(title, size, windowMode, resizable);
+					if (auto res = serializer.Serialize(result, winData); !res) return {};
+					break;
+				}
+				}
 			}
 			else if (assetType == zzz::core::ePackage::Prefab)
 			{
@@ -583,9 +651,13 @@ namespace zzz::builder
 				{
 					typeVal = static_cast<uint32_t>(zzz::core::ePackage::Scene);
 				}
-				else if (ext == ".zv")
+				else if (ext == ".zcv")
 				{
-					typeVal = static_cast<uint32_t>(zzz::core::ePackage::View);
+					typeVal = static_cast<uint32_t>(zzz::core::ePackage::ChildView);
+				}
+				else if (ext == ".ziv")
+				{
+					typeVal = static_cast<uint32_t>(zzz::core::ePackage::IndependentView);
 				}
 				else if (ext == ".zp")
 				{

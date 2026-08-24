@@ -8,7 +8,7 @@ public class ViewAssetImporter : IAssetImporter
     public bool CanHandle(string filePath)
     {
         string ext = Path.GetExtension(filePath).ToLowerInvariant();
-        return ext == AssetExtensions.View;
+        return ext == AssetExtensions.ChildView || ext == AssetExtensions.IndependentView;
     }
 
     public string GetMetaFilePath(string filePath)

@@ -139,9 +139,9 @@ namespace zzz::engine
 		if (!res)
 			return UNEXPECTED("Ошибка десериализации данных пакета '{}': {}.", entry.GetName(), res.error());
 
-		if constexpr (std::is_same_v<T, ViewData>)
+		if constexpr (std::is_same_v<T, ChildViewData> || std::is_same_v<T, IndependentViewData>)
 		{
-			data.SetName(entry.GetName());
+			// Reserved for name tagging if needed
 		}
 		return data;
 	}
@@ -155,7 +155,8 @@ namespace zzz::engine
 		LogEntriesSummaryForType<ProjectManifestData>(ePackage::ProjectManifest);
 		LogEntriesSummaryForType<PrimaryViewData>(ePackage::PrimaryView);
 		LogEntriesSummaryForType<SceneData>(ePackage::Scene);
-		LogEntriesSummaryForType<ViewData>(ePackage::View);
+		LogEntriesSummaryForType<ChildViewData>(ePackage::ChildView);
+		LogEntriesSummaryForType<IndependentViewData>(ePackage::IndependentView);
 		LogEntriesSummaryForType<PrefabData>(ePackage::Prefab);
 #endif
 	}

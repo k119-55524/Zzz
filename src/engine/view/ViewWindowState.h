@@ -33,7 +33,6 @@ namespace zzz::engine
 			return s.Serialize(buffer, m_ViewGuid)
 				.and_then([&]() { return s.Serialize(buffer, m_NativeState); });
 		}
-
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const zzz::core::Serializer& s) override
 		{
 			return s.Deserialize(buffer, offset, m_ViewGuid)

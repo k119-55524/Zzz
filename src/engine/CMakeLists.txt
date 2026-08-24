@@ -66,8 +66,11 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "gapi/vulkan/DepthBuffer_VK.h"
         "gapi/vulkan/SurfView_VK.h" "gapi/vulkan/SurfView_VK.cpp"
         "gapi/directx12/DirectX12API.h" "gapi/directx12/DirectX12API.cpp"
+        "gapi/directx12/Swapchain_DX.h" "gapi/directx12/Swapchain_DX.cpp"
+        "gapi/directx12/DepthBuffer_DX.h" "gapi/directx12/DepthBuffer_DX.cpp"
         "gapi/directx12/SurfView_DX.h" "gapi/directx12/SurfView_DX.cpp"
         "gapi/metal/MetalAPI.h" "gapi/metal/MetalAPI.mm"
+        "gapi/metal/SurfView_Metal.h" "gapi/metal/SurfView_Metal.mm"
 
         # Scripts & Scenes
         "scene/GameObject.h"

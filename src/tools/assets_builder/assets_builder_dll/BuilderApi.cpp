@@ -50,9 +50,14 @@ extern "C"
 		return static_cast<uint32_t>(zzz::core::ePackage::Scene);
 	}
 
-	BUILDER_API uint32_t GetAssetTypeView()
+	BUILDER_API uint32_t GetAssetTypeChildView()
 	{
-		return static_cast<uint32_t>(zzz::core::ePackage::View);
+		return static_cast<uint32_t>(zzz::core::ePackage::ChildView);
+	}
+
+	BUILDER_API uint32_t GetAssetTypeIndependentView()
+	{
+		return static_cast<uint32_t>(zzz::core::ePackage::IndependentView);
 	}
 
 	BUILDER_API uint32_t GetAssetTypePrefab()

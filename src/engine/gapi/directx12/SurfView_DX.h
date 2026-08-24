@@ -5,7 +5,6 @@
 #include "engine/platforms/window/NativeWindow.h"
 
 #if defined(Z_D3D12)
-
 namespace zzz::engine
 {
 	class SurfView_DX final : public ISurfView
@@ -24,9 +23,7 @@ namespace zzz::engine
 		std::expected<void, std::string> Initialize() override;
 
 	private:
-		std::shared_ptr<NativeWindow> m_Window;
 		std::shared_ptr<DirectX12API> m_DirectX12API;
 	};
 }
-
 #endif // Z_D3D12

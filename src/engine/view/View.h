@@ -9,6 +9,8 @@
 #include "engine/gapi/SurfView.h"
 #include "engine/view/ViewWindowState.h"
 
+using namespace zzz::core;
+
 namespace zzz::engine
 {
 	class UserSettingsManager;
@@ -19,25 +21,30 @@ namespace zzz::engine
 
 	public:
 		View() = delete;
-		View(zzz::core::Guid guid, const zzz::core::ViewPlatformData& settings, std::vector<std::shared_ptr<zzz::core::ViewScript>> scripts, const Platform& platform, std::shared_ptr<IGAPI> gapi, std::shared_ptr<UserSettingsManager> userSettingsManager, std::function<void(View&)> onWindowClose, const View* parentView = nullptr);
+		View(
+			Guid guid,
+			const ViewPlatformData& settings,
+			std::vector<std::shared_ptr<ViewScript>> scripts,
+			const Platform& platform,
+			std::shared_ptr<IGAPI> gapi,
+			std::function<void(View&)> onWindowClose,
+			const View* parentView = nullptr);
 #if Z_EDITOR
 		View(const Platform& platform, std::shared_ptr<IGAPI> gapi, void* data);
 #endif // Z_EDITOR
 		~View();
 
 		inline void InvokeStart() { m_EventBus.InvokeStart(); }
-		void Update(const zzz::core::Time& time);
+		void Update(const Time& time);
 
 		void PrepareFrame();
 		void RenderFrame();
 
-		[[nodiscard]] const zzz::core::Guid& GetGuid() const noexcept { return m_Guid; }
-		[[nodiscard]] ViewWindowState GetState() const;
-
-		[[nodiscard]] const NativeWindow& GetNativeWindow() const noexcept { return *m_NativeWindow; }
-		[[nodiscard]] NativeWindow& GetNativeWindow() noexcept { return *m_NativeWindow; }
-
-		[[nodiscard]] std::shared_ptr<ISurfView> GetSurfView() const noexcept { return m_SurfView; }
+		[[nodiscard]] inline const Guid& GetGuid() const noexcept { return m_Guid; }
+		[[nodiscard]] inline ViewWindowState GetState() const { return ViewWindowState{ m_Guid, m_NativeWindow->GetState() }; }
+		[[nodiscard]] inline const NativeWindow& GetNativeWindow() const noexcept { return *m_NativeWindow; }
+		[[nodiscard]] inline NativeWindow& GetNativeWindow() noexcept { return *m_NativeWindow; }
+		[[nodiscard]] inline std::shared_ptr<ISurfView> GetSurfView() const noexcept { return m_SurfView; }
 
 		inline void SetActive(bool active)
 		{
@@ -191,7 +198,6 @@ namespace zzz::engine
 		std::shared_ptr<ISurfView> m_SurfView;
 		std::shared_ptr<Input>  m_Input;
 		std::shared_ptr<NativeWindow> m_NativeWindow;
-		std::shared_ptr<UserSettingsManager> m_UserSettingsManager;
 		zzz::templates::ThreadPool m_ThreadsUpdate;
 
 		bool m_IsActive;

@@ -25,6 +25,16 @@ namespace zzz::core
 		[[nodiscard]] const ViewWindowState& GetWindowState() const noexcept { return m_State; }
 		[[nodiscard]] ViewWindowState& GetWindowState() noexcept { return m_State; }
 
+		[[nodiscard]] inline ViewPlatformData GetPlatformData() const noexcept
+		{
+			const auto& navState = m_State.GetNativeState();
+			ViewPlatformData platformData;
+			platformData.SetWindowRect(navState.GetWindowRect());
+			platformData.SetWindowState(navState.GetState());
+			platformData.SetMonitorId(navState.GetMonitorId());
+			return platformData;
+		}
+
 		[[nodiscard]] bool operator==(const ViewUserData& other) const noexcept
 		{
 			return m_State == other.m_State;
@@ -48,7 +58,6 @@ namespace zzz::core
 		{
 			return s.Serialize(buffer, m_State);
 		}
-
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override
 		{
 			return s.Deserialize(buffer, offset, m_State);

@@ -18,10 +18,10 @@ namespace zzz::engine
 		UserSettingsManager() = delete;
 		UserSettingsManager(const Path& path, const PrimaryViewData& defaultPrimaryViewData);
 
-		[[nodiscard]] inline const PrimaryViewUserData& GetPrimaryViewUserData() const noexcept { return m_PrimaryViewUserData; }
 		[[nodiscard]] inline const std::string& GetSelectedGpuId() const noexcept { return m_SelectedGpuId; }
-		[[nodiscard]] inline const ViewUserDataMap& GetChildViewsUserData() const noexcept { return m_ChildViewsUserData; }
-		[[nodiscard]] inline const ViewUserDataMap& GetIndependentViewsUserData() const noexcept { return m_IndependentViewsUserData; }
+		[[nodiscard]] inline const PrimaryViewUserData& GetPrimaryViewUserData() const noexcept { return m_PrimaryViewUserData; }
+		[[nodiscard]] const ViewUserData& GetChildViewUserData(const Guid& guid) const;
+		[[nodiscard]] const ViewUserData& GetIndependentViewUserData(const Guid& guid) const;
 		[[nodiscard]] inline bool IsFirstRun() const noexcept { return m_IsFirstRun; }
 
 		void SetSelectedGpuId(std::string gpuId);

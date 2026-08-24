@@ -9,13 +9,19 @@
 using namespace zzz::core;
 using namespace zzz::engine;
 
-View::View(Guid guid, const ViewPlatformData& settings, std::vector<std::shared_ptr<ViewScript>> scripts, const Platform& platform, std::shared_ptr<IGAPI> gapi, std::shared_ptr<UserSettingsManager> userSettingsManager, std::function<void(View&)> onWindowClose, const View* parentView) :
+View::View(
+	Guid guid,
+	const ViewPlatformData& settings,
+	std::vector<std::shared_ptr<ViewScript>> scripts,
+	const Platform& platform,
+	std::shared_ptr<IGAPI> gapi,
+	std::function<void(View&)> onWindowClose,
+	const View* parentView) :
 	m_Platform{ platform },
 	m_Guid{ std::move(guid) },
 	m_GAPI{ std::move(gapi) },
 	m_Input{ nullptr },
 	m_NativeWindow{ nullptr },
-	m_UserSettingsManager{ std::move(userSettingsManager) },
 	m_ThreadsUpdate{ "View", 2 },
 	OnWindowClose{ std::move(onWindowClose) },
 	m_IsActive{ true }
@@ -24,11 +30,6 @@ View::View(Guid guid, const ViewPlatformData& settings, std::vector<std::shared_
 	ensure(OnWindowClose != nullptr, "OnWindowClose не должен быть null.");
 
 	Initialize(settings, scripts, parentView);
-}
-
-ViewWindowState View::GetState() const
-{
-	return ViewWindowState{ m_Guid, m_NativeWindow ? m_NativeWindow->GetState() : NativeWindowState{} };
 }
 
 #if Z_EDITOR
@@ -41,6 +42,7 @@ View::View(const Platform& platform, std::shared_ptr<IGAPI> gapi, void* data) :
 	m_IsActive{ true }
 {
 	ensure(m_GAPI != nullptr, "IGAPI не должен быть null.");
+
 	Initialize(data);
 }
 #endif // Z_EDITOR
@@ -129,9 +131,6 @@ void View::HandleWindowClose()
 {
 	DOut("[View::HandleWindowClose] - OnClose");
 
-	if (m_UserSettingsManager)
-		m_UserSettingsManager->StoreViewState(*this);
-
 	// В редакторе управление происходит из вне поэтому колбэк может быть не инициализирован
 	if (OnWindowClose != nullptr)
 		OnWindowClose(*this);
@@ -160,9 +159,6 @@ void View::OnWindowSizing()
 void View::OnWindowResizeEnd()
 {
 	DOut("[View::OnWindowResizeEnd]");
-
-	if (m_UserSettingsManager)
-		m_UserSettingsManager->StoreViewState(*this);
 }
 
 void View::OnWindowDpiChanged()
@@ -187,10 +183,6 @@ void View::OnWindowActivate(bool active)
 void View::OnWindowDisplayChanged()
 {
 	DOut("[View::OnWindowDisplayChanged]");
-	if (m_UserSettingsManager)
-	{
-		m_UserSettingsManager->StoreViewState(*this);
-	}
 }
 
 #pragma endregion
@@ -236,9 +228,6 @@ void View::Update(const Time& time)
 
 	if (m_ActiveScene)
 		m_ActiveScene->Update(time);
-
-	PrepareFrame();
-	RenderFrame();
 }
 
 void View::PrepareFrame()
@@ -247,11 +236,7 @@ void View::PrepareFrame()
 		return;
 
 	m_SurfView->PreRender();
-
-	m_ThreadsUpdate.Submit([this]()
-	{
-		m_SurfView->PrepareFrame();
-	});
+	m_SurfView->PrepareFrame();
 }
 
 void View::RenderFrame()
@@ -259,11 +244,6 @@ void View::RenderFrame()
 	if (!m_IsActive || !m_SurfView)
 		return;
 
-	m_ThreadsUpdate.Submit([this]()
-	{
-		m_SurfView->RenderFrame();
-	});
-	m_ThreadsUpdate.Join();
-
+	m_SurfView->RenderFrame();
 	m_SurfView->PostRender();
 }
