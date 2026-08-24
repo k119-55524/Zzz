@@ -18,10 +18,10 @@ namespace zzz::engine
 
 	public:
 		ViewManager() = delete;
-		ViewManager(const Platform& platform, std::shared_ptr<IGAPI> gapi, std::shared_ptr<ScriptFactory> scriptFactory, std::shared_ptr<PackageManager> packageManager, std::shared_ptr<UserSettingsManager> userSettingsManager, std::function<void()> onAllViewsClosed);
+		ViewManager(const Platform& platform, std::shared_ptr<GAPI> gapi, std::shared_ptr<ScriptFactory> scriptFactory, std::shared_ptr<PackageManager> packageManager, std::shared_ptr<UserSettingsManager> userSettingsManager, std::function<void()> onAllViewsClosed);
 		~ViewManager();
 
-		[[nodiscard]] inline std::shared_ptr<IGAPI> GetGAPI() const noexcept { return m_GAPI; }
+		[[nodiscard]] inline std::shared_ptr<GAPI> GetGAPI() const noexcept { return m_GAPI; }
 		[[nodiscard]] inline std::shared_ptr<View> GetPrimaryView() const noexcept { return m_PrimaryView; }
 
 		/**
@@ -52,7 +52,7 @@ namespace zzz::engine
 
 	private:
 		const Platform& m_Platform;
-		std::shared_ptr<IGAPI> m_GAPI;
+		std::shared_ptr<GAPI> m_GAPI;
 		std::shared_ptr<ScriptFactory> m_ScriptFactory;
 		std::shared_ptr<PackageManager> m_PackageManager;
 		std::shared_ptr<UserSettingsManager> m_UserSettingsManager;

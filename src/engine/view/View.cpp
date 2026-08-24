@@ -14,7 +14,7 @@ View::View(
 	const ViewPlatformData& settings,
 	std::vector<std::shared_ptr<ViewScript>> scripts,
 	const Platform& platform,
-	std::shared_ptr<IGAPI> gapi,
+	std::shared_ptr<GAPI> gapi,
 	std::function<void(View&)> onWindowClose,
 	const View* parentView) :
 	m_Platform{ platform },
@@ -26,14 +26,14 @@ View::View(
 	OnWindowClose{ std::move(onWindowClose) },
 	m_IsActive{ true }
 {
-	ensure(m_GAPI != nullptr, "IGAPI не должен быть null.");
+	ensure(m_GAPI != nullptr, "GAPI не должен быть null.");
 	ensure(OnWindowClose != nullptr, "OnWindowClose не должен быть null.");
 
 	Initialize(settings, scripts, parentView);
 }
 
 #if Z_EDITOR
-View::View(const Platform& platform, std::shared_ptr<IGAPI> gapi, void* data) :
+View::View(const Platform& platform, std::shared_ptr<GAPI> gapi, void* data) :
 	m_Platform{ platform },
 	m_GAPI{ std::move(gapi) },
 	m_Input{ nullptr },
@@ -41,7 +41,7 @@ View::View(const Platform& platform, std::shared_ptr<IGAPI> gapi, void* data) :
 	m_ThreadsUpdate{ "View", 2 },
 	m_IsActive{ true }
 {
-	ensure(m_GAPI != nullptr, "IGAPI не должен быть null.");
+	ensure(m_GAPI != nullptr, "GAPI не должен быть null.");
 
 	Initialize(data);
 }

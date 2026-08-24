@@ -12,7 +12,7 @@ namespace zzz::engine
 		Z_NO_COPY_MOVE(SurfView_Metal);
 
 	public:
-		SurfView_Metal(std::shared_ptr<NativeWindow> window, std::shared_ptr<IGAPI> gapi);
+		SurfView_Metal(std::shared_ptr<NativeWindow> window, std::shared_ptr<MetalAPI> gapi);
 		~SurfView_Metal() override = default;
 
 		void PrepareFrame() override;
@@ -20,11 +20,7 @@ namespace zzz::engine
 		void OnResize(const Size2D<>& size) override;
 
 	protected:
-		std::expected<void, std::string> Initialize() override;
-
-	private:
-		std::shared_ptr<NativeWindow> m_Window;
-		std::shared_ptr<MetalAPI> m_MetalAPI;
+		void Initialize() override;
 	};
 }
 #endif // Z_METAL

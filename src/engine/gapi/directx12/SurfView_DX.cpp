@@ -4,22 +4,14 @@
 
 namespace zzz::engine
 {
-	SurfView_DX::SurfView_DX(std::shared_ptr<NativeWindow> window, std::shared_ptr<IGAPI> gapi) :
-		ISurfView(std::move(window), gapi),
-		m_DirectX12API(std::dynamic_pointer_cast<DirectX12API>(gapi))
+	SurfView_DX::SurfView_DX(std::shared_ptr<NativeWindow> window, std::shared_ptr<DirectX12API> gapi) :
+		ISurfView(std::move(window), std::move(gapi))
 	{
-		ensure(m_DirectX12API, "Failed to cast IGAPI to DirectX12API.");
-
-		auto res = Initialize();
-		if (!res)
-		{
-			THROW_RUNTIME("Failed to initialize SurfView_DX: {}", res.error());
-		}
+		Initialize();
 	}
 
-	std::expected<void, std::string> SurfView_DX::Initialize()
+	void SurfView_DX::Initialize()
 	{
-		return {};
 	}
 
 	void SurfView_DX::PrepareFrame()

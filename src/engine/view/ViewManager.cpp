@@ -11,7 +11,7 @@
 using namespace zzz::core;
 using namespace zzz::engine;
 
-ViewManager::ViewManager(const Platform& platform, std::shared_ptr<IGAPI> gapi, std::shared_ptr<ScriptFactory> scriptFactory, std::shared_ptr<PackageManager> packageManager, std::shared_ptr<UserSettingsManager> userSettingsManager, std::function<void()> onAllViewsClosed) :
+ViewManager::ViewManager(const Platform& platform, std::shared_ptr<GAPI> gapi, std::shared_ptr<ScriptFactory> scriptFactory, std::shared_ptr<PackageManager> packageManager, std::shared_ptr<UserSettingsManager> userSettingsManager, std::function<void()> onAllViewsClosed) :
 	m_Platform{ platform },
 	m_GAPI{ std::move(gapi) },
 	m_ScriptFactory{ std::move(scriptFactory) },
@@ -20,7 +20,7 @@ ViewManager::ViewManager(const Platform& platform, std::shared_ptr<IGAPI> gapi, 
 	m_ThreadsUpdate{ "ViewManager", 2 },
 	OnAllViewsClosed{ std::move(onAllViewsClosed) }
 {
-	ensure(m_GAPI != nullptr, "IGAPI не должен быть null.");
+	ensure(m_GAPI != nullptr, "GAPI не должен быть null.");
 	ensure(m_ScriptFactory != nullptr, "ScriptFactory не должен быть null.");
 	ensure(m_PackageManager != nullptr, "PackageManager не должен быть null.");
 	ensure(m_UserSettingsManager != nullptr, "UserSettingsManager не должен быть null.");

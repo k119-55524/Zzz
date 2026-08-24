@@ -12,7 +12,7 @@ namespace zzz::engine
 		Z_NO_COPY_MOVE(SurfView_VK);
 
 	public:
-		SurfView_VK(std::shared_ptr<NativeWindow> window, std::shared_ptr<IGAPI> gapi);
+		SurfView_VK(std::shared_ptr<NativeWindow> window, std::shared_ptr<VulkanAPI> gapi);
 		~SurfView_VK() override = default;
 
 		void PrepareFrame() override;
@@ -20,11 +20,7 @@ namespace zzz::engine
 		void OnResize(const Size2D<>& size) override;
 
 	protected:
-		std::expected<void, std::string> Initialize() override;
-
-	private:
-		std::shared_ptr<NativeWindow> m_Window;
-		std::shared_ptr<VulkanAPI> m_VulkanAPI;
+		void Initialize() override;
 	};
 }
 #endif // Z_VULKAN

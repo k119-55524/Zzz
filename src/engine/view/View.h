@@ -42,11 +42,11 @@ namespace zzz::engine
 			const ViewPlatformData& settings,
 			std::vector<std::shared_ptr<ViewScript>> scripts,
 			const Platform& platform,
-			std::shared_ptr<IGAPI> gapi,
+			std::shared_ptr<GAPI> gapi,
 			std::function<void(View&)> onWindowClose,
 			const View* parentView = nullptr);
 #if Z_EDITOR
-		View(const Platform& platform, std::shared_ptr<IGAPI> gapi, void* data);
+		View(const Platform& platform, std::shared_ptr<GAPI> gapi, void* data);
 #endif // Z_EDITOR
 		~View();
 
@@ -243,7 +243,7 @@ namespace zzz::engine
 
 		const Platform& m_Platform;
 		Guid m_Guid;
-		std::shared_ptr<IGAPI> m_GAPI;
+		std::shared_ptr<GAPI> m_GAPI;
 		std::shared_ptr<ISurfView> m_SurfView;
 		std::shared_ptr<Input>  m_Input;
 		std::shared_ptr<NativeWindow> m_NativeWindow;

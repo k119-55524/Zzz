@@ -62,7 +62,6 @@ Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeDa
 	// Инициализация главного кадрового цикла, шины событий проекта и игрового таймера
 	m_MainLoop = safe_make_shared<MainLoop>(*m_Platform, [this]() { OnUpdateSystem(); });
 	m_EventBus = safe_make_shared<ProjectEventBus>();
-	m_Time = safe_make_shared<Time>();
 
 	// Сохраняем пользовательскую конфигурацию на диск, если в процессе инициализации были изменения
 	if (auto res = m_UserSettingsManager->SaveConfig(); !res)
@@ -134,7 +133,7 @@ void Engine::Shutdown()
 
 		m_ViewManager->CreatePrimaryView();
 		m_EventBus->InvokeStart();
-		m_Time->ResetFrameTimer();
+		m_Time = safe_make_shared<Time>();
 		m_MainLoop->Run();
 	}
 	catch (const std::exception& e)

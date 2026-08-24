@@ -4,23 +4,14 @@
 
 namespace zzz::engine
 {
-	SurfView_VK::SurfView_VK(std::shared_ptr<NativeWindow> window, std::shared_ptr<IGAPI> gapi) :
-		ISurfView(window, gapi),
-		m_VulkanAPI(std::dynamic_pointer_cast<VulkanAPI>(gapi))
+	SurfView_VK::SurfView_VK(std::shared_ptr<NativeWindow> window, std::shared_ptr<VulkanAPI> gapi) :
+		ISurfView(std::move(window), std::move(gapi))
 	{
-		ensure(m_Window, "Window cannot be null.");
-		ensure(m_VulkanAPI, "Failed to cast IGAPI to VulkanAPI.");
-
-		auto res = Initialize();
-		if (!res)
-		{
-			THROW_RUNTIME("Failed to initialize SurfView_VK: {}", res.error());
-		}
+		Initialize();
 	}
 
-	std::expected<void, std::string> SurfView_VK::Initialize()
+	void SurfView_VK::Initialize()
 	{
-		return {};
 	}
 
 	void SurfView_VK::PrepareFrame()
