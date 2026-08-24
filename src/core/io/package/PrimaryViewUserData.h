@@ -11,6 +11,10 @@ namespace zzz::core
 	{
 	public:
 		PrimaryViewUserData() = default;
+		PrimaryViewUserData(Guid viewGuid, ViewPlatformData platformData)
+			: m_ViewGuid(std::move(viewGuid))
+			, m_PlatformData(std::move(platformData))
+		{}
 		explicit PrimaryViewUserData(const PrimaryViewData& primaryViewData)
 			: m_ViewGuid(primaryViewData.GetViewGuid())
 			, m_PlatformData(primaryViewData.GetPlatformData())

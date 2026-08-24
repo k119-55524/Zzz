@@ -53,6 +53,6 @@ namespace zzz::engine
 		std::function<void()> OnAllViewsClosed;
 		void OnWindowClose(View& view);
 		[[nodiscard]] std::vector<std::shared_ptr<ViewScript>> CreateViewScripts(const std::vector<Guid>& scriptGuids) const;
-		std::shared_ptr<View> CreateViewInstance(const Guid& viewGuid, const ViewPlatformData& platformData, const std::vector<Guid>& uiScriptGuids, const View* parentView = nullptr);
+		std::shared_ptr<View> CreateViewInstance(const Guid& viewGuid, const ViewPlatformData& platformData, const std::vector<Guid>& uiScriptGuids, bool isFirstTime, const View* parentView = nullptr);
 	};
 }

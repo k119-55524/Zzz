@@ -39,12 +39,23 @@ void ViewManager::CreatePrimaryView()
 	if (m_PrimaryView)
 		THROW_RUNTIME("Первичное (Основное) окно приложения уже создано.");
 
-	const auto& primaryUserData = m_UserSettingsManager->GetPrimaryViewUserData();
 	auto primaryViewData = m_PackageManager->GetPrimaryViewData();
 	if (!primaryViewData)
 		THROW_RUNTIME("Обязательный ресурс PrimaryViewData не найден в пакете: {}", primaryViewData.error());
 
-	m_PrimaryView = CreateViewInstance(primaryUserData.GetViewGuid(), primaryUserData.GetPlatformData(), primaryViewData->GetUiScriptGuids());
+	const auto* primaryUserData = m_UserSettingsManager->GetPrimaryViewUserData();
+	const bool isFirstTime = (primaryUserData == nullptr);
+
+	ViewPlatformData platformData = isFirstTime 
+		? primaryViewData->GetPlatformData() 
+		: primaryUserData->GetPlatformData();
+
+	m_PrimaryView = CreateViewInstance(
+		primaryViewData->GetViewGuid(),
+		platformData,
+		primaryViewData->GetUiScriptGuids(),
+		isFirstTime
+	);
 }
 
 void ViewManager::CreateChildView(const Guid& viewGuid)
@@ -54,12 +65,21 @@ void ViewManager::CreateChildView(const Guid& viewGuid)
 #else // Z_MOBILE
 	ensure(m_PrimaryView != nullptr, "Дочернее окно не может быть создано до создания Основного окна.");
 
-	const auto& userData = m_UserSettingsManager->GetChildViewUserData(viewGuid);
 	auto viewDataRes = m_PackageManager->LoadPackageDataByGuid<ChildViewData>(ePackage::ChildView, viewGuid);
 	if (!viewDataRes)
 		THROW_RUNTIME("Не удалось загрузить ChildViewData из пакета для GUID '{}': {}", viewGuid.ToString(), viewDataRes.error());
 
-	m_ChildViews.push_back(CreateViewInstance(viewGuid, userData.GetPlatformData(), viewDataRes->GetUiScriptGuids(), m_PrimaryView.get()));
+	const auto* userData = m_UserSettingsManager->GetChildViewUserData(viewGuid);
+	const bool isFirstTime = (userData == nullptr);
+	ViewPlatformData platformData = isFirstTime ? viewDataRes->GetPlatformData() : userData->GetPlatformData();
+
+	m_ChildViews.push_back(CreateViewInstance(
+		viewGuid,
+		platformData,
+		viewDataRes->GetUiScriptGuids(),
+		isFirstTime,
+		m_PrimaryView.get()
+	));
 #endif // Z_MOBILE
 }
 
@@ -70,12 +90,20 @@ void ViewManager::CreateIndependentView(const Guid& viewGuid)
 #else // Z_MOBILE
 	ensure(m_PrimaryView != nullptr, "Независимое окно не может быть создано до создания Основного окна.");
 
-	const auto& userData = m_UserSettingsManager->GetIndependentViewUserData(viewGuid);
 	auto viewDataRes = m_PackageManager->LoadPackageDataByGuid<IndependentViewData>(ePackage::IndependentView, viewGuid);
 	if (!viewDataRes)
 		THROW_RUNTIME("Не удалось загрузить IndependentViewData из пакета для GUID '{}': {}", viewGuid.ToString(), viewDataRes.error());
 
-	m_IndependentViews.push_back(CreateViewInstance(viewGuid, userData.GetPlatformData(), viewDataRes->GetUiScriptGuids()));
+	const auto* userData = m_UserSettingsManager->GetIndependentViewUserData(viewGuid);
+	const bool isFirstTime = (userData == nullptr);
+	ViewPlatformData platformData = isFirstTime ? viewDataRes->GetPlatformData() : userData->GetPlatformData();
+
+	m_IndependentViews.push_back(CreateViewInstance(
+		viewGuid,
+		platformData,
+		viewDataRes->GetUiScriptGuids(),
+		isFirstTime
+	));
 #endif // Z_MOBILE
 }
 
@@ -83,12 +111,13 @@ std::shared_ptr<View> ViewManager::CreateViewInstance(
 	const Guid& viewGuid,
 	const ViewPlatformData& rawPlatformData,
 	const std::vector<Guid>& uiScriptGuids,
+	bool isFirstTime,
 	const View* parentView)
 {
 	ViewPlatformData platformData = rawPlatformData;
 	const auto& monitorProvider = m_Platform.GetMonitorProvider();
 	MonitorInfo targetMonitor = monitorProvider.GetMonitorById(platformData.GetMonitorId());
-	Rect2D<zI32> targetRect = m_UserSettingsManager->IsFirstRun()
+	Rect2D<zI32> targetRect = isFirstTime
 		? monitorProvider.CenterOnWorkArea(platformData.GetWindowRect(), targetMonitor)
 		: monitorProvider.FitToWorkArea(platformData.GetWindowRect(), targetMonitor);
 
@@ -105,6 +134,7 @@ std::shared_ptr<View> ViewManager::CreateViewInstance(
 		[this](View& v) { OnWindowClose(v); },
 		parentView
 	);
+	m_UserSettingsManager->StoreViewState(*view);
 	view->InvokeStart();
 	return view;
 }

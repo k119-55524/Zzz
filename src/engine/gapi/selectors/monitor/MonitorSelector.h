@@ -37,7 +37,8 @@ namespace zzz::engine
 			zU32 selectedIndex = 0;
 			bool monitorFound = false;
 
-			const std::string& savedMonitorId = m_UserSettings ? m_UserSettings->GetPrimaryViewUserData().GetPlatformData().GetMonitorId() : "";
+			const auto* primaryUserData = m_UserSettings ? m_UserSettings->GetPrimaryViewUserData() : nullptr;
+			const std::string savedMonitorId = primaryUserData ? primaryUserData->GetPlatformData().GetMonitorId() : "";
 
 			if (!savedMonitorId.empty())
 			{

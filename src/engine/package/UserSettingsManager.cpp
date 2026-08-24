@@ -8,20 +8,19 @@ using zzz::core::PrimaryViewUserData;
 
 namespace zzz::engine
 {
-	UserSettingsManager::UserSettingsManager(const Path& path, const PrimaryViewData& defaultPrimaryViewData) :
+	UserSettingsManager::UserSettingsManager(const Path& path) :
 		m_Path(path),
 		m_Version(c_ConfigFileMajorVersion, c_ConfigFileMinorVersion, c_ConfigFilePatchVersion),
 		m_IsDirty(true)
 	{
 #if Z_EDITOR
-		(void)defaultPrimaryViewData;
 #else
-		Initialize(defaultPrimaryViewData);
+		Initialize();
 		LogUserData();
 #endif
 	}
 
-	void UserSettingsManager::Initialize(const PrimaryViewData& defaultPrimaryViewData)
+	void UserSettingsManager::Initialize()
 	{
 		try
 		{
@@ -33,7 +32,7 @@ namespace zzz::engine
 				.lexically_normal()
 				.make_preferred();
 
-			SetDefaultUserSettings(defaultPrimaryViewData);
+			SetDefaultUserSettings();
 			if (!std::filesystem::exists(m_ConfigPath))
 			{
 				DOutWarning("Файл конфигурации не найден: {}. Используется конфигурация по умолчанию.", m_ConfigPath.string());
@@ -44,49 +43,44 @@ namespace zzz::engine
 			if (!res)
 			{
 				DOutWarning("Не удалось загрузить файл конфигурации: {}. Создаётся конфигурация по умолчанию.", m_ConfigPath.string());
-				SetDefaultUserSettings(defaultPrimaryViewData);
+				SetDefaultUserSettings();
 			}
 			else
 			{
 				m_IsFirstRun = false;
 			}
-
-			auto& primaryPlatformData = m_PrimaryViewUserData.GetPlatformData();
-			const auto currentState = primaryPlatformData.GetWindowState();
-			if (currentState == eWindowState::Closed || currentState == eWindowState::Minimized)
-			{
-				const auto defaultState = defaultPrimaryViewData.GetPlatformData().GetWindowState();
-				const bool isFullscreen = (defaultState == eWindowState::BorderlessFullscreen || defaultState == eWindowState::ExclusiveFullscreen);
-				primaryPlatformData.SetWindowState(isFullscreen ? defaultState : eWindowState::Normal);
-				m_IsDirty = true;
-			}
 		}
 		catch (const std::filesystem::filesystem_error& e)
 		{
 			DOutException("Ошибка файловой системы: {}. Установка конфигурации по умолчанию.", e.what());
-			SetDefaultUserSettings(defaultPrimaryViewData);
+			SetDefaultUserSettings();
 			return;
 		}
 		catch (const std::exception& e)
 		{
 			DOutException("Ошибка загрузки конфигурации: {}. Установка конфигурации по умолчанию.", e.what());
-			SetDefaultUserSettings(defaultPrimaryViewData);
+			SetDefaultUserSettings();
 			return;
 		}
 		catch (...)
 		{
 			DOutException("Неизвестная ошибка загрузки конфигурации. Установка конфигурации по умолчанию.");
-			SetDefaultUserSettings(defaultPrimaryViewData);
+			SetDefaultUserSettings();
 			return;
 		}
 
 		DOut("[UserSettingsManager] Конфигурация десериализована: {}.", m_ConfigPath.string());
 	}
 
-	void UserSettingsManager::SetDefaultUserSettings(const PrimaryViewData& defaultPrimaryViewData)
+	void UserSettingsManager::SetDefaultUserSettings()
 	{
 		m_Version = Version(c_ConfigFileMajorVersion, c_ConfigFileMinorVersion, c_ConfigFilePatchVersion);
-		m_PrimaryViewUserData = PrimaryViewUserData(defaultPrimaryViewData);
+		m_PrimaryViewUserData.reset();
+	}
+
+	const PrimaryViewUserData* UserSettingsManager::GetPrimaryViewUserData() const noexcept
+	{
+		return m_PrimaryViewUserData.has_value() ? &m_PrimaryViewUserData.value() : nullptr;
 	}
 
 	void UserSettingsManager::SetSelectedGpuId(std::string gpuId)
@@ -98,18 +92,20 @@ namespace zzz::engine
 		}
 	}
 
-	const ViewUserData& UserSettingsManager::GetChildViewUserData(const Guid& guid) const
+	const ViewUserData* UserSettingsManager::GetChildViewUserData(const Guid& guid) const noexcept
 	{
 		auto it = m_ChildViewsUserData.find(guid);
-		ensure(it != m_ChildViewsUserData.end(), "Пользовательские настройки для View с GUID '" + guid.ToString() + "' не найдены в UserSettingsManager (ChildViews).");
-		return it->second;
+		if (it != m_ChildViewsUserData.end())
+			return &it->second;
+		return nullptr;
 	}
 
-	const ViewUserData& UserSettingsManager::GetIndependentViewUserData(const Guid& guid) const
+	const ViewUserData* UserSettingsManager::GetIndependentViewUserData(const Guid& guid) const noexcept
 	{
 		auto it = m_IndependentViewsUserData.find(guid);
-		ensure(it != m_IndependentViewsUserData.end(), "Пользовательские настройки для View с GUID '" + guid.ToString() + "' не найдены в UserSettingsManager (IndependentViews).");
-		return it->second;
+		if (it != m_IndependentViewsUserData.end())
+			return &it->second;
+		return nullptr;
 	}
 
 	[[nodiscard]] std::expected<void, std::string> UserSettingsManager::SaveConfig()
@@ -195,12 +191,16 @@ namespace zzz::engine
 				return UNEXPECTED("Не удалось десериализовать конфигурацию: {}", result.error());
 
 			// Санитария состояния стартового окна для релиза: Closed или Minimized исправление на Normal
-			auto& startPlatformData = m_PrimaryViewUserData.GetPlatformData();
-			auto state = startPlatformData.GetWindowState();
-			if (state == eWindowState::Closed || state == eWindowState::Minimized)
+			if (m_PrimaryViewUserData)
 			{
-				DOutWarning("[UserSettingsManager] Зафиксирован невалидный статус стартового окна ('{}'). Автоматический сброс на 'Normal'.", EnumToString::ToString(state));
-				startPlatformData.SetWindowState(eWindowState::Normal);
+				auto& startPlatformData = m_PrimaryViewUserData->GetPlatformData();
+				auto state = startPlatformData.GetWindowState();
+				if (state == eWindowState::Closed || state == eWindowState::Minimized)
+				{
+					DOutWarning("[UserSettingsManager] Зафиксирован невалидный статус стартового окна ('{}'). Автоматический сброс на 'Normal'.", EnumToString::ToString(state));
+					startPlatformData.SetWindowState(eWindowState::Normal);
+					m_IsDirty = true;
+				}
 			}
 		}
 		catch (const std::filesystem::filesystem_error& e)
@@ -236,15 +236,28 @@ namespace zzz::engine
 		const Guid& guid = viewState.GetViewGuid();
 		const NativeWindowState& navState = viewState.GetNativeState();
 
-		if (m_PrimaryViewUserData.GetViewGuid() == guid)
+		if (!m_PrimaryViewUserData || m_PrimaryViewUserData->GetViewGuid() == guid)
 		{
-			auto& platformData = m_PrimaryViewUserData.GetPlatformData();
-			platformData.SetWindowRect(navState.GetWindowRect());
-			platformData.SetMonitorId(navState.GetMonitorId());
+			if (!m_PrimaryViewUserData)
+			{
+				ViewPlatformData pd;
+				pd.SetWindowRect(navState.GetWindowRect());
+				pd.SetMonitorId(navState.GetMonitorId());
+				auto state = navState.GetState();
+				if (state != eWindowState::Closed && state != eWindowState::Minimized)
+					pd.SetWindowState(state);
+				m_PrimaryViewUserData = PrimaryViewUserData(guid, pd);
+			}
+			else
+			{
+				auto& platformData = m_PrimaryViewUserData->GetPlatformData();
+				platformData.SetWindowRect(navState.GetWindowRect());
+				platformData.SetMonitorId(navState.GetMonitorId());
 
-			auto state = navState.GetState();
-			if (state != eWindowState::Closed && state != eWindowState::Minimized)
-				platformData.SetWindowState(state);
+				auto state = navState.GetState();
+				if (state != eWindowState::Closed && state != eWindowState::Minimized)
+					platformData.SetWindowState(state);
+			}
 
 			m_IsDirty = true;
 			return;
@@ -271,7 +284,14 @@ namespace zzz::engine
 	{
 		auto res = s.Serialize(buffer, c_ConfigHeader)
 			.and_then([&]() { return s.Serialize(buffer, m_Version); })
-			.and_then([&]() { return s.Serialize(buffer, m_PrimaryViewUserData); });
+			.and_then([&]() -> std::expected<void, std::string> {
+				bool hasPrimary = m_PrimaryViewUserData.has_value();
+				auto resP = s.Serialize(buffer, hasPrimary);
+				if (!resP) return resP;
+				if (hasPrimary)
+					return s.Serialize(buffer, *m_PrimaryViewUserData);
+				return {};
+			});
 
 		if (!res)
 			return res;
@@ -315,7 +335,23 @@ namespace zzz::engine
 
 					return s.Deserialize(buffer, offset, m_Version);
 				})
-			.and_then([&]() { return s.Deserialize(buffer, offset, m_PrimaryViewUserData); });
+			.and_then([&]() -> std::expected<void, std::string> {
+				bool hasPrimary = false;
+				auto resP = s.Deserialize(buffer, offset, hasPrimary);
+				if (!resP) return resP;
+				if (hasPrimary)
+				{
+					PrimaryViewUserData data;
+					auto resD = s.Deserialize(buffer, offset, data);
+					if (!resD) return resD;
+					m_PrimaryViewUserData = std::move(data);
+				}
+				else
+				{
+					m_PrimaryViewUserData.reset();
+				}
+				return {};
+			});
 
 		if (!res)
 			return res;
@@ -362,7 +398,8 @@ namespace zzz::engine
 	{
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 		DOut("========== [UserSettingsManager] User Data: {} ==========", m_ConfigPath.string());
-		m_PrimaryViewUserData.LogFileBlock("  ");
+		if (m_PrimaryViewUserData)
+			m_PrimaryViewUserData->LogFileBlock("  ");
 		for (const auto& [guid, viewData] : m_ChildViewsUserData)
 		{
 			viewData.LogFileBlock("  ");

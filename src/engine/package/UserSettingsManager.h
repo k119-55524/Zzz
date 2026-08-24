@@ -16,12 +16,12 @@ namespace zzz::engine
 	{
 	public:
 		UserSettingsManager() = delete;
-		UserSettingsManager(const Path& path, const PrimaryViewData& defaultPrimaryViewData);
+		UserSettingsManager(const Path& path);
 
 		[[nodiscard]] inline const std::string& GetSelectedGpuId() const noexcept { return m_SelectedGpuId; }
-		[[nodiscard]] inline const PrimaryViewUserData& GetPrimaryViewUserData() const noexcept { return m_PrimaryViewUserData; }
-		[[nodiscard]] const ViewUserData& GetChildViewUserData(const Guid& guid) const;
-		[[nodiscard]] const ViewUserData& GetIndependentViewUserData(const Guid& guid) const;
+		[[nodiscard]] const PrimaryViewUserData* GetPrimaryViewUserData() const noexcept;
+		[[nodiscard]] const ViewUserData* GetChildViewUserData(const Guid& guid) const noexcept;
+		[[nodiscard]] const ViewUserData* GetIndependentViewUserData(const Guid& guid) const noexcept;
 		[[nodiscard]] inline bool IsFirstRun() const noexcept { return m_IsFirstRun; }
 
 		void SetSelectedGpuId(std::string gpuId);
@@ -30,9 +30,9 @@ namespace zzz::engine
 		[[nodiscard]] std::expected<void, std::string> SaveConfig();
 
 	private:
-		void Initialize(const PrimaryViewData& defaultPrimaryViewData);
+		void Initialize();
 		void LogUserData() const;
-		void SetDefaultUserSettings(const PrimaryViewData& defaultPrimaryViewData);
+		void SetDefaultUserSettings();
 		std::expected<std::filesystem::path, std::string> GetSettingsDirectory();
 		std::expected<void, std::string> LoadConfig(std::filesystem::path path);
 
@@ -43,7 +43,7 @@ namespace zzz::engine
 		std::filesystem::path m_ConfigPath;
 
 		Version m_Version;
-		PrimaryViewUserData m_PrimaryViewUserData;
+		std::optional<PrimaryViewUserData> m_PrimaryViewUserData;
 		ViewUserDataMap m_ChildViewsUserData;
 		ViewUserDataMap m_IndependentViewsUserData;
 		std::string m_SelectedGpuId;

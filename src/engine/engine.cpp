@@ -41,7 +41,7 @@ Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeDa
 		THROW_RUNTIME("Failed to load PrimaryViewData: {}", primaryViewData.error());
 
 	// Загрузка пользовательских настроек (UserSettings.dat)
-	m_UserSettingsManager = safe_make_shared<UserSettingsManager>(*m_Path, *primaryViewData);
+	m_UserSettingsManager = safe_make_shared<UserSettingsManager>(*m_Path);
 
 	// Создание платформенного слоя абстракции ОС (native windows, ввод, системные события)
 	m_Platform = safe_make_unique<Platform>(nativeData, projectManifestData->GetPlatformData());
