@@ -19,12 +19,38 @@ namespace zzz::engine
 		UserSettingsManager(const Path& path);
 
 		[[nodiscard]] inline const std::string& GetSelectedGpuId() const noexcept { return m_SelectedGpuId; }
+		/**
+		 * @brief Возвращает пользовательские настройки Основного окна ( PrimaryViewUserData ).
+		 * @return Указатель на настройки, или nullptr, если настройки ещё не созданы в user.dat.
+		 */
 		[[nodiscard]] const PrimaryViewUserData* GetPrimaryViewUserData() const noexcept;
+
+		/**
+		 * @brief Возвращает пользовательские настройки Дочернего окна ( ChildView ).
+		 * @param guid Уникальный идентификатор окна.
+		 * @return Указатель на настройки, или nullptr, если окно открывается впервые и отсутствует в user.dat.
+		 */
 		[[nodiscard]] const ViewUserData* GetChildViewUserData(const Guid& guid) const noexcept;
+
+		/**
+		 * @brief Возвращает пользовательские настройки Независимого окна ( IndependentView ).
+		 * @param guid Уникальный идентификатор окна.
+		 * @return Указатель на настройки, или nullptr, если окно открывается впервые и отсутствует в user.dat.
+		 */
 		[[nodiscard]] const ViewUserData* GetIndependentViewUserData(const Guid& guid) const noexcept;
+
+		/**
+		 * @brief Проверяет, запущен ли движок впервые (отсутствовал файл user.dat).
+		 */
 		[[nodiscard]] inline bool IsFirstRun() const noexcept { return m_IsFirstRun; }
 
 		void SetSelectedGpuId(std::string gpuId);
+
+		/**
+		 * @brief Запоминает или обновляет геометрическое состояние (размер, позиция, монитор) указанного View в user.dat.
+		 * Если окна ещё нет в конфигурации пользователя, создаёт новую запись.
+		 * @param view Ссылка на экземпляр окна.
+		 */
 		void StoreViewState(const View& view);
 
 		[[nodiscard]] std::expected<void, std::string> SaveConfig();

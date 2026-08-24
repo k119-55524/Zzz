@@ -7,11 +7,11 @@ namespace zzz::core
 	enum class ePackage : zU32
 	{
 		ProjectManifest = 1,
-		Scene = 2,
-		Prefab = 4,
-		BinaryAsset = 5,
-		PrimaryView = 6,
-		ChildView = 7,
-		IndependentView = 8
+		Scene           = 2,
+		PrimaryView     = 3,
+		ChildView       = 4,
+		IndependentView = 5,
+		Prefab          = 6,
+		BinaryAsset     = 7
 	};
 }

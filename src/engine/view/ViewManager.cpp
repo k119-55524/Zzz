@@ -39,13 +39,16 @@ void ViewManager::CreatePrimaryView()
 	if (m_PrimaryView)
 		THROW_RUNTIME("Первичное (Основное) окно приложения уже создано.");
 
+	// 1. Проверяем наличие ресурсов Основного окна в package.dat
 	auto primaryViewData = m_PackageManager->GetPrimaryViewData();
 	if (!primaryViewData)
 		THROW_RUNTIME("Обязательный ресурс PrimaryViewData не найден в пакете: {}", primaryViewData.error());
 
+	// 2. Проверяем наличие пользовательских настроек в user.dat (nullptr если первый запуск)
 	const auto* primaryUserData = m_UserSettingsManager->GetPrimaryViewUserData();
 	const bool isFirstTime = (primaryUserData == nullptr);
 
+	// 3. Если окно запускается впервые — берем базовые характеристики из package.dat, иначе из user.dat
 	ViewPlatformData platformData = isFirstTime 
 		? primaryViewData->GetPlatformData() 
 		: primaryUserData->GetPlatformData();
@@ -65,10 +68,12 @@ void ViewManager::CreateChildView(const Guid& viewGuid)
 #else // Z_MOBILE
 	ensure(m_PrimaryView != nullptr, "Дочернее окно не может быть создано до создания Основного окна.");
 
+	// 1. Обязательная проверка существования ресурса ChildView в пакете ресурсов package.dat
 	auto viewDataRes = m_PackageManager->LoadPackageDataByGuid<ChildViewData>(ePackage::ChildView, viewGuid);
 	if (!viewDataRes)
 		THROW_RUNTIME("Не удалось загрузить ChildViewData из пакета для GUID '{}': {}", viewGuid.ToString(), viewDataRes.error());
 
+	// 2. Поиск сохраненных настроек в user.dat (nullptr если окно открывается впервые)
 	const auto* userData = m_UserSettingsManager->GetChildViewUserData(viewGuid);
 	const bool isFirstTime = (userData == nullptr);
 	ViewPlatformData platformData = isFirstTime ? viewDataRes->GetPlatformData() : userData->GetPlatformData();
@@ -90,10 +95,12 @@ void ViewManager::CreateIndependentView(const Guid& viewGuid)
 #else // Z_MOBILE
 	ensure(m_PrimaryView != nullptr, "Независимое окно не может быть создано до создания Основного окна.");
 
+	// 1. Обязательная проверка существования ресурса IndependentView в пакете ресурсов package.dat
 	auto viewDataRes = m_PackageManager->LoadPackageDataByGuid<IndependentViewData>(ePackage::IndependentView, viewGuid);
 	if (!viewDataRes)
 		THROW_RUNTIME("Не удалось загрузить IndependentViewData из пакета для GUID '{}': {}", viewGuid.ToString(), viewDataRes.error());
 
+	// 2. Поиск сохраненных настроек в user.dat (nullptr если окно открывается впервые)
 	const auto* userData = m_UserSettingsManager->GetIndependentViewUserData(viewGuid);
 	const bool isFirstTime = (userData == nullptr);
 	ViewPlatformData platformData = isFirstTime ? viewDataRes->GetPlatformData() : userData->GetPlatformData();
@@ -117,6 +124,9 @@ std::shared_ptr<View> ViewManager::CreateViewInstance(
 	ViewPlatformData platformData = rawPlatformData;
 	const auto& monitorProvider = m_Platform.GetMonitorProvider();
 	MonitorInfo targetMonitor = monitorProvider.GetMonitorById(platformData.GetMonitorId());
+
+	// Если окно новое (isFirstTime) — вычисляем позицию по центру экрана (CenterOnWorkArea).
+	// Если окно уже сохранялось в user.dat — проверяем вписанность пользовательских координат (FitToWorkArea).
 	Rect2D<zI32> targetRect = isFirstTime
 		? monitorProvider.CenterOnWorkArea(platformData.GetWindowRect(), targetMonitor)
 		: monitorProvider.FitToWorkArea(platformData.GetWindowRect(), targetMonitor);
@@ -134,6 +144,8 @@ std::shared_ptr<View> ViewManager::CreateViewInstance(
 		[this](View& v) { OnWindowClose(v); },
 		parentView
 	);
+
+	// Сразу фиксируем рассчитанное первичное состояние окна в UserSettingsManager
 	m_UserSettingsManager->StoreViewState(*view);
 	view->InvokeStart();
 	return view;

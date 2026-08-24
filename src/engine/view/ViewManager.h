@@ -25,10 +25,22 @@ namespace zzz::engine
 		[[nodiscard]] inline std::shared_ptr<View> GetPrimaryView() const noexcept { return m_PrimaryView; }
 
 		/**
-		 * @brief Создаёт первичное (основное) окно приложения из стартового ресурса пакета и пользовательских настроек окна.
+		 * @brief Создаёт первичное (основное) окно приложения из ресурса пакета и пользовательских настроек ( user.dat ).
 		 */
 		void CreatePrimaryView();
+
+		/**
+		 * @brief Создаёт дочернее окно по его GUID из ресурсов пакета и настроек user.dat.
+		 * Если окно открывается впервые, его положение автоматически вычисляется по центру экрана ( CenterOnWorkArea ).
+		 * @param viewGuid Идентификатор ресурса ChildView.
+		 */
 		void CreateChildView(const Guid& viewGuid);
+
+		/**
+		 * @brief Создаёт независимое окно по его GUID из ресурсов пакета и настроек user.dat.
+		 * Если окно открывается впервые, его положение автоматически вычисляется по центру экрана ( CenterOnWorkArea ).
+		 * @param viewGuid Идентификатор ресурса IndependentView.
+		 */
 		void CreateIndependentView(const Guid& viewGuid);
 
 #if Z_EDITOR

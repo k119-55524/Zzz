@@ -105,11 +105,11 @@ namespace zzz::core
 			{
 			case ePackage::ProjectManifest: return "ProjectManifest";
 			case ePackage::Scene:           return "Scene";
-			case ePackage::Prefab:          return "Prefab";
-			case ePackage::BinaryAsset:     return "BinaryAsset";
 			case ePackage::PrimaryView:     return "PrimaryView";
 			case ePackage::ChildView:       return "ChildView";
 			case ePackage::IndependentView: return "IndependentView";
+			case ePackage::Prefab:          return "Prefab";
+			case ePackage::BinaryAsset:     return "BinaryAsset";
 			}
 			THROW_RUNTIME("Необработанный ePackage");
 		}
