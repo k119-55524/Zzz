@@ -34,6 +34,7 @@
 #include <expected>
 #include <bitset>
 #include <concepts>
+#include <queue>
 
 // Core Defines
 #include "core/utils/Defines.h"

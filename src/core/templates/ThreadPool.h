@@ -1,160 +1,46 @@
 #pragma once
 
 #include "core/CoreIncludes.h"
-#include "QueueArray.h"
+#include <queue>
+#include <future>
+#include <type_traits>
+#include <functional>
 
 namespace zzz::templates
 {
-#if defined(_MSC_VER) && defined(_DEBUG)
+#if defined(_WIN32)
 	inline void SetThreadName(const char* threadName)
 	{
-		const DWORD MS_VC_EXCEPTION = 0x406D1388;
+		if (!threadName)
+			return;
 
-#pragma pack(push,8)
-		struct THREADNAME_INFO
+		int wlen = MultiByteToWideChar(CP_UTF8, 0, threadName, -1, nullptr, 0);
+		if (wlen > 0)
 		{
-			DWORD dwType;
-			LPCSTR szName;
-			DWORD dwThreadID;
-			DWORD dwFlags;
-		} info;
-		info.dwType = 0x1000;
-		info.szName = threadName;
-		info.dwThreadID = static_cast<DWORD>(-1);
-		info.dwFlags = 0;
-#pragma pack(pop)
-
-		__try
-		{
-			RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
-		}
-		__except (EXCEPTION_EXECUTE_HANDLER)
-		{
+			std::wstring wname(static_cast<size_t>(wlen), L'\0');
+			MultiByteToWideChar(CP_UTF8, 0, threadName, -1, wname.data(), wlen);
+			SetThreadDescription(GetCurrentThread(), wname.c_str());
 		}
 	}
 #else
 	inline void SetThreadName(const char*) {}
 #endif
 
-	template<typename T>
-	class ThreadSafeArrayQueue
-	{
-	public:
-		ThreadSafeArrayQueue() = delete;
-		ThreadSafeArrayQueue(const ThreadSafeArrayQueue&) = delete;
-		ThreadSafeArrayQueue& operator=(const ThreadSafeArrayQueue&) = delete;
-
-		explicit ThreadSafeArrayQueue(size_t startArraySize) :
-			threadQueue(startArraySize),
-			head{ 0 },
-			tail{ 0 },
-			lengthQueue{ 0 }
-		{
-		}
-
-		ThreadSafeArrayQueue(ThreadSafeArrayQueue&& other) noexcept :
-			threadQueue(std::move(other.threadQueue)),
-			head{ other.head },
-			tail{ other.tail },
-			lengthQueue{ other.lengthQueue }
-		{
-			other.head = 0;
-			other.tail = 0;
-			other.lengthQueue = 0;
-		}
-
-		inline ThreadSafeArrayQueue& operator=(ThreadSafeArrayQueue&& other) noexcept
-		{
-			if (this != &other)
-			{
-				threadQueue = std::move(other.threadQueue);
-				head = other.head;
-				tail = other.tail;
-				lengthQueue = other.lengthQueue;
-				other.head = 0;
-				other.tail = 0;
-				other.lengthQueue = 0;
-			}
-			return *this;
-		}
-
-		inline void push(const T& value)
-		{
-			std::lock_guard<std::mutex> lk(mut);
-			threadQueue.PushBack(value);
-			tail = (tail + 1) % threadQueue.Capacity();
-			lengthQueue++;
-			cv.notify_one();
-		}
-
-		inline void push(T&& value)
-		{
-			std::lock_guard<std::mutex> lk(mut);
-			threadQueue.PushBack(std::move(value));
-			tail = (tail + 1) % threadQueue.Capacity();
-			lengthQueue++;
-			cv.notify_one();
-		}
-
-		inline bool pop(T& value) noexcept
-		{
-			std::lock_guard<std::mutex> lk(mut);
-			if (lengthQueue == 0)
-				return false;
-
-			value = std::move(threadQueue[head]);
-			head = (head + 1) % threadQueue.Capacity();
-			lengthQueue--;
-
-			if (lengthQueue == 0)
-			{
-				head = tail = 0;
-				threadQueue.Clear();
-			}
-
-			return true;
-		}
-
-		inline bool IsEmpty() const noexcept
-		{
-			std::lock_guard<std::mutex> lk(mut);
-			return lengthQueue == 0;
-		}
-
-		inline size_t Length() const noexcept
-		{
-			std::lock_guard<std::mutex> lk(mut);
-			return lengthQueue;
-		}
-
-		inline void clear()
-		{
-			std::lock_guard<std::mutex> lk(mut);
-			head = 0;
-			tail = 0;
-			lengthQueue = 0;
-			threadQueue.Clear();
-		}
-
-	private:
-		QueueArray<T> threadQueue;
-		size_t head;
-		size_t tail;
-		size_t lengthQueue;
-		mutable std::mutex mut;
-		std::condition_variable cv;
-	};
-
+	/**
+	 * @brief Пул работяг-потоков для асинхронного выполнения задач движка.
+	 * 
+	 * @note ВАЖНО: Запрещено вызывать метод Join() или уничтожать объект ThreadPool 
+	 * изнутри задачи, исполняемой в этом же пуле потоков (WorkerThread), 
+	 * так как это приведет к взаимной блокировке (Deadlock).
+	 */
 	class ThreadPool
 	{
 		Z_NO_COPY_MOVE(ThreadPool);
 
 	public:
-		explicit ThreadPool(const std::string& threadName, size_t threadCount) :
-			done{ false },
-			threadCount{ threadCount },
-			activeThreadCount{ 0 },
-			workQueue(threadCount)
+		explicit ThreadPool(const std::string& threadName, size_t threadCount)
+			: done{ false }
+			, activeThreadCount{ 0 }
 		{
 			if (threadCount == 0)
 				THROW_RUNTIME("Parameters cannot be 0.");
@@ -169,7 +55,10 @@ namespace zzz::templates
 			}
 			catch (...)
 			{
-				done = true;
+				{
+					std::lock_guard<std::mutex> lock(cv_mutex);
+					done = true;
+				}
 				cv.notify_all();
 				for (auto& thread : threads)
 				{
@@ -185,6 +74,8 @@ namespace zzz::templates
 			{
 				std::lock_guard<std::mutex> lock(cv_mutex);
 				done = true;
+				std::queue<std::function<void()>> emptyQueue;
+				std::swap(workQueue, emptyQueue);
 			}
 			cv.notify_all();
 
@@ -195,54 +86,130 @@ namespace zzz::templates
 			}
 
 			threads.clear();
-			workQueue.clear();
 		}
 
+		/**
+		 * @brief Отправляет задачу на выполнение в пул потоков.
+		 * Поддерживает любые std::invoke-совместимые callable-объекты, лямбды, 
+		 * функции и указатели на методы классов (&Class::Method).
+		 * Также корректно поддерживает move-only типы (std::unique_ptr).
+		 */
 		template<typename FunctionType, typename... Args>
-		void Submit(FunctionType&& f, Args&&... args)
+		auto Submit(FunctionType&& f, Args&&... args) -> std::future<std::invoke_result_t<FunctionType, Args...>>
 		{
+			using ReturnType = std::invoke_result_t<FunctionType, Args...>;
+
+			auto task = std::make_shared<std::packaged_task<ReturnType()>>(
+				[f = std::forward<FunctionType>(f), ...args = std::forward<Args>(args)]() mutable {
+					return std::invoke(std::move(f), std::move(args)...);
+				}
+			);
+
+			std::future<ReturnType> result = task->get_future();
 			{
 				std::lock_guard<std::mutex> lock(cv_mutex);
-				if (done) return;
+				if (done)
+				{
+					THROW_RUNTIME("Cannot submit task to stopped ThreadPool.");
+				}
+
+				workQueue.push([task]() {
+					(*task)();
+				});
+			}
+			cv.notify_one();
+			return result;
+		}
+
+		/**
+		 * @brief Пакетная отправка множества независимых задач в один вызов.
+		 * Позволяет захватить мьютекс всего один раз и разбудить доступные воркер-потоки.
+		 * Возвращает std::tuple из std::future для каждой из переданных задач.
+		 * 
+		 * Пример использования:
+		 * auto [f1, f2, f3] = pool.SubmitTasks(
+		 *     [this] { Task1(); },
+		 *     [this] { Task2(); },
+		 *     [this] { Task3(); }
+		 * );
+		 */
+		template<typename... Tasks>
+		auto SubmitTasks(Tasks&&... tasks)
+		{
+			static_assert(sizeof...(Tasks) > 0, "SubmitTasks requires at least one task.");
+
+			auto submitSingle = [this](auto&& taskFunc) {
+				using TaskType = std::decay_t<decltype(taskFunc)>;
+				using ReturnType = std::invoke_result_t<TaskType>;
+
+				auto packagedTask = std::make_shared<std::packaged_task<ReturnType()>>(
+					[f = std::forward<TaskType>(taskFunc)]() mutable {
+						return std::invoke(std::move(f));
+					}
+				);
+
+				std::future<ReturnType> fut = packagedTask->get_future();
+				return std::pair{ packagedTask, std::move(fut) };
+			};
+
+			auto taskPairs = std::tuple{ submitSingle(std::forward<Tasks>(tasks))... };
+
+			{
+				std::lock_guard<std::mutex> lock(cv_mutex);
+				if (done)
+				{
+					THROW_RUNTIME("Cannot submit tasks to stopped ThreadPool.");
+				}
+
+				std::apply([this](auto&... pairs) {
+					(workQueue.push([pkg = pairs.first]() { (*pkg)(); }), ...);
+				}, taskPairs);
 			}
 
-			workQueue.push([f = std::forward<FunctionType>(f), ...args = std::forward<Args>(args)]() mutable { f(args...); });
-			cv.notify_one();
+			cv.notify_all();
+
+			return std::apply([](auto&... pairs) {
+				return std::tuple{ std::move(pairs.second)... };
+			}, taskPairs);
 		}
 
-		bool IsCompleted()
+		[[nodiscard]] bool IsCompleted() const
 		{
 			std::lock_guard<std::mutex> lk(cv_mutex);
-			bool queueEmpty = workQueue.IsEmpty();
-			uint32_t activeCount = activeThreadCount.load();
-
-			return queueEmpty && activeCount == 0;
+			return workQueue.empty() && activeThreadCount == 0;
 		}
 
+		[[nodiscard]] size_t GetThreadCount() const noexcept
+		{
+			return threads.size();
+		}
+
+		/**
+		 * @brief Ожидает завершения всех текущих и стоящих в очереди задач.
+		 * @warning Не вызывайте метод Join() из задачи самого ThreadPool во избежание дедлока!
+		 */
 		void Join()
 		{
 			std::unique_lock<std::mutex> lk(cv_mutex);
 
 			cv.wait(lk, [this]
 				{
-					bool queueEmpty = workQueue.IsEmpty();
-					uint32_t activeCount = activeThreadCount.load();
-					return queueEmpty && activeCount == 0;
+					return workQueue.empty() && activeThreadCount == 0;
 				});
 		}
 
 	private:
-		size_t threadCount;
-		std::atomic_bool done;
-		std::atomic_uint activeThreadCount;
-		ThreadSafeArrayQueue<std::function<void()>> workQueue;
-		std::vector<std::thread> threads;
-		std::mutex cv_mutex;
+		mutable std::mutex cv_mutex;
 		std::condition_variable cv;
+
+		bool done;
+		size_t activeThreadCount;
+		std::queue<std::function<void()>> workQueue;
+		std::vector<std::thread> threads;
 
 		void WorkerThread(const std::string& _threadName, size_t id)
 		{
-#if defined(_MSC_VER) && defined(_DEBUG)
+#if defined(_WIN32)
 			std::string threadName = std::format(">>>>> [zzz::ThreadPool]. Thread-using class: zzz::{}({})", _threadName, id);
 			SetThreadName(threadName.c_str());
 #endif
@@ -255,15 +222,14 @@ namespace zzz::templates
 					std::unique_lock<std::mutex> lk(cv_mutex);
 
 					cv.wait(lk, [this] {
-						return !workQueue.IsEmpty() || done;
-						});
+						return !workQueue.empty() || done;
+					});
 
-					if (done && workQueue.IsEmpty())
+					if (done && workQueue.empty())
 						return;
 
-					if (!workQueue.pop(task))
-						continue;
-
+					task = std::move(workQueue.front());
+					workQueue.pop();
 					activeThreadCount++;
 				}
 
@@ -279,8 +245,11 @@ namespace zzz::templates
 				{
 					std::lock_guard<std::mutex> lk(cv_mutex);
 					activeThreadCount--;
+					if (workQueue.empty() && activeThreadCount == 0)
+					{
+						cv.notify_all();
+					}
 				}
-				cv.notify_all();
 			}
 		}
 	};

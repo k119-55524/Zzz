@@ -212,36 +212,37 @@ void ViewManager::Update(const Time& time)
 	if (!m_PrimaryView)
 		return;
 
-	m_ThreadsUpdate.Submit([this, &time]()
-	{
-		m_PrimaryView->Update(time);
-		m_PrimaryView->PrepareFrame();
+	m_ThreadsUpdate.SubmitTasks(
+		[this, &time]()
+		{
+			m_PrimaryView->Update(time);
+			m_PrimaryView->PrepareFrame();
 
-		for (const auto& view : m_ChildViews)
+			for (const auto& view : m_ChildViews)
+			{
+				view->Update(time);
+				view->PrepareFrame();
+			}
+			for (const auto& view : m_IndependentViews)
+			{
+				view->Update(time);
+				view->PrepareFrame();
+			}
+		},
+		[this]()
 		{
-			view->Update(time);
-			view->PrepareFrame();
-		}
-		for (const auto& view : m_IndependentViews)
-		{
-			view->Update(time);
-			view->PrepareFrame();
-		}
-	});
+			m_PrimaryView->RenderFrame();
 
-	m_ThreadsUpdate.Submit([this]()
-	{
-		m_PrimaryView->RenderFrame();
-
-		for (const auto& view : m_ChildViews)
-		{
-			view->RenderFrame();
+			for (const auto& view : m_ChildViews)
+			{
+				view->RenderFrame();
+			}
+			for (const auto& view : m_IndependentViews)
+			{
+				view->RenderFrame();
+			}
 		}
-		for (const auto& view : m_IndependentViews)
-		{
-			view->RenderFrame();
-		}
-	});
+	);
 
 	m_ThreadsUpdate.Join();
 }
