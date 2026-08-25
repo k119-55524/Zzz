@@ -1,4 +1,3 @@
-﻿
 #pragma once
 
 #if defined(Z_D3D12)

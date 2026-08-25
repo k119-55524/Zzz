@@ -4,11 +4,11 @@
 #include "core/hardware/MonitorInfo.h"
 #include "core/Serialize/Serializer.h"
 #include "core/enums/eEnumToString.h"
+#include "core/io/package/platforms/start_view/ViewPlatformConfig.h"
 #include "engine/view/ViewWindowState.h"
 
 namespace zzz::core
 {
-	using namespace zzz::engine;
 
 	/**
 	 * @brief Сохраненное пользовательское состояние конкретного окна (View) в user.dat.
@@ -17,13 +17,13 @@ namespace zzz::core
 	{
 	public:
 		ViewUserData() = default;
-		explicit ViewUserData(ViewWindowState state)
+		explicit ViewUserData(zzz::engine::ViewWindowState state)
 			: m_State(std::move(state))
 		{}
 
 		[[nodiscard]] const Guid& GetViewGuid() const noexcept { return m_State.GetViewGuid(); }
-		[[nodiscard]] const ViewWindowState& GetWindowState() const noexcept { return m_State; }
-		[[nodiscard]] ViewWindowState& GetWindowState() noexcept { return m_State; }
+		[[nodiscard]] const zzz::engine::ViewWindowState& GetWindowState() const noexcept { return m_State; }
+		[[nodiscard]] zzz::engine::ViewWindowState& GetWindowState() noexcept { return m_State; }
 
 		[[nodiscard]] inline ViewPlatformData GetPlatformData() const noexcept
 		{
@@ -63,6 +63,6 @@ namespace zzz::core
 			return s.Deserialize(buffer, offset, m_State);
 		}
 
-		ViewWindowState m_State;
+		zzz::engine::ViewWindowState m_State;
 	};
 }

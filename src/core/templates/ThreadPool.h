@@ -20,7 +20,7 @@ namespace zzz::templates
 		} info;
 		info.dwType = 0x1000;
 		info.szName = threadName;
-		info.dwThreadID = -1;
+		info.dwThreadID = static_cast<DWORD>(-1);
 		info.dwFlags = 0;
 #pragma pack(pop)
 

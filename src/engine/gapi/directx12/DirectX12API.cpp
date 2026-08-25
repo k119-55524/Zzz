@@ -1,14 +1,20 @@
-#include "engine/gapi/directx12/DirectX12API.h"
 
 #if defined(Z_D3D12)
-
-#include "engine/gapi/selectors/monitor/MonitorSelector.h"
 #include "engine/utils/MonitorUtils.h"
+#include "engine/gapi/directx12/DirectX12API.h"
+#include "engine/gapi/selectors/monitor/MonitorSelector.h"
+#include "engine/gapi/selectors/gpu/directx12/DirectX12GpuSelector.h"
+
 
 namespace zzz::engine
 {
 	DirectX12API::~DirectX12API()
 	{
+		if (m_FenceEvent)
+		{
+			CloseHandle(m_FenceEvent);
+			m_FenceEvent = nullptr;
+		}
 	}
 
 #pragma region Initialize
@@ -154,7 +160,7 @@ namespace zzz::engine
 		HRESULT hr = E_FAIL;
 		for (auto level : levels)
 		{
-			hr = D3D12CreateDevice(adapter, level, IID_PPV_ARGS(&m_Device));
+			hr = D3D12CreateDevice(adapter, level, IID_PPV_ARGS(m_Device.ReleaseAndGetAddressOf()));
 			if (SUCCEEDED(hr))
 			{
 				m_FeatureLevel = level;
@@ -164,6 +170,23 @@ namespace zzz::engine
 
 		if (FAILED(hr))
 			THROW_RUNTIME("Failed to create D3D12 device. HRESULT = 0x{:08X}", static_cast<unsigned int>(hr));
+
+		D3D12_COMMAND_QUEUE_DESC queueDesc{};
+		queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+		queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+
+		hr = m_Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(m_CommandQueue.ReleaseAndGetAddressOf()));
+		if (FAILED(hr))
+			THROW_RUNTIME("Failed to create D3D12 Direct Command Queue. HRESULT = 0x{:08X}", static_cast<unsigned int>(hr));
+
+		hr = m_Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_Fence.ReleaseAndGetAddressOf()));
+		if (FAILED(hr))
+			THROW_RUNTIME("Failed to create D3D12 Fence. HRESULT = 0x{:08X}", static_cast<unsigned int>(hr));
+
+		m_FenceValue = 0;
+		m_FenceEvent = CreateEventEx(nullptr, FALSE, FALSE, EVENT_ALL_ACCESS);
+		if (!m_FenceEvent)
+			THROW_RUNTIME("Failed to create D3D12 Fence Event.");
 
 #if defined(Z_DEBUG_BUILD)
 		std::string levelName = (m_FeatureLevel == D3D_FEATURE_LEVEL_12_2) ? "12.2 (DirectX 12 Ultimate)" :
@@ -188,6 +211,21 @@ namespace zzz::engine
 
 	void DirectX12API::WaitForGpu()
 	{
+		if (!m_CommandQueue || !m_Fence || !m_FenceEvent)
+			return;
+
+		const uint64_t fenceValue = ++m_FenceValue;
+
+		if (FAILED(m_CommandQueue->Signal(m_Fence.Get(), fenceValue)))
+			return;
+
+		if (m_Fence->GetCompletedValue() < fenceValue)
+		{
+			if (FAILED(m_Fence->SetEventOnCompletion(fenceValue, m_FenceEvent)))
+				return;
+
+			WaitForSingleObject(m_FenceEvent, INFINITE);
+		}
 	}
 }
 

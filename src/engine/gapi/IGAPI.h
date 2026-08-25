@@ -33,10 +33,9 @@ namespace zzz::engine
 		virtual void SubmitCommandLists() = 0;
 		virtual void BeginRender() = 0;
 		virtual void EndRender() = 0;
-
-	protected:
 		virtual void WaitForGpu() = 0;
 
+	protected:
 		bool m_IsCanDisableVSync{ false };
 
 	private:

@@ -1,10 +1,8 @@
 #pragma once
 
 #include "engine/gapi/IGAPI.h"
-#include "engine/gapi/selectors/gpu/directx12/DirectX12GpuSelector.h"
 
 #if defined(Z_D3D12)
-
 namespace zzz::engine
 {
 	class DirectX12API final : public IGAPI
@@ -16,12 +14,12 @@ namespace zzz::engine
 		void SubmitCommandLists() override;
 		void BeginRender() override;
 		void EndRender() override;
+		void WaitForGpu() override;
 
 		[[nodiscard]] ID3D12Device* GetDevice() const noexcept { return m_Device.Get(); }
 		[[nodiscard]] ID3D12CommandQueue* GetCommandQueue() const noexcept { return m_CommandQueue.Get(); }
 
 	protected:
-		void WaitForGpu() override;
 
 	private:
 		friend class Engine;
@@ -39,8 +37,11 @@ namespace zzz::engine
 		Microsoft::WRL::ComPtr<ID3D12Device> m_Device;
 		Microsoft::WRL::ComPtr<ID3D12CommandQueue> m_CommandQueue;
 
-		D3D_FEATURE_LEVEL m_FeatureLevel{ D3D_FEATURE_LEVEL_12_0 };
+		uint64_t m_FenceValue{ 0 };
+		HANDLE m_FenceEvent{ nullptr };
+		Microsoft::WRL::ComPtr<ID3D12Fence> m_Fence;
+
+		D3D_FEATURE_LEVEL m_FeatureLevel{ zzz::core::c_DefaultFeatureLevel };
 	};
 }
-
 #endif // Z_D3D12

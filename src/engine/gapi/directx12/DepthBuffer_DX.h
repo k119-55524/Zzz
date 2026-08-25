@@ -1,5 +1,6 @@
 #pragma once
 
+//#include "core/Core.h"
 #include "engine/gapi/directx12/DirectX12API.h"
 
 #if defined(Z_D3D12)
@@ -20,13 +21,12 @@ namespace zzz::engine
 		[[nodiscard]] ID3D12Resource* GetResource() const noexcept { return m_DepthStencilBuffer.Get(); }
 
 	private:
-		void Initialize(std::shared_ptr<DirectX12API> gapi, const Size2D<>& size);
+		void Initialize(const Size2D<>& size);
 
 		std::shared_ptr<DirectX12API> m_GAPI;
 		Microsoft::WRL::ComPtr<ID3D12Resource> m_DepthStencilBuffer;
 		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_DsvHeap;
-		D3D12_CPU_DESCRIPTOR_HANDLE m_DsvHandle{};
-		DXGI_FORMAT m_DepthFormat{ DXGI_FORMAT_D24_UNORM_S8_UINT };
+		D3D12_CPU_DESCRIPTOR_HANDLE m_DsvHandle;
 	};
 }
 #endif // Z_D3D12

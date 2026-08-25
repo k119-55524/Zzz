@@ -4,3 +4,5 @@
 #include <logger.h>
 
 #include <core/Core.h>
+
+using namespace zzz::engine;

@@ -4,6 +4,8 @@
 
 #include "core/utils/Types.h"
 #include "core/utils/Export.h"
+#include "core/serialize/Serializer.h"
+#include "core/io/FileHeader.h"
 #include "core/utils/Constants.h"
 #include "core/utils/Defines.h"
 #include "core/utils/Ensure.h"
@@ -26,7 +28,6 @@
 #include "core/enums/platforms/ConverterLinuxTypes.h"
 #include "core/enums/platforms/ConverterMacOSTypes.h"
 
-#include "core/serialize/Serializer.h"
 
 #include "core/templates/DoubleBufferedVector.h"
 #include "core/templates/QueueArray.h"
@@ -47,12 +48,13 @@
 #include "core/userscripts/base_script/SceneScript.h"
 #include "core/userscripts/base_script/ViewScript.h"
 
-#include "core/io/FileHeader.h"
 #include "core/io/Path.h"
 #include "core/io/package/PackageHeader.h"
 #include "core/io/package/PackageEntry.h"
+#include "core/io/package/platforms/start_view/ViewPlatformConfig.h"
 #include "core/io/package/PrimaryViewData.h"
 #include "core/io/package/PrimaryViewUserData.h"
+#include "core/io/package/ViewUserData.h"
 #include "core/io/package/ChildViewData.h"
 #include "core/io/package/IndependentViewData.h"
 #include "core/io/package/ProjectManifestData.h"
@@ -64,7 +66,6 @@
 #include "core/io/package/platforms/project/ProjectPlatformDataMSWin.h"
 #include "core/io/package/platforms/project/ProjectPlatformDataMacOS.h"
 #include "core/io/package/platforms/project/ProjectPlatformDataiOS.h"
-#include "core/io/package/platforms/start_view/ViewPlatformConfig.h"
 #include "core/io/package/platforms/start_view/ViewDataAndroid.h"
 #include "core/io/package/platforms/start_view/ViewDataLinux.h"
 #include "core/io/package/platforms/start_view/ViewDataMSWin.h"
@@ -81,4 +82,5 @@
 #include "core/hardware/HardwareState.h"
 
 using namespace zzz::math;
+using namespace zzz::core;
 

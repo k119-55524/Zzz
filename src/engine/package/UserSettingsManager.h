@@ -1,8 +1,11 @@
 #pragma once
 
-#include <unordered_map>
 #include "engine/EngineIncludes.h"
-#include "core/io/package/ViewUserData.h"
+
+namespace zzz::core
+{
+	class ViewUserData;
+}
 
 using namespace zzz::core;
 

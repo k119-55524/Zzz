@@ -4,14 +4,16 @@
 #if defined(Z_D3D12)
 namespace zzz::engine
 {
-	SurfView_DX::SurfView_DX(std::shared_ptr<NativeWindow> window, std::shared_ptr<DirectX12API> gapi) :
-		ISurfView(std::move(window), std::move(gapi))
+	SurfView_DX::SurfView_DX(std::shared_ptr<NativeWindow> window, std::shared_ptr<DirectX12API> gapi)
+		: ISurfView(std::move(window), std::move(gapi))
 	{
 		Initialize();
 	}
 
 	SurfView_DX::~SurfView_DX()
 	{
+		m_GAPI->WaitForGpu();
+
 		if (m_DepthBuffer)
 			m_DepthBuffer->Release();
 
@@ -33,9 +35,7 @@ namespace zzz::engine
 	void SurfView_DX::RenderFrame()
 	{
 		if (m_Swapchain)
-		{
 			m_Swapchain->Present(true);
-		}
 	}
 
 	void SurfView_DX::OnResize(const Size2D<>& size)
@@ -45,7 +45,7 @@ namespace zzz::engine
 
 		if (size.GetWidth() == 0 || size.GetHeight() == 0)
 		{
-			DOutWarning("[SurfView_DX::OnResize] Invalid size: Width or height is zero.");
+			DOut("[SurfView_DX::OnResize] Width or height is zero.");
 			return;
 		}
 
@@ -55,10 +55,12 @@ namespace zzz::engine
 			return;
 		}
 
+		m_GAPI->WaitForGpu();
 		m_Swapchain->OnResize(size);
 		m_DepthBuffer->OnResize(size);
 
 		m_OldSize = size;
+		DOut("[SurfView_DX::OnResize] Resize completed from old size to {}x{}.", size.GetWidth(), size.GetHeight());
 	}
 }
 #endif // Z_D3D12

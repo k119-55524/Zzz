@@ -1,3 +1,4 @@
+
 #include "DepthBuffer_DX.h"
 
 #if defined(Z_D3D12)
@@ -5,8 +6,12 @@
 namespace zzz::engine
 {
 	DepthBuffer_DX::DepthBuffer_DX(std::shared_ptr<DirectX12API> gapi, const Size2D<>& size)
+		: m_GAPI(std::move(gapi))
+		, m_DepthStencilBuffer(nullptr)
+		, m_DsvHeap(nullptr)
+		, m_DsvHandle{}
 	{
-		Initialize(gapi, size);
+		Initialize(size);
 	}
 
 	DepthBuffer_DX::~DepthBuffer_DX()
@@ -22,15 +27,15 @@ namespace zzz::engine
 
 	void DepthBuffer_DX::OnResize(const Size2D<>& size)
 	{
-		Initialize(m_GAPI, size);
+		Initialize(size);
+		DOut("[DepthBuffer_DX::OnResize] Successfully resized to {}x{} (DepthFormat: {}).", size.GetWidth(), size.GetHeight(), static_cast<uint32_t>(zzz::core::c_DefaultDepthFormat));
 	}
 
-	void DepthBuffer_DX::Initialize(std::shared_ptr<DirectX12API> gapi, const Size2D<>& size)
+	void DepthBuffer_DX::Initialize(const Size2D<>& size)
 	{
-		ensure(gapi, "DirectX12API cannot be null.");
-		m_GAPI = gapi;
+		ensure(m_GAPI, "DirectX12API cannot be null.");
 
-		ID3D12Device* device = gapi->GetDevice();
+		ID3D12Device* device = m_GAPI->GetDevice();
 		ensure(device, "DirectX12 Device cannot be null.");
 
 		Release();
@@ -53,14 +58,14 @@ namespace zzz::engine
 		depthStencilDesc.Height = static_cast<UINT>(size.GetHeight());
 		depthStencilDesc.DepthOrArraySize = 1;
 		depthStencilDesc.MipLevels = 1;
-		depthStencilDesc.Format = m_DepthFormat;
+		depthStencilDesc.Format = zzz::core::c_DefaultDepthFormat;
 		depthStencilDesc.SampleDesc.Count = 1;
 		depthStencilDesc.SampleDesc.Quality = 0;
 		depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 		depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
 		D3D12_CLEAR_VALUE optClear{};
-		optClear.Format = m_DepthFormat;
+		optClear.Format = zzz::core::c_DefaultDepthFormat;
 		optClear.DepthStencil.Depth = 1.0f;
 		optClear.DepthStencil.Stencil = 0;
 

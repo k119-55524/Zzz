@@ -132,8 +132,9 @@ void View::HandleWindowClose()
 	DOut("[View::HandleWindowClose] - OnClose");
 
 	// В редакторе управление происходит из вне поэтому колбэк может быть не инициализирован
-	if (OnWindowClose != nullptr)
-		OnWindowClose(*this);
+#if !Z_EDITOR
+	OnWindowClose(*this);
+#endif // !Z_EDITOR
 }
 
 void View::OnWindowResize(Size2D<>& size, eWinResize type)

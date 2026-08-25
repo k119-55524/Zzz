@@ -1,9 +1,7 @@
 #pragma once
 
-#include <array>
-
-#include "core/IO/FileHeader.h"
-#include "core/utils/Defines.h"
+#include "core/CoreIncludes.h"
+#include "core/io/FileHeader.h"
 
 namespace zzz::core
 {
@@ -53,6 +51,22 @@ namespace zzz::core
 	constexpr std::string_view c_IcoResourceName = "IDI_ICON1";
 #pragma endregion
 
+#pragma region GAPI Engine Constants
+	constexpr uint32_t c_FramesInFlight = 2;
+
+#if defined(Z_D3D12)
+	constexpr DXGI_FORMAT c_DefaultBackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+	constexpr DXGI_FORMAT c_DefaultDepthFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	constexpr D3D_FEATURE_LEVEL c_DefaultFeatureLevel = D3D_FEATURE_LEVEL_12_0;
+#elif defined(Z_VULKAN)
+	constexpr VkFormat c_DefaultBackBufferFormat = VK_FORMAT_R8G8B8A8_UNORM;
+	constexpr VkFormat c_DefaultDepthFormat = VK_FORMAT_D24_UNORM_S8_UINT;
+#elif defined(Z_METAL)
+	constexpr MTLPixelFormat c_DefaultBackBufferFormat = MTLPixelFormatRGBA8Unorm;
+	constexpr MTLPixelFormat c_DefaultDepthFormat = MTLPixelFormatDepth24Unorm_Stencil8;
+#endif
+#pragma endregion
+
 #pragma region Network & Logger constants
 	constexpr std::string_view c_LocalhostIPv4 = "127.0.0.1";
 	constexpr zU16 c_DefaultLoggerPort = 3030;
@@ -62,5 +76,5 @@ namespace zzz::core
 #elif Z_MOBILE
 	constexpr zU32 c_MaxNetworkLogQueueSize = 500;
 #endif
-#pragma endregion
+#pragma endregion 
 }

@@ -1,6 +1,7 @@
 
 #include "PackageManager.h"
 #include "UserSettingsManager.h"
+#include "core/io/package/ViewUserData.h"
 #include "engine/view/View.h"
 
 using namespace zzz::core;
