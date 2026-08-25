@@ -1,0 +1,78 @@
+#include <gtest/gtest.h>
+#include "math/Math.h"
+
+using namespace zzz;
+using namespace zzz::math;
+
+TEST(ColorTest, DefaultConstructors)
+{
+	Color3<zF32> c3;
+	EXPECT_FLOAT_EQ(c3.R, 0.0f);
+	EXPECT_FLOAT_EQ(c3.G, 0.0f);
+	EXPECT_FLOAT_EQ(c3.B, 0.0f);
+
+	Color4<zF32> c4;
+	EXPECT_FLOAT_EQ(c4.R, 0.0f);
+	EXPECT_FLOAT_EQ(c4.G, 0.0f);
+	EXPECT_FLOAT_EQ(c4.B, 0.0f);
+	EXPECT_FLOAT_EQ(c4.A, 1.0f);
+
+	Color4<zU8> c4u;
+	EXPECT_EQ(c4u.A, 255);
+}
+
+TEST(ColorTest, ConvertChannelLinearScaling)
+{
+	// 255 -> 1.0f
+	Color4<zF32> cFloat{ Color4<zU8>(255, 128, 0, 255) };
+	EXPECT_FLOAT_EQ(cFloat.R, 1.0f);
+	EXPECT_NEAR(cFloat.G, 128.0f / 255.0f, 0.001f);
+	EXPECT_FLOAT_EQ(cFloat.B, 0.0f);
+	EXPECT_FLOAT_EQ(cFloat.A, 1.0f);
+
+	// 510 -> 2.0f without clamping
+	Color4<zF32> cFloat2{ Color4<zI32>(510, 255, 0, 255) };
+	EXPECT_FLOAT_EQ(cFloat2.R, 2.0f);
+	EXPECT_FLOAT_EQ(cFloat2.G, 1.0f);
+}
+
+TEST(ColorTest, Color3Color4Conversions)
+{
+	Color3<zF32> rgb(1.0f, 0.5f, 0.25f);
+	Color4<zF32> rgba(rgb, 0.75f);
+
+	EXPECT_FLOAT_EQ(rgba.R, 1.0f);
+	EXPECT_FLOAT_EQ(rgba.G, 0.5f);
+	EXPECT_FLOAT_EQ(rgba.B, 0.25f);
+	EXPECT_FLOAT_EQ(rgba.A, 0.75f);
+
+	Color3<zF32> extracted = rgba.GetRGB();
+	EXPECT_EQ(extracted, rgb);
+}
+
+TEST(ColorTest, ClampAndLerp)
+{
+	Color4<zF32> overshooting(1.5f, -0.2f, 0.5f, 1.0f);
+	Color4<zF32> clamped = overshooting.Clamped(0.0f, 1.0f);
+
+	EXPECT_FLOAT_EQ(clamped.R, 1.0f);
+	EXPECT_FLOAT_EQ(clamped.G, 0.0f);
+	EXPECT_FLOAT_EQ(clamped.B, 0.5f);
+
+	Color4<zF32> start(0.0f, 0.0f, 0.0f, 1.0f);
+	Color4<zF32> end(1.0f, 1.0f, 1.0f, 1.0f);
+	Color4<zF32> mid = start.Lerp(end, 0.5f);
+
+	EXPECT_FLOAT_EQ(mid.R, 0.5f);
+	EXPECT_FLOAT_EQ(mid.G, 0.5f);
+	EXPECT_FLOAT_EQ(mid.B, 0.5f);
+}
+
+TEST(ColorTest, Palette)
+{
+	EXPECT_FLOAT_EQ(Palette3::Red.R, 1.0f);
+	EXPECT_FLOAT_EQ(Palette3::Red.G, 0.0f);
+	EXPECT_FLOAT_EQ(Palette3::Red.B, 0.0f);
+
+	EXPECT_FLOAT_EQ(Palette4::Transparent.A, 0.0f);
+}

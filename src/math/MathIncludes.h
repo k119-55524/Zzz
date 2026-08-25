@@ -10,6 +10,8 @@
 #include <type_traits>
 #include <string_view>
 #include <concepts>
+#include <cassert>
+#include <algorithm>
 
 #include "math/Types.h"
 
