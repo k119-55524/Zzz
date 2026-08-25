@@ -1,7 +1,7 @@
+
 #include "SurfView_DX.h"
 
 #if defined(Z_D3D12)
-
 namespace zzz::engine
 {
 	SurfView_DX::SurfView_DX(std::shared_ptr<NativeWindow> window, std::shared_ptr<DirectX12API> gapi) :
@@ -13,13 +13,10 @@ namespace zzz::engine
 	SurfView_DX::~SurfView_DX()
 	{
 		if (m_DepthBuffer)
-		{
 			m_DepthBuffer->Release();
-		}
+
 		if (m_Swapchain)
-		{
 			m_Swapchain->Release();
-		}
 	}
 
 	void SurfView_DX::Initialize()
@@ -64,5 +61,4 @@ namespace zzz::engine
 		m_OldSize = size;
 	}
 }
-
 #endif // Z_D3D12
