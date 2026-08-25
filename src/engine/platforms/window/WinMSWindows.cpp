@@ -323,7 +323,7 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		/**
 		 * @brief [Windows] Изменение активности окна (например, окно ушло на задний план, но всё ещё видно).
 		 */
-		m_IsActivate = (wParam != 0);
+		m_IsActivate = (LOWORD(wParam) != WA_INACTIVE);
 		VERIFY_AND_CALL(m_Callbacks.OnActivate, m_IsActivate);
 		break;
 
