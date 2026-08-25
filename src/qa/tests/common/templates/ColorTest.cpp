@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "math/Math.h"
+#include "core/serialize/Serializer.h"
 
 using namespace zzz;
 using namespace zzz::math;
@@ -75,4 +76,21 @@ TEST(ColorTest, Palette)
 	EXPECT_FLOAT_EQ(Palette3::Red.B, 0.0f);
 
 	EXPECT_FLOAT_EQ(Palette4::Transparent.A, 0.0f);
+}
+
+TEST(ColorTest, Serialization)
+{
+	core::Serializer serializer;
+	std::vector<std::byte> buffer;
+
+	Color4<zF32> originalColor(0.25f, 0.5f, 0.75f, 1.0f);
+	auto serRes = serializer.Serialize(buffer, originalColor);
+	EXPECT_TRUE(serRes.has_value());
+
+	Color4<zF32> restoredColor;
+	std::size_t offset = 0;
+	auto deserRes = serializer.Deserialize(buffer, offset, restoredColor);
+	EXPECT_TRUE(deserRes.has_value());
+
+	EXPECT_EQ(originalColor, restoredColor);
 }

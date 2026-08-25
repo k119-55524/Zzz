@@ -262,5 +262,39 @@ namespace zzz::core
 			return Deserialize(buffer, offset, rect.m_Position)
 				.and_then([&]() { return Deserialize(buffer, offset, rect.m_Size); });
 		}
+
+		template<typename T>
+		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const zzz::math::Color3<T>& color) const
+		{
+			return Serialize(buffer, color.R)
+				.and_then([&]() { return Serialize(buffer, color.G); })
+				.and_then([&]() { return Serialize(buffer, color.B); });
+		}
+
+		template<typename T>
+		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, zzz::math::Color3<T>& color) const
+		{
+			return Deserialize(buffer, offset, color.R)
+				.and_then([&]() { return Deserialize(buffer, offset, color.G); })
+				.and_then([&]() { return Deserialize(buffer, offset, color.B); });
+		}
+
+		template<typename T>
+		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const zzz::math::Color4<T>& color) const
+		{
+			return Serialize(buffer, color.R)
+				.and_then([&]() { return Serialize(buffer, color.G); })
+				.and_then([&]() { return Serialize(buffer, color.B); })
+				.and_then([&]() { return Serialize(buffer, color.A); });
+		}
+
+		template<typename T>
+		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, zzz::math::Color4<T>& color) const
+		{
+			return Deserialize(buffer, offset, color.R)
+				.and_then([&]() { return Deserialize(buffer, offset, color.G); })
+				.and_then([&]() { return Deserialize(buffer, offset, color.B); })
+				.and_then([&]() { return Deserialize(buffer, offset, color.A); });
+		}
 	};
 }
