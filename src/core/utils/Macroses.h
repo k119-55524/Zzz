@@ -1,11 +1,94 @@
 #pragma once
 
+#include <source_location>
 #include <core/CoreIncludes.h>
+
+namespace
+{
+	struct LogThrottleState
+	{
+		std::atomic<uint64_t> counter{ 0 };
+		std::atomic<int64_t> lastTicks{ 0 };
+	};	
+}
 
 namespace zzz::logger
 {
 	class Logger;
 	extern Logger g_Logger;
+
+	// 1. Throttled log overload (First arg after loc is int or float)
+	template<typename LogFunc, typename Throttle, typename Fmt, typename... Args>
+	requires (std::is_arithmetic_v<std::decay_t<Throttle>> && !std::is_same_v<std::decay_t<Throttle>, bool> && !std::is_same_v<std::decay_t<Throttle>, char>)
+	inline void LogDispatchImpl(LogFunc&& logFunc, const std::source_location& loc, Throttle throttleVal, Fmt&& fmt, Args&&... args)
+	{
+		using T = std::decay_t<Throttle>;
+		static LogThrottleState state;
+
+		auto FormatMsg = [](auto&& f, auto&&... a) {
+			if constexpr (sizeof...(a) == 0)
+				return std::string(std::forward<decltype(f)>(f));
+			else
+				return std::vformat(std::string_view(f), std::make_format_args(a...));
+		};
+
+		if constexpr (std::is_floating_point_v<T>)
+		{
+			using clock = std::chrono::steady_clock;
+			const auto nowTicks = clock::now().time_since_epoch().count();
+			auto lastTicks = state.lastTicks.load(std::memory_order_relaxed);
+
+			const double elapsedSec = (lastTicks == 0) ? 0.0 : std::chrono::duration<double>(clock::duration(nowTicks - lastTicks)).count();
+
+			if (lastTicks == 0 || elapsedSec >= static_cast<double>(throttleVal))
+			{
+				if (state.lastTicks.compare_exchange_strong(lastTicks, nowTicks, std::memory_order_relaxed))
+				{
+					logFunc(loc, FormatMsg(std::forward<Fmt>(fmt), std::forward<Args>(args)...));
+				}
+			}
+		}
+		else if constexpr (std::is_integral_v<T>)
+		{
+			uint64_t n = static_cast<uint64_t>(throttleVal);
+			if (n <= 1 || (state.counter.fetch_add(1, std::memory_order_relaxed) % n) == 0)
+			{
+				logFunc(loc, FormatMsg(std::forward<Fmt>(fmt), std::forward<Args>(args)...));
+			}
+		}
+	}
+
+	// 2. Conditional log overload (First arg after loc is bool condition)
+	template<typename LogFunc, typename Fmt, typename... Args>
+	inline void LogDispatchImpl(LogFunc&& logFunc, const std::source_location& loc, bool condition, Fmt&& fmt, Args&&... args)
+	{
+		if (!condition)
+			return;
+
+		auto FormatMsg = [](auto&& f, auto&&... a) {
+			if constexpr (sizeof...(a) == 0)
+				return std::string(std::forward<decltype(f)>(f));
+			else
+				return std::vformat(std::string_view(f), std::make_format_args(a...));
+		};
+
+		logFunc(loc, FormatMsg(std::forward<Fmt>(fmt), std::forward<Args>(args)...));
+	}
+
+	// 3. Regular log overload (First arg after loc is format string)
+	template<typename LogFunc, typename Fmt, typename... Args>
+	requires (!std::is_arithmetic_v<std::decay_t<Fmt>> || std::is_same_v<std::decay_t<Fmt>, char>)
+	inline void LogDispatchImpl(LogFunc&& logFunc, const std::source_location& loc, Fmt&& fmt, Args&&... args)
+	{
+		auto FormatMsg = [](auto&& f, auto&&... a) {
+			if constexpr (sizeof...(a) == 0)
+				return std::string(std::forward<decltype(f)>(f));
+			else
+				return std::vformat(std::string_view(f), std::make_format_args(a...));
+		};
+
+		logFunc(loc, FormatMsg(std::forward<Fmt>(fmt), std::forward<Args>(args)...));
+	}
 }
 
 #if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
@@ -14,7 +97,9 @@ namespace zzz::logger
  */
 #define DOut(...) \
 	do { \
-		::zzz::logger::g_Logger.LogMessage(std::source_location::current(), std::format(__VA_ARGS__)); \
+		::zzz::logger::LogDispatchImpl([](const std::source_location& loc, std::string msg) { \
+			::zzz::logger::g_Logger.LogMessage(loc, std::move(msg)); \
+		}, std::source_location::current(), __VA_ARGS__); \
 	} while (false)
 
 /**
@@ -22,7 +107,9 @@ namespace zzz::logger
  */
 #define DOutWarning(...) \
 	do { \
-		::zzz::logger::g_Logger.LogWarning(std::source_location::current(), std::format(__VA_ARGS__)); \
+		::zzz::logger::LogDispatchImpl([](const std::source_location& loc, std::string msg) { \
+			::zzz::logger::g_Logger.LogWarning(loc, std::move(msg)); \
+		}, std::source_location::current(), __VA_ARGS__); \
 	} while (false)
 
 /**
@@ -30,7 +117,9 @@ namespace zzz::logger
  */
 #define DOutError(...) \
 	do { \
-		::zzz::logger::g_Logger.LogError(std::source_location::current(), std::format(__VA_ARGS__)); \
+		::zzz::logger::LogDispatchImpl([](const std::source_location& loc, std::string msg) { \
+			::zzz::logger::g_Logger.LogError(loc, std::move(msg)); \
+		}, std::source_location::current(), __VA_ARGS__); \
 	} while (false)
 
 /**
@@ -38,7 +127,9 @@ namespace zzz::logger
  */
 #define DOutException(...) \
 	do { \
-		::zzz::logger::g_Logger.LogException(std::source_location::current(), std::format(__VA_ARGS__)); \
+		::zzz::logger::LogDispatchImpl([](const std::source_location& loc, std::string msg) { \
+			::zzz::logger::g_Logger.LogException(loc, std::move(msg)); \
+		}, std::source_location::current(), __VA_ARGS__); \
 	} while (false)
 
 /**
@@ -46,7 +137,9 @@ namespace zzz::logger
  */
 #define DOutCritical(...) \
 	do { \
-		::zzz::logger::g_Logger.LogCritical(std::source_location::current(), std::format(__VA_ARGS__)); \
+		::zzz::logger::LogDispatchImpl([](const std::source_location& loc, std::string msg) { \
+			::zzz::logger::g_Logger.LogCritical(loc, std::move(msg)); \
+		}, std::source_location::current(), __VA_ARGS__); \
 	} while (false)
 
 /**
@@ -54,7 +147,9 @@ namespace zzz::logger
  */
 #define DOutFatal(...) \
 	do { \
-		::zzz::logger::g_Logger.LogFatal(std::source_location::current(), std::format(__VA_ARGS__)); \
+		::zzz::logger::LogDispatchImpl([](const std::source_location& loc, std::string msg) { \
+			::zzz::logger::g_Logger.LogFatal(loc, std::move(msg)); \
+		}, std::source_location::current(), __VA_ARGS__); \
 	} while (false)
 #else // Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 #define DOut(...)

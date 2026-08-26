@@ -177,21 +177,23 @@ void View::OnWindowResize(Size2D<>& size, eWinResize type)
 		break;
 	}
 
-	DOut("[View::OnWindowResize] - {}x{} (Type: {})", size.GetWidth(), size.GetHeight(), EnumToString::ToString(type));
+	DOut(!m_IsResizing, "[View::OnWindowResize] - {}x{} (Type: {})", size.GetWidth(), size.GetHeight(), EnumToString::ToString(type));
 }
 
 void View::OnWindowResizeStart()
 {
+	m_IsResizing = true;
 	DOut("[View::OnWindowResizeStart]");
 }
 
 void View::OnWindowSizing()
 {
-	DOut("[View::OnWindowSizing]");
+	DOut(0.5, "[View::OnWindowSizing]");
 }
 
 void View::OnWindowResizeEnd()
 {
+	m_IsResizing = false;
 	const auto& navState = m_NativeWindow->GetState();
 	if (navState.GetState() == eWindowState::Normal)
 		m_UserPlatformData->SetWindowRect(navState.GetWindowRect());
@@ -206,7 +208,7 @@ void View::OnWindowMoveStart()
 
 void View::OnWindowMoving()
 {
-	DOut("[View::OnWindowMoving]");
+	DOut(0.5, "[View::OnWindowMoving]");
 }
 
 void View::OnWindowMoveEnd()

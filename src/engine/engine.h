@@ -55,6 +55,6 @@ namespace zzz::engine
 		std::shared_ptr<Time> m_Time;
 
 	private:
-		void OnCloseAllViews() const;
+		void OnAppClosed() const;
 	};
 }

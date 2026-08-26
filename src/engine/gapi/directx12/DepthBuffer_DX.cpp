@@ -1,7 +1,10 @@
 
 #include "DepthBuffer_DX.h"
+#include "engine/gapi/utils/GAPILogHelpers.h"
 
 #if defined(Z_D3D12)
+
+using namespace zzz::core;
 
 namespace zzz::engine
 {
@@ -52,7 +55,7 @@ namespace zzz::engine
 	void DepthBuffer_DX::OnResize(const Size2D<>& size)
 	{
 		Initialize(size);
-		DOut("[DepthBuffer_DX::OnResize] Successfully resized to {}x{} (DepthFormat: {}).", size.GetWidth(), size.GetHeight(), static_cast<uint32_t>(zzz::core::c_DefaultDepthFormat));
+		DOut("[DepthBuffer_DX::OnResize] Successfully resized to {}x{} (DepthFormat: {}).", size.GetWidth(), size.GetHeight(), c_DefaultDepthFormat);
 	}
 
 	void DepthBuffer_DX::Initialize(const Size2D<>& size)

@@ -98,6 +98,8 @@ namespace zzz::engine
 		[[nodiscard]] inline const NativeWindow& GetNativeWindow() const noexcept { return *m_NativeWindow; }
 		[[nodiscard]] inline NativeWindow& GetNativeWindow() noexcept { return *m_NativeWindow; }
 
+		[[nodiscard]] inline bool IsResizing() const noexcept { return m_IsResizing; }
+
 		/**
 		 * @brief Возвращает графическую поверхность SurfView данного окна.
 		 */
@@ -286,6 +288,7 @@ namespace zzz::engine
 		zzz::templates::ThreadPool m_ThreadsUpdate;
 
 		bool m_IsActive;
+		bool m_IsResizing{ false };
 		ViewEventBus m_EventBus;
 		std::shared_ptr<Scene> m_ActiveScene;
 		std::vector<std::shared_ptr<ViewScript>> m_Scripts;

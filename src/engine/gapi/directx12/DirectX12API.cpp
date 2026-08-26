@@ -4,6 +4,7 @@
 #include "engine/gapi/directx12/DirectX12API.h"
 #include "engine/gapi/selectors/monitor/MonitorSelector.h"
 #include "engine/gapi/selectors/gpu/directx12/DirectX12GpuSelector.h"
+#include "engine/gapi/utils/GAPILogHelpers.h"
 
 
 namespace zzz::engine
@@ -189,10 +190,7 @@ namespace zzz::engine
 			THROW_RUNTIME("Failed to create D3D12 Fence Event.");
 
 #if defined(Z_DEBUG_BUILD)
-		std::string levelName = (m_FeatureLevel == D3D_FEATURE_LEVEL_12_2) ? "12.2 (DirectX 12 Ultimate)" :
-			(m_FeatureLevel == D3D_FEATURE_LEVEL_12_1) ? "12.1" :
-			(m_FeatureLevel == D3D_FEATURE_LEVEL_12_0) ? "12.0" : "Unknown";
-		DOut("[DirectX12API::CreateDevice] - Created D3D12 device with feature level: {}", levelName);
+		DOut("[DirectX12API::CreateDevice] - Created D3D12 device with feature level: {}", m_FeatureLevel);
 #endif
 	}
 #pragma endregion

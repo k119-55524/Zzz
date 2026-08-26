@@ -57,7 +57,7 @@ Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeDa
 	m_ScriptFactory = safe_make_shared<ScriptFactory>(*m_ScriptStorage);
 
 	// Инициализация менеджера отображения окон (ViewManager) с пробросом графического API, фабрики скриптов и пакета ресурсов
-	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, m_GAPI, m_ScriptFactory, m_PackageManager, m_UserSettingsManager, [this]() { OnCloseAllViews(); });
+	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, m_GAPI, m_ScriptFactory, m_PackageManager, m_UserSettingsManager, [this]() { OnAppClosed(); });
 
 	// Инициализация главного кадрового цикла, шины событий проекта и игрового таймера
 	m_MainLoop = safe_make_shared<MainLoop>(*m_Platform, [this]() { OnUpdateSystem(); });
@@ -183,7 +183,7 @@ void Engine::LoadGlobalScripts()
 	}
 }
 
-void Engine::OnCloseAllViews() const
+void Engine::OnAppClosed() const
 {
 #if !Z_EDITOR
 	m_MainLoop->Stop();
@@ -193,6 +193,11 @@ void Engine::OnCloseAllViews() const
 void Engine::OnUpdateSystem()
 {
 	m_Time->Update();
+
+	DOut(1.0, "[Engine::OnUpdateSystem] FPS: {:.1f} (FrameTime: {:.2f}ms)",
+		(m_Time->GetUnscaledDeltaTime() > 0.0f) ? (1.0f / m_Time->GetUnscaledDeltaTime()) : 0.0f,
+		m_Time->GetUnscaledDeltaTime() * 1000.0f);
+
 	m_EventBus->InvokeUpdate(*m_Time);
 
 	if (m_ViewManager)
