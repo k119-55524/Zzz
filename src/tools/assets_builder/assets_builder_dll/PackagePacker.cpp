@@ -267,11 +267,11 @@ namespace zzz::builder
 
 		const auto& clearJson = root["clear"];
 
-		// Color mode
-		std::string colorModeStr = clearJson.value("colorMode", "Color");
-		if (colorModeStr == "None") config.surface.mode = zzz::engine::eClearColorMode::None;
-		else if (colorModeStr == "Shader") config.surface.mode = zzz::engine::eClearColorMode::Shader;
-		else config.surface.mode = zzz::engine::eClearColorMode::Color;
+		// Surface mode
+		std::string surfaceModeStr = clearJson.value("surfaceMode", clearJson.value("colorMode", "Color"));
+		if (surfaceModeStr == "None") config.surface.mode = zzz::engine::eSurfaceClearMode::None;
+		else if (surfaceModeStr == "Shader") config.surface.mode = zzz::engine::eSurfaceClearMode::Shader;
+		else config.surface.mode = zzz::engine::eSurfaceClearMode::Color;
 
 		// Color parsing
 		if (clearJson.contains("color"))

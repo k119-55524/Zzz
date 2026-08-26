@@ -42,6 +42,10 @@ namespace zzz::engine
 		 */
 		[[nodiscard]] const ViewUserData* GetIndependentViewUserData(const Guid& guid) const noexcept;
 
+		[[nodiscard]] ViewPlatformData* GetOrCreatePrimaryViewPlatformData(const Guid& guid, const ViewPlatformData& defaultData);
+		[[nodiscard]] ViewPlatformData* GetOrCreateChildViewPlatformData(const Guid& guid, const ViewPlatformData& defaultData);
+		[[nodiscard]] ViewPlatformData* GetOrCreateIndependentViewPlatformData(const Guid& guid, const ViewPlatformData& defaultData);
+
 		/**
 		 * @brief Проверяет, запущен ли движок впервые (отсутствовал файл user.dat).
 		 */

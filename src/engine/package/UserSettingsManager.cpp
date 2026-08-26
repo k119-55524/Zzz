@@ -231,11 +231,48 @@ namespace zzz::engine
 #endif
 	}
 
+	ViewPlatformData* UserSettingsManager::GetOrCreatePrimaryViewPlatformData(const Guid& guid, const ViewPlatformData& defaultData)
+	{
+		if (!m_PrimaryViewUserData || m_PrimaryViewUserData->GetViewGuid() != guid)
+		{
+			m_PrimaryViewUserData = PrimaryViewUserData(guid, defaultData);
+		}
+		m_IsDirty = true;
+		return &m_PrimaryViewUserData->GetPlatformData();
+	}
+
+	ViewPlatformData* UserSettingsManager::GetOrCreateChildViewPlatformData(const Guid& guid, const ViewPlatformData& defaultData)
+	{
+		auto it = m_ChildViewsUserData.find(guid);
+		if (it == m_ChildViewsUserData.end())
+		{
+			NativeWindowState navState(defaultData.GetMonitorId(), defaultData.GetWindowRect(), defaultData.GetWindowState());
+			ViewWindowState viewState(guid, navState);
+			it = m_ChildViewsUserData.emplace(guid, ViewUserData(viewState)).first;
+		}
+		m_IsDirty = true;
+		return &it->second.GetPlatformDataRef();
+	}
+
+	ViewPlatformData* UserSettingsManager::GetOrCreateIndependentViewPlatformData(const Guid& guid, const ViewPlatformData& defaultData)
+	{
+		auto it = m_IndependentViewsUserData.find(guid);
+		if (it == m_IndependentViewsUserData.end())
+		{
+			NativeWindowState navState(defaultData.GetMonitorId(), defaultData.GetWindowRect(), defaultData.GetWindowState());
+			ViewWindowState viewState(guid, navState);
+			it = m_IndependentViewsUserData.emplace(guid, ViewUserData(viewState)).first;
+		}
+		m_IsDirty = true;
+		return &it->second.GetPlatformDataRef();
+	}
+
 	void UserSettingsManager::StoreViewState(const View& view)
 	{
 		const ViewWindowState viewState = view.GetState();
 		const Guid& guid = viewState.GetViewGuid();
 		const NativeWindowState& navState = viewState.GetNativeState();
+		const eWindowState state = navState.GetState();
 
 		if (!m_PrimaryViewUserData || m_PrimaryViewUserData->GetViewGuid() == guid)
 		{
@@ -244,7 +281,6 @@ namespace zzz::engine
 				ViewPlatformData pd;
 				pd.SetWindowRect(navState.GetWindowRect());
 				pd.SetMonitorId(navState.GetMonitorId());
-				auto state = navState.GetState();
 				if (state != eWindowState::Closed && state != eWindowState::Minimized)
 					pd.SetWindowState(state);
 				m_PrimaryViewUserData = PrimaryViewUserData(guid, pd);
@@ -255,7 +291,6 @@ namespace zzz::engine
 				platformData.SetWindowRect(navState.GetWindowRect());
 				platformData.SetMonitorId(navState.GetMonitorId());
 
-				auto state = navState.GetState();
 				if (state != eWindowState::Closed && state != eWindowState::Minimized)
 					platformData.SetWindowState(state);
 			}
@@ -266,14 +301,20 @@ namespace zzz::engine
 
 		if (auto it = m_ChildViewsUserData.find(guid); it != m_ChildViewsUserData.end())
 		{
-			it->second.GetWindowState() = viewState;
+			it->second.GetWindowState().GetNativeState().SetWindowRect(navState.GetWindowRect());
+			it->second.GetWindowState().GetNativeState().SetMonitorId(navState.GetMonitorId());
+			if (state != eWindowState::Closed && state != eWindowState::Minimized)
+				it->second.GetWindowState().GetNativeState().SetState(state);
 			m_IsDirty = true;
 			return;
 		}
 
 		if (auto it = m_IndependentViewsUserData.find(guid); it != m_IndependentViewsUserData.end())
 		{
-			it->second.GetWindowState() = viewState;
+			it->second.GetWindowState().GetNativeState().SetWindowRect(navState.GetWindowRect());
+			it->second.GetWindowState().GetNativeState().SetMonitorId(navState.GetMonitorId());
+			if (state != eWindowState::Closed && state != eWindowState::Minimized)
+				it->second.GetWindowState().GetNativeState().SetState(state);
 			m_IsDirty = true;
 			return;
 		}

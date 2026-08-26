@@ -35,13 +35,13 @@ namespace zzz::engine
 	{
 		if (!cmdList) return;
 
-		if (m_ClearConfig.mode == eClearColorMode::Color)
+		if (m_ClearConfig.mode == eSurfaceClearMode::Color)
 		{
 			const D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = GetCurrentRTVHandle();
 			const zF32* clearColorData = reinterpret_cast<const zF32*>(&m_ClearConfig.color.R);
 			cmdList->ClearRenderTargetView(rtvHandle, clearColorData, 0, nullptr);
 		}
-		else if (m_ClearConfig.mode == eClearColorMode::Shader)
+		else if (m_ClearConfig.mode == eSurfaceClearMode::Shader)
 		{
 			// Background shader pass stub
 		}

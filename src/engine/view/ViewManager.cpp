@@ -44,21 +44,11 @@ void ViewManager::CreatePrimaryView()
 	if (!primaryViewData)
 		THROW_RUNTIME("Обязательный ресурс PrimaryViewData не найден в пакете: {}", primaryViewData.error());
 
-	// 2. Проверяем наличие пользовательских настроек в user.dat (nullptr если первый запуск)
-	const auto* primaryUserData = m_UserSettingsManager->GetPrimaryViewUserData();
-	const bool isFirstTime = (primaryUserData == nullptr);
+	// 2. Получаем или создаем прямой блок ViewPlatformData в UserSettingsManager
+	const bool isFirstTime = (m_UserSettingsManager->GetPrimaryViewUserData() == nullptr);
+	auto* userPlatformData = m_UserSettingsManager->GetOrCreatePrimaryViewPlatformData(primaryViewData->GetViewGuid(), primaryViewData->GetPlatformData());
 
-	// 3. Если окно запускается впервые — берем базовые характеристики из package.dat, иначе из user.dat
-	ViewPlatformData platformData = isFirstTime 
-		? primaryViewData->GetPlatformData() 
-		: primaryUserData->GetPlatformData();
-
-	m_PrimaryView = CreateViewInstance(
-		primaryViewData->GetViewGuid(),
-		platformData,
-		primaryViewData->GetUiScriptGuids(),
-		isFirstTime
-	);
+	m_PrimaryView = CreateViewInstance(*primaryViewData, userPlatformData, isFirstTime);
 }
 
 void ViewManager::CreateChildView(const Guid& viewGuid)
@@ -73,18 +63,11 @@ void ViewManager::CreateChildView(const Guid& viewGuid)
 	if (!viewDataRes)
 		THROW_RUNTIME("Не удалось загрузить ChildViewData из пакета для GUID '{}': {}", viewGuid.ToString(), viewDataRes.error());
 
-	// 2. Поиск сохраненных настроек в user.dat (nullptr если окно открывается впервые)
-	const auto* userData = m_UserSettingsManager->GetChildViewUserData(viewGuid);
-	const bool isFirstTime = (userData == nullptr);
-	ViewPlatformData platformData = isFirstTime ? viewDataRes->GetPlatformData() : userData->GetPlatformData();
+	// 2. Получаем или создаем прямой блок ViewPlatformData в UserSettingsManager
+	const bool isFirstTime = (m_UserSettingsManager->GetChildViewUserData(viewGuid) == nullptr);
+	auto* userPlatformData = m_UserSettingsManager->GetOrCreateChildViewPlatformData(viewGuid, viewDataRes->GetPlatformData());
 
-	m_ChildViews.push_back(CreateViewInstance(
-		viewGuid,
-		platformData,
-		viewDataRes->GetUiScriptGuids(),
-		isFirstTime,
-		m_PrimaryView.get()
-	));
+	m_ChildViews.push_back(CreateViewInstance(*viewDataRes, userPlatformData, isFirstTime, m_PrimaryView.get()));
 #endif // Z_MOBILE
 }
 
@@ -100,71 +83,44 @@ void ViewManager::CreateIndependentView(const Guid& viewGuid)
 	if (!viewDataRes)
 		THROW_RUNTIME("Не удалось загрузить IndependentViewData из пакета для GUID '{}': {}", viewGuid.ToString(), viewDataRes.error());
 
-	// 2. Поиск сохраненных настроек в user.dat (nullptr если окно открывается впервые)
-	const auto* userData = m_UserSettingsManager->GetIndependentViewUserData(viewGuid);
-	const bool isFirstTime = (userData == nullptr);
-	ViewPlatformData platformData = isFirstTime ? viewDataRes->GetPlatformData() : userData->GetPlatformData();
+	// 2. Получаем или создаем прямой блок ViewPlatformData в UserSettingsManager
+	const bool isFirstTime = (m_UserSettingsManager->GetIndependentViewUserData(viewGuid) == nullptr);
+	auto* userPlatformData = m_UserSettingsManager->GetOrCreateIndependentViewPlatformData(viewGuid, viewDataRes->GetPlatformData());
 
-	m_IndependentViews.push_back(CreateViewInstance(
-		viewGuid,
-		platformData,
-		viewDataRes->GetUiScriptGuids(),
-		isFirstTime
-	));
+	m_IndependentViews.push_back(CreateViewInstance(*viewDataRes, userPlatformData, isFirstTime));
 #endif // Z_MOBILE
 }
 
 std::shared_ptr<View> ViewManager::CreateViewInstance(
-	const Guid& viewGuid,
-	const ViewPlatformData& rawPlatformData,
-	const std::vector<Guid>& uiScriptGuids,
+	const ViewConfigData& viewData,
+	ViewPlatformData* userPlatformData,
 	bool isFirstTime,
 	const View* parentView)
 {
-	ViewPlatformData platformData = rawPlatformData;
 	const auto& monitorProvider = m_Platform.GetMonitorProvider();
-	MonitorInfo targetMonitor = monitorProvider.GetMonitorById(platformData.GetMonitorId());
+	MonitorInfo targetMonitor = monitorProvider.GetMonitorById(userPlatformData->GetMonitorId());
 
 	// Если окно новое (isFirstTime) — вычисляем позицию по центру экрана (CenterOnWorkArea).
 	// Если окно уже сохранялось в user.dat — проверяем вписанность пользовательских координат (FitToWorkArea).
 	Rect2D<zI32> targetRect = isFirstTime
-		? monitorProvider.CenterOnWorkArea(platformData.GetWindowRect(), targetMonitor)
-		: monitorProvider.FitToWorkArea(platformData.GetWindowRect(), targetMonitor);
+		? monitorProvider.CenterOnWorkArea(userPlatformData->GetWindowRect(), targetMonitor)
+		: monitorProvider.FitToWorkArea(userPlatformData->GetWindowRect(), targetMonitor);
 
-	platformData.SetWindowRect(targetRect);
-	platformData.SetMonitorId(targetMonitor.GetPlatformMonitorId());
+	userPlatformData->SetWindowRect(targetRect);
+	userPlatformData->SetMonitorId(targetMonitor.GetPlatformMonitorId());
 
-	auto scripts = CreateViewScripts(uiScriptGuids);
 	auto view = safe_make_shared<View>(
-		viewGuid,
-		platformData,
-		std::move(scripts),
+		viewData,
+		userPlatformData,
+		m_ScriptFactory,
 		m_Platform,
 		m_GAPI,
 		[this](View& v) { OnWindowClose(v); },
 		parentView
 	);
 
-	// Сразу фиксируем рассчитанное первичное состояние окна в UserSettingsManager
-	m_UserSettingsManager->StoreViewState(*view);
 	view->InvokeStart();
 	return view;
-}
-
-std::vector<std::shared_ptr<ViewScript>> ViewManager::CreateViewScripts(const std::vector<Guid>& scriptGuids) const
-{
-	ensure(m_ScriptFactory != nullptr, "ScriptFactory должен быть инициализирован.");
-
-	std::vector<std::shared_ptr<ViewScript>> viewScripts;
-	viewScripts.reserve(scriptGuids.size());
-	for (const auto& scriptGuid : scriptGuids)
-	{
-		auto script = m_ScriptFactory->CreateViewScript(scriptGuid);
-		ensure(script != nullptr, "Не удалось создать экземпляр ViewScript с GUID: " + scriptGuid.ToString());
-		viewScripts.push_back(std::move(script));
-	}
-
-	return viewScripts;
 }
 
 void ViewManager::OnWindowClose(View& view)
@@ -178,6 +134,10 @@ void ViewManager::OnWindowClose(View& view)
 		m_ChildViews.clear();
 		m_IndependentViews.clear();
 		m_PrimaryView = nullptr;
+
+		auto res = m_UserSettingsManager->SaveConfig();
+		if (!res)
+			DOutError("[ViewManager::OnWindowClose] Ошибка при сохранении user.dat: {}", res.error());
 
 		if (OnAllViewsClosed)
 			OnAllViewsClosed();

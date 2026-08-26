@@ -1,8 +1,7 @@
-
 #include "scene/Scene.h"
 #include "../platforms/input/Input.h"
 #include "../platforms/window/NativeWindow.h"
-#include "engine/package/UserSettingsManager.h"
+#include "core/userscripts/ScriptFactory.h"
 
 #include "View.h"
 
@@ -10,38 +9,38 @@ using namespace zzz::core;
 using namespace zzz::engine;
 
 View::View(
-	Guid guid,
-	const ViewPlatformData& settings,
-	std::vector<std::shared_ptr<ViewScript>> scripts,
+	const ViewConfigData& viewData,
+	ViewPlatformData* platformData,
+	std::shared_ptr<ScriptFactory> scriptFactory,
 	const Platform& platform,
 	std::shared_ptr<GAPI> gapi,
 	std::function<void(View&)> onWindowClose,
 	const View* parentView) :
 	m_Platform{ platform },
-	m_Guid{ std::move(guid) },
-	m_GAPI{ std::move(gapi) },
+	m_Guid{ viewData.GetViewGuid() },
 	m_Input{ nullptr },
 	m_NativeWindow{ nullptr },
 	m_ThreadsUpdate{ "View", 2 },
 	OnWindowClose{ std::move(onWindowClose) },
 	m_IsActive{ true }
 {
-	ensure(m_GAPI != nullptr, "GAPI не должен быть null.");
+	ensure(platformData != nullptr, "ViewPlatformData не должен быть null.");
+	ensure(gapi != nullptr, "GAPI не должен быть null.");
 	ensure(OnWindowClose != nullptr, "OnWindowClose не должен быть null.");
+	ensure(scriptFactory != nullptr, "ScriptFactory не должен быть null.");
 
-	Initialize(settings, scripts, parentView);
+	Initialize(viewData, platformData, std::move(scriptFactory), std::move(gapi), parentView);
 }
 
 #if Z_EDITOR
 View::View(const Platform& platform, std::shared_ptr<GAPI> gapi, void* data) :
 	m_Platform{ platform },
-	m_GAPI{ std::move(gapi) },
 	m_Input{ nullptr },
 	m_NativeWindow{ nullptr },
 	m_ThreadsUpdate{ "View", 2 },
 	m_IsActive{ true }
 {
-	ensure(m_GAPI != nullptr, "GAPI не должен быть null.");
+	ensure(gapi != nullptr, "GAPI не должен быть null.");
 
 	Initialize(data);
 }
@@ -54,12 +53,14 @@ View::~View()
 	m_ActiveScene = nullptr;
 }
 
-void View::Initialize(const ViewPlatformData& settings, const std::vector<std::shared_ptr<ViewScript>>& scripts, const View* parentView)
+void View::Initialize(const ViewConfigData& viewData, ViewPlatformData* platformData, std::shared_ptr<ScriptFactory> scriptFactory, std::shared_ptr<GAPI> gapi, const View* parentView)
 {
+	m_UserPlatformData = platformData;
+
 	m_Input = safe_make_shared<Input>();
 	auto inputRes = m_Input->Initialize();
 	if (!inputRes)
-		THROW_RUNTIME("Не удалось инициализировать систему ввода: {}.", inputRes.error());
+		THROW_RUNTIME("Не удалось инициализировать систему ввода: {}", inputRes.error());
 
 	WindowCallbacks callbacks;
 	callbacks.OnClose            = [this]()                                 { HandleWindowClose(); };
@@ -79,28 +80,24 @@ void View::Initialize(const ViewPlatformData& settings, const std::vector<std::s
 	callbacks.OnSafeAreaChanged  = [this](int t, int b, int l, int r)       { OnWindowSafeAreaChanged(t, b, l, r); };
 
 	m_NativeWindow = safe_make_shared<NativeWindow>(m_Platform, m_Input, std::move(callbacks));
-	auto res = m_NativeWindow->Initialize(settings, parentView);
+	auto res = m_NativeWindow->Initialize(*m_UserPlatformData, parentView);
 	if (!res)
-		THROW_RUNTIME("Не удалось инициализировать окно: {}.", res.error());
+		THROW_RUNTIME("Не удалось инициализировать окно: {}", res.error());
 
-	m_SurfView = safe_make_shared<SurfView>(m_NativeWindow, m_GAPI);
-	if (m_SurfView)
+	m_SurfView = safe_make_shared<SurfView>(m_NativeWindow, std::move(gapi));
+	m_SurfView->SetClearConfig(viewData.GetClearConfig());
+
+	for (const auto& scriptGuid : viewData.GetUiScriptGuids())
 	{
-		m_SurfView->SetClearConfig(m_ClearConfig);
-	}
-
-	for (const auto& script : scripts)
-	{
-		ensure(script != nullptr, "ViewScript не должен быть null.");
-
+		auto script = scriptFactory->CreateViewScript(scriptGuid);
+		ensure(script != nullptr, "Не удалось создать экземпляр ViewScript с GUID: " + scriptGuid.ToString());
 		script->Init(&m_EventBus);
-		m_Scripts.push_back(script);
+		m_Scripts.push_back(std::move(script));
 	}
 }
 
 void View::SetClearConfig(const ViewClearConfig& config)
 {
-	m_ClearConfig = config;
 	if (m_SurfView)
 	{
 		m_SurfView->SetClearConfig(config);
@@ -114,7 +111,7 @@ void View::Initialize(void* data)
 	m_Input = safe_make_shared<Input>();
 	auto inputRes = m_Input->Initialize();
 	if (!inputRes)
-		THROW_RUNTIME("Не удалось инициализировать систему ввода: {}.", inputRes.error());
+		THROW_RUNTIME("Не удалось инициализировать систему ввода: {}", inputRes.error());
 
 	WindowCallbacks callbacks;
 	callbacks.OnClose            = [this]()                                 { HandleWindowClose(); };
@@ -135,7 +132,7 @@ void View::Initialize(void* data)
 	m_NativeWindow = safe_make_shared<NativeWindow>(m_Platform, m_Input, std::move(callbacks));
 	auto res = m_NativeWindow->Initialize(ViewPlatformData{});
 	if (!res)
-		THROW_RUNTIME("Не удалось инициализировать окно: {}.", res.error());
+		THROW_RUNTIME("Не удалось инициализировать окно: {}", res.error());
 }
 #endif
 
@@ -143,6 +140,12 @@ void View::Initialize(void* data)
 void View::HandleWindowClose()
 {
 	DOut("[View::HandleWindowClose] - OnClose");
+
+	const auto& navState = m_NativeWindow->GetState();
+	if (navState.GetState() != eWindowState::Closed && navState.GetState() != eWindowState::Minimized)
+		m_UserPlatformData->SetWindowState(navState.GetState());
+	if (navState.GetState() == eWindowState::Normal)
+		m_UserPlatformData->SetWindowRect(m_NativeWindow->GetFullWindowRect());
 
 	// В редакторе управление происходит из вне поэтому колбэк может быть не инициализирован
 #if !Z_EDITOR
@@ -156,6 +159,20 @@ void View::OnWindowResize(Size2D<>& size, eWinResize type)
 
 	if (m_SurfView)
 		m_SurfView->OnResize(size);
+
+	const auto& state = m_NativeWindow->GetState();
+	switch (state.GetState())
+	{
+	case eWindowState::Maximized:
+		m_UserPlatformData->SetWindowState(eWindowState::Maximized);
+		break;
+	case eWindowState::Normal:
+		m_UserPlatformData->SetWindowState(eWindowState::Normal);
+		m_UserPlatformData->SetWindowRect(m_NativeWindow->GetFullWindowRect());
+		break;
+	default:
+		break;
+	}
 
 	DOut("[View::OnWindowResize] - {}x{} (Type: {})", size.GetWidth(), size.GetHeight(), EnumToString::ToString(type));
 }
@@ -172,6 +189,10 @@ void View::OnWindowSizing()
 
 void View::OnWindowResizeEnd()
 {
+	const auto& navState = m_NativeWindow->GetState();
+	if (navState.GetState() == eWindowState::Normal)
+		m_UserPlatformData->SetWindowRect(m_NativeWindow->GetFullWindowRect());
+
 	DOut("[View::OnWindowResizeEnd]");
 }
 

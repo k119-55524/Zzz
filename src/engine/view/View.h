@@ -7,7 +7,7 @@
 #include "../platforms/window/NativeWindow.h"
 
 #include "engine/gapi/SurfView.h"
-#include "engine/view/ViewWindowState.h"
+#include "core/io/package/ViewConfigData.h"
 
 using namespace zzz::core;
 
@@ -29,18 +29,18 @@ namespace zzz::engine
 
 		/**
 		 * @brief Конструирует экземпляр View.
-		 * @param guid Уникальный идентификатор окна.
-		 * @param settings Начальные платформенные настройки окна (размер, режим, заголовок и т.д.).
-		 * @param scripts Список подключённых пользовательских скриптов окна.
+		 * @param viewData Данные конфигурации вида/окна из пакета ресурсов (Guid, очистка и т.д.).
+		 * @param platformData Рассчитанные настройки платформы и координаты окна.
+		 * @param scriptFactory Фабрика для инстанцирования UI-скриптов по GUID.
 		 * @param platform Ссылка на глобальный платформенный слой приложения.
 		 * @param gapi Общий графический API (DirectX12, Vulkan или Metal).
 		 * @param onWindowClose Колбэк при закрытии окна.
 		 * @param parentView Указатель на родительское окно (для ChildView) или nullptr.
 		 */
 		View(
-			Guid guid,
-			const ViewPlatformData& settings,
-			std::vector<std::shared_ptr<ViewScript>> scripts,
+			const ViewConfigData& viewData,
+			ViewPlatformData* platformData,
+			std::shared_ptr<ScriptFactory> scriptFactory,
 			const Platform& platform,
 			std::shared_ptr<GAPI> gapi,
 			std::function<void(View&)> onWindowClose,
@@ -62,14 +62,25 @@ namespace zzz::engine
 		void Update(const Time& time);
 
 		/**
-		 * @brief Подготавливает кадр к рендерингу (подготовка графических команд).
+		 * @brief Подготавливает буферы кадра и выполняет очистку поверхностей перед отрисовкой.
 		 */
 		void PrepareFrame();
 
 		/**
-		 * @brief Выполняет непосредственную отрисовку кадра на графической поверхности SurfView.
+		 * @brief Выполняет отрисовку кадра (сцены, элементов UI) и переключение буферов.
 		 */
 		void RenderFrame();
+
+		/**
+		 * @brief Устанавливает активную сцену для отображения и взаимодействия в данном окне.
+		 * @param scene Указатель на объект Scene.
+		 */
+		inline void SetActiveScene(std::shared_ptr<Scene> scene) noexcept { m_ActiveScene = std::move(scene); }
+
+		/**
+		 * @brief Возвращает указатель на текущую активную сцену.
+		 */
+		[[nodiscard]] inline std::shared_ptr<Scene> GetActiveScene() const noexcept { return m_ActiveScene; }
 
 		/**
 		 * @brief Возвращает GUID данного окна.
@@ -93,14 +104,15 @@ namespace zzz::engine
 		[[nodiscard]] inline std::shared_ptr<ISurfView> GetSurfView() const noexcept { return m_SurfView; }
 
 		/**
-		 * @brief Динамически изменяет настройки очистки кадра для данного View и его поверхностей.
+		 * @brief Устанавливает новую конфигурацию очистки экрана на лету.
+		 * @param config Новая конфигурация ViewClearConfig.
 		 */
 		void SetClearConfig(const ViewClearConfig& config);
 
 		/**
-		 * @brief Возвращает текущие настройки очистки кадра View.
+		 * @brief Возвращает текущую конфигурацию очистки экрана.
 		 */
-		[[nodiscard]] inline const ViewClearConfig& GetClearConfig() const noexcept { return m_ClearConfig; }
+		[[nodiscard]] inline const ViewClearConfig& GetClearConfig() const noexcept { return m_SurfView->GetClearConfig(); }
 
 		/**
 		 * @brief Изменяет статус активности окна (управляет вызовами OnEnable / OnDisable).
@@ -120,7 +132,7 @@ namespace zzz::engine
 		inline bool IsActive() const noexcept { return m_IsActive; }
 
 	private:
-		void Initialize(const ViewPlatformData& settings, const std::vector<std::shared_ptr<ViewScript>>& scripts, const View* parentView = nullptr);
+		void Initialize(const ViewConfigData& viewData, ViewPlatformData* platformData, std::shared_ptr<ScriptFactory> scriptFactory, std::shared_ptr<GAPI> gapi, const View* parentView = nullptr);
 #if Z_EDITOR
 		void Initialize(void* data);
 #endif
@@ -253,17 +265,16 @@ namespace zzz::engine
 
 		const Platform& m_Platform;
 		Guid m_Guid;
-		std::shared_ptr<GAPI> m_GAPI;
 		std::shared_ptr<ISurfView> m_SurfView;
 		std::shared_ptr<Input>  m_Input;
 		std::shared_ptr<NativeWindow> m_NativeWindow;
 		zzz::templates::ThreadPool m_ThreadsUpdate;
 
 		bool m_IsActive;
-		ViewClearConfig m_ClearConfig;
 		ViewEventBus m_EventBus;
 		std::shared_ptr<Scene> m_ActiveScene;
 		std::vector<std::shared_ptr<ViewScript>> m_Scripts;
+		ViewPlatformData* m_UserPlatformData = nullptr;
 
 		std::function<void(View&)> OnWindowClose;
 		void HandleWindowClose();

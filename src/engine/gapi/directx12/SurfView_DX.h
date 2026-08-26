@@ -1,10 +1,15 @@
 #pragma once
 
+#include <mutex>
+#include <array>
 #include "engine/gapi/ISurfView.h"
 #include "engine/gapi/directx12/DirectX12API.h"
 #include "engine/platforms/window/NativeWindow.h"
 
 #if defined(Z_D3D12)
+
+using namespace zzz::core;
+using namespace Microsoft::WRL;
 
 namespace zzz::engine
 {
@@ -24,6 +29,16 @@ namespace zzz::engine
 
 	protected:
 		void Initialize() override;
+
+	private:
+		std::array<ComPtr<ID3D12CommandAllocator>, c_FramesInFlight> m_CommandAllocators;
+		std::array<ComPtr<ID3D12GraphicsCommandList>, c_FramesInFlight> m_CommandLists;
+		std::array<bool, c_FramesInFlight> m_IsRecording{};
+
+		uint32_t m_IndexPrepare;
+		uint32_t m_IndexRender;
+
+		std::mutex m_FrameMutex;
 	};
 }
 

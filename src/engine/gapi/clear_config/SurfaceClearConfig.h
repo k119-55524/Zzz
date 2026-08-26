@@ -3,6 +3,7 @@
 #include "math/Color.h"
 #include "core/utils/Guid.h"
 #include "core/Serialize/Serializer.h"
+#include <logger/logger.h>
 
 namespace zzz::engine
 {
@@ -10,12 +11,12 @@ namespace zzz::engine
 	using namespace zzz::core;
 
 	/**
-	 * @enum eClearColorMode
-	 * @brief Режим очистки/заливки поверхности рендеринга (цвет).
+	 * @enum eSurfaceClearMode
+	 * @brief Режим очистки/заливки поверхности рендеринга.
 	 */
-	enum class eClearColorMode : zU8
+	enum class eSurfaceClearMode : zU8
 	{
-		None,   ///< Не чистить (пропустить очистку цвета)
+		None,   ///< Не чистить (пропустить очистку поверхности)
 		Color,  ///< Чистка цветом (Color4<zF32>)
 		Shader  ///< Чистка полноэкранным фоновым шейдером
 	};
@@ -27,18 +28,29 @@ namespace zzz::engine
 	class SurfaceClearConfig final : public ISerializable
 	{
 	public:
-		eClearColorMode mode{ eClearColorMode::Color };   ///< Режим очистки цвета.
-		Color4<zF32>    color{ Palette4::Black };         ///< Цвет очистки (zF32 [0.0f..1.0f]).
-		Guid            shaderGuid{};                     ///< GUID фонового шейдера (для режима Shader).
+		eSurfaceClearMode mode{ eSurfaceClearMode::Color };   ///< Режим очистки поверхности.
+		Color4<zF32>      color{ Palette4::Black };            ///< Цвет очистки (zF32 [0.0f..1.0f]).
+		Guid              shaderGuid{};                        ///< GUID фонового шейдера (для режима Shader).
 
 		constexpr SurfaceClearConfig() noexcept = default;
-		constexpr SurfaceClearConfig(eClearColorMode mode, Color4<zF32> color, Guid shaderGuid = {}) noexcept
+		constexpr SurfaceClearConfig(eSurfaceClearMode mode, Color4<zF32> color, Guid shaderGuid = {}) noexcept
 			: mode(mode)
 			, color(color)
 			, shaderGuid(shaderGuid)
 		{}
 
 		constexpr bool operator==(const SurfaceClearConfig&) const noexcept = default;
+
+		inline void LogFileBlock(std::string_view indentation = {}) const
+		{
+#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+			const std::string nestedIndentation = std::string(indentation) + "  ";
+			DOut("{}[SurfaceClearConfig]", indentation);
+			DOut("{}mode: {}", nestedIndentation, mode == eSurfaceClearMode::Color ? "Color" : (mode == eSurfaceClearMode::Shader ? "Shader" : "None"));
+			DOut("{}color: {}", nestedIndentation, color.ToString());
+			DOut("{}shaderGuid: {}", nestedIndentation, shaderGuid.ToString());
+#endif
+		}
 
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override

@@ -1,18 +1,34 @@
-
 #include "SurfView_DX.h"
+#include "Swapchain_DX.h"
+#include "DepthBuffer_DX.h"
 
 #if defined(Z_D3D12)
 namespace zzz::engine
 {
 	SurfView_DX::SurfView_DX(std::shared_ptr<NativeWindow> window, std::shared_ptr<DirectX12API> gapi)
 		: ISurfView(std::move(window), std::move(gapi))
+		, m_IndexPrepare(0)
+		, m_IndexRender(1)
 	{
 		Initialize();
 	}
 
 	SurfView_DX::~SurfView_DX()
 	{
+		std::lock_guard<std::mutex> lock(m_FrameMutex);
+
 		m_GAPI->WaitForGpu();
+
+		for (size_t i = 0; i < zzz::core::c_FramesInFlight; ++i)
+		{
+			if (m_IsRecording[i] && m_CommandLists[i])
+			{
+				m_CommandLists[i]->Close();
+				m_IsRecording[i] = false;
+			}
+			m_CommandLists[i].Reset();
+			m_CommandAllocators[i].Reset();
+		}
 
 		if (m_DepthBuffer)
 			m_DepthBuffer->Release();
@@ -26,10 +42,28 @@ namespace zzz::engine
 		m_Swapchain = std::make_unique<Swapchain_DX>(m_GAPI, m_Window);
 		m_OldSize = m_Swapchain->GetSize();
 		m_DepthBuffer = std::make_unique<DepthBuffer_DX>(m_GAPI, m_OldSize);
+
+		ID3D12Device* device = m_GAPI->GetDevice();
+		ensure(device, "DirectX12 Device не должен быть null.");
+
+		for (size_t i = 0; i < zzz::core::c_FramesInFlight; ++i)
+		{
+			HRESULT hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_CommandAllocators[i]));
+			if (FAILED(hr))
+				THROW_RUNTIME("Failed to create Command Allocator [{}] in SurfView_DX: 0x{:08X}", i, static_cast<uint32_t>(hr));
+
+			hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_CommandAllocators[i].Get(), nullptr, IID_PPV_ARGS(&m_CommandLists[i]));
+			if (FAILED(hr))
+				THROW_RUNTIME("Failed to create Command List [{}] in SurfView_DX: 0x{:08X}", i, static_cast<uint32_t>(hr));
+
+			m_CommandLists[i]->Close();
+			m_IsRecording[i] = false;
+		}
 	}
 
 	void SurfView_DX::SetClearConfig(const ViewClearConfig& config)
 	{
+		std::lock_guard<std::mutex> lock(m_FrameMutex);
 		ISurfView::SetClearConfig(config);
 
 		if (m_Swapchain)
@@ -47,12 +81,120 @@ namespace zzz::engine
 
 	void SurfView_DX::PrepareFrame()
 	{
+		if (!m_Swapchain || !m_DepthBuffer)
+			return;
+
+		if (m_OldSize.GetWidth() == 0 || m_OldSize.GetHeight() == 0)
+			return;
+
+		std::lock_guard<std::mutex> lock(m_FrameMutex);
+
+		const uint32_t prepIdx = m_IndexPrepare;
+		if (!m_CommandAllocators[prepIdx] || !m_CommandLists[prepIdx])
+			return;
+
+		if (m_IsRecording[prepIdx])
+			return;
+
+		auto dxSwapchain = static_cast<Swapchain_DX*>(m_Swapchain.get());
+		auto dxDepthBuffer = static_cast<DepthBuffer_DX*>(m_DepthBuffer.get());
+
+		ID3D12Resource* backBuffer = dxSwapchain->GetCurrentBackBuffer();
+		if (!backBuffer)
+			return;
+
+		HRESULT hr = m_CommandAllocators[prepIdx]->Reset();
+		if (FAILED(hr))
+		{
+			DOutError("[SurfView_DX::PrepareFrame] Failed to reset Command Allocator [{}]: 0x{:08X}", prepIdx, static_cast<uint32_t>(hr));
+			return;
+		}
+
+		hr = m_CommandLists[prepIdx]->Reset(m_CommandAllocators[prepIdx].Get(), nullptr);
+		if (FAILED(hr))
+		{
+			DOutError("[SurfView_DX::PrepareFrame] Failed to reset Command List [{}]: 0x{:08X}", prepIdx, static_cast<uint32_t>(hr));
+			return;
+		}
+
+		m_IsRecording[prepIdx] = true;
+
+		// 1. Transition BackBuffer: PRESENT -> RENDER_TARGET
+		D3D12_RESOURCE_BARRIER barrier{};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = backBuffer;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		m_CommandLists[prepIdx]->ResourceBarrier(1, &barrier);
+
+		// 2. Set Viewport & Scissor Rect
+		D3D12_VIEWPORT viewport{ 0.0f, 0.0f, static_cast<FLOAT>(m_OldSize.GetWidth()), static_cast<FLOAT>(m_OldSize.GetHeight()), 0.0f, 1.0f };
+		D3D12_RECT scissorRect{ 0, 0, static_cast<LONG>(m_OldSize.GetWidth()), static_cast<LONG>(m_OldSize.GetHeight()) };
+		m_CommandLists[prepIdx]->RSSetViewports(1, &viewport);
+		m_CommandLists[prepIdx]->RSSetScissorRects(1, &scissorRect);
+
+		// 3. Clear Color Surface and Depth-Stencil Buffer
+		dxSwapchain->Clear(m_CommandLists[prepIdx].Get());
+		dxDepthBuffer->Clear(m_CommandLists[prepIdx].Get());
+
+		// 4. Bind Render Target and Depth Stencil View
+		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = dxSwapchain->GetCurrentRTVHandle();
+		D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dxDepthBuffer->GetDSVHandle();
+		m_CommandLists[prepIdx]->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 	}
 
 	void SurfView_DX::RenderFrame()
 	{
-		if (m_Swapchain)
-			m_Swapchain->Present(true);
+		if (!m_Swapchain)
+			return;
+
+		std::lock_guard<std::mutex> lock(m_FrameMutex);
+
+		const uint32_t prepIdx = m_IndexPrepare;
+		if (!m_CommandLists[prepIdx] || !m_IsRecording[prepIdx])
+			return;
+
+		auto dxSwapchain = static_cast<Swapchain_DX*>(m_Swapchain.get());
+		ID3D12Resource* backBuffer = dxSwapchain->GetCurrentBackBuffer();
+		if (!backBuffer)
+		{
+			m_CommandLists[prepIdx]->Close();
+			m_IsRecording[prepIdx] = false;
+			return;
+		}
+
+		// 1. Transition BackBuffer: RENDER_TARGET -> PRESENT
+		D3D12_RESOURCE_BARRIER barrier{};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = backBuffer;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		m_CommandLists[prepIdx]->ResourceBarrier(1, &barrier);
+
+		// 2. Close and execute Command List
+		m_IsRecording[prepIdx] = false;
+		HRESULT hr = m_CommandLists[prepIdx]->Close();
+
+		if (FAILED(hr))
+		{
+			DOutError("[SurfView_DX::RenderFrame] Failed to close Command List [{}]: 0x{:08X}", prepIdx, static_cast<uint32_t>(hr));
+			return;
+		}
+
+		ID3D12CommandList* cmds[] = { m_CommandLists[prepIdx].Get() };
+		m_GAPI->GetCommandQueue()->ExecuteCommandLists(1, cmds);
+
+		// 3. Present & Sync
+		m_Swapchain->Present(true);
+		m_GAPI->WaitForGpu();
+
+		// Закольцовываем индексы кадра для любого значения c_FramesInFlight (2, 3 и т.д.)
+		m_IndexPrepare = (m_IndexPrepare + 1) % zzz::core::c_FramesInFlight;
+		m_IndexRender  = (m_IndexRender + 1) % zzz::core::c_FramesInFlight;
 	}
 
 	void SurfView_DX::OnResize(const Size2D<>& size)
@@ -72,7 +214,19 @@ namespace zzz::engine
 			return;
 		}
 
+		std::lock_guard<std::mutex> lock(m_FrameMutex);
+
 		m_GAPI->WaitForGpu();
+
+		for (size_t i = 0; i < zzz::core::c_FramesInFlight; ++i)
+		{
+			if (m_IsRecording[i] && m_CommandLists[i])
+			{
+				m_CommandLists[i]->Close();
+				m_IsRecording[i] = false;
+			}
+		}
+
 		m_Swapchain->OnResize(size);
 		m_DepthBuffer->OnResize(size);
 

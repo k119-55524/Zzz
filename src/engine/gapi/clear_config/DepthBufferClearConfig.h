@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/Serialize/Serializer.h"
+#include <logger/logger.h>
 
 namespace zzz::engine
 {
@@ -47,6 +48,18 @@ namespace zzz::engine
 		{}
 
 		constexpr bool operator==(const DepthBufferClearConfig&) const noexcept = default;
+
+		inline void LogFileBlock(std::string_view indentation = {}) const
+		{
+#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+			const std::string nestedIndentation = std::string(indentation) + "  ";
+			DOut("{}[DepthBufferClearConfig]", indentation);
+			DOut("{}depthMode: {}", nestedIndentation, depthMode == eClearDepthMode::Depth ? "Depth" : "None");
+			DOut("{}depth: {}", nestedIndentation, depth);
+			DOut("{}stencilMode: {}", nestedIndentation, stencilMode == eClearStencilMode::Stencil ? "Stencil" : "None");
+			DOut("{}stencil: {}", nestedIndentation, stencil);
+#endif
+		}
 
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override

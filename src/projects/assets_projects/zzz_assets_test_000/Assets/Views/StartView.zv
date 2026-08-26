@@ -8,7 +8,7 @@
     "14366409-92e5-4842-837e-c3ae45c93cf7"
   ],
   "clear": {
-    "colorMode": "Color",
+    "surfaceMode": "Color",
     "color": [0.0, 0.4706, 0.8431, 1.0],
     "depthMode": "Depth",
     "depth": 1.0,
