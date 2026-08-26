@@ -15,41 +15,35 @@ namespace zzz::math
 	class Color4 final
 	{
 	public:
-		T R; // Красный канал.
-		T G; // Зеленый канал.
-		T B; // Синий канал.
-		T A; // Альфа канал (прозрачность).
+		T R; ///< Красный канал (Red).
+		T G; ///< Зеленый канал (Green).
+		T B; ///< Синий канал (Blue).
+		T A; ///< Альфа канал (Alpha / Прозрачность).
 
+		/// @brief Конструктор по умолчанию. Инициализирует R, G, B нулями (чёрный цвет) и A максимальной непрозрачностью (1.0f или 255).
 		constexpr Color4() noexcept : R{ 0 }, G{ 0 }, B{ 0 }, A{ DefaultAlpha() } {}
+
+		/// @brief Конструктор с инициализацией цветовых каналов одинаковым значением.
+		/// @param val Значение для R, G, B. Альфа инициализируется максимальной непрозрачностью.
 		explicit constexpr Color4(T val) noexcept : R{ val }, G{ val }, B{ val }, A{ DefaultAlpha() } {}
+
+		/// @brief Конструктор с явным указанием каждого компонента цвета.
+		/// @param r Значение красного канала.
+		/// @param g Значение зеленого канала.
+		/// @param b Значение синего канала.
+		/// @param a Значение альфа-канала (по умолчанию 1.0f или 255).
 		constexpr Color4(T r, T g, T b, T a = DefaultAlpha()) noexcept : R{ r }, G{ g }, B{ b }, A{ a } {}
+
+		/// @brief Конструктор создания 4-компонентного цвета из 3-компонентного Color3 с указанием альфа-канала.
+		/// @param rgb Исходный цвет Color3 (RGB).
+		/// @param a Альфа-канал прозрачности.
 		constexpr Color4(const Color3<T>& rgb, T a = DefaultAlpha()) noexcept : R{ rgb.R }, G{ rgb.G }, B{ rgb.B }, A{ a } {}
+
+		/// @brief Конструктор копирования по умолчанию.
 		constexpr Color4(const Color4& other) noexcept = default;
+
+		/// @brief Конструктор перемещения по умолчанию.
 		constexpr Color4(Color4&&) noexcept = default;
-
-		template<Arithmetic U>
-		explicit constexpr Color4(U r, U g, U b, U a) noexcept
-			: R{ details::ConvertChannel<T>(r) }
-			, G{ details::ConvertChannel<T>(g) }
-			, B{ details::ConvertChannel<T>(b) }
-			, A{ details::ConvertChannel<T>(a) }
-		{}
-
-		template<Arithmetic U>
-		explicit constexpr Color4(const Color4<U>& other) noexcept
-			: R{ details::ConvertChannel<T>(other.R) }
-			, G{ details::ConvertChannel<T>(other.G) }
-			, B{ details::ConvertChannel<T>(other.B) }
-			, A{ details::ConvertChannel<T>(other.A) }
-		{}
-
-		template<Arithmetic U>
-		explicit constexpr Color4(const Color3<U>& rgb, T a = DefaultAlpha()) noexcept
-			: R{ details::ConvertChannel<T>(rgb.R) }
-			, G{ details::ConvertChannel<T>(rgb.G) }
-			, B{ details::ConvertChannel<T>(rgb.B) }
-			, A{ a }
-		{}
 
 		Color4& operator=(const Color4&) noexcept = default;
 		Color4& operator=(Color4&&) noexcept = default;
@@ -71,11 +65,16 @@ namespace zzz::math
 		[[nodiscard]] constexpr operator const T* () const noexcept { return &R; }
 		[[nodiscard]] constexpr operator T* () noexcept { return &R; }
 
+		/// @brief Возвращает RGB-компоненты цвета в виде объекта Color3<T> (отбрасывая альфа-канал).
+		/// @return Цвет Color3<T>.
 		[[nodiscard]] constexpr Color3<T> GetRGB() const noexcept
 		{
 			return Color3<T>{ R, G, B };
 		}
 
+		/// @brief Возвращает новый объект Color4 с изменённым значением альфа-канала.
+		/// @param newA Новое значение прозрачности.
+		/// @return Скопированный цвет с обновленной альфой.
 		[[nodiscard]] constexpr Color4 WithAlpha(T newA) const noexcept
 		{
 			return Color4{ R, G, B, newA };
@@ -124,6 +123,9 @@ namespace zzz::math
 		template<Arithmetic S> requires std::is_arithmetic_v<S>
 		constexpr Color4& operator/=(S scalar) noexcept { return *this = *this / scalar; }
 
+		/// @brief Ограничивает все 4 канала цвета в текущем объекте диапазоном [minVal, maxVal].
+		/// @param minVal Минимальная граница (по умолчанию 0).
+		/// @param maxVal Максимальная граница (по умолчанию 1).
 		inline void Clamp(T minVal = T(0), T maxVal = T(1)) noexcept
 		{
 			R = std::clamp(R, minVal, maxVal);
@@ -132,6 +134,10 @@ namespace zzz::math
 			A = std::clamp(A, minVal, maxVal);
 		}
 
+		/// @brief Возвращает новый цвет с ограниченными диапазоном [minVal, maxVal] каналами.
+		/// @param minVal Минимальная граница (по умолчанию 0).
+		/// @param maxVal Максимальная граница (по умолчанию 1).
+		/// @return Скопированный и ограниченный цвет.
 		[[nodiscard]] inline Color4 Clamped(T minVal = T(0), T maxVal = T(1)) const noexcept
 		{
 			Color4 res = *this;
@@ -139,6 +145,10 @@ namespace zzz::math
 			return res;
 		}
 
+		/// @brief Выполняет линейную интерполяцию (Lerp) по всем 4 каналам между текущим и целевым цветом.
+		/// @param target Целевой цвет.
+		/// @param t Коэффициент интерполяции (автоматически зажимается в диапазон [0.0f, 1.0f]).
+		/// @return Интерполированный цвет.
 		[[nodiscard]] inline Color4 Lerp(const Color4& target, zF32 t) const noexcept
 		{
 			const zF32 clampedT = std::clamp(t, 0.0f, 1.0f);
@@ -166,6 +176,11 @@ namespace zzz::math
 			}
 		}
 
+		/// @brief Устанавливает новые значения каналов текущего цвета без конвертации типов.
+		/// @param r Красный канал.
+		/// @param g Зеленый канал.
+		/// @param b Синий канал.
+		/// @param a Альфа-канал.
 		inline void Set(T r, T g, T b, T a = DefaultAlpha()) noexcept
 		{
 			R = r;
@@ -174,24 +189,49 @@ namespace zzz::math
 			A = a;
 		}
 
+		/// @brief Задаёт новые значения каналов из другого арифметического типа U с автоматической масштабируемой конвертацией диапазонов.
+		/// @tparam U Исходный арифметический тип компонентов.
+		/// @param r Красный канал типа U.
+		/// @param g Зеленый канал типа U.
+		/// @param b Синий канал типа U.
+		/// @param a Альфа-канал типа U.
 		template<Arithmetic U>
-		inline void SetFrom(U r, U g, U b, U a) noexcept
+		inline void SetFrom(U r, U g, U b, U a = DefaultAlphaU<U>()) noexcept
 		{
-			R = details::ConvertChannel<T>(r);
-			G = details::ConvertChannel<T>(g);
-			B = details::ConvertChannel<T>(b);
-			A = details::ConvertChannel<T>(a);
+			R = ConvertChannel<T>(r);
+			G = ConvertChannel<T>(g);
+			B = ConvertChannel<T>(b);
+			A = ConvertChannel<T>(a);
 		}
 
+		/// @brief Задаёт значения из объекта Color4 другого типа U с автоматической масштабируемой конвертацией диапазонов.
+		/// @tparam U Исходный арифметический тип исходного цвета.
+		/// @param other Исходный цвет типа U.
 		template<Arithmetic U>
 		inline void SetFrom(const Color4<U>& other) noexcept
 		{
-			R = details::ConvertChannel<T>(other.R);
-			G = details::ConvertChannel<T>(other.G);
-			B = details::ConvertChannel<T>(other.B);
-			A = details::ConvertChannel<T>(other.A);
+			R = ConvertChannel<T>(other.R);
+			G = ConvertChannel<T>(other.G);
+			B = ConvertChannel<T>(other.B);
+			A = ConvertChannel<T>(other.A);
 		}
 
+		/// @brief Преобразует и возвращает новый цвет типа TargetT с автоматической масштабируемой конвертацией каналов.
+		/// @tparam TargetT Целевой арифметический тип каналов цветности.
+		/// @return Новый объект Color4<TargetT>.
+		template<Arithmetic TargetT>
+		[[nodiscard]] inline Color4<TargetT> ConvertTo() const noexcept
+		{
+			return Color4<TargetT>{
+				ConvertChannel<TargetT>(R),
+				ConvertChannel<TargetT>(G),
+				ConvertChannel<TargetT>(B),
+				ConvertChannel<TargetT>(A)
+			};
+		}
+
+		/// @brief Формирует строковое представление цвета.
+		/// @return Строка формата "R: ..., G: ..., B: ..., A: ...".
 		[[nodiscard]] inline std::string ToString() const noexcept
 		{
 			return std::format("R: {}, G: {}, B: {}, A: {}", R, G, B, A);
@@ -204,22 +244,13 @@ namespace zzz::math
 			else return T(255);
 		}
 
+		template<Arithmetic U>
+		[[nodiscard]] static constexpr U DefaultAlphaU() noexcept
+		{
+			if constexpr (std::is_floating_point_v<U>) return U(1);
+			else return U(255);
+		}
+
 		friend class zzz::core::Serializer;
 	};
-
-	template<Arithmetic T>
-	constexpr Color3<T>::Color3(const Color4<T>& rgba) noexcept
-		: R{ rgba.R }
-		, G{ rgba.G }
-		, B{ rgba.B }
-	{}
-
-	template<Arithmetic T>
-	template<Arithmetic U>
-	constexpr Color3<T>::Color3(const Color4<U>& rgba) noexcept
-		: R{ details::ConvertChannel<T>(rgba.R) }
-		, G{ details::ConvertChannel<T>(rgba.G) }
-		, B{ details::ConvertChannel<T>(rgba.B) }
-	{}
-
 }

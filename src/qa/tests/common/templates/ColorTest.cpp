@@ -24,15 +24,17 @@ TEST(ColorTest, DefaultConstructors)
 
 TEST(ColorTest, ConvertChannelLinearScaling)
 {
-	// 255 -> 1.0f
-	Color4<zF32> cFloat{ Color4<zU8>(255, 128, 0, 255) };
+	// 255 -> 1.0f via ConvertTo
+	Color4<zU8> cByte(255, 128, 0, 255);
+	Color4<zF32> cFloat = cByte.ConvertTo<zF32>();
 	EXPECT_FLOAT_EQ(cFloat.R, 1.0f);
 	EXPECT_NEAR(cFloat.G, 128.0f / 255.0f, 0.001f);
 	EXPECT_FLOAT_EQ(cFloat.B, 0.0f);
 	EXPECT_FLOAT_EQ(cFloat.A, 1.0f);
 
-	// 510 -> 2.0f without clamping
-	Color4<zF32> cFloat2{ Color4<zI32>(510, 255, 0, 255) };
+	// 510 -> 2.0f without clamping via SetFrom
+	Color4<zF32> cFloat2;
+	cFloat2.SetFrom(510, 255, 0, 255);
 	EXPECT_FLOAT_EQ(cFloat2.R, 2.0f);
 	EXPECT_FLOAT_EQ(cFloat2.G, 1.0f);
 }
