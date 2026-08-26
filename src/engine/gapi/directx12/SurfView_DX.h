@@ -25,7 +25,10 @@ namespace zzz::engine
 		void RenderFrame() override;
 		void OnResize(const Size2D<>& size) override;
 
-		void SetClearConfig(const ViewClearConfig& config) override;
+#pragma region Surface Lifecycle
+		void OnSurfaceCreated(void* handle) override;
+		void OnSurfaceDestroyed() override;
+#pragma endregion
 
 	protected:
 		void Initialize() override;
@@ -34,9 +37,6 @@ namespace zzz::engine
 		std::array<ComPtr<ID3D12CommandAllocator>, c_FramesInFlight> m_CommandAllocators;
 		std::array<ComPtr<ID3D12GraphicsCommandList>, c_FramesInFlight> m_CommandLists;
 		std::array<bool, c_FramesInFlight> m_IsRecording{};
-
-		uint32_t m_IndexPrepare;
-		uint32_t m_IndexRender;
 
 		std::mutex m_FrameMutex;
 	};

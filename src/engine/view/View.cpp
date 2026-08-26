@@ -83,12 +83,12 @@ void View::Initialize(const ViewConfigData& viewData, ViewPlatformData* platform
 	callbacks.OnSafeAreaChanged  = [this](int t, int b, int l, int r)       { OnWindowSafeAreaChanged(t, b, l, r); };
 
 	m_NativeWindow = safe_make_shared<NativeWindow>(m_Platform, m_Input, std::move(callbacks));
+	m_SurfView = safe_make_shared<SurfView>(m_NativeWindow, std::move(gapi));
+	m_SurfView->SetClearConfig(viewData.GetClearConfig());
+
 	auto res = m_NativeWindow->Initialize(*m_UserPlatformData, parentView);
 	if (!res)
 		THROW_RUNTIME("Не удалось инициализировать окно: {}", res.error());
-
-	m_SurfView = safe_make_shared<SurfView>(m_NativeWindow, std::move(gapi));
-	m_SurfView->SetClearConfig(viewData.GetClearConfig());
 
 	for (const auto& scriptGuid : viewData.GetUiScriptGuids())
 	{
@@ -101,10 +101,7 @@ void View::Initialize(const ViewConfigData& viewData, ViewPlatformData* platform
 
 void View::SetClearConfig(const ViewClearConfig& config)
 {
-	if (m_SurfView)
-	{
-		m_SurfView->SetClearConfig(config);
-	}
+	m_SurfView->SetClearConfig(config);
 }
 
 #if Z_EDITOR
@@ -248,14 +245,25 @@ void View::OnWindowDisplayChanged()
 #pragma endregion
 
 #pragma region App Lifecycle & GPU Surface
+/**
+ * @brief Вызывается при выделении нативной графической поверхности операционной системой.
+ * @param handle Нативный хэндл окна/поверхности (HWND в DirectX 12, ANativeWindow* в Vulkan, CAMetalLayer* в Metal).
+ * Передает хэндл в SurfView для привязки и создания цепочки кадров Swapchain.
+ */
 void View::OnWindowSurfaceCreated(void* handle)
 {
 	DOut("[View::OnWindowSurfaceCreated] - Handle: {}", handle);
+	m_SurfView->OnSurfaceCreated(handle);
 }
 
+/**
+ * @brief Вызывается при уничтожении графической поверхности операционной системой.
+ * Сообщает SurfView о необходимости остановки GPU (WaitForGpu) и безопасного освобождения Swapchain и буфера глубины.
+ */
 void View::OnWindowSurfaceDestroyed()
 {
 	DOut("[View::OnWindowSurfaceDestroyed]");
+	m_SurfView->OnSurfaceDestroyed();
 }
 
 void View::OnWindowSuspend()

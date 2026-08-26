@@ -19,7 +19,9 @@ namespace zzz::engine
 		ISurfView() = delete;
 		explicit ISurfView(std::shared_ptr<NativeWindow> window, std::shared_ptr<GAPI> gapi) :
 			m_Window{ std::move(window) },
-			m_GAPI{ std::move(gapi) }
+			m_GAPI{ std::move(gapi) },
+			m_IndexPrepare{ 0 },
+			m_IndexRender{ 1 }
 		{
 			ensure(m_Window != nullptr, "NativeWindow не должен быть null.");
 			ensure(m_GAPI != nullptr, "GAPI не должен быть null.");
@@ -32,9 +34,18 @@ namespace zzz::engine
 		[[nodiscard]] Swapchain* GetSwapchain() const noexcept { return m_Swapchain.get(); }
 		[[nodiscard]] DepthBuffer* GetDepthBuffer() const noexcept { return m_DepthBuffer.get(); }
 
-		virtual void SetClearConfig(const ViewClearConfig& config)
+		[[nodiscard]] uint32_t GetPrepareIndex() const noexcept { return m_IndexPrepare; }
+		[[nodiscard]] uint32_t GetRenderIndex() const noexcept { return m_IndexRender; }
+
+		 inline void SetClearConfig(const ViewClearConfig& config)
 		{
 			m_ClearConfig = config;
+
+			if (m_Swapchain)
+				m_Swapchain->SetClearConfig(config.surface);
+
+			if (m_DepthBuffer)
+				m_DepthBuffer->SetClearConfig(config.depthBuffer);
 		}
 		[[nodiscard]] const ViewClearConfig& GetClearConfig() const noexcept { return m_ClearConfig; }
 
@@ -46,8 +57,19 @@ namespace zzz::engine
 		virtual void OnResize(const Size2D<>& size) = 0;
 		virtual void OnUpdateVSyncState() {}
 
+#pragma region Surface Lifecycle
+		virtual void OnSurfaceCreated(void* handle) = 0;
+		virtual void OnSurfaceDestroyed() = 0;
+#pragma endregion
+
 	protected:
 		virtual void Initialize() = 0;
+
+		void UpdateFrameIndices() noexcept
+		{
+			m_IndexPrepare = (m_IndexPrepare + 1) % zzz::core::c_FramesInFlight;
+			m_IndexRender  = (m_IndexRender + 1) % zzz::core::c_FramesInFlight;
+		}
 
 		std::shared_ptr<NativeWindow> m_Window;
 		std::shared_ptr<GAPI> m_GAPI;
@@ -58,7 +80,8 @@ namespace zzz::engine
 
 		Size2D<> m_OldSize{};
 
-		uint32_t m_IndexRender{ 1 };
-		uint32_t m_IndexPrepare{ 0 };
+	private:
+		uint32_t m_IndexRender;
+		uint32_t m_IndexPrepare;
 	};
 }

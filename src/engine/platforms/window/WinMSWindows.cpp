@@ -17,9 +17,9 @@ WinMSWindows::~WinMSWindows()
 {
 	if (m_hWnd)
 	{
-		SetWindowLongPtr(m_hWnd, GWLP_USERDATA, 0);
-		DestroyWindow(m_hWnd);
+		HWND hWndTemp = m_hWnd;
 		m_hWnd = nullptr;
+		DestroyWindow(hWndTemp);
 	}
 }
 
@@ -192,6 +192,7 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		 * строго ДО того, как хэндл окна станет невалидным.
 		 */
 		VERIFY_AND_CALL(m_Callbacks.OnSurfaceDestroyed);
+		SetWindowLongPtr(hWnd, GWLP_USERDATA, 0);
 		PostQuitMessage(0);
 		return { true, TRUE };
 

@@ -7,15 +7,29 @@ namespace zzz::engine
 {
 	SurfView_DX::SurfView_DX(std::shared_ptr<NativeWindow> window, std::shared_ptr<DirectX12API> gapi)
 		: ISurfView(std::move(window), std::move(gapi))
-		, m_IndexPrepare(0)
-		, m_IndexRender(1)
 	{
-		Initialize();
 	}
 
 	SurfView_DX::~SurfView_DX()
 	{
+		OnSurfaceDestroyed();
+	}
+
+#pragma region Initialize
+	void SurfView_DX::OnSurfaceCreated(void* handle)
+	{
+		DOut("[SurfView_DX::OnSurfaceCreated] - Handle: {}", handle);
+		Initialize();
+	}
+
+	void SurfView_DX::OnSurfaceDestroyed()
+	{
+		DOut("[SurfView_DX::OnSurfaceDestroyed]");
+
 		std::lock_guard<std::mutex> lock(m_FrameMutex);
+
+		if (!m_GAPI)
+			return;
 
 		m_GAPI->WaitForGpu();
 
@@ -31,10 +45,16 @@ namespace zzz::engine
 		}
 
 		if (m_DepthBuffer)
+		{
 			m_DepthBuffer->Release();
+			m_DepthBuffer.reset();
+		}
 
 		if (m_Swapchain)
+		{
 			m_Swapchain->Release();
+			m_Swapchain.reset();
+		}
 	}
 
 	void SurfView_DX::Initialize()
@@ -42,6 +62,9 @@ namespace zzz::engine
 		m_Swapchain = std::make_unique<Swapchain_DX>(m_GAPI, m_Window);
 		m_OldSize = m_Swapchain->GetSize();
 		m_DepthBuffer = std::make_unique<DepthBuffer_DX>(m_GAPI, m_OldSize);
+
+		m_Swapchain->SetClearConfig(m_ClearConfig.surface);
+		m_DepthBuffer->SetClearConfig(m_ClearConfig.depthBuffer);
 
 		ID3D12Device* device = m_GAPI->GetDevice();
 		ensure(device, "DirectX12 Device не должен быть null.");
@@ -60,24 +83,7 @@ namespace zzz::engine
 			m_IsRecording[i] = false;
 		}
 	}
-
-	void SurfView_DX::SetClearConfig(const ViewClearConfig& config)
-	{
-		std::lock_guard<std::mutex> lock(m_FrameMutex);
-		ISurfView::SetClearConfig(config);
-
-		if (m_Swapchain)
-		{
-			auto dxSwapchain = static_cast<Swapchain_DX*>(m_Swapchain.get());
-			dxSwapchain->SetClearConfig(config.surface);
-		}
-
-		if (m_DepthBuffer)
-		{
-			auto dxDepthBuffer = static_cast<DepthBuffer_DX*>(m_DepthBuffer.get());
-			dxDepthBuffer->SetClearConfig(config.depthBuffer);
-		}
-	}
+#pragma endregion // Initialize
 
 	void SurfView_DX::PrepareFrame()
 	{
@@ -89,7 +95,7 @@ namespace zzz::engine
 
 		std::lock_guard<std::mutex> lock(m_FrameMutex);
 
-		const uint32_t prepIdx = m_IndexPrepare;
+		const uint32_t prepIdx = GetPrepareIndex();
 		if (!m_CommandAllocators[prepIdx] || !m_CommandLists[prepIdx])
 			return;
 
@@ -152,7 +158,7 @@ namespace zzz::engine
 
 		std::lock_guard<std::mutex> lock(m_FrameMutex);
 
-		const uint32_t prepIdx = m_IndexPrepare;
+		const uint32_t prepIdx = GetPrepareIndex();
 		if (!m_CommandLists[prepIdx] || !m_IsRecording[prepIdx])
 			return;
 
@@ -192,9 +198,7 @@ namespace zzz::engine
 		m_Swapchain->Present(true);
 		m_GAPI->WaitForGpu();
 
-		// Закольцовываем индексы кадра для любого значения c_FramesInFlight (2, 3 и т.д.)
-		m_IndexPrepare = (m_IndexPrepare + 1) % zzz::core::c_FramesInFlight;
-		m_IndexRender  = (m_IndexRender + 1) % zzz::core::c_FramesInFlight;
+		UpdateFrameIndices();
 	}
 
 	void SurfView_DX::OnResize(const Size2D<>& size)

@@ -19,6 +19,11 @@ namespace zzz::engine
 		void RenderFrame() override;
 		void OnResize(const Size2D<>& size) override;
 
+#pragma region Surface Lifecycle
+		void OnSurfaceCreated(void* handle) override;
+		void OnSurfaceDestroyed() override;
+#pragma endregion
+
 	protected:
 		void Initialize() override;
 	};
