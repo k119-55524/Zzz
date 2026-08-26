@@ -1,6 +1,7 @@
 
 #include "DepthBuffer_DX.h"
-#include "engine/gapi/utils/GAPILogHelpers.h"
+#include "core/utils/ToStringHelpers.h"
+#include "engine/utils/EngineLogFlags.h"
 
 #if defined(Z_D3D12)
 
@@ -55,7 +56,7 @@ namespace zzz::engine
 	void DepthBuffer_DX::OnResize(const Size2D<>& size)
 	{
 		Initialize(size);
-		DOut("[DepthBuffer_DX::OnResize] Successfully resized to {}x{} (DepthFormat: {}).", size.GetWidth(), size.GetHeight(), c_DefaultDepthFormat);
+		DOut(!Z_LOG_GET(g_IsResizing), "[DepthBuffer_DX::OnResize] Successfully resized to {}x{} (DepthFormat: {}).", size.GetWidth(), size.GetHeight(), c_DefaultDepthFormat);
 	}
 
 	void DepthBuffer_DX::Initialize(const Size2D<>& size)

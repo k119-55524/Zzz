@@ -5,7 +5,7 @@
 #include <format>
 #include <string_view>
 
-namespace zzz::engine::gapi
+namespace zzz::core
 {
 	constexpr std::string_view ToString(VkFormat format) noexcept
 	{
@@ -30,7 +30,7 @@ struct std::formatter<VkFormat> : std::formatter<std::string_view>
 {
 	auto format(VkFormat format, std::format_context& ctx) const
 	{
-		return std::formatter<std::string_view>::format(zzz::engine::gapi::ToString(format), ctx);
+		return std::formatter<std::string_view>::format(zzz::core::ToString(format), ctx);
 	}
 };
 

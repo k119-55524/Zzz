@@ -1,5 +1,6 @@
 #include "Swapchain_DX.h"
-#include "engine/gapi/utils/GAPILogHelpers.h"
+#include "core/utils/ToStringHelpers.h"
+#include "engine/utils/EngineLogFlags.h"
 
 #if defined(Z_D3D12)
 namespace zzz::engine
@@ -185,7 +186,7 @@ namespace zzz::engine
 			device->CreateRenderTargetView(m_RenderTargets[i].Get(), nullptr, currentHandle);
 		}
 
-		DOut("[Swapchain_DX::OnResize] Successfully resized to {}x{} (BackBufferFormat: {}).", m_Size.GetWidth(), m_Size.GetHeight(), m_BackBufferFormat);
+		DOut(!Z_LOG_GET(g_IsResizing), "[Swapchain_DX::OnResize] Successfully resized to {}x{} (BackBufferFormat: {}).", m_Size.GetWidth(), m_Size.GetHeight(), m_BackBufferFormat);
 	}
 }
 #endif // Z_D3D12

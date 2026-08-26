@@ -4,7 +4,7 @@
 #include "engine/gapi/directx12/DirectX12API.h"
 #include "engine/gapi/selectors/monitor/MonitorSelector.h"
 #include "engine/gapi/selectors/gpu/directx12/DirectX12GpuSelector.h"
-#include "engine/gapi/utils/GAPILogHelpers.h"
+#include "core/utils/ToStringHelpers.h"
 
 
 namespace zzz::engine

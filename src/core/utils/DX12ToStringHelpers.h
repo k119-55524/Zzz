@@ -6,7 +6,7 @@
 
 #if defined(Z_D3D12)
 
-namespace zzz::engine::gapi
+namespace zzz::core
 {
 	constexpr std::string_view ToString(DXGI_FORMAT format) noexcept
 	{
@@ -165,7 +165,7 @@ struct std::formatter<DXGI_FORMAT> : std::formatter<std::string_view>
 {
 	auto format(DXGI_FORMAT format, std::format_context& ctx) const
 	{
-		return std::formatter<std::string_view>::format(zzz::engine::gapi::ToString(format), ctx);
+		return std::formatter<std::string_view>::format(zzz::core::ToString(format), ctx);
 	}
 };
 
@@ -174,7 +174,7 @@ struct std::formatter<D3D_FEATURE_LEVEL> : std::formatter<std::string_view>
 {
 	auto format(D3D_FEATURE_LEVEL featureLevel, std::format_context& ctx) const
 	{
-		return std::formatter<std::string_view>::format(zzz::engine::gapi::ToString(featureLevel), ctx);
+		return std::formatter<std::string_view>::format(zzz::core::ToString(featureLevel), ctx);
 	}
 };
 

@@ -151,6 +151,11 @@ namespace zzz::logger
 			::zzz::logger::g_Logger.LogFatal(loc, std::move(msg)); \
 		}, std::source_location::current(), __VA_ARGS__); \
 	} while (false)
+
+#define Z_LOG_VAR(type, name, init)        type name{ init }
+#define Z_LOG_GLOBAL_VAR(type, name, init) inline type name{ init }
+#define Z_LOG_SET(name, val)               (name = (val))
+#define Z_LOG_GET(name)                    (name)
 #else // Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 #define DOut(...)
 #define DOutWarning(...)
@@ -158,6 +163,11 @@ namespace zzz::logger
 #define DOutException(...)
 #define DOutCritical(...)
 #define DOutFatal(...)
+
+#define Z_LOG_VAR(type, name, init)
+#define Z_LOG_GLOBAL_VAR(type, name, init)
+#define Z_LOG_SET(name, val)               ((void)0)
+#define Z_LOG_GET(name)                    false
 #endif // Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 
 /**

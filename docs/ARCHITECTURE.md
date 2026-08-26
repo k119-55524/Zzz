@@ -98,7 +98,48 @@ namespace = "Gameplay"
 3. **Единый стиль обработки ошибок:**
    Унификация использования `std::expected`, `throw` и `ensure`. Введение единого `Z_FATAL` или полный переход на `std::expected` с кодами ошибок `ErrorCode`.
 4. **Покрытие тестами (`src/qa/`):**
-   Написание тестов для `ScriptRegistry`, `.meta`/GUID синхронизации, логгера и команд Undo/Redo.
+   Расширение юнит-тестов и бенчмарков.
+
+---
+
+## 5. Подсистема Логирования (Logging System)
+
+### 5.1. Потоковая модель и бродкастеры
+- **Игровой поток:** Записывает сообщения в лок-фри буфер `DoubleBufferedVector<LogEntry>` без задержек.
+- **Поток раздатчика (`Logger`):** Событийно забирает пакеты логов и рассылает слушателям (`ConsoleBroadcaster`, `NetworkBroadcaster`).
+- **Сетевой Viewer (`RemoteLogViewer`):** Принимает логи по TCP (порт 3030).
+
+### 5.2. Уровни и режимы логирования (`DOut*`)
+Поддерживаются уровни: `DOut`, `DOutWarning`, `DOutError`, `DOutException`, `DOutCritical`, `DOutFatal`.
+Макросы логирования поддерживают 4 режима передачи аргументов:
+1. **Обычный вывод:** `DOut("Сообщение: {}", val)`
+2. **Throttling по итерациям:** `DOut(100, "Каждый 100-й вызов: {}", i)`
+3. **Throttling по времени:** `DOut(0.5f, "Не чаще раз в 0.5с: {}", fps)`
+4. **Условный вывод по `bool`:** `DOut(condition, "Сообщение только при true: {}", val)`
+
+### 5.3. Отладочные переменные и флаги (`Z_LOG_VAR` / `Z_LOG_GLOBAL_VAR`)
+В [src/engine/utils/EngineLogFlags.h](file:///c:/Workspaces/ZzzTest/src/engine/utils/EngineLogFlags.h) реализованы макросы отладочных переменных:
+- `Z_LOG_VAR(type, name, init)` — локальная переменная логирования.
+- `Z_LOG_GLOBAL_VAR(type, name, init)` — глобальная отладочная переменная с поддержкой `inline`.
+- `Z_LOG_SET(name, val)` — присвоение значения.
+- `Z_LOG_GET(name)` — чтение значения.
+
+> **Нулевой оверхед в Release:** В сборках без логгера (`#if !(Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD)`) макросы превращаются в `((void)0)` и `false`, а глобальные переменные не компилируются.
+
+### 5.4. Синхронное подавление спама при ресайзе
+Глобальный отладочный флаг `zzz::engine::g_IsResizing` автоматически взводится в `true` во `View` во время интерактивного перетаскивания рамок окна мышью (`OnWindowResizeStart` ... `OnWindowResizeEnd`).
+Все подсистемы рендера (`View`, `SurfView_DX`, `Swapchain_DX`, `DepthBuffer_DX`) синхронно проверяют `!Z_LOG_GET(g_IsResizing)`, отсекая поток промежуточных логов кадра и выводя 1 итоговый лог по завершении ресайза.
+
+### 5.5. Строковые хелперы GAPI (`ToStringHelpers.h`)
+В [src/core/utils/ToStringHelpers.h](file:///c:/Workspaces/ZzzTest/src/core/utils/ToStringHelpers.h) (вместе с утилитами ядра `Macroses.h`, `Converters.h`) реализованы универсальные функции `ToString` и специализации `std::formatter` для прямой конвертации и печати перечислений GAPI (`DXGI_FORMAT`, `D3D_FEATURE_LEVEL`, `VkFormat`, `MTLPixelFormat`):
+```cpp
+#include "core/utils/ToStringHelpers.h"
+
+// Работает как для обычного ToString(), так и для std::format / DOut
+DOut("Формат глубины: {}", c_DefaultDepthFormat);
+// Вывод: Формат глубины: DXGI_FORMAT::DXGI_FORMAT_D24_UNORM_S8_UINT
+```
+
 5. **Оптимизация производительности и функционала `zzz::core::EventImpl` (`src/core/events/Event.h`):**
    * **Проблема:** На длинных циклах (10 000+ подписчиков) вызов события создает CPU overhead из-за `std::function` (Type Erasure / косвенный вызов), атомарного `isDead.load()` (`seq_cst`) и `weak_ptr::expired()` (атомарное чтение control block). Дополнительно при `SetActive(false/true)` в `BaseScript` происходит полная отписка/подписка, что ломает порядок вызова подписчиков.
    * **Планируемые решения:**

@@ -2,6 +2,7 @@
 #include <logger/logger.h>
 
 #include "Engine.h"
+#include "engine/utils/EngineLogFlags.h"
 
 using namespace zzz;
 using namespace zzz::core;
@@ -194,9 +195,31 @@ void Engine::OnUpdateSystem()
 {
 	m_Time->Update();
 
-	DOut(1.0, "[Engine::OnUpdateSystem] FPS: {:.1f} (FrameTime: {:.2f}ms)",
-		(m_Time->GetUnscaledDeltaTime() > 0.0f) ? (1.0f / m_Time->GetUnscaledDeltaTime()) : 0.0f,
-		m_Time->GetUnscaledDeltaTime() * 1000.0f);
+#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD // Вывод среднего FPS в лог каждые logInterval секунд
+	{
+		// Интервал (в секундах) для расчёта среднего FPS и вывода в лог.
+		// Измените logInterval (например, 1.0f, 2.0f, 5.0f), чтобы изменить частоту вывода и период усреднения.
+		constexpr float logInterval = 1.0f;
+
+		static float accumTime = 0.0f;
+		static uint32_t frameCount = 0;
+
+		accumTime += m_Time->GetUnscaledDeltaTime();
+		frameCount++;
+
+		// Вывод лога и сброс аккумуляторов происходит по истечении интервала задержки
+		if (accumTime >= logInterval)
+		{
+			const float avgFps = static_cast<float>(frameCount) / accumTime;
+			const float avgFrameTimeMs = (accumTime / static_cast<float>(frameCount)) * 1000.0f;
+
+			DOut("[Engine::OnUpdateSystem] FPS (Avg {:.0f}s): {:.1f} (FrameTime: {:.2f}ms)", logInterval, avgFps, avgFrameTimeMs);
+
+			accumTime = 0.0f;
+			frameCount = 0;
+		}
+	}
+#endif
 
 	m_EventBus->InvokeUpdate(*m_Time);
 

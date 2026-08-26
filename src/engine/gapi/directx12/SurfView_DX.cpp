@@ -1,6 +1,7 @@
 #include "SurfView_DX.h"
 #include "Swapchain_DX.h"
 #include "DepthBuffer_DX.h"
+#include "engine/utils/EngineLogFlags.h"
 
 #if defined(Z_D3D12)
 namespace zzz::engine
@@ -235,7 +236,7 @@ namespace zzz::engine
 		m_DepthBuffer->OnResize(size);
 
 		m_OldSize = size;
-		DOut("[SurfView_DX::OnResize] Resize completed from old size to {}x{}.", size.GetWidth(), size.GetHeight());
+		DOut(!Z_LOG_GET(g_IsResizing), "[SurfView_DX::OnResize] Resize completed from old size to {}x{}.", size.GetWidth(), size.GetHeight());
 	}
 }
 #endif // Z_D3D12

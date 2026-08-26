@@ -5,7 +5,7 @@
 #include <format>
 #include <string_view>
 
-namespace zzz::engine::gapi
+namespace zzz::core
 {
 	inline std::string_view ToString(MTLPixelFormat format) noexcept
 	{
@@ -30,7 +30,7 @@ struct std::formatter<MTLPixelFormat> : std::formatter<std::string_view>
 {
 	auto format(MTLPixelFormat format, std::format_context& ctx) const
 	{
-		return std::formatter<std::string_view>::format(zzz::engine::gapi::ToString(format), ctx);
+		return std::formatter<std::string_view>::format(zzz::core::ToString(format), ctx);
 	}
 };
 

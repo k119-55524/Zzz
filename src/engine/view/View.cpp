@@ -2,6 +2,7 @@
 #include "../platforms/input/Input.h"
 #include "../platforms/window/NativeWindow.h"
 #include "core/userscripts/ScriptFactory.h"
+#include "engine/utils/EngineLogFlags.h"
 
 #include "View.h"
 
@@ -177,12 +178,12 @@ void View::OnWindowResize(Size2D<>& size, eWinResize type)
 		break;
 	}
 
-	DOut(!m_IsResizing, "[View::OnWindowResize] - {}x{} (Type: {})", size.GetWidth(), size.GetHeight(), EnumToString::ToString(type));
+	DOut(!Z_LOG_GET(g_IsResizing), "[View::OnWindowResize] - {}x{} (Type: {})", size.GetWidth(), size.GetHeight(), EnumToString::ToString(type));
 }
 
 void View::OnWindowResizeStart()
 {
-	m_IsResizing = true;
+	Z_LOG_SET(g_IsResizing, true);
 	DOut("[View::OnWindowResizeStart]");
 }
 
@@ -193,7 +194,7 @@ void View::OnWindowSizing()
 
 void View::OnWindowResizeEnd()
 {
-	m_IsResizing = false;
+	Z_LOG_SET(g_IsResizing, false);
 	const auto& navState = m_NativeWindow->GetState();
 	if (navState.GetState() == eWindowState::Normal)
 		m_UserPlatformData->SetWindowRect(navState.GetWindowRect());
@@ -229,9 +230,7 @@ void View::OnWindowFocus(bool focus)
 {
 	DOut("[View::OnWindowFocus] - Focus: {}", focus ? "true" : "false");
 	if (!focus)
-	{
 		m_Input->ResetState();
-	}
 }
 
 void View::OnWindowActivate(bool active)
