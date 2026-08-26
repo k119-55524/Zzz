@@ -25,6 +25,30 @@ namespace zzz::engine
 		m_DsvHeap.Reset();
 	}
 
+	void DepthBuffer_DX::Clear(ID3D12GraphicsCommandList* cmdList)
+	{
+		if (!cmdList) return;
+
+		UINT flags = 0;
+		if (m_ClearConfig.depthMode == eClearDepthMode::Depth)
+			flags |= D3D12_CLEAR_FLAG_DEPTH;
+
+		if (m_ClearConfig.stencilMode == eClearStencilMode::Stencil)
+			flags |= D3D12_CLEAR_FLAG_STENCIL;
+
+		if (flags != 0)
+		{
+			cmdList->ClearDepthStencilView(
+				m_DsvHandle,
+				static_cast<D3D12_CLEAR_FLAGS>(flags),
+				m_ClearConfig.depth,
+				m_ClearConfig.stencil,
+				0,
+				nullptr
+			);
+		}
+	}
+
 	void DepthBuffer_DX::OnResize(const Size2D<>& size)
 	{
 		Initialize(size);

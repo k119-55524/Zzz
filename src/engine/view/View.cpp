@@ -84,6 +84,10 @@ void View::Initialize(const ViewPlatformData& settings, const std::vector<std::s
 		THROW_RUNTIME("Не удалось инициализировать окно: {}.", res.error());
 
 	m_SurfView = safe_make_shared<SurfView>(m_NativeWindow, m_GAPI);
+	if (m_SurfView)
+	{
+		m_SurfView->SetClearConfig(m_ClearConfig);
+	}
 
 	for (const auto& script : scripts)
 	{
@@ -91,6 +95,15 @@ void View::Initialize(const ViewPlatformData& settings, const std::vector<std::s
 
 		script->Init(&m_EventBus);
 		m_Scripts.push_back(script);
+	}
+}
+
+void View::SetClearConfig(const ViewClearConfig& config)
+{
+	m_ClearConfig = config;
+	if (m_SurfView)
+	{
+		m_SurfView->SetClearConfig(config);
 	}
 }
 

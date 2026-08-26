@@ -6,6 +6,7 @@
 #include "core/utils/Guid.h"
 #include "platforms/start_view/ViewPlatformConfig.h"
 #include "core/Serialize/Serializer.h"
+#include "engine/gapi/clear_config/ViewClearConfig.h"
 
 namespace zzz::core
 {
@@ -13,17 +14,19 @@ namespace zzz::core
 	{
 	public:
 		ChildViewData() = default;
-		ChildViewData(Guid viewGuid, Guid sceneGuid, std::vector<Guid> uiScriptGuids, ViewPlatformData platformData = {})
+		ChildViewData(Guid viewGuid, Guid sceneGuid, std::vector<Guid> uiScriptGuids, ViewPlatformData platformData = {}, zzz::engine::ViewClearConfig clearConfig = {})
 			: m_ViewGuid(viewGuid)
 			, m_SceneGuid(sceneGuid)
 			, m_UiScriptGuids(std::move(uiScriptGuids))
 			, m_PlatformData(std::move(platformData))
+			, m_ClearConfig(std::move(clearConfig))
 		{}
 
 		[[nodiscard]] const Guid& GetViewGuid() const noexcept { return m_ViewGuid; }
 		[[nodiscard]] const Guid& GetSceneGuid() const noexcept { return m_SceneGuid; }
 		[[nodiscard]] const std::vector<Guid>& GetUiScriptGuids() const noexcept { return m_UiScriptGuids; }
 		[[nodiscard]] const ViewPlatformData& GetPlatformData() const noexcept { return m_PlatformData; }
+		[[nodiscard]] const zzz::engine::ViewClearConfig& GetClearConfig() const noexcept { return m_ClearConfig; }
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
@@ -44,6 +47,7 @@ namespace zzz::core
 		Guid m_SceneGuid;
 		std::vector<Guid> m_UiScriptGuids;
 		ViewPlatformData m_PlatformData;
+		zzz::engine::ViewClearConfig m_ClearConfig;
 
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override
@@ -62,7 +66,8 @@ namespace zzz::core
 					}
 					return {};
 				})
-				.and_then([&]() { return serializer.Serialize(buffer, m_PlatformData); });
+				.and_then([&]() { return serializer.Serialize(buffer, m_PlatformData); })
+				.and_then([&]() { return serializer.Serialize(buffer, m_ClearConfig); });
 		}
 
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& serializer) override
@@ -86,7 +91,8 @@ namespace zzz::core
 					}
 					return {};
 				})
-				.and_then([&]() { return serializer.Deserialize(buffer, offset, m_PlatformData); });
+				.and_then([&]() { return serializer.Deserialize(buffer, offset, m_PlatformData); })
+				.and_then([&]() { return serializer.Deserialize(buffer, offset, m_ClearConfig); });
 		}
 	};
 }

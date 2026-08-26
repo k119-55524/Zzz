@@ -3,6 +3,8 @@
 #include "engine/gapi/directx12/DirectX12API.h"
 #include "engine/platforms/window/NativeWindow.h"
 
+#include "engine/gapi/clear_config/SurfaceClearConfig.h"
+
 #if defined(Z_D3D12)
 
 namespace zzz::engine
@@ -20,6 +22,10 @@ namespace zzz::engine
 		void Present(bool vSync);
 		void OnResize(const Size2D<>& size);
 
+		void Clear(ID3D12GraphicsCommandList* cmdList);
+		void SetClearConfig(const SurfaceClearConfig& config) noexcept { m_ClearConfig = config; }
+		[[nodiscard]] const SurfaceClearConfig& GetClearConfig() const noexcept { return m_ClearConfig; }
+
 		[[nodiscard]] Size2D<> GetSize() const noexcept { return m_Size; }
 		[[nodiscard]] ID3D12Resource* GetCurrentBackBuffer() const noexcept;
 		[[nodiscard]] D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRTVHandle() const noexcept;
@@ -29,6 +35,7 @@ namespace zzz::engine
 		void Initialize(std::shared_ptr<NativeWindow> window);
 
 		std::shared_ptr<DirectX12API> m_GAPI;
+		SurfaceClearConfig m_ClearConfig;
 		Microsoft::WRL::ComPtr<IDXGISwapChain3> m_SwapChain;
 		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_RtvHeap;
 

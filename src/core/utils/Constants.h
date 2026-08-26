@@ -60,10 +60,10 @@ namespace zzz::core
 	constexpr D3D_FEATURE_LEVEL c_DefaultFeatureLevel = D3D_FEATURE_LEVEL_12_0;
 #elif defined(Z_VULKAN)
 	constexpr VkFormat c_DefaultBackBufferFormat = VK_FORMAT_R8G8B8A8_UNORM;
-	constexpr VkFormat c_DefaultDepthFormat = VK_FORMAT_D24_UNORM_S8_UINT;
+	constexpr VkFormat c_DefaultDepthFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
 #elif defined(Z_METAL)
 	constexpr MTLPixelFormat c_DefaultBackBufferFormat = MTLPixelFormatRGBA8Unorm;
-	constexpr MTLPixelFormat c_DefaultDepthFormat = MTLPixelFormatDepth24Unorm_Stencil8;
+	constexpr MTLPixelFormat c_DefaultDepthFormat = MTLPixelFormatDepth32Float_Stencil8;
 #endif
 #pragma endregion
 

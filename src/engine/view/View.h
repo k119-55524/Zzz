@@ -93,6 +93,16 @@ namespace zzz::engine
 		[[nodiscard]] inline std::shared_ptr<ISurfView> GetSurfView() const noexcept { return m_SurfView; }
 
 		/**
+		 * @brief Динамически изменяет настройки очистки кадра для данного View и его поверхностей.
+		 */
+		void SetClearConfig(const ViewClearConfig& config);
+
+		/**
+		 * @brief Возвращает текущие настройки очистки кадра View.
+		 */
+		[[nodiscard]] inline const ViewClearConfig& GetClearConfig() const noexcept { return m_ClearConfig; }
+
+		/**
 		 * @brief Изменяет статус активности окна (управляет вызовами OnEnable / OnDisable).
 		 */
 		inline void SetActive(bool active)
@@ -250,6 +260,7 @@ namespace zzz::engine
 		zzz::templates::ThreadPool m_ThreadsUpdate;
 
 		bool m_IsActive;
+		ViewClearConfig m_ClearConfig;
 		ViewEventBus m_EventBus;
 		std::shared_ptr<Scene> m_ActiveScene;
 		std::vector<std::shared_ptr<ViewScript>> m_Scripts;

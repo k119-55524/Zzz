@@ -31,6 +31,22 @@ namespace zzz::engine
 		m_SwapChain.Reset();
 	}
 
+	void Swapchain_DX::Clear(ID3D12GraphicsCommandList* cmdList)
+	{
+		if (!cmdList) return;
+
+		if (m_ClearConfig.mode == eClearColorMode::Color)
+		{
+			const D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = GetCurrentRTVHandle();
+			const zF32* clearColorData = reinterpret_cast<const zF32*>(&m_ClearConfig.color.R);
+			cmdList->ClearRenderTargetView(rtvHandle, clearColorData, 0, nullptr);
+		}
+		else if (m_ClearConfig.mode == eClearColorMode::Shader)
+		{
+			// Background shader pass stub
+		}
+	}
+
 	void Swapchain_DX::Initialize(std::shared_ptr<NativeWindow> window)
 	{
 		ensure(m_GAPI, "DirectX12API cannot be null.");

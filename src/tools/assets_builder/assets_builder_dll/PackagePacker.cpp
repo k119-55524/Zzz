@@ -258,6 +258,76 @@ namespace zzz::builder
 		return eMSWinWindowMode::Windowed;
 	}
 
+	static zzz::engine::ViewClearConfig ReadViewClearConfig(const json& root)
+	{
+		zzz::engine::ViewClearConfig config;
+
+		if (!root.contains("clear") || !root["clear"].is_object())
+			return config;
+
+		const auto& clearJson = root["clear"];
+
+		// Color mode
+		std::string colorModeStr = clearJson.value("colorMode", "Color");
+		if (colorModeStr == "None") config.surface.mode = zzz::engine::eClearColorMode::None;
+		else if (colorModeStr == "Shader") config.surface.mode = zzz::engine::eClearColorMode::Shader;
+		else config.surface.mode = zzz::engine::eClearColorMode::Color;
+
+		// Color parsing
+		if (clearJson.contains("color"))
+		{
+			const auto& c = clearJson["color"];
+			if (c.is_string())
+			{
+				std::string colorName = c.get<std::string>();
+				if (colorName == "CornflowerBlue") config.surface.color = zzz::math::Palette4::CornflowerBlue;
+				else if (colorName == "Black") config.surface.color = zzz::math::Palette4::Black;
+				else if (colorName == "White") config.surface.color = zzz::math::Palette4::White;
+				else if (colorName == "Red") config.surface.color = zzz::math::Palette4::Red;
+				else if (colorName == "Green") config.surface.color = zzz::math::Palette4::Green;
+				else if (colorName == "Blue") config.surface.color = zzz::math::Palette4::Blue;
+				else if (colorName == "Transparent") config.surface.color = zzz::math::Palette4::Transparent;
+			}
+			else if (c.is_array() && c.size() >= 3)
+			{
+				zF32 r = c[0].get<zF32>();
+				zF32 g = c[1].get<zF32>();
+				zF32 b = c[2].get<zF32>();
+				zF32 a = c.size() >= 4 ? c[3].get<zF32>() : 1.0f;
+				if (r > 1.0f || g > 1.0f || b > 1.0f)
+				{
+					config.surface.color = Color4<zU8>(static_cast<zU8>(r), static_cast<zU8>(g), static_cast<zU8>(b), static_cast<zU8>(a * 255.0f)).ConvertTo<zF32>();
+				}
+				else
+				{
+					config.surface.color = zzz::math::Color4<zF32>(r, g, b, a);
+				}
+			}
+		}
+
+		// Shader GUID
+		if (clearJson.contains("shader") && clearJson["shader"].is_string())
+		{
+			config.surface.shaderGuid = Guid::Parse(clearJson["shader"].get<std::string>()).value_or(Guid{});
+		}
+
+		// Depth mode
+		std::string depthModeStr = clearJson.value("depthMode", "Depth");
+		if (depthModeStr == "None") config.depthBuffer.depthMode = zzz::engine::eClearDepthMode::None;
+		else config.depthBuffer.depthMode = zzz::engine::eClearDepthMode::Depth;
+
+		config.depthBuffer.depth = clearJson.value("depth", 1.0f);
+
+		// Stencil mode
+		std::string stencilModeStr = clearJson.value("stencilMode", "None");
+		if (stencilModeStr == "Stencil") config.depthBuffer.stencilMode = zzz::engine::eClearStencilMode::Stencil;
+		else config.depthBuffer.stencilMode = zzz::engine::eClearStencilMode::None;
+
+		config.depthBuffer.stencil = static_cast<zU8>(clearJson.value("stencil", 0));
+
+		return config;
+	}
+
 	static std::vector<std::byte> SerializeAssetToBinary(const PendingAsset& item, const fs::path& projectDir, zzz::core::eTargetPlatform targetPlatform)
 	{
 		Serializer serializer;
@@ -468,6 +538,9 @@ namespace zzz::builder
 					break;
 				}
 				}
+
+				auto clearConfig = ReadViewClearConfig(startViewRoot);
+				if (auto res = serializer.Serialize(result, clearConfig); !res) return {};
 			}
 			else if (assetType == zzz::core::ePackage::Scene)
 			{

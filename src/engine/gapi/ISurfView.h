@@ -5,6 +5,8 @@
 #include "engine/gapi/DepthBuffer.h"
 #include "engine/platforms/window/NativeWindow.h"
 
+#include "engine/gapi/clear_config/ViewClearConfig.h"
+
 using namespace zzz::core;
 
 namespace zzz::engine
@@ -30,6 +32,12 @@ namespace zzz::engine
 		[[nodiscard]] Swapchain* GetSwapchain() const noexcept { return m_Swapchain.get(); }
 		[[nodiscard]] DepthBuffer* GetDepthBuffer() const noexcept { return m_DepthBuffer.get(); }
 
+		virtual void SetClearConfig(const ViewClearConfig& config)
+		{
+			m_ClearConfig = config;
+		}
+		[[nodiscard]] const ViewClearConfig& GetClearConfig() const noexcept { return m_ClearConfig; }
+
 		virtual void PreRender() {}
 		virtual void PrepareFrame() = 0;
 		virtual void RenderFrame() = 0;
@@ -46,6 +54,7 @@ namespace zzz::engine
 
 		std::unique_ptr<Swapchain> m_Swapchain;
 		std::unique_ptr<DepthBuffer> m_DepthBuffer;
+		ViewClearConfig m_ClearConfig;
 
 		Size2D<> m_OldSize{};
 

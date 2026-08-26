@@ -28,6 +28,23 @@ namespace zzz::engine
 		m_DepthBuffer = std::make_unique<DepthBuffer_DX>(m_GAPI, m_OldSize);
 	}
 
+	void SurfView_DX::SetClearConfig(const ViewClearConfig& config)
+	{
+		ISurfView::SetClearConfig(config);
+
+		if (m_Swapchain)
+		{
+			auto dxSwapchain = static_cast<Swapchain_DX*>(m_Swapchain.get());
+			dxSwapchain->SetClearConfig(config.surface);
+		}
+
+		if (m_DepthBuffer)
+		{
+			auto dxDepthBuffer = static_cast<DepthBuffer_DX*>(m_DepthBuffer.get());
+			dxDepthBuffer->SetClearConfig(config.depthBuffer);
+		}
+	}
+
 	void SurfView_DX::PrepareFrame()
 	{
 	}

@@ -20,6 +20,8 @@ namespace zzz::engine
 		void RenderFrame() override;
 		void OnResize(const Size2D<>& size) override;
 
+		void SetClearConfig(const ViewClearConfig& config) override;
+
 	protected:
 		void Initialize() override;
 	};
