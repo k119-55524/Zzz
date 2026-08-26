@@ -90,7 +90,7 @@ Rect2D<zI32> WinMSWindows::GetFullWindowRect() const
 	wp.length = sizeof(WINDOWPLACEMENT);
 	if (GetWindowPlacement(m_hWnd, &wp))
 	{
-		if (wp.showCmd == SW_SHOWMINIMIZED)
+		if (wp.showCmd == SW_SHOWMINIMIZED || wp.showCmd == SW_SHOWMAXIMIZED || wp.showCmd == SW_MAXIMIZE)
 		{
 			const RECT& r = wp.rcNormalPosition;
 			return Rect2D<zI32>{ Point2D<zI32>{r.left, r.top}, Size2D<zI32>{r.right - r.left, r.bottom - r.top} };
