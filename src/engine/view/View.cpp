@@ -199,7 +199,10 @@ void View::OnWindowResizeEnd()
 	if (navState.GetState() == eWindowState::Normal)
 		m_UserPlatformData->SetWindowRect(navState.GetWindowRect());
 
-	DOut("[View::OnWindowResizeEnd]");
+	auto finalSize = m_NativeWindow->GetPhysicalClientSize();
+	OnWindowResize(finalSize, eWinResize::Resize);
+
+	DOut("[View::OnWindowResizeEnd] - Resize completed at {}x{}", finalSize.GetWidth(), finalSize.GetHeight());
 }
 
 void View::OnWindowMoveStart()

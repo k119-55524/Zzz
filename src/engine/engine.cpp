@@ -195,11 +195,12 @@ void Engine::OnUpdateSystem()
 {
 	m_Time->Update();
 
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD // Вывод среднего FPS в лог каждые logInterval секунд
+// Вывод среднего FPS в лог каждые logInterval секунд
+#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 	{
 		// Интервал (в секундах) для расчёта среднего FPS и вывода в лог.
 		// Измените logInterval (например, 1.0f, 2.0f, 5.0f), чтобы изменить частоту вывода и период усреднения.
-		constexpr float logInterval = 1.0f;
+		constexpr float logInterval = 5.0f;
 
 		static float accumTime = 0.0f;
 		static uint32_t frameCount = 0;
@@ -219,7 +220,7 @@ void Engine::OnUpdateSystem()
 			frameCount = 0;
 		}
 	}
-#endif
+#endif // Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
 
 	m_EventBus->InvokeUpdate(*m_Time);
 
