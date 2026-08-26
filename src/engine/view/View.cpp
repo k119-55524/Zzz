@@ -68,6 +68,9 @@ void View::Initialize(const ViewConfigData& viewData, ViewPlatformData* platform
 	callbacks.OnResizeStart      = [this]()                                 { OnWindowResizeStart(); };
 	callbacks.OnSizing           = [this]()                                 { OnWindowSizing(); };
 	callbacks.OnResizeEnd        = [this]()                                 { OnWindowResizeEnd(); };
+	callbacks.OnMoveStart        = [this]()                                 { OnWindowMoveStart(); };
+	callbacks.OnMoving           = [this]()                                 { OnWindowMoving(); };
+	callbacks.OnMoveEnd          = [this]()                                 { OnWindowMoveEnd(); };
 	callbacks.OnDpiChanged       = [this]()                                 { OnWindowDpiChanged(); };
 	callbacks.OnFocus            = [this](bool focus)                       { OnWindowFocus(focus); };
 	callbacks.OnActivate         = [this](bool active)                      { OnWindowActivate(active); };
@@ -119,6 +122,9 @@ void View::Initialize(void* data)
 	callbacks.OnResizeStart      = [this]()                                 { OnWindowResizeStart(); };
 	callbacks.OnSizing           = [this]()                                 { OnWindowSizing(); };
 	callbacks.OnResizeEnd        = [this]()                                 { OnWindowResizeEnd(); };
+	callbacks.OnMoveStart        = [this]()                                 { OnWindowMoveStart(); };
+	callbacks.OnMoving           = [this]()                                 { OnWindowMoving(); };
+	callbacks.OnMoveEnd          = [this]()                                 { OnWindowMoveEnd(); };
 	callbacks.OnDpiChanged       = [this]()                                 { OnWindowDpiChanged(); };
 	callbacks.OnFocus            = [this](bool focus)                       { OnWindowFocus(focus); };
 	callbacks.OnActivate         = [this](bool active)                      { OnWindowActivate(active); };
@@ -194,6 +200,25 @@ void View::OnWindowResizeEnd()
 		m_UserPlatformData->SetWindowRect(navState.GetWindowRect());
 
 	DOut("[View::OnWindowResizeEnd]");
+}
+
+void View::OnWindowMoveStart()
+{
+	DOut("[View::OnWindowMoveStart]");
+}
+
+void View::OnWindowMoving()
+{
+	DOut("[View::OnWindowMoving]");
+}
+
+void View::OnWindowMoveEnd()
+{
+	const auto& navState = m_NativeWindow->GetState();
+	if (navState.GetState() == eWindowState::Normal)
+		m_UserPlatformData->SetWindowRect(navState.GetWindowRect());
+
+	DOut("[View::OnWindowMoveEnd]");
 }
 
 void View::OnWindowDpiChanged()

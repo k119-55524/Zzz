@@ -175,6 +175,21 @@ namespace zzz::engine
 		void OnWindowResizeEnd();
 
 		/**
+		 * @brief Обрабатывает момент начала перемещения окна мышью.
+		 */
+		void OnWindowMoveStart();
+
+		/**
+		 * @brief Обрабатывает промежуточное перемещение окна мышью.
+		 */
+		void OnWindowMoving();
+
+		/**
+		 * @brief Обрабатывает момент завершения перемещения окна мышью.
+		 */
+		void OnWindowMoveEnd();
+
+		/**
 		 * @brief Обрабатывает перемещение окна на монитор с другим DPI.
 		 * 
 		 * @platforms Windows, macOS, Linux (если настроен дробный скейлинг).

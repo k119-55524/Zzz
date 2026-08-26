@@ -224,31 +224,43 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		}
 		return { false, 0 };
 
+	case WM_ENTERSIZEMOVE:
+		m_SizeMoveMode = eSizeMoveMode::None;
+		return { false, 0 };
+
+	case WM_SIZING:
+		if (m_SizeMoveMode != eSizeMoveMode::Resize)
+		{
+			m_SizeMoveMode = eSizeMoveMode::Resize;
+			VERIFY_AND_CALL(m_Callbacks.OnResizeStart);
+		}
+		VERIFY_AND_CALL(m_Callbacks.OnSizing);
+		return { false, 0 };
+
+	case WM_MOVING:
+		if (m_SizeMoveMode != eSizeMoveMode::Move)
+		{
+			m_SizeMoveMode = eSizeMoveMode::Move;
+			VERIFY_AND_CALL(m_Callbacks.OnMoveStart);
+		}
+		VERIFY_AND_CALL(m_Callbacks.OnMoving);
+		return { false, 0 };
+
 	case WM_MOVE:
 		m_NativeState.SetWindowRect(GetRestoredWindowRect());
 		return { false, 0 };
 
-	case WM_ENTERSIZEMOVE:
-		/**
-		 * @brief [Windows] Пользователь захватил рамку окна мышью.
-		 */
-		VERIFY_AND_CALL(m_Callbacks.OnResizeStart);
-		return { false, 0 };
-
-	case WM_SIZING:
-		/**
-		 * @brief [Windows] Пользователь активно перетаскивает рамку окна.
-		 * Windows блокирует главный поток в этот момент, поэтому рендер может замирать.
-		 */
-		VERIFY_AND_CALL(m_Callbacks.OnSizing);
-		return { false, 0 };
-
 	case WM_EXITSIZEMOVE:
-		/**
-		 * @brief [Windows] Пользователь отпустил рамку окна.
-		 */
 		m_NativeState.SetWindowRect(GetRestoredWindowRect());
-		VERIFY_AND_CALL(m_Callbacks.OnResizeEnd);
+		if (m_SizeMoveMode == eSizeMoveMode::Resize)
+		{
+			VERIFY_AND_CALL(m_Callbacks.OnResizeEnd);
+		}
+		else if (m_SizeMoveMode == eSizeMoveMode::Move)
+		{
+			VERIFY_AND_CALL(m_Callbacks.OnMoveEnd);
+		}
+		m_SizeMoveMode = eSizeMoveMode::None;
 		return { false, 0 };
 
 	case WM_GETMINMAXINFO:

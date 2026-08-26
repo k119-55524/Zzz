@@ -39,9 +39,12 @@ namespace zzz::engine
 		static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept;
 
 	private:
+		enum class eSizeMoveMode : zU8 { None, Move, Resize };
+
 		[[nodiscard]] Rect2D<zI32> GetRestoredWindowRect() const;
 
 		HWND m_hWnd;
 		MSWinCtx m_Ctx;
+		eSizeMoveMode m_SizeMoveMode{ eSizeMoveMode::None };
 	};
 }
