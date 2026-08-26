@@ -145,7 +145,7 @@ void View::HandleWindowClose()
 	if (navState.GetState() != eWindowState::Closed && navState.GetState() != eWindowState::Minimized)
 		m_UserPlatformData->SetWindowState(navState.GetState());
 	if (navState.GetState() == eWindowState::Normal)
-		m_UserPlatformData->SetWindowRect(m_NativeWindow->GetFullWindowRect());
+		m_UserPlatformData->SetWindowRect(navState.GetWindowRect());
 
 	// В редакторе управление происходит из вне поэтому колбэк может быть не инициализирован
 #if !Z_EDITOR
@@ -168,7 +168,7 @@ void View::OnWindowResize(Size2D<>& size, eWinResize type)
 		break;
 	case eWindowState::Normal:
 		m_UserPlatformData->SetWindowState(eWindowState::Normal);
-		m_UserPlatformData->SetWindowRect(m_NativeWindow->GetFullWindowRect());
+		m_UserPlatformData->SetWindowRect(state.GetWindowRect());
 		break;
 	default:
 		break;
@@ -191,7 +191,7 @@ void View::OnWindowResizeEnd()
 {
 	const auto& navState = m_NativeWindow->GetState();
 	if (navState.GetState() == eWindowState::Normal)
-		m_UserPlatformData->SetWindowRect(m_NativeWindow->GetFullWindowRect());
+		m_UserPlatformData->SetWindowRect(navState.GetWindowRect());
 
 	DOut("[View::OnWindowResizeEnd]");
 }

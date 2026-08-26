@@ -129,10 +129,6 @@ namespace zzz::engine
 		[[nodiscard]] virtual bool IsMinimized() const noexcept = 0;
 		[[nodiscard]] virtual bool IsMaximized() const = 0;
 
-		/**
-		 * @brief Возвращает полный прямоугольник окна, включая внешние рамки и заголовок (Window Rect).
-		 */
-		[[nodiscard]] virtual zzz::math::Rect2D<zzz::core::zI32> GetFullWindowRect() const = 0;
 
 		/**
 		 * @brief Возвращает прямоугольник клиентской области окна без учета рамок и заголовка (Client Rect / Surface Rect).

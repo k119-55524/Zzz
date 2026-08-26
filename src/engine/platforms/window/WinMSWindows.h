@@ -30,7 +30,6 @@ namespace zzz::engine
 		[[nodiscard]] std::expected<void, std::string> Initialize(const ViewPlatformData& platformData, const View* parentView = nullptr) override;
 		[[nodiscard]] bool IsMinimized() const noexcept override { return m_hWnd && ::IsIconic(m_hWnd); }
 		[[nodiscard]] bool IsMaximized() const override;
-		[[nodiscard]] Rect2D<zI32> GetFullWindowRect() const override;
 		[[nodiscard]] Rect2D<zI32> GetClientRect() const override;
 		void OnMonitorResolutionChanged() override;
 
@@ -40,6 +39,8 @@ namespace zzz::engine
 		static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept;
 
 	private:
+		[[nodiscard]] Rect2D<zI32> GetRestoredWindowRect() const;
+
 		HWND m_hWnd;
 		MSWinCtx m_Ctx;
 	};
