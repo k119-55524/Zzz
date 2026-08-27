@@ -59,6 +59,7 @@ namespace zzz::core
 	constexpr DXGI_FORMAT c_DefaultDepthFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	constexpr D3D_FEATURE_LEVEL c_DefaultFeatureLevel = D3D_FEATURE_LEVEL_12_0;
 #elif defined(Z_VULKAN)
+	constexpr uint32_t c_DefaultVulkanApiVersion = VK_API_VERSION_1_4;
 	constexpr VkFormat c_DefaultBackBufferFormat = VK_FORMAT_R8G8B8A8_UNORM;
 	constexpr VkFormat c_DefaultDepthFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
 #elif defined(Z_METAL)

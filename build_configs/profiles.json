@@ -16,9 +16,18 @@
       "activeDefines": [],
       "description": "Не исппользовать код логера в сборке",
       "name": "NO LOGGER"
+    },
+    {
+      "activeDefines": [
+        "Z_ADD_LOGGER",
+        "Z_IDE_OUT_LOGS",
+        "Z_FORCE_VULKAN"
+      ],
+      "description": "Сборка с Vulkan в Windows",
+      "name": "WIN_VULKAN"
     }
   ],
-  "currentConfig": "WORKING_BUILD",
+  "currentConfig": "WIN_VULKAN",
   "defines": [
     {
       "description": "Включить код логера в сборку",
