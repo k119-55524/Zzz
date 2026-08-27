@@ -210,8 +210,6 @@ namespace zzz::engine
 
 		m_FrameReady[prepIdx] = false;
 
-		DOut(0.5, "[SurfView_VK::PreRender] WaitFence+Acquire prepIdx={}", prepIdx);
-
 		// Ожидание и сброс фенса (однопоточно, после Join предыдущей итерации)
 		VkResult fenceRes = vkWaitForFences(device, 1, &m_InFlightFences[prepIdx], VK_TRUE, UINT64_MAX);
 		if (fenceRes != VK_SUCCESS)
@@ -250,8 +248,6 @@ namespace zzz::engine
 		const uint32_t prepIdx = GetPrepareIndex();
 		if (!m_FrameReady[prepIdx])
 			return;
-
-		DOut(0.5, "[SurfView_VK::PrepareFrame] Recording prepIdx={}", prepIdx);
 
 		auto vkSwapchain = static_cast<Swapchain_VK*>(m_Swapchain.get());
 		auto vkDepthBuffer = static_cast<DepthBuffer_VK*>(m_DepthBuffer.get());
@@ -399,8 +395,6 @@ namespace zzz::engine
 		submitInfo.pCommandBuffers = &cmd;
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &m_RenderFinishedSemaphores[imgIdx];
-
-		DOut(0.5, "[SurfView_VK::RenderFrame] Submit&Present renderIdx={} imgIdx={}", renderIdx, imgIdx);
 
 		VkResult vr = VK_SUCCESS;
 		{

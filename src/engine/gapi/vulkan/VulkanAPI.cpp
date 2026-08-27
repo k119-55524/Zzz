@@ -103,12 +103,64 @@ namespace zzz::engine
 		debugInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 		debugInfo.pfnUserCallback = [](VkDebugUtilsMessageSeverityFlagBitsEXT severity, VkDebugUtilsMessageTypeFlagsEXT, const VkDebugUtilsMessengerCallbackDataEXT* data, void*) -> VkBool32
 		{
-			if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
-				DOutError("[Vulkan Validation Error] {}", data->pMessage);
-			else if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
-				DOut("[Vulkan Validation Warning] {}", data->pMessage);
-			else
-				DOut("[Vulkan Validation Info] {}", data->pMessage);
+			if (!data || !data->pMessage)
+				return VK_FALSE;
+
+			std::string_view message(data->pMessage);
+			size_t start = 0;
+			while (start < message.length())
+			{
+				size_t end = message.find('\n', start);
+				if (end == std::string_view::npos)
+					end = message.length();
+
+				std::string_view line = message.substr(start, end - start);
+				size_t first = line.find_first_not_of(" \t\r\n");
+				if (first != std::string_view::npos)
+				{
+					size_t last = line.find_last_not_of(" \t\r\n");
+					std::string_view trimmedLine = line.substr(first, (last - first + 1));
+
+					// Игнорируем специфичные текстовые разделители '||' и заголовки стека слоев
+					if (trimmedLine.find("||") == std::string_view::npos &&
+					    trimmedLine.find("callstack setup") == std::string_view::npos)
+					{
+						if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+						{
+							DOutError("[Vulkan Validation Error] {}", trimmedLine);
+						}
+						else if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+						{
+							DOut("[Vulkan Validation Warning] {}", trimmedLine);
+						}
+						else
+						{
+							static bool s_HeaderPrinted = false;
+							if (!s_HeaderPrinted)
+							{
+								DOut("========== [VulkanValidation] Vulkan Validation Layers ==========");
+								s_HeaderPrinted = true;
+							}
+
+							std::string_view indent = "  ";
+							if (trimmedLine.starts_with("VK_LAYER_") || trimmedLine.starts_with("Using "))
+							{
+								indent = "    ";
+							}
+							else if (trimmedLine.starts_with("Type:") || trimmedLine.starts_with("Enabled By:") ||
+							         trimmedLine.starts_with("Disable Env Var:") || trimmedLine.starts_with("Manifest:") ||
+							         trimmedLine.starts_with("Library:"))
+							{
+								indent = "      ";
+							}
+
+							DOut("{}{}", indent, trimmedLine);
+						}
+					}
+				}
+
+				start = end + 1;
+			}
 			return VK_FALSE;
 		};
 
