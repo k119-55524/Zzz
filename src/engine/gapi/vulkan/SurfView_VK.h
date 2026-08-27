@@ -20,6 +20,7 @@ namespace zzz::engine
 		SurfView_VK(std::shared_ptr<NativeWindow> window, std::shared_ptr<VulkanAPI> gapi);
 		~SurfView_VK() override;
 
+		void PreRender() override;
 		void PrepareFrame() override;
 		void RenderFrame() override;
 		void OnResize(const Size2D<>& size) override;
@@ -42,6 +43,7 @@ namespace zzz::engine
 		std::array<VkFence, c_FramesInFlight> m_InFlightFences{ VK_NULL_HANDLE, VK_NULL_HANDLE };
 
 		std::array<bool, c_FramesInFlight> m_IsRecording{};
+		std::array<bool, c_FramesInFlight> m_FrameReady{};
 		std::array<uint32_t, c_FramesInFlight> m_CurrentImageIndex{};
 		bool m_IsDepthInitialLayoutTransitioned{ false };
 		std::mutex m_SubmitMutex;

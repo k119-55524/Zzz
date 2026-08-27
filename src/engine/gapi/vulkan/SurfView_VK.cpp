@@ -197,7 +197,7 @@ namespace zzz::engine
 	}
 #pragma endregion // Initialize
 
-	void SurfView_VK::PrepareFrame()
+	void SurfView_VK::PreRender()
 	{
 		if (!m_Swapchain || !m_DepthBuffer)
 			return;
@@ -208,36 +208,54 @@ namespace zzz::engine
 		VkDevice device = m_GAPI->GetDevice();
 		const uint32_t prepIdx = GetPrepareIndex();
 
-		DOut(0.5, "[SurfView_VK::PrepareFrame] FrameStart prepIdx={}", prepIdx);
+		m_FrameReady[prepIdx] = false;
 
-		// Ожидание фенса текущего prepIdx (renderIdx — другой индекс, конфликта нет)
+		DOut(0.5, "[SurfView_VK::PreRender] WaitFence+Acquire prepIdx={}", prepIdx);
+
+		// Ожидание и сброс фенса (однопоточно, после Join предыдущей итерации)
 		VkResult fenceRes = vkWaitForFences(device, 1, &m_InFlightFences[prepIdx], VK_TRUE, UINT64_MAX);
 		if (fenceRes != VK_SUCCESS)
 		{
-			DOutError("[SurfView_VK::PrepareFrame] vkWaitForFences failed: 0x{:08X}", static_cast<uint32_t>(fenceRes));
+			DOutError("[SurfView_VK::PreRender] vkWaitForFences failed: 0x{:08X}", static_cast<uint32_t>(fenceRes));
 			return;
 		}
 		vkResetFences(device, 1, &m_InFlightFences[prepIdx]);
 
 		auto vkSwapchain = static_cast<Swapchain_VK*>(m_Swapchain.get());
-		auto vkDepthBuffer = static_cast<DepthBuffer_VK*>(m_DepthBuffer.get());
 
-		// 1. Запрос следующего изображения у Swapchain
+		// Запрос следующего изображения у Swapchain (однопоточно, не пересекается с Present)
 		uint32_t imageIndex = 0;
 		VkResult vr = vkAcquireNextImageKHR(device, vkSwapchain->GetSwapchain(), UINT64_MAX, m_ImageAvailableSemaphores[prepIdx], VK_NULL_HANDLE, &imageIndex);
 		if (vr == VK_ERROR_OUT_OF_DATE_KHR)
 		{
-			DOut("[SurfView_VK::PrepareFrame] Swapchain OUT_OF_DATE. Resizing...");
+			DOut("[SurfView_VK::PreRender] Swapchain OUT_OF_DATE. Resizing...");
 			m_Swapchain->OnResize(m_OldSize);
 			return;
 		}
 		else if (vr != VK_SUCCESS && vr != VK_SUBOPTIMAL_KHR)
 		{
-			DOutError("[SurfView_VK::PrepareFrame] Failed vkAcquireNextImageKHR: 0x{:08X}", static_cast<uint32_t>(vr));
+			DOutError("[SurfView_VK::PreRender] Failed vkAcquireNextImageKHR: 0x{:08X}", static_cast<uint32_t>(vr));
 			return;
 		}
 
 		m_CurrentImageIndex[prepIdx] = imageIndex;
+		m_FrameReady[prepIdx] = true;
+	}
+
+	void SurfView_VK::PrepareFrame()
+	{
+		if (!m_Swapchain || !m_DepthBuffer)
+			return;
+
+		const uint32_t prepIdx = GetPrepareIndex();
+		if (!m_FrameReady[prepIdx])
+			return;
+
+		DOut(0.5, "[SurfView_VK::PrepareFrame] Recording prepIdx={}", prepIdx);
+
+		auto vkSwapchain = static_cast<Swapchain_VK*>(m_Swapchain.get());
+		auto vkDepthBuffer = static_cast<DepthBuffer_VK*>(m_DepthBuffer.get());
+		const uint32_t imageIndex = m_CurrentImageIndex[prepIdx];
 
 		VkCommandBuffer cmd = m_CommandBuffers[prepIdx];
 		if (!cmd || m_IsRecording[prepIdx])
@@ -249,7 +267,7 @@ namespace zzz::engine
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-		vr = vkBeginCommandBuffer(cmd, &beginInfo);
+		VkResult vr = vkBeginCommandBuffer(cmd, &beginInfo);
 		if (vr != VK_SUCCESS)
 		{
 			DOutError("[SurfView_VK::PrepareFrame] Failed to begin Command Buffer [{}]: 0x{:08X}", prepIdx, static_cast<uint32_t>(vr));
