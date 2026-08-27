@@ -52,21 +52,17 @@ namespace zzz::engine
 		virtual void PreRender() {}
 		virtual void PrepareFrame() = 0;
 		virtual void RenderFrame() = 0;
-		virtual void PostRender() {}
+		inline void PostRender() noexcept
+		{
+			m_IndexPrepare = (m_IndexPrepare + 1) % zzz::core::c_FramesInFlight;
+			m_IndexRender  = (m_IndexRender + 1) % zzz::core::c_FramesInFlight;			
+		}
 
 		virtual void OnResize(const Size2D<>& size) = 0;
 		virtual void OnUpdateVSyncState() {}
 
-		void UpdateFrameIndices() noexcept
-		{
-			m_IndexPrepare = (m_IndexPrepare + 1) % zzz::core::c_FramesInFlight;
-			m_IndexRender  = (m_IndexRender + 1) % zzz::core::c_FramesInFlight;
-		}
-
-#pragma region Surface Lifecycle
 		virtual void OnSurfaceCreated(void* handle) = 0;
 		virtual void OnSurfaceDestroyed() = 0;
-#pragma endregion
 
 	protected:
 		virtual void Initialize() = 0;

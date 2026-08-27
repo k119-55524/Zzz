@@ -1,3 +1,4 @@
+
 #include "SurfView_VK.h"
 #include "Swapchain_VK.h"
 #include "DepthBuffer_VK.h"
@@ -230,10 +231,13 @@ namespace zzz::engine
 			m_Swapchain->OnResize(m_OldSize);
 			return;
 		}
-		else if (vr != VK_SUCCESS && vr != VK_SUBOPTIMAL_KHR)
+		else
 		{
-			DOutError("[SurfView_VK::PreRender] Failed vkAcquireNextImageKHR: 0x{:08X}", static_cast<uint32_t>(vr));
-			return;
+			if (vr != VK_SUCCESS && vr != VK_SUBOPTIMAL_KHR)
+			{
+				DOutError("[SurfView_VK::PreRender] Failed vkAcquireNextImageKHR: 0x{:08X}", static_cast<uint32_t>(vr));
+				return;
+			}
 		}
 
 		m_CurrentImageIndex[prepIdx] = imageIndex;

@@ -332,5 +332,4 @@ void View::PostRender()
 		return;
 
 	m_SurfView->PostRender();
-	m_SurfView->UpdateFrameIndices();
 }
