@@ -302,12 +302,19 @@ void View::Update(const Time& time)
 		m_ActiveScene->Update(time);
 }
 
-void View::PrepareFrame()
+void View::PreRender()
 {
 	if (!m_IsActive || !m_SurfView)
 		return;
 
 	m_SurfView->PreRender();
+}
+
+void View::PrepareFrame()
+{
+	if (!m_IsActive || !m_SurfView)
+		return;
+
 	m_SurfView->PrepareFrame();
 }
 
@@ -317,5 +324,13 @@ void View::RenderFrame()
 		return;
 
 	m_SurfView->RenderFrame();
+}
+
+void View::PostRender()
+{
+	if (!m_IsActive || !m_SurfView)
+		return;
+
 	m_SurfView->PostRender();
+	m_SurfView->UpdateFrameIndices();
 }

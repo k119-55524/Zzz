@@ -57,6 +57,12 @@ namespace zzz::engine
 		virtual void OnResize(const Size2D<>& size) = 0;
 		virtual void OnUpdateVSyncState() {}
 
+		void UpdateFrameIndices() noexcept
+		{
+			m_IndexPrepare = (m_IndexPrepare + 1) % zzz::core::c_FramesInFlight;
+			m_IndexRender  = (m_IndexRender + 1) % zzz::core::c_FramesInFlight;
+		}
+
 #pragma region Surface Lifecycle
 		virtual void OnSurfaceCreated(void* handle) = 0;
 		virtual void OnSurfaceDestroyed() = 0;
@@ -64,12 +70,6 @@ namespace zzz::engine
 
 	protected:
 		virtual void Initialize() = 0;
-
-		void UpdateFrameIndices() noexcept
-		{
-			m_IndexPrepare = (m_IndexPrepare + 1) % zzz::core::c_FramesInFlight;
-			m_IndexRender  = (m_IndexRender + 1) % zzz::core::c_FramesInFlight;
-		}
 
 		std::shared_ptr<NativeWindow> m_Window;
 		std::shared_ptr<GAPI> m_GAPI;

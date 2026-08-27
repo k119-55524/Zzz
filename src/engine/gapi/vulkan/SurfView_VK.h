@@ -44,7 +44,7 @@ namespace zzz::engine
 		std::array<bool, c_FramesInFlight> m_IsRecording{};
 		std::array<uint32_t, c_FramesInFlight> m_CurrentImageIndex{};
 		bool m_IsDepthInitialLayoutTransitioned{ false };
-		std::mutex m_FrameMutex;
+		std::mutex m_SubmitMutex;
 	};
 }
 

@@ -198,8 +198,6 @@ namespace zzz::engine
 		// 3. Present & Sync
 		m_Swapchain->Present(true);
 		m_GAPI->WaitForGpu();
-
-		UpdateFrameIndices();
 	}
 
 	void SurfView_DX::OnResize(const Size2D<>& size)

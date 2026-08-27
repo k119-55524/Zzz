@@ -86,7 +86,7 @@ namespace zzz::engine
 	{
 		DOut("[SurfView_VK::OnSurfaceDestroyed]");
 
-		std::lock_guard<std::mutex> lock(m_FrameMutex);
+		std::lock_guard<std::mutex> lock(m_SubmitMutex);
 
 		if (!m_GAPI)
 			return;
@@ -210,13 +210,14 @@ namespace zzz::engine
 
 		DOut(0.5, "[SurfView_VK::PrepareFrame] FrameStart prepIdx={}", prepIdx);
 
-		// Ожидание завершения работы GPU над буферами этого кадра
+		// Ожидание фенса текущего prepIdx (renderIdx — другой индекс, конфликта нет)
 		VkResult fenceRes = vkWaitForFences(device, 1, &m_InFlightFences[prepIdx], VK_TRUE, UINT64_MAX);
 		if (fenceRes != VK_SUCCESS)
 		{
 			DOutError("[SurfView_VK::PrepareFrame] vkWaitForFences failed: 0x{:08X}", static_cast<uint32_t>(fenceRes));
 			return;
 		}
+		vkResetFences(device, 1, &m_InFlightFences[prepIdx]);
 
 		auto vkSwapchain = static_cast<Swapchain_VK*>(m_Swapchain.get());
 		auto vkDepthBuffer = static_cast<DepthBuffer_VK*>(m_DepthBuffer.get());
@@ -237,7 +238,6 @@ namespace zzz::engine
 		}
 
 		m_CurrentImageIndex[prepIdx] = imageIndex;
-		vkResetFences(device, 1, &m_InFlightFences[prepIdx]);
 
 		VkCommandBuffer cmd = m_CommandBuffers[prepIdx];
 		if (!cmd || m_IsRecording[prepIdx])
@@ -364,27 +364,32 @@ namespace zzz::engine
 		if (!m_Swapchain)
 			return;
 
-		const uint32_t prepIdx = GetPrepareIndex();
-		VkCommandBuffer cmd = m_CommandBuffers[prepIdx];
-		if (!cmd || !m_IsRecording[prepIdx])
+		const uint32_t renderIdx = GetRenderIndex();
+		VkCommandBuffer cmd = m_CommandBuffers[renderIdx];
+		if (!cmd || !m_IsRecording[renderIdx])
 			return;
 
-		const uint32_t imgIdx = m_CurrentImageIndex[prepIdx];
+		const uint32_t imgIdx = m_CurrentImageIndex[renderIdx];
 		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &m_ImageAvailableSemaphores[prepIdx];
+		submitInfo.pWaitSemaphores = &m_ImageAvailableSemaphores[renderIdx];
 		submitInfo.pWaitDstStageMask = waitStages;
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &cmd;
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &m_RenderFinishedSemaphores[imgIdx];
 
-		DOut(0.5, "[SurfView_VK::RenderFrame] Submit&Present prepIdx={} imgIdx={}", prepIdx, imgIdx);
+		DOut(0.5, "[SurfView_VK::RenderFrame] Submit&Present renderIdx={} imgIdx={}", renderIdx, imgIdx);
 
-		VkResult vr = vkQueueSubmit(m_GAPI->GetGraphicsQueue(), 1, &submitInfo, m_InFlightFences[prepIdx]);
+		VkResult vr = VK_SUCCESS;
+		{
+			std::lock_guard lock(m_SubmitMutex);
+			vr = vkQueueSubmit(m_GAPI->GetGraphicsQueue(), 1, &submitInfo, m_InFlightFences[renderIdx]);
+		}
+
 		if (vr != VK_SUCCESS)
 		{
 			DOutError("[SurfView_VK::RenderFrame] Failed vkQueueSubmit: 0x{:08X}", static_cast<uint32_t>(vr));
@@ -394,8 +399,7 @@ namespace zzz::engine
 		auto vkSwapchain = static_cast<Swapchain_VK*>(m_Swapchain.get());
 		vkSwapchain->Present(m_GAPI->IsCanDisableVSync(), imgIdx, m_RenderFinishedSemaphores[imgIdx]);
 
-		m_IsRecording[prepIdx] = false;
-		UpdateFrameIndices();
+		m_IsRecording[renderIdx] = false;
 	}
 
 	void SurfView_VK::OnResize(const Size2D<>& size)
@@ -403,7 +407,7 @@ namespace zzz::engine
 		if (!m_Swapchain || !m_DepthBuffer)
 			return;
 
-		std::lock_guard<std::mutex> lock(m_FrameMutex);
+		std::lock_guard<std::mutex> lock(m_SubmitMutex);
 
 		m_GAPI->WaitForGpu();
 		m_OldSize = size;
