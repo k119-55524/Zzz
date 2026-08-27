@@ -4,6 +4,43 @@
 
 #if defined(Z_D3D12)
 
+namespace
+{
+	using namespace zzz::core;
+	using namespace zzz::engine;
+
+	class DirectX12GpuRatingEvaluator final : public GpuRatingEvaluator
+	{
+	public:
+		DirectX12GpuRatingEvaluator() = delete;
+
+		[[nodiscard]] static zU64 CalculateScore(eGPUType type, zU64 dedicatedVramBytes, D3D_FEATURE_LEVEL featureLevel, zU32 outputsCount) noexcept
+		{
+			const zU64 baseScore = CalculateBaseScore(type, dedicatedVramBytes);
+			zU64 featureScore = 0;
+
+			switch (featureLevel)
+			{
+			case D3D_FEATURE_LEVEL_12_2:
+				featureScore = 2000ULL;
+				break;
+			case D3D_FEATURE_LEVEL_12_1:
+				featureScore = 1000ULL;
+				break;
+			case D3D_FEATURE_LEVEL_12_0:
+				featureScore = 500ULL;
+				break;
+			default:
+				featureScore = 0ULL;
+				break;
+			}
+
+			const zU64 monitorBonus = (outputsCount > 0) ? 50000ULL : 0ULL;
+			return baseScore + featureScore + monitorBonus;
+		}
+	};
+}
+
 namespace zzz::engine
 {
 	DirectX12GpuSelector::DirectX12GpuSelector(const std::shared_ptr<UserSettingsManager>& userSettings)
@@ -77,7 +114,7 @@ namespace zzz::engine
 		// Расчёт рейтинга через DirectX12GpuRatingEvaluator с учетом выходов
 		const zU64 score = DirectX12GpuRatingEvaluator::CalculateScore(type, desc.DedicatedVideoMemory, maxLevel, outputsCount);
 
-		DirectX12GpuCandidate candidate{};
+		Candidate candidate{};
 		candidate.adapter = adapter;
 		candidate.desc = desc;
 		candidate.maxFeatureLevel = maxLevel;
@@ -145,7 +182,7 @@ namespace zzz::engine
 		}
 
 		// 2. Автовыбор по наибольшему рейтингу (Score)
-		const DirectX12GpuCandidate* bestCandidate = &m_Candidates[0];
+		const Candidate* bestCandidate = &m_Candidates[0];
 		for (std::size_t i = 1; i < m_Candidates.size(); ++i)
 		{
 			if (m_Candidates[i].score > bestCandidate->score)

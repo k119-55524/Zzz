@@ -140,7 +140,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         target_link_libraries(${TARGET_NAME} PUBLIC Microsoft::DXC)
     endif()
 
-    if(NOT WIN32 OR Z_FORCE_VULKAN)
+    if((WIN32 AND Z_FORCE_VULKAN) OR LINUX OR ANDROID)
         find_package(Vulkan REQUIRED)
         target_link_libraries(${TARGET_NAME} PUBLIC Vulkan::Vulkan)
         target_compile_definitions(${TARGET_NAME} PUBLIC Z_HAS_VULKAN_SDK=1)

@@ -19,6 +19,8 @@
 #include <wrl/client.h>
 #include <hidsdi.h>
 #include <hidusage.h>
+#include <dxgi1_6.h>
 
 #pragma comment(lib, "IPHLPAPI.lib")
+#pragma comment(lib, "dxgi.lib")
 #endif // Z_WINDOWS

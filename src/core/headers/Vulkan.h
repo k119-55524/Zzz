@@ -2,11 +2,6 @@
 #pragma once
 
 #if defined(Z_VULKAN)
-#if (_DEBUG)
-#pragma comment(lib, "volkd.lib")
-#else
-#pragma comment(lib, "volk.lib")
-#endif
 
 #if defined(Z_WINDOWS)
 #define VK_USE_PLATFORM_WIN32_KHR
@@ -25,9 +20,7 @@
 // ---- Vulkan ----
 #pragma warning(push)
 #pragma warning(disable: 28251 26110 26495 6386 6387 26813)
-#include <volk/volk.h>
-#include <vulkan/vulkan_raii.hpp>
-#include <vma/vk_mem_alloc.h>
+#include <vulkan/vulkan.h>
 #pragma warning(pop)
 
 // ---- GLM ----

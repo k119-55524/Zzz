@@ -1,48 +1,57 @@
 #pragma once
 
 #include "engine/gapi/vulkan/VulkanAPI.h"
+#include "engine/gapi/clear_config/SurfaceClearConfig.h"
+#include "engine/platforms/window/NativeWindow.h"
 
 #if defined(Z_VULKAN)
 
 namespace zzz::engine
 {
-	constexpr uint32_t FRAMES_IN_FLIGHT = 3;
+	using namespace zzz::core;
 
-	class Swapchain_VK final
+	class Swapchain_VK
 	{
 		Z_NO_COPY_MOVE(Swapchain_VK);
 
 	public:
-		Swapchain_VK();
+		Swapchain_VK(std::shared_ptr<VulkanAPI> gapi, std::shared_ptr<NativeWindow> window);
 		~Swapchain_VK();
 
-		std::expected<VkExtent2D, std::string> Initialize(std::shared_ptr<zzz::engine::VulkanAPI> gapi, VkSurfaceKHR surface);
+		void Initialize(VkSurfaceKHR surface);
+		void Release();
+
+		void Present(bool vSync, uint32_t imageIndex, VkSemaphore waitSemaphore);
+		void OnResize(const Size2D<>& size);
+
+		void SetClearConfig(const SurfaceClearConfig& config) noexcept { m_ClearConfig = config; }
+		[[nodiscard]] const SurfaceClearConfig& GetClearConfig() const noexcept { return m_ClearConfig; }
+
+		[[nodiscard]] VkSwapchainKHR GetSwapchain() const noexcept { return m_Swapchain; }
+		[[nodiscard]] VkSurfaceKHR GetSurface() const noexcept { return m_Surface; }
+		[[nodiscard]] const Size2D<>& GetSize() const noexcept { return m_Size; }
+		[[nodiscard]] VkFormat GetFormat() const noexcept { return m_Format; }
+		[[nodiscard]] size_t GetImageCount() const noexcept { return m_Images.size(); }
+		[[nodiscard]] VkImage GetBackBuffer(uint32_t imageIndex) const noexcept;
+		[[nodiscard]] VkImageView GetImageView(uint32_t imageIndex) const noexcept;
 
 	private:
-		VkSurfaceFormat2KHR SelectSwapSurfaceFormat(const std::vector<VkSurfaceFormat2KHR>& availableFormats) const;
-		VkPresentModeKHR SelectSwapPresentMode(bool vSync, const std::vector<VkPresentModeKHR>& availablePresentModes);
-		void CmdTransitionSwapchainLayout(VkCommandBuffer cmd, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
+		void CreateSwapchain(const Size2D<>& size);
+		void CleanupSwapchain();
 
-		struct Image
-		{
-			VkImage		image{ VK_NULL_HANDLE };
-			VkImageView	imageView{ VK_NULL_HANDLE };
-		};
+		std::shared_ptr<VulkanAPI> m_GAPI;
+		std::shared_ptr<NativeWindow> m_Window;
 
-		struct FrameResources
-		{
-			VkSemaphore imageAvailableSemaphore{ VK_NULL_HANDLE };
-			VkSemaphore renderFinishedSemaphore{ VK_NULL_HANDLE };
-		};
+		VkSurfaceKHR m_Surface{ VK_NULL_HANDLE };
+		VkSwapchainKHR m_Swapchain{ VK_NULL_HANDLE };
+		VkFormat m_Format{ c_DefaultBackBufferFormat };
+		Size2D<> m_Size{};
 
-		VkDevice m_Device{ VK_NULL_HANDLE };
-		VkSwapchainKHR m_SwapChain{ VK_NULL_HANDLE };
-		VkFormat m_ImageFormat{};
+		std::vector<VkImage> m_Images;
+		std::vector<VkImageView> m_ImageViews;
 
-		std::vector<Image> m_NextImages;
-		std::vector<FrameResources> m_FrameResources;
-
-		uint32_t m_MaxFramesInFlight = FRAMES_IN_FLIGHT;
+		SurfaceClearConfig m_ClearConfig;
+		uint32_t m_FrameIndex{ 0 };
 	};
 }
 

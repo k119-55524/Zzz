@@ -1,9 +1,10 @@
-
 #include "Platform.h"
 #include "window/WinMSWindows.h"
 #include "monitor/IMonitorProvider.h"
 #include "engine/utils/MonitorUtils.h"
 #include "engine/utils/GpuUtils.h"
+
+#if Z_WINDOWS
 
 using namespace zzz::engine;
 
@@ -90,6 +91,7 @@ HardwareState Platform::GatherHardwareState() const
 	// 1. Мониторы (из подсистемы IMonitorProvider)
 	monitors = m_MonitorProvider ? m_MonitorProvider->GetMonitors() : std::vector<MonitorInfo>{};
 
+	// На Windows ВСЕГДА используем системный DXGI для перечисления GPU (и для DX12, и для Vulkan)
 	Microsoft::WRL::ComPtr<IDXGIFactory1> factory;
 	if (SUCCEEDED(CreateDXGIFactory1(IID_PPV_ARGS(&factory))))
 	{
@@ -441,3 +443,5 @@ HardwareState Platform::GatherHardwareState() const
 		std::move(networkAdapters)
 	);
 }
+
+#endif // Z_WINDOWS

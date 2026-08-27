@@ -33,6 +33,11 @@ target_include_directories(zzz_user_scripts PUBLIC
     "${WORKSPACE_SRC_DIR}"
 )
 
+if((WIN32 AND Z_FORCE_VULKAN) OR LINUX OR ANDROID)
+    find_package(Vulkan REQUIRED)
+    target_link_libraries(zzz_user_scripts PUBLIC Vulkan::Vulkan)
+endif()
+
 # Отображение файлов собранного пакета zzz_assets_test_000_build в дереве Visual Studio без их компиляции
 get_filename_component(BUILD_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../zzz_assets_test_000_build" ABSOLUTE)
 

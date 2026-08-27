@@ -75,6 +75,11 @@ namespace zzz::core
 template <>
 struct std::formatter<VkResult> : std::formatter<std::string_view>
 {
+	constexpr auto parse(std::format_parse_context& ctx)
+	{
+		return std::formatter<std::string_view>::parse(ctx);
+	}
+
 	auto format(VkResult result, std::format_context& ctx) const
 	{
 		return std::formatter<std::string_view>::format(zzz::core::ToString(result), ctx);
@@ -84,6 +89,11 @@ struct std::formatter<VkResult> : std::formatter<std::string_view>
 template <>
 struct std::formatter<VkPresentModeKHR> : std::formatter<std::string_view>
 {
+	constexpr auto parse(std::format_parse_context& ctx)
+	{
+		return std::formatter<std::string_view>::parse(ctx);
+	}
+
 	auto format(VkPresentModeKHR mode, std::format_context& ctx) const
 	{
 		return std::formatter<std::string_view>::format(zzz::core::ToString(mode), ctx);
@@ -93,6 +103,11 @@ struct std::formatter<VkPresentModeKHR> : std::formatter<std::string_view>
 template <>
 struct std::formatter<VkFormat> : std::formatter<std::string_view>
 {
+	constexpr auto parse(std::format_parse_context& ctx)
+	{
+		return std::formatter<std::string_view>::parse(ctx);
+	}
+
 	auto format(VkFormat format, std::format_context& ctx) const
 	{
 		return std::formatter<std::string_view>::format(zzz::core::ToString(format), ctx);

@@ -1,10 +1,15 @@
 #pragma once
 
+#include <mutex>
+#include <array>
 #include "engine/gapi/ISurfView.h"
 #include "engine/gapi/vulkan/VulkanAPI.h"
 #include "engine/platforms/window/NativeWindow.h"
 
 #if defined(Z_VULKAN)
+
+using namespace zzz::core;
+
 namespace zzz::engine
 {
 	class SurfView_VK final : public ISurfView
@@ -13,7 +18,7 @@ namespace zzz::engine
 
 	public:
 		SurfView_VK(std::shared_ptr<NativeWindow> window, std::shared_ptr<VulkanAPI> gapi);
-		~SurfView_VK() override = default;
+		~SurfView_VK() override;
 
 		void PrepareFrame() override;
 		void RenderFrame() override;
@@ -26,6 +31,21 @@ namespace zzz::engine
 
 	protected:
 		void Initialize() override;
+
+	private:
+		VkSurfaceKHR CreateVulkanSurface(void* handle);
+
+		VkCommandPool m_CommandPool{ VK_NULL_HANDLE };
+		std::array<VkCommandBuffer, c_FramesInFlight> m_CommandBuffers{ VK_NULL_HANDLE, VK_NULL_HANDLE };
+		std::array<VkSemaphore, c_FramesInFlight> m_ImageAvailableSemaphores{ VK_NULL_HANDLE, VK_NULL_HANDLE };
+		std::vector<VkSemaphore> m_RenderFinishedSemaphores;
+		std::array<VkFence, c_FramesInFlight> m_InFlightFences{ VK_NULL_HANDLE, VK_NULL_HANDLE };
+
+		std::array<bool, c_FramesInFlight> m_IsRecording{};
+		std::array<uint32_t, c_FramesInFlight> m_CurrentImageIndex{};
+		bool m_IsDepthInitialLayoutTransitioned{ false };
+		std::mutex m_FrameMutex;
 	};
 }
+
 #endif // Z_VULKAN
