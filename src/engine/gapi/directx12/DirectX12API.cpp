@@ -1,11 +1,10 @@
 
 #if defined(Z_D3D12)
 #include "engine/utils/MonitorUtils.h"
+#include "core/utils/ToStringHelpers.h"
 #include "engine/gapi/directx12/DirectX12API.h"
 #include "engine/gapi/selectors/monitor/MonitorSelector.h"
 #include "engine/gapi/selectors/gpu/directx12/DirectX12GpuSelector.h"
-#include "core/utils/ToStringHelpers.h"
-
 
 namespace zzz::engine
 {
@@ -226,5 +225,4 @@ namespace zzz::engine
 		}
 	}
 }
-
 #endif // Z_D3D12
