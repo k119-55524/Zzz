@@ -30,6 +30,14 @@ endif()
 
 include(package_versions.cmake)
 include(build_configs/current.cmake OPTIONAL)
+
+# Единый флаг Z_FORCE_VULKAN приходит из build_configs/current.cmake (BuildConfigurator/Switcher)
+# как CMake-переменная; здесь же он пробрасывается в компилятор как define для Defines.h,
+# чтобы не заводить для одного и того же выбора отдельный CMake- и compile-define флаг.
+if(Z_FORCE_VULKAN)
+    add_compile_definitions(Z_FORCE_VULKAN=1)
+endif()
+
 include(build_configs/setup_d3d12_packages.cmake OPTIONAL)
 
 # Multi-config generators (Xcode) need to know about our custom configurations up front;

@@ -27,7 +27,7 @@ namespace zzz::engine
 	{
 		DOut("[SurfView_DX::OnSurfaceDestroyed]");
 
-		std::lock_guard<std::mutex> lock(m_FrameMutex);
+		std::lock_guard<std::mutex> lock(m_SubmitMutex);
 
 		if (!m_GAPI)
 			return;
@@ -86,7 +86,7 @@ namespace zzz::engine
 	}
 #pragma endregion // Initialize
 
-	void SurfView_DX::PrepareFrame()
+	void SurfView_DX::PreRender()
 	{
 		if (!m_Swapchain || !m_DepthBuffer)
 			return;
@@ -94,9 +94,35 @@ namespace zzz::engine
 		if (m_OldSize.GetWidth() == 0 || m_OldSize.GetHeight() == 0)
 			return;
 
-		std::lock_guard<std::mutex> lock(m_FrameMutex);
+		const uint32_t prepIdx = GetPrepareIndex();
+
+		// 1. Ожидаем завершения работы GPU с ресурсами этого логического слота (аллокаторы и т.д.)
+		m_GAPI->WaitForFenceValue(m_FrameFenceValues[prepIdx]);
+
+		m_FrameReady[prepIdx] = false;
+
+		// 2. Получаем физический индекс буфера из Swapchain (аналог vkAcquireNextImage)
+		auto dxSwapchain = static_cast<Swapchain_DX*>(m_Swapchain.get());
+		const uint32_t physIdx = dxSwapchain->AcquireNextImage();
+		m_PhysicalIndices[prepIdx] = physIdx;
+
+		ID3D12Resource* backBuffer = dxSwapchain->GetBackBuffer(physIdx);
+		if (!backBuffer)
+			return;
+
+		m_FrameBackBuffer[prepIdx] = backBuffer;
+		m_FrameReady[prepIdx] = true;
+	}
+
+	void SurfView_DX::PrepareFrame()
+	{
+		if (!m_Swapchain || !m_DepthBuffer)
+			return;
 
 		const uint32_t prepIdx = GetPrepareIndex();
+		if (!m_FrameReady[prepIdx])
+			return;
+
 		if (!m_CommandAllocators[prepIdx] || !m_CommandLists[prepIdx])
 			return;
 
@@ -105,10 +131,8 @@ namespace zzz::engine
 
 		auto dxSwapchain = static_cast<Swapchain_DX*>(m_Swapchain.get());
 		auto dxDepthBuffer = static_cast<DepthBuffer_DX*>(m_DepthBuffer.get());
-
-		ID3D12Resource* backBuffer = dxSwapchain->GetCurrentBackBuffer();
-		if (!backBuffer)
-			return;
+		ID3D12Resource* backBuffer = m_FrameBackBuffer[prepIdx];
+		const uint32_t physIdx = m_PhysicalIndices[prepIdx];
 
 		HRESULT hr = m_CommandAllocators[prepIdx]->Reset();
 		if (FAILED(hr))
@@ -143,11 +167,11 @@ namespace zzz::engine
 		m_CommandLists[prepIdx]->RSSetScissorRects(1, &scissorRect);
 
 		// 3. Clear Color Surface and Depth-Stencil Buffer
-		dxSwapchain->Clear(m_CommandLists[prepIdx].Get());
+		dxSwapchain->Clear(m_CommandLists[prepIdx].Get(), physIdx);
 		dxDepthBuffer->Clear(m_CommandLists[prepIdx].Get());
 
 		// 4. Bind Render Target and Depth Stencil View
-		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = dxSwapchain->GetCurrentRTVHandle();
+		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = dxSwapchain->GetRTVHandle(physIdx);
 		D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dxDepthBuffer->GetDSVHandle();
 		m_CommandLists[prepIdx]->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 	}
@@ -157,18 +181,15 @@ namespace zzz::engine
 		if (!m_Swapchain)
 			return;
 
-		std::lock_guard<std::mutex> lock(m_FrameMutex);
-
-		const uint32_t prepIdx = GetPrepareIndex();
-		if (!m_CommandLists[prepIdx] || !m_IsRecording[prepIdx])
+		const uint32_t renderIdx = GetRenderIndex();
+		if (!m_CommandLists[renderIdx] || !m_IsRecording[renderIdx])
 			return;
 
-		auto dxSwapchain = static_cast<Swapchain_DX*>(m_Swapchain.get());
-		ID3D12Resource* backBuffer = dxSwapchain->GetCurrentBackBuffer();
+		ID3D12Resource* backBuffer = m_FrameBackBuffer[renderIdx];
 		if (!backBuffer)
 		{
-			m_CommandLists[prepIdx]->Close();
-			m_IsRecording[prepIdx] = false;
+			m_CommandLists[renderIdx]->Close();
+			m_IsRecording[renderIdx] = false;
 			return;
 		}
 
@@ -180,24 +201,30 @@ namespace zzz::engine
 		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-		m_CommandLists[prepIdx]->ResourceBarrier(1, &barrier);
+		m_CommandLists[renderIdx]->ResourceBarrier(1, &barrier);
 
 		// 2. Close and execute Command List
-		m_IsRecording[prepIdx] = false;
-		HRESULT hr = m_CommandLists[prepIdx]->Close();
+		m_IsRecording[renderIdx] = false;
+		HRESULT hr = m_CommandLists[renderIdx]->Close();
 
 		if (FAILED(hr))
 		{
-			DOutError("[SurfView_DX::RenderFrame] Failed to close Command List [{}]: 0x{:08X}", prepIdx, static_cast<uint32_t>(hr));
+			DOutError("[SurfView_DX::RenderFrame] Failed to close Command List [{}]: 0x{:08X}", renderIdx, static_cast<uint32_t>(hr));
 			return;
 		}
 
-		ID3D12CommandList* cmds[] = { m_CommandLists[prepIdx].Get() };
-		m_GAPI->GetCommandQueue()->ExecuteCommandLists(1, cmds);
+		ID3D12CommandList* cmds[] = { m_CommandLists[renderIdx].Get() };
 
-		// 3. Present & Sync
+		{
+			std::lock_guard lock(m_SubmitMutex);
+			m_GAPI->GetCommandQueue()->ExecuteCommandLists(1, cmds);
+		}
+
+		// 3. Signal Fence for this logical frame
+		m_FrameFenceValues[renderIdx] = m_GAPI->SignalFence();
+
+		// 4. Present
 		m_Swapchain->Present(true);
-		m_GAPI->WaitForGpu();
 	}
 
 	void SurfView_DX::OnResize(const Size2D<>& size)
@@ -217,7 +244,7 @@ namespace zzz::engine
 			return;
 		}
 
-		std::lock_guard<std::mutex> lock(m_FrameMutex);
+		std::lock_guard<std::mutex> lock(m_SubmitMutex);
 
 		m_GAPI->WaitForGpu();
 

@@ -1,8 +1,6 @@
 #pragma once
 
 #include "engine/view/View.h"
-#include "engine/gapi/IGAPI.h"
-#include "engine/EngineIncludes.h"
 #include "engine/platforms/Platform.h"
 #include "engine/package/PackageManager.h"
 #include "engine/package/UserSettingsManager.h"
@@ -18,7 +16,14 @@ namespace zzz::engine
 
 	public:
 		ViewManager() = delete;
-		ViewManager(const Platform& platform, std::shared_ptr<GAPI> gapi, std::shared_ptr<ScriptFactory> scriptFactory, std::shared_ptr<PackageManager> packageManager, std::shared_ptr<UserSettingsManager> userSettingsManager, std::function<void()> onAllViewsClosed);
+		ViewManager(
+			const Platform& platform,
+			std::shared_ptr<GAPI> gapi,
+			std::shared_ptr<ScriptFactory> scriptFactory,
+			std::shared_ptr<PackageManager> packageManager,
+			std::shared_ptr<UserSettingsManager> userSettingsManager,
+			std::function<void()> onAllViewsClosed
+		);
 		~ViewManager();
 
 		[[nodiscard]] inline std::shared_ptr<GAPI> GetGAPI() const noexcept { return m_GAPI; }

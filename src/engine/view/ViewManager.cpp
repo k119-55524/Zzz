@@ -1,6 +1,5 @@
 
 #include "ViewManager.h"
-#include "../gapi/IGAPI.h"
 #include "../platforms/Platform.h"
 #include "../package/PackageManager.h"
 #include "../package/UserSettingsManager.h"
@@ -11,7 +10,14 @@
 using namespace zzz::core;
 using namespace zzz::engine;
 
-ViewManager::ViewManager(const Platform& platform, std::shared_ptr<GAPI> gapi, std::shared_ptr<ScriptFactory> scriptFactory, std::shared_ptr<PackageManager> packageManager, std::shared_ptr<UserSettingsManager> userSettingsManager, std::function<void()> onAllViewsClosed) :
+ViewManager::ViewManager(
+	const Platform& platform,
+	std::shared_ptr<GAPI> gapi,
+	std::shared_ptr<ScriptFactory> scriptFactory,
+	std::shared_ptr<PackageManager> packageManager,
+	std::shared_ptr<UserSettingsManager> userSettingsManager,
+	std::function<void()> onAllViewsClosed
+) :
 	m_Platform{ platform },
 	m_GAPI{ std::move(gapi) },
 	m_ScriptFactory{ std::move(scriptFactory) },

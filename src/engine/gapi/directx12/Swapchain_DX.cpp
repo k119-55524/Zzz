@@ -12,6 +12,8 @@ namespace zzz::engine
 		, m_RenderTargets{}
 		, m_RtvDescriptorSize(0)
 		, m_FrameIndex(0)
+		, m_NextAcquireIndex(0)
+		, m_PresentCount(0)
 		, m_Size{}
 		, m_BackBufferFormat(zzz::core::c_DefaultBackBufferFormat)
 	{
@@ -35,11 +37,16 @@ namespace zzz::engine
 
 	void Swapchain_DX::Clear(ID3D12GraphicsCommandList* cmdList)
 	{
+		Clear(cmdList, m_FrameIndex);
+	}
+
+	void Swapchain_DX::Clear(ID3D12GraphicsCommandList* cmdList, uint32_t index)
+	{
 		if (!cmdList) return;
 
 		if (m_ClearConfig.mode == eSurfaceClearMode::Color)
 		{
-			const D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = GetCurrentRTVHandle();
+			const D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = GetRTVHandle(index);
 			const zF32* clearColorData = reinterpret_cast<const zF32*>(&m_ClearConfig.color.R);
 			cmdList->ClearRenderTargetView(rtvHandle, clearColorData, 0, nullptr);
 		}
@@ -99,6 +106,8 @@ namespace zzz::engine
 			THROW_RUNTIME("Failed to query IDXGISwapChain3 interface.");
 
 		m_FrameIndex = m_SwapChain->GetCurrentBackBufferIndex();
+		m_NextAcquireIndex = m_FrameIndex;
+		m_PresentCount = 0;
 
 		D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc{};
 		rtvHeapDesc.NumDescriptors = c_FramesInFlight;
@@ -131,9 +140,28 @@ namespace zzz::engine
 
 	D3D12_CPU_DESCRIPTOR_HANDLE Swapchain_DX::GetCurrentRTVHandle() const noexcept
 	{
+		return GetRTVHandle(m_FrameIndex);
+	}
+
+	ID3D12Resource* Swapchain_DX::GetBackBuffer(uint32_t index) const noexcept
+	{
+		if (index >= c_FramesInFlight) return nullptr;
+		return m_RenderTargets[index].Get();
+	}
+
+	D3D12_CPU_DESCRIPTOR_HANDLE Swapchain_DX::GetRTVHandle(uint32_t index) const noexcept
+	{
 		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_RtvHeap->GetCPUDescriptorHandleForHeapStart();
-		rtvHandle.ptr += static_cast<SIZE_T>(m_FrameIndex * m_RtvDescriptorSize);
+		rtvHandle.ptr += static_cast<SIZE_T>(index * m_RtvDescriptorSize);
 		return rtvHandle;
+	}
+
+	uint32_t Swapchain_DX::AcquireNextImage()
+	{
+		std::lock_guard lock(m_PresentMutex);
+		uint32_t index = m_NextAcquireIndex;
+		m_NextAcquireIndex = (m_NextAcquireIndex + 1) % c_FramesInFlight;
+		return index;
 	}
 
 	void Swapchain_DX::Present(bool vSync)
@@ -142,7 +170,13 @@ namespace zzz::engine
 		{
 			UINT syncInterval = vSync ? 1 : 0;
 			m_SwapChain->Present(syncInterval, 0);
-			m_FrameIndex = m_SwapChain->GetCurrentBackBufferIndex();
+
+			{
+				std::lock_guard lock(m_PresentMutex);
+				m_FrameIndex = m_SwapChain->GetCurrentBackBufferIndex();
+				m_PresentCount++;
+			}
+			m_PresentCV.notify_all();
 		}
 	}
 
@@ -170,6 +204,8 @@ namespace zzz::engine
 
 		m_Size = size;
 		m_FrameIndex = m_SwapChain->GetCurrentBackBufferIndex();
+		m_NextAcquireIndex = m_FrameIndex;
+
 		ID3D12Device* device = m_GAPI->GetDevice();
 		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_RtvHeap->GetCPUDescriptorHandleForHeapStart();
 		for (UINT i = 0; i < c_FramesInFlight; i++)

@@ -1,8 +1,9 @@
+
 #include "scene/Scene.h"
 #include "../platforms/input/Input.h"
-#include "../platforms/window/NativeWindow.h"
-#include "core/userscripts/ScriptFactory.h"
 #include "engine/utils/EngineLogFlags.h"
+#include "core/userscripts/ScriptFactory.h"
+#include "../platforms/window/NativeWindow.h"
 
 #include "View.h"
 

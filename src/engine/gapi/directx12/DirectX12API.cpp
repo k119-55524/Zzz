@@ -224,5 +224,27 @@ namespace zzz::engine
 			WaitForSingleObject(m_FenceEvent, INFINITE);
 		}
 	}
+
+	uint64_t DirectX12API::SignalFence()
+	{
+		if (!m_CommandQueue || !m_Fence)
+			return 0;
+
+		const uint64_t fenceValue = ++m_FenceValue;
+		m_CommandQueue->Signal(m_Fence.Get(), fenceValue);
+		return fenceValue;
+	}
+
+	void DirectX12API::WaitForFenceValue(uint64_t fenceValue)
+	{
+		if (!m_Fence || !m_FenceEvent || fenceValue == 0)
+			return;
+
+		if (m_Fence->GetCompletedValue() < fenceValue)
+		{
+			m_Fence->SetEventOnCompletion(fenceValue, m_FenceEvent);
+			WaitForSingleObject(m_FenceEvent, INFINITE);
+		}
+	}
 }
 #endif // Z_D3D12

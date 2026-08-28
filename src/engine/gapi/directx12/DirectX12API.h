@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include "engine/gapi/IGAPI.h"
 
 #if defined(Z_D3D12)
@@ -15,6 +16,9 @@ namespace zzz::engine
 		void BeginRender() override;
 		void EndRender() override;
 		void WaitForGpu() override;
+
+		uint64_t SignalFence();
+		void WaitForFenceValue(uint64_t fenceValue);
 
 		[[nodiscard]] ID3D12Device* GetDevice() const noexcept { return m_Device.Get(); }
 		[[nodiscard]] ID3D12CommandQueue* GetCommandQueue() const noexcept { return m_CommandQueue.Get(); }
@@ -37,7 +41,7 @@ namespace zzz::engine
 		Microsoft::WRL::ComPtr<ID3D12Device> m_Device;
 		Microsoft::WRL::ComPtr<ID3D12CommandQueue> m_CommandQueue;
 
-		uint64_t m_FenceValue{ 0 };
+		std::atomic<uint64_t> m_FenceValue{ 0 };
 		HANDLE m_FenceEvent{ nullptr };
 		Microsoft::WRL::ComPtr<ID3D12Fence> m_Fence;
 

@@ -10,24 +10,23 @@
         "Z_ADD_PROJECT_BENCHMARKS_IN_BUILD"
       ],
       "description": "Ежедневные рабочие настройки",
-      "name": "WORKING_BUILD"
-    },
-    {
-      "activeDefines": [],
-      "description": "Не исппользовать код логера в сборке",
-      "name": "NO LOGGER"
+      "name": "WIN_DX_LOGS"
     },
     {
       "activeDefines": [
         "Z_ADD_LOGGER",
         "Z_IDE_OUT_LOGS",
-        "Z_FORCE_VULKAN"
+        "Z_FORCE_VULKAN",
+        "Z_TESTS_ENABLE_COMMON",
+        "Z_TESTS_BENCH_ENABLE_COMMON",
+        "Z_ADD_PROJECT_TESTS_IN_BUILD",
+        "Z_ADD_PROJECT_BENCHMARKS_IN_BUILD"
       ],
       "description": "Сборка с Vulkan в Windows",
-      "name": "WIN_VULKAN"
+      "name": "WIN_VULKAN_LOGS"
     }
   ],
-  "currentConfig": "WIN_VULKAN",
+  "currentConfig": "WIN_VULKAN_LOGS",
   "defines": [
     {
       "description": "Включить код логера в сборку",
@@ -44,7 +43,7 @@
     {
       "description": "Принудительное использование Vulkan вместо DirectX",
       "isArchived": false,
-      "isCMake": false,
+      "isCMake": true,
       "name": "Z_FORCE_VULKAN"
     },
     {

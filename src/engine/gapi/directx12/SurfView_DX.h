@@ -21,6 +21,7 @@ namespace zzz::engine
 		SurfView_DX(std::shared_ptr<NativeWindow> window, std::shared_ptr<DirectX12API> gapi);
 		~SurfView_DX() override;
 
+		void PreRender() override;
 		void PrepareFrame() override;
 		void RenderFrame() override;
 		void OnResize(const Size2D<>& size) override;
@@ -37,8 +38,12 @@ namespace zzz::engine
 		std::array<ComPtr<ID3D12CommandAllocator>, c_FramesInFlight> m_CommandAllocators;
 		std::array<ComPtr<ID3D12GraphicsCommandList>, c_FramesInFlight> m_CommandLists;
 		std::array<bool, c_FramesInFlight> m_IsRecording{};
+		std::array<bool, c_FramesInFlight> m_FrameReady{};
+		std::array<ID3D12Resource*, c_FramesInFlight> m_FrameBackBuffer{};
 
-		std::mutex m_FrameMutex;
+		std::array<uint64_t, c_FramesInFlight> m_FrameFenceValues{};
+
+		std::mutex m_SubmitMutex;
 	};
 }
 

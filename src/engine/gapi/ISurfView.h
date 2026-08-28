@@ -37,6 +37,8 @@ namespace zzz::engine
 		[[nodiscard]] uint32_t GetPrepareIndex() const noexcept { return m_IndexPrepare; }
 		[[nodiscard]] uint32_t GetRenderIndex() const noexcept { return m_IndexRender; }
 
+		[[nodiscard]] uint32_t GetPhysicalIndex(uint32_t logicalIndex) const noexcept { return m_PhysicalIndices[logicalIndex]; }
+
 		 inline void SetClearConfig(const ViewClearConfig& config)
 		{
 			m_ClearConfig = config;
@@ -75,6 +77,8 @@ namespace zzz::engine
 		ViewClearConfig m_ClearConfig;
 
 		Size2D<> m_OldSize{};
+
+		std::array<uint32_t, zzz::core::c_FramesInFlight> m_PhysicalIndices{};
 
 	private:
 		uint32_t m_IndexRender;
