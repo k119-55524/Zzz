@@ -194,18 +194,6 @@ namespace zzz::engine
 	}
 #pragma endregion
 
-	void DirectX12API::SubmitCommandLists()
-	{
-	}
-
-	void DirectX12API::BeginRender()
-	{
-	}
-
-	void DirectX12API::EndRender()
-	{
-	}
-
 	void DirectX12API::WaitForGpu()
 	{
 		if (!m_CommandQueue || !m_Fence || !m_FenceEvent)

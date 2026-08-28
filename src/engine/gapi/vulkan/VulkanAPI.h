@@ -13,9 +13,6 @@ namespace zzz::engine
 		explicit VulkanAPI() = default;
 		~VulkanAPI() override;
 
-		void SubmitCommandLists() override;
-		void BeginRender() override;
-		void EndRender() override;
 		void WaitForGpu() override;
 
 		[[nodiscard]] VkInstance GetInstance() const noexcept { return m_Instance; }

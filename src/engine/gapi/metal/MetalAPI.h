@@ -9,19 +9,14 @@ namespace zzz::engine
 	class MetalAPI final : public IGAPI
 	{
 	public:
-		explicit MetalAPI(std::shared_ptr<UserSettingsManager> userSettings);
+		explicit MetalAPI() = default;
 		~MetalAPI() override;
 
-		void SubmitCommandLists() override;
-		void BeginRender() override;
-		void EndRender() override;
-
-	protected:
 		void WaitForGpu() override;
 
 	private:
 		friend class Engine;
-		void Initialize() override;
+		void Initialize(std::shared_ptr<UserSettingsManager> userSettings) override;
 	};
 }
 

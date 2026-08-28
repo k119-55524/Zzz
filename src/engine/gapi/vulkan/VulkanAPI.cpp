@@ -235,18 +235,6 @@ namespace zzz::engine
 		vkGetDeviceQueue(m_Device, m_PresentQueueFamilyIndex, 0, &m_PresentQueue);
 	}
 
-	void VulkanAPI::SubmitCommandLists()
-	{
-	}
-
-	void VulkanAPI::BeginRender()
-	{
-	}
-
-	void VulkanAPI::EndRender()
-	{
-	}
-
 	void VulkanAPI::WaitForGpu()
 	{
 		if (m_Device)

@@ -56,8 +56,8 @@ namespace zzz::engine
 		virtual void RenderFrame() = 0;
 		inline void PostRender() noexcept
 		{
-			m_IndexPrepare = (m_IndexPrepare + 1) % zzz::core::c_FramesInFlight;
-			m_IndexRender  = (m_IndexRender + 1) % zzz::core::c_FramesInFlight;			
+			m_IndexPrepare = (m_IndexPrepare + 1) % c_FramesInFlight;
+			m_IndexRender  = (m_IndexRender + 1) % c_FramesInFlight;
 		}
 
 		virtual void OnResize(const Size2D<>& size) = 0;
@@ -71,14 +71,12 @@ namespace zzz::engine
 
 		std::shared_ptr<NativeWindow> m_Window;
 		std::shared_ptr<GAPI> m_GAPI;
-
 		std::unique_ptr<Swapchain> m_Swapchain;
 		std::unique_ptr<DepthBuffer> m_DepthBuffer;
+
 		ViewClearConfig m_ClearConfig;
-
 		Size2D<> m_OldSize{};
-
-		std::array<uint32_t, zzz::core::c_FramesInFlight> m_PhysicalIndices{};
+		std::array<uint32_t, c_FramesInFlight> m_PhysicalIndices{};
 
 	private:
 		uint32_t m_IndexRender;

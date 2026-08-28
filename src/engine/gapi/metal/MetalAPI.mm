@@ -4,28 +4,11 @@
 
 namespace zzz::engine
 {
-	MetalAPI::MetalAPI(std::shared_ptr<UserSettingsManager> userSettings)
-		: IGAPI(std::move(userSettings))
-	{
-	}
-
 	MetalAPI::~MetalAPI()
 	{
 	}
 
-	void MetalAPI::Initialize()
-	{
-	}
-
-	void MetalAPI::SubmitCommandLists()
-	{
-	}
-
-	void MetalAPI::BeginRender()
-	{
-	}
-
-	void MetalAPI::EndRender()
+	void MetalAPI::Initialize(std::shared_ptr<UserSettingsManager> userSettings)
 	{
 	}
 

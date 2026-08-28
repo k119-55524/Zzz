@@ -5,7 +5,6 @@
 #include "engine/utils/EngineLogFlags.h"
 
 #if defined(Z_VULKAN)
-
 namespace zzz::engine
 {
 	SurfView_VK::SurfView_VK(std::shared_ptr<NativeWindow> window, std::shared_ptr<VulkanAPI> gapi)
@@ -431,5 +430,4 @@ namespace zzz::engine
 		m_DepthBuffer->OnResize(size);
 	}
 }
-
 #endif // Z_VULKAN

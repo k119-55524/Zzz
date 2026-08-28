@@ -30,9 +30,6 @@ namespace zzz::engine
 
 		[[nodiscard]] inline bool IsCanDisableVSync() const noexcept { return m_IsCanDisableVSync; }
 
-		virtual void SubmitCommandLists() = 0;
-		virtual void BeginRender() = 0;
-		virtual void EndRender() = 0;
 		virtual void WaitForGpu() = 0;
 
 	protected:

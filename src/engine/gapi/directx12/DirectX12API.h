@@ -12,9 +12,6 @@ namespace zzz::engine
 		explicit DirectX12API() = default;
 		~DirectX12API() override;
 
-		void SubmitCommandLists() override;
-		void BeginRender() override;
-		void EndRender() override;
 		void WaitForGpu() override;
 
 		uint64_t SignalFence();
