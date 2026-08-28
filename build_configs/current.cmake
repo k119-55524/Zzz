@@ -1,7 +1,7 @@
 # Auto-generated file.
-# Configuration: WIN_DX_LOGS
+# Configuration: WIN_VULKAN_LOGS
 
-set(Z_FORCE_VULKAN OFF)
+set(Z_FORCE_VULKAN ON)
 set(Z_TESTS_ENABLE_COMMON ON)
 set(Z_TESTS_BENCH_ENABLE_COMMON ON)
 set(Z_ADD_PROJECT_TESTS_IN_BUILD ON)
