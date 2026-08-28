@@ -89,7 +89,7 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
     private void RebuildList(string? selectName)
     {
         ConfigItems.Clear();
-        foreach (var cfg in _data.Configurations)
+        foreach (var cfg in _data.Configurations.OrderBy(c => c.Name, StringComparer.OrdinalIgnoreCase))
             ConfigItems.Add(CreateConfigItem(cfg));
 
         OnPropertyChanged(nameof(TotalConfigsText));
@@ -119,7 +119,7 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
     {
         UnsubscribeDefineEntries();
         DefineEntries.Clear();
-        foreach (var d in _data.Defines)
+        foreach (var d in _data.Defines.OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase))
         {
             var entry = DefineEntryViewModel.Create(
                 d.Name, d.Description, d.IsArchived, d.IsCMake,
@@ -200,7 +200,7 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
         _data.Configurations.Add(cfg);
 
         var item = CreateConfigItem(cfg);
-        ConfigItems.Add(item);
+        InsertSorted(ConfigItems, item, x => x.Name);
         SelectedConfigItem = item;
         OnPropertyChanged(nameof(TotalConfigsText));
         
@@ -214,9 +214,19 @@ public partial class ConfigurationsTabViewModel : ViewModelBase
     {
         if (SelectedConfigItem == null) return;
         var cfg = SelectedConfigItem.Configuration;
+        var nameChanged = !cfg.Name.Equals(args.name, StringComparison.Ordinal);
         cfg.Name        = args.name;
         cfg.Description = args.description;
         SelectedConfigItem.RefreshName();
+
+        if (nameChanged)
+        {
+            var item = SelectedConfigItem;
+            ConfigItems.Remove(item);
+            InsertSorted(ConfigItems, item, x => x.Name);
+            SelectedConfigItem = item;
+        }
+
         _isListDirty = true;
         RefreshHasUnsavedChanges();
         MarkDirty();

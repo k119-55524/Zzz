@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Linq;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -34,7 +35,27 @@ public class FileService : IFileService
 
     public void SaveData(AppData data)
     {
-        var json = JsonSerializer.Serialize(data, JsonOptions);
+        // Сериализуем отсортированную копию, не трогая порядок элементов в исходных коллекциях
+        // (они привязаны к UI через ObservableCollection/InsertSorted и должны остаться как есть).
+        var sorted = new AppData
+        {
+            Defines = data.Defines
+                .OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase)
+                .ToList(),
+            Configurations = data.Configurations
+                .OrderBy(c => c.Name, StringComparer.OrdinalIgnoreCase)
+                .Select(c => new BuildConfiguration
+                {
+                    Name = c.Name,
+                    Description = c.Description,
+                    ActiveDefines = c.ActiveDefines
+                        .OrderBy(n => n, StringComparer.OrdinalIgnoreCase)
+                        .ToList()
+                })
+                .ToList()
+        };
+
+        var json = JsonSerializer.Serialize(sorted, JsonOptions);
         File.WriteAllText(DataFilePath, json);
     }
 }

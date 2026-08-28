@@ -3,11 +3,11 @@
     {
       "activeDefines": [
         "Z_ADD_LOGGER",
-        "Z_IDE_OUT_LOGS",
-        "Z_TESTS_ENABLE_COMMON",
-        "Z_TESTS_BENCH_ENABLE_COMMON",
+        "Z_ADD_PROJECT_BENCHMARKS_IN_BUILD",
         "Z_ADD_PROJECT_TESTS_IN_BUILD",
-        "Z_ADD_PROJECT_BENCHMARKS_IN_BUILD"
+        "Z_IDE_OUT_LOGS",
+        "Z_TESTS_BENCH_ENABLE_COMMON",
+        "Z_TESTS_ENABLE_COMMON"
       ],
       "description": "Ежедневные рабочие настройки",
       "name": "WIN_DX_LOGS"
@@ -15,12 +15,12 @@
     {
       "activeDefines": [
         "Z_ADD_LOGGER",
-        "Z_IDE_OUT_LOGS",
-        "Z_FORCE_VULKAN",
-        "Z_TESTS_ENABLE_COMMON",
-        "Z_TESTS_BENCH_ENABLE_COMMON",
+        "Z_ADD_PROJECT_BENCHMARKS_IN_BUILD",
         "Z_ADD_PROJECT_TESTS_IN_BUILD",
-        "Z_ADD_PROJECT_BENCHMARKS_IN_BUILD"
+        "Z_FORCE_VULKAN",
+        "Z_IDE_OUT_LOGS",
+        "Z_TESTS_BENCH_ENABLE_COMMON",
+        "Z_TESTS_ENABLE_COMMON"
       ],
       "description": "Сборка с Vulkan в Windows",
       "name": "WIN_VULKAN_LOGS"
@@ -35,28 +35,10 @@
       "name": "Z_ADD_LOGGER"
     },
     {
-      "description": "Выводить логи в консоле IDE(при использовании логера)",
-      "isArchived": false,
-      "isCMake": false,
-      "name": "Z_IDE_OUT_LOGS"
-    },
-    {
-      "description": "Принудительное использование Vulkan вместо DirectX",
+      "description": "Добавить проект теста производительности в сборку Cmake",
       "isArchived": false,
       "isCMake": true,
-      "name": "Z_FORCE_VULKAN"
-    },
-    {
-      "description": "Тестирование шаблонов проекта",
-      "isArchived": false,
-      "isCMake": true,
-      "name": "Z_TESTS_ENABLE_COMMON"
-    },
-    {
-      "description": "Тестирование производительности шаблонов проекта",
-      "isArchived": false,
-      "isCMake": true,
-      "name": "Z_TESTS_BENCH_ENABLE_COMMON"
+      "name": "Z_ADD_PROJECT_BENCHMARKS_IN_BUILD"
     },
     {
       "description": "Добаввить проект с тестами в сборку Cmake",
@@ -65,10 +47,28 @@
       "name": "Z_ADD_PROJECT_TESTS_IN_BUILD"
     },
     {
-      "description": "Добавить проект теста производительности в сборку Cmake",
+      "description": "Принудительное использование Vulkan вместо DirectX",
       "isArchived": false,
       "isCMake": true,
-      "name": "Z_ADD_PROJECT_BENCHMARKS_IN_BUILD"
+      "name": "Z_FORCE_VULKAN"
+    },
+    {
+      "description": "Выводить логи в консоле IDE(при использовании логера)",
+      "isArchived": false,
+      "isCMake": false,
+      "name": "Z_IDE_OUT_LOGS"
+    },
+    {
+      "description": "Тестирование производительности шаблонов проекта",
+      "isArchived": false,
+      "isCMake": true,
+      "name": "Z_TESTS_BENCH_ENABLE_COMMON"
+    },
+    {
+      "description": "Тестирование шаблонов проекта",
+      "isArchived": false,
+      "isCMake": true,
+      "name": "Z_TESTS_ENABLE_COMMON"
     }
   ]
 }

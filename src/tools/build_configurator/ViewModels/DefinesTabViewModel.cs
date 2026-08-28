@@ -51,7 +51,9 @@ public partial class DefinesTabViewModel : ViewModelBase
     private void RebuildList()
     {
         Defines.Clear();
-        foreach (var d in _data.Defines.Where(d => d.IsCMake == _isCMakeTab))
+        foreach (var d in _data.Defines
+                     .Where(d => d.IsCMake == _isCMakeTab)
+                     .OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase))
             Defines.Add(new DefineItemViewModel(d));
         OnPropertyChanged(nameof(FilteredDefines));
         RefreshStatus();
@@ -124,7 +126,7 @@ public partial class DefinesTabViewModel : ViewModelBase
         _fileService.SaveData(_data);
 
         var vm = new DefineItemViewModel(define);
-        Defines.Add(vm);
+        InsertSorted(Defines, vm, x => x.Name);
         SelectedDefine = vm;
         OnPropertyChanged(nameof(FilteredDefines));
         RefreshStatus();
@@ -174,6 +176,15 @@ public partial class DefinesTabViewModel : ViewModelBase
         _fileService.SaveData(_data);
         SelectedDefine.MarkDirty();
         SelectedDefine.Refresh();
+
+        if (!oldName.Equals(newName, StringComparison.Ordinal))
+        {
+            var vm = SelectedDefine;
+            Defines.Remove(vm);
+            InsertSorted(Defines, vm, x => x.Name);
+            SelectedDefine = vm;
+        }
+
         OnPropertyChanged(nameof(FilteredDefines));
         HasUnsavedChanges = true;
         DataChanged?.Invoke();
