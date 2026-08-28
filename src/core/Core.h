@@ -49,37 +49,14 @@
 #include "core/userscripts/base_script/ViewScript.h"
 
 #include "core/io/Path.h"
-#include "core/io/package/PackageHeader.h"
-#include "core/io/package/PackageEntry.h"
+// Узкие типы данных пакета (PackageHeader, PrimaryViewData, ChildViewData и т.д.) и hardware/*
+// намеренно НЕ включаются сюда: они используются только в единичных местах (PackageManager,
+// UserSettingsManager, ViewManager, Platform и т.п.), а не по всему проекту. Раньше их бланкетное
+// подключение здесь заставляло core_lib/engine_lib пересобираться целиком при правке любого из ~30
+// файлов, хотя большинство потребителей Core.h эти типы вообще не используют. Конкретные потребители
+// подключают нужные заголовки самостоятельно (Include What You Use).
 #include "core/io/package/platforms/start_view/ViewPlatformConfig.h"
-#include "core/io/package/PrimaryViewData.h"
-#include "core/io/package/PrimaryViewUserData.h"
-#include "core/io/package/ViewUserData.h"
-#include "core/io/package/ChildViewData.h"
-#include "core/io/package/IndependentViewData.h"
-#include "core/io/package/ProjectManifestData.h"
-#include "core/io/package/SceneData.h"
-#include "core/io/package/PrefabData.h"
 #include "core/io/package/platforms/project/ProjectPlatformConfig.h"
-#include "core/io/package/platforms/project/ProjectPlatformDataAndroid.h"
-#include "core/io/package/platforms/project/ProjectPlatformDataLinux.h"
-#include "core/io/package/platforms/project/ProjectPlatformDataMSWin.h"
-#include "core/io/package/platforms/project/ProjectPlatformDataMacOS.h"
-#include "core/io/package/platforms/project/ProjectPlatformDataiOS.h"
-#include "core/io/package/platforms/start_view/ViewDataAndroid.h"
-#include "core/io/package/platforms/start_view/ViewDataLinux.h"
-#include "core/io/package/platforms/start_view/ViewDataMSWin.h"
-#include "core/io/package/platforms/start_view/ViewDataMacOS.h"
-#include "core/io/package/platforms/start_view/ViewDataiOS.h"
-
-#include "core/hardware/CpuInfo.h"
-#include "core/hardware/GpuInfo.h"
-#include "core/hardware/RamInfo.h"
-#include "core/hardware/MotherboardInfo.h"
-#include "core/hardware/MonitorInfo.h"
-#include "core/hardware/StorageInfo.h"
-#include "core/hardware/NetworkAdapterInfo.h"
-#include "core/hardware/HardwareState.h"
 
 using namespace zzz::math;
 using namespace zzz::core;

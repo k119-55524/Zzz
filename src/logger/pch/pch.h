@@ -1,6 +1,5 @@
 #pragma once
 
-#include <core/Core.h>
 #include "../LoggerIncludes.h"
 
 #if Z_WINDOWS

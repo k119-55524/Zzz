@@ -1,5 +1,10 @@
 
 #include "PackageManager.h"
+#include "core/io/package/PackageHeader.h"
+#include "core/io/package/SceneData.h"
+#include "core/io/package/ChildViewData.h"
+#include "core/io/package/IndependentViewData.h"
+#include "core/io/package/PrefabData.h"
 
 using namespace zzz::core;
 

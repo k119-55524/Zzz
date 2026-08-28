@@ -3,6 +3,8 @@
 #include "private/ConsoleBroadcaster.h"
 #include "private/NetworkBroadcaster.h"
 #include "private/CallbackBroadcaster.h"
+#include "core/enums/eEnumToString.h"
+#include "core/utils/MemoryUtils.h"
 
 #include "logger.h"
 

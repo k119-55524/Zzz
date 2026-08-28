@@ -1,11 +1,8 @@
 #pragma once
 
 #include "engine/EngineIncludes.h"
-
-namespace zzz::core
-{
-	class ViewUserData;
-}
+#include "core/io/package/ViewUserData.h"
+#include "core/io/package/PrimaryViewUserData.h"
 
 using namespace zzz::core;
 

@@ -4,6 +4,8 @@
 #include "../package/PackageManager.h"
 #include "../package/UserSettingsManager.h"
 #include "../platforms/monitor/IMonitorProvider.h"
+#include "core/io/package/ChildViewData.h"
+#include "core/io/package/IndependentViewData.h"
 
 #include "View.h"
 

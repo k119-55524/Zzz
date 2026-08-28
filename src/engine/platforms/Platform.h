@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/EngineIncludes.h"
+#include "core/hardware/HardwareState.h"
 
 namespace zzz::engine
 {

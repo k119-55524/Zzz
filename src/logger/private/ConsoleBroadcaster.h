@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IBroadcaster.h"
+#include "core/enums/eEnumToString.h"
 
 #if Z_WINDOWS
 #include <format>

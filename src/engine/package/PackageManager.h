@@ -1,6 +1,9 @@
 #pragma once
 
 #include "engine/EngineIncludes.h"
+#include "core/io/package/ProjectManifestData.h"
+#include "core/io/package/PrimaryViewData.h"
+#include "core/io/package/PackageEntry.h"
 
 using namespace zzz::core;
 
