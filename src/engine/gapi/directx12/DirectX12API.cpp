@@ -8,8 +8,92 @@
 
 namespace zzz::engine
 {
+	namespace
+	{
+		eGAPIDebugSeverity MapDX12Severity(D3D12_MESSAGE_SEVERITY severity)
+		{
+			switch (severity)
+			{
+			case D3D12_MESSAGE_SEVERITY_CORRUPTION:
+			case D3D12_MESSAGE_SEVERITY_ERROR:
+				return eGAPIDebugSeverity::Error;
+			case D3D12_MESSAGE_SEVERITY_WARNING:
+				return eGAPIDebugSeverity::Warning;
+			case D3D12_MESSAGE_SEVERITY_INFO:
+				return eGAPIDebugSeverity::Info;
+			case D3D12_MESSAGE_SEVERITY_MESSAGE:
+			default:
+				return eGAPIDebugSeverity::Verbose;
+			}
+		}
+
+		eGAPIDebugCategory MapDX12Category(D3D12_MESSAGE_CATEGORY category)
+		{
+			switch (category)
+			{
+			case D3D12_MESSAGE_CATEGORY_MISCELLANEOUS:
+			case D3D12_MESSAGE_CATEGORY_INITIALIZATION:
+			case D3D12_MESSAGE_CATEGORY_CLEANUP:
+				return eGAPIDebugCategory::General;
+			default:
+				return eGAPIDebugCategory::Validation;
+			}
+		}
+
+		// Колбэк ID3D12InfoQueue1::RegisterMessageCallback - сюда попадают все сообщения DX12 debug layer
+		// (аналог pfnUserCallback у Vulkan), без фильтрации по severity/категории. Решение "показывать ли
+		// Verbose-уровень" здесь НЕ принимается - это делает GAPIDebugLogger::Report централизованно,
+		// одинаково для всех бэкендов (см. её комментарий в GAPIDebugLogger.h).
+		void __stdcall DX12DebugMessageCallback(D3D12_MESSAGE_CATEGORY category, D3D12_MESSAGE_SEVERITY severity, D3D12_MESSAGE_ID id, LPCSTR description, void* context)
+		{
+			(void)id;
+			(void)context;
+
+			GAPIDebugLogger::Report(eGAPIType::DirectX12, MapDX12Severity(severity), MapDX12Category(category), description ? description : "");
+		}
+
+		// У DX12 нет аналога VK_EXT_layer_settings/report_flags (у Vulkan это позволяет слою самому
+		// решать, репортить ли сообщение, если оно не error/warn/perf - см. VulkanAPI::BuildVerboseValidationLayerSettings).
+		// Ближайший DX12-аналог - ID3D12InfoQueue::AddStorageFilterEntries с D3D12_INFO_QUEUE_FILTER:
+		// он глушит сообщения по категории/severity/id ещё до попадания в очередь InfoQueue. Сейчас не
+		// используется - мы и так получаем ВСЕ сообщения через RegisterMessageCallback (push, не через
+		// очередь GetMessage), а фильтрация по Verbose-уровню теперь единая для всех бэкендов и живёт в
+		// GAPIDebugLogger::Report, а не здесь. Полный пример, если понадобится более тонкая
+		// фильтрация по категориям (например заглушить болтливые STATE_SETTING/STATE_GETTING):
+		//
+		// void ApplyStorageFilter(ID3D12InfoQueue1* infoQueue)
+		// {
+		//     D3D12_MESSAGE_SEVERITY denySeverities[] = { D3D12_MESSAGE_SEVERITY_MESSAGE };
+		//     D3D12_MESSAGE_CATEGORY denyCategories[] =
+		//     {
+		//         D3D12_MESSAGE_CATEGORY_STATE_CREATION,
+		//         D3D12_MESSAGE_CATEGORY_STATE_SETTING,
+		//         D3D12_MESSAGE_CATEGORY_STATE_GETTING,
+		//     };
+		//
+		//     D3D12_INFO_QUEUE_FILTER filter{};
+		//     filter.DenyList.NumSeverities = _countof(denySeverities);
+		//     filter.DenyList.pSeverityList = denySeverities;
+		//     filter.DenyList.NumCategories = _countof(denyCategories);
+		//     filter.DenyList.pCategoryList = denyCategories;
+		//
+		//     infoQueue->AddStorageFilterEntries(&filter);
+		// }
+		//
+		// AddStorageFilterEntries относится к очереди сообщений InfoQueue (GetMessage/GetNumStoredMessages) -
+		// на RegisterMessageCallback он не влияет, поэтому нам он и не нужен при текущем push-подходе.
+	}
+
 	DirectX12API::~DirectX12API()
 	{
+#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
+		if (m_InfoQueue && m_InfoQueueCookie != 0)
+		{
+			m_InfoQueue->UnregisterMessageCallback(m_InfoQueueCookie);
+			m_InfoQueueCookie = 0;
+		}
+#endif
+
 		if (m_FenceEvent)
 		{
 			CloseHandle(m_FenceEvent);
@@ -28,12 +112,21 @@ namespace zzz::engine
 
 	void DirectX12API::EnableDebugLayer(UINT& dxgiFactoryFlags)
 	{
-#if defined(Z_DEBUG_BUILD)
+#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
 		Microsoft::WRL::ComPtr<ID3D12Debug> debugController;
 		if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
 		{
 			debugController->EnableDebugLayer();
 			dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
+
+#if defined(Z_GAPI_VERBOSE_DEBUG_LAYER)
+			Microsoft::WRL::ComPtr<ID3D12Debug1> debugController1;
+			if (SUCCEEDED(debugController.As(&debugController1)))
+			{
+				debugController1->SetEnableGPUBasedValidation(TRUE);
+				debugController1->SetEnableSynchronizedCommandQueueValidation(TRUE);
+			}
+#endif
 
 			DOut("[DirectX12API::EnableDebugLayer] - DirectX debug layer enabled.");
 		}
@@ -59,43 +152,6 @@ namespace zzz::engine
 		hr = m_Factory->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
 		if (SUCCEEDED(hr))
 			m_IsCanDisableVSync = allowTearing;
-	}
-
-	void DirectX12API::SelectMonitor(IDXGIAdapter1* adapter, const std::shared_ptr<UserSettingsManager>& userSettings)
-	{
-		if (!adapter || !userSettings)
-			return;
-
-		MonitorSelector selector(userSettings);
-
-		Microsoft::WRL::ComPtr<IDXGIOutput> output;
-		for (UINT i = 0; SUCCEEDED(adapter->EnumOutputs(i, &output)); ++i)
-		{
-			DXGI_OUTPUT_DESC desc{};
-			if (SUCCEEDED(output->GetDesc(&desc)))
-			{
-				int sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, desc.DeviceName, -1, NULL, 0, NULL, NULL);
-				std::string systemId(sizeNeeded > 1 ? sizeNeeded - 1 : 0, 0);
-				if (sizeNeeded > 1)
-				{
-					WideCharToMultiByte(CP_UTF8, 0, desc.DeviceName, -1, systemId.data(), sizeNeeded, NULL, NULL);
-				}
-				std::string platformMonitorId = MonitorUtils::MakeId(systemId);
-
-				Size2D<zU32> resolution{
-					static_cast<zU32>(desc.DesktopCoordinates.right - desc.DesktopCoordinates.left),
-					static_cast<zU32>(desc.DesktopCoordinates.bottom - desc.DesktopCoordinates.top)
-				};
-
-				zI32 posX = desc.DesktopCoordinates.left;
-				zI32 posY = desc.DesktopCoordinates.top;
-				bool isPrimary = (posX == 0 && posY == 0);
-
-				selector.AddMonitor(MonitorInfo(platformMonitorId, systemId, resolution, posX, posY, isPrimary));
-			}
-		}
-
-		selector.SelectMonitor();
 	}
 
 	Microsoft::WRL::ComPtr<IDXGIFactory7> DirectX12API::CreateFactory(UINT dxgiFactoryFlags)
@@ -171,6 +227,9 @@ namespace zzz::engine
 		if (FAILED(hr))
 			THROW_RUNTIME("Failed to create D3D12 device. HRESULT = 0x{:08X}", static_cast<unsigned int>(hr));
 
+		SetDebugName(m_Device, "MainDevice");
+		RegisterDebugMessageCallback();
+
 		D3D12_COMMAND_QUEUE_DESC queueDesc{};
 		queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 		queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
@@ -179,9 +238,13 @@ namespace zzz::engine
 		if (FAILED(hr))
 			THROW_RUNTIME("Failed to create D3D12 Direct Command Queue. HRESULT = 0x{:08X}", static_cast<unsigned int>(hr));
 
+		SetDebugName(m_CommandQueue, "MainCommandQueue");
+
 		hr = m_Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_Fence.ReleaseAndGetAddressOf()));
 		if (FAILED(hr))
 			THROW_RUNTIME("Failed to create D3D12 Fence. HRESULT = 0x{:08X}", static_cast<unsigned int>(hr));
+
+		SetDebugName(m_Fence, "MainFence");
 
 		m_FenceValue = 0;
 		m_FenceEvent = CreateEventEx(nullptr, FALSE, FALSE, EVENT_ALL_ACCESS);
@@ -191,6 +254,64 @@ namespace zzz::engine
 #if defined(Z_DEBUG_BUILD)
 		DOut("[DirectX12API::CreateDevice] - Created D3D12 device with feature level: {}", m_FeatureLevel);
 #endif
+	}
+
+	void DirectX12API::RegisterDebugMessageCallback()
+	{
+#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
+		if (!m_Device)
+			return;
+
+		if (FAILED(m_Device.As(&m_InfoQueue)))
+		{
+			DOutWarning("[DirectX12API::RegisterDebugMessageCallback] - ID3D12InfoQueue1 is not available, DX12 debug layer messages will not be routed to the engine logger.");
+			return;
+		}
+
+		HRESULT hr = m_InfoQueue->RegisterMessageCallback(&DX12DebugMessageCallback, D3D12_MESSAGE_CALLBACK_FLAG_NONE, nullptr, &m_InfoQueueCookie);
+		if (FAILED(hr))
+		{
+			DOutWarning("[DirectX12API::RegisterDebugMessageCallback] - Failed to register DX12 debug message callback. HRESULT = 0x{:08X}", static_cast<unsigned int>(hr));
+			m_InfoQueue.Reset();
+		}
+#endif
+	}
+
+	void DirectX12API::SelectMonitor(IDXGIAdapter1* adapter, const std::shared_ptr<UserSettingsManager>& userSettings)
+	{
+		if (!adapter || !userSettings)
+			return;
+
+		MonitorSelector selector(userSettings);
+
+		Microsoft::WRL::ComPtr<IDXGIOutput> output;
+		for (UINT i = 0; SUCCEEDED(adapter->EnumOutputs(i, &output)); ++i)
+		{
+			DXGI_OUTPUT_DESC desc{};
+			if (SUCCEEDED(output->GetDesc(&desc)))
+			{
+				int sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, desc.DeviceName, -1, NULL, 0, NULL, NULL);
+				std::string systemId(sizeNeeded > 1 ? sizeNeeded - 1 : 0, 0);
+				if (sizeNeeded > 1)
+				{
+					WideCharToMultiByte(CP_UTF8, 0, desc.DeviceName, -1, systemId.data(), sizeNeeded, NULL, NULL);
+				}
+				std::string platformMonitorId = MonitorUtils::MakeId(systemId);
+
+				Size2D<zU32> resolution{
+					static_cast<zU32>(desc.DesktopCoordinates.right - desc.DesktopCoordinates.left),
+					static_cast<zU32>(desc.DesktopCoordinates.bottom - desc.DesktopCoordinates.top)
+				};
+
+				zI32 posX = desc.DesktopCoordinates.left;
+				zI32 posY = desc.DesktopCoordinates.top;
+				bool isPrimary = (posX == 0 && posY == 0);
+
+				selector.AddMonitor(MonitorInfo(platformMonitorId, systemId, resolution, posX, posY, isPrimary));
+			}
+		}
+
+		selector.SelectMonitor();
 	}
 #pragma endregion
 

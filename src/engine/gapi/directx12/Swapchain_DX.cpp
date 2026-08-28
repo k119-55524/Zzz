@@ -118,6 +118,8 @@ namespace zzz::engine
 		if (FAILED(hr))
 			THROW_RUNTIME("Failed to create RTV Descriptor Heap: 0x{:08X}", static_cast<uint32_t>(hr));
 
+		m_GAPI->SetDebugName(m_RtvHeap, "SwapchainRtvHeap");
+
 		m_RtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_RtvHeap->GetCPUDescriptorHandleForHeapStart();
@@ -126,6 +128,8 @@ namespace zzz::engine
 			hr = m_SwapChain->GetBuffer(i, IID_PPV_ARGS(&m_RenderTargets[i]));
 			if (FAILED(hr))
 				THROW_RUNTIME("Failed to get Swapchain Buffer {}: 0x{:08X}", i, static_cast<uint32_t>(hr));
+
+			m_GAPI->SetDebugName(m_RenderTargets[i], std::format("SwapchainRenderTarget[{}]", i).c_str());
 
 			D3D12_CPU_DESCRIPTOR_HANDLE currentHandle = rtvHandle;
 			currentHandle.ptr += static_cast<SIZE_T>(i * m_RtvDescriptorSize);

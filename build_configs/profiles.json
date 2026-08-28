@@ -16,6 +16,7 @@
       "activeDefines": [
         "Z_ADD_LOGGER",
         "Z_ADD_PROJECT_BENCHMARKS_IN_BUILD",
+        "Z_ADD_PROJECT_TESTS_IN_BUILD",
         "Z_GAPI_VERBOSE_DEBUG_LAYER",
         "Z_IDE_OUT_LOGS",
         "Z_TESTS_BENCH_ENABLE_COMMON",
@@ -45,13 +46,14 @@
         "Z_FORCE_VULKAN",
         "Z_GAPI_VERBOSE_DEBUG_LAYER",
         "Z_IDE_OUT_LOGS",
-        "Z_TESTS_BENCH_ENABLE_COMMON"
+        "Z_TESTS_BENCH_ENABLE_COMMON",
+        "Z_TESTS_ENABLE_COMMON"
       ],
       "description": "Подробный вывод логов GAPI",
       "name": "WIN_VULKAN_VERBOSE_LOGS"
     }
   ],
-  "currentConfig": "WIN_DX_LOGS",
+  "currentConfig": "WIN_VULKAN_VERBOSE_LOGS",
   "defines": [
     {
       "description": "Включить код логера в сборку",

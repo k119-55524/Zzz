@@ -68,6 +68,8 @@ namespace zzz::engine
 		if (vr != VK_SUCCESS)
 			THROW_RUNTIME("[DepthBuffer_VK::CreateDepthResources] Failed to create depth VkImage: 0x{:08X}", static_cast<uint32_t>(vr));
 
+		m_GAPI->SetDebugName(m_Image, "DepthImage");
+
 		VkMemoryRequirements memReqs;
 		vkGetImageMemoryRequirements(device, m_Image, &memReqs);
 
@@ -96,6 +98,8 @@ namespace zzz::engine
 		if (vr != VK_SUCCESS)
 			THROW_RUNTIME("[DepthBuffer_VK::CreateDepthResources] Failed to allocate memory for depth image: 0x{:08X}", static_cast<uint32_t>(vr));
 
+		m_GAPI->SetDebugName(m_Memory, "DepthImageMemory");
+
 		vkBindImageMemory(device, m_Image, m_Memory, 0);
 
 		VkImageViewCreateInfo viewInfo{};
@@ -114,6 +118,8 @@ namespace zzz::engine
 		vr = vkCreateImageView(device, &viewInfo, nullptr, &m_ImageView);
 		if (vr != VK_SUCCESS)
 			THROW_RUNTIME("[DepthBuffer_VK::CreateDepthResources] Failed to create VkImageView for depth image: 0x{:08X}", static_cast<uint32_t>(vr));
+
+		m_GAPI->SetDebugName(m_ImageView, "DepthImageView");
 
 		DOut(!Z_LOG_GET(g_IsResizing), "[DepthBuffer_VK::CreateDepthResources] Created DepthBuffer {}x{} (DepthFormat: {}).", m_Size.GetWidth(), m_Size.GetHeight(), m_Format);
 	}

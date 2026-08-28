@@ -101,6 +101,8 @@ namespace zzz::engine
 		if (vr != VK_SUCCESS)
 			THROW_RUNTIME("[Swapchain_VK::CreateSwapchain] Failed to create VkSwapchainKHR: 0x{:08X}", static_cast<uint32_t>(vr));
 
+		m_GAPI->SetDebugName(m_Swapchain, "MainSwapchain");
+
 		vkGetSwapchainImagesKHR(device, m_Swapchain, &imageCount, nullptr);
 		m_Images.resize(imageCount);
 		vkGetSwapchainImagesKHR(device, m_Swapchain, &imageCount, m_Images.data());
@@ -122,6 +124,8 @@ namespace zzz::engine
 			vr = vkCreateImageView(device, &viewInfo, nullptr, &m_ImageViews[i]);
 			if (vr != VK_SUCCESS)
 				THROW_RUNTIME("[Swapchain_VK::CreateSwapchain] Failed to create VkImageView [{}]: 0x{:08X}", i, static_cast<uint32_t>(vr));
+
+			m_GAPI->SetDebugName(m_ImageViews[i], std::format("SwapchainImageView[{}]", i).c_str());
 		}
 
 		DOut(!Z_LOG_GET(g_IsResizing), "[Swapchain_VK::CreateSwapchain] Created Swapchain {}x{} (Format: {}).", m_Size.GetWidth(), m_Size.GetHeight(), m_Format);

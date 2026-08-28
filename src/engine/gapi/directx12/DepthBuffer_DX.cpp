@@ -77,6 +77,8 @@ namespace zzz::engine
 		if (FAILED(hr))
 			THROW_RUNTIME("Failed to create DSV Descriptor Heap: 0x{:08X}", static_cast<uint32_t>(hr));
 
+		m_GAPI->SetDebugName(m_DsvHeap, "DepthDsvHeap");
+
 		m_DsvHandle = m_DsvHeap->GetCPUDescriptorHandleForHeapStart();
 
 		D3D12_RESOURCE_DESC depthStencilDesc{};
@@ -111,6 +113,8 @@ namespace zzz::engine
 
 		if (FAILED(hr))
 			THROW_RUNTIME("Failed to create Depth Stencil Buffer Resource: 0x{:08X}", static_cast<uint32_t>(hr));
+
+		m_GAPI->SetDebugName(m_DepthStencilBuffer, "DepthStencilBuffer");
 
 		device->CreateDepthStencilView(m_DepthStencilBuffer.Get(), nullptr, m_DsvHandle);
 	}

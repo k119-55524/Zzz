@@ -77,9 +77,13 @@ namespace zzz::engine
 			if (FAILED(hr))
 				THROW_RUNTIME("Failed to create Command Allocator [{}] in SurfView_DX: 0x{:08X}", i, static_cast<uint32_t>(hr));
 
+			m_GAPI->SetDebugName(m_CommandAllocators[i], std::format("SurfViewCommandAllocator[{}]", i).c_str());
+
 			hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_CommandAllocators[i].Get(), nullptr, IID_PPV_ARGS(&m_CommandLists[i]));
 			if (FAILED(hr))
 				THROW_RUNTIME("Failed to create Command List [{}] in SurfView_DX: 0x{:08X}", i, static_cast<uint32_t>(hr));
+
+			m_GAPI->SetDebugName(m_CommandLists[i], std::format("SurfViewCommandList[{}]", i).c_str());
 
 			m_CommandLists[i]->Close();
 			m_IsRecording[i] = false;

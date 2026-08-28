@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include "engine/gapi/IGAPI.h"
+#include "engine/gapi/GAPIDebugLogger.h"
 
 #if defined(Z_D3D12)
 namespace zzz::engine
@@ -20,16 +21,38 @@ namespace zzz::engine
 		[[nodiscard]] ID3D12Device* GetDevice() const noexcept { return m_Device.Get(); }
 		[[nodiscard]] ID3D12CommandQueue* GetCommandQueue() const noexcept { return m_CommandQueue.Get(); }
 
-	protected:
+		template<typename T>
+		void SetDebugName(const Microsoft::WRL::ComPtr<T>& object, const char* name) const
+		{
+#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
+			if (!object || !name)
+				return;
+
+			int wlen = MultiByteToWideChar(CP_UTF8, 0, name, -1, nullptr, 0);
+			if (wlen <= 0)
+				return;
+
+			std::wstring wname(static_cast<size_t>(wlen), L'\0');
+			MultiByteToWideChar(CP_UTF8, 0, name, -1, wname.data(), wlen);
+
+			object->SetName(wname.c_str());
+#endif
+		}
 
 	private:
 		friend class Engine;
 		void Initialize(std::shared_ptr<UserSettingsManager> userSettings) override;
 		void EnableDebugLayer(UINT& dxgiFactoryFlags);
+		void InitializeDevice(std::shared_ptr<UserSettingsManager> userSettings, UINT dxgiFactoryFlags);
 		[[nodiscard]] Microsoft::WRL::ComPtr<IDXGIFactory7> CreateFactory(UINT dxgiFactoryFlags);
 		[[nodiscard]] Microsoft::WRL::ComPtr<IDXGIAdapter1> GetAdapter(IDXGIFactory1* pFactory, const std::shared_ptr<UserSettingsManager>& userSettings);
 		void CreateDevice(IDXGIAdapter1* adapter);
-		void InitializeDevice(std::shared_ptr<UserSettingsManager> userSettings, UINT dxgiFactoryFlags);
+
+		// Подписывается на ID3D12InfoQueue1::RegisterMessageCallback, чтобы сообщения DX12 debug layer
+		// (сейчас идущие только в окно Output IDE) маршрутизировались в наш логгер через GAPIDebugLogger,
+		// как это уже сделано для Vulkan validation layer.
+		void RegisterDebugMessageCallback();
+
 		void SelectMonitor(IDXGIAdapter1* adapter, const std::shared_ptr<UserSettingsManager>& userSettings);
 
 		Microsoft::WRL::ComPtr<IDXGIFactory7> m_Factory;
@@ -43,6 +66,9 @@ namespace zzz::engine
 		Microsoft::WRL::ComPtr<ID3D12Fence> m_Fence;
 
 		D3D_FEATURE_LEVEL m_FeatureLevel{ zzz::core::c_DefaultFeatureLevel };
+
+		Microsoft::WRL::ComPtr<ID3D12InfoQueue1> m_InfoQueue;
+		DWORD m_InfoQueueCookie{ 0 };
 	};
 }
 #endif // Z_D3D12

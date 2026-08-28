@@ -3,8 +3,10 @@
 /* -------------------------------------------------------------
 
 	Макросы, задаваемые в current.cmake утилитами BuildConfigurator и build_configurator_switch:
-	- Z_FORCE_VULKAN      - принудительно использовать Vulkan на Windows.
-	- Z_IDE_OUT_LOGS      - вывод логов в IDE в случае вывода логов
+	- Z_FORCE_VULKAN             - принудительно использовать Vulkan на Windows.
+	- Z_IDE_OUT_LOGS             - вывод логов в IDE в случае вывода логов
+	- Z_ADD_LOGGER               - включить код логера в сборку
+	- Z_GAPI_VERBOSE_DEBUG_LAYER - вывод подробного лога графической подсистемы (Vulkan/DX12/Metal debug layer)
 
 	Режимы сборки:
 	- Z_EDITOR            - сборка движка для редактора
@@ -112,7 +114,7 @@
 
 // Вывод активных дефайнов
 #if defined(Z_PRINT_DEFINES)
-#pragma message(">>>>> ------- [ zdefines.h : active defines ] -------")
+#pragma message(">>>>> ------- [ Defines.h : active defines ] -------")
 #ifdef Z_TARGET_NAME
 #pragma message(">>>>> Target   : " Z_TARGET_NAME)
 #endif
@@ -148,6 +150,9 @@
 #endif
 #if Z_METAL
 #pragma message(">>>>> Graphics : Z_METAL")
+#endif
+#if defined(Z_GAPI_VERBOSE_DEBUG_LAYER)
+#pragma message(">>>>> GAPI     : Z_GAPI_VERBOSE_DEBUG_LAYER")
 #endif
 #if Z_DEBUG_BUILD
 #pragma message(">>>>> Build    : Z_DEBUG_BUILD")

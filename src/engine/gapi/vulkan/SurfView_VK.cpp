@@ -78,6 +78,7 @@ namespace zzz::engine
 			THROW_RUNTIME("[SurfView_VK::CreateVulkanSurface] Failed to create XCB surface: 0x{:08X}", static_cast<uint32_t>(vr));
 #endif
 #endif
+
 		return surface;
 	}
 
@@ -154,6 +155,8 @@ namespace zzz::engine
 		if (vr != VK_SUCCESS)
 			THROW_RUNTIME("[SurfView_VK::Initialize] Failed to create VkCommandPool: 0x{:08X}", static_cast<uint32_t>(vr));
 
+		m_GAPI->SetDebugName(m_CommandPool, "SurfViewCommandPool");
+
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		allocInfo.commandPool = m_CommandPool;
@@ -163,6 +166,9 @@ namespace zzz::engine
 		vr = vkAllocateCommandBuffers(device, &allocInfo, m_CommandBuffers.data());
 		if (vr != VK_SUCCESS)
 			THROW_RUNTIME("[SurfView_VK::Initialize] Failed to allocate VkCommandBuffers: 0x{:08X}", static_cast<uint32_t>(vr));
+
+		for (size_t i = 0; i < m_CommandBuffers.size(); ++i)
+			m_GAPI->SetDebugName(m_CommandBuffers[i], std::format("SurfViewCommandBuffer[{}]", i).c_str());
 
 		VkSemaphoreCreateInfo semaphoreInfo{};
 		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -178,6 +184,10 @@ namespace zzz::engine
 			{
 				THROW_RUNTIME("[SurfView_VK::Initialize] Failed to create sync objects for frame [{}]", i);
 			}
+
+			m_GAPI->SetDebugName(m_ImageAvailableSemaphores[i], std::format("ImageAvailableSemaphore[{}]", i).c_str());
+			m_GAPI->SetDebugName(m_InFlightFences[i], std::format("InFlightFence[{}]", i).c_str());
+
 			m_IsRecording[i] = false;
 		}
 
@@ -192,6 +202,8 @@ namespace zzz::engine
 			{
 				THROW_RUNTIME("[SurfView_VK::Initialize] Failed to create VkSemaphore for image [{}]", i);
 			}
+
+			m_GAPI->SetDebugName(m_RenderFinishedSemaphores[i], std::format("RenderFinishedSemaphore[{}]", i).c_str());
 		}
 	}
 #pragma endregion // Initialize
@@ -479,11 +491,13 @@ namespace zzz::engine
 				vkDestroyFence(device, m_InFlightFences[i], nullptr);
 			if (vkCreateFence(device, &fenceInfo, nullptr, &m_InFlightFences[i]) != VK_SUCCESS)
 				THROW_RUNTIME("[SurfView_VK::OnResize] Failed to recreate VkFence for frame [{}]", i);
+			m_GAPI->SetDebugName(m_InFlightFences[i], std::format("InFlightFence[{}]", i).c_str());
 
 			if (m_ImageAvailableSemaphores[i])
 				vkDestroySemaphore(device, m_ImageAvailableSemaphores[i], nullptr);
 			if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &m_ImageAvailableSemaphores[i]) != VK_SUCCESS)
 				THROW_RUNTIME("[SurfView_VK::OnResize] Failed to recreate VkSemaphore for frame [{}]", i);
+			m_GAPI->SetDebugName(m_ImageAvailableSemaphores[i], std::format("ImageAvailableSemaphore[{}]", i).c_str());
 		}
 	}
 }

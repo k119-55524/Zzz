@@ -55,6 +55,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "gapi/ISurfView.h"
         "gapi/SurfView.h"
         "gapi/GAPI.h"
+        "gapi/GAPIDebugLogger.h" "gapi/GAPIDebugLogger.cpp"
         "gapi/selectors/gpu/GpuRatingEvaluator.h"
         "gapi/selectors/gpu/IGpuSelector.h"
         "gapi/selectors/gpu/directx12/DirectX12GpuSelector.h" "gapi/selectors/gpu/directx12/DirectX12GpuSelector.cpp"
