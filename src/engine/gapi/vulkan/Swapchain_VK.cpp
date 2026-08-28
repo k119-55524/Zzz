@@ -1,5 +1,6 @@
 #include "engine/gapi/vulkan/Swapchain_VK.h"
 #include "engine/utils/EngineLogFlags.h"
+#include "core/utils/VKToStringHelpers.h"
 
 #if defined(Z_VULKAN)
 
@@ -32,7 +33,6 @@ namespace zzz::engine
 
 	void Swapchain_VK::CreateSwapchain(const Size2D<>& size)
 	{
-		m_Size = size;
 		VkDevice device = m_GAPI->GetDevice();
 		VkPhysicalDevice physDevice = m_GAPI->GetPhysicalDevice();
 
@@ -55,9 +55,16 @@ namespace zzz::engine
 		}
 		m_Format = surfaceFormat.format;
 
-		VkExtent2D extent = { static_cast<uint32_t>(m_Size.GetWidth()), static_cast<uint32_t>(m_Size.GetHeight()) };
+		VkExtent2D extent = { static_cast<uint32_t>(size.GetWidth()), static_cast<uint32_t>(size.GetHeight()) };
 		extent.width = std::clamp(extent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
 		extent.height = std::clamp(extent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+
+		// Драйвер (особенно на Win32, где currentExtent обычно жёстко привязан к текущему размеру окна)
+		// может вернуть capabilities, где min/maxImageExtent уже клампят extent к другому размеру, чем
+		// запрошенный `size`. m_Size обязан отражать РЕАЛЬНЫЙ размер созданных VkImage/VkImageView, а не
+		// запрошенный — иначе SurfView_VK будет строить renderArea по неверному размеру и Vulkan Validation
+		// упадёт на несоответствии imageView/renderArea сразу после ресайза.
+		m_Size = Size2D<>(extent.width, extent.height);
 
 		uint32_t imageCount = capabilities.minImageCount + 1;
 		if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount)
@@ -117,7 +124,7 @@ namespace zzz::engine
 				THROW_RUNTIME("[Swapchain_VK::CreateSwapchain] Failed to create VkImageView [{}]: 0x{:08X}", i, static_cast<uint32_t>(vr));
 		}
 
-		DOut(!Z_LOG_GET(g_IsResizing), "[Swapchain_VK::CreateSwapchain] Created Swapchain {}x{} (Format: {}).", m_Size.GetWidth(), m_Size.GetHeight(), static_cast<int>(m_Format));
+		DOut(!Z_LOG_GET(g_IsResizing), "[Swapchain_VK::CreateSwapchain] Created Swapchain {}x{} (Format: {}).", m_Size.GetWidth(), m_Size.GetHeight(), m_Format);
 	}
 
 	void Swapchain_VK::CleanupSwapchain()
@@ -184,7 +191,7 @@ namespace zzz::engine
 		CleanupSwapchain();
 		CreateSwapchain(size);
 
-		DOut(!Z_LOG_GET(g_IsResizing), "[Swapchain_VK::OnResize] Successfully resized to {}x{} (BackBufferFormat: {}).", m_Size.GetWidth(), m_Size.GetHeight(), static_cast<int>(m_Format));
+		DOut(!Z_LOG_GET(g_IsResizing), "[Swapchain_VK::OnResize] Successfully resized to {}x{} (BackBufferFormat: {}).", m_Size.GetWidth(), m_Size.GetHeight(), m_Format);
 	}
 }
 

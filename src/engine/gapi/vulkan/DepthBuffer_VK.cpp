@@ -1,5 +1,6 @@
 #include "engine/gapi/vulkan/DepthBuffer_VK.h"
 #include "engine/utils/EngineLogFlags.h"
+#include "core/utils/VKToStringHelpers.h"
 
 #if defined(Z_VULKAN)
 
@@ -114,7 +115,7 @@ namespace zzz::engine
 		if (vr != VK_SUCCESS)
 			THROW_RUNTIME("[DepthBuffer_VK::CreateDepthResources] Failed to create VkImageView for depth image: 0x{:08X}", static_cast<uint32_t>(vr));
 
-		DOut(!Z_LOG_GET(g_IsResizing), "[DepthBuffer_VK::CreateDepthResources] Created DepthBuffer {}x{} (DepthFormat: {}).", m_Size.GetWidth(), m_Size.GetHeight(), static_cast<int>(m_Format));
+		DOut(!Z_LOG_GET(g_IsResizing), "[DepthBuffer_VK::CreateDepthResources] Created DepthBuffer {}x{} (DepthFormat: {}).", m_Size.GetWidth(), m_Size.GetHeight(), m_Format);
 	}
 
 	void DepthBuffer_VK::OnResize(const Size2D<>& size)
@@ -122,7 +123,7 @@ namespace zzz::engine
 		Release();
 		CreateDepthResources(size);
 
-		DOut(!Z_LOG_GET(g_IsResizing), "[DepthBuffer_VK::OnResize] Successfully resized DepthBuffer to {}x{} (DepthFormat: {}).", m_Size.GetWidth(), m_Size.GetHeight(), static_cast<int>(m_Format));
+		DOut(!Z_LOG_GET(g_IsResizing), "[DepthBuffer_VK::OnResize] Successfully resized DepthBuffer to {}x{} (DepthFormat: {}).", m_Size.GetWidth(), m_Size.GetHeight(), m_Format);
 	}
 }
 

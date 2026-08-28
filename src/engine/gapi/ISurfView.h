@@ -4,7 +4,6 @@
 #include "engine/gapi/Swapchain.h"
 #include "engine/gapi/DepthBuffer.h"
 #include "engine/platforms/window/NativeWindow.h"
-
 #include "engine/gapi/clear_config/ViewClearConfig.h"
 
 using namespace zzz::core;

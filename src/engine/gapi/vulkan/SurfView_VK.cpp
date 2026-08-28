@@ -2,7 +2,6 @@
 #include "SurfView_VK.h"
 #include "Swapchain_VK.h"
 #include "DepthBuffer_VK.h"
-#include "engine/utils/EngineLogFlags.h"
 
 #if defined(Z_VULKAN)
 namespace zzz::engine
@@ -199,6 +198,8 @@ namespace zzz::engine
 
 	void SurfView_VK::PreRender()
 	{
+		std::lock_guard<std::mutex> lock(m_SubmitMutex);
+
 		if (!m_Swapchain || !m_DepthBuffer)
 			return;
 
@@ -245,6 +246,8 @@ namespace zzz::engine
 
 	void SurfView_VK::PrepareFrame()
 	{
+		std::lock_guard<std::mutex> lock(m_SubmitMutex);
+
 		if (!m_Swapchain || !m_DepthBuffer)
 			return;
 
@@ -378,6 +381,12 @@ namespace zzz::engine
 
 	void SurfView_VK::RenderFrame()
 	{
+		// Весь метод держит m_SubmitMutex, чтобы OnResize() не мог пересоздать Swapchain/DepthBuffer
+		// (и обнулить m_IsRecording/m_CurrentImageIndex) между проверкой готовности кадра и его
+		// реальной отправкой/презентацией — иначе кадр уйдёт в vkQueueSubmit/vkQueuePresentKHR по уже
+		// уничтоженным Swapchain-ресурсам.
+		std::lock_guard<std::mutex> lock(m_SubmitMutex);
+
 		if (!m_Swapchain)
 			return;
 
@@ -399,11 +408,7 @@ namespace zzz::engine
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &m_RenderFinishedSemaphores[imgIdx];
 
-		VkResult vr = VK_SUCCESS;
-		{
-			std::lock_guard lock(m_SubmitMutex);
-			vr = vkQueueSubmit(m_GAPI->GetGraphicsQueue(), 1, &submitInfo, m_InFlightFences[renderIdx]);
-		}
+		VkResult vr = vkQueueSubmit(m_GAPI->GetGraphicsQueue(), 1, &submitInfo, m_InFlightFences[renderIdx]);
 
 		if (vr != VK_SUCCESS)
 		{
@@ -425,9 +430,61 @@ namespace zzz::engine
 		std::lock_guard<std::mutex> lock(m_SubmitMutex);
 
 		m_GAPI->WaitForGpu();
-		m_OldSize = size;
 		m_Swapchain->OnResize(size);
-		m_DepthBuffer->OnResize(size);
+
+		// Swapchain_VK::CreateSwapchain клампит запрошенный `size` под VkSurfaceCapabilitiesKHR и хранит
+		// РЕАЛЬНЫЙ размер созданных VkImage/VkImageView в своём m_Size — он может отличаться от того, что
+		// запросили (особенно на Win32, где currentExtent жёстко привязан к текущему размеру окна). Дальше
+		// DepthBuffer и renderArea в PrepareFrame() обязаны ориентироваться именно на этот реальный размер,
+		// а не на исходный `size` — иначе imageView (color/depth) и renderArea разойдутся в размере.
+		const Size2D<>& actualSize = static_cast<Swapchain_VK*>(m_Swapchain.get())->GetSize();
+		m_OldSize = actualSize;
+		m_DepthBuffer->OnResize(actualSize);
+
+		// DepthBuffer пересоздаёт VkImage заново (initialLayout = UNDEFINED), поэтому барьер перехода
+		// layout'а нужно повторить для нового изображения — иначе PrepareFrame() решит, что переход уже
+		// был сделан (см. m_IsDepthInitialLayoutTransitioned), и будет использовать в рендеринге старый
+		// (несуществующий) layout DEPTH_STENCIL_ATTACHMENT_OPTIMAL для изображения, всё ещё находящегося
+		// в UNDEFINED.
+		m_IsDepthInitialLayoutTransitioned = false;
+
+		// Любой кадр, для которого уже был вызван PreRender() (acquire у старого Swapchain) или
+		// PrepareFrame() (запись команд по старым Swapchain/DepthBuffer) до этого resize, теперь
+		// ссылается на уничтоженные ресурсы — такие кадры нельзя ни дорисовывать, ни отправлять в GPU.
+		//
+		// Но просто пропустить их отправку недостаточно: PreRender() уже мог сбросить (vkResetFences)
+		// фенс этого индекса перед acquire — а сигналит его только vkQueueSubmit в RenderFrame(), который
+		// мы для этого кадра теперь пропускаем. Не пересоздав фенс сигналённым, следующий PreRender() для
+		// того же индекса встанет в vkWaitForFences(..., UINT64_MAX) навсегда — приложение зависает без
+		// единой ошибки в логе. По той же причине пересоздаём и m_ImageAvailableSemaphores: если acquire
+		// в PreRender() успел сигналить семафор, а RenderFrame() его так и не дождался (пропущен), то
+		// следующий vkAcquireNextImageKHR попытается сигналить уже сигналённый бинарный семафор — что
+		// запрещено спецификацией Vulkan. WaitForGpu() выше гарантирует, что GPU уже ничего не делает с
+		// этими объектами, так что их безопасно уничтожить и создать заново в чистом состоянии.
+		VkDevice device = m_GAPI->GetDevice();
+
+		VkSemaphoreCreateInfo semaphoreInfo{};
+		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+		VkFenceCreateInfo fenceInfo{};
+		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+		for (size_t i = 0; i < c_FramesInFlight; ++i)
+		{
+			m_FrameReady[i] = false;
+			m_IsRecording[i] = false;
+
+			if (m_InFlightFences[i])
+				vkDestroyFence(device, m_InFlightFences[i], nullptr);
+			if (vkCreateFence(device, &fenceInfo, nullptr, &m_InFlightFences[i]) != VK_SUCCESS)
+				THROW_RUNTIME("[SurfView_VK::OnResize] Failed to recreate VkFence for frame [{}]", i);
+
+			if (m_ImageAvailableSemaphores[i])
+				vkDestroySemaphore(device, m_ImageAvailableSemaphores[i], nullptr);
+			if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &m_ImageAvailableSemaphores[i]) != VK_SUCCESS)
+				THROW_RUNTIME("[SurfView_VK::OnResize] Failed to recreate VkSemaphore for frame [{}]", i);
+		}
 	}
 }
 #endif // Z_VULKAN
