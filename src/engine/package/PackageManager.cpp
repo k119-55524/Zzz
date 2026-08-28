@@ -151,10 +151,21 @@ namespace zzz::engine
 		return data;
 	}
 
+	// Явные инстанциации LoadPackageData<T> - LoadPackageDataByGuid/ByName (шаблоны в заголовке) могут
+	// дёргать этот приватный метод из других TU, а его тело видно только здесь. Раньше ChildViewData/
+	// IndependentViewData инстанцировались только через LogEntriesSummaryForType под Z_ADD_LOGGER -
+	// в Release эта ветка пуста, и линковка внешних вызовов (ViewManager.cpp) падала с LNK2019.
+	template std::expected<ProjectManifestData, std::string> PackageManager::LoadPackageData<ProjectManifestData>(const PackageEntry&) const;
+	template std::expected<PrimaryViewData, std::string> PackageManager::LoadPackageData<PrimaryViewData>(const PackageEntry&) const;
+	template std::expected<SceneData, std::string> PackageManager::LoadPackageData<SceneData>(const PackageEntry&) const;
+	template std::expected<ChildViewData, std::string> PackageManager::LoadPackageData<ChildViewData>(const PackageEntry&) const;
+	template std::expected<IndependentViewData, std::string> PackageManager::LoadPackageData<IndependentViewData>(const PackageEntry&) const;
+	template std::expected<PrefabData, std::string> PackageManager::LoadPackageData<PrefabData>(const PackageEntry&) const;
+
 #pragma region Logging
 	void PackageManager::LogPackageEntriesSummary() const
 	{
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+#if Z_ADD_LOGGER
 		DOut("========== [PackageManager] Package Data: {} ==========", m_PackagePath.string());
 		// Закомментируй тот тип ресурса, который не хочешь логировать
 		LogEntriesSummaryForType<ProjectManifestData>(ePackage::ProjectManifest);

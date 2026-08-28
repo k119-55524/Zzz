@@ -50,7 +50,7 @@ namespace zzz::core
 
 		inline void LogFileBlock([[maybe_unused]] std::string_view indentation = {}) const
 		{
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+#if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";
 			DOut("{}[StorageInfo]", indentation);
 			DOut("{}name: {}", nestedIndentation, m_Name);

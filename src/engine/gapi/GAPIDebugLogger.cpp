@@ -1,4 +1,5 @@
 #include "engine/gapi/GAPIDebugLogger.h"
+#include "core/utils/macros/GAPILogMacros.h"
 
 #if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
 namespace zzz::engine
@@ -45,15 +46,15 @@ namespace zzz::engine
 		switch (severity)
 		{
 		case eGAPIDebugSeverity::Error:
-			DOutError("[{} | {}] {}", EnumToString::ToString(backend), EnumToString::ToString(category), message);
+			DOutErrorGAPI(">#### [GAPI:{}] [{}] {}", EnumToString::ToString(backend), EnumToString::ToString(category), message);
 			break;
 		case eGAPIDebugSeverity::Warning:
-			DOutWarning("[{} | {}] {}", EnumToString::ToString(backend), EnumToString::ToString(category), message);
+			DOutWarningGAPI(">#### [GAPI:{}] [{}] {}", EnumToString::ToString(backend), EnumToString::ToString(category), message);
 			break;
 		case eGAPIDebugSeverity::Info:
 		case eGAPIDebugSeverity::Verbose:
 		default:
-			DOut("[{} | {} | {}] {}", EnumToString::ToString(backend), EnumToString::ToString(category), EnumToString::ToString(severity), message);
+			DOutGAPI(">#### [GAPI:{}] [{} | {}] {}", EnumToString::ToString(backend), EnumToString::ToString(category), EnumToString::ToString(severity), message);
 			break;
 		}
 	}

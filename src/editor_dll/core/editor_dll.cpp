@@ -30,7 +30,7 @@ extern "C"
 		try
 		{
 			g_EditorLogCallback = callback;
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+#if Z_ADD_LOGGER
 			zzz::logger::g_Logger.AddCallbackBroadcaster(callback);
 #endif
 

@@ -103,13 +103,22 @@
     #define Z_DEBUG_BUILD 1
 #endif
 
-// Если компилируется Release-сборка — гарантированно выключаем все виды отладочных проверок и логов,
-// даже если они случайно были переданы через настройки проекта или CMake.
+// Финализация логирующих дефайнов (Z_ADD_LOGGER / Z_IDE_OUT_LOGS / Z_GAPI_VERBOSE_DEBUG_LAYER).
+// Z_DEBUG_BUILD сам по себе НЕ включает IDE-вывод и verbose - это независимые ручные флаги профиля.
+// Z_DEVELOPMENT_BUILD - единственный тип сборки, форсирующий логер: девелоп-сборка без логов бессмысленна.
+#if !Z_ADD_LOGGER && Z_DEVELOPMENT_BUILD
+    #undef Z_ADD_LOGGER
+    #define Z_ADD_LOGGER 1
+#endif
+
+// Release гарантированно гасит все логи, даже если профиль/CMake их случайно передали.
 #if Z_RELEASE_BUILD
     #undef Z_ADD_LOGGER
     #define Z_ADD_LOGGER 0
     #undef Z_IDE_OUT_LOGS
     #define Z_IDE_OUT_LOGS 0
+    #undef Z_GAPI_VERBOSE_DEBUG_LAYER
+    #define Z_GAPI_VERBOSE_DEBUG_LAYER 0
 #endif
 
 // Вывод активных дефайнов
@@ -151,7 +160,7 @@
 #if Z_METAL
 #pragma message(">>>>> Graphics : Z_METAL")
 #endif
-#if defined(Z_GAPI_VERBOSE_DEBUG_LAYER)
+#if Z_GAPI_VERBOSE_DEBUG_LAYER
 #pragma message(">>>>> GAPI     : Z_GAPI_VERBOSE_DEBUG_LAYER")
 #endif
 #if Z_DEBUG_BUILD

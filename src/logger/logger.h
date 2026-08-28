@@ -24,7 +24,7 @@ namespace zzz::logger
 	 *
 	 * 2. **Правила гарантированного вывода логов**:
 	 *    - `LogWarning`, `LogError`, `LogException`, `LogCritical`, `LogFatal` — обрабатываются **всегда** во всех сборках.
-	 *    - `LogMessage` — обрабатывается только при наличии дефайнов `Z_ADD_LOGGER` или `Z_DEVELOPMENT_BUILD`.
+	 *    - `LogMessage` — обрабатывается только при активном `Z_ADD_LOGGER` (уже включает Z_DEVELOPMENT_BUILD).
 	 *    - Если взведен макрос `Z_IDE_OUT_LOGS`, лог напрямую выводится в отладочную консоль IDE (`OutputDebugString` / `__android_log`),
 	 *      даже если список слушателей `m_Listeners` пуст.
 	 *
@@ -75,7 +75,7 @@ namespace zzz::logger
 		 */
 		void SetMaxNetworkLogQueueSize(zU32 newSize);
 
-		/** @brief Регистрирует информационное сообщение (выводится при Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD). */
+		/** @brief Регистрирует информационное сообщение (выводится при Z_ADD_LOGGER). */
 		void LogMessage(const std::source_location& loc, std::string formatted);
 		/** @brief Регистрирует предупреждение (гарантированный вывод). */
 		void LogWarning(const std::source_location& loc, std::string formatted);

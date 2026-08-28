@@ -438,7 +438,7 @@ namespace zzz::engine
 #pragma region Logging
 	void UserSettingsManager::LogUserData() const
 	{
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+#if Z_ADD_LOGGER
 		DOut("========== [UserSettingsManager] User Data: {} ==========", m_ConfigPath.string());
 		if (m_PrimaryViewUserData)
 			m_PrimaryViewUserData->LogFileBlock("  ");

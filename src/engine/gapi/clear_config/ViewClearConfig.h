@@ -27,7 +27,7 @@ namespace zzz::engine
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+#if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";
 			DOut("{}[ViewClearConfig]", indentation);
 			surface.LogFileBlock(nestedIndentation);

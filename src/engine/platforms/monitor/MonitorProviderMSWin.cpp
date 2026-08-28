@@ -100,7 +100,7 @@ namespace zzz::engine
 
 	void MonitorProviderMSWin::LogMonitors() const
 	{
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+#if Z_ADD_LOGGER
 		DOut("[MonitorProviderMSWin] Обнаружено мониторов: {}", m_Monitors.size());
 		for (std::size_t i = 0; i < m_Monitors.size(); ++i)
 		{

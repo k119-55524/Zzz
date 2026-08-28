@@ -60,7 +60,7 @@ namespace zzz::core
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+#if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";
 			DOut("{}[ViewUserData]", indentation);
 			DOut("{}viewGuid: {}", nestedIndentation, m_State.GetViewGuid().ToString());

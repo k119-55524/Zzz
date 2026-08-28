@@ -119,7 +119,7 @@ namespace zzz::engine
 			debugController->EnableDebugLayer();
 			dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
 
-#if defined(Z_GAPI_VERBOSE_DEBUG_LAYER)
+#if Z_GAPI_VERBOSE_DEBUG_LAYER
 			Microsoft::WRL::ComPtr<ID3D12Debug1> debugController1;
 			if (SUCCEEDED(debugController.As(&debugController1)))
 			{

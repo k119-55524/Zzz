@@ -134,7 +134,7 @@ namespace zzz::engine
 		// Расширенные настройки VK_LAYER_KHRONOS_validation через VK_EXT_layer_settings - включаются только
 		// в Debug/Development сборках под Z_GAPI_VERBOSE_DEBUG_LAYER, т.к. заметно увеличивают объём проверок
 		// (и, соответственно, лога). Без этого дефайна слой работает с настройками по умолчанию, как и раньше.
-#if (Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD) && defined(Z_GAPI_VERBOSE_DEBUG_LAYER)
+#if (Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD) && Z_GAPI_VERBOSE_DEBUG_LAYER
 		if (!validationLayerFound)
 			return false;
 
@@ -166,7 +166,7 @@ namespace zzz::engine
 		(void)outLayerSettings;
 		(void)outLayerSettingsCreateInfo;
 		return false;
-#endif // (Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD) && defined(Z_GAPI_VERBOSE_DEBUG_LAYER)
+#endif // (Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD) && Z_GAPI_VERBOSE_DEBUG_LAYER
 	}
 
 	void VulkanAPI::EnableDebugMessenger()
@@ -175,7 +175,7 @@ namespace zzz::engine
 		VkDebugUtilsMessengerCreateInfoEXT debugInfo{};
 		debugInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 		debugInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-#if defined(Z_GAPI_VERBOSE_DEBUG_LAYER)
+#if Z_GAPI_VERBOSE_DEBUG_LAYER
 		debugInfo.messageSeverity |= VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT;
 #endif // Z_GAPI_VERBOSE_DEBUG_LAYER
 		debugInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;

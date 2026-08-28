@@ -53,7 +53,7 @@
       "name": "WIN_VULKAN_VERBOSE_LOGS"
     }
   ],
-  "currentConfig": "WIN_VULKAN_VERBOSE_LOGS",
+  "currentConfig": "WIN_DX_LOGS",
   "defines": [
     {
       "description": "Включить код логера в сборку",

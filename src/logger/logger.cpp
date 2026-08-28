@@ -68,7 +68,7 @@ void Logger::SetMaxNetworkLogQueueSize(zU32 newSize)
 #pragma region LogXXX messages
 void Logger::LogMessage(const std::source_location& loc, std::string formatted)
 {
-#if Z_ADD_LOGGER || Z_DEVELOPMENT_BUILD
+#if Z_ADD_LOGGER
 	ProcessLog(loc, eLogMessageType::Message, std::move(formatted));
 #else
 	(void)loc;
@@ -172,9 +172,18 @@ void Logger::DebugOutputIDE(const std::source_location& loc, eLogMessageType typ
 #endif
 }
 
+namespace
+{
+	// Пустой source_location (см. GAPILogMacros.h) значит "call site не показывать".
+	bool HasCallSite(const std::source_location& loc)
+	{
+		return loc.file_name() && *loc.file_name() != '\0';
+	}
+}
+
 std::string Logger::MakeLogMessage(const std::source_location& loc, eLogMessageType type, const std::string& msg)
 {
-	if (!!(type & eLogMessageType::Message))
+	if (!!(type & eLogMessageType::Message) || !HasCallSite(loc))
 		return std::format(
 			">>>>> [{}] {}{}",
 			EnumToString::ToString(type),
@@ -192,6 +201,13 @@ std::string Logger::MakeLogMessage(const std::source_location& loc, eLogMessageT
 
 std::string Logger::MakeLogMessageError(const std::source_location& loc, eLogMessageType type, const std::string& msg)
 {
+	if (!HasCallSite(loc))
+		return std::format(
+			">>>>> [{}] {}{}",
+			EnumToString::ToString(type),
+			msg,
+			GetPlatformLogLineEnding());
+
 	return std::format(
 		">>>>> [{}] {} -> [{}]. line: {}, file: {}{}",
 		EnumToString::ToString(type),
