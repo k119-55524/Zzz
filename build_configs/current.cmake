@@ -9,5 +9,6 @@ set(Z_TESTS_ENABLE_COMMON ON)
 
 add_compile_definitions(
     Z_ADD_LOGGER=1
+    Z_GAPI_VERBOSE_DEBUG_LAYER=0
     Z_IDE_OUT_LOGS=1
 )
