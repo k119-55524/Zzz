@@ -63,13 +63,13 @@ bool Logger::IsCategoryEnabled(const LogCategory& category) const
 	if (!groupEnabled)
 		return false;
 
-	std::lock_guard lock(m_DisabledCategoriesMutex);
-	return !m_DisabledCategories.contains(std::string(category.name));
+	std::shared_lock lock(m_DisabledCategoriesMutex);
+	return !m_DisabledCategories.contains(category.name);
 }
 
 void Logger::SetCategoryEnabled(std::string_view categoryName, bool enabled)
 {
-	std::lock_guard lock(m_DisabledCategoriesMutex);
+	std::unique_lock lock(m_DisabledCategoriesMutex);
 	if (enabled)
 		m_DisabledCategories.erase(std::string(categoryName));
 	else

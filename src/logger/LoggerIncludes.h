@@ -1,18 +1,18 @@
 #pragma once
 
-#include <source_location>
 #include <thread>
 #include <mutex>
 #include <atomic>
 #include <vector>
 #include <memory>
+#include <shared_mutex>
+#include <source_location>
 #include <condition_variable>
-
 #include <core/CoreIncludes.h>
-#include <core/serialize/Serializer.h>
-#include <core/enums/eLogMessageType.h>
 #include <core/utils/Macroses.h>
 #include <core/utils/Constants.h>
+#include <core/serialize/Serializer.h>
+#include <core/enums/eLogMessageType.h>
 #include <core/templates/DoubleBufferedVector.h>
 
 using namespace zzz::core;
