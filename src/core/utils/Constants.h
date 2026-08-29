@@ -68,17 +68,6 @@ namespace zzz::core
 	constexpr MTLPixelFormat c_DefaultDepthFormat = MTLPixelFormatDepth32Float_Stencil8;
 #endif
 
-#if defined(Z_D3D12) || defined(Z_VULKAN)
-	// DirectX12 и Vulkan список включённых "тегов" debug-сообщений 
-	constexpr std::array c_GAPIDebugReportFlags =
-	{
-		"error", // ошибки/нарушения спецификации
-		"warn",  // предупреждения
-		"perf",  // предупреждения о производительности
-		// "info",  // информационные сообщения (не только проблемы, а вообще всё, что достойно упоминания)
-		// "debug", // самый подробный уровень (Vulkan VERBOSE / DX12 MESSAGE) - crazy verbose
-	};
-#endif // defined(Z_D3D12) || defined(Z_VULKAN)
 #pragma endregion
 
 #pragma region Network & Logger constants
