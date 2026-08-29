@@ -97,44 +97,26 @@ namespace zzz::core
 #pragma endregion 
 
 #pragma region Built-in Log Categories
-	// Единый центр конфигурации встроенных категорий логирования движка.
-	// Макросы определяются здесь, используются один раз, потом обнуляются.
 	
-	namespace detail {
 #define Z_DECLARE_LOG_CATEGORY_ENGINE(Name) \
-		inline constexpr LogCategory Name{ #Name, eLogCategoryGroup::Engine, false }
+	inline constexpr LogCategory Name{ #Name, eLogCategoryGroup::Engine, false }
 
 #define Z_DECLARE_GUARANTEED_LOG_CATEGORY_ENGINE(Name) \
-		inline constexpr LogCategory Name{ #Name, eLogCategoryGroup::Engine, true }
+	inline constexpr LogCategory Name{ #Name, eLogCategoryGroup::Engine, true }
 
-		// Гарантированные - не подлежат рантайм-фильтрации ни при каких настройках
-		Z_DECLARE_GUARANTEED_LOG_CATEGORY_ENGINE(LogGeneral);
-		Z_DECLARE_GUARANTEED_LOG_CATEGORY_ENGINE(LogEngine);
+	Z_DECLARE_GUARANTEED_LOG_CATEGORY_ENGINE(LogGeneral);
+	Z_DECLARE_GUARANTEED_LOG_CATEGORY_ENGINE(LogEngine);
 
-		// Фильтруемые категории движка
-		Z_DECLARE_LOG_CATEGORY_ENGINE(LogGAPI);
-		Z_DECLARE_LOG_CATEGORY_ENGINE(LogGAPIVerbose);
-		Z_DECLARE_LOG_CATEGORY_ENGINE(LogECS);
-		Z_DECLARE_LOG_CATEGORY_ENGINE(LogAudio);
-		Z_DECLARE_LOG_CATEGORY_ENGINE(LogPhysics);
-		Z_DECLARE_LOG_CATEGORY_ENGINE(LogAssets);
-		Z_DECLARE_LOG_CATEGORY_ENGINE(LogNetwork);
-		Z_DECLARE_LOG_CATEGORY_ENGINE(LogUI);
+	Z_DECLARE_LOG_CATEGORY_ENGINE(LogGAPI);
+	Z_DECLARE_LOG_CATEGORY_ENGINE(LogGAPIVerbose);
+	Z_DECLARE_LOG_CATEGORY_ENGINE(LogECS);
+	Z_DECLARE_LOG_CATEGORY_ENGINE(LogAudio);
+	Z_DECLARE_LOG_CATEGORY_ENGINE(LogPhysics);
+	Z_DECLARE_LOG_CATEGORY_ENGINE(LogAssets);
+	Z_DECLARE_LOG_CATEGORY_ENGINE(LogNetwork);
+	Z_DECLARE_LOG_CATEGORY_ENGINE(LogUI);
 
 #undef Z_DECLARE_LOG_CATEGORY_ENGINE
 #undef Z_DECLARE_GUARANTEED_LOG_CATEGORY_ENGINE
-	}
-
-	// Экспортируем встроенные категории в публичное пространство
-	using detail::LogGeneral;
-	using detail::LogEngine;
-	using detail::LogGAPI;
-	using detail::LogGAPIVerbose;
-	using detail::LogECS;
-	using detail::LogAudio;
-	using detail::LogPhysics;
-	using detail::LogAssets;
-	using detail::LogNetwork;
-	using detail::LogUI;
 #pragma endregion
 }
