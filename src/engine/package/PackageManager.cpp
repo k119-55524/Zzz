@@ -6,6 +6,8 @@
 #include "core/io/package/IndependentViewData.h"
 #include "core/io/package/PrefabData.h"
 
+Z_SET_LOG_CATEGORY(::zzz::core::Assets);
+
 using namespace zzz::core;
 
 namespace zzz::engine

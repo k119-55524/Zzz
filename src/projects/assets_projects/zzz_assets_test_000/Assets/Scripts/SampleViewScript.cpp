@@ -3,6 +3,8 @@
 
 #include "SampleViewScript.h"
 
+Z_SET_LOG_CATEGORY(::zzz::core::ScriptView);
+
 void SampleViewScript::OnBindEvents()
 {
 	SubscribeToStart([this]() { OnStart(); });

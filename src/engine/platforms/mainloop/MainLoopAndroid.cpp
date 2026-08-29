@@ -3,6 +3,8 @@
 #include "MainLoop_Android.h"
 #include "../Platform.h"
 
+Z_SET_LOG_CATEGORY(::zzz::core::LogEngine);
+
 using namespace zzz::engine;
 
 namespace zzz::engine {

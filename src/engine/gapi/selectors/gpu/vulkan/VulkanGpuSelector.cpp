@@ -2,6 +2,8 @@
 #include "engine/utils/GpuUtils.h"
 #include "engine/gapi/selectors/gpu/vulkan/VulkanGpuSelector.h"
 
+Z_SET_LOG_CATEGORY(::zzz::core::GAPI);
+
 #if defined(Z_VULKAN)
 
 namespace

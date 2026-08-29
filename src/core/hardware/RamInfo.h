@@ -47,11 +47,11 @@ namespace zzz::core
 		{
 #if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut("{}[RamInfo]", indentation);
-			DOut("{}type: {}", nestedIndentation, GetTypeString(m_Type));
-			DOut("{}speedMTs: {} MT/s", nestedIndentation, m_SpeedMTs);
-			DOut("{}totalRamBytes: {} MB", nestedIndentation, m_TotalRamBytes / (1024 * 1024));
-			DOut("{}availableRamBytes: {} MB", nestedIndentation, m_AvailableRamBytes / (1024 * 1024));
+			DOut(::zzz::core::Hardware, "{}[RamInfo]", indentation);
+			DOut(::zzz::core::Hardware, "{}type: {}", nestedIndentation, GetTypeString(m_Type));
+			DOut(::zzz::core::Hardware, "{}speedMTs: {} MT/s", nestedIndentation, m_SpeedMTs);
+			DOut(::zzz::core::Hardware, "{}totalRamBytes: {} MB", nestedIndentation, m_TotalRamBytes / (1024 * 1024));
+			DOut(::zzz::core::Hardware, "{}availableRamBytes: {} MB", nestedIndentation, m_AvailableRamBytes / (1024 * 1024));
 #endif
 		}
 

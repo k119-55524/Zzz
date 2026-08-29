@@ -32,10 +32,10 @@ namespace zzz::core
 		{
 #if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut("{}[MotherboardInfo]", indentation);
-			DOut("{}vendor: {}", nestedIndentation, m_Vendor);
-			DOut("{}model: {}", nestedIndentation, m_Model);
-			DOut("{}systemUuid: {}", nestedIndentation, m_SystemUuid);
+			DOut(::zzz::core::Hardware, "{}[MotherboardInfo]", indentation);
+			DOut(::zzz::core::Hardware, "{}vendor: {}", nestedIndentation, m_Vendor);
+			DOut(::zzz::core::Hardware, "{}model: {}", nestedIndentation, m_Model);
+			DOut(::zzz::core::Hardware, "{}systemUuid: {}", nestedIndentation, m_SystemUuid);
 #endif
 		}
 

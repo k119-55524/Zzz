@@ -4,6 +4,8 @@
 #include "core/io/package/ViewUserData.h"
 #include "engine/view/View.h"
 
+Z_SET_LOG_CATEGORY(::zzz::core::Assets);
+
 using namespace zzz::core;
 using zzz::core::PrimaryViewUserData;
 

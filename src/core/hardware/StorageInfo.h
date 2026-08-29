@@ -52,13 +52,13 @@ namespace zzz::core
 		{
 #if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut("{}[StorageInfo]", indentation);
-			DOut("{}name: {}", nestedIndentation, m_Name);
-			DOut("{}mountPath: {}", nestedIndentation, m_MountPath);
-			DOut("{}type: {}", nestedIndentation, GetTypeString(m_Type));
-			DOut("{}totalSizeBytes: {} GB", nestedIndentation, m_TotalSizeBytes / (1024 * 1024 * 1024));
-			DOut("{}freeSizeBytes: {} GB", nestedIndentation, m_FreeSizeBytes / (1024 * 1024 * 1024));
-			DOut("{}isSystemDrive: {}", nestedIndentation, m_IsSystemDrive);
+			DOut(::zzz::core::Hardware, "{}[StorageInfo]", indentation);
+			DOut(::zzz::core::Hardware, "{}name: {}", nestedIndentation, m_Name);
+			DOut(::zzz::core::Hardware, "{}mountPath: {}", nestedIndentation, m_MountPath);
+			DOut(::zzz::core::Hardware, "{}type: {}", nestedIndentation, GetTypeString(m_Type));
+			DOut(::zzz::core::Hardware, "{}totalSizeBytes: {} GB", nestedIndentation, m_TotalSizeBytes / (1024 * 1024 * 1024));
+			DOut(::zzz::core::Hardware, "{}freeSizeBytes: {} GB", nestedIndentation, m_FreeSizeBytes / (1024 * 1024 * 1024));
+			DOut(::zzz::core::Hardware, "{}isSystemDrive: {}", nestedIndentation, m_IsSystemDrive);
 #endif
 		}
 

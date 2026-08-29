@@ -45,10 +45,10 @@ namespace zzz::engine
 		{
 #if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut("{}[SurfaceClearConfig]", indentation);
-			DOut("{}mode: {}", nestedIndentation, mode == eSurfaceClearMode::Color ? "Color" : (mode == eSurfaceClearMode::Shader ? "Shader" : "None"));
-			DOut("{}color: {}", nestedIndentation, color.ToString());
-			DOut("{}shaderGuid: {}", nestedIndentation, shaderGuid.ToString());
+			DOut(::zzz::core::GAPI, "{}[SurfaceClearConfig]", indentation);
+			DOut(::zzz::core::GAPI, "{}mode: {}", nestedIndentation, mode == eSurfaceClearMode::Color ? "Color" : (mode == eSurfaceClearMode::Shader ? "Shader" : "None"));
+			DOut(::zzz::core::GAPI, "{}color: {}", nestedIndentation, color.ToString());
+			DOut(::zzz::core::GAPI, "{}shaderGuid: {}", nestedIndentation, shaderGuid.ToString());
 #endif
 		}
 

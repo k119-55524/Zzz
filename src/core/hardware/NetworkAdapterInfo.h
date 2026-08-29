@@ -35,12 +35,12 @@ namespace zzz::core
 		{
 #if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut("{}[NetworkAdapterInfo]", indentation);
-			DOut("{}name: {}", nestedIndentation, m_Name);
-			DOut("{}macAddress: {}", nestedIndentation, m_MacAddress);
-			DOut("{}transmitSpeedMbps: {}", nestedIndentation, m_TransmitSpeedMbps);
-			DOut("{}receiveSpeedMbps: {}", nestedIndentation, m_ReceiveSpeedMbps);
-			DOut("{}isActive: {}", nestedIndentation, m_IsActive);
+			DOut(::zzz::core::Hardware, "{}[NetworkAdapterInfo]", indentation);
+			DOut(::zzz::core::Hardware, "{}name: {}", nestedIndentation, m_Name);
+			DOut(::zzz::core::Hardware, "{}macAddress: {}", nestedIndentation, m_MacAddress);
+			DOut(::zzz::core::Hardware, "{}transmitSpeedMbps: {}", nestedIndentation, m_TransmitSpeedMbps);
+			DOut(::zzz::core::Hardware, "{}receiveSpeedMbps: {}", nestedIndentation, m_ReceiveSpeedMbps);
+			DOut(::zzz::core::Hardware, "{}isActive: {}", nestedIndentation, m_IsActive);
 #endif
 		}
 

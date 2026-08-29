@@ -13,7 +13,7 @@ namespace zzz::core
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			DOut("{}[ProjectPlatformDataiOS]", indentation);
+			DOut(::zzz::core::Assets, "{}[ProjectPlatformDataiOS]", indentation);
 		}
 
 	private:

@@ -36,11 +36,11 @@ namespace zzz::core
 
 		inline void LogFileBlock() const
 		{
-			DOut("[PackageHeader]");
-			DOut("  magic: {}", m_Magic.ToString());
-			DOut("  version: {}", m_Version.ToString());
-			DOut("  entryCount: {}", m_EntryCount);
-			DOut("---");
+			DOut(::zzz::core::Assets, "[PackageHeader]");
+			DOut(::zzz::core::Assets, "  magic: {}", m_Magic.ToString());
+			DOut(::zzz::core::Assets, "  version: {}", m_Version.ToString());
+			DOut(::zzz::core::Assets, "  entryCount: {}", m_EntryCount);
+			DOut(::zzz::core::Assets, "---");
 		}
 
 	private:

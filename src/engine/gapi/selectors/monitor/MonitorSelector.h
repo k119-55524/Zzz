@@ -49,7 +49,7 @@ namespace zzz::engine
 					{
 						selectedIndex = static_cast<zU32>(i);
 						monitorFound = true;
-						DOut("[MonitorSelector] Сохраненный монитор найден: {} [#{}, ID: {}]",
+						DOut(::zzz::core::GAPI, "[MonitorSelector] Сохраненный монитор найден: {} [#{}, ID: {}]",
 							m_Monitors[i].GetName(), selectedIndex, savedMonitorId);
 						break;
 					}
@@ -58,7 +58,7 @@ namespace zzz::engine
 
 			if (!monitorFound)
 			{
-				DOutWarning("[MonitorSelector] Сохраненный монитор с ID '{}' не найден или состав мониторов изменился.", savedMonitorId);
+				DOutWarning(::zzz::core::GAPI, "[MonitorSelector] Сохраненный монитор с ID '{}' не найден или состав мониторов изменился.", savedMonitorId);
 				
 				// Ищем Primary монитор
 				for (std::size_t i = 0; i < m_Monitors.size(); ++i)
@@ -70,7 +70,7 @@ namespace zzz::engine
 					}
 				}
 
-				DOut("[MonitorSelector] Выбран Primary монитор: {} [#{}, ID: {}]", m_Monitors[selectedIndex].GetName(), selectedIndex, m_Monitors[selectedIndex].GetPlatformMonitorId());
+				DOut(::zzz::core::GAPI, "[MonitorSelector] Выбран Primary монитор: {} [#{}, ID: {}]", m_Monitors[selectedIndex].GetName(), selectedIndex, m_Monitors[selectedIndex].GetPlatformMonitorId());
 			}
 		}
 

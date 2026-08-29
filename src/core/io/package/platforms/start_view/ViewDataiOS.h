@@ -26,10 +26,10 @@ namespace zzz::core
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut("{}[StartViewDataiOS]", indentation);
-			DOut("{}orientation: {}", nestedIndentation, EnumToString::ToString(orientation));
-			DOut("{}safeAreaMode: {}", nestedIndentation, EnumToString::ToString(safeAreaMode));
-			DOut("{}homeIndicatorMode: {}", nestedIndentation, EnumToString::ToString(homeIndicatorMode));
+			DOut(::zzz::core::Assets, "{}[StartViewDataiOS]", indentation);
+			DOut(::zzz::core::Assets, "{}orientation: {}", nestedIndentation, EnumToString::ToString(orientation));
+			DOut(::zzz::core::Assets, "{}safeAreaMode: {}", nestedIndentation, EnumToString::ToString(safeAreaMode));
+			DOut(::zzz::core::Assets, "{}homeIndicatorMode: {}", nestedIndentation, EnumToString::ToString(homeIndicatorMode));
 		}
 
 	private:

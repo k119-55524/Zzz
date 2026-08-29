@@ -49,17 +49,17 @@ namespace zzz::core
 
 		void ValidateAndAdjustWindowRect(const std::vector<MonitorInfo>& monitors)
 		{
-			DOut("[ViewDataMSWin::ValidateAndAdjustWindowRect] Начало валидации окна. Текущий windowRect: {}, monitorIndex: {}", windowRect.ToString(), monitorIndex);
+			DOut(::zzz::core::Assets, "[ViewDataMSWin::ValidateAndAdjustWindowRect] Начало валидации окна. Текущий windowRect: {}, monitorIndex: {}", windowRect.ToString(), monitorIndex);
 
 			if (monitors.empty())
 			{
-				DOut("[ViewDataMSWin::ValidateAndAdjustWindowRect] Список мониторов пуст. Пропуск валидации.");
+				DOut(::zzz::core::Assets, "[ViewDataMSWin::ValidateAndAdjustWindowRect] Список мониторов пуст. Пропуск валидации.");
 				return;
 			}
 
 			if (monitorIndex >= monitors.size())
 			{
-				DOut("[ViewDataMSWin::ValidateAndAdjustWindowRect] Предупреждение: monitorIndex ({}) за пределами кол-ва мониторов ({}). Сброс на 0.", monitorIndex, monitors.size());
+				DOut(::zzz::core::Assets, "[ViewDataMSWin::ValidateAndAdjustWindowRect] Предупреждение: monitorIndex ({}) за пределами кол-ва мониторов ({}). Сброс на 0.", monitorIndex, monitors.size());
 				monitorIndex = 0;
 			}
 
@@ -69,41 +69,41 @@ namespace zzz::core
 				Size2D<zI32>{ static_cast<zI32>(mon.GetResolution().GetWidth()), static_cast<zI32>(mon.GetResolution().GetHeight()) }
 			);
 
-			DOut("[ViewDataMSWin::ValidateAndAdjustWindowRect] Целевой монитор #{}: {}", monitorIndex, monRect.ToString());
+			DOut(::zzz::core::Assets, "[ViewDataMSWin::ValidateAndAdjustWindowRect] Целевой монитор #{}: {}", monitorIndex, monRect.ToString());
 
 			zI32 targetW = std::clamp<zI32>(windowRect.GetSize().GetWidth(), c_MinWinSize, monRect.GetSize().GetWidth());
 			zI32 targetH = std::clamp<zI32>(windowRect.GetSize().GetHeight(), c_MinWinSize, monRect.GetSize().GetHeight());
 
 			if (static_cast<zU32>(targetW) != windowRect.GetSize().GetWidth() || static_cast<zU32>(targetH) != windowRect.GetSize().GetHeight())
 			{
-				DOut("[ViewDataMSWin::ValidateAndAdjustWindowRect] Размер окна скорректирован под монитор/c_MinWinSize: {}x{}", targetW, targetH);
+				DOut(::zzz::core::Assets, "[ViewDataMSWin::ValidateAndAdjustWindowRect] Размер окна скорректирован под монитор/c_MinWinSize: {}x{}", targetW, targetH);
 				windowRect.SetSize(Size2D<zU32>{ static_cast<zU32>(targetW), static_cast<zU32>(targetH) });
 			}
 
 			if (!monRect.Intersects(windowRect))
 			{
-				DOut("[ViewDataMSWin::ValidateAndAdjustWindowRect] Внимание! Окно не пересекается с монитором #{}! Перенос по центру.", monitorIndex);
+				DOut(::zzz::core::Assets, "[ViewDataMSWin::ValidateAndAdjustWindowRect] Внимание! Окно не пересекается с монитором #{}! Перенос по центру.", monitorIndex);
 				zI32 centerX = monRect.GetPosition().GetX() + (monRect.GetSize().GetWidth() - windowRect.GetSize().GetWidth()) / 2;
 				zI32 centerY = monRect.GetPosition().GetY() + (monRect.GetSize().GetHeight() - windowRect.GetSize().GetHeight()) / 2;
 				windowRect.SetPosition(Point2D<zI32>{ centerX, centerY });
 			}
 
-			DOut("[ViewDataMSWin::ValidateAndAdjustWindowRect] Итоговый валидированный windowRect: {}", windowRect.ToString());
+			DOut(::zzz::core::Assets, "[ViewDataMSWin::ValidateAndAdjustWindowRect] Итоговый валидированный windowRect: {}", windowRect.ToString());
 		}
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
 #if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut("{}[ViewDataMSWin]", indentation);
-			DOut("{}title: {}", nestedIndentation, title);
-			DOut("{}size: {}x{}", nestedIndentation, size.GetWidth(), size.GetHeight());
-			DOut("{}windowMode: {}", nestedIndentation, EnumToString::ToString(windowMode));
-			DOut("{}windowState: {}", nestedIndentation, EnumToString::ToString(windowState));
-			DOut("{}resizable: {}", nestedIndentation, resizable ? "true" : "false");
-			DOut("{}windowRect: {}", nestedIndentation, windowRect.ToString());
-			DOut("{}monitorIndex: {}", nestedIndentation, monitorIndex);
-			DOut("{}monitorId: {}", nestedIndentation, monitorId);
+			DOut(::zzz::core::Assets, "{}[ViewDataMSWin]", indentation);
+			DOut(::zzz::core::Assets, "{}title: {}", nestedIndentation, title);
+			DOut(::zzz::core::Assets, "{}size: {}x{}", nestedIndentation, size.GetWidth(), size.GetHeight());
+			DOut(::zzz::core::Assets, "{}windowMode: {}", nestedIndentation, EnumToString::ToString(windowMode));
+			DOut(::zzz::core::Assets, "{}windowState: {}", nestedIndentation, EnumToString::ToString(windowState));
+			DOut(::zzz::core::Assets, "{}resizable: {}", nestedIndentation, resizable ? "true" : "false");
+			DOut(::zzz::core::Assets, "{}windowRect: {}", nestedIndentation, windowRect.ToString());
+			DOut(::zzz::core::Assets, "{}monitorIndex: {}", nestedIndentation, monitorIndex);
+			DOut(::zzz::core::Assets, "{}monitorId: {}", nestedIndentation, monitorId);
 #endif
 		}
 

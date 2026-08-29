@@ -125,39 +125,53 @@ namespace zzz::logger
 
 	// --- Ambient категория файла (CurrentFileLogCategory / Z_SET_LOG_CATEGORY) ---
 	//
-	// z_TU_Tag - уникальный (за счёт анонимного namespace) тип на каждую единицу трансляции. CategoryHolder<z_TU_Tag>
-	// хранит категорию по умолчанию для файла (LogGeneral) через первичный шаблон, а Z_SET_LOG_CATEGORY(Category)
-	// переопределяет её явной специализации CategoryHolder<z_TU_Tag>. Т.к явная специализация одного и того же
-	// шаблона дважды в одной единице трансляции - жёсткая ошибка компиляции (redefinition), повторный вызов
-	// Z_SET_LOG_CATEGORY в одном файле гарантированно не скомпилируется.
+	// Предыдущая реализация держала ambient-категорию через explicit specialization шаблона CategoryHolder
+	// по TU-уникальному тегу (анонимный namespace). В реальной сборке (MSVC + precompiled header, см.
+	// engine/pch/pch.h) это давало C2908/C2766 ("explicit specialization ... already instantiated/defined"),
+	// т.к. PCH кеширует/разделяет compile-time идентичность типов между единицами трансляции способом,
+	// несовместимым с трюком "один тип на TU через анонимный namespace" - независимо от того, где в файле
+	// стоит Z_SET_LOG_CATEGORY (даже первой строкой файла, до всех #include, ошибка сохранялась).
 	//
-	// ВАЖНО: Z_SET_LOG_CATEGORY(...) должен стоять в файле раньше первого использования DOut*/CurrentFileLogCategory -
-	// иначе первичный шаблон будет неявно инстанциирован до специализации (ошибка "explicit specialization after instantiation").
+	// Текущая реализация не использует шаблоны и специализации вообще: z_CurrentFileLogCategoryPtr - обычная
+	// static-переменная (internal linkage), объявленная в этом заголовке. Такая переменная гарантированно
+	// получает СВОЁ ОТДЕЛЬНОЕ хранилище в каждой единице трансляции (это требование ODR для internal linkage,
+	// а не эвристика компилятора) и не подвержена описанной выше проблеме PCH, т.к. это не compile-time
+	// операция над типом, а обычное определение объекта с генерацией кода для каждой TU отдельно.
+	// Z_SET_LOG_CATEGORY(Category) переопределяет указатель через конструктор static-объекта в анонимном
+	// namespace - выполняется во время динамической инициализации файла, до входа в main().
+	//
+	// Повторный вызов Z_SET_LOG_CATEGORY в одном файле по-прежнему гарантированная ошибка компиляции:
+	// в анонимном namespace дважды объявляется один и тот же идентификатор (z_LogCategorySetter /
+	// z_logCategorySetterInstance) => redefinition.
+	//
+	// ВАЖНО: годится ТОЛЬКО для .cpp файлов (реальных единиц трансляции). В header-only файлах с inline-
+	// методами использовать НЕЛЬЗЯ: если два таких заголовка (каждый со своим Z_SET_LOG_CATEGORY) попадут
+	// в одну единицу трансляции через #include, компиляция пройдёт, но категория для заголовка, подключённого
+	// РАНЬШЕ, будет молча перезаписана категорией того, что подключён ПОЗЖЕ (порядок статической инициализации
+	// в пределах TU = порядок объявления). В header-only файлах категорию передавайте явным первым аргументом
+	// в каждый DOut(...)/DOutWarning(...)/... вызов.
 	namespace detail
 	{
-		namespace { struct z_TU_Tag; }
-
-		template<typename Tag>
-		struct CategoryHolder
-		{
-			static constexpr const ::zzz::core::LogCategory& value = ::zzz::core::LogGeneral;
-		};
+		static const ::zzz::core::LogCategory* z_CurrentFileLogCategoryPtr = &::zzz::core::LogGeneral;
 	}
 }
 
 /**
  * @brief Ambient-категория текущего файла: LogGeneral по умолчанию, либо категория, заданная через Z_SET_LOG_CATEGORY.
  */
-#define CurrentFileLogCategory (::zzz::logger::detail::CategoryHolder<::zzz::logger::detail::z_TU_Tag>::value)
+#define CurrentFileLogCategory (*::zzz::logger::detail::z_CurrentFileLogCategoryPtr)
 
 /**
  * @brief Задаёт ambient-категорию логирования (CurrentFileLogCategory) для текущего .cpp файла.
- * @details Должен быть указан один раз в файле, до первого использования DOut*-макросов или CurrentFileLogCategory (обычно
- * сразу после #include). Повторный вызов в одном файле - ошибка компиляции (redefinition).
+ * @details Должен быть указан один раз в файле (обычно сразу после #include), ТОЛЬКО в .cpp-файле - не в
+ * заголовке (см. предупреждение выше). Повторный вызов в одном файле - ошибка компиляции (redefinition).
  */
 #define Z_SET_LOG_CATEGORY(Category) \
-	namespace zzz::logger::detail { \
-		template<> struct CategoryHolder<z_TU_Tag> { static constexpr const ::zzz::core::LogCategory& value = (Category); }; \
+	namespace { \
+		struct z_LogCategorySetter \
+		{ \
+			z_LogCategorySetter() noexcept { ::zzz::logger::detail::z_CurrentFileLogCategoryPtr = &(Category); } \
+		} z_logCategorySetterInstance; \
 	}
 
 // Общее тело DOut*. Loc - параметр, а не current() внутри, чтобы можно было передать заранее вычисленный source_location.

@@ -76,13 +76,13 @@ namespace zzz::core
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut("{}[StartViewDataMacOS]", indentation);
-			DOut("{}title: {}", nestedIndentation, title);
-			DOut("{}size: {}x{}", nestedIndentation, size.GetWidth(), size.GetHeight());
-			DOut("{}windowMode: {}", nestedIndentation, EnumToString::ToString(windowMode));
-			DOut("{}resizable: {}", nestedIndentation, resizable);
-			DOut("{}windowRect: X: {}, Y: {}, W: {}, H: {}", nestedIndentation, windowRect.GetPosition().GetX(), windowRect.GetPosition().GetY(), windowRect.GetSize().GetWidth(), windowRect.GetSize().GetHeight());
-			DOut("{}monitorIndex: {}", nestedIndentation, monitorIndex);
+			DOut(::zzz::core::Assets, "{}[StartViewDataMacOS]", indentation);
+			DOut(::zzz::core::Assets, "{}title: {}", nestedIndentation, title);
+			DOut(::zzz::core::Assets, "{}size: {}x{}", nestedIndentation, size.GetWidth(), size.GetHeight());
+			DOut(::zzz::core::Assets, "{}windowMode: {}", nestedIndentation, EnumToString::ToString(windowMode));
+			DOut(::zzz::core::Assets, "{}resizable: {}", nestedIndentation, resizable);
+			DOut(::zzz::core::Assets, "{}windowRect: X: {}, Y: {}, W: {}, H: {}", nestedIndentation, windowRect.GetPosition().GetX(), windowRect.GetPosition().GetY(), windowRect.GetSize().GetWidth(), windowRect.GetSize().GetHeight());
+			DOut(::zzz::core::Assets, "{}monitorIndex: {}", nestedIndentation, monitorIndex);
 		}
 
 	private:

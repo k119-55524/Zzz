@@ -5,6 +5,8 @@
 #include "input/InputLinux.h"
 #include "core/specific/linux_wayland/Xdg-shell-client-protocol.h"
 
+Z_SET_LOG_CATEGORY(::zzz::core::Window);
+
 using namespace zzz::engine;
 
 namespace

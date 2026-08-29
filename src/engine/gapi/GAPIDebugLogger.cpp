@@ -4,6 +4,8 @@
 #include "core/enums/eEnumToString.h"
 #include "engine/gapi/GAPIDebugLogger.h"
 
+Z_SET_LOG_CATEGORY(::zzz::core::GAPI);
+
 namespace zzz::engine
 {
 	void GAPIDebugLogger::Report(eGAPIType backend, eLogMessageType severity, std::string_view message)

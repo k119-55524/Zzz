@@ -6,6 +6,8 @@
 #include "engine/gapi/selectors/monitor/MonitorSelector.h"
 #include "engine/gapi/selectors/gpu/directx12/DirectX12GpuSelector.h"
 
+Z_SET_LOG_CATEGORY(::zzz::core::GAPI);
+
 namespace zzz::engine
 {
 #if Z_GAPI_VERBOSE_DEBUG_LAYER

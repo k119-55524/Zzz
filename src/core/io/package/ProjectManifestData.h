@@ -32,27 +32,27 @@ namespace zzz::core
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut("{}[ProjectManifestData]", indentation);
-			DOut("{}gameScriptGuids({})", nestedIndentation, gameScriptGuids.size());
+			DOut(::zzz::core::Assets, "{}[ProjectManifestData]", indentation);
+			DOut(::zzz::core::Assets, "{}gameScriptGuids({})", nestedIndentation, gameScriptGuids.size());
 			for (zU32 i = 0; i < gameScriptGuids.size(); ++i)
 			{
-				DOut("{}  gameScriptGuid #{}: {}", nestedIndentation, i, gameScriptGuids[i].ToString());
+				DOut(::zzz::core::Assets, "{}  gameScriptGuid #{}: {}", nestedIndentation, i, gameScriptGuids[i].ToString());
 			}
 
-			DOut("{}sceneGuids({})", nestedIndentation, sceneGuids.size());
+			DOut(::zzz::core::Assets, "{}sceneGuids({})", nestedIndentation, sceneGuids.size());
 			for (zU32 i = 0; i < sceneGuids.size(); ++i)
 			{
-				DOut("{}  sceneGuid #{}: {}", nestedIndentation, i, sceneGuids[i].ToString());
+				DOut(::zzz::core::Assets, "{}  sceneGuid #{}: {}", nestedIndentation, i, sceneGuids[i].ToString());
 			}
 
-			DOut("{}viewGuids({})", nestedIndentation, viewGuids.size());
+			DOut(::zzz::core::Assets, "{}viewGuids({})", nestedIndentation, viewGuids.size());
 			for (zU32 i = 0; i < viewGuids.size(); ++i)
 			{
-				DOut("{}  viewGuid #{}: {}", nestedIndentation, i, viewGuids[i].ToString());
+				DOut(::zzz::core::Assets, "{}  viewGuid #{}: {}", nestedIndentation, i, viewGuids[i].ToString());
 			}
 
-			DOut("{}maxLogQueueSize: {}", nestedIndentation, maxLogQueueSize);
-			DOut("{}loggerPort: {}", nestedIndentation, loggerPort);
+			DOut(::zzz::core::Assets, "{}maxLogQueueSize: {}", nestedIndentation, maxLogQueueSize);
+			DOut(::zzz::core::Assets, "{}loggerPort: {}", nestedIndentation, loggerPort);
 
 			platformData.LogFileBlock(nestedIndentation);
 		}

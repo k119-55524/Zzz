@@ -62,11 +62,11 @@ namespace zzz::core
 		{
 #if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut("{}[ViewUserData]", indentation);
-			DOut("{}viewGuid: {}", nestedIndentation, m_State.GetViewGuid().ToString());
-			DOut("{}windowState: {}", nestedIndentation, EnumToString::ToString(m_PlatformData.GetWindowState()));
-			DOut("{}platformMonitorId: {}", nestedIndentation, m_PlatformData.GetMonitorId());
-			DOut("{}windowRect: {}", nestedIndentation, m_PlatformData.GetWindowRect().ToString());
+			DOut(::zzz::core::Assets, "{}[ViewUserData]", indentation);
+			DOut(::zzz::core::Assets, "{}viewGuid: {}", nestedIndentation, m_State.GetViewGuid().ToString());
+			DOut(::zzz::core::Assets, "{}windowState: {}", nestedIndentation, EnumToString::ToString(m_PlatformData.GetWindowState()));
+			DOut(::zzz::core::Assets, "{}platformMonitorId: {}", nestedIndentation, m_PlatformData.GetMonitorId());
+			DOut(::zzz::core::Assets, "{}windowRect: {}", nestedIndentation, m_PlatformData.GetWindowRect().ToString());
 #endif
 		}
 

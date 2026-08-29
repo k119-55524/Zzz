@@ -1,5 +1,7 @@
 #include "MonitorProviderMSWin.h"
 
+Z_SET_LOG_CATEGORY(::zzz::core::Window);
+
 #if Z_WINDOWS
 
 namespace

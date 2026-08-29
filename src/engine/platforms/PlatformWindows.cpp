@@ -4,6 +4,8 @@
 #include "engine/utils/MonitorUtils.h"
 #include "engine/utils/GpuUtils.h"
 
+Z_SET_LOG_CATEGORY(::zzz::core::Window);
+
 #if Z_WINDOWS
 
 using namespace zzz::engine;

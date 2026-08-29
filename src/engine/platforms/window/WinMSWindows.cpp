@@ -4,6 +4,8 @@
 #include "../monitor/IMonitorProvider.h"
 #include "engine/view/View.h"
 
+Z_SET_LOG_CATEGORY(::zzz::core::Window);
+
 using namespace zzz::core;
 
 using namespace zzz::engine;

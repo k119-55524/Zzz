@@ -1,6 +1,8 @@
 #include "WinAndroid.h"
 #include "../Platform.h"
 
+Z_SET_LOG_CATEGORY(::zzz::core::Window);
+
 using namespace zzz::engine;
 
 WinAndroid::WinAndroid(const Platform& platform, const std::shared_ptr<Input> input, WindowCallbacks callbacks) :

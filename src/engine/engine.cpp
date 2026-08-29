@@ -4,6 +4,8 @@
 #include "Engine.h"
 #include "engine/utils/EngineLogFlags.h"
 
+Z_SET_LOG_CATEGORY(::zzz::core::LogEngine);
+
 using namespace zzz;
 using namespace zzz::core;
 using namespace zzz::engine;

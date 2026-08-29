@@ -59,17 +59,17 @@ namespace zzz::core
 		{
 #if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut("{}[GpuInfo]", indentation);
-			DOut("{}platformGpuId: {}", nestedIndentation, m_PlatformGpuId);
-			DOut("{}name: {}", nestedIndentation, m_Name);
-			DOut("{}vendorId: 0x{:04X}", nestedIndentation, m_VendorId);
-			DOut("{}deviceId: 0x{:04X}", nestedIndentation, m_DeviceId);
-			DOut("{}type: {}", nestedIndentation, (m_Type == eGPUType::Discrete) ? "Discrete" : (m_Type == eGPUType::Integrated) ? "Integrated" : (m_Type == eGPUType::CpuSoftware) ? "CpuSoftware" : "Unknown");
-			DOut("{}dedicatedVideoMemoryBytes: {} MB", nestedIndentation, m_DedicatedVideoMemoryBytes / (1024 * 1024));
-			DOut("{}sharedSystemMemoryBytes: {} MB", nestedIndentation, m_SharedSystemMemoryBytes / (1024 * 1024));
-			DOut("{}dedicatedSystemMemoryBytes: {} MB", nestedIndentation, m_DedicatedSystemMemoryBytes / (1024 * 1024));
-			DOut("{}score: {}", nestedIndentation, m_Score);
-			DOut("{}isCanDisableVSync: {}", nestedIndentation, m_IsCanDisableVSync);
+			DOut(::zzz::core::Hardware, "{}[GpuInfo]", indentation);
+			DOut(::zzz::core::Hardware, "{}platformGpuId: {}", nestedIndentation, m_PlatformGpuId);
+			DOut(::zzz::core::Hardware, "{}name: {}", nestedIndentation, m_Name);
+			DOut(::zzz::core::Hardware, "{}vendorId: 0x{:04X}", nestedIndentation, m_VendorId);
+			DOut(::zzz::core::Hardware, "{}deviceId: 0x{:04X}", nestedIndentation, m_DeviceId);
+			DOut(::zzz::core::Hardware, "{}type: {}", nestedIndentation, (m_Type == eGPUType::Discrete) ? "Discrete" : (m_Type == eGPUType::Integrated) ? "Integrated" : (m_Type == eGPUType::CpuSoftware) ? "CpuSoftware" : "Unknown");
+			DOut(::zzz::core::Hardware, "{}dedicatedVideoMemoryBytes: {} MB", nestedIndentation, m_DedicatedVideoMemoryBytes / (1024 * 1024));
+			DOut(::zzz::core::Hardware, "{}sharedSystemMemoryBytes: {} MB", nestedIndentation, m_SharedSystemMemoryBytes / (1024 * 1024));
+			DOut(::zzz::core::Hardware, "{}dedicatedSystemMemoryBytes: {} MB", nestedIndentation, m_DedicatedSystemMemoryBytes / (1024 * 1024));
+			DOut(::zzz::core::Hardware, "{}score: {}", nestedIndentation, m_Score);
+			DOut(::zzz::core::Hardware, "{}isCanDisableVSync: {}", nestedIndentation, m_IsCanDisableVSync);
 #endif
 		}
 

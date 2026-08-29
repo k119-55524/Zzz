@@ -5,6 +5,8 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+Z_SET_LOG_CATEGORY(::zzz::core::Window);
+
 using namespace zzz::engine;
 
 namespace

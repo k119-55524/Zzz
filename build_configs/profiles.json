@@ -1,107 +1,107 @@
-﻿{
-    "configurations":  [
-                           {
-                               "activeDefines":  [
-                                                     "Z_ADD_LOGGER",
-                                                     "Z_ADD_PROJECT_BENCHMARKS_IN_BUILD",
-                                                     "Z_ADD_PROJECT_TESTS_IN_BUILD",
-                                                     "Z_IDE_OUT_LOGS",
-                                                     "Z_TESTS_BENCH_ENABLE_COMMON",
-                                                     "Z_TESTS_ENABLE_COMMON"
-                                                 ],
-                               "description":  "Ежедневные рабочие настройки",
-                               "name":  "WIN_DX_LOGS"
-                           },
-                           {
-                               "activeDefines":  [
-                                                     "Z_ADD_LOGGER",
-                                                     "Z_ADD_PROJECT_BENCHMARKS_IN_BUILD",
-                                                     "Z_ADD_PROJECT_TESTS_IN_BUILD",
-                                                     "Z_GAPI_VERBOSE_DEBUG_LAYER",
-                                                     "Z_IDE_OUT_LOGS",
-                                                     "Z_TESTS_BENCH_ENABLE_COMMON",
-                                                     "Z_TESTS_ENABLE_COMMON"
-                                                 ],
-                               "description":  "Подробный вывод логов GAPI",
-                               "name":  "WIN_DX_VERBOSE_LOGS"
-                           },
-                           {
-                               "activeDefines":  [
-                                                     "Z_ADD_LOGGER",
-                                                     "Z_ADD_PROJECT_BENCHMARKS_IN_BUILD",
-                                                     "Z_ADD_PROJECT_TESTS_IN_BUILD",
-                                                     "Z_FORCE_VULKAN",
-                                                     "Z_IDE_OUT_LOGS",
-                                                     "Z_TESTS_BENCH_ENABLE_COMMON",
-                                                     "Z_TESTS_ENABLE_COMMON"
-                                                 ],
-                               "description":  "Сборка с Vulkan в Windows",
-                               "name":  "WIN_VULKAN_LOGS"
-                           },
-                           {
-                               "activeDefines":  [
-                                                     "Z_ADD_LOGGER",
-                                                     "Z_ADD_PROJECT_BENCHMARKS_IN_BUILD",
-                                                     "Z_ADD_PROJECT_TESTS_IN_BUILD",
-                                                     "Z_FORCE_VULKAN",
-                                                     "Z_GAPI_VERBOSE_DEBUG_LAYER",
-                                                     "Z_IDE_OUT_LOGS",
-                                                     "Z_TESTS_BENCH_ENABLE_COMMON",
-                                                     "Z_TESTS_ENABLE_COMMON"
-                                                 ],
-                               "description":  "Подробный вывод логов GAPI",
-                               "name":  "WIN_VULKAN_VERBOSE_LOGS"
-                           }
-                       ],
-    "currentConfig":  "WIN_DX_LOGS",
-    "defines":  [
-                    {
-                        "description":  "Включить код логера в сборку",
-                        "isArchived":  false,
-                        "isCMake":  false,
-                        "name":  "Z_ADD_LOGGER"
-                    },
-                    {
-                        "description":  "Добавить проект теста производительности в сборку Cmake",
-                        "isArchived":  false,
-                        "isCMake":  true,
-                        "name":  "Z_ADD_PROJECT_BENCHMARKS_IN_BUILD"
-                    },
-                    {
-                        "description":  "Добаввить проект с тестами в сборку Cmake",
-                        "isArchived":  false,
-                        "isCMake":  true,
-                        "name":  "Z_ADD_PROJECT_TESTS_IN_BUILD"
-                    },
-                    {
-                        "description":  "Принудительное использование Vulkan вместо DirectX",
-                        "isArchived":  false,
-                        "isCMake":  true,
-                        "name":  "Z_FORCE_VULKAN"
-                    },
-                    {
-                        "description":  "Вывод подробного лога графической подсистемы",
-                        "isArchived":  false,
-                        "isCMake":  false,
-                        "name":  "Z_GAPI_VERBOSE_DEBUG_LAYER"
-                    },
-                    {
-                        "description":  "Выводить логи в консоле IDE(при использовании логера)",
-                        "isArchived":  false,
-                        "isCMake":  false,
-                        "name":  "Z_IDE_OUT_LOGS"
-                    },
-                    {
-                        "description":  "Тестирование производительности шаблонов проекта",
-                        "isArchived":  false,
-                        "isCMake":  true,
-                        "name":  "Z_TESTS_BENCH_ENABLE_COMMON"
-                    },
-                    {
-                        "description":  "Тестирование шаблонов проекта",
-                        "isArchived":  false,
-                        "isCMake":  true,
-                        "name":  "Z_TESTS_ENABLE_COMMON"
-                    }
-                ]
+{
+  "configurations": [
+    {
+      "activeDefines": [
+        "Z_ADD_LOGGER",
+        "Z_ADD_PROJECT_BENCHMARKS_IN_BUILD",
+        "Z_ADD_PROJECT_TESTS_IN_BUILD",
+        "Z_IDE_OUT_LOGS",
+        "Z_TESTS_BENCH_ENABLE_COMMON",
+        "Z_TESTS_ENABLE_COMMON"
+      ],
+      "description": "Ежедневные рабочие настройки",
+      "name": "WIN_DX_LOGS"
+    },
+    {
+      "activeDefines": [
+        "Z_ADD_LOGGER",
+        "Z_ADD_PROJECT_BENCHMARKS_IN_BUILD",
+        "Z_ADD_PROJECT_TESTS_IN_BUILD",
+        "Z_GAPI_VERBOSE_DEBUG_LAYER",
+        "Z_IDE_OUT_LOGS",
+        "Z_TESTS_BENCH_ENABLE_COMMON",
+        "Z_TESTS_ENABLE_COMMON"
+      ],
+      "description": "Подробный вывод логов GAPI",
+      "name": "WIN_DX_VERBOSE_LOGS"
+    },
+    {
+      "activeDefines": [
+        "Z_ADD_LOGGER",
+        "Z_ADD_PROJECT_BENCHMARKS_IN_BUILD",
+        "Z_ADD_PROJECT_TESTS_IN_BUILD",
+        "Z_FORCE_VULKAN",
+        "Z_IDE_OUT_LOGS",
+        "Z_TESTS_BENCH_ENABLE_COMMON",
+        "Z_TESTS_ENABLE_COMMON"
+      ],
+      "description": "Сборка с Vulkan в Windows",
+      "name": "WIN_VULKAN_LOGS"
+    },
+    {
+      "activeDefines": [
+        "Z_ADD_LOGGER",
+        "Z_ADD_PROJECT_BENCHMARKS_IN_BUILD",
+        "Z_ADD_PROJECT_TESTS_IN_BUILD",
+        "Z_FORCE_VULKAN",
+        "Z_GAPI_VERBOSE_DEBUG_LAYER",
+        "Z_IDE_OUT_LOGS",
+        "Z_TESTS_BENCH_ENABLE_COMMON",
+        "Z_TESTS_ENABLE_COMMON"
+      ],
+      "description": "Подробный вывод логов GAPI",
+      "name": "WIN_VULKAN_VERBOSE_LOGS"
+    }
+  ],
+  "currentConfig": "WIN_DX_LOGS",
+  "defines": [
+    {
+      "description": "Включить код логера в сборку",
+      "isArchived": false,
+      "isCMake": false,
+      "name": "Z_ADD_LOGGER"
+    },
+    {
+      "description": "Добавить проект теста производительности в сборку Cmake",
+      "isArchived": false,
+      "isCMake": true,
+      "name": "Z_ADD_PROJECT_BENCHMARKS_IN_BUILD"
+    },
+    {
+      "description": "Добаввить проект с тестами в сборку Cmake",
+      "isArchived": false,
+      "isCMake": true,
+      "name": "Z_ADD_PROJECT_TESTS_IN_BUILD"
+    },
+    {
+      "description": "Принудительное использование Vulkan вместо DirectX",
+      "isArchived": false,
+      "isCMake": true,
+      "name": "Z_FORCE_VULKAN"
+    },
+    {
+      "description": "Вывод подробного лога графической подсистемы",
+      "isArchived": false,
+      "isCMake": false,
+      "name": "Z_GAPI_VERBOSE_DEBUG_LAYER"
+    },
+    {
+      "description": "Выводить логи в консоле IDE(при использовании логера)",
+      "isArchived": false,
+      "isCMake": false,
+      "name": "Z_IDE_OUT_LOGS"
+    },
+    {
+      "description": "Тестирование производительности шаблонов проекта",
+      "isArchived": false,
+      "isCMake": true,
+      "name": "Z_TESTS_BENCH_ENABLE_COMMON"
+    },
+    {
+      "description": "Тестирование шаблонов проекта",
+      "isArchived": false,
+      "isCMake": true,
+      "name": "Z_TESTS_ENABLE_COMMON"
+    }
+  ]
 }

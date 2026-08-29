@@ -53,11 +53,11 @@ namespace zzz::engine
 		{
 #if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut("{}[DepthBufferClearConfig]", indentation);
-			DOut("{}depthMode: {}", nestedIndentation, depthMode == eClearDepthMode::Depth ? "Depth" : "None");
-			DOut("{}depth: {}", nestedIndentation, depth);
-			DOut("{}stencilMode: {}", nestedIndentation, stencilMode == eClearStencilMode::Stencil ? "Stencil" : "None");
-			DOut("{}stencil: {}", nestedIndentation, stencil);
+			DOut(::zzz::core::GAPI, "{}[DepthBufferClearConfig]", indentation);
+			DOut(::zzz::core::GAPI, "{}depthMode: {}", nestedIndentation, depthMode == eClearDepthMode::Depth ? "Depth" : "None");
+			DOut(::zzz::core::GAPI, "{}depth: {}", nestedIndentation, depth);
+			DOut(::zzz::core::GAPI, "{}stencilMode: {}", nestedIndentation, stencilMode == eClearStencilMode::Stencil ? "Stencil" : "None");
+			DOut(::zzz::core::GAPI, "{}stencil: {}", nestedIndentation, stencil);
 #endif
 		}
 

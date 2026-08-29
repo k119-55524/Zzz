@@ -1,6 +1,8 @@
 #include <logger/logger.h>
 #include "SampleSceneScript.h"
 
+Z_SET_LOG_CATEGORY(::zzz::core::ScriptScene);
+
 void SampleSceneScript::OnBindEvents()
 {
 	SubscribeToStart([this]() { OnStart(); });

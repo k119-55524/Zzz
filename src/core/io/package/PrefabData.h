@@ -13,7 +13,7 @@ namespace zzz::core
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			DOut("{}[PrefabData]", indentation);
+			DOut(::zzz::core::Assets, "{}[PrefabData]", indentation);
 		}
 
 	protected:

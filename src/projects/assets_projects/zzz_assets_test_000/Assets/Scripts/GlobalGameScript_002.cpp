@@ -3,6 +3,8 @@
 
 #include "GlobalGameScript_002.h"
 
+Z_SET_LOG_CATEGORY(::zzz::core::ScriptGame);
+
 void GlobalGameScript_002::OnBindEvents()
 {
 	SubscribeToStart([this]() { OnStart(); });

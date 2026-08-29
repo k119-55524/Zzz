@@ -30,7 +30,7 @@ namespace zzz::core
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			DOut("{}[PackageEntry] name: '{}', guid: {}, type: {}, offset: {}, size: {}",
+			DOut(::zzz::core::Assets, "{}[PackageEntry] name: '{}', guid: {}, type: {}, offset: {}, size: {}",
 				indentation,
 				name,
 				guid.ToString(),

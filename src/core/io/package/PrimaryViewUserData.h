@@ -26,8 +26,8 @@ namespace zzz::core
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			DOut("{}[PrimaryViewUserData]", indentation);
-			DOut("{}viewGuid: {}", std::string(indentation) + "  ", m_ViewGuid.ToString());
+			DOut(::zzz::core::Assets, "{}[PrimaryViewUserData]", indentation);
+			DOut(::zzz::core::Assets, "{}viewGuid: {}", std::string(indentation) + "  ", m_ViewGuid.ToString());
 			m_PlatformData.LogFileBlock(std::string(indentation) + "  ");
 		}
 

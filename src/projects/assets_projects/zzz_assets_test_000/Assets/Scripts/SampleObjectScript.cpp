@@ -1,6 +1,8 @@
 #include <logger/logger.h>
 #include "SampleObjectScript.h"
 
+Z_SET_LOG_CATEGORY(::zzz::core::ScriptObject);
+
 void SampleObjectScript::OnBindEvents()
 {
 	SubscribeToStart([this]() { OnStart(); });

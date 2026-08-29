@@ -29,7 +29,7 @@ namespace zzz::engine
 		{
 #if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut("{}[ViewClearConfig]", indentation);
+			DOut(::zzz::core::GAPI, "{}[ViewClearConfig]", indentation);
 			surface.LogFileBlock(nestedIndentation);
 			depthBuffer.LogFileBlock(nestedIndentation);
 #endif

@@ -67,70 +67,70 @@ namespace zzz::core
 		{
 #if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut("========== [HardwareState] Platform Hardware State ==========");
-			DOut("{}[HardwareState]", indentation);
+			DOut(::zzz::core::Hardware, "========== [HardwareState] Platform Hardware State ==========");
+			DOut(::zzz::core::Hardware, "{}[HardwareState]", indentation);
 
 			if (!m_Cpus.empty())
 			{
-				DOut("{}cpus({})", nestedIndentation, m_Cpus.size());
+				DOut(::zzz::core::Hardware, "{}cpus({})", nestedIndentation, m_Cpus.size());
 				for (std::size_t i = 0; i < m_Cpus.size(); ++i)
 				{
-					DOut("{}cpu #({}/{}):", nestedIndentation + "  ", i + 1, m_Cpus.size());
+					DOut(::zzz::core::Hardware, "{}cpu #({}/{}):", nestedIndentation + "  ", i + 1, m_Cpus.size());
 					m_Cpus[i].LogFileBlock(nestedIndentation + "    ");
 				}
-				DOut("{}", nestedIndentation);
+				DOut(::zzz::core::Hardware, "{}", nestedIndentation);
 			}
 
-			DOut("{}ram:", nestedIndentation);
+			DOut(::zzz::core::Hardware, "{}ram:", nestedIndentation);
 			m_Ram.LogFileBlock(nestedIndentation + "  ");
-			DOut("{}", nestedIndentation);
+			DOut(::zzz::core::Hardware, "{}", nestedIndentation);
 
-			DOut("{}motherboard:", nestedIndentation);
+			DOut(::zzz::core::Hardware, "{}motherboard:", nestedIndentation);
 			m_Motherboard.LogFileBlock(nestedIndentation + "  ");
-			DOut("{}", nestedIndentation);
+			DOut(::zzz::core::Hardware, "{}", nestedIndentation);
 
 			if (!m_Gpus.empty())
 			{
-				DOut("{}gpus({})", nestedIndentation, m_Gpus.size());
+				DOut(::zzz::core::Hardware, "{}gpus({})", nestedIndentation, m_Gpus.size());
 				for (std::size_t i = 0; i < m_Gpus.size(); ++i)
 				{
-					DOut("{}gpu #({}/{}):", nestedIndentation + "  ", i + 1, m_Gpus.size());
+					DOut(::zzz::core::Hardware, "{}gpu #({}/{}):", nestedIndentation + "  ", i + 1, m_Gpus.size());
 					m_Gpus[i].LogFileBlock(nestedIndentation + "    ");
 				}
-				DOut("{}", nestedIndentation);
+				DOut(::zzz::core::Hardware, "{}", nestedIndentation);
 			}
 
 			if (!m_Monitors.empty())
 			{
-				DOut("{}monitors({})", nestedIndentation, m_Monitors.size());
+				DOut(::zzz::core::Hardware, "{}monitors({})", nestedIndentation, m_Monitors.size());
 				for (std::size_t i = 0; i < m_Monitors.size(); ++i)
 				{
-					DOut("{}monitor #({}/{}):", nestedIndentation + "  ", i + 1, m_Monitors.size());
+					DOut(::zzz::core::Hardware, "{}monitor #({}/{}):", nestedIndentation + "  ", i + 1, m_Monitors.size());
 					m_Monitors[i].LogFileBlock(nestedIndentation + "    ");
 				}
-				DOut("{}", nestedIndentation);
+				DOut(::zzz::core::Hardware, "{}", nestedIndentation);
 			}
 
 			if (!m_Storages.empty())
 			{
-				DOut("{}storages({})", nestedIndentation, m_Storages.size());
+				DOut(::zzz::core::Hardware, "{}storages({})", nestedIndentation, m_Storages.size());
 				for (std::size_t i = 0; i < m_Storages.size(); ++i)
 				{
-					DOut("{}storage #({}/{}):", nestedIndentation + "  ", i + 1, m_Storages.size());
+					DOut(::zzz::core::Hardware, "{}storage #({}/{}):", nestedIndentation + "  ", i + 1, m_Storages.size());
 					m_Storages[i].LogFileBlock(nestedIndentation + "    ");
 				}
-				DOut("{}", nestedIndentation);
+				DOut(::zzz::core::Hardware, "{}", nestedIndentation);
 			}
 
 			if (!m_NetworkAdapters.empty())
 			{
-				DOut("{}networkAdapters({})", nestedIndentation, m_NetworkAdapters.size());
+				DOut(::zzz::core::Hardware, "{}networkAdapters({})", nestedIndentation, m_NetworkAdapters.size());
 				for (std::size_t i = 0; i < m_NetworkAdapters.size(); ++i)
 				{
-					DOut("{}networkAdapter #({}/{}):", nestedIndentation + "  ", i + 1, m_NetworkAdapters.size());
+					DOut(::zzz::core::Hardware, "{}networkAdapter #({}/{}):", nestedIndentation + "  ", i + 1, m_NetworkAdapters.size());
 					m_NetworkAdapters[i].LogFileBlock(nestedIndentation + "    ");
 				}
-				DOut("{}", nestedIndentation);
+				DOut(::zzz::core::Hardware, "{}", nestedIndentation);
 			}
 #endif
 		}

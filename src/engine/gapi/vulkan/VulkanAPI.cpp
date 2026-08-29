@@ -3,6 +3,8 @@
 #include "engine/gapi/vulkan/VulkanAPI.h"
 #include "engine/gapi/GAPIDebugLogger.h"
 
+Z_SET_LOG_CATEGORY(::zzz::core::GAPI);
+
 #if defined(Z_VULKAN)
 
 namespace zzz::engine

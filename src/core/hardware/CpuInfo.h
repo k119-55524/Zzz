@@ -37,12 +37,12 @@ namespace zzz::core
 		{
 #if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut("{}[CpuInfo]", indentation);
-			DOut("{}name: {}", nestedIndentation, m_Name);
-			DOut("{}arch: {}", nestedIndentation, m_Architecture);
-			DOut("{}physicalCores: {}", nestedIndentation, m_PhysicalCores);
-			DOut("{}logicalCores: {}", nestedIndentation, m_LogicalCores);
-			DOut("{}baseClockMHz: {}", nestedIndentation, m_BaseClockMHz);
+			DOut(::zzz::core::Hardware, "{}[CpuInfo]", indentation);
+			DOut(::zzz::core::Hardware, "{}name: {}", nestedIndentation, m_Name);
+			DOut(::zzz::core::Hardware, "{}arch: {}", nestedIndentation, m_Architecture);
+			DOut(::zzz::core::Hardware, "{}physicalCores: {}", nestedIndentation, m_PhysicalCores);
+			DOut(::zzz::core::Hardware, "{}logicalCores: {}", nestedIndentation, m_LogicalCores);
+			DOut(::zzz::core::Hardware, "{}baseClockMHz: {}", nestedIndentation, m_BaseClockMHz);
 #endif
 		}
 

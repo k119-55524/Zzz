@@ -2,6 +2,8 @@
 #include "core/utils/ToStringHelpers.h"
 #include "engine/utils/EngineLogFlags.h"
 
+Z_SET_LOG_CATEGORY(::zzz::core::GAPI);
+
 #if defined(Z_D3D12)
 namespace zzz::engine
 {
