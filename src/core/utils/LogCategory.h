@@ -23,9 +23,9 @@ namespace zzz::core
 	 * и имеют стабильный на весь процесс адрес. LogEntry хранит указатель на категорию (`const LogCategory*`),
 	 * а не копию строки её имени - это исключает лишние аллокации при логировании.
 	 *
-	 * `isGuaranteed` категории (LogGeneral, LogEngine, а также объявленные через
-	 * Z_DECLARE_GUARANTEED_LOG_CATEGORY_USER пользовательские категории) никогда не фильтруются рантаймом,
-	 * даже на уровне Message - см. Logger::IsCategoryEnabled.
+	 * `isGuaranteed` категории (LogGeneral, LogEngine - встроенные гарантированные категории движка)
+	 * никогда не фильтруются рантаймом, даже на уровне Message - см. Logger::IsCategoryEnabled.
+	 * Пользовательские категории всегда фильтруемы.
 	 */
 	struct LogCategory
 	{
@@ -91,6 +91,10 @@ namespace zzz::core
 
 	/**
 	 * @brief Объявляет фильтруемую рантаймом пользовательскую категорию логирования.
+	 * 
+	 * Пользовательские категории всегда фильтруемы (не гарантированы).
+	 * Гарантированные категории - только встроенные (LogGeneral, LogEngine).
+	 * 
 	 * @param Name Имя объявляемой категории (используется и как идентификатор C++, и как отображаемое имя).
 	 * 
 	 * @example
@@ -99,14 +103,4 @@ namespace zzz::core
 	 */
 #define Z_DECLARE_LOG_CATEGORY_USER(Name) \
 	inline constexpr ::zzz::core::LogCategory Name{ #Name, ::zzz::core::eLogCategoryGroup::User, false }
-
-	/**
-	 * @brief Объявляет гарантированную пользовательскую категорию логирования - никогда не фильтруется рантаймом.
-	 * @param Name Имя объявляемой категории.
-	 * 
-	 * @example
-	 *   Z_DECLARE_GUARANTEED_LOG_CATEGORY_USER(LogCriticalGameState);
-	 */
-#define Z_DECLARE_GUARANTEED_LOG_CATEGORY_USER(Name) \
-	inline constexpr ::zzz::core::LogCategory Name{ #Name, ::zzz::core::eLogCategoryGroup::User, true }
 }
