@@ -19,13 +19,13 @@ namespace zzz::core
 	/**
 	 * @brief Категория лог-сообщения.
 	 *
-	 * @details Категории объявляются как глобальные `inline constexpr` объекты (см. Z_DECLARE_LOG_CATEGORY /
-	 * Z_DECLARE_GUARANTEED_LOG_CATEGORY ниже) и имеют стабильный на весь процесс адрес. LogEntry хранит указатель
-	 * на категорию (`const LogCategory*`), а не копию строки её имени - это исключает лишние аллокации при логировании.
+	 * @details Категории объявляются как глобальные `inline constexpr` объекты (см. макросы ниже)
+	 * и имеют стабильный на весь процесс адрес. LogEntry хранит указатель на категорию (`const LogCategory*`),
+	 * а не копию строки её имени - это исключает лишние аллокации при логировании.
 	 *
 	 * `isGuaranteed` категории (LogGeneral, LogEngine, а также объявленные через
-	 * Z_DECLARE_GUARANTEED_LOG_CATEGORY пользовательские категории) никогда не фильтруются рантаймом, даже
-	 * на уровне Message - см. Logger::IsCategoryEnabled.
+	 * Z_DECLARE_GUARANTEED_LOG_CATEGORY_USER пользовательские категории) никогда не фильтруются рантаймом,
+	 * даже на уровне Message - см. Logger::IsCategoryEnabled.
 	 */
 	struct LogCategory
 	{
@@ -38,35 +38,75 @@ namespace zzz::core
 		constexpr bool IsGuaranteed() const noexcept { return isGuaranteed; }
 	};
 
-	/**
-	 * @brief Объявляет фильтруемую рантаймом категорию логирования.
-	 * @param Name  Имя объявляемой категории (используется и как идентификатор C++, и как отображаемое имя).
-	 * @param Group Группа категории: Engine или User (без ::, см. eLogCategoryGroup).
-	 */
-#define Z_DECLARE_LOG_CATEGORY(Name, Group) \
-	inline constexpr ::zzz::core::LogCategory Name{ #Name, ::zzz::core::eLogCategoryGroup::Group, false }
+	// ========== Встроенные категории движка (приватные макросы) ==========
+	namespace detail
+	{
+		/**
+		 * @brief Приватный макрос для объявления фильтруемой категории Engine.
+		 * Не для использования пользователем.
+		 */
+#define Z_DECLARE_LOG_CATEGORY_ENGINE(Name) \
+		inline constexpr ::zzz::core::LogCategory Name{ #Name, ::zzz::core::eLogCategoryGroup::Engine, false }
+
+		/**
+		 * @brief Приватный макрос для объявления гарантированной категории Engine.
+		 * Не для использования пользователем.
+		 */
+#define Z_DECLARE_GUARANTEED_LOG_CATEGORY_ENGINE(Name) \
+		inline constexpr ::zzz::core::LogCategory Name{ #Name, ::zzz::core::eLogCategoryGroup::Engine, true }
+
+		// --- Встроенные категории движка ---
+
+		// Гарантированные - не подлежат рантайм-фильтрации ни при каких настройках (в т.ч. на уровне Message).
+		Z_DECLARE_GUARANTEED_LOG_CATEGORY_ENGINE(LogGeneral); // Категория по умолчанию для файлов без Z_SET_LOG_CATEGORY(...).
+		Z_DECLARE_GUARANTEED_LOG_CATEGORY_ENGINE(LogEngine);
+
+		// Фильтруемые категории движка.
+		Z_DECLARE_LOG_CATEGORY_ENGINE(LogGAPI);
+		Z_DECLARE_LOG_CATEGORY_ENGINE(LogGAPIVerbose);
+		Z_DECLARE_LOG_CATEGORY_ENGINE(LogECS);
+		Z_DECLARE_LOG_CATEGORY_ENGINE(LogAudio);
+		Z_DECLARE_LOG_CATEGORY_ENGINE(LogPhysics);
+		Z_DECLARE_LOG_CATEGORY_ENGINE(LogAssets);
+		Z_DECLARE_LOG_CATEGORY_ENGINE(LogNetwork);
+		Z_DECLARE_LOG_CATEGORY_ENGINE(LogUI);
+
+#undef Z_DECLARE_LOG_CATEGORY_ENGINE
+#undef Z_DECLARE_GUARANTEED_LOG_CATEGORY_ENGINE
+	}
+
+	// Экспортируем встроенные категории в публичное пространство
+	using detail::LogGeneral;
+	using detail::LogEngine;
+	using detail::LogGAPI;
+	using detail::LogGAPIVerbose;
+	using detail::LogECS;
+	using detail::LogAudio;
+	using detail::LogPhysics;
+	using detail::LogAssets;
+	using detail::LogNetwork;
+	using detail::LogUI;
+
+	// ========== Публичный API для пользовательских категорий ==========
 
 	/**
-	 * @brief Объявляет гарантированную категорию логирования - никогда не фильтруется рантаймом.
-	 * @param Name  Имя объявляемой категории.
-	 * @param Group Группа категории: Engine или User (без ::, см. eLogCategoryGroup).
+	 * @brief Объявляет фильтруемую рантаймом пользовательскую категорию логирования.
+	 * @param Name Имя объявляемой категории (используется и как идентификатор C++, и как отображаемое имя).
+	 * 
+	 * @example
+	 *   Z_DECLARE_LOG_CATEGORY_USER(LogGameLogic);
+	 *   Z_DECLARE_LOG_CATEGORY_USER(LogAI);
 	 */
-#define Z_DECLARE_GUARANTEED_LOG_CATEGORY(Name, Group) \
-	inline constexpr ::zzz::core::LogCategory Name{ #Name, ::zzz::core::eLogCategoryGroup::Group, true }
+#define Z_DECLARE_LOG_CATEGORY_USER(Name) \
+	inline constexpr ::zzz::core::LogCategory Name{ #Name, ::zzz::core::eLogCategoryGroup::User, false }
 
-	// --- Встроенные категории движка ---
-
-	// Гарантированные - не подлежат рантайм-фильтрации ни при каких настройках (в т.ч. на уровне Message).
-	Z_DECLARE_GUARANTEED_LOG_CATEGORY(LogGeneral, Engine); // Категория по умолчанию для файлов без Z_SET_LOG_CATEGORY(...).
-	Z_DECLARE_GUARANTEED_LOG_CATEGORY(LogEngine, Engine);
-
-	// Фильтруемые категории движка.
-	Z_DECLARE_LOG_CATEGORY(LogGAPI, Engine);
-	Z_DECLARE_LOG_CATEGORY(LogGAPIVerbose, Engine);
-	Z_DECLARE_LOG_CATEGORY(LogECS, Engine);
-	Z_DECLARE_LOG_CATEGORY(LogAudio, Engine);
-	Z_DECLARE_LOG_CATEGORY(LogPhysics, Engine);
-	Z_DECLARE_LOG_CATEGORY(LogAssets, Engine);
-	Z_DECLARE_LOG_CATEGORY(LogNetwork, Engine);
-	Z_DECLARE_LOG_CATEGORY(LogUI, Engine);
+	/**
+	 * @brief Объявляет гарантированную пользовательскую категорию логирования - никогда не фильтруется рантаймом.
+	 * @param Name Имя объявляемой категории.
+	 * 
+	 * @example
+	 *   Z_DECLARE_GUARANTEED_LOG_CATEGORY_USER(LogCriticalGameState);
+	 */
+#define Z_DECLARE_GUARANTEED_LOG_CATEGORY_USER(Name) \
+	inline constexpr ::zzz::core::LogCategory Name{ #Name, ::zzz::core::eLogCategoryGroup::User, true }
 }

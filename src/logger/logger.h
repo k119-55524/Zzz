@@ -32,7 +32,7 @@ namespace zzz::logger
 	 *      (напр. RemoteLogViewer) при этом может независимо скрывать категории в своих собственных View Filters -
 	 *      это никак не связано с рантайм-фильтром движка.
 	 *    - Категории с `isGuaranteed == true` (LogGeneral, LogEngine, а также объявленные через
-	 *      Z_DECLARE_GUARANTEED_LOG_CATEGORY) никогда не фильтруются рантаймом - даже на уровне Message.
+	 *      Z_DECLARE_GUARANTEED_LOG_CATEGORY_USER) никогда не фильтруются рантаймом - даже на уровне Message.
 	 *    - `m_BypassAllFilters` - отладочный "рубильник", полностью отключающий фильтрацию категорий (см.
 	 *      SetBypassAllFilters). Проверяется в IsCategoryEnabled первым.
 	 *
@@ -144,8 +144,14 @@ namespace zzz::logger
 		std::atomic<bool> m_BypassAllFilters{ false };
 		std::atomic<bool> m_EngineGroupEnabled{ true };
 		std::atomic<bool> m_UserGroupEnabled{ true };
-		mutable std::mutex m_DisabledCategoriesMutex;
-		std::unordered_set<std::string> m_DisabledCategories;
+		mutable std::shared_mutex m_DisabledCategoriesMutex;
+
+		struct StringHash
+		{
+			using is_transparent = void;
+			[[nodiscard]] size_t operator()(std::string_view sv) const noexcept { return std::hash<std::string_view>{}(sv); }
+		};
+		std::unordered_set<std::string, StringHash, std::equal_to<>> m_DisabledCategories;
 
 		std::vector<std::shared_ptr<IBroadcaster>> m_Listeners;
 		std::mutex m_ListenersMutex;
