@@ -8,10 +8,11 @@
 
 namespace zzz::engine
 {
+#if Z_GAPI_VERBOSE_DEBUG_LAYER
 	namespace
 	{
 		// eLogMessageType::Message покрывает и Info, и Message(Verbose) DX12 - GAPIDebugLogger::Report сам
-		// разводит их по категориям (LogGAPI/LogGAPIVerbose, см. GAPIDebugLogger.cpp). Отдельная категория
+		// разводит их по категориям (LogGAPI/GAPIVerbose, см. GAPIDebugLogger.cpp). Отдельная категория
 		// Validation/General (D3D12_MESSAGE_CATEGORY) больше не нужна - LogGAPIPerformance убрана из
 		// финального плана категорий, см. core/utils/LogCategory.h.
 		eLogMessageType MapDX12Severity(D3D12_MESSAGE_SEVERITY severity)
@@ -42,38 +43,8 @@ namespace zzz::engine
 
 			GAPIDebugLogger::Report(eGAPIType::DirectX12, MapDX12Severity(severity), description ? description : "");
 		}
-
-		// У DX12 нет аналога VK_EXT_layer_settings/report_flags (у Vulkan это позволяет слою самому
-		// решать, репортить ли сообщение, если оно не error/warn/perf - см. VulkanAPI::BuildVerboseValidationLayerSettings).
-		// Ближайший DX12-аналог - ID3D12InfoQueue::AddStorageFilterEntries с D3D12_INFO_QUEUE_FILTER:
-		// он глушит сообщения по категории/severity/id ещё до попадания в очередь InfoQueue. Сейчас не
-		// используется - мы и так получаем ВСЕ сообщения через RegisterMessageCallback (push, не через
-		// очередь GetMessage), а фильтрация по Verbose-уровню теперь единая для всех бэкендов и живёт в
-		// GAPIDebugLogger::Report, а не здесь. Полный пример, если понадобится более тонкая
-		// фильтрация по категориям (например заглушить болтливые STATE_SETTING/STATE_GETTING):
-		//
-		// void ApplyStorageFilter(ID3D12InfoQueue1* infoQueue)
-		// {
-		//     D3D12_MESSAGE_SEVERITY denySeverities[] = { D3D12_MESSAGE_SEVERITY_MESSAGE };
-		//     D3D12_MESSAGE_CATEGORY denyCategories[] =
-		//     {
-		//         D3D12_MESSAGE_CATEGORY_STATE_CREATION,
-		//         D3D12_MESSAGE_CATEGORY_STATE_SETTING,
-		//         D3D12_MESSAGE_CATEGORY_STATE_GETTING,
-		//     };
-		//
-		//     D3D12_INFO_QUEUE_FILTER filter{};
-		//     filter.DenyList.NumSeverities = _countof(denySeverities);
-		//     filter.DenyList.pSeverityList = denySeverities;
-		//     filter.DenyList.NumCategories = _countof(denyCategories);
-		//     filter.DenyList.pCategoryList = denyCategories;
-		//
-		//     infoQueue->AddStorageFilterEntries(&filter);
-		// }
-		//
-		// AddStorageFilterEntries относится к очереди сообщений InfoQueue (GetMessage/GetNumStoredMessages) -
-		// на RegisterMessageCallback он не влияет, поэтому нам он и не нужен при текущем push-подходе.
 	}
+#endif // Z_GAPI_VERBOSE_DEBUG_LAYER
 
 	DirectX12API::~DirectX12API()
 	{
@@ -249,7 +220,7 @@ namespace zzz::engine
 
 	void DirectX12API::RegisterDebugMessageCallback()
 	{
-#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
+#if (Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD) && Z_GAPI_VERBOSE_DEBUG_LAYER
 		if (!m_Device)
 			return;
 

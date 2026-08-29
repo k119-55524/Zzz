@@ -65,6 +65,7 @@ namespace zzz::engine
 		// вынесены в константы класса, а не дублируются как локальные литералы в каждой функции.
 		static constexpr const char* c_ValidationLayerName = "VK_LAYER_KHRONOS_validation";
 		static constexpr std::array<const char*, 1> c_ValidationDebugAction = { "VK_DBG_LAYER_ACTION_LOG_MSG" };
+		static constexpr std::array<const char*, 4> c_GAPIDebugReportFlags = { "info", "warn", "perf", "error" };
 
 		void CreateInstance();
 

@@ -12,39 +12,13 @@ namespace zzz::logger
 	/**
 	 * @brief Централизованная система логирования с поддержкой асинхронной рассылки.
 	 *
-	 * @details Архитектура и принципы работы подсистемы логирования:
-	 *
-	 * 1. **Потоковая модель**:
-	 *    - **Игровой поток (Engine)**: Записывает сообщения в `DoubleBufferedVector<LogEntry>` (lock-free swap, без длительных блокировок).
-	 *      Основной поток игры никогда не занимается выводом в консоль или ожиданием сетевых сокетов.
-	 *    - **Поток раздатчика (Logger)**: Работает событийно (Event-driven) по `std::condition_variable`. При появлении логов
-	 *      делает `swap` буферов и передает текущий пакет каждому слушателю через `IBroadcaster::PushLogsBatch`.
-	 *    - **Поток сетевого бродкастера (NetworkBroadcaster)**: Имеет собственную очередь и отдельный фоновый поток I/O.
-	 *      Это исключает задержки сетевого соединения на главный поток или другие бродкастеры.
-	 *
-	 * 2. **Категории логирования (LogCategory, см. core/utils/LogCategory.h)**:
-	 *    - Каждое сообщение относится к категории - явно (`DOut(LogGAPI, "...")`) либо через ambient
-	 *      `CurrentFileLogCategory` файла (см. Z_SET_LOG_CATEGORY, LogMacros.h).
-	 *    - Категория проверяется рантаймом (`IsCategoryEnabled`) только для уровня `Message` (DOut) - Early Exit
-	 *      происходит ещё в LogMacros.h, до форматирования строки.
-	 *    - `LogWarning`, `LogError`, `LogException`, `LogCritical`, `LogFatal` - гарантированная доставка: категория
-	 *      для них НЕ фильтруется рантаймом вообще (см. Z_LOG_DISPATCH, ApplyFilter=false). Каждый внешний слушатель
-	 *      (напр. RemoteLogViewer) при этом может независимо скрывать категории в своих собственных View Filters -
-	 *      это никак не связано с рантайм-фильтром движка.
-	 *    - Категории с `isGuaranteed == true` (LogGeneral, LogEngine, а также объявленные через
-	 *      Z_DECLARE_GUARANTEED_LOG_CATEGORY_USER) никогда не фильтруются рантаймом - даже на уровне Message.
-	 *    - `m_BypassAllFilters` - отладочный "рубильник", полностью отключающий фильтрацию категорий (см.
-	 *      SetBypassAllFilters). Проверяется в IsCategoryEnabled первым.
-	 *
-	 * 3. **Правила гарантированного вывода логов**:
-	 *    - `LogWarning`, `LogError`, `LogException`, `LogCritical`, `LogFatal` — обрабатываются **всегда** при активном Z_ADD_LOGGER.
-	 *    - `LogMessage` — обрабатывается только при активном `Z_ADD_LOGGER` (уже включает Z_DEVELOPMENT_BUILD).
-	 *    - Если взведен макрос `Z_IDE_OUT_LOGS`, лог напрямую выводится в отладочную консоль IDE (`OutputDebugString` / `__android_log`),
-	 *      даже если список слушателей `m_Listeners` пуст.
-	 *
-	 * 4. **Управление очередью**:
-	 *    - Если слушатели отсутствуют (`m_Listeners.empty()`), логи в память фонового буфера рассылки не записываются.
-	 *    - Размер сетевой очереди управляется значением из `ProjectManifestData` через вызов `SetMaxNetworkLogQueueSize`.
+	 * @details Полная документация архитектуры и использования см. в docs/Logger.md:
+	 *    - Потоковая модель (Engine thread, Logger thread, NetworkBroadcaster thread)
+	 *    - Категории логирования (встроенные GUARANTEED и фильтруемые)
+	 *    - GAPI Debug Logging (Z_GAPI_VERBOSE_DEBUG_LAYER)
+	 *    - Правила гарантированного вывода логов
+	 *    - Управление фильтрацией и очередями
+	 *    - Примеры использования
 	 */
 	class Logger
 	{

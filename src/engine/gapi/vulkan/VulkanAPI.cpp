@@ -185,7 +185,7 @@ namespace zzz::engine
 				return VK_FALSE;
 
 			// eLogMessageType::Message покрывает и Info, и Verbose - GAPIDebugLogger::Report сам разводит их
-			// по категориям (LogGAPI для гарантированных severity, LogGAPIVerbose для Message, см. GAPIDebugLogger.cpp).
+			// по категориям (LogGAPI для гарантированных severity, GAPIVerbose для Message, см. GAPIDebugLogger.cpp).
 			// Раздельная категория Validation/Performance (type) больше не нужна - LogGAPIPerformance убрана
 			// из финального плана категорий, см. core/utils/LogCategory.h.
 			eLogMessageType gapiSeverity = eLogMessageType::Message;

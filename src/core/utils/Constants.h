@@ -27,11 +27,11 @@ namespace zzz::core
 #if Z_DESKTOP
 	// Минимальный размер окна (клиентской области) в пикселях.
 	constexpr zU32 c_MinWinSize = 150;
-#endif
+#endif // Z_DESKTOP
 
 	constexpr zzz::math::Size2D<zU32> c_UHD_4K{ 3840, 2160 };
 	constexpr zzz::math::Size2D<zU32> c_UHD_8K{ 7680, 4320 };
-#pragma endregion
+#pragma endregion // Config file constants
 
 #pragma region Game Package file constants
 	constexpr std::string_view c_GamePackageFileName = "assets/package.dat";
@@ -46,11 +46,11 @@ namespace zzz::core
 	constexpr zU8 c_GamePackageFileMajorVersion = 1;
 	constexpr zU8 c_GamePackageFileMinorVersion = 1;
 	constexpr zU8 c_GamePackageFilePatchVersion = 0;
-#pragma endregion
+#pragma endregion // Game Package file constants
 
 #pragma region Microsoft Windows constants
 	constexpr std::string_view c_IcoResourceName = "IDI_ICON1";
-#pragma endregion
+#pragma endregion // Microsoft Windows constants
 
 #pragma region GAPI Engine Constants
 	constexpr uint32_t c_FramesInFlight = 2;
@@ -67,45 +67,41 @@ namespace zzz::core
 	constexpr MTLPixelFormat c_DefaultBackBufferFormat = MTLPixelFormatRGBA8Unorm;
 	constexpr MTLPixelFormat c_DefaultDepthFormat = MTLPixelFormatDepth32Float_Stencil8;
 #endif
-
-#pragma endregion
+#pragma endregion // GAPI Engine Constants
 
 #pragma region Network & Logger constants
 	constexpr std::string_view c_LocalhostIPv4 = "127.0.0.1";
 	constexpr zU16 c_DefaultLoggerPort = 3030;
 
-	// Версия бинарного протокола передачи логов по сети (см. LogEntry::Serialize/Deserialize).
-	// Меняется при изменении формата данных, отправляемых NetworkBroadcaster (напр. добавление категории).
-	constexpr zU32 c_LogProtocolVersion = 2;
+	// Версия бинарного протокола передачи логов по сети
+	constexpr zU32 c_LogProtocolVersion = 0;
 
 #if Z_DESKTOP
 	constexpr zU32 c_MaxNetworkLogQueueSize = 2000;
 #elif Z_MOBILE
 	constexpr zU32 c_MaxNetworkLogQueueSize = 500;
 #endif
-#pragma endregion 
+#pragma endregion // Network & Logger constants 
 
 #pragma region Built-in Log Categories
-	
 #define Z_DECLARE_LOG_CATEGORY_ENGINE(Name) \
 	inline constexpr LogCategory Name{ #Name, eLogCategoryGroup::Engine, false }
 
 #define Z_DECLARE_GUARANTEED_LOG_CATEGORY_ENGINE(Name) \
 	inline constexpr LogCategory Name{ #Name, eLogCategoryGroup::Engine, true }
 
-	Z_DECLARE_GUARANTEED_LOG_CATEGORY_ENGINE(LogGeneral);
-	Z_DECLARE_GUARANTEED_LOG_CATEGORY_ENGINE(LogEngine);
+	// Пример обязательной (GUARANTEED) категории логирования:
+	// Z_DECLARE_GUARANTEED_LOG_CATEGORY_ENGINE(MyCriticalSystem);
 
-	Z_DECLARE_LOG_CATEGORY_ENGINE(LogGAPI);
-	Z_DECLARE_LOG_CATEGORY_ENGINE(LogGAPIVerbose);
-	Z_DECLARE_LOG_CATEGORY_ENGINE(LogECS);
-	Z_DECLARE_LOG_CATEGORY_ENGINE(LogAudio);
-	Z_DECLARE_LOG_CATEGORY_ENGINE(LogPhysics);
-	Z_DECLARE_LOG_CATEGORY_ENGINE(LogAssets);
-	Z_DECLARE_LOG_CATEGORY_ENGINE(LogNetwork);
-	Z_DECLARE_LOG_CATEGORY_ENGINE(LogUI);
+	Z_DECLARE_LOG_CATEGORY_ENGINE(GAPI);
+	Z_DECLARE_LOG_CATEGORY_ENGINE(ECS);
+	Z_DECLARE_LOG_CATEGORY_ENGINE(Audio);
+	Z_DECLARE_LOG_CATEGORY_ENGINE(Physics);
+	Z_DECLARE_LOG_CATEGORY_ENGINE(Assets);
+	Z_DECLARE_LOG_CATEGORY_ENGINE(Network);
+	Z_DECLARE_LOG_CATEGORY_ENGINE(UI);
 
 #undef Z_DECLARE_LOG_CATEGORY_ENGINE
 #undef Z_DECLARE_GUARANTEED_LOG_CATEGORY_ENGINE
-#pragma endregion
+#pragma endregion // Built-in Log Categories
 }

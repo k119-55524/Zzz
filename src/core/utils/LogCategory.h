@@ -42,6 +42,8 @@ namespace zzz::core
 #define Z_DECLARE_LOG_CATEGORY_USER(Name) \
 	inline constexpr ::zzz::core::LogCategory Name{ #Name, ::zzz::core::eLogCategoryGroup::User, false }
 
-	// Встроенные категории объявлены в Constants.h (единый центр конфигурации)
-	// Используйте Z_DECLARE_LOG_CATEGORY_USER для пользовательских категорий
+	// встроенные категории (GUARANTEED)
+	inline constexpr LogCategory LogGeneral{ "General", eLogCategoryGroup::Engine, true };
+	inline constexpr LogCategory LogEngine{ "Engine", eLogCategoryGroup::Engine, true };
+	inline constexpr LogCategory GAPIVerbose{ "GAPIVerbose", eLogCategoryGroup::Engine, true };
 }

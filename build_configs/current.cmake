@@ -1,4 +1,4 @@
-# Auto-generated file.
+﻿# Auto-generated file.
 # Configuration: WIN_DX_LOGS
 
 set(Z_ADD_PROJECT_BENCHMARKS_IN_BUILD ON)
