@@ -12,7 +12,19 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Types.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/NativeAppData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Export.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/utils/Constants.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/constants/Constants.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/constants/ConfigConstants.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/constants/DisplayConstants.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/constants/PackageConstants.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/constants/GAPIConstants.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/constants/NetworkConstants.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/constants/LogCategoryConstants.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/constants/platforms/PlatformConstants.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/constants/platforms/MSWinConstants.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/constants/platforms/LinuxConstants.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/constants/platforms/MacOSConstants.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/constants/platforms/AndroidConstants.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/constants/platforms/iOSConstants.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Defines.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Ensure.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Guid.h

@@ -6,7 +6,7 @@
 #include "core/utils/Export.h"
 #include "core/serialize/Serializer.h"
 #include "core/io/FileHeader.h"
-#include "core/utils/Constants.h"
+#include "core/constants/Constants.h"
 #include "core/utils/Defines.h"
 #include "core/utils/Ensure.h"
 #include "core/utils/Guid.h"

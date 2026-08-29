@@ -10,7 +10,7 @@
 #include "core/Enums/eEnumToString.h"
 #include "core/Enums/platforms/eLinuxEnums.h"
 #include "core/hardware/MonitorInfo.h"
-#include "core/utils/Constants.h"
+#include "core/constants/DisplayConstants.h"
 
 namespace zzz::core
 {

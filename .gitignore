@@ -12,6 +12,7 @@ cmake-build-*/
 # Служебные dot-папки IDE/инструментов (.vs, .idea, .claude, .agents, .continue, .cache и т.п.)
 
 .cache/
+.docs/
 .*/
 
 # CMake generated files
@@ -101,6 +102,7 @@ build_configs/BuildConfigurator.exe
 src/tools/RemoteLogViewer/bin/
 src/tools/RemoteLogViewer/obj/
 RemoteLogViewer.lnk
+Documentation.lnk
 
 # Editor centralized build output
 bin/

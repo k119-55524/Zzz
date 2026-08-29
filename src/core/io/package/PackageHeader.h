@@ -2,7 +2,8 @@
 
 #include "core/utils/Version.h"
 #include <logger/logger.h>
-#include "core/utils/Constants.h"
+#include "core/constants/PackageConstants.h"
+#include "core/constants/LogCategoryConstants.h"
 #include "core/IO/FileHeader.h"
 #include "core/Serialize/Serializer.h"
 

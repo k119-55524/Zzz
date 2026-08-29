@@ -27,3 +27,10 @@ set(Z_GBENCH_VERSION "v1.9.5" CACHE STRING "GoogleBenchmark Git Tag")
 # Вспомогательные утилиты / .NET SDK
 # -----------------------------------------------------------------------------
 set(Z_DOTNET_CHANNEL "10.0" CACHE STRING ".NET SDK Channel Version")
+
+# -----------------------------------------------------------------------------
+# Генератор документации Doxygen, темы и Graphviz
+# -----------------------------------------------------------------------------
+set(Z_DOXYGEN_VERSION "1.12.0" CACHE STRING "Doxygen Windows Portable Version")
+set(Z_DOXYGEN_AWESOME_VERSION "v2.4.1" CACHE STRING "Doxygen Awesome CSS Git Tag")
+set(Z_GRAPHVIZ_VERSION "12.2.1" CACHE STRING "Graphviz Windows Portable Version")

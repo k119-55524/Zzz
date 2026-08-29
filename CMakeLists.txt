@@ -133,3 +133,8 @@ endif()
 if(Z_ADD_PROJECT_BENCHMARKS_IN_BUILD)
     add_subdirectory(src/qa/benchmark)
 endif()
+
+# -----------------------------------------------------------------------------
+# Documentation (Doxygen)
+# -----------------------------------------------------------------------------
+include(automation/doxygen/docs.cmake)

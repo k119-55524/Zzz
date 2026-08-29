@@ -21,7 +21,7 @@ namespace zzz::core
 	 * @details Категории объявляются как глобальные `inline constexpr` объекты и имеют стабильный на весь процесс адрес.
 	 * LogEntry хранит указатель на категорию (`const LogCategory*`), а не копию строки имени - это исключает лишние аллокации.
 	 * 
-	 * Встроенные категории движка объявлены в Constants.h, пользовательские - через Z_DECLARE_LOG_CATEGORY_USER.
+	 * Встроенные категории движка объявлены в LogCategoryConstants.h (или Constants.h), пользовательские - через Z_DECLARE_LOG_CATEGORY_USER.
 	 */
 	struct LogCategory
 	{

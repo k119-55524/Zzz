@@ -12,7 +12,7 @@ namespace zzz::logger
 	/**
 	 * @brief Централизованная система логирования с поддержкой асинхронной рассылки.
 	 *
-	 * @details Полная документация архитектуры и использования см. в docs/Logger.md:
+	 * @details Полная документация архитектуры и использования см. в docs/guides/Logger.md:
 	 *    - Потоковая модель (Engine thread, Logger thread, NetworkBroadcaster thread)
 	 *    - Категории логирования (встроенные GUARANTEED и фильтруемые)
 	 *    - GAPI Debug Logging (Z_GAPI_VERBOSE_DEBUG_LAYER)

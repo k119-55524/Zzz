@@ -10,7 +10,8 @@
 #include "core/Enums/eEnumToString.h"
 #include "core/Enums/platforms/eMSWinEnums.h"
 #include "core/hardware/MonitorInfo.h"
-#include "core/utils/Constants.h"
+#include "core/constants/DisplayConstants.h"
+#include "core/constants/LogCategoryConstants.h"
 #include <logger/logger.h>
 
 #include "core/enums/eWindowState.h"
