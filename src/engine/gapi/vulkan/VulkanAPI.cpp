@@ -184,19 +184,18 @@ namespace zzz::engine
 			if (!data || !data->pMessage)
 				return VK_FALSE;
 
-			eGAPIDebugSeverity gapiSeverity = eGAPIDebugSeverity::Verbose;
+			// eLogMessageType::Message покрывает и Info, и Verbose - GAPIDebugLogger::Report сам разводит их
+			// по категориям (LogGAPI для гарантированных severity, LogGAPIVerbose для Message, см. GAPIDebugLogger.cpp).
+			// Раздельная категория Validation/Performance (type) больше не нужна - LogGAPIPerformance убрана
+			// из финального плана категорий, см. core/utils/LogCategory.h.
+			eLogMessageType gapiSeverity = eLogMessageType::Message;
 			if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
-				gapiSeverity = eGAPIDebugSeverity::Error;
+				gapiSeverity = eLogMessageType::Error;
 			else if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
-				gapiSeverity = eGAPIDebugSeverity::Warning;
+				gapiSeverity = eLogMessageType::Warning;
 			else if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
-				gapiSeverity = eGAPIDebugSeverity::Info;
-
-			eGAPIDebugCategory gapiCategory = eGAPIDebugCategory::General;
-			if (type & VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT)
-				gapiCategory = eGAPIDebugCategory::Validation;
-			else if (type & VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT)
-				gapiCategory = eGAPIDebugCategory::Performance;
+				gapiSeverity = eLogMessageType::Message;
+			(void)type;
 
 			std::string_view message(data->pMessage);
 			size_t start = 0;
@@ -218,12 +217,12 @@ namespace zzz::engine
 					    trimmedLine.find("callstack setup") == std::string_view::npos)
 					{
 						std::string indented(trimmedLine);
-						if (gapiSeverity == eGAPIDebugSeverity::Info)
+						if (gapiSeverity == eLogMessageType::Message && (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT))
 						{
 							static bool s_HeaderPrinted = false;
 							if (!s_HeaderPrinted)
 							{
-								GAPIDebugLogger::Report(eGAPIType::Vulkan, eGAPIDebugSeverity::Info, eGAPIDebugCategory::General,
+								GAPIDebugLogger::Report(eGAPIType::Vulkan, eLogMessageType::Message,
 									"========== Vulkan Validation Layers ==========");
 								s_HeaderPrinted = true;
 							}
@@ -243,7 +242,7 @@ namespace zzz::engine
 							indented = std::format("{}{}", indent, trimmedLine);
 						}
 
-						GAPIDebugLogger::Report(eGAPIType::Vulkan, gapiSeverity, gapiCategory, indented);
+						GAPIDebugLogger::Report(eGAPIType::Vulkan, gapiSeverity, indented);
 					}
 				}
 

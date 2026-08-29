@@ -80,8 +80,9 @@
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
-                                
+
                                 <WrapPanel Grid.Row="0" Margin="0,0,0,5">
                                     <CheckBox Content="Message" IsChecked="{Binding Filters.ShowMessage}" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{StaticResource TextPrimary}" Checked="Filter_Changed" Unchecked="Filter_Changed"/>
                                     <CheckBox Content="Warning" IsChecked="{Binding Filters.ShowWarning}" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{StaticResource TextPrimary}" Checked="Filter_Changed" Unchecked="Filter_Changed"/>
@@ -91,7 +92,28 @@
                                     <CheckBox Content="Fatal" IsChecked="{Binding Filters.ShowFatal}" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{StaticResource TextPrimary}" Checked="Filter_Changed" Unchecked="Filter_Changed"/>
                                 </WrapPanel>
 
-                                <Grid Grid.Row="1">
+                                <!-- Категории - список пополняется динамически по мере поступления логов в этой вкладке.
+                                     Замок (🔒) - категория гарантированная на движке (LogGeneral/LogEngine/...), но фильтр
+                                     этого вьюера всё равно можно применить к ней независимо (см. TabFilters.CategoryVisibility). -->
+                                <ItemsControl Grid.Row="1" ItemsSource="{Binding CategoryFilters}" Margin="0,0,0,5">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <CheckBox IsChecked="{Binding IsVisible, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{StaticResource TextPrimary}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="🔒" Margin="0,0,3,0" Visibility="{Binding IsGuaranteed, Converter={StaticResource BoolToVis}}" ToolTip="Гарантированная категория (не фильтруется рантаймом движка)"/>
+                                                    <TextBlock Text="{Binding Name}"/>
+                                                </StackPanel>
+                                            </CheckBox>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <Grid Grid.Row="2">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
@@ -181,6 +203,7 @@
                                 <DataGridTextColumn Header="#" Binding="{Binding Id}" Width="SizeToCells" ElementStyle="{StaticResource LogTextStyle}"/>
                                 <DataGridTextColumn Header="Время" Binding="{Binding Timestamp, StringFormat=HH:mm:ss.fff}" Width="SizeToCells" ElementStyle="{StaticResource LogTextStyle}"/>
                                 <DataGridTextColumn Header="Тип" Binding="{Binding Level}" Width="SizeToCells" ElementStyle="{StaticResource LogTextStyle}"/>
+                                <DataGridTextColumn Header="Категория" Binding="{Binding Category}" Width="SizeToCells" ElementStyle="{StaticResource LogTextStyle}"/>
                                 <DataGridTextColumn Header="Текст" Binding="{Binding MessageSummary}" Width="*" ElementStyle="{StaticResource LogTextStyle}"/>
                             </DataGrid.Columns>
                         </DataGrid>

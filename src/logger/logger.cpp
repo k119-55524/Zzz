@@ -48,6 +48,48 @@ void Logger::SetLogFilterMask(eLogMessageType filterMask)
 	g_Logger.m_FilterMask.store(filterMask);
 }
 
+#pragma region Категории
+bool Logger::IsCategoryEnabled(const LogCategory& category) const
+{
+	if (m_BypassAllFilters.load(std::memory_order_relaxed))
+		return true;
+
+	if (category.IsGuaranteed())
+		return true;
+
+	const bool groupEnabled = category.IsEngine()
+		? m_EngineGroupEnabled.load(std::memory_order_relaxed)
+		: m_UserGroupEnabled.load(std::memory_order_relaxed);
+	if (!groupEnabled)
+		return false;
+
+	std::lock_guard lock(m_DisabledCategoriesMutex);
+	return !m_DisabledCategories.contains(std::string(category.name));
+}
+
+void Logger::SetCategoryEnabled(std::string_view categoryName, bool enabled)
+{
+	std::lock_guard lock(m_DisabledCategoriesMutex);
+	if (enabled)
+		m_DisabledCategories.erase(std::string(categoryName));
+	else
+		m_DisabledCategories.insert(std::string(categoryName));
+}
+
+void Logger::SetGroupEnabled(eLogCategoryGroup group, bool enabled) noexcept
+{
+	if (group == eLogCategoryGroup::Engine)
+		m_EngineGroupEnabled.store(enabled, std::memory_order_relaxed);
+	else
+		m_UserGroupEnabled.store(enabled, std::memory_order_relaxed);
+}
+
+void Logger::SetBypassAllFilters(bool bypass) noexcept
+{
+	m_BypassAllFilters.store(bypass, std::memory_order_relaxed);
+}
+#pragma endregion
+
 void Logger::SetMaxNetworkLogQueueSize(zU32 newSize)
 {
 	if (newSize == 0)
@@ -66,50 +108,51 @@ void Logger::SetMaxNetworkLogQueueSize(zU32 newSize)
 }
 
 #pragma region LogXXX messages
-void Logger::LogMessage(const std::source_location& loc, std::string formatted)
+void Logger::LogMessage(const std::source_location& loc, const LogCategory& category, std::string formatted)
 {
 #if Z_ADD_LOGGER
-	ProcessLog(loc, eLogMessageType::Message, std::move(formatted));
+	ProcessLog(loc, eLogMessageType::Message, category, std::move(formatted));
 #else
 	(void)loc;
+	(void)category;
 	(void)formatted;
 #endif
 }
 
-void Logger::LogWarning(const std::source_location& loc, std::string formatted)
+void Logger::LogWarning(const std::source_location& loc, const LogCategory& category, std::string formatted)
 {
-	ProcessLog(loc, eLogMessageType::Warning, std::move(formatted));
+	ProcessLog(loc, eLogMessageType::Warning, category, std::move(formatted));
 }
 
-void Logger::LogError(const std::source_location& loc, std::string formatted)
+void Logger::LogError(const std::source_location& loc, const LogCategory& category, std::string formatted)
 {
-	ProcessLog(loc, eLogMessageType::Error, std::move(formatted));
+	ProcessLog(loc, eLogMessageType::Error, category, std::move(formatted));
 }
 
-void Logger::LogException(const std::source_location& loc, std::string formatted)
+void Logger::LogException(const std::source_location& loc, const LogCategory& category, std::string formatted)
 {
-	ProcessLog(loc, eLogMessageType::Exception, std::move(formatted));
+	ProcessLog(loc, eLogMessageType::Exception, category, std::move(formatted));
 }
 
-void Logger::LogCritical(const std::source_location& loc, std::string formatted)
+void Logger::LogCritical(const std::source_location& loc, const LogCategory& category, std::string formatted)
 {
-	ProcessLog(loc, eLogMessageType::Critical, std::move(formatted));
+	ProcessLog(loc, eLogMessageType::Critical, category, std::move(formatted));
 }
 
-void Logger::LogFatal(const std::source_location& loc, std::string formatted)
+void Logger::LogFatal(const std::source_location& loc, const LogCategory& category, std::string formatted)
 {
-	ProcessLog(loc, eLogMessageType::Fatal, std::move(formatted));
+	ProcessLog(loc, eLogMessageType::Fatal, category, std::move(formatted));
 	std::terminate();
 }
 #pragma endregion
 
-void Logger::ProcessLog(const std::source_location& loc, eLogMessageType type, std::string formatted)
+void Logger::ProcessLog(const std::source_location& loc, eLogMessageType type, const LogCategory& category, std::string formatted)
 {
 	auto mask = m_FilterMask.load();
 	if (!(mask & type))
 		return;
 
-	DebugOutputIDE(loc, type, formatted);
+	DebugOutputIDE(loc, type, category, formatted);
 
 	bool hasListeners = false;
 	{
@@ -119,11 +162,11 @@ void Logger::ProcessLog(const std::source_location& loc, eLogMessageType type, s
 
 	if (hasListeners)
 	{
-		AddToBroadcast(loc, type, std::move(formatted));
+		AddToBroadcast(loc, type, category, std::move(formatted));
 	}
 }
 
-void Logger::AddToBroadcast(const std::source_location& loc, eLogMessageType type, std::string msg)
+void Logger::AddToBroadcast(const std::source_location& loc, eLogMessageType type, const LogCategory& category, std::string msg)
 {
 	if (!m_BroadcastThreadRunning.load())
 		return;
@@ -134,6 +177,7 @@ void Logger::AddToBroadcast(const std::source_location& loc, eLogMessageType typ
 	m_LogBuffer.Emplace(
 		timestamp,
 		type,
+		&category,
 		std::move(msg),
 		loc.file_name() ? loc.file_name() : "",
 		loc.function_name() ? loc.function_name() : "",
@@ -143,17 +187,17 @@ void Logger::AddToBroadcast(const std::source_location& loc, eLogMessageType typ
 	m_BroadcastCV.notify_one();
 }
 
-void Logger::DebugOutputIDE(const std::source_location& loc, eLogMessageType type, const std::string& formatted) noexcept
+void Logger::DebugOutputIDE(const std::source_location& loc, eLogMessageType type, const LogCategory& category, const std::string& formatted) noexcept
 {
 #if Z_IDE_OUT_LOGS
 	std::string output;
 	if (!!(type & (eLogMessageType::Message | eLogMessageType::Warning)))
 	{
-		output = MakeLogMessage(loc, type, formatted);
+		output = MakeLogMessage(loc, type, category, formatted);
 	}
 	else
 	{
-		output = MakeLogMessageError(loc, type, formatted);
+		output = MakeLogMessageError(loc, type, category, formatted);
 	}
 
 #if defined(_MSC_VER)
@@ -174,43 +218,48 @@ void Logger::DebugOutputIDE(const std::source_location& loc, eLogMessageType typ
 
 namespace
 {
-	// Пустой source_location (см. GAPILogMacros.h) значит "call site не показывать".
+	// Пустой source_location (см. GAPIDebugLogger.cpp - Report() передаёт std::source_location{} напрямую,
+	// т.к. call site там всегда одна и та же строка debug-колбэка GAPI, показывать нечего) значит "call site не показывать".
 	bool HasCallSite(const std::source_location& loc)
 	{
 		return loc.file_name() && *loc.file_name() != '\0';
 	}
 }
 
-std::string Logger::MakeLogMessage(const std::source_location& loc, eLogMessageType type, const std::string& msg)
+std::string Logger::MakeLogMessage(const std::source_location& loc, eLogMessageType type, const LogCategory& category, const std::string& msg)
 {
 	if (!!(type & eLogMessageType::Message) || !HasCallSite(loc))
 		return std::format(
-			">>>>> [{}] {}{}",
+			">>>>> [{}] [{}] {}{}",
 			EnumToString::ToString(type),
+			category.name,
 			msg,
 			GetPlatformLogLineEnding());
 	else
 		return std::format(
-			">>>>> [{}] {} -> line: {}, file: {}{}",
+			">>>>> [{}] [{}] {} -> line: {}, file: {}{}",
 			EnumToString::ToString(type),
+			category.name,
 			msg,
 			loc.line(),
 			loc.file_name(),
 			GetPlatformLogLineEnding());
 }
 
-std::string Logger::MakeLogMessageError(const std::source_location& loc, eLogMessageType type, const std::string& msg)
+std::string Logger::MakeLogMessageError(const std::source_location& loc, eLogMessageType type, const LogCategory& category, const std::string& msg)
 {
 	if (!HasCallSite(loc))
 		return std::format(
-			">>>>> [{}] {}{}",
+			">>>>> [{}] [{}] {}{}",
 			EnumToString::ToString(type),
+			category.name,
 			msg,
 			GetPlatformLogLineEnding());
 
 	return std::format(
-		">>>>> [{}] {} -> [{}]. line: {}, file: {}{}",
+		">>>>> [{}] [{}] {} -> [{}]. line: {}, file: {}{}",
 		EnumToString::ToString(type),
+		category.name,
 		msg,
 		loc.function_name(),
 		loc.line(),

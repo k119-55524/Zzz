@@ -17,6 +17,7 @@ namespace zzz::engine
 #if Z_EDITOR
 #else
 		Initialize();
+		ApplyLogCategorySettings();
 		LogUserData();
 #endif
 	}
@@ -90,6 +91,37 @@ namespace zzz::engine
 		{
 			m_SelectedGpuId = std::move(gpuId);
 			m_IsDirty = true;
+		}
+	}
+
+	bool UserSettingsManager::IsLogCategoryDisabled(std::string_view categoryName) const
+	{
+		return m_DisabledLogCategories.contains(std::string(categoryName));
+	}
+
+	void UserSettingsManager::SetLogCategoryEnabled(std::string_view categoryName, bool enabled)
+	{
+		if (enabled)
+		{
+			if (m_DisabledLogCategories.erase(std::string(categoryName)) > 0)
+				m_IsDirty = true;
+		}
+		else
+		{
+			auto [it, inserted] = m_DisabledLogCategories.insert(std::string(categoryName));
+			(void)it;
+			if (inserted)
+				m_IsDirty = true;
+		}
+
+		zzz::logger::g_Logger.SetCategoryEnabled(categoryName, enabled);
+	}
+
+	void UserSettingsManager::ApplyLogCategorySettings() const
+	{
+		for (const auto& name : m_DisabledLogCategories)
+		{
+			zzz::logger::g_Logger.SetCategoryEnabled(name, false);
 		}
 	}
 
@@ -362,7 +394,23 @@ namespace zzz::engine
 				return res;
 		}
 
-		return s.Serialize(buffer, m_SelectedGpuId);
+		auto resGpu = s.Serialize(buffer, m_SelectedGpuId);
+		if (!resGpu)
+			return resGpu;
+
+		zU32 disabledCatCount = static_cast<zU32>(m_DisabledLogCategories.size());
+		auto resCount = s.Serialize(buffer, disabledCatCount);
+		if (!resCount)
+			return resCount;
+
+		for (const auto& name : m_DisabledLogCategories)
+		{
+			auto resName = s.Serialize(buffer, name);
+			if (!resName)
+				return resName;
+		}
+
+		return {};
 	}
 
 	[[nodiscard]] std::expected<void, std::string> UserSettingsManager::Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s)
@@ -432,7 +480,26 @@ namespace zzz::engine
 			m_IndependentViewsUserData.emplace(std::move(guid), std::move(item));
 		}
 
-		return s.Deserialize(buffer, offset, m_SelectedGpuId);
+		auto resGpu = s.Deserialize(buffer, offset, m_SelectedGpuId);
+		if (!resGpu)
+			return resGpu;
+
+		m_DisabledLogCategories.clear();
+		zU32 disabledCatCount = 0;
+		auto resCount = s.Deserialize(buffer, offset, disabledCatCount);
+		if (!resCount)
+			return resCount;
+
+		for (zU32 i = 0; i < disabledCatCount; ++i)
+		{
+			std::string name;
+			auto resName = s.Deserialize(buffer, offset, name);
+			if (!resName)
+				return resName;
+			m_DisabledLogCategories.insert(std::move(name));
+		}
+
+		return {};
 	}
 
 #pragma region Logging

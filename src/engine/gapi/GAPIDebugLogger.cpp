@@ -1,62 +1,45 @@
-#include "engine/gapi/GAPIDebugLogger.h"
-#include "core/utils/macros/GAPILogMacros.h"
 
-#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
+#include "core/utils/Macroses.h"
+#include "core/enums/eEnumToString.h"
+#include "engine/gapi/GAPIDebugLogger.h"
+
+#if Z_ADD_LOGGER
 namespace zzz::engine
 {
-	namespace
-	{
-		bool IsReportFlagEnabled(std::string_view flag)
-		{
-			for (const char* enabled : c_GAPIDebugReportFlags)
-			{
-				if (flag == enabled)
-					return true;
-			}
-			return false;
-		}
-
-		// Переводит severity/category в тег из c_GAPIDebugReportFlags ("error"/"warn"/"perf"/"info"/"debug") -
-		// единая точка фильтрации, одинаковая для Vulkan и DirectX12 (см. комментарий у c_GAPIDebugReportFlags
-		// в Constants.h и у класса GAPIDebugLogger в GAPIDebugLogger.h).
-		bool ShouldReport(eGAPIDebugSeverity severity, eGAPIDebugCategory category)
-		{
-			if (category == eGAPIDebugCategory::Performance && IsReportFlagEnabled("perf"))
-				return true;
-
-			switch (severity)
-			{
-			case eGAPIDebugSeverity::Error:   return IsReportFlagEnabled("error");
-			case eGAPIDebugSeverity::Warning: return IsReportFlagEnabled("warn");
-			case eGAPIDebugSeverity::Info:    return IsReportFlagEnabled("info");
-			case eGAPIDebugSeverity::Verbose: return IsReportFlagEnabled("debug");
-			default: return false;
-			}
-		}
-	}
-
-	void GAPIDebugLogger::Report(eGAPIType backend, eGAPIDebugSeverity severity, eGAPIDebugCategory category, std::string_view message)
+	void GAPIDebugLogger::Report(eGAPIType backend, eLogMessageType severity, std::string_view message)
 	{
 		if (message.empty())
 			return;
 
-		if (!ShouldReport(severity, category))
-			return;
-
+		// Guaranteed-уровни (всё кроме Message) идут в LogGAPI - гарантированную категорию, которая всегда
+		// доходит до IDE независимо от рантайм-фильтра (см. Z_LOG_DISPATCH, ApplyFilter=false). Message
+		// (Info/Verbose нативного API) идёт в LogGAPIVerbose - обычную фильтруемую категорию, т.к. это
+		// потенциально очень шумный поток, который не должен быть гарантированным.
+		//
+		// Формат сообщения намеренно минимален - Logger::MakeLogMessage/MakeLogMessageError уже добавляют
+		// "[{type}] [{category}]" сами (см. logger.cpp), здесь остаётся только различить бэкенд (Vulkan/D3D12/...).
 		switch (severity)
 		{
-		case eGAPIDebugSeverity::Error:
-			DOutErrorGAPI(">#### [GAPI:{}] [{}] {}", EnumToString::ToString(backend), EnumToString::ToString(category), message);
+		case eLogMessageType::Warning:
+			DOutWarning(LogGAPI, "[GAPI:{}] {}", EnumToString::ToString(backend), message);
 			break;
-		case eGAPIDebugSeverity::Warning:
-			DOutWarningGAPI(">#### [GAPI:{}] [{}] {}", EnumToString::ToString(backend), EnumToString::ToString(category), message);
+		case eLogMessageType::Error:
+			DOutError(LogGAPI, "[GAPI:{}] {}", EnumToString::ToString(backend), message);
 			break;
-		case eGAPIDebugSeverity::Info:
-		case eGAPIDebugSeverity::Verbose:
+		case eLogMessageType::Exception:
+			DOutException(LogGAPI, "[GAPI:{}] {}", EnumToString::ToString(backend), message);
+			break;
+		case eLogMessageType::Critical:
+			DOutCritical(LogGAPI, "[GAPI:{}] {}", EnumToString::ToString(backend), message);
+			break;
+		case eLogMessageType::Fatal:
+			DOutFatal(LogGAPI, "[GAPI:{}] {}", EnumToString::ToString(backend), message);
+			break;
+		case eLogMessageType::Message:
 		default:
-			DOutGAPI(">#### [GAPI:{}] [{} | {}] {}", EnumToString::ToString(backend), EnumToString::ToString(category), EnumToString::ToString(severity), message);
+			DOut(LogGAPIVerbose, "[GAPI:{}] {}", EnumToString::ToString(backend), message);
 			break;
 		}
 	}
 }
-#endif // Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
+#endif // Z_ADD_LOGGER

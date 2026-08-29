@@ -1,38 +1,43 @@
 #pragma once
 
 #include "core/enums/eGAPIType.h"
-#include "core/enums/eGAPIDebugSeverity.h"
-#include "core/enums/eGAPIDebugCategory.h"
+#include "core/enums/eLogMessageType.h"
 
 namespace zzz::engine
 {
 	using namespace zzz::core;
 
-	// Единая точка форматирования, ФИЛЬТРАЦИИ и маршрутизации подробных сообщений debug-слоя GAPI
-	// (Vulkan validation layer / DirectX12 Info Queue / Metal command buffer error) в логгер движка.
+	// Единая точка форматирования и маршрутизации debug-сообщений слоя GAPI (Vulkan validation layer /
+	// DirectX12 Info Queue / Metal command buffer error) в логгер движка.
 	//
-	// Каждый бэкенд сам мапит свой нативный severity/category в eGAPIDebugSeverity/eGAPIDebugCategory
-	// и разбирает специфичный для своего API формат сообщения (например построчная фильтрация у Vulkan)
-	// ДО вызова Report - сюда приходит уже готовая для печати строка.
+	// Report переиспользует "родной" для движка eLogMessageType вместо отдельного eGAPIDebugSeverity - тип
+	// сообщения (Warning/Error/...) и категория (LogGAPI - гарантированные сообщения; LogGAPIVerbose -
+	// фильтруемый рантаймом информационный/verbose шум) решают те же задачи, что раньше решали
+	// eGAPIDebugSeverity/eGAPIDebugCategory + список c_GAPIDebugReportFlags, но уже общей для всего движка
+	// системой категорий (см. core/utils/LogCategory.h): Warning/Error/Exception/Critical/Fatal гарантированно
+	// доходят до IDE (см. LogMacros.h, ApplyFilter=false), а Message (Info/Verbose) фильтруется рантаймом через
+	// категорию LogGAPIVerbose (Logger::IsCategoryEnabled) - решать "репортить ли" отдельным списком флагов
+	// (как раньше ShouldReport/c_GAPIDebugReportFlags) больше не нужно.
 	//
-	// Решение "репортить ли конкретное сообщение" тоже принимается здесь, в одном месте, а не в каждом
-	// бэкенде отдельно - единый интерфейс фильтрации для Vulkan/DirectX12/Metal по списку
-	// zzz::core::c_GAPIDebugReportFlags (Constants.h), см. ShouldReport в Report.cpp.
-	// У Vulkan есть дополнительная оптимизация на стороне самого слоя (messageSeverity/report_flags -
-	// см. VulkanAPI::EnableDebugMessenger/BuildVerboseValidationLayerSettings, туда передаётся тот же
-	// c_GAPIDebugReportFlags), которая просто не доводит отфильтрованные сообщения до Report вовсе,
-	// но это именно оптимизация поверх, а не замена - финальное решение всё равно здесь.
+	// Каждый бэкенд сам мапит свой нативный severity в eLogMessageType и разбирает специфичный для своего API
+	// формат сообщения (например построчная фильтрация у Vulkan) ДО вызова Report - сюда приходит уже готовая
+	// для печати строка.
 	//
-	// Report можно звать безусловно, как DOut/DOutError - в Release-сборке (нет ни Z_DEBUG_BUILD,
-	// ни Z_DEVELOPMENT_BUILD) превращается в пустую inline-заглушку, так что бэкендам не нужно
-	// оборачивать каждый вызов в свой #if.
+	// Z_GAPI_VERBOSE_DEBUG_LAYER остаётся отдельной, более ранней оптимизацией на стороне самого нативного
+	// слоя (см. VulkanAPI::EnableDebugMessenger/DirectX12API) - она решает, включать ли verbose-режим самого
+	// GAPI-sлоя вообще (и тем самым избегает лишних вызовов Report), а категория LogGAPIVerbose - независимый
+	// от неё рантайм-фильтр уже принятых сообщений на стороне движка.
+	//
+	// Гейт как у обычных DOut* (Z_ADD_LOGGER, без отдельного Z_DEBUG_BUILD) - осознанное решение: раз
+	// DOutError/DOutWarning для обычных логов уже целиком зависят от Z_ADD_LOGGER, отдельный гейт для класса,
+	// который лишь маршрутизирует сообщения в те же DOut*, ничего не даёт.
 	class GAPIDebugLogger
 	{
 	public:
-#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
-		static void Report(eGAPIType backend, eGAPIDebugSeverity severity, eGAPIDebugCategory category, std::string_view message);
+#if Z_ADD_LOGGER
+		static void Report(eGAPIType backend, eLogMessageType severity, std::string_view message);
 #else
-		static void Report(eGAPIType, eGAPIDebugSeverity, eGAPIDebugCategory, std::string_view) {}
+		static void Report(eGAPIType, eLogMessageType, std::string_view) {}
 #endif
 	};
 }

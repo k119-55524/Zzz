@@ -16,7 +16,7 @@ namespace zzz::core
 		}
 	};
 	constexpr zU8 c_ConfigFileMajorVersion = 1;
-	constexpr zU8 c_ConfigFileMinorVersion = 0;
+	constexpr zU8 c_ConfigFileMinorVersion = 1; // v1: добавлен opt-out список отключённых категорий логирования (UserSettingsManager)
 	constexpr zU8 c_ConfigFilePatchVersion = 0;
 
 	constexpr zU32 c_DefaultWindowWidth = 800;
@@ -83,6 +83,10 @@ namespace zzz::core
 #pragma region Network & Logger constants
 	constexpr std::string_view c_LocalhostIPv4 = "127.0.0.1";
 	constexpr zU16 c_DefaultLoggerPort = 3030;
+
+	// Версия бинарного протокола передачи логов по сети (см. LogEntry::Serialize/Deserialize).
+	// Меняется при изменении формата данных, отправляемых NetworkBroadcaster (напр. добавление категории).
+	constexpr zU32 c_LogProtocolVersion = 2;
 
 #if Z_DESKTOP
 	constexpr zU32 c_MaxNetworkLogQueueSize = 2000;

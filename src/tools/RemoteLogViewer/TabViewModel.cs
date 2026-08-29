@@ -28,6 +28,11 @@ public class TabViewModel : INotifyPropertyChanged
 	public ObservableCollection<LogEntry> Logs { get; } = new ObservableCollection<LogEntry>();
 	public ICollectionView LogsView { get; }
 
+	// Динамический список фильтров по категориям - пополняется по мере поступления новых категорий в этой
+	// вкладке (сама вкладка не знает заранее полный список категорий движка). Видимость каждой категории
+	// подмешивается из Filters.CategoryVisibility (персистентно, composite-ключ = имя категории), см. Models.cs.
+	public ObservableCollection<CategoryFilterItem> CategoryFilters { get; } = new ObservableCollection<CategoryFilterItem>();
+
 	public ConnectionState State
 	{
 		get => _state;
@@ -146,9 +151,34 @@ public class TabViewModel : INotifyPropertyChanged
 	{
 		Application.Current.Dispatcher.InvokeAsync(() =>
 		{
+			EnsureCategoryFilter(entry.Category, entry.CategoryIsGuaranteed);
 			entry.Id = Logs.Count + 1;
 			Logs.Add(entry);
 		});
+	}
+
+	// Регистрирует категорию в списке фильтров вкладки при первом появлении (вызывается из UI-потока, см.
+	// OnLogReceived). Начальная видимость берётся из ранее сохранённых настроек (Filters.CategoryVisibility),
+	// иначе категория видна по умолчанию (opt-out, как и на движке).
+	private void EnsureCategoryFilter(string categoryName, bool isGuaranteed)
+	{
+		if (string.IsNullOrEmpty(categoryName))
+			return;
+
+		foreach (var existing in CategoryFilters)
+		{
+			if (existing.Name == categoryName)
+				return;
+		}
+
+		bool isVisible = !Filters.CategoryVisibility.TryGetValue(categoryName, out var savedVisible) || savedVisible;
+		var item = new CategoryFilterItem(categoryName, isGuaranteed, isVisible);
+		item.PropertyChanged += (s, e) =>
+		{
+			Filters.CategoryVisibility[item.Name] = item.IsVisible;
+			ApplyFilter();
+		};
+		CategoryFilters.Add(item);
 	}
 
 	private bool FilterLog(object obj)
@@ -167,6 +197,12 @@ public class TabViewModel : INotifyPropertyChanged
 		};
 
 		if (!typeMatch) return false;
+
+		// View Filter по категории - независим от рантайм-фильтра движка (см. комментарий у
+		// TabFilters.CategoryVisibility в Models.cs): отсутствие записи в словаре = категория видна.
+		if (!string.IsNullOrEmpty(entry.Category) &&
+			Filters.CategoryVisibility.TryGetValue(entry.Category, out bool categoryVisible) && !categoryVisible)
+			return false;
 
 		if (!string.IsNullOrWhiteSpace(Filters.MessageFilter) && !entry.MessageFull.Contains(Filters.MessageFilter, StringComparison.OrdinalIgnoreCase))
 			return false;

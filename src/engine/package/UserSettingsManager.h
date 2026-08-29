@@ -50,6 +50,15 @@ namespace zzz::engine
 
 		void SetSelectedGpuId(std::string gpuId);
 
+		/** @brief Проверяет, отключена ли категория логирования пользователем (persisted, см. user.dat). */
+		[[nodiscard]] bool IsLogCategoryDisabled(std::string_view categoryName) const;
+
+		/**
+		 * @brief Включает/выключает категорию логирования по имени: сохраняет решение в user.dat (opt-out список
+		 * отключённых категорий) и сразу применяет его к zzz::logger::g_Logger.
+		 */
+		void SetLogCategoryEnabled(std::string_view categoryName, bool enabled);
+
 		/**
 		 * @brief Запоминает или обновляет геометрическое состояние (размер, позиция, монитор) указанного View в user.dat.
 		 * Если окна ещё нет в конфигурации пользователя, создаёт новую запись.
@@ -63,6 +72,8 @@ namespace zzz::engine
 		void Initialize();
 		void LogUserData() const;
 		void SetDefaultUserSettings();
+		/** @brief Применяет persisted-список отключённых категорий логирования к zzz::logger::g_Logger (вызывается после Initialize()). */
+		void ApplyLogCategorySettings() const;
 		std::expected<std::filesystem::path, std::string> GetSettingsDirectory();
 		std::expected<void, std::string> LoadConfig(std::filesystem::path path);
 
@@ -77,6 +88,7 @@ namespace zzz::engine
 		ViewUserDataMap m_ChildViewsUserData;
 		ViewUserDataMap m_IndependentViewsUserData;
 		std::string m_SelectedGpuId;
+		std::unordered_set<std::string> m_DisabledLogCategories;
 
 		bool m_IsDirty;
 		bool m_IsFirstRun = true;

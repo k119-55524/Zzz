@@ -20,6 +20,7 @@
 #include "core/enums/eGAPIType.h"
 #include "core/enums/eWindowState.h"
 #include "core/enums/eLogMessageType.h"
+#include "core/utils/LogCategory.h"
 #include "core/enums/eEnumToString.h"
 #include "core/enums/eWinResize.h"
 #include "core/enums/platforms/ConverterMSWinTypes.h"

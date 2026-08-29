@@ -128,20 +128,35 @@ public class NetworkReceiver
         }
     }
 
+    // Формат протокола v2 (см. c_LogProtocolVersion в Constants.h движка и LogEntry::Serialize):
+    // [Version(u32), Timestamp(u64), Type(u64), CategoryGroup(u8), CategoryName(string), CategoryIsGuaranteed(bool/u8),
+    //  Text(string), File(string), Function(string), Line(u32)]. Строки - u32-префикс длины + UTF8-байты (см.
+    // Serializer::Serialize(std::string) - ДО этого рефакторинга здесь ошибочно читался u64-префикс).
     private void ParseLogEntry(byte[] payload)
     {
         try
         {
             using var ms = new MemoryStream(payload);
             using var reader = new BinaryReader(ms);
-            
+
+            var protocolVersion = reader.ReadUInt32();
+            if (protocolVersion != Constants.LogProtocolVersion)
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    $"Unsupported log protocol version: {protocolVersion} (expected {Constants.LogProtocolVersion}). Entry skipped.");
+                return;
+            }
+
             var timestampMs = reader.ReadUInt64(); // Предполагаем, что timestamp в мс
             var typeRaw = reader.ReadUInt64();
+            var categoryGroupRaw = reader.ReadByte();
+            var categoryName = ReadSizePrefixedString(reader);
+            var categoryIsGuaranteed = reader.ReadByte() != 0;
             var text = ReadSizePrefixedString(reader);
             var file = ReadSizePrefixedString(reader);
             var function = ReadSizePrefixedString(reader);
             var line = reader.ReadUInt32();
-            
+
             // Предполагаем, что timestamp - миллисекунды от эпохи или от загрузки системы, конвертируем в DateTime
             // Пока просто используем DateTime.Now (момент получения), т.к. timestamp движка может быть относительным
             // На самом деле стоило бы попробовать прибавить его к базовой дате - если число маленькое, оно относительное.
@@ -150,13 +165,16 @@ public class NetworkReceiver
             {
                 Timestamp = DateTime.Now, // Локальное время для отображения в UI
                 Level = (LogLevel)typeRaw,
+                Category = categoryName,
+                CategoryGroup = categoryGroupRaw == 0 ? "Engine" : "User",
+                CategoryIsGuaranteed = categoryIsGuaranteed,
                 MessageSummary = text.Length > 100 ? text.Substring(0, 100) + "..." : text,
                 MessageFull = text,
                 File = file,
                 Function = function,
                 Line = line
             };
-            
+
             LogReceived?.Invoke(this, entry);
         }
         catch (Exception ex)
@@ -164,12 +182,12 @@ public class NetworkReceiver
             System.Diagnostics.Debug.WriteLine($"Parse error: {ex.Message}");
         }
     }
-    
+
     private string ReadSizePrefixedString(BinaryReader reader)
     {
-        ulong size = reader.ReadUInt64();
+        uint size = reader.ReadUInt32();
         if (size == 0) return string.Empty;
-        
+
         byte[] stringBytes = reader.ReadBytes((int)size);
         return Encoding.UTF8.GetString(stringBytes);
     }

@@ -10,33 +10,23 @@ namespace zzz::engine
 {
 	namespace
 	{
-		eGAPIDebugSeverity MapDX12Severity(D3D12_MESSAGE_SEVERITY severity)
+		// eLogMessageType::Message покрывает и Info, и Message(Verbose) DX12 - GAPIDebugLogger::Report сам
+		// разводит их по категориям (LogGAPI/LogGAPIVerbose, см. GAPIDebugLogger.cpp). Отдельная категория
+		// Validation/General (D3D12_MESSAGE_CATEGORY) больше не нужна - LogGAPIPerformance убрана из
+		// финального плана категорий, см. core/utils/LogCategory.h.
+		eLogMessageType MapDX12Severity(D3D12_MESSAGE_SEVERITY severity)
 		{
 			switch (severity)
 			{
 			case D3D12_MESSAGE_SEVERITY_CORRUPTION:
 			case D3D12_MESSAGE_SEVERITY_ERROR:
-				return eGAPIDebugSeverity::Error;
+				return eLogMessageType::Error;
 			case D3D12_MESSAGE_SEVERITY_WARNING:
-				return eGAPIDebugSeverity::Warning;
+				return eLogMessageType::Warning;
 			case D3D12_MESSAGE_SEVERITY_INFO:
-				return eGAPIDebugSeverity::Info;
 			case D3D12_MESSAGE_SEVERITY_MESSAGE:
 			default:
-				return eGAPIDebugSeverity::Verbose;
-			}
-		}
-
-		eGAPIDebugCategory MapDX12Category(D3D12_MESSAGE_CATEGORY category)
-		{
-			switch (category)
-			{
-			case D3D12_MESSAGE_CATEGORY_MISCELLANEOUS:
-			case D3D12_MESSAGE_CATEGORY_INITIALIZATION:
-			case D3D12_MESSAGE_CATEGORY_CLEANUP:
-				return eGAPIDebugCategory::General;
-			default:
-				return eGAPIDebugCategory::Validation;
+				return eLogMessageType::Message;
 			}
 		}
 
@@ -46,10 +36,11 @@ namespace zzz::engine
 		// одинаково для всех бэкендов (см. её комментарий в GAPIDebugLogger.h).
 		void __stdcall DX12DebugMessageCallback(D3D12_MESSAGE_CATEGORY category, D3D12_MESSAGE_SEVERITY severity, D3D12_MESSAGE_ID id, LPCSTR description, void* context)
 		{
+			(void)category;
 			(void)id;
 			(void)context;
 
-			GAPIDebugLogger::Report(eGAPIType::DirectX12, MapDX12Severity(severity), MapDX12Category(category), description ? description : "");
+			GAPIDebugLogger::Report(eGAPIType::DirectX12, MapDX12Severity(severity), description ? description : "");
 		}
 
 		// У DX12 нет аналога VK_EXT_layer_settings/report_flags (у Vulkan это позволяет слою самому

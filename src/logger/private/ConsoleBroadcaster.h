@@ -82,12 +82,14 @@ namespace zzz::logger
 			auto ms = entry.timestamp % 1000;
 			std::string timeStr = std::format("[{:02}ч {:02}м {:02}с {:03}мс]", bt.tm_hour, bt.tm_min, bt.tm_sec, ms);
 
-			// entry.file пуст - call site нарочно не задан (см. GAPILogMacros.h), хвост не печатаем.
+			// entry.file пуст - call site нарочно не задан (см. GAPIDebugLogger.cpp - Report() передаёт
+			// std::source_location{} напрямую), хвост не печатаем.
+			const LogCategory& cat = entry.category ? *entry.category : LogGeneral;
 			std::string output;
 			if (isError && !entry.file.empty())
-				output = std::format("{} [{}] {} -> [{}] {}:{}\n", timeStr, EnumToString::ToString(entry.type), entry.text, entry.function, entry.file, entry.line);
+				output = std::format("{} [{}] [{}] {} -> [{}] {}:{}\n", timeStr, EnumToString::ToString(entry.type), cat.name, entry.text, entry.function, entry.file, entry.line);
 			else
-				output = std::format("{} [{}] {}\n", timeStr, EnumToString::ToString(entry.type), entry.text);
+				output = std::format("{} [{}] [{}] {}\n", timeStr, EnumToString::ToString(entry.type), cat.name, entry.text);
 
 			auto& stream = isError ? std::cerr : std::cout;
 			stream << output;

@@ -10,8 +10,6 @@
 #include "platforms/eiOSEnums.h"
 #include "core/enums/eWinResize.h"
 #include "core/enums/eInitState.h"
-#include "core/enums/eGAPIDebugSeverity.h"
-#include "core/enums/eGAPIDebugCategory.h"
 #include "platforms/eLinuxEnums.h"
 #include "platforms/eMacOSEnums.h"
 #include "platforms/eMSWinEnums.h"
@@ -87,29 +85,6 @@ namespace zzz::core
 			case eGAPIType::Metal:     return "Metal";
 			}
 			THROW_RUNTIME("Необработанный eGAPIType");
-		}
-
-		static constexpr std::string_view ToString(eGAPIDebugSeverity severity)
-		{
-			switch (severity)
-			{
-			case eGAPIDebugSeverity::Verbose: return "VERBOSE";
-			case eGAPIDebugSeverity::Info:    return "INFO";
-			case eGAPIDebugSeverity::Warning: return "WARNING";
-			case eGAPIDebugSeverity::Error:   return "ERROR";
-			}
-			THROW_RUNTIME("Необработанный eGAPIDebugSeverity");
-		}
-
-		static constexpr std::string_view ToString(eGAPIDebugCategory category)
-		{
-			switch (category)
-			{
-			case eGAPIDebugCategory::General:     return "GENERAL";
-			case eGAPIDebugCategory::Validation:  return "VALIDATION";
-			case eGAPIDebugCategory::Performance: return "PERFORMANCE";
-			}
-			THROW_RUNTIME("Необработанный eGAPIDebugCategory");
 		}
 
 		static constexpr std::string_view ToString(eGPUType type)

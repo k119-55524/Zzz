@@ -28,7 +28,15 @@ public class LogEntry : INotifyPropertyChanged
     public string File { get; set; } = string.Empty;
     public string Function { get; set; } = string.Empty;
     public uint Line { get; set; }
-    
+
+    // Категория лога (см. LogCategory.h/протокол v2) - имя категории и признак "гарантированности"
+    // (LogGeneral/LogEngine и т.п., которые движок никогда не фильтрует рантаймом даже на уровне Message).
+    // CategoryIsGuaranteed используется только для отображения (напр. значок замка в списке фильтров) -
+    // сам View Filter в этом вьюере независим от рантайм-фильтра движка и может скрыть любую категорию.
+    public string Category { get; set; } = string.Empty;
+    public string CategoryGroup { get; set; } = string.Empty;
+    public bool CategoryIsGuaranteed { get; set; }
+
     private bool _isExpanded;
     [System.Text.Json.Serialization.JsonIgnore]
     public bool IsExpanded
@@ -85,6 +93,37 @@ public class TabFilters
     public string MessageFilter { get; set; } = string.Empty;
     public string FileFilter { get; set; } = string.Empty;
     public string FunctionFilter { get; set; } = string.Empty;
+
+    // Composite-ключ: имя категории -> видимость в текущей вкладке. Отсутствие ключа = категория видна
+    // (opt-out, по аналогии с движковым Logger::m_DisabledCategories/UserSettingsManager) - это НЕ то же самое,
+    // что рантайм-фильтр движка: сообщение может быть отфильтровано движком, но если оно всё же дошло сюда,
+    // вьюер решает показывать его или нет полностью независимо (см. LogEntry.CategoryIsGuaranteed).
+    public Dictionary<string, bool> CategoryVisibility { get; set; } = new Dictionary<string, bool>();
+}
+
+// Элемент динамического списка фильтров по категориям (см. TabViewModel.CategoryFilters) - строится по мере
+// того, как в текущей сессии встречаются новые категории, и подмешивает сохранённое состояние видимости
+// из TabFilters.CategoryVisibility.
+public class CategoryFilterItem : INotifyPropertyChanged
+{
+    public string Name { get; }
+    public bool IsGuaranteed { get; }
+
+    private bool _isVisible;
+    public bool IsVisible
+    {
+        get => _isVisible;
+        set { if (_isVisible != value) { _isVisible = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsVisible))); } }
+    }
+
+    public CategoryFilterItem(string name, bool isGuaranteed, bool isVisible)
+    {
+        Name = name;
+        IsGuaranteed = isGuaranteed;
+        _isVisible = isVisible;
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
 }
 
 public class TabSettings
