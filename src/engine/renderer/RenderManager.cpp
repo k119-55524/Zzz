@@ -21,6 +21,11 @@ namespace zzz::engine
 		ensure(m_SurfView != nullptr, "ISurfView не должен быть null в RenderManager.");
 	}
 
+	void RenderManager::PreRender()
+	{
+		m_SurfView->PreRender();
+	}
+
 	void RenderManager::PrepareFrame(const std::shared_ptr<Scene>& scene)
 	{
 		const ClearConfig& clearConfig = scene ? scene->GetClearConfig() : c_FallbackClearConfig;
@@ -45,5 +50,10 @@ namespace zzz::engine
 	void RenderManager::RenderFrame()
 	{
 		m_SurfView->RenderFrame();
+	}
+
+	void RenderManager::PostRender()
+	{
+		m_SurfView->PostRender();
 	}
 }

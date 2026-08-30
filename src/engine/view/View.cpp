@@ -26,7 +26,6 @@ View::View(
 	m_Guid{ viewData.GetViewGuid() },
 	m_Input{ nullptr },
 	m_NativeWindow{ nullptr },
-	m_ThreadsUpdate{ "View", 2 },
 	OnWindowClose{ std::move(onWindowClose) }
 {
 	ensure(platformData != nullptr, "ViewPlatformData не должен быть null.");
@@ -42,8 +41,7 @@ View::View(
 View::View(const Platform& platform, std::shared_ptr<GAPI> gapi, void* data) :
 	m_Platform{ platform },
 	m_Input{ nullptr },
-	m_NativeWindow{ nullptr },
-	m_ThreadsUpdate{ "View", 2 }
+	m_NativeWindow{ nullptr }
 {
 	ensure(gapi != nullptr, "GAPI не должен быть null.");
 
@@ -303,7 +301,7 @@ void View::Update(const Time& time)
 
 void View::PreRender()
 {
-	m_SurfView->PreRender();
+	m_RenderManager->PreRender();
 }
 
 void View::PrepareFrame()
@@ -318,5 +316,5 @@ void View::RenderFrame()
 
 void View::PostRender()
 {
-	m_SurfView->PostRender();
+	m_RenderManager->PostRender();
 }

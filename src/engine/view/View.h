@@ -204,7 +204,6 @@ namespace zzz::engine
 		std::unique_ptr<RenderManager> m_RenderManager;
 		std::shared_ptr<Input>  m_Input;
 		std::shared_ptr<NativeWindow> m_NativeWindow;
-		zzz::templates::ThreadPool m_ThreadsUpdate;
 
 		ViewEventBus m_EventBus;
 		std::weak_ptr<Scene> m_ActiveScene;

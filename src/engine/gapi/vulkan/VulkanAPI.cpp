@@ -15,9 +15,6 @@ namespace zzz::engine
 		{
 			vkDeviceWaitIdle(m_Device);
 
-			if (m_RenderFence)
-				vkDestroyFence(m_Device, m_RenderFence, nullptr);
-
 			vkDestroyDevice(m_Device, nullptr);
 			m_Device = VK_NULL_HANDLE;
 		}
@@ -42,13 +39,6 @@ namespace zzz::engine
 		CreateInstance();
 		EnableDebugMessenger();
 		SelectPhysicalDeviceAndCreateLogicalDevice(userSettings);
-
-		VkFenceCreateInfo fenceInfo{};
-		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-		VkResult vr = vkCreateFence(m_Device, &fenceInfo, nullptr, &m_RenderFence);
-		if (vr != VK_SUCCESS)
-			THROW_RUNTIME("[VulkanAPI::Initialize] Failed to create Render Fence: 0x{:08X}", static_cast<uint32_t>(vr));
 
 		m_IsCanDisableVSync = true;
 
@@ -272,7 +262,7 @@ namespace zzz::engine
 		VulkanGpuSelector selector(userSettings);
 		for (auto device : devices)
 		{
-			selector.AddCandidate(device, VK_NULL_HANDLE);
+			selector.AddCandidate(device, VK_NULL_HANDLE); // surface ещё не существует - окно создаётся позже (см. VulkanGpuSelector::AddCandidate)
 		}
 
 		auto bestCandidate = selector.SelectBestGpu();
@@ -329,6 +319,18 @@ namespace zzz::engine
 	{
 		if (m_Device)
 			vkDeviceWaitIdle(m_Device);
+	}
+
+	VkResult VulkanAPI::QueueSubmit(uint32_t submitCount, const VkSubmitInfo* submits, VkFence fence)
+	{
+		std::lock_guard<std::mutex> lock(m_QueueMutex);
+		return vkQueueSubmit(m_GraphicsQueue, submitCount, submits, fence);
+	}
+
+	VkResult VulkanAPI::QueuePresent(const VkPresentInfoKHR* presentInfo)
+	{
+		std::lock_guard<std::mutex> lock(m_QueueMutex);
+		return vkQueuePresentKHR(m_PresentQueue, presentInfo);
 	}
 }
 #endif // Z_VULKAN

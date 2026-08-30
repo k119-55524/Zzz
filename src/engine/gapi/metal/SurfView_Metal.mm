@@ -43,6 +43,15 @@ namespace zzz::engine
 	{
 		(void)size;
 	}
+
+	void SurfView_Metal::OnSurfaceCreated(void* handle)
+	{
+		(void)handle;
+	}
+
+	void SurfView_Metal::OnSurfaceDestroyed()
+	{
+	}
 }
 
 #endif // Z_METAL

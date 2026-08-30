@@ -8,6 +8,8 @@
 #include "core/io/package/IndependentViewData.h"
 
 #include "View.h"
+#include <thread>
+#include <algorithm>
 
 Z_SET_LOG_CATEGORY(::zzz::core::Window);
 
@@ -29,7 +31,7 @@ ViewManager::ViewManager(
 	m_PackageManager{ std::move(packageManager) },
 	m_UserSettingsManager{ std::move(userSettingsManager) },
 	m_SceneManager{ std::move(sceneManager) },
-	m_ThreadsUpdate{ "ViewManager", 2 },
+	m_ThreadsUpdate{ "ViewManager", std::max(2u, std::thread::hardware_concurrency()) },
 	OnAllViewsClosed{ std::move(onAllViewsClosed) }
 {
 	ensure(m_GAPI != nullptr, "GAPI не должен быть null.");
@@ -186,44 +188,48 @@ void ViewManager::Update(const Time& time)
 	if (!m_PrimaryView)
 		return;
 
-	m_PrimaryView->PreRender();
-	for (const auto& view : m_ChildViews)
-		view->PreRender();
-	for (const auto& view : m_IndependentViews)
-		view->PreRender();
-
-	m_ThreadsUpdate.SubmitTasks(
-		[this, &time]()
-		{
-			m_PrimaryView->Update(time);
-			m_PrimaryView->PrepareFrame();
-
-			for (const auto& view : m_ChildViews)
-			{
-				view->Update(time);
-				view->PrepareFrame();
-			}
-
-			for (const auto& view : m_IndependentViews)
-			{
-				view->Update(time);
-				view->PrepareFrame();
-			}
-		},
-		[this]()
+	// 1. Поток рендера (отправка кадра N-1 на GPU для всех окон в одном потоке)
+	m_ThreadsUpdate.Submit([this]()
 		{
 			m_PrimaryView->RenderFrame();
-
 			for (const auto& view : m_ChildViews)
 				view->RenderFrame();
-
 			for (const auto& view : m_IndependentViews)
 				view->RenderFrame();
-		}
-	);
+		});
 
+	// 2. Параллельная подготовка кадра N (для каждого окна в отдельном потоке)
+	m_ThreadsUpdate.Submit([this, &time]()
+		{
+			m_PrimaryView->PreRender();
+			m_PrimaryView->Update(time);
+			m_PrimaryView->PrepareFrame();
+		});
+
+	for (const auto& view : m_ChildViews)
+	{
+		m_ThreadsUpdate.Submit([view, &time]()
+			{
+				view->PreRender();
+				view->Update(time);
+				view->PrepareFrame();
+			});
+	}
+
+	for (const auto& view : m_IndependentViews)
+	{
+		m_ThreadsUpdate.Submit([view, &time]()
+			{
+				view->PreRender();
+				view->Update(time);
+				view->PrepareFrame();
+			});
+	}
+
+	// 3. Ждём завершения рендера и подготовки
 	m_ThreadsUpdate.Join();
 
+	// 4. Пост-рендер (переключение слотов)
 	m_PrimaryView->PostRender();
 	for (const auto& view : m_ChildViews)
 		view->PostRender();

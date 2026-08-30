@@ -426,7 +426,7 @@ namespace zzz::engine
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &m_RenderFinishedSemaphores[imgIdx];
 
-		VkResult vr = vkQueueSubmit(m_GAPI->GetGraphicsQueue(), 1, &submitInfo, m_InFlightFences[renderIdx]);
+		VkResult vr = m_GAPI->QueueSubmit(1, &submitInfo, m_InFlightFences[renderIdx]);
 
 		if (vr != VK_SUCCESS)
 		{
@@ -435,7 +435,7 @@ namespace zzz::engine
 		}
 
 		auto vkSwapchain = static_cast<Swapchain_VK*>(m_Swapchain.get());
-		vkSwapchain->Present(m_GAPI->IsCanDisableVSync(), imgIdx, m_RenderFinishedSemaphores[imgIdx]);
+		vkSwapchain->Present(imgIdx, m_RenderFinishedSemaphores[imgIdx]);
 
 		m_IsRecording[renderIdx] = false;
 	}

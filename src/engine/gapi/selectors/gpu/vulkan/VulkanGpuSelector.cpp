@@ -66,8 +66,19 @@ namespace zzz::engine
 			}
 			else
 			{
+				// Surface ещё не существует (окно создаётся позже, см. VulkanAPI::SelectPhysicalDeviceAndCreateLogicalDevice).
+#if defined(Z_WINDOWS)
+				// На Windows можно честно спросить платформу без реального VkSurfaceKHR -
+				// vkGetPhysicalDeviceWin32PresentationSupportKHR требует только семейство очередей.
+				if (vkGetPhysicalDeviceWin32PresentationSupportKHR(device, i) && presentQueueFamilyIndex == UINT32_MAX)
+					presentQueueFamilyIndex = i;
+#else
+				// На Android/Linux аналогичного surface-less запроса тут нет (Android презентует
+				// на любой поверхности, X11/Wayland требуют реальное соединение с дисплеем) -
+				// оставляем прежнее допущение: graphics-семейство считается presentation-совместимым.
 				if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
 					presentQueueFamilyIndex = i;
+#endif
 			}
 		}
 

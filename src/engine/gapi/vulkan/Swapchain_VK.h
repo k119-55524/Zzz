@@ -15,14 +15,23 @@ namespace zzz::engine
 		Z_NO_COPY_MOVE(Swapchain_VK);
 
 	public:
-		Swapchain_VK(std::shared_ptr<VulkanAPI> gapi, std::shared_ptr<NativeWindow> window);
+		explicit Swapchain_VK(std::shared_ptr<VulkanAPI> gapi, std::shared_ptr<NativeWindow> window, bool vSyncEnabled = true);
 		~Swapchain_VK();
 
 		void Initialize(VkSurfaceKHR surface);
 		void Release();
 
-		void Present(bool vSync, uint32_t imageIndex, VkSemaphore waitSemaphore);
+		// vSync больше не параметр Present() - в Vulkan presentMode фиксируется при создании swapchain
+		// (в отличие от DX12, где sync interval можно менять на каждый Present()), поэтому переключение
+		// VSync идёт через SetVSync() (пересоздаёт swapchain), а не через этот вызов.
+		void Present(uint32_t imageIndex, VkSemaphore waitSemaphore);
 		void OnResize(const Size2D<>& size);
+
+		// Меняет желаемое состояние VSync. Если swapchain уже создан и значение реально меняется -
+		// пересоздаёт его (как OnResize) с новым presentMode. Если запрошенный режим без VSync
+		// (MAILBOX/IMMEDIATE) не поддерживается GPU - тихо остаётся на FIFO (см. CreateSwapchain).
+		void SetVSync(bool enabled);
+		[[nodiscard]] bool IsVSyncEnabled() const noexcept { return m_VSyncEnabled; }
 
 		void SetClearConfig(const SurfaceClearConfig& config) noexcept { m_ClearConfig = config; }
 		[[nodiscard]] const SurfaceClearConfig& GetClearConfig() const noexcept { return m_ClearConfig; }
@@ -52,6 +61,7 @@ namespace zzz::engine
 
 		SurfaceClearConfig m_ClearConfig;
 		uint32_t m_FrameIndex{ 0 };
+		bool m_VSyncEnabled{ true };
 	};
 }
 

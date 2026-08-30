@@ -3,6 +3,8 @@
 #include "engine/gapi/IGAPI.h"
 #include "engine/gapi/selectors/gpu/vulkan/VulkanGpuSelector.h"
 
+#include <mutex>
+
 #if defined(Z_VULKAN)
 
 namespace zzz::engine
@@ -34,6 +36,13 @@ namespace zzz::engine
 		[[nodiscard]] VkQueue GetPresentQueue() const noexcept { return m_PresentQueue; }
 		[[nodiscard]] uint32_t GetGraphicsQueueFamilyIndex() const noexcept { return m_GraphicsQueueFamilyIndex; }
 		[[nodiscard]] uint32_t GetPresentQueueFamilyIndex() const noexcept { return m_PresentQueueFamilyIndex; }
+
+		// Потокобезопасные обёртки над vkQueueSubmit/vkQueuePresentKHR - VkQueue общий на все View (GAPI один
+		// shared_ptr на всё приложение), а спецификация Vulkan требует внешней синхронизации доступа к очереди
+		// при конкурентных вызовах с разных потоков. Использовать ТОЛЬКО эти методы, не GetGraphicsQueue()/
+		// GetPresentQueue() напрямую для submit/present.
+		VkResult QueueSubmit(uint32_t submitCount, const VkSubmitInfo* submits, VkFence fence);
+		VkResult QueuePresent(const VkPresentInfoKHR* presentInfo);
 
 		template<typename T>
 		void SetDebugName(T handle, const char* name) const
@@ -101,7 +110,7 @@ namespace zzz::engine
 		uint32_t m_GraphicsQueueFamilyIndex{ UINT32_MAX };
 		uint32_t m_PresentQueueFamilyIndex{ UINT32_MAX };
 
-		VkFence m_RenderFence{ VK_NULL_HANDLE };
+		std::mutex m_QueueMutex;
 	};
 }
 

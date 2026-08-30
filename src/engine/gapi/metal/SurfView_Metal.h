@@ -20,6 +20,9 @@ namespace zzz::engine
 		void RenderFrame() override;
 		void OnResize(const Size2D<>& size) override;
 
+		void OnSurfaceCreated(void* handle) override;
+		void OnSurfaceDestroyed() override;
+
 	protected:
 		void Initialize() override;
 	};

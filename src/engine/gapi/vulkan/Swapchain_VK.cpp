@@ -8,9 +8,10 @@ Z_SET_LOG_CATEGORY(::zzz::core::GAPI);
 
 namespace zzz::engine
 {
-	Swapchain_VK::Swapchain_VK(std::shared_ptr<VulkanAPI> gapi, std::shared_ptr<NativeWindow> window)
+	Swapchain_VK::Swapchain_VK(std::shared_ptr<VulkanAPI> gapi, std::shared_ptr<NativeWindow> window, bool vSyncEnabled)
 		: m_GAPI(std::move(gapi))
 		, m_Window(std::move(window))
+		, m_VSyncEnabled(vSyncEnabled)
 	{
 		ensure(m_GAPI != nullptr, "VulkanAPI не должен быть null.");
 		ensure(m_Window != nullptr, "NativeWindow не должен быть null.");
@@ -94,9 +95,37 @@ namespace zzz::engine
 			createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		}
 
+		// FIFO гарантирован спецификацией Vulkan на любом устройстве/платформе - безопасный дефолт при
+		// включённом VSync и fallback, если для выключенного VSync не нашлось поддерживаемого режима.
+		VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
+		if (!m_VSyncEnabled)
+		{
+			uint32_t presentModeCount = 0;
+			vkGetPhysicalDeviceSurfacePresentModesKHR(physDevice, m_Surface, &presentModeCount, nullptr);
+			std::vector<VkPresentModeKHR> presentModes(presentModeCount);
+			vkGetPhysicalDeviceSurfacePresentModesKHR(physDevice, m_Surface, &presentModeCount, presentModes.data());
+
+			bool supportsMailbox = false;
+			bool supportsImmediate = false;
+			for (const auto& mode : presentModes)
+			{
+				if (mode == VK_PRESENT_MODE_MAILBOX_KHR)
+					supportsMailbox = true;
+				else if (mode == VK_PRESENT_MODE_IMMEDIATE_KHR)
+					supportsImmediate = true;
+			}
+
+			if (supportsMailbox)
+				presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+			else if (supportsImmediate)
+				presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+			else
+				DOutWarning("[Swapchain_VK::CreateSwapchain] VSync запрошен выключенным, но GPU не поддерживает ни MAILBOX, ни IMMEDIATE present mode - остаёмся на FIFO (VSync фактически включён).");
+		}
+
 		createInfo.preTransform = capabilities.currentTransform;
 		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-		createInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+		createInfo.presentMode = presentMode;
 		createInfo.clipped = VK_TRUE;
 
 		VkResult vr = vkCreateSwapchainKHR(device, &createInfo, nullptr, &m_Swapchain);
@@ -168,9 +197,8 @@ namespace zzz::engine
 		return VK_NULL_HANDLE;
 	}
 
-	void Swapchain_VK::Present(bool vSync, uint32_t imageIndex, VkSemaphore waitSemaphore)
+	void Swapchain_VK::Present(uint32_t imageIndex, VkSemaphore waitSemaphore)
 	{
-		(void)vSync;
 		if (!m_Swapchain)
 			return;
 
@@ -185,7 +213,24 @@ namespace zzz::engine
 		presentInfo.pSwapchains = &m_Swapchain;
 		presentInfo.pImageIndices = &imageIndex;
 
-		vkQueuePresentKHR(m_GAPI->GetPresentQueue(), &presentInfo);
+		m_GAPI->QueuePresent(&presentInfo);
+	}
+
+	void Swapchain_VK::SetVSync(bool enabled)
+	{
+		if (m_VSyncEnabled == enabled)
+			return;
+
+		m_VSyncEnabled = enabled;
+
+		if (!m_Swapchain)
+			return; // ещё не создан - новое значение применится при первом CreateSwapchain (Initialize)
+
+		m_GAPI->WaitForGpu();
+		CleanupSwapchain();
+		CreateSwapchain(m_Size);
+
+		DOut("[Swapchain_VK::SetVSync] VSync {} -> swapchain пересоздан.", enabled ? "включён" : "выключен");
 	}
 
 	void Swapchain_VK::OnResize(const Size2D<>& size)

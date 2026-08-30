@@ -18,8 +18,10 @@ namespace zzz::engine
 		RenderManager() = delete;
 		explicit RenderManager(std::shared_ptr<ISurfView> surfView);
 
+		void PreRender();
 		void PrepareFrame(const std::shared_ptr<Scene>& scene);
 		void RenderFrame();
+		void PostRender();
 
 	private:
 		void BuildRenderTree(const Scene& scene);
