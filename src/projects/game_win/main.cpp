@@ -21,8 +21,8 @@ int APIENTRY wWinMain(
 	int exitCode = 0;
 
 	{
-		g_Logger.SetLogFilterMask(eLogMessageType::All);
-		g_Logger.AddConsoleBroadcaster();
+		//g_Logger.SetLogFilterMask(eLogMessageType::All);
+		//g_Logger.AddConsoleBroadcaster();
 
 		DOut("[Main::WinMain (Windows)] - Игра запущена.");
 
@@ -42,13 +42,11 @@ int APIENTRY wWinMain(
 		}
 		catch (const std::exception& e)
 		{
-			std::ofstream("startup_error.txt") << e.what() << std::endl;
 			DOutException("[Main::WinMain (Windows)] - Исключение в WinMain: {}.", e.what());
 			exitCode = -1;
 		}
 		catch (...)
 		{
-			std::ofstream("startup_error.txt") << "Unknown exception" << std::endl;
 			DOutException("[Main::WinMain (Windows)] - Исключение в WinMain.");
 			exitCode = -1;
 		}

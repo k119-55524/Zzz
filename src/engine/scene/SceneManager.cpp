@@ -19,9 +19,6 @@ namespace zzz::engine
 
 	std::expected<std::shared_ptr<Scene>, std::string> SceneManager::LoadScene(const Guid& sceneGuid)
 	{
-		// Отменяем отложенную выгрузку, если сцену запросили повторно раньше, чем сработал ProcessPendingUnloads().
-		std::erase(m_PendingUnloads, sceneGuid);
-
 		if (auto it = m_ActiveScenes.find(sceneGuid); it != m_ActiveScenes.end())
 			return it->second;
 
@@ -35,9 +32,6 @@ namespace zzz::engine
 
 		auto scene = safe_make_shared<Scene>(sceneGuid, entryOpt->GetName(), sceneDataRes->GetSceneScriptGuids(), *m_ScriptFactory);
 
-		// Регистрируем ДО InvokeStart(): если OnStart() одного скрипта реентрантно запросит эту же (или
-		// ссылающуюся на неё) сцену через LoadScene(), дедупликация должна найти её уже здесь, а не начать
-		// повторную загрузку / повторный InvokeStart().
 		m_ActiveScenes[sceneGuid] = scene;
 		scene->InvokeStart();
 
@@ -55,40 +49,8 @@ namespace zzz::engine
 		return LoadScene(entryOpt->GetGuid());
 	}
 
-	void SceneManager::UnloadScene(const Guid& sceneGuid)
-	{
-		if (!m_ActiveScenes.contains(sceneGuid))
-			return;
-
-		if (std::find(m_PendingUnloads.begin(), m_PendingUnloads.end(), sceneGuid) == m_PendingUnloads.end())
-			m_PendingUnloads.push_back(sceneGuid);
-	}
-
-	void SceneManager::ProcessPendingUnloads()
-	{
-		if (m_PendingUnloads.empty())
-			return;
-
-		for (const auto& guid : m_PendingUnloads)
-		{
-			auto it = m_ActiveScenes.find(guid);
-			if (it == m_ActiveScenes.end())
-				continue;
-
-			it->second->InvokeDestroy();
-			DOut("[SceneManager::ProcessPendingUnloads] Выгружена сцена '{}' ({}).", it->second->GetName(), guid.ToString());
-			m_ActiveScenes.erase(it);
-		}
-
-		m_PendingUnloads.clear();
-	}
-
 	void SceneManager::Update(const Time& time)
 	{
-		// Обрабатываем отложенную выгрузку ДО итерации по m_ActiveScenes - вставка/удаление из неё во время
-		// самой итерации (например, если бы UnloadScene() выгружал немедленно) было бы неопределённым поведением.
-		ProcessPendingUnloads();
-
 		for (const auto& [guid, scene] : m_ActiveScenes)
 			scene->Update(time);
 	}

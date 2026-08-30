@@ -16,28 +16,12 @@ namespace zzz::engine
 	class UserSettingsManager;
 	class SceneManager;
 
-	/**
-	 * @brief Представляет базовое окно приложения ( PrimaryView, ChildView или IndependentView ).
-	 * Управляет жизненным циклом системного окна ( NativeWindow ), графической поверхностью рендера ( SurfView ),
-	 * вводом ( Input ), скриптами и активной логикой сцены.
-	 */
 	class View final
 	{
 		Z_NO_MOVE(View);
 
 	public:
 		View() = delete;
-
-		/**
-		 * @brief Конструирует экземпляр View.
-		 * @param viewData Данные конфигурации вида/окна из пакета ресурсов (Guid, очистка и т.д.).
-		 * @param platformData Рассчитанные настройки платформы и координаты окна.
-		 * @param scriptFactory Фабрика для инстанцирования UI-скриптов по GUID.
-		 * @param platform Ссылка на глобальный платформенный слой приложения.
-		 * @param gapi Общий графический API (DirectX12, Vulkan или Metal).
-		 * @param onWindowClose Колбэк при закрытии окна.
-		 * @param parentView Указатель на родительское окно (для ChildView) или nullptr.
-		 */
 		View(
 			const ViewConfigData& viewData,
 			ViewPlatformData* platformData,
@@ -52,97 +36,22 @@ namespace zzz::engine
 #endif // Z_EDITOR
 		~View();
 
-		/**
-		 * @brief Запускает вызов события OnStart для шины событий окна.
-		 */
 		inline void InvokeStart() { m_EventBus.InvokeStart(); }
 
-		/**
-		 * @brief Выполняет обновление подсистем окна и активных скриптов в каждом кадре.
-		 * @param time Ссылка на таймер кадра.
-		 */
 		void Update(const Time& time);
-
-		/**
-		 * @brief Однопоточная подготовка перед параллельной фазой (до потоков).
-		 */
 		void PreRender();
-
-		/**
-		 * @brief Подготавливает буферы кадра и выполняет очистку поверхностей перед отрисовкой (Thread A).
-		 */
 		void PrepareFrame();
-
-		/**
-		 * @brief Выполняет отправку команд и презентацию предыдущего кадра (Thread B).
-		 */
 		void RenderFrame();
-
-		/**
-		 * @brief Однопоточная финализация после параллельной фазы (после Join). Переключает индексы кадров.
-		 */
 		void PostRender();
 
-		/**
-		 * @brief Устанавливает активную сцену для отображения и взаимодействия в данном окне.
-		 * @param scene Указатель на объект Scene.
-		 */
-		inline void SetActiveScene(std::shared_ptr<Scene> scene) noexcept { m_ActiveScene = std::move(scene); }
-
-		/**
-		 * @brief Возвращает текущую активную сцену, либо nullptr, если она уже выгружена SceneManager'ом
-		 * (см. std::weak_ptr::lock() - View не владеет сценой и не продлевает её жизнь).
-		 */
-		[[nodiscard]] inline std::shared_ptr<Scene> GetActiveScene() const noexcept { return m_ActiveScene.lock(); }
-
-		/**
-		 * @brief Возвращает GUID данного окна.
-		 */
 		[[nodiscard]] inline const Guid& GetGuid() const noexcept { return m_Guid; }
-
-		/**
-		 * @brief Возвращает актуальный снимок геометрического состояния окна для сохранения в user.dat.
-		 */
 		[[nodiscard]] inline ViewWindowState GetState() const { return ViewWindowState{ m_Guid, m_NativeWindow->GetState() }; }
-
-		/**
-		 * @brief Возвращает нативное окно платформы.
-		 */
 		[[nodiscard]] inline const NativeWindow& GetNativeWindow() const noexcept { return *m_NativeWindow; }
 		[[nodiscard]] inline NativeWindow& GetNativeWindow() noexcept { return *m_NativeWindow; }
-
-		/**
-		 * @brief Возвращает графическую поверхность SurfView данного окна.
-		 */
 		[[nodiscard]] inline std::shared_ptr<ISurfView> GetSurfView() const noexcept { return m_SurfView; }
 
-		/**
-		 * @brief Устанавливает новую конфигурацию очистки экрана на лету.
-		 * @param config Новая конфигурация ViewClearConfig.
-		 */
 		void SetClearConfig(const ViewClearConfig& config);
-
-		/**
-		 * @brief Возвращает текущую конфигурацию очистки экрана.
-		 */
 		[[nodiscard]] inline const ViewClearConfig& GetClearConfig() const noexcept { return m_SurfView->GetClearConfig(); }
-
-		/**
-		 * @brief Изменяет статус активности окна (управляет вызовами OnEnable / OnDisable).
-		 */
-		inline void SetActive(bool active)
-		{
-			if (m_IsActive == active)
-				return;
-
-			m_IsActive = active;
-
-			if (active)
-				m_EventBus.InvokeEnable();
-			else
-				m_EventBus.InvokeDisable();
-		}
-		inline bool IsActive() const noexcept { return m_IsActive; }
 
 	private:
 		void Initialize(const ViewConfigData& viewData, ViewPlatformData* platformData, std::shared_ptr<ScriptFactory> scriptFactory, std::shared_ptr<SceneManager> sceneManager, std::shared_ptr<GAPI> gapi, const View* parentView = nullptr);
