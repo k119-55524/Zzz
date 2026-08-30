@@ -7,6 +7,7 @@
 #include "../platforms/window/NativeWindow.h"
 
 #include "engine/gapi/SurfView.h"
+#include "engine/renderer/RenderManager.h"
 #include "core/io/package/ViewConfigData.h"
 
 using namespace zzz::core;
@@ -49,9 +50,6 @@ namespace zzz::engine
 		[[nodiscard]] inline const NativeWindow& GetNativeWindow() const noexcept { return *m_NativeWindow; }
 		[[nodiscard]] inline NativeWindow& GetNativeWindow() noexcept { return *m_NativeWindow; }
 		[[nodiscard]] inline std::shared_ptr<ISurfView> GetSurfView() const noexcept { return m_SurfView; }
-
-		void SetClearConfig(const ViewClearConfig& config);
-		[[nodiscard]] inline const ViewClearConfig& GetClearConfig() const noexcept { return m_SurfView->GetClearConfig(); }
 
 	private:
 		void Initialize(const ViewConfigData& viewData, ViewPlatformData* platformData, std::shared_ptr<ScriptFactory> scriptFactory, std::shared_ptr<SceneManager> sceneManager, std::shared_ptr<GAPI> gapi, const View* parentView = nullptr);
@@ -203,11 +201,11 @@ namespace zzz::engine
 		const Platform& m_Platform;
 		Guid m_Guid;
 		std::shared_ptr<ISurfView> m_SurfView;
+		std::unique_ptr<RenderManager> m_RenderManager;
 		std::shared_ptr<Input>  m_Input;
 		std::shared_ptr<NativeWindow> m_NativeWindow;
 		zzz::templates::ThreadPool m_ThreadsUpdate;
 
-		bool m_IsActive;
 		ViewEventBus m_EventBus;
 		std::weak_ptr<Scene> m_ActiveScene;
 		std::vector<std::shared_ptr<ViewScript>> m_Scripts;

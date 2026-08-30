@@ -8,28 +8,28 @@ namespace zzz::engine
 	using namespace zzz::core;
 
 	/**
-	 * @class ViewClearConfig
-	 * @brief Агрегированная конфигурация очистки для View, объединяющая настройки поверхности рендеринга и буфера глубины.
+	 * @class ClearConfig
+	 * @brief Агрегированная конфигурация очистки, объединяющая настройки поверхности рендеринга и буфера глубины.
 	 */
-	class ViewClearConfig final : public ISerializable
+	class ClearConfig final : public ISerializable
 	{
 	public:
 		SurfaceClearConfig     surface;     ///< Настройки очистки поверхности цвета (Swapchain).
 		DepthBufferClearConfig depthBuffer; ///< Настройки очистки буфера глубины и трафарета (DepthBuffer).
 
-		constexpr ViewClearConfig() noexcept = default;
-		constexpr ViewClearConfig(SurfaceClearConfig surface, DepthBufferClearConfig depthBuffer) noexcept
+		constexpr ClearConfig() noexcept = default;
+		constexpr ClearConfig(SurfaceClearConfig surface, DepthBufferClearConfig depthBuffer) noexcept
 			: surface(std::move(surface))
 			, depthBuffer(std::move(depthBuffer))
 		{}
 
-		constexpr bool operator==(const ViewClearConfig&) const noexcept = default;
+		constexpr bool operator==(const ClearConfig&) const noexcept = default;
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
 #if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut(::zzz::core::GAPI, "{}[ViewClearConfig]", indentation);
+			DOut(::zzz::core::GAPI, "{}[ClearConfig]", indentation);
 			surface.LogFileBlock(nestedIndentation);
 			depthBuffer.LogFileBlock(nestedIndentation);
 #endif
@@ -48,4 +48,6 @@ namespace zzz::engine
 				.and_then([&]() { return serializer.Deserialize(buffer, offset, depthBuffer); });
 		}
 	};
+
+	using ViewClearConfig = ClearConfig; ///< Алиас для обратной совместимости (ClearConfig ранее назывался ViewClearConfig).
 }

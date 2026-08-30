@@ -2,6 +2,14 @@
   "name": "MainScene",
   "version": "1.0.0",
   "script": "cc94831d-1c26-4c88-9010-6e9906f880ad",
+  "clear": {
+    "surfaceMode": "Color",
+    "color": [0.0, 0.4706, 0.8431, 1.0],
+    "depthMode": "Depth",
+    "depth": 1.0,
+    "stencilMode": "None",
+    "stencil": 0
+  },
   "objects": [
     {
       "name": "PlayerObject",

@@ -19,7 +19,7 @@ namespace zzz::engine
 
 	std::expected<std::shared_ptr<Scene>, std::string> SceneManager::LoadScene(const Guid& sceneGuid)
 	{
-		if (auto it = m_ActiveScenes.find(sceneGuid); it != m_ActiveScenes.end())
+		if (auto it = m_Scenes.find(sceneGuid); it != m_Scenes.end())
 			return it->second;
 
 		auto entryOpt = m_PackageManager->GetSceneEntryByGuid(sceneGuid);
@@ -30,9 +30,9 @@ namespace zzz::engine
 		if (!sceneDataRes)
 			return UNEXPECTED("Не удалось загрузить данные сцены '{}' ({}): {}", entryOpt->GetName(), sceneGuid.ToString(), sceneDataRes.error());
 
-		auto scene = safe_make_shared<Scene>(sceneGuid, entryOpt->GetName(), sceneDataRes->GetSceneScriptGuids(), *m_ScriptFactory);
+		auto scene = safe_make_shared<Scene>(sceneGuid, entryOpt->GetName(), sceneDataRes->GetSceneScriptGuids(), *m_ScriptFactory, sceneDataRes->GetClearConfig());
 
-		m_ActiveScenes[sceneGuid] = scene;
+		m_Scenes[sceneGuid] = scene;
 		scene->InvokeStart();
 
 		DOut("[SceneManager::LoadScene] Загружена сцена '{}' ({}), скриптов: {}.", entryOpt->GetName(), sceneGuid.ToString(), sceneDataRes->GetSceneScriptGuids().size());
@@ -51,7 +51,7 @@ namespace zzz::engine
 
 	void SceneManager::Update(const Time& time)
 	{
-		for (const auto& [guid, scene] : m_ActiveScenes)
+		for (const auto& [guid, scene] : m_Scenes)
 			scene->Update(time);
 	}
 }

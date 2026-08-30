@@ -67,9 +67,6 @@ namespace zzz::engine
 		m_OldSize = m_Swapchain->GetSize();
 		m_DepthBuffer = std::make_unique<DepthBuffer_DX>(m_GAPI, m_OldSize);
 
-		m_Swapchain->SetClearConfig(m_ClearConfig.surface);
-		m_DepthBuffer->SetClearConfig(m_ClearConfig.depthBuffer);
-
 		ID3D12Device* device = m_GAPI->GetDevice();
 		ensure(device, "DirectX12 Device не должен быть null.");
 
@@ -121,7 +118,7 @@ namespace zzz::engine
 		m_FrameReady[prepIdx] = true;
 	}
 
-	void SurfView_DX::PrepareFrame()
+	void SurfView_DX::PrepareFrame(const ClearConfig& clearConfig)
 	{
 		if (!m_Swapchain || !m_DepthBuffer)
 			return;
@@ -173,7 +170,9 @@ namespace zzz::engine
 		m_CommandLists[prepIdx]->RSSetViewports(1, &viewport);
 		m_CommandLists[prepIdx]->RSSetScissorRects(1, &scissorRect);
 
-		// 3. Clear Color Surface and Depth-Stencil Buffer
+		// 3. Clear Color Surface and Depth-Stencil Buffer (конфиг очистки приходит per-frame от активной сцены)
+		dxSwapchain->SetClearConfig(clearConfig.surface);
+		dxDepthBuffer->SetClearConfig(clearConfig.depthBuffer);
 		dxSwapchain->Clear(m_CommandLists[prepIdx].Get(), physIdx);
 		dxDepthBuffer->Clear(m_CommandLists[prepIdx].Get());
 
@@ -181,6 +180,13 @@ namespace zzz::engine
 		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = dxSwapchain->GetRTVHandle(physIdx);
 		D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dxDepthBuffer->GetDSVHandle();
 		m_CommandLists[prepIdx]->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+	}
+
+	void SurfView_DX::SubmitRenderTree(const SceneRenderTree& renderTree)
+	{
+		// SceneRenderTree - пока заглушка (пустое дерево), трансляция бакетов Материалы -> Меши
+		// в нативные Draw-вызовы появится вместе с ResourceManager/MeshRenderer.
+		(void)renderTree;
 	}
 
 	void SurfView_DX::RenderFrame()

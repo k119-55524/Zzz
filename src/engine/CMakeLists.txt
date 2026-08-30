@@ -13,6 +13,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
             pch
             ${CMAKE_CURRENT_SOURCE_DIR}/scene
             ${CMAKE_CURRENT_SOURCE_DIR}/view
+            ${CMAKE_CURRENT_SOURCE_DIR}/renderer
             ${CMAKE_CURRENT_SOURCE_DIR}/platforms
     )
 
@@ -49,6 +50,10 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
 
         # Helpers
         "platforms/input/InputHelpers.h" "platforms/input/InputBase.cpp"
+
+        # Renderer
+        "renderer/SceneRenderTree.h"
+        "renderer/RenderManager.h" "renderer/RenderManager.cpp"
 
         # GAPI
         "gapi/IGAPI.h" "gapi/IGAPI.cpp"

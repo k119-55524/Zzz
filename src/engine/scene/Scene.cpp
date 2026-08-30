@@ -6,9 +6,10 @@ using namespace zzz::core;
 
 namespace zzz::engine
 {
-	Scene::Scene(Guid guid, std::string name, const std::vector<Guid>& sceneScriptGuids, const ScriptFactory& scriptFactory) :
+	Scene::Scene(Guid guid, std::string name, const std::vector<Guid>& sceneScriptGuids, const ScriptFactory& scriptFactory, ClearConfig clearConfig) :
 		m_Guid(guid),
-		m_Name(std::move(name))
+		m_Name(std::move(name)),
+		m_ClearConfig(std::move(clearConfig))
 	{
 		for (const auto& scriptGuid : sceneScriptGuids)
 		{
@@ -29,12 +30,6 @@ namespace zzz::engine
 	void Scene::Update(const Time& time)
 	{
 		m_EventBus.InvokeUpdate(time);
-	}
-
-	void Scene::PrepareFrame([[maybe_unused]] ISurfView* surfView)
-	{
-		// Заготовка: реальное построение списков команд отрисовки (меши/материалы) появится вместе
-		// с ResourceManager (см. Этап 6 плана пайплайна сцен и ресурсов) - пока намеренно пусто.
 	}
 
 	void Scene::InvokeStart()

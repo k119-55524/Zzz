@@ -8,8 +8,8 @@ namespace zzz::core
 	{
 	public:
 		PrimaryViewData() = default;
-		PrimaryViewData(Guid viewGuid, Guid sceneGuid, std::vector<Guid> uiScriptGuids, ViewPlatformData platformData = {}, zzz::engine::ViewClearConfig clearConfig = {})
-			: ViewConfigData(viewGuid, sceneGuid, std::move(uiScriptGuids), std::move(platformData), std::move(clearConfig))
+		PrimaryViewData(Guid viewGuid, Guid sceneGuid, std::vector<Guid> uiScriptGuids, ViewPlatformData platformData = {})
+			: ViewConfigData(viewGuid, sceneGuid, std::move(uiScriptGuids), std::move(platformData))
 		{}
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
@@ -23,7 +23,6 @@ namespace zzz::core
 			{
 				DOut(::zzz::core::Assets, "{}  uiScriptGuid #{}: {}", nestedIndentation, i, m_UiScriptGuids[i].ToString());
 			}
-			m_ClearConfig.LogFileBlock(nestedIndentation);
 			m_PlatformData.LogFileBlock(nestedIndentation);
 		}
 	};

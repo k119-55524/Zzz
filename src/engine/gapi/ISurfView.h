@@ -4,7 +4,8 @@
 #include "engine/gapi/Swapchain.h"
 #include "engine/gapi/DepthBuffer.h"
 #include "engine/platforms/window/NativeWindow.h"
-#include "engine/gapi/clear_config/ViewClearConfig.h"
+#include "engine/gapi/clear_config/ClearConfig.h"
+#include "engine/renderer/SceneRenderTree.h"
 
 using namespace zzz::core;
 
@@ -38,20 +39,9 @@ namespace zzz::engine
 
 		[[nodiscard]] uint32_t GetPhysicalIndex(uint32_t logicalIndex) const noexcept { return m_PhysicalIndices[logicalIndex]; }
 
-		 inline void SetClearConfig(const ViewClearConfig& config)
-		{
-			m_ClearConfig = config;
-
-			if (m_Swapchain)
-				m_Swapchain->SetClearConfig(config.surface);
-
-			if (m_DepthBuffer)
-				m_DepthBuffer->SetClearConfig(config.depthBuffer);
-		}
-		[[nodiscard]] const ViewClearConfig& GetClearConfig() const noexcept { return m_ClearConfig; }
-
 		virtual void PreRender() {}
-		virtual void PrepareFrame() = 0;
+		virtual void PrepareFrame(const ClearConfig& clearConfig) = 0;
+		virtual void SubmitRenderTree(const SceneRenderTree& renderTree) = 0;
 		virtual void RenderFrame() = 0;
 		inline void PostRender() noexcept
 		{
@@ -73,7 +63,6 @@ namespace zzz::engine
 		std::unique_ptr<Swapchain> m_Swapchain;
 		std::unique_ptr<DepthBuffer> m_DepthBuffer;
 
-		ViewClearConfig m_ClearConfig;
 		Size2D<> m_OldSize{};
 		std::array<uint32_t, c_FramesInFlight> m_PhysicalIndices{};
 

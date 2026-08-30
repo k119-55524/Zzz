@@ -5,6 +5,7 @@
 #include <vector>
 #include "core/utils/Guid.h"
 #include "core/Serialize/Serializer.h"
+#include "engine/gapi/clear_config/ClearConfig.h"
 
 namespace zzz::core
 {
@@ -12,11 +13,15 @@ namespace zzz::core
 	{
 	public:
 		SceneData() = default;
-		explicit SceneData(std::vector<Guid> sceneScriptGuids)
+		explicit SceneData(std::vector<Guid> sceneScriptGuids, zzz::engine::ClearConfig clearConfig = {})
 			: sceneScriptGuids(std::move(sceneScriptGuids))
+			, clearConfig(std::move(clearConfig))
 		{}
 
 		[[nodiscard]] const std::vector<Guid>& GetSceneScriptGuids() const noexcept { return sceneScriptGuids; }
+
+		[[nodiscard]] const zzz::engine::ClearConfig& GetClearConfig() const noexcept { return clearConfig; }
+		void SetClearConfig(const zzz::engine::ClearConfig& config) noexcept { clearConfig = config; }
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
@@ -27,10 +32,12 @@ namespace zzz::core
 			{
 				DOut(::zzz::core::Assets, "{}  sceneScriptGuid #{}: {}", nestedIndentation, i, sceneScriptGuids[i].ToString());
 			}
+			clearConfig.LogFileBlock(nestedIndentation);
 		}
 
 	private:
 		std::vector<Guid> sceneScriptGuids;
+		zzz::engine::ClearConfig clearConfig;
 
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override
@@ -45,7 +52,8 @@ namespace zzz::core
 						if (!res) return res;
 					}
 					return {};
-				});
+				})
+				.and_then([&]() { return serializer.Serialize(buffer, clearConfig); });
 		}
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& serializer) override
 		{
@@ -63,7 +71,8 @@ namespace zzz::core
 						sceneScriptGuids.push_back(scriptGuid);
 					}
 					return {};
-				});
+				})
+				.and_then([&]() { return serializer.Deserialize(buffer, offset, clearConfig); });
 		}
 	};
 }

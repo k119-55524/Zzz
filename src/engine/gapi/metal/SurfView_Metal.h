@@ -15,7 +15,8 @@ namespace zzz::engine
 		SurfView_Metal(std::shared_ptr<NativeWindow> window, std::shared_ptr<MetalAPI> gapi);
 		~SurfView_Metal() override = default;
 
-		void PrepareFrame() override;
+		void PrepareFrame(const ClearConfig& clearConfig) override;
+		void SubmitRenderTree(const SceneRenderTree& renderTree) override;
 		void RenderFrame() override;
 		void OnResize(const Size2D<>& size) override;
 

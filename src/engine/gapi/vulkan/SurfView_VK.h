@@ -21,7 +21,8 @@ namespace zzz::engine
 		~SurfView_VK() override;
 
 		void PreRender() override;
-		void PrepareFrame() override;
+		void PrepareFrame(const ClearConfig& clearConfig) override;
+		void SubmitRenderTree(const SceneRenderTree& renderTree) override;
 		void RenderFrame() override;
 		void OnResize(const Size2D<>& size) override;
 

@@ -31,9 +31,6 @@ namespace zzz::engine
 		m_OldSize = m_Swapchain->GetSize();
 		m_DepthBuffer = std::make_unique<DepthBuffer_VK>(m_GAPI, m_OldSize);
 
-		m_Swapchain->SetClearConfig(m_ClearConfig.surface);
-		m_DepthBuffer->SetClearConfig(m_ClearConfig.depthBuffer);
-
 		Initialize();
 	}
 
@@ -258,7 +255,7 @@ namespace zzz::engine
 		m_FrameReady[prepIdx] = true;
 	}
 
-	void SurfView_VK::PrepareFrame()
+	void SurfView_VK::PrepareFrame(const ClearConfig& clearConfig)
 	{
 		std::lock_guard<std::mutex> lock(m_SubmitMutex);
 
@@ -343,7 +340,7 @@ namespace zzz::engine
 		}
 
 		// Dynamic Rendering Pass (Vulkan 1.3 / 1.4)
-		const auto& clearColor = m_ClearConfig.surface.color;
+		const auto& clearColor = clearConfig.surface.color;
 		VkClearValue colorClearValue{};
 		colorClearValue.color = { clearColor.R, clearColor.G, clearColor.B, clearColor.A };
 
@@ -351,18 +348,18 @@ namespace zzz::engine
 		colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
 		colorAttachment.imageView = vkSwapchain->GetImageView(imageIndex);
 		colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		colorAttachment.loadOp = (m_ClearConfig.surface.mode == eSurfaceClearMode::Color) ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
+		colorAttachment.loadOp = (clearConfig.surface.mode == eSurfaceClearMode::Color) ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
 		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 		colorAttachment.clearValue = colorClearValue;
 
 		VkClearValue depthClearValue{};
-		depthClearValue.depthStencil = { m_ClearConfig.depthBuffer.depth, m_ClearConfig.depthBuffer.stencil };
+		depthClearValue.depthStencil = { clearConfig.depthBuffer.depth, clearConfig.depthBuffer.stencil };
 
 		VkRenderingAttachmentInfo depthAttachment{};
 		depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
 		depthAttachment.imageView = vkDepthBuffer->GetImageView();
 		depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-		depthAttachment.loadOp = (m_ClearConfig.depthBuffer.depthMode == eClearDepthMode::Depth) ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
+		depthAttachment.loadOp = (clearConfig.depthBuffer.depthMode == eClearDepthMode::Depth) ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
 		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 		depthAttachment.clearValue = depthClearValue;
 
@@ -391,6 +388,13 @@ namespace zzz::engine
 		);
 
 		vkEndCommandBuffer(cmd);
+	}
+
+	void SurfView_VK::SubmitRenderTree(const SceneRenderTree& renderTree)
+	{
+		// SceneRenderTree - пока заглушка (пустое дерево), трансляция бакетов Материалы -> Меши
+		// в нативные draw-вызовы появится вместе с ResourceManager/MeshRenderer.
+		(void)renderTree;
 	}
 
 	void SurfView_VK::RenderFrame()

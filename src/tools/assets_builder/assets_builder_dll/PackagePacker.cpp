@@ -259,9 +259,9 @@ namespace zzz::builder
 		return eMSWinWindowMode::Windowed;
 	}
 
-	static zzz::engine::ViewClearConfig ReadViewClearConfig(const json& root)
+	static zzz::engine::ClearConfig ReadClearConfig(const json& root)
 	{
-		zzz::engine::ViewClearConfig config;
+		zzz::engine::ClearConfig config;
 
 		if (!root.contains("clear") || !root["clear"].is_object())
 			return config;
@@ -559,9 +559,6 @@ namespace zzz::builder
 					break;
 				}
 				}
-
-				auto clearConfig = ReadViewClearConfig(startViewRoot);
-				if (auto res = serializer.Serialize(result, clearConfig); !res) return {};
 			}
 			else if (assetType == zzz::core::ePackage::Scene)
 			{
@@ -583,7 +580,9 @@ namespace zzz::builder
 						sceneScriptGuids.push_back(*parsed);
 				}
 
-				zzz::core::SceneData sceneData(sceneScriptGuids);
+				auto clearConfig = ReadClearConfig(root);
+
+				zzz::core::SceneData sceneData(sceneScriptGuids, clearConfig);
 				if (auto res = serializer.Serialize(result, sceneData); !res)
 					return {};
 			}

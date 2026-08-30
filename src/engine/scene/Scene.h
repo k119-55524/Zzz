@@ -1,11 +1,7 @@
 #pragma once
 
 #include "engine/EngineIncludes.h"
-
-namespace zzz::engine
-{
-	class ISurfView;
-}
+#include "engine/gapi/clear_config/ClearConfig.h"
 
 namespace zzz::engine
 {
@@ -17,20 +13,23 @@ namespace zzz::engine
 
 	public:
 		Scene() = delete;
-		Scene(Guid guid, std::string name, const std::vector<Guid>& sceneScriptGuids, const ScriptFactory& scriptFactory);
+		Scene(Guid guid, std::string name, const std::vector<Guid>& sceneScriptGuids, const ScriptFactory& scriptFactory, ClearConfig clearConfig = {});
 		~Scene();
 
 		[[nodiscard]] const Guid& GetGuid() const noexcept { return m_Guid; }
 		[[nodiscard]] const std::string& GetName() const noexcept { return m_Name; }
 
+		[[nodiscard]] const ClearConfig& GetClearConfig() const noexcept { return m_ClearConfig; }
+		void SetClearConfig(const ClearConfig& config) noexcept { m_ClearConfig = config; }
+
 		void Update(const Time& time);
-		void PrepareFrame(ISurfView* surfView);
 		void InvokeStart();
 		void InvokeDestroy();
 
 	private:
 		Guid m_Guid;
 		std::string m_Name;
+		ClearConfig m_ClearConfig;
 		SceneEventBus m_EventBus;
 		std::vector<std::shared_ptr<SceneScript>> m_Scripts;
 	};

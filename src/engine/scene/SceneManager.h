@@ -30,6 +30,6 @@ namespace zzz::engine
 		std::shared_ptr<PackageManager> m_PackageManager;
 		std::shared_ptr<ScriptFactory> m_ScriptFactory;
 
-		std::unordered_map<Guid, std::shared_ptr<Scene>> m_ActiveScenes;
+		std::unordered_map<Guid, std::shared_ptr<Scene>> m_Scenes;
 	};
 }

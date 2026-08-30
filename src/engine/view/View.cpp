@@ -27,8 +27,7 @@ View::View(
 	m_Input{ nullptr },
 	m_NativeWindow{ nullptr },
 	m_ThreadsUpdate{ "View", 2 },
-	OnWindowClose{ std::move(onWindowClose) },
-	m_IsActive{ true }
+	OnWindowClose{ std::move(onWindowClose) }
 {
 	ensure(platformData != nullptr, "ViewPlatformData не должен быть null.");
 	ensure(gapi != nullptr, "GAPI не должен быть null.");
@@ -44,8 +43,7 @@ View::View(const Platform& platform, std::shared_ptr<GAPI> gapi, void* data) :
 	m_Platform{ platform },
 	m_Input{ nullptr },
 	m_NativeWindow{ nullptr },
-	m_ThreadsUpdate{ "View", 2 },
-	m_IsActive{ true }
+	m_ThreadsUpdate{ "View", 2 }
 {
 	ensure(gapi != nullptr, "GAPI не должен быть null.");
 
@@ -91,7 +89,7 @@ void View::Initialize(const ViewConfigData& viewData, ViewPlatformData* platform
 
 	m_NativeWindow = safe_make_shared<NativeWindow>(m_Platform, m_Input, std::move(callbacks));
 	m_SurfView = safe_make_shared<SurfView>(m_NativeWindow, std::move(gapi));
-	m_SurfView->SetClearConfig(viewData.GetClearConfig());
+	m_RenderManager = safe_make_unique<RenderManager>(m_SurfView);
 
 	auto res = m_NativeWindow->Initialize(*m_UserPlatformData, parentView);
 	if (!res)
@@ -110,11 +108,6 @@ void View::Initialize(const ViewConfigData& viewData, ViewPlatformData* platform
 		THROW_RUNTIME("Не удалось загрузить стартовую сцену View (guid {}): {}", viewData.GetSceneGuid().ToString(), sceneRes.error());
 
 	m_ActiveScene = *sceneRes;
-}
-
-void View::SetClearConfig(const ViewClearConfig& config)
-{
-	m_SurfView->SetClearConfig(config);
 }
 
 #if Z_EDITOR
@@ -305,43 +298,25 @@ void View::OnWindowSafeAreaChanged(int top, int bottom, int left, int right)
 
 void View::Update(const Time& time)
 {
-	if (!m_IsActive)
-		return;
-
 	m_EventBus.InvokeUpdate(time);
 }
 
 void View::PreRender()
 {
-	if (!m_IsActive || !m_SurfView)
-		return;
-
 	m_SurfView->PreRender();
 }
 
 void View::PrepareFrame()
 {
-	if (!m_IsActive || !m_SurfView)
-		return;
-
-	m_SurfView->PrepareFrame();
-
-	if (auto scene = m_ActiveScene.lock())
-		scene->PrepareFrame(m_SurfView.get());
+	m_RenderManager->PrepareFrame(m_ActiveScene.lock());
 }
 
 void View::RenderFrame()
 {
-	if (!m_IsActive || !m_SurfView)
-		return;
-
-	m_SurfView->RenderFrame();
+	m_RenderManager->RenderFrame();
 }
 
 void View::PostRender()
 {
-	if (!m_IsActive || !m_SurfView)
-		return;
-
 	m_SurfView->PostRender();
 }
