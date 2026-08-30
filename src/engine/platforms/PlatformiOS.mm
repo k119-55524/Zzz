@@ -19,7 +19,7 @@ static std::unique_ptr<Engine> g_Engine;
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
 
     // Создание движка
-    g_Engine = safe_make_unique<Engine>("GameiOS_ZzzEngine");
+    g_Engine = safe_make_unique<Engine>();
     DOut("[EngineAppDelegate] Движок инициализирован успешно. Запуск Run...");
     // Здесь можно было бы прокинуть self.window в NativeAppData или в WiniOS.
     // WiniOS::Initialize создаст ViewController и View, после чего можно выставить rootViewController.

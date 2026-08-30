@@ -1,5 +1,6 @@
 #include "BuilderApi.h"
 #include <core/Core.h>
+#include <core/io/Path.h>
 
 #include "PackagePacker.h"
 
@@ -12,7 +13,7 @@ extern "C"
 
 	BUILDER_API const char* GetGamePackageFileName()
 	{
-		return zzz::core::c_GamePackageFileName.data();
+		return zzz::core::c_GamePackageRelativePath.data();
 	}
 
 	BUILDER_API const uint8_t* GetGamePackageMagicBytes()
@@ -77,5 +78,11 @@ extern "C"
 			sourceDir,
 			destinationDir,
 			static_cast<zzz::core::eTargetPlatform>(targetPlatform));
+	}
+
+	BUILDER_API bool ValidateDirectoryNameNative(const char* name)
+	{
+		if (!name) return false;
+		return zzz::core::Path::IsValidDirectoryName(name);
 	}
 }

@@ -4,6 +4,7 @@
 #include <string_view>
 #include <vector>
 #include "core/utils/Guid.h"
+#include "core/utils/Version.h"
 #include "core/Serialize/Serializer.h"
 #include "core/IO/package/platforms/project/ProjectPlatformConfig.h"
 
@@ -13,13 +14,16 @@ namespace zzz::core
 	{
 	public:
 		ProjectManifestData() = default;
-		ProjectManifestData(std::vector<Guid> gameScriptGuids, std::vector<Guid> sceneGuids, std::vector<Guid> viewGuids, ProjectPlatformData platformData = {}, zU32 maxLogQueueSize = c_MaxNetworkLogQueueSize, zU16 loggerPort = c_DefaultLoggerPort)
+		ProjectManifestData(std::vector<Guid> gameScriptGuids, std::vector<Guid> sceneGuids, std::vector<Guid> viewGuids, ProjectPlatformData platformData = {}, zU32 maxLogQueueSize = c_MaxNetworkLogQueueSize, zU16 loggerPort = c_DefaultLoggerPort, std::string appName = {}, std::string companyName = {}, Version appVersion = {})
 			: gameScriptGuids(std::move(gameScriptGuids))
 			, sceneGuids(std::move(sceneGuids))
 			, viewGuids(std::move(viewGuids))
 			, platformData(std::move(platformData))
 			, maxLogQueueSize(maxLogQueueSize)
 			, loggerPort(loggerPort)
+			, appName(std::move(appName))
+			, companyName(std::move(companyName))
+			, appVersion(appVersion)
 		{}
 
 		[[nodiscard]] const std::vector<Guid>& GetGameScriptGuids() const noexcept { return gameScriptGuids; }
@@ -28,11 +32,17 @@ namespace zzz::core
 		[[nodiscard]] const ProjectPlatformData& GetPlatformData() const noexcept { return platformData; }
 		[[nodiscard]] zU32 GetMaxLogQueueSize() const noexcept { return maxLogQueueSize; }
 		[[nodiscard]] zU16 GetLoggerPort() const noexcept { return loggerPort; }
+		[[nodiscard]] const std::string& GetAppName() const noexcept { return appName; }
+		[[nodiscard]] const std::string& GetCompanyName() const noexcept { return companyName; }
+		[[nodiscard]] const Version& GetAppVersion() const noexcept { return appVersion; }
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
 			const std::string nestedIndentation = std::string(indentation) + "  ";
 			DOut(::zzz::core::Assets, "{}[ProjectManifestData]", indentation);
+			DOut(::zzz::core::Assets, "{}appName: {}", nestedIndentation, appName);
+			DOut(::zzz::core::Assets, "{}companyName: {}", nestedIndentation, companyName);
+			DOut(::zzz::core::Assets, "{}appVersion: {}", nestedIndentation, appVersion.ToString());
 			DOut(::zzz::core::Assets, "{}gameScriptGuids({})", nestedIndentation, gameScriptGuids.size());
 			for (zU32 i = 0; i < gameScriptGuids.size(); ++i)
 			{
@@ -64,6 +74,9 @@ namespace zzz::core
 		ProjectPlatformData platformData;
 		zU32 maxLogQueueSize{ c_MaxNetworkLogQueueSize };
 		zU16 loggerPort{ c_DefaultLoggerPort };
+		std::string appName;
+		std::string companyName;
+		Version appVersion;
 
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override
@@ -110,6 +123,15 @@ namespace zzz::core
 				})
 				.and_then([&]() {
 					return serializer.Serialize(buffer, platformData);
+				})
+				.and_then([&]() {
+					return serializer.Serialize(buffer, appName);
+				})
+				.and_then([&]() {
+					return serializer.Serialize(buffer, companyName);
+				})
+				.and_then([&]() {
+					return serializer.Serialize(buffer, appVersion);
 				});
 		}
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& serializer) override
@@ -184,6 +206,18 @@ namespace zzz::core
 				.and_then([&]()
 				{
 					return serializer.Deserialize(buffer, offset, platformData);
+				})
+				.and_then([&]()
+				{
+					return serializer.Deserialize(buffer, offset, appName);
+				})
+				.and_then([&]()
+				{
+					return serializer.Deserialize(buffer, offset, companyName);
+				})
+				.and_then([&]()
+				{
+					return serializer.Deserialize(buffer, offset, appVersion);
 				});
 		}
 	};

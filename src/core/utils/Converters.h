@@ -1,8 +1,9 @@
-﻿#pragma once
+#pragma once
 
 #if Z_WINDOWS
 
 #include "core/headers/MSWin.h"
+#include "core/utils/ThrowWrappers.h"
 
 namespace zzz
 {

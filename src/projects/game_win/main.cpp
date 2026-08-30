@@ -1,4 +1,4 @@
-﻿#include <core/Core.h>
+#include <core/Core.h>
 #include <logger.h>
 #include "main.h"
 
@@ -21,14 +21,14 @@ int APIENTRY wWinMain(
 	int exitCode = 0;
 
 	{
-		//g_Logger.SetLogFilterMask(eLogMessageType::All);
-		//g_Logger.AddConsoleBroadcaster();
+		g_Logger.SetLogFilterMask(eLogMessageType::All);
+		g_Logger.AddConsoleBroadcaster();
 
 		DOut("[Main::WinMain (Windows)] - Игра запущена.");
 
 		try
 		{
-			Engine engine("GameWin_ZzzEngine");
+			Engine engine;
 			auto res = engine.Run();
 			if (!res)
 			{
@@ -42,11 +42,13 @@ int APIENTRY wWinMain(
 		}
 		catch (const std::exception& e)
 		{
+			std::ofstream("startup_error.txt") << e.what() << std::endl;
 			DOutException("[Main::WinMain (Windows)] - Исключение в WinMain: {}.", e.what());
 			exitCode = -1;
 		}
 		catch (...)
 		{
+			std::ofstream("startup_error.txt") << "Unknown exception" << std::endl;
 			DOutException("[Main::WinMain (Windows)] - Исключение в WinMain.");
 			exitCode = -1;
 		}

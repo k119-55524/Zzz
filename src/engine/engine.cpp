@@ -2,7 +2,6 @@
 #include <logger/logger.h>
 
 #include "Engine.h"
-#include "engine/utils/EngineLogFlags.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::LogEngine);
 
@@ -19,19 +18,14 @@ extern "C" void RegisterAllScripts(zzz::core::ScriptRegistry&);
 extern "C" __attribute__((weak)) void RegisterAllScripts(zzz::core::ScriptRegistry&) {}
 #endif
 
-Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeData) :
+Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 	engineState{ eInitState::NotInitialized }
 {
-	// Регистрация локального сетевого бродкастера логов (127.0.0.1)
-	g_Logger.AddNetworkBroadcaster(c_LocalhostIPv4, c_DefaultLoggerPort);
-
-	ensure(appName.empty() == false, "Имя приложения не должно быть пустым.");
-
-	// Инициализация подсистемы путей приложения
-	m_Path = safe_make_shared<Path>(appName, nativeData);
-
-	// Загрузка менеджера пакетов ресурсов и манифеста проекта
+	m_Path = safe_make_shared<Path>(nativeData);
 	m_PackageManager = safe_make_shared<PackageManager>(*m_Path);
+	if (auto res = m_Path->InitializeUserData(m_PackageManager->GetCompanyName(), m_PackageManager->GetAppName()); !res)
+		THROW_RUNTIME("Не удалось инициализировать каталог пользовательских данных: {}", res.error());
+
 	auto projectManifestData = m_PackageManager->GetProjectManifestData();
 	if (!projectManifestData)
 		THROW_RUNTIME("Failed to load ProjectManifestData: {}", projectManifestData.error());
@@ -59,8 +53,11 @@ Engine::Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeDa
 	m_ScriptRegistry = safe_make_unique<ScriptRegistry>(*m_ScriptStorage);
 	m_ScriptFactory = safe_make_shared<ScriptFactory>(*m_ScriptStorage);
 
-	// Инициализация менеджера отображения окон (ViewManager) с пробросом графического API, фабрики скриптов и пакета ресурсов
-	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, m_GAPI, m_ScriptFactory, m_PackageManager, m_UserSettingsManager, [this]() { OnAppClosed(); });
+	// Инициализация менеджера сцен (SceneManager) - используется View для загрузки стартовых сцен
+	m_SceneManager = safe_make_shared<SceneManager>(m_PackageManager, m_ScriptFactory);
+
+	// Инициализация менеджера отображения окон (ViewManager) с пробросом графического API, фабрики скриптов, пакета ресурсов и менеджера сцен
+	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, m_GAPI, m_ScriptFactory, m_PackageManager, m_UserSettingsManager, m_SceneManager, [this]() { OnAppClosed(); });
 
 	// Инициализация главного кадрового цикла, шины событий проекта и игрового таймера
 	m_MainLoop = safe_make_shared<MainLoop>(*m_Platform, [this]() { OnUpdateSystem(); });
@@ -104,6 +101,7 @@ void Engine::Shutdown()
 			auto res = m_UserSettingsManager->SaveConfig();
 		m_UserSettingsManager = nullptr;
 
+		m_SceneManager = nullptr;
 		m_Platform = nullptr;
 		m_PackageManager = nullptr;
 		m_Path = nullptr;
@@ -225,6 +223,9 @@ void Engine::OnUpdateSystem()
 #endif // Z_ADD_LOGGER
 
 	m_EventBus->InvokeUpdate(*m_Time);
+
+	if (m_SceneManager)
+		m_SceneManager->Update(*m_Time);
 
 	if (m_ViewManager)
 		m_ViewManager->Update(*m_Time);

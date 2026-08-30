@@ -3,6 +3,7 @@
 #include "engine/gapi/GAPI.h"
 #include "engine/view/ViewManager.h"
 #include "engine/platforms/Platform.h"
+#include "engine/scene/SceneManager.h"
 #include "engine/package/PackageManager.h"
 #include "engine/package/UserSettingsManager.h"
 #include "engine/platforms/mainloop/MainLoop.h"
@@ -14,14 +15,7 @@ namespace zzz::engine
 	class Engine
 	{
 	public:
-		Engine() = delete;
-
-		/**
-		 * @brief Инициализирует подсистемы движка (сетевой логер, пути, манифест, GAPI, скрипты и окна).
-		 * @param appName Имя приложения.
-		 * @param nativeData Нативные данные платформы.
-		 */
-		Engine(std::string_view appName, std::shared_ptr<NativeAppData> nativeData = nullptr);
+		Engine(std::shared_ptr<NativeAppData> nativeData = nullptr);
 		~Engine();
 
 		[[nodiscard]] virtual std::expected<void, std::string> Run();
@@ -49,6 +43,7 @@ namespace zzz::engine
 		std::shared_ptr<UserSettingsManager> m_UserSettingsManager;
 		std::unique_ptr<Platform> m_Platform;
 		std::shared_ptr<GAPI> m_GAPI;
+		std::shared_ptr<SceneManager> m_SceneManager;
 		std::unique_ptr<ViewManager> m_ViewManager;
 		std::shared_ptr<MainLoopBase> m_MainLoop;
 		std::shared_ptr<ProjectEventBus> m_EventBus;

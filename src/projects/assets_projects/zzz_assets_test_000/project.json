@@ -1,5 +1,8 @@
 {
-  "name": "zzz_assets_test_000",
+  "company_name": "Zzz",
+  "app_name": "ZzzGame",
+  "app_version": "1.0.0",
+  "name": "ZzzGame",
   "version": "1.0.0",
   "game_scripts": [
     "a8f94d12-e5b1-4c92-bf38-71e4029410ad",

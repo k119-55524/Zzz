@@ -40,4 +40,10 @@ internal static class NativeMethods
 
     [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     public static extern bool PackProjectNative(string sourceDir, string destinationDir, uint targetPlatform);
+
+    // Валидация имени каталога (company_name/app_name из project.json) той же логикой, что и движок
+    // (Path::IsValidDirectoryName) - единственный источник истины на стороне C++. Имя передаётся в UTF-8,
+    // так как каталоги пользовательских данных могут содержать не-ASCII символы (например, кириллицу).
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+    public static extern bool ValidateDirectoryNameNative([MarshalAs(UnmanagedType.LPUTF8Str)] string name);
 }

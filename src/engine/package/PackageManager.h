@@ -19,6 +19,14 @@ namespace zzz::engine
 		[[nodiscard]] std::expected<ProjectManifestData, std::string> GetProjectManifestData() const;
 		[[nodiscard]] std::expected<PrimaryViewData, std::string> GetPrimaryViewData() const;
 
+		/// @brief Имя компании и приложения, закэшированные из ProjectManifestData во время Initialize().
+		[[nodiscard]] const std::string& GetCompanyName() const noexcept { return m_CompanyName; }
+		[[nodiscard]] const std::string& GetAppName() const noexcept { return m_AppName; }
+
+		/// @brief Метаданные (имя/guid/offset) записи Scene в package.dat - для SceneManager (загрузка по имени/дедупликация).
+		[[nodiscard]] std::optional<PackageEntry> GetSceneEntryByGuid(const Guid& guid) const { return GetEntryByGuid(ePackage::Scene, guid); }
+		[[nodiscard]] std::optional<PackageEntry> GetSceneEntryByName(std::string_view name) const { return GetEntryByName(ePackage::Scene, name); }
+
 		template <typename T> requires std::derived_from<T, ISerializable>
 		[[nodiscard]] std::expected<T, std::string> LoadPackageDataByName(ePackage type, std::string_view name) const
 		{
@@ -53,5 +61,7 @@ namespace zzz::engine
 		std::filesystem::path m_PackagePath;
 		std::map<ePackage, std::unordered_map<std::string, PackageEntry>> m_EntriesByName;
 		std::map<ePackage, std::unordered_map<Guid, PackageEntry>> m_EntriesByGuid;
+		std::string m_CompanyName;
+		std::string m_AppName;
 	};
 }

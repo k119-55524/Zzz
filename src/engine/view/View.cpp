@@ -1,5 +1,6 @@
 
 #include "scene/Scene.h"
+#include "scene/SceneManager.h"
 #include "../platforms/input/Input.h"
 #include "engine/utils/EngineLogFlags.h"
 #include "core/userscripts/ScriptFactory.h"
@@ -16,6 +17,7 @@ View::View(
 	const ViewConfigData& viewData,
 	ViewPlatformData* platformData,
 	std::shared_ptr<ScriptFactory> scriptFactory,
+	std::shared_ptr<SceneManager> sceneManager,
 	const Platform& platform,
 	std::shared_ptr<GAPI> gapi,
 	std::function<void(View&)> onWindowClose,
@@ -32,8 +34,9 @@ View::View(
 	ensure(gapi != nullptr, "GAPI не должен быть null.");
 	ensure(OnWindowClose != nullptr, "OnWindowClose не должен быть null.");
 	ensure(scriptFactory != nullptr, "ScriptFactory не должен быть null.");
+	ensure(sceneManager != nullptr, "SceneManager не должен быть null.");
 
-	Initialize(viewData, platformData, std::move(scriptFactory), std::move(gapi), parentView);
+	Initialize(viewData, platformData, std::move(scriptFactory), std::move(sceneManager), std::move(gapi), parentView);
 }
 
 #if Z_EDITOR
@@ -54,10 +57,10 @@ View::~View()
 {
 	m_EventBus.InvokeDestroy();
 	m_Scripts.clear();
-	m_ActiveScene = nullptr;
+	m_ActiveScene.reset();
 }
 
-void View::Initialize(const ViewConfigData& viewData, ViewPlatformData* platformData, std::shared_ptr<ScriptFactory> scriptFactory, std::shared_ptr<GAPI> gapi, const View* parentView)
+void View::Initialize(const ViewConfigData& viewData, ViewPlatformData* platformData, std::shared_ptr<ScriptFactory> scriptFactory, std::shared_ptr<SceneManager> sceneManager, std::shared_ptr<GAPI> gapi, const View* parentView)
 {
 	m_UserPlatformData = platformData;
 
@@ -101,6 +104,12 @@ void View::Initialize(const ViewConfigData& viewData, ViewPlatformData* platform
 		script->Init(&m_EventBus);
 		m_Scripts.push_back(std::move(script));
 	}
+
+	auto sceneRes = sceneManager->LoadScene(viewData.GetSceneGuid());
+	if (!sceneRes)
+		THROW_RUNTIME("Не удалось загрузить стартовую сцену View (guid {}): {}", viewData.GetSceneGuid().ToString(), sceneRes.error());
+
+	m_ActiveScene = *sceneRes;
 }
 
 void View::SetClearConfig(const ViewClearConfig& config)
@@ -300,9 +309,6 @@ void View::Update(const Time& time)
 		return;
 
 	m_EventBus.InvokeUpdate(time);
-
-	if (m_ActiveScene)
-		m_ActiveScene->Update(time);
 }
 
 void View::PreRender()
@@ -319,6 +325,9 @@ void View::PrepareFrame()
 		return;
 
 	m_SurfView->PrepareFrame();
+
+	if (auto scene = m_ActiveScene.lock())
+		scene->PrepareFrame(m_SurfView.get());
 }
 
 void View::RenderFrame()

@@ -1,27 +1,30 @@
 #pragma once
 
-/**
- * @file PackageConstants.h
- * @brief Константы формата игровых пакетов и архивов ресурсов (Game Package).
- *
- * @details Определяет относительный путь к файлу пакета по умолчанию, сигнатуру
- *          заголовка архива (Magic Bytes) и текущую версию формата пакета ресурсов.
- *
- * @note Используется в:
- *       - PackageManager (чтение, валидация и монтирование package.dat)
- *       - PackageHeader (сериализация/десериализация заголовка пакета)
- *       - PackageBuilder / Asset Pipeline (утилиты сборки и упаковки ресурсов)
- */
-
 #include "core/CoreIncludes.h"
 #include "core/io/FileHeader.h"
 
 namespace zzz::core
 {
-#pragma region Game Package file constants
-	/// Путь по умолчанию к основному архиву игровых ресурсов
-	constexpr std::string_view c_GamePackageFileName = "assets/package.dat";
+#pragma region Path composition constants
+	/// Имя каталога игровых ассетов (Read-Only, поставляется с игрой) - используется и напрямую, и в путях ниже.
+	inline constexpr char c_AssetsDirectoryName[] = "assets";
 
+	/// Относительные (от каталога исполняемого файла) пути к файлам/каталогам ассетов.
+	inline constexpr std::string_view c_GamePackageRelativePath       = "assets/package.dat";
+	inline constexpr std::string_view c_DataDirectoryRelativePath     = "assets/data";
+	inline constexpr std::string_view c_DataPackageRelativePath       = "assets/data/data.dat";
+	inline constexpr std::string_view c_TexturesDirectoryRelativePath = "assets/data/textures";
+	inline constexpr std::string_view c_VideoDirectoryRelativePath    = "assets/data/video";
+	inline constexpr std::string_view c_AudioDirectoryRelativePath    = "assets/data/audio";
+	inline constexpr std::string_view c_FontsDirectoryRelativePath    = "assets/data/fonts";
+
+	/// Имена подкаталогов внутри каталога пользовательских данных (Read-Write, машина пользователя).
+	inline constexpr std::string_view c_CacheDirectoryName = "cache";
+	inline constexpr std::string_view c_SavesDirectoryName = "saves";
+	inline constexpr std::string_view c_LogsDirectoryName = "logs";
+#pragma endregion // Path composition constants
+
+#pragma region Game Package file constants
 	/// Сигнатура (Magic Bytes) файла пакета ресурсов: "ZZP"
 	constexpr FileHeader<3> c_GamePackageHeader
 	{
@@ -36,7 +39,7 @@ namespace zzz::core
 	constexpr zU8 c_GamePackageFileMajorVersion = 1;
 
 	/// Минорная версия формата пакета ресурсов
-	constexpr zU8 c_GamePackageFileMinorVersion = 1;
+	constexpr zU8 c_GamePackageFileMinorVersion = 0;
 
 	/// Патч-версия формата пакета ресурсов
 	constexpr zU8 c_GamePackageFilePatchVersion = 0;

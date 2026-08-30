@@ -20,6 +20,7 @@ ViewManager::ViewManager(
 	std::shared_ptr<ScriptFactory> scriptFactory,
 	std::shared_ptr<PackageManager> packageManager,
 	std::shared_ptr<UserSettingsManager> userSettingsManager,
+	std::shared_ptr<SceneManager> sceneManager,
 	std::function<void()> onAllViewsClosed
 ) :
 	m_Platform{ platform },
@@ -27,6 +28,7 @@ ViewManager::ViewManager(
 	m_ScriptFactory{ std::move(scriptFactory) },
 	m_PackageManager{ std::move(packageManager) },
 	m_UserSettingsManager{ std::move(userSettingsManager) },
+	m_SceneManager{ std::move(sceneManager) },
 	m_ThreadsUpdate{ "ViewManager", 2 },
 	OnAllViewsClosed{ std::move(onAllViewsClosed) }
 {
@@ -34,6 +36,7 @@ ViewManager::ViewManager(
 	ensure(m_ScriptFactory != nullptr, "ScriptFactory не должен быть null.");
 	ensure(m_PackageManager != nullptr, "PackageManager не должен быть null.");
 	ensure(m_UserSettingsManager != nullptr, "UserSettingsManager не должен быть null.");
+	ensure(m_SceneManager != nullptr, "SceneManager не должен быть null.");
 	ensure(OnAllViewsClosed != nullptr, "OnAllViewsClosed не должен быть null.");
 }
 
@@ -123,6 +126,7 @@ std::shared_ptr<View> ViewManager::CreateViewInstance(
 		viewData,
 		userPlatformData,
 		m_ScriptFactory,
+		m_SceneManager,
 		m_Platform,
 		m_GAPI,
 		[this](View& v) { OnWindowClose(v); },

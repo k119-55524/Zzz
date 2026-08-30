@@ -80,6 +80,12 @@ public class ProjectJsonValidator : IAssetValidator
                     }
                 }
             }
+
+            // 4. Проверка имени компании и приложения (company_name/app_name) — обязательны и должны быть
+            // валидными именами каталогов (см. Path::IsValidDirectoryName в движке), так как формируют
+            // двухуровневый каталог пользовательских данных приложения ( %LOCALAPPDATA%/<company>/<app>/ и т.п.).
+            ValidateDirectoryNameField(root, filePath, "company_name", result);
+            ValidateDirectoryNameField(root, filePath, "app_name", result);
         }
         catch (Exception ex)
         {
@@ -87,6 +93,29 @@ public class ProjectJsonValidator : IAssetValidator
         }
 
         return result;
+    }
+
+    private void ValidateDirectoryNameField(JsonElement root, string filePath, string fieldName, ValidationResult result)
+    {
+        if (!root.TryGetProperty(fieldName, out var prop) || prop.ValueKind != JsonValueKind.String)
+        {
+            result.AddError(filePath, $"project.json: Отсутствует обязательное строковое поле '{fieldName}'.");
+            return;
+        }
+
+        string value = prop.GetString() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            result.AddError(filePath, $"project.json: Поле '{fieldName}' не должно быть пустым.");
+            return;
+        }
+
+        if (!NativeMethods.ValidateDirectoryNameNative(value))
+        {
+            result.AddError(filePath, $"project.json: Поле '{fieldName}' ('{value}') содержит недопустимое имя каталога " +
+                "(запрещены Path Traversal, символы < > : \" / \\ | ? *, управляющие коды, зарезервированные имена " +
+                "Windows-устройств (CON, PRN, AUX, NUL, COM1-9, LPT1-9), а также завершающие точки/пробелы).");
+        }
     }
 
     private void ValidateStrictGuid(

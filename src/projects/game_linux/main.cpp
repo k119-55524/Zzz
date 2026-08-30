@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
 
 		try
 		{
-			Engine engine("GameLinux_ZzzEngine");
+			Engine engine;
 			auto res = engine.Run();
 			if (!res)
 			{

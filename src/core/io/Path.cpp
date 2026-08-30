@@ -1,46 +1,99 @@
 
-#include <cstdlib>
+#include <array>
+#include <cctype>
 #include <memory>
+#include <cstdlib>
+#include <algorithm>
+#include <logger/logger.h>
 
-#include "core/utils/Types.h"
-#include "core/utils/Ensure.h"
 #include "core/utils/Defines.h"
-#include "core/utils/Macroses.h"
-#include "core/utils/MemoryUtils.h"
-#include "core/utils/ThrowWrappers.h"
-#include "core/utils/ThrowWrappers.h"
-#include "core/headers/Android.h"
+#include "core/utils/Ensure.h"
 #include "core/headers/Apple.h"
 #include "core/headers/Linux.h"
 #include "core/headers/MSWin.h"
-#include "core/io/Path.h"
-#include <logger/logger.h>
+#include "core/headers/Android.h"
+#include "core/constants/PackageConstants.h"
+
+#include "Path.h"
+
+namespace
+{
+	/// Зарезервированные Windows-имена устройств - запрещены как имена каталогов независимо от платформы,
+	/// регистра и расширения (например "CON", "con", "CON.txt" - все запрещены для кроссплатформенной совместимости).
+	constexpr std::array<std::string_view, 22> c_ReservedWindowsNames =
+	{
+		"CON", "PRN", "AUX", "NUL",
+		"COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+		"LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
+	};
+
+	[[nodiscard]] bool IsReservedWindowsName(std::string_view stem) noexcept
+	{
+		for (const auto& reserved : c_ReservedWindowsNames)
+		{
+			if (stem.size() != reserved.size())
+				continue;
+
+			bool equalCaseInsensitive = true;
+			for (std::size_t i = 0; i < stem.size(); ++i)
+			{
+				if (std::toupper(static_cast<unsigned char>(stem[i])) != static_cast<int>(reserved[i]))
+				{
+					equalCaseInsensitive = false;
+					break;
+				}
+			}
+
+			if (equalCaseInsensitive)
+				return true;
+		}
+
+		return false;
+	}
+}
 
 namespace zzz::core
 {
-	Path::Path(std::string_view appName, std::shared_ptr<NativeAppData> nativeData) :
-		m_AppName{appName},
-		m_NativeData{ nativeData }
-	{	
-		ensure(IsValidDirectoryName(appName) == true, "Некорректное имя приложения для каталога: {}", appName);
+	Path::Path(std::shared_ptr<NativeAppData> nativeData) :
+		m_NativeData{ std::move(nativeData) }
+	{
+		auto execDir = ResolveExecutableDirectory();
+		if (!execDir)
+			THROW_RUNTIME("Path: не удалось определить каталог исполняемого файла: {}", execDir.error());
 
-		auto resPath = ResolveUserDataDirectory(appName);
-		if (!resPath)
-			THROW_RUNTIME("Не удалось определить каталог пользовательских данных: {}.", resPath.error());
-
-		m_UserDataDirectory = *resPath;
+		m_ExecutableDirectory = *execDir;
 	}
 
-	/// @brief Проверяет корректность имени каталога для всех поддерживаемых платформ.
-	[[nodiscard]] bool Path::IsValidDirectoryName(std::string_view name) const noexcept
+	[[nodiscard]] std::expected<void, std::string> Path::InitializeUserData(std::string_view companyName, std::string_view appName)
+	{
+		ensure(IsValidDirectoryName(companyName), "Недопустимое имя компании для каталога пользовательских данных: '{}'.", companyName);
+		ensure(IsValidDirectoryName(appName), "Недопустимое имя приложения для каталога пользовательских данных: '{}'.", appName);
+
+		auto resPath = ResolveUserDataDirectory(companyName, appName);
+		if (!resPath)
+			return UNEXPECTED("Не удалось определить каталог пользовательских данных: {}.", resPath.error());
+
+		m_UserDataDirectory = *resPath;
+
+		return {};
+	}
+
+	[[nodiscard]] bool Path::IsValidDirectoryName(std::string_view name) noexcept
 	{
 		if (name.empty())
 			return false;
 
+		if (name == "." || name == "..")
+			return false;
+
+		if (name.back() == '.' || name.back() == ' ')
+			return false;
+
 		static constexpr std::string_view invalidChars = R"(< > : " / \ | ? *)";
-		for (char c : name)
+		(void)invalidChars;
+		for (unsigned char c : name)
 		{
-			if (static_cast<unsigned char>(c) < 32)
+			if (c < 32)
 				return false;
 
 			switch (c)
@@ -55,14 +108,21 @@ namespace zzz::core
 			case '?':
 			case '*':
 				return false;
+			default:
+				break;
 			}
 		}
+
+		const auto dotPos = name.find('.');
+		const std::string_view stem = (dotPos == std::string_view::npos) ? name : name.substr(0, dotPos);
+		if (IsReservedWindowsName(stem))
+			return false;
 
 		return true;
 	}
 
-	/// @brief Возвращает каталог, в котором расположен исполняемый файл приложения.
-	[[nodiscard]] const std::expected<std::filesystem::path, std::string> Path::GetExecutableDirectory() const noexcept
+	/// @brief Определяет каталог, в котором расположен исполняемый файл приложения (вызывается один раз в конструкторе).
+	[[nodiscard]] std::expected<std::filesystem::path, std::string> Path::ResolveExecutableDirectory() noexcept
 	{
 		try
 		{
@@ -73,7 +133,7 @@ namespace zzz::core
 				return UNEXPECTED("Не удалось получить путь к исполняемому файлу.");
 
 			return std::filesystem::path(buffer).parent_path();
-#elif Z_MACOS
+#elif Z_APPLE
 			uint32_t size = 0;
 			_NSGetExecutablePath(nullptr, &size);
 
@@ -83,6 +143,12 @@ namespace zzz::core
 				return UNEXPECTED("Не удалось получить путь к исполняемому файлу.");
 
 			return std::filesystem::weakly_canonical(path).parent_path();
+#elif Z_ANDROID
+			auto app = m_NativeData.get();
+			if (!app || !app->activity || !app->activity->internalDataPath)
+				return UNEXPECTED("Android activity или internalDataPath равен null.");
+
+			return std::filesystem::path(app->activity->internalDataPath);
 #elif Z_LINUX
 			char buffer[PATH_MAX];
 			ssize_t len = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
@@ -110,8 +176,8 @@ namespace zzz::core
 		}
 	}
 
-	/// @brief Возвращает каталог пользовательских данных приложения для текущей платформы.
-	[[nodiscard]] std::expected<std::filesystem::path, std::string> Path::ResolveUserDataDirectory(std::string_view appName)
+	/// @brief Возвращает каталог пользовательских данных приложения (двухуровневый company/name) для текущей платформы.
+	[[nodiscard]] std::expected<std::filesystem::path, std::string> Path::ResolveUserDataDirectory(std::string_view companyName, std::string_view appName)
 	{
 		try
 		{
@@ -123,13 +189,13 @@ namespace zzz::core
 			if (!localAppData)
 				return UNEXPECTED("Не удалось получить LOCALAPPDATA.");
 
-			return std::filesystem::path(localAppData.get()) / appName;
+			return std::filesystem::path(localAppData.get()) / companyName / appName;
 #elif Z_APPLE
 			auto path = GetAppleUserDataDirectory();
 			if (!path)
 				return UNEXPECTED("{}", path.error());
 
-			return *path / appName;
+			return *path / companyName / appName;
 #elif Z_ANDROID
 			auto app = m_NativeData.get();
 			if (!app->activity)
@@ -138,17 +204,17 @@ namespace zzz::core
 			if (!app->activity->internalDataPath)
 				return UNEXPECTED("Внутренний путь данных Android равен null.");
 
-			return std::filesystem::path(app->activity->internalDataPath) / appName;
+			return std::filesystem::path(app->activity->internalDataPath) / companyName / appName;
 #elif Z_LINUX
 			const char* xdgConfigHome = std::getenv("XDG_CONFIG_HOME");
 			if (xdgConfigHome)
-				return std::filesystem::path(xdgConfigHome) / appName;
+				return std::filesystem::path(xdgConfigHome) / companyName / appName;
 
 			const char* home = std::getenv("HOME");
 			if (!home)
 				return UNEXPECTED("Не удалось получить HOME.");
 
-			return std::filesystem::path(home) / ".config" / appName;
+			return std::filesystem::path(home) / ".config" / companyName / appName;
 #else
 #error >>>>> zzz::core::Path::ResolveUserDataDirectory(): Unsupported platform.
 #endif
@@ -164,6 +230,31 @@ namespace zzz::core
 		catch (...)
 		{
 			return UNEXPECTED("Неизвестная ошибка при получении каталога пользовательских данных.");
+		}
+	}
+
+	[[nodiscard]] std::filesystem::path Path::GetDirectory(eUserDirectoryKind kind) const
+	{
+		switch (kind)
+		{
+		case eUserDirectoryKind::Cache: return m_UserDataDirectory / c_CacheDirectoryName;
+		case eUserDirectoryKind::Saves: return m_UserDataDirectory / c_SavesDirectoryName;
+		case eUserDirectoryKind::Logs:  return m_UserDataDirectory / c_LogsDirectoryName;
+		default:
+			THROW_RUNTIME("Path::GetDirectory(): необработанный eUserDirectoryKind.");
+		}
+	}
+
+	[[nodiscard]] std::filesystem::path Path::GetDirectory(eAssetDirectoryKind kind) const
+	{
+		switch (kind)
+		{
+		case eAssetDirectoryKind::Textures: return m_ExecutableDirectory / c_TexturesDirectoryRelativePath;
+		case eAssetDirectoryKind::Video:    return m_ExecutableDirectory / c_VideoDirectoryRelativePath;
+		case eAssetDirectoryKind::Audio:    return m_ExecutableDirectory / c_AudioDirectoryRelativePath;
+		case eAssetDirectoryKind::Fonts:    return m_ExecutableDirectory / c_FontsDirectoryRelativePath;
+		default:
+			THROW_RUNTIME("Path::GetDirectory(): необработанный eAssetDirectoryKind.");
 		}
 	}
 }

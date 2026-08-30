@@ -40,13 +40,13 @@ namespace zzz::core
 
 	private:
 		friend class zzz::engine::Scene;
-		void Init(std::shared_ptr<zzz::core::SceneEventBus> bus)
+		void Init(zzz::core::SceneEventBus* bus)
 		{
 			m_Bus = bus;
 			OnBindEvents();
 		}
 
-		std::shared_ptr<zzz::core::SceneEventBus> m_Bus;
+		zzz::core::SceneEventBus* m_Bus = nullptr;
 	};
 #pragma warning(pop)
 

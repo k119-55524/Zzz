@@ -141,6 +141,10 @@ public class AssetsBuilderEngine
 		var guidToFileMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 		var guidToTypeMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 		var scriptNameToGuidMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+		// Имя сцены (имя файла .zs без расширения) должно быть уникально в проекте - SceneManager::LoadSceneByName
+		// ищет сцену по имени в package.dat, и дубликат имени сделал бы такой поиск неоднозначным.
+		var sceneNameToFileMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+		int sceneNameDuplicateErrors = 0;
 
 		int totalProcessed = 0;
 		int newMetaCreated = 0;
@@ -189,6 +193,22 @@ public class AssetsBuilderEngine
 				{
 					guidToFileMap[guid] = relativePath;
 					guidToTypeMap[guid] = assetType;
+				}
+			}
+
+			// Проверка на дубликат имени сцены (имя файла .zs без расширения - см. PackagePacker.cpp,
+			// где оно используется как PackageEntry.Name для сцены в package.dat)
+			if (assetType.Equals("scene", StringComparison.OrdinalIgnoreCase))
+			{
+				string sceneName = Path.GetFileNameWithoutExtension(file);
+				if (sceneNameToFileMap.TryGetValue(sceneName, out var existingSceneFile))
+				{
+					sceneNameDuplicateErrors++;
+					Log($"Ошибка: Обнаружен дубликат имени сцены '{sceneName}' в файлах:\n     1) {existingSceneFile}\n     2) {relativePath}\n     SceneManager::LoadSceneByName не сможет однозначно определить нужную сцену.");
+				}
+				else
+				{
+					sceneNameToFileMap[sceneName] = relativePath;
 				}
 			}
 
@@ -253,7 +273,7 @@ public class AssetsBuilderEngine
 			}
 		}
 
-		bool isSuccess = (duplicateErrors == 0 && validationErrorsCount == 0);
+		bool isSuccess = (duplicateErrors == 0 && sceneNameDuplicateErrors == 0 && validationErrorsCount == 0);
 
 		if (isSuccess)
 		{
@@ -261,7 +281,7 @@ public class AssetsBuilderEngine
 		}
 		else
 		{
-			Log($"Ошибка: Валидация завершена с ошибками! Ошибки: {validationErrorsCount + duplicateErrors}, Предупреждения: {warningsCount}");
+			Log($"Ошибка: Валидация завершена с ошибками! Ошибки: {validationErrorsCount + duplicateErrors + sceneNameDuplicateErrors}, Предупреждения: {warningsCount}");
 		}
 
 		Log($"Сканирование завершено. Ресурсных файлов: {totalProcessed}, Создано новых .meta: {newMetaCreated}, Удалено осиротевших .meta: {deletedOrphanedMetas}");
@@ -334,10 +354,21 @@ public class AssetsBuilderEngine
 
 			string assetsDir = Path.Combine(options.DestinationPath, "assets");
 			string includeDir = Path.Combine(options.DestinationPath, "include");
+			string dataDir = Path.Combine(assetsDir, "data");
 
 			Directory.CreateDirectory(assetsDir);
 			Directory.CreateDirectory(includeDir);
-			Log("Создана чистая структура папок (assets/ и include/).");
+
+			// Каталоги медиа-ресурсов (assets/data/<category>) - см. PackageConstants.h в движке
+			// (c_TexturesDirectoryName и т.д.). Создаются заранее пустыми, чтобы Path::GetTexturesDirectory()
+			// и аналогичные методы в движке всегда указывали на существующий каталог, даже если ресурсы
+			// соответствующей категории в проекте пока отсутствуют.
+			foreach (var category in new[] { "textures", "video", "audio", "fonts", "custom" })
+			{
+				Directory.CreateDirectory(Path.Combine(dataDir, category));
+			}
+
+			Log("Создана чистая структура папок (assets/, assets/data/{textures,video,audio,fonts,custom} и include/).");
 		}
 		catch (Exception ex)
 		{

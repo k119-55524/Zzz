@@ -74,7 +74,6 @@ namespace zzz::engine
 		void SetDefaultUserSettings();
 		/** @brief Применяет persisted-список отключённых категорий логирования к zzz::logger::g_Logger (вызывается после Initialize()). */
 		void ApplyLogCategorySettings() const;
-		std::expected<std::filesystem::path, std::string> GetSettingsDirectory();
 		std::expected<void, std::string> LoadConfig(std::filesystem::path path);
 
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override;

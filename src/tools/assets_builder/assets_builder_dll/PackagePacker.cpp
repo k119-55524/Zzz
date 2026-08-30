@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstring>
 #include <vector>
+#include <unordered_set>
 #include <json.hpp>
 
 #include <logger/logger.h>
@@ -439,6 +440,26 @@ namespace zzz::builder
 
 				if (auto res = SerializeProjectPlatformData(result, serializer, platformRoot, targetPlatform); !res)
 					return {};
+
+				// Имя компании/приложения - единственный источник истины для каталога пользовательских
+				// данных (см. Path::InitializeUserData в движке). Валидируются на стороне C# ещё до сборки
+				// (см. ProjectJsonValidator.ValidateDirectoryNameField), здесь читаются как есть.
+				std::string appName = root.value("app_name", root.value("name", std::string{}));
+				std::string companyName = root.value("company_name", root.value("company", std::string{}));
+				if (companyName.empty()) companyName = "Zzz";
+				if (auto res = serializer.Serialize(result, appName); !res) return {};
+				if (auto res = serializer.Serialize(result, companyName); !res) return {};
+
+				// Версия приложения (semver-строка "major.minor.patch", например "1.0.0") - по умолчанию 0.0.0,
+				// если поле отсутствует или не парсится.
+				Version appVersion{};
+				std::string versionStr = root.value("app_version", root.value("version", "1.0.0"));
+				if (!versionStr.empty())
+				{
+					if (auto parsedVersion = Version::Parse(versionStr))
+						appVersion = *parsedVersion;
+				}
+				if (auto res = serializer.Serialize(result, appVersion); !res) return {};
 			}
 			else if (assetType == zzz::core::ePackage::PrimaryView)
 			{
@@ -694,7 +715,7 @@ namespace zzz::builder
 
 	bool PackagePacker::PackProject(const fs::path& sourceDir, const fs::path& destinationDir, zzz::core::eTargetPlatform targetPlatform)
 	{
-		fs::path outPath = destinationDir / zzz::core::c_GamePackageFileName;
+		fs::path outPath = destinationDir / zzz::core::c_GamePackageRelativePath;
 		std::vector<PendingAsset> pendingAssets;
 
 		// 1. Упаковка project.json под служебным GUID манифеста
@@ -710,6 +731,13 @@ namespace zzz::builder
 		}
 
 		// 2. Поиск сцен (*.zs), вьюх (*.zv) и префабов (*.zp) в исходной директории
+		// Защита от дублей имён сцен (см. также AssetsBuilderEngine.ScanProjectMetaFiles в C# -
+		// там же выполняется основная, отчитывающаяся об ошибке проверка перед вызовом PackProjectNative).
+		// Здесь - "тихий" защитный фильтр на случай прямого вызова нативного упаковщика в обход C#-валидации:
+		// SceneManager::LoadSceneByName ищет сцену по имени в package.dat, и дубликат сделал бы поиск
+		// неоднозначным (m_EntriesByName молча перезаписал бы более раннюю запись более поздней).
+		std::unordered_set<std::string> seenSceneNames;
+
 		if (fs::exists(sourceDir))
 		{
 			for (const auto& entry : fs::recursive_directory_iterator(sourceDir))
@@ -771,6 +799,12 @@ namespace zzz::builder
 							}
 						}
 					}
+				}
+
+				if (typeVal == static_cast<uint32_t>(zzz::core::ePackage::Scene) && !seenSceneNames.insert(assetName).second)
+				{
+					// Дубликат имени сцены - пропускаем (первое найденное имя побеждает), см. комментарий выше.
+					continue;
 				}
 
 				if (guid != "unknown" && !guid.empty())

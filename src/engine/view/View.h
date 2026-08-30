@@ -14,6 +14,7 @@ using namespace zzz::core;
 namespace zzz::engine
 {
 	class UserSettingsManager;
+	class SceneManager;
 
 	/**
 	 * @brief Представляет базовое окно приложения ( PrimaryView, ChildView или IndependentView ).
@@ -41,6 +42,7 @@ namespace zzz::engine
 			const ViewConfigData& viewData,
 			ViewPlatformData* platformData,
 			std::shared_ptr<ScriptFactory> scriptFactory,
+			std::shared_ptr<SceneManager> sceneManager,
 			const Platform& platform,
 			std::shared_ptr<GAPI> gapi,
 			std::function<void(View&)> onWindowClose,
@@ -88,9 +90,10 @@ namespace zzz::engine
 		inline void SetActiveScene(std::shared_ptr<Scene> scene) noexcept { m_ActiveScene = std::move(scene); }
 
 		/**
-		 * @brief Возвращает указатель на текущую активную сцену.
+		 * @brief Возвращает текущую активную сцену, либо nullptr, если она уже выгружена SceneManager'ом
+		 * (см. std::weak_ptr::lock() - View не владеет сценой и не продлевает её жизнь).
 		 */
-		[[nodiscard]] inline std::shared_ptr<Scene> GetActiveScene() const noexcept { return m_ActiveScene; }
+		[[nodiscard]] inline std::shared_ptr<Scene> GetActiveScene() const noexcept { return m_ActiveScene.lock(); }
 
 		/**
 		 * @brief Возвращает GUID данного окна.
@@ -142,7 +145,7 @@ namespace zzz::engine
 		inline bool IsActive() const noexcept { return m_IsActive; }
 
 	private:
-		void Initialize(const ViewConfigData& viewData, ViewPlatformData* platformData, std::shared_ptr<ScriptFactory> scriptFactory, std::shared_ptr<GAPI> gapi, const View* parentView = nullptr);
+		void Initialize(const ViewConfigData& viewData, ViewPlatformData* platformData, std::shared_ptr<ScriptFactory> scriptFactory, std::shared_ptr<SceneManager> sceneManager, std::shared_ptr<GAPI> gapi, const View* parentView = nullptr);
 #if Z_EDITOR
 		void Initialize(void* data);
 #endif
@@ -297,7 +300,7 @@ namespace zzz::engine
 
 		bool m_IsActive;
 		ViewEventBus m_EventBus;
-		std::shared_ptr<Scene> m_ActiveScene;
+		std::weak_ptr<Scene> m_ActiveScene;
 		std::vector<std::shared_ptr<ViewScript>> m_Scripts;
 		ViewPlatformData* m_UserPlatformData = nullptr;
 

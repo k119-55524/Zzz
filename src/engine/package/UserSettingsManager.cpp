@@ -28,11 +28,7 @@ namespace zzz::engine
 	{
 		try
 		{
-			auto path = GetSettingsDirectory();
-			if (!path)
-				THROW_RUNTIME("Не удалось получить каталог настроек: {}.", path.error());
-
-			m_ConfigPath = (path.value() / c_ConfigFileName)
+			m_ConfigPath = m_Path.GetUserDatPath()
 				.lexically_normal()
 				.make_preferred();
 
@@ -173,7 +169,7 @@ namespace zzz::engine
 
 			file.write(reinterpret_cast<const char*>(buffer.data()), static_cast<std::streamsize>(buffer.size()));
 			if (!file)
-				return UNEXPECTED("Не удалось записать файл: {}.", m_Path.GetUserDataDirectory().string());
+				return UNEXPECTED("Не удалось записать файл: {}.", m_ConfigPath.string());
 		}
 		catch (const std::filesystem::filesystem_error& e)
 		{
@@ -252,17 +248,6 @@ namespace zzz::engine
 		}
 
 		return {};
-	}
-
-	std::expected<std::filesystem::path, std::string> UserSettingsManager::GetSettingsDirectory()
-	{
-#if Z_APPLE || Z_ANDROID
-		return m_Path.GetUserDataDirectory();
-#elif Z_WINDOWS || Z_LINUX
-		return m_Path.GetExecutableDirectory();
-#else
-#error >>>>> UserSettingsManager::GetSettingsDirectory(): Unsupported platform.
-#endif
 	}
 
 	ViewPlatformData* UserSettingsManager::GetOrCreatePrimaryViewPlatformData(const Guid& guid, const ViewPlatformData& defaultData)

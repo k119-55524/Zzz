@@ -32,6 +32,9 @@ namespace zzz::core
 			if (m_Magic != c_GamePackageHeader)
 				return UNEXPECTED("Некорректная сигнатура заголовка");
 
+			if (m_Version.GetMajor() != c_GamePackageFileMajorVersion)
+				return UNEXPECTED("Несовместимая версия формата пакета: {} (ожидалась мажорная версия {}). Пересоберите ассеты текущим Assets Builder.", m_Version.ToString(), c_GamePackageFileMajorVersion);
+
 			return {};
 		}
 

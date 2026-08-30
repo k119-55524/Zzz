@@ -75,7 +75,8 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
 
         # Scripts & Scenes
         "scene/GameObject.h"
-        "scene/Scene.h" "scene/Scene.cpp")
+        "scene/Scene.h" "scene/Scene.cpp"
+        "scene/SceneManager.h" "scene/SceneManager.cpp")
 
     if(WIN32)
         if(${IS_EDITOR})

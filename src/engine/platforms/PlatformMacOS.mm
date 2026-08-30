@@ -14,7 +14,7 @@ static std::unique_ptr<Engine> g_Engine;
 
 - (void)applicationDidFinishLaunching:(NSNotification *)notification {
     DOut("[EngineAppDelegate] Приложение завершило запуск. Инициализация движка...");
-    g_Engine = safe_make_unique<Engine>("GameMacOS_ZzzEngine");
+    g_Engine = safe_make_unique<Engine>();
 
     DOut("[EngineAppDelegate] Движок инициализирован успешно. Запуск Run...");
     auto runResult = g_Engine->Run();

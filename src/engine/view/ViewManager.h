@@ -22,6 +22,7 @@ namespace zzz::engine
 			std::shared_ptr<ScriptFactory> scriptFactory,
 			std::shared_ptr<PackageManager> packageManager,
 			std::shared_ptr<UserSettingsManager> userSettingsManager,
+			std::shared_ptr<SceneManager> sceneManager,
 			std::function<void()> onAllViewsClosed
 		);
 		~ViewManager();
@@ -61,6 +62,7 @@ namespace zzz::engine
 		std::shared_ptr<ScriptFactory> m_ScriptFactory;
 		std::shared_ptr<PackageManager> m_PackageManager;
 		std::shared_ptr<UserSettingsManager> m_UserSettingsManager;
+		std::shared_ptr<SceneManager> m_SceneManager;
 
 		std::shared_ptr<View> m_PrimaryView;
 		std::vector<std::shared_ptr<View>> m_ChildViews;

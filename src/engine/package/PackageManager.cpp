@@ -19,11 +19,7 @@ namespace zzz::engine
 
 	void PackageManager::Initialize(const Path& path)
 	{
-		auto execDir = path.GetExecutableDirectory();
-		if (!execDir)
-			THROW_RUNTIME("Не удалось определить путь к бинарному файлу приложения: {}", execDir.error());
-
-		m_PackagePath = *execDir / c_GamePackageFileName;
+		m_PackagePath = path.GetPackageDatPath();
 
 		if (!std::filesystem::exists(m_PackagePath))
 			THROW_RUNTIME("Файл пакета не существует: {}", m_PackagePath.string());
@@ -73,6 +69,26 @@ namespace zzz::engine
 		{
 			THROW_RUNTIME("Ошибка пакета {}: Ресурс PrimaryViewData не уникален (найдено {} штук).", m_PackagePath.string(), primaryViewIt->second.size());
 		}
+
+		auto manifestIt = m_EntriesByName.find(ePackage::ProjectManifest);
+		if (manifestIt == m_EntriesByName.end() || manifestIt->second.empty())
+		{
+			THROW_RUNTIME("Ошибка пакета {}: Обязательный ресурс ProjectManifestData отсутствует.", m_PackagePath.string());
+		}
+		if (manifestIt->second.size() > 1)
+		{
+			THROW_RUNTIME("Ошибка пакета {}: Ресурс ProjectManifestData не уникален (найдено {} штук).", m_PackagePath.string(), manifestIt->second.size());
+		}
+
+		auto manifestRes = LoadPackageData<ProjectManifestData>(manifestIt->second.begin()->second);
+		if (!manifestRes)
+			THROW_RUNTIME("Ошибка десериализации ProjectManifestData из пакета {}: {}", m_PackagePath.string(), manifestRes.error());
+
+		if (manifestRes->GetCompanyName().empty() || manifestRes->GetAppName().empty())
+			THROW_RUNTIME("Ошибка пакета {}: ProjectManifestData не содержит имя компании и/или приложения.", m_PackagePath.string());
+
+		m_CompanyName = manifestRes->GetCompanyName();
+		m_AppName = manifestRes->GetAppName();
 
 		LogPackageEntriesSummary();
 	}
