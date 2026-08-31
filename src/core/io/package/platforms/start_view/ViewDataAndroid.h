@@ -12,18 +12,21 @@ namespace zzz::core
 	class ViewDataAndroid final : public ISerializable
 	{
 	public:
-		ViewDataAndroid() = default;
+		ViewDataAndroid() : isPrimary(false) {}
 		ViewDataAndroid(eAndroidScreenOrientation orientation, zU32 targetFPS = 60, eAndroidCutoutMode cutoutMode = eAndroidCutoutMode::ShortEdges, bool keepScreenOn = true)
 			: orientation(orientation)
 			, targetFPS(targetFPS)
 			, cutoutMode(cutoutMode)
 			, keepScreenOn(keepScreenOn)
+			, isPrimary(false)
 		{}
 
 		[[nodiscard]] eAndroidScreenOrientation GetOrientation() const noexcept { return orientation; }
 		[[nodiscard]] zU32 GetTargetFPS() const noexcept { return targetFPS; }
 		[[nodiscard]] eAndroidCutoutMode GetCutoutMode() const noexcept { return cutoutMode; }
 		[[nodiscard]] bool IsKeepScreenOn() const noexcept { return keepScreenOn; }
+		[[nodiscard]] bool IsPrimary() const noexcept { return isPrimary; }
+		void SetPrimary(bool primary) noexcept { isPrimary = primary; }
 
 		[[nodiscard]] bool operator==(const ViewDataAndroid& other) const noexcept
 		{
@@ -63,5 +66,10 @@ namespace zzz::core
 		zU32 targetFPS = 60;
 		eAndroidCutoutMode cutoutMode = eAndroidCutoutMode::ShortEdges;
 		bool keepScreenOn = true;
+
+		// Не сериализуется - транзиентная метка "кто создаёт это окно" (Primary или нет).
+		// Проставляется заново каждый раз в UserSettingsManager::GetOrCreateXxxViewPlatformData()
+		// при чтении/создании и не должна переживать сериализацию в user.dat.
+		bool isPrimary;
 	};
 }

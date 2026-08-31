@@ -124,8 +124,19 @@ std::expected<void, std::string> WinMSWindows::Initialize(const ViewPlatformData
 
 	// Только первичное окно может быть в режиме Fullscreen/Borderless. Дочерние всегда Windowed.
 	eMSWinWindowMode winMode = isChild ? eMSWinWindowMode::Windowed : platformData.GetWindowMode();
-	eWindowState targetState = isChild ? eWindowState::Normal : platformData.GetWindowState();
-	if (targetState == eWindowState::Closed || targetState == eWindowState::Minimized)
+
+	// Closed -> Normal сбрасываем безусловно, для ЛЮБОГО View: раз дошли до Initialize(), значит
+	// окно физически создаётся и показывается прямо сейчас - Closed как результирующее состояние
+	// невалиден в принципе (решение "не создавать это окно вовсе" принимается снаружи, ДО вызова
+	// Initialize() - см. ViewManager/Engine::Run(), проверка сохранённого состояния перед
+	// CreateChildView()/CreateIndependentView()).
+	// Minimized -> Normal сбрасываем только для Primary: нельзя стартовать приложение свёрнутым.
+	// Для Child/Independent (platformData.IsPrimary() == false) пытаемся восстановить сохранённую
+	// свёрнутость как есть.
+	eWindowState targetState = platformData.GetWindowState();
+	if (targetState == eWindowState::Closed)
+		targetState = eWindowState::Normal;
+	if (platformData.IsPrimary() && targetState == eWindowState::Minimized)
 		targetState = eWindowState::Normal;
 
 	const auto& windowRect = platformData.GetWindowRect();
@@ -192,10 +203,21 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		 * @brief [Windows] Окно физически уничтожается операционной системой.
 		 * Транслируем в OnSurfaceDestroyed, чтобы убить Vulkan/Metal Swapchain
 		 * строго ДО того, как хэндл окна станет невалидным.
+		 *
+		 * ВАЖНО: PostQuitMessage(0) здесь намеренно не вызывается. Это окно - одно
+		 * из потенциально нескольких (Primary/Child/Independent) на одной очереди
+		 * сообщений потока (см. MainLoop_MSWin::Run() - PeekMessage с hWnd=0 вычерпывает
+		 * сообщения всех окон разом), и WM_DESTROY тут приходит для ЛЮБОГО из них, а не
+		 * только для Primary. Решение "закрыть всё приложение" принимает ViewManager -
+		 * View::HandleWindowClose() -> ViewManager::OnWindowClose() смотрит, Primary это
+		 * или нет, и только для Primary зовёт OnAllViewsClosed() -> Engine::OnAppClosed()
+		 * -> MainLoop::Stop() (isRunning.store(false), MainLoopCommon.h) - этого достаточно,
+		 * чтобы MainLoop_MSWin::Run() вышел из цикла, WM_QUIT не нужен. PostQuitMessage(0)
+		 * тут раньше стоял безусловно и по факту закрывал ВСЕ окна при закрытии любого
+		 * одного (см. rendering_pipeline_review.md).
 		 */
 		VERIFY_AND_CALL(m_Callbacks.OnSurfaceDestroyed);
 		SetWindowLongPtr(hWnd, GWLP_USERDATA, 0);
-		PostQuitMessage(0);
 		return { true, TRUE };
 
 	case WM_SIZE:

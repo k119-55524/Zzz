@@ -257,7 +257,14 @@ namespace zzz::engine
 			m_PrimaryViewUserData = PrimaryViewUserData(guid, defaultData);
 		}
 		m_IsDirty = true;
-		return &m_PrimaryViewUserData->GetPlatformData();
+
+		ViewPlatformData& platformData = m_PrimaryViewUserData->GetPlatformData();
+		// isPrimary не сериализуется (см. комментарий у поля в ViewDataMSWin/... .h) - проставляем
+		// заново на каждый запрос. Для Child/Independent не нужно ставить false явно - это значение
+		// по умолчанию (см. конструкторы ViewDataXxx), а в m_PrimaryViewUserData никогда не попадают
+		// объекты, для которых до этого звали SetPrimary(true) от чужого View.
+		platformData.SetPrimary(true);
+		return &platformData;
 	}
 
 	ViewPlatformData* UserSettingsManager::GetOrCreateChildViewPlatformData(const Guid& guid, const ViewPlatformData& defaultData)
@@ -284,6 +291,18 @@ namespace zzz::engine
 		}
 		m_IsDirty = true;
 		return &it->second.GetPlatformDataRef();
+	}
+
+	void UserSettingsManager::RemoveChildViewUserData(const Guid& guid)
+	{
+		if (m_ChildViewsUserData.erase(guid) > 0)
+			m_IsDirty = true;
+	}
+
+	void UserSettingsManager::RemoveIndependentViewUserData(const Guid& guid)
+	{
+		if (m_IndependentViewsUserData.erase(guid) > 0)
+			m_IsDirty = true;
 	}
 
 	void UserSettingsManager::StoreViewState(const View& view)

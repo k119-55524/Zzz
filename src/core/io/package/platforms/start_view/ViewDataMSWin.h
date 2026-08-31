@@ -23,7 +23,7 @@ namespace zzz::core
 	class ViewDataMSWin final : public ISerializable
 	{
 	public:
-		ViewDataMSWin() = default;
+		ViewDataMSWin() : isPrimary(false) {}
 		ViewDataMSWin(std::string title, Size2D<zU32> size, eMSWinWindowMode windowMode = eMSWinWindowMode::Windowed, bool resizable = true, eWindowState windowState = eWindowState::Normal)
 			: title(std::move(title))
 			, size(size)
@@ -31,6 +31,7 @@ namespace zzz::core
 			, resizable(resizable)
 			, windowRect(Point2D<zI32>{0, 0}, size)
 			, windowState(windowState)
+			, isPrimary(false)
 		{}
 
 		[[nodiscard]] const std::string& GetTitle() const noexcept { return title; }
@@ -41,12 +42,14 @@ namespace zzz::core
 		[[nodiscard]] zU32 GetMonitorIndex() const noexcept { return monitorIndex; }
 		[[nodiscard]] const std::string& GetMonitorId() const noexcept { return monitorId; }
 		[[nodiscard]] eWindowState GetWindowState() const noexcept { return windowState; }
+		[[nodiscard]] bool IsPrimary() const noexcept { return isPrimary; }
 
 		void SetWindowRect(const Rect2D<zI32>& rect) noexcept { windowRect = rect; }
 		void SetMonitorIndex(zU32 index) noexcept { monitorIndex = index; }
 		void SetMonitorId(std::string id) noexcept { monitorId = std::move(id); }
 		void SetWindowMode(eMSWinWindowMode mode) noexcept { windowMode = mode; }
 		void SetWindowState(eWindowState state) noexcept { windowState = state; }
+		void SetPrimary(bool primary) noexcept { isPrimary = primary; }
 
 		void ValidateAndAdjustWindowRect(const std::vector<MonitorInfo>& monitors)
 		{
@@ -153,5 +156,10 @@ namespace zzz::core
 		zU32 monitorIndex{ 0 };
 		std::string monitorId;
 		eWindowState windowState{ eWindowState::Normal };
+
+		// Не сериализуется - транзиентная метка "кто создаёт это окно" (Primary или нет).
+		// Проставляется заново каждый раз в UserSettingsManager::GetOrCreateXxxViewPlatformData()
+		// при чтении/создании и не должна переживать сериализацию в user.dat.
+		bool isPrimary;
 	};
 }

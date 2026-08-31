@@ -12,16 +12,19 @@ namespace zzz::core
 	class ViewDataiOS final : public ISerializable
 	{
 	public:
-		ViewDataiOS() = default;
+		ViewDataiOS() : isPrimary(false) {}
 		ViewDataiOS(eiOSScreenOrientation orientation, eiOSSafeAreaMode safeAreaMode = eiOSSafeAreaMode::ExtendIntoSafeArea, eiOSHomeIndicatorMode homeIndicatorMode = eiOSHomeIndicatorMode::AutoHidden)
 			: orientation(orientation)
 			, safeAreaMode(safeAreaMode)
 			, homeIndicatorMode(homeIndicatorMode)
+			, isPrimary(false)
 		{}
 
 		[[nodiscard]] eiOSScreenOrientation GetOrientation() const noexcept { return orientation; }
 		[[nodiscard]] eiOSSafeAreaMode GetSafeAreaMode() const noexcept { return safeAreaMode; }
 		[[nodiscard]] eiOSHomeIndicatorMode GetHomeIndicatorMode() const noexcept { return homeIndicatorMode; }
+		[[nodiscard]] bool IsPrimary() const noexcept { return isPrimary; }
+		void SetPrimary(bool primary) noexcept { isPrimary = primary; }
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
@@ -50,5 +53,10 @@ namespace zzz::core
 		eiOSScreenOrientation orientation = eiOSScreenOrientation::LandscapeLeft;
 		eiOSSafeAreaMode safeAreaMode = eiOSSafeAreaMode::ExtendIntoSafeArea;
 		eiOSHomeIndicatorMode homeIndicatorMode = eiOSHomeIndicatorMode::AutoHidden;
+
+		// Не сериализуется - транзиентная метка "кто создаёт это окно" (Primary или нет).
+		// Проставляется заново каждый раз в UserSettingsManager::GetOrCreateXxxViewPlatformData()
+		// при чтении/создании и не должна переживать сериализацию в user.dat.
+		bool isPrimary;
 	};
 }

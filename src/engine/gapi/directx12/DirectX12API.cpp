@@ -308,16 +308,34 @@ namespace zzz::engine
 		return fenceValue;
 	}
 
+	namespace
+	{
+		// Свой event на поток (thread_local, ленивое создание один раз на поток, живёт до
+		// его завершения) - чтобы конкурентные вызовы WaitForFenceValue() из нескольких
+		// потоков (по одному на View в ViewManager::Update) не делили один HANDLE.
+		struct ThreadFenceEvent
+		{
+			HANDLE handle{ CreateEventEx(nullptr, FALSE, FALSE, EVENT_ALL_ACCESS) };
+			~ThreadFenceEvent() { if (handle) CloseHandle(handle); }
+		};
+	}
+
 	void DirectX12API::WaitForFenceValue(uint64_t fenceValue)
 	{
-		if (!m_Fence || !m_FenceEvent || fenceValue == 0)
+		if (!m_Fence || fenceValue == 0)
 			return;
 
-		if (m_Fence->GetCompletedValue() < fenceValue)
-		{
-			m_Fence->SetEventOnCompletion(fenceValue, m_FenceEvent);
-			WaitForSingleObject(m_FenceEvent, INFINITE);
-		}
+		if (m_Fence->GetCompletedValue() >= fenceValue)
+			return;
+
+		thread_local ThreadFenceEvent s_FenceEvent;
+		if (!s_FenceEvent.handle)
+			return;
+
+		if (FAILED(m_Fence->SetEventOnCompletion(fenceValue, s_FenceEvent.handle)))
+			return;
+
+		WaitForSingleObject(s_FenceEvent.handle, INFINITE);
 	}
 }
 #endif // Z_D3D12

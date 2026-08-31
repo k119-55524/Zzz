@@ -148,9 +148,12 @@ void View::HandleWindowClose()
 {
 	DOut("[View::HandleWindowClose] - OnClose");
 
+	// Закрытие окна - это отдельный, самодостаточный факт: независимо от того, в каком состоянии
+	// (Normal/Maximized/Minimized) окно было секунду назад, теперь оно Closed. Это единственное
+	// место, где eWindowState::Closed вообще пишется - используется ViewManager/Engine на старте,
+	// чтобы не пересоздавать окна, которые пользователь сам закрыл (см. rendering_pipeline_review.md).
 	const auto& navState = m_NativeWindow->GetState();
-	if (navState.GetState() != eWindowState::Closed && navState.GetState() != eWindowState::Minimized)
-		m_UserPlatformData->SetWindowState(navState.GetState());
+	m_UserPlatformData->SetWindowState(eWindowState::Closed);
 	if (navState.GetState() == eWindowState::Normal)
 		m_UserPlatformData->SetWindowRect(navState.GetWindowRect());
 
@@ -176,6 +179,9 @@ void View::OnWindowResize(Size2D<>& size, eWinResize type)
 	case eWindowState::Normal:
 		m_UserPlatformData->SetWindowState(eWindowState::Normal);
 		m_UserPlatformData->SetWindowRect(state.GetWindowRect());
+		break;
+	case eWindowState::Minimized:
+		m_UserPlatformData->SetWindowState(eWindowState::Minimized);
 		break;
 	default:
 		break;

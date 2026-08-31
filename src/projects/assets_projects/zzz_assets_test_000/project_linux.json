@@ -3,6 +3,10 @@
     "executableName": "GameZzz",
     "icon": "Assets/Icons/linux_icon.png"
   },
+  "platform": {
+    "child_views": [],
+    "independent_views": []
+  },
   "startView": {
     "title": "GameZzz",
     "defaultSize": {

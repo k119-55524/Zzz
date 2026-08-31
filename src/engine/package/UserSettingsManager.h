@@ -39,9 +39,33 @@ namespace zzz::engine
 		 */
 		[[nodiscard]] const ViewUserData* GetIndependentViewUserData(const Guid& guid) const noexcept;
 
+		/**
+		 * @brief Возвращает все сохранённые в user.dat Дочерние окна (guid -> состояние).
+		 * Используется при старте для восстановления набора открытых Child-окон прошлой сессии.
+		 */
+		[[nodiscard]] const ViewUserDataMap& GetChildViewsUserData() const noexcept { return m_ChildViewsUserData; }
+
+		/**
+		 * @brief Возвращает все сохранённые в user.dat Независимые окна (guid -> состояние).
+		 * Используется при старте для восстановления набора открытых Independent-окон прошлой сессии.
+		 */
+		[[nodiscard]] const ViewUserDataMap& GetIndependentViewsUserData() const noexcept { return m_IndependentViewsUserData; }
+
 		[[nodiscard]] ViewPlatformData* GetOrCreatePrimaryViewPlatformData(const Guid& guid, const ViewPlatformData& defaultData);
 		[[nodiscard]] ViewPlatformData* GetOrCreateChildViewPlatformData(const Guid& guid, const ViewPlatformData& defaultData);
 		[[nodiscard]] ViewPlatformData* GetOrCreateIndependentViewPlatformData(const Guid& guid, const ViewPlatformData& defaultData);
+
+		/**
+		 * @brief Удаляет из user.dat протухшую запись Дочернего окна - ассет с таким guid больше не существует
+		 * в package.dat (удалён из проекта), восстанавливать нечего. Безопасно вызывать в любой момент - в
+		 * отличие от закрытия окна пользователем (см. View::HandleWindowClose - там мы намеренно НЕ удаляем,
+		 * а помечаем Closed, чтобы сохранить geometry на случай повторного открытия), тут восстанавливать
+		 * уже нечего - самого определения окна в проекте больше нет.
+		 */
+		void RemoveChildViewUserData(const Guid& guid);
+
+		/** @brief Аналогично RemoveChildViewUserData(), но для Независимых окон. */
+		void RemoveIndependentViewUserData(const Guid& guid);
 
 		/**
 		 * @brief Проверяет, запущен ли движок впервые (отсутствовал файл user.dat).

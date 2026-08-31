@@ -19,13 +19,14 @@ namespace zzz::core
 	class ViewDataMacOS final : public ISerializable
 	{
 	public:
-		ViewDataMacOS() = default;
+		ViewDataMacOS() : isPrimary(false) {}
 		ViewDataMacOS(std::string title, Size2D<zU32> size, eMacOSWindowMode windowMode = eMacOSWindowMode::Windowed, bool resizable = true)
 			: title(std::move(title))
 			, size(size)
 			, windowMode(windowMode)
 			, resizable(resizable)
 			, windowRect(Point2D<zI32>{0, 0}, Size2D<zU32>{size.GetWidth(), size.GetHeight()})
+			, isPrimary(false)
 		{}
 
 		[[nodiscard]] const std::string& GetTitle() const noexcept { return title; }
@@ -34,10 +35,12 @@ namespace zzz::core
 		[[nodiscard]] bool IsResizable() const noexcept { return resizable; }
 		[[nodiscard]] const Rect2D<zI32>& GetWindowRect() const noexcept { return windowRect; }
 		[[nodiscard]] zU32 GetMonitorIndex() const noexcept { return monitorIndex; }
+		[[nodiscard]] bool IsPrimary() const noexcept { return isPrimary; }
 
 		void SetWindowRect(const Rect2D<zI32>& rect) noexcept { windowRect = rect; }
 		void SetMonitorIndex(zU32 index) noexcept { monitorIndex = index; }
 		void SetWindowMode(eMacOSWindowMode mode) noexcept { windowMode = mode; }
+		void SetPrimary(bool primary) noexcept { isPrimary = primary; }
 
 		void ValidateAndAdjustWindowRect(const std::vector<MonitorInfo>& monitors)
 		{
@@ -112,5 +115,10 @@ namespace zzz::core
 		bool resizable = true;
 		Rect2D<zI32> windowRect{ Point2D<zI32>{0, 0}, Size2D<zU32>{1280, 720} };
 		zU32 monitorIndex{ 0 };
+
+		// Не сериализуется - транзиентная метка "кто создаёт это окно" (Primary или нет).
+		// Проставляется заново каждый раз в UserSettingsManager::GetOrCreateXxxViewPlatformData()
+		// при чтении/создании и не должна переживать сериализацию в user.dat.
+		bool isPrimary;
 	};
 }

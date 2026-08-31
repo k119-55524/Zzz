@@ -5,7 +5,9 @@
     "visualStudioToolset": "v143"
   },
   "platform": {
-    "windowClassName": "ZzzEngineWindowClass"
+    "windowClassName": "ZzzEngineWindowClass",
+    "child_views": [],
+    "independent_views": []
   },
   "startView": {
     "title": "GameZzz",

@@ -2,9 +2,9 @@
 #include "ViewManager.h"
 #include "../platforms/Platform.h"
 #include "../package/PackageManager.h"
+#include "core/io/package/ChildViewData.h"
 #include "../package/UserSettingsManager.h"
 #include "../platforms/monitor/IMonitorProvider.h"
-#include "core/io/package/ChildViewData.h"
 #include "core/io/package/IndependentViewData.h"
 
 #include "View.h"

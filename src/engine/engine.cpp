@@ -133,6 +133,50 @@ void Engine::Shutdown()
 		LoadGlobalScripts();
 
 		m_ViewManager->CreatePrimaryView();
+
+		// Восстановление состояния Child/Independent окон из user.dat, если они были открыты в прошлой сессии
+#if !Z_MOBILE
+		// Тест: принудительное создание ВСЕХ Child/Independent окон, какие есть
+		//for (const auto& guid : m_PackageManager->GetAllGuidsOfType(ePackage::ChildView))
+		//	m_ViewManager->CreateChildView(guid);
+		//for (const auto& guid : m_PackageManager->GetAllGuidsOfType(ePackage::IndependentView))
+		//	m_ViewManager->CreateIndependentView(guid);
+
+		std::vector<Guid> staleChildGuids;
+		for (const auto& [guid, userData] : m_UserSettingsManager->GetChildViewsUserData())
+		{
+			if (userData.GetPlatformData().GetWindowState() == eWindowState::Closed)
+				continue;
+
+			if (!m_PackageManager->HasEntry(ePackage::ChildView, guid))
+			{
+				staleChildGuids.push_back(guid);
+				continue;
+			}
+
+			m_ViewManager->CreateChildView(guid);
+		}
+		for (const auto& guid : staleChildGuids)
+			m_UserSettingsManager->RemoveChildViewUserData(guid);
+
+		std::vector<Guid> staleIndependentGuids;
+		for (const auto& [guid, userData] : m_UserSettingsManager->GetIndependentViewsUserData())
+		{
+			if (userData.GetPlatformData().GetWindowState() == eWindowState::Closed)
+				continue;
+
+			if (!m_PackageManager->HasEntry(ePackage::IndependentView, guid))
+			{
+				staleIndependentGuids.push_back(guid);
+				continue;
+			}
+
+			m_ViewManager->CreateIndependentView(guid);
+		}
+		for (const auto& guid : staleIndependentGuids)
+			m_UserSettingsManager->RemoveIndependentViewUserData(guid);
+#endif
+
 		m_EventBus->InvokeStart();
 		m_Time = safe_make_shared<Time>();
 		m_MainLoop->Run();
@@ -195,7 +239,7 @@ void Engine::OnUpdateSystem()
 {
 	m_Time->Update();
 
-// Вывод среднего FPS в лог каждые logInterval секунд
+	// Вывод среднего FPS в лог каждые logInterval секунд
 #if Z_ADD_LOGGER
 	{
 		// Интервал (в секундах) для расчёта среднего FPS и вывода в лог.

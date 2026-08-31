@@ -8,6 +8,7 @@
 
 #include <logger/logger.h>
 #include <core/Core.h>
+#include <core/utils/macros/LogMacros.h>
 #include <core/IO/package/PrimaryViewData.h>
 #include <core/IO/package/PackageEntry.h>
 #include <core/IO/package/PackageHeader.h>
@@ -26,6 +27,8 @@
 #include <core/IO/package/platforms/start_view/ViewDataMacOS.h>
 #include <core/IO/package/platforms/start_view/ViewDataMSWin.h>
 #include <core/IO/package/platforms/start_view/ViewDataiOS.h>
+
+Z_SET_LOG_CATEGORY(::zzz::core::Assets);
 
 namespace zzz::builder
 {
@@ -729,6 +732,39 @@ namespace zzz::builder
 				});
 		}
 
+		// 1.1 Списки Child/Independent вью, объявленные в платформенном конфиге (child_views/independent_views
+		// внутри секции "platform" project_<platform>.json - см. ResolvePlatformJson). Это единственный
+		// источник правды о том, какие вторичные окна пакуются: физическое наличие файла в Assets/ - лишь
+		// необходимое условие (валидация ниже), но не достаточное. Guid не объявленный в списке не пакуется,
+		// даже если ресурс физически существует на диске.
+		std::unordered_set<std::string> declaredChildViewGuids;
+		std::unordered_set<std::string> declaredIndependentViewGuids;
+
+		if (fs::exists(projJsonPath))
+		{
+			std::ifstream projJsonFile(projJsonPath);
+			json projRoot = json::parse(projJsonFile, nullptr, false);
+			if (!projRoot.is_discarded())
+			{
+				json platformRoot = ResolvePlatformJson(projRoot, sourceDir, targetPlatform);
+
+				if (platformRoot.contains("child_views") && platformRoot["child_views"].is_array())
+					for (const auto& elem : platformRoot["child_views"])
+						if (elem.is_string())
+							declaredChildViewGuids.insert(elem.get<std::string>());
+
+				if (platformRoot.contains("independent_views") && platformRoot["independent_views"].is_array())
+					for (const auto& elem : platformRoot["independent_views"])
+						if (elem.is_string())
+							declaredIndependentViewGuids.insert(elem.get<std::string>());
+			}
+		}
+
+		// Гуиды из деклараций выше, для которых реально нашёлся файл на диске - остальное (объявлено, но
+		// не найдено) считается протухшей декларацией и логируется после скана как предупреждение.
+		std::unordered_set<std::string> matchedChildViewGuids;
+		std::unordered_set<std::string> matchedIndependentViewGuids;
+
 		// 2. Поиск сцен (*.zs), вьюх (*.zv) и префабов (*.zp) в исходной директории
 		// Защита от дублей имён сцен (см. также AssetsBuilderEngine.ScanProjectMetaFiles в C# -
 		// там же выполняется основная, отчитывающаяся об ошибке проверка перед вызовом PackProjectNative).
@@ -806,12 +842,39 @@ namespace zzz::builder
 					continue;
 				}
 
+				// Child/Independent вью пакуются только если их guid объявлен в платформенном конфиге
+				// (см. п.1.1) - физическое наличие файла в Assets/ само по себе не основание для упаковки.
+				if (typeVal == static_cast<uint32_t>(zzz::core::ePackage::ChildView))
+				{
+					if (guid == "unknown" || guid.empty() || declaredChildViewGuids.find(guid) == declaredChildViewGuids.end())
+						continue;
+					matchedChildViewGuids.insert(guid);
+				}
+				else if (typeVal == static_cast<uint32_t>(zzz::core::ePackage::IndependentView))
+				{
+					if (guid == "unknown" || guid.empty() || declaredIndependentViewGuids.find(guid) == declaredIndependentViewGuids.end())
+						continue;
+					matchedIndependentViewGuids.insert(guid);
+				}
+
 				if (guid != "unknown" && !guid.empty())
 				{
 					pendingAssets.push_back({ assetName, guid, typeVal, path });
 				}
 			}
 		}
+
+		// Диагностика: guid объявлен в child_views/independent_views платформенного конфига, но на диске
+		// не найден ни одного .zcv/.ziv файла с таким guid - протухшая (или опечатанная) декларация.
+		// Не валим сборку, просто предупреждаем - см. обсуждение "какой-то другой механизм" для user.dat,
+		// здесь тот же принцип: несуществующий ресурс тихо пропускается, а не роняет весь пайплайн.
+		for (const auto& guid : declaredChildViewGuids)
+			if (matchedChildViewGuids.find(guid) == matchedChildViewGuids.end())
+				DOutWarning("PackProject: guid {} объявлен в child_views, но соответствующий .zcv ресурс не найден в Assets/ - пропущен.", guid);
+
+		for (const auto& guid : declaredIndependentViewGuids)
+			if (matchedIndependentViewGuids.find(guid) == matchedIndependentViewGuids.end())
+				DOutWarning("PackProject: guid {} объявлен в independent_views, но соответствующий .ziv ресурс не найден в Assets/ - пропущен.", guid);
 
 		bool hasPrimaryView = std::any_of(pendingAssets.begin(), pendingAssets.end(), [](const PendingAsset& item) {
 			return item.type == static_cast<uint32_t>(zzz::core::ePackage::PrimaryView);

@@ -1,10 +1,11 @@
 
-#include "PackageManager.h"
-#include "core/io/package/PackageHeader.h"
 #include "core/io/package/SceneData.h"
+#include "core/io/package/PrefabData.h"
+#include "core/io/package/PackageHeader.h"
 #include "core/io/package/ChildViewData.h"
 #include "core/io/package/IndependentViewData.h"
-#include "core/io/package/PrefabData.h"
+
+#include "PackageManager.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Assets);
 
@@ -62,23 +63,17 @@ namespace zzz::engine
 
 		auto primaryViewIt = m_EntriesByName.find(ePackage::PrimaryView);
 		if (primaryViewIt == m_EntriesByName.end() || primaryViewIt->second.empty())
-		{
 			THROW_RUNTIME("Ошибка пакета {}: Обязательный ресурс PrimaryViewData отсутствует.", m_PackagePath.string());
-		}
+
 		if (primaryViewIt->second.size() > 1)
-		{
 			THROW_RUNTIME("Ошибка пакета {}: Ресурс PrimaryViewData не уникален (найдено {} штук).", m_PackagePath.string(), primaryViewIt->second.size());
-		}
 
 		auto manifestIt = m_EntriesByName.find(ePackage::ProjectManifest);
 		if (manifestIt == m_EntriesByName.end() || manifestIt->second.empty())
-		{
 			THROW_RUNTIME("Ошибка пакета {}: Обязательный ресурс ProjectManifestData отсутствует.", m_PackagePath.string());
-		}
+
 		if (manifestIt->second.size() > 1)
-		{
 			THROW_RUNTIME("Ошибка пакета {}: Ресурс ProjectManifestData не уникален (найдено {} штук).", m_PackagePath.string(), manifestIt->second.size());
-		}
 
 		auto manifestRes = LoadPackageData<ProjectManifestData>(manifestIt->second.begin()->second);
 		if (!manifestRes)
@@ -169,10 +164,6 @@ namespace zzz::engine
 		return data;
 	}
 
-	// Явные инстанциации LoadPackageData<T> - LoadPackageDataByGuid/ByName (шаблоны в заголовке) могут
-	// дёргать этот приватный метод из других TU, а его тело видно только здесь. Раньше ChildViewData/
-	// IndependentViewData инстанцировались только через LogEntriesSummaryForType под Z_ADD_LOGGER -
-	// в Release эта ветка пуста, и линковка внешних вызовов (ViewManager.cpp) падала с LNK2019.
 	template std::expected<ProjectManifestData, std::string> PackageManager::LoadPackageData<ProjectManifestData>(const PackageEntry&) const;
 	template std::expected<PrimaryViewData, std::string> PackageManager::LoadPackageData<PrimaryViewData>(const PackageEntry&) const;
 	template std::expected<SceneData, std::string> PackageManager::LoadPackageData<SceneData>(const PackageEntry&) const;
