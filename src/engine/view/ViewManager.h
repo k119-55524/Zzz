@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/Core.h"
 #include "engine/view/View.h"
 #include "engine/platforms/Platform.h"
 #include "engine/package/PackageManager.h"

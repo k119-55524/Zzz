@@ -1,15 +1,16 @@
 
-#include "ViewManager.h"
-#include "../platforms/Platform.h"
-#include "../package/PackageManager.h"
-#include "core/io/package/ChildViewData.h"
-#include "../package/UserSettingsManager.h"
-#include "../platforms/monitor/IMonitorProvider.h"
-#include "core/io/package/IndependentViewData.h"
-
-#include "View.h"
 #include <thread>
 #include <algorithm>
+
+#include "core/Core.h"
+#include "engine/view/View.h"
+#include "engine/view/ViewManager.h"
+#include "engine/platforms/Platform.h"
+#include "engine/package/PackageManager.h"
+#include "core/io/package/ChildViewData.h"
+#include "engine/package/UserSettingsManager.h"
+#include "core/io/package/IndependentViewData.h"
+#include "engine/platforms/monitor/IMonitorProvider.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Window);
 
