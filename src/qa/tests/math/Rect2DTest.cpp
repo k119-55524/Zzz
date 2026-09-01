@@ -20,6 +20,8 @@ TEST(Rect2DTest, UnificationAndAccess)
 	EXPECT_EQ(rect.Top(), 20);
 	EXPECT_EQ(rect.Right(), 310);
 	EXPECT_EQ(rect.Bottom(), 420);
+	EXPECT_EQ(rect.Width(), 300);
+	EXPECT_EQ(rect.Height(), 400);
 
 	EXPECT_TRUE(rect.Contains(50, 50));
 	EXPECT_FALSE(rect.Contains(500, 500));

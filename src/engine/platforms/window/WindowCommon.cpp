@@ -18,13 +18,13 @@ WindowBase::WindowBase(
 
 zzz::math::Size2D<zzz::core::zU32> WindowBase::GetPhysicalClientSize() const noexcept
 {
-	const auto clientSize = GetClientRect().GetSize();
+	const auto clientSize = GetClientRect().size;
 	const auto& monitorProvider = m_Platform.GetMonitorProvider();
 	const auto monitor = monitorProvider.GetMonitorForRect(GetClientRect());
 	const float scale = monitor.GetScaleFactor();
 
 	return zzz::math::Size2D<zzz::core::zU32>{
-		static_cast<zzz::core::zU32>(static_cast<float>(clientSize.GetWidth()) * scale),
-		static_cast<zzz::core::zU32>(static_cast<float>(clientSize.GetHeight()) * scale)
+		static_cast<zzz::core::zU32>(static_cast<float>(clientSize.width) * scale),
+		static_cast<zzz::core::zU32>(static_cast<float>(clientSize.height) * scale)
 	};
 }

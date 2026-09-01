@@ -73,7 +73,7 @@ namespace zzz::engine
 
 		Release();
 
-		m_Size = window->GetClientRect().GetSize();
+		m_Size = window->GetClientRect().size;
 
 		Microsoft::WRL::ComPtr<IDXGIFactory4> factory;
 		HRESULT hr = CreateDXGIFactory1(IID_PPV_ARGS(&factory));
@@ -82,8 +82,8 @@ namespace zzz::engine
 
 		DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
 		swapChainDesc.BufferCount = c_FramesInFlight;
-		swapChainDesc.Width = static_cast<UINT>(m_Size.GetWidth());
-		swapChainDesc.Height = static_cast<UINT>(m_Size.GetHeight());
+		swapChainDesc.Width = static_cast<UINT>(m_Size.width);
+		swapChainDesc.Height = static_cast<UINT>(m_Size.height);
 		swapChainDesc.Format = m_BackBufferFormat;
 		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
@@ -197,14 +197,14 @@ namespace zzz::engine
 		UINT flags = (m_GAPI && m_GAPI->IsCanDisableVSync()) ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 		HRESULT hr = m_SwapChain->ResizeBuffers(
 			c_FramesInFlight,
-			static_cast<UINT>(size.GetWidth()),
-			static_cast<UINT>(size.GetHeight()),
+			static_cast<UINT>(size.width),
+			static_cast<UINT>(size.height),
 			m_BackBufferFormat,
 			flags
 		);
 		if (FAILED(hr))
 		{
-			DOutError("[Swapchain_DX::OnResize] Failed to ResizeBuffers ({}x{}): 0x{:08X}", size.GetWidth(), size.GetHeight(), static_cast<uint32_t>(hr));
+			DOutError("[Swapchain_DX::OnResize] Failed to ResizeBuffers ({}x{}): 0x{:08X}", size.width, size.height, static_cast<uint32_t>(hr));
 			THROW_RUNTIME("[Swapchain_DX::OnResize] Failed to ResizeBuffers: 0x{:08X}", static_cast<uint32_t>(hr));
 		}
 
@@ -228,7 +228,7 @@ namespace zzz::engine
 			device->CreateRenderTargetView(m_RenderTargets[i].Get(), nullptr, currentHandle);
 		}
 
-		DOut(!Z_LOG_GET(g_IsResizing), "[Swapchain_DX::OnResize] Successfully resized to {}x{} (BackBufferFormat: {}).", m_Size.GetWidth(), m_Size.GetHeight(), m_BackBufferFormat);
+		DOut(!Z_LOG_GET(g_IsResizing), "[Swapchain_DX::OnResize] Successfully resized to {}x{} (BackBufferFormat: {}).", m_Size.width, m_Size.height, m_BackBufferFormat);
 	}
 }
 #endif // Z_D3D12

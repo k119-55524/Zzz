@@ -187,7 +187,7 @@ void View::OnWindowResize(Size2D<>& size, eWinResize type)
 		break;
 	}
 
-	DOut(!Z_LOG_GET(g_IsResizing), "[View::OnWindowResize] - {}x{} (Type: {})", size.GetWidth(), size.GetHeight(), EnumToString::ToString(type));
+	DOut(!Z_LOG_GET(g_IsResizing), "[View::OnWindowResize] - {}x{} (Type: {})", size.width, size.height, EnumToString::ToString(type));
 }
 
 void View::OnWindowResizeStart()
@@ -211,7 +211,7 @@ void View::OnWindowResizeEnd()
 	auto finalSize = m_NativeWindow->GetPhysicalClientSize();
 	OnWindowResize(finalSize, eWinResize::Resize);
 
-	DOut("[View::OnWindowResizeEnd] - Resize completed at {}x{}", finalSize.GetWidth(), finalSize.GetHeight());
+	DOut("[View::OnWindowResizeEnd] - Resize completed at {}x{}", finalSize.width, finalSize.height);
 }
 
 void View::OnWindowMoveStart()

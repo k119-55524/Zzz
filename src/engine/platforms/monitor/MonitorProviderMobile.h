@@ -27,7 +27,7 @@ namespace zzz::engine
 
 		[[nodiscard]] Rect2D<zI32> FitToWorkArea(const Rect2D<zI32>& /*windowRect*/, const MonitorInfo& monitor) const override
 		{
-			return Rect2D<zI32>{ Point2D<zI32>{0, 0}, Size2D<zI32>{static_cast<zI32>(monitor.GetResolution().GetWidth()), static_cast<zI32>(monitor.GetResolution().GetHeight())} };
+			return Rect2D<zI32>{ Point2D<zI32>{0, 0}, Size2D<zI32>{static_cast<zI32>(monitor.GetResolution().width), static_cast<zI32>(monitor.GetResolution().height)} };
 		}
 		[[nodiscard]] Rect2D<zI32> CenterOnWorkArea(const Rect2D<zI32>& windowRect, const MonitorInfo& monitor) const override
 		{

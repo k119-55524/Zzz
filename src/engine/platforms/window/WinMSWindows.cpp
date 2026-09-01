@@ -140,10 +140,10 @@ std::expected<void, std::string> WinMSWindows::Initialize(const ViewPlatformData
 		targetState = eWindowState::Normal;
 
 	const auto& windowRect = platformData.GetWindowRect();
-	int xPos = windowRect.GetPosition().GetX();
-	int yPos = windowRect.GetPosition().GetY();
-	int width = windowRect.GetSize().GetWidth();
-	int height = windowRect.GetSize().GetHeight();
+	int xPos = windowRect.position.x;
+	int yPos = windowRect.position.y;
+	int width = static_cast<int>(windowRect.size.width);
+	int height = static_cast<int>(windowRect.size.height);
 
 	DWORD windowStyle = ConverterMSWinTypes::ToNative(winMode);
 	// Флаг IsResizable строго берется из ProjectData (platformData)
@@ -300,7 +300,7 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		pMinMaxInfo->ptMinTrackSize.x = minRect.right - minRect.left;
 		pMinMaxInfo->ptMinTrackSize.y = minRect.bottom - minRect.top;
 
-		RECT maxRect = { 0, 0, static_cast<LONG>(c_UHD_4K.GetWidth()), static_cast<LONG>(c_UHD_4K.GetHeight()) };
+		RECT maxRect = { 0, 0, static_cast<LONG>(c_UHD_4K.width), static_cast<LONG>(c_UHD_4K.height) };
 		AdjustWindowRect(&maxRect, WS_OVERLAPPEDWINDOW, FALSE);
 		pMinMaxInfo->ptMaxTrackSize.x = maxRect.right - maxRect.left;
 		pMinMaxInfo->ptMaxTrackSize.y = maxRect.bottom - maxRect.top;
@@ -402,8 +402,8 @@ void WinMSWindows::OnMonitorResolutionChanged()
 		if (normalRect != fittedRect)
 		{
 			SetWindowPos(m_hWnd, nullptr,
-				fittedRect.GetPosition().GetX(), fittedRect.GetPosition().GetY(),
-				static_cast<int>(fittedRect.GetSize().GetWidth()), static_cast<int>(fittedRect.GetSize().GetHeight()),
+				fittedRect.position.x, fittedRect.position.y,
+				static_cast<int>(fittedRect.size.width), static_cast<int>(fittedRect.size.height),
 				SWP_NOZORDER | SWP_NOACTIVATE);
 			m_NativeState.SetWindowRect(fittedRect);
 		}

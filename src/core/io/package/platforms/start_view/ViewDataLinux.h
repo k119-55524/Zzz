@@ -26,7 +26,7 @@ namespace zzz::core
 			, windowMode(windowMode)
 			, resizable(resizable)
 			, displayServer(displayServer)
-			, windowRect(Point2D<zI32>{0, 0}, Size2D<zU32>{size.GetWidth(), size.GetHeight()})
+			, windowRect(Point2D<zI32>{0, 0}, Size2D<zU32>{size.width, size.height})
 			, isPrimary(false)
 		{}
 
@@ -55,13 +55,13 @@ namespace zzz::core
 			const auto& targetMonitor = monitors[monitorIndex];
 			zI32 monX = targetMonitor.GetPositionX();
 			zI32 monY = targetMonitor.GetPositionY();
-			zI32 monW = static_cast<zI32>(targetMonitor.GetResolution().GetWidth());
-			zI32 monH = static_cast<zI32>(targetMonitor.GetResolution().GetHeight());
+			zI32 monW = static_cast<zI32>(targetMonitor.GetResolution().width);
+			zI32 monH = static_cast<zI32>(targetMonitor.GetResolution().height);
 
 			Rect2D<zI32> monRect(monX, monY, monW, monH);
 
-			zI32 targetW = std::clamp(static_cast<zI32>(windowRect.GetSize().GetWidth()), static_cast<zI32>(c_MinWinSize), monW);
-			zI32 targetH = std::clamp(static_cast<zI32>(windowRect.GetSize().GetHeight()), static_cast<zI32>(c_MinWinSize), monH);
+			zI32 targetW = std::clamp(static_cast<zI32>(windowRect.size.width), static_cast<zI32>(c_MinWinSize), monW);
+			zI32 targetH = std::clamp(static_cast<zI32>(windowRect.size.height), static_cast<zI32>(c_MinWinSize), monH);
 
 			if (!windowRect.Intersects(monRect))
 			{
@@ -72,7 +72,7 @@ namespace zzz::core
 			}
 			else
 			{
-				windowRect.SetFrom(windowRect.GetPosition().GetX(), windowRect.GetPosition().GetY(), targetW, targetH);
+				windowRect.SetFrom(windowRect.position.x, windowRect.position.y, targetW, targetH);
 			}
 
 			size.SetFrom(static_cast<zU32>(targetW), static_cast<zU32>(targetH));
@@ -83,11 +83,11 @@ namespace zzz::core
 			const std::string nestedIndentation = std::string(indentation) + "  ";
 			DOut(::zzz::core::Assets, "{}[StartViewDataLinux]", indentation);
 			DOut(::zzz::core::Assets, "{}title: {}", nestedIndentation, title);
-			DOut(::zzz::core::Assets, "{}size: {}x{}", nestedIndentation, size.GetWidth(), size.GetHeight());
+			DOut(::zzz::core::Assets, "{}size: {}x{}", nestedIndentation, size.width, size.height);
 			DOut(::zzz::core::Assets, "{}windowMode: {}", nestedIndentation, EnumToString::ToString(windowMode));
 			DOut(::zzz::core::Assets, "{}resizable: {}", nestedIndentation, resizable);
 			DOut(::zzz::core::Assets, "{}displayServer: {}", nestedIndentation, EnumToString::ToString(displayServer));
-			DOut(::zzz::core::Assets, "{}windowRect: X: {}, Y: {}, W: {}, H: {}", nestedIndentation, windowRect.GetPosition().GetX(), windowRect.GetPosition().GetY(), windowRect.GetSize().GetWidth(), windowRect.GetSize().GetHeight());
+			DOut(::zzz::core::Assets, "{}windowRect: X: {}, Y: {}, W: {}, H: {}", nestedIndentation, windowRect.position.x, windowRect.position.y, windowRect.size.width, windowRect.size.height);
 			DOut(::zzz::core::Assets, "{}monitorIndex: {}", nestedIndentation, monitorIndex);
 		}
 

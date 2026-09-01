@@ -35,17 +35,11 @@ namespace zzz::math
 		constexpr Rect2D(const Rect2D&) = default;
 		constexpr Rect2D(Rect2D&&) noexcept = default;
 
-		[[nodiscard]] inline const Point2D<T>& GetPosition() const noexcept { return position; }
-		[[nodiscard]] inline const Size2D<UnsignedT>& GetSize() const noexcept { return size; }
-
-		inline void SetPosition(const Point2D<T>& pos) noexcept { position = pos; }
-		inline void SetSize(const Size2D<UnsignedT>& sz) noexcept { size = sz; }
-
 		template<Arithmetic U> requires SafelyConvertibleTo<U, T>
 		inline void SetFrom(const Rect2D<U>& other) noexcept
 		{
-			position.SetFrom(other.GetPosition());
-			size.SetFrom(other.GetSize());
+			position.SetFrom(other.position);
+			size.SetFrom(other.size);
 		}
 
 		Rect2D& operator=(const Rect2D&) = default;
@@ -57,6 +51,8 @@ namespace zzz::math
 		[[nodiscard]] inline T Top() const noexcept { return position.y; }
 		[[nodiscard]] inline T Right() const noexcept { return position.x + static_cast<T>(size.width); }
 		[[nodiscard]] inline T Bottom() const noexcept { return position.y + static_cast<T>(size.height); }
+		[[nodiscard]] inline T Width() const noexcept { return static_cast<T>(size.width); }
+		[[nodiscard]] inline T Height() const noexcept { return static_cast<T>(size.height); }
 
 		template<Arithmetic U1, Arithmetic U2, Arithmetic U3, Arithmetic U4>
 		inline void SetFrom(U1 inX, U2 inY, U3 inW, U4 inH) noexcept

@@ -40,12 +40,6 @@ namespace zzz::math
 			return (&x)[index];
 		}
 
-		[[nodiscard]] inline T GetX() const noexcept { return x; }
-		[[nodiscard]] inline T GetY() const noexcept { return y; }
-
-		inline void SetX(T inX) noexcept { x = inX; }
-		inline void SetY(T inY) noexcept { y = inY; }
-
 		template<Arithmetic U> requires SafelyConvertibleTo<U, T>
 		inline void SetFrom(U inX, U inY) noexcept
 		{
@@ -56,15 +50,15 @@ namespace zzz::math
 		template<Arithmetic U> requires SafelyConvertibleTo<U, T>
 		inline void SetFrom(const Point2D<U>& other) noexcept
 		{
-			x = static_cast<T>(other.GetX());
-			y = static_cast<T>(other.GetY());
+			x = static_cast<T>(other.x);
+			y = static_cast<T>(other.y);
 		}
 
 		template<Arithmetic U> requires SafelyConvertibleTo<U, T>
 		inline void SetFrom(const Size2D<U>& sz) noexcept
 		{
-			x = static_cast<T>(sz.GetWidth());
-			y = static_cast<T>(sz.GetHeight());
+			x = static_cast<T>(sz.width);
+			y = static_cast<T>(sz.height);
 		}
 
 		Point2D& operator=(const Point2D&) = default;
@@ -76,10 +70,10 @@ namespace zzz::math
 		constexpr Point2D operator-(const Point2D& other) const noexcept { return Point2D{ static_cast<T>(x - other.x), static_cast<T>(y - other.y) }; }
 
 		template<Arithmetic U> requires SafelyConvertibleTo<U, T>
-		constexpr Point2D operator+(const Size2D<U>& sz) const noexcept { return Point2D{ static_cast<T>(x + sz.GetWidth()), static_cast<T>(y + sz.GetHeight()) }; }
+		constexpr Point2D operator+(const Size2D<U>& sz) const noexcept { return Point2D{ static_cast<T>(x + sz.width), static_cast<T>(y + sz.height) }; }
 
 		template<Arithmetic U> requires SafelyConvertibleTo<U, T>
-		constexpr Point2D operator-(const Size2D<U>& sz) const noexcept { return Point2D{ static_cast<T>(x - sz.GetWidth()), static_cast<T>(y - sz.GetHeight()) }; }
+		constexpr Point2D operator-(const Size2D<U>& sz) const noexcept { return Point2D{ static_cast<T>(x - sz.width), static_cast<T>(y - sz.height) }; }
 
 		constexpr Point2D& operator+=(const Point2D& other) noexcept { return *this = *this + other; }
 		constexpr Point2D& operator-=(const Point2D& other) noexcept { return *this = *this - other; }

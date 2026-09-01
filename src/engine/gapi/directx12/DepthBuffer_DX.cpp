@@ -58,7 +58,7 @@ namespace zzz::engine
 	void DepthBuffer_DX::OnResize(const Size2D<>& size)
 	{
 		Initialize(size);
-		DOut(!Z_LOG_GET(g_IsResizing), "[DepthBuffer_DX::OnResize] Successfully resized to {}x{} (DepthFormat: {}).", size.GetWidth(), size.GetHeight(), c_DefaultDepthFormat);
+		DOut(!Z_LOG_GET(g_IsResizing), "[DepthBuffer_DX::OnResize] Successfully resized to {}x{} (DepthFormat: {}).", size.width, size.height, c_DefaultDepthFormat);
 	}
 
 	void DepthBuffer_DX::Initialize(const Size2D<>& size)
@@ -86,8 +86,8 @@ namespace zzz::engine
 		D3D12_RESOURCE_DESC depthStencilDesc{};
 		depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 		depthStencilDesc.Alignment = 0;
-		depthStencilDesc.Width = static_cast<UINT64>(size.GetWidth());
-		depthStencilDesc.Height = static_cast<UINT>(size.GetHeight());
+		depthStencilDesc.Width = static_cast<UINT64>(size.width);
+		depthStencilDesc.Height = static_cast<UINT>(size.height);
 		depthStencilDesc.DepthOrArraySize = 1;
 		depthStencilDesc.MipLevels = 1;
 		depthStencilDesc.Format = zzz::core::c_DefaultDepthFormat;

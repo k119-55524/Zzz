@@ -70,26 +70,26 @@ namespace zzz::core
 			const auto& mon = monitors[monitorIndex];
 			Rect2D<zI32> monRect(
 				Point2D<zI32>{ mon.GetPositionX(), mon.GetPositionY() },
-				Size2D<zI32>{ static_cast<zI32>(mon.GetResolution().GetWidth()), static_cast<zI32>(mon.GetResolution().GetHeight()) }
+				Size2D<zI32>{ static_cast<zI32>(mon.GetResolution().width), static_cast<zI32>(mon.GetResolution().height) }
 			);
 
 			DOut(::zzz::core::Assets, "[ViewDataMSWin::ValidateAndAdjustWindowRect] Целевой монитор #{}: {}", monitorIndex, monRect.ToString());
 
-			zI32 targetW = std::clamp<zI32>(windowRect.GetSize().GetWidth(), c_MinWinSize, monRect.GetSize().GetWidth());
-			zI32 targetH = std::clamp<zI32>(windowRect.GetSize().GetHeight(), c_MinWinSize, monRect.GetSize().GetHeight());
+			zI32 targetW = std::clamp<zI32>(static_cast<zI32>(windowRect.size.width), c_MinWinSize, static_cast<zI32>(monRect.size.width));
+			zI32 targetH = std::clamp<zI32>(static_cast<zI32>(windowRect.size.height), c_MinWinSize, static_cast<zI32>(monRect.size.height));
 
-			if (static_cast<zU32>(targetW) != windowRect.GetSize().GetWidth() || static_cast<zU32>(targetH) != windowRect.GetSize().GetHeight())
+			if (static_cast<zU32>(targetW) != windowRect.size.width || static_cast<zU32>(targetH) != windowRect.size.height)
 			{
 				DOut(::zzz::core::Assets, "[ViewDataMSWin::ValidateAndAdjustWindowRect] Размер окна скорректирован под монитор/c_MinWinSize: {}x{}", targetW, targetH);
-				windowRect.SetSize(Size2D<zU32>{ static_cast<zU32>(targetW), static_cast<zU32>(targetH) });
+				windowRect.size = Size2D<zU32>{ static_cast<zU32>(targetW), static_cast<zU32>(targetH) };
 			}
 
 			if (!monRect.Intersects(windowRect))
 			{
 				DOut(::zzz::core::Assets, "[ViewDataMSWin::ValidateAndAdjustWindowRect] Внимание! Окно не пересекается с монитором #{}! Перенос по центру.", monitorIndex);
-				zI32 centerX = monRect.GetPosition().GetX() + (monRect.GetSize().GetWidth() - windowRect.GetSize().GetWidth()) / 2;
-				zI32 centerY = monRect.GetPosition().GetY() + (monRect.GetSize().GetHeight() - windowRect.GetSize().GetHeight()) / 2;
-				windowRect.SetPosition(Point2D<zI32>{ centerX, centerY });
+				zI32 centerX = monRect.position.x + (static_cast<zI32>(monRect.size.width) - static_cast<zI32>(windowRect.size.width)) / 2;
+				zI32 centerY = monRect.position.y + (static_cast<zI32>(monRect.size.height) - static_cast<zI32>(windowRect.size.height)) / 2;
+				windowRect.position = Point2D<zI32>{ centerX, centerY };
 			}
 
 			DOut(::zzz::core::Assets, "[ViewDataMSWin::ValidateAndAdjustWindowRect] Итоговый валидированный windowRect: {}", windowRect.ToString());
@@ -101,7 +101,7 @@ namespace zzz::core
 			const std::string nestedIndentation = std::string(indentation) + "  ";
 			DOut(::zzz::core::Assets, "{}[ViewDataMSWin]", indentation);
 			DOut(::zzz::core::Assets, "{}title: {}", nestedIndentation, title);
-			DOut(::zzz::core::Assets, "{}size: {}x{}", nestedIndentation, size.GetWidth(), size.GetHeight());
+			DOut(::zzz::core::Assets, "{}size: {}x{}", nestedIndentation, size.width, size.height);
 			DOut(::zzz::core::Assets, "{}windowMode: {}", nestedIndentation, EnumToString::ToString(windowMode));
 			DOut(::zzz::core::Assets, "{}windowState: {}", nestedIndentation, EnumToString::ToString(windowState));
 			DOut(::zzz::core::Assets, "{}resizable: {}", nestedIndentation, resizable ? "true" : "false");

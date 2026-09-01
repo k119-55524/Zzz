@@ -42,12 +42,6 @@ namespace zzz::math
 			return (&width)[index];
 		}
 
-		[[nodiscard]] inline T GetWidth() const noexcept { return width; }
-		[[nodiscard]] inline T GetHeight() const noexcept { return height; }
-
-		inline void SetWidth(T inWidth) noexcept { width = inWidth; }
-		inline void SetHeight(T inHeight) noexcept { height = inHeight; }
-
 		template<Arithmetic U> requires SafelyConvertibleTo<U, T>
 		inline void SetFrom(U w, U h) noexcept
 		{
@@ -58,8 +52,8 @@ namespace zzz::math
 		template<Arithmetic U> requires SafelyConvertibleTo<U, T>
 		inline void SetFrom(const Size2D<U>& other) noexcept
 		{
-			width = static_cast<T>(other.GetWidth());
-			height = static_cast<T>(other.GetHeight());
+			width = static_cast<T>(other.width);
+			height = static_cast<T>(other.height);
 		}
 
 		template<Arithmetic U> requires SafelyConvertibleTo<U, T>
@@ -74,10 +68,10 @@ namespace zzz::math
 		constexpr Size2D operator-(const Size2D& other) const noexcept { return Size2D{ static_cast<T>(width - other.width), static_cast<T>(height - other.height) }; }
 
 		template<Arithmetic U> requires SafelyConvertibleTo<U, T>
-		constexpr Size2D operator+(const Size2D<U>& other) const noexcept { return Size2D{ static_cast<T>(width + other.GetWidth()), static_cast<T>(height + other.GetHeight()) }; }
+		constexpr Size2D operator+(const Size2D<U>& other) const noexcept { return Size2D{ static_cast<T>(width + other.width), static_cast<T>(height + other.height) }; }
 
 		template<Arithmetic U> requires SafelyConvertibleTo<U, T>
-		constexpr Size2D operator-(const Size2D<U>& other) const noexcept { return Size2D{ static_cast<T>(width - other.GetWidth()), static_cast<T>(height - other.GetHeight()) }; }
+		constexpr Size2D operator-(const Size2D<U>& other) const noexcept { return Size2D{ static_cast<T>(width - other.width), static_cast<T>(height - other.height) }; }
 
 		constexpr Size2D& operator+=(const Size2D& other) noexcept { return *this = *this + other; }
 		constexpr Size2D& operator-=(const Size2D& other) noexcept { return *this = *this - other; }

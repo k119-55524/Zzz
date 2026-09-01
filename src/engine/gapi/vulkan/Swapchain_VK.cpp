@@ -25,7 +25,7 @@ namespace zzz::engine
 	void Swapchain_VK::Initialize(VkSurfaceKHR surface)
 	{
 		m_Surface = surface;
-		CreateSwapchain(m_Window->GetClientRect().GetSize());
+		CreateSwapchain(m_Window->GetClientRect().size);
 	}
 
 	void Swapchain_VK::Release()
@@ -58,7 +58,7 @@ namespace zzz::engine
 		}
 		m_Format = surfaceFormat.format;
 
-		VkExtent2D extent = { static_cast<uint32_t>(size.GetWidth()), static_cast<uint32_t>(size.GetHeight()) };
+		VkExtent2D extent = { static_cast<uint32_t>(size.width), static_cast<uint32_t>(size.height) };
 		extent.width = std::clamp(extent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
 		extent.height = std::clamp(extent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
 
@@ -159,7 +159,7 @@ namespace zzz::engine
 			m_GAPI->SetDebugName(m_ImageViews[i], std::format("SwapchainImageView[{}]", i).c_str());
 		}
 
-		DOut(!Z_LOG_GET(g_IsResizing), "[Swapchain_VK::CreateSwapchain] Created Swapchain {}x{} (Format: {}).", m_Size.GetWidth(), m_Size.GetHeight(), m_Format);
+		DOut(!Z_LOG_GET(g_IsResizing), "[Swapchain_VK::CreateSwapchain] Created Swapchain {}x{} (Format: {}).", m_Size.width, m_Size.height, m_Format);
 	}
 
 	void Swapchain_VK::CleanupSwapchain()
@@ -242,7 +242,7 @@ namespace zzz::engine
 		CleanupSwapchain();
 		CreateSwapchain(size);
 
-		DOut(!Z_LOG_GET(g_IsResizing), "[Swapchain_VK::OnResize] Successfully resized to {}x{} (BackBufferFormat: {}).", m_Size.GetWidth(), m_Size.GetHeight(), m_Format);
+		DOut(!Z_LOG_GET(g_IsResizing), "[Swapchain_VK::OnResize] Successfully resized to {}x{} (BackBufferFormat: {}).", m_Size.width, m_Size.height, m_Format);
 	}
 }
 

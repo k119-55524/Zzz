@@ -60,8 +60,8 @@ namespace zzz::core
 			DOut(::zzz::core::Hardware, "{}[MonitorInfo]", indentation);
 			DOut(::zzz::core::Hardware, "{}platformMonitorId: {}", nestedIndentation, m_PlatformMonitorId);
 			DOut(::zzz::core::Hardware, "{}name: {}", nestedIndentation, m_Name);
-			DOut(::zzz::core::Hardware, "{}physicalResolution: {}x{}", nestedIndentation, m_PhysicalResolution.GetWidth(), m_PhysicalResolution.GetHeight());
-			DOut(::zzz::core::Hardware, "{}logicalResolution: {}x{}", nestedIndentation, m_LogicalResolution.GetWidth(), m_LogicalResolution.GetHeight());
+			DOut(::zzz::core::Hardware, "{}physicalResolution: {}x{}", nestedIndentation, m_PhysicalResolution.width, m_PhysicalResolution.height);
+			DOut(::zzz::core::Hardware, "{}logicalResolution: {}x{}", nestedIndentation, m_LogicalResolution.width, m_LogicalResolution.height);
 			DOut(::zzz::core::Hardware, "{}position: ({},{})", nestedIndentation, m_PositionX, m_PositionY);
 			DOut(::zzz::core::Hardware, "{}isPrimary: {}", nestedIndentation, m_IsPrimary);
 			DOut(::zzz::core::Hardware, "{}scaleFactor: {:.2f} ({}%)", nestedIndentation, m_ScaleFactor, static_cast<int>(m_ScaleFactor * 100.0f + 0.5f));

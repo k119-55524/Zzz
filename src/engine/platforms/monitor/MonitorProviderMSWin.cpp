@@ -67,9 +67,9 @@ namespace
 				}
 			}
 			float scaleFactor = static_cast<float>(dpiX) / 96.0f;
-			if (scaleFactor <= 1.0001f && logicalResolution.GetWidth() > 0 && physicalResolution.GetWidth() > logicalResolution.GetWidth())
+			if (scaleFactor <= 1.0001f && logicalResolution.width > 0 && physicalResolution.width > logicalResolution.width)
 			{
-				scaleFactor = static_cast<float>(physicalResolution.GetWidth()) / static_cast<float>(logicalResolution.GetWidth());
+				scaleFactor = static_cast<float>(physicalResolution.width) / static_cast<float>(logicalResolution.width);
 			}
 
 			MonitorInfo info(platformMonitorId, systemId, physicalResolution, logicalResolution, mi.rcMonitor.left, mi.rcMonitor.top, isPrimary, scaleFactor);
@@ -108,7 +108,7 @@ namespace zzz::engine
 		{
 			DOut("  Монитор #{}: ID='{}', Res={}x{}, Pos=({}, {}), Primary={}",
 				i, m_Monitors[i].GetPlatformMonitorId(),
-				m_Monitors[i].GetResolution().GetWidth(), m_Monitors[i].GetResolution().GetHeight(),
+				m_Monitors[i].GetResolution().width, m_Monitors[i].GetResolution().height,
 				m_Monitors[i].GetPositionX(), m_Monitors[i].GetPositionY(),
 				m_Monitors[i].IsPrimary() ? "True" : "False");
 		}
@@ -127,7 +127,7 @@ namespace zzz::engine
 
 	MonitorInfo MonitorProviderMSWin::GetMonitorForPoint(const Point2D<zI32>& point) const
 	{
-		POINT pt{ point.GetX(), point.GetY() };
+		POINT pt{ point.x, point.y };
 		HMONITOR hMon = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
 		MONITORINFOEXW mi{};
 		mi.cbSize = sizeof(MONITORINFOEXW);
@@ -194,8 +194,8 @@ namespace zzz::engine
 		{
 			zI32 monX = monitor.GetPositionX();
 			zI32 monY = monitor.GetPositionY();
-			zI32 monW = static_cast<zI32>(monitor.GetResolution().GetWidth());
-			zI32 monH = static_cast<zI32>(monitor.GetResolution().GetHeight());
+			zI32 monW = static_cast<zI32>(monitor.GetResolution().width);
+			zI32 monH = static_cast<zI32>(monitor.GetResolution().height);
 			RECT defaultRect{ monX, monY, monX + monW, monY + monH };
 
 			std::wstring targetDevice(monitor.GetName().begin(), monitor.GetName().end());
@@ -236,11 +236,11 @@ namespace zzz::engine
 		zI32 workW = winWorkArea.right - winWorkArea.left;
 		zI32 workH = winWorkArea.bottom - winWorkArea.top;
 
-		zI32 targetW = std::min(static_cast<zI32>(windowRect.GetSize().GetWidth()), workW);
-		zI32 targetH = std::min(static_cast<zI32>(windowRect.GetSize().GetHeight()), workH);
+		zI32 targetW = std::min(static_cast<zI32>(windowRect.size.width), workW);
+		zI32 targetH = std::min(static_cast<zI32>(windowRect.size.height), workH);
 
-		zI32 targetX = windowRect.GetPosition().GetX();
-		zI32 targetY = windowRect.GetPosition().GetY();
+		zI32 targetX = windowRect.position.x;
+		zI32 targetY = windowRect.position.y;
 
 		if (targetX < workX) targetX = workX;
 		if (targetY < workY) targetY = workY;
@@ -259,8 +259,8 @@ namespace zzz::engine
 		zI32 workW = winWorkArea.right - winWorkArea.left;
 		zI32 workH = winWorkArea.bottom - winWorkArea.top;
 
-		zI32 targetW = std::min(static_cast<zI32>(windowRect.GetSize().GetWidth()), workW);
-		zI32 targetH = std::min(static_cast<zI32>(windowRect.GetSize().GetHeight()), workH);
+		zI32 targetW = std::min(static_cast<zI32>(windowRect.size.width), workW);
+		zI32 targetH = std::min(static_cast<zI32>(windowRect.size.height), workH);
 
 		zI32 targetX = workX + (workW - targetW) / 2;
 		zI32 targetY = workY + (workH - targetH) / 2;

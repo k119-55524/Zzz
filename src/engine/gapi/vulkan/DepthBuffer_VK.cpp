@@ -54,8 +54,8 @@ namespace zzz::engine
 		VkImageCreateInfo imageInfo{};
 		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		imageInfo.imageType = VK_IMAGE_TYPE_2D;
-		imageInfo.extent.width = static_cast<uint32_t>(m_Size.GetWidth());
-		imageInfo.extent.height = static_cast<uint32_t>(m_Size.GetHeight());
+		imageInfo.extent.width = static_cast<uint32_t>(m_Size.width);
+		imageInfo.extent.height = static_cast<uint32_t>(m_Size.height);
 		imageInfo.extent.depth = 1;
 		imageInfo.mipLevels = 1;
 		imageInfo.arrayLayers = 1;
@@ -123,7 +123,7 @@ namespace zzz::engine
 
 		m_GAPI->SetDebugName(m_ImageView, "DepthImageView");
 
-		DOut(!Z_LOG_GET(g_IsResizing), "[DepthBuffer_VK::CreateDepthResources] Created DepthBuffer {}x{} (DepthFormat: {}).", m_Size.GetWidth(), m_Size.GetHeight(), m_Format);
+		DOut(!Z_LOG_GET(g_IsResizing), "[DepthBuffer_VK::CreateDepthResources] Created DepthBuffer {}x{} (DepthFormat: {}).", m_Size.width, m_Size.height, m_Format);
 	}
 
 	void DepthBuffer_VK::OnResize(const Size2D<>& size)
@@ -131,7 +131,7 @@ namespace zzz::engine
 		Release();
 		CreateDepthResources(size);
 
-		DOut(!Z_LOG_GET(g_IsResizing), "[DepthBuffer_VK::OnResize] Successfully resized DepthBuffer to {}x{} (DepthFormat: {}).", m_Size.GetWidth(), m_Size.GetHeight(), m_Format);
+		DOut(!Z_LOG_GET(g_IsResizing), "[DepthBuffer_VK::OnResize] Successfully resized DepthBuffer to {}x{} (DepthFormat: {}).", m_Size.width, m_Size.height, m_Format);
 	}
 }
 

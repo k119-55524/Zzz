@@ -95,7 +95,7 @@ namespace zzz::engine
 		if (!m_Swapchain || !m_DepthBuffer)
 			return;
 
-		if (m_OldSize.GetWidth() == 0 || m_OldSize.GetHeight() == 0)
+		if (m_OldSize.width == 0 || m_OldSize.height == 0)
 			return;
 
 		const uint32_t prepIdx = GetPrepareIndex();
@@ -165,8 +165,8 @@ namespace zzz::engine
 		m_CommandLists[prepIdx]->ResourceBarrier(1, &barrier);
 
 		// 2. Set Viewport & Scissor Rect
-		D3D12_VIEWPORT viewport{ 0.0f, 0.0f, static_cast<FLOAT>(m_OldSize.GetWidth()), static_cast<FLOAT>(m_OldSize.GetHeight()), 0.0f, 1.0f };
-		D3D12_RECT scissorRect{ 0, 0, static_cast<LONG>(m_OldSize.GetWidth()), static_cast<LONG>(m_OldSize.GetHeight()) };
+		D3D12_VIEWPORT viewport{ 0.0f, 0.0f, static_cast<FLOAT>(m_OldSize.width), static_cast<FLOAT>(m_OldSize.height), 0.0f, 1.0f };
+		D3D12_RECT scissorRect{ 0, 0, static_cast<LONG>(m_OldSize.width), static_cast<LONG>(m_OldSize.height) };
 		m_CommandLists[prepIdx]->RSSetViewports(1, &viewport);
 		m_CommandLists[prepIdx]->RSSetScissorRects(1, &scissorRect);
 
@@ -245,7 +245,7 @@ namespace zzz::engine
 		if (!m_Swapchain || !m_DepthBuffer)
 			return;
 
-		if (size.GetWidth() == 0 || size.GetHeight() == 0)
+		if (size.width == 0 || size.height == 0)
 		{
 			DOut("[SurfView_DX::OnResize] Width or height is zero.");
 			return;
@@ -253,7 +253,7 @@ namespace zzz::engine
 
 		if (m_OldSize == size)
 		{
-			DOut("[SurfView_DX::OnResize] Dimensions are unchanged ({}x{}).", size.GetWidth(), size.GetHeight());
+			DOut("[SurfView_DX::OnResize] Dimensions are unchanged ({}x{}).", size.width, size.height);
 			return;
 		}
 
@@ -274,7 +274,7 @@ namespace zzz::engine
 		m_DepthBuffer->OnResize(size);
 
 		m_OldSize = size;
-		DOut(!Z_LOG_GET(g_IsResizing), "[SurfView_DX::OnResize] Resize completed from old size to {}x{}.", size.GetWidth(), size.GetHeight());
+		DOut(!Z_LOG_GET(g_IsResizing), "[SurfView_DX::OnResize] Resize completed from old size to {}x{}.", size.width, size.height);
 	}
 }
 #endif // Z_D3D12

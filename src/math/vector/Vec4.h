@@ -1,8 +1,8 @@
 #pragma once
 
-#include "math/MathIncludes.h"
 #include "math/vector/Vec2.h"
 #include "math/vector/Vec3.h"
+#include "math/MathIncludes.h"
 
 namespace zzz::math
 {

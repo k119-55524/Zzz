@@ -214,7 +214,7 @@ namespace zzz::engine
 		if (!m_Swapchain || !m_DepthBuffer)
 			return;
 
-		if (m_OldSize.GetWidth() == 0 || m_OldSize.GetHeight() == 0)
+		if (m_OldSize.width == 0 || m_OldSize.height == 0)
 			return;
 
 		VkDevice device = m_GAPI->GetDevice();
@@ -365,7 +365,7 @@ namespace zzz::engine
 
 		VkRenderingInfo renderingInfo{};
 		renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
-		renderingInfo.renderArea = { {0, 0}, {static_cast<uint32_t>(m_OldSize.GetWidth()), static_cast<uint32_t>(m_OldSize.GetHeight())} };
+		renderingInfo.renderArea = { {0, 0}, {static_cast<uint32_t>(m_OldSize.width), static_cast<uint32_t>(m_OldSize.height)} };
 		renderingInfo.layerCount = 1;
 		renderingInfo.colorAttachmentCount = 1;
 		renderingInfo.pColorAttachments = &colorAttachment;
