@@ -1,7 +1,7 @@
 #pragma once
 
 #include "math/MathIncludes.h"
-#include "math/color/Color3.h"
+#include "math/utils/color/Color3.h"
 
 namespace zzz::math
 {

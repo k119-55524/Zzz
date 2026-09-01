@@ -12,7 +12,7 @@
 #define Z_TEST_MATH_RECT2D          // Rect2D (position, size, bounding rects)
 #define Z_TEST_MATH_MAT3            // Матрицы Mat3 (Пункт 2)
 #define Z_TEST_MATH_MAT4            // Матрицы Mat4 (Пункт 2)
-// #define Z_TEST_MATH_QUAT         // Кватернионы Quat (Пункт 3)
+#define Z_TEST_MATH_QUAT            // Кватернионы Quat (Пункт 3)
 
 // --- Ядро и сериализация (core/) ---
 #define Z_TEST_CORE_SERIALIZATION   // Бинарная сериализация векторов и геометрии

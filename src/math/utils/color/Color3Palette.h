@@ -1,6 +1,6 @@
 #pragma once
 
-#include "math/color/Color3.h"
+#include "math/utils/color/Color3.h"
 
 namespace zzz::math::Palette3
 {

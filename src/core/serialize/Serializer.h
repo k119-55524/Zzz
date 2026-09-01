@@ -392,5 +392,22 @@ namespace zzz::core
 			}
 			return {};
 		}
+		template<typename T>
+		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const zzz::math::Quat<T>& q) const
+		{
+			return Serialize(buffer, q.x)
+				.and_then([&]() { return Serialize(buffer, q.y); })
+				.and_then([&]() { return Serialize(buffer, q.z); })
+				.and_then([&]() { return Serialize(buffer, q.w); });
+		}
+
+		template<typename T>
+		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, zzz::math::Quat<T>& q) const
+		{
+			return Deserialize(buffer, offset, q.x)
+				.and_then([&]() { return Deserialize(buffer, offset, q.y); })
+				.and_then([&]() { return Deserialize(buffer, offset, q.z); })
+				.and_then([&]() { return Deserialize(buffer, offset, q.w); });
+		}
 	};
 }

@@ -14,6 +14,8 @@
 #include <algorithm>
 
 #include "math/Types.h"
+#include "math/utils/MathConstants.h"
+#include "math/utils/MathUtils.h"
 
 namespace zzz::core
 {

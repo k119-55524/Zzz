@@ -1,7 +1,9 @@
 #pragma once
 
 #include "math/MathIncludes.h"
-#include "math/Color.h"
+#include "math/utils/MathConstants.h"
+#include "math/utils/MathUtils.h"
+#include "math/utils/color/Color.h"
 #include "math/geometry/Point2D.h"
 #include "math/geometry/Size2D.h"
 #include "math/geometry/Rect2D.h"
@@ -10,3 +12,4 @@
 #include "math/vector/Vec4.h"
 #include "math/matrix/Mat3.h"
 #include "math/matrix/Mat4.h"
+#include "math/quat/Quat.h"
