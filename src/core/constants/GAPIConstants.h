@@ -21,6 +21,9 @@ namespace zzz::core
 	/// Количество кадров в обработке (frames in flight / swapchain image count)
 	constexpr uint32_t c_FramesInFlight = 2;
 
+	/// Аппаратное выравнивание константных буферов CBV (DirectX 12 / Vulkan / Metal)
+	constexpr uint32_t c_ConstantBufferAlignment = 256;
+
 #if defined(Z_D3D12)
 	/// Формат бэкбуфера Direct3D 12 по умолчанию
 	constexpr DXGI_FORMAT c_DefaultBackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;

@@ -409,5 +409,23 @@ namespace zzz::core
 				.and_then([&]() { return Deserialize(buffer, offset, q.z); })
 				.and_then([&]() { return Deserialize(buffer, offset, q.w); });
 		}
+
+		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const zzz::math::Vertex3D& v) const
+		{
+			return Serialize(buffer, v.position)
+				.and_then([&]() { return Serialize(buffer, v.normal); })
+				.and_then([&]() { return Serialize(buffer, v.texCoord); })
+				.and_then([&]() { return Serialize(buffer, v.color); })
+				.and_then([&]() { return Serialize(buffer, v.tangent); });
+		}
+
+		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, zzz::math::Vertex3D& v) const
+		{
+			return Deserialize(buffer, offset, v.position)
+				.and_then([&]() { return Deserialize(buffer, offset, v.normal); })
+				.and_then([&]() { return Deserialize(buffer, offset, v.texCoord); })
+				.and_then([&]() { return Deserialize(buffer, offset, v.color); })
+				.and_then([&]() { return Deserialize(buffer, offset, v.tangent); });
+		}
 	};
 }

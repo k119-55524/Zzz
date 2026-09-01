@@ -17,3 +17,4 @@
 // --- Ядро и сериализация (core/) ---
 #define Z_TEST_CORE_SERIALIZATION   // Бинарная сериализация векторов и геометрии
 #define Z_TEST_CORE_TEMPLATES       // Color, Event, DoubleBufferedVector
+#define Z_TEST_CORE_ENUMS_STRUCTS   // Базовые перечисления, форматы, ConverterGAPITypes, Vertex3D, AttributeRange, AlignUp (Пункт 4)

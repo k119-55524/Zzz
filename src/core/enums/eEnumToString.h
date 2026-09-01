@@ -2,6 +2,10 @@
 
 #include <string_view>
 
+#include "eResourceType.h"
+#include "ePixelFormat.h"
+#include "eIndexFormat.h"
+#include "eVertexSemantic.h"
 #include "ePackage.h"
 #include "eGAPIType.h"
 #include "eTargetPlatform.h"
@@ -23,6 +27,74 @@ namespace zzz::core
 	class EnumToString
 	{
 	public:
+		static constexpr std::string_view ToString(eResourceType type)
+		{
+			switch (type)
+			{
+			case eResourceType::Unknown:    return "Unknown";
+			case eResourceType::Texture2D:  return "Texture2D";
+			case eResourceType::Mesh:       return "Mesh";
+			case eResourceType::Material:   return "Material";
+			case eResourceType::Shader:     return "Shader";
+			case eResourceType::AudioClip:  return "AudioClip";
+			case eResourceType::Font:       return "Font";
+			case eResourceType::Scene:      return "Scene";
+			case eResourceType::Prefab:     return "Prefab";
+			case eResourceType::BinaryData: return "BinaryData";
+			}
+			THROW_RUNTIME("Необработанный eResourceType");
+		}
+
+		static constexpr std::string_view ToString(ePixelFormat format)
+		{
+			switch (format)
+			{
+			case ePixelFormat::Unknown:           return "Unknown";
+			case ePixelFormat::R8_UNORM:          return "R8_UNORM";
+			case ePixelFormat::RGBA8_UNORM:       return "RGBA8_UNORM";
+			case ePixelFormat::RGBA8_SRGB:        return "RGBA8_SRGB";
+			case ePixelFormat::BGRA8_UNORM:       return "BGRA8_UNORM";
+			case ePixelFormat::BGRA8_SRGB:        return "BGRA8_SRGB";
+			case ePixelFormat::RGBA16_FLOAT:      return "RGBA16_FLOAT";
+			case ePixelFormat::R32_FLOAT:         return "R32_FLOAT";
+			case ePixelFormat::D32_FLOAT:         return "D32_FLOAT";
+			case ePixelFormat::D24_UNORM_S8_UINT: return "D24_UNORM_S8_UINT";
+			case ePixelFormat::D32_FLOAT_S8_UINT: return "D32_FLOAT_S8_UINT";
+			case ePixelFormat::BC1_UNORM:         return "BC1_UNORM";
+			case ePixelFormat::BC3_UNORM:         return "BC3_UNORM";
+			case ePixelFormat::BC7_UNORM:         return "BC7_UNORM";
+			case ePixelFormat::ASTC_4x4_UNORM:    return "ASTC_4x4_UNORM";
+			case ePixelFormat::ETC2_RGBA8_UNORM:  return "ETC2_RGBA8_UNORM";
+			}
+			THROW_RUNTIME("Необработанный ePixelFormat");
+		}
+
+		static constexpr std::string_view ToString(eIndexFormat format)
+		{
+			switch (format)
+			{
+			case eIndexFormat::UInt16: return "UInt16";
+			case eIndexFormat::UInt32: return "UInt32";
+			}
+			THROW_RUNTIME("Необработанный eIndexFormat");
+		}
+
+		static constexpr std::string_view ToString(eVertexSemantic semantic)
+		{
+			switch (semantic)
+			{
+			case eVertexSemantic::Position:     return "Position";
+			case eVertexSemantic::Normal:       return "Normal";
+			case eVertexSemantic::TexCoord:     return "TexCoord";
+			case eVertexSemantic::Color:        return "Color";
+			case eVertexSemantic::Tangent:      return "Tangent";
+			case eVertexSemantic::Bitangent:    return "Bitangent";
+			case eVertexSemantic::BlendWeight:  return "BlendWeight";
+			case eVertexSemantic::BlendIndices: return "BlendIndices";
+			case eVertexSemantic::Count:        return "Count";
+			}
+			THROW_RUNTIME("Необработанный eVertexSemantic");
+		}
 		static constexpr std::string_view ToString(eWindowState state)
 		{
 			switch (state)

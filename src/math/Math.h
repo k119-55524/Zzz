@@ -13,3 +13,5 @@
 #include "math/matrix/Mat3.h"
 #include "math/matrix/Mat4.h"
 #include "math/quat/Quat.h"
+#include "math/geometry/Vertex3D.h"
+#include "math/geometry/AttributeRange.h"

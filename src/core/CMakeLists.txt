@@ -60,12 +60,18 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/base_script/SceneScript.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/base_script/ViewScript.h
         ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/base_script/ViewScript.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/Alignment.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eResourceType.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/ePixelFormat.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eIndexFormat.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eVertexSemantic.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eLogMessageType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eWinResize.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eGAPIType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/ePackage.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/eTargetPlatform.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/eEnumToString.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverterGAPITypes.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverterMSWinTypes.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverterAndroidTypes.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverteriOSTypes.h
