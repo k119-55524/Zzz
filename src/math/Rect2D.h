@@ -8,7 +8,7 @@ namespace zzz::math
 {
 	/**
 	 * @class Rect2D
-	 * @brief Шаблонный класс для хранения и управления 2D прямоугольником (положение + размер).
+	 * @brief Шаблонный класс для хранения и управления 2D прямоугольником (position + size).
 	 *
 	 * @tparam T Тип данных для координат и размеров (должен быть арифметическим).
 	 *           Значение по умолчанию: zI32.
@@ -19,30 +19,33 @@ namespace zzz::math
 	public:
 		using UnsignedT = std::make_unsigned_t<T>;
 
-		constexpr Rect2D() : m_Position{}, m_Size{} {}
-		constexpr Rect2D(T x, T y, T width, T height)
-			: m_Position{ x, y }
-			, m_Size{ static_cast<UnsignedT>(width), static_cast<UnsignedT>(height) }
+		Point2D<T> position{};
+		Size2D<UnsignedT> size{};
+
+		constexpr Rect2D() noexcept = default;
+		constexpr Rect2D(T x, T y, T width, T height) noexcept
+			: position{ x, y }
+			, size{ static_cast<UnsignedT>(width), static_cast<UnsignedT>(height) }
 		{}
-		constexpr Rect2D(Point2D<T> pos, Size2D<UnsignedT> sz) : m_Position{ pos }, m_Size{ sz } {}
-		constexpr Rect2D(Point2D<T> pos, Size2D<T> sz)
-			: m_Position{ pos }
-			, m_Size{ static_cast<UnsignedT>(sz.GetWidth()), static_cast<UnsignedT>(sz.GetHeight()) }
+		constexpr Rect2D(Point2D<T> pos, Size2D<UnsignedT> sz) noexcept : position{ pos }, size{ sz } {}
+		constexpr Rect2D(Point2D<T> pos, Size2D<T> sz) noexcept
+			: position{ pos }
+			, size{ static_cast<UnsignedT>(sz.width), static_cast<UnsignedT>(sz.height) }
 		{}
 		constexpr Rect2D(const Rect2D&) = default;
 		constexpr Rect2D(Rect2D&&) noexcept = default;
 
-		[[nodiscard]] inline const Point2D<T>& GetPosition() const noexcept { return m_Position; }
-		[[nodiscard]] inline const Size2D<UnsignedT>& GetSize() const noexcept { return m_Size; }
+		[[nodiscard]] inline const Point2D<T>& GetPosition() const noexcept { return position; }
+		[[nodiscard]] inline const Size2D<UnsignedT>& GetSize() const noexcept { return size; }
 
-		inline void SetPosition(const Point2D<T>& pos) noexcept { m_Position = pos; }
-		inline void SetSize(const Size2D<UnsignedT>& sz) noexcept { m_Size = sz; }
+		inline void SetPosition(const Point2D<T>& pos) noexcept { position = pos; }
+		inline void SetSize(const Size2D<UnsignedT>& sz) noexcept { size = sz; }
 
 		template<Arithmetic U> requires SafelyConvertibleTo<U, T>
 		inline void SetFrom(const Rect2D<U>& other) noexcept
 		{
-			m_Position.SetFrom(other.GetPosition());
-			m_Size.SetFrom(other.GetSize());
+			position.SetFrom(other.GetPosition());
+			size.SetFrom(other.GetSize());
 		}
 
 		Rect2D& operator=(const Rect2D&) = default;
@@ -50,21 +53,21 @@ namespace zzz::math
 
 		constexpr bool operator==(const Rect2D&) const noexcept = default;
 
-		[[nodiscard]] inline T Left() const noexcept { return m_Position.GetX(); }
-		[[nodiscard]] inline T Top() const noexcept { return m_Position.GetY(); }
-		[[nodiscard]] inline T Right() const noexcept { return m_Position.GetX() + static_cast<T>(m_Size.GetWidth()); }
-		[[nodiscard]] inline T Bottom() const noexcept { return m_Position.GetY() + static_cast<T>(m_Size.GetHeight()); }
+		[[nodiscard]] inline T Left() const noexcept { return position.x; }
+		[[nodiscard]] inline T Top() const noexcept { return position.y; }
+		[[nodiscard]] inline T Right() const noexcept { return position.x + static_cast<T>(size.width); }
+		[[nodiscard]] inline T Bottom() const noexcept { return position.y + static_cast<T>(size.height); }
 
 		template<Arithmetic U1, Arithmetic U2, Arithmetic U3, Arithmetic U4>
-		inline void SetFrom(U1 x, U2 y, U3 w, U4 h) noexcept
+		inline void SetFrom(U1 inX, U2 inY, U3 inW, U4 inH) noexcept
 		{
-			m_Position.SetFrom(x, y);
-			m_Size.SetFrom(w, h);
+			position.SetFrom(inX, inY);
+			size.SetFrom(inW, inH);
 		}
 
-		[[nodiscard]] inline bool Contains(T x, T y) const noexcept
+		[[nodiscard]] inline bool Contains(T inX, T inY) const noexcept
 		{
-			return x >= Left() && x < Right() && y >= Top() && y < Bottom();
+			return inX >= Left() && inX < Right() && inY >= Top() && inY < Bottom();
 		}
 
 		[[nodiscard]] inline bool Intersects(const Rect2D& other) const noexcept
@@ -75,13 +78,10 @@ namespace zzz::math
 
 		[[nodiscard]] inline std::string ToString() const noexcept
 		{
-			return std::format("X: {}, Y: {}, Width: {}, Height: {}", m_Position.GetX(), m_Position.GetY(), m_Size.GetWidth(), m_Size.GetHeight());
+			return std::format("X: {}, Y: {}, Width: {}, Height: {}", position.x, position.y, size.width, size.height);
 		}
-
-	private:
-		Point2D<T> m_Position;
-		Size2D<UnsignedT> m_Size;
-
-		friend class zzz::core::Serializer;
 	};
+
+	static_assert(std::is_standard_layout_v<Rect2D<zI32>>, "Rect2D must be standard layout");
+	static_assert(sizeof(Rect2D<zI32>) == 16, "Rect2D<zI32> must be 16 bytes");
 }

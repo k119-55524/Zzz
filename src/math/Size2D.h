@@ -9,7 +9,7 @@ namespace zzz::math
 
 	/**
 	 * @class Size2D
-	 * @brief Шаблонный класс для хранения и управления двумерными размерами.
+	 * @brief Шаблонный класс для хранения и управления двумерными размерами (width, height).
 	 *
 	 * @tparam T Тип данных для хранения ширины и высоты (должен быть арифметическим).
 	 *           Значение по умолчанию: zU32.
@@ -18,30 +18,48 @@ namespace zzz::math
 	class Size2D final
 	{
 	public:
-		constexpr Size2D() : m_Width{ 0 }, m_Height{ 0 } {}
-		explicit constexpr Size2D(T size) : m_Width{ size }, m_Height{ size } {}
-		constexpr Size2D(T width, T height) : m_Width{ width }, m_Height{ height } {}
-		constexpr Size2D(const Size2D& size) : m_Width{ size.m_Width }, m_Height{ size.m_Height } {}
+		T width{ static_cast<T>(0) };
+		T height{ static_cast<T>(0) };
+
+		constexpr Size2D() noexcept = default;
+		explicit constexpr Size2D(T size) noexcept : width{ size }, height{ size } {}
+		constexpr Size2D(T inWidth, T inHeight) noexcept : width{ inWidth }, height{ inHeight } {}
+		constexpr Size2D(const Size2D& size) noexcept : width{ size.width }, height{ size.height } {}
 		constexpr Size2D(Size2D&&) noexcept = default;
 
-		[[nodiscard]] inline T GetWidth() const noexcept { return m_Width; }
-		[[nodiscard]] inline T GetHeight() const noexcept { return m_Height; }
+		[[nodiscard]] constexpr const T* data() const noexcept { return &width; }
+		[[nodiscard]] constexpr T* data() noexcept { return &width; }
 
-		inline void SetWidth(T width) noexcept { m_Width = width; }
-		inline void SetHeight(T height) noexcept { m_Height = height; }
+		[[nodiscard]] constexpr const T& operator[](size_t index) const noexcept
+		{
+			assert(index < 2 && "Size2D index out of range");
+			return (&width)[index];
+		}
+
+		[[nodiscard]] constexpr T& operator[](size_t index) noexcept
+		{
+			assert(index < 2 && "Size2D index out of range");
+			return (&width)[index];
+		}
+
+		[[nodiscard]] inline T GetWidth() const noexcept { return width; }
+		[[nodiscard]] inline T GetHeight() const noexcept { return height; }
+
+		inline void SetWidth(T inWidth) noexcept { width = inWidth; }
+		inline void SetHeight(T inHeight) noexcept { height = inHeight; }
 
 		template<Arithmetic U> requires SafelyConvertibleTo<U, T>
 		inline void SetFrom(U w, U h) noexcept
 		{
-			m_Width = static_cast<T>(w);
-			m_Height = static_cast<T>(h);
+			width = static_cast<T>(w);
+			height = static_cast<T>(h);
 		}
 
 		template<Arithmetic U> requires SafelyConvertibleTo<U, T>
 		inline void SetFrom(const Size2D<U>& other) noexcept
 		{
-			m_Width = static_cast<T>(other.GetWidth());
-			m_Height = static_cast<T>(other.GetHeight());
+			width = static_cast<T>(other.GetWidth());
+			height = static_cast<T>(other.GetHeight());
 		}
 
 		template<Arithmetic U> requires SafelyConvertibleTo<U, T>
@@ -52,23 +70,23 @@ namespace zzz::math
 
 		constexpr bool operator==(const Size2D&) const noexcept = default;
 
-		constexpr Size2D operator+(const Size2D& other) const noexcept { return Size2D{ static_cast<T>(m_Width + other.m_Width), static_cast<T>(m_Height + other.m_Height) }; }
-		constexpr Size2D operator-(const Size2D& other) const noexcept { return Size2D{ static_cast<T>(m_Width - other.m_Width), static_cast<T>(m_Height - other.m_Height) }; }
+		constexpr Size2D operator+(const Size2D& other) const noexcept { return Size2D{ static_cast<T>(width + other.width), static_cast<T>(height + other.height) }; }
+		constexpr Size2D operator-(const Size2D& other) const noexcept { return Size2D{ static_cast<T>(width - other.width), static_cast<T>(height - other.height) }; }
 
 		template<Arithmetic U> requires SafelyConvertibleTo<U, T>
-		constexpr Size2D operator+(const Size2D<U>& other) const noexcept { return Size2D{ static_cast<T>(m_Width + other.GetWidth()), static_cast<T>(m_Height + other.GetHeight()) }; }
+		constexpr Size2D operator+(const Size2D<U>& other) const noexcept { return Size2D{ static_cast<T>(width + other.GetWidth()), static_cast<T>(height + other.GetHeight()) }; }
 
 		template<Arithmetic U> requires SafelyConvertibleTo<U, T>
-		constexpr Size2D operator-(const Size2D<U>& other) const noexcept { return Size2D{ static_cast<T>(m_Width - other.GetWidth()), static_cast<T>(m_Height - other.GetHeight()) }; }
+		constexpr Size2D operator-(const Size2D<U>& other) const noexcept { return Size2D{ static_cast<T>(width - other.GetWidth()), static_cast<T>(height - other.GetHeight()) }; }
 
 		constexpr Size2D& operator+=(const Size2D& other) noexcept { return *this = *this + other; }
 		constexpr Size2D& operator-=(const Size2D& other) noexcept { return *this = *this - other; }
 
 		template<Arithmetic S> requires std::is_arithmetic_v<S>
-		constexpr Size2D operator*(S scale) const noexcept { return Size2D{ static_cast<T>(m_Width * scale), static_cast<T>(m_Height * scale) }; }
+		constexpr Size2D operator*(S scale) const noexcept { return Size2D{ static_cast<T>(width * scale), static_cast<T>(height * scale) }; }
 
 		template<Arithmetic S> requires std::is_arithmetic_v<S>
-		constexpr Size2D operator/(S scale) const noexcept { return Size2D{ static_cast<T>(m_Width / scale), static_cast<T>(m_Height / scale) }; }
+		constexpr Size2D operator/(S scale) const noexcept { return Size2D{ static_cast<T>(width / scale), static_cast<T>(height / scale) }; }
 
 		template<Arithmetic S> requires std::is_arithmetic_v<S>
 		constexpr Size2D& operator*=(S scale) noexcept { return *this = *this * scale; }
@@ -76,14 +94,11 @@ namespace zzz::math
 		template<Arithmetic S> requires std::is_arithmetic_v<S>
 		constexpr Size2D& operator/=(S scale) noexcept { return *this = *this / scale; }
 
-		[[nodiscard]] inline std::string ToString() const noexcept { return std::format("Width: {}, Height: {}", m_Width, m_Height); }
-
-	private:
-		T m_Width;  // Ширина объекта.
-		T m_Height; // Высота объекта.
-
-		friend class zzz::core::Serializer;
+		[[nodiscard]] inline std::string ToString() const noexcept { return std::format("Width: {}, Height: {}", width, height); }
 	};
+
+	static_assert(std::is_standard_layout_v<Size2D<zU32>>, "Size2D must be standard layout");
+	static_assert(sizeof(Size2D<zU32>) == 8, "Size2D<zU32> must be 8 bytes");
 }
 
 #include "math/Point2D.h"
@@ -94,7 +109,7 @@ namespace zzz::math
 	template<Arithmetic U> requires SafelyConvertibleTo<U, T>
 	inline void Size2D<T>::SetFrom(const Point2D<U>& pt) noexcept
 	{
-		m_Width = static_cast<T>(pt.GetX());
-		m_Height = static_cast<T>(pt.GetY());
+		width = static_cast<T>(pt.x);
+		height = static_cast<T>(pt.y);
 	}
 }

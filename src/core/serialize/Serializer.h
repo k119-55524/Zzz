@@ -224,43 +224,91 @@ namespace zzz::core
 		template<typename T>
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const zzz::math::Size2D<T>& size) const
 		{
-			return Serialize(buffer, size.m_Width)
-				.and_then([&]() { return Serialize(buffer, size.m_Height); });
+			return Serialize(buffer, size.width)
+				.and_then([&]() { return Serialize(buffer, size.height); });
 		}
 
 		template<typename T>
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, zzz::math::Size2D<T>& size) const
 		{
-			return Deserialize(buffer, offset, size.m_Width)
-				.and_then([&]() { return Deserialize(buffer, offset, size.m_Height); });
+			return Deserialize(buffer, offset, size.width)
+				.and_then([&]() { return Deserialize(buffer, offset, size.height); });
 		}
 
 		template<typename T>
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const zzz::math::Point2D<T>& pt) const
 		{
-			return Serialize(buffer, pt.m_X)
-				.and_then([&]() { return Serialize(buffer, pt.m_Y); });
+			return Serialize(buffer, pt.x)
+				.and_then([&]() { return Serialize(buffer, pt.y); });
 		}
 
 		template<typename T>
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, zzz::math::Point2D<T>& pt) const
 		{
-			return Deserialize(buffer, offset, pt.m_X)
-				.and_then([&]() { return Deserialize(buffer, offset, pt.m_Y); });
+			return Deserialize(buffer, offset, pt.x)
+				.and_then([&]() { return Deserialize(buffer, offset, pt.y); });
+		}
+
+		template<typename T>
+		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const zzz::math::Vec2<T>& v) const
+		{
+			return Serialize(buffer, v.x)
+				.and_then([&]() { return Serialize(buffer, v.y); });
+		}
+
+		template<typename T>
+		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, zzz::math::Vec2<T>& v) const
+		{
+			return Deserialize(buffer, offset, v.x)
+				.and_then([&]() { return Deserialize(buffer, offset, v.y); });
+		}
+
+		template<typename T>
+		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const zzz::math::Vec3<T>& v) const
+		{
+			return Serialize(buffer, v.x)
+				.and_then([&]() { return Serialize(buffer, v.y); })
+				.and_then([&]() { return Serialize(buffer, v.z); });
+		}
+
+		template<typename T>
+		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, zzz::math::Vec3<T>& v) const
+		{
+			return Deserialize(buffer, offset, v.x)
+				.and_then([&]() { return Deserialize(buffer, offset, v.y); })
+				.and_then([&]() { return Deserialize(buffer, offset, v.z); });
+		}
+
+		template<typename T>
+		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const zzz::math::Vec4<T>& v) const
+		{
+			return Serialize(buffer, v.x)
+				.and_then([&]() { return Serialize(buffer, v.y); })
+				.and_then([&]() { return Serialize(buffer, v.z); })
+				.and_then([&]() { return Serialize(buffer, v.w); });
+		}
+
+		template<typename T>
+		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, zzz::math::Vec4<T>& v) const
+		{
+			return Deserialize(buffer, offset, v.x)
+				.and_then([&]() { return Deserialize(buffer, offset, v.y); })
+				.and_then([&]() { return Deserialize(buffer, offset, v.z); })
+				.and_then([&]() { return Deserialize(buffer, offset, v.w); });
 		}
 
 		template<typename T>
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const zzz::math::Rect2D<T>& rect) const
 		{
-			return Serialize(buffer, rect.m_Position)
-				.and_then([&]() { return Serialize(buffer, rect.m_Size); });
+			return Serialize(buffer, rect.position)
+				.and_then([&]() { return Serialize(buffer, rect.size); });
 		}
 
 		template<typename T>
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, zzz::math::Rect2D<T>& rect) const
 		{
-			return Deserialize(buffer, offset, rect.m_Position)
-				.and_then([&]() { return Deserialize(buffer, offset, rect.m_Size); });
+			return Deserialize(buffer, offset, rect.position)
+				.and_then([&]() { return Deserialize(buffer, offset, rect.size); });
 		}
 
 		template<typename T>

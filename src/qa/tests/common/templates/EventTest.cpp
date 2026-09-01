@@ -1,4 +1,8 @@
 
+#include "qa/tests/TestsConfig.h"
+
+#ifdef Z_TEST_CORE_TEMPLATES
+
 #include <thread>
 #include <gtest/gtest.h>
 #include <core/Core.h>
@@ -196,3 +200,6 @@ TEST(EventTest, OrderedVsUnordered)
 	EXPECT_EQ(unorderedResult[1], 2);
 	EXPECT_EQ(unorderedResult[2], 3);
 }
+
+#endif // Z_TEST_CORE_TEMPLATES
+

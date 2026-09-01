@@ -1,3 +1,7 @@
+#include "qa/tests/TestsConfig.h"
+
+#ifdef Z_TEST_CORE_TEMPLATES
+
 #include <gtest/gtest.h>
 #include "math/Math.h"
 #include "core/serialize/Serializer.h"
@@ -96,3 +100,5 @@ TEST(ColorTest, Serialization)
 
 	EXPECT_EQ(originalColor, restoredColor);
 }
+
+#endif // Z_TEST_CORE_TEMPLATES

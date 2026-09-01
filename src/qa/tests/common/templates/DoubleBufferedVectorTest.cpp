@@ -1,4 +1,8 @@
 
+#include "qa/tests/TestsConfig.h"
+
+#ifdef Z_TEST_CORE_TEMPLATES
+
 #include <thread>
 #include <vector>
 #include <gtest/gtest.h>
@@ -103,3 +107,5 @@ TEST(DoubleBufferedVectorTest, StressTest)
 	// Проверяем, что ни один элемент не потерялся под огромной нагрузкой
 	EXPECT_EQ(totalRead, totalPushed.load());
 }
+
+#endif // Z_TEST_CORE_TEMPLATES
