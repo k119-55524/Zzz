@@ -1,4 +1,4 @@
-﻿# Этап 01: Векторная математика (`Vec2`, `Vec3`, `Vec4`) и унификация `Point2D`, `Size2D`, `Rect2D`
+# Этап 01: Векторная математика (`Vec2`, `Vec3`, `Vec4`) и унификация `Point2D`, `Size2D`, `Rect2D`
 
 ## 1. Контекст и цели этапа
 - **Цель:** Создать современный, типобезопасный и производительный фундамент векторной алгебры движка `Zzz`, необходимый для матричных преобразований (`Mat4`), кватернионов (`Quat`), вершинных буферов (`Vertex3D`), трансформаций сущностей (`Transform`), камер и системы координат.
@@ -77,11 +77,12 @@
 
 ```
 src/math/
-├── Math.h                      # Подключение math/vector/Vec2.h, Vec3.h, Vec4.h
+├── Math.h                      # Подключение math/vector/Vec2.h, Vec3.h, Vec4.h и math/geometry/
 ├── MathIncludes.h              # Концепты Arithmetic, математические заголовки
-├── Point2D.h                   # Унификация Point2D (открытые поля x, y, data(), operator[])
-├── Size2D.h                    # Унификация Size2D (открытые поля width, height, data(), operator[])
-├── Rect2D.h                    # Унификация Rect2D (открытые поля position, size)
+├── geometry/
+│   ├── Point2D.h               # Унификация Point2D (открытые поля x, y, data(), operator[])
+│   ├── Size2D.h                # Унификация Size2D (открытые поля width, height, data(), operator[])
+│   └── Rect2D.h                # Унификация Rect2D (открытые поля position, size)
 └── vector/
     ├── Vec2.h                  # Шаблонная структура Vec2<T>
     ├── Vec3.h                  # Шаблонная структура Vec3<T>

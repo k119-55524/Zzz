@@ -1,8 +1,8 @@
 #pragma once
 
 #include "math/MathIncludes.h"
-#include "math/Point2D.h"
-#include "math/Size2D.h"
+#include "math/geometry/Point2D.h"
+#include "math/geometry/Size2D.h"
 
 namespace zzz::math
 {

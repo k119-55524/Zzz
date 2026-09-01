@@ -4,7 +4,7 @@
 
 namespace zzz::math
 {
-	template<Arithmetic T = zI32>
+	template<Arithmetic T>
 	class Point2D;
 
 	/**
@@ -95,7 +95,7 @@ namespace zzz::math
 	static_assert(sizeof(Size2D<zU32>) == 8, "Size2D<zU32> must be 8 bytes");
 }
 
-#include "math/Point2D.h"
+#include "math/geometry/Point2D.h"
 
 namespace zzz::math
 {

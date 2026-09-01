@@ -1,7 +1,7 @@
 #pragma once
 
 #include "math/MathIncludes.h"
-#include "math/Size2D.h"
+#include "math/geometry/Size2D.h"
 
 namespace zzz::math
 {
@@ -12,7 +12,7 @@ namespace zzz::math
 	 * @tparam T Тип данных для хранения координат (должен быть арифметическим).
 	 *           Значение по умолчанию: zI32.
 	 */
-	template<Arithmetic T>
+	template<Arithmetic T = zI32>
 	class Point2D final
 	{
 	public:

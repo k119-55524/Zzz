@@ -3,7 +3,7 @@
 #include <logger/logger.h>
 
 #include "core/CoreIncludes.h"
-#include "math/Size2D.h"
+#include "math/Math.h"
 #include "core/Serialize/Serializer.h"
 
 namespace zzz::core

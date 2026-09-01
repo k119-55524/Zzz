@@ -4,8 +4,7 @@
 #include <string>
 #include <memory>
 #include "core/hardware/MonitorInfo.h"
-#include "math/Point2D.h"
-#include "math/Rect2D.h"
+#include "math/Math.h"
 
 namespace zzz::engine
 {

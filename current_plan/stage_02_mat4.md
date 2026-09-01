@@ -1,7 +1,7 @@
-﻿# Этап 02: Матрица `Mat4` (базовые операции, аффинные трансформации и проекции)
+# Этап 02: Матрицы `Mat4` и `Mat3` (базовые операции, аффинные трансформации, базис и проекции)
 
 ## 1. Контекст и цели этапа
-- **Цель:** Реализовать фундаментальный класс матрицы $4 \times 4$ (`Mat4`) для линейных и аффинных преобразований в 3D-пространстве, формирования матриц вида (View) и проекции (Projection) в левосторонней системе координат (LH) с диапазоном глубины NDC Z $[0, 1]$.
+- **Цель:** Реализовать фундаментальные классы матриц $4 \times 4$ (`Mat4`) и $3 \times 3$ (`Mat3`) для линейных и аффинных преобразований в 3D/2D-пространстве, формирования матриц вида (View) и проекции (Projection) в левосторонней системе координат (LH) с диапазоном глубины NDC Z $[0, 1]$, извлечения базиса ориентации и вычисления матрицы нормалей (Normal Matrix).
 - **Статус:** `🔄 В работе`
 - **Зависимости:** `src/math/Types.h`, `src/math/MathIncludes.h`, `src/math/vector/Vec3.h`, `src/math/vector/Vec4.h`, `src/core/serialize/Serializer.h`.
 
@@ -21,74 +21,56 @@
   - `OrthographicLH(T width, T height, T nearZ, T farZ)`
   - `OrthographicOffCenterLH(T left, T right, T bottom, T top, T nearZ, T farZ)`
 
-### 2.2. Расположение в памяти и хранение элементов (Standard Layout POD)
-- Матрица хранится как плоский массив из 16 элементов типа `T` (Row-Major в памяти: `m[0]`..`m[15]` или `m[4][4]`):
-  ```cpp
-  union
-  {
-      T m[4][4];
-      T elements[16];
-      struct
-      {
-          T _11, _12, _13, _14;
-          T _21, _22, _23, _24;
-          T _31, _32, _33, _34;
-          T _41, _42, _43, _44;
-      };
-  };
-  ```
-- `static_assert(std::is_standard_layout_v<Mat4<zF32>>);`
-- `static_assert(sizeof(Mat4<zF32>) == 64);`
-- Прямой доступ к сырому указателю через `data()` для передачи в константные буферы GAPI (`CBV`, `PushConstants`).
+### 2.2. Расположение в памяти, выравнивание и хранение элементов (Standard Layout POD)
+- **`Mat4`**: выравнивается по строке GPU/SIMD-слота: `alignas(sizeof(T) * 4)` (16 байт для `zF32`, 32 байта для `zF64`), 64 байта для `zF32`.
+- **`Mat3`**: плоская компактная структура из 9 элементов (`m[3][3]`, `elements[9]`, `_11.._33`), 36 байт для `zF32`.
+- Прямой доступ к сырому указателю через `data()`.
 
 ### 2.3. Строгая типизация движка (Strict Engine Types)
-- Шаблон `template<Arithmetic T = zF32> struct Mat4`.
-- **Запрещено** использовать сырые типы `float`, `double`, `int` в заголовочных файлах.
+- Шаблоны `template<Arithmetic T = zF32> struct Mat4` и `template<Arithmetic T = zF32> struct Mat3`.
 - **Псевдонимы (Typedefs):**
-  - `using Mat4f = Mat4<zF32>;`
-  - `using Mat4d = Mat4<zF64>;`
-  - `using Mat4i = Mat4<zI32>;`
+  - `using Mat4f = Mat4<zF32>;`, `using Mat4d = Mat4<zF64>;`, `using Mat4i = Mat4<zI32>;`
+  - `using Mat3f = Mat3<zF32>;`, `using Mat3d = Mat3<zF64>;`, `using Mat3i = Mat3<zI32>;`
 
 ---
 
-## 3. Детальная спецификация интерфейса `Mat4`
+## 3. Детальная спецификация интерфейса
 
-### 3.1. Конструкторы и статические фабрики
-- `constexpr Mat4() noexcept = default;` (единичная матрица по умолчанию — Identity);
-- `explicit constexpr Mat4(T diagonal) noexcept;` (диагональная матрица);
-- Поэлементный конструктор `constexpr Mat4(T m00, T m01, ... T m33) noexcept;`;
-- Из массива `explicit constexpr Mat4(const T elements[16]) noexcept;`;
-- Из векторов строк или столбцов;
-- Фабрики:
-  - `static constexpr Mat4 Identity() noexcept;`
-  - `static constexpr Mat4 Zero() noexcept;`
-  - `static constexpr Mat4 Translation(const Vec3<T>& translation) noexcept;`
-  - `static constexpr Mat4 Translation(T x, T y, T z) noexcept;`
-  - `static constexpr Mat4 Scaling(const Vec3<T>& scale) noexcept;`
-  - `static constexpr Mat4 Scaling(T x, T y, T z) noexcept;`
-  - `static constexpr Mat4 Scaling(T uniformScale) noexcept;`
-  - `static Mat4 RotationX(T radians) noexcept;`
-  - `static Mat4 RotationY(T radians) noexcept;`
-  - `static Mat4 RotationZ(T radians) noexcept;`
-  - `static Mat4 RotationAxis(const Vec3<T>& axis, T radians) noexcept;`
-  - `static Mat4 TRS(const Vec3<T>& translation, const Vec3<T>& rotationEuler, const Vec3<T>& scale) noexcept;`
+### 3.1. Соглашение об умножении векторов (Row-Vector Convention: $v \cdot M$)
+В движке принят единый стандарт векторов-строк (Row-Vector / Post-multiplication, аналогично DirectXMath):
+- Вектор умножается **слева**: `v * M` (`Vec4 operator*(const Vec4& v, const Mat4& m)`);
+- В строках `_41.._43` матрицы хранится вектор трансляции;
+- Матрицы вида (`LookAtLH`) и проекции (`PerspectiveFovLH`, `OrthographicLH`) построены строго под применение `v * M`.
 
-### 3.2. Матричные операции
-- Умножение матриц `operator*(const Mat4& other) const` и `operator*=(const Mat4& other)`;
-- Умножение на скаляр `operator*(T scalar) const` и `operator*=(T scalar)`;
-- Транспонирование: `[[nodiscard]] Mat4 Transpose() const noexcept;`
-- Определитель: `[[nodiscard]] T Determinant() const noexcept;`
-- Обратная матрица: `[[nodiscard]] Mat4 Inverse(bool* outInvertible = nullptr) const noexcept;` (с безопасной обработкой вырожденных матриц).
+### 3.2. Порядок углов Эйлера в `TRS` ($Z \to X \to Y$)
+Комбинированная матрица вращения в методе `Mat4::TRS` вычисляется как:
+$$R = R_z \cdot R_x \cdot R_y$$
+При строчном умножении вектора $v \cdot (S \cdot R_z \cdot R_x \cdot R_y \cdot T)$ это задаёт порядок применения: **$Z \to X \to Y$ (Roll $\to$ Pitch $\to$ Yaw)**.  
+Этот же порядок строго фиксируется для кватернионов `Quat::FromEuler` / `ToEuler` на Этапе 03.
 
-### 3.3. Трансформация векторов и точек
-- Умножение на 4D-вектор: `[[nodiscard]] Vec4<T> operator*(const Vec4<T>& v) const noexcept;`
-- Трансформация точки (Point): `[[nodiscard]] Vec3<T> TransformPoint(const Vec3<T>& point) const noexcept;` ($W = 1$, с делением на результирующий $W$ при перспективном делении);
-- Трансформация направления (Vector/Normal): `[[nodiscard]] Vec3<T> TransformVector(const Vec3<T>& vec) const noexcept;` ($W = 0$, без учета сдвига);
-- Доступ по индексам: `operator()(size_t row, size_t col)` и `operator[](size_t index)`.
+### 3.3. Спецификация `Mat3`
+- **Структура**: `template<Arithmetic T = zF32> struct Mat3` (9 элементов, 36 байт для `zF32`).
+- **Конструкторы**: Identity (по умолчанию), Zero, Diagonal, 9 элементов, из 3 векторов `Vec3<T>`, конвертирующий `Mat3<U>`.
+- **Доступ**: `data()`, `operator()(r, c)`, `operator[](i)`, `GetRow`/`SetRow`, `GetColumn`/`SetColumn`.
+- **Операции**: `operator*`, `operator*=`, `operator*=(scalar)`, `operator*(scalar)`, `Determinant()`, `Inverse()`, `Transpose()`, `operator==`, `operator!=`.
+- **Трансформации**: `TransformVector(const Vec3<T>& v)` и оператор `v * M`.
+- **Форматирование**: `ToString()` и специализация `std::formatter<Mat3<T>>`.
 
-### 3.4. Сериализация и вывод
-- Метод `ToString() const` и специализация `std::formatter<zzz::math::Mat4<T>>`;
-- Перегрузки `Serialize` / `Deserialize` в `zzz::core::Serializer`.
+### 3.4. Спецификация `Mat4`
+- **Структура**: `template<Arithmetic T = zF32> struct alignas(sizeof(T) * 4) Mat4` (16 элементов, 64 байта для `zF32`).
+- **Конструкторы**: Identity (по умолчанию), Zero, Diagonal, 16 элементов, из 4 векторов `Vec4<T>`, из `Mat3<T>` + translation, конвертирующий `Mat4<U>`.
+- **Доступ**: `data()`, `operator()(r, c)`, `operator[](i)`, `GetRow`/`SetRow`, `GetColumn`/`SetColumn`.
+- **Базис и нормали**:
+  - `[[nodiscard]] constexpr Mat3<T> ToMat3() const noexcept` (извлечение верхнего левого блока $3 \times 3$).
+  - `[[nodiscard]] Mat3<T> GetNormalMatrix() const noexcept` (`Transpose(Inverse(ToMat3()))`).
+- **Аффинные трансформации**: `Translation`, `Scaling`, `RotationX/Y/Z`, `RotationAxis`, `TRS`.
+- **Проекции LH $[0, 1]$**: `LookAtLH`, `PerspectiveFovLH`, `OrthographicLH`, `OrthographicOffCenterLH`.
+- **Трансформации векторов**:
+  - `TransformPoint(const Vec3<T>& pt)` ($W=1$, перспективное деление $X/W, Y/W, Z/W$);
+  - `TransformVector(const Vec3<T>& vec)` ($W=0$, без смещения);
+  - `TransformVector4(const Vec4<T>& v)` и `operator*(const Vec4<T>& v, const Mat4<T>& m)` ($v \cdot M$).
+- **Базовая алгебра**: `operator*`, `operator*=`, `operator*=(scalar)`, `operator*(scalar)`, `Determinant()`, `Inverse()`, `Transpose()`, `operator==`, `operator!=`.
+- **Форматирование**: `ToString()` и специализация `std::formatter<Mat4<T>>`.
 
 ---
 
@@ -96,32 +78,36 @@
 
 ```
 src/math/
-├── Math.h                      # Подключение math/matrix/Mat4.h
+├── Math.h                      # Подключение math/matrix/Mat3.h и math/matrix/Mat4.h
 └── matrix/
-    └── Mat4.h                  # Шаблонная структура Mat4<T>
+    ├── Mat3.h                  # Шаблонная структура Mat3<T> (базис, ориентация, нормали)
+    └── Mat4.h                  # Шаблонная структура Mat4<T> (аффинные трансформации, проекции)
 src/core/serialize/
-└── Serializer.h                # Перегрузки Serialize/Deserialize для Mat4<T>
+└── Serializer.h                # Перегрузки Serialize/Deserialize для Mat3<T> и Mat4<T>
 src/qa/tests/
-├── TestsConfig.h               # Раскомментирование #define Z_TEST_MATH_MATRICES
+├── TestsConfig.h               # Раскомментирование #define Z_TEST_MATH_MAT3 и Z_TEST_MATH_MAT4
 └── math/
-    └── MatrixTests.cpp         # Юнит-тесты Mat4 (Identity, TRS, Inverse, Transpose, LookAtLH, PerspectiveFovLH, Serialization)
+    ├── Mat3Tests.cpp           # Юнит-тесты Mat3 (Identity, Transpose, Inverse, NormalMatrix, Serialization)
+    └── Mat4Tests.cpp           # Юнит-тесты Mat4 (Identity, TRS, Inverse, Projections LH [0, 1], Serialization)
 ```
 
 ---
 
 ## 5. Чек-лист реализации и Definition of Done (DoD)
 
-- [ ] Создать `src/math/matrix/Mat4.h` (структура Standard Layout POD, 64 байта)
-- [ ] Реализовать базовую алгебру (Identity, Zero, умножение, определитель, Inverse, Transpose)
-- [ ] Реализовать аффинные трансформации (Translation, Scaling, RotationX/Y/Z, RotationAxis, TRS)
-- [ ] Реализовать функции проекции и вида для LH системы координат с NDC Z $[0, 1]$ (`LookAtLH`, `PerspectiveFovLH`, `OrthographicLH`, `OrthographicOffCenterLH`)
-- [ ] Реализовать трансформацию векторов `TransformPoint` и `TransformVector`
-- [ ] Подключить заголовок `Mat4.h` в `src/math/Math.h`
-- [ ] Добавить перегрузки `Serialize` / `Deserialize` для `Mat4` в `src/core/serialize/Serializer.h`
-- [ ] Создать `src/qa/tests/math/MatrixTests.cpp` и раскомментировать `Z_TEST_MATH_MATRICES` в `src/qa/tests/TestsConfig.h`
-- [ ] Собрать тестовый таргет `EngineTests` через CMake / MSVC x64
-- [ ] Успешно прогнать все тесты (проверка ассоциативности умножения, `M * M^-1 == I`, `Transpose(Transpose(M)) == M`, проекция точки внутри `PerspectiveFovLH` в NDC $[0, 1]$, бинарный round-trip в `Serializer`)
+- [x] Создать `src/math/matrix/Mat4.h` (структура Standard Layout POD, 64 байта, выравнивание `alignas(sizeof(T) * 4)`)
+- [x] Создать `src/math/matrix/Mat3.h` (структура Standard Layout POD, 36 байт, 9 элементов)
+- [x] Добавить в `Mat4.h` методы `ToMat3()` и `GetNormalMatrix()`
+- [x] Реализовать базовую алгебру `Mat4` (Identity, Zero, умножение $v \cdot M$, определитель, Inverse, Transpose, GetRow/SetRow/GetColumn/SetColumn, operator==/!=)
+- [x] Реализовать аффинные трансформации (Translation, Scaling, RotationX/Y/Z, RotationAxis, TRS в порядке $Z \to X \to Y$)
+- [x] Реализовать функции проекции и вида для LH системы координат с NDC Z $[0, 1]$ (`LookAtLH`, `PerspectiveFovLH`, `OrthographicLH`, `OrthographicOffCenterLH`)
+- [x] Реализовать трансформацию векторов `TransformPoint` и `TransformVector`
+- [x] Подключить заголовки `Mat3.h` и `Mat4.h` в `src/math/Math.h`
+- [x] Добавить перегрузки `Serialize` / `Deserialize` для `Mat3` и `Mat4` в `src/core/serialize/Serializer.h`
+- [x] Создать раздельные файлы тестов `src/qa/tests/math/Mat3Tests.cpp` и `src/qa/tests/math/Mat4Tests.cpp` под отдельными тумблерами `Z_TEST_MATH_MAT3` и `Z_TEST_MATH_MAT4`
+- [x] Собрать тестовый таргет `EngineTests` через CMake / MSVC x64
+- [x] Успешно прогнать все 46 тестов (100% успех)
 - [ ] Запросить утверждение у пользователя
-- [ ] Сделать Git commit: `feat(math): completed stage 02 - Mat4 matrix, transforms and projections`
+- [ ] Сделать Git commit: `feat(math): completed stage 02 - Mat4 and Mat3 matrices, normal matrix, transforms and projections`
 - [ ] Перевести статус Пункта 2 в `✅ Выполнено` в `general_plan.md`
 - [ ] Подготовить спецификацию следующего шага `stage_03_quat.md`

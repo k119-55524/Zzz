@@ -3,9 +3,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
-#include "math/Size2D.h"
-#include "math/Point2D.h"
-#include "math/Rect2D.h"
+#include "math/Math.h"
 #include "core/Serialize/Serializer.h"
 #include "core/Enums/eEnumToString.h"
 #include "core/Enums/platforms/eLinuxEnums.h"

@@ -344,5 +344,53 @@ namespace zzz::core
 				.and_then([&]() { return Deserialize(buffer, offset, color.B); })
 				.and_then([&]() { return Deserialize(buffer, offset, color.A); });
 		}
+
+		template<typename T>
+		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const zzz::math::Mat3<T>& m) const
+		{
+			for (std::size_t i = 0; i < 9; ++i)
+			{
+				auto res = Serialize(buffer, m.elements[i]);
+				if (!res)
+					return res;
+			}
+			return {};
+		}
+
+		template<typename T>
+		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, zzz::math::Mat3<T>& m) const
+		{
+			for (std::size_t i = 0; i < 9; ++i)
+			{
+				auto res = Deserialize(buffer, offset, m.elements[i]);
+				if (!res)
+					return res;
+			}
+			return {};
+		}
+
+		template<typename T>
+		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const zzz::math::Mat4<T>& m) const
+		{
+			for (std::size_t i = 0; i < 16; ++i)
+			{
+				auto res = Serialize(buffer, m.elements[i]);
+				if (!res)
+					return res;
+			}
+			return {};
+		}
+
+		template<typename T>
+		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, zzz::math::Mat4<T>& m) const
+		{
+			for (std::size_t i = 0; i < 16; ++i)
+			{
+				auto res = Deserialize(buffer, offset, m.elements[i]);
+				if (!res)
+					return res;
+			}
+			return {};
+		}
 	};
 }

@@ -10,7 +10,8 @@
 #define Z_TEST_MATH_POINT2D         // Point2D (открытые x, y, data, operator[])
 #define Z_TEST_MATH_SIZE2D          // Size2D (открытые width, height)
 #define Z_TEST_MATH_RECT2D          // Rect2D (position, size, bounding rects)
-// #define Z_TEST_MATH_MATRICES     // Матрицы Mat4 (Пункт 2)
+#define Z_TEST_MATH_MAT3            // Матрицы Mat3 (Пункт 2)
+#define Z_TEST_MATH_MAT4            // Матрицы Mat4 (Пункт 2)
 // #define Z_TEST_MATH_QUAT         // Кватернионы Quat (Пункт 3)
 
 // --- Ядро и сериализация (core/) ---
