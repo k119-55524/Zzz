@@ -65,6 +65,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/ePixelFormat.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eIndexFormat.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eVertexSemantic.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eFileLocation.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eLogMessageType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eWinResize.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eGAPIType.h
@@ -89,6 +90,15 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileHeader.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/Path.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/Path.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileSystem.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileSystemBase.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileSystemBase.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/platforms/FileSystemDesktop.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/platforms/FileSystemDesktop.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/platforms/FileSystemAndroid.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/platforms/FileSystemAndroid.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/platforms/FileSystemiOS.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/platforms/FileSystemiOS.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PackageHeader.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PackageEntry.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PrimaryViewData.h

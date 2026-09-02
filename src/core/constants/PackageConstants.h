@@ -11,6 +11,7 @@ namespace zzz::core
 
 	/// Относительные (от каталога исполняемого файла) пути к файлам/каталогам ассетов.
 	inline constexpr std::string_view c_GamePackageRelativePath       = "assets/package.dat";
+	inline constexpr std::string_view c_PaksDirectoryRelativePath     = "assets/paks";
 	inline constexpr std::string_view c_DataDirectoryRelativePath     = "assets/data";
 	inline constexpr std::string_view c_DataPackageRelativePath       = "assets/data/data.dat";
 	inline constexpr std::string_view c_TexturesDirectoryRelativePath = "assets/data/textures";

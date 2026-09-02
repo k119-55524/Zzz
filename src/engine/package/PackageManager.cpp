@@ -1,9 +1,10 @@
-
 #include "core/io/package/SceneData.h"
 #include "core/io/package/PrefabData.h"
 #include "core/io/package/PackageHeader.h"
 #include "core/io/package/ChildViewData.h"
 #include "core/io/package/IndependentViewData.h"
+#include "core/constants/PackageConstants.h"
+#include "core/utils/Ensure.h"
 
 #include "PackageManager.h"
 
@@ -13,38 +14,30 @@ using namespace zzz::core;
 
 namespace zzz::engine
 {
-	PackageManager::PackageManager(const Path& path)
+	PackageManager::PackageManager(std::shared_ptr<FileSystem> fileSystem) :
+		m_FileSystem{ std::move(fileSystem) }
 	{
-		Initialize(path);
+		ensure(m_FileSystem, "FileSystem не должен быть null при создании PackageManager.");
+		Initialize();
 	}
 
-	void PackageManager::Initialize(const Path& path)
+	void PackageManager::Initialize()
 	{
-		m_PackagePath = path.GetPackageDatPath();
+		auto fileBufferRes = m_FileSystem->ReadAllBytes(eFileLocation::App, c_GamePackageRelativePath);
+		if (!fileBufferRes)
+			THROW_RUNTIME("Не удалось прочитать файл пакета '{}': {}", c_GamePackageRelativePath, fileBufferRes.error());
 
-		if (!std::filesystem::exists(m_PackagePath))
-			THROW_RUNTIME("Файл пакета не существует: {}", m_PackagePath.string());
-
-		std::ifstream file(m_PackagePath, std::ios::binary);
-		if (!file.is_open())
-			THROW_RUNTIME("Не удалось открыть файл пакета: {}", m_PackagePath.string());
-
-		const auto fileSize = std::filesystem::file_size(m_PackagePath);
-		std::vector<std::byte> fileBuffer(fileSize);
-		file.read(reinterpret_cast<char*>(fileBuffer.data()), fileSize);
-		if (!file.good())
-			THROW_RUNTIME("Не удалось прочитать файл пакета из: {}", m_PackagePath.string());
-
+		const auto& fileBuffer = *fileBufferRes;
 		std::size_t offset = 0;
 		Serializer serializer;
 		PackageHeader header;
 		auto headerRes = serializer.Deserialize(fileBuffer, offset, header);
 		if (!headerRes)
-			THROW_RUNTIME("Ошибка десериализации заголовка пакета {}: {}", m_PackagePath.string(), headerRes.error());
+			THROW_RUNTIME("Ошибка десериализации заголовка пакета '{}': {}", c_GamePackageRelativePath, headerRes.error());
 
 		auto validRes = header.Validate();
 		if (!validRes)
-			THROW_RUNTIME("Некорректный заголовок в файле {}: {}", m_PackagePath.string(), validRes.error());
+			THROW_RUNTIME("Некорректный заголовок в файле '{}': {}", c_GamePackageRelativePath, validRes.error());
 
 		m_EntriesByName.clear();
 		m_EntriesByGuid.clear();
@@ -54,7 +47,7 @@ namespace zzz::engine
 			PackageEntry entry{};
 			auto entryRes = serializer.Deserialize(fileBuffer, offset, entry);
 			if (!entryRes)
-				THROW_RUNTIME("Ошибка десериализации записи пакета #{} в файле {}: {}", i, m_PackagePath.string(), entryRes.error());
+				THROW_RUNTIME("Ошибка десериализации записи пакета #{} в файле '{}': {}", i, c_GamePackageRelativePath, entryRes.error());
 
 			auto type = static_cast<ePackage>(entry.GetAssetType());
 			m_EntriesByName[type][entry.GetName()] = entry;
@@ -63,24 +56,24 @@ namespace zzz::engine
 
 		auto primaryViewIt = m_EntriesByName.find(ePackage::PrimaryView);
 		if (primaryViewIt == m_EntriesByName.end() || primaryViewIt->second.empty())
-			THROW_RUNTIME("Ошибка пакета {}: Обязательный ресурс PrimaryViewData отсутствует.", m_PackagePath.string());
+			THROW_RUNTIME("Ошибка пакета '{}': Обязательный ресурс PrimaryViewData отсутствует.", c_GamePackageRelativePath);
 
 		if (primaryViewIt->second.size() > 1)
-			THROW_RUNTIME("Ошибка пакета {}: Ресурс PrimaryViewData не уникален (найдено {} штук).", m_PackagePath.string(), primaryViewIt->second.size());
+			THROW_RUNTIME("Ошибка пакета '{}': Ресурс PrimaryViewData не уникален (найдено {} штук).", c_GamePackageRelativePath, primaryViewIt->second.size());
 
 		auto manifestIt = m_EntriesByName.find(ePackage::ProjectManifest);
 		if (manifestIt == m_EntriesByName.end() || manifestIt->second.empty())
-			THROW_RUNTIME("Ошибка пакета {}: Обязательный ресурс ProjectManifestData отсутствует.", m_PackagePath.string());
+			THROW_RUNTIME("Ошибка пакета '{}': Обязательный ресурс ProjectManifestData отсутствует.", c_GamePackageRelativePath);
 
 		if (manifestIt->second.size() > 1)
-			THROW_RUNTIME("Ошибка пакета {}: Ресурс ProjectManifestData не уникален (найдено {} штук).", m_PackagePath.string(), manifestIt->second.size());
+			THROW_RUNTIME("Ошибка пакета '{}': Ресурс ProjectManifestData не уникален (найдено {} штук).", c_GamePackageRelativePath, manifestIt->second.size());
 
 		auto manifestRes = LoadPackageData<ProjectManifestData>(manifestIt->second.begin()->second);
 		if (!manifestRes)
-			THROW_RUNTIME("Ошибка десериализации ProjectManifestData из пакета {}: {}", m_PackagePath.string(), manifestRes.error());
+			THROW_RUNTIME("Ошибка десериализации ProjectManifestData из пакета '{}': {}", c_GamePackageRelativePath, manifestRes.error());
 
 		if (manifestRes->GetCompanyName().empty() || manifestRes->GetAppName().empty())
-			THROW_RUNTIME("Ошибка пакета {}: ProjectManifestData не содержит имя компании и/или приложения.", m_PackagePath.string());
+			THROW_RUNTIME("Ошибка пакета '{}': ProjectManifestData не содержит имя компании и/или приложения.", c_GamePackageRelativePath);
 
 		m_CompanyName = manifestRes->GetCompanyName();
 		m_AppName = manifestRes->GetAppName();
@@ -88,68 +81,59 @@ namespace zzz::engine
 		LogPackageEntriesSummary();
 	}
 
-	std::optional<PackageEntry> PackageManager::GetEntryByName(ePackage type, std::string_view name) const
+	[[nodiscard]] std::expected<ProjectManifestData, std::string> PackageManager::GetProjectManifestData() const
 	{
-		auto typeIt = m_EntriesByName.find(type);
-		if (typeIt == m_EntriesByName.end())
-			return std::nullopt;
+		auto it = m_EntriesByName.find(ePackage::ProjectManifest);
+		if (it == m_EntriesByName.end() || it->second.empty())
+			return UNEXPECTED("Package entry of type ProjectManifest was not found.");
 
-		auto entryIt = typeIt->second.find(std::string(name));
-		if (entryIt == typeIt->second.end())
-			return std::nullopt;
-
-		return entryIt->second;
+		return LoadPackageData<ProjectManifestData>(it->second.begin()->second);
 	}
 
-	std::optional<PackageEntry> PackageManager::GetEntryByGuid(ePackage type, const Guid& guid) const
+	[[nodiscard]] std::expected<PrimaryViewData, std::string> PackageManager::GetPrimaryViewData() const
 	{
-		auto typeIt = m_EntriesByGuid.find(type);
-		if (typeIt == m_EntriesByGuid.end())
-			return std::nullopt;
+		auto it = m_EntriesByName.find(ePackage::PrimaryView);
+		if (it == m_EntriesByName.end() || it->second.empty())
+			return UNEXPECTED("Package entry of type PrimaryView was not found.");
 
-		auto entryIt = typeIt->second.find(guid);
-		if (entryIt == typeIt->second.end())
-			return std::nullopt;
-
-		return entryIt->second;
+		return LoadPackageData<PrimaryViewData>(it->second.begin()->second);
 	}
 
-	std::expected<PrimaryViewData, std::string> PackageManager::GetPrimaryViewData() const
+	[[nodiscard]] std::optional<PackageEntry> PackageManager::GetEntryByName(ePackage type, std::string_view name) const
 	{
-		auto typeIt = m_EntriesByName.find(ePackage::PrimaryView);
-		if (typeIt == m_EntriesByName.end() || typeIt->second.empty())
-			return UNEXPECTED("Ресурс PrimaryViewData не найден в манифесте пакета.");
+		auto it = m_EntriesByName.find(type);
+		if (it == m_EntriesByName.end())
+			return std::nullopt;
 
-		const auto& entry = typeIt->second.begin()->second;
-		return LoadPackageData<PrimaryViewData>(entry);
+		auto nameIt = it->second.find(std::string(name));
+		if (nameIt == it->second.end())
+			return std::nullopt;
+
+		return nameIt->second;
 	}
 
-	std::expected<ProjectManifestData, std::string> PackageManager::GetProjectManifestData() const
+	[[nodiscard]] std::optional<PackageEntry> PackageManager::GetEntryByGuid(ePackage type, const Guid& guid) const
 	{
-		auto typeIt = m_EntriesByName.find(ePackage::ProjectManifest);
-		if (typeIt == m_EntriesByName.end() || typeIt->second.empty())
-			return UNEXPECTED("ProjectManifestData was not found in package manifest.");
+		auto it = m_EntriesByGuid.find(type);
+		if (it == m_EntriesByGuid.end())
+			return std::nullopt;
 
-		const auto& entry = typeIt->second.begin()->second;
-		return LoadPackageData<ProjectManifestData>(entry);
+		auto guidIt = it->second.find(guid);
+		if (guidIt == it->second.end())
+			return std::nullopt;
+
+		return guidIt->second;
 	}
 
 	template <typename T> requires std::derived_from<T, ISerializable>
 	[[nodiscard]] std::expected<T, std::string> PackageManager::LoadPackageData(const PackageEntry& entry) const
 	{
-		if (m_PackagePath.empty())
-			return UNEXPECTED("Путь к пакету ресурсов не задан.");
+		auto bufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_GamePackageRelativePath, entry.GetOffset(), entry.GetSize());
+		if (!bufferRes)
+			return UNEXPECTED("Не удалось прочитать блок данных '{}' из пакета '{}': {}",
+				entry.GetName(), c_GamePackageRelativePath, bufferRes.error());
 
-		std::ifstream file(m_PackagePath, std::ios::binary);
-		if (!file.is_open())
-			return UNEXPECTED("Не удалось открыть файл пакета: {}.", m_PackagePath.string());
-
-		file.seekg(entry.GetOffset(), std::ios::beg);
-		std::vector<std::byte> buffer(entry.GetSize());
-		file.read(reinterpret_cast<char*>(buffer.data()), entry.GetSize());
-		if (!file.good())
-			return UNEXPECTED("Ошибка ввода-вывода при чтении блока данных '{}' из пакета (offset: {}, size: {}).", entry.GetName(), entry.GetOffset(), entry.GetSize());
-
+		const auto& buffer = *bufferRes;
 		std::size_t offset = 0;
 		Serializer serializer;
 		T data{};
@@ -175,7 +159,7 @@ namespace zzz::engine
 	void PackageManager::LogPackageEntriesSummary() const
 	{
 #if Z_ADD_LOGGER
-		DOut("========== [PackageManager] Package Data: {} ==========", m_PackagePath.string());
+		DOut("========== [PackageManager] Package Data: {} ==========", c_GamePackageRelativePath);
 		// Закомментируй тот тип ресурса, который не хочешь логировать
 		LogEntriesSummaryForType<ProjectManifestData>(ePackage::ProjectManifest);
 		LogEntriesSummaryForType<PrimaryViewData>(ePackage::PrimaryView);

@@ -38,7 +38,7 @@ namespace zzz::engine
 		std::unique_ptr<ScriptRegistry> m_ScriptRegistry;
 		std::shared_ptr<ScriptFactory> m_ScriptFactory;
 
-		std::shared_ptr<Path> m_Path;
+		std::shared_ptr<FileSystem> m_FileSystem;
 		std::shared_ptr<PackageManager> m_PackageManager;
 		std::shared_ptr<UserSettingsManager> m_UserSettingsManager;
 		std::unique_ptr<Platform> m_Platform;

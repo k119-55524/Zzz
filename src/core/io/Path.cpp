@@ -249,6 +249,7 @@ namespace zzz::core
 	{
 		switch (kind)
 		{
+		case eAssetDirectoryKind::Paks:     return m_ExecutableDirectory / c_PaksDirectoryRelativePath;
 		case eAssetDirectoryKind::Textures: return m_ExecutableDirectory / c_TexturesDirectoryRelativePath;
 		case eAssetDirectoryKind::Video:    return m_ExecutableDirectory / c_VideoDirectoryRelativePath;
 		case eAssetDirectoryKind::Audio:    return m_ExecutableDirectory / c_AudioDirectoryRelativePath;

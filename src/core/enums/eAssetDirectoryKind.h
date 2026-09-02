@@ -10,6 +10,7 @@ namespace zzz::core
 		Textures = 1,
 		Video    = 2,
 		Audio    = 3,
-		Fonts    = 4
+		Fonts    = 4,
+		Paks     = 5
 	};
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/EngineIncludes.h"
+#include "core/io/FileSystem.h"
 #include "core/io/package/ProjectManifestData.h"
 #include "core/io/package/PrimaryViewData.h"
 #include "core/io/package/PackageEntry.h"
@@ -13,7 +14,7 @@ namespace zzz::engine
 	{
 	public:
 		PackageManager() = delete;
-		PackageManager(const Path& path);
+		explicit PackageManager(std::shared_ptr<FileSystem> fileSystem);
 		~PackageManager() = default;
 
 		[[nodiscard]] std::expected<ProjectManifestData, std::string> GetProjectManifestData() const;
@@ -65,7 +66,7 @@ namespace zzz::engine
 		}
 
 	private:
-		void Initialize(const Path& path);
+		void Initialize();
 		[[nodiscard]] std::optional<PackageEntry> GetEntryByName(ePackage type, std::string_view name) const;
 		[[nodiscard]] std::optional<PackageEntry> GetEntryByGuid(ePackage type, const Guid& guid) const;
 
@@ -76,7 +77,7 @@ namespace zzz::engine
 		template <typename T> requires std::derived_from<T, ISerializable>
 		void LogEntriesSummaryForType(ePackage type) const;
 
-		std::filesystem::path m_PackagePath;
+		std::shared_ptr<FileSystem> m_FileSystem;
 		std::map<ePackage, std::unordered_map<std::string, PackageEntry>> m_EntriesByName;
 		std::map<ePackage, std::unordered_map<Guid, PackageEntry>> m_EntriesByGuid;
 		std::string m_CompanyName;

@@ -12,17 +12,20 @@
 #include "core/enums/eAssetDirectoryKind.h"
 #include "core/constants/PackageConstants.h"
 
-namespace zzz::engine { class Engine; }
-
 namespace zzz::core
 {
+	class FileSystemBase;
+
 	class Path final
 	{
-		friend class zzz::engine::Engine;
+		friend class FileSystemBase;
 
 	public:
 		Path() = delete;
 		explicit Path(std::shared_ptr<NativeAppData> nativeData = nullptr);
+
+		[[nodiscard]] inline const std::filesystem::path& GetExecutableDirectory() const noexcept { return m_ExecutableDirectory; }
+		[[nodiscard]] inline const std::filesystem::path& GetUserDataDirectory() const noexcept { return m_UserDataDirectory; }
 
 		[[nodiscard]] inline std::filesystem::path GetPackageDatPath() const { return m_ExecutableDirectory / c_GamePackageRelativePath; }
 		[[nodiscard]] inline std::filesystem::path GetUserDatPath() const { return m_UserDataDirectory / c_ConfigFileName; }

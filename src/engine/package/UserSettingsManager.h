@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/EngineIncludes.h"
+#include "core/io/FileSystem.h"
 #include "core/io/package/ViewUserData.h"
 #include "core/io/package/PrimaryViewUserData.h"
 
@@ -16,7 +17,7 @@ namespace zzz::engine
 	{
 	public:
 		UserSettingsManager() = delete;
-		UserSettingsManager(const Path& path);
+		explicit UserSettingsManager(std::shared_ptr<FileSystem> fileSystem);
 
 		[[nodiscard]] inline const std::string& GetSelectedGpuId() const noexcept { return m_SelectedGpuId; }
 		/**
@@ -98,13 +99,12 @@ namespace zzz::engine
 		void SetDefaultUserSettings();
 		/** @brief Применяет persisted-список отключённых категорий логирования к zzz::logger::g_Logger (вызывается после Initialize()). */
 		void ApplyLogCategorySettings() const;
-		std::expected<void, std::string> LoadConfig(std::filesystem::path path);
+		std::expected<void, std::string> LoadConfig();
 
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override;
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override;
 
-		Path m_Path;
-		std::filesystem::path m_ConfigPath;
+		std::shared_ptr<FileSystem> m_FileSystem;
 
 		Version m_Version;
 		std::optional<PrimaryViewUserData> m_PrimaryViewUserData;

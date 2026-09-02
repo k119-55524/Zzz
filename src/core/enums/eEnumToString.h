@@ -6,6 +6,7 @@
 #include "ePixelFormat.h"
 #include "eIndexFormat.h"
 #include "eVertexSemantic.h"
+#include "eFileLocation.h"
 #include "ePackage.h"
 #include "eGAPIType.h"
 #include "eTargetPlatform.h"
@@ -95,6 +96,20 @@ namespace zzz::core
 			}
 			THROW_RUNTIME("Необработанный eVertexSemantic");
 		}
+
+		static constexpr std::string_view ToString(eFileLocation location)
+		{
+			switch (location)
+			{
+			case eFileLocation::App:   return "App";
+			case eFileLocation::User:  return "User";
+			case eFileLocation::Saves: return "Saves";
+			case eFileLocation::Cache: return "Cache";
+			case eFileLocation::Logs:  return "Logs";
+			}
+			THROW_RUNTIME("Необработанный eFileLocation");
+		}
+
 		static constexpr std::string_view ToString(eWindowState state)
 		{
 			switch (state)

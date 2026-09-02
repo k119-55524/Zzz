@@ -2,6 +2,8 @@
 #include "PackageManager.h"
 #include "UserSettingsManager.h"
 #include "core/io/package/ViewUserData.h"
+#include "core/constants/ConfigConstants.h"
+#include "core/utils/Ensure.h"
 #include "engine/view/View.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Assets);
@@ -11,11 +13,12 @@ using zzz::core::PrimaryViewUserData;
 
 namespace zzz::engine
 {
-	UserSettingsManager::UserSettingsManager(const Path& path) :
-		m_Path(path),
+	UserSettingsManager::UserSettingsManager(std::shared_ptr<FileSystem> fileSystem) :
+		m_FileSystem{ std::move(fileSystem) },
 		m_Version(c_ConfigFileMajorVersion, c_ConfigFileMinorVersion, c_ConfigFilePatchVersion),
 		m_IsDirty(true)
 	{
+		ensure(m_FileSystem, "FileSystem не должен быть null при создании UserSettingsManager.");
 #if Z_EDITOR
 #else
 		Initialize();
@@ -28,33 +31,23 @@ namespace zzz::engine
 	{
 		try
 		{
-			m_ConfigPath = m_Path.GetUserDatPath()
-				.lexically_normal()
-				.make_preferred();
-
 			SetDefaultUserSettings();
-			if (!std::filesystem::exists(m_ConfigPath))
+			if (!m_FileSystem->FileExists(eFileLocation::User, c_ConfigFileName))
 			{
-				DOutWarning("Файл конфигурации не найден: {}. Используется конфигурация по умолчанию.", m_ConfigPath.string());
+				DOutWarning("Файл конфигурации не найден: {}. Используется конфигурация по умолчанию.", c_ConfigFileName);
 				return;
 			}
 
-			auto res = LoadConfig(m_ConfigPath);
+			auto res = LoadConfig();
 			if (!res)
 			{
-				DOutWarning("Не удалось загрузить файл конфигурации: {}. Создаётся конфигурация по умолчанию.", m_ConfigPath.string());
+				DOutWarning("Не удалось загрузить файл конфигурации: {}. Создаётся конфигурация по умолчанию.", res.error());
 				SetDefaultUserSettings();
 			}
 			else
 			{
 				m_IsFirstRun = false;
 			}
-		}
-		catch (const std::filesystem::filesystem_error& e)
-		{
-			DOutException("Ошибка файловой системы: {}. Установка конфигурации по умолчанию.", e.what());
-			SetDefaultUserSettings();
-			return;
 		}
 		catch (const std::exception& e)
 		{
@@ -69,7 +62,7 @@ namespace zzz::engine
 			return;
 		}
 
-		DOut("[UserSettingsManager] Конфигурация десериализована: {}.", m_ConfigPath.string());
+		DOut("[UserSettingsManager] Конфигурация десериализована: {}.", c_ConfigFileName);
 	}
 
 	void UserSettingsManager::SetDefaultUserSettings()
@@ -158,22 +151,9 @@ namespace zzz::engine
 			if (auto res = serializer.Serialize(buffer, *this); !res)
 				return UNEXPECTED("Не удалось сериализовать конфигурацию: {}.", res.error());
 
-			std::error_code ec;
-			std::filesystem::create_directories(m_ConfigPath.parent_path(), ec);
-			if (ec)
-				return UNEXPECTED("Не удалось создать директории: {}. Ошибка: {}", m_ConfigPath.parent_path().string(), ec.message());
-
-			std::ofstream file(m_ConfigPath, std::ios::binary);
-			if (!file)
-				return UNEXPECTED("Не удалось открыть файл: {}.", m_ConfigPath.string());
-
-			file.write(reinterpret_cast<const char*>(buffer.data()), static_cast<std::streamsize>(buffer.size()));
-			if (!file)
-				return UNEXPECTED("Не удалось записать файл: {}.", m_ConfigPath.string());
-		}
-		catch (const std::filesystem::filesystem_error& e)
-		{
-			return UNEXPECTED("Ошибка файловой системы: {}.", std::string(e.what()));
+			auto writeRes = m_FileSystem->WriteAllBytes(eFileLocation::User, c_ConfigFileName, buffer);
+			if (!writeRes)
+				return UNEXPECTED("Не удалось сохранить файл конфигурации: {}.", writeRes.error());
 		}
 		catch (const std::exception& e)
 		{
@@ -185,39 +165,25 @@ namespace zzz::engine
 		}
 
 		m_IsDirty = false;
-		DOut("[UserSettingsManager] Конфигурация сохранена: {}.", m_ConfigPath.string());
+		DOut("[UserSettingsManager] Конфигурация сохранена: {}.", c_ConfigFileName);
 
 		return {};
 #endif // Z_EDITOR
 	}
 
-	std::expected<void, std::string> UserSettingsManager::LoadConfig(std::filesystem::path path)
+	std::expected<void, std::string> UserSettingsManager::LoadConfig()
 	{
 		try
 		{
-			if (!std::filesystem::exists(path))
-				return UNEXPECTED("Файл конфигурации не существует: {}", path.string());
+			auto bufferRes = m_FileSystem->ReadAllBytes(eFileLocation::User, c_ConfigFileName);
+			if (!bufferRes)
+				return UNEXPECTED("Не удалось прочитать файл конфигурации: {}", bufferRes.error());
 
-			std::ifstream file(path, std::ios::binary);
-			if (!file.is_open())
-				return UNEXPECTED("Не удалось открыть файл конфигурации: {}", path.string());
-
-			const auto fileSize = std::filesystem::file_size(path);
-			std::vector<std::byte> buffer(fileSize);
-			file.read(reinterpret_cast<char*>(buffer.data()), fileSize);
-			if (!file.good())
-				return UNEXPECTED("Не удалось прочитать файл конфигурации: {}", path.string());
-
+			const auto& buffer = *bufferRes;
 			std::size_t offset = 0;
 
 			Serializer serializer;
-			auto result = serializer.Deserialize(
-				std::span(
-					reinterpret_cast<const std::byte*>(buffer.data()),
-					buffer.size()),
-				offset,
-				*this);
-
+			auto result = serializer.Deserialize(buffer, offset, *this);
 			if (!result)
 				return UNEXPECTED("Не удалось десериализовать конфигурацию: {}", result.error());
 
@@ -233,10 +199,6 @@ namespace zzz::engine
 					m_IsDirty = true;
 				}
 			}
-		}
-		catch (const std::filesystem::filesystem_error& e)
-		{
-			return UNEXPECTED("Ошибка файловой системы: {}", std::string(e.what()));
 		}
 		catch (const std::exception& e)
 		{
@@ -512,7 +474,7 @@ namespace zzz::engine
 	void UserSettingsManager::LogUserData() const
 	{
 #if Z_ADD_LOGGER
-		DOut("========== [UserSettingsManager] User Data: {} ==========", m_ConfigPath.string());
+		DOut("========== [UserSettingsManager] User Data: {} ==========", c_ConfigFileName);
 		if (m_PrimaryViewUserData)
 			m_PrimaryViewUserData->LogFileBlock("  ");
 		for (const auto& [guid, viewData] : m_ChildViewsUserData)

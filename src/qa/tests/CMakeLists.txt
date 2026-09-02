@@ -38,6 +38,7 @@ if(TEST_SOURCES)
         PRIVATE
             GTest::gtest_main
             engine_lib
+            core_lib
             logger_lib
     )
 

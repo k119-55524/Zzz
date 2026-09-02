@@ -21,9 +21,9 @@ extern "C" __attribute__((weak)) void RegisterAllScripts(zzz::core::ScriptRegist
 Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 	engineState{ eInitState::NotInitialized }
 {
-	m_Path = safe_make_shared<Path>(nativeData);
-	m_PackageManager = safe_make_shared<PackageManager>(*m_Path);
-	if (auto res = m_Path->InitializeUserData(m_PackageManager->GetCompanyName(), m_PackageManager->GetAppName()); !res)
+	m_FileSystem = safe_make_shared<FileSystem>(nativeData);
+	m_PackageManager = safe_make_shared<PackageManager>(m_FileSystem);
+	if (auto res = m_FileSystem->InitializeUserData(m_PackageManager->GetCompanyName(), m_PackageManager->GetAppName()); !res)
 		THROW_RUNTIME("Не удалось инициализировать каталог пользовательских данных: {}", res.error());
 
 	auto projectManifestData = m_PackageManager->GetProjectManifestData();
@@ -38,7 +38,7 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 		THROW_RUNTIME("Failed to load PrimaryViewData: {}", primaryViewData.error());
 
 	// Загрузка пользовательских настроек (UserSettings.dat)
-	m_UserSettingsManager = safe_make_shared<UserSettingsManager>(*m_Path);
+	m_UserSettingsManager = safe_make_shared<UserSettingsManager>(m_FileSystem);
 
 	// Создание платформенного слоя абстракции ОС (native windows, ввод, системные события)
 	m_Platform = safe_make_unique<Platform>(nativeData, projectManifestData->GetPlatformData());
@@ -104,7 +104,7 @@ void Engine::Shutdown()
 		m_SceneManager = nullptr;
 		m_Platform = nullptr;
 		m_PackageManager = nullptr;
-		m_Path = nullptr;
+		m_FileSystem = nullptr;
 	}
 	catch (const std::exception& e)
 	{

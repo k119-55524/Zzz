@@ -20,6 +20,7 @@
 #include "core/enums/ePixelFormat.h"
 #include "core/enums/eIndexFormat.h"
 #include "core/enums/eVertexSemantic.h"
+#include "core/enums/eFileLocation.h"
 #include "core/enums/ePackage.h"
 #include "core/enums/eTargetPlatform.h"
 #include "core/enums/eGAPIType.h"
@@ -56,6 +57,7 @@
 #include "core/userscripts/base_script/ViewScript.h"
 
 #include "core/io/Path.h"
+#include "core/io/FileSystem.h"
 // Узкие типы данных пакета (PackageHeader, PrimaryViewData, ChildViewData и т.д.) и hardware/*
 // намеренно НЕ включаются сюда: они используются только в единичных местах (PackageManager,
 // UserSettingsManager, ViewManager, Platform и т.п.), а не по всему проекту. Раньше их бланкетное
