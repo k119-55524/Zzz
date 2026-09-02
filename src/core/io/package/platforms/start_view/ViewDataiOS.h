@@ -3,7 +3,6 @@
 #include <string>
 #include <string_view>
 #include "core/Serialize/Serializer.h"
-#include "core/Enums/eEnumToString.h"
 #include "core/Enums/platforms/eiOSEnums.h"
 
 namespace zzz::core
@@ -30,9 +29,9 @@ namespace zzz::core
 		{
 			const std::string nestedIndentation = std::string(indentation) + "  ";
 			DOut(::zzz::core::Assets, "{}[StartViewDataiOS]", indentation);
-			DOut(::zzz::core::Assets, "{}orientation: {}", nestedIndentation, EnumToString::ToString(orientation));
-			DOut(::zzz::core::Assets, "{}safeAreaMode: {}", nestedIndentation, EnumToString::ToString(safeAreaMode));
-			DOut(::zzz::core::Assets, "{}homeIndicatorMode: {}", nestedIndentation, EnumToString::ToString(homeIndicatorMode));
+			DOut(::zzz::core::Assets, "{}orientation: {}", nestedIndentation, ToString(orientation));
+			DOut(::zzz::core::Assets, "{}safeAreaMode: {}", nestedIndentation, ToString(safeAreaMode));
+			DOut(::zzz::core::Assets, "{}homeIndicatorMode: {}", nestedIndentation, ToString(homeIndicatorMode));
 		}
 
 	private:

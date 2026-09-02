@@ -1,8 +1,10 @@
 #pragma once
 
+#include <string_view>
 #include <logger/logger.h>
 
 #include "core/CoreIncludes.h"
+#include "core/utils/ThrowWrappers.h"
 #include "core/Serialize/Serializer.h"
 
 namespace zzz::core
@@ -19,6 +21,23 @@ namespace zzz::core
 		LPDDR4,
 		LPDDR5
 	};
+
+	constexpr std::string_view ToString(eRamType type)
+	{
+		switch (type)
+		{
+		case eRamType::Unknown: return "Unknown";
+		case eRamType::DDR:     return "DDR";
+		case eRamType::DDR2:    return "DDR2";
+		case eRamType::DDR3:    return "DDR3";
+		case eRamType::DDR4:    return "DDR4";
+		case eRamType::DDR5:    return "DDR5";
+		case eRamType::LPDDR3:  return "LPDDR3";
+		case eRamType::LPDDR4:  return "LPDDR4";
+		case eRamType::LPDDR5:  return "LPDDR5";
+		}
+		THROW_RUNTIME("Необработанный eRamType");
+	}
 
 	class RamInfo final : public ISerializable
 	{
@@ -48,7 +67,7 @@ namespace zzz::core
 #if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";
 			DOut(::zzz::core::Hardware, "{}[RamInfo]", indentation);
-			DOut(::zzz::core::Hardware, "{}type: {}", nestedIndentation, GetTypeString(m_Type));
+			DOut(::zzz::core::Hardware, "{}type: {}", nestedIndentation, ToString(m_Type));
 			DOut(::zzz::core::Hardware, "{}speedMTs: {} MT/s", nestedIndentation, m_SpeedMTs);
 			DOut(::zzz::core::Hardware, "{}totalRamBytes: {} MB", nestedIndentation, m_TotalRamBytes / (1024 * 1024));
 			DOut(::zzz::core::Hardware, "{}availableRamBytes: {} MB", nestedIndentation, m_AvailableRamBytes / (1024 * 1024));
@@ -56,21 +75,6 @@ namespace zzz::core
 		}
 
 	private:
-		[[nodiscard]] static constexpr std::string_view GetTypeString(eRamType type) noexcept
-		{
-			switch (type)
-			{
-			case eRamType::DDR:    return "DDR";
-			case eRamType::DDR2:   return "DDR2";
-			case eRamType::DDR3:   return "DDR3";
-			case eRamType::DDR4:   return "DDR4";
-			case eRamType::DDR5:   return "DDR5";
-			case eRamType::LPDDR3: return "LPDDR3";
-			case eRamType::LPDDR4: return "LPDDR4";
-			case eRamType::LPDDR5: return "LPDDR5";
-			default: return "Unknown";
-			}
-		}
 
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override
 		{

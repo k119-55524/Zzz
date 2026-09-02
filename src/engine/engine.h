@@ -7,6 +7,7 @@
 #include "engine/package/PackageManager.h"
 #include "engine/package/UserSettingsManager.h"
 #include "engine/platforms/mainloop/MainLoop.h"
+#include "core/enums/eInitState.h"
 
 using namespace zzz::core;
 

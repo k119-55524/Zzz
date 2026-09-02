@@ -1,8 +1,10 @@
 #pragma once
 
+#include <string_view>
 #include <logger/logger.h>
 
 #include "core/CoreIncludes.h"
+#include "core/utils/ThrowWrappers.h"
 #include "core/Serialize/Serializer.h"
 
 namespace zzz::core
@@ -18,6 +20,22 @@ namespace zzz::core
 		RAMDisk,
 		Network
 	};
+
+	constexpr std::string_view ToString(eStorageType type)
+	{
+		switch (type)
+		{
+		case eStorageType::Unknown:   return "Unknown";
+		case eStorageType::HDD:       return "HDD";
+		case eStorageType::SSD:       return "SSD";
+		case eStorageType::NVMe:      return "NVMe";
+		case eStorageType::Removable: return "Removable";
+		case eStorageType::CDROM:     return "CDROM";
+		case eStorageType::RAMDisk:   return "RAMDisk";
+		case eStorageType::Network:   return "Network";
+		}
+		THROW_RUNTIME("Необработанный eStorageType");
+	}
 
 	class StorageInfo final : public ISerializable
 	{
@@ -55,7 +73,7 @@ namespace zzz::core
 			DOut(::zzz::core::Hardware, "{}[StorageInfo]", indentation);
 			DOut(::zzz::core::Hardware, "{}name: {}", nestedIndentation, m_Name);
 			DOut(::zzz::core::Hardware, "{}mountPath: {}", nestedIndentation, m_MountPath);
-			DOut(::zzz::core::Hardware, "{}type: {}", nestedIndentation, GetTypeString(m_Type));
+			DOut(::zzz::core::Hardware, "{}type: {}", nestedIndentation, ToString(m_Type));
 			DOut(::zzz::core::Hardware, "{}totalSizeBytes: {} GB", nestedIndentation, m_TotalSizeBytes / (1024 * 1024 * 1024));
 			DOut(::zzz::core::Hardware, "{}freeSizeBytes: {} GB", nestedIndentation, m_FreeSizeBytes / (1024 * 1024 * 1024));
 			DOut(::zzz::core::Hardware, "{}isSystemDrive: {}", nestedIndentation, m_IsSystemDrive);
@@ -63,20 +81,6 @@ namespace zzz::core
 		}
 
 	private:
-		[[nodiscard]] static constexpr std::string_view GetTypeString(eStorageType type) noexcept
-		{
-			switch (type)
-			{
-			case eStorageType::HDD: return "HDD";
-			case eStorageType::SSD: return "SSD";
-			case eStorageType::NVMe: return "NVMe";
-			case eStorageType::Removable: return "Removable";
-			case eStorageType::CDROM: return "CDROM";
-			case eStorageType::RAMDisk: return "RAMDisk";
-			case eStorageType::Network: return "Network";
-			default: return "Unknown";
-			}
-		}
 
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override
 		{

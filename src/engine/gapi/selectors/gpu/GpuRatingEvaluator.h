@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/EngineIncludes.h"
+#include "core/hardware/GpuInfo.h"
 
 using namespace zzz::core;
 

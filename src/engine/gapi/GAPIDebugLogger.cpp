@@ -1,7 +1,6 @@
 
 #if Z_GAPI_VERBOSE_DEBUG_LAYER
 #include "core/utils/Macroses.h"
-#include "core/enums/eEnumToString.h"
 #include "engine/gapi/GAPIDebugLogger.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::GAPI);
@@ -16,23 +15,23 @@ namespace zzz::engine
 		switch (severity)
 		{
 		case eLogMessageType::Warning:
-			DOutWarning(GAPIVerbose, "[GAPI:{}] {}", EnumToString::ToString(backend), message);
+			DOutWarning(GAPIVerbose, "[GAPI:{}] {}", ToString(backend), message);
 			break;
 		case eLogMessageType::Error:
-			DOutError(GAPIVerbose, "[GAPI:{}] {}", EnumToString::ToString(backend), message);
+			DOutError(GAPIVerbose, "[GAPI:{}] {}", ToString(backend), message);
 			break;
 		case eLogMessageType::Exception:
-			DOutException(GAPIVerbose, "[GAPI:{}] {}", EnumToString::ToString(backend), message);
+			DOutException(GAPIVerbose, "[GAPI:{}] {}", ToString(backend), message);
 			break;
 		case eLogMessageType::Critical:
-			DOutCritical(GAPIVerbose, "[GAPI:{}] {}", EnumToString::ToString(backend), message);
+			DOutCritical(GAPIVerbose, "[GAPI:{}] {}", ToString(backend), message);
 			break;
 		case eLogMessageType::Fatal:
-			DOutFatal(GAPIVerbose, "[GAPI:{}] {}", EnumToString::ToString(backend), message);
+			DOutFatal(GAPIVerbose, "[GAPI:{}] {}", ToString(backend), message);
 			break;
 		case eLogMessageType::Message:
 		default:
-			DOut(GAPIVerbose, "[GAPI:{}] {}", EnumToString::ToString(backend), message);
+			DOut(GAPIVerbose, "[GAPI:{}] {}", ToString(backend), message);
 			break;
 		}
 	}

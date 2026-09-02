@@ -3,7 +3,6 @@
 #include <string>
 #include <string_view>
 #include "core/Serialize/Serializer.h"
-#include "core/Enums/eEnumToString.h"
 #include "core/Enums/platforms/eAndroidEnums.h"
 
 namespace zzz::core
@@ -40,9 +39,9 @@ namespace zzz::core
 		{
 			const std::string nestedIndentation = std::string(indentation) + "  ";
 			DOut(::zzz::core::Assets, "{}[ViewDataAndroid]", indentation);
-			DOut(::zzz::core::Assets, "{}orientation: {}", nestedIndentation, EnumToString::ToString(orientation));
+			DOut(::zzz::core::Assets, "{}orientation: {}", nestedIndentation, ToString(orientation));
 			DOut(::zzz::core::Assets, "{}targetFPS: {}", nestedIndentation, targetFPS);
-			DOut(::zzz::core::Assets, "{}cutoutMode: {}", nestedIndentation, EnumToString::ToString(cutoutMode));
+			DOut(::zzz::core::Assets, "{}cutoutMode: {}", nestedIndentation, ToString(cutoutMode));
 			DOut(::zzz::core::Assets, "{}keepScreenOn: {}", nestedIndentation, keepScreenOn);
 		}
 

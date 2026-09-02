@@ -175,7 +175,7 @@ namespace zzz::engine
 	{
 		auto typeIt = m_EntriesByName.find(type);
 		const size_t count = (typeIt != m_EntriesByName.end()) ? typeIt->second.size() : 0;
-		DOut("  [PackageType] {}({})", EnumToString::ToString(type), count);
+		DOut("  [PackageType] {}({})", ToString(type), count);
 
 		if (typeIt == m_EntriesByName.end() || typeIt->second.empty())
 		{

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "IBroadcaster.h"
-#include "core/enums/eEnumToString.h"
+#include "core/enums/eLogMessageType.h"
 
 #if Z_WINDOWS
 #include <format>
@@ -87,9 +87,9 @@ namespace zzz::logger
 			const LogCategory& cat = entry.category ? *entry.category : LogGeneral;
 			std::string output;
 			if (isError && !entry.file.empty())
-				output = std::format("{} [{}] [{}] {} -> [{}] {}:{}\n", timeStr, EnumToString::ToString(entry.type), cat.name, entry.text, entry.function, entry.file, entry.line);
+				output = std::format("{} [{}] [{}] {} -> [{}] {}:{}\n", timeStr, ToString(entry.type), cat.name, entry.text, entry.function, entry.file, entry.line);
 			else
-				output = std::format("{} [{}] [{}] {}\n", timeStr, EnumToString::ToString(entry.type), cat.name, entry.text);
+				output = std::format("{} [{}] [{}] {}\n", timeStr, ToString(entry.type), cat.name, entry.text);
 
 			auto& stream = isError ? std::cerr : std::cout;
 			stream << output;

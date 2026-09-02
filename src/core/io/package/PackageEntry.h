@@ -5,7 +5,6 @@
 #include "core/utils/Guid.h"
 #include <logger/logger.h>
 #include "core/Enums/ePackage.h"
-#include "core/Enums/eEnumToString.h"
 #include "core/Serialize/Serializer.h"
 
 namespace zzz::core
@@ -34,7 +33,7 @@ namespace zzz::core
 				indentation,
 				name,
 				guid.ToString(),
-				EnumToString::ToString(static_cast<ePackage>(assetType)),
+				ToString(static_cast<ePackage>(assetType)),
 				offset,
 				size);
 		}

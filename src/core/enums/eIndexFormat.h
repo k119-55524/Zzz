@@ -1,6 +1,8 @@
 #pragma once
 
+#include <string_view>
 #include "math/utils/Types.h"
+#include "core/utils/ThrowWrappers.h"
 
 namespace zzz::core
 {
@@ -13,6 +15,16 @@ namespace zzz::core
 		UInt16 = 0, ///< 2 байта (zU16): до 65 535 вершин — идеально для куба, UI и базовых мешей (экономит 50% VRAM)
 		UInt32 = 1  ///< 4 байта (zU32): для высокополигональных мешей (> 65k вершин)
 	};
+
+	constexpr std::string_view ToString(eIndexFormat format)
+	{
+		switch (format)
+		{
+		case eIndexFormat::UInt16: return "UInt16";
+		case eIndexFormat::UInt32: return "UInt32";
+		}
+		THROW_RUNTIME("Необработанный eIndexFormat");
+	}
 
 	namespace IndexFormatUtils
 	{

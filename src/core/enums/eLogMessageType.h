@@ -1,6 +1,8 @@
-﻿#pragma once
+#pragma once
 
+#include <string_view>
 #include "core/utils/Types.h"
+#include "core/utils/ThrowWrappers.h"
 
 namespace zzz::core
 {
@@ -15,6 +17,22 @@ namespace zzz::core
 		Fatal     = 1 << 5,
 		All       = 0xFF
 	};
+
+	constexpr std::string_view ToString(eLogMessageType type)
+	{
+		switch (type)
+		{
+		case eLogMessageType::Message:   return "MESSAGE";
+		case eLogMessageType::Warning:   return "WARNING";
+		case eLogMessageType::Error:     return "ERROR";
+		case eLogMessageType::Exception: return "EXCEPTION";
+		case eLogMessageType::Critical:  return "CRITICAL";
+		case eLogMessageType::Fatal:     return "FATAL";
+		case eLogMessageType::All:       return "ALL";
+		case eLogMessageType::None:      return "NONE";
+		}
+		THROW_RUNTIME("Необработанный eLogMessageType");
+	}
 
 	inline constexpr eLogMessageType operator|(eLogMessageType a, eLogMessageType b)
 	{

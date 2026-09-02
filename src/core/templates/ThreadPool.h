@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/CoreIncludes.h"
+#include <logger/logger.h>
 #include <queue>
 #include <future>
 #include <type_traits>

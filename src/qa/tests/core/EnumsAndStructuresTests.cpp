@@ -6,6 +6,17 @@
 #include <vector>
 #include <cstring>
 #include "core/Core.h"
+#include "core/enums/eResourceType.h"
+#include "core/enums/ePixelFormat.h"
+#include "core/enums/eIndexFormat.h"
+#include "core/enums/eVertexSemantic.h"
+#include "core/enums/eFileLocation.h"
+#include "core/enums/ePackage.h"
+#include "core/enums/eTargetPlatform.h"
+#include "core/enums/eGAPIType.h"
+#include "core/enums/eWindowState.h"
+#include "core/enums/eLogMessageType.h"
+#include "core/enums/eWinResize.h"
 #include "math/Math.h"
 
 using namespace zzz;
@@ -149,55 +160,55 @@ TEST(EnumsAndStructuresTests, AttributeRangeOperations)
 }
 
 // =============================================================================
-// 4. Тесты строковых конвертеров EnumToString
+// 4. Тесты строковых конвертеров ToString
 // =============================================================================
 
-TEST(EnumsAndStructuresTests, EnumToStringAllValues)
+TEST(EnumsAndStructuresTests, ToStringAllValues)
 {
 	// eResourceType
-	EXPECT_EQ(EnumToString::ToString(eResourceType::Unknown), "Unknown");
-	EXPECT_EQ(EnumToString::ToString(eResourceType::Texture2D), "Texture2D");
-	EXPECT_EQ(EnumToString::ToString(eResourceType::Mesh), "Mesh");
-	EXPECT_EQ(EnumToString::ToString(eResourceType::Material), "Material");
-	EXPECT_EQ(EnumToString::ToString(eResourceType::Shader), "Shader");
-	EXPECT_EQ(EnumToString::ToString(eResourceType::AudioClip), "AudioClip");
-	EXPECT_EQ(EnumToString::ToString(eResourceType::Font), "Font");
-	EXPECT_EQ(EnumToString::ToString(eResourceType::Scene), "Scene");
-	EXPECT_EQ(EnumToString::ToString(eResourceType::Prefab), "Prefab");
-	EXPECT_EQ(EnumToString::ToString(eResourceType::BinaryData), "BinaryData");
+	EXPECT_EQ(ToString(eResourceType::Unknown), "Unknown");
+	EXPECT_EQ(ToString(eResourceType::Texture2D), "Texture2D");
+	EXPECT_EQ(ToString(eResourceType::Mesh), "Mesh");
+	EXPECT_EQ(ToString(eResourceType::Material), "Material");
+	EXPECT_EQ(ToString(eResourceType::Shader), "Shader");
+	EXPECT_EQ(ToString(eResourceType::AudioClip), "AudioClip");
+	EXPECT_EQ(ToString(eResourceType::Font), "Font");
+	EXPECT_EQ(ToString(eResourceType::Scene), "Scene");
+	EXPECT_EQ(ToString(eResourceType::Prefab), "Prefab");
+	EXPECT_EQ(ToString(eResourceType::BinaryData), "BinaryData");
 
 	// ePixelFormat
-	EXPECT_EQ(EnumToString::ToString(ePixelFormat::Unknown), "Unknown");
-	EXPECT_EQ(EnumToString::ToString(ePixelFormat::R8_UNORM), "R8_UNORM");
-	EXPECT_EQ(EnumToString::ToString(ePixelFormat::RGBA8_UNORM), "RGBA8_UNORM");
-	EXPECT_EQ(EnumToString::ToString(ePixelFormat::RGBA8_SRGB), "RGBA8_SRGB");
-	EXPECT_EQ(EnumToString::ToString(ePixelFormat::BGRA8_UNORM), "BGRA8_UNORM");
-	EXPECT_EQ(EnumToString::ToString(ePixelFormat::BGRA8_SRGB), "BGRA8_SRGB");
-	EXPECT_EQ(EnumToString::ToString(ePixelFormat::RGBA16_FLOAT), "RGBA16_FLOAT");
-	EXPECT_EQ(EnumToString::ToString(ePixelFormat::R32_FLOAT), "R32_FLOAT");
-	EXPECT_EQ(EnumToString::ToString(ePixelFormat::D32_FLOAT), "D32_FLOAT");
-	EXPECT_EQ(EnumToString::ToString(ePixelFormat::D24_UNORM_S8_UINT), "D24_UNORM_S8_UINT");
-	EXPECT_EQ(EnumToString::ToString(ePixelFormat::D32_FLOAT_S8_UINT), "D32_FLOAT_S8_UINT");
-	EXPECT_EQ(EnumToString::ToString(ePixelFormat::BC1_UNORM), "BC1_UNORM");
-	EXPECT_EQ(EnumToString::ToString(ePixelFormat::BC3_UNORM), "BC3_UNORM");
-	EXPECT_EQ(EnumToString::ToString(ePixelFormat::BC7_UNORM), "BC7_UNORM");
-	EXPECT_EQ(EnumToString::ToString(ePixelFormat::ASTC_4x4_UNORM), "ASTC_4x4_UNORM");
-	EXPECT_EQ(EnumToString::ToString(ePixelFormat::ETC2_RGBA8_UNORM), "ETC2_RGBA8_UNORM");
+	EXPECT_EQ(ToString(ePixelFormat::Unknown), "Unknown");
+	EXPECT_EQ(ToString(ePixelFormat::R8_UNORM), "R8_UNORM");
+	EXPECT_EQ(ToString(ePixelFormat::RGBA8_UNORM), "RGBA8_UNORM");
+	EXPECT_EQ(ToString(ePixelFormat::RGBA8_SRGB), "RGBA8_SRGB");
+	EXPECT_EQ(ToString(ePixelFormat::BGRA8_UNORM), "BGRA8_UNORM");
+	EXPECT_EQ(ToString(ePixelFormat::BGRA8_SRGB), "BGRA8_SRGB");
+	EXPECT_EQ(ToString(ePixelFormat::RGBA16_FLOAT), "RGBA16_FLOAT");
+	EXPECT_EQ(ToString(ePixelFormat::R32_FLOAT), "R32_FLOAT");
+	EXPECT_EQ(ToString(ePixelFormat::D32_FLOAT), "D32_FLOAT");
+	EXPECT_EQ(ToString(ePixelFormat::D24_UNORM_S8_UINT), "D24_UNORM_S8_UINT");
+	EXPECT_EQ(ToString(ePixelFormat::D32_FLOAT_S8_UINT), "D32_FLOAT_S8_UINT");
+	EXPECT_EQ(ToString(ePixelFormat::BC1_UNORM), "BC1_UNORM");
+	EXPECT_EQ(ToString(ePixelFormat::BC3_UNORM), "BC3_UNORM");
+	EXPECT_EQ(ToString(ePixelFormat::BC7_UNORM), "BC7_UNORM");
+	EXPECT_EQ(ToString(ePixelFormat::ASTC_4x4_UNORM), "ASTC_4x4_UNORM");
+	EXPECT_EQ(ToString(ePixelFormat::ETC2_RGBA8_UNORM), "ETC2_RGBA8_UNORM");
 
 	// eIndexFormat
-	EXPECT_EQ(EnumToString::ToString(eIndexFormat::UInt16), "UInt16");
-	EXPECT_EQ(EnumToString::ToString(eIndexFormat::UInt32), "UInt32");
+	EXPECT_EQ(ToString(eIndexFormat::UInt16), "UInt16");
+	EXPECT_EQ(ToString(eIndexFormat::UInt32), "UInt32");
 
 	// eVertexSemantic
-	EXPECT_EQ(EnumToString::ToString(eVertexSemantic::Position), "Position");
-	EXPECT_EQ(EnumToString::ToString(eVertexSemantic::Normal), "Normal");
-	EXPECT_EQ(EnumToString::ToString(eVertexSemantic::TexCoord), "TexCoord");
-	EXPECT_EQ(EnumToString::ToString(eVertexSemantic::Color), "Color");
-	EXPECT_EQ(EnumToString::ToString(eVertexSemantic::Tangent), "Tangent");
-	EXPECT_EQ(EnumToString::ToString(eVertexSemantic::Bitangent), "Bitangent");
-	EXPECT_EQ(EnumToString::ToString(eVertexSemantic::BlendWeight), "BlendWeight");
-	EXPECT_EQ(EnumToString::ToString(eVertexSemantic::BlendIndices), "BlendIndices");
-	EXPECT_EQ(EnumToString::ToString(eVertexSemantic::Count), "Count");
+	EXPECT_EQ(ToString(eVertexSemantic::Position), "Position");
+	EXPECT_EQ(ToString(eVertexSemantic::Normal), "Normal");
+	EXPECT_EQ(ToString(eVertexSemantic::TexCoord), "TexCoord");
+	EXPECT_EQ(ToString(eVertexSemantic::Color), "Color");
+	EXPECT_EQ(ToString(eVertexSemantic::Tangent), "Tangent");
+	EXPECT_EQ(ToString(eVertexSemantic::Bitangent), "Bitangent");
+	EXPECT_EQ(ToString(eVertexSemantic::BlendWeight), "BlendWeight");
+	EXPECT_EQ(ToString(eVertexSemantic::BlendIndices), "BlendIndices");
+	EXPECT_EQ(ToString(eVertexSemantic::Count), "Count");
 }
 
 // =============================================================================

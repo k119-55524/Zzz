@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string_view>
+#include "core/utils/ThrowWrappers.h"
 #include "core/Serialize/Serializer.h"
 #include <logger/logger.h>
 
@@ -17,6 +19,16 @@ namespace zzz::engine
 		Depth  ///< Чистка глубины (float)
 	};
 
+	constexpr std::string_view ToString(eClearDepthMode mode)
+	{
+		switch (mode)
+		{
+		case eClearDepthMode::None:  return "None";
+		case eClearDepthMode::Depth: return "Depth";
+		}
+		THROW_RUNTIME("Необработанный eClearDepthMode");
+	}
+
 	/**
 	 * @enum eClearStencilMode
 	 * @brief Режим очистки трафарета.
@@ -26,6 +38,16 @@ namespace zzz::engine
 		None,    ///< Не чистить трафарет
 		Stencil  ///< Чистка трафарета (uint8)
 	};
+
+	constexpr std::string_view ToString(eClearStencilMode mode)
+	{
+		switch (mode)
+		{
+		case eClearStencilMode::None:    return "None";
+		case eClearStencilMode::Stencil: return "Stencil";
+		}
+		THROW_RUNTIME("Необработанный eClearStencilMode");
+	}
 
 	/**
 	 * @class DepthBufferClearConfig
@@ -54,9 +76,9 @@ namespace zzz::engine
 #if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";
 			DOut(::zzz::core::GAPI, "{}[DepthBufferClearConfig]", indentation);
-			DOut(::zzz::core::GAPI, "{}depthMode: {}", nestedIndentation, depthMode == eClearDepthMode::Depth ? "Depth" : "None");
+			DOut(::zzz::core::GAPI, "{}depthMode: {}", nestedIndentation, ToString(depthMode));
 			DOut(::zzz::core::GAPI, "{}depth: {}", nestedIndentation, depth);
-			DOut(::zzz::core::GAPI, "{}stencilMode: {}", nestedIndentation, stencilMode == eClearStencilMode::Stencil ? "Stencil" : "None");
+			DOut(::zzz::core::GAPI, "{}stencilMode: {}", nestedIndentation, ToString(stencilMode));
 			DOut(::zzz::core::GAPI, "{}stencil: {}", nestedIndentation, stencil);
 #endif
 		}

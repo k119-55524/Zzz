@@ -1,6 +1,8 @@
 #pragma once
 
+#include <string_view>
 #include "math/utils/Types.h"
+#include "core/utils/ThrowWrappers.h"
 
 namespace zzz::core
 {
@@ -108,5 +110,29 @@ namespace zzz::core
 				return false;
 			}
 		}
+	}
+
+	constexpr std::string_view ToString(ePixelFormat format)
+	{
+		switch (format)
+		{
+		case ePixelFormat::Unknown:           return "Unknown";
+		case ePixelFormat::R8_UNORM:          return "R8_UNORM";
+		case ePixelFormat::RGBA8_UNORM:       return "RGBA8_UNORM";
+		case ePixelFormat::RGBA8_SRGB:        return "RGBA8_SRGB";
+		case ePixelFormat::BGRA8_UNORM:       return "BGRA8_UNORM";
+		case ePixelFormat::BGRA8_SRGB:        return "BGRA8_SRGB";
+		case ePixelFormat::RGBA16_FLOAT:      return "RGBA16_FLOAT";
+		case ePixelFormat::R32_FLOAT:         return "R32_FLOAT";
+		case ePixelFormat::D32_FLOAT:         return "D32_FLOAT";
+		case ePixelFormat::D24_UNORM_S8_UINT: return "D24_UNORM_S8_UINT";
+		case ePixelFormat::D32_FLOAT_S8_UINT: return "D32_FLOAT_S8_UINT";
+		case ePixelFormat::BC1_UNORM:         return "BC1_UNORM";
+		case ePixelFormat::BC3_UNORM:         return "BC3_UNORM";
+		case ePixelFormat::BC7_UNORM:         return "BC7_UNORM";
+		case ePixelFormat::ASTC_4x4_UNORM:    return "ASTC_4x4_UNORM";
+		case ePixelFormat::ETC2_RGBA8_UNORM:  return "ETC2_RGBA8_UNORM";
+		}
+		THROW_RUNTIME("Необработанный ePixelFormat");
 	}
 }

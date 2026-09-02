@@ -3,7 +3,7 @@
 #include "private/ConsoleBroadcaster.h"
 #include "private/NetworkBroadcaster.h"
 #include "private/CallbackBroadcaster.h"
-#include "core/enums/eEnumToString.h"
+#include "core/enums/eLogMessageType.h"
 #include "core/utils/MemoryUtils.h"
 
 #include "logger.h"
@@ -231,14 +231,14 @@ std::string Logger::MakeLogMessage(const std::source_location& loc, eLogMessageT
 	if (!!(type & eLogMessageType::Message) || !HasCallSite(loc))
 		return std::format(
 			">>>>> [{}] [{}] {}{}",
-			EnumToString::ToString(type),
+			ToString(type),
 			category.name,
 			msg,
 			GetPlatformLogLineEnding());
 	else
 		return std::format(
 			">>>>> [{}] [{}] {} -> line: {}, file: {}{}",
-			EnumToString::ToString(type),
+			ToString(type),
 			category.name,
 			msg,
 			loc.line(),
@@ -251,14 +251,14 @@ std::string Logger::MakeLogMessageError(const std::source_location& loc, eLogMes
 	if (!HasCallSite(loc))
 		return std::format(
 			">>>>> [{}] [{}] {}{}",
-			EnumToString::ToString(type),
+			ToString(type),
 			category.name,
 			msg,
 			GetPlatformLogLineEnding());
 
 	return std::format(
 		">>>>> [{}] [{}] {} -> [{}]. line: {}, file: {}{}",
-		EnumToString::ToString(type),
+		ToString(type),
 		category.name,
 		msg,
 		loc.function_name(),

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string_view>
+#include "core/utils/ThrowWrappers.h"
 #include "math/Color.h"
 #include "core/utils/Guid.h"
 #include "core/Serialize/Serializer.h"
@@ -20,6 +22,17 @@ namespace zzz::engine
 		Color,  ///< Чистка цветом (Color4<zF32>)
 		Shader  ///< Чистка полноэкранным фоновым шейдером
 	};
+
+	constexpr std::string_view ToString(eSurfaceClearMode mode)
+	{
+		switch (mode)
+		{
+		case eSurfaceClearMode::None:   return "None";
+		case eSurfaceClearMode::Color:  return "Color";
+		case eSurfaceClearMode::Shader: return "Shader";
+		}
+		THROW_RUNTIME("Необработанный eSurfaceClearMode");
+	}
 
 	/**
 	 * @class SurfaceClearConfig
@@ -46,7 +59,7 @@ namespace zzz::engine
 #if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";
 			DOut(::zzz::core::GAPI, "{}[SurfaceClearConfig]", indentation);
-			DOut(::zzz::core::GAPI, "{}mode: {}", nestedIndentation, mode == eSurfaceClearMode::Color ? "Color" : (mode == eSurfaceClearMode::Shader ? "Shader" : "None"));
+			DOut(::zzz::core::GAPI, "{}mode: {}", nestedIndentation, ToString(mode));
 			DOut(::zzz::core::GAPI, "{}color: {}", nestedIndentation, color.ToString());
 			DOut(::zzz::core::GAPI, "{}shaderGuid: {}", nestedIndentation, shaderGuid.ToString());
 #endif

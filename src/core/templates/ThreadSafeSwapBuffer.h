@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/CoreIncludes.h"
+#include "core/utils/Ensure.h"
 #include "QueueArray.h"
 #include "ThreadSafeQueueArray.h"
 
@@ -20,7 +21,7 @@ namespace zzz::templates
 			readIndex{ 0 },
 			writeIndex{ 1 }
 		{
-			ensure(capacity > 1);
+			zzz::core::ensure(capacity > 1);
 		}
 
 		~ThreadSafeSwapBuffer() = default;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/utils/Types.h"
+
 namespace zzz
 {
 	enum class eInitState : core::zU8

@@ -5,7 +5,6 @@
 #include <vector>
 #include "math/Math.h"
 #include "core/Serialize/Serializer.h"
-#include "core/Enums/eEnumToString.h"
 #include "core/Enums/platforms/eLinuxEnums.h"
 #include "core/hardware/MonitorInfo.h"
 #include "core/constants/DisplayConstants.h"
@@ -82,9 +81,9 @@ namespace zzz::core
 			DOut(::zzz::core::Assets, "{}[StartViewDataLinux]", indentation);
 			DOut(::zzz::core::Assets, "{}title: {}", nestedIndentation, title);
 			DOut(::zzz::core::Assets, "{}size: {}x{}", nestedIndentation, size.width, size.height);
-			DOut(::zzz::core::Assets, "{}windowMode: {}", nestedIndentation, EnumToString::ToString(windowMode));
+			DOut(::zzz::core::Assets, "{}windowMode: {}", nestedIndentation, ToString(windowMode));
 			DOut(::zzz::core::Assets, "{}resizable: {}", nestedIndentation, resizable);
-			DOut(::zzz::core::Assets, "{}displayServer: {}", nestedIndentation, EnumToString::ToString(displayServer));
+			DOut(::zzz::core::Assets, "{}displayServer: {}", nestedIndentation, ToString(displayServer));
 			DOut(::zzz::core::Assets, "{}windowRect: X: {}, Y: {}, W: {}, H: {}", nestedIndentation, windowRect.position.x, windowRect.position.y, windowRect.size.width, windowRect.size.height);
 			DOut(::zzz::core::Assets, "{}monitorIndex: {}", nestedIndentation, monitorIndex);
 		}

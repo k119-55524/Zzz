@@ -5,7 +5,6 @@
 #include <vector>
 #include "math/Math.h"
 #include "core/Serialize/Serializer.h"
-#include "core/Enums/eEnumToString.h"
 #include "core/Enums/platforms/eMSWinEnums.h"
 #include "core/hardware/MonitorInfo.h"
 #include "core/constants/DisplayConstants.h"
@@ -100,8 +99,8 @@ namespace zzz::core
 			DOut(::zzz::core::Assets, "{}[ViewDataMSWin]", indentation);
 			DOut(::zzz::core::Assets, "{}title: {}", nestedIndentation, title);
 			DOut(::zzz::core::Assets, "{}size: {}x{}", nestedIndentation, size.width, size.height);
-			DOut(::zzz::core::Assets, "{}windowMode: {}", nestedIndentation, EnumToString::ToString(windowMode));
-			DOut(::zzz::core::Assets, "{}windowState: {}", nestedIndentation, EnumToString::ToString(windowState));
+			DOut(::zzz::core::Assets, "{}windowMode: {}", nestedIndentation, ToString(windowMode));
+			DOut(::zzz::core::Assets, "{}windowState: {}", nestedIndentation, ToString(windowState));
 			DOut(::zzz::core::Assets, "{}resizable: {}", nestedIndentation, resizable ? "true" : "false");
 			DOut(::zzz::core::Assets, "{}windowRect: {}", nestedIndentation, windowRect.ToString());
 			DOut(::zzz::core::Assets, "{}monitorIndex: {}", nestedIndentation, monitorIndex);

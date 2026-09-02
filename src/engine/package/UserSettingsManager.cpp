@@ -194,7 +194,7 @@ namespace zzz::engine
 				auto state = startPlatformData.GetWindowState();
 				if (state == eWindowState::Closed || state == eWindowState::Minimized)
 				{
-					DOutWarning("[UserSettingsManager] Зафиксирован невалидный статус стартового окна ('{}'). Автоматический сброс на 'Normal'.", EnumToString::ToString(state));
+					DOutWarning("[UserSettingsManager] Зафиксирован невалидный статус стартового окна ('{}'). Автоматический сброс на 'Normal'.", ToString(state));
 					startPlatformData.SetWindowState(eWindowState::Normal);
 					m_IsDirty = true;
 				}

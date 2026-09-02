@@ -1,6 +1,8 @@
 #pragma once
 
+#include <string_view>
 #include "math/utils/Types.h"
+#include "core/utils/ThrowWrappers.h"
 
 namespace zzz::core
 {
@@ -20,4 +22,21 @@ namespace zzz::core
 		BlendIndices,   ///< Индексы костей для скелетной анимации
 		Count           ///< Общее количество поддерживаемых семантик
 	};
+
+	constexpr std::string_view ToString(eVertexSemantic semantic)
+	{
+		switch (semantic)
+		{
+		case eVertexSemantic::Position:     return "Position";
+		case eVertexSemantic::Normal:       return "Normal";
+		case eVertexSemantic::TexCoord:     return "TexCoord";
+		case eVertexSemantic::Color:        return "Color";
+		case eVertexSemantic::Tangent:      return "Tangent";
+		case eVertexSemantic::Bitangent:    return "Bitangent";
+		case eVertexSemantic::BlendWeight:  return "BlendWeight";
+		case eVertexSemantic::BlendIndices: return "BlendIndices";
+		case eVertexSemantic::Count:        return "Count";
+		}
+		THROW_RUNTIME("Необработанный eVertexSemantic");
+	}
 }

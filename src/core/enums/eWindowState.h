@@ -1,6 +1,8 @@
 #pragma once
 
+#include <string_view>
 #include "core/utils/Types.h"
+#include "core/utils/ThrowWrappers.h"
 
 namespace zzz::core
 {
@@ -13,4 +15,18 @@ namespace zzz::core
 		Minimized,            // Свёрнуто на панель задач / в трей
 		Closed                // Окно закрыто пользователем
 	};
+
+	constexpr std::string_view ToString(eWindowState state)
+	{
+		switch (state)
+		{
+		case eWindowState::Normal:               return "Normal";
+		case eWindowState::Maximized:            return "Maximized";
+		case eWindowState::BorderlessFullscreen: return "BorderlessFullscreen";
+		case eWindowState::ExclusiveFullscreen:  return "ExclusiveFullscreen";
+		case eWindowState::Minimized:            return "Minimized";
+		case eWindowState::Closed:               return "Closed";
+		}
+		THROW_RUNTIME("Необработанный eWindowState");
+	}
 }

@@ -1,6 +1,8 @@
 #pragma once
 
+#include <string_view>
 #include "core/utils/Types.h"
+#include "core/utils/ThrowWrappers.h"
 
 namespace zzz::core
 {
@@ -14,4 +16,19 @@ namespace zzz::core
 		Prefab          = 6,
 		BinaryAsset     = 7
 	};
+
+	constexpr std::string_view ToString(ePackage type)
+	{
+		switch (type)
+		{
+		case ePackage::ProjectManifest: return "ProjectManifest";
+		case ePackage::Scene:           return "Scene";
+		case ePackage::PrimaryView:     return "PrimaryView";
+		case ePackage::ChildView:       return "ChildView";
+		case ePackage::IndependentView: return "IndependentView";
+		case ePackage::Prefab:          return "Prefab";
+		case ePackage::BinaryAsset:     return "BinaryAsset";
+		}
+		THROW_RUNTIME("Необработанный ePackage");
+	}
 }

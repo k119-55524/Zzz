@@ -5,6 +5,7 @@
 #include "engine/utils/EngineLogFlags.h"
 #include "core/userscripts/ScriptFactory.h"
 #include "../platforms/window/NativeWindow.h"
+#include "core/enums/eWinResize.h"
 
 #include "View.h"
 
@@ -187,7 +188,7 @@ void View::OnWindowResize(Size2D<>& size, eWinResize type)
 		break;
 	}
 
-	DOut(!Z_LOG_GET(g_IsResizing), "[View::OnWindowResize] - {}x{} (Type: {})", size.width, size.height, EnumToString::ToString(type));
+	DOut(!Z_LOG_GET(g_IsResizing), "[View::OnWindowResize] - {}x{} (Type: {})", size.width, size.height, ToString(type));
 }
 
 void View::OnWindowResizeStart()

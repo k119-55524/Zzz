@@ -1,6 +1,8 @@
 #pragma once
 
+#include <string_view>
 #include "math/utils/Types.h"
+#include "core/utils/ThrowWrappers.h"
 
 namespace zzz::core
 {
@@ -18,4 +20,17 @@ namespace zzz::core
 		Cache,      ///< Папка временного кэша (Read-Write)
 		Logs        ///< Папка лог-файлов (Read-Write)
 	};
+
+	constexpr std::string_view ToString(eFileLocation location)
+	{
+		switch (location)
+		{
+		case eFileLocation::App:   return "App";
+		case eFileLocation::User:  return "User";
+		case eFileLocation::Saves: return "Saves";
+		case eFileLocation::Cache: return "Cache";
+		case eFileLocation::Logs:  return "Logs";
+		}
+		THROW_RUNTIME("Необработанный eFileLocation");
+	}
 }

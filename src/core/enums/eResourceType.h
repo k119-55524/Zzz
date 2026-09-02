@@ -1,6 +1,8 @@
 #pragma once
 
+#include <string_view>
 #include "math/utils/Types.h"
+#include "core/utils/ThrowWrappers.h"
 
 namespace zzz::core
 {
@@ -27,4 +29,22 @@ namespace zzz::core
 		Prefab,         ///< Префаб объекта
 		BinaryData      ///< Произвольный бинарный буфер
 	};
+
+	constexpr std::string_view ToString(eResourceType type)
+	{
+		switch (type)
+		{
+		case eResourceType::Unknown:    return "Unknown";
+		case eResourceType::Texture2D:  return "Texture2D";
+		case eResourceType::Mesh:       return "Mesh";
+		case eResourceType::Material:   return "Material";
+		case eResourceType::Shader:     return "Shader";
+		case eResourceType::AudioClip:  return "AudioClip";
+		case eResourceType::Font:       return "Font";
+		case eResourceType::Scene:      return "Scene";
+		case eResourceType::Prefab:     return "Prefab";
+		case eResourceType::BinaryData: return "BinaryData";
+		}
+		THROW_RUNTIME("Необработанный eResourceType");
+	}
 }

@@ -51,7 +51,7 @@ namespace zzz::engine
 		{
 			auto entryOpt = GetEntryByName(type, name);
 			if (!entryOpt)
-				return UNEXPECTED("Package entry of type {} with name '{}' was not found.", EnumToString::ToString(type), name);
+				return UNEXPECTED("Package entry of type {} with name '{}' was not found.", ToString(type), name);
 
 			return LoadPackageData<T>(*entryOpt);
 		}
@@ -60,7 +60,7 @@ namespace zzz::engine
 		{
 			auto entryOpt = GetEntryByGuid(type, guid);
 			if (!entryOpt)
-				return UNEXPECTED("Package entry of type {} with GUID '{}' was not found.", EnumToString::ToString(type), guid.ToString());
+				return UNEXPECTED("Package entry of type {} with GUID '{}' was not found.", ToString(type), guid.ToString());
 
 			return LoadPackageData<T>(*entryOpt);
 		}

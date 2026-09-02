@@ -1,8 +1,10 @@
 #pragma once
 
+#include <string_view>
 #include <logger/logger.h>
 
 #include "core/CoreIncludes.h"
+#include "core/utils/ThrowWrappers.h"
 #include "core/Serialize/Serializer.h"
 
 namespace zzz::core
@@ -14,6 +16,18 @@ namespace zzz::core
 		Integrated,
 		CpuSoftware
 	};
+
+	constexpr std::string_view ToString(eGPUType type)
+	{
+		switch (type)
+		{
+		case eGPUType::Unknown:     return "Unknown";
+		case eGPUType::Discrete:    return "Discrete";
+		case eGPUType::Integrated:  return "Integrated";
+		case eGPUType::CpuSoftware: return "CpuSoftware";
+		}
+		THROW_RUNTIME("Необработанный eGPUType");
+	}
 
 	class GpuInfo final : public ISerializable
 	{
@@ -64,7 +78,7 @@ namespace zzz::core
 			DOut(::zzz::core::Hardware, "{}name: {}", nestedIndentation, m_Name);
 			DOut(::zzz::core::Hardware, "{}vendorId: 0x{:04X}", nestedIndentation, m_VendorId);
 			DOut(::zzz::core::Hardware, "{}deviceId: 0x{:04X}", nestedIndentation, m_DeviceId);
-			DOut(::zzz::core::Hardware, "{}type: {}", nestedIndentation, (m_Type == eGPUType::Discrete) ? "Discrete" : (m_Type == eGPUType::Integrated) ? "Integrated" : (m_Type == eGPUType::CpuSoftware) ? "CpuSoftware" : "Unknown");
+			DOut(::zzz::core::Hardware, "{}type: {}", nestedIndentation, ToString(m_Type));
 			DOut(::zzz::core::Hardware, "{}dedicatedVideoMemoryBytes: {} MB", nestedIndentation, m_DedicatedVideoMemoryBytes / (1024 * 1024));
 			DOut(::zzz::core::Hardware, "{}sharedSystemMemoryBytes: {} MB", nestedIndentation, m_SharedSystemMemoryBytes / (1024 * 1024));
 			DOut(::zzz::core::Hardware, "{}dedicatedSystemMemoryBytes: {} MB", nestedIndentation, m_DedicatedSystemMemoryBytes / (1024 * 1024));

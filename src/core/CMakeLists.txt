@@ -71,7 +71,6 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eGAPIType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/ePackage.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/eTargetPlatform.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/Enums/eEnumToString.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverterGAPITypes.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverterMSWinTypes.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverterAndroidTypes.h

@@ -3,7 +3,7 @@
 #include "core/utils/Guid.h"
 #include "core/hardware/MonitorInfo.h"
 #include "core/Serialize/Serializer.h"
-#include "core/enums/eEnumToString.h"
+#include "core/enums/eWindowState.h"
 #include "core/io/package/platforms/start_view/ViewPlatformConfig.h"
 #include "engine/view/ViewWindowState.h"
 
@@ -64,7 +64,7 @@ namespace zzz::core
 			const std::string nestedIndentation = std::string(indentation) + "  ";
 			DOut(::zzz::core::Assets, "{}[ViewUserData]", indentation);
 			DOut(::zzz::core::Assets, "{}viewGuid: {}", nestedIndentation, m_State.GetViewGuid().ToString());
-			DOut(::zzz::core::Assets, "{}windowState: {}", nestedIndentation, EnumToString::ToString(m_PlatformData.GetWindowState()));
+			DOut(::zzz::core::Assets, "{}windowState: {}", nestedIndentation, ToString(m_PlatformData.GetWindowState()));
 			DOut(::zzz::core::Assets, "{}platformMonitorId: {}", nestedIndentation, m_PlatformData.GetMonitorId());
 			DOut(::zzz::core::Assets, "{}windowRect: {}", nestedIndentation, m_PlatformData.GetWindowRect().ToString());
 #endif
