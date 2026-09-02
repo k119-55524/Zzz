@@ -1,8 +1,10 @@
 #pragma once
 
+#include "core/utils/Defines.h"
+
+#if defined(Z_ANDROID)
 
 #include "WindowCommon.h"
-
 #include "../../header.h"
 
 namespace zzz::engine
@@ -34,3 +36,5 @@ namespace zzz::engine
 		AndroidActinityCtx m_Ctx;
 	};
 }
+
+#endif // defined(Z_ANDROID)

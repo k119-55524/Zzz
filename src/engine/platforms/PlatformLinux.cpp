@@ -1,3 +1,7 @@
+#include "core/utils/Defines.h"
+
+#if defined(Z_LINUX)
+
 #include "engine/EngineIncludes.h"
 #include <memory>
 #include "Platform.h"
@@ -190,3 +194,5 @@ PlatformHardwareState Platform::GatherHardwareState() const
 	state.cpu.architecture = "x86_64";
 	return state;
 }
+
+#endif // defined(Z_LINUX)

@@ -1,6 +1,9 @@
 #pragma once
 
-#if Z_WINDOWS
+#include "core/utils/Defines.h"
+
+#if defined(Z_WINDOWS)
+
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -23,4 +26,5 @@
 
 #pragma comment(lib, "IPHLPAPI.lib")
 #pragma comment(lib, "dxgi.lib")
-#endif // Z_WINDOWS
+
+#endif // defined(Z_WINDOWS)

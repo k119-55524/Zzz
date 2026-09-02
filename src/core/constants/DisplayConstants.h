@@ -14,6 +14,7 @@
  *       - Render / Viewport / Camera systems
  */
 
+#include "core/utils/Defines.h"
 #include "core/CoreIncludes.h"
 
 namespace zzz::core
@@ -28,10 +29,10 @@ namespace zzz::core
 	/// Дефолтный размер окна приложения (800x600)
 	constexpr zzz::math::Size2D<zU32> c_DefaultWindowSize{ c_DefaultWindowWidth, c_DefaultWindowHeight };
 
-#if Z_DESKTOP
+#if defined(Z_DESKTOP)
 	/// Минимальный размер окна (клиентской области) в пикселях для десктопных платформ
 	constexpr zU32 c_MinWinSize = 150;
-#endif // Z_DESKTOP
+#endif // defined(Z_DESKTOP)
 
 	/// Разрешение экрана Ultra HD 4K (3840x2160)
 	constexpr zzz::math::Size2D<zU32> c_UHD_4K{ 3840, 2160 };

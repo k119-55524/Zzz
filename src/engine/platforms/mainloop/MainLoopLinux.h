@@ -1,5 +1,8 @@
 #pragma once
 
+#include "core/utils/Defines.h"
+
+#if defined(Z_LINUX)
 
 #include "MainLoopCommon.h"
 
@@ -22,3 +25,5 @@ namespace zzz::engine
 		wl_display* m_Display;
 	};
 }
+
+#endif // defined(Z_LINUX)

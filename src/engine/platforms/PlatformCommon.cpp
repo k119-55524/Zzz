@@ -1,10 +1,14 @@
 #include "Platform.h"
-#if Z_WINDOWS
+#if defined(Z_WINDOWS)
 #include "monitor/MonitorProviderMSWin.h"
-#elif Z_ANDROID || Z_IOS
+#elif defined(Z_LINUX)
+#include "monitor/MonitorProviderLinux.h"
+#elif defined(Z_MACOS)
+#include "monitor/MonitorProviderMacOS.h"
+#elif defined(Z_MOBILE)
 #include "monitor/MonitorProviderMobile.h"
 #else
-#include "monitor/MonitorProviderMSWin.h"
+#error ">>>>> PlatformCommon: Unsupported platform for IMonitorProvider."
 #endif
 
 using namespace zzz::engine;
@@ -13,12 +17,16 @@ Platform::Platform(std::shared_ptr<NativeAppData> nativeData, const ProjectPlatf
 	m_NativeData(nativeData),
 	m_PlatformData(platformData),
 	m_MonitorProvider(
-#if Z_WINDOWS
+#if defined(Z_WINDOWS)
 		std::make_shared<MonitorProviderMSWin>()
-#elif Z_ANDROID || Z_IOS
+#elif defined(Z_LINUX)
+		std::make_shared<MonitorProviderLinux>()
+#elif defined(Z_MACOS)
+		std::make_shared<MonitorProviderMacOS>()
+#elif defined(Z_MOBILE)
 		std::make_shared<MonitorProviderMobile>()
 #else
-		std::make_shared<MonitorProviderMSWin>()
+#error ">>>>> PlatformCommon: Unsupported platform for IMonitorProvider."
 #endif
 	),
 	m_HardwareState(GatherHardwareState())

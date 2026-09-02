@@ -1,9 +1,13 @@
 #pragma once
 
+#include "core/utils/Defines.h"
+
+#if defined(Z_EDITOR)
+
 #include "WindowCommon.h"
 #include "../input/Input.h"
 
-#if Z_WINDOWS
+#if defined(Z_WINDOWS)
 #include <windows.h>
 #endif
 
@@ -31,3 +35,5 @@ namespace zzz::engine
 		HWND m_hWnd = nullptr;
 	};
 }
+
+#endif // defined(Z_EDITOR)

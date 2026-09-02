@@ -1,8 +1,10 @@
 #pragma once
 
-#include "engine/gapi/selectors/gpu/IGpuSelector.h"
+#include "core/utils/Defines.h"
 
 #if defined(Z_D3D12)
+
+#include "engine/gapi/selectors/gpu/IGpuSelector.h"
 #include "core/headers/DirectX12.h"
 
 namespace zzz::engine
@@ -49,4 +51,4 @@ namespace zzz::engine
 	};
 }
 
-#endif // Z_D3D12
+#endif // defined(Z_D3D12)

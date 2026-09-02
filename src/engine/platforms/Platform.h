@@ -20,7 +20,7 @@ namespace zzz::engine
 		[[nodiscard]] inline const HardwareState& GetHardwareState() const noexcept { return m_HardwareState; }
 		[[nodiscard]] const IMonitorProvider& GetMonitorProvider() const noexcept;
 
-#if Z_APPLE
+#if defined(Z_APPLE)
 		static constexpr bool c_AsyncRunLoop = true;
 #else
 		static constexpr bool c_AsyncRunLoop = false;

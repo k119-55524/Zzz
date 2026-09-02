@@ -1,22 +1,29 @@
 #pragma once
-#include "MainLoopCommon.h"
 
-#if Z_EDITOR
+#include "core/utils/Defines.h"
+
+#if defined(Z_EDITOR)
+#include "MainLoopCommon.h"
 #include "MainLoopEditor.h"
 namespace zzz::engine { using MainLoop = MainLoop_Editor; } // Пустая заглушка
-#elif Z_WINDOWS
+#elif defined(Z_WINDOWS)
+#include "MainLoopCommon.h"
 #include "MainLoopMSWin.h"
 namespace zzz::engine { using MainLoop = MainLoop_MSWin; }
-#elif Z_LINUX
+#elif defined(Z_LINUX)
+#include "MainLoopCommon.h"
 #include "MainLoopLinux.h"
 namespace zzz::engine { using MainLoop = MainLoop_Linux; }
-#elif Z_ANDROID
+#elif defined(Z_ANDROID)
+#include "MainLoopCommon.h"
 #include "MainLoopAndroid.h"
 namespace zzz::engine { using MainLoop = MainLoop_Android; }
-#elif Z_MACOS
+#elif defined(Z_MACOS)
+#include "MainLoopCommon.h"
 #include "MainLoopMacOS.h"
 namespace zzz::engine { using MainLoop = MainLoop_MacOS; }
-#elif Z_IOS
+#elif defined(Z_IOS)
+#include "MainLoopCommon.h"
 #include "MainLoopiOS.h"
 namespace zzz::engine { using MainLoop = MainLoop_iOS; }
 #else

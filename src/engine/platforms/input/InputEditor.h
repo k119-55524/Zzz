@@ -1,5 +1,9 @@
 #pragma once
 
+#include "core/utils/Defines.h"
+
+#if defined(Z_EDITOR)
+
 #include "InputBase.h"
 
 namespace zzz::engine
@@ -20,3 +24,5 @@ namespace zzz::engine
 		void InjectMouseButtonUp(int button);
 	};
 }
+
+#endif // defined(Z_EDITOR)

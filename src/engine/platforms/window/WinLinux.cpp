@@ -1,3 +1,7 @@
+#include "core/utils/Defines.h"
+
+#if defined(Z_LINUX)
+
 #include "WinLinux.h"
 #include "../Platform.h"
 #include "core/specific/linux_wayland/Xdg-shell-client-protocol.h"
@@ -172,3 +176,5 @@ std::expected<void, std::string> WinLinux::Initialize(const ViewPlatformData& wi
 
 	return {};
 }
+
+#endif // defined(Z_LINUX)

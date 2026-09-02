@@ -1,8 +1,9 @@
-#include "FileSystemAndroid.h"
 #include "core/utils/Defines.h"
-#include "core/utils/Ensure.h"
 
-#if Z_ANDROID
+#if defined(Z_ANDROID)
+
+#include "FileSystemAndroid.h"
+#include "core/utils/Ensure.h"
 #include <android/asset_manager.h>
 #include <android_native_app_glue.h>
 
@@ -116,4 +117,4 @@ namespace zzz::core
 		return FileSystemBase::WriteAllBytes(location, relativePath, bytes);
 	}
 }
-#endif
+#endif // defined(Z_ANDROID)

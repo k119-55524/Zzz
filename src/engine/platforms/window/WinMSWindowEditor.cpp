@@ -1,3 +1,7 @@
+#include "core/utils/Defines.h"
+
+#if defined(Z_EDITOR)
+
 #include "WinMSWindowEditor.h"
 #include "../Platform.h"
 
@@ -17,3 +21,5 @@ std::expected<void, std::string> WinMSWindowEditor::Initialize(const ViewPlatfor
 {
 	return {};
 }
+
+#endif // defined(Z_EDITOR)

@@ -14,6 +14,7 @@
  *       - NetworkService / SocketManager
  */
 
+#include "core/utils/Defines.h"
 #include "core/CoreIncludes.h"
 
 namespace zzz::core
@@ -28,10 +29,10 @@ namespace zzz::core
 	/// Версия бинарного протокола передачи логов по сети
 	constexpr zU32 c_LogProtocolVersion = 0;
 
-#if Z_DESKTOP
+#if defined(Z_DESKTOP)
 	/// Максимальный размер очереди сетевых логов на Desktop
 	constexpr zU32 c_MaxNetworkLogQueueSize = 2000;
-#elif Z_MOBILE
+#elif defined(Z_MOBILE)
 	/// Максимальный размер очереди сетевых логов на Mobile
 	constexpr zU32 c_MaxNetworkLogQueueSize = 500;
 #endif

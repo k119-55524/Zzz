@@ -1,3 +1,7 @@
+#include "core/utils/Defines.h"
+
+#if defined(Z_ANDROID)
+
 #include "engine/EngineIncludes.h"
 #include "Platform.h"
 #include "window/WinAndroid.h"
@@ -70,3 +74,5 @@ PlatformHardwareState Platform::GatherHardwareState() const
 	state.cpu.architecture = "ARM64";
 	return state;
 }
+
+#endif // defined(Z_ANDROID)

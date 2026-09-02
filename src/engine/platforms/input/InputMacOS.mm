@@ -1,4 +1,6 @@
-﻿#if Z_MACOS
+#include "core/utils/Defines.h"
+
+#if defined(Z_MACOS)
 
 #include "InputMacOS.h"
 #import "../../window/MacOSView.h"
@@ -36,4 +38,4 @@ bool InputMacOS::ProcessMessage(const NativeMsg& nativeMsg)
 	return false;
 }
 
-#endif // Z_MACOS
+#endif // defined(Z_MACOS)

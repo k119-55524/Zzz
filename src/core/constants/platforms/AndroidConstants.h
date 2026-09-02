@@ -11,6 +11,10 @@
  *       - AndroidApp / Platform (Android)
  */
 
+#include "core/utils/Defines.h"
+
+#if defined(Z_ANDROID)
+
 #include "core/CoreIncludes.h"
 
 namespace zzz::core
@@ -19,3 +23,5 @@ namespace zzz::core
 	// Заготовка под специфичные константы платформы Android
 #pragma endregion // Android constants
 }
+
+#endif // defined(Z_ANDROID)

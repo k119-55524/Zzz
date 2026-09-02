@@ -1,14 +1,16 @@
 #pragma once
 
-#if Z_EDITOR || Z_WINDOWS
+#include "core/utils/Defines.h"
+
+#if defined(Z_EDITOR) || defined(Z_WINDOWS)
 #include "ProjectPlatformDataMSWin.h"
-#elif Z_LINUX
+#elif defined(Z_LINUX)
 #include "ProjectPlatformDataLinux.h"
-#elif Z_ANDROID
+#elif defined(Z_ANDROID)
 #include "ProjectPlatformDataAndroid.h"
-#elif Z_MACOS
+#elif defined(Z_MACOS)
 #include "ProjectPlatformDataMacOS.h"
-#elif Z_IOS
+#elif defined(Z_IOS)
 #include "ProjectPlatformDataiOS.h"
 #else
 #error >>>>> ProjectPlatformConfig header inclusion: Unsupported platform.
@@ -16,15 +18,15 @@
 
 namespace zzz::core
 {
-#if Z_EDITOR || Z_WINDOWS
+#if defined(Z_EDITOR) || defined(Z_WINDOWS)
 	using ProjectPlatformData = ProjectPlatformDataMSWin;
-#elif Z_LINUX
+#elif defined(Z_LINUX)
 	using ProjectPlatformData = ProjectPlatformDataLinux;
-#elif Z_ANDROID
+#elif defined(Z_ANDROID)
 	using ProjectPlatformData = ProjectPlatformDataAndroid;
-#elif Z_MACOS
+#elif defined(Z_MACOS)
 	using ProjectPlatformData = ProjectPlatformDataMacOS;
-#elif Z_IOS
+#elif defined(Z_IOS)
 	using ProjectPlatformData = ProjectPlatformDataiOS;
 #else
 #error >>>>> ProjectPlatformData alias: Unsupported platform.

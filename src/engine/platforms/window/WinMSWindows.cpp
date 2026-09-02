@@ -1,4 +1,8 @@
 
+#include "core/utils/Defines.h"
+
+#if defined(Z_WINDOWS)
+
 #include "WinMSWindows.h"
 #include "../Platform.h"
 #include "../monitor/IMonitorProvider.h"
@@ -409,3 +413,5 @@ void WinMSWindows::OnMonitorResolutionChanged()
 		}
 	}
 }
+
+#endif // defined(Z_WINDOWS)

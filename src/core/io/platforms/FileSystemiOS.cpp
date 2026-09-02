@@ -1,5 +1,8 @@
-#include "FileSystemiOS.h"
 #include "core/utils/Defines.h"
+
+#if defined(Z_IOS)
+
+#include "FileSystemiOS.h"
 
 namespace zzz::core
 {
@@ -38,3 +41,5 @@ namespace zzz::core
 		return FileSystemBase::WriteAllBytes(location, relativePath, bytes);
 	}
 }
+
+#endif // defined(Z_IOS)

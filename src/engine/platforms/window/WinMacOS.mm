@@ -1,3 +1,7 @@
+#include "core/utils/Defines.h"
+
+#if defined(Z_MACOS)
+
 #include "WinMacOS.h"
 #import "MacOSView.h"
 
@@ -29,22 +33,21 @@ WinMacOS::~WinMacOS()
 
 std::expected<void, std::string> WinMacOS::Initialize(const ViewPlatformData& windowSettings, const View* parentView)
 {
+    // Initialize macOS window (NSWindow) and metal view (MTKView)
     NSRect frame = NSMakeRect(0, 0, windowSettings.GetSize().width, windowSettings.GetSize().height);
+    NSWindowStyleMask styleMask = NSWindowStyleMaskTitled | 
+                                  NSWindowStyleMaskClosable | 
+                                  NSWindowStyleMaskResizable |
+                                  NSWindowStyleMaskMiniaturizable;
 
-    NSUInteger style =
-        NSWindowStyleMaskTitled |
-        NSWindowStyleMaskClosable |
-        NSWindowStyleMaskResizable;
+    NSWindow* window = [[NSWindow alloc] initWithContentRect:frame
+                                                   styleMask:styleMask
+                                                     backing:NSBackingStoreBuffered
+                                                       defer:NO];
 
-    NSWindow* window = [[NSWindow alloc]
-        initWithContentRect:frame
-        styleMask:style
-        backing:NSBackingStoreBuffered
-        defer:NO];
-
-    [window setTitle:[NSString stringWithUTF8String:settings.GetTitle().c_str()]];
+    [window setTitle:[NSString stringWithUTF8String:windowSettings.GetTitle().c_str()]];
     [window setReleasedWhenClosed:NO];
-
+    
     EngineWindowDelegate* delegate = [[EngineWindowDelegate alloc] init];
     delegate.winEngine = this;
     [window setDelegate:delegate];
@@ -62,3 +65,5 @@ std::expected<void, std::string> WinMacOS::Initialize(const ViewPlatformData& wi
 
 	return {};
 }
+
+#endif // defined(Z_MACOS)

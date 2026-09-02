@@ -1,4 +1,8 @@
-﻿
+
+#include "core/utils/Defines.h"
+
+#if defined(Z_WINDOWS)
+
 #include "engine/EngineIncludes.h"
 #include "MainLoopMSWin.h"
 
@@ -31,3 +35,5 @@ void MainLoop_MSWin::Run()
 			OnUpdate();
 	}
 }
+
+#endif // defined(Z_WINDOWS)

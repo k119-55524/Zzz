@@ -1,3 +1,7 @@
+#include "core/utils/Defines.h"
+
+#if defined(Z_EDITOR)
+
 #include "Platform.h"
 #include "window/WinMSWindowEditor.h"
 
@@ -26,3 +30,5 @@ HardwareState Platform::GatherHardwareState() const
 		std::move(gpus),
 		std::move(monitors));
 }
+
+#endif // defined(Z_EDITOR)

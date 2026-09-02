@@ -1,4 +1,8 @@
-﻿#pragma once
+#pragma once
+
+#include "core/utils/Defines.h"
+
+#if defined(Z_LINUX)
 
 #include "core/enums/platforms/eLinuxEnums.h"
 
@@ -22,3 +26,5 @@ namespace zzz::core
 		}
 	};
 }
+
+#endif // defined(Z_LINUX)

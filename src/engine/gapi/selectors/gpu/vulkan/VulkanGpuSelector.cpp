@@ -1,10 +1,12 @@
 
+#include "core/utils/Defines.h"
+
+#if defined(Z_VULKAN)
+
 #include "engine/utils/GpuUtils.h"
 #include "engine/gapi/selectors/gpu/vulkan/VulkanGpuSelector.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::GAPI);
-
-#if defined(Z_VULKAN)
 
 namespace
 {
@@ -169,4 +171,4 @@ namespace zzz::engine
 	}
 }
 
-#endif // Z_VULKAN
+#endif // defined(Z_VULKAN)

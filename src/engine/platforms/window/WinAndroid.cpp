@@ -1,3 +1,7 @@
+#include "core/utils/Defines.h"
+
+#if defined(Z_ANDROID)
+
 #include "WinAndroid.h"
 #include "../Platform.h"
 
@@ -32,9 +36,13 @@ void WinAndroid::ProcessAppCmd(int32_t cmd)
 	{
 	case APP_CMD_INIT_WINDOW:
 		DOut("APP_CMD_INIT_WINDOW.");
-		// [Android] Выделена графическая поверхность. Окно готово к отрисовке.
-		// Передаем хэндл нативного окна для инициализации Swapchain.
-		// TODO: VERIFY_AND_CALL(m_Callbacks.OnSurfaceCreated, app->window);
+		// [Android] Окно создано нативно системой, ANativeWindow доступно в app->window.
+		// Вызываем OnSurfaceCreated, чтобы движок создал Swapchain.
+		{
+			android_app* app = m_Platform.GetNativeData().get();
+			if (app)
+				VERIFY_AND_CALL(m_Callbacks.OnSurfaceCreated, app->window);
+		}
 		break;
 	case APP_CMD_TERM_WINDOW:
 		DOut("APP_CMD_TERM_WINDOW.");
@@ -54,3 +62,4 @@ void WinAndroid::ProcessAppCmd(int32_t cmd)
 	}
 }
 
+#endif // defined(Z_ANDROID)

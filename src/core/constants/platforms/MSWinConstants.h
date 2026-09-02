@@ -12,6 +12,10 @@
  *       - Platform / Native Application Handlers (Windows)
  */
 
+#include "core/utils/Defines.h"
+
+#if defined(Z_WINDOWS)
+
 #include "core/CoreIncludes.h"
 
 namespace zzz::core
@@ -21,3 +25,5 @@ namespace zzz::core
 	constexpr std::string_view c_IcoResourceName = "IDI_ICON1";
 #pragma endregion // Microsoft Windows constants
 }
+
+#endif // defined(Z_WINDOWS)

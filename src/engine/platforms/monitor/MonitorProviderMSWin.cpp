@@ -1,8 +1,10 @@
+#include "core/utils/Defines.h"
+
+#if defined(Z_WINDOWS)
+
 #include "MonitorProviderMSWin.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Window);
-
-#if Z_WINDOWS
 
 namespace
 {
@@ -269,4 +271,4 @@ namespace zzz::engine
 	}
 }
 
-#endif
+#endif // defined(Z_WINDOWS)

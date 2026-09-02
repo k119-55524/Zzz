@@ -1,8 +1,11 @@
 #pragma once
 
+#include "core/utils/Defines.h"
+
+#if defined(Z_WINDOWS)
+
 #include "InputBase.h"
 
-#if Z_WINDOWS
 namespace zzz::engine
 {
 	class InputMSWindows final : public InputBase
@@ -39,4 +42,4 @@ namespace zzz::engine
 		}
 	};
 }
-#endif
+#endif // defined(Z_WINDOWS)

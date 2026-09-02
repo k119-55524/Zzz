@@ -30,11 +30,17 @@
 #include "core/utils/LogCategory.h"
 #include "core/enums/eWinResize.h"
 #include "core/enums/platforms/ConverterGAPITypes.h"
+#if defined(Z_WINDOWS)
 #include "core/enums/platforms/ConverterMSWinTypes.h"
+#elif defined(Z_ANDROID)
 #include "core/enums/platforms/ConverterAndroidTypes.h"
+#elif defined(Z_IOS)
 #include "core/enums/platforms/ConverteriOSTypes.h"
+#elif defined(Z_LINUX)
 #include "core/enums/platforms/ConverterLinuxTypes.h"
+#elif defined(Z_MACOS)
 #include "core/enums/platforms/ConverterMacOSTypes.h"
+#endif
 
 
 #include "core/templates/DoubleBufferedVector.h"

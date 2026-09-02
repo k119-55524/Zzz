@@ -1,25 +1,31 @@
 #pragma once
-#include "InputBase.h"
 
-#if Z_EDITOR
+#include "core/utils/Defines.h"
+
+#if defined(Z_EDITOR)
+#include "InputBase.h"
 #include "InputEditor.h"
 namespace zzz::engine { using Input = InputEditor; }
-#elif Z_WINDOWS
+#elif defined(Z_WINDOWS)
+#include "InputBase.h"
 #include "InputMSWindows.h"
 namespace zzz::engine { using Input = InputMSWindows; }
-#elif Z_LINUX
+#elif defined(Z_LINUX)
+#include "InputBase.h"
 #include "InputLinux.h"
 namespace zzz::engine { using Input = InputLinux; }
-#elif Z_ANDROID
+#elif defined(Z_ANDROID)
+#include "InputBase.h"
 #include "InputAndroid.h"
 namespace zzz::engine { using Input = InputAndroid; }
-#elif Z_MACOS
+#elif defined(Z_MACOS)
+#include "InputBase.h"
 #include "InputMacOS.h"
 namespace zzz::engine { using Input = InputMacOS; }
-#elif Z_IOS
+#elif defined(Z_IOS)
+#include "InputBase.h"
 #include "InputiOS.h"
 namespace zzz::engine { using Input = InputiOS; }
 #else
 #error ">>>>> Input: Unsupported platform."
 #endif
-

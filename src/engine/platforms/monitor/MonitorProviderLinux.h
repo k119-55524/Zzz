@@ -1,8 +1,8 @@
-#pragma once
+﻿#pragma once
 
 #include "core/utils/Defines.h"
 
-#if defined(Z_MOBILE)
+#if defined(Z_LINUX)
 
 #include "IMonitorProvider.h"
 #include "engine/EngineIncludes.h"
@@ -10,18 +10,17 @@
 namespace zzz::engine
 {
 	/**
-	 * @brief Платформенная реализация IMonitorProvider для мобильных операционных систем (Android / iOS).
-	 * Предоставляет сведения об 1 нативном физическом дисплее смартфона/планшета.
+	 * @brief Платформенная реализация IMonitorProvider для Linux (Wayland / X11).
 	 */
-	class MonitorProviderMobile final : public IMonitorProvider
+	class MonitorProviderLinux final : public IMonitorProvider
 	{
 	public:
-		MonitorProviderMobile()
+		MonitorProviderLinux()
 		{
 			RefreshMonitors();
 		}
 
-		~MonitorProviderMobile() override = default;
+		~MonitorProviderLinux() override = default;
 
 		[[nodiscard]] const std::vector<MonitorInfo>& GetMonitors() const noexcept override { return m_Monitors; }
 		[[nodiscard]] MonitorInfo GetPrimaryMonitor() const override { return m_Monitors.front(); }
@@ -33,6 +32,7 @@ namespace zzz::engine
 		{
 			return Rect2D<zI32>{ Point2D<zI32>{0, 0}, Size2D<zI32>{static_cast<zI32>(monitor.GetResolution().width), static_cast<zI32>(monitor.GetResolution().height)} };
 		}
+
 		[[nodiscard]] Rect2D<zI32> CenterOnWorkArea(const Rect2D<zI32>& windowRect, const MonitorInfo& monitor) const override
 		{
 			return FitToWorkArea(windowRect, monitor);
@@ -41,8 +41,7 @@ namespace zzz::engine
 		void RefreshMonitors() override
 		{
 			m_Monitors.clear();
-			// Реальные физические метрики экрана смартфона/планшета (например, 2400x1080)
-			m_Monitors.emplace_back("MOBILE_DISPLAY_0", "Mobile Main Display", Size2D<zU32>{1080, 1920}, 0, 0, true, 2.0f);
+			m_Monitors.emplace_back("LINUX_DISPLAY_0", "Linux Main Display", Size2D<zU32>{1920, 1080}, 0, 0, true, 1.0f);
 		}
 
 	private:
@@ -50,4 +49,4 @@ namespace zzz::engine
 	};
 }
 
-#endif // defined(Z_MOBILE)
+#endif // defined(Z_LINUX)

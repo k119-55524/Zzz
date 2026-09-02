@@ -1,10 +1,12 @@
 
+#include "core/utils/Defines.h"
+
+#if defined(Z_D3D12)
+
 #include "engine/utils/GpuUtils.h"
 #include "engine/gapi/selectors/gpu/directx12/DirectX12GpuSelector.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::GAPI);
-
-#if defined(Z_D3D12)
 
 namespace
 {
@@ -216,4 +218,4 @@ namespace zzz::engine
 	}
 }
 
-#endif // Z_D3D12
+#endif // defined(Z_D3D12)

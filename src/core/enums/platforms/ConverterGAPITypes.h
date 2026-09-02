@@ -1,27 +1,28 @@
 #pragma once
 
-#include <type_traits>
 #include "core/utils/Defines.h"
+
+#include <type_traits>
 #include "core/enums/ePixelFormat.h"
 #include "core/enums/eIndexFormat.h"
 
-#if Z_D3D12
+#if defined(Z_D3D12)
 	#include <dxgiformat.h>
-#elif Z_VULKAN
+#elif defined(Z_VULKAN)
 	#include <vulkan/vulkan.h>
-#elif Z_METAL
+#elif defined(Z_METAL)
 	#import <Metal/Metal.h>
 #endif
 
 namespace zzz::core
 {
-#if Z_D3D12
+#if defined(Z_D3D12)
 	using NativePixelFormat = DXGI_FORMAT;
 	using NativeIndexFormat = DXGI_FORMAT;
-#elif Z_VULKAN
+#elif defined(Z_VULKAN)
 	using NativePixelFormat = VkFormat;
 	using NativeIndexFormat = VkIndexType;
-#elif Z_METAL
+#elif defined(Z_METAL)
 	using NativePixelFormat = MTLPixelFormat;
 	using NativeIndexFormat = MTLIndexType;
 #else
@@ -38,11 +39,9 @@ namespace zzz::core
 	public:
 		ConverterGAPITypes() = delete;
 
-		// --- ePixelFormat -> NativePixelFormat ---
-
 		[[nodiscard]] static constexpr NativePixelFormat ToNative(ePixelFormat format) noexcept
 		{
-#if Z_D3D12
+#if defined(Z_D3D12)
 			switch (format)
 			{
 			case ePixelFormat::R8_UNORM:          return DXGI_FORMAT_R8_UNORM;
@@ -60,7 +59,7 @@ namespace zzz::core
 			case ePixelFormat::BC7_UNORM:         return DXGI_FORMAT_BC7_UNORM;
 			default:                              return DXGI_FORMAT_UNKNOWN;
 			}
-#elif Z_VULKAN
+#elif defined(Z_VULKAN)
 			switch (format)
 			{
 			case ePixelFormat::R8_UNORM:          return VK_FORMAT_R8_UNORM;
@@ -80,7 +79,7 @@ namespace zzz::core
 			case ePixelFormat::ETC2_RGBA8_UNORM:  return VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK;
 			default:                              return VK_FORMAT_UNDEFINED;
 			}
-#elif Z_METAL
+#elif defined(Z_METAL)
 			switch (format)
 			{
 			case ePixelFormat::R8_UNORM:          return MTLPixelFormatR8Unorm;
@@ -107,11 +106,11 @@ namespace zzz::core
 
 		[[nodiscard]] static constexpr NativeIndexFormat ToNative(eIndexFormat format) noexcept
 		{
-#if Z_D3D12
+#if defined(Z_D3D12)
 			return (format == eIndexFormat::UInt16) ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
-#elif Z_VULKAN
+#elif defined(Z_VULKAN)
 			return (format == eIndexFormat::UInt16) ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32;
-#elif Z_METAL
+#elif defined(Z_METAL)
 			return (format == eIndexFormat::UInt16) ? MTLIndexTypeUInt16 : MTLIndexTypeUInt32;
 #else
 			return static_cast<NativeIndexFormat>(format);
@@ -122,7 +121,7 @@ namespace zzz::core
 
 		[[nodiscard]] static constexpr ePixelFormat ToEnginePixelFormat(NativePixelFormat nativeFormat) noexcept
 		{
-#if Z_D3D12
+#if defined(Z_D3D12)
 			switch (nativeFormat)
 			{
 			case DXGI_FORMAT_R8_UNORM:            return ePixelFormat::R8_UNORM;
@@ -140,7 +139,7 @@ namespace zzz::core
 			case DXGI_FORMAT_BC7_UNORM:           return ePixelFormat::BC7_UNORM;
 			default:                              return ePixelFormat::Unknown;
 			}
-#elif Z_VULKAN
+#elif defined(Z_VULKAN)
 			switch (nativeFormat)
 			{
 			case VK_FORMAT_R8_UNORM:                  return ePixelFormat::R8_UNORM;
@@ -160,7 +159,7 @@ namespace zzz::core
 			case VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK: return ePixelFormat::ETC2_RGBA8_UNORM;
 			default:                                  return ePixelFormat::Unknown;
 			}
-#elif Z_METAL
+#elif defined(Z_METAL)
 			switch (nativeFormat)
 			{
 			case MTLPixelFormatR8Unorm:               return ePixelFormat::R8_UNORM;
@@ -176,7 +175,7 @@ namespace zzz::core
 			case MTLPixelFormatBC1_RGBA:              return ePixelFormat::BC1_UNORM;
 			case MTLPixelFormatBC7_RGBAUnorm:         return ePixelFormat::BC7_UNORM;
 			case MTLPixelFormatASTC_4x4_LDR:          return ePixelFormat::ASTC_4x4_UNORM;
-			default:                                  return ePixelFormat::Unknown;
+			default:                              return ePixelFormat::Unknown;
 			}
 #else
 			return static_cast<ePixelFormat>(nativeFormat);
@@ -187,11 +186,11 @@ namespace zzz::core
 
 		[[nodiscard]] static constexpr eIndexFormat ToEngineIndexFormat(NativeIndexFormat nativeFormat) noexcept
 		{
-#if Z_D3D12
+#if defined(Z_D3D12)
 			return (nativeFormat == DXGI_FORMAT_R16_UINT) ? eIndexFormat::UInt16 : eIndexFormat::UInt32;
-#elif Z_VULKAN
+#elif defined(Z_VULKAN)
 			return (nativeFormat == VK_INDEX_TYPE_UINT16) ? eIndexFormat::UInt16 : eIndexFormat::UInt32;
-#elif Z_METAL
+#elif defined(Z_METAL)
 			return (nativeFormat == MTLIndexTypeUInt16) ? eIndexFormat::UInt16 : eIndexFormat::UInt32;
 #else
 			return static_cast<eIndexFormat>(nativeFormat);

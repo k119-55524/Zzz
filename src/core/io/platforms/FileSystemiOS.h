@@ -1,5 +1,9 @@
 #pragma once
 
+#include "core/utils/Defines.h"
+
+#if defined(Z_IOS)
+
 #include "core/io/FileSystemBase.h"
 
 namespace zzz::core
@@ -30,3 +34,5 @@ namespace zzz::core
 			eFileLocation location, std::string_view relativePath, std::span<const std::byte> bytes) noexcept;
 	};
 }
+
+#endif // defined(Z_IOS)

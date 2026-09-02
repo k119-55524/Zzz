@@ -1,6 +1,9 @@
-#include <android/looper.h>
+#include "core/utils/Defines.h"
 
-#include "MainLoop_Android.h"
+#if defined(Z_ANDROID)
+
+#include <android/looper.h>
+#include "MainLoopAndroid.h"
 #include "../Platform.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::LogEngine);
@@ -51,4 +54,6 @@ void MainLoop_Android::Run()
 		OnUpdate();
 	}
 }
+
+#endif // defined(Z_ANDROID)
 

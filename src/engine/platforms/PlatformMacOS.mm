@@ -1,3 +1,7 @@
+#include "core/utils/Defines.h"
+
+#if defined(Z_MACOS)
+
 #include "engine/EngineIncludes.h"
 #include "engine/Engine.h"
 #include "Platform.h"
@@ -53,3 +57,5 @@ PlatformHardwareState Platform::GatherHardwareState() const
 	state.cpu.architecture = "ARM64";
 	return state;
 }
+
+#endif // defined(Z_MACOS)

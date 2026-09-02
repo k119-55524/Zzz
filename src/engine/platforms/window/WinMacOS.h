@@ -1,7 +1,10 @@
 #pragma once
 
+#include "core/utils/Defines.h"
 
-#include "Window_Common.h"
+#if defined(Z_MACOS)
+
+#include "WindowCommon.h"
 #include "../../header.h"
 
 namespace zzz::engine
@@ -22,3 +25,5 @@ namespace zzz::engine
 		void OnMonitorResolutionChanged() override {}
 	};
 }
+
+#endif // defined(Z_MACOS)

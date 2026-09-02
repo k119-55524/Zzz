@@ -1,7 +1,9 @@
 
-#include "InputMSWindows.h"
+#include "core/utils/Defines.h"
 
-#if Z_WINDOWS
+#if defined(Z_WINDOWS)
+
+#include "InputMSWindows.h"
 
 using namespace zzz::engine;
 
@@ -185,4 +187,4 @@ void InputMSWindows::HandleRawKeyboard(const RAWKEYBOARD& kb)
 	UpdateKeyState(key, pressed);
 }
 
-#endif
+#endif // defined(Z_WINDOWS)

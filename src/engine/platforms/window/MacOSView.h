@@ -1,5 +1,9 @@
 #pragma once
 
+#include "core/utils/Defines.h"
+
+#if defined(Z_MACOS)
+
 #ifdef __OBJC__
 
 #import <Cocoa/Cocoa.h>
@@ -13,5 +17,7 @@ namespace zzz::engine {
 @property (nonatomic, assign) zzz::engine::InputMacOS* inputEngine;
 @end
 
-#endif
+#endif // __OBJC__
+
+#endif // defined(Z_MACOS)
 

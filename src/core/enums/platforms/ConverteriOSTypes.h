@@ -1,4 +1,8 @@
-﻿#pragma once
+#pragma once
+
+#include "core/utils/Defines.h"
+
+#if defined(Z_IOS)
 
 #include "core/enums/platforms/eiOSEnums.h"
 
@@ -46,3 +50,5 @@ namespace zzz::core
 		}
 	};
 }
+
+#endif // defined(Z_IOS)

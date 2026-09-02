@@ -1,10 +1,12 @@
 #pragma once
 
+#include "core/utils/Defines.h"
+
+#if defined(Z_ANDROID)
+
 #include "core/io/FileSystemBase.h"
 
-#if Z_ANDROID
 struct AAsset;
-#endif
 
 namespace zzz::core
 {
@@ -33,10 +35,10 @@ namespace zzz::core
 		std::expected<void, std::string> WriteAllBytes(
 			eFileLocation location, std::string_view relativePath, std::span<const std::byte> bytes) noexcept;
 
-#if Z_ANDROID
 	private:
 		[[nodiscard]] std::expected<AAsset*, std::string> TryOpenAsset(
 			std::string_view relativePath, int mode = 0) const noexcept;
-#endif
 	};
 }
+
+#endif // defined(Z_ANDROID)

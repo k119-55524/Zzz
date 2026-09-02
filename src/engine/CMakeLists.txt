@@ -38,6 +38,8 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "platforms/PlatformCommon.cpp"
         "platforms/monitor/IMonitorProvider.h"
         "platforms/monitor/MonitorProviderMobile.h"
+        "platforms/monitor/MonitorProviderLinux.h"
+        "platforms/monitor/MonitorProviderMacOS.h"
 
         # Main Loop
         "platforms/mainloop/MainLoop.h" "platforms/mainloop/MainLoopCommon.h" "platforms/mainloop/MainLoopCommon.cpp"

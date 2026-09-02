@@ -1,5 +1,9 @@
 #pragma once
 
+#include "core/utils/Defines.h"
+
+#if defined(Z_WINDOWS)
+
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -46,3 +50,5 @@ namespace zzz::core
 		}
 	};
 }
+
+#endif // defined(Z_WINDOWS)

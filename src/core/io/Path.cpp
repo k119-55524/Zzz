@@ -126,14 +126,14 @@ namespace zzz::core
 	{
 		try
 		{
-#if Z_WINDOWS
+#if defined(Z_WINDOWS)
 			wchar_t buffer[MAX_PATH];
 			DWORD len = GetModuleFileNameW(nullptr, buffer, MAX_PATH);
 			if (len == 0)
 				return UNEXPECTED("Не удалось получить путь к исполняемому файлу.");
 
 			return std::filesystem::path(buffer).parent_path();
-#elif Z_APPLE
+#elif defined(Z_APPLE)
 			uint32_t size = 0;
 			_NSGetExecutablePath(nullptr, &size);
 
@@ -143,13 +143,13 @@ namespace zzz::core
 				return UNEXPECTED("Не удалось получить путь к исполняемому файлу.");
 
 			return std::filesystem::weakly_canonical(path).parent_path();
-#elif Z_ANDROID
+#elif defined(Z_ANDROID)
 			auto app = m_NativeData.get();
 			if (!app || !app->activity || !app->activity->internalDataPath)
 				return UNEXPECTED("Android activity или internalDataPath равен null.");
 
 			return std::filesystem::path(app->activity->internalDataPath);
-#elif Z_LINUX
+#elif defined(Z_LINUX)
 			char buffer[PATH_MAX];
 			ssize_t len = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
 			if (len == -1)
@@ -159,7 +159,7 @@ namespace zzz::core
 
 			return std::filesystem::weakly_canonical(buffer).parent_path();
 #else
-			return UNEXPECTED("Неподдерживаемая платформа.");
+#error ">>>>> zzz::core::Path::ResolveExecutableDirectory(): Unsupported platform."
 #endif
 		}
 		catch (const std::filesystem::filesystem_error& e)
@@ -181,7 +181,7 @@ namespace zzz::core
 	{
 		try
 		{
-#if Z_WINDOWS
+#if defined(Z_WINDOWS)
 			wchar_t* rawPtr = nullptr;
 			size_t len = 0;
 			_wdupenv_s(&rawPtr, &len, L"LOCALAPPDATA");
@@ -190,13 +190,13 @@ namespace zzz::core
 				return UNEXPECTED("Не удалось получить LOCALAPPDATA.");
 
 			return std::filesystem::path(localAppData.get()) / companyName / appName;
-#elif Z_APPLE
+#elif defined(Z_APPLE)
 			auto path = GetAppleUserDataDirectory();
 			if (!path)
 				return UNEXPECTED("{}", path.error());
 
 			return *path / companyName / appName;
-#elif Z_ANDROID
+#elif defined(Z_ANDROID)
 			auto app = m_NativeData.get();
 			if (!app->activity)
 				return UNEXPECTED("Android activity равен null.");
@@ -205,7 +205,7 @@ namespace zzz::core
 				return UNEXPECTED("Внутренний путь данных Android равен null.");
 
 			return std::filesystem::path(app->activity->internalDataPath) / companyName / appName;
-#elif Z_LINUX
+#elif defined(Z_LINUX)
 			const char* xdgConfigHome = std::getenv("XDG_CONFIG_HOME");
 			if (xdgConfigHome)
 				return std::filesystem::path(xdgConfigHome) / companyName / appName;
@@ -216,7 +216,7 @@ namespace zzz::core
 
 			return std::filesystem::path(home) / ".config" / companyName / appName;
 #else
-#error >>>>> zzz::core::Path::ResolveUserDataDirectory(): Unsupported platform.
+#error ">>>>> zzz::core::Path::ResolveUserDataDirectory(): Unsupported platform."
 #endif
 		}
 		catch (const std::filesystem::filesystem_error& e)

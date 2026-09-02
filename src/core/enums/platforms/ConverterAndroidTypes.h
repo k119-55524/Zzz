@@ -1,4 +1,8 @@
-﻿#pragma once
+#pragma once
+
+#include "core/utils/Defines.h"
+
+#if defined(Z_ANDROID)
 
 #include "core/enums/platforms/eAndroidEnums.h"
 
@@ -57,3 +61,5 @@ namespace zzz::core
 		}
 	};
 }
+
+#endif // defined(Z_ANDROID)

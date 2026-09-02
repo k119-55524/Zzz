@@ -1,8 +1,10 @@
 #pragma once
 
-#include "engine/gapi/selectors/gpu/IGpuSelector.h"
+#include "core/utils/Defines.h"
 
 #if defined(Z_VULKAN)
+
+#include "engine/gapi/selectors/gpu/IGpuSelector.h"
 
 namespace zzz::engine
 {
@@ -40,4 +42,4 @@ namespace zzz::engine
 	};
 }
 
-#endif // Z_VULKAN
+#endif // defined(Z_VULKAN)

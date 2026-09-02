@@ -1,3 +1,7 @@
+#include "core/utils/Defines.h"
+
+#if defined(Z_WINDOWS)
+
 #include "Platform.h"
 #include "window/WinMSWindows.h"
 #include "monitor/IMonitorProvider.h"
@@ -5,8 +9,6 @@
 #include "engine/utils/GpuUtils.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Window);
-
-#if Z_WINDOWS
 
 using namespace zzz::engine;
 

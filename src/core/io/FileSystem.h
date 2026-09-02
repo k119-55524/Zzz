@@ -3,13 +3,13 @@
 #include "core/utils/Defines.h"
 #include "FileSystemBase.h"
 
-#if Z_WINDOWS || Z_LINUX || Z_MACOS
+#if defined(Z_DESKTOP)
 #include "platforms/FileSystemDesktop.h"
 namespace zzz::core { using FileSystem = FileSystemDesktop; }
-#elif Z_ANDROID
+#elif defined(Z_ANDROID)
 #include "platforms/FileSystemAndroid.h"
 namespace zzz::core { using FileSystem = FileSystemAndroid; }
-#elif Z_IOS
+#elif defined(Z_IOS)
 #include "platforms/FileSystemiOS.h"
 namespace zzz::core { using FileSystem = FileSystemiOS; }
 #else

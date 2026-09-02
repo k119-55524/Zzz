@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/utils/Defines.h"
+
 #include <memory>
 #include <string>
 #include <expected>
@@ -45,7 +47,7 @@ namespace zzz::core
 		std::filesystem::path m_ExecutableDirectory;
 		std::filesystem::path m_UserDataDirectory;
 
-#if Z_MACOS || Z_IOS
+#if defined(Z_APPLE)
 		[[nodiscard]] std::expected<std::filesystem::path, std::string> GetAppleUserDataDirectory();
 #endif
 	};

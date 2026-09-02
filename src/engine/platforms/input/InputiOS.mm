@@ -1,4 +1,6 @@
-﻿#if Z_IOS
+#include "core/utils/Defines.h"
+
+#if defined(Z_IOS)
 
 #include "InputiOS.h"
 #import "../../window/iOSView.h"
@@ -32,4 +34,4 @@ bool InputiOS::ProcessMessage(const NativeMsg& nativeMsg)
 	return false;
 }
 
-#endif // Z_IOS
+#endif // defined(Z_IOS)

@@ -1,5 +1,8 @@
 #pragma once
 
+#include "core/utils/Defines.h"
+
+#if defined(Z_LINUX)
 
 #include "InputBase.h"
 
@@ -15,3 +18,5 @@ namespace zzz::engine
 		bool ProcessMessage(const NativeMsg& nativeMsg) ;
 	};
 }
+
+#endif // defined(Z_LINUX)

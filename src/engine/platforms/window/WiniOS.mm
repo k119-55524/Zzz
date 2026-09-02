@@ -1,3 +1,7 @@
+#include "core/utils/Defines.h"
+
+#if defined(Z_IOS)
+
 #include "WiniOS.h"
 #import "iOSView.h"
 #include "engine/EngineIncludes.h"
@@ -43,4 +47,6 @@ std::expected<void, std::string> WiniOS::Initialize(const ViewPlatformData& wind
     }
 	return {};
 }
+
+#endif // defined(Z_IOS)
 

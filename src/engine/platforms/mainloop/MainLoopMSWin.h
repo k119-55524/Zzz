@@ -1,5 +1,9 @@
 #pragma once
 
+#include "core/utils/Defines.h"
+
+#if defined(Z_WINDOWS)
+
 #include "MainLoopCommon.h"
 
 namespace zzz::engine
@@ -16,3 +20,5 @@ namespace zzz::engine
 		void Run() override;
 	};
 }
+
+#endif // defined(Z_WINDOWS)

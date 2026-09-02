@@ -1,4 +1,8 @@
-﻿#include "MainLoop_iOS.h"
+#include "core/utils/Defines.h"
+
+#if defined(Z_IOS)
+
+#include "MainLoopiOS.h"
 #import <QuartzCore/QuartzCore.h>
 #import <Foundation/Foundation.h>
 
@@ -33,3 +37,5 @@ void MainLoop_iOS::Run()
     g_DisplayLink = [CADisplayLink displayLinkWithTarget:g_DisplayTarget selector:@selector(update:)];
     [g_DisplayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
 }
+
+#endif // defined(Z_IOS)

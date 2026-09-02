@@ -1,5 +1,8 @@
 #pragma once
 
+#include "core/utils/Defines.h"
+
+#if defined(Z_LINUX)
 
 #include "WindowCommon.h"
 
@@ -39,3 +42,5 @@ namespace zzz::engine
 		xdg_toplevel* m_XdgToplevel;
 	};
 }
+
+#endif // defined(Z_LINUX)

@@ -1,4 +1,8 @@
 
+#include "core/utils/Defines.h"
+
+#if defined(Z_ANDROID)
+
 #include "InputAndroid.h"
 
 using namespace zzz::engine;
@@ -10,9 +14,10 @@ std::expected<void, std::string> InputAndroid::Initialize()
 
 bool InputAndroid::ProcessMessage(const NativeMsg& nativeMsg)
 {
-
 	return false;
 }
+
+#endif // defined(Z_ANDROID)
 
 
 

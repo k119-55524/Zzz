@@ -1,11 +1,13 @@
-﻿#pragma once
+#pragma once
+
+#include "core/utils/Defines.h"
 
 #include <functional>
 #include <bitset>
 #include "InputHelpers.h"
 #include "engine/EngineIncludes.h"
 
-#if Z_ANDROID
+#if defined(Z_ANDROID)
 #include <android/input.h>
 #endif
 
@@ -14,7 +16,7 @@ namespace zzz::engine
 	class IWindow;
 
 #pragma region Type Aliases
-#if Z_WINDOWS
+#if defined(Z_WINDOWS)
 	struct WinMsg
 	{
 		HWND	hWnd;
@@ -23,26 +25,26 @@ namespace zzz::engine
 		LPARAM	lParam;
 	};
 	using NativeMsg = WinMsg;
-#elif Z_ANDROID
+#elif defined(Z_ANDROID)
 	struct AndroidMsg
 	{
 		void* motionEvent;
 		void* keyEvent;
 	};
 	using NativeMsg = AndroidMsg;
-#elif Z_LINUX
+#elif defined(Z_LINUX)
 	struct LinuxMsg
 	{
 		void* msg;
 	};
 	using NativeMsg = LinuxMsg;
-#elif Z_MACOS
+#elif defined(Z_MACOS)
 	struct MacOSMsg
 	{
 		void* msg;
 	};
 	using NativeMsg = MacOSMsg;
-#elif Z_IOS
+#elif defined(Z_IOS)
 	struct iOSMsg
 	{
 		void* msg;

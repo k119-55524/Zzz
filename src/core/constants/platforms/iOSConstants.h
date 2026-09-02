@@ -11,6 +11,10 @@
  *       - iOSWindow / Platform (iOS)
  */
 
+#include "core/utils/Defines.h"
+
+#if defined(Z_IOS)
+
 #include "core/CoreIncludes.h"
 
 namespace zzz::core
@@ -19,3 +23,5 @@ namespace zzz::core
 	// Заготовка под специфичные константы платформы iOS
 #pragma endregion // iOS constants
 }
+
+#endif // defined(Z_IOS)

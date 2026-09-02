@@ -1,3 +1,7 @@
+#include "core/utils/Defines.h"
+
+#if defined(Z_EDITOR)
+
 #include "InputEditor.h"
 
 using namespace zzz::engine;
@@ -34,3 +38,5 @@ void InputEditor::InjectMouseButtonDown(int /*button*/)
 void InputEditor::InjectMouseButtonUp(int /*button*/)
 {
 }
+
+#endif // defined(Z_EDITOR)

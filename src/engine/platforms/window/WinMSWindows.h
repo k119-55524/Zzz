@@ -1,5 +1,9 @@
 #pragma once
 
+#include "core/utils/Defines.h"
+
+#if defined(Z_WINDOWS)
+
 #include "WindowCommon.h"
 #include "../input/Input.h"
 
@@ -48,3 +52,5 @@ namespace zzz::engine
 		eSizeMoveMode m_SizeMoveMode{ eSizeMoveMode::None };
 	};
 }
+
+#endif // defined(Z_WINDOWS)

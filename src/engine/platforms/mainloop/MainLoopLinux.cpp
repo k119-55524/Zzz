@@ -1,7 +1,9 @@
-﻿#include "MainLoop_Linux.h"
+#include "core/utils/Defines.h"
+
+#if defined(Z_LINUX)
+
+#include "MainLoopLinux.h"
 #include "../Platform.h"
-
-
 #include <poll.h>
 
 using namespace zzz::engine;
@@ -37,3 +39,5 @@ void MainLoop_Linux::Run()
 		OnUpdate();
 	}
 }
+
+#endif // defined(Z_LINUX)

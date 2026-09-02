@@ -13,16 +13,18 @@
  *       - Общем зонтичном заголовке core/constants/Constants.h
  */
 
-#include "core/CoreIncludes.h"
+#include "core/utils/Defines.h"
 
-#if Z_WINDOWS
+#if defined(Z_WINDOWS)
 #include "core/constants/platforms/MSWinConstants.h"
-#elif Z_LINUX
+#elif defined(Z_LINUX)
 #include "core/constants/platforms/LinuxConstants.h"
-#elif Z_MACOS
+#elif defined(Z_MACOS)
 #include "core/constants/platforms/MacOSConstants.h"
-#elif Z_ANDROID
+#elif defined(Z_ANDROID)
 #include "core/constants/platforms/AndroidConstants.h"
-#elif Z_IOS
+#elif defined(Z_IOS)
 #include "core/constants/platforms/iOSConstants.h"
+#else
+#error ">>>>> PlatformConstants: Unsupported platform."
 #endif

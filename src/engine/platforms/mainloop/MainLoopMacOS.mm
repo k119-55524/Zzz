@@ -1,4 +1,8 @@
-﻿#include "MainLoop_MacOS.h"
+#include "core/utils/Defines.h"
+
+#if defined(Z_MACOS)
+
+#include "MainLoopMacOS.h"
 #import <Cocoa/Cocoa.h>
 #import <Foundation/Foundation.h>
 
@@ -37,3 +41,5 @@ void MainLoop_MacOS::Run()
                                                     userInfo:nil
                                                      repeats:YES];
 }
+
+#endif // defined(Z_MACOS)

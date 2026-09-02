@@ -1,4 +1,8 @@
-﻿#pragma once
+#pragma once
+
+#include "core/utils/Defines.h"
+
+#if defined(Z_MACOS)
 
 #include "core/enums/platforms/eMacOSEnums.h"
 
@@ -22,3 +26,5 @@ namespace zzz::core
 		}
 	};
 }
+
+#endif // defined(Z_MACOS)

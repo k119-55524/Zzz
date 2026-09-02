@@ -11,6 +11,10 @@
  *       - LinuxWindow / Platform (Linux)
  */
 
+#include "core/utils/Defines.h"
+
+#if defined(Z_LINUX)
+
 #include "core/CoreIncludes.h"
 
 namespace zzz::core
@@ -19,3 +23,5 @@ namespace zzz::core
 	// Заготовка под специфичные константы платформы Linux
 #pragma endregion // Linux constants
 }
+
+#endif // defined(Z_LINUX)

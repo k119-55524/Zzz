@@ -1,5 +1,9 @@
 #pragma once
 
+#include "core/utils/Defines.h"
+
+#if defined(Z_WINDOWS)
+
 #include "IMonitorProvider.h"
 #include "engine/EngineIncludes.h"
 #include "engine/utils/MonitorUtils.h"
@@ -29,3 +33,5 @@ namespace zzz::engine
 		std::vector<MonitorInfo> m_Monitors;
 	};
 }
+
+#endif // defined(Z_WINDOWS)
