@@ -12,10 +12,10 @@ using namespace zzz::logger;
 
 #if defined(_MSC_VER)
 #pragma comment(linker, "/alternatename:RegisterAllScripts=DefaultRegisterAllScripts")
-extern "C" void DefaultRegisterAllScripts(zzz::core::ScriptRegistry&) {}
-extern "C" void RegisterAllScripts(zzz::core::ScriptRegistry&);
+extern "C" void DefaultRegisterAllScripts(ScriptRegistry&) {}
+extern "C" void RegisterAllScripts(ScriptRegistry&);
 #else
-extern "C" __attribute__((weak)) void RegisterAllScripts(zzz::core::ScriptRegistry&) {}
+extern "C" __attribute__((weak)) void RegisterAllScripts(ScriptRegistry&) {}
 #endif
 
 Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :

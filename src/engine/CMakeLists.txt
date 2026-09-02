@@ -41,6 +41,19 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "platforms/monitor/MonitorProviderLinux.h"
         "platforms/monitor/MonitorProviderMacOS.h"
 
+        # Hardware (Пункт 6: HardwareManager)
+        "platforms/hardware/HardwareManager.h" "platforms/hardware/HardwareManager.cpp"
+        "platforms/hardware/CpuInfoCollector.h"
+        "platforms/hardware/RamInfoCollector.h"
+        "platforms/hardware/MotherboardInfoCollector.h"
+        "platforms/hardware/GpuInfoCollector.h"
+        "platforms/hardware/StorageInfoCollector.h"
+        "platforms/hardware/NetworkAdapterInfoCollector.h"
+        "platforms/hardware/platforms/motherboard/MotherboardInfoCollectorMobile.h"
+        "platforms/hardware/platforms/storage/StorageInfoCollectorMobile.h"
+        "platforms/hardware/platforms/network/NetworkAdapterInfoCollectorMobile.h"
+        "platforms/hardware/platforms/gpu/GpuInfoCollectorStub.h"
+
         # Main Loop
         "platforms/mainloop/MainLoop.h" "platforms/mainloop/MainLoopCommon.h" "platforms/mainloop/MainLoopCommon.cpp"
         "platforms/mainloop/MainLoopEditor.h"
@@ -92,6 +105,12 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
                 "platforms/input/InputEditor.h" "platforms/input/InputEditor.cpp"
                 "platforms/window/WinMSWindowEditor.h" "platforms/window/WinMSWindowEditor.cpp"
                 "platforms/monitor/MonitorProviderMSWin.h" "platforms/monitor/MonitorProviderMSWin.cpp"
+                "platforms/hardware/platforms/cpu/CpuInfoCollectorEditor.h"
+                "platforms/hardware/platforms/ram/RamInfoCollectorEditor.h"
+                "platforms/hardware/platforms/motherboard/MotherboardInfoCollectorEditor.h"
+                "platforms/hardware/platforms/gpu/GpuInfoCollectorEditor.h"
+                "platforms/hardware/platforms/storage/StorageInfoCollectorEditor.h"
+                "platforms/hardware/platforms/network/NetworkAdapterInfoCollectorEditor.h"
             )
         else()
             target_sources(${TARGET_NAME} PRIVATE 
@@ -100,6 +119,14 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
                 "platforms/mainloop/MainLoopMSWin.h" "platforms/mainloop/MainLoopMSWin.cpp"
                 "platforms/window/WinMSWindows.h" "platforms/window/WinMSWindows.cpp"
                 "platforms/monitor/MonitorProviderMSWin.h" "platforms/monitor/MonitorProviderMSWin.cpp"
+                "platforms/hardware/platforms/common/WCharUtilsMSWin.h"
+                "platforms/hardware/platforms/common/SmbiosReaderMSWin.h" "platforms/hardware/platforms/common/SmbiosReaderMSWin.cpp"
+                "platforms/hardware/platforms/cpu/CpuInfoCollectorMSWin.h" "platforms/hardware/platforms/cpu/CpuInfoCollectorMSWin.cpp"
+                "platforms/hardware/platforms/ram/RamInfoCollectorMSWin.h" "platforms/hardware/platforms/ram/RamInfoCollectorMSWin.cpp"
+                "platforms/hardware/platforms/motherboard/MotherboardInfoCollectorMSWin.h" "platforms/hardware/platforms/motherboard/MotherboardInfoCollectorMSWin.cpp"
+                "platforms/hardware/platforms/storage/StorageInfoCollectorMSWin.h" "platforms/hardware/platforms/storage/StorageInfoCollectorMSWin.cpp"
+                "platforms/hardware/platforms/network/NetworkAdapterInfoCollectorMSWin.h" "platforms/hardware/platforms/network/NetworkAdapterInfoCollectorMSWin.cpp"
+                "platforms/hardware/platforms/gpu/GpuInfoCollectorMSWin.h" "platforms/hardware/platforms/gpu/GpuInfoCollectorMSWin.cpp"
             )
         endif()
     endif()
@@ -110,6 +137,11 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
             "platforms/input/InputLinux.h" "platforms/input/InputLinux.cpp"
             "platforms/mainloop/MainLoopLinux.h" "platforms/mainloop/MainLoopLinux.cpp"
             "platforms/window/WinLinux.h" "platforms/window/WinLinux.cpp"
+            "platforms/hardware/platforms/cpu/CpuInfoCollectorLinux.h" "platforms/hardware/platforms/cpu/CpuInfoCollectorLinux.cpp"
+            "platforms/hardware/platforms/ram/RamInfoCollectorLinux.h" "platforms/hardware/platforms/ram/RamInfoCollectorLinux.cpp"
+            "platforms/hardware/platforms/motherboard/MotherboardInfoCollectorLinux.h" "platforms/hardware/platforms/motherboard/MotherboardInfoCollectorLinux.cpp"
+            "platforms/hardware/platforms/storage/StorageInfoCollectorLinux.h" "platforms/hardware/platforms/storage/StorageInfoCollectorLinux.cpp"
+            "platforms/hardware/platforms/network/NetworkAdapterInfoCollectorLinux.h" "platforms/hardware/platforms/network/NetworkAdapterInfoCollectorLinux.cpp"
         )
     endif()
 
@@ -119,6 +151,8 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
             "platforms/input/InputAndroid.h" "platforms/input/InputAndroid.cpp"
             "platforms/mainloop/MainLoopAndroid.h" "platforms/mainloop/MainLoopAndroid.cpp"
             "platforms/window/WinAndroid.h" "platforms/window/WinAndroid.cpp"
+            "platforms/hardware/platforms/cpu/CpuInfoCollectorAndroid.h" "platforms/hardware/platforms/cpu/CpuInfoCollectorAndroid.cpp"
+            "platforms/hardware/platforms/ram/RamInfoCollectorAndroid.h" "platforms/hardware/platforms/ram/RamInfoCollectorAndroid.cpp"
         )
     endif()
 
@@ -129,6 +163,8 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
                 "platforms/PlatformiOS.mm"
                 "platforms/mainloop/MainLoopiOS.h" "platforms/mainloop/MainLoopiOS.mm"
                 "platforms/window/WiniOS.h" "platforms/window/WiniOS.mm"
+                "platforms/hardware/platforms/cpu/CpuInfoCollectorApple.h" "platforms/hardware/platforms/cpu/CpuInfoCollectorApple.cpp"
+                "platforms/hardware/platforms/ram/RamInfoCollectorApple.h" "platforms/hardware/platforms/ram/RamInfoCollectorApple.cpp"
             )
         else()
             target_sources(${TARGET_NAME} PRIVATE
@@ -136,6 +172,11 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
                 "platforms/PlatformMacOS.mm"
                 "platforms/mainloop/MainLoopMacOS.h" "platforms/mainloop/MainLoopMacOS.mm"
                 "platforms/window/WinMacOS.h" "platforms/window/WinMacOS.mm"
+                "platforms/hardware/platforms/cpu/CpuInfoCollectorApple.h" "platforms/hardware/platforms/cpu/CpuInfoCollectorApple.cpp"
+                "platforms/hardware/platforms/ram/RamInfoCollectorApple.h" "platforms/hardware/platforms/ram/RamInfoCollectorApple.cpp"
+                "platforms/hardware/platforms/motherboard/MotherboardInfoCollectorMacOS.h" "platforms/hardware/platforms/motherboard/MotherboardInfoCollectorMacOS.cpp"
+                "platforms/hardware/platforms/storage/StorageInfoCollectorMacOS.h" "platforms/hardware/platforms/storage/StorageInfoCollectorMacOS.cpp"
+                "platforms/hardware/platforms/network/NetworkAdapterInfoCollectorMacOS.h" "platforms/hardware/platforms/network/NetworkAdapterInfoCollectorMacOS.cpp"
             )
         endif()
     endif()

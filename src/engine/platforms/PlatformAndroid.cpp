@@ -68,11 +68,4 @@ void Platform::ShutdownPlatformSpecific()
 {
 }
 
-PlatformHardwareState Platform::GatherHardwareState() const
-{
-	PlatformHardwareState state{};
-	state.cpu.architecture = "ARM64";
-	return state;
-}
-
 #endif // defined(Z_ANDROID)

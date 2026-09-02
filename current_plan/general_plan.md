@@ -104,9 +104,9 @@
 ## 📌 Текущее состояние разработки
 
 > [!IMPORTANT]
-> **Текущий активный пункт:** `Пункт 5. Кроссплатформенная файловая система (FileSystem, eFileLocation)`  
-> **Статус:** ✅ Выполнено  
-> **Файл детального плана текущего шага:** [`stage_05_filesystem.md`](stage_05_filesystem.md)
+> **Текущий активный пункт:** `Пункт 7. Шаблонная система буфера вершин и маппер GAPI`  
+> **Статус:** ⏳ Не начато  
+> **Файл детального плана текущего шага:** Ожидает формирования (по команде)
 
 ---
 
@@ -120,7 +120,7 @@
 | **3** | Кватернионы `Quat` | ✅ Выполнено | [`stage_03_quat.md`](stage_03_quat.md) | 3D вращения без Gimbal Lock, `Slerp`, `FromEuler`/`ToEuler`, `ToMat4`, сериализация |
 | **4** | Базовые перечисления (Enums) и структуры ядра | ✅ Выполнено | [`stage_04_enums_and_core_structs.md`](stage_04_enums_and_core_structs.md) | `eResourceType`, `ePixelFormat`, `eIndexFormat`, `ConverterGAPITypes`, `eVertexSemantic`, `Vertex3D`, `AttributeRange`, выравнивание CBV (256б), `EnumToString` |
 | **5** | Кроссплатформенная файловая система (`FileSystem`, `eFileLocation`) | ✅ Выполнено | [`stage_05_filesystem.md`](stage_05_filesystem.md) | Compile-Time Type Alias (`using FileSystem = ...`), `FileSystemBase`, `FileSystemDesktop`, `eFileLocation`, ranged-read, изоляция `Path` |
-| **6** | Рефакторинг подсистемы аппаратуры (`HardwareManager`, `HardwareState`) | ⏳ Не начато | — | Вынос сбора телеметрии (CPU, RAM, GPU, Storage, Network) из монолитного `Platform::GatherHardwareState` в чистый сервис по Правилу 29 (SRP, изоляция нативных SDK Win32 DXGI/SMBIOS) |
+| **6** | Рефакторинг подсистемы аппаратуры (`HardwareManager`, `HardwareState`) | ✅ Выполнено | [`stage_06_hardware_manager.md`](stage_06_hardware_manager.md) | Вынос сбора телеметрии (CPU, RAM, GPU, Storage, Network) из монолитного `Platform::GatherHardwareState` в чистый сервис по Правилу 29 (SRP, изоляция нативных SDK Win32 DXGI/SMBIOS) |
 
 ### Уровень 2: GAPI-ресурсы, содержимое куба и сквозной рендер
 | № | Этап разработки | Статус | Файл этапа | Краткое описание |

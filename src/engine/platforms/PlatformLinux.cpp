@@ -187,12 +187,4 @@ void Platform::ShutdownPlatformSpecific()
 	}
 }
 
-PlatformHardwareState Platform::GatherHardwareState() const
-{
-	PlatformHardwareState state{};
-	// Базовая информация для Linux
-	state.cpu.architecture = "x86_64";
-	return state;
-}
-
 #endif // defined(Z_LINUX)

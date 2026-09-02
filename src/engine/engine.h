@@ -1,13 +1,13 @@
 #pragma once
 
 #include "engine/gapi/GAPI.h"
+#include "core/enums/eInitState.h"
 #include "engine/view/ViewManager.h"
 #include "engine/platforms/Platform.h"
 #include "engine/scene/SceneManager.h"
 #include "engine/package/PackageManager.h"
 #include "engine/package/UserSettingsManager.h"
 #include "engine/platforms/mainloop/MainLoop.h"
-#include "core/enums/eInitState.h"
 
 using namespace zzz::core;
 

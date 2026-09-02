@@ -11,6 +11,8 @@
 #error ">>>>> PlatformCommon: Unsupported platform for IMonitorProvider."
 #endif
 
+#include "hardware/HardwareManager.h"
+
 using namespace zzz::engine;
 
 Platform::Platform(std::shared_ptr<NativeAppData> nativeData, const ProjectPlatformData& platformData) :
@@ -29,7 +31,7 @@ Platform::Platform(std::shared_ptr<NativeAppData> nativeData, const ProjectPlatf
 #error ">>>>> PlatformCommon: Unsupported platform for IMonitorProvider."
 #endif
 	),
-	m_HardwareState(GatherHardwareState())
+	m_HardwareManager(safe_make_unique<HardwareManager>(*m_MonitorProvider))
 {
 	Initialize();
 }
@@ -37,6 +39,11 @@ Platform::Platform(std::shared_ptr<NativeAppData> nativeData, const ProjectPlatf
 Platform::~Platform()
 {
 	ShutdownPlatformSpecific();
+}
+
+const HardwareState& Platform::GetHardwareState() const noexcept
+{
+	return m_HardwareManager->GetHardwareState();
 }
 
 const IMonitorProvider& Platform::GetMonitorProvider() const noexcept

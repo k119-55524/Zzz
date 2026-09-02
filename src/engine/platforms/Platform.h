@@ -7,7 +7,8 @@ namespace zzz::engine
 {
 	class Engine;
 	class IMonitorProvider;
-	
+	class HardwareManager;
+
 	class Platform final
 	{
 	public:
@@ -17,7 +18,7 @@ namespace zzz::engine
 
 		[[nodiscard]] inline std::shared_ptr<NativeAppData> GetNativeData() const noexcept { return m_NativeData; }
 		[[nodiscard]] inline const ProjectPlatformData& GetProjectPlatformData() const noexcept { return m_PlatformData; }
-		[[nodiscard]] inline const HardwareState& GetHardwareState() const noexcept { return m_HardwareState; }
+		[[nodiscard]] const HardwareState& GetHardwareState() const noexcept;
 		[[nodiscard]] const IMonitorProvider& GetMonitorProvider() const noexcept;
 
 #if defined(Z_APPLE)
@@ -30,11 +31,10 @@ namespace zzz::engine
 		void Initialize();
 		void InitializePlatformSpecific();
 		void ShutdownPlatformSpecific();
-		[[nodiscard]] HardwareState GatherHardwareState() const;
 
 		std::shared_ptr<NativeAppData> m_NativeData;
 		ProjectPlatformData m_PlatformData;
 		std::shared_ptr<IMonitorProvider> m_MonitorProvider;
-		HardwareState m_HardwareState;
+		std::unique_ptr<HardwareManager> m_HardwareManager;   // заменяет m_HardwareState; unique, т.к. единственный владелец (см. stage_06)
 	};
 }
