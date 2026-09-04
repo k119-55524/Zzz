@@ -55,12 +55,9 @@ void ViewManager::CreatePrimaryView()
 	if (m_PrimaryView)
 		THROW_RUNTIME("Первичное (Основное) окно приложения уже создано.");
 
-	// 1. Проверяем наличие ресурсов Основного окна в package.dat
 	auto primaryViewData = m_PackageManager->GetPrimaryViewData();
-	if (!primaryViewData)
-		THROW_RUNTIME("Обязательный ресурс PrimaryViewData не найден в пакете: {}", primaryViewData.error());
+	ensure(primaryViewData != nullptr, "Не удалось получить данные для основного окна.");
 
-	// 2. Получаем или создаем прямой блок ViewPlatformData в UserSettingsManager
 	const bool isFirstTime = (m_UserSettingsManager->GetPrimaryViewUserData() == nullptr);
 	auto* userPlatformData = m_UserSettingsManager->GetOrCreatePrimaryViewPlatformData(primaryViewData->GetViewGuid(), primaryViewData->GetPlatformData());
 

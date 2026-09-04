@@ -93,8 +93,16 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "gapi/metal/MetalAPI.h" "gapi/metal/MetalAPI.mm"
         "gapi/metal/SurfView_Metal.h" "gapi/metal/SurfView_Metal.mm"
 
-        # Scripts & Scenes
-        "scene/GameObject.h"
+        # Scripts & Scenes (Пункт 7: GameObject, Transform, ObjectWorld, Layers, Storage)
+        "scene/Transform.h" "scene/Transform.cpp"
+        "scene/GameObject.h" "scene/GameObject.cpp"
+        "scene/ObjectWorld.h" "scene/ObjectWorld.cpp"
+        "scene/storage/ISceneStorage.h"
+        "scene/storage/DefaultSceneStorage.h" "scene/storage/DefaultSceneStorage.cpp"
+        "scene/layer/ILayer.h"
+        "scene/layer/Layer3D.h" "scene/layer/Layer3D.cpp"
+        "scene/layer/LayerUI.h" "scene/layer/LayerUI.cpp"
+        "scene/layer/LayerMVVM.h" "scene/layer/LayerMVVM.cpp"
         "scene/Scene.h" "scene/Scene.cpp"
         "scene/SceneManager.h" "scene/SceneManager.cpp")
 

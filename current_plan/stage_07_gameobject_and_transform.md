@@ -537,8 +537,8 @@ namespace zzz
 		[[nodiscard]] ISceneStorage* GetStorage() const noexcept { return m_Storage; }
 
 	private:
-		// Владение памятью: стабильные адреса объектов
-		std::vector<std::unique_ptr<GameObject>> m_AllocatedObjects;
+		// Владение памятью: стабильные адреса объектов с гарантированным O(1) удалением
+		std::unordered_map<GameObject*, std::unique_ptr<GameObject>> m_AllocatedObjects;
 
 		// Плотный пул активных указателей для кэш-локального обхода Update()
 		::zzz::core::SlotMap<GameObject*> m_ActiveObjects;
@@ -568,22 +568,22 @@ namespace zzz
 
 ## 5. Чек-лист Definition of Done (DoD)
 
-- [ ] Создать шаблонный контейнер `src/core/templates/SlotMap.h` (Dense/Sparse пул с Swap & Pop)
-- [ ] Создать `src/engine/scene/Transform.h` и `Transform.cpp` (с ленивым $TRS$ и dirty-флагом)
-- [ ] Выполнить рефакторинг `src/engine/scene/GameObject.h` и `GameObject.cpp` (GUID, Transform, слоты `meshGuid`/`materialGuid`)
-- [ ] Создать `src/engine/scene/ObjectWorld.h` и `ObjectWorld.cpp` (владелец объектов и SlotMap<GameObject*>)
-- [ ] Создать `src/engine/scene/storage/ISceneStorage.h` и `DefaultSceneStorage.h` / `.cpp`
-- [ ] Создать систему слоев сцены `src/engine/scene/layer/`:
+- [x] Создать шаблонный контейнер `src/core/templates/SlotMap.h` (Dense/Sparse пул с Swap & Pop)
+- [x] Создать `src/engine/scene/Transform.h` и `Transform.cpp` (с ленивым $TRS$ и dirty-флагом)
+- [x] Выполнить рефакторинг `src/engine/scene/GameObject.h` и `GameObject.cpp` (GUID, Transform, слоты `meshGuid`/`materialGuid`)
+- [x] Создать `src/engine/scene/ObjectWorld.h` и `ObjectWorld.cpp` (владелец объектов и SlotMap<GameObject*>)
+- [x] Создать `src/engine/scene/storage/ISceneStorage.h` и `DefaultSceneStorage.h` / `.cpp`
+- [x] Создать систему слоев сцены `src/engine/scene/layer/`:
   - `ILayer.h` (базовый интерфейс)
   - `Layer3D.h` / `.cpp` (3D мир с `DefaultSceneStorage` и `ObjectWorld`)
   - `LayerUI.h` / `.cpp` (HUD / Screen UI)
   - `LayerMVVM.h` / `.cpp` (каркас авторского MVVM-фреймворка)
-- [ ] Создать `src/core/io/package/GameObjectData.h` и `GameObjectData.cpp` (сериализация сущности)
-- [ ] Обновить `src/core/io/package/SceneData.h` и `SceneData.cpp` для хранения `std::vector<GameObjectData>`
-- [ ] Интегрировать слои в `src/engine/scene/Scene.h` и `Scene.cpp`
-- [ ] Зарегистрировать новые файлы в `src/core/CMakeLists.txt` и `src/engine/CMakeLists.txt`
-- [ ] Собрать `EngineTests.exe` и `game_win` под MSVC + Ninja (чистая сборка)
-- [ ] Запустить `game_win.exe` (чистый запуск, создание тестового GameObject с Transform в Layer3D, завершение с кодом 0)
+- [x] Создать `src/core/io/package/GameObjectData.h` и `GameObjectData.cpp` (сериализация сущности)
+- [x] Обновить `src/core/io/package/SceneData.h` для хранения `std::vector<GameObjectData>`
+- [x] Интегрировать слои в `src/engine/scene/Scene.h` и `Scene.cpp`
+- [x] Зарегистрировать новые файлы в `src/core/CMakeLists.txt` и `src/engine/CMakeLists.txt`
+- [x] Собрать `EngineTests.exe` и `game_win` под MSVC + Ninja (чистая сборка)
+- [x] Запустить `game_win.exe` (чистый запуск, создание тестового GameObject с Transform в Layer3D, завершение)
 - [ ] Запросить утверждение у пользователя
 - [ ] Зафиксировать Git-коммит: `feat(scene): completed stage 07 - GameObject, Transform, SlotMap, ObjectWorld, Layers and SceneStorage`
 - [ ] Обновить статус Пункта 7 в `general_plan.md` на `✅ Выполнено`

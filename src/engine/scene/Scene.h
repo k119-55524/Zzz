@@ -2,6 +2,11 @@
 
 #include "engine/EngineIncludes.h"
 #include "engine/gapi/clear_config/ClearConfig.h"
+#include "engine/scene/layer/ILayer.h"
+#include "engine/scene/layer/Layer3D.h"
+#include <vector>
+#include <memory>
+#include <span>
 
 namespace zzz::engine
 {
@@ -22,6 +27,11 @@ namespace zzz::engine
 		[[nodiscard]] const ClearConfig& GetClearConfig() const noexcept { return m_ClearConfig; }
 		void SetClearConfig(const ClearConfig& config) noexcept { m_ClearConfig = config; }
 
+		// --- Управление слоями сцены ---
+		void AddLayer(std::unique_ptr<ILayer> layer);
+		[[nodiscard]] Layer3D* GetLayer3D() const noexcept;
+		[[nodiscard]] const std::vector<std::unique_ptr<ILayer>>& GetLayers() const noexcept { return m_Layers; }
+
 		void Update(const Time& time);
 		void InvokeStart();
 		void InvokeDestroy();
@@ -32,5 +42,9 @@ namespace zzz::engine
 		ClearConfig m_ClearConfig;
 		SceneEventBus m_EventBus;
 		std::vector<std::shared_ptr<SceneScript>> m_Scripts;
+
+		// Слои сцены
+		std::vector<std::unique_ptr<ILayer>> m_Layers;
+		Layer3D* m_Layer3D{ nullptr };
 	};
 }

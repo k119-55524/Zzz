@@ -78,6 +78,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverterLinuxTypes.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverterMacOSTypes.h
         ${CMAKE_CURRENT_SOURCE_DIR}/templates/DoubleBufferedVector.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/templates/SlotMap.h
         ${CMAKE_CURRENT_SOURCE_DIR}/hardware/CpuInfo.h
         ${CMAKE_CURRENT_SOURCE_DIR}/hardware/GpuInfo.h
         ${CMAKE_CURRENT_SOURCE_DIR}/hardware/RamInfo.h
@@ -119,6 +120,8 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/IndependentViewData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/ProjectManifestData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/SceneData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/GameObjectData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/GameObjectData.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PrefabData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Serialize/Serializer.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Serialize/Serializer.cpp

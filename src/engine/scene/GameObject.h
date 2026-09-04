@@ -1,6 +1,11 @@
 #pragma once
 
-#include "engine/EngineIncludes.h"
+#include <string>
+#include <vector>
+#include <memory>
+#include "core/utils/Guid.h"
+#include "core/templates/SlotMap.h"
+#include "engine/scene/Transform.h"
 
 namespace zzz::core
 {
@@ -9,35 +14,78 @@ namespace zzz::core
 
 namespace zzz
 {
-	class GameObject : public std::enable_shared_from_this<GameObject>
+	/**
+	 * @class GameObject
+	 * @brief Сущность игрового мира, объединяющая иерархию сцены, Transform, ресурсы и скрипты.
+	 */
+	class GameObject final
 	{
 	public:
-		explicit GameObject(std::string name) : m_Name(std::move(name)) {}
+		explicit GameObject(std::string name = "GameObject");
+		GameObject(::zzz::core::Guid guid, std::string name);
 		~GameObject() = default;
 
-		const std::string& GetName() const { return m_Name; }
+		Z_NO_COPY_MOVE(GameObject);
+
+		// --- Идентификация ---
+		[[nodiscard]] const ::zzz::core::Guid& GetGuid() const noexcept { return m_Guid; }
+		[[nodiscard]] const std::string& GetName() const noexcept { return m_Name; }
 		void SetName(std::string name) { m_Name = std::move(name); }
 
-		void AddScript(std::shared_ptr<core::Script> script) {
-			m_Scripts.push_back(script);
-		}
+		// --- Хэндл в ObjectWorld (O(1) удаление из SlotMap) ---
+		[[nodiscard]] ::zzz::core::SlotHandle GetWorldHandle() const noexcept { return m_WorldHandle; }
+		void SetWorldHandle(::zzz::core::SlotHandle handle) noexcept { m_WorldHandle = handle; }
 
-		void RemoveScript(const std::shared_ptr<core::Script>& script)
-		{
-			std::erase(m_Scripts, script);
-		}
+		// --- Активность и жизненный цикл в кадре ---
+		[[nodiscard]] bool IsActive() const noexcept { return m_IsActive; }
+		void SetActive(bool active) noexcept { m_IsActive = active; }
 
-		void RemoveAllScripts() {
-			m_Scripts.clear();
-		}
+		[[nodiscard]] uint8_t GetRenderFramesRemaining() const noexcept { return m_RenderFramesRemaining; }
+		void DecrementRenderFrames() noexcept { if (m_RenderFramesRemaining > 0) --m_RenderFramesRemaining; }
+		void ResetRenderFrames(uint8_t bufferCount = 2) noexcept { m_RenderFramesRemaining = bufferCount; }
 
-		const std::vector<std::shared_ptr<core::Script>>& GetScripts() const
-		{
-			return m_Scripts;
-		}
+		// --- Пространственная трансформация ---
+		[[nodiscard]] Transform& GetTransform() noexcept { return m_Transform; }
+		[[nodiscard]] const Transform& GetTransform() const noexcept { return m_Transform; }
+
+		// --- Иерархия сцены (Parent / Children) ---
+		[[nodiscard]] GameObject* GetParent() const noexcept { return m_Parent; }
+		void SetParent(GameObject* newParent, bool keepWorldTransform = true) noexcept;
+
+		[[nodiscard]] const std::vector<GameObject*>& GetChildren() const noexcept { return m_Children; }
+		[[nodiscard]] size_t GetChildCount() const noexcept { return m_Children.size(); }
+		[[nodiscard]] GameObject* GetChild(size_t index) const noexcept;
+
+		// --- Слоты графических ресурсов (для отрисовки меша и материала) ---
+		[[nodiscard]] const ::zzz::core::Guid& GetMeshGuid() const noexcept { return m_MeshGuid; }
+		void SetMeshGuid(const ::zzz::core::Guid& guid) noexcept { m_MeshGuid = guid; }
+		[[nodiscard]] bool HasMesh() const noexcept { return !m_MeshGuid.IsEmpty(); }
+
+		[[nodiscard]] const ::zzz::core::Guid& GetMaterialGuid() const noexcept { return m_MaterialGuid; }
+		void SetMaterialGuid(const ::zzz::core::Guid& guid) noexcept { m_MaterialGuid = guid; }
+		[[nodiscard]] bool HasMaterial() const noexcept { return !m_MaterialGuid.IsEmpty(); }
+
+		// --- Скрипты поведения ---
+		void AddScript(std::shared_ptr<::zzz::core::Script> script);
+		void RemoveScript(const std::shared_ptr<::zzz::core::Script>& script);
+		void RemoveAllScripts();
+		[[nodiscard]] const std::vector<std::shared_ptr<::zzz::core::Script>>& GetScripts() const noexcept { return m_Scripts; }
 
 	private:
+		::zzz::core::Guid m_Guid;
 		std::string m_Name;
-		std::vector<std::shared_ptr<core::Script>> m_Scripts;
+		::zzz::core::SlotHandle m_WorldHandle{};
+		bool m_IsActive{ true };
+		uint8_t m_RenderFramesRemaining{ 2 }; // Frames in Flight safety
+
+		Transform m_Transform;
+
+		GameObject* m_Parent{ nullptr };
+		std::vector<GameObject*> m_Children;
+
+		::zzz::core::Guid m_MeshGuid;
+		::zzz::core::Guid m_MaterialGuid;
+
+		std::vector<std::shared_ptr<::zzz::core::Script>> m_Scripts;
 	};
 }
