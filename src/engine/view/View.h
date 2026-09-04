@@ -24,17 +24,20 @@ namespace zzz::engine
 			const ViewConfigData& viewData,
 			ViewPlatformData* platformData,
 			std::shared_ptr<ScriptFactory> scriptFactory,
-			std::shared_ptr<SceneManager> sceneManager,
 			const Platform& platform,
 			std::shared_ptr<GAPI> gapi,
 			std::function<void(View&)> onWindowClose,
 			const View* parentView = nullptr);
 #if Z_EDITOR
 		View(const Platform& platform, std::shared_ptr<GAPI> gapi, void* data);
-#endif // Z_EDITOR
+#endif
 		~View();
 
 		inline void InvokeStart() { m_EventBus.InvokeStart(); }
+
+		void SetScene(std::shared_ptr<Scene> newScene);
+		[[nodiscard]] inline std::shared_ptr<Scene> GetActiveScene() const noexcept { return m_ActiveScene.lock(); }
+		[[nodiscard]] inline bool IsUserInputBlocked() const noexcept { return m_IsUserInputBlocked; }
 
 		void Update(const Time& time);
 		void PreRender();
@@ -49,7 +52,7 @@ namespace zzz::engine
 		[[nodiscard]] inline std::shared_ptr<ISurfView> GetSurfView() const noexcept { return m_SurfView; }
 
 	private:
-		void Initialize(const ViewConfigData& viewData, ViewPlatformData* platformData, std::shared_ptr<ScriptFactory> scriptFactory, std::shared_ptr<SceneManager> sceneManager, std::shared_ptr<GAPI> gapi, const View* parentView = nullptr);
+		void Initialize(const ViewConfigData& viewData, ViewPlatformData* platformData, std::shared_ptr<ScriptFactory> scriptFactory, std::shared_ptr<GAPI> gapi, const View* parentView = nullptr);
 #if Z_EDITOR
 		void Initialize(void* data);
 #endif
@@ -202,10 +205,23 @@ namespace zzz::engine
 		std::shared_ptr<Input>  m_Input;
 		std::shared_ptr<NativeWindow> m_NativeWindow;
 
+		enum class eTransitionState : zU8
+		{
+			Idle,
+			FadingOut,
+			Activating,
+			FadingIn
+		};
+
 		ViewEventBus m_EventBus;
 		std::weak_ptr<Scene> m_ActiveScene;
 		std::vector<std::shared_ptr<ViewScript>> m_Scripts;
 		ViewPlatformData* m_UserPlatformData = nullptr;
+
+		eTransitionState m_TransitionState{ eTransitionState::Idle };
+		SceneTransitionParams m_ActiveTransitionParams{};
+		zF32 m_TransitionElapsedTime{ 0.0f };
+		bool m_IsUserInputBlocked{ false };
 
 		std::function<void(View&)> OnWindowClose;
 		void HandleWindowClose();

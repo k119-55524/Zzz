@@ -10,6 +10,7 @@
 
 #include "core/utils/Export.h"
 #include "core/utils/Macroses.h"
+#include "core/scene/transition/SceneTransitionParams.h"
 #include <math/Math.h>
 
 namespace zzz::core
@@ -426,6 +427,26 @@ namespace zzz::core
 				.and_then([&]() { return Deserialize(buffer, offset, v.texCoord); })
 				.and_then([&]() { return Deserialize(buffer, offset, v.color); })
 				.and_then([&]() { return Deserialize(buffer, offset, v.tangent); });
+		}
+
+		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const SceneTransitionParams& params) const
+		{
+			return Serialize(buffer, params.type)
+				.and_then([&]() { return Serialize(buffer, params.durationSeconds); })
+				.and_then([&]() { return Serialize(buffer, params.fadeColor); })
+				.and_then([&]() { return Serialize(buffer, params.blockUserInput); })
+				.and_then([&]() { return Serialize(buffer, params.pauseOldSceneUpdate); })
+				.and_then([&]() { return Serialize(buffer, params.renderLoadingSpinner); });
+		}
+
+		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, SceneTransitionParams& params) const
+		{
+			return Deserialize(buffer, offset, params.type)
+				.and_then([&]() { return Deserialize(buffer, offset, params.durationSeconds); })
+				.and_then([&]() { return Deserialize(buffer, offset, params.fadeColor); })
+				.and_then([&]() { return Deserialize(buffer, offset, params.blockUserInput); })
+				.and_then([&]() { return Deserialize(buffer, offset, params.pauseOldSceneUpdate); })
+				.and_then([&]() { return Deserialize(buffer, offset, params.renderLoadingSpinner); });
 		}
 	};
 }

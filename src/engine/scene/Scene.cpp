@@ -1,5 +1,7 @@
-#include "Scene.h"
+
 #include "core/utils/MemoryUtils.h"
+
+#include "Scene.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Scene);
 
@@ -7,10 +9,17 @@ using namespace zzz::core;
 
 namespace zzz::engine
 {
-	Scene::Scene(Guid guid, std::string name, const std::vector<Guid>& sceneScriptGuids, const ScriptFactory& scriptFactory, ClearConfig clearConfig) :
+	Scene::Scene(
+		Guid guid,
+		std::string name,
+		const std::vector<Guid>& sceneScriptGuids,
+		const ScriptFactory& scriptFactory,
+		ClearConfig clearConfig,
+		SceneTransitionParams transitionParams) :
 		m_Guid(guid),
 		m_Name(std::move(name)),
-		m_ClearConfig(std::move(clearConfig))
+		m_ClearConfig(std::move(clearConfig)),
+		m_TransitionParams(std::move(transitionParams))
 	{
 		for (const auto& scriptGuid : sceneScriptGuids)
 		{

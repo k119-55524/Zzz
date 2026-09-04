@@ -73,5 +73,6 @@ namespace zzz::engine
 		std::function<void()> OnAllViewsClosed;
 		void OnWindowClose(View& view);
 		std::shared_ptr<View> CreateViewInstance(const ViewConfigData& viewData, ePackage viewType, const View* parentView = nullptr);
+		void SetupSceneAsync(std::weak_ptr<View> viewWeak, Guid sceneGuid);
 	};
 }

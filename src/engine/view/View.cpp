@@ -1,10 +1,11 @@
 
-#include "scene/SceneManager.h"
+#include "scene/Scene.h"
 #include "core/enums/eWinResize.h"
 #include "../platforms/input/Input.h"
 #include "engine/utils/EngineLogFlags.h"
 #include "core/userscripts/ScriptFactory.h"
 #include "../platforms/window/NativeWindow.h"
+#include "core/scene/transition/SceneTransitionParams.h"
 
 #include "View.h"
 
@@ -17,7 +18,6 @@ View::View(
 	const ViewConfigData& viewData,
 	ViewPlatformData* platformData,
 	std::shared_ptr<ScriptFactory> scriptFactory,
-	std::shared_ptr<SceneManager> sceneManager,
 	const Platform& platform,
 	std::shared_ptr<GAPI> gapi,
 	std::function<void(View&)> onWindowClose,
@@ -32,9 +32,8 @@ View::View(
 	ensure(gapi != nullptr, "GAPI не должен быть null.");
 	ensure(OnWindowClose != nullptr, "OnWindowClose не должен быть null.");
 	ensure(scriptFactory != nullptr, "ScriptFactory не должен быть null.");
-	ensure(sceneManager != nullptr, "SceneManager не должен быть null.");
 
-	Initialize(viewData, platformData, std::move(scriptFactory), std::move(sceneManager), std::move(gapi), parentView);
+	Initialize(viewData, platformData, std::move(scriptFactory), std::move(gapi), parentView);
 }
 
 #if Z_EDITOR
@@ -56,7 +55,7 @@ View::~View()
 	m_ActiveScene.reset();
 }
 
-void View::Initialize(const ViewConfigData& viewData, ViewPlatformData* platformData, std::shared_ptr<ScriptFactory> scriptFactory, std::shared_ptr<SceneManager> sceneManager, std::shared_ptr<GAPI> gapi, const View* parentView)
+void View::Initialize(const ViewConfigData& viewData, ViewPlatformData* platformData, std::shared_ptr<ScriptFactory> scriptFactory, std::shared_ptr<GAPI> gapi, const View* parentView)
 {
 	m_UserPlatformData = platformData;
 
@@ -100,12 +99,6 @@ void View::Initialize(const ViewConfigData& viewData, ViewPlatformData* platform
 		script->Init(&m_EventBus);
 		m_Scripts.push_back(std::move(script));
 	}
-
-	auto sceneRes = sceneManager->LoadScene(viewData.GetSceneGuid());
-	if (!sceneRes)
-		THROW_RUNTIME("Не удалось загрузить стартовую сцену View (guid {}): {}", viewData.GetSceneGuid().ToString(), sceneRes.error());
-
-	m_ActiveScene = *sceneRes;
 }
 
 #if Z_EDITOR
@@ -284,8 +277,43 @@ void View::OnWindowSafeAreaChanged(int top, int bottom, int left, int right)
 }
 #pragma endregion
 
+void View::SetScene(std::shared_ptr<Scene> newScene)
+{
+	SceneTransitionParams transition = newScene ? newScene->GetTransitionParams() : SceneTransitionParams{};
+
+	m_ActiveTransitionParams = transition;
+	m_TransitionElapsedTime = 0.0f;
+
+	if (transition.type == eTransitionType::Instant || transition.durationSeconds <= 0.0f)
+	{
+		m_ActiveScene = newScene;
+		m_TransitionState = eTransitionState::Idle;
+		m_IsUserInputBlocked = false;
+		DOut("[View::SetScene] Сцена мгновенно активирована (GUID: {})", newScene ? newScene->GetGuid().ToString() : "null");
+	}
+	else
+	{
+		m_TransitionState = eTransitionState::FadingOut;
+		m_IsUserInputBlocked = transition.blockUserInput;
+		m_ActiveScene = newScene;
+		DOut("[View::SetScene] Запущен переход сцены (тип: {}, длительность: {:.2f}s, blockInput: {})",
+			ToString(transition.type), transition.durationSeconds, transition.blockUserInput);
+	}
+}
+
 void View::Update(const Time& time)
 {
+	if (m_TransitionState != eTransitionState::Idle)
+	{
+		m_TransitionElapsedTime += time.GetDeltaTime();
+		if (m_TransitionElapsedTime >= m_ActiveTransitionParams.durationSeconds)
+		{
+			m_TransitionState = eTransitionState::Idle;
+			m_IsUserInputBlocked = false;
+			DOut("[View::Update] Переход сцены завершен.");
+		}
+	}
+
 	m_EventBus.InvokeUpdate(time);
 }
 

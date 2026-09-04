@@ -1,16 +1,16 @@
 #pragma once
 
-#include "engine/EngineIncludes.h"
+#include "core/templates/ThreadPool.h"
+#include "core/templates/CallbackQueue.h"
+#include "core/scene/transition/SceneTransitionParams.h"
+
+using namespace zzz::core;
+using namespace zzz::templates;
 
 namespace zzz::engine
 {
 	class PackageManager;
 	class Scene;
-}
-
-namespace zzz::engine
-{
-	using namespace zzz::core;
 
 	class SceneManager final
 	{
@@ -21,8 +21,11 @@ namespace zzz::engine
 		SceneManager(std::shared_ptr<PackageManager> packageManager, std::shared_ptr<ScriptFactory> scriptFactory);
 		~SceneManager() = default;
 
-		[[nodiscard]] std::expected<std::shared_ptr<Scene>, std::string> LoadScene(const Guid& sceneGuid);
-		[[nodiscard]] std::expected<std::shared_ptr<Scene>, std::string> LoadSceneByName(std::string_view sceneName);
+		using SceneLoadResult = std::expected<std::shared_ptr<Scene>, std::string>;
+		using SceneLoadCallback = std::function<void(SceneLoadResult)>;
+
+		void LoadSceneAsync(Guid sceneGuid, SceneLoadCallback onComplete);
+		void LoadSceneAsync(std::string sceneName, SceneLoadCallback onComplete);
 
 		void Update(const Time& time);
 
@@ -30,6 +33,11 @@ namespace zzz::engine
 		std::shared_ptr<PackageManager> m_PackageManager;
 		std::shared_ptr<ScriptFactory> m_ScriptFactory;
 
-		std::unordered_map<Guid, std::shared_ptr<Scene>> m_Scenes;
+		SceneTransitionParams m_GlobalTransitionParams;
+		std::unique_ptr<ThreadPool> m_LoadingThreadPool;
+
+		std::mutex m_LoadSceneMutex;
+		CallbackQueue<> m_MainThreadQueue;
+		std::vector<std::shared_ptr<Scene>> m_Scenes;
 	};
 }

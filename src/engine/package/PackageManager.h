@@ -17,16 +17,16 @@ namespace zzz::engine
 		explicit PackageManager(std::shared_ptr<FileSystem> fileSystem);
 		~PackageManager() = default;
 
-		[[nodiscard]] std::expected<ProjectManifestData, std::string> GetProjectManifestData() const;
+		[[nodiscard]] const ProjectManifestData& GetProjectManifestData() const noexcept { return m_ProjectManifest; }
 		[[nodiscard]] std::expected<PrimaryViewData, std::string> GetPrimaryViewData() const;
 
 		/// @brief Имя компании и приложения, закэшированные из ProjectManifestData во время Initialize().
 		[[nodiscard]] const std::string& GetCompanyName() const noexcept { return m_CompanyName; }
 		[[nodiscard]] const std::string& GetAppName() const noexcept { return m_AppName; }
 
-		/// @brief Метаданные (имя/guid/offset) записи Scene в package.dat - для SceneManager
-		[[nodiscard]] std::optional<PackageEntry> GetSceneEntryByGuid(const Guid& guid) const { return GetEntryByGuid(ePackage::Scene, guid); }
-		[[nodiscard]] std::optional<PackageEntry> GetSceneEntryByName(std::string_view name) const { return GetEntryByName(ePackage::Scene, name); }
+		/// @brief Метаданные (имя/guid/offset/size) записи любого типа в package.dat
+		[[nodiscard]] std::optional<PackageEntry> GetEntryByGuid(ePackage type, const Guid& guid) const;
+		[[nodiscard]] std::optional<PackageEntry> GetEntryByName(ePackage type, std::string_view name) const;
 
 		/// @brief Проверяет, есть ли в package.dat запись данного типа с таким guid, без полной загрузки/десериализации.
 		[[nodiscard]] bool HasEntry(ePackage type, const Guid& guid) const { return GetEntryByGuid(type, guid).has_value(); }
@@ -67,8 +67,6 @@ namespace zzz::engine
 
 	private:
 		void Initialize();
-		[[nodiscard]] std::optional<PackageEntry> GetEntryByName(ePackage type, std::string_view name) const;
-		[[nodiscard]] std::optional<PackageEntry> GetEntryByGuid(ePackage type, const Guid& guid) const;
 
 		template <typename T> requires std::derived_from<T, ISerializable>
 		[[nodiscard]] std::expected<T, std::string> LoadPackageData(const PackageEntry& entry) const;
@@ -82,5 +80,6 @@ namespace zzz::engine
 		std::map<ePackage, std::unordered_map<Guid, PackageEntry>> m_EntriesByGuid;
 		std::string m_CompanyName;
 		std::string m_AppName;
+		ProjectManifestData m_ProjectManifest{};
 	};
 }

@@ -77,17 +77,9 @@ namespace zzz::engine
 
 		m_CompanyName = manifestRes->GetCompanyName();
 		m_AppName = manifestRes->GetAppName();
+		m_ProjectManifest = std::move(*manifestRes);
 
 		LogPackageEntriesSummary();
-	}
-
-	[[nodiscard]] std::expected<ProjectManifestData, std::string> PackageManager::GetProjectManifestData() const
-	{
-		auto it = m_EntriesByName.find(ePackage::ProjectManifest);
-		if (it == m_EntriesByName.end() || it->second.empty())
-			return UNEXPECTED("Package entry of type ProjectManifest was not found.");
-
-		return LoadPackageData<ProjectManifestData>(it->second.begin()->second);
 	}
 
 	[[nodiscard]] std::expected<PrimaryViewData, std::string> PackageManager::GetPrimaryViewData() const

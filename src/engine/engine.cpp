@@ -26,12 +26,10 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 	if (auto res = m_FileSystem->InitializeUserData(m_PackageManager->GetCompanyName(), m_PackageManager->GetAppName()); !res)
 		THROW_RUNTIME("Не удалось инициализировать каталог пользовательских данных: {}", res.error());
 
-	auto projectManifestData = m_PackageManager->GetProjectManifestData();
-	if (!projectManifestData)
-		THROW_RUNTIME("Failed to load ProjectManifestData: {}", projectManifestData.error());
+	const auto& projectManifestData = m_PackageManager->GetProjectManifestData();
 
 	// Установка максимального размера сетевой очереди логов из манифеста
-	g_Logger.SetMaxNetworkLogQueueSize(projectManifestData->GetMaxLogQueueSize());
+	g_Logger.SetMaxNetworkLogQueueSize(projectManifestData.GetMaxLogQueueSize());
 
 	auto primaryViewData = m_PackageManager->GetPrimaryViewData();
 	if (!primaryViewData)
@@ -41,7 +39,7 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 	m_UserSettingsManager = safe_make_shared<UserSettingsManager>(m_FileSystem);
 
 	// Создание платформенного слоя абстракции ОС (native windows, ввод, системные события)
-	m_Platform = safe_make_unique<Platform>(nativeData, projectManifestData->GetPlatformData());
+	m_Platform = safe_make_unique<Platform>(nativeData, projectManifestData.GetPlatformData());
 	m_Platform->GetHardwareState().LogFileBlock();
 
 	// Инициализация графического интерфейса (DirectX 12 / Vulkan / Metal)
@@ -267,10 +265,6 @@ void Engine::OnUpdateSystem()
 #endif // Z_ADD_LOGGER
 
 	m_EventBus->InvokeUpdate(*m_Time);
-
-	if (m_SceneManager)
-		m_SceneManager->Update(*m_Time);
-
-	if (m_ViewManager)
-		m_ViewManager->Update(*m_Time);
+	m_SceneManager->Update(*m_Time);
+	m_ViewManager->Update(*m_Time);
 }

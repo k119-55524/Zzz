@@ -6,6 +6,7 @@
 #include "core/utils/Guid.h"
 #include "core/utils/Version.h"
 #include "core/Serialize/Serializer.h"
+#include "core/scene/transition/SceneTransitionParams.h"
 #include "core/IO/package/platforms/project/ProjectPlatformConfig.h"
 
 namespace zzz::core
@@ -14,7 +15,7 @@ namespace zzz::core
 	{
 	public:
 		ProjectManifestData() = default;
-		ProjectManifestData(std::vector<Guid> gameScriptGuids, std::vector<Guid> sceneGuids, std::vector<Guid> viewGuids, ProjectPlatformData platformData = {}, zU32 maxLogQueueSize = c_MaxNetworkLogQueueSize, zU16 loggerPort = c_DefaultLoggerPort, std::string appName = {}, std::string companyName = {}, Version appVersion = {})
+		ProjectManifestData(std::vector<Guid> gameScriptGuids, std::vector<Guid> sceneGuids, std::vector<Guid> viewGuids, ProjectPlatformData platformData = {}, zU32 maxLogQueueSize = c_MaxNetworkLogQueueSize, zU16 loggerPort = c_DefaultLoggerPort, std::string appName = {}, std::string companyName = {}, Version appVersion = {}, SceneTransitionParams defaultTransitionParams = {})
 			: gameScriptGuids(std::move(gameScriptGuids))
 			, sceneGuids(std::move(sceneGuids))
 			, viewGuids(std::move(viewGuids))
@@ -24,6 +25,7 @@ namespace zzz::core
 			, appName(std::move(appName))
 			, companyName(std::move(companyName))
 			, appVersion(appVersion)
+			, defaultTransitionParams(std::move(defaultTransitionParams))
 		{}
 
 		[[nodiscard]] const std::vector<Guid>& GetGameScriptGuids() const noexcept { return gameScriptGuids; }
@@ -35,6 +37,8 @@ namespace zzz::core
 		[[nodiscard]] const std::string& GetAppName() const noexcept { return appName; }
 		[[nodiscard]] const std::string& GetCompanyName() const noexcept { return companyName; }
 		[[nodiscard]] const Version& GetAppVersion() const noexcept { return appVersion; }
+		[[nodiscard]] const SceneTransitionParams& GetDefaultTransitionParams() const noexcept { return defaultTransitionParams; }
+		void SetDefaultTransitionParams(const SceneTransitionParams& params) noexcept { defaultTransitionParams = params; }
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
@@ -77,6 +81,7 @@ namespace zzz::core
 		std::string appName;
 		std::string companyName;
 		Version appVersion;
+		SceneTransitionParams defaultTransitionParams{};
 
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override
@@ -132,6 +137,9 @@ namespace zzz::core
 				})
 				.and_then([&]() {
 					return serializer.Serialize(buffer, appVersion);
+				})
+				.and_then([&]() {
+					return serializer.Serialize(buffer, defaultTransitionParams);
 				});
 		}
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& serializer) override
@@ -218,6 +226,16 @@ namespace zzz::core
 				.and_then([&]()
 				{
 					return serializer.Deserialize(buffer, offset, appVersion);
+				})
+				.and_then([&]() -> std::expected<void, std::string>
+				{
+					// Обратная совместимость (Правило 31): если буфер закончился, дефолтные параметры перехода
+					defaultTransitionParams = SceneTransitionParams{};
+					if (offset < buffer.size())
+					{
+						return serializer.Deserialize(buffer, offset, defaultTransitionParams);
+					}
+					return {};
 				});
 		}
 	};

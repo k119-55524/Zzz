@@ -17,10 +17,14 @@ namespace zzz::core
 		explicit SceneData(
 			std::vector<Guid> sceneScriptGuids,
 			zzz::engine::ClearConfig clearConfig = {},
-			std::vector<GameObjectData> gameObjects = {})
+			std::vector<GameObjectData> gameObjects = {},
+			eTransitionSource transitionSource = eTransitionSource::UseGlobal,
+			SceneTransitionParams transitionParams = {})
 			: sceneScriptGuids(std::move(sceneScriptGuids))
 			, clearConfig(std::move(clearConfig))
 			, gameObjects(std::move(gameObjects))
+			, transitionSource(transitionSource)
+			, transitionParams(std::move(transitionParams))
 		{}
 
 		[[nodiscard]] const std::vector<Guid>& GetSceneScriptGuids() const noexcept { return sceneScriptGuids; }
@@ -31,6 +35,13 @@ namespace zzz::core
 		[[nodiscard]] const std::vector<GameObjectData>& GetGameObjects() const noexcept { return gameObjects; }
 		[[nodiscard]] std::vector<GameObjectData>& GetGameObjects() noexcept { return gameObjects; }
 		void SetGameObjects(std::vector<GameObjectData> objs) noexcept { gameObjects = std::move(objs); }
+
+		[[nodiscard]] eTransitionSource GetTransitionSource() const noexcept { return transitionSource; }
+		void SetTransitionSource(eTransitionSource source) noexcept { transitionSource = source; }
+
+		[[nodiscard]] const SceneTransitionParams& GetTransitionParams() const noexcept { return transitionParams; }
+		[[nodiscard]] SceneTransitionParams& GetTransitionParams() noexcept { return transitionParams; }
+		void SetTransitionParams(const SceneTransitionParams& params) noexcept { transitionParams = params; }
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
@@ -46,6 +57,10 @@ namespace zzz::core
 			{
 				DOut(::zzz::core::Assets, "{}  gameObject #{}: {} [{}]", nestedIndentation, i, gameObjects[i].GetName(), gameObjects[i].GetGuid().ToString());
 			}
+			DOut(::zzz::core::Assets, "{}transitionSource: {}", nestedIndentation, ToString(transitionSource));
+			DOut(::zzz::core::Assets, "{}transitionParams: type={}, duration={:.2f}s, blockInput={}, pauseOld={}",
+				nestedIndentation, ToString(transitionParams.type), transitionParams.durationSeconds,
+				transitionParams.blockUserInput, transitionParams.pauseOldSceneUpdate);
 			clearConfig.LogFileBlock(nestedIndentation);
 		}
 
@@ -53,6 +68,8 @@ namespace zzz::core
 		std::vector<Guid> sceneScriptGuids;
 		zzz::engine::ClearConfig clearConfig;
 		std::vector<GameObjectData> gameObjects;
+		eTransitionSource transitionSource{ eTransitionSource::UseGlobal };
+		SceneTransitionParams transitionParams{};
 
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override
@@ -80,7 +97,9 @@ namespace zzz::core
 						if (!res) return res;
 					}
 					return {};
-				});
+				})
+				.and_then([&]() { return serializer.Serialize(buffer, transitionSource); })
+				.and_then([&]() { return serializer.Serialize(buffer, transitionParams); });
 		}
 
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& serializer) override
@@ -128,6 +147,24 @@ namespace zzz::core
 						return res;
 					}
 					gameObjects.push_back(std::move(objData));
+				}
+			}
+
+			// Обратная совместимость (Правило 31): чтение настроек переходов, если они присутствуют в потоке
+			transitionSource = eTransitionSource::UseGlobal;
+			transitionParams = SceneTransitionParams{};
+			if (offset < buffer.size())
+			{
+				res = serializer.Deserialize(buffer, offset, transitionSource);
+				if (!res)
+				{
+					return res;
+				}
+
+				res = serializer.Deserialize(buffer, offset, transitionParams);
+				if (!res)
+				{
+					return res;
 				}
 			}
 

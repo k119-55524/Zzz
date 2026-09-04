@@ -79,6 +79,8 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverterMacOSTypes.h
         ${CMAKE_CURRENT_SOURCE_DIR}/templates/DoubleBufferedVector.h
         ${CMAKE_CURRENT_SOURCE_DIR}/templates/SlotMap.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/templates/CallbackQueue.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/scene/transition/SceneTransitionParams.h
         ${CMAKE_CURRENT_SOURCE_DIR}/hardware/CpuInfo.h
         ${CMAKE_CURRENT_SOURCE_DIR}/hardware/GpuInfo.h
         ${CMAKE_CURRENT_SOURCE_DIR}/hardware/RamInfo.h

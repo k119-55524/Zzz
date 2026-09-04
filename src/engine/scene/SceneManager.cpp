@@ -2,9 +2,10 @@
 #include "Scene.h"
 #include "core/io/package/SceneData.h"
 #include "engine/package/PackageManager.h"
+#include "core/io/package/ProjectManifestData.h"
+#include <algorithm>
 
 #include "SceneManager.h"
-
 
 Z_SET_LOG_CATEGORY(::zzz::core::Scene);
 
@@ -14,47 +15,121 @@ namespace zzz::engine
 {
 	SceneManager::SceneManager(std::shared_ptr<PackageManager> packageManager, std::shared_ptr<ScriptFactory> scriptFactory) :
 		m_PackageManager(std::move(packageManager)),
-		m_ScriptFactory(std::move(scriptFactory))
+		m_ScriptFactory(std::move(scriptFactory)),
+		m_LoadingThreadPool(safe_make_unique<zzz::templates::ThreadPool>("SceneLoader", 1))
 	{
 		ensure(m_PackageManager != nullptr, "PackageManager не должен быть null.");
 		ensure(m_ScriptFactory != nullptr, "ScriptFactory не должен быть null.");
+
+		m_GlobalTransitionParams = m_PackageManager->GetProjectManifestData().GetDefaultTransitionParams();
 	}
 
-	std::expected<std::shared_ptr<Scene>, std::string> SceneManager::LoadScene(const Guid& sceneGuid)
+	void SceneManager::LoadSceneAsync(std::string sceneName, SceneLoadCallback onComplete)
 	{
-		if (auto it = m_Scenes.find(sceneGuid); it != m_Scenes.end())
-			return it->second;
+		ensure(onComplete != nullptr, "onComplete коллбэк должен быть валидным.");
+		auto entryOpt = m_PackageManager->GetEntryByName(ePackage::Scene, sceneName);
+		ensure(entryOpt.has_value(), "Сцена с именем '{}' не найдена в package.dat.", sceneName);
 
-		auto entryOpt = m_PackageManager->GetSceneEntryByGuid(sceneGuid);
-		if (!entryOpt)
-			return UNEXPECTED("Сцена с GUID '{}' не найдена в package.dat.", sceneGuid.ToString());
-
-		auto sceneDataRes = m_PackageManager->LoadPackageDataByGuid<SceneData>(ePackage::Scene, sceneGuid);
-		if (!sceneDataRes)
-			return UNEXPECTED("Не удалось загрузить данные сцены '{}' ({}): {}", entryOpt->GetName(), sceneGuid.ToString(), sceneDataRes.error());
-
-		auto scene = safe_make_shared<Scene>(sceneGuid, entryOpt->GetName(), sceneDataRes->GetSceneScriptGuids(), *m_ScriptFactory, sceneDataRes->GetClearConfig());
-
-		m_Scenes[sceneGuid] = scene;
-		scene->InvokeStart();
-
-		DOut("[SceneManager::LoadScene] Загружена сцена '{}' ({}), скриптов: {}.", entryOpt->GetName(), sceneGuid.ToString(), sceneDataRes->GetSceneScriptGuids().size());
-
-		return scene;
+		LoadSceneAsync(entryOpt->GetGuid(), std::move(onComplete));
 	}
 
-	std::expected<std::shared_ptr<Scene>, std::string> SceneManager::LoadSceneByName(std::string_view sceneName)
+	void SceneManager::LoadSceneAsync(Guid sceneGuid, SceneLoadCallback onComplete)
 	{
-		auto entryOpt = m_PackageManager->GetSceneEntryByName(sceneName);
-		if (!entryOpt)
-			return UNEXPECTED("Сцена с именем '{}' не найдена в package.dat.", sceneName);
+		ensure(!sceneGuid.IsEmpty(), "GUID загружаемой сцены не может быть пустым.");
+		ensure(onComplete != nullptr, "onComplete коллбэк должен быть валидным.");
 
-		return LoadScene(entryOpt->GetGuid());
+		std::lock_guard lock(m_LoadSceneMutex);
+
+		auto it = std::ranges::find_if(m_Scenes, [&](const auto& s) { return s->GetGuid() == sceneGuid; });
+		if (it != m_Scenes.end())
+		{
+			m_MainThreadQueue.Push([onComplete = std::move(onComplete), scene = *it]() mutable
+			{
+				onComplete(scene);
+			});
+			return;
+		}
+
+		m_LoadingThreadPool->Submit([this, sceneGuid, onComplete = std::move(onComplete)]() mutable
+		{
+			try
+			{
+				auto entryOpt = m_PackageManager->GetEntryByGuid(ePackage::Scene, sceneGuid);
+				ensure(entryOpt.has_value(), "Сцена с GUID '{}' не найдена в package.dat.", sceneGuid.ToString());
+
+				auto sceneDataRes = m_PackageManager->LoadPackageDataByGuid<SceneData>(ePackage::Scene, sceneGuid);
+				if (!sceneDataRes.has_value())
+				{
+					std::string err = std::format("Ошибка загрузки данных сцены '{}' ({}): {}",
+						entryOpt->GetName(), sceneGuid.ToString(), sceneDataRes.error());
+					DOutError("[SceneManager::LoadSceneAsync] {}", err);
+
+					m_MainThreadQueue.Push([onComplete = std::move(onComplete), err = std::move(err)]() mutable
+					{
+						onComplete(std::unexpected(std::move(err)));
+					});
+					return;
+				}
+
+				const std::string sceneName = entryOpt->GetName();
+				const auto& sceneData = *sceneDataRes;
+
+				const auto& transition = (sceneData.GetTransitionSource() == eTransitionSource::Custom)
+					? sceneData.GetTransitionParams()
+					: m_GlobalTransitionParams;
+
+				auto scene = safe_make_shared<Scene>(
+					sceneGuid,
+					sceneName,
+					sceneData.GetSceneScriptGuids(),
+					*m_ScriptFactory,
+					sceneData.GetClearConfig(),
+					transition
+				);
+
+				DOut("[SceneManager::LoadSceneAsync] Собрана сцена '{}' ({}), скриптов: {}.",
+					sceneName, sceneGuid.ToString(), sceneData.GetSceneScriptGuids().size());
+
+				m_MainThreadQueue.Push([this, scene = std::move(scene), onComplete = std::move(onComplete)]() mutable
+				{
+					auto it = std::ranges::find_if(m_Scenes, [&](const auto& s) { return s->GetGuid() == scene->GetGuid(); });
+					if (it != m_Scenes.end())
+						*it = scene;
+					else
+						m_Scenes.push_back(scene);
+
+					scene->InvokeStart();
+					onComplete(scene);
+				});
+			}
+			catch (const std::exception& ex)
+			{
+				std::string err = std::format("Исключение при загрузке сцены '{}': {}", sceneGuid.ToString(), ex.what());
+				DOutError("[SceneManager::LoadSceneAsync] {}", err);
+
+				m_MainThreadQueue.Push([onComplete = std::move(onComplete), err = std::move(err)]() mutable
+				{
+					onComplete(std::unexpected(std::move(err)));
+				});
+			}
+			catch (...)
+			{
+				std::string err = std::format("Неизвестное исключение при загрузке сцены '{}'.", sceneGuid.ToString());
+				DOutError("[SceneManager::LoadSceneAsync] {}", err);
+
+				m_MainThreadQueue.Push([onComplete = std::move(onComplete), err = std::move(err)]() mutable
+				{
+					onComplete(std::unexpected(std::move(err)));
+				});
+			}
+		});
 	}
 
 	void SceneManager::Update(const Time& time)
 	{
-		for (const auto& [guid, scene] : m_Scenes)
+		m_MainThreadQueue.ExecuteAll();
+
+		for (const auto& scene : m_Scenes)
 			scene->Update(time);
 	}
 }

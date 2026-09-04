@@ -5,6 +5,8 @@
 #include "core/Core.h"
 #include "engine/view/View.h"
 #include "engine/view/ViewManager.h"
+#include "engine/scene/Scene.h"
+#include "engine/scene/SceneManager.h"
 #include "engine/platforms/Platform.h"
 #include "engine/package/PackageManager.h"
 #include "core/io/package/ChildViewData.h"
@@ -141,7 +143,6 @@ std::shared_ptr<View> ViewManager::CreateViewInstance(
 		viewData,
 		userPlatformData,
 		m_ScriptFactory,
-		m_SceneManager,
 		m_Platform,
 		m_GAPI,
 		[this](View& v) { OnWindowClose(v); },
@@ -149,7 +150,27 @@ std::shared_ptr<View> ViewManager::CreateViewInstance(
 	);
 
 	view->InvokeStart();
+	SetupSceneAsync(view, viewData.GetSceneGuid());
+
 	return view;
+}
+
+void ViewManager::SetupSceneAsync(std::weak_ptr<View> viewWeak, Guid sceneGuid)
+{
+	m_SceneManager->LoadSceneAsync(sceneGuid, [viewWeak](auto sceneRes)
+	{
+		auto view = viewWeak.lock();
+		if (!view)
+			return;
+
+		if (!sceneRes)
+		{
+			DOutError("[ViewManager] Не удалось загрузить стартовую сцену View: {}", sceneRes.error());
+			return;
+		}
+
+		view->SetScene(*sceneRes);
+	});
 }
 
 void ViewManager::OnWindowClose(View& view)

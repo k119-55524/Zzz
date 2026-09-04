@@ -1,12 +1,12 @@
 #pragma once
 
-#include "engine/EngineIncludes.h"
-#include "engine/gapi/clear_config/ClearConfig.h"
-#include "engine/scene/layer/ILayer.h"
-#include "engine/scene/layer/Layer3D.h"
 #include <vector>
 #include <memory>
-#include <span>
+
+#include "engine/EngineIncludes.h"
+#include "engine/scene/layer/ILayer.h"
+#include "engine/scene/layer/Layer3D.h"
+#include "engine/gapi/clear_config/ClearConfig.h"
 
 namespace zzz::engine
 {
@@ -17,8 +17,13 @@ namespace zzz::engine
 		Z_NO_COPY_MOVE(Scene);
 
 	public:
-		Scene() = delete;
-		Scene(Guid guid, std::string name, const std::vector<Guid>& sceneScriptGuids, const ScriptFactory& scriptFactory, ClearConfig clearConfig = {});
+		Scene(
+			Guid guid,
+			std::string name,
+			const std::vector<Guid>& sceneScriptGuids,
+			const ScriptFactory& scriptFactory,
+			ClearConfig clearConfig = {},
+			SceneTransitionParams transitionParams = {});
 		~Scene();
 
 		[[nodiscard]] const Guid& GetGuid() const noexcept { return m_Guid; }
@@ -26,6 +31,9 @@ namespace zzz::engine
 
 		[[nodiscard]] const ClearConfig& GetClearConfig() const noexcept { return m_ClearConfig; }
 		void SetClearConfig(const ClearConfig& config) noexcept { m_ClearConfig = config; }
+
+		[[nodiscard]] const SceneTransitionParams& GetTransitionParams() const noexcept { return m_TransitionParams; }
+		void SetTransitionParams(const SceneTransitionParams& params) noexcept { m_TransitionParams = params; }
 
 		// --- Управление слоями сцены ---
 		void AddLayer(std::unique_ptr<ILayer> layer);
@@ -40,6 +48,7 @@ namespace zzz::engine
 		Guid m_Guid;
 		std::string m_Name;
 		ClearConfig m_ClearConfig;
+		SceneTransitionParams m_TransitionParams{};
 		SceneEventBus m_EventBus;
 		std::vector<std::shared_ptr<SceneScript>> m_Scripts;
 
