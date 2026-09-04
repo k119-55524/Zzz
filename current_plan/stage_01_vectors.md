@@ -40,7 +40,7 @@
 - Поля `Rect2D<T>` открыты (`position, size`).
 - Для 100% обратной совместимости сохранены инлайновые методы доступа (`GetX()`, `GetWidth()`, `GetPosition()` и т.д.).
 
-### 2.5. Правило №27 (Организация QA тестов и TestsConfig.h)
+### 2.5. Правило №33 (Организация QA тестов и TestsConfig.h)
 - Тесты разложены по подпапкам `src/qa/tests/math/` и `src/qa/tests/core/`.
 - Включение/отключение групп тестов управляется централизованно через `src/qa/tests/TestsConfig.h`.
 
@@ -112,7 +112,7 @@ src/qa/tests/
 - [x] Обновить `src/math/Point2D.h` (открытые поля `x, y`, `data()`, `operator[]`, обратная совместимость `GetX`/`SetX`)
 - [x] Обновить `src/math/Size2D.h` и `src/math/Rect2D.h` согласно Правилу №26 (открытые поля `width/height`, `position/size`)
 - [x] Добавить перегрузки `Serialize` и `Deserialize` для `Vec2`, `Vec3`, `Vec4`, `Point2D`, `Size2D`, `Rect2D` в `src/core/serialize/Serializer.h`
-- [x] Создать единый конфигуратор `src/qa/tests/TestsConfig.h` и разложить тесты по подпапкам `src/qa/tests/math/` и `src/qa/tests/core/` (Правило №27)
+- [x] Создать единый конфигуратор `src/qa/tests/TestsConfig.h` и разложить тесты по подпапкам `src/qa/tests/math/` и `src/qa/tests/core/` (Правило №33)
 - [x] Собрать тестовый таргет `EngineTests` через CMake / MSVC x64
 - [x] Успешно прогнать все 28 тестов (проверка `Dot`, `Cross`, `Normalize`, `Lerp`, `Reflect`, `Length`, деление на 0, бинарный round-trip в `Serializer`, Point2D, Size2D, Rect2D)
 - [x] Запросить утверждение у пользователя

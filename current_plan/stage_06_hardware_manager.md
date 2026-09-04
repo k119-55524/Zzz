@@ -2,13 +2,13 @@
 
 ## 1. Контекст и цели этапа
 - **Номер пункта:** **Пункт 6** (Уровень 1: Математический и файловый фундамент).
-- **Цель:** Вынести сбор телеметрии оборудования (CPU, RAM, Материнская плата, GPU, Storage, Network) из монолитного `Platform::GatherHardwareState()` (~250 строк на Windows, все категории вперемешку в одной функции) в чистый сервис `HardwareManager`, построенный по Правилу 29 (Compile-Time Type Aliases, 0 `#ifdef` в теле методов, изоляция нативных SDK — Win32 DXGI/SMBIOS, POSIX `/proc`, `sysctl`, IOKit и т.д. — каждый в своём файле).
+- **Цель:** Вынести сбор телеметрии оборудования (CPU, RAM, Материнская плата, GPU, Storage, Network) из монолитного `Platform::GatherHardwareState()` (~250 строк на Windows, все категории вперемешку в одной функции) в чистый сервис `HardwareManager`, построенный по Правилу 21 (Compile-Time Type Aliases, 0 `#ifdef` в теле методов, изоляция нативных SDK — Win32 DXGI/SMBIOS, POSIX `/proc`, `sysctl`, IOKit и т.д. — каждый в своём файле).
 - **Статус:** `✅ Выполнено` — реализация выполнена, собрана и успешно верифицирована.
 - **Зависимости:** `src/core/hardware/*.h` (не изменялись), `src/engine/platforms/Platform.h`, `src/engine/platforms/PlatformCommon.cpp`, `src/engine/platforms/monitor/IMonitorProvider.h`, `src/engine/utils/GpuUtils.h`, `src/engine/utils/MonitorUtils.h`.
 
 ---
 
-## 2. Ревизия существующего кода (Правило 22)
+## 2. Ревизия существующего кода (Правило 15)
 
 1. **`Platform::GatherHardwareState()` был реализован ТОЛЬКО для двух платформ:**
    - **Windows** (`PlatformWindows.cpp`) — рабочая, но монолитная реализация: мониторы (через `m_MonitorProvider`), GPU (DXGI `IDXGIFactory1::EnumAdapters1`), CPU (`GetSystemInfo`), RAM (`GlobalMemoryStatusEx` + разбор SMBIOS Type 17), материнская плата (реестр `HARDWARE\DESCRIPTION\System\BIOS` + разбор SMBIOS Type 1 для UUID — **SMBIOS-таблица читалась и парсилась ДВАЖДЫ**, отдельно для RAM и отдельно для UUID; устранено декомпозицией через `SmbiosReaderMSWin`), диски (`GetLogicalDriveStringsW` + `IOCTL_STORAGE_QUERY_PROPERTY`), сеть (`GetAdaptersAddresses`) — всё в одной функции.
@@ -17,11 +17,11 @@
 3. **`core/hardware/*.h` (CpuInfo, RamInfo, GpuInfo, MotherboardInfo, StorageInfo, NetworkAdapterInfo, MonitorInfo, HardwareState) не менялись** — чистые DTO, целевой контракт для новых коллекторов.
 4. **`IMonitorProvider` не тронут.** `HardwareManager` только опрашивает существующий `m_MonitorProvider` за списком мониторов для заполнения `HardwareState::m_Monitors`.
 5. **Пересечений с GPU-подсистемой рендера нет** (DXGI-перечисление адаптеров в `DirectX12API.cpp`/`Swapchain_DX.cpp` — отдельная задача выбора адаптера рендера, не телеметрия).
-6. **Решение (Правило 22): монолит `PlatformWindows.cpp::GatherHardwareState()` декомпозирован в новую независимую подсистему `platforms/hardware/`.** Код Windows-реализации перенесён (не переписан с нуля) в новые классы-коллекторы почти 1:1, с устранением дублирования разбора SMBIOS.
+6. **Решение (Правило 15): монолит `PlatformWindows.cpp::GatherHardwareState()` декомпозирован в новую независимую подсистему `platforms/hardware/`.** Код Windows-реализации перенесён (не переписан с нуля) в новые классы-коллекторы почти 1:1, с устранением дублирования разбора SMBIOS.
 
 ---
 
-## 3. Архитектура (Правило 29: Compile-Time Type Aliases + декомпозиция по SRP)
+## 3. Архитектура (Правило 21: Compile-Time Type Aliases + декомпозиция по SRP)
 
 ### 3.1. `HardwareManager` — тонкий агрегатор без `#ifdef`
 
@@ -98,7 +98,7 @@ namespace zzz::engine
 }
 ```
 
-Каждый `XxxInfoCollectorYyy` — маленький класс с единственным публичным методом `Collect() const`, файл целиком обёрнут в `#if defined(Z_...) ... #endif` (Правило 32).
+Каждый `XxxInfoCollectorYyy` — маленький класс с единственным публичным методом `Collect() const`, файл целиком обёрнут в `#if defined(Z_...) ... #endif` (Правило 23).
 
 **Появление ветки `Z_EDITOR` во всех 6 диспетчерах — отличие от первоначального плана**, потребовавшееся по ходу реализации: удаление `Platform::GatherHardwareState()` из `Platform.h` ломало собственное определение этого метода в `PlatformEditor.cpp`. Решение — 6 новых честных стабов `*CollectorEditor.h` (header-only), воспроизводящих исходные фейковые данные `PlatformEditor.cpp` 1:1 для CPU/RAM/Motherboard/GPU; Storage/Network-стабы для Editor — пустые списки (в оригинале их не было вовсе). См. важное следствие в п. 3.5.3.
 

@@ -32,7 +32,7 @@ enum class eResourceType : zU8
 ```
 
 > [!IMPORTANT]
-> **Разграничение `ePackage` и `eResourceType` (Правило 22):**
+> **Разграничение `ePackage` и `eResourceType` (Правило 15):**
 > - **`ePackage` (`zU32`, `src/core/enums/ePackage.h`)** — классифицирует **контейнеры и файлы пакетов верхнего уровня** (`ProjectManifest`, `Scene`, `PrimaryView`, `ChildView`, `IndependentView`, `Prefab`, `BinaryAsset`), с которыми работает менеджер пакетов `PackageManager`.
 > - **`eResourceType` (`zU8`, `src/core/enums/eResourceType.h`)** — классифицирует **гранулярные типы контента/ассетов** внутри пакетов и ресурсов движка (`Texture2D`, `Mesh`, `Material`, `Shader`, `Font`, `AudioClip`).
 > 

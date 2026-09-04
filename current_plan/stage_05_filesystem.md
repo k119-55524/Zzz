@@ -64,7 +64,7 @@ enum class eAssetDirectoryKind : zU32
 
 ---
 
-### 2.3. Архитектура `FileSystem` (Правило 29: Compile-Time Type Aliases, Zero `#ifdef`)
+### 2.3. Архитектура `FileSystem` (Правило 21: Compile-Time Type Aliases, Zero `#ifdef`)
 
 Вместо динамического полиморфизма с виртуальными таблицами (`vtable`) и лишними аллокациями памяти, подсистема `FileSystem` построена по каноничному стандарту ZzzEngine (`Input`, `MainLoop`):
 
@@ -78,7 +78,7 @@ enum class eAssetDirectoryKind : zU32
      4. `WriteAllBytes(location, relativePath, bytes)` — атомарная запись буфера байт (сохранения, конфиги).
    - Никаких неиспользуемых строковых обёрток (`ReadAllText`, `WriteAllText`, `AppendText`, `GetFileSize`), никаких `DiskXxx` / `protected static`, а также удалены геттеры `GetPath()` и `GetNativeData()` (строгая изоляция `Path` внутри подсистемы IO и соблюдение YAGNI).
    - **Инкапсуляция `InitializeUserData`:** метод перенесён в `private`, чтобы исключить повторную инициализацию или подмену путей в рантайме. Вызов разрешён строго ядру `zzz::engine::Engine` через `friend class`. Никаких сторонних классов или тестовых фикстур в друзьях нет.
-   - **Гарантия контракта инициализации:** порядок инициализации ядра в `Engine::Engine` гарантирует, что `InitializeUserData()` вызывается до создания любых сервисов, работающих с данными пользователя (`UserSettingsManager`). Инвариант инициализации контролируется каноничным `ensure(!m_Path->GetUserDataDirectory().empty(), ...)` по Правилу 6 — нулевые накладные расходы (zero overhead) в Release и немедленный ассерт разработчику в Debug при нарушении порядка вызовов.
+   - **Гарантия контракта инициализации:** порядок инициализации ядра в `Engine::Engine` гарантирует, что `InitializeUserData()` вызывается до создания любых сервисов, работающих с данными пользователя (`UserSettingsManager`). Инвариант инициализации контролируется каноничным `ensure(!m_Path->GetUserDataDirectory().empty(), ...)` по Правилу 25 — нулевые накладные расходы (zero overhead) в Release и немедленный ассерт разработчику в Debug при нарушении порядка вызовов.
    - **Ноль `#ifdef` в реализации.**
 
 2. **`FileSystemDesktop` (`src/core/io/platforms/FileSystemDesktop.h` / `.cpp`):**
@@ -115,7 +115,7 @@ enum class eAssetDirectoryKind : zU32
 
 ---
 
-### 2.4. Архитектурный контракт порядка инициализации путей (Правило 6)
+### 2.4. Архитектурный контракт порядка инициализации путей (Правило 25)
 
 В архитектуре ZzzEngine действует принцип строгой контрактной модели (Design by Contract) в сочетании с Zero-Overhead в релизных сборках:
 
@@ -129,7 +129,7 @@ enum class eAssetDirectoryKind : zU32
 
 2. **Отсутствие защитных рантайм-ветвлений в Release:**
    - Защитные рантайм-проверки вида `if (m_Path->GetUserDataDirectory().empty()) return UNEXPECTED(...)` в методах резолва путей **запрещены как избыточные**, поскольку они тратят процессорные такты на проверку инварианта, на 100% гарантированного архитектурой.
-   - Контроль соблюдения контракта возложен на каноничный макрос `ensure(!m_Path->GetUserDataDirectory().empty(), ...)` по Правилу 6:
+   - Контроль соблюдения контракта возложен на каноничный макрос `ensure(!m_Path->GetUserDataDirectory().empty(), ...)` по Правилу 25:
      - **В Debug/Dev:** немедленно ловит нарушение контракта разработчиком (например, попытку чтения сохранения в обход порядка инициализации или в новом юнит-тесте) и выдает стек-трейс с точным местом (`source_location`).
      - **В Release:** компилируется в `(void)0` (полный zero-overhead no-op).
 
@@ -238,8 +238,8 @@ src/engine/
 - [x] Модифицировать `src/core/io/Path.h` и `Path.cpp` (строго `friend class FileSystemBase`, геттеры `GetExecutableDirectory`, `GetUserDataDirectory`, ветка `Paks`)
 - [x] Создать `src/core/enums/eFileLocation.h` (`App`, `User`, `Saves`, `Cache`, `Logs`)
 - [x] Добавить перегрузку `ToString(eFileLocation)` в `src/core/enums/eEnumToString.h`
-- [x] Добавить Правило 29 в `general_plan.md` (платформенная специализация через Compile-Time Type Aliases, Zero `#ifdef`)
-- [x] Создать `FileSystemBase.h` / `FileSystemBase.cpp` (чистый C++23 без `#ifdef`, 4 каноничных метода без YAGNI, `InitializeUserData` в `private`, контрактная модель по Правилу 6)
+- [x] Добавить Правило 21 в `general_plan.md` (платформенная специализация через Compile-Time Type Aliases, Zero `#ifdef`)
+- [x] Создать `FileSystemBase.h` / `FileSystemBase.cpp` (чистый C++23 без `#ifdef`, 4 каноничных метода без YAGNI, `InitializeUserData` в `private`, контрактная модель по Правилу 25)
 - [x] Создать `FileSystemDesktop.h` / `FileSystemDesktop.cpp` (единая десктопная реализация Windows/Linux/macOS)
 - [x] Создать `FileSystemAndroid.h` / `FileSystemAndroid.cpp` (с хелпером `TryOpenAsset` и однопроходным `ReadAllBytes`)
 - [x] Создать `FileSystemiOS.h` / `FileSystemiOS.cpp` (заготовка под КП-5)
