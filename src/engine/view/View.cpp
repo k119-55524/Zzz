@@ -1,11 +1,10 @@
 
-#include "scene/Scene.h"
 #include "scene/SceneManager.h"
+#include "core/enums/eWinResize.h"
 #include "../platforms/input/Input.h"
 #include "engine/utils/EngineLogFlags.h"
 #include "core/userscripts/ScriptFactory.h"
 #include "../platforms/window/NativeWindow.h"
-#include "core/enums/eWinResize.h"
 
 #include "View.h"
 
@@ -149,10 +148,6 @@ void View::HandleWindowClose()
 {
 	DOut("[View::HandleWindowClose] - OnClose");
 
-	// Закрытие окна - это отдельный, самодостаточный факт: независимо от того, в каком состоянии
-	// (Normal/Maximized/Minimized) окно было секунду назад, теперь оно Closed. Это единственное
-	// место, где eWindowState::Closed вообще пишется - используется ViewManager/Engine на старте,
-	// чтобы не пересоздавать окна, которые пользователь сам закрыл (см. rendering_pipeline_review.md).
 	const auto& navState = m_NativeWindow->GetState();
 	m_UserPlatformData->SetWindowState(eWindowState::Closed);
 	if (navState.GetState() == eWindowState::Normal)
@@ -172,21 +167,9 @@ void View::OnWindowResize(Size2D<>& size, eWinResize type)
 		m_SurfView->OnResize(size);
 
 	const auto& state = m_NativeWindow->GetState();
-	switch (state.GetState())
-	{
-	case eWindowState::Maximized:
-		m_UserPlatformData->SetWindowState(eWindowState::Maximized);
-		break;
-	case eWindowState::Normal:
-		m_UserPlatformData->SetWindowState(eWindowState::Normal);
+	m_UserPlatformData->SetWindowState(state.GetState());
+	if (state.GetState() == eWindowState::Normal)
 		m_UserPlatformData->SetWindowRect(state.GetWindowRect());
-		break;
-	case eWindowState::Minimized:
-		m_UserPlatformData->SetWindowState(eWindowState::Minimized);
-		break;
-	default:
-		break;
-	}
 
 	DOut(!Z_LOG_GET(g_IsResizing), "[View::OnWindowResize] - {}x{} (Type: {})", size.width, size.height, ToString(type));
 }

@@ -43,6 +43,11 @@ include(build_configs/setup_d3d12_packages.cmake OPTIONAL)
 # Multi-config generators (Xcode) need to know about our custom configurations up front;
 # single-config generators (Ninja) just ignore this and use CMAKE_BUILD_TYPE instead.
 set(CMAKE_CONFIGURATION_TYPES "Debug;Development;Development_ASan;Development_TSan;Release" CACHE STRING "" FORCE)
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build." FORCE)
+endif()
+
+set(Z_DOTNET_CONFIG "$<IF:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>,$<CONFIG:RelWithDebInfo>>,Release,Debug>")
 
 string(TOUPPER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_UPPER)
 if(CMAKE_BUILD_TYPE_UPPER MATCHES "^DEVELOPMENT")
@@ -107,9 +112,10 @@ elseif(WIN32)
 
     # Авто-сборка C# AssetsBuilderGUI в CMake с зависимостью от C++ assets_builder_dll
     add_custom_target(assets_builder_gui_build ALL
-        COMMAND dotnet build "${CMAKE_SOURCE_DIR}/src/tools/assets_builder/assets_builder_gui/assets_builder_gui.csproj" -c $<CONFIG>
+        COMMAND dotnet build "${CMAKE_SOURCE_DIR}/src/tools/assets_builder/assets_builder_gui/assets_builder_gui.csproj" -c ${Z_DOTNET_CONFIG}
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
         COMMENT "Building Assets Builder C# GUI..."
+        VERBATIM
     )
     add_dependencies(assets_builder_gui_build assets_builder_dll)
 elseif(IOS)

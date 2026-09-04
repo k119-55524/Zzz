@@ -56,31 +56,22 @@ void ViewManager::CreatePrimaryView()
 		THROW_RUNTIME("Первичное (Основное) окно приложения уже создано.");
 
 	auto primaryViewData = m_PackageManager->GetPrimaryViewData();
-	ensure(primaryViewData != nullptr, "Не удалось получить данные для основного окна.");
+	ensure(primaryViewData.has_value(), "Не удалось получить данные для основного окна.");
 
-	const bool isFirstTime = (m_UserSettingsManager->GetPrimaryViewUserData() == nullptr);
-	auto* userPlatformData = m_UserSettingsManager->GetOrCreatePrimaryViewPlatformData(primaryViewData->GetViewGuid(), primaryViewData->GetPlatformData());
-
-	m_PrimaryView = CreateViewInstance(*primaryViewData, userPlatformData, isFirstTime);
+	m_PrimaryView = CreateViewInstance(*primaryViewData, ePackage::PrimaryView);
 }
 
 void ViewManager::CreateChildView(const Guid& viewGuid)
 {
 #if Z_MOBILE
 	THROW_RUNTIME("Мобильные платформы (Android/iOS) поддерживают только одно Основное окно.");
-#else // Z_MOBILE
+#else
 	ensure(m_PrimaryView != nullptr, "Дочернее окно не может быть создано до создания Основного окна.");
 
-	// 1. Обязательная проверка существования ресурса ChildView в пакете ресурсов package.dat
 	auto viewDataRes = m_PackageManager->LoadPackageDataByGuid<ChildViewData>(ePackage::ChildView, viewGuid);
-	if (!viewDataRes)
-		THROW_RUNTIME("Не удалось загрузить ChildViewData из пакета для GUID '{}': {}", viewGuid.ToString(), viewDataRes.error());
 
-	// 2. Получаем или создаем прямой блок ViewPlatformData в UserSettingsManager
-	const bool isFirstTime = (m_UserSettingsManager->GetChildViewUserData(viewGuid) == nullptr);
-	auto* userPlatformData = m_UserSettingsManager->GetOrCreateChildViewPlatformData(viewGuid, viewDataRes->GetPlatformData());
-
-	m_ChildViews.push_back(CreateViewInstance(*viewDataRes, userPlatformData, isFirstTime, m_PrimaryView.get()));
+	ensure(viewDataRes.has_value(), "Не удалось загрузить ChildViewData из пакета для GUID '{}': {}", viewGuid.ToString(), viewDataRes.error());
+	m_ChildViews.push_back(CreateViewInstance(*viewDataRes, ePackage::ChildView, m_PrimaryView.get()));
 #endif // Z_MOBILE
 }
 
@@ -88,34 +79,58 @@ void ViewManager::CreateIndependentView(const Guid& viewGuid)
 {
 #if Z_MOBILE
 	THROW_RUNTIME("Мобильные платформы (Android/iOS) поддерживают только одно Основное окно.");
-#else // Z_MOBILE
+#else
 	ensure(m_PrimaryView != nullptr, "Независимое окно не может быть создано до создания Основного окна.");
 
-	// 1. Обязательная проверка существования ресурса IndependentView в пакете ресурсов package.dat
 	auto viewDataRes = m_PackageManager->LoadPackageDataByGuid<IndependentViewData>(ePackage::IndependentView, viewGuid);
-	if (!viewDataRes)
-		THROW_RUNTIME("Не удалось загрузить IndependentViewData из пакета для GUID '{}': {}", viewGuid.ToString(), viewDataRes.error());
+	ensure(viewDataRes.has_value(), "Не удалось загрузить IndependentViewData из пакета для GUID '{}': {}", viewGuid.ToString(), viewDataRes.error());
 
-	// 2. Получаем или создаем прямой блок ViewPlatformData в UserSettingsManager
-	const bool isFirstTime = (m_UserSettingsManager->GetIndependentViewUserData(viewGuid) == nullptr);
-	auto* userPlatformData = m_UserSettingsManager->GetOrCreateIndependentViewPlatformData(viewGuid, viewDataRes->GetPlatformData());
-
-	m_IndependentViews.push_back(CreateViewInstance(*viewDataRes, userPlatformData, isFirstTime));
+	m_IndependentViews.push_back(CreateViewInstance(*viewDataRes, ePackage::IndependentView));
 #endif // Z_MOBILE
 }
 
 std::shared_ptr<View> ViewManager::CreateViewInstance(
 	const ViewConfigData& viewData,
-	ViewPlatformData* userPlatformData,
-	bool isFirstTime,
+	ePackage viewType,
 	const View* parentView)
 {
+	const Guid& guid = viewData.GetViewGuid();
+	bool needsAutoCentering = false;
+	ViewPlatformData* userPlatformData = nullptr;
+
+	switch (viewType)
+	{
+	case ePackage::PrimaryView:
+	{
+		const auto* primaryUserData = m_UserSettingsManager->GetPrimaryViewUserData();
+		needsAutoCentering = (primaryUserData == nullptr || primaryUserData->GetViewGuid() != guid);
+		userPlatformData = m_UserSettingsManager->GetOrCreatePrimaryViewPlatformData(guid, viewData.GetPlatformData());
+		break;
+	}
+	case ePackage::ChildView:
+	{
+		needsAutoCentering = (m_UserSettingsManager->GetChildViewUserData(guid) == nullptr);
+		userPlatformData = m_UserSettingsManager->GetOrCreateChildViewPlatformData(guid, viewData.GetPlatformData());
+		break;
+	}
+	case ePackage::IndependentView:
+	{
+		needsAutoCentering = (m_UserSettingsManager->GetIndependentViewUserData(guid) == nullptr);
+		userPlatformData = m_UserSettingsManager->GetOrCreateIndependentViewPlatformData(guid, viewData.GetPlatformData());
+		break;
+	}
+	default:
+		THROW_RUNTIME("Неподдерживаемый тип окна для создания экземпляра View: {}", ToString(viewType));
+	}
+
+	ensure(userPlatformData != nullptr, "ViewPlatformData не может быть null.");
+
 	const auto& monitorProvider = m_Platform.GetMonitorProvider();
 	MonitorInfo targetMonitor = monitorProvider.GetMonitorById(userPlatformData->GetMonitorId());
 
-	// Если окно новое (isFirstTime) — вычисляем позицию по центру экрана (CenterOnWorkArea).
+	// Если окно новое для пользователя (needsAutoCentering) — вычисляем позицию по центру экрана (CenterOnWorkArea).
 	// Если окно уже сохранялось в user.dat — проверяем вписанность пользовательских координат (FitToWorkArea).
-	Rect2D<zI32> targetRect = isFirstTime
+	Rect2D<zI32> targetRect = needsAutoCentering
 		? monitorProvider.CenterOnWorkArea(userPlatformData->GetWindowRect(), targetMonitor)
 		: monitorProvider.FitToWorkArea(userPlatformData->GetWindowRect(), targetMonitor);
 
