@@ -17,7 +17,14 @@ extern "C"
 	BUILDER_API uint32_t GetAssetTypeChildView();
 	BUILDER_API uint32_t GetAssetTypeIndependentView();
 	BUILDER_API uint32_t GetAssetTypePrefab();
-	BUILDER_API uint32_t GetAssetTypeBinaryAsset();
+
+	// Data Package constants (data.dat)
+	BUILDER_API const char* GetDataPackageFileName();
+	BUILDER_API const uint8_t* GetDataPackageMagicBytes();
+	BUILDER_API uint32_t GetDataPackageMajorVersion();
+	BUILDER_API uint32_t GetDataPackageMinorVersion();
+	BUILDER_API uint32_t GetDataPackagePatchVersion();
+
 	BUILDER_API bool PackProjectNative(const char* sourceDir, const char* destinationDir, uint32_t targetPlatform);
 
 	/**

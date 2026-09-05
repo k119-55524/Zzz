@@ -63,6 +63,9 @@
    - `DataAssetsManager` инициализируется при старте движка (таблица `Guid` read-only).
    - Чтение `MeshData` потокобезопасно (независимое открытие/чтение смещений файлового потока).
    - На этапе 09 вычитка `MeshData` куба валидируется при открытии сцены через `DataAssetsManager`, обеспечивая детерминированную проверку сквозного конвейера до создания `ResourceManager` на Этапе 10.
+10. **Контракт параметров переходов сцен (`transition`) и валидация:**
+    - `PackagePacker` считывает секции `transition` из `project.json` (дефолтные глобальные параметры `SceneTransitionParams`) и `.zs` (параметры конкретной сцены и `transitionSource`).
+    - C# валидаторы (`SceneAssetValidator`, `ProjectJsonValidator`) валидируют объекты во всех слоях (`layers[].objects[]`), проверяют валидность GUID мешей (`render.mesh`), а также типы и диапазоны параметров переходов (`type`, `duration`).
 
 ---
 
@@ -229,6 +232,8 @@ namespace zzz::core
 - [x] Реализовать `ObjImporter.h/.cpp` в `assets_builder_dll`
 - [x] Обновить чтение сцены в `PackagePacker.cpp`: парсинг слоёв и объектов `GameObjectData` (позиция, domain, render.mesh) в `SceneData`
 - [x] Обновить `PackagePacker.cpp` для генерации обоих архивов: `package.dat` и `data.dat`
+- [x] Поддержать чтение и сериализацию параметров переходов (`transition`) в `PackagePacker.cpp`
+- [x] Обновить C# валидаторы (`SceneAssetValidator.cs`, `ProjectJsonValidator.cs`): обход `layers[].objects[]`, валидация `render.mesh` и `transition`
 - [x] Создать `Assets/Meshes/cube_00.obj` и `cube_00.obj.meta` в `zzz_assets_test_000`
 - [x] Обновить `MainScene.zs` слоем `Layer3D` и объектом `CubeObject` с блоком `render` в `(0,0,0)`
 - [x] Передать `SceneData::GetGameObjects()` в сцену при загрузке в `SceneManager` / `Scene`

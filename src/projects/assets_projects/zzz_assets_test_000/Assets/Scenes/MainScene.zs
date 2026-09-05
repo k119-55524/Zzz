@@ -10,6 +10,10 @@
     "stencilMode": "None",
     "stencil": 0
   },
+  "transition": {
+    "type": "Instant",
+    "duration": 0.0
+  },
   "layers": [
     {
       "type": "Layer3D",

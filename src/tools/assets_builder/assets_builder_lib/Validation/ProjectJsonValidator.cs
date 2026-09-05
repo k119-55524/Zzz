@@ -81,7 +81,35 @@ public class ProjectJsonValidator : IAssetValidator
                 }
             }
 
-            // 4. Проверка имени компании и приложения (company_name/app_name) — обязательны и должны быть
+            // 4. Проверка глобальных параметров переходов сцен (transition)
+            if (root.TryGetProperty("transition", out var transProp) && transProp.ValueKind == JsonValueKind.Object)
+            {
+                if (transProp.TryGetProperty("type", out var typeProp))
+                {
+                    string tType = typeProp.GetString() ?? string.Empty;
+                    if (tType != "Instant" && tType != "FadeColor" && tType != "CrossFade")
+                    {
+                        result.AddError(filePath, $"project.json: Недопустимый глобальный тип перехода сцены '{tType}'. Ожидается 'Instant', 'FadeColor' или 'CrossFade'.");
+                    }
+                }
+
+                if (transProp.TryGetProperty("duration", out var durProp) && durProp.ValueKind == JsonValueKind.Number)
+                {
+                    if (durProp.GetDouble() < 0.0)
+                    {
+                        result.AddError(filePath, "project.json: Длительность глобального перехода (duration) не может быть отрицательной.");
+                    }
+                }
+                else if (transProp.TryGetProperty("durationSeconds", out var durSecProp) && durSecProp.ValueKind == JsonValueKind.Number)
+                {
+                    if (durSecProp.GetDouble() < 0.0)
+                    {
+                        result.AddError(filePath, "project.json: Длительность глобального перехода (durationSeconds) не может быть отрицательной.");
+                    }
+                }
+            }
+
+            // 5. Проверка имени компании и приложения (company_name/app_name) — обязательны и должны быть
             // валидными именами каталогов (см. Path::IsValidDirectoryName в движке), так как формируют
             // двухуровневый каталог пользовательских данных приложения ( %LOCALAPPDATA%/<company>/<app>/ и т.п.).
             ValidateDirectoryNameField(root, filePath, "company_name", result);

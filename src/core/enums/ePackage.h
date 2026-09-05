@@ -13,8 +13,7 @@ namespace zzz::core
 		PrimaryView     = 3,
 		ChildView       = 4,
 		IndependentView = 5,
-		Prefab          = 6,
-		BinaryAsset     = 7
+		Prefab          = 6
 	};
 
 	constexpr std::string_view ToString(ePackage type)
@@ -27,7 +26,6 @@ namespace zzz::core
 		case ePackage::ChildView:       return "ChildView";
 		case ePackage::IndependentView: return "IndependentView";
 		case ePackage::Prefab:          return "Prefab";
-		case ePackage::BinaryAsset:     return "BinaryAsset";
 		}
 		THROW_RUNTIME("Необработанный ePackage");
 	}

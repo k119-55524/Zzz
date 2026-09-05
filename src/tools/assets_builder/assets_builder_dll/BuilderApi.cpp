@@ -66,9 +66,34 @@ extern "C"
 		return static_cast<uint32_t>(zzz::core::ePackage::Prefab);
 	}
 
-	BUILDER_API uint32_t GetAssetTypeBinaryAsset()
+	BUILDER_API const char* GetDataPackageFileName()
 	{
-		return static_cast<uint32_t>(zzz::core::ePackage::BinaryAsset);
+		return zzz::core::c_DataPackageRelativePath.data();
+	}
+
+	BUILDER_API const uint8_t* GetDataPackageMagicBytes()
+	{
+		static const uint8_t magic[3] = {
+			static_cast<uint8_t>(zzz::core::c_DataPackageHeader.GetMagic()[0]),
+			static_cast<uint8_t>(zzz::core::c_DataPackageHeader.GetMagic()[1]),
+			static_cast<uint8_t>(zzz::core::c_DataPackageHeader.GetMagic()[2])
+		};
+		return magic;
+	}
+
+	BUILDER_API uint32_t GetDataPackageMajorVersion()
+	{
+		return zzz::core::c_DataPackageFileMajorVersion;
+	}
+
+	BUILDER_API uint32_t GetDataPackageMinorVersion()
+	{
+		return zzz::core::c_DataPackageFileMinorVersion;
+	}
+
+	BUILDER_API uint32_t GetDataPackagePatchVersion()
+	{
+		return zzz::core::c_DataPackageFilePatchVersion;
 	}
 
 	BUILDER_API bool PackProjectNative(const char* sourceDir, const char* destinationDir, uint32_t targetPlatform)

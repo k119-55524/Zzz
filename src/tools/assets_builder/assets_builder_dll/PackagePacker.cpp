@@ -32,6 +32,7 @@
 #include <core/IO/AssetFileExtensions.h>
 #include <core/IO/ResourceStorageTraits.h>
 #include "AssetImporterRegistry.h"
+#include "ArchiveWriter.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Assets);
 
@@ -313,11 +314,13 @@ namespace zzz::builder
 				zF32 a = c.size() >= 4 ? c[3].get<zF32>() : 1.0f;
 				if (r > 1.0f || g > 1.0f || b > 1.0f)
 				{
-					config.surface.color = Color4<zU8>(static_cast<zU8>(r), static_cast<zU8>(g), static_cast<zU8>(b), static_cast<zU8>(a * 255.0f)).ConvertTo<zF32>();
+					zU8 aByte = (a > 1.0f) ? static_cast<zU8>(a) : static_cast<zU8>(a * 255.0f);
+					config.surface.color = Color4<zU8>(static_cast<zU8>(r), static_cast<zU8>(g), static_cast<zU8>(b), aByte).ConvertTo<zF32>();
 				}
 				else
 				{
-					config.surface.color = zzz::math::Color4<zF32>(r, g, b, a);
+					zF32 aNorm = (a > 1.0f) ? (a / 255.0f) : a;
+					config.surface.color = zzz::math::Color4<zF32>(r, g, b, aNorm);
 				}
 			}
 		}
@@ -426,6 +429,75 @@ namespace zzz::builder
 		}
 
 		return GameObjectData(objGuid, std::move(name), std::move(layerName), layerType, domain, isActive, position, rotation, scale, meshGuid, materialGuid, std::move(scriptGuids));
+	}
+
+	static SceneTransitionParams ReadTransitionParams(const json& transJson, const SceneTransitionParams& defaultParams = {})
+	{
+		SceneTransitionParams params = defaultParams;
+
+		if (!transJson.is_object())
+			return params;
+
+		if (transJson.contains("type") && transJson["type"].is_string())
+		{
+			std::string typeStr = transJson["type"].get<std::string>();
+			if (typeStr == "Instant") params.type = eTransitionType::Instant;
+			else if (typeStr == "FadeColor") params.type = eTransitionType::FadeColor;
+			else if (typeStr == "CrossFade") params.type = eTransitionType::CrossFade;
+		}
+
+		if (transJson.contains("duration") && transJson["duration"].is_number())
+		{
+			params.durationSeconds = transJson["duration"].get<zF32>();
+		}
+		else if (transJson.contains("durationSeconds") && transJson["durationSeconds"].is_number())
+		{
+			params.durationSeconds = transJson["durationSeconds"].get<zF32>();
+		}
+
+		if (transJson.contains("fadeColor"))
+		{
+			const auto& c = transJson["fadeColor"];
+			if (c.is_string())
+			{
+				std::string colorName = c.get<std::string>();
+				if (colorName == "CornflowerBlue") params.fadeColor = zzz::math::Palette4::CornflowerBlue;
+				else if (colorName == "Black") params.fadeColor = zzz::math::Palette4::Black;
+				else if (colorName == "White") params.fadeColor = zzz::math::Palette4::White;
+				else if (colorName == "Red") params.fadeColor = zzz::math::Palette4::Red;
+				else if (colorName == "Green") params.fadeColor = zzz::math::Palette4::Green;
+				else if (colorName == "Blue") params.fadeColor = zzz::math::Palette4::Blue;
+				else if (colorName == "Transparent") params.fadeColor = zzz::math::Palette4::Transparent;
+			}
+			else if (c.is_array() && c.size() >= 3)
+			{
+				zF32 r = c[0].get<zF32>();
+				zF32 g = c[1].get<zF32>();
+				zF32 b = c[2].get<zF32>();
+				zF32 a = c.size() >= 4 ? c[3].get<zF32>() : 1.0f;
+				if (r > 1.0f || g > 1.0f || b > 1.0f)
+				{
+					zU8 aByte = (a > 1.0f) ? static_cast<zU8>(a) : static_cast<zU8>(a * 255.0f);
+					params.fadeColor = Color4<zU8>(static_cast<zU8>(r), static_cast<zU8>(g), static_cast<zU8>(b), aByte).ConvertTo<zF32>();
+				}
+				else
+				{
+					zF32 aNorm = (a > 1.0f) ? (a / 255.0f) : a;
+					params.fadeColor = zzz::math::Color4<zF32>(r, g, b, aNorm);
+				}
+			}
+		}
+
+		if (transJson.contains("blockUserInput") && transJson["blockUserInput"].is_boolean())
+			params.blockUserInput = transJson["blockUserInput"].get<bool>();
+
+		if (transJson.contains("pauseOldSceneUpdate") && transJson["pauseOldSceneUpdate"].is_boolean())
+			params.pauseOldSceneUpdate = transJson["pauseOldSceneUpdate"].get<bool>();
+
+		if (transJson.contains("renderLoadingSpinner") && transJson["renderLoadingSpinner"].is_boolean())
+			params.renderLoadingSpinner = transJson["renderLoadingSpinner"].get<bool>();
+
+		return params;
 	}
 
 	static std::vector<std::byte> SerializeAssetToBinary(const PendingAsset& item, const fs::path& projectDir, zzz::core::eTargetPlatform targetPlatform)
@@ -559,6 +631,13 @@ namespace zzz::builder
 						appVersion = *parsedVersion;
 				}
 				if (auto res = serializer.Serialize(result, appVersion); !res) return {};
+
+				SceneTransitionParams defaultTransitionParams{};
+				if (root.contains("transition") && root["transition"].is_object())
+				{
+					defaultTransitionParams = ReadTransitionParams(root["transition"]);
+				}
+				if (auto res = serializer.Serialize(result, defaultTransitionParams); !res) return {};
 			}
 			else if (assetType == zzz::core::ePackage::PrimaryView)
 			{
@@ -714,7 +793,32 @@ namespace zzz::builder
 					}
 				}
 
-				zzz::core::SceneData sceneData(sceneScriptGuids, clearConfig, std::move(gameObjects));
+				eTransitionSource transitionSource = eTransitionSource::UseGlobal;
+				SceneTransitionParams transitionParams{};
+
+				if (root.contains("transitionSource") && root["transitionSource"].is_string())
+				{
+					std::string sourceStr = root["transitionSource"].get<std::string>();
+					if (sourceStr == "Custom") transitionSource = eTransitionSource::Custom;
+					else transitionSource = eTransitionSource::UseGlobal;
+				}
+
+				if (root.contains("transition") && root["transition"].is_object())
+				{
+					transitionParams = ReadTransitionParams(root["transition"]);
+					if (!root.contains("transitionSource"))
+					{
+						transitionSource = eTransitionSource::Custom;
+					}
+				}
+
+				zzz::core::SceneData sceneData(
+					sceneScriptGuids,
+					clearConfig,
+					std::move(gameObjects),
+					transitionSource,
+					transitionParams);
+
 				if (auto res = serializer.Serialize(result, sceneData); !res)
 					return {};
 			}
@@ -813,12 +917,6 @@ namespace zzz::builder
 					break;
 				}
 				}
-			}
-			else if (assetType == zzz::core::ePackage::Prefab)
-			{
-				zzz::core::PrefabData prefabData;
-				if (auto res = serializer.Serialize(result, prefabData); !res)
-					return {};
 			}
 			else
 			{
@@ -928,29 +1026,6 @@ namespace zzz::builder
 					{
 						guid = metaJson["guid"].get<std::string>();
 					}
-					else
-					{
-						metaFile.clear();
-						metaFile.seekg(0);
-						std::string line;
-						while (std::getline(metaFile, line))
-						{
-							auto pos = line.find("\"guid\"");
-							if (pos != std::string::npos)
-							{
-								auto valStart = line.find('"', pos + 6);
-								if (valStart != std::string::npos)
-								{
-									auto valEnd = line.find('"', valStart + 1);
-									if (valEnd != std::string::npos)
-									{
-										guid = line.substr(valStart + 1, valEnd - valStart - 1);
-										break;
-									}
-								}
-							}
-						}
-					}
 				}
 
 				if (guid == "unknown" || guid.empty())
@@ -985,11 +1060,6 @@ namespace zzz::builder
 				{
 					typeVal = static_cast<uint32_t>(zzz::core::ePackage::PrimaryView);
 					pendingAssets.push_back({ assetName, guid, typeVal, path });
-				}
-				else if (ext == ".zp")
-				{
-					std::vector<std::byte> payload = SerializeAssetToBinary({ assetName, guid, static_cast<uint32_t>(zzz::core::ePackage::Prefab), path }, sourceDir, targetPlatform);
-					pendingDataAssets.push_back({ assetName, Guid::Parse(guid).value_or(Guid{}), eResourceType::Prefab, std::move(payload) });
 				}
 				else if (auto importer = AssetImporterRegistry::Instance().GetImporter(ext))
 				{
@@ -1035,182 +1105,61 @@ namespace zzz::builder
 		}
 
 		// 3. Формирование бинарного файла package.dat в подпапке destinationDir/assets/
-		fs::create_directories(outPath.parent_path());
-		std::ofstream outFile(outPath, std::ios::binary);
-		if (!outFile.is_open())
-			return false;
-
-		std::vector<std::vector<std::byte>> payloads;
-		std::vector<uint64_t> fileSizes;
+		Serializer serializer;
+		std::vector<ArchiveItem> packageItems;
+		packageItems.reserve(pendingAssets.size());
 
 		for (const auto& item : pendingAssets)
 		{
 			std::vector<std::byte> payload = SerializeAssetToBinary(item, sourceDir, targetPlatform);
-			uint64_t payloadSize = payload.size();
-
-			payloads.push_back(std::move(payload));
-			fileSizes.push_back(payloadSize);
-		}
-
-		// Пасс 1: Измеряем размер serialized header + entries
-		Serializer serializer;
-		std::vector<zzz::core::PackageEntry> dummyEntries;
-		dummyEntries.reserve(pendingAssets.size());
-
-		for (size_t i = 0; i < pendingAssets.size(); ++i)
-		{
-			const auto& item = pendingAssets[i];
 			auto parsedGuid = Guid::Parse(item.guid);
-			dummyEntries.emplace_back(
+			packageItems.push_back({
 				item.name,
 				parsedGuid ? *parsedGuid : Guid{},
 				item.type,
-				0,
-				fileSizes[i]
-			);
+				std::move(payload)
+			});
 		}
 
-		zzz::core::PackageHeader dummyHeader(
+		if (!WriteBinaryArchive(
+			outPath,
 			c_GamePackageHeader,
 			Version{ c_GamePackageFileMajorVersion, c_GamePackageFileMinorVersion, c_GamePackageFilePatchVersion },
-			static_cast<uint32_t>(dummyEntries.size())
-		);
-
-		std::vector<std::byte> headerBuffer;
-		if (!serializer.Serialize(headerBuffer, dummyHeader))
+			packageItems,
+			serializer))
+		{
+			DOutError("PackProject: Не удалось записать пакет: {}", outPath.string());
 			return false;
-
-		for (const auto& entry : dummyEntries)
-		{
-			if (!serializer.Serialize(headerBuffer, entry))
-				return false;
 		}
-
-		const uint64_t initialOffset = headerBuffer.size();
-
-		// Пасс 2: Строим итоговые записи с правильными offset
-		std::vector<zzz::core::PackageEntry> finalEntries;
-		finalEntries.reserve(pendingAssets.size());
-		uint64_t currentOffset = initialOffset;
-
-		for (size_t i = 0; i < pendingAssets.size(); ++i)
-		{
-			const auto& item = pendingAssets[i];
-			auto parsedGuid = Guid::Parse(item.guid);
-			finalEntries.emplace_back(
-				item.name,
-				parsedGuid ? *parsedGuid : Guid{},
-				item.type,
-				currentOffset,
-				fileSizes[i]
-			);
-
-			currentOffset += fileSizes[i];
-		}
-
-		// Записываем финальный headerBuffer
-		headerBuffer.clear();
-		if (!serializer.Serialize(headerBuffer, dummyHeader))
-			return false;
-
-		for (const auto& entry : finalEntries)
-		{
-			if (!serializer.Serialize(headerBuffer, entry))
-				return false;
-		}
-
-		// Записываем сериализованный заголовок и таблицу в файл
-		outFile.write(reinterpret_cast<const char*>(headerBuffer.data()), headerBuffer.size());
-
-		// Записываем бинарные блоки данных
-		for (const auto& payload : payloads)
-		{
-			if (!payload.empty())
-				outFile.write(reinterpret_cast<const char*>(payload.data()), payload.size());
-		}
-		outFile.close();
 
 		// 4. Формирование бинарного архива игровых данных data.dat в destinationDir/assets/data/
 		fs::path dataOutPath = destinationDir / zzz::core::c_DataPackageRelativePath;
-		fs::create_directories(dataOutPath.parent_path());
-		std::ofstream dataOutFile(dataOutPath, std::ios::binary);
-		if (!dataOutFile.is_open())
+		std::vector<ArchiveItem> dataItems;
+		dataItems.reserve(pendingDataAssets.size());
+
+		for (auto& item : pendingDataAssets)
+		{
+			dataItems.push_back({
+				std::move(item.name),
+				item.guid,
+				static_cast<uint32_t>(item.resourceType),
+				std::move(item.payload)
+			});
+		}
+
+		if (!WriteBinaryArchive(
+			dataOutPath,
+			c_DataPackageHeader,
+			Version{ c_DataPackageFileMajorVersion, c_DataPackageFileMinorVersion, c_DataPackageFilePatchVersion },
+			dataItems,
+			serializer))
 		{
 			DOutError("PackProject: Не удалось создать архив данных: {}", dataOutPath.string());
 			return false;
 		}
 
-		std::vector<zzz::core::PackageEntry> dummyDataEntries;
-		dummyDataEntries.reserve(pendingDataAssets.size());
-
-		for (size_t i = 0; i < pendingDataAssets.size(); ++i)
-		{
-			const auto& item = pendingDataAssets[i];
-			dummyDataEntries.emplace_back(
-				item.name,
-				item.guid,
-				static_cast<zU32>(item.resourceType),
-				0,
-				item.payload.size()
-			);
-		}
-
-		zzz::core::PackageHeader dummyDataHeader(
-			c_DataPackageHeader,
-			Version{ c_DataPackageFileMajorVersion, c_DataPackageFileMinorVersion, c_DataPackageFilePatchVersion },
-			static_cast<uint32_t>(dummyDataEntries.size())
-		);
-
-		std::vector<std::byte> dataHeaderBuffer;
-		if (!serializer.Serialize(dataHeaderBuffer, dummyDataHeader))
-			return false;
-
-		for (const auto& entry : dummyDataEntries)
-		{
-			if (!serializer.Serialize(dataHeaderBuffer, entry))
-				return false;
-		}
-
-		const uint64_t initialDataOffset = dataHeaderBuffer.size();
-
-		std::vector<zzz::core::PackageEntry> finalDataEntries;
-		finalDataEntries.reserve(pendingDataAssets.size());
-		uint64_t currentDataOffset = initialDataOffset;
-
-		for (size_t i = 0; i < pendingDataAssets.size(); ++i)
-		{
-			const auto& item = pendingDataAssets[i];
-			finalDataEntries.emplace_back(
-				item.name,
-				item.guid,
-				static_cast<zU32>(item.resourceType),
-				currentDataOffset,
-				item.payload.size()
-			);
-			currentDataOffset += item.payload.size();
-		}
-
-		dataHeaderBuffer.clear();
-		if (!serializer.Serialize(dataHeaderBuffer, dummyDataHeader))
-			return false;
-
-		for (const auto& entry : finalDataEntries)
-		{
-			if (!serializer.Serialize(dataHeaderBuffer, entry))
-				return false;
-		}
-
-		dataOutFile.write(reinterpret_cast<const char*>(dataHeaderBuffer.data()), dataHeaderBuffer.size());
-
-		for (const auto& item : pendingDataAssets)
-		{
-			if (!item.payload.empty())
-				dataOutFile.write(reinterpret_cast<const char*>(item.payload.data()), item.payload.size());
-		}
-		dataOutFile.close();
-
 		DOut("[PackagePacker] Успешно упаковано: {} (записей: {}), {} (записей: {})",
-			outPath.string(), finalEntries.size(), dataOutPath.string(), finalDataEntries.size());
+			outPath.string(), packageItems.size(), dataOutPath.string(), dataItems.size());
 
 		return true;
 	}

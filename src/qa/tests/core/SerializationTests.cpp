@@ -82,6 +82,8 @@ TEST(SerializationTest, VectorsPoint2DSize2DRect2D)
 
 #include "core/io/package/MeshData.h"
 #include "core/io/package/DataAssetsManager.h"
+#include "core/io/package/SceneData.h"
+#include "engine/package/PackageManager.h"
 #include "core/io/FileSystem.h"
 #include "core/utils/MemoryUtils.h"
 #include <windows.h>
@@ -147,6 +149,16 @@ TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
 	EXPECT_EQ(meshRes->GetVertexStride(), 64u);
 	EXPECT_EQ(meshRes->GetIndexCount(), 36u);
 	EXPECT_EQ(meshRes->GetIndexFormat(), core::eIndexFormat::UInt16);
+
+	// Проверяем чтение из package.dat через PackageManager
+	auto pkgMgr = core::safe_make_shared<engine::PackageManager>(fs);
+	auto sceneRes = pkgMgr->LoadPackageDataByName<core::SceneData>(core::ePackage::Scene, "MainScene");
+	ASSERT_TRUE(sceneRes.has_value()) << "Ошибка загрузки MainScene: " << sceneRes.error();
+
+	EXPECT_EQ(sceneRes->GetTransitionSource(), core::eTransitionSource::Custom);
+	EXPECT_EQ(sceneRes->GetTransitionParams().type, core::eTransitionType::Instant);
+	EXPECT_FLOAT_EQ(sceneRes->GetTransitionParams().durationSeconds, 0.0f);
+	EXPECT_FALSE(sceneRes->GetGameObjects().empty());
 }
 
 #endif // Z_TEST_CORE_SERIALIZATION

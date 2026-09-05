@@ -4,6 +4,8 @@ add_library(assets_builder_dll SHARED
     BuilderApi.cpp
     PackagePacker.h
     PackagePacker.cpp
+    ArchiveWriter.h
+    ArchiveWriter.cpp
     IAssetImporter.h
     AssetImporterRegistry.h
     AssetImporterRegistry.cpp
