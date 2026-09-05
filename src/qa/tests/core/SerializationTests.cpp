@@ -80,4 +80,73 @@ TEST(SerializationTest, VectorsPoint2DSize2DRect2D)
 	EXPECT_EQ(offset, buffer.size());
 }
 
+#include "core/io/package/MeshData.h"
+#include "core/io/package/DataAssetsManager.h"
+#include "core/io/FileSystem.h"
+#include "core/utils/MemoryUtils.h"
+#include <windows.h>
+
+TEST(SerializationTest, MeshDataSymmetricSerialization)
+{
+	core::Serializer serializer;
+
+	std::vector<std::byte> vertexBytes(24 * 64, std::byte{ 0xAB });
+	std::vector<std::byte> indexBytes(36 * sizeof(uint16_t), std::byte{ 0xCD });
+
+	core::MeshData originalMesh(24, 64, vertexBytes, 36, core::eIndexFormat::UInt16, indexBytes);
+
+	std::vector<std::byte> buffer;
+	auto serRes = serializer.Serialize(buffer, originalMesh);
+	ASSERT_TRUE(serRes.has_value());
+
+	core::MeshData readMesh;
+	std::size_t offset = 0;
+	auto desRes = serializer.Deserialize(buffer, offset, readMesh);
+	ASSERT_TRUE(desRes.has_value());
+
+	EXPECT_EQ(readMesh.GetVertexCount(), 24u);
+	EXPECT_EQ(readMesh.GetVertexStride(), 64u);
+	EXPECT_EQ(readMesh.GetIndexCount(), 36u);
+	EXPECT_EQ(readMesh.GetIndexFormat(), core::eIndexFormat::UInt16);
+	EXPECT_EQ(readMesh.GetVertexData(), vertexBytes);
+	EXPECT_EQ(readMesh.GetIndexData(), indexBytes);
+}
+
+TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
+{
+	// Загружаем assets_builder_dll и вызываем PackProjectNative
+	HMODULE hDll = LoadLibraryA("assets_builder_dll.dll");
+	if (hDll == nullptr)
+	{
+		hDll = LoadLibraryA("dist/Debug/assets_builder_dll.dll");
+	}
+	ASSERT_NE(hDll, nullptr) << "Не удалось загрузить assets_builder_dll.dll";
+
+	using PackFn = bool (*)(const char*, const char*, uint32_t);
+	auto packProject = reinterpret_cast<PackFn>(GetProcAddress(hDll, "PackProjectNative"));
+	ASSERT_NE(packProject, nullptr) << "Не найдена функция PackProjectNative";
+
+	// Собираем пакет в dist/Debug
+	bool ok = packProject("src/projects/assets_projects/zzz_assets_test_000", "dist/Debug", 0);
+	EXPECT_TRUE(ok);
+
+	// Собираем также в zzz_assets_test_000_build/game_win_Windows для game_win
+	packProject("src/projects/assets_projects/zzz_assets_test_000", "src/projects/assets_projects/zzz_assets_test_000_build/game_win_Windows", 0);
+
+	FreeLibrary(hDll);
+
+	// Проверяем чтение из data.dat через DataAssetsManager
+	auto fs = core::safe_make_shared<core::FileSystem>();
+	auto dataMgr = core::safe_make_shared<core::DataAssetsManager>(fs);
+
+	core::Guid cubeMeshGuid = *core::Guid::Parse("00000000-0000-0000-0000-000000000010");
+	auto meshRes = dataMgr->LoadData<core::MeshData>(core::eResourceType::Mesh, cubeMeshGuid);
+	ASSERT_TRUE(meshRes.has_value()) << "Ошибка загрузки меша куба: " << meshRes.error();
+
+	EXPECT_EQ(meshRes->GetVertexCount(), 24u);
+	EXPECT_EQ(meshRes->GetVertexStride(), 64u);
+	EXPECT_EQ(meshRes->GetIndexCount(), 36u);
+	EXPECT_EQ(meshRes->GetIndexFormat(), core::eIndexFormat::UInt16);
+}
+
 #endif // Z_TEST_CORE_SERIALIZATION

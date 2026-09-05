@@ -45,4 +45,25 @@ namespace zzz::core
 	/// Патч-версия формата пакета ресурсов
 	constexpr zU8 c_GamePackageFilePatchVersion = 0;
 #pragma endregion // Game Package file constants
+
+#pragma region Data Package file constants
+	/// Сигнатура (Magic Bytes) файла пакета данных: "ZZD"
+	constexpr FileHeader<3> c_DataPackageHeader
+	{
+		std::array<std::byte, 3>{
+			static_cast<std::byte>('Z'),
+			static_cast<std::byte>('Z'),
+			static_cast<std::byte>('D')
+		}
+	};
+
+	/// Мажорная версия формата пакета данных
+	constexpr zU8 c_DataPackageFileMajorVersion = 1;
+
+	/// Минорная версия формата пакета данных
+	constexpr zU8 c_DataPackageFileMinorVersion = 0;
+
+	/// Патч-версия формата пакета данных
+	constexpr zU8 c_DataPackageFilePatchVersion = 0;
+#pragma endregion // Data Package file constants
 }

@@ -54,10 +54,15 @@
      - `domain == eObjectDomain::Object` $\to$ создаётся в `ObjectWorld` текущей сцены.
      - `domain == eObjectDomain::Entity` $\to$ выбрасывается `THROW_RUNTIME("EntityWorld пока не реализован")` (строгое соблюдение YAGNI: класс `EntityWorld` не создаётся до этапа ECS).
      - При отсутствии блока `"render"` объект создаётся как узел трансформации (Empty).
-8. **Потоковая модель загрузки на Этапе 09:**
+8. **Архитектура разбора слоёв (Инкапсуляция разборщика в реализации слоя):**
+   - Слои (`Layer3D`, `LayerUI`, `LayerMVVM`) принципиально отличаются составом, семантикой данных и поведением.
+   - Разбор и наполнение конкретного слоя инкапсулируются в самом слое (`ILayer::PopulateObject(...)` / `Layer3D::PopulateObject(...)`).
+   - `Layer3D` инкапсулирует: создание `GameObject` в своём `ObjectWorld`, настройку трансформаций, скриптов и вычитку `MeshData` через `DataAssetsManager`.
+   - `Scene` не знает о внутреннем устройстве конкретных слоёв: она лишь определяет/фабрикует слой по типу и делегирует ему наполнение объектом.
+9. **Потоковая модель загрузки на Этапе 09:**
    - `DataAssetsManager` инициализируется при старте движка (таблица `Guid` read-only).
    - Чтение `MeshData` потокобезопасно (независимое открытие/чтение смещений файлового потока).
-   - На этапе 09 вычитка `MeshData` куба валидируется синхронно при инициализации сцены/объекта, обеспечивая детерминированную проверку сквозного конвейера до создания `ResourceManager` на Этапе 10.
+   - На этапе 09 вычитка `MeshData` куба валидируется при открытии сцены через `DataAssetsManager`, обеспечивая детерминированную проверку сквозного конвейера до создания `ResourceManager` на Этапе 10.
 
 ---
 
@@ -215,20 +220,20 @@ namespace zzz::core
 
 ## 5. Чек-лист Definition of Done (DoD)
 
-- [ ] Создать `src/core/io/AssetFileExtensions.h` и `src/core/io/ResourceStorageTraits.h`
-- [ ] Унифицировать `src/core/enums/eResourceType.h` как единый глобальный enum контента
-- [ ] Создать `src/core/io/package/MeshData.h` и `src/core/io/package/MeshData.cpp`
-- [ ] Создать `src/core/io/package/DataAssetsManager.h` и `src/core/io/package/DataAssetsManager.cpp` (с обязательной проверкой наличия `data.dat` и выбросом `THROW_RUNTIME`)
-- [ ] Зарегистрировать новые файлы в `src/core/CMakeLists.txt`
-- [ ] Создать `IAssetImporter.h` и `AssetImporterRegistry.h/.cpp` в `assets_builder_dll`
-- [ ] Реализовать `ObjImporter.h/.cpp` в `assets_builder_dll`
-- [ ] Обновить чтение сцены в `PackagePacker.cpp`: парсинг слоёв и объектов `GameObjectData` (позиция, domain, render.mesh) в `SceneData`
-- [ ] Обновить `PackagePacker.cpp` для генерации обоих архивов: `package.dat` и `data.dat`
-- [ ] Создать `Assets/Meshes/cube_00.obj` и `cube_00.obj.meta` в `zzz_assets_test_000`
-- [ ] Обновить `MainScene.zs` слоем `Layer3D` и объектом `CubeObject` с блоком `render` в `(0,0,0)`
-- [ ] Передать `SceneData::GetGameObjects()` в сцену при загрузке в `SceneManager` / `Scene`
-- [ ] Интегрировать проверку загрузки `MeshData` из `DataAssetsManager` в запуск `game_win.exe`
-- [ ] Собрать проект и успешно прогнать `game_win.exe` (код выхода 0)
+- [x] Создать `src/core/io/AssetFileExtensions.h` и `src/core/io/ResourceStorageTraits.h`
+- [x] Унифицировать `src/core/enums/eResourceType.h` как единый глобальный enum контента
+- [x] Создать `src/core/io/package/MeshData.h` и `src/core/io/package/MeshData.cpp`
+- [x] Создать `src/core/io/package/DataAssetsManager.h` и `src/core/io/package/DataAssetsManager.cpp` (с обязательной проверкой наличия `data.dat` и выбросом `THROW_RUNTIME`)
+- [x] Зарегистрировать новые файлы в `src/core/CMakeLists.txt`
+- [x] Создать `IAssetImporter.h` и `AssetImporterRegistry.h/.cpp` в `assets_builder_dll`
+- [x] Реализовать `ObjImporter.h/.cpp` в `assets_builder_dll`
+- [x] Обновить чтение сцены в `PackagePacker.cpp`: парсинг слоёв и объектов `GameObjectData` (позиция, domain, render.mesh) в `SceneData`
+- [x] Обновить `PackagePacker.cpp` для генерации обоих архивов: `package.dat` и `data.dat`
+- [x] Создать `Assets/Meshes/cube_00.obj` и `cube_00.obj.meta` в `zzz_assets_test_000`
+- [x] Обновить `MainScene.zs` слоем `Layer3D` и объектом `CubeObject` с блоком `render` в `(0,0,0)`
+- [x] Передать `SceneData::GetGameObjects()` в сцену при загрузке в `SceneManager` / `Scene`
+- [x] Интегрировать проверку загрузки `MeshData` из `DataAssetsManager` в запуск `game_win.exe`
+- [x] Собрать проект и успешно прогнать `game_win.exe` (код выхода 0)
 - [ ] Запросить утверждение у пользователя
 - [ ] Зафиксировать Git-коммит: `feat(mesh): completed stage 09 - MeshData, DataAssetsManager, data.dat and obj importer`
 - [ ] Обновить статус Пункта 9 в `general_plan.md` на `✅ Выполнено`

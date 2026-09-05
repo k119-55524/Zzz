@@ -4,6 +4,11 @@ add_library(assets_builder_dll SHARED
     BuilderApi.cpp
     PackagePacker.h
     PackagePacker.cpp
+    IAssetImporter.h
+    AssetImporterRegistry.h
+    AssetImporterRegistry.cpp
+    ObjImporter.h
+    ObjImporter.cpp
 )
 
 target_include_directories(assets_builder_dll PRIVATE

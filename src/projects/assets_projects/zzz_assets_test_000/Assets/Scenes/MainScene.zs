@@ -10,10 +10,26 @@
     "stencilMode": "None",
     "stencil": 0
   },
-  "objects": [
+  "layers": [
     {
-      "name": "PlayerObject",
-      "script": "6ea9c238-4c23-4b73-be36-8fed508ea612"
+      "type": "Layer3D",
+      "name": "Main3DLayer",
+      "objects": [
+        {
+          "name": "PlayerObject",
+          "domain": "Object",
+          "position": [0.0, 0.0, 0.0],
+          "script": "6ea9c238-4c23-4b73-be36-8fed508ea612"
+        },
+        {
+          "name": "CubeObject",
+          "domain": "Object",
+          "position": [0.0, 0.0, 0.0],
+          "render": {
+            "mesh": "00000000-0000-0000-0000-000000000010"
+          }
+        }
+      ]
     }
   ]
 }

@@ -1,5 +1,7 @@
 
 #include "core/utils/MemoryUtils.h"
+#include "core/io/package/DataAssetsManager.h"
+#include "core/userscripts/ScriptFactory.h"
 
 #include "Scene.h"
 
@@ -15,7 +17,9 @@ namespace zzz::engine
 		const std::vector<Guid>& sceneScriptGuids,
 		const ScriptFactory& scriptFactory,
 		ClearConfig clearConfig,
-		SceneTransitionParams transitionParams) :
+		SceneTransitionParams transitionParams,
+		const std::vector<GameObjectData>& gameObjects,
+		std::shared_ptr<DataAssetsManager> dataAssetsManager) :
 		m_Guid(guid),
 		m_Name(std::move(name)),
 		m_ClearConfig(std::move(clearConfig)),
@@ -29,10 +33,46 @@ namespace zzz::engine
 			m_Scripts.push_back(std::move(script));
 		}
 
-		// По умолчанию каждая сцена имеет базовый 3D слой
-		AddLayer(::zzz::core::safe_make_unique<Layer3D>("Default3DLayer"));
+		// Загрузка игровых объектов сцены с раскладкой по слоям
+		for (const auto& objData : gameObjects)
+		{
+			if (objData.IsEntity())
+			{
+				THROW_RUNTIME("EntityWorld пока не реализован");
+			}
 
-		DOut("[Scene::Scene] Создана сцена '{}' ({}), скриптов: {}, слоёв: {}", m_Name, m_Guid.ToString(), m_Scripts.size(), m_Layers.size());
+			std::string layerName = objData.GetLayerName().empty() ? "Default3DLayer" : objData.GetLayerName();
+			ILayer* targetLayer = GetLayerByName(layerName);
+			if (targetLayer == nullptr)
+			{
+				std::unique_ptr<ILayer> newLayer;
+				switch (objData.GetLayerType())
+				{
+				case eLayerType::Layer3D:
+					newLayer = ::zzz::core::safe_make_unique<Layer3D>(layerName);
+					break;
+				case eLayerType::LayerUI:
+				case eLayerType::LayerMVVM:
+					THROW_RUNTIME("Тип слоя '{}' пока не поддерживается", ToString(objData.GetLayerType()));
+				default:
+					newLayer = ::zzz::core::safe_make_unique<Layer3D>(layerName);
+					break;
+				}
+
+				targetLayer = newLayer.get();
+				AddLayer(std::move(newLayer));
+			}
+
+			targetLayer->PopulateObject(objData, scriptFactory, dataAssetsManager.get());
+		}
+
+		if (m_Layers.empty())
+		{
+			AddLayer(::zzz::core::safe_make_unique<Layer3D>("Default3DLayer"));
+		}
+
+		DOut("[Scene::Scene] Создана сцена '{}' ({}), скриптов: {}, слоёв: {}, объектов: {}",
+			m_Name, m_Guid.ToString(), m_Scripts.size(), m_Layers.size(), gameObjects.size());
 	}
 
 	Scene::~Scene()
@@ -58,6 +98,16 @@ namespace zzz::engine
 	Layer3D* Scene::GetLayer3D() const noexcept
 	{
 		return m_Layer3D;
+	}
+
+	ILayer* Scene::GetLayerByName(std::string_view name) const noexcept
+	{
+		for (const auto& layer : m_Layers)
+		{
+			if (layer != nullptr && layer->GetName() == name)
+				return layer.get();
+		}
+		return nullptr;
 	}
 
 	void Scene::Update(const Time& time)

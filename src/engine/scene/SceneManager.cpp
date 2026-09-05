@@ -2,6 +2,7 @@
 #include "Scene.h"
 #include "core/io/package/SceneData.h"
 #include "engine/package/PackageManager.h"
+#include "core/io/package/DataAssetsManager.h"
 #include "core/io/package/ProjectManifestData.h"
 #include <algorithm>
 
@@ -13,8 +14,12 @@ using namespace zzz::core;
 
 namespace zzz::engine
 {
-	SceneManager::SceneManager(std::shared_ptr<PackageManager> packageManager, std::shared_ptr<ScriptFactory> scriptFactory) :
+	SceneManager::SceneManager(
+		std::shared_ptr<PackageManager> packageManager,
+		std::shared_ptr<DataAssetsManager> dataAssetsManager,
+		std::shared_ptr<ScriptFactory> scriptFactory) :
 		m_PackageManager(std::move(packageManager)),
+		m_DataAssetsManager(std::move(dataAssetsManager)),
 		m_ScriptFactory(std::move(scriptFactory)),
 		m_LoadingThreadPool(safe_make_unique<zzz::templates::ThreadPool>("SceneLoader", 1))
 	{
@@ -40,10 +45,10 @@ namespace zzz::engine
 
 		std::lock_guard lock(m_LoadSceneMutex);
 
-		auto it = std::ranges::find_if(m_Scenes, [&](const auto& s) { return s->GetGuid() == sceneGuid; });
+		auto it = m_Scenes.find(sceneGuid);
 		if (it != m_Scenes.end())
 		{
-			m_MainThreadQueue.Push([onComplete = std::move(onComplete), scene = *it]() mutable
+			m_MainThreadQueue.Push([onComplete = std::move(onComplete), scene = it->second]() mutable
 			{
 				onComplete(scene);
 			});
@@ -84,7 +89,9 @@ namespace zzz::engine
 					sceneData.GetSceneScriptGuids(),
 					*m_ScriptFactory,
 					sceneData.GetClearConfig(),
-					transition
+					transition,
+					sceneData.GetGameObjects(),
+					m_DataAssetsManager
 				);
 
 				DOut("[SceneManager::LoadSceneAsync] Собрана сцена '{}' ({}), скриптов: {}.",
@@ -92,12 +99,7 @@ namespace zzz::engine
 
 				m_MainThreadQueue.Push([this, scene = std::move(scene), onComplete = std::move(onComplete)]() mutable
 				{
-					auto it = std::ranges::find_if(m_Scenes, [&](const auto& s) { return s->GetGuid() == scene->GetGuid(); });
-					if (it != m_Scenes.end())
-						*it = scene;
-					else
-						m_Scenes.push_back(scene);
-
+					m_Scenes[scene->GetGuid()] = scene;
 					scene->InvokeStart();
 					onComplete(scene);
 				});
@@ -129,7 +131,10 @@ namespace zzz::engine
 	{
 		m_MainThreadQueue.ExecuteAll();
 
-		for (const auto& scene : m_Scenes)
-			scene->Update(time);
+		for (const auto& [guid, scene] : m_Scenes)
+		{
+			if (scene != nullptr)
+				scene->Update(time);
+		}
 	}
 }

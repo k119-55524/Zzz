@@ -19,31 +19,43 @@ namespace zzz::core
 	enum class eResourceType : zU8
 	{
 		Unknown = 0,
-		Texture2D,      ///< 2D Текстура (DDS, PNG, JPEG, RGBA)
-		Mesh,           ///< 3D Сетка/Геометрия (Vertex/Index buffers, Submeshes)
-		Material,       ///< Материал (.zmat)
-		Shader,         ///< Шейдер (скомпилированный байткод DXIL / SPIR-V / MetalLib)
-		AudioClip,      ///< Аудиофайл (WAV, OGG, MP3)
-		Font,           ///< Шрифт (TTF, OTF, SDF/MSDF текстурные атласы)
-		Scene,          ///< Сцена (дерево GameObject, компоненты)
-		Prefab,         ///< Префаб объекта
-		BinaryData      ///< Произвольный бинарный буфер
+		ProjectManifest, ///< Манифест проекта
+		PrimaryView,     ///< Главное окно (.zav)
+		ChildView,       ///< Дочернее окно (.zcv)
+		IndependentView, ///< Независимое окно (.ziv)
+		Scene,           ///< Сцена (.zs)
+		Prefab,          ///< Префаб (.zp)
+		Mesh,            ///< 3D Сетка/Геометрия (Vertex/Index buffers)
+		Material,        ///< Материал (.zmat)
+		Shader,          ///< Шейдер (.hlsl / байткод)
+		Animation,       ///< Анимация
+		Texture2D,       ///< 2D Текстура (DDS, PNG, JPEG, RGBA)
+		AudioClip,       ///< Аудиофайл (WAV, OGG, MP3)
+		Video,           ///< Видео
+		Font,            ///< Шрифт (TTF, OTF, атласы)
+		BinaryData       ///< Произвольный бинарный буфер
 	};
 
 	constexpr std::string_view ToString(eResourceType type)
 	{
 		switch (type)
 		{
-		case eResourceType::Unknown:    return "Unknown";
-		case eResourceType::Texture2D:  return "Texture2D";
-		case eResourceType::Mesh:       return "Mesh";
-		case eResourceType::Material:   return "Material";
-		case eResourceType::Shader:     return "Shader";
-		case eResourceType::AudioClip:  return "AudioClip";
-		case eResourceType::Font:       return "Font";
-		case eResourceType::Scene:      return "Scene";
-		case eResourceType::Prefab:     return "Prefab";
-		case eResourceType::BinaryData: return "BinaryData";
+		case eResourceType::Unknown:         return "Unknown";
+		case eResourceType::ProjectManifest: return "ProjectManifest";
+		case eResourceType::PrimaryView:     return "PrimaryView";
+		case eResourceType::ChildView:       return "ChildView";
+		case eResourceType::IndependentView: return "IndependentView";
+		case eResourceType::Scene:           return "Scene";
+		case eResourceType::Prefab:          return "Prefab";
+		case eResourceType::Mesh:            return "Mesh";
+		case eResourceType::Material:        return "Material";
+		case eResourceType::Shader:          return "Shader";
+		case eResourceType::Animation:       return "Animation";
+		case eResourceType::Texture2D:       return "Texture2D";
+		case eResourceType::AudioClip:       return "AudioClip";
+		case eResourceType::Video:           return "Video";
+		case eResourceType::Font:            return "Font";
+		case eResourceType::BinaryData:      return "BinaryData";
 		}
 		THROW_RUNTIME("Необработанный eResourceType");
 	}

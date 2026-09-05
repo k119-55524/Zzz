@@ -7,6 +7,7 @@
 #include <cstdint>
 #include "core/utils/Guid.h"
 #include "core/serialize/Serializer.h"
+#include "core/enums/eLayerType.h"
 #include "math/vector/Vec3.h"
 #include "math/quat/Quat.h"
 
@@ -29,6 +30,8 @@ namespace zzz::core
 		GameObjectData(
 			Guid guid,
 			std::string name,
+			std::string layerName,
+			eLayerType layerType,
 			eObjectDomain domain,
 			bool isActive,
 			math::Vec3<zF32> position,
@@ -38,8 +41,24 @@ namespace zzz::core
 			Guid materialGuid,
 			std::vector<Guid> scriptGuids);
 
+		GameObjectData(
+			Guid guid,
+			std::string name,
+			eObjectDomain domain,
+			bool isActive,
+			math::Vec3<zF32> position,
+			math::Quat<zF32> rotation,
+			math::Vec3<zF32> scale,
+			Guid meshGuid,
+			Guid materialGuid,
+			std::vector<Guid> scriptGuids)
+			: GameObjectData(guid, std::move(name), "Default3DLayer", eLayerType::Layer3D, domain, isActive, position, rotation, scale, meshGuid, materialGuid, std::move(scriptGuids))
+		{}
+
 		[[nodiscard]] const Guid& GetGuid() const noexcept { return m_Guid; }
 		[[nodiscard]] const std::string& GetName() const noexcept { return m_Name; }
+		[[nodiscard]] const std::string& GetLayerName() const noexcept { return m_LayerName; }
+		[[nodiscard]] eLayerType GetLayerType() const noexcept { return m_LayerType; }
 		[[nodiscard]] eObjectDomain GetDomain() const noexcept { return m_Domain; }
 		[[nodiscard]] bool IsEntity() const noexcept { return m_Domain == eObjectDomain::Entity; }
 		[[nodiscard]] bool IsActive() const noexcept { return m_IsActive; }
@@ -59,6 +78,8 @@ namespace zzz::core
 	private:
 		Guid m_Guid;
 		std::string m_Name;
+		std::string m_LayerName{ "Default3DLayer" };
+		eLayerType m_LayerType{ eLayerType::Layer3D };
 		eObjectDomain m_Domain{ eObjectDomain::Object };
 		bool m_IsActive{ true };
 

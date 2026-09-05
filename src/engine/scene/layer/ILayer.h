@@ -4,30 +4,20 @@
 #include <string_view>
 #include "core/utils/Defines.h"
 
+#include "core/enums/eLayerType.h"
+
 namespace zzz
 {
 	class ISceneStorage;
 
-	/**
-	 * @enum eLayerType
-	 * @brief Тип слоя сцены в многослойном конвейере отрисовки.
-	 */
-	enum class eLayerType : uint8_t
-	{
-		Layer3D = 0, ///< Основной 3D мир
-		LayerUI = 1, ///< Экранный HUD / оверлей
-		LayerMVVM = 2  ///< Авторский MVVM-интерфейс
-	};
+	using ::zzz::core::eLayerType;
+	using ::zzz::core::ToString;
 
-	[[nodiscard]] constexpr std::string_view ToString(eLayerType type) noexcept
+	namespace core
 	{
-		switch (type)
-		{
-		case eLayerType::Layer3D: return "Layer3D";
-		case eLayerType::LayerUI: return "LayerUI";
-		case eLayerType::LayerMVVM: return "LayerMVVM";
-		}
-		return "Unknown";
+		class GameObjectData;
+		class DataAssetsManager;
+		class ScriptFactory;
 	}
 
 	/**
@@ -51,5 +41,14 @@ namespace zzz
 		virtual void Update(float dt) = 0;
 
 		[[nodiscard]] virtual ISceneStorage* GetStorage() noexcept { return nullptr; }
+
+		/**
+		 * @brief Наполнить слой объектом из сериализованных данных сцены.
+		 * Каждый тип слоя инкапсулирует разбор своей специфики.
+		 */
+		virtual void PopulateObject(
+			const ::zzz::core::GameObjectData& objData,
+			const ::zzz::core::ScriptFactory& scriptFactory,
+			::zzz::core::DataAssetsManager* dataAssetsManager) = 0;
 	};
 }

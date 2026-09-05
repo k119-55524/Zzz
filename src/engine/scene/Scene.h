@@ -7,6 +7,12 @@
 #include "engine/scene/layer/ILayer.h"
 #include "engine/scene/layer/Layer3D.h"
 #include "engine/gapi/clear_config/ClearConfig.h"
+#include "core/io/package/GameObjectData.h"
+
+namespace zzz::core
+{
+	class DataAssetsManager;
+}
 
 namespace zzz::engine
 {
@@ -23,7 +29,9 @@ namespace zzz::engine
 			const std::vector<Guid>& sceneScriptGuids,
 			const ScriptFactory& scriptFactory,
 			ClearConfig clearConfig = {},
-			SceneTransitionParams transitionParams = {});
+			SceneTransitionParams transitionParams = {},
+			const std::vector<GameObjectData>& gameObjects = {},
+			std::shared_ptr<DataAssetsManager> dataAssetsManager = nullptr);
 		~Scene();
 
 		[[nodiscard]] const Guid& GetGuid() const noexcept { return m_Guid; }
@@ -38,6 +46,7 @@ namespace zzz::engine
 		// --- Управление слоями сцены ---
 		void AddLayer(std::unique_ptr<ILayer> layer);
 		[[nodiscard]] Layer3D* GetLayer3D() const noexcept;
+		[[nodiscard]] ILayer* GetLayerByName(std::string_view name) const noexcept;
 		[[nodiscard]] const std::vector<std::unique_ptr<ILayer>>& GetLayers() const noexcept { return m_Layers; }
 
 		void Update(const Time& time);

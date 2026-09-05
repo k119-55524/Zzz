@@ -7,6 +7,11 @@
 using namespace zzz::core;
 using namespace zzz::templates;
 
+namespace zzz::core
+{
+	class DataAssetsManager;
+}
+
 namespace zzz::engine
 {
 	class PackageManager;
@@ -18,7 +23,10 @@ namespace zzz::engine
 
 	public:
 		SceneManager() = delete;
-		SceneManager(std::shared_ptr<PackageManager> packageManager, std::shared_ptr<ScriptFactory> scriptFactory);
+		SceneManager(
+			std::shared_ptr<PackageManager> packageManager,
+			std::shared_ptr<DataAssetsManager> dataAssetsManager,
+			std::shared_ptr<ScriptFactory> scriptFactory);
 		~SceneManager() = default;
 
 		using SceneLoadResult = std::expected<std::shared_ptr<Scene>, std::string>;
@@ -31,6 +39,7 @@ namespace zzz::engine
 
 	private:
 		std::shared_ptr<PackageManager> m_PackageManager;
+		std::shared_ptr<DataAssetsManager> m_DataAssetsManager;
 		std::shared_ptr<ScriptFactory> m_ScriptFactory;
 
 		SceneTransitionParams m_GlobalTransitionParams;
@@ -38,6 +47,6 @@ namespace zzz::engine
 
 		std::mutex m_LoadSceneMutex;
 		CallbackQueue<> m_MainThreadQueue;
-		std::vector<std::shared_ptr<Scene>> m_Scenes;
+		std::unordered_map<Guid, std::shared_ptr<Scene>> m_Scenes;
 	};
 }

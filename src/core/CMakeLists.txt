@@ -69,6 +69,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eLogMessageType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eWinResize.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eGAPIType.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eLayerType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/ePackage.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/eTargetPlatform.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverterGAPITypes.h
@@ -95,6 +96,8 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileSystem.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileSystemBase.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileSystemBase.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/AssetFileExtensions.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/ResourceStorageTraits.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/platforms/FileSystemDesktop.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/platforms/FileSystemDesktop.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/platforms/FileSystemAndroid.h
@@ -103,6 +106,10 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/platforms/FileSystemiOS.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PackageHeader.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PackageEntry.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/MeshData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/MeshData.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/DataAssetsManager.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/DataAssetsManager.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PrimaryViewData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/project/ProjectPlatformConfig.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/project/ProjectPlatformDataMSWin.h

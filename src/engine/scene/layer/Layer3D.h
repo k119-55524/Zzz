@@ -30,6 +30,11 @@ namespace zzz
 
 		void Update(float dt) override;
 
+		void PopulateObject(
+			const ::zzz::core::GameObjectData& objData,
+			const ::zzz::core::ScriptFactory& scriptFactory,
+			::zzz::core::DataAssetsManager* dataAssetsManager) override;
+
 		[[nodiscard]] ISceneStorage* GetStorage() noexcept override { return m_Storage.get(); }
 		[[nodiscard]] ObjectWorld& GetObjectWorld() noexcept { return m_ObjectWorld; }
 		[[nodiscard]] const ObjectWorld& GetObjectWorld() const noexcept { return m_ObjectWorld; }

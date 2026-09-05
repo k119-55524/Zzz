@@ -27,13 +27,15 @@ namespace zzz::core
 		[[nodiscard]] const FileHeader<3>& GetMagic() const noexcept { return m_Magic; }
 		[[nodiscard]] const Version& GetVersion() const noexcept { return m_Version; }
 		[[nodiscard]] zU32 GetEntryCount() const noexcept { return m_EntryCount; }
-		[[nodiscard]] std::expected<void, std::string> Validate() const
+		[[nodiscard]] std::expected<void, std::string> Validate(
+			const FileHeader<3>& expectedHeader = c_GamePackageHeader,
+			zU8 expectedMajor = c_GamePackageFileMajorVersion) const
 		{
-			if (m_Magic != c_GamePackageHeader)
+			if (m_Magic != expectedHeader)
 				return UNEXPECTED("Некорректная сигнатура заголовка");
 
-			if (m_Version.GetMajor() != c_GamePackageFileMajorVersion)
-				return UNEXPECTED("Несовместимая версия формата пакета: {} (ожидалась мажорная версия {}). Пересоберите ассеты текущим Assets Builder.", m_Version.ToString(), c_GamePackageFileMajorVersion);
+			if (m_Version.GetMajor() != expectedMajor)
+				return UNEXPECTED("Несовместимая версия формата пакета: {} (ожидалась мажорная версия {}). Пересоберите ассеты текущим Assets Builder.", m_Version.ToString(), expectedMajor);
 
 			return {};
 		}

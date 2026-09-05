@@ -31,6 +31,11 @@ namespace zzz
 
 		void Update(float dt) override;
 
+		void PopulateObject(
+			const ::zzz::core::GameObjectData& objData,
+			const ::zzz::core::ScriptFactory& scriptFactory,
+			::zzz::core::DataAssetsManager* dataAssetsManager) override;
+
 	private:
 		std::string m_Name;
 		bool m_IsVisible{ true };

@@ -27,6 +27,11 @@
 #include <core/IO/package/platforms/start_view/ViewDataMacOS.h>
 #include <core/IO/package/platforms/start_view/ViewDataMSWin.h>
 #include <core/IO/package/platforms/start_view/ViewDataiOS.h>
+#include <core/IO/package/MeshData.h>
+#include <core/IO/package/GameObjectData.h>
+#include <core/IO/AssetFileExtensions.h>
+#include <core/IO/ResourceStorageTraits.h>
+#include "AssetImporterRegistry.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Assets);
 
@@ -42,6 +47,14 @@ namespace zzz::builder
 		std::string guid;
 		uint32_t type;
 		fs::path filePath;
+	};
+
+	struct PendingDataAsset
+	{
+		std::string name;
+		Guid guid;
+		eResourceType resourceType{ eResourceType::Unknown };
+		std::vector<std::byte> payload;
 	};
 
 	static std::string ToPlatformString(zzz::core::eTargetPlatform targetPlatform)
@@ -332,6 +345,89 @@ namespace zzz::builder
 		return config;
 	}
 
+	static GameObjectData ParseGameObjectJson(const json& objJson, std::string layerName = "Default3DLayer", eLayerType layerType = eLayerType::Layer3D)
+	{
+		std::string name = objJson.value("name", "GameObject");
+
+		Guid objGuid{};
+		if (objJson.contains("guid") && objJson["guid"].is_string())
+		{
+			if (auto parsed = Guid::Parse(objJson["guid"].get<std::string>()))
+				objGuid = *parsed;
+		}
+
+		eObjectDomain domain = eObjectDomain::Object;
+		if (objJson.contains("domain") && objJson["domain"].is_string())
+		{
+			if (objJson["domain"].get<std::string>() == "Entity")
+				domain = eObjectDomain::Entity;
+		}
+
+		bool isActive = objJson.value("isActive", true);
+
+		math::Vec3f position(0.0f, 0.0f, 0.0f);
+		if (objJson.contains("position") && objJson["position"].is_array() && objJson["position"].size() >= 3)
+		{
+			position.x = objJson["position"][0].get<float>();
+			position.y = objJson["position"][1].get<float>();
+			position.z = objJson["position"][2].get<float>();
+		}
+
+		math::Quatf rotation(0.0f, 0.0f, 0.0f, 1.0f);
+		if (objJson.contains("rotation") && objJson["rotation"].is_array() && objJson["rotation"].size() >= 4)
+		{
+			rotation.x = objJson["rotation"][0].get<float>();
+			rotation.y = objJson["rotation"][1].get<float>();
+			rotation.z = objJson["rotation"][2].get<float>();
+			rotation.w = objJson["rotation"][3].get<float>();
+		}
+
+		math::Vec3f scale(1.0f, 1.0f, 1.0f);
+		if (objJson.contains("scale") && objJson["scale"].is_array() && objJson["scale"].size() >= 3)
+		{
+			scale.x = objJson["scale"][0].get<float>();
+			scale.y = objJson["scale"][1].get<float>();
+			scale.z = objJson["scale"][2].get<float>();
+		}
+
+		Guid meshGuid{};
+		Guid materialGuid{};
+		if (objJson.contains("render") && objJson["render"].is_object())
+		{
+			const auto& render = objJson["render"];
+			if (render.contains("mesh") && render["mesh"].is_string())
+			{
+				if (auto parsed = Guid::Parse(render["mesh"].get<std::string>()))
+					meshGuid = *parsed;
+			}
+			if (render.contains("material") && render["material"].is_string())
+			{
+				if (auto parsed = Guid::Parse(render["material"].get<std::string>()))
+					materialGuid = *parsed;
+			}
+		}
+
+		std::vector<Guid> scriptGuids;
+		if (objJson.contains("scripts") && objJson["scripts"].is_array())
+		{
+			for (const auto& elem : objJson["scripts"])
+			{
+				if (elem.is_string())
+				{
+					if (auto parsed = Guid::Parse(elem.get<std::string>()))
+						scriptGuids.push_back(*parsed);
+				}
+			}
+		}
+		else if (objJson.contains("script") && objJson["script"].is_string())
+		{
+			if (auto parsed = Guid::Parse(objJson["script"].get<std::string>()))
+				scriptGuids.push_back(*parsed);
+		}
+
+		return GameObjectData(objGuid, std::move(name), std::move(layerName), layerType, domain, isActive, position, rotation, scale, meshGuid, materialGuid, std::move(scriptGuids));
+	}
+
 	static std::vector<std::byte> SerializeAssetToBinary(const PendingAsset& item, const fs::path& projectDir, zzz::core::eTargetPlatform targetPlatform)
 	{
 		Serializer serializer;
@@ -585,7 +681,40 @@ namespace zzz::builder
 
 				auto clearConfig = ReadClearConfig(root);
 
-				zzz::core::SceneData sceneData(sceneScriptGuids, clearConfig);
+				std::vector<zzz::core::GameObjectData> gameObjects;
+				if (root.contains("objects") && root["objects"].is_array())
+				{
+					for (const auto& objElem : root["objects"])
+					{
+						if (objElem.is_object())
+							gameObjects.push_back(ParseGameObjectJson(objElem, "Default3DLayer", eLayerType::Layer3D));
+					}
+				}
+				if (root.contains("layers") && root["layers"].is_array())
+				{
+					for (const auto& layerElem : root["layers"])
+					{
+						if (layerElem.is_object())
+						{
+							std::string layerName = layerElem.value("name", "Default3DLayer");
+							std::string typeStr = layerElem.value("type", "Layer3D");
+							eLayerType layerType = eLayerType::Layer3D;
+							if (typeStr == "LayerUI") layerType = eLayerType::LayerUI;
+							else if (typeStr == "LayerMVVM") layerType = eLayerType::LayerMVVM;
+
+							if (layerElem.contains("objects") && layerElem["objects"].is_array())
+							{
+								for (const auto& objElem : layerElem["objects"])
+								{
+									if (objElem.is_object())
+										gameObjects.push_back(ParseGameObjectJson(objElem, layerName, layerType));
+								}
+							}
+						}
+					}
+				}
+
+				zzz::core::SceneData sceneData(sceneScriptGuids, clearConfig, std::move(gameObjects));
 				if (auto res = serializer.Serialize(result, sceneData); !res)
 					return {};
 			}
@@ -773,6 +902,8 @@ namespace zzz::builder
 		// неоднозначным (m_EntriesByName молча перезаписал бы более раннюю запись более поздней).
 		std::unordered_set<std::string> seenSceneNames;
 
+		std::vector<PendingDataAsset> pendingDataAssets;
+
 		if (fs::exists(sourceDir))
 		{
 			for (const auto& entry : fs::recursive_directory_iterator(sourceDir))
@@ -781,32 +912,8 @@ namespace zzz::builder
 					continue;
 
 				auto ext = entry.path().extension().string();
-				uint32_t typeVal = 0;
-
-				if (ext == ".zs")
-				{
-					typeVal = static_cast<uint32_t>(zzz::core::ePackage::Scene);
-				}
-				else if (ext == ".zcv")
-				{
-					typeVal = static_cast<uint32_t>(zzz::core::ePackage::ChildView);
-				}
-				else if (ext == ".ziv")
-				{
-					typeVal = static_cast<uint32_t>(zzz::core::ePackage::IndependentView);
-				}
-				else if (ext == ".zp")
-				{
-					typeVal = static_cast<uint32_t>(zzz::core::ePackage::Prefab);
-				}
-				else if (ext == ".zav")
-				{
-					typeVal = static_cast<uint32_t>(zzz::core::ePackage::PrimaryView);
-				}
-				else
-				{
+				if (ext == ".meta")
 					continue;
-				}
 
 				fs::path path = entry.path();
 				std::string assetName = path.stem().string();
@@ -816,58 +923,95 @@ namespace zzz::builder
 				if (fs::exists(metaPath))
 				{
 					std::ifstream metaFile(metaPath);
-					std::string line;
-					while (std::getline(metaFile, line))
+					json metaJson = json::parse(metaFile, nullptr, false);
+					if (!metaJson.is_discarded() && metaJson.contains("guid") && metaJson["guid"].is_string())
 					{
-						auto pos = line.find("\"guid\"");
-						if (pos != std::string::npos)
+						guid = metaJson["guid"].get<std::string>();
+					}
+					else
+					{
+						metaFile.clear();
+						metaFile.seekg(0);
+						std::string line;
+						while (std::getline(metaFile, line))
 						{
-							auto valStart = line.find('"', pos + 6);
-							if (valStart != std::string::npos)
+							auto pos = line.find("\"guid\"");
+							if (pos != std::string::npos)
 							{
-								auto valEnd = line.find('"', valStart + 1);
-								if (valEnd != std::string::npos)
+								auto valStart = line.find('"', pos + 6);
+								if (valStart != std::string::npos)
 								{
-									guid = line.substr(valStart + 1, valEnd - valStart - 1);
-									break;
+									auto valEnd = line.find('"', valStart + 1);
+									if (valEnd != std::string::npos)
+									{
+										guid = line.substr(valStart + 1, valEnd - valStart - 1);
+										break;
+									}
 								}
 							}
 						}
 					}
 				}
 
-				if (typeVal == static_cast<uint32_t>(zzz::core::ePackage::Scene) && !seenSceneNames.insert(assetName).second)
-				{
-					// Дубликат имени сцены - пропускаем (первое найденное имя побеждает), см. комментарий выше.
+				if (guid == "unknown" || guid.empty())
 					continue;
-				}
 
-				// Child/Independent вью пакуются только если их guid объявлен в платформенном конфиге
-				// (см. п.1.1) - физическое наличие файла в Assets/ само по себе не основание для упаковки.
-				if (typeVal == static_cast<uint32_t>(zzz::core::ePackage::ChildView))
+				uint32_t typeVal = 0;
+
+				if (ext == ".zs")
 				{
-					if (guid == "unknown" || guid.empty() || declaredChildViewGuids.find(guid) == declaredChildViewGuids.end())
+					if (!seenSceneNames.insert(assetName).second)
+						continue;
+					typeVal = static_cast<uint32_t>(zzz::core::ePackage::Scene);
+					pendingAssets.push_back({ assetName, guid, typeVal, path });
+				}
+				else if (ext == ".zcv")
+				{
+					if (declaredChildViewGuids.find(guid) == declaredChildViewGuids.end())
 						continue;
 					matchedChildViewGuids.insert(guid);
+					typeVal = static_cast<uint32_t>(zzz::core::ePackage::ChildView);
+					pendingAssets.push_back({ assetName, guid, typeVal, path });
 				}
-				else if (typeVal == static_cast<uint32_t>(zzz::core::ePackage::IndependentView))
+				else if (ext == ".ziv")
 				{
-					if (guid == "unknown" || guid.empty() || declaredIndependentViewGuids.find(guid) == declaredIndependentViewGuids.end())
+					if (declaredIndependentViewGuids.find(guid) == declaredIndependentViewGuids.end())
 						continue;
 					matchedIndependentViewGuids.insert(guid);
-				}
-
-				if (guid != "unknown" && !guid.empty())
-				{
+					typeVal = static_cast<uint32_t>(zzz::core::ePackage::IndependentView);
 					pendingAssets.push_back({ assetName, guid, typeVal, path });
+				}
+				else if (ext == ".zav")
+				{
+					typeVal = static_cast<uint32_t>(zzz::core::ePackage::PrimaryView);
+					pendingAssets.push_back({ assetName, guid, typeVal, path });
+				}
+				else if (ext == ".zp")
+				{
+					std::vector<std::byte> payload = SerializeAssetToBinary({ assetName, guid, static_cast<uint32_t>(zzz::core::ePackage::Prefab), path }, sourceDir, targetPlatform);
+					pendingDataAssets.push_back({ assetName, Guid::Parse(guid).value_or(Guid{}), eResourceType::Prefab, std::move(payload) });
+				}
+				else if (auto importer = AssetImporterRegistry::Instance().GetImporter(ext))
+				{
+					ImportContext ctx{
+						.sourceFilePath = path,
+						.assetGuid = Guid::Parse(guid).value_or(Guid{}),
+						.assetName = assetName,
+						.targetPlatform = targetPlatform
+					};
+					ImportResult importRes = importer->Import(ctx);
+					if (!importRes.success)
+					{
+						DOutError("PackProject: Ошибка импорта '{}': {}", path.string(), importRes.errorMessage);
+						return false;
+					}
+					pendingDataAssets.push_back({ ctx.assetName, ctx.assetGuid, importRes.resourceType, std::move(importRes.binaryPayload) });
 				}
 			}
 		}
 
 		// Диагностика: guid объявлен в child_views/independent_views платформенного конфига, но на диске
 		// не найден ни одного .zcv/.ziv файла с таким guid - протухшая (или опечатанная) декларация.
-		// Не валим сборку, просто предупреждаем - см. обсуждение "какой-то другой механизм" для user.dat,
-		// здесь тот же принцип: несуществующий ресурс тихо пропускается, а не роняет весь пайплайн.
 		for (const auto& guid : declaredChildViewGuids)
 			if (matchedChildViewGuids.find(guid) == matchedChildViewGuids.end())
 				DOutWarning("PackProject: guid {} объявлен в child_views, но соответствующий .zcv ресурс не найден в Assets/ - пропущен.", guid);
@@ -984,6 +1128,89 @@ namespace zzz::builder
 			if (!payload.empty())
 				outFile.write(reinterpret_cast<const char*>(payload.data()), payload.size());
 		}
+		outFile.close();
+
+		// 4. Формирование бинарного архива игровых данных data.dat в destinationDir/assets/data/
+		fs::path dataOutPath = destinationDir / zzz::core::c_DataPackageRelativePath;
+		fs::create_directories(dataOutPath.parent_path());
+		std::ofstream dataOutFile(dataOutPath, std::ios::binary);
+		if (!dataOutFile.is_open())
+		{
+			DOutError("PackProject: Не удалось создать архив данных: {}", dataOutPath.string());
+			return false;
+		}
+
+		std::vector<zzz::core::PackageEntry> dummyDataEntries;
+		dummyDataEntries.reserve(pendingDataAssets.size());
+
+		for (size_t i = 0; i < pendingDataAssets.size(); ++i)
+		{
+			const auto& item = pendingDataAssets[i];
+			dummyDataEntries.emplace_back(
+				item.name,
+				item.guid,
+				static_cast<zU32>(item.resourceType),
+				0,
+				item.payload.size()
+			);
+		}
+
+		zzz::core::PackageHeader dummyDataHeader(
+			c_DataPackageHeader,
+			Version{ c_DataPackageFileMajorVersion, c_DataPackageFileMinorVersion, c_DataPackageFilePatchVersion },
+			static_cast<uint32_t>(dummyDataEntries.size())
+		);
+
+		std::vector<std::byte> dataHeaderBuffer;
+		if (!serializer.Serialize(dataHeaderBuffer, dummyDataHeader))
+			return false;
+
+		for (const auto& entry : dummyDataEntries)
+		{
+			if (!serializer.Serialize(dataHeaderBuffer, entry))
+				return false;
+		}
+
+		const uint64_t initialDataOffset = dataHeaderBuffer.size();
+
+		std::vector<zzz::core::PackageEntry> finalDataEntries;
+		finalDataEntries.reserve(pendingDataAssets.size());
+		uint64_t currentDataOffset = initialDataOffset;
+
+		for (size_t i = 0; i < pendingDataAssets.size(); ++i)
+		{
+			const auto& item = pendingDataAssets[i];
+			finalDataEntries.emplace_back(
+				item.name,
+				item.guid,
+				static_cast<zU32>(item.resourceType),
+				currentDataOffset,
+				item.payload.size()
+			);
+			currentDataOffset += item.payload.size();
+		}
+
+		dataHeaderBuffer.clear();
+		if (!serializer.Serialize(dataHeaderBuffer, dummyDataHeader))
+			return false;
+
+		for (const auto& entry : finalDataEntries)
+		{
+			if (!serializer.Serialize(dataHeaderBuffer, entry))
+				return false;
+		}
+
+		dataOutFile.write(reinterpret_cast<const char*>(dataHeaderBuffer.data()), dataHeaderBuffer.size());
+
+		for (const auto& item : pendingDataAssets)
+		{
+			if (!item.payload.empty())
+				dataOutFile.write(reinterpret_cast<const char*>(item.payload.data()), item.payload.size());
+		}
+		dataOutFile.close();
+
+		DOut("[PackagePacker] Успешно упаковано: {} (записей: {}), {} (записей: {})",
+			outPath.string(), finalEntries.size(), dataOutPath.string(), finalDataEntries.size());
 
 		return true;
 	}

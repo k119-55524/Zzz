@@ -1,5 +1,6 @@
 
 #include <logger/logger.h>
+#include "core/io/package/MeshData.h"
 
 #include "Engine.h"
 
@@ -23,6 +24,7 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 {
 	m_FileSystem = safe_make_shared<FileSystem>(nativeData);
 	m_PackageManager = safe_make_shared<PackageManager>(m_FileSystem);
+	m_DataAssetsManager = safe_make_shared<DataAssetsManager>(m_FileSystem);
 	if (auto res = m_FileSystem->InitializeUserData(m_PackageManager->GetCompanyName(), m_PackageManager->GetAppName()); !res)
 		THROW_RUNTIME("Не удалось инициализировать каталог пользовательских данных: {}", res.error());
 
@@ -52,7 +54,7 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 	m_ScriptFactory = safe_make_shared<ScriptFactory>(*m_ScriptStorage);
 
 	// Инициализация менеджера сцен (SceneManager) - используется View для загрузки стартовых сцен
-	m_SceneManager = safe_make_shared<SceneManager>(m_PackageManager, m_ScriptFactory);
+	m_SceneManager = safe_make_shared<SceneManager>(m_PackageManager, m_DataAssetsManager, m_ScriptFactory);
 
 	// Инициализация менеджера отображения окон (ViewManager) с пробросом графического API, фабрики скриптов, пакета ресурсов и менеджера сцен
 	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, m_GAPI, m_ScriptFactory, m_PackageManager, m_UserSettingsManager, m_SceneManager, [this]() { OnAppClosed(); });
@@ -101,6 +103,7 @@ void Engine::Shutdown()
 
 		m_SceneManager = nullptr;
 		m_Platform = nullptr;
+		m_DataAssetsManager = nullptr;
 		m_PackageManager = nullptr;
 		m_FileSystem = nullptr;
 	}
