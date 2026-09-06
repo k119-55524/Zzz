@@ -1,11 +1,17 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows.Input;
 using assets_builder_gui.Models;
 using assets_builder_gui.Services;
 using assets_builder_lib;
+using assets_builder_lib.Scaffolding;
+using assets_builder_lib.Validation;
 
 namespace assets_builder_gui.ViewModels;
 
@@ -24,7 +30,7 @@ public class MainWindowViewModel : ViewModelBase
     {
         public string Name { get; init; } = string.Empty;
         public eTargetPlatform TargetPlatform { get; init; }
-        public string ConfigJsonPath { get; init; } = string.Empty;
+        public string ConfigFile { get; init; } = string.Empty;
         public string BuildDirectory { get; init; } = string.Empty;
     }
 
@@ -83,7 +89,6 @@ public class MainWindowViewModel : ViewModelBase
             Profiles.Add(vm);
         }
 
-        // Авто-сортировка списка по алфавиту (сортируется при сохранении)
         ProfilesView = CollectionViewSource.GetDefaultView(Profiles);
         ProfilesView.SortDescriptions.Add(new SortDescription(nameof(BuildProfileViewModel.Name), ListSortDirection.Ascending));
 
@@ -95,7 +100,9 @@ public class MainWindowViewModel : ViewModelBase
 
         AppendLog("Готов к работе.");
 
+        // Команды профилей / проектов
         AddProfileCommand = new RelayCommand(_ => AddProfile());
+        CreateNewProjectScaffoldCommand = new RelayCommand(_ => CreateNewProjectScaffold());
         DeleteProfileCommand = new RelayCommand(_ => DeleteProfile(), _ => SelectedProfile != null);
         SaveProfileCommand = new RelayCommand(_ => SaveProfile(), _ => HasAnyUnsavedChanges && (SelectedProfile == null || SelectedProfile.IsValid));
         CancelProfileCommand = new RelayCommand(_ => CancelProfile(), _ => SelectedProfile != null && SelectedProfile.IsDirty);
@@ -196,6 +203,7 @@ public class MainWindowViewModel : ViewModelBase
 
     // Команды
     public ICommand AddProfileCommand { get; }
+    public ICommand CreateNewProjectScaffoldCommand { get; }
     public ICommand DeleteProfileCommand { get; }
     public ICommand SaveProfileCommand { get; }
     public ICommand CancelProfileCommand { get; }
@@ -209,11 +217,29 @@ public class MainWindowViewModel : ViewModelBase
 
     private void AddProfile()
     {
-        var model = new BuildProfile 
-        { 
-            Name = "Новая настройка",
-            TargetProjects = new List<TargetProjectItem>()
+        string? folder = _dialogService.SelectFolder("Выберите существующую папку проекта с project.json", string.Empty);
+        if (string.IsNullOrEmpty(folder)) return;
+
+        // Строгая валидация выбранной папки
+        var validation = ProjectValidator.Validate(folder);
+        if (!validation.IsValid)
+        {
+            string errSummary = string.Join("\n", validation.Errors);
+            _dialogService.ShowError("Ошибка открытия проекта", $"Выбранная папка не является валидным проектом ассетов:\n\n{errSummary}\n\nПроект не был открыт.");
+            return;
+        }
+
+        string projName = Path.GetFileName(folder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        string destPath = Path.Combine(Path.GetDirectoryName(folder) ?? folder, $"{projName}_build");
+
+        var model = new BuildProfile
+        {
+            Name = projName,
+            SourcePath = folder,
+            DestinationPath = destPath,
+            ActivePresetName = validation.Manifest?.BuildSettings?.ActivePreset ?? "Default"
         };
+
         var vm = new BuildProfileViewModel(model, _dialogService);
         vm.PropertyChanged += OnProfilePropertyChanged;
         Profiles.Add(vm);
@@ -222,6 +248,52 @@ public class MainWindowViewModel : ViewModelBase
         _isCollectionModified = true;
         OnPropertyChanged(nameof(HasAnyUnsavedChanges));
         OnPropertyChanged(nameof(WindowTitle));
+        AppendLog($"Проект '{projName}' успешно добавлен в список.");
+    }
+
+    private void CreateNewProjectScaffold()
+    {
+        string? folder = _dialogService.SelectFolder("Выберите пустую папку для создания нового проекта ассетов", string.Empty);
+        if (string.IsNullOrEmpty(folder)) return;
+
+        if (!ProjectScaffolder.CanCreateInDirectory(folder, out string checkErr))
+        {
+            _dialogService.ShowError("Невозможно создать проект", checkErr);
+            return;
+        }
+
+        string projName = Path.GetFileName(folder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        if (string.IsNullOrWhiteSpace(projName))
+        {
+            projName = "NewGameProject";
+        }
+
+        bool created = ProjectScaffolder.CreateProjectScaffold(folder, "MyCompany", projName, out string scaffoldErr);
+        if (!created)
+        {
+            _dialogService.ShowError("Ошибка создания каркаса проекта", scaffoldErr);
+            return;
+        }
+
+        string destPath = Path.Combine(Path.GetDirectoryName(folder) ?? folder, $"{projName}_build");
+        var model = new BuildProfile
+        {
+            Name = projName,
+            SourcePath = folder,
+            DestinationPath = destPath,
+            ActivePresetName = "Default"
+        };
+
+        var vm = new BuildProfileViewModel(model, _dialogService);
+        vm.PropertyChanged += OnProfilePropertyChanged;
+        Profiles.Add(vm);
+        SelectedProfile = vm;
+
+        _isCollectionModified = true;
+        OnPropertyChanged(nameof(HasAnyUnsavedChanges));
+        OnPropertyChanged(nameof(WindowTitle));
+        _dialogService.ShowInformation("Каркас проекта создан", $"Новый проект ассетов успешно сгенерирован в папке:\n{folder}");
+        AppendLog($"Создан новый проект '{projName}' в '{folder}'.");
     }
 
     private void DeleteProfile()
@@ -308,6 +380,14 @@ public class MainWindowViewModel : ViewModelBase
         var folder = _dialogService.SelectFolder("Выберите папку проекта (содержащую project.json)", SelectedProfile.SourcePath);
         if (!string.IsNullOrEmpty(folder))
         {
+            var validation = ProjectValidator.Validate(folder);
+            if (!validation.IsValid)
+            {
+                string errSummary = string.Join("\n", validation.Errors);
+                _dialogService.ShowError("Ошибка валидации структуры", $"Папка не прошла строгую валидацию:\n\n{errSummary}\n\nПуть не был применен.");
+                return;
+            }
+
             SelectedProfile.SourcePath = folder;
         }
     }
@@ -322,34 +402,51 @@ public class MainWindowViewModel : ViewModelBase
         }
     }
 
+    private static eTargetPlatform ParseTargetPlatform(string platformName)
+    {
+        if (Enum.TryParse<eTargetPlatform>(platformName, true, out var result))
+        {
+            return result;
+        }
+        return eTargetPlatform.Windows;
+    }
+
     private void StartBuild()
     {
         if (SelectedProfile == null) return;
         if (IsBuilding) return;
 
-        var enabledTargets = SelectedProfile.TargetProjects
-            .Where(t => t.IsEnabled)
+        if (SelectedProfile.SelectedPreset == null)
+        {
+            AppendLog("Ошибка: не выбран пресет для сборки.");
+            return;
+        }
+
+        // Выбираем таргеты: активные и с выбранным конфигом (не "None" / не пустой)
+        var runnableTargets = SelectedProfile.SelectedPreset.Targets
+            .Where(t => t.IsEnabled && !t.IsNone)
             .Select(t => new TargetBuildSnapshot
             {
                 Name = t.Name,
-                TargetPlatform = t.TargetPlatform,
-                ConfigJsonPath = t.ConfigJsonPath,
-                BuildDirectory = GetTargetBuildDirectory(SelectedProfile.DestinationPath, t.Name, t.TargetPlatform)
+                TargetPlatform = ParseTargetPlatform(t.Platform),
+                ConfigFile = t.ConfigFilePath,
+                BuildDirectory = GetTargetBuildDirectory(SelectedProfile.DestinationPath, t.Name, ParseTargetPlatform(t.Platform))
             })
             .ToList();
 
-        if (enabledTargets.Count == 0)
+        if (runnableTargets.Count == 0)
         {
-            AppendLog("Ошибка: нет включенных целевых проектов для сборки.");
+            AppendLog("Ошибка: нет активных таргетов с назначенной конфигурацией для сборки.");
             return;
         }
 
         string baseDestinationPath = SelectedProfile.DestinationPath;
         string sourcePath = SelectedProfile.SourcePath;
+        string presetName = SelectedProfile.SelectedPreset.Name;
 
         bool confirmed = _dialogService.ShowConfirmation(
             "Подтверждение сборки",
-            $"Папка назначения '{SelectedProfile.DestinationPath}' будет вычищена и перезаписана.\n\nПродолжить сборку ассетов для '{SelectedProfile.Name}'?"
+            $"Папка назначения '{SelectedProfile.DestinationPath}' будет вычищена и перезаписана.\n\nПродолжить сборку пресета '{presetName}' для '{SelectedProfile.Name}'?"
         );
 
         if (confirmed)
@@ -361,14 +458,15 @@ public class MainWindowViewModel : ViewModelBase
                 bool success = PrepareBuildRoot(baseDestinationPath);
                 if (success)
                 {
-                    // 1. Предварительное сканирование и создание единых файлов (include/, Scripts.cmake) в корне DestinationPath
-                    var firstTarget = enabledTargets.First();
+                    // 1. Предварительное сканирование мета-файлов
+                    var firstTarget = runnableTargets.First();
                     var commonOptions = new BuildOptions
                     {
                         SourcePath = sourcePath,
                         DestinationPath = baseDestinationPath,
                         TargetProjectName = firstTarget.Name,
-                        TargetPlatform = firstTarget.TargetPlatform
+                        TargetPlatform = firstTarget.TargetPlatform,
+                        PlatformConfigFile = firstTarget.ConfigFile
                     };
 
                     bool metaValid = _engine.ScanProjectMetaFiles(commonOptions);
@@ -379,10 +477,10 @@ public class MainWindowViewModel : ViewModelBase
                     }
                 }
 
-                // 2. Для каждого таргета собираем индивидуальный package.dat, include/ и Scripts.cmake в его подпапке <DestinationPath>/<TargetName>_<TargetPlatform>/
+                // 2. Сборка индивидуального пакета для каждого таргета пресета
                 if (success)
                 {
-                    foreach (var target in enabledTargets)
+                    foreach (var target in runnableTargets)
                     {
                         Directory.CreateDirectory(target.BuildDirectory);
                         string targetIncludeDir = Path.Combine(target.BuildDirectory, "include");
@@ -393,8 +491,8 @@ public class MainWindowViewModel : ViewModelBase
                         _engine.CopyHeaderFiles(sourcePath, targetIncludeDir);
                         _engine.GenerateScriptsCmake(sourcePath, target.BuildDirectory);
 
-                        AppendLog($"Сериализация индивидуального бинарного пакета для '{target.Name}' ({target.TargetPlatform})...");
-                        bool packSuccess = PackagePacker.PackProject(sourcePath, target.BuildDirectory, target.TargetPlatform, AppendLog);
+                        AppendLog($"Сериализация пакета для '{target.Name}' ({target.TargetPlatform}, конфиг: '{target.ConfigFile}')...");
+                        bool packSuccess = PackagePacker.PackProject(sourcePath, target.BuildDirectory, target.TargetPlatform, target.ConfigFile, AppendLog);
                         if (!packSuccess)
                         {
                             AppendLog($"Ошибка упаковки для таргета '{target.Name}'!");
@@ -406,7 +504,8 @@ public class MainWindowViewModel : ViewModelBase
 
                 if (success)
                 {
-                    UpdateTargetProjectsConfig(enabledTargets, baseDestinationPath);
+                    UpdateTargetProjectsConfig(runnableTargets, baseDestinationPath);
+                    AppendLog("Сборка всех выбранных целевых проектов завершена успешно!");
                 }
                 System.Windows.Application.Current?.Dispatcher.Invoke(() => IsBuilding = false);
             });
@@ -415,42 +514,59 @@ public class MainWindowViewModel : ViewModelBase
 
     public void BuildHeadless()
     {
-        if (SelectedProfile == null || !SelectedProfile.IsValid)
+        if (SelectedProfile == null)
         {
-            Console.WriteLine("Ошибка: Выбранный профиль отсутствует или не валиден.");
+            Console.WriteLine("Ошибка: Профиль не выбран.");
+            return;
+        }
+
+        if (!SelectedProfile.IsValid)
+        {
+            Console.WriteLine($"Ошибка: Профиль не валиден. IsSourceValid: {SelectedProfile.IsSourcePathValid}, IsDestValid: {SelectedProfile.IsDestinationPathValid}, IsProjectValid: {SelectedProfile.IsProjectValid}, HasRunnableTargets: {SelectedProfile.HasRunnableTargets}");
+            if (!SelectedProfile.IsProjectValid)
+            {
+                Console.WriteLine($"Ошибки валидации проекта:\n{SelectedProfile.ValidationErrorsSummary}");
+            }
+            return;
+        }
+
+        if (SelectedProfile.SelectedPreset == null)
+        {
+            Console.WriteLine("Ошибка: Набор сборки (пресет) не выбран.");
             return;
         }
 
         string sourcePath = SelectedProfile.SourcePath;
         string baseDestinationPath = SelectedProfile.DestinationPath;
 
-        var enabledTargets = SelectedProfile.TargetProjects
-            .Where(t => t.IsEnabled)
+        var runnableTargets = SelectedProfile.SelectedPreset.Targets
+            .Where(t => t.IsEnabled && !t.IsNone)
             .Select(t => new TargetBuildSnapshot
             {
                 Name = t.Name,
-                TargetPlatform = t.TargetPlatform,
-                ConfigJsonPath = t.ConfigJsonPath,
-                BuildDirectory = GetTargetBuildDirectory(baseDestinationPath, t.Name, t.TargetPlatform)
+                TargetPlatform = ParseTargetPlatform(t.Platform),
+                ConfigFile = t.ConfigFilePath,
+                BuildDirectory = GetTargetBuildDirectory(baseDestinationPath, t.Name, ParseTargetPlatform(t.Platform))
             })
             .ToList();
 
-        if (enabledTargets.Count == 0)
+        if (runnableTargets.Count == 0)
         {
-            Console.WriteLine("Предупреждение: Нет активных целевых проектов.");
+            Console.WriteLine("Предупреждение: Нет активных целевых проектов для сборки.");
             return;
         }
 
         bool success = PrepareBuildRoot(baseDestinationPath);
         if (success)
         {
-            var firstTarget = enabledTargets.First();
+            var firstTarget = runnableTargets.First();
             var commonOptions = new BuildOptions
             {
                 SourcePath = sourcePath,
                 DestinationPath = baseDestinationPath,
                 TargetProjectName = firstTarget.Name,
-                TargetPlatform = firstTarget.TargetPlatform
+                TargetPlatform = firstTarget.TargetPlatform,
+                PlatformConfigFile = firstTarget.ConfigFile
             };
 
             bool metaValid = _engine.ScanProjectMetaFiles(commonOptions);
@@ -463,7 +579,7 @@ public class MainWindowViewModel : ViewModelBase
 
         if (success)
         {
-            foreach (var target in enabledTargets)
+            foreach (var target in runnableTargets)
             {
                 Directory.CreateDirectory(target.BuildDirectory);
                 string targetIncludeDir = Path.Combine(target.BuildDirectory, "include");
@@ -474,8 +590,8 @@ public class MainWindowViewModel : ViewModelBase
                 _engine.CopyHeaderFiles(sourcePath, targetIncludeDir);
                 _engine.GenerateScriptsCmake(sourcePath, target.BuildDirectory);
 
-                Console.WriteLine($"Сериализация индивидуального бинарного пакета для '{target.Name}' ({target.TargetPlatform})...");
-                bool packSuccess = PackagePacker.PackProject(sourcePath, target.BuildDirectory, target.TargetPlatform, msg => Console.WriteLine(msg));
+                Console.WriteLine($"Сериализация индивидуального пакета для '{target.Name}' ({target.TargetPlatform}, конфиг: '{target.ConfigFile}')...");
+                bool packSuccess = PackagePacker.PackProject(sourcePath, target.BuildDirectory, target.TargetPlatform, target.ConfigFile, msg => Console.WriteLine(msg));
                 if (!packSuccess)
                 {
                     Console.WriteLine($"Ошибка упаковки для таргета '{target.Name}'!");
@@ -487,7 +603,7 @@ public class MainWindowViewModel : ViewModelBase
 
         if (success)
         {
-            UpdateTargetProjectsConfig(enabledTargets, baseDestinationPath);
+            UpdateTargetProjectsConfig(runnableTargets, baseDestinationPath);
             Console.WriteLine("Headless build completed successfully.");
         }
     }
@@ -548,16 +664,21 @@ public class MainWindowViewModel : ViewModelBase
 
     private void UpdateTargetProjectsConfig(IEnumerable<TargetBuildSnapshot> targets, string baseDestinationPath)
     {
-        foreach (var target in targets.Where(t => !string.IsNullOrWhiteSpace(t.ConfigJsonPath)))
+        // Динамическое определение папки целевых проектов (src/projects) относительно окружения/сессии
+        string workspaceProjects = SessionManager.ResolveWorkspaceProjectsPath(_sessionConfig.WorkspaceProjectsPath);
+
+        foreach (var target in targets)
         {
             try
             {
-                string jsonPath = target.ConfigJsonPath;
-                string dir = Path.GetDirectoryName(jsonPath)!;
-                if (!Directory.Exists(dir))
+                string targetDir = Path.Combine(workspaceProjects, target.Name);
+                if (!Directory.Exists(targetDir))
                 {
-                    Directory.CreateDirectory(dir);
+                    AppendLog($"Предупреждение: Целевой проект '{target.Name}' не найден в каталоге движка '{workspaceProjects}'. Запись assets_config.json пропущена.");
+                    continue;
                 }
+
+                string jsonPath = Path.Combine(targetDir, "assets_config.json");
 
                 List<string> activeBuilds = new();
                 if (File.Exists(jsonPath))
@@ -620,36 +741,54 @@ public class MainWindowViewModel : ViewModelBase
     public void AppendLog(string message)
     {
         string timestamp = DateTime.Now.ToString("HH:mm:ss");
-        string color = "#CDD9E5"; // Стандартный нейтральный светлый цвет
+        string color = "#CDD9E5";
         string weight = "Normal";
 
         if (message.Contains("Ошибка", StringComparison.OrdinalIgnoreCase) || message.Contains("error", StringComparison.OrdinalIgnoreCase))
         {
-            color = "#FF5252"; // Красный цвет ошибок
+            color = "#FF5252";
             weight = "Bold";
         }
         else if (message.Contains("Предупреждение", StringComparison.OrdinalIgnoreCase) || message.Contains("warning", StringComparison.OrdinalIgnoreCase))
         {
-            color = "#FFC107"; // Яркий желтый цвет предупреждений
+            color = "#FFC107";
             weight = "SemiBold";
         }
         else if (message.Contains("успешно", StringComparison.OrdinalIgnoreCase))
         {
-            color = "#4CAF50"; // Зеленый цвет успеха
+            color = "#4CAF50";
             weight = "SemiBold";
         }
 
-        System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+        var app = System.Windows.Application.Current;
+        if (app != null && app.Dispatcher != null && !app.Dispatcher.HasShutdownStarted)
         {
-            LogItems.Add(new LogItem
+            if (app.Dispatcher.CheckAccess())
             {
-                Timestamp = timestamp,
-                Message = message,
-                Color = color,
-                FontWeight = weight
-            });
-            LogText += $"[{timestamp}] {message}\n";
-        });
+                LogItems.Add(new LogItem
+                {
+                    Timestamp = timestamp,
+                    Message = message,
+                    Color = color,
+                    FontWeight = weight
+                });
+                LogText += $"[{timestamp}] {message}\n";
+            }
+            else
+            {
+                app.Dispatcher.BeginInvoke(() =>
+                {
+                    LogItems.Add(new LogItem
+                    {
+                        Timestamp = timestamp,
+                        Message = message,
+                        Color = color,
+                        FontWeight = weight
+                    });
+                    LogText += $"[{timestamp}] {message}\n";
+                });
+            }
+        }
     }
 
     public bool ConfirmWindowClose()
@@ -670,15 +809,15 @@ public class MainWindowViewModel : ViewModelBase
                 ProfilesView.Refresh();
                 _isCollectionModified = false;
                 SaveSessionToDisk();
-                return true; // Allow close
+                return true;
             }
             else if (choice == SaveCloseChoice.DontSave)
             {
-                return true; // Allow close without saving
+                return true;
             }
             else
             {
-                return false; // Cancel close
+                return false;
             }
         }
 

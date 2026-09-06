@@ -1,4 +1,5 @@
 {
+  "name": "Android Default",
   "build": {
     "packageName": "com.zzz.assetstest",
     "minSdkVersion": 24,

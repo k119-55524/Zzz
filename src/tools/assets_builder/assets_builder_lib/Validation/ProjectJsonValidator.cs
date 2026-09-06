@@ -66,6 +66,16 @@ public class ProjectJsonValidator : IAssetValidator
                 }
             }
 
+            // 2.1 Проверка стартовой сцены (start_scene), если задана явно — ТРЕБУЕТСЯ СТРОГИЙ GUID
+            if (root.TryGetProperty("start_scene", out var startSceneProp) && startSceneProp.ValueKind == JsonValueKind.String)
+            {
+                string startSceneRef = startSceneProp.GetString() ?? string.Empty;
+                if (!string.IsNullOrWhiteSpace(startSceneRef))
+                {
+                    ValidateStrictGuid(filePath, "project.json", "start_scene", startSceneRef, "scene", guidToFileMap, guidToTypeMap, scriptNameToGuidMap, result);
+                }
+            }
+
             // 3. Проверка стартовых вьюшек (views) — ТРЕБУЕТСЯ СТРОГИЙ GUID
             if (root.TryGetProperty("views", out var viewsProp) && viewsProp.ValueKind == JsonValueKind.Array)
             {
@@ -178,7 +188,15 @@ public class ProjectJsonValidator : IAssetValidator
                                       actualType.Equals("h", StringComparison.OrdinalIgnoreCase) ||
                                       actualType.Equals("hpp", StringComparison.OrdinalIgnoreCase));
 
-            if (!actualType.Equals(expectedType, StringComparison.OrdinalIgnoreCase) && !isScriptTypeMatch)
+            bool isViewTypeMatch = expectedType.Equals("view", StringComparison.OrdinalIgnoreCase) &&
+                                   (actualType.Equals("view", StringComparison.OrdinalIgnoreCase) ||
+                                    actualType.Equals("start_view", StringComparison.OrdinalIgnoreCase) ||
+                                    actualType.Equals("primary_view", StringComparison.OrdinalIgnoreCase) ||
+                                    actualType.Equals("zav", StringComparison.OrdinalIgnoreCase) ||
+                                    actualType.Equals("zcv", StringComparison.OrdinalIgnoreCase) ||
+                                    actualType.Equals("ziv", StringComparison.OrdinalIgnoreCase));
+
+            if (!actualType.Equals(expectedType, StringComparison.OrdinalIgnoreCase) && !isScriptTypeMatch && !isViewTypeMatch)
             {
                 result.AddError(filePath, $"{fileName}: Поле '{fieldName}' ссылается на GUID '{referenceValue}' типа '{actualType}' вместо ожидаемого типа '{expectedType}'!");
             }

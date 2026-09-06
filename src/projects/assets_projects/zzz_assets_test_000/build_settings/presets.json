@@ -1,0 +1,40 @@
+{
+  "presets": [
+    {
+      "name": "Default",
+      "description": "Base development preset",
+      "targets": [
+        {
+          "name": "game_win",
+          "platform": "Windows",
+          "config_file": "build_settings/platforms/windows/default.json",
+          "is_enabled": true
+        },
+        {
+          "name": "game_android",
+          "platform": "Android",
+          "config_file": "build_settings/platforms/android/default.json",
+          "is_enabled": true
+        },
+        {
+          "name": "game_ios",
+          "platform": "iOS",
+          "config_file": "build_settings/platforms/ios/default.json",
+          "is_enabled": true
+        },
+        {
+          "name": "game_linux",
+          "platform": "Linux",
+          "config_file": "build_settings/platforms/linux/default.json",
+          "is_enabled": true
+        },
+        {
+          "name": "game_macos",
+          "platform": "MacOS",
+          "config_file": "build_settings/platforms/macos/default.json",
+          "is_enabled": true
+        }
+      ]
+    }
+  ]
+}

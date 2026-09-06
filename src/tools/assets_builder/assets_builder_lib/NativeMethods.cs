@@ -39,7 +39,7 @@ internal static class NativeMethods
     public static extern uint GetAssetTypePrefab();
 
     [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-    public static extern bool PackProjectNative(string sourceDir, string destinationDir, uint targetPlatform);
+    public static extern bool PackProjectNative(string sourceDir, string destinationDir, uint targetPlatform, string platformConfigFile);
 
     // Валидация имени каталога (company_name/app_name из project.json) той же логикой, что и движок
     // (Path::IsValidDirectoryName) - единственный источник истины на стороне C++. Имя передаётся в UTF-8,

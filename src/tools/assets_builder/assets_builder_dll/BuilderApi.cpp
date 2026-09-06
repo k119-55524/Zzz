@@ -98,13 +98,15 @@ extern "C"
 		return zzz::core::c_DataPackageFilePatchVersion;
 	}
 
-	BUILDER_API bool PackProjectNative(const char* sourceDir, const char* destinationDir, uint32_t targetPlatform)
+	BUILDER_API bool PackProjectNative(const char* sourceDir, const char* destinationDir, uint32_t targetPlatform, const char* platformConfigFile)
 	{
 		if (!sourceDir || !destinationDir) return false;
+		std::string platformConfig = platformConfigFile ? platformConfigFile : "";
 		return zzz::builder::PackagePacker::PackProject(
 			sourceDir,
 			destinationDir,
-			static_cast<zzz::core::eTargetPlatform>(targetPlatform));
+			static_cast<zzz::core::eTargetPlatform>(targetPlatform),
+			platformConfig);
 	}
 
 	BUILDER_API bool ValidateDirectoryNameNative(const char* name)

@@ -74,42 +74,35 @@ namespace zzz::builder
 		return "Windows";
 	}
 
-	static json ResolvePlatformJson(const json& root, const fs::path& projectDir, zzz::core::eTargetPlatform targetPlatform)
+	static json LoadPlatformConfigJson(const fs::path& projectDir, const std::string& platformConfigFile)
 	{
-		const std::string platformName = ToPlatformString(targetPlatform);
+		if (platformConfigFile.empty())
+			return json::object();
+
+		fs::path configPath = projectDir / platformConfigFile;
+		std::ifstream configFile(configPath);
+		if (!configFile.is_open())
+			return json::object();
+
+		json configRoot = json::parse(configFile, nullptr, false);
+		if (configRoot.is_discarded())
+			return json::object();
+
+		return configRoot;
+	}
+
+	static json ResolvePlatformJson(const json& root, const fs::path& projectDir, zzz::core::eTargetPlatform targetPlatform, const std::string& platformConfigFile)
+	{
 		json platformRoot = root.contains("platform") && root["platform"].is_object()
 			? root["platform"]
 			: json::object();
 
-		if (root.contains("platform_configs") && root["platform_configs"].is_array())
+		json configRoot = LoadPlatformConfigJson(projectDir, platformConfigFile);
+		if (configRoot.contains("platform") && configRoot["platform"].is_object())
 		{
-			for (const auto& configEntry : root["platform_configs"])
+			for (const auto& [key, value] : configRoot["platform"].items())
 			{
-				if (!configEntry.is_object())
-					continue;
-
-				if (configEntry.value("platform", "") != platformName)
-					continue;
-
-				std::string configFileName = configEntry.value("file", "");
-				if (configFileName.empty())
-					break;
-
-				fs::path configPath = projectDir / configFileName;
-				std::ifstream configFile(configPath);
-				if (!configFile.is_open())
-					break;
-
-				json configRoot = json::parse(configFile, nullptr, false);
-				if (!configRoot.is_discarded() && configRoot.contains("platform") && configRoot["platform"].is_object())
-				{
-					for (const auto& [key, value] : configRoot["platform"].items())
-					{
-						platformRoot[key] = value;
-					}
-				}
-
-				break;
+				platformRoot[key] = value;
 			}
 		}
 
@@ -151,55 +144,18 @@ namespace zzz::builder
 		return serializer.Serialize(result, winData);
 	}
 
-	static json ResolveStartViewJson(const json& root, const fs::path& projectDir, zzz::core::eTargetPlatform targetPlatform)
+	static json ResolveStartViewJson(const json& root, const fs::path& projectDir, zzz::core::eTargetPlatform targetPlatform, const std::string& platformConfigFile)
 	{
-		const std::string platformName = ToPlatformString(targetPlatform);
 		json startViewRoot = root.contains("startView") && root["startView"].is_object()
 			? root["startView"]
 			: root;
-		json configRoot = root;
 
-		if (!configRoot.contains("platform_configs"))
+		json configRoot = LoadPlatformConfigJson(projectDir, platformConfigFile);
+		if (configRoot.contains("startView") && configRoot["startView"].is_object())
 		{
-			std::ifstream projectFile(projectDir / "project.json");
-			if (projectFile.is_open())
+			for (const auto& [key, value] : configRoot["startView"].items())
 			{
-				json projectRoot = json::parse(projectFile, nullptr, false);
-				if (!projectRoot.is_discarded())
-					configRoot = std::move(projectRoot);
-			}
-		}
-
-		if (configRoot.contains("platform_configs") && configRoot["platform_configs"].is_array())
-		{
-			for (const auto& configEntry : configRoot["platform_configs"])
-			{
-				if (!configEntry.is_object())
-					continue;
-
-				if (configEntry.value("platform", "") != platformName)
-					continue;
-
-				std::string configFileName = configEntry.value("file", "");
-				if (configFileName.empty())
-					break;
-
-				fs::path configPath = projectDir / configFileName;
-				std::ifstream configFile(configPath);
-				if (!configFile.is_open())
-					break;
-
-				json platformRoot = json::parse(configFile, nullptr, false);
-				if (!platformRoot.is_discarded() && platformRoot.contains("startView") && platformRoot["startView"].is_object())
-				{
-					for (const auto& [key, value] : platformRoot["startView"].items())
-					{
-						startViewRoot[key] = value;
-					}
-					return startViewRoot;
-				}
-
-				break;
+				startViewRoot[key] = value;
 			}
 		}
 
@@ -510,7 +466,7 @@ namespace zzz::builder
 		return params;
 	}
 
-	static std::vector<std::byte> SerializeAssetToBinary(const PendingAsset& item, const fs::path& projectDir, zzz::core::eTargetPlatform targetPlatform)
+	static std::vector<std::byte> SerializeAssetToBinary(const PendingAsset& item, const fs::path& projectDir, zzz::core::eTargetPlatform targetPlatform, const std::string& platformConfigFile)
 	{
 		Serializer serializer;
 		std::vector<std::byte> result;
@@ -582,7 +538,7 @@ namespace zzz::builder
 					}
 				}
 
-				json platformRoot = ResolvePlatformJson(root, projectDir, targetPlatform);
+				json platformRoot = ResolvePlatformJson(root, projectDir, targetPlatform, platformConfigFile);
 				zU32 maxQueueSize = c_MaxNetworkLogQueueSize;
 				zU16 loggerPort = c_DefaultLoggerPort;
 
@@ -651,7 +607,7 @@ namespace zzz::builder
 			}
 			else if (assetType == zzz::core::ePackage::PrimaryView)
 			{
-				json startViewRoot = ResolveStartViewJson(root, projectDir, targetPlatform);
+				json startViewRoot = ResolveStartViewJson(root, projectDir, targetPlatform, platformConfigFile);
 
 				Guid sceneGuid{};
 				if (startViewRoot.contains("scene") && startViewRoot["scene"].is_string())
@@ -867,7 +823,7 @@ namespace zzz::builder
 					if (auto res = serializer.Serialize(result, guid); !res) return {};
 				}
 
-				json platformViewRoot = ResolveStartViewJson(root, projectDir, targetPlatform);
+				json platformViewRoot = ResolveStartViewJson(root, projectDir, targetPlatform, platformConfigFile);
 				switch (targetPlatform)
 				{
 				case zzz::core::eTargetPlatform::Android:
@@ -952,7 +908,11 @@ namespace zzz::builder
 		return result;
 	}
 
-	bool PackagePacker::PackProject(const fs::path& sourceDir, const fs::path& destinationDir, zzz::core::eTargetPlatform targetPlatform)
+	bool PackagePacker::PackProject(
+		const fs::path& sourceDir,
+		const fs::path& destinationDir,
+		zzz::core::eTargetPlatform targetPlatform,
+		const std::string& platformConfigFile)
 	{
 		fs::path outPath = destinationDir / zzz::core::c_GamePackageRelativePath;
 		std::vector<PendingAsset> pendingAssets;
@@ -970,7 +930,7 @@ namespace zzz::builder
 		}
 
 		// 1.1 Списки Child/Independent вью, объявленные в платформенном конфиге (child_views/independent_views
-		// внутри секции "platform" project_<platform>.json - см. ResolvePlatformJson). Это единственный
+		// внутри секции "platform" - см. ResolvePlatformJson). Это единственный
 		// источник правды о том, какие вторичные окна пакуются: физическое наличие файла в Assets/ - лишь
 		// необходимое условие (валидация ниже), но не достаточное. Guid не объявленный в списке не пакуется,
 		// даже если ресурс физически существует на диске.
@@ -983,7 +943,7 @@ namespace zzz::builder
 			json projRoot = json::parse(projJsonFile, nullptr, false);
 			if (!projRoot.is_discarded())
 			{
-				json platformRoot = ResolvePlatformJson(projRoot, sourceDir, targetPlatform);
+				json platformRoot = ResolvePlatformJson(projRoot, sourceDir, targetPlatform, platformConfigFile);
 
 				if (platformRoot.contains("child_views") && platformRoot["child_views"].is_array())
 					for (const auto& elem : platformRoot["child_views"])
@@ -1121,7 +1081,7 @@ namespace zzz::builder
 
 		for (const auto& item : pendingAssets)
 		{
-			std::vector<std::byte> payload = SerializeAssetToBinary(item, sourceDir, targetPlatform);
+			std::vector<std::byte> payload = SerializeAssetToBinary(item, sourceDir, targetPlatform, platformConfigFile);
 			auto parsedGuid = Guid::Parse(item.guid);
 			packageItems.push_back({
 				item.name,

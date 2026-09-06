@@ -1,14 +1,6 @@
-using assets_builder_lib;
+using System;
 
 namespace assets_builder_gui.Models;
-
-public class TargetProjectItem
-{
-    public bool IsEnabled { get; set; } = false;
-    public string Name { get; set; } = string.Empty;
-    public eTargetPlatform TargetPlatform { get; set; } = eTargetPlatform.Windows;
-    public string ConfigJsonPath { get; set; } = string.Empty;
-}
 
 public class BuildProfile
 {
@@ -16,5 +8,5 @@ public class BuildProfile
     public string Name { get; set; } = "Новая настройка";
     public string SourcePath { get; set; } = string.Empty;
     public string DestinationPath { get; set; } = string.Empty;
-    public List<TargetProjectItem> TargetProjects { get; set; } = new();
+    public string ActivePresetName { get; set; } = "Default";
 }

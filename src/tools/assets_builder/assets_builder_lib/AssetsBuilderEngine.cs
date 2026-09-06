@@ -452,7 +452,7 @@ public class AssetsBuilderEngine
 
 		// 4. Вызов C# запаковщика PackagePacker для генерации бинарного пакета структуры игры
 		Log($"Сериализация бинарного пакета игры '{AssetExtensions.GamePackageBinaryName}'...");
-		bool packageSuccess = PackagePacker.PackProject(options.SourcePath, options.DestinationPath, options.TargetPlatform, Log);
+		bool packageSuccess = PackagePacker.PackProject(options.SourcePath, options.DestinationPath, options.TargetPlatform, options.PlatformConfigFile, Log);
 
 		// 5. Генерация Scripts.cmake в корне папки назначения (options.DestinationPath)
 		GenerateScriptsCmake(options.SourcePath, options.DestinationPath);

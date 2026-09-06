@@ -10,10 +10,13 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        var args = Environment.GetCommandLineArgs();
+        bool isHeadlessBuild = e.Args.Contains("--build") || args.Any(a => a.Equals("--build", StringComparison.OrdinalIgnoreCase));
+
         var dialogService = new WpfDialogService();
         var mainViewModel = new MainWindowViewModel(dialogService);
 
-        if (e.Args.Contains("--build"))
+        if (isHeadlessBuild)
         {
             [System.Runtime.InteropServices.DllImport("kernel32.dll")]
             static extern bool AttachConsole(int dwProcessId);
@@ -29,6 +32,7 @@ public partial class App : Application
             }
 
             Shutdown();
+            Environment.Exit(0);
             return;
         }
 

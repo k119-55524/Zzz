@@ -1,10 +1,12 @@
 {
+  "name": "Windows Default",
   "build": {
-    "executableName": "GameZzz",
-    "bundleIdentifier": "com.zzz.assetstest",
-    "icon": "Assets/Icons/macos_icon.icns"
+    "executableName": "GameZzz.exe",
+    "icon": "Assets/Icons/win_icon.ico",
+    "visualStudioToolset": "v143"
   },
   "platform": {
+    "windowClassName": "ZzzEngineWindowClass",
     "child_views": [],
     "independent_views": []
   },

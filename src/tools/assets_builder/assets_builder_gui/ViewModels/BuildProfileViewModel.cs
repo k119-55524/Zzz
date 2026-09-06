@@ -1,79 +1,51 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using assets_builder_gui.Models;
 using assets_builder_lib;
+using assets_builder_lib.Models;
+using assets_builder_lib.Validation;
 
 namespace assets_builder_gui.ViewModels;
 
-public class TargetProjectViewModel : ViewModelBase
+public class TargetConfigViewModel : ViewModelBase
 {
-    private readonly Services.IDialogService? _dialogService;
+    private readonly BuildPresetTarget _model;
     private bool _isEnabled;
     private string _name;
-    private eTargetPlatform _targetPlatform;
-    private string _configJsonPath;
+    private string _platform;
+    private PlatformConfigOption? _selectedConfigOption;
 
-    public TargetProjectViewModel(TargetProjectItem model, Services.IDialogService? dialogService = null)
+    public TargetConfigViewModel(BuildPresetTarget model, List<PlatformConfigOption> availableOptions)
     {
-        Model = model;
-        _dialogService = dialogService;
+        _model = model;
         _isEnabled = model.IsEnabled;
         _name = model.Name;
-        _targetPlatform = model.TargetPlatform;
-        _configJsonPath = model.ConfigJsonPath;
+        _platform = model.Platform;
+        AvailableConfigOptions = availableOptions;
 
-        BrowseConfigJsonPathCommand = new RelayCommand(_ => BrowseConfigJsonPath());
+        // Поиск выбранного конфига среди доступных опций
+        _selectedConfigOption = availableOptions.FirstOrDefault(o =>
+            !string.IsNullOrWhiteSpace(o.RelativePath) &&
+            o.RelativePath.Equals(model.ConfigFile.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase))
+            ?? availableOptions.FirstOrDefault(o => string.IsNullOrWhiteSpace(o.RelativePath))
+            ?? availableOptions.FirstOrDefault();
     }
 
-    public TargetProjectItem Model { get; }
+    public BuildPresetTarget Model => _model;
 
-    public static List<eTargetPlatform> AvailableTargetPlatforms { get; } = new()
+    public string Name
     {
-        eTargetPlatform.Windows,
-        eTargetPlatform.Linux,
-        eTargetPlatform.Android,
-        eTargetPlatform.MacOS,
-        eTargetPlatform.iOS
-    };
-
-    public System.Windows.Input.ICommand BrowseConfigJsonPathCommand { get; }
-
-    private void BrowseConfigJsonPath()
-    {
-        string currentFolder = string.IsNullOrWhiteSpace(_configJsonPath) ? string.Empty : Path.GetDirectoryName(_configJsonPath) ?? string.Empty;
-        string selectedFolder = _dialogService?.SelectFolder("Выберите папку целевого проекта", currentFolder) ?? string.Empty;
-        if (!string.IsNullOrEmpty(selectedFolder))
-        {
-            if (string.IsNullOrWhiteSpace(_name))
-            {
-                Name = Path.GetFileName(selectedFolder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-            }
-            ConfigJsonPath = Path.Combine(selectedFolder, "assets_config.json");
-        }
+        get => _name;
+        set => SetProperty(ref _name, value);
     }
 
-    public bool IsConfigJsonPathValid
+    public string Platform
     {
-        get
-        {
-            if (string.IsNullOrWhiteSpace(_configJsonPath))
-                return false;
-
-            try
-            {
-                string fullPath = Path.GetFullPath(_configJsonPath);
-                char[] invalidChars = Path.GetInvalidPathChars();
-                if (_configJsonPath.IndexOfAny(invalidChars) >= 0)
-                    return false;
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
+        get => _platform;
+        set => SetProperty(ref _platform, value);
     }
 
     public bool IsEnabled
@@ -88,63 +60,104 @@ public class TargetProjectViewModel : ViewModelBase
         }
     }
 
-    public string Name
+    public List<PlatformConfigOption> AvailableConfigOptions { get; }
+
+    public PlatformConfigOption? SelectedConfigOption
     {
-        get => _name;
+        get => _selectedConfigOption;
         set
         {
-            if (SetProperty(ref _name, value))
+            if (SetProperty(ref _selectedConfigOption, value))
             {
+                OnPropertyChanged(nameof(ConfigFilePath));
+                OnPropertyChanged(nameof(IsNone));
                 OnPropertyChanged(nameof(IsDirty));
             }
         }
     }
 
-    public eTargetPlatform TargetPlatform
-    {
-        get => _targetPlatform;
-        set
-        {
-            if (SetProperty(ref _targetPlatform, value))
-            {
-                OnPropertyChanged(nameof(IsDirty));
-            }
-        }
-    }
+    public string ConfigFilePath => SelectedConfigOption?.RelativePath ?? string.Empty;
 
-    public string ConfigJsonPath
-    {
-        get => _configJsonPath;
-        set
-        {
-            if (SetProperty(ref _configJsonPath, value))
-            {
-                OnPropertyChanged(nameof(IsConfigJsonPathValid));
-                OnPropertyChanged(nameof(IsDirty));
-            }
-        }
-    }
+    public bool IsNone => string.IsNullOrWhiteSpace(ConfigFilePath);
 
-    public bool IsDirty => _isEnabled != Model.IsEnabled ||
-                           _name != Model.Name ||
-                           _targetPlatform != Model.TargetPlatform ||
-                           _configJsonPath != Model.ConfigJsonPath;
+    public bool IsDirty => _isEnabled != _model.IsEnabled ||
+                           ConfigFilePath != _model.ConfigFile;
 
     public void ApplyToModel()
     {
-        Model.IsEnabled = _isEnabled;
-        Model.Name = _name;
-        Model.TargetPlatform = _targetPlatform;
-        Model.ConfigJsonPath = _configJsonPath;
+        _model.IsEnabled = _isEnabled;
+        _model.ConfigFile = ConfigFilePath;
     }
 
     public void ResetFromModel()
     {
-        IsEnabled = Model.IsEnabled;
-        Name = Model.Name;
-        TargetPlatform = Model.TargetPlatform;
-        ConfigJsonPath = Model.ConfigJsonPath;
-        OnPropertyChanged(nameof(IsConfigJsonPathValid));
+        IsEnabled = _model.IsEnabled;
+        SelectedConfigOption = AvailableConfigOptions.FirstOrDefault(o =>
+            !string.IsNullOrWhiteSpace(o.RelativePath) &&
+            o.RelativePath.Equals(_model.ConfigFile.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase))
+            ?? AvailableConfigOptions.FirstOrDefault(o => string.IsNullOrWhiteSpace(o.RelativePath))
+            ?? AvailableConfigOptions.FirstOrDefault();
+        OnPropertyChanged(nameof(IsDirty));
+    }
+}
+
+public class BuildPresetViewModel : ViewModelBase
+{
+    private readonly BuildPreset _model;
+    private readonly string _projectPath;
+
+    public BuildPresetViewModel(BuildPreset model, string projectPath)
+    {
+        _model = model;
+        _projectPath = projectPath;
+        Targets = new ObservableCollection<TargetConfigViewModel>();
+
+        LoadTargets();
+    }
+
+    public BuildPreset Model => _model;
+
+    public string Name => _model.Name;
+
+    public string Description => _model.Description;
+
+    public ObservableCollection<TargetConfigViewModel> Targets { get; }
+
+    public bool IsDirty => Targets.Any(t => t.IsDirty);
+
+    private void LoadTargets()
+    {
+        Targets.Clear();
+        foreach (var target in _model.Targets)
+        {
+            var options = BuildPresetManager.GetAvailablePlatformConfigs(_projectPath, target.Platform);
+            var vm = new TargetConfigViewModel(target, options);
+            vm.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(TargetConfigViewModel.IsDirty))
+                {
+                    OnPropertyChanged(nameof(IsDirty));
+                }
+            };
+            Targets.Add(vm);
+        }
+    }
+
+    public void ApplyToModel()
+    {
+        foreach (var target in Targets)
+        {
+            target.ApplyToModel();
+        }
+        OnPropertyChanged(nameof(IsDirty));
+    }
+
+    public void ResetFromModel()
+    {
+        foreach (var target in Targets)
+        {
+            target.ResetFromModel();
+        }
         OnPropertyChanged(nameof(IsDirty));
     }
 }
@@ -157,61 +170,20 @@ public class BuildProfileViewModel : ViewModelBase
     private string _name = string.Empty;
     private string _sourcePath = string.Empty;
     private string _destinationPath = string.Empty;
-    private bool _isTargetProjectsModified = false;
+    private string _activePresetName = "Default";
 
-    public ObservableCollection<TargetProjectViewModel> TargetProjects { get; } = new();
+    private ProjectValidationResult? _validationResult;
+    private PresetsContainer? _presetsContainer;
+    private BuildPresetViewModel? _selectedPreset;
+
+    public ObservableCollection<BuildPresetViewModel> Presets { get; } = new();
 
     public BuildProfileViewModel(BuildProfile model, Services.IDialogService? dialogService = null)
     {
         _model = model;
         _dialogService = dialogService;
 
-        AddTargetProjectCommand = new RelayCommand(_ => AddTargetProject());
-        RemoveTargetProjectCommand = new RelayCommand(param => RemoveTargetProject(param as TargetProjectViewModel));
-
         ResetFromModel();
-    }
-
-    public System.Windows.Input.ICommand AddTargetProjectCommand { get; }
-    public System.Windows.Input.ICommand RemoveTargetProjectCommand { get; }
-
-    private void AddTargetProject()
-    {
-        string path = _dialogService?.SelectFolder("Выберите папку целевого проекта", string.Empty) ?? string.Empty;
-        if (!string.IsNullOrEmpty(path))
-        {
-            string projName = Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-            string jsonPath = Path.Combine(path, "assets_config.json");
-
-            var item = new TargetProjectItem
-            {
-                IsEnabled = true,
-                Name = projName,
-                TargetPlatform = InferTargetPlatform(projName),
-                ConfigJsonPath = jsonPath
-            };
-
-            var vm = new TargetProjectViewModel(item, _dialogService);
-            vm.PropertyChanged += OnTargetProjectPropertyChanged;
-            TargetProjects.Add(vm);
-
-            _isTargetProjectsModified = true;
-            OnPropertyChanged(nameof(IsDirty));
-            OnPropertyChanged(nameof(DisplayName));
-            OnPropertyChanged(nameof(IsValid));
-        }
-    }
-
-    private void RemoveTargetProject(TargetProjectViewModel? item)
-    {
-        if (item != null && TargetProjects.Contains(item))
-        {
-            TargetProjects.Remove(item);
-            _isTargetProjectsModified = true;
-            OnPropertyChanged(nameof(IsDirty));
-            OnPropertyChanged(nameof(DisplayName));
-            OnPropertyChanged(nameof(IsValid));
-        }
     }
 
     public BuildProfile Model => _model;
@@ -234,19 +206,6 @@ public class BuildProfileViewModel : ViewModelBase
         }
     }
 
-    private static eTargetPlatform InferTargetPlatform(string name)
-    {
-        if (name.Contains("linux", StringComparison.OrdinalIgnoreCase))
-            return eTargetPlatform.Linux;
-        if (name.Contains("android", StringComparison.OrdinalIgnoreCase))
-            return eTargetPlatform.Android;
-        if (name.Contains("ios", StringComparison.OrdinalIgnoreCase))
-            return eTargetPlatform.iOS;
-        if (name.Contains("macos", StringComparison.OrdinalIgnoreCase) || name.Contains("mac", StringComparison.OrdinalIgnoreCase))
-            return eTargetPlatform.MacOS;
-        return eTargetPlatform.Windows;
-    }
-
     public string SourcePath
     {
         get => _sourcePath;
@@ -254,7 +213,10 @@ public class BuildProfileViewModel : ViewModelBase
         {
             if (SetProperty(ref _sourcePath, value))
             {
+                ReloadProjectAndPresets();
                 OnPropertyChanged(nameof(IsSourcePathValid));
+                OnPropertyChanged(nameof(IsProjectValid));
+                OnPropertyChanged(nameof(ValidationErrorsSummary));
                 OnPropertyChanged(nameof(DisplayName));
                 OnPropertyChanged(nameof(IsDirty));
                 OnPropertyChanged(nameof(IsValid));
@@ -277,10 +239,70 @@ public class BuildProfileViewModel : ViewModelBase
         }
     }
 
+    public string ActivePresetName
+    {
+        get => _activePresetName;
+        set
+        {
+            if (SetProperty(ref _activePresetName, value))
+            {
+                var match = Presets.FirstOrDefault(p => p.Name.Equals(value, StringComparison.OrdinalIgnoreCase));
+                if (match != null && match != SelectedPreset)
+                {
+                    SelectedPreset = match;
+                }
+                OnPropertyChanged(nameof(IsDirty));
+            }
+        }
+    }
+
+    public BuildPresetViewModel? SelectedPreset
+    {
+        get => _selectedPreset;
+        set
+        {
+            if (SetProperty(ref _selectedPreset, value))
+            {
+                if (value != null)
+                {
+                    _activePresetName = value.Name;
+                    OnPropertyChanged(nameof(ActivePresetName));
+                }
+                OnPropertyChanged(nameof(IsDirty));
+                OnPropertyChanged(nameof(IsValid));
+            }
+        }
+    }
+
+    public ProjectValidationResult? ValidationResult
+    {
+        get => _validationResult;
+        private set
+        {
+            if (SetProperty(ref _validationResult, value))
+            {
+                OnPropertyChanged(nameof(IsProjectValid));
+                OnPropertyChanged(nameof(ValidationErrorsSummary));
+            }
+        }
+    }
+
+    public bool IsProjectValid => _validationResult != null && _validationResult.IsValid;
+
+    public string ValidationErrorsSummary
+    {
+        get
+        {
+            if (_validationResult == null) return string.Empty;
+            if (_validationResult.IsValid) return string.Empty;
+            return string.Join("\n", _validationResult.Errors);
+        }
+    }
+
     // Источниковый путь к папке проекта должен существовать на диске
     public bool IsSourcePathValid => !string.IsNullOrWhiteSpace(_sourcePath) && Directory.Exists(_sourcePath);
 
-    // Валидация пути назначения: проверяем ТОЛЬКО корректность синтаксиса и имён пути, наличие папки на диске НЕ требуется!
+    // Валидация пути назначения: синтаксис и имя пути
     public bool IsDestinationPathValid
     {
         get
@@ -290,10 +312,7 @@ public class BuildProfileViewModel : ViewModelBase
 
             try
             {
-                // Проверка синтаксиса полного пути
                 string fullPath = Path.GetFullPath(_destinationPath);
-                
-                // Проверка недопустимых символов в пути Windows
                 char[] invalidChars = Path.GetInvalidPathChars();
                 if (_destinationPath.IndexOfAny(invalidChars) >= 0)
                     return false;
@@ -307,37 +326,87 @@ public class BuildProfileViewModel : ViewModelBase
         }
     }
 
-    public bool IsValid => !string.IsNullOrWhiteSpace(_name) && IsSourcePathValid && IsDestinationPathValid && TargetProjects.Any(tp => tp.IsEnabled);
+    public bool HasRunnableTargets
+    {
+        get
+        {
+            if (SelectedPreset == null) return false;
+            return SelectedPreset.Targets.Any(t => t.IsEnabled && !t.IsNone);
+        }
+    }
+
+    public bool IsValid => !string.IsNullOrWhiteSpace(_name) &&
+                           IsSourcePathValid &&
+                           IsDestinationPathValid &&
+                           IsProjectValid &&
+                           HasRunnableTargets;
 
     public bool IsDirty => _name != _model.Name ||
                            _sourcePath != _model.SourcePath ||
                            _destinationPath != _model.DestinationPath ||
-                           _isTargetProjectsModified ||
-                           TargetProjects.Any(tp => tp.IsDirty);
+                           _activePresetName != _model.ActivePresetName ||
+                           Presets.Any(p => p.IsDirty);
 
     public string DisplayName => IsDirty ? $"{_name} *" : _name;
+
+    public void ReloadProjectAndPresets()
+    {
+        Presets.Clear();
+        _selectedPreset = null;
+
+        if (!IsSourcePathValid)
+        {
+            ValidationResult = null;
+            return;
+        }
+
+        // Строгая валидация структуры
+        ValidationResult = ProjectValidator.Validate(_sourcePath);
+
+        if (!ValidationResult.IsValid)
+        {
+            return;
+        }
+
+        string presetsRelPath = ValidationResult.Manifest?.BuildSettings?.PresetsFile ?? "build_settings/presets.json";
+        _presetsContainer = BuildPresetManager.LoadPresets(_sourcePath, presetsRelPath);
+
+        if (_presetsContainer != null)
+        {
+            foreach (var preset in _presetsContainer.Presets)
+            {
+                var pvm = new BuildPresetViewModel(preset, _sourcePath);
+                pvm.PropertyChanged += (s, e) =>
+                {
+                    if (e.PropertyName == nameof(BuildPresetViewModel.IsDirty))
+                    {
+                        OnPropertyChanged(nameof(IsDirty));
+                        OnPropertyChanged(nameof(DisplayName));
+                        OnPropertyChanged(nameof(IsValid));
+                    }
+                };
+                Presets.Add(pvm);
+            }
+
+            var active = Presets.FirstOrDefault(p => p.Name.Equals(_activePresetName, StringComparison.OrdinalIgnoreCase))
+                         ?? Presets.FirstOrDefault();
+            SelectedPreset = active;
+        }
+    }
 
     public void ResetFromModel()
     {
         _name = _model.Name;
         _sourcePath = _model.SourcePath;
         _destinationPath = _model.DestinationPath;
-        _isTargetProjectsModified = false;
+        _activePresetName = string.IsNullOrWhiteSpace(_model.ActivePresetName) ? "Default" : _model.ActivePresetName;
 
-        TargetProjects.Clear();
-        if (_model.TargetProjects != null)
-        {
-            foreach (var item in _model.TargetProjects)
-            {
-                var vm = new TargetProjectViewModel(item, _dialogService);
-                vm.PropertyChanged += OnTargetProjectPropertyChanged;
-                TargetProjects.Add(vm);
-            }
-        }
+        ReloadProjectAndPresets();
 
         OnPropertyChanged(nameof(Name));
         OnPropertyChanged(nameof(SourcePath));
         OnPropertyChanged(nameof(DestinationPath));
+        OnPropertyChanged(nameof(ActivePresetName));
         OnPropertyChanged(nameof(DisplayName));
         OnPropertyChanged(nameof(IsSourcePathValid));
         OnPropertyChanged(nameof(IsDestinationPathValid));
@@ -345,28 +414,24 @@ public class BuildProfileViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsValid));
     }
 
-    private void OnTargetProjectPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(TargetProjectViewModel.IsDirty))
-        {
-            OnPropertyChanged(nameof(IsDirty));
-            OnPropertyChanged(nameof(DisplayName));
-            OnPropertyChanged(nameof(IsValid));
-        }
-    }
-
     public void ApplyToModel()
     {
         _model.Name = _name;
         _model.SourcePath = _sourcePath;
         _model.DestinationPath = _destinationPath;
+        _model.ActivePresetName = _activePresetName;
 
-        _model.TargetProjects = TargetProjects.Select(tp => {
-            tp.ApplyToModel();
-            return tp.Model;
-        }).ToList();
+        // Сохранение изменений в пресетах проекта (в build_settings/presets.json)
+        if (IsProjectValid && _presetsContainer != null)
+        {
+            foreach (var p in Presets)
+            {
+                p.ApplyToModel();
+            }
 
-        _isTargetProjectsModified = false;
+            string presetsRelPath = ValidationResult?.Manifest?.BuildSettings?.PresetsFile ?? "build_settings/presets.json";
+            BuildPresetManager.SavePresets(_sourcePath, presetsRelPath, _presetsContainer);
+        }
 
         OnPropertyChanged(nameof(DisplayName));
         OnPropertyChanged(nameof(IsDirty));

@@ -9,6 +9,9 @@ public class SessionConfig
     public List<BuildProfile> Profiles { get; set; } = new();
     public string SelectedProfileId { get; set; } = string.Empty;
 
+    // Путь к папке целевых проектов (src/projects). Если не задан, определяется динамически.
+    public string WorkspaceProjectsPath { get; set; } = string.Empty;
+
     // Геометрия окна
     public double WindowWidth { get; set; } = 860;
     public double WindowHeight { get; set; } = 720;
@@ -65,29 +68,56 @@ public static class SessionManager
         }
     }
 
+    public static string ResolveWorkspaceProjectsPath(string? customPath = null)
+    {
+        if (!string.IsNullOrWhiteSpace(customPath) && Directory.Exists(customPath))
+        {
+            return customPath;
+        }
+
+        // Поиск папки src/projects относительно текущего приложения (dist/Debug, bin, и т.д.)
+        string? current = AppDomain.CurrentDomain.BaseDirectory;
+        while (!string.IsNullOrEmpty(current))
+        {
+            string candidate = Path.Combine(current, "src", "projects");
+            if (Directory.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            string rootMarker = Path.Combine(current, "CMakeLists.txt");
+            if (File.Exists(rootMarker))
+            {
+                string p = Path.Combine(current, "src", "projects");
+                if (Directory.Exists(p)) return p;
+            }
+
+            var parent = Directory.GetParent(current);
+            if (parent == null) break;
+            current = parent.FullName;
+        }
+
+        // Fallback на стандартный путь репозитория
+        return @"C:\Workspaces\ZzzTest\src\projects";
+    }
+
     public static SessionConfig GetDefaultConfig()
     {
-        string workspaceProjects = @"C:\Workspaces\ZzzTest\src\projects";
+        string workspaceProjects = ResolveWorkspaceProjectsPath();
         var defaultProfile = new BuildProfile
         {
             Id = Guid.NewGuid().ToString(),
             Name = "zzz_assets_test_000",
             SourcePath = Path.Combine(workspaceProjects, "assets_projects", "zzz_assets_test_000"),
             DestinationPath = Path.Combine(workspaceProjects, "assets_projects", "zzz_assets_test_000_build"),
-            TargetProjects = new List<TargetProjectItem>
-            {
-                new TargetProjectItem { IsEnabled = true, Name = "game_win", TargetPlatform = assets_builder_lib.eTargetPlatform.Windows, ConfigJsonPath = Path.Combine(workspaceProjects, "game_win", "assets_config.json") },
-                new TargetProjectItem { IsEnabled = true, Name = "game_linux", TargetPlatform = assets_builder_lib.eTargetPlatform.Linux, ConfigJsonPath = Path.Combine(workspaceProjects, "game_linux", "assets_config.json") },
-                new TargetProjectItem { IsEnabled = true, Name = "game_android", TargetPlatform = assets_builder_lib.eTargetPlatform.Android, ConfigJsonPath = Path.Combine(workspaceProjects, "game_android", "assets_config.json") },
-                new TargetProjectItem { IsEnabled = true, Name = "game_ios", TargetPlatform = assets_builder_lib.eTargetPlatform.iOS, ConfigJsonPath = Path.Combine(workspaceProjects, "game_ios", "assets_config.json") },
-                new TargetProjectItem { IsEnabled = true, Name = "game_macos", TargetPlatform = assets_builder_lib.eTargetPlatform.MacOS, ConfigJsonPath = Path.Combine(workspaceProjects, "game_macos", "assets_config.json") }
-            }
+            ActivePresetName = "Default"
         };
 
         return new SessionConfig
         {
             Profiles = new List<BuildProfile> { defaultProfile },
             SelectedProfileId = defaultProfile.Id,
+            WorkspaceProjectsPath = workspaceProjects,
             WindowWidth = 860,
             WindowHeight = 720,
             WindowLeft = 100,

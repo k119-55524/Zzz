@@ -25,7 +25,7 @@ extern "C"
 	BUILDER_API uint32_t GetDataPackageMinorVersion();
 	BUILDER_API uint32_t GetDataPackagePatchVersion();
 
-	BUILDER_API bool PackProjectNative(const char* sourceDir, const char* destinationDir, uint32_t targetPlatform);
+	BUILDER_API bool PackProjectNative(const char* sourceDir, const char* destinationDir, uint32_t targetPlatform, const char* platformConfigFile);
 
 	/**
 	 * @brief Валидирует имя каталога (компании/приложения) по тем же правилам, что и Path::IsValidDirectoryName

@@ -1,7 +1,9 @@
 {
+  "name": "macOS Default",
   "build": {
     "executableName": "GameZzz",
-    "icon": "Assets/Icons/linux_icon.png"
+    "bundleIdentifier": "com.zzz.assetstest",
+    "icon": "Assets/Icons/macos_icon.icns"
   },
   "platform": {
     "child_views": [],
@@ -14,7 +16,6 @@
       "height": 720
     },
     "windowMode": "Windowed",
-    "displayServer": "Auto",
     "resizable": true
   }
 }

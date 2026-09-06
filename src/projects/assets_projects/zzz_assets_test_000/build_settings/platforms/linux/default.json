@@ -1,11 +1,10 @@
 {
+  "name": "Linux Default",
   "build": {
-    "executableName": "GameZzz.exe",
-    "icon": "Assets/Icons/win_icon.ico",
-    "visualStudioToolset": "v143"
+    "executableName": "GameZzz",
+    "icon": "Assets/Icons/linux_icon.png"
   },
   "platform": {
-    "windowClassName": "ZzzEngineWindowClass",
     "child_views": [],
     "independent_views": []
   },
@@ -16,6 +15,7 @@
       "height": 720
     },
     "windowMode": "Windowed",
+    "displayServer": "Auto",
     "resizable": true
   }
 }

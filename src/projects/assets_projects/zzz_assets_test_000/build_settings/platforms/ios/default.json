@@ -1,4 +1,5 @@
 {
+  "name": "iOS Default",
   "build": {
     "bundleIdentifier": "com.zzz.assetstest",
     "developmentTeam": "XYZ123456",
