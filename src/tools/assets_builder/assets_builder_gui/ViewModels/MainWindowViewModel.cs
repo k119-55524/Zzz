@@ -365,7 +365,9 @@ public class MainWindowViewModel : ViewModelBase
 
             Task.Run(() =>
             {
-                string buildTime = DateTime.UtcNow.ToString("o");
+                DateTimeOffset buildDateTime = DateTimeOffset.Now;
+                ulong buildTimestampMs = (ulong)buildDateTime.ToUnixTimeMilliseconds();
+                string buildTime = DateTimeOffset.FromUnixTimeMilliseconds((long)buildTimestampMs).LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss:fff");
                 bool success = PrepareBuildRoot(baseDestinationPath, buildTime);
                 if (success)
                 {
@@ -403,7 +405,7 @@ public class MainWindowViewModel : ViewModelBase
                         _engine.GenerateScriptsCmake(sourcePath, target.BuildDirectory, target.ConfigFile);
 
                         AppendLog($"Сериализация пакета для '{target.Name}' ({target.TargetPlatform}, конфиг: '{target.ConfigFile}')...");
-                        bool packSuccess = PackagePacker.PackProject(sourcePath, target.BuildDirectory, target.TargetPlatform, target.ConfigFile, AppendLog);
+                        bool packSuccess = PackagePacker.PackProject(sourcePath, target.BuildDirectory, target.TargetPlatform, buildTimestampMs, out _, target.ConfigFile, AppendLog);
                         if (!packSuccess)
                         {
                             AppendLog($"Ошибка упаковки для таргета '{target.Name}'!");
@@ -425,6 +427,8 @@ public class MainWindowViewModel : ViewModelBase
 
     public void BuildHeadless()
     {
+        _engine.LogReceived += msg => Console.WriteLine(msg);
+
         if (SelectedProfile == null)
         {
             Console.WriteLine("Ошибка: Профиль не выбран.");
@@ -468,7 +472,9 @@ public class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        string buildTime = DateTime.UtcNow.ToString("o");
+        DateTimeOffset buildDateTime = DateTimeOffset.Now;
+        ulong buildTimestampMs = (ulong)buildDateTime.ToUnixTimeMilliseconds();
+        string buildTime = DateTimeOffset.FromUnixTimeMilliseconds((long)buildTimestampMs).LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss:fff");
         bool success = PrepareBuildRoot(baseDestinationPath, buildTime);
         if (success)
         {
@@ -504,7 +510,7 @@ public class MainWindowViewModel : ViewModelBase
                 _engine.GenerateScriptsCmake(sourcePath, target.BuildDirectory, target.ConfigFile);
 
                 Console.WriteLine($"Сериализация индивидуального пакета для '{target.Name}' ({target.TargetPlatform}, конфиг: '{target.ConfigFile}')...");
-                bool packSuccess = PackagePacker.PackProject(sourcePath, target.BuildDirectory, target.TargetPlatform, target.ConfigFile, msg => Console.WriteLine(msg));
+                bool packSuccess = PackagePacker.PackProject(sourcePath, target.BuildDirectory, target.TargetPlatform, buildTimestampMs, out _, target.ConfigFile, msg => Console.WriteLine(msg));
                 if (!packSuccess)
                 {
                     Console.WriteLine($"Ошибка упаковки для таргета '{target.Name}'!");
@@ -621,6 +627,7 @@ public class MainWindowViewModel : ViewModelBase
 
                 activeBuilds.Add(target.BuildDirectory);
 
+                // Единое время сборки, совпадающее с buildtime-data.txt и заголовками package.dat/data.dat
                 var jsonObj = new { active_build_directories = activeBuilds, last_build_time = buildTime };
                 string outputJson = System.Text.Json.JsonSerializer.Serialize(jsonObj, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(jsonPath, outputJson);

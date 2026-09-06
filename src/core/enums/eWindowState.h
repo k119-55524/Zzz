@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string_view>
-#include "core/utils/Types.h"
+#include "math/utils/Types.h"
 #include "core/utils/ThrowWrappers.h"
 
 namespace zzz::core

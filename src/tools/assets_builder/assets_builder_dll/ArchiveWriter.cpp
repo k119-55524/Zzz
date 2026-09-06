@@ -1,6 +1,6 @@
 #include "ArchiveWriter.h"
 #include <fstream>
-#include <core/io/package/PackageHeader.h>
+#include <core/io/DatFileHeader.h>
 #include <core/io/package/PackageEntry.h>
 #include <core/constants/PackageConstants.h>
 #include <core/utils/ThrowWrappers.h>
@@ -9,10 +9,11 @@ namespace zzz::builder
 {
 	bool WriteBinaryArchive(
 		const std::filesystem::path& outPath,
-		const zzz::core::FileHeader<3>& magic,
+		const zzz::core::DatFileHeader::Magic& magic,
 		const zzz::core::Version& version,
 		const std::vector<ArchiveItem>& items,
-		const zzz::core::Serializer& serializer)
+		const zzz::core::Serializer& serializer,
+		uint64_t buildTime)
 	{
 		std::filesystem::create_directories(outPath.parent_path());
 		std::ofstream outFile(outPath, std::ios::binary);
@@ -22,10 +23,11 @@ namespace zzz::builder
 		}
 
 		// Сериализатор сам сформирует заголовок и таблицу и сдвинет указатель на точный размер
-		zzz::core::PackageHeader header(
+		zzz::core::DatFileHeader header(
 			magic,
 			version,
-			static_cast<uint32_t>(items.size())
+			static_cast<uint32_t>(items.size()),
+			buildTime
 		);
 
 		std::vector<zzz::core::PackageEntry> tempEntries;

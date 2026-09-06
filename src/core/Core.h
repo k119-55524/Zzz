@@ -2,10 +2,9 @@
 
 #include "core/CoreIncludes.h"
 
-#include "core/utils/Types.h"
 #include "core/utils/Export.h"
 #include "core/serialize/Serializer.h"
-#include "core/io/FileHeader.h"
+#include "core/io/DatFileHeader.h"
 #include "core/constants/Constants.h"
 #include "core/utils/Defines.h"
 #include "core/utils/Ensure.h"
@@ -64,7 +63,7 @@
 
 #include "core/io/Path.h"
 #include "core/io/FileSystem.h"
-// Узкие типы данных пакета (PackageHeader, PrimaryViewData, ChildViewData и т.д.) и hardware/*
+// Узкие типы данных пакета (PrimaryViewData, ChildViewData и т.д.) и hardware/*
 // намеренно НЕ включаются сюда: они используются только в единичных местах (PackageManager,
 // UserSettingsManager, ViewManager, Platform и т.п.), а не по всему проекту. Раньше их бланкетное
 // подключение здесь заставляло core_lib/engine_lib пересобираться целиком при правке любого из ~30

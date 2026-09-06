@@ -1,11 +1,13 @@
 {
-  "name": "StartView",
-  "version": "1.0.0",
-  "width": 800,
-  "height": 600,
+  "title": "GameZzz...",
+  "defaultSize": {
+    "width": 1280,
+    "height": 720
+  },
   "scene": "3cbf41ff-f608-47ca-b383-ea5698648aca",
   "scripts": [
     "14366409-92e5-4842-837e-c3ae45c93cf7"
   ],
-  "elements": []
+  "windowMode": "Windowed",
+  "resizable": true
 }

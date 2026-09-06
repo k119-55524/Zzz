@@ -144,13 +144,13 @@ namespace zzz::engine
 		/**
 		 * @brief Возвращает прямоугольник клиентской области окна без учета рамок и заголовка (Client Rect / Surface Rect).
 		 */
-		[[nodiscard]] virtual zzz::math::Rect2D<zzz::core::zI32> GetClientRect() const = 0;
+		[[nodiscard]] virtual zzz::math::Rect2D<zzz::zI32> GetClientRect() const = 0;
 
 		/**
 		 * @brief Возвращает точный физический размер клиентской области в пикселях для GAPI (Vulkan / DirectX 12 / Metal).
 		 * Вычисляется как GetClientRect().GetSize() * Monitor.ScaleFactor.
 		 */
-		[[nodiscard]] zzz::math::Size2D<zzz::core::zU32> GetPhysicalClientSize() const noexcept;
+		[[nodiscard]] zzz::math::Size2D<zzz::zU32> GetPhysicalClientSize() const noexcept;
 
 		/**
 		 * @brief Обрабатывает событие смены разрешения или конфигурации монитора.

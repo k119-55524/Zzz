@@ -78,6 +78,7 @@ namespace zzz::engine
 
 	Scene::~Scene()
 	{
+		InvokeDestroy();
 		DOut("[Scene::~Scene] Уничтожена сцена '{}' ({})", m_Name, m_Guid.ToString());
 	}
 

@@ -1,6 +1,6 @@
 #include "AssetImporterRegistry.h"
 #include "ObjImporter.h"
-#include "core/io/AssetFileExtensions.h"
+#include "AssetExtensions.h"
 
 namespace zzz::builder
 {
@@ -12,7 +12,7 @@ namespace zzz::builder
 
 	AssetImporterRegistry::AssetImporterRegistry()
 	{
-		RegisterImporter(core::ext::MeshObj, std::make_shared<ObjImporter>());
+		RegisterImporter(c_ExtMeshObj, std::make_shared<ObjImporter>());
 	}
 
 	void AssetImporterRegistry::RegisterImporter(std::string_view extension, std::shared_ptr<IAssetImporter> importer)

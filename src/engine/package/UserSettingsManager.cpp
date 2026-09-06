@@ -1,10 +1,12 @@
 
+#include <chrono>
+
 #include "PackageManager.h"
+#include "engine/view/View.h"
+#include "core/utils/Ensure.h"
 #include "UserSettingsManager.h"
 #include "core/io/package/ViewUserData.h"
 #include "core/constants/ConfigConstants.h"
-#include "core/utils/Ensure.h"
-#include "engine/view/View.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Assets);
 
@@ -15,7 +17,7 @@ namespace zzz::engine
 {
 	UserSettingsManager::UserSettingsManager(std::shared_ptr<FileSystem> fileSystem) :
 		m_FileSystem{ std::move(fileSystem) },
-		m_Version(c_ConfigFileMajorVersion, c_ConfigFileMinorVersion, c_ConfigFilePatchVersion),
+		m_Header(c_ConfigHeader, Version(c_ConfigFileMajorVersion, c_ConfigFileMinorVersion, c_ConfigFilePatchVersion), 0, 0),
 		m_IsDirty(true)
 	{
 		ensure(m_FileSystem, "FileSystem не должен быть null при создании UserSettingsManager.");
@@ -67,7 +69,7 @@ namespace zzz::engine
 
 	void UserSettingsManager::SetDefaultUserSettings()
 	{
-		m_Version = Version(c_ConfigFileMajorVersion, c_ConfigFileMinorVersion, c_ConfigFilePatchVersion);
+		m_Header = DatFileHeader(c_ConfigHeader, Version(c_ConfigFileMajorVersion, c_ConfigFileMinorVersion, c_ConfigFilePatchVersion), 0, 0);
 		m_PrimaryViewUserData.reset();
 	}
 
@@ -144,23 +146,45 @@ namespace zzz::engine
 			return {};
 		}
 
+		const zU64 saveTime = static_cast<zU64>(
+			std::chrono::duration_cast<std::chrono::milliseconds>(
+				std::chrono::system_clock::now().time_since_epoch()).count());
+		const zU64 prevSaveTime = m_Header.GetTimestamp();
+
+		// DatFileHeader - неизменяемый value-type (нет сеттеров), поэтому обновление timestamp - это
+		// пересборка через конструктор с сохранением остальных полей заголовка без изменений.
+		auto withTimestamp = [&](zU64 timestamp)
+		{
+			m_Header = DatFileHeader(m_Header.GetMagic(), m_Header.GetVersion(), m_Header.GetEntryCount(), timestamp);
+		};
+
+		withTimestamp(saveTime);
+
 		try
 		{
 			std::vector<std::byte> buffer;
 			Serializer serializer;
 			if (auto res = serializer.Serialize(buffer, *this); !res)
+			{
+				withTimestamp(prevSaveTime);
 				return UNEXPECTED("Не удалось сериализовать конфигурацию: {}.", res.error());
+			}
 
 			auto writeRes = m_FileSystem->WriteAllBytes(eFileLocation::User, c_ConfigFileName, buffer);
 			if (!writeRes)
+			{
+				withTimestamp(prevSaveTime);
 				return UNEXPECTED("Не удалось сохранить файл конфигурации: {}.", writeRes.error());
+			}
 		}
 		catch (const std::exception& e)
 		{
+			withTimestamp(prevSaveTime);
 			return UNEXPECTED("Ошибка сериализации конфигурации: {}.", std::string(e.what()));
 		}
 		catch (...)
 		{
+			withTimestamp(prevSaveTime);
 			return UNEXPECTED("Неизвестная ошибка сериализации конфигурации.");
 		}
 
@@ -324,8 +348,7 @@ namespace zzz::engine
 
 	[[nodiscard]] std::expected<void, std::string> UserSettingsManager::Serialize(std::vector<std::byte>& buffer, const Serializer& s) const
 	{
-		auto res = s.Serialize(buffer, c_ConfigHeader)
-			.and_then([&]() { return s.Serialize(buffer, m_Version); })
+		auto res = s.Serialize(buffer, m_Header)
 			.and_then([&]() -> std::expected<void, std::string> {
 				bool hasPrimary = m_PrimaryViewUserData.has_value();
 				auto resP = s.Serialize(buffer, hasPrimary);
@@ -383,15 +406,17 @@ namespace zzz::engine
 
 	[[nodiscard]] std::expected<void, std::string> UserSettingsManager::Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s)
 	{
-		FileHeader<3> header{};
+		DatFileHeader header;
 
 		auto res = s.Deserialize(buffer, offset, header)
 			.and_then([&]() -> std::expected<void, std::string>
 				{
-					if (header != c_ConfigHeader)
-						return UNEXPECTED("Некорректный заголовок конфигурации.");
+					auto valRes = header.Validate(c_ConfigHeader, c_ConfigFileMajorVersion);
+					if (!valRes)
+						return UNEXPECTED("Некорректный заголовок конфигурации: {}", valRes.error());
 
-					return s.Deserialize(buffer, offset, m_Version);
+					m_Header = header;
+					return {};
 				})
 			.and_then([&]() -> std::expected<void, std::string> {
 				bool hasPrimary = false;
@@ -475,6 +500,7 @@ namespace zzz::engine
 	{
 #if Z_ADD_LOGGER
 		DOut("========== [UserSettingsManager] User Data: {} ==========", c_ConfigFileName);
+		m_Header.LogFileBlock("  ");
 		if (m_PrimaryViewUserData)
 			m_PrimaryViewUserData->LogFileBlock("  ");
 		for (const auto& [guid, viewData] : m_ChildViewsUserData)

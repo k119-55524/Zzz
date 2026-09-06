@@ -1,7 +1,7 @@
 #pragma once
 
-#include "engine/EngineIncludes.h"
 #include "core/io/FileSystem.h"
+#include "core/io/DatFileHeader.h"
 #include "core/io/package/ViewUserData.h"
 #include "core/io/package/PrimaryViewUserData.h"
 
@@ -93,6 +93,12 @@ namespace zzz::engine
 
 		[[nodiscard]] std::expected<void, std::string> SaveConfig();
 
+		[[nodiscard]] inline const DatFileHeader& GetHeader() const noexcept { return m_Header; }
+		[[nodiscard]] inline const Version& GetVersion() const noexcept { return m_Header.GetVersion(); }
+
+		/// @brief Unix-время (UTC, секунды) сохранения конфигурации user.dat.
+		[[nodiscard]] inline zU64 GetSaveTimestamp() const noexcept { return m_Header.GetTimestamp(); }
+
 	private:
 		void Initialize();
 		void LogUserData() const;
@@ -106,7 +112,7 @@ namespace zzz::engine
 
 		std::shared_ptr<FileSystem> m_FileSystem;
 
-		Version m_Version;
+		DatFileHeader m_Header;
 		std::optional<PrimaryViewUserData> m_PrimaryViewUserData;
 		ViewUserDataMap m_ChildViewsUserData;
 		ViewUserDataMap m_IndependentViewsUserData;

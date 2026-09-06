@@ -1,18 +1,13 @@
 #include "BuilderApi.h"
 #include <core/Core.h>
 #include <core/io/Path.h>
-#include <core/io/AssetFileExtensions.h>
+#include "AssetExtensions.h"
 
 #include "PackagePacker.h"
 #include "AssetImporterRegistry.h"
 
 extern "C"
 {
-	BUILDER_API const char* GetBuilderEngineVersion()
-	{
-		return "1.0.0";
-	}
-
 	BUILDER_API const char* GetGamePackageFileName()
 	{
 		return zzz::core::c_GamePackageRelativePath.data();
@@ -21,9 +16,9 @@ extern "C"
 	BUILDER_API const uint8_t* GetGamePackageMagicBytes()
 	{
 		static const uint8_t magic[3] = {
-			static_cast<uint8_t>(zzz::core::c_GamePackageHeader.GetMagic()[0]),
-			static_cast<uint8_t>(zzz::core::c_GamePackageHeader.GetMagic()[1]),
-			static_cast<uint8_t>(zzz::core::c_GamePackageHeader.GetMagic()[2])
+			static_cast<uint8_t>(zzz::core::c_GamePackageHeader[0]),
+			static_cast<uint8_t>(zzz::core::c_GamePackageHeader[1]),
+			static_cast<uint8_t>(zzz::core::c_GamePackageHeader[2])
 		};
 		return magic;
 	}
@@ -76,9 +71,9 @@ extern "C"
 	BUILDER_API const uint8_t* GetDataPackageMagicBytes()
 	{
 		static const uint8_t magic[3] = {
-			static_cast<uint8_t>(zzz::core::c_DataPackageHeader.GetMagic()[0]),
-			static_cast<uint8_t>(zzz::core::c_DataPackageHeader.GetMagic()[1]),
-			static_cast<uint8_t>(zzz::core::c_DataPackageHeader.GetMagic()[2])
+			static_cast<uint8_t>(zzz::core::c_DataPackageHeader[0]),
+			static_cast<uint8_t>(zzz::core::c_DataPackageHeader[1]),
+			static_cast<uint8_t>(zzz::core::c_DataPackageHeader[2])
 		};
 		return magic;
 	}
@@ -98,7 +93,7 @@ extern "C"
 		return zzz::core::c_DataPackageFilePatchVersion;
 	}
 
-	BUILDER_API bool PackProjectNative(const char* sourceDir, const char* destinationDir, uint32_t targetPlatform, const char* platformConfigFile)
+	BUILDER_API bool PackProjectNative(const char* sourceDir, const char* destinationDir, uint32_t targetPlatform, const char* platformConfigFile, uint64_t inBuildTimestamp, uint64_t* outBuildTimestamp)
 	{
 		if (!sourceDir || !destinationDir) return false;
 		std::string platformConfig = platformConfigFile ? platformConfigFile : "";
@@ -106,7 +101,9 @@ extern "C"
 			sourceDir,
 			destinationDir,
 			static_cast<zzz::core::eTargetPlatform>(targetPlatform),
-			platformConfig);
+			platformConfig,
+			inBuildTimestamp,
+			outBuildTimestamp);
 	}
 
 	BUILDER_API bool ValidateDirectoryNameNative(const char* name)
@@ -119,18 +116,34 @@ extern "C"
 	{
 		if (!ext) return false;
 		std::string_view sv(ext);
-		if (sv == zzz::core::ext::Scene ||
-			sv == zzz::core::ext::Prefab ||
-			sv == zzz::core::ext::PrimaryView ||
-			sv == zzz::core::ext::ChildView ||
-			sv == zzz::core::ext::IndepView ||
-			sv == zzz::core::ext::MeshObj ||
-			sv == zzz::core::ext::TexturePng ||
-			sv == zzz::core::ext::Material ||
-			sv == zzz::core::ext::ShaderHlsl)
+		if (sv == zzz::builder::c_ExtScene ||
+			sv == zzz::builder::c_ExtPrefab ||
+			sv == zzz::builder::c_ExtView ||
+			sv == zzz::builder::c_ExtMeshObj ||
+			sv == zzz::builder::c_ExtTexturePng ||
+			sv == zzz::builder::c_ExtMaterial ||
+			sv == zzz::builder::c_ExtShaderHlsl)
 		{
 			return true;
 		}
 		return zzz::builder::AssetImporterRegistry::Instance().GetImporter(sv) != nullptr;
+	}
+
+	BUILDER_API bool IsSupportedDataAssetExtension(const char* ext)
+	{
+		if (!ext) return false;
+		std::string_view sv(ext);
+		return sv == zzz::builder::c_ExtPrefab ||
+			sv == zzz::builder::c_ExtMeshObj ||
+			sv == zzz::builder::c_ExtTexturePng ||
+			sv == zzz::builder::c_ExtMaterial ||
+			sv == zzz::builder::c_ExtShaderHlsl;
+	}
+
+	BUILDER_API bool IsSupportedViewExtension(const char* ext)
+	{
+		if (!ext) return false;
+		std::string_view sv(ext);
+		return sv == zzz::builder::c_ExtView;
 	}
 }

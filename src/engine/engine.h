@@ -24,10 +24,10 @@ namespace zzz::engine
 		[[nodiscard]] std::shared_ptr<DataAssetsManager> GetDataAssetsManager() const noexcept { return m_DataAssetsManager; }
 
 	protected:
-		void Shutdown();
+		void Shutdown() noexcept;
 
 		virtual void StartGame() {};
-		virtual void StopGame() {};
+		virtual void StopGame();
 		virtual void RegisterScripts();
 		virtual void OnUpdateSystem();
 

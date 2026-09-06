@@ -1,10 +1,9 @@
 #pragma once
 
 #include <string_view>
-#include "core/utils/Types.h"
+#include "math/utils/Types.h"
 #include "core/utils/ThrowWrappers.h"
 #include "core/enums/eResourceType.h"
-#include "core/io/AssetFileExtensions.h"
 
 namespace zzz::core
 {
@@ -45,9 +44,7 @@ namespace zzz::core
 		switch (type)
 		{
 		case eResourceType::ProjectManifest:
-		case eResourceType::PrimaryView:
-		case eResourceType::ChildView:
-		case eResourceType::IndependentView:
+		case eResourceType::View:
 		case eResourceType::Scene:
 			return { eResourceStorageKind::PackageArchive, "" };
 

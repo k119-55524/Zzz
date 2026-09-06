@@ -1,7 +1,8 @@
 #pragma once
 
+#include <array>
+#include <cstddef>
 #include "core/CoreIncludes.h"
-#include "core/io/FileHeader.h"
 
 namespace zzz::core
 {
@@ -30,13 +31,11 @@ namespace zzz::core
 
 #pragma region Game Package file constants
 	/// Сигнатура (Magic Bytes) файла пакета ресурсов: "ZZP"
-	constexpr FileHeader<3> c_GamePackageHeader
+	constexpr std::array<std::byte, 3> c_GamePackageHeader
 	{
-		std::array<std::byte, 3>{
-			static_cast<std::byte>('Z'),
-			static_cast<std::byte>('Z'),
-			static_cast<std::byte>('P')
-		}
+		static_cast<std::byte>('Z'),
+		static_cast<std::byte>('Z'),
+		static_cast<std::byte>('P')
 	};
 
 	/// Мажорная версия формата пакета ресурсов
@@ -51,13 +50,11 @@ namespace zzz::core
 
 #pragma region Data Package file constants
 	/// Сигнатура (Magic Bytes) файла пакета данных: "ZZD"
-	constexpr FileHeader<3> c_DataPackageHeader
+	constexpr std::array<std::byte, 3> c_DataPackageHeader
 	{
-		std::array<std::byte, 3>{
-			static_cast<std::byte>('Z'),
-			static_cast<std::byte>('Z'),
-			static_cast<std::byte>('D')
-		}
+		static_cast<std::byte>('Z'),
+		static_cast<std::byte>('Z'),
+		static_cast<std::byte>('D')
 	};
 
 	/// Мажорная версия формата пакета данных

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/utils/Types.h"
+#include "math/utils/Types.h"
 
 namespace zzz::core
 {

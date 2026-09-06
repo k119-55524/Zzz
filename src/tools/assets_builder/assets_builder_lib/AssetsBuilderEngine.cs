@@ -4,7 +4,6 @@ using System.Text.Json;
 using assets_builder_lib.Importers;
 using assets_builder_lib.Validation;
 using System.Collections.Concurrent;
-using System.Runtime.InteropServices;
 
 namespace assets_builder_lib;
 
@@ -34,19 +33,6 @@ public class AssetsBuilderEngine
 			new ViewAssetValidator(),
 			new DataAssetValidator()
 		};
-	}
-
-	public string GetVersion()
-	{
-		try
-		{
-			IntPtr ptr = NativeMethods.GetBuilderEngineVersion();
-			return ptr != IntPtr.Zero ? Marshal.PtrToStringAnsi(ptr) ?? "1.0.0" : "1.0.0";
-		}
-		catch
-		{
-			return "1.0.0";
-		}
 	}
 
 	public bool ScanProjectMetaFiles(BuildOptions options)
@@ -390,83 +376,6 @@ public class AssetsBuilderEngine
 		}
 
 		return (guid, type);
-	}
-
-	public bool BuildPackage(BuildOptions options, CancellationToken cancellationToken = default)
-	{
-		// 1. Автоматическое предварительное сканирование, генерация .meta и валидация
-		bool isMetaValid = ScanProjectMetaFiles(options);
-		if (!isMetaValid)
-		{
-			Log("Ошибка: Сборка отменена из-за наличия критических ошибок или дубликатов GUID в проекте.");
-			return false;
-		}
-
-		Log($"Старт сборки пакета (Платформа: {options.TargetPlatform})...");
-		Log($"Источник проекта: {options.SourcePath}");
-		Log($"Манифест:         {options.ProjectJsonPath}");
-		Log($"Папка назначения:  {options.DestinationPath}");
-
-		if (cancellationToken.IsCancellationRequested)
-		{
-			Log("Сборка прервана.");
-			return false;
-		}
-
-		// 2. Полная очистка папки назначения (DestinationPath)
-		try
-		{
-			if (Directory.Exists(options.DestinationPath))
-			{
-				Log($"Очистка папки назначения: {options.DestinationPath}");
-				Directory.Delete(options.DestinationPath, recursive: true);
-			}
-
-			string assetsDir = Path.Combine(options.DestinationPath, "assets");
-			string includeDir = Path.Combine(options.DestinationPath, "include");
-			string dataDir = Path.Combine(assetsDir, "data");
-
-			Directory.CreateDirectory(assetsDir);
-			Directory.CreateDirectory(includeDir);
-
-			// Каталоги медиа-ресурсов (assets/data/<category>) - см. PackageConstants.h в движке
-			// (c_TexturesDirectoryName и т.д.). Создаются заранее пустыми, чтобы Path::GetTexturesDirectory()
-			// и аналогичные методы в движке всегда указывали на существующий каталог, даже если ресурсы
-			// соответствующей категории в проекте пока отсутствуют.
-			foreach (var category in new[] { "textures", "video", "audio", "fonts", "custom" })
-			{
-				Directory.CreateDirectory(Path.Combine(dataDir, category));
-			}
-
-			Log("Создана чистая структура папок (assets/, assets/data/{textures,video,audio,fonts,custom} и include/).");
-		}
-		catch (Exception ex)
-		{
-			Log($"Ошибка очистки/создания папки назначения: {ex.Message}");
-			return false;
-		}
-
-		// 3. Экспорт C++ заголовочных файлов (.h / .hpp) в подпапку include/
-		Log("Экспорт C++ заголовочных файлов (.h/.hpp) в подпапку include/...");
-		CopyHeaderFiles(options.SourcePath, Path.Combine(options.DestinationPath, "include"), options.PlatformConfigFile);
-
-		// 4. Вызов C# запаковщика PackagePacker для генерации бинарного пакета структуры игры
-		Log($"Сериализация бинарного пакета игры '{AssetExtensions.GamePackageBinaryName}'...");
-		bool packageSuccess = PackagePacker.PackProject(options.SourcePath, options.DestinationPath, options.TargetPlatform, options.PlatformConfigFile, Log);
-
-		// 5. Генерация Scripts.cmake в корне папки назначения (options.DestinationPath)
-		GenerateScriptsCmake(options.SourcePath, options.DestinationPath, options.PlatformConfigFile);
-
-		if (packageSuccess)
-		{
-			Log($"Сборка пакета успешно завершена! Пакадж: {AssetExtensions.GamePackageBinaryName}");
-			return true;
-		}
-		else
-		{
-			Log("Ошибка: Сериализация бинарного пакета вернула ошибку.");
-			return false;
-		}
 	}
 
 	public void GenerateScriptsCmake(string sourcePath, string destinationPath, string platformConfigFile = "")

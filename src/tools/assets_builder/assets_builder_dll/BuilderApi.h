@@ -5,7 +5,6 @@
 
 extern "C"
 {
-	BUILDER_API const char* GetBuilderEngineVersion();
 	BUILDER_API const char* GetGamePackageFileName();
 	BUILDER_API const uint8_t* GetGamePackageMagicBytes();
 	BUILDER_API uint32_t GetGamePackageMajorVersion();
@@ -25,7 +24,15 @@ extern "C"
 	BUILDER_API uint32_t GetDataPackageMinorVersion();
 	BUILDER_API uint32_t GetDataPackagePatchVersion();
 
-	BUILDER_API bool PackProjectNative(const char* sourceDir, const char* destinationDir, uint32_t targetPlatform, const char* platformConfigFile);
+	/**
+	 * @brief Упаковывает проект в package.dat/data.dat. Оба архива получают одно и то же время упаковки
+	 * (см. DatFileHeader::GetBuildTime()).
+	 * @param inBuildTimestamp Если > 0, используется как единый timestamp (мс от unix epoch) для архивов,
+	 *        чтобы совпадать с buildtime-data.txt и assets_config.json. Если 0, генерируется автоматически.
+	 * @param outBuildTimestamp Необязательный (может быть nullptr) выходной параметр - unix-время (мс),
+	 *        которое было записано в заголовки package.dat/data.dat при успешной упаковке.
+	 */
+	BUILDER_API bool PackProjectNative(const char* sourceDir, const char* destinationDir, uint32_t targetPlatform, const char* platformConfigFile, uint64_t inBuildTimestamp, uint64_t* outBuildTimestamp);
 
 	/**
 	 * @brief Валидирует имя каталога (компании/приложения) по тем же правилам, что и Path::IsValidDirectoryName
@@ -37,10 +44,24 @@ extern "C"
 	BUILDER_API bool ValidateDirectoryNameNative(const char* name);
 
 	/**
-	 * @brief Проверяет, поддерживается ли указанное расширение ресурса движком Zzz Engine
-	 * (на основе констант AssetFileExtensions.h и зарегистрированных импортеров AssetImporterRegistry).
-	 * @param ext Расширение с точкой (например, ".obj", ".zs", ".zav").
-	 * @return true, если тип ресурса поддерживается движком; false иначе.
+	 * @brief Проверяет, поддерживается ли указанное расширение ресурса сборщиком
+	 * (на основе констант AssetExtensions.h и зарегистрированных импортеров AssetImporterRegistry).
+	 * @param ext Расширение с точкой (например, ".obj", ".zs", ".zv").
+	 * @return true, если тип ресурса поддерживается; false иначе.
 	 */
 	BUILDER_API bool IsSupportedAssetExtension(const char* ext);
+
+	/**
+	 * @brief Проверяет, относится ли расширение к ресурсам архива data.dat
+	 * (Mesh, Material, Shader, Prefab - на основе констант AssetExtensions.h).
+	 * @param ext Расширение с точкой (например, ".obj", ".zmat").
+	 */
+	BUILDER_API bool IsSupportedDataAssetExtension(const char* ext);
+
+	/**
+	 * @brief Проверяет, относится ли расширение к форматам окон (View -
+	 * на основе констант AssetExtensions.h).
+	 * @param ext Расширение с точкой (например, ".zv").
+	 */
+	BUILDER_API bool IsSupportedViewExtension(const char* ext);
 }

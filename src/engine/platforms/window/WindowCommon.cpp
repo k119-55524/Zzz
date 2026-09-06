@@ -16,15 +16,15 @@ WindowBase::WindowBase(
 	ensure(m_Callbacks.OnSurfaceCreated != nullptr, "OnSurfaceCreated не должен быть null.");
 }
 
-zzz::math::Size2D<zzz::core::zU32> WindowBase::GetPhysicalClientSize() const noexcept
+zzz::math::Size2D<zzz::zU32> WindowBase::GetPhysicalClientSize() const noexcept
 {
 	const auto clientSize = GetClientRect().size;
 	const auto& monitorProvider = m_Platform.GetMonitorProvider();
 	const auto monitor = monitorProvider.GetMonitorForRect(GetClientRect());
 	const float scale = monitor.GetScaleFactor();
 
-	return zzz::math::Size2D<zzz::core::zU32>{
-		static_cast<zzz::core::zU32>(static_cast<float>(clientSize.width) * scale),
-		static_cast<zzz::core::zU32>(static_cast<float>(clientSize.height) * scale)
+	return zzz::math::Size2D<zzz::zU32>{
+		static_cast<zzz::zU32>(static_cast<float>(clientSize.width) * scale),
+		static_cast<zzz::zU32>(static_cast<float>(clientSize.height) * scale)
 	};
 }

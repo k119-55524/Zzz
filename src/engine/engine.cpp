@@ -1,6 +1,5 @@
 
 #include <logger/logger.h>
-#include "core/io/package/MeshData.h"
 
 #include "Engine.h"
 
@@ -37,7 +36,7 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 	if (!primaryViewData)
 		THROW_RUNTIME("Failed to load PrimaryViewData: {}", primaryViewData.error());
 
-	// Загрузка пользовательских настроек (UserSettings.dat)
+	// Загрузка пользовательских настроек (user.dat). Время сохранения обновляется в DatFileHeader при каждом SaveConfig().
 	m_UserSettingsManager = safe_make_shared<UserSettingsManager>(m_FileSystem);
 
 	// Создание платформенного слоя абстракции ОС (native windows, ввод, системные события)
@@ -77,31 +76,58 @@ Engine::~Engine()
 	Shutdown();
 }
 
-void Engine::Shutdown()
+void Engine::StopGame()
 {
-	engineState.store(eInitState::Destroying);
+	if (m_EventBus)
+	{
+		m_EventBus->InvokeDestroy();
+		m_EventBus->ClearAll();
+	}
+
+	m_Scripts.clear();
+}
+
+void Engine::Shutdown() noexcept
+{
+	{
+		std::lock_guard lock(stateMutex);
+		const auto currentState = engineState.load();
+		if (currentState == eInitState::NotInitialized || currentState == eInitState::Destroying)
+			return;
+
+		engineState.store(eInitState::Destroying);
+	}
 
 	try
 	{
-		m_MainLoop = nullptr;
-		m_ViewManager = nullptr;
-		m_GAPI = nullptr;
-
+		if (m_MainLoop)
 		{
-			if (m_EventBus)
-				m_EventBus->InvokeDestroy();
-
-			m_Scripts.clear();
-			m_EventBus = nullptr;
+			m_MainLoop->Stop();
+			m_MainLoop = nullptr;
 		}
 
+		if (m_GAPI)
+			m_GAPI->WaitForGpu();
+
+		StopGame();
+		m_EventBus = nullptr;
+
+		m_SceneManager = nullptr;
+		m_ViewManager = nullptr;
+		m_GAPI = nullptr;
 		m_Time = nullptr;
 
 		if (m_UserSettingsManager)
-			auto res = m_UserSettingsManager->SaveConfig();
-		m_UserSettingsManager = nullptr;
+		{
+			if (auto res = m_UserSettingsManager->SaveConfig(); !res)
+				DOutWarning("[Engine::Shutdown] Не удалось сохранить user.dat: {}", res.error());
+			m_UserSettingsManager = nullptr;
+		}
 
-		m_SceneManager = nullptr;
+		m_ScriptFactory = nullptr;
+		m_ScriptRegistry = nullptr;
+		m_ScriptStorage = nullptr;
+
 		m_Platform = nullptr;
 		m_DataAssetsManager = nullptr;
 		m_PackageManager = nullptr;
@@ -109,7 +135,11 @@ void Engine::Shutdown()
 	}
 	catch (const std::exception& e)
 	{
-		DOutException("Исключение при завершении работы: {}.", e.what());
+		DOutException("[Engine::Shutdown] Исключение при завершении работы: {}.", e.what());
+	}
+	catch (...)
+	{
+		DOutException("[Engine::Shutdown] Неизвестное исключение при завершении работы.");
 	}
 
 	engineState.store(eInitState::NotInitialized);

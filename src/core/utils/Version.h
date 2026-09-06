@@ -9,7 +9,6 @@
 #include <sstream>
 #include <expected>
 #include <string_view>
-//#include "core/utils/Types.h"
 //#include "core/utils/Ensure.h"
 //#include "core/utils/Defines.h"
 //#include "core/utils/Macroses.h"
@@ -40,6 +39,9 @@ namespace zzz::core
 		inline zU32 GetPatch() const noexcept { return m_Patch; }
 
 		inline std::string ToString() const { return std::format("{}.{}.{}", m_Major, m_Minor, m_Patch); }
+
+		/// @brief Размер бинарного представления Version (3 * zU32 = 12 байт).
+		[[nodiscard]] static constexpr std::size_t BinarySize() noexcept { return 3 * sizeof(zU32); }
 
 		static std::expected<Version, std::string> Parse(std::string_view str)
 		{

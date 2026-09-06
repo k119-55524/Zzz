@@ -2,6 +2,7 @@
 #include <fstream>
 #include <algorithm>
 #include <cstring>
+#include <chrono>
 #include <vector>
 #include <unordered_set>
 #include <json.hpp>
@@ -11,7 +12,7 @@
 #include <core/utils/macros/LogMacros.h>
 #include <core/IO/package/PrimaryViewData.h>
 #include <core/IO/package/PackageEntry.h>
-#include <core/IO/package/PackageHeader.h>
+#include <core/io/DatFileHeader.h>
 #include <core/IO/package/PrefabData.h>
 #include <core/IO/package/ProjectManifestData.h>
 #include <core/IO/package/platforms/project/ProjectPlatformDataAndroid.h>
@@ -29,7 +30,6 @@
 #include <core/IO/package/platforms/start_view/ViewDataiOS.h>
 #include <core/IO/package/MeshData.h>
 #include <core/IO/package/GameObjectData.h>
-#include <core/IO/AssetFileExtensions.h>
 #include <core/IO/ResourceStorageTraits.h>
 #include <core/constants/PackageConstants.h>
 #include <core/enums/eObjectDomain.h>
@@ -1015,8 +1015,23 @@ namespace zzz::builder
 		const fs::path& sourceDir,
 		const fs::path& destinationDir,
 		zzz::core::eTargetPlatform targetPlatform,
-		const std::string& platformConfigFile)
+		const std::string& platformConfigFile,
+		uint64_t buildTimestamp,
+		uint64_t* outBuildTimestamp)
 	{
+		if (outBuildTimestamp)
+			*outBuildTimestamp = 0;
+
+		// Единое время упаковки для package.dat и data.dat - если передано извне (из C# сборщика),
+		// используется оно, чтобы buildtime-data.txt, assets_config.json и заголовки архивов
+		// имели строго один и тот же штамп времени. Если 0 - генерируется здесь.
+		if (buildTimestamp == 0)
+		{
+			buildTimestamp = static_cast<uint64_t>(
+				std::chrono::duration_cast<std::chrono::milliseconds>(
+					std::chrono::system_clock::now().time_since_epoch()).count());
+		}
+
 		fs::path outPath = destinationDir / zzz::core::c_GamePackageRelativePath;
 		std::vector<PendingAsset> pendingAssets;
 
@@ -1049,13 +1064,20 @@ namespace zzz::builder
 					removedSceneGuids.insert(elem.get<std::string>());
 		}
 
+		std::string startViewGuid;
 		if (fs::exists(projJsonPath))
 		{
 			std::ifstream projJsonFile(projJsonPath);
 			json projRoot = json::parse(projJsonFile, nullptr, false);
 			if (!projRoot.is_discarded())
 			{
+				if (projRoot.contains("start_view") && projRoot["start_view"].is_string())
+					startViewGuid = projRoot["start_view"].get<std::string>();
+
 				json platformRoot = ResolvePlatformJson(projRoot, sourceDir, targetPlatform, platformConfigFile);
+
+				if (platformRoot.contains("start_view") && platformRoot["start_view"].is_string())
+					startViewGuid = platformRoot["start_view"].get<std::string>();
 
 				if (platformRoot.contains("child_views") && platformRoot["child_views"].is_array())
 					for (const auto& elem : platformRoot["child_views"])
@@ -1124,26 +1146,29 @@ namespace zzz::builder
 					typeVal = static_cast<uint32_t>(zzz::core::ePackage::Scene);
 					pendingAssets.push_back({ assetName, guid, typeVal, path });
 				}
-				else if (ext == ".zcv")
+				else if (ext == ".zv")
 				{
-					if (declaredChildViewGuids.find(guid) == declaredChildViewGuids.end())
-						continue;
-					matchedChildViewGuids.insert(guid);
-					typeVal = static_cast<uint32_t>(zzz::core::ePackage::ChildView);
-					pendingAssets.push_back({ assetName, guid, typeVal, path });
-				}
-				else if (ext == ".ziv")
-				{
-					if (declaredIndependentViewGuids.find(guid) == declaredIndependentViewGuids.end())
-						continue;
-					matchedIndependentViewGuids.insert(guid);
-					typeVal = static_cast<uint32_t>(zzz::core::ePackage::IndependentView);
-					pendingAssets.push_back({ assetName, guid, typeVal, path });
-				}
-				else if (ext == ".zav")
-				{
-					typeVal = static_cast<uint32_t>(zzz::core::ePackage::PrimaryView);
-					pendingAssets.push_back({ assetName, guid, typeVal, path });
+					// Тип вью определяется нахождением в списках JSON-конфигов (start_view, independent_views, child_views)
+					bool isPrimary = (!startViewGuid.empty() && _stricmp(guid.c_str(), startViewGuid.c_str()) == 0);
+					bool isIndependent = (declaredIndependentViewGuids.find(guid) != declaredIndependentViewGuids.end());
+
+					if (isPrimary)
+					{
+						typeVal = static_cast<uint32_t>(zzz::core::ePackage::PrimaryView);
+						pendingAssets.push_back({ assetName, guid, typeVal, path });
+					}
+					else if (isIndependent)
+					{
+						matchedIndependentViewGuids.insert(guid);
+						typeVal = static_cast<uint32_t>(zzz::core::ePackage::IndependentView);
+						pendingAssets.push_back({ assetName, guid, typeVal, path });
+					}
+					else
+					{
+						matchedChildViewGuids.insert(guid);
+						typeVal = static_cast<uint32_t>(zzz::core::ePackage::ChildView);
+						pendingAssets.push_back({ assetName, guid, typeVal, path });
+					}
 				}
 				else if (auto importer = AssetImporterRegistry::Instance().GetImporter(ext))
 				{
@@ -1165,18 +1190,31 @@ namespace zzz::builder
 		}
 
 		// Диагностика: guid объявлен в child_views/independent_views платформенного конфига, но на диске
-		// не найден ни одного .zcv/.ziv файла с таким guid - протухшая (или опечатанная) декларация.
+		// не найден ни одного .zv файла с таким guid - протухшая (или опечатанная) декларация.
 		for (const auto& guid : declaredChildViewGuids)
 			if (matchedChildViewGuids.find(guid) == matchedChildViewGuids.end())
-				DOutWarning("PackProject: guid {} объявлен в child_views, но соответствующий .zcv ресурс не найден в Assets/ - пропущен.", guid);
+				DOutWarning("PackProject: guid {} объявлен в child_views, но соответствующий .zv ресурс не найден в Assets/ - пропущен.", guid);
 
 		for (const auto& guid : declaredIndependentViewGuids)
 			if (matchedIndependentViewGuids.find(guid) == matchedIndependentViewGuids.end())
-				DOutWarning("PackProject: guid {} объявлен в independent_views, но соответствующий .ziv ресурс не найден в Assets/ - пропущен.", guid);
+				DOutWarning("PackProject: guid {} объявлен в independent_views, но соответствующий .zv ресурс не найден в Assets/ - пропущен.", guid);
 
 		bool hasPrimaryView = std::any_of(pendingAssets.begin(), pendingAssets.end(), [](const PendingAsset& item) {
 			return item.type == static_cast<uint32_t>(zzz::core::ePackage::PrimaryView);
 		});
+
+		if (!hasPrimaryView)
+		{
+			// Если start_view не был задан явно, но есть .zv вьюхи, делаем первую из них PrimaryView
+			auto firstViewIt = std::find_if(pendingAssets.begin(), pendingAssets.end(), [](const PendingAsset& item) {
+				return item.type == static_cast<uint32_t>(zzz::core::ePackage::ChildView);
+			});
+			if (firstViewIt != pendingAssets.end())
+			{
+				firstViewIt->type = static_cast<uint32_t>(zzz::core::ePackage::PrimaryView);
+				hasPrimaryView = true;
+			}
+		}
 
 		if (!hasPrimaryView)
 		{
@@ -1210,7 +1248,8 @@ namespace zzz::builder
 			c_GamePackageHeader,
 			Version{ c_GamePackageFileMajorVersion, c_GamePackageFileMinorVersion, c_GamePackageFilePatchVersion },
 			packageItems,
-			serializer))
+			serializer,
+			buildTimestamp))
 		{
 			DOutError("PackProject: Не удалось записать пакет: {}", outPath.string());
 			return false;
@@ -1236,14 +1275,18 @@ namespace zzz::builder
 			c_DataPackageHeader,
 			Version{ c_DataPackageFileMajorVersion, c_DataPackageFileMinorVersion, c_DataPackageFilePatchVersion },
 			dataItems,
-			serializer))
+			serializer,
+			buildTimestamp))
 		{
 			DOutError("PackProject: Не удалось создать архив данных: {}", dataOutPath.string());
 			return false;
 		}
 
-		DOut("[PackagePacker] Успешно упаковано: {} (записей: {}), {} (записей: {})",
-			outPath.string(), packageItems.size(), dataOutPath.string(), dataItems.size());
+		DOut("[PackagePacker] Успешно упаковано: {} (записей: {}), {} (записей: {}), buildTime: {}",
+			outPath.string(), packageItems.size(), dataOutPath.string(), dataItems.size(), buildTimestamp);
+
+		if (outBuildTimestamp)
+			*outBuildTimestamp = buildTimestamp;
 
 		return true;
 	}

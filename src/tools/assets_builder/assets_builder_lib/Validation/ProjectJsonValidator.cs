@@ -76,6 +76,16 @@ public class ProjectJsonValidator : IAssetValidator
                 }
             }
 
+            // 2.2 Проверка стартовой вьюшки (start_view), если задана явно — ТРЕБУЕТСЯ СТРОГИЙ GUID
+            if (root.TryGetProperty("start_view", out var startViewProp) && startViewProp.ValueKind == JsonValueKind.String)
+            {
+                string startViewRef = startViewProp.GetString() ?? string.Empty;
+                if (!string.IsNullOrWhiteSpace(startViewRef))
+                {
+                    ValidateStrictGuid(filePath, "project.json", "start_view", startViewRef, "view", guidToFileMap, guidToTypeMap, scriptNameToGuidMap, result);
+                }
+            }
+
             // 3. Проверка стартовых вьюшек (views) — ТРЕБУЕТСЯ СТРОГИЙ GUID
             if (root.TryGetProperty("views", out var viewsProp) && viewsProp.ValueKind == JsonValueKind.Array)
             {
@@ -189,12 +199,7 @@ public class ProjectJsonValidator : IAssetValidator
                                       actualType.Equals("hpp", StringComparison.OrdinalIgnoreCase));
 
             bool isViewTypeMatch = expectedType.Equals("view", StringComparison.OrdinalIgnoreCase) &&
-                                   (actualType.Equals("view", StringComparison.OrdinalIgnoreCase) ||
-                                    actualType.Equals("start_view", StringComparison.OrdinalIgnoreCase) ||
-                                    actualType.Equals("primary_view", StringComparison.OrdinalIgnoreCase) ||
-                                    actualType.Equals("zav", StringComparison.OrdinalIgnoreCase) ||
-                                    actualType.Equals("zcv", StringComparison.OrdinalIgnoreCase) ||
-                                    actualType.Equals("ziv", StringComparison.OrdinalIgnoreCase));
+                                   actualType.Equals("view", StringComparison.OrdinalIgnoreCase);
 
             if (!actualType.Equals(expectedType, StringComparison.OrdinalIgnoreCase) && !isScriptTypeMatch && !isViewTypeMatch)
             {

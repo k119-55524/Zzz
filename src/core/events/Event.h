@@ -1,16 +1,15 @@
-﻿#pragma once
+#pragma once
 
 #include <mutex>
 #include <vector>
 #include <memory>
 #include <atomic>
 #include <functional>
-#include "core/utils/Types.h"
+#include "math/utils/Types.h"
 #include "core/utils/Ensure.h"
 #include "core/utils/Defines.h"
 #include "core/utils/Macroses.h"
 #include "core/utils/MemoryUtils.h"
-#include "core/utils/ThrowWrappers.h"
 #include "core/utils/ThrowWrappers.h"
 #include <logger/logger.h>
 

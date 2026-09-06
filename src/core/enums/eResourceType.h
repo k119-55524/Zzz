@@ -20,9 +20,7 @@ namespace zzz::core
 	{
 		Unknown = 0,
 		ProjectManifest, ///< Манифест проекта
-		PrimaryView,     ///< Главное окно (.zav)
-		ChildView,       ///< Дочернее окно (.zcv)
-		IndependentView, ///< Независимое окно (.ziv)
+		View,            ///< Окно / представление (.zv)
 		Scene,           ///< Сцена (.zs)
 		Prefab,          ///< Префаб (.zp)
 		Mesh,            ///< 3D Сетка/Геометрия (Vertex/Index buffers)
@@ -42,9 +40,7 @@ namespace zzz::core
 		{
 		case eResourceType::Unknown:         return "Unknown";
 		case eResourceType::ProjectManifest: return "ProjectManifest";
-		case eResourceType::PrimaryView:     return "PrimaryView";
-		case eResourceType::ChildView:       return "ChildView";
-		case eResourceType::IndependentView: return "IndependentView";
+		case eResourceType::View:            return "View";
 		case eResourceType::Scene:           return "Scene";
 		case eResourceType::Prefab:          return "Prefab";
 		case eResourceType::Mesh:            return "Mesh";

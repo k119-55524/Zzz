@@ -1,10 +1,10 @@
 #pragma once
 
-#include "core/utils/Types.h"
+#include "math/utils/Types.h"
 
 namespace zzz
 {
-	enum class eInitState : core::zU8
+	enum class eInitState : zU8
 	{
 		NotInitialized,	// Готов к инициализации
 		Initializing,	// Процесс инициализации

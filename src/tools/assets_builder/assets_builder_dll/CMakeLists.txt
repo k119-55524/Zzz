@@ -2,6 +2,7 @@ add_library(assets_builder_dll SHARED
     BuilderExport.h
     BuilderApi.h
     BuilderApi.cpp
+    AssetExtensions.h
     PackagePacker.h
     PackagePacker.cpp
     ArchiveWriter.h

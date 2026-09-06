@@ -1,8 +1,8 @@
 
 #include <logger/logger.h>
 
+#include "core/io/DatFileHeader.h"
 #include "core/io/package/MeshData.h"
-#include "core/io/package/PackageHeader.h"
 #include "core/constants/PackageConstants.h"
 
 #include "DataAssetsManager.h"
@@ -20,34 +20,33 @@ namespace zzz::core
 
 	void DataAssetsManager::Initialize()
 	{
-		constexpr std::size_t headerSize = PackageHeader::BinarySize();
-		auto headerBufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_DataPackageRelativePath, 0, headerSize);
+		auto headerBufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_DataPackageRelativePath, 0, DatFileHeader::BinarySize());
 		if (!headerBufferRes)
 			THROW_RUNTIME("Отсутствует обязательный архив игровых ресурсов: {}: {}", c_DataPackageRelativePath, headerBufferRes.error());
 
 		std::size_t offset = 0;
 		Serializer serializer;
-		PackageHeader header;
-		auto headerRes = serializer.Deserialize(*headerBufferRes, offset, header);
+		auto headerRes = serializer.Deserialize(*headerBufferRes, offset, m_Header);
 		if (!headerRes)
 			THROW_RUNTIME("Ошибка десериализации заголовка архива данных '{}': {}", c_DataPackageRelativePath, headerRes.error());
 
-		auto validRes = header.Validate(c_DataPackageHeader, c_DataPackageFileMajorVersion);
+		auto validRes = m_Header.Validate(c_DataPackageHeader, c_DataPackageFileMajorVersion);
 		if (!validRes)
 			THROW_RUNTIME("Некорректный заголовок в файле '{}': {}", c_DataPackageRelativePath, validRes.error());
 
 		m_EntriesByGuid.clear();
 		m_EntriesByName.clear();
 
-		const std::size_t tableSize = header.GetEntryCount() * PackageEntry::BinarySize();
-		if (tableSize > 0)
+		const zU32 entryCount = m_Header.GetEntryCount();
+		if (entryCount > 0)
 		{
-			auto tableBufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_DataPackageRelativePath, headerSize, tableSize);
+			const std::size_t tableSize = static_cast<std::size_t>(entryCount) * PackageEntry::BinarySize();
+			auto tableBufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_DataPackageRelativePath, DatFileHeader::BinarySize(), tableSize);
 			if (!tableBufferRes)
-				THROW_RUNTIME("Не удалось прочитать таблицу записей архива данных '{}': {}", c_DataPackageRelativePath, tableBufferRes.error());
+				THROW_RUNTIME("Ошибка чтения таблицы записей архива данных '{}': {}", c_DataPackageRelativePath, tableBufferRes.error());
 
 			std::size_t tableOffset = 0;
-			for (zU32 i = 0; i < header.GetEntryCount(); ++i)
+			for (zU32 i = 0; i < entryCount; ++i)
 			{
 				PackageEntry entry{};
 				auto entryRes = serializer.Deserialize(*tableBufferRes, tableOffset, entry);
@@ -98,6 +97,7 @@ namespace zzz::core
 
 		DOut("========== [DataAssetsManager] Data Package: {} (Total entries: {}) ==========",
 			c_DataPackageRelativePath, totalCount);
+		m_Header.LogFileBlock("  ");
 		for (const auto& [type, entries] : m_EntriesByGuid)
 		{
 			for (const auto& [guid, entry] : entries)

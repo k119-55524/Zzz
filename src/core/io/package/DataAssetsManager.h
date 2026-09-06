@@ -1,16 +1,16 @@
 #pragma once
 
+#include <map>
 #include <string>
 #include <memory>
 #include <optional>
 #include <expected>
-#include <map>
 #include <unordered_map>
 
 #include "core/utils/Guid.h"
 #include "core/utils/Export.h"
-#include "core/utils/Ensure.h"
 #include "core/io/FileSystem.h"
+#include "core/io/DatFileHeader.h"
 #include "core/enums/eResourceType.h"
 #include "core/serialize/Serializer.h"
 #include "core/io/package/PackageEntry.h"
@@ -55,6 +55,8 @@ namespace zzz::core
 		DataAssetsManager() = delete;
 		explicit DataAssetsManager(std::shared_ptr<FileSystem> fileSystem);
 		~DataAssetsManager() = default;
+
+		[[nodiscard]] const DatFileHeader& GetHeader() const noexcept { return m_Header; }
 
 		template <typename T>
 		[[nodiscard]] std::expected<T, std::string> LoadAsset(const Guid& guid) const
@@ -105,6 +107,7 @@ namespace zzz::core
 		void LogDataEntriesSummary() const;
 
 		std::shared_ptr<FileSystem> m_FileSystem;
+		DatFileHeader m_Header{};
 		std::map<eResourceType, std::unordered_map<Guid, PackageEntry>> m_EntriesByGuid;
 		std::map<eResourceType, std::unordered_map<std::string, PackageEntry>> m_EntriesByName;
 	};

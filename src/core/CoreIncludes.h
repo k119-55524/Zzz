@@ -38,9 +38,25 @@
 
 // Core Defines
 #include "core/utils/Defines.h"
-#include "core/utils/Types.h"
+#include "math/utils/Types.h"
 #include "core/utils/NativeAppData.h"
 #include <math/Math.h>
+
+namespace zzz::core
+{
+	using zzz::zU8;
+	using zzz::zU16;
+	using zzz::zU32;
+	using zzz::zU64;
+
+	using zzz::zI8;
+	using zzz::zI16;
+	using zzz::zI32;
+	using zzz::zI64;
+
+	using zzz::zF32;
+	using zzz::zF64;
+}
 
 // Platform Headers
 #include "core/headers/Apple.h"

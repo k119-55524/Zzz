@@ -2,7 +2,7 @@
 #include "core/utils/Ensure.h"
 #include "core/io/package/SceneData.h"
 #include "core/io/package/PrefabData.h"
-#include "core/io/package/PackageHeader.h"
+#include "core/io/DatFileHeader.h"
 #include "core/io/package/ChildViewData.h"
 #include "core/constants/PackageConstants.h"
 #include "core/io/package/IndependentViewData.h"
@@ -24,34 +24,33 @@ namespace zzz::engine
 
 	void PackageManager::Initialize()
 	{
-		constexpr std::size_t headerSize = PackageHeader::BinarySize();
-		auto headerBufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_GamePackageRelativePath, 0, headerSize);
+		auto headerBufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_GamePackageRelativePath, 0, DatFileHeader::BinarySize());
 		if (!headerBufferRes)
 			THROW_RUNTIME("Не удалось прочитать заголовок пакета '{}': {}", c_GamePackageRelativePath, headerBufferRes.error());
 
 		std::size_t offset = 0;
 		Serializer serializer;
-		PackageHeader header;
-		auto headerRes = serializer.Deserialize(*headerBufferRes, offset, header);
+		auto headerRes = serializer.Deserialize(*headerBufferRes, offset, m_Header);
 		if (!headerRes)
 			THROW_RUNTIME("Ошибка десериализации заголовка пакета '{}': {}", c_GamePackageRelativePath, headerRes.error());
 
-		auto validRes = header.Validate(c_GamePackageHeader, c_GamePackageFileMajorVersion);
+		auto validRes = m_Header.Validate(c_GamePackageHeader, c_GamePackageFileMajorVersion);
 		if (!validRes)
 			THROW_RUNTIME("Некорректный заголовок в файле '{}': {}", c_GamePackageRelativePath, validRes.error());
 
 		m_EntriesByName.clear();
 		m_EntriesByGuid.clear();
 
-		const std::size_t tableSize = header.GetEntryCount() * PackageEntry::BinarySize();
-		if (tableSize > 0)
+		const zU32 entryCount = m_Header.GetEntryCount();
+		if (entryCount > 0)
 		{
-			auto tableBufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_GamePackageRelativePath, headerSize, tableSize);
+			const std::size_t tableSize = static_cast<std::size_t>(entryCount) * PackageEntry::BinarySize();
+			auto tableBufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_GamePackageRelativePath, DatFileHeader::BinarySize(), tableSize);
 			if (!tableBufferRes)
-				THROW_RUNTIME("Не удалось прочитать таблицу записей пакета '{}': {}", c_GamePackageRelativePath, tableBufferRes.error());
+				THROW_RUNTIME("Ошибка чтения таблицы записей пакета '{}': {}", c_GamePackageRelativePath, tableBufferRes.error());
 
 			std::size_t tableOffset = 0;
-			for (zU32 i = 0; i < header.GetEntryCount(); ++i)
+			for (zU32 i = 0; i < entryCount; ++i)
 			{
 				PackageEntry entry{};
 				auto entryRes = serializer.Deserialize(*tableBufferRes, tableOffset, entry);
@@ -162,6 +161,7 @@ namespace zzz::engine
 	{
 #if Z_ADD_LOGGER
 		DOut("========== [PackageManager] Package Data: {} ==========", c_GamePackageRelativePath);
+		m_Header.LogFileBlock("  ");
 		// Закомментируй тот тип ресурса, который не хочешь логировать
 		LogEntriesSummaryForType<ProjectManifestData>(ePackage::ProjectManifest);
 		LogEntriesSummaryForType<PrimaryViewData>(ePackage::PrimaryView);

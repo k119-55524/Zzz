@@ -9,7 +9,6 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
     target_sources(${TARGET_NAME} PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/CoreIncludes.h
         ${CMAKE_CURRENT_SOURCE_DIR}/core.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/utils/Types.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/NativeAppData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Export.h
         ${CMAKE_CURRENT_SOURCE_DIR}/constants/Constants.h
@@ -92,13 +91,12 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/hardware/StorageInfo.h
         ${CMAKE_CURRENT_SOURCE_DIR}/hardware/NetworkAdapterInfo.h
         ${CMAKE_CURRENT_SOURCE_DIR}/hardware/HardwareState.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileHeader.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/DatFileHeader.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/Path.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/Path.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileSystem.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileSystemBase.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileSystemBase.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/AssetFileExtensions.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/ResourceStorageTraits.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/platforms/FileSystemDesktop.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/platforms/FileSystemDesktop.cpp
@@ -106,7 +104,6 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/platforms/FileSystemAndroid.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/platforms/FileSystemiOS.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/platforms/FileSystemiOS.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PackageHeader.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PackageEntry.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/MeshData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/MeshData.cpp

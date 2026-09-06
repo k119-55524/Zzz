@@ -7,7 +7,7 @@
 #include <string>
 #include <span>
 #include "core/utils/Export.h"
-#include "core/utils/Types.h"
+#include "math/utils/Types.h"
 #include "core/serialize/Serializer.h"
 #include "core/enums/eIndexFormat.h"
 

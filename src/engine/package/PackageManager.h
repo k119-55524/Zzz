@@ -53,6 +53,9 @@ namespace zzz::engine
 		[[nodiscard]] const ProjectManifestData& GetProjectManifestData() const noexcept { return m_ProjectManifest; }
 		[[nodiscard]] std::expected<PrimaryViewData, std::string> GetPrimaryViewData() const;
 
+		[[nodiscard]] const DatFileHeader& GetHeader() const noexcept { return m_Header; }
+		[[nodiscard]] zU64 GetBuildTime() const noexcept { return m_Header.GetBuildTime(); }
+
 		/// @brief Имя компании и приложения, закэшированные из ProjectManifestData во время Initialize().
 		[[nodiscard]] const std::string& GetCompanyName() const noexcept { return m_CompanyName; }
 		[[nodiscard]] const std::string& GetAppName() const noexcept { return m_AppName; }
@@ -97,5 +100,6 @@ namespace zzz::engine
 		std::string m_CompanyName;
 		std::string m_AppName;
 		ProjectManifestData m_ProjectManifest{};
+		DatFileHeader m_Header{};
 	};
 }
