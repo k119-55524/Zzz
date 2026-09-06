@@ -2,7 +2,8 @@
 #include "Scene.h"
 #include "core/io/package/SceneData.h"
 #include "engine/package/PackageManager.h"
-#include "core/io/package/DataAssetsManager.h"
+#include "engine/resources/ResourceManager.h"
+#include "engine/resources/ResourceGarbageCollector.h"
 #include "core/io/package/ProjectManifestData.h"
 #include <algorithm>
 
@@ -16,14 +17,17 @@ namespace zzz::engine
 {
 	SceneManager::SceneManager(
 		std::shared_ptr<PackageManager> packageManager,
-		std::shared_ptr<DataAssetsManager> dataAssetsManager,
-		std::shared_ptr<ScriptFactory> scriptFactory) :
+		std::shared_ptr<ResourceManager> resourceManager,
+		std::shared_ptr<ScriptFactory> scriptFactory,
+		ResourceGarbageCollector* resourceGC) :
 		m_PackageManager(std::move(packageManager)),
-		m_DataAssetsManager(std::move(dataAssetsManager)),
+		m_ResourceManager(std::move(resourceManager)),
 		m_ScriptFactory(std::move(scriptFactory)),
+		m_ResourceGC(resourceGC),
 		m_LoadingThreadPool(safe_make_unique<zzz::templates::ThreadPool>("SceneLoader", 1))
 	{
 		ensure(m_PackageManager != nullptr, "PackageManager не должен быть null.");
+		ensure(m_ResourceManager != nullptr, "ResourceManager не должен быть null.");
 		ensure(m_ScriptFactory != nullptr, "ScriptFactory не должен быть null.");
 
 		m_GlobalTransitionParams = m_PackageManager->GetProjectManifestData().GetDefaultTransitionParams();
@@ -60,43 +64,27 @@ namespace zzz::engine
 		{
 			try
 			{
+				std::optional<ScopedGCSuspension> gcLock;
+				if (m_ResourceGC)
+					gcLock.emplace(*m_ResourceGC);
+
 				auto entryOpt = m_PackageManager->GetEntry(ePackage::Scene, sceneGuid);
 				// Наличие гарантируется сборкой ассетов в package.dat; ensure для проверки целостности при разработке
 				ensure(entryOpt.has_value(), "Сцена с GUID '{}' не найдена в package.dat.", sceneGuid.ToString());
 
-				auto sceneDataRes = m_PackageManager->LoadAsset<SceneData>(sceneGuid);
-				if (!sceneDataRes.has_value())
-				{
-					std::string err = std::format("Ошибка загрузки данных сцены '{}' ({}): {}",
-						entryOpt->GetName(), sceneGuid.ToString(), sceneDataRes.error());
-					DOutError("[SceneManager::LoadSceneAsync] {}", err);
-
-					m_MainThreadQueue.Push([onComplete = std::move(onComplete), err = std::move(err)]() mutable
-					{
-						onComplete(std::unexpected(std::move(err)));
-					});
-					return;
-				}
-
 				const std::string sceneName = std::string(entryOpt->GetName());
-				const auto& sceneData = *sceneDataRes;
 
-				const auto& transition = (sceneData.GetTransitionSource() == eTransitionSource::Custom)
-					? sceneData.GetTransitionParams()
-					: m_GlobalTransitionParams;
-
+				// Сцена сама запрашивает свои данные (SceneData) по GUID через ResourceManager (Вариант 1)
 				auto scene = safe_make_shared<Scene>(
 					sceneGuid,
 					sceneName,
-					sceneData,
+					m_ResourceManager,
 					*m_ScriptFactory,
-					sceneData.GetClearConfig(),
-					transition,
-					m_DataAssetsManager
+					m_GlobalTransitionParams
 				);
 
-				DOut("[SceneManager::LoadSceneAsync] Собрана сцена '{}' ({}), скриптов: {}.",
-					sceneName, sceneGuid.ToString(), sceneData.GetSceneScriptGuids().size());
+				DOut("[SceneManager::LoadSceneAsync] Собрана сцена '{}' ({}).",
+					sceneName, sceneGuid.ToString());
 
 				m_MainThreadQueue.Push([this, scene = std::move(scene), onComplete = std::move(onComplete)]() mutable
 				{

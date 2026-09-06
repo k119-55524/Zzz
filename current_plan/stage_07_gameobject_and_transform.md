@@ -324,11 +324,17 @@ namespace zzz::core
 
 ### 3.4. Обновление `SceneData`: `src/core/io/package/SceneData.h`
 
-В `SceneData` добавляется список объектов:
-```cpp
-std::vector<GameObjectData> m_GameObjects;
-```
-При десериализации сцены `SceneData` предоставляет готовые структуры `GameObjectData`, из которых `SceneManager` инстанциирует живые `GameObject` с их `Transform` и связывает ссылки на меши и материалы.
+**Обновлено 2026-09-06 (пост-ревью после Пункта 9):** объекты сцены хранятся не плоским списком на
+уровне `SceneData`, а внутри отдельного сериализуемого класса `LayerData`
+(`src/core/io/package/LayerData.h/.cpp`) - имя слоя, его тип (`eLayerType`) и `std::vector<GameObjectData>`
+именно этого слоя. `SceneData` хранит `std::vector<LayerData> layers` и отдаёт его через
+`GetLayers()`/`SetLayers()` (`GetGameObjects()`/`SetGameObjects()` больше не существует).
+`GameObjectData` не хранит `layerName`/`layerType` - эта информация лежит на `LayerData`, а не
+дублируется на каждом объекте.
+
+При десериализации сцены `SceneData` предоставляет готовые структуры `LayerData` (каждая - со своими
+`GameObjectData` внутри), из которых `Scene::Initialize` заводит по одному `ILayer` на каждый `LayerData`
+и сразу наполняет его объектами (см. обновлённый п.8 в `stage_09_package_resource_formats.md`).
 
 ---
 
@@ -385,6 +391,21 @@ namespace zzz
    - Слой классического игрового HUD / UI (спрайты, панели, экранный текст).
 3. `src/engine/scene/layer/LayerMVVM.h` и `.cpp`:
    - Авторский UI-слой с поддержкой архитектуры MVVM (ViewModels, привязки данных, дерево элементов).
+
+**Обновлено 2026-09-06 (пост-ревью после Пункта 9):** сигнатура наполнения слоя объектами изменилась.
+Показанный выше `ILayer` из первоначального плана уже не описывает актуальный интерфейс (в фактическом
+коде также есть `GetObjectWorld()`/`GetEntityWorld()` и своя логика на слой), а метод наполнения
+теперь принимает не один объект, а весь `LayerData` целиком:
+```cpp
+virtual void Populate(
+    const ::zzz::core::LayerData& layerData,
+    const ::zzz::core::ScriptFactory& scriptFactory) = 0;
+```
+Слой сам обходит `layerData.GetObjects()` внутри своей реализации `Populate()` - `Scene::Initialize`
+вызывает его один раз на слой, а не по разу на объект. `Layer3D`/`LayerUI`/`LayerMVVM` также получают
+`std::shared_ptr<ResourceManager>` конструктором (а не параметром на каждый вызов наполнения) -
+`Layer3D` хранит и использует его для `LoadDataAsset<MeshData>`, `LayerUI`/`LayerMVVM` пока хранят, но
+не используют.
 
 ---
 
@@ -579,7 +600,9 @@ namespace zzz
   - `LayerUI.h` / `.cpp` (HUD / Screen UI)
   - `LayerMVVM.h` / `.cpp` (каркас авторского MVVM-фреймворка)
 - [x] Создать `src/core/io/package/GameObjectData.h` и `GameObjectData.cpp` (сериализация сущности)
-- [x] Обновить `src/core/io/package/SceneData.h` для хранения `std::vector<GameObjectData>`
+- [x] Обновить `src/core/io/package/SceneData.h` для хранения объектов сцены (2026-09-06: пост-ревью
+  перевело хранение на `std::vector<LayerData>` через `LayerData.h/.cpp` вместо плоского
+  `std::vector<GameObjectData>` - см. обновлённый п.3.4 выше)
 - [x] Интегрировать слои в `src/engine/scene/Scene.h` и `Scene.cpp`
 - [x] Зарегистрировать новые файлы в `src/core/CMakeLists.txt` и `src/engine/CMakeLists.txt`
 - [x] Собрать `EngineTests.exe` и `game_win` под MSVC + Ninja (чистая сборка)

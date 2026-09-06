@@ -3,6 +3,7 @@
 #include <vector>
 #include <mutex>
 #include <utility>
+#include "core/utils/Defines.h"
 
 namespace zzz::core
 {
@@ -15,6 +16,8 @@ namespace zzz::core
 	template <typename T>
 	class DoubleBufferedVector
 	{
+		Z_NO_COPY_MOVE(DoubleBufferedVector);
+
 	public:
 		DoubleBufferedVector() = default;
 
@@ -70,7 +73,13 @@ namespace zzz::core
 			m_ReadBuffer.clear();
 		}
 
-		bool IsEmpty()
+		[[nodiscard]] bool HasPendingWrites() const noexcept
+		{
+			std::lock_guard lock(m_Mutex);
+			return !m_WriteBuffer.empty();
+		}
+
+		[[nodiscard]] bool IsEmpty() const noexcept
 		{
 			std::lock_guard lock(m_Mutex);
 			return m_WriteBuffer.empty() && m_ReadBuffer.empty();
@@ -79,6 +88,6 @@ namespace zzz::core
 	private:
 		std::vector<T> m_ReadBuffer;
 		std::vector<T> m_WriteBuffer;
-		std::mutex m_Mutex;
+		mutable std::mutex m_Mutex;
 	};
 }

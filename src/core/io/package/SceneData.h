@@ -5,7 +5,7 @@
 #include <vector>
 #include "core/utils/Guid.h"
 #include "core/serialize/Serializer.h"
-#include "core/io/package/GameObjectData.h"
+#include "core/io/package/LayerData.h"
 #include "engine/gapi/clear_config/ClearConfig.h"
 
 namespace zzz::core
@@ -17,12 +17,12 @@ namespace zzz::core
 		explicit SceneData(
 			std::vector<Guid> sceneScriptGuids,
 			zzz::engine::ClearConfig clearConfig = {},
-			std::vector<GameObjectData> gameObjects = {},
+			std::vector<LayerData> layers = {},
 			eTransitionSource transitionSource = eTransitionSource::UseGlobal,
 			SceneTransitionParams transitionParams = {})
 			: sceneScriptGuids(std::move(sceneScriptGuids))
 			, clearConfig(std::move(clearConfig))
-			, gameObjects(std::move(gameObjects))
+			, layers(std::move(layers))
 			, transitionSource(transitionSource)
 			, transitionParams(std::move(transitionParams))
 		{}
@@ -32,9 +32,9 @@ namespace zzz::core
 		[[nodiscard]] const zzz::engine::ClearConfig& GetClearConfig() const noexcept { return clearConfig; }
 		void SetClearConfig(const zzz::engine::ClearConfig& config) noexcept { clearConfig = config; }
 
-		[[nodiscard]] const std::vector<GameObjectData>& GetGameObjects() const noexcept { return gameObjects; }
-		[[nodiscard]] std::vector<GameObjectData>& GetGameObjects() noexcept { return gameObjects; }
-		void SetGameObjects(std::vector<GameObjectData> objs) noexcept { gameObjects = std::move(objs); }
+		[[nodiscard]] const std::vector<LayerData>& GetLayers() const noexcept { return layers; }
+		[[nodiscard]] std::vector<LayerData>& GetLayers() noexcept { return layers; }
+		void SetLayers(std::vector<LayerData> layersIn) noexcept { layers = std::move(layersIn); }
 
 		[[nodiscard]] eTransitionSource GetTransitionSource() const noexcept { return transitionSource; }
 		void SetTransitionSource(eTransitionSource source) noexcept { transitionSource = source; }
@@ -52,10 +52,11 @@ namespace zzz::core
 			{
 				DOut(::zzz::core::Assets, "{}  sceneScriptGuid #{}: {}", nestedIndentation, i, sceneScriptGuids[i].ToString());
 			}
-			DOut(::zzz::core::Assets, "{}gameObjects({})", nestedIndentation, gameObjects.size());
-			for (zU32 i = 0; i < gameObjects.size(); ++i)
+			DOut(::zzz::core::Assets, "{}layers({})", nestedIndentation, layers.size());
+			for (zU32 i = 0; i < layers.size(); ++i)
 			{
-				DOut(::zzz::core::Assets, "{}  gameObject #{}: {} [{}]", nestedIndentation, i, gameObjects[i].GetName(), gameObjects[i].GetGuid().ToString());
+				DOut(::zzz::core::Assets, "{}  layer #{}: '{}' [{}], объектов: {}",
+					nestedIndentation, i, layers[i].GetName(), ToString(layers[i].GetType()), layers[i].GetObjects().size());
 			}
 			DOut(::zzz::core::Assets, "{}transitionSource: {}", nestedIndentation, ToString(transitionSource));
 			DOut(::zzz::core::Assets, "{}transitionParams: type={}, duration={:.2f}s, blockInput={}, pauseOld={}",
@@ -67,7 +68,7 @@ namespace zzz::core
 	private:
 		std::vector<Guid> sceneScriptGuids;
 		zzz::engine::ClearConfig clearConfig;
-		std::vector<GameObjectData> gameObjects;
+		std::vector<LayerData> layers;
 		eTransitionSource transitionSource{ eTransitionSource::UseGlobal };
 		SceneTransitionParams transitionParams{};
 
@@ -87,13 +88,13 @@ namespace zzz::core
 				})
 				.and_then([&]() { return serializer.Serialize(buffer, clearConfig); })
 				.and_then([&]() -> std::expected<void, std::string> {
-					const zU32 objectsCount = static_cast<zU32>(gameObjects.size());
-					auto res = serializer.Serialize(buffer, objectsCount);
+					const zU32 layersCount = static_cast<zU32>(layers.size());
+					auto res = serializer.Serialize(buffer, layersCount);
 					if (!res) return res;
 
-					for (const auto& objData : gameObjects)
+					for (const auto& layerData : layers)
 					{
-						res = serializer.Serialize(buffer, objData);
+						res = serializer.Serialize(buffer, layerData);
 						if (!res) return res;
 					}
 					return {};
@@ -126,27 +127,27 @@ namespace zzz::core
 				return res;
 			}
 
-			// Обратная совместимость (Правило 31): если буфер кончился (старый формат SceneData), объектов 0
-			gameObjects.clear();
+			// Обратная совместимость (Правило 31): если буфер кончился (старый формат SceneData), слоёв 0
+			layers.clear();
 			if (offset < buffer.size())
 			{
-				zU32 objectsCount = 0;
-				res = serializer.Deserialize(buffer, offset, objectsCount);
+				zU32 layersCount = 0;
+				res = serializer.Deserialize(buffer, offset, layersCount);
 				if (!res)
 				{
 					return res;
 				}
 
-				gameObjects.reserve(objectsCount);
-				for (zU32 i = 0; i < objectsCount; ++i)
+				layers.reserve(layersCount);
+				for (zU32 i = 0; i < layersCount; ++i)
 				{
-					GameObjectData objData{};
-					res = serializer.Deserialize(buffer, offset, objData);
+					LayerData layerData{};
+					res = serializer.Deserialize(buffer, offset, layerData);
 					if (!res)
 					{
 						return res;
 					}
-					gameObjects.push_back(std::move(objData));
+					layers.push_back(std::move(layerData));
 				}
 			}
 

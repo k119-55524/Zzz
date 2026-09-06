@@ -7,14 +7,11 @@
 using namespace zzz::core;
 using namespace zzz::templates;
 
-namespace zzz::core
-{
-	class DataAssetsManager;
-}
-
 namespace zzz::engine
 {
 	class PackageManager;
+	class ResourceManager;
+	class ResourceGarbageCollector;
 	class Scene;
 
 	class SceneManager final
@@ -25,8 +22,9 @@ namespace zzz::engine
 		SceneManager() = delete;
 		SceneManager(
 			std::shared_ptr<PackageManager> packageManager,
-			std::shared_ptr<DataAssetsManager> dataAssetsManager,
-			std::shared_ptr<ScriptFactory> scriptFactory);
+			std::shared_ptr<ResourceManager> resourceManager,
+			std::shared_ptr<ScriptFactory> scriptFactory,
+			ResourceGarbageCollector* resourceGC = nullptr);
 		~SceneManager() = default;
 
 		using SceneLoadResult = std::expected<std::shared_ptr<Scene>, std::string>;
@@ -39,8 +37,9 @@ namespace zzz::engine
 
 	private:
 		std::shared_ptr<PackageManager> m_PackageManager;
-		std::shared_ptr<DataAssetsManager> m_DataAssetsManager;
+		std::shared_ptr<ResourceManager> m_ResourceManager;
 		std::shared_ptr<ScriptFactory> m_ScriptFactory;
+		ResourceGarbageCollector* m_ResourceGC{ nullptr };
 
 		SceneTransitionParams m_GlobalTransitionParams;
 		std::unique_ptr<ThreadPool> m_LoadingThreadPool;

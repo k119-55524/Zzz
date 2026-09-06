@@ -113,6 +113,17 @@ namespace zzz::engine
 		return nameIt->second;
 	}
 
+	[[nodiscard]] std::optional<PackageEntry> PackageManager::GetEntry(const Guid& guid) const
+	{
+		for (const auto& [type, entries] : m_EntriesByGuid)
+		{
+			auto it = entries.find(guid);
+			if (it != entries.end())
+				return it->second;
+		}
+		return std::nullopt;
+	}
+
 	[[nodiscard]] std::optional<PackageEntry> PackageManager::GetEntry(ePackage type, const Guid& guid) const
 	{
 		auto it = m_EntriesByGuid.find(type);

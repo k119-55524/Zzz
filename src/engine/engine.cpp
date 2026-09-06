@@ -47,13 +47,19 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 	m_GAPI = safe_make_shared<GAPI>();
 	m_GAPI->Initialize(m_UserSettingsManager);
 
+	// Инициализация центрального менеджера ресурсов (ResourceManager)
+	m_ResourceManager = safe_make_shared<ResourceManager>(m_PackageManager, m_DataAssetsManager, m_FileSystem, m_GAPI);
+	m_ResourceManager->Start();
+	m_ResourceGC = safe_make_unique<ResourceGarbageCollector>(*m_ResourceManager);
+	m_ResourceGC->Start();
+
 	// Инициализация изолированной подсистемы скриптов (хранилище, регистратор и фабрика экземпляра движка)
 	m_ScriptStorage = safe_make_shared<ScriptStorage>();
 	m_ScriptRegistry = safe_make_unique<ScriptRegistry>(*m_ScriptStorage);
 	m_ScriptFactory = safe_make_shared<ScriptFactory>(*m_ScriptStorage);
 
-	// Инициализация менеджера сцен (SceneManager) - используется View для загрузки стартовых сцен
-	m_SceneManager = safe_make_shared<SceneManager>(m_PackageManager, m_DataAssetsManager, m_ScriptFactory);
+	// Инициализация менеджера сцен (SceneManager) с пробросом ResourceManager и ResourceGC
+	m_SceneManager = safe_make_shared<SceneManager>(m_PackageManager, m_ResourceManager, m_ScriptFactory, m_ResourceGC.get());
 
 	// Инициализация менеджера отображения окон (ViewManager) с пробросом графического API, фабрики скриптов, пакета ресурсов и менеджера сцен
 	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, m_GAPI, m_ScriptFactory, m_PackageManager, m_UserSettingsManager, m_SceneManager, [this]() { OnAppClosed(); });
@@ -108,6 +114,18 @@ void Engine::Shutdown() noexcept
 
 		if (m_GAPI)
 			m_GAPI->WaitForGpu();
+
+		if (m_ResourceGC)
+		{
+			m_ResourceGC->Stop();
+			m_ResourceGC = nullptr;
+		}
+
+		if (m_ResourceManager)
+		{
+			m_ResourceManager->Stop();
+			m_ResourceManager = nullptr;
+		}
 
 		StopGame();
 		m_EventBus = nullptr;

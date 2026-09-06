@@ -7,6 +7,8 @@
 #include "engine/scene/SceneManager.h"
 #include "engine/package/PackageManager.h"
 #include "core/io/package/DataAssetsManager.h"
+#include "engine/resources/ResourceManager.h"
+#include "engine/resources/ResourceGarbageCollector.h"
 #include "engine/package/UserSettingsManager.h"
 #include "engine/platforms/mainloop/MainLoop.h"
 
@@ -22,6 +24,8 @@ namespace zzz::engine
 
 		[[nodiscard]] virtual std::expected<void, std::string> Run();
 		[[nodiscard]] std::shared_ptr<DataAssetsManager> GetDataAssetsManager() const noexcept { return m_DataAssetsManager; }
+		[[nodiscard]] std::shared_ptr<ResourceManager> GetResourceManager() const noexcept { return m_ResourceManager; }
+		[[nodiscard]] ResourceGarbageCollector* GetResourceGC() const noexcept { return m_ResourceGC.get(); }
 
 	protected:
 		void Shutdown() noexcept;
@@ -44,6 +48,8 @@ namespace zzz::engine
 		std::shared_ptr<FileSystem> m_FileSystem;
 		std::shared_ptr<PackageManager> m_PackageManager;
 		std::shared_ptr<DataAssetsManager> m_DataAssetsManager;
+		std::shared_ptr<ResourceManager> m_ResourceManager;
+		std::unique_ptr<ResourceGarbageCollector> m_ResourceGC;
 		std::shared_ptr<UserSettingsManager> m_UserSettingsManager;
 		std::unique_ptr<Platform> m_Platform;
 		std::shared_ptr<GAPI> m_GAPI;

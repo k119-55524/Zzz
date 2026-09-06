@@ -1,11 +1,11 @@
 
 #include "core/utils/MemoryUtils.h"
-#include "core/io/package/DataAssetsManager.h"
 #include "core/io/package/SceneData.h"
-#include "core/userscripts/ScriptFactory.h"
 #include "engine/scene/layer/Layer3D.h"
 #include "engine/scene/layer/LayerUI.h"
 #include "engine/scene/layer/LayerMVVM.h"
+#include "core/userscripts/ScriptFactory.h"
+#include "engine/resources/ResourceManager.h"
 
 #include "Scene.h"
 
@@ -18,88 +18,21 @@ namespace zzz::engine
 	Scene::Scene(
 		Guid guid,
 		std::string name,
-		const std::vector<Guid>& sceneScriptGuids,
+		std::shared_ptr<ResourceManager> resourceManager,
 		const ScriptFactory& scriptFactory,
-		ClearConfig clearConfig,
-		SceneTransitionParams transitionParams,
-		const std::vector<GameObjectData>& gameObjects,
-		std::shared_ptr<DataAssetsManager> dataAssetsManager) :
+		SceneTransitionParams defaultTransition) :
 		m_Guid(guid),
 		m_Name(std::move(name)),
-		m_ClearConfig(std::move(clearConfig)),
-		m_TransitionParams(std::move(transitionParams))
+		m_ResourceManager(std::move(resourceManager)),
+		m_TransitionParams(std::move(defaultTransition))
 	{
-		Initialize(sceneScriptGuids, scriptFactory, gameObjects, std::move(dataAssetsManager));
-	}
+		ensure(m_ResourceManager != nullptr, "ResourceManager не должен быть null при создании Scene.");
 
-	Scene::Scene(
-		Guid guid,
-		std::string name,
-		const SceneData& sceneData,
-		const ScriptFactory& scriptFactory,
-		ClearConfig clearConfig,
-		SceneTransitionParams transitionParams,
-		std::shared_ptr<DataAssetsManager> dataAssetsManager) :
-		m_Guid(guid),
-		m_Name(std::move(name)),
-		m_ClearConfig(std::move(clearConfig)),
-		m_TransitionParams(std::move(transitionParams))
-	{
-		Initialize(sceneData.GetSceneScriptGuids(), scriptFactory, sceneData.GetGameObjects(), std::move(dataAssetsManager));
-	}
+		auto sceneDataRes = m_ResourceManager->LoadSceneData(m_Guid);
+		if (!sceneDataRes)
+			THROW_RUNTIME("Scene '{}' ({}) не смогла загрузить SceneData: {}", m_Name, m_Guid.ToString(), sceneDataRes.error());
 
-	void Scene::Initialize(
-		const std::vector<Guid>& sceneScriptGuids,
-		const ScriptFactory& scriptFactory,
-		const std::vector<GameObjectData>& gameObjects,
-		std::shared_ptr<DataAssetsManager> dataAssetsManager)
-	{
-		for (const auto& scriptGuid : sceneScriptGuids)
-		{
-			auto script = scriptFactory.CreateSceneScript(scriptGuid);
-			ensure(script != nullptr, "Не удалось создать экземпляр SceneScript с GUID: " + scriptGuid.ToString());
-			script->Init(&m_EventBus);
-			m_Scripts.push_back(std::move(script));
-		}
-
-		// Загрузка игровых объектов сцены с раскладкой по слоям
-		for (const auto& objData : gameObjects)
-		{
-			std::string layerName = objData.GetLayerName().empty() ? "Default3DLayer" : objData.GetLayerName();
-			ILayer* targetLayer = GetLayerByName(layerName);
-			if (targetLayer == nullptr)
-			{
-				std::unique_ptr<ILayer> newLayer;
-				switch (objData.GetLayerType())
-				{
-				case eLayerType::Layer3D:
-					newLayer = ::zzz::core::safe_make_unique<Layer3D>(layerName);
-					break;
-				case eLayerType::LayerUI:
-					newLayer = ::zzz::core::safe_make_unique<LayerUI>(layerName);
-					break;
-				case eLayerType::LayerMVVM:
-					newLayer = ::zzz::core::safe_make_unique<LayerMVVM>(layerName);
-					break;
-				default:
-					newLayer = ::zzz::core::safe_make_unique<Layer3D>(layerName);
-					break;
-				}
-
-				targetLayer = newLayer.get();
-				AddLayer(std::move(newLayer));
-			}
-
-			targetLayer->PopulateObject(objData, scriptFactory, dataAssetsManager.get());
-		}
-
-		if (m_Layers.empty())
-		{
-			AddLayer(::zzz::core::safe_make_unique<Layer3D>("Default3DLayer"));
-		}
-
-		DOut("[Scene::Initialize] Создана сцена '{}' ({}), скриптов: {}, слоёв: {}, объектов: {}",
-			m_Name, m_Guid.ToString(), m_Scripts.size(), m_Layers.size(), gameObjects.size());
+		Initialize(*sceneDataRes, scriptFactory);
 	}
 
 	Scene::~Scene()
@@ -108,24 +41,47 @@ namespace zzz::engine
 		DOut("[Scene::~Scene] Уничтожена сцена '{}' ({})", m_Name, m_Guid.ToString());
 	}
 
-	void Scene::AddLayer(std::unique_ptr<ILayer> layer)
+	void Scene::Initialize(const SceneData& sceneData, const ScriptFactory& scriptFactory)
 	{
-		if (layer == nullptr)
+		// Разрешение параметров перехода
+		if (sceneData.GetTransitionSource() == eTransitionSource::Custom)
+			m_TransitionParams = sceneData.GetTransitionParams();
+
+		m_ClearConfig = sceneData.GetClearConfig();
+		for (const auto& scriptGuid : sceneData.GetSceneScriptGuids())
 		{
-			return;
+			auto script = scriptFactory.CreateSceneScript(scriptGuid);
+			ensure(script != nullptr, "Не удалось создать экземпляр SceneScript с GUID: " + scriptGuid.ToString());
+			script->Init(&m_EventBus);
+			m_Scripts.push_back(std::move(script));
 		}
 
-		m_Layers.push_back(std::move(layer));
-	}
-
-	ILayer* Scene::GetLayerByName(std::string_view name) const noexcept
-	{
-		for (const auto& layer : m_Layers)
+		// SceneData хранит слои напрямую (LayerData: имя, тип и его собственные объекты). На каждый
+		// слой заводится ровно один ILayer, а разбор объектов внутри него - целиком забота самого
+		// слоя: Scene отдаёт ему LayerData целиком одним вызовом, а не гоняет по объектам сама.
+		for (const auto& layerData : sceneData.GetLayers())
 		{
-			if (layer != nullptr && layer->GetName() == name)
-				return layer.get();
+			switch (layerData.GetType())
+			{
+			case eLayerType::Layer3D:
+				m_Layers.push_back(safe_make_unique<Layer3D>(layerData.GetName(), m_ResourceManager));
+				break;
+			case eLayerType::LayerUI:
+				m_Layers.push_back(safe_make_unique<LayerUI>(layerData.GetName()));
+				break;
+			case eLayerType::LayerMVVM:
+				m_Layers.push_back(safe_make_unique<LayerMVVM>(layerData.GetName()));
+				break;
+			default:
+				THROW_RUNTIME("Неизвестный eLayerType ({}) у слоя '{}' в сцене '{}'",
+					ToString(layerData.GetType()), layerData.GetName(), m_Name);
+			}
+
+			m_Layers.back()->Populate(layerData, scriptFactory);
 		}
-		return nullptr;
+
+		DOut("[Scene::Initialize] Создана сцена '{}' ({}), скриптов: {}, слоёв: {}",
+			m_Name, m_Guid.ToString(), m_Scripts.size(), m_Layers.size());
 	}
 
 	void Scene::Update(const Time& time)
@@ -133,11 +89,12 @@ namespace zzz::engine
 		// Обновление скриптов сцены
 		m_EventBus.InvokeUpdate(time);
 
-		// Кадровый цикл обновления слоев сцены
+		// Кадровый цикл обновления слоев сцены. Видимость (IsVisible) - единственный флаг
+		// включения/выключения слоя, и её уже проверяет сам Update() каждой реализации ILayer.
 		const float dt = time.GetDeltaTime();
 		for (const auto& layer : m_Layers)
 		{
-			if (layer != nullptr && layer->IsEnabled())
+			if (layer != nullptr)
 			{
 				layer->Update(dt);
 			}

@@ -125,11 +125,11 @@
 
 > [!IMPORTANT]
 > **Текущий активный пункт:** `Пункт 10. Подсистема ресурсов (ResourceManager, ResourceGarbageCollector, DoubleBufferedVector)`  
-> **Статус:** ⏳ Не начато  
+> **Статус:** ✅ Выполнено  
 > **Файл детального плана текущего шага:** [`stage_10_resource_manager.md`](stage_10_resource_manager.md)  
 > **Список открытых сквозных задач / технического долга:** [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) §4  
-> **Текущая подзадача:** Проектирование архитектуры `ResourceManager`, `IResource`, фонового сборщика `ResourceGarbageCollector` и потокобезопасного кэширования.
-
+> **Текущая подзадача:** Подсистема ресурсов реализована, интегрирована и успешно скомпилирована.
+> 
 ---
 
 ## 📋 Сквозная таблица этапов реализации (Строгая последовательность зависимостей)
@@ -147,11 +147,11 @@
 ### Уровень 2: GAPI-ресурсы, содержимое куба и сквозной рендер
 | № | Этап разработки | Статус | Файл этапа | Краткое описание |
 |---|---|---|---|---|
-| **7** | Сущность сцены (`GameObject`), иерархический `Transform`, `SlotMap`, слои (`ILayer`, `Layer3D`, `LayerUI`, `LayerMVVM`) и `ISceneStorage` | ✅ Выполнено | [`stage_07_gameobject_and_transform.md`](stage_07_gameobject_and_transform.md) | `Transform` (поле-значение, dirty flag), `GameObject`, `SlotMap<T>` (Swap & Pop, stable handles), слои сцены (`ILayer`, `Layer3D`, `LayerUI`, `LayerMVVM`), `ISceneStorage` (`DefaultSceneStorage`), `GameObjectData` |
+| **7** | Сущность сцены (`GameObject`), иерархический `Transform`, `SlotMap`, слои (`ILayer`, `Layer3D`, `LayerUI`, `LayerMVVM`) и `ISceneStorage` | ✅ Выполнено | [`stage_07_gameobject_and_transform.md`](stage_07_gameobject_and_transform.md) | `Transform` (поле-значение, dirty flag), `GameObject`, `SlotMap<T>` (Swap & Pop, stable handles), слои сцены (`ILayer`, `Layer3D`, `LayerUI`, `LayerMVVM`), `ISceneStorage` (`DefaultSceneStorage`), `GameObjectData`, `LayerData` (2026-09-06: объекты сцены хранятся внутри слоя, не плоским списком) |
 | **8** | Конвейер смены сцен, асинхронная загрузка и переходы (`SceneTransitionParams`, `SceneManager::LoadSceneAsync`, `View::SetScene`) | ✅ Выполнено | [`stage_08_scene_transition_pipeline.md`](stage_08_scene_transition_pipeline.md) | Вынос загрузки сцены из конструктора `View`, `SceneTransitionParams` (структура с флагами перехода, `blockUserInput`), `View::SetScene`, асинхронная загрузка (фоновые I/O, десериализация и создание `Scene` в `ThreadPool` + потокобезопасная публикация в `m_Scenes`, запуск скриптов `InvokeStart` и вызов `onComplete` на логическом потоке через `m_MainThreadQueue` / `CallbackQueue`) |
 | **9** | Сквозной конвейер сетки: бинарный формат `MeshData`, парсинг `.obj`, упаковка и загрузка из `package.dat` | ✅ Выполнено | [`stage_09_package_resource_formats.md`](stage_09_package_resource_formats.md) | `MeshData` в `core`, парсер `.obj` в `assets_builder_dll`, упаковка в `package.dat` и `data.dat`, исходник `cube_00.obj` с `.meta`, UTF-32 имена, белый список расширений |
 | **9.1** | Менеджер проектов Сборщика Ассетов: каркас проекта, валидация структуры, пресеты сборки, платформенные конфиги и дельты | ⏳ В процессе | [`stage_09_1_assets_builder_presets_and_scaffolding.md`](stage_09_1_assets_builder_presets_and_scaffolding.md) | Создание каркаса в пустой папке (Scaffolding), строгая валидация, наборы сборки (`presets.json`), платформенные конфиги с версиями сторов и дельтами `add_*`/`remove_*`, очистка `project.json` от дублей |
-| **10** | Подсистема ресурсов (`ResourceManager`, `ResourceGarbageCollector`, `DoubleBufferedVector`) | ⏳ Не начато | [`stage_10_resource_manager.md`](stage_10_resource_manager.md) | Базовый интерфейс `IResource`, `eResourceState`, кэш по типам (Mesh, Texture, Shader, Material), выделенный I/O-поток, фоновый сборщик `ResourceGarbageCollector` с RAII `ScopedGCSuspension`, интеграция в `Engine` |
+| **10** | Подсистема ресурсов (`ResourceManager`, `ResourceGarbageCollector`, `DoubleBufferedVector`) | ✅ Выполнено | [`stage_10_resource_manager.md`](stage_10_resource_manager.md) | Базовый интерфейс `IResource`, `eResourceState`, кэш по типам (Mesh, Texture, Shader, Material), выделенный I/O-поток, фоновый сборщик `ResourceGarbageCollector` с RAII `ScopedGCSuspension`, интеграция в `Engine` |
 | **11** | Шаблонная система буфера вершин и маппер GAPI | ⏳ Не начато | — | `CPUVertexBuffer<Attrs...>`, `eVertexFormat`, `ConverterGAPITypes` и `VertexFormatMapper` (референс: `c:\Workspaces\DZzz\...`) |
 | **12** | Кроссплатформенные абстракции ресурсов GAPI | ⏳ Не начато | — | `IVertexBuffer`, `IIndexBuffer`, `IConstantBuffer` (двойная буферизация кадра), `ITexture2D` |
 | **13** | Управление зоной рендеринга и DPI-масштабирование | ⏳ Не начато | — | Viewport, Scissor, Safe Area, логические единицы (DIP / Canvas Units), компенсация Y в Vulkan |
@@ -178,7 +178,7 @@
 | № | Этап разработки | Статус | Файл этапа | Краткое описание |
 |---|---|---|---|---|
 | **28** | Продвинутые структуры пространственного хранения объектов (`ISceneStorage`) | ⏳ Не начато | — | Реализация AABB-деревьев (`BVHSceneStorage`, `QuadTreeSceneStorage`, `OctreeSceneStorage`), Frustum Culling, автопересчёт границ |
-| **29** | Независимая кадровика слоёв и On-Demand рендеринг | ⏳ Не начато | — | Развитие `Layer3D`, `LayerUI`, `LayerMVVM`: независимый FPS для слоёв, On-Demand отрисовка для UI, частицы и 3D в интерфейсе |
+| **29** | Скрипты слоёв (`LayerScript`), независимая кадровика и On-Demand рендеринг | ⏳ Не начато | — | Внедрение базового `LayerScript` (события OnStart, OnUpdate, OnDestroy слоя, подписка на события слоя) и индивидуальных скриптов под тип слоя (`Layer3DScript`, `LayerUIScript`, `LayerMVVMScript`), поддержка в `ScriptFactory`/`ScriptRegistry`, развитие `Layer3D`, `LayerUI`, `LayerMVVM`: независимый FPS для слоёв, On-Demand отрисовка для UI, частицы и 3D в интерфейсе |
 
 ### Уровень 5: Ввод и UI-фреймворк ZzzGUI
 | № | Этап разработки | Статус | Файл этапа | Краткое описание |

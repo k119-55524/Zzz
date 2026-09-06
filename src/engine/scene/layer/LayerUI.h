@@ -3,6 +3,7 @@
 #include "engine/scene/layer/ILayer.h"
 #include "engine/scene/ObjectWorld.h"
 #include "engine/scene/EntityWorld.h"
+#include <memory>
 
 namespace zzz
 {
@@ -13,7 +14,7 @@ namespace zzz
 	class LayerUI final : public ILayer
 	{
 	public:
-		explicit LayerUI(std::string name = "LayerUI")
+		explicit LayerUI(std::string name)
 			: m_Name(std::move(name))
 		{
 		}
@@ -28,25 +29,15 @@ namespace zzz
 		[[nodiscard]] bool IsVisible() const noexcept override { return m_IsVisible; }
 		void SetVisible(bool visible) noexcept override { m_IsVisible = visible; }
 
-		[[nodiscard]] bool IsEnabled() const noexcept override { return m_IsEnabled; }
-		void SetEnabled(bool enabled) noexcept override { m_IsEnabled = enabled; }
-
 		void Update(float dt) override;
 
-		void PopulateObject(
-			const ::zzz::core::GameObjectData& objData,
-			const ::zzz::core::ScriptFactory& scriptFactory,
-			::zzz::core::DataAssetsManager* dataAssetsManager) override;
-
-		[[nodiscard]] ObjectWorld* GetObjectWorld() noexcept override { return &m_ObjectWorld; }
-		[[nodiscard]] const ObjectWorld* GetObjectWorld() const noexcept override { return &m_ObjectWorld; }
-		[[nodiscard]] ::zzz::engine::EntityWorld* GetEntityWorld() noexcept override { return &m_EntityWorld; }
-		[[nodiscard]] const ::zzz::engine::EntityWorld* GetEntityWorld() const noexcept override { return &m_EntityWorld; }
+		void Populate(
+			const ::zzz::core::LayerData& layerData,
+			const ::zzz::core::ScriptFactory& scriptFactory) override;
 
 	private:
 		std::string m_Name;
 		bool m_IsVisible{ true };
-		bool m_IsEnabled{ true };
 
 		ObjectWorld m_ObjectWorld;
 		::zzz::engine::EntityWorld m_EntityWorld;

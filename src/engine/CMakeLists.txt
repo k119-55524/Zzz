@@ -14,6 +14,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
             ${CMAKE_CURRENT_SOURCE_DIR}/scene
             ${CMAKE_CURRENT_SOURCE_DIR}/view
             ${CMAKE_CURRENT_SOURCE_DIR}/renderer
+            ${CMAKE_CURRENT_SOURCE_DIR}/resources
             ${CMAKE_CURRENT_SOURCE_DIR}/platforms
     )
 
@@ -29,6 +30,11 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         # Package & Settings
         "package/PackageManager.h" "package/PackageManager.cpp"
         "package/UserSettingsManager.h" "package/UserSettingsManager.cpp"
+
+        # Resources (Этап 10)
+        "resources/IResourceLoader.h"
+        "resources/ResourceManager.h" "resources/ResourceManager.cpp"
+        "resources/ResourceGarbageCollector.h" "resources/ResourceGarbageCollector.cpp"
 
         # Inputs
         "platforms/input/Input.h" "platforms/input/InputBase.h"

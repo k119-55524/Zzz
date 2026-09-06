@@ -40,10 +40,12 @@ namespace zzz::core
 namespace zzz::engine
 {
 	class SceneManager;
+	class ResourceManager;
 
 	class PackageManager final
 	{
 		friend class SceneManager;
+		friend class ResourceManager;
 
 	public:
 		PackageManager() = delete;
@@ -83,6 +85,7 @@ namespace zzz::engine
 		}
 
 	private:
+		[[nodiscard]] std::optional<PackageEntry> GetEntry(const Guid& guid) const;
 		[[nodiscard]] std::optional<PackageEntry> GetEntry(ePackage type, const Guid& guid) const;
 		[[nodiscard]] std::optional<PackageEntry> GetEntry(ePackage type, std::string_view name) const;
 		void Initialize();

@@ -1,11 +1,11 @@
 #include "engine/scene/layer/LayerMVVM.h"
-#include "core/io/package/GameObjectData.h"
+#include "core/io/package/LayerData.h"
 
 namespace zzz
 {
 	void LayerMVVM::Update(float dt)
 	{
-		if (!m_IsEnabled)
+		if (!m_IsVisible)
 		{
 			return;
 		}
@@ -14,21 +14,23 @@ namespace zzz
 		m_EntityWorld.Update(dt);
 	}
 
-	void LayerMVVM::PopulateObject(
-		const ::zzz::core::GameObjectData& objData,
-		const ::zzz::core::ScriptFactory& /*scriptFactory*/,
-		::zzz::core::DataAssetsManager* /*dataAssetsManager*/)
+	void LayerMVVM::Populate(
+		const ::zzz::core::LayerData& layerData,
+		const ::zzz::core::ScriptFactory& /*scriptFactory*/)
 	{
-		if (objData.IsEntity())
+		for (const auto& objData : layerData.GetObjects())
 		{
-			m_EntityWorld.CreateEntity(objData.GetGuid(), objData.GetName());
-			return;
-		}
+			if (objData.IsEntity())
+			{
+				m_EntityWorld.CreateEntity(objData.GetGuid(), objData.GetName());
+				continue;
+			}
 
-		auto* go = m_ObjectWorld.CreateObject(objData.GetGuid(), objData.GetName());
-		if (go != nullptr)
-		{
-			go->SetActive(objData.IsActive());
+			auto* go = m_ObjectWorld.CreateObject(objData.GetGuid(), objData.GetName());
+			if (go != nullptr)
+			{
+				go->SetActive(objData.IsActive());
+			}
 		}
 	}
 }

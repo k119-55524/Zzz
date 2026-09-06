@@ -33,6 +33,8 @@
 #include <core/IO/ResourceStorageTraits.h>
 #include <core/constants/PackageConstants.h>
 #include <core/enums/eObjectDomain.h>
+#include <core/enums/eLayerType.h>
+#include <core/IO/package/LayerData.h>
 #include "AssetImporterRegistry.h"
 #include "ArchiveWriter.h"
 
@@ -306,7 +308,7 @@ namespace zzz::builder
 		return config;
 	}
 
-	static GameObjectData ParseGameObjectJson(const json& objJson, std::string layerName = "Default3DLayer", eLayerType layerType = eLayerType::Layer3D)
+	static GameObjectData ParseGameObjectJson(const json& objJson)
 	{
 		std::string name = objJson.value("name", "GameObject");
 
@@ -394,7 +396,7 @@ namespace zzz::builder
 				scriptGuids.push_back(*parsed);
 		}
 
-		return GameObjectData(objGuid, std::move(name), std::move(layerName), layerType, domain, isActive, position, rotation, scale, meshGuid, materialGuid, std::move(scriptGuids));
+		return GameObjectData(objGuid, std::move(name), domain, isActive, position, rotation, scale, meshGuid, materialGuid, std::move(scriptGuids));
 	}
 
 	static SceneTransitionParams ReadTransitionParams(const json& transJson, const SceneTransitionParams& defaultParams = {})
@@ -829,36 +831,46 @@ namespace zzz::builder
 
 				auto clearConfig = ReadClearConfig(root);
 
-				std::vector<zzz::core::GameObjectData> gameObjects;
+				// Слои собираются как есть: верхнеуровневые "objects" (если есть) образуют один
+				// неявный слой "Default3DLayer"/Layer3D, каждая запись из "layers" - свой отдельный
+				// LayerData со своими объектами внутри. Объекты хранятся внутри слоя, а не в общем списке.
+				std::vector<zzz::core::LayerData> layers;
+
 				if (root.contains("objects") && root["objects"].is_array())
 				{
+					std::vector<GameObjectData> defaultLayerObjects;
 					for (const auto& objElem : root["objects"])
 					{
 						if (objElem.is_object())
-							gameObjects.push_back(ParseGameObjectJson(objElem, "Default3DLayer", eLayerType::Layer3D));
+							defaultLayerObjects.push_back(ParseGameObjectJson(objElem));
 					}
+					layers.emplace_back("Default3DLayer", eLayerType::Layer3D, std::move(defaultLayerObjects));
 				}
+
 				if (root.contains("layers") && root["layers"].is_array())
 				{
 					for (const auto& layerElem : root["layers"])
 					{
-						if (layerElem.is_object())
-						{
-							std::string layerName = layerElem.value("name", "Default3DLayer");
-							std::string typeStr = layerElem.value("type", "Layer3D");
-							eLayerType layerType = eLayerType::Layer3D;
-							if (typeStr == "LayerUI") layerType = eLayerType::LayerUI;
-							else if (typeStr == "LayerMVVM") layerType = eLayerType::LayerMVVM;
+						if (!layerElem.is_object())
+							continue;
 
-							if (layerElem.contains("objects") && layerElem["objects"].is_array())
+						std::string layerName = layerElem.value("name", "Default3DLayer");
+						std::string typeStr = layerElem.value("type", "Layer3D");
+						eLayerType layerType = eLayerType::Layer3D;
+						if (typeStr == "LayerUI") layerType = eLayerType::LayerUI;
+						else if (typeStr == "LayerMVVM") layerType = eLayerType::LayerMVVM;
+
+						std::vector<GameObjectData> layerObjects;
+						if (layerElem.contains("objects") && layerElem["objects"].is_array())
+						{
+							for (const auto& objElem : layerElem["objects"])
 							{
-								for (const auto& objElem : layerElem["objects"])
-								{
-									if (objElem.is_object())
-										gameObjects.push_back(ParseGameObjectJson(objElem, layerName, layerType));
-								}
+								if (objElem.is_object())
+									layerObjects.push_back(ParseGameObjectJson(objElem));
 							}
 						}
+
+						layers.emplace_back(std::move(layerName), layerType, std::move(layerObjects));
 					}
 				}
 
@@ -884,7 +896,7 @@ namespace zzz::builder
 				zzz::core::SceneData sceneData(
 					sceneScriptGuids,
 					clearConfig,
-					std::move(gameObjects),
+					std::move(layers),
 					transitionSource,
 					transitionParams);
 

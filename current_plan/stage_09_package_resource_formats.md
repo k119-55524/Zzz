@@ -57,7 +57,11 @@
      - При отсутствии блока `"render"` объект создаётся как узел трансформации (Empty).
 8. **Архитектура разбора слоёв (Инкапсуляция разборщика в реализации слоя):**
    - Слои (`Layer3D`, `LayerUI`, `LayerMVVM`) принципиально отличаются составом, семантикой данных и поведением.
-   - Разбор и наполнение конкретного слоя инкапсулируются в самом слое (`ILayer::PopulateObject(...)` / `Layer3D::PopulateObject(...)`).
+   - Разбор и наполнение конкретного слоя инкапсулируются в самом слое. **Обновлено 2026-09-06
+     (пост-ревью):** сигнатура - `ILayer::Populate(const LayerData& layerData, const ScriptFactory&)` /
+     `Layer3D::Populate(...)` и т.д. - слой получает весь `LayerData` (имя, тип, свои объекты) одним
+     вызовом и сам обходит `layerData.GetObjects()`, а не разбирает объекты по одному через отдельный
+     метод на объект (см. `LayerData` в п.3.4 `stage_07_gameobject_and_transform.md`).
    - `Layer3D` инкапсулирует: создание `GameObject` в своём `ObjectWorld`, настройку трансформаций, скриптов и вычитку `MeshData` через `DataAssetsManager`.
    - `Scene` не знает о внутреннем устройстве конкретных слоёв: она лишь определяет/фабрикует слой по типу и делегирует ему наполнение объектом.
 9. **Потоковая модель загрузки на Этапе 09:**
@@ -283,13 +287,15 @@ namespace zzz::engine
 - [x] Зарегистрировать новые файлы в `src/core/CMakeLists.txt`
 - [x] Создать `IAssetImporter.h` и `AssetImporterRegistry.h/.cpp` в `assets_builder_dll`
 - [x] Реализовать `ObjImporter.h/.cpp` в `assets_builder_dll`
-- [x] Обновить чтение сцены в `PackagePacker.cpp`: парсинг слоёв и объектов `GameObjectData` (позиция, domain, render.mesh) в `SceneData`
+- [x] Обновить чтение сцены в `PackagePacker.cpp`: парсинг слоёв и объектов `GameObjectData` (позиция, domain, render.mesh) в `SceneData` (2026-09-06: пост-ревью перевело результат парсинга на `std::vector<LayerData>` - каждый слой из JSON, включая неявный `"Default3DLayer"` из верхнеуровневых `"objects"`, собирается в свой `LayerData` со своими объектами внутри, а не в общий плоский список)
 - [x] Обновить `PackagePacker.cpp` для генерации обоих архивов: `package.dat` и `data.dat`
 - [x] Поддержать чтение и сериализацию параметров переходов (`transition`) в `PackagePacker.cpp`
 - [x] Обновить C# валидаторы (`SceneAssetValidator.cs`, `ProjectJsonValidator.cs`): обход `layers[].objects[]`, валидация `render.mesh` и `transition`
 - [x] Создать `Assets/Meshes/cube_00.obj` и `cube_00.obj.meta` в `zzz_assets_test_000`
 - [x] Обновить `MainScene.zs` слоем `Layer3D` и объектом `CubeObject` с блоком `render` в `(0,0,0)`
-- [x] Передать `SceneData::GetGameObjects()` в сцену при загрузке в `SceneManager` / `Scene`
+- [x] Передать структуру сцены в `Scene` при загрузке (2026-09-06: `SceneData::GetGameObjects()`
+  заменён на `SceneData::GetLayers()` - `Scene::Initialize` заводит `ILayer` на каждый `LayerData` и
+  наполняет его целиком через `ILayer::Populate(layerData, scriptFactory)`)
 - [x] Интегрировать проверку загрузки `MeshData` из `DataAssetsManager` в запуск `game_win.exe`
 - [x] Собрать проект и успешно прогнать `game_win.exe` (код выхода 0)
 - [x] Создать `src/core/enums/eObjectDomain.h` (`ToString`, `ParseObjectDomain`) и зарегистрировать в `src/core/CMakeLists.txt`

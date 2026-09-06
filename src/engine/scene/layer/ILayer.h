@@ -8,12 +8,9 @@
 
 namespace zzz
 {
-	class ISceneStorage;
-	class ObjectWorld;
-
 	namespace engine
 	{
-		class EntityWorld;
+		class ResourceManager;
 	}
 
 	using ::zzz::core::eLayerType;
@@ -21,8 +18,7 @@ namespace zzz
 
 	namespace core
 	{
-		class GameObjectData;
-		class DataAssetsManager;
+		class LayerData;
 		class ScriptFactory;
 	}
 
@@ -41,24 +37,15 @@ namespace zzz
 		[[nodiscard]] virtual bool IsVisible() const noexcept = 0;
 		virtual void SetVisible(bool visible) noexcept = 0;
 
-		[[nodiscard]] virtual bool IsEnabled() const noexcept = 0;
-		virtual void SetEnabled(bool enabled) noexcept = 0;
-
 		virtual void Update(float dt) = 0;
 
-		[[nodiscard]] virtual ISceneStorage* GetStorage() noexcept { return nullptr; }
-		[[nodiscard]] virtual ObjectWorld* GetObjectWorld() noexcept { return nullptr; }
-		[[nodiscard]] virtual const ObjectWorld* GetObjectWorld() const noexcept { return nullptr; }
-		[[nodiscard]] virtual ::zzz::engine::EntityWorld* GetEntityWorld() noexcept { return nullptr; }
-		[[nodiscard]] virtual const ::zzz::engine::EntityWorld* GetEntityWorld() const noexcept { return nullptr; }
-
 		/**
-		 * @brief Наполнить слой объектом из сериализованных данных сцены.
-		 * Каждый тип слоя инкапсулирует разбор своей специфики.
+		 * @brief Наполнить слой целиком из его LayerData (имя, тип уже разрешены снаружи).
+		 * Слой сам обходит layerData.GetObjects() и разбирает каждый объект - Scene ему просто
+		 * отдаёт данные слоя целиком, не занимаясь построчным разбором.
 		 */
-		virtual void PopulateObject(
-			const ::zzz::core::GameObjectData& objData,
-			const ::zzz::core::ScriptFactory& scriptFactory,
-			::zzz::core::DataAssetsManager* dataAssetsManager) = 0;
+		virtual void Populate(
+			const ::zzz::core::LayerData& layerData,
+			const ::zzz::core::ScriptFactory& scriptFactory) = 0;
 	};
 }

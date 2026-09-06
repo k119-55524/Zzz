@@ -62,6 +62,9 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/base_script/ViewScript.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Alignment.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eResourceType.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eResourceState.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/IResource.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/ResourceBase.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/ePixelFormat.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eIndexFormat.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eVertexSemantic.h
@@ -130,6 +133,8 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/SceneData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/GameObjectData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/GameObjectData.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/LayerData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/LayerData.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PrefabData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Serialize/Serializer.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Serialize/Serializer.cpp

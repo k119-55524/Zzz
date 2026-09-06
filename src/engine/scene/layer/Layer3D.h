@@ -1,12 +1,15 @@
 #pragma once
 
+#include <memory>
+
 #include "engine/scene/layer/ILayer.h"
 #include "engine/scene/ObjectWorld.h"
 #include "engine/scene/EntityWorld.h"
 #include "engine/scene/storage/DefaultSceneStorage.h"
-#include <memory>
 
-namespace zzz
+using namespace zzz::core;
+
+namespace zzz::engine
 {
 	/**
 	 * @class Layer3D
@@ -15,7 +18,7 @@ namespace zzz
 	class Layer3D final : public ILayer
 	{
 	public:
-		explicit Layer3D(std::string name = "Layer3D");
+		Layer3D(std::string name, std::shared_ptr<::zzz::engine::ResourceManager> resourceManager);
 		~Layer3D() override = default;
 
 		Z_NO_COPY_MOVE(Layer3D);
@@ -26,29 +29,17 @@ namespace zzz
 		[[nodiscard]] bool IsVisible() const noexcept override { return m_IsVisible; }
 		void SetVisible(bool visible) noexcept override { m_IsVisible = visible; }
 
-		[[nodiscard]] bool IsEnabled() const noexcept override { return m_IsEnabled; }
-		void SetEnabled(bool enabled) noexcept override { m_IsEnabled = enabled; }
-
 		void Update(float dt) override;
 
-		void PopulateObject(
-			const ::zzz::core::GameObjectData& objData,
-			const ::zzz::core::ScriptFactory& scriptFactory,
-			::zzz::core::DataAssetsManager* dataAssetsManager) override;
-
-		[[nodiscard]] ISceneStorage* GetStorage() noexcept override { return m_Storage.get(); }
-		[[nodiscard]] ObjectWorld* GetObjectWorld() noexcept override { return &m_ObjectWorld; }
-		[[nodiscard]] const ObjectWorld* GetObjectWorld() const noexcept override { return &m_ObjectWorld; }
-		[[nodiscard]] ::zzz::engine::EntityWorld* GetEntityWorld() noexcept override { return &m_EntityWorld; }
-		[[nodiscard]] const ::zzz::engine::EntityWorld* GetEntityWorld() const noexcept override { return &m_EntityWorld; }
+		void Populate(const LayerData& layerData, const ScriptFactory& scriptFactory) override;
 
 	private:
 		std::string m_Name;
-		bool m_IsVisible{ true };
-		bool m_IsEnabled{ true };
+		bool m_IsVisible;
 
 		std::unique_ptr<ISceneStorage> m_Storage;
 		ObjectWorld m_ObjectWorld;
-		::zzz::engine::EntityWorld m_EntityWorld;
+		EntityWorld m_EntityWorld;
+		std::shared_ptr<ResourceManager> m_ResourceManager;
 	};
 }

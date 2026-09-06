@@ -158,7 +158,8 @@ TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
 	EXPECT_EQ(sceneRes->GetTransitionSource(), core::eTransitionSource::Custom);
 	EXPECT_EQ(sceneRes->GetTransitionParams().type, core::eTransitionType::Instant);
 	EXPECT_FLOAT_EQ(sceneRes->GetTransitionParams().durationSeconds, 0.0f);
-	EXPECT_FALSE(sceneRes->GetGameObjects().empty());
+	EXPECT_FALSE(sceneRes->GetLayers().empty());
+	EXPECT_FALSE(sceneRes->GetLayers().front().GetObjects().empty());
 }
 
 #endif // Z_TEST_CORE_SERIALIZATION

@@ -10,7 +10,6 @@
 
 namespace zzz::core
 {
-	class DataAssetsManager;
 	class ScriptFactory;
 	class SceneData;
 }
@@ -18,6 +17,7 @@ namespace zzz::core
 namespace zzz::engine
 {
 	using namespace zzz::core;
+	class ResourceManager;
 
 	class Scene final : public std::enable_shared_from_this<Scene>
 	{
@@ -27,21 +27,9 @@ namespace zzz::engine
 		Scene(
 			Guid guid,
 			std::string name,
-			const std::vector<Guid>& sceneScriptGuids,
+			std::shared_ptr<ResourceManager> resourceManager,
 			const ScriptFactory& scriptFactory,
-			ClearConfig clearConfig = {},
-			SceneTransitionParams transitionParams = {},
-			const std::vector<GameObjectData>& gameObjects = {},
-			std::shared_ptr<DataAssetsManager> dataAssetsManager = nullptr);
-
-		Scene(
-			Guid guid,
-			std::string name,
-			const SceneData& sceneData,
-			const ScriptFactory& scriptFactory,
-			ClearConfig clearConfig = {},
-			SceneTransitionParams transitionParams = {},
-			std::shared_ptr<DataAssetsManager> dataAssetsManager = nullptr);
+			SceneTransitionParams defaultTransition = {});
 
 		~Scene();
 
@@ -54,9 +42,9 @@ namespace zzz::engine
 		[[nodiscard]] const SceneTransitionParams& GetTransitionParams() const noexcept { return m_TransitionParams; }
 		void SetTransitionParams(const SceneTransitionParams& params) noexcept { m_TransitionParams = params; }
 
+		[[nodiscard]] std::shared_ptr<ResourceManager> GetResourceManager() const noexcept { return m_ResourceManager; }
+
 		// --- Управление слоями сцены ---
-		void AddLayer(std::unique_ptr<ILayer> layer);
-		[[nodiscard]] ILayer* GetLayerByName(std::string_view name) const noexcept;
 		[[nodiscard]] const std::vector<std::unique_ptr<ILayer>>& GetLayers() const noexcept { return m_Layers; }
 
 		void Update(const Time& time);
@@ -64,16 +52,13 @@ namespace zzz::engine
 		void InvokeDestroy();
 
 	private:
-		void Initialize(
-			const std::vector<Guid>& sceneScriptGuids,
-			const ScriptFactory& scriptFactory,
-			const std::vector<GameObjectData>& gameObjects,
-			std::shared_ptr<DataAssetsManager> dataAssetsManager);
+		void Initialize(const SceneData& sceneData, const ScriptFactory& scriptFactory);
 
 		Guid m_Guid;
 		std::string m_Name;
+		std::shared_ptr<ResourceManager> m_ResourceManager;
 		ClearConfig m_ClearConfig;
-		SceneTransitionParams m_TransitionParams{};
+		SceneTransitionParams m_TransitionParams;
 		SceneEventBus m_EventBus;
 		std::vector<std::shared_ptr<SceneScript>> m_Scripts;
 
