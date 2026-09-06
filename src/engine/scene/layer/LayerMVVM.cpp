@@ -1,21 +1,34 @@
 #include "engine/scene/layer/LayerMVVM.h"
+#include "core/io/package/GameObjectData.h"
 
 namespace zzz
 {
-	void LayerMVVM::Update(float /*dt*/)
+	void LayerMVVM::Update(float dt)
 	{
 		if (!m_IsEnabled)
 		{
 			return;
 		}
-		// Заготовка под реактивный движок разметки и Data Binding (Шаги 30, 34)
+
+		m_ObjectWorld.Update(dt);
+		m_EntityWorld.Update(dt);
 	}
 
 	void LayerMVVM::PopulateObject(
-		const ::zzz::core::GameObjectData& /*objData*/,
+		const ::zzz::core::GameObjectData& objData,
 		const ::zzz::core::ScriptFactory& /*scriptFactory*/,
 		::zzz::core::DataAssetsManager* /*dataAssetsManager*/)
 	{
-		THROW_RUNTIME("LayerMVVM пока не поддерживает наполнение объектами (Шаги 30, 34)");
+		if (objData.IsEntity())
+		{
+			m_EntityWorld.CreateEntity(objData.GetGuid(), objData.GetName());
+			return;
+		}
+
+		auto* go = m_ObjectWorld.CreateObject(objData.GetGuid(), objData.GetName());
+		if (go != nullptr)
+		{
+			go->SetActive(objData.IsActive());
+		}
 	}
 }

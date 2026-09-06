@@ -1,6 +1,8 @@
 #pragma once
 
 #include "engine/scene/layer/ILayer.h"
+#include "engine/scene/ObjectWorld.h"
+#include "engine/scene/EntityWorld.h"
 
 namespace zzz
 {
@@ -36,9 +38,17 @@ namespace zzz
 			const ::zzz::core::ScriptFactory& scriptFactory,
 			::zzz::core::DataAssetsManager* dataAssetsManager) override;
 
+		[[nodiscard]] ObjectWorld* GetObjectWorld() noexcept override { return &m_ObjectWorld; }
+		[[nodiscard]] const ObjectWorld* GetObjectWorld() const noexcept override { return &m_ObjectWorld; }
+		[[nodiscard]] ::zzz::engine::EntityWorld* GetEntityWorld() noexcept override { return &m_EntityWorld; }
+		[[nodiscard]] const ::zzz::engine::EntityWorld* GetEntityWorld() const noexcept override { return &m_EntityWorld; }
+
 	private:
 		std::string m_Name;
 		bool m_IsVisible{ true };
 		bool m_IsEnabled{ true };
+
+		ObjectWorld m_ObjectWorld;
+		::zzz::engine::EntityWorld m_EntityWorld;
 	};
 }

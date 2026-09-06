@@ -1,7 +1,11 @@
 
 #include "core/utils/MemoryUtils.h"
 #include "core/io/package/DataAssetsManager.h"
+#include "core/io/package/SceneData.h"
 #include "core/userscripts/ScriptFactory.h"
+#include "engine/scene/layer/Layer3D.h"
+#include "engine/scene/layer/LayerUI.h"
+#include "engine/scene/layer/LayerMVVM.h"
 
 #include "Scene.h"
 
@@ -25,6 +29,31 @@ namespace zzz::engine
 		m_ClearConfig(std::move(clearConfig)),
 		m_TransitionParams(std::move(transitionParams))
 	{
+		Initialize(sceneScriptGuids, scriptFactory, gameObjects, std::move(dataAssetsManager));
+	}
+
+	Scene::Scene(
+		Guid guid,
+		std::string name,
+		const SceneData& sceneData,
+		const ScriptFactory& scriptFactory,
+		ClearConfig clearConfig,
+		SceneTransitionParams transitionParams,
+		std::shared_ptr<DataAssetsManager> dataAssetsManager) :
+		m_Guid(guid),
+		m_Name(std::move(name)),
+		m_ClearConfig(std::move(clearConfig)),
+		m_TransitionParams(std::move(transitionParams))
+	{
+		Initialize(sceneData.GetSceneScriptGuids(), scriptFactory, sceneData.GetGameObjects(), std::move(dataAssetsManager));
+	}
+
+	void Scene::Initialize(
+		const std::vector<Guid>& sceneScriptGuids,
+		const ScriptFactory& scriptFactory,
+		const std::vector<GameObjectData>& gameObjects,
+		std::shared_ptr<DataAssetsManager> dataAssetsManager)
+	{
 		for (const auto& scriptGuid : sceneScriptGuids)
 		{
 			auto script = scriptFactory.CreateSceneScript(scriptGuid);
@@ -36,12 +65,6 @@ namespace zzz::engine
 		// Загрузка игровых объектов сцены с раскладкой по слоям
 		for (const auto& objData : gameObjects)
 		{
-			if (objData.IsEntity())
-			{
-				m_EntityWorld.CreateEntity(objData.GetGuid(), objData.GetName());
-				continue;
-			}
-
 			std::string layerName = objData.GetLayerName().empty() ? "Default3DLayer" : objData.GetLayerName();
 			ILayer* targetLayer = GetLayerByName(layerName);
 			if (targetLayer == nullptr)
@@ -53,8 +76,11 @@ namespace zzz::engine
 					newLayer = ::zzz::core::safe_make_unique<Layer3D>(layerName);
 					break;
 				case eLayerType::LayerUI:
+					newLayer = ::zzz::core::safe_make_unique<LayerUI>(layerName);
+					break;
 				case eLayerType::LayerMVVM:
-					THROW_RUNTIME("Тип слоя '{}' пока не поддерживается", ToString(objData.GetLayerType()));
+					newLayer = ::zzz::core::safe_make_unique<LayerMVVM>(layerName);
+					break;
 				default:
 					newLayer = ::zzz::core::safe_make_unique<Layer3D>(layerName);
 					break;
@@ -72,7 +98,7 @@ namespace zzz::engine
 			AddLayer(::zzz::core::safe_make_unique<Layer3D>("Default3DLayer"));
 		}
 
-		DOut("[Scene::Scene] Создана сцена '{}' ({}), скриптов: {}, слоёв: {}, объектов: {}",
+		DOut("[Scene::Initialize] Создана сцена '{}' ({}), скриптов: {}, слоёв: {}, объектов: {}",
 			m_Name, m_Guid.ToString(), m_Scripts.size(), m_Layers.size(), gameObjects.size());
 	}
 
@@ -89,17 +115,7 @@ namespace zzz::engine
 			return;
 		}
 
-		if (layer->GetType() == eLayerType::Layer3D && m_Layer3D == nullptr)
-		{
-			m_Layer3D = static_cast<Layer3D*>(layer.get());
-		}
-
 		m_Layers.push_back(std::move(layer));
-	}
-
-	Layer3D* Scene::GetLayer3D() const noexcept
-	{
-		return m_Layer3D;
 	}
 
 	ILayer* Scene::GetLayerByName(std::string_view name) const noexcept
@@ -126,9 +142,6 @@ namespace zzz::engine
 				layer->Update(dt);
 			}
 		}
-
-		// Кадровый цикл ECS-мира сущностей
-		m_EntityWorld.Update(dt);
 	}
 
 	void Scene::InvokeStart()

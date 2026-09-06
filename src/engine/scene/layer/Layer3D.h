@@ -2,6 +2,7 @@
 
 #include "engine/scene/layer/ILayer.h"
 #include "engine/scene/ObjectWorld.h"
+#include "engine/scene/EntityWorld.h"
 #include "engine/scene/storage/DefaultSceneStorage.h"
 #include <memory>
 
@@ -36,8 +37,10 @@ namespace zzz
 			::zzz::core::DataAssetsManager* dataAssetsManager) override;
 
 		[[nodiscard]] ISceneStorage* GetStorage() noexcept override { return m_Storage.get(); }
-		[[nodiscard]] ObjectWorld& GetObjectWorld() noexcept { return m_ObjectWorld; }
-		[[nodiscard]] const ObjectWorld& GetObjectWorld() const noexcept { return m_ObjectWorld; }
+		[[nodiscard]] ObjectWorld* GetObjectWorld() noexcept override { return &m_ObjectWorld; }
+		[[nodiscard]] const ObjectWorld* GetObjectWorld() const noexcept override { return &m_ObjectWorld; }
+		[[nodiscard]] ::zzz::engine::EntityWorld* GetEntityWorld() noexcept override { return &m_EntityWorld; }
+		[[nodiscard]] const ::zzz::engine::EntityWorld* GetEntityWorld() const noexcept override { return &m_EntityWorld; }
 
 	private:
 		std::string m_Name;
@@ -46,5 +49,6 @@ namespace zzz
 
 		std::unique_ptr<ISceneStorage> m_Storage;
 		ObjectWorld m_ObjectWorld;
+		::zzz::engine::EntityWorld m_EntityWorld;
 	};
 }

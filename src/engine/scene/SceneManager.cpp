@@ -33,6 +33,7 @@ namespace zzz::engine
 	{
 		ensure(onComplete != nullptr, "onComplete коллбэк должен быть валидным.");
 		auto entryOpt = m_PackageManager->GetEntry(ePackage::Scene, sceneName);
+		// Наличие гарантируется сборкой ассетов в package.dat; ensure для проверки целостности при разработке
 		ensure(entryOpt.has_value(), "Сцена с именем '{}' не найдена в package.dat.", sceneName);
 
 		LoadSceneAsync(entryOpt->GetGuid(), std::move(onComplete));
@@ -60,6 +61,7 @@ namespace zzz::engine
 			try
 			{
 				auto entryOpt = m_PackageManager->GetEntry(ePackage::Scene, sceneGuid);
+				// Наличие гарантируется сборкой ассетов в package.dat; ensure для проверки целостности при разработке
 				ensure(entryOpt.has_value(), "Сцена с GUID '{}' не найдена в package.dat.", sceneGuid.ToString());
 
 				auto sceneDataRes = m_PackageManager->LoadAsset<SceneData>(sceneGuid);
@@ -86,11 +88,10 @@ namespace zzz::engine
 				auto scene = safe_make_shared<Scene>(
 					sceneGuid,
 					sceneName,
-					sceneData.GetSceneScriptGuids(),
+					sceneData,
 					*m_ScriptFactory,
 					sceneData.GetClearConfig(),
 					transition,
-					sceneData.GetGameObjects(),
 					m_DataAssetsManager
 				);
 

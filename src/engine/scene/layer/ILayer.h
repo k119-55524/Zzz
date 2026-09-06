@@ -9,6 +9,12 @@
 namespace zzz
 {
 	class ISceneStorage;
+	class ObjectWorld;
+
+	namespace engine
+	{
+		class EntityWorld;
+	}
 
 	using ::zzz::core::eLayerType;
 	using ::zzz::core::ToString;
@@ -41,6 +47,10 @@ namespace zzz
 		virtual void Update(float dt) = 0;
 
 		[[nodiscard]] virtual ISceneStorage* GetStorage() noexcept { return nullptr; }
+		[[nodiscard]] virtual ObjectWorld* GetObjectWorld() noexcept { return nullptr; }
+		[[nodiscard]] virtual const ObjectWorld* GetObjectWorld() const noexcept { return nullptr; }
+		[[nodiscard]] virtual ::zzz::engine::EntityWorld* GetEntityWorld() noexcept { return nullptr; }
+		[[nodiscard]] virtual const ::zzz::engine::EntityWorld* GetEntityWorld() const noexcept { return nullptr; }
 
 		/**
 		 * @brief Наполнить слой объектом из сериализованных данных сцены.

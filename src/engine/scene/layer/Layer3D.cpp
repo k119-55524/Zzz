@@ -26,6 +26,7 @@ namespace zzz
 		}
 
 		m_ObjectWorld.Update(dt);
+		m_EntityWorld.Update(dt);
 	}
 
 	void Layer3D::PopulateObject(
@@ -33,6 +34,12 @@ namespace zzz
 		const ::zzz::core::ScriptFactory& scriptFactory,
 		::zzz::core::DataAssetsManager* dataAssetsManager)
 	{
+		if (objData.IsEntity())
+		{
+			m_EntityWorld.CreateEntity(objData.GetGuid(), objData.GetName());
+			return;
+		}
+
 		auto* go = m_ObjectWorld.CreateObject(objData.GetGuid(), objData.GetName());
 		if (go == nullptr)
 		{
