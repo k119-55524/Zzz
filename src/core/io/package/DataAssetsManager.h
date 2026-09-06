@@ -1,21 +1,50 @@
 #pragma once
 
+#include <string>
 #include <memory>
-#include <unordered_map>
 #include <optional>
 #include <expected>
-#include <string>
-#include <concepts>
-#include "core/utils/Export.h"
+#include <map>
+#include <unordered_map>
+
 #include "core/utils/Guid.h"
+#include "core/utils/Export.h"
 #include "core/utils/Ensure.h"
 #include "core/io/FileSystem.h"
-#include "core/io/package/PackageEntry.h"
 #include "core/enums/eResourceType.h"
 #include "core/serialize/Serializer.h"
+#include "core/io/package/PackageEntry.h"
 
 namespace zzz::core
 {
+	class MeshData;
+	class PrefabData;
+	class MaterialData;
+	class ShaderData;
+	class AnimationData;
+	class BinaryData;
+
+	/**
+	 * @brief Соответствие между типом ресурса, поддерживаемым архивом data.dat, и его eResourceType.
+	 * @details Задаёт единственно верный eResourceType для каждого T, чтобы вызывающий код
+	 *          не мог передать в LoadAsset<T> несовместимый друг с другом тип и eResourceType.
+	 *          Специализирован только для допустимых типов (MeshData, PrefabData, MaterialData,
+	 *          ShaderData, AnimationData, BinaryData) - для любого другого T обращение
+	 *          к DataAssetResourceType<T>::value не скомпилируется (incomplete type).
+	 */
+	template <typename T>
+	struct DataAssetResourceType;
+
+	template <> struct DataAssetResourceType<MeshData>      { static constexpr eResourceType value = eResourceType::Mesh; };
+	template <> struct DataAssetResourceType<PrefabData>    { static constexpr eResourceType value = eResourceType::Prefab; };
+	template <> struct DataAssetResourceType<MaterialData>  { static constexpr eResourceType value = eResourceType::Material; };
+	template <> struct DataAssetResourceType<ShaderData>    { static constexpr eResourceType value = eResourceType::Shader; };
+	template <> struct DataAssetResourceType<AnimationData> { static constexpr eResourceType value = eResourceType::Animation; };
+	template <> struct DataAssetResourceType<BinaryData>    { static constexpr eResourceType value = eResourceType::BinaryData; };
+
+	template <typename T>
+	inline constexpr eResourceType c_DataAssetResourceType = DataAssetResourceType<T>::value;
+
 	/**
 	 * @class DataAssetsManager
 	 * @brief Менеджер для чтения игровых ресурсов из архива assets/data/data.dat (меши, материалы, шейдеры, префабы).
@@ -27,53 +56,34 @@ namespace zzz::core
 		explicit DataAssetsManager(std::shared_ptr<FileSystem> fileSystem);
 		~DataAssetsManager() = default;
 
-		[[nodiscard]] bool HasEntry(const Guid& guid) const noexcept
+		template <typename T>
+		[[nodiscard]] std::expected<T, std::string> LoadAsset(const Guid& guid) const
 		{
-			return m_EntriesByGuid.contains(guid);
+			constexpr eResourceType expectedType = c_DataAssetResourceType<T>;
+			auto entryOpt = GetEntry(expectedType, guid);
+			if (!entryOpt)
+				return UNEXPECTED("Ресурс типа {} с GUID '{}' не найден в data.dat", ToString(expectedType), guid.ToString());
+
+			return DeserializeEntry<T>(*entryOpt);
 		}
 
-		[[nodiscard]] std::optional<PackageEntry> GetEntryByGuid(const Guid& guid) const
+		template <typename T>
+		[[nodiscard]] std::expected<T, std::string> LoadAsset(std::string_view name) const
 		{
-			auto it = m_EntriesByGuid.find(guid);
-			if (it == m_EntriesByGuid.end())
-				return std::nullopt;
-			return it->second;
+			constexpr eResourceType expectedType = c_DataAssetResourceType<T>;
+			auto entryOpt = GetEntry(expectedType, name);
+			if (!entryOpt)
+				return UNEXPECTED("Ресурс типа {} с именем '{}' не найден в data.dat", ToString(expectedType), name);
+
+			return DeserializeEntry<T>(*entryOpt);
 		}
 
-		[[nodiscard]] std::optional<PackageEntry> GetEntryByName(std::string_view name) const
-		{
-			auto it = m_EntriesByName.find(std::string(name));
-			if (it == m_EntriesByName.end())
-				return std::nullopt;
-			return it->second;
-		}
+	private:
+		[[nodiscard]] std::optional<PackageEntry> GetEntry(eResourceType type, const Guid& guid) const;
+		[[nodiscard]] std::optional<PackageEntry> GetEntry(eResourceType type, std::string_view name) const;
 
-		template <typename T> requires std::derived_from<T, ISerializable>
-		[[nodiscard]] std::expected<T, std::string> LoadData(eResourceType expectedType, const Guid& guid) const
-		{
-			ensure(
-				expectedType == eResourceType::Mesh ||
-				expectedType == eResourceType::Prefab ||
-				expectedType == eResourceType::Material ||
-				expectedType == eResourceType::Shader ||
-				expectedType == eResourceType::Animation ||
-				expectedType == eResourceType::BinaryData,
-				"Запрошенный тип ресурса не поддерживается архивом data.dat");
-
-			auto it = m_EntriesByGuid.find(guid);
-			if (it == m_EntriesByGuid.end())
-				return UNEXPECTED("Ресурс с GUID '{}' не найден в data.dat", guid.ToString());
-
-			const auto& entry = it->second;
-			ensure(static_cast<eResourceType>(entry.GetAssetType()) == expectedType,
-				"Несовпадение типа ресурса: ожидался {}, фактически {}",
-				ToString(expectedType), ToString(static_cast<eResourceType>(entry.GetAssetType())));
-
-			return LoadData<T>(entry);
-		}
-
-		template <typename T> requires std::derived_from<T, ISerializable>
-		[[nodiscard]] std::expected<T, std::string> LoadData(const PackageEntry& entry) const
+		template <typename T>
+		[[nodiscard]] std::expected<T, std::string> DeserializeEntry(const PackageEntry& entry) const
 		{
 			auto bufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_DataPackageRelativePath, entry.GetOffset(), entry.GetSize());
 			if (!bufferRes)
@@ -91,12 +101,11 @@ namespace zzz::core
 			return data;
 		}
 
-	private:
 		void Initialize();
 		void LogDataEntriesSummary() const;
 
 		std::shared_ptr<FileSystem> m_FileSystem;
-		std::unordered_map<Guid, PackageEntry> m_EntriesByGuid;
-		std::unordered_map<std::string, PackageEntry> m_EntriesByName;
+		std::map<eResourceType, std::unordered_map<Guid, PackageEntry>> m_EntriesByGuid;
+		std::map<eResourceType, std::unordered_map<std::string, PackageEntry>> m_EntriesByName;
 	};
 }

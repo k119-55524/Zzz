@@ -32,7 +32,7 @@ namespace zzz::engine
 	void SceneManager::LoadSceneAsync(std::string sceneName, SceneLoadCallback onComplete)
 	{
 		ensure(onComplete != nullptr, "onComplete коллбэк должен быть валидным.");
-		auto entryOpt = m_PackageManager->GetEntryByName(ePackage::Scene, sceneName);
+		auto entryOpt = m_PackageManager->GetEntry(ePackage::Scene, sceneName);
 		ensure(entryOpt.has_value(), "Сцена с именем '{}' не найдена в package.dat.", sceneName);
 
 		LoadSceneAsync(entryOpt->GetGuid(), std::move(onComplete));
@@ -59,10 +59,10 @@ namespace zzz::engine
 		{
 			try
 			{
-				auto entryOpt = m_PackageManager->GetEntryByGuid(ePackage::Scene, sceneGuid);
+				auto entryOpt = m_PackageManager->GetEntry(ePackage::Scene, sceneGuid);
 				ensure(entryOpt.has_value(), "Сцена с GUID '{}' не найдена в package.dat.", sceneGuid.ToString());
 
-				auto sceneDataRes = m_PackageManager->LoadPackageDataByGuid<SceneData>(ePackage::Scene, sceneGuid);
+				auto sceneDataRes = m_PackageManager->LoadAsset<SceneData>(sceneGuid);
 				if (!sceneDataRes.has_value())
 				{
 					std::string err = std::format("Ошибка загрузки данных сцены '{}' ({}): {}",

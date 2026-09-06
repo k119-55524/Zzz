@@ -142,7 +142,7 @@ TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
 	auto dataMgr = core::safe_make_shared<core::DataAssetsManager>(fs);
 
 	core::Guid cubeMeshGuid = *core::Guid::Parse("00000000-0000-0000-0000-000000000010");
-	auto meshRes = dataMgr->LoadData<core::MeshData>(core::eResourceType::Mesh, cubeMeshGuid);
+	auto meshRes = dataMgr->LoadAsset<core::MeshData>(cubeMeshGuid);
 	ASSERT_TRUE(meshRes.has_value()) << "Ошибка загрузки меша куба: " << meshRes.error();
 
 	EXPECT_EQ(meshRes->GetVertexCount(), 24u);
@@ -152,7 +152,7 @@ TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
 
 	// Проверяем чтение из package.dat через PackageManager
 	auto pkgMgr = core::safe_make_shared<engine::PackageManager>(fs);
-	auto sceneRes = pkgMgr->LoadPackageDataByName<core::SceneData>(core::ePackage::Scene, "MainScene");
+	auto sceneRes = pkgMgr->LoadAsset<core::SceneData>("MainScene");
 	ASSERT_TRUE(sceneRes.has_value()) << "Ошибка загрузки MainScene: " << sceneRes.error();
 
 	EXPECT_EQ(sceneRes->GetTransitionSource(), core::eTransitionSource::Custom);

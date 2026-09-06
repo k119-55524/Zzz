@@ -284,7 +284,7 @@ public class BuildProfileViewModel : ViewModelBase
             {
                 if (!string.IsNullOrEmpty(value))
                 {
-                    DestinationPath = Path.Combine(value, ".build");
+                    DestinationPath = SessionManager.GetDefaultBuildPath();
                 }
                 ReloadProjectAndPresets();
                 OnPropertyChanged(nameof(IsSourcePathValid));

@@ -58,7 +58,7 @@ namespace zzz
 		// Загрузка и привязка MeshData через DataAssetsManager
 		if (go->HasMesh() && dataAssetsManager != nullptr)
 		{
-			auto meshRes = dataAssetsManager->LoadData<::zzz::core::MeshData>(::zzz::core::eResourceType::Mesh, go->GetMeshGuid());
+			auto meshRes = dataAssetsManager->LoadAsset<::zzz::core::MeshData>(go->GetMeshGuid());
 			if (!meshRes)
 			{
 				THROW_RUNTIME("Ошибка загрузки MeshData для объекта '{}' (GUID: {}): {}",

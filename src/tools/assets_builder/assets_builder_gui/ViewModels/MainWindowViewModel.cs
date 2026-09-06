@@ -365,7 +365,8 @@ public class MainWindowViewModel : ViewModelBase
 
             Task.Run(() =>
             {
-                bool success = PrepareBuildRoot(baseDestinationPath);
+                string buildTime = DateTime.UtcNow.ToString("o");
+                bool success = PrepareBuildRoot(baseDestinationPath, buildTime);
                 if (success)
                 {
                     // 1. Предварительное сканирование мета-файлов
@@ -414,7 +415,7 @@ public class MainWindowViewModel : ViewModelBase
 
                 if (success)
                 {
-                    UpdateTargetProjectsConfig(runnableTargets, baseDestinationPath);
+                    UpdateTargetProjectsConfig(runnableTargets, baseDestinationPath, buildTime);
                     AppendLog("Сборка всех выбранных целевых проектов завершена успешно!");
                 }
                 System.Windows.Application.Current?.Dispatcher.Invoke(() => IsBuilding = false);
@@ -467,7 +468,8 @@ public class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        bool success = PrepareBuildRoot(baseDestinationPath);
+        string buildTime = DateTime.UtcNow.ToString("o");
+        bool success = PrepareBuildRoot(baseDestinationPath, buildTime);
         if (success)
         {
             var firstTarget = runnableTargets.First();
@@ -514,12 +516,12 @@ public class MainWindowViewModel : ViewModelBase
 
         if (success)
         {
-            UpdateTargetProjectsConfig(runnableTargets, baseDestinationPath);
+            UpdateTargetProjectsConfig(runnableTargets, baseDestinationPath, buildTime);
             Console.WriteLine("Headless build completed successfully.");
         }
     }
 
-    private bool PrepareBuildRoot(string destinationPath)
+    private bool PrepareBuildRoot(string destinationPath, string buildTime)
     {
         try
         {
@@ -530,6 +532,7 @@ public class MainWindowViewModel : ViewModelBase
             }
 
             Directory.CreateDirectory(destinationPath);
+            File.WriteAllText(Path.Combine(destinationPath, "buildtime-data.txt"), buildTime);
             return true;
         }
         catch (Exception ex)
@@ -573,7 +576,7 @@ public class MainWindowViewModel : ViewModelBase
         }
     }
 
-    private void UpdateTargetProjectsConfig(IEnumerable<TargetBuildSnapshot> targets, string baseDestinationPath)
+    private void UpdateTargetProjectsConfig(IEnumerable<TargetBuildSnapshot> targets, string baseDestinationPath, string buildTime)
     {
         // Динамическое определение папки целевых проектов (src/projects) относительно окружения/сессии
         string workspaceProjects = SessionManager.ResolveWorkspaceProjectsPath(_sessionConfig.WorkspaceProjectsPath);
@@ -606,7 +609,7 @@ public class MainWindowViewModel : ViewModelBase
                             foreach (var elem in arr.EnumerateArray())
                             {
                                 string str = elem.GetString() ?? "";
-                                if (!string.IsNullOrEmpty(str) && !IsSameOrInsideDirectory(str, baseDestinationPath))
+                                if (!string.IsNullOrEmpty(str) && Directory.Exists(str) && !IsSameOrInsideDirectory(str, baseDestinationPath))
                                 {
                                     activeBuilds.Add(str);
                                 }
@@ -618,7 +621,7 @@ public class MainWindowViewModel : ViewModelBase
 
                 activeBuilds.Add(target.BuildDirectory);
 
-                var jsonObj = new { active_build_directories = activeBuilds };
+                var jsonObj = new { active_build_directories = activeBuilds, last_build_time = buildTime };
                 string outputJson = System.Text.Json.JsonSerializer.Serialize(jsonObj, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(jsonPath, outputJson);
                 AppendLog($"Обновлен конфиг целевого проекта ({target.Name}): {jsonPath}");

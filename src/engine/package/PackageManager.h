@@ -1,17 +1,50 @@
 #pragma once
 
-#include "engine/EngineIncludes.h"
 #include "core/io/FileSystem.h"
-#include "core/io/package/ProjectManifestData.h"
-#include "core/io/package/PrimaryViewData.h"
+#include "engine/EngineIncludes.h"
 #include "core/io/package/PackageEntry.h"
+#include "core/io/package/PrimaryViewData.h"
+#include "core/io/package/ProjectManifestData.h"
 
 using namespace zzz::core;
 
+namespace zzz::core
+{
+	class SceneData;
+	class ChildViewData;
+	class IndependentViewData;
+	class PrefabData;
+
+	/**
+	 * @brief Соответствие между типом ресурса, поддерживаемым архивом package.dat, и его ePackage.
+	 * @details Задаёт единственно верный ePackage для каждого T, чтобы вызывающий код
+	 *          не мог передать в LoadAsset<T> несовместимый друг с другом тип и ePackage.
+	 *          Специализирован только для допустимых типов (ProjectManifestData, PrimaryViewData,
+	 *          SceneData, ChildViewData, IndependentViewData, PrefabData) - для любого другого T
+	 *          обращение к PackageAssetType<T>::value не скомпилируется (incomplete type).
+	 */
+	template <typename T>
+	struct PackageAssetType;
+
+	template <> struct PackageAssetType<ProjectManifestData> { static constexpr ePackage value = ePackage::ProjectManifest; };
+	template <> struct PackageAssetType<PrimaryViewData>     { static constexpr ePackage value = ePackage::PrimaryView; };
+	template <> struct PackageAssetType<SceneData>           { static constexpr ePackage value = ePackage::Scene; };
+	template <> struct PackageAssetType<ChildViewData>       { static constexpr ePackage value = ePackage::ChildView; };
+	template <> struct PackageAssetType<IndependentViewData> { static constexpr ePackage value = ePackage::IndependentView; };
+	template <> struct PackageAssetType<PrefabData>          { static constexpr ePackage value = ePackage::Prefab; };
+
+	template <typename T>
+	inline constexpr ePackage c_PackageAssetType = PackageAssetType<T>::value;
+}
+
 namespace zzz::engine
 {
+	class SceneManager;
+
 	class PackageManager final
 	{
+		friend class SceneManager;
+
 	public:
 		PackageManager() = delete;
 		explicit PackageManager(std::shared_ptr<FileSystem> fileSystem);
@@ -24,52 +57,35 @@ namespace zzz::engine
 		[[nodiscard]] const std::string& GetCompanyName() const noexcept { return m_CompanyName; }
 		[[nodiscard]] const std::string& GetAppName() const noexcept { return m_AppName; }
 
-		/// @brief Метаданные (имя/guid/offset/size) записи любого типа в package.dat
-		[[nodiscard]] std::optional<PackageEntry> GetEntryByGuid(ePackage type, const Guid& guid) const;
-		[[nodiscard]] std::optional<PackageEntry> GetEntryByName(ePackage type, std::string_view name) const;
-
-		/// @brief Проверяет, есть ли в package.dat запись данного типа с таким guid, без полной загрузки/десериализации.
-		[[nodiscard]] bool HasEntry(ePackage type, const Guid& guid) const { return GetEntryByGuid(type, guid).has_value(); }
-
-		/// @brief Возвращает все guid'ы записей данного типа в package.dat
-		[[nodiscard]] std::vector<Guid> GetAllGuidsOfType(ePackage type) const
+		template <typename T>
+		[[nodiscard]] std::expected<T, std::string> LoadAsset(std::string_view name) const
 		{
-			std::vector<Guid> guids;
-			auto it = m_EntriesByGuid.find(type);
-			if (it == m_EntriesByGuid.end())
-				return guids;
-
-			guids.reserve(it->second.size());
-			for (const auto& [guid, entry] : it->second)
-				guids.push_back(guid);
-
-			return guids;
-		}
-
-		template <typename T> requires std::derived_from<T, ISerializable>
-		[[nodiscard]] std::expected<T, std::string> LoadPackageDataByName(ePackage type, std::string_view name) const
-		{
-			auto entryOpt = GetEntryByName(type, name);
+			constexpr ePackage type = c_PackageAssetType<T>;
+			auto entryOpt = GetEntry(type, name);
 			if (!entryOpt)
 				return UNEXPECTED("Package entry of type {} with name '{}' was not found.", ToString(type), name);
 
-			return LoadPackageData<T>(*entryOpt);
+			return DeserializeEntry<T>(*entryOpt);
 		}
-		template <typename T> requires std::derived_from<T, ISerializable>
-		[[nodiscard]] std::expected<T, std::string> LoadPackageDataByGuid(ePackage type, const Guid& guid) const
+
+		template <typename T>
+		[[nodiscard]] std::expected<T, std::string> LoadAsset(const Guid& guid) const
 		{
-			auto entryOpt = GetEntryByGuid(type, guid);
+			constexpr ePackage type = c_PackageAssetType<T>;
+			auto entryOpt = GetEntry(type, guid);
 			if (!entryOpt)
 				return UNEXPECTED("Package entry of type {} with GUID '{}' was not found.", ToString(type), guid.ToString());
 
-			return LoadPackageData<T>(*entryOpt);
+			return DeserializeEntry<T>(*entryOpt);
 		}
 
 	private:
+		[[nodiscard]] std::optional<PackageEntry> GetEntry(ePackage type, const Guid& guid) const;
+		[[nodiscard]] std::optional<PackageEntry> GetEntry(ePackage type, std::string_view name) const;
 		void Initialize();
 
 		template <typename T> requires std::derived_from<T, ISerializable>
-		[[nodiscard]] std::expected<T, std::string> LoadPackageData(const PackageEntry& entry) const;
+		[[nodiscard]] std::expected<T, std::string> DeserializeEntry(const PackageEntry& entry) const;
 
 		void LogPackageEntriesSummary() const;
 		template <typename T> requires std::derived_from<T, ISerializable>

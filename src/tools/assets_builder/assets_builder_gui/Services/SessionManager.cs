@@ -29,9 +29,13 @@ public static class SessionManager
         "AssetsBuilder"
     );
 
-    public static string GetDefaultBuildPath(string projectPath)
+    /// <summary>
+    /// Общая папка сборки для всех проектов/профилей - лежит рядом с настройками сборщика,
+    /// а не внутри исходной папки проекта.
+    /// </summary>
+    public static string GetDefaultBuildPath()
     {
-        return Path.Combine(projectPath, ".build");
+        return Path.Combine(AppDataFolder, ".build");
     }
 
     private static readonly string ConfigFilePath = Path.Combine(AppDataFolder, "session_config.json");
@@ -48,9 +52,12 @@ public static class SessionManager
                 {
                     foreach (var p in config.Profiles)
                     {
-                        if (string.IsNullOrEmpty(p.DestinationPath) || p.DestinationPath.EndsWith("_build") || p.DestinationPath.Contains("builds"))
+                        bool isOldStyleDefault = !string.IsNullOrEmpty(p.SourcePath) &&
+                            string.Equals(p.DestinationPath, Path.Combine(p.SourcePath, ".build"), StringComparison.OrdinalIgnoreCase);
+
+                        if (string.IsNullOrEmpty(p.DestinationPath) || p.DestinationPath.EndsWith("_build") || p.DestinationPath.Contains("builds") || isOldStyleDefault)
                         {
-                            p.DestinationPath = GetDefaultBuildPath(p.SourcePath);
+                            p.DestinationPath = GetDefaultBuildPath();
                         }
                     }
                     return config;
@@ -125,7 +132,7 @@ public static class SessionManager
             Id = Guid.NewGuid().ToString(),
             Name = "zzz_assets_test_000",
             SourcePath = defaultSource,
-            DestinationPath = GetDefaultBuildPath(defaultSource),
+            DestinationPath = GetDefaultBuildPath(),
             ActivePresetName = "Default"
         };
 

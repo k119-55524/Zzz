@@ -1,11 +1,11 @@
 #pragma once
 
-#include "core/utils/Version.h"
 #include <logger/logger.h>
-#include "core/constants/PackageConstants.h"
-#include "core/constants/LogCategoryConstants.h"
+
 #include "core/IO/FileHeader.h"
+#include "core/utils/Version.h"
 #include "core/Serialize/Serializer.h"
+#include "core/constants/LogCategoryConstants.h"
 
 namespace zzz::core
 {
@@ -24,8 +24,6 @@ namespace zzz::core
 			, m_EntryCount(entryCount)
 		{}
 
-		[[nodiscard]] const FileHeader<3>& GetMagic() const noexcept { return m_Magic; }
-		[[nodiscard]] const Version& GetVersion() const noexcept { return m_Version; }
 		[[nodiscard]] zU32 GetEntryCount() const noexcept { return m_EntryCount; }
 
 		[[nodiscard]] static constexpr std::size_t BinarySize() noexcept
@@ -34,8 +32,8 @@ namespace zzz::core
 			return 3 + 3 * sizeof(zU32) + sizeof(zU32);
 		}
 		[[nodiscard]] std::expected<void, std::string> Validate(
-			const FileHeader<3>& expectedHeader = c_GamePackageHeader,
-			zU8 expectedMajor = c_GamePackageFileMajorVersion) const
+			const FileHeader<3>& expectedHeader,
+			zU8 expectedMajor) const
 		{
 			if (m_Magic != expectedHeader)
 				return UNEXPECTED("Некорректная сигнатура заголовка");
@@ -48,11 +46,12 @@ namespace zzz::core
 
 		inline void LogFileBlock() const
 		{
+#if Z_ADD_LOGGER
 			DOut(::zzz::core::Assets, "[PackageHeader]");
 			DOut(::zzz::core::Assets, "  magic: {}", m_Magic.ToString());
 			DOut(::zzz::core::Assets, "  version: {}", m_Version.ToString());
 			DOut(::zzz::core::Assets, "  entryCount: {}", m_EntryCount);
-			DOut(::zzz::core::Assets, "---");
+#endif // Z_ADD_LOGGER
 		}
 
 	private:

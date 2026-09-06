@@ -1,9 +1,11 @@
-#include "core/io/package/DataAssetsManager.h"
-#include "core/io/package/PackageHeader.h"
-#include "core/io/package/MeshData.h"
-#include "core/constants/PackageConstants.h"
-#include "core/utils/ThrowWrappers.h"
+
 #include <logger/logger.h>
+
+#include "core/io/package/MeshData.h"
+#include "core/io/package/PackageHeader.h"
+#include "core/constants/PackageConstants.h"
+
+#include "DataAssetsManager.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Assets);
 
@@ -18,7 +20,6 @@ namespace zzz::core
 
 	void DataAssetsManager::Initialize()
 	{
-		// 1. Читаем строго заголовок архива данных
 		constexpr std::size_t headerSize = PackageHeader::BinarySize();
 		auto headerBufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_DataPackageRelativePath, 0, headerSize);
 		if (!headerBufferRes)
@@ -38,7 +39,6 @@ namespace zzz::core
 		m_EntriesByGuid.clear();
 		m_EntriesByName.clear();
 
-		// 2. Читаем ровно оглавление (TOC) благодаря фиксированному размеру PackageEntry
 		const std::size_t tableSize = header.GetEntryCount() * PackageEntry::BinarySize();
 		if (tableSize > 0)
 		{
@@ -54,28 +54,62 @@ namespace zzz::core
 				if (!entryRes)
 					THROW_RUNTIME("Ошибка десериализации записи архива данных #{} в файле '{}': {}", i, c_DataPackageRelativePath, entryRes.error());
 
-				m_EntriesByGuid[entry.GetGuid()] = entry;
-				m_EntriesByName[std::string(entry.GetName())] = entry;
+				auto type = static_cast<eResourceType>(entry.GetAssetType());
+				m_EntriesByGuid[type][entry.GetGuid()] = entry;
+				m_EntriesByName[type][std::string(entry.GetName())] = entry;
 			}
 		}
 
 		LogDataEntriesSummary();
 	}
 
+	[[nodiscard]] std::optional<PackageEntry> DataAssetsManager::GetEntry(eResourceType type, std::string_view name) const
+	{
+		auto it = m_EntriesByName.find(type);
+		if (it == m_EntriesByName.end())
+			return std::nullopt;
+
+		auto nameIt = it->second.find(std::string(name));
+		if (nameIt == it->second.end())
+			return std::nullopt;
+
+		return nameIt->second;
+	}
+
+	[[nodiscard]] std::optional<PackageEntry> DataAssetsManager::GetEntry(eResourceType type, const Guid& guid) const
+	{
+		auto it = m_EntriesByGuid.find(type);
+		if (it == m_EntriesByGuid.end())
+			return std::nullopt;
+
+		auto guidIt = it->second.find(guid);
+		if (guidIt == it->second.end())
+			return std::nullopt;
+
+		return guidIt->second;
+	}
+
 	void DataAssetsManager::LogDataEntriesSummary() const
 	{
 #if Z_ADD_LOGGER
+		size_t totalCount = 0;
+		for (const auto& [type, entries] : m_EntriesByGuid)
+			totalCount += entries.size();
+
 		DOut("========== [DataAssetsManager] Data Package: {} (Total entries: {}) ==========",
-			c_DataPackageRelativePath, m_EntriesByGuid.size());
-		for (const auto& [guid, entry] : m_EntriesByGuid)
+			c_DataPackageRelativePath, totalCount);
+		for (const auto& [type, entries] : m_EntriesByGuid)
 		{
-			const auto resType = static_cast<eResourceType>(entry.GetAssetType());
-			DOut("  [DataEntry] type: {}, guid: {}, name: '{}', size: {} bytes",
-				ToString(resType), guid.ToString(), entry.GetName(), entry.GetSize());
+			for (const auto& [guid, entry] : entries)
+			{
+				DOut("  [DataEntry] type: {}, guid: {}, name: '{}', size: {} bytes",
+					ToString(type), guid.ToString(), entry.GetName(), entry.GetSize());
+			}
 		}
-#endif
+#endif // Z_ADD_LOGGER
 	}
 
-	template std::expected<MeshData, std::string> DataAssetsManager::LoadData<MeshData>(eResourceType, const Guid&) const;
-	template std::expected<MeshData, std::string> DataAssetsManager::LoadData<MeshData>(const PackageEntry&) const;
+	template std::expected<MeshData, std::string> DataAssetsManager::LoadAsset<MeshData>(const Guid&) const;
+	template std::expected<MeshData, std::string> DataAssetsManager::LoadAsset<MeshData>(std::string_view) const;
+	template std::expected<MeshData, std::string> DataAssetsManager::DeserializeEntry<MeshData>(const PackageEntry&) const;
 }

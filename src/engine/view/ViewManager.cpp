@@ -70,7 +70,7 @@ void ViewManager::CreateChildView(const Guid& viewGuid)
 #else
 	ensure(m_PrimaryView != nullptr, "Дочернее окно не может быть создано до создания Основного окна.");
 
-	auto viewDataRes = m_PackageManager->LoadPackageDataByGuid<ChildViewData>(ePackage::ChildView, viewGuid);
+	auto viewDataRes = m_PackageManager->LoadAsset<ChildViewData>(viewGuid);
 
 	ensure(viewDataRes.has_value(), "Не удалось загрузить ChildViewData из пакета для GUID '{}': {}", viewGuid.ToString(), viewDataRes.error());
 	m_ChildViews.push_back(CreateViewInstance(*viewDataRes, ePackage::ChildView, m_PrimaryView.get()));
@@ -84,7 +84,7 @@ void ViewManager::CreateIndependentView(const Guid& viewGuid)
 #else
 	ensure(m_PrimaryView != nullptr, "Независимое окно не может быть создано до создания Основного окна.");
 
-	auto viewDataRes = m_PackageManager->LoadPackageDataByGuid<IndependentViewData>(ePackage::IndependentView, viewGuid);
+	auto viewDataRes = m_PackageManager->LoadAsset<IndependentViewData>(viewGuid);
 	ensure(viewDataRes.has_value(), "Не удалось загрузить IndependentViewData из пакета для GUID '{}': {}", viewGuid.ToString(), viewDataRes.error());
 
 	m_IndependentViews.push_back(CreateViewInstance(*viewDataRes, ePackage::IndependentView));

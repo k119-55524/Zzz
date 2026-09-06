@@ -1,10 +1,11 @@
+
+#include "core/utils/Ensure.h"
 #include "core/io/package/SceneData.h"
 #include "core/io/package/PrefabData.h"
 #include "core/io/package/PackageHeader.h"
 #include "core/io/package/ChildViewData.h"
-#include "core/io/package/IndependentViewData.h"
 #include "core/constants/PackageConstants.h"
-#include "core/utils/Ensure.h"
+#include "core/io/package/IndependentViewData.h"
 
 #include "PackageManager.h"
 
@@ -23,7 +24,6 @@ namespace zzz::engine
 
 	void PackageManager::Initialize()
 	{
-		// 1. Читаем строго заголовок пакета
 		constexpr std::size_t headerSize = PackageHeader::BinarySize();
 		auto headerBufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_GamePackageRelativePath, 0, headerSize);
 		if (!headerBufferRes)
@@ -36,14 +36,13 @@ namespace zzz::engine
 		if (!headerRes)
 			THROW_RUNTIME("Ошибка десериализации заголовка пакета '{}': {}", c_GamePackageRelativePath, headerRes.error());
 
-		auto validRes = header.Validate();
+		auto validRes = header.Validate(c_GamePackageHeader, c_GamePackageFileMajorVersion);
 		if (!validRes)
 			THROW_RUNTIME("Некорректный заголовок в файле '{}': {}", c_GamePackageRelativePath, validRes.error());
 
 		m_EntriesByName.clear();
 		m_EntriesByGuid.clear();
 
-		// 2. Читаем ровно оглавление (TOC) благодаря фиксированному размеру PackageEntry
 		const std::size_t tableSize = header.GetEntryCount() * PackageEntry::BinarySize();
 		if (tableSize > 0)
 		{
@@ -79,7 +78,7 @@ namespace zzz::engine
 		if (manifestIt->second.size() > 1)
 			THROW_RUNTIME("Ошибка пакета '{}': Ресурс ProjectManifestData не уникален (найдено {} штук).", c_GamePackageRelativePath, manifestIt->second.size());
 
-		auto manifestRes = LoadPackageData<ProjectManifestData>(manifestIt->second.begin()->second);
+		auto manifestRes = DeserializeEntry<ProjectManifestData>(manifestIt->second.begin()->second);
 		if (!manifestRes)
 			THROW_RUNTIME("Ошибка десериализации ProjectManifestData из пакета '{}': {}", c_GamePackageRelativePath, manifestRes.error());
 
@@ -99,10 +98,10 @@ namespace zzz::engine
 		if (it == m_EntriesByName.end() || it->second.empty())
 			return UNEXPECTED("Package entry of type PrimaryView was not found.");
 
-		return LoadPackageData<PrimaryViewData>(it->second.begin()->second);
+		return DeserializeEntry<PrimaryViewData>(it->second.begin()->second);
 	}
 
-	[[nodiscard]] std::optional<PackageEntry> PackageManager::GetEntryByName(ePackage type, std::string_view name) const
+	[[nodiscard]] std::optional<PackageEntry> PackageManager::GetEntry(ePackage type, std::string_view name) const
 	{
 		auto it = m_EntriesByName.find(type);
 		if (it == m_EntriesByName.end())
@@ -115,7 +114,7 @@ namespace zzz::engine
 		return nameIt->second;
 	}
 
-	[[nodiscard]] std::optional<PackageEntry> PackageManager::GetEntryByGuid(ePackage type, const Guid& guid) const
+	[[nodiscard]] std::optional<PackageEntry> PackageManager::GetEntry(ePackage type, const Guid& guid) const
 	{
 		auto it = m_EntriesByGuid.find(type);
 		if (it == m_EntriesByGuid.end())
@@ -129,7 +128,7 @@ namespace zzz::engine
 	}
 
 	template <typename T> requires std::derived_from<T, ISerializable>
-	[[nodiscard]] std::expected<T, std::string> PackageManager::LoadPackageData(const PackageEntry& entry) const
+	[[nodiscard]] std::expected<T, std::string> PackageManager::DeserializeEntry(const PackageEntry& entry) const
 	{
 		auto bufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_GamePackageRelativePath, entry.GetOffset(), entry.GetSize());
 		if (!bufferRes)
@@ -151,12 +150,12 @@ namespace zzz::engine
 		return data;
 	}
 
-	template std::expected<ProjectManifestData, std::string> PackageManager::LoadPackageData<ProjectManifestData>(const PackageEntry&) const;
-	template std::expected<PrimaryViewData, std::string> PackageManager::LoadPackageData<PrimaryViewData>(const PackageEntry&) const;
-	template std::expected<SceneData, std::string> PackageManager::LoadPackageData<SceneData>(const PackageEntry&) const;
-	template std::expected<ChildViewData, std::string> PackageManager::LoadPackageData<ChildViewData>(const PackageEntry&) const;
-	template std::expected<IndependentViewData, std::string> PackageManager::LoadPackageData<IndependentViewData>(const PackageEntry&) const;
-	template std::expected<PrefabData, std::string> PackageManager::LoadPackageData<PrefabData>(const PackageEntry&) const;
+	template std::expected<ProjectManifestData, std::string> PackageManager::DeserializeEntry<ProjectManifestData>(const PackageEntry&) const;
+	template std::expected<PrimaryViewData, std::string> PackageManager::DeserializeEntry<PrimaryViewData>(const PackageEntry&) const;
+	template std::expected<SceneData, std::string> PackageManager::DeserializeEntry<SceneData>(const PackageEntry&) const;
+	template std::expected<ChildViewData, std::string> PackageManager::DeserializeEntry<ChildViewData>(const PackageEntry&) const;
+	template std::expected<IndependentViewData, std::string> PackageManager::DeserializeEntry<IndependentViewData>(const PackageEntry&) const;
+	template std::expected<PrefabData, std::string> PackageManager::DeserializeEntry<PrefabData>(const PackageEntry&) const;
 
 #pragma region Logging
 	void PackageManager::LogPackageEntriesSummary() const
@@ -192,7 +191,7 @@ namespace zzz::engine
 			const auto& entry = entryPair.second;
 			entry.LogFileBlock("    ");
 
-			if (auto dataRes = LoadPackageData<T>(entry))
+			if (auto dataRes = DeserializeEntry<T>(entry))
 			{
 				dataRes->LogFileBlock("      ");
 			}
