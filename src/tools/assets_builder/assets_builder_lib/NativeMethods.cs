@@ -46,4 +46,8 @@ internal static class NativeMethods
     // так как каталоги пользовательских данных могут содержать не-ASCII символы (например, кириллицу).
     [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
     public static extern bool ValidateDirectoryNameNative([MarshalAs(UnmanagedType.LPUTF8Str)] string name);
+
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    public static extern bool IsSupportedAssetExtension(string ext);
 }

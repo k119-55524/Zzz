@@ -413,6 +413,85 @@ public class MainWindowViewModel : ViewModelBase
         }
     }
 
+    public void BuildHeadless()
+    {
+        if (SelectedProfile == null || !SelectedProfile.IsValid)
+        {
+            Console.WriteLine("Ошибка: Выбранный профиль отсутствует или не валиден.");
+            return;
+        }
+
+        string sourcePath = SelectedProfile.SourcePath;
+        string baseDestinationPath = SelectedProfile.DestinationPath;
+
+        var enabledTargets = SelectedProfile.TargetProjects
+            .Where(t => t.IsEnabled)
+            .Select(t => new TargetBuildSnapshot
+            {
+                Name = t.Name,
+                TargetPlatform = t.TargetPlatform,
+                ConfigJsonPath = t.ConfigJsonPath,
+                BuildDirectory = GetTargetBuildDirectory(baseDestinationPath, t.Name, t.TargetPlatform)
+            })
+            .ToList();
+
+        if (enabledTargets.Count == 0)
+        {
+            Console.WriteLine("Предупреждение: Нет активных целевых проектов.");
+            return;
+        }
+
+        bool success = PrepareBuildRoot(baseDestinationPath);
+        if (success)
+        {
+            var firstTarget = enabledTargets.First();
+            var commonOptions = new BuildOptions
+            {
+                SourcePath = sourcePath,
+                DestinationPath = baseDestinationPath,
+                TargetProjectName = firstTarget.Name,
+                TargetPlatform = firstTarget.TargetPlatform
+            };
+
+            bool metaValid = _engine.ScanProjectMetaFiles(commonOptions);
+            if (!metaValid)
+            {
+                Console.WriteLine("Ошибка: Сборка отменена из-за ошибок валидации или GUID.");
+                success = false;
+            }
+        }
+
+        if (success)
+        {
+            foreach (var target in enabledTargets)
+            {
+                Directory.CreateDirectory(target.BuildDirectory);
+                string targetIncludeDir = Path.Combine(target.BuildDirectory, "include");
+                Directory.CreateDirectory(targetIncludeDir);
+                string targetAssetsDir = Path.Combine(target.BuildDirectory, "assets");
+                Directory.CreateDirectory(targetAssetsDir);
+
+                _engine.CopyHeaderFiles(sourcePath, targetIncludeDir);
+                _engine.GenerateScriptsCmake(sourcePath, target.BuildDirectory);
+
+                Console.WriteLine($"Сериализация индивидуального бинарного пакета для '{target.Name}' ({target.TargetPlatform})...");
+                bool packSuccess = PackagePacker.PackProject(sourcePath, target.BuildDirectory, target.TargetPlatform, msg => Console.WriteLine(msg));
+                if (!packSuccess)
+                {
+                    Console.WriteLine($"Ошибка упаковки для таргета '{target.Name}'!");
+                    success = false;
+                    break;
+                }
+            }
+        }
+
+        if (success)
+        {
+            UpdateTargetProjectsConfig(enabledTargets, baseDestinationPath);
+            Console.WriteLine("Headless build completed successfully.");
+        }
+    }
+
     private bool PrepareBuildRoot(string destinationPath)
     {
         try

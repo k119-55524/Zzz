@@ -57,7 +57,6 @@ void WinAndroid::ProcessAppCmd(int32_t cmd)
 	case APP_CMD_WINDOW_RESIZED:
 		DOut("APP_CMD_WINDOW_RESIZED.");
 		// [Android] Изменился размер окна (например, из-за скрытия системной панели навигации или поворота).
-		// TODO: Извлечь новые размеры и передать в OnResize.
 		break;
 	}
 }

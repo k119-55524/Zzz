@@ -38,7 +38,8 @@ namespace zzz::engine
 		{
 			if (objData.IsEntity())
 			{
-				THROW_RUNTIME("EntityWorld пока не реализован");
+				m_EntityWorld.CreateEntity(objData.GetGuid(), objData.GetName());
+				continue;
 			}
 
 			std::string layerName = objData.GetLayerName().empty() ? "Default3DLayer" : objData.GetLayerName();
@@ -124,6 +125,9 @@ namespace zzz::engine
 				layer->Update(dt);
 			}
 		}
+
+		// Кадровый цикл ECS-мира сущностей
+		m_EntityWorld.Update(dt);
 	}
 
 	void Scene::InvokeStart()

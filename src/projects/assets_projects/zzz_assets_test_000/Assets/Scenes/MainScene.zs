@@ -20,15 +20,12 @@
       "name": "Main3DLayer",
       "objects": [
         {
-          "name": "PlayerObject",
-          "domain": "Object",
-          "position": [0.0, 0.0, 0.0],
-          "script": "6ea9c238-4c23-4b73-be36-8fed508ea612"
-        },
-        {
           "name": "CubeObject",
           "domain": "Object",
           "position": [0.0, 0.0, 0.0],
+          "scripts": [
+            "6ea9c238-4c23-4b73-be36-8fed508ea612"
+          ],
           "render": {
             "mesh": "00000000-0000-0000-0000-000000000010"
           }

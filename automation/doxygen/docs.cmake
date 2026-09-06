@@ -50,6 +50,7 @@ FetchContent_Declare(
     doxygen_awesome_css
     GIT_REPOSITORY "https://github.com/jothepro/doxygen-awesome-css.git"
     GIT_TAG "${Z_DOXYGEN_AWESOME_VERSION}"
+    UPDATE_DISCONNECTED TRUE
 )
 FetchContent_MakeAvailable(doxygen_awesome_css)
 

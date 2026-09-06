@@ -2,6 +2,8 @@
 #include <fstream>
 #include <core/io/package/PackageHeader.h>
 #include <core/io/package/PackageEntry.h>
+#include <core/constants/PackageConstants.h>
+#include <core/utils/ThrowWrappers.h>
 
 namespace zzz::builder
 {
@@ -19,34 +21,35 @@ namespace zzz::builder
 			return false;
 		}
 
-		// Пасс 1: Измеряем размер сериализованного заголовка + записей
-		std::vector<zzz::core::PackageEntry> dummyEntries;
-		dummyEntries.reserve(items.size());
-
-		for (const auto& item : items)
-		{
-			dummyEntries.emplace_back(
-				item.name,
-				item.guid,
-				item.assetType,
-				0,
-				item.payload.size()
-			);
-		}
-
-		zzz::core::PackageHeader dummyHeader(
+		// Сериализатор сам сформирует заголовок и таблицу и сдвинет указатель на точный размер
+		zzz::core::PackageHeader header(
 			magic,
 			version,
-			static_cast<uint32_t>(dummyEntries.size())
+			static_cast<uint32_t>(items.size())
 		);
 
+		std::vector<zzz::core::PackageEntry> tempEntries;
+		tempEntries.reserve(items.size());
+		for (const auto& item : items)
+		{
+			auto nameRes = zzz::core::PackageEntry::NameStringType::Create(item.name);
+			if (!nameRes)
+			{
+				DOutError("ArchiveWriter: Имя ресурса '{}' превышает лимит в {} символов: {}",
+					item.name, zzz::core::c_MaxAssetNameLength, nameRes.error());
+				return false;
+			}
+
+			tempEntries.emplace_back(*nameRes, item.guid, item.assetType, 0, item.payload.size());
+		}
+
 		std::vector<std::byte> headerBuffer;
-		if (!serializer.Serialize(headerBuffer, dummyHeader))
+		if (!serializer.Serialize(headerBuffer, header))
 		{
 			return false;
 		}
 
-		for (const auto& entry : dummyEntries)
+		for (const auto& entry : tempEntries)
 		{
 			if (!serializer.Serialize(headerBuffer, entry))
 			{
@@ -56,15 +59,22 @@ namespace zzz::builder
 
 		const uint64_t initialOffset = headerBuffer.size();
 
-		// Пасс 2: Строим итоговые записи с правильными смещениями
 		std::vector<zzz::core::PackageEntry> finalEntries;
 		finalEntries.reserve(items.size());
 		uint64_t currentOffset = initialOffset;
 
 		for (const auto& item : items)
 		{
+			auto nameRes = zzz::core::PackageEntry::NameStringType::Create(item.name);
+			if (!nameRes)
+			{
+				DOutError("ArchiveWriter: Имя ресурса '{}' превышает лимит в {} символов: {}",
+					item.name, zzz::core::c_MaxAssetNameLength, nameRes.error());
+				return false;
+			}
+
 			finalEntries.emplace_back(
-				item.name,
+				*nameRes,
 				item.guid,
 				item.assetType,
 				currentOffset,
@@ -74,9 +84,9 @@ namespace zzz::builder
 			currentOffset += item.payload.size();
 		}
 
-		// Записываем финальный заголовок
 		headerBuffer.clear();
-		if (!serializer.Serialize(headerBuffer, dummyHeader))
+		headerBuffer.reserve(static_cast<std::size_t>(initialOffset));
+		if (!serializer.Serialize(headerBuffer, header))
 		{
 			return false;
 		}

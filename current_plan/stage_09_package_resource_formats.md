@@ -49,10 +49,11 @@
 7. **Структура `GameObject` в слоях сцены (`MainScene.zs`) и маршрутизация доменов:**
    - Объекты сцены сгруппированы по слоям (`Layer3D`, `LayerUI` и др.).
    - Куб располагается в слое `Layer3D` строго в начале координат `position: [0.0, 0.0, 0.0]`.
-   - В JSON сцены хранится тип/домен объекта (`"domain": "Object"`) и опциональные блоки настроек (`"render": { "mesh": "..." }`, `"scripts": [...]`).
+   - В JSON сцены хранится тип/домен объекта (`"domain": "Object"`) и опциональные блоки настроек (`"render": { "mesh": "..." }`, массив скриптов `"scripts": [...]` — на одном объекте может быть несколько скриптов, хранящихся и загружаемых списком GUID).
+   - Единый глобальный enum `eObjectDomain` выносится в `src/core/enums/eObjectDomain.h` с функциями `ToString(eObjectDomain)` и `ParseObjectDomain(std::string_view)`. Константы строковых полей JSON объявляются в `PackageConstants.h`. C# валидатор `SceneAssetValidator.cs` валидирует допустимость значений `domain` ('Object' или 'Entity').
    - Маршрутизация при загрузке сцены:
-     - `domain == eObjectDomain::Object` $\to$ создаётся в `ObjectWorld` текущей сцены.
-     - `domain == eObjectDomain::Entity` $\to$ выбрасывается `THROW_RUNTIME("EntityWorld пока не реализован")` (строгое соблюдение YAGNI: класс `EntityWorld` не создаётся до этапа ECS).
+     - `domain == eObjectDomain::Object` $\to$ создаётся в `ObjectWorld` целевого слоя текущей сцены.
+     - `domain == eObjectDomain::Entity` $\to$ регистрируется в классе-заглушке `EntityWorld` сцены (`CreateEntity`), обеспечивая сквозную цепочку от упаковки в `package.dat` до чтения движком без исключений.
      - При отсутствии блока `"render"` объект создаётся как узел трансформации (Empty).
 8. **Архитектура разбора слоёв (Инкапсуляция разборщика в реализации слоя):**
    - Слои (`Layer3D`, `LayerUI`, `LayerMVVM`) принципиально отличаются составом, семантикой данных и поведением.
@@ -66,6 +67,20 @@
 10. **Контракт параметров переходов сцен (`transition`) и валидация:**
     - `PackagePacker` считывает секции `transition` из `project.json` (дефолтные глобальные параметры `SceneTransitionParams`) и `.zs` (параметры конкретной сцены и `transitionSource`).
     - C# валидаторы (`SceneAssetValidator`, `ProjectJsonValidator`) валидируют объекты во всех слоях (`layers[].objects[]`), проверяют валидность GUID мешей (`render.mesh`), а также типы и диапазоны параметров переходов (`type`, `duration`).
+11. **Строгая фильтрация расширений ресурсов и отсечение неподдерживаемых файлов (Whitelist):**
+    - `AssetFileExtensions.h` и `AssetImporterRegistry` выступают единым источником истины в C++ ядра движка.
+    - В `assets_builder_dll` экспортируется нативная функция `IsSupportedAssetExtension(ext)` (`BuilderApi.h`).
+    - В `assets_builder_lib` константы `AssetExtensions.cs` синхронизированы с `AssetFileExtensions.h`.
+    - Всеядные fallback-классы `DefaultAssetImporter` и `DefaultAssetValidator` удалены.
+    - Добавлены специализированные `DataAssetImporter` и `DataAssetValidator` для разрешённых типов (`.obj`, `.png`, `.zmat`, `.hlsl`, `.zp`).
+    - Вьюшка первичного окна `.zav` (`PrimaryView`) поддержана в `ViewAssetImporter` и `ViewAssetValidator`.
+    - Сканирование `Assets/` и `Assets/Scripts/` отфильтровывает любые файлы не из белого списка с выводом предупреждения в лог сборщика и предотвращением создания `.meta` и GUID для посторонних файлов.
+    - Очистка осиротевших `.meta` удаляет метафайлы, если целевой ресурс не существует или его тип не поддерживается.
+12. **Формат имени ассета в таблицах архивов (`FixedLengthString32`, UTF-32) и расчёт бинарного размера:**
+    - Имена ресурсов в `PackageEntry` хранятся в формате `FixedLengthString32<c_MaxAssetNameLength>` (`char32_t`, UTF-32).
+    - Это обеспечивает равное количество символов во всех языках (64 символа, где каждый символ — ровно 4 байта, итого 256 байт на имя).
+    - В упаковщике (`ArchiveWriter.cpp`) запрещено тихое усечение: имя валидируется методом `Create`, при превышении лимита логируется ошибка `DOutError` и функция возвращает `false` (не `THROW_RUNTIME` — исключение не должно пересекать границу P/Invoke до C#).
+    - Бинарный размер `PackageEntry::BinarySize()` вычисляется динамически из суммы бинарных размеров полей с явным вызовом `Guid::BinarySize()` (16 байт), исключая оверхед указателя виртуальной таблицы `vptr` (8 байт), предотвращая выход за границы буфера при чтении чанков.
 
 ---
 
@@ -194,6 +209,9 @@ namespace zzz::core
                "name": "CubeObject",
                "domain": "Object",
                "position": [0.0, 0.0, 0.0],
+               "scripts": [
+                 "6ea9c238-4c23-4b73-be36-8fed508ea612"
+               ],
                "render": {
                  "mesh": "00000000-0000-0000-0000-000000000010"
                }
@@ -204,12 +222,47 @@ namespace zzz::core
      }
      ```
 
+### 3.5. Класс-заглушка `EntityWorld`: `src/engine/scene/EntityWorld.h`
+
+```cpp
+#pragma once
+
+#include <string_view>
+#include <vector>
+#include <core/utils/Guid.h>
+#include <core/utils/Defines.h>
+
+namespace zzz::engine
+{
+	/**
+	 * @class EntityWorld
+	 * @brief Легковесная заглушка мира ECS-сущностей для сквозной цепочки domain == Entity.
+	 */
+	class EntityWorld final
+	{
+	public:
+		EntityWorld() = default;
+		~EntityWorld() = default;
+
+		Z_NO_COPY_MOVE(EntityWorld);
+
+		void CreateEntity(const core::Guid& guid, std::string_view name);
+		void Update(float dt);
+
+		[[nodiscard]] size_t GetEntityCount() const noexcept { return m_EntityCount; }
+
+	private:
+		size_t m_EntityCount{ 0 };
+	};
+}
+```
+
 ---
 
 ## 4. План верификации
 
 1. **Компиляция под MSVC x64 + Ninja:**
-   - Сборка целей `core`, `assets_builder_dll`, `game_win` без ошибок и предупреждений.
+   - Сборка целей `core`, `engine_lib`, `assets_builder_dll`, `EngineTests`, `game_win` без ошибок и предупреждений.
 2. **Сборка пакетов:**
    - `PackagePacker::PackProject()` успешно создаёт `assets/package.dat` и `assets/data/data.dat`.
 3. **Сквозная проверка через запуск приложения `game_win.exe`:**
@@ -239,7 +292,21 @@ namespace zzz::core
 - [x] Передать `SceneData::GetGameObjects()` в сцену при загрузке в `SceneManager` / `Scene`
 - [x] Интегрировать проверку загрузки `MeshData` из `DataAssetsManager` в запуск `game_win.exe`
 - [x] Собрать проект и успешно прогнать `game_win.exe` (код выхода 0)
-- [ ] Запросить утверждение у пользователя
-- [ ] Зафиксировать Git-коммит: `feat(mesh): completed stage 09 - MeshData, DataAssetsManager, data.dat and obj importer`
-- [ ] Обновить статус Пункта 9 в `general_plan.md` на `✅ Выполнено`
+- [x] Создать `src/core/enums/eObjectDomain.h` (`ToString`, `ParseObjectDomain`) и зарегистрировать в `src/core/CMakeLists.txt`
+- [x] Добавить константы домена в `PackageConstants.h` и валидацию `domain` в `SceneAssetValidator.cs`
+- [x] Обновить `GameObjectData.h` и `PackagePacker.cpp` на использование `eObjectDomain.h`
+- [x] Создать класс-заглушку `src/engine/scene/EntityWorld.h` и `EntityWorld.cpp`
+- [x] Зарегистрировать `EntityWorld` в `src/engine/CMakeLists.txt`
+- [x] Интегрировать `EntityWorld` в `Scene.h` и `Scene.cpp` (маршрутизация `objData.IsEntity()`)
+- [x] Реализовать `FixedLengthString32` (UTF-32, `char32_t`) для равного количества символов во всех языках (64 символа = 256 байт)
+- [x] Добавить `Guid::BinarySize()` (16 байт) и использовать в `PackageEntry::BinarySize()` без `sizeof(Guid)`
+- [x] Добавить логирование ошибки (`DOutError`) и возврат `false` при переполнении длины имени в `ArchiveWriter.cpp`
+- [x] Экспорт `IsSupportedAssetExtension` в `assets_builder_dll` (`BuilderApi.h`, `BuilderApi.cpp`)
+- [x] Расширение `AssetExtensions.cs` и P/Invoke `NativeMethods.cs` строгим белым списком
+- [x] Поддержка `.zav` в `ViewAssetImporter.cs` и `ViewAssetValidator.cs`
+- [x] Создать `DataAssetImporter.cs` и `DataAssetValidator.cs`
+- [x] Удалить всеядный fallback `DefaultAssetImporter.cs` и `DefaultAssetValidator.cs`
+- [x] Интегрировать фильтрацию по расширениям и очистку неподдерживаемых `.meta` в `AssetsBuilderEngine.cs`
+- [ ] Зафиксировать Git-коммит
+- [x] Обновить статус Пункта 9 в `general_plan.md` на `✅ Выполнено`
 

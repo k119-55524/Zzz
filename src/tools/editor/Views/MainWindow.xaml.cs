@@ -526,7 +526,6 @@ namespace editor
 				string zlibsIncludeDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "libs", "zlibs", "include").Replace('\\', '/');
 				
 				// Всегда собираем скрипты в режиме Debug при работе в редакторе (чтобы работали точки останова)
-				// TODO: Добавить в настройки проекта/редактора возможность выбора режима сборки скриптов (Debug/Release/RelWithDebInfo)
 				string config = "Debug";
 
 				string editorDllLib = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "editor_dll.lib").Replace('\\', '/');

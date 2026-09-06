@@ -31,6 +31,8 @@
 #include <core/IO/package/GameObjectData.h>
 #include <core/IO/AssetFileExtensions.h>
 #include <core/IO/ResourceStorageTraits.h>
+#include <core/constants/PackageConstants.h>
+#include <core/enums/eObjectDomain.h>
 #include "AssetImporterRegistry.h"
 #include "ArchiveWriter.h"
 
@@ -360,10 +362,18 @@ namespace zzz::builder
 		}
 
 		eObjectDomain domain = eObjectDomain::Object;
-		if (objJson.contains("domain") && objJson["domain"].is_string())
+		if (objJson.contains(c_FieldDomain) && objJson[std::string(c_FieldDomain)].is_string())
 		{
-			if (objJson["domain"].get<std::string>() == "Entity")
-				domain = eObjectDomain::Entity;
+			std::string domainStr = objJson[std::string(c_FieldDomain)].get<std::string>();
+			if (auto parsed = ParseObjectDomain(domainStr))
+			{
+				domain = *parsed;
+			}
+			else
+			{
+				DOutWarning("ParseGameObjectJson: Неизвестный domain '{}' для объекта '{}', используется Object",
+					domainStr, name);
+			}
 		}
 
 		bool isActive = objJson.value("isActive", true);

@@ -17,6 +17,9 @@ namespace zzz::core
 		/// @brief Массив из 16 байт сырого представления GUID.
 		using RawBytes = std::array<uint8_t, 16>;
 
+		/// @brief Возвращает фиксированный размер сериализации GUID в байтах (16 байт).
+		[[nodiscard]] static constexpr size_t BinarySize() noexcept { return sizeof(RawBytes); }
+
 		/// @brief Конструктор по умолчанию. Инициализирует нулевой GUID.
 		constexpr Guid() noexcept : m_Bytes{} {}
 

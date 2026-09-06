@@ -23,15 +23,16 @@ namespace zzz::engine
 
 	void PackageManager::Initialize()
 	{
-		auto fileBufferRes = m_FileSystem->ReadAllBytes(eFileLocation::App, c_GamePackageRelativePath);
-		if (!fileBufferRes)
-			THROW_RUNTIME("Не удалось прочитать файл пакета '{}': {}", c_GamePackageRelativePath, fileBufferRes.error());
+		// 1. Читаем строго заголовок пакета
+		constexpr std::size_t headerSize = PackageHeader::BinarySize();
+		auto headerBufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_GamePackageRelativePath, 0, headerSize);
+		if (!headerBufferRes)
+			THROW_RUNTIME("Не удалось прочитать заголовок пакета '{}': {}", c_GamePackageRelativePath, headerBufferRes.error());
 
-		const auto& fileBuffer = *fileBufferRes;
 		std::size_t offset = 0;
 		Serializer serializer;
 		PackageHeader header;
-		auto headerRes = serializer.Deserialize(fileBuffer, offset, header);
+		auto headerRes = serializer.Deserialize(*headerBufferRes, offset, header);
 		if (!headerRes)
 			THROW_RUNTIME("Ошибка десериализации заголовка пакета '{}': {}", c_GamePackageRelativePath, headerRes.error());
 
@@ -42,16 +43,26 @@ namespace zzz::engine
 		m_EntriesByName.clear();
 		m_EntriesByGuid.clear();
 
-		for (zU32 i = 0; i < header.GetEntryCount(); ++i)
+		// 2. Читаем ровно оглавление (TOC) благодаря фиксированному размеру PackageEntry
+		const std::size_t tableSize = header.GetEntryCount() * PackageEntry::BinarySize();
+		if (tableSize > 0)
 		{
-			PackageEntry entry{};
-			auto entryRes = serializer.Deserialize(fileBuffer, offset, entry);
-			if (!entryRes)
-				THROW_RUNTIME("Ошибка десериализации записи пакета #{} в файле '{}': {}", i, c_GamePackageRelativePath, entryRes.error());
+			auto tableBufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_GamePackageRelativePath, headerSize, tableSize);
+			if (!tableBufferRes)
+				THROW_RUNTIME("Не удалось прочитать таблицу записей пакета '{}': {}", c_GamePackageRelativePath, tableBufferRes.error());
 
-			auto type = static_cast<ePackage>(entry.GetAssetType());
-			m_EntriesByName[type][entry.GetName()] = entry;
-			m_EntriesByGuid[type][entry.GetGuid()] = entry;
+			std::size_t tableOffset = 0;
+			for (zU32 i = 0; i < header.GetEntryCount(); ++i)
+			{
+				PackageEntry entry{};
+				auto entryRes = serializer.Deserialize(*tableBufferRes, tableOffset, entry);
+				if (!entryRes)
+					THROW_RUNTIME("Ошибка десериализации записи пакета #{} в файле '{}': {}", i, c_GamePackageRelativePath, entryRes.error());
+
+				auto type = static_cast<ePackage>(entry.GetAssetType());
+				m_EntriesByName[type][std::string(entry.GetName())] = entry;
+				m_EntriesByGuid[type][entry.GetGuid()] = entry;
+			}
 		}
 
 		auto primaryViewIt = m_EntriesByName.find(ePackage::PrimaryView);

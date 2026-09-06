@@ -35,4 +35,12 @@ extern "C"
 	 * @return true, если имя допустимо; false для nullptr, пустой строки или некорректного имени.
 	 */
 	BUILDER_API bool ValidateDirectoryNameNative(const char* name);
+
+	/**
+	 * @brief Проверяет, поддерживается ли указанное расширение ресурса движком Zzz Engine
+	 * (на основе констант AssetFileExtensions.h и зарегистрированных импортеров AssetImporterRegistry).
+	 * @param ext Расширение с точкой (например, ".obj", ".zs", ".zav").
+	 * @return true, если тип ресурса поддерживается движком; false иначе.
+	 */
+	BUILDER_API bool IsSupportedAssetExtension(const char* ext);
 }

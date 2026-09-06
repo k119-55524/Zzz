@@ -27,6 +27,12 @@ namespace zzz::core
 		[[nodiscard]] const FileHeader<3>& GetMagic() const noexcept { return m_Magic; }
 		[[nodiscard]] const Version& GetVersion() const noexcept { return m_Version; }
 		[[nodiscard]] zU32 GetEntryCount() const noexcept { return m_EntryCount; }
+
+		[[nodiscard]] static constexpr std::size_t BinarySize() noexcept
+		{
+			// Magic (3 bytes) + Version (3 * sizeof(zU32) = 12 bytes) + entryCount (sizeof(zU32) = 4 bytes) = 19 bytes
+			return 3 + 3 * sizeof(zU32) + sizeof(zU32);
+		}
 		[[nodiscard]] std::expected<void, std::string> Validate(
 			const FileHeader<3>& expectedHeader = c_GamePackageHeader,
 			zU8 expectedMajor = c_GamePackageFileMajorVersion) const

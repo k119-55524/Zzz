@@ -331,8 +331,6 @@ namespace zzz::editor
 				}
 			}
 			m_Scripts.clear();
-
-			// 3. (TODO Phase 3: Сцен пока нет, но тут будет удаление SceneScripts)
 #endif
 
 			if (m_ScriptStorage)

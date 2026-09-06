@@ -23,7 +23,7 @@ public class AssetsBuilderEngine
 			new SceneAssetImporter(),
 			new ViewAssetImporter(),
 			new ProjectAssetImporter(),
-			new DefaultAssetImporter() // Fallback
+			new DataAssetImporter()
 		};
 
 		_validators = new List<IAssetValidator>
@@ -32,7 +32,7 @@ public class AssetsBuilderEngine
 			new ScriptAssetValidator(),
 			new SceneAssetValidator(),
 			new ViewAssetValidator(),
-			new DefaultAssetValidator() // Fallback
+			new DataAssetValidator()
 		};
 	}
 
@@ -73,6 +73,21 @@ public class AssetsBuilderEngine
 				{
 					foreach (var file in Directory.GetFiles(scriptsPath, "*.*", SearchOption.AllDirectories))
 					{
+						string ext = Path.GetExtension(file);
+						if (ext.Equals(".meta", StringComparison.OrdinalIgnoreCase))
+						{
+							scriptsFiles.Add(file);
+							continue;
+						}
+
+						if (!AssetExtensions.IsScriptExtension(ext))
+						{
+							string rel = Path.GetRelativePath(sourcePath, file).Replace('\\', '/');
+							Log($"Предупреждение: Неподдерживаемый файл '{rel}' в каталоге Assets/Scripts/ (ожидаются .h, .hpp, .cpp)! Файл проигнорирован.");
+							ignoredFiles.Add(file);
+							continue;
+						}
+
 						scriptsFiles.Add(file);
 					}
 				}
@@ -92,6 +107,22 @@ public class AssetsBuilderEngine
 						{
 							string rel = Path.GetRelativePath(sourcePath, file).Replace('\\', '/');
 							Log($"Предупреждение: Файл project.json должен находиться ТОЛЬКО в корне проекта! Файл '{rel}' проигнорирован.");
+							ignoredFiles.Add(file);
+							continue;
+						}
+
+						string ext = Path.GetExtension(file);
+						if (ext.Equals(".meta", StringComparison.OrdinalIgnoreCase))
+						{
+							assetsFiles.Add(file);
+							continue;
+						}
+
+						// Проверка поддержки расширения ресурса через единый белый список
+						if (!AssetExtensions.IsSupportedAssetExtension(ext))
+						{
+							string rel = Path.GetRelativePath(sourcePath, file).Replace('\\', '/');
+							Log($"Предупреждение: Неподдерживаемый тип ресурса '{rel}' (расширение '{ext}')! Файл проигнорирован.");
 							ignoredFiles.Add(file);
 							continue;
 						}
@@ -158,9 +189,14 @@ public class AssetsBuilderEngine
 				continue;
 
 			totalProcessed++;
-			var importer = _importers.First(imp => imp.CanHandle(file));
-			string metaPath = importer.GetMetaFilePath(file);
 			string relativePath = Path.GetRelativePath(sourcePath, file).Replace('\\', '/');
+			var importer = _importers.FirstOrDefault(imp => imp.CanHandle(file));
+			if (importer == null)
+			{
+				Log($"Предупреждение: Для файла '{relativePath}' не найден зарегистрированный импортер! Файл пропущен.");
+				continue;
+			}
+			string metaPath = importer.GetMetaFilePath(file);
 
 			string guid;
 			string assetType;
@@ -230,7 +266,10 @@ public class AssetsBuilderEngine
 			if (file.EndsWith(".meta", StringComparison.OrdinalIgnoreCase))
 				continue;
 
-			var validator = _validators.First(v => v.CanValidate(file));
+			var validator = _validators.FirstOrDefault(v => v.CanValidate(file));
+			if (validator == null)
+				continue;
+
 			var result = validator.Validate(file, guidToFileMap, guidToTypeMap, scriptNameToGuidMap);
 			if (!result.IsValid)
 			{
@@ -251,20 +290,51 @@ public class AssetsBuilderEngine
 		}
 
 		// 4. Постобработка: удаление осиротевших (устаревших) .meta файлов, у которых удален исходный ресурс
+		// или чье расширение не поддерживается белым списком
 		int deletedOrphanedMetas = 0;
 
 		foreach (var metaFile in Directory.GetFiles(sourcePath, "*.meta", SearchOption.AllDirectories))
 		{
 			// Путь целевого файла (удаляем суффикс .meta)
 			string targetAssetPath = metaFile.Substring(0, metaFile.Length - 5);
+			bool shouldDelete = false;
+			string reason = string.Empty;
+
 			if (!File.Exists(targetAssetPath))
+			{
+				shouldDelete = true;
+				reason = "исходный ресурс не существует на диске";
+			}
+			else
+			{
+				string ext = Path.GetExtension(targetAssetPath);
+				string fileName = Path.GetFileName(targetAssetPath);
+				bool isScript = targetAssetPath.StartsWith(scriptsPath, StringComparison.OrdinalIgnoreCase);
+				bool isRootProjectJson = fileName.Equals(AssetExtensions.ProjectJsonName, StringComparison.OrdinalIgnoreCase);
+
+				if (isScript)
+				{
+					if (!AssetExtensions.IsScriptExtension(ext))
+					{
+						shouldDelete = true;
+						reason = $"файл '{ext}' не является скриптом C++";
+					}
+				}
+				else if (!isRootProjectJson && !AssetExtensions.IsSupportedAssetExtension(ext))
+				{
+					shouldDelete = true;
+					reason = $"расширение '{ext}' не поддерживается движком";
+				}
+			}
+
+			if (shouldDelete)
 			{
 				try
 				{
 					File.Delete(metaFile);
 					deletedOrphanedMetas++;
 					string relMetaPath = Path.GetRelativePath(sourcePath, metaFile).Replace('\\', '/');
-					Log($"  Удален осиротевший мета-файл: {relMetaPath} (исходный ресурс не существует на диске)");
+					Log($"  Удален некорректный/осиротевший мета-файл: {relMetaPath} ({reason})");
 				}
 				catch (Exception ex)
 				{

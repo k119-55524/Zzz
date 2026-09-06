@@ -76,7 +76,7 @@ namespace zzz::engine
 					return;
 				}
 
-				const std::string sceneName = entryOpt->GetName();
+				const std::string sceneName = std::string(entryOpt->GetName());
 				const auto& sceneData = *sceneDataRes;
 
 				const auto& transition = (sceneData.GetTransitionSource() == eTransitionSource::Custom)

@@ -6,6 +6,7 @@
 #include "engine/EngineIncludes.h"
 #include "engine/scene/layer/ILayer.h"
 #include "engine/scene/layer/Layer3D.h"
+#include "engine/scene/EntityWorld.h"
 #include "engine/gapi/clear_config/ClearConfig.h"
 #include "core/io/package/GameObjectData.h"
 
@@ -48,6 +49,8 @@ namespace zzz::engine
 		[[nodiscard]] Layer3D* GetLayer3D() const noexcept;
 		[[nodiscard]] ILayer* GetLayerByName(std::string_view name) const noexcept;
 		[[nodiscard]] const std::vector<std::unique_ptr<ILayer>>& GetLayers() const noexcept { return m_Layers; }
+		[[nodiscard]] EntityWorld& GetEntityWorld() noexcept { return m_EntityWorld; }
+		[[nodiscard]] const EntityWorld& GetEntityWorld() const noexcept { return m_EntityWorld; }
 
 		void Update(const Time& time);
 		void InvokeStart();
@@ -64,5 +67,8 @@ namespace zzz::engine
 		// Слои сцены
 		std::vector<std::unique_ptr<ILayer>> m_Layers;
 		Layer3D* m_Layer3D{ nullptr };
+
+		// Мир ECS-сущностей
+		EntityWorld m_EntityWorld;
 	};
 }

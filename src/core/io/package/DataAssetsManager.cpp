@@ -18,15 +18,16 @@ namespace zzz::core
 
 	void DataAssetsManager::Initialize()
 	{
-		auto fileBufferRes = m_FileSystem->ReadAllBytes(eFileLocation::App, c_DataPackageRelativePath);
-		if (!fileBufferRes)
-			THROW_RUNTIME("Отсутствует обязательный архив игровых ресурсов: {}: {}", c_DataPackageRelativePath, fileBufferRes.error());
+		// 1. Читаем строго заголовок архива данных
+		constexpr std::size_t headerSize = PackageHeader::BinarySize();
+		auto headerBufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_DataPackageRelativePath, 0, headerSize);
+		if (!headerBufferRes)
+			THROW_RUNTIME("Отсутствует обязательный архив игровых ресурсов: {}: {}", c_DataPackageRelativePath, headerBufferRes.error());
 
-		const auto& fileBuffer = *fileBufferRes;
 		std::size_t offset = 0;
 		Serializer serializer;
 		PackageHeader header;
-		auto headerRes = serializer.Deserialize(fileBuffer, offset, header);
+		auto headerRes = serializer.Deserialize(*headerBufferRes, offset, header);
 		if (!headerRes)
 			THROW_RUNTIME("Ошибка десериализации заголовка архива данных '{}': {}", c_DataPackageRelativePath, headerRes.error());
 
@@ -37,15 +38,25 @@ namespace zzz::core
 		m_EntriesByGuid.clear();
 		m_EntriesByName.clear();
 
-		for (zU32 i = 0; i < header.GetEntryCount(); ++i)
+		// 2. Читаем ровно оглавление (TOC) благодаря фиксированному размеру PackageEntry
+		const std::size_t tableSize = header.GetEntryCount() * PackageEntry::BinarySize();
+		if (tableSize > 0)
 		{
-			PackageEntry entry{};
-			auto entryRes = serializer.Deserialize(fileBuffer, offset, entry);
-			if (!entryRes)
-				THROW_RUNTIME("Ошибка десериализации записи архива данных #{} в файле '{}': {}", i, c_DataPackageRelativePath, entryRes.error());
+			auto tableBufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_DataPackageRelativePath, headerSize, tableSize);
+			if (!tableBufferRes)
+				THROW_RUNTIME("Не удалось прочитать таблицу записей архива данных '{}': {}", c_DataPackageRelativePath, tableBufferRes.error());
 
-			m_EntriesByGuid[entry.GetGuid()] = entry;
-			m_EntriesByName[entry.GetName()] = entry;
+			std::size_t tableOffset = 0;
+			for (zU32 i = 0; i < header.GetEntryCount(); ++i)
+			{
+				PackageEntry entry{};
+				auto entryRes = serializer.Deserialize(*tableBufferRes, tableOffset, entry);
+				if (!entryRes)
+					THROW_RUNTIME("Ошибка десериализации записи архива данных #{} в файле '{}': {}", i, c_DataPackageRelativePath, entryRes.error());
+
+				m_EntriesByGuid[entry.GetGuid()] = entry;
+				m_EntriesByName[std::string(entry.GetName())] = entry;
+			}
 		}
 
 		LogDataEntriesSummary();

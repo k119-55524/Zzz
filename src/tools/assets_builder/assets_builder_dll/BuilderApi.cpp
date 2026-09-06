@@ -1,8 +1,10 @@
 #include "BuilderApi.h"
 #include <core/Core.h>
 #include <core/io/Path.h>
+#include <core/io/AssetFileExtensions.h>
 
 #include "PackagePacker.h"
+#include "AssetImporterRegistry.h"
 
 extern "C"
 {
@@ -109,5 +111,24 @@ extern "C"
 	{
 		if (!name) return false;
 		return zzz::core::Path::IsValidDirectoryName(name);
+	}
+
+	BUILDER_API bool IsSupportedAssetExtension(const char* ext)
+	{
+		if (!ext) return false;
+		std::string_view sv(ext);
+		if (sv == zzz::core::ext::Scene ||
+			sv == zzz::core::ext::Prefab ||
+			sv == zzz::core::ext::PrimaryView ||
+			sv == zzz::core::ext::ChildView ||
+			sv == zzz::core::ext::IndepView ||
+			sv == zzz::core::ext::MeshObj ||
+			sv == zzz::core::ext::TexturePng ||
+			sv == zzz::core::ext::Material ||
+			sv == zzz::core::ext::ShaderHlsl)
+		{
+			return true;
+		}
+		return zzz::builder::AssetImporterRegistry::Instance().GetImporter(sv) != nullptr;
 	}
 }

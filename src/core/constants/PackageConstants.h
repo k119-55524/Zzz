@@ -9,6 +9,9 @@ namespace zzz::core
 	/// Имя каталога игровых ассетов (Read-Only, поставляется с игрой) - используется и напрямую, и в путях ниже.
 	inline constexpr char c_AssetsDirectoryName[] = "assets";
 
+	/// Максимальная длина имени ассета в символах (кодовых точках Unicode, не байтах) в таблице пакетов (PackageEntry, см. core::FixedLengthString32)
+	inline constexpr std::size_t c_MaxAssetNameLength = 64;
+
 	/// Относительные (от каталога исполняемого файла) пути к файлам/каталогам ассетов.
 	inline constexpr std::string_view c_GamePackageRelativePath       = "assets/package.dat";
 	inline constexpr std::string_view c_PaksDirectoryRelativePath     = "assets/paks";
@@ -66,4 +69,10 @@ namespace zzz::core
 	/// Патч-версия формата пакета данных
 	constexpr zU8 c_DataPackageFilePatchVersion = 0;
 #pragma endregion // Data Package file constants
+
+#pragma region Scene and GameObject JSON constants
+	inline constexpr std::string_view c_FieldDomain       = "domain";
+	inline constexpr std::string_view c_DomainObject      = "Object";
+	inline constexpr std::string_view c_DomainEntity      = "Entity";
+#pragma endregion // Scene and GameObject JSON constants
 }

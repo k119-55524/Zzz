@@ -124,9 +124,11 @@
 ### 📌 Текущее состояние разработки
 
 > [!IMPORTANT]
-> **Текущий активный пункт:** `Пункт 9. Бинарные форматы ресурсов (MeshData, TextureData, MaterialData, ShaderData) и упаковка в PackagePacker`  
-> **Статус:** 🔄 В работе  
-> **Файл детального плана текущего шага:** [`stage_09_package_resource_formats.md`](stage_09_package_resource_formats.md)
+> **Текущий активный пункт:** `Пункт 10. Подсистема ресурсов (ResourceManager, ResourceGarbageCollector, DoubleBufferedVector)`  
+> **Статус:** ⏳ Не начато  
+> **Файл детального плана текущего шага:** [`stage_10_resource_manager.md`](stage_10_resource_manager.md)  
+> **Список открытых сквозных задач / технического долга:** [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) §4  
+> **Текущая подзадача:** Проектирование архитектуры `ResourceManager`, `IResource`, фонового сборщика `ResourceGarbageCollector` и потокобезопасного кэширования.
 
 ---
 
@@ -147,7 +149,7 @@
 |---|---|---|---|---|
 | **7** | Сущность сцены (`GameObject`), иерархический `Transform`, `SlotMap`, слои (`ILayer`, `Layer3D`, `LayerUI`, `LayerMVVM`) и `ISceneStorage` | ✅ Выполнено | [`stage_07_gameobject_and_transform.md`](stage_07_gameobject_and_transform.md) | `Transform` (поле-значение, dirty flag), `GameObject`, `SlotMap<T>` (Swap & Pop, stable handles), слои сцены (`ILayer`, `Layer3D`, `LayerUI`, `LayerMVVM`), `ISceneStorage` (`DefaultSceneStorage`), `GameObjectData` |
 | **8** | Конвейер смены сцен, асинхронная загрузка и переходы (`SceneTransitionParams`, `SceneManager::LoadSceneAsync`, `View::SetScene`) | ✅ Выполнено | [`stage_08_scene_transition_pipeline.md`](stage_08_scene_transition_pipeline.md) | Вынос загрузки сцены из конструктора `View`, `SceneTransitionParams` (структура с флагами перехода, `blockUserInput`), `View::SetScene`, асинхронная загрузка (фоновые I/O, десериализация и создание `Scene` в `ThreadPool` + потокобезопасная публикация в `m_Scenes`, запуск скриптов `InvokeStart` и вызов `onComplete` на логическом потоке через `m_MainThreadQueue` / `CallbackQueue`) |
-| **9** | Сквозной конвейер сетки: бинарный формат `MeshData`, парсинг `.obj`, упаковка и загрузка из `package.dat` | 🔄 В работе | [`stage_09_package_resource_formats.md`](stage_09_package_resource_formats.md) | `MeshData` в `core`, парсер `.obj` в `assets_builder_dll`, упаковка в `package.dat`, исходник `cube.obj` (центр 0, размер 2) с `.meta`, сквозная загрузка |
+| **9** | Сквозной конвейер сетки: бинарный формат `MeshData`, парсинг `.obj`, упаковка и загрузка из `package.dat` | ✅ Выполнено | [`stage_09_package_resource_formats.md`](stage_09_package_resource_formats.md) | `MeshData` в `core`, парсер `.obj` в `assets_builder_dll`, упаковка в `package.dat` и `data.dat`, исходник `cube_00.obj` с `.meta`, UTF-32 имена, белый список расширений |
 | **10** | Подсистема ресурсов (`ResourceManager`, `ResourceGarbageCollector`, `DoubleBufferedVector`) | ⏳ Не начато | [`stage_10_resource_manager.md`](stage_10_resource_manager.md) | Базовый интерфейс `IResource`, `eResourceState`, кэш по типам (Mesh, Texture, Shader, Material), выделенный I/O-поток, фоновый сборщик `ResourceGarbageCollector` с RAII `ScopedGCSuspension`, интеграция в `Engine` |
 | **11** | Шаблонная система буфера вершин и маппер GAPI | ⏳ Не начато | — | `CPUVertexBuffer<Attrs...>`, `eVertexFormat`, `ConverterGAPITypes` и `VertexFormatMapper` (референс: `c:\Workspaces\DZzz\...`) |
 | **12** | Кроссплатформенные абстракции ресурсов GAPI | ⏳ Не начато | — | `IVertexBuffer`, `IIndexBuffer`, `IConstantBuffer` (двойная буферизация кадра), `ITexture2D` |

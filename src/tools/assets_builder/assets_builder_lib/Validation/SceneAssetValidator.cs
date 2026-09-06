@@ -132,6 +132,23 @@ public class SceneAssetValidator : IAssetValidator
     {
         string objName = objElem.TryGetProperty("name", out var nameProp) ? nameProp.GetString() ?? "Object" : "Object";
 
+        // Валидация домена объекта (domain)
+        if (objElem.TryGetProperty("domain", out var domainProp))
+        {
+            if (domainProp.ValueKind != JsonValueKind.String)
+            {
+                result.AddError(filePath, $"{fileName}: {contextPrefix} '{objName}': поле 'domain' должно быть строкой ('Object' или 'Entity').");
+            }
+            else
+            {
+                string domainStr = domainProp.GetString() ?? string.Empty;
+                if (domainStr != "Object" && domainStr != "Entity")
+                {
+                    result.AddError(filePath, $"{fileName}: {contextPrefix} '{objName}': недопустимый domain '{domainStr}'. Допустимы только 'Object' или 'Entity'.");
+                }
+            }
+        }
+
         // Валидация скрипта объекта
         if (objElem.TryGetProperty("script", out var objScriptProp))
         {

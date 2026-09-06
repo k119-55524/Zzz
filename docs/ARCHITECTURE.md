@@ -99,6 +99,29 @@ namespace = "Gameplay"
    Унификация использования `std::expected`, `throw` и `ensure`. Введение единого `Z_FATAL` или полный переход на `std::expected` с кодами ошибок `ErrorCode`.
 4. **Покрытие тестами (`src/qa/`):**
    Расширение юнит-тестов и бенчмарков.
+5. **Оптимизация производительности и функционала `zzz::core::EventImpl` (`src/core/events/Event.h`):**
+   * **Проблема:** На длинных циклах (10 000+ подписчиков) вызов события создает CPU overhead из-за `std::function` (Type Erasure / косвенный вызов), атомарного `isDead.load()` (`seq_cst`) и `weak_ptr::expired()` (атомарное чтение control block). Дополнительно при `SetActive(false/true)` в `BaseScript` происходит полная отписка/подписка, что ломает порядок вызова подписчиков.
+   * **Планируемые решения:**
+     - Ослабление атомарного порядка вызовов: замена `isDead.load()` на `std::memory_order_relaxed`.
+     - Избавление от проверки `weak_ptr.expired()` во внутреннем цикле за счет явной отписки объектов в деструкторах (Smart Unsubscribe on Destroy).
+     - Поддержка флага паузы (`isPaused` / `isEnabled`) внутри `CallbackEntry`, чтобы `BaseScript::SetActive` не пересоздавал подписку и сохранял исходный порядок вызова в очереди.
+     - Разделение данных на Hot/Cold массивы (Data-Oriented Structure: `vector<FuncType>` отдельно от метаданных отписки).
+     - Замена `std::function` на легкий кастомный делегат (`void* instance` + static trampoline) для ликвидации SBO-аллокаций и ускорения вызова.
+
+### 4.2. Инфраструктурные задачи (сериализация, I/O пакетов)
+6. **Сборка двух более ранних рефакторингов формально не подтверждена:**
+   Перенос `ClearConfig` View → Scene, новый `RenderManager`/`SceneRenderTree` (2026-08-30), и упразднение `eEnumToString.h` в пользу `ToString` рядом с каждым enum'ом (2026-09-02) — оба сделаны без доступа к реальному тулчейну (сверка только по коду/диффу), явно не пересобирались. Косвенно подтверждены последующим успешным билдом Пункта 9 генплана (`current_plan/stage_09_package_resource_formats.md`, DoD «Собрать проект и успешно прогнать game_win.exe»), но стоит один раз явно закрыть вопрос — прогнать `src/qa/tests` целиком.
+7. **`FileSystem`: нет переиспользуемого файлового хендла:**
+   `FileSystemBase::ReadBytes`/`ReadAllBytes` (`src/core/io/FileSystemBase.cpp`) и Android-версия (`FileSystemAndroid.cpp`) открывают новый хендл на каждый вызов. `PackageManager::Initialize()`/`DataAssetsManager::Initialize()` тянут `ReadAllBytes` на весь `package.dat`/`data.dat` только чтобы дойти до конца таблицы записей (байты всех payload'ов читаются впустую), а затем каждый реально запрошенный ресурс читается ЕЩЁ РАЗ отдельным `ReadBytes(offset, size)`. Отложено до подсистемы ресурсов (Пункт 10 генплана, `ResourceManager` с выделенным I/O-потоком и кэшем).
+8. **[ВЫПОЛНЕНО] `PackageEntry::name` — фиксированный размер записи (`FixedLengthString32`):**
+   Реализован `FixedLengthString32<c_MaxAssetNameLength>` (`char32_t`, UTF-32), гарантирующий строго 64 символа во всех языках (русский, английский, иероглифы) и фиксированный размер 256 байт на имя. В `Guid` добавлен метод `BinarySize()` (16 байт), исключающий оверхед полиморфного `vptr` (8 байт). Размер `PackageEntry::BinarySize()` стал полностью детерминированным. Чтение TOC в `PackageManager` и `DataAssetsManager` выполняется чанком `entryCount * PackageEntry::BinarySize()` без загрузки полезной нагрузки всего файла `package.dat`/`data.dat`. В упаковщике (`ArchiveWriter.cpp`) внедрена строгая валидация длины имени: при превышении лимита `DOutError` логирует ошибку, функция возвращает `false` (не бросает исключение — упаковщик вызывается из C# через P/Invoke, где непойманное исключение недопустимо).
+
+### 4.3. Мелкие точечные задачи по коду
+9. **Android: `OnResize` при `APP_CMD_WINDOW_RESIZED`** (`src/engine/platforms/window/WinAndroid.cpp`) — извлечь новые размеры окна и передать в `OnResize` (сейчас только логируется факт события).
+10. **`WindowCommon::OnDpiChanged`** (`src/engine/platforms/window/WindowCommon.h`) — добавить передачу `ScaleFactor` (float) и нового размера, чтобы движок знал, как перестроить UI при переносе окна на монитор с другим DPI.
+11. **`EditorEngine::UnloadScripts` (Phase 3)** (`src/editor_dll/engine_wrapper/EditorEngine.cpp`) — комментарий-заглушка про удаление `SceneScripts` при выгрузке скриптов писался до появления сцен в движке; сцены уже реализованы (Пункт 7-8 генплана) — нужно перепроверить, актуален ли ещё этот шаг и не сделан ли он уже как часть `SceneManager`.
+12. **`BuildConfigurator`: вкладка настроек** (`Services/CMakeService.cs`, `Services/ICMakeService.cs`, `ViewModels/SettingsTabViewModel.cs`, `Views/SettingsTabView.xaml.cs`) — четыре файла-заготовки (2026-07-05), нигде не подключены к `MainWindow.xaml` (нет соответствующего `TabItem`). Реализовать содержимое вкладки либо удалить все четыре файла, если она не понадобится.
+13. **Editor: режим сборки пользовательских скриптов** (`src/tools/editor/Views/MainWindow.xaml.cs`) — сейчас всегда жёстко `Debug` (чтобы работали точки останова); добавить в настройки проекта/редактора возможность выбрать `Debug`/`Release`/`RelWithDebInfo`.
 
 ---
 
@@ -140,26 +163,19 @@ DOut("Формат глубины: {}", c_DefaultDepthFormat);
 // Вывод: Формат глубины: DXGI_FORMAT::DXGI_FORMAT_D24_UNORM_S8_UINT
 ```
 
-5. **Оптимизация производительности и функционала `zzz::core::EventImpl` (`src/core/events/Event.h`):**
-   * **Проблема:** На длинных циклах (10 000+ подписчиков) вызов события создает CPU overhead из-за `std::function` (Type Erasure / косвенный вызов), атомарного `isDead.load()` (`seq_cst`) и `weak_ptr::expired()` (атомарное чтение control block). Дополнительно при `SetActive(false/true)` в `BaseScript` происходит полная отписка/подписка, что ломает порядок вызова подписчиков.
-   * **Планируемые решения:**
-     - Ослабление атомарного порядка вызовов: замена `isDead.load()` на `std::memory_order_relaxed`.
-     - Избавление от проверки `weak_ptr.expired()` во внутреннем цикле за счет явной отписки объектов в деструкторах (Smart Unsubscribe on Destroy).
-     - Поддержка флага паузы (`isPaused` / `isEnabled`) внутри `CallbackEntry`, чтобы `BaseScript::SetActive` не пересоздавал подписку и сохранял исходный порядок вызова в очереди.
-     - Разделение данных на Hot/Cold массивы (Data-Oriented Structure: `vector<FuncType>` отдельно от метаданных отписки).
-     - Замена `std::function` на легкий кастомный делегат (`void* instance` + static trampoline) для ликвидации SBO-аллокаций и ускорения вызова.
-
-
 ---
 
 ## 6. Пайплайн Сцен, Ресурсов и Пользовательских Данных (Scene & Resource Pipeline)
 
 ### 6.1. Общий поток: Assets Builder → Engine
-1. **Assets Builder** (C#, `assets_builder_lib`) сканирует `Assets/`, генерирует/проверяет `.meta`-файлы, валидирует `project.json` (включая обязательные `company_name`/`app_name` — см. 6.3) и уникальность имён сцен (`SceneManager::LoadSceneByName` ищет сцену по имени, дубликат сделал бы поиск неоднозначным).
-2. **Нативный упаковщик** (`PackagePacker.cpp`, вызывается из C# через `PackProjectNative`) сериализует `project.json`, сцены (`.zs`), вьюхи (`.zcv`/`.ziv`/`.zav`) и префабы (`.zp`) в единый бинарный `package.dat` (`assets/package.dat`).
-3. При старте движка `PackageManager::Initialize()` читает и валидирует `package.dat` (магические байты, мажорная версия формата, обязательные `PrimaryViewData` и `ProjectManifestData`), кэширует имя компании/приложения.
+1. **Assets Builder** (C#, `assets_builder_lib`) сканирует `Assets/` и `Assets/Scripts/` по строгому белому списку поддерживаемых расширений (`AssetFileExtensions.h`, C++ нативная проверка `IsSupportedAssetExtension`). Неподдерживаемые файлы отбрасываются с предупреждением без генерации `.meta`. Генерирует/проверяет `.meta`-файлы для валидных ресурсов, валидирует `project.json` (включая обязательные `company_name`/`app_name` — см. 6.3), уникальность имён сцен и валидность GUID ссылок.
+2. **Нативный упаковщик** (`PackagePacker.cpp`, вызывается из C# через `PackProjectNative`) сериализует:
+   - Структуру и манифест игры в единый бинарный `package.dat` (`assets/package.dat`): `project.json`, сцены (`.zs`), вьюхи (`.zcv`/`.ziv`/`.zav`);
+   - Игровые ресурсы в бинарный архив `data.dat` (`assets/data/data.dat`): меши (`MeshData` из `.obj` через `ObjImporter`), материалы, шейдеры, префабы.
+   - Записи обоих архивов имеют фиксированный размер заголовков (`FixedLengthString32<c_MaxAssetNameLength>`), позволяя считывать TOC блоками фиксированного размера без загрузки данных в память.
+3. При старте движка `PackageManager::Initialize()` читает и валидирует `package.dat`, а `DataAssetsManager::Initialize()` открывает `data.dat` (проверяет сигнатуру `ZZD`, версию и строит быстрый индекс записей по GUID и имени).
 4. `Path::InitializeUserData(companyName, appName)` строит двухуровневый каталог пользовательских данных (`%LOCALAPPDATA%/<company>/<app>/` на Windows и аналоги на других платформах) — до этого вызова `GetUserDataDirectory()`/`GetCacheDirectory()`/`GetSavesDirectory()`/`GetLogsDirectory()` бросают исключение (см. `ensure()`).
-5. `SceneManager` загружает и выгружает сцены (`LoadScene`/`LoadSceneByName`/`UnloadScene`), `View` хранит `weak_ptr<Scene>` на активную сцену.
+5. `SceneManager` загружает и выгружает сцены (`LoadScene`/`LoadSceneByName`/`UnloadScene`), `View` хранит `weak_ptr<Scene>` на активную сцену. Ресурсы сцены (например, `MeshData` объектов) извлекаются по GUID из `DataAssetsManager`.
 
 ### 6.2. Модель сцен
 - `Scene` — лёгкий контейнер: GUID, имя, `SceneEventBus`, набор `SceneScript`. Создаётся и уничтожается **только** через `SceneManager`; деструктор `Scene` не вызывает `InvokeDestroy()` — это отдельный явный шаг в `SceneManager::ProcessPendingUnloads`, чтобы избежать двойного вызова `OnDestroy()`.

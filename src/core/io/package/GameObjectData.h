@@ -8,16 +8,12 @@
 #include "core/utils/Guid.h"
 #include "core/serialize/Serializer.h"
 #include "core/enums/eLayerType.h"
+#include "core/enums/eObjectDomain.h"
 #include "math/vector/Vec3.h"
 #include "math/quat/Quat.h"
 
 namespace zzz::core
 {
-	enum class eObjectDomain : uint8_t
-	{
-		Object = 0, ///< Классический GameObject с иерархией Transform и собственными скриптами
-		Entity = 1  ///< Высокоскоростная пакетная сущность для EntityWorld
-	};
 
 	/**
 	 * @class GameObjectData

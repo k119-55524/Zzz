@@ -59,7 +59,6 @@ namespace zzz::engine
 
 		/**
 		 * @brief Вызывается при перемещении окна на монитор с другим DPI.
-		 * TODO: В будущем стоит добавить передачу ScaleFactor (float) и нового размера, чтобы движок знал, как перестроить UI.
 		 */
 		std::function<void()> OnDpiChanged;
 

@@ -97,6 +97,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "scene/Transform.h" "scene/Transform.cpp"
         "scene/GameObject.h" "scene/GameObject.cpp"
         "scene/ObjectWorld.h" "scene/ObjectWorld.cpp"
+        "scene/EntityWorld.h" "scene/EntityWorld.cpp"
         "scene/storage/ISceneStorage.h"
         "scene/storage/DefaultSceneStorage.h" "scene/storage/DefaultSceneStorage.cpp"
         "scene/layer/ILayer.h"
