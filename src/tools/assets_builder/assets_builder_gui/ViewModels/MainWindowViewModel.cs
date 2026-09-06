@@ -10,7 +10,6 @@ using System.Windows.Input;
 using assets_builder_gui.Models;
 using assets_builder_gui.Services;
 using assets_builder_lib;
-using assets_builder_lib.Scaffolding;
 using assets_builder_lib.Validation;
 
 namespace assets_builder_gui.ViewModels;
@@ -29,6 +28,7 @@ public class MainWindowViewModel : ViewModelBase
     private sealed class TargetBuildSnapshot
     {
         public string Name { get; init; } = string.Empty;
+        public string ProjectPath { get; init; } = string.Empty;
         public eTargetPlatform TargetPlatform { get; init; }
         public string ConfigFile { get; init; } = string.Empty;
         public string BuildDirectory { get; init; } = string.Empty;
@@ -39,7 +39,6 @@ public class MainWindowViewModel : ViewModelBase
     private readonly SessionConfig _sessionConfig;
     private BuildProfileViewModel? _selectedProfile;
     private bool _isBuilding = false;
-    private bool _isCollectionModified = false;
     private string _logText = string.Empty;
     private string _statusText = "Готов";
     private string _statusColor = "#4CAF50";
@@ -50,6 +49,7 @@ public class MainWindowViewModel : ViewModelBase
     private double _windowLeft;
     private double _windowTop;
     private bool _isWindowMaximized;
+    private double _presetsPanelHeight = 260;
 
     public MainWindowViewModel(IDialogService dialogService)
     {
@@ -79,6 +79,7 @@ public class MainWindowViewModel : ViewModelBase
         _windowLeft = _sessionConfig.WindowLeft;
         _windowTop = _sessionConfig.WindowTop;
         _isWindowMaximized = _sessionConfig.IsWindowMaximized;
+        _presetsPanelHeight = _sessionConfig.PresetsPanelHeight >= 170 ? _sessionConfig.PresetsPanelHeight : 260;
 
         Profiles = new ObservableCollection<BuildProfileViewModel>();
 
@@ -101,14 +102,8 @@ public class MainWindowViewModel : ViewModelBase
         AppendLog("Готов к работе.");
 
         // Команды профилей / проектов
-        AddProfileCommand = new RelayCommand(_ => AddProfile());
-        CreateNewProjectScaffoldCommand = new RelayCommand(_ => CreateNewProjectScaffold());
-        DeleteProfileCommand = new RelayCommand(_ => DeleteProfile(), _ => SelectedProfile != null);
         SaveProfileCommand = new RelayCommand(_ => SaveProfile(), _ => HasAnyUnsavedChanges && (SelectedProfile == null || SelectedProfile.IsValid));
         CancelProfileCommand = new RelayCommand(_ => CancelProfile(), _ => SelectedProfile != null && SelectedProfile.IsDirty);
-
-        BrowseSourcePathCommand = new RelayCommand(_ => BrowseSourcePath(), _ => SelectedProfile != null);
-        BrowseDestinationPathCommand = new RelayCommand(_ => BrowseDestinationPath(), _ => SelectedProfile != null);
 
         StartOrCancelBuildCommand = new RelayCommand(_ => StartBuild(), _ => SelectedProfile != null && SelectedProfile.IsValid && !IsBuilding);
         CopyLogsCommand = new RelayCommand(_ => CopyLogs(), _ => LogItems.Count > 0);
@@ -129,6 +124,11 @@ public class MainWindowViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(HasSelectedProfile));
                 CommandManager.InvalidateRequerySuggested();
+                if (value != null)
+                {
+                    _sessionConfig.SelectedProfileId = value.Id;
+                    SaveSessionToDisk();
+                }
             }
         }
     }
@@ -197,167 +197,48 @@ public class MainWindowViewModel : ViewModelBase
         set => SetProperty(ref _isWindowMaximized, value);
     }
 
-    public bool HasAnyUnsavedChanges => _isCollectionModified || Profiles.Any(p => p.IsDirty);
+    public double PresetsPanelHeight
+    {
+        get => _presetsPanelHeight;
+        set => SetProperty(ref _presetsPanelHeight, value);
+    }
+
+    public bool HasAnyUnsavedChanges => Profiles.Any(p => p.IsDirty);
 
     public string WindowTitle => HasAnyUnsavedChanges ? "Assets Builder *" : "Assets Builder";
 
     // Команды
-    public ICommand AddProfileCommand { get; }
-    public ICommand CreateNewProjectScaffoldCommand { get; }
-    public ICommand DeleteProfileCommand { get; }
     public ICommand SaveProfileCommand { get; }
     public ICommand CancelProfileCommand { get; }
-
-    public ICommand BrowseSourcePathCommand { get; }
-    public ICommand BrowseDestinationPathCommand { get; }
-
     public ICommand StartOrCancelBuildCommand { get; }
     public ICommand CopyLogsCommand { get; }
     public ICommand ClearLogsCommand { get; }
 
-    private void AddProfile()
-    {
-        string? folder = _dialogService.SelectFolder("Выберите существующую папку проекта с project.json", string.Empty);
-        if (string.IsNullOrEmpty(folder)) return;
-
-        // Строгая валидация выбранной папки
-        var validation = ProjectValidator.Validate(folder);
-        if (!validation.IsValid)
-        {
-            string errSummary = string.Join("\n", validation.Errors);
-            _dialogService.ShowError("Ошибка открытия проекта", $"Выбранная папка не является валидным проектом ассетов:\n\n{errSummary}\n\nПроект не был открыт.");
-            return;
-        }
-
-        string projName = Path.GetFileName(folder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-        string destPath = Path.Combine(Path.GetDirectoryName(folder) ?? folder, $"{projName}_build");
-
-        var model = new BuildProfile
-        {
-            Name = projName,
-            SourcePath = folder,
-            DestinationPath = destPath,
-            ActivePresetName = validation.Manifest?.BuildSettings?.ActivePreset ?? "Default"
-        };
-
-        var vm = new BuildProfileViewModel(model, _dialogService);
-        vm.PropertyChanged += OnProfilePropertyChanged;
-        Profiles.Add(vm);
-        SelectedProfile = vm;
-
-        _isCollectionModified = true;
-        OnPropertyChanged(nameof(HasAnyUnsavedChanges));
-        OnPropertyChanged(nameof(WindowTitle));
-        AppendLog($"Проект '{projName}' успешно добавлен в список.");
-    }
-
-    private void CreateNewProjectScaffold()
-    {
-        string? folder = _dialogService.SelectFolder("Выберите пустую папку для создания нового проекта ассетов", string.Empty);
-        if (string.IsNullOrEmpty(folder)) return;
-
-        if (!ProjectScaffolder.CanCreateInDirectory(folder, out string checkErr))
-        {
-            _dialogService.ShowError("Невозможно создать проект", checkErr);
-            return;
-        }
-
-        string projName = Path.GetFileName(folder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-        if (string.IsNullOrWhiteSpace(projName))
-        {
-            projName = "NewGameProject";
-        }
-
-        bool created = ProjectScaffolder.CreateProjectScaffold(folder, "MyCompany", projName, out string scaffoldErr);
-        if (!created)
-        {
-            _dialogService.ShowError("Ошибка создания каркаса проекта", scaffoldErr);
-            return;
-        }
-
-        string destPath = Path.Combine(Path.GetDirectoryName(folder) ?? folder, $"{projName}_build");
-        var model = new BuildProfile
-        {
-            Name = projName,
-            SourcePath = folder,
-            DestinationPath = destPath,
-            ActivePresetName = "Default"
-        };
-
-        var vm = new BuildProfileViewModel(model, _dialogService);
-        vm.PropertyChanged += OnProfilePropertyChanged;
-        Profiles.Add(vm);
-        SelectedProfile = vm;
-
-        _isCollectionModified = true;
-        OnPropertyChanged(nameof(HasAnyUnsavedChanges));
-        OnPropertyChanged(nameof(WindowTitle));
-        _dialogService.ShowInformation("Каркас проекта создан", $"Новый проект ассетов успешно сгенерирован в папке:\n{folder}");
-        AppendLog($"Создан новый проект '{projName}' в '{folder}'.");
-    }
-
-    private void DeleteProfile()
-    {
-        if (SelectedProfile == null) return;
-
-        bool confirmed = _dialogService.ShowConfirmation(
-            "Удаление настройки",
-            $"Вы действительно хотите удалить настройку '{SelectedProfile.Name}'?"
-        );
-
-        if (confirmed)
-        {
-            var toRemove = SelectedProfile;
-            int index = Profiles.IndexOf(toRemove);
-            Profiles.Remove(toRemove);
-
-            if (Profiles.Count > 0)
-            {
-                int newIndex = Math.Clamp(index, 0, Profiles.Count - 1);
-                SelectedProfile = Profiles[newIndex];
-            }
-            else
-            {
-                SelectedProfile = null;
-            }
-
-            _isCollectionModified = true;
-            OnPropertyChanged(nameof(HasAnyUnsavedChanges));
-            OnPropertyChanged(nameof(WindowTitle));
-            CommandManager.InvalidateRequerySuggested();
-        }
-    }
-
     private void SaveProfile()
     {
-        bool confirmed = _dialogService.ShowConfirmation(
-            "Подтверждение сохранения",
-            "Сохранить все изменения в настройках сборок?"
-        );
-
-        if (confirmed)
+        foreach (var p in Profiles.Where(p => p.IsDirty))
         {
-            foreach (var p in Profiles.Where(p => p.IsDirty))
-            {
-                p.ApplyToModel();
-            }
-
-            ProfilesView.Refresh();
-
-            _isCollectionModified = false;
-            SaveSessionToDisk();
-            AppendLog("Настройки успешно сохранены на диск.");
-            OnPropertyChanged(nameof(HasAnyUnsavedChanges));
-            OnPropertyChanged(nameof(WindowTitle));
+            p.ApplyToModel();
         }
+
+        ProfilesView.Refresh();
+
+        SaveSessionToDisk();
+        AppendLog("Настройки успешно сохранены на диск.");
+        OnPropertyChanged(nameof(HasAnyUnsavedChanges));
+        OnPropertyChanged(nameof(WindowTitle));
+        CommandManager.InvalidateRequerySuggested();
     }
 
     private void CancelProfile()
     {
         if (SelectedProfile == null) return;
         SelectedProfile.ResetFromModel();
+        ProfilesView.Refresh();
         OnPropertyChanged(nameof(HasAnyUnsavedChanges));
         OnPropertyChanged(nameof(WindowTitle));
+        CommandManager.InvalidateRequerySuggested();
+        AppendLog("Изменения отменены.");
     }
 
     public void SaveSessionToDisk()
@@ -370,6 +251,7 @@ public class MainWindowViewModel : ViewModelBase
         _sessionConfig.WindowLeft = WindowLeft;
         _sessionConfig.WindowTop = WindowTop;
         _sessionConfig.IsWindowMaximized = IsWindowMaximized;
+        _sessionConfig.PresetsPanelHeight = PresetsPanelHeight;
 
         SessionManager.SaveSession(_sessionConfig);
     }
@@ -424,10 +306,11 @@ public class MainWindowViewModel : ViewModelBase
 
         // Выбираем таргеты: активные и с выбранным конфигом (не "None" / не пустой)
         var runnableTargets = SelectedProfile.SelectedPreset.Targets
-            .Where(t => t.IsEnabled && !t.IsNone)
+            .Where(t => !t.IsNone)
             .Select(t => new TargetBuildSnapshot
             {
                 Name = t.Name,
+                ProjectPath = t.ProjectPath,
                 TargetPlatform = ParseTargetPlatform(t.Platform),
                 ConfigFile = t.ConfigFilePath,
                 BuildDirectory = GetTargetBuildDirectory(SelectedProfile.DestinationPath, t.Name, ParseTargetPlatform(t.Platform))
@@ -444,12 +327,39 @@ public class MainWindowViewModel : ViewModelBase
         string sourcePath = SelectedProfile.SourcePath;
         string presetName = SelectedProfile.SelectedPreset.Name;
 
-        bool confirmed = _dialogService.ShowConfirmation(
-            "Подтверждение сборки",
-            $"Папка назначения '{SelectedProfile.DestinationPath}' будет вычищена и перезаписана.\n\nПродолжить сборку пресета '{presetName}' для '{SelectedProfile.Name}'?"
-        );
+        if (SelectedProfile.IsDirty)
+        {
+            bool saveConfirmed = _dialogService.ShowConfirmation(
+                "Несохраненные изменения",
+                $"В настройках сборок есть несохраненные изменения. Сохранить их на диск перед запуском сборки набора '{presetName}'?"
+            );
 
-        if (confirmed)
+            if (!saveConfirmed)
+            {
+                AppendLog("Сборка отменена: изменения не сохранены на диск.");
+                return;
+            }
+
+            SelectedProfile.ApplyToModel();
+            SaveSessionToDisk();
+            ProfilesView.Refresh();
+            OnPropertyChanged(nameof(HasAnyUnsavedChanges));
+            OnPropertyChanged(nameof(WindowTitle));
+            CommandManager.InvalidateRequerySuggested();
+            AppendLog("Настройки сохранены перед сборкой.");
+        }
+        else
+        {
+            bool confirmed = _dialogService.ShowConfirmation(
+                "Подтверждение сборки",
+                $"Продолжить сборку набора '{presetName}' для проекта '{SelectedProfile.Name}'?"
+            );
+
+            if (!confirmed)
+            {
+                return;
+            }
+        }
         {
             IsBuilding = true;
 
@@ -488,8 +398,8 @@ public class MainWindowViewModel : ViewModelBase
                         string targetAssetsDir = Path.Combine(target.BuildDirectory, "assets");
                         Directory.CreateDirectory(targetAssetsDir);
 
-                        _engine.CopyHeaderFiles(sourcePath, targetIncludeDir);
-                        _engine.GenerateScriptsCmake(sourcePath, target.BuildDirectory);
+                        _engine.CopyHeaderFiles(sourcePath, targetIncludeDir, target.ConfigFile);
+                        _engine.GenerateScriptsCmake(sourcePath, target.BuildDirectory, target.ConfigFile);
 
                         AppendLog($"Сериализация пакета для '{target.Name}' ({target.TargetPlatform}, конфиг: '{target.ConfigFile}')...");
                         bool packSuccess = PackagePacker.PackProject(sourcePath, target.BuildDirectory, target.TargetPlatform, target.ConfigFile, AppendLog);
@@ -540,10 +450,11 @@ public class MainWindowViewModel : ViewModelBase
         string baseDestinationPath = SelectedProfile.DestinationPath;
 
         var runnableTargets = SelectedProfile.SelectedPreset.Targets
-            .Where(t => t.IsEnabled && !t.IsNone)
+            .Where(t => !t.IsNone)
             .Select(t => new TargetBuildSnapshot
             {
                 Name = t.Name,
+                ProjectPath = t.ProjectPath,
                 TargetPlatform = ParseTargetPlatform(t.Platform),
                 ConfigFile = t.ConfigFilePath,
                 BuildDirectory = GetTargetBuildDirectory(baseDestinationPath, t.Name, ParseTargetPlatform(t.Platform))
@@ -587,8 +498,8 @@ public class MainWindowViewModel : ViewModelBase
                 string targetAssetsDir = Path.Combine(target.BuildDirectory, "assets");
                 Directory.CreateDirectory(targetAssetsDir);
 
-                _engine.CopyHeaderFiles(sourcePath, targetIncludeDir);
-                _engine.GenerateScriptsCmake(sourcePath, target.BuildDirectory);
+                _engine.CopyHeaderFiles(sourcePath, targetIncludeDir, target.ConfigFile);
+                _engine.GenerateScriptsCmake(sourcePath, target.BuildDirectory, target.ConfigFile);
 
                 Console.WriteLine($"Сериализация индивидуального пакета для '{target.Name}' ({target.TargetPlatform}, конфиг: '{target.ConfigFile}')...");
                 bool packSuccess = PackagePacker.PackProject(sourcePath, target.BuildDirectory, target.TargetPlatform, target.ConfigFile, msg => Console.WriteLine(msg));
@@ -671,10 +582,13 @@ public class MainWindowViewModel : ViewModelBase
         {
             try
             {
-                string targetDir = Path.Combine(workspaceProjects, target.Name);
+                string targetDir = !string.IsNullOrWhiteSpace(target.ProjectPath) && Directory.Exists(target.ProjectPath)
+                    ? target.ProjectPath
+                    : Path.Combine(workspaceProjects, target.Name);
+
                 if (!Directory.Exists(targetDir))
                 {
-                    AppendLog($"Предупреждение: Целевой проект '{target.Name}' не найден в каталоге движка '{workspaceProjects}'. Запись assets_config.json пропущена.");
+                    AppendLog($"Предупреждение: Целевой проект '{target.Name}' не найден по пути '{targetDir}'. Запись assets_config.json пропущена.");
                     continue;
                 }
 
@@ -797,7 +711,7 @@ public class MainWindowViewModel : ViewModelBase
         {
             var choice = _dialogService.ShowSaveOnCloseConfirmation(
                 "Несохраненные изменения",
-                "В настройках есть несохраненные изменения (добавлены/удалены/изменены профили). Сохранить их перед выходом?"
+                "В настройках сборок есть несохраненные изменения. Сохранить их перед выходом?"
             );
 
             if (choice == SaveCloseChoice.Save)
@@ -807,7 +721,6 @@ public class MainWindowViewModel : ViewModelBase
                     p.ApplyToModel();
                 }
                 ProfilesView.Refresh();
-                _isCollectionModified = false;
                 SaveSessionToDisk();
                 return true;
             }
@@ -831,6 +744,12 @@ public class MainWindowViewModel : ViewModelBase
         {
             OnPropertyChanged(nameof(HasAnyUnsavedChanges));
             OnPropertyChanged(nameof(WindowTitle));
+            ProfilesView.Refresh();
+            CommandManager.InvalidateRequerySuggested();
+        }
+        else if (e.PropertyName == nameof(BuildProfileViewModel.IsValid) ||
+                 e.PropertyName == nameof(BuildProfileViewModel.HasRunnableTargets))
+        {
             CommandManager.InvalidateRequerySuggested();
         }
     }

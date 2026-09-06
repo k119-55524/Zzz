@@ -108,20 +108,26 @@ namespace = "Gameplay"
      - Разделение данных на Hot/Cold массивы (Data-Oriented Structure: `vector<FuncType>` отдельно от метаданных отписки).
      - Замена `std::function` на легкий кастомный делегат (`void* instance` + static trampoline) для ликвидации SBO-аллокаций и ускорения вызова.
 
-### 4.2. Инфраструктурные задачи (сериализация, I/O пакетов)
-6. **Сборка двух более ранних рефакторингов формально не подтверждена:**
+### 4.2. Инфраструктурные задачи (сериализация, I/O пакетов, сборочный инструментарий)
+6. **Тестирование Сборщика Ассетов (Assets Builder) с различными настройками и профилями:**
+   - Верификация сборки с отключенными таргетами (`None`) — сборка только выбранных активных таргетов.
+   - Верификация сборки под различные платформы (Windows, Linux, Android) и с разными платформенными JSON-конфигурациями.
+   - Проверка применения дельт (`add_scripts`/`remove_scripts`, `add_scenes`/`remove_scenes`, переопределение `start_scene`).
+   - Проверка поведения `IsDirty` и диалогов подтверждения сохранения настроек перед сборкой.
+   - Стресс-тестирование валидатора проектов (`ProjectValidator`) на поврежденных метаданных и отсутствующих файлах.
+7. **Сборка двух более ранних рефакторингов формально не подтверждена:**
    Перенос `ClearConfig` View → Scene, новый `RenderManager`/`SceneRenderTree` (2026-08-30), и упразднение `eEnumToString.h` в пользу `ToString` рядом с каждым enum'ом (2026-09-02) — оба сделаны без доступа к реальному тулчейну (сверка только по коду/диффу), явно не пересобирались. Косвенно подтверждены последующим успешным билдом Пункта 9 генплана (`current_plan/stage_09_package_resource_formats.md`, DoD «Собрать проект и успешно прогнать game_win.exe»), но стоит один раз явно закрыть вопрос — прогнать `src/qa/tests` целиком.
-7. **`FileSystem`: нет переиспользуемого файлового хендла:**
+8. **`FileSystem`: нет переиспользуемого файлового хендла:**
    `FileSystemBase::ReadBytes`/`ReadAllBytes` (`src/core/io/FileSystemBase.cpp`) и Android-версия (`FileSystemAndroid.cpp`) открывают новый хендл на каждый вызов. `PackageManager::Initialize()`/`DataAssetsManager::Initialize()` тянут `ReadAllBytes` на весь `package.dat`/`data.dat` только чтобы дойти до конца таблицы записей (байты всех payload'ов читаются впустую), а затем каждый реально запрошенный ресурс читается ЕЩЁ РАЗ отдельным `ReadBytes(offset, size)`. Отложено до подсистемы ресурсов (Пункт 10 генплана, `ResourceManager` с выделенным I/O-потоком и кэшем).
-8. **[ВЫПОЛНЕНО] `PackageEntry::name` — фиксированный размер записи (`FixedLengthString32`):**
+9. **[ВЫПОЛНЕНО] `PackageEntry::name` — фиксированный размер записи (`FixedLengthString32`):**
    Реализован `FixedLengthString32<c_MaxAssetNameLength>` (`char32_t`, UTF-32), гарантирующий строго 64 символа во всех языках (русский, английский, иероглифы) и фиксированный размер 256 байт на имя. В `Guid` добавлен метод `BinarySize()` (16 байт), исключающий оверхед полиморфного `vptr` (8 байт). Размер `PackageEntry::BinarySize()` стал полностью детерминированным. Чтение TOC в `PackageManager` и `DataAssetsManager` выполняется чанком `entryCount * PackageEntry::BinarySize()` без загрузки полезной нагрузки всего файла `package.dat`/`data.dat`. В упаковщике (`ArchiveWriter.cpp`) внедрена строгая валидация длины имени: при превышении лимита `DOutError` логирует ошибку, функция возвращает `false` (не бросает исключение — упаковщик вызывается из C# через P/Invoke, где непойманное исключение недопустимо).
 
 ### 4.3. Мелкие точечные задачи по коду
-9. **Android: `OnResize` при `APP_CMD_WINDOW_RESIZED`** (`src/engine/platforms/window/WinAndroid.cpp`) — извлечь новые размеры окна и передать в `OnResize` (сейчас только логируется факт события).
-10. **`WindowCommon::OnDpiChanged`** (`src/engine/platforms/window/WindowCommon.h`) — добавить передачу `ScaleFactor` (float) и нового размера, чтобы движок знал, как перестроить UI при переносе окна на монитор с другим DPI.
-11. **`EditorEngine::UnloadScripts` (Phase 3)** (`src/editor_dll/engine_wrapper/EditorEngine.cpp`) — комментарий-заглушка про удаление `SceneScripts` при выгрузке скриптов писался до появления сцен в движке; сцены уже реализованы (Пункт 7-8 генплана) — нужно перепроверить, актуален ли ещё этот шаг и не сделан ли он уже как часть `SceneManager`.
-12. **`BuildConfigurator`: вкладка настроек** (`Services/CMakeService.cs`, `Services/ICMakeService.cs`, `ViewModels/SettingsTabViewModel.cs`, `Views/SettingsTabView.xaml.cs`) — четыре файла-заготовки (2026-07-05), нигде не подключены к `MainWindow.xaml` (нет соответствующего `TabItem`). Реализовать содержимое вкладки либо удалить все четыре файла, если она не понадобится.
-13. **Editor: режим сборки пользовательских скриптов** (`src/tools/editor/Views/MainWindow.xaml.cs`) — сейчас всегда жёстко `Debug` (чтобы работали точки останова); добавить в настройки проекта/редактора возможность выбрать `Debug`/`Release`/`RelWithDebInfo`.
+10. **Android: `OnResize` при `APP_CMD_WINDOW_RESIZED`** (`src/engine/platforms/window/WinAndroid.cpp`) — извлечь новые размеры окна и передать в `OnResize` (сейчас только логируется факт события).
+11. **`WindowCommon::OnDpiChanged`** (`src/engine/platforms/window/WindowCommon.h`) — добавить передачу `ScaleFactor` (float) и нового размера, чтобы движок знал, как перестроить UI при переносе окна на монитор с другим DPI.
+12. **`EditorEngine::UnloadScripts` (Phase 3)** (`src/editor_dll/engine_wrapper/EditorEngine.cpp`) — комментарий-заглушка про удаление `SceneScripts` при выгрузке скриптов писался до появления сцен в движке; сцены уже реализованы (Пункт 7-8 генплана) — нужно перепроверить, актуален ли ещё этот шаг и не сделан ли он уже как часть `SceneManager`.
+13. **`BuildConfigurator`: вкладка настроек** (`Services/CMakeService.cs`, `Services/ICMakeService.cs`, `ViewModels/SettingsTabViewModel.cs`, `Views/SettingsTabView.xaml.cs`) — четыре файла-заготовки (2026-07-05), нигде не подключены к `MainWindow.xaml` (нет соответствующего `TabItem`). Реализовать содержимое вкладки либо удалить все четыре файла, если она не понадобится.
+14. **Editor: режим сборки пользовательских скриптов** (`src/tools/editor/Views/MainWindow.xaml.cs`) — сейчас всегда жёстко `Debug` (чтобы работали точки останова); добавить в настройки проекта/редактора возможность выбрать `Debug`/`Release`/`RelWithDebInfo`.
 
 ---
 

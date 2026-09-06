@@ -448,14 +448,14 @@ public class AssetsBuilderEngine
 
 		// 3. Экспорт C++ заголовочных файлов (.h / .hpp) в подпапку include/
 		Log("Экспорт C++ заголовочных файлов (.h/.hpp) в подпапку include/...");
-		CopyHeaderFiles(options.SourcePath, Path.Combine(options.DestinationPath, "include"));
+		CopyHeaderFiles(options.SourcePath, Path.Combine(options.DestinationPath, "include"), options.PlatformConfigFile);
 
 		// 4. Вызов C# запаковщика PackagePacker для генерации бинарного пакета структуры игры
 		Log($"Сериализация бинарного пакета игры '{AssetExtensions.GamePackageBinaryName}'...");
 		bool packageSuccess = PackagePacker.PackProject(options.SourcePath, options.DestinationPath, options.TargetPlatform, options.PlatformConfigFile, Log);
 
 		// 5. Генерация Scripts.cmake в корне папки назначения (options.DestinationPath)
-		GenerateScriptsCmake(options.SourcePath, options.DestinationPath);
+		GenerateScriptsCmake(options.SourcePath, options.DestinationPath, options.PlatformConfigFile);
 
 		if (packageSuccess)
 		{
@@ -469,10 +469,12 @@ public class AssetsBuilderEngine
 		}
 	}
 
-	public void GenerateScriptsCmake(string sourcePath, string destinationPath)
+	public void GenerateScriptsCmake(string sourcePath, string destinationPath, string platformConfigFile = "")
 	{
 		try
 		{
+			var removedScriptGuids = LoadRemovedScriptGuids(sourcePath, platformConfigFile);
+
 			string scriptsPath = Path.Combine(sourcePath, "Assets", "Scripts");
 			var cppFiles = new List<string>();
 			var hppFiles = new List<string>();
@@ -483,6 +485,11 @@ public class AssetsBuilderEngine
 				{
 					string ext = Path.GetExtension(file).ToLowerInvariant();
 					string fullPathNormalized = file.Replace('\\', '/');
+
+					if (IsScriptExcluded(file, removedScriptGuids))
+					{
+						continue;
+					}
 
 					if (ext == ".cpp" || ext == ".c")
 					{
@@ -502,28 +509,7 @@ public class AssetsBuilderEngine
 			foreach (var headerFile in hppFiles)
 			{
 				string className = Path.GetFileNameWithoutExtension(headerFile);
-				string metaFile = headerFile + ".meta";
-				if (!File.Exists(metaFile))
-				{
-					metaFile = Path.Combine(Path.GetDirectoryName(headerFile)!, className + ".meta");
-				}
-
-				string scriptGuid = "";
-				string scriptNamespace = "";
-
-				if (File.Exists(metaFile))
-				{
-					try
-					{
-						string metaJson = File.ReadAllText(metaFile);
-						using var doc = System.Text.Json.JsonDocument.Parse(metaJson);
-						if (doc.RootElement.TryGetProperty("guid", out var gElem))
-							scriptGuid = gElem.GetString() ?? "";
-						if (doc.RootElement.TryGetProperty("namespace", out var nElem))
-							scriptNamespace = nElem.GetString() ?? "";
-					}
-					catch { }
-				}
+				var (scriptGuid, scriptNamespace) = GetScriptMetaInfo(headerFile);
 
 				string qualifiedName = string.IsNullOrWhiteSpace(scriptNamespace) ? className : $"{scriptNamespace}::{className}";
 				headerIncludes.Add($"#include \"{headerFile}\"");
@@ -595,10 +581,12 @@ public class AssetsBuilderEngine
 		}
 	}
 
-	public void CopyHeaderFiles(string sourcePath, string outputIncludeDir)
+	public void CopyHeaderFiles(string sourcePath, string outputIncludeDir, string platformConfigFile = "")
 	{
 		try
 		{
+			var removedScriptGuids = LoadRemovedScriptGuids(sourcePath, platformConfigFile);
+
 			string scriptsPath = Path.Combine(sourcePath, "Assets", "Scripts");
 			if (Directory.Exists(scriptsPath))
 			{
@@ -607,6 +595,11 @@ public class AssetsBuilderEngine
 					string ext = Path.GetExtension(file).ToLowerInvariant();
 					if (ext == ".h" || ext == ".hpp")
 					{
+						if (IsScriptExcluded(file, removedScriptGuids))
+						{
+							continue;
+						}
+
 						string relPath = Path.GetRelativePath(scriptsPath, file);
 						string targetPath = Path.Combine(outputIncludeDir, relPath);
 						Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
@@ -632,6 +625,73 @@ public class AssetsBuilderEngine
 		{
 			Log($"Предупреждение при экспорте заголовочных файлов: {ex.Message}");
 		}
+	}
+
+	private static (string Guid, string Namespace) GetScriptMetaInfo(string scriptFilePath)
+	{
+		string className = Path.GetFileNameWithoutExtension(scriptFilePath);
+		string metaFile = scriptFilePath + ".meta";
+		if (!File.Exists(metaFile))
+		{
+			metaFile = Path.Combine(Path.GetDirectoryName(scriptFilePath)!, className + ".h.meta");
+			if (!File.Exists(metaFile))
+				metaFile = Path.Combine(Path.GetDirectoryName(scriptFilePath)!, className + ".meta");
+		}
+
+		string scriptGuid = "";
+		string scriptNamespace = "";
+		if (File.Exists(metaFile))
+		{
+			try
+			{
+				string metaJson = File.ReadAllText(metaFile);
+				using var doc = System.Text.Json.JsonDocument.Parse(metaJson);
+				if (doc.RootElement.TryGetProperty("guid", out var gElem))
+					scriptGuid = gElem.GetString() ?? "";
+				if (doc.RootElement.TryGetProperty("namespace", out var nElem))
+					scriptNamespace = nElem.GetString() ?? "";
+			}
+			catch { }
+		}
+
+		return (scriptGuid, scriptNamespace);
+	}
+
+	private static bool IsScriptExcluded(string scriptFilePath, HashSet<string> removedScriptGuids)
+	{
+		if (removedScriptGuids.Count == 0)
+			return false;
+
+		var (guid, _) = GetScriptMetaInfo(scriptFilePath);
+		return !string.IsNullOrWhiteSpace(guid) && removedScriptGuids.Contains(guid);
+	}
+
+	private static HashSet<string> LoadRemovedScriptGuids(string sourcePath, string platformConfigFile)
+	{
+		var removedScriptGuids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		if (!string.IsNullOrWhiteSpace(platformConfigFile))
+		{
+			string configFullPath = Path.IsPathRooted(platformConfigFile) ? platformConfigFile : Path.Combine(sourcePath, platformConfigFile);
+			if (File.Exists(configFullPath))
+			{
+				try
+				{
+					string cfgJson = File.ReadAllText(configFullPath);
+					using var doc = System.Text.Json.JsonDocument.Parse(cfgJson);
+					if (doc.RootElement.TryGetProperty("remove_scripts", out var remProp) && remProp.ValueKind == System.Text.Json.JsonValueKind.Array)
+					{
+						foreach (var elem in remProp.EnumerateArray())
+						{
+							string? s = elem.GetString();
+							if (!string.IsNullOrWhiteSpace(s))
+								removedScriptGuids.Add(s);
+						}
+					}
+				}
+				catch { }
+			}
+		}
+		return removedScriptGuids;
 	}
 
 	private void Log(string message)

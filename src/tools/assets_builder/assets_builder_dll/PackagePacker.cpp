@@ -494,6 +494,8 @@ namespace zzz::builder
 
 			if (assetType == zzz::core::ePackage::ProjectManifest)
 			{
+				json configRoot = LoadPlatformConfigJson(projectDir, platformConfigFile);
+
 				std::vector<Guid> gameScriptGuids;
 				if (root.contains("game_scripts") && root["game_scripts"].is_array())
 				{
@@ -512,6 +514,39 @@ namespace zzz::builder
 						gameScriptGuids.push_back(*parsed);
 				}
 
+				// Применяем deltas для game_scripts:
+				// 1. remove_scripts
+				if (configRoot.contains("remove_scripts") && configRoot["remove_scripts"].is_array())
+				{
+					std::unordered_set<Guid> removeScriptGuids;
+					for (const auto& elem : configRoot["remove_scripts"])
+					{
+						if (elem.is_string())
+						{
+							if (auto parsed = Guid::Parse(elem.get<std::string>()))
+								removeScriptGuids.insert(*parsed);
+						}
+					}
+					std::erase_if(gameScriptGuids, [&](const Guid& g) {
+						return removeScriptGuids.find(g) != removeScriptGuids.end();
+					});
+				}
+				// 2. add_scripts
+				if (configRoot.contains("add_scripts") && configRoot["add_scripts"].is_array())
+				{
+					for (const auto& elem : configRoot["add_scripts"])
+					{
+						if (elem.is_string())
+						{
+							if (auto parsed = Guid::Parse(elem.get<std::string>()))
+							{
+								if (std::find(gameScriptGuids.begin(), gameScriptGuids.end(), *parsed) == gameScriptGuids.end())
+									gameScriptGuids.push_back(*parsed);
+							}
+						}
+					}
+				}
+
 				std::vector<Guid> sceneGuids;
 				if (root.contains("scenes") && root["scenes"].is_array())
 				{
@@ -521,6 +556,39 @@ namespace zzz::builder
 						{
 							if (auto parsed = Guid::Parse(elem.get<std::string>()))
 								sceneGuids.push_back(*parsed);
+						}
+					}
+				}
+
+				// Применяем deltas для scenes:
+				// 1. remove_scenes
+				if (configRoot.contains("remove_scenes") && configRoot["remove_scenes"].is_array())
+				{
+					std::unordered_set<Guid> removeSceneGuids;
+					for (const auto& elem : configRoot["remove_scenes"])
+					{
+						if (elem.is_string())
+						{
+							if (auto parsed = Guid::Parse(elem.get<std::string>()))
+								removeSceneGuids.insert(*parsed);
+						}
+					}
+					std::erase_if(sceneGuids, [&](const Guid& g) {
+						return removeSceneGuids.find(g) != removeSceneGuids.end();
+					});
+				}
+				// 2. add_scenes
+				if (configRoot.contains("add_scenes") && configRoot["add_scenes"].is_array())
+				{
+					for (const auto& elem : configRoot["add_scenes"])
+					{
+						if (elem.is_string())
+						{
+							if (auto parsed = Guid::Parse(elem.get<std::string>()))
+							{
+								if (std::find(sceneGuids.begin(), sceneGuids.end(), *parsed) == sceneGuids.end())
+									sceneGuids.push_back(*parsed);
+							}
 						}
 					}
 				}
@@ -587,10 +655,25 @@ namespace zzz::builder
 				if (auto res = serializer.Serialize(result, appName); !res) return {};
 				if (auto res = serializer.Serialize(result, companyName); !res) return {};
 
-				// Версия приложения (semver-строка "major.minor.patch", например "1.0.0") - по умолчанию 0.0.0,
-				// если поле отсутствует или не парсится.
+				// Версия приложения (semver-строка "major.minor.patch", например "1.0.0") - сначала
+				// из платформенного конфига (build.version / build.versionName / build.bundleVersion),
+				// затем из project.json (app_version / version), по умолчанию 1.0.0.
 				Version appVersion{};
-				std::string versionStr = root.value("app_version", root.value("version", "1.0.0"));
+				std::string versionStr;
+				if (configRoot.contains("build") && configRoot["build"].is_object())
+				{
+					const auto& b = configRoot["build"];
+					if (b.contains("version") && b["version"].is_string())
+						versionStr = b["version"].get<std::string>();
+					else if (b.contains("versionName") && b["versionName"].is_string())
+						versionStr = b["versionName"].get<std::string>();
+					else if (b.contains("bundleVersion") && b["bundleVersion"].is_string())
+						versionStr = b["bundleVersion"].get<std::string>();
+				}
+				if (versionStr.empty())
+				{
+					versionStr = root.value("app_version", root.value("version", "1.0.0"));
+				}
 				if (!versionStr.empty())
 				{
 					if (auto parsedVersion = Version::Parse(versionStr))
@@ -608,12 +691,32 @@ namespace zzz::builder
 			else if (assetType == zzz::core::ePackage::PrimaryView)
 			{
 				json startViewRoot = ResolveStartViewJson(root, projectDir, targetPlatform, platformConfigFile);
+				json configRoot = LoadPlatformConfigJson(projectDir, platformConfigFile);
 
 				Guid sceneGuid{};
-				if (startViewRoot.contains("scene") && startViewRoot["scene"].is_string())
+				if (configRoot.contains("start_scene") && configRoot["start_scene"].is_string())
+				{
+					if (auto parsed = Guid::Parse(configRoot["start_scene"].get<std::string>()))
+						sceneGuid = *parsed;
+				}
+				else if (startViewRoot.contains("scene") && startViewRoot["scene"].is_string())
 				{
 					if (auto parsed = Guid::Parse(startViewRoot["scene"].get<std::string>()))
 						sceneGuid = *parsed;
+				}
+				else
+				{
+					fs::path projJsonPath = projectDir / "project.json";
+					if (fs::exists(projJsonPath))
+					{
+						std::ifstream projFile(projJsonPath);
+						json projJson = json::parse(projFile, nullptr, false);
+						if (!projJson.is_discarded() && projJson.contains("start_scene") && projJson["start_scene"].is_string())
+						{
+							if (auto parsed = Guid::Parse(projJson["start_scene"].get<std::string>()))
+								sceneGuid = *parsed;
+						}
+					}
 				}
 
 				std::vector<Guid> uiScriptGuids;
@@ -936,6 +1039,15 @@ namespace zzz::builder
 		// даже если ресурс физически существует на диске.
 		std::unordered_set<std::string> declaredChildViewGuids;
 		std::unordered_set<std::string> declaredIndependentViewGuids;
+		std::unordered_set<std::string> removedSceneGuids;
+
+		json configRoot = LoadPlatformConfigJson(sourceDir, platformConfigFile);
+		if (configRoot.contains("remove_scenes") && configRoot["remove_scenes"].is_array())
+		{
+			for (const auto& elem : configRoot["remove_scenes"])
+				if (elem.is_string())
+					removedSceneGuids.insert(elem.get<std::string>());
+		}
 
 		if (fs::exists(projJsonPath))
 		{
@@ -1005,6 +1117,8 @@ namespace zzz::builder
 
 				if (ext == ".zs")
 				{
+					if (removedSceneGuids.find(guid) != removedSceneGuids.end())
+						continue;
 					if (!seenSceneNames.insert(assetName).second)
 						continue;
 					typeVal = static_cast<uint32_t>(zzz::core::ePackage::Scene);

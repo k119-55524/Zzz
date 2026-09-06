@@ -18,15 +18,21 @@ public class SessionConfig
     public double WindowLeft { get; set; } = 100;
     public double WindowTop { get; set; } = 100;
     public bool IsWindowMaximized { get; set; } = false;
+    public double PresetsPanelHeight { get; set; } = 260;
 }
 
 public static class SessionManager
 {
-    private static readonly string AppDataFolder = Path.Combine(
+    public static readonly string AppDataFolder = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "Zzz",
         "AssetsBuilder"
     );
+
+    public static string GetDefaultBuildPath(string projectPath)
+    {
+        return Path.Combine(projectPath, ".build");
+    }
 
     private static readonly string ConfigFilePath = Path.Combine(AppDataFolder, "session_config.json");
 
@@ -39,7 +45,16 @@ public static class SessionManager
                 string json = File.ReadAllText(ConfigFilePath);
                 var config = JsonSerializer.Deserialize<SessionConfig>(json);
                 if (config != null && config.Profiles != null && config.Profiles.Count > 0)
+                {
+                    foreach (var p in config.Profiles)
+                    {
+                        if (string.IsNullOrEmpty(p.DestinationPath) || p.DestinationPath.EndsWith("_build") || p.DestinationPath.Contains("builds"))
+                        {
+                            p.DestinationPath = GetDefaultBuildPath(p.SourcePath);
+                        }
+                    }
                     return config;
+                }
             }
         }
         catch
@@ -104,12 +119,13 @@ public static class SessionManager
     public static SessionConfig GetDefaultConfig()
     {
         string workspaceProjects = ResolveWorkspaceProjectsPath();
+        string defaultSource = Path.Combine(workspaceProjects, "assets_projects", "zzz_assets_test_000");
         var defaultProfile = new BuildProfile
         {
             Id = Guid.NewGuid().ToString(),
             Name = "zzz_assets_test_000",
-            SourcePath = Path.Combine(workspaceProjects, "assets_projects", "zzz_assets_test_000"),
-            DestinationPath = Path.Combine(workspaceProjects, "assets_projects", "zzz_assets_test_000_build"),
+            SourcePath = defaultSource,
+            DestinationPath = GetDefaultBuildPath(defaultSource),
             ActivePresetName = "Default"
         };
 
@@ -122,7 +138,8 @@ public static class SessionManager
             WindowHeight = 720,
             WindowLeft = 100,
             WindowTop = 100,
-            IsWindowMaximized = false
+            IsWindowMaximized = false,
+            PresetsPanelHeight = 260
         };
     }
 }

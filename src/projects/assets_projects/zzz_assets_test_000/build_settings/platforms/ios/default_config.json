@@ -2,9 +2,15 @@
   "name": "iOS Default",
   "build": {
     "bundleIdentifier": "com.zzz.assetstest",
+    "bundleVersion": "1.0.0",
+    "buildNumber": 1,
     "developmentTeam": "XYZ123456",
     "icon": "Assets/Icons/ios_icon.png"
   },
+  "add_scripts": [],
+  "remove_scripts": [],
+  "add_scenes": [],
+  "remove_scenes": [],
   "startView": {
     "orientation": "LandscapeLeft",
     "safeAreaMode": "ExtendIntoSafeArea",

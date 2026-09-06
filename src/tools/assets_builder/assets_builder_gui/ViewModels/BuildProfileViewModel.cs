@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Windows.Input;
 using assets_builder_gui.Models;
+using assets_builder_gui.Services;
 using assets_builder_lib;
 using assets_builder_lib.Models;
 using assets_builder_lib.Validation;
@@ -12,29 +14,62 @@ namespace assets_builder_gui.ViewModels;
 
 public class TargetConfigViewModel : ViewModelBase
 {
+    public static readonly IReadOnlyList<string> AvailablePlatforms = new[]
+    {
+        "Windows",
+        "Android",
+        "iOS",
+        "MacOS",
+        "Linux"
+    };
+
     private readonly BuildPresetTarget _model;
-    private bool _isEnabled;
+    private readonly string _assetsProjectPath;
+    private readonly Services.IDialogService? _dialogService;
+
     private string _name;
+    private string _projectPath;
     private string _platform;
     private PlatformConfigOption? _selectedConfigOption;
 
-    public TargetConfigViewModel(BuildPresetTarget model, List<PlatformConfigOption> availableOptions)
+    public TargetConfigViewModel(BuildPresetTarget model, string assetsProjectPath, Services.IDialogService? dialogService)
     {
         _model = model;
-        _isEnabled = model.IsEnabled;
+        _assetsProjectPath = assetsProjectPath;
+        _dialogService = dialogService;
+
         _name = model.Name;
         _platform = model.Platform;
-        AvailableConfigOptions = availableOptions;
 
-        // Поиск выбранного конфига среди доступных опций
-        _selectedConfigOption = availableOptions.FirstOrDefault(o =>
-            !string.IsNullOrWhiteSpace(o.RelativePath) &&
-            o.RelativePath.Equals(model.ConfigFile.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase))
-            ?? availableOptions.FirstOrDefault(o => string.IsNullOrWhiteSpace(o.RelativePath))
-            ?? availableOptions.FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(model.ProjectPath))
+        {
+            string defaultPath = Path.Combine(SessionManager.ResolveWorkspaceProjectsPath(), model.Name);
+            _projectPath = Directory.Exists(defaultPath) ? defaultPath : string.Empty;
+            _model.ProjectPath = _projectPath;
+        }
+        else
+        {
+            _projectPath = model.ProjectPath;
+        }
+
+        BrowseProjectPathCommand = new RelayCommand(_ =>
+        {
+            string? folder = _dialogService?.SelectFolder("Выберите папку целевого проекта", _projectPath);
+            if (!string.IsNullOrEmpty(folder))
+            {
+                ProjectPath = folder;
+            }
+        });
+
+        AvailableConfigOptions = new ObservableCollection<PlatformConfigOption>();
+        UpdateAvailableConfigs();
     }
 
     public BuildPresetTarget Model => _model;
+
+    public ICommand BrowseProjectPathCommand { get; }
+
+    public IReadOnlyList<string> PlatformList => AvailablePlatforms;
 
     public string Name
     {
@@ -42,25 +77,34 @@ public class TargetConfigViewModel : ViewModelBase
         set => SetProperty(ref _name, value);
     }
 
-    public string Platform
+    public string ProjectPath
     {
-        get => _platform;
-        set => SetProperty(ref _platform, value);
-    }
-
-    public bool IsEnabled
-    {
-        get => _isEnabled;
+        get => _projectPath;
         set
         {
-            if (SetProperty(ref _isEnabled, value))
+            if (SetProperty(ref _projectPath, value))
             {
                 OnPropertyChanged(nameof(IsDirty));
             }
         }
     }
 
-    public List<PlatformConfigOption> AvailableConfigOptions { get; }
+    public string Platform
+    {
+        get => AvailablePlatforms.FirstOrDefault(p => p.Equals(_platform, StringComparison.OrdinalIgnoreCase)) ?? _platform;
+        set
+        {
+            if (SetProperty(ref _platform, value))
+            {
+                UpdateAvailableConfigs();
+                OnPropertyChanged(nameof(IsDirty));
+            }
+        }
+    }
+
+    public bool IsEnabled => !IsNone;
+
+    public ObservableCollection<PlatformConfigOption> AvailableConfigOptions { get; }
 
     public PlatformConfigOption? SelectedConfigOption
     {
@@ -71,6 +115,7 @@ public class TargetConfigViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(ConfigFilePath));
                 OnPropertyChanged(nameof(IsNone));
+                OnPropertyChanged(nameof(IsEnabled));
                 OnPropertyChanged(nameof(IsDirty));
             }
         }
@@ -80,23 +125,46 @@ public class TargetConfigViewModel : ViewModelBase
 
     public bool IsNone => string.IsNullOrWhiteSpace(ConfigFilePath);
 
-    public bool IsDirty => _isEnabled != _model.IsEnabled ||
-                           ConfigFilePath != _model.ConfigFile;
+    public bool IsDirty =>
+        _projectPath != (_model.ProjectPath ?? string.Empty) ||
+        !string.Equals(_platform, _model.Platform, StringComparison.OrdinalIgnoreCase) ||
+        !string.Equals(ConfigFilePath, _model.ConfigFile?.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase);
+
+    private void UpdateAvailableConfigs()
+    {
+        var options = BuildPresetManager.GetAvailablePlatformConfigs(_assetsProjectPath, _platform);
+        AvailableConfigOptions.Clear();
+        foreach (var opt in options)
+        {
+            AvailableConfigOptions.Add(opt);
+        }
+
+        string targetRel = _selectedConfigOption?.RelativePath ?? _model.ConfigFile?.Replace('\\', '/') ?? string.Empty;
+        SelectedConfigOption = AvailableConfigOptions.FirstOrDefault(o =>
+            !string.IsNullOrWhiteSpace(o.RelativePath) &&
+            o.RelativePath.Equals(targetRel, StringComparison.OrdinalIgnoreCase))
+            ?? AvailableConfigOptions.FirstOrDefault(o => string.IsNullOrWhiteSpace(o.RelativePath))
+            ?? AvailableConfigOptions.FirstOrDefault();
+    }
 
     public void ApplyToModel()
     {
-        _model.IsEnabled = _isEnabled;
+        _model.Name = _name;
+        _model.ProjectPath = _projectPath;
+        _model.Platform = _platform;
         _model.ConfigFile = ConfigFilePath;
+        OnPropertyChanged(nameof(IsDirty));
     }
 
     public void ResetFromModel()
     {
-        IsEnabled = _model.IsEnabled;
-        SelectedConfigOption = AvailableConfigOptions.FirstOrDefault(o =>
-            !string.IsNullOrWhiteSpace(o.RelativePath) &&
-            o.RelativePath.Equals(_model.ConfigFile.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase))
-            ?? AvailableConfigOptions.FirstOrDefault(o => string.IsNullOrWhiteSpace(o.RelativePath))
-            ?? AvailableConfigOptions.FirstOrDefault();
+        Name = _model.Name;
+        _platform = _model.Platform;
+        OnPropertyChanged(nameof(Platform));
+        _projectPath = _model.ProjectPath ?? string.Empty;
+        OnPropertyChanged(nameof(ProjectPath));
+        UpdateAvailableConfigs();
+        OnPropertyChanged(nameof(IsEnabled));
         OnPropertyChanged(nameof(IsDirty));
     }
 }
@@ -105,11 +173,13 @@ public class BuildPresetViewModel : ViewModelBase
 {
     private readonly BuildPreset _model;
     private readonly string _projectPath;
+    private readonly Services.IDialogService? _dialogService;
 
-    public BuildPresetViewModel(BuildPreset model, string projectPath)
+    public BuildPresetViewModel(BuildPreset model, string projectPath, Services.IDialogService? dialogService = null)
     {
         _model = model;
         _projectPath = projectPath;
+        _dialogService = dialogService;
         Targets = new ObservableCollection<TargetConfigViewModel>();
 
         LoadTargets();
@@ -130,8 +200,7 @@ public class BuildPresetViewModel : ViewModelBase
         Targets.Clear();
         foreach (var target in _model.Targets)
         {
-            var options = BuildPresetManager.GetAvailablePlatformConfigs(_projectPath, target.Platform);
-            var vm = new TargetConfigViewModel(target, options);
+            var vm = new TargetConfigViewModel(target, _projectPath, _dialogService);
             vm.PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == nameof(TargetConfigViewModel.IsDirty))
@@ -213,6 +282,10 @@ public class BuildProfileViewModel : ViewModelBase
         {
             if (SetProperty(ref _sourcePath, value))
             {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    DestinationPath = Path.Combine(value, ".build");
+                }
                 ReloadProjectAndPresets();
                 OnPropertyChanged(nameof(IsSourcePathValid));
                 OnPropertyChanged(nameof(IsProjectValid));
@@ -266,6 +339,7 @@ public class BuildProfileViewModel : ViewModelBase
                 if (value != null)
                 {
                     _activePresetName = value.Name;
+                    _model.ActivePresetName = value.Name;
                     OnPropertyChanged(nameof(ActivePresetName));
                 }
                 OnPropertyChanged(nameof(IsDirty));
@@ -283,9 +357,15 @@ public class BuildProfileViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(IsProjectValid));
                 OnPropertyChanged(nameof(ValidationErrorsSummary));
+                OnPropertyChanged(nameof(ProjectDescription));
+                OnPropertyChanged(nameof(AppName));
             }
         }
     }
+
+    public string ProjectDescription => _validationResult?.Manifest?.Description ?? string.Empty;
+
+    public string AppName => _validationResult?.Manifest?.AppName ?? string.Empty;
 
     public bool IsProjectValid => _validationResult != null && _validationResult.IsValid;
 
@@ -331,7 +411,7 @@ public class BuildProfileViewModel : ViewModelBase
         get
         {
             if (SelectedPreset == null) return false;
-            return SelectedPreset.Targets.Any(t => t.IsEnabled && !t.IsNone);
+            return SelectedPreset.Targets.Any(t => !t.IsNone);
         }
     }
 
@@ -375,7 +455,7 @@ public class BuildProfileViewModel : ViewModelBase
         {
             foreach (var preset in _presetsContainer.Presets)
             {
-                var pvm = new BuildPresetViewModel(preset, _sourcePath);
+                var pvm = new BuildPresetViewModel(preset, _sourcePath, _dialogService);
                 pvm.PropertyChanged += (s, e) =>
                 {
                     if (e.PropertyName == nameof(BuildPresetViewModel.IsDirty))
@@ -431,6 +511,20 @@ public class BuildProfileViewModel : ViewModelBase
 
             string presetsRelPath = ValidationResult?.Manifest?.BuildSettings?.PresetsFile ?? "build_settings/presets.json";
             BuildPresetManager.SavePresets(_sourcePath, presetsRelPath, _presetsContainer);
+
+            // Сохранение активного пресета в project.json
+            string projectJsonPath = Path.Combine(_sourcePath, "project.json");
+            if (File.Exists(projectJsonPath) && ValidationResult?.Manifest != null)
+            {
+                try
+                {
+                    ValidationResult.Manifest.BuildSettings ??= new BuildSettingsInfo();
+                    ValidationResult.Manifest.BuildSettings.ActivePreset = _activePresetName;
+                    string json = System.Text.Json.JsonSerializer.Serialize(ValidationResult.Manifest, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                    File.WriteAllText(projectJsonPath, json);
+                }
+                catch { }
+            }
         }
 
         OnPropertyChanged(nameof(DisplayName));

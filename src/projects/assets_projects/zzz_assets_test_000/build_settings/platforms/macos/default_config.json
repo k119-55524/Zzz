@@ -3,12 +3,18 @@
   "build": {
     "executableName": "GameZzz",
     "bundleIdentifier": "com.zzz.assetstest",
+    "bundleVersion": "1.0.0",
+    "buildNumber": 1,
     "icon": "Assets/Icons/macos_icon.icns"
   },
   "platform": {
     "child_views": [],
     "independent_views": []
   },
+  "add_scripts": [],
+  "remove_scripts": [],
+  "add_scenes": [],
+  "remove_scenes": [],
   "startView": {
     "title": "GameZzz",
     "defaultSize": {

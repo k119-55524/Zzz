@@ -1,9 +1,8 @@
 {
   "company_name": "Zzz",
   "app_name": "ZzzGame",
-  "app_version": "1.0.0",
-  "name": "ZzzGame",
-  "version": "1.0.0",
+  "description": "Тестовый проект игровых ресурсов",
+  "start_scene": "3cbf41ff-f608-47ca-b383-ea5698648aca",
   "game_scripts": [
     "a8f94d12-e5b1-4c92-bf38-71e4029410ad",
     "b73c891e-42f0-410a-9d66-88c9a3b01e74",

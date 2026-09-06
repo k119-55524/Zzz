@@ -124,9 +124,67 @@ public static class ProjectValidator
                 {
                     result.Warnings.Add($"Таргет '{target.Name}' ({target.Platform}): платформенный файл не найден по пути '{target.ConfigFile}'");
                 }
+                else
+                {
+                    ValidatePlatformConfigFile(configFullPath, target, result);
+                }
             }
         }
 
         return result;
+    }
+
+    private static void ValidatePlatformConfigFile(string configPath, BuildPresetTarget target, ProjectValidationResult result)
+    {
+        try
+        {
+            string json = File.ReadAllText(configPath);
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            ValidateGuidArrayField(root, target, "add_scripts", result);
+            ValidateGuidArrayField(root, target, "remove_scripts", result);
+            ValidateGuidArrayField(root, target, "add_scenes", result);
+            ValidateGuidArrayField(root, target, "remove_scenes", result);
+
+            if (root.TryGetProperty("start_scene", out var startSceneProp))
+            {
+                if (startSceneProp.ValueKind != JsonValueKind.String || !Guid.TryParse(startSceneProp.GetString(), out _))
+                {
+                    result.Warnings.Add($"Таргет '{target.Name}' ({target.ConfigFile}): поле 'start_scene' должно содержать валидный GUID.");
+                }
+            }
+
+            if (root.TryGetProperty("build", out var buildProp) && buildProp.ValueKind != JsonValueKind.Object)
+            {
+                result.Warnings.Add($"Таргет '{target.Name}' ({target.ConfigFile}): секция 'build' должна быть объектом.");
+            }
+        }
+        catch (Exception ex)
+        {
+            result.Warnings.Add($"Таргет '{target.Name}' ({target.ConfigFile}): ошибка синтаксиса JSON: {ex.Message}");
+        }
+    }
+
+    private static void ValidateGuidArrayField(JsonElement root, BuildPresetTarget target, string fieldName, ProjectValidationResult result)
+    {
+        if (root.TryGetProperty(fieldName, out var prop))
+        {
+            if (prop.ValueKind != JsonValueKind.Array)
+            {
+                result.Warnings.Add($"Таргет '{target.Name}' ({target.ConfigFile}): поле '{fieldName}' должно быть массивом GUID.");
+                return;
+            }
+
+            int idx = 0;
+            foreach (var item in prop.EnumerateArray())
+            {
+                idx++;
+                if (item.ValueKind != JsonValueKind.String || !Guid.TryParse(item.GetString(), out _))
+                {
+                    result.Warnings.Add($"Таргет '{target.Name}' ({target.ConfigFile}): элемент '{fieldName}[{idx}]' ('{item}') не является валидным GUID.");
+                }
+            }
+        }
     }
 }

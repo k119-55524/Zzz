@@ -20,14 +20,8 @@ public class ProjectManifestModel
     [JsonPropertyName("app_name")]
     public string AppName { get; set; } = string.Empty;
 
-    [JsonPropertyName("app_version")]
-    public string AppVersion { get; set; } = "1.0.0";
-
-    [JsonPropertyName("name")]
-    public string Name { get; set; } = string.Empty;
-
-    [JsonPropertyName("version")]
-    public string Version { get; set; } = "1.0.0";
+    [JsonPropertyName("description")]
+    public string Description { get; set; } = string.Empty;
 
     [JsonPropertyName("start_scene")]
     public string StartScene { get; set; } = string.Empty;

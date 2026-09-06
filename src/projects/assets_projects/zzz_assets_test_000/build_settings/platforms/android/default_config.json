@@ -2,10 +2,16 @@
   "name": "Android Default",
   "build": {
     "packageName": "com.zzz.assetstest",
+    "versionName": "1.0.0",
+    "versionCode": 1,
     "minSdkVersion": 24,
     "targetSdkVersion": 34,
     "icon": "Assets/Icons/android_icon.png"
   },
+  "add_scripts": [],
+  "remove_scripts": [],
+  "add_scenes": [],
+  "remove_scenes": [],
   "startView": {
     "orientation": "LandscapeLeft",
     "targetFPS": 60,

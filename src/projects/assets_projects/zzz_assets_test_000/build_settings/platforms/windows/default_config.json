@@ -2,6 +2,8 @@
   "name": "Windows Default",
   "build": {
     "executableName": "GameZzz.exe",
+    "version": "1.0.0",
+    "buildNumber": 1,
     "icon": "Assets/Icons/win_icon.ico",
     "visualStudioToolset": "v143"
   },
@@ -10,6 +12,10 @@
     "child_views": [],
     "independent_views": []
   },
+  "add_scripts": [],
+  "remove_scripts": [],
+  "add_scenes": [],
+  "remove_scenes": [],
   "startView": {
     "title": "GameZzz",
     "defaultSize": {

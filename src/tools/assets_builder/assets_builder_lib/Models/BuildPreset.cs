@@ -8,14 +8,17 @@ public class BuildPresetTarget
     [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
 
+    [JsonPropertyName("project_path")]
+    public string ProjectPath { get; set; } = string.Empty;
+
     [JsonPropertyName("platform")]
     public string Platform { get; set; } = string.Empty;
 
     [JsonPropertyName("config_file")]
     public string ConfigFile { get; set; } = string.Empty;
 
-    [JsonPropertyName("is_enabled")]
-    public bool IsEnabled { get; set; } = true;
+    [JsonIgnore]
+    public bool IsEnabled => !string.IsNullOrWhiteSpace(ConfigFile);
 }
 
 public class BuildPreset

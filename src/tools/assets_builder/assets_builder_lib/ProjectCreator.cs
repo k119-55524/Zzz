@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text.Json;
 using assets_builder_lib.Models;
 
-namespace assets_builder_lib.Scaffolding;
+namespace assets_builder_lib;
 
-public static class ProjectScaffolder
+public static class ProjectCreator
 {
     public static bool CanCreateInDirectory(string directoryPath, out string errorMessage)
     {
@@ -39,14 +39,14 @@ public static class ProjectScaffolder
 
         if (entries.Count > 0)
         {
-            errorMessage = $"Папка не пуста ({entries.Count} элементов). Создание каркаса разрешено только в пустой папке.";
+            errorMessage = $"Папка не пуста ({entries.Count} элементов). Создание проекта разрешено только в пустой папке.";
             return false;
         }
 
         return true;
     }
 
-    public static bool CreateProjectScaffold(string directoryPath, string companyName, string appName, out string errorMessage)
+    public static bool CreateProject(string directoryPath, string companyName, string appName, out string errorMessage)
     {
         errorMessage = string.Empty;
 
@@ -73,6 +73,8 @@ public static class ProjectScaffolder
   ""name"": ""Windows Default"",
   ""build"": {
     ""executableName"": ""GameZzz.exe"",
+    ""version"": ""1.0.0"",
+    ""buildNumber"": 1,
     ""icon"": ""Assets/Icons/win_icon.ico"",
     ""visualStudioToolset"": ""v143""
   },
@@ -81,6 +83,10 @@ public static class ProjectScaffolder
     ""child_views"": [],
     ""independent_views"": []
   },
+  ""add_scripts"": [],
+  ""remove_scripts"": [],
+  ""add_scenes"": [],
+  ""remove_scenes"": [],
   ""startView"": {
     ""title"": ""GameZzz"",
     ""defaultSize"": {
@@ -91,15 +97,21 @@ public static class ProjectScaffolder
     ""resizable"": true
   }
 }";
-            File.WriteAllText(Path.Combine(buildSettingsDir, "platforms", "windows", "default.json"), winDefault);
+            File.WriteAllText(Path.Combine(buildSettingsDir, "platforms", "windows", "default_config.json"), winDefault);
 
             string androidDefault = @"{
   ""name"": ""Android Default"",
   ""build"": {
     ""packageName"": ""com.zzz.game"",
+    ""versionName"": ""1.0.0"",
+    ""versionCode"": 1,
     ""minSdkVersion"": 24,
     ""targetSdkVersion"": 34
   },
+  ""add_scripts"": [],
+  ""remove_scripts"": [],
+  ""add_scenes"": [],
+  ""remove_scenes"": [],
   ""startView"": {
     ""orientation"": ""LandscapeLeft"",
     ""targetFPS"": 60,
@@ -107,31 +119,43 @@ public static class ProjectScaffolder
     ""keepScreenOn"": true
   }
 }";
-            File.WriteAllText(Path.Combine(buildSettingsDir, "platforms", "android", "default.json"), androidDefault);
+            File.WriteAllText(Path.Combine(buildSettingsDir, "platforms", "android", "default_config.json"), androidDefault);
 
             string iosDefault = @"{
   ""name"": ""iOS Default"",
   ""build"": {
     ""bundleIdentifier"": ""com.zzz.game"",
+    ""bundleVersion"": ""1.0.0"",
+    ""buildNumber"": 1,
     ""developmentTeam"": ""XYZ123456""
   },
+  ""add_scripts"": [],
+  ""remove_scripts"": [],
+  ""add_scenes"": [],
+  ""remove_scenes"": [],
   ""startView"": {
     ""orientation"": ""LandscapeLeft"",
     ""safeAreaMode"": ""ExtendIntoSafeArea"",
     ""homeIndicatorMode"": ""AutoHidden""
   }
 }";
-            File.WriteAllText(Path.Combine(buildSettingsDir, "platforms", "ios", "default.json"), iosDefault);
+            File.WriteAllText(Path.Combine(buildSettingsDir, "platforms", "ios", "default_config.json"), iosDefault);
 
             string linuxDefault = @"{
   ""name"": ""Linux Default"",
   ""build"": {
-    ""executableName"": ""GameZzz""
+    ""executableName"": ""GameZzz"",
+    ""version"": ""1.0.0"",
+    ""buildNumber"": 1
   },
   ""platform"": {
     ""child_views"": [],
     ""independent_views"": []
   },
+  ""add_scripts"": [],
+  ""remove_scripts"": [],
+  ""add_scenes"": [],
+  ""remove_scenes"": [],
   ""startView"": {
     ""title"": ""GameZzz"",
     ""defaultSize"": {
@@ -143,19 +167,25 @@ public static class ProjectScaffolder
     ""resizable"": true
   }
 }";
-            File.WriteAllText(Path.Combine(buildSettingsDir, "platforms", "linux", "default.json"), linuxDefault);
+            File.WriteAllText(Path.Combine(buildSettingsDir, "platforms", "linux", "default_config.json"), linuxDefault);
 
             string macosDefault = @"{
   ""name"": ""macOS Default"",
   ""build"": {
     ""executableName"": ""GameZzz"",
     ""bundleIdentifier"": ""com.zzz.game"",
+    ""bundleVersion"": ""1.0.0"",
+    ""buildNumber"": 1,
     ""icon"": ""Assets/Icons/macos_icon.icns""
   },
   ""platform"": {
     ""child_views"": [],
     ""independent_views"": []
   },
+  ""add_scripts"": [],
+  ""remove_scripts"": [],
+  ""add_scenes"": [],
+  ""remove_scenes"": [],
   ""startView"": {
     ""title"": ""GameZzz"",
     ""defaultSize"": {
@@ -166,7 +196,7 @@ public static class ProjectScaffolder
     ""resizable"": true
   }
 }";
-            File.WriteAllText(Path.Combine(buildSettingsDir, "platforms", "macos", "default.json"), macosDefault);
+            File.WriteAllText(Path.Combine(buildSettingsDir, "platforms", "macos", "default_config.json"), macosDefault);
 
             var presets = new PresetsContainer
             {
@@ -178,11 +208,11 @@ public static class ProjectScaffolder
                         Description = "Базовый набор сборки",
                         Targets = new List<BuildPresetTarget>
                         {
-                            new BuildPresetTarget { Name = "game_win", Platform = "Windows", ConfigFile = "build_settings/platforms/windows/default.json", IsEnabled = true },
-                            new BuildPresetTarget { Name = "game_android", Platform = "Android", ConfigFile = "build_settings/platforms/android/default.json", IsEnabled = true },
-                            new BuildPresetTarget { Name = "game_ios", Platform = "iOS", ConfigFile = "build_settings/platforms/ios/default.json", IsEnabled = true },
-                            new BuildPresetTarget { Name = "game_linux", Platform = "Linux", ConfigFile = "build_settings/platforms/linux/default.json", IsEnabled = true },
-                            new BuildPresetTarget { Name = "game_macos", Platform = "MacOS", ConfigFile = "build_settings/platforms/macos/default.json", IsEnabled = true }
+                            new BuildPresetTarget { Name = "game_win", Platform = "Windows", ConfigFile = "build_settings/platforms/windows/default_config.json" },
+                            new BuildPresetTarget { Name = "game_android", Platform = "Android", ConfigFile = "build_settings/platforms/android/default_config.json" },
+                            new BuildPresetTarget { Name = "game_ios", Platform = "iOS", ConfigFile = "build_settings/platforms/ios/default_config.json" },
+                            new BuildPresetTarget { Name = "game_linux", Platform = "Linux", ConfigFile = "build_settings/platforms/linux/default_config.json" },
+                            new BuildPresetTarget { Name = "game_macos", Platform = "MacOS", ConfigFile = "build_settings/platforms/macos/default_config.json" }
                         }
                     }
                 }
@@ -194,9 +224,7 @@ public static class ProjectScaffolder
             {
                 CompanyName = string.IsNullOrWhiteSpace(companyName) ? "Zzz" : companyName,
                 AppName = string.IsNullOrWhiteSpace(appName) ? "ZzzGame" : appName,
-                AppVersion = "1.0.0",
-                Name = string.IsNullOrWhiteSpace(appName) ? "ZzzGame" : appName,
-                Version = "1.0.0",
+                Description = "Новый проект игровых ресурсов",
                 StartScene = string.Empty,
                 BuildSettings = new BuildSettingsInfo
                 {

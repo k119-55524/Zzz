@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using assets_builder_gui.ViewModels;
 
@@ -18,6 +19,11 @@ public partial class MainWindow : Window
     {
         if (DataContext is MainWindowViewModel vm)
         {
+            if (vm.PresetsPanelHeight >= 170)
+            {
+                PresetsRow.Height = new GridLength(vm.PresetsPanelHeight, GridUnitType.Pixel);
+            }
+
             if (vm.IsWindowMaximized)
             {
                 WindowState = WindowState.Maximized;
@@ -31,6 +37,15 @@ public partial class MainWindow : Window
                     LogScrollViewer.ScrollToBottom();
                 });
             };
+        }
+    }
+
+    private void GridSplitter_DragCompleted(object sender, DragCompletedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel vm && PresetsRow.ActualHeight >= 170)
+        {
+            vm.PresetsPanelHeight = PresetsRow.ActualHeight;
+            vm.SaveSessionToDisk();
         }
     }
 
@@ -87,6 +102,11 @@ public partial class MainWindow : Window
                 vm.WindowHeight = Height;
                 vm.WindowLeft = Left;
                 vm.WindowTop = Top;
+            }
+
+            if (PresetsRow.ActualHeight >= 170)
+            {
+                vm.PresetsPanelHeight = PresetsRow.ActualHeight;
             }
 
             if (!vm.ConfirmWindowClose())

@@ -7,32 +7,27 @@
         {
           "name": "game_win",
           "platform": "Windows",
-          "config_file": "build_settings/platforms/windows/default.json",
-          "is_enabled": true
+          "config_file": "build_settings/platforms/windows/default_config.json"
         },
         {
           "name": "game_android",
           "platform": "Android",
-          "config_file": "build_settings/platforms/android/default.json",
-          "is_enabled": true
+          "config_file": "build_settings/platforms/android/default_config.json"
         },
         {
           "name": "game_ios",
           "platform": "iOS",
-          "config_file": "build_settings/platforms/ios/default.json",
-          "is_enabled": true
+          "config_file": "build_settings/platforms/ios/default_config.json"
         },
         {
           "name": "game_linux",
           "platform": "Linux",
-          "config_file": "build_settings/platforms/linux/default.json",
-          "is_enabled": true
+          "config_file": "build_settings/platforms/linux/default_config.json"
         },
         {
           "name": "game_macos",
           "platform": "MacOS",
-          "config_file": "build_settings/platforms/macos/default.json",
-          "is_enabled": true
+          "config_file": "build_settings/platforms/macos/default_config.json"
         }
       ]
     }
