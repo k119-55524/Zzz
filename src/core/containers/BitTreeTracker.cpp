@@ -5,21 +5,17 @@
 
 namespace zzz::core
 {
-	BitTreeTracker::BitTreeTracker()
-		: m_Capacity(0)
-		, m_Depth(1)
-		, m_Words{ 0ULL }
-		, m_DirtyIndices{}
-	{
-	}
-
 	BitTreeTracker::BitTreeTracker(uint32_t initialCapacity)
 		: m_Capacity(0)
 		, m_Depth(1)
+		, m_IsDirty(false)
 		, m_Words{ 0ULL }
 		, m_DirtyIndices{}
 	{
-		Prepare(initialCapacity);
+		if (initialCapacity > 0)
+		{
+			Prepare(initialCapacity);
+		}
 	}
 
 	size_t BitTreeTracker::GetLevelOffset(uint32_t level) const noexcept
@@ -50,12 +46,20 @@ namespace zzz::core
 		}
 
 		const size_t leafWordsNeeded = (capacity + 63ULL) >> 6;
-
-		// 1. Если емкости уже достаточно, просто быстро обнуляем биты текущего кадра
 		size_t currentLeafCapacity = 1ULL << (static_cast<size_t>(m_Depth - 1) * 6);
+
+		// 1. Если емкости уже достаточно под элементы
 		if (capacity > 0 && currentLeafCapacity >= leafWordsNeeded && !m_Words.empty())
 		{
+			// Если изменений вообще не было — выходим мгновенно за O(1)
+			if (!m_IsDirty)
+			{
+				return;
+			}
+
+			// Если изменения были — сбрасываем биты текущего кадра
 			std::fill(m_Words.begin(), m_Words.end(), 0ULL);
+			m_IsDirty = false;
 			return;
 		}
 
@@ -79,6 +83,7 @@ namespace zzz::core
 
 		// 4. Выделяем память с полным занулением
 		m_Words.assign(totalWords, 0ULL);
+		m_IsDirty = false;
 	}
 
 	void BitTreeTracker::Set(uint32_t index) noexcept
@@ -87,6 +92,8 @@ namespace zzz::core
 		{
 			return;
 		}
+
+		m_IsDirty = true;
 
 		size_t wordInLevel = static_cast<size_t>(index) >> 6;
 		size_t bitInWord = static_cast<size_t>(index) & 63ULL;
@@ -113,7 +120,7 @@ namespace zzz::core
 	{
 		m_DirtyIndices.clear();
 
-		if (m_Words[0] == 0ULL)
+		if (!m_IsDirty)
 		{
 			return {};
 		}

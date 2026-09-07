@@ -29,8 +29,7 @@ namespace zzz::core
 	class BitTreeTracker final
 	{
 	public:
-		BitTreeTracker();
-		explicit BitTreeTracker(uint32_t initialCapacity);
+		explicit BitTreeTracker(uint32_t initialCapacity = 0);
 
 		/// @brief Подготовка трекера к кадру: гарантирует емкость под число элементов и сбрасывает все биты в 0.
 		void Prepare(uint32_t capacity);
@@ -49,6 +48,7 @@ namespace zzz::core
 
 		uint32_t              m_Capacity;
 		uint32_t              m_Depth;
+		bool                  m_IsDirty;
 		std::vector<uint64_t> m_Words;
 		std::vector<uint32_t> m_DirtyIndices;
 	};
