@@ -99,13 +99,23 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "gapi/metal/MetalAPI.h" "gapi/metal/MetalAPI.mm"
         "gapi/metal/SurfView_Metal.h" "gapi/metal/SurfView_Metal.mm"
 
-        # Scripts & Scenes (Пункт 7: GameObject, Transform, ObjectWorld, Layers, Storage)
-        "scene/Transform.h" "scene/Transform.cpp"
-        "scene/GameObject.h" "scene/GameObject.cpp"
-        "scene/ObjectWorld.h" "scene/ObjectWorld.cpp"
-        "scene/EntityWorld.h" "scene/EntityWorld.cpp"
-        "scene/storage/ISceneStorage.h"
-        "scene/storage/DefaultSceneStorage.h" "scene/storage/DefaultSceneStorage.cpp"
+        # Domain Interfaces (Пункт 11.1)
+        "scene/domain/ILayerDomain.h"
+        "scene/domain/IObjectDomain.h"
+        "scene/domain/IEntityDomain.h"
+        "scene/domain/IDomainFactory.h"
+
+        # GameObject & Transform (ООП-модель)
+        "scene/gameobject/Transform.h" "scene/gameobject/Transform.cpp"
+        "scene/gameobject/GameObject.h" "scene/gameobject/GameObject.cpp"
+        "scene/gameobject/ObjectWorld.h" "scene/gameobject/ObjectWorld.cpp"
+
+        # Entity (ECS-модель)
+        "scene/entity/EntityWorld.h" "scene/entity/EntityWorld.cpp"
+
+        # Storage (Пространственные хранилища)
+        "scene/storage/ISpatialStorage.h"
+        "scene/storage/DefaultSpatialStorage.h" "scene/storage/DefaultSpatialStorage.cpp"
         "scene/layer/ILayer.h"
         "scene/layer/Layer3D.h" "scene/layer/Layer3D.cpp"
         "scene/layer/LayerUI.h" "scene/layer/LayerUI.cpp"

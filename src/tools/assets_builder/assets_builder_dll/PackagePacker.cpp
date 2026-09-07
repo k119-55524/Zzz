@@ -857,7 +857,7 @@ namespace zzz::builder
 						std::string layerName = layerElem.value("name", "Default3DLayer");
 						std::string typeStr = layerElem.value("type", "Layer3D");
 						eLayerType layerType = eLayerType::Layer3D;
-						if (typeStr == "LayerUI") layerType = eLayerType::LayerUI;
+						if (typeStr == "Layer2D" || typeStr == "LayerUI") layerType = eLayerType::Layer2D;
 						else if (typeStr == "LayerMVVM") layerType = eLayerType::LayerMVVM;
 
 						std::vector<GameObjectData> layerObjects;

@@ -5,7 +5,7 @@
 #include "engine/utils/EngineLogFlags.h"
 #include "core/userscripts/ScriptFactory.h"
 #include "../platforms/window/NativeWindow.h"
-#include "core/scene/transition/SceneTransitionParams.h"
+#include "core/scene/SceneTransitionParams.h"
 
 #include "View.h"
 

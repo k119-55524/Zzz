@@ -1,5 +1,5 @@
-#include "engine/scene/Transform.h"
-#include "engine/scene/GameObject.h"
+#include "engine/scene/gameobject/Transform.h"
+#include "engine/scene/gameobject/GameObject.h"
 
 namespace zzz
 {

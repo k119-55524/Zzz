@@ -1,8 +1,8 @@
 #pragma once
 
 #include "engine/scene/layer/ILayer.h"
-#include "engine/scene/ObjectWorld.h"
-#include "engine/scene/EntityWorld.h"
+#include "engine/scene/gameobject/ObjectWorld.h"
+#include "engine/scene/entity/EntityWorld.h"
 #include <memory>
 
 namespace zzz

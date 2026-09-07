@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string_view>
 #include <optional>
+#include "core/utils/ThrowWrappers.h"
 
 namespace zzz::core
 {
@@ -16,14 +17,14 @@ namespace zzz::core
 		Entity = 1  ///< Высокоскоростная пакетная сущность для EntityWorld
 	};
 
-	[[nodiscard]] constexpr std::string_view ToString(eObjectDomain domain) noexcept
+	[[nodiscard]] constexpr std::string_view ToString(eObjectDomain domain)
 	{
 		switch (domain)
 		{
 		case eObjectDomain::Object: return "Object";
 		case eObjectDomain::Entity: return "Entity";
 		}
-		return "Unknown";
+		THROW_RUNTIME("Необработанный eObjectDomain");
 	}
 
 	[[nodiscard]] constexpr std::optional<eObjectDomain> ParseObjectDomain(std::string_view str) noexcept

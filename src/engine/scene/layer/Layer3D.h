@@ -3,9 +3,9 @@
 #include <memory>
 
 #include "engine/scene/layer/ILayer.h"
-#include "engine/scene/ObjectWorld.h"
-#include "engine/scene/EntityWorld.h"
-#include "engine/scene/storage/DefaultSceneStorage.h"
+#include "engine/scene/gameobject/ObjectWorld.h"
+#include "engine/scene/entity/EntityWorld.h"
+#include "engine/scene/storage/DefaultSpatialStorage.h"
 
 using namespace zzz::core;
 
@@ -37,7 +37,7 @@ namespace zzz::engine
 		std::string m_Name;
 		bool m_IsVisible;
 
-		std::unique_ptr<ISceneStorage> m_Storage;
+		std::unique_ptr<ISpatialStorage> m_Storage;
 		ObjectWorld m_ObjectWorld;
 		EntityWorld m_EntityWorld;
 		std::shared_ptr<ResourceManager> m_ResourceManager;

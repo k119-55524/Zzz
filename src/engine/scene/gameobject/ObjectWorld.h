@@ -7,11 +7,16 @@
 #include "core/utils/Guid.h"
 #include "core/utils/Defines.h"
 #include "core/templates/SlotMap.h"
-#include "engine/scene/GameObject.h"
+#include "engine/scene/gameobject/GameObject.h"
+
+namespace zzz::engine
+{
+	class ISpatialStorage;
+}
 
 namespace zzz
 {
-	class ISceneStorage;
+	using ::zzz::engine::ISpatialStorage;
 
 	/**
 	 * @class ObjectWorld
@@ -42,8 +47,8 @@ namespace zzz
 		void Update(float dt);
 
 		// --- Связка с пространственным хранилищем слоя ---
-		void SetStorage(ISceneStorage* storage) noexcept { m_Storage = storage; }
-		[[nodiscard]] ISceneStorage* GetStorage() const noexcept { return m_Storage; }
+		void SetStorage(ISpatialStorage* storage) noexcept { m_Storage = storage; }
+		[[nodiscard]] ISpatialStorage* GetStorage() const noexcept { return m_Storage; }
 
 	private:
 		// Владение памятью: стабильные адреса объектов с гарантированным O(1) удалением
@@ -53,6 +58,6 @@ namespace zzz
 		::zzz::core::SlotMap<GameObject*> m_ActiveObjects;
 
 		// Указатель на пространственное хранилище слоя (для регистрации/дерегистрации)
-		ISceneStorage* m_Storage{ nullptr };
+		ISpatialStorage* m_Storage{ nullptr };
 	};
 }

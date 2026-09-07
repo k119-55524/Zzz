@@ -1,6 +1,6 @@
 #include <core/Core.h>
 #include <engine/view/ViewManager.h>
-#include <engine/scene/GameObject.h>
+#include <engine/scene/gameobject/GameObject.h>
 #include <algorithm>
 #include <cctype>
 #include <utility>

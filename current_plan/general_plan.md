@@ -124,11 +124,11 @@
 ### 📌 Текущее состояние разработки
 
 > [!IMPORTANT]
-> **Текущий активный пункт:** `Пункт 10. Подсистема ресурсов (ResourceManager, ResourceGarbageCollector, DoubleBufferedVector)`  
-> **Статус:** ✅ Выполнено  
-> **Файл детального плана текущего шага:** [`stage_10_resource_manager.md`](stage_10_resource_manager.md)  
+> **Текущий активный пункт:** `Пункт 11.2. 64-арное битовое дерево изменений (BitTreeTracker) в ядре`  
+> **Статус:** ⏳ В процессе  
+> **Файл детального плана текущего шага:** [`stage_11_2_bit_tree_tracker.md`](stage_11_2_bit_tree_tracker.md)  
 > **Список открытых сквозных задач / технического долга:** [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) §4  
-> **Текущая подзадача:** Подсистема ресурсов реализована, интегрирована и успешно скомпилирована.
+> **Текущая подзадача:** Реализация класса `BitTreeTracker` в `src/core/containers/` с 64-арной иерархией бит, $O(1)$ пометкой грязных узлов и сканированием через `std::countr_zero`.
 > 
 ---
 
@@ -147,82 +147,68 @@
 ### Уровень 2: GAPI-ресурсы, содержимое куба и сквозной рендер
 | № | Этап разработки | Статус | Файл этапа | Краткое описание |
 |---|---|---|---|---|
-| **7** | Сущность сцены (`GameObject`), иерархический `Transform`, `SlotMap`, слои (`ILayer`, `Layer3D`, `LayerUI`, `LayerMVVM`) и `ISceneStorage` | ✅ Выполнено | [`stage_07_gameobject_and_transform.md`](stage_07_gameobject_and_transform.md) | `Transform` (поле-значение, dirty flag), `GameObject`, `SlotMap<T>` (Swap & Pop, stable handles), слои сцены (`ILayer`, `Layer3D`, `LayerUI`, `LayerMVVM`), `ISceneStorage` (`DefaultSceneStorage`), `GameObjectData`, `LayerData` (2026-09-06: объекты сцены хранятся внутри слоя, не плоским списком) |
-| **8** | Конвейер смены сцен, асинхронная загрузка и переходы (`SceneTransitionParams`, `SceneManager::LoadSceneAsync`, `View::SetScene`) | ✅ Выполнено | [`stage_08_scene_transition_pipeline.md`](stage_08_scene_transition_pipeline.md) | Вынос загрузки сцены из конструктора `View`, `SceneTransitionParams` (структура с флагами перехода, `blockUserInput`), `View::SetScene`, асинхронная загрузка (фоновые I/O, десериализация и создание `Scene` в `ThreadPool` + потокобезопасная публикация в `m_Scenes`, запуск скриптов `InvokeStart` и вызов `onComplete` на логическом потоке через `m_MainThreadQueue` / `CallbackQueue`) |
+| **7** | Сущность сцены (`GameObject`), иерархический `Transform`, `SlotMap`, слои (`ILayer`, `Layer3D`, `LayerUI`, `LayerMVVM`) | ✅ Выполнено | [`stage_07_gameobject_and_transform.md`](stage_07_gameobject_and_transform.md) | `Transform` (поле-значение, dirty flag), `GameObject`, `SlotMap<T>` (Swap & Pop, stable handles), слои сцены (`ILayer`, `Layer3D`, `LayerUI`, `LayerMVVM`), `GameObjectData`, `LayerData` |
+| **8** | Конвейер смены сцен, асинхронная загрузка и переходы (`SceneTransitionParams`, `SceneManager::LoadSceneAsync`, `View::SetScene`) | ✅ Выполнено | [`stage_08_scene_transition_pipeline.md`](stage_08_scene_transition_pipeline.md) | Вынос загрузки сцены из конструктора `View`, `SceneTransitionParams`, `View::SetScene`, асинхронная загрузка |
 | **9** | Сквозной конвейер сетки: бинарный формат `MeshData`, парсинг `.obj`, упаковка и загрузка из `package.dat` | ✅ Выполнено | [`stage_09_package_resource_formats.md`](stage_09_package_resource_formats.md) | `MeshData` в `core`, парсер `.obj` в `assets_builder_dll`, упаковка в `package.dat` и `data.dat`, исходник `cube_00.obj` с `.meta`, UTF-32 имена, белый список расширений |
-| **9.1** | Менеджер проектов Сборщика Ассетов: каркас проекта, валидация структуры, пресеты сборки, платформенные конфиги и дельты | ⏳ В процессе | [`stage_09_1_assets_builder_presets_and_scaffolding.md`](stage_09_1_assets_builder_presets_and_scaffolding.md) | Создание каркаса в пустой папке (Scaffolding), строгая валидация, наборы сборки (`presets.json`), платформенные конфиги с версиями сторов и дельтами `add_*`/`remove_*`, очистка `project.json` от дублей |
+| **9.1** | Менеджер проектов Сборщика Ассетов: каркас проекта, валидация структуры, пресеты сборки, платформенные конфиги и дельты | ⏳ В процессе | [`stage_09_1_assets_builder_presets_and_scaffolding.md`](stage_09_1_assets_builder_presets_and_scaffolding.md) | Каркас проекта (Scaffolding), пресеты сборки (`presets.json`), платформенные конфиги с дельтами `add_*`/`remove_*` |
 | **10** | Подсистема ресурсов (`ResourceManager`, `ResourceGarbageCollector`, `DoubleBufferedVector`) | ✅ Выполнено | [`stage_10_resource_manager.md`](stage_10_resource_manager.md) | Базовый интерфейс `IResource`, `eResourceState`, кэш по типам (Mesh, Texture, Shader, Material), выделенный I/O-поток, фоновый сборщик `ResourceGarbageCollector` с RAII `ScopedGCSuspension`, интеграция в `Engine` |
-| **11** | Шаблонная система буфера вершин и маппер GAPI | ⏳ Не начато | — | `CPUVertexBuffer<Attrs...>`, `eVertexFormat`, `ConverterGAPITypes` и `VertexFormatMapper` (референс: `c:\Workspaces\DZzz\...`) |
-| **12** | Кроссплатформенные абстракции ресурсов GAPI | ⏳ Не начато | — | `IVertexBuffer`, `IIndexBuffer`, `IConstantBuffer` (двойная буферизация кадра), `ITexture2D` |
-| **13** | Управление зоной рендеринга и DPI-масштабирование | ⏳ Не начато | — | Viewport, Scissor, Safe Area, логические единицы (DIP / Canvas Units), компенсация Y в Vulkan |
-| **14** | Компонент `Camera` | ⏳ Не начато | — | Углы обзора, View/Projection матрицы, автоматический пересчет Aspect при ресайзе |
-| **15** | Структура и ресурс `Mesh` и генератор 3D-куба | ⏳ Не начато | — | Ресурс `Mesh : public IResource`, `MeshLoader`, единичный куб: 24 вершины (нормали, UV), 36 индексов |
-| **16** | Класс и ресурс `Material` и формат `.zmat` | ⏳ Не начато | — | Ресурс `Material : public IResource`, динамический Property Bag (`SetColor`, `SetFloat`, `SetTexture`), файл материала |
-| **17** | Базовый текстурный шейдер `BasicTextured.hlsl` | ⏳ Не начато | — | HLSL шейдер с текстурированием и простым рассеянным освещением |
-| **18** | Формирование команд отрисовки меша и кадровой очереди (`RenderCommand`, `RenderQueue`) | ⏳ Не начато | — | Экстракция данных из `GameObject` (Transform, Mesh, Material) в плоские команды отрисовки `RenderCommand` и сборка неизменяемого снимка кадра `RenderQueue` для потока рендеринга (Правило 28) |
-| **19** | Отрисовка куба на DX12/Vulkan/Metal **(частично реализовано)** | ⏳ Не начато | — | Доведение `SurfView_DX/VK/Metal` и `RenderManager` до реальной отрисовки текстурированного куба |
-| **20** | Компиляция шейдеров и кэширование PSO | ⏳ Не начато | — | Сборка через `dxc.exe` в DXIL и SPIR-V, `VkPipelineCache` и `ID3D12PipelineLibrary` |
-| **21** | 🚦 КП-1: кроссплатформенная проверка статичного куба | ⏳ Не начато | — | Сборка и проверка отрисовки куба на Windows (DirectX12 + Vulkan) |
+| **11.1** | Интерфейсы доменов (`ILayerDomain`, `IDomainFactory`) и базовое хранилище (`ISpatialStorage`, `DefaultSpatialStorage`) | ✅ Выполнено | [`stage_11_1_domain_interfaces_and_spatial_storage.md`](stage_11_1_domain_interfaces_and_spatial_storage.md) | Переименование `LayerUI` $\to$ `Layer2D`, интерфейсы доменов, удаление устаревшего `ISceneStorage`, создание интерфейса `ISpatialStorage` и бейзлайна `DefaultSpatialStorage` (тривиальный плоский массив с Free-List для $O(1)$ вставки/удаления без пространственного отсечения) |
+| **11.2** | 64-арное битовое дерево изменений (`BitTreeTracker`) в ядре | ⏳ В процессе | [`stage_11_2_bit_tree_tracker.md`](stage_11_2_bit_tree_tracker.md) | `BitTreeTracker` в `core/containers/`: 64-арная битовая иерархия, $O(1)$ пометка грязных узлов, аппаратный `std::countr_zero`/`_BitScanForward64`, модульные тесты |
+| **11.3** | Структура узлов сцены, SoA-хранилище `NodeStorageBlock`, двухбуферный `SceneTreeContainer`, скрытый интерфейс `ISceneTreeAccessor`, полное удаление `Transform` и рефакторинг `GameObject` | ⏳ Не начато | [`stage_11_3_scene_node_and_tree_container.md`](stage_11_3_scene_node_and_tree_container.md) | SoA-блок `NodeStorageBlock`, двухбуферный `SceneTreeContainer` (`PrimaryNodes`/`SecondaryNodes`, Staging, `ReparentQueue`, `DeleteQueue`, итеративный `DestroySubtree`), скрытый интерфейс `ISceneTreeAccessor`, полное удаление `class Transform`, прямой доступ `GameObject` к плоским массивам по `NodeHandle` |
+| **11.4** | Интеграция слоёв сцены, базовый класс `SceneTreeLayerBase`, покадровый конвейер и двухпроходное наполнение (`Populate`) | ⏳ Не начато | [`stage_11_4_layer_integration_and_populate.md`](stage_11_4_layer_integration_and_populate.md) | Базовый класс `SceneTreeLayerBase : public ILayer`, специализации `Layer3D`, `Layer2D`, `LayerMVVM`, барьер сдачи кадра (Handover Barrier) во `ViewManager`, двухпроходная инициализация с `parentGuid` |
+| **13** | Загрузка текстур (`Texture2D`) + отправка в GPU | ⏳ Не начато | — | Ресурс `Texture2D : public IResource`, `TextureLoader` в `ResourceManager`, создание текстурных ресурсов и дескрипторов SRV в GAPI, кэширование в `m_Textures` |
+| **14** | Загрузка материалов (`Material`) + полное создание связки (Шейдер + Текстура + Параметры) | ⏳ Не начато | — | Ресурс `Material : public IResource`, `MaterialLoader` в `ResourceManager`, чтение `.zmat`/`MaterialData`, связка с `Shader` и `Texture2D`, константный буфер параметров материала на GPU, визуальный компонент `MeshRenderer` |
+| **15** | Скриптование `GameObject` (жизненный цикл и связка с движком) | ⏳ Не начато | — | Доведение `ScriptFactory`/`ScriptRegistry`/`ScriptStorage` для `GameObject`, методы жизненного цикла (`OnStart`, `OnUpdate(dt)`, `OnDestroy`), доступ к `Transform`, пользовательский скрипт `CubeRotatorScript` |
+| **16** | 🚦 КП-1 / КП-2: сквозной показ вращающегося куба и перенос на платформы | ⏳ Не начато | — | Запуск, визуальный контроль вращающегося текстурированного куба на Windows (DirectX 12 + Vulkan), валидация кадрового конвейера ($N$ логика / $N-1$ GPU), перенос и верификация на Linux (Vulkan) и macOS/iOS (Metal) |
 
-### Уровень 3: Скриптование и первая живая проверка вращения
+### Уровень 3: Продвинутый рендеринг, камера и пространственные деревья
 | № | Этап разработки | Статус | Файл этапа | Краткое описание |
 |---|---|---|---|---|
-| **22** | Механизм скриптования `GameObject` по GUID **(частично реализовано)** | ⏳ Не начато | — | Доведение существующей `ScriptFactory`/`ScriptRegistry`/`ScriptStorage` под Transform/Mesh/Material |
-| **23** | Фасады движка для скриптов (Engine Facades) | ⏳ Не начато | — | Безопасные обертки API (`EngineFacade`, `SceneFacade`, `ViewFacade`) с разграничением прав |
-| **24** | Изоляция и контроль видимости скриптов | ⏳ Не начато | — | Виртуальные методы ограничения доступа к скриптам верхнего уровня для нижележащих скриптов |
-| **25** | Вращение куба пользовательским скриптом | ⏳ Не начато | — | Скрипт `CubeRotatorScript` на объекте куба, вращение во времени (`DeltaTime`) |
-| **26** | 🚦 КП-2: кроссплатформенная проверка вращающегося куба | ⏳ Не начато | — | Тестирование параллельной схемы кадрового конвейера ($N$ готовит / $N-1$ рендерит) на Windows (DX12 + VK) |
-| **27** | Сериализуемые поля и ссылки скриптов (`FieldRef`) | ⏳ Не начато | — | Unity-like поля в скриптах: ссылки на `GameObject`, другие скрипты и ассеты с 2-фазной линковкой |
+| **17** | Управление зоной рендеринга и DPI-масштабирование | ⏳ Не начато | — | Viewport, Scissor, Safe Area, логические единицы (DIP / Canvas Units), компенсация Y в Vulkan |
+| **18** | Компонент `Camera` и пирамида видимости `Frustum` | ⏳ Не начато | — | Углы обзора, View/Projection матрицы, автоматический пересчет Aspect при ресайзе, плоскости отсечения `Frustum` |
+| **19** | Продвинутые пространственные деревья (`ISpatialStorage`: Dynamic BVH / Octree) и Frustum Culling | ⏳ Не начато | — | Эволюция `ISpatialStorage`: добавление геометрии `AABB`, реализация пространственных индексов (`BVHSpatialStorage`, `OctreeSpatialStorage`), быстрое Frustum-отсечение за $O(\log N)$ взамен плоского бейзлайна `DefaultSpatialStorage` |
+| **20** | Формирование команд отрисовки меша и кадровой очереди (`RenderCommand`, `RenderQueue`) | ⏳ Не начато | — | Экстракция отсечённых видимых объектов в плоские команды отрисовки `RenderCommand` и сборка неизменяемого снимка кадра `RenderQueue` для потока рендеринга |
+| **21** | Компиляция шейдеров и кэширование PSO | ⏳ Не начато | — | Сборка через `dxc.exe` в DXIL и SPIR-V, `VkPipelineCache` и `ID3D12PipelineLibrary` |
+| **22** | Фасады движка для скриптов (Engine Facades) | ⏳ Не начато | — | Безопасные обертки API (`EngineFacade`, `SceneFacade`, `ViewFacade`) с разграничением прав |
+| **23** | Изоляция и контроль видимости скриптов | ⏳ Не начато | — | Виртуальные методы ограничения доступа к скриптам верхнего уровня для нижележащих скриптов |
+| **24** | Сериализуемые поля и ссылки скриптов (`FieldRef`) | ⏳ Не начато | — | Unity-like поля в скриптах: ссылки на `GameObject`, другие скрипты и ассеты с 2-фазной линковкой |
+| **25** | Скрипты слоёв (`LayerScript`), независимая кадровика и On-Demand рендеринг | ⏳ Не начато | — | Внедрение базового `LayerScript` (события OnStart, OnUpdate, OnDestroy слоя, подписка на события слоя) и индивидуальных скриптов под тип слоя (`Layer3DScript`, `LayerUIScript`, `LayerMVVMScript`), поддержка в `ScriptFactory`/`ScriptRegistry`, развитие `Layer3D`, `LayerUI`, `LayerMVVM`: независимый FPS для слоёв, On-Demand отрисовка для UI, частицы и 3D в интерфейсе |
 
-### Уровень 4: Продвинутые пространственные контейнеры и кадровые режимы слоев
+### Уровень 4: Ввод и UI-фреймворк ZzzGUI
 | № | Этап разработки | Статус | Файл этапа | Краткое описание |
 |---|---|---|---|---|
-| **28** | Продвинутые структуры пространственного хранения объектов (`ISceneStorage`) | ⏳ Не начато | — | Реализация AABB-деревьев (`BVHSceneStorage`, `QuadTreeSceneStorage`, `OctreeSceneStorage`), Frustum Culling, автопересчёт границ |
-| **29** | Скрипты слоёв (`LayerScript`), независимая кадровика и On-Demand рендеринг | ⏳ Не начато | — | Внедрение базового `LayerScript` (события OnStart, OnUpdate, OnDestroy слоя, подписка на события слоя) и индивидуальных скриптов под тип слоя (`Layer3DScript`, `LayerUIScript`, `LayerMVVMScript`), поддержка в `ScriptFactory`/`ScriptRegistry`, развитие `Layer3D`, `LayerUI`, `LayerMVVM`: независимый FPS для слоёв, On-Demand отрисовка для UI, частицы и 3D в интерфейсе |
+| **26** | Автоматическая маршрутизация ввода в слои сцены | ⏳ Не начато | — | Доставка Тач / Мышь / Клавиатура / Геймпад: Hit-Testing в GUI с поглощением кликов и проброс в 3D World |
+| **27** | Движок разметки ZzzGUI (`Measure`/`Arrange`) | ⏳ Не начато | — | CMake-таргет `gui_lib`: двухпроходный layout, контейнеры `StackPanel`, `Grid`, `Canvas`, `ScrollViewer`, `Border` |
+| **28** | Базовые контролы ZzzGUI | ⏳ Не начато | — | `Button`, `TextBlock`, `Image`, `Slider`, `ProgressBar`, `CheckBox`, `TextBox` (фокус/каретка) |
+| **29** | 2D GPU GUI Batcher | ⏳ Не начато | — | Динамический вершинный буфер интерфейса (`GuiVertex2D`), прямоугольники отсечения Scissor Rects |
+| **30** | Рендеринг текста в GUI | ⏳ Не начато | — | Выбор типа шрифта и способа отрисовки по факту (правило 16), API-обертки для движка и скриптов |
+| **31** | Реактивный Data Binding Core | ⏳ Не начато | — | `ObservableProperty<T>`, команды `ICommand`, автоматический On-Demand перерендер только изменившихся элементов |
+| **32** | 🚦 КП-3: кроссплатформенная проверка GUI-MVP | ⏳ Не начато | — | Проверка одинакового поведения интерфейса на Windows под DirectX 12 и Vulkan |
+| **33** | 🚦 КП-4: портирование и проверка на Linux (Vulkan) | ⏳ Не начато | — | Куб + ZzzGUI-MVP на Linux (Vulkan) |
 
-### Уровень 5: Ввод и UI-фреймворк ZzzGUI
+### Уровень 5: Мета-система ассетов, профили, Студия и сборка пакета
 | № | Этап разработки | Статус | Файл этапа | Краткое описание |
 |---|---|---|---|---|
-| **30** | Автоматическая маршрутизация ввода в слои сцены | ⏳ Не начато | — | Доставка Тач / Мышь / Клавиатура / Геймпад: Hit-Testing в GUI с поглощением кликов и проброс в 3D World |
-| **31** | Движок разметки ZzzGUI (`Measure`/`Arrange`) | ⏳ Не начато | — | CMake-таргет `gui_lib`: двухпроходный layout, контейнеры `StackPanel`, `Grid`, `Canvas`, `ScrollViewer`, `Border` |
-| **32** | Базовые контролы ZzzGUI | ⏳ Не начато | — | `Button`, `TextBlock`, `Image`, `Slider`, `ProgressBar`, `CheckBox`, `TextBox` (фокус/каретка) |
-| **33** | 2D GPU GUI Batcher | ⏳ Не начато | — | Динамический вершинный буфер интерфейса (`GuiVertex2D`), прямоугольники отсечения Scissor Rects |
-| **34** | Рендеринг текста в GUI | ⏳ Не начато | — | Выбор типа шрифта и способа отрисовки по факту (правило 16), API-обертки для движка и скриптов |
-| **35** | Реактивный Data Binding Core | ⏳ Не начато | — | `ObservableProperty<T>`, команды `ICommand`, автоматический On-Demand перерендер только изменившихся элементов |
-| **36** | 🚦 КП-3: кроссплатформенная проверка GUI-MVP | ⏳ Не начато | — | Проверка одинакового поведения интерфейса на Windows под DirectX 12 и Vulkan |
-| **37** | 🚦 КП-4: портирование и проверка на Linux (Vulkan) | ⏳ Не начато | — | Куб + ZzzGUI-MVP на Linux (Vulkan) |
+| **34** | Параметры импорта ассетов в `.meta` | ⏳ Не начато | — | Типоспецифичные параметры импорта внутри `.meta`: текстуры (мипы, сжатие, фильтрация, sRGB), меши, материалы |
+| **35** | Множественные платформенные JSON-профили конфигурации | ⏳ Не начато | — | Расширение существующей схемы `project_<platform>.json` под сборочные профили |
+| **36** | Платформозависимые форматы собранных ресурсов | ⏳ Не начато | — | Базовый общий формат для MVP; тайринг качества — в Полировку |
+| **37** | Продвинутая компиляция ресурсов и оптимизация `package.dat` | ⏳ Не начато | — | Сжатие текстур (BC1-BC7 / ASTC), компиляция шейдеров в `PackagePacker` |
+| **38** | Студия проектов (ex-AssetsBuilder) | ⏳ Не начато | — | Доведение `tools/editor` и `tools/assets_builder` (инспектор `.zmat`, ссылки `FieldRef`) |
+| **39** | Автоматическая доставка ресурсов в CMake | ⏳ Не начато | — | Post-build копирование собранного `package.dat` в папки запуска игровых таргетов |
+| **40** | Загрузка сцены в `SceneManager` | ⏳ Не начато | — | Расширение существующего `SceneManager` под асинхронную загрузку не-Primary окон через `ResourceManager` |
 
-### Уровень 6: Мета-система ассетов, профили, Студия и сборка пакета
+### Уровень 6: Расширение платформенного покрытия и полировка
 | № | Этап разработки | Статус | Файл этапа | Краткое описание |
 |---|---|---|---|---|
-| **38** | Параметры импорта ассетов в `.meta` | ⏳ Не начато | — | Типоспецифичные параметры импорта внутри `.meta`: текстуры (мипы, сжатие, фильтрация, sRGB), меши, материалы |
-| **39** | Множественные платформенные JSON-профили конфигурации **(частично реализовано)** | ⏳ Не начато | — | Расширение существующей схемы `project_<platform>.json` под сборочные профили |
-| **40** | Платформозависимые форматы собранных ресурсов | ⏳ Не начато | — | Базовый общий формат для MVP; тайринг качества — в Полировку |
-| **41** | Продвинутая компиляция ресурсов и оптимизация `package.dat` **(частично реализовано)** | ⏳ Не начато | — | Сжатие текстур (BC1-BC7 / ASTC), компиляция шейдеров в `PackagePacker` |
-| **42** | Студия проектов (ex-AssetsBuilder) **(частично реализовано)** | ⏳ Не начато | — | Доведение `tools/editor` и `tools/assets_builder` (инспектор `.zmat`, ссылки `FieldRef`) |
-| **43** | Автоматическая доставка ресурсов в CMake | ⏳ Не начато | — | Post-build копирование собранного `package.dat` в папки запуска игровых таргетов |
-
-### Уровень 7: Менеджеры сцен и загрузка
-| № | Этап разработки | Статус | Файл этапа | Краткое описание |
-|---|---|---|---|---|
-| **44** | Загрузка сцены в `SceneManager` **(частично реализовано)** | ⏳ Не начато | — | Расширение существующего `SceneManager` под асинхронную загрузку не-Primary окон через `ResourceManager` |
-
-### Уровень 8: Расширение платформенного покрытия
-| № | Этап разработки | Статус | Файл этапа | Краткое описание |
-|---|---|---|---|---|
-| **45** | 🚦 КП-5: первый прогон на macOS и мобильных (Android/iOS, Metal) | ⏳ Не начато | — | Куб + ZzzGUI-MVP на macOS/iOS (Metal) и Android (Vulkan) |
-
-### Уровень 9: Полировка / отложенная сложность
-| № | Этап разработки | Статус | Файл этапа | Краткое описание |
-|---|---|---|---|---|
-| **46** | SIMD оптимизация матрицы `Mat4` | ⏳ Не начато | — | Аппаратное ускорение через SSE2/AVX и NEON без изменения публичного API |
-| **47** | Менеджер CPU ядер и приоритетов пулов потоков | ⏳ Не начато | — | `CpuCoreManager`: топология CPU (P/E ядра), маски affinity, очереди задач без False Sharing (`alignas(64)`) и приоритеты тредпулов |
-| **48** | Управление прозрачностью окна и альфа-каналом GAPI | ⏳ Не начато | — | Кроссплатформенная альфа окна; нативные Acrylic/Mica как надстройка |
-| **49** | Платформозависимый сплэшскрин | ⏳ Не начато | — | Загрузочное окно старта (Win/Linux/macOS frameless splash, Android SplashScreen, iOS Storyboard) |
-| **50** | Встраивание 3D и GPU-эффектов в UI (`Viewport3DControl`) | ⏳ Не начато | — | Интерактивные 3D объекты прямо в разметке UI, шейдерные эффекты, частицы и Glass/Acrylic блюр |
-| **51** | Адаптивный ZzzGUI (Desktop vs Mobile) и полиморфизм | ⏳ Не начато | — | Стабильные Element ID, платформенные шаблоны разметки, полиморфизм UI-скриптов |
-| **52** | Потоковое чтение тяжелых ресурсов (`ResourceStreaming`) | ⏳ Не начато | — | `IResourceStream`: потоковое чтение чанками (видео, длинное аудио) |
-| **53** | Механизм смены сцен и визуальных эффектов перехода | ⏳ Не начато | — | Шейдерные эффекты перехода (Fade, Cross-Fade, Dissolve, Wipe, маски), захват кадра |
+| **41** | 🚦 КП-5: первый прогон на macOS и мобильных (Android/iOS, Metal) | ⏳ Не начато | — | Куб + ZzzGUI-MVP на macOS/iOS (Metal) и Android (Vulkan) |
+| **42** | SIMD оптимизация матрицы `Mat4` | ⏳ Не начато | — | Аппаратное ускорение через SSE2/AVX и NEON без изменения публичного API |
+| **43** | Менеджер CPU ядер и приоритетов пулов потоков | ⏳ Не начато | — | `CpuCoreManager`: топология CPU (P/E ядра), маски affinity, очереди задач без False Sharing (`alignas(64)`) и приоритеты тредпулов |
+| **44** | Управление прозрачностью окна и альфа-каналом GAPI | ⏳ Не начато | — | Кроссплатформенная альфа окна; нативные Acrylic/Mica как надстройка |
+| **45** | Платформозависимый сплэшскрин | ⏳ Не начато | — | Загрузочное окно старта (Win/Linux/macOS frameless splash, Android SplashScreen, iOS Storyboard) |
+| **46** | Встраивание 3D и GPU-эффектов в UI (`Viewport3DControl`) | ⏳ Не начато | — | Интерактивные 3D объекты прямо в разметке UI, шейдерные эффекты, частицы и Glass/Acrylic блюр |
+| **47** | Адаптивный ZzzGUI (Desktop vs Mobile) и полиморфизм | ⏳ Не начато | — | Стабильные Element ID, платформенные шаблоны разметки, полиморфизм UI-скриптов |
+| **48** | Потоковое чтение тяжелых ресурсов (`ResourceStreaming`) | ⏳ Не начато | — | `IResourceStream`: потоковое чтение чанками (видео, длинное аудио) |
+| **49** | Механизм смены сцен и визуальных эффектов перехода | ⏳ Не начато | — | Шейдерные эффекты перехода (Fade, Cross-Fade, Dissolve, Wipe, маски), захват кадра |
 
 ### Уровень 10: Финал
 | № | Этап разработки | Статус | Файл этапа | Краткое описание |

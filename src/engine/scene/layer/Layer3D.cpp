@@ -13,7 +13,7 @@ namespace zzz::engine
 	Layer3D::Layer3D(std::string name, std::shared_ptr<::zzz::engine::ResourceManager> resourceManager)
 		: m_Name(std::move(name))
 		, m_IsVisible{ true }
-		, m_Storage(::zzz::core::safe_make_unique<DefaultSceneStorage>())
+		, m_Storage(::zzz::core::safe_make_unique<DefaultSpatialStorage>())
 		, m_ResourceManager(std::move(resourceManager))
 	{
 		m_ObjectWorld.SetStorage(m_Storage.get());

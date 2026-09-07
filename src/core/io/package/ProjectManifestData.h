@@ -6,7 +6,7 @@
 #include "core/utils/Guid.h"
 #include "core/utils/Version.h"
 #include "core/Serialize/Serializer.h"
-#include "core/scene/transition/SceneTransitionParams.h"
+#include "core/scene/SceneTransitionParams.h"
 #include "core/IO/package/platforms/project/ProjectPlatformConfig.h"
 
 namespace zzz::core

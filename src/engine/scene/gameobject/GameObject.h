@@ -5,7 +5,7 @@
 #include <memory>
 #include "core/utils/Guid.h"
 #include "core/templates/SlotMap.h"
-#include "engine/scene/Transform.h"
+#include "engine/scene/gameobject/Transform.h"
 
 namespace zzz::core
 {
@@ -35,6 +35,10 @@ namespace zzz
 		// --- Хэндл в ObjectWorld (O(1) удаление из SlotMap) ---
 		[[nodiscard]] ::zzz::core::SlotHandle GetWorldHandle() const noexcept { return m_WorldHandle; }
 		void SetWorldHandle(::zzz::core::SlotHandle handle) noexcept { m_WorldHandle = handle; }
+
+		// --- Хэндл в пространственном хранилище ---
+		[[nodiscard]] uint32_t GetSpatialHandle() const noexcept { return m_SpatialHandle; }
+		void SetSpatialHandle(uint32_t handle) noexcept { m_SpatialHandle = handle; }
 
 		// --- Активность и жизненный цикл в кадре ---
 		[[nodiscard]] bool IsActive() const noexcept { return m_IsActive; }
@@ -75,6 +79,7 @@ namespace zzz
 		::zzz::core::Guid m_Guid;
 		std::string m_Name;
 		::zzz::core::SlotHandle m_WorldHandle{};
+		uint32_t m_SpatialHandle{ 0xFFFFFFFF };
 		bool m_IsActive{ true };
 		uint8_t m_RenderFramesRemaining{ 2 }; // Frames in Flight safety
 

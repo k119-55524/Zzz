@@ -1,5 +1,5 @@
-#include "engine/scene/ObjectWorld.h"
-#include "engine/scene/storage/ISceneStorage.h"
+#include "engine/scene/gameobject/ObjectWorld.h"
+#include "engine/scene/storage/ISpatialStorage.h"
 #include "core/utils/MemoryUtils.h"
 #include <algorithm>
 
@@ -28,7 +28,8 @@ namespace zzz
 		// Регистрация в пространственном хранилище слоя
 		if (m_Storage != nullptr)
 		{
-			m_Storage->Insert(rawPtr);
+			const uint32_t spHandle = m_Storage->Insert(reinterpret_cast<uint64_t>(rawPtr));
+			rawPtr->SetSpatialHandle(spHandle);
 		}
 
 		return rawPtr;
@@ -54,9 +55,10 @@ namespace zzz
 		}
 
 		// Удаление из пространственного хранилища слоя
-		if (m_Storage != nullptr)
+		if (m_Storage != nullptr && obj->GetSpatialHandle() != 0xFFFFFFFF)
 		{
-			m_Storage->Remove(obj);
+			m_Storage->Remove(obj->GetSpatialHandle());
+			obj->SetSpatialHandle(0xFFFFFFFF);
 		}
 
 		// O(1) удаление из плотного массива через SlotHandle

@@ -31,6 +31,7 @@ namespace zzz::engine
 		Z_NO_COPY_MOVE(EntityWorld);
 
 		void CreateEntity(const ::zzz::core::Guid& guid, std::string_view name);
+		void DestroyEntity(const ::zzz::core::Guid& guid);
 		void Update(float dt);
 
 		[[nodiscard]] size_t GetEntityCount() const noexcept { return m_Entities.size(); }

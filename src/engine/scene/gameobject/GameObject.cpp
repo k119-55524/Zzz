@@ -1,4 +1,4 @@
-#include "engine/scene/GameObject.h"
+#include "engine/scene/gameobject/GameObject.h"
 #include "core/userscripts/base_script/Script.h"
 #include <algorithm>
 

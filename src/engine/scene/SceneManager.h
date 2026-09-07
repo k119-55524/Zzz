@@ -2,7 +2,7 @@
 
 #include "core/templates/ThreadPool.h"
 #include "core/templates/CallbackQueue.h"
-#include "core/scene/transition/SceneTransitionParams.h"
+#include "core/scene/SceneTransitionParams.h"
 
 using namespace zzz::core;
 using namespace zzz::templates;

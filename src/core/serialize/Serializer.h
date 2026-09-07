@@ -10,7 +10,7 @@
 
 #include "core/utils/Export.h"
 #include "core/utils/Macroses.h"
-#include "core/scene/transition/SceneTransitionParams.h"
+#include "core/scene/SceneTransitionParams.h"
 #include <math/Math.h>
 
 namespace zzz::core
