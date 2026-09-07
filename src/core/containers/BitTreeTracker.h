@@ -47,9 +47,9 @@ namespace zzz::core
 
 		void TraverseLevel(uint32_t level, size_t wordIndexInLevel);
 
-		uint32_t              m_Capacity{ 0 };
-		uint32_t              m_Depth{ 1 };
-		std::vector<uint64_t> m_Words{ 0ULL }; // Корень m_Words[0] всегда гарантированно существует!
-		std::vector<uint32_t> m_DirtyIndices;  // Переиспользуемый буфер грязных индексов
+		uint32_t              m_Capacity;
+		uint32_t              m_Depth;
+		std::vector<uint64_t> m_Words;
+		std::vector<uint32_t> m_DirtyIndices;
 	};
 }
