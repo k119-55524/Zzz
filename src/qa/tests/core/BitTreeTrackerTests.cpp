@@ -12,24 +12,20 @@ using namespace zzz::core;
 TEST(BitTreeTrackerTest, InitialStateAndPrepare)
 {
 	BitTreeTracker tracker;
-	std::vector<uint32_t> dirty;
-	EXPECT_EQ(tracker.GetDirtyIndices(dirty), 0u);
-	EXPECT_TRUE(dirty.empty());
+	EXPECT_TRUE(tracker.GetDirtyIndices().empty());
 
 	tracker.Prepare(100);
-	EXPECT_EQ(tracker.GetDirtyIndices(dirty), 0u);
-	EXPECT_TRUE(dirty.empty());
+	EXPECT_TRUE(tracker.GetDirtyIndices().empty());
 
 	// Выставляем бит и проверяем возврат через Prepare
 	tracker.Set(10);
-	EXPECT_EQ(tracker.GetDirtyIndices(dirty), 1u);
+	auto dirty = tracker.GetDirtyIndices();
 	ASSERT_EQ(dirty.size(), 1u);
 	EXPECT_EQ(dirty[0], 10u);
 
 	// Новый Prepare сбрасывает трекер
 	tracker.Prepare(50);
-	EXPECT_EQ(tracker.GetDirtyIndices(dirty), 0u);
-	EXPECT_TRUE(dirty.empty());
+	EXPECT_TRUE(tracker.GetDirtyIndices().empty());
 }
 
 TEST(BitTreeTrackerTest, BoundaryIndices)
@@ -39,16 +35,15 @@ TEST(BitTreeTrackerTest, BoundaryIndices)
 
 	const std::vector<uint32_t> boundaries = { 0, 63, 64, 65, 127, 128, 4095, 4096, 4097, 8191, 8192, 9999 };
 
-	std::vector<uint32_t> dirty;
 	for (uint32_t idx : boundaries)
 	{
 		tracker.Set(idx);
-		EXPECT_EQ(tracker.GetDirtyIndices(dirty), 1u);
+		auto dirty = tracker.GetDirtyIndices();
 		ASSERT_EQ(dirty.size(), 1u);
 		EXPECT_EQ(dirty[0], idx);
 
 		tracker.Prepare(capacity);
-		EXPECT_EQ(tracker.GetDirtyIndices(dirty), 0u);
+		EXPECT_TRUE(tracker.GetDirtyIndices().empty());
 	}
 }
 
@@ -63,10 +58,12 @@ TEST(BitTreeTrackerTest, SparseGetDirtyIndices)
 		tracker.Set(idx);
 	}
 
-	std::vector<uint32_t> dirty;
-	const size_t count = tracker.GetDirtyIndices(dirty);
-	EXPECT_EQ(count, expectedIndices.size());
-	EXPECT_EQ(dirty, expectedIndices);
+	auto dirty = tracker.GetDirtyIndices();
+	ASSERT_EQ(dirty.size(), expectedIndices.size());
+	for (size_t i = 0; i < dirty.size(); ++i)
+	{
+		EXPECT_EQ(dirty[i], expectedIndices[i]);
+	}
 }
 
 TEST(BitTreeTrackerTest, DenseGetDirtyIndices)
@@ -77,9 +74,7 @@ TEST(BitTreeTrackerTest, DenseGetDirtyIndices)
 		tracker.Set(i);
 	}
 
-	std::vector<uint32_t> dirty;
-	const size_t count = tracker.GetDirtyIndices(dirty);
-	ASSERT_EQ(count, 20u);
+	auto dirty = tracker.GetDirtyIndices();
 	ASSERT_EQ(dirty.size(), 20u);
 	for (uint32_t i = 0; i < 20; ++i)
 	{

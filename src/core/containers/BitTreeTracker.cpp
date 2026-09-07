@@ -32,6 +32,11 @@ namespace zzz::core
 	{
 		m_Capacity = capacity;
 
+		if (m_DirtyIndices.capacity() < capacity)
+		{
+			m_DirtyIndices.reserve(capacity);
+		}
+
 		const size_t leafWordsNeeded = (capacity + 63ULL) >> 6;
 
 		// 1. Если емкости уже достаточно, просто быстро обнуляем биты текущего кадра
@@ -92,21 +97,20 @@ namespace zzz::core
 		}
 	}
 
-
-	size_t BitTreeTracker::GetDirtyIndices(std::vector<uint32_t>& outIndices) const
+	std::span<const uint32_t> BitTreeTracker::GetDirtyIndices()
 	{
-		outIndices.clear();
+		m_DirtyIndices.clear();
 
 		if (m_Words.empty() || m_Words[0] == 0ULL)
 		{
-			return 0;
+			return {};
 		}
 
-		TraverseLevel(m_Depth - 1, 0, outIndices);
-		return outIndices.size();
+		TraverseLevel(m_Depth - 1, 0);
+		return m_DirtyIndices;
 	}
 
-	void BitTreeTracker::TraverseLevel(uint32_t level, size_t wordIndexInLevel, std::vector<uint32_t>& outIndices) const
+	void BitTreeTracker::TraverseLevel(uint32_t level, size_t wordIndexInLevel)
 	{
 		const size_t wordGlobalIndex = GetLevelOffset(level) + wordIndexInLevel;
 		uint64_t mask = m_Words[wordGlobalIndex];
@@ -120,7 +124,7 @@ namespace zzz::core
 				const uint32_t itemIndex = baseIndex + bit;
 				if (itemIndex < m_Capacity)
 				{
-					outIndices.push_back(itemIndex);
+					m_DirtyIndices.push_back(itemIndex);
 				}
 				mask &= (mask - 1ULL);
 			}
@@ -133,7 +137,7 @@ namespace zzz::core
 			while (mask != 0ULL)
 			{
 				const uint32_t bit = static_cast<uint32_t>(std::countr_zero(mask));
-				TraverseLevel(nextLevel, nextWordBase + bit, outIndices);
+				TraverseLevel(nextLevel, nextWordBase + bit);
 				mask &= (mask - 1ULL);
 			}
 		}

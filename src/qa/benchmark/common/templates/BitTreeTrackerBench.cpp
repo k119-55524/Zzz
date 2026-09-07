@@ -31,14 +31,11 @@ static void BM_BitTreeTracker_GetDirtyIndices_Sparse(benchmark::State& state)
 		tracker.Set(static_cast<uint32_t>(i));
 	}
 
-	std::vector<uint32_t> dirtyIndices;
-	dirtyIndices.reserve(capacity / 100 + 1);
-
 	for (auto _ : state)
 	{
-		size_t count = tracker.GetDirtyIndices(dirtyIndices);
-		benchmark::DoNotOptimize(dirtyIndices.data());
-		benchmark::DoNotOptimize(count);
+		auto dirty = tracker.GetDirtyIndices();
+		benchmark::DoNotOptimize(dirty.data());
+		benchmark::DoNotOptimize(dirty.size());
 	}
 }
 BENCHMARK(BM_BitTreeTracker_GetDirtyIndices_Sparse)->Arg(10000)->Arg(100000);
@@ -54,14 +51,11 @@ static void BM_BitTreeTracker_GetDirtyIndices_Dense(benchmark::State& state)
 		tracker.Set(static_cast<uint32_t>(i));
 	}
 
-	std::vector<uint32_t> dirtyIndices;
-	dirtyIndices.reserve(capacity / 2 + 1);
-
 	for (auto _ : state)
 	{
-		size_t count = tracker.GetDirtyIndices(dirtyIndices);
-		benchmark::DoNotOptimize(dirtyIndices.data());
-		benchmark::DoNotOptimize(count);
+		auto dirty = tracker.GetDirtyIndices();
+		benchmark::DoNotOptimize(dirty.data());
+		benchmark::DoNotOptimize(dirty.size());
 	}
 }
 BENCHMARK(BM_BitTreeTracker_GetDirtyIndices_Dense)->Arg(10000)->Arg(50000);
@@ -72,14 +66,11 @@ static void BM_BitTreeTracker_GetDirtyIndices_Empty(benchmark::State& state)
 	const uint32_t capacity = static_cast<uint32_t>(state.range(0));
 	BitTreeTracker tracker(capacity);
 
-	std::vector<uint32_t> dirtyIndices;
-	dirtyIndices.reserve(64);
-
 	for (auto _ : state)
 	{
-		size_t count = tracker.GetDirtyIndices(dirtyIndices);
-		benchmark::DoNotOptimize(dirtyIndices.data());
-		benchmark::DoNotOptimize(count);
+		auto dirty = tracker.GetDirtyIndices();
+		benchmark::DoNotOptimize(dirty.data());
+		benchmark::DoNotOptimize(dirty.size());
 	}
 }
 BENCHMARK(BM_BitTreeTracker_GetDirtyIndices_Empty)->Arg(10000)->Arg(100000);
