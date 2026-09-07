@@ -12,10 +12,7 @@ namespace zzz::core
 		, m_Words{ 0ULL }
 		, m_DirtyIndices{}
 	{
-		if (initialCapacity > 0)
-		{
-			Prepare(initialCapacity);
-		}
+		Prepare(initialCapacity);
 	}
 
 	size_t BitTreeTracker::GetLevelOffset(uint32_t level) const noexcept

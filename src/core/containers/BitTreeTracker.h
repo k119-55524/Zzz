@@ -29,7 +29,7 @@ namespace zzz::core
 	class BitTreeTracker final
 	{
 	public:
-		explicit BitTreeTracker(uint32_t initialCapacity = 0);
+		explicit BitTreeTracker(uint32_t initialCapacity = 1);
 
 		/// @brief Подготовка трекера к кадру: гарантирует емкость под число элементов и сбрасывает все биты в 0.
 		void Prepare(uint32_t capacity);
