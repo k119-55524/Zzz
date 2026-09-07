@@ -18,4 +18,5 @@
 #define Z_TEST_CORE_SERIALIZATION   // Бинарная сериализация векторов и геометрии
 #define Z_TEST_CORE_TEMPLATES       // Color, Event, DoubleBufferedVector
 #define Z_TEST_CORE_ENUMS_STRUCTS   // Базовые перечисления, форматы, ConverterGAPITypes, Vertex3D, AttributeRange, AlignUp (Пункт 4)
+#define Z_TEST_CORE_BIT_TREE_TRACKER // 64-арное битовое дерево изменений BitTreeTracker (Пункт 11.2)
 
