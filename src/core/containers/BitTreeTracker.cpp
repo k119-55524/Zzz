@@ -1,11 +1,23 @@
-#include "core/containers/BitTreeTracker.h"
+
 #include <algorithm>
+
+#include "core/containers/BitTreeTracker.h"
 
 namespace zzz::core
 {
+	BitTreeTracker::BitTreeTracker()
+		: m_Capacity(0)
+		, m_Depth(1)
+		, m_Words{ 0ULL }
+		, m_DirtyIndices{}
+	{
+	}
+
 	BitTreeTracker::BitTreeTracker(uint32_t initialCapacity)
 		: m_Capacity(0)
 		, m_Depth(1)
+		, m_Words{ 0ULL }
+		, m_DirtyIndices{}
 	{
 		Prepare(initialCapacity);
 	}
@@ -101,12 +113,13 @@ namespace zzz::core
 	{
 		m_DirtyIndices.clear();
 
-		if (m_Words.empty() || m_Words[0] == 0ULL)
+		if (m_Words[0] == 0ULL)
 		{
 			return {};
 		}
 
 		TraverseLevel(m_Depth - 1, 0);
+
 		return m_DirtyIndices;
 	}
 

@@ -1,8 +1,8 @@
 #pragma once
 
+#include <span>
 #include <vector>
 #include <cstdint>
-#include <span>
 
 namespace zzz::core
 {
@@ -29,7 +29,7 @@ namespace zzz::core
 	class BitTreeTracker final
 	{
 	public:
-		BitTreeTracker() = default;
+		BitTreeTracker();
 		explicit BitTreeTracker(uint32_t initialCapacity);
 
 		/// @brief Подготовка трекера к кадру: гарантирует емкость под число элементов и сбрасывает все биты в 0.
@@ -47,9 +47,9 @@ namespace zzz::core
 
 		void TraverseLevel(uint32_t level, size_t wordIndexInLevel);
 
-		uint32_t m_Capacity{ 0 };
-		uint32_t m_Depth{ 1 };
-		std::vector<zU64> m_Words; // ЕДИНСТВЕННЫЙ непрерывный массив пирамиды
-		std::vector<zU32> m_DirtyIndices;
+		uint32_t              m_Capacity{ 0 };
+		uint32_t              m_Depth{ 1 };
+		std::vector<uint64_t> m_Words{ 0ULL }; // Корень m_Words[0] всегда гарантированно существует!
+		std::vector<uint32_t> m_DirtyIndices;  // Переиспользуемый буфер грязных индексов
 	};
 }
