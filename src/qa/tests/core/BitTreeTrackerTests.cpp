@@ -15,8 +15,13 @@ TEST(BitTreeTrackerTest, InitialStateAndPrepare)
 	BitTreeTracker tracker;
 	EXPECT_TRUE(tracker.GetDirtyIndices().empty());
 
-	EXPECT_THROW(tracker.Prepare(0), std::runtime_error);
-	EXPECT_THROW(BitTreeTracker(static_cast<uint32_t>(0)), std::runtime_error);
+	EXPECT_NO_THROW(tracker.Prepare(0));
+	tracker.Set(0);
+	ASSERT_EQ(tracker.GetDirtyIndices().size(), 1u);
+
+	BitTreeTracker emptySceneTracker(0);
+	emptySceneTracker.Set(0);
+	ASSERT_EQ(emptySceneTracker.GetDirtyIndices().size(), 1u);
 
 	tracker.Prepare(100);
 	EXPECT_TRUE(tracker.GetDirtyIndices().empty());

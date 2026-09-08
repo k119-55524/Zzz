@@ -75,12 +75,17 @@ namespace zzz::engine
         std::vector<LocalTransform>       localTransforms;
         std::vector<math::Mat4<zF32>>     worldMatrices;   // 64 байта = 1 кэш-линия
         std::vector<NodeMetadata>         metadata;
-        core::BitTreeTracker              dirtyTracker;
+        core::BitTreeTracker              dirtyTracker;    // Отслеживает измененные слоты SoA (без топологического порядка)
 
         void EnsureCapacity(size_t requiredCapacity);
         void MarkDirty(uint32_t nodeIndex);
+
+        /// @brief Разрешение мировых матриц (parent-before-child).
+        /// @details Выполняет собственный top-down обход по графу NodeTopology (от корней к листьям),
+        /// каскадно наследуя dirty-состояние от родителей. НЕ опирается на порядок GetDirtyIndices(),
+        /// так как индексы слотов SoA не гарантируют топологический порядок.
+        /// dirtyTracker используется после Resolve для сбора затронутых слотов (отправка в Render Snapshot, обновление AABB).
         void ResolveTransforms();
-        void ClearDirty() { dirtyTracker.Clear(); }
     };
 }
 ```

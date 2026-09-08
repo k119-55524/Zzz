@@ -1,85 +1,70 @@
 
-#include <limits>
+#include <array>
 #include <algorithm>
-#include <stdexcept>
 
 #include "core/containers/BitTreeTracker.h"
 
 namespace zzz::core
 {
-	BitTreeTracker::BitTreeTracker(uint32_t initialCapacity) :
-		m_Capacity{1},
-		m_Depth{1},
-		m_IsDirty{false},
-		m_LevelOffsets{0},
-		m_Words{0}
+	BitTreeTracker::BitTreeTracker(uint32_t capacity) :
+		m_Capacity{ capacity },
+		m_Depth{ 1 },
+		m_IsDirty{ false },
+		m_Words{ 0 }
 	{
-		ensure(initialCapacity >= 1, "BitTreeTracker::BitTreeTracker: initialCapacity must be >= 1");
-
-		Prepare(initialCapacity);
+		Prepare(capacity);
 	}
 
 	void BitTreeTracker::Prepare(zU32 capacity)
 	{
 		if (capacity == 0)
-			throw std::runtime_error("BitTreeTracker::Prepare: capacity must be >= 1");
+			capacity = 1;
+
+		constexpr zU64 maxCapacity =
+			(kLevelOffsets.back() - kLevelOffsets[kLevelOffsets.size() - 2]) * 64ULL;
+		if (static_cast<zU64>(capacity) > maxCapacity)
+			THROW_RUNTIME("BitTreeTracker::Prepare: capacity exceeds supported tree depth");
 
 		m_Capacity = capacity;
-
+		m_DirtyIndices.clear();
 		if (m_DirtyIndices.capacity() < capacity)
 			m_DirtyIndices.reserve(capacity);
 
 		const size_t leafWordsNeeded = (capacity + 63ULL) >> 6;
-		size_t currentLeafCapacity = 1ULL << (static_cast<size_t>(m_Depth - 1) * 6);
+		const size_t currentLeafCapacity =
+			kLevelOffsets[m_Depth] - kLevelOffsets[m_Depth - 1];
 
-		// 1. Если емкости уже достаточно под элементы
+		// Если емкости уже достаточно под элементы
 		if (currentLeafCapacity >= leafWordsNeeded)
 		{
-			// Если изменений вообще не было — выходим мгновенно за O(1)
 			if (!m_IsDirty)
-			{
 				return;
-			}
 
-			// Если изменения были — сбрасываем биты текущего кадра
 			std::fill(m_Words.begin(), m_Words.end(), 0ULL);
 			m_IsDirty = false;
+
 			return;
 		}
 
-		// 2. Рассчитываем новую глубину пирамиды под возросшее число объектов
+		// Выбираем минимальную глубину пирамиды под возросшее число объектов
 		m_Depth = 1;
-		currentLeafCapacity = 1;
-		while (currentLeafCapacity < leafWordsNeeded)
+		for (size_t depth = 1; depth < kLevelOffsets.size(); ++depth)
 		{
-			currentLeafCapacity <<= 6;
-			++m_Depth;
+			const size_t leafWordCapacity = kLevelOffsets[depth] - kLevelOffsets[depth - 1];
+			if (leafWordsNeeded <= leafWordCapacity)
+			{
+				m_Depth = static_cast<zU32>(depth);
+				break;
+			}
 		}
 
-		// 3. Вычисляем смещения и суммарный размер: sum = 1 + 64 + 64^2 + ...
-		size_t totalWords = 0;
-		size_t levelWords = 1;
-		m_LevelOffsets.resize(m_Depth);
-		for (uint32_t topDistance = 0; topDistance < m_Depth; ++topDistance)
-		{
-			ensure(totalWords <= std::numeric_limits<uint32_t>::max(),
-				"BitTreeTracker::Prepare: level offset exceeds uint32_t range");
-
-			const uint32_t level = m_Depth - 1 - topDistance;
-			m_LevelOffsets[level] = static_cast<uint32_t>(totalWords);
-			totalWords += levelWords;
-			levelWords <<= 6;
-		}
-
-		// 4. Выделяем память с полным занулением
-		m_Words.assign(totalWords, 0ULL);
+		m_Words.assign(kLevelOffsets[m_Depth], 0ULL);
 		m_IsDirty = false;
 	}
 
 	void BitTreeTracker::Set(zU32 index) noexcept
 	{
-		ensure(index < m_Capacity,
-			"BitTreeTracker::Set: index must be less than capacity");
+		ensure(index < m_Capacity, "BitTreeTracker::Set: index must be less than capacity");
 
 		m_IsDirty = true;
 
@@ -92,12 +77,10 @@ namespace zzz::core
 			const zU64 bitMask = 1ULL << bitInWord;
 			const zU64 oldVal = m_Words[wordGlobal];
 
-			m_Words[wordGlobal] = oldVal | bitMask;
-
 			if ((oldVal & bitMask) != 0ULL)
-			{
 				break;
-			}
+
+			m_Words[wordGlobal] = oldVal | bitMask;
 
 			bitInWord = wordInLevel & 63ULL;
 			wordInLevel >>= 6;
@@ -110,7 +93,6 @@ namespace zzz::core
 			return {};
 
 		m_DirtyIndices.clear();
-
 		TraverseLevel(m_Depth - 1, 0);
 
 		return m_DirtyIndices;
@@ -143,14 +125,9 @@ namespace zzz::core
 			while (mask != 0ULL)
 			{
 				const zU32 bit = static_cast<zU32>(std::countr_zero(mask));
-				TraverseLevel(nextLevel, nextWordBase + bit);
+				TraverseLevel(level - 1, nextWordBase + bit);
 				mask &= (mask - 1ULL);
 			}
 		}
-	}
-
-	size_t BitTreeTracker::GetLevelOffset(zU32 level) const noexcept
-	{
-		return m_LevelOffsets[level];
 	}
 }
