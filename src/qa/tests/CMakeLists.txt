@@ -24,6 +24,7 @@ if(Z_TESTS_ENABLE_COMMON)
     file(GLOB_RECURSE TEST_CPP_FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/math/*.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/core/*.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/engine/*.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/gapi/*.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/common/*.cpp"
     )

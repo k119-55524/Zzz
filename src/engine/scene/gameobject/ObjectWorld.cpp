@@ -42,12 +42,6 @@ namespace zzz
 			return;
 		}
 
-		// Рекурсивно удаляем дочерние объекты
-		while (obj->GetChildCount() > 0)
-		{
-			DestroyObject(obj->GetChild(0));
-		}
-
 		// Отвязываем от родителя
 		if (obj->GetParent() != nullptr)
 		{

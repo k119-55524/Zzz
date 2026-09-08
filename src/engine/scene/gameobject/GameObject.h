@@ -5,7 +5,7 @@
 #include <memory>
 #include "core/utils/Guid.h"
 #include "core/templates/SlotMap.h"
-#include "engine/scene/gameobject/Transform.h"
+#include "engine/scene/storage/ISceneTreeAccessor.h"
 
 namespace zzz::core
 {
@@ -14,9 +14,12 @@ namespace zzz::core
 
 namespace zzz
 {
+	using ::zzz::engine::NodeHandle;
+	using ::zzz::engine::ISceneTreeAccessor;
+
 	/**
 	 * @class GameObject
-	 * @brief Сущность игрового мира, объединяющая иерархию сцены, Transform, ресурсы и скрипты.
+	 * @brief Легковесный фасад сущности сцены, объединяющий ISceneTreeAccessor, ресурсы и скрипты.
 	 */
 	class GameObject final
 	{
@@ -27,38 +30,52 @@ namespace zzz
 
 		Z_NO_COPY_MOVE(GameObject);
 
+		// --- Привязка к контейнеру сцены ---
+		void BindSceneTree(ISceneTreeAccessor* tree, NodeHandle handle) noexcept
+		{
+			m_SceneTree = tree;
+			m_NodeHandle = handle;
+		}
+
+		[[nodiscard]] NodeHandle GetNodeHandle() const noexcept { return m_NodeHandle; }
+		[[nodiscard]] ISceneTreeAccessor* GetSceneTree() const noexcept { return m_SceneTree; }
+
 		// --- Идентификация ---
 		[[nodiscard]] const ::zzz::core::Guid& GetGuid() const noexcept { return m_Guid; }
-		[[nodiscard]] const std::string& GetName() const noexcept { return m_Name; }
-		void SetName(std::string name) { m_Name = std::move(name); }
+		[[nodiscard]] const std::string& GetName() const noexcept;
+		void SetName(std::string name);
 
 		// --- Хэндл в ObjectWorld (O(1) удаление из SlotMap) ---
 		[[nodiscard]] ::zzz::core::SlotHandle GetWorldHandle() const noexcept { return m_WorldHandle; }
 		void SetWorldHandle(::zzz::core::SlotHandle handle) noexcept { m_WorldHandle = handle; }
 
 		// --- Хэндл в пространственном хранилище ---
-		[[nodiscard]] uint32_t GetSpatialHandle() const noexcept { return m_SpatialHandle; }
-		void SetSpatialHandle(uint32_t handle) noexcept { m_SpatialHandle = handle; }
+		[[nodiscard]] uint32_t GetSpatialHandle() const noexcept;
+		void SetSpatialHandle(uint32_t handle) noexcept;
 
 		// --- Активность и жизненный цикл в кадре ---
-		[[nodiscard]] bool IsActive() const noexcept { return m_IsActive; }
-		void SetActive(bool active) noexcept { m_IsActive = active; }
+		[[nodiscard]] bool IsActive() const noexcept;
+		void SetActive(bool active) noexcept;
 
 		[[nodiscard]] uint8_t GetRenderFramesRemaining() const noexcept { return m_RenderFramesRemaining; }
 		void DecrementRenderFrames() noexcept { if (m_RenderFramesRemaining > 0) --m_RenderFramesRemaining; }
 		void ResetRenderFrames(uint8_t bufferCount = 2) noexcept { m_RenderFramesRemaining = bufferCount; }
 
-		// --- Пространственная трансформация ---
-		[[nodiscard]] Transform& GetTransform() noexcept { return m_Transform; }
-		[[nodiscard]] const Transform& GetTransform() const noexcept { return m_Transform; }
+		// --- Пространственные трансформации (делегирование в ISceneTreeAccessor) ---
+		void SetLocalPosition(const ::zzz::math::Vec3<zF32>& pos);
+		[[nodiscard]] const ::zzz::math::Vec3<zF32>& GetLocalPosition() const;
 
-		// --- Иерархия сцены (Parent / Children) ---
-		[[nodiscard]] GameObject* GetParent() const noexcept { return m_Parent; }
+		void SetLocalRotation(const ::zzz::math::Quat<zF32>& rot);
+		[[nodiscard]] const ::zzz::math::Quat<zF32>& GetLocalRotation() const;
+
+		void SetLocalScale(const ::zzz::math::Vec3<zF32>& scale);
+		[[nodiscard]] const ::zzz::math::Vec3<zF32>& GetLocalScale() const;
+
+		[[nodiscard]] const ::zzz::math::Mat4<zF32>& GetWorldMatrix() const;
+
+		// --- Иерархия сцены ---
+		[[nodiscard]] GameObject* GetParent() const noexcept;
 		void SetParent(GameObject* newParent, bool keepWorldTransform = true) noexcept;
-
-		[[nodiscard]] const std::vector<GameObject*>& GetChildren() const noexcept { return m_Children; }
-		[[nodiscard]] size_t GetChildCount() const noexcept { return m_Children.size(); }
-		[[nodiscard]] GameObject* GetChild(size_t index) const noexcept;
 
 		// --- Слоты графических ресурсов (для отрисовки меша и материала) ---
 		[[nodiscard]] const ::zzz::core::Guid& GetMeshGuid() const noexcept { return m_MeshGuid; }
@@ -77,16 +94,13 @@ namespace zzz
 
 	private:
 		::zzz::core::Guid m_Guid;
-		std::string m_Name;
 		::zzz::core::SlotHandle m_WorldHandle{};
-		uint32_t m_SpatialHandle{ 0xFFFFFFFF };
-		bool m_IsActive{ true };
-		uint8_t m_RenderFramesRemaining{ 2 }; // Frames in Flight safety
+		uint8_t m_RenderFramesRemaining{ 2 };
 
-		Transform m_Transform;
+		ISceneTreeAccessor* m_SceneTree{ nullptr };
+		NodeHandle          m_NodeHandle{};
 
-		GameObject* m_Parent{ nullptr };
-		std::vector<GameObject*> m_Children;
+		std::string         m_FallbackName;
 
 		::zzz::core::Guid m_MeshGuid;
 		::zzz::core::Guid m_MaterialGuid;

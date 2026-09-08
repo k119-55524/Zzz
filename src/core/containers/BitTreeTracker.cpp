@@ -62,6 +62,58 @@ namespace zzz::core
 		m_IsDirty = false;
 	}
 
+	void BitTreeTracker::GrowCapacity(zU32 newCapacity)
+	{
+		if (newCapacity <= m_Capacity)
+		{
+			return;
+		}
+
+		constexpr zU64 maxCapacity =
+			(kLevelOffsets.back() - kLevelOffsets[kLevelOffsets.size() - 2]) * 64ULL;
+		if (static_cast<zU64>(newCapacity) > maxCapacity)
+			THROW_RUNTIME("BitTreeTracker::GrowCapacity: capacity exceeds supported tree depth");
+
+		const size_t leafWordsNeeded = (newCapacity + 63ULL) >> 6;
+		const size_t currentLeafCapacity =
+			kLevelOffsets[m_Depth] - kLevelOffsets[m_Depth - 1];
+
+		m_Capacity = newCapacity;
+
+		// Если текущей пирамиды достаточно под возросшее число объектов
+		if (currentLeafCapacity >= leafWordsNeeded)
+		{
+			return;
+		}
+
+		// Нужно увеличить глубину пирамиды, сохранив уже выставленные dirty-индексы
+		std::vector<zU32> preservedIndices;
+		if (m_IsDirty)
+		{
+			auto dirtySpan = GetDirtyIndices();
+			preservedIndices.assign(dirtySpan.begin(), dirtySpan.end());
+		}
+
+		for (size_t depth = m_Depth + 1; depth < kLevelOffsets.size(); ++depth)
+		{
+			const size_t leafWordCapacity = kLevelOffsets[depth] - kLevelOffsets[depth - 1];
+			if (leafWordsNeeded <= leafWordCapacity)
+			{
+				m_Depth = static_cast<zU32>(depth);
+				break;
+			}
+		}
+
+		m_Words.assign(kLevelOffsets[m_Depth], 0ULL);
+		m_IsDirty = false;
+
+		// Восстанавливаем ранее накопленные биты
+		for (zU32 idx : preservedIndices)
+		{
+			Set(idx);
+		}
+	}
+
 	void BitTreeTracker::Set(zU32 index) noexcept
 	{
 		ensure(index < m_Capacity, "BitTreeTracker::Set: index must be less than capacity");
@@ -125,7 +177,7 @@ namespace zzz::core
 			while (mask != 0ULL)
 			{
 				const zU32 bit = static_cast<zU32>(std::countr_zero(mask));
-				TraverseLevel(level - 1, nextWordBase + bit);
+				TraverseLevel(nextLevel, nextWordBase + bit);
 				mask &= (mask - 1ULL);
 			}
 		}

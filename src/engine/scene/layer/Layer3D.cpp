@@ -47,9 +47,9 @@ namespace zzz::engine
 			}
 
 			go->SetActive(objData.IsActive());
-			go->GetTransform().SetLocalPosition(objData.GetPosition());
-			go->GetTransform().SetLocalRotation(objData.GetRotation());
-			go->GetTransform().SetLocalScale(objData.GetScale());
+			go->SetLocalPosition(objData.GetPosition());
+			go->SetLocalRotation(objData.GetRotation());
+			go->SetLocalScale(objData.GetScale());
 			go->SetMeshGuid(objData.GetMeshGuid());
 			go->SetMaterialGuid(objData.GetMaterialGuid());
 

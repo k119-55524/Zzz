@@ -8,7 +8,7 @@
   3. **Полная ликвидация `class Transform`** (`Transform.h` / `Transform.cpp` удаляются): избавление от лишней ООП-прослойки и проблем выравнивания (C4324).
   4. Введение скрытого интерфейса `ISceneTreeAccessor`: `GameObject` хранит `NodeHandle` и указатель на интерфейс `ISceneTreeAccessor*`. Методы `SetLocalPosition`, `GetWorldMatrix` вызываются у `GameObject` напрямую и делегируются в плоский массив `SceneTreeContainer` за $O(1)$.
   5. Итеративный обход поддерева при удалении (`DestroySubtree`) без рекурсии на стеке CPU.
-- **Статус:** ⏳ В процессе разработки.
+- **Статус:** ✅ Выполнено.
 - **Зависимости:** `BitTreeTracker.h`, `ISpatialStorage.h`, `src/math/matrix/Mat4.h`, `src/math/quat/Quat.h`, `src/math/vector/Vec3.h`.
 
 ### Физическое размещение файлов
@@ -98,6 +98,7 @@ namespace zzz::engine
     struct NodeHandle {
         uint32_t index{ 0xFFFFFFFF };
         uint32_t generation{ 0 };
+        /// @brief Проверка на ненулевой дескриптор (полную проверку с generation выполняет SceneTreeContainer::IsValid).
         [[nodiscard]] bool IsValid() const noexcept { return index != 0xFFFFFFFF; }
     };
 
@@ -151,21 +152,31 @@ namespace zzz::engine
    - Если скрипт внутри цикла обновления вызывает `SetParent` или `Destroy`, синхронная перелинковка привела бы к реентрантности и поломке итератора обхода.
    - Поэтому во время выполнения кадра вызовы `SetParent` и `Destroy` **только складируют команды в `m_ReparentQueue` и `m_DeleteQueue` за $O(1)$**.
    - Применение очередей к топологии происходит централизованно и пакетно перед расчётом матриц в точке Handover Barrier.
+3. **Жизненный цикл кадра и сброс dirtyTracker:**
+   - В начале каждого кадра логики (перед обновлением скриптов) вызывается `m_SecondaryNodes.dirtyTracker.Prepare(m_SecondaryNodes.metadata.size())`, что за $O(1)$ сбрасывает dirty-биты при отсутствии изменений либо очищает буфер.
+   - По мере мутаций скриптов (`SetLocalPosition`, `SetLocalRotation`) взводятся биты `m_SecondaryNodes.dirtyTracker.Set(index)`.
+4. **Механика сдачи кадра (`ApplyHandoverBarrier`):**
+   - После выполнения скриптов логики применяются отложенные очереди `m_DeleteQueue` и `m_ReparentQueue` к `m_SecondaryNodes`.
+   - Запускается `m_SecondaryNodes.ResolveTransforms()`, пересчитывающий мировые матрицы затронутых поддеревьев.
+   - В точке барьера кадра `ApplyHandoverBarrier()`:
+     - Синхронизируются изменения из `m_SecondaryNodes` в `m_PrimaryNodes`: обновляются измененные `worldMatrices`, топология и метаданные.
+     - `m_PrimaryNodes` фиксируется для чтения Render Thread кадра $N$.
+     - `m_SecondaryNodes` готов к следующему кадру симуляции $N+1$.
 
 ### 2.3. Алгоритм итеративного удаления поддерева (`SceneTreeContainer::DestroySubtree`)
 Старый рекурсивный вызов C++ стека `while (obj->GetChildCount() > 0) DestroyObject(obj->GetChild(0));` **полностью удаляется**.
-Вместо рекурсии уничтожение выполняет метод `SceneTreeContainer::DestroySubtree(NodeHandle rootHandle)` **строго итеративно** (без вызовов функций на стеке CPU):
+Вместо рекурсии уничтожение выполняет метод `SceneTreeContainer::DestroySubtree(NodeHandle rootHandle)` **строго итеративно** (без вызовов функций на стеке CPU) и работает **исключительно с рабочим буфером `m_SecondaryNodes`**:
 1. **Сбор индексов поддерева (BFS/DFS без рекурсии):**
    - Используется плоский локальный буфер индексов `std::vector<uint32_t> toDeleteIndices`;
    - Буфер резервирует память (начиная с `rootHandle.index`);
    - Указатель чтения `size_t readIdx = 0`: пока `readIdx < toDeleteIndices.size()`:
      - Берется текущий индекс `uint32_t curIdx = toDeleteIndices[readIdx++]`;
-     - Обход всех непосредственных детей: `uint32_t childIdx = m_PrimaryNodes.topology[curIdx].firstChildIndex`;
+     - Обход всех непосредственных детей: `uint32_t childIdx = m_SecondaryNodes.topology[curIdx].firstChildIndex`;
      - Пока `childIdx != 0xFFFFFFFF`:
        - `toDeleteIndices.push_back(childIdx)`;
-       - `childIdx = m_PrimaryNodes.topology[childIdx].nextSiblingIndex`;
+       - `childIdx = m_SecondaryNodes.topology[childIdx].nextSiblingIndex`;
 2. **Отвязка корня поддерева от родительской топологии:**
-   - Для `rootHandle.index` извлекается `parentIndex = m_PrimaryNodes.topology[rootIdx].parentIndex`;
+   - Для `rootHandle.index` извлекается `parentIndex = m_SecondaryNodes.topology[rootIdx].parentIndex`;
    - Если `parentIndex != 0xFFFFFFFF`:
      - Перелинковываются сиблинги: `prevSiblingIndex` и `nextSiblingIndex` связываются напрямую;
      - Если `rootIdx` был `firstChildIndex` родителя, `parent.firstChildIndex` переставляется на `root.nextSiblingIndex`;
@@ -178,25 +189,32 @@ namespace zzz::engine
      - **ISpatialStorage:** Если `metadata[idx].spatialHandle != 0`:
        - Вызывается `spatialStorage->Remove(metadata[idx].spatialHandle)`;
        - `metadata[idx].spatialHandle = 0`;
-     - **Сброс битов изменений:**
-       - `m_PrimaryNodes.dirtyTracker.Reset(idx)`;
-       - `m_PrimaryNodes.metadata[idx].isDirty = false`;
+     - **Сброс состояния:**
+       - Флаг `m_SecondaryNodes.metadata[idx].isDirty = false`;
+       - Сам бит в `dirtyTracker` сбрасывать точечно не требуется (в `BitTreeTracker` нет побитового сброса) — трекер сбрасывается пакетно через `Prepare()` в начале кадра, а слот признаётся мёртвым через `isAlive == false`.
      - **Освобождение слота:**
        - `metadata[idx].isAlive = false`;
-       - `metadata[idx].generation++` (защита от ABA-проблемы для внешних дескрипторов);
+       - `metadata[idx].generation++` (защита от ABA-проблемы для внешних дескрипторов `NodeHandle`);
        - `m_FreeIndices.push_back(idx)`;
        - `topology[idx]` сбрасывается в `0xFFFFFFFF`.
 
 ---
 
 ### 2.4. Скрытый интерфейс `ISceneTreeAccessor`, полное удаление `Transform` и рефакторинг `GameObject`
-- **Полная ликвидация `class Transform`**: удаляются `Transform.h` и `Transform.cpp`.
+- **Единый источник истины (Правило 6):**
+  - Все пространственные данные (`LocalTransform`, `worldMatrices`), топология, а также свойства узла (`name`, `isActive`, `spatialHandle`) хранятся **строго в одном месте — в SoA-блоках `SceneTreeContainer` (`NodeMetadata`)**.
+  - В `GameObject` поля `m_Transform`, `m_SpatialHandle`, `m_IsActive`, `m_Name` **полностью удаляются**.
+  - `GameObject` становится легковесным 32-байтовым фасадом: хранит `ISceneTreeAccessor* m_SceneTree`, `NodeHandle m_NodeHandle`, `Guid m_Guid`, а также контейнеры игрового поведения (скрипты, компоненты).
+  - Все методы `GameObject` (`GetName`, `SetName`, `IsActive`, `SetActive`, `GetSpatialHandle`, `SetSpatialHandle`, `GetLocalPosition`, `SetLocalPosition` и т.д.) делегируются в `m_SceneTree` за $O(1)$.
+
 - Вводится абстрактный скрытый интерфейс `ISceneTreeAccessor`:
   ```cpp
   class ISceneTreeAccessor
   {
   public:
       virtual ~ISceneTreeAccessor() = default;
+
+      // Пространственные координаты
       virtual void SetLocalPosition(NodeHandle handle, const ::zzz::math::Vec3<zF32>& pos) = 0;
       [[nodiscard]] virtual const ::zzz::math::Vec3<zF32>& GetLocalPosition(NodeHandle handle) const = 0;
       virtual void SetLocalRotation(NodeHandle handle, const ::zzz::math::Quat<zF32>& rot) = 0;
@@ -204,17 +222,32 @@ namespace zzz::engine
       virtual void SetLocalScale(NodeHandle handle, const ::zzz::math::Vec3<zF32>& scale) = 0;
       [[nodiscard]] virtual const ::zzz::math::Vec3<zF32>& GetLocalScale(NodeHandle handle) const = 0;
       [[nodiscard]] virtual const ::zzz::math::Mat4<zF32>& GetWorldMatrix(NodeHandle handle) const = 0;
+
+      // Топология и владение
       virtual void SetParent(NodeHandle child, NodeHandle parent, bool keepWorldTransform = true) = 0;
       [[nodiscard]] virtual NodeHandle GetParent(NodeHandle handle) const = 0;
       [[nodiscard]] virtual GameObject* GetNodeOwner(NodeHandle handle) const = 0;
       virtual void MarkDirty(NodeHandle handle) = 0;
+
+      // Свойства узла (делегирование из GameObject)
+      virtual void SetActive(NodeHandle handle, bool active) = 0;
+      [[nodiscard]] virtual bool IsActive(NodeHandle handle) const = 0;
+      virtual void SetName(NodeHandle handle, std::string name) = 0;
+      [[nodiscard]] virtual const std::string& GetName(NodeHandle handle) const = 0;
+      virtual void SetSpatialHandle(NodeHandle handle, SpatialHandle spHandle) = 0;
+      [[nodiscard]] virtual SpatialHandle GetSpatialHandle(NodeHandle handle) const noexcept = 0;
   };
   ```
+
 - `SceneTreeContainer` реализует `ISceneTreeAccessor`.
-- `GameObject` хранит `NodeHandle m_NodeHandle` и `ISceneTreeAccessor* m_SceneTree`:
+- `GameObject` фасад:
   - `void SetLocalPosition(const ::zzz::math::Vec3<zF32>& pos) { m_SceneTree->SetLocalPosition(m_NodeHandle, pos); }`
   - `[[nodiscard]] const ::zzz::math::Vec3<zF32>& GetLocalPosition() const { return m_SceneTree->GetLocalPosition(m_NodeHandle); }`
   - `[[nodiscard]] const ::zzz::math::Mat4<zF32>& GetWorldMatrix() const { return m_SceneTree->GetWorldMatrix(m_NodeHandle); }`
+  - `void SetActive(bool active) { m_SceneTree->SetActive(m_NodeHandle, active); }`
+  - `[[nodiscard]] bool IsActive() const { return m_SceneTree ? m_SceneTree->IsActive(m_NodeHandle) : false; }`
+  - `const std::string& GetName() const { return m_SceneTree->GetName(m_NodeHandle); }`
+  - `SpatialHandle GetSpatialHandle() const noexcept { return m_SceneTree ? m_SceneTree->GetSpatialHandle(m_NodeHandle) : 0; }`
   - `GameObject* GetParent() const noexcept { return m_SceneTree ? m_SceneTree->GetNodeOwner(m_SceneTree->GetParent(m_NodeHandle)) : nullptr; }`
   - `void SetParent(GameObject* newParent, bool keepWorldTransform = true) noexcept;`
   - Все устаревшие рекурсивные методы `GetChildren()`, `GetChildCount()`, `GetChild()` удалены.
@@ -224,11 +257,26 @@ namespace zzz::engine
 
 ## 3. Чек-лист Definition of Done (DoD)
 
-- [ ] Создать скрытый интерфейс `src/engine/scene/storage/ISceneTreeAccessor.h`
-- [ ] Реализовать `src/engine/scene/storage/NodeStorageBlock.h` и `.cpp`
-- [ ] Реализовать `src/engine/scene/storage/SceneTreeContainer.h` и `.cpp` (реализует `ISceneTreeAccessor`)
-- [ ] Удалить файлы `src/engine/scene/gameobject/Transform.h` и `Transform.cpp`
-- [ ] Рефакторить `src/engine/scene/gameobject/GameObject.h` и `.cpp` (прямой API пространственных параметров через `ISceneTreeAccessor` по `NodeHandle`)
-- [ ] Обновить вызовы `go->GetTransform().SetLocal...` на `go->SetLocal...` в `Layer3D.cpp` и тестах
-- [ ] Обновить регистрацию файлов в `src/engine/CMakeLists.txt`
-- [ ] Проверить сборку под MSVC x64 + Ninja (0 ошибок)
+- [x] Создать скрытый интерфейс `src/engine/scene/storage/ISceneTreeAccessor.h`
+- [x] Реализовать `src/engine/scene/storage/NodeStorageBlock.h` и `.cpp`
+- [x] Реализовать `src/engine/scene/storage/SceneTreeContainer.h` и `.cpp` (реализует `ISceneTreeAccessor`)
+- [x] Удалить файлы `src/engine/scene/gameobject/Transform.h` и `Transform.cpp`
+- [x] Рефакторить `src/engine/scene/gameobject/GameObject.h` и `.cpp` (прямой API пространственных параметров через `ISceneTreeAccessor` по `NodeHandle`)
+- [x] Обновить вызовы `go->GetTransform().SetLocal...` на `go->SetLocal...` в `Layer3D.cpp` и тестах
+- [x] Обновить регистрацию файлов в `src/engine/CMakeLists.txt`
+- [x] Реализовать модульные тесты в `src/qa/tests/engine/SceneTreeContainerTests.cpp`:
+  - Создание, удаление узлов, валидация `NodeHandle` и защита от ABA-проблемы через `generation`
+  - Иерархия: `SetParent`, перелинковка `firstChild`/`siblings`, отсоединение от родителя
+  - Итеративное удаление поддерева `DestroySubtree`
+  - Корректность расчёта мировых матриц `ResolveTransforms` (цепочки $TRS$: родитель $\times$ ребенок)
+  - Отложенные очереди мутаций `m_ReparentQueue`, `m_DeleteQueue`
+- [x] Реализовать тесты производительности в `src/qa/benchmark/common/templates/SceneTreeContainerBench.cpp`:
+  - `ResolveTransforms` на плоской сцене (10 000 / 100 000 объектов)
+  - `ResolveTransforms` на глубокой иерархии (пирамида / дерево глубиной 5–10 уровней)
+  - Пакетное создание узлов `CreateNode`
+  - Мутации `SetLocalPosition` / `MarkDirty`
+  - Итеративное удаление `DestroySubtree`
+- [x] Зарегистрировать флаг теста `Z_TEST_ENGINE_SCENE_TREE_CONTAINER` в `src/qa/tests/TestsConfig.h`
+- [x] Проверить сборку под MSVC x64 + Ninja (0 ошибок, 0 предупреждений)
+- [ ] Прогнать модульные тесты `SceneTreeContainerTest.*`
+- [x] Прогнать бенчмарки `--benchmark_filter=SceneTreeContainer`

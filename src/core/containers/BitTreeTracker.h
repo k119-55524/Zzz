@@ -61,6 +61,12 @@ namespace zzz::core
 		/// @warning Возвращаемый span указывает на внутренний буфер трекера и валиден строго до следующего вызова Prepare() в текущем потоке. Порядок индексов - строго по возрастанию слотов SoA (не топологический).
 		[[nodiscard]] std::span<const zU32> GetDirtyIndices();
 
+		/// @brief Возвращает текущую рабочую емкость трекера.
+		[[nodiscard]] zU32 GetCapacity() const noexcept { return m_Capacity; }
+
+		/// @brief Расширяет емкость пирамиды с сохранением уже выставленных грязных бит (без их зануления).
+		void GrowCapacity(zU32 newCapacity);
+
 	private:
 		// Вычисляет смещение начала заданного уровня пирамиды (0 = листья, depth-1 = корень)
 		[[nodiscard]] inline size_t GetLevelOffset(zU32 level) const noexcept { return kLevelOffsets[m_Depth - 1 - level]; }

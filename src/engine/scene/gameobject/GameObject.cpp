@@ -4,82 +4,161 @@
 
 namespace zzz
 {
+	namespace
+	{
+		const math::Vec3<zF32> kZeroPos{ 0.0f, 0.0f, 0.0f };
+		const math::Quat<zF32> kIdentityRot{ 0.0f, 0.0f, 0.0f, 1.0f };
+		const math::Vec3<zF32> kOneScale{ 1.0f, 1.0f, 1.0f };
+		const math::Mat4<zF32> kIdentityMat = math::Mat4<zF32>::Identity();
+	}
+
 	GameObject::GameObject(std::string name)
 		: m_Guid{}
-		, m_Name(std::move(name))
-		, m_Transform(*this)
+		, m_FallbackName(std::move(name))
 	{
 	}
 
 	GameObject::GameObject(::zzz::core::Guid guid, std::string name)
 		: m_Guid(guid)
-		, m_Name(std::move(name))
-		, m_Transform(*this)
+		, m_FallbackName(std::move(name))
 	{
+	}
+
+	const std::string& GameObject::GetName() const noexcept
+	{
+		if (m_SceneTree != nullptr && m_NodeHandle.IsValid())
+		{
+			return m_SceneTree->GetName(m_NodeHandle);
+		}
+		return m_FallbackName;
+	}
+
+	void GameObject::SetName(std::string name)
+	{
+		if (m_SceneTree != nullptr && m_NodeHandle.IsValid())
+		{
+			m_SceneTree->SetName(m_NodeHandle, std::move(name));
+		}
+		else
+		{
+			m_FallbackName = std::move(name);
+		}
+	}
+
+	uint32_t GameObject::GetSpatialHandle() const noexcept
+	{
+		if (m_SceneTree != nullptr && m_NodeHandle.IsValid())
+		{
+			return m_SceneTree->GetSpatialHandle(m_NodeHandle);
+		}
+		return 0xFFFFFFFF;
+	}
+
+	void GameObject::SetSpatialHandle(uint32_t handle) noexcept
+	{
+		if (m_SceneTree != nullptr && m_NodeHandle.IsValid())
+		{
+			m_SceneTree->SetSpatialHandle(m_NodeHandle, handle);
+		}
+	}
+
+	bool GameObject::IsActive() const noexcept
+	{
+		if (m_SceneTree != nullptr && m_NodeHandle.IsValid())
+		{
+			return m_SceneTree->IsActive(m_NodeHandle);
+		}
+		return true;
+	}
+
+	void GameObject::SetActive(bool active) noexcept
+	{
+		if (m_SceneTree != nullptr && m_NodeHandle.IsValid())
+		{
+			m_SceneTree->SetActive(m_NodeHandle, active);
+		}
+	}
+
+	void GameObject::SetLocalPosition(const ::zzz::math::Vec3<zF32>& pos)
+	{
+		if (m_SceneTree != nullptr && m_NodeHandle.IsValid())
+		{
+			m_SceneTree->SetLocalPosition(m_NodeHandle, pos);
+		}
+	}
+
+	const ::zzz::math::Vec3<zF32>& GameObject::GetLocalPosition() const
+	{
+		if (m_SceneTree != nullptr && m_NodeHandle.IsValid())
+		{
+			return m_SceneTree->GetLocalPosition(m_NodeHandle);
+		}
+		return kZeroPos;
+	}
+
+	void GameObject::SetLocalRotation(const ::zzz::math::Quat<zF32>& rot)
+	{
+		if (m_SceneTree != nullptr && m_NodeHandle.IsValid())
+		{
+			m_SceneTree->SetLocalRotation(m_NodeHandle, rot);
+		}
+	}
+
+	const ::zzz::math::Quat<zF32>& GameObject::GetLocalRotation() const
+	{
+		if (m_SceneTree != nullptr && m_NodeHandle.IsValid())
+		{
+			return m_SceneTree->GetLocalRotation(m_NodeHandle);
+		}
+		return kIdentityRot;
+	}
+
+	void GameObject::SetLocalScale(const ::zzz::math::Vec3<zF32>& scale)
+	{
+		if (m_SceneTree != nullptr && m_NodeHandle.IsValid())
+		{
+			m_SceneTree->SetLocalScale(m_NodeHandle, scale);
+		}
+	}
+
+	const ::zzz::math::Vec3<zF32>& GameObject::GetLocalScale() const
+	{
+		if (m_SceneTree != nullptr && m_NodeHandle.IsValid())
+		{
+			return m_SceneTree->GetLocalScale(m_NodeHandle);
+		}
+		return kOneScale;
+	}
+
+	const ::zzz::math::Mat4<zF32>& GameObject::GetWorldMatrix() const
+	{
+		if (m_SceneTree != nullptr && m_NodeHandle.IsValid())
+		{
+			return m_SceneTree->GetWorldMatrix(m_NodeHandle);
+		}
+		return kIdentityMat;
+	}
+
+	GameObject* GameObject::GetParent() const noexcept
+	{
+		if (m_SceneTree != nullptr && m_NodeHandle.IsValid())
+		{
+			const NodeHandle parentHandle = m_SceneTree->GetParent(m_NodeHandle);
+			if (parentHandle.IsValid())
+			{
+				return m_SceneTree->GetNodeOwner(parentHandle);
+			}
+		}
+		return nullptr;
 	}
 
 	void GameObject::SetParent(GameObject* newParent, bool keepWorldTransform) noexcept
 	{
-		if (m_Parent == newParent || newParent == this)
+		if (m_SceneTree != nullptr && m_NodeHandle.IsValid())
 		{
-			return;
+			const NodeHandle parentHandle = (newParent != nullptr) ? newParent->GetNodeHandle() : NodeHandle{};
+			m_SceneTree->SetParent(m_NodeHandle, parentHandle, keepWorldTransform);
 		}
-
-		// Запоминаем текущие мировые параметры, если требуется их сохранить
-		::zzz::math::Vec3<zF32> oldWorldPos{};
-		::zzz::math::Quat<zF32> oldWorldRot{};
-		::zzz::math::Vec3<zF32> oldWorldScale{};
-		if (keepWorldTransform)
-		{
-			oldWorldPos = m_Transform.GetWorldPosition();
-			oldWorldRot = m_Transform.GetWorldRotation();
-			oldWorldScale = m_Transform.GetWorldScale();
-		}
-
-		// Отвязываем от текущего родителя
-		if (m_Parent != nullptr)
-		{
-			std::erase(m_Parent->m_Children, this);
-		}
-
-		m_Parent = newParent;
-
-		// Привязываем к новому родителю
-		if (m_Parent != nullptr)
-		{
-			m_Parent->m_Children.push_back(this);
-		}
-
-		// Пересчитываем локальные координаты относительно нового родителя
-		if (keepWorldTransform)
-		{
-			m_Transform.SetWorldPosition(oldWorldPos);
-			m_Transform.SetWorldRotation(oldWorldRot);
-			if (m_Parent != nullptr)
-			{
-				const auto parentScale = m_Parent->GetTransform().GetWorldScale();
-				m_Transform.SetLocalScale(::zzz::math::Vec3<zF32>{
-					parentScale.x > 1e-6f ? oldWorldScale.x / parentScale.x : oldWorldScale.x,
-					parentScale.y > 1e-6f ? oldWorldScale.y / parentScale.y : oldWorldScale.y,
-					parentScale.z > 1e-6f ? oldWorldScale.z / parentScale.z : oldWorldScale.z
-				});
-			}
-			else
-			{
-				m_Transform.SetLocalScale(oldWorldScale);
-			}
-		}
-
-		m_Transform.SetDirty();
-	}
-
-	GameObject* GameObject::GetChild(size_t index) const noexcept
-	{
-		if (index < m_Children.size())
-		{
-			return m_Children[index];
-		}
-		return nullptr;
 	}
 
 	void GameObject::AddScript(std::shared_ptr<::zzz::core::Script> script)

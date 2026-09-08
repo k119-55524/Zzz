@@ -105,8 +105,12 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "scene/domain/IEntityDomain.h"
         "scene/domain/IDomainFactory.h"
 
-        # GameObject & Transform (ООП-модель)
-        "scene/gameobject/Transform.h" "scene/gameobject/Transform.cpp"
+        # Storage & Scene Tree (SoA-модель)
+        "scene/storage/ISceneTreeAccessor.h"
+        "scene/storage/NodeStorageBlock.h" "scene/storage/NodeStorageBlock.cpp"
+        "scene/storage/SceneTreeContainer.h" "scene/storage/SceneTreeContainer.cpp"
+
+        # GameObject (Фасад над SceneTreeContainer)
         "scene/gameobject/GameObject.h" "scene/gameobject/GameObject.cpp"
         "scene/gameobject/ObjectWorld.h" "scene/gameobject/ObjectWorld.cpp"
 
