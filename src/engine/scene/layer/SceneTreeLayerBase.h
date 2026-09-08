@@ -5,7 +5,8 @@
 
 #include "engine/scene/layer/ILayer.h"
 #include "core/utils/macros/MiscMacros.h"
-#include "engine/scene/domain/IDomainFactory.h"
+#include "engine/scene/domain/IObjectDomain.h"
+#include "engine/scene/domain/IEntityDomain.h"
 #include "engine/scene/storage/ISpatialStorage.h"
 #include "engine/scene/storage/SceneTreeContainer.h"
 
@@ -28,7 +29,8 @@ namespace zzz::engine
 		SceneTreeLayerBase(
 			std::string name,
 			std::shared_ptr<ResourceManager> resourceManager,
-			std::unique_ptr<IDomainFactory> domainFactory,
+			std::unique_ptr<IObjectDomain> objectDomain,
+			std::unique_ptr<IEntityDomain> entityDomain,
 			std::unique_ptr<ISpatialStorage> spatialStorage);
 		~SceneTreeLayerBase() override = default;
 
@@ -60,7 +62,6 @@ namespace zzz::engine
 		bool m_IsVisible;
 		std::shared_ptr<ResourceManager> m_ResourceManager;
 
-		std::unique_ptr<IDomainFactory> m_DomainFactory;
 		std::unique_ptr<IObjectDomain> m_ObjectDomain;
 		std::unique_ptr<IEntityDomain> m_EntityDomain;
 

@@ -4,6 +4,8 @@
 #include "engine/scene/layer/Layer3D.h"
 #include "engine/scene/layer/Layer2D.h"
 #include "engine/scene/layer/LayerMVVM.h"
+#include "engine/scene/domain/DefaultDomainFactory.h"
+#include "engine/scene/storage/DefaultSpatialStorage.h"
 #include "core/userscripts/ScriptFactory.h"
 #include "engine/resources/ResourceManager.h"
 
@@ -56,6 +58,8 @@ namespace zzz::engine
 			m_Scripts.push_back(std::move(script));
 		}
 
+		DefaultDomainFactory domainFactory;
+
 		// SceneData хранит слои напрямую (LayerData: имя, тип и его собственные объекты). На каждый
 		// слой заводится ровно один ILayer, а разбор объектов внутри него - целиком забота самого
 		// слоя: Scene отдаёт ему LayerData целиком одним вызовом, а не гоняет по объектам сама.
@@ -64,11 +68,33 @@ namespace zzz::engine
 			switch (layerData.GetType())
 			{
 			case eLayerType::Layer3D:
-				m_Layers.push_back(safe_make_unique<Layer3D>(layerData.GetName(), m_ResourceManager));
+			{
+				auto objectDomain = domainFactory.CreateObjectDomain();
+				auto entityDomain = domainFactory.CreateEntityDomain();
+				auto spatialStorage = safe_make_unique<DefaultSpatialStorage>();
+
+				m_Layers.push_back(safe_make_unique<Layer3D>(
+					layerData.GetName(),
+					m_ResourceManager,
+					std::move(objectDomain),
+					std::move(entityDomain),
+					std::move(spatialStorage)));
 				break;
+			}
 			case eLayerType::Layer2D:
-				m_Layers.push_back(safe_make_unique<Layer2D>(layerData.GetName(), m_ResourceManager));
+			{
+				auto objectDomain = domainFactory.CreateObjectDomain();
+				auto entityDomain = domainFactory.CreateEntityDomain();
+				auto spatialStorage = safe_make_unique<DefaultSpatialStorage>();
+
+				m_Layers.push_back(safe_make_unique<Layer2D>(
+					layerData.GetName(),
+					m_ResourceManager,
+					std::move(objectDomain),
+					std::move(entityDomain),
+					std::move(spatialStorage)));
 				break;
+			}
 			case eLayerType::LayerMVVM:
 				m_Layers.push_back(safe_make_unique<LayerMVVM>(layerData.GetName()));
 				break;

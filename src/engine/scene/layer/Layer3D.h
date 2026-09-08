@@ -13,7 +13,12 @@ namespace zzz::engine
 		Z_NO_COPY_MOVE(Layer3D);
 
 	public:
-		Layer3D(std::string name, std::shared_ptr<ResourceManager> resourceManager);
+		Layer3D(
+			std::string name,
+			std::shared_ptr<ResourceManager> resourceManager,
+			std::unique_ptr<IObjectDomain> objectDomain,
+			std::unique_ptr<IEntityDomain> entityDomain,
+			std::unique_ptr<ISpatialStorage> spatialStorage);
 		~Layer3D() override = default;
 
 		[[nodiscard]] eLayerType GetType() const noexcept override { return eLayerType::Layer3D; }

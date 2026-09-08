@@ -17,27 +17,25 @@ namespace zzz::engine
 	SceneTreeLayerBase::SceneTreeLayerBase(
 		std::string name,
 		std::shared_ptr<ResourceManager> resourceManager,
-		std::unique_ptr<IDomainFactory> domainFactory,
+		std::unique_ptr<IObjectDomain> objectDomain,
+		std::unique_ptr<IEntityDomain> entityDomain,
 		std::unique_ptr<ISpatialStorage> spatialStorage)
 		: m_Name(std::move(name))
 		, m_IsVisible{ true }
 		, m_ResourceManager(std::move(resourceManager))
-		, m_DomainFactory(std::move(domainFactory))
+		, m_ObjectDomain(std::move(objectDomain))
+		, m_EntityDomain(std::move(entityDomain))
 		, m_SpatialStorage(std::move(spatialStorage))
 	{
-		ensure(m_DomainFactory != nullptr, "DomainFactory не должен быть null в SceneTreeLayerBase.");
+		ensure(m_ObjectDomain != nullptr, "ObjectDomain не должен быть null в SceneTreeLayerBase.");
+		ensure(m_EntityDomain != nullptr, "EntityDomain не должен быть null в SceneTreeLayerBase.");
 		ensure(m_SpatialStorage != nullptr, "SpatialStorage не должен быть null в SceneTreeLayerBase.");
-
-		m_ObjectDomain = m_DomainFactory->CreateObjectDomain();
-		m_EntityDomain = m_DomainFactory->CreateEntityDomain();
 	}
 
 	void SceneTreeLayerBase::BeginFrame()
 	{
 		if (!m_IsVisible)
-		{
 			return;
-		}
 
 		m_TreeContainer.BeginFrame();
 	}

@@ -1,17 +1,21 @@
 
 #include "core/utils/MemoryUtils.h"
 #include "engine/scene/layer/Layer2D.h"
-#include "engine/scene/domain/DefaultDomainFactory.h"
-#include "engine/scene/storage/DefaultSpatialStorage.h"
 
 namespace zzz::engine
 {
-	Layer2D::Layer2D(std::string name, std::shared_ptr<ResourceManager> resourceManager)
+	Layer2D::Layer2D(
+		std::string name,
+		std::shared_ptr<ResourceManager> resourceManager,
+		std::unique_ptr<IObjectDomain> objectDomain,
+		std::unique_ptr<IEntityDomain> entityDomain,
+		std::unique_ptr<ISpatialStorage> spatialStorage)
 		: SceneTreeLayerBase(
 			std::move(name),
 			std::move(resourceManager),
-			::zzz::core::safe_make_unique<DefaultDomainFactory>(),
-			::zzz::core::safe_make_unique<DefaultSpatialStorage>())
+			std::move(objectDomain),
+			std::move(entityDomain),
+			std::move(spatialStorage))
 	{
 	}
 }
