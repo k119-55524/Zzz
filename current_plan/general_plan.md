@@ -129,11 +129,11 @@
 ### 📌 Текущее состояние разработки
 
 > [!IMPORTANT]
-> **Текущий активный пункт:** `Пункт 11.4. Интеграция слоёв сцены, базовый класс SceneTreeLayerBase, покадровый конвейер и двухпроходное наполнение (Populate)`  
-> **Статус:** ⏳ В процессе  
-> **Файл детального плана текущего шага:** [`stage_11_4_layer_integration_and_populate.md`](stage_11_4_layer_integration_and_populate.md)  
+> **Текущий активный пункт:** `Пункт 13. Загрузка текстур (Texture2D) + отправка в GPU`  
+> **Статус:** ⏳ Планирование  
+> **Файл детального плана текущего шага:** [`stage_13_texture2d_and_gpu_upload.md`](stage_13_texture2d_and_gpu_upload.md)  
 > **Список открытых сквозных задач / технического долга:** [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) §4  
-> **Текущая подзадача:** Интеграция слоёв сцены `SceneTreeLayerBase`, `Layer3D`, `Layer2D`, кадровый барьер Handover Barrier во `ViewManager` и двухпроходный `Populate`.
+> **Текущая подзадача:** Разработка детального плана этапа 13 (ресурс `Texture2D`, `TextureLoader`, создание ресурсов в GAPI, кэширование в `ResourceManager`).
 > 
 ---
 
