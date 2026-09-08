@@ -65,14 +65,8 @@ namespace zzz::engine
 
 	void SceneTreeLayerBase::OnUpdateDomains(float dt)
 	{
-		if (m_ObjectDomain)
-		{
-			m_ObjectDomain->Update(dt);
-		}
-		if (m_EntityDomain)
-		{
-			m_EntityDomain->Update(dt);
-		}
+		m_ObjectDomain->Update(dt);
+		m_EntityDomain->Update(dt);
 	}
 
 	void SceneTreeLayerBase::OnUpdateSpatial()
@@ -89,14 +83,11 @@ namespace zzz::engine
 		{
 			if (objData.IsEntity())
 			{
-				if (m_EntityDomain)
-				{
-					m_EntityDomain->CreateEntity(objData.GetGuid(), objData.GetName());
-				}
+				m_EntityDomain->CreateEntity(objData.GetGuid(), objData.GetName());
 				continue;
 			}
 
-			::zzz::GameObject* go = m_ObjectDomain ? m_ObjectDomain->CreateObject(objData.GetGuid(), objData.GetName()) : nullptr;
+			::zzz::GameObject* go = m_ObjectDomain->CreateObject(objData.GetGuid(), objData.GetName());
 			if (go == nullptr)
 			{
 				THROW_RUNTIME("Не удалось создать GameObject '{}' в слое '{}'", objData.GetName(), m_Name);
@@ -137,7 +128,7 @@ namespace zzz::engine
 				}
 			}
 
-			const uint32_t spHandle = m_SpatialStorage ? m_SpatialStorage->Insert(static_cast<uint64_t>(handle.index)) : 0xFFFFFFFF;
+			const uint32_t spHandle = m_SpatialStorage->Insert(static_cast<uint64_t>(handle.index));
 			m_TreeContainer.SetSpatialHandle(handle, spHandle);
 
 			guidToHandle[objData.GetGuid()] = handle;
