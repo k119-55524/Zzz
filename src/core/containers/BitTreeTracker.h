@@ -3,6 +3,7 @@
 #include <span>
 #include <vector>
 #include <cstdint>
+#include "math/utils/Types.h"
 
 namespace zzz::core
 {
@@ -29,27 +30,28 @@ namespace zzz::core
 	class BitTreeTracker final
 	{
 	public:
-		explicit BitTreeTracker(uint32_t initialCapacity = 1);
+		explicit BitTreeTracker(zU32 initialCapacity = 1);
 
 		/// @brief Подготовка трекера к кадру: гарантирует емкость под число элементов и сбрасывает все биты в 0.
-		void Prepare(uint32_t capacity);
+		void Prepare(zU32 capacity);
 
 		/// @brief Установка бита по индексу (помечает узел и каскадно поднимает 1 до корня).
-		void Set(uint32_t index) noexcept;
+		void Set(zU32 index) noexcept;
 
 		/// @brief Возвращает span со всеми собранными грязными индексами текущего кадра (0 аллокаций).
-		[[nodiscard]] std::span<const uint32_t> GetDirtyIndices();
+		[[nodiscard]] std::span<const zU32> GetDirtyIndices();
 
 	private:
 		// Вычисляет смещение начала заданного уровня пирамиды (0 = листья, depth-1 = корень)
-		[[nodiscard]] size_t GetLevelOffset(uint32_t level) const noexcept;
+		[[nodiscard]] size_t GetLevelOffset(zU32 level) const noexcept;
 
-		void TraverseLevel(uint32_t level, size_t wordIndexInLevel);
+		void TraverseLevel(zU32 level, size_t wordIndexInLevel);
 
-		uint32_t              m_Capacity;
-		uint32_t              m_Depth;
-		bool                  m_IsDirty;
-		std::vector<uint64_t> m_Words;
-		std::vector<uint32_t> m_DirtyIndices;
+		zU32 m_Capacity;
+		zU32 m_Depth;
+		bool m_IsDirty;
+		std::vector<zU32> m_LevelOffsets;
+		std::vector<zU64> m_Words;
+		std::vector<zU32> m_DirtyIndices;
 	};
 }

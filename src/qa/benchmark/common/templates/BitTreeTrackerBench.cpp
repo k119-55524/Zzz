@@ -85,6 +85,11 @@ static void BM_BitTreeTracker_Prepare(benchmark::State& state)
 
 	for (auto _ : state)
 	{
+		state.PauseTiming();
+		tracker.Set(10);
+		tracker.Set(static_cast<uint32_t>(capacity - 1));
+		state.ResumeTiming();
+
 		tracker.Prepare(capacity);
 		benchmark::ClobberMemory();
 	}

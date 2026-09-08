@@ -8,11 +8,15 @@
 #include "core/containers/BitTreeTracker.h"
 
 using namespace zzz::core;
+using zzz::zU32;
 
 TEST(BitTreeTrackerTest, InitialStateAndPrepare)
 {
 	BitTreeTracker tracker;
 	EXPECT_TRUE(tracker.GetDirtyIndices().empty());
+
+	EXPECT_THROW(tracker.Prepare(0), std::runtime_error);
+	EXPECT_THROW(BitTreeTracker(static_cast<uint32_t>(0)), std::runtime_error);
 
 	tracker.Prepare(100);
 	EXPECT_TRUE(tracker.GetDirtyIndices().empty());
@@ -81,5 +85,31 @@ TEST(BitTreeTrackerTest, DenseGetDirtyIndices)
 		EXPECT_EQ(dirty[i], 10u + i);
 	}
 }
+
+TEST(BitTreeTrackerTest, PrepareShrinksLogicalCapacity)
+{
+	BitTreeTracker tracker(100);
+	tracker.Set(99);
+
+	tracker.Prepare(50);
+	EXPECT_TRUE(tracker.GetDirtyIndices().empty());
+
+	tracker.Set(49);
+	const auto dirty = tracker.GetDirtyIndices();
+	ASSERT_EQ(dirty.size(), 1u);
+	EXPECT_EQ(dirty[0], 49u);
+}
+
+#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
+TEST(BitTreeTrackerTest, SetOutOfRangeTerminates)
+{
+	EXPECT_DEATH(
+		{
+			BitTreeTracker tracker(1);
+			tracker.Set(1);
+		},
+		"BitTreeTracker::Set: index must be less than capacity");
+}
+#endif
 
 #endif // Z_TEST_CORE_BIT_TREE_TRACKER
