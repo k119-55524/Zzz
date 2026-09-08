@@ -68,15 +68,10 @@ namespace zzz::engine
 		[[nodiscard]] NodeStorageBlock& GetSecondaryNodes() noexcept { return m_SecondaryNodes; }
 
 	private:
-		void ApplyDeferredQueues(ISpatialStorage* spatialStorage = nullptr);
-
 		NodeStorageBlock      m_PrimaryNodes;   // Front Buffer: статичный снимок для параллельного чтения рендером
 		NodeStorageBlock      m_SecondaryNodes; // Back Buffer: рабочий буфер для мутаций текущего кадра
 		std::vector<uint32_t> m_FreeIndices;
 		bool                  m_TopologyDirty{ false };
-
-		// Очереди отложенных кадровых мутаций
-		std::vector<uint32_t> m_DeleteQueue;
-		std::vector<std::pair<uint32_t, uint32_t>> m_ReparentQueue;
 	};
 }
+

@@ -3,34 +3,21 @@
 
 namespace zzz
 {
-	void LayerMVVM::Update(float dt)
+	void LayerMVVM::Update(float /*dt*/)
 	{
 		if (!m_IsVisible)
 		{
 			return;
 		}
 
-		m_ObjectWorld.Update(dt);
-		m_EntityWorld.Update(dt);
+		// Декларативный UI слой: обновление элементов интерфейса (будет реализовано в MVP ZzzGUI)
 	}
 
 	void LayerMVVM::Populate(
-		const ::zzz::core::LayerData& layerData,
+		const ::zzz::core::LayerData& /*layerData*/,
 		const ::zzz::core::ScriptFactory& /*scriptFactory*/)
 	{
-		for (const auto& objData : layerData.GetObjects())
-		{
-			if (objData.IsEntity())
-			{
-				m_EntityWorld.CreateEntity(objData.GetGuid(), objData.GetName());
-				continue;
-			}
-
-			auto* go = m_ObjectWorld.CreateObject(objData.GetGuid(), objData.GetName());
-			if (go != nullptr)
-			{
-				go->SetActive(objData.IsActive());
-			}
-		}
+		// Декларативный UI слой: парсинг и биндинг XAML/MVVM разметки (будет реализовано в MVP ZzzGUI)
 	}
 }
+

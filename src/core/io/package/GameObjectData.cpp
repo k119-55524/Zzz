@@ -12,8 +12,10 @@ namespace zzz::core
 		math::Vec3<zF32> scale,
 		Guid meshGuid,
 		Guid materialGuid,
-		std::vector<Guid> scriptGuids)
+		std::vector<Guid> scriptGuids,
+		Guid parentGuid)
 		: m_Guid(guid)
+		, m_ParentGuid(parentGuid)
 		, m_Name(std::move(name))
 		, m_Domain(domain)
 		, m_IsActive(isActive)
@@ -29,6 +31,7 @@ namespace zzz::core
 	std::expected<void, std::string> GameObjectData::Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const
 	{
 		return serializer.Serialize(buffer, m_Guid)
+			.and_then([&]() { return serializer.Serialize(buffer, m_ParentGuid); })
 			.and_then([&]() { return serializer.Serialize(buffer, m_Name); })
 			.and_then([&]() { return serializer.Serialize(buffer, static_cast<uint8_t>(m_Domain)); })
 			.and_then([&]() { return serializer.Serialize(buffer, m_IsActive ? uint8_t{ 1 } : uint8_t{ 0 }); })
@@ -58,6 +61,7 @@ namespace zzz::core
 		uint32_t scriptsCount = 0;
 
 		auto res = serializer.Deserialize(buffer, offset, m_Guid)
+			.and_then([&]() { return serializer.Deserialize(buffer, offset, m_ParentGuid); })
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, m_Name); })
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, domainRaw); })
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, activeRaw); })
@@ -92,3 +96,4 @@ namespace zzz::core
 		return {};
 	}
 }
+

@@ -99,11 +99,14 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "gapi/metal/MetalAPI.h" "gapi/metal/MetalAPI.mm"
         "gapi/metal/SurfView_Metal.h" "gapi/metal/SurfView_Metal.mm"
 
-        # Domain Interfaces (Пункт 11.1)
+        # Domain Interfaces & Implementations (Пункт 11.1 & 11.4)
         "scene/domain/ILayerDomain.h"
         "scene/domain/IObjectDomain.h"
         "scene/domain/IEntityDomain.h"
         "scene/domain/IDomainFactory.h"
+        "scene/domain/ObjectDomain.h" "scene/domain/ObjectDomain.cpp"
+        "scene/domain/EntityDomain.h" "scene/domain/EntityDomain.cpp"
+        "scene/domain/DefaultDomainFactory.h" "scene/domain/DefaultDomainFactory.cpp"
 
         # Storage & Scene Tree (SoA-модель)
         "scene/storage/ISceneTreeAccessor.h"
@@ -120,12 +123,16 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         # Storage (Пространственные хранилища)
         "scene/storage/ISpatialStorage.h"
         "scene/storage/DefaultSpatialStorage.h" "scene/storage/DefaultSpatialStorage.cpp"
+
+        # Layers (Слои сцены, Пункт 11.4)
         "scene/layer/ILayer.h"
+        "scene/layer/SceneTreeLayerBase.h" "scene/layer/SceneTreeLayerBase.cpp"
         "scene/layer/Layer3D.h" "scene/layer/Layer3D.cpp"
-        "scene/layer/LayerUI.h" "scene/layer/LayerUI.cpp"
+        "scene/layer/Layer2D.h" "scene/layer/Layer2D.cpp"
         "scene/layer/LayerMVVM.h" "scene/layer/LayerMVVM.cpp"
         "scene/Scene.h" "scene/Scene.cpp"
         "scene/SceneManager.h" "scene/SceneManager.cpp")
+
 
     if(WIN32)
         if(${IS_EDITOR})

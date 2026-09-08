@@ -2,7 +2,7 @@
 #include "core/utils/MemoryUtils.h"
 #include "core/io/package/SceneData.h"
 #include "engine/scene/layer/Layer3D.h"
-#include "engine/scene/layer/LayerUI.h"
+#include "engine/scene/layer/Layer2D.h"
 #include "engine/scene/layer/LayerMVVM.h"
 #include "core/userscripts/ScriptFactory.h"
 #include "engine/resources/ResourceManager.h"
@@ -66,8 +66,8 @@ namespace zzz::engine
 			case eLayerType::Layer3D:
 				m_Layers.push_back(safe_make_unique<Layer3D>(layerData.GetName(), m_ResourceManager));
 				break;
-			case eLayerType::LayerUI:
-				m_Layers.push_back(safe_make_unique<LayerUI>(layerData.GetName()));
+			case eLayerType::Layer2D:
+				m_Layers.push_back(safe_make_unique<Layer2D>(layerData.GetName(), m_ResourceManager));
 				break;
 			case eLayerType::LayerMVVM:
 				m_Layers.push_back(safe_make_unique<LayerMVVM>(layerData.GetName()));
@@ -84,19 +84,43 @@ namespace zzz::engine
 			m_Name, m_Guid.ToString(), m_Scripts.size(), m_Layers.size());
 	}
 
+	void Scene::BeginFrame()
+	{
+		for (const auto& layer : m_Layers)
+		{
+			if (layer != nullptr)
+			{
+				layer->BeginFrame();
+			}
+		}
+	}
+
 	void Scene::Update(const Time& time)
 	{
-		// Обновление скриптов сцены
+		// 1. Начало кадра для слоев (очистка dirtyTracker перед скриптами)
+		BeginFrame();
+
+		// 2. Обновление скриптов сцены
 		m_EventBus.InvokeUpdate(time);
 
-		// Кадровый цикл обновления слоев сцены. Видимость (IsVisible) - единственный флаг
-		// включения/выключения слоя, и её уже проверяет сам Update() каждой реализации ILayer.
+		// 3. Кадровый цикл обновления слоев сцены (скрипты объектов, ResolveTransforms)
 		const float dt = time.GetDeltaTime();
 		for (const auto& layer : m_Layers)
 		{
 			if (layer != nullptr)
 			{
 				layer->Update(dt);
+			}
+		}
+	}
+
+	void Scene::ApplyHandoverBarrier()
+	{
+		for (const auto& layer : m_Layers)
+		{
+			if (layer != nullptr)
+			{
+				layer->ApplyHandoverBarrier();
 			}
 		}
 	}
@@ -111,3 +135,4 @@ namespace zzz::engine
 		m_EventBus.InvokeDestroy();
 	}
 }
+

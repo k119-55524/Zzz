@@ -47,7 +47,9 @@ namespace zzz::engine
 		// --- Управление слоями сцены ---
 		[[nodiscard]] const std::vector<std::unique_ptr<ILayer>>& GetLayers() const noexcept { return m_Layers; }
 
+		void BeginFrame();
 		void Update(const Time& time);
+		void ApplyHandoverBarrier();
 		void InvokeStart();
 		void InvokeDestroy();
 

@@ -32,9 +32,11 @@ namespace zzz::core
 			math::Vec3<zF32> scale,
 			Guid meshGuid,
 			Guid materialGuid,
-			std::vector<Guid> scriptGuids);
+			std::vector<Guid> scriptGuids,
+			Guid parentGuid = Guid{});
 
 		[[nodiscard]] const Guid& GetGuid() const noexcept { return m_Guid; }
+		[[nodiscard]] const Guid& GetParentGuid() const noexcept { return m_ParentGuid; }
 		[[nodiscard]] const std::string& GetName() const noexcept { return m_Name; }
 		[[nodiscard]] eObjectDomain GetDomain() const noexcept { return m_Domain; }
 		[[nodiscard]] bool IsEntity() const noexcept { return m_Domain == eObjectDomain::Entity; }
@@ -54,6 +56,7 @@ namespace zzz::core
 
 	private:
 		Guid m_Guid;
+		Guid m_ParentGuid;
 		std::string m_Name;
 		eObjectDomain m_Domain{ eObjectDomain::Object };
 		bool m_IsActive{ true };

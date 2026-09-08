@@ -3,7 +3,7 @@
 #include <string>
 #include <cstdint>
 
-#include "core/guid/Guid.h"
+#include "core/utils/Guid.h"
 #include "engine/scene/domain/ILayerDomain.h"
 namespace zzz::engine
 {

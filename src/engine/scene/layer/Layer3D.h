@@ -1,21 +1,14 @@
 #pragma once
 
-#include <memory>
-
-#include "engine/scene/layer/ILayer.h"
-#include "engine/scene/gameobject/ObjectWorld.h"
-#include "engine/scene/entity/EntityWorld.h"
-#include "engine/scene/storage/DefaultSpatialStorage.h"
-
-using namespace zzz::core;
+#include "engine/scene/layer/SceneTreeLayerBase.h"
 
 namespace zzz::engine
 {
 	/**
 	 * @class Layer3D
-	 * @brief Слой 3D игрового мира (GameObject, Transform, меши, материалы, освещение).
+	 * @brief Слой 3D игрового мира (GameObject, сценовое дерево, меши, материалы, освещение).
 	 */
-	class Layer3D final : public ILayer
+	class Layer3D final : public SceneTreeLayerBase
 	{
 	public:
 		Layer3D(std::string name, std::shared_ptr<::zzz::engine::ResourceManager> resourceManager);
@@ -23,23 +16,7 @@ namespace zzz::engine
 
 		Z_NO_COPY_MOVE(Layer3D);
 
-		[[nodiscard]] const std::string& GetName() const noexcept override { return m_Name; }
 		[[nodiscard]] eLayerType GetType() const noexcept override { return eLayerType::Layer3D; }
-
-		[[nodiscard]] bool IsVisible() const noexcept override { return m_IsVisible; }
-		void SetVisible(bool visible) noexcept override { m_IsVisible = visible; }
-
-		void Update(float dt) override;
-
-		void Populate(const LayerData& layerData, const ScriptFactory& scriptFactory) override;
-
-	private:
-		std::string m_Name;
-		bool m_IsVisible;
-
-		std::unique_ptr<ISpatialStorage> m_Storage;
-		ObjectWorld m_ObjectWorld;
-		EntityWorld m_EntityWorld;
-		std::shared_ptr<ResourceManager> m_ResourceManager;
 	};
 }
+

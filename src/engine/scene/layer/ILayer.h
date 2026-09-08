@@ -37,7 +37,13 @@ namespace zzz
 		[[nodiscard]] virtual bool IsVisible() const noexcept = 0;
 		virtual void SetVisible(bool visible) noexcept = 0;
 
+		/// @brief Начало кадра логики: подготовка сброса dirty-трекеров слоя перед выполнением скриптов.
+		virtual void BeginFrame() {}
+
 		virtual void Update(float dt) = 0;
+
+		/// @brief Барьер сдачи кадра: передача измененных данных кадра в буфер рендера.
+		virtual void ApplyHandoverBarrier() {}
 
 		/**
 		 * @brief Наполнить слой целиком из его LayerData (имя, тип уже разрешены снаружи).

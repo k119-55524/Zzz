@@ -1,9 +1,7 @@
 #pragma once
 
 #include "engine/scene/layer/ILayer.h"
-#include "engine/scene/gameobject/ObjectWorld.h"
-#include "engine/scene/entity/EntityWorld.h"
-#include <memory>
+#include <string>
 
 namespace zzz
 {
@@ -38,8 +36,6 @@ namespace zzz
 	private:
 		std::string m_Name;
 		bool m_IsVisible{ true };
-
-		ObjectWorld m_ObjectWorld;
-		::zzz::engine::EntityWorld m_EntityWorld;
 	};
 }
+

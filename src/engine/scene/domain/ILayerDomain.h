@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/utility/NonCopyable.h"
+#include "core/utils/macros/MiscMacros.h"
 
 namespace zzz::engine
 {
@@ -11,7 +11,10 @@ namespace zzz::engine
 	class ILayerDomain
 	{
 	public:
+		ILayerDomain() = default;
 		virtual ~ILayerDomain() = default;
+
+		Z_NO_COPY_MOVE(ILayerDomain);
 
 		/**
 		 * @brief Кадровое обновление домена.
