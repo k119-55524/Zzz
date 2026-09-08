@@ -6,12 +6,11 @@
 
 namespace zzz::engine
 {
-	LayerMVVM::LayerMVVM(std::string name, std::unique_ptr<IObjectDomain> objectDomain)
-		: m_Name(std::move(name))
-		, m_IsVisible{ true }
-		, m_ObjectDomain(std::move(objectDomain))
+	LayerMVVM::LayerMVVM(std::string name, std::unique_ptr<IMVVMDomain> mvvmDomain)
+		: ILayer(std::move(name), std::move(mvvmDomain))
 	{
-		ensure(m_ObjectDomain != nullptr, "ObjectDomain не должен быть null в LayerMVVM.");
+		ensure(m_Domain->GetDomainType() == ::zzz::core::eObjectDomain::MVVM,
+			"LayerMVVM требует домен типа eObjectDomain::MVVM.");
 	}
 
 	void LayerMVVM::Update(float /*dt*/)

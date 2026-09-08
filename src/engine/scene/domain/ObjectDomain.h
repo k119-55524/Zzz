@@ -29,6 +29,7 @@ namespace zzz::engine
 		Z_NO_COPY_MOVE(ObjectDomain);
 
 		// --- ILayerDomain ---
+		[[nodiscard]] ::zzz::core::eObjectDomain GetDomainType() const noexcept override { return ::zzz::core::eObjectDomain::Object; }
 		void Update(float dt) override;
 		void Clear() override;
 

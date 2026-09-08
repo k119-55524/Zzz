@@ -12,6 +12,11 @@
 
 using namespace zzz::core;
 
+namespace zzz::core
+{
+	class GameObjectData;
+}
+
 namespace zzz::engine
 {
 	class ResourceManager;
@@ -36,10 +41,6 @@ namespace zzz::engine
 
 		Z_NO_COPY_MOVE(SceneTreeLayerBase);
 
-		[[nodiscard]] const std::string& GetName() const noexcept override { return m_Name; }
-		[[nodiscard]] bool IsVisible() const noexcept override { return m_IsVisible; }
-		void SetVisible(bool visible) noexcept override { m_IsVisible = visible; }
-
 		void BeginFrame() override;
 		void Update(float dt) override;
 		void ApplyHandoverBarrier() override;
@@ -53,8 +54,8 @@ namespace zzz::engine
 		[[nodiscard]] ISpatialStorage& GetSpatialStorage() noexcept { return *m_SpatialStorage; }
 		[[nodiscard]] const ISpatialStorage& GetSpatialStorage() const noexcept { return *m_SpatialStorage; }
 
-		[[nodiscard]] IObjectDomain& GetObjectDomain() noexcept override { return *m_ObjectDomain; }
-		[[nodiscard]] const IObjectDomain& GetObjectDomain() const noexcept override { return *m_ObjectDomain; }
+		[[nodiscard]] IObjectDomain& GetObjectDomain() noexcept { return static_cast<IObjectDomain&>(*m_Domain); }
+		[[nodiscard]] const IObjectDomain& GetObjectDomain() const noexcept { return static_cast<const IObjectDomain&>(*m_Domain); }
 
 		[[nodiscard]] IEntityDomain& GetEntityDomain() noexcept { return *m_EntityDomain; }
 		[[nodiscard]] const IEntityDomain& GetEntityDomain() const noexcept { return *m_EntityDomain; }
@@ -63,14 +64,14 @@ namespace zzz::engine
 		virtual void OnUpdateDomains(float dt);
 		virtual void OnUpdateSpatial();
 
-		std::string m_Name;
-		bool m_IsVisible;
 		std::shared_ptr<ResourceManager> m_ResourceManager;
 
-		std::unique_ptr<IObjectDomain> m_ObjectDomain;
-		std::unique_ptr<IEntityDomain> m_EntityDomain;
-
+		std::unique_ptr<IEntityDomain>   m_EntityDomain;
 		std::unique_ptr<ISpatialStorage> m_SpatialStorage;
-		SceneTreeContainer m_TreeContainer;
+		SceneTreeContainer               m_TreeContainer;
+
+	private:
+		[[nodiscard]] NodeHandle PopulateGameObject(const GameObjectData& objData, const ScriptFactory& scriptFactory);
+		[[nodiscard]] NodeHandle PopulateEntity(const GameObjectData& objData);
 	};
 }

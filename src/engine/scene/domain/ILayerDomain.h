@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/utils/macros/MiscMacros.h"
+#include "core/enums/eObjectDomain.h"
 
 namespace zzz::engine
 {
@@ -15,6 +16,11 @@ namespace zzz::engine
 		virtual ~ILayerDomain() = default;
 
 		Z_NO_COPY_MOVE(ILayerDomain);
+
+		/**
+		 * @brief Тип домена сущностей слоя.
+		 */
+		[[nodiscard]] virtual ::zzz::core::eObjectDomain GetDomainType() const noexcept = 0;
 
 		/**
 		 * @brief Кадровое обновление домена.

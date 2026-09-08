@@ -4,10 +4,10 @@
 #include "engine/scene/layer/Layer3D.h"
 #include "engine/scene/layer/Layer2D.h"
 #include "engine/scene/layer/LayerMVVM.h"
-#include "engine/scene/domain/DefaultDomainFactory.h"
-#include "engine/scene/storage/DefaultSpatialStorage.h"
 #include "core/userscripts/ScriptFactory.h"
 #include "engine/resources/ResourceManager.h"
+#include "engine/scene/domain/DefaultDomainFactory.h"
+#include "engine/scene/storage/DefaultSpatialStorage.h"
 
 #include "Scene.h"
 
@@ -97,8 +97,8 @@ namespace zzz::engine
 			}
 			case eLayerType::LayerMVVM:
 			{
-				auto objectDomain = domainFactory.CreateObjectDomain();
-				m_Layers.push_back(safe_make_unique<LayerMVVM>(layerData.GetName(), std::move(objectDomain)));
+				auto mvvmDomain = domainFactory.CreateMVVMDomain();
+				m_Layers.push_back(safe_make_unique<LayerMVVM>(layerData.GetName(), std::move(mvvmDomain)));
 				break;
 			}
 			default:

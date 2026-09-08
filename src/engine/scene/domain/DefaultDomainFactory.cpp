@@ -12,4 +12,9 @@ namespace zzz::engine
 	{
 		return ::zzz::core::safe_make_unique<EntityDomain>();
 	}
+
+	std::unique_ptr<IMVVMDomain> DefaultDomainFactory::CreateMVVMDomain()
+	{
+		return ::zzz::core::safe_make_unique<MVVMDomain>();
+	}
 }
