@@ -10,11 +10,11 @@ namespace zzz::engine
 	 */
 	class Layer2D final : public SceneTreeLayerBase
 	{
-	public:
-		Layer2D(std::string name, std::shared_ptr<::zzz::engine::ResourceManager> resourceManager = nullptr);
-		~Layer2D() override = default;
-
 		Z_NO_COPY_MOVE(Layer2D);
+
+	public:
+		Layer2D(std::string name, std::shared_ptr<ResourceManager> resourceManager = nullptr);
+		~Layer2D() override = default;
 
 		[[nodiscard]] eLayerType GetType() const noexcept override { return eLayerType::Layer2D; }
 	};

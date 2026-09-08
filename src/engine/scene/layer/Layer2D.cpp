@@ -1,11 +1,12 @@
+
+#include "core/utils/MemoryUtils.h"
 #include "engine/scene/layer/Layer2D.h"
 #include "engine/scene/domain/DefaultDomainFactory.h"
 #include "engine/scene/storage/DefaultSpatialStorage.h"
-#include "core/utils/MemoryUtils.h"
 
 namespace zzz::engine
 {
-	Layer2D::Layer2D(std::string name, std::shared_ptr<::zzz::engine::ResourceManager> resourceManager)
+	Layer2D::Layer2D(std::string name, std::shared_ptr<ResourceManager> resourceManager)
 		: SceneTreeLayerBase(
 			std::move(name),
 			std::move(resourceManager),

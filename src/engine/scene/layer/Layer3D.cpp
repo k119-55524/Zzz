@@ -1,11 +1,10 @@
-#include "engine/scene/layer/Layer3D.h"
+
+#include "core/utils/MemoryUtils.h"
+#include "engine/resources/ResourceManager.h"
 #include "engine/scene/domain/DefaultDomainFactory.h"
 #include "engine/scene/storage/DefaultSpatialStorage.h"
-#include "core/utils/MemoryUtils.h"
-#include "core/io/package/LayerData.h"
-#include "core/io/package/MeshData.h"
-#include "engine/resources/ResourceManager.h"
-#include "core/userscripts/ScriptFactory.h"
+
+#include "Layer3D.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Scene);
 
@@ -20,4 +19,3 @@ namespace zzz::engine
 	{
 	}
 }
-

@@ -3,10 +3,8 @@
 #include <vector>
 #include <memory>
 
-#include "engine/EngineIncludes.h"
 #include "engine/scene/layer/ILayer.h"
 #include "engine/gapi/clear_config/ClearConfig.h"
-#include "core/io/package/GameObjectData.h"
 
 namespace zzz::core
 {

@@ -1,21 +1,19 @@
-#include "engine/scene/layer/LayerMVVM.h"
+
 #include "core/io/package/LayerData.h"
 
-namespace zzz
+#include "LayerMVVM.h"
+
+namespace zzz::engine
 {
 	void LayerMVVM::Update(float /*dt*/)
 	{
 		if (!m_IsVisible)
-		{
 			return;
-		}
 
 		// Декларативный UI слой: обновление элементов интерфейса (будет реализовано в MVP ZzzGUI)
 	}
 
-	void LayerMVVM::Populate(
-		const ::zzz::core::LayerData& /*layerData*/,
-		const ::zzz::core::ScriptFactory& /*scriptFactory*/)
+	void LayerMVVM::Populate(const LayerData& /*layerData*/, const ScriptFactory& /*scriptFactory*/)
 	{
 		// Декларативный UI слой: парсинг и биндинг XAML/MVVM разметки (будет реализовано в MVP ZzzGUI)
 	}

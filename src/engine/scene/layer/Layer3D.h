@@ -10,13 +10,12 @@ namespace zzz::engine
 	 */
 	class Layer3D final : public SceneTreeLayerBase
 	{
-	public:
-		Layer3D(std::string name, std::shared_ptr<::zzz::engine::ResourceManager> resourceManager);
-		~Layer3D() override = default;
-
 		Z_NO_COPY_MOVE(Layer3D);
+
+	public:
+		Layer3D(std::string name, std::shared_ptr<ResourceManager> resourceManager);
+		~Layer3D() override = default;
 
 		[[nodiscard]] eLayerType GetType() const noexcept override { return eLayerType::Layer3D; }
 	};
 }
-

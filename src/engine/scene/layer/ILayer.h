@@ -1,26 +1,20 @@
 #pragma once
 
 #include <string>
-#include <string_view>
-#include "core/utils/Defines.h"
 
 #include "core/enums/eLayerType.h"
 
-namespace zzz
+namespace zzz::core
 {
-	namespace engine
-	{
-		class ResourceManager;
-	}
+	class LayerData;
+	class ScriptFactory;
+}
 
+namespace zzz::engine
+{
 	using ::zzz::core::eLayerType;
-	using ::zzz::core::ToString;
 
-	namespace core
-	{
-		class LayerData;
-		class ScriptFactory;
-	}
+	class ResourceManager;
 
 	/**
 	 * @class ILayer
