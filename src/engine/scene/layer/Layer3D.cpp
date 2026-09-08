@@ -8,14 +8,16 @@
 
 Z_SET_LOG_CATEGORY(::zzz::core::Scene);
 
+using namespace zzz::core;
+
 namespace zzz::engine
 {
-	Layer3D::Layer3D(std::string name, std::shared_ptr<::zzz::engine::ResourceManager> resourceManager)
+	Layer3D::Layer3D(std::string name, std::shared_ptr<ResourceManager> resourceManager)
 		: SceneTreeLayerBase(
 			std::move(name),
 			std::move(resourceManager),
-			::zzz::core::safe_make_unique<DefaultDomainFactory>(),
-			::zzz::core::safe_make_unique<DefaultSpatialStorage>())
+			safe_make_unique<DefaultDomainFactory>(),
+			safe_make_unique<DefaultSpatialStorage>())
 	{
 	}
 }

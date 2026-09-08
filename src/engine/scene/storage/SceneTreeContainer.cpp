@@ -1,8 +1,10 @@
-#include "engine/scene/storage/SceneTreeContainer.h"
-#include "engine/scene/storage/ISpatialStorage.h"
-#include "engine/scene/gameobject/GameObject.h"
-#include "core/utils/Ensure.h"
+
 #include <algorithm>
+
+#include "engine/scene/gameobject/GameObject.h"
+#include "engine/scene/storage/ISpatialStorage.h"
+
+#include "SceneTreeContainer.h"
 
 namespace zzz::engine
 {

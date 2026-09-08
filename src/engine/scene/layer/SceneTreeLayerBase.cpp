@@ -1,12 +1,14 @@
-#include "engine/scene/layer/SceneTreeLayerBase.h"
-#include "engine/scene/gameobject/GameObject.h"
-#include "engine/resources/ResourceManager.h"
-#include "core/io/package/LayerData.h"
-#include "core/io/package/MeshData.h"
-#include "core/userscripts/ScriptFactory.h"
-#include "core/utils/MemoryUtils.h"
-#include "core/utils/Ensure.h"
+
 #include <unordered_map>
+
+#include "core/utils/Ensure.h"
+#include "core/io/package/MeshData.h"
+#include "core/io/package/LayerData.h"
+#include "core/userscripts/ScriptFactory.h"
+#include "engine/resources/ResourceManager.h"
+#include "engine/scene/gameobject/GameObject.h"
+
+#include "SceneTreeLayerBase.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Scene);
 

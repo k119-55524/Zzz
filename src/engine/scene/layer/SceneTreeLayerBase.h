@@ -2,11 +2,14 @@
 
 #include <string>
 #include <memory>
-#include "core/utils/macros/MiscMacros.h"
+
 #include "engine/scene/layer/ILayer.h"
+#include "core/utils/macros/MiscMacros.h"
 #include "engine/scene/domain/IDomainFactory.h"
 #include "engine/scene/storage/ISpatialStorage.h"
 #include "engine/scene/storage/SceneTreeContainer.h"
+
+using namespace zzz::core;
 
 namespace zzz::engine
 {
@@ -39,8 +42,8 @@ namespace zzz::engine
 		void Update(float dt) override;
 		void ApplyHandoverBarrier() override;
 		void Populate(
-			const ::zzz::core::LayerData& layerData,
-			const ::zzz::core::ScriptFactory& scriptFactory) override;
+			const LayerData& layerData,
+			const ScriptFactory& scriptFactory) override;
 
 		[[nodiscard]] SceneTreeContainer& GetTreeContainer() noexcept { return m_TreeContainer; }
 		[[nodiscard]] const SceneTreeContainer& GetTreeContainer() const noexcept { return m_TreeContainer; }
@@ -53,14 +56,15 @@ namespace zzz::engine
 		virtual void OnUpdateDomains(float dt);
 		virtual void OnUpdateSpatial();
 
-		std::string                      m_Name;
-		bool                             m_IsVisible{ true };
+		std::string m_Name;
+		bool m_IsVisible;
 		std::shared_ptr<ResourceManager> m_ResourceManager;
 
-		std::unique_ptr<IDomainFactory>  m_DomainFactory;
+		std::unique_ptr<IDomainFactory> m_DomainFactory;
+		std::unique_ptr<IObjectDomain> m_ObjectDomain;
+		std::unique_ptr<IEntityDomain> m_EntityDomain;
+
 		std::unique_ptr<ISpatialStorage> m_SpatialStorage;
-		SceneTreeContainer               m_TreeContainer;
-		std::unique_ptr<IObjectDomain>   m_ObjectDomain;
-		std::unique_ptr<IEntityDomain>   m_EntityDomain;
+		SceneTreeContainer m_TreeContainer;
 	};
 }
