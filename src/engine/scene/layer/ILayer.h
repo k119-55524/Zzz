@@ -13,6 +13,7 @@ namespace zzz::core
 namespace zzz::engine
 {
 	class ResourceManager;
+	class IObjectDomain;
 
 	/**
 	 * @class ILayer
@@ -43,5 +44,9 @@ namespace zzz::engine
 		 * отдаёт данные слоя целиком, не занимаясь построчным разбором.
 		 */
 		virtual void Populate(const LayerData& layerData, const ScriptFactory& scriptFactory) = 0;
+
+		/// @brief Домен объектов слоя (GameObject / UI-элементы слоя).
+		[[nodiscard]] virtual IObjectDomain& GetObjectDomain() noexcept = 0;
+		[[nodiscard]] virtual const IObjectDomain& GetObjectDomain() const noexcept = 0;
 	};
 }

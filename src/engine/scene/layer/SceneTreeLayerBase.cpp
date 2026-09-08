@@ -43,9 +43,7 @@ namespace zzz::engine
 	void SceneTreeLayerBase::Update(float dt)
 	{
 		if (!m_IsVisible)
-		{
 			return;
-		}
 
 		OnUpdateDomains(dt);
 		OnUpdateSpatial();
@@ -54,9 +52,7 @@ namespace zzz::engine
 	void SceneTreeLayerBase::ApplyHandoverBarrier()
 	{
 		if (!m_IsVisible)
-		{
 			return;
-		}
 
 		m_TreeContainer.ApplyHandoverBarrier();
 	}

@@ -51,8 +51,13 @@ namespace zzz::engine
 		[[nodiscard]] const SceneTreeContainer& GetTreeContainer() const noexcept { return m_TreeContainer; }
 
 		[[nodiscard]] ISpatialStorage& GetSpatialStorage() noexcept { return *m_SpatialStorage; }
-		[[nodiscard]] IObjectDomain& GetObjectDomain() noexcept { return *m_ObjectDomain; }
+		[[nodiscard]] const ISpatialStorage& GetSpatialStorage() const noexcept { return *m_SpatialStorage; }
+
+		[[nodiscard]] IObjectDomain& GetObjectDomain() noexcept override { return *m_ObjectDomain; }
+		[[nodiscard]] const IObjectDomain& GetObjectDomain() const noexcept override { return *m_ObjectDomain; }
+
 		[[nodiscard]] IEntityDomain& GetEntityDomain() noexcept { return *m_EntityDomain; }
+		[[nodiscard]] const IEntityDomain& GetEntityDomain() const noexcept { return *m_EntityDomain; }
 
 	protected:
 		virtual void OnUpdateDomains(float dt);

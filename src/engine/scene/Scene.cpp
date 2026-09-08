@@ -96,8 +96,11 @@ namespace zzz::engine
 				break;
 			}
 			case eLayerType::LayerMVVM:
-				m_Layers.push_back(safe_make_unique<LayerMVVM>(layerData.GetName()));
+			{
+				auto objectDomain = domainFactory.CreateObjectDomain();
+				m_Layers.push_back(safe_make_unique<LayerMVVM>(layerData.GetName(), std::move(objectDomain)));
 				break;
+			}
 			default:
 				THROW_RUNTIME("Неизвестный eLayerType ({}) у слоя '{}' в сцене '{}'",
 					ToString(layerData.GetType()), layerData.GetName(), m_Name);
