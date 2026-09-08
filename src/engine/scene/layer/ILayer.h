@@ -12,8 +12,6 @@ namespace zzz::core
 
 namespace zzz::engine
 {
-	using ::zzz::core::eLayerType;
-
 	class ResourceManager;
 
 	/**
@@ -44,8 +42,6 @@ namespace zzz::engine
 		 * Слой сам обходит layerData.GetObjects() и разбирает каждый объект - Scene ему просто
 		 * отдаёт данные слоя целиком, не занимаясь построчным разбором.
 		 */
-		virtual void Populate(
-			const ::zzz::core::LayerData& layerData,
-			const ::zzz::core::ScriptFactory& scriptFactory) = 0;
+		virtual void Populate(const LayerData& layerData, const ScriptFactory& scriptFactory) = 0;
 	};
 }
