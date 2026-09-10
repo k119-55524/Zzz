@@ -1,5 +1,6 @@
 #include "core/utils/Ensure.h"
 #include "engine/scene/gameobject/GameObject.h"
+#include "engine/scene/storage/SceneTreeContainer.h"
 #include "core/userscripts/base_script/Script.h"
 #include <algorithm>
 
@@ -14,25 +15,25 @@ namespace zzz::engine
 	{
 	}
 
-	uint32_t GameObject::GetSpatialHandle() const noexcept
+	uint32_t GameObject::GetSpatialHandle() const
 	{
 		ensure(m_SceneTree != nullptr, "GameObject::GetSpatialHandle: объект не привязан к сцене");
 		return m_SceneTree->GetSpatialHandle(m_NodeHandle);
 	}
 
-	void GameObject::SetSpatialHandle(uint32_t handle) noexcept
+	void GameObject::SetSpatialHandle(uint32_t handle)
 	{
 		ensure(m_SceneTree != nullptr, "GameObject::SetSpatialHandle: объект не привязан к сцене");
 		m_SceneTree->SetSpatialHandle(m_NodeHandle, handle);
 	}
 
-	bool GameObject::IsActive() const noexcept
+	bool GameObject::IsActive() const
 	{
 		ensure(m_SceneTree != nullptr, "GameObject::IsActive: объект не привязан к сцене");
 		return m_SceneTree->IsActive(m_NodeHandle);
 	}
 
-	void GameObject::SetActive(bool active) noexcept
+	void GameObject::SetActive(bool active)
 	{
 		ensure(m_SceneTree != nullptr, "GameObject::SetActive: объект не привязан к сцене");
 		m_SceneTree->SetActive(m_NodeHandle, active);
@@ -86,7 +87,7 @@ namespace zzz::engine
 		return m_SceneTree->GetWorldMatrix(m_NodeHandle);
 	}
 
-	GameObject* GameObject::GetParent() const noexcept
+	GameObject* GameObject::GetParent() const
 	{
 		ensure(m_SceneTree != nullptr, "GameObject::GetParent: объект не привязан к сцене");
 		const NodeHandle parentHandle = m_SceneTree->GetParent(m_NodeHandle);
@@ -97,7 +98,7 @@ namespace zzz::engine
 		return nullptr;
 	}
 
-	void GameObject::SetParent(GameObject* newParent, bool keepWorldTransform) noexcept
+	void GameObject::SetParent(GameObject* newParent, bool keepWorldTransform)
 	{
 		ensure(m_SceneTree != nullptr, "GameObject::SetParent: объект не привязан к сцене");
 		const NodeHandle parentHandle = (newParent != nullptr) ? newParent->GetNodeHandle() : NodeHandle{};

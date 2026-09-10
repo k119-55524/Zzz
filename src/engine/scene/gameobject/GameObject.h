@@ -16,9 +16,11 @@ using namespace zzz::math;
 
 namespace zzz::engine
 {
+	class SceneTreeContainer;
+
 	/**
 	 * @class GameObject
-	 * @brief Легковесный фасад сущности сцены, объединяющий ISceneTreeAccessor, ресурсы и скрипты.
+	 * @brief Легковесный фасад сущности сцены, объединяющий SceneTreeContainer, ресурсы и скрипты.
 	 */
 	class GameObject final
 	{
@@ -29,14 +31,14 @@ namespace zzz::engine
 		~GameObject() = default;
 
 		// --- Привязка к контейнеру сцены ---
-		void BindSceneTree(ISceneTreeAccessor* tree, NodeHandle handle) noexcept
+		void BindSceneTree(SceneTreeContainer* tree, NodeHandle handle) noexcept
 		{
 			m_SceneTree = tree;
 			m_NodeHandle = handle;
 		}
 
 		[[nodiscard]] NodeHandle GetNodeHandle() const noexcept { return m_NodeHandle; }
-		[[nodiscard]] ISceneTreeAccessor* GetSceneTree() const noexcept { return m_SceneTree; }
+		[[nodiscard]] SceneTreeContainer* GetSceneTree() const noexcept { return m_SceneTree; }
 
 		// --- Идентификация ---
 		[[nodiscard]] const Guid& GetGuid() const noexcept { return m_Guid; }
@@ -44,12 +46,12 @@ namespace zzz::engine
 		void SetName(std::string name) { m_Name = std::move(name); }
 
 		// --- Хэндл в пространственном хранилище ---
-		[[nodiscard]] uint32_t GetSpatialHandle() const noexcept;
-		void SetSpatialHandle(uint32_t handle) noexcept;
+		[[nodiscard]] uint32_t GetSpatialHandle() const;
+		void SetSpatialHandle(uint32_t handle);
 
 		// --- Активность и жизненный цикл в кадре ---
-		[[nodiscard]] bool IsActive() const noexcept;
-		void SetActive(bool active) noexcept;
+		[[nodiscard]] bool IsActive() const;
+		void SetActive(bool active);
 
 		// --- Пространственные трансформации (делегирование в ISceneTreeAccessor) ---
 		void SetLocalPosition(const Vec3<zF32>& pos);
@@ -65,8 +67,8 @@ namespace zzz::engine
 		[[nodiscard]] const Mat4<zF32>& GetWorldMatrix() const;
 
 		// --- Иерархия сцены ---
-		[[nodiscard]] GameObject* GetParent() const noexcept;
-		void SetParent(GameObject* newParent, bool keepWorldTransform = true) noexcept;
+		[[nodiscard]] GameObject* GetParent() const;
+		void SetParent(GameObject* newParent, bool keepWorldTransform = true);
 
 		// --- Слоты графических ресурсов (для отрисовки меша и материала) ---
 		[[nodiscard]] const Guid& GetMeshGuid() const noexcept { return m_MeshGuid; }
@@ -86,7 +88,7 @@ namespace zzz::engine
 	private:
 		Guid m_Guid;
 
-		ISceneTreeAccessor* m_SceneTree{ nullptr };
+		SceneTreeContainer* m_SceneTree{ nullptr };
 		NodeHandle          m_NodeHandle{};
 
 		std::string         m_Name;

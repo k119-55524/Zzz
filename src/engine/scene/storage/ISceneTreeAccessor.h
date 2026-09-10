@@ -69,41 +69,4 @@ namespace zzz::engine
 		bool          isAlive{ true };
 		bool          isActive{ true };
 	};
-
-	/**
-	 * @class ISceneTreeAccessor
-	 * @brief Абстрактный скрытый интерфейс доступа GameObject и подсистем к плоскому SoA-хранилищу сцены.
-	 */
-	class ISceneTreeAccessor
-	{
-	public:
-		virtual ~ISceneTreeAccessor() = default;
-
-		// --- Пространственные координаты (Local) ---
-		virtual void SetLocalPosition(NodeHandle handle, const Vec3<zF32>& pos) = 0;
-		[[nodiscard]] virtual Vec3<zF32> GetLocalPosition(NodeHandle handle) const = 0;
-
-		virtual void SetLocalRotation(NodeHandle handle, const Quat<zF32>& rot) = 0;
-		[[nodiscard]] virtual Quat<zF32> GetLocalRotation(NodeHandle handle) const = 0;
-
-		virtual void SetLocalScale(NodeHandle handle, const Vec3<zF32>& scale) = 0;
-		[[nodiscard]] virtual Vec3<zF32> GetLocalScale(NodeHandle handle) const = 0;
-
-		// --- Матрицы (Local / World) ---
-		[[nodiscard]] virtual const Mat4<zF32>& GetLocalMatrix(NodeHandle handle) const = 0;
-		[[nodiscard]] virtual const Mat4<zF32>& GetWorldMatrix(NodeHandle handle) const = 0;
-
-		// --- Топология и иерархия ---
-		virtual void SetParent(NodeHandle child, NodeHandle parent, bool keepWorldTransform = true) = 0;
-		[[nodiscard]] virtual NodeHandle GetParent(NodeHandle handle) const = 0;
-		[[nodiscard]] virtual GameObject* GetNodeOwner(NodeHandle handle) const = 0;
-		virtual void MarkDirty(NodeHandle handle) = 0;
-
-		// --- Свойства узла (делегирование из GameObject) ---
-		virtual void SetActive(NodeHandle handle, bool active) = 0;
-		[[nodiscard]] virtual bool IsActive(NodeHandle handle) const = 0;
-
-		virtual void SetSpatialHandle(NodeHandle handle, SpatialHandle spHandle) = 0;
-		[[nodiscard]] virtual SpatialHandle GetSpatialHandle(NodeHandle handle) const noexcept = 0;
-	};
 }

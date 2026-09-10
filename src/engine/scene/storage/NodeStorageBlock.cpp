@@ -24,18 +24,7 @@ namespace zzz::engine
 			metadata.reserve(requiredCapacity);
 		}
 
-		if (dirtyTracker.GetCapacity() < requiredCapacity)
-		{
-			dirtyTracker.GrowCapacity(static_cast<uint32_t>(requiredCapacity));
-		}
-	}
-
-	void NodeStorageBlock::MarkDirty(uint32_t nodeIndex) noexcept
-	{
-		if (nodeIndex < metadata.size())
-		{
-			dirtyTracker.Set(nodeIndex);
-		}
+		dirtyTracker.GrowCapacity(static_cast<uint32_t>(requiredCapacity));
 	}
 
 	void NodeStorageBlock::ResolveTransforms()

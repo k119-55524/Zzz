@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <cstdint>
+#include "core/utils/Ensure.h"
 #include "core/utils/macros/MiscMacros.h"
 #include "core/containers/BitTreeTracker.h"
 #include "engine/scene/storage/ISceneTreeAccessor.h"
@@ -15,8 +16,8 @@ namespace zzz::engine
 	 * @class NodeStorageBlock
 	 * @brief Плоский SoA-блок (Structure of Arrays) данных узлов сцены.
 	 *
-	 * @details Хранит параллельные непрерывные векторы топологии, локальных и мировых трансформаций,
-	 * метаданных и 64-арный трекер изменений.
+	 * @details Хранит параллельные непрерывные векторы топологии, локальных TRS,
+	 * локальных и мировых матриц, метаданных узлов и битовое дерево изменений (BitTreeTracker).
 	 */
 	class NodeStorageBlock final
 	{
@@ -34,7 +35,11 @@ namespace zzz::engine
 		Z_NO_COPY_MOVE(NodeStorageBlock);
 
 		void EnsureCapacity(size_t requiredCapacity);
-		void MarkDirty(uint32_t nodeIndex) noexcept;
+		inline void MarkDirty(uint32_t nodeIndex)
+		{
+			ensure(nodeIndex < metadata.size(), "NodeStorageBlock::MarkDirty: индекс узла выходит за пределы metadata");
+			dirtyTracker.Set(nodeIndex);
+		}
 
 		/// @brief Пакетный расчёт локальных и мировых матриц по дереву.
 		/// @details Обходит изменившиеся узлы из dirtyTracker. Если узел dirty, его localMatrix
