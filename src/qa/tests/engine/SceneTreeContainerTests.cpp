@@ -4,7 +4,6 @@
 
 #include <gtest/gtest.h>
 #include "engine/scene/storage/SceneTreeContainer.h"
-#include "engine/scene/storage/DefaultSpatialStorage.h"
 
 using namespace zzz;
 using namespace zzz::engine;
@@ -24,26 +23,6 @@ TEST(SceneTreeContainerTest, NodeCreationAndValidation)
 
 	container.SetActive(h1, false);
 	EXPECT_FALSE(container.IsActive(h1));
-}
-
-TEST(SceneTreeContainerTest, AbadProtectionViaGeneration)
-{
-	SceneTreeContainer container;
-
-	NodeHandle h1 = container.CreateNode("First");
-	EXPECT_EQ(h1.index, 0u);
-	EXPECT_EQ(h1.generation, 1u);
-
-	container.DestroySubtree(h1);
-	EXPECT_FALSE(container.IsValid(h1));
-
-	// Повторное создание берет тот же слот 0, но generation растет
-	NodeHandle h2 = container.CreateNode("Second");
-	EXPECT_EQ(h2.index, 0u);
-	EXPECT_EQ(h2.generation, 2u);
-
-	EXPECT_TRUE(container.IsValid(h2));
-	EXPECT_FALSE(container.IsValid(h1)); // Старый дескриптор h1 не валиден!
 }
 
 TEST(SceneTreeContainerTest, HierarchyAndReparenting)

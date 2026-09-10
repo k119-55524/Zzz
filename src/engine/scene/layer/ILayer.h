@@ -42,9 +42,6 @@ namespace zzz::engine
 
 		virtual void Update(float dt) = 0;
 
-		/// @brief Барьер сдачи кадра: передача измененных данных кадра в буфер рендера.
-		virtual void ApplyHandoverBarrier() {}
-
 		/**
 		 * @brief Наполнить слой целиком из его LayerData (имя, тип уже разрешены снаружи).
 		 * Слой сам обходит layerData.GetObjects() и разбирает каждый объект - Scene ему просто

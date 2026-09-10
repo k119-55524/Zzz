@@ -19,6 +19,7 @@ namespace zzz::engine
 		{
 			topology.reserve(requiredCapacity);
 			localTransforms.reserve(requiredCapacity);
+			localMatrices.reserve(requiredCapacity);
 			worldMatrices.reserve(requiredCapacity);
 			metadata.reserve(requiredCapacity);
 		}
@@ -33,67 +34,84 @@ namespace zzz::engine
 	{
 		if (nodeIndex < metadata.size())
 		{
-			metadata[nodeIndex].isDirty = true;
 			dirtyTracker.Set(nodeIndex);
 		}
 	}
 
 	void NodeStorageBlock::ResolveTransforms()
 	{
-		const size_t count = topology.size();
-		if (count == 0)
+		const auto dirtyIndices = dirtyTracker.GetDirtyIndices();
+		if (dirtyIndices.empty())
 		{
 			return;
 		}
 
-		const math::Mat4<zF32> identity = math::Mat4<zF32>::Identity();
-
-		// Итерируемся по корням дерева (у кого parentIndex == 0xFFFFFFFF)
-		for (uint32_t i = 0; i < static_cast<uint32_t>(count); ++i)
+		// TODO: Подумать, как при обходе dirty битовой маски исключить повторный пересчёт матриц
+		// (если предок уже каскадно обновил поддерево детей, потомки из dirtyIndices не должны пересчитываться повторно).
+		for (const uint32_t nodeIndex : dirtyIndices)
 		{
-			if (metadata[i].isAlive && topology[i].parentIndex == 0xFFFFFFFF)
+			if (nodeIndex >= metadata.size())
 			{
-				ResolveSubtree(i, false, identity);
+				continue;
+			}
+
+			const auto& meta = metadata[nodeIndex];
+			if (!meta.isAlive || !meta.isActive)
+			{
+				continue;
+			}
+
+			const auto& local = localTransforms[nodeIndex];
+			localMatrices[nodeIndex] = Mat4<zF32>::Scaling(local.scale) * local.rotation.ToMat4() * Mat4<zF32>::Translation(local.position);
+
+			const uint32_t parentIdx = topology[nodeIndex].parentIndex;
+			if (parentIdx != 0xFFFFFFFF && parentIdx < metadata.size())
+			{
+				worldMatrices[nodeIndex] = localMatrices[nodeIndex] * worldMatrices[parentIdx];
+			}
+			else
+			{
+				worldMatrices[nodeIndex] = localMatrices[nodeIndex];
+			}
+
+			// Каскадно обновляем детей (используя готовую localMatrices[child], если сам ребёнок не dirty)
+			const uint32_t firstChild = topology[nodeIndex].firstChildIndex;
+			if (firstChild != 0xFFFFFFFF && firstChild < metadata.size())
+			{
+				const auto& currentWorld = worldMatrices[nodeIndex];
+				uint32_t childIndex = firstChild;
+				while (childIndex != 0xFFFFFFFF && childIndex < metadata.size())
+				{
+					ResolveSubtree(childIndex, currentWorld);
+					childIndex = topology[childIndex].nextSiblingIndex;
+				}
 			}
 		}
 	}
 
-	void NodeStorageBlock::ResolveSubtree(uint32_t nodeIndex, bool parentDirty, const math::Mat4<zF32>& parentWorld)
+	void NodeStorageBlock::ResolveSubtree(uint32_t nodeIndex, const Mat4<zF32>& parentWorld)
 	{
-		auto& meta = metadata[nodeIndex];
+		const auto& meta = metadata[nodeIndex];
 		if (!meta.isAlive || !meta.isActive)
 		{
 			return;
 		}
 
-		const bool isSelfDirty = meta.isDirty;
-		const bool needRecalc = parentDirty || isSelfDirty;
-
-		if (needRecalc)
+		// Если сам ребёнок был помечен как dirty, его TRS изменился — обновляем localMatrix
+		if (dirtyTracker.IsSet(nodeIndex))
 		{
 			const auto& local = localTransforms[nodeIndex];
-			const auto localMatrix = math::Mat4<zF32>::Scaling(local.scale) * local.rotation.ToMat4() * math::Mat4<zF32>::Translation(local.position);
-
-			if (topology[nodeIndex].parentIndex != 0xFFFFFFFF)
-			{
-				worldMatrices[nodeIndex] = localMatrix * parentWorld;
-			}
-			else
-			{
-				worldMatrices[nodeIndex] = localMatrix;
-			}
-
-			meta.isDirty = false;
-			dirtyTracker.Set(nodeIndex);
+			localMatrices[nodeIndex] = Mat4<zF32>::Scaling(local.scale) * local.rotation.ToMat4() * Mat4<zF32>::Translation(local.position);
 		}
 
-		const auto& currentWorld = worldMatrices[nodeIndex];
+		// Вычисляем мировую матрицу ребенка: (его локальная * родительский мир)
+		worldMatrices[nodeIndex] = localMatrices[nodeIndex] * parentWorld;
 
-		// Рекурсивно (или по сиблингам) обходим всех детей
+		const auto& currentWorld = worldMatrices[nodeIndex];
 		uint32_t childIndex = topology[nodeIndex].firstChildIndex;
 		while (childIndex != 0xFFFFFFFF && childIndex < metadata.size())
 		{
-			ResolveSubtree(childIndex, needRecalc, currentWorld);
+			ResolveSubtree(childIndex, currentWorld);
 			childIndex = topology[childIndex].nextSiblingIndex;
 		}
 	}

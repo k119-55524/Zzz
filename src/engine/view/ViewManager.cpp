@@ -263,26 +263,6 @@ void ViewManager::Update(const Time& time)
 	// 3. Ждём завершения рендера кадра N-1 и подготовки кадра N
 	m_ThreadsUpdate.Join();
 
-	// 4. Handover Barrier: синхронизация измененного состояния сцен (Secondary -> Primary)
-	if (auto scene = m_PrimaryView->GetActiveScene())
-	{
-		scene->ApplyHandoverBarrier();
-	}
-	for (const auto& view : m_ChildViews)
-	{
-		if (auto scene = view->GetActiveScene())
-		{
-			scene->ApplyHandoverBarrier();
-		}
-	}
-	for (const auto& view : m_IndependentViews)
-	{
-		if (auto scene = view->GetActiveScene())
-		{
-			scene->ApplyHandoverBarrier();
-		}
-	}
-
 	// 5. Пост-рендер (переключение слотов и показ)
 	m_PrimaryView->PostRender();
 	for (const auto& view : m_ChildViews)

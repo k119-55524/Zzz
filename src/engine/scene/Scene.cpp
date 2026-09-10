@@ -127,17 +127,6 @@ namespace zzz::engine
 		}
 	}
 
-	void Scene::ApplyHandoverBarrier()
-	{
-		for (const auto& layer : m_Layers)
-		{
-			if (layer != nullptr)
-			{
-				layer->ApplyHandoverBarrier();
-			}
-		}
-	}
-
 	void Scene::InvokeStart()
 	{
 		m_EventBus.InvokeStart();

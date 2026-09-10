@@ -1,6 +1,5 @@
 #pragma once
 
-#include <string>
 #include <cstdint>
 
 #include "math/quat/Quat.h"
@@ -58,7 +57,6 @@ namespace zzz::engine
 
 	struct NodeMetadata
 	{
-		std::string   name;
 		SceneNodeType payloadType{ SceneNodeType::Empty };
 		union
 		{
@@ -70,7 +68,6 @@ namespace zzz::engine
 		uint32_t      generation{ 1 };
 		bool          isAlive{ true };
 		bool          isActive{ true };
-		bool          isDirty{ false };
 	};
 
 	/**
@@ -84,15 +81,16 @@ namespace zzz::engine
 
 		// --- Пространственные координаты (Local) ---
 		virtual void SetLocalPosition(NodeHandle handle, const Vec3<zF32>& pos) = 0;
-		[[nodiscard]] virtual const Vec3<zF32>& GetLocalPosition(NodeHandle handle) const = 0;
+		[[nodiscard]] virtual Vec3<zF32> GetLocalPosition(NodeHandle handle) const = 0;
 
 		virtual void SetLocalRotation(NodeHandle handle, const Quat<zF32>& rot) = 0;
-		[[nodiscard]] virtual const Quat<zF32>& GetLocalRotation(NodeHandle handle) const = 0;
+		[[nodiscard]] virtual Quat<zF32> GetLocalRotation(NodeHandle handle) const = 0;
 
 		virtual void SetLocalScale(NodeHandle handle, const Vec3<zF32>& scale) = 0;
-		[[nodiscard]] virtual const Vec3<zF32>& GetLocalScale(NodeHandle handle) const = 0;
+		[[nodiscard]] virtual Vec3<zF32> GetLocalScale(NodeHandle handle) const = 0;
 
-		// --- Мировая матрица (World) ---
+		// --- Матрицы (Local / World) ---
+		[[nodiscard]] virtual const Mat4<zF32>& GetLocalMatrix(NodeHandle handle) const = 0;
 		[[nodiscard]] virtual const Mat4<zF32>& GetWorldMatrix(NodeHandle handle) const = 0;
 
 		// --- Топология и иерархия ---
@@ -104,9 +102,6 @@ namespace zzz::engine
 		// --- Свойства узла (делегирование из GameObject) ---
 		virtual void SetActive(NodeHandle handle, bool active) = 0;
 		[[nodiscard]] virtual bool IsActive(NodeHandle handle) const = 0;
-
-		virtual void SetName(NodeHandle handle, std::string name) = 0;
-		[[nodiscard]] virtual const std::string& GetName(NodeHandle handle) const = 0;
 
 		virtual void SetSpatialHandle(NodeHandle handle, SpatialHandle spHandle) = 0;
 		[[nodiscard]] virtual SpatialHandle GetSpatialHandle(NodeHandle handle) const noexcept = 0;

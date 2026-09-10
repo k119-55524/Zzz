@@ -49,14 +49,6 @@ namespace zzz::engine
 		OnUpdateSpatial();
 	}
 
-	void GameLayer::ApplyHandoverBarrier()
-	{
-		if (!m_IsVisible)
-			return;
-
-		m_TreeContainer.ApplyHandoverBarrier();
-	}
-
 	void GameLayer::OnUpdateDomains(float dt)
 	{
 		m_ObjectDomain->Update(dt);
@@ -118,13 +110,13 @@ namespace zzz::engine
 	NodeHandle GameLayer::PopulateEntity(const GameObjectData& objData)
 	{
 		m_EntityDomain->CreateEntity(objData.GetGuid(), objData.GetName());
-		return m_TreeContainer.CreateNode(objData.GetName(), nullptr);
+		return m_TreeContainer.CreateNode(nullptr);
 	}
 
 	NodeHandle GameLayer::PopulateGameObject(const GameObjectData& objData, const ScriptFactory& scriptFactory)
 	{
 		GameObject* go = m_ObjectDomain->CreateObject(objData.GetGuid(), objData.GetName());
-		NodeHandle handle = m_TreeContainer.CreateNode(objData.GetName(), go);
+		NodeHandle handle = m_TreeContainer.CreateNode(go);
 
 		go->SetMeshGuid(objData.GetMeshGuid());
 		go->SetMaterialGuid(objData.GetMaterialGuid());

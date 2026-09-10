@@ -6,6 +6,9 @@
 #include "core/containers/BitTreeTracker.h"
 #include "engine/scene/storage/ISceneTreeAccessor.h"
 
+using namespace zzz::core;
+using namespace zzz::math;
+
 namespace zzz::engine
 {
 	/**
@@ -18,11 +21,12 @@ namespace zzz::engine
 	class NodeStorageBlock final
 	{
 	public:
-		std::vector<NodeTopology>         topology;
-		std::vector<LocalTransform>       localTransforms;
-		std::vector<math::Mat4<zF32>>     worldMatrices;   // 64 байта = 1 кэш-линия
-		std::vector<NodeMetadata>         metadata;
-		core::BitTreeTracker              dirtyTracker;
+		std::vector<NodeTopology>   topology;
+		std::vector<LocalTransform> localTransforms;
+		std::vector<Mat4<zF32>>     localMatrices;
+		std::vector<Mat4<zF32>>     worldMatrices;
+		std::vector<NodeMetadata>   metadata;
+		BitTreeTracker              dirtyTracker;
 
 		explicit NodeStorageBlock(uint32_t initialCapacity = 1);
 		~NodeStorageBlock() = default;
@@ -32,12 +36,16 @@ namespace zzz::engine
 		void EnsureCapacity(size_t requiredCapacity);
 		void MarkDirty(uint32_t nodeIndex) noexcept;
 
-		/// @brief Пакетный расчёт мировых матриц (parent-before-child).
-		/// @details Выполняет top-down обход по иерархии топологии от корней к листьям,
-		/// каскадно распространяя пересчёт мировых матриц от изменившихся предков к потомкам.
+		/// @brief Пакетный расчёт локальных и мировых матриц по дереву.
+		/// @details Обходит изменившиеся узлы из dirtyTracker. Если узел dirty, его localMatrix
+		/// пересчитывается из TRS, затем обновляется worldMatrix и каскадно спускается детям.
+		/// Для чистых детей переиспользуется их готовая localMatrix.
+		/// @todo Подумать, как при обходе dirty битовой маски исключить повторный пересчёт матриц
+		/// (например, если родитель уже обновил всё поддерево детей каскадом, а ребёнок тоже был в dirtyTracker,
+		/// либо через топологическую сортировку/глубину, либо снимая dirty-бит у посещённых потомков).
 		void ResolveTransforms();
 
 	private:
-		void ResolveSubtree(uint32_t nodeIndex, bool parentDirty, const math::Mat4<zF32>& parentWorld);
+		void ResolveSubtree(uint32_t nodeIndex, const Mat4<zF32>& parentWorld);
 	};
 }

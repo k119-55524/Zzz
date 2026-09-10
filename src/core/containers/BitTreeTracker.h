@@ -4,6 +4,7 @@
 #include <array>
 #include <vector>
 #include "math/utils/Types.h"
+#include "core/utils/Ensure.h"
 
 namespace zzz::core
 {
@@ -56,6 +57,17 @@ namespace zzz::core
 		/// @brief Установка бита по индексу (помечает узел и каскадно поднимает 1 до корня).
 		/// @warning index < Capacity гарантируется вызывающей стороной (доверенный контракт, аналогично GUID из Правила 15): ensure ловит нарушение только в Debug/Dev, в Release проверка - zero-overhead no-op, защиты от выхода за границы m_Words нет.
 		void Set(zU32 index) noexcept;
+
+		/// @brief Проверяет, выставлен ли бит по индексу на листовом уровне.
+		[[nodiscard]] inline bool IsSet(zU32 index) const noexcept
+		{
+			ensure(index < m_Capacity, "BitTreeTracker::IsSet: index must be less than capacity");
+
+			const size_t wordGlobal = GetLevelOffset(0) + (static_cast<size_t>(index) >> 6);
+			const zU64 bitMask = 1ULL << (static_cast<size_t>(index) & 63ULL);
+
+			return (m_Words[wordGlobal] & bitMask) != 0ULL;
+		}
 
 		/// @brief Возвращает span со всеми собранными грязными индексами текущего кадра (0 аллокаций). Безопасно вызывать повторно между вызовами Prepare() - результат не дублируется.
 		/// @warning Возвращаемый span указывает на внутренний буфер трекера и валиден строго до следующего вызова Prepare() в текущем потоке. Порядок индексов - строго по возрастанию слотов SoA (не топологический).

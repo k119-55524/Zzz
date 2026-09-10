@@ -47,7 +47,6 @@ namespace zzz::engine
 
 		void BeginFrame();
 		void Update(const Time& time);
-		void ApplyHandoverBarrier();
 		void InvokeStart();
 		void InvokeDestroy();
 

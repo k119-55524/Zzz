@@ -25,8 +25,8 @@ namespace zzz::engine
 	 * @class GameLayer
 	 * @brief Слой игрового мира сцены (2D/3D), обладающий иерархическим деревом и пространственным индексом.
 	 *
-	 * @details Инкапсулирует двухбуферный SceneTreeContainer, ISpatialStorage, IObjectDomain и IEntityDomain.
-	 * Реализует общий жизненный цикл кадра (BeginFrame, Update, ApplyHandoverBarrier) и двухпроходный Populate.
+	 * @details Инкапсулирует SceneTreeContainer, ISpatialStorage, IObjectDomain и IEntityDomain.
+	 * Реализует общий жизненный цикл кадра (BeginFrame, Update) и двухпроходный Populate.
 	 */
 	class GameLayer final : public ILayer
 	{
@@ -44,7 +44,6 @@ namespace zzz::engine
 
 		void BeginFrame() override;
 		void Update(float dt) override;
-		void ApplyHandoverBarrier() override;
 		void Populate(
 			const LayerData& layerData,
 			const ScriptFactory& scriptFactory) override;

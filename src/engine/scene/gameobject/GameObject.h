@@ -40,8 +40,8 @@ namespace zzz::engine
 
 		// --- Идентификация ---
 		[[nodiscard]] const Guid& GetGuid() const noexcept { return m_Guid; }
-		[[nodiscard]] const std::string& GetName() const noexcept;
-		void SetName(std::string name);
+		[[nodiscard]] const std::string& GetName() const noexcept { return m_Name; }
+		void SetName(std::string name) { m_Name = std::move(name); }
 
 		// --- Хэндл в пространственном хранилище ---
 		[[nodiscard]] uint32_t GetSpatialHandle() const noexcept;
@@ -53,14 +53,15 @@ namespace zzz::engine
 
 		// --- Пространственные трансформации (делегирование в ISceneTreeAccessor) ---
 		void SetLocalPosition(const Vec3<zF32>& pos);
-		[[nodiscard]] const Vec3<zF32>& GetLocalPosition() const;
+		[[nodiscard]] Vec3<zF32> GetLocalPosition() const;
 
 		void SetLocalRotation(const Quat<zF32>& rot);
-		[[nodiscard]] const Quat<zF32>& GetLocalRotation() const;
+		[[nodiscard]] Quat<zF32> GetLocalRotation() const;
 
 		void SetLocalScale(const Vec3<zF32>& scale);
-		[[nodiscard]] const Vec3<zF32>& GetLocalScale() const;
+		[[nodiscard]] Vec3<zF32> GetLocalScale() const;
 
+		[[nodiscard]] const Mat4<zF32>& GetLocalMatrix() const;
 		[[nodiscard]] const Mat4<zF32>& GetWorldMatrix() const;
 
 		// --- Иерархия сцены ---
@@ -88,7 +89,7 @@ namespace zzz::engine
 		ISceneTreeAccessor* m_SceneTree{ nullptr };
 		NodeHandle          m_NodeHandle{};
 
-		std::string         m_FallbackName;
+		std::string         m_Name;
 
 		Guid m_MeshGuid;
 		Guid m_MaterialGuid;
