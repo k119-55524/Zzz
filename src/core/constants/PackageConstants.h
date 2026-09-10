@@ -68,8 +68,6 @@ namespace zzz::core
 #pragma endregion // Data Package file constants
 
 #pragma region Scene and GameObject JSON constants
-	inline constexpr std::string_view c_FieldDomain       = "domain";
-	inline constexpr std::string_view c_DomainObject      = "Object";
-	inline constexpr std::string_view c_DomainEntity      = "Entity";
+	inline constexpr std::string_view c_FieldIsEntity     = "isEntity";
 #pragma endregion // Scene and GameObject JSON constants
 }

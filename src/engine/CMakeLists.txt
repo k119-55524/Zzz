@@ -105,10 +105,9 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "scene/domain/ILayerDomain.h"
         "scene/domain/IObjectDomain.h"
         "scene/domain/IEntityDomain.h"
-        "scene/domain/IDomainFactory.h"
         "scene/domain/ObjectDomain.h" "scene/domain/ObjectDomain.cpp"
         "scene/domain/EntityDomain.h" "scene/domain/EntityDomain.cpp"
-        "scene/domain/DefaultDomainFactory.h" "scene/domain/DefaultDomainFactory.cpp"
+        "scene/domain/DomainFactory.h" "scene/domain/DomainFactory.cpp"
 
         # Storage & Scene Tree (SoA-модель)
         "scene/storage/ISceneTreeAccessor.h"
@@ -117,7 +116,6 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
 
         # GameObject (Фасад над SceneTreeContainer)
         "scene/gameobject/GameObject.h" "scene/gameobject/GameObject.cpp"
-        "scene/gameobject/ObjectWorld.h" "scene/gameobject/ObjectWorld.cpp"
 
         # Entity (ECS-модель)
         "scene/entity/EntityWorld.h" "scene/entity/EntityWorld.cpp"
@@ -128,9 +126,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
 
         # Layers (Слои сцены, Пункт 11.4)
         "scene/layer/ILayer.h"
-        "scene/layer/SpatialLayer.h" "scene/layer/SpatialLayer.cpp"
-        "scene/layer/Layer3D.h" "scene/layer/Layer3D.cpp"
-        "scene/layer/Layer2D.h" "scene/layer/Layer2D.cpp"
+        "scene/layer/GameLayer.h" "scene/layer/GameLayer.cpp"
         "scene/layer/LayerMVVM.h" "scene/layer/LayerMVVM.cpp"
         "scene/Scene.h" "scene/Scene.cpp"
         "scene/SceneManager.h" "scene/SceneManager.cpp")

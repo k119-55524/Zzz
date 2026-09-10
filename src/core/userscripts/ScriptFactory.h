@@ -10,9 +10,14 @@
 #include "core/utils/Macroses.h"
 #include "ScriptStorage.h"
 
-namespace zzz
+namespace zzz::engine
 {
 	class GameObject;
+}
+
+namespace zzz
+{
+	using GameObject = ::zzz::engine::GameObject;
 }
 
 namespace zzz::core

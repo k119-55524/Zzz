@@ -11,8 +11,6 @@ namespace zzz::engine
 		, m_MVVMDomain(std::move(mvvmDomain))
 	{
 		ensure(m_MVVMDomain != nullptr, "MVVMDomain не должен быть null в LayerMVVM.");
-		ensure(m_MVVMDomain->GetDomainType() == ::zzz::core::eObjectDomain::MVVM,
-			"LayerMVVM требует домен типа eObjectDomain::MVVM.");
 	}
 
 	void LayerMVVM::Update(float /*dt*/)

@@ -22,25 +22,25 @@ namespace zzz::engine
 	class ResourceManager;
 
 	/**
-	 * @class SpatialLayer
-	 * @brief Базовый класс для слоёв сцены, обладающих иерархическим деревом и пространственным индексом.
+	 * @class GameLayer
+	 * @brief Слой игрового мира сцены (2D/3D), обладающий иерархическим деревом и пространственным индексом.
 	 *
 	 * @details Инкапсулирует двухбуферный SceneTreeContainer, ISpatialStorage, IObjectDomain и IEntityDomain.
 	 * Реализует общий жизненный цикл кадра (BeginFrame, Update, ApplyHandoverBarrier) и двухпроходный Populate.
 	 */
-	class SpatialLayer : public ILayer
+	class GameLayer final : public ILayer
 	{
 	public:
-		SpatialLayer(
+		GameLayer(
 			std::string name,
 			eLayerType type,
 			std::shared_ptr<ResourceManager> resourceManager,
 			std::unique_ptr<IObjectDomain> objectDomain,
 			std::unique_ptr<IEntityDomain> entityDomain,
 			std::unique_ptr<ISpatialStorage> spatialStorage);
-		~SpatialLayer() override = default;
+		~GameLayer() override = default;
 
-		Z_NO_COPY_MOVE(SpatialLayer);
+		Z_NO_COPY_MOVE(GameLayer);
 
 		void BeginFrame() override;
 		void Update(float dt) override;
@@ -52,9 +52,12 @@ namespace zzz::engine
 		[[nodiscard]] SceneTreeContainer& GetTreeContainer() noexcept { return m_TreeContainer; }
 		[[nodiscard]] const SceneTreeContainer& GetTreeContainer() const noexcept { return m_TreeContainer; }
 
-	protected:
-		virtual void OnUpdateDomains(float dt);
-		virtual void OnUpdateSpatial();
+	private:
+		void OnUpdateDomains(float dt);
+		void OnUpdateSpatial();
+
+		[[nodiscard]] NodeHandle PopulateGameObject(const GameObjectData& objData, const ScriptFactory& scriptFactory);
+		[[nodiscard]] NodeHandle PopulateEntity(const GameObjectData& objData);
 
 		std::shared_ptr<ResourceManager> m_ResourceManager;
 
@@ -62,9 +65,5 @@ namespace zzz::engine
 		std::unique_ptr<IEntityDomain>   m_EntityDomain;
 		std::unique_ptr<ISpatialStorage> m_SpatialStorage;
 		SceneTreeContainer               m_TreeContainer;
-
-	private:
-		[[nodiscard]] NodeHandle PopulateGameObject(const GameObjectData& objData, const ScriptFactory& scriptFactory);
-		[[nodiscard]] NodeHandle PopulateEntity(const GameObjectData& objData);
 	};
 }

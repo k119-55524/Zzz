@@ -2,7 +2,7 @@
 #include "core/userscripts/base_script/Script.h"
 #include <algorithm>
 
-namespace zzz
+namespace zzz::engine
 {
 	namespace
 	{
@@ -12,13 +12,7 @@ namespace zzz
 		const math::Mat4<zF32> kIdentityMat = math::Mat4<zF32>::Identity();
 	}
 
-	GameObject::GameObject(std::string name)
-		: m_Guid{}
-		, m_FallbackName(std::move(name))
-	{
-	}
-
-	GameObject::GameObject(::zzz::core::Guid guid, std::string name)
+	GameObject::GameObject(const ::zzz::core::Guid& guid, std::string name)
 		: m_Guid(guid)
 		, m_FallbackName(std::move(name))
 	{

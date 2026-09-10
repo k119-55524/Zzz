@@ -15,10 +15,5 @@ namespace zzz::engine
 	{
 	public:
 		~IMVVMDomain() override = default;
-
-		[[nodiscard]] ::zzz::core::eObjectDomain GetDomainType() const noexcept override
-		{
-			return ::zzz::core::eObjectDomain::MVVM;
-		}
 	};
 }

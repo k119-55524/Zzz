@@ -8,13 +8,13 @@
 #include "engine/resources/ResourceManager.h"
 #include "engine/scene/gameobject/GameObject.h"
 
-#include "SpatialLayer.h"
+#include "GameLayer.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Scene);
 
 namespace zzz::engine
 {
-	SpatialLayer::SpatialLayer(
+	GameLayer::GameLayer(
 		std::string name,
 		eLayerType type,
 		std::shared_ptr<ResourceManager> resourceManager,
@@ -27,16 +27,12 @@ namespace zzz::engine
 		, m_EntityDomain(std::move(entityDomain))
 		, m_SpatialStorage(std::move(spatialStorage))
 	{
-		ensure(m_ObjectDomain != nullptr, "ObjectDomain не должен быть null в SpatialLayer.");
-		ensure(m_ObjectDomain->GetDomainType() == ::zzz::core::eObjectDomain::Object,
-			"ObjectDomain в SpatialLayer должен иметь тип eObjectDomain::Object.");
-		ensure(m_EntityDomain != nullptr, "EntityDomain не должен быть null в SpatialLayer.");
-		ensure(m_EntityDomain->GetDomainType() == ::zzz::core::eObjectDomain::Entity,
-			"EntityDomain в SpatialLayer должен иметь тип eObjectDomain::Entity.");
-		ensure(m_SpatialStorage != nullptr, "SpatialStorage не должен быть null в SpatialLayer.");
+		ensure(m_ObjectDomain != nullptr, "ObjectDomain не должен быть null в GameLayer.");
+		ensure(m_EntityDomain != nullptr, "EntityDomain не должен быть null в GameLayer.");
+		ensure(m_SpatialStorage != nullptr, "SpatialStorage не должен быть null в GameLayer.");
 	}
 
-	void SpatialLayer::BeginFrame()
+	void GameLayer::BeginFrame()
 	{
 		if (!m_IsVisible)
 			return;
@@ -44,7 +40,7 @@ namespace zzz::engine
 		m_TreeContainer.BeginFrame();
 	}
 
-	void SpatialLayer::Update(float dt)
+	void GameLayer::Update(float dt)
 	{
 		if (!m_IsVisible)
 			return;
@@ -53,7 +49,7 @@ namespace zzz::engine
 		OnUpdateSpatial();
 	}
 
-	void SpatialLayer::ApplyHandoverBarrier()
+	void GameLayer::ApplyHandoverBarrier()
 	{
 		if (!m_IsVisible)
 			return;
@@ -61,18 +57,18 @@ namespace zzz::engine
 		m_TreeContainer.ApplyHandoverBarrier();
 	}
 
-	void SpatialLayer::OnUpdateDomains(float dt)
+	void GameLayer::OnUpdateDomains(float dt)
 	{
 		m_ObjectDomain->Update(dt);
 		m_EntityDomain->Update(dt);
 	}
 
-	void SpatialLayer::OnUpdateSpatial()
+	void GameLayer::OnUpdateSpatial()
 	{
 		m_TreeContainer.ResolveTransforms();
 	}
 
-	void SpatialLayer::Populate(const LayerData& layerData, const ScriptFactory& scriptFactory)
+	void GameLayer::Populate(const LayerData& layerData, const ScriptFactory& scriptFactory)
 	{
 		std::unordered_map<Guid, NodeHandle> guidToHandle;
 
@@ -111,7 +107,7 @@ namespace zzz::engine
 					}
 					else
 					{
-						DOutWarning("[SpatialLayer::Populate] Родитель с GUID '{}' не найден для объекта '{}' в слое '{}'",
+						DOutWarning("[GameLayer::Populate] Родитель с GUID '{}' не найден для объекта '{}' в слое '{}'",
 							parentGuid.ToString(), objData.GetName(), m_Name);
 					}
 				}
@@ -119,20 +115,15 @@ namespace zzz::engine
 		}
 	}
 
-	NodeHandle SpatialLayer::PopulateEntity(const GameObjectData& objData)
+	NodeHandle GameLayer::PopulateEntity(const GameObjectData& objData)
 	{
 		m_EntityDomain->CreateEntity(objData.GetGuid(), objData.GetName());
 		return m_TreeContainer.CreateNode(objData.GetName(), nullptr);
 	}
 
-	NodeHandle SpatialLayer::PopulateGameObject(const GameObjectData& objData, const ScriptFactory& scriptFactory)
+	NodeHandle GameLayer::PopulateGameObject(const GameObjectData& objData, const ScriptFactory& scriptFactory)
 	{
-		GameObject* go = m_ObjectDomain->CreateObject(objData.GetGuid(), objData.GetName());
-		if (go == nullptr)
-		{
-			THROW_RUNTIME("Не удалось создать GameObject '{}' в слое '{}'", objData.GetName(), m_Name);
-		}
-
+		GameObject* go = m_ObjectDomain->AddObject(objData.GetGuid(), objData.GetName());
 		NodeHandle handle = m_TreeContainer.CreateNode(objData.GetName(), go);
 		go->BindSceneTree(&m_TreeContainer, handle);
 
@@ -153,12 +144,12 @@ namespace zzz::engine
 			auto res = m_ResourceManager->LoadDataAsset<::zzz::core::MeshData>(objData.GetMeshGuid());
 			if (res)
 			{
-				DOut("[SpatialLayer::Populate] Меш '{}' успешно загружен: вершин {}, треугольников {}",
+				DOut("[GameLayer::Populate] Меш '{}' успешно загружен: вершин {}, треугольников {}",
 					objData.GetMeshGuid().ToString(), res->GetVertexCount(), res->GetIndexCount() / 3);
 			}
 			else
 			{
-				DOutWarning("[SpatialLayer::Populate] Не удалось загрузить меш '{}': {}",
+				DOutWarning("[GameLayer::Populate] Не удалось загрузить меш '{}': {}",
 					objData.GetMeshGuid().ToString(), res.error());
 			}
 		}

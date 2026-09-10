@@ -5,7 +5,7 @@ namespace zzz::core
 	GameObjectData::GameObjectData(
 		Guid guid,
 		std::string name,
-		eObjectDomain domain,
+		bool isEntity,
 		bool isActive,
 		math::Vec3<zF32> position,
 		math::Quat<zF32> rotation,
@@ -17,7 +17,7 @@ namespace zzz::core
 		: m_Guid(guid)
 		, m_ParentGuid(parentGuid)
 		, m_Name(std::move(name))
-		, m_Domain(domain)
+		, m_IsEntity(isEntity)
 		, m_IsActive(isActive)
 		, m_Position(position)
 		, m_Rotation(rotation)
@@ -33,7 +33,7 @@ namespace zzz::core
 		return serializer.Serialize(buffer, m_Guid)
 			.and_then([&]() { return serializer.Serialize(buffer, m_ParentGuid); })
 			.and_then([&]() { return serializer.Serialize(buffer, m_Name); })
-			.and_then([&]() { return serializer.Serialize(buffer, static_cast<uint8_t>(m_Domain)); })
+			.and_then([&]() { return serializer.Serialize(buffer, m_IsEntity ? uint8_t{ 1 } : uint8_t{ 0 }); })
 			.and_then([&]() { return serializer.Serialize(buffer, m_IsActive ? uint8_t{ 1 } : uint8_t{ 0 }); })
 			.and_then([&]() { return serializer.Serialize(buffer, m_Position); })
 			.and_then([&]() { return serializer.Serialize(buffer, m_Rotation); })
@@ -56,14 +56,14 @@ namespace zzz::core
 
 	std::expected<void, std::string> GameObjectData::Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& serializer)
 	{
-		uint8_t domainRaw = 0;
+		uint8_t entityRaw = 0;
 		uint8_t activeRaw = 1;
 		uint32_t scriptsCount = 0;
 
 		auto res = serializer.Deserialize(buffer, offset, m_Guid)
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, m_ParentGuid); })
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, m_Name); })
-			.and_then([&]() { return serializer.Deserialize(buffer, offset, domainRaw); })
+			.and_then([&]() { return serializer.Deserialize(buffer, offset, entityRaw); })
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, activeRaw); })
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, m_Position); })
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, m_Rotation); })
@@ -77,7 +77,7 @@ namespace zzz::core
 			return res;
 		}
 
-		m_Domain = static_cast<eObjectDomain>(domainRaw);
+		m_IsEntity = (entityRaw != 0);
 		m_IsActive = (activeRaw != 0);
 
 		m_ScriptGuids.clear();

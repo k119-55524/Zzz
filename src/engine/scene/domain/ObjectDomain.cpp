@@ -1,94 +1,50 @@
-#include "engine/scene/domain/ObjectDomain.h"
+
 #include "core/utils/MemoryUtils.h"
+#include "core/utils/Ensure.h"
+
+#include "ObjectDomain.h"
 
 namespace zzz::engine
 {
 	ObjectDomain::ObjectDomain() = default;
 	ObjectDomain::~ObjectDomain() = default;
 
-	::zzz::GameObject* ObjectDomain::CreateObject(const ::zzz::core::Guid& guid, std::string name)
+	GameObject* ObjectDomain::AddObject(const Guid& guid, std::string name)
 	{
-		auto obj = ::zzz::core::safe_make_unique<::zzz::GameObject>(guid, std::move(name));
-		::zzz::GameObject* rawPtr = obj.get();
+		ensure(!m_Objects.contains(guid), "ObjectDomain::AddObject: объект с GUID '{}' уже зарегистрирован в домене.", guid.ToString());
 
-		m_AllocatedObjects.emplace(rawPtr, std::move(obj));
-		if (guid != ::zzz::core::Guid{})
-		{
-			m_GuidToObject[guid] = rawPtr;
-		}
-
-		const ::zzz::core::SlotHandle handle = m_ActiveObjects.Emplace(rawPtr);
-		rawPtr->SetWorldHandle(handle);
+		auto obj = safe_make_unique<GameObject>(guid, std::move(name));
+		GameObject* rawPtr = obj.get();
+		m_Objects[guid] = std::move(obj);
 
 		return rawPtr;
 	}
 
-	void ObjectDomain::DestroyObject(::zzz::GameObject* obj)
+	GameObject* ObjectDomain::FindObjectByGuid(const Guid& guid) const noexcept
 	{
-		if (obj == nullptr)
-		{
-			return;
-		}
-
-		if (obj->GetGuid() != ::zzz::core::Guid{})
-		{
-			m_GuidToObject.erase(obj->GetGuid());
-		}
-
-		const ::zzz::core::SlotHandle handle = obj->GetWorldHandle();
-		if (handle.IsValid())
-		{
-			m_ActiveObjects.Remove(handle);
-			obj->SetWorldHandle(::zzz::core::SlotHandle{});
-		}
-
-		m_AllocatedObjects.erase(obj);
+		auto it = m_Objects.find(guid);
+		return it != m_Objects.end() ? it->second.get() : nullptr;
 	}
 
-	::zzz::GameObject* ObjectDomain::FindObjectByGuid(const ::zzz::core::Guid& guid) const noexcept
-	{
-		auto it = m_GuidToObject.find(guid);
-		return it != m_GuidToObject.end() ? it->second : nullptr;
-	}
-
-	void ObjectDomain::GetAllObjects(std::vector<::zzz::GameObject*>& outObjects) const
+	void ObjectDomain::GetAllObjects(std::vector<GameObject*>& outObjects) const
 	{
 		outObjects.clear();
-		outObjects.reserve(m_ActiveObjects.Size());
-		for (::zzz::GameObject* obj : m_ActiveObjects.GetDenseSpan())
+		outObjects.reserve(m_Objects.size());
+		for (const auto& [guid, obj] : m_Objects)
 		{
 			if (obj != nullptr)
 			{
-				outObjects.push_back(obj);
+				outObjects.push_back(obj.get());
 			}
 		}
-	}
-
-	size_t ObjectDomain::GetObjectCount() const noexcept
-	{
-		return m_ActiveObjects.Size();
-	}
-
-	std::span<::zzz::GameObject* const> ObjectDomain::GetObjects() const noexcept
-	{
-		return m_ActiveObjects.GetDenseSpan();
 	}
 
 	void ObjectDomain::Update(float /*dt*/)
 	{
-		for (::zzz::GameObject* obj : m_ActiveObjects.GetDenseSpan())
-		{
-			if (obj != nullptr && obj->IsActive())
-			{
-				obj->DecrementRenderFrames();
-			}
-		}
 	}
 
 	void ObjectDomain::Clear()
 	{
-		m_ActiveObjects.Clear();
-		m_GuidToObject.clear();
-		m_AllocatedObjects.clear();
+		m_Objects.clear();
 	}
 }

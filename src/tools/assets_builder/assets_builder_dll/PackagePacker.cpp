@@ -32,7 +32,6 @@
 #include <core/IO/package/GameObjectData.h>
 #include <core/IO/ResourceStorageTraits.h>
 #include <core/constants/PackageConstants.h>
-#include <core/enums/eObjectDomain.h>
 #include <core/enums/eLayerType.h>
 #include <core/IO/package/LayerData.h>
 #include "AssetImporterRegistry.h"
@@ -319,21 +318,7 @@ namespace zzz::builder
 				objGuid = *parsed;
 		}
 
-		eObjectDomain domain = eObjectDomain::Object;
-		if (objJson.contains(c_FieldDomain) && objJson[std::string(c_FieldDomain)].is_string())
-		{
-			std::string domainStr = objJson[std::string(c_FieldDomain)].get<std::string>();
-			if (auto parsed = ParseObjectDomain(domainStr))
-			{
-				domain = *parsed;
-			}
-			else
-			{
-				DOutWarning("ParseGameObjectJson: Неизвестный domain '{}' для объекта '{}', используется Object",
-					domainStr, name);
-			}
-		}
-
+		bool isEntity = objJson.value(c_FieldIsEntity, false);
 		bool isActive = objJson.value("isActive", true);
 
 		math::Vec3f position(0.0f, 0.0f, 0.0f);
@@ -396,7 +381,7 @@ namespace zzz::builder
 				scriptGuids.push_back(*parsed);
 		}
 
-		return GameObjectData(objGuid, std::move(name), domain, isActive, position, rotation, scale, meshGuid, materialGuid, std::move(scriptGuids));
+		return GameObjectData(objGuid, std::move(name), isEntity, isActive, position, rotation, scale, meshGuid, materialGuid, std::move(scriptGuids));
 	}
 
 	static SceneTransitionParams ReadTransitionParams(const json& transJson, const SceneTransitionParams& defaultParams = {})

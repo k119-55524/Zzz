@@ -21,7 +21,6 @@
       "objects": [
         {
           "name": "CubeObject",
-          "domain": "Object",
           "position": [0.0, 0.0, 0.0],
           "scripts": [
             "6ea9c238-4c23-4b73-be36-8fed508ea612"

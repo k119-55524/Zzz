@@ -55,6 +55,6 @@ namespace zzz::engine
 	protected:
 		std::string  m_Name;
 		eLayerType   m_Type;
-		bool         m_IsVisible{ true };
+		bool         m_IsVisible;
 	};
 }

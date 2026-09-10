@@ -2,6 +2,7 @@
 
 #include "core/utils/Guid.h"
 #include "core/utils/macros/MiscMacros.h"
+#include "core/enums/eLayerType.h"
 #include "engine/scene/domain/IEntityDomain.h"
 #include "engine/scene/entity/EntityWorld.h"
 
@@ -14,13 +15,14 @@ namespace zzz::engine
 	class EntityDomain final : public IEntityDomain
 	{
 	public:
-		EntityDomain();
+		explicit EntityDomain(::zzz::core::eLayerType layerType = ::zzz::core::eLayerType::Layer3D);
 		~EntityDomain() override;
 
 		Z_NO_COPY_MOVE(EntityDomain);
 
+		[[nodiscard]] ::zzz::core::eLayerType GetLayerType() const noexcept { return m_LayerType; }
+
 		// --- ILayerDomain ---
-		[[nodiscard]] ::zzz::core::eObjectDomain GetDomainType() const noexcept override { return ::zzz::core::eObjectDomain::Entity; }
 		void Update(float dt) override;
 		void Clear() override;
 
@@ -32,6 +34,7 @@ namespace zzz::engine
 		[[nodiscard]] const std::vector<EntityStub>& GetEntities() const noexcept;
 
 	private:
+		::zzz::core::eLayerType m_LayerType{ ::zzz::core::eLayerType::Layer3D };
 		EntityWorld m_World;
 	};
 }

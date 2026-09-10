@@ -9,13 +9,10 @@
 
 using namespace zzz::math;
 
-namespace zzz
-{
-	class GameObject;
-}
-
 namespace zzz::engine
 {
+	class GameObject;
+
 	using SpatialHandle = uint32_t;
 
 	enum class SceneNodeType : uint8_t

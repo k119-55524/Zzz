@@ -73,7 +73,6 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eWinResize.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eGAPIType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eLayerType.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eObjectDomain.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/ePackage.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/eTargetPlatform.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverterGAPITypes.h

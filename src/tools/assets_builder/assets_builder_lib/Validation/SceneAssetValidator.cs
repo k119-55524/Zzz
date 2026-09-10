@@ -132,20 +132,12 @@ public class SceneAssetValidator : IAssetValidator
     {
         string objName = objElem.TryGetProperty("name", out var nameProp) ? nameProp.GetString() ?? "Object" : "Object";
 
-        // Валидация домена объекта (domain)
-        if (objElem.TryGetProperty("domain", out var domainProp))
+        // Валидация признака ECS-сущности (isEntity)
+        if (objElem.TryGetProperty("isEntity", out var isEntityProp))
         {
-            if (domainProp.ValueKind != JsonValueKind.String)
+            if (isEntityProp.ValueKind != JsonValueKind.True && isEntityProp.ValueKind != JsonValueKind.False)
             {
-                result.AddError(filePath, $"{fileName}: {contextPrefix} '{objName}': поле 'domain' должно быть строкой ('Object' или 'Entity').");
-            }
-            else
-            {
-                string domainStr = domainProp.GetString() ?? string.Empty;
-                if (domainStr != "Object" && domainStr != "Entity")
-                {
-                    result.AddError(filePath, $"{fileName}: {contextPrefix} '{objName}': недопустимый domain '{domainStr}'. Допустимы только 'Object' или 'Entity'.");
-                }
+                result.AddError(filePath, $"{fileName}: {contextPrefix} '{objName}': поле 'isEntity' должно быть булевым (true или false).");
             }
         }
 

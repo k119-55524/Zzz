@@ -2,7 +2,11 @@
 
 namespace zzz::engine
 {
-	EntityDomain::EntityDomain() = default;
+	EntityDomain::EntityDomain(::zzz::core::eLayerType layerType)
+		: m_LayerType(layerType)
+	{
+	}
+
 	EntityDomain::~EntityDomain() = default;
 
 	void EntityDomain::CreateEntity(const ::zzz::core::Guid& guid, std::string_view name)

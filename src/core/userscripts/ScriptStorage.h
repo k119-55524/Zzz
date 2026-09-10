@@ -11,9 +11,14 @@
 #include "core/utils/Export.h"
 #include "core/utils/Macroses.h"
 
-namespace zzz
+namespace zzz::engine
 {
 	class GameObject;
+}
+
+namespace zzz
+{
+	using GameObject = ::zzz::engine::GameObject;
 }
 
 namespace zzz::core
