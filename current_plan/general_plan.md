@@ -50,12 +50,12 @@
 ### 📌 Текущее состояние разработки
 
 > [!IMPORTANT]
-> **Текущий активный пункт:** `Пункт 16. ResourceManager, Texture2D и безопасная загрузка в GPU`
+> **Текущий активный пункт:** `Пункт 16. ResourceManager, Mesh и подготовка к загрузке в GPU`
 >
 > **Статус:** ⏳ Планирование  
-> **Файл детального плана текущего шага:** [`stage_16_texture2d_and_gpu_upload.md`](stage_16_texture2d_and_gpu_upload.md)  
+> **Файл детального плана текущего шага:** [`stage_16_mesh_and_gpu_upload.md`](stage_16_mesh_and_gpu_upload.md)  
 > **Список открытых сквозных задач / технического долга:** [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) §4  
-> **Текущая подзадача:** Уточнение этапа 16: маршрутизация ресурсов, кэш, GPU-upload/lifetime и `Texture2D`. План не означает, что код уже готов; реализация начинается по отдельной команде. Приёмочные проверки этапа 10 остаются открытыми и закрываются до КП-1 (этап 21).
+> **Текущая подзадача:** Реализация этапа 16: маршрутизация ресурсов по хранилищам (DataArchive -> DataAssetsManager, PackageArchive -> PackageManager), дедупликация in-flight запросов, десериализация MeshData за один проход, формирование ресурса Mesh до состояния готовности отправки на GPU, публикация в кэш и безопасные колбэки. Все вопросы GPU upload (буферы, staging, fenceValue/VkFence, барьеры) вынесены в этап 17.
 > 
 ---
 
@@ -86,11 +86,11 @@
 | **12** | Базовые доменные интерфейсы и хранилище Transform | ✅ Выполнено | [`stage_12_domain_interfaces_and_spatial_storage.md`](stage_12_domain_interfaces_and_spatial_storage.md) | Layer2D, ILayerDomain, ISpatialStorage, DefaultSpatialStorage |
 | **13** | 64-арное битовое дерево изменений (`BitTreeTracker`) | ✅ Выполнено | [`stage_13_bit_tree_tracker.md`](stage_13_bit_tree_tracker.md) | Иерархический битовый трекер грязных узлов для сцены |
 | **14** | SoA-узлы сцены и SceneTreeContainer, удаление Transform | ✅ Выполнено | [`stage_14_scene_node_and_tree_container.md`](stage_14_scene_node_and_tree_container.md) | Плоский SoA-контейнер иерархии, Primary/Secondary, DestroySubtree |
-| **15** | Интеграция слоёв, кадра и Populate | ✅ Выполнено | [`stage_15_layer_integration_and_populate.md`](stage_15_layer_integration_and_populate.md) | SceneTreeLayerBase, LayerMVVM, Handover Barrier, Populate |
-| **16** | ResourceManager, Texture2D и безопасная загрузка в GPU | ⏳ Планирование | [`stage_16_texture2d_and_gpu_upload.md`](stage_16_texture2d_and_gpu_upload.md) | GUID -> правильное хранилище, загрузчик и типизированный кэш; Texture2D/SRV; upload, GPU-ready и отложенное освобождение по fence |
-| **17** | GPU-меш (Mesh / MeshLoader) | ⏳ Не начато | — | Существующий MeshData -> вершинный и индексный GPU-буферы, формат Vertex3D/stride, загрузчик, кэш и lifetime из этапа 16 |
+| **15** | Интеграция слоёв, кадра и Populate | ✅ Выполнено | [`stage_15_layer_integration_and_populate.md`](stage_15_layer_integration_and_populate.md) | SpatialLayer, LayerMVVM, Handover Barrier, Populate |
+| **16** | ResourceManager, Mesh и подготовка к загрузке в GPU | ⏳ Планирование | [`stage_16_mesh_and_gpu_upload.md`](stage_16_mesh_and_gpu_upload.md) | GUID -> правильное хранилище (DataAssetsManager / PackageManager), загрузчик и типизированный кэш, дедупликация in-flight запросов; формирование ресурса Mesh из MeshData до состояния готовности к отправке на GPU |
+| **17** | GPU-буферы, загрузка в GPU и GPU-меш | ⏳ Не начато | — | Создание GPUBuffer (вершинный/индексный), upload-инфраструктура, барьеры, fenceValue/VkFence, неблокирующий staging lifetime, GPU-готовность Mesh |
 | **18** | Базовые Shader и Material | ⏳ Не начато | — | Компиляция минимальных шейдеров DXIL/SPIR-V, рабочий pipeline для куба, MaterialData + Texture2D + параметры; разрешение всех обязательных зависимостей сцены и OnStart только после полной CPU/GPU-готовности |
-| **19** | Жизненный цикл компонентных скриптов | ⏳ Не начато | — | OnStart/OnUpdate/OnDestroy, CubeRotatorScript через актуальные методы GameObject/SceneTreeContainer (без удалённого в этапе 14 Transform); безопасные удаление/перепривязка во время обхода, деактивация и выгрузка; без обязательного перехода на ECS |
+| **19** | Жизненный цикл компонентных скриптов и ObjectDomain | ⏳ Не начато | — | OnStart/OnUpdate/OnDestroy, CubeRotatorScript; оптимизация ObjectDomain (единое хранилище по Guid, SetName только для редактора по правилу 8.2); безопасные удаление/перепривязка во время обхода, деактивация и выгрузка; без обязательного перехода на ECS |
 | **20** | Минимальный сквозной рендер куба | ⏳ Не начато | — | Базовая Camera, View/Projection и aspect при resize; обход DefaultSpatialStorage без BVH; извлечение матриц и ресурсов из опубликованных данных; кадровые команды, привязка pipeline/ресурсов и DrawIndexed на DX12/Vulkan; изоляция CPU-слотов и GPU-fences |
 | **21** | КП-1 / КП-2: вращающийся текстурированный куб на Windows | ⏳ Не начато | — | Проверка всей цепочки ассет -> пакет/файл -> ресурс -> скрипт -> Draw/Present под DX12 и Vulkan. Resize, minimize/restore, смена сцены и закрытие при загрузке, ошибка обязательного ресурса, отсутствие преждевременного GPU-release; закрытие применимых проверок этапа 10 |
 

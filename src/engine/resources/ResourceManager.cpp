@@ -1,6 +1,8 @@
 #include "ResourceManager.h"
+#include "Mesh.h"
 #include "engine/package/PackageManager.h"
 #include "core/io/package/DataAssetsManager.h"
+#include "core/io/ResourceStorageTraits.h"
 #include "core/utils/Ensure.h"
 Z_SET_LOG_CATEGORY(::zzz::core::LogEngine);
 
@@ -90,10 +92,20 @@ namespace zzz::engine
 		return m_Loaders.contains(type);
 	}
 
+	void ResourceManager::Update()
+	{
+		m_MainThreadQueue.ExecuteAll();
+	}
+
 	void ResourceManager::AddMesh(std::shared_ptr<Mesh> mesh)
 	{
 		if (!mesh) return;
-		// Метод-заглушка: будет наполняться при реализации класса Mesh на шаге 11
+		std::unique_lock lock(m_Mutex);
+		m_Meshes[mesh->GetGuid()] = mesh;
+		if (!mesh->GetName().empty())
+		{
+			m_MeshNames[std::string(mesh->GetName())] = mesh->GetGuid();
+		}
 	}
 
 	void ResourceManager::AddTexture(std::shared_ptr<Texture2D> texture)
@@ -206,16 +218,43 @@ namespace zzz::engine
 		const Guid& guid,
 		eResourceType type,
 		std::string name,
-		std::function<void(std::shared_ptr<IResource>)> onLoaded)
+		AnyResourceCallback onLoaded)
 	{
-		m_ActiveRequests.fetch_add(1, std::memory_order_release);
-		m_RequestQueue.Emplace(ResourceLoadRequest{
-			.guid = guid,
-			.type = type,
-			.name = std::move(name),
-			.onLoaded = std::move(onLoaded)
-		});
-		m_IoCv.notify_one();
+		bool isFirstRequest = false;
+		{
+			std::unique_lock lock(m_Mutex);
+			auto it = m_InFlightCallbacks.find(guid);
+			if (it != m_InFlightCallbacks.end())
+			{
+				if (onLoaded)
+				{
+					it->second.push_back(std::move(onLoaded));
+				}
+				return;
+			}
+
+			isFirstRequest = true;
+			if (onLoaded)
+			{
+				m_InFlightCallbacks[guid].push_back(std::move(onLoaded));
+			}
+			else
+			{
+				m_InFlightCallbacks[guid] = {};
+			}
+		}
+
+		if (isFirstRequest)
+		{
+			m_ActiveRequests.fetch_add(1, std::memory_order_release);
+			m_RequestQueue.Emplace(ResourceLoadRequest{
+				.guid = guid,
+				.type = type,
+				.name = std::move(name),
+				.onLoaded = nullptr
+			});
+			m_IoCv.notify_one();
+		}
 	}
 
 	void ResourceManager::Flush()
@@ -224,6 +263,32 @@ namespace zzz::engine
 		m_FlushCv.wait(lock, [this]() {
 			return m_ActiveRequests.load(std::memory_order_acquire) == 0;
 		});
+		lock.unlock();
+
+		m_MainThreadQueue.ExecuteAll();
+	}
+
+	void ResourceManager::PublishResource(const Guid& guid, const std::shared_ptr<IResource>& resource)
+	{
+		if (!resource) return;
+
+		std::unique_lock lock(m_Mutex);
+		switch (resource->GetResourceType())
+		{
+		case eResourceType::Mesh:
+		{
+			auto mesh = std::static_pointer_cast<Mesh>(resource);
+			m_Meshes[guid] = mesh;
+			if (!mesh->GetName().empty())
+			{
+				m_MeshNames[std::string(mesh->GetName())] = guid;
+			}
+			break;
+		}
+		default:
+			// Ресурсы Texture2D, Shader, Material подключаются на этапе 18
+			break;
+		}
 	}
 
 	void ResourceManager::IoWorkerLoop(std::stop_token stopToken)
@@ -243,36 +308,99 @@ namespace zzz::engine
 			auto& batch = m_RequestQueue.SwapAndGetReadBuffer();
 			for (auto& req : batch)
 			{
-				std::shared_ptr<IResource> loadedResource = nullptr;
+				AnyResourceResult result = std::unexpected("Неизвестная ошибка загрузки ресурса");
+
+				IResourceLoader* loader = nullptr;
 				{
 					std::shared_lock lock(m_Mutex);
 					auto loaderIt = m_Loaders.find(req.type);
-					if (loaderIt != m_Loaders.end() && m_PackageManager && m_FileSystem && m_GAPI)
+					if (loaderIt != m_Loaders.end())
 					{
-						auto entryOpt = m_PackageManager->GetEntry(req.guid);
-						if (entryOpt)
-						{
-							auto loadRes = loaderIt->second->Load(*entryOpt, *m_PackageManager, *m_FileSystem, *m_GAPI);
-							if (loadRes)
-							{
-								loadedResource = *loadRes;
-							}
-							else
-							{
-								DOutError("ResourceManager: Ошибка загрузки ресурса {}: {}", req.guid.ToString(), loadRes.error());
-							}
-						}
+						loader = loaderIt->second.get();
 					}
 				}
 
-				if (req.onLoaded)
+				if (!loader)
 				{
-					req.onLoaded(loadedResource);
+					result = std::unexpected(std::format("Не найден загрузчик для ресурса типа {}", ToString(req.type)));
+					DOutError("[ResourceManager::IoWorkerLoop] {}", result.error());
+				}
+				else if (!m_PackageManager || !m_DataAssetsManager || !m_FileSystem || !m_GAPI)
+				{
+					result = std::unexpected(std::format("Подсистемы движка не инициализированы для загрузки ресурса {}", req.guid.ToString()));
+					DOutError("[ResourceManager::IoWorkerLoop] {}", result.error());
+				}
+				else
+				{
+					const auto storageKind = GetResourceStorageTraits(req.type).storageKind;
+					std::optional<PackageEntry> entryOpt;
+
+					if (storageKind == eResourceStorageKind::DataArchive)
+					{
+						entryOpt = m_DataAssetsManager->GetEntry(req.type, req.guid);
+					}
+					else if (storageKind == eResourceStorageKind::PackageArchive)
+					{
+						entryOpt = m_PackageManager->GetEntry(req.guid);
+					}
+
+					if (entryOpt.has_value())
+					{
+						auto loadRes = loader->Load(*entryOpt, *m_PackageManager, *m_DataAssetsManager, *m_FileSystem, *m_GAPI);
+						if (loadRes.has_value())
+						{
+							PublishResource(req.guid, *loadRes);
+							result = *loadRes;
+						}
+						else
+						{
+							result = std::unexpected(loadRes.error());
+							DOutError("[ResourceManager::IoWorkerLoop] Ошибка загрузки ресурса '{}' ({}): {}",
+								entryOpt->GetName(), req.guid.ToString(), loadRes.error());
+						}
+					}
+					else
+					{
+						result = std::unexpected(std::format("Запись ресурса с GUID '{}' не найдена в хранилище", req.guid.ToString()));
+						DOutError("[ResourceManager::IoWorkerLoop] {}", result.error());
+					}
 				}
 
-				if (m_ActiveRequests.fetch_sub(1, std::memory_order_acq_rel) == 1)
+				// Извлекаем колбэки из in-flight таблицы
+				std::vector<AnyResourceCallback> callbacks;
 				{
-					m_FlushCv.notify_all();
+					std::unique_lock lock(m_Mutex);
+					auto it = m_InFlightCallbacks.find(req.guid);
+					if (it != m_InFlightCallbacks.end())
+					{
+						callbacks = std::move(it->second);
+						m_InFlightCallbacks.erase(it);
+					}
+				}
+
+				// Передаем колбэки в очередь главного потока m_MainThreadQueue
+				for (auto& cb : callbacks)
+				{
+					if (cb)
+					{
+						m_MainThreadQueue.Push([cb = std::move(cb), result]() mutable {
+							cb(result);
+						});
+					}
+				}
+
+				{
+					// m_FlushCv.notify_all() должен выполняться под тем же m_FlushMutex, что и
+					// проверка предиката в Flush(), иначе возможна потеря пробуждения: поток Flush()
+					// может проверить m_ActiveRequests > 0 и начать входить в wait() ровно в момент,
+					// когда здесь декрементируется последний активный запрос и вызывается notify_all() -
+					// тогда уведомление некому будет доставить, а других уведомлений уже не будет,
+					// и Flush()/LoadSync() зависнут навсегда.
+					std::lock_guard flushLock(m_FlushMutex);
+					if (m_ActiveRequests.fetch_sub(1, std::memory_order_acq_rel) == 1)
+					{
+						m_FlushCv.notify_all();
+					}
 				}
 			}
 		}

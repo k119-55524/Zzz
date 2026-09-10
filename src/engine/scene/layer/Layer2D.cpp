@@ -10,8 +10,9 @@ namespace zzz::engine
 		std::unique_ptr<IObjectDomain> objectDomain,
 		std::unique_ptr<IEntityDomain> entityDomain,
 		std::unique_ptr<ISpatialStorage> spatialStorage)
-		: SceneTreeLayerBase(
+		: SpatialLayer(
 			std::move(name),
+			eLayerType::Layer2D,
 			std::move(resourceManager),
 			std::move(objectDomain),
 			std::move(entityDomain),

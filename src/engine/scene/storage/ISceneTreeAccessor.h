@@ -2,10 +2,12 @@
 
 #include <string>
 #include <cstdint>
-#include "core/utils/Defines.h"
-#include "math/vector/Vec3.h"
+
 #include "math/quat/Quat.h"
+#include "math/vector/Vec3.h"
 #include "math/matrix/Mat4.h"
+
+using namespace zzz::math;
 
 namespace zzz
 {
@@ -52,9 +54,9 @@ namespace zzz::engine
 
 	struct LocalTransform
 	{
-		::zzz::math::Vec3<zF32> position{ 0.0f, 0.0f, 0.0f };
-		::zzz::math::Quat<zF32> rotation{ 0.0f, 0.0f, 0.0f, 1.0f };
-		::zzz::math::Vec3<zF32> scale{ 1.0f, 1.0f, 1.0f };
+		Vec3<zF32> position{ 0.0f, 0.0f, 0.0f };
+		Quat<zF32> rotation{ 0.0f, 0.0f, 0.0f, 1.0f };
+		Vec3<zF32> scale{ 1.0f, 1.0f, 1.0f };
 	};
 
 	struct NodeMetadata
@@ -66,6 +68,7 @@ namespace zzz::engine
 			GameObject* gameObject{ nullptr };
 			uint32_t    entityId;
 		};
+
 		SpatialHandle spatialHandle{ 0xFFFFFFFF };
 		uint32_t      generation{ 1 };
 		bool          isAlive{ true };
@@ -83,17 +86,17 @@ namespace zzz::engine
 		virtual ~ISceneTreeAccessor() = default;
 
 		// --- Пространственные координаты (Local) ---
-		virtual void SetLocalPosition(NodeHandle handle, const ::zzz::math::Vec3<zF32>& pos) = 0;
-		[[nodiscard]] virtual const ::zzz::math::Vec3<zF32>& GetLocalPosition(NodeHandle handle) const = 0;
+		virtual void SetLocalPosition(NodeHandle handle, const Vec3<zF32>& pos) = 0;
+		[[nodiscard]] virtual const Vec3<zF32>& GetLocalPosition(NodeHandle handle) const = 0;
 
-		virtual void SetLocalRotation(NodeHandle handle, const ::zzz::math::Quat<zF32>& rot) = 0;
-		[[nodiscard]] virtual const ::zzz::math::Quat<zF32>& GetLocalRotation(NodeHandle handle) const = 0;
+		virtual void SetLocalRotation(NodeHandle handle, const Quat<zF32>& rot) = 0;
+		[[nodiscard]] virtual const Quat<zF32>& GetLocalRotation(NodeHandle handle) const = 0;
 
-		virtual void SetLocalScale(NodeHandle handle, const ::zzz::math::Vec3<zF32>& scale) = 0;
-		[[nodiscard]] virtual const ::zzz::math::Vec3<zF32>& GetLocalScale(NodeHandle handle) const = 0;
+		virtual void SetLocalScale(NodeHandle handle, const Vec3<zF32>& scale) = 0;
+		[[nodiscard]] virtual const Vec3<zF32>& GetLocalScale(NodeHandle handle) const = 0;
 
 		// --- Мировая матрица (World) ---
-		[[nodiscard]] virtual const ::zzz::math::Mat4<zF32>& GetWorldMatrix(NodeHandle handle) const = 0;
+		[[nodiscard]] virtual const Mat4<zF32>& GetWorldMatrix(NodeHandle handle) const = 0;
 
 		// --- Топология и иерархия ---
 		virtual void SetParent(NodeHandle child, NodeHandle parent, bool keepWorldTransform = true) = 0;

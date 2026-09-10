@@ -9,6 +9,11 @@
 #include "core/io/FileSystem.h"
 #include "engine/gapi/GAPI.h"
 
+namespace zzz::core
+{
+	class DataAssetsManager;
+}
+
 namespace zzz::engine
 {
 	class PackageManager;
@@ -24,10 +29,11 @@ namespace zzz::engine
 
 		[[nodiscard]] virtual ::zzz::core::eResourceType GetSupportedType() const noexcept = 0;
 
-		/// @brief Загрузка ресурса из записи пакета package.dat
+		/// @brief Загрузка ресурса из записи пакета (package.dat или data.dat)
 		[[nodiscard]] virtual std::expected<std::shared_ptr<::zzz::core::IResource>, std::string> Load(
 			const ::zzz::core::PackageEntry& entry,
 			PackageManager& packageManager,
+			::zzz::core::DataAssetsManager& dataAssetsManager,
 			::zzz::core::FileSystem& fileSystem,
 			GAPI& gapi) = 0;
 	};

@@ -1,6 +1,6 @@
 
-#include "core/utils/MemoryUtils.h"
 #include "engine/resources/ResourceManager.h"
+
 #include "Layer3D.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Scene);
@@ -15,8 +15,9 @@ namespace zzz::engine
 		std::unique_ptr<IObjectDomain> objectDomain,
 		std::unique_ptr<IEntityDomain> entityDomain,
 		std::unique_ptr<ISpatialStorage> spatialStorage)
-		: SceneTreeLayerBase(
+		: SpatialLayer(
 			std::move(name),
+			eLayerType::Layer3D,
 			std::move(resourceManager),
 			std::move(objectDomain),
 			std::move(entityDomain),

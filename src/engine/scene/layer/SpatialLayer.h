@@ -22,24 +22,25 @@ namespace zzz::engine
 	class ResourceManager;
 
 	/**
-	 * @class SceneTreeLayerBase
+	 * @class SpatialLayer
 	 * @brief Базовый класс для слоёв сцены, обладающих иерархическим деревом и пространственным индексом.
 	 *
 	 * @details Инкапсулирует двухбуферный SceneTreeContainer, ISpatialStorage, IObjectDomain и IEntityDomain.
 	 * Реализует общий жизненный цикл кадра (BeginFrame, Update, ApplyHandoverBarrier) и двухпроходный Populate.
 	 */
-	class SceneTreeLayerBase : public ILayer
+	class SpatialLayer : public ILayer
 	{
 	public:
-		SceneTreeLayerBase(
+		SpatialLayer(
 			std::string name,
+			eLayerType type,
 			std::shared_ptr<ResourceManager> resourceManager,
 			std::unique_ptr<IObjectDomain> objectDomain,
 			std::unique_ptr<IEntityDomain> entityDomain,
 			std::unique_ptr<ISpatialStorage> spatialStorage);
-		~SceneTreeLayerBase() override = default;
+		~SpatialLayer() override = default;
 
-		Z_NO_COPY_MOVE(SceneTreeLayerBase);
+		Z_NO_COPY_MOVE(SpatialLayer);
 
 		void BeginFrame() override;
 		void Update(float dt) override;
@@ -51,21 +52,13 @@ namespace zzz::engine
 		[[nodiscard]] SceneTreeContainer& GetTreeContainer() noexcept { return m_TreeContainer; }
 		[[nodiscard]] const SceneTreeContainer& GetTreeContainer() const noexcept { return m_TreeContainer; }
 
-		[[nodiscard]] ISpatialStorage& GetSpatialStorage() noexcept { return *m_SpatialStorage; }
-		[[nodiscard]] const ISpatialStorage& GetSpatialStorage() const noexcept { return *m_SpatialStorage; }
-
-		[[nodiscard]] IObjectDomain& GetObjectDomain() noexcept { return static_cast<IObjectDomain&>(*m_Domain); }
-		[[nodiscard]] const IObjectDomain& GetObjectDomain() const noexcept { return static_cast<const IObjectDomain&>(*m_Domain); }
-
-		[[nodiscard]] IEntityDomain& GetEntityDomain() noexcept { return *m_EntityDomain; }
-		[[nodiscard]] const IEntityDomain& GetEntityDomain() const noexcept { return *m_EntityDomain; }
-
 	protected:
 		virtual void OnUpdateDomains(float dt);
 		virtual void OnUpdateSpatial();
 
 		std::shared_ptr<ResourceManager> m_ResourceManager;
 
+		std::unique_ptr<IObjectDomain>   m_ObjectDomain;
 		std::unique_ptr<IEntityDomain>   m_EntityDomain;
 		std::unique_ptr<ISpatialStorage> m_SpatialStorage;
 		SceneTreeContainer               m_TreeContainer;

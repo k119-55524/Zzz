@@ -15,6 +15,11 @@
 #include "core/serialize/Serializer.h"
 #include "core/io/package/PackageEntry.h"
 
+namespace zzz::engine
+{
+	class ResourceManager;
+}
+
 namespace zzz::core
 {
 	class MeshData;
@@ -51,12 +56,27 @@ namespace zzz::core
 	 */
 	class Z_CORE_API DataAssetsManager final
 	{
+		friend class ::zzz::engine::ResourceManager;
+
 	public:
 		DataAssetsManager() = delete;
 		explicit DataAssetsManager(std::shared_ptr<FileSystem> fileSystem);
 		~DataAssetsManager() = default;
 
 		[[nodiscard]] const DatFileHeader& GetHeader() const noexcept { return m_Header; }
+
+		template <typename T>
+		[[nodiscard]] std::expected<T, std::string> DeserializeAsset(const PackageEntry& entry) const
+		{
+			constexpr eResourceType expectedType = c_DataAssetResourceType<T>;
+			if (entry.GetAssetType() != static_cast<zU32>(expectedType))
+			{
+				return UNEXPECTED("Несоответствие типа ассета '{}'. Ожидался: {}, в записи: {}",
+					entry.GetName(), ToString(expectedType), entry.GetAssetType());
+			}
+
+			return DeserializeEntry<T>(entry);
+		}
 
 		template <typename T>
 		[[nodiscard]] std::expected<T, std::string> LoadAsset(const Guid& guid) const

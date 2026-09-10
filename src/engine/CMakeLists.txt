@@ -31,8 +31,10 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "package/PackageManager.h" "package/PackageManager.cpp"
         "package/UserSettingsManager.h" "package/UserSettingsManager.cpp"
 
-        # Resources (Этап 10)
+        # Resources (Этап 10, 16)
         "resources/IResourceLoader.h"
+        "resources/Mesh.h" "resources/Mesh.cpp"
+        "resources/MeshLoader.h" "resources/MeshLoader.cpp"
         "resources/ResourceManager.h" "resources/ResourceManager.cpp"
         "resources/ResourceGarbageCollector.h" "resources/ResourceGarbageCollector.cpp"
 
@@ -126,7 +128,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
 
         # Layers (Слои сцены, Пункт 11.4)
         "scene/layer/ILayer.h"
-        "scene/layer/SceneTreeLayerBase.h" "scene/layer/SceneTreeLayerBase.cpp"
+        "scene/layer/SpatialLayer.h" "scene/layer/SpatialLayer.cpp"
         "scene/layer/Layer3D.h" "scene/layer/Layer3D.cpp"
         "scene/layer/Layer2D.h" "scene/layer/Layer2D.cpp"
         "scene/layer/LayerMVVM.h" "scene/layer/LayerMVVM.cpp"

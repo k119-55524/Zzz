@@ -21,6 +21,7 @@
 #include "core/io/package/DataAssetsManager.h"
 #include "core/io/FileSystem.h"
 #include "core/templates/DoubleBufferedVector.h"
+#include "core/templates/CallbackQueue.h"
 #include "engine/resources/IResourceLoader.h"
 #include "engine/gapi/GAPI.h"
 namespace zzz::engine
@@ -32,6 +33,15 @@ namespace zzz::engine
 	class Texture2D;
 	class Shader;
 	class Material;
+
+	template <typename T>
+	using ResourceResult = std::expected<std::shared_ptr<T>, std::string>;
+
+	template <typename T>
+	using ResourceCallback = std::function<void(ResourceResult<T>)>;
+
+	using AnyResourceResult = std::expected<std::shared_ptr<::zzz::core::IResource>, std::string>;
+	using AnyResourceCallback = std::function<void(AnyResourceResult)>;
 
 	/**
 	 * @class ResourceManager
@@ -47,7 +57,7 @@ namespace zzz::engine
 			::zzz::core::Guid guid;
 			::zzz::core::eResourceType type{ ::zzz::core::eResourceType::Unknown };
 			std::string name;
-			std::function<void(std::shared_ptr<::zzz::core::IResource>)> onLoaded;
+			AnyResourceCallback onLoaded;
 		};
 
 		ResourceManager() = delete;
@@ -57,6 +67,9 @@ namespace zzz::engine
 			std::shared_ptr<::zzz::core::FileSystem> fileSystem = nullptr,
 			std::shared_ptr<GAPI> gapi = nullptr);
 		~ResourceManager();
+
+		// --- Обновление и доставка колбэков на главном потоке ---
+		void Update();
 
 		// --- Запуск и остановка I/O-потока ---
 		void Start();
@@ -142,15 +155,41 @@ namespace zzz::engine
 
 		// --- Асинхронная загрузка с диска через пинг-понг очередь ---
 		template<typename T>
-		void LoadAsync(const ::zzz::core::Guid& guid, std::function<void(std::shared_ptr<T>)> onLoaded)
+		void LoadAsync(const ::zzz::core::Guid& guid, ResourceCallback<T> onCompleted)
 		{
 			if (auto cached = Get<T>(guid))
 			{
-				if (onLoaded) onLoaded(cached);
+				if (onCompleted)
+				{
+					m_MainThreadQueue.Push([onCompleted = std::move(onCompleted), cached = std::move(cached)]() mutable {
+						onCompleted(cached);
+					});
+				}
 				return;
 			}
-			EnqueueLoadRequest(guid, GetTypeFor<T>(), {}, [onLoaded = std::move(onLoaded)](std::shared_ptr<::zzz::core::IResource> res) {
-				if (onLoaded) onLoaded(std::static_pointer_cast<T>(res));
+
+			EnqueueLoadRequest(guid, GetTypeFor<T>(), {}, [onCompleted = std::move(onCompleted)](AnyResourceResult res) {
+				if (!onCompleted) return;
+				if (!res)
+				{
+					onCompleted(std::unexpected(res.error()));
+				}
+				else
+				{
+					onCompleted(std::static_pointer_cast<T>(*res));
+				}
+			});
+		}
+
+		template<typename T>
+		void LoadAsync(const ::zzz::core::Guid& guid, std::function<void(std::shared_ptr<T>)> onLoaded)
+		{
+			LoadAsync<T>(guid, [onLoaded = std::move(onLoaded)](ResourceResult<T> res) {
+				if (!onLoaded) return;
+				if (res)
+					onLoaded(*res);
+				else
+					onLoaded(nullptr);
 			});
 		}
 
@@ -163,14 +202,9 @@ namespace zzz::engine
 			if (auto cached = Get<T>(guid))
 				return cached;
 
-			std::promise<std::shared_ptr<T>> promise;
-			auto future = promise.get_future();
-
-			LoadAsync<T>(guid, [&promise](std::shared_ptr<T> res) {
-				promise.set_value(res);
-			});
-
-			return future.get();
+			LoadAsync<T>(guid, ResourceCallback<T>{});
+			Flush();
+			return Get<T>(guid);
 		}
 
 		// --- Раздельное управление жизненным циклом и выгрузкой памяти ---
@@ -203,7 +237,7 @@ namespace zzz::engine
 			const ::zzz::core::Guid& guid,
 			::zzz::core::eResourceType type,
 			std::string name,
-			std::function<void(std::shared_ptr<::zzz::core::IResource>)> onLoaded);
+			AnyResourceCallback onLoaded);
 
 		void IoWorkerLoop(std::stop_token stopToken);
 
@@ -228,6 +262,15 @@ namespace zzz::engine
 
 		// Реестр загрузчиков
 		std::unordered_map<::zzz::core::eResourceType, std::unique_ptr<IResourceLoader>> m_Loaders;
+
+		// Реестр in-flight запросов для дедупликации конкурентной загрузки одного GUID
+		std::unordered_map<::zzz::core::Guid, std::vector<AnyResourceCallback>> m_InFlightCallbacks;
+
+		// Очередь для передачи колбэков на главный поток
+		::zzz::templates::CallbackQueue<> m_MainThreadQueue;
+
+		// Публикация загруженного ресурса в типизированную таблицу кэша
+		void PublishResource(const ::zzz::core::Guid& guid, const std::shared_ptr<::zzz::core::IResource>& resource);
 
 		// Выделенный I/O-поток и пинг-понг очередь
 		::zzz::core::DoubleBufferedVector<ResourceLoadRequest> m_RequestQueue;

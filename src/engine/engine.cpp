@@ -2,6 +2,7 @@
 #include <logger/logger.h>
 
 #include "Engine.h"
+#include "resources/MeshLoader.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::LogEngine);
 
@@ -49,6 +50,7 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 
 	// Инициализация центрального менеджера ресурсов (ResourceManager)
 	m_ResourceManager = safe_make_shared<ResourceManager>(m_PackageManager, m_DataAssetsManager, m_FileSystem, m_GAPI);
+	m_ResourceManager->RegisterLoader<MeshLoader>();
 	m_ResourceManager->Start();
 	m_ResourceGC = safe_make_unique<ResourceGarbageCollector>(*m_ResourceManager);
 	m_ResourceGC->Start();
@@ -292,6 +294,7 @@ void Engine::OnUpdateSystem()
 #endif // Z_ADD_LOGGER
 
 	m_EventBus->InvokeUpdate(*m_Time);
+	m_ResourceManager->Update();
 	m_SceneManager->Update(*m_Time);
 	m_ViewManager->Update(*m_Time);
 }

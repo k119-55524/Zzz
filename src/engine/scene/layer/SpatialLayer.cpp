@@ -8,30 +8,35 @@
 #include "engine/resources/ResourceManager.h"
 #include "engine/scene/gameobject/GameObject.h"
 
-#include "SceneTreeLayerBase.h"
+#include "SpatialLayer.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Scene);
 
 namespace zzz::engine
 {
-	SceneTreeLayerBase::SceneTreeLayerBase(
+	SpatialLayer::SpatialLayer(
 		std::string name,
+		eLayerType type,
 		std::shared_ptr<ResourceManager> resourceManager,
 		std::unique_ptr<IObjectDomain> objectDomain,
 		std::unique_ptr<IEntityDomain> entityDomain,
 		std::unique_ptr<ISpatialStorage> spatialStorage)
-		: ILayer(std::move(name), std::move(objectDomain))
+		: ILayer(std::move(name), type)
 		, m_ResourceManager(std::move(resourceManager))
+		, m_ObjectDomain(std::move(objectDomain))
 		, m_EntityDomain(std::move(entityDomain))
 		, m_SpatialStorage(std::move(spatialStorage))
 	{
-		ensure(m_EntityDomain != nullptr, "EntityDomain не должен быть null в SceneTreeLayerBase.");
+		ensure(m_ObjectDomain != nullptr, "ObjectDomain не должен быть null в SpatialLayer.");
+		ensure(m_ObjectDomain->GetDomainType() == ::zzz::core::eObjectDomain::Object,
+			"ObjectDomain в SpatialLayer должен иметь тип eObjectDomain::Object.");
+		ensure(m_EntityDomain != nullptr, "EntityDomain не должен быть null в SpatialLayer.");
 		ensure(m_EntityDomain->GetDomainType() == ::zzz::core::eObjectDomain::Entity,
-			"EntityDomain в SceneTreeLayerBase должен иметь тип eObjectDomain::Entity.");
-		ensure(m_SpatialStorage != nullptr, "SpatialStorage не должен быть null в SceneTreeLayerBase.");
+			"EntityDomain в SpatialLayer должен иметь тип eObjectDomain::Entity.");
+		ensure(m_SpatialStorage != nullptr, "SpatialStorage не должен быть null в SpatialLayer.");
 	}
 
-	void SceneTreeLayerBase::BeginFrame()
+	void SpatialLayer::BeginFrame()
 	{
 		if (!m_IsVisible)
 			return;
@@ -39,7 +44,7 @@ namespace zzz::engine
 		m_TreeContainer.BeginFrame();
 	}
 
-	void SceneTreeLayerBase::Update(float dt)
+	void SpatialLayer::Update(float dt)
 	{
 		if (!m_IsVisible)
 			return;
@@ -48,7 +53,7 @@ namespace zzz::engine
 		OnUpdateSpatial();
 	}
 
-	void SceneTreeLayerBase::ApplyHandoverBarrier()
+	void SpatialLayer::ApplyHandoverBarrier()
 	{
 		if (!m_IsVisible)
 			return;
@@ -56,18 +61,18 @@ namespace zzz::engine
 		m_TreeContainer.ApplyHandoverBarrier();
 	}
 
-	void SceneTreeLayerBase::OnUpdateDomains(float dt)
+	void SpatialLayer::OnUpdateDomains(float dt)
 	{
-		GetObjectDomain().Update(dt);
+		m_ObjectDomain->Update(dt);
 		m_EntityDomain->Update(dt);
 	}
 
-	void SceneTreeLayerBase::OnUpdateSpatial()
+	void SpatialLayer::OnUpdateSpatial()
 	{
 		m_TreeContainer.ResolveTransforms();
 	}
 
-	void SceneTreeLayerBase::Populate(const LayerData& layerData, const ScriptFactory& scriptFactory)
+	void SpatialLayer::Populate(const LayerData& layerData, const ScriptFactory& scriptFactory)
 	{
 		std::unordered_map<Guid, NodeHandle> guidToHandle;
 
@@ -94,7 +99,7 @@ namespace zzz::engine
 		for (const auto& objData : layerData.GetObjects())
 		{
 			const auto& parentGuid = objData.GetParentGuid();
-			if (parentGuid != ::zzz::core::Guid{})
+			if (parentGuid != Guid{})
 			{
 				auto childIt = guidToHandle.find(objData.GetGuid());
 				if (childIt != guidToHandle.end())
@@ -106,7 +111,7 @@ namespace zzz::engine
 					}
 					else
 					{
-						DOutWarning("[SceneTreeLayerBase::Populate] Родитель с GUID '{}' не найден для объекта '{}' в слое '{}'",
+						DOutWarning("[SpatialLayer::Populate] Родитель с GUID '{}' не найден для объекта '{}' в слое '{}'",
 							parentGuid.ToString(), objData.GetName(), m_Name);
 					}
 				}
@@ -114,15 +119,15 @@ namespace zzz::engine
 		}
 	}
 
-	NodeHandle SceneTreeLayerBase::PopulateEntity(const GameObjectData& objData)
+	NodeHandle SpatialLayer::PopulateEntity(const GameObjectData& objData)
 	{
 		m_EntityDomain->CreateEntity(objData.GetGuid(), objData.GetName());
 		return m_TreeContainer.CreateNode(objData.GetName(), nullptr);
 	}
 
-	NodeHandle SceneTreeLayerBase::PopulateGameObject(const GameObjectData& objData, const ScriptFactory& scriptFactory)
+	NodeHandle SpatialLayer::PopulateGameObject(const GameObjectData& objData, const ScriptFactory& scriptFactory)
 	{
-		GameObject* go = GetObjectDomain().CreateObject(objData.GetGuid(), objData.GetName());
+		GameObject* go = m_ObjectDomain->CreateObject(objData.GetGuid(), objData.GetName());
 		if (go == nullptr)
 		{
 			THROW_RUNTIME("Не удалось создать GameObject '{}' в слое '{}'", objData.GetName(), m_Name);
@@ -148,12 +153,12 @@ namespace zzz::engine
 			auto res = m_ResourceManager->LoadDataAsset<::zzz::core::MeshData>(objData.GetMeshGuid());
 			if (res)
 			{
-				DOut("[SceneTreeLayerBase::Populate] Меш '{}' успешно загружен: вершин {}, треугольников {}",
+				DOut("[SpatialLayer::Populate] Меш '{}' успешно загружен: вершин {}, треугольников {}",
 					objData.GetMeshGuid().ToString(), res->GetVertexCount(), res->GetIndexCount() / 3);
 			}
 			else
 			{
-				DOutWarning("[SceneTreeLayerBase::Populate] Не удалось загрузить меш '{}': {}",
+				DOutWarning("[SpatialLayer::Populate] Не удалось загрузить меш '{}': {}",
 					objData.GetMeshGuid().ToString(), res.error());
 			}
 		}

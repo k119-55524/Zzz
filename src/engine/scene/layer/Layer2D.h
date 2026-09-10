@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/scene/layer/SceneTreeLayerBase.h"
+#include "engine/scene/layer/SpatialLayer.h"
 
 namespace zzz::engine
 {
@@ -8,7 +8,7 @@ namespace zzz::engine
 	 * @class Layer2D
 	 * @brief Слой 2D игрового мира и экранного HUD (спрайты, панели, экранный текст, 2D сценовое дерево).
 	 */
-	class Layer2D final : public SceneTreeLayerBase
+	class Layer2D final : public SpatialLayer
 	{
 		Z_NO_COPY_MOVE(Layer2D);
 
@@ -20,7 +20,5 @@ namespace zzz::engine
 			std::unique_ptr<IEntityDomain> entityDomain,
 			std::unique_ptr<ISpatialStorage> spatialStorage);
 		~Layer2D() override = default;
-
-		[[nodiscard]] eLayerType GetType() const noexcept override { return eLayerType::Layer2D; }
 	};
 }
