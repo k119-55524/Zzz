@@ -19,8 +19,8 @@ namespace zzz::engine
 	public:
 		virtual ~IObjectDomain() override = default;
 
-		virtual GameObject* AddObject(const ::zzz::core::Guid& guid, std::string name) = 0;
+		virtual GameObject* CreateObject(const ::zzz::core::Guid& guid, std::string name) = 0;
 		[[nodiscard]] virtual GameObject* FindObjectByGuid(const ::zzz::core::Guid& guid) const noexcept = 0;
-		virtual void GetAllObjects(std::vector<GameObject*>& outObjects) const = 0;
+		[[nodiscard]] virtual GameObject* FindObjectByName(std::string_view name) const noexcept = 0;
 	};
 }

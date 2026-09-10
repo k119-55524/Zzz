@@ -47,7 +47,13 @@ namespace zzz::engine
 			m_SecondaryNodes.dirtyTracker.Set(index);
 			m_TopologyDirty = true;
 
-			return NodeHandle{ index, meta.generation };
+			NodeHandle handle{ index, meta.generation };
+			if (owner != nullptr)
+			{
+				owner->BindSceneTree(this, handle);
+			}
+
+			return handle;
 		}
 
 		index = static_cast<uint32_t>(m_SecondaryNodes.metadata.size());
@@ -71,7 +77,13 @@ namespace zzz::engine
 		m_SecondaryNodes.dirtyTracker.Set(index);
 		m_TopologyDirty = true;
 
-		return NodeHandle{ index, 1 };
+		NodeHandle handle{ index, 1 };
+		if (owner != nullptr)
+		{
+			owner->BindSceneTree(this, handle);
+		}
+
+		return handle;
 	}
 
 	void SceneTreeContainer::DestroySubtree(NodeHandle root, ISpatialStorage* spatialStorage)

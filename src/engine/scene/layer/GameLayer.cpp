@@ -123,9 +123,8 @@ namespace zzz::engine
 
 	NodeHandle GameLayer::PopulateGameObject(const GameObjectData& objData, const ScriptFactory& scriptFactory)
 	{
-		GameObject* go = m_ObjectDomain->AddObject(objData.GetGuid(), objData.GetName());
+		GameObject* go = m_ObjectDomain->CreateObject(objData.GetGuid(), objData.GetName());
 		NodeHandle handle = m_TreeContainer.CreateNode(objData.GetName(), go);
-		go->BindSceneTree(&m_TreeContainer, handle);
 
 		go->SetMeshGuid(objData.GetMeshGuid());
 		go->SetMaterialGuid(objData.GetMaterialGuid());
@@ -139,9 +138,9 @@ namespace zzz::engine
 			}
 		}
 
-		if (m_ResourceManager != nullptr && objData.GetMeshGuid() != ::zzz::core::Guid{})
+		if (m_ResourceManager != nullptr && objData.GetMeshGuid() != Guid{})
 		{
-			auto res = m_ResourceManager->LoadDataAsset<::zzz::core::MeshData>(objData.GetMeshGuid());
+			auto res = m_ResourceManager->LoadDataAsset<MeshData>(objData.GetMeshGuid());
 			if (res)
 			{
 				DOut("[GameLayer::Populate] Меш '{}' успешно загружен: вершин {}, треугольников {}",

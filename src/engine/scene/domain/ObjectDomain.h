@@ -6,7 +6,6 @@
 #include <unordered_map>
 
 #include "core/utils/Guid.h"
-#include "core/enums/eLayerType.h"
 #include "core/utils/macros/MiscMacros.h"
 #include "engine/scene/domain/IObjectDomain.h"
 #include "engine/scene/gameobject/GameObject.h"
@@ -30,13 +29,12 @@ namespace zzz::engine
 		void Update(float dt) override;
 		void Clear() override;
 
-		GameObject* AddObject(const Guid& guid, std::string name) override;
+		GameObject* CreateObject(const Guid& guid, std::string name) override;
 		[[nodiscard]] GameObject* FindObjectByGuid(const Guid& guid) const noexcept override;
-		void GetAllObjects(std::vector<GameObject*>& outObjects) const override;
-
-		[[nodiscard]] size_t GetObjectCount() const noexcept { return m_Objects.size(); }
+		[[nodiscard]] GameObject* FindObjectByName(std::string_view name) const noexcept override;
 
 	private:
-		std::unordered_map<Guid, std::unique_ptr<GameObject>> m_Objects;
+		std::unordered_map<Guid, std::unique_ptr<GameObject>> m_ObjectsByGuid;
+		std::unordered_map<std::string, std::vector<GameObject*>> m_ObjectsByName;
 	};
 }
