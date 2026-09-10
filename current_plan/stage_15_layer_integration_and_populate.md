@@ -1,15 +1,15 @@
-# Этап 11.4: Интеграция слоёв, базовый класс `SceneTreeLayerBase`, покадровый конвейер и наполнение (`Populate`)
+# Этап 15: Интеграция слоёв, базовый класс `SceneTreeLayerBase`, покадровый конвейер и наполнение (`Populate`)
 
-## 1. Контекст и цели подэтапа
-- **Номер подпункта:** **Пункт 11.4** (финальная часть Этапа 11: Структура хранения GameObject в сцене).
+## 1. Контекст и цели этапа
+- **Номер пункта:** **Пункт 15** (Уровень 2: GAPI-ресурсы, содержимое куба и сквозной рендер).
 - **Цель:** Связать все компоненты воедино на уровне слоёв сцены, кадрового цикла и загрузки пакетов:
   1. Реализация доменов: `ObjectDomain` (на базе `SlotMap<GameObject*>`) и `EntityDomain` (на базе `EntityWorld`).
   2. Реализация 3-уровневой иерархии слоёв: `ILayer` $\to$ `SceneTreeLayerBase` (BeginFrame, Update, Populate, ApplyHandoverBarrier, владение) $\to$ `Layer3D` / `Layer2D` и автономный `LayerMVVM`.
   3. Двухпроходное наполнение слоя `SceneTreeLayerBase::Populate`: создание объектов, $TRS$, скриптов, мешей, связывание через `go->BindSceneTree(&m_TreeContainer, handle)` и связывание иерархии по `parentGuid`.
   4. Точная интеграция с покадровым конвейером `ViewManager` (вызов `scene->ApplyHandoverBarrier()` после `Join()` рабочих потоков).
   5. Проверка сквозной сборки проекта под MSVC x64 + Ninja и обновление `general_plan.md`.
-- **Статус:** ⏳ В процессе разработки.
-- **Зависимости:** Этапы 11.1, 11.2, 11.3.
+- **Статус:** Выполнена интеграция по генплану. Populate создаёт узлы/объекты, связывает иерархию, присоединяет скрипты и сохраняет GUID ресурсов; CPU-чтение MeshData ещё не создаёт GPU Mesh. Lifecycle скриптов, готовность ресурсов и Draw завершаются в этапах 16–20. Проверки внизу исторические; ревизия 2026-09-10 новых прогонов не включает.
+- **Зависимости:** Этапы 12, 13, 14.
 
 ### Физическое размещение файлов
 ```text
@@ -194,14 +194,15 @@ namespace zzz::engine
      for (const auto& layer : m_Layers)
          if (layer) layer->BeginFrame();
      ```
-   - `SceneTreeLayerBase::BeginFrame()` вызывает `m_TreeContainer.BeginFrame()`, очищая `dirtyTracker` за $O(1)$.
-   - Скрипты исполняются и вызывают `SetLocalPosition` / `SetLocalRotation`, синхронно мутируя `m_SecondaryNodes` и взводя биты в `dirtyTracker`.
+   - `SceneTreeLayerBase::BeginFrame()` вызывает `m_TreeContainer.BeginFrame()` и Prepare трекера. Пустой путь без изменения размеров O(1); очистка непустого трекера/переразмеривание не считаются O(1).
+   - Изменения через SetLocalPosition/SetLocalRotation пишутся в m_SecondaryNodes и dirtyTracker. SceneScript обновляется существующим сценовым путём; полный вызов жизненного цикла компонентных Script относится к этапу 19.
    - В конце `SceneTreeLayerBase::Update()` вызывается `m_TreeContainer.ResolveTransforms()`, пересчитывая мировые матрицы поддеревьев по `metadata[i].isDirty`.
 
 2. **Параллельная фаза во `ViewManager::Update()`:**
-   - Поток рендера исполняет `m_PrimaryView->RenderFrame()`, читая неизменяемый **Front Buffer** (`m_PrimaryNodes`).
-   - Потоки окон исполняют `PreRender()`, `Update(time)` (где крутится логика сцены), `PrepareFrame()`.
-   - `m_ThreadsUpdate.Join()` — точка синхронизации, ожидающая завершения параллельных потоков логики и рендера.
+   - Для окон отправляется RenderFrame с командами ранее подготовленного кадрового слота. RenderFrame не должен читать m_PrimaryNodes или живые GameObject.
+   - Задачи окон исполняют PreRender, View::Update(time), PrepareFrame. View::Update обслуживает окно/переходы; Scene::Update вызывается один раз через SceneManager до ViewManager, не отдельно для каждого окна.
+   - PrepareFrame предназначен для чтения опубликованного Front Buffer и записи собственных команд слота; фактические BuildRenderTree/SubmitRenderTree ещё заглушки, доводятся в этапе 20.
+   - m_ThreadsUpdate.Join() ожидает CPU-задачи подготовки и отправки. Он не означает GPU completion; освобождение и переиспользование GPU-объектов требует fence.
 
 3. **Точка Handover Barrier (после `Join()`, перед `PostRender()`):**
    - Во `ViewManager::Update()`:
@@ -218,7 +219,7 @@ namespace zzz::engine
          if (auto scene = view->GetActiveScene())
              scene->ApplyHandoverBarrier();
 
-     // PostRender: Present цепочки показа
+     // PostRender: продвижение кадровых слотов после CPU-барьера
      m_PrimaryView->PostRender();
      ...
      ```
@@ -230,6 +231,10 @@ namespace zzz::engine
 
 4. **Очистка мёртвого кода в `SceneTreeContainer`:**
    - Поля `m_ReparentQueue`, `m_DeleteQueue` и приватный метод `ApplyDeferredQueues` удаляются из `SceneTreeContainer.h` / `.cpp` (Правило 16: Zero Technical Debt).
+   - Это заменяет требование очередей из этапа 14, но не решает безопасное удаление из исполняемого callback. Этот обязательный контракт доводится вместе с lifecycle в этапе 19.
+
+5. **Открытая семантика слоёв:**
+   - Текущий SceneTreeLayerBase пропускает работу невидимого слоя. Это факт реализации, не окончательное решение: пользователь отложил вопрос обновления логики скрытых слоёв в TODO 21. При этой ревизии поведение кода не меняется.
 
 ---
 
