@@ -109,7 +109,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "scene/domain/EntityDomain.h" "scene/domain/EntityDomain.cpp"
 
         # Storage & Scene Tree (SoA-модель)
-        "scene/storage/ISceneTreeAccessor.h"
+        "scene/storage/NodeTypes.h"
         "scene/storage/NodeStorage.h" "scene/storage/NodeStorage.cpp"
 
         # GameObject (Фасад над NodeStorage)

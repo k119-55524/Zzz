@@ -67,7 +67,7 @@ static void BM_NodeStorage_ResolveFlat(benchmark::State& state)
 	// Помечаем 1% узлов грязными
 	for (size_t i = 0; i < count; i += 100)
 	{
-		container.SetLocalPosition(NodeHandle{ static_cast<uint32_t>(i), 1 }, ::zzz::math::Vec3<zF32>{ 1.0f, 2.0f, 3.0f });
+		container.SetLocalPosition(static_cast<zU32>(i), ::zzz::math::Vec3<zF32>{ 1.0f, 2.0f, 3.0f });
 	}
 
 	for (auto _ : state)
@@ -122,7 +122,7 @@ static void BM_NodeStorage_ResolveHierarchy(benchmark::State& state)
 
 	for (auto _ : state)
 	{
-		container.SetLocalPosition(NodeHandle{ 0, 1 }, ::zzz::math::Vec3<zF32>{ 5.0f, 0.0f, 0.0f });
+		container.SetLocalPosition(0, ::zzz::math::Vec3<zF32>{ 5.0f, 0.0f, 0.0f });
 		container.ResolveTransforms();
 		benchmark::ClobberMemory();
 	}

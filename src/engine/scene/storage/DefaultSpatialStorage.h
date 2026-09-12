@@ -21,8 +21,8 @@ namespace zzz::engine
 		~DefaultSpatialStorage() override = default;
 
 		void Build(const NodeStorage& nodeStorage) override;
-		SpatialHandle Insert(uint64_t userData) override;
-		void Remove(SpatialHandle handle) override;
+		zU32 Insert(uint64_t userData) override;
+		void Remove(zU32 handle) override;
 		void Clear() override;
 
 		void GetAll(std::vector<uint64_t>& outUserData) const override;

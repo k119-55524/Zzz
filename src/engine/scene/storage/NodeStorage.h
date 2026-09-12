@@ -7,7 +7,7 @@
 #include "core/utils/Ensure.h"
 #include "core/utils/macros/MiscMacros.h"
 #include "core/containers/BitTreeTracker.h"
-#include "engine/scene/storage/ISceneTreeAccessor.h"
+#include "engine/scene/storage/NodeTypes.h"
 
 using namespace zzz::math;
 using namespace zzz::core;
@@ -43,165 +43,125 @@ namespace zzz::engine
 
 #pragma region Getters and Setters
 		// --- Пространственные координаты ---
-		void SetLocalPosition(NodeHandle handle, const Vec3<zF32>& pos)
+		void SetLocalPosition(zU32 nodeIndex, const Vec3<zF32>& pos)
 		{
-			ensure(IsValid(handle), "NodeStorage::SetLocalPosition: невалидный NodeHandle");
-			m_LocalTransforms[handle.index].position = pos;
-			MarkDirty(handle);
+			ensure(IsValid(nodeIndex), "NodeStorage::SetLocalPosition: невалидный nodeIndex");
+			m_LocalTransforms[nodeIndex].position = pos;
+			MarkDirty(nodeIndex);
 		}
 
-		[[nodiscard]] Vec3<zF32> GetLocalPosition(NodeHandle handle) const
+		[[nodiscard]] Vec3<zF32> GetLocalPosition(zU32 nodeIndex) const
 		{
-			ensure(IsValid(handle), "NodeStorage::GetLocalPosition: невалидный NodeHandle");
-			return m_LocalTransforms[handle.index].position;
+			ensure(IsValid(nodeIndex), "NodeStorage::GetLocalPosition: невалидный nodeIndex");
+			return m_LocalTransforms[nodeIndex].position;
 		}
 
-		void SetLocalRotation(NodeHandle handle, const Quat<zF32>& rot)
+		void SetLocalRotation(zU32 nodeIndex, const Quat<zF32>& rot)
 		{
-			ensure(IsValid(handle), "NodeStorage::SetLocalRotation: невалидный NodeHandle");
-			m_LocalTransforms[handle.index].rotation = rot;
-			MarkDirty(handle);
+			ensure(IsValid(nodeIndex), "NodeStorage::SetLocalRotation: невалидный nodeIndex");
+			m_LocalTransforms[nodeIndex].rotation = rot;
+			MarkDirty(nodeIndex);
 		}
 
-		[[nodiscard]] Quat<zF32> GetLocalRotation(NodeHandle handle) const
+		[[nodiscard]] Quat<zF32> GetLocalRotation(zU32 nodeIndex) const
 		{
-			ensure(IsValid(handle), "NodeStorage::GetLocalRotation: невалидный NodeHandle");
-			return m_LocalTransforms[handle.index].rotation;
+			ensure(IsValid(nodeIndex), "NodeStorage::GetLocalRotation: невалидный nodeIndex");
+			return m_LocalTransforms[nodeIndex].rotation;
 		}
 
-		void SetLocalScale(NodeHandle handle, const Vec3<zF32>& scale)
+		void SetLocalScale(zU32 nodeIndex, const Vec3<zF32>& scale)
 		{
-			ensure(IsValid(handle), "NodeStorage::SetLocalScale: невалидный NodeHandle");
-			m_LocalTransforms[handle.index].scale = scale;
-			MarkDirty(handle);
+			ensure(IsValid(nodeIndex), "NodeStorage::SetLocalScale: невалидный nodeIndex");
+			m_LocalTransforms[nodeIndex].scale = scale;
+			MarkDirty(nodeIndex);
 		}
 
-		[[nodiscard]] Vec3<zF32> GetLocalScale(NodeHandle handle) const
+		[[nodiscard]] Vec3<zF32> GetLocalScale(zU32 nodeIndex) const
 		{
-			ensure(IsValid(handle), "NodeStorage::GetLocalScale: невалидный NodeHandle");
-			return m_LocalTransforms[handle.index].scale;
+			ensure(IsValid(nodeIndex), "NodeStorage::GetLocalScale: невалидный nodeIndex");
+			return m_LocalTransforms[nodeIndex].scale;
 		}
 
-		[[nodiscard]] const Mat4<zF32>& GetLocalMatrix(NodeHandle handle) const
+		[[nodiscard]] const Mat4<zF32>& GetLocalMatrix(zU32 nodeIndex) const
 		{
-			ensure(IsValid(handle), "NodeStorage::GetLocalMatrix: невалидный NodeHandle");
-			return m_LocalMatrices[handle.index];
+			ensure(IsValid(nodeIndex), "NodeStorage::GetLocalMatrix: невалидный nodeIndex");
+			return m_LocalMatrices[nodeIndex];
 		}
 
-		[[nodiscard]] const Mat4<zF32>& GetWorldMatrix(NodeHandle handle) const
+		[[nodiscard]] const Mat4<zF32>& GetWorldMatrix(zU32 nodeIndex) const
 		{
-			ensure(IsValid(handle), "NodeStorage::GetWorldMatrix: невалидный NodeHandle");
-			return m_WorldMatrices[handle.index];
+			ensure(IsValid(nodeIndex), "NodeStorage::GetWorldMatrix: невалидный nodeIndex");
+			return m_WorldMatrices[nodeIndex];
 		}
 
 		// --- Топология и иерархия ---
-		void SetParent(NodeHandle child, NodeHandle parent, bool keepWorldTransform = true);
-		[[nodiscard]] NodeHandle GetParent(NodeHandle handle) const
+		[[nodiscard]] zU32 GetParent(zU32 nodeIndex) const
 		{
-			ensure(IsValid(handle), "NodeStorage::GetParent: невалидный NodeHandle");
-			const uint32_t pIdx = m_Topology[handle.index].parentIndex;
-			if (pIdx != 0xFFFFFFFF && pIdx < m_Metadata.size())
-			{
-				return NodeHandle{ pIdx, m_Metadata[pIdx].generation };
-			}
-			return NodeHandle{};
+			ensure(IsValid(nodeIndex), "NodeStorage::GetParent: невалидный nodeIndex");
+			return m_Topology[nodeIndex].parentIndex;
 		}
 
-		[[nodiscard]] GameObject* GetNodeOwner(NodeHandle handle) const
+		void MarkDirty(zU32 nodeIndex)
 		{
-			ensure(IsValid(handle), "NodeStorage::GetNodeOwner: невалидный NodeHandle");
-			return m_Metadata[handle.index].gameObject;
-		}
-
-		void SetNodeOwner(NodeHandle handle, GameObject* owner)
-		{
-			ensure(IsValid(handle), "NodeStorage::SetNodeOwner: невалидный NodeHandle");
-			m_Metadata[handle.index].gameObject = owner;
-			m_Metadata[handle.index].payloadType = owner ? SceneNodeType::GameObject : SceneNodeType::Entity;
-		}
-
-		void MarkDirty(NodeHandle handle)
-		{
-			ensure(IsValid(handle), "NodeStorage::MarkDirty: невалидный NodeHandle");
-			MarkDirty(handle.index);
-		}
-
-		// --- Свойства узла ---
-		void SetActive(NodeHandle handle, bool active)
-		{
-			ensure(IsValid(handle), "NodeStorage::SetActive: невалидный NodeHandle");
-			m_Metadata[handle.index].isActive = active;
-		}
-
-		[[nodiscard]] bool IsActive(NodeHandle handle) const
-		{
-			ensure(IsValid(handle), "NodeStorage::IsActive: невалидный NodeHandle");
-			return m_Metadata[handle.index].isActive;
-		}
-
-		void SetSpatialHandle(NodeHandle handle, SpatialHandle spHandle)
-		{
-			ensure(IsValid(handle), "NodeStorage::SetSpatialHandle: невалидный NodeHandle");
-			m_Metadata[handle.index].spatialHandle = spHandle;
-		}
-
-		[[nodiscard]] SpatialHandle GetSpatialHandle(NodeHandle handle) const
-		{
-			ensure(IsValid(handle), "NodeStorage::GetSpatialHandle: невалидный NodeHandle");
-			return m_Metadata[handle.index].spatialHandle;
-		}
-
-		// --- Валидация ---
-		[[nodiscard]] bool IsValid(NodeHandle handle) const noexcept
-		{
-			return handle.index < m_Metadata.size()
-				&& m_Metadata[handle.index].isAlive
-				&& m_Metadata[handle.index].generation == handle.generation;
-		}
-
-		[[nodiscard]] NodeHandle GetHandle(uint32_t storageIndex) const noexcept
-		{
-			if (storageIndex < m_Metadata.size() && m_Metadata[storageIndex].isAlive)
-			{
-				return NodeHandle{ storageIndex, m_Metadata[storageIndex].generation };
-			}
-			return NodeHandle{};
-		}
-
-		[[nodiscard]] uint32_t GetLayerObjectIndex(NodeHandle handle) const
-		{
-			ensure(IsValid(handle), "NodeStorage::GetLayerObjectIndex: невалидный NodeHandle");
-			return m_Metadata[handle.index].layerObjectIndex;
-		}
-
-		[[nodiscard]] SceneNodeType GetNodeType(NodeHandle handle) const
-		{
-			ensure(IsValid(handle), "NodeStorage::GetNodeType: невалидный NodeHandle");
-			return m_Metadata[handle.index].payloadType;
-		}
-
-		// --- Доступ к размерам и плоским SoA данным для подсистем (SpatialStorage, Renderer) ---
-		[[nodiscard]] size_t GetNodeCount() const noexcept { return m_Metadata.size(); }
-		[[nodiscard]] std::span<const Mat4<zF32>> GetWorldMatrices() const noexcept { return m_WorldMatrices; }
-		[[nodiscard]] std::span<const NodeMetadata> GetMetadata() const noexcept { return m_Metadata; }
-		[[nodiscard]] std::span<const LocalTransform> GetLocalTransforms() const noexcept { return m_LocalTransforms; }
-#pragma endregion
-
-	private:
-		inline void MarkDirty(uint32_t nodeIndex)
-		{
-			ensure(nodeIndex < m_Metadata.size(), "NodeStorage::MarkDirty: индекс узла выходит за пределы metadata");
+			ensure(IsValid(nodeIndex), "NodeStorage::MarkDirty: индекс узла выходит за пределы хранилища");
 			m_DirtyTracker.Set(nodeIndex);
 		}
 
-		void ResolveSubtree(uint32_t nodeIndex, const Mat4<zF32>& parentWorld);
+		// --- Свойства узла ---
+		void SetActive(zU32 nodeIndex, bool active)
+		{
+			ensure(IsValid(nodeIndex), "NodeStorage::SetActive: невалидный nodeIndex");
+			m_States[nodeIndex].isActive = active;
+		}
+
+		[[nodiscard]] bool IsActive(zU32 nodeIndex) const
+		{
+			ensure(IsValid(nodeIndex), "NodeStorage::IsActive: невалидный nodeIndex");
+			return m_States[nodeIndex].isActive;
+		}
+
+		void SetSpatialHandle(zU32 nodeIndex, zU32 spHandle)
+		{
+			ensure(IsValid(nodeIndex), "NodeStorage::SetSpatialHandle: невалидный nodeIndex");
+			m_Bindings[nodeIndex].spatialHandle = spHandle;
+		}
+
+		[[nodiscard]] zU32 GetSpatialHandle(zU32 nodeIndex) const
+		{
+			ensure(IsValid(nodeIndex), "NodeStorage::GetSpatialHandle: невалидный nodeIndex");
+			return m_Bindings[nodeIndex].spatialHandle;
+		}
+
+		// --- Валидация ---
+		[[nodiscard]] bool IsValid(zU32 nodeIndex) const noexcept
+		{
+			return nodeIndex < m_States.size();
+		}
+
+		[[nodiscard]] zU32 GetLayerObjectIndex(zU32 nodeIndex) const
+		{
+			ensure(IsValid(nodeIndex), "NodeStorage::GetLayerObjectIndex: невалидный nodeIndex");
+			return m_Bindings[nodeIndex].layerObjectIndex;
+		}
+
+		// --- Доступ к размерам и плоским SoA данным для подсистем (SpatialStorage, Renderer) ---
+		[[nodiscard]] size_t GetNodeCount() const noexcept { return m_States.size(); }
+		[[nodiscard]] std::span<const Mat4<zF32>> GetWorldMatrices() const noexcept { return m_WorldMatrices; }
+		[[nodiscard]] std::span<const NodeState> GetStates() const noexcept { return m_States; }
+		[[nodiscard]] std::span<const NodeBindings> GetBindings() const noexcept { return m_Bindings; }
+		[[nodiscard]] std::span<const Transform> GetLocalTransforms() const noexcept { return m_LocalTransforms; }
+#pragma endregion
 
 	private:
-		std::vector<NodeTopology>   m_Topology;
-		std::vector<LocalTransform> m_LocalTransforms;
-		std::vector<Mat4<zF32>>     m_LocalMatrices;
-		std::vector<Mat4<zF32>>     m_WorldMatrices;
-		std::vector<NodeMetadata>   m_Metadata;
-		BitTreeTracker              m_DirtyTracker;
+		void ResolveSubtree(uint32_t nodeIndex, const Mat4<zF32>& parentWorld);
+
+		std::vector<NodeTopology>	m_Topology;
+		std::vector<Transform>		m_LocalTransforms;
+		std::vector<Mat4<zF32>>		m_LocalMatrices;
+		std::vector<Mat4<zF32>>		m_WorldMatrices;
+		std::vector<NodeState>		m_States;
+		std::vector<NodeBindings>	m_Bindings;
+
+		BitTreeTracker m_DirtyTracker;
 	};
 }

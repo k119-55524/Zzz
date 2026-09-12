@@ -5,7 +5,7 @@
 #include <memory>
 
 #include "core/utils/Guid.h"
-#include "engine/scene/storage/ISceneTreeAccessor.h"
+#include "engine/scene/storage/NodeTypes.h"
 
 namespace zzz::core
 {
@@ -31,13 +31,13 @@ namespace zzz::engine
 		~GameObject() = default;
 
 		// --- Привязка к контейнеру сцены ---
-		void BindNodeStorage(NodeStorage* storage, NodeHandle handle) noexcept
+		void BindNodeStorage(NodeStorage* storage, zU32 nodeIndex) noexcept
 		{
 			m_NodeStorage = storage;
-			m_NodeHandle = handle;
+			m_NodeIndex = nodeIndex;
 		}
 
-		[[nodiscard]] NodeHandle GetNodeHandle() const noexcept { return m_NodeHandle; }
+		[[nodiscard]] zU32 GetNodeIndex() const noexcept { return m_NodeIndex; }
 		[[nodiscard]] NodeStorage* GetNodeStorage() const noexcept { return m_NodeStorage; }
 
 		// --- Идентификация ---
@@ -46,14 +46,13 @@ namespace zzz::engine
 		void SetName(std::string name) { m_Name = std::move(name); }
 
 		// --- Хэндл в пространственном хранилище ---
-		[[nodiscard]] uint32_t GetSpatialHandle() const;
-		void SetSpatialHandle(uint32_t handle);
+		[[nodiscard]] zU32 GetSpatialHandle() const;
 
 		// --- Активность и жизненный цикл в кадре ---
 		[[nodiscard]] bool IsActive() const;
 		void SetActive(bool active);
 
-		// --- Пространственные трансформации (делегирование в ISceneTreeAccessor) ---
+		// --- Пространственные трансформации (делегирование в NodeStorage) ---
 		void SetLocalPosition(const Vec3<zF32>& pos);
 		[[nodiscard]] Vec3<zF32> GetLocalPosition() const;
 
@@ -67,8 +66,7 @@ namespace zzz::engine
 		[[nodiscard]] const Mat4<zF32>& GetWorldMatrix() const;
 
 		// --- Иерархия сцены ---
-		[[nodiscard]] GameObject* GetParent() const;
-		void SetParent(GameObject* newParent, bool keepWorldTransform = true);
+		[[nodiscard]] zU32 GetParentIndex() const;
 
 		// --- Слоты графических ресурсов (для отрисовки меша и материала) ---
 		[[nodiscard]] const Guid& GetMeshGuid() const noexcept { return m_MeshGuid; }
@@ -89,7 +87,7 @@ namespace zzz::engine
 		Guid m_Guid;
 
 		NodeStorage* m_NodeStorage{ nullptr };
-		NodeHandle   m_NodeHandle{};
+		zU32         m_NodeIndex{ kInvalidNodeIndex };
 
 		std::string         m_Name;
 

@@ -1,14 +1,15 @@
 #pragma once
 
 #include <vector>
-#include <cstdint>
+#include "math/utils/Types.h"
+
+using namespace zzz::math;
 
 namespace zzz::engine
 {
 	class NodeStorage;
 
-	using SpatialHandle = uint32_t;
-	constexpr SpatialHandle c_InvalidSpatialHandle = 0xFFFFFFFF;
+	constexpr zU32 c_InvalidSpatialHandle = 0xFFFFFFFF;
 
 	/**
 	 * @class ISpatialStorage
@@ -24,8 +25,8 @@ namespace zzz::engine
 
 		/// @brief Пакетное построение пространственного индекса по плоскому списку узлов.
 		virtual void Build(const NodeStorage& nodeStorage) = 0;
-		virtual SpatialHandle Insert(uint64_t userData) = 0;
-		virtual void Remove(SpatialHandle handle) = 0;
+		virtual zU32 Insert(uint64_t userData) = 0;
+		virtual void Remove(zU32 handle) = 0;
 		virtual void Clear() = 0;
 
 		virtual void GetAll(std::vector<uint64_t>& outUserData) const = 0;

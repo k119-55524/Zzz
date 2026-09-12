@@ -44,16 +44,12 @@ TEST(NodeStorageTest, BatchConstructionAndValidation)
 
 	EXPECT_EQ(container.GetNodeCount(), 2u);
 
-	NodeHandle h0 = container.GetHandle(0);
-	NodeHandle h1 = container.GetHandle(1);
+	const zU32 h0 = 0;
+	const zU32 h1 = 1;
 
-	EXPECT_TRUE(h0.IsValid());
-	EXPECT_TRUE(h1.IsValid());
 	EXPECT_TRUE(container.IsValid(h0));
 	EXPECT_TRUE(container.IsValid(h1));
-
-	EXPECT_EQ(container.GetNodeType(h0), SceneNodeType::GameObject);
-	EXPECT_EQ(container.GetNodeType(h1), SceneNodeType::Entity);
+	EXPECT_FALSE(container.IsValid(999));
 
 	EXPECT_EQ(container.GetLayerObjectIndex(h0), 0u);
 	EXPECT_EQ(container.GetLayerObjectIndex(h1), 1u);
@@ -76,11 +72,11 @@ TEST(NodeStorageTest, HierarchyAndTransforms)
 
 	NodeStorage container(objects);
 
-	NodeHandle root = container.GetHandle(0);
-	NodeHandle child = container.GetHandle(1);
+	const zU32 root = 0;
+	const zU32 child = 1;
 
 	EXPECT_EQ(container.GetParent(child), root);
-	EXPECT_FALSE(container.GetParent(root).IsValid());
+	EXPECT_EQ(container.GetParent(root), kInvalidNodeIndex);
 
 	// Мировые матрицы уже рассчитаны в конструкторе
 	const auto rootWorld = container.GetWorldMatrix(root);
@@ -94,32 +90,6 @@ TEST(NodeStorageTest, HierarchyAndTransforms)
 	EXPECT_NEAR(childWorld._42, 5.0f, 1e-4f);
 }
 
-TEST(NodeStorageTest, SetParentReparenting)
-{
-	std::vector<GameObjectData> objects = {
-		CreateDummyObject("Root", { 10.0f, 0.0f, 0.0f }),
-		CreateDummyObject("Child1", { 0.0f, 5.0f, 0.0f }),
-		CreateDummyObject("Child2", { 0.0f, 0.0f, 2.0f })
-	};
-
-	NodeStorage container(objects);
-
-	NodeHandle root = container.GetHandle(0);
-	NodeHandle child1 = container.GetHandle(1);
-	NodeHandle child2 = container.GetHandle(2);
-
-	container.SetParent(child1, root, false);
-	container.SetParent(child2, root, false);
-
-	EXPECT_EQ(container.GetParent(child1), root);
-	EXPECT_EQ(container.GetParent(child2), root);
-
-	// Отвязываем child1 от родителя
-	container.SetParent(child1, NodeHandle{}, false);
-	EXPECT_FALSE(container.GetParent(child1).IsValid());
-	EXPECT_EQ(container.GetParent(child2), root);
-}
-
 TEST(NodeStorageTest, DirtyTrackerAndResolveTransforms)
 {
 	std::vector<GameObjectData> objects = {
@@ -128,8 +98,8 @@ TEST(NodeStorageTest, DirtyTrackerAndResolveTransforms)
 	};
 
 	NodeStorage container(objects);
-	NodeHandle root = container.GetHandle(0);
-	NodeHandle child = container.GetHandle(1);
+	const zU32 root = 0;
+	const zU32 child = 1;
 
 	// Новый кадр
 	container.BeginFrame();

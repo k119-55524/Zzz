@@ -66,37 +66,33 @@ namespace zzz::engine
 		if (objects.empty())
 			return;
 
-		// Шаг 1: Формируем плоский список сцены
+		// Формируем плоский список дерева сцены
 		m_NodeStorage = NodeStorage(objects);
 
-		// Шаг 2: Создаем игровые объекты / скрипты / ECS-сущности
+		// Создаем игровые объекты / скрипты / ECS-сущности
 		const size_t nodeCount = m_NodeStorage.GetNodeCount();
-		for (uint32_t i = 0; i < static_cast<uint32_t>(nodeCount); ++i)
+		for (zU32 nodeIndex = 0; nodeIndex < static_cast<zU32>(nodeCount); ++nodeIndex)
 		{
-			const NodeHandle handle = m_NodeStorage.GetHandle(i);
-			const uint32_t dataIdx = m_NodeStorage.GetLayerObjectIndex(handle);
+			const zU32 dataIdx = m_NodeStorage.GetLayerObjectIndex(nodeIndex);
 			const auto& objData = objects[dataIdx];
 
-			if (m_NodeStorage.GetNodeType(handle) == SceneNodeType::Entity)
-				PopulateEntity(handle, objData);
+			if (objData.IsEntity())
+				PopulateEntity(nodeIndex, objData);
 			else
-				PopulateGameObject(handle, objData, scriptFactory);
+				PopulateGameObject(nodeIndex, objData, scriptFactory);
 		}
 
-		// Шаг 3: Пространственный индекс для рендера/выборки (Spatial Index)
-		// Передаем NodeStorage с уже рассчитанными мировыми матрицами/позициями
+		// Пространственное распределение
 		m_SpatialStorage->Build(m_NodeStorage);
 	}
 
-	void GameLayer::PopulateEntity(NodeHandle handle, const GameObjectData& objData)
+	void GameLayer::PopulateEntity(zU32 nodeIndex, const GameObjectData& objData)
 	{
-		(void)handle;
+		(void)nodeIndex;
 		m_EntityDomain->CreateEntity(objData.GetGuid(), objData.GetName());
 
 		// TODO (Этап 15 ECS): При полноценной реализации EntityWorld связать узел и сущность:
-		// 1. Записать NodeHandle как компонент сущности (TransformComponent / NodeComponent).
-		// 2. Записать полученный uint32_t entityId обратно в NodeMetadata узла:
-		//    m_NodeStorage.SetEntityId(handle, entityId);
+		// Записать nodeIndex как компонент сущности (TransformComponent / NodeComponent).
 
 		// Точка расширения: загрузка ресурсов меша для рендера сущностей
 		if (m_ResourceManager != nullptr && objData.GetMeshGuid() != Guid{})
@@ -109,11 +105,10 @@ namespace zzz::engine
 		}
 	}
 
-	void GameLayer::PopulateGameObject(NodeHandle handle, const GameObjectData& objData, const ScriptFactory& scriptFactory)
+	void GameLayer::PopulateGameObject(zU32 nodeIndex, const GameObjectData& objData, const ScriptFactory& scriptFactory)
 	{
 		GameObject* go = m_ObjectDomain->CreateObject(objData.GetGuid(), objData.GetName());
-		go->BindNodeStorage(&m_NodeStorage, handle);
-		m_NodeStorage.SetNodeOwner(handle, go);
+		go->BindNodeStorage(&m_NodeStorage, nodeIndex);
 
 		go->SetMeshGuid(objData.GetMeshGuid());
 		go->SetMaterialGuid(objData.GetMaterialGuid());

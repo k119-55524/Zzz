@@ -25,6 +25,7 @@ namespace zzz::engine
 	GameObject* ObjectDomain::FindObjectByGuid(const Guid& guid) const noexcept
 	{
 		auto it = m_ObjectsByGuid.find(guid);
+
 		return it != m_ObjectsByGuid.end() ? it->second.get() : nullptr;
 	}
 

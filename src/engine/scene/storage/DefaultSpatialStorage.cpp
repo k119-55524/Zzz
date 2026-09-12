@@ -14,9 +14,9 @@ namespace zzz::engine
 			return;
 		}
 
-		// Доступ к пространственным данным узлов (мировые матрицы, метаданные)
+		// Доступ к пространственным данным узлов (мировые матрицы, состояния)
 		const auto worldMatrices = nodeStorage.GetWorldMatrices();
-		const auto metadata = nodeStorage.GetMetadata();
+		const auto states = nodeStorage.GetStates();
 
 		m_Slots.resize(count);
 		for (size_t i = 0; i < count; ++i)
@@ -26,13 +26,13 @@ namespace zzz::engine
 			const Vec3<zF32> worldPos{ worldMat._41, worldMat._42, worldMat._43 };
 			(void)worldPos; // Точка расширения под построение пространственного дерева
 
-			const bool isOccupied = metadata[i].isAlive;
+			const bool isOccupied = states[i].isActive;
 			m_Slots[i] = Slot{ static_cast<uint64_t>(i), isOccupied };
 		}
 		m_ActiveCount = count;
 	}
 
-	SpatialHandle DefaultSpatialStorage::Insert(uint64_t userData)
+	zU32 DefaultSpatialStorage::Insert(uint64_t userData)
 	{
 		uint32_t index = 0;
 		if (!m_FreeIndices.empty())
@@ -52,7 +52,7 @@ namespace zzz::engine
 		return index;
 	}
 
-	void DefaultSpatialStorage::Remove(SpatialHandle handle)
+	void DefaultSpatialStorage::Remove(zU32 handle)
 	{
 		if (handle < m_Slots.size() && m_Slots[handle].isOccupied)
 		{
