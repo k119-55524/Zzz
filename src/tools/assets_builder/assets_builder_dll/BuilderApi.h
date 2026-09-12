@@ -64,4 +64,13 @@ extern "C"
 	 * @param ext Расширение с точкой (например, ".zv").
 	 */
 	BUILDER_API bool IsSupportedViewExtension(const char* ext);
+
+	/**
+	 * @brief Генерирует новый 128-битный UUID v4 через движковый генератор Guid::Generate()
+	 * (Single Source of Truth) и форматирует в строку 36 символов (с завершающим нулём - 37 байт).
+	 * @param outBuffer Выходной буфер символов.
+	 * @param bufferSize Размер выходного буфера (должен быть не менее 37 байт).
+	 * @return true при успешной записи; false если outBuffer == nullptr или bufferSize < 37.
+	 */
+	BUILDER_API bool GenerateGuidNative(char* outBuffer, uint32_t bufferSize);
 }

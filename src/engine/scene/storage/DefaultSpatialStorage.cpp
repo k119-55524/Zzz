@@ -1,8 +1,37 @@
 
 #include "engine/scene/storage/DefaultSpatialStorage.h"
+#include "engine/scene/storage/NodeStorage.h"
 
 namespace zzz::engine
 {
+	void DefaultSpatialStorage::Build(const NodeStorage& nodeStorage)
+	{
+		Clear();
+
+		const size_t count = nodeStorage.GetNodeCount();
+		if (count == 0)
+		{
+			return;
+		}
+
+		// Доступ к пространственным данным узлов (мировые матрицы, метаданные)
+		const auto worldMatrices = nodeStorage.GetWorldMatrices();
+		const auto metadata = nodeStorage.GetMetadata();
+
+		m_Slots.resize(count);
+		for (size_t i = 0; i < count; ++i)
+		{
+			// Разбираем пространственные данные узла (на этапе 18+ здесь будет расчет AABB и группировка в BVH/Octree)
+			const auto& worldMat = worldMatrices[i];
+			const Vec3<zF32> worldPos{ worldMat._41, worldMat._42, worldMat._43 };
+			(void)worldPos; // Точка расширения под построение пространственного дерева
+
+			const bool isOccupied = metadata[i].isAlive;
+			m_Slots[i] = Slot{ static_cast<uint64_t>(i), isOccupied };
+		}
+		m_ActiveCount = count;
+	}
+
 	SpatialHandle DefaultSpatialStorage::Insert(uint64_t userData)
 	{
 		uint32_t index = 0;

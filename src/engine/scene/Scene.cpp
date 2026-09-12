@@ -5,8 +5,7 @@
 #include "engine/scene/layer/LayerMVVM.h"
 #include "core/userscripts/ScriptFactory.h"
 #include "engine/resources/ResourceManager.h"
-#include "engine/scene/domain/DomainFactory.h"
-#include "engine/scene/storage/DefaultSpatialStorage.h"
+#include "engine/scene/layer/LayerSubsystemFactory.h"
 
 #include "Scene.h"
 
@@ -57,7 +56,7 @@ namespace zzz::engine
 			m_Scripts.push_back(std::move(script));
 		}
 
-		DomainFactory domainFactory;
+		LayerSubsystemFactory factory;
 		for (const auto& layerData : sceneData.GetLayers())
 		{
 			const auto layerType = layerData.GetType();
@@ -66,9 +65,9 @@ namespace zzz::engine
 			case eLayerType::Layer3D:
 			case eLayerType::Layer2D:
 			{
-				auto objectDomain = domainFactory.CreateObjectDomain(layerType);
-				auto entityDomain = domainFactory.CreateEntityDomain(layerType);
-				auto spatialStorage = safe_make_unique<DefaultSpatialStorage>();
+				auto objectDomain = factory.CreateObjectDomain(layerType);
+				auto entityDomain = factory.CreateEntityDomain(layerType);
+				auto spatialStorage = factory.CreateSpatialStorage(eSpatialStorageType::Flat);
 
 				m_Layers.push_back(safe_make_unique<GameLayer>(
 					layerData.GetName(),
@@ -81,7 +80,7 @@ namespace zzz::engine
 			}
 			case eLayerType::LayerMVVM:
 			{
-				auto mvvmDomain = domainFactory.CreateMVVMDomain();
+				auto mvvmDomain = factory.CreateMVVMDomain();
 				m_Layers.push_back(safe_make_unique<LayerMVVM>(layerData.GetName(), std::move(mvvmDomain)));
 				break;
 			}

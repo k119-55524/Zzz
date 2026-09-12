@@ -5,6 +5,8 @@
 
 namespace zzz::engine
 {
+	class NodeStorage;
+
 	using SpatialHandle = uint32_t;
 	constexpr SpatialHandle c_InvalidSpatialHandle = 0xFFFFFFFF;
 
@@ -20,6 +22,8 @@ namespace zzz::engine
 	public:
 		virtual ~ISpatialStorage() = default;
 
+		/// @brief Пакетное построение пространственного индекса по плоскому списку узлов.
+		virtual void Build(const NodeStorage& nodeStorage) = 0;
 		virtual SpatialHandle Insert(uint64_t userData) = 0;
 		virtual void Remove(SpatialHandle handle) = 0;
 		virtual void Clear() = 0;

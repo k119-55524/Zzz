@@ -8,7 +8,7 @@
 #include "engine/scene/domain/IObjectDomain.h"
 #include "engine/scene/domain/IEntityDomain.h"
 #include "engine/scene/storage/ISpatialStorage.h"
-#include "engine/scene/storage/SceneTreeContainer.h"
+#include "engine/scene/storage/NodeStorage.h"
 
 using namespace zzz::core;
 
@@ -25,7 +25,7 @@ namespace zzz::engine
 	 * @class GameLayer
 	 * @brief Слой игрового мира сцены (2D/3D), обладающий иерархическим деревом и пространственным индексом.
 	 *
-	 * @details Инкапсулирует SceneTreeContainer, ISpatialStorage, IObjectDomain и IEntityDomain.
+	 * @details Инкапсулирует NodeStorage, ISpatialStorage, IObjectDomain и IEntityDomain.
 	 * Реализует общий жизненный цикл кадра (BeginFrame, Update) и двухпроходный Populate.
 	 */
 	class GameLayer final : public ILayer
@@ -48,21 +48,18 @@ namespace zzz::engine
 			const LayerData& layerData,
 			const ScriptFactory& scriptFactory) override;
 
-		[[nodiscard]] SceneTreeContainer& GetTreeContainer() noexcept { return m_TreeContainer; }
-		[[nodiscard]] const SceneTreeContainer& GetTreeContainer() const noexcept { return m_TreeContainer; }
-
 	private:
 		void OnUpdateDomains(float dt);
 		void OnUpdateSpatial();
 
-		[[nodiscard]] NodeHandle PopulateGameObject(const GameObjectData& objData, const ScriptFactory& scriptFactory);
-		[[nodiscard]] NodeHandle PopulateEntity(const GameObjectData& objData);
+		void PopulateGameObject(NodeHandle handle, const GameObjectData& objData, const ScriptFactory& scriptFactory);
+		void PopulateEntity(NodeHandle handle, const GameObjectData& objData);
 
 		std::shared_ptr<ResourceManager> m_ResourceManager;
 
 		std::unique_ptr<IObjectDomain>   m_ObjectDomain;
 		std::unique_ptr<IEntityDomain>   m_EntityDomain;
 		std::unique_ptr<ISpatialStorage> m_SpatialStorage;
-		SceneTreeContainer               m_TreeContainer;
+		NodeStorage                      m_NodeStorage;
 	};
 }

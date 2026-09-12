@@ -307,16 +307,11 @@ namespace zzz::builder
 		return config;
 	}
 
-	static GameObjectData ParseGameObjectJson(const json& objJson)
+	static GameObjectData ParseGameObjectJson(const json& objJson, uint32_t parentIndex = 0xFFFFFFFF)
 	{
 		std::string name = objJson.value("name", "GameObject");
 
 		Guid objGuid{};
-		if (objJson.contains("guid") && objJson["guid"].is_string())
-		{
-			if (auto parsed = Guid::Parse(objJson["guid"].get<std::string>()))
-				objGuid = *parsed;
-		}
 
 		bool isEntity = objJson.value(c_FieldIsEntity, false);
 		bool isActive = objJson.value("isActive", true);
@@ -381,7 +376,24 @@ namespace zzz::builder
 				scriptGuids.push_back(*parsed);
 		}
 
-		return GameObjectData(objGuid, std::move(name), isEntity, isActive, position, rotation, scale, meshGuid, materialGuid, std::move(scriptGuids));
+		return GameObjectData(objGuid, std::move(name), isEntity, isActive, position, rotation, scale, meshGuid, materialGuid, std::move(scriptGuids), parentIndex);
+	}
+
+	static void FlattenGameObjectJson(const json& objJson, uint32_t parentIndex, std::vector<GameObjectData>& outObjects)
+	{
+		const uint32_t myIndex = static_cast<uint32_t>(outObjects.size());
+		outObjects.push_back(ParseGameObjectJson(objJson, parentIndex));
+
+		if (objJson.contains("children") && objJson["children"].is_array())
+		{
+			for (const auto& childElem : objJson["children"])
+			{
+				if (childElem.is_object())
+				{
+					FlattenGameObjectJson(childElem, myIndex, outObjects);
+				}
+			}
+		}
 	}
 
 	static SceneTransitionParams ReadTransitionParams(const json& transJson, const SceneTransitionParams& defaultParams = {})
@@ -851,7 +863,7 @@ namespace zzz::builder
 							for (const auto& objElem : layerElem["objects"])
 							{
 								if (objElem.is_object())
-									layerObjects.push_back(ParseGameObjectJson(objElem));
+									FlattenGameObjectJson(objElem, 0xFFFFFFFF, layerObjects);
 							}
 						}
 

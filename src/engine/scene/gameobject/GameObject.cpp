@@ -1,6 +1,6 @@
 #include "core/utils/Ensure.h"
 #include "engine/scene/gameobject/GameObject.h"
-#include "engine/scene/storage/SceneTreeContainer.h"
+#include "engine/scene/storage/NodeStorage.h"
 #include "core/userscripts/base_script/Script.h"
 #include <algorithm>
 
@@ -17,92 +17,92 @@ namespace zzz::engine
 
 	uint32_t GameObject::GetSpatialHandle() const
 	{
-		ensure(m_SceneTree != nullptr, "GameObject::GetSpatialHandle: объект не привязан к сцене");
-		return m_SceneTree->GetSpatialHandle(m_NodeHandle);
+		ensure(m_NodeStorage != nullptr, "GameObject::GetSpatialHandle: объект не привязан к сцене");
+		return m_NodeStorage->GetSpatialHandle(m_NodeHandle);
 	}
 
 	void GameObject::SetSpatialHandle(uint32_t handle)
 	{
-		ensure(m_SceneTree != nullptr, "GameObject::SetSpatialHandle: объект не привязан к сцене");
-		m_SceneTree->SetSpatialHandle(m_NodeHandle, handle);
+		ensure(m_NodeStorage != nullptr, "GameObject::SetSpatialHandle: объект не привязан к сцене");
+		m_NodeStorage->SetSpatialHandle(m_NodeHandle, handle);
 	}
 
 	bool GameObject::IsActive() const
 	{
-		ensure(m_SceneTree != nullptr, "GameObject::IsActive: объект не привязан к сцене");
-		return m_SceneTree->IsActive(m_NodeHandle);
+		ensure(m_NodeStorage != nullptr, "GameObject::IsActive: объект не привязан к сцене");
+		return m_NodeStorage->IsActive(m_NodeHandle);
 	}
 
 	void GameObject::SetActive(bool active)
 	{
-		ensure(m_SceneTree != nullptr, "GameObject::SetActive: объект не привязан к сцене");
-		m_SceneTree->SetActive(m_NodeHandle, active);
+		ensure(m_NodeStorage != nullptr, "GameObject::SetActive: объект не привязан к сцене");
+		m_NodeStorage->SetActive(m_NodeHandle, active);
 	}
 
 	void GameObject::SetLocalPosition(const Vec3<zF32>& pos)
 	{
-		ensure(m_SceneTree != nullptr, "GameObject::SetLocalPosition: объект не привязан к сцене");
-		m_SceneTree->SetLocalPosition(m_NodeHandle, pos);
+		ensure(m_NodeStorage != nullptr, "GameObject::SetLocalPosition: объект не привязан к сцене");
+		m_NodeStorage->SetLocalPosition(m_NodeHandle, pos);
 	}
 
 	Vec3<zF32> GameObject::GetLocalPosition() const
 	{
-		ensure(m_SceneTree != nullptr, "GameObject::GetLocalPosition: объект не привязан к сцене");
-		return m_SceneTree->GetLocalPosition(m_NodeHandle);
+		ensure(m_NodeStorage != nullptr, "GameObject::GetLocalPosition: объект не привязан к сцене");
+		return m_NodeStorage->GetLocalPosition(m_NodeHandle);
 	}
 
 	void GameObject::SetLocalRotation(const Quat<zF32>& rot)
 	{
-		ensure(m_SceneTree != nullptr, "GameObject::SetLocalRotation: объект не привязан к сцене");
-		m_SceneTree->SetLocalRotation(m_NodeHandle, rot);
+		ensure(m_NodeStorage != nullptr, "GameObject::SetLocalRotation: объект не привязан к сцене");
+		m_NodeStorage->SetLocalRotation(m_NodeHandle, rot);
 	}
 
 	Quat<zF32> GameObject::GetLocalRotation() const
 	{
-		ensure(m_SceneTree != nullptr, "GameObject::GetLocalRotation: объект не привязан к сцене");
-		return m_SceneTree->GetLocalRotation(m_NodeHandle);
+		ensure(m_NodeStorage != nullptr, "GameObject::GetLocalRotation: объект не привязан к сцене");
+		return m_NodeStorage->GetLocalRotation(m_NodeHandle);
 	}
 
 	void GameObject::SetLocalScale(const Vec3<zF32>& scale)
 	{
-		ensure(m_SceneTree != nullptr, "GameObject::SetLocalScale: объект не привязан к сцене");
-		m_SceneTree->SetLocalScale(m_NodeHandle, scale);
+		ensure(m_NodeStorage != nullptr, "GameObject::SetLocalScale: объект не привязан к сцене");
+		m_NodeStorage->SetLocalScale(m_NodeHandle, scale);
 	}
 
 	Vec3<zF32> GameObject::GetLocalScale() const
 	{
-		ensure(m_SceneTree != nullptr, "GameObject::GetLocalScale: объект не привязан к сцене");
-		return m_SceneTree->GetLocalScale(m_NodeHandle);
+		ensure(m_NodeStorage != nullptr, "GameObject::GetLocalScale: объект не привязан к сцене");
+		return m_NodeStorage->GetLocalScale(m_NodeHandle);
 	}
 
 	const Mat4<zF32>& GameObject::GetLocalMatrix() const
 	{
-		ensure(m_SceneTree != nullptr, "GameObject::GetLocalMatrix: объект не привязан к сцене");
-		return m_SceneTree->GetLocalMatrix(m_NodeHandle);
+		ensure(m_NodeStorage != nullptr, "GameObject::GetLocalMatrix: объект не привязан к сцене");
+		return m_NodeStorage->GetLocalMatrix(m_NodeHandle);
 	}
 
 	const Mat4<zF32>& GameObject::GetWorldMatrix() const
 	{
-		ensure(m_SceneTree != nullptr, "GameObject::GetWorldMatrix: объект не привязан к сцене");
-		return m_SceneTree->GetWorldMatrix(m_NodeHandle);
+		ensure(m_NodeStorage != nullptr, "GameObject::GetWorldMatrix: объект не привязан к сцене");
+		return m_NodeStorage->GetWorldMatrix(m_NodeHandle);
 	}
 
 	GameObject* GameObject::GetParent() const
 	{
-		ensure(m_SceneTree != nullptr, "GameObject::GetParent: объект не привязан к сцене");
-		const NodeHandle parentHandle = m_SceneTree->GetParent(m_NodeHandle);
+		ensure(m_NodeStorage != nullptr, "GameObject::GetParent: объект не привязан к сцене");
+		const NodeHandle parentHandle = m_NodeStorage->GetParent(m_NodeHandle);
 		if (parentHandle.IsValid())
 		{
-			return m_SceneTree->GetNodeOwner(parentHandle);
+			return m_NodeStorage->GetNodeOwner(parentHandle);
 		}
 		return nullptr;
 	}
 
 	void GameObject::SetParent(GameObject* newParent, bool keepWorldTransform)
 	{
-		ensure(m_SceneTree != nullptr, "GameObject::SetParent: объект не привязан к сцене");
+		ensure(m_NodeStorage != nullptr, "GameObject::SetParent: объект не привязан к сцене");
 		const NodeHandle parentHandle = (newParent != nullptr) ? newParent->GetNodeHandle() : NodeHandle{};
-		m_SceneTree->SetParent(m_NodeHandle, parentHandle, keepWorldTransform);
+		m_NodeStorage->SetParent(m_NodeHandle, parentHandle, keepWorldTransform);
 	}
 
 	void GameObject::AddScript(std::shared_ptr<Script> script)

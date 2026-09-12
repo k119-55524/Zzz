@@ -16,11 +16,11 @@ using namespace zzz::math;
 
 namespace zzz::engine
 {
-	class SceneTreeContainer;
+	class NodeStorage;
 
 	/**
 	 * @class GameObject
-	 * @brief Легковесный фасад сущности сцены, объединяющий SceneTreeContainer, ресурсы и скрипты.
+	 * @brief Легковесный фасад сущности сцены, объединяющий NodeStorage, ресурсы и скрипты.
 	 */
 	class GameObject final
 	{
@@ -31,14 +31,14 @@ namespace zzz::engine
 		~GameObject() = default;
 
 		// --- Привязка к контейнеру сцены ---
-		void BindSceneTree(SceneTreeContainer* tree, NodeHandle handle) noexcept
+		void BindNodeStorage(NodeStorage* storage, NodeHandle handle) noexcept
 		{
-			m_SceneTree = tree;
+			m_NodeStorage = storage;
 			m_NodeHandle = handle;
 		}
 
 		[[nodiscard]] NodeHandle GetNodeHandle() const noexcept { return m_NodeHandle; }
-		[[nodiscard]] SceneTreeContainer* GetSceneTree() const noexcept { return m_SceneTree; }
+		[[nodiscard]] NodeStorage* GetNodeStorage() const noexcept { return m_NodeStorage; }
 
 		// --- Идентификация ---
 		[[nodiscard]] const Guid& GetGuid() const noexcept { return m_Guid; }
@@ -88,8 +88,8 @@ namespace zzz::engine
 	private:
 		Guid m_Guid;
 
-		SceneTreeContainer* m_SceneTree{ nullptr };
-		NodeHandle          m_NodeHandle{};
+		NodeStorage* m_NodeStorage{ nullptr };
+		NodeHandle   m_NodeHandle{};
 
 		std::string         m_Name;
 

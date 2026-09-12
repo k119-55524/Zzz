@@ -146,4 +146,13 @@ extern "C"
 		std::string_view sv(ext);
 		return sv == zzz::builder::c_ExtView;
 	}
+
+	BUILDER_API bool GenerateGuidNative(char* outBuffer, uint32_t bufferSize)
+	{
+		if (!outBuffer || bufferSize < 37) return false;
+		const auto str = zzz::core::Guid::Generate().ToString();
+		std::memcpy(outBuffer, str.c_str(), 36);
+		outBuffer[36] = '\0';
+		return true;
+	}
 }

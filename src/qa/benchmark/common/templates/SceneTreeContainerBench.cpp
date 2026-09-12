@@ -1,47 +1,73 @@
 #include <benchmark/benchmark.h>
-#include "engine/scene/storage/SceneTreeContainer.h"
+#include "engine/scene/storage/NodeStorage.h"
+#include "core/io/package/GameObjectData.h"
 #include "math/utils/Types.h"
 #include <vector>
 
 using namespace zzz;
+using namespace zzz::core;
 using namespace zzz::engine;
 
-// 1. Бенчмарк пакетного создания узлов
-static void BM_SceneTreeContainer_CreateNode(benchmark::State& state)
+// 1. Бенчмарк пакетного создания хранилища узлов
+static void BM_NodeStorage_Construct(benchmark::State& state)
 {
 	const size_t count = static_cast<size_t>(state.range(0));
+	std::vector<GameObjectData> objects;
+	objects.reserve(count);
+	for (size_t i = 0; i < count; ++i)
+	{
+		objects.emplace_back(
+			Guid::Generate(),
+			"BenchmarkNode",
+			false,
+			true,
+			Vec3<zF32>{ 0.0f, 0.0f, 0.0f },
+			Quat<zF32>{ 0.0f, 0.0f, 0.0f, 1.0f },
+			Vec3<zF32>{ 1.0f, 1.0f, 1.0f },
+			Guid{},
+			Guid{},
+			std::vector<Guid>{},
+			0xFFFFFFFF
+		);
+	}
 
 	for (auto _ : state)
 	{
-		SceneTreeContainer container;
-		for (size_t i = 0; i < count; ++i)
-		{
-			auto h = container.CreateNode("BenchmarkNode");
-			benchmark::DoNotOptimize(h);
-		}
+		NodeStorage container(objects);
+		benchmark::DoNotOptimize(container);
 	}
 }
-BENCHMARK(BM_SceneTreeContainer_CreateNode)->Arg(1000)->Arg(10000);
+BENCHMARK(BM_NodeStorage_Construct)->Arg(1000)->Arg(10000);
 
 // 2. Бенчмарк ResolveTransforms на плоской сцене
-static void BM_SceneTreeContainer_ResolveFlat(benchmark::State& state)
+static void BM_NodeStorage_ResolveFlat(benchmark::State& state)
 {
 	const size_t count = static_cast<size_t>(state.range(0));
-	SceneTreeContainer container;
-
-	std::vector<NodeHandle> handles;
-	handles.reserve(count);
+	std::vector<GameObjectData> objects;
+	objects.reserve(count);
 	for (size_t i = 0; i < count; ++i)
 	{
-		handles.push_back(container.CreateNode("Node"));
+		objects.emplace_back(
+			Guid::Generate(),
+			"Node",
+			false,
+			true,
+			Vec3<zF32>{ 0.0f, 0.0f, 0.0f },
+			Quat<zF32>{ 0.0f, 0.0f, 0.0f, 1.0f },
+			Vec3<zF32>{ 1.0f, 1.0f, 1.0f },
+			Guid{},
+			Guid{},
+			std::vector<Guid>{},
+			0xFFFFFFFF
+		);
 	}
 
-	container.ResolveTransforms();
+	NodeStorage container(objects);
 
 	// Помечаем 1% узлов грязными
 	for (size_t i = 0; i < count; i += 100)
 	{
-		container.SetLocalPosition(handles[i], ::zzz::math::Vec3<zF32>{ 1.0f, 2.0f, 3.0f });
+		container.SetLocalPosition(NodeHandle{ static_cast<uint32_t>(i), 1 }, ::zzz::math::Vec3<zF32>{ 1.0f, 2.0f, 3.0f });
 	}
 
 	for (auto _ : state)
@@ -50,23 +76,49 @@ static void BM_SceneTreeContainer_ResolveFlat(benchmark::State& state)
 		benchmark::ClobberMemory();
 	}
 }
-BENCHMARK(BM_SceneTreeContainer_ResolveFlat)->Arg(10000)->Arg(100000);
+BENCHMARK(BM_NodeStorage_ResolveFlat)->Arg(10000)->Arg(100000);
 
 // 3. Бенчмарк ResolveTransforms на глубоком дереве (цепочка 100 узлов вглубь)
-static void BM_SceneTreeContainer_ResolveHierarchy(benchmark::State& state)
+static void BM_NodeStorage_ResolveHierarchy(benchmark::State& state)
 {
-	SceneTreeContainer container;
 	constexpr size_t depth = 100;
+	std::vector<GameObjectData> objects;
+	objects.reserve(depth);
 
-	NodeHandle parent = container.CreateNode("Root");
+	// Root
+	objects.emplace_back(
+		Guid::Generate(),
+		"Root",
+		false,
+		true,
+		Vec3<zF32>{ 0.0f, 0.0f, 0.0f },
+		Quat<zF32>{ 0.0f, 0.0f, 0.0f, 1.0f },
+		Vec3<zF32>{ 1.0f, 1.0f, 1.0f },
+		Guid{},
+		Guid{},
+		std::vector<Guid>{},
+		0xFFFFFFFF
+	);
+
+	// Children chain
 	for (size_t i = 1; i < depth; ++i)
 	{
-		NodeHandle child = container.CreateNode("Child");
-		container.SetParent(child, parent, false);
-		parent = child;
+		objects.emplace_back(
+			Guid::Generate(),
+			"Child",
+			false,
+			true,
+			Vec3<zF32>{ 0.0f, 0.0f, 0.0f },
+			Quat<zF32>{ 0.0f, 0.0f, 0.0f, 1.0f },
+			Vec3<zF32>{ 1.0f, 1.0f, 1.0f },
+			Guid{},
+			Guid{},
+			std::vector<Guid>{},
+			static_cast<uint32_t>(i - 1)
+		);
 	}
 
-	container.ResolveTransforms();
+	NodeStorage container(objects);
 
 	for (auto _ : state)
 	{
@@ -75,4 +127,4 @@ static void BM_SceneTreeContainer_ResolveHierarchy(benchmark::State& state)
 		benchmark::ClobberMemory();
 	}
 }
-BENCHMARK(BM_SceneTreeContainer_ResolveHierarchy);
+BENCHMARK(BM_NodeStorage_ResolveHierarchy);

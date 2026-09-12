@@ -37,7 +37,7 @@ namespace zzz::engine
 		if (!m_IsVisible)
 			return;
 
-		m_TreeContainer.BeginFrame();
+		m_NodeStorage.BeginFrame();
 	}
 
 	void GameLayer::Update(float dt)
@@ -57,66 +57,63 @@ namespace zzz::engine
 
 	void GameLayer::OnUpdateSpatial()
 	{
-		m_TreeContainer.ResolveTransforms();
+		m_NodeStorage.ResolveTransforms();
 	}
 
 	void GameLayer::Populate(const LayerData& layerData, const ScriptFactory& scriptFactory)
 	{
-		std::unordered_map<Guid, NodeHandle> guidToHandle;
+		const auto& objects = layerData.GetObjects();
+		if (objects.empty())
+			return;
 
-		// --- Проход 1: Создание объектов и регистрация в структурах слоя ---
-		for (const auto& objData : layerData.GetObjects())
+		// Шаг 1: Формируем плоский список сцены
+		m_NodeStorage = NodeStorage(objects);
+
+		// Шаг 2: Создаем игровые объекты / скрипты / ECS-сущности
+		const size_t nodeCount = m_NodeStorage.GetNodeCount();
+		for (uint32_t i = 0; i < static_cast<uint32_t>(nodeCount); ++i)
 		{
-			const NodeHandle handle = objData.IsEntity()
-				? PopulateEntity(objData)
-				: PopulateGameObject(objData, scriptFactory);
+			const NodeHandle handle = m_NodeStorage.GetHandle(i);
+			const uint32_t dataIdx = m_NodeStorage.GetLayerObjectIndex(handle);
+			const auto& objData = objects[dataIdx];
 
-			// Общие параметры пространственного узла (и для GameObject, и для Entity)
-			m_TreeContainer.SetActive(handle, objData.IsActive());
-			m_TreeContainer.SetLocalPosition(handle, objData.GetPosition());
-			m_TreeContainer.SetLocalRotation(handle, objData.GetRotation());
-			m_TreeContainer.SetLocalScale(handle, objData.GetScale());
-
-			const uint32_t spHandle = m_SpatialStorage->Insert(static_cast<uint64_t>(handle.index));
-			m_TreeContainer.SetSpatialHandle(handle, spHandle);
-
-			guidToHandle[objData.GetGuid()] = handle;
+			if (m_NodeStorage.GetNodeType(handle) == SceneNodeType::Entity)
+				PopulateEntity(handle, objData);
+			else
+				PopulateGameObject(handle, objData, scriptFactory);
 		}
 
-		// --- Проход 2: Связывание иерархии ---
-		for (const auto& objData : layerData.GetObjects())
+		// Шаг 3: Пространственный индекс для рендера/выборки (Spatial Index)
+		// Передаем NodeStorage с уже рассчитанными мировыми матрицами/позициями
+		m_SpatialStorage->Build(m_NodeStorage);
+	}
+
+	void GameLayer::PopulateEntity(NodeHandle handle, const GameObjectData& objData)
+	{
+		(void)handle;
+		m_EntityDomain->CreateEntity(objData.GetGuid(), objData.GetName());
+
+		// TODO (Этап 15 ECS): При полноценной реализации EntityWorld связать узел и сущность:
+		// 1. Записать NodeHandle как компонент сущности (TransformComponent / NodeComponent).
+		// 2. Записать полученный uint32_t entityId обратно в NodeMetadata узла:
+		//    m_NodeStorage.SetEntityId(handle, entityId);
+
+		// Точка расширения: загрузка ресурсов меша для рендера сущностей
+		if (m_ResourceManager != nullptr && objData.GetMeshGuid() != Guid{})
 		{
-			const auto& parentGuid = objData.GetParentGuid();
-			if (parentGuid != Guid{})
+			auto res = m_ResourceManager->LoadDataAsset<MeshData>(objData.GetMeshGuid());
+			if (res)
 			{
-				auto childIt = guidToHandle.find(objData.GetGuid());
-				if (childIt != guidToHandle.end())
-				{
-					auto parentIt = guidToHandle.find(parentGuid);
-					if (parentIt != guidToHandle.end())
-					{
-						m_TreeContainer.SetParent(childIt->second, parentIt->second, false);
-					}
-					else
-					{
-						DOutWarning("[GameLayer::Populate] Родитель с GUID '{}' не найден для объекта '{}' в слое '{}'",
-							parentGuid.ToString(), objData.GetName(), m_Name);
-					}
-				}
+				DOut("[GameLayer::PopulateEntity] Меш '{}' для Entity успешно загружен", objData.GetMeshGuid().ToString());
 			}
 		}
 	}
 
-	NodeHandle GameLayer::PopulateEntity(const GameObjectData& objData)
-	{
-		m_EntityDomain->CreateEntity(objData.GetGuid(), objData.GetName());
-		return m_TreeContainer.CreateNode(nullptr);
-	}
-
-	NodeHandle GameLayer::PopulateGameObject(const GameObjectData& objData, const ScriptFactory& scriptFactory)
+	void GameLayer::PopulateGameObject(NodeHandle handle, const GameObjectData& objData, const ScriptFactory& scriptFactory)
 	{
 		GameObject* go = m_ObjectDomain->CreateObject(objData.GetGuid(), objData.GetName());
-		NodeHandle handle = m_TreeContainer.CreateNode(go);
+		go->BindNodeStorage(&m_NodeStorage, handle);
+		m_NodeStorage.SetNodeOwner(handle, go);
 
 		go->SetMeshGuid(objData.GetMeshGuid());
 		go->SetMaterialGuid(objData.GetMaterialGuid());
@@ -144,7 +141,5 @@ namespace zzz::engine
 					objData.GetMeshGuid().ToString(), res.error());
 			}
 		}
-
-		return handle;
 	}
 }

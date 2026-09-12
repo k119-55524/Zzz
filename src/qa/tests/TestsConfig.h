@@ -21,5 +21,5 @@
 #define Z_TEST_CORE_BIT_TREE_TRACKER // 64-арное битовое дерево изменений BitTreeTracker (Пункт 11.2)
 
 // --- Движок и сцена (engine/) ---
-#define Z_TEST_ENGINE_SCENE_TREE_CONTAINER // SoA дерево сцены SceneTreeContainer (Пункт 11.3)
+#define Z_TEST_ENGINE_NODE_STORAGE // SoA хранилище узлов слоя сцены NodeStorage (Пункт 11.3)
 

@@ -27,6 +27,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Defines.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Ensure.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Guid.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/Guid.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Macroses.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/MemoryUtils.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/ThrowWrappers.h
@@ -73,6 +74,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eWinResize.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eGAPIType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eLayerType.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eSpatialStorageType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/ePackage.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/eTargetPlatform.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverterGAPITypes.h

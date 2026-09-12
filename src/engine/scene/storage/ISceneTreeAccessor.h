@@ -26,7 +26,7 @@ namespace zzz::engine
 		uint32_t index{ 0xFFFFFFFF };
 		uint32_t generation{ 0 };
 
-		/// @brief Проверка на ненулевой дескриптор (полную проверку с generation выполняет SceneTreeContainer::IsValid).
+		/// @brief Проверка на ненулевой дескриптор (полную проверку с generation выполняет NodeStorage::IsValid).
 		[[nodiscard]] constexpr bool IsValid() const noexcept { return index != 0xFFFFFFFF; }
 
 		[[nodiscard]] constexpr bool operator==(const NodeHandle& other) const noexcept
@@ -65,6 +65,7 @@ namespace zzz::engine
 		};
 
 		SpatialHandle spatialHandle{ 0xFFFFFFFF };
+		uint32_t      layerObjectIndex{ 0xFFFFFFFF };
 		uint32_t      generation{ 1 };
 		bool          isAlive{ true };
 		bool          isActive{ true };

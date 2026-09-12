@@ -33,10 +33,10 @@ namespace zzz::core
 			Guid meshGuid,
 			Guid materialGuid,
 			std::vector<Guid> scriptGuids,
-			Guid parentGuid = Guid{});
+			uint32_t parentIndex = 0xFFFFFFFF);
 
 		[[nodiscard]] const Guid& GetGuid() const noexcept { return m_Guid; }
-		[[nodiscard]] const Guid& GetParentGuid() const noexcept { return m_ParentGuid; }
+		[[nodiscard]] uint32_t GetParentIndex() const noexcept { return m_ParentIndex; }
 		[[nodiscard]] const std::string& GetName() const noexcept { return m_Name; }
 		[[nodiscard]] bool IsEntity() const noexcept { return m_IsEntity; }
 		[[nodiscard]] bool IsActive() const noexcept { return m_IsActive; }
@@ -55,7 +55,7 @@ namespace zzz::core
 
 	private:
 		Guid m_Guid;
-		Guid m_ParentGuid;
+		uint32_t m_ParentIndex{ 0xFFFFFFFF };
 		std::string m_Name;
 		bool m_IsEntity{ false };
 		bool m_IsActive{ true };

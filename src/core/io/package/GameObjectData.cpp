@@ -13,9 +13,9 @@ namespace zzz::core
 		Guid meshGuid,
 		Guid materialGuid,
 		std::vector<Guid> scriptGuids,
-		Guid parentGuid)
+		uint32_t parentIndex)
 		: m_Guid(guid)
-		, m_ParentGuid(parentGuid)
+		, m_ParentIndex(parentIndex)
 		, m_Name(std::move(name))
 		, m_IsEntity(isEntity)
 		, m_IsActive(isActive)
@@ -31,7 +31,7 @@ namespace zzz::core
 	std::expected<void, std::string> GameObjectData::Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const
 	{
 		return serializer.Serialize(buffer, m_Guid)
-			.and_then([&]() { return serializer.Serialize(buffer, m_ParentGuid); })
+			.and_then([&]() { return serializer.Serialize(buffer, m_ParentIndex); })
 			.and_then([&]() { return serializer.Serialize(buffer, m_Name); })
 			.and_then([&]() { return serializer.Serialize(buffer, m_IsEntity ? uint8_t{ 1 } : uint8_t{ 0 }); })
 			.and_then([&]() { return serializer.Serialize(buffer, m_IsActive ? uint8_t{ 1 } : uint8_t{ 0 }); })
@@ -61,7 +61,7 @@ namespace zzz::core
 		uint32_t scriptsCount = 0;
 
 		auto res = serializer.Deserialize(buffer, offset, m_Guid)
-			.and_then([&]() { return serializer.Deserialize(buffer, offset, m_ParentGuid); })
+			.and_then([&]() { return serializer.Deserialize(buffer, offset, m_ParentIndex); })
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, m_Name); })
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, entityRaw); })
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, activeRaw); })

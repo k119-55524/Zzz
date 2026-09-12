@@ -1,0 +1,151 @@
+#include "qa/tests/TestsConfig.h"
+
+#ifdef Z_TEST_ENGINE_NODE_STORAGE
+
+#include <gtest/gtest.h>
+#include "engine/scene/storage/NodeStorage.h"
+#include "core/io/package/GameObjectData.h"
+
+using namespace zzz;
+using namespace zzz::core;
+using namespace zzz::engine;
+
+static GameObjectData CreateDummyObject(
+	std::string name,
+	Vec3<zF32> pos = { 0.0f, 0.0f, 0.0f },
+	Quat<zF32> rot = { 0.0f, 0.0f, 0.0f, 1.0f },
+	Vec3<zF32> scale = { 1.0f, 1.0f, 1.0f },
+	uint32_t parentIndex = 0xFFFFFFFF,
+	bool isEntity = false)
+{
+	return GameObjectData(
+		Guid::Generate(),
+		std::move(name),
+		isEntity,
+		true,
+		pos,
+		rot,
+		scale,
+		Guid{},
+		Guid{},
+		{},
+		parentIndex
+	);
+}
+
+TEST(NodeStorageTest, BatchConstructionAndValidation)
+{
+	std::vector<GameObjectData> objects = {
+		CreateDummyObject("Node0", { 1.0f, 2.0f, 3.0f }),
+		CreateDummyObject("Node1", { 4.0f, 5.0f, 6.0f }, { 0.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, 0xFFFFFFFF, true)
+	};
+
+	NodeStorage container(objects);
+
+	EXPECT_EQ(container.GetNodeCount(), 2u);
+
+	NodeHandle h0 = container.GetHandle(0);
+	NodeHandle h1 = container.GetHandle(1);
+
+	EXPECT_TRUE(h0.IsValid());
+	EXPECT_TRUE(h1.IsValid());
+	EXPECT_TRUE(container.IsValid(h0));
+	EXPECT_TRUE(container.IsValid(h1));
+
+	EXPECT_EQ(container.GetNodeType(h0), SceneNodeType::GameObject);
+	EXPECT_EQ(container.GetNodeType(h1), SceneNodeType::Entity);
+
+	EXPECT_EQ(container.GetLayerObjectIndex(h0), 0u);
+	EXPECT_EQ(container.GetLayerObjectIndex(h1), 1u);
+
+	EXPECT_EQ(container.GetLocalPosition(h0).x, 1.0f);
+	EXPECT_EQ(container.GetLocalPosition(h1).x, 4.0f);
+
+	EXPECT_TRUE(container.IsActive(h0));
+	container.SetActive(h0, false);
+	EXPECT_FALSE(container.IsActive(h0));
+}
+
+TEST(NodeStorageTest, HierarchyAndTransforms)
+{
+	// Root (0) -> Child (1)
+	std::vector<GameObjectData> objects = {
+		CreateDummyObject("Root", { 10.0f, 0.0f, 0.0f }),
+		CreateDummyObject("Child", { 0.0f, 5.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, 0)
+	};
+
+	NodeStorage container(objects);
+
+	NodeHandle root = container.GetHandle(0);
+	NodeHandle child = container.GetHandle(1);
+
+	EXPECT_EQ(container.GetParent(child), root);
+	EXPECT_FALSE(container.GetParent(root).IsValid());
+
+	// Мировые матрицы уже рассчитаны в конструкторе
+	const auto rootWorld = container.GetWorldMatrix(root);
+	const auto childWorld = container.GetWorldMatrix(child);
+
+	EXPECT_NEAR(rootWorld._41, 10.0f, 1e-4f);
+	EXPECT_NEAR(rootWorld._42, 0.0f, 1e-4f);
+
+	// Мировое положение ребенка должно быть (10, 5, 0)
+	EXPECT_NEAR(childWorld._41, 10.0f, 1e-4f);
+	EXPECT_NEAR(childWorld._42, 5.0f, 1e-4f);
+}
+
+TEST(NodeStorageTest, SetParentReparenting)
+{
+	std::vector<GameObjectData> objects = {
+		CreateDummyObject("Root", { 10.0f, 0.0f, 0.0f }),
+		CreateDummyObject("Child1", { 0.0f, 5.0f, 0.0f }),
+		CreateDummyObject("Child2", { 0.0f, 0.0f, 2.0f })
+	};
+
+	NodeStorage container(objects);
+
+	NodeHandle root = container.GetHandle(0);
+	NodeHandle child1 = container.GetHandle(1);
+	NodeHandle child2 = container.GetHandle(2);
+
+	container.SetParent(child1, root, false);
+	container.SetParent(child2, root, false);
+
+	EXPECT_EQ(container.GetParent(child1), root);
+	EXPECT_EQ(container.GetParent(child2), root);
+
+	// Отвязываем child1 от родителя
+	container.SetParent(child1, NodeHandle{}, false);
+	EXPECT_FALSE(container.GetParent(child1).IsValid());
+	EXPECT_EQ(container.GetParent(child2), root);
+}
+
+TEST(NodeStorageTest, DirtyTrackerAndResolveTransforms)
+{
+	std::vector<GameObjectData> objects = {
+		CreateDummyObject("Root", { 0.0f, 0.0f, 0.0f }),
+		CreateDummyObject("Child", { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, 0)
+	};
+
+	NodeStorage container(objects);
+	NodeHandle root = container.GetHandle(0);
+	NodeHandle child = container.GetHandle(1);
+
+	// Новый кадр
+	container.BeginFrame();
+
+	// Сдвигаем Root на (10, 0, 0)
+	container.SetLocalPosition(root, math::Vec3<zF32>{ 10.0f, 0.0f, 0.0f });
+
+	// Каскадный пересчет
+	container.ResolveTransforms();
+
+	const auto rootWorld = container.GetWorldMatrix(root);
+	const auto childWorld = container.GetWorldMatrix(child);
+
+	EXPECT_NEAR(rootWorld._41, 10.0f, 1e-4f);
+	EXPECT_NEAR(childWorld._41, 11.0f, 1e-4f);
+}
+
+#endif // Z_TEST_ENGINE_NODE_STORAGE
+

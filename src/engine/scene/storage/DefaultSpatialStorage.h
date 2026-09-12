@@ -20,6 +20,7 @@ namespace zzz::engine
 		DefaultSpatialStorage() = default;
 		~DefaultSpatialStorage() override = default;
 
+		void Build(const NodeStorage& nodeStorage) override;
 		SpatialHandle Insert(uint64_t userData) override;
 		void Remove(SpatialHandle handle) override;
 		void Clear() override;

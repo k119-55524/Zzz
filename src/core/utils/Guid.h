@@ -74,6 +74,9 @@ namespace zzz::core
 			return Guid(bytes);
 		}
 
+		/// @brief Генерирует новый глобально уникальный идентификатор версии 4 (RFC 4122 UUID v4).
+		[[nodiscard]] static Guid Generate() noexcept;
+
 		/// @brief Форматирует GUID в стандартную дефисную шестнадцатеричную строку (8-4-4-4-12).
 		/// @return Форматированная строка GUID в нижнем регистре.
 		[[nodiscard]] inline std::string ToString() const
