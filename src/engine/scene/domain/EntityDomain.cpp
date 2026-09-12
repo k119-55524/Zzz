@@ -2,8 +2,8 @@
 
 namespace zzz::engine
 {
-	EntityDomain::EntityDomain(::zzz::core::eLayerType layerType)
-		: m_LayerType(layerType)
+	EntityDomain::EntityDomain()
+		: m_World{}
 	{
 	}
 

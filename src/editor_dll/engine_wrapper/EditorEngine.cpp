@@ -317,10 +317,7 @@ namespace zzz::editor
 				for (auto* scriptRaw : activeScripts)
 				{
 					scriptRaw->SetActive(false);
-					if (auto owner = scriptRaw->GetOwner())
-					{
-						owner->RemoveScript(std::static_pointer_cast<zzz::core::Script>(scriptRaw->shared_from_this()));
-					}
+					// TODO: Полноценная выгрузка/удаление скриптов из GameObject будет реализована при согласовании архитектуры жизненного цикла скриптов.
 				}
 
 				// 2. Удаляем все активные GameScript-ы (та же логика: сначала отписка, потом очистка)

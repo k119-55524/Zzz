@@ -6,7 +6,7 @@
 
 namespace zzz::engine
 {
-	LayerMVVM::LayerMVVM(std::string name, std::unique_ptr<IMVVMDomain> mvvmDomain)
+	LayerMVVM::LayerMVVM(std::string name, std::unique_ptr<MVVMDomain> mvvmDomain)
 		: ILayer(std::move(name), eLayerType::LayerMVVM)
 		, m_MVVMDomain(std::move(mvvmDomain))
 	{

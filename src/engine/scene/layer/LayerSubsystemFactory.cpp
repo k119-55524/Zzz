@@ -1,40 +1,45 @@
-#include "LayerSubsystemFactory.h"
+
 #include "core/utils/MemoryUtils.h"
-#include "core/utils/Ensure.h"
-#include "engine/scene/domain/ObjectDomain.h"
-#include "engine/scene/domain/EntityDomain.h"
 #include "engine/scene/domain/MVVMDomain.h"
+#include "engine/scene/domain/ObjectDomain2D.h"
+#include "engine/scene/domain/ObjectDomain3D.h"
+#include "engine/scene/domain/EntityDomain.h"
 #include "engine/scene/storage/DefaultSpatialStorage.h"
+
+#include "LayerSubsystemFactory.h"
+
+using namespace zzz::core;
 
 namespace zzz::engine
 {
-	std::unique_ptr<IObjectDomain> LayerSubsystemFactory::CreateObjectDomain(::zzz::core::eLayerType layerType) const
+	std::unique_ptr<IObjectDomain> LayerSubsystemFactory::CreateObjectDomain2D() const
 	{
-		ensure(layerType == ::zzz::core::eLayerType::Layer3D || layerType == ::zzz::core::eLayerType::Layer2D,
-			"ObjectDomain поддерживается только для Layer3D и Layer2D.");
-		return ::zzz::core::safe_make_unique<ObjectDomain>();
+		return safe_make_unique<ObjectDomain2D>();
 	}
 
-	std::unique_ptr<IEntityDomain> LayerSubsystemFactory::CreateEntityDomain(::zzz::core::eLayerType layerType) const
+	std::unique_ptr<IObjectDomain> LayerSubsystemFactory::CreateObjectDomain3D() const
 	{
-		ensure(layerType == ::zzz::core::eLayerType::Layer3D || layerType == ::zzz::core::eLayerType::Layer2D,
-			"EntityDomain поддерживается только для Layer3D и Layer2D.");
-		return ::zzz::core::safe_make_unique<EntityDomain>(layerType);
+		return safe_make_unique<ObjectDomain3D>();
 	}
 
-	std::unique_ptr<ISpatialStorage> LayerSubsystemFactory::CreateSpatialStorage(::zzz::core::eSpatialStorageType spatialType) const
+	std::unique_ptr<IEntityDomain> LayerSubsystemFactory::CreateEntityDomain() const
+	{
+		return safe_make_unique<EntityDomain>();
+	}
+
+	std::unique_ptr<ISpatialStorage> LayerSubsystemFactory::CreateSpatialStorage(eSpatialStorageType spatialType) const
 	{
 		switch (spatialType)
 		{
-		case ::zzz::core::eSpatialStorageType::Flat:
-			return ::zzz::core::safe_make_unique<DefaultSpatialStorage>();
+		case eSpatialStorageType::Flat:
+			return safe_make_unique<DefaultSpatialStorage>();
 		default:
-			THROW_RUNTIME("Неподдерживаемый eSpatialStorageType ({}) в LayerSubsystemFactory", ::zzz::core::ToString(spatialType));
+			THROW_RUNTIME("Неподдерживаемый eSpatialStorageType ({}) в LayerSubsystemFactory", ToString(spatialType));
 		}
 	}
 
-	std::unique_ptr<IMVVMDomain> LayerSubsystemFactory::CreateMVVMDomain() const
+	std::unique_ptr<MVVMDomain> LayerSubsystemFactory::CreateMVVMDomain() const
 	{
-		return ::zzz::core::safe_make_unique<MVVMDomain>();
+		return safe_make_unique<MVVMDomain>();
 	}
 }

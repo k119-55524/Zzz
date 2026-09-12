@@ -1,28 +1,63 @@
 #pragma once
 
 #include <vector>
-#include "core/types/BaseTypes.h"
-#include "core/enums/eVisualType.h"
+#include <variant>
+
 #include "core/utils/Guid.h"
+#include "math/utils/Types.h"
+#include "core/enums/eVisualType.h"
 
 using namespace zzz::core;
 
 namespace zzz::engine
 {
 	/**
+	 * @struct SimpleMeshData
+	 * @brief Меш (сетка + материал, для SimpleMesh3D и Mesh2D).
+	 */
+	struct SimpleMeshData
+	{
+		Guid meshGuid;
+		Guid materialGuid;
+	};
+
+	/**
+	 * @struct MultiMesh3DData
+	 * @brief Составной 3D-меш (N сабмешей + N материалов по индексу).
+	 */
+	struct MultiMesh3DData
+	{
+		std::vector<Guid> submeshes;
+		std::vector<Guid> materials;
+	};
+
+	/**
+	 * @struct SpriteData
+	 * @brief 2D-спрайт с текстурой, материалом, UV и тинтом.
+	 */
+	struct SpriteData
+	{
+		Guid textureGuid;
+		Guid materialGuid;
+		zF32 uv[4];
+		zU32 tint;
+	};
+
+	/**
 	 * @struct VisualPayload
-	 * @brief Визуальная нагрузка объекта GameObject на сцене.
+	 * @brief Визуальная нагрузка объекта GameObject на базе std::variant.
 	 */
 	struct VisualPayload
 	{
-		eVisualType       type{ eVisualType::None };
-		Guid              resourceGuid;                    ///< MeshGuid, TextureGuid или EffectGuid
-		Guid              materialGuid;                    ///< Основной материал (для SimpleMesh3D, Sprite, Mesh2D)
-		zF32              uv[4]{ 0.0f, 0.0f, 1.0f, 1.0f }; ///< u0, v0, u1, v1 для Sprite
-		zU32              tint{ 0xFFFFFFFF };              ///< Цвет RGBA8 для Sprite
+		eVisualType type;
+		std::variant<std::monostate, SpriteData, SimpleMeshData, MultiMesh3DData> data;
 
-		// Для MultiMesh3D:
-		std::vector<Guid> submeshes;                       ///< submeshes[i] — сетка
-		std::vector<Guid> materials;                       ///< materials[i] — материал для submeshes[i]
+		VisualPayload() noexcept
+			: type(eVisualType::None)
+			, data(std::monostate{})
+		{
+		}
 	};
 }
+
+

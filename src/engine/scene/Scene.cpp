@@ -63,10 +63,24 @@ namespace zzz::engine
 			switch (layerType)
 			{
 			case eLayerType::Layer3D:
+			{
+				auto objectDomain = factory.CreateObjectDomain3D();
+				auto entityDomain = factory.CreateEntityDomain();
+				auto spatialStorage = factory.CreateSpatialStorage(eSpatialStorageType::Flat);
+
+				m_Layers.push_back(safe_make_unique<GameLayer>(
+					layerData.GetName(),
+					layerType,
+					m_ResourceManager,
+					std::move(objectDomain),
+					std::move(entityDomain),
+					std::move(spatialStorage)));
+				break;
+			}
 			case eLayerType::Layer2D:
 			{
-				auto objectDomain = factory.CreateObjectDomain(layerType);
-				auto entityDomain = factory.CreateEntityDomain(layerType);
+				auto objectDomain = factory.CreateObjectDomain2D();
+				auto entityDomain = factory.CreateEntityDomain();
 				auto spatialStorage = factory.CreateSpatialStorage(eSpatialStorageType::Flat);
 
 				m_Layers.push_back(safe_make_unique<GameLayer>(

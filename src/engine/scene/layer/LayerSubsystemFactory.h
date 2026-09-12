@@ -1,11 +1,13 @@
 #pragma once
 
 #include <memory>
-#include "core/enums/eLayerType.h"
+
 #include "core/enums/eSpatialStorageType.h"
+#include "engine/scene/domain/MVVMDomain.h"
 #include "engine/scene/domain/IObjectDomain.h"
 #include "engine/scene/domain/IEntityDomain.h"
-#include "engine/scene/domain/IMVVMDomain.h"
+
+using namespace zzz::core;
 
 namespace zzz::engine
 {
@@ -22,9 +24,11 @@ namespace zzz::engine
 		LayerSubsystemFactory() = default;
 		virtual ~LayerSubsystemFactory() = default;
 
-		[[nodiscard]] std::unique_ptr<IObjectDomain>   CreateObjectDomain(::zzz::core::eLayerType layerType) const;
-		[[nodiscard]] std::unique_ptr<IEntityDomain>   CreateEntityDomain(::zzz::core::eLayerType layerType) const;
-		[[nodiscard]] std::unique_ptr<ISpatialStorage> CreateSpatialStorage(::zzz::core::eSpatialStorageType spatialType) const;
-		[[nodiscard]] std::unique_ptr<IMVVMDomain>     CreateMVVMDomain() const;
+		[[nodiscard]] std::unique_ptr<IObjectDomain>   CreateObjectDomain2D() const;
+		[[nodiscard]] std::unique_ptr<IObjectDomain>   CreateObjectDomain3D() const;
+		[[nodiscard]] std::unique_ptr<IEntityDomain>   CreateEntityDomain() const;
+		[[nodiscard]] std::unique_ptr<MVVMDomain>     CreateMVVMDomain() const;
+
+		[[nodiscard]] std::unique_ptr<ISpatialStorage> CreateSpatialStorage(eSpatialStorageType spatialType) const;
 	};
 }

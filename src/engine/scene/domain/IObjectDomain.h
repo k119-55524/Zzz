@@ -1,26 +1,48 @@
 #pragma once
 
-#include <vector>
+#include <memory>
 #include <string>
+#include <string_view>
+#include <vector>
+#include <unordered_map>
 
 #include "core/utils/Guid.h"
-#include "engine/scene/domain/ILayerDomain.h"
+#include "core/utils/macros/MiscMacros.h"
+#include "engine/scene/visual/VisualTypes.h"
+#include "engine/scene/gameobject/GameObject.h"
+
+using namespace zzz::core;
+
+namespace zzz::core
+{
+	class GameObjectData;
+}
 
 namespace zzz::engine
 {
-	class GameObject;
-
 	/**
 	 * @class IObjectDomain
-	 * @brief Контракт домена управления классическими объектами сцены (GameObject).
+	 * @brief Базовый класс домена классических объектов: реестр, поиск по GUID/имени и контракт создания объектов.
 	 */
-	class IObjectDomain : public ILayerDomain
+	class IObjectDomain
 	{
-	public:
-		virtual ~IObjectDomain() override = default;
+		Z_NO_COPY_MOVE(IObjectDomain);
 
-		virtual GameObject* CreateObject(const ::zzz::core::Guid& guid, std::string name) = 0;
-		[[nodiscard]] virtual GameObject* FindObjectByGuid(const ::zzz::core::Guid& guid) const noexcept = 0;
-		[[nodiscard]] virtual GameObject* FindObjectByName(std::string_view name) const noexcept = 0;
+	public:
+		IObjectDomain();
+		virtual ~IObjectDomain();
+
+		[[nodiscard]] GameObject* FindObjectByGuid(const Guid& guid) const noexcept;
+		[[nodiscard]] GameObject* FindObjectByName(std::string_view name) const noexcept;
+
+		virtual GameObject* CreateObject(const GameObjectData& objData) = 0;
+		virtual GameObject* CreateObject(const Guid& guid, std::string name, VisualPayload visual = {}) = 0;
+
+	protected:
+		GameObject* RegisterObject(const Guid& guid, std::string name, VisualPayload visual);
+
+	private:
+		std::unordered_map<Guid, std::unique_ptr<GameObject>> m_ObjectsByGuid;
+		std::unordered_map<std::string, std::vector<GameObject*>> m_ObjectsByName;
 	};
 }

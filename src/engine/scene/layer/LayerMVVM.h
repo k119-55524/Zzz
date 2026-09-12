@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "engine/scene/layer/ILayer.h"
-#include "engine/scene/domain/IMVVMDomain.h"
+#include "engine/scene/domain/MVVMDomain.h"
 
 using namespace zzz::core;
 
@@ -19,14 +19,14 @@ namespace zzz::engine
 		Z_NO_COPY_MOVE(LayerMVVM);
 
 	public:
-		LayerMVVM(std::string name, std::unique_ptr<IMVVMDomain> mvvmDomain);
+		LayerMVVM(std::string name, std::unique_ptr<MVVMDomain> mvvmDomain);
 		~LayerMVVM() override = default;
 
 		void Update(float dt) override;
 		void Populate(const LayerData& layerData, const ScriptFactory& scriptFactory) override;
 
 	private:
-		std::unique_ptr<IMVVMDomain> m_MVVMDomain;
+		std::unique_ptr<MVVMDomain> m_MVVMDomain;
 	};
 }
 

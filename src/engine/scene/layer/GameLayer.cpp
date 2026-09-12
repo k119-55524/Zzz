@@ -10,7 +10,9 @@
 
 #include "GameLayer.h"
 
-Z_SET_LOG_CATEGORY(::zzz::core::Scene);
+using namespace zzz::core;
+
+Z_SET_LOG_CATEGORY(zzz::core::Scene);
 
 namespace zzz::engine
 {
@@ -26,6 +28,7 @@ namespace zzz::engine
 		, m_ObjectDomain(std::move(objectDomain))
 		, m_EntityDomain(std::move(entityDomain))
 		, m_SpatialStorage(std::move(spatialStorage))
+		, m_NodeStorage{}
 	{
 		ensure(m_ObjectDomain != nullptr, "ObjectDomain не должен быть null в GameLayer.");
 		ensure(m_EntityDomain != nullptr, "EntityDomain не должен быть null в GameLayer.");
@@ -51,7 +54,6 @@ namespace zzz::engine
 
 	void GameLayer::OnUpdateDomains(float dt)
 	{
-		m_ObjectDomain->Update(dt);
 		m_EntityDomain->Update(dt);
 	}
 
@@ -107,11 +109,8 @@ namespace zzz::engine
 
 	void GameLayer::PopulateGameObject(zU32 nodeIndex, const GameObjectData& objData, const ScriptFactory& scriptFactory)
 	{
-		GameObject* go = m_ObjectDomain->CreateObject(objData.GetGuid(), objData.GetName());
+		GameObject* go = m_ObjectDomain->CreateObject(objData);
 		go->BindNodeStorage(&m_NodeStorage, nodeIndex);
-
-		go->SetMeshGuid(objData.GetMeshGuid());
-		go->SetMaterialGuid(objData.GetMaterialGuid());
 
 		for (const auto& sGuid : objData.GetScriptGuids())
 		{

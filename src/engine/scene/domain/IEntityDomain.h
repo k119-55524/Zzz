@@ -1,21 +1,27 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <cstdint>
 
 #include "core/utils/Guid.h"
-#include "engine/scene/domain/ILayerDomain.h"
+#include "core/utils/macros/MiscMacros.h"
+
 namespace zzz::engine
 {
 	/**
 	 * @class IEntityDomain
 	 * @brief Контракт домена управления легковесными сущностями (ECS).
 	 */
-	class IEntityDomain : public ILayerDomain
+	class IEntityDomain
 	{
-	public:
-		virtual ~IEntityDomain() override = default;
+		Z_NO_COPY_MOVE(IEntityDomain);
 
+	public:
+		IEntityDomain() = default;
+		virtual ~IEntityDomain() = default;
+
+		virtual void Update(float dt) = 0;
 		virtual void CreateEntity(const ::zzz::core::Guid& guid, std::string_view name) = 0;
 		virtual void DestroyEntity(const ::zzz::core::Guid& guid) = 0;
 	};
