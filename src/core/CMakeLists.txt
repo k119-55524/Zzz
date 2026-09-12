@@ -8,7 +8,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
 
     target_sources(${TARGET_NAME} PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/CoreIncludes.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/core.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/Core.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/NativeAppData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Export.h
         ${CMAKE_CURRENT_SOURCE_DIR}/constants/Constants.h
@@ -25,6 +25,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/constants/platforms/AndroidConstants.h
         ${CMAKE_CURRENT_SOURCE_DIR}/constants/platforms/iOSConstants.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Defines.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/Converters.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Ensure.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Guid.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Guid.cpp
@@ -34,6 +35,13 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/ThrowWrappers.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/FixedLengthString.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Version.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/LogCategory.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/ToStringHelpers.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/DX12ToStringHelpers.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/VKToStringHelpers.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/MetalToStringHelpers.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/macros/LogMacros.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/macros/MiscMacros.h
         ${CMAKE_CURRENT_SOURCE_DIR}/headers/Apple.h
         ${CMAKE_CURRENT_SOURCE_DIR}/headers/MSWin.h
         ${CMAKE_CURRENT_SOURCE_DIR}/headers/Linux.h
@@ -42,6 +50,9 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/headers/Vulkan.h
         ${CMAKE_CURRENT_SOURCE_DIR}/headers/Metal.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eInitState.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eWindowState.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eAssetDirectoryKind.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eUserDirectoryKind.h
         ${CMAKE_CURRENT_SOURCE_DIR}/time/Time.h
         ${CMAKE_CURRENT_SOURCE_DIR}/time/Time.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/events/Event.h
@@ -75,17 +86,25 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eGAPIType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eLayerType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eSpatialStorageType.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/Enums/ePackage.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/Enums/eTargetPlatform.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverterGAPITypes.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverterMSWinTypes.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverterAndroidTypes.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverteriOSTypes.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverterLinuxTypes.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/Enums/platforms/ConverterMacOSTypes.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/ePackage.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eTargetPlatform.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/platforms/ConverterGAPITypes.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/platforms/ConverterMSWinTypes.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/platforms/ConverterAndroidTypes.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/platforms/ConverteriOSTypes.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/platforms/ConverterLinuxTypes.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/platforms/ConverterMacOSTypes.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/platforms/eAndroidEnums.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/platforms/eLinuxEnums.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/platforms/eMSWinEnums.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/platforms/eMacOSEnums.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/platforms/eiOSEnums.h
         ${CMAKE_CURRENT_SOURCE_DIR}/templates/DoubleBufferedVector.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/templates/SlotMap.h
         ${CMAKE_CURRENT_SOURCE_DIR}/templates/CallbackQueue.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/templates/QueueArray.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/templates/ThreadPool.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/templates/ThreadSafeQueueArray.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/templates/ThreadSafeSwapBuffer.h
         ${CMAKE_CURRENT_SOURCE_DIR}/containers/BitTreeTracker.h
         ${CMAKE_CURRENT_SOURCE_DIR}/containers/BitTreeTracker.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/scene/SceneTransitionParams.h
@@ -97,50 +116,51 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/hardware/StorageInfo.h
         ${CMAKE_CURRENT_SOURCE_DIR}/hardware/NetworkAdapterInfo.h
         ${CMAKE_CURRENT_SOURCE_DIR}/hardware/HardwareState.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/DatFileHeader.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Path.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/Path.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileSystem.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileSystemBase.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/FileSystemBase.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/ResourceStorageTraits.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/platforms/FileSystemDesktop.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/platforms/FileSystemDesktop.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/platforms/FileSystemAndroid.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/platforms/FileSystemAndroid.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/platforms/FileSystemiOS.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/platforms/FileSystemiOS.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PackageEntry.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/MeshData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/MeshData.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/DataAssetsManager.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/DataAssetsManager.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PrimaryViewData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/project/ProjectPlatformConfig.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/project/ProjectPlatformDataMSWin.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/project/ProjectPlatformDataAndroid.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/project/ProjectPlatformDataiOS.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/project/ProjectPlatformDataLinux.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/project/ProjectPlatformDataMacOS.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/start_view/ViewPlatformConfig.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/start_view/ViewDataMSWin.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/start_view/ViewDataAndroid.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/start_view/ViewDataiOS.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/start_view/ViewDataLinux.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/platforms/start_view/ViewDataMacOS.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PrimaryViewUserData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/ViewUserData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/ChildViewData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/IndependentViewData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/ProjectManifestData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/SceneData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/GameObjectData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/GameObjectData.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/LayerData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/LayerData.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/IO/package/PrefabData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/Serialize/Serializer.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/Serialize/Serializer.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/DatFileHeader.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/Path.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/Path.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/FileSystem.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/FileSystemBase.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/FileSystemBase.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/ResourceStorageTraits.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/platforms/FileSystemDesktop.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/platforms/FileSystemDesktop.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/platforms/FileSystemAndroid.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/platforms/FileSystemAndroid.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/platforms/FileSystemiOS.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/platforms/FileSystemiOS.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/PackageEntry.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/MeshData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/MeshData.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/DataAssetsManager.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/DataAssetsManager.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/PrimaryViewData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/platforms/project/ProjectPlatformConfig.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/platforms/project/ProjectPlatformDataMSWin.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/platforms/project/ProjectPlatformDataAndroid.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/platforms/project/ProjectPlatformDataiOS.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/platforms/project/ProjectPlatformDataLinux.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/platforms/project/ProjectPlatformDataMacOS.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/platforms/start_view/ViewPlatformConfig.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/platforms/start_view/ViewDataMSWin.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/platforms/start_view/ViewDataAndroid.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/platforms/start_view/ViewDataiOS.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/platforms/start_view/ViewDataLinux.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/platforms/start_view/ViewDataMacOS.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/PrimaryViewUserData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/ViewUserData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/ViewConfigData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/ChildViewData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/IndependentViewData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/ProjectManifestData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/SceneData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/GameObjectData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/GameObjectData.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/LayerData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/LayerData.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/PrefabData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/serialize/Serializer.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/serialize/Serializer.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/pch/pch.h
         ${CMAKE_CURRENT_SOURCE_DIR}/pch/pch.cpp
     )
@@ -164,7 +184,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
 
     if(APPLE)
         target_sources(${TARGET_NAME} PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}/IO/apple/Path_Apple.mm
+            ${CMAKE_CURRENT_SOURCE_DIR}/io/apple/Path_Apple.mm
         )
     endif()
 

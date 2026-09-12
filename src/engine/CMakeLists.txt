@@ -22,10 +22,12 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         pch/pch.h
         pch/pch.cpp
         # Public
-        Engine.h
-        Engine.cpp
+        engine.h
+        engine.cpp
         EngineIncludes.h
-        utils/Fwd.h
+        utils/EngineLogFlags.h
+        utils/GpuUtils.h
+        utils/MonitorUtils.h
 
         # Package & Settings
         "package/PackageManager.h" "package/PackageManager.cpp"
@@ -67,9 +69,12 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "platforms/mainloop/MainLoopEditor.h"
 
         # Native View / Window
-        "platforms/window/NativeWindow.h" "platforms/window/WindowCommon.h" "platforms/window/WindowCommon.cpp"
+        "platforms/window/NativeWindow.h" "platforms/window/NativeWindowState.h" "platforms/window/WindowCommon.h" "platforms/window/WindowCommon.cpp"
+        "platforms/window/MacOSView.h"
+        "platforms/window/iOSView.h"
         "view/View.h" "view/View.cpp"
         "view/ViewManager.h" "view/ViewManager.cpp"
+        "view/ViewWindowState.h"
 
         # Helpers
         "platforms/input/InputHelpers.h" "platforms/input/InputBase.cpp"
@@ -83,7 +88,12 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "gapi/ISurfView.h"
         "gapi/SurfView.h"
         "gapi/GAPI.h"
+        "gapi/DepthBuffer.h"
+        "gapi/Swapchain.h"
         "gapi/GAPIDebugLogger.h" "gapi/GAPIDebugLogger.cpp"
+        "gapi/clear_config/ClearConfig.h"
+        "gapi/clear_config/DepthBufferClearConfig.h"
+        "gapi/clear_config/SurfaceClearConfig.h"
         "gapi/selectors/gpu/GpuRatingEvaluator.h"
         "gapi/selectors/gpu/IGpuSelector.h"
         "gapi/selectors/gpu/directx12/DirectX12GpuSelector.h" "gapi/selectors/gpu/directx12/DirectX12GpuSelector.cpp"
@@ -100,11 +110,14 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "gapi/directx12/SurfView_DX.h" "gapi/directx12/SurfView_DX.cpp"
         "gapi/metal/MetalAPI.h" "gapi/metal/MetalAPI.mm"
         "gapi/metal/SurfView_Metal.h" "gapi/metal/SurfView_Metal.mm"
+        "gapi/metal/Swapchain_Metal.h"
 
         # Domain Interfaces & Implementations (Пункт 11.1 & 11.4)
         "scene/domain/ILayerDomain.h"
         "scene/domain/IObjectDomain.h"
         "scene/domain/IEntityDomain.h"
+        "scene/domain/IMVVMDomain.h"
+        "scene/domain/MVVMDomain.h"
         "scene/domain/ObjectDomain.h" "scene/domain/ObjectDomain.cpp"
         "scene/domain/EntityDomain.h" "scene/domain/EntityDomain.cpp"
 

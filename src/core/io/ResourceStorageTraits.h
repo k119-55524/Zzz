@@ -30,16 +30,16 @@ namespace zzz::core
 	}
 
 	/**
-	 * @struct ResourceTypeTraits
+	 * @struct ResourceStorageTraits
 	 * @brief Свойства хранения типа ресурса.
 	 */
-	struct ResourceTypeTraits
+	struct ResourceStorageTraits
 	{
 		eResourceStorageKind storageKind{ eResourceStorageKind::DataArchive };
 		std::string_view relativeDir{};
 	};
 
-	constexpr ResourceTypeTraits GetResourceStorageTraits(eResourceType type)
+	constexpr ResourceStorageTraits GetResourceStorageTraits(eResourceType type)
 	{
 		switch (type)
 		{

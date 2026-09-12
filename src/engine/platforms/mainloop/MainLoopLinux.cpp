@@ -8,7 +8,7 @@
 
 using namespace zzz::engine;
 
-MainLoop_Linux::MainLoop_Linux(const Platform& platform, std::function<void()> onUpdate) :
+MainLoopLinux::MainLoopLinux(const Platform& platform, std::function<void()> onUpdate) :
 	MainLoopBase(platform, std::move(onUpdate)),
 	m_Display{ nullptr }
 {
@@ -16,7 +16,7 @@ MainLoop_Linux::MainLoop_Linux(const Platform& platform, std::function<void()> o
 	ensure(m_Display != nullptr, "Display не получен от PlatformLinux.");
 }
 
-void MainLoop_Linux::Run()
+void MainLoopLinux::Run()
 {
 	while (isRunning)
 	{

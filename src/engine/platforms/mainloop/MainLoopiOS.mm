@@ -9,7 +9,7 @@
 using namespace zzz::engine;
 
 @interface DisplayLinkTarget_iOS : NSObject
-@property (nonatomic, assign) MainLoop_iOS* loop;
+@property (nonatomic, assign) MainLoopiOS* loop;
 - (void)update:(CADisplayLink *)displayLink;
 @end
 
@@ -24,12 +24,12 @@ using namespace zzz::engine;
 static CADisplayLink* g_DisplayLink = nil;
 static DisplayLinkTarget_iOS* g_DisplayTarget = nil;
 
-MainLoop_iOS::MainLoop_iOS(const Platform& platform, std::function<void()> onUpdate) :
+MainLoopiOS::MainLoopiOS(const Platform& platform, std::function<void()> onUpdate) :
 	MainLoopBase(platform, std::move(onUpdate))
 {
 }
 
-void MainLoop_iOS::Run()
+void MainLoopiOS::Run()
 {
     g_DisplayTarget = [[DisplayLinkTarget_iOS alloc] init];
     g_DisplayTarget.loop = this;

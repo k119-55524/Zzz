@@ -17,7 +17,7 @@ void android_main(struct android_app* app)
 	{
 		auto platformData = std::shared_ptr<android_app>(app, [](android_app*) {});
 		engine = safe_make_unique<Engine>(platformData);
-		// Запускаем движок. Он сам будет крутить цикл внутри MainLoop_Android
+		// Запускаем движок. Он сам будет крутить цикл внутри MainLoopAndroid
 		auto runRes = engine->Run();
 		if (!runRes)
 		{

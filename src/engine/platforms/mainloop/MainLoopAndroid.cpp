@@ -14,12 +14,12 @@ namespace zzz::engine {
     void ProcessAndroidInput(struct android_app* app);
 }
 
-MainLoop_Android::MainLoop_Android(const Platform& platform, std::function<void()> onUpdate) :
+MainLoopAndroid::MainLoopAndroid(const Platform& platform, std::function<void()> onUpdate) :
 	MainLoopBase(platform, std::move(onUpdate))
 {
 }
 
-void MainLoop_Android::Run()
+void MainLoopAndroid::Run()
 {
 	isRunning.store(true);
 

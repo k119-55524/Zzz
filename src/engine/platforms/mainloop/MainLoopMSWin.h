@@ -8,14 +8,14 @@
 
 namespace zzz::engine
 {
-	class MainLoop_MSWin final : public MainLoopBase
+	class MainLoopMSWin final : public MainLoopBase
 	{
-		Z_NO_COPY_MOVE(MainLoop_MSWin);
+		Z_NO_COPY_MOVE(MainLoopMSWin);
 
 	public:
-		MainLoop_MSWin() = delete;
-		MainLoop_MSWin(const Platform& platform, std::function<void()> onUpdate);
-		virtual ~MainLoop_MSWin() = default;
+		MainLoopMSWin() = delete;
+		MainLoopMSWin(const Platform& platform, std::function<void()> onUpdate);
+		virtual ~MainLoopMSWin() = default;
 
 		void Run() override;
 	};

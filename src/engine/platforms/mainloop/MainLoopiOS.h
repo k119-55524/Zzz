@@ -8,14 +8,14 @@
 
 namespace zzz::engine
 {
-	class MainLoop_iOS final : public MainLoopBase
+	class MainLoopiOS final : public MainLoopBase
 	{
-		Z_NO_COPY_MOVE(MainLoop_iOS);
+		Z_NO_COPY_MOVE(MainLoopiOS);
 
 	public:
-		MainLoop_iOS() = delete;
-		MainLoop_iOS(const Platform& platform, std::function<void()> onUpdate);
-		virtual ~MainLoop_iOS() = default;
+		MainLoopiOS() = delete;
+		MainLoopiOS(const Platform& platform, std::function<void()> onUpdate);
+		virtual ~MainLoopiOS() = default;
 
 		void Run() override;
 	};

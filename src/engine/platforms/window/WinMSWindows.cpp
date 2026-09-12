@@ -210,13 +210,13 @@ WinMSWindows::MsgProcResult WinMSWindows::MsgProc(HWND hWnd, UINT uMsg, WPARAM w
 		 *
 		 * ВАЖНО: PostQuitMessage(0) здесь намеренно не вызывается. Это окно - одно
 		 * из потенциально нескольких (Primary/Child/Independent) на одной очереди
-		 * сообщений потока (см. MainLoop_MSWin::Run() - PeekMessage с hWnd=0 вычерпывает
+		 * сообщений потока (см. MainLoopMSWin::Run() - PeekMessage с hWnd=0 вычерпывает
 		 * сообщения всех окон разом), и WM_DESTROY тут приходит для ЛЮБОГО из них, а не
 		 * только для Primary. Решение "закрыть всё приложение" принимает ViewManager -
 		 * View::HandleWindowClose() -> ViewManager::OnWindowClose() смотрит, Primary это
 		 * или нет, и только для Primary зовёт OnAllViewsClosed() -> Engine::OnAppClosed()
 		 * -> MainLoop::Stop() (isRunning.store(false), MainLoopCommon.h) - этого достаточно,
-		 * чтобы MainLoop_MSWin::Run() вышел из цикла, WM_QUIT не нужен. PostQuitMessage(0)
+		 * чтобы MainLoopMSWin::Run() вышел из цикла, WM_QUIT не нужен. PostQuitMessage(0)
 		 * тут раньше стоял безусловно и по факту закрывал ВСЕ окна при закрытии любого
 		 * одного (см. rendering_pipeline_review.md).
 		 */

@@ -10,14 +10,14 @@ struct wl_display;
 
 namespace zzz::engine
 {
-	class MainLoop_Linux final : public MainLoopBase
+	class MainLoopLinux final : public MainLoopBase
 	{
-		Z_NO_COPY_MOVE(MainLoop_Linux);
+		Z_NO_COPY_MOVE(MainLoopLinux);
 
 	public:
-		MainLoop_Linux() = delete;
-		MainLoop_Linux(const Platform& platform, std::function<void()> onUpdate);
-		virtual ~MainLoop_Linux() = default;
+		MainLoopLinux() = delete;
+		MainLoopLinux(const Platform& platform, std::function<void()> onUpdate);
+		virtual ~MainLoopLinux() = default;
 
 		void Run() override;
 

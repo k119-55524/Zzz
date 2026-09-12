@@ -8,12 +8,12 @@
 
 using namespace zzz::engine;
 
-MainLoop_MSWin::MainLoop_MSWin(const Platform& platform, std::function<void()> onUpdate) :
+MainLoopMSWin::MainLoopMSWin(const Platform& platform, std::function<void()> onUpdate) :
 	MainLoopBase(platform, onUpdate)
 {
 }
 
-void MainLoop_MSWin::Run()
+void MainLoopMSWin::Run()
 {
 	MSG msg = { 0 };
 

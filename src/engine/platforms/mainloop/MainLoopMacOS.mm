@@ -9,7 +9,7 @@
 using namespace zzz::engine;
 
 @interface DisplayLinkTarget_MacOS : NSObject
-@property (nonatomic, assign) MainLoop_MacOS* loop;
+@property (nonatomic, assign) MainLoopMacOS* loop;
 - (void)update:(NSTimer *)timer;
 @end
 
@@ -24,12 +24,12 @@ using namespace zzz::engine;
 static NSTimer* g_DisplayTimer = nil;
 static DisplayLinkTarget_MacOS* g_DisplayTarget = nil;
 
-MainLoop_MacOS::MainLoop_MacOS(const Platform& platform, std::function<void()> onUpdate) :
+MainLoopMacOS::MainLoopMacOS(const Platform& platform, std::function<void()> onUpdate) :
 	MainLoopBase(platform, std::move(onUpdate))
 {
 }
 
-void MainLoop_MacOS::Run()
+void MainLoopMacOS::Run()
 {
     g_DisplayTarget = [[DisplayLinkTarget_MacOS alloc] init];
     g_DisplayTarget.loop = this;

@@ -8,14 +8,14 @@
 
 namespace zzz::engine
 {
-	class MainLoop_Android final : public MainLoopBase
+	class MainLoopAndroid final : public MainLoopBase
 	{
-		Z_NO_COPY_MOVE(MainLoop_Android);
+		Z_NO_COPY_MOVE(MainLoopAndroid);
 
 	public:
-		MainLoop_Android() = delete;
-		MainLoop_Android(const Platform& platform, std::function<void()> onUpdate);
-		virtual ~MainLoop_Android() = default;
+		MainLoopAndroid() = delete;
+		MainLoopAndroid(const Platform& platform, std::function<void()> onUpdate);
+		virtual ~MainLoopAndroid() = default;
 
 		void Run() override;
 	};

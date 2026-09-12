@@ -8,7 +8,7 @@
 
 namespace zzz::engine
 {
-	class MainLoop_Editor : public MainLoopBase
+	class MainLoopEditor : public MainLoopBase
 	{
 	public:
 		using MainLoopBase::MainLoopBase;
