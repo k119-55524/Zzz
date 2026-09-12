@@ -1,7 +1,7 @@
 #pragma once
 
-#include "math/utils/Types.h"
 #include "math/quat/Quat.h"
+#include "math/utils/Types.h"
 #include "math/vector/Vec3.h"
 
 using namespace zzz::math;
@@ -14,13 +14,16 @@ using namespace zzz::math;
 {
 	inline constexpr zU32 kInvalidNodeIndex = 0xFFFFFFFF;
 
-	/// @brief Топология иерархии сцены (First-Child / Next-Sibling на индексах).
+	/// @brief Топология иерархии сцены (First-Child / Next-Sibling) и флаги состояния узла.
 	struct NodeTopology
 	{
 		zU32 parentIndex{ kInvalidNodeIndex };
 		zU32 firstChildIndex{ kInvalidNodeIndex };
 		zU32 nextSiblingIndex{ kInvalidNodeIndex };
 		zU32 prevSiblingIndex{ kInvalidNodeIndex };
+
+		bool isActive{ true };
+		bool isStatic{ false };
 	};
 
 	/// @brief Компоненты пространственного положения (Pos, Rot, Scale).
@@ -31,17 +34,10 @@ using namespace zzz::math;
 		Vec3<zF32> scale{ 1.0f, 1.0f, 1.0f };
 	};
 
-	/// @brief Состояние и флаги жизненного цикла узла.
-	struct NodeState
-	{
-		bool isActive{ true };   ///< Участвует ли узел в апдейте и рендере.
-		bool isStatic{ false };  ///< Статический ли объект (для батчинга).
-	};
-
 	/// @brief Внешние связи узла с другими подсистемами движка.
 	struct NodeBindings
 	{
-		zU32 spatialHandle{ kInvalidNodeIndex };    ///< Индекс в пространственной структуре ускорения.
-		zU32 layerObjectIndex{ kInvalidNodeIndex }; ///< Индекс в исходных данных слоя (LayerData).
+		zU32 spatialHandle{ kInvalidNodeIndex };
+		zU32 layerObjectIndex{ kInvalidNodeIndex };
 	};
 }

@@ -14,9 +14,9 @@ namespace zzz::engine
 			return;
 		}
 
-		// Доступ к пространственным данным узлов (мировые матрицы, состояния)
+		// Доступ к пространственным данным узлов (мировые матрицы, топология и состояния)
 		const auto worldMatrices = nodeStorage.GetWorldMatrices();
-		const auto states = nodeStorage.GetStates();
+		const auto topology = nodeStorage.GetTopology();
 
 		m_Slots.resize(count);
 		for (size_t i = 0; i < count; ++i)
@@ -26,7 +26,7 @@ namespace zzz::engine
 			const Vec3<zF32> worldPos{ worldMat._41, worldMat._42, worldMat._43 };
 			(void)worldPos; // Точка расширения под построение пространственного дерева
 
-			const bool isOccupied = states[i].isActive;
+			const bool isOccupied = topology[i].isActive;
 			m_Slots[i] = Slot{ static_cast<uint64_t>(i), isOccupied };
 		}
 		m_ActiveCount = count;

@@ -82,10 +82,11 @@ namespace zzz::engine
 			return m_LocalTransforms[nodeIndex].scale;
 		}
 
-		[[nodiscard]] const Mat4<zF32>& GetLocalMatrix(zU32 nodeIndex) const
+		[[nodiscard]] Mat4<zF32> GetLocalMatrix(zU32 nodeIndex) const
 		{
 			ensure(IsValid(nodeIndex), "NodeStorage::GetLocalMatrix: невалидный nodeIndex");
-			return m_LocalMatrices[nodeIndex];
+			const auto& local = m_LocalTransforms[nodeIndex];
+			return Mat4<zF32>::Scaling(local.scale) * local.rotation.ToMat4() * Mat4<zF32>::Translation(local.position);
 		}
 
 		[[nodiscard]] const Mat4<zF32>& GetWorldMatrix(zU32 nodeIndex) const
@@ -111,13 +112,13 @@ namespace zzz::engine
 		void SetActive(zU32 nodeIndex, bool active)
 		{
 			ensure(IsValid(nodeIndex), "NodeStorage::SetActive: невалидный nodeIndex");
-			m_States[nodeIndex].isActive = active;
+			m_Topology[nodeIndex].isActive = active;
 		}
 
 		[[nodiscard]] bool IsActive(zU32 nodeIndex) const
 		{
 			ensure(IsValid(nodeIndex), "NodeStorage::IsActive: невалидный nodeIndex");
-			return m_States[nodeIndex].isActive;
+			return m_Topology[nodeIndex].isActive;
 		}
 
 		void SetSpatialHandle(zU32 nodeIndex, zU32 spHandle)
@@ -135,7 +136,7 @@ namespace zzz::engine
 		// --- Валидация ---
 		[[nodiscard]] bool IsValid(zU32 nodeIndex) const noexcept
 		{
-			return nodeIndex < m_States.size();
+			return nodeIndex < m_Topology.size();
 		}
 
 		[[nodiscard]] zU32 GetLayerObjectIndex(zU32 nodeIndex) const
@@ -145,9 +146,9 @@ namespace zzz::engine
 		}
 
 		// --- Доступ к размерам и плоским SoA данным для подсистем (SpatialStorage, Renderer) ---
-		[[nodiscard]] size_t GetNodeCount() const noexcept { return m_States.size(); }
+		[[nodiscard]] size_t GetNodeCount() const noexcept { return m_Topology.size(); }
 		[[nodiscard]] std::span<const Mat4<zF32>> GetWorldMatrices() const noexcept { return m_WorldMatrices; }
-		[[nodiscard]] std::span<const NodeState> GetStates() const noexcept { return m_States; }
+		[[nodiscard]] std::span<const NodeTopology> GetTopology() const noexcept { return m_Topology; }
 		[[nodiscard]] std::span<const NodeBindings> GetBindings() const noexcept { return m_Bindings; }
 		[[nodiscard]] std::span<const Transform> GetLocalTransforms() const noexcept { return m_LocalTransforms; }
 #pragma endregion
@@ -157,9 +158,7 @@ namespace zzz::engine
 
 		std::vector<NodeTopology>	m_Topology;
 		std::vector<Transform>		m_LocalTransforms;
-		std::vector<Mat4<zF32>>		m_LocalMatrices;
 		std::vector<Mat4<zF32>>		m_WorldMatrices;
-		std::vector<NodeState>		m_States;
 		std::vector<NodeBindings>	m_Bindings;
 
 		BitTreeTracker m_DirtyTracker;

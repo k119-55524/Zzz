@@ -69,7 +69,7 @@ namespace zzz::engine
 		return m_NodeStorage->GetLocalScale(m_NodeIndex);
 	}
 
-	const Mat4<zF32>& GameObject::GetLocalMatrix() const
+	Mat4<zF32> GameObject::GetLocalMatrix() const
 	{
 		ensure(m_NodeStorage != nullptr, "GameObject::GetLocalMatrix: объект не привязан к сцене");
 		return m_NodeStorage->GetLocalMatrix(m_NodeIndex);

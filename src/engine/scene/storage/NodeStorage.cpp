@@ -22,9 +22,7 @@ namespace zzz::engine
 		// 1. Выделяем память под все узлы одним махом
 		m_Topology.resize(count);
 		m_LocalTransforms.resize(count);
-		m_LocalMatrices.resize(count);
 		m_WorldMatrices.resize(count);
-		m_States.resize(count);
 		m_Bindings.resize(count);
 
 		m_DirtyTracker.Prepare(static_cast<uint32_t>(count));
@@ -34,16 +32,17 @@ namespace zzz::engine
 		{
 			const auto& obj = objects[i];
 
-			m_Topology[i] = NodeTopology{};
+			m_Topology[i] = NodeTopology{
+				.isActive = obj.IsActive(),
+				.isStatic = false
+			};
 
 			m_LocalTransforms[i].position = obj.GetPosition();
 			m_LocalTransforms[i].rotation = obj.GetRotation();
 			m_LocalTransforms[i].scale = obj.GetScale();
 
-			m_LocalMatrices[i] = Mat4<zF32>::Identity();
 			m_WorldMatrices[i] = Mat4<zF32>::Identity();
 
-			m_States[i] = NodeState{ .isActive = obj.IsActive(), .isStatic = false };
 			m_Bindings[i] = NodeBindings{
 				.spatialHandle = static_cast<zU32>(i),
 				.layerObjectIndex = static_cast<zU32>(i)
@@ -77,7 +76,7 @@ namespace zzz::engine
 
 	void NodeStorage::BeginFrame()
 	{
-		m_DirtyTracker.Prepare(static_cast<uint32_t>(m_States.size()));
+		m_DirtyTracker.Prepare(static_cast<uint32_t>(m_Topology.size()));
 	}
 
 	void NodeStorage::ResolveTransforms()
@@ -90,36 +89,36 @@ namespace zzz::engine
 
 		for (const uint32_t nodeIndex : dirtyIndices)
 		{
-			if (nodeIndex >= m_States.size())
+			if (nodeIndex >= m_Topology.size())
 			{
 				continue;
 			}
 
-			if (!m_States[nodeIndex].isActive)
+			if (!m_Topology[nodeIndex].isActive)
 			{
 				continue;
 			}
 
 			const auto& local = m_LocalTransforms[nodeIndex];
-			m_LocalMatrices[nodeIndex] = Mat4<zF32>::Scaling(local.scale) * local.rotation.ToMat4() * Mat4<zF32>::Translation(local.position);
+			const Mat4<zF32> localMatrix = Mat4<zF32>::Scaling(local.scale) * local.rotation.ToMat4() * Mat4<zF32>::Translation(local.position);
 
 			const uint32_t parentIdx = m_Topology[nodeIndex].parentIndex;
-			if (parentIdx != 0xFFFFFFFF && parentIdx < m_States.size())
+			if (parentIdx != 0xFFFFFFFF && parentIdx < m_Topology.size())
 			{
-				m_WorldMatrices[nodeIndex] = m_LocalMatrices[nodeIndex] * m_WorldMatrices[parentIdx];
+				m_WorldMatrices[nodeIndex] = localMatrix * m_WorldMatrices[parentIdx];
 			}
 			else
 			{
-				m_WorldMatrices[nodeIndex] = m_LocalMatrices[nodeIndex];
+				m_WorldMatrices[nodeIndex] = localMatrix;
 			}
 
-			// Каскадно обновляем детей (используя готовую m_LocalMatrices[child], если сам ребёнок не dirty)
+			// Каскадно обновляем детей
 			const uint32_t firstChild = m_Topology[nodeIndex].firstChildIndex;
-			if (firstChild != 0xFFFFFFFF && firstChild < m_States.size())
+			if (firstChild != 0xFFFFFFFF && firstChild < m_Topology.size())
 			{
 				const auto& currentWorld = m_WorldMatrices[nodeIndex];
 				uint32_t childIndex = firstChild;
-				while (childIndex != 0xFFFFFFFF && childIndex < m_States.size())
+				while (childIndex != 0xFFFFFFFF && childIndex < m_Topology.size())
 				{
 					ResolveSubtree(childIndex, currentWorld);
 					childIndex = m_Topology[childIndex].nextSiblingIndex;
@@ -130,24 +129,18 @@ namespace zzz::engine
 
 	void NodeStorage::ResolveSubtree(uint32_t nodeIndex, const Mat4<zF32>& parentWorld)
 	{
-		if (!m_States[nodeIndex].isActive)
+		if (!m_Topology[nodeIndex].isActive)
 		{
 			return;
 		}
 
-		// Если сам ребёнок был помечен как dirty, его TRS изменился — обновляем localMatrix
-		if (m_DirtyTracker.IsSet(nodeIndex))
-		{
-			const auto& local = m_LocalTransforms[nodeIndex];
-			m_LocalMatrices[nodeIndex] = Mat4<zF32>::Scaling(local.scale) * local.rotation.ToMat4() * Mat4<zF32>::Translation(local.position);
-		}
-
-		// Вычисляем мировую матрицу ребенка: (его локальная * родительский мир)
-		m_WorldMatrices[nodeIndex] = m_LocalMatrices[nodeIndex] * parentWorld;
+		const auto& local = m_LocalTransforms[nodeIndex];
+		const Mat4<zF32> localMatrix = Mat4<zF32>::Scaling(local.scale) * local.rotation.ToMat4() * Mat4<zF32>::Translation(local.position);
+		m_WorldMatrices[nodeIndex] = localMatrix * parentWorld;
 
 		const auto& currentWorld = m_WorldMatrices[nodeIndex];
 		uint32_t childIndex = m_Topology[nodeIndex].firstChildIndex;
-		while (childIndex != 0xFFFFFFFF && childIndex < m_States.size())
+		while (childIndex != 0xFFFFFFFF && childIndex < m_Topology.size())
 		{
 			ResolveSubtree(childIndex, currentWorld);
 			childIndex = m_Topology[childIndex].nextSiblingIndex;

@@ -6,12 +6,14 @@
 
 #include "core/utils/Guid.h"
 #include "engine/scene/storage/NodeTypes.h"
+#include "engine/scene/visual/VisualTypes.h"
 
 namespace zzz::core
 {
 	class Script;
 }
 
+using namespace zzz::core;
 using namespace zzz::math;
 
 namespace zzz::engine
@@ -62,20 +64,36 @@ namespace zzz::engine
 		void SetLocalScale(const Vec3<zF32>& scale);
 		[[nodiscard]] Vec3<zF32> GetLocalScale() const;
 
-		[[nodiscard]] const Mat4<zF32>& GetLocalMatrix() const;
+		[[nodiscard]] Mat4<zF32> GetLocalMatrix() const;
 		[[nodiscard]] const Mat4<zF32>& GetWorldMatrix() const;
 
 		// --- Иерархия сцены ---
 		[[nodiscard]] zU32 GetParentIndex() const;
 
-		// --- Слоты графических ресурсов (для отрисовки меша и материала) ---
-		[[nodiscard]] const Guid& GetMeshGuid() const noexcept { return m_MeshGuid; }
-		void SetMeshGuid(const Guid& guid) noexcept { m_MeshGuid = guid; }
-		[[nodiscard]] bool HasMesh() const noexcept { return !m_MeshGuid.IsEmpty(); }
+		// --- Визуальная нагрузка ---
+		[[nodiscard]] eVisualType GetVisualType() const noexcept { return m_Visual.type; }
+		[[nodiscard]] bool HasVisual() const noexcept { return m_Visual.type != eVisualType::None; }
+		[[nodiscard]] const VisualPayload& GetVisual() const noexcept { return m_Visual; }
+		void SetVisual(VisualPayload visual) noexcept { m_Visual = std::move(visual); }
 
-		[[nodiscard]] const Guid& GetMaterialGuid() const noexcept { return m_MaterialGuid; }
-		void SetMaterialGuid(const Guid& guid) noexcept { m_MaterialGuid = guid; }
-		[[nodiscard]] bool HasMaterial() const noexcept { return !m_MaterialGuid.IsEmpty(); }
+		// --- Совместимые хелперы ---
+		[[nodiscard]] const Guid& GetMeshGuid() const noexcept { return m_Visual.resourceGuid; }
+		void SetMeshGuid(const Guid& guid) noexcept
+		{
+			m_Visual.resourceGuid = guid;
+			if (m_Visual.type == eVisualType::None)
+			{
+				m_Visual.type = eVisualType::SimpleMesh3D;
+			}
+		}
+		[[nodiscard]] bool HasMesh() const noexcept
+		{
+			return (m_Visual.type == eVisualType::SimpleMesh3D || m_Visual.type == eVisualType::Mesh2D) && !m_Visual.resourceGuid.IsEmpty();
+		}
+
+		[[nodiscard]] const Guid& GetMaterialGuid() const noexcept { return m_Visual.materialGuid; }
+		void SetMaterialGuid(const Guid& guid) noexcept { m_Visual.materialGuid = guid; }
+		[[nodiscard]] bool HasMaterial() const noexcept { return !m_Visual.materialGuid.IsEmpty(); }
 
 		// --- Скрипты поведения ---
 		void AddScript(std::shared_ptr<Script> script);
@@ -89,10 +107,9 @@ namespace zzz::engine
 		NodeStorage* m_NodeStorage{ nullptr };
 		zU32         m_NodeIndex{ kInvalidNodeIndex };
 
-		std::string         m_Name;
+		std::string  m_Name;
 
-		Guid m_MeshGuid;
-		Guid m_MaterialGuid;
+		VisualPayload m_Visual;
 
 		std::vector<std::shared_ptr<Script>> m_Scripts;
 	};
