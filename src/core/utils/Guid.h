@@ -41,6 +41,10 @@ namespace zzz::core
 			return true;
 		}
 
+		/// @brief Проверяет, является ли GUID ненулевым (валидным).
+		/// @return true, если хотя бы один байт ненулевой; иначе false.
+		[[nodiscard]] constexpr bool IsValid() const noexcept { return !IsEmpty(); }
+
 		/// @brief Парсит GUID из 36-символьной дефисной строки (8-4-4-4-12).
 		[[nodiscard]] static std::optional<Guid> Parse(std::string_view str) noexcept
 		{

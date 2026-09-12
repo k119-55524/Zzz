@@ -33,7 +33,9 @@ namespace zzz::core
 			Guid meshGuid,
 			Guid materialGuid,
 			std::vector<Guid> scriptGuids,
-			uint32_t parentIndex = 0xFFFFFFFF);
+			uint32_t parentIndex = 0xFFFFFFFF,
+			std::vector<Guid> submeshGuids = {},
+			std::vector<Guid> materialGuids = {});
 
 		[[nodiscard]] const Guid& GetGuid() const noexcept { return m_Guid; }
 		[[nodiscard]] uint32_t GetParentIndex() const noexcept { return m_ParentIndex; }
@@ -45,8 +47,28 @@ namespace zzz::core
 		[[nodiscard]] const Quat<zF32>& GetRotation() const noexcept { return m_Rotation; }
 		[[nodiscard]] const Vec3<zF32>& GetScale() const noexcept { return m_Scale; }
 
+		enum class eMeshType : uint8_t
+		{
+			None,
+			Simple,
+			Multi
+		};
+
 		[[nodiscard]] const Guid& GetMeshGuid() const noexcept { return m_MeshGuid; }
 		[[nodiscard]] const Guid& GetMaterialGuid() const noexcept { return m_MaterialGuid; }
+		[[nodiscard]] const std::vector<Guid>& GetSubmeshGuids() const noexcept { return m_SubmeshGuids; }
+		[[nodiscard]] const std::vector<Guid>& GetMaterialGuids() const noexcept { return m_MaterialGuids; }
+		[[nodiscard]] bool IsMultiMesh() const noexcept { return !m_SubmeshGuids.empty(); }
+		[[nodiscard]] bool HasMesh() const noexcept { return m_MeshGuid.IsValid() || IsMultiMesh(); }
+		[[nodiscard]] bool HasMaterial() const noexcept { return m_MaterialGuid.IsValid() || !m_MaterialGuids.empty(); }
+		[[nodiscard]] eMeshType GetMeshType() const noexcept
+		{
+			if (!m_SubmeshGuids.empty())
+				return eMeshType::Multi;
+			if (m_MeshGuid.IsValid())
+				return eMeshType::Simple;
+			return eMeshType::None;
+		}
 		[[nodiscard]] const std::vector<Guid>& GetScriptGuids() const noexcept { return m_ScriptGuids; }
 
 	protected:
@@ -68,5 +90,7 @@ namespace zzz::core
 		Guid m_MaterialGuid;
 
 		std::vector<Guid> m_ScriptGuids;
+		std::vector<Guid> m_SubmeshGuids;
+		std::vector<Guid> m_MaterialGuids;
 	};
 }

@@ -30,13 +30,25 @@ namespace zzz::engine
 	GameObject* ObjectDomain3D::CreateObject(const GameObjectData& objData)
 	{
 		VisualPayload visual;
-		if (objData.GetMeshGuid() != Guid{})
+		switch (objData.GetMeshType())
 		{
+		case GameObjectData::eMeshType::Multi:
+			visual.type = eVisualType::MultiMesh3D;
+			visual.data = MultiMesh3DData{
+				.submeshes = objData.GetSubmeshGuids(),
+				.materials = objData.GetMaterialGuids()
+			};
+			break;
+		case GameObjectData::eMeshType::Simple:
 			visual.type = eVisualType::SimpleMesh3D;
 			visual.data = SimpleMeshData{
 				.meshGuid = objData.GetMeshGuid(),
 				.materialGuid = objData.GetMaterialGuid()
 			};
+			break;
+		case GameObjectData::eMeshType::None:
+		default:
+			break;
 		}
 
 		return CreateObject(objData.GetGuid(), objData.GetName(), std::move(visual));
@@ -44,7 +56,7 @@ namespace zzz::engine
 
 	GameObject* ObjectDomain3D::CreateObject(const Guid& guid, std::string name, VisualPayload visual)
 	{
-		ValidateVisual(visual);
+
 		return RegisterObject(guid, std::move(name), std::move(visual));
 	}
 }

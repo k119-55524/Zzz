@@ -13,7 +13,9 @@ namespace zzz::core
 		Guid meshGuid,
 		Guid materialGuid,
 		std::vector<Guid> scriptGuids,
-		uint32_t parentIndex)
+		uint32_t parentIndex,
+		std::vector<Guid> submeshGuids,
+		std::vector<Guid> materialGuids)
 		: m_Guid(guid)
 		, m_ParentIndex(parentIndex)
 		, m_Name(std::move(name))
@@ -25,6 +27,8 @@ namespace zzz::core
 		, m_MeshGuid(meshGuid)
 		, m_MaterialGuid(materialGuid)
 		, m_ScriptGuids(std::move(scriptGuids))
+		, m_SubmeshGuids(std::move(submeshGuids))
+		, m_MaterialGuids(std::move(materialGuids))
 	{
 	}
 
@@ -50,6 +54,29 @@ namespace zzz::core
 					res = serializer.Serialize(buffer, sGuid);
 					if (!res) return res;
 				}
+				return {};
+			})
+			.and_then([&]() -> std::expected<void, std::string> {
+				const uint32_t submeshesCount = static_cast<uint32_t>(m_SubmeshGuids.size());
+				auto res = serializer.Serialize(buffer, submeshesCount);
+				if (!res) return res;
+
+				for (const auto& smGuid : m_SubmeshGuids)
+				{
+					res = serializer.Serialize(buffer, smGuid);
+					if (!res) return res;
+				}
+
+				const uint32_t materialsCount = static_cast<uint32_t>(m_MaterialGuids.size());
+				res = serializer.Serialize(buffer, materialsCount);
+				if (!res) return res;
+
+				for (const auto& matGuid : m_MaterialGuids)
+				{
+					res = serializer.Serialize(buffer, matGuid);
+					if (!res) return res;
+				}
+
 				return {};
 			});
 	}
@@ -91,6 +118,40 @@ namespace zzz::core
 				return res;
 			}
 			m_ScriptGuids.push_back(sGuid);
+		}
+
+		// Обратная совместимость (Правило 17 / 31): если буфер исчерпан (старый формат), мультимеш пустой
+		m_SubmeshGuids.clear();
+		m_MaterialGuids.clear();
+		if (offset >= buffer.size())
+		{
+			return {};
+		}
+
+		uint32_t submeshesCount = 0;
+		res = serializer.Deserialize(buffer, offset, submeshesCount);
+		if (!res) return res;
+
+		m_SubmeshGuids.reserve(submeshesCount);
+		for (uint32_t i = 0; i < submeshesCount; ++i)
+		{
+			Guid smGuid;
+			res = serializer.Deserialize(buffer, offset, smGuid);
+			if (!res) return res;
+			m_SubmeshGuids.push_back(smGuid);
+		}
+
+		uint32_t materialsCount = 0;
+		res = serializer.Deserialize(buffer, offset, materialsCount);
+		if (!res) return res;
+
+		m_MaterialGuids.reserve(materialsCount);
+		for (uint32_t i = 0; i < materialsCount; ++i)
+		{
+			Guid matGuid;
+			res = serializer.Deserialize(buffer, offset, matGuid);
+			if (!res) return res;
+			m_MaterialGuids.push_back(matGuid);
 		}
 
 		return {};

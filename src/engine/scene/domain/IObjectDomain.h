@@ -36,9 +36,9 @@ namespace zzz::engine
 		[[nodiscard]] GameObject* FindObjectByName(std::string_view name) const noexcept;
 
 		virtual GameObject* CreateObject(const GameObjectData& objData) = 0;
-		virtual GameObject* CreateObject(const Guid& guid, std::string name, VisualPayload visual = {}) = 0;
 
 	protected:
+		virtual GameObject* CreateObject(const Guid& guid, std::string name, VisualPayload visual = {}) = 0;
 		GameObject* RegisterObject(const Guid& guid, std::string name, VisualPayload visual);
 
 	private:

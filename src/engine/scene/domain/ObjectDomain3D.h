@@ -19,6 +19,8 @@ namespace zzz::engine
 		~ObjectDomain3D() override;
 
 		GameObject* CreateObject(const GameObjectData& objData) override;
+
+	protected:
 		GameObject* CreateObject(const Guid& guid, std::string name, VisualPayload visual = {}) override;
 
 	private:

@@ -5,7 +5,6 @@
 #include <memory>
 
 #include "core/utils/Guid.h"
-#include "engine/scene/storage/NodeTypes.h"
 #include "engine/scene/storage/NodeStorage.h"
 #include "engine/scene/visual/VisualTypes.h"
 

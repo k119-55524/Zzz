@@ -14,6 +14,7 @@ cmake-build-*/
 .cache/
 .docs/
 .*/
+GEMINI.md
 
 # CMake generated files
 

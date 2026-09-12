@@ -16,11 +16,14 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/dist/$<CONFIG>")
 
 set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/.cache" CACHE PATH "Directory for downloaded external packages")
 
-# Отключает update-проверку (git fetch/checkout) для уже скачанных FetchContent-зависимостей
-# (googletest, googlebenchmark, doxygen и т.д. - см. src/qa/tests, src/qa/benchmark, automation/doxygen)
-# при каждом reconfigure. Без этого CMake лезет в сеть проверять обновления на каждый запуск конфигурации,
-# даже если исходники уже лежат в .cache/ и версия (Z_GTEST_VERSION и т.п.) не менялась.
-set(FETCHCONTENT_FULLY_DISCONNECTED ON CACHE BOOL "Skip update step for already-populated FetchContent dependencies" FORCE)
+# Если зависимости уже скачаны в .cache/ — включаем FULLY_DISCONNECTED (0 задержек, без subbuild).
+# Если кэша ещё нет (первый запуск на чистой машине) — скачиваем один раз через UPDATES_DISCONNECTED.
+if(EXISTS "${FETCHCONTENT_BASE_DIR}/googletest-src" AND EXISTS "${FETCHCONTENT_BASE_DIR}/googlebenchmark-src")
+    set(FETCHCONTENT_FULLY_DISCONNECTED ON CACHE BOOL "Fully disconnect FetchContent when dependencies exist" FORCE)
+else()
+    set(FETCHCONTENT_FULLY_DISCONNECTED OFF CACHE BOOL "Allow download when dependencies missing" FORCE)
+    set(FETCHCONTENT_UPDATES_DISCONNECTED ON CACHE BOOL "Skip update step for already-populated FetchContent dependencies" FORCE)
+endif()
 
 
 # Отключаем сканирование модулей C++20, так как они не используются в проекте и вызывают спам иерархии зависимостей в Ninja

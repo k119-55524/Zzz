@@ -30,6 +30,7 @@ namespace zzz::engine
 		, m_SpatialStorage(std::move(spatialStorage))
 		, m_NodeStorage{}
 	{
+		ensure(m_ResourceManager != nullptr, "ResourceManager не должен быть null в GameLayer.");
 		ensure(m_ObjectDomain != nullptr, "ObjectDomain не должен быть null в GameLayer.");
 		ensure(m_EntityDomain != nullptr, "EntityDomain не должен быть null в GameLayer.");
 		ensure(m_SpatialStorage != nullptr, "SpatialStorage не должен быть null в GameLayer.");
@@ -97,13 +98,35 @@ namespace zzz::engine
 		// Записать nodeIndex как компонент сущности (TransformComponent / NodeComponent).
 
 		// Точка расширения: загрузка ресурсов меша для рендера сущностей
-		if (m_ResourceManager != nullptr && objData.GetMeshGuid() != Guid{})
+		switch (objData.GetMeshType())
+		{
+		case GameObjectData::eMeshType::Multi:
+		{
+			for (const auto& smGuid : objData.GetSubmeshGuids())
+			{
+				if (smGuid.IsValid())
+				{
+					auto res = m_ResourceManager->LoadDataAsset<MeshData>(smGuid);
+					if (res)
+					{
+						DOut("[GameLayer::PopulateEntity] Меш '{}' для Entity успешно загружен", smGuid.ToString());
+					}
+				}
+			}
+			break;
+		}
+		case GameObjectData::eMeshType::Simple:
 		{
 			auto res = m_ResourceManager->LoadDataAsset<MeshData>(objData.GetMeshGuid());
 			if (res)
 			{
 				DOut("[GameLayer::PopulateEntity] Меш '{}' для Entity успешно загружен", objData.GetMeshGuid().ToString());
 			}
+			break;
+		}
+		case GameObjectData::eMeshType::None:
+		default:
+			break;
 		}
 	}
 
@@ -121,7 +144,24 @@ namespace zzz::engine
 			}
 		}
 
-		if (m_ResourceManager != nullptr && objData.GetMeshGuid() != Guid{})
+		switch (objData.GetMeshType())
+		{
+		case GameObjectData::eMeshType::Multi:
+		{
+			for (const auto& smGuid : objData.GetSubmeshGuids())
+			{
+				auto res = m_ResourceManager->LoadDataAsset<MeshData>(smGuid);
+				if (res)
+				{
+					DOut("[GameLayer::Populate] Сабмеш '{}' успешно загружен: вершин {}, треугольников {}",
+						smGuid.ToString(), res->GetVertexCount(), res->GetIndexCount() / 3);
+				}
+				else
+					DOutWarning("[GameLayer::Populate] Не удалось загрузить сабмеш '{}': {}", smGuid.ToString(), res.error());
+			}
+			break;
+		}
+		case GameObjectData::eMeshType::Simple:
 		{
 			auto res = m_ResourceManager->LoadDataAsset<MeshData>(objData.GetMeshGuid());
 			if (res)
@@ -130,10 +170,12 @@ namespace zzz::engine
 					objData.GetMeshGuid().ToString(), res->GetVertexCount(), res->GetIndexCount() / 3);
 			}
 			else
-			{
-				DOutWarning("[GameLayer::Populate] Не удалось загрузить меш '{}': {}",
-					objData.GetMeshGuid().ToString(), res.error());
-			}
+				DOutWarning("[GameLayer::Populate] Не удалось загрузить меш '{}': {}", objData.GetMeshGuid().ToString(), res.error());
+			break;
+		}
+		case GameObjectData::eMeshType::None:
+		default:
+			break;
 		}
 	}
 }

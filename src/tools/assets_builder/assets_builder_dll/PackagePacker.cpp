@@ -343,6 +343,9 @@ namespace zzz::builder
 
 		Guid meshGuid{};
 		Guid materialGuid{};
+		std::vector<Guid> submeshGuids;
+		std::vector<Guid> materialGuids;
+
 		if (objJson.contains("render") && objJson["render"].is_object())
 		{
 			const auto& render = objJson["render"];
@@ -355,6 +358,55 @@ namespace zzz::builder
 			{
 				if (auto parsed = Guid::Parse(render["material"].get<std::string>()))
 					materialGuid = *parsed;
+			}
+
+			// Мультимеш: массивы submeshes и materials
+			if (render.contains("submeshes") && render["submeshes"].is_array())
+			{
+				for (const auto& smElem : render["submeshes"])
+				{
+					if (smElem.is_string())
+					{
+						if (auto parsed = Guid::Parse(smElem.get<std::string>()))
+							submeshGuids.push_back(*parsed);
+					}
+				}
+			}
+			if (render.contains("materials") && render["materials"].is_array())
+			{
+				for (const auto& matElem : render["materials"])
+				{
+					if (matElem.is_string())
+					{
+						if (auto parsed = Guid::Parse(matElem.get<std::string>()))
+							materialGuids.push_back(*parsed);
+					}
+				}
+			}
+
+			// Альтернативный формат: "parts": [ { "mesh": "...", "material": "..." }, ... ]
+			if (render.contains("parts") && render["parts"].is_array())
+			{
+				for (const auto& partElem : render["parts"])
+				{
+					if (partElem.is_object())
+					{
+						Guid pMesh{};
+						Guid pMat{};
+						if (partElem.contains("mesh") && partElem["mesh"].is_string())
+						{
+							if (auto parsed = Guid::Parse(partElem["mesh"].get<std::string>()))
+								pMesh = *parsed;
+						}
+						if (partElem.contains("material") && partElem["material"].is_string())
+						{
+							if (auto parsed = Guid::Parse(partElem["material"].get<std::string>()))
+								pMat = *parsed;
+						}
+						submeshGuids.push_back(pMesh);
+						materialGuids.push_back(pMat);
+					}
+				}
 			}
 		}
 
@@ -376,7 +428,21 @@ namespace zzz::builder
 				scriptGuids.push_back(*parsed);
 		}
 
-		return GameObjectData(objGuid, std::move(name), isEntity, isActive, position, rotation, scale, meshGuid, materialGuid, std::move(scriptGuids), parentIndex);
+		return GameObjectData(
+			objGuid,
+			std::move(name),
+			isEntity,
+			isActive,
+			position,
+			rotation,
+			scale,
+			meshGuid,
+			materialGuid,
+			std::move(scriptGuids),
+			parentIndex,
+			std::move(submeshGuids),
+			std::move(materialGuids)
+		);
 	}
 
 	static void FlattenGameObjectJson(const json& objJson, uint32_t parentIndex, std::vector<GameObjectData>& outObjects)

@@ -30,14 +30,11 @@ namespace zzz::engine
 	GameObject* ObjectDomain2D::CreateObject(const GameObjectData& objData)
 	{
 		VisualPayload visual;
-		if (objData.GetMeshGuid() != Guid{})
-		{
-			visual.type = eVisualType::Mesh2D;
-			visual.data = SimpleMeshData{
-				.meshGuid = objData.GetMeshGuid(),
-				.materialGuid = objData.GetMaterialGuid()
-			};
-		}
+		visual.type = eVisualType::Mesh2D;
+		visual.data = SimpleMeshData{
+			.meshGuid = objData.GetMeshGuid(),
+			.materialGuid = objData.GetMaterialGuid()
+		};
 
 		return CreateObject(objData.GetGuid(), objData.GetName(), std::move(visual));
 	}
