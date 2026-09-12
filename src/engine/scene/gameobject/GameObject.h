@@ -11,6 +11,13 @@
 namespace zzz::core
 {
 	class Script;
+	class GameObjectData;
+	class ScriptFactory;
+}
+
+namespace zzz::engine
+{
+	class ResourceManager;
 }
 
 using namespace zzz::core;
@@ -29,6 +36,14 @@ namespace zzz::engine
 	public:
 		explicit GameObject(const Guid& guid, std::string name, VisualPayload visual = {});
 		~GameObject() = default;
+
+		// Полная инициализация и наполнение объекта навешанными данными (трансформ, скрипты, ресурсы)
+		void Initialize(
+			const GameObjectData& data,
+			const ScriptFactory& scriptFactory,
+			ResourceManager& resourceManager,
+			NodeStorage* storage,
+			zU32 nodeIndex);
 
 		// Привязка к контейнеру сцены
 		void BindNodeStorage(NodeStorage* storage, zU32 nodeIndex);

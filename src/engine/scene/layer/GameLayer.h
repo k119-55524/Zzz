@@ -52,14 +52,11 @@ namespace zzz::engine
 		void OnUpdateDomains(float dt);
 		void OnUpdateSpatial();
 
-		void PopulateGameObject(zU32 nodeIndex, const GameObjectData& objData, const ScriptFactory& scriptFactory);
-		void PopulateEntity(zU32 nodeIndex, const GameObjectData& objData);
-
 		std::shared_ptr<ResourceManager> m_ResourceManager;
 
-		std::unique_ptr<IObjectDomain>   m_ObjectDomain;
-		std::unique_ptr<IEntityDomain>   m_EntityDomain;
+		std::unique_ptr<IObjectDomain> m_ObjectDomain;
+		std::unique_ptr<IEntityDomain> m_EntityDomain;
 		std::unique_ptr<ISpatialStorage> m_SpatialStorage;
-		NodeStorage                      m_NodeStorage;
+		NodeStorage  m_NodeStorage;
 	};
 }

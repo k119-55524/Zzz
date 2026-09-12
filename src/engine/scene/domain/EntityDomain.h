@@ -24,6 +24,11 @@ namespace zzz::engine
 		void Clear();
 
 		void CreateEntity(const ::zzz::core::Guid& guid, std::string_view name) override;
+		void CreateEntity(
+			zU32 nodeIndex,
+			const ::zzz::core::GameObjectData& objData,
+			const ::zzz::core::ScriptFactory& scriptFactory,
+			class ResourceManager& resourceManager) override;
 		void DestroyEntity(const ::zzz::core::Guid& guid) override;
 
 		[[nodiscard]] size_t GetEntityCount() const noexcept;
