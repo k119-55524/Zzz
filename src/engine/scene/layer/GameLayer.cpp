@@ -24,10 +24,11 @@ namespace zzz::engine
 		std::unique_ptr<ISpatialStorage> spatialStorage) :
 			ILayer(guid, std::move(name), type),
 			m_ResourceManager(std::move(resourceManager)),
+			m_NodeStorage(),
 			m_ObjectDomain(std::move(objectDomain)),
 			m_EntityDomain(std::move(entityDomain)),
 			m_SpatialStorage(std::move(spatialStorage)),
-			m_NodeStorage()
+			m_LastChangeRanges()
 	{
 		ensure(m_ResourceManager != nullptr, "ResourceManager не должен быть null в GameLayer.");
 		ensure(m_ObjectDomain != nullptr, "ObjectDomain не должен быть null в GameLayer.");
@@ -37,10 +38,6 @@ namespace zzz::engine
 
 	void GameLayer::BeginFrame()
 	{
-		if (!m_IsVisible)
-			return;
-
-		m_NodeStorage.BeginFrame();
 	}
 
 	void GameLayer::Update(float dt)
@@ -59,37 +56,104 @@ namespace zzz::engine
 
 	void GameLayer::OnUpdateSpatial()
 	{
-		m_NodeStorage.ResolveTransforms();
+		m_LastChangeRanges = m_NodeStorage.ResolveTransforms();
 	}
 
 	void GameLayer::Populate(const LayerData& layerData, const ScriptFactory& scriptFactory)
 	{
+		// 1. Всегда очищаем предыдущее состояние слоя
+		m_ObjectDomain->Clear();
+		m_EntityDomain->Clear();
+		m_SpatialStorage->Clear();
+		m_LastChangeRanges = {};
+
 		const auto& objects = layerData.GetObjects();
 		if (objects.empty())
+		{
+			m_NodeStorage = NodeStorage();
 			return;
+		}
 
-		// Формируем плоский список дерева сцены
+		// 2. Формируем плоское линейное хранилище узлов сцены
 		m_NodeStorage = NodeStorage(objects);
 
-		// Создаем игровые объекты / скрипты / ECS-сущности
-		const size_t nodeCount = m_NodeStorage.GetNodeCount();
-		for (zU32 nodeIndex = 0; nodeIndex < static_cast<zU32>(nodeCount); ++nodeIndex)
-		{
-			const zU32 dataIdx = m_NodeStorage.GetLayerObjectIndex(nodeIndex);
-			const auto& objData = objects[dataIdx];
+		// 3. Предварительный подсчет сущностей, объектов и мешей для устранения реаллокаций векторов
+		size_t objectCount = 0;
+		size_t entityCount = 0;
+		size_t meshCount = 0;
 
+		const size_t nodeCount = m_NodeStorage.GetNodeCount();
+		for (size_t i = 0; i < nodeCount; ++i)
+		{
+			const auto& objData = objects[i];
 			if (objData.IsEntity())
 			{
-				m_EntityDomain->CreateEntity(nodeIndex, objData, scriptFactory, *m_ResourceManager);
+				++entityCount;
 			}
 			else
 			{
-				GameObject* go = m_ObjectDomain->CreateObject(objData);
-				go->Initialize(objData, scriptFactory, *m_ResourceManager, &m_NodeStorage, nodeIndex);
+				++objectCount;
+			}
+
+			if (objData.HasMesh())
+			{
+				++meshCount;
 			}
 		}
 
-		// Пространственное распределение
-		m_SpatialStorage->Build(m_NodeStorage);
+		m_ObjectDomain->Reserve(objectCount);
+		m_EntityDomain->Reserve(entityCount);
+		m_SpatialStorage->Reserve(meshCount);
+
+		// 4. Однопроходная регистрация в домены и пространственное хранилище
+		for (NodeHandle nodeHandle = 0; nodeHandle < static_cast<NodeHandle>(nodeCount); ++nodeHandle)
+		{
+			const auto& objData = objects[nodeHandle];
+
+			// Регистрация в пространственное хранилище только если есть геометрия
+			SpatialHandle spHandle = kInvalidSpatialHandle;
+			if (objData.HasMesh())
+			{
+				spHandle = m_SpatialStorage->AddMeshNode(nodeHandle);
+				m_NodeStorage.SetSpatialHandle(nodeHandle, spHandle);
+			}
+
+			// Взаимоисключающая маршрутизация в домены
+			if (objData.IsEntity())
+			{
+				const DomainHandle dHandle = m_EntityDomain->CreateEntity(nodeHandle, objData, scriptFactory, *m_ResourceManager);
+				m_NodeStorage.SetDomainBinding(nodeHandle, dHandle, eNodeDomainKind::Entity);
+			}
+			else
+			{
+				const auto [dHandle, go] = m_ObjectDomain->CreateObject(objData);
+				ensure(go != nullptr, "GameLayer::Populate: не удалось создать GameObject для ноды {}", nodeHandle);
+				go->Initialize(objData, scriptFactory, *m_ResourceManager, &m_NodeStorage, nodeHandle);
+
+				m_NodeStorage.SetDomainBinding(nodeHandle, dHandle, eNodeDomainKind::Object);
+			}
+		}
+
+		// 5. Контрактная проверка целостности связей каждого узла
+		const auto bindings = m_NodeStorage.GetBindings();
+		ensure(bindings.size() == nodeCount, "GameLayer::Populate: размер bindings не совпадает с nodeCount");
+
+		for (size_t i = 0; i < nodeCount; ++i)
+		{
+			const auto& binding = bindings[i];
+			const auto& objData = objects[i];
+
+			ensure(binding.domainHandle != kInvalidDomainHandle, "GameLayer::Populate: узел {} не имеет привязки к домену", i);
+			ensure(binding.domainKind != eNodeDomainKind::None, "GameLayer::Populate: узел {} имеет eNodeDomainKind::None", i);
+
+			if (objData.HasMesh())
+			{
+				ensure(binding.spatialHandle != kInvalidSpatialHandle, "GameLayer::Populate: узел {} с мешем не зарегистрирован в spatial", i);
+			}
+			else
+			{
+				ensure(binding.spatialHandle == kInvalidSpatialHandle, "GameLayer::Populate: узел {} без меша имеет spatialHandle", i);
+			}
+		}
 	}
 }

@@ -5,6 +5,7 @@
 #include <vector>
 #include "core/utils/Guid.h"
 #include "core/utils/Defines.h"
+#include "engine/scene/storage/NodeTypes.h"
 
 namespace zzz::engine
 {
@@ -16,6 +17,7 @@ namespace zzz::engine
 	{
 		::zzz::core::Guid guid;
 		std::string name;
+		NodeHandle nodeHandle{ kInvalidNodeHandle };
 	};
 
 	/**
@@ -30,7 +32,10 @@ namespace zzz::engine
 
 		Z_NO_COPY_MOVE(EntityWorld);
 
-		void CreateEntity(const ::zzz::core::Guid& guid, std::string_view name);
+		void Clear() { m_Entities.clear(); }
+		void Reserve(size_t capacity) { m_Entities.reserve(capacity); }
+
+		DomainHandle CreateEntity(const ::zzz::core::Guid& guid, std::string_view name, NodeHandle nodeHandle = kInvalidNodeHandle);
 		void DestroyEntity(const ::zzz::core::Guid& guid);
 		void Update(float dt);
 

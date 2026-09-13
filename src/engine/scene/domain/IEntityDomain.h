@@ -7,6 +7,7 @@
 #include "core/utils/Guid.h"
 #include "core/utils/macros/MiscMacros.h"
 #include "core/utils/Defines.h"
+#include "engine/scene/storage/NodeTypes.h"
 
 namespace zzz::core
 {
@@ -28,10 +29,13 @@ namespace zzz::engine
 		IEntityDomain() = default;
 		virtual ~IEntityDomain() = default;
 
+		virtual void Clear() = 0;
+		virtual void Reserve(size_t capacity) = 0;
+
 		virtual void Update(float dt) = 0;
-		virtual void CreateEntity(const ::zzz::core::Guid& guid, std::string_view name) = 0;
-		virtual void CreateEntity(
-			zU32 nodeIndex,
+		virtual DomainHandle CreateEntity(const ::zzz::core::Guid& guid, std::string_view name) = 0;
+		virtual DomainHandle CreateEntity(
+			NodeHandle nodeHandle,
 			const ::zzz::core::GameObjectData& objData,
 			const ::zzz::core::ScriptFactory& scriptFactory,
 			class ResourceManager& resourceManager) = 0;

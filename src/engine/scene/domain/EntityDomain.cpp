@@ -16,20 +16,19 @@ namespace zzz::engine
 
 	EntityDomain::~EntityDomain() = default;
 
-	void EntityDomain::CreateEntity(const Guid& guid, std::string_view name)
+	DomainHandle EntityDomain::CreateEntity(const Guid& guid, std::string_view name)
 	{
-		m_World.CreateEntity(guid, name);
+		return m_World.CreateEntity(guid, name);
 	}
 
-	void EntityDomain::CreateEntity(
-		zU32 nodeIndex,
+	DomainHandle EntityDomain::CreateEntity(
+		NodeHandle nodeHandle,
 		const GameObjectData& objData,
 		const ScriptFactory& scriptFactory,
 		ResourceManager& resourceManager)
 	{
-		(void)nodeIndex;
 		(void)scriptFactory;
-		m_World.CreateEntity(objData.GetGuid(), objData.GetName());
+		const DomainHandle handle = m_World.CreateEntity(objData.GetGuid(), objData.GetName(), nodeHandle);
 
 		// Наполнение визуальными ресурсами сущности
 		switch (objData.GetMeshType())
@@ -62,6 +61,8 @@ namespace zzz::engine
 		default:
 			break;
 		}
+
+		return handle;
 	}
 
 	void EntityDomain::DestroyEntity(const Guid& guid)
@@ -86,9 +87,11 @@ namespace zzz::engine
 
 	void EntityDomain::Clear()
 	{
-		for (const auto& entity : m_World.GetEntities())
-		{
-			m_World.DestroyEntity(entity.guid);
-		}
+		m_World.Clear();
+	}
+
+	void EntityDomain::Reserve(size_t capacity)
+	{
+		m_World.Reserve(capacity);
 	}
 }

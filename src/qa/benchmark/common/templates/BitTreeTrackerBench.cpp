@@ -26,14 +26,16 @@ static void BM_BitTreeTracker_GetDirtyIndices_Sparse(benchmark::State& state)
 	const uint32_t capacity = static_cast<uint32_t>(state.range(0));
 	BitTreeTracker tracker(capacity);
 
-	for (size_t i = 0; i < capacity; i += 100)
-	{
-		tracker.Set(static_cast<uint32_t>(i));
-	}
-
 	for (auto _ : state)
 	{
-		auto dirty = tracker.GetDirtyIndices();
+		state.PauseTiming();
+		for (size_t i = 0; i < capacity; i += 100)
+		{
+			tracker.Set(static_cast<uint32_t>(i));
+		}
+		state.ResumeTiming();
+
+		auto dirty = tracker.ConsumeDirtyIndices();
 		benchmark::DoNotOptimize(dirty.data());
 		benchmark::DoNotOptimize(dirty.size());
 	}
@@ -46,14 +48,16 @@ static void BM_BitTreeTracker_GetDirtyIndices_Dense(benchmark::State& state)
 	const uint32_t capacity = static_cast<uint32_t>(state.range(0));
 	BitTreeTracker tracker(capacity);
 
-	for (size_t i = 0; i < capacity; i += 2)
-	{
-		tracker.Set(static_cast<uint32_t>(i));
-	}
-
 	for (auto _ : state)
 	{
-		auto dirty = tracker.GetDirtyIndices();
+		state.PauseTiming();
+		for (size_t i = 0; i < capacity; i += 2)
+		{
+			tracker.Set(static_cast<uint32_t>(i));
+		}
+		state.ResumeTiming();
+
+		auto dirty = tracker.ConsumeDirtyIndices();
 		benchmark::DoNotOptimize(dirty.data());
 		benchmark::DoNotOptimize(dirty.size());
 	}
@@ -68,7 +72,7 @@ static void BM_BitTreeTracker_GetDirtyIndices_Empty(benchmark::State& state)
 
 	for (auto _ : state)
 	{
-		auto dirty = tracker.GetDirtyIndices();
+		auto dirty = tracker.ConsumeDirtyIndices();
 		benchmark::DoNotOptimize(dirty.data());
 		benchmark::DoNotOptimize(dirty.size());
 	}

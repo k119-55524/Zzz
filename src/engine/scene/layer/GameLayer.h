@@ -49,15 +49,21 @@ namespace zzz::engine
 			const LayerData& layerData,
 			const ScriptFactory& scriptFactory) override;
 
+		[[nodiscard]] std::span<const TransformChangeRange> GetLastTransformChanges() const noexcept
+		{
+			return m_LastChangeRanges;
+		}
+
 	private:
 		void OnUpdateDomains(float dt);
 		void OnUpdateSpatial();
 
 		std::shared_ptr<ResourceManager> m_ResourceManager;
 
-		std::unique_ptr<IObjectDomain> m_ObjectDomain;
-		std::unique_ptr<IEntityDomain> m_EntityDomain;
-		std::unique_ptr<ISpatialStorage> m_SpatialStorage;
-		NodeStorage  m_NodeStorage;
+		NodeStorage                           m_NodeStorage;
+		std::unique_ptr<IObjectDomain>        m_ObjectDomain;
+		std::unique_ptr<IEntityDomain>        m_EntityDomain;
+		std::unique_ptr<ISpatialStorage>      m_SpatialStorage;
+		std::span<const TransformChangeRange> m_LastChangeRanges;
 	};
 }

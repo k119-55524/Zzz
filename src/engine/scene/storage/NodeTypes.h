@@ -10,34 +10,51 @@ using namespace zzz::math;
  * @file NodeTypes.h
  * @brief Базовые типы данных и структуры узлов графа сцены (NodeStorage).
  */
- namespace zzz::engine
+namespace zzz::engine
 {
-	inline constexpr zU32 kInvalidNodeIndex = 0xFFFFFFFF;
+	using NodeHandle = zU32;
+	using DomainHandle = zU32;
+	using SpatialHandle = zU32;
 
-	/// @brief Топология иерархии сцены (First-Child / Next-Sibling) и флаги состояния узла.
-	struct NodeTopology
+	inline constexpr NodeHandle kInvalidNodeHandle = 0xFFFFFFFF;
+	inline constexpr DomainHandle kInvalidDomainHandle = 0xFFFFFFFF;
+	inline constexpr SpatialHandle kInvalidSpatialHandle = 0xFFFFFFFF;
+
+	/// @brief Флаги состояния узла сцены.
+	enum class eNodeFlags : zU8
 	{
-		zU32 parentIndex{ kInvalidNodeIndex };
-		zU32 firstChildIndex{ kInvalidNodeIndex };
-		zU32 nextSiblingIndex{ kInvalidNodeIndex };
-		zU32 prevSiblingIndex{ kInvalidNodeIndex };
-
-		bool isActive{ true };
-		bool isStatic{ false };
+		None = 0,
+		Active = 1 << 0
 	};
 
-	/// @brief Компоненты пространственного положения (Pos, Rot, Scale).
+	/// @brief Категория домена, к которому привязан узел.
+	enum class eNodeDomainKind : zU8
+	{
+		None = 0,
+		Object,
+		Entity
+	};
+
+	/// @brief Компоненты пространственного положения (Rot, Pos, Scale).
 	struct Transform
 	{
-		Vec3<zF32> position{ 0.0f, 0.0f, 0.0f };
 		Quat<zF32> rotation{ 0.0f, 0.0f, 0.0f, 1.0f };
+		Vec3<zF32> position{ 0.0f, 0.0f, 0.0f };
 		Vec3<zF32> scale{ 1.0f, 1.0f, 1.0f };
 	};
 
-	/// @brief Внешние связи узла с другими подсистемами движка.
+	/// @brief Внешние связи узла с доменным и пространственным хранилищами.
 	struct NodeBindings
 	{
-		zU32 spatialHandle{ kInvalidNodeIndex };
-		zU32 layerObjectIndex{ kInvalidNodeIndex };
+		DomainHandle domainHandle{ kInvalidDomainHandle };
+		SpatialHandle spatialHandle{ kInvalidSpatialHandle };
+		eNodeDomainKind domainKind{ eNodeDomainKind::None };
+	};
+
+	/// @brief Непрерывный диапазон индексов узлов с обновлёнными мировыми матрицами.
+	struct TransformChangeRange
+	{
+		zU32 begin{ 0 };
+		zU32 end{ 0 }; // exclusive
 	};
 }

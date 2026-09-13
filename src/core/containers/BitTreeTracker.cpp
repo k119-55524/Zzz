@@ -1,65 +1,69 @@
-
-#include <array>
-#include <algorithm>
-
 #include "core/containers/BitTreeTracker.h"
+#include <algorithm>
+#include <bit>
 
 namespace zzz::core
 {
-	BitTreeTracker::BitTreeTracker(uint32_t capacity) :
-		m_Capacity{ capacity },
-		m_Depth{ 1 },
-		m_IsDirty{ false },
-		m_Words{ 0 }
+	BitTreeTracker::BitTreeTracker(zU32 capacity)
 	{
 		Prepare(capacity);
 	}
 
-	void BitTreeTracker::Prepare(zU32 capacity)
+	void BitTreeTracker::Resize(zU32 capacity)
 	{
 		if (capacity == 0)
 			capacity = 1;
 
-		constexpr zU64 maxCapacity =
-			(kLevelOffsets.back() - kLevelOffsets[kLevelOffsets.size() - 2]) * 64ULL;
-		if (static_cast<zU64>(capacity) > maxCapacity)
-			THROW_RUNTIME("BitTreeTracker::Prepare: capacity exceeds supported tree depth");
-
-		m_Capacity = capacity;
-		m_DirtyIndices.clear();
-		if (m_DirtyIndices.capacity() < capacity)
-			m_DirtyIndices.reserve(capacity);
-
-		const size_t leafWordsNeeded = (capacity + 63ULL) >> 6;
-		const size_t currentLeafCapacity =
-			kLevelOffsets[m_Depth] - kLevelOffsets[m_Depth - 1];
-
-		// Если емкости уже достаточно под элементы
-		if (currentLeafCapacity >= leafWordsNeeded)
+		if (capacity <= m_Capacity && !m_Words.empty())
 		{
-			if (!m_IsDirty)
-				return;
-
-			std::fill(m_Words.begin(), m_Words.end(), 0ULL);
-			m_IsDirty = false;
-
+			m_Capacity = capacity;
 			return;
 		}
 
-		// Выбираем минимальную глубину пирамиды под возросшее число объектов
-		m_Depth = 1;
-		for (size_t depth = 1; depth < kLevelOffsets.size(); ++depth)
+		m_Capacity = capacity;
+
+		if (m_DirtyIndices.capacity() < capacity)
+			m_DirtyIndices.reserve(capacity);
+
+		// Вычисляем фактическое число слов на каждом уровне
+		size_t wordsNeeded = (static_cast<size_t>(capacity) + 63ULL) >> 6;
+		m_LevelWordCounts[0] = wordsNeeded;
+
+		zU32 depth = 1;
+		while (wordsNeeded > 1 && depth < kMaxDepth)
 		{
-			const size_t leafWordCapacity = kLevelOffsets[depth] - kLevelOffsets[depth - 1];
-			if (leafWordsNeeded <= leafWordCapacity)
-			{
-				m_Depth = static_cast<zU32>(depth);
-				break;
-			}
+			wordsNeeded = (wordsNeeded + 63ULL) >> 6;
+			m_LevelWordCounts[depth] = wordsNeeded;
+			depth++;
+		}
+		m_Depth = depth;
+
+		// Смещения: корень (уровень m_Depth - 1) в начале
+		size_t offset = 0;
+		for (int lvl = static_cast<int>(m_Depth) - 1; lvl >= 0; --lvl)
+		{
+			m_LevelOffsets[lvl] = offset;
+			offset += m_LevelWordCounts[lvl];
 		}
 
-		m_Words.assign(kLevelOffsets[m_Depth], 0ULL);
+		m_Words.assign(offset, 0ULL);
 		m_IsDirty = false;
+	}
+
+	void BitTreeTracker::Clear() noexcept
+	{
+		if (m_IsDirty)
+		{
+			std::fill(m_Words.begin(), m_Words.end(), 0ULL);
+			m_IsDirty = false;
+		}
+		m_DirtyIndices.clear();
+	}
+
+	void BitTreeTracker::Prepare(zU32 capacity)
+	{
+		Resize(capacity);
+		Clear();
 	}
 
 	void BitTreeTracker::Set(zU32 index) noexcept
@@ -73,7 +77,7 @@ namespace zzz::core
 
 		for (zU32 lvl = 0; lvl < m_Depth; ++lvl)
 		{
-			const size_t wordGlobal = GetLevelOffset(lvl) + wordInLevel;
+			const size_t wordGlobal = m_LevelOffsets[lvl] + wordInLevel;
 			const zU64 bitMask = 1ULL << bitInWord;
 			const zU64 oldVal = m_Words[wordGlobal];
 
@@ -87,21 +91,23 @@ namespace zzz::core
 		}
 	}
 
-	std::span<const zU32> BitTreeTracker::GetDirtyIndices()
+	std::span<const zU32> BitTreeTracker::ConsumeDirtyIndices()
 	{
 		if (!m_IsDirty)
 			return {};
 
 		m_DirtyIndices.clear();
-		TraverseLevel(m_Depth - 1, 0);
+		TraverseAndConsumeLevel(m_Depth - 1, 0);
+		m_IsDirty = false;
 
 		return m_DirtyIndices;
 	}
 
-	void BitTreeTracker::TraverseLevel(zU32 level, size_t wordIndexInLevel)
+	void BitTreeTracker::TraverseAndConsumeLevel(zU32 level, size_t wordIndexInLevel)
 	{
-		const size_t wordGlobalIndex = GetLevelOffset(level) + wordIndexInLevel;
+		const size_t wordGlobalIndex = m_LevelOffsets[level] + wordIndexInLevel;
 		zU64 mask = m_Words[wordGlobalIndex];
+		m_Words[wordGlobalIndex] = 0ULL;
 
 		if (level == 0)
 		{
@@ -125,7 +131,7 @@ namespace zzz::core
 			while (mask != 0ULL)
 			{
 				const zU32 bit = static_cast<zU32>(std::countr_zero(mask));
-				TraverseLevel(nextLevel, nextWordBase + bit);
+				TraverseAndConsumeLevel(nextLevel, nextWordBase + bit);
 				mask &= (mask - 1ULL);
 			}
 		}

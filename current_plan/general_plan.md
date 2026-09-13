@@ -50,12 +50,12 @@
 ### 📌 Текущее состояние разработки
 
 > [!IMPORTANT]
-> **Текущий активный пункт:** `Пункт 16. ResourceManager, Mesh и подготовка к загрузке в GPU`
+> **Текущий активный пункт:** `Пункт 18. Линейное runtime-хранилище сцены, домены и spatial`
 >
-> **Статус:** ⏳ Планирование  
-> **Файл детального плана текущего шага:** [`stage_16_mesh_and_gpu_upload.md`](stage_16_mesh_and_gpu_upload.md)  
+> **Статус:** ⏳ В процессе  
+> **Файл детального плана текущего шага:** [`stage_18_linear_scene_storage_domains_and_spatial.md`](stage_18_linear_scene_storage_domains_and_spatial.md)  
 > **Список открытых сквозных задач / технического долга:** [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) §4  
-> **Текущая подзадача:** Реализация этапа 16: маршрутизация ресурсов по хранилищам (DataArchive -> DataAssetsManager, PackageArchive -> PackageManager), дедупликация in-flight запросов, десериализация MeshData за один проход, формирование ресурса Mesh до состояния готовности отправки на GPU, публикация в кэш и безопасные колбэки. Все вопросы GPU upload (буферы, staging, fenceValue/VkFence, барьеры) вынесены в этап 19 после исправления формата и runtime-хранилищ сцены в этапах 17–18.
+> **Текущая подзадача:** Реализация этапа 18: построение линейного runtime-core слоя поверх гарантированного этапом 17 preorder-массива: замена FCNS на parent/subtreeEnd, линейная инициализация NodeStorage O(N) без рекурсии, расчет BitTreeTracker от фактической ёмкости, однократный пересчёт затронутых поддеревьев, живые NodeBindings (domainKind/domainHandle/spatialHandle) и плоский spatial только для узлов с мешем.
 > 
 ---
 
@@ -88,8 +88,8 @@
 | **14** | SoA-узлы сцены и SceneTreeContainer, удаление Transform | ✅ Выполнено | [`stage_14_scene_node_and_tree_container.md`](stage_14_scene_node_and_tree_container.md) | Плоский SoA-контейнер иерархии, Primary/Secondary, DestroySubtree |
 | **15** | Интеграция слоёв, кадра и Populate | ✅ Выполнено | [`stage_15_layer_integration_and_populate.md`](stage_15_layer_integration_and_populate.md) | SpatialLayer, LayerMVVM, Handover Barrier, Populate |
 | **16** | ResourceManager, Mesh и подготовка к загрузке в GPU | ⏳ Планирование | [`stage_16_mesh_and_gpu_upload.md`](stage_16_mesh_and_gpu_upload.md) | GUID -> правильное хранилище (DataAssetsManager / PackageManager), загрузчик и типизированный кэш, дедупликация in-flight запросов; формирование ресурса Mesh из MeshData до состояния готовности к отправке на GPU |
-| **17** | GUID, JSON-иерархия и упаковка сцен | ⏳ Не начато | [`stage_17_guid_json_hierarchy_and_scene_packing.md`](stage_17_guid_json_hierarchy_and_scene_packing.md) | Единое глобальное пространство неизменяемых GUID проекта: сцены/представления/скрипты/ресурсы из `.meta`, слои/объекты из JSON; GUID в `LayerData` и `GameObjectData`; нативный общий реестр и полная предсборочная проверка уникальности/типизированных ссылок; слои сохраняют JSON-порядок, деревья объектов рекурсивно уплощаются в preorder с локальными `parentIndex` |
-| **18** | Линейное runtime-хранилище сцены, домены и spatial | ⏳ Не начато | [`stage_18_linear_scene_storage_domains_and_spatial.md`](stage_18_linear_scene_storage_domains_and_spatial.md) | Parent-before-child topology и линейная инициализация `NodeStorage`; dirty-иерархия пропорциональна числу узлов, перекрывающиеся dirty-поддеревья не пересчитываются; `NodeStorage` — единственный источник transform, плоский spatial хранит только handles узлов с мешем; живые `NodeBindings` (`domainKind/domainHandle/spatialHandle`) и взаимоисключающая маршрутизация `isEntity`. `isActive` только хранится |
+| **17** | GUID, JSON-иерархия и упаковка сцен | ✅ Выполнено | [`stage_17_guid_json_hierarchy_and_scene_packing.md`](stage_17_guid_json_hierarchy_and_scene_packing.md) | Единое глобальное пространство неизменяемых GUID проекта: сцены/представления/скрипты/ресурсы из `.meta`, слои/объекты из JSON; GUID в `LayerData` и `GameObjectData`; нативный общий реестр и полная предсборочная проверка уникальности/типизированных ссылок; слои сохраняют JSON-порядок, деревья объектов рекурсивно уплощаются в preorder с локальными `parentIndex` |
+| **18** | Линейное runtime-хранилище сцены, домены и spatial | ⏳ В процессе | [`stage_18_linear_scene_storage_domains_and_spatial.md`](stage_18_linear_scene_storage_domains_and_spatial.md) | Parent-before-child topology и линейная инициализация `NodeStorage`; dirty-иерархия пропорциональна числу узлов, перекрывающиеся dirty-поддеревья не пересчитываются; `NodeStorage` — единственный источник transform, плоский spatial хранит только handles узлов с мешем; живые `NodeBindings` (`domainKind/domainHandle/spatialHandle`) и взаимоисключающая маршрутизация `isEntity`. `isActive` только хранится |
 | **19** | GPU-буферы, загрузка в GPU и GPU-меш | ⏳ Не начато | — | Создание GPUBuffer (вершинный/индексный), upload-инфраструктура, барьеры, fenceValue/VkFence, неблокирующий staging lifetime, GPU-готовность Mesh |
 | **20** | Базовые Shader и Material | ⏳ Не начато | — | Компиляция минимальных шейдеров DXIL/SPIR-V, рабочий pipeline для куба, MaterialData + Texture2D + параметры; разрешение всех обязательных зависимостей сцены и OnStart только после полной CPU/GPU-готовности |
 | **21** | Жизненный цикл компонентных скриптов и ObjectDomain | ⏳ Не начато | — | OnStart/OnUpdate/OnDestroy, CubeRotatorScript; инициализация пользовательской части на игровом потоке после фоновой сборки CPU-сцены; оптимизация ObjectDomain; безопасные мутации, деактивация и выгрузка; без обязательного перехода на ECS |

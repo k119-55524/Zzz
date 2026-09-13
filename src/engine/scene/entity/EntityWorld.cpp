@@ -5,14 +5,17 @@ using namespace zzz::core;
 
 namespace zzz::engine
 {
-	void EntityWorld::CreateEntity(const Guid& guid, std::string_view name)
+	DomainHandle EntityWorld::CreateEntity(const Guid& guid, std::string_view name, NodeHandle nodeHandle)
 	{
+		const DomainHandle handle = static_cast<DomainHandle>(m_Entities.size());
 		m_Entities.push_back(EntityStub{
 			.guid = guid,
-			.name = std::string(name)
+			.name = std::string(name),
+			.nodeHandle = nodeHandle
 		});
 
-		DOut("[EntityWorld] Зарегистрирована заглушка сущности '{}' ({})", name, guid.ToString());
+		DOut("[EntityWorld] Зарегистрирована заглушка сущности '{}' ({}) для ноды {}", name, guid.ToString(), nodeHandle);
+		return handle;
 	}
 
 	void EntityWorld::DestroyEntity(const Guid& guid)

@@ -51,9 +51,6 @@ TEST(NodeStorageTest, BatchConstructionAndValidation)
 	EXPECT_TRUE(container.IsValid(h1));
 	EXPECT_FALSE(container.IsValid(999));
 
-	EXPECT_EQ(container.GetLayerObjectIndex(h0), 0u);
-	EXPECT_EQ(container.GetLayerObjectIndex(h1), 1u);
-
 	EXPECT_EQ(container.GetLocalPosition(h0).x, 1.0f);
 	EXPECT_EQ(container.GetLocalPosition(h1).x, 4.0f);
 
@@ -72,11 +69,11 @@ TEST(NodeStorageTest, HierarchyAndTransforms)
 
 	NodeStorage container(objects);
 
-	const zU32 root = 0;
-	const zU32 child = 1;
+	const NodeHandle root = 0;
+	const NodeHandle child = 1;
 
 	EXPECT_EQ(container.GetParent(child), root);
-	EXPECT_EQ(container.GetParent(root), kInvalidNodeIndex);
+	EXPECT_EQ(container.GetParent(root), kInvalidNodeHandle);
 
 	// Мировые матрицы уже рассчитаны в конструкторе
 	const auto rootWorld = container.GetWorldMatrix(root);
@@ -100,9 +97,6 @@ TEST(NodeStorageTest, DirtyTrackerAndResolveTransforms)
 	NodeStorage container(objects);
 	const zU32 root = 0;
 	const zU32 child = 1;
-
-	// Новый кадр
-	container.BeginFrame();
 
 	// Сдвигаем Root на (10, 0, 0)
 	container.SetLocalPosition(root, math::Vec3<zF32>{ 10.0f, 0.0f, 0.0f });

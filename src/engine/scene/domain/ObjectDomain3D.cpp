@@ -27,7 +27,7 @@ namespace zzz::engine
 		}
 	}
 
-	GameObject* ObjectDomain3D::CreateObject(const GameObjectData& objData)
+	ObjectRegistration ObjectDomain3D::CreateObject(const GameObjectData& objData)
 	{
 		VisualPayload visual;
 		switch (objData.GetMeshType())
@@ -54,9 +54,9 @@ namespace zzz::engine
 		return CreateObject(objData.GetGuid(), objData.GetName(), std::move(visual));
 	}
 
-	GameObject* ObjectDomain3D::CreateObject(const Guid& guid, std::string name, VisualPayload visual)
+	ObjectRegistration ObjectDomain3D::CreateObject(const Guid& guid, std::string name, VisualPayload visual)
 	{
-
+		ValidateVisual(visual);
 		return RegisterObject(guid, std::move(name), std::move(visual));
 	}
 }

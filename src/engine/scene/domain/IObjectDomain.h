@@ -21,6 +21,16 @@ namespace zzz::core
 namespace zzz::engine
 {
 	/**
+	 * @struct ObjectRegistration
+	 * @brief Результат создания объекта в домене.
+	 */
+	struct ObjectRegistration
+	{
+		DomainHandle handle{ kInvalidDomainHandle };
+		GameObject*  object{ nullptr };
+	};
+
+	/**
 	 * @class IObjectDomain
 	 * @brief Базовый класс домена классических объектов: реестр, поиск по GUID/имени и контракт создания объектов.
 	 */
@@ -32,17 +42,23 @@ namespace zzz::engine
 		IObjectDomain();
 		virtual ~IObjectDomain();
 
+		void Clear();
+		void Reserve(size_t capacity);
+
 		[[nodiscard]] GameObject* FindObjectByGuid(const Guid& guid) const noexcept;
 		[[nodiscard]] GameObject* FindObjectByName(std::string_view name) const noexcept;
+		[[nodiscard]] GameObject* GetObjectByHandle(DomainHandle handle) const noexcept;
+		[[nodiscard]] size_t GetObjectCount() const noexcept { return m_Objects.size(); }
 
-		virtual GameObject* CreateObject(const GameObjectData& objData) = 0;
+		virtual ObjectRegistration CreateObject(const GameObjectData& objData) = 0;
 
 	protected:
-		virtual GameObject* CreateObject(const Guid& guid, std::string name, VisualPayload visual = {}) = 0;
-		GameObject* RegisterObject(const Guid& guid, std::string name, VisualPayload visual);
+		virtual ObjectRegistration CreateObject(const Guid& guid, std::string name, VisualPayload visual = {}) = 0;
+		ObjectRegistration RegisterObject(const Guid& guid, std::string name, VisualPayload visual);
 
 	private:
-		std::unordered_map<Guid, std::unique_ptr<GameObject>> m_ObjectsByGuid;
-		std::unordered_map<std::string, std::vector<GameObject*>> m_ObjectsByName;
+		std::vector<std::unique_ptr<GameObject>> m_Objects;
+		std::unordered_map<Guid, DomainHandle> m_ObjectsByGuid;
+		std::unordered_map<std::string, std::vector<DomainHandle>> m_ObjectsByName;
 	};
 }

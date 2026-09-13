@@ -13,28 +13,28 @@ using zzz::zU32;
 TEST(BitTreeTrackerTest, InitialStateAndPrepare)
 {
 	BitTreeTracker tracker;
-	EXPECT_TRUE(tracker.GetDirtyIndices().empty());
+	EXPECT_TRUE(tracker.ConsumeDirtyIndices().empty());
 
 	EXPECT_NO_THROW(tracker.Prepare(0));
 	tracker.Set(0);
-	ASSERT_EQ(tracker.GetDirtyIndices().size(), 1u);
+	ASSERT_EQ(tracker.ConsumeDirtyIndices().size(), 1u);
 
 	BitTreeTracker emptySceneTracker(0);
 	emptySceneTracker.Set(0);
-	ASSERT_EQ(emptySceneTracker.GetDirtyIndices().size(), 1u);
+	ASSERT_EQ(emptySceneTracker.ConsumeDirtyIndices().size(), 1u);
 
 	tracker.Prepare(100);
-	EXPECT_TRUE(tracker.GetDirtyIndices().empty());
+	EXPECT_TRUE(tracker.ConsumeDirtyIndices().empty());
 
 	// Выставляем бит и проверяем возврат через Prepare
 	tracker.Set(10);
-	auto dirty = tracker.GetDirtyIndices();
+	auto dirty = tracker.ConsumeDirtyIndices();
 	ASSERT_EQ(dirty.size(), 1u);
 	EXPECT_EQ(dirty[0], 10u);
 
 	// Новый Prepare сбрасывает трекер
 	tracker.Prepare(50);
-	EXPECT_TRUE(tracker.GetDirtyIndices().empty());
+	EXPECT_TRUE(tracker.ConsumeDirtyIndices().empty());
 }
 
 TEST(BitTreeTrackerTest, BoundaryIndices)
@@ -47,16 +47,16 @@ TEST(BitTreeTrackerTest, BoundaryIndices)
 	for (uint32_t idx : boundaries)
 	{
 		tracker.Set(idx);
-		auto dirty = tracker.GetDirtyIndices();
+		auto dirty = tracker.ConsumeDirtyIndices();
 		ASSERT_EQ(dirty.size(), 1u);
 		EXPECT_EQ(dirty[0], idx);
 
 		tracker.Prepare(capacity);
-		EXPECT_TRUE(tracker.GetDirtyIndices().empty());
+		EXPECT_TRUE(tracker.ConsumeDirtyIndices().empty());
 	}
 }
 
-TEST(BitTreeTrackerTest, SparseGetDirtyIndices)
+TEST(BitTreeTrackerTest, SparseConsumeDirtyIndices)
 {
 	constexpr uint32_t capacity = 20000;
 	BitTreeTracker tracker(capacity);
@@ -67,7 +67,7 @@ TEST(BitTreeTrackerTest, SparseGetDirtyIndices)
 		tracker.Set(idx);
 	}
 
-	auto dirty = tracker.GetDirtyIndices();
+	auto dirty = tracker.ConsumeDirtyIndices();
 	ASSERT_EQ(dirty.size(), expectedIndices.size());
 	for (size_t i = 0; i < dirty.size(); ++i)
 	{
@@ -75,7 +75,7 @@ TEST(BitTreeTrackerTest, SparseGetDirtyIndices)
 	}
 }
 
-TEST(BitTreeTrackerTest, DenseGetDirtyIndices)
+TEST(BitTreeTrackerTest, DenseConsumeDirtyIndices)
 {
 	BitTreeTracker tracker(200);
 	for (uint32_t i = 10; i < 30; ++i)
@@ -83,7 +83,7 @@ TEST(BitTreeTrackerTest, DenseGetDirtyIndices)
 		tracker.Set(i);
 	}
 
-	auto dirty = tracker.GetDirtyIndices();
+	auto dirty = tracker.ConsumeDirtyIndices();
 	ASSERT_EQ(dirty.size(), 20u);
 	for (uint32_t i = 0; i < 20; ++i)
 	{
@@ -97,10 +97,10 @@ TEST(BitTreeTrackerTest, PrepareShrinksLogicalCapacity)
 	tracker.Set(99);
 
 	tracker.Prepare(50);
-	EXPECT_TRUE(tracker.GetDirtyIndices().empty());
+	EXPECT_TRUE(tracker.ConsumeDirtyIndices().empty());
 
 	tracker.Set(49);
-	const auto dirty = tracker.GetDirtyIndices();
+	const auto dirty = tracker.ConsumeDirtyIndices();
 	ASSERT_EQ(dirty.size(), 1u);
 	EXPECT_EQ(dirty[0], 49u);
 }

@@ -20,7 +20,7 @@ namespace zzz::engine
 		m_Guid(guid),
 		m_Name(std::move(name)),
 		m_NodeStorage(nullptr),
-		m_NodeIndex(kInvalidNodeIndex),
+		m_NodeHandle(kInvalidNodeHandle),
 		m_Visual(std::move(visual)),
 		m_Scripts()
 	{
@@ -31,10 +31,10 @@ namespace zzz::engine
 		const ScriptFactory& scriptFactory,
 		ResourceManager& resourceManager,
 		NodeStorage* storage,
-		zU32 nodeIndex)
+		NodeHandle nodeHandle)
 	{
 		// 1. Привязка к пространственному узлу сцены
-		BindNodeStorage(storage, nodeIndex);
+		BindNodeStorage(storage, nodeHandle);
 
 		// 2. Инстанцирование и наполнение скриптами
 		for (const auto& sGuid : data.GetScriptGuids())
@@ -94,14 +94,14 @@ namespace zzz::engine
 		}
 	}
 
-	void GameObject::BindNodeStorage(NodeStorage* storage, zU32 nodeIndex)
+	void GameObject::BindNodeStorage(NodeStorage* storage, NodeHandle nodeHandle)
 	{
 		ensure(storage != nullptr, "GameObject::BindNodeStorage: указатель на NodeStorage не должен быть null");
-		ensure(nodeIndex != kInvalidNodeIndex, "GameObject::BindNodeStorage: индекс ноды не должен быть kInvalidNodeIndex");
+		ensure(nodeHandle != kInvalidNodeHandle, "GameObject::BindNodeStorage: индекс ноды не должен быть kInvalidNodeHandle");
 		ensure(m_NodeStorage == nullptr, "GameObject::BindNodeStorage: объект '{}' уже привязан к NodeStorage", m_Name);
 
 		m_NodeStorage = storage;
-		m_NodeIndex = nodeIndex;
+		m_NodeHandle = nodeHandle;
 	}
 
 	void GameObject::AddScript(std::shared_ptr<Script> script)

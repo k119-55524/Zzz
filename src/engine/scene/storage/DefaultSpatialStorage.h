@@ -1,18 +1,17 @@
 #pragma once
 
+#include <span>
 #include <vector>
-#include <cstdint>
-
 #include "engine/scene/storage/ISpatialStorage.h"
 
 namespace zzz::engine
 {
 	/**
 	 * @class DefaultSpatialStorage
-	 * @brief Простая линейная реализация пространственного хранилища (массив слотов).
+	 * @brief Линейная реализация пространственного хранилища для узлов с геометрией.
 	 *
-	 * @details Хранит элементы в плоском массиве (std::vector) с повторным использованием
-	 * освобождённых индексов через Free-List. Предоставляет доступ за O(1) и линейный GetAll.
+	 * @details Хранит плотный непрерывный массив NodeHandle для узлов с геометрией (HasMesh),
+	 * обеспечивая возврат std::span<const NodeHandle> без аллокаций.
 	 */
 	class DefaultSpatialStorage final : public ISpatialStorage
 	{
@@ -20,24 +19,18 @@ namespace zzz::engine
 		DefaultSpatialStorage() = default;
 		~DefaultSpatialStorage() override = default;
 
-		void Build(const NodeStorage& nodeStorage) override;
-		zU32 Insert(uint64_t userData) override;
-		void Remove(zU32 handle) override;
 		void Clear() override;
+		void Reserve(size_t capacity) override { m_MeshNodes.reserve(capacity); }
+		SpatialHandle AddMeshNode(NodeHandle nodeHandle) override;
 
-		void GetAll(std::vector<uint64_t>& outUserData) const override;
+		[[nodiscard]] std::span<const NodeHandle> GetMeshNodes() const noexcept override
+		{
+			return m_MeshNodes;
+		}
 
-		[[nodiscard]] size_t GetCount() const noexcept override { return m_ActiveCount; }
+		[[nodiscard]] size_t GetCount() const noexcept override { return m_MeshNodes.size(); }
 
 	private:
-		struct Slot
-		{
-			uint64_t userData{ 0 };
-			bool     isOccupied{ false };
-		};
-
-		std::vector<Slot>     m_Slots;
-		std::vector<uint32_t> m_FreeIndices;
-		size_t                m_ActiveCount{ 0 };
+		std::vector<NodeHandle> m_MeshNodes;
 	};
 }

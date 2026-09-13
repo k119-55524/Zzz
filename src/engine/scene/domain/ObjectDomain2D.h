@@ -18,10 +18,10 @@ namespace zzz::engine
 		ObjectDomain2D();
 		~ObjectDomain2D() override;
 
-		GameObject* CreateObject(const GameObjectData& objData) override;
+		ObjectRegistration CreateObject(const GameObjectData& objData) override;
 
 	protected:
-		GameObject* CreateObject(const Guid& guid, std::string name, VisualPayload visual = {}) override;
+		ObjectRegistration CreateObject(const Guid& guid, std::string name, VisualPayload visual = {}) override;
 
 	private:
 		void ValidateVisual(const VisualPayload& visual) const;

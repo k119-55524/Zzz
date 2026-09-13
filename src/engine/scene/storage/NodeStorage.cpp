@@ -1,150 +1,179 @@
 
+#include <algorithm>
 #include "core/io/package/GameObjectData.h"
 
 #include "NodeStorage.h"
 
 using namespace zzz::core;
+using namespace zzz::math;
 
 namespace zzz::engine
 {
 	NodeStorage::NodeStorage()
-		: m_DirtyTracker(1)
+		: m_ParentIndices()
+		, m_SubtreeEnds()
+		, m_LocalTransforms()
+		, m_WorldMatrices()
+		, m_Flags()
+		, m_Bindings()
+		, m_DirtyTracker(1)
+		, m_ChangeRanges()
 	{
 	}
 
 	NodeStorage::NodeStorage(std::span<const zzz::core::GameObjectData> objects)
-		: m_DirtyTracker(static_cast<uint32_t>(objects.empty() ? 1 : objects.size()))
+		: m_ParentIndices()
+		, m_SubtreeEnds()
+		, m_LocalTransforms()
+		, m_WorldMatrices()
+		, m_Flags()
+		, m_Bindings()
+		, m_DirtyTracker((ensure(objects.size() < kInvalidNodeHandle, "NodeStorage: количество объектов превышает максимально допустимую емкость kInvalidNodeHandle"), static_cast<zU32>(objects.empty() ? 1 : objects.size())))
+		, m_ChangeRanges()
+	{
+		InitializeFromObjects(objects);
+	}
+
+	void NodeStorage::InitializeFromObjects(std::span<const zzz::core::GameObjectData> objects)
 	{
 		const size_t count = objects.size();
 		if (count == 0)
 			return;
 
-		// 1. Выделяем память под все узлы одним махом
-		m_Topology.resize(count);
+		ensure(count < kInvalidNodeHandle, "NodeStorage: количество объектов ({}) превышает максимально допустимую емкость kInvalidNodeHandle", count);
+
+		m_ParentIndices.resize(count);
+		m_SubtreeEnds.resize(count);
 		m_LocalTransforms.resize(count);
 		m_WorldMatrices.resize(count);
+		m_Flags.resize(count);
 		m_Bindings.resize(count);
+		m_ChangeRanges.reserve(count);
 
-		m_DirtyTracker.Prepare(static_cast<uint32_t>(count));
+		m_DirtyTracker.Prepare(static_cast<zU32>(count));
 
-		// 2. Заполняем плоские массивы узлов
+		// 1. Заполняем плоские массивы узлов и проверяем инвариант parentIndex < i
 		for (size_t i = 0; i < count; ++i)
 		{
 			const auto& obj = objects[i];
+			const zU32 pIdx = obj.GetParentIndex();
 
-			m_Topology[i] = NodeTopology{
-				.isActive = obj.IsActive(),
-				.isStatic = false
-			};
+			if (pIdx == 0xFFFFFFFF)
+			{
+				m_ParentIndices[i] = kInvalidNodeHandle;
+			}
+			else
+			{
+				ensure(pIdx < i, "NodeStorage: нарушение инварианта parentIndex < childIndex (parent: {}, child: {})", pIdx, i);
+				m_ParentIndices[i] = static_cast<NodeHandle>(pIdx);
+			}
+
+			m_SubtreeEnds[i] = static_cast<zU32>(i + 1);
 
 			m_LocalTransforms[i].position = obj.GetPosition();
 			m_LocalTransforms[i].rotation = obj.GetRotation();
 			m_LocalTransforms[i].scale = obj.GetScale();
 
-			m_WorldMatrices[i] = Mat4<zF32>::Identity();
+			m_Flags[i] = obj.IsActive() ? eNodeFlags::Active : eNodeFlags::None;
 
 			m_Bindings[i] = NodeBindings{
-				.spatialHandle = static_cast<zU32>(i),
-				.layerObjectIndex = static_cast<zU32>(i)
+				.domainHandle = kInvalidDomainHandle,
+				.spatialHandle = kInvalidSpatialHandle,
+				.domainKind = eNodeDomainKind::None
 			};
-
-			m_DirtyTracker.Set(static_cast<uint32_t>(i));
 		}
 
-		// 3. Выстраиваем связи иерархии parent -> child
+		// 2. Расчет subtreeEnd в один обратный проход от листьев к корням
+		for (size_t i = count; i > 0; --i)
+		{
+			const size_t idx = i - 1;
+			const NodeHandle pIdx = m_ParentIndices[idx];
+			if (pIdx != kInvalidNodeHandle && pIdx < count)
+			{
+				m_SubtreeEnds[pIdx] = std::max(m_SubtreeEnds[pIdx], m_SubtreeEnds[idx]);
+			}
+		}
+
+		// 3. Вычисление мировых матриц в один прямой проход по preorder-массиву
 		for (size_t i = 0; i < count; ++i)
 		{
-			const uint32_t pIdx = objects[i].GetParentIndex();
-			if (pIdx != 0xFFFFFFFF && pIdx < count)
-			{
-				const uint32_t childIdx = static_cast<uint32_t>(i);
-				m_Topology[childIdx].parentIndex = pIdx;
-
-				const uint32_t oldFirst = m_Topology[pIdx].firstChildIndex;
-				m_Topology[childIdx].nextSiblingIndex = oldFirst;
-				if (oldFirst != 0xFFFFFFFF && oldFirst < count)
-				{
-					m_Topology[oldFirst].prevSiblingIndex = childIdx;
-				}
-				m_Topology[pIdx].firstChildIndex = childIdx;
-			}
-		}
-
-		// 4. Сразу рассчитываем матрицы для всех узлов
-		ResolveTransforms();
-	}
-
-	void NodeStorage::BeginFrame()
-	{
-		m_DirtyTracker.Prepare(static_cast<uint32_t>(m_Topology.size()));
-	}
-
-	void NodeStorage::ResolveTransforms()
-	{
-		const auto dirtyIndices = m_DirtyTracker.GetDirtyIndices();
-		if (dirtyIndices.empty())
-		{
-			return;
-		}
-
-		for (const uint32_t nodeIndex : dirtyIndices)
-		{
-			if (nodeIndex >= m_Topology.size())
-			{
-				continue;
-			}
-
-			if (!m_Topology[nodeIndex].isActive)
-			{
-				continue;
-			}
-
-			const auto& local = m_LocalTransforms[nodeIndex];
+			const auto& local = m_LocalTransforms[i];
 			const Mat4<zF32> localMatrix = Mat4<zF32>::Scaling(local.scale) * local.rotation.ToMat4() * Mat4<zF32>::Translation(local.position);
 
-			const uint32_t parentIdx = m_Topology[nodeIndex].parentIndex;
-			if (parentIdx != 0xFFFFFFFF && parentIdx < m_Topology.size())
+			const NodeHandle pIdx = m_ParentIndices[i];
+			if (pIdx != kInvalidNodeHandle && pIdx < count)
 			{
-				m_WorldMatrices[nodeIndex] = localMatrix * m_WorldMatrices[parentIdx];
+				m_WorldMatrices[i] = localMatrix * m_WorldMatrices[pIdx];
 			}
 			else
 			{
-				m_WorldMatrices[nodeIndex] = localMatrix;
-			}
-
-			// Каскадно обновляем детей
-			const uint32_t firstChild = m_Topology[nodeIndex].firstChildIndex;
-			if (firstChild != 0xFFFFFFFF && firstChild < m_Topology.size())
-			{
-				const auto& currentWorld = m_WorldMatrices[nodeIndex];
-				uint32_t childIndex = firstChild;
-				while (childIndex != 0xFFFFFFFF && childIndex < m_Topology.size())
-				{
-					ResolveSubtree(childIndex, currentWorld);
-					childIndex = m_Topology[childIndex].nextSiblingIndex;
-				}
+				m_WorldMatrices[i] = localMatrix;
 			}
 		}
 	}
 
-	void NodeStorage::ResolveSubtree(uint32_t nodeIndex, const Mat4<zF32>& parentWorld)
+	std::span<const TransformChangeRange> NodeStorage::ResolveTransforms()
 	{
-		if (!m_Topology[nodeIndex].isActive)
+		m_ChangeRanges.clear();
+
+		const auto dirtyIndices = m_DirtyTracker.ConsumeDirtyIndices();
+		if (dirtyIndices.empty())
 		{
-			return;
+			return m_ChangeRanges;
 		}
 
-		const auto& local = m_LocalTransforms[nodeIndex];
-		const Mat4<zF32> localMatrix = Mat4<zF32>::Scaling(local.scale) * local.rotation.ToMat4() * Mat4<zF32>::Translation(local.position);
-		m_WorldMatrices[nodeIndex] = localMatrix * parentWorld;
+		const size_t count = m_ParentIndices.size();
+		zU32 coveredUntil = 0;
 
-		const auto& currentWorld = m_WorldMatrices[nodeIndex];
-		uint32_t childIndex = m_Topology[nodeIndex].firstChildIndex;
-		while (childIndex != 0xFFFFFFFF && childIndex < m_Topology.size())
+		for (const zU32 nodeIndex : dirtyIndices)
 		{
-			ResolveSubtree(childIndex, currentWorld);
-			childIndex = m_Topology[childIndex].nextSiblingIndex;
+			if (nodeIndex >= count)
+			{
+				continue;
+			}
+
+			// Пропускаем узлы, уже обработанные в составе более высокого грязного поддерева
+			if (nodeIndex < coveredUntil)
+			{
+				continue;
+			}
+
+			const zU32 rangeBegin = nodeIndex;
+			const zU32 rangeEnd = m_SubtreeEnds[nodeIndex];
+			coveredUntil = rangeEnd;
+
+			// Линейный пересчет непрерывного поддерева [rangeBegin, rangeEnd) без проверки isActive
+			for (zU32 i = rangeBegin; i < rangeEnd; ++i)
+			{
+				const auto& local = m_LocalTransforms[i];
+				const Mat4<zF32> localMatrix = Mat4<zF32>::Scaling(local.scale) * local.rotation.ToMat4() * Mat4<zF32>::Translation(local.position);
+
+				const NodeHandle pIdx = m_ParentIndices[i];
+				if (pIdx != kInvalidNodeHandle && pIdx < count)
+				{
+					m_WorldMatrices[i] = localMatrix * m_WorldMatrices[pIdx];
+				}
+				else
+				{
+					m_WorldMatrices[i] = localMatrix;
+				}
+			}
+
+			// Объединение смежных диапазонов
+			if (!m_ChangeRanges.empty() && m_ChangeRanges.back().end == rangeBegin)
+			{
+				m_ChangeRanges.back().end = rangeEnd;
+			}
+			else
+			{
+				m_ChangeRanges.push_back(TransformChangeRange{
+					.begin = rangeBegin,
+					.end = rangeEnd
+				});
+			}
 		}
+
+		return m_ChangeRanges;
 	}
 }
 
