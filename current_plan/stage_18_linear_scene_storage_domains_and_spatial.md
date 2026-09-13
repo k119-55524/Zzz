@@ -10,6 +10,8 @@
 
 На этом этапе иерархия после `Populate` неизменяема: runtime `spawn/destroy/reparent` не поддерживаются. Это позволяет использовать индекс узла как стабильный `NodeHandle` без generation и не тащить преждевременный `SlotMap` в простой core.
 
+Этап не создаёт подсистему с нуля, а исправляет и упрощает уже работающую связку `GameLayer::Populate -> NodeStorage -> Object/Entity domain -> DefaultSpatialStorage`. Текущий `NodeStorage` уже строит topology и world matrices, но использует FCNS/рекурсивный обход, сбрасывает dirty state через `BeginFrame` и повторно пересчитывает пересекающиеся dirty-поддеревья. Решение этапа — расширить существующую интеграцию, заменив эти проблемные внутренние контракты без переписывания всей цепочки загрузки сцены.
+
 ---
 
 ## 2. Согласованные контракты
@@ -31,10 +33,12 @@ using NodeHandle = zU32;
 using DomainHandle = zU32;
 using SpatialHandle = zU32;
 
-inline constexpr zU32 kInvalidHandle = 0xFFFFFFFF;
+inline constexpr NodeHandle kInvalidNodeHandle = 0xFFFFFFFF;
+inline constexpr DomainHandle kInvalidDomainHandle = 0xFFFFFFFF;
+inline constexpr SpatialHandle kInvalidSpatialHandle = 0xFFFFFFFF;
 ```
 
-Смешивать значения разных пространств индексов без явного API нельзя. `NodeHandle` стабилен на всё время жизни `GameLayer`, потому что число узлов и их порядок после `Populate` не меняются. Стабильность `DomainHandle` и `SpatialHandle` в рамках этапа обеспечивается отсутствием runtime-удаления.
+Все три invalid-константы намеренно имеют одинаковое форматное значение, но разделены по пространствам handles; использовать общий `kInvalidHandle` или подставлять domain/spatial sentinel вместо node sentinel нельзя. Существующий `kInvalidNodeIndex` переименовывается в `kInvalidNodeHandle`, старый алиас не сохраняется. `NodeHandle` стабилен на всё время жизни `GameLayer`, потому что число узлов и их порядок после `Populate` не меняются. Стабильность `DomainHandle` и `SpatialHandle` в рамках этапа обеспечивается отсутствием runtime-удаления.
 
 ### 2.3. Cache-friendly topology
 
@@ -53,7 +57,7 @@ inline constexpr zU32 kInvalidHandle = 0xFFFFFFFF;
 Для узла `i` выполняются инварианты:
 
 ```text
-parentIndex == kInvalidNodeIndex || parentIndex < i
+parentIndex == kInvalidNodeHandle || parentIndex < i
 i < subtreeEnd[i] <= nodeCount
 все потомки i находятся в [i + 1, subtreeEnd[i])
 ```
@@ -64,7 +68,7 @@ i < subtreeEnd[i] <= nodeCount
 2. В одном прямом проходе копируются parent, flags и локальный TRS, а world matrix рассчитывается сразу:
 
 ```cpp
-world[i] = parent[i] == kInvalidNodeIndex
+world[i] = parent[i] == kInvalidNodeHandle
     ? LocalMatrix(local[i])
     : LocalMatrix(local[i]) * world[parent[i]];
 ```
@@ -152,8 +156,8 @@ enum class eNodeDomainKind : zU8
 
 struct NodeBindings
 {
-    DomainHandle domainHandle{ kInvalidHandle };
-    SpatialHandle spatialHandle{ kInvalidHandle };
+    DomainHandle domainHandle{ kInvalidDomainHandle };
+    SpatialHandle spatialHandle{ kInvalidSpatialHandle };
     eNodeDomainKind domainKind{ eNodeDomainKind::None };
 };
 ```
@@ -189,7 +193,7 @@ struct ObjectRegistration
 ### 2.10. Плоский spatial только для узлов с мешем
 
 1. `GameLayer::Populate` регистрирует узел в `DefaultSpatialStorage` только когда `GameObjectData::HasMesh() == true`, независимо от `isEntity` и `isActive`.
-2. Узел без меша получает `spatialHandle == kInvalidHandle`.
+2. Узел без меша получает `spatialHandle == kInvalidSpatialHandle`.
 3. Узел с мешем получает handle, возвращённый spatial; предположение `spatialHandle == nodeIndex` удаляется.
 4. `DefaultSpatialStorage` на первом этапе — плотный `std::vector<NodeHandle>` без свободных слотов, `isOccupied` и free-list, потому что runtime insert/remove не входят в текущий контракт.
 5. Чтение для следующего потребителя выполняется allocation-free через `std::span<const NodeHandle>`, а не через `GetAll(std::vector<uint64_t>&)` с копированием каждого кадра.
