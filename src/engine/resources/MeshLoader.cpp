@@ -4,22 +4,24 @@
 #include "core/io/package/MeshData.h"
 #include "core/utils/MemoryUtils.h"
 
+using namespace zzz::core;
+
 namespace zzz::engine
 {
-	std::expected<std::shared_ptr<::zzz::core::IResource>, std::string> MeshLoader::Load(
-		const ::zzz::core::PackageEntry& entry,
+	std::expected<std::shared_ptr<IResource>, std::string> MeshLoader::Load(
+		const PackageEntry& entry,
 		PackageManager& /*packageManager*/,
-		::zzz::core::DataAssetsManager& dataAssetsManager,
-		::zzz::core::FileSystem& /*fileSystem*/,
+		DataAssetsManager& dataAssetsManager,
+		FileSystem& /*fileSystem*/,
 		GAPI& /*gapi*/)
 	{
-		auto meshDataRes = dataAssetsManager.DeserializeAsset<::zzz::core::MeshData>(entry);
+		auto meshDataRes = dataAssetsManager.DeserializeAsset<MeshData>(entry);
 		if (!meshDataRes)
 		{
 			return std::unexpected(meshDataRes.error());
 		}
 
-		auto mesh = ::zzz::core::safe_make_shared<Mesh>(entry.GetGuid(), entry.GetName(), std::move(*meshDataRes));
+		auto mesh = safe_make_shared<Mesh>(entry.GetGuid(), entry.GetName(), std::move(*meshDataRes));
 		return mesh;
 	}
 }

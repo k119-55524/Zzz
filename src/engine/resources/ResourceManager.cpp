@@ -12,8 +12,8 @@ namespace zzz::engine
 {
 	ResourceManager::ResourceManager(
 		std::shared_ptr<PackageManager> packageManager,
-		std::shared_ptr<::zzz::core::DataAssetsManager> dataAssetsManager,
-		std::shared_ptr<::zzz::core::FileSystem> fileSystem,
+		std::shared_ptr<DataAssetsManager> dataAssetsManager,
+		std::shared_ptr<FileSystem> fileSystem,
 		std::shared_ptr<GAPI> gapi)
 		: m_PackageManager(std::move(packageManager))
 		, m_DataAssetsManager(std::move(dataAssetsManager))

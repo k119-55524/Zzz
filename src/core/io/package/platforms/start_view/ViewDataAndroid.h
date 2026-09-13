@@ -37,12 +37,11 @@ namespace zzz::core
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut(::zzz::core::Assets, "{}[ViewDataAndroid]", indentation);
-			DOut(::zzz::core::Assets, "{}orientation: {}", nestedIndentation, ToString(orientation));
-			DOut(::zzz::core::Assets, "{}targetFPS: {}", nestedIndentation, targetFPS);
-			DOut(::zzz::core::Assets, "{}cutoutMode: {}", nestedIndentation, ToString(cutoutMode));
-			DOut(::zzz::core::Assets, "{}keepScreenOn: {}", nestedIndentation, keepScreenOn);
+			DOut(Assets, "{}[ViewDataAndroid]", indentation);
+			DOut(Assets, "{}  orientation: {}", indentation, ToString(orientation));
+			DOut(Assets, "{}  targetFPS: {}", indentation, targetFPS);
+			DOut(Assets, "{}  cutoutMode: {}", indentation, ToString(cutoutMode));
+			DOut(Assets, "{}  keepScreenOn: {}", indentation, keepScreenOn);
 		}
 
 	private:

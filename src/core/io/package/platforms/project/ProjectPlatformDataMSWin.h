@@ -20,9 +20,8 @@ namespace zzz::core
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut(::zzz::core::Assets, "{}[ProjectPlatformDataMSWin]", indentation);
-			DOut(::zzz::core::Assets, "{}windowClassName: {}", nestedIndentation, windowClassName);
+			DOut(Assets, "{}[ProjectPlatformDataMSWin]", indentation);
+			DOut(Assets, "{}  windowClassName: {}", indentation, windowClassName);
 		}
 
 	private:

@@ -58,4 +58,16 @@ internal static class NativeMethods
     [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     [return: MarshalAs(UnmanagedType.I1)]
     public static extern bool IsSupportedViewExtension(string ext);
+
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    public static extern bool GenerateGuidNative([Out] byte[] outBuffer, uint bufferSize);
+
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    public static extern bool ValidateProjectIdentityNative(
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string projectDir,
+        [Out] byte[] errorBuffer,
+        uint errorBufferSize,
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string? platformConfigFile = null);
 }

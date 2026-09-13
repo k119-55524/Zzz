@@ -77,15 +77,14 @@ namespace zzz::core
 
 		inline void LogFileBlock(std::string_view indentation = {}) const
 		{
-			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut(::zzz::core::Assets, "{}[StartViewDataLinux]", indentation);
-			DOut(::zzz::core::Assets, "{}title: {}", nestedIndentation, title);
-			DOut(::zzz::core::Assets, "{}size: {}x{}", nestedIndentation, size.width, size.height);
-			DOut(::zzz::core::Assets, "{}windowMode: {}", nestedIndentation, ToString(windowMode));
-			DOut(::zzz::core::Assets, "{}resizable: {}", nestedIndentation, resizable);
-			DOut(::zzz::core::Assets, "{}displayServer: {}", nestedIndentation, ToString(displayServer));
-			DOut(::zzz::core::Assets, "{}windowRect: X: {}, Y: {}, W: {}, H: {}", nestedIndentation, windowRect.position.x, windowRect.position.y, windowRect.size.width, windowRect.size.height);
-			DOut(::zzz::core::Assets, "{}monitorIndex: {}", nestedIndentation, monitorIndex);
+			DOut(Assets, "{}[StartViewDataLinux]", indentation);
+			DOut(Assets, "{}  title: {}", indentation, title);
+			DOut(Assets, "{}  size: {}x{}", indentation, size.width, size.height);
+			DOut(Assets, "{}  windowMode: {}", indentation, ToString(windowMode));
+			DOut(Assets, "{}  resizable: {}", indentation, resizable);
+			DOut(Assets, "{}  displayServer: {}", indentation, ToString(displayServer));
+			DOut(Assets, "{}  windowRect: X: {}, Y: {}, W: {}, H: {}", indentation, windowRect.position.x, windowRect.position.y, windowRect.size.width, windowRect.size.height);
+			DOut(Assets, "{}  monitorIndex: {}", indentation, monitorIndex);
 		}
 
 	private:

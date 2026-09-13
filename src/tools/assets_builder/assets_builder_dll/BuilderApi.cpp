@@ -5,6 +5,7 @@
 
 #include "PackagePacker.h"
 #include "AssetImporterRegistry.h"
+#include "ProjectIdentityValidator.h"
 
 extern "C"
 {
@@ -154,5 +155,27 @@ extern "C"
 		std::memcpy(outBuffer, str.c_str(), 36);
 		outBuffer[36] = '\0';
 		return true;
+	}
+
+	BUILDER_API bool ValidateProjectIdentityNative(const char* projectDir, char* errorBuffer, uint32_t errorBufferSize, const char* platformConfigFile)
+	{
+		if (!projectDir)
+		{
+			if (errorBuffer && errorBufferSize > 0)
+			{
+				const char* msg = "Каталог проекта не задан (null).";
+				const size_t len = std::min<size_t>(std::strlen(msg), errorBufferSize - 1);
+				std::memcpy(errorBuffer, msg, len);
+				errorBuffer[len] = '\0';
+			}
+			return false;
+		}
+
+		std::string cfg = platformConfigFile ? platformConfigFile : "";
+		return zzz::builder::ProjectIdentityValidator::Validate(
+			std::filesystem::path(reinterpret_cast<const char8_t*>(projectDir)),
+			errorBuffer,
+			errorBufferSize,
+			cfg);
 	}
 }

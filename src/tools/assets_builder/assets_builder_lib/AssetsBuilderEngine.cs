@@ -165,7 +165,6 @@ public class AssetsBuilderEngine
 
 		int totalProcessed = 0;
 		int newMetaCreated = 0;
-		int duplicateErrors = 0;
 
 		foreach (var file in allValidFiles)
 		{
@@ -194,8 +193,13 @@ public class AssetsBuilderEngine
 			}
 			else
 			{
-				// Если мета-файла нет — генерируем новый и сохраняем на диск
-				guid = Guid.NewGuid().ToString();
+				// Если мета-файла нет — генерируем новый через нативный Single Source of Truth и сохраняем на диск
+				byte[] guidBuf = new byte[40];
+				if (!NativeMethods.GenerateGuidNative(guidBuf, (uint)guidBuf.Length))
+				{
+					throw new InvalidOperationException($"Не удалось сгенерировать GUID через NativeMethods.GenerateGuidNative для файла '{relativePath}'.");
+				}
+				guid = System.Text.Encoding.ASCII.GetString(guidBuf).TrimEnd('\0');
 				string json = importer.GenerateMetaJson(file, guid);
 				File.WriteAllText(metaPath, json);
 				newMetaCreated++;
@@ -203,19 +207,11 @@ public class AssetsBuilderEngine
 				Log($"  {relativePath}  ->  Добавлен новый мета-файл GUID: {guid} [{assetType}]");
 			}
 
-			// Проверка на дубликат GUID
+			// Регистрируем GUID и тип ресурса для валидаторов
 			if (!string.IsNullOrEmpty(guid) && guid != "unknown")
 			{
-				if (guidToFileMap.TryGetValue(guid, out var existingFile))
-				{
-					duplicateErrors++;
-					Log($"Ошибка: Обнаружен дубликат GUID '{guid}' в файлах:\n     1) {existingFile}\n     2) {relativePath}");
-				}
-				else
-				{
-					guidToFileMap[guid] = relativePath;
-					guidToTypeMap[guid] = assetType;
-				}
+				guidToFileMap[guid] = relativePath;
+				guidToTypeMap[guid] = assetType;
 			}
 
 			// Проверка на дубликат имени сцены (имя файла .zs без расширения - см. PackagePacker.cpp,
@@ -232,14 +228,6 @@ public class AssetsBuilderEngine
 				{
 					sceneNameToFileMap[sceneName] = relativePath;
 				}
-			}
-
-			// Регистрируем имя C++ скрипта без расширения для валидации ссылок по имени ИЛИ по GUID
-			if (file.EndsWith(AssetExtensions.HeaderH, StringComparison.OrdinalIgnoreCase) ||
-				file.EndsWith(AssetExtensions.HeaderHpp, StringComparison.OrdinalIgnoreCase))
-			{
-				string scriptName = Path.GetFileNameWithoutExtension(file);
-				scriptNameToGuidMap[scriptName] = guid;
 			}
 		}
 
@@ -273,6 +261,18 @@ public class AssetsBuilderEngine
 					}
 				}
 			}
+		}
+
+		// 3.1. Нативная предсборочная валидация единого глобального пространства GUID и ссылок (Single Source of Truth)
+		byte[] errBuf = new byte[2048];
+		string? platformConfig = string.IsNullOrWhiteSpace(options.PlatformConfigFile) ? null : options.PlatformConfigFile;
+		if (!NativeMethods.ValidateProjectIdentityNative(sourcePath, errBuf, (uint)errBuf.Length, platformConfig))
+		{
+			string nativeErr = System.Text.Encoding.UTF8.GetString(errBuf).TrimEnd('\0');
+			if (string.IsNullOrWhiteSpace(nativeErr))
+				nativeErr = "Нативная проверка идентичности проекта завершилась с ошибкой.";
+			validationErrorsCount++;
+			Log($"Ошибка: {nativeErr}");
 		}
 
 		// 4. Постобработка: удаление осиротевших (устаревших) .meta файлов, у которых удален исходный ресурс
@@ -329,7 +329,7 @@ public class AssetsBuilderEngine
 			}
 		}
 
-		bool isSuccess = (duplicateErrors == 0 && sceneNameDuplicateErrors == 0 && validationErrorsCount == 0);
+		bool isSuccess = (sceneNameDuplicateErrors == 0 && validationErrorsCount == 0);
 
 		if (isSuccess)
 		{
@@ -337,7 +337,7 @@ public class AssetsBuilderEngine
 		}
 		else
 		{
-			Log($"Ошибка: Валидация завершена с ошибками! Ошибки: {validationErrorsCount + duplicateErrors + sceneNameDuplicateErrors}, Предупреждения: {warningsCount}");
+			Log($"Ошибка: Валидация завершена с ошибками! Ошибки: {validationErrorsCount + sceneNameDuplicateErrors}, Предупреждения: {warningsCount}");
 		}
 
 		Log($"Сканирование завершено. Ресурсных файлов: {totalProcessed}, Создано новых .meta: {newMetaCreated}, Удалено осиротевших .meta: {deletedOrphanedMetas}");

@@ -73,4 +73,14 @@ extern "C"
 	 * @return true при успешной записи; false если outBuffer == nullptr или bufferSize < 37.
 	 */
 	BUILDER_API bool GenerateGuidNative(char* outBuffer, uint32_t bufferSize);
+
+	/**
+	 * @brief Проверяет глобальную уникальность GUID и ссылочную целостность проекта (нативный Single Source of Truth).
+	 * @param projectDir Корневой каталог проекта в UTF-8.
+	 * @param errorBuffer Выделенный вызывающей стороной буфер под текст ошибки в кодировке UTF-8.
+	 * @param errorBufferSize Размер буфера ошибки.
+	 * @param platformConfigFile Опциональный путь к конкретному файлу платформенной конфигурации.
+	 * @return true, если проект валиден; false, если обнаружена ошибка (сообщение записывается в errorBuffer).
+	 */
+	BUILDER_API bool ValidateProjectIdentityNative(const char* projectDir, char* errorBuffer, uint32_t errorBufferSize, const char* platformConfigFile = nullptr);
 }

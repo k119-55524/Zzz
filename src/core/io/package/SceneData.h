@@ -43,26 +43,27 @@ namespace zzz::core
 		[[nodiscard]] SceneTransitionParams& GetTransitionParams() noexcept { return transitionParams; }
 		void SetTransitionParams(const SceneTransitionParams& params) noexcept { transitionParams = params; }
 
-		inline void LogFileBlock(std::string_view indentation = {}) const
+		inline void LogFileBlock([[maybe_unused]] std::string_view indentation = {}) const
 		{
+#if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut(::zzz::core::Assets, "{}[SceneData]", indentation);
-			DOut(::zzz::core::Assets, "{}sceneScriptGuids({})", nestedIndentation, sceneScriptGuids.size());
+			DOut(Assets, "{}[SceneData]", indentation);
+			DOut(Assets, "{}sceneScriptGuids({})", nestedIndentation, sceneScriptGuids.size());
 			for (zU32 i = 0; i < sceneScriptGuids.size(); ++i)
 			{
-				DOut(::zzz::core::Assets, "{}  sceneScriptGuid #{}: {}", nestedIndentation, i, sceneScriptGuids[i].ToString());
+				DOut(Assets, "{}  sceneScriptGuid #{}: {}", nestedIndentation, i, sceneScriptGuids[i].ToString());
 			}
-			DOut(::zzz::core::Assets, "{}layers({})", nestedIndentation, layers.size());
+			DOut(Assets, "{}layers({})", nestedIndentation, layers.size());
 			for (zU32 i = 0; i < layers.size(); ++i)
 			{
-				DOut(::zzz::core::Assets, "{}  layer #{}: '{}' [{}], объектов: {}",
-					nestedIndentation, i, layers[i].GetName(), ToString(layers[i].GetType()), layers[i].GetObjects().size());
+				layers[i].LogFileBlock(nestedIndentation + "  ");
 			}
-			DOut(::zzz::core::Assets, "{}transitionSource: {}", nestedIndentation, ToString(transitionSource));
-			DOut(::zzz::core::Assets, "{}transitionParams: type={}, duration={:.2f}s, blockInput={}, pauseOld={}",
+			DOut(Assets, "{}transitionSource: {}", nestedIndentation, ToString(transitionSource));
+			DOut(Assets, "{}transitionParams: type={}, duration={:.2f}s, blockInput={}, pauseOld={}",
 				nestedIndentation, ToString(transitionParams.type), transitionParams.durationSeconds,
 				transitionParams.blockUserInput, transitionParams.pauseOldSceneUpdate);
 			clearConfig.LogFileBlock(nestedIndentation);
+#endif
 		}
 
 	private:

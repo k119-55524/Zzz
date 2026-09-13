@@ -32,6 +32,7 @@ namespace zzz::engine
 	{
 	public:
 		GameLayer(
+			zzz::core::Guid guid,
 			std::string name,
 			eLayerType type,
 			std::shared_ptr<ResourceManager> resourceManager,

@@ -1,10 +1,13 @@
 #include "core/io/package/LayerData.h"
 
+using namespace zzz::core;
+
 namespace zzz::core
 {
 	std::expected<void, std::string> LayerData::Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const
 	{
-		return serializer.Serialize(buffer, m_Name)
+		return serializer.Serialize(buffer, m_Guid)
+			.and_then([&]() { return serializer.Serialize(buffer, m_Name); })
 			.and_then([&]() { return serializer.Serialize(buffer, static_cast<uint8_t>(m_Type)); })
 			.and_then([&]() -> std::expected<void, std::string> {
 				const uint32_t objectsCount = static_cast<uint32_t>(m_Objects.size());
@@ -25,7 +28,8 @@ namespace zzz::core
 		uint8_t typeRaw = 0;
 		uint32_t objectsCount = 0;
 
-		auto res = serializer.Deserialize(buffer, offset, m_Name)
+		auto res = serializer.Deserialize(buffer, offset, m_Guid)
+			.and_then([&]() { return serializer.Deserialize(buffer, offset, m_Name); })
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, typeRaw); })
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, objectsCount); });
 
@@ -50,5 +54,18 @@ namespace zzz::core
 		}
 
 		return {};
+	}
+
+	void LayerData::LogFileBlock([[maybe_unused]] std::string_view indentation) const
+	{
+#if Z_ADD_LOGGER
+		const std::string nestedIndentation = std::string(indentation) + "  ";
+		DOut(Assets, "{}[LayerData] '{}' [{}], guid: {}, объектов: {}",
+			indentation, m_Name, ToString(m_Type), m_Guid.ToString(), m_Objects.size());
+		for (const auto& obj : m_Objects)
+		{
+			obj.LogFileBlock(nestedIndentation);
+		}
+#endif
 	}
 }

@@ -15,17 +15,19 @@ Z_SET_LOG_CATEGORY(zzz::core::Scene);
 namespace zzz::engine
 {
 	GameLayer::GameLayer(
+		Guid guid,
 		std::string name,
 		eLayerType type,
 		std::shared_ptr<ResourceManager> resourceManager,
 		std::unique_ptr<IObjectDomain> objectDomain,
 		std::unique_ptr<IEntityDomain> entityDomain,
 		std::unique_ptr<ISpatialStorage> spatialStorage) :
-			ILayer(std::move(name), type),
+			ILayer(guid, std::move(name), type),
 			m_ResourceManager(std::move(resourceManager)),
 			m_ObjectDomain(std::move(objectDomain)),
 			m_EntityDomain(std::move(entityDomain)),
-			m_SpatialStorage(std::move(spatialStorage))
+			m_SpatialStorage(std::move(spatialStorage)),
+			m_NodeStorage()
 	{
 		ensure(m_ResourceManager != nullptr, "ResourceManager не должен быть null в GameLayer.");
 		ensure(m_ObjectDomain != nullptr, "ObjectDomain не должен быть null в GameLayer.");

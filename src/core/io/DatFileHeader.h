@@ -97,14 +97,14 @@ namespace zzz::core
 			return FormatTimestamp(m_Timestamp);
 		}
 
-		inline void LogFileBlock(std::string_view prefix = "") const
+		inline void LogFileBlock([[maybe_unused]] std::string_view prefix = "") const
 		{
 #if Z_ADD_LOGGER
-			DOut(::zzz::core::Assets, "{}[DatFileHeader]", prefix);
-			DOut(::zzz::core::Assets, "{}  magic: {}", prefix, GetMagicString());
-			DOut(::zzz::core::Assets, "{}  version: {}", prefix, m_Version.ToString());
-			DOut(::zzz::core::Assets, "{}  entryCount: {}", prefix, m_EntryCount);
-			DOut(::zzz::core::Assets, "{}  timestamp: {}", prefix, GetFormattedTimestamp());
+			DOut(Assets, "{}[DatFileHeader]", prefix);
+			DOut(Assets, "{}  magic: {}", prefix, GetMagicString());
+			DOut(Assets, "{}  version: {}", prefix, m_Version.ToString());
+			DOut(Assets, "{}  entryCount: {}", prefix, m_EntryCount);
+			DOut(Assets, "{}  timestamp: {}", prefix, GetFormattedTimestamp());
 #endif // Z_ADD_LOGGER
 		}
 

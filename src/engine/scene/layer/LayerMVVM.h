@@ -19,7 +19,7 @@ namespace zzz::engine
 		Z_NO_COPY_MOVE(LayerMVVM);
 
 	public:
-		LayerMVVM(std::string name, std::unique_ptr<MVVMDomain> mvvmDomain);
+		LayerMVVM(zzz::core::Guid guid, std::string name, std::unique_ptr<MVVMDomain> mvvmDomain);
 		~LayerMVVM() override = default;
 
 		void Update(float dt) override;

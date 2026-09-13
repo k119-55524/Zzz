@@ -24,11 +24,13 @@ namespace zzz::core
 		[[nodiscard]] const ViewPlatformData& GetPlatformData() const noexcept { return m_PlatformData; }
 		[[nodiscard]] ViewPlatformData& GetPlatformData() noexcept { return m_PlatformData; }
 
-		inline void LogFileBlock(std::string_view indentation = {}) const
+		inline void LogFileBlock([[maybe_unused]] std::string_view indentation = {}) const
 		{
-			DOut(::zzz::core::Assets, "{}[PrimaryViewUserData]", indentation);
-			DOut(::zzz::core::Assets, "{}viewGuid: {}", std::string(indentation) + "  ", m_ViewGuid.ToString());
+#if Z_ADD_LOGGER
+			DOut(Assets, "{}[PrimaryViewUserData]", indentation);
+			DOut(Assets, "{}viewGuid: {}", std::string(indentation) + "  ", m_ViewGuid.ToString());
 			m_PlatformData.LogFileBlock(std::string(indentation) + "  ");
+#endif
 		}
 
 	private:

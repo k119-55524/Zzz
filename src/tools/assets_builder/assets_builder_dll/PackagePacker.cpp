@@ -36,6 +36,7 @@
 #include <core/IO/package/LayerData.h>
 #include "AssetImporterRegistry.h"
 #include "ArchiveWriter.h"
+#include "ProjectIdentityValidator.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Assets);
 
@@ -48,7 +49,7 @@ namespace zzz::builder
 	struct PendingAsset
 	{
 		std::string name;
-		std::string guid;
+		Guid guid;
 		uint32_t type;
 		fs::path filePath;
 	};
@@ -80,7 +81,13 @@ namespace zzz::builder
 		if (platformConfigFile.empty())
 			return json::object();
 
-		fs::path configPath = projectDir / platformConfigFile;
+		fs::path p(platformConfigFile);
+		fs::path configPath = p.is_absolute() ? p : (projectDir / p);
+		if (!fs::exists(configPath))
+		{
+			configPath = projectDir / "build_settings" / p;
+		}
+
 		std::ifstream configFile(configPath);
 		if (!configFile.is_open())
 			return json::object();
@@ -92,7 +99,7 @@ namespace zzz::builder
 		return configRoot;
 	}
 
-	static json ResolvePlatformJson(const json& root, const fs::path& projectDir, zzz::core::eTargetPlatform targetPlatform, const std::string& platformConfigFile)
+	static json ResolvePlatformJson(const json& root, const fs::path& projectDir, zzz::core::eTargetPlatform /*targetPlatform*/, const std::string& platformConfigFile)
 	{
 		json platformRoot = root.contains("platform") && root["platform"].is_object()
 			? root["platform"]
@@ -145,7 +152,7 @@ namespace zzz::builder
 		return serializer.Serialize(result, winData);
 	}
 
-	static json ResolveStartViewJson(const json& root, const fs::path& projectDir, zzz::core::eTargetPlatform targetPlatform, const std::string& platformConfigFile)
+	static json ResolveStartViewJson(const json& root, const fs::path& projectDir, zzz::core::eTargetPlatform /*targetPlatform*/, const std::string& platformConfigFile)
 	{
 		json startViewRoot = root.contains("startView") && root["startView"].is_object()
 			? root["startView"]
@@ -312,6 +319,15 @@ namespace zzz::builder
 		std::string name = objJson.value("name", "GameObject");
 
 		Guid objGuid{};
+		if (objJson.contains("guid") && objJson["guid"].is_string())
+		{
+			if (auto parsed = Guid::Parse(objJson["guid"].get<std::string>()))
+				objGuid = *parsed;
+		}
+		if (objGuid == Guid{})
+		{
+			THROW_RUNTIME("GameObject '{}' не содержит обязательного валидного 'guid'.", name);
+		}
 
 		bool isEntity = objJson.value(c_FieldIsEntity, false);
 		bool isActive = objJson.value("isActive", true);
@@ -797,9 +813,7 @@ namespace zzz::builder
 					}
 				}
 
-				Guid viewGuid{};
-				if (auto parsed = Guid::Parse(item.guid))
-					viewGuid = *parsed;
+				Guid viewGuid = item.guid;
 
 				// Сначала сериализуем общие поля PrimaryViewData (ViewGuid, SceneGuid, ScriptGuids)
 				if (auto res = serializer.Serialize(result, viewGuid); !res) return {};
@@ -894,21 +908,9 @@ namespace zzz::builder
 
 				auto clearConfig = ReadClearConfig(root);
 
-				// Слои собираются как есть: верхнеуровневые "objects" (если есть) образуют один
-				// неявный слой "Default3DLayer"/Layer3D, каждая запись из "layers" - свой отдельный
-				// LayerData со своими объектами внутри. Объекты хранятся внутри слоя, а не в общем списке.
+				// Слои собираются строго из "layers". Корневой "objects" и неявный Default3DLayer удалены.
+				// Каждый слой сохраняет исходный порядок и содержит обязательный валидный GUID.
 				std::vector<zzz::core::LayerData> layers;
-
-				if (root.contains("objects") && root["objects"].is_array())
-				{
-					std::vector<GameObjectData> defaultLayerObjects;
-					for (const auto& objElem : root["objects"])
-					{
-						if (objElem.is_object())
-							defaultLayerObjects.push_back(ParseGameObjectJson(objElem));
-					}
-					layers.emplace_back("Default3DLayer", eLayerType::Layer3D, std::move(defaultLayerObjects));
-				}
 
 				if (root.contains("layers") && root["layers"].is_array())
 				{
@@ -917,7 +919,17 @@ namespace zzz::builder
 						if (!layerElem.is_object())
 							continue;
 
-						std::string layerName = layerElem.value("name", "Default3DLayer");
+						std::string layerName = layerElem.value("name", "Layer");
+						Guid layerGuid{};
+						if (layerElem.contains("guid") && layerElem["guid"].is_string())
+						{
+							if (auto parsed = Guid::Parse(layerElem["guid"].get<std::string>()))
+								layerGuid = *parsed;
+						}
+						if (layerGuid == Guid{})
+						{
+							THROW_RUNTIME("Слой '{}' в сцене не содержит обязательного валидного 'guid'.", layerName);
+						}
 						std::string typeStr = layerElem.value("type", "Layer3D");
 						eLayerType layerType = eLayerType::Layer3D;
 						if (typeStr == "Layer2D" || typeStr == "LayerUI") layerType = eLayerType::Layer2D;
@@ -933,7 +945,7 @@ namespace zzz::builder
 							}
 						}
 
-						layers.emplace_back(std::move(layerName), layerType, std::move(layerObjects));
+						layers.emplace_back(layerGuid, std::move(layerName), layerType, std::move(layerObjects));
 					}
 				}
 
@@ -968,9 +980,7 @@ namespace zzz::builder
 			}
 			else if (assetType == zzz::core::ePackage::ChildView || assetType == zzz::core::ePackage::IndependentView)
 			{
-				Guid viewGuid{};
-				if (auto parsed = Guid::Parse(item.guid))
-					viewGuid = *parsed;
+				Guid viewGuid = item.guid;
 
 				Guid sceneGuid{};
 				if (root.contains("scene") && root["scene"].is_string())
@@ -1097,6 +1107,13 @@ namespace zzz::builder
 		if (outBuildTimestamp)
 			*outBuildTimestamp = 0;
 
+		char validationErrorBuf[1024]{};
+		if (!ProjectIdentityValidator::Validate(sourceDir, validationErrorBuf, sizeof(validationErrorBuf), platformConfigFile))
+		{
+			DOutError("PackProject: Ошибка валидации идентичности проекта: {}", validationErrorBuf);
+			return false;
+		}
+
 		// Единое время упаковки для package.dat и data.dat - если передано извне (из C# сборщика),
 		// используется оно, чтобы buildtime-data.txt, assets_config.json и заголовки архивов
 		// имели строго один и тот же штамп времени. Если 0 - генерируется здесь.
@@ -1110,13 +1127,26 @@ namespace zzz::builder
 		fs::path outPath = destinationDir / zzz::core::c_GamePackageRelativePath;
 		std::vector<PendingAsset> pendingAssets;
 
-		// 1. Упаковка project.json под служебным GUID манифеста
+		// 1. Упаковка project.json под GUID из project.json.meta
 		fs::path projJsonPath = sourceDir / "project.json";
-		if (fs::exists(projJsonPath))
+		fs::path projMetaPath = sourceDir / "project.json.meta";
+		Guid manifestGuid{};
+		if (fs::exists(projMetaPath))
+		{
+			std::ifstream mf(projMetaPath);
+			json metaJson = json::parse(mf, nullptr, false);
+			if (!metaJson.is_discarded() && metaJson.contains("guid") && metaJson["guid"].is_string())
+			{
+				if (auto parsed = Guid::Parse(metaJson["guid"].get<std::string>()))
+					manifestGuid = *parsed;
+			}
+		}
+
+		if (fs::exists(projJsonPath) && manifestGuid.IsValid())
 		{
 			pendingAssets.push_back({
 				"ProjectManifest",
-				"00000000-0000-0000-0000-000000000001",
+				manifestGuid,
 				static_cast<uint32_t>(zzz::core::ePackage::ProjectManifest),
 				projJsonPath
 				});
@@ -1127,19 +1157,24 @@ namespace zzz::builder
 		// источник правды о том, какие вторичные окна пакуются: физическое наличие файла в Assets/ - лишь
 		// необходимое условие (валидация ниже), но не достаточное. Guid не объявленный в списке не пакуется,
 		// даже если ресурс физически существует на диске.
-		std::unordered_set<std::string> declaredChildViewGuids;
-		std::unordered_set<std::string> declaredIndependentViewGuids;
-		std::unordered_set<std::string> removedSceneGuids;
+		std::unordered_set<Guid> declaredChildViewGuids;
+		std::unordered_set<Guid> declaredIndependentViewGuids;
+		std::unordered_set<Guid> removedSceneGuids;
 
 		json configRoot = LoadPlatformConfigJson(sourceDir, platformConfigFile);
 		if (configRoot.contains("remove_scenes") && configRoot["remove_scenes"].is_array())
 		{
 			for (const auto& elem : configRoot["remove_scenes"])
+			{
 				if (elem.is_string())
-					removedSceneGuids.insert(elem.get<std::string>());
+				{
+					if (auto g = Guid::Parse(elem.get<std::string>()))
+						removedSceneGuids.insert(*g);
+				}
+			}
 		}
 
-		std::string startViewGuid;
+		Guid startViewGuid{};
 		if (fs::exists(projJsonPath))
 		{
 			std::ifstream projJsonFile(projJsonPath);
@@ -1147,29 +1182,49 @@ namespace zzz::builder
 			if (!projRoot.is_discarded())
 			{
 				if (projRoot.contains("start_view") && projRoot["start_view"].is_string())
-					startViewGuid = projRoot["start_view"].get<std::string>();
+				{
+					if (auto g = Guid::Parse(projRoot["start_view"].get<std::string>()))
+						startViewGuid = *g;
+				}
 
 				json platformRoot = ResolvePlatformJson(projRoot, sourceDir, targetPlatform, platformConfigFile);
 
 				if (platformRoot.contains("start_view") && platformRoot["start_view"].is_string())
-					startViewGuid = platformRoot["start_view"].get<std::string>();
+				{
+					if (auto g = Guid::Parse(platformRoot["start_view"].get<std::string>()))
+						startViewGuid = *g;
+				}
 
 				if (platformRoot.contains("child_views") && platformRoot["child_views"].is_array())
+				{
 					for (const auto& elem : platformRoot["child_views"])
+					{
 						if (elem.is_string())
-							declaredChildViewGuids.insert(elem.get<std::string>());
+						{
+							if (auto g = Guid::Parse(elem.get<std::string>()))
+								declaredChildViewGuids.insert(*g);
+						}
+					}
+				}
 
 				if (platformRoot.contains("independent_views") && platformRoot["independent_views"].is_array())
+				{
 					for (const auto& elem : platformRoot["independent_views"])
+					{
 						if (elem.is_string())
-							declaredIndependentViewGuids.insert(elem.get<std::string>());
+						{
+							if (auto g = Guid::Parse(elem.get<std::string>()))
+								declaredIndependentViewGuids.insert(*g);
+						}
+					}
+				}
 			}
 		}
 
 		// Гуиды из деклараций выше, для которых реально нашёлся файл на диске - остальное (объявлено, но
 		// не найдено) считается протухшей декларацией и логируется после скана как предупреждение.
-		std::unordered_set<std::string> matchedChildViewGuids;
-		std::unordered_set<std::string> matchedIndependentViewGuids;
+		std::unordered_set<Guid> matchedChildViewGuids;
+		std::unordered_set<Guid> matchedIndependentViewGuids;
 
 		// 2. Поиск сцен (*.zs), вьюх (*.zv) и префабов (*.zp) в исходной директории
 		// Защита от дублей имён сцен (см. также AssetsBuilderEngine.ScanProjectMetaFiles в C# -
@@ -1195,7 +1250,7 @@ namespace zzz::builder
 				fs::path path = entry.path();
 				std::string assetName = path.stem().string();
 				fs::path metaPath = path.string() + ".meta";
-				std::string guid = "unknown";
+				Guid assetGuid{};
 
 				if (fs::exists(metaPath))
 				{
@@ -1203,53 +1258,54 @@ namespace zzz::builder
 					json metaJson = json::parse(metaFile, nullptr, false);
 					if (!metaJson.is_discarded() && metaJson.contains("guid") && metaJson["guid"].is_string())
 					{
-						guid = metaJson["guid"].get<std::string>();
+						if (auto parsed = Guid::Parse(metaJson["guid"].get<std::string>()))
+							assetGuid = *parsed;
 					}
 				}
 
-				if (guid == "unknown" || guid.empty())
+				if (assetGuid.IsEmpty())
 					continue;
 
 				uint32_t typeVal = 0;
 
 				if (ext == ".zs")
 				{
-					if (removedSceneGuids.find(guid) != removedSceneGuids.end())
+					if (removedSceneGuids.find(assetGuid) != removedSceneGuids.end())
 						continue;
 					if (!seenSceneNames.insert(assetName).second)
 						continue;
 					typeVal = static_cast<uint32_t>(zzz::core::ePackage::Scene);
-					pendingAssets.push_back({ assetName, guid, typeVal, path });
+					pendingAssets.push_back({ assetName, assetGuid, typeVal, path });
 				}
 				else if (ext == ".zv")
 				{
 					// Тип вью определяется нахождением в списках JSON-конфигов (start_view, independent_views, child_views)
-					bool isPrimary = (!startViewGuid.empty() && _stricmp(guid.c_str(), startViewGuid.c_str()) == 0);
-					bool isIndependent = (declaredIndependentViewGuids.find(guid) != declaredIndependentViewGuids.end());
+					bool isPrimary = (startViewGuid.IsValid() && assetGuid == startViewGuid);
+					bool isIndependent = (declaredIndependentViewGuids.find(assetGuid) != declaredIndependentViewGuids.end());
 
 					if (isPrimary)
 					{
 						typeVal = static_cast<uint32_t>(zzz::core::ePackage::PrimaryView);
-						pendingAssets.push_back({ assetName, guid, typeVal, path });
+						pendingAssets.push_back({ assetName, assetGuid, typeVal, path });
 					}
 					else if (isIndependent)
 					{
-						matchedIndependentViewGuids.insert(guid);
+						matchedIndependentViewGuids.insert(assetGuid);
 						typeVal = static_cast<uint32_t>(zzz::core::ePackage::IndependentView);
-						pendingAssets.push_back({ assetName, guid, typeVal, path });
+						pendingAssets.push_back({ assetName, assetGuid, typeVal, path });
 					}
 					else
 					{
-						matchedChildViewGuids.insert(guid);
+						matchedChildViewGuids.insert(assetGuid);
 						typeVal = static_cast<uint32_t>(zzz::core::ePackage::ChildView);
-						pendingAssets.push_back({ assetName, guid, typeVal, path });
+						pendingAssets.push_back({ assetName, assetGuid, typeVal, path });
 					}
 				}
 				else if (auto importer = AssetImporterRegistry::Instance().GetImporter(ext))
 				{
 					ImportContext ctx{
 						.sourceFilePath = path,
-						.assetGuid = Guid::Parse(guid).value_or(Guid{}),
+						.assetGuid = assetGuid,
 						.assetName = assetName,
 						.targetPlatform = targetPlatform
 					};
@@ -1268,11 +1324,11 @@ namespace zzz::builder
 		// не найден ни одного .zv файла с таким guid - протухшая (или опечатанная) декларация.
 		for (const auto& guid : declaredChildViewGuids)
 			if (matchedChildViewGuids.find(guid) == matchedChildViewGuids.end())
-				DOutWarning("PackProject: guid {} объявлен в child_views, но соответствующий .zv ресурс не найден в Assets/ - пропущен.", guid);
+				DOutWarning("PackProject: guid {} объявлен в child_views, но соответствующий .zv ресурс не найден в Assets/ - пропущен.", guid.ToString());
 
 		for (const auto& guid : declaredIndependentViewGuids)
 			if (matchedIndependentViewGuids.find(guid) == matchedIndependentViewGuids.end())
-				DOutWarning("PackProject: guid {} объявлен в independent_views, но соответствующий .zv ресурс не найден в Assets/ - пропущен.", guid);
+				DOutWarning("PackProject: guid {} объявлен в independent_views, но соответствующий .zv ресурс не найден в Assets/ - пропущен.", guid.ToString());
 
 		bool hasPrimaryView = std::any_of(pendingAssets.begin(), pendingAssets.end(), [](const PendingAsset& item) {
 			return item.type == static_cast<uint32_t>(zzz::core::ePackage::PrimaryView);
@@ -1293,12 +1349,8 @@ namespace zzz::builder
 
 		if (!hasPrimaryView)
 		{
-			pendingAssets.push_back({
-				"MainPrimaryView",
-				"00000000-0000-0000-0000-000000000002",
-				static_cast<uint32_t>(zzz::core::ePackage::PrimaryView),
-				projJsonPath
-			});
+			DOutError("PackProject: В проекте отсутствует хотя бы одно корректное представление (PrimaryView).");
+			return false;
 		}
 
 		// 3. Формирование бинарного файла package.dat в подпапке destinationDir/assets/
@@ -1309,10 +1361,9 @@ namespace zzz::builder
 		for (const auto& item : pendingAssets)
 		{
 			std::vector<std::byte> payload = SerializeAssetToBinary(item, sourceDir, targetPlatform, platformConfigFile);
-			auto parsedGuid = Guid::Parse(item.guid);
 			packageItems.push_back({
 				item.name,
-				parsedGuid ? *parsedGuid : Guid{},
+				item.guid,
 				item.type,
 				std::move(payload)
 			});

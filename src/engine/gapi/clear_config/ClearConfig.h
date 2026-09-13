@@ -25,7 +25,7 @@ namespace zzz::engine
 
 		constexpr bool operator==(const ClearConfig&) const noexcept = default;
 
-		inline void LogFileBlock(std::string_view indentation = {}) const
+		inline void LogFileBlock([[maybe_unused]] std::string_view indentation = {}) const
 		{
 #if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";

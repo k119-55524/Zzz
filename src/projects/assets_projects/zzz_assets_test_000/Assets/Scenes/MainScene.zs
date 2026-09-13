@@ -16,10 +16,12 @@
   },
   "layers": [
     {
+      "guid": "c1f348fe-f7ea-4e4f-b06b-a0b86ee486b3",
       "type": "Layer3D",
       "name": "Main3DLayer",
       "objects": [
         {
+          "guid": "1c93786a-4fc0-4b9d-93ae-70437e7decce",
           "name": "CubeObject",
           "position": [0.0, 0.0, 0.0],
           "scripts": [

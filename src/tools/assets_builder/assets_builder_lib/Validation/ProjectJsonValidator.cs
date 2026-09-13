@@ -24,81 +24,10 @@ public class ProjectJsonValidator : IAssetValidator
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
-            // 1. Проверка главных скриптов игры (game_scripts или game_script) — ТРЕБУЕТСЯ СТРОГИЙ GUID
-            if (root.TryGetProperty("game_scripts", out var gameScriptsProp) && gameScriptsProp.ValueKind == JsonValueKind.Array)
-            {
-                int index = 0;
-                foreach (var scriptElem in gameScriptsProp.EnumerateArray())
-                {
-                    index++;
-                    string scriptRef = scriptElem.GetString() ?? string.Empty;
-                    if (!string.IsNullOrEmpty(scriptRef))
-                    {
-                        ValidateStrictGuid(filePath, "project.json", $"game_scripts[{index}]", scriptRef, "script", guidToFileMap, guidToTypeMap, scriptNameToGuidMap, result);
-                    }
-                }
-            }
-            else if (root.TryGetProperty("game_script", out var gameScriptProp))
-            {
-                string scriptRef = gameScriptProp.GetString() ?? string.Empty;
-                if (!string.IsNullOrEmpty(scriptRef))
-                {
-                    ValidateStrictGuid(filePath, "project.json", "game_script", scriptRef, "script", guidToFileMap, guidToTypeMap, scriptNameToGuidMap, result);
-                }
-            }
-            else
+            // 1. Проверка наличия поля главного скрипта игры (game_scripts или game_script)
+            if (!root.TryGetProperty("game_scripts", out _) && !root.TryGetProperty("game_script", out _))
             {
                 result.AddError(filePath, "project.json: Отсутствует обязательное поле 'game_scripts' или 'game_script'.");
-            }
-
-            // 2. Проверка начальных сцен (scenes) — ТРЕБУЕТСЯ СТРОГИЙ GUID
-            if (root.TryGetProperty("scenes", out var scenesProp) && scenesProp.ValueKind == JsonValueKind.Array)
-            {
-                int index = 0;
-                foreach (var sceneElem in scenesProp.EnumerateArray())
-                {
-                    index++;
-                    string sceneRef = sceneElem.GetString() ?? string.Empty;
-                    if (!string.IsNullOrEmpty(sceneRef))
-                    {
-                        ValidateStrictGuid(filePath, "project.json", $"scenes[{index}]", sceneRef, "scene", guidToFileMap, guidToTypeMap, scriptNameToGuidMap, result);
-                    }
-                }
-            }
-
-            // 2.1 Проверка стартовой сцены (start_scene), если задана явно — ТРЕБУЕТСЯ СТРОГИЙ GUID
-            if (root.TryGetProperty("start_scene", out var startSceneProp) && startSceneProp.ValueKind == JsonValueKind.String)
-            {
-                string startSceneRef = startSceneProp.GetString() ?? string.Empty;
-                if (!string.IsNullOrWhiteSpace(startSceneRef))
-                {
-                    ValidateStrictGuid(filePath, "project.json", "start_scene", startSceneRef, "scene", guidToFileMap, guidToTypeMap, scriptNameToGuidMap, result);
-                }
-            }
-
-            // 2.2 Проверка стартовой вьюшки (start_view), если задана явно — ТРЕБУЕТСЯ СТРОГИЙ GUID
-            if (root.TryGetProperty("start_view", out var startViewProp) && startViewProp.ValueKind == JsonValueKind.String)
-            {
-                string startViewRef = startViewProp.GetString() ?? string.Empty;
-                if (!string.IsNullOrWhiteSpace(startViewRef))
-                {
-                    ValidateStrictGuid(filePath, "project.json", "start_view", startViewRef, "view", guidToFileMap, guidToTypeMap, scriptNameToGuidMap, result);
-                }
-            }
-
-            // 3. Проверка стартовых вьюшек (views) — ТРЕБУЕТСЯ СТРОГИЙ GUID
-            if (root.TryGetProperty("views", out var viewsProp) && viewsProp.ValueKind == JsonValueKind.Array)
-            {
-                int index = 0;
-                foreach (var viewElem in viewsProp.EnumerateArray())
-                {
-                    index++;
-                    string viewRef = viewElem.GetString() ?? string.Empty;
-                    if (!string.IsNullOrEmpty(viewRef))
-                    {
-                        ValidateStrictGuid(filePath, "project.json", $"views[{index}]", viewRef, "view", guidToFileMap, guidToTypeMap, scriptNameToGuidMap, result);
-                    }
-                }
             }
 
             // 4. Проверка глобальных параметров переходов сцен (transition)
@@ -163,48 +92,6 @@ public class ProjectJsonValidator : IAssetValidator
             result.AddError(filePath, $"project.json: Поле '{fieldName}' ('{value}') содержит недопустимое имя каталога " +
                 "(запрещены Path Traversal, символы < > : \" / \\ | ? *, управляющие коды, зарезервированные имена " +
                 "Windows-устройств (CON, PRN, AUX, NUL, COM1-9, LPT1-9), а также завершающие точки/пробелы).");
-        }
-    }
-
-    private void ValidateStrictGuid(
-        string filePath,
-        string fileName,
-        string fieldName,
-        string referenceValue,
-        string expectedType,
-        IReadOnlyDictionary<string, string> guidToFileMap,
-        IReadOnlyDictionary<string, string> guidToTypeMap,
-        IReadOnlyDictionary<string, string> scriptNameToGuidMap,
-        ValidationResult result)
-    {
-        bool isGuidPresent = guidToFileMap.ContainsKey(referenceValue);
-
-        if (!isGuidPresent)
-        {
-            if (scriptNameToGuidMap.ContainsKey(referenceValue))
-            {
-                result.AddError(filePath, $"{fileName}: Поле '{fieldName}' использует имя скрипта '{referenceValue}' вместо обязательного GUID!");
-            }
-            else
-            {
-                result.AddError(filePath, $"{fileName}: Поле '{fieldName}' ссылается на неизвестный GUID или имя '{referenceValue}'!");
-            }
-        }
-        else
-        {
-            string actualType = guidToTypeMap.GetValueOrDefault(referenceValue, string.Empty);
-            bool isScriptTypeMatch = expectedType.Equals("script", StringComparison.OrdinalIgnoreCase) &&
-                                     (actualType.Equals("script", StringComparison.OrdinalIgnoreCase) ||
-                                      actualType.Equals("h", StringComparison.OrdinalIgnoreCase) ||
-                                      actualType.Equals("hpp", StringComparison.OrdinalIgnoreCase));
-
-            bool isViewTypeMatch = expectedType.Equals("view", StringComparison.OrdinalIgnoreCase) &&
-                                   actualType.Equals("view", StringComparison.OrdinalIgnoreCase);
-
-            if (!actualType.Equals(expectedType, StringComparison.OrdinalIgnoreCase) && !isScriptTypeMatch && !isViewTypeMatch)
-            {
-                result.AddError(filePath, $"{fileName}: Поле '{fieldName}' ссылается на GUID '{referenceValue}' типа '{actualType}' вместо ожидаемого типа '{expectedType}'!");
-            }
         }
     }
 }

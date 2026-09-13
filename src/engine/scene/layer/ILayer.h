@@ -3,6 +3,7 @@
 #include <string>
 
 #include "core/enums/eLayerType.h"
+#include "core/utils/Guid.h"
 #include "core/utils/macros/MiscMacros.h"
 
 namespace zzz::core
@@ -20,10 +21,11 @@ namespace zzz::engine
 	class ILayer
 	{
 	public:
-		ILayer(std::string name, eLayerType type)
-			: m_Name(std::move(name))
+		ILayer(zzz::core::Guid guid, std::string name, eLayerType type)
+			: m_Guid(guid)
+			, m_Name(std::move(name))
 			, m_Type(type)
-			, m_IsVisible{ true }
+			, m_IsVisible(true)
 		{
 		}
 
@@ -31,6 +33,7 @@ namespace zzz::engine
 
 		Z_NO_COPY_MOVE(ILayer);
 
+		[[nodiscard]] const zzz::core::Guid& GetGuid() const noexcept { return m_Guid; }
 		[[nodiscard]] const std::string& GetName() const noexcept { return m_Name; }
 		[[nodiscard]] eLayerType GetType() const noexcept { return m_Type; }
 
@@ -50,6 +53,7 @@ namespace zzz::engine
 		virtual void Populate(const LayerData& layerData, const ScriptFactory& scriptFactory) = 0;
 
 	protected:
+		zzz::core::Guid m_Guid;
 		std::string  m_Name;
 		eLayerType   m_Type;
 		bool         m_IsVisible;

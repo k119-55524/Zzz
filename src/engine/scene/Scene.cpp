@@ -69,6 +69,7 @@ namespace zzz::engine
 				auto spatialStorage = factory.CreateSpatialStorage(eSpatialStorageType::Flat);
 
 				m_Layers.push_back(safe_make_unique<GameLayer>(
+					layerData.GetGuid(),
 					layerData.GetName(),
 					layerType,
 					m_ResourceManager,
@@ -84,6 +85,7 @@ namespace zzz::engine
 				auto spatialStorage = factory.CreateSpatialStorage(eSpatialStorageType::Flat);
 
 				m_Layers.push_back(safe_make_unique<GameLayer>(
+					layerData.GetGuid(),
 					layerData.GetName(),
 					layerType,
 					m_ResourceManager,
@@ -95,7 +97,7 @@ namespace zzz::engine
 			case eLayerType::LayerMVVM:
 			{
 				auto mvvmDomain = factory.CreateMVVMDomain();
-				m_Layers.push_back(safe_make_unique<LayerMVVM>(layerData.GetName(), std::move(mvvmDomain)));
+				m_Layers.push_back(safe_make_unique<LayerMVVM>(layerData.GetGuid(), layerData.GetName(), std::move(mvvmDomain)));
 				break;
 			}
 			default:

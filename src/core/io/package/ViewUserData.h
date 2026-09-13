@@ -58,15 +58,15 @@ namespace zzz::core
 			return m_State == other.m_State;
 		}
 
-		inline void LogFileBlock(std::string_view indentation = {}) const
+		inline void LogFileBlock([[maybe_unused]] std::string_view indentation = {}) const
 		{
 #if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut(::zzz::core::Assets, "{}[ViewUserData]", indentation);
-			DOut(::zzz::core::Assets, "{}viewGuid: {}", nestedIndentation, m_State.GetViewGuid().ToString());
-			DOut(::zzz::core::Assets, "{}windowState: {}", nestedIndentation, ToString(m_PlatformData.GetWindowState()));
-			DOut(::zzz::core::Assets, "{}platformMonitorId: {}", nestedIndentation, m_PlatformData.GetMonitorId());
-			DOut(::zzz::core::Assets, "{}windowRect: {}", nestedIndentation, m_PlatformData.GetWindowRect().ToString());
+			DOut(Assets, "{}[ViewUserData]", indentation);
+			DOut(Assets, "{}viewGuid: {}", nestedIndentation, m_State.GetViewGuid().ToString());
+			DOut(Assets, "{}windowState: {}", nestedIndentation, ToString(m_PlatformData.GetWindowState()));
+			DOut(Assets, "{}platformMonitorId: {}", nestedIndentation, m_PlatformData.GetMonitorId());
+			DOut(Assets, "{}windowRect: {}", nestedIndentation, m_PlatformData.GetWindowRect().ToString());
 #endif
 		}
 

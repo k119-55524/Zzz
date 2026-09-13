@@ -12,6 +12,8 @@ add_library(assets_builder_dll SHARED
     AssetImporterRegistry.cpp
     ObjImporter.h
     ObjImporter.cpp
+    ProjectIdentityValidator.h
+    ProjectIdentityValidator.cpp
 )
 
 target_include_directories(assets_builder_dll PRIVATE

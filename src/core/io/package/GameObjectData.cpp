@@ -1,5 +1,8 @@
 #include "core/io/package/GameObjectData.h"
 
+using namespace zzz::core;
+using namespace zzz::math;
+
 namespace zzz::core
 {
 	GameObjectData::GameObjectData(
@@ -7,9 +10,9 @@ namespace zzz::core
 		std::string name,
 		bool isEntity,
 		bool isActive,
-		math::Vec3<zF32> position,
-		math::Quat<zF32> rotation,
-		math::Vec3<zF32> scale,
+		Vec3<zF32> position,
+		Quat<zF32> rotation,
+		Vec3<zF32> scale,
 		Guid meshGuid,
 		Guid materialGuid,
 		std::vector<Guid> scriptGuids,
@@ -155,6 +158,43 @@ namespace zzz::core
 		}
 
 		return {};
+	}
+
+	void GameObjectData::LogFileBlock([[maybe_unused]] std::string_view indentation) const
+	{
+#if Z_ADD_LOGGER
+		const std::string nestedIndentation = std::string(indentation) + "  ";
+		DOut(Assets, "{}[GameObjectData] '{}', guid: {}, isEntity: {}, isActive: {}, parentIndex: {}",
+			indentation, m_Name, m_Guid.ToString(), m_IsEntity, m_IsActive, m_ParentIndex);
+		DOut(Assets, "{}pos: ({:.2f}, {:.2f}, {:.2f}), rot: ({:.2f}, {:.2f}, {:.2f}, {:.2f}), scale: ({:.2f}, {:.2f}, {:.2f})",
+			nestedIndentation, m_Position.x, m_Position.y, m_Position.z,
+			m_Rotation.x, m_Rotation.y, m_Rotation.z, m_Rotation.w,
+			m_Scale.x, m_Scale.y, m_Scale.z);
+		if (HasMesh())
+		{
+			DOut(Assets, "{}meshGuid: {}, submeshes({}):", nestedIndentation, m_MeshGuid.ToString(), m_SubmeshGuids.size());
+			for (size_t i = 0; i < m_SubmeshGuids.size(); ++i)
+			{
+				DOut(Assets, "{}  submeshGuid #{}: {}", nestedIndentation, i, m_SubmeshGuids[i].ToString());
+			}
+		}
+		if (HasMaterial())
+		{
+			DOut(Assets, "{}materialGuid: {}, materials({}):", nestedIndentation, m_MaterialGuid.ToString(), m_MaterialGuids.size());
+			for (size_t i = 0; i < m_MaterialGuids.size(); ++i)
+			{
+				DOut(Assets, "{}  materialGuid #{}: {}", nestedIndentation, i, m_MaterialGuids[i].ToString());
+			}
+		}
+		if (!m_ScriptGuids.empty())
+		{
+			DOut(Assets, "{}scripts({}):", nestedIndentation, m_ScriptGuids.size());
+			for (size_t i = 0; i < m_ScriptGuids.size(); ++i)
+			{
+				DOut(Assets, "{}  scriptGuid #{}: {}", nestedIndentation, i, m_ScriptGuids[i].ToString());
+			}
+		}
+#endif // Z_ADD_LOGGER
 	}
 }
 

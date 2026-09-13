@@ -61,6 +61,8 @@ namespace zzz::core
 		[[nodiscard]] bool IsMultiMesh() const noexcept { return !m_SubmeshGuids.empty(); }
 		[[nodiscard]] bool HasMesh() const noexcept { return m_MeshGuid.IsValid() || IsMultiMesh(); }
 		[[nodiscard]] bool HasMaterial() const noexcept { return m_MaterialGuid.IsValid() || !m_MaterialGuids.empty(); }
+
+		void LogFileBlock(std::string_view indentation = {}) const;
 		[[nodiscard]] eMeshType GetMeshType() const noexcept
 		{
 			if (!m_SubmeshGuids.empty())

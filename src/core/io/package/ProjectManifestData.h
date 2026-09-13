@@ -40,35 +40,40 @@ namespace zzz::core
 		[[nodiscard]] const SceneTransitionParams& GetDefaultTransitionParams() const noexcept { return defaultTransitionParams; }
 		void SetDefaultTransitionParams(const SceneTransitionParams& params) noexcept { defaultTransitionParams = params; }
 
-		inline void LogFileBlock(std::string_view indentation = {}) const
+		inline void LogFileBlock([[maybe_unused]] std::string_view indentation = {}) const
 		{
+#if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut(::zzz::core::Assets, "{}[ProjectManifestData]", indentation);
-			DOut(::zzz::core::Assets, "{}appName: {}", nestedIndentation, appName);
-			DOut(::zzz::core::Assets, "{}companyName: {}", nestedIndentation, companyName);
-			DOut(::zzz::core::Assets, "{}appVersion: {}", nestedIndentation, appVersion.ToString());
-			DOut(::zzz::core::Assets, "{}gameScriptGuids({})", nestedIndentation, gameScriptGuids.size());
+			DOut(Assets, "{}[ProjectManifestData]", indentation);
+			DOut(Assets, "{}appName: {}", nestedIndentation, appName);
+			DOut(Assets, "{}companyName: {}", nestedIndentation, companyName);
+			DOut(Assets, "{}appVersion: {}", nestedIndentation, appVersion.ToString());
+			DOut(Assets, "{}gameScriptGuids({})", nestedIndentation, gameScriptGuids.size());
 			for (zU32 i = 0; i < gameScriptGuids.size(); ++i)
 			{
-				DOut(::zzz::core::Assets, "{}  gameScriptGuid #{}: {}", nestedIndentation, i, gameScriptGuids[i].ToString());
+				DOut(Assets, "{}  gameScriptGuid #{}: {}", nestedIndentation, i, gameScriptGuids[i].ToString());
 			}
 
-			DOut(::zzz::core::Assets, "{}sceneGuids({})", nestedIndentation, sceneGuids.size());
+			DOut(Assets, "{}sceneGuids({})", nestedIndentation, sceneGuids.size());
 			for (zU32 i = 0; i < sceneGuids.size(); ++i)
 			{
-				DOut(::zzz::core::Assets, "{}  sceneGuid #{}: {}", nestedIndentation, i, sceneGuids[i].ToString());
+				DOut(Assets, "{}  sceneGuid #{}: {}", nestedIndentation, i, sceneGuids[i].ToString());
 			}
 
-			DOut(::zzz::core::Assets, "{}viewGuids({})", nestedIndentation, viewGuids.size());
+			DOut(Assets, "{}viewGuids({})", nestedIndentation, viewGuids.size());
 			for (zU32 i = 0; i < viewGuids.size(); ++i)
 			{
-				DOut(::zzz::core::Assets, "{}  viewGuid #{}: {}", nestedIndentation, i, viewGuids[i].ToString());
+				DOut(Assets, "{}  viewGuid #{}: {}", nestedIndentation, i, viewGuids[i].ToString());
 			}
 
-			DOut(::zzz::core::Assets, "{}maxLogQueueSize: {}", nestedIndentation, maxLogQueueSize);
-			DOut(::zzz::core::Assets, "{}loggerPort: {}", nestedIndentation, loggerPort);
+			DOut(Assets, "{}maxLogQueueSize: {}", nestedIndentation, maxLogQueueSize);
+			DOut(Assets, "{}loggerPort: {}", nestedIndentation, loggerPort);
+			DOut(Assets, "{}defaultTransitionParams: type={}, duration={:.2f}s, blockInput={}, pauseOld={}",
+				nestedIndentation, ToString(defaultTransitionParams.type), defaultTransitionParams.durationSeconds,
+				defaultTransitionParams.blockUserInput, defaultTransitionParams.pauseOldSceneUpdate);
 
 			platformData.LogFileBlock(nestedIndentation);
+#endif
 		}
 
 	private:
