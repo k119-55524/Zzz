@@ -6,12 +6,15 @@
 #include "core/userscripts/ScriptFactory.h"
 #include "engine/resources/ResourceManager.h"
 #include "engine/scene/layer/LayerSubsystemFactory.h"
+#include "core/templates/CountdownTrigger.h"
+#include "core/templates/ThreadPool.h"
 
 #include "Scene.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Scene);
 
 using namespace zzz::core;
+using namespace zzz::templates;
 
 namespace zzz::engine
 {
@@ -19,7 +22,6 @@ namespace zzz::engine
 		Guid guid,
 		std::string name,
 		std::shared_ptr<ResourceManager> resourceManager,
-		const ScriptFactory& scriptFactory,
 		SceneTransitionParams defaultTransition) :
 		m_Guid(guid),
 		m_Name(std::move(name)),
@@ -27,8 +29,6 @@ namespace zzz::engine
 		m_TransitionParams(std::move(defaultTransition))
 	{
 		ensure(m_ResourceManager != nullptr, "ResourceManager не должен быть null при создании Scene.");
-
-		Initialize(scriptFactory);
 	}
 
 	Scene::~Scene()
@@ -37,17 +37,22 @@ namespace zzz::engine
 		DOut("[Scene::~Scene] Уничтожена сцена '{}' ({})", m_Name, m_Guid.ToString());
 	}
 
-	void Scene::Initialize(const ScriptFactory& scriptFactory)
+	void Scene::Initialize(const ScriptFactory& scriptFactory, ThreadPool& threadPool, std::function<void()> onLayersCreated)
 	{
+		ensure(onLayersCreated != nullptr, "onLayersCreated коллбэк не должен быть null при инициализации Scene.");
+
 		auto sceneDataRes = m_ResourceManager->LoadSceneData(m_Guid);
 		if (!sceneDataRes)
 			THROW_RUNTIME("Scene '{}' ({}) не смогла загрузить SceneData: {}", m_Name, m_Guid.ToString(), sceneDataRes.error());
 
-		// Разрешение параметров перехода
+		// Разрешение параметров перехода на сцену
 		if (sceneDataRes->GetTransitionSource() == eTransitionSource::Custom)
 			m_TransitionParams = sceneDataRes->GetTransitionParams();
 
+		// Настройки очистки поверхности и буфера глубины
 		m_ClearConfig = sceneDataRes->GetClearConfig();
+
+		// Создаём экземпляры SceneScript и инициализируем их
 		for (const auto& scriptGuid : sceneDataRes->GetSceneScriptGuids())
 		{
 			auto script = scriptFactory.CreateSceneScript(scriptGuid);
@@ -56,9 +61,18 @@ namespace zzz::engine
 			m_Scripts.push_back(std::move(script));
 		}
 
+		// Перемещаем SceneData в shared_ptr, чтобы он жил всё время асинхронного наполнения слоёв в пуле потоков
+		auto sharedSceneData = std::make_shared<SceneData>(std::move(*sceneDataRes));
+		const auto& layersData = sharedSceneData->GetLayers();
+		const size_t layerCount = layersData.size();
+		m_Layers.resize(layerCount);
+
+		// Создаём неблокирующий триггер завершения наполнения всех слоёв
+		auto trigger = std::make_shared<CountdownTrigger>(layerCount, std::move(onLayersCreated));
 		LayerSubsystemFactory factory;
-		for (const auto& layerData : sceneDataRes->GetLayers())
+		for (size_t i = 0; i < layerCount; ++i)
 		{
+			const auto& layerData = layersData[i];
 			switch (layerData.GetType())
 			{
 			case eLayerType::Layer3D:
@@ -68,20 +82,20 @@ namespace zzz::engine
 				auto entityDomain = factory.CreateEntityDomain();
 				auto spatialStorage = factory.CreateSpatialStorage(eSpatialStorageType::Flat);
 
-				m_Layers.push_back(safe_make_unique<GameLayer>(
+				m_Layers[i] = safe_make_unique<GameLayer>(
 					layerData.GetGuid(),
 					layerData.GetName(),
 					layerData.GetType(),
 					m_ResourceManager,
 					std::move(objectDomain),
 					std::move(entityDomain),
-					std::move(spatialStorage)));
+					std::move(spatialStorage));
 				break;
 			}
 			case eLayerType::LayerMVVM:
 			{
 				auto mvvmDomain = factory.CreateMVVMDomain();
-				m_Layers.push_back(safe_make_unique<LayerMVVM>(layerData.GetGuid(), layerData.GetName(), std::move(mvvmDomain)));
+				m_Layers[i] = safe_make_unique<LayerMVVM>(layerData.GetGuid(), layerData.GetName(), std::move(mvvmDomain));
 				break;
 			}
 			default:
@@ -89,10 +103,15 @@ namespace zzz::engine
 					ToString(layerData.GetType()), layerData.GetName(), m_Name);
 			}
 
-			m_Layers.back()->Populate(layerData, scriptFactory);
+			// Асинхронное наполнение слоя в пуле потоков
+			threadPool.Submit([layer = m_Layers[i].get(), &layerData, &scriptFactory, sharedSceneData, trigger]()
+			{
+				layer->Populate(layerData, scriptFactory);
+				trigger->CountDown();
+			});
 		}
 
-		DOut("[Scene::Initialize] Создана сцена '{}' ({}), скриптов: {}, слоёв: {}",
+		DOut("[Scene::Initialize] Запущена инициализация сцены '{}' ({}), скриптов: {}, слоёв: {}",
 			m_Name, m_Guid.ToString(), m_Scripts.size(), m_Layers.size());
 	}
 

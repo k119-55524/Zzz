@@ -8,9 +8,13 @@
 > Все работы, планирование этапов, архитектурные инварианты, потоковая модель и критерии приёмки (DoD) регламентируются единым сводом правил:
 > 👉 **[RULES.md](RULES.md)**
 >
+> **Обязательно к исполнению перед любым планированием:**
+> 1. Внимательно прочитать и соблюдать все правила из **[RULES.md](RULES.md)**;
+> 2. Провести обязательный аудит существующих примитивов в `src/core/templates/` (`CallbackQueue`, `DoubleBufferedVector`, `SwapQueue`, `QueueArray`, `SlotMap`, `ThreadPool`, `CountdownTrigger` и др.) перед проектированием любых синхронизаций, очередей или контейнеров (Правило 4.1).
+>
 > Свод правил включает 6 блоков:
 > 1. **Процесс разработки, этапы и верификация (Workflow & DoD)** (Правила 1–5);
-> 2. **Архитектура модулей, владение кодом и C++ стандарт** (Правила 6–8.1);
+> 2. **Архитектура модулей, владение кодом и C++ стандарт** (Правила 6–8.3);
 > 3. **Кроссплатформенность и изоляция платформ (Zero Platform Leaks)** (Правила 9–12);
 > 4. **Производительность, Concurrency и Data-Oriented Design (DOD)** (Правила 13–15);
 > 5. **Минимализм API и соблюдение YAGNI** (Правило 16);
@@ -143,7 +147,7 @@
 |---|---|---|---|---|
 | **49** | КП-5: macOS и мобильные | ⏳ Не начато | — | Куб + ZzzGUI-MVP на macOS/iOS (Metal), Android (Vulkan); реализация недостающих GPU-ресурсов/pipeline, touch, DPI/Safe Area и Android resize (TODO 10) |
 | **50** | SIMD для Mat4 | ⏳ Не начато | — | SSE2/AVX и NEON по замерам без изменения публичного API |
-| **51** | CPU-ядра и пулы потоков | ⏳ Не начато | — | CpuCoreManager, P/E-ядра, affinity и приоритеты; оптимизация конкурентного доступа по замерам |
+| **51** | CPU-ядра и пулы потоков (TaskDispatcher) | ⏳ Не начато | [stage_51_task_dispatcher_preview.md](stage_51_task_dispatcher_preview.md) | TaskDispatcher, P/E-ядра, affinity и приоритеты; CpuTopology и PlatformTaskPolicy |
 | **52** | Прозрачность окна | ⏳ Не начато | — | Альфа окна и GAPI; Acrylic/Mica как нативная надстройка |
 | **53** | Платформенный сплэшскрин | ⏳ Не начато | — | Win/Linux/macOS frameless splash, Android SplashScreen, iOS Storyboard |
 | **54** | 3D и GPU-эффекты в UI | ⏳ Не начато | — | Viewport3DControl, интерактивные объекты, частицы, Glass/Acrylic blur |

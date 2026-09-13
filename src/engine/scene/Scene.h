@@ -12,6 +12,11 @@ namespace zzz::core
 	class SceneData;
 }
 
+namespace zzz::templates
+{
+	class ThreadPool;
+}
+
 namespace zzz::engine
 {
 	using namespace zzz::core;
@@ -26,10 +31,14 @@ namespace zzz::engine
 			Guid guid,
 			std::string name,
 			std::shared_ptr<ResourceManager> resourceManager,
-			const ScriptFactory& scriptFactory,
 			SceneTransitionParams defaultTransition = {});
 
 		~Scene();
+
+		void Initialize(
+			const ScriptFactory& scriptFactory,
+			zzz::templates::ThreadPool& threadPool,
+			std::function<void()> onLayersCreated);
 
 		[[nodiscard]] const Guid& GetGuid() const noexcept { return m_Guid; }
 		[[nodiscard]] const std::string& GetName() const noexcept { return m_Name; }
@@ -51,8 +60,6 @@ namespace zzz::engine
 		void InvokeDestroy();
 
 	private:
-		void Initialize(const SceneData& sceneData, const ScriptFactory& scriptFactory);
-
 		Guid m_Guid;
 		std::string m_Name;
 		std::shared_ptr<ResourceManager> m_ResourceManager;

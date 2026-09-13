@@ -101,6 +101,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/platforms/eiOSEnums.h
         ${CMAKE_CURRENT_SOURCE_DIR}/templates/DoubleBufferedVector.h
         ${CMAKE_CURRENT_SOURCE_DIR}/templates/CallbackQueue.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/templates/CountdownTrigger.h
         ${CMAKE_CURRENT_SOURCE_DIR}/templates/QueueArray.h
         ${CMAKE_CURRENT_SOURCE_DIR}/templates/ThreadPool.h
         ${CMAKE_CURRENT_SOURCE_DIR}/templates/ThreadSafeQueueArray.h

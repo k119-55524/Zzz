@@ -24,7 +24,9 @@ namespace zzz::engine
 		m_ResourceManager(std::move(resourceManager)),
 		m_ScriptFactory(std::move(scriptFactory)),
 		m_ResourceGC(resourceGC),
-		m_LoadingThreadPool(safe_make_unique<zzz::templates::ThreadPool>("SceneLoader", 1))
+		m_LoadingThreadPool(safe_make_unique<zzz::templates::ThreadPool>(
+			"SceneLoader",
+			std::max(2u, std::thread::hardware_concurrency())))
 	{
 		ensure(m_PackageManager != nullptr, "PackageManager не должен быть null.");
 		ensure(m_ResourceManager != nullptr, "ResourceManager не должен быть null.");
@@ -74,23 +76,25 @@ namespace zzz::engine
 
 				const std::string sceneName = std::string(entryOpt->GetName());
 
-				// Сцена сама запрашивает свои данные (SceneData) по GUID через ResourceManager (Вариант 1)
+				// 1. Создание экземпляра Scene по RAII (только регистрация базовых параметров)
 				auto scene = safe_make_shared<Scene>(
 					sceneGuid,
 					sceneName,
 					m_ResourceManager,
-					*m_ScriptFactory,
 					m_GlobalTransitionParams
 				);
 
-				DOut("[SceneManager::LoadSceneAsync] Собрана сцена '{}' ({}).",
-					sceneName, sceneGuid.ToString());
-
-				m_MainThreadQueue.Push([this, scene = std::move(scene), onComplete = std::move(onComplete)]() mutable
+				// 2. Инициализация слоёв сцены (по завершении переносим в основной поток)
+				scene->Initialize(*m_ScriptFactory, *m_LoadingThreadPool, [this, scene, onComplete = std::move(onComplete)]() mutable
 				{
-					m_Scenes[scene->GetGuid()] = scene;
-					scene->InvokeStart();
-					onComplete(scene);
+					DOut("[SceneManager::LoadSceneAsync] Собрана сцена '{}' ({}).", scene->GetName(), scene->GetGuid().ToString());
+
+					m_MainThreadQueue.Push([this, scene = std::move(scene), onComplete = std::move(onComplete)]() mutable
+					{
+						m_Scenes[scene->GetGuid()] = scene;
+						scene->InvokeStart();
+						onComplete(scene);
+					});
 				});
 			}
 			catch (const std::exception& ex)

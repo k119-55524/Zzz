@@ -33,8 +33,8 @@ namespace zzz::core
 	/// Мажорная версия формата файла конфигурации
 	constexpr zU8 c_ConfigFileMajorVersion = 1;
 
-	/// Минорная версия формата файла конфигурации (v1.2: DatFileHeader с timestamp сохранения)
-	constexpr zU8 c_ConfigFileMinorVersion = 2;
+	/// Минорная версия формата файла конфигурации (v1.0.0)
+	constexpr zU8 c_ConfigFileMinorVersion = 0;
 
 	/// Патч-версия формата файла конфигурации
 	constexpr zU8 c_ConfigFilePatchVersion = 0;
