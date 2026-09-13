@@ -183,14 +183,14 @@ namespace zzz::engine
 	private:
 		void InitializeFromObjects(std::span<const zzz::core::GameObjectData> objects);
 
-		std::vector<NodeHandle>          m_ParentIndices;
-		std::vector<zU32>                 m_SubtreeEnds;
-		std::vector<Transform>            m_LocalTransforms;
-		std::vector<Mat4<zF32>>           m_WorldMatrices;
-		std::vector<eNodeFlags>           m_Flags;
-		std::vector<NodeBindings>         m_Bindings;
+		std::vector<NodeHandle>		m_ParentIndices;
+		std::vector<zU32>			m_SubtreeEnds;
+		std::vector<Transform>		m_LocalTransforms;
+		std::vector<Mat4<zF32>>		m_WorldMatrices;
+		std::vector<eNodeFlags>		m_Flags;
+		std::vector<NodeBindings>	m_Bindings;
 
-		BitTreeTracker                    m_DirtyTracker;
+		BitTreeTracker m_DirtyTracker;
 		std::vector<TransformChangeRange> m_ChangeRanges;
 	};
 }
