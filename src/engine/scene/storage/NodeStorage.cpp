@@ -16,6 +16,8 @@ namespace zzz::engine
 		, m_WorldMatrices()
 		, m_Flags()
 		, m_Bindings()
+		, m_NodeVisuals()
+		, m_Draws()
 		, m_DirtyTracker(1)
 		, m_ChangeRanges()
 	{
@@ -28,7 +30,9 @@ namespace zzz::engine
 		, m_WorldMatrices()
 		, m_Flags()
 		, m_Bindings()
-		, m_DirtyTracker((ensure(objects.size() < kInvalidNodeHandle, "NodeStorage: количество объектов превышает максимально допустимую емкость kInvalidNodeHandle"), static_cast<zU32>(objects.empty() ? 1 : objects.size())))
+		, m_NodeVisuals()
+		, m_Draws()
+		, m_DirtyTracker(static_cast<zU32>(objects.empty() ? 1 : objects.size()))
 		, m_ChangeRanges()
 	{
 		InitializeFromObjects(objects);
@@ -48,7 +52,26 @@ namespace zzz::engine
 		m_WorldMatrices.resize(count);
 		m_Flags.resize(count);
 		m_Bindings.resize(count);
+		m_NodeVisuals.resize(count);
 		m_ChangeRanges.reserve(count);
+
+		// Предварительный подсчет draw calls для исключения реаллокаций m_Draws
+		size_t totalDraws = 0;
+		for (size_t i = 0; i < count; ++i)
+		{
+			const auto& obj = objects[i];
+			if (obj.IsMultiMesh())
+			{
+				totalDraws += obj.GetSubmeshGuids().size();
+			}
+			else if (obj.GetMeshGuid().IsValid())
+			{
+				totalDraws += 1;
+			}
+		}
+		ensure(totalDraws <= static_cast<size_t>(std::numeric_limits<zU32>::max()),
+			"NodeStorage: суммарное количество draw calls ({}) превышает вместимость zU32", totalDraws);
+		m_Draws.reserve(totalDraws);
 
 		m_DirtyTracker.Prepare(static_cast<zU32>(count));
 
@@ -74,13 +97,52 @@ namespace zzz::engine
 			m_LocalTransforms[i].rotation = obj.GetRotation();
 			m_LocalTransforms[i].scale = obj.GetScale();
 
-			m_Flags[i] = obj.IsActive() ? eNodeFlags::Active : eNodeFlags::None;
+			m_Flags[i] = (obj.IsActive() ? eNodeFlags::Active : eNodeFlags::None) | eNodeFlags::Visible;
 
 			m_Bindings[i] = NodeBindings{
 				.domainHandle = kInvalidDomainHandle,
 				.spatialHandle = kInvalidSpatialHandle,
 				.domainKind = eNodeDomainKind::None
 			};
+
+			if (obj.IsMultiMesh())
+			{
+				const zU32 begin = static_cast<zU32>(m_Draws.size());
+				const auto& submeshes = obj.GetSubmeshGuids();
+				const auto& materials = obj.GetMaterialGuids();
+				const size_t submeshCount = submeshes.size();
+				for (size_t s = 0; s < submeshCount; ++s)
+				{
+					const Guid matGuid = (s < materials.size()) ? materials[s] : Guid();
+					m_Draws.push_back(DrawDescriptor{
+						.meshGuid = submeshes[s],
+						.materialGuid = matGuid
+					});
+				}
+				m_NodeVisuals[i] = VisualRange{
+					.begin = begin,
+					.count = static_cast<zU32>(submeshCount)
+				};
+			}
+			else if (obj.GetMeshGuid().IsValid())
+			{
+				const zU32 begin = static_cast<zU32>(m_Draws.size());
+				m_Draws.push_back(DrawDescriptor{
+					.meshGuid = obj.GetMeshGuid(),
+					.materialGuid = obj.GetMaterialGuid()
+				});
+				m_NodeVisuals[i] = VisualRange{
+					.begin = begin,
+					.count = 1
+				};
+			}
+			else
+			{
+				m_NodeVisuals[i] = VisualRange{
+					.begin = 0,
+					.count = 0
+				};
+			}
 		}
 
 		// 2. Расчет subtreeEnd в один обратный проход от листьев к корням

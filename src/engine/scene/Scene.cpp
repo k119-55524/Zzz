@@ -28,11 +28,7 @@ namespace zzz::engine
 	{
 		ensure(m_ResourceManager != nullptr, "ResourceManager не должен быть null при создании Scene.");
 
-		auto sceneDataRes = m_ResourceManager->LoadSceneData(m_Guid);
-		if (!sceneDataRes)
-			THROW_RUNTIME("Scene '{}' ({}) не смогла загрузить SceneData: {}", m_Name, m_Guid.ToString(), sceneDataRes.error());
-
-		Initialize(*sceneDataRes, scriptFactory);
+		Initialize(scriptFactory);
 	}
 
 	Scene::~Scene()
@@ -41,14 +37,18 @@ namespace zzz::engine
 		DOut("[Scene::~Scene] Уничтожена сцена '{}' ({})", m_Name, m_Guid.ToString());
 	}
 
-	void Scene::Initialize(const SceneData& sceneData, const ScriptFactory& scriptFactory)
+	void Scene::Initialize(const ScriptFactory& scriptFactory)
 	{
-		// Разрешение параметров перехода
-		if (sceneData.GetTransitionSource() == eTransitionSource::Custom)
-			m_TransitionParams = sceneData.GetTransitionParams();
+		auto sceneDataRes = m_ResourceManager->LoadSceneData(m_Guid);
+		if (!sceneDataRes)
+			THROW_RUNTIME("Scene '{}' ({}) не смогла загрузить SceneData: {}", m_Name, m_Guid.ToString(), sceneDataRes.error());
 
-		m_ClearConfig = sceneData.GetClearConfig();
-		for (const auto& scriptGuid : sceneData.GetSceneScriptGuids())
+		// Разрешение параметров перехода
+		if (sceneDataRes->GetTransitionSource() == eTransitionSource::Custom)
+			m_TransitionParams = sceneDataRes->GetTransitionParams();
+
+		m_ClearConfig = sceneDataRes->GetClearConfig();
+		for (const auto& scriptGuid : sceneDataRes->GetSceneScriptGuids())
 		{
 			auto script = scriptFactory.CreateSceneScript(scriptGuid);
 			ensure(script != nullptr, "Не удалось создать экземпляр SceneScript с GUID: " + scriptGuid.ToString());
@@ -57,37 +57,21 @@ namespace zzz::engine
 		}
 
 		LayerSubsystemFactory factory;
-		for (const auto& layerData : sceneData.GetLayers())
+		for (const auto& layerData : sceneDataRes->GetLayers())
 		{
-			const auto layerType = layerData.GetType();
-			switch (layerType)
+			switch (layerData.GetType())
 			{
 			case eLayerType::Layer3D:
-			{
-				auto objectDomain = factory.CreateObjectDomain3D();
-				auto entityDomain = factory.CreateEntityDomain();
-				auto spatialStorage = factory.CreateSpatialStorage(eSpatialStorageType::Flat);
-
-				m_Layers.push_back(safe_make_unique<GameLayer>(
-					layerData.GetGuid(),
-					layerData.GetName(),
-					layerType,
-					m_ResourceManager,
-					std::move(objectDomain),
-					std::move(entityDomain),
-					std::move(spatialStorage)));
-				break;
-			}
 			case eLayerType::Layer2D:
 			{
-				auto objectDomain = factory.CreateObjectDomain2D();
+				auto objectDomain = factory.CreateObjectDomain();
 				auto entityDomain = factory.CreateEntityDomain();
 				auto spatialStorage = factory.CreateSpatialStorage(eSpatialStorageType::Flat);
 
 				m_Layers.push_back(safe_make_unique<GameLayer>(
 					layerData.GetGuid(),
 					layerData.GetName(),
-					layerType,
+					layerData.GetType(),
 					m_ResourceManager,
 					std::move(objectDomain),
 					std::move(entityDomain),

@@ -16,27 +16,24 @@ Z_SET_LOG_CATEGORY(zzz::core::Scene);
 
 namespace zzz::engine
 {
-	GameObject::GameObject(const Guid& guid, std::string name, VisualPayload visual) :
-		m_Guid(guid),
-		m_Name(std::move(name)),
-		m_NodeStorage(nullptr),
-		m_NodeHandle(kInvalidNodeHandle),
-		m_Visual(std::move(visual)),
-		m_Scripts()
+	GameObject::GameObject(const Guid& guid, std::string name, NodeStorage& storage, NodeHandle nodeHandle)
+		: m_Guid(guid)
+		, m_Name(std::move(name))
+		, m_NodeStorage(&storage)
+		, m_NodeHandle(nodeHandle)
+		, m_Scripts()
 	{
+		ensure(m_Guid.IsValid(), "GameObject: передан невалидный Guid");
+		ensure(!m_Name.empty(), "GameObject: передано пустое имя объекта");
+		ensure(storage.IsValid(nodeHandle), "GameObject: передан невалидный NodeHandle ({})", nodeHandle);
 	}
 
 	void GameObject::Initialize(
 		const GameObjectData& data,
 		const ScriptFactory& scriptFactory,
-		ResourceManager& resourceManager,
-		NodeStorage* storage,
-		NodeHandle nodeHandle)
+		ResourceManager& resourceManager)
 	{
-		// 1. Привязка к пространственному узлу сцены
-		BindNodeStorage(storage, nodeHandle);
-
-		// 2. Инстанцирование и наполнение скриптами
+		// 1. Инстанцирование и наполнение скриптами
 		for (const auto& sGuid : data.GetScriptGuids())
 		{
 			auto script = scriptFactory.CreateScript(sGuid, this);
@@ -46,7 +43,7 @@ namespace zzz::engine
 			}
 		}
 
-		// 3. Наполнение и предзагрузка визуальных ресурсов (меши)
+		// 2. Наполнение и предзагрузка визуальных ресурсов (меши)
 		switch (data.GetMeshType())
 		{
 		case GameObjectData::eMeshType::Multi:
@@ -92,16 +89,6 @@ namespace zzz::engine
 		default:
 			break;
 		}
-	}
-
-	void GameObject::BindNodeStorage(NodeStorage* storage, NodeHandle nodeHandle)
-	{
-		ensure(storage != nullptr, "GameObject::BindNodeStorage: указатель на NodeStorage не должен быть null");
-		ensure(nodeHandle != kInvalidNodeHandle, "GameObject::BindNodeStorage: индекс ноды не должен быть kInvalidNodeHandle");
-		ensure(m_NodeStorage == nullptr, "GameObject::BindNodeStorage: объект '{}' уже привязан к NodeStorage", m_Name);
-
-		m_NodeStorage = storage;
-		m_NodeHandle = nodeHandle;
 	}
 
 	void GameObject::AddScript(std::shared_ptr<Script> script)

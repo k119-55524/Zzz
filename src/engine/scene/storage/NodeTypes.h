@@ -4,7 +4,10 @@
 #include "math/utils/Types.h"
 #include "math/vector/Vec3.h"
 
+#include "core/utils/Guid.h"
+
 using namespace zzz::math;
+using namespace zzz::core;
 
 /**
  * @file NodeTypes.h
@@ -24,7 +27,60 @@ namespace zzz::engine
 	enum class eNodeFlags : zU8
 	{
 		None = 0,
-		Active = 1 << 0
+		Active = 1 << 0,
+		Visible = 1 << 1
+	};
+
+	[[nodiscard]] constexpr eNodeFlags operator|(eNodeFlags lhs, eNodeFlags rhs) noexcept
+	{
+		return static_cast<eNodeFlags>(static_cast<zU8>(lhs) | static_cast<zU8>(rhs));
+	}
+
+	[[nodiscard]] constexpr eNodeFlags operator&(eNodeFlags lhs, eNodeFlags rhs) noexcept
+	{
+		return static_cast<eNodeFlags>(static_cast<zU8>(lhs) & static_cast<zU8>(rhs));
+	}
+
+	[[nodiscard]] constexpr eNodeFlags operator~(eNodeFlags flag) noexcept
+	{
+		return static_cast<eNodeFlags>(~static_cast<zU8>(flag));
+	}
+
+	inline eNodeFlags& operator|=(eNodeFlags& lhs, eNodeFlags rhs) noexcept
+	{
+		lhs = lhs | rhs;
+		return lhs;
+	}
+
+	inline eNodeFlags& operator&=(eNodeFlags& lhs, eNodeFlags rhs) noexcept
+	{
+		lhs = lhs & rhs;
+		return lhs;
+	}
+
+	/**
+	 * @struct VisualRange
+	 * @brief Диапазон дескрипторов отрисовки узла в общем плоском массиве m_Draws.
+	 */
+	struct VisualRange
+	{
+		zU32 begin{ 0 };
+		zU32 count{ 0 };
+
+		[[nodiscard]] bool HasMesh() const noexcept { return count > 0; }
+	};
+
+	/**
+	 * @struct DrawDescriptor
+	 * @brief Непосредственный дескриптор одной отрисовки (связка геометрии и материала).
+	 */
+	struct DrawDescriptor
+	{
+		Guid meshGuid;
+		Guid materialGuid;
+
+		[[nodiscard]] bool HasMesh() const noexcept { return meshGuid.IsValid(); }
+		[[nodiscard]] bool HasMaterial() const noexcept { return materialGuid.IsValid(); }
 	};
 
 	/// @brief Категория домена, к которому привязан узел.

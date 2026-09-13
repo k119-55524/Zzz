@@ -8,7 +8,6 @@
 
 #include "core/utils/Guid.h"
 #include "core/utils/macros/MiscMacros.h"
-#include "engine/scene/visual/VisualTypes.h"
 #include "engine/scene/gameobject/GameObject.h"
 
 using namespace zzz::core;
@@ -20,6 +19,8 @@ namespace zzz::core
 
 namespace zzz::engine
 {
+	class NodeStorage;
+
 	/**
 	 * @struct ObjectRegistration
 	 * @brief Результат создания объекта в домене.
@@ -31,16 +32,16 @@ namespace zzz::engine
 	};
 
 	/**
-	 * @class IObjectDomain
-	 * @brief Базовый класс домена классических объектов: реестр, поиск по GUID/имени и контракт создания объектов.
+	 * @class ObjectDomain
+	 * @brief Домен классических игровых объектов (GameObject): реестр, быстрый поиск по GUID/имени и создание объектов.
 	 */
-	class IObjectDomain
+	class ObjectDomain final
 	{
-		Z_NO_COPY_MOVE(IObjectDomain);
+		Z_NO_COPY_MOVE(ObjectDomain);
 
 	public:
-		IObjectDomain();
-		virtual ~IObjectDomain();
+		ObjectDomain();
+		~ObjectDomain();
 
 		void Clear();
 		void Reserve(size_t capacity);
@@ -50,13 +51,18 @@ namespace zzz::engine
 		[[nodiscard]] GameObject* GetObjectByHandle(DomainHandle handle) const noexcept;
 		[[nodiscard]] size_t GetObjectCount() const noexcept { return m_Objects.size(); }
 
-		virtual ObjectRegistration CreateObject(const GameObjectData& objData) = 0;
-
-	protected:
-		virtual ObjectRegistration CreateObject(const Guid& guid, std::string name, VisualPayload visual = {}) = 0;
-		ObjectRegistration RegisterObject(const Guid& guid, std::string name, VisualPayload visual);
+		ObjectRegistration CreateObject(
+			NodeStorage& storage,
+			NodeHandle nodeHandle,
+			const GameObjectData& objData);
 
 	private:
+		ObjectRegistration RegisterObject(
+			NodeStorage& storage,
+			NodeHandle nodeHandle,
+			const Guid& guid,
+			std::string name);
+
 		std::vector<std::unique_ptr<GameObject>> m_Objects;
 		std::unordered_map<Guid, DomainHandle> m_ObjectsByGuid;
 		std::unordered_map<std::string, std::vector<DomainHandle>> m_ObjectsByName;

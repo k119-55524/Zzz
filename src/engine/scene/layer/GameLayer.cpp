@@ -19,25 +19,19 @@ namespace zzz::engine
 		std::string name,
 		eLayerType type,
 		std::shared_ptr<ResourceManager> resourceManager,
-		std::unique_ptr<IObjectDomain> objectDomain,
+		std::unique_ptr<ObjectDomain> objectDomain,
 		std::unique_ptr<IEntityDomain> entityDomain,
 		std::unique_ptr<ISpatialStorage> spatialStorage) :
 			ILayer(guid, std::move(name), type),
 			m_ResourceManager(std::move(resourceManager)),
-			m_NodeStorage(),
 			m_ObjectDomain(std::move(objectDomain)),
 			m_EntityDomain(std::move(entityDomain)),
-			m_SpatialStorage(std::move(spatialStorage)),
-			m_LastChangeRanges()
+			m_SpatialStorage(std::move(spatialStorage))
 	{
 		ensure(m_ResourceManager != nullptr, "ResourceManager не должен быть null в GameLayer.");
 		ensure(m_ObjectDomain != nullptr, "ObjectDomain не должен быть null в GameLayer.");
 		ensure(m_EntityDomain != nullptr, "EntityDomain не должен быть null в GameLayer.");
 		ensure(m_SpatialStorage != nullptr, "SpatialStorage не должен быть null в GameLayer.");
-	}
-
-	void GameLayer::BeginFrame()
-	{
 	}
 
 	void GameLayer::Update(float dt)
@@ -95,7 +89,7 @@ namespace zzz::engine
 				++objectCount;
 			}
 
-			if (objData.HasMesh())
+			if (m_NodeStorage.HasMesh(static_cast<NodeHandle>(i)))
 			{
 				++meshCount;
 			}
@@ -112,7 +106,7 @@ namespace zzz::engine
 
 			// Регистрация в пространственное хранилище только если есть геометрия
 			SpatialHandle spHandle = kInvalidSpatialHandle;
-			if (objData.HasMesh())
+			if (m_NodeStorage.HasMesh(nodeHandle))
 			{
 				spHandle = m_SpatialStorage->AddMeshNode(nodeHandle);
 				m_NodeStorage.SetSpatialHandle(nodeHandle, spHandle);
@@ -126,9 +120,9 @@ namespace zzz::engine
 			}
 			else
 			{
-				const auto [dHandle, go] = m_ObjectDomain->CreateObject(objData);
+				const auto [dHandle, go] = m_ObjectDomain->CreateObject(m_NodeStorage, nodeHandle, objData);
 				ensure(go != nullptr, "GameLayer::Populate: не удалось создать GameObject для ноды {}", nodeHandle);
-				go->Initialize(objData, scriptFactory, *m_ResourceManager, &m_NodeStorage, nodeHandle);
+				go->Initialize(objData, scriptFactory, *m_ResourceManager);
 
 				m_NodeStorage.SetDomainBinding(nodeHandle, dHandle, eNodeDomainKind::Object);
 			}
@@ -141,12 +135,11 @@ namespace zzz::engine
 		for (size_t i = 0; i < nodeCount; ++i)
 		{
 			const auto& binding = bindings[i];
-			const auto& objData = objects[i];
 
 			ensure(binding.domainHandle != kInvalidDomainHandle, "GameLayer::Populate: узел {} не имеет привязки к домену", i);
 			ensure(binding.domainKind != eNodeDomainKind::None, "GameLayer::Populate: узел {} имеет eNodeDomainKind::None", i);
 
-			if (objData.HasMesh())
+			if (m_NodeStorage.HasMesh(static_cast<NodeHandle>(i)))
 			{
 				ensure(binding.spatialHandle != kInvalidSpatialHandle, "GameLayer::Populate: узел {} с мешем не зарегистрирован в spatial", i);
 			}

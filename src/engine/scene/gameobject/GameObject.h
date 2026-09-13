@@ -3,10 +3,10 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <span>
 
 #include "core/utils/Guid.h"
 #include "engine/scene/storage/NodeStorage.h"
-#include "engine/scene/visual/VisualTypes.h"
 
 namespace zzz::core
 {
@@ -27,26 +27,21 @@ namespace zzz::engine
 {
 	/**
 	 * @class GameObject
-	 * @brief Легковесный фасад сущности сцены, объединяющий NodeStorage, ресурсы и скрипты.
+	 * @brief Легковесный фасад сущности сцены, объединяющий идентификацию, NodeStorage и скрипты.
 	 */
 	class GameObject final
 	{
 		Z_NO_COPY_MOVE(GameObject);
 
 	public:
-		explicit GameObject(const Guid& guid, std::string name, VisualPayload visual = {});
+		explicit GameObject(const Guid& guid, std::string name, NodeStorage& storage, NodeHandle nodeHandle);
 		~GameObject() = default;
 
-		// Полная инициализация и наполнение объекта навешанными данными (трансформ, скрипты, ресурсы)
+		// Полная инициализация и наполнение объекта навешанными данными (скрипты, ресурсы)
 		void Initialize(
 			const GameObjectData& data,
 			const ScriptFactory& scriptFactory,
-			ResourceManager& resourceManager,
-			NodeStorage* storage,
-			NodeHandle nodeHandle);
-
-		// Привязка к контейнеру сцены
-		void BindNodeStorage(NodeStorage* storage, NodeHandle nodeHandle);
+			ResourceManager& resourceManager);
 
 #pragma region Getters and Setters
 		[[nodiscard]] NodeHandle GetNodeHandle() const noexcept { return m_NodeHandle; }
@@ -55,82 +50,89 @@ namespace zzz::engine
 		// --- Идентификация ---
 		[[nodiscard]] const Guid& GetGuid() const noexcept { return m_Guid; }
 		[[nodiscard]] const std::string& GetName() const noexcept { return m_Name; }
-		void SetName(std::string name) { m_Name = std::move(name); }
 
 		// --- Хэндл в пространственном хранилище ---
 		[[nodiscard]] SpatialHandle GetSpatialHandle() const
 		{
-			ensure(m_NodeStorage != nullptr, "GameObject '{}': обращение к NodeStorage до BindNodeStorage", m_Name);
 			return m_NodeStorage->GetSpatialHandle(m_NodeHandle);
 		}
 
 		// --- Активность и жизненный цикл в кадре ---
 		[[nodiscard]] bool IsActive() const
 		{
-			ensure(m_NodeStorage != nullptr, "GameObject '{}': обращение к NodeStorage до BindNodeStorage", m_Name);
 			return m_NodeStorage->IsActive(m_NodeHandle);
 		}
 		void SetActive(bool active)
 		{
-			ensure(m_NodeStorage != nullptr, "GameObject '{}': обращение к NodeStorage до BindNodeStorage", m_Name);
 			m_NodeStorage->SetActive(m_NodeHandle, active);
+		}
+
+		// --- Видимость для рендера ---
+		[[nodiscard]] bool IsVisible() const
+		{
+			return m_NodeStorage->IsVisible(m_NodeHandle);
+		}
+		void SetVisible(bool visible)
+		{
+			m_NodeStorage->SetVisible(m_NodeHandle, visible);
 		}
 
 		// --- Пространственные трансформации (делегирование в NodeStorage) ---
 		void SetLocalPosition(const Vec3<zF32>& pos)
 		{
-			ensure(m_NodeStorage != nullptr, "GameObject '{}': обращение к NodeStorage до BindNodeStorage", m_Name);
 			m_NodeStorage->SetLocalPosition(m_NodeHandle, pos);
 		}
 		[[nodiscard]] Vec3<zF32> GetLocalPosition() const
 		{
-			ensure(m_NodeStorage != nullptr, "GameObject '{}': обращение к NodeStorage до BindNodeStorage", m_Name);
 			return m_NodeStorage->GetLocalPosition(m_NodeHandle);
 		}
 
 		void SetLocalRotation(const Quat<zF32>& rot)
 		{
-			ensure(m_NodeStorage != nullptr, "GameObject '{}': обращение к NodeStorage до BindNodeStorage", m_Name);
 			m_NodeStorage->SetLocalRotation(m_NodeHandle, rot);
 		}
 		[[nodiscard]] Quat<zF32> GetLocalRotation() const
 		{
-			ensure(m_NodeStorage != nullptr, "GameObject '{}': обращение к NodeStorage до BindNodeStorage", m_Name);
 			return m_NodeStorage->GetLocalRotation(m_NodeHandle);
 		}
 
 		void SetLocalScale(const Vec3<zF32>& scale)
 		{
-			ensure(m_NodeStorage != nullptr, "GameObject '{}': обращение к NodeStorage до BindNodeStorage", m_Name);
 			m_NodeStorage->SetLocalScale(m_NodeHandle, scale);
 		}
 		[[nodiscard]] Vec3<zF32> GetLocalScale() const
 		{
-			ensure(m_NodeStorage != nullptr, "GameObject '{}': обращение к NodeStorage до BindNodeStorage", m_Name);
 			return m_NodeStorage->GetLocalScale(m_NodeHandle);
 		}
 
 		[[nodiscard]] Mat4<zF32> GetLocalMatrix() const
 		{
-			ensure(m_NodeStorage != nullptr, "GameObject '{}': обращение к NodeStorage до BindNodeStorage", m_Name);
 			return m_NodeStorage->GetLocalMatrix(m_NodeHandle);
 		}
 		[[nodiscard]] const Mat4<zF32>& GetWorldMatrix() const
 		{
-			ensure(m_NodeStorage != nullptr, "GameObject '{}': обращение к NodeStorage до BindNodeStorage", m_Name);
 			return m_NodeStorage->GetWorldMatrix(m_NodeHandle);
 		}
 
 		// --- Иерархия сцены ---
 		[[nodiscard]] NodeHandle GetParent() const
 		{
-			ensure(m_NodeStorage != nullptr, "GameObject '{}': обращение к NodeStorage до BindNodeStorage", m_Name);
 			return m_NodeStorage->GetParent(m_NodeHandle);
 		}
 
-		// --- Визуальная нагрузка ---
-		[[nodiscard]] const VisualPayload& GetVisual() const noexcept { return m_Visual; }
-		void SetVisual(VisualPayload visual) noexcept { m_Visual = std::move(visual); }
+		// --- Визуальные дескрипторы (делегирование в NodeStorage) ---
+		[[nodiscard]] VisualRange GetVisualRange() const
+		{
+			return m_NodeStorage->GetVisualRange(m_NodeHandle);
+		}
+		[[nodiscard]] std::span<const DrawDescriptor> GetDraws() const
+		{
+			return m_NodeStorage->GetDraws(m_NodeHandle);
+		}
+		[[nodiscard]] bool HasMesh() const noexcept
+		{
+			return m_NodeStorage->HasMesh(m_NodeHandle);
+		}
 
 		[[nodiscard]] const std::vector<std::shared_ptr<Script>>& GetScripts() const noexcept { return m_Scripts; }
 #pragma endregion
@@ -139,12 +141,11 @@ namespace zzz::engine
 
 	private:
 		Guid m_Guid;
-		std::string  m_Name;
+		std::string m_Name;
 
 		NodeStorage* m_NodeStorage;
 		NodeHandle m_NodeHandle;
 
-		VisualPayload m_Visual;
 		std::vector<std::shared_ptr<Script>> m_Scripts;
 	};
 }

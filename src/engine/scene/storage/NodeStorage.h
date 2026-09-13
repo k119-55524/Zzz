@@ -119,18 +119,67 @@ namespace zzz::engine
 			ensure(IsValid(handle), "NodeStorage::SetActive: невалидный handle");
 			if (active)
 			{
-				m_Flags[handle] = static_cast<eNodeFlags>(static_cast<zU8>(m_Flags[handle]) | static_cast<zU8>(eNodeFlags::Active));
+				m_Flags[handle] |= eNodeFlags::Active;
 			}
 			else
 			{
-				m_Flags[handle] = static_cast<eNodeFlags>(static_cast<zU8>(m_Flags[handle]) & ~static_cast<zU8>(eNodeFlags::Active));
+				m_Flags[handle] &= ~eNodeFlags::Active;
 			}
 		}
 
 		[[nodiscard]] bool IsActive(NodeHandle handle) const
 		{
 			ensure(IsValid(handle), "NodeStorage::IsActive: невалидный handle");
-			return (static_cast<zU8>(m_Flags[handle]) & static_cast<zU8>(eNodeFlags::Active)) != 0;
+			return (m_Flags[handle] & eNodeFlags::Active) != eNodeFlags::None;
+		}
+
+		void SetVisible(NodeHandle handle, bool visible)
+		{
+			ensure(IsValid(handle), "NodeStorage::SetVisible: невалидный handle");
+			if (visible)
+			{
+				m_Flags[handle] |= eNodeFlags::Visible;
+			}
+			else
+			{
+				m_Flags[handle] &= ~eNodeFlags::Visible;
+			}
+		}
+
+		[[nodiscard]] bool IsVisible(NodeHandle handle) const
+		{
+			ensure(IsValid(handle), "NodeStorage::IsVisible: невалидный handle");
+			return (m_Flags[handle] & eNodeFlags::Visible) != eNodeFlags::None;
+		}
+
+		// --- Визуальные дескрипторы ---
+		[[nodiscard]] VisualRange GetVisualRange(NodeHandle handle) const
+		{
+			ensure(IsValid(handle), "NodeStorage::GetVisualRange: невалидный handle");
+			return m_NodeVisuals[handle];
+		}
+
+		[[nodiscard]] std::span<const DrawDescriptor> GetDraws(NodeHandle handle) const
+		{
+			ensure(IsValid(handle), "NodeStorage::GetDraws: невалидный handle");
+			const auto& range = m_NodeVisuals[handle];
+			if (range.count == 0)
+			{
+				return {};
+			}
+			ensure(static_cast<size_t>(range.begin) + range.count <= m_Draws.size(),
+				"NodeStorage::GetDraws: диапазон вызовов отрисовки [{}, {}) выходит за пределы m_Draws (размер {})",
+				range.begin, range.begin + range.count, m_Draws.size());
+			return std::span<const DrawDescriptor>(m_Draws.data() + range.begin, range.count);
+		}
+
+		[[nodiscard]] bool HasMesh(NodeHandle handle) const noexcept
+		{
+			if (!IsValid(handle))
+			{
+				return false;
+			}
+			return m_NodeVisuals[handle].HasMesh();
 		}
 
 		void SetSpatialHandle(NodeHandle handle, SpatialHandle spHandle)
@@ -178,6 +227,8 @@ namespace zzz::engine
 		[[nodiscard]] std::span<const eNodeFlags> GetFlags() const noexcept { return m_Flags; }
 		[[nodiscard]] std::span<const NodeBindings> GetBindings() const noexcept { return m_Bindings; }
 		[[nodiscard]] std::span<const Transform> GetLocalTransforms() const noexcept { return m_LocalTransforms; }
+		[[nodiscard]] std::span<const VisualRange> GetNodeVisuals() const noexcept { return m_NodeVisuals; }
+		[[nodiscard]] std::span<const DrawDescriptor> GetAllDraws() const noexcept { return m_Draws; }
 #pragma endregion
 
 	private:
@@ -189,6 +240,8 @@ namespace zzz::engine
 		std::vector<Mat4<zF32>>		m_WorldMatrices;
 		std::vector<eNodeFlags>		m_Flags;
 		std::vector<NodeBindings>	m_Bindings;
+		std::vector<VisualRange>	m_NodeVisuals;
+		std::vector<DrawDescriptor>	m_Draws;
 
 		BitTreeTracker m_DirtyTracker;
 		std::vector<TransformChangeRange> m_ChangeRanges;

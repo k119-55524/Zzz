@@ -1,8 +1,7 @@
 
 #include "core/utils/MemoryUtils.h"
 #include "engine/scene/domain/MVVMDomain.h"
-#include "engine/scene/domain/ObjectDomain2D.h"
-#include "engine/scene/domain/ObjectDomain3D.h"
+#include "engine/scene/domain/ObjectDomain.h"
 #include "engine/scene/domain/EntityDomain.h"
 #include "engine/scene/storage/DefaultSpatialStorage.h"
 
@@ -12,14 +11,9 @@ using namespace zzz::core;
 
 namespace zzz::engine
 {
-	std::unique_ptr<IObjectDomain> LayerSubsystemFactory::CreateObjectDomain2D() const
+	std::unique_ptr<ObjectDomain> LayerSubsystemFactory::CreateObjectDomain() const
 	{
-		return safe_make_unique<ObjectDomain2D>();
-	}
-
-	std::unique_ptr<IObjectDomain> LayerSubsystemFactory::CreateObjectDomain3D() const
-	{
-		return safe_make_unique<ObjectDomain3D>();
+		return safe_make_unique<ObjectDomain>();
 	}
 
 	std::unique_ptr<IEntityDomain> LayerSubsystemFactory::CreateEntityDomain() const

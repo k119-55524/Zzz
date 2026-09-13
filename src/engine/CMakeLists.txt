@@ -113,9 +113,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "gapi/metal/Swapchain_Metal.h"
 
         # Domain Interfaces & Implementations (Пункт 11.1 & 11.4)
-        "scene/domain/IObjectDomain.h" "scene/domain/IObjectDomain.cpp"
-        "scene/domain/ObjectDomain2D.h" "scene/domain/ObjectDomain2D.cpp"
-        "scene/domain/ObjectDomain3D.h" "scene/domain/ObjectDomain3D.cpp"
+        "scene/domain/ObjectDomain.h" "scene/domain/ObjectDomain.cpp"
         "scene/domain/IEntityDomain.h"
         "scene/domain/EntityDomain.h" "scene/domain/EntityDomain.cpp"
         "scene/domain/MVVMDomain.h"
@@ -123,9 +121,6 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         # Storage & Scene Tree (SoA-модель)
         "scene/storage/NodeTypes.h"
         "scene/storage/NodeStorage.h" "scene/storage/NodeStorage.cpp"
-
-        # Visual Payloads
-        "scene/visual/VisualTypes.h"
 
         # GameObject (Фасад над NodeStorage)
         "scene/gameobject/GameObject.h" "scene/gameobject/GameObject.cpp"

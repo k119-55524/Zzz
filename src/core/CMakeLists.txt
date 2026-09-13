@@ -85,7 +85,6 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eWinResize.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eGAPIType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eLayerType.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eVisualType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eSpatialStorageType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/ePackage.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eTargetPlatform.h

@@ -3,7 +3,7 @@
 ## 1. Контекст, статус и цель
 
 - **Номер этапа:** 19 (Уровень 2: GAPI-ресурсы, содержимое куба и сквозной рендер).
-- **Статус:** ⏳ Не начато
+- **Статус:** ✅ Выполнено
 - **Цель:** 
   1. Избавиться от громоздкой полиморфной структуры `VisualPayload` (`std::variant`, динамические векторы сабмешей `std::vector<Guid>`) в `GameObject` и доменах.
   2. Вынести визуальные дескрипторы в двухуровневый плоский массив внутри `NodeStorage` (`VisualRange` в `m_NodeVisuals` по индексу `NodeHandle` + непрерывный `m_Draws`), адресуемый за $O(1)$ без аллокаций в куче на узел и с нативной поддержкой как одиночных мешей/спрайтов, так и MultiMesh.
@@ -189,22 +189,22 @@ struct DrawDescriptor
    - `[[nodiscard]] std::span<const DrawDescriptor> GetDraws() const { return m_NodeStorage->GetDraws(m_NodeHandle); }`
    - `[[nodiscard]] bool HasMesh() const { return m_NodeStorage->HasMesh(m_NodeHandle); }`
 
-### 2.5. Развязка времени жизни и контракт доменов (`IObjectDomain`, `ObjectDomain2D`, `ObjectDomain3D`)
+### 2.5. Развязка времени жизни и контракт домена (`ObjectDomain`)
 
 1. В `Scene.cpp` домены создаются **до** создания слоя и `NodeStorage`.
-   Поэтому `IObjectDomain` **не сохраняет** указатель на `NodeStorage` в своём конструкторе:
+   Конкретный класс `ObjectDomain` создаётся фабрикой `LayerSubsystemFactory::CreateObjectDomain()`:
    ```cpp
-   IObjectDomain() = default;
-   virtual ~IObjectDomain() = default;
+   ObjectDomain() = default;
+   ~ObjectDomain() = default;
    ```
 2. `NodeStorage&` передаётся непосредственно в вызовы создания объектов:
    ```cpp
-   virtual ObjectRegistration CreateObject(
+   ObjectRegistration CreateObject(
        NodeStorage& storage,
        NodeHandle nodeHandle,
-       const GameObjectData& objData) = 0;
+       const GameObjectData& objData);
    ```
-3. Метод `RegisterObject` в `IObjectDomain`:
+3. Метод `RegisterObject` в `ObjectDomain`:
    ```cpp
    ObjectRegistration RegisterObject(
        NodeStorage& storage,
@@ -218,9 +218,9 @@ struct DrawDescriptor
    ```cpp
    m_ObjectDomain->CreateObject(m_NodeStorage, nodeHandle, objData);
    ```
-5. Из доменов полностью удаляются:
-   - `VisualPayload` и метод `ValidateVisual(const VisualPayload&)`.
-   - Зависимости от полиморфных структур визуала.
+5. Полное схлопывание иерархии доменов классических объектов:
+   - Поскольку различие между 2D и 3D слоями лежит в камере, проекции, шейдерах и рендерере, а логика `GameObject` идентична, пустые классы `ObjectDomain2D` и `ObjectDomain3D` схлопнуты в единый конкретный класс `ObjectDomain`.
+   - Файлы `IObjectDomain.h/.cpp`, `ObjectDomain2D.h/.cpp`, `ObjectDomain3D.h/.cpp` полностью удалены (YAGNI, Правило 16).
 
 ### 2.6. Полное удаление `VisualTypes.h` и `eVisualType.h`
 
@@ -252,24 +252,26 @@ struct DrawDescriptor
    - Добавить параллельные массивы `std::vector<VisualRange> m_NodeVisuals` и `std::vector<DrawDescriptor> m_Draws`.
    - В `InitializeFromObjects`:
      - Выставлять `m_Flags[i] = (obj.IsActive() ? eNodeFlags::Active : eNodeFlags::None) | eNodeFlags::Visible`.
-     - Выполнять предварительный подсчёт `totalDraws` и вызывать `m_Draws.reserve(totalDraws)`.
+     - Выполнять предварительный подсчёт `totalDraws` с проверкой на переполнение `zU32` и вызывать `m_Draws.reserve(totalDraws)`.
      - Заполнять `m_NodeVisuals` и `m_Draws` с поддержкой как одиночных мешей/спрайтов, так и MultiMesh (с fallback `Guid()` для недостающих материалов).
-   - Реализовать методы доступа: `GetVisualRange`, `GetDraws`, `HasMesh`, `IsVisible`, `SetVisible`, `GetNodeVisuals()`, `GetAllDraws()`.
+   - Реализовать методы доступа: `GetVisualRange`, `GetDraws` (с проверкой границ диапазона), `HasMesh`, `IsVisible`, `SetVisible`, `GetNodeVisuals()`, `GetAllDraws()`.
 3. **Удаление устаревших типов (`VisualTypes.h`, `eVisualType.h`):**
    - Удалить `src/engine/scene/visual/VisualTypes.h` и очистить `src/engine/CMakeLists.txt`.
    - Удалить `src/core/enums/eVisualType.h` и очистить `src/core/CMakeLists.txt`.
 4. **Очистка и адаптация `GameObject` (`GameObject.h / .cpp`):**
    - Удалить поле `m_Visual` и методы работы с `VisualPayload`.
-   - Конструктор принимает `(guid, name, NodeStorage&, NodeHandle)` со строгой проверкой `ensure` и списком инициализации полей (Правило 8.1).
+   - Удалить метод `SetName` (Правило 8.2: имя неизменяемо, исключается рассинхронизация с индексом домена).
+   - Конструктор принимает `(guid, name, NodeStorage&, NodeHandle)` со строгой проверкой `ensure(storage.IsValid(nodeHandle))`, `ensure(guid.IsValid())`, `ensure(!name.empty())` и списком инициализации полей (Правило 8.1).
    - Хранить скрипты как `std::vector<std::shared_ptr<Script>> m_Scripts`.
    - Реализовать методы `GetVisualRange()`, `GetDraws()`, `HasMesh()`, делегирующие в `m_NodeStorage`.
-5. **Упрощение доменов (`IObjectDomain`, `ObjectDomain2D`, `ObjectDomain3D`):**
-   - Конструктор `IObjectDomain()` остаётся дефолтным (без сохранения `NodeStorage*`).
-   - Сигнатура: `CreateObject(NodeStorage& storage, NodeHandle nodeHandle, const GameObjectData& objData)`.
+5. **Единый домен объектов (`ObjectDomain.h / .cpp`):**
+   - Объединить абстракцию и производные классы в единый конкретный класс `ObjectDomain`.
+   - Метод `CreateObject(NodeStorage& storage, NodeHandle nodeHandle, const GameObjectData& objData)`.
    - Метод `RegisterObject(storage, nodeHandle, guid, name)` создаёт `GameObject`.
-   - Удалить `ValidateVisual` и зависимости от `VisualPayload`.
-6. **Адаптация слоя (`GameLayer.h / .cpp`):**
+   - Удалить устаревшие файлы `IObjectDomain.h/.cpp`, `ObjectDomain2D.h/.cpp`, `ObjectDomain3D.h/.cpp`.
+6. **Адаптация слоя (`GameLayer.h / .cpp`, `LayerSubsystemFactory.h / .cpp`, `Scene.cpp`):**
    - В `Populate` вызывать `m_ObjectDomain->CreateObject(m_NodeStorage, nodeHandle, objData)`.
+   - Удалить пустой оверрайд `BeginFrame()` из `GameLayer`.
 7. **Верификация сборки:**
    - Выполнить `run_build.bat`.
    - Убедиться в 0 ошибок и 0 предупреждений компилятора.
@@ -285,14 +287,17 @@ struct DrawDescriptor
 2. **Двухуровневый плоский массив визуалов:**
    - `VisualRange` в `m_NodeVisuals` индексируется за $O(1)$ по `NodeHandle`.
    - Массив `m_Draws` непрерывен, память под него резервируется перед наполнением (`reserve`).
+   - Исключено усечение при приведении к `zU32`, метод `GetDraws` проверяет границы диапазона в `m_Draws`.
    - Поддерживаются SingleMesh, MultiMesh (с fallback для недостающих материалов) и узлы без визуала.
    - Нулевое число динамических аллокаций в куче на отдельный узел.
-3. **Корректная развязка времени жизни:**
-   - `IObjectDomain` не хранит ссылку на `NodeStorage`, ссылка `NodeStorage&` передаётся в `CreateObject`.
+3. **Единый конкретный `ObjectDomain`:**
+   - `ObjectDomain` является конкретным классом, фиктивное полиморфное разделение 2D/3D удалено.
+   - Ссылка `NodeStorage&` передаётся в `CreateObject` без сохранения в конструкторе домена.
 4. **Удаление устаревших заголовков:**
    - Файлы `VisualTypes.h` и `eVisualType.h` полностью удалены с диска и из `CMakeLists.txt`.
-5. **Компактный `GameObject`:**
+5. **Компактный `GameObject` и неизменяемость имени:**
    - `GameObject` освобождён от визуальных данных, размер экземпляра минимизирован.
+   - Метод `SetName` удалён для сохранения консистентности реестра имён домена (Правило 8.2).
    - Скрипты сохранены как `std::shared_ptr<Script>`.
 6. **Целостность Spatial Registration:**
    - Регистрация в `DefaultSpatialStorage` работает для всех узлов (и `Object`, и `Entity`) через `storage.HasMesh(nodeHandle)`.
@@ -309,14 +314,18 @@ struct DrawDescriptor
 | `src/core/enums/eVisualType.h` | **Полное удаление файла** |
 | `src/core/CMakeLists.txt` | Удаление `eVisualType.h` из списка файлов сборки |
 | `src/engine/scene/storage/NodeTypes.h` | Добавление флага `Visible` в `eNodeFlags`, битовые операторы, объявление `VisualRange` и `DrawDescriptor` |
-| `src/engine/scene/storage/NodeStorage.h` | Массивы `m_NodeVisuals`, `m_Draws`, методы `IsVisible/SetVisible`, геттеры `GetVisualRange`, `GetDraws` |
-| `src/engine/scene/storage/NodeStorage.cpp` | Заполнение `m_NodeVisuals`, `m_Draws` и `m_Flags` в `InitializeFromObjects` с `reserve` и поддержкой MultiMesh fallback |
-| `src/engine/scene/gameobject/GameObject.h` | Удаление `VisualPayload`, конструктор с `NodeStorage&`, прокси-геттеры, `shared_ptr<Script>` |
-| `src/engine/scene/gameobject/GameObject.cpp` | Конструктор по Правилу 8.1 с `ensure`, очистка от `VisualPayload` |
-| `src/engine/scene/domain/IObjectDomain.h` | Удаление хранения `NodeStorage*`, метод `CreateObject(NodeStorage&, ...)` |
-| `src/engine/scene/domain/IObjectDomain.cpp` | Реализация `RegisterObject(NodeStorage&, ...)` |
-| `src/engine/scene/domain/ObjectDomain2D.h/cpp` | Реализация `CreateObject(NodeStorage&, ...)`, удаление методов валидации `VisualPayload` |
-| `src/engine/scene/domain/ObjectDomain3D.h/cpp` | Реализация `CreateObject(NodeStorage&, ...)`, удаление методов валидации `VisualPayload` |
+| `src/engine/scene/storage/NodeStorage.h` | Массивы `m_NodeVisuals`, `m_Draws`, методы `IsVisible/SetVisible`, геттеры `GetVisualRange`, `GetDraws` с валидацией границ |
+| `src/engine/scene/storage/NodeStorage.cpp` | Заполнение `m_NodeVisuals`, `m_Draws` и `m_Flags` в `InitializeFromObjects` с `reserve`, проверкой на переполнение и MultiMesh fallback |
+| `src/engine/scene/gameobject/GameObject.h` | Удаление `VisualPayload` и `SetName`, конструктор с `NodeStorage&`, прокси-геттеры, `shared_ptr<Script>` |
+| `src/engine/scene/gameobject/GameObject.cpp` | Конструктор по Правилу 8.1 с валидацией `storage.IsValid(nodeHandle)`, `guid.IsValid()`, `!name.empty()` |
+| `src/engine/scene/domain/ObjectDomain.h` | Единый конкретный класс домена объектов |
+| `src/engine/scene/domain/ObjectDomain.cpp` | Реализация `CreateObject(NodeStorage&, ...)` и реестра объектов |
+| `src/engine/scene/domain/IObjectDomain.h/.cpp` | **Полное удаление файлов** |
+| `src/engine/scene/domain/ObjectDomain2D.h/.cpp` | **Полное удаление файлов** |
+| `src/engine/scene/domain/ObjectDomain3D.h/.cpp` | **Полное удаление файлов** |
+| `src/engine/scene/layer/LayerSubsystemFactory.h/.cpp` | Метод `CreateObjectDomain()` |
+| `src/engine/scene/Scene.cpp` | Создание `ObjectDomain` для слоев 2D и 3D |
 | `src/engine/scene/visual/VisualTypes.h` | **Полное удаление файла** |
-| `src/engine/CMakeLists.txt` | Удаление `VisualTypes.h` из списка файлов сборки |
-| `src/engine/scene/layer/GameLayer.cpp` | Вызов `CreateObject(m_NodeStorage, nodeHandle, objData)` |
+| `src/engine/CMakeLists.txt` | Обновление списка файлов (замена удаленных доменов и visual типов на `ObjectDomain`) |
+| `src/engine/scene/layer/GameLayer.h/.cpp` | Вызов `CreateObject(m_NodeStorage, nodeHandle, objData)`, удаление пустого `BeginFrame()` |
+
