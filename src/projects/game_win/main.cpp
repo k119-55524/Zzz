@@ -11,7 +11,7 @@ using namespace zzz::engine;
 int APIENTRY wWinMain(
 	_In_		HINSTANCE	/*hInstance*/,
 	_In_opt_	HINSTANCE	/*hPrevInstance*/,
-	_In_		LPWSTR		lpCmdLine,
+	_In_		LPWSTR		/*lpCmdLine*/,
 	_In_		int			/*nCmdShow*/)
 {
 	CRT_LEAK_CHECK_BEGIN();
@@ -28,8 +28,7 @@ int APIENTRY wWinMain(
 
 		try
 		{
-			auto launchOptions = EngineLaunchOptions::ParseWindowsCommandLine(lpCmdLine ? lpCmdLine : L"");
-			Engine engine(nullptr, launchOptions);
+			Engine engine;
 			auto res = engine.Run();
 			if (!res)
 			{

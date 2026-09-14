@@ -9,10 +9,10 @@
 #include "engine/package/PackageManager.h"
 #include "core/io/package/DataAssetsManager.h"
 #include "engine/resources/ResourceManager.h"
-#include "engine/launch/EngineLaunchOptions.h"
 #include "engine/package/UserSettingsManager.h"
 #include "engine/platforms/mainloop/MainLoop.h"
 #include "engine/resources/ResourceGarbageCollector.h"
+#include "core/templates/CallbackQueue.h"
 
 using namespace zzz::core;
 
@@ -21,9 +21,7 @@ namespace zzz::engine
 	class Engine
 	{
 	public:
-		Engine(
-			std::shared_ptr<NativeAppData> nativeData = nullptr,
-			EngineLaunchOptions launchOptions = {});
+		Engine(std::shared_ptr<NativeAppData> nativeData = nullptr);
 		~Engine();
 
 		[[nodiscard]] virtual std::expected<void, std::string> Run();
@@ -31,6 +29,12 @@ namespace zzz::engine
 		[[nodiscard]] std::shared_ptr<ResourceManager> GetResourceManager() const noexcept { return m_ResourceManager; }
 		[[nodiscard]] ResourceGarbageCollector* GetResourceGC() const noexcept { return m_ResourceGC.get(); }
 		[[nodiscard]] TaskDispatcher* GetTaskDispatcher() const noexcept { return m_TaskDispatcher.get(); }
+
+		/// @brief Прокидывает задачу или обработчик ошибки для выполнения на главном потоке кадра
+		void DispatchToMainThread(std::function<void()> callback)
+		{
+			m_MainThreadQueue.Push(std::move(callback));
+		}
 
 	protected:
 		void Shutdown() noexcept;
@@ -64,6 +68,7 @@ namespace zzz::engine
 		std::shared_ptr<MainLoopBase> m_MainLoop;
 		std::shared_ptr<ProjectEventBus> m_EventBus;
 		std::shared_ptr<Time> m_Time;
+		templates::CallbackQueue<std::function<void()>> m_MainThreadQueue;
 
 	private:
 		void OnAppClosed() const;

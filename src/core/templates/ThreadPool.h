@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/CoreIncludes.h"
+#include "core/utils/ThreadUtils.h"
 #include <logger/logger.h>
 #include <queue>
 #include <future>
@@ -9,24 +10,6 @@
 
 namespace zzz::templates
 {
-#if defined(_WIN32)
-	inline void SetThreadName(const char* threadName)
-	{
-		if (!threadName)
-			return;
-
-		int wlen = MultiByteToWideChar(CP_UTF8, 0, threadName, -1, nullptr, 0);
-		if (wlen > 0)
-		{
-			std::wstring wname(static_cast<size_t>(wlen), L'\0');
-			MultiByteToWideChar(CP_UTF8, 0, threadName, -1, wname.data(), wlen);
-			SetThreadDescription(GetCurrentThread(), wname.c_str());
-		}
-	}
-#else
-	inline void SetThreadName(const char*) {}
-#endif
-
 	enum class eEnqueueResult : uint8_t
 	{
 		Accepted,
@@ -48,9 +31,11 @@ namespace zzz::templates
 		explicit ThreadPool(
 			const std::string& threadName,
 			size_t threadCount,
+			core::eThreadPriority priority = core::eThreadPriority::Normal,
 			std::function<void(size_t workerIndex)> onWorkerStart = nullptr)
 			: done{ false }
 			, activeThreadCount{ 0 }
+			, m_Priority(priority)
 			, m_OnWorkerStart(std::move(onWorkerStart))
 		{
 			if (threadCount == 0)
@@ -235,16 +220,16 @@ namespace zzz::templates
 
 		bool done;
 		size_t activeThreadCount;
+		core::eThreadPriority m_Priority;
 		std::function<void(size_t workerIndex)> m_OnWorkerStart;
 		std::queue<std::function<void()>> workQueue;
 		std::vector<std::thread> threads;
 
 		void WorkerThread(const std::string& _threadName, size_t id)
 		{
-#if defined(_WIN32)
 			std::string threadName = std::format(">>>>> [zzz::ThreadPool]. Thread-using class: zzz::{}({})", _threadName, id);
-			SetThreadName(threadName.c_str());
-#endif
+			core::SetCurrentThreadName(threadName);
+			core::SetCurrentThreadPriority(m_Priority);
 
 			if (m_OnWorkerStart)
 			{

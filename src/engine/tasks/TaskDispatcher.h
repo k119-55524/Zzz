@@ -1,21 +1,22 @@
 #pragma once
 
-#include "core/CoreIncludes.h"
-#include "core/templates/ThreadPool.h"
-#include "engine/tasks/TaskPriority.h"
-#include "engine/tasks/TaskDispatcherConfig.h"
 #include <array>
 #include <memory>
 #include <functional>
-#include <exception>
+
+#include "core/hardware/CpuTopology.h"
+#include "core/templates/ThreadPool.h"
+#include "engine/tasks/TaskPriority.h"
 
 namespace zzz::engine
 {
+	using namespace zzz::core;
+	using namespace zzz::templates;
+
 	enum class eSubmitResult : uint8_t
 	{
 		Success,
-		RejectedPoolClosed,
-		InvalidPriority
+		RejectedPoolClosed
 	};
 
 	/**
@@ -27,25 +28,23 @@ namespace zzz::engine
 		Z_NO_COPY_MOVE(TaskDispatcher);
 
 	public:
-		explicit TaskDispatcher(const TaskDispatcherConfig& config);
+		using ErrorHandler = std::function<void(std::exception_ptr)>;
+
+		explicit TaskDispatcher(const CpuTopology& topology);
 		~TaskDispatcher();
 
-		eSubmitResult Submit(
-			eTaskPriority priority,
-			std::function<void()> task,
-			std::function<void(std::exception_ptr)> onError = nullptr);
-
+		eSubmitResult Submit(eTaskPriority priority, std::function<void()> task, ErrorHandler onError = nullptr);
 		void Join(eTaskPriority priority);
 		void JoinAll();
 
 	private:
-		static_assert(static_cast<size_t>(eTaskPriority::Count) == 4, "m_PoolRouting size mismatch!");
-		std::array<zzz::templates::ThreadPool*, static_cast<size_t>(eTaskPriority::Count)> m_PoolRouting{};
+		void InitializePools(const CpuTopology& topology);
 
-		std::unique_ptr<zzz::templates::ThreadPool> m_CriticalPool;
-		std::unique_ptr<zzz::templates::ThreadPool> m_PrimePool;
-		std::unique_ptr<zzz::templates::ThreadPool> m_PerfPool;
-		std::unique_ptr<zzz::templates::ThreadPool> m_EffPool;
-		std::unique_ptr<zzz::templates::ThreadPool> m_CommonPool;
+		static constexpr uint32_t c_DefaultCriticalThreads = 2;
+
+		static_assert(static_cast<size_t>(eTaskPriority::Count) == 4, "m_Pools size mismatch!");
+		static_assert(static_cast<size_t>(eTaskPriority::Count) == static_cast<size_t>(eThreadPriority::Count),
+			"eTaskPriority and eThreadPriority size mismatch!");
+		std::array<std::shared_ptr<ThreadPool>, static_cast<size_t>(eTaskPriority::Count)> m_Pools{};
 	};
 }

@@ -142,21 +142,22 @@
 
 В соответствии с Правилом 16 (YAGNI) из контракта исключены неиспользуемые методы (`GetActiveWorkers`, `GetPendingTasks`).
 
-**Структура `TaskDispatcherConfig` (`src/engine/tasks/TaskDispatcherConfig.h`):**
-- `isHeterogeneous` (флаг: гетерогенные кластеры vs однородный CPU);
-- `commonThreads` (размер `m_CommonPool` для однородного CPU / малоядерного фоллбэка);
-- `primeThreads`, `perfThreads`, `effThreads` (размеры пулов под супер-ядра, P-ядра и E-ядра в гетерогенном режиме);
-- `criticalThreads` (размер выделенного кадрового пула `m_CriticalPool`, 1–2 воркера во всех случаях, кроме 1-ядерного).
+**Типизация физических пулов (`ePoolType`):**
+- `Critical` (выделенный кадровый пул);
+- `Prime` (супер-ядра Cortex-X при наличии);
+- `Perf` (производительные ядра в гетерогенном режиме, либо ВСЕ рабочие потоки в однородном SMP-режиме);
+- `Eff` (энергоэффективные E-ядра при наличии);
+- `Count = 4`.
 
 **Интерфейс и поля `TaskDispatcher` (`src/engine/tasks/TaskDispatcher.h`):**
 - Запрет копирования и перемещения (`Z_NO_COPY_MOVE`);
-- Конструктор от `const TaskDispatcherConfig&` и деструктор `~TaskDispatcher()`;
+- Конструктор от `const CpuTopology& topology` и деструктор `~TaskDispatcher()`;
 - Метод `Submit(priority, task, onError)`: приём задачи с приоритетом, целевой функцией и опциональным колбэком ошибки;
 - Метод `Join(priority)`: прямое ожидание завершения пула, назначенного на данный приоритет ($O(1)$ маршрутизация);
-- Метод `JoinAll()`: последовательное ожидание всех фактически созданных физических пулов (`m_CriticalPool`, `m_PrimePool`, `m_PerfPool`, `m_EffPool`, `m_CommonPool`), если они инициализированы;
+- Метод `JoinAll()`: ожидание всех фактически созданных физических пулов циклом по массиву `m_Pools`;
 - Внутренние поля:
   - Массив указателей на пулы `m_PoolRouting` размера `eTaskPriority::Count` (`std::array<ThreadPool*, 4>`);
-  - Уникальные физические пулы `std::unique_ptr<ThreadPool>`: `m_CriticalPool`, `m_PrimePool`, `m_PerfPool`, `m_EffPool`, `m_CommonPool`.
+  - Фиксированный массив владения уникальными физическими пулами `m_Pools` (`std::array<std::unique_ptr<ThreadPool>, 4>`).
 
 ### 4.1. Расширение `ThreadPool` (`src/core/templates/ThreadPool.h`)
 В `ThreadPool` вносятся минимальные необходимые расширения:
@@ -181,13 +182,8 @@
 3. **`Mobile Hard Cap`**: абсолютный защитный потолок ОС ($\le 4$ воркеров на Android / iOS).
 
 **Архитектурные правила применения настроек:**
-1. **Семантика CLI `--threads=N`:**
-   - Аргумент `--threads=N` задаёт верхний предел (cap) для `TotalWorkersBudget`. Если пользователь указал `--threads=2` на 16-ядерном CPU, движок выделит не более 2 воркеров.
-   - Значение `--threads=0` означает `Auto` (лимит отсутствует, бюджет определяется топологией).
-2. **Безусловный Mobile Hard Cap:**
-   - На мобильных платформах (Android / iOS) аппаратный лимит перегрева и термодроттлинга ($\le 4$ активных воркеров) применяется **после всех остальных источников** и является безусловным: даже если передан флаг `--threads=8`, финальный бюджет воркеров урезается до 4.
-3. **Параметры запуска (`EngineLaunchOptions`):**
-   - Аргументы командной строки парсятся в платформенных точках входа (`projects/game_win/main.cpp`, `game_linux/main.cpp`, `game_android`, `game_ios`, `game_macos`) и передаются в `Engine::Run(const EngineLaunchOptions& options)`.
+1. **Безусловный Mobile Hard Cap:**
+   - На мобильных платформах (Android / iOS) аппаратный лимит перегрева и термодроттлинга ($\le 4$ активных воркеров) является безусловным: финальный бюджет воркеров урезается до 4.
 
 **Цепочка формирования конфигурации:**
 [Железо / ОС] $\to$ [HardwareManager::CpuInfoCollector] (формирование `CpuTopology`) $\to$ [PlatformTaskPolicy::Resolve] (Desktop vs Mobile) $\to$ [TaskDispatcherConfig] (финальные скорректированные бюджеты) $\to$ [TaskDispatcher(config)] (создание пулов и заполнение `m_PoolRouting`).
@@ -197,7 +193,6 @@
    - Бюджет воркеров:
      - При $LogicalCores \ge 6$: $TotalWorkersBudget = LogicalCores - 2$;
      - При $LogicalCores < 6$: $TotalWorkersBudget = \max(1, LogicalCores - 1)$.
-   - При наличии флага CLI `--threads=N` ($N > 0$): $TotalWorkersBudget = \min(TotalWorkersBudget, N)$.
 2. **Mobile (`PlatformTaskPolicyMobile` — Android/iOS):**
    - Суммарный бюджет воркеров `TaskDispatcher`: **не более 3–4 воркеров на весь процесс** (Mobile Hard Cap):
      $$TotalWorkersBudget = \min(TotalWorkersBudget, 4)$$
@@ -207,7 +202,7 @@
 
 При инициализации подсистемы в канонический лог (`::zzz::core::Hardware`) выводятся два структурированных блока фактов:
 1. **Блок `[CpuTopology]`**: имя процессора, архитектура (x64/ARM64), общее число логических и физических ядер, признак гетерогенности (`isHeterogeneous`), а также ёмкости логических ядер по кластерам (`primeLogicalCapacity`, `performanceLogicalCapacity`, `efficiencyLogicalCapacity`), если система гетерогенная.
-2. **Блок `[TaskDispatcherConfig]`**: применённая платформенная политика (`Desktop` / `Mobile`), эффективные параметры запуска (`launchOptions`, включая лимит флага `--threads`), перечень созданных физических пулов с их фактическим числом потоков и приоритетом ОС (`PriorityHint`), а также итоговая матрица маршрутизации `m_PoolRouting` по приоритетам (`Critical`, `High`, `Normal`, `Background`).
+2. **Блок `[TaskDispatcherConfig]`**: применённая платформенная политика (`Desktop` / `Mobile`), перечень созданных физических пулов с их фактическим числом потоков и приоритетом ОС (`PriorityHint`), а также итоговая матрица маршрутизации `m_PoolRouting` по приоритетам (`Critical`, `High`, `Normal`, `Background`).
 
 ---
 
@@ -247,17 +242,15 @@
    - Встроить `CpuTopology` в `src/core/hardware/HardwareState.h`;
    - Расширить `CpuInfoCollector` под Windows, Linux (с SMP-фоллбэком), Apple (динамический `hw.nperflevels`), Android;
    - Обновить `CpuInfoCollectorEditor.h` для опроса реального числа ядер хоста (`std::thread::hardware_concurrency()`).
-3. **Конфигуратор политики и параметры запуска:**
-   - Создать `src/engine/launch/EngineLaunchOptions.h` (парсинг флага `--threads=N`);
-   - Поддержать передачу `EngineLaunchOptions` из платформенных точек входа (`projects/game_win/main.cpp`, `game_linux/main.cpp`, `android_main.cpp`, `game_ios/main.mm`, `game_macos/main.mm`) в `Engine::Run()`;
-   - Создать `src/engine/platforms/task/PlatformTaskPolicy.h` и специализации `Desktop` / `Mobile`.
-4. **Класс `TaskDispatcher`:**
+3. **Класс `TaskDispatcher`:**
    - Создать `src/engine/tasks/TaskDispatcher.h` и `src/engine/tasks/TaskDispatcher.cpp`;
-   - Реализовать заполнение `m_PoolRouting` с безопасным фоллбэком под 1–2 ядра / $TotalWorkersBudget \le 1$ (включая `m_PrimePool` для 3-кластерных систем);
+   - Конструктор от `CpuTopology`: расчёт бюджетов потоков с учётом лимита мобилок (`Mobile Hard Cap <= 4`);
+   - Физические пулы в фиксированном массиве `m_Pools` по `ePoolType` (Critical, Prime, Perf, Eff);
+   - Реализовать заполнение `m_PoolRouting` с безопасным фоллбэком под 1–2 ядра / $TotalWorkersBudget \le 1$;
    - Реализовать `Submit` с проверкой `!task`, валидацией границ enum, атомарным вызовом `Enqueue` и безопасной изоляцией исключений через `std::exception_ptr`;
    - Реализовать `Join(eTaskPriority priority)` за $O(1)$ через `m_PoolRouting[priority]->Join()`;
-   - Реализовать `JoinAll()` для последовательного ожидания всех фактически созданных уникальных физических пулов.
-5. **Интеграция в `Engine` и клиенты:**
+   - Реализовать `JoinAll()` простым проходом по `m_Pools`.
+4. **Интеграция в `Engine` и клиенты:**
    - Создать `m_TaskDispatcher` в `Engine.h/.cpp`;
    - Пробросить `TaskDispatcher&` в `SceneManager` и `ViewManager`;
    - В `SceneManager` и `Scene` (`src/engine/scene/Scene.h/.cpp`) перевести загрузку слоёв на `TaskDispatcher&` (`eTaskPriority::Normal`) с существующим `CountdownTrigger`;
@@ -285,13 +278,10 @@
 
 - **Новые файлы:**
   - `src/core/hardware/CpuTopology.h`
-  - `src/engine/launch/EngineLaunchOptions.h`
-  - `src/engine/tasks/TaskDispatcherConfig.h`
+  - `src/engine/tasks/TaskPriority.h`
+  - `src/engine/tasks/TaskConstants.h`
   - `src/engine/tasks/TaskDispatcher.h`
   - `src/engine/tasks/TaskDispatcher.cpp`
-  - `src/engine/platforms/task/PlatformTaskPolicy.h`
-  - `src/engine/platforms/task/platforms/PlatformTaskPolicyDesktop.h`
-  - `src/engine/platforms/task/platforms/PlatformTaskPolicyMobile.h`
 - **Модифицируемые файлы:**
   - `src/core/CMakeLists.txt`
   - `src/core/templates/ThreadPool.h`

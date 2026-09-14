@@ -37,6 +37,8 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Version.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/LogCategory.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/ToStringHelpers.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/ThreadUtils.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/ThreadUtils.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/DX12ToStringHelpers.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/VKToStringHelpers.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/MetalToStringHelpers.h

@@ -2,7 +2,6 @@
 #include <logger.h>
 
 #include "resources/MeshLoader.h"
-#include "engine/platforms/task/PlatformTaskPolicy.h"
 
 #include "Engine.h"
 
@@ -21,9 +20,7 @@ extern "C" void RegisterAllScripts(ScriptRegistry&);
 extern "C" __attribute__((weak)) void RegisterAllScripts(ScriptRegistry&) {}
 #endif
 
-Engine::Engine(
-	std::shared_ptr<NativeAppData> nativeData,
-	EngineLaunchOptions launchOptions) :
+Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 	engineState{ eInitState::NotInitialized }
 {
 	m_FileSystem = safe_make_shared<FileSystem>(nativeData);
@@ -49,9 +46,7 @@ Engine::Engine(
 	m_Platform->GetHardwareState().LogFileBlock();
 
 	// Инициализация централизованного диспетчера задач (TaskDispatcher)
-	const auto taskConfig = PlatformTaskPolicy::Resolve(m_Platform->GetHardwareState().GetCpuTopology(), launchOptions);
-	taskConfig.LogFileBlock();
-	m_TaskDispatcher = safe_make_unique<TaskDispatcher>(taskConfig);
+	m_TaskDispatcher = safe_make_unique<TaskDispatcher>(m_Platform->GetHardwareState().GetCpuTopology());
 
 	// Инициализация графического интерфейса (DirectX 12 / Vulkan / Metal)
 	m_GAPI = safe_make_shared<GAPI>();
@@ -154,6 +149,7 @@ void Engine::Shutdown() noexcept
 
 		// Освобождение пулов потоков диспетчера
 		m_TaskDispatcher = nullptr;
+		m_MainThreadQueue.Clear();
 
 		if (m_UserSettingsManager)
 		{
@@ -282,6 +278,9 @@ void Engine::OnAppClosed() const
 
 void Engine::OnUpdateSystem()
 {
+	// 0. Выполнение задач и перехват исключений из фоновых воркеров на главном потоке
+	m_MainThreadQueue.ExecuteAll();
+
 	m_Time->Update();
 
 	// Вывод среднего FPS в лог каждые logInterval секунд

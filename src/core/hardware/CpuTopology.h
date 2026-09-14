@@ -20,8 +20,6 @@ namespace zzz::core
 		uint32_t performanceLogicalCapacity{ 0 };
 		uint32_t efficiencyLogicalCapacity{ 0 };
 
-		bool isHeterogeneous{ false };
-
 		[[nodiscard]] bool operator==(const CpuTopology& other) const noexcept
 		{
 			return name == other.name &&
@@ -30,8 +28,7 @@ namespace zzz::core
 				totalPhysicalCores == other.totalPhysicalCores &&
 				primeLogicalCapacity == other.primeLogicalCapacity &&
 				performanceLogicalCapacity == other.performanceLogicalCapacity &&
-				efficiencyLogicalCapacity == other.efficiencyLogicalCapacity &&
-				isHeterogeneous == other.isHeterogeneous;
+				efficiencyLogicalCapacity == other.efficiencyLogicalCapacity;
 		}
 
 		inline void LogFileBlock([[maybe_unused]] std::string_view indentation = {}) const
@@ -43,14 +40,11 @@ namespace zzz::core
 			DOut(::zzz::core::Hardware, "{}arch: {}", nestedIndentation, architecture);
 			DOut(::zzz::core::Hardware, "{}totalLogicalCores: {}", nestedIndentation, totalLogicalCores);
 			DOut(::zzz::core::Hardware, "{}totalPhysicalCores: {}", nestedIndentation, totalPhysicalCores);
-			DOut(::zzz::core::Hardware, "{}isHeterogeneous: {}", nestedIndentation, isHeterogeneous);
-			if (isHeterogeneous)
-			{
-				if (primeLogicalCapacity > 0)
-					DOut(::zzz::core::Hardware, "{}primeLogicalCapacity: {}", nestedIndentation, primeLogicalCapacity);
-				DOut(::zzz::core::Hardware, "{}performanceLogicalCapacity: {}", nestedIndentation, performanceLogicalCapacity);
+			if (primeLogicalCapacity > 0)
+				DOut(::zzz::core::Hardware, "{}primeLogicalCapacity: {}", nestedIndentation, primeLogicalCapacity);
+			DOut(::zzz::core::Hardware, "{}performanceLogicalCapacity: {}", nestedIndentation, performanceLogicalCapacity);
+			if (efficiencyLogicalCapacity > 0)
 				DOut(::zzz::core::Hardware, "{}efficiencyLogicalCapacity: {}", nestedIndentation, efficiencyLogicalCapacity);
-			}
 #endif
 		}
 	};

@@ -5,4 +5,5 @@
 #if defined(Z_APPLE)
 #include <mach-o/dyld.h>
 #include <TargetConditionals.h>
+#include <pthread.h>
 #endif // defined(Z_APPLE)

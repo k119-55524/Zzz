@@ -1,131 +1,89 @@
+
+#include <logger.h>
+
 #include "TaskDispatcher.h"
-#include <logger/logger.h>
 
-#if defined(_WIN32)
-#include <windows.h>
-#endif
-
-using namespace zzz::engine;
 using namespace zzz::core;
+using namespace zzz::engine;
 using namespace zzz::templates;
 
-namespace
+TaskDispatcher::TaskDispatcher(const CpuTopology& topology)
 {
-	void SetWorkerPriorityHint(int priorityLevel)
-	{
-#if defined(_WIN32)
-		int winPriority = THREAD_PRIORITY_NORMAL;
-		if (priorityLevel > 1)
-			winPriority = THREAD_PRIORITY_HIGHEST;
-		else if (priorityLevel == 1)
-			winPriority = THREAD_PRIORITY_ABOVE_NORMAL;
-		else if (priorityLevel == -1)
-			winPriority = THREAD_PRIORITY_BELOW_NORMAL;
-		else if (priorityLevel < -1)
-			winPriority = THREAD_PRIORITY_LOWEST;
-
-		SetThreadPriority(GetCurrentThread(), winPriority);
-#else
-		(void)priorityLevel;
-#endif
-	}
+	InitializePools(topology);
 }
 
-TaskDispatcher::TaskDispatcher(const TaskDispatcherConfig& config)
+void TaskDispatcher::InitializePools(const CpuTopology& topology)
 {
-	// 1. Создание пулов
-	if (config.isHeterogeneous)
+	const uint32_t logicalCores = topology.totalLogicalCores;
+	if (logicalCores < 4)
+		THROW_RUNTIME("Неподдерживаемая аппаратная конфигурация CPU. Требуется минимум 4 логических ядра (обнаружено: {}).", logicalCores);
+
+	// 1. Нулевой пул Critical: гарантированно создаётся сразу на 2 кадровых потока
+	m_Pools[static_cast<size_t>(eTaskPriority::Critical)] = safe_make_shared<ThreadPool>(
+		"CriticalWorker",
+		c_DefaultCriticalThreads,
+		eThreadPriority::Critical);
+
+	// 2. Массив доступных ядер по кластерам: [0] High (Prime), [1] Normal (Perf), [2] Background (Eff)
+	// В первой строчке сразу -2 (Critical) и -1 (резерв), в остальных по -1 (резерв).
+	std::array<uint32_t, 3> counts = {
+		(topology.primeLogicalCapacity > 3) ? (topology.primeLogicalCapacity - 2 - 1) : 0u,
+		(topology.performanceLogicalCapacity > 1) ? (topology.performanceLogicalCapacity - 1) : 0u,
+		(topology.efficiencyLogicalCapacity > 1) ? (topology.efficiencyLogicalCapacity - 1) : 0u
+	};
+
+	constexpr std::array<const char*, 3> poolNames = {"HighWorker", "NormalWorker", "BackgroundWorker"};
+
+	// 3. Цикл создания пулов: создаём только там, где остались ядра
+	for (size_t i = 0; i < counts.size(); ++i)
 	{
-		if (config.criticalThreads > 0)
-		{
-			m_CriticalPool = safe_make_unique<ThreadPool>(
-				"CriticalWorker",
-				config.criticalThreads,
-				[](size_t /*id*/) { SetWorkerPriorityHint(2); });
-		}
-
-		if (config.primeThreads > 0)
-		{
-			m_PrimePool = safe_make_unique<ThreadPool>(
-				"PrimeWorker",
-				config.primeThreads,
-				[](size_t /*id*/) { SetWorkerPriorityHint(1); });
-		}
-
-		if (config.perfThreads > 0)
-		{
-			m_PerfPool = safe_make_unique<ThreadPool>(
-				"PerfWorker",
-				config.perfThreads,
-				[](size_t /*id*/) { SetWorkerPriorityHint(0); });
-		}
-
-		if (config.effThreads > 0)
-		{
-			m_EffPool = safe_make_unique<ThreadPool>(
-				"EffWorker",
-				config.effThreads,
-				[](size_t /*id*/) { SetWorkerPriorityHint(-2); });
-		}
-
-		// Универсальный выбор пула по списку предпочтений с гарантированным фоллбэком на любой доступный пул
-		auto GetFirstAvailablePool = [&](std::initializer_list<ThreadPool*> preference) -> ThreadPool*
-		{
-			for (auto* pool : preference)
-			{
-				if (pool)
-					return pool;
-			}
-			for (auto* pool : { m_CriticalPool.get(), m_PrimePool.get(), m_PerfPool.get(), m_EffPool.get() })
-			{
-				if (pool)
-					return pool;
-			}
-			return nullptr;
-		};
-
-		// Заполнение матрицы маршрутизации:
-		// Critical: Critical -> Prime -> Perf -> Eff
-		m_PoolRouting[static_cast<size_t>(eTaskPriority::Critical)] =
-			GetFirstAvailablePool({ m_CriticalPool.get(), m_PrimePool.get(), m_PerfPool.get(), m_EffPool.get() });
-
-		// High: Prime -> Perf -> Critical -> Eff
-		m_PoolRouting[static_cast<size_t>(eTaskPriority::High)] =
-			GetFirstAvailablePool({ m_PrimePool.get(), m_PerfPool.get(), m_CriticalPool.get(), m_EffPool.get() });
-
-		// Normal: Perf -> Eff -> Prime -> Critical
-		m_PoolRouting[static_cast<size_t>(eTaskPriority::Normal)] =
-			GetFirstAvailablePool({ m_PerfPool.get(), m_EffPool.get(), m_PrimePool.get(), m_CriticalPool.get() });
-
-		// Background: Eff -> Perf -> Prime -> Critical
-		m_PoolRouting[static_cast<size_t>(eTaskPriority::Background)] =
-			GetFirstAvailablePool({ m_EffPool.get(), m_PerfPool.get(), m_PrimePool.get(), m_CriticalPool.get() });
+		if (counts[i] > 0)
+			m_Pools[i + 1] = safe_make_shared<ThreadPool>(poolNames[i], counts[i], static_cast<eThreadPriority>(i + 1));
 	}
-	else
+
+	// 4. Копирование влево среди рабочих пулов [1..3] (чтобы не забирать Critical [0], если справа есть ядра)
+	for (size_t i = m_Pools.size() - 1; i > 1; --i)
 	{
-		// Однородная топология (SMP) или фоллбэк
-		if (config.criticalThreads > 0)
+		if (!m_Pools[i - 1] && m_Pools[i])
+			m_Pools[i - 1] = m_Pools[i];
+	}
+
+	// 5. Копирование вправо: если пул всё ещё пуст, подтягиваем ближайший левый
+	for (size_t i = 1; i < m_Pools.size(); ++i)
+	{
+		if (!m_Pools[i])
+			m_Pools[i] = m_Pools[i - 1];
+	}
+
+#if Z_ADD_LOGGER
+	DOut(Hardware, "========== [TaskDispatcher] Workers Allocation ==========");
+	DOut(Hardware, "  Logical cores: {}", logicalCores);
+	DOut(Hardware, "  Quota -> High: {}, Normal: {}, Background: {}", counts[0], counts[1], counts[2]);
+	for (size_t i = 0; i < m_Pools.size(); ++i)
+	{
+		const auto prio = static_cast<eTaskPriority>(i);
+		size_t aliasOf = i;
+		for (size_t j = 0; j < i; ++j)
 		{
-			m_CriticalPool = safe_make_unique<ThreadPool>(
-				"CriticalWorker",
-				config.criticalThreads,
-				[](size_t /*id*/) { SetWorkerPriorityHint(2); });
+			if (m_Pools[j] == m_Pools[i])
+			{
+				aliasOf = j;
+				break;
+			}
 		}
 
-		uint32_t commonCount = (config.commonThreads > 0) ? config.commonThreads : 1;
-		m_CommonPool = safe_make_unique<ThreadPool>(
-			"CommonWorker",
-			commonCount,
-			[](size_t /*id*/) { SetWorkerPriorityHint(0); });
-
-		ThreadPool* criticalTarget = m_CriticalPool ? m_CriticalPool.get() : m_CommonPool.get();
-		ThreadPool* generalTarget = m_CommonPool.get();
-
-		m_PoolRouting[static_cast<size_t>(eTaskPriority::Critical)] = criticalTarget;
-		m_PoolRouting[static_cast<size_t>(eTaskPriority::High)] = generalTarget;
-		m_PoolRouting[static_cast<size_t>(eTaskPriority::Normal)] = generalTarget;
-		m_PoolRouting[static_cast<size_t>(eTaskPriority::Background)] = generalTarget;
+		if (aliasOf != i)
+		{
+			DOut(Hardware, "  [{}] -> Shared with [{}]", ToString(prio), ToString(static_cast<eTaskPriority>(aliasOf)));
+		}
+		else
+		{
+			DOut(Hardware, "  [{}] -> Dedicated pool ({} threads)",
+				ToString(prio), m_Pools[i]->GetThreadCount());
+		}
 	}
+	DOut(Hardware, "==========================================================");
+#endif
 }
 
 TaskDispatcher::~TaskDispatcher()
@@ -133,71 +91,76 @@ TaskDispatcher::~TaskDispatcher()
 	JoinAll();
 }
 
-eSubmitResult TaskDispatcher::Submit(
-	eTaskPriority priority,
-	std::function<void()> task,
-	std::function<void(std::exception_ptr)> onError)
+eSubmitResult TaskDispatcher::Submit(eTaskPriority priority, std::function<void()> task, ErrorHandler onError)
 {
 	if (!task)
 		return eSubmitResult::RejectedPoolClosed;
 
 	const size_t index = static_cast<size_t>(priority);
-	if (index >= m_PoolRouting.size())
-		return eSubmitResult::InvalidPriority;
+	ensure(index < m_Pools.size(), "Некорректный приоритет задачи.");
 
-	ThreadPool* pool = m_PoolRouting[index];
+	const auto& pool = m_Pools[index];
 	if (!pool)
 		return eSubmitResult::RejectedPoolClosed;
 
-	auto safeTask = [task = std::move(task), onError = std::move(onError)]() mutable
+	auto safeTask = [userTask = std::move(task), userOnError = std::move(onError)]() noexcept
 	{
 		try
 		{
-			task();
+			userTask();
 		}
 		catch (...)
 		{
-			if (onError)
+			const std::exception_ptr ex = std::current_exception();
+			DOutError("Исключение при выполнении задачи в TaskDispatcher.");
+
+			if (userOnError)
 			{
 				try
 				{
-					onError(std::current_exception());
+					userOnError(ex);
 				}
 				catch (...)
 				{
-					DOutError("[TaskDispatcher] Исключение внутри пользовательского onError колбэка.");
+					DOutError("Исключение внутри обработчика onError в TaskDispatcher.");
 				}
-			}
-			else
-			{
-				DOutError("[TaskDispatcher] Необработанное исключение задачи (onError отсутствует).");
 			}
 		}
 	};
 
-	eEnqueueResult res = pool->Enqueue(std::move(safeTask));
+	const eEnqueueResult res = pool->Enqueue(std::move(safeTask));
 	return (res == eEnqueueResult::Accepted) ? eSubmitResult::Success : eSubmitResult::RejectedPoolClosed;
 }
 
 void TaskDispatcher::Join(eTaskPriority priority)
 {
 	const size_t index = static_cast<size_t>(priority);
-	if (index < m_PoolRouting.size() && m_PoolRouting[index])
+	ensure(index < m_Pools.size(), "Некорректный приоритет задачи.");
+
+	if (m_Pools[index])
 	{
-		m_PoolRouting[index]->Join();
+		m_Pools[index]->Join();
 	}
 }
 
 void TaskDispatcher::JoinAll()
 {
-	if (m_CriticalPool)
-		m_CriticalPool->Join();
-	if (m_PrimePool)
-		m_PrimePool->Join();
-	if (m_PerfPool)
-		m_PerfPool->Join();
-	if (m_EffPool)
-		m_EffPool->Join();
-	if (m_CommonPool)
-		m_CommonPool->Join();
+	for (size_t i = 0; i < m_Pools.size(); ++i)
+	{
+		if (!m_Pools[i])
+			continue;
+
+		bool alreadyJoined = false;
+		for (size_t j = 0; j < i; ++j)
+		{
+			if (m_Pools[j] == m_Pools[i])
+			{
+				alreadyJoined = true;
+				break;
+			}
+		}
+
+		if (!alreadyJoined)
+			m_Pools[i]->Join();
+	}
 }

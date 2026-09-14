@@ -4,7 +4,7 @@
 using namespace zzz::engine;
 
 // Linux
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* /*argv*/[])
 {
 	int exitCode = 0;
 
@@ -13,8 +13,7 @@ int main(int argc, char* argv[])
 
 		try
 		{
-			auto launchOptions = EngineLaunchOptions::Parse(argc, argv);
-			Engine engine(nullptr, launchOptions);
+			Engine engine;
 			auto res = engine.Run();
 			if (!res)
 			{

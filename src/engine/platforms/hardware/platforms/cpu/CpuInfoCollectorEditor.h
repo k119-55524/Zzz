@@ -34,7 +34,6 @@ namespace zzz::engine
 			const uint32_t cores = std::max(1u, std::thread::hardware_concurrency());
 			topology.totalLogicalCores = cores;
 			topology.totalPhysicalCores = cores;
-			topology.isHeterogeneous = false;
 			topology.performanceLogicalCapacity = cores;
 			return topology;
 		}

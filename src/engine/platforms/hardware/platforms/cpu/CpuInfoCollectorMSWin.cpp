@@ -75,13 +75,11 @@ CpuTopology CpuInfoCollectorMSWin::CollectTopology() const
 			topology.totalPhysicalCores = physicalCores > 0 ? physicalCores : sysInfo.dwNumberOfProcessors;
 			if (hasEfficiencyClass && eLogical > 0 && pLogical > 0)
 			{
-				topology.isHeterogeneous = true;
 				topology.performanceLogicalCapacity = pLogical;
 				topology.efficiencyLogicalCapacity = eLogical;
 			}
 			else
 			{
-				topology.isHeterogeneous = false;
 				topology.performanceLogicalCapacity = topology.totalLogicalCores;
 			}
 
@@ -90,7 +88,6 @@ CpuTopology CpuInfoCollectorMSWin::CollectTopology() const
 	}
 
 	topology.totalPhysicalCores = sysInfo.dwNumberOfProcessors;
-	topology.isHeterogeneous = false;
 	topology.performanceLogicalCapacity = topology.totalLogicalCores;
 	return topology;
 }

@@ -71,14 +71,12 @@ CpuTopology CpuInfoCollectorApple::CollectTopology() const
 
 		if (pCores > 0 && eCores > 0)
 		{
-			topology.isHeterogeneous = true;
 			topology.performanceLogicalCapacity = pCores;
 			topology.efficiencyLogicalCapacity = eCores;
 			return topology;
 		}
 	}
 
-	topology.isHeterogeneous = false;
 	topology.performanceLogicalCapacity = topology.totalLogicalCores;
 	return topology;
 }

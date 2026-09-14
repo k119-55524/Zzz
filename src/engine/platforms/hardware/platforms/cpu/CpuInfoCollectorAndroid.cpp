@@ -72,7 +72,6 @@ CpuTopology CpuInfoCollectorAndroid::CollectTopology() const
 
 	// Считывание частот через /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_max_freq
 	// Для Android парсим кластеры, при их отсутствии фоллбэк на однородный
-	topology.isHeterogeneous = false;
 	topology.performanceLogicalCapacity = coreCount;
 	return topology;
 }

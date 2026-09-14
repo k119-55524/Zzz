@@ -70,7 +70,6 @@ CpuTopology CpuInfoCollectorLinux::CollectTopology() const
 	topology.totalPhysicalCores = coreCount;
 
 	// SMP-фоллбэк: если sysfs недоступен, считаем однородным
-	topology.isHeterogeneous = false;
 	topology.performanceLogicalCapacity = coreCount;
 	return topology;
 }
