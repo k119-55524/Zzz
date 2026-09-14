@@ -20,7 +20,6 @@ namespace zzz::engine
 		~DefaultSpatialStorage() override = default;
 
 		void Clear() override;
-		void Reserve(size_t capacity) override { m_MeshNodes.reserve(capacity); }
 		SpatialHandle AddMeshNode(NodeHandle nodeHandle) override;
 
 		[[nodiscard]] std::span<const NodeHandle> GetMeshNodes() const noexcept override

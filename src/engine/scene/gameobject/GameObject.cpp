@@ -1,11 +1,11 @@
 
 #include "core/utils/Ensure.h"
-#include "core/io/package/GameObjectData.h"
 #include "core/io/package/MeshData.h"
-#include "core/userscripts/base_script/Script.h"
+#include "core/io/package/GameObjectData.h"
 #include "core/userscripts/ScriptFactory.h"
 #include "engine/resources/ResourceManager.h"
 #include "engine/scene/storage/NodeStorage.h"
+#include "core/userscripts/base_script/Script.h"
 
 #include "GameObject.h"
 
@@ -16,12 +16,11 @@ Z_SET_LOG_CATEGORY(zzz::core::Scene);
 
 namespace zzz::engine
 {
-	GameObject::GameObject(const Guid& guid, std::string name, NodeStorage& storage, NodeHandle nodeHandle)
-		: m_Guid(guid)
-		, m_Name(std::move(name))
-		, m_NodeStorage(&storage)
-		, m_NodeHandle(nodeHandle)
-		, m_Scripts()
+	GameObject::GameObject(const Guid& guid, std::string name, NodeStorage& storage, NodeHandle nodeHandle) :
+		m_Guid(guid) ,
+		m_Name(std::move(name)),
+		m_NodeStorage(&storage),
+		m_NodeHandle(nodeHandle)
 	{
 		ensure(m_Guid.IsValid(), "GameObject: передан невалидный Guid");
 		ensure(!m_Name.empty(), "GameObject: передано пустое имя объекта");

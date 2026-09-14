@@ -89,9 +89,4 @@ namespace zzz::engine
 	{
 		m_World.Clear();
 	}
-
-	void EntityDomain::Reserve(size_t capacity)
-	{
-		m_World.Reserve(capacity);
-	}
 }

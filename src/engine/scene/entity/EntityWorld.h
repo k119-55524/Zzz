@@ -33,7 +33,6 @@ namespace zzz::engine
 		Z_NO_COPY_MOVE(EntityWorld);
 
 		void Clear() { m_Entities.clear(); }
-		void Reserve(size_t capacity) { m_Entities.reserve(capacity); }
 
 		DomainHandle CreateEntity(const ::zzz::core::Guid& guid, std::string_view name, NodeHandle nodeHandle = kInvalidNodeHandle);
 		void DestroyEntity(const ::zzz::core::Guid& guid);

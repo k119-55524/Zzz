@@ -39,18 +39,7 @@ namespace zzz::engine
 		if (!m_IsVisible)
 			return;
 
-		OnUpdateDomains(dt);
-		OnUpdateSpatial();
-	}
-
-	void GameLayer::OnUpdateDomains(float dt)
-	{
 		m_EntityDomain->Update(dt);
-	}
-
-	void GameLayer::OnUpdateSpatial()
-	{
-		m_LastChangeRanges = m_NodeStorage.ResolveTransforms();
 	}
 
 	void GameLayer::Populate(const LayerData& layerData, const ScriptFactory& scriptFactory)
@@ -59,7 +48,6 @@ namespace zzz::engine
 		m_ObjectDomain->Clear();
 		m_EntityDomain->Clear();
 		m_SpatialStorage->Clear();
-		m_LastChangeRanges = {};
 
 		const auto& objects = layerData.GetObjects();
 		if (objects.empty())
@@ -70,47 +58,12 @@ namespace zzz::engine
 
 		// 2. Формируем плоское линейное хранилище узлов сцены
 		m_NodeStorage = NodeStorage(objects);
-
-		// 3. Предварительный подсчет сущностей, объектов и мешей для устранения реаллокаций векторов
-		size_t objectCount = 0;
-		size_t entityCount = 0;
-		size_t meshCount = 0;
-
 		const size_t nodeCount = m_NodeStorage.GetNodeCount();
-		for (size_t i = 0; i < nodeCount; ++i)
-		{
-			const auto& objData = objects[i];
-			if (objData.IsEntity())
-			{
-				++entityCount;
-			}
-			else
-			{
-				++objectCount;
-			}
 
-			if (m_NodeStorage.HasMesh(static_cast<NodeHandle>(i)))
-			{
-				++meshCount;
-			}
-		}
-
-		m_ObjectDomain->Reserve(objectCount);
-		m_EntityDomain->Reserve(entityCount);
-		m_SpatialStorage->Reserve(meshCount);
-
-		// 4. Однопроходная регистрация в домены и пространственное хранилище
+		// 3. Однопроходная регистрация в домены и пространственное хранилище
 		for (NodeHandle nodeHandle = 0; nodeHandle < static_cast<NodeHandle>(nodeCount); ++nodeHandle)
 		{
 			const auto& objData = objects[nodeHandle];
-
-			// Регистрация в пространственное хранилище только если есть геометрия
-			SpatialHandle spHandle = kInvalidSpatialHandle;
-			if (m_NodeStorage.HasMesh(nodeHandle))
-			{
-				spHandle = m_SpatialStorage->AddMeshNode(nodeHandle);
-				m_NodeStorage.SetSpatialHandle(nodeHandle, spHandle);
-			}
 
 			// Взаимоисключающая маршрутизация в домены
 			if (objData.IsEntity())
@@ -126,9 +79,16 @@ namespace zzz::engine
 
 				m_NodeStorage.SetDomainBinding(nodeHandle, dHandle, eNodeDomainKind::Object);
 			}
+
+			// Регистрация в пространственное хранилище только если есть геометрия
+			if (objData.HasMesh())
+			{
+				const SpatialHandle spHandle = m_SpatialStorage->AddMeshNode(nodeHandle);
+				m_NodeStorage.SetSpatialHandle(nodeHandle, spHandle);
+			}
 		}
 
-		// 5. Контрактная проверка целостности связей каждого узла
+		// 4. Контрактная проверка целостности связей каждого узла
 		const auto bindings = m_NodeStorage.GetBindings();
 		ensure(bindings.size() == nodeCount, "GameLayer::Populate: размер bindings не совпадает с nodeCount");
 
@@ -139,7 +99,7 @@ namespace zzz::engine
 			ensure(binding.domainHandle != kInvalidDomainHandle, "GameLayer::Populate: узел {} не имеет привязки к домену", i);
 			ensure(binding.domainKind != eNodeDomainKind::None, "GameLayer::Populate: узел {} имеет eNodeDomainKind::None", i);
 
-			if (m_NodeStorage.HasMesh(static_cast<NodeHandle>(i)))
+			if (objects[i].HasMesh())
 			{
 				ensure(binding.spatialHandle != kInvalidSpatialHandle, "GameLayer::Populate: узел {} с мешем не зарегистрирован в spatial", i);
 			}

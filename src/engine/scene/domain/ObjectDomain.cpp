@@ -26,13 +26,6 @@ namespace zzz::engine
 		m_ObjectsByName.clear();
 	}
 
-	void ObjectDomain::Reserve(size_t capacity)
-	{
-		m_Objects.reserve(capacity);
-		m_ObjectsByGuid.reserve(capacity);
-		m_ObjectsByName.reserve(capacity);
-	}
-
 	ObjectRegistration ObjectDomain::CreateObject(
 		NodeStorage& storage,
 		NodeHandle nodeHandle,

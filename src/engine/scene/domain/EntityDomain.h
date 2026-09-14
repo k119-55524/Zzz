@@ -22,7 +22,6 @@ namespace zzz::engine
 
 		void Update(float dt) override;
 		void Clear() override;
-		void Reserve(size_t capacity) override;
 
 		DomainHandle CreateEntity(const ::zzz::core::Guid& guid, std::string_view name) override;
 		DomainHandle CreateEntity(

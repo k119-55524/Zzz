@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <span>
 
 #include "core/utils/Guid.h"
 #include "engine/scene/storage/NodeStorage.h"
@@ -120,19 +119,6 @@ namespace zzz::engine
 			return m_NodeStorage->GetParent(m_NodeHandle);
 		}
 
-		// --- Визуальные дескрипторы (делегирование в NodeStorage) ---
-		[[nodiscard]] VisualRange GetVisualRange() const
-		{
-			return m_NodeStorage->GetVisualRange(m_NodeHandle);
-		}
-		[[nodiscard]] std::span<const DrawDescriptor> GetDraws() const
-		{
-			return m_NodeStorage->GetDraws(m_NodeHandle);
-		}
-		[[nodiscard]] bool HasMesh() const noexcept
-		{
-			return m_NodeStorage->HasMesh(m_NodeHandle);
-		}
 
 		[[nodiscard]] const std::vector<std::shared_ptr<Script>>& GetScripts() const noexcept { return m_Scripts; }
 #pragma endregion

@@ -30,7 +30,6 @@ namespace zzz::engine
 		virtual ~IEntityDomain() = default;
 
 		virtual void Clear() = 0;
-		virtual void Reserve(size_t capacity) = 0;
 
 		virtual void Update(float dt) = 0;
 		virtual DomainHandle CreateEntity(const ::zzz::core::Guid& guid, std::string_view name) = 0;

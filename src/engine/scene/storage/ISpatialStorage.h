@@ -26,9 +26,6 @@ namespace zzz::engine
 		/// @brief Очистка хранилища.
 		virtual void Clear() = 0;
 
-		/// @brief Резервирование памяти под ожидаемое число меш-узлов.
-		virtual void Reserve(size_t capacity) = 0;
-
 		/// @brief Регистрация узла с мешем в пространственном хранилище.
 		virtual SpatialHandle AddMeshNode(NodeHandle nodeHandle) = 0;
 

@@ -44,7 +44,6 @@ namespace zzz::engine
 		~ObjectDomain();
 
 		void Clear();
-		void Reserve(size_t capacity);
 
 		[[nodiscard]] GameObject* FindObjectByGuid(const Guid& guid) const noexcept;
 		[[nodiscard]] GameObject* FindObjectByName(std::string_view name) const noexcept;

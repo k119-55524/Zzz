@@ -2,7 +2,6 @@
 
 #include <span>
 #include <vector>
-#include <cstdint>
 
 #include "core/utils/Ensure.h"
 #include "core/utils/macros/MiscMacros.h"
@@ -38,7 +37,7 @@ namespace zzz::engine
 		explicit NodeStorage(std::span<const zzz::core::GameObjectData> objects);
 		~NodeStorage() = default;
 
-		std::span<const TransformChangeRange> ResolveTransforms();
+		void ResolveTransforms();
 
 #pragma region Getters and Setters
 		// --- Пространственные координаты ---
@@ -119,18 +118,18 @@ namespace zzz::engine
 			ensure(IsValid(handle), "NodeStorage::SetActive: невалидный handle");
 			if (active)
 			{
-				m_Flags[handle] |= eNodeFlags::Active;
+				m_Flags[handle] |= NodeFlags::Active;
 			}
 			else
 			{
-				m_Flags[handle] &= ~eNodeFlags::Active;
+				m_Flags[handle] &= static_cast<zU8>(~NodeFlags::Active);
 			}
 		}
 
 		[[nodiscard]] bool IsActive(NodeHandle handle) const
 		{
 			ensure(IsValid(handle), "NodeStorage::IsActive: невалидный handle");
-			return (m_Flags[handle] & eNodeFlags::Active) != eNodeFlags::None;
+			return (m_Flags[handle] & NodeFlags::Active) != 0;
 		}
 
 		void SetVisible(NodeHandle handle, bool visible)
@@ -138,49 +137,20 @@ namespace zzz::engine
 			ensure(IsValid(handle), "NodeStorage::SetVisible: невалидный handle");
 			if (visible)
 			{
-				m_Flags[handle] |= eNodeFlags::Visible;
+				m_Flags[handle] |= NodeFlags::Visible;
 			}
 			else
 			{
-				m_Flags[handle] &= ~eNodeFlags::Visible;
+				m_Flags[handle] &= static_cast<zU8>(~NodeFlags::Visible);
 			}
 		}
 
 		[[nodiscard]] bool IsVisible(NodeHandle handle) const
 		{
 			ensure(IsValid(handle), "NodeStorage::IsVisible: невалидный handle");
-			return (m_Flags[handle] & eNodeFlags::Visible) != eNodeFlags::None;
+			return (m_Flags[handle] & NodeFlags::Visible) != 0;
 		}
 
-		// --- Визуальные дескрипторы ---
-		[[nodiscard]] VisualRange GetVisualRange(NodeHandle handle) const
-		{
-			ensure(IsValid(handle), "NodeStorage::GetVisualRange: невалидный handle");
-			return m_NodeVisuals[handle];
-		}
-
-		[[nodiscard]] std::span<const DrawDescriptor> GetDraws(NodeHandle handle) const
-		{
-			ensure(IsValid(handle), "NodeStorage::GetDraws: невалидный handle");
-			const auto& range = m_NodeVisuals[handle];
-			if (range.count == 0)
-			{
-				return {};
-			}
-			ensure(static_cast<size_t>(range.begin) + range.count <= m_Draws.size(),
-				"NodeStorage::GetDraws: диапазон вызовов отрисовки [{}, {}) выходит за пределы m_Draws (размер {})",
-				range.begin, range.begin + range.count, m_Draws.size());
-			return std::span<const DrawDescriptor>(m_Draws.data() + range.begin, range.count);
-		}
-
-		[[nodiscard]] bool HasMesh(NodeHandle handle) const noexcept
-		{
-			if (!IsValid(handle))
-			{
-				return false;
-			}
-			return m_NodeVisuals[handle].HasMesh();
-		}
 
 		void SetSpatialHandle(NodeHandle handle, SpatialHandle spHandle)
 		{
@@ -224,11 +194,9 @@ namespace zzz::engine
 		[[nodiscard]] std::span<const Mat4<zF32>> GetWorldMatrices() const noexcept { return m_WorldMatrices; }
 		[[nodiscard]] std::span<const NodeHandle> GetParentIndices() const noexcept { return m_ParentIndices; }
 		[[nodiscard]] std::span<const zU32> GetSubtreeEnds() const noexcept { return m_SubtreeEnds; }
-		[[nodiscard]] std::span<const eNodeFlags> GetFlags() const noexcept { return m_Flags; }
+		[[nodiscard]] std::span<const zU8> GetFlags() const noexcept { return m_Flags; }
 		[[nodiscard]] std::span<const NodeBindings> GetBindings() const noexcept { return m_Bindings; }
 		[[nodiscard]] std::span<const Transform> GetLocalTransforms() const noexcept { return m_LocalTransforms; }
-		[[nodiscard]] std::span<const VisualRange> GetNodeVisuals() const noexcept { return m_NodeVisuals; }
-		[[nodiscard]] std::span<const DrawDescriptor> GetAllDraws() const noexcept { return m_Draws; }
 #pragma endregion
 
 	private:
@@ -238,12 +206,10 @@ namespace zzz::engine
 		std::vector<zU32>			m_SubtreeEnds;
 		std::vector<Transform>		m_LocalTransforms;
 		std::vector<Mat4<zF32>>		m_WorldMatrices;
-		std::vector<eNodeFlags>		m_Flags;
+		std::vector<zU8>			m_Flags;
 		std::vector<NodeBindings>	m_Bindings;
-		std::vector<VisualRange>	m_NodeVisuals;
-		std::vector<DrawDescriptor>	m_Draws;
 
 		BitTreeTracker m_DirtyTracker;
-		std::vector<TransformChangeRange> m_ChangeRanges;
 	};
 }
+

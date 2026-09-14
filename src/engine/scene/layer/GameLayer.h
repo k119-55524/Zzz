@@ -6,9 +6,9 @@
 #include "engine/scene/layer/ILayer.h"
 #include "core/utils/macros/MiscMacros.h"
 #include "engine/scene/domain/ObjectDomain.h"
+#include "engine/scene/storage/NodeStorage.h"
 #include "engine/scene/domain/IEntityDomain.h"
 #include "engine/scene/storage/ISpatialStorage.h"
-#include "engine/scene/storage/NodeStorage.h"
 
 using namespace zzz::core;
 
@@ -32,7 +32,7 @@ namespace zzz::engine
 	{
 	public:
 		GameLayer(
-			zzz::core::Guid guid,
+			Guid guid,
 			std::string name,
 			eLayerType type,
 			std::shared_ptr<ResourceManager> resourceManager,
@@ -44,25 +44,14 @@ namespace zzz::engine
 		Z_NO_COPY_MOVE(GameLayer);
 
 		void Update(float dt) override;
-		void Populate(
-			const LayerData& layerData,
-			const ScriptFactory& scriptFactory) override;
-
-		[[nodiscard]] std::span<const TransformChangeRange> GetLastTransformChanges() const noexcept
-		{
-			return m_LastChangeRanges;
-		}
+		void Populate(const LayerData& layerData, const ScriptFactory& scriptFactory) override;
 
 	private:
-		void OnUpdateDomains(float dt);
-		void OnUpdateSpatial();
-
 		std::shared_ptr<ResourceManager> m_ResourceManager;
 
 		NodeStorage                           m_NodeStorage;
 		std::unique_ptr<ObjectDomain>         m_ObjectDomain;
 		std::unique_ptr<IEntityDomain>        m_EntityDomain;
 		std::unique_ptr<ISpatialStorage>      m_SpatialStorage;
-		std::span<const TransformChangeRange> m_LastChangeRanges;
 	};
 }
