@@ -1,11 +1,9 @@
 
 #include "Scene.h"
-#include "core/io/package/SceneData.h"
 #include "engine/package/PackageManager.h"
 #include "engine/resources/ResourceManager.h"
-#include "engine/resources/ResourceGarbageCollector.h"
 #include "core/io/package/ProjectManifestData.h"
-#include <algorithm>
+#include "engine/resources/ResourceGarbageCollector.h"
 
 #include "SceneManager.h"
 
@@ -61,16 +59,15 @@ namespace zzz::engine
 			return;
 		}
 
-		m_TaskDispatcher.Submit(eTaskPriority::Normal, [this, sceneGuid, onComplete = std::move(onComplete)]() mutable
-		{
-			try
+		m_TaskDispatcher.Submit(
+			eTaskPriority::Normal,
+			[this, sceneGuid, onComplete]()
 			{
 				std::optional<ScopedGCSuspension> gcLock;
 				if (m_ResourceGC)
 					gcLock.emplace(*m_ResourceGC);
 
 				auto entryOpt = m_PackageManager->GetEntry(ePackage::Scene, sceneGuid);
-				// Наличие гарантируется сборкой ассетов в package.dat; ensure для проверки целостности при разработке
 				ensure(entryOpt.has_value(), "Сцена с GUID '{}' не найдена в package.dat.", sceneGuid.ToString());
 
 				const std::string sceneName = std::string(entryOpt->GetName());
@@ -84,14 +81,14 @@ namespace zzz::engine
 				);
 
 				// 2. Инициализация слоёв сцены (по завершении переносим в основной поток)
-				scene->Initialize(*m_ScriptFactory, m_TaskDispatcher, [this, scene, onComplete = std::move(onComplete)](std::expected<void, std::string> initRes) mutable
+				scene->Initialize(*m_ScriptFactory, m_TaskDispatcher, [this, scene, onComplete](std::expected<void, std::string> initRes) mutable
 				{
 					if (!initRes)
 					{
 						DOutError("[SceneManager::LoadSceneAsync] Сбой инициализации слоёв сцены '{}' ({}): {}",
 							scene->GetName(), scene->GetGuid().ToString(), initRes.error());
 
-						m_MainThreadQueue.Push([onComplete = std::move(onComplete), err = std::move(initRes.error())]() mutable
+						m_MainThreadQueue.Push([onComplete, err = std::move(initRes.error())]() mutable
 						{
 							onComplete(std::unexpected(std::move(err)));
 						});
@@ -107,28 +104,20 @@ namespace zzz::engine
 						onComplete(scene);
 					});
 				});
-			}
-			catch (const std::exception& ex)
+			},
+			// Колбэк перехвата исключений из потока моздания сцены
+			[this, onComplete](std::exception_ptr ex)
 			{
-				std::string err = std::format("Исключение при загрузке сцены '{}': {}", sceneGuid.ToString(), ex.what());
-				DOutError("[SceneManager::LoadSceneAsync] {}", err);
-
-				m_MainThreadQueue.Push([onComplete = std::move(onComplete), err = std::move(err)]() mutable
+				// Перенаправляем исключение в очередь главного потока для перехвата в Engine::Run
+				m_MainThreadQueue.Push([onComplete, ex]()
 				{
-					onComplete(std::unexpected(std::move(err)));
-				});
-			}
-			catch (...)
-			{
-				std::string err = std::format("Неизвестное исключение при загрузке сцены '{}'.", sceneGuid.ToString());
-				DOutError("[SceneManager::LoadSceneAsync] {}", err);
+					if (onComplete)
+						onComplete(std::unexpected("Критическое исключение при загрузке сцены."));
 
-				m_MainThreadQueue.Push([onComplete = std::move(onComplete), err = std::move(err)]() mutable
-				{
-					onComplete(std::unexpected(std::move(err)));
+					if (ex)
+						std::rethrow_exception(ex);
 				});
-			}
-		});
+			});
 	}
 
 	void SceneManager::Update(const Time& time)
