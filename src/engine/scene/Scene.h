@@ -12,15 +12,11 @@ namespace zzz::core
 	class SceneData;
 }
 
-namespace zzz::templates
-{
-	class ThreadPool;
-}
-
 namespace zzz::engine
 {
 	using namespace zzz::core;
 	class ResourceManager;
+	class TaskDispatcher;
 
 	class Scene final : public std::enable_shared_from_this<Scene>
 	{
@@ -37,8 +33,8 @@ namespace zzz::engine
 
 		void Initialize(
 			const ScriptFactory& scriptFactory,
-			zzz::templates::ThreadPool& threadPool,
-			std::function<void()> onLayersCreated);
+			TaskDispatcher& taskDispatcher,
+			std::function<void(std::expected<void, std::string>)> onLayersCreated);
 
 		[[nodiscard]] const Guid& GetGuid() const noexcept { return m_Guid; }
 		[[nodiscard]] const std::string& GetName() const noexcept { return m_Name; }

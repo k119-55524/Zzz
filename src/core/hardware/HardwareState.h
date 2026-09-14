@@ -2,6 +2,7 @@
 
 #include "core/CoreIncludes.h"
 #include "core/hardware/CpuInfo.h"
+#include "core/hardware/CpuTopology.h"
 #include "core/hardware/RamInfo.h"
 #include "core/hardware/GpuInfo.h"
 #include "core/hardware/StorageInfo.h"
@@ -21,6 +22,7 @@ namespace zzz::core
 		HardwareState() = delete;
 		HardwareState(
 			std::vector<CpuInfo> cpus,
+			CpuTopology cpuTopology,
 			RamInfo ram,
 			MotherboardInfo motherboard,
 			std::vector<GpuInfo> gpus,
@@ -28,6 +30,7 @@ namespace zzz::core
 			std::vector<StorageInfo> storages = {},
 			std::vector<NetworkAdapterInfo> networkAdapters = {})
 			: m_Cpus(std::move(cpus))
+			, m_CpuTopology(std::move(cpuTopology))
 			, m_Ram(std::move(ram))
 			, m_Motherboard(std::move(motherboard))
 			, m_Gpus(std::move(gpus))
@@ -45,6 +48,7 @@ namespace zzz::core
 
 		// Геттеры данных оборудования
 		[[nodiscard]] const std::vector<CpuInfo>& GetCpus() const noexcept { return m_Cpus; }
+		[[nodiscard]] const CpuTopology& GetCpuTopology() const noexcept { return m_CpuTopology; }
 		[[nodiscard]] const RamInfo& GetRam() const noexcept { return m_Ram; }
 		[[nodiscard]] const MotherboardInfo& GetMotherboard() const noexcept { return m_Motherboard; }
 		[[nodiscard]] const std::vector<GpuInfo>& GetGpus() const noexcept { return m_Gpus; }
@@ -55,6 +59,7 @@ namespace zzz::core
 		[[nodiscard]] bool operator==(const HardwareState& other) const noexcept
 		{
 			return m_Cpus == other.m_Cpus &&
+				m_CpuTopology == other.m_CpuTopology &&
 				m_Ram == other.m_Ram &&
 				m_Motherboard == other.m_Motherboard &&
 				m_Gpus == other.m_Gpus &&
@@ -80,6 +85,9 @@ namespace zzz::core
 				}
 				DOut(::zzz::core::Hardware, "{}", nestedIndentation);
 			}
+
+			m_CpuTopology.LogFileBlock(nestedIndentation);
+			DOut(::zzz::core::Hardware, "{}", nestedIndentation);
 
 			DOut(::zzz::core::Hardware, "{}ram:", nestedIndentation);
 			m_Ram.LogFileBlock(nestedIndentation + "  ");
@@ -137,6 +145,7 @@ namespace zzz::core
 
 	private:
 		std::vector<CpuInfo> m_Cpus;
+		CpuTopology m_CpuTopology;
 		RamInfo m_Ram;
 		MotherboardInfo m_Motherboard;
 		std::vector<GpuInfo> m_Gpus;

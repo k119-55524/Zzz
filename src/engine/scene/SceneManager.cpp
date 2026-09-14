@@ -16,17 +16,16 @@ using namespace zzz::core;
 namespace zzz::engine
 {
 	SceneManager::SceneManager(
+		TaskDispatcher& taskDispatcher,
 		std::shared_ptr<PackageManager> packageManager,
 		std::shared_ptr<ResourceManager> resourceManager,
 		std::shared_ptr<ScriptFactory> scriptFactory,
 		ResourceGarbageCollector* resourceGC) :
+		m_TaskDispatcher(taskDispatcher),
 		m_PackageManager(std::move(packageManager)),
 		m_ResourceManager(std::move(resourceManager)),
 		m_ScriptFactory(std::move(scriptFactory)),
-		m_ResourceGC(resourceGC),
-		m_LoadingThreadPool(safe_make_unique<zzz::templates::ThreadPool>(
-			"SceneLoader",
-			std::max(2u, std::thread::hardware_concurrency())))
+		m_ResourceGC(resourceGC)
 	{
 		ensure(m_PackageManager != nullptr, "PackageManager не должен быть null.");
 		ensure(m_ResourceManager != nullptr, "ResourceManager не должен быть null.");
@@ -62,7 +61,7 @@ namespace zzz::engine
 			return;
 		}
 
-		m_LoadingThreadPool->Submit([this, sceneGuid, onComplete = std::move(onComplete)]() mutable
+		m_TaskDispatcher.Submit(eTaskPriority::Normal, [this, sceneGuid, onComplete = std::move(onComplete)]() mutable
 		{
 			try
 			{
@@ -85,8 +84,20 @@ namespace zzz::engine
 				);
 
 				// 2. Инициализация слоёв сцены (по завершении переносим в основной поток)
-				scene->Initialize(*m_ScriptFactory, *m_LoadingThreadPool, [this, scene, onComplete = std::move(onComplete)]() mutable
+				scene->Initialize(*m_ScriptFactory, m_TaskDispatcher, [this, scene, onComplete = std::move(onComplete)](std::expected<void, std::string> initRes) mutable
 				{
+					if (!initRes)
+					{
+						DOutError("[SceneManager::LoadSceneAsync] Сбой инициализации слоёв сцены '{}' ({}): {}",
+							scene->GetName(), scene->GetGuid().ToString(), initRes.error());
+
+						m_MainThreadQueue.Push([onComplete = std::move(onComplete), err = std::move(initRes.error())]() mutable
+						{
+							onComplete(std::unexpected(std::move(err)));
+						});
+						return;
+					}
+
 					DOut("[SceneManager::LoadSceneAsync] Собрана сцена '{}' ({}).", scene->GetName(), scene->GetGuid().ToString());
 
 					m_MainThreadQueue.Push([this, scene = std::move(scene), onComplete = std::move(onComplete)]() mutable

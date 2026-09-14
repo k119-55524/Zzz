@@ -6,6 +6,7 @@
 
 #include <vector>
 #include "core/hardware/CpuInfo.h"
+#include "core/hardware/CpuTopology.h"
 
 namespace zzz::engine
 {
@@ -13,6 +14,7 @@ namespace zzz::engine
 	{
 	public:
 		[[nodiscard]] std::vector<::zzz::core::CpuInfo> Collect() const;
+		[[nodiscard]] ::zzz::core::CpuTopology CollectTopology() const;
 	};
 }
 

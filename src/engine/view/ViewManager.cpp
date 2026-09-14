@@ -20,6 +20,7 @@ using namespace zzz::core;
 using namespace zzz::engine;
 
 ViewManager::ViewManager(
+	TaskDispatcher& taskDispatcher,
 	const Platform& platform,
 	std::shared_ptr<GAPI> gapi,
 	std::shared_ptr<ScriptFactory> scriptFactory,
@@ -28,13 +29,13 @@ ViewManager::ViewManager(
 	std::shared_ptr<SceneManager> sceneManager,
 	std::function<void()> onAllViewsClosed
 ) :
+	m_TaskDispatcher{ taskDispatcher },
 	m_Platform{ platform },
 	m_GAPI{ std::move(gapi) },
 	m_ScriptFactory{ std::move(scriptFactory) },
 	m_PackageManager{ std::move(packageManager) },
 	m_UserSettingsManager{ std::move(userSettingsManager) },
 	m_SceneManager{ std::move(sceneManager) },
-	m_ThreadsUpdate{ "ViewManager", std::max(2u, std::thread::hardware_concurrency()) },
 	OnAllViewsClosed{ std::move(onAllViewsClosed) }
 {
 	ensure(m_GAPI != nullptr, "GAPI не должен быть null.");
@@ -222,18 +223,30 @@ void ViewManager::Update(const Time& time)
 	if (!m_PrimaryView)
 		return;
 
-	// 1. Поток рендера (отправка кадра N-1 на GPU для всех окон в одном потоке)
-	m_ThreadsUpdate.Submit([this]()
+	// 1. Поток рендера (отправка кадра N-1 на GPU параллельно для каждого окна)
+	m_TaskDispatcher.Submit(eTaskPriority::Critical, [this]()
 		{
 			m_PrimaryView->RenderFrame();
-			for (const auto& view : m_ChildViews)
-				view->RenderFrame();
-			for (const auto& view : m_IndependentViews)
-				view->RenderFrame();
 		});
 
+	for (const auto& view : m_ChildViews)
+	{
+		m_TaskDispatcher.Submit(eTaskPriority::Critical, [view]()
+			{
+				view->RenderFrame();
+			});
+	}
+
+	for (const auto& view : m_IndependentViews)
+	{
+		m_TaskDispatcher.Submit(eTaskPriority::Critical, [view]()
+			{
+				view->RenderFrame();
+			});
+	}
+
 	// 2. Параллельная подготовка кадра N (для каждого окна в отдельном потоке)
-	m_ThreadsUpdate.Submit([this, &time]()
+	m_TaskDispatcher.Submit(eTaskPriority::Critical, [this, &time]()
 		{
 			m_PrimaryView->PreRender();
 			m_PrimaryView->Update(time);
@@ -242,7 +255,7 @@ void ViewManager::Update(const Time& time)
 
 	for (const auto& view : m_ChildViews)
 	{
-		m_ThreadsUpdate.Submit([view, &time]()
+		m_TaskDispatcher.Submit(eTaskPriority::Critical, [view, &time]()
 			{
 				view->PreRender();
 				view->Update(time);
@@ -252,7 +265,7 @@ void ViewManager::Update(const Time& time)
 
 	for (const auto& view : m_IndependentViews)
 	{
-		m_ThreadsUpdate.Submit([view, &time]()
+		m_TaskDispatcher.Submit(eTaskPriority::Critical, [view, &time]()
 			{
 				view->PreRender();
 				view->Update(time);
@@ -261,7 +274,7 @@ void ViewManager::Update(const Time& time)
 	}
 
 	// 3. Ждём завершения рендера кадра N-1 и подготовки кадра N
-	m_ThreadsUpdate.Join();
+	m_TaskDispatcher.Join(eTaskPriority::Critical);
 
 	// 5. Пост-рендер (переключение слотов и показ)
 	m_PrimaryView->PostRender();

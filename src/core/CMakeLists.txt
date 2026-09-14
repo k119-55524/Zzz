@@ -110,6 +110,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/containers/BitTreeTracker.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/scene/SceneTransitionParams.h
         ${CMAKE_CURRENT_SOURCE_DIR}/hardware/CpuInfo.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/hardware/CpuTopology.h
         ${CMAKE_CURRENT_SOURCE_DIR}/hardware/GpuInfo.h
         ${CMAKE_CURRENT_SOURCE_DIR}/hardware/RamInfo.h
         ${CMAKE_CURRENT_SOURCE_DIR}/hardware/MotherboardInfo.h

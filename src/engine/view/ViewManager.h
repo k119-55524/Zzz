@@ -6,6 +6,7 @@
 #include "engine/platforms/Platform.h"
 #include "engine/package/PackageManager.h"
 #include "engine/package/UserSettingsManager.h"
+#include "engine/tasks/TaskDispatcher.h"
 
 using namespace zzz::core;
 using namespace zzz::templates;
@@ -19,6 +20,7 @@ namespace zzz::engine
 	public:
 		ViewManager() = delete;
 		ViewManager(
+			TaskDispatcher& taskDispatcher,
 			const Platform& platform,
 			std::shared_ptr<GAPI> gapi,
 			std::shared_ptr<ScriptFactory> scriptFactory,
@@ -59,6 +61,7 @@ namespace zzz::engine
 		void Update(const Time& time);
 
 	private:
+		TaskDispatcher& m_TaskDispatcher;
 		const Platform& m_Platform;
 		std::shared_ptr<GAPI> m_GAPI;
 		std::shared_ptr<ScriptFactory> m_ScriptFactory;
@@ -69,7 +72,6 @@ namespace zzz::engine
 		std::shared_ptr<View> m_PrimaryView;
 		std::vector<std::shared_ptr<View>> m_ChildViews;
 		std::vector<std::shared_ptr<View>> m_IndependentViews;
-		ThreadPool m_ThreadsUpdate;
 
 		std::function<void()> OnAllViewsClosed;
 		void OnWindowClose(View& view);

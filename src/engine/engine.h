@@ -5,12 +5,14 @@
 #include "engine/view/ViewManager.h"
 #include "engine/platforms/Platform.h"
 #include "engine/scene/SceneManager.h"
+#include "engine/tasks/TaskDispatcher.h"
 #include "engine/package/PackageManager.h"
 #include "core/io/package/DataAssetsManager.h"
 #include "engine/resources/ResourceManager.h"
-#include "engine/resources/ResourceGarbageCollector.h"
+#include "engine/launch/EngineLaunchOptions.h"
 #include "engine/package/UserSettingsManager.h"
 #include "engine/platforms/mainloop/MainLoop.h"
+#include "engine/resources/ResourceGarbageCollector.h"
 
 using namespace zzz::core;
 
@@ -19,13 +21,16 @@ namespace zzz::engine
 	class Engine
 	{
 	public:
-		Engine(std::shared_ptr<NativeAppData> nativeData = nullptr);
+		Engine(
+			std::shared_ptr<NativeAppData> nativeData = nullptr,
+			EngineLaunchOptions launchOptions = {});
 		~Engine();
 
 		[[nodiscard]] virtual std::expected<void, std::string> Run();
 		[[nodiscard]] std::shared_ptr<DataAssetsManager> GetDataAssetsManager() const noexcept { return m_DataAssetsManager; }
 		[[nodiscard]] std::shared_ptr<ResourceManager> GetResourceManager() const noexcept { return m_ResourceManager; }
 		[[nodiscard]] ResourceGarbageCollector* GetResourceGC() const noexcept { return m_ResourceGC.get(); }
+		[[nodiscard]] TaskDispatcher* GetTaskDispatcher() const noexcept { return m_TaskDispatcher.get(); }
 
 	protected:
 		void Shutdown() noexcept;
@@ -52,6 +57,7 @@ namespace zzz::engine
 		std::unique_ptr<ResourceGarbageCollector> m_ResourceGC;
 		std::shared_ptr<UserSettingsManager> m_UserSettingsManager;
 		std::unique_ptr<Platform> m_Platform;
+		std::unique_ptr<TaskDispatcher> m_TaskDispatcher;
 		std::shared_ptr<GAPI> m_GAPI;
 		std::shared_ptr<SceneManager> m_SceneManager;
 		std::unique_ptr<ViewManager> m_ViewManager;

@@ -5,7 +5,9 @@
 #if defined(Z_EDITOR)
 
 #include <vector>
+#include <thread>
 #include "core/hardware/CpuInfo.h"
+#include "core/hardware/CpuTopology.h"
 
 namespace zzz::engine
 {
@@ -21,6 +23,20 @@ namespace zzz::engine
 		{
 			using namespace zzz::core;
 			return { CpuInfo("Editor CPU", "x64", 1, 1, 1000) };
+		}
+
+		[[nodiscard]] ::zzz::core::CpuTopology CollectTopology() const
+		{
+			using namespace zzz::core;
+			CpuTopology topology;
+			topology.name = "Editor CPU";
+			topology.architecture = "x64";
+			const uint32_t cores = std::max(1u, std::thread::hardware_concurrency());
+			topology.totalLogicalCores = cores;
+			topology.totalPhysicalCores = cores;
+			topology.isHeterogeneous = false;
+			topology.performanceLogicalCapacity = cores;
+			return topology;
 		}
 	};
 }

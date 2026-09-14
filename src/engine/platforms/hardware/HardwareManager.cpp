@@ -12,6 +12,7 @@ HardwareState HardwareManager::Gather(const IMonitorProvider& monitorProvider) c
 {
 	return HardwareState(
 		m_CpuCollector.Collect(),
+		m_CpuCollector.CollectTopology(),
 		m_RamCollector.Collect(),
 		m_MotherboardCollector.Collect(),
 		m_GpuCollector.Collect(),

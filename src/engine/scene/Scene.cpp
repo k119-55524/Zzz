@@ -7,7 +7,7 @@
 #include "engine/resources/ResourceManager.h"
 #include "engine/scene/layer/LayerSubsystemFactory.h"
 #include "core/templates/CountdownTrigger.h"
-#include "core/templates/ThreadPool.h"
+#include "engine/tasks/TaskDispatcher.h"
 
 #include "Scene.h"
 
@@ -37,7 +37,10 @@ namespace zzz::engine
 		DOut("[Scene::~Scene] Уничтожена сцена '{}' ({})", m_Name, m_Guid.ToString());
 	}
 
-	void Scene::Initialize(const ScriptFactory& scriptFactory, ThreadPool& threadPool, std::function<void()> onLayersCreated)
+	void Scene::Initialize(
+		const ScriptFactory& scriptFactory,
+		TaskDispatcher& taskDispatcher,
+		std::function<void(std::expected<void, std::string>)> onLayersCreated)
 	{
 		ensure(onLayersCreated != nullptr, "onLayersCreated коллбэк не должен быть null при инициализации Scene.");
 
@@ -67,8 +70,18 @@ namespace zzz::engine
 		const size_t layerCount = layersData.size();
 		m_Layers.resize(layerCount);
 
+		auto firstError = std::make_shared<std::string>();
+		auto errorMutex = std::make_shared<std::mutex>();
+
 		// Создаём неблокирующий триггер завершения наполнения всех слоёв
-		auto trigger = std::make_shared<CountdownTrigger>(layerCount, std::move(onLayersCreated));
+		auto trigger = std::make_shared<CountdownTrigger>(layerCount, [firstError, onLayersCreated = std::move(onLayersCreated)]()
+		{
+			if (!firstError->empty())
+				onLayersCreated(std::unexpected(*firstError));
+			else
+				onLayersCreated({});
+		});
+
 		LayerSubsystemFactory factory;
 		for (size_t i = 0; i < layerCount; ++i)
 		{
@@ -103,10 +116,26 @@ namespace zzz::engine
 					ToString(layerData.GetType()), layerData.GetName(), m_Name);
 			}
 
-			// Асинхронное наполнение слоя в пуле потоков
-			threadPool.Submit([layer = m_Layers[i].get(), &layerData, &scriptFactory, sharedSceneData, trigger]()
+			// Асинхронное наполнение слоя в пуле потоков через TaskDispatcher (приоритет Normal)
+			taskDispatcher.Submit(eTaskPriority::Normal, [layer = m_Layers[i].get(), &layerData, &scriptFactory, sharedSceneData, trigger, firstError, errorMutex]()
 			{
-				layer->Populate(layerData, scriptFactory);
+				try
+				{
+					layer->Populate(layerData, scriptFactory);
+				}
+				catch (const std::exception& ex)
+				{
+					std::lock_guard lock(*errorMutex);
+					if (firstError->empty())
+						*firstError = std::format("Ошибка при наполнении слоя '{}': {}", layerData.GetName(), ex.what());
+				}
+				catch (...)
+				{
+					std::lock_guard lock(*errorMutex);
+					if (firstError->empty())
+						*firstError = std::format("Неизвестное исключение при наполнении слоя '{}'.", layerData.GetName());
+				}
+
 				trigger->CountDown();
 			});
 		}

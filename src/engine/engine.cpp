@@ -1,8 +1,10 @@
 
 #include <logger.h>
 
-#include "Engine.h"
 #include "resources/MeshLoader.h"
+#include "engine/platforms/task/PlatformTaskPolicy.h"
+
+#include "Engine.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::LogEngine);
 
@@ -19,7 +21,9 @@ extern "C" void RegisterAllScripts(ScriptRegistry&);
 extern "C" __attribute__((weak)) void RegisterAllScripts(ScriptRegistry&) {}
 #endif
 
-Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
+Engine::Engine(
+	std::shared_ptr<NativeAppData> nativeData,
+	EngineLaunchOptions launchOptions) :
 	engineState{ eInitState::NotInitialized }
 {
 	m_FileSystem = safe_make_shared<FileSystem>(nativeData);
@@ -44,6 +48,11 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 	m_Platform = safe_make_unique<Platform>(nativeData, projectManifestData.GetPlatformData());
 	m_Platform->GetHardwareState().LogFileBlock();
 
+	// Инициализация централизованного диспетчера задач (TaskDispatcher)
+	const auto taskConfig = PlatformTaskPolicy::Resolve(m_Platform->GetHardwareState().GetCpuTopology(), launchOptions);
+	taskConfig.LogFileBlock();
+	m_TaskDispatcher = safe_make_unique<TaskDispatcher>(taskConfig);
+
 	// Инициализация графического интерфейса (DirectX 12 / Vulkan / Metal)
 	m_GAPI = safe_make_shared<GAPI>();
 	m_GAPI->Initialize(m_UserSettingsManager);
@@ -60,11 +69,11 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 	m_ScriptRegistry = safe_make_unique<ScriptRegistry>(*m_ScriptStorage);
 	m_ScriptFactory = safe_make_shared<ScriptFactory>(*m_ScriptStorage);
 
-	// Инициализация менеджера сцен (SceneManager) с пробросом ResourceManager и ResourceGC
-	m_SceneManager = safe_make_shared<SceneManager>(m_PackageManager, m_ResourceManager, m_ScriptFactory, m_ResourceGC.get());
+	// Инициализация менеджера сцен (SceneManager) с пробросом TaskDispatcher, ResourceManager и ResourceGC
+	m_SceneManager = safe_make_shared<SceneManager>(*m_TaskDispatcher, m_PackageManager, m_ResourceManager, m_ScriptFactory, m_ResourceGC.get());
 
-	// Инициализация менеджера отображения окон (ViewManager) с пробросом графического API, фабрики скриптов, пакета ресурсов и менеджера сцен
-	m_ViewManager = safe_make_unique<ViewManager>(*m_Platform, m_GAPI, m_ScriptFactory, m_PackageManager, m_UserSettingsManager, m_SceneManager, [this]() { OnAppClosed(); });
+	// Инициализация менеджера отображения окон (ViewManager) с пробросом TaskDispatcher, платформы, GAPI, скриптов и сцен
+	m_ViewManager = safe_make_unique<ViewManager>(*m_TaskDispatcher, *m_Platform, m_GAPI, m_ScriptFactory, m_PackageManager, m_UserSettingsManager, m_SceneManager, [this]() { OnAppClosed(); });
 
 	// Инициализация главного кадрового цикла, шины событий проекта и игрового таймера
 	m_MainLoop = safe_make_shared<MainLoop>(*m_Platform, [this]() { OnUpdateSystem(); });
@@ -114,6 +123,15 @@ void Engine::Shutdown() noexcept
 			m_MainLoop = nullptr;
 		}
 
+		StopGame();
+		m_EventBus = nullptr;
+
+		// Ожидание завершения всех активных задач воркеров перед разрушением сервисов
+		if (m_TaskDispatcher)
+		{
+			m_TaskDispatcher->JoinAll();
+		}
+
 		if (m_GAPI)
 			m_GAPI->WaitForGpu();
 
@@ -129,13 +147,13 @@ void Engine::Shutdown() noexcept
 			m_ResourceManager = nullptr;
 		}
 
-		StopGame();
-		m_EventBus = nullptr;
-
 		m_SceneManager = nullptr;
 		m_ViewManager = nullptr;
 		m_GAPI = nullptr;
 		m_Time = nullptr;
+
+		// Освобождение пулов потоков диспетчера
+		m_TaskDispatcher = nullptr;
 
 		if (m_UserSettingsManager)
 		{

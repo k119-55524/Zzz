@@ -13,7 +13,8 @@ int main(int argc, char* argv[])
 
 		try
 		{
-			Engine engine;
+			auto launchOptions = EngineLaunchOptions::Parse(argc, argv);
+			Engine engine(nullptr, launchOptions);
 			auto res = engine.Run();
 			if (!res)
 			{

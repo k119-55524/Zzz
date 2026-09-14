@@ -64,6 +64,15 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "platforms/hardware/platforms/network/NetworkAdapterInfoCollectorMobile.h"
         "platforms/hardware/platforms/gpu/GpuInfoCollectorStub.h"
 
+        # Launch & Tasks (Этап 51)
+        "launch/EngineLaunchOptions.h"
+        "tasks/TaskPriority.h"
+        "tasks/TaskDispatcherConfig.h"
+        "tasks/TaskDispatcher.h" "tasks/TaskDispatcher.cpp"
+        "platforms/task/PlatformTaskPolicy.h"
+        "platforms/task/platforms/PlatformTaskPolicyDesktop.h"
+        "platforms/task/platforms/PlatformTaskPolicyMobile.h"
+
         # Main Loop
         "platforms/mainloop/MainLoop.h" "platforms/mainloop/MainLoopCommon.h" "platforms/mainloop/MainLoopCommon.cpp"
         "platforms/mainloop/MainLoopEditor.h"

@@ -50,4 +50,37 @@ std::vector<CpuInfo> CpuInfoCollectorApple::Collect() const
 	return cpus;
 }
 
+CpuTopology CpuInfoCollectorApple::CollectTopology() const
+{
+	CpuTopology topology;
+	std::string name = SysctlString("machdep.cpu.brand_string");
+	if (name.empty())
+		name = "Apple CPU";
+
+	topology.name = std::move(name);
+	topology.architecture = "arm64";
+	topology.totalPhysicalCores = SysctlU32("hw.physicalcpu", 1);
+	topology.totalLogicalCores = SysctlU32("hw.logicalcpu", topology.totalPhysicalCores);
+
+	zU32 nperflevels = SysctlU32("hw.nperflevels", 1);
+	if (nperflevels > 1)
+	{
+		// Apple Silicon: perflevel0 = Performance cores, perflevel1 = Efficiency cores
+		zU32 pCores = SysctlU32("hw.perflevel0.logicalcpu", 0);
+		zU32 eCores = SysctlU32("hw.perflevel1.logicalcpu", 0);
+
+		if (pCores > 0 && eCores > 0)
+		{
+			topology.isHeterogeneous = true;
+			topology.performanceLogicalCapacity = pCores;
+			topology.efficiencyLogicalCapacity = eCores;
+			return topology;
+		}
+	}
+
+	topology.isHeterogeneous = false;
+	topology.performanceLogicalCapacity = topology.totalLogicalCores;
+	return topology;
+}
+
 #endif // defined(Z_APPLE)

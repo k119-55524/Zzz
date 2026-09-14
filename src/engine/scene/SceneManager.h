@@ -1,8 +1,8 @@
 #pragma once
 
-#include "core/templates/ThreadPool.h"
 #include "core/templates/CallbackQueue.h"
 #include "core/scene/SceneTransitionParams.h"
+#include "engine/tasks/TaskDispatcher.h"
 
 using namespace zzz::core;
 using namespace zzz::templates;
@@ -21,6 +21,7 @@ namespace zzz::engine
 	public:
 		SceneManager() = delete;
 		SceneManager(
+			TaskDispatcher& taskDispatcher,
 			std::shared_ptr<PackageManager> packageManager,
 			std::shared_ptr<ResourceManager> resourceManager,
 			std::shared_ptr<ScriptFactory> scriptFactory,
@@ -36,13 +37,13 @@ namespace zzz::engine
 		void Update(const Time& time);
 
 	private:
+		TaskDispatcher& m_TaskDispatcher;
 		std::shared_ptr<PackageManager> m_PackageManager;
 		std::shared_ptr<ResourceManager> m_ResourceManager;
 		std::shared_ptr<ScriptFactory> m_ScriptFactory;
 		ResourceGarbageCollector* m_ResourceGC{ nullptr };
 
 		SceneTransitionParams m_GlobalTransitionParams;
-		std::unique_ptr<ThreadPool> m_LoadingThreadPool;
 
 		std::mutex m_LoadSceneMutex;
 		CallbackQueue<> m_MainThreadQueue;

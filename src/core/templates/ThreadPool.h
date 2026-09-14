@@ -27,6 +27,12 @@ namespace zzz::templates
 	inline void SetThreadName(const char*) {}
 #endif
 
+	enum class eEnqueueResult : uint8_t
+	{
+		Accepted,
+		Closed
+	};
+
 	/**
 	 * @brief Пул работяг-потоков для асинхронного выполнения задач движка.
 	 * 
@@ -39,9 +45,13 @@ namespace zzz::templates
 		Z_NO_COPY_MOVE(ThreadPool);
 
 	public:
-		explicit ThreadPool(const std::string& threadName, size_t threadCount)
+		explicit ThreadPool(
+			const std::string& threadName,
+			size_t threadCount,
+			std::function<void(size_t workerIndex)> onWorkerStart = nullptr)
 			: done{ false }
 			, activeThreadCount{ 0 }
+			, m_OnWorkerStart(std::move(onWorkerStart))
 		{
 			if (threadCount == 0)
 				THROW_RUNTIME("Parameters cannot be 0.");
@@ -186,6 +196,26 @@ namespace zzz::templates
 		}
 
 		/**
+		 * @brief Атомарная отправка задачи в очередь без создания std::future.
+		 * Возвращает Accepted, либо Closed, если пул уже останавливается.
+		 */
+		eEnqueueResult Enqueue(std::function<void()> task)
+		{
+			if (!task)
+				return eEnqueueResult::Accepted;
+
+			{
+				std::lock_guard<std::mutex> lock(cv_mutex);
+				if (done)
+					return eEnqueueResult::Closed;
+
+				workQueue.push(std::move(task));
+			}
+			cv.notify_one();
+			return eEnqueueResult::Accepted;
+		}
+
+		/**
 		 * @brief Ожидает завершения всех текущих и стоящих в очереди задач.
 		 * @warning Не вызывайте метод Join() из задачи самого ThreadPool во избежание дедлока!
 		 */
@@ -205,6 +235,7 @@ namespace zzz::templates
 
 		bool done;
 		size_t activeThreadCount;
+		std::function<void(size_t workerIndex)> m_OnWorkerStart;
 		std::queue<std::function<void()>> workQueue;
 		std::vector<std::thread> threads;
 
@@ -214,6 +245,18 @@ namespace zzz::templates
 			std::string threadName = std::format(">>>>> [zzz::ThreadPool]. Thread-using class: zzz::{}({})", _threadName, id);
 			SetThreadName(threadName.c_str());
 #endif
+
+			if (m_OnWorkerStart)
+			{
+				try
+				{
+					m_OnWorkerStart(id);
+				}
+				catch (...)
+				{
+					DOutError("ThreadPool onWorkerStart exception caught.");
+				}
+			}
 
 			while (true)
 			{
