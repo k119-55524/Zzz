@@ -22,7 +22,9 @@ namespace zzz::core
 #elif defined(Z_APPLE)
 		pthread_setname_np(std::string(name).c_str());
 #elif defined(Z_LINUX) || defined(Z_ANDROID)
-		pthread_setname_np(pthread_self(), std::string(name).c_str());
+		// Ядро Linux жестко ограничивает длину имени потока до 16 байт (TASK_COMM_LEN, включая \0)
+		const std::string shortName = (name.size() > 15) ? std::string(name.substr(0, 15)) : std::string(name);
+		pthread_setname_np(pthread_self(), shortName.c_str());
 #endif
 	}
 
@@ -36,7 +38,8 @@ namespace zzz::core
 		case eThreadPriority::High:       winPriority = THREAD_PRIORITY_ABOVE_NORMAL; break;
 		case eThreadPriority::Normal:     winPriority = THREAD_PRIORITY_NORMAL; break;
 		case eThreadPriority::Background: winPriority = THREAD_PRIORITY_LOWEST; break;
-		case eThreadPriority::Count:      break;
+		default:
+			THROW_RUNTIME("Неизвестный приоритет потока: {}", static_cast<uint32_t>(priority));
 		}
 		SetThreadPriority(GetCurrentThread(), winPriority);
 #elif defined(Z_APPLE)
@@ -47,7 +50,8 @@ namespace zzz::core
 		case eThreadPriority::High:       qos = QOS_CLASS_USER_INITIATED; break;
 		case eThreadPriority::Normal:     qos = QOS_CLASS_DEFAULT; break;
 		case eThreadPriority::Background: qos = QOS_CLASS_BACKGROUND; break;
-		case eThreadPriority::Count:      break;
+		default:
+			THROW_RUNTIME("Неизвестный приоритет потока: {}", static_cast<uint32_t>(priority));
 		}
 		pthread_set_qos_class_self_np(qos, 0);
 #elif defined(Z_LINUX) || defined(Z_ANDROID)
@@ -58,7 +62,8 @@ namespace zzz::core
 		case eThreadPriority::High:       niceVal = -2; break;
 		case eThreadPriority::Normal:     niceVal = 0; break;
 		case eThreadPriority::Background: niceVal = 10; break;
-		case eThreadPriority::Count:      break;
+		default:
+			THROW_RUNTIME("Неизвестный приоритет потока: {}", static_cast<uint32_t>(priority));
 		}
 		setpriority(PRIO_PROCESS, 0, niceVal);
 #endif

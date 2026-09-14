@@ -1,7 +1,8 @@
 #pragma once
 
+#include <logger.h>
+
 #include "core/CoreIncludes.h"
-#include <logger/logger.h>
 
 namespace zzz::core
 {
@@ -35,16 +36,16 @@ namespace zzz::core
 		{
 #if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";
-			DOut(::zzz::core::Hardware, "{}[CpuTopology]", indentation);
-			DOut(::zzz::core::Hardware, "{}name: {}", nestedIndentation, name);
-			DOut(::zzz::core::Hardware, "{}arch: {}", nestedIndentation, architecture);
-			DOut(::zzz::core::Hardware, "{}totalLogicalCores: {}", nestedIndentation, totalLogicalCores);
-			DOut(::zzz::core::Hardware, "{}totalPhysicalCores: {}", nestedIndentation, totalPhysicalCores);
+			DOut(Hardware, "{}[CpuTopology]", indentation);
+			DOut(Hardware, "{}name: {}", nestedIndentation, name);
+			DOut(Hardware, "{}arch: {}", nestedIndentation, architecture);
+			DOut(Hardware, "{}totalLogicalCores: {}", nestedIndentation, totalLogicalCores);
+			DOut(Hardware, "{}totalPhysicalCores: {}", nestedIndentation, totalPhysicalCores);
 			if (primeLogicalCapacity > 0)
-				DOut(::zzz::core::Hardware, "{}primeLogicalCapacity: {}", nestedIndentation, primeLogicalCapacity);
-			DOut(::zzz::core::Hardware, "{}performanceLogicalCapacity: {}", nestedIndentation, performanceLogicalCapacity);
+				DOut(Hardware, "{}primeLogicalCapacity: {}", nestedIndentation, primeLogicalCapacity);
+			DOut(Hardware, "{}performanceLogicalCapacity: {}", nestedIndentation, performanceLogicalCapacity);
 			if (efficiencyLogicalCapacity > 0)
-				DOut(::zzz::core::Hardware, "{}efficiencyLogicalCapacity: {}", nestedIndentation, efficiencyLogicalCapacity);
+				DOut(Hardware, "{}efficiencyLogicalCapacity: {}", nestedIndentation, efficiencyLogicalCapacity);
 #endif
 		}
 	};
