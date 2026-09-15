@@ -6,13 +6,13 @@
 #include "engine/platforms/Platform.h"
 #include "engine/scene/SceneManager.h"
 #include "engine/tasks/TaskDispatcher.h"
+#include "core/templates/CallbackQueue.h"
 #include "engine/package/PackageManager.h"
-#include "core/io/package/DataAssetsManager.h"
 #include "engine/resources/ResourceManager.h"
+#include "core/io/package/DataAssetsManager.h"
 #include "engine/package/UserSettingsManager.h"
 #include "engine/platforms/mainloop/MainLoop.h"
 #include "engine/resources/ResourceGarbageCollector.h"
-#include "core/templates/CallbackQueue.h"
 
 using namespace zzz::core;
 

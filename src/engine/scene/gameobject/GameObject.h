@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <expected>
+#include <functional>
 
 #include "core/utils/Guid.h"
 #include "engine/scene/storage/NodeStorage.h"
@@ -40,7 +42,9 @@ namespace zzz::engine
 		void Initialize(
 			const GameObjectData& data,
 			const ScriptFactory& scriptFactory,
-			ResourceManager& resourceManager);
+			ResourceManager& resourceManager,
+			std::function<void(std::expected<void, std::string>)> onReady = {},
+			std::weak_ptr<const void> ownerToken = {});
 
 #pragma region Getters and Setters
 		[[nodiscard]] NodeHandle GetNodeHandle() const noexcept { return m_NodeHandle; }
@@ -120,6 +124,10 @@ namespace zzz::engine
 		}
 
 
+		// --- Меш и геометрия ---
+		[[nodiscard]] const Guid& GetMeshGuid() const noexcept { return m_MeshGuid; }
+		[[nodiscard]] bool HasMesh() const noexcept { return m_MeshGuid.IsValid(); }
+
 		[[nodiscard]] const std::vector<std::shared_ptr<Script>>& GetScripts() const noexcept { return m_Scripts; }
 #pragma endregion
 
@@ -132,6 +140,7 @@ namespace zzz::engine
 		NodeStorage* m_NodeStorage;
 		NodeHandle m_NodeHandle;
 
+		Guid m_MeshGuid;
 		std::vector<std::shared_ptr<Script>> m_Scripts;
 	};
 }

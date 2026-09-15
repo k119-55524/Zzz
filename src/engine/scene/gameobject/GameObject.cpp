@@ -17,10 +17,12 @@ Z_SET_LOG_CATEGORY(zzz::core::Scene);
 namespace zzz::engine
 {
 	GameObject::GameObject(const Guid& guid, std::string name, NodeStorage& storage, NodeHandle nodeHandle) :
-		m_Guid(guid) ,
+		m_Guid(guid),
 		m_Name(std::move(name)),
 		m_NodeStorage(&storage),
-		m_NodeHandle(nodeHandle)
+		m_NodeHandle(nodeHandle),
+		m_MeshGuid(),
+		m_Scripts()
 	{
 		ensure(m_Guid.IsValid(), "GameObject: передан невалидный Guid");
 		ensure(!m_Name.empty(), "GameObject: передано пустое имя объекта");
@@ -30,7 +32,9 @@ namespace zzz::engine
 	void GameObject::Initialize(
 		const GameObjectData& data,
 		const ScriptFactory& scriptFactory,
-		ResourceManager& resourceManager)
+		ResourceManager& resourceManager,
+		std::function<void(std::expected<void, std::string>)> onReady,
+		std::weak_ptr<const void> ownerToken)
 	{
 		// 1. Инстанцирование и наполнение скриптами
 		for (const auto& sGuid : data.GetScriptGuids())
@@ -42,51 +46,64 @@ namespace zzz::engine
 			}
 		}
 
-		// 2. Наполнение и предзагрузка визуальных ресурсов (меши)
+		// 2. Асинхронная загрузка меша
 		switch (data.GetMeshType())
 		{
-		case GameObjectData::eMeshType::Multi:
-		{
-			for (const auto& smGuid : data.GetSubmeshGuids())
-			{
-				if (smGuid.IsValid())
-				{
-					auto res = resourceManager.LoadDataAsset<MeshData>(smGuid);
-					if (res)
-					{
-						DOut("[GameObject::Initialize] Сабмеш '{}' для '{}' успешно загружен: вершин {}, треугольников {}",
-							smGuid.ToString(), m_Name, res->GetVertexCount(), res->GetIndexCount() / 3);
-					}
-					else
-					{
-						DOutWarning("[GameObject::Initialize] Не удалось загрузить сабмеш '{}' для '{}': {}",
-							smGuid.ToString(), m_Name, res.error());
-					}
-				}
-			}
-			break;
-		}
 		case GameObjectData::eMeshType::Simple:
 		{
-			if (data.GetMeshGuid().IsValid())
-			{
-				auto res = resourceManager.LoadDataAsset<MeshData>(data.GetMeshGuid());
-				if (res)
-				{
-					DOut("[GameObject::Initialize] Меш '{}' для '{}' успешно загружен: вершин {}, треугольников {}",
-						data.GetMeshGuid().ToString(), m_Name, res->GetVertexCount(), res->GetIndexCount() / 3);
-				}
-				else
-				{
-					DOutWarning("[GameObject::Initialize] Не удалось загрузить меш '{}' для '{}': {}",
-						data.GetMeshGuid().ToString(), m_Name, res.error());
-				}
-			}
+			resourceManager.LoadMeshAsync(
+				data.GetMeshGuid(),
+				[this, onReady = std::move(onReady)](std::expected<Guid, std::string> res) {
+					if (!res)
+					{
+						if (onReady)
+						{
+							onReady(std::unexpected(res.error()));
+						}
+						return;
+					}
+					m_MeshGuid = *res;
+					m_NodeStorage->SetVisible(m_NodeHandle, true);
+					if (onReady)
+					{
+						onReady({});
+					}
+				},
+				ownerToken);
+			break;
+		}
+		case GameObjectData::eMeshType::Multi:
+		{
+			resourceManager.LoadMultiMeshAsync(
+				data.GetSubmeshGuids(),
+				[this, onReady = std::move(onReady)](std::expected<Guid, std::string> res) {
+					if (!res)
+					{
+						if (onReady)
+						{
+							onReady(std::unexpected(res.error()));
+						}
+						return;
+					}
+					m_MeshGuid = *res;
+					m_NodeStorage->SetVisible(m_NodeHandle, true);
+					if (onReady)
+					{
+						onReady({});
+					}
+				},
+				ownerToken);
 			break;
 		}
 		case GameObjectData::eMeshType::None:
 		default:
+		{
+			if (onReady)
+			{
+				onReady({});
+			}
 			break;
+		}
 		}
 	}
 

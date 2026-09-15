@@ -58,7 +58,10 @@ namespace zzz::engine
 			m_LocalTransforms[i].rotation = obj.GetRotation();
 			m_LocalTransforms[i].scale = obj.GetScale();
 
-			m_Flags[i] = (obj.IsActive() ? NodeFlags::Active : NodeFlags::None) | NodeFlags::Visible;
+			const bool hasMesh = !obj.IsEntity() && obj.HasMesh();
+			const bool isVisible = !hasMesh;
+
+			m_Flags[i] = (obj.IsActive() ? NodeFlags::Active : NodeFlags::None) | (isVisible ? NodeFlags::Visible : NodeFlags::None);
 
 			m_Bindings[i] = NodeBindings{
 				.domainHandle = kInvalidDomainHandle,

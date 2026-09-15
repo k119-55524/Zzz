@@ -1,4 +1,6 @@
 
+#include <mutex>
+#include "core/templates/CountdownTrigger.h"
 #include "core/utils/Ensure.h"
 #include "core/io/package/MeshData.h"
 #include "core/io/package/LayerData.h"
@@ -9,6 +11,7 @@
 #include "GameLayer.h"
 
 using namespace zzz::core;
+using namespace zzz::templates;
 
 Z_SET_LOG_CATEGORY(zzz::core::Scene);
 
@@ -42,7 +45,11 @@ namespace zzz::engine
 		m_EntityDomain->Update(dt);
 	}
 
-	void GameLayer::Populate(const LayerData& layerData, const ScriptFactory& scriptFactory)
+	void GameLayer::Populate(
+		const LayerData& layerData,
+		const ScriptFactory& scriptFactory,
+		std::function<void(std::expected<void, std::string>)> onReady,
+		std::weak_ptr<const void> ownerToken)
 	{
 		// 1. Всегда очищаем предыдущее состояние слоя
 		m_ObjectDomain->Clear();
@@ -53,12 +60,19 @@ namespace zzz::engine
 		if (objects.empty())
 		{
 			m_NodeStorage = NodeStorage();
+			if (onReady)
+			{
+				onReady({});
+			}
 			return;
 		}
 
 		// 2. Формируем плоское линейное хранилище узлов сцены
 		m_NodeStorage = NodeStorage(objects);
 		const size_t nodeCount = m_NodeStorage.GetNodeCount();
+
+		std::vector<std::pair<NodeHandle, GameObject*>> gameObjects;
+		gameObjects.reserve(nodeCount);
 
 		// 3. Однопроходная регистрация в домены и пространственное хранилище
 		for (NodeHandle nodeHandle = 0; nodeHandle < static_cast<NodeHandle>(nodeCount); ++nodeHandle)
@@ -75,7 +89,7 @@ namespace zzz::engine
 			{
 				const auto [dHandle, go] = m_ObjectDomain->CreateObject(m_NodeStorage, nodeHandle, objData);
 				ensure(go != nullptr, "GameLayer::Populate: не удалось создать GameObject для ноды {}", nodeHandle);
-				go->Initialize(objData, scriptFactory, *m_ResourceManager);
+				gameObjects.emplace_back(nodeHandle, go);
 
 				m_NodeStorage.SetDomainBinding(nodeHandle, dHandle, eNodeDomainKind::Object);
 			}
@@ -107,6 +121,52 @@ namespace zzz::engine
 			{
 				ensure(binding.spatialHandle == kInvalidSpatialHandle, "GameLayer::Populate: узел {} без меша имеет spatialHandle", i);
 			}
+		}
+
+		// 5. Асинхронная инициализация GameObjects
+		if (gameObjects.empty())
+		{
+			if (onReady)
+			{
+				onReady({});
+			}
+			return;
+		}
+
+		auto firstError = std::make_shared<std::string>();
+		auto errorMutex = std::make_shared<std::mutex>();
+
+		auto trigger = std::make_shared<CountdownTrigger>(gameObjects.size(), [onReady = std::move(onReady), firstError]() mutable {
+			if (!onReady) return;
+			if (!firstError->empty())
+			{
+				onReady(std::unexpected(*firstError));
+			}
+			else
+			{
+				onReady({});
+			}
+		});
+
+		for (const auto& [handle, go] : gameObjects)
+		{
+			const auto& objData = objects[handle];
+			go->Initialize(
+				objData,
+				scriptFactory,
+				*m_ResourceManager,
+				[trigger, firstError, errorMutex](std::expected<void, std::string> res) {
+					if (!res)
+					{
+						std::lock_guard lock(*errorMutex);
+						if (firstError->empty())
+						{
+							*firstError = res.error();
+						}
+					}
+					trigger->CountDown();
+				},
+				ownerToken);
 		}
 	}
 }

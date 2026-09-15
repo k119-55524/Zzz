@@ -1,13 +1,12 @@
 #pragma once
 
-#include "IBroadcaster.h"
-#include "core/enums/eLogMessageType.h"
-
 #if Z_WINDOWS
 #include <format>
 #include <chrono>
 #include <iostream>
-#include <stdio.h>
+
+#include "IBroadcaster.h"
+#include "core/enums/eLogMessageType.h"
 
 namespace zzz::logger
 {
@@ -103,5 +102,4 @@ namespace zzz::logger
 		bool m_ConsoleCreated = false;
 	};
 }
-#endif
-
+#endif // Z_WINDOWS

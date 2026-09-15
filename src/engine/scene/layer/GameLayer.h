@@ -44,7 +44,11 @@ namespace zzz::engine
 		Z_NO_COPY_MOVE(GameLayer);
 
 		void Update(float dt) override;
-		void Populate(const LayerData& layerData, const ScriptFactory& scriptFactory) override;
+		void Populate(
+			const LayerData& layerData,
+			const ScriptFactory& scriptFactory,
+			std::function<void(std::expected<void, std::string>)> onReady = {},
+			std::weak_ptr<const void> ownerToken = {}) override;
 
 	private:
 		std::shared_ptr<ResourceManager> m_ResourceManager;

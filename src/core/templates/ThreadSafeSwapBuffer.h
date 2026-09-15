@@ -2,8 +2,9 @@
 
 #include "core/CoreIncludes.h"
 #include "core/utils/Ensure.h"
-#include "QueueArray.h"
 #include "ThreadSafeQueueArray.h"
+
+using namespace zzz::core;
 
 namespace zzz::templates
 {
@@ -17,11 +18,11 @@ namespace zzz::templates
 		ThreadSafeSwapBuffer& operator=(const ThreadSafeSwapBuffer&) = delete;
 		ThreadSafeSwapBuffer& operator=(ThreadSafeSwapBuffer&&) = delete;
 		ThreadSafeSwapBuffer(zU32 capacity) :
-			data{ ThreadSafeQueueArray<T>(capacity), ThreadSafeQueueArray<T>(capacity) },
 			readIndex{ 0 },
-			writeIndex{ 1 }
+			writeIndex{ 1 },
+			data{ ThreadSafeQueueArray<T>(capacity), ThreadSafeQueueArray<T>(capacity) }
 		{
-			zzz::core::ensure(capacity > 1);
+			ensure(capacity > 1, "Capacity must be greater than 1");
 		}
 
 		~ThreadSafeSwapBuffer() = default;

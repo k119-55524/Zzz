@@ -34,7 +34,8 @@ namespace zzz::engine
 		void Initialize(
 			const ScriptFactory& scriptFactory,
 			TaskDispatcher& taskDispatcher,
-			std::function<void(std::expected<void, std::string>)> onLayersCreated);
+			std::function<void(std::expected<void, std::string>)> onLayersCreated,
+			std::weak_ptr<const void> ownerToken = {});
 
 		[[nodiscard]] const Guid& GetGuid() const noexcept { return m_Guid; }
 		[[nodiscard]] const std::string& GetName() const noexcept { return m_Name; }

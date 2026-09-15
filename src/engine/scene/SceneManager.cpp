@@ -80,6 +80,8 @@ namespace zzz::engine
 					m_GlobalTransitionParams
 				);
 
+				std::weak_ptr<const void> ownerToken = scene;
+
 				// 2. Инициализация слоёв сцены (по завершении переносим в основной поток)
 				scene->Initialize(*m_ScriptFactory, m_TaskDispatcher, [this, scene, onComplete](std::expected<void, std::string> initRes) mutable
 				{
@@ -90,7 +92,11 @@ namespace zzz::engine
 
 						m_MainThreadQueue.Push([onComplete, err = std::move(initRes.error())]() mutable
 						{
-							onComplete(std::unexpected(std::move(err)));
+							if (onComplete)
+							{
+								onComplete(std::unexpected(err));
+							}
+							THROW_RUNTIME("Сбой инициализации слоёв сцены: {}", err);
 						});
 						return;
 					}
@@ -101,9 +107,12 @@ namespace zzz::engine
 					{
 						m_Scenes[scene->GetGuid()] = scene;
 						scene->InvokeStart();
-						onComplete(scene);
+						if (onComplete)
+						{
+							onComplete(scene);
+						}
 					});
-				});
+				}, ownerToken);
 			},
 			// Колбэк перехвата исключений из потока моздания сцены
 			[this, onComplete](std::exception_ptr ex)

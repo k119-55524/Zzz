@@ -1,6 +1,9 @@
 #pragma once
 
 #include <string>
+#include <expected>
+#include <functional>
+#include <memory>
 
 #include "core/enums/eLayerType.h"
 #include "core/utils/Guid.h"
@@ -50,7 +53,11 @@ namespace zzz::engine
 		 * Слой сам обходит layerData.GetObjects() и разбирает каждый объект - Scene ему просто
 		 * отдаёт данные слоя целиком, не занимаясь построчным разбором.
 		 */
-		virtual void Populate(const LayerData& layerData, const ScriptFactory& scriptFactory) = 0;
+		virtual void Populate(
+			const LayerData& layerData,
+			const ScriptFactory& scriptFactory,
+			std::function<void(std::expected<void, std::string>)> onReady = {},
+			std::weak_ptr<const void> ownerToken = {}) = 0;
 
 	protected:
 		zzz::core::Guid m_Guid;

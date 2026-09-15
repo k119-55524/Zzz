@@ -2,11 +2,15 @@
 #include "Mesh.h"
 #include "engine/package/PackageManager.h"
 #include "core/io/package/DataAssetsManager.h"
+#include "core/io/package/MeshData.h"
 #include "core/io/ResourceStorageTraits.h"
+#include "core/templates/CountdownTrigger.h"
 #include "core/utils/Ensure.h"
+#include "core/utils/MemoryUtils.h"
 Z_SET_LOG_CATEGORY(::zzz::core::LogEngine);
 
 using namespace zzz::core;
+using namespace zzz::templates;
 
 namespace zzz::engine
 {
@@ -346,17 +350,32 @@ namespace zzz::engine
 
 					if (entryOpt.has_value())
 					{
-						auto loadRes = loader->Load(*entryOpt, *m_PackageManager, *m_DataAssetsManager, *m_FileSystem, *m_GAPI);
-						if (loadRes.has_value())
+						try
 						{
-							PublishResource(req.guid, *loadRes);
-							result = *loadRes;
+							auto loadRes = loader->Load(*entryOpt, *m_PackageManager, *m_DataAssetsManager, *m_FileSystem, *m_GAPI);
+							if (loadRes.has_value())
+							{
+								PublishResource(req.guid, *loadRes);
+								result = *loadRes;
+							}
+							else
+							{
+								result = std::unexpected(loadRes.error());
+								DOutError("[ResourceManager::IoWorkerLoop] Ошибка загрузки ресурса '{}' ({}): {}",
+									entryOpt->GetName(), req.guid.ToString(), loadRes.error());
+							}
 						}
-						else
+						catch (const std::exception& ex)
 						{
-							result = std::unexpected(loadRes.error());
-							DOutError("[ResourceManager::IoWorkerLoop] Ошибка загрузки ресурса '{}' ({}): {}",
-								entryOpt->GetName(), req.guid.ToString(), loadRes.error());
+							result = std::unexpected(std::format("Исключение при загрузке ресурса '{}' ({}): {}",
+								entryOpt->GetName(), req.guid.ToString(), ex.what()));
+							DOutError("[ResourceManager::IoWorkerLoop] {}", result.error());
+						}
+						catch (...)
+						{
+							result = std::unexpected(std::format("Неизвестное исключение при загрузке ресурса '{}' ({})",
+								entryOpt->GetName(), req.guid.ToString()));
+							DOutError("[ResourceManager::IoWorkerLoop] {}", result.error());
 						}
 					}
 					else
@@ -508,5 +527,224 @@ namespace zzz::engine
 	{
 		std::shared_lock lock(m_Mutex);
 		return m_Materials.size();
+	}
+
+	std::expected<std::shared_ptr<Mesh>, std::string> ResourceManager::CombineSubmeshes(
+		const Guid& resultGuid,
+		std::span<const std::shared_ptr<Mesh>> submeshes)
+	{
+		if (submeshes.empty())
+		{
+			return std::unexpected("Список сабмешей пуст для объединения MultiMesh");
+		}
+
+		if (submeshes.size() == 1)
+		{
+			const auto& single = submeshes[0];
+			if (!single)
+			{
+				return std::unexpected("Сабмеш равен nullptr");
+			}
+			return safe_make_shared<Mesh>(resultGuid, std::string(single->GetName()), single->GetMeshData());
+		}
+
+		const zU32 vertexStride = submeshes[0]->GetVertexStride();
+		zU64 totalVertices = 0;
+		zU64 totalIndices = 0;
+		bool needs32BitIndices = false;
+
+		for (const auto& sm : submeshes)
+		{
+			if (!sm)
+			{
+				return std::unexpected("Один из сабмешей равен nullptr");
+			}
+			if (sm->GetVertexStride() != vertexStride)
+			{
+				return std::unexpected(std::format(
+					"Несовпадение vertex stride сабмешей: ожидался {}, получен {}",
+					vertexStride, sm->GetVertexStride()));
+			}
+
+			totalVertices += sm->GetVertexCount();
+			totalIndices += sm->GetIndexCount();
+			if (sm->GetIndexFormat() == eIndexFormat::UInt32)
+			{
+				needs32BitIndices = true;
+			}
+		}
+
+		if (totalVertices > 65535)
+		{
+			needs32BitIndices = true;
+		}
+
+		if (totalVertices > std::numeric_limits<zU32>::max() || totalIndices > std::numeric_limits<zU32>::max())
+		{
+			return std::unexpected("Превышен максимальный лимит вершин/индексов при объединении MultiMesh");
+		}
+
+		std::vector<std::byte> combinedVertices;
+		combinedVertices.reserve(static_cast<size_t>(totalVertices) * vertexStride);
+		for (const auto& sm : submeshes)
+		{
+			const auto& vData = sm->GetVertexData();
+			combinedVertices.insert(combinedVertices.end(), vData.begin(), vData.end());
+		}
+
+		const eIndexFormat targetFormat = needs32BitIndices ? eIndexFormat::UInt32 : eIndexFormat::UInt16;
+		const size_t indexSize = needs32BitIndices ? sizeof(uint32_t) : sizeof(uint16_t);
+		std::vector<std::byte> combinedIndices(static_cast<size_t>(totalIndices) * indexSize);
+
+		zU32 currentVertexOffset = 0;
+		size_t currentIndexOffset = 0;
+
+		for (const auto& sm : submeshes)
+		{
+			const zU32 indexCount = sm->GetIndexCount();
+			const auto& indexBytes = sm->GetIndexData();
+
+			if (sm->GetIndexFormat() == eIndexFormat::UInt16)
+			{
+				const auto* src16 = reinterpret_cast<const uint16_t*>(indexBytes.data());
+				for (size_t i = 0; i < indexCount; ++i)
+				{
+					const zU32 offsetIndex = static_cast<zU32>(src16[i]) + currentVertexOffset;
+					if (needs32BitIndices)
+					{
+						reinterpret_cast<uint32_t*>(combinedIndices.data())[currentIndexOffset + i] = offsetIndex;
+					}
+					else
+					{
+						reinterpret_cast<uint16_t*>(combinedIndices.data())[currentIndexOffset + i] = static_cast<uint16_t>(offsetIndex);
+					}
+				}
+			}
+			else
+			{
+				const auto* src32 = reinterpret_cast<const uint32_t*>(indexBytes.data());
+				for (size_t i = 0; i < indexCount; ++i)
+				{
+					const zU32 offsetIndex = src32[i] + currentVertexOffset;
+					reinterpret_cast<uint32_t*>(combinedIndices.data())[currentIndexOffset + i] = offsetIndex;
+				}
+			}
+
+			currentVertexOffset += sm->GetVertexCount();
+			currentIndexOffset += indexCount;
+		}
+
+		MeshData combinedMeshData(
+			static_cast<zU32>(totalVertices),
+			vertexStride,
+			std::move(combinedVertices),
+			static_cast<zU32>(totalIndices),
+			targetFormat,
+			std::move(combinedIndices));
+
+		return safe_make_shared<Mesh>(resultGuid, std::string("CombinedMultiMesh"), std::move(combinedMeshData));
+	}
+
+	void ResourceManager::LoadMeshAsync(
+		const Guid& meshGuid,
+		std::function<void(std::expected<Guid, std::string>)> onCompleted,
+		OwnerToken ownerToken)
+	{
+		LoadAsync<Mesh>(meshGuid, ResourceCallback<Mesh>([onCompleted = std::move(onCompleted), meshGuid, ownerToken](ResourceResult<Mesh> res) {
+			if (!IsOwnerAlive(ownerToken)) return;
+			if (!onCompleted) return;
+
+			if (!res)
+			{
+				onCompleted(std::unexpected(res.error()));
+			}
+			else
+			{
+				onCompleted(meshGuid);
+			}
+		}), ownerToken);
+	}
+
+	void ResourceManager::LoadMultiMeshAsync(
+		std::span<const Guid> submeshGuids,
+		std::function<void(std::expected<Guid, std::string>)> onCompleted,
+		OwnerToken ownerToken)
+	{
+		if (submeshGuids.empty())
+		{
+			if (onCompleted)
+			{
+				m_MainThreadQueue.Push([onCompleted = std::move(onCompleted), ownerToken]() {
+					if (IsOwnerAlive(ownerToken))
+					{
+						onCompleted(std::unexpected("Список сабмешей пуст для MultiMesh"));
+					}
+				});
+			}
+			return;
+		}
+
+		const size_t count = submeshGuids.size();
+		auto loadedSubmeshes = std::make_shared<std::vector<std::shared_ptr<Mesh>>>(count);
+		auto firstError = std::make_shared<std::string>();
+		auto errorMutex = std::make_shared<std::mutex>();
+
+		auto trigger = std::make_shared<CountdownTrigger>(count, [this, loadedSubmeshes, firstError, onCompleted = std::move(onCompleted), ownerToken]() mutable {
+			m_MainThreadQueue.Push([this, loadedSubmeshes, firstError, onCompleted = std::move(onCompleted), ownerToken]() {
+				if (!IsOwnerAlive(ownerToken)) return;
+
+				if (!firstError->empty())
+				{
+					if (onCompleted)
+					{
+						onCompleted(std::unexpected(*firstError));
+					}
+					return;
+				}
+
+				const Guid combinedGuid = Guid::Generate();
+				auto combinedRes = CombineSubmeshes(combinedGuid, *loadedSubmeshes);
+				if (!combinedRes)
+				{
+					if (onCompleted)
+					{
+						onCompleted(std::unexpected(combinedRes.error()));
+					}
+					return;
+				}
+
+				PublishResource(combinedGuid, *combinedRes);
+				if (onCompleted)
+				{
+					onCompleted(combinedGuid);
+				}
+			});
+		});
+
+		for (size_t i = 0; i < count; ++i)
+		{
+			const auto& smGuid = submeshGuids[i];
+			LoadAsync<Mesh>(smGuid, ResourceCallback<Mesh>([i, loadedSubmeshes, firstError, errorMutex, trigger, ownerToken](ResourceResult<Mesh> res) {
+				if (!IsOwnerAlive(ownerToken))
+				{
+					trigger->CountDown();
+					return;
+				}
+
+				if (!res)
+				{
+					std::lock_guard lock(*errorMutex);
+					if (firstError->empty())
+					{
+						*firstError = res.error();
+					}
+				}
+				else
+				{
+					(*loadedSubmeshes)[i] = *res;
+				}
+				trigger->CountDown();
+			}), ownerToken);
+		}
 	}
 }

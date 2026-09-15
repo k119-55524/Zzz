@@ -153,23 +153,39 @@ namespace zzz::engine
 		[[nodiscard]] bool HasShader(const ::zzz::core::Guid& guid) const noexcept;
 		[[nodiscard]] bool HasMaterial(const ::zzz::core::Guid& guid) const noexcept;
 
+		using OwnerToken = std::weak_ptr<const void>;
+
+		[[nodiscard]] static bool IsOwnerAlive(const OwnerToken& token) noexcept
+		{
+			if (!token.owner_before(OwnerToken{}) && !OwnerToken{}.owner_before(token))
+			{
+				return true;
+			}
+			return !token.expired();
+		}
+
 		// --- Асинхронная загрузка с диска через пинг-понг очередь ---
 		template<typename T>
-		void LoadAsync(const ::zzz::core::Guid& guid, ResourceCallback<T> onCompleted)
+		void LoadAsync(const ::zzz::core::Guid& guid, ResourceCallback<T> onCompleted, OwnerToken ownerToken = {})
 		{
 			if (auto cached = Get<T>(guid))
 			{
 				if (onCompleted)
 				{
-					m_MainThreadQueue.Push([onCompleted = std::move(onCompleted), cached = std::move(cached)]() mutable {
-						onCompleted(cached);
+					m_MainThreadQueue.Push([onCompleted = std::move(onCompleted), cached = std::move(cached), ownerToken = std::move(ownerToken)]() mutable {
+						if (IsOwnerAlive(ownerToken))
+						{
+							onCompleted(cached);
+						}
 					});
 				}
 				return;
 			}
 
-			EnqueueLoadRequest(guid, GetTypeFor<T>(), {}, [onCompleted = std::move(onCompleted)](AnyResourceResult res) {
+			EnqueueLoadRequest(guid, GetTypeFor<T>(), {}, [onCompleted = std::move(onCompleted), ownerToken = std::move(ownerToken)](AnyResourceResult res) {
 				if (!onCompleted) return;
+				if (!IsOwnerAlive(ownerToken)) return;
+
 				if (!res)
 				{
 					onCompleted(std::unexpected(res.error()));
@@ -182,7 +198,7 @@ namespace zzz::engine
 		}
 
 		template<typename T>
-		void LoadAsync(const ::zzz::core::Guid& guid, std::function<void(std::shared_ptr<T>)> onLoaded)
+		void LoadAsync(const ::zzz::core::Guid& guid, std::function<void(std::shared_ptr<T>)> onLoaded, OwnerToken ownerToken = {})
 		{
 			LoadAsync<T>(guid, [onLoaded = std::move(onLoaded)](ResourceResult<T> res) {
 				if (!onLoaded) return;
@@ -190,8 +206,19 @@ namespace zzz::engine
 					onLoaded(*res);
 				else
 					onLoaded(nullptr);
-			});
+			}, std::move(ownerToken));
 		}
+
+		// --- Специализированная загрузка Mesh и MultiMesh ---
+		void LoadMeshAsync(
+			const ::zzz::core::Guid& meshGuid,
+			std::function<void(std::expected<::zzz::core::Guid, std::string>)> onCompleted,
+			OwnerToken ownerToken = {});
+
+		void LoadMultiMeshAsync(
+			std::span<const ::zzz::core::Guid> submeshGuids,
+			std::function<void(std::expected<::zzz::core::Guid, std::string>)> onCompleted,
+			OwnerToken ownerToken = {});
 
 		// --- Синхронизация и барьеры загрузки ---
 		void Flush();
@@ -271,6 +298,10 @@ namespace zzz::engine
 
 		// Публикация загруженного ресурса в типизированную таблицу кэша
 		void PublishResource(const ::zzz::core::Guid& guid, const std::shared_ptr<::zzz::core::IResource>& resource);
+
+		[[nodiscard]] std::expected<std::shared_ptr<Mesh>, std::string> CombineSubmeshes(
+			const ::zzz::core::Guid& resultGuid,
+			std::span<const std::shared_ptr<Mesh>> submeshes);
 
 		// Выделенный I/O-поток и пинг-понг очередь
 		::zzz::core::DoubleBufferedVector<ResourceLoadRequest> m_RequestQueue;
