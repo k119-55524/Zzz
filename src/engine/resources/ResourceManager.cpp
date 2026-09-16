@@ -665,26 +665,32 @@ namespace zzz::engine
 		}), ownerToken);
 	}
 
-	void ResourceManager::LoadMultiMeshAsync(
-		std::span<const Guid> submeshGuids,
+	void ResourceManager::LoadMeshAsync(
+		std::span<const Guid> meshGuids,
 		std::function<void(std::expected<Guid, std::string>)> onCompleted,
 		OwnerToken ownerToken)
 	{
-		if (submeshGuids.empty())
+		if (meshGuids.empty())
 		{
 			if (onCompleted)
 			{
 				m_MainThreadQueue.Push([onCompleted = std::move(onCompleted), ownerToken]() {
 					if (IsOwnerAlive(ownerToken))
 					{
-						onCompleted(std::unexpected("Список сабмешей пуст для MultiMesh"));
+						onCompleted(std::unexpected("Список мешей пуст"));
 					}
 				});
 			}
 			return;
 		}
 
-		const size_t count = submeshGuids.size();
+		if (meshGuids.size() == 1)
+		{
+			LoadMeshAsync(meshGuids[0], std::move(onCompleted), std::move(ownerToken));
+			return;
+		}
+
+		const size_t count = meshGuids.size();
 		auto loadedSubmeshes = std::make_shared<std::vector<std::shared_ptr<Mesh>>>(count);
 		auto firstError = std::make_shared<std::string>();
 		auto errorMutex = std::make_shared<std::mutex>();
@@ -723,7 +729,7 @@ namespace zzz::engine
 
 		for (size_t i = 0; i < count; ++i)
 		{
-			const auto& smGuid = submeshGuids[i];
+			const auto& smGuid = meshGuids[i];
 			LoadAsync<Mesh>(smGuid, ResourceCallback<Mesh>([i, loadedSubmeshes, firstError, errorMutex, trigger, ownerToken](ResourceResult<Mesh> res) {
 				if (!IsOwnerAlive(ownerToken))
 				{

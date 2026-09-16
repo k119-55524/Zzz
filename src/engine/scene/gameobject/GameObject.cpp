@@ -20,9 +20,7 @@ namespace zzz::engine
 		m_Guid(guid),
 		m_Name(std::move(name)),
 		m_NodeStorage(&storage),
-		m_NodeHandle(nodeHandle),
-		m_MeshGuid(),
-		m_Scripts()
+		m_NodeHandle(nodeHandle)
 	{
 		ensure(m_Guid.IsValid(), "GameObject: передан невалидный Guid");
 		ensure(!m_Name.empty(), "GameObject: передано пустое имя объекта");
@@ -36,75 +34,38 @@ namespace zzz::engine
 		std::function<void(std::expected<void, std::string>)> onReady,
 		std::weak_ptr<const void> ownerToken)
 	{
+		ensure(onReady != nullptr, "GameObject::Initialize: onReady коллбэк не должен быть null.");
+
 		// 1. Инстанцирование и наполнение скриптами
 		for (const auto& sGuid : data.GetScriptGuids())
 		{
 			auto script = scriptFactory.CreateScript(sGuid, this);
 			if (script != nullptr)
-			{
 				AddScript(std::move(script));
-			}
 		}
 
 		// 2. Асинхронная загрузка меша
-		switch (data.GetMeshType())
+		if (!data.HasMesh())
 		{
-		case GameObjectData::eMeshType::Simple:
-		{
-			resourceManager.LoadMeshAsync(
-				data.GetMeshGuid(),
-				[this, onReady = std::move(onReady)](std::expected<Guid, std::string> res) {
-					if (!res)
-					{
-						if (onReady)
-						{
-							onReady(std::unexpected(res.error()));
-						}
-						return;
-					}
-					m_MeshGuid = *res;
-					m_NodeStorage->SetVisible(m_NodeHandle, true);
-					if (onReady)
-					{
-						onReady({});
-					}
-				},
-				ownerToken);
-			break;
+			onReady({});
+			return;
 		}
-		case GameObjectData::eMeshType::Multi:
-		{
-			resourceManager.LoadMultiMeshAsync(
-				data.GetSubmeshGuids(),
-				[this, onReady = std::move(onReady)](std::expected<Guid, std::string> res) {
-					if (!res)
-					{
-						if (onReady)
-						{
-							onReady(std::unexpected(res.error()));
-						}
-						return;
-					}
-					m_MeshGuid = *res;
-					m_NodeStorage->SetVisible(m_NodeHandle, true);
-					if (onReady)
-					{
-						onReady({});
-					}
-				},
-				ownerToken);
-			break;
-		}
-		case GameObjectData::eMeshType::None:
-		default:
-		{
-			if (onReady)
+
+		resourceManager.LoadMeshAsync(data.GetMeshGuids(),
+			[this, onReady = std::move(onReady)](std::expected<Guid, std::string> res)
 			{
+				if (!res)
+				{
+					onReady(std::unexpected(res.error()));
+					return;
+				}
+
+				m_MeshGuid = *res;
+				m_NodeStorage->SetVisible(m_NodeHandle, true);
+
 				onReady({});
-			}
-			break;
-		}
-		}
+			},
+			ownerToken);
 	}
 
 	void GameObject::AddScript(std::shared_ptr<Script> script)

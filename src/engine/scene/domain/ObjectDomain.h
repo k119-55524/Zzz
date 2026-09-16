@@ -50,10 +50,7 @@ namespace zzz::engine
 		[[nodiscard]] GameObject* GetObjectByHandle(DomainHandle handle) const noexcept;
 		[[nodiscard]] size_t GetObjectCount() const noexcept { return m_Objects.size(); }
 
-		ObjectRegistration CreateObject(
-			NodeStorage& storage,
-			NodeHandle nodeHandle,
-			const GameObjectData& objData);
+		ObjectRegistration CreateObject(NodeStorage& storage, NodeHandle nodeHandle, const GameObjectData& objData);
 
 	private:
 		ObjectRegistration RegisterObject(

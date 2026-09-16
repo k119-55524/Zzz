@@ -43,7 +43,7 @@ namespace zzz::engine
 			const GameObjectData& data,
 			const ScriptFactory& scriptFactory,
 			ResourceManager& resourceManager,
-			std::function<void(std::expected<void, std::string>)> onReady = {},
+			std::function<void(std::expected<void, std::string>)> onReady,
 			std::weak_ptr<const void> ownerToken = {});
 
 #pragma region Getters and Setters

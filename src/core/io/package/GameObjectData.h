@@ -30,11 +30,10 @@ namespace zzz::core
 			Vec3<zF32> position,
 			Quat<zF32> rotation,
 			Vec3<zF32> scale,
-			Guid meshGuid,
-			Guid materialGuid,
-			std::vector<Guid> scriptGuids,
+			std::vector<Guid> meshGuids = {},
+			Guid materialGuid = {},
+			std::vector<Guid> scriptGuids = {},
 			uint32_t parentIndex = 0xFFFFFFFF,
-			std::vector<Guid> submeshGuids = {},
 			std::vector<Guid> materialGuids = {});
 
 		[[nodiscard]] const Guid& GetGuid() const noexcept { return m_Guid; }
@@ -47,30 +46,13 @@ namespace zzz::core
 		[[nodiscard]] const Quat<zF32>& GetRotation() const noexcept { return m_Rotation; }
 		[[nodiscard]] const Vec3<zF32>& GetScale() const noexcept { return m_Scale; }
 
-		enum class eMeshType : uint8_t
-		{
-			None,
-			Simple,
-			Multi
-		};
-
-		[[nodiscard]] const Guid& GetMeshGuid() const noexcept { return m_MeshGuid; }
+		[[nodiscard]] std::span<const Guid> GetMeshGuids() const noexcept { return m_MeshGuids; }
 		[[nodiscard]] const Guid& GetMaterialGuid() const noexcept { return m_MaterialGuid; }
-		[[nodiscard]] const std::vector<Guid>& GetSubmeshGuids() const noexcept { return m_SubmeshGuids; }
 		[[nodiscard]] const std::vector<Guid>& GetMaterialGuids() const noexcept { return m_MaterialGuids; }
-		[[nodiscard]] bool IsMultiMesh() const noexcept { return !m_SubmeshGuids.empty(); }
-		[[nodiscard]] bool HasMesh() const noexcept { return m_MeshGuid.IsValid() || IsMultiMesh(); }
+		[[nodiscard]] bool HasMesh() const noexcept { return !m_MeshGuids.empty(); }
 		[[nodiscard]] bool HasMaterial() const noexcept { return m_MaterialGuid.IsValid() || !m_MaterialGuids.empty(); }
 
 		void LogFileBlock(std::string_view indentation = {}) const;
-		[[nodiscard]] eMeshType GetMeshType() const noexcept
-		{
-			if (!m_SubmeshGuids.empty())
-				return eMeshType::Multi;
-			if (m_MeshGuid.IsValid())
-				return eMeshType::Simple;
-			return eMeshType::None;
-		}
 		[[nodiscard]] const std::vector<Guid>& GetScriptGuids() const noexcept { return m_ScriptGuids; }
 
 	protected:
@@ -88,11 +70,10 @@ namespace zzz::core
 		Quat<zF32> m_Rotation{ 0.0f, 0.0f, 0.0f, 1.0f };
 		Vec3<zF32> m_Scale{ 1.0f, 1.0f, 1.0f };
 
-		Guid m_MeshGuid;
+		std::vector<Guid> m_MeshGuids;
 		Guid m_MaterialGuid;
 
 		std::vector<Guid> m_ScriptGuids;
-		std::vector<Guid> m_SubmeshGuids;
 		std::vector<Guid> m_MaterialGuids;
 	};
 }

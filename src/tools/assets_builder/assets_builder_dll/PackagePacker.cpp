@@ -357,26 +357,20 @@ namespace zzz::builder
 			scale.z = objJson["scale"][2].get<float>();
 		}
 
-		Guid meshGuid{};
+		std::vector<Guid> meshGuids;
 		Guid materialGuid{};
-		std::vector<Guid> submeshGuids;
 		std::vector<Guid> materialGuids;
 
 		if (objJson.contains("render") && objJson["render"].is_object())
 		{
 			const auto& render = objJson["render"];
+
 			if (render.contains("mesh") && render["mesh"].is_string())
 			{
 				if (auto parsed = Guid::Parse(render["mesh"].get<std::string>()))
-					meshGuid = *parsed;
-			}
-			if (render.contains("material") && render["material"].is_string())
-			{
-				if (auto parsed = Guid::Parse(render["material"].get<std::string>()))
-					materialGuid = *parsed;
+					meshGuids.push_back(*parsed);
 			}
 
-			// Мультимеш: массивы submeshes и materials
 			if (render.contains("submeshes") && render["submeshes"].is_array())
 			{
 				for (const auto& smElem : render["submeshes"])
@@ -384,10 +378,17 @@ namespace zzz::builder
 					if (smElem.is_string())
 					{
 						if (auto parsed = Guid::Parse(smElem.get<std::string>()))
-							submeshGuids.push_back(*parsed);
+							meshGuids.push_back(*parsed);
 					}
 				}
 			}
+
+			if (render.contains("material") && render["material"].is_string())
+			{
+				if (auto parsed = Guid::Parse(render["material"].get<std::string>()))
+					materialGuid = *parsed;
+			}
+
 			if (render.contains("materials") && render["materials"].is_array())
 			{
 				for (const auto& matElem : render["materials"])
@@ -396,31 +397,6 @@ namespace zzz::builder
 					{
 						if (auto parsed = Guid::Parse(matElem.get<std::string>()))
 							materialGuids.push_back(*parsed);
-					}
-				}
-			}
-
-			// Альтернативный формат: "parts": [ { "mesh": "...", "material": "..." }, ... ]
-			if (render.contains("parts") && render["parts"].is_array())
-			{
-				for (const auto& partElem : render["parts"])
-				{
-					if (partElem.is_object())
-					{
-						Guid pMesh{};
-						Guid pMat{};
-						if (partElem.contains("mesh") && partElem["mesh"].is_string())
-						{
-							if (auto parsed = Guid::Parse(partElem["mesh"].get<std::string>()))
-								pMesh = *parsed;
-						}
-						if (partElem.contains("material") && partElem["material"].is_string())
-						{
-							if (auto parsed = Guid::Parse(partElem["material"].get<std::string>()))
-								pMat = *parsed;
-						}
-						submeshGuids.push_back(pMesh);
-						materialGuids.push_back(pMat);
 					}
 				}
 			}
@@ -452,11 +428,10 @@ namespace zzz::builder
 			position,
 			rotation,
 			scale,
-			meshGuid,
+			std::move(meshGuids),
 			materialGuid,
 			std::move(scriptGuids),
 			parentIndex,
-			std::move(submeshGuids),
 			std::move(materialGuids)
 		);
 	}

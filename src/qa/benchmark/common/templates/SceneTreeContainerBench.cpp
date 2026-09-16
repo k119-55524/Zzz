@@ -23,11 +23,7 @@ static void BM_NodeStorage_Construct(benchmark::State& state)
 			true,
 			Vec3<zF32>{ 0.0f, 0.0f, 0.0f },
 			Quat<zF32>{ 0.0f, 0.0f, 0.0f, 1.0f },
-			Vec3<zF32>{ 1.0f, 1.0f, 1.0f },
-			Guid{},
-			Guid{},
-			std::vector<Guid>{},
-			0xFFFFFFFF
+			Vec3<zF32>{ 1.0f, 1.0f, 1.0f }
 		);
 	}
 
@@ -54,11 +50,7 @@ static void BM_NodeStorage_ResolveFlat(benchmark::State& state)
 			true,
 			Vec3<zF32>{ 0.0f, 0.0f, 0.0f },
 			Quat<zF32>{ 0.0f, 0.0f, 0.0f, 1.0f },
-			Vec3<zF32>{ 1.0f, 1.0f, 1.0f },
-			Guid{},
-			Guid{},
-			std::vector<Guid>{},
-			0xFFFFFFFF
+			Vec3<zF32>{ 1.0f, 1.0f, 1.0f }
 		);
 	}
 
@@ -93,11 +85,7 @@ static void BM_NodeStorage_ResolveHierarchy(benchmark::State& state)
 		true,
 		Vec3<zF32>{ 0.0f, 0.0f, 0.0f },
 		Quat<zF32>{ 0.0f, 0.0f, 0.0f, 1.0f },
-		Vec3<zF32>{ 1.0f, 1.0f, 1.0f },
-		Guid{},
-		Guid{},
-		std::vector<Guid>{},
-		0xFFFFFFFF
+		Vec3<zF32>{ 1.0f, 1.0f, 1.0f }
 	);
 
 	// Children chain
@@ -111,7 +99,7 @@ static void BM_NodeStorage_ResolveHierarchy(benchmark::State& state)
 			Vec3<zF32>{ 0.0f, 0.0f, 0.0f },
 			Quat<zF32>{ 0.0f, 0.0f, 0.0f, 1.0f },
 			Vec3<zF32>{ 1.0f, 1.0f, 1.0f },
-			Guid{},
+			std::vector<Guid>{},
 			Guid{},
 			std::vector<Guid>{},
 			static_cast<uint32_t>(i - 1)

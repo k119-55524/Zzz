@@ -31,35 +31,16 @@ namespace zzz::engine
 		const DomainHandle handle = m_World.CreateEntity(objData.GetGuid(), objData.GetName(), nodeHandle);
 
 		// Наполнение визуальными ресурсами сущности
-		switch (objData.GetMeshType())
+		for (const auto& meshGuid : objData.GetMeshGuids())
 		{
-		case GameObjectData::eMeshType::Multi:
-		{
-			for (const auto& smGuid : objData.GetSubmeshGuids())
+			if (meshGuid.IsValid())
 			{
-				if (smGuid.IsValid())
+				auto res = resourceManager.LoadDataAsset<MeshData>(meshGuid);
+				if (res)
 				{
-					auto res = resourceManager.LoadDataAsset<MeshData>(smGuid);
-					if (res)
-					{
-						DOut("[EntityDomain::CreateEntity] Сабмеш '{}' для Entity '{}' успешно загружен", smGuid.ToString(), objData.GetName());
-					}
+					DOut("[EntityDomain::CreateEntity] Меш '{}' для Entity '{}' успешно загружен", meshGuid.ToString(), objData.GetName());
 				}
 			}
-			break;
-		}
-		case GameObjectData::eMeshType::Simple:
-		{
-			auto res = resourceManager.LoadDataAsset<MeshData>(objData.GetMeshGuid());
-			if (res)
-			{
-				DOut("[EntityDomain::CreateEntity] Меш '{}' для Entity '{}' успешно загружен", objData.GetMeshGuid().ToString(), objData.GetName());
-			}
-			break;
-		}
-		case GameObjectData::eMeshType::None:
-		default:
-			break;
 		}
 
 		return handle;

@@ -13,11 +13,10 @@ namespace zzz::core
 		Vec3<zF32> position,
 		Quat<zF32> rotation,
 		Vec3<zF32> scale,
-		Guid meshGuid,
+		std::vector<Guid> meshGuids,
 		Guid materialGuid,
 		std::vector<Guid> scriptGuids,
 		uint32_t parentIndex,
-		std::vector<Guid> submeshGuids,
 		std::vector<Guid> materialGuids)
 		: m_Guid(guid)
 		, m_ParentIndex(parentIndex)
@@ -27,16 +26,16 @@ namespace zzz::core
 		, m_Position(position)
 		, m_Rotation(rotation)
 		, m_Scale(scale)
-		, m_MeshGuid(meshGuid)
+		, m_MeshGuids(std::move(meshGuids))
 		, m_MaterialGuid(materialGuid)
 		, m_ScriptGuids(std::move(scriptGuids))
-		, m_SubmeshGuids(std::move(submeshGuids))
 		, m_MaterialGuids(std::move(materialGuids))
 	{
 	}
 
 	std::expected<void, std::string> GameObjectData::Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const
 	{
+		const Guid legacyMeshGuid = m_MeshGuids.empty() ? Guid{} : m_MeshGuids[0];
 		return serializer.Serialize(buffer, m_Guid)
 			.and_then([&]() { return serializer.Serialize(buffer, m_ParentIndex); })
 			.and_then([&]() { return serializer.Serialize(buffer, m_Name); })
@@ -45,7 +44,7 @@ namespace zzz::core
 			.and_then([&]() { return serializer.Serialize(buffer, m_Position); })
 			.and_then([&]() { return serializer.Serialize(buffer, m_Rotation); })
 			.and_then([&]() { return serializer.Serialize(buffer, m_Scale); })
-			.and_then([&]() { return serializer.Serialize(buffer, m_MeshGuid); })
+			.and_then([&]() { return serializer.Serialize(buffer, legacyMeshGuid); })
 			.and_then([&]() { return serializer.Serialize(buffer, m_MaterialGuid); })
 			.and_then([&]() -> std::expected<void, std::string> {
 				const uint32_t scriptsCount = static_cast<uint32_t>(m_ScriptGuids.size());
@@ -60,11 +59,11 @@ namespace zzz::core
 				return {};
 			})
 			.and_then([&]() -> std::expected<void, std::string> {
-				const uint32_t submeshesCount = static_cast<uint32_t>(m_SubmeshGuids.size());
+				const uint32_t submeshesCount = static_cast<uint32_t>(m_MeshGuids.size());
 				auto res = serializer.Serialize(buffer, submeshesCount);
 				if (!res) return res;
 
-				for (const auto& smGuid : m_SubmeshGuids)
+				for (const auto& smGuid : m_MeshGuids)
 				{
 					res = serializer.Serialize(buffer, smGuid);
 					if (!res) return res;
@@ -89,6 +88,7 @@ namespace zzz::core
 		uint8_t entityRaw = 0;
 		uint8_t activeRaw = 1;
 		uint32_t scriptsCount = 0;
+		Guid legacyMeshGuid{};
 
 		auto res = serializer.Deserialize(buffer, offset, m_Guid)
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, m_ParentIndex); })
@@ -98,7 +98,7 @@ namespace zzz::core
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, m_Position); })
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, m_Rotation); })
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, m_Scale); })
-			.and_then([&]() { return serializer.Deserialize(buffer, offset, m_MeshGuid); })
+			.and_then([&]() { return serializer.Deserialize(buffer, offset, legacyMeshGuid); })
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, m_MaterialGuid); })
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, scriptsCount); });
 
@@ -124,10 +124,14 @@ namespace zzz::core
 		}
 
 		// Обратная совместимость (Правило 17 / 31): если буфер исчерпан (старый формат), мультимеш пустой
-		m_SubmeshGuids.clear();
+		m_MeshGuids.clear();
 		m_MaterialGuids.clear();
 		if (offset >= buffer.size())
 		{
+			if (legacyMeshGuid.IsValid())
+			{
+				m_MeshGuids.push_back(legacyMeshGuid);
+			}
 			return {};
 		}
 
@@ -135,13 +139,18 @@ namespace zzz::core
 		res = serializer.Deserialize(buffer, offset, submeshesCount);
 		if (!res) return res;
 
-		m_SubmeshGuids.reserve(submeshesCount);
+		m_MeshGuids.reserve(submeshesCount);
 		for (uint32_t i = 0; i < submeshesCount; ++i)
 		{
 			Guid smGuid;
 			res = serializer.Deserialize(buffer, offset, smGuid);
 			if (!res) return res;
-			m_SubmeshGuids.push_back(smGuid);
+			m_MeshGuids.push_back(smGuid);
+		}
+
+		if (m_MeshGuids.empty() && legacyMeshGuid.IsValid())
+		{
+			m_MeshGuids.push_back(legacyMeshGuid);
 		}
 
 		uint32_t materialsCount = 0;
@@ -172,10 +181,10 @@ namespace zzz::core
 			m_Scale.x, m_Scale.y, m_Scale.z);
 		if (HasMesh())
 		{
-			DOut(Assets, "{}meshGuid: {}, submeshes({}):", nestedIndentation, m_MeshGuid.ToString(), m_SubmeshGuids.size());
-			for (size_t i = 0; i < m_SubmeshGuids.size(); ++i)
+			DOut(Assets, "{}meshGuids({}):", nestedIndentation, m_MeshGuids.size());
+			for (size_t i = 0; i < m_MeshGuids.size(); ++i)
 			{
-				DOut(Assets, "{}  submeshGuid #{}: {}", nestedIndentation, i, m_SubmeshGuids[i].ToString());
+				DOut(Assets, "{}  meshGuid #{}: {}", nestedIndentation, i, m_MeshGuids[i].ToString());
 			}
 		}
 		if (HasMaterial())

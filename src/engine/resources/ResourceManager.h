@@ -209,14 +209,14 @@ namespace zzz::engine
 			}, std::move(ownerToken));
 		}
 
-		// --- Специализированная загрузка Mesh и MultiMesh ---
+		// --- Специализированная асинхронная загрузка Mesh ---
 		void LoadMeshAsync(
 			const ::zzz::core::Guid& meshGuid,
 			std::function<void(std::expected<::zzz::core::Guid, std::string>)> onCompleted,
 			OwnerToken ownerToken = {});
 
-		void LoadMultiMeshAsync(
-			std::span<const ::zzz::core::Guid> submeshGuids,
+		void LoadMeshAsync(
+			std::span<const ::zzz::core::Guid> meshGuids,
 			std::function<void(std::expected<::zzz::core::Guid, std::string>)> onCompleted,
 			OwnerToken ownerToken = {});
 

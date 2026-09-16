@@ -26,8 +26,8 @@ static GameObjectData CreateDummyObject(
 		pos,
 		rot,
 		scale,
-		Guid{},
-		Guid{},
+		{},
+		{},
 		{},
 		parentIndex
 	);
