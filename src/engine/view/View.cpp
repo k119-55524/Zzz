@@ -95,7 +95,6 @@ void View::Initialize(const ViewConfigData& viewData, ViewPlatformData* platform
 	for (const auto& scriptGuid : viewData.GetUiScriptGuids())
 	{
 		auto script = scriptFactory->CreateViewScript(scriptGuid);
-		ensure(script != nullptr, "Не удалось создать экземпляр ViewScript с GUID: " + scriptGuid.ToString());
 		script->Init(&m_EventBus);
 		m_Scripts.push_back(std::move(script));
 	}

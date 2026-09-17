@@ -1,5 +1,6 @@
 #pragma once
 
+#include <span>
 #include <string>
 #include <vector>
 #include <memory>
@@ -19,6 +20,16 @@ namespace zzz::core
 namespace zzz::engine
 {
 	class ResourceManager;
+
+	/**
+	 * @struct RenderPair
+	 * @brief Пара привязки геометрии и материала для отрисовки.
+	 */
+	struct RenderPair
+	{
+		core::Guid meshGuid;
+		core::Guid materialGuid;
+	};
 }
 
 using namespace zzz::core;
@@ -124,9 +135,27 @@ namespace zzz::engine
 		}
 
 
-		// --- Меш и геометрия ---
-		[[nodiscard]] const Guid& GetMeshGuid() const noexcept { return m_MeshGuid; }
-		[[nodiscard]] bool HasMesh() const noexcept { return m_MeshGuid.IsValid(); }
+		// --- Меши и материалы (пары рендера) ---
+		[[nodiscard]] std::span<const RenderPair> GetRenderPairs() const noexcept { return m_RenderPairs; }
+		[[nodiscard]] bool HasRenderPairs() const noexcept { return !m_RenderPairs.empty(); }
+		[[nodiscard]] size_t GetRenderPairCount() const noexcept { return m_RenderPairs.size(); }
+
+		[[nodiscard]] const Guid& GetMeshGuid(size_t index = 0) const noexcept
+		{
+			return index < m_RenderPairs.size() ? m_RenderPairs[index].meshGuid : s_EmptyGuid;
+		}
+		[[nodiscard]] const Guid& GetMaterialGuid(size_t index = 0) const noexcept
+		{
+			return index < m_RenderPairs.size() ? m_RenderPairs[index].materialGuid : s_EmptyGuid;
+		}
+		[[nodiscard]] bool HasMesh() const noexcept
+		{
+			return !m_RenderPairs.empty() && m_RenderPairs[0].meshGuid.IsValid();
+		}
+		[[nodiscard]] bool HasMaterial() const noexcept
+		{
+			return !m_RenderPairs.empty() && m_RenderPairs[0].materialGuid.IsValid();
+		}
 
 		[[nodiscard]] const std::vector<std::shared_ptr<Script>>& GetScripts() const noexcept { return m_Scripts; }
 #pragma endregion
@@ -140,7 +169,8 @@ namespace zzz::engine
 		NodeStorage* m_NodeStorage;
 		NodeHandle m_NodeHandle;
 
-		Guid m_MeshGuid;
+		std::vector<RenderPair> m_RenderPairs;
 		std::vector<std::shared_ptr<Script>> m_Scripts;
+		static inline const Guid s_EmptyGuid{};
 	};
 }

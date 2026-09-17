@@ -220,6 +220,12 @@ namespace zzz::engine
 			std::function<void(std::expected<::zzz::core::Guid, std::string>)> onCompleted,
 			OwnerToken ownerToken = {});
 
+		// --- Специализированная асинхронная загрузка Material ---
+		void LoadMaterialAsync(
+			const ::zzz::core::Guid& materialGuid,
+			std::function<void(std::expected<::zzz::core::Guid, std::string>)> onCompleted,
+			OwnerToken ownerToken = {});
+
 		// --- Синхронизация и барьеры загрузки ---
 		void Flush();
 

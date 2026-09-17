@@ -1,5 +1,4 @@
 #include "ObjImporter.h"
-#include <fstream>
 #include <sstream>
 #include <vector>
 #include <unordered_map>
@@ -80,11 +79,10 @@ namespace zzz::builder
 
 	ImportResult ObjImporter::Import(const ImportContext& ctx)
 	{
-		std::ifstream file(ctx.sourceFilePath);
-		if (!file.is_open())
-		{
-			return { false, "Не удалось открыть файл .obj: " + ctx.sourceFilePath.string(), core::eResourceType::Mesh, {} };
-		}
+		const std::string source(
+			reinterpret_cast<const char*>(ctx.sourceData.data()),
+			ctx.sourceData.size());
+		std::istringstream file(source);
 
 		std::vector<math::Vec3f> rawPositions;
 		std::vector<math::Vec2f> rawTexCoords;
@@ -175,7 +173,7 @@ namespace zzz::builder
 
 							if (uniqueVertices.size() >= 65535)
 							{
-								return { false, "Меш превышает 65535 вершин для UInt16 индексов: " + ctx.sourceFilePath.string(), core::eResourceType::Mesh, {} };
+								return std::unexpected("Меш превышает 65535 вершин для UInt16 индексов: " + ctx.sourceFilePath.string());
 							}
 
 							zU16 newIndex = static_cast<zU16>(uniqueVertices.size());
@@ -190,7 +188,7 @@ namespace zzz::builder
 
 		if (uniqueVertices.empty() || indices.empty())
 		{
-			return { false, "Файл .obj не содержит валидной геометрии: " + ctx.sourceFilePath.string(), core::eResourceType::Mesh, {} };
+			return std::unexpected("Файл .obj не содержит валидной геометрии: " + ctx.sourceFilePath.string());
 		}
 
 		// Формируем байтовые буферы
@@ -214,9 +212,9 @@ namespace zzz::builder
 		auto serRes = serializer.Serialize(payload, meshData);
 		if (!serRes)
 		{
-			return { false, "Ошибка сериализации MeshData: " + serRes.error(), core::eResourceType::Mesh, {} };
+			return std::unexpected("Ошибка сериализации MeshData: " + serRes.error());
 		}
 
-		return { true, "", core::eResourceType::Mesh, std::move(payload) };
+		return ImportedAssetData{ .binaryPayload = std::move(payload) };
 	}
 }

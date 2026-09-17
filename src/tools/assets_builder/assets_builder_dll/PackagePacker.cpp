@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstring>
 #include <chrono>
+#include <expected>
 #include <vector>
 #include <unordered_set>
 #include <json.hpp>
@@ -34,7 +35,7 @@
 #include <core/constants/PackageConstants.h>
 #include <core/enums/eLayerType.h>
 #include <core/IO/package/LayerData.h>
-#include "AssetImporterRegistry.h"
+#include "AssetImportPipeline.h"
 #include "ArchiveWriter.h"
 #include "ProjectIdentityValidator.h"
 
@@ -361,42 +362,105 @@ namespace zzz::builder
 		Guid materialGuid{};
 		std::vector<Guid> materialGuids;
 
-		if (objJson.contains("render") && objJson["render"].is_object())
+		if (objJson.contains("render"))
 		{
 			const auto& render = objJson["render"];
-
-			if (render.contains("mesh") && render["mesh"].is_string())
+			if (render.is_array())
 			{
-				if (auto parsed = Guid::Parse(render["mesh"].get<std::string>()))
-					meshGuids.push_back(*parsed);
-			}
-
-			if (render.contains("submeshes") && render["submeshes"].is_array())
-			{
-				for (const auto& smElem : render["submeshes"])
+				for (const auto& partElem : render)
 				{
-					if (smElem.is_string())
+					if (partElem.is_object())
 					{
-						if (auto parsed = Guid::Parse(smElem.get<std::string>()))
-							meshGuids.push_back(*parsed);
+						Guid smMesh{};
+						Guid smMat{};
+						if (partElem.contains("mesh") && partElem["mesh"].is_string())
+						{
+							if (auto parsed = Guid::Parse(partElem["mesh"].get<std::string>()))
+								smMesh = *parsed;
+						}
+						if (partElem.contains("material") && partElem["material"].is_string())
+						{
+							if (auto parsed = Guid::Parse(partElem["material"].get<std::string>()))
+								smMat = *parsed;
+						}
+						if (smMesh.IsValid() && smMat.IsValid())
+						{
+							meshGuids.push_back(smMesh);
+							materialGuids.push_back(smMat);
+							if (materialGuid.IsEmpty())
+							{
+								materialGuid = smMat;
+							}
+						}
 					}
 				}
 			}
-
-			if (render.contains("material") && render["material"].is_string())
+			else if (render.is_object())
 			{
-				if (auto parsed = Guid::Parse(render["material"].get<std::string>()))
-					materialGuid = *parsed;
-			}
-
-			if (render.contains("materials") && render["materials"].is_array())
-			{
-				for (const auto& matElem : render["materials"])
+				if (render.contains("parts") && render["parts"].is_array())
 				{
-					if (matElem.is_string())
+					for (const auto& partElem : render["parts"])
 					{
-						if (auto parsed = Guid::Parse(matElem.get<std::string>()))
-							materialGuids.push_back(*parsed);
+						if (partElem.is_object())
+						{
+							Guid smMesh{};
+							Guid smMat{};
+							if (partElem.contains("mesh") && partElem["mesh"].is_string())
+							{
+								if (auto parsed = Guid::Parse(partElem["mesh"].get<std::string>()))
+									smMesh = *parsed;
+							}
+							if (partElem.contains("material") && partElem["material"].is_string())
+							{
+								if (auto parsed = Guid::Parse(partElem["material"].get<std::string>()))
+									smMat = *parsed;
+							}
+							if (smMesh.IsValid() && smMat.IsValid())
+							{
+								meshGuids.push_back(smMesh);
+								materialGuids.push_back(smMat);
+								if (materialGuid.IsEmpty())
+								{
+									materialGuid = smMat;
+								}
+							}
+						}
+					}
+				}
+
+				if (render.contains("mesh") && render["mesh"].is_string())
+				{
+					if (auto parsed = Guid::Parse(render["mesh"].get<std::string>()))
+						meshGuids.push_back(*parsed);
+				}
+
+				if (render.contains("submeshes") && render["submeshes"].is_array())
+				{
+					for (const auto& smElem : render["submeshes"])
+					{
+						if (smElem.is_string())
+						{
+							if (auto parsed = Guid::Parse(smElem.get<std::string>()))
+								meshGuids.push_back(*parsed);
+						}
+					}
+				}
+
+				if (render.contains("material") && render["material"].is_string())
+				{
+					if (auto parsed = Guid::Parse(render["material"].get<std::string>()))
+						materialGuid = *parsed;
+				}
+
+				if (render.contains("materials") && render["materials"].is_array())
+				{
+					for (const auto& matElem : render["materials"])
+					{
+						if (matElem.is_string())
+						{
+							if (auto parsed = Guid::Parse(matElem.get<std::string>()))
+								materialGuids.push_back(*parsed);
+						}
 					}
 				}
 			}
@@ -522,7 +586,7 @@ namespace zzz::builder
 		return params;
 	}
 
-	static std::vector<std::byte> SerializeAssetToBinary(const PendingAsset& item, const fs::path& projectDir, zzz::core::eTargetPlatform targetPlatform, const std::string& platformConfigFile)
+	static std::expected<std::vector<std::byte>, std::string> SerializeAssetToBinary(const PendingAsset& item, const fs::path& projectDir, zzz::core::eTargetPlatform targetPlatform, const std::string& platformConfigFile)
 	{
 		Serializer serializer;
 		std::vector<std::byte> result;
@@ -531,19 +595,12 @@ namespace zzz::builder
 		{
 			std::ifstream inFile(item.filePath);
 			if (!inFile.is_open())
-				return {};
+				return std::unexpected("Не удалось открыть файл '" + item.filePath.string() + "'.");
 
 			json root = json::parse(inFile, nullptr, false);
 			if (root.is_discarded())
 			{
-				// Если это невалидный JSON, читаем как обычный бинарник
-				std::ifstream rawFile(item.filePath, std::ios::binary | std::ios::ate);
-				if (!rawFile.is_open()) return {};
-				uint64_t size = static_cast<uint64_t>(rawFile.tellg());
-				rawFile.seekg(0, std::ios::beg);
-				result.resize(size);
-				rawFile.read(reinterpret_cast<char*>(result.data()), size);
-				return result;
+				return std::unexpected("Некорректный JSON в файле '" + item.filePath.string() + "'.");
 			}
 
 			auto assetType = static_cast<zzz::core::ePackage>(item.type);
@@ -1050,22 +1107,25 @@ namespace zzz::builder
 			else
 			{
 				std::ifstream rawFile(item.filePath, std::ios::binary | std::ios::ate);
-				if (!rawFile.is_open()) return {};
-				uint64_t size = static_cast<uint64_t>(rawFile.tellg());
+				if (!rawFile.is_open())
+					return std::unexpected("Не удалось открыть бинарный ресурс '" + item.filePath.string() + "'.");
+				const std::streampos end = rawFile.tellg();
+				if (end < 0)
+					return std::unexpected("Не удалось определить размер бинарного ресурса '" + item.filePath.string() + "'.");
+				uint64_t size = static_cast<uint64_t>(end);
 				rawFile.seekg(0, std::ios::beg);
 				result.resize(size);
-				rawFile.read(reinterpret_cast<char*>(result.data()), size);
+				if (!result.empty() && !rawFile.read(reinterpret_cast<char*>(result.data()), static_cast<std::streamsize>(size)))
+					return std::unexpected("Не удалось полностью прочитать бинарный ресурс '" + item.filePath.string() + "'.");
 			}
+		}
+		catch (const std::exception& ex)
+		{
+			return std::unexpected("Исключение при обработке '" + item.filePath.string() + "': " + ex.what());
 		}
 		catch (...)
 		{
-			// При исключении считываем исходные бинарные байты
-			std::ifstream rawFile(item.filePath, std::ios::binary | std::ios::ate);
-			if (!rawFile.is_open()) return {};
-			uint64_t size = static_cast<uint64_t>(rawFile.tellg());
-			rawFile.seekg(0, std::ios::beg);
-			result.resize(size);
-			rawFile.read(reinterpret_cast<char*>(result.data()), size);
+			return std::unexpected("Неизвестное исключение при обработке '" + item.filePath.string() + "'.");
 		}
 
 		return result;
@@ -1223,23 +1283,60 @@ namespace zzz::builder
 					continue;
 
 				fs::path path = entry.path();
+
+				// Зарегистрированные ресурсы data.dat проходят только через единый import pipeline.
+				auto importedRes = AssetImportPipeline::TryImport(path, targetPlatform);
+				if (!importedRes)
+				{
+					DOutError("PackProject: Сборка ресурса '{}' остановлена: {}", path.string(), importedRes.error());
+					return false;
+				}
+				if (importedRes->has_value())
+				{
+					auto& imported = **importedRes;
+					pendingDataAssets.push_back({
+						std::move(imported.name),
+						imported.guid,
+						imported.resourceType,
+						std::move(imported.payload)
+					});
+					continue;
+				}
+
+				// Остальные файлы не являются входом нативного упаковщика.
+				if (ext != ".zs" && ext != ".zv")
+					continue;
+
 				std::string assetName = path.stem().string();
 				fs::path metaPath = path.string() + ".meta";
 				Guid assetGuid{};
 
-				if (fs::exists(metaPath))
+				if (!fs::exists(metaPath) || !fs::is_regular_file(metaPath))
 				{
-					std::ifstream metaFile(metaPath);
-					json metaJson = json::parse(metaFile, nullptr, false);
-					if (!metaJson.is_discarded() && metaJson.contains("guid") && metaJson["guid"].is_string())
-					{
-						if (auto parsed = Guid::Parse(metaJson["guid"].get<std::string>()))
-							assetGuid = *parsed;
-					}
+					DOutError("PackProject: Для ресурса '{}' отсутствует обязательный мета-файл '{}'.", path.string(), metaPath.string());
+					return false;
 				}
 
-				if (assetGuid.IsEmpty())
-					continue;
+				std::ifstream metaFile(metaPath);
+				if (!metaFile.is_open())
+				{
+					DOutError("PackProject: Не удалось открыть мета-файл '{}'.", metaPath.string());
+					return false;
+				}
+				json metaJson = json::parse(metaFile, nullptr, false);
+				if (metaJson.is_discarded() || !metaJson.is_object() ||
+					!metaJson.contains("guid") || !metaJson["guid"].is_string())
+				{
+					DOutError("PackProject: Мета-файл '{}' повреждён или не содержит строковое поле 'guid'.", metaPath.string());
+					return false;
+				}
+				auto parsedGuid = Guid::Parse(metaJson["guid"].get<std::string>());
+				if (!parsedGuid || !parsedGuid->IsValid())
+				{
+					DOutError("PackProject: Мета-файл '{}' содержит невалидный GUID.", metaPath.string());
+					return false;
+				}
+				assetGuid = *parsedGuid;
 
 				uint32_t typeVal = 0;
 
@@ -1275,22 +1372,6 @@ namespace zzz::builder
 						typeVal = static_cast<uint32_t>(zzz::core::ePackage::ChildView);
 						pendingAssets.push_back({ assetName, assetGuid, typeVal, path });
 					}
-				}
-				else if (auto importer = AssetImporterRegistry::Instance().GetImporter(ext))
-				{
-					ImportContext ctx{
-						.sourceFilePath = path,
-						.assetGuid = assetGuid,
-						.assetName = assetName,
-						.targetPlatform = targetPlatform
-					};
-					ImportResult importRes = importer->Import(ctx);
-					if (!importRes.success)
-					{
-						DOutError("PackProject: Ошибка импорта '{}': {}", path.string(), importRes.errorMessage);
-						return false;
-					}
-					pendingDataAssets.push_back({ ctx.assetName, ctx.assetGuid, importRes.resourceType, std::move(importRes.binaryPayload) });
 				}
 			}
 		}
@@ -1335,29 +1416,49 @@ namespace zzz::builder
 
 		for (const auto& item : pendingAssets)
 		{
-			std::vector<std::byte> payload = SerializeAssetToBinary(item, sourceDir, targetPlatform, platformConfigFile);
+			auto payloadRes = SerializeAssetToBinary(item, sourceDir, targetPlatform, platformConfigFile);
+			if (!payloadRes)
+			{
+				DOutError("PackProject: Ошибка обработки '{}': {}", item.filePath.string(), payloadRes.error());
+				return false;
+			}
+			if (payloadRes->empty())
+			{
+				DOutError("PackProject: Обработчик '{}' вернул пустой payload.", item.filePath.string());
+				return false;
+			}
 			packageItems.push_back({
 				item.name,
 				item.guid,
 				item.type,
-				std::move(payload)
+				std::move(*payloadRes)
 			});
 		}
 
-		if (!WriteBinaryArchive(
-			outPath,
+		// Атомарная публикация: оба архива сначала полностью пишутся во временные файлы,
+		// и только при успехе обоих выполняется замена рабочих package.dat/data.dat.
+		fs::path packageTmpPath = outPath;
+		packageTmpPath += ".tmp";
+
+		auto packageWriteRes = WriteBinaryArchive(
+			packageTmpPath,
 			c_GamePackageHeader,
 			Version{ c_GamePackageFileMajorVersion, c_GamePackageFileMinorVersion, c_GamePackageFilePatchVersion },
 			packageItems,
 			serializer,
-			buildTimestamp))
+			buildTimestamp);
+		if (!packageWriteRes)
 		{
-			DOutError("PackProject: Не удалось записать пакет: {}", outPath.string());
+			DOutError("PackProject: Не удалось записать package.dat.tmp: {}", packageWriteRes.error());
+			std::error_code cleanupEc;
+			fs::remove(packageTmpPath, cleanupEc);
 			return false;
 		}
 
 		// 4. Формирование бинарного архива игровых данных data.dat в destinationDir/assets/data/
 		fs::path dataOutPath = destinationDir / zzz::core::c_DataPackageRelativePath;
+		fs::path dataTmpPath = dataOutPath;
+		dataTmpPath += ".tmp";
 		std::vector<ArchiveItem> dataItems;
 		dataItems.reserve(pendingDataAssets.size());
 
@@ -1371,15 +1472,45 @@ namespace zzz::builder
 			});
 		}
 
-		if (!WriteBinaryArchive(
-			dataOutPath,
+		auto dataWriteRes = WriteBinaryArchive(
+			dataTmpPath,
 			c_DataPackageHeader,
 			Version{ c_DataPackageFileMajorVersion, c_DataPackageFileMinorVersion, c_DataPackageFilePatchVersion },
 			dataItems,
 			serializer,
-			buildTimestamp))
+			buildTimestamp);
+		if (!dataWriteRes)
 		{
-			DOutError("PackProject: Не удалось создать архив данных: {}", dataOutPath.string());
+			DOutError("PackProject: Не удалось создать data.dat.tmp: {}", dataWriteRes.error());
+			std::error_code cleanupEc;
+			fs::remove(packageTmpPath, cleanupEc);
+			fs::remove(dataTmpPath, cleanupEc);
+			return false;
+		}
+
+		// Оба архива успешно сформированы во временных файлах - публикуем.
+		// Примечание: между двумя rename нет кросс-файловой транзакции (её не даёт ни NTFS, ни POSIX
+		// без отдельного журнала), поэтому крайне маловероятный сбой второго rename оставит
+		// package.dat уже новым, а data.dat - ещё старым. Частично записанного/битого архива
+		// в любом случае больше не возникает: до этой точки либо оба .tmp полностью готовы, либо
+		// ни один рабочий файл не тронут.
+		std::error_code renameEc;
+		fs::rename(packageTmpPath, outPath, renameEc);
+		if (renameEc)
+		{
+			DOutError("PackProject: Не удалось опубликовать package.dat: {}", renameEc.message());
+			std::error_code cleanupEc;
+			fs::remove(packageTmpPath, cleanupEc);
+			fs::remove(dataTmpPath, cleanupEc);
+			return false;
+		}
+
+		fs::rename(dataTmpPath, dataOutPath, renameEc);
+		if (renameEc)
+		{
+			DOutError("PackProject: Не удалось опубликовать data.dat: {} (package.dat уже обновлён - пара архивов рассинхронизирована, требуется повторная сборка)", renameEc.message());
+			std::error_code cleanupEc;
+			fs::remove(dataTmpPath, cleanupEc);
 			return false;
 		}
 

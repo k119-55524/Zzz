@@ -1,5 +1,6 @@
 #include "ProjectIdentityValidator.h"
 #include "AssetExtensions.h"
+#include "AssetImporterRegistry.h"
 #include "core/utils/Guid.h"
 #include "json.hpp"
 
@@ -7,6 +8,7 @@
 #include <cstring>
 #include <format>
 #include <fstream>
+#include <optional>
 #include <unordered_map>
 #include <vector>
 
@@ -38,6 +40,19 @@ namespace zzz::builder
 
 	namespace
 	{
+		std::optional<GuidOwnerKind> ToGuidOwnerKind(eResourceType type)
+		{
+			switch (type)
+			{
+			case eResourceType::Mesh: return GuidOwnerKind::Mesh;
+			case eResourceType::Material: return GuidOwnerKind::Material;
+			case eResourceType::Shader: return GuidOwnerKind::Shader;
+			case eResourceType::Texture2D: return GuidOwnerKind::Texture;
+			case eResourceType::Prefab: return GuidOwnerKind::Prefab;
+			default: return std::nullopt;
+			}
+		}
+
 		struct GuidOwnerInfo
 		{
 			Guid guid;
@@ -321,36 +336,22 @@ namespace zzz::builder
 				if (objElem.contains("render"))
 				{
 					const auto& render = objElem["render"];
-					if (!render.is_object())
+					if (render.is_array())
 					{
-						outError = std::format("{}: поле 'render' должно быть объектом JSON.", ctx);
-						return false;
-					}
-
-					if (!ValidateGuidStringField(registry, render, "mesh", GuidOwnerKind::Mesh, ctx + " (render)", outError))
-						return false;
-					if (!ValidateGuidArrayField(registry, render, "submeshes", GuidOwnerKind::Mesh, ctx + " (render)", outError))
-						return false;
-					if (!ValidateGuidStringField(registry, render, "material", GuidOwnerKind::Material, ctx + " (render)", outError))
-						return false;
-					if (!ValidateGuidArrayField(registry, render, "materials", GuidOwnerKind::Material, ctx + " (render)", outError))
-						return false;
-
-					if (render.contains("parts"))
-					{
-						const auto& parts = render["parts"];
-						if (!parts.is_array())
+						for (size_t pIdx = 0; pIdx < render.size(); ++pIdx)
 						{
-							outError = std::format("{}: поле 'render.parts' должно быть массивом.", ctx);
-							return false;
-						}
-						for (size_t pIdx = 0; pIdx < parts.size(); ++pIdx)
-						{
-							const auto& partElem = parts[pIdx];
-							std::string partCtx = std::format("{} (render.parts[{}])", ctx, pIdx);
+							const auto& partElem = render[pIdx];
+							std::string partCtx = std::format("{} (render[{}])", ctx, pIdx);
 							if (!partElem.is_object())
 							{
-								outError = std::format("{}: элемент render.parts[{}] не является объектом JSON.", ctx, pIdx);
+								outError = std::format("{}: элемент render[{}] не является объектом JSON.", ctx, pIdx);
+								return false;
+							}
+							if (!partElem.contains("mesh") || !partElem.contains("material"))
+							{
+								outError = std::format(
+									"{}: элемент render[{}] должен содержать обязательные поля 'mesh' и 'material'.",
+									ctx, pIdx);
 								return false;
 							}
 							if (!ValidateGuidStringField(registry, partElem, "mesh", GuidOwnerKind::Mesh, partCtx, outError))
@@ -358,6 +359,46 @@ namespace zzz::builder
 							if (!ValidateGuidStringField(registry, partElem, "material", GuidOwnerKind::Material, partCtx, outError))
 								return false;
 						}
+					}
+					else if (render.is_object())
+					{
+						if (!ValidateGuidStringField(registry, render, "mesh", GuidOwnerKind::Mesh, ctx + " (render)", outError))
+							return false;
+						if (!ValidateGuidArrayField(registry, render, "submeshes", GuidOwnerKind::Mesh, ctx + " (render)", outError))
+							return false;
+						if (!ValidateGuidStringField(registry, render, "material", GuidOwnerKind::Material, ctx + " (render)", outError))
+							return false;
+						if (!ValidateGuidArrayField(registry, render, "materials", GuidOwnerKind::Material, ctx + " (render)", outError))
+							return false;
+
+						if (render.contains("parts"))
+						{
+							const auto& parts = render["parts"];
+							if (!parts.is_array())
+							{
+								outError = std::format("{}: поле 'render.parts' должно быть массивом.", ctx);
+								return false;
+							}
+							for (size_t pIdx = 0; pIdx < parts.size(); ++pIdx)
+							{
+								const auto& partElem = parts[pIdx];
+								std::string partCtx = std::format("{} (render.parts[{}])", ctx, pIdx);
+								if (!partElem.is_object())
+								{
+									outError = std::format("{}: элемент render.parts[{}] не является объектом JSON.", ctx, pIdx);
+									return false;
+								}
+								if (!ValidateGuidStringField(registry, partElem, "mesh", GuidOwnerKind::Mesh, partCtx, outError))
+									return false;
+								if (!ValidateGuidStringField(registry, partElem, "material", GuidOwnerKind::Material, partCtx, outError))
+									return false;
+							}
+						}
+					}
+					else
+					{
+						outError = std::format("{}: поле 'render' должно быть массивом или объектом JSON.", ctx);
+						return false;
 					}
 				}
 
@@ -597,30 +638,13 @@ namespace zzz::builder
 						kind = GuidOwnerKind::View;
 						isKnownAsset = true;
 					}
-					else if (ext == c_ExtMeshObj)
+					else if (auto importer = AssetImporterRegistry::Instance().GetImporter(ext))
 					{
-						kind = GuidOwnerKind::Mesh;
-						isKnownAsset = true;
-					}
-					else if (ext == c_ExtMaterial)
-					{
-						kind = GuidOwnerKind::Material;
-						isKnownAsset = true;
-					}
-					else if (ext == c_ExtShaderHlsl)
-					{
-						kind = GuidOwnerKind::Shader;
-						isKnownAsset = true;
-					}
-					else if (ext == c_ExtTexturePng)
-					{
-						kind = GuidOwnerKind::Texture;
-						isKnownAsset = true;
-					}
-					else if (ext == c_ExtPrefab)
-					{
-						kind = GuidOwnerKind::Prefab;
-						isKnownAsset = true;
+						if (auto importerKind = ToGuidOwnerKind(importer->GetResourceType()))
+						{
+							kind = *importerKind;
+							isKnownAsset = true;
+						}
 					}
 					else if (ext == ".h" || ext == ".hpp")
 					{

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <expected>
 #include <vector>
 #include <cstddef>
 #include <filesystem>
@@ -20,7 +21,7 @@ namespace zzz::builder
 		std::vector<std::byte> payload;
 	};
 
-	bool WriteBinaryArchive(
+	[[nodiscard]] std::expected<void, std::string> WriteBinaryArchive(
 		const std::filesystem::path& outPath,
 		const zzz::core::DatFileHeader::Magic& magic,
 		const zzz::core::Version& version,

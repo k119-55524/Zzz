@@ -199,7 +199,7 @@
   - Хранит геометрию на CPU в том же виде, что и источник `MeshData` (без домысливания несуществующих полей):
     - `m_VertexData: std::vector<std::byte>`, `m_VertexCount`, `m_VertexStride` — как в `MeshData`; интерпретация как `Vertex3D` возможна только при `vertexStride == sizeof(Vertex3D)` (проверяется `ensure`/`THROW_RUNTIME` при несовпадении, а не молчаливым reinterpret).
     - `m_IndexData: std::vector<std::byte>`, `m_IndexCount`, `m_IndexFormat: eIndexFormat` — индексы хранятся как есть, без безусловного расширения `UInt16` до `uint32_t`; конкретный тип индексного GPU-буфера (16 или 32 бита) выбирается в этапе 19 по `m_IndexFormat`.
-  - Bounding box и сабмеши в `Mesh` не добавляются: bounding box — это этап 34 (AABB/Frustum Culling), а понятия "сабмеш" нет ни в `MeshData`, ни где-либо ещё в проекте — добавлять `MeshSubsetInfo` без формата-источника и потребителя нарушает правило 16 (YAGNI).
+  - Bounding box и сабмеши в `Mesh` не добавляются: bounding box — это этап 35 (AABB/Frustum Culling), а понятия "сабмеш" нет ни в `MeshData`, ни где-либо ещё в проекте — добавлять `MeshSubsetInfo` без формата-источника и потребителя нарушает правило 16 (YAGNI).
   - Предоставляет константные геттеры к этим данным для последующей отправки на GPU в этапе 19.
 - В `src/engine/resources/MeshLoader.h` и `src/engine/resources/MeshLoader.cpp`:
   - Наследует `IResourceLoader`.
@@ -277,6 +277,6 @@
 
 - Загрузка в GPU (создание `GPUBuffer`, выделение staging-буферов, запись команд копирования, `VkFence`/`SignalFence`, барьеры состояний, очередь отложенного освобождения staging-буферов) — **этап 19**.
 - Текстуры (`Texture2D`), материалы (`Material`), шейдеры (`Shader`) — **этап 20**.
-- Барьер готовности сцены и запуск скриптов — **этапы 20–21**.
-- Кадровые команды рендера и отрисовка (`DrawIndexed`) — **этап 22**.
+- Барьер готовности сцены и запуск скриптов — **этапы 20, 22**.
+- Кадровые команды рендера и отрисовка (`DrawIndexed`) — **этап 23**.
 - Модульные тесты в `src/qa/tests/` — не создаются по решению пользователя.

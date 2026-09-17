@@ -65,7 +65,6 @@ namespace zzz::engine
 		for (const auto& scriptGuid : sceneDataRes->GetSceneScriptGuids())
 		{
 			auto script = scriptFactory.CreateSceneScript(scriptGuid);
-			ensure(script != nullptr, "Не удалось создать экземпляр SceneScript с GUID: " + scriptGuid.ToString());
 			script->Init(&m_EventBus);
 			m_Scripts.push_back(std::move(script));
 		}
@@ -145,7 +144,7 @@ namespace zzz::engine
 					{
 						std::lock_guard lock(*errorMutex);
 						if (firstError->empty())
-							*firstError = std::format("Ошибка при наполнении слоя '{}': {}", currentLayerData.GetName(), ex.what());
+							*firstError = ex.what();
 					}
 					trigger->CountDown();
 				}

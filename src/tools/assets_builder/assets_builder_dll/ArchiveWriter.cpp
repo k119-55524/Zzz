@@ -1,5 +1,6 @@
 #include "ArchiveWriter.h"
 #include <fstream>
+#include <format>
 #include <core/io/DatFileHeader.h>
 #include <core/io/package/PackageEntry.h>
 #include <core/constants/PackageConstants.h>
@@ -7,7 +8,7 @@
 
 namespace zzz::builder
 {
-	bool WriteBinaryArchive(
+	std::expected<void, std::string> WriteBinaryArchive(
 		const std::filesystem::path& outPath,
 		const zzz::core::DatFileHeader::Magic& magic,
 		const zzz::core::Version& version,
@@ -15,11 +16,18 @@ namespace zzz::builder
 		const zzz::core::Serializer& serializer,
 		uint64_t buildTime)
 	{
-		std::filesystem::create_directories(outPath.parent_path());
+		std::error_code directoryError;
+		std::filesystem::create_directories(outPath.parent_path(), directoryError);
+		if (directoryError)
+		{
+			return std::unexpected(std::format(
+				"Не удалось создать каталог архива '{}': {}", outPath.parent_path().string(), directoryError.message()));
+		}
+
 		std::ofstream outFile(outPath, std::ios::binary);
 		if (!outFile.is_open())
 		{
-			return false;
+			return std::unexpected("Не удалось открыть архив для записи: " + outPath.string());
 		}
 
 		// Сериализатор сам сформирует заголовок и таблицу и сдвинет указатель на точный размер
@@ -37,25 +45,25 @@ namespace zzz::builder
 			auto nameRes = zzz::core::PackageEntry::NameStringType::Create(item.name);
 			if (!nameRes)
 			{
-				DOutError("ArchiveWriter: Имя ресурса '{}' превышает лимит в {} символов: {}",
-					item.name, zzz::core::c_MaxAssetNameLength, nameRes.error());
-				return false;
+				return std::unexpected(std::format(
+					"Имя ресурса '{}' превышает лимит в {} символов: {}",
+					item.name, zzz::core::c_MaxAssetNameLength, nameRes.error()));
 			}
 
 			tempEntries.emplace_back(*nameRes, item.guid, item.assetType, 0, item.payload.size());
 		}
 
 		std::vector<std::byte> headerBuffer;
-		if (!serializer.Serialize(headerBuffer, header))
+		if (auto res = serializer.Serialize(headerBuffer, header); !res)
 		{
-			return false;
+			return std::unexpected("Ошибка сериализации заголовка архива '" + outPath.string() + "': " + res.error());
 		}
 
 		for (const auto& entry : tempEntries)
 		{
-			if (!serializer.Serialize(headerBuffer, entry))
+			if (auto res = serializer.Serialize(headerBuffer, entry); !res)
 			{
-				return false;
+				return std::unexpected("Ошибка сериализации таблицы архива '" + outPath.string() + "': " + res.error());
 			}
 		}
 
@@ -70,9 +78,9 @@ namespace zzz::builder
 			auto nameRes = zzz::core::PackageEntry::NameStringType::Create(item.name);
 			if (!nameRes)
 			{
-				DOutError("ArchiveWriter: Имя ресурса '{}' превышает лимит в {} символов: {}",
-					item.name, zzz::core::c_MaxAssetNameLength, nameRes.error());
-				return false;
+				return std::unexpected(std::format(
+					"Имя ресурса '{}' превышает лимит в {} символов: {}",
+					item.name, zzz::core::c_MaxAssetNameLength, nameRes.error()));
 			}
 
 			finalEntries.emplace_back(
@@ -88,21 +96,23 @@ namespace zzz::builder
 
 		headerBuffer.clear();
 		headerBuffer.reserve(static_cast<std::size_t>(initialOffset));
-		if (!serializer.Serialize(headerBuffer, header))
+		if (auto res = serializer.Serialize(headerBuffer, header); !res)
 		{
-			return false;
+			return std::unexpected("Ошибка финальной сериализации заголовка архива '" + outPath.string() + "': " + res.error());
 		}
 
 		for (const auto& entry : finalEntries)
 		{
-			if (!serializer.Serialize(headerBuffer, entry))
+			if (auto res = serializer.Serialize(headerBuffer, entry); !res)
 			{
-				return false;
+				return std::unexpected("Ошибка финальной сериализации таблицы архива '" + outPath.string() + "': " + res.error());
 			}
 		}
 
 		// Записываем заголовок и таблицу записей в файл
 		outFile.write(reinterpret_cast<const char*>(headerBuffer.data()), headerBuffer.size());
+		if (!outFile)
+			return std::unexpected("Ошибка записи заголовка архива: " + outPath.string());
 
 		// Записываем бинарные полезные нагрузки
 		for (const auto& item : items)
@@ -110,10 +120,15 @@ namespace zzz::builder
 			if (!item.payload.empty())
 			{
 				outFile.write(reinterpret_cast<const char*>(item.payload.data()), item.payload.size());
+				if (!outFile)
+					return std::unexpected("Ошибка записи ресурса '" + item.name + "' в архив '" + outPath.string() + "'.");
 			}
 		}
 
 		outFile.close();
-		return true;
+		if (outFile.fail())
+			return std::unexpected("Ошибка завершения записи архива: " + outPath.string());
+
+		return {};
 	}
 }

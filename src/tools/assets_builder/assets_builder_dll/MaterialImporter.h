@@ -1,18 +1,18 @@
-#pragma once
+﻿#pragma once
 
 #include "IAssetImporter.h"
 
 namespace zzz::builder
 {
-	class ObjImporter final : public IAssetImporter
+	class MaterialImporter final : public IAssetImporter
 	{
 	public:
-		ObjImporter() = default;
-		~ObjImporter() override = default;
+		MaterialImporter() = default;
+		~MaterialImporter() override = default;
 
 		[[nodiscard]] core::eResourceType GetResourceType() const noexcept override
 		{
-			return core::eResourceType::Mesh;
+			return core::eResourceType::Material;
 		}
 
 		[[nodiscard]] ImportResult Import(const ImportContext& ctx) override;

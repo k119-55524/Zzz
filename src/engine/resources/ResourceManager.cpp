@@ -1,5 +1,6 @@
 #include "ResourceManager.h"
 #include "Mesh.h"
+#include "Material.h"
 #include "engine/package/PackageManager.h"
 #include "core/io/package/DataAssetsManager.h"
 #include "core/io/package/MeshData.h"
@@ -289,8 +290,18 @@ namespace zzz::engine
 			}
 			break;
 		}
+		case eResourceType::Material:
+		{
+			auto mat = std::static_pointer_cast<Material>(resource);
+			m_Materials[guid] = mat;
+			if (!mat->GetName().empty())
+			{
+				m_MaterialNames[std::string(mat->GetName())] = guid;
+			}
+			break;
+		}
 		default:
-			// Ресурсы Texture2D, Shader, Material подключаются на этапе 18
+			// Ресурсы Texture2D, Shader подключаются на этапе 18
 			break;
 		}
 	}
@@ -380,8 +391,17 @@ namespace zzz::engine
 					}
 					else
 					{
-						result = std::unexpected(std::format("Запись ресурса с GUID '{}' не найдена в хранилище", req.guid.ToString()));
-						DOutError("[ResourceManager::IoWorkerLoop] {}", result.error());
+						if (req.type == eResourceType::Material)
+						{
+							auto defaultMat = safe_make_shared<Material>(req.guid, req.name.empty() ? "DefaultMaterial" : req.name);
+							PublishResource(req.guid, defaultMat);
+							result = defaultMat;
+						}
+						else
+						{
+							result = std::unexpected(std::format("Запись ресурса с GUID '{}' не найдена в хранилище", req.guid.ToString()));
+							DOutError("[ResourceManager::IoWorkerLoop] {}", result.error());
+						}
 					}
 				}
 
@@ -752,5 +772,25 @@ namespace zzz::engine
 				trigger->CountDown();
 			}), ownerToken);
 		}
+	}
+
+	void ResourceManager::LoadMaterialAsync(
+		const Guid& materialGuid,
+		std::function<void(std::expected<Guid, std::string>)> onCompleted,
+		OwnerToken ownerToken)
+	{
+		LoadAsync<Material>(materialGuid, ResourceCallback<Material>([onCompleted = std::move(onCompleted), materialGuid, ownerToken](ResourceResult<Material> res) {
+			if (!IsOwnerAlive(ownerToken)) return;
+			if (!onCompleted) return;
+
+			if (!res)
+			{
+				onCompleted(std::unexpected(res.error()));
+			}
+			else
+			{
+				onCompleted(materialGuid);
+			}
+		}), ownerToken);
 	}
 }

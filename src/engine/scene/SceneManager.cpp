@@ -96,7 +96,7 @@ namespace zzz::engine
 							{
 								onComplete(std::unexpected(err));
 							}
-							THROW_RUNTIME("Сбой инициализации слоёв сцены: {}", err);
+							throw std::runtime_error(err);
 						});
 						return;
 					}

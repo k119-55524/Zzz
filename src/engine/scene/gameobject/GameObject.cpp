@@ -1,8 +1,9 @@
 
+#include <mutex>
 #include "core/utils/Ensure.h"
-#include "core/io/package/MeshData.h"
 #include "core/io/package/GameObjectData.h"
 #include "core/userscripts/ScriptFactory.h"
+#include "core/templates/CountdownTrigger.h"
 #include "engine/resources/ResourceManager.h"
 #include "engine/scene/storage/NodeStorage.h"
 #include "core/userscripts/base_script/Script.h"
@@ -39,33 +40,92 @@ namespace zzz::engine
 		// 1. Инстанцирование и наполнение скриптами
 		for (const auto& sGuid : data.GetScriptGuids())
 		{
-			auto script = scriptFactory.CreateScript(sGuid, this);
-			if (script != nullptr)
-				AddScript(std::move(script));
+			AddScript(scriptFactory.CreateScript(sGuid, this));
 		}
 
-		// 2. Асинхронная загрузка меша
-		if (!data.HasMesh())
+		// 2. Формирование пар рендера (меш + материал)
+		m_RenderPairs.clear();
+		const auto meshGuids = data.GetMeshGuids();
+		const auto& matGuids = data.GetMaterialGuids();
+		const size_t pairCount = std::max(meshGuids.size(), matGuids.size());
+
+		for (size_t i = 0; i < pairCount; ++i)
+		{
+			Guid mg = (i < meshGuids.size()) ? meshGuids[i] : Guid{};
+			Guid matg = (i < matGuids.size()) ? matGuids[i] : (data.GetMaterialGuid().IsValid() ? data.GetMaterialGuid() : Guid{});
+			if (mg.IsValid() || matg.IsValid())
+			{
+				m_RenderPairs.push_back(RenderPair{ mg, matg });
+			}
+		}
+
+		if (m_RenderPairs.empty() && data.GetMaterialGuid().IsValid())
+		{
+			m_RenderPairs.push_back(RenderPair{ Guid{}, data.GetMaterialGuid() });
+		}
+
+		// 3. Подсчёт количества ресурсов для асинхронной загрузки
+		size_t resourceCount = 0;
+		for (const auto& pair : m_RenderPairs)
+		{
+			if (pair.meshGuid.IsValid()) ++resourceCount;
+			if (pair.materialGuid.IsValid()) ++resourceCount;
+		}
+
+		if (resourceCount == 0)
 		{
 			onReady({});
 			return;
 		}
 
-		resourceManager.LoadMeshAsync(data.GetMeshGuids(),
-			[this, onReady = std::move(onReady)](std::expected<Guid, std::string> res)
+		// 4. Асинхронная параллельная загрузка всех ресурсов ГО с неблокирующим CountdownTrigger
+		auto firstError = std::make_shared<std::string>();
+		auto errorMutex = std::make_shared<std::mutex>();
+
+		auto trigger = std::make_shared<templates::CountdownTrigger>(resourceCount, [this, firstError, onReady = std::move(onReady)]() mutable {
+			if (!firstError->empty())
 			{
-				if (!res)
-				{
-					onReady(std::unexpected(res.error()));
-					return;
-				}
-
-				m_MeshGuid = *res;
+				onReady(std::unexpected(*firstError));
+			}
+			else
+			{
 				m_NodeStorage->SetVisible(m_NodeHandle, true);
-
 				onReady({});
-			},
-			ownerToken);
+			}
+		});
+
+		for (const auto& pair : m_RenderPairs)
+		{
+			if (pair.meshGuid.IsValid())
+			{
+				resourceManager.LoadMeshAsync(pair.meshGuid, [trigger, firstError, errorMutex](std::expected<Guid, std::string> res) {
+					if (!res)
+					{
+						std::lock_guard lock(*errorMutex);
+						if (firstError->empty())
+						{
+							*firstError = res.error();
+						}
+					}
+					trigger->CountDown();
+				}, ownerToken);
+			}
+
+			if (pair.materialGuid.IsValid())
+			{
+				resourceManager.LoadMaterialAsync(pair.materialGuid, [trigger, firstError, errorMutex](std::expected<Guid, std::string> res) {
+					if (!res)
+					{
+						std::lock_guard lock(*errorMutex);
+						if (firstError->empty())
+						{
+							*firstError = res.error();
+						}
+					}
+					trigger->CountDown();
+				}, ownerToken);
+			}
+		}
 	}
 
 	void GameObject::AddScript(std::shared_ptr<Script> script)

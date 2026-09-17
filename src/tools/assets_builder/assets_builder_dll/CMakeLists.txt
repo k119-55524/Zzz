@@ -10,8 +10,12 @@ add_library(assets_builder_dll SHARED
     IAssetImporter.h
     AssetImporterRegistry.h
     AssetImporterRegistry.cpp
+    AssetImportPipeline.h
+    AssetImportPipeline.cpp
     ObjImporter.h
     ObjImporter.cpp
+    MaterialImporter.h
+    MaterialImporter.cpp
     ProjectIdentityValidator.h
     ProjectIdentityValidator.cpp
 )

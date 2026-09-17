@@ -3,20 +3,28 @@
 #include "core/userscripts/base_script/ViewScript.h"
 #include "core/userscripts/base_script/GameScript.h"
 #include "core/userscripts/base_script/SceneScript.h"
+#include "core/utils/ThrowWrappers.h"
+#include "core/utils/Macroses.h"
 
 namespace zzz::core
 {
 	namespace
 	{
 		template<typename MapType, typename KeyType, typename... Args>
-		auto FindAndCreate(const MapType& map, const KeyType& key, Args&&... args)
+		auto FindAndCreate(const MapType& map, const KeyType& key, std::string_view scriptType, Args&&... args)
 		{
 			auto it = map.find(key);
 			if (it != map.end())
 				return it->second(std::forward<Args>(args)...);
 
-			using ReturnType = decltype(it->second(std::forward<Args>(args)...));
-			return ReturnType{ nullptr };
+			if constexpr (std::is_same_v<KeyType, zzz::core::Guid>)
+			{
+				THROW_RUNTIME("Не удалось создать {} с GUID '{}': фабрика скрипта не зарегистрирована в ScriptStorage.", scriptType, key.ToString());
+			}
+			else
+			{
+				THROW_RUNTIME("Не удалось создать {} с именем '{}': фабрика скрипта не зарегистрирована в ScriptStorage.", scriptType, key);
+			}
 		}
 
 #if Z_EDITOR
@@ -66,7 +74,7 @@ namespace zzz::core
 
 	std::shared_ptr<Script> ScriptStorage::CreateScript(std::string_view name, GameObject* owner) const
 	{
-		auto script = FindAndCreate(m_ScriptFactories, std::string(name), owner);
+		auto script = FindAndCreate(m_ScriptFactories, std::string(name), "Script", owner);
 #if Z_EDITOR
 		if (script)
 			const_cast<ScriptStorage*>(this)->m_ActiveInstances.push_back(script.get());
@@ -76,7 +84,7 @@ namespace zzz::core
 
 	std::shared_ptr<GameScript> ScriptStorage::CreateGameScript(std::string_view name) const
 	{
-		auto script = FindAndCreate(m_GameScriptFactories, std::string(name));
+		auto script = FindAndCreate(m_GameScriptFactories, std::string(name), "GameScript");
 #if Z_EDITOR
 		if (script)
 			const_cast<ScriptStorage*>(this)->m_ActiveGameScripts.push_back(script.get());
@@ -86,7 +94,7 @@ namespace zzz::core
 
 	std::shared_ptr<SceneScript> ScriptStorage::CreateSceneScript(std::string_view name) const
 	{
-		auto script = FindAndCreate(m_SceneScriptFactories, std::string(name));
+		auto script = FindAndCreate(m_SceneScriptFactories, std::string(name), "SceneScript");
 #if Z_EDITOR
 		if (script)
 			const_cast<ScriptStorage*>(this)->m_ActiveSceneScripts.push_back(script.get());
@@ -96,7 +104,7 @@ namespace zzz::core
 
 	std::shared_ptr<ViewScript> ScriptStorage::CreateViewScript(std::string_view name) const
 	{
-		auto script = FindAndCreate(m_ViewScriptFactories, std::string(name));
+		auto script = FindAndCreate(m_ViewScriptFactories, std::string(name), "ViewScript");
 #if Z_EDITOR
 		if (script)
 			const_cast<ScriptStorage*>(this)->m_ActiveViewScripts.push_back(script.get());
@@ -106,7 +114,7 @@ namespace zzz::core
 
 	std::shared_ptr<Script> ScriptStorage::CreateScript(const zzz::core::Guid& guid, GameObject* owner) const
 	{
-		auto script = FindAndCreate(m_ScriptGuidFactories, guid, owner);
+		auto script = FindAndCreate(m_ScriptGuidFactories, guid, "Script", owner);
 #if Z_EDITOR
 		if (script)
 			const_cast<ScriptStorage*>(this)->m_ActiveInstances.push_back(script.get());
@@ -116,7 +124,7 @@ namespace zzz::core
 
 	std::shared_ptr<GameScript> ScriptStorage::CreateGameScript(const zzz::core::Guid& guid) const
 	{
-		auto script = FindAndCreate(m_GameScriptGuidFactories, guid);
+		auto script = FindAndCreate(m_GameScriptGuidFactories, guid, "GameScript");
 #if Z_EDITOR
 		if (script)
 			const_cast<ScriptStorage*>(this)->m_ActiveGameScripts.push_back(script.get());
@@ -126,7 +134,7 @@ namespace zzz::core
 
 	std::shared_ptr<SceneScript> ScriptStorage::CreateSceneScript(const zzz::core::Guid& guid) const
 	{
-		auto script = FindAndCreate(m_SceneScriptGuidFactories, guid);
+		auto script = FindAndCreate(m_SceneScriptGuidFactories, guid, "SceneScript");
 #if Z_EDITOR
 		if (script)
 			const_cast<ScriptStorage*>(this)->m_ActiveSceneScripts.push_back(script.get());
@@ -136,7 +144,7 @@ namespace zzz::core
 
 	std::shared_ptr<ViewScript> ScriptStorage::CreateViewScript(const zzz::core::Guid& guid) const
 	{
-		auto script = FindAndCreate(m_ViewScriptGuidFactories, guid);
+		auto script = FindAndCreate(m_ViewScriptGuidFactories, guid, "ViewScript");
 #if Z_EDITOR
 		if (script)
 			const_cast<ScriptStorage*>(this)->m_ActiveViewScripts.push_back(script.get());

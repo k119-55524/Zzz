@@ -118,12 +118,7 @@ extern "C"
 		if (!ext) return false;
 		std::string_view sv(ext);
 		if (sv == zzz::builder::c_ExtScene ||
-			sv == zzz::builder::c_ExtPrefab ||
-			sv == zzz::builder::c_ExtView ||
-			sv == zzz::builder::c_ExtMeshObj ||
-			sv == zzz::builder::c_ExtTexturePng ||
-			sv == zzz::builder::c_ExtMaterial ||
-			sv == zzz::builder::c_ExtShaderHlsl)
+			sv == zzz::builder::c_ExtView)
 		{
 			return true;
 		}
@@ -133,12 +128,7 @@ extern "C"
 	BUILDER_API bool IsSupportedDataAssetExtension(const char* ext)
 	{
 		if (!ext) return false;
-		std::string_view sv(ext);
-		return sv == zzz::builder::c_ExtPrefab ||
-			sv == zzz::builder::c_ExtMeshObj ||
-			sv == zzz::builder::c_ExtTexturePng ||
-			sv == zzz::builder::c_ExtMaterial ||
-			sv == zzz::builder::c_ExtShaderHlsl;
+		return zzz::builder::AssetImporterRegistry::Instance().GetImporter(ext) != nullptr;
 	}
 
 	BUILDER_API bool IsSupportedViewExtension(const char* ext)

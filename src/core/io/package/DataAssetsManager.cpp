@@ -3,6 +3,7 @@
 
 #include "core/io/DatFileHeader.h"
 #include "core/io/package/MeshData.h"
+#include "core/io/package/MaterialData.h"
 #include "core/constants/PackageConstants.h"
 
 #include "DataAssetsManager.h"
@@ -112,4 +113,8 @@ namespace zzz::core
 	template std::expected<MeshData, std::string> DataAssetsManager::LoadAsset<MeshData>(const Guid&) const;
 	template std::expected<MeshData, std::string> DataAssetsManager::LoadAsset<MeshData>(std::string_view) const;
 	template std::expected<MeshData, std::string> DataAssetsManager::DeserializeEntry<MeshData>(const PackageEntry&) const;
+
+	template std::expected<MaterialData, std::string> DataAssetsManager::LoadAsset<MaterialData>(const Guid&) const;
+	template std::expected<MaterialData, std::string> DataAssetsManager::LoadAsset<MaterialData>(std::string_view) const;
+	template std::expected<MaterialData, std::string> DataAssetsManager::DeserializeEntry<MaterialData>(const PackageEntry&) const;
 }
