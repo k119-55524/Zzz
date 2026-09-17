@@ -36,6 +36,8 @@
 #include <core/enums/eLayerType.h>
 #include <core/IO/package/LayerData.h>
 #include "AssetImportPipeline.h"
+#include "AssetImporterRegistry.h"
+#include "AssetScanner.h"
 #include "ArchiveWriter.h"
 #include "ProjectIdentityValidator.h"
 
@@ -1271,18 +1273,15 @@ namespace zzz::builder
 
 		std::vector<PendingDataAsset> pendingDataAssets;
 
-		if (fs::exists(sourceDir))
-		{
-			for (const auto& entry : fs::recursive_directory_iterator(sourceDir))
+		// Сканируем только Assets/ - project.json/build_settings/platforms на корне проекта
+		// не являются ассетами и обрабатываются отдельно (см. выше). Общий AssetScanner - единая точка
+		// правды обхода, используется также ProjectIdentityValidator::Validate.
+		fs::path assetsScanDir = sourceDir / "Assets";
+		bool assetScanOk = zzz::builder::ScanAssetsDirectory(assetsScanDir,
+			[&](const zzz::builder::ScannedAssetFile& scannedFile) -> bool
 			{
-				if (!entry.is_regular_file())
-					continue;
-
-				auto ext = entry.path().extension().string();
-				if (ext == ".meta")
-					continue;
-
-				fs::path path = entry.path();
+				const std::string& ext = scannedFile.extension;
+				const fs::path& path = scannedFile.path;
 
 				// Зарегистрированные ресурсы data.dat проходят только через единый import pipeline.
 				auto importedRes = AssetImportPipeline::TryImport(path, targetPlatform);
@@ -1300,12 +1299,29 @@ namespace zzz::builder
 						imported.resourceType,
 						std::move(imported.payload)
 					});
-					continue;
+					return true;
 				}
 
 				// Остальные файлы не являются входом нативного упаковщика.
-				if (ext != ".zs" && ext != ".zv")
-					continue;
+				// Scene/View - структурные ресурсы package.dat, известные реестру, но не проходящие
+				// через блоб-импортёр data.dat (обрабатываются структурно ниже).
+				auto knownType = scannedFile.knownType;
+				const bool isStructuredPackageAsset = knownType.has_value() &&
+					(*knownType == zzz::core::eResourceType::Scene || *knownType == zzz::core::eResourceType::View);
+				if (!isStructuredPackageAsset)
+				{
+					// Исходники скриптов собираются отдельно в scripts.dll, а не упаковщиком ассетов -
+					// осознанное, явное исключение, а не тихий пропуск по умолчанию.
+					std::string genericRel = fs::relative(path, sourceDir).generic_string();
+					const bool isScriptSource = (ext == ".h" || ext == ".hpp" || ext == ".cpp") &&
+						(genericRel.find("Assets/Scripts/") != std::string::npos ||
+						 genericRel.find("Assets/scripts/") != std::string::npos);
+					if (isScriptSource)
+						return true;
+
+					DOutError("PackProject: Незарегистрированный тип ассета '{}' для файла '{}'.", ext, path.string());
+					return false;
+				}
 
 				std::string assetName = path.stem().string();
 				fs::path metaPath = path.string() + ".meta";
@@ -1343,9 +1359,9 @@ namespace zzz::builder
 				if (ext == ".zs")
 				{
 					if (removedSceneGuids.find(assetGuid) != removedSceneGuids.end())
-						continue;
+						return true;
 					if (!seenSceneNames.insert(assetName).second)
-						continue;
+						return true;
 					typeVal = static_cast<uint32_t>(zzz::core::ePackage::Scene);
 					pendingAssets.push_back({ assetName, assetGuid, typeVal, path });
 				}
@@ -1373,8 +1389,10 @@ namespace zzz::builder
 						pendingAssets.push_back({ assetName, assetGuid, typeVal, path });
 					}
 				}
-			}
-		}
+				return true;
+			});
+		if (!assetScanOk)
+			return false;
 
 		// Диагностика: guid объявлен в child_views/independent_views платформенного конфига, но на диске
 		// не найден ни одного .zv файла с таким guid - протухшая (или опечатанная) декларация.

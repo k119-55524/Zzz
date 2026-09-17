@@ -1,5 +1,6 @@
 
 #include <mutex>
+
 #include "core/utils/Ensure.h"
 #include "core/io/package/GameObjectData.h"
 #include "core/userscripts/ScriptFactory.h"
@@ -21,7 +22,9 @@ namespace zzz::engine
 		m_Guid(guid),
 		m_Name(std::move(name)),
 		m_NodeStorage(&storage),
-		m_NodeHandle(nodeHandle)
+		m_NodeHandle(nodeHandle),
+		m_RenderPairs(),
+		m_Scripts()
 	{
 		ensure(m_Guid.IsValid(), "GameObject: передан невалидный Guid");
 		ensure(!m_Name.empty(), "GameObject: передано пустое имя объекта");
@@ -43,7 +46,14 @@ namespace zzz::engine
 			AddScript(scriptFactory.CreateScript(sGuid, this));
 		}
 
-		// 2. Формирование пар рендера (меш + материал)
+		// 2. Проверка наличия геометрии: если мешей нет, ГО готов мгновенно
+		if (!data.HasMesh())
+		{
+			onReady({});
+			return;
+		}
+
+		// 3. Формирование пар рендера (меш + материал)
 		m_RenderPairs.clear();
 		const auto meshGuids = data.GetMeshGuids();
 		const auto& matGuids = data.GetMaterialGuids();
@@ -64,7 +74,7 @@ namespace zzz::engine
 			m_RenderPairs.push_back(RenderPair{ Guid{}, data.GetMaterialGuid() });
 		}
 
-		// 3. Подсчёт количества ресурсов для асинхронной загрузки
+		// 4. Подсчёт количества ресурсов для асинхронной загрузки
 		size_t resourceCount = 0;
 		for (const auto& pair : m_RenderPairs)
 		{
@@ -78,27 +88,27 @@ namespace zzz::engine
 			return;
 		}
 
-		// 4. Асинхронная параллельная загрузка всех ресурсов ГО с неблокирующим CountdownTrigger
+		// 5. Асинхронная параллельная загрузка всех ресурсов ГО с неблокирующим CountdownTrigger
 		auto firstError = std::make_shared<std::string>();
 		auto errorMutex = std::make_shared<std::mutex>();
 
-		auto trigger = std::make_shared<templates::CountdownTrigger>(resourceCount, [this, firstError, onReady = std::move(onReady)]() mutable {
+		auto trigger = std::make_shared<templates::CountdownTrigger>(resourceCount, [firstError, onReady = std::move(onReady)]() mutable {
 			if (!firstError->empty())
 			{
 				onReady(std::unexpected(*firstError));
 			}
 			else
 			{
-				m_NodeStorage->SetVisible(m_NodeHandle, true);
 				onReady({});
 			}
 		});
 
-		for (const auto& pair : m_RenderPairs)
+		for (size_t i = 0; i < m_RenderPairs.size(); ++i)
 		{
+			const auto& pair = m_RenderPairs[i];
 			if (pair.meshGuid.IsValid())
 			{
-				resourceManager.LoadMeshAsync(pair.meshGuid, [trigger, firstError, errorMutex](std::expected<Guid, std::string> res) {
+				resourceManager.LoadMeshAsync(pair.meshGuid, [this, i, trigger, firstError, errorMutex](std::expected<Guid, std::string> res) {
 					if (!res)
 					{
 						std::lock_guard lock(*errorMutex);
@@ -107,13 +117,17 @@ namespace zzz::engine
 							*firstError = res.error();
 						}
 					}
+					else
+					{
+						m_RenderPairs[i].meshGuid = *res;
+					}
 					trigger->CountDown();
 				}, ownerToken);
 			}
 
 			if (pair.materialGuid.IsValid())
 			{
-				resourceManager.LoadMaterialAsync(pair.materialGuid, [trigger, firstError, errorMutex](std::expected<Guid, std::string> res) {
+				resourceManager.LoadMaterialAsync(pair.materialGuid, [this, i, trigger, firstError, errorMutex](std::expected<Guid, std::string> res) {
 					if (!res)
 					{
 						std::lock_guard lock(*errorMutex);
@@ -121,6 +135,10 @@ namespace zzz::engine
 						{
 							*firstError = res.error();
 						}
+					}
+					else
+					{
+						m_RenderPairs[i].materialGuid = *res;
 					}
 					trigger->CountDown();
 				}, ownerToken);

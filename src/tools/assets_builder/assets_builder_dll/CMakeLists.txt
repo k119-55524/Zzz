@@ -3,6 +3,8 @@ add_library(assets_builder_dll SHARED
     BuilderApi.h
     BuilderApi.cpp
     AssetExtensions.h
+    AssetScanner.h
+    AssetScanner.cpp
     PackagePacker.h
     PackagePacker.cpp
     ArchiveWriter.h

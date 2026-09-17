@@ -54,20 +54,20 @@
 ### 📌 Текущее состояние разработки
 
 > [!IMPORTANT]
-> **Текущий активный пункт:** `Пункт 21. Правки сборщика ассетов`
+> **Текущий активный пункт:** `Пункт 20. Асинхронная загрузка Mesh и реактивная готовность сцены`
 >
 > **Статус:** ⏳ В процессе
 > **Список открытых сквозных задач / технического долга:** [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) §4  
-> **Текущая подзадача:** Единый импорт-пайплайн сборщика: централизация `.zs`/`.zv`/`project.json` через `AssetImporterRegistry`, build-time ошибка на незарегистрированном ассете с `.meta`, обязательное поле `type` в `.meta` (с миграцией), маршрутизация `DedicatedFolder`-ресурсов, фиксация контракта в `docs/ARCHITECTURE.md` §6.1. Атомарная публикация `package.dat`/`data.dat` уже сделана. См. [`stage_21_assets_builder_pipeline_fixes.md`](stage_21_assets_builder_pipeline_fixes.md).
+> **Текущая подзадача:** Завершение расширения каскада инициализации `GameObject` на материалы и render-пары (`RenderPair { meshGuid, materialGuid }`), обработка ошибок десериализации в `MaterialLoader` и валидация импорта `.zmat`. См. [`stage_20_async_mesh_loading_and_gameobject_lifecycle.md`](stage_20_async_mesh_loading_and_gameobject_lifecycle.md).
 >
-> **Приостановлено (не завершено, возврат после Пункта 21):** `Пункт 20. Асинхронная загрузка Mesh и реактивная готовность сцены` — ⏳ В процессе, см. [`stage_20_async_mesh_loading_and_gameobject_lifecycle.md`](stage_20_async_mesh_loading_and_gameobject_lifecycle.md).
+> **Завершено ранее:** `Пункт 21. Правки сборщика ассетов (единый импорт-пайплайн)` — ✅ Выполнено, см. [`stage_21_assets_builder_pipeline_fixes.md`](stage_21_assets_builder_pipeline_fixes.md).
 > 
 ---
 
 ## 📋 Сквозная таблица этапов реализации (Строгая последовательность зависимостей)
 
 > 💡 **Примечание к выполненным этапам:**  
-> По завершённым пунктам (1–15, 17, 18) в таблице генплана оставлены только номер, название, статус и ссылка на файл этапа.  
+> По завершённым пунктам (1–15, 17, 18, 21) в таблице генплана оставлены только номер, название, статус и ссылка на файл этапа.  
 > **Вся исчерпывающая техническая спецификация, сигнатуры, структуры, архитектурные решения и чек-листы бережно сохранены в файлах `current_plan/stage_XX_...md`**. Они будут использованы в этапе 59 для формирования итоговой архитектурной документации в `docs/`.
 
 ### Уровень 1: Математический, файловый и платформенный фундамент
@@ -97,7 +97,7 @@
 | **18** | Линейное runtime-хранилище сцены, домены и spatial | ✅ Выполнено | [`stage_18_linear_scene_storage_domains_and_spatial.md`](stage_18_linear_scene_storage_domains_and_spatial.md) | Parent-before-child topology и линейная инициализация `NodeStorage`; dirty-иерархия пропорциональна числу узлов, перекрывающиеся dirty-поддеревья не пересчитываются; `NodeStorage` — единственный источник transform, плоский spatial хранит только handles узлов с мешем; живые `NodeBindings` (`domainKind/domainHandle/spatialHandle`) и взаимоисключающая маршрутизация `isEntity`. `isActive` только хранится |
 | **19** | Очистка NodeStorage для иерархии и матриц, очистка GameObject | ✅ Выполнено | [`stage_19_visual_descriptors_soa_and_gameobject_cleanup.md`](stage_19_visual_descriptors_soa_and_gameobject_cleanup.md) | Изоляция `NodeStorage` строго под SoA-иерархию и трансформы; удаление устаревших структур; наполнение командных буферов возложено на пространственное хранилище; constexpr битовые флаги `Active/Visible` в `m_Flags` |
 | **20** | Асинхронная загрузка Mesh и реактивная готовность сцены | ⏳ В процессе | [`stage_20_async_mesh_loading_and_gameobject_lifecycle.md`](stage_20_async_mesh_loading_and_gameobject_lifecycle.md) | Расширение реализованного ResourceManager: Simple/MultiMesh загружаются без блокировки, MultiMesh собирается в единый ресурс и возвращает итоговый GUID; безопасные callback'и и каскад готовности `GameObject -> GameLayer -> Scene -> SceneManager`; сцена не регистрируется и не запускается до готовности |
-| **21** | Правки сборщика ассетов (единый импорт-пайплайн) | ⏳ В процессе | [`stage_21_assets_builder_pipeline_fixes.md`](stage_21_assets_builder_pipeline_fixes.md) | Централизация `.zs`/`.zv`/`project.json` через `AssetImporterRegistry`; build-time ошибка на незарегистрированном файле с `.meta`; обязательное поле `type` в `.meta` (с миграцией старых); маршрутизация `DedicatedFolder`-ресурсов; фиксация контракта в `docs/ARCHITECTURE.md` §6.1. Атомарная публикация `package.dat`/`data.dat` (`.tmp` + rename) — сделано |
+| **21** | Правки сборщика ассетов (единый импорт-пайплайн) | ✅ Выполнено | [`stage_21_assets_builder_pipeline_fixes.md`](stage_21_assets_builder_pipeline_fixes.md) | Единый реестр `AssetImporterRegistry`, ошибка на незарегистрированном файле, `type` обязателен только для скриптов, атомарная публикация `.tmp` + rename, общий `AssetScanner`, очистка рудимента `zzz_assets_test_000_build` |
 | **22** | GPU-буферы, загрузка в GPU и GPU-меш | ⏳ Не начато | — | Создание GPUBuffer (вершинный/индексный), upload-инфраструктура, барьеры, fenceValue/VkFence, неблокирующий staging lifetime, GPU-готовность Mesh; трехуровневый кэш (L1 GPU, L2 CPU, Ping-Pong очередь диска), единый источник правды классов сериализации (правило 19) |
 | **23** | Базовые Shader и Material | ⏳ Не начато | — | Компиляция минимальных шейдеров DXIL/SPIR-V, рабочий pipeline для куба, MaterialData + Texture2D + параметры; разрешение всех обязательных зависимостей сцены и OnStart только после полной CPU/GPU-готовности |
 | **24** | Минимальный сквозной рендер куба | ⏳ Не начато | — | Базовая Camera, View/Projection и aspect при resize; обход DefaultSpatialStorage без BVH; игровой поток после update публикует неизменяемый набор команд кадра N, render-поток исполняет только набор N-1 без чтения живой сцены; DrawIndexed на DX12/Vulkan и раздельные CPU/GPU-барьеры |

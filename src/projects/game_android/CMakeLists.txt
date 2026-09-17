@@ -17,13 +17,6 @@ if(EXISTS "${ASSETS_CONFIG_JSON}")
     endif()
 endif()
 
-if(Z_GAME_PROJECT_DIR)
-    get_filename_component(FALLBACK_BUILD_DIR "${Z_GAME_PROJECT_DIR}/../zzz_assets_test_000_build" ABSOLUTE)
-    if(EXISTS "${FALLBACK_BUILD_DIR}")
-        list(APPEND Z_ASSET_BUILD_DIRS "${FALLBACK_BUILD_DIR}")
-    endif()
-endif()
-
 list(REMOVE_DUPLICATES Z_ASSET_BUILD_DIRS)
 
 set(SCRIPT_HPPS "")

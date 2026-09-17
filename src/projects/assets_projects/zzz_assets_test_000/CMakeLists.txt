@@ -38,14 +38,3 @@ if((WIN32 AND Z_FORCE_VULKAN) OR LINUX OR ANDROID)
     target_link_libraries(zzz_user_scripts PUBLIC Vulkan::Vulkan)
 endif()
 
-# Отображение файлов собранного пакета zzz_assets_test_000_build в дереве Visual Studio без их компиляции
-get_filename_component(BUILD_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../zzz_assets_test_000_build" ABSOLUTE)
-
-if(EXISTS "${BUILD_OUTPUT_DIR}")
-    file(GLOB_RECURSE BUILD_OUTPUT_FILES CONFIGURE_DEPENDS "${BUILD_OUTPUT_DIR}/*")
-    if(BUILD_OUTPUT_FILES)
-        target_sources(zzz_user_scripts PRIVATE ${BUILD_OUTPUT_FILES})
-        set_source_files_properties(${BUILD_OUTPUT_FILES} PROPERTIES HEADER_FILE_ONLY TRUE EXCLUDED_FROM_BUILD TRUE)
-        source_group(TREE "${BUILD_OUTPUT_DIR}" PREFIX "Build Output" FILES ${BUILD_OUTPUT_FILES})
-    endif()
-endif()

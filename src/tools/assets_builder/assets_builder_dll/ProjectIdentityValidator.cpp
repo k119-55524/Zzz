@@ -1,10 +1,12 @@
 #include "ProjectIdentityValidator.h"
 #include "AssetExtensions.h"
 #include "AssetImporterRegistry.h"
+#include "AssetScanner.h"
 #include "core/utils/Guid.h"
 #include "json.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <cstring>
 #include <format>
 #include <fstream>
@@ -49,7 +51,37 @@ namespace zzz::builder
 			case eResourceType::Shader: return GuidOwnerKind::Shader;
 			case eResourceType::Texture2D: return GuidOwnerKind::Texture;
 			case eResourceType::Prefab: return GuidOwnerKind::Prefab;
+			case eResourceType::Scene: return GuidOwnerKind::Scene;
+			case eResourceType::View: return GuidOwnerKind::View;
 			default: return std::nullopt;
+			}
+		}
+
+		std::string NormalizeTypeString(std::string value)
+		{
+			std::ranges::transform(value, value.begin(), [](unsigned char ch) {
+				return static_cast<char>(std::tolower(ch));
+			});
+			return value;
+		}
+
+		// Ожидаемое значение поля "type" в .meta для данного владельца GUID. Пустая строка -
+		// проверка совпадения не выполняется (значение не фиксировано контрактом), но поле всё
+		// равно обязано присутствовать.
+		std::string_view ExpectedMetaTypeStringForKind(GuidOwnerKind kind)
+		{
+			switch (kind)
+			{
+			case GuidOwnerKind::Project:  return "project";
+			case GuidOwnerKind::Scene:    return "scene";
+			case GuidOwnerKind::View:     return "view";
+			case GuidOwnerKind::Script:   return "script";
+			case GuidOwnerKind::Mesh:     return "mesh";
+			case GuidOwnerKind::Material: return "material";
+			case GuidOwnerKind::Shader:   return "shader";
+			case GuidOwnerKind::Texture:  return "texture";
+			case GuidOwnerKind::Prefab:   return "prefab";
+			default: return {};
 			}
 		}
 
@@ -596,6 +628,16 @@ namespace zzz::builder
 					SetError(errorBuffer, bufferSize, outError);
 					return false;
 				}
+				if (metaJson.contains("type") && metaJson["type"].is_string())
+				{
+					if (NormalizeTypeString(metaJson["type"].get<std::string>()) != "project")
+					{
+						outError = std::format("Файл 'project.json.meta': поле 'type' = '{}' должно быть 'project'.",
+							metaJson["type"].get<std::string>());
+						SetError(errorBuffer, bufferSize, outError);
+						return false;
+					}
+				}
 				auto parsed = Guid::Parse(metaJson["guid"].get<std::string>());
 				if (!parsed)
 				{
@@ -610,37 +652,22 @@ namespace zzz::builder
 				}
 			}
 
-			// 1.2. Рекурсивное сканирование каталога Assets/
+			// 1.2. Рекурсивное сканирование каталога Assets/ - через общий AssetScanner (единая точка
+			// правды обхода, используется также PackagePacker::PackProject).
 			fs::path assetsDir = projectDir / "Assets";
-			if (fs::exists(assetsDir) && fs::is_directory(assetsDir))
-			{
-				for (const auto& entry : fs::recursive_directory_iterator(assetsDir))
+			bool assetScanOk = zzz::builder::ScanAssetsDirectory(assetsDir,
+				[&](const zzz::builder::ScannedAssetFile& scannedFile) -> bool
 				{
-					if (!entry.is_regular_file())
-						continue;
-
-					fs::path path = entry.path();
-					std::string ext = path.extension().string();
-					if (ext == ".meta")
-						continue;
+					const fs::path& path = scannedFile.path;
+					const std::string& ext = scannedFile.extension;
 
 					fs::path relPath = fs::relative(path, projectDir);
 					GuidOwnerKind kind = GuidOwnerKind::Mesh;
 					bool isKnownAsset = false;
 
-					if (ext == c_ExtScene)
+					if (auto knownType = scannedFile.knownType)
 					{
-						kind = GuidOwnerKind::Scene;
-						isKnownAsset = true;
-					}
-					else if (ext == c_ExtView)
-					{
-						kind = GuidOwnerKind::View;
-						isKnownAsset = true;
-					}
-					else if (auto importer = AssetImporterRegistry::Instance().GetImporter(ext))
-					{
-						if (auto importerKind = ToGuidOwnerKind(importer->GetResourceType()))
+						if (auto importerKind = ToGuidOwnerKind(*knownType))
 						{
 							kind = *importerKind;
 							isKnownAsset = true;
@@ -656,9 +683,27 @@ namespace zzz::builder
 							isKnownAsset = true;
 						}
 					}
+					else if (ext == ".cpp")
+					{
+						// Реализация скрипта: идентичность (guid) несёт .h/.meta, у .cpp собственного меты нет -
+						// зеркалит PackagePacker::PackProject (isScriptSource), где .cpp под Assets/Scripts/ тоже пропускается.
+						std::string genericRel = relPath.generic_string();
+						if (genericRel.find("Assets/Scripts/") != std::string::npos ||
+							genericRel.find("Assets/scripts/") != std::string::npos)
+						{
+							return true;
+						}
+					}
 
 					if (!isKnownAsset)
-						continue;
+					{
+						outError = std::format(
+							"Незарегистрированный тип ассета '{}' для файла '{}'. Добавьте обработчик в AssetImporterRegistry "
+							"или явно исключите файл.",
+							ext, relPath.string());
+						SetError(errorBuffer, bufferSize, outError);
+						return false;
+					}
 
 					fs::path metaPath = path;
 					metaPath += ".meta";
@@ -685,6 +730,33 @@ namespace zzz::builder
 							fs::relative(metaPath, projectDir).string());
 						SetError(errorBuffer, bufferSize, outError);
 						return false;
+					}
+					// Поле 'type' в .meta обязательно только для скриптов (расширение .h/.hpp само по себе не задаёт тип скрипта).
+					// Для остальных типов (mesh, material, scene, view) тип на 100% известен по зарегистрированному расширению файла.
+					// Если же поле 'type' явно задано в .meta для любого ресурса, проверяется его корректность.
+					if (kind == GuidOwnerKind::Script)
+					{
+						if (!metaJson.contains("type") || !metaJson["type"].is_string())
+						{
+							outError = std::format("Мета-файл скрипта '{}' не содержит обязательное строковое поле 'type'.",
+								fs::relative(metaPath, projectDir).string());
+							SetError(errorBuffer, bufferSize, outError);
+							return false;
+						}
+					}
+
+					if (metaJson.contains("type") && metaJson["type"].is_string())
+					{
+						const std::string actualType = NormalizeTypeString(metaJson["type"].get<std::string>());
+						const std::string_view expectedType = ExpectedMetaTypeStringForKind(kind);
+						if (!expectedType.empty() && actualType != expectedType)
+						{
+							outError = std::format(
+								"Мета-файл '{}': поле 'type' = '{}' не соответствует ожидаемому '{}' для '{}'.",
+								fs::relative(metaPath, projectDir).string(), actualType, expectedType, relPath.string());
+							SetError(errorBuffer, bufferSize, outError);
+							return false;
+						}
 					}
 
 					auto parsed = Guid::Parse(metaJson["guid"].get<std::string>());
@@ -822,8 +894,10 @@ namespace zzz::builder
 							}
 						}
 					}
-				}
-			}
+				return true;
+			});
+			if (!assetScanOk)
+				return false;
 
 			// ----------------------------------------------------
 			// ПРОХОД 2. Проверка типизированных GUID-ссылок

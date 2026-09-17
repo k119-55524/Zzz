@@ -132,9 +132,6 @@ TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
 	bool ok = packProject("src/projects/assets_projects/zzz_assets_test_000", "dist/Debug", 0);
 	EXPECT_TRUE(ok);
 
-	// Собираем также в zzz_assets_test_000_build/game_win_Windows для game_win
-	packProject("src/projects/assets_projects/zzz_assets_test_000", "src/projects/assets_projects/zzz_assets_test_000_build/game_win_Windows", 0);
-
 	FreeLibrary(hDll);
 
 	// Проверяем чтение из data.dat через DataAssetsManager

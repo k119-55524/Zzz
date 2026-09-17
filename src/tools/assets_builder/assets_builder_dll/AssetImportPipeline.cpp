@@ -75,11 +75,8 @@ namespace zzz::builder
 			if (!guid || !guid->IsValid())
 				return std::unexpected("Мета-файл содержит невалидный GUID: '" + metaPath.string() + "'.");
 
-			if (root.contains("type"))
+			if (root.contains("type") && root["type"].is_string())
 			{
-				if (!root["type"].is_string())
-					return std::unexpected("Поле 'type' мета-файла должно быть строкой: '" + metaPath.string() + "'.");
-
 				const std::string_view expectedType = ExpectedMetaType(resourceType);
 				const std::string actualType = Normalize(root["type"].get<std::string>());
 				if (!expectedType.empty() && actualType != expectedType)

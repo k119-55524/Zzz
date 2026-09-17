@@ -1,8 +1,13 @@
 #pragma once
 
-#include <string>
+#include <format>
 #include <source_location>
+#include <string>
 #include "Export.h"
+
+#ifndef THROW_RUNTIME
+#define THROW_RUNTIME(...) ::zzz::core::throw_runtime_error(std::format(__VA_ARGS__), std::source_location::current())
+#endif
 
 namespace zzz::core
 {
