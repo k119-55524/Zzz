@@ -179,20 +179,20 @@ namespace zzz::core
 			nestedIndentation, m_Position.x, m_Position.y, m_Position.z,
 			m_Rotation.x, m_Rotation.y, m_Rotation.z, m_Rotation.w,
 			m_Scale.x, m_Scale.y, m_Scale.z);
-		if (HasMesh())
+		const size_t pairCount = std::max(m_MeshGuids.size(), std::max(m_MaterialGuids.size(), (m_MaterialGuid.IsValid() ? size_t{1} : size_t{0})));
+		if (pairCount > 0)
 		{
-			DOut(Assets, "{}meshGuids({}):", nestedIndentation, m_MeshGuids.size());
-			for (size_t i = 0; i < m_MeshGuids.size(); ++i)
+			DOut(Assets, "{}renderPairs({}):", nestedIndentation, pairCount);
+			for (size_t i = 0; i < pairCount; ++i)
 			{
-				DOut(Assets, "{}  meshGuid #{}: {}", nestedIndentation, i, m_MeshGuids[i].ToString());
-			}
-		}
-		if (HasMaterial())
-		{
-			DOut(Assets, "{}materialGuid: {}, materials({}):", nestedIndentation, m_MaterialGuid.ToString(), m_MaterialGuids.size());
-			for (size_t i = 0; i < m_MaterialGuids.size(); ++i)
-			{
-				DOut(Assets, "{}  materialGuid #{}: {}", nestedIndentation, i, m_MaterialGuids[i].ToString());
+				const std::string meshStr = (i < m_MeshGuids.size() && m_MeshGuids[i].IsValid())
+					? m_MeshGuids[i].ToString()
+					: "<none>";
+				const std::string matStr = (i < m_MaterialGuids.size() && m_MaterialGuids[i].IsValid())
+					? m_MaterialGuids[i].ToString()
+					: (m_MaterialGuid.IsValid() ? m_MaterialGuid.ToString() : "<none>");
+
+				DOut(Assets, "{}  pair [{}/{}]: mesh: {}, material: {}", nestedIndentation, i + 1, pairCount, meshStr, matStr);
 			}
 		}
 		if (!m_ScriptGuids.empty())
@@ -200,7 +200,7 @@ namespace zzz::core
 			DOut(Assets, "{}scripts({}):", nestedIndentation, m_ScriptGuids.size());
 			for (size_t i = 0; i < m_ScriptGuids.size(); ++i)
 			{
-				DOut(Assets, "{}  scriptGuid #{}: {}", nestedIndentation, i, m_ScriptGuids[i].ToString());
+				DOut(Assets, "{}  script [{}/{}]: {}", nestedIndentation, i + 1, m_ScriptGuids.size(), m_ScriptGuids[i].ToString());
 			}
 		}
 #endif // Z_ADD_LOGGER

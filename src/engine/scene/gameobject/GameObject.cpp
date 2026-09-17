@@ -22,9 +22,7 @@ namespace zzz::engine
 		m_Guid(guid),
 		m_Name(std::move(name)),
 		m_NodeStorage(&storage),
-		m_NodeHandle(nodeHandle),
-		m_RenderPairs(),
-		m_Scripts()
+		m_NodeHandle(nodeHandle)
 	{
 		ensure(m_Guid.IsValid(), "GameObject: передан невалидный Guid");
 		ensure(!m_Name.empty(), "GameObject: передано пустое имя объекта");
