@@ -8,7 +8,7 @@
 
 1. Исключить жесткую блокирующую синхронную загрузку сцены из конструктора [`View`](file:///c:/Workspaces/ZzzTest/src/engine/view/View.cpp) (соблюдение Single Responsibility Principle).
 2. Спроектировать и внедрить **каркас** структуры параметров перехода сцен [`SceneTransitionParams`](file:///c:/Workspaces/ZzzTest/src/engine/scene/transition/SceneTransitionParams.h) с поддержкой флагов (`blockUserInput`, длительность `durationSeconds`, цвет затухания `fadeColor`, тип перехода `eTransitionType`).  
-   *(На данном этапе создаётся каркас структур и состояний переходов; графические эффекты реализуются в этапе 57 поверх рабочего рендера.)*
+   *(На данном этапе создаётся каркас структур и состояний переходов; графические эффекты реализуются в этапе 58 поверх рабочего рендера.)*
 3. Обеспечить трехуровневую иерархию правил перехода:
    - Глобальная настройка в [`SceneManager`](file:///c:/Workspaces/ZzzTest/src/engine/scene/SceneManager.h);
    - Локальная настройка в [`SceneData`](file:///c:/Workspaces/ZzzTest/src/core/io/package/SceneData.h) с флагом `eTransitionSource` (`UseGlobal` / `Custom`);

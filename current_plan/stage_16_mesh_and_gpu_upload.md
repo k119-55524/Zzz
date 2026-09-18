@@ -3,6 +3,7 @@
 ## 1. Статус и границы
 
 - **Статус:** ✅ Выполнено. Реализовано и проверено сборкой `engine_lib` и `engine_lib_editor` 2026-09-10. Реализация (`ResourceManager.cpp`) дополнительно вычитана по факту написания кода 2026-09-10: устранена гонка потери пробуждения в `Flush()`/`LoadSync()` (декремент `m_ActiveRequests` + `notify_all()` в `IoWorkerLoop` теперь под тем же `m_FlushMutex`, что и `wait()` в `Flush()`); исправлена мёртвая ветка обработки ошибки "запись не найдена" (`else if (result.has_value())` не могло быть true, ошибка глушилась без лога); `m_DataAssetsManager` добавлен в общую проверку готовности подсистем в `IoWorkerLoop`, чтобы не разыменовывать его вслепую для `PackageArchive`-ресурсов.
+  *(Примечание по Правилу 3: Решения этапа 16 по типам `Mesh`/`Material`/`Shader`, монолитному `ResourceManager` и интерфейсу `IResourceLoader` заменены и реорганизованы на этапе 22: см. [`stage_22_resource_manager_ownership_and_ready_events.md`](stage_22_resource_manager_ownership_and_ready_events.md) — введены `CpuMesh`, `GpuMesh`, разделение на `CpuResourceManager`/`GpuResourceManager`, события `OneShotEvent` и шаблоны `ResourceRecord<T>`).*
 - **Цель:** Получить надёжную асинхронную загрузку ресурсов через `ResourceManager` с правильной маршрутизацией по хранилищам, дедупликацией in-flight запросов, прокидыванием результатов/ошибок на главный поток через `CallbackQueue` и подготовкой ресурса `Mesh` до состояния готовности к отправке на GPU (`eResourceState::Ready` на CPU-уровне).
 - **Сквозной путь этапа 16:**
   1. Вызов `ResourceManager::LoadAsync<Mesh>(guid, callback)` из логики сцены/главного потока.
@@ -199,7 +200,7 @@
   - Хранит геометрию на CPU в том же виде, что и источник `MeshData` (без домысливания несуществующих полей):
     - `m_VertexData: std::vector<std::byte>`, `m_VertexCount`, `m_VertexStride` — как в `MeshData`; интерпретация как `Vertex3D` возможна только при `vertexStride == sizeof(Vertex3D)` (проверяется `ensure`/`THROW_RUNTIME` при несовпадении, а не молчаливым reinterpret).
     - `m_IndexData: std::vector<std::byte>`, `m_IndexCount`, `m_IndexFormat: eIndexFormat` — индексы хранятся как есть, без безусловного расширения `UInt16` до `uint32_t`; конкретный тип индексного GPU-буфера (16 или 32 бита) выбирается в этапе 19 по `m_IndexFormat`.
-  - Bounding box и сабмеши в `Mesh` не добавляются: bounding box — это этап 35 (AABB/Frustum Culling), а понятия "сабмеш" нет ни в `MeshData`, ни где-либо ещё в проекте — добавлять `MeshSubsetInfo` без формата-источника и потребителя нарушает правило 16 (YAGNI).
+  - Bounding box и сабмеши в `Mesh` не добавляются: bounding box — это этап 36 (AABB/Frustum Culling), а понятия "сабмеш" нет ни в `MeshData`, ни где-либо ещё в проекте — добавлять `MeshSubsetInfo` без формата-источника и потребителя нарушает правило 16 (YAGNI).
   - Предоставляет константные геттеры к этим данным для последующей отправки на GPU в этапе 19.
 - В `src/engine/resources/MeshLoader.h` и `src/engine/resources/MeshLoader.cpp`:
   - Наследует `IResourceLoader`.
@@ -277,6 +278,6 @@
 
 - Загрузка в GPU (создание `GPUBuffer`, выделение staging-буферов, запись команд копирования, `VkFence`/`SignalFence`, барьеры состояний, очередь отложенного освобождения staging-буферов) — **этап 19**.
 - Текстуры (`Texture2D`), материалы (`Material`), шейдеры (`Shader`) — **этап 20**.
-- Барьер готовности сцены и запуск скриптов — **этапы 20, 22**.
-- Кадровые команды рендера и отрисовка (`DrawIndexed`) — **этап 23**.
+- Барьер готовности сцены и запуск скриптов — **этапы 20, 23**.
+- Кадровые команды рендера и отрисовка (`DrawIndexed`) — **этап 24**.
 - Модульные тесты в `src/qa/tests/` — не создаются по решению пользователя.
