@@ -28,7 +28,7 @@ namespace zzz::engine
 			NodeHandle nodeHandle,
 			const ::zzz::core::GameObjectData& objData,
 			const ::zzz::core::ScriptFactory& scriptFactory,
-			class ResourceManager& resourceManager) override;
+			class CpuResourceManager& resourceManager) override;
 		void DestroyEntity(const ::zzz::core::Guid& guid) override;
 
 		[[nodiscard]] size_t GetEntityCount() const noexcept;

@@ -37,7 +37,7 @@ namespace zzz::engine
 			NodeHandle nodeHandle,
 			const ::zzz::core::GameObjectData& objData,
 			const ::zzz::core::ScriptFactory& scriptFactory,
-			class ResourceManager& resourceManager) = 0;
+			class CpuResourceManager& resourceManager) = 0;
 		virtual void DestroyEntity(const ::zzz::core::Guid& guid) = 0;
 	};
 }

@@ -59,6 +59,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/time/Time.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/events/Event.h
         ${CMAKE_CURRENT_SOURCE_DIR}/events/EventBus.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/events/OneShotEvent.h
         ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/ScriptStorage.h
         ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/ScriptStorage.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/ScriptFactory.h

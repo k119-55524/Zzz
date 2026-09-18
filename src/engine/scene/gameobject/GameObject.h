@@ -19,7 +19,9 @@ namespace zzz::core
 
 namespace zzz::engine
 {
-	class ResourceManager;
+	class GpuResourceManager;
+	class GpuMesh;
+	class GpuMaterial;
 
 	/**
 	 * @struct RenderPair
@@ -29,6 +31,8 @@ namespace zzz::engine
 	{
 		core::Guid meshGuid;
 		core::Guid materialGuid;
+		std::shared_ptr<GpuMesh> gpuMesh;
+		std::shared_ptr<GpuMaterial> gpuMaterial;
 	};
 }
 
@@ -41,7 +45,7 @@ namespace zzz::engine
 	 * @class GameObject
 	 * @brief Легковесный фасад сущности сцены, объединяющий идентификацию, NodeStorage и скрипты.
 	 */
-	class GameObject final
+	class GameObject final : public std::enable_shared_from_this<GameObject>
 	{
 		Z_NO_COPY_MOVE(GameObject);
 
@@ -53,9 +57,8 @@ namespace zzz::engine
 		void Initialize(
 			const GameObjectData& data,
 			const ScriptFactory& scriptFactory,
-			ResourceManager& resourceManager,
-			std::function<void(std::expected<void, std::string>)> onReady,
-			std::weak_ptr<const void> ownerToken = {});
+			GpuResourceManager& gpuResourceManager,
+			std::function<void(std::expected<void, std::string>)> onReady);
 
 #pragma region Getters and Setters
 		[[nodiscard]] NodeHandle GetNodeHandle() const noexcept { return m_NodeHandle; }
@@ -134,7 +137,6 @@ namespace zzz::engine
 			return m_NodeStorage->GetParent(m_NodeHandle);
 		}
 
-
 		// --- Меши и материалы (пары рендера) ---
 		[[nodiscard]] std::span<const RenderPair> GetRenderPairs() const noexcept { return m_RenderPairs; }
 		[[nodiscard]] bool HasRenderPairs() const noexcept { return !m_RenderPairs.empty(); }
@@ -147,6 +149,14 @@ namespace zzz::engine
 		[[nodiscard]] const Guid& GetMaterialGuid(size_t index = 0) const noexcept
 		{
 			return index < m_RenderPairs.size() ? m_RenderPairs[index].materialGuid : s_EmptyGuid;
+		}
+		[[nodiscard]] std::shared_ptr<GpuMesh> GetGpuMesh(size_t index = 0) const noexcept
+		{
+			return index < m_RenderPairs.size() ? m_RenderPairs[index].gpuMesh : nullptr;
+		}
+		[[nodiscard]] std::shared_ptr<GpuMaterial> GetGpuMaterial(size_t index = 0) const noexcept
+		{
+			return index < m_RenderPairs.size() ? m_RenderPairs[index].gpuMaterial : nullptr;
 		}
 		[[nodiscard]] bool HasMesh() const noexcept
 		{

@@ -33,16 +33,21 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "package/PackageManager.h" "package/PackageManager.cpp"
         "package/UserSettingsManager.h" "package/UserSettingsManager.cpp"
 
-        # Resources (Этап 10, 16)
-        "resources/IResourceLoader.h"
-        "resources/Mesh.h" "resources/Mesh.cpp"
-        "resources/MeshLoader.h" "resources/MeshLoader.cpp"
-        "resources/Material.h" "resources/Material.cpp"
-        "resources/MaterialLoader.h" "resources/MaterialLoader.cpp"
-        "resources/Shader.h" "resources/Shader.cpp"
-        "resources/ShaderLoader.h" "resources/ShaderLoader.cpp"
-        "resources/ResourceManager.h" "resources/ResourceManager.cpp"
-        "resources/ResourceGarbageCollector.h" "resources/ResourceGarbageCollector.cpp"
+        # Resources (Этап 22)
+        "resources/ResourceRecord.h"
+        "resources/cpu/CpuMesh.h" "resources/cpu/CpuMesh.cpp"
+        "resources/cpu/CpuMaterial.h" "resources/cpu/CpuMaterial.cpp"
+        "resources/cpu/CpuTexture2D.h" "resources/cpu/CpuTexture2D.cpp"
+        "resources/cpu/CpuShader.h" "resources/cpu/CpuShader.cpp"
+        "resources/cpu/loaders/CpuMeshLoader.h" "resources/cpu/loaders/CpuMeshLoader.cpp"
+        "resources/cpu/loaders/CpuMaterialLoader.h" "resources/cpu/loaders/CpuMaterialLoader.cpp"
+        "resources/cpu/loaders/CpuShaderLoader.h" "resources/cpu/loaders/CpuShaderLoader.cpp"
+        "resources/cpu/CpuResourceManager.h" "resources/cpu/CpuResourceManager.cpp"
+        "resources/gpu/GpuMesh.h" "resources/gpu/GpuMesh.cpp"
+        "resources/gpu/GpuMaterial.h" "resources/gpu/GpuMaterial.cpp"
+        "resources/gpu/GpuTexture2D.h" "resources/gpu/GpuTexture2D.cpp"
+        "resources/gpu/GpuShader.h" "resources/gpu/GpuShader.cpp"
+        "resources/gpu/GpuResourceManager.h" "resources/gpu/GpuResourceManager.cpp"
 
         # Inputs
         "platforms/input/Input.h" "platforms/input/InputBase.h"

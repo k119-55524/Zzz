@@ -19,7 +19,8 @@ namespace zzz::core
 
 namespace zzz::engine
 {
-	class ResourceManager;
+	class CpuResourceManager;
+	class GpuResourceManager;
 
 	/**
 	 * @class GameLayer
@@ -35,7 +36,8 @@ namespace zzz::engine
 			Guid guid,
 			std::string name,
 			eLayerType type,
-			std::shared_ptr<ResourceManager> resourceManager,
+			std::shared_ptr<CpuResourceManager> cpuResourceManager,
+			std::shared_ptr<GpuResourceManager> gpuResourceManager,
 			std::unique_ptr<ObjectDomain> objectDomain,
 			std::unique_ptr<IEntityDomain> entityDomain,
 			std::unique_ptr<ISpatialStorage> spatialStorage);
@@ -47,11 +49,11 @@ namespace zzz::engine
 		void Populate(
 			const LayerData& layerData,
 			const ScriptFactory& scriptFactory,
-			std::function<void(std::expected<void, std::string>)> onReady = {},
-			std::weak_ptr<const void> ownerToken = {}) override;
+			std::function<void(std::expected<void, std::string>)> onReady = {}) override;
 
 	private:
-		std::shared_ptr<ResourceManager> m_ResourceManager;
+		std::shared_ptr<CpuResourceManager>   m_CpuResourceManager;
+		std::shared_ptr<GpuResourceManager>   m_GpuResourceManager;
 
 		NodeStorage                           m_NodeStorage;
 		std::unique_ptr<ObjectDomain>         m_ObjectDomain;

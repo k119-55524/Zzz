@@ -1,6 +1,6 @@
 #include "core/io/package/GameObjectData.h"
 #include "core/io/package/MeshData.h"
-#include "engine/resources/ResourceManager.h"
+#include "engine/resources/cpu/CpuResourceManager.h"
 #include "engine/scene/domain/EntityDomain.h"
 
 using namespace zzz::core;
@@ -25,7 +25,7 @@ namespace zzz::engine
 		NodeHandle nodeHandle,
 		const GameObjectData& objData,
 		const ScriptFactory& scriptFactory,
-		ResourceManager& resourceManager)
+		CpuResourceManager& resourceManager)
 	{
 		(void)scriptFactory;
 		const DomainHandle handle = m_World.CreateEntity(objData.GetGuid(), objData.GetName(), nodeHandle);

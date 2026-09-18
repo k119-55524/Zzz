@@ -10,15 +10,14 @@
 namespace zzz::engine
 {
 	/**
-	 * @class Mesh
-	 * @brief Ресурс полигональной 3D геометрии.
-	 * @details На этапе 16 хранит CPU-данные геометрии, подготовленные к отправке в GPU-буферы на этапе 17.
+	 * @class CpuMesh
+	 * @brief Ресурс полигональной 3D-геометрии в оперативной памяти (CPU).
 	 */
-	class Mesh : public ::zzz::core::ResourceBase
+	class CpuMesh final : public ::zzz::core::ResourceBase
 	{
 	public:
-		Mesh(const ::zzz::core::Guid& guid, std::string name, ::zzz::core::MeshData meshData);
-		~Mesh() override = default;
+		CpuMesh(const ::zzz::core::Guid& guid, std::string name, ::zzz::core::MeshData meshData);
+		~CpuMesh() override = default;
 
 		[[nodiscard]] zU32 GetVertexCount() const noexcept { return m_MeshData.GetVertexCount(); }
 		[[nodiscard]] zU32 GetVertexStride() const noexcept { return m_MeshData.GetVertexStride(); }

@@ -40,12 +40,12 @@ namespace zzz::core
 namespace zzz::engine
 {
 	class SceneManager;
-	class ResourceManager;
+	class CpuResourceManager;
 
 	class PackageManager final
 	{
 		friend class SceneManager;
-		friend class ResourceManager;
+		friend class CpuResourceManager;
 
 	public:
 		PackageManager() = delete;

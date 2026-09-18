@@ -44,7 +44,7 @@ namespace zzz::engine
 
 		const DomainHandle handle = static_cast<DomainHandle>(m_Objects.size());
 		const std::string nameCopy = name;
-		auto obj = safe_make_unique<GameObject>(guid, std::move(name), storage, nodeHandle);
+		auto obj = safe_make_shared<GameObject>(guid, std::move(name), storage, nodeHandle);
 		GameObject* rawPtr = obj.get();
 		m_Objects.push_back(std::move(obj));
 		m_ObjectsByGuid[guid] = handle;

@@ -24,8 +24,7 @@ namespace zzz::engine
 	void LayerMVVM::Populate(
 		const LayerData& /*layerData*/,
 		const ScriptFactory& /*scriptFactory*/,
-		std::function<void(std::expected<void, std::string>)> onReady,
-		std::weak_ptr<const void> /*ownerToken*/)
+		std::function<void(std::expected<void, std::string>)> onReady)
 	{
 		// Декларативный UI слой: парсинг и биндинг XAML/MVVM разметки (будет реализовано в MVP ZzzGUI)
 		if (onReady)

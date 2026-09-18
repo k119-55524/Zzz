@@ -59,7 +59,7 @@ namespace zzz::engine
 			const Guid& guid,
 			std::string name);
 
-		std::vector<std::unique_ptr<GameObject>> m_Objects;
+		std::vector<std::shared_ptr<GameObject>> m_Objects;
 		std::unordered_map<Guid, DomainHandle> m_ObjectsByGuid;
 		std::unordered_map<std::string, std::vector<DomainHandle>> m_ObjectsByName;
 	};

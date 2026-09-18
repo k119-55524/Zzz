@@ -64,10 +64,29 @@ namespace zzz::templates
 			lock.unlock(); // Мгновенно отпускаем мьютекс
 
 			// 3. Вызываем коллбэки строго вне мьютекса (защита от дедлоков и реентерабельности)
+			// Изолируем каждый коллбэк, чтобы исключение в одной задаче не прерывало выполнение остальных задач батча
+			std::exception_ptr firstException{ nullptr };
 			for (auto& cb : ready)
 			{
 				if (cb)
-					cb();
+				{
+					try
+					{
+						cb();
+					}
+					catch (...)
+					{
+						if (!firstException)
+						{
+							firstException = std::current_exception();
+						}
+					}
+				}
+			}
+
+			if (firstException)
+			{
+				std::rethrow_exception(firstException);
 			}
 		}
 

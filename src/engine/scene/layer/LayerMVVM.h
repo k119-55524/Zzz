@@ -26,8 +26,7 @@ namespace zzz::engine
 		void Populate(
 			const LayerData& layerData,
 			const ScriptFactory& scriptFactory,
-			std::function<void(std::expected<void, std::string>)> onReady = {},
-			std::weak_ptr<const void> ownerToken = {}) override;
+			std::function<void(std::expected<void, std::string>)> onReady = {}) override;
 
 	private:
 		std::unique_ptr<MVVMDomain> m_MVVMDomain;

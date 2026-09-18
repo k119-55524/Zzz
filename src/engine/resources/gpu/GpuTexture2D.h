@@ -1,0 +1,30 @@
+#pragma once
+
+#include <memory>
+#include <string>
+#include "core/resources/ResourceBase.h"
+#include "engine/resources/cpu/CpuTexture2D.h"
+
+namespace zzz::engine
+{
+	/**
+	 * @class GpuTexture2D
+	 * @brief Ресурс 2D-текстуры в видеопамяти (GPU).
+	 */
+	class GpuTexture2D final : public ::zzz::core::ResourceBase
+	{
+	public:
+		GpuTexture2D(
+			const ::zzz::core::Guid& guid,
+			std::string name,
+			std::shared_ptr<CpuTexture2D> cpuTexture);
+		~GpuTexture2D() override = default;
+
+		[[nodiscard]] const std::shared_ptr<CpuTexture2D>& GetCpuTexture() const noexcept { return m_CpuTexture; }
+		[[nodiscard]] uint32_t GetWidth() const noexcept { return m_CpuTexture ? m_CpuTexture->GetWidth() : 0; }
+		[[nodiscard]] uint32_t GetHeight() const noexcept { return m_CpuTexture ? m_CpuTexture->GetHeight() : 0; }
+
+	private:
+		std::shared_ptr<CpuTexture2D> m_CpuTexture;
+	};
+}

@@ -1,9 +1,7 @@
 
 #include <logger.h>
 
-#include "resources/MeshLoader.h"
-#include "resources/MaterialLoader.h"
-#include "resources/ShaderLoader.h"
+
 
 #include "Engine.h"
 
@@ -54,22 +52,20 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 	m_GAPI = safe_make_shared<GAPI>();
 	m_GAPI->Initialize(m_UserSettingsManager);
 
-	// Инициализация центрального менеджера ресурсов (ResourceManager)
-	m_ResourceManager = safe_make_shared<ResourceManager>(m_PackageManager, m_DataAssetsManager, m_FileSystem, m_GAPI);
-	m_ResourceManager->RegisterLoader<MeshLoader>();
-	m_ResourceManager->RegisterLoader<MaterialLoader>();
-	m_ResourceManager->RegisterLoader<ShaderLoader>();
-	m_ResourceManager->Start();
-	m_ResourceGC = safe_make_unique<ResourceGarbageCollector>(*m_ResourceManager);
-	m_ResourceGC->Start();
+	// Инициализация центрального менеджера ресурсов CPU (CpuResourceManager)
+	m_CpuResourceManager = safe_make_shared<CpuResourceManager>(m_PackageManager, m_DataAssetsManager, m_FileSystem);
+	m_CpuResourceManager->Start();
+
+	// Инициализация менеджера ресурсов GPU (GpuResourceManager)
+	m_GpuResourceManager = safe_make_shared<GpuResourceManager>(m_GAPI, m_CpuResourceManager);
 
 	// Инициализация изолированной подсистемы скриптов (хранилище, регистратор и фабрика экземпляра движка)
 	m_ScriptStorage = safe_make_shared<ScriptStorage>();
 	m_ScriptRegistry = safe_make_unique<ScriptRegistry>(*m_ScriptStorage);
 	m_ScriptFactory = safe_make_shared<ScriptFactory>(*m_ScriptStorage);
 
-	// Инициализация менеджера сцен (SceneManager) с пробросом TaskDispatcher, ResourceManager и ResourceGC
-	m_SceneManager = safe_make_shared<SceneManager>(*m_TaskDispatcher, m_PackageManager, m_ResourceManager, m_ScriptFactory, m_ResourceGC.get());
+	// Инициализация менеджера сцен (SceneManager) с пробросом TaskDispatcher, CpuResourceManager и GpuResourceManager
+	m_SceneManager = safe_make_shared<SceneManager>(*m_TaskDispatcher, m_PackageManager, m_CpuResourceManager, m_GpuResourceManager, m_ScriptFactory);
 
 	// Инициализация менеджера отображения окон (ViewManager) с пробросом TaskDispatcher, платформы, GAPI, скриптов и сцен
 	m_ViewManager = safe_make_unique<ViewManager>(*m_TaskDispatcher, *m_Platform, m_GAPI, m_ScriptFactory, m_PackageManager, m_UserSettingsManager, m_SceneManager, [this]() { OnAppClosed(); });
@@ -134,17 +130,12 @@ void Engine::Shutdown() noexcept
 		if (m_GAPI)
 			m_GAPI->WaitForGpu();
 
-		if (m_ResourceGC)
+		if (m_CpuResourceManager)
 		{
-			m_ResourceGC->Stop();
-			m_ResourceGC = nullptr;
+			m_CpuResourceManager->Stop();
+			m_CpuResourceManager = nullptr;
 		}
-
-		if (m_ResourceManager)
-		{
-			m_ResourceManager->Stop();
-			m_ResourceManager = nullptr;
-		}
+		m_GpuResourceManager = nullptr;
 
 		m_SceneManager = nullptr;
 		m_ViewManager = nullptr;
@@ -315,7 +306,8 @@ void Engine::OnUpdateSystem()
 #endif // Z_ADD_LOGGER
 
 	m_EventBus->InvokeUpdate(*m_Time);
-	m_ResourceManager->Update();
+	m_CpuResourceManager->Update();
+	m_GpuResourceManager->Update();
 	m_SceneManager->Update(*m_Time);
 	m_ViewManager->Update(*m_Time);
 }

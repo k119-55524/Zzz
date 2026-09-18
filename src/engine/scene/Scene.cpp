@@ -1,3 +1,7 @@
+#include "Scene.h"
+
+#include <mutex>
+#include <format>
 
 #include "core/utils/MemoryUtils.h"
 #include "core/io/package/SceneData.h"
@@ -6,10 +10,9 @@
 #include "engine/scene/layer/LayerMVVM.h"
 #include "core/templates/CountdownTrigger.h"
 #include "core/userscripts/ScriptFactory.h"
-#include "engine/resources/ResourceManager.h"
+#include "engine/resources/cpu/CpuResourceManager.h"
+#include "engine/resources/gpu/GpuResourceManager.h"
 #include "engine/scene/layer/LayerSubsystemFactory.h"
-
-#include "Scene.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Scene);
 
@@ -21,14 +24,21 @@ namespace zzz::engine
 	Scene::Scene(
 		Guid guid,
 		std::string name,
-		std::shared_ptr<ResourceManager> resourceManager,
-		SceneTransitionParams defaultTransition) :
-		m_Guid(guid),
-		m_Name(std::move(name)),
-		m_ResourceManager(std::move(resourceManager)),
-		m_TransitionParams(std::move(defaultTransition))
+		std::shared_ptr<CpuResourceManager> cpuResourceManager,
+		std::shared_ptr<GpuResourceManager> gpuResourceManager,
+		SceneTransitionParams defaultTransition)
+		: m_Guid(guid)
+		, m_Name(std::move(name))
+		, m_CpuResourceManager(std::move(cpuResourceManager))
+		, m_GpuResourceManager(std::move(gpuResourceManager))
+		, m_ClearConfig()
+		, m_TransitionParams(std::move(defaultTransition))
+		, m_EventBus()
+		, m_Scripts()
+		, m_Layers()
 	{
-		ensure(m_ResourceManager != nullptr, "ResourceManager не должен быть null при создании Scene.");
+		ensure(m_CpuResourceManager != nullptr, "CpuResourceManager не должен быть null при создании Scene.");
+		ensure(m_GpuResourceManager != nullptr, "GpuResourceManager не должен быть null при создании Scene.");
 	}
 
 	Scene::~Scene()
@@ -40,17 +50,11 @@ namespace zzz::engine
 	void Scene::Initialize(
 		const ScriptFactory& scriptFactory,
 		TaskDispatcher& taskDispatcher,
-		std::function<void(std::expected<void, std::string>)> onLayersCreated,
-		std::weak_ptr<const void> ownerToken)
+		std::function<void(std::expected<void, std::string>)> onLayersCreated)
 	{
 		ensure(onLayersCreated != nullptr, "onLayersCreated коллбэк не должен быть null при инициализации Scene.");
 
-		if (ownerToken.expired())
-		{
-			ownerToken = weak_from_this();
-		}
-
-		auto sceneDataRes = m_ResourceManager->LoadSceneData(m_Guid);
+		auto sceneDataRes = m_CpuResourceManager->LoadSceneData(m_Guid);
 		if (!sceneDataRes)
 			THROW_RUNTIME("Scene '{}' ({}) не смогла загрузить SceneData: {}", m_Name, m_Guid.ToString(), sceneDataRes.error());
 
@@ -104,7 +108,8 @@ namespace zzz::engine
 					layerData.GetGuid(),
 					layerData.GetName(),
 					layerData.GetType(),
-					m_ResourceManager,
+					m_CpuResourceManager,
+					m_GpuResourceManager,
 					std::move(objectDomain),
 					std::move(entityDomain),
 					std::move(spatialStorage));
@@ -122,7 +127,7 @@ namespace zzz::engine
 			}
 
 			// Асинхронное наполнение слоя в пуле потоков через TaskDispatcher (приоритет Normal)
-			taskDispatcher.Submit(eTaskPriority::Normal, [layer = m_Layers[i].get(), layerIndex = i, &scriptFactory, sharedSceneData, trigger, firstError, errorMutex, ownerToken]()
+			taskDispatcher.Submit(eTaskPriority::Normal, [layer = m_Layers[i].get(), layerIndex = i, &scriptFactory, sharedSceneData, trigger, firstError, errorMutex]()
 			{
 				const auto& currentLayerData = sharedSceneData->GetLayers()[layerIndex];
 				try
@@ -137,7 +142,7 @@ namespace zzz::engine
 							}
 						}
 						trigger->CountDown();
-					}, ownerToken);
+					});
 				}
 				catch (const std::exception& ex)
 				{
@@ -204,4 +209,3 @@ namespace zzz::engine
 		m_EventBus.InvokeDestroy();
 	}
 }
-

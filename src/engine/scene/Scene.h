@@ -15,7 +15,8 @@ namespace zzz::core
 namespace zzz::engine
 {
 	using namespace zzz::core;
-	class ResourceManager;
+	class CpuResourceManager;
+	class GpuResourceManager;
 	class TaskDispatcher;
 
 	class Scene final : public std::enable_shared_from_this<Scene>
@@ -26,7 +27,8 @@ namespace zzz::engine
 		Scene(
 			Guid guid,
 			std::string name,
-			std::shared_ptr<ResourceManager> resourceManager,
+			std::shared_ptr<CpuResourceManager> cpuResourceManager,
+			std::shared_ptr<GpuResourceManager> gpuResourceManager,
 			SceneTransitionParams defaultTransition = {});
 
 		~Scene();
@@ -34,8 +36,7 @@ namespace zzz::engine
 		void Initialize(
 			const ScriptFactory& scriptFactory,
 			TaskDispatcher& taskDispatcher,
-			std::function<void(std::expected<void, std::string>)> onLayersCreated,
-			std::weak_ptr<const void> ownerToken = {});
+			std::function<void(std::expected<void, std::string>)> onLayersCreated);
 
 		[[nodiscard]] const Guid& GetGuid() const noexcept { return m_Guid; }
 		[[nodiscard]] const std::string& GetName() const noexcept { return m_Name; }
@@ -46,7 +47,8 @@ namespace zzz::engine
 		[[nodiscard]] const SceneTransitionParams& GetTransitionParams() const noexcept { return m_TransitionParams; }
 		void SetTransitionParams(const SceneTransitionParams& params) noexcept { m_TransitionParams = params; }
 
-		[[nodiscard]] std::shared_ptr<ResourceManager> GetResourceManager() const noexcept { return m_ResourceManager; }
+		[[nodiscard]] std::shared_ptr<CpuResourceManager> GetCpuResourceManager() const noexcept { return m_CpuResourceManager; }
+		[[nodiscard]] std::shared_ptr<GpuResourceManager> GetGpuResourceManager() const noexcept { return m_GpuResourceManager; }
 
 		// --- Управление слоями сцены ---
 		[[nodiscard]] const std::vector<std::unique_ptr<ILayer>>& GetLayers() const noexcept { return m_Layers; }
@@ -59,7 +61,8 @@ namespace zzz::engine
 	private:
 		Guid m_Guid;
 		std::string m_Name;
-		std::shared_ptr<ResourceManager> m_ResourceManager;
+		std::shared_ptr<CpuResourceManager> m_CpuResourceManager;
+		std::shared_ptr<GpuResourceManager> m_GpuResourceManager;
 		ClearConfig m_ClearConfig;
 		SceneTransitionParams m_TransitionParams;
 		SceneEventBus m_EventBus;

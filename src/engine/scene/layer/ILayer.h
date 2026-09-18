@@ -56,8 +56,7 @@ namespace zzz::engine
 		virtual void Populate(
 			const LayerData& layerData,
 			const ScriptFactory& scriptFactory,
-			std::function<void(std::expected<void, std::string>)> onReady = {},
-			std::weak_ptr<const void> ownerToken = {}) = 0;
+			std::function<void(std::expected<void, std::string>)> onReady = {}) = 0;
 
 	protected:
 		zzz::core::Guid m_Guid;

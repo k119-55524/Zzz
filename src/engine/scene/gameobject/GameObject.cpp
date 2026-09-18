@@ -1,15 +1,18 @@
+#include "GameObject.h"
 
 #include <mutex>
+#include <format>
 
 #include "core/utils/Ensure.h"
+#include "core/utils/ThrowWrappers.h"
 #include "core/io/package/GameObjectData.h"
 #include "core/userscripts/ScriptFactory.h"
 #include "core/templates/CountdownTrigger.h"
-#include "engine/resources/ResourceManager.h"
+#include "engine/resources/gpu/GpuResourceManager.h"
+#include "engine/resources/gpu/GpuMesh.h"
+#include "engine/resources/gpu/GpuMaterial.h"
 #include "engine/scene/storage/NodeStorage.h"
 #include "core/userscripts/base_script/Script.h"
-
-#include "GameObject.h"
 
 using namespace zzz::core;
 using namespace zzz::math;
@@ -18,11 +21,11 @@ Z_SET_LOG_CATEGORY(zzz::core::Scene);
 
 namespace zzz::engine
 {
-	GameObject::GameObject(const Guid& guid, std::string name, NodeStorage& storage, NodeHandle nodeHandle) :
-		m_Guid(guid),
-		m_Name(std::move(name)),
-		m_NodeStorage(&storage),
-		m_NodeHandle(nodeHandle)
+	GameObject::GameObject(const Guid& guid, std::string name, NodeStorage& storage, NodeHandle nodeHandle)
+		: m_Guid(guid)
+		, m_Name(std::move(name))
+		, m_NodeStorage(&storage)
+		, m_NodeHandle(nodeHandle)
 	{
 		ensure(m_Guid.IsValid(), "GameObject: передан невалидный Guid");
 		ensure(!m_Name.empty(), "GameObject: передано пустое имя объекта");
@@ -32,9 +35,8 @@ namespace zzz::engine
 	void GameObject::Initialize(
 		const GameObjectData& data,
 		const ScriptFactory& scriptFactory,
-		ResourceManager& resourceManager,
-		std::function<void(std::expected<void, std::string>)> onReady,
-		std::weak_ptr<const void> ownerToken)
+		GpuResourceManager& gpuResourceManager,
+		std::function<void(std::expected<void, std::string>)> onReady)
 	{
 		ensure(onReady != nullptr, "GameObject::Initialize: onReady коллбэк не должен быть null.");
 
@@ -73,7 +75,7 @@ namespace zzz::engine
 					m_Name, m_Guid.ToString(), i, meshGuids[i].ToString(), matGuids[i].ToString())));
 				return;
 			}
-			m_RenderPairs.push_back(RenderPair{ meshGuids[i], matGuids[i] });
+			m_RenderPairs.push_back(RenderPair{ meshGuids[i], matGuids[i], nullptr, nullptr });
 		}
 
 		// 4. Подсчёт количества ресурсов для асинхронной загрузки
@@ -104,7 +106,7 @@ namespace zzz::engine
 			const auto& pair = m_RenderPairs[i];
 			if (pair.meshGuid.IsValid())
 			{
-				resourceManager.LoadMeshAsync(pair.meshGuid, [this, i, trigger, firstError, errorMutex](std::expected<Guid, std::string> res) {
+				gpuResourceManager.LoadGpuMeshAsync(pair.meshGuid, weak_from_this(), [this, i, trigger, firstError, errorMutex](std::expected<std::shared_ptr<GpuMesh>, std::string> res) {
 					if (!res)
 					{
 						std::lock_guard lock(*errorMutex);
@@ -115,15 +117,15 @@ namespace zzz::engine
 					}
 					else
 					{
-						m_RenderPairs[i].meshGuid = *res;
+						m_RenderPairs[i].gpuMesh = *res;
 					}
 					trigger->CountDown();
-				}, ownerToken);
+				});
 			}
 
 			if (pair.materialGuid.IsValid())
 			{
-				resourceManager.LoadMaterialAsync(pair.materialGuid, [this, i, trigger, firstError, errorMutex](std::expected<Guid, std::string> res) {
+				gpuResourceManager.LoadGpuMaterialAsync(pair.materialGuid, weak_from_this(), [this, i, trigger, firstError, errorMutex](std::expected<std::shared_ptr<GpuMaterial>, std::string> res) {
 					if (!res)
 					{
 						std::lock_guard lock(*errorMutex);
@@ -134,10 +136,10 @@ namespace zzz::engine
 					}
 					else
 					{
-						m_RenderPairs[i].materialGuid = *res;
+						m_RenderPairs[i].gpuMaterial = *res;
 					}
 					trigger->CountDown();
-				}, ownerToken);
+				});
 			}
 		}
 	}

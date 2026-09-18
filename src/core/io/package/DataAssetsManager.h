@@ -17,7 +17,7 @@
 
 namespace zzz::engine
 {
-	class ResourceManager;
+	class CpuResourceManager;
 }
 
 namespace zzz::core
@@ -56,7 +56,7 @@ namespace zzz::core
 	 */
 	class Z_CORE_API DataAssetsManager final
 	{
-		friend class ::zzz::engine::ResourceManager;
+		friend class ::zzz::engine::CpuResourceManager;
 
 	public:
 		DataAssetsManager() = delete;

@@ -1,3 +1,4 @@
+#include "GameLayer.h"
 
 #include <mutex>
 #include "core/templates/CountdownTrigger.h"
@@ -5,10 +6,9 @@
 #include "core/io/package/MeshData.h"
 #include "core/io/package/LayerData.h"
 #include "core/userscripts/ScriptFactory.h"
-#include "engine/resources/ResourceManager.h"
+#include "engine/resources/cpu/CpuResourceManager.h"
+#include "engine/resources/gpu/GpuResourceManager.h"
 #include "engine/scene/gameobject/GameObject.h"
-
-#include "GameLayer.h"
 
 using namespace zzz::core;
 using namespace zzz::templates;
@@ -21,17 +21,21 @@ namespace zzz::engine
 		Guid guid,
 		std::string name,
 		eLayerType type,
-		std::shared_ptr<ResourceManager> resourceManager,
+		std::shared_ptr<CpuResourceManager> cpuResourceManager,
+		std::shared_ptr<GpuResourceManager> gpuResourceManager,
 		std::unique_ptr<ObjectDomain> objectDomain,
 		std::unique_ptr<IEntityDomain> entityDomain,
-		std::unique_ptr<ISpatialStorage> spatialStorage) :
-			ILayer(guid, std::move(name), type),
-			m_ResourceManager(std::move(resourceManager)),
-			m_ObjectDomain(std::move(objectDomain)),
-			m_EntityDomain(std::move(entityDomain)),
-			m_SpatialStorage(std::move(spatialStorage))
+		std::unique_ptr<ISpatialStorage> spatialStorage)
+		: ILayer(guid, std::move(name), type)
+		, m_CpuResourceManager(std::move(cpuResourceManager))
+		, m_GpuResourceManager(std::move(gpuResourceManager))
+		, m_NodeStorage()
+		, m_ObjectDomain(std::move(objectDomain))
+		, m_EntityDomain(std::move(entityDomain))
+		, m_SpatialStorage(std::move(spatialStorage))
 	{
-		ensure(m_ResourceManager != nullptr, "ResourceManager не должен быть null в GameLayer.");
+		ensure(m_CpuResourceManager != nullptr, "CpuResourceManager не должен быть null в GameLayer.");
+		ensure(m_GpuResourceManager != nullptr, "GpuResourceManager не должен быть null в GameLayer.");
 		ensure(m_ObjectDomain != nullptr, "ObjectDomain не должен быть null в GameLayer.");
 		ensure(m_EntityDomain != nullptr, "EntityDomain не должен быть null в GameLayer.");
 		ensure(m_SpatialStorage != nullptr, "SpatialStorage не должен быть null в GameLayer.");
@@ -48,8 +52,7 @@ namespace zzz::engine
 	void GameLayer::Populate(
 		const LayerData& layerData,
 		const ScriptFactory& scriptFactory,
-		std::function<void(std::expected<void, std::string>)> onReady,
-		std::weak_ptr<const void> ownerToken)
+		std::function<void(std::expected<void, std::string>)> onReady)
 	{
 		// 1. Всегда очищаем предыдущее состояние слоя
 		m_ObjectDomain->Clear();
@@ -82,7 +85,7 @@ namespace zzz::engine
 			// Взаимоисключающая маршрутизация в домены
 			if (objData.IsEntity())
 			{
-				const DomainHandle dHandle = m_EntityDomain->CreateEntity(nodeHandle, objData, scriptFactory, *m_ResourceManager);
+				const DomainHandle dHandle = m_EntityDomain->CreateEntity(nodeHandle, objData, scriptFactory, *m_CpuResourceManager);
 				m_NodeStorage.SetDomainBinding(nodeHandle, dHandle, eNodeDomainKind::Entity);
 			}
 			else
@@ -154,7 +157,7 @@ namespace zzz::engine
 			go->Initialize(
 				objData,
 				scriptFactory,
-				*m_ResourceManager,
+				*m_GpuResourceManager,
 				[trigger, firstError, errorMutex](std::expected<void, std::string> res) {
 					if (!res)
 					{
@@ -165,8 +168,7 @@ namespace zzz::engine
 						}
 					}
 					trigger->CountDown();
-				},
-				ownerToken);
+				});
 		}
 	}
 }

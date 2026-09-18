@@ -1,11 +1,15 @@
+#include "SceneManager.h"
+
+#include <format>
+#include <stdexcept>
 
 #include "Scene.h"
 #include "engine/package/PackageManager.h"
-#include "engine/resources/ResourceManager.h"
+#include "engine/resources/cpu/CpuResourceManager.h"
+#include "engine/resources/gpu/GpuResourceManager.h"
 #include "core/io/package/ProjectManifestData.h"
-#include "engine/resources/ResourceGarbageCollector.h"
-
-#include "SceneManager.h"
+#include "core/utils/Ensure.h"
+#include "core/utils/MemoryUtils.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Scene);
 
@@ -16,17 +20,22 @@ namespace zzz::engine
 	SceneManager::SceneManager(
 		TaskDispatcher& taskDispatcher,
 		std::shared_ptr<PackageManager> packageManager,
-		std::shared_ptr<ResourceManager> resourceManager,
-		std::shared_ptr<ScriptFactory> scriptFactory,
-		ResourceGarbageCollector* resourceGC) :
-		m_TaskDispatcher(taskDispatcher),
-		m_PackageManager(std::move(packageManager)),
-		m_ResourceManager(std::move(resourceManager)),
-		m_ScriptFactory(std::move(scriptFactory)),
-		m_ResourceGC(resourceGC)
+		std::shared_ptr<CpuResourceManager> cpuResourceManager,
+		std::shared_ptr<GpuResourceManager> gpuResourceManager,
+		std::shared_ptr<ScriptFactory> scriptFactory)
+		: m_TaskDispatcher(taskDispatcher)
+		, m_PackageManager(std::move(packageManager))
+		, m_CpuResourceManager(std::move(cpuResourceManager))
+		, m_GpuResourceManager(std::move(gpuResourceManager))
+		, m_ScriptFactory(std::move(scriptFactory))
+		, m_GlobalTransitionParams()
+		, m_LoadSceneMutex()
+		, m_MainThreadQueue()
+		, m_Scenes()
 	{
 		ensure(m_PackageManager != nullptr, "PackageManager не должен быть null.");
-		ensure(m_ResourceManager != nullptr, "ResourceManager не должен быть null.");
+		ensure(m_CpuResourceManager != nullptr, "CpuResourceManager не должен быть null.");
+		ensure(m_GpuResourceManager != nullptr, "GpuResourceManager не должен быть null.");
 		ensure(m_ScriptFactory != nullptr, "ScriptFactory не должен быть null.");
 
 		m_GlobalTransitionParams = m_PackageManager->GetProjectManifestData().GetDefaultTransitionParams();
@@ -36,7 +45,6 @@ namespace zzz::engine
 	{
 		ensure(onComplete != nullptr, "onComplete коллбэк должен быть валидным.");
 		auto entryOpt = m_PackageManager->GetEntry(ePackage::Scene, sceneName);
-		// Наличие гарантируется сборкой ассетов в package.dat; ensure для проверки целостности при разработке
 		ensure(entryOpt.has_value(), "Сцена с именем '{}' не найдена в package.dat.", sceneName);
 
 		LoadSceneAsync(entryOpt->GetGuid(), std::move(onComplete));
@@ -63,10 +71,6 @@ namespace zzz::engine
 			eTaskPriority::Normal,
 			[this, sceneGuid, onComplete]()
 			{
-				std::optional<ScopedGCSuspension> gcLock;
-				if (m_ResourceGC)
-					gcLock.emplace(*m_ResourceGC);
-
 				auto entryOpt = m_PackageManager->GetEntry(ePackage::Scene, sceneGuid);
 				ensure(entryOpt.has_value(), "Сцена с GUID '{}' не найдена в package.dat.", sceneGuid.ToString());
 
@@ -76,11 +80,10 @@ namespace zzz::engine
 				auto scene = safe_make_shared<Scene>(
 					sceneGuid,
 					sceneName,
-					m_ResourceManager,
+					m_CpuResourceManager,
+					m_GpuResourceManager,
 					m_GlobalTransitionParams
 				);
-
-				std::weak_ptr<const void> ownerToken = scene;
 
 				// 2. Инициализация слоёв сцены (по завершении переносим в основной поток)
 				scene->Initialize(*m_ScriptFactory, m_TaskDispatcher, [this, scene, onComplete](std::expected<void, std::string> initRes) mutable
@@ -112,31 +115,47 @@ namespace zzz::engine
 							onComplete(scene);
 						}
 					});
-				}, ownerToken);
+				});
 			},
-			// Колбэк перехвата исключений из потока моздания сцены
+			// Колбэк перехвата исключений из потока создания сцены
 			[this, onComplete](std::exception_ptr ex)
 			{
 				// Перенаправляем исключение в очередь главного потока для перехвата в Engine::Run
-				m_MainThreadQueue.Push([onComplete, ex]()
+				m_MainThreadQueue.Push([ex, onComplete]()
 				{
 					if (onComplete)
-						onComplete(std::unexpected("Критическое исключение при загрузке сцены."));
-
-					if (ex)
-						std::rethrow_exception(ex);
+					{
+						try
+						{
+							std::rethrow_exception(ex);
+						}
+						catch (const std::exception& e)
+						{
+							onComplete(std::unexpected(e.what()));
+						}
+						catch (...)
+						{
+							onComplete(std::unexpected("Неизвестная ошибка при загрузке сцены"));
+						}
+					}
+					std::rethrow_exception(ex);
 				});
-			});
+			}
+		);
 	}
 
 	void SceneManager::Update(const Time& time)
 	{
+		// 1. Разбор отложенных задач диспетчеризации (перенос готовых сцен и вызовы Start в главном потоке)
 		m_MainThreadQueue.ExecuteAll();
 
-		for (const auto& [guid, scene] : m_Scenes)
+		// 2. Кадровое обновление всех активных сцен (выполнение пользовательских скриптов SceneScript/GameScript)
+		for (auto& [guid, scene] : m_Scenes)
 		{
-			if (scene != nullptr)
+			if (scene)
+			{
 				scene->Update(time);
+			}
 		}
 	}
 }
