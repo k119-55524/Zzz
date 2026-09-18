@@ -1,6 +1,8 @@
 #include "AssetImporterRegistry.h"
 #include "ObjImporter.h"
 #include "MaterialImporter.h"
+#include "ShaderImporter.h"
+#include "PrefabImporter.h"
 #include "AssetExtensions.h"
 #include <algorithm>
 #include <cctype>
@@ -29,6 +31,8 @@ namespace zzz::builder
 	{
 		RegisterImporter(c_ExtMeshObj, std::make_shared<ObjImporter>());
 		RegisterImporter(c_ExtMaterial, std::make_shared<MaterialImporter>());
+		RegisterImporter(c_ExtShaderHlsl, std::make_shared<ShaderImporter>());
+		RegisterImporter(c_ExtPrefab, std::make_shared<PrefabImporter>());
 
 		// Scene/View - структурные ресурсы package.dat, не блоб-импортёры data.dat (обрабатываются
 		// PackagePacker напрямую), но должны быть "известны" реестру наравне с остальными типами,

@@ -9,7 +9,7 @@ namespace zzz::builder
 	class PackagePacker final
 	{
 	public:
-		// Упаковка манифеста project.json, сцен (*.zs) и вьюх (*.zv) в destinationDir/assets/package.dat
+		// Упаковка манифеста project.json, сцен (*.zscene) и вьюх (*.zview) в destinationDir/assets/package.dat
 		// и данных (мешей/материалов/шейдеров) в destinationDir/assets/data/data.dat. Оба архива получают
 		// одно и то же время упаковки (см. DatFileHeader::GetBuildTime()); buildTimestamp - если задан (>0),
 		// используется как единый timestamp (мс от unix epoch), иначе генерируется текущее время.

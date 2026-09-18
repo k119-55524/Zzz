@@ -3,6 +3,7 @@
 
 #include "resources/MeshLoader.h"
 #include "resources/MaterialLoader.h"
+#include "resources/ShaderLoader.h"
 
 #include "Engine.h"
 
@@ -57,6 +58,7 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 	m_ResourceManager = safe_make_shared<ResourceManager>(m_PackageManager, m_DataAssetsManager, m_FileSystem, m_GAPI);
 	m_ResourceManager->RegisterLoader<MeshLoader>();
 	m_ResourceManager->RegisterLoader<MaterialLoader>();
+	m_ResourceManager->RegisterLoader<ShaderLoader>();
 	m_ResourceManager->Start();
 	m_ResourceGC = safe_make_unique<ResourceGarbageCollector>(*m_ResourceManager);
 	m_ResourceGC->Start();

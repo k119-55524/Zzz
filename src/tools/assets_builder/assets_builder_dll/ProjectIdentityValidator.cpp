@@ -65,25 +65,7 @@ namespace zzz::builder
 			return value;
 		}
 
-		// Ожидаемое значение поля "type" в .meta для данного владельца GUID. Пустая строка -
-		// проверка совпадения не выполняется (значение не фиксировано контрактом), но поле всё
-		// равно обязано присутствовать.
-		std::string_view ExpectedMetaTypeStringForKind(GuidOwnerKind kind)
-		{
-			switch (kind)
-			{
-			case GuidOwnerKind::Project:  return "project";
-			case GuidOwnerKind::Scene:    return "scene";
-			case GuidOwnerKind::View:     return "view";
-			case GuidOwnerKind::Script:   return "script";
-			case GuidOwnerKind::Mesh:     return "mesh";
-			case GuidOwnerKind::Material: return "material";
-			case GuidOwnerKind::Shader:   return "shader";
-			case GuidOwnerKind::Texture:  return "texture";
-			case GuidOwnerKind::Prefab:   return "prefab";
-			default: return {};
-			}
-		}
+
 
 		struct GuidOwnerInfo
 		{
@@ -386,50 +368,25 @@ namespace zzz::builder
 									ctx, pIdx);
 								return false;
 							}
+							if (!partElem["mesh"].is_string())
+							{
+								outError = std::format("{}: поле 'mesh' в render[{}] должно быть строкой GUID.", ctx, pIdx);
+								return false;
+							}
+							if (!partElem["material"].is_string())
+							{
+								outError = std::format("{}: поле 'material' в render[{}] должно быть строкой GUID.", ctx, pIdx);
+								return false;
+							}
 							if (!ValidateGuidStringField(registry, partElem, "mesh", GuidOwnerKind::Mesh, partCtx, outError))
 								return false;
 							if (!ValidateGuidStringField(registry, partElem, "material", GuidOwnerKind::Material, partCtx, outError))
 								return false;
 						}
 					}
-					else if (render.is_object())
-					{
-						if (!ValidateGuidStringField(registry, render, "mesh", GuidOwnerKind::Mesh, ctx + " (render)", outError))
-							return false;
-						if (!ValidateGuidArrayField(registry, render, "submeshes", GuidOwnerKind::Mesh, ctx + " (render)", outError))
-							return false;
-						if (!ValidateGuidStringField(registry, render, "material", GuidOwnerKind::Material, ctx + " (render)", outError))
-							return false;
-						if (!ValidateGuidArrayField(registry, render, "materials", GuidOwnerKind::Material, ctx + " (render)", outError))
-							return false;
-
-						if (render.contains("parts"))
-						{
-							const auto& parts = render["parts"];
-							if (!parts.is_array())
-							{
-								outError = std::format("{}: поле 'render.parts' должно быть массивом.", ctx);
-								return false;
-							}
-							for (size_t pIdx = 0; pIdx < parts.size(); ++pIdx)
-							{
-								const auto& partElem = parts[pIdx];
-								std::string partCtx = std::format("{} (render.parts[{}])", ctx, pIdx);
-								if (!partElem.is_object())
-								{
-									outError = std::format("{}: элемент render.parts[{}] не является объектом JSON.", ctx, pIdx);
-									return false;
-								}
-								if (!ValidateGuidStringField(registry, partElem, "mesh", GuidOwnerKind::Mesh, partCtx, outError))
-									return false;
-								if (!ValidateGuidStringField(registry, partElem, "material", GuidOwnerKind::Material, partCtx, outError))
-									return false;
-							}
-						}
-					}
 					else
 					{
-						outError = std::format("{}: поле 'render' должно быть массивом или объектом JSON.", ctx);
+						outError = std::format("{}: поле 'render' должно быть массивом пар {{ \"mesh\": \"...\", \"material\": \"...\" }}.", ctx);
 						return false;
 					}
 				}
@@ -732,8 +689,7 @@ namespace zzz::builder
 						return false;
 					}
 					// Поле 'type' в .meta обязательно только для скриптов (расширение .h/.hpp само по себе не задаёт тип скрипта).
-					// Для остальных типов (mesh, material, scene, view) тип на 100% известен по зарегистрированному расширению файла.
-					// Если же поле 'type' явно задано в .meta для любого ресурса, проверяется его корректность.
+					// Для остальных ресурсов тип определяется по расширению файла, поле 'type' игнорируется.
 					if (kind == GuidOwnerKind::Script)
 					{
 						if (!metaJson.contains("type") || !metaJson["type"].is_string())
@@ -743,17 +699,14 @@ namespace zzz::builder
 							SetError(errorBuffer, bufferSize, outError);
 							return false;
 						}
-					}
 
-					if (metaJson.contains("type") && metaJson["type"].is_string())
-					{
-						const std::string actualType = NormalizeTypeString(metaJson["type"].get<std::string>());
-						const std::string_view expectedType = ExpectedMetaTypeStringForKind(kind);
-						if (!expectedType.empty() && actualType != expectedType)
+						const std::string scriptType = NormalizeTypeString(metaJson["type"].get<std::string>());
+						if (scriptType != "script" && scriptType != "game" &&
+							scriptType != "view" && scriptType != "scene" && scriptType != "cppclass")
 						{
 							outError = std::format(
-								"Мета-файл '{}': поле 'type' = '{}' не соответствует ожидаемому '{}' для '{}'.",
-								fs::relative(metaPath, projectDir).string(), actualType, expectedType, relPath.string());
+								"Мета-файл скрипта '{}' содержит неподдерживаемый тип '{}'. Ожидается один из: script, game, view, scene, cppclass.",
+								fs::relative(metaPath, projectDir).string(), scriptType);
 							SetError(errorBuffer, bufferSize, outError);
 							return false;
 						}
@@ -774,7 +727,7 @@ namespace zzz::builder
 						return false;
 					}
 
-					// Проверка синтаксиса представления (.zv)
+					// Проверка синтаксиса представления (.zview)
 					if (kind == GuidOwnerKind::View)
 					{
 						std::ifstream vf(path);
@@ -793,7 +746,7 @@ namespace zzz::builder
 						}
 					}
 
-					// Если это сцена (.zs), регистрируем слои и объекты
+					// Если это сцена (.zscene), регистрируем слои и объекты
 					if (kind == GuidOwnerKind::Scene)
 					{
 						std::ifstream sf(path);
@@ -1054,7 +1007,7 @@ namespace zzz::builder
 				}
 			}
 
-			// 2.3. Ссылки внутри ассетов (.zv и .zs)
+			// 2.3. Ссылки внутри ассетов (.zview и .zscene)
 			if (fs::exists(assetsDir) && fs::is_directory(assetsDir))
 			{
 				for (const auto& entry : fs::recursive_directory_iterator(assetsDir))
@@ -1125,6 +1078,30 @@ namespace zzz::builder
 								SetError(errorBuffer, bufferSize, outError);
 								return false;
 							}
+						}
+					}
+					else if (ext == c_ExtMaterial)
+					{
+						std::ifstream mf(path);
+						json matJson = json::parse(mf, nullptr, false);
+						if (matJson.is_discarded())
+						{
+							outError = std::format("Материал '{}' содержит некорректный JSON синтаксис.", relPath.string());
+							SetError(errorBuffer, bufferSize, outError);
+							return false;
+						}
+						if (!matJson.is_object())
+						{
+							outError = std::format("Материал '{}' должен быть JSON-объектом.", relPath.string());
+							SetError(errorBuffer, bufferSize, outError);
+							return false;
+						}
+
+						std::string ctx = std::format("Материал '{}'", relPath.string());
+						if (!ValidateGuidStringField(registry, matJson, "shader", GuidOwnerKind::Shader, ctx, outError))
+						{
+							SetError(errorBuffer, bufferSize, outError);
+							return false;
 						}
 					}
 					else if (ext == c_ExtScene)

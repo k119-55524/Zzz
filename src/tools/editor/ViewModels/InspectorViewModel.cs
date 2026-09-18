@@ -462,9 +462,9 @@ namespace editor.ViewModels
             }
             else if (assetType == AssetResourceType.View)
             {
-                if (!node.RelativePath.EndsWith(".zv", StringComparison.OrdinalIgnoreCase))
+                if (!node.RelativePath.EndsWith(".zview", StringComparison.OrdinalIgnoreCase))
                 {
-                    error = $"[{propName}] В данный список можно добавлять только представления (.zv).";
+                    error = $"[{propName}] В данный список можно добавлять только представления (.zview).";
                     return false;
                 }
                 
@@ -473,9 +473,9 @@ namespace editor.ViewModels
             }
             else if (assetType == AssetResourceType.Scene)
             {
-                if (!node.RelativePath.EndsWith(".zs", StringComparison.OrdinalIgnoreCase))
+                if (!node.RelativePath.EndsWith(".zscene", StringComparison.OrdinalIgnoreCase))
                 {
-                    error = $"[{propName}] В данный список можно добавлять только сцены (.zs). Node path: {node.RelativePath}";
+                    error = $"[{propName}] В данный список можно добавлять только сцены (.zscene). Node path: {node.RelativePath}";
                     return false;
                 }
                 
@@ -712,8 +712,8 @@ namespace editor.ViewModels
                     }
                 }
                 else if (node.Name.EndsWith(".toml", StringComparison.OrdinalIgnoreCase) ||
-                         node.Name.EndsWith(".zs", StringComparison.OrdinalIgnoreCase) ||
-                         node.Name.EndsWith(".zv", StringComparison.OrdinalIgnoreCase))
+                         node.Name.EndsWith(".zscene", StringComparison.OrdinalIgnoreCase) ||
+                         node.Name.EndsWith(".zview", StringComparison.OrdinalIgnoreCase))
                 {
                     TryShowConfigFile(node);
                 }
@@ -745,11 +745,11 @@ namespace editor.ViewModels
             }
 
             IEditorConfigParser? editorParser = null;
-            if (node.Name.EndsWith(".zs", StringComparison.OrdinalIgnoreCase))
+            if (node.Name.EndsWith(".zscene", StringComparison.OrdinalIgnoreCase))
             {
                 editorParser = new editor.Services.Project.FileTypes.Assets.SceneAssetParser();
             }
-            else if (node.Name.EndsWith(".zv", StringComparison.OrdinalIgnoreCase))
+            else if (node.Name.EndsWith(".zview", StringComparison.OrdinalIgnoreCase))
             {
                 editorParser = new editor.Services.Project.FileTypes.Assets.ViewAssetParser();
             }

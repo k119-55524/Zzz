@@ -5,7 +5,7 @@ using editor.Services.Project.Infrastructure;
 namespace editor.Services.Project.FileTypes.Assets
 {
 	/// <summary>
-	/// Данные представления (View), хранящиеся в *.zv файле.
+	/// Данные представления (View), хранящиеся в *.zview файле.
 	/// </summary>
 	public class ViewAssetData
 	{

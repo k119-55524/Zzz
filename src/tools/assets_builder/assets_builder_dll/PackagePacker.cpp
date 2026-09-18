@@ -40,6 +40,17 @@
 #include "AssetScanner.h"
 #include "ArchiveWriter.h"
 #include "ProjectIdentityValidator.h"
+#include "AssetExtensions.h"
+
+#if defined(_WIN32)
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#endif
 
 Z_SET_LOG_CATEGORY(::zzz::core::Assets);
 
@@ -48,6 +59,31 @@ namespace zzz::builder
 	namespace fs = std::filesystem;
 	using json = nlohmann::json;
 	using namespace zzz::core;
+
+	namespace
+	{
+		bool ReplaceArchiveFile(const fs::path& from, const fs::path& to, std::string& outError)
+		{
+#if defined(_WIN32)
+			if (!MoveFileExW(from.c_str(), to.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_COPY_ALLOWED))
+			{
+				const DWORD err = GetLastError();
+				outError = std::format("MoveFileExW завершился с ошибкой: {}", err);
+				return false;
+			}
+			return true;
+#else
+			std::error_code ec;
+			fs::rename(from, to, ec);
+			if (ec)
+			{
+				outError = ec.message();
+				return false;
+			}
+			return true;
+#endif
+		}
+	}
 
 	struct PendingAsset
 	{
@@ -367,103 +403,31 @@ namespace zzz::builder
 		if (objJson.contains("render"))
 		{
 			const auto& render = objJson["render"];
-			if (render.is_array())
+			if (!render.is_array())
 			{
-				for (const auto& partElem : render)
-				{
-					if (partElem.is_object())
-					{
-						Guid smMesh{};
-						Guid smMat{};
-						if (partElem.contains("mesh") && partElem["mesh"].is_string())
-						{
-							if (auto parsed = Guid::Parse(partElem["mesh"].get<std::string>()))
-								smMesh = *parsed;
-						}
-						if (partElem.contains("material") && partElem["material"].is_string())
-						{
-							if (auto parsed = Guid::Parse(partElem["material"].get<std::string>()))
-								smMat = *parsed;
-						}
-						if (smMesh.IsValid() && smMat.IsValid())
-						{
-							meshGuids.push_back(smMesh);
-							materialGuids.push_back(smMat);
-							if (materialGuid.IsEmpty())
-							{
-								materialGuid = smMat;
-							}
-						}
-					}
-				}
+				THROW_RUNTIME("GameObject '{}': поле 'render' должно быть массивом пар.", name);
 			}
-			else if (render.is_object())
+
+			for (const auto& partElem : render)
 			{
-				if (render.contains("parts") && render["parts"].is_array())
+				if (!partElem.is_object() || !partElem.contains("mesh") || !partElem.contains("material") ||
+					!partElem["mesh"].is_string() || !partElem["material"].is_string())
 				{
-					for (const auto& partElem : render["parts"])
-					{
-						if (partElem.is_object())
-						{
-							Guid smMesh{};
-							Guid smMat{};
-							if (partElem.contains("mesh") && partElem["mesh"].is_string())
-							{
-								if (auto parsed = Guid::Parse(partElem["mesh"].get<std::string>()))
-									smMesh = *parsed;
-							}
-							if (partElem.contains("material") && partElem["material"].is_string())
-							{
-								if (auto parsed = Guid::Parse(partElem["material"].get<std::string>()))
-									smMat = *parsed;
-							}
-							if (smMesh.IsValid() && smMat.IsValid())
-							{
-								meshGuids.push_back(smMesh);
-								materialGuids.push_back(smMat);
-								if (materialGuid.IsEmpty())
-								{
-									materialGuid = smMat;
-								}
-							}
-						}
-					}
+					THROW_RUNTIME("GameObject '{}': каждый элемент 'render' должен быть объектом со строковыми полями 'mesh' и 'material'.", name);
 				}
 
-				if (render.contains("mesh") && render["mesh"].is_string())
+				auto meshParsed = Guid::Parse(partElem["mesh"].get<std::string>());
+				auto matParsed = Guid::Parse(partElem["material"].get<std::string>());
+				if (!meshParsed || !meshParsed->IsValid() || !matParsed || !matParsed->IsValid())
 				{
-					if (auto parsed = Guid::Parse(render["mesh"].get<std::string>()))
-						meshGuids.push_back(*parsed);
+					THROW_RUNTIME("GameObject '{}': пара рендера содержит невалидный GUID меша или материала.", name);
 				}
 
-				if (render.contains("submeshes") && render["submeshes"].is_array())
+				meshGuids.push_back(*meshParsed);
+				materialGuids.push_back(*matParsed);
+				if (materialGuid.IsEmpty())
 				{
-					for (const auto& smElem : render["submeshes"])
-					{
-						if (smElem.is_string())
-						{
-							if (auto parsed = Guid::Parse(smElem.get<std::string>()))
-								meshGuids.push_back(*parsed);
-						}
-					}
-				}
-
-				if (render.contains("material") && render["material"].is_string())
-				{
-					if (auto parsed = Guid::Parse(render["material"].get<std::string>()))
-						materialGuid = *parsed;
-				}
-
-				if (render.contains("materials") && render["materials"].is_array())
-				{
-					for (const auto& matElem : render["materials"])
-					{
-						if (matElem.is_string())
-						{
-							if (auto parsed = Guid::Parse(matElem.get<std::string>()))
-								materialGuids.push_back(*parsed);
-						}
-					}
+					materialGuid = *matParsed;
 				}
 			}
 		}
@@ -1263,7 +1227,7 @@ namespace zzz::builder
 		std::unordered_set<Guid> matchedChildViewGuids;
 		std::unordered_set<Guid> matchedIndependentViewGuids;
 
-		// 2. Поиск сцен (*.zs), вьюх (*.zv) и префабов (*.zp) в исходной директории
+		// 2. Поиск сцен (*.zscene), вьюх (*.zview) и префабов (*.zprefab) в исходной директории
 		// Защита от дублей имён сцен (см. также AssetsBuilderEngine.ScanProjectMetaFiles в C# -
 		// там же выполняется основная, отчитывающаяся об ошибке проверка перед вызовом PackProjectNative).
 		// Здесь - "тихий" защитный фильтр на случай прямого вызова нативного упаковщика в обход C#-валидации:
@@ -1356,7 +1320,7 @@ namespace zzz::builder
 
 				uint32_t typeVal = 0;
 
-				if (ext == ".zs")
+				if (ext == c_ExtScene)
 				{
 					if (removedSceneGuids.find(assetGuid) != removedSceneGuids.end())
 						return true;
@@ -1365,7 +1329,7 @@ namespace zzz::builder
 					typeVal = static_cast<uint32_t>(zzz::core::ePackage::Scene);
 					pendingAssets.push_back({ assetName, assetGuid, typeVal, path });
 				}
-				else if (ext == ".zv")
+				else if (ext == c_ExtView)
 				{
 					// Тип вью определяется нахождением в списках JSON-конфигов (start_view, independent_views, child_views)
 					bool isPrimary = (startViewGuid.IsValid() && assetGuid == startViewGuid);
@@ -1395,14 +1359,14 @@ namespace zzz::builder
 			return false;
 
 		// Диагностика: guid объявлен в child_views/independent_views платформенного конфига, но на диске
-		// не найден ни одного .zv файла с таким guid - протухшая (или опечатанная) декларация.
+		// не найден ни одного .zview файла с таким guid - протухшая (или опечатанная) декларация.
 		for (const auto& guid : declaredChildViewGuids)
 			if (matchedChildViewGuids.find(guid) == matchedChildViewGuids.end())
-				DOutWarning("PackProject: guid {} объявлен в child_views, но соответствующий .zv ресурс не найден в Assets/ - пропущен.", guid.ToString());
+				DOutWarning("PackProject: guid {} объявлен в child_views, но соответствующий .zview ресурс не найден в Assets/ - пропущен.", guid.ToString());
 
 		for (const auto& guid : declaredIndependentViewGuids)
 			if (matchedIndependentViewGuids.find(guid) == matchedIndependentViewGuids.end())
-				DOutWarning("PackProject: guid {} объявлен в independent_views, но соответствующий .zv ресурс не найден в Assets/ - пропущен.", guid.ToString());
+				DOutWarning("PackProject: guid {} объявлен в independent_views, но соответствующий .zview ресурс не найден в Assets/ - пропущен.", guid.ToString());
 
 		bool hasPrimaryView = std::any_of(pendingAssets.begin(), pendingAssets.end(), [](const PendingAsset& item) {
 			return item.type == static_cast<uint32_t>(zzz::core::ePackage::PrimaryView);
@@ -1410,7 +1374,7 @@ namespace zzz::builder
 
 		if (!hasPrimaryView)
 		{
-			// Если start_view не был задан явно, но есть .zv вьюхи, делаем первую из них PrimaryView
+			// Если start_view не был задан явно, но есть .zview вьюхи, делаем первую из них PrimaryView
 			auto firstViewIt = std::find_if(pendingAssets.begin(), pendingAssets.end(), [](const PendingAsset& item) {
 				return item.type == static_cast<uint32_t>(zzz::core::ePackage::ChildView);
 			});
@@ -1470,6 +1434,7 @@ namespace zzz::builder
 			DOutError("PackProject: Не удалось записать package.dat.tmp: {}", packageWriteRes.error());
 			std::error_code cleanupEc;
 			fs::remove(packageTmpPath, cleanupEc);
+			fs::remove_all(destinationDir / "assets", cleanupEc);
 			return false;
 		}
 
@@ -1503,32 +1468,31 @@ namespace zzz::builder
 			std::error_code cleanupEc;
 			fs::remove(packageTmpPath, cleanupEc);
 			fs::remove(dataTmpPath, cleanupEc);
+			fs::remove_all(destinationDir / "assets", cleanupEc);
 			return false;
 		}
 
 		// Оба архива успешно сформированы во временных файлах - публикуем.
-		// Примечание: между двумя rename нет кросс-файловой транзакции (её не даёт ни NTFS, ни POSIX
-		// без отдельного журнала), поэтому крайне маловероятный сбой второго rename оставит
-		// package.dat уже новым, а data.dat - ещё старым. Частично записанного/битого архива
-		// в любом случае больше не возникает: до этой точки либо оба .tmp полностью готовы, либо
-		// ни один рабочий файл не тронут.
-		std::error_code renameEc;
-		fs::rename(packageTmpPath, outPath, renameEc);
-		if (renameEc)
+		// Замена выполняется атомарно с перезаписью существующих файлов.
+		// При сбое публикации любого из архивов каталог assets/ удаляется полностью,
+		// гарантируя инвариант: либо оба архива одной сборки, либо ни одного.
+		std::string replaceErr;
+		if (!ReplaceArchiveFile(packageTmpPath, outPath, replaceErr))
 		{
-			DOutError("PackProject: Не удалось опубликовать package.dat: {}", renameEc.message());
+			DOutError("PackProject: Не удалось опубликовать package.dat: {}", replaceErr);
 			std::error_code cleanupEc;
 			fs::remove(packageTmpPath, cleanupEc);
 			fs::remove(dataTmpPath, cleanupEc);
+			fs::remove_all(destinationDir / "assets", cleanupEc);
 			return false;
 		}
 
-		fs::rename(dataTmpPath, dataOutPath, renameEc);
-		if (renameEc)
+		if (!ReplaceArchiveFile(dataTmpPath, dataOutPath, replaceErr))
 		{
-			DOutError("PackProject: Не удалось опубликовать data.dat: {} (package.dat уже обновлён - пара архивов рассинхронизирована, требуется повторная сборка)", renameEc.message());
+			DOutError("PackProject: Не удалось опубликовать data.dat: {} (удаляем каталог assets)", replaceErr);
 			std::error_code cleanupEc;
 			fs::remove(dataTmpPath, cleanupEc);
+			fs::remove_all(destinationDir / "assets", cleanupEc);
 			return false;
 		}
 

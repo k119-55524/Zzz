@@ -474,8 +474,8 @@ namespace editor.Services.Project.Infrastructure
                     Name = name,
                     RelativePath = relPath,
                     IsFolder = false,
-                    IsScene = ext == ".zs",
-                    IsView = ext == ".zv"
+                    IsScene = ext == ".zscene",
+                    IsView = ext == ".zview"
                 };
 
                 nodes.Add(node);
@@ -537,7 +537,7 @@ namespace editor.Services.Project.Infrastructure
             var entries = _storage.GetFileSystemEntries(currentPath);
             var filePaths = entries.Where(e => !_storage.DirectoryExists(e)).ToList();
 
-            var assetExtensions = new[] { ".hpp", ".zs", ".zv" };
+            var assetExtensions = new[] { ".hpp", ".zscene", ".zview", ".zmaterial", ".zshaders", ".zprefab" };
             foreach (var assetPath in filePaths.Where(f => assetExtensions.Contains(Path.GetExtension(f).ToLower())))
             {
                 string baseName = Path.GetFileNameWithoutExtension(assetPath);
@@ -567,7 +567,7 @@ namespace editor.Services.Project.Infrastructure
 
             foreach (var metaPath in filePaths.Where(f => Path.GetExtension(f).Equals(".meta", StringComparison.OrdinalIgnoreCase)))
             {
-                // Для ассетов с расширением (например, Main.zs.meta) baseName будет "Main.zs"
+                // Для ассетов с расширением (например, Main.zscene.meta) baseName будет "Main.zscene"
                 // Для скриптов (Main.meta) baseName будет "Main", и мы ищем Main.hpp
                 string baseName = Path.GetFileNameWithoutExtension(metaPath);
                 string dir = Path.GetDirectoryName(metaPath) ?? currentPath;
@@ -575,7 +575,7 @@ namespace editor.Services.Project.Infrastructure
                 string ext = Path.GetExtension(baseName).ToLower();
                 string assetPath;
                 
-                if (ext == ".zs" || ext == ".zv")
+                if (assetExtensions.Contains(ext) && ext != ".hpp")
                 {
                     assetPath = Path.Combine(dir, baseName);
                 }

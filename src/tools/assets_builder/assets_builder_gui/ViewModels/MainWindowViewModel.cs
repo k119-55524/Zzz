@@ -399,6 +399,10 @@ public class MainWindowViewModel : ViewModelBase
                         string targetIncludeDir = Path.Combine(target.BuildDirectory, "include");
                         Directory.CreateDirectory(targetIncludeDir);
                         string targetAssetsDir = Path.Combine(target.BuildDirectory, "assets");
+                        if (Directory.Exists(targetAssetsDir))
+                        {
+                            Directory.Delete(targetAssetsDir, recursive: true);
+                        }
                         Directory.CreateDirectory(targetAssetsDir);
 
                         _engine.CopyHeaderFiles(sourcePath, targetIncludeDir, target.ConfigFile);
@@ -504,6 +508,10 @@ public class MainWindowViewModel : ViewModelBase
                 string targetIncludeDir = Path.Combine(target.BuildDirectory, "include");
                 Directory.CreateDirectory(targetIncludeDir);
                 string targetAssetsDir = Path.Combine(target.BuildDirectory, "assets");
+                if (Directory.Exists(targetAssetsDir))
+                {
+                    Directory.Delete(targetAssetsDir, recursive: true);
+                }
                 Directory.CreateDirectory(targetAssetsDir);
 
                 _engine.CopyHeaderFiles(sourcePath, targetIncludeDir, target.ConfigFile);

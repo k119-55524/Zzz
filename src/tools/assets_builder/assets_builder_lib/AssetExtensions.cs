@@ -24,7 +24,11 @@ public static class AssetExtensions
 
 	// Используется отдельно от IsSupportedAssetExtension - диспетчеризация SceneAssetImporter/SceneAssetValidator
 	// по конкретному расширению (см. assets_builder_dll/AssetExtensions.h).
-	public const string Scene = ".zs";
+	public const string Scene = ".zscene";
+	public const string View = ".zview";
+	public const string Material = ".zmaterial";
+	public const string Shader = ".zshaders";
+	public const string Prefab = ".zprefab";
 
 	// C++ скрипты - понятие самого Assets Builder, в core (движке) не существует, поэтому не дублирует
 	// никакую C++-константу и не идёт через нативную DLL.

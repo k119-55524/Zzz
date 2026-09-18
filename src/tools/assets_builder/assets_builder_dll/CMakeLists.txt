@@ -18,6 +18,9 @@ add_library(assets_builder_dll SHARED
     ObjImporter.cpp
     MaterialImporter.h
     MaterialImporter.cpp
+    ShaderImporter.h
+    ShaderImporter.cpp
+    PrefabImporter.h
     ProjectIdentityValidator.h
     ProjectIdentityValidator.cpp
 )

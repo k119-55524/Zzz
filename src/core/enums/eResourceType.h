@@ -20,12 +20,12 @@ namespace zzz::core
 	{
 		Unknown = 0,
 		ProjectManifest, ///< Манифест проекта
-		View,            ///< Окно / представление (.zv)
-		Scene,           ///< Сцена (.zs)
-		Prefab,          ///< Префаб (.zp)
+		View,            ///< Окно / представление (.zview)
+		Scene,           ///< Сцена (.zscene)
+		Prefab,          ///< Префаб (.zprefab)
 		Mesh,            ///< 3D Сетка/Геометрия (Vertex/Index buffers)
-		Material,        ///< Материал (.zmat)
-		Shader,          ///< Шейдер (.hlsl / байткод)
+		Material,        ///< Материал (.zmaterial)
+		Shader,          ///< Шейдер (.zshaders / байткод)
 		Animation,       ///< Анимация
 		Texture2D,       ///< 2D Текстура (DDS, PNG, JPEG, RGBA)
 		AudioClip,       ///< Аудиофайл (WAV, OGG, MP3)

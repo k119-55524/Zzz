@@ -17,6 +17,9 @@ namespace zzz::builder
 
 			fs::path path = entry.path();
 			std::string ext = path.extension().string();
+			std::ranges::transform(ext, ext.begin(), [](unsigned char ch) {
+				return static_cast<char>(std::tolower(ch));
+			});
 			if (ext == ".meta")
 				continue;
 

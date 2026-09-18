@@ -215,14 +215,15 @@ namespace zzz::engine
 			std::function<void(std::expected<::zzz::core::Guid, std::string>)> onCompleted,
 			OwnerToken ownerToken = {});
 
-		void LoadMeshAsync(
-			std::span<const ::zzz::core::Guid> meshGuids,
-			std::function<void(std::expected<::zzz::core::Guid, std::string>)> onCompleted,
-			OwnerToken ownerToken = {});
-
 		// --- Специализированная асинхронная загрузка Material ---
 		void LoadMaterialAsync(
 			const ::zzz::core::Guid& materialGuid,
+			std::function<void(std::expected<::zzz::core::Guid, std::string>)> onCompleted,
+			OwnerToken ownerToken = {});
+
+		// --- Специализированная асинхронная загрузка Shader ---
+		void LoadShaderAsync(
+			const ::zzz::core::Guid& shaderGuid,
 			std::function<void(std::expected<::zzz::core::Guid, std::string>)> onCompleted,
 			OwnerToken ownerToken = {});
 
@@ -304,10 +305,6 @@ namespace zzz::engine
 
 		// Публикация загруженного ресурса в типизированную таблицу кэша
 		void PublishResource(const ::zzz::core::Guid& guid, const std::shared_ptr<::zzz::core::IResource>& resource);
-
-		[[nodiscard]] std::expected<std::shared_ptr<Mesh>, std::string> CombineSubmeshes(
-			const ::zzz::core::Guid& resultGuid,
-			std::span<const std::shared_ptr<Mesh>> submeshes);
 
 		// Выделенный I/O-поток и пинг-понг очередь
 		::zzz::core::DoubleBufferedVector<ResourceLoadRequest> m_RequestQueue;

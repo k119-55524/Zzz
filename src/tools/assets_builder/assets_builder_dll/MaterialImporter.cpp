@@ -31,7 +31,22 @@ namespace zzz::builder
 				return std::unexpected("Поле 'name' материала не должно быть пустым: " + ctx.sourceFilePath.string());
 		}
 
-		core::MaterialData matData(std::move(materialName));
+		core::Guid shaderGuid{};
+		if (root.contains("shader"))
+		{
+			if (!root["shader"].is_string())
+				return std::unexpected("Поле 'shader' материала должно быть строкой (GUID): " + ctx.sourceFilePath.string());
+
+			const auto shaderStr = root["shader"].get<std::string>();
+			auto parseRes = core::Guid::Parse(shaderStr);
+			if (!parseRes)
+			{
+				return std::unexpected("Некорректный GUID шейдера в материале '" + ctx.sourceFilePath.string() + "': " + shaderStr);
+			}
+			shaderGuid = *parseRes;
+		}
+
+		core::MaterialData matData(std::move(materialName), shaderGuid);
 		core::Serializer serializer;
 		std::vector<std::byte> payload;
 

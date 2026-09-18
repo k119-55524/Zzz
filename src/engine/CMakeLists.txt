@@ -39,6 +39,8 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "resources/MeshLoader.h" "resources/MeshLoader.cpp"
         "resources/Material.h" "resources/Material.cpp"
         "resources/MaterialLoader.h" "resources/MaterialLoader.cpp"
+        "resources/Shader.h" "resources/Shader.cpp"
+        "resources/ShaderLoader.h" "resources/ShaderLoader.cpp"
         "resources/ResourceManager.h" "resources/ResourceManager.cpp"
         "resources/ResourceGarbageCollector.h" "resources/ResourceGarbageCollector.cpp"
 

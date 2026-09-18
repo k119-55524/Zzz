@@ -36,8 +36,8 @@
 
 ### 1. Единый реестр типов (`AssetImporterRegistry`)
 * Все типы файлов, участвующие в сборке, обязаны быть зарегистрированы в реестре `AssetImporterRegistry`:
-  - **Блоб-ресурсы `data.dat`** (`.obj`, `.zmat` и др.): регистрируются через `RegisterImporter(ext, importer)`. Реализуют интерфейс `IAssetImporter` и вызываются через `AssetImportPipeline::TryImport`.
-  - **Структурные ресурсы `package.dat`** (`.zs`, `.zv`): регистрируются через `RegisterKnownType(ext, type)`. Их сериализация выполняется структурным сериализатором `PackagePacker`.
+  - **Блоб-ресурсы `data.dat`** (`.obj`, `.zmaterial` и др.): регистрируются через `RegisterImporter(ext, importer)`. Реализуют интерфейс `IAssetImporter` и вызываются через `AssetImportPipeline::TryImport`.
+  - **Структурные ресурсы `package.dat`** (`.zscene`, `.zview`): регистрируются через `RegisterKnownType(ext, type)`. Их сериализация выполняется структурным сериализатором `PackagePacker`.
 * `GetKnownType(ext)` является единым источником правды для валидации расширений файлов.
 
 ### 2. Строгая валидация файлов и сканирование (`AssetScanner`)
@@ -60,7 +60,7 @@
     "type": "script"
   }
   ```
-* Для всех остальных файловых ресурсов (`.obj`, `.zmat`, `.zs`, `.zv` и др.) тип однозначно выводится по расширению через `AssetImporterRegistry`. Если поле `"type"` указано в `.meta`, сборщик валидирует его на точное совпадение с зарегистрированным типом.
+* Для всех остальных файловых ресурсов (`.obj`, `.zmaterial`, `.zscene`, `.zview` и др.) тип однозначно выводится по расширению через `AssetImporterRegistry`. Поле `"type"` в их мета-файлах игнорируется.
 
 ### 4. Атомарная публикация архивов
 * Архивы `package.dat` и `data.dat` первоначально формируются во временные файлы `.tmp`.

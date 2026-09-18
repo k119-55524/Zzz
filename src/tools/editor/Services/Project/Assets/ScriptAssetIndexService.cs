@@ -173,7 +173,7 @@ namespace editor.Services.Project.Assets
 			string dir = Path.GetDirectoryName(metaPath) ?? string.Empty;
 			string ext = Path.GetExtension(baseName).ToLower();
 			
-			bool isAsset = ext == ".zs" || ext == ".zv";
+			bool isAsset = ext == ".zscene" || ext == ".zview" || ext == ".zmaterial" || ext == ".zshaders" || ext == ".zprefab";
 			string hppPath = string.Empty;
 			string cppPath = string.Empty;
 			string assetPath = string.Empty;

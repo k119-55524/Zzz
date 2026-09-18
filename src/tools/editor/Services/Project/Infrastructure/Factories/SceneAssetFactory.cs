@@ -5,7 +5,7 @@ namespace editor.Services.Project.Infrastructure.Factories
 {
     public class SceneAssetFactory : IAssetFactory
     {
-        public string Extension => ".zs";
+        public string Extension => ".zscene";
 
         public void CreateAsset(string fullPath, string baseName, string guid, IFileStorage storage)
         {

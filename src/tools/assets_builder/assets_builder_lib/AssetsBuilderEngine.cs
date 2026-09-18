@@ -158,7 +158,7 @@ public class AssetsBuilderEngine
 		var guidToFileMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 		var guidToTypeMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 		var scriptNameToGuidMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-		// Имя сцены (имя файла .zs без расширения) должно быть уникально в проекте - SceneManager::LoadSceneByName
+		// Имя сцены (имя файла .zscene без расширения) должно быть уникально в проекте - SceneManager::LoadSceneByName
 		// ищет сцену по имени в package.dat, и дубликат имени сделал бы такой поиск неоднозначным.
 		var sceneNameToFileMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 		int sceneNameDuplicateErrors = 0;
@@ -214,7 +214,7 @@ public class AssetsBuilderEngine
 				guidToTypeMap[guid] = assetType;
 			}
 
-			// Проверка на дубликат имени сцены (имя файла .zs без расширения - см. PackagePacker.cpp,
+			// Проверка на дубликат имени сцены (имя файла .zscene без расширения - см. PackagePacker.cpp,
 			// где оно используется как PackageEntry.Name для сцены в package.dat)
 			if (assetType.Equals("scene", StringComparison.OrdinalIgnoreCase))
 			{

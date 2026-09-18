@@ -1,10 +1,14 @@
-﻿#include "MaterialLoader.h"
+#include "MaterialLoader.h"
 #include "Material.h"
 #include "core/io/package/DataAssetsManager.h"
 #include "core/io/package/MaterialData.h"
 #include "core/utils/MemoryUtils.h"
+#include <logger.h>
+
+Z_SET_LOG_CATEGORY(::zzz::core::LogEngine);
 
 using namespace zzz::core;
+using namespace zzz::logger;
 
 namespace zzz::engine
 {
@@ -27,6 +31,10 @@ namespace zzz::engine
 			matName = matDataRes->GetName();
 		}
 
-		return safe_make_shared<Material>(entry.GetGuid(), std::move(matName));
+		Guid shaderGuid = matDataRes->GetShaderGuid();
+		DOut("[MaterialLoader] Загружен материал '{}' (GUID: {}, шейдер: {})",
+			matName, entry.GetGuid().ToString(), shaderGuid.ToString());
+
+		return safe_make_shared<Material>(entry.GetGuid(), std::move(matName), shaderGuid);
 	}
 }

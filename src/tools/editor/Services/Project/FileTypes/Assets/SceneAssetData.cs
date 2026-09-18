@@ -5,7 +5,7 @@ using editor.Services.Project.Infrastructure;
 namespace editor.Services.Project.FileTypes.Assets
 {
 	/// <summary>
-	/// Данные сцены, хранящиеся в *.zs файле.
+	/// Данные сцены, хранящиеся в *.zscene файле.
 	/// </summary>
 	public class SceneAssetData
 	{

@@ -32,30 +32,7 @@ namespace zzz::builder
 			return bytes;
 		}
 
-		std::string Normalize(std::string value)
-		{
-			std::ranges::transform(value, value.begin(), [](unsigned char ch) {
-				return static_cast<char>(std::tolower(ch));
-			});
-			return value;
-		}
-
-		std::string_view ExpectedMetaType(core::eResourceType type)
-		{
-			switch (type)
-			{
-			case core::eResourceType::Mesh: return "mesh";
-			case core::eResourceType::Material: return "material";
-			case core::eResourceType::Shader: return "shader";
-			case core::eResourceType::Texture2D: return "texture";
-			case core::eResourceType::Prefab: return "prefab";
-			default: return {};
-			}
-		}
-
-		std::expected<core::Guid, std::string> ReadMetaGuid(
-			const fs::path& metaPath,
-			core::eResourceType resourceType)
+		std::expected<core::Guid, std::string> ReadMetaGuid(const fs::path& metaPath)
 		{
 			auto bytesRes = ReadFileFully(metaPath);
 			if (!bytesRes)
@@ -75,18 +52,6 @@ namespace zzz::builder
 			if (!guid || !guid->IsValid())
 				return std::unexpected("Мета-файл содержит невалидный GUID: '" + metaPath.string() + "'.");
 
-			if (root.contains("type") && root["type"].is_string())
-			{
-				const std::string_view expectedType = ExpectedMetaType(resourceType);
-				const std::string actualType = Normalize(root["type"].get<std::string>());
-				if (!expectedType.empty() && actualType != expectedType)
-				{
-					return std::unexpected(
-						"Тип '" + actualType + "' в мета-файле '" + metaPath.string() +
-						"' не соответствует зарегистрированному типу '" + std::string(expectedType) + "'.");
-				}
-			}
-
 			return *guid;
 		}
 	}
@@ -104,7 +69,7 @@ namespace zzz::builder
 		if (!fs::exists(metaPath) || !fs::is_regular_file(metaPath))
 			return std::unexpected("Для зарегистрированного ресурса отсутствует мета-файл '" + metaPath.string() + "'.");
 
-		auto guidRes = ReadMetaGuid(metaPath, importer->GetResourceType());
+		auto guidRes = ReadMetaGuid(metaPath);
 		if (!guidRes)
 			return std::unexpected(guidRes.error());
 

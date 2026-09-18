@@ -55,31 +55,29 @@ namespace zzz::engine
 		m_RenderPairs.clear();
 		const auto meshGuids = data.GetMeshGuids();
 		const auto& matGuids = data.GetMaterialGuids();
-		const size_t pairCount = std::max(meshGuids.size(), matGuids.size());
-
-		for (size_t i = 0; i < pairCount; ++i)
+		if (meshGuids.size() != matGuids.size())
 		{
-			Guid mg = (i < meshGuids.size()) ? meshGuids[i] : Guid{};
-			Guid matg = (i < matGuids.size()) ? matGuids[i] : (data.GetMaterialGuid().IsValid() ? data.GetMaterialGuid() : Guid{});
-			if (mg.IsValid() || matg.IsValid())
-			{
-				m_RenderPairs.push_back(RenderPair{ mg, matg });
-			}
+			onReady(std::unexpected(std::format(
+				"GameObject '{}' ({}): количество мешей ({}) не совпадает с количеством материалов ({}).",
+				m_Name, m_Guid.ToString(), meshGuids.size(), matGuids.size())));
+			return;
 		}
 
-		if (m_RenderPairs.empty() && data.GetMaterialGuid().IsValid())
+		m_RenderPairs.reserve(meshGuids.size());
+		for (size_t i = 0; i < meshGuids.size(); ++i)
 		{
-			m_RenderPairs.push_back(RenderPair{ Guid{}, data.GetMaterialGuid() });
+			if (!meshGuids[i].IsValid() || !matGuids[i].IsValid())
+			{
+				onReady(std::unexpected(std::format(
+					"GameObject '{}' ({}): пара рендера #{} содержит невалидный GUID (mesh: '{}', material: '{}').",
+					m_Name, m_Guid.ToString(), i, meshGuids[i].ToString(), matGuids[i].ToString())));
+				return;
+			}
+			m_RenderPairs.push_back(RenderPair{ meshGuids[i], matGuids[i] });
 		}
 
 		// 4. Подсчёт количества ресурсов для асинхронной загрузки
-		size_t resourceCount = 0;
-		for (const auto& pair : m_RenderPairs)
-		{
-			if (pair.meshGuid.IsValid()) ++resourceCount;
-			if (pair.materialGuid.IsValid()) ++resourceCount;
-		}
-
+		const size_t resourceCount = m_RenderPairs.size() * 2;
 		if (resourceCount == 0)
 		{
 			onReady({});

@@ -5,7 +5,7 @@ namespace editor.Services.Project.Infrastructure.Factories
 {
     public class ViewAssetFactory : IAssetFactory
     {
-        public string Extension => ".zv";
+        public string Extension => ".zview";
 
         public void CreateAsset(string fullPath, string baseName, string guid, IFileStorage storage)
         {

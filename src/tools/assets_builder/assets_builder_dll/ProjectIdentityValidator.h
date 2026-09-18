@@ -34,7 +34,7 @@ namespace zzz::builder
 	 *
 	 * Выполняет двухпроходную проверку:
 	 *   - Проход 1: регистрация всех владельцев GUID (.meta, layers[].guid, objects[].guid с рекурсией) и проверка уникальности.
-	 *   - Проход 2: типизированная проверка всех GUID-ссылок (project.json, платформенные конфиги, .zv, .zs и все children).
+	 *   - Проход 2: типизированная проверка всех GUID-ссылок (project.json, платформенные конфиги, .zview, .zscene и все children).
 	 */
 	class ProjectIdentityValidator
 	{

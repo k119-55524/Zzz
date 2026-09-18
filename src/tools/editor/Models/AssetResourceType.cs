@@ -16,8 +16,11 @@ namespace editor.Models
 
 	public static class AssetResourceTypeRules
 	{
-		public const string ExtScene = ".zs";
-		public const string ExtView = ".zv";
+		public const string ExtScene = ".zscene";
+		public const string ExtView = ".zview";
+		public const string ExtMaterial = ".zmaterial";
+		public const string ExtShader = ".zshaders";
+		public const string ExtPrefab = ".zprefab";
 		public const string ExtScriptCpp = ".cpp";
 		public const string ExtScriptHpp = ".hpp";
 
@@ -65,8 +68,8 @@ namespace editor.Models
 				AssetResourceType.Texture => new[] { ".png", ".jpg", ".jpeg", ".tga", ".bmp" },
 				AssetResourceType.Model => new[] { ".fbx", ".obj", ".gltf", ".glb" },
 				AssetResourceType.Audio => new[] { ".wav", ".mp3", ".ogg" },
-				AssetResourceType.Shader => new[] { ".hlsl", ".glsl", ".shader" },
-				AssetResourceType.Material => new[] { ".mat" },
+				AssetResourceType.Shader => new[] { ExtShader, ".hlsl", ".glsl", ".shader" },
+				AssetResourceType.Material => new[] { ExtMaterial, ".mat" },
 				_ => System.Array.Empty<string>()
 			};
 		}

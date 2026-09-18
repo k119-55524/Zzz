@@ -46,7 +46,7 @@ extern "C"
 	/**
 	 * @brief Проверяет, поддерживается ли указанное расширение ресурса сборщиком
 	 * (на основе констант AssetExtensions.h и зарегистрированных импортеров AssetImporterRegistry).
-	 * @param ext Расширение с точкой (например, ".obj", ".zs", ".zv").
+	 * @param ext Расширение с точкой (например, ".obj", ".zscene", ".zview").
 	 * @return true, если тип ресурса поддерживается; false иначе.
 	 */
 	BUILDER_API bool IsSupportedAssetExtension(const char* ext);
@@ -54,14 +54,14 @@ extern "C"
 	/**
 	 * @brief Проверяет, относится ли расширение к ресурсам архива data.dat
 	 * (Mesh, Material, Shader, Prefab - на основе констант AssetExtensions.h).
-	 * @param ext Расширение с точкой (например, ".obj", ".zmat").
+	 * @param ext Расширение с точкой (например, ".obj", ".zmaterial").
 	 */
 	BUILDER_API bool IsSupportedDataAssetExtension(const char* ext);
 
 	/**
 	 * @brief Проверяет, относится ли расширение к форматам окон (View -
 	 * на основе констант AssetExtensions.h).
-	 * @param ext Расширение с точкой (например, ".zv").
+	 * @param ext Расширение с точкой (например, ".zview").
 	 */
 	BUILDER_API bool IsSupportedViewExtension(const char* ext);
 

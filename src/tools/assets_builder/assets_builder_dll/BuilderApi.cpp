@@ -7,6 +7,19 @@
 #include "AssetImporterRegistry.h"
 #include "ProjectIdentityValidator.h"
 
+namespace
+{
+	std::string NormalizeExt(const char* ext)
+	{
+		if (!ext) return {};
+		std::string result(ext);
+		std::ranges::transform(result, result.begin(), [](unsigned char ch) {
+			return static_cast<char>(std::tolower(ch));
+		});
+		return result;
+	}
+}
+
 extern "C"
 {
 	BUILDER_API const char* GetGamePackageFileName()
@@ -113,29 +126,27 @@ extern "C"
 		return zzz::core::Path::IsValidDirectoryName(name);
 	}
 
+
 	BUILDER_API bool IsSupportedAssetExtension(const char* ext)
 	{
 		if (!ext) return false;
-		std::string_view sv(ext);
-		if (sv == zzz::builder::c_ExtScene ||
-			sv == zzz::builder::c_ExtView)
-		{
-			return true;
-		}
-		return zzz::builder::AssetImporterRegistry::Instance().GetImporter(sv) != nullptr;
+		const std::string norm = NormalizeExt(ext);
+		return zzz::builder::AssetImporterRegistry::Instance().GetKnownType(norm).has_value();
 	}
 
 	BUILDER_API bool IsSupportedDataAssetExtension(const char* ext)
 	{
 		if (!ext) return false;
-		return zzz::builder::AssetImporterRegistry::Instance().GetImporter(ext) != nullptr;
+		const std::string norm = NormalizeExt(ext);
+		return zzz::builder::AssetImporterRegistry::Instance().GetImporter(norm) != nullptr;
 	}
 
 	BUILDER_API bool IsSupportedViewExtension(const char* ext)
 	{
 		if (!ext) return false;
-		std::string_view sv(ext);
-		return sv == zzz::builder::c_ExtView;
+		const std::string norm = NormalizeExt(ext);
+		auto known = zzz::builder::AssetImporterRegistry::Instance().GetKnownType(norm);
+		return known.has_value() && *known == zzz::core::eResourceType::View;
 	}
 
 	BUILDER_API bool GenerateGuidNative(char* outBuffer, uint32_t bufferSize)

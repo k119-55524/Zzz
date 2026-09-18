@@ -277,8 +277,8 @@ namespace editor.Views.Widgets
 			ShowNewScriptDialog("Assets", scriptType);
 		}
 
-		private void AddSceneToRoot_Click(object sender, System.Windows.RoutedEventArgs e) => AddAssetToRoot(".zs", "New Scene");
-		private void AddViewToRoot_Click(object sender, System.Windows.RoutedEventArgs e) => AddAssetToRoot(".zv", "New View");
+		private void AddSceneToRoot_Click(object sender, System.Windows.RoutedEventArgs e) => AddAssetToRoot(".zscene", "New Scene");
+		private void AddViewToRoot_Click(object sender, System.Windows.RoutedEventArgs e) => AddAssetToRoot(".zview", "New View");
 
 		private void AddAssetToRoot(string extension, string baseName)
 		{
@@ -1067,7 +1067,7 @@ namespace editor.Views.Widgets
 			{
 				if (e.ClickCount == 2)
 				{
-					if (node.RelativePath.EndsWith(".zv", StringComparison.OrdinalIgnoreCase))
+					if (node.RelativePath.EndsWith(".zview", StringComparison.OrdinalIgnoreCase))
 					{
 						var info = App.ScriptAssetIndexService.ByGuid.Values.FirstOrDefault(i => string.Equals(i.AssetPath, node.RelativePath, StringComparison.OrdinalIgnoreCase));
 						if (info != null)
@@ -1078,7 +1078,7 @@ namespace editor.Views.Widgets
 						e.Handled = true;
 						return;
 					}
-					else if (node.RelativePath.EndsWith(".zs", StringComparison.OrdinalIgnoreCase))
+					else if (node.RelativePath.EndsWith(".zscene", StringComparison.OrdinalIgnoreCase))
 					{
 						var sceneInfo = App.ScriptAssetIndexService.ByGuid.Values.FirstOrDefault(i => string.Equals(i.AssetPath, node.RelativePath, StringComparison.OrdinalIgnoreCase));
 						if (sceneInfo != null)
@@ -1278,8 +1278,8 @@ namespace editor.Views.Widgets
 			return _cachedDevenvPath;
 		}
 
-		private void AddScene_Click(object sender, System.Windows.RoutedEventArgs e) => AddAsset_Click(sender, ".zs", "New Scene");
-		private void AddView_Click(object sender, System.Windows.RoutedEventArgs e) => AddAsset_Click(sender, ".zv", "New View");
+		private void AddScene_Click(object sender, System.Windows.RoutedEventArgs e) => AddAsset_Click(sender, ".zscene", "New Scene");
+		private void AddView_Click(object sender, System.Windows.RoutedEventArgs e) => AddAsset_Click(sender, ".zview", "New View");
 
 		private void AddAsset_Click(object sender, string extension, string baseName)
 		{
