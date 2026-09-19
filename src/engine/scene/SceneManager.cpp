@@ -54,19 +54,20 @@ namespace zzz::engine
 
 		std::lock_guard lock(m_LoadSceneMutex);
 
-		auto it = m_Scenes.find(sceneGuid);
-		if (it != m_Scenes.end())
+		auto [it, inserted] = m_Scenes.try_emplace(sceneGuid, [this](auto task)
 		{
-			m_MainThreadQueue.Push([onComplete = std::move(onComplete), scene = it->second]() mutable
-			{
-				onComplete(scene);
-			});
+			m_MainThreadQueue.Push(std::move(task));
+		});
+
+		it->second.readyEvent.Subscribe(std::move(onComplete));
+
+		if (!inserted)
+		{
+			// Сцена уже либо загружена, либо находится в процессе загрузки
 			return;
 		}
 
-		m_TaskDispatcher.Submit(
-			eTaskPriority::Normal,
-			[this, sceneGuid, onComplete]()
+		m_TaskDispatcher.Submit(eTaskPriority::Normal, [this, sceneGuid]()
 			{
 				auto entryOpt = m_PackageManager->GetEntry(ePackage::Scene, sceneGuid);
 				ensure(entryOpt.has_value(), "Сцена с GUID '{}' не найдена в package.dat.", sceneGuid.ToString());
@@ -83,18 +84,23 @@ namespace zzz::engine
 				);
 
 				// 2. Инициализация слоёв сцены (по завершении переносим в основной поток)
-				scene->Initialize(*m_ScriptFactory, m_TaskDispatcher, [this, scene, onComplete](std::expected<void, std::string> initRes) mutable
+				scene->Initialize(*m_ScriptFactory, m_TaskDispatcher, [this, scene](std::expected<void, std::string> initRes) mutable
 				{
 					if (!initRes)
 					{
 						DOutError("[SceneManager::LoadSceneAsync] Сбой инициализации слоёв сцены '{}' ({}): {}",
 							scene->GetName(), scene->GetGuid().ToString(), initRes.error());
 
-						m_MainThreadQueue.Push([onComplete, err = std::move(initRes.error())]() mutable
+						m_MainThreadQueue.Push([this, guid = scene->GetGuid(), err = std::move(initRes.error())]() mutable
 						{
-							if (onComplete)
 							{
-								onComplete(std::unexpected(err));
+								std::lock_guard lock(m_LoadSceneMutex);
+								auto it = m_Scenes.find(guid);
+								if (it != m_Scenes.end())
+								{
+									it->second.readyEvent.Resolve(std::unexpected(err));
+									m_Scenes.erase(it);
+								}
 							}
 							throw std::runtime_error(err);
 						});
@@ -103,38 +109,50 @@ namespace zzz::engine
 
 					DOut("[SceneManager::LoadSceneAsync] Собрана сцена '{}' ({}).", scene->GetName(), scene->GetGuid().ToString());
 
-					m_MainThreadQueue.Push([this, scene = std::move(scene), onComplete = std::move(onComplete)]() mutable
+					m_MainThreadQueue.Push([this, scene = std::move(scene)]() mutable
 					{
-						m_Scenes[scene->GetGuid()] = scene;
-						scene->InvokeStart();
-						if (onComplete)
+						std::lock_guard lock(m_LoadSceneMutex);
+						auto it = m_Scenes.find(scene->GetGuid());
+						if (it != m_Scenes.end())
 						{
-							onComplete(scene);
+							scene->InvokeStart();
+							it->second = scene;
 						}
 					});
 				});
 			},
 			// Колбэк перехвата исключений из потока создания сцены
-			[this, onComplete](std::exception_ptr ex)
+			[this, sceneGuid](std::exception_ptr ex)
 			{
 				// Перенаправляем исключение в очередь главного потока для перехвата в Engine::Run
-				m_MainThreadQueue.Push([ex, onComplete]()
+				m_MainThreadQueue.Push([this, sceneGuid, ex]()
 				{
-					if (onComplete)
+					std::string err = "Неизвестная ошибка при загрузке сцены";
+					try
 					{
-						try
+						if (ex)
 						{
 							std::rethrow_exception(ex);
 						}
-						catch (const std::exception& e)
+					}
+					catch (const std::exception& e)
+					{
+						err = e.what();
+					}
+					catch (...)
+					{
+					}
+
+					{
+						std::lock_guard lock(m_LoadSceneMutex);
+						auto it = m_Scenes.find(sceneGuid);
+						if (it != m_Scenes.end())
 						{
-							onComplete(std::unexpected(e.what()));
-						}
-						catch (...)
-						{
-							onComplete(std::unexpected("Неизвестная ошибка при загрузке сцены"));
+							it->second.readyEvent.Resolve(std::unexpected(err));
+							m_Scenes.erase(it);
 						}
 					}
+
 					std::rethrow_exception(ex);
 				});
 			}
@@ -147,11 +165,11 @@ namespace zzz::engine
 		m_MainThreadQueue.ExecuteAll();
 
 		// 2. Кадровое обновление всех активных сцен (выполнение пользовательских скриптов SceneScript/GameScript)
-		for (auto& [guid, scene] : m_Scenes)
+		for (auto& [guid, record] : m_Scenes)
 		{
-			if (scene)
+			if (record)
 			{
-				scene->Update(time);
+				record.scene->Update(time);
 			}
 		}
 	}

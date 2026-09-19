@@ -106,7 +106,7 @@ namespace zzz::engine
 			const auto& pair = m_RenderPairs[i];
 			if (pair.meshGuid.IsValid())
 			{
-				gpuResourceManager.LoadGpuMeshAsync(pair.meshGuid, weak_from_this(), [this, i, trigger, firstError, errorMutex](std::expected<std::shared_ptr<GpuMesh>, std::string> res) {
+				gpuResourceManager.LoadAsync<GpuMesh>(pair.meshGuid, weak_from_this(), [this, i, trigger, firstError, errorMutex](std::expected<std::shared_ptr<GpuMesh>, std::string> res) {
 					if (!res)
 					{
 						std::lock_guard lock(*errorMutex);
@@ -125,7 +125,7 @@ namespace zzz::engine
 
 			if (pair.materialGuid.IsValid())
 			{
-				gpuResourceManager.LoadGpuMaterialAsync(pair.materialGuid, weak_from_this(), [this, i, trigger, firstError, errorMutex](std::expected<std::shared_ptr<GpuMaterial>, std::string> res) {
+				gpuResourceManager.LoadAsync<GpuMaterial>(pair.materialGuid, weak_from_this(), [this, i, trigger, firstError, errorMutex](std::expected<std::shared_ptr<GpuMaterial>, std::string> res) {
 					if (!res)
 					{
 						std::lock_guard lock(*errorMutex);

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "core/resources/ResourceBase.h"
+#include "engine/resources/ResourceBase.h"
 #include "core/utils/Guid.h"
 
 namespace zzz::engine
@@ -10,7 +10,7 @@ namespace zzz::engine
 	 * @class CpuMaterial
 	 * @brief Ресурс описания материала в оперативной памяти (CPU).
 	 */
-	class CpuMaterial final : public ::zzz::core::ResourceBase
+	class CpuMaterial final : public ResourceBase
 	{
 	public:
 		CpuMaterial(const ::zzz::core::Guid& guid, std::string name, ::zzz::core::Guid shaderGuid = {});

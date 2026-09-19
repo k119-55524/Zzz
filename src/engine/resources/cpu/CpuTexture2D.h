@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <cstddef>
-#include "core/resources/ResourceBase.h"
+#include "engine/resources/ResourceBase.h"
 
 namespace zzz::engine
 {
@@ -11,7 +11,7 @@ namespace zzz::engine
 	 * @class CpuTexture2D
 	 * @brief Ресурс 2D-текстуры в оперативной памяти (CPU).
 	 */
-	class CpuTexture2D final : public ::zzz::core::ResourceBase
+	class CpuTexture2D final : public ResourceBase
 	{
 	public:
 		CpuTexture2D(

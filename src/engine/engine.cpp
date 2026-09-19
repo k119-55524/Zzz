@@ -125,9 +125,17 @@ void Engine::Shutdown() noexcept
 			m_TaskDispatcher->JoinAll();
 		}
 
+		// 1. Сначала выгружаем менеджер сцен и сцены (освобождает объекты сцены и их ссылки на ресурсы)
+		m_SceneManager = nullptr;
+
+		// 2. Закрываем окна, освобождаем SwapChain и рендер-поверхности
+		m_ViewManager = nullptr;
+
+		// 3. Ждём завершения всех операций GPU
 		if (m_GAPI)
 			m_GAPI->WaitForGpu();
 
+		// 4. Останавливаем CPU ресурсы и очищаем кэш GPU ресурсов
 		if (m_CpuResourceManager)
 		{
 			m_CpuResourceManager->Stop();
@@ -135,8 +143,7 @@ void Engine::Shutdown() noexcept
 		}
 		m_GpuResourceManager = nullptr;
 
-		m_SceneManager = nullptr;
-		m_ViewManager = nullptr;
+		// 5. Разрушаем GAPI и таймер
 		m_GAPI = nullptr;
 		m_Time = nullptr;
 

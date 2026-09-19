@@ -34,6 +34,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "package/UserSettingsManager.h" "package/UserSettingsManager.cpp"
 
         # Resources (Этап 22)
+        "resources/ResourceBase.h"
         "resources/ResourceRecord.h"
         "resources/cpu/CpuMesh.h" "resources/cpu/CpuMesh.cpp"
         "resources/cpu/CpuMaterial.h" "resources/cpu/CpuMaterial.cpp"

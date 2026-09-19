@@ -101,7 +101,6 @@ namespace zzz::engine
 
 	std::expected<SceneData, std::string> CpuResourceManager::LoadSceneData(std::string_view sceneName)
 	{
-		std::shared_lock lock(m_TablesMutex);
 		auto entryOpt = m_PackageManager->GetEntry(ePackage::Scene, sceneName);
 		if (!entryOpt.has_value())
 		{
@@ -113,58 +112,22 @@ namespace zzz::engine
 
 	void CpuResourceManager::AddMesh(std::shared_ptr<CpuMesh> mesh)
 	{
-		if (!mesh) return;
-		std::unique_lock lock(m_TablesMutex);
-		auto& record = m_CpuMeshes[mesh->GetGuid()];
-		record.readyEvent.SetDispatcher([this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
-		record.resource = mesh;
-		record.readyEvent.Resolve(mesh);
-		if (!mesh->GetName().empty())
-		{
-			m_MeshNames[std::string(mesh->GetName())] = mesh->GetGuid();
-		}
+		Add(std::move(mesh));
 	}
 
 	void CpuResourceManager::AddTexture(std::shared_ptr<CpuTexture2D> texture)
 	{
-		if (!texture) return;
-		std::unique_lock lock(m_TablesMutex);
-		auto& record = m_CpuTextures[texture->GetGuid()];
-		record.readyEvent.SetDispatcher([this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
-		record.resource = texture;
-		record.readyEvent.Resolve(texture);
-		if (!texture->GetName().empty())
-		{
-			m_TextureNames[std::string(texture->GetName())] = texture->GetGuid();
-		}
+		Add(std::move(texture));
 	}
 
 	void CpuResourceManager::AddShader(std::shared_ptr<CpuShader> shader)
 	{
-		if (!shader) return;
-		std::unique_lock lock(m_TablesMutex);
-		auto& record = m_CpuShaders[shader->GetGuid()];
-		record.readyEvent.SetDispatcher([this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
-		record.resource = shader;
-		record.readyEvent.Resolve(shader);
-		if (!shader->GetName().empty())
-		{
-			m_ShaderNames[std::string(shader->GetName())] = shader->GetGuid();
-		}
+		Add(std::move(shader));
 	}
 
 	void CpuResourceManager::AddMaterial(std::shared_ptr<CpuMaterial> material)
 	{
-		if (!material) return;
-		std::unique_lock lock(m_TablesMutex);
-		auto& record = m_CpuMaterials[material->GetGuid()];
-		record.readyEvent.SetDispatcher([this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
-		record.resource = material;
-		record.readyEvent.Resolve(material);
-		if (!material->GetName().empty())
-		{
-			m_MaterialNames[std::string(material->GetName())] = material->GetGuid();
-		}
+		Add(std::move(material));
 	}
 
 	std::shared_ptr<CpuMesh> CpuResourceManager::GetMesh(const Guid& guid) const
@@ -259,58 +222,6 @@ namespace zzz::engine
 		return it != m_CpuMaterials.end() && it->second.resource != nullptr;
 	}
 
-	void CpuResourceManager::UnloadSceneResources()
-	{
-		std::unique_lock lock(m_TablesMutex);
-		m_CpuMeshes.clear();
-		m_MeshNames.clear();
-		m_CpuTextures.clear();
-		m_TextureNames.clear();
-		m_CpuMaterials.clear();
-		m_MaterialNames.clear();
-	}
-
-	void CpuResourceManager::UnloadMeshes()
-	{
-		std::unique_lock lock(m_TablesMutex);
-		m_CpuMeshes.clear();
-		m_MeshNames.clear();
-	}
-
-	void CpuResourceManager::UnloadTextures()
-	{
-		std::unique_lock lock(m_TablesMutex);
-		m_CpuTextures.clear();
-		m_TextureNames.clear();
-	}
-
-	void CpuResourceManager::UnloadMaterials()
-	{
-		std::unique_lock lock(m_TablesMutex);
-		m_CpuMaterials.clear();
-		m_MaterialNames.clear();
-	}
-
-	void CpuResourceManager::UnloadShaders()
-	{
-		std::unique_lock lock(m_TablesMutex);
-		m_CpuShaders.clear();
-		m_ShaderNames.clear();
-	}
-
-	void CpuResourceManager::UnloadAll()
-	{
-		std::unique_lock lock(m_TablesMutex);
-		m_CpuMeshes.clear();
-		m_MeshNames.clear();
-		m_CpuTextures.clear();
-		m_TextureNames.clear();
-		m_CpuMaterials.clear();
-		m_MaterialNames.clear();
-		m_CpuShaders.clear();
-		m_ShaderNames.clear();
-	}
-
 	size_t CpuResourceManager::GetLoadedMeshCount() const noexcept
 	{
 		std::shared_lock lock(m_TablesMutex);
@@ -383,138 +294,225 @@ namespace zzz::engine
 				break;
 
 			auto& requests = m_RequestQueue.SwapAndGetReadBuffer();
+			struct RequestScopeGuard
+			{
+				std::atomic<size_t>& activeRequests;
+				std::mutex& flushMutex;
+				std::condition_variable& flushCv;
+
+				~RequestScopeGuard()
+				{
+					std::lock_guard flushLock(flushMutex);
+					if (activeRequests.fetch_sub(1, std::memory_order_acq_rel) == 1)
+					{
+						flushCv.notify_all();
+					}
+				}
+			};
+
 			for (const auto& req : requests)
 			{
-				switch (req.kind)
+				RequestScopeGuard guard(m_ActiveRequests, m_FlushMutex, m_FlushCv);
+				try
 				{
-				case eCpuResourceKind::Mesh:
-				{
-					auto entryRes = FindEntry(req.guid, eResourceType::Mesh);
-					if (!entryRes)
+					switch (req.kind)
 					{
-						std::unique_lock lock(m_TablesMutex);
-						m_CpuMeshes[req.guid].readyEvent.Resolve(std::unexpected(entryRes.error()));
-					}
-					else if (!m_DataAssetsManager)
+					case eCpuResourceKind::Mesh:
 					{
-						std::unique_lock lock(m_TablesMutex);
-						m_CpuMeshes[req.guid].readyEvent.Resolve(std::unexpected("DataAssetsManager не инициализирован"));
-					}
-					else
-					{
-						auto loadRes = CpuMeshLoader::Load(*entryRes, *m_DataAssetsManager);
-						std::unique_lock lock(m_TablesMutex);
-						if (loadRes)
+						auto entryRes = FindEntry(req.guid, eResourceType::Mesh);
+						if (!entryRes)
 						{
-							m_CpuMeshes[req.guid].resource = *loadRes;
-							if (!entryRes->GetName().empty())
-							{
-								m_MeshNames[std::string(entryRes->GetName())] = req.guid;
-							}
-							m_CpuMeshes[req.guid].readyEvent.Resolve(*loadRes);
+							std::unique_lock lock(m_TablesMutex);
+							auto [it, _] = m_CpuMeshes.try_emplace(req.guid, [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
+							it->second.readyEvent.Resolve(std::unexpected(entryRes.error()));
+						}
+						else if (!m_DataAssetsManager)
+						{
+							std::unique_lock lock(m_TablesMutex);
+							auto [it, _] = m_CpuMeshes.try_emplace(req.guid, [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
+							it->second.readyEvent.Resolve(std::unexpected("DataAssetsManager не инициализирован"));
 						}
 						else
 						{
-							m_CpuMeshes[req.guid].readyEvent.Resolve(std::unexpected(loadRes.error()));
-						}
-					}
-					break;
-				}
-				case eCpuResourceKind::Material:
-				{
-					auto entryRes = FindEntry(req.guid, eResourceType::Material);
-					if (!entryRes)
-					{
-						std::unique_lock lock(m_TablesMutex);
-						m_CpuMaterials[req.guid].readyEvent.Resolve(std::unexpected(entryRes.error()));
-					}
-					else if (!m_DataAssetsManager)
-					{
-						std::unique_lock lock(m_TablesMutex);
-						m_CpuMaterials[req.guid].readyEvent.Resolve(std::unexpected("DataAssetsManager не инициализирован"));
-					}
-					else
-					{
-						auto loadRes = CpuMaterialLoader::Load(*entryRes, *m_DataAssetsManager);
-						std::unique_lock lock(m_TablesMutex);
-						if (loadRes)
-						{
-							m_CpuMaterials[req.guid].resource = *loadRes;
-							if (!entryRes->GetName().empty())
+							auto loadRes = CpuMeshLoader::Load(*entryRes, *m_DataAssetsManager);
+							std::unique_lock lock(m_TablesMutex);
+							auto [it, _] = m_CpuMeshes.try_emplace(req.guid, [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
+							if (loadRes)
 							{
-								m_MaterialNames[std::string(entryRes->GetName())] = req.guid;
+								it->second.resource = *loadRes;
+								if (!entryRes->GetName().empty())
+								{
+									m_MeshNames[std::string(entryRes->GetName())] = req.guid;
+								}
+								it->second.readyEvent.Resolve(*loadRes);
 							}
-							m_CpuMaterials[req.guid].readyEvent.Resolve(*loadRes);
+							else
+							{
+								it->second.readyEvent.Resolve(std::unexpected(loadRes.error()));
+							}
+						}
+						break;
+					}
+					case eCpuResourceKind::Material:
+					{
+						auto entryRes = FindEntry(req.guid, eResourceType::Material);
+						if (!entryRes)
+						{
+							std::unique_lock lock(m_TablesMutex);
+							auto [it, _] = m_CpuMaterials.try_emplace(req.guid, [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
+							it->second.readyEvent.Resolve(std::unexpected(entryRes.error()));
+						}
+						else if (!m_DataAssetsManager)
+						{
+							std::unique_lock lock(m_TablesMutex);
+							auto [it, _] = m_CpuMaterials.try_emplace(req.guid, [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
+							it->second.readyEvent.Resolve(std::unexpected("DataAssetsManager не инициализирован"));
 						}
 						else
 						{
-							m_CpuMaterials[req.guid].readyEvent.Resolve(std::unexpected(loadRes.error()));
-						}
-					}
-					break;
-				}
-				case eCpuResourceKind::Shader:
-				{
-					auto entryRes = FindEntry(req.guid, eResourceType::Shader);
-					if (!entryRes)
-					{
-						std::unique_lock lock(m_TablesMutex);
-						m_CpuShaders[req.guid].readyEvent.Resolve(std::unexpected(entryRes.error()));
-					}
-					else if (!m_DataAssetsManager)
-					{
-						std::unique_lock lock(m_TablesMutex);
-						m_CpuShaders[req.guid].readyEvent.Resolve(std::unexpected("DataAssetsManager не инициализирован"));
-					}
-					else
-					{
-						auto loadRes = CpuShaderLoader::Load(*entryRes, *m_DataAssetsManager);
-						std::unique_lock lock(m_TablesMutex);
-						if (loadRes)
-						{
-							m_CpuShaders[req.guid].resource = *loadRes;
-							if (!entryRes->GetName().empty())
+							auto loadRes = CpuMaterialLoader::Load(*entryRes, *m_DataAssetsManager);
+							std::unique_lock lock(m_TablesMutex);
+							auto [it, _] = m_CpuMaterials.try_emplace(req.guid, [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
+							if (loadRes)
 							{
-								m_ShaderNames[std::string(entryRes->GetName())] = req.guid;
+								it->second.resource = *loadRes;
+								if (!entryRes->GetName().empty())
+								{
+									m_MaterialNames[std::string(entryRes->GetName())] = req.guid;
+								}
+								it->second.readyEvent.Resolve(*loadRes);
 							}
-							m_CpuShaders[req.guid].readyEvent.Resolve(*loadRes);
+							else
+							{
+								it->second.readyEvent.Resolve(std::unexpected(loadRes.error()));
+							}
+						}
+						break;
+					}
+					case eCpuResourceKind::Shader:
+					{
+						auto entryRes = FindEntry(req.guid, eResourceType::Shader);
+						if (!entryRes)
+						{
+							std::unique_lock lock(m_TablesMutex);
+							auto [it, _] = m_CpuShaders.try_emplace(req.guid, [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
+							it->second.readyEvent.Resolve(std::unexpected(entryRes.error()));
+						}
+						else if (!m_DataAssetsManager)
+						{
+							std::unique_lock lock(m_TablesMutex);
+							auto [it, _] = m_CpuShaders.try_emplace(req.guid, [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
+							it->second.readyEvent.Resolve(std::unexpected("DataAssetsManager не инициализирован"));
 						}
 						else
 						{
-							m_CpuShaders[req.guid].readyEvent.Resolve(std::unexpected(loadRes.error()));
+							auto loadRes = CpuShaderLoader::Load(*entryRes, *m_DataAssetsManager);
+							std::unique_lock lock(m_TablesMutex);
+							auto [it, _] = m_CpuShaders.try_emplace(req.guid, [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
+							if (loadRes)
+							{
+								it->second.resource = *loadRes;
+								if (!entryRes->GetName().empty())
+								{
+									m_ShaderNames[std::string(entryRes->GetName())] = req.guid;
+								}
+								it->second.readyEvent.Resolve(*loadRes);
+							}
+							else
+							{
+								it->second.readyEvent.Resolve(std::unexpected(loadRes.error()));
+							}
 						}
+						break;
 					}
-					break;
-				}
-				case eCpuResourceKind::Texture:
-				{
-					auto entryRes = FindEntry(req.guid, eResourceType::Texture2D);
-					if (!entryRes)
+					case eCpuResourceKind::Texture:
 					{
-						std::unique_lock lock(m_TablesMutex);
-						m_CpuTextures[req.guid].readyEvent.Resolve(std::unexpected(entryRes.error()));
-					}
-					else
-					{
-						// Заглушка для загрузки текстуры (наполняется по мере необходимости)
-						auto texture = safe_make_shared<CpuTexture2D>(entryRes->GetGuid(), std::string(entryRes->GetName()));
-						std::unique_lock lock(m_TablesMutex);
-						m_CpuTextures[req.guid].resource = texture;
-						if (!entryRes->GetName().empty())
+						auto entryRes = FindEntry(req.guid, eResourceType::Texture2D);
+						if (!entryRes)
 						{
-							m_TextureNames[std::string(entryRes->GetName())] = req.guid;
+							std::unique_lock lock(m_TablesMutex);
+							auto [it, _] = m_CpuTextures.try_emplace(req.guid, [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
+							it->second.readyEvent.Resolve(std::unexpected(entryRes.error()));
 						}
-						m_CpuTextures[req.guid].readyEvent.Resolve(texture);
+						else
+						{
+							// Заглушка для загрузки текстуры (наполняется по мере необходимости)
+							auto texture = safe_make_shared<CpuTexture2D>(entryRes->GetGuid(), std::string(entryRes->GetName()));
+							std::unique_lock lock(m_TablesMutex);
+							auto [it, _] = m_CpuTextures.try_emplace(req.guid, [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
+							it->second.resource = texture;
+							if (!entryRes->GetName().empty())
+							{
+								m_TextureNames[std::string(entryRes->GetName())] = req.guid;
+							}
+							it->second.readyEvent.Resolve(texture);
+						}
+						break;
 					}
-					break;
+					}
 				}
-				}
-
+				catch (const std::exception& ex)
 				{
-					std::lock_guard flushLock(m_FlushMutex);
-					if (m_ActiveRequests.fetch_sub(1, std::memory_order_acq_rel) == 1)
+					std::unique_lock lock(m_TablesMutex);
+					const std::string err = std::format("Исключение при загрузке ресурса: {}", ex.what());
+					switch (req.kind)
 					{
-						m_FlushCv.notify_all();
+					case eCpuResourceKind::Mesh:
+					{
+						auto [it, _] = m_CpuMeshes.try_emplace(req.guid, [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
+						it->second.readyEvent.Resolve(std::unexpected(err));
+						break;
+					}
+					case eCpuResourceKind::Material:
+					{
+						auto [it, _] = m_CpuMaterials.try_emplace(req.guid, [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
+						it->second.readyEvent.Resolve(std::unexpected(err));
+						break;
+					}
+					case eCpuResourceKind::Shader:
+					{
+						auto [it, _] = m_CpuShaders.try_emplace(req.guid, [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
+						it->second.readyEvent.Resolve(std::unexpected(err));
+						break;
+					}
+					case eCpuResourceKind::Texture:
+					{
+						auto [it, _] = m_CpuTextures.try_emplace(req.guid, [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
+						it->second.readyEvent.Resolve(std::unexpected(err));
+						break;
+					}
+					}
+				}
+				catch (...)
+				{
+					std::unique_lock lock(m_TablesMutex);
+					const std::string err = "Неизвестное исключение при загрузке ресурса";
+					switch (req.kind)
+					{
+					case eCpuResourceKind::Mesh:
+					{
+						auto [it, _] = m_CpuMeshes.try_emplace(req.guid, [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
+						it->second.readyEvent.Resolve(std::unexpected(err));
+						break;
+					}
+					case eCpuResourceKind::Material:
+					{
+						auto [it, _] = m_CpuMaterials.try_emplace(req.guid, [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
+						it->second.readyEvent.Resolve(std::unexpected(err));
+						break;
+					}
+					case eCpuResourceKind::Shader:
+					{
+						auto [it, _] = m_CpuShaders.try_emplace(req.guid, [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
+						it->second.readyEvent.Resolve(std::unexpected(err));
+						break;
+					}
+					case eCpuResourceKind::Texture:
+					{
+						auto [it, _] = m_CpuTextures.try_emplace(req.guid, [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
+						it->second.readyEvent.Resolve(std::unexpected(err));
+						break;
+					}
 					}
 				}
 			}

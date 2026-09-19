@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <string>
-#include "core/resources/ResourceBase.h"
+#include "engine/resources/ResourceBase.h"
 #include "engine/resources/cpu/CpuMesh.h"
 
 namespace zzz::engine
@@ -13,7 +13,7 @@ namespace zzz::engine
 	 * @details На этапе 22 хранит валидную ссылку на CPU-ресурс и дескрипторы.
 	 *          Настоящие Vertex/Index GPU-буферы и барьеры создаются на этапе 23.
 	 */
-	class GpuMesh final : public ::zzz::core::ResourceBase
+	class GpuMesh final : public ResourceBase
 	{
 	public:
 		GpuMesh(

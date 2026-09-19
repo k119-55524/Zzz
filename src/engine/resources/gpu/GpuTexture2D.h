@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <string>
-#include "core/resources/ResourceBase.h"
+#include "engine/resources/ResourceBase.h"
 #include "engine/resources/cpu/CpuTexture2D.h"
 
 namespace zzz::engine
@@ -11,7 +11,7 @@ namespace zzz::engine
 	 * @class GpuTexture2D
 	 * @brief Ресурс 2D-текстуры в видеопамяти (GPU).
 	 */
-	class GpuTexture2D final : public ::zzz::core::ResourceBase
+	class GpuTexture2D final : public ResourceBase
 	{
 	public:
 		GpuTexture2D(

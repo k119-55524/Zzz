@@ -135,13 +135,4 @@ namespace zzz::engine
 		auto it = m_GpuShaders.find(guid);
 		return it != m_GpuShaders.end() && it->second.resource != nullptr;
 	}
-
-	void GpuResourceManager::UnloadAll()
-	{
-		std::unique_lock lock(m_Mutex);
-		m_GpuMeshes.clear();
-		m_GpuMaterials.clear();
-		m_GpuTextures.clear();
-		m_GpuShaders.clear();
-	}
 }

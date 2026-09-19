@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <string>
-#include "core/resources/ResourceBase.h"
+#include "engine/resources/ResourceBase.h"
 #include "engine/resources/cpu/CpuMaterial.h"
 
 namespace zzz::engine
@@ -11,7 +11,7 @@ namespace zzz::engine
 	 * @class GpuMaterial
 	 * @brief Ресурс материала на GPU (шейдеры, параметры, текстурные привязки).
 	 */
-	class GpuMaterial final : public ::zzz::core::ResourceBase
+	class GpuMaterial final : public ResourceBase
 	{
 	public:
 		GpuMaterial(

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "core/resources/ResourceBase.h"
+#include "engine/resources/ResourceBase.h"
 
 namespace zzz::engine
 {
@@ -9,7 +9,7 @@ namespace zzz::engine
 	 * @class CpuShader
 	 * @brief Ресурс шейдера в оперативной памяти (CPU).
 	 */
-	class CpuShader final : public ::zzz::core::ResourceBase
+	class CpuShader final : public ResourceBase
 	{
 	public:
 		CpuShader(const ::zzz::core::Guid& guid, std::string name);

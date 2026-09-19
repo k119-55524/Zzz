@@ -3,6 +3,7 @@
 #include "engine/tasks/TaskDispatcher.h"
 #include "core/templates/CallbackQueue.h"
 #include "core/scene/SceneTransitionParams.h"
+#include "core/events/OneShotEvent.h"
 
 using namespace zzz::core;
 using namespace zzz::templates;
@@ -45,8 +46,32 @@ namespace zzz::engine
 
 		SceneTransitionParams m_GlobalTransitionParams;
 
+		struct SceneRecord final
+		{
+			std::shared_ptr<Scene> scene{ nullptr };
+			core::OneShotEvent<SceneLoadResult> readyEvent;
+
+			SceneRecord() = delete;
+			explicit SceneRecord(core::OneShotEvent<SceneLoadResult>::DispatcherFunc dispatcher)
+				: readyEvent(std::move(dispatcher))
+			{
+			}
+
+			SceneRecord& operator=(std::shared_ptr<Scene> loadedScene)
+			{
+				scene = loadedScene;
+				readyEvent.Resolve(std::move(loadedScene));
+				return *this;
+			}
+
+			[[nodiscard]] explicit operator bool() const noexcept
+			{
+				return scene != nullptr;
+			}
+		};
+
 		std::mutex m_LoadSceneMutex;
 		CallbackQueue<> m_MainThreadQueue;
-		std::unordered_map<Guid, std::shared_ptr<Scene>> m_Scenes;
+		std::unordered_map<Guid, SceneRecord> m_Scenes;
 	};
 }

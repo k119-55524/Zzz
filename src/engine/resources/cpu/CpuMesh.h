@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <cstddef>
-#include "core/resources/ResourceBase.h"
+#include "engine/resources/ResourceBase.h"
 #include "core/io/package/MeshData.h"
 #include "core/enums/eIndexFormat.h"
 
@@ -13,7 +13,7 @@ namespace zzz::engine
 	 * @class CpuMesh
 	 * @brief Ресурс полигональной 3D-геометрии в оперативной памяти (CPU).
 	 */
-	class CpuMesh final : public ::zzz::core::ResourceBase
+	class CpuMesh final : public ResourceBase
 	{
 	public:
 		CpuMesh(const ::zzz::core::Guid& guid, std::string name, ::zzz::core::MeshData meshData);

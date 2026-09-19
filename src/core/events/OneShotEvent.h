@@ -51,21 +51,15 @@ namespace zzz::core
 		DispatcherFunc m_Dispatcher;
 
 	public:
-		OneShotEvent() = default;
+		OneShotEvent() = delete;
 
 		explicit OneShotEvent(DispatcherFunc dispatcher)
 			: m_Dispatcher(std::move(dispatcher))
 		{
+			ensure(m_Dispatcher != nullptr, "OneShotEvent: dispatcher не установлен");
 		}
 
 		~OneShotEvent() = default;
-
-		/// @brief Устанавливает функцию диспетчеризации (например, очередь главного потока)
-		void SetDispatcher(DispatcherFunc dispatcher)
-		{
-			std::lock_guard lock(m_Mutex);
-			m_Dispatcher = std::move(dispatcher);
-		}
 
 		/// @brief Подписка с проверкой контекста подписчика
 		template<typename ContextType>
@@ -74,10 +68,13 @@ namespace zzz::core
 			if (!callback)
 				return;
 
-			std::lock_guard lock(m_Mutex);
+			std::unique_lock lock(m_Mutex);
 			if (m_State == State::Resolved)
 			{
-				DispatchSubscriber(Subscriber{ std::move(context), true, std::move(callback) }, *m_Result);
+				auto res = *m_Result;
+				auto dispatcher = m_Dispatcher;
+				lock.unlock();
+				DispatchSubscriber(Subscriber{ std::move(context), true, std::move(callback) }, res, dispatcher);
 				return;
 			}
 
@@ -90,10 +87,13 @@ namespace zzz::core
 			if (!callback)
 				return;
 
-			std::lock_guard lock(m_Mutex);
+			std::unique_lock lock(m_Mutex);
 			if (m_State == State::Resolved)
 			{
-				DispatchSubscriber(Subscriber{ {}, false, std::move(callback) }, *m_Result);
+				auto res = *m_Result;
+				auto dispatcher = m_Dispatcher;
+				lock.unlock();
+				DispatchSubscriber(Subscriber{ {}, false, std::move(callback) }, res, dispatcher);
 				return;
 			}
 
@@ -105,6 +105,7 @@ namespace zzz::core
 		{
 			std::vector<Subscriber> subscribersToNotify;
 			std::tuple<Args...> resultTuple(std::forward<Args>(args)...);
+			DispatcherFunc dispatcher;
 
 			{
 				std::lock_guard lock(m_Mutex);
@@ -117,11 +118,12 @@ namespace zzz::core
 				m_State = State::Resolved;
 				m_Result.emplace(resultTuple);
 				subscribersToNotify = std::move(m_Subscribers);
+				dispatcher = m_Dispatcher;
 			}
 
 			for (auto& sub : subscribersToNotify)
 			{
-				DispatchSubscriber(std::move(sub), resultTuple);
+				DispatchSubscriber(std::move(sub), resultTuple, dispatcher);
 			}
 		}
 
@@ -140,25 +142,24 @@ namespace zzz::core
 		}
 
 	private:
-		void DispatchSubscriber(Subscriber sub, const std::tuple<Args...>& result)
+		static void DispatchSubscriber(Subscriber sub, const std::tuple<Args...>& result, const DispatcherFunc& dispatcher)
 		{
 			auto task = [sub = std::move(sub), result]() mutable
 			{
-				if (sub.hasContext && sub.context.expired())
+				std::shared_ptr<void> pinnedContext;
+				if (sub.hasContext)
 				{
-					return;
+					pinnedContext = sub.context.lock();
+					if (!pinnedContext)
+					{
+						return;
+					}
 				}
 				std::apply(sub.callback, result);
 			};
 
-			if (m_Dispatcher)
-			{
-				m_Dispatcher(std::move(task));
-			}
-			else
-			{
-				task();
-			}
+			ensure(dispatcher != nullptr, "OneShotEvent: dispatcher не установлен");
+			dispatcher(std::move(task));
 		}
 	};
 }

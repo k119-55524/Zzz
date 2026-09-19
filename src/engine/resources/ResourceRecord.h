@@ -23,7 +23,7 @@ namespace zzz::engine
 		ResourcePtr resource{ nullptr };
 		EventType readyEvent;
 
-		ResourceRecord() = default;
+		ResourceRecord() = delete;
 
 		explicit ResourceRecord(typename EventType::DispatcherFunc dispatcher)
 			: readyEvent(std::move(dispatcher))

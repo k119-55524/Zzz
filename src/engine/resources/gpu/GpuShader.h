@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <string>
-#include "core/resources/ResourceBase.h"
+#include "engine/resources/ResourceBase.h"
 #include "engine/resources/cpu/CpuShader.h"
 
 namespace zzz::engine
@@ -11,7 +11,7 @@ namespace zzz::engine
 	 * @class GpuShader
 	 * @brief Ресурс скомпилированного шейдера на GPU.
 	 */
-	class GpuShader final : public ::zzz::core::ResourceBase
+	class GpuShader final : public ResourceBase
 	{
 	public:
 		GpuShader(

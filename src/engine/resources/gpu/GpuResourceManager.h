@@ -56,108 +56,129 @@ namespace zzz::engine
 		[[nodiscard]] std::shared_ptr<GpuShader>    CreateGpuShader(std::shared_ptr<CpuShader> cpuShader);
 
 		// --- Асинхронные методы загрузки GPU-ресурсов ---
-		template<typename ContextType>
-		void LoadGpuMeshAsync(
+		// --- Унифицированная шаблонная асинхронная загрузка LoadAsync<T> ---
+		template<typename T, typename ContextType>
+		void LoadAsync(
 			const ::zzz::core::Guid& guid,
 			std::weak_ptr<ContextType> context,
-			GpuResourceCallback<GpuMesh> onLoaded)
+			GpuResourceCallback<T> onLoaded)
 		{
-			LoadGpuResourceInternal<GpuMesh, CpuMesh>(
-				guid,
-				m_GpuMeshes,
-				std::move(context),
-				std::move(onLoaded),
-				[this](const ::zzz::core::Guid& g, auto ctx, auto cb) {
-					RequestCpuMesh(g, std::move(ctx), std::move(cb));
-				},
-				[this](std::shared_ptr<CpuMesh> cpuRes) {
-					return CreateGpuMesh(std::move(cpuRes));
-				});
+			if constexpr (std::is_same_v<T, GpuMesh>)
+			{
+				LoadGpuResourceInternal<GpuMesh, CpuMesh>(
+					guid, m_GpuMeshes, std::move(context), std::move(onLoaded),
+					[this](const ::zzz::core::Guid& g, auto ctx, auto cb) { RequestCpuMesh(g, std::move(ctx), std::move(cb)); },
+					[this](std::shared_ptr<CpuMesh> cpuRes) { return CreateGpuMesh(std::move(cpuRes)); });
+			}
+			else if constexpr (std::is_same_v<T, GpuMaterial>)
+			{
+				LoadGpuResourceInternal<GpuMaterial, CpuMaterial>(
+					guid, m_GpuMaterials, std::move(context), std::move(onLoaded),
+					[this](const ::zzz::core::Guid& g, auto ctx, auto cb) { RequestCpuMaterial(g, std::move(ctx), std::move(cb)); },
+					[this](std::shared_ptr<CpuMaterial> cpuRes) { return CreateGpuMaterial(std::move(cpuRes)); });
+			}
+			else if constexpr (std::is_same_v<T, GpuTexture2D>)
+			{
+				LoadGpuResourceInternal<GpuTexture2D, CpuTexture2D>(
+					guid, m_GpuTextures, std::move(context), std::move(onLoaded),
+					[this](const ::zzz::core::Guid& g, auto ctx, auto cb) { RequestCpuTexture(g, std::move(ctx), std::move(cb)); },
+					[this](std::shared_ptr<CpuTexture2D> cpuRes) { return CreateGpuTexture(std::move(cpuRes)); });
+			}
+			else if constexpr (std::is_same_v<T, GpuShader>)
+			{
+				LoadGpuResourceInternal<GpuShader, CpuShader>(
+					guid, m_GpuShaders, std::move(context), std::move(onLoaded),
+					[this](const ::zzz::core::Guid& g, auto ctx, auto cb) { RequestCpuShader(g, std::move(ctx), std::move(cb)); },
+					[this](std::shared_ptr<CpuShader> cpuRes) { return CreateGpuShader(std::move(cpuRes)); });
+			}
+			else
+			{
+				static_assert(sizeof(T) == 0, "Неподдерживаемый тип ресурса для LoadAsync<T>");
+			}
 		}
 
-		void LoadGpuMeshAsync(
+		template<typename T>
+		void LoadAsync(
 			const ::zzz::core::Guid& guid,
-			GpuResourceCallback<GpuMesh> onLoaded)
+			GpuResourceCallback<T> onLoaded)
 		{
-			LoadGpuMeshAsync<void>(guid, {}, std::move(onLoaded));
+			if constexpr (std::is_same_v<T, GpuMesh>)
+			{
+				LoadGpuResourceInternal<GpuMesh, CpuMesh>(
+					guid, m_GpuMeshes, std::move(onLoaded),
+					[this](const ::zzz::core::Guid& g, auto ctx, auto cb) { RequestCpuMesh(g, std::move(ctx), std::move(cb)); },
+					[this](std::shared_ptr<CpuMesh> cpuRes) { return CreateGpuMesh(std::move(cpuRes)); });
+			}
+			else if constexpr (std::is_same_v<T, GpuMaterial>)
+			{
+				LoadGpuResourceInternal<GpuMaterial, CpuMaterial>(
+					guid, m_GpuMaterials, std::move(onLoaded),
+					[this](const ::zzz::core::Guid& g, auto ctx, auto cb) { RequestCpuMaterial(g, std::move(ctx), std::move(cb)); },
+					[this](std::shared_ptr<CpuMaterial> cpuRes) { return CreateGpuMaterial(std::move(cpuRes)); });
+			}
+			else if constexpr (std::is_same_v<T, GpuTexture2D>)
+			{
+				LoadGpuResourceInternal<GpuTexture2D, CpuTexture2D>(
+					guid, m_GpuTextures, std::move(onLoaded),
+					[this](const ::zzz::core::Guid& g, auto ctx, auto cb) { RequestCpuTexture(g, std::move(ctx), std::move(cb)); },
+					[this](std::shared_ptr<CpuTexture2D> cpuRes) { return CreateGpuTexture(std::move(cpuRes)); });
+			}
+			else if constexpr (std::is_same_v<T, GpuShader>)
+			{
+				LoadGpuResourceInternal<GpuShader, CpuShader>(
+					guid, m_GpuShaders, std::move(onLoaded),
+					[this](const ::zzz::core::Guid& g, auto ctx, auto cb) { RequestCpuShader(g, std::move(ctx), std::move(cb)); },
+					[this](std::shared_ptr<CpuShader> cpuRes) { return CreateGpuShader(std::move(cpuRes)); });
+			}
+			else
+			{
+				static_assert(sizeof(T) == 0, "Неподдерживаемый тип ресурса для LoadAsync<T>");
+			}
+		}
+
+		// --- Именованные методы асинхронной загрузки (делегируют в LoadAsync<T>) ---
+		template<typename ContextType>
+		void LoadGpuMeshAsync(const ::zzz::core::Guid& guid, std::weak_ptr<ContextType> context, GpuResourceCallback<GpuMesh> onLoaded)
+		{
+			LoadAsync<GpuMesh>(guid, std::move(context), std::move(onLoaded));
+		}
+
+		void LoadGpuMeshAsync(const ::zzz::core::Guid& guid, GpuResourceCallback<GpuMesh> onLoaded)
+		{
+			LoadAsync<GpuMesh>(guid, std::move(onLoaded));
 		}
 
 		template<typename ContextType>
-		void LoadGpuMaterialAsync(
-			const ::zzz::core::Guid& guid,
-			std::weak_ptr<ContextType> context,
-			GpuResourceCallback<GpuMaterial> onLoaded)
+		void LoadGpuMaterialAsync(const ::zzz::core::Guid& guid, std::weak_ptr<ContextType> context, GpuResourceCallback<GpuMaterial> onLoaded)
 		{
-			LoadGpuResourceInternal<GpuMaterial, CpuMaterial>(
-				guid,
-				m_GpuMaterials,
-				std::move(context),
-				std::move(onLoaded),
-				[this](const ::zzz::core::Guid& g, auto ctx, auto cb) {
-					RequestCpuMaterial(g, std::move(ctx), std::move(cb));
-				},
-				[this](std::shared_ptr<CpuMaterial> cpuRes) {
-					return CreateGpuMaterial(std::move(cpuRes));
-				});
+			LoadAsync<GpuMaterial>(guid, std::move(context), std::move(onLoaded));
 		}
 
-		void LoadGpuMaterialAsync(
-			const ::zzz::core::Guid& guid,
-			GpuResourceCallback<GpuMaterial> onLoaded)
+		void LoadGpuMaterialAsync(const ::zzz::core::Guid& guid, GpuResourceCallback<GpuMaterial> onLoaded)
 		{
-			LoadGpuMaterialAsync<void>(guid, {}, std::move(onLoaded));
+			LoadAsync<GpuMaterial>(guid, std::move(onLoaded));
 		}
 
 		template<typename ContextType>
-		void LoadGpuTextureAsync(
-			const ::zzz::core::Guid& guid,
-			std::weak_ptr<ContextType> context,
-			GpuResourceCallback<GpuTexture2D> onLoaded)
+		void LoadGpuTextureAsync(const ::zzz::core::Guid& guid, std::weak_ptr<ContextType> context, GpuResourceCallback<GpuTexture2D> onLoaded)
 		{
-			LoadGpuResourceInternal<GpuTexture2D, CpuTexture2D>(
-				guid,
-				m_GpuTextures,
-				std::move(context),
-				std::move(onLoaded),
-				[this](const ::zzz::core::Guid& g, auto ctx, auto cb) {
-					RequestCpuTexture(g, std::move(ctx), std::move(cb));
-				},
-				[this](std::shared_ptr<CpuTexture2D> cpuRes) {
-					return CreateGpuTexture(std::move(cpuRes));
-				});
+			LoadAsync<GpuTexture2D>(guid, std::move(context), std::move(onLoaded));
 		}
 
-		void LoadGpuTextureAsync(
-			const ::zzz::core::Guid& guid,
-			GpuResourceCallback<GpuTexture2D> onLoaded)
+		void LoadGpuTextureAsync(const ::zzz::core::Guid& guid, GpuResourceCallback<GpuTexture2D> onLoaded)
 		{
-			LoadGpuTextureAsync<void>(guid, {}, std::move(onLoaded));
+			LoadAsync<GpuTexture2D>(guid, std::move(onLoaded));
 		}
 
 		template<typename ContextType>
-		void LoadGpuShaderAsync(
-			const ::zzz::core::Guid& guid,
-			std::weak_ptr<ContextType> context,
-			GpuResourceCallback<GpuShader> onLoaded)
+		void LoadGpuShaderAsync(const ::zzz::core::Guid& guid, std::weak_ptr<ContextType> context, GpuResourceCallback<GpuShader> onLoaded)
 		{
-			LoadGpuResourceInternal<GpuShader, CpuShader>(
-				guid,
-				m_GpuShaders,
-				std::move(context),
-				std::move(onLoaded),
-				[this](const ::zzz::core::Guid& g, auto ctx, auto cb) {
-					RequestCpuShader(g, std::move(ctx), std::move(cb));
-				},
-				[this](std::shared_ptr<CpuShader> cpuRes) {
-					return CreateGpuShader(std::move(cpuRes));
-				});
+			LoadAsync<GpuShader>(guid, std::move(context), std::move(onLoaded));
 		}
 
-		void LoadGpuShaderAsync(
-			const ::zzz::core::Guid& guid,
-			GpuResourceCallback<GpuShader> onLoaded)
+		void LoadGpuShaderAsync(const ::zzz::core::Guid& guid, GpuResourceCallback<GpuShader> onLoaded)
 		{
-			LoadGpuShaderAsync<void>(guid, {}, std::move(onLoaded));
+			LoadAsync<GpuShader>(guid, std::move(onLoaded));
 		}
 
 		// --- Быстрый доступ к кэшу GPU ---
@@ -166,12 +187,30 @@ namespace zzz::engine
 		[[nodiscard]] std::shared_ptr<GpuTexture2D> GetGpuTexture(const ::zzz::core::Guid& guid) const;
 		[[nodiscard]] std::shared_ptr<GpuShader>    GetGpuShader(const ::zzz::core::Guid& guid) const;
 
+		template<typename T>
+		[[nodiscard]] std::shared_ptr<T> Get(const ::zzz::core::Guid& guid) const
+		{
+			if constexpr (std::is_same_v<T, GpuMesh>)           return GetGpuMesh(guid);
+			else if constexpr (std::is_same_v<T, GpuMaterial>)  return GetGpuMaterial(guid);
+			else if constexpr (std::is_same_v<T, GpuTexture2D>) return GetGpuTexture(guid);
+			else if constexpr (std::is_same_v<T, GpuShader>)    return GetGpuShader(guid);
+			else static_assert(sizeof(T) == 0, "Неподдерживаемый тип ресурса для Get<T>");
+		}
+
 		[[nodiscard]] bool HasGpuMesh(const ::zzz::core::Guid& guid) const noexcept;
 		[[nodiscard]] bool HasGpuMaterial(const ::zzz::core::Guid& guid) const noexcept;
 		[[nodiscard]] bool HasGpuTexture(const ::zzz::core::Guid& guid) const noexcept;
 		[[nodiscard]] bool HasGpuShader(const ::zzz::core::Guid& guid) const noexcept;
 
-		void UnloadAll();
+		template<typename T>
+		[[nodiscard]] bool Has(const ::zzz::core::Guid& guid) const noexcept
+		{
+			if constexpr (std::is_same_v<T, GpuMesh>)           return HasGpuMesh(guid);
+			else if constexpr (std::is_same_v<T, GpuMaterial>)  return HasGpuMaterial(guid);
+			else if constexpr (std::is_same_v<T, GpuTexture2D>) return HasGpuTexture(guid);
+			else if constexpr (std::is_same_v<T, GpuShader>)    return HasGpuShader(guid);
+			else static_assert(sizeof(T) == 0, "Неподдерживаемый тип ресурса для Has<T>");
+		}
 
 	private:
 		template<typename GpuT, typename CpuT, typename ContextType, typename RequestFunc, typename CreateFunc>
@@ -184,31 +223,74 @@ namespace zzz::engine
 			CreateFunc&& createFunc)
 		{
 			std::unique_lock lock(m_Mutex);
-			auto it = table.find(guid);
-			if (it != table.end())
+			auto [it, inserted] = table.try_emplace(guid, [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
+			it->second.readyEvent.Subscribe(std::move(context), std::move(onLoaded));
+			if (!inserted)
 			{
-				it->second.readyEvent.SetDispatcher([this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
-				it->second.readyEvent.Subscribe(std::move(context), std::move(onLoaded));
 				return;
 			}
-
-			auto& record = table[guid];
-			record.readyEvent.SetDispatcher([this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
-			record.readyEvent.Subscribe(std::move(context), std::move(onLoaded));
 
 			requestFunc(guid, weak_from_this(), [this, &table, guid, createFunc = std::forward<CreateFunc>(createFunc)](std::expected<std::shared_ptr<CpuT>, std::string> cpuRes)
 			{
 				if (!cpuRes)
 				{
 					std::unique_lock l(m_Mutex);
-					table[guid].readyEvent.Resolve(std::unexpected(cpuRes.error()));
+					auto it = table.find(guid);
+					if (it != table.end())
+					{
+						it->second.readyEvent.Resolve(std::unexpected(cpuRes.error()));
+					}
 					return;
 				}
 
 				auto gpuObj = createFunc(*cpuRes);
 				std::unique_lock l(m_Mutex);
-				table[guid].resource = gpuObj;
-				table[guid].readyEvent.Resolve(gpuObj);
+				auto it = table.find(guid);
+				if (it != table.end())
+				{
+					it->second.resource = gpuObj;
+					it->second.readyEvent.Resolve(gpuObj);
+				}
+			});
+		}
+
+		template<typename GpuT, typename CpuT, typename RequestFunc, typename CreateFunc>
+		void LoadGpuResourceInternal(
+			const ::zzz::core::Guid& guid,
+			std::unordered_map<::zzz::core::Guid, ResourceRecord<GpuT>>& table,
+			GpuResourceCallback<GpuT> onLoaded,
+			RequestFunc&& requestFunc,
+			CreateFunc&& createFunc)
+		{
+			std::unique_lock lock(m_Mutex);
+			auto [it, inserted] = table.try_emplace(guid, [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
+			it->second.readyEvent.Subscribe(std::move(onLoaded));
+			if (!inserted)
+			{
+				return;
+			}
+
+			requestFunc(guid, weak_from_this(), [this, &table, guid, createFunc = std::forward<CreateFunc>(createFunc)](std::expected<std::shared_ptr<CpuT>, std::string> cpuRes)
+			{
+				if (!cpuRes)
+				{
+					std::unique_lock l(m_Mutex);
+					auto it = table.find(guid);
+					if (it != table.end())
+					{
+						it->second.readyEvent.Resolve(std::unexpected(cpuRes.error()));
+					}
+					return;
+				}
+
+				auto gpuObj = createFunc(*cpuRes);
+				std::unique_lock l(m_Mutex);
+				auto it = table.find(guid);
+				if (it != table.end())
+				{
+					it->second.resource = gpuObj;
+					it->second.readyEvent.Resolve(gpuObj);
+				}
 			});
 		}
 
