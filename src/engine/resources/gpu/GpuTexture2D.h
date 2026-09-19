@@ -14,6 +14,8 @@ namespace zzz::engine
 	class GpuTexture2D final : public ResourceBase
 	{
 	public:
+		using CpuType = CpuTexture2D;
+
 		GpuTexture2D(
 			const ::zzz::core::Guid& guid,
 			std::string name,

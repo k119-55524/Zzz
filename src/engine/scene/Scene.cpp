@@ -26,8 +26,8 @@ namespace zzz::engine
 	Scene::Scene(
 		Guid guid,
 		std::string name,
-		std::shared_ptr<CpuResourceManager> cpuResourceManager,
-		std::shared_ptr<GpuResourceManager> gpuResourceManager,
+		std::shared_ptr<CoreCpuResourceManager> cpuResourceManager,
+		std::shared_ptr<CoreGpuResourceManager> gpuResourceManager,
 		SceneTransitionParams defaultTransition)
 		: m_Guid(guid)
 		, m_Name(std::move(name))

@@ -21,8 +21,8 @@ namespace zzz::engine
 		Guid guid,
 		std::string name,
 		eLayerType type,
-		std::shared_ptr<CpuResourceManager> cpuResourceManager,
-		std::shared_ptr<GpuResourceManager> gpuResourceManager,
+		std::shared_ptr<CoreCpuResourceManager> cpuResourceManager,
+		std::shared_ptr<CoreGpuResourceManager> gpuResourceManager,
 		std::unique_ptr<ObjectDomain> objectDomain,
 		std::unique_ptr<IEntityDomain> entityDomain,
 		std::unique_ptr<ISpatialStorage> spatialStorage)

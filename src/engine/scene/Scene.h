@@ -12,11 +12,11 @@ namespace zzz::core
 	class SceneData;
 }
 
+#include "engine/resources/ResourceTypes.h"
+
 namespace zzz::engine
 {
 	using namespace zzz::core;
-	class CpuResourceManager;
-	class GpuResourceManager;
 	class TaskDispatcher;
 
 	class Scene final : public std::enable_shared_from_this<Scene>
@@ -27,8 +27,8 @@ namespace zzz::engine
 		Scene(
 			Guid guid,
 			std::string name,
-			std::shared_ptr<CpuResourceManager> cpuResourceManager,
-			std::shared_ptr<GpuResourceManager> gpuResourceManager,
+			std::shared_ptr<CoreCpuResourceManager> cpuResourceManager,
+			std::shared_ptr<CoreGpuResourceManager> gpuResourceManager,
 			SceneTransitionParams defaultTransition = {});
 
 		~Scene();
@@ -47,8 +47,8 @@ namespace zzz::engine
 		[[nodiscard]] const SceneTransitionParams& GetTransitionParams() const noexcept { return m_TransitionParams; }
 		void SetTransitionParams(const SceneTransitionParams& params) noexcept { m_TransitionParams = params; }
 
-		[[nodiscard]] std::shared_ptr<CpuResourceManager> GetCpuResourceManager() const noexcept { return m_CpuResourceManager; }
-		[[nodiscard]] std::shared_ptr<GpuResourceManager> GetGpuResourceManager() const noexcept { return m_GpuResourceManager; }
+		[[nodiscard]] std::shared_ptr<CoreCpuResourceManager> GetCpuResourceManager() const noexcept { return m_CpuResourceManager; }
+		[[nodiscard]] std::shared_ptr<CoreGpuResourceManager> GetGpuResourceManager() const noexcept { return m_GpuResourceManager; }
 
 		// --- Управление слоями сцены ---
 		[[nodiscard]] const std::vector<std::unique_ptr<ILayer>>& GetLayers() const noexcept { return m_Layers; }
@@ -61,8 +61,8 @@ namespace zzz::engine
 	private:
 		Guid m_Guid;
 		std::string m_Name;
-		std::shared_ptr<CpuResourceManager> m_CpuResourceManager;
-		std::shared_ptr<GpuResourceManager> m_GpuResourceManager;
+		std::shared_ptr<CoreCpuResourceManager> m_CpuResourceManager;
+		std::shared_ptr<CoreGpuResourceManager> m_GpuResourceManager;
 		ClearConfig m_ClearConfig;
 		SceneTransitionParams m_TransitionParams;
 

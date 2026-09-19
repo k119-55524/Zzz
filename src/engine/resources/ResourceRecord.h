@@ -5,6 +5,8 @@
 #include <expected>
 #include "core/templates/AsyncRecord.h"
 
+using namespace zzz::core;
+
 namespace zzz::engine
 {
 	/**
@@ -14,5 +16,5 @@ namespace zzz::engine
 	 * объединяя готовый указатель на ресурс и OneShotEvent с результатом std::expected<std::shared_ptr<T>, std::string>.
 	 */
 	template<typename T>
-	using ResourceRecord = core::AsyncRecord<std::shared_ptr<T>, std::expected<std::shared_ptr<T>, std::string>>;
+	using ResourceRecord = AsyncRecord<std::shared_ptr<T>, std::expected<std::shared_ptr<T>, std::string>>;
 }

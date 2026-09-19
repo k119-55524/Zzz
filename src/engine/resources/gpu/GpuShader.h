@@ -14,6 +14,8 @@ namespace zzz::engine
 	class GpuShader final : public ResourceBase
 	{
 	public:
+		using CpuType = CpuShader;
+
 		GpuShader(
 			const ::zzz::core::Guid& guid,
 			std::string name,

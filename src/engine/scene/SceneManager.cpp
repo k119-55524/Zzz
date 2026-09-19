@@ -21,8 +21,8 @@ namespace zzz::engine
 	SceneManager::SceneManager(
 		TaskDispatcher& taskDispatcher,
 		std::shared_ptr<PackageManager> packageManager,
-		std::shared_ptr<CpuResourceManager> cpuResourceManager,
-		std::shared_ptr<GpuResourceManager> gpuResourceManager,
+		std::shared_ptr<CoreCpuResourceManager> cpuResourceManager,
+		std::shared_ptr<CoreGpuResourceManager> gpuResourceManager,
 		std::shared_ptr<ScriptFactory> scriptFactory) :
 			m_TaskDispatcher(taskDispatcher),
 			m_PackageManager(std::move(packageManager)),

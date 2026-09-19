@@ -40,11 +40,13 @@ namespace zzz::core
 namespace zzz::engine
 {
 	class SceneManager;
+	template<typename... SupportedResources>
 	class CpuResourceManager;
 
 	class PackageManager final
 	{
 		friend class SceneManager;
+		template<typename... SupportedResources>
 		friend class CpuResourceManager;
 
 	public:

@@ -17,11 +17,10 @@ namespace zzz::core
 	class GameObjectData;
 }
 
+#include "engine/resources/ResourceTypes.h"
+
 namespace zzz::engine
 {
-	class CpuResourceManager;
-	class GpuResourceManager;
-
 	/**
 	 * @class GameLayer
 	 * @brief Слой игрового мира сцены (2D/3D), обладающий иерархическим деревом и пространственным индексом.
@@ -36,8 +35,8 @@ namespace zzz::engine
 			Guid guid,
 			std::string name,
 			eLayerType type,
-			std::shared_ptr<CpuResourceManager> cpuResourceManager,
-			std::shared_ptr<GpuResourceManager> gpuResourceManager,
+			std::shared_ptr<CoreCpuResourceManager> cpuResourceManager,
+			std::shared_ptr<CoreGpuResourceManager> gpuResourceManager,
 			std::unique_ptr<ObjectDomain> objectDomain,
 			std::unique_ptr<IEntityDomain> entityDomain,
 			std::unique_ptr<ISpatialStorage> spatialStorage);
@@ -52,8 +51,8 @@ namespace zzz::engine
 			std::function<void(std::expected<void, std::string>)> onReady = {}) override;
 
 	private:
-		std::shared_ptr<CpuResourceManager>   m_CpuResourceManager;
-		std::shared_ptr<GpuResourceManager>   m_GpuResourceManager;
+		std::shared_ptr<CoreCpuResourceManager>   m_CpuResourceManager;
+		std::shared_ptr<CoreGpuResourceManager>   m_GpuResourceManager;
 
 		NodeStorage                           m_NodeStorage;
 		std::unique_ptr<ObjectDomain>         m_ObjectDomain;

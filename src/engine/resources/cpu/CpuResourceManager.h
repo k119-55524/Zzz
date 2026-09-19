@@ -1,31 +1,25 @@
 #pragma once
 
+#include <tuple>
 #include <memory>
 #include <string>
-#include <string_view>
-#include <unordered_map>
-#include <shared_mutex>
-#include <functional>
+#include <format>
 #include <expected>
-#include <concepts>
-#include <thread>
-#include <condition_variable>
-#include <atomic>
+#include <functional>
+#include <string_view>
 
 #include "core/utils/Guid.h"
-#include "core/utils/Defines.h"
+#include "core/io/FileSystem.h"
 #include "core/enums/eResourceType.h"
 #include "core/io/package/SceneData.h"
-#include "core/io/package/DataAssetsManager.h"
 #include "core/io/package/PackageEntry.h"
-#include "core/io/FileSystem.h"
-#include "core/templates/DoubleBufferedVector.h"
 #include "core/templates/CallbackQueue.h"
-#include "engine/resources/ResourceRecord.h"
-#include "engine/resources/cpu/CpuMesh.h"
-#include "engine/resources/cpu/CpuMaterial.h"
-#include "engine/resources/cpu/CpuTexture2D.h"
-#include "engine/resources/cpu/CpuShader.h"
+#include "engine/tasks/TaskDispatcher.h"
+#include "engine/resources/ResourceTable.h"
+#include "engine/resources/ResourceTypes.h"
+#include "core/io/package/DataAssetsManager.h"
+
+using namespace zzz::core;
 
 namespace zzz::engine
 {
@@ -37,301 +31,156 @@ namespace zzz::engine
 	template <typename T>
 	using CpuResourceCallback = std::function<void(CpuResourceResult<T>)>;
 
+	template<typename T, typename Mgr>
+	std::expected<std::shared_ptr<T>, std::string> LoadCpuResourceSync(
+		const Guid& guid,
+		Mgr& manager);
+
 	/**
 	 * @class CpuResourceManager
-	 * @brief Потокобезопасный центральный сервис загрузки и кэширования CPU-ресурсов (диск, VFS, пакеты).
-	 * @details Полностью изолирован от GAPI и видеопамяти (Zero Platform Leaks).
+	 * @brief Шаблонный потокобезопасный центральный сервис загрузки и кэширования CPU-ресурсов.
+	 * @details Автоматически разворачивает типизированные таблицы в std::tuple для всех типов из SupportedResources...
+	 *          Задачи I/O и десериализации отправляются в пул потоков TaskDispatcher.
 	 */
-	class CpuResourceManager final
+	template<typename... SupportedResources>
+	class CpuResourceManager
 	{
 		Z_NO_COPY_MOVE(CpuResourceManager);
 
 	public:
-		enum class eCpuResourceKind : uint8_t
-		{
-			Mesh,
-			Material,
-			Texture,
-			Shader
-		};
-
-		struct CpuLoadRequest
-		{
-			::zzz::core::Guid guid;
-			eCpuResourceKind kind{ eCpuResourceKind::Mesh };
-			std::string name;
-		};
-
 		CpuResourceManager() = delete;
+
 		explicit CpuResourceManager(
+			TaskDispatcher& taskDispatcher,
 			std::shared_ptr<PackageManager> packageManager,
-			std::shared_ptr<::zzz::core::DataAssetsManager> dataAssetsManager = nullptr,
-			std::shared_ptr<::zzz::core::FileSystem> fileSystem = nullptr);
-		~CpuResourceManager();
+			std::shared_ptr<DataAssetsManager> dataAssetsManager = nullptr,
+			std::shared_ptr<FileSystem> fileSystem = nullptr)
+			: m_TaskDispatcher(taskDispatcher)
+			, m_PackageManager(std::move(packageManager))
+			, m_DataAssetsManager(std::move(dataAssetsManager))
+			, m_FileSystem(std::move(fileSystem))
+		{
+		}
+
+		virtual ~CpuResourceManager()
+		{
+			EmergencyStop();
+		}
 
 		// --- Обновление и доставка колбэков на главном потоке ---
-		void Update();
+		void Update()
+		{
+			m_MainThreadQueue.ExecuteAll();
+		}
 
-		// --- Запуск и остановка I/O-потока ---
-		void Start();
-		void Stop();
+		/// @brief Прямой доступ к типизированной таблице ресурса T
+		template<typename T>
+		[[nodiscard]] ResourceTable<T>& GetTable() noexcept
+		{
+			return std::get<ResourceTable<T>>(m_Tables);
+		}
 
-		// --- Барьер загрузки ---
-		void Flush();
+		template<typename T>
+		[[nodiscard]] const ResourceTable<T>& GetTable() const noexcept
+		{
+			return std::get<ResourceTable<T>>(m_Tables);
+		}
 
 		// --- Загрузка структуры сцены (SceneData) ---
-		[[nodiscard]] std::expected<::zzz::core::SceneData, std::string> LoadSceneData(const ::zzz::core::Guid& sceneGuid);
-		[[nodiscard]] std::expected<::zzz::core::SceneData, std::string> LoadSceneData(std::string_view sceneName);
+		[[nodiscard]] std::expected<SceneData, std::string> LoadSceneData(const Guid& sceneGuid);
+		[[nodiscard]] std::expected<SceneData, std::string> LoadSceneData(std::string_view sceneName);
 
-		// --- Доступ к подсистемам пакетов и бинарных ассетов ---
-		[[nodiscard]] std::shared_ptr<PackageManager> GetPackageManager() const noexcept;
-		[[nodiscard]] std::shared_ptr<::zzz::core::DataAssetsManager> GetDataAssetsManager() const noexcept;
-		[[nodiscard]] std::shared_ptr<::zzz::core::FileSystem> GetFileSystem() const noexcept;
+		[[nodiscard]] std::expected<PackageEntry, std::string> FindEntry(const Guid& guid, eResourceType type) const;
 
-		// --- Загрузка ассетов данных из data.dat ---
-		template <typename T>
-		[[nodiscard]] std::expected<T, std::string> LoadDataAsset(const ::zzz::core::Guid& guid)
-		{
-			if (!m_DataAssetsManager)
-			{
-				return std::unexpected("DataAssetsManager не инициализирован в CpuResourceManager");
-			}
-			return m_DataAssetsManager->LoadAsset<T>(guid);
-		}
-
-		// --- Унифицированное добавление ресурса в кэш Add<T> ---
-		template<typename T>
-		void Add(std::shared_ptr<T> res)
-		{
-			if (!res) return;
-			std::unique_lock lock(m_TablesMutex);
-			auto [it, inserted] = GetTable<T>().try_emplace(res->GetGuid(), [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
-			it->second.resource = res;
-			it->second.readyEvent.Resolve(res);
-			if (!res->GetName().empty())
-			{
-				GetNameTable<T>()[std::string(res->GetName())] = res->GetGuid();
-			}
-		}
-
-		// --- Шаблонный фасад доступа Get<T> ---
-		template<typename T>
-		[[nodiscard]] std::shared_ptr<T> Get(const ::zzz::core::Guid& guid) const
-		{
-			std::shared_lock lock(m_TablesMutex);
-			const auto& table = GetTable<T>();
-			auto it = table.find(guid);
-			return it != table.end() ? it->second.resource : nullptr;
-		}
-
-		template<typename T>
-		[[nodiscard]] std::shared_ptr<T> Get(std::string_view name) const
-		{
-			std::shared_lock lock(m_TablesMutex);
-			const auto& names = GetNameTable<T>();
-			auto it = names.find(std::string(name));
-			if (it == names.end()) return nullptr;
-			const auto& table = GetTable<T>();
-			auto recIt = table.find(it->second);
-			return recIt != table.end() ? recIt->second.resource : nullptr;
-		}
-
-		template<typename T>
-		[[nodiscard]] bool Has(const ::zzz::core::Guid& guid) const noexcept
-		{
-			std::shared_lock lock(m_TablesMutex);
-			const auto& table = GetTable<T>();
-			auto it = table.find(guid);
-			return it != table.end() && it->second.resource != nullptr;
-		}
-
-		// --- Унифицированная шаблонная асинхронная загрузка LoadAsync<T> ---
+		// --- Единая шаблонная функция асинхронного доступа GetAsync<T> ---
 		template<typename T, typename ContextType>
-		void LoadAsync(
-			const ::zzz::core::Guid& guid,
+		void GetAsync(
+			const Guid& guid,
 			std::weak_ptr<ContextType> context,
 			CpuResourceCallback<T> onLoaded)
 		{
-			EnqueueTypedRequest<T>(guid, std::move(context), std::move(onLoaded));
+			static_assert((std::is_same_v<T, SupportedResources> || ...),
+				"Запрашиваемый тип ресурса не поддерживается данным CpuResourceManager!");
+
+			GetTable<T>().GetOrRequest(
+				guid,
+				std::move(context),
+				std::move(onLoaded),
+				GetDispatcher(),
+				[this](const Guid& g)
+				{
+					DispatchLoad<T>(g);
+				});
 		}
 
 		template<typename T>
-		void LoadAsync(
-			const ::zzz::core::Guid& guid,
+		void GetAsync(
+			const Guid& guid,
 			CpuResourceCallback<T> onLoaded)
 		{
-			EnqueueTypedRequest<T>(guid, std::move(onLoaded));
+			static_assert((std::is_same_v<T, SupportedResources> || ...),
+				"Запрашиваемый тип ресурса не поддерживается данным CpuResourceManager!");
+
+			GetTable<T>().GetOrRequest(
+				guid,
+				std::move(onLoaded),
+				GetDispatcher(),
+				[this](const Guid& g)
+				{
+					DispatchLoad<T>(g);
+				});
 		}
 
-		// --- Именованные методы асинхронной загрузки (делегируют в LoadAsync<T>) ---
-		template<typename ContextType>
-		void LoadMeshAsync(const ::zzz::core::Guid& guid, std::weak_ptr<ContextType> context, CpuResourceCallback<CpuMesh> onLoaded)
+	protected:
+		void EmergencyStop()
 		{
-			LoadAsync<CpuMesh>(guid, std::move(context), std::move(onLoaded));
+			(GetTable<SupportedResources>().Clear(), ...);
 		}
 
-		void LoadMeshAsync(const ::zzz::core::Guid& guid, CpuResourceCallback<CpuMesh> onLoaded)
+		[[nodiscard]] auto GetDispatcher()
 		{
-			LoadAsync<CpuMesh>(guid, std::move(onLoaded));
-		}
-
-		template<typename ContextType>
-		void LoadMaterialAsync(const ::zzz::core::Guid& guid, std::weak_ptr<ContextType> context, CpuResourceCallback<CpuMaterial> onLoaded)
-		{
-			LoadAsync<CpuMaterial>(guid, std::move(context), std::move(onLoaded));
-		}
-
-		void LoadMaterialAsync(const ::zzz::core::Guid& guid, CpuResourceCallback<CpuMaterial> onLoaded)
-		{
-			LoadAsync<CpuMaterial>(guid, std::move(onLoaded));
-		}
-
-		template<typename ContextType>
-		void LoadTextureAsync(const ::zzz::core::Guid& guid, std::weak_ptr<ContextType> context, CpuResourceCallback<CpuTexture2D> onLoaded)
-		{
-			LoadAsync<CpuTexture2D>(guid, std::move(context), std::move(onLoaded));
-		}
-
-		void LoadTextureAsync(const ::zzz::core::Guid& guid, CpuResourceCallback<CpuTexture2D> onLoaded)
-		{
-			LoadAsync<CpuTexture2D>(guid, std::move(onLoaded));
-		}
-
-		template<typename ContextType>
-		void LoadShaderAsync(const ::zzz::core::Guid& guid, std::weak_ptr<ContextType> context, CpuResourceCallback<CpuShader> onLoaded)
-		{
-			LoadAsync<CpuShader>(guid, std::move(context), std::move(onLoaded));
-		}
-
-		void LoadShaderAsync(const ::zzz::core::Guid& guid, CpuResourceCallback<CpuShader> onLoaded)
-		{
-			LoadAsync<CpuShader>(guid, std::move(onLoaded));
-		}
-
-		// --- Шаблонный доступ к количеству загруженных ресурсов ---
-		template<typename T>
-		[[nodiscard]] size_t GetLoadedCount() const noexcept
-		{
-			std::shared_lock lock(m_TablesMutex);
-			return GetTable<T>().size();
-		}
-
-	private:
-		template<typename T>
-		[[nodiscard]] auto& GetTable() noexcept
-		{
-			if constexpr (std::is_same_v<T, CpuMesh>)           return m_CpuMeshes;
-			else if constexpr (std::is_same_v<T, CpuTexture2D>) return m_CpuTextures;
-			else if constexpr (std::is_same_v<T, CpuShader>)    return m_CpuShaders;
-			else if constexpr (std::is_same_v<T, CpuMaterial>)  return m_CpuMaterials;
+			return [this](auto task) { m_MainThreadQueue.Push(std::move(task)); };
 		}
 
 		template<typename T>
-		[[nodiscard]] const auto& GetTable() const noexcept
+		void DispatchLoad(const Guid& guid)
 		{
-			if constexpr (std::is_same_v<T, CpuMesh>)           return m_CpuMeshes;
-			else if constexpr (std::is_same_v<T, CpuTexture2D>) return m_CpuTextures;
-			else if constexpr (std::is_same_v<T, CpuShader>)    return m_CpuShaders;
-			else if constexpr (std::is_same_v<T, CpuMaterial>)  return m_CpuMaterials;
-		}
-
-		template<typename T>
-		[[nodiscard]] auto& GetNameTable() noexcept
-		{
-			if constexpr (std::is_same_v<T, CpuMesh>)           return m_MeshNames;
-			else if constexpr (std::is_same_v<T, CpuTexture2D>) return m_TextureNames;
-			else if constexpr (std::is_same_v<T, CpuShader>)    return m_ShaderNames;
-			else if constexpr (std::is_same_v<T, CpuMaterial>)  return m_MaterialNames;
-		}
-
-		template<typename T>
-		[[nodiscard]] const auto& GetNameTable() const noexcept
-		{
-			if constexpr (std::is_same_v<T, CpuMesh>)           return m_MeshNames;
-			else if constexpr (std::is_same_v<T, CpuTexture2D>) return m_TextureNames;
-			else if constexpr (std::is_same_v<T, CpuShader>)    return m_ShaderNames;
-			else if constexpr (std::is_same_v<T, CpuMaterial>)  return m_MaterialNames;
-		}
-
-		template<typename T>
-		[[nodiscard]] static constexpr eCpuResourceKind GetResourceKind() noexcept
-		{
-			if constexpr (std::is_same_v<T, CpuMesh>)           return eCpuResourceKind::Mesh;
-			else if constexpr (std::is_same_v<T, CpuTexture2D>) return eCpuResourceKind::Texture;
-			else if constexpr (std::is_same_v<T, CpuShader>)    return eCpuResourceKind::Shader;
-			else if constexpr (std::is_same_v<T, CpuMaterial>)  return eCpuResourceKind::Material;
-		}
-
-		template<typename T, typename ContextType>
-		void EnqueueTypedRequest(
-			const ::zzz::core::Guid& guid,
-			std::weak_ptr<ContextType> context,
-			CpuResourceCallback<T> onLoaded)
-		{
-			std::unique_lock lock(m_TablesMutex);
-			auto& table = GetTable<T>();
-			auto [it, inserted] = table.try_emplace(guid, [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
-			it->second.readyEvent.Subscribe(std::move(context), std::move(onLoaded));
-			if (!inserted)
+			m_TaskDispatcher.Submit(eTaskPriority::Normal, [this, guid]()
 			{
-				return;
-			}
-
-			m_ActiveRequests.fetch_add(1, std::memory_order_relaxed);
-			m_RequestQueue.Push(CpuLoadRequest{ guid, GetResourceKind<T>(), {} });
-			m_IoCv.notify_one();
+				try
+				{
+					auto result = LoadCpuResourceSync<T>(guid, *this);
+					GetTable<T>().Resolve(guid, std::move(result), GetDispatcher());
+				}
+				catch (const std::exception& ex)
+				{
+					GetTable<T>().Resolve(guid, std::unexpected(std::format("Исключение при загрузке: {}", ex.what())), GetDispatcher());
+				}
+				catch (...)
+				{
+					GetTable<T>().Resolve(guid, std::unexpected("Неизвестное исключение при загрузке"), GetDispatcher());
+				}
+			});
 		}
 
-		template<typename T>
-		void EnqueueTypedRequest(
-			const ::zzz::core::Guid& guid,
-			CpuResourceCallback<T> onLoaded)
-		{
-			std::unique_lock lock(m_TablesMutex);
-			auto& table = GetTable<T>();
-			auto [it, inserted] = table.try_emplace(guid, [this](auto task) { m_MainThreadQueue.Push(std::move(task)); });
-			it->second.readyEvent.Subscribe(std::move(onLoaded));
-			if (!inserted)
-			{
-				return;
-			}
-
-			m_ActiveRequests.fetch_add(1, std::memory_order_relaxed);
-			m_RequestQueue.Push(CpuLoadRequest{ guid, GetResourceKind<T>(), {} });
-			m_IoCv.notify_one();
-		}
-
-		[[nodiscard]] std::expected<::zzz::core::PackageEntry, std::string> FindEntry(
-			const ::zzz::core::Guid& guid,
-			::zzz::core::eResourceType type) const;
-
-		void IoWorkerLoop(std::stop_token stopToken);
-
+		TaskDispatcher& m_TaskDispatcher;
 		std::shared_ptr<PackageManager> m_PackageManager;
-		std::shared_ptr<::zzz::core::DataAssetsManager> m_DataAssetsManager;
-		std::shared_ptr<::zzz::core::FileSystem> m_FileSystem;
+		std::shared_ptr<DataAssetsManager> m_DataAssetsManager;
+		std::shared_ptr<FileSystem> m_FileSystem;
 
-		mutable std::shared_mutex m_TablesMutex;
+		templates::CallbackQueue<> m_MainThreadQueue;
+		std::tuple<ResourceTable<SupportedResources>...> m_Tables;
 
-		std::unordered_map<::zzz::core::Guid, ResourceRecord<CpuMesh>>      m_CpuMeshes;
-		std::unordered_map<::zzz::core::Guid, ResourceRecord<CpuTexture2D>> m_CpuTextures;
-		std::unordered_map<::zzz::core::Guid, ResourceRecord<CpuShader>>    m_CpuShaders;
-		std::unordered_map<::zzz::core::Guid, ResourceRecord<CpuMaterial>>  m_CpuMaterials;
-
-		std::unordered_map<std::string, ::zzz::core::Guid> m_MeshNames;
-		std::unordered_map<std::string, ::zzz::core::Guid> m_TextureNames;
-		std::unordered_map<std::string, ::zzz::core::Guid> m_ShaderNames;
-		std::unordered_map<std::string, ::zzz::core::Guid> m_MaterialNames;
-
-		::zzz::templates::CallbackQueue<> m_MainThreadQueue;
-
-		::zzz::core::DoubleBufferedVector<CpuLoadRequest> m_RequestQueue;
-		std::jthread m_IoThread;
-		std::mutex m_IoMutex;
-		std::condition_variable_any m_IoCv;
-
-		std::atomic<size_t> m_ActiveRequests{ 0 };
-		std::mutex m_FlushMutex;
-		std::condition_variable m_FlushCv;
+		template<typename T, typename Mgr>
+		friend std::expected<std::shared_ptr<T>, std::string> LoadCpuResourceSync(
+			const Guid& guid,
+			Mgr& manager);
 	};
+
+	// Автоматическое разворачивание CoreCpuResourceManager из eEngineResourceType
+	template<size_t... Is>
+	auto BuildCpuManager(std::index_sequence<Is...>)
+		-> CpuResourceManager<typename ResourceBinding<static_cast<eEngineResourceType>(Is)>::Cpu...>;
+
+	using CoreCpuResourceManager = decltype(BuildCpuManager(std::make_index_sequence<static_cast<size_t>(eEngineResourceType::_Count)>{}));
 }

@@ -14,6 +14,8 @@ namespace zzz::engine
 	class GpuMaterial final : public ResourceBase
 	{
 	public:
+		using CpuType = CpuMaterial;
+
 		GpuMaterial(
 			const ::zzz::core::Guid& guid,
 			std::string name,

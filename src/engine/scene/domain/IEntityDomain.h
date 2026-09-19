@@ -15,6 +15,8 @@ namespace zzz::core
 	class ScriptFactory;
 }
 
+#include "engine/resources/ResourceTypes.h"
+
 namespace zzz::engine
 {
 	/**
@@ -37,7 +39,7 @@ namespace zzz::engine
 			NodeHandle nodeHandle,
 			const ::zzz::core::GameObjectData& objData,
 			const ::zzz::core::ScriptFactory& scriptFactory,
-			class CpuResourceManager& resourceManager) = 0;
+			CoreCpuResourceManager& resourceManager) = 0;
 		virtual void DestroyEntity(const ::zzz::core::Guid& guid) = 0;
 	};
 }

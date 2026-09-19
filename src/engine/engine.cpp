@@ -51,11 +51,10 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 	m_GAPI->Initialize(m_UserSettingsManager);
 
 	// Инициализация центрального менеджера ресурсов CPU
-	m_CpuResourceManager = safe_make_shared<CpuResourceManager>(m_PackageManager, m_DataAssetsManager, m_FileSystem);
-	m_CpuResourceManager->Start();
+	m_CpuResourceManager = safe_make_shared<CoreCpuResourceManager>(*m_TaskDispatcher, m_PackageManager, m_DataAssetsManager, m_FileSystem);
 
 	// Инициализация менеджера ресурсов GPU
-	m_GpuResourceManager = safe_make_shared<GpuResourceManager>(m_GAPI, m_CpuResourceManager);
+	m_GpuResourceManager = safe_make_shared<CoreGpuResourceManager>(*m_TaskDispatcher, m_GAPI, m_CpuResourceManager);
 
 	// Инициализация изолированной подсистемы скриптов
 	m_ScriptStorage = safe_make_shared<ScriptStorage>();
@@ -119,31 +118,16 @@ void Engine::Shutdown() noexcept
 		StopGame();
 		m_EventBus = nullptr;
 
-		// Ожидание завершения всех активных задач воркеров перед разрушением сервисов
 		if (m_TaskDispatcher)
-		{
 			m_TaskDispatcher->JoinAll();
-		}
 
-		// 1. Сначала выгружаем менеджер сцен и сцены (освобождает объекты сцены и их ссылки на ресурсы)
 		m_SceneManager = nullptr;
-
-		// 2. Закрываем окна, освобождаем SwapChain и рендер-поверхности
 		m_ViewManager = nullptr;
-
-		// 3. Ждём завершения всех операций GPU
 		if (m_GAPI)
 			m_GAPI->WaitForGpu();
 
-		// 4. Останавливаем CPU ресурсы и очищаем кэш GPU ресурсов
-		if (m_CpuResourceManager)
-		{
-			m_CpuResourceManager->Stop();
-			m_CpuResourceManager = nullptr;
-		}
 		m_GpuResourceManager = nullptr;
-
-		// 5. Разрушаем GAPI и таймер
+		m_CpuResourceManager = nullptr;
 		m_GAPI = nullptr;
 		m_Time = nullptr;
 
@@ -154,7 +138,7 @@ void Engine::Shutdown() noexcept
 		if (m_UserSettingsManager)
 		{
 			if (auto res = m_UserSettingsManager->SaveConfig(); !res)
-				DOutWarning("[Engine::Shutdown] Не удалось сохранить user.dat: {}", res.error());
+				DOutWarning("Не удалось сохранить user.dat: {}", res.error());
 			m_UserSettingsManager = nullptr;
 		}
 

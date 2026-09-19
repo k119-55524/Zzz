@@ -25,25 +25,11 @@ namespace zzz::engine
 		NodeHandle nodeHandle,
 		const GameObjectData& objData,
 		const ScriptFactory& scriptFactory,
-		CpuResourceManager& resourceManager)
+		CoreCpuResourceManager& resourceManager)
 	{
 		(void)scriptFactory;
-		const DomainHandle handle = m_World.CreateEntity(objData.GetGuid(), objData.GetName(), nodeHandle);
-
-		// Наполнение визуальными ресурсами сущности
-		for (const auto& meshGuid : objData.GetMeshGuids())
-		{
-			if (meshGuid.IsValid())
-			{
-				auto res = resourceManager.LoadDataAsset<MeshData>(meshGuid);
-				if (res)
-				{
-					DOut("[EntityDomain::CreateEntity] Меш '{}' для Entity '{}' успешно загружен", meshGuid.ToString(), objData.GetName());
-				}
-			}
-		}
-
-		return handle;
+		(void)resourceManager;
+		return m_World.CreateEntity(objData.GetGuid(), objData.GetName(), nodeHandle);
 	}
 
 	void EntityDomain::DestroyEntity(const Guid& guid)

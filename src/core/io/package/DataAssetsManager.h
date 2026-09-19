@@ -17,6 +17,7 @@
 
 namespace zzz::engine
 {
+	template<typename... SupportedResources>
 	class CpuResourceManager;
 }
 
@@ -56,6 +57,7 @@ namespace zzz::core
 	 */
 	class Z_CORE_API DataAssetsManager final
 	{
+		template<typename... SupportedResources>
 		friend class ::zzz::engine::CpuResourceManager;
 
 	public:

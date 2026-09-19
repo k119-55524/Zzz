@@ -35,7 +35,7 @@ namespace zzz::engine
 	void GameObject::Initialize(
 		const GameObjectData& data,
 		const ScriptFactory& scriptFactory,
-		GpuResourceManager& gpuResourceManager,
+		CoreGpuResourceManager& gpuResourceManager,
 		std::function<void(std::expected<void, std::string>)> onReady)
 	{
 		ensure(onReady != nullptr, "GameObject::Initialize: onReady коллбэк не должен быть null.");
@@ -94,7 +94,7 @@ namespace zzz::engine
 			const auto& pair = m_RenderPairs[i];
 			if (pair.meshGuid.IsValid())
 			{
-				gpuResourceManager.LoadAsync<GpuMesh>(pair.meshGuid, weak_from_this(), [this, i, tracker](std::expected<std::shared_ptr<GpuMesh>, std::string> res)
+				gpuResourceManager.GetAsync<GpuMesh>(pair.meshGuid, weak_from_this(), [this, i, tracker](std::expected<std::shared_ptr<GpuMesh>, std::string> res)
 				{
 					if (!res)
 					{
@@ -110,7 +110,7 @@ namespace zzz::engine
 
 			if (pair.materialGuid.IsValid())
 			{
-				gpuResourceManager.LoadAsync<GpuMaterial>(pair.materialGuid, weak_from_this(), [this, i, tracker](std::expected<std::shared_ptr<GpuMaterial>, std::string> res)
+				gpuResourceManager.GetAsync<GpuMaterial>(pair.materialGuid, weak_from_this(), [this, i, tracker](std::expected<std::shared_ptr<GpuMaterial>, std::string> res)
 				{
 					if (!res)
 					{

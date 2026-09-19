@@ -16,6 +16,8 @@ namespace zzz::engine
 	class GpuMesh final : public ResourceBase
 	{
 	public:
+		using CpuType = CpuMesh;
+
 		GpuMesh(
 			const ::zzz::core::Guid& guid,
 			std::string name,
