@@ -105,6 +105,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/templates/CountdownTrigger.h
         ${CMAKE_CURRENT_SOURCE_DIR}/templates/ThreadPool.h
         ${CMAKE_CURRENT_SOURCE_DIR}/templates/AsyncRecord.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/templates/AsyncInitTracker.h
         ${CMAKE_CURRENT_SOURCE_DIR}/containers/BitTreeTracker.h
         ${CMAKE_CURRENT_SOURCE_DIR}/containers/BitTreeTracker.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/scene/SceneTransitionParams.h

@@ -65,10 +65,9 @@ namespace zzz::engine
 		std::shared_ptr<GpuResourceManager> m_GpuResourceManager;
 		ClearConfig m_ClearConfig;
 		SceneTransitionParams m_TransitionParams;
+
 		SceneEventBus m_EventBus;
 		std::vector<std::shared_ptr<SceneScript>> m_Scripts;
-
-		// Слои сцены
 		std::vector<std::unique_ptr<ILayer>> m_Layers;
 	};
 }

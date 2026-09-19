@@ -57,11 +57,9 @@ namespace zzz::templates
 		{
 			ensure(m_OnComplete != nullptr, "CountdownTrigger: коллбэк onComplete не должен быть null");
 
-			// Граничный случай: задач изначально нет — немедленно вызываем коллбэк
+			// Граничный случай: задач изначально нет
 			if (initialCount == 0)
-			{
 				m_OnComplete();
-			}
 		}
 
 		~CountdownTrigger() = default;
@@ -78,26 +76,7 @@ namespace zzz::templates
 			ensure(prev > 0, "CountdownTrigger::CountDown: вызов декремента сверх установленного начального лимита");
 
 			if (prev == 1)
-			{
 				m_OnComplete();
-			}
-		}
-
-		/**
-		 * @brief Возвращает текущее количество оставшихся операций.
-		 * @note Значение носит информационный характер из-за возможных параллельных вызовов.
-		 */
-		[[nodiscard]] size_t GetRemaining() const noexcept
-		{
-			return m_Remaining.load(std::memory_order_relaxed);
-		}
-
-		/**
-		 * @brief Проверяет, завершились ли все операции.
-		 */
-		[[nodiscard]] bool IsCompleted() const noexcept
-		{
-			return GetRemaining() == 0;
 		}
 
 	private:

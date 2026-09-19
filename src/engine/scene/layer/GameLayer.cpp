@@ -1,11 +1,9 @@
 
-#include <mutex>
-
 #include "core/utils/Ensure.h"
 #include "core/io/package/MeshData.h"
 #include "core/io/package/LayerData.h"
 #include "core/userscripts/ScriptFactory.h"
-#include "core/templates/CountdownTrigger.h"
+#include "core/templates/AsyncInitTracker.h"
 #include "engine/scene/gameobject/GameObject.h"
 #include "engine/resources/cpu/CpuResourceManager.h"
 #include "engine/resources/gpu/GpuResourceManager.h"
@@ -138,20 +136,7 @@ namespace zzz::engine
 			return;
 		}
 
-		auto firstError = std::make_shared<std::string>();
-		auto errorMutex = std::make_shared<std::mutex>();
-
-		auto trigger = std::make_shared<CountdownTrigger>(gameObjects.size(), [onReady = std::move(onReady), firstError]() mutable {
-			if (!onReady) return;
-			if (!firstError->empty())
-			{
-				onReady(std::unexpected(*firstError));
-			}
-			else
-			{
-				onReady({});
-			}
-		});
+		auto tracker = std::make_shared<AsyncInitTracker>(gameObjects.size(), std::move(onReady));
 
 		for (const auto& [handle, go] : gameObjects)
 		{
@@ -160,16 +145,9 @@ namespace zzz::engine
 				objData,
 				scriptFactory,
 				*m_GpuResourceManager,
-				[trigger, firstError, errorMutex](std::expected<void, std::string> res) {
-					if (!res)
-					{
-						std::lock_guard lock(*errorMutex);
-						if (firstError->empty())
-						{
-							*firstError = res.error();
-						}
-					}
-					trigger->CountDown();
+				[tracker](std::expected<void, std::string> res)
+				{
+					tracker->Notify(res);
 				});
 		}
 	}

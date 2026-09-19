@@ -8,6 +8,7 @@
 #include "engine/scene/layer/GameLayer.h"
 #include "engine/scene/layer/LayerMVVM.h"
 #include "core/templates/CountdownTrigger.h"
+#include "core/templates/AsyncInitTracker.h"
 #include "core/userscripts/ScriptFactory.h"
 #include "engine/resources/cpu/CpuResourceManager.h"
 #include "engine/resources/gpu/GpuResourceManager.h"
@@ -52,19 +53,19 @@ namespace zzz::engine
 	{
 		ensure(onLayersCreated != nullptr, "onLayersCreated коллбэк не должен быть null при инициализации Scene.");
 
-		auto sceneDataRes = m_CpuResourceManager->LoadSceneData(m_Guid);
-		if (!sceneDataRes)
-			THROW_RUNTIME("Scene '{}' ({}) не смогла загрузить SceneData: {}", m_Name, m_Guid.ToString(), sceneDataRes.error());
+		auto sceneData = m_CpuResourceManager->LoadSceneData(m_Guid);
+		if (!sceneData)
+			THROW_RUNTIME("Scene '{}' ({}) не смогла загрузить SceneData: {}", m_Name, m_Guid.ToString(), sceneData.error());
 
 		// Разрешение параметров перехода на сцену
-		if (sceneDataRes->GetTransitionSource() == eTransitionSource::Custom)
-			m_TransitionParams = sceneDataRes->GetTransitionParams();
+		if (sceneData->GetTransitionSource() == eTransitionSource::Custom)
+			m_TransitionParams = sceneData->GetTransitionParams();
 
 		// Настройки очистки поверхности и буфера глубины
-		m_ClearConfig = sceneDataRes->GetClearConfig();
+		m_ClearConfig = sceneData->GetClearConfig();
 
 		// Создаём экземпляры SceneScript и инициализируем их
-		for (const auto& scriptGuid : sceneDataRes->GetSceneScriptGuids())
+		for (const auto& scriptGuid : sceneData->GetSceneScriptGuids())
 		{
 			auto script = scriptFactory.CreateSceneScript(scriptGuid);
 			script->Init(&m_EventBus);
@@ -72,22 +73,13 @@ namespace zzz::engine
 		}
 
 		// Перемещаем SceneData в shared_ptr, чтобы он жил всё время асинхронного наполнения слоёв в пуле потоков
-		auto sharedSceneData = std::make_shared<SceneData>(std::move(*sceneDataRes));
+		auto sharedSceneData = std::make_shared<SceneData>(std::move(*sceneData));
 		const auto& layersData = sharedSceneData->GetLayers();
 		const size_t layerCount = layersData.size();
 		m_Layers.resize(layerCount);
 
-		auto firstError = std::make_shared<std::string>();
-		auto errorMutex = std::make_shared<std::mutex>();
-
-		// Создаём неблокирующий триггер завершения наполнения всех слоёв
-		auto trigger = std::make_shared<CountdownTrigger>(layerCount, [firstError, onLayersCreated = std::move(onLayersCreated)]()
-		{
-			if (!firstError->empty())
-				onLayersCreated(std::unexpected(*firstError));
-			else
-				onLayersCreated({});
-		});
+		// Создаём трекер параллельного наполнения всех слоёв
+		auto tracker = std::make_shared<AsyncInitTracker>(layerCount, std::move(onLayersCreated));
 
 		LayerSubsystemFactory factory;
 		for (size_t i = 0; i < layerCount; ++i)
@@ -125,40 +117,23 @@ namespace zzz::engine
 			}
 
 			// Асинхронное наполнение слоя в пуле потоков через TaskDispatcher (приоритет Normal)
-			taskDispatcher.Submit(eTaskPriority::Normal, [layer = m_Layers[i].get(), layerIndex = i, &scriptFactory, sharedSceneData, trigger, firstError, errorMutex]()
+			taskDispatcher.Submit(eTaskPriority::Normal, [layer = m_Layers[i].get(), layerIndex = i, &scriptFactory, sharedSceneData, tracker]()
 			{
 				const auto& currentLayerData = sharedSceneData->GetLayers()[layerIndex];
 				try
 				{
-					layer->Populate(currentLayerData, scriptFactory, [trigger, firstError, errorMutex](std::expected<void, std::string> res) {
-						if (!res)
-						{
-							std::lock_guard lock(*errorMutex);
-							if (firstError->empty())
-							{
-								*firstError = res.error();
-							}
-						}
-						trigger->CountDown();
+					layer->Populate(currentLayerData, scriptFactory, [tracker](std::expected<void, std::string> res)
+					{
+						tracker->Notify(res);
 					});
 				}
 				catch (const std::exception& ex)
 				{
-					{
-						std::lock_guard lock(*errorMutex);
-						if (firstError->empty())
-							*firstError = ex.what();
-					}
-					trigger->CountDown();
+					tracker->NotifyError(ex.what());
 				}
 				catch (...)
 				{
-					{
-						std::lock_guard lock(*errorMutex);
-						if (firstError->empty())
-							*firstError = std::format("Неизвестное исключение при наполнении слоя '{}'.", currentLayerData.GetName());
-					}
-					trigger->CountDown();
+					tracker->NotifyError(std::format("Неизвестное исключение при наполнении слоя '{}'.", currentLayerData.GetName()));
 				}
 			});
 		}
