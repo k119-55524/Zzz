@@ -1,8 +1,6 @@
 
 #include <logger.h>
 
-
-
 #include "Engine.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::LogEngine);
@@ -38,43 +36,43 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 	if (!primaryViewData)
 		THROW_RUNTIME("Failed to load PrimaryViewData: {}", primaryViewData.error());
 
-	// Загрузка пользовательских настроек (user.dat). Время сохранения обновляется в DatFileHeader при каждом SaveConfig().
+	// Загрузка пользовательских настроек (user.dat).
 	m_UserSettingsManager = safe_make_shared<UserSettingsManager>(m_FileSystem);
 
-	// Создание платформенного слоя абстракции ОС (native windows, ввод, системные события)
+	// Создание платформенного слоя абстракции ОС
 	m_Platform = safe_make_unique<Platform>(nativeData, projectManifestData.GetPlatformData());
 	m_Platform->GetHardwareState().LogFileBlock();
 
-	// Инициализация централизованного диспетчера задач (TaskDispatcher)
+	// Инициализация централизованного диспетчера задач
 	m_TaskDispatcher = safe_make_unique<TaskDispatcher>(m_Platform->GetHardwareState().GetCpuTopology());
 
-	// Инициализация графического интерфейса (DirectX 12 / Vulkan / Metal)
+	// Инициализация графического интерфейса
 	m_GAPI = safe_make_shared<GAPI>();
 	m_GAPI->Initialize(m_UserSettingsManager);
 
-	// Инициализация центрального менеджера ресурсов CPU (CpuResourceManager)
+	// Инициализация центрального менеджера ресурсов CPU
 	m_CpuResourceManager = safe_make_shared<CpuResourceManager>(m_PackageManager, m_DataAssetsManager, m_FileSystem);
 	m_CpuResourceManager->Start();
 
-	// Инициализация менеджера ресурсов GPU (GpuResourceManager)
+	// Инициализация менеджера ресурсов GPU
 	m_GpuResourceManager = safe_make_shared<GpuResourceManager>(m_GAPI, m_CpuResourceManager);
 
-	// Инициализация изолированной подсистемы скриптов (хранилище, регистратор и фабрика экземпляра движка)
+	// Инициализация изолированной подсистемы скриптов
 	m_ScriptStorage = safe_make_shared<ScriptStorage>();
 	m_ScriptRegistry = safe_make_unique<ScriptRegistry>(*m_ScriptStorage);
 	m_ScriptFactory = safe_make_shared<ScriptFactory>(*m_ScriptStorage);
 
-	// Инициализация менеджера сцен (SceneManager) с пробросом TaskDispatcher, CpuResourceManager и GpuResourceManager
+	// Инициализация менеджера сцен
 	m_SceneManager = safe_make_shared<SceneManager>(*m_TaskDispatcher, m_PackageManager, m_CpuResourceManager, m_GpuResourceManager, m_ScriptFactory);
 
-	// Инициализация менеджера отображения окон (ViewManager) с пробросом TaskDispatcher, платформы, GAPI, скриптов и сцен
+	// Инициализация менеджера отображения окон
 	m_ViewManager = safe_make_unique<ViewManager>(*m_TaskDispatcher, *m_Platform, m_GAPI, m_ScriptFactory, m_PackageManager, m_UserSettingsManager, m_SceneManager, [this]() { OnAppClosed(); });
 
 	// Инициализация главного кадрового цикла, шины событий проекта и игрового таймера
 	m_MainLoop = safe_make_shared<MainLoop>(*m_Platform, [this]() { OnUpdateSystem(); });
 	m_EventBus = safe_make_shared<ProjectEventBus>();
 
-	// Сохраняем пользовательскую конфигурацию на диск, если в процессе инициализации были изменения
+	// Сохраняем пользовательскую конфигурацию на диск
 	if (auto res = m_UserSettingsManager->SaveConfig(); !res)
 		DOutWarning("[Engine::Engine] Не удалось сохранить пользовательские настройки после инициализации: {}", res.error());
 

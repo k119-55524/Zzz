@@ -1,4 +1,3 @@
-#include "Scene.h"
 
 #include <mutex>
 #include <format>
@@ -13,6 +12,8 @@
 #include "engine/resources/cpu/CpuResourceManager.h"
 #include "engine/resources/gpu/GpuResourceManager.h"
 #include "engine/scene/layer/LayerSubsystemFactory.h"
+
+#include "Scene.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Scene);
 
@@ -31,11 +32,7 @@ namespace zzz::engine
 		, m_Name(std::move(name))
 		, m_CpuResourceManager(std::move(cpuResourceManager))
 		, m_GpuResourceManager(std::move(gpuResourceManager))
-		, m_ClearConfig()
 		, m_TransitionParams(std::move(defaultTransition))
-		, m_EventBus()
-		, m_Scripts()
-		, m_Layers()
 	{
 		ensure(m_CpuResourceManager != nullptr, "CpuResourceManager не должен быть null при создании Scene.");
 		ensure(m_GpuResourceManager != nullptr, "GpuResourceManager не должен быть null при создании Scene.");

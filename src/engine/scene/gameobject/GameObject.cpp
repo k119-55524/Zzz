@@ -1,18 +1,18 @@
-#include "GameObject.h"
 
 #include <mutex>
 #include <format>
 
 #include "core/utils/Ensure.h"
-#include "core/utils/ThrowWrappers.h"
+#include "engine/resources/gpu/GpuMesh.h"
 #include "core/io/package/GameObjectData.h"
 #include "core/userscripts/ScriptFactory.h"
 #include "core/templates/CountdownTrigger.h"
-#include "engine/resources/gpu/GpuResourceManager.h"
-#include "engine/resources/gpu/GpuMesh.h"
 #include "engine/resources/gpu/GpuMaterial.h"
 #include "engine/scene/storage/NodeStorage.h"
 #include "core/userscripts/base_script/Script.h"
+#include "engine/resources/gpu/GpuResourceManager.h"
+
+#include "GameObject.h"
 
 using namespace zzz::core;
 using namespace zzz::math;

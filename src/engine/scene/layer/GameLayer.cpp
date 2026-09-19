@@ -1,14 +1,16 @@
-#include "GameLayer.h"
 
 #include <mutex>
-#include "core/templates/CountdownTrigger.h"
+
 #include "core/utils/Ensure.h"
 #include "core/io/package/MeshData.h"
 #include "core/io/package/LayerData.h"
 #include "core/userscripts/ScriptFactory.h"
+#include "core/templates/CountdownTrigger.h"
+#include "engine/scene/gameobject/GameObject.h"
 #include "engine/resources/cpu/CpuResourceManager.h"
 #include "engine/resources/gpu/GpuResourceManager.h"
-#include "engine/scene/gameobject/GameObject.h"
+
+#include "GameLayer.h"
 
 using namespace zzz::core;
 using namespace zzz::templates;

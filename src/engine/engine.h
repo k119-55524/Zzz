@@ -8,11 +8,11 @@
 #include "engine/tasks/TaskDispatcher.h"
 #include "core/templates/CallbackQueue.h"
 #include "engine/package/PackageManager.h"
-#include "engine/resources/cpu/CpuResourceManager.h"
-#include "engine/resources/gpu/GpuResourceManager.h"
 #include "core/io/package/DataAssetsManager.h"
 #include "engine/package/UserSettingsManager.h"
 #include "engine/platforms/mainloop/MainLoop.h"
+#include "engine/resources/cpu/CpuResourceManager.h"
+#include "engine/resources/gpu/GpuResourceManager.h"
 
 using namespace zzz::core;
 

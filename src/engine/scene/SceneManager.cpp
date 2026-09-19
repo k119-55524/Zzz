@@ -1,15 +1,16 @@
-#include "SceneManager.h"
 
 #include <format>
 #include <stdexcept>
 
 #include "Scene.h"
-#include "engine/package/PackageManager.h"
-#include "engine/resources/cpu/CpuResourceManager.h"
-#include "engine/resources/gpu/GpuResourceManager.h"
-#include "core/io/package/ProjectManifestData.h"
 #include "core/utils/Ensure.h"
 #include "core/utils/MemoryUtils.h"
+#include "engine/package/PackageManager.h"
+#include "core/io/package/ProjectManifestData.h"
+#include "engine/resources/cpu/CpuResourceManager.h"
+#include "engine/resources/gpu/GpuResourceManager.h"
+
+#include "SceneManager.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Scene);
 
@@ -22,16 +23,12 @@ namespace zzz::engine
 		std::shared_ptr<PackageManager> packageManager,
 		std::shared_ptr<CpuResourceManager> cpuResourceManager,
 		std::shared_ptr<GpuResourceManager> gpuResourceManager,
-		std::shared_ptr<ScriptFactory> scriptFactory)
-		: m_TaskDispatcher(taskDispatcher)
-		, m_PackageManager(std::move(packageManager))
-		, m_CpuResourceManager(std::move(cpuResourceManager))
-		, m_GpuResourceManager(std::move(gpuResourceManager))
-		, m_ScriptFactory(std::move(scriptFactory))
-		, m_GlobalTransitionParams()
-		, m_LoadSceneMutex()
-		, m_MainThreadQueue()
-		, m_Scenes()
+		std::shared_ptr<ScriptFactory> scriptFactory) :
+			m_TaskDispatcher(taskDispatcher),
+			m_PackageManager(std::move(packageManager)),
+			m_CpuResourceManager(std::move(cpuResourceManager)),
+			m_GpuResourceManager(std::move(gpuResourceManager)),
+			m_ScriptFactory(std::move(scriptFactory))
 	{
 		ensure(m_PackageManager != nullptr, "PackageManager не должен быть null.");
 		ensure(m_CpuResourceManager != nullptr, "CpuResourceManager не должен быть null.");
