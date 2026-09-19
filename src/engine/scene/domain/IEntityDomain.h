@@ -15,10 +15,10 @@ namespace zzz::core
 	class ScriptFactory;
 }
 
-#include "engine/resources/ResourceTypes.h"
-
 namespace zzz::engine
 {
+	class CpuResourceManager;
+
 	/**
 	 * @class IEntityDomain
 	 * @brief Контракт домена управления легковесными сущностями (ECS).
@@ -39,7 +39,7 @@ namespace zzz::engine
 			NodeHandle nodeHandle,
 			const ::zzz::core::GameObjectData& objData,
 			const ::zzz::core::ScriptFactory& scriptFactory,
-			CoreCpuResourceManager& resourceManager) = 0;
+			CpuResourceManager& resourceManager) = 0;
 		virtual void DestroyEntity(const ::zzz::core::Guid& guid) = 0;
 	};
 }

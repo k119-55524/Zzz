@@ -1,52 +1,32 @@
-#include "engine/gapi/GAPI.h"
-#include "core/utils/Ensure.h"
-#include "core/utils/MemoryUtils.h"
-#include "engine/tasks/TaskDispatcher.h"
-#include "engine/resources/cpu/CpuResourceManager.h"
 
+#include "core/utils/Ensure.h"
 #include "GpuResourceManager.h"
 
 using namespace zzz::core;
-using namespace zzz::templates;
 
 namespace zzz::engine
 {
-	std::shared_ptr<GpuMesh> CreateGpuResource(std::shared_ptr<CpuMesh> cpuMesh, GAPI*)
+	GpuResourceManager::GpuResourceManager(
+		TaskDispatcher& taskDispatcher,
+		std::shared_ptr<GAPI> gapi,
+		std::shared_ptr<CpuResourceManager> cpuResourceManager)
+		: m_TaskDispatcher(taskDispatcher)
+		, m_GAPI(std::move(gapi))
+		, m_CpuManager(std::move(cpuResourceManager))
 	{
-		if (!cpuMesh)
-		{
-			return nullptr;
-		}
-		// На этапе 22 - сохранение ссылки на CPU-меш. На этапе 23 - создание аппаратных Vertex/Index буферов GAPI.
-		return safe_make_shared<GpuMesh>(cpuMesh->GetGuid(), std::string(cpuMesh->GetName()), std::move(cpuMesh));
+		ensure(m_CpuManager != nullptr, "CpuResourceManager не должен быть null в GpuResourceManager.");
 	}
 
-	std::shared_ptr<GpuMaterial> CreateGpuResource(std::shared_ptr<CpuMaterial> cpuMaterial, GAPI*)
+	GpuResourceManager::~GpuResourceManager()
 	{
-		if (!cpuMaterial)
-		{
-			return nullptr;
-		}
-		return safe_make_shared<GpuMaterial>(cpuMaterial->GetGuid(), std::string(cpuMaterial->GetName()), std::move(cpuMaterial));
+		EmergencyStop();
 	}
 
-	std::shared_ptr<GpuTexture2D> CreateGpuResource(std::shared_ptr<CpuTexture2D> cpuTexture, GAPI*)
+	void GpuResourceManager::EmergencyStop()
 	{
-		if (!cpuTexture)
-		{
-			return nullptr;
-		}
-		return safe_make_shared<GpuTexture2D>(cpuTexture->GetGuid(), std::string(cpuTexture->GetName()), std::move(cpuTexture));
+		m_Meshes.Clear();
+		m_Materials.Clear();
+		m_Textures.Clear();
+		m_Shaders.Clear();
 	}
-
-	std::shared_ptr<GpuShader> CreateGpuResource(std::shared_ptr<CpuShader> cpuShader, GAPI*)
-	{
-		if (!cpuShader)
-		{
-			return nullptr;
-		}
-		return safe_make_shared<GpuShader>(cpuShader->GetGuid(), std::string(cpuShader->GetName()), std::move(cpuShader));
-	}
-
-	template class GpuResourceManager<GpuMesh, GpuMaterial, GpuTexture2D, GpuShader>;
 }

@@ -1,44 +1,32 @@
 #pragma once
 
-#include <tuple>
 #include <memory>
 #include <string>
 #include <format>
 #include <expected>
-#include <functional>
 
 #include "core/utils/Guid.h"
 #include "engine/gapi/GAPI.h"
 #include "engine/tasks/TaskDispatcher.h"
 #include "core/templates/CallbackQueue.h"
+#include "engine/resources/gpu/GpuMesh.h"
 #include "engine/resources/ResourceTable.h"
-#include "engine/resources/ResourceTypes.h"
+#include "engine/resources/gpu/GpuShader.h"
+#include "engine/resources/gpu/GpuMaterial.h"
+#include "engine/resources/gpu/GpuTexture2D.h"
 #include "engine/resources/cpu/CpuResourceManager.h"
 
 using namespace zzz::core;
 
 namespace zzz::engine
 {
-	template <typename T>
-	using GpuResourceResult = std::expected<std::shared_ptr<T>, std::string>;
-
-	template <typename T>
-	using GpuResourceCallback = std::function<void(GpuResourceResult<T>)>;
-
-	// Фабрикация GPU-ресурсов из соответствующих CPU-ресурсов
-	[[nodiscard]] std::shared_ptr<GpuMesh>      CreateGpuResource(std::shared_ptr<CpuMesh> cpuMesh, GAPI* gapi);
-	[[nodiscard]] std::shared_ptr<GpuMaterial>  CreateGpuResource(std::shared_ptr<CpuMaterial> cpuMaterial, GAPI* gapi);
-	[[nodiscard]] std::shared_ptr<GpuTexture2D> CreateGpuResource(std::shared_ptr<CpuTexture2D> cpuTexture, GAPI* gapi);
-	[[nodiscard]] std::shared_ptr<GpuShader>    CreateGpuResource(std::shared_ptr<CpuShader> cpuShader, GAPI* gapi);
-
 	/**
 	 * @class GpuResourceManager
-	 * @brief Шаблонный менеджер видеопамяти и GPU-ресурсов.
-	 * @details Автоматически разворачивает типизированные таблицы в std::tuple для SupportedResources...
-	 *          При запросе ресурса типа TGpu автоматически запрашивает парный CPU-ресурс (typename TGpu::CpuType).
+	 * @brief Централизованный сервис управления видеопамятью и GPU-ресурсами.
+	 * @details Хранит явные таблицы GPU-ресурсов. При запросе GetAsync<TGpu> запрашивает
+	 *          соответствующий CPU-ресурс у CpuResourceManager и инстанциирует GPU-ресурс.
 	 */
-	template<typename... SupportedResources>
-	class GpuResourceManager
+	class GpuResourceManager final : public std::enable_shared_from_this<GpuResourceManager>
 	{
 		Z_NO_COPY_MOVE(GpuResourceManager);
 
@@ -48,81 +36,38 @@ namespace zzz::engine
 		explicit GpuResourceManager(
 			TaskDispatcher& taskDispatcher,
 			std::shared_ptr<GAPI> gapi,
-			std::shared_ptr<CoreCpuResourceManager> cpuResourceManager)
-			: m_TaskDispatcher(taskDispatcher)
-			, m_GAPI(std::move(gapi))
-			, m_CpuManager(std::move(cpuResourceManager))
-		{
-		}
+			std::shared_ptr<CpuResourceManager> cpuResourceManager);
 
-		virtual ~GpuResourceManager()
-		{
-			EmergencyStop();
-		}
+		~GpuResourceManager();
 
-		// --- Обновление и выполнение колбэков на главном потоке ---
-		void Update()
-		{
-			m_MainThreadQueue.ExecuteAll();
-		}
+		inline void Update() { m_MainThreadQueue.ExecuteAll(); }
 
-		/// @brief Прямой доступ к типизированной таблице ресурса
-		template<typename T>
-		[[nodiscard]] ResourceTable<T>& GetTable() noexcept
-		{
-			return std::get<ResourceTable<T>>(m_Tables);
-		}
-
-		template<typename T>
-		[[nodiscard]] const ResourceTable<T>& GetTable() const noexcept
-		{
-			return std::get<ResourceTable<T>>(m_Tables);
-		}
-
-		// --- Единая шаблонная функция асинхронного доступа GetAsync<T> ---
 		template<typename T, typename ContextType>
 		void GetAsync(
 			const Guid& guid,
 			std::weak_ptr<ContextType> context,
-			GpuResourceCallback<T> onLoaded)
+			typename ResourceTable<T>::CallbackType onLoaded)
 		{
-			static_assert((std::is_same_v<T, SupportedResources> || ...),
-				"Запрашиваемый тип ресурса не поддерживается данным GpuResourceManager!");
-
 			GetTable<T>().GetOrRequest(
 				guid,
 				std::move(context),
 				std::move(onLoaded),
 				GetDispatcher(),
-				[this](const Guid& g)
-				{
-					RequestFromCpu<T>(g);
-				});
+				[this](const Guid& g) { RequestFromCpu<T>(g); });
 		}
 
+	private:
 		template<typename T>
-		void GetAsync(
-			const Guid& guid,
-			GpuResourceCallback<T> onLoaded)
+		[[nodiscard]] auto& GetTable() noexcept
 		{
-			static_assert((std::is_same_v<T, SupportedResources> || ...),
-				"Запрашиваемый тип ресурса не поддерживается данным GpuResourceManager!");
-
-			GetTable<T>().GetOrRequest(
-				guid,
-				std::move(onLoaded),
-				GetDispatcher(),
-				[this](const Guid& g)
-				{
-					RequestFromCpu<T>(g);
-				});
+			if constexpr (std::is_same_v<T, GpuMesh>)           return m_Meshes;
+			else if constexpr (std::is_same_v<T, GpuMaterial>)  return m_Materials;
+			else if constexpr (std::is_same_v<T, GpuTexture2D>) return m_Textures;
+			else if constexpr (std::is_same_v<T, GpuShader>)    return m_Shaders;
+			else static_assert(sizeof(T) == 0, "Запрашиваемый тип ресурса не поддерживается GpuResourceManager!");
 		}
 
-	protected:
-		void EmergencyStop()
-		{
-			(GetTable<SupportedResources>().Clear(), ...);
-		}
+		void EmergencyStop();
 
 		[[nodiscard]] auto GetDispatcher()
 		{
@@ -134,7 +79,7 @@ namespace zzz::engine
 		{
 			using TCpu = typename TGpu::CpuType;
 
-			m_CpuManager->GetAsync<TCpu>(guid, [this, guid](auto cpuRes)
+			m_CpuManager->GetAsync<TCpu>(guid, weak_from_this(), [this, guid](auto cpuRes)
 			{
 				if (!cpuRes)
 				{
@@ -146,7 +91,7 @@ namespace zzz::engine
 				{
 					try
 					{
-						auto gpuObj = CreateGpuResource(cpuRes, m_GAPI.get());
+						auto gpuObj = safe_make_shared<TGpu>(guid, std::string(cpuRes->GetName()), std::move(cpuRes));
 						GetTable<TGpu>().Resolve(guid, std::move(gpuObj), GetDispatcher());
 					}
 					catch (const std::exception& ex)
@@ -155,7 +100,7 @@ namespace zzz::engine
 					}
 					catch (...)
 					{
-						GetTable<TGpu>().Resolve(guid, std::unexpected("Неизвестная ошибка создания GPU-ресурса"), GetDispatcher());
+						GetTable<TGpu>().Resolve(guid, std::unexpected(std::string("Неизвестная ошибка создания GPU-ресурса")), GetDispatcher());
 					}
 				});
 			});
@@ -163,16 +108,13 @@ namespace zzz::engine
 
 		TaskDispatcher& m_TaskDispatcher;
 		std::shared_ptr<GAPI> m_GAPI;
-		std::shared_ptr<CoreCpuResourceManager> m_CpuManager;
+		std::shared_ptr<CpuResourceManager> m_CpuManager;
 
-		templates::CallbackQueue<> m_MainThreadQueue;
-		std::tuple<ResourceTable<SupportedResources>...> m_Tables;
+		CallbackQueue<> m_MainThreadQueue;
+
+		ResourceTable<GpuMesh>      m_Meshes;
+		ResourceTable<GpuMaterial>  m_Materials;
+		ResourceTable<GpuTexture2D> m_Textures;
+		ResourceTable<GpuShader>    m_Shaders;
 	};
-
-	// Автоматическое разворачивание CoreGpuResourceManager из eEngineResourceType
-	template<size_t... Is>
-	auto BuildGpuManager(std::index_sequence<Is...>)
-		-> GpuResourceManager<typename ResourceBinding<static_cast<eEngineResourceType>(Is)>::Gpu...>;
-
-	using CoreGpuResourceManager = decltype(BuildGpuManager(std::make_index_sequence<static_cast<size_t>(eEngineResourceType::_Count)>{}));
 }

@@ -37,7 +37,6 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "resources/ResourceBase.h"
         "resources/ResourceRecord.h"
         "resources/ResourceTable.h"
-        "resources/ResourceTypes.h"
         "resources/cpu/CpuMesh.h" "resources/cpu/CpuMesh.cpp"
         "resources/cpu/CpuMaterial.h" "resources/cpu/CpuMaterial.cpp"
         "resources/cpu/CpuTexture2D.h" "resources/cpu/CpuTexture2D.cpp"

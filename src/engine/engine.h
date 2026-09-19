@@ -26,8 +26,8 @@ namespace zzz::engine
 
 		[[nodiscard]] virtual std::expected<void, std::string> Run();
 		[[nodiscard]] std::shared_ptr<DataAssetsManager> GetDataAssetsManager() const noexcept { return m_DataAssetsManager; }
-		[[nodiscard]] std::shared_ptr<CoreCpuResourceManager> GetCpuResourceManager() const noexcept { return m_CpuResourceManager; }
-		[[nodiscard]] std::shared_ptr<CoreGpuResourceManager> GetGpuResourceManager() const noexcept { return m_GpuResourceManager; }
+		[[nodiscard]] std::shared_ptr<CpuResourceManager> GetCpuResourceManager() const noexcept { return m_CpuResourceManager; }
+		[[nodiscard]] std::shared_ptr<GpuResourceManager> GetGpuResourceManager() const noexcept { return m_GpuResourceManager; }
 		[[nodiscard]] TaskDispatcher* GetTaskDispatcher() const noexcept { return m_TaskDispatcher.get(); }
 
 		/// @brief Прокидывает задачу или обработчик ошибки для выполнения на главном потоке кадра
@@ -57,8 +57,8 @@ namespace zzz::engine
 		std::shared_ptr<FileSystem> m_FileSystem;
 		std::shared_ptr<PackageManager> m_PackageManager;
 		std::shared_ptr<DataAssetsManager> m_DataAssetsManager;
-		std::shared_ptr<CoreCpuResourceManager> m_CpuResourceManager;
-		std::shared_ptr<CoreGpuResourceManager> m_GpuResourceManager;
+		std::shared_ptr<CpuResourceManager> m_CpuResourceManager;
+		std::shared_ptr<GpuResourceManager> m_GpuResourceManager;
 		std::shared_ptr<UserSettingsManager> m_UserSettingsManager;
 		std::unique_ptr<Platform> m_Platform;
 		std::unique_ptr<TaskDispatcher> m_TaskDispatcher;

@@ -1,3 +1,4 @@
+
 #include <format>
 #include <logger.h>
 
@@ -8,8 +9,8 @@
 #include "core/io/ResourceStorageTraits.h"
 #include "core/io/package/DataAssetsManager.h"
 #include "engine/resources/cpu/loaders/CpuMeshLoader.h"
-#include "engine/resources/cpu/loaders/CpuMaterialLoader.h"
 #include "engine/resources/cpu/loaders/CpuShaderLoader.h"
+#include "engine/resources/cpu/loaders/CpuMaterialLoader.h"
 
 #include "CpuResourceManager.h"
 
@@ -20,8 +21,33 @@ using namespace zzz::templates;
 
 namespace zzz::engine
 {
-	template<typename... SupportedResources>
-	std::expected<PackageEntry, std::string> CpuResourceManager<SupportedResources...>::FindEntry(
+	CpuResourceManager::CpuResourceManager(
+		TaskDispatcher& taskDispatcher,
+		std::shared_ptr<PackageManager> packageManager,
+		std::shared_ptr<DataAssetsManager> dataAssetsManager,
+		std::shared_ptr<FileSystem> fileSystem)
+		: m_TaskDispatcher(taskDispatcher)
+		, m_PackageManager(std::move(packageManager))
+		, m_DataAssetsManager(std::move(dataAssetsManager))
+		, m_FileSystem(std::move(fileSystem))
+	{
+		ensure(m_PackageManager != nullptr, "PackageManager не должен быть null в CpuResourceManager.");
+	}
+
+	CpuResourceManager::~CpuResourceManager()
+	{
+		EmergencyStop();
+	}
+
+	void CpuResourceManager::EmergencyStop()
+	{
+		m_Meshes.Clear();
+		m_Materials.Clear();
+		m_Textures.Clear();
+		m_Shaders.Clear();
+	}
+
+	std::expected<PackageEntry, std::string> CpuResourceManager::FindEntry(
 		const Guid& guid,
 		eResourceType type) const
 	{
@@ -55,102 +81,58 @@ namespace zzz::engine
 	}
 
 	template<>
-	std::expected<std::shared_ptr<CpuMesh>, std::string> LoadCpuResourceSync<CpuMesh, CoreCpuResourceManager>(
-		const Guid& guid,
-		CoreCpuResourceManager& manager)
+	std::expected<std::shared_ptr<CpuMesh>, std::string> CpuResourceManager::LoadResourceSync<CpuMesh>(const Guid& guid)
 	{
-		auto entryRes = manager.FindEntry(guid, eResourceType::Mesh);
+		auto entryRes = FindEntry(guid, eResourceType::Mesh);
 		if (!entryRes)
 		{
 			return std::unexpected(entryRes.error());
 		}
-		auto dataAssetsMgr = manager.m_DataAssetsManager.get();
-		if (!dataAssetsMgr)
+		if (!m_DataAssetsManager)
 		{
 			return std::unexpected("DataAssetsManager не инициализирован");
 		}
-		return CpuMeshLoader::Load(*entryRes, *dataAssetsMgr);
+		return CpuMeshLoader::Load(*entryRes, *m_DataAssetsManager);
 	}
 
 	template<>
-	std::expected<std::shared_ptr<CpuMaterial>, std::string> LoadCpuResourceSync<CpuMaterial, CoreCpuResourceManager>(
-		const Guid& guid,
-		CoreCpuResourceManager& manager)
+	std::expected<std::shared_ptr<CpuMaterial>, std::string> CpuResourceManager::LoadResourceSync<CpuMaterial>(const Guid& guid)
 	{
-		auto entryRes = manager.FindEntry(guid, eResourceType::Material);
+		auto entryRes = FindEntry(guid, eResourceType::Material);
 		if (!entryRes)
 		{
 			return std::unexpected(entryRes.error());
 		}
-		auto dataAssetsMgr = manager.m_DataAssetsManager.get();
-		if (!dataAssetsMgr)
+		if (!m_DataAssetsManager)
 		{
 			return std::unexpected("DataAssetsManager не инициализирован");
 		}
-		return CpuMaterialLoader::Load(*entryRes, *dataAssetsMgr);
+		return CpuMaterialLoader::Load(*entryRes, *m_DataAssetsManager);
 	}
 
 	template<>
-	std::expected<std::shared_ptr<CpuShader>, std::string> LoadCpuResourceSync<CpuShader, CoreCpuResourceManager>(
-		const Guid& guid,
-		CoreCpuResourceManager& manager)
+	std::expected<std::shared_ptr<CpuShader>, std::string> CpuResourceManager::LoadResourceSync<CpuShader>(const Guid& guid)
 	{
-		auto entryRes = manager.FindEntry(guid, eResourceType::Shader);
+		auto entryRes = FindEntry(guid, eResourceType::Shader);
 		if (!entryRes)
 		{
 			return std::unexpected(entryRes.error());
 		}
-		auto dataAssetsMgr = manager.m_DataAssetsManager.get();
-		if (!dataAssetsMgr)
+		if (!m_DataAssetsManager)
 		{
 			return std::unexpected("DataAssetsManager не инициализирован");
 		}
-		return CpuShaderLoader::Load(*entryRes, *dataAssetsMgr);
+		return CpuShaderLoader::Load(*entryRes, *m_DataAssetsManager);
 	}
 
 	template<>
-	std::expected<std::shared_ptr<CpuTexture2D>, std::string> LoadCpuResourceSync<CpuTexture2D, CoreCpuResourceManager>(
-		const Guid& guid,
-		CoreCpuResourceManager& manager)
+	std::expected<std::shared_ptr<CpuTexture2D>, std::string> CpuResourceManager::LoadResourceSync<CpuTexture2D>(const Guid& guid)
 	{
-		auto entryRes = manager.FindEntry(guid, eResourceType::Texture2D);
+		auto entryRes = FindEntry(guid, eResourceType::Texture2D);
 		if (!entryRes)
 		{
 			return std::unexpected(entryRes.error());
 		}
 		return safe_make_shared<CpuTexture2D>(entryRes->GetGuid(), std::string(entryRes->GetName()));
 	}
-
-	template<typename... SupportedResources>
-	std::expected<SceneData, std::string> CpuResourceManager<SupportedResources...>::LoadSceneData(const Guid& sceneGuid)
-	{
-		auto entryOpt = m_PackageManager->GetEntry(ePackage::Scene, sceneGuid);
-		if (!entryOpt.has_value())
-		{
-			return std::unexpected(std::format("Сцена с GUID '{}' не найдена в package.dat.", sceneGuid.ToString()));
-		}
-
-		auto sceneDataRes = m_PackageManager->LoadAsset<SceneData>(sceneGuid);
-		if (!sceneDataRes.has_value())
-		{
-			return std::unexpected(std::format("Ошибка загрузки данных сцены '{}' ({}): {}",
-				entryOpt->GetName(), sceneGuid.ToString(), sceneDataRes.error()));
-		}
-
-		return std::move(*sceneDataRes);
-	}
-
-	template<typename... SupportedResources>
-	std::expected<SceneData, std::string> CpuResourceManager<SupportedResources...>::LoadSceneData(std::string_view sceneName)
-	{
-		auto entryOpt = m_PackageManager->GetEntry(ePackage::Scene, sceneName);
-		if (!entryOpt.has_value())
-		{
-			return std::unexpected(std::format("Сцена с именем '{}' не найдена в package.dat.", sceneName));
-		}
-
-		return LoadSceneData(entryOpt->GetGuid());
-	}
-
-	template class CpuResourceManager<CpuMesh, CpuMaterial, CpuTexture2D, CpuShader>;
 }

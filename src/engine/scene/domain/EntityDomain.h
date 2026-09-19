@@ -9,6 +9,8 @@
 
 namespace zzz::engine
 {
+	class CpuResourceManager;
+
 	/**
 	 * @class EntityDomain
 	 * @brief Реализация IEntityDomain для управления легковесными сущностями (ECS).
@@ -29,7 +31,7 @@ namespace zzz::engine
 			NodeHandle nodeHandle,
 			const ::zzz::core::GameObjectData& objData,
 			const ::zzz::core::ScriptFactory& scriptFactory,
-			CoreCpuResourceManager& resourceManager) override;
+			CpuResourceManager& resourceManager) override;
 		void DestroyEntity(const ::zzz::core::Guid& guid) override;
 
 		[[nodiscard]] size_t GetEntityCount() const noexcept;

@@ -25,7 +25,7 @@ namespace zzz::engine
 		NodeHandle nodeHandle,
 		const GameObjectData& objData,
 		const ScriptFactory& scriptFactory,
-		CoreCpuResourceManager& resourceManager)
+		CpuResourceManager& resourceManager)
 	{
 		(void)scriptFactory;
 		(void)resourceManager;

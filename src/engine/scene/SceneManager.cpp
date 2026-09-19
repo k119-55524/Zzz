@@ -7,6 +7,7 @@
 #include "core/utils/MemoryUtils.h"
 #include "engine/package/PackageManager.h"
 #include "core/io/package/ProjectManifestData.h"
+#include "core/io/package/SceneData.h"
 #include "engine/resources/cpu/CpuResourceManager.h"
 #include "engine/resources/gpu/GpuResourceManager.h"
 
@@ -21,8 +22,8 @@ namespace zzz::engine
 	SceneManager::SceneManager(
 		TaskDispatcher& taskDispatcher,
 		std::shared_ptr<PackageManager> packageManager,
-		std::shared_ptr<CoreCpuResourceManager> cpuResourceManager,
-		std::shared_ptr<CoreGpuResourceManager> gpuResourceManager,
+		std::shared_ptr<CpuResourceManager> cpuResourceManager,
+		std::shared_ptr<GpuResourceManager> gpuResourceManager,
 		std::shared_ptr<ScriptFactory> scriptFactory) :
 			m_TaskDispatcher(taskDispatcher),
 			m_PackageManager(std::move(packageManager)),
@@ -72,6 +73,9 @@ namespace zzz::engine
 					auto entryOpt = m_PackageManager->GetEntry(ePackage::Scene, sceneGuid);
 					ensure(entryOpt.has_value(), "Сцена с GUID '{}' не найдена в package.dat.", sceneGuid.ToString());
 
+					auto sceneDataRes = m_PackageManager->LoadAsset<SceneData>(sceneGuid);
+					ensure(sceneDataRes.has_value(), "Ошибка загрузки данных сцены '{}': {}", sceneGuid.ToString(), sceneDataRes.error());
+
 					auto scene = safe_make_shared<Scene>(
 						sceneGuid,
 						std::string(entryOpt->GetName()),
@@ -81,7 +85,7 @@ namespace zzz::engine
 					);
 
 					// Инициализация слоёв сцены
-					scene->Initialize(*m_ScriptFactory, m_TaskDispatcher, [this, scene](std::expected<void, std::string> initRes) mutable
+					scene->Initialize(std::move(*sceneDataRes), *m_ScriptFactory, m_TaskDispatcher, [this, scene](std::expected<void, std::string> initRes) mutable
 					{
 						if (!initRes)
 						{

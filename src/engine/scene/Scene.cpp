@@ -26,8 +26,8 @@ namespace zzz::engine
 	Scene::Scene(
 		Guid guid,
 		std::string name,
-		std::shared_ptr<CoreCpuResourceManager> cpuResourceManager,
-		std::shared_ptr<CoreGpuResourceManager> gpuResourceManager,
+		std::shared_ptr<CpuResourceManager> cpuResourceManager,
+		std::shared_ptr<GpuResourceManager> gpuResourceManager,
 		SceneTransitionParams defaultTransition)
 		: m_Guid(guid)
 		, m_Name(std::move(name))
@@ -47,25 +47,22 @@ namespace zzz::engine
 	}
 
 	void Scene::Initialize(
+		SceneData sceneData,
 		const ScriptFactory& scriptFactory,
 		TaskDispatcher& taskDispatcher,
 		std::function<void(std::expected<void, std::string>)> onLayersCreated)
 	{
 		ensure(onLayersCreated != nullptr, "onLayersCreated коллбэк не должен быть null при инициализации Scene.");
 
-		auto sceneData = m_CpuResourceManager->LoadSceneData(m_Guid);
-		if (!sceneData)
-			THROW_RUNTIME("Scene '{}' ({}) не смогла загрузить SceneData: {}", m_Name, m_Guid.ToString(), sceneData.error());
-
 		// Разрешение параметров перехода на сцену
-		if (sceneData->GetTransitionSource() == eTransitionSource::Custom)
-			m_TransitionParams = sceneData->GetTransitionParams();
+		if (sceneData.GetTransitionSource() == eTransitionSource::Custom)
+			m_TransitionParams = sceneData.GetTransitionParams();
 
 		// Настройки очистки поверхности и буфера глубины
-		m_ClearConfig = sceneData->GetClearConfig();
+		m_ClearConfig = sceneData.GetClearConfig();
 
 		// Создаём экземпляры SceneScript и инициализируем их
-		for (const auto& scriptGuid : sceneData->GetSceneScriptGuids())
+		for (const auto& scriptGuid : sceneData.GetSceneScriptGuids())
 		{
 			auto script = scriptFactory.CreateSceneScript(scriptGuid);
 			script->Init(&m_EventBus);
@@ -73,7 +70,7 @@ namespace zzz::engine
 		}
 
 		// Перемещаем SceneData в shared_ptr, чтобы он жил всё время асинхронного наполнения слоёв в пуле потоков
-		auto sharedSceneData = std::make_shared<SceneData>(std::move(*sceneData));
+		auto sharedSceneData = std::make_shared<SceneData>(std::move(sceneData));
 		const auto& layersData = sharedSceneData->GetLayers();
 		const size_t layerCount = layersData.size();
 		m_Layers.resize(layerCount);

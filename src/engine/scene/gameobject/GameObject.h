@@ -17,10 +17,9 @@ namespace zzz::core
 	class ScriptFactory;
 }
 
-#include "engine/resources/ResourceTypes.h"
-
 namespace zzz::engine
 {
+	class GpuResourceManager;
 	class GpuMesh;
 	class GpuMaterial;
 
@@ -58,7 +57,7 @@ namespace zzz::engine
 		void Initialize(
 			const GameObjectData& data,
 			const ScriptFactory& scriptFactory,
-			CoreGpuResourceManager& gpuResourceManager,
+			GpuResourceManager& gpuResourceManager,
 			std::function<void(std::expected<void, std::string>)> onReady);
 
 #pragma region Getters and Setters

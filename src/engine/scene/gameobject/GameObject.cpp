@@ -35,7 +35,7 @@ namespace zzz::engine
 	void GameObject::Initialize(
 		const GameObjectData& data,
 		const ScriptFactory& scriptFactory,
-		CoreGpuResourceManager& gpuResourceManager,
+		GpuResourceManager& gpuResourceManager,
 		std::function<void(std::expected<void, std::string>)> onReady)
 	{
 		ensure(onReady != nullptr, "GameObject::Initialize: onReady коллбэк не должен быть null.");
