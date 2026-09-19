@@ -1,4 +1,5 @@
 #pragma once
+#include <span>
 
 #include <string>
 #include <string_view>
@@ -39,7 +40,7 @@ namespace zzz::engine
 		void Update(float dt);
 
 		[[nodiscard]] size_t GetEntityCount() const noexcept { return m_Entities.size(); }
-		[[nodiscard]] const std::vector<EntityStub>& GetEntities() const noexcept { return m_Entities; }
+		[[nodiscard]] std::span<const EntityStub> GetEntities() const noexcept { return m_Entities; }
 
 	private:
 		std::vector<EntityStub> m_Entities;

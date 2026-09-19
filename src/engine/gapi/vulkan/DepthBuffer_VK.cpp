@@ -1,6 +1,6 @@
 #include "engine/gapi/vulkan/DepthBuffer_VK.h"
 #include "engine/utils/EngineLogFlags.h"
-#include "core/utils/VKToStringHelpers.h"
+#include "core/utils/platforms/VKToStringHelpers.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::GAPI);
 

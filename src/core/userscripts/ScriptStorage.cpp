@@ -185,18 +185,18 @@ namespace zzz::core
 #if Z_EDITOR
 	void ScriptStorage::RegisterInstance(Script* instance)       { RegisterInstanceImpl(instance, m_ActiveInstances); }
 	void ScriptStorage::UnregisterInstance(Script* instance)     { UnregisterInstanceImpl(instance, m_ActiveInstances); }
-	const std::vector<Script*>& ScriptStorage::GetActiveInstances() const { return m_ActiveInstances; }
+	std::span<Script* const> ScriptStorage::GetActiveInstances() const { return m_ActiveInstances; }
 
 	void ScriptStorage::RegisterInstance(GameScript* instance)   { RegisterInstanceImpl(instance, m_ActiveGameScripts); }
 	void ScriptStorage::UnregisterInstance(GameScript* instance) { UnregisterInstanceImpl(instance, m_ActiveGameScripts); }
-	const std::vector<GameScript*>& ScriptStorage::GetActiveGameScripts() const { return m_ActiveGameScripts; }
+	std::span<GameScript* const> ScriptStorage::GetActiveGameScripts() const { return m_ActiveGameScripts; }
 
 	void ScriptStorage::RegisterInstance(SceneScript* instance)  { RegisterInstanceImpl(instance, m_ActiveSceneScripts); }
 	void ScriptStorage::UnregisterInstance(SceneScript* instance){ UnregisterInstanceImpl(instance, m_ActiveSceneScripts); }
-	const std::vector<SceneScript*>& ScriptStorage::GetActiveSceneScripts() const { return m_ActiveSceneScripts; }
+	std::span<SceneScript* const> ScriptStorage::GetActiveSceneScripts() const { return m_ActiveSceneScripts; }
 
 	void ScriptStorage::RegisterInstance(ViewScript* instance)   { RegisterInstanceImpl(instance, m_ActiveViewScripts); }
 	void ScriptStorage::UnregisterInstance(ViewScript* instance) { UnregisterInstanceImpl(instance, m_ActiveViewScripts); }
-	const std::vector<ViewScript*>& ScriptStorage::GetActiveViewScripts() const { return m_ActiveViewScripts; }
+	std::span<ViewScript* const> ScriptStorage::GetActiveViewScripts() const { return m_ActiveViewScripts; }
 #endif
 }

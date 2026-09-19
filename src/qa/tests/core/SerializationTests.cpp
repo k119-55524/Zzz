@@ -110,8 +110,8 @@ TEST(SerializationTest, MeshDataSymmetricSerialization)
 	EXPECT_EQ(readMesh.GetVertexStride(), 64u);
 	EXPECT_EQ(readMesh.GetIndexCount(), 36u);
 	EXPECT_EQ(readMesh.GetIndexFormat(), core::eIndexFormat::UInt16);
-	EXPECT_EQ(readMesh.GetVertexData(), vertexBytes);
-	EXPECT_EQ(readMesh.GetIndexData(), indexBytes);
+	EXPECT_TRUE(std::ranges::equal(readMesh.GetVertexData(), vertexBytes));
+	EXPECT_TRUE(std::ranges::equal(readMesh.GetIndexData(), indexBytes));
 }
 
 TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)

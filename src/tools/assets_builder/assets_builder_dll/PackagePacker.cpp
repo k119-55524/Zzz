@@ -281,9 +281,9 @@ namespace zzz::builder
 		return eMSWinWindowMode::Windowed;
 	}
 
-	static zzz::engine::ClearConfig ReadClearConfig(const json& root)
+	static zzz::core::ClearConfig ReadClearConfig(const json& root)
 	{
-		zzz::engine::ClearConfig config;
+		zzz::core::ClearConfig config;
 
 		if (!root.contains("clear") || !root["clear"].is_object())
 			return config;
@@ -292,9 +292,9 @@ namespace zzz::builder
 
 		// Surface mode
 		std::string surfaceModeStr = clearJson.value("surfaceMode", clearJson.value("colorMode", "Color"));
-		if (surfaceModeStr == "None") config.surface.mode = zzz::engine::eSurfaceClearMode::None;
-		else if (surfaceModeStr == "Shader") config.surface.mode = zzz::engine::eSurfaceClearMode::Shader;
-		else config.surface.mode = zzz::engine::eSurfaceClearMode::Color;
+		if (surfaceModeStr == "None") config.surface.mode = zzz::core::eSurfaceClearMode::None;
+		else if (surfaceModeStr == "Shader") config.surface.mode = zzz::core::eSurfaceClearMode::Shader;
+		else config.surface.mode = zzz::core::eSurfaceClearMode::Color;
 
 		// Color parsing
 		if (clearJson.contains("color"))
@@ -338,15 +338,15 @@ namespace zzz::builder
 
 		// Depth mode
 		std::string depthModeStr = clearJson.value("depthMode", "Depth");
-		if (depthModeStr == "None") config.depthBuffer.depthMode = zzz::engine::eClearDepthMode::None;
-		else config.depthBuffer.depthMode = zzz::engine::eClearDepthMode::Depth;
+		if (depthModeStr == "None") config.depthBuffer.depthMode = zzz::core::eClearDepthMode::None;
+		else config.depthBuffer.depthMode = zzz::core::eClearDepthMode::Depth;
 
 		config.depthBuffer.depth = clearJson.value("depth", 1.0f);
 
 		// Stencil mode
 		std::string stencilModeStr = clearJson.value("stencilMode", "None");
-		if (stencilModeStr == "Stencil") config.depthBuffer.stencilMode = zzz::engine::eClearStencilMode::Stencil;
-		else config.depthBuffer.stencilMode = zzz::engine::eClearStencilMode::None;
+		if (stencilModeStr == "Stencil") config.depthBuffer.stencilMode = zzz::core::eClearStencilMode::Stencil;
+		else config.depthBuffer.stencilMode = zzz::core::eClearStencilMode::None;
 
 		config.depthBuffer.stencil = static_cast<zU8>(clearJson.value("stencil", 0));
 

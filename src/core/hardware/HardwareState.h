@@ -1,4 +1,5 @@
 #pragma once
+#include <span>
 
 #include "core/CoreIncludes.h"
 #include "core/hardware/CpuInfo.h"
@@ -47,14 +48,14 @@ namespace zzz::core
 		}
 
 		// Геттеры данных оборудования
-		[[nodiscard]] const std::vector<CpuInfo>& GetCpus() const noexcept { return m_Cpus; }
+		[[nodiscard]] std::span<const CpuInfo> GetCpus() const noexcept { return m_Cpus; }
 		[[nodiscard]] const CpuTopology& GetCpuTopology() const noexcept { return m_CpuTopology; }
 		[[nodiscard]] const RamInfo& GetRam() const noexcept { return m_Ram; }
 		[[nodiscard]] const MotherboardInfo& GetMotherboard() const noexcept { return m_Motherboard; }
-		[[nodiscard]] const std::vector<GpuInfo>& GetGpus() const noexcept { return m_Gpus; }
-		[[nodiscard]] const std::vector<MonitorInfo>& GetMonitors() const noexcept { return m_Monitors; }
-		[[nodiscard]] const std::vector<StorageInfo>& GetStorages() const noexcept { return m_Storages; }
-		[[nodiscard]] const std::vector<NetworkAdapterInfo>& GetNetworkAdapters() const noexcept { return m_NetworkAdapters; }
+		[[nodiscard]] std::span<const GpuInfo> GetGpus() const noexcept { return m_Gpus; }
+		[[nodiscard]] std::span<const MonitorInfo> GetMonitors() const noexcept { return m_Monitors; }
+		[[nodiscard]] std::span<const StorageInfo> GetStorages() const noexcept { return m_Storages; }
+		[[nodiscard]] std::span<const NetworkAdapterInfo> GetNetworkAdapters() const noexcept { return m_NetworkAdapters; }
 
 		[[nodiscard]] bool operator==(const HardwareState& other) const noexcept
 		{

@@ -1,4 +1,5 @@
 #pragma once
+#include <span>
 
 #include "core/utils/Guid.h"
 #include "core/utils/macros/MiscMacros.h"
@@ -32,7 +33,7 @@ namespace zzz::engine
 		void DestroyEntity(const ::zzz::core::Guid& guid) override;
 
 		[[nodiscard]] size_t GetEntityCount() const noexcept;
-		[[nodiscard]] const std::vector<EntityStub>& GetEntities() const noexcept;
+		[[nodiscard]] std::span<const EntityStub> GetEntities() const noexcept;
 
 	private:
 		EntityWorld m_World;

@@ -114,24 +114,6 @@ namespace zzz::engine
 			}
 		}
 
-		// --- Регистрация рантайм/процедурных ресурсов ---
-		void AddMesh(std::shared_ptr<CpuMesh> mesh);
-		void AddTexture(std::shared_ptr<CpuTexture2D> texture);
-		void AddShader(std::shared_ptr<CpuShader> shader);
-		void AddMaterial(std::shared_ptr<CpuMaterial> material);
-
-		// --- Быстрый доступ к кэшу (по GUID) ---
-		[[nodiscard]] std::shared_ptr<CpuMesh>      GetMesh(const ::zzz::core::Guid& guid) const;
-		[[nodiscard]] std::shared_ptr<CpuTexture2D> GetTexture(const ::zzz::core::Guid& guid) const;
-		[[nodiscard]] std::shared_ptr<CpuShader>    GetShader(const ::zzz::core::Guid& guid) const;
-		[[nodiscard]] std::shared_ptr<CpuMaterial>  GetMaterial(const ::zzz::core::Guid& guid) const;
-
-		// --- Быстрый доступ к кэшу (по имени) ---
-		[[nodiscard]] std::shared_ptr<CpuMesh>      GetMesh(std::string_view name) const;
-		[[nodiscard]] std::shared_ptr<CpuTexture2D> GetTexture(std::string_view name) const;
-		[[nodiscard]] std::shared_ptr<CpuShader>    GetShader(std::string_view name) const;
-		[[nodiscard]] std::shared_ptr<CpuMaterial>  GetMaterial(std::string_view name) const;
-
 		// --- Шаблонный фасад доступа Get<T> ---
 		template<typename T>
 		[[nodiscard]] std::shared_ptr<T> Get(const ::zzz::core::Guid& guid) const
@@ -153,12 +135,6 @@ namespace zzz::engine
 			auto recIt = table.find(it->second);
 			return recIt != table.end() ? recIt->second.resource : nullptr;
 		}
-
-		// --- Проверка наличия в кэше ---
-		[[nodiscard]] bool HasMesh(const ::zzz::core::Guid& guid) const noexcept;
-		[[nodiscard]] bool HasTexture(const ::zzz::core::Guid& guid) const noexcept;
-		[[nodiscard]] bool HasShader(const ::zzz::core::Guid& guid) const noexcept;
-		[[nodiscard]] bool HasMaterial(const ::zzz::core::Guid& guid) const noexcept;
 
 		template<typename T>
 		[[nodiscard]] bool Has(const ::zzz::core::Guid& guid) const noexcept
@@ -232,10 +208,13 @@ namespace zzz::engine
 			LoadAsync<CpuShader>(guid, std::move(onLoaded));
 		}
 
-		[[nodiscard]] size_t GetLoadedMeshCount() const noexcept;
-		[[nodiscard]] size_t GetLoadedTextureCount() const noexcept;
-		[[nodiscard]] size_t GetLoadedShaderCount() const noexcept;
-		[[nodiscard]] size_t GetLoadedMaterialCount() const noexcept;
+		// --- Шаблонный доступ к количеству загруженных ресурсов ---
+		template<typename T>
+		[[nodiscard]] size_t GetLoadedCount() const noexcept
+		{
+			std::shared_lock lock(m_TablesMutex);
+			return GetTable<T>().size();
+		}
 
 	private:
 		template<typename T>

@@ -31,11 +31,11 @@ namespace zzz::core
 
 		[[nodiscard]] zU32 GetVertexCount() const noexcept { return m_VertexCount; }
 		[[nodiscard]] zU32 GetVertexStride() const noexcept { return m_VertexStride; }
-		[[nodiscard]] const std::vector<std::byte>& GetVertexData() const noexcept { return m_VertexData; }
+		[[nodiscard]] std::span<const std::byte> GetVertexData() const noexcept { return m_VertexData; }
 
 		[[nodiscard]] zU32 GetIndexCount() const noexcept { return m_IndexCount; }
 		[[nodiscard]] eIndexFormat GetIndexFormat() const noexcept { return m_IndexFormat; }
-		[[nodiscard]] const std::vector<std::byte>& GetIndexData() const noexcept { return m_IndexData; }
+		[[nodiscard]] std::span<const std::byte> GetIndexData() const noexcept { return m_IndexData; }
 
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override;

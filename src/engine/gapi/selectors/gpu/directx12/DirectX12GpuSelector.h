@@ -5,7 +5,7 @@
 #if defined(Z_D3D12)
 
 #include "engine/gapi/selectors/gpu/IGpuSelector.h"
-#include "core/headers/DirectX12.h"
+#include "core/headers/platforms/DirectX12.h"
 
 namespace zzz::engine
 {

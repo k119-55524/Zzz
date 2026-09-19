@@ -1,4 +1,5 @@
 #pragma once
+#include <span>
 
 #include <string_view>
 #include <vector>
@@ -28,7 +29,7 @@ namespace zzz::core
 
 		[[nodiscard]] const Guid& GetViewGuid() const noexcept { return m_ViewGuid; }
 		[[nodiscard]] const Guid& GetSceneGuid() const noexcept { return m_SceneGuid; }
-		[[nodiscard]] const std::vector<Guid>& GetUiScriptGuids() const noexcept { return m_UiScriptGuids; }
+		[[nodiscard]] std::span<const Guid> GetUiScriptGuids() const noexcept { return m_UiScriptGuids; }
 		[[nodiscard]] const ViewPlatformData& GetPlatformData() const noexcept { return m_PlatformData; }
 
 	protected:

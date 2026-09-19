@@ -1,4 +1,5 @@
 #pragma once
+#include <span>
 
 #include <string>
 #include <string_view>
@@ -28,9 +29,9 @@ namespace zzz::core
 			, defaultTransitionParams(std::move(defaultTransitionParams))
 		{}
 
-		[[nodiscard]] const std::vector<Guid>& GetGameScriptGuids() const noexcept { return gameScriptGuids; }
-		[[nodiscard]] const std::vector<Guid>& GetSceneGuids() const noexcept { return sceneGuids; }
-		[[nodiscard]] const std::vector<Guid>& GetViewGuids() const noexcept { return viewGuids; }
+		[[nodiscard]] std::span<const Guid> GetGameScriptGuids() const noexcept { return gameScriptGuids; }
+		[[nodiscard]] std::span<const Guid> GetSceneGuids() const noexcept { return sceneGuids; }
+		[[nodiscard]] std::span<const Guid> GetViewGuids() const noexcept { return viewGuids; }
 		[[nodiscard]] const ProjectPlatformData& GetPlatformData() const noexcept { return platformData; }
 		[[nodiscard]] zU32 GetMaxLogQueueSize() const noexcept { return maxLogQueueSize; }
 		[[nodiscard]] zU16 GetLoggerPort() const noexcept { return loggerPort; }

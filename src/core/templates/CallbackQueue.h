@@ -4,8 +4,8 @@
 #include <vector>
 #include <mutex>
 #include <atomic>
-#include <functional>
 #include <utility>
+#include <functional>
 
 namespace zzz::templates
 {

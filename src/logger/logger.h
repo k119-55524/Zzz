@@ -98,7 +98,7 @@ namespace zzz::logger
 		void ProcessLog(const std::source_location& loc, eLogMessageType type, const LogCategory& category, std::string formatted);
 		void AddToBroadcast(const std::source_location& loc, eLogMessageType type, const LogCategory& category, std::string msg);
 		void StartBroadcastThreadIfNeeded();
-		void BroadcastThreadLoop();
+		void BroadcastThreadLoop(std::stop_token stopToken);
 		void BroadcastLogs(const std::vector<LogEntry>& logs);
 
 		void DebugOutputIDE(const std::source_location& loc, eLogMessageType type, const LogCategory& category, const std::string& formatted) noexcept;
@@ -131,10 +131,9 @@ namespace zzz::logger
 		std::mutex m_ListenersMutex;
 
 		DoubleBufferedVector<LogEntry> m_LogBuffer;
-		std::thread m_BroadcastThread;
-		std::condition_variable m_BroadcastCV;
+		std::jthread m_BroadcastThread;
+		std::condition_variable_any m_BroadcastCV;
 		std::mutex m_BroadcastMutex;
-		std::atomic<bool> m_BroadcastThreadRunning{false};
 	};
 
 	inline Logger g_Logger;

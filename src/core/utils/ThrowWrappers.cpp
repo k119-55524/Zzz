@@ -1,6 +1,7 @@
 ﻿
 #include <sstream>
 #include <stdexcept>
+
 #include "core/utils/Macroses.h"
 
 namespace zzz::core

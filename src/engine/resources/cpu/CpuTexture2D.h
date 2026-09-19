@@ -1,4 +1,5 @@
 #pragma once
+#include <span>
 
 #include <string>
 #include <vector>
@@ -24,7 +25,7 @@ namespace zzz::engine
 
 		[[nodiscard]] uint32_t GetWidth() const noexcept { return m_Width; }
 		[[nodiscard]] uint32_t GetHeight() const noexcept { return m_Height; }
-		[[nodiscard]] const std::vector<std::byte>& GetPixelData() const noexcept { return m_PixelData; }
+		[[nodiscard]] std::span<const std::byte> GetPixelData() const noexcept { return m_PixelData; }
 
 	private:
 		uint32_t m_Width;

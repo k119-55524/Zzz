@@ -3,31 +3,16 @@
 #include <memory>
 #include <string>
 #include <expected>
-#include "core/events/OneShotEvent.h"
+#include "core/templates/AsyncRecord.h"
 
 namespace zzz::engine
 {
 	/**
 	 * @brief Унифицированная запись ресурса в кэше менеджера ресурсов.
 	 *
-	 * Объединяет готовый указатель на ресурс и одноразовое событие OneShotEvent,
-	 * позволяющее клиентам ожидать завершения загрузки ресурса без polling и раздельных in-flight таблиц.
+	 * Базируется на общем шаблоне ядра zzz::core::AsyncRecord,
+	 * объединяя готовый указатель на ресурс и OneShotEvent с результатом std::expected<std::shared_ptr<T>, std::string>.
 	 */
 	template<typename T>
-	struct ResourceRecord final
-	{
-		using ResourcePtr = std::shared_ptr<T>;
-		using ResultType = std::expected<ResourcePtr, std::string>;
-		using EventType = core::OneShotEvent<ResultType>;
-
-		ResourcePtr resource{ nullptr };
-		EventType readyEvent;
-
-		ResourceRecord() = delete;
-
-		explicit ResourceRecord(typename EventType::DispatcherFunc dispatcher)
-			: readyEvent(std::move(dispatcher))
-		{
-		}
-	};
+	using ResourceRecord = core::AsyncRecord<std::shared_ptr<T>, std::expected<std::shared_ptr<T>, std::string>>;
 }

@@ -1553,7 +1553,7 @@ namespace zzz::dx
 	}
 
 	//------------------------------------------------------------------------------------------------
-	// Returns required size of a buffer to be used for data upload
+	// Возвращает требуемый размер буфера для загрузки данных (data upload)
 	inline UINT64 GetRequiredIntermediateSize(
 		_In_ ID3D12Resource* pDestinationResource,
 		_In_range_(0, D3D12_REQ_SUBRESOURCES) UINT FirstSubresource,

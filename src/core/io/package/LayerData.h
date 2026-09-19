@@ -44,7 +44,7 @@ namespace zzz::core
 		[[nodiscard]] const std::string& GetName() const noexcept { return m_Name; }
 		[[nodiscard]] eLayerType GetType() const noexcept { return m_Type; }
 
-		[[nodiscard]] const std::vector<GameObjectData>& GetObjects() const noexcept { return m_Objects; }
+		[[nodiscard]] std::span<const GameObjectData> GetObjects() const noexcept { return m_Objects; }
 		[[nodiscard]] std::vector<GameObjectData>& GetObjects() noexcept { return m_Objects; }
 		void SetObjects(std::vector<GameObjectData> objects) noexcept { m_Objects = std::move(objects); }
 

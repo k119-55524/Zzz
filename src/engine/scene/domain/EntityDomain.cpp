@@ -56,7 +56,7 @@ namespace zzz::engine
 		return m_World.GetEntityCount();
 	}
 
-	const std::vector<EntityStub>& EntityDomain::GetEntities() const noexcept
+	std::span<const EntityStub> EntityDomain::GetEntities() const noexcept
 	{
 		return m_World.GetEntities();
 	}

@@ -181,38 +181,44 @@ namespace zzz::engine
 			LoadAsync<GpuShader>(guid, std::move(onLoaded));
 		}
 
-		// --- Быстрый доступ к кэшу GPU ---
-		[[nodiscard]] std::shared_ptr<GpuMesh>      GetGpuMesh(const ::zzz::core::Guid& guid) const;
-		[[nodiscard]] std::shared_ptr<GpuMaterial>  GetGpuMaterial(const ::zzz::core::Guid& guid) const;
-		[[nodiscard]] std::shared_ptr<GpuTexture2D> GetGpuTexture(const ::zzz::core::Guid& guid) const;
-		[[nodiscard]] std::shared_ptr<GpuShader>    GetGpuShader(const ::zzz::core::Guid& guid) const;
-
+		// --- Шаблонный быстрый доступ к кэшу GPU ---
 		template<typename T>
 		[[nodiscard]] std::shared_ptr<T> Get(const ::zzz::core::Guid& guid) const
 		{
-			if constexpr (std::is_same_v<T, GpuMesh>)           return GetGpuMesh(guid);
-			else if constexpr (std::is_same_v<T, GpuMaterial>)  return GetGpuMaterial(guid);
-			else if constexpr (std::is_same_v<T, GpuTexture2D>) return GetGpuTexture(guid);
-			else if constexpr (std::is_same_v<T, GpuShader>)    return GetGpuShader(guid);
-			else static_assert(sizeof(T) == 0, "Неподдерживаемый тип ресурса для Get<T>");
+			std::shared_lock lock(m_Mutex);
+			const auto& table = GetTable<T>();
+			auto it = table.find(guid);
+			return it != table.end() ? it->second.resource : nullptr;
 		}
-
-		[[nodiscard]] bool HasGpuMesh(const ::zzz::core::Guid& guid) const noexcept;
-		[[nodiscard]] bool HasGpuMaterial(const ::zzz::core::Guid& guid) const noexcept;
-		[[nodiscard]] bool HasGpuTexture(const ::zzz::core::Guid& guid) const noexcept;
-		[[nodiscard]] bool HasGpuShader(const ::zzz::core::Guid& guid) const noexcept;
 
 		template<typename T>
 		[[nodiscard]] bool Has(const ::zzz::core::Guid& guid) const noexcept
 		{
-			if constexpr (std::is_same_v<T, GpuMesh>)           return HasGpuMesh(guid);
-			else if constexpr (std::is_same_v<T, GpuMaterial>)  return HasGpuMaterial(guid);
-			else if constexpr (std::is_same_v<T, GpuTexture2D>) return HasGpuTexture(guid);
-			else if constexpr (std::is_same_v<T, GpuShader>)    return HasGpuShader(guid);
-			else static_assert(sizeof(T) == 0, "Неподдерживаемый тип ресурса для Has<T>");
+			std::shared_lock lock(m_Mutex);
+			const auto& table = GetTable<T>();
+			auto it = table.find(guid);
+			return it != table.end() && it->second.resource != nullptr;
 		}
 
 	private:
+		template<typename T>
+		[[nodiscard]] auto& GetTable() noexcept
+		{
+			if constexpr (std::is_same_v<T, GpuMesh>)           return m_GpuMeshes;
+			else if constexpr (std::is_same_v<T, GpuMaterial>)  return m_GpuMaterials;
+			else if constexpr (std::is_same_v<T, GpuTexture2D>) return m_GpuTextures;
+			else if constexpr (std::is_same_v<T, GpuShader>)    return m_GpuShaders;
+		}
+
+		template<typename T>
+		[[nodiscard]] const auto& GetTable() const noexcept
+		{
+			if constexpr (std::is_same_v<T, GpuMesh>)           return m_GpuMeshes;
+			else if constexpr (std::is_same_v<T, GpuMaterial>)  return m_GpuMaterials;
+			else if constexpr (std::is_same_v<T, GpuTexture2D>) return m_GpuTextures;
+			else if constexpr (std::is_same_v<T, GpuShader>)    return m_GpuShaders;
+		}
+
 		template<typename GpuT, typename CpuT, typename ContextType, typename RequestFunc, typename CreateFunc>
 		void LoadGpuResourceInternal(
 			const ::zzz::core::Guid& guid,

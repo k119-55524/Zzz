@@ -1,4 +1,5 @@
 #pragma once
+#include <span>
 
 #include <memory>
 #include <vector>
@@ -55,19 +56,19 @@ namespace zzz::core
 #if Z_EDITOR
 		void RegisterInstance(Script* instance);
 		void UnregisterInstance(Script* instance);
-		[[nodiscard]] const std::vector<Script*>& GetActiveInstances() const;
+		[[nodiscard]] std::span<Script* const> GetActiveInstances() const;
 
 		void RegisterInstance(GameScript* instance);
 		void UnregisterInstance(GameScript* instance);
-		[[nodiscard]] const std::vector<GameScript*>& GetActiveGameScripts() const;
+		[[nodiscard]] std::span<GameScript* const> GetActiveGameScripts() const;
 
 		void RegisterInstance(SceneScript* instance);
 		void UnregisterInstance(SceneScript* instance);
-		[[nodiscard]] const std::vector<SceneScript*>& GetActiveSceneScripts() const;
+		[[nodiscard]] std::span<SceneScript* const> GetActiveSceneScripts() const;
 
 		void RegisterInstance(ViewScript* instance);
 		void UnregisterInstance(ViewScript* instance);
-		[[nodiscard]] const std::vector<ViewScript*>& GetActiveViewScripts() const;
+		[[nodiscard]] std::span<ViewScript* const> GetActiveViewScripts() const;
 #endif
 
 	private:

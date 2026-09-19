@@ -40,17 +40,17 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/ThreadUtils.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/ThreadUtils.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/DX12ToStringHelpers.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/utils/VKToStringHelpers.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/utils/MetalToStringHelpers.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/platforms/VKToStringHelpers.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/platforms/MetalToStringHelpers.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/macros/LogMacros.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/macros/MiscMacros.h
         ${CMAKE_CURRENT_SOURCE_DIR}/headers/Apple.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/headers/MSWin.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/headers/platforms/MSWin.h
         ${CMAKE_CURRENT_SOURCE_DIR}/headers/Linux.h
         ${CMAKE_CURRENT_SOURCE_DIR}/headers/Android.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/headers/DirectX12.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/headers/Vulkan.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/headers/Metal.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/headers/platforms/DirectX12.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/headers/platforms/Vulkan.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/headers/platforms/Metal.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eInitState.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eWindowState.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eAssetDirectoryKind.h
@@ -103,10 +103,8 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/templates/DoubleBufferedVector.h
         ${CMAKE_CURRENT_SOURCE_DIR}/templates/CallbackQueue.h
         ${CMAKE_CURRENT_SOURCE_DIR}/templates/CountdownTrigger.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/templates/QueueArray.h
         ${CMAKE_CURRENT_SOURCE_DIR}/templates/ThreadPool.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/templates/ThreadSafeQueueArray.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/templates/ThreadSafeSwapBuffer.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/templates/AsyncRecord.h
         ${CMAKE_CURRENT_SOURCE_DIR}/containers/BitTreeTracker.h
         ${CMAKE_CURRENT_SOURCE_DIR}/containers/BitTreeTracker.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/scene/SceneTransitionParams.h
@@ -161,6 +159,9 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/IndependentViewData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/ProjectManifestData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/SceneData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/render/clear_config/ClearConfig.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/render/clear_config/DepthBufferClearConfig.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/render/clear_config/SurfaceClearConfig.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/GameObjectData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/GameObjectData.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/LayerData.h

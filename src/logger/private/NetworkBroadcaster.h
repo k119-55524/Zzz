@@ -17,7 +17,7 @@ namespace zzz::logger
 	private:
 		void Connect();
 		void Disconnect();
-		void SendThreadLoop();
+		void SendThreadLoop(std::stop_token stopToken);
 		void ProcessLogSend(const LogEntry& entry);
 
 		std::string m_Address;
@@ -30,10 +30,9 @@ namespace zzz::logger
 
 		DoubleBufferedVector<LogEntry> m_PendingLogsBuffer;
 		std::vector<LogEntry> m_UnsentLogs;
-		std::thread m_SendThread;
-		std::condition_variable m_SendCV;
+		std::jthread m_SendThread;
+		std::condition_variable_any m_SendCV;
 		std::mutex m_SendMutex;
-		std::atomic<bool> m_SendThreadRunning{ false };
 
 #if Z_WINDOWS
 		bool m_WsaInitialized = false;

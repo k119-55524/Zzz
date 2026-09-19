@@ -61,38 +61,34 @@ namespace zzz::engine
 
 		it->second.readyEvent.Subscribe(std::move(onComplete));
 
+		// Сцена уже загружена, либо в процессе загрузки
 		if (!inserted)
-		{
-			// Сцена уже либо загружена, либо находится в процессе загрузки
 			return;
-		}
 
 		m_TaskDispatcher.Submit(eTaskPriority::Normal, [this, sceneGuid]()
 			{
-				auto entryOpt = m_PackageManager->GetEntry(ePackage::Scene, sceneGuid);
-				ensure(entryOpt.has_value(), "Сцена с GUID '{}' не найдена в package.dat.", sceneGuid.ToString());
-
-				const std::string sceneName = std::string(entryOpt->GetName());
-
-				// 1. Создание экземпляра Scene по RAII (только регистрация базовых параметров)
-				auto scene = safe_make_shared<Scene>(
-					sceneGuid,
-					sceneName,
-					m_CpuResourceManager,
-					m_GpuResourceManager,
-					m_GlobalTransitionParams
-				);
-
-				// 2. Инициализация слоёв сцены (по завершении переносим в основной поток)
-				scene->Initialize(*m_ScriptFactory, m_TaskDispatcher, [this, scene](std::expected<void, std::string> initRes) mutable
+				try
 				{
-					if (!initRes)
-					{
-						DOutError("[SceneManager::LoadSceneAsync] Сбой инициализации слоёв сцены '{}' ({}): {}",
-							scene->GetName(), scene->GetGuid().ToString(), initRes.error());
+					auto entryOpt = m_PackageManager->GetEntry(ePackage::Scene, sceneGuid);
+					ensure(entryOpt.has_value(), "Сцена с GUID '{}' не найдена в package.dat.", sceneGuid.ToString());
 
-						m_MainThreadQueue.Push([this, guid = scene->GetGuid(), err = std::move(initRes.error())]() mutable
+					auto scene = safe_make_shared<Scene>(
+						sceneGuid,
+						std::string(entryOpt->GetName()),
+						m_CpuResourceManager,
+						m_GpuResourceManager,
+						m_GlobalTransitionParams
+					);
+
+					// Инициализация слоёв сцены
+					scene->Initialize(*m_ScriptFactory, m_TaskDispatcher, [this, scene](std::expected<void, std::string> initRes) mutable
+					{
+						if (!initRes)
 						{
+							DOutError("[SceneManager::LoadSceneAsync] Сбой инициализации слоёв сцены '{}' ({}): {}",
+								scene->GetName(), scene->GetGuid().ToString(), initRes.error());
+
+							m_MainThreadQueue.Push([this, guid = scene->GetGuid(), err = std::move(initRes.error())]() mutable
 							{
 								std::lock_guard lock(m_LoadSceneMutex);
 								auto it = m_Scenes.find(guid);
@@ -101,48 +97,29 @@ namespace zzz::engine
 									it->second.readyEvent.Resolve(std::unexpected(err));
 									m_Scenes.erase(it);
 								}
+							});
+							return;
+						}
+
+						DOut("[SceneManager::LoadSceneAsync] Собрана сцена '{}' ({}).", scene->GetName(), scene->GetGuid().ToString());
+
+						m_MainThreadQueue.Push([this, scene = std::move(scene)]() mutable
+						{
+							std::lock_guard lock(m_LoadSceneMutex);
+							auto it = m_Scenes.find(scene->GetGuid());
+							if (it != m_Scenes.end())
+							{
+								scene->InvokeStart();
+								it->second = scene;
+								it->second.readyEvent.Resolve(scene);
 							}
-							throw std::runtime_error(err);
 						});
-						return;
-					}
-
-					DOut("[SceneManager::LoadSceneAsync] Собрана сцена '{}' ({}).", scene->GetName(), scene->GetGuid().ToString());
-
-					m_MainThreadQueue.Push([this, scene = std::move(scene)]() mutable
-					{
-						std::lock_guard lock(m_LoadSceneMutex);
-						auto it = m_Scenes.find(scene->GetGuid());
-						if (it != m_Scenes.end())
-						{
-							scene->InvokeStart();
-							it->second = scene;
-						}
 					});
-				});
-			},
-			// Колбэк перехвата исключений из потока создания сцены
-			[this, sceneGuid](std::exception_ptr ex)
-			{
-				// Перенаправляем исключение в очередь главного потока для перехвата в Engine::Run
-				m_MainThreadQueue.Push([this, sceneGuid, ex]()
+				}
+				catch (const std::exception& e)
 				{
-					std::string err = "Неизвестная ошибка при загрузке сцены";
-					try
-					{
-						if (ex)
-						{
-							std::rethrow_exception(ex);
-						}
-					}
-					catch (const std::exception& e)
-					{
-						err = e.what();
-					}
-					catch (...)
-					{
-					}
-
+					std::string err = e.what();
+					m_MainThreadQueue.Push([this, sceneGuid, err]()
 					{
 						std::lock_guard lock(m_LoadSceneMutex);
 						auto it = m_Scenes.find(sceneGuid);
@@ -151,10 +128,22 @@ namespace zzz::engine
 							it->second.readyEvent.Resolve(std::unexpected(err));
 							m_Scenes.erase(it);
 						}
-					}
-
-					std::rethrow_exception(ex);
-				});
+					});
+				}
+				catch (...)
+				{
+					std::string err = "Неизвестное исключение при создании сцены";
+					m_MainThreadQueue.Push([this, sceneGuid, err]()
+					{
+						std::lock_guard lock(m_LoadSceneMutex);
+						auto it = m_Scenes.find(sceneGuid);
+						if (it != m_Scenes.end())
+						{
+							it->second.readyEvent.Resolve(std::unexpected(err));
+							m_Scenes.erase(it);
+						}
+					});
+				}
 			}
 		);
 	}
@@ -169,7 +158,7 @@ namespace zzz::engine
 		{
 			if (record)
 			{
-				record.scene->Update(time);
+				record.resource->Update(time);
 			}
 		}
 	}

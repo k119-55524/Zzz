@@ -1,4 +1,5 @@
 #pragma once
+#include <span>
 
 #include <string>
 #include <vector>
@@ -21,11 +22,11 @@ namespace zzz::engine
 
 		[[nodiscard]] zU32 GetVertexCount() const noexcept { return m_MeshData.GetVertexCount(); }
 		[[nodiscard]] zU32 GetVertexStride() const noexcept { return m_MeshData.GetVertexStride(); }
-		[[nodiscard]] const std::vector<std::byte>& GetVertexData() const noexcept { return m_MeshData.GetVertexData(); }
+		[[nodiscard]] std::span<const std::byte> GetVertexData() const noexcept { return m_MeshData.GetVertexData(); }
 
 		[[nodiscard]] zU32 GetIndexCount() const noexcept { return m_MeshData.GetIndexCount(); }
 		[[nodiscard]] ::zzz::core::eIndexFormat GetIndexFormat() const noexcept { return m_MeshData.GetIndexFormat(); }
-		[[nodiscard]] const std::vector<std::byte>& GetIndexData() const noexcept { return m_MeshData.GetIndexData(); }
+		[[nodiscard]] std::span<const std::byte> GetIndexData() const noexcept { return m_MeshData.GetIndexData(); }
 
 		[[nodiscard]] const ::zzz::core::MeshData& GetMeshData() const noexcept { return m_MeshData; }
 

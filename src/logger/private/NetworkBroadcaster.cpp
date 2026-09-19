@@ -33,25 +33,17 @@ namespace zzz::logger
 			return;
 #endif
 
-		m_SendThreadRunning.store(true);
-		m_SendThread = std::thread(&NetworkBroadcaster::SendThreadLoop, this);
+		m_SendThread = std::jthread([this](std::stop_token st) {
+			SendThreadLoop(std::move(st));
+		});
 	}
 
 	NetworkBroadcaster::~NetworkBroadcaster()
 	{
-		bool needJoin = false;
+		if (m_SendThread.joinable())
 		{
-			std::lock_guard<std::mutex> lock(m_SendMutex);
-			if (m_SendThreadRunning.load())
-			{
-				m_SendThreadRunning.store(false);
-				needJoin = m_SendThread.joinable();
-			}
-		}
-
-		m_SendCV.notify_one();
-		if (needJoin)
-		{
+			m_SendThread.request_stop();
+			m_SendCV.notify_all();
 			m_SendThread.join();
 		}
 
@@ -78,7 +70,7 @@ namespace zzz::logger
 
 	void NetworkBroadcaster::PushLogsBatch(std::span<const LogEntry> entries)
 	{
-		if (entries.empty() || !m_SendThreadRunning.load())
+		if (entries.empty() || !m_SendThread.joinable() || m_SendThread.get_stop_token().stop_requested())
 			return;
 
 		for (const auto& entry : entries)
@@ -89,7 +81,7 @@ namespace zzz::logger
 		m_SendCV.notify_one();
 	}
 
-	void NetworkBroadcaster::SendThreadLoop()
+	void NetworkBroadcaster::SendThreadLoop(std::stop_token stopToken)
 	{
 		for (;;)
 		{
@@ -109,7 +101,7 @@ namespace zzz::logger
 
 			if (!m_UnsentLogs.empty())
 			{
-				if (!m_IsConnected && !m_SendThreadRunning.load())
+				if (!m_IsConnected && stopToken.stop_requested())
 				{
 					break; // При закрытии приложения не пытаемся подключаться к отсутствующему серверу
 				}
@@ -133,14 +125,14 @@ namespace zzz::logger
 				}
 			}
 
-			if (!m_SendThreadRunning.load())
+			if (stopToken.stop_requested())
 				break;
 
 			if (m_PendingLogsBuffer.IsEmpty() && (m_UnsentLogs.empty() || !m_IsConnected))
 			{
 				std::unique_lock<std::mutex> lock(m_SendMutex);
-				m_SendCV.wait_for(lock, std::chrono::milliseconds(500), [this]() {
-					return !m_SendThreadRunning.load() || !m_PendingLogsBuffer.IsEmpty();
+				m_SendCV.wait_for(lock, stopToken, std::chrono::milliseconds(500), [this]() {
+					return !m_PendingLogsBuffer.IsEmpty();
 				});
 			}
 		}

@@ -1,12 +1,14 @@
 #pragma once
+#include <span>
 
 #include <string>
-#include <string_view>
 #include <vector>
+#include <string_view>
+
 #include "core/utils/Guid.h"
 #include "core/serialize/Serializer.h"
 #include "core/io/package/LayerData.h"
-#include "engine/gapi/clear_config/ClearConfig.h"
+#include "core/render/clear_config/ClearConfig.h"
 
 namespace zzz::core
 {
@@ -16,7 +18,7 @@ namespace zzz::core
 		SceneData() = default;
 		explicit SceneData(
 			std::vector<Guid> sceneScriptGuids,
-			zzz::engine::ClearConfig clearConfig = {},
+			ClearConfig clearConfig = {},
 			std::vector<LayerData> layers = {},
 			eTransitionSource transitionSource = eTransitionSource::UseGlobal,
 			SceneTransitionParams transitionParams = {})
@@ -27,12 +29,12 @@ namespace zzz::core
 			, transitionParams(std::move(transitionParams))
 		{}
 
-		[[nodiscard]] const std::vector<Guid>& GetSceneScriptGuids() const noexcept { return sceneScriptGuids; }
+		[[nodiscard]] std::span<const Guid> GetSceneScriptGuids() const noexcept { return sceneScriptGuids; }
 
-		[[nodiscard]] const zzz::engine::ClearConfig& GetClearConfig() const noexcept { return clearConfig; }
-		void SetClearConfig(const zzz::engine::ClearConfig& config) noexcept { clearConfig = config; }
+		[[nodiscard]] const ClearConfig& GetClearConfig() const noexcept { return clearConfig; }
+		void SetClearConfig(const ClearConfig& config) noexcept { clearConfig = config; }
 
-		[[nodiscard]] const std::vector<LayerData>& GetLayers() const noexcept { return layers; }
+		[[nodiscard]] std::span<const LayerData> GetLayers() const noexcept { return layers; }
 		[[nodiscard]] std::vector<LayerData>& GetLayers() noexcept { return layers; }
 		void SetLayers(std::vector<LayerData> layersIn) noexcept { layers = std::move(layersIn); }
 
@@ -68,7 +70,7 @@ namespace zzz::core
 
 	private:
 		std::vector<Guid> sceneScriptGuids;
-		zzz::engine::ClearConfig clearConfig;
+		ClearConfig clearConfig;
 		std::vector<LayerData> layers;
 		eTransitionSource transitionSource{ eTransitionSource::UseGlobal };
 		SceneTransitionParams transitionParams{};

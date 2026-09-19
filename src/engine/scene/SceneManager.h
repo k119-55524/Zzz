@@ -1,9 +1,9 @@
 #pragma once
 
+#include "core/templates/AsyncRecord.h"
 #include "engine/tasks/TaskDispatcher.h"
 #include "core/templates/CallbackQueue.h"
 #include "core/scene/SceneTransitionParams.h"
-#include "core/events/OneShotEvent.h"
 
 using namespace zzz::core;
 using namespace zzz::templates;
@@ -31,6 +31,7 @@ namespace zzz::engine
 
 		using SceneLoadResult = std::expected<std::shared_ptr<Scene>, std::string>;
 		using SceneLoadCallback = std::function<void(SceneLoadResult)>;
+		using SceneRecord = AsyncRecord<std::shared_ptr<Scene>, SceneLoadResult>;
 
 		void LoadSceneAsync(Guid sceneGuid, SceneLoadCallback onComplete);
 		void LoadSceneAsync(std::string sceneName, SceneLoadCallback onComplete);
@@ -45,30 +46,6 @@ namespace zzz::engine
 		std::shared_ptr<ScriptFactory> m_ScriptFactory;
 
 		SceneTransitionParams m_GlobalTransitionParams;
-
-		struct SceneRecord final
-		{
-			std::shared_ptr<Scene> scene{ nullptr };
-			core::OneShotEvent<SceneLoadResult> readyEvent;
-
-			SceneRecord() = delete;
-			explicit SceneRecord(core::OneShotEvent<SceneLoadResult>::DispatcherFunc dispatcher)
-				: readyEvent(std::move(dispatcher))
-			{
-			}
-
-			SceneRecord& operator=(std::shared_ptr<Scene> loadedScene)
-			{
-				scene = loadedScene;
-				readyEvent.Resolve(std::move(loadedScene));
-				return *this;
-			}
-
-			[[nodiscard]] explicit operator bool() const noexcept
-			{
-				return scene != nullptr;
-			}
-		};
 
 		std::mutex m_LoadSceneMutex;
 		CallbackQueue<> m_MainThreadQueue;

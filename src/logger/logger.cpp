@@ -23,24 +23,12 @@ Logger::~Logger()
 
 void Logger::StopBroadcastThread()
 {
-	bool needJoin = false;
+	if (!m_BroadcastThread.joinable())
+		return;
 
-	{
-		std::lock_guard<std::mutex> lock(m_BroadcastMutex);
-
-		if (!m_BroadcastThreadRunning.load())
-			return;
-
-		m_BroadcastThreadRunning.store(false);
-		needJoin = m_BroadcastThread.joinable();
-	}
-
-	m_BroadcastCV.notify_one();
-
-	if (needJoin)
-	{
-		m_BroadcastThread.join();
-	}
+	m_BroadcastThread.request_stop();
+	m_BroadcastCV.notify_all();
+	m_BroadcastThread.join();
 }
 
 void Logger::SetLogFilterMask(eLogMessageType filterMask)
@@ -168,7 +156,7 @@ void Logger::ProcessLog(const std::source_location& loc, eLogMessageType type, c
 
 void Logger::AddToBroadcast(const std::source_location& loc, eLogMessageType type, const LogCategory& category, std::string msg)
 {
-	if (!m_BroadcastThreadRunning.load())
+	if (!m_BroadcastThread.joinable() || m_BroadcastThread.get_stop_token().stop_requested())
 		return;
 
 	auto now = std::chrono::system_clock::now();
@@ -267,7 +255,7 @@ std::string Logger::MakeLogMessageError(const std::source_location& loc, eLogMes
 		GetPlatformLogLineEnding());
 }
 
-void Logger::BroadcastThreadLoop()
+void Logger::BroadcastThreadLoop(std::stop_token stopToken)
 {
 	for (;;)
 	{
@@ -276,17 +264,17 @@ void Logger::BroadcastThreadLoop()
 		if (!readBuffer.empty())
 		{
 			BroadcastLogs(readBuffer);
-			if (!m_BroadcastThreadRunning.load())
+			if (stopToken.stop_requested())
 				break;
 			continue;
 		}
 
-		if (!m_BroadcastThreadRunning.load())
+		if (stopToken.stop_requested())
 			break;
 
 		std::unique_lock<std::mutex> lock(m_BroadcastMutex);
-		m_BroadcastCV.wait(lock, [this]() {
-			return !m_BroadcastThreadRunning.load() || !m_LogBuffer.IsEmpty();
+		m_BroadcastCV.wait(lock, stopToken, [this]() {
+			return !m_LogBuffer.IsEmpty();
 		});
 	}
 }
@@ -294,10 +282,11 @@ void Logger::BroadcastThreadLoop()
 void Logger::StartBroadcastThreadIfNeeded()
 {
 	std::lock_guard lock(m_BroadcastMutex);
-	if (m_BroadcastThreadRunning.load())
+	if (m_BroadcastThread.joinable())
 		return;
-	m_BroadcastThreadRunning.store(true);
-	m_BroadcastThread = std::thread(&Logger::BroadcastThreadLoop, this);
+	m_BroadcastThread = std::jthread([this](std::stop_token st) {
+		BroadcastThreadLoop(std::move(st));
+	});
 }
 
 void Logger::BroadcastLogs(const std::vector<LogEntry>& logs)

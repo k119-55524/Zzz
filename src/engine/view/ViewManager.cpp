@@ -151,13 +151,15 @@ std::shared_ptr<View> ViewManager::CreateViewInstance(
 	);
 
 	view->InvokeStart();
-	SetupSceneAsync(view, viewData.GetSceneGuid());
+	SetInitialSceneAsync(view, viewData.GetSceneGuid());
 
 	return view;
 }
 
-void ViewManager::SetupSceneAsync(std::weak_ptr<View> viewWeak, Guid sceneGuid)
+void ViewManager::SetInitialSceneAsync(std::weak_ptr<View> viewWeak, const Guid& sceneGuid)
 {
+	ensure(!sceneGuid.IsEmpty(), "GUID стартовой сцены окна не может быть пустым.");
+
 	m_SceneManager->LoadSceneAsync(sceneGuid, [viewWeak](auto sceneRes)
 	{
 		auto view = viewWeak.lock();
@@ -165,10 +167,7 @@ void ViewManager::SetupSceneAsync(std::weak_ptr<View> viewWeak, Guid sceneGuid)
 			return;
 
 		if (!sceneRes)
-		{
-			DOutError("[ViewManager] Не удалось загрузить стартовую сцену View: {}", sceneRes.error());
-			return;
-		}
+			THROW_RUNTIME("Не удалось загрузить стартовую сцену View: {}", sceneRes.error());
 
 		view->SetScene(*sceneRes);
 	});

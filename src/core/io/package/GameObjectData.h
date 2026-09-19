@@ -48,12 +48,12 @@ namespace zzz::core
 
 		[[nodiscard]] std::span<const Guid> GetMeshGuids() const noexcept { return m_MeshGuids; }
 		[[nodiscard]] const Guid& GetMaterialGuid() const noexcept { return m_MaterialGuid; }
-		[[nodiscard]] const std::vector<Guid>& GetMaterialGuids() const noexcept { return m_MaterialGuids; }
+		[[nodiscard]] std::span<const Guid> GetMaterialGuids() const noexcept { return m_MaterialGuids; }
 		[[nodiscard]] bool HasMesh() const noexcept { return !m_MeshGuids.empty(); }
 		[[nodiscard]] bool HasMaterial() const noexcept { return m_MaterialGuid.IsValid() || !m_MaterialGuids.empty(); }
 
 		void LogFileBlock(std::string_view indentation = {}) const;
-		[[nodiscard]] const std::vector<Guid>& GetScriptGuids() const noexcept { return m_ScriptGuids; }
+		[[nodiscard]] std::span<const Guid> GetScriptGuids() const noexcept { return m_ScriptGuids; }
 
 	protected:
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override;

@@ -60,16 +60,16 @@ namespace zzz::core
 
 // Platform Headers
 #include "core/headers/Apple.h"
-#include "core/headers/MSWin.h"
+#include "core/headers/platforms/MSWin.h"
 #include "core/headers/Linux.h"
 #include "core/headers/Android.h"
 #if defined(_MSC_VER)
 #pragma warning(push)
 #pragma warning(disable: 4062)
 #endif
-#include "core/headers/DirectX12.h"
+#include "core/headers/platforms/DirectX12.h"
 #if defined(_MSC_VER)
 #pragma warning(pop)
 #endif
-#include "core/headers/Vulkan.h"
-#include "core/headers/Metal.h"
+#include "core/headers/platforms/Vulkan.h"
+#include "core/headers/platforms/Metal.h"

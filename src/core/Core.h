@@ -43,9 +43,6 @@
 
 
 #include "core/templates/DoubleBufferedVector.h"
-#include "core/templates/QueueArray.h"
-#include "core/templates/ThreadSafeQueueArray.h"
-#include "core/templates/ThreadSafeSwapBuffer.h"
 #include "core/templates/ThreadPool.h"
 
 #include "core/time/Time.h"
