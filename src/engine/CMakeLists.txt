@@ -35,6 +35,7 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
 
         # Resources (Этап 22)
         "resources/ResourceBase.h"
+        "resources/ResourceRef.h"
         "resources/ResourceRecord.h"
         "resources/ResourceTable.h"
         "resources/cpu/CpuMesh.h" "resources/cpu/CpuMesh.cpp"

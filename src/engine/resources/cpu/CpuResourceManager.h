@@ -12,6 +12,7 @@
 #include "core/templates/CallbackQueue.h"
 #include "engine/tasks/TaskDispatcher.h"
 #include "engine/resources/ResourceTable.h"
+#include "engine/resources/ResourceRef.h"
 #include "engine/resources/cpu/CpuMesh.h"
 #include "engine/resources/cpu/CpuMaterial.h"
 #include "engine/resources/cpu/CpuTexture2D.h"
@@ -51,11 +52,45 @@ namespace zzz::engine
 		void GetAsync(
 			const Guid& guid,
 			std::weak_ptr<ContextType> context,
-			typename ResourceTable<T>::CallbackType onLoaded)
+			std::function<void(std::expected<ResourceRef<T>, std::string>)> onLoaded)
 		{
 			GetTable<T>().GetOrRequest(guid,
 				std::move(context),
-				std::move(onLoaded),
+				[cb = std::move(onLoaded)](typename ResourceTable<T>::ResultType res)
+				{
+					if (!res)
+					{
+						cb(std::unexpected(std::move(res.error())));
+					}
+					else
+					{
+						cb(ResourceRef<T>(std::move(*res)));
+					}
+				},
+				GetDispatcher(),
+				[this](const Guid& g)
+				{
+					DispatchLoad<T>(g);
+				});
+		}
+
+		template<typename T>
+		void GetAsync(
+			const Guid& guid,
+			std::function<void(std::expected<ResourceRef<T>, std::string>)> onLoaded)
+		{
+			GetTable<T>().GetOrRequest(guid,
+				[cb = std::move(onLoaded)](typename ResourceTable<T>::ResultType res)
+				{
+					if (!res)
+					{
+						cb(std::unexpected(std::move(res.error())));
+					}
+					else
+					{
+						cb(ResourceRef<T>(std::move(*res)));
+					}
+				},
 				GetDispatcher(),
 				[this](const Guid& g)
 				{

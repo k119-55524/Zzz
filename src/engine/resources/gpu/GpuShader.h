@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include "engine/resources/ResourceBase.h"
+#include "engine/resources/ResourceRef.h"
 #include "engine/resources/cpu/CpuShader.h"
 
 namespace zzz::engine
@@ -19,12 +20,12 @@ namespace zzz::engine
 		GpuShader(
 			const ::zzz::core::Guid& guid,
 			std::string name,
-			std::shared_ptr<CpuShader> cpuShader);
+			ResourceRef<CpuShader> cpuShader);
 		~GpuShader() override = default;
 
-		[[nodiscard]] const std::shared_ptr<CpuShader>& GetCpuShader() const noexcept { return m_CpuShader; }
+		[[nodiscard]] const ResourceRef<CpuShader>& GetCpuShader() const noexcept { return m_CpuShader; }
 
 	private:
-		std::shared_ptr<CpuShader> m_CpuShader;
+		ResourceRef<CpuShader> m_CpuShader;
 	};
 }

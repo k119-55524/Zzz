@@ -6,21 +6,29 @@
 #include "core/utils/Guid.h"
 #include "core/enums/eResourceType.h"
 #include "core/enums/eResourceState.h"
+#include "math/utils/Types.h"
 
 namespace zzz::engine
 {
+	template<typename T>
+	class ResourceRef;
+
 	/**
 	 * @class ResourceBase
 	 * @brief Каноническая базовая реализация метаданных ресурса.
 	 */
 	class ResourceBase
 	{
+		template<typename T>
+		friend class ResourceRef;
+
 	public:
 		ResourceBase(const ::zzz::core::Guid& guid, ::zzz::core::eResourceType type, std::string name)
 			: m_Guid(guid)
 			, m_Type(type)
 			, m_Name(std::move(name))
 			, m_State(::zzz::core::eResourceState::Ready)
+			, m_RefCount(0)
 		{
 		}
 
@@ -32,10 +40,17 @@ namespace zzz::engine
 		[[nodiscard]] virtual ::zzz::core::eResourceState GetState() const noexcept { return m_State.load(std::memory_order_relaxed); }
 		virtual void SetState(::zzz::core::eResourceState state) noexcept { m_State.store(state, std::memory_order_relaxed); }
 
+		[[nodiscard]] zU32 GetRefCount() const noexcept { return m_RefCount.load(std::memory_order_relaxed); }
+
 	protected:
 		::zzz::core::Guid m_Guid;
 		::zzz::core::eResourceType m_Type;
 		std::string m_Name;
 		std::atomic<::zzz::core::eResourceState> m_State;
+		std::atomic<zU32> m_RefCount;
+
+	private:
+		void AddRef() noexcept { m_RefCount.fetch_add(1, std::memory_order_relaxed); }
+		void Release() noexcept { m_RefCount.fetch_sub(1, std::memory_order_relaxed); }
 	};
 }

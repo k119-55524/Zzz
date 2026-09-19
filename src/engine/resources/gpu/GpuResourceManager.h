@@ -46,12 +46,44 @@ namespace zzz::engine
 		void GetAsync(
 			const Guid& guid,
 			std::weak_ptr<ContextType> context,
-			typename ResourceTable<T>::CallbackType onLoaded)
+			std::function<void(std::expected<ResourceRef<T>, std::string>)> onLoaded)
 		{
 			GetTable<T>().GetOrRequest(
 				guid,
 				std::move(context),
-				std::move(onLoaded),
+				[cb = std::move(onLoaded)](typename ResourceTable<T>::ResultType res)
+				{
+					if (!res)
+					{
+						cb(std::unexpected(std::move(res.error())));
+					}
+					else
+					{
+						cb(ResourceRef<T>(std::move(*res)));
+					}
+				},
+				GetDispatcher(),
+				[this](const Guid& g) { RequestFromCpu<T>(g); });
+		}
+
+		template<typename T>
+		void GetAsync(
+			const Guid& guid,
+			std::function<void(std::expected<ResourceRef<T>, std::string>)> onLoaded)
+		{
+			GetTable<T>().GetOrRequest(
+				guid,
+				[cb = std::move(onLoaded)](typename ResourceTable<T>::ResultType res)
+				{
+					if (!res)
+					{
+						cb(std::unexpected(std::move(res.error())));
+					}
+					else
+					{
+						cb(ResourceRef<T>(std::move(*res)));
+					}
+				},
 				GetDispatcher(),
 				[this](const Guid& g) { RequestFromCpu<T>(g); });
 		}
@@ -79,7 +111,7 @@ namespace zzz::engine
 		{
 			using TCpu = typename TGpu::CpuType;
 
-			m_CpuManager->GetAsync<TCpu>(guid, weak_from_this(), [this, guid](auto cpuRes)
+			m_CpuManager->GetAsync<TCpu>(guid, weak_from_this(), [this, guid](std::expected<ResourceRef<TCpu>, std::string> cpuRes)
 			{
 				if (!cpuRes)
 				{
@@ -87,11 +119,11 @@ namespace zzz::engine
 					return;
 				}
 
-				m_TaskDispatcher.Submit(eTaskPriority::Normal, [this, guid, cpuRes = std::move(*cpuRes)]()
+				m_TaskDispatcher.Submit(eTaskPriority::Normal, [this, guid, cpuRef = std::move(*cpuRes)]() mutable
 				{
 					try
 					{
-						auto gpuObj = safe_make_shared<TGpu>(guid, std::string(cpuRes->GetName()), std::move(cpuRes));
+						auto gpuObj = safe_make_shared<TGpu>(guid, std::string(cpuRef->GetName()), std::move(cpuRef));
 						GetTable<TGpu>().Resolve(guid, std::move(gpuObj), GetDispatcher());
 					}
 					catch (const std::exception& ex)

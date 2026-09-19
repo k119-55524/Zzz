@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include "engine/resources/ResourceBase.h"
+#include "engine/resources/ResourceRef.h"
 #include "engine/resources/cpu/CpuMesh.h"
 
 namespace zzz::engine
@@ -21,14 +22,14 @@ namespace zzz::engine
 		GpuMesh(
 			const ::zzz::core::Guid& guid,
 			std::string name,
-			std::shared_ptr<CpuMesh> cpuMesh);
+			ResourceRef<CpuMesh> cpuMesh);
 		~GpuMesh() override = default;
 
-		[[nodiscard]] const std::shared_ptr<CpuMesh>& GetCpuMesh() const noexcept { return m_CpuMesh; }
+		[[nodiscard]] const ResourceRef<CpuMesh>& GetCpuMesh() const noexcept { return m_CpuMesh; }
 		[[nodiscard]] zU32 GetVertexCount() const noexcept { return m_CpuMesh ? m_CpuMesh->GetVertexCount() : 0; }
 		[[nodiscard]] zU32 GetIndexCount() const noexcept { return m_CpuMesh ? m_CpuMesh->GetIndexCount() : 0; }
 
 	private:
-		std::shared_ptr<CpuMesh> m_CpuMesh;
+		ResourceRef<CpuMesh> m_CpuMesh;
 	};
 }

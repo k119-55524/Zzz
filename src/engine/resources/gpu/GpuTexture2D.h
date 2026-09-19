@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include "engine/resources/ResourceBase.h"
+#include "engine/resources/ResourceRef.h"
 #include "engine/resources/cpu/CpuTexture2D.h"
 
 namespace zzz::engine
@@ -19,14 +20,14 @@ namespace zzz::engine
 		GpuTexture2D(
 			const ::zzz::core::Guid& guid,
 			std::string name,
-			std::shared_ptr<CpuTexture2D> cpuTexture);
+			ResourceRef<CpuTexture2D> cpuTexture);
 		~GpuTexture2D() override = default;
 
-		[[nodiscard]] const std::shared_ptr<CpuTexture2D>& GetCpuTexture() const noexcept { return m_CpuTexture; }
+		[[nodiscard]] const ResourceRef<CpuTexture2D>& GetCpuTexture() const noexcept { return m_CpuTexture; }
 		[[nodiscard]] uint32_t GetWidth() const noexcept { return m_CpuTexture ? m_CpuTexture->GetWidth() : 0; }
 		[[nodiscard]] uint32_t GetHeight() const noexcept { return m_CpuTexture ? m_CpuTexture->GetHeight() : 0; }
 
 	private:
-		std::shared_ptr<CpuTexture2D> m_CpuTexture;
+		ResourceRef<CpuTexture2D> m_CpuTexture;
 	};
 }

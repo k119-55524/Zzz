@@ -17,11 +17,13 @@ namespace zzz::core
 	class ScriptFactory;
 }
 
+#include "engine/resources/ResourceRef.h"
+#include "engine/resources/gpu/GpuMesh.h"
+#include "engine/resources/gpu/GpuMaterial.h"
+
 namespace zzz::engine
 {
 	class GpuResourceManager;
-	class GpuMesh;
-	class GpuMaterial;
 
 	/**
 	 * @struct RenderPair
@@ -29,10 +31,8 @@ namespace zzz::engine
 	 */
 	struct RenderPair
 	{
-		core::Guid meshGuid;
-		core::Guid materialGuid;
-		std::shared_ptr<GpuMesh> gpuMesh;
-		std::shared_ptr<GpuMaterial> gpuMaterial;
+		ResourceRef<GpuMesh> gpuMesh;
+		ResourceRef<GpuMaterial> gpuMaterial;
 	};
 }
 
@@ -142,29 +142,21 @@ namespace zzz::engine
 		[[nodiscard]] bool HasRenderPairs() const noexcept { return !m_RenderPairs.empty(); }
 		[[nodiscard]] size_t GetRenderPairCount() const noexcept { return m_RenderPairs.size(); }
 
-		[[nodiscard]] const Guid& GetMeshGuid(size_t index = 0) const noexcept
+		[[nodiscard]] ResourceRef<GpuMesh> GetGpuMesh(size_t index = 0) const noexcept
 		{
-			return index < m_RenderPairs.size() ? m_RenderPairs[index].meshGuid : s_EmptyGuid;
+			return index < m_RenderPairs.size() ? m_RenderPairs[index].gpuMesh : ResourceRef<GpuMesh>{};
 		}
-		[[nodiscard]] const Guid& GetMaterialGuid(size_t index = 0) const noexcept
+		[[nodiscard]] ResourceRef<GpuMaterial> GetGpuMaterial(size_t index = 0) const noexcept
 		{
-			return index < m_RenderPairs.size() ? m_RenderPairs[index].materialGuid : s_EmptyGuid;
-		}
-		[[nodiscard]] std::shared_ptr<GpuMesh> GetGpuMesh(size_t index = 0) const noexcept
-		{
-			return index < m_RenderPairs.size() ? m_RenderPairs[index].gpuMesh : nullptr;
-		}
-		[[nodiscard]] std::shared_ptr<GpuMaterial> GetGpuMaterial(size_t index = 0) const noexcept
-		{
-			return index < m_RenderPairs.size() ? m_RenderPairs[index].gpuMaterial : nullptr;
+			return index < m_RenderPairs.size() ? m_RenderPairs[index].gpuMaterial : ResourceRef<GpuMaterial>{};
 		}
 		[[nodiscard]] bool HasMesh() const noexcept
 		{
-			return !m_RenderPairs.empty() && m_RenderPairs[0].meshGuid.IsValid();
+			return !m_RenderPairs.empty() && m_RenderPairs[0].gpuMesh != nullptr;
 		}
 		[[nodiscard]] bool HasMaterial() const noexcept
 		{
-			return !m_RenderPairs.empty() && m_RenderPairs[0].materialGuid.IsValid();
+			return !m_RenderPairs.empty() && m_RenderPairs[0].gpuMaterial != nullptr;
 		}
 
 		[[nodiscard]] const std::vector<std::shared_ptr<Script>>& GetScripts() const noexcept { return m_Scripts; }
@@ -181,6 +173,5 @@ namespace zzz::engine
 
 		std::vector<RenderPair> m_RenderPairs;
 		std::vector<std::shared_ptr<Script>> m_Scripts;
-		static inline const Guid s_EmptyGuid{};
 	};
 }

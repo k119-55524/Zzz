@@ -55,66 +55,38 @@ namespace zzz::engine
 
 		const auto renderPairs = data.GetRenderPairs();
 		m_RenderPairs.clear();
-		m_RenderPairs.reserve(renderPairs.size());
+		m_RenderPairs.resize(renderPairs.size());
 
+		// Асинхронная параллельная загрузка всех ресурсов ГО с неблокирующим AsyncInitTracker
+		auto tracker = std::make_shared<AsyncInitTracker>(renderPairs.size() * 2, std::move(onReady));
 		for (size_t i = 0; i < renderPairs.size(); ++i)
 		{
 			const auto& pair = renderPairs[i];
-			if (!pair.meshGuid.IsValid() || !pair.materialGuid.IsValid())
+			ensure(pair.meshGuid.IsValid() && pair.materialGuid.IsValid(),
+				"GameObject '{}' ({}): пара рендера #{} содержит невалидный GUID (mesh: '{}', material: '{}').",
+				m_Name, m_Guid.ToString(), i, pair.meshGuid.ToString(), pair.materialGuid.ToString());
+
+			gpuResourceManager.GetAsync<GpuMesh>(pair.meshGuid, weak_from_this(), [this, i, tracker](auto res)
 			{
-				onReady(std::unexpected(std::format(
-					"GameObject '{}' ({}): пара рендера #{} содержит невалидный GUID (mesh: '{}', material: '{}').",
-					m_Name, m_Guid.ToString(), i, pair.meshGuid.ToString(), pair.materialGuid.ToString())));
-				return;
-			}
-			m_RenderPairs.push_back(RenderPair{ pair.meshGuid, pair.materialGuid, nullptr, nullptr });
-		}
-
-		// 4. Подсчёт количества ресурсов для асинхронной загрузки
-		const size_t resourceCount = m_RenderPairs.size() * 2;
-		if (resourceCount == 0)
-		{
-			onReady({});
-			return;
-		}
-
-		// 5. Асинхронная параллельная загрузка всех ресурсов ГО с неблокирующим AsyncInitTracker
-		auto tracker = std::make_shared<AsyncInitTracker>(resourceCount, std::move(onReady));
-
-		for (size_t i = 0; i < m_RenderPairs.size(); ++i)
-		{
-			const auto& pair = m_RenderPairs[i];
-			if (pair.meshGuid.IsValid())
-			{
-				gpuResourceManager.GetAsync<GpuMesh>(pair.meshGuid, weak_from_this(), [this, i, tracker](std::expected<std::shared_ptr<GpuMesh>, std::string> res)
+				if (!res)
+					tracker->NotifyError(std::move(res.error()));
+				else
 				{
-					if (!res)
-					{
-						tracker->NotifyError(std::move(res.error()));
-					}
-					else
-					{
-						m_RenderPairs[i].gpuMesh = *res;
-						tracker->NotifySuccess();
-					}
-				});
-			}
+					m_RenderPairs[i].gpuMesh = std::move(*res);
+					tracker->NotifySuccess();
+				}
+			});
 
-			if (pair.materialGuid.IsValid())
+			gpuResourceManager.GetAsync<GpuMaterial>(pair.materialGuid, weak_from_this(), [this, i, tracker](auto res)
 			{
-				gpuResourceManager.GetAsync<GpuMaterial>(pair.materialGuid, weak_from_this(), [this, i, tracker](std::expected<std::shared_ptr<GpuMaterial>, std::string> res)
+				if (!res)
+					tracker->NotifyError(std::move(res.error()));
+				else
 				{
-					if (!res)
-					{
-						tracker->NotifyError(std::move(res.error()));
-					}
-					else
-					{
-						m_RenderPairs[i].gpuMaterial = *res;
-						tracker->NotifySuccess();
-					}
-				});
-			}
+					m_RenderPairs[i].gpuMaterial = std::move(*res);
+					tracker->NotifySuccess();
+				}
+			});
 		}
 	}
 

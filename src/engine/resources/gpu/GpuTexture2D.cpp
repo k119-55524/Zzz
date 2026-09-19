@@ -7,7 +7,7 @@ namespace zzz::engine
 	GpuTexture2D::GpuTexture2D(
 		const Guid& guid,
 		std::string name,
-		std::shared_ptr<CpuTexture2D> cpuTexture)
+		ResourceRef<CpuTexture2D> cpuTexture)
 		: ResourceBase(guid, eResourceType::Texture2D, std::move(name))
 		, m_CpuTexture(std::move(cpuTexture))
 	{
