@@ -1,11 +1,12 @@
 #pragma once
 
-#include "core/CoreIncludes.h"
-#include <vector>
 #include <mutex>
 #include <atomic>
+#include <vector>
 #include <utility>
 #include <functional>
+
+#include "core/utils/Ensure.h"
 
 namespace zzz::templates
 {
@@ -37,8 +38,7 @@ namespace zzz::templates
 		/// @brief Потокобезопасно добавляет коллбэк в очередь
 		void Push(CallbackType callback)
 		{
-			if (!callback)
-				return;
+			ensure(callback != nullptr, "Callback не должен быть null");
 
 			{
 				std::lock_guard lock(m_Mutex);
@@ -50,11 +50,11 @@ namespace zzz::templates
 		/// @brief Потокобезопасно вызывает все накопленные коллбэки со сбросом счётчика
 		void ExecuteAll()
 		{
-			// 1. Слабая проверка: если задач нет, моментальный выход (hot path кадра)
+			// Слабая проверка: если задач нет, моментальный выход (hot path кадра)
 			if (m_Count.load(std::memory_order_relaxed) == 0) [[likely]]
 				return;
 
-			// 2. Сразу захватываем мьютекс
+			// Сразу захватываем мьютекс
 			std::unique_lock lock(m_Mutex);
 			if (m_Callbacks.empty()) [[unlikely]]
 				return;
@@ -63,7 +63,7 @@ namespace zzz::templates
 			m_Count.store(0, std::memory_order_relaxed);
 			lock.unlock(); // Мгновенно отпускаем мьютекс
 
-			// 3. Вызываем коллбэки строго вне мьютекса (защита от дедлоков и реентерабельности)
+			// Вызываем коллбэки строго вне мьютекса (защита от дедлоков и реентерабельности)
 			// Изолируем каждый коллбэк, чтобы исключение в одной задаче не прерывало выполнение остальных задач батча
 			std::exception_ptr firstException{ nullptr };
 			for (auto& cb : ready)
@@ -77,9 +77,7 @@ namespace zzz::templates
 					catch (...)
 					{
 						if (!firstException)
-						{
 							firstException = std::current_exception();
-						}
 					}
 				}
 			}
@@ -99,16 +97,6 @@ namespace zzz::templates
 				toDestroy = std::move(m_Callbacks);
 				m_Count.store(0, std::memory_order_relaxed);
 			}
-		}
-
-		[[nodiscard]] size_t GetCount() const noexcept
-		{
-			return m_Count.load(std::memory_order_relaxed);
-		}
-
-		[[nodiscard]] bool IsEmpty() const noexcept
-		{
-			return m_Count.load(std::memory_order_relaxed) == 0;
 		}
 
 	private:

@@ -64,16 +64,15 @@ namespace zzz::core
 		template<typename ContextType>
 		void Subscribe(std::weak_ptr<ContextType> context, CallbackType callback)
 		{
-			if (!callback)
-				return;
+			ensure(callback != nullptr, "Callback не должен быть null");
 
 			std::unique_lock lock(m_Mutex);
 			if (m_State == State::Resolved)
 			{
 				auto res = *m_Result;
-				auto dispatcher = m_Dispatcher;
 				lock.unlock();
-				DispatchSubscriber(Subscriber{ std::move(context), true, std::move(callback) }, res, dispatcher);
+				DispatchSubscriber(Subscriber{ std::move(context), true, std::move(callback) }, res);
+
 				return;
 			}
 
@@ -83,16 +82,15 @@ namespace zzz::core
 		/// @brief Подписка без контекста (вызывается безусловно)
 		void Subscribe(CallbackType callback)
 		{
-			if (!callback)
-				return;
+			ensure(callback != nullptr, "Callback не должен быть null");
 
 			std::unique_lock lock(m_Mutex);
 			if (m_State == State::Resolved)
 			{
 				auto res = *m_Result;
-				auto dispatcher = m_Dispatcher;
 				lock.unlock();
-				DispatchSubscriber(Subscriber{ {}, false, std::move(callback) }, res, dispatcher);
+				DispatchSubscriber(Subscriber{ {}, false, std::move(callback) }, res);
+
 				return;
 			}
 
@@ -104,26 +102,21 @@ namespace zzz::core
 		{
 			std::vector<Subscriber> subscribersToNotify;
 			std::tuple<Args...> resultTuple(std::forward<Args>(args)...);
-			DispatcherFunc dispatcher;
 
 			{
 				std::lock_guard lock(m_Mutex);
+
+				// Однократное событие уже разрешено
 				if (m_State == State::Resolved)
-				{
-					// Однократное событие уже разрешено
 					return;
-				}
 
 				m_State = State::Resolved;
 				m_Result.emplace(resultTuple);
 				subscribersToNotify = std::move(m_Subscribers);
-				dispatcher = m_Dispatcher;
 			}
 
 			for (auto& sub : subscribersToNotify)
-			{
-				DispatchSubscriber(std::move(sub), resultTuple, dispatcher);
-			}
+				DispatchSubscriber(std::move(sub), resultTuple);
 		}
 
 		/// @brief Проверка, перешло ли событие в состояние Resolved
@@ -133,32 +126,24 @@ namespace zzz::core
 			return m_State == State::Resolved;
 		}
 
-		/// @brief Получение сохраненного результата, если событие уже разрешено
-		[[nodiscard]] std::optional<std::tuple<Args...>> GetResult() const
-		{
-			std::lock_guard lock(m_Mutex);
-			return m_Result;
-		}
-
 	private:
-		static void DispatchSubscriber(Subscriber sub, const std::tuple<Args...>& result, const DispatcherFunc& dispatcher)
+		void DispatchSubscriber(Subscriber inSub, const std::tuple<Args...>& result)
 		{
-			auto task = [sub = std::move(sub), result]() mutable
+			auto task = [sub = std::move(inSub), result]() mutable
 			{
 				std::shared_ptr<void> pinnedContext;
 				if (sub.hasContext)
 				{
 					pinnedContext = sub.context.lock();
 					if (!pinnedContext)
-					{
 						return;
-					}
 				}
+
 				std::apply(sub.callback, result);
 			};
 
-			ensure(dispatcher != nullptr, "OneShotEvent: dispatcher не установлен");
-			dispatcher(std::move(task));
+			ensure(m_Dispatcher != nullptr, "OneShotEvent: dispatcher не установлен");
+			m_Dispatcher(std::move(task));
 		}
 	};
 }

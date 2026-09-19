@@ -1,34 +1,16 @@
 #pragma once
 
-#include "Defines.h"
 #include <format>
 #include <utility>
 #include <stdexcept>
 #include <string_view>
 #include <source_location>
 
+#include "Defines.h"
+#include "ThrowWrappers.h"
+
 namespace zzz::core
 {
-	/**
-	 * @brief Вспомогательная функция для генерации исключения std::runtime_error с информацией о месте вызова.
-	 *
-	 * @param message Сообщение об ошибке.
-	 * @param loc Местоположение вызова (автоматически заполняется std::source_location::current()).
-	 * @throws std::runtime_error Сформированное исключение с информацией о файле, функции и строке.
-	 */
-	[[noreturn]]
-	inline void throw_ensure(
-		std::string_view message,
-		const std::source_location& loc)
-	{
-		throw std::runtime_error(
-			std::format(
-				">>>> [{}]\nСтрока: {}\nФайл: {}\n\n{}",
-				loc.function_name(),
-				loc.line(),
-				loc.file_name(),
-				message));
-	}
 
 	/**
 	 * @brief Универсальный шаблон ensure для типов, которые можно привести к bool.
