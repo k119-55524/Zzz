@@ -15,6 +15,18 @@ using namespace zzz::math;
 namespace zzz::core
 {
 	/**
+	 * @struct RenderPairData
+	 * @brief Сериализуемая пара GUID меша и GUID материала слота рендера объекта.
+	 */
+	struct RenderPairData
+	{
+		Guid meshGuid;
+		Guid materialGuid;
+
+		bool operator==(const RenderPairData&) const = default;
+	};
+
+	/**
 	 * @class GameObjectData
 	 * @brief Сериализуемое представление игрового объекта в package.dat / SceneData.
 	 */
@@ -30,11 +42,9 @@ namespace zzz::core
 			Vec3<zF32> position,
 			Quat<zF32> rotation,
 			Vec3<zF32> scale,
-			std::vector<Guid> meshGuids = {},
-			Guid materialGuid = {},
+			std::vector<RenderPairData> renderPairs = {},
 			std::vector<Guid> scriptGuids = {},
-			uint32_t parentIndex = 0xFFFFFFFF,
-			std::vector<Guid> materialGuids = {});
+			uint32_t parentIndex = 0xFFFFFFFF);
 
 		[[nodiscard]] const Guid& GetGuid() const noexcept { return m_Guid; }
 		[[nodiscard]] uint32_t GetParentIndex() const noexcept { return m_ParentIndex; }
@@ -46,11 +56,9 @@ namespace zzz::core
 		[[nodiscard]] const Quat<zF32>& GetRotation() const noexcept { return m_Rotation; }
 		[[nodiscard]] const Vec3<zF32>& GetScale() const noexcept { return m_Scale; }
 
-		[[nodiscard]] std::span<const Guid> GetMeshGuids() const noexcept { return m_MeshGuids; }
-		[[nodiscard]] const Guid& GetMaterialGuid() const noexcept { return m_MaterialGuid; }
-		[[nodiscard]] std::span<const Guid> GetMaterialGuids() const noexcept { return m_MaterialGuids; }
-		[[nodiscard]] bool HasMesh() const noexcept { return !m_MeshGuids.empty(); }
-		[[nodiscard]] bool HasMaterial() const noexcept { return m_MaterialGuid.IsValid() || !m_MaterialGuids.empty(); }
+		[[nodiscard]] std::span<const RenderPairData> GetRenderPairs() const noexcept { return m_RenderPairs; }
+		[[nodiscard]] bool HasMesh() const noexcept { return !m_RenderPairs.empty(); }
+		[[nodiscard]] bool HasMaterial() const noexcept { return !m_RenderPairs.empty(); }
 
 		void LogFileBlock(std::string_view indentation = {}) const;
 		[[nodiscard]] std::span<const Guid> GetScriptGuids() const noexcept { return m_ScriptGuids; }
@@ -70,10 +78,7 @@ namespace zzz::core
 		Quat<zF32> m_Rotation{ 0.0f, 0.0f, 0.0f, 1.0f };
 		Vec3<zF32> m_Scale{ 1.0f, 1.0f, 1.0f };
 
-		std::vector<Guid> m_MeshGuids;
-		Guid m_MaterialGuid;
-
+		std::vector<RenderPairData> m_RenderPairs;
 		std::vector<Guid> m_ScriptGuids;
-		std::vector<Guid> m_MaterialGuids;
 	};
 }

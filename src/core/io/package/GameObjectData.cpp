@@ -13,11 +13,9 @@ namespace zzz::core
 		Vec3<zF32> position,
 		Quat<zF32> rotation,
 		Vec3<zF32> scale,
-		std::vector<Guid> meshGuids,
-		Guid materialGuid,
+		std::vector<RenderPairData> renderPairs,
 		std::vector<Guid> scriptGuids,
-		uint32_t parentIndex,
-		std::vector<Guid> materialGuids)
+		uint32_t parentIndex)
 		: m_Guid(guid)
 		, m_ParentIndex(parentIndex)
 		, m_Name(std::move(name))
@@ -26,16 +24,16 @@ namespace zzz::core
 		, m_Position(position)
 		, m_Rotation(rotation)
 		, m_Scale(scale)
-		, m_MeshGuids(std::move(meshGuids))
-		, m_MaterialGuid(materialGuid)
+		, m_RenderPairs(std::move(renderPairs))
 		, m_ScriptGuids(std::move(scriptGuids))
-		, m_MaterialGuids(std::move(materialGuids))
 	{
 	}
 
 	std::expected<void, std::string> GameObjectData::Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const
 	{
-		const Guid legacyMeshGuid = m_MeshGuids.empty() ? Guid{} : m_MeshGuids[0];
+		const Guid legacyMeshGuid = m_RenderPairs.empty() ? Guid{} : m_RenderPairs[0].meshGuid;
+		const Guid legacyMaterialGuid = m_RenderPairs.empty() ? Guid{} : m_RenderPairs[0].materialGuid;
+
 		return serializer.Serialize(buffer, m_Guid)
 			.and_then([&]() { return serializer.Serialize(buffer, m_ParentIndex); })
 			.and_then([&]() { return serializer.Serialize(buffer, m_Name); })
@@ -45,7 +43,7 @@ namespace zzz::core
 			.and_then([&]() { return serializer.Serialize(buffer, m_Rotation); })
 			.and_then([&]() { return serializer.Serialize(buffer, m_Scale); })
 			.and_then([&]() { return serializer.Serialize(buffer, legacyMeshGuid); })
-			.and_then([&]() { return serializer.Serialize(buffer, m_MaterialGuid); })
+			.and_then([&]() { return serializer.Serialize(buffer, legacyMaterialGuid); })
 			.and_then([&]() -> std::expected<void, std::string> {
 				const uint32_t scriptsCount = static_cast<uint32_t>(m_ScriptGuids.size());
 				auto res = serializer.Serialize(buffer, scriptsCount);
@@ -59,23 +57,16 @@ namespace zzz::core
 				return {};
 			})
 			.and_then([&]() -> std::expected<void, std::string> {
-				const uint32_t submeshesCount = static_cast<uint32_t>(m_MeshGuids.size());
-				auto res = serializer.Serialize(buffer, submeshesCount);
+				const uint32_t pairsCount = static_cast<uint32_t>(m_RenderPairs.size());
+				auto res = serializer.Serialize(buffer, pairsCount);
 				if (!res) return res;
 
-				for (const auto& smGuid : m_MeshGuids)
+				for (const auto& pair : m_RenderPairs)
 				{
-					res = serializer.Serialize(buffer, smGuid);
+					res = serializer.Serialize(buffer, pair.meshGuid);
 					if (!res) return res;
-				}
 
-				const uint32_t materialsCount = static_cast<uint32_t>(m_MaterialGuids.size());
-				res = serializer.Serialize(buffer, materialsCount);
-				if (!res) return res;
-
-				for (const auto& matGuid : m_MaterialGuids)
-				{
-					res = serializer.Serialize(buffer, matGuid);
+					res = serializer.Serialize(buffer, pair.materialGuid);
 					if (!res) return res;
 				}
 
@@ -89,6 +80,7 @@ namespace zzz::core
 		uint8_t activeRaw = 1;
 		uint32_t scriptsCount = 0;
 		Guid legacyMeshGuid{};
+		Guid legacyMaterialGuid{};
 
 		auto res = serializer.Deserialize(buffer, offset, m_Guid)
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, m_ParentIndex); })
@@ -99,7 +91,7 @@ namespace zzz::core
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, m_Rotation); })
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, m_Scale); })
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, legacyMeshGuid); })
-			.and_then([&]() { return serializer.Deserialize(buffer, offset, m_MaterialGuid); })
+			.and_then([&]() { return serializer.Deserialize(buffer, offset, legacyMaterialGuid); })
 			.and_then([&]() { return serializer.Deserialize(buffer, offset, scriptsCount); });
 
 		if (!res)
@@ -123,47 +115,38 @@ namespace zzz::core
 			m_ScriptGuids.push_back(sGuid);
 		}
 
-		// Обратная совместимость (Правило 17 / 31): если буфер исчерпан (старый формат), мультимеш пустой
-		m_MeshGuids.clear();
-		m_MaterialGuids.clear();
+		m_RenderPairs.clear();
+		// Обратная совместимость: если буфер исчерпан, читаем из legacy-полей
 		if (offset >= buffer.size())
 		{
 			if (legacyMeshGuid.IsValid())
 			{
-				m_MeshGuids.push_back(legacyMeshGuid);
+				m_RenderPairs.push_back(RenderPairData{ legacyMeshGuid, legacyMaterialGuid });
 			}
 			return {};
 		}
 
-		uint32_t submeshesCount = 0;
-		res = serializer.Deserialize(buffer, offset, submeshesCount);
+		uint32_t pairsCount = 0;
+		res = serializer.Deserialize(buffer, offset, pairsCount);
 		if (!res) return res;
 
-		m_MeshGuids.reserve(submeshesCount);
-		for (uint32_t i = 0; i < submeshesCount; ++i)
+		m_RenderPairs.reserve(pairsCount);
+		for (uint32_t i = 0; i < pairsCount; ++i)
 		{
 			Guid smGuid;
 			res = serializer.Deserialize(buffer, offset, smGuid);
 			if (!res) return res;
-			m_MeshGuids.push_back(smGuid);
-		}
 
-		if (m_MeshGuids.empty() && legacyMeshGuid.IsValid())
-		{
-			m_MeshGuids.push_back(legacyMeshGuid);
-		}
-
-		uint32_t materialsCount = 0;
-		res = serializer.Deserialize(buffer, offset, materialsCount);
-		if (!res) return res;
-
-		m_MaterialGuids.reserve(materialsCount);
-		for (uint32_t i = 0; i < materialsCount; ++i)
-		{
 			Guid matGuid;
 			res = serializer.Deserialize(buffer, offset, matGuid);
 			if (!res) return res;
-			m_MaterialGuids.push_back(matGuid);
+
+			m_RenderPairs.push_back(RenderPairData{ smGuid, matGuid });
+		}
+
+		if (m_RenderPairs.empty() && legacyMeshGuid.IsValid())
+		{
+			m_RenderPairs.push_back(RenderPairData{ legacyMeshGuid, legacyMaterialGuid });
 		}
 
 		return {};
@@ -179,20 +162,15 @@ namespace zzz::core
 			nestedIndentation, m_Position.x, m_Position.y, m_Position.z,
 			m_Rotation.x, m_Rotation.y, m_Rotation.z, m_Rotation.w,
 			m_Scale.x, m_Scale.y, m_Scale.z);
-		const size_t pairCount = std::max(m_MeshGuids.size(), std::max(m_MaterialGuids.size(), (m_MaterialGuid.IsValid() ? size_t{1} : size_t{0})));
-		if (pairCount > 0)
+		if (!m_RenderPairs.empty())
 		{
-			DOut(Assets, "{}renderPairs({}):", nestedIndentation, pairCount);
-			for (size_t i = 0; i < pairCount; ++i)
+			DOut(Assets, "{}renderPairs({}):", nestedIndentation, m_RenderPairs.size());
+			for (size_t i = 0; i < m_RenderPairs.size(); ++i)
 			{
-				const std::string meshStr = (i < m_MeshGuids.size() && m_MeshGuids[i].IsValid())
-					? m_MeshGuids[i].ToString()
-					: "<none>";
-				const std::string matStr = (i < m_MaterialGuids.size() && m_MaterialGuids[i].IsValid())
-					? m_MaterialGuids[i].ToString()
-					: (m_MaterialGuid.IsValid() ? m_MaterialGuid.ToString() : "<none>");
-
-				DOut(Assets, "{}  pair [{}/{}]: mesh: {}, material: {}", nestedIndentation, i + 1, pairCount, meshStr, matStr);
+				DOut(Assets, "{}  pair [{}/{}]: mesh: {}, material: {}", nestedIndentation,
+					i + 1, m_RenderPairs.size(),
+					m_RenderPairs[i].meshGuid.ToString(),
+					m_RenderPairs[i].materialGuid.ToString());
 			}
 		}
 		if (!m_ScriptGuids.empty())

@@ -396,9 +396,7 @@ namespace zzz::builder
 			scale.z = objJson["scale"][2].get<float>();
 		}
 
-		std::vector<Guid> meshGuids;
-		Guid materialGuid{};
-		std::vector<Guid> materialGuids;
+		std::vector<RenderPairData> renderPairs;
 
 		if (objJson.contains("render"))
 		{
@@ -423,12 +421,7 @@ namespace zzz::builder
 					THROW_RUNTIME("GameObject '{}': пара рендера содержит невалидный GUID меша или материала.", name);
 				}
 
-				meshGuids.push_back(*meshParsed);
-				materialGuids.push_back(*matParsed);
-				if (materialGuid.IsEmpty())
-				{
-					materialGuid = *matParsed;
-				}
+				renderPairs.push_back(RenderPairData{ *meshParsed, *matParsed });
 			}
 		}
 
@@ -458,11 +451,9 @@ namespace zzz::builder
 			position,
 			rotation,
 			scale,
-			std::move(meshGuids),
-			materialGuid,
+			std::move(renderPairs),
 			std::move(scriptGuids),
-			parentIndex,
-			std::move(materialGuids)
+			parentIndex
 		);
 	}
 

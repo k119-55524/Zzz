@@ -186,6 +186,26 @@ namespace = "Gameplay"
 22. **Сквозные обязательства, перенесённые в основные этапы (не отложенный долг).**
     Этап 16: CPU-ресурс Mesh и правильная маршрутизация/кэш; 17: глобальные GUID, JSON-дерево и упаковка сцен; 18: линейный NodeStorage, доменные bindings и плоский spatial; 19: GPU-меш; 20: обязательные зависимости сцены, Shader/Material и готовность; 23: lifecycle/мутации скриптов; 24: camera, неизменяемые команды кадра N, render N-1, Draw и CPU/GPU-барьеры. Закрытый каркас этапов 8, 11, 15 не означает завершённость этой цепочки.
 
+23. **Кроссплатформенный перехват системных сбоев и крашей (Crash Handler & Unhandled Exceptions).**
+    - **Цель:** Гарантированный перехват любых фатальных сбоев (аппаратные исключения ОС, системные сигналы, CRT assertions, разыменование nullptr, stack overflow) во всех потоках приложения, запись подробного диагностического отчёта со стеком вызовов в лог движка (`DOutFatal`, `RemoteLogViewer`, аварийный файл `crash.log`) и предотвращение «тихих» вылетов без следов.
+    - **Кроссплатформенная реализация (Zero Platform Leaks, Правила 9–11):**
+      - Единый интерфейс ядра: `CrashHandler::Initialize()` (вызывается на самом раннем этапе старта процесса в платформенной точке входа / `Engine`).
+      - **Windows (`PlatformWindows`):**
+        1. `SetUnhandledExceptionFilter`: перехват неперехваченных SEH-исключений (Access Violation `0xC0000005`, деление на ноль, повреждения стека);
+        2. `_set_invalid_parameter_handler` и `_set_abort_behavior`: перехват вызовов `abort()` из ассертов Debug CRT (`_STL_VERIFY`, `assert`);
+        3. Опциональная генерация MiniDump (`.dmp`) через `MiniDumpWriteDump` из `DbgHelp.dll` для возможности post-mortem отладки в Visual Studio.
+      - **Linux и Android (`PlatformLinux`, `PlatformAndroid`):**
+        1. Установка обработчиков сигналов через `sigaction`: `SIGSEGV` (Segmentation Fault), `SIGABRT` (Abort/Assert), `SIGFPE` (арифметика), `SIGBUS` (ошибка шины/выравнивания), `SIGILL` (недопустимая инструкция);
+        2. Выделение альтернативного стека через `sigaltstack` для гарантированного срабатывания обработчика даже при переполнении стека вызовов (Stack Overflow);
+        3. На Android: дублирование информации о сбое в системный `logcat` (`__android_log_print(ANDROID_LOG_FATAL, ...)`) и локальный файл приложения.
+      - **macOS и iOS (`PlatformMacOS`, `PlatformiOS`):**
+        1. Обработка POSIX-сигналов (`sigaction`) и интеграция с Mach Exception Ports (`task_set_exception_ports`);
+        2. Регистрация `NSSetUncaughtExceptionHandler` для Objective-C/Swift исключений;
+        3. Логирование через Apple Unified Logging (`os_log`) и аварийный файл.
+    - **Раскрутка стека вызовов (C++23 `std::stacktrace`):**
+      - Использование стандартизированного C++23 заголовка `<stacktrace>` (`std::stacktrace::current()`) для кроссплатформенного формирования читаемого Callstack (имя функции, файл, номер строки);
+      - Принудительный сброс очередей логгера (`Logger::Flush()`) и синхронный бродкаст пакета в `RemoteLogViewer` перед аварийным выходом (`std::_Exit(EXIT_FAILURE)`).
+
 ---
 
 ## 5. Подсистема Логирования (Logging System)

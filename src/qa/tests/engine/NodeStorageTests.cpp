@@ -28,7 +28,6 @@ static GameObjectData CreateDummyObject(
 		scale,
 		{},
 		{},
-		{},
 		parentIndex
 	);
 }

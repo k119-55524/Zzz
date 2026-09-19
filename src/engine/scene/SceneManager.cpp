@@ -74,7 +74,7 @@ namespace zzz::engine
 					ensure(entryOpt.has_value(), "Сцена с GUID '{}' не найдена в package.dat.", sceneGuid.ToString());
 
 					auto sceneDataRes = m_PackageManager->LoadAsset<SceneData>(sceneGuid);
-					ensure(sceneDataRes.has_value(), "Ошибка загрузки данных сцены '{}': {}", sceneGuid.ToString(), sceneDataRes.error());
+					ensure(sceneDataRes.has_value(), "Ошибка загрузки данных сцены '{}': {}", sceneGuid.ToString(), sceneDataRes ? "" : sceneDataRes.error());
 
 					auto scene = safe_make_shared<Scene>(
 						sceneGuid,

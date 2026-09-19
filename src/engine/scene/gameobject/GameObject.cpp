@@ -40,42 +40,34 @@ namespace zzz::engine
 	{
 		ensure(onReady != nullptr, "GameObject::Initialize: onReady коллбэк не должен быть null.");
 
-		// 1. Инстанцирование и наполнение скриптами
+		// Инстанцирование и наполнение скриптами
 		for (const auto& sGuid : data.GetScriptGuids())
 		{
 			AddScript(scriptFactory.CreateScript(sGuid, this));
 		}
 
-		// 2. Проверка наличия геометрии: если мешей нет, ГО готов мгновенно
+		// Если мешей нет
 		if (!data.HasMesh())
 		{
 			onReady({});
 			return;
 		}
 
-		// 3. Формирование пар рендера (меш + материал)
+		const auto renderPairs = data.GetRenderPairs();
 		m_RenderPairs.clear();
-		const auto meshGuids = data.GetMeshGuids();
-		const auto& matGuids = data.GetMaterialGuids();
-		if (meshGuids.size() != matGuids.size())
-		{
-			onReady(std::unexpected(std::format(
-				"GameObject '{}' ({}): количество мешей ({}) не совпадает с количеством материалов ({}).",
-				m_Name, m_Guid.ToString(), meshGuids.size(), matGuids.size())));
-			return;
-		}
+		m_RenderPairs.reserve(renderPairs.size());
 
-		m_RenderPairs.reserve(meshGuids.size());
-		for (size_t i = 0; i < meshGuids.size(); ++i)
+		for (size_t i = 0; i < renderPairs.size(); ++i)
 		{
-			if (!meshGuids[i].IsValid() || !matGuids[i].IsValid())
+			const auto& pair = renderPairs[i];
+			if (!pair.meshGuid.IsValid() || !pair.materialGuid.IsValid())
 			{
 				onReady(std::unexpected(std::format(
 					"GameObject '{}' ({}): пара рендера #{} содержит невалидный GUID (mesh: '{}', material: '{}').",
-					m_Name, m_Guid.ToString(), i, meshGuids[i].ToString(), matGuids[i].ToString())));
+					m_Name, m_Guid.ToString(), i, pair.meshGuid.ToString(), pair.materialGuid.ToString())));
 				return;
 			}
-			m_RenderPairs.push_back(RenderPair{ meshGuids[i], matGuids[i], nullptr, nullptr });
+			m_RenderPairs.push_back(RenderPair{ pair.meshGuid, pair.materialGuid, nullptr, nullptr });
 		}
 
 		// 4. Подсчёт количества ресурсов для асинхронной загрузки

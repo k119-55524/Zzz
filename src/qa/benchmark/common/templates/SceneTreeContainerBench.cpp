@@ -99,8 +99,7 @@ static void BM_NodeStorage_ResolveHierarchy(benchmark::State& state)
 			Vec3<zF32>{ 0.0f, 0.0f, 0.0f },
 			Quat<zF32>{ 0.0f, 0.0f, 0.0f, 1.0f },
 			Vec3<zF32>{ 1.0f, 1.0f, 1.0f },
-			std::vector<Guid>{},
-			Guid{},
+			std::vector<RenderPairData>{},
 			std::vector<Guid>{},
 			static_cast<uint32_t>(i - 1)
 		);
