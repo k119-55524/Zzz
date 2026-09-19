@@ -85,19 +85,8 @@ namespace zzz::engine
 					{
 						if (!initRes)
 						{
-							DOutError("[SceneManager::LoadSceneAsync] Сбой инициализации слоёв сцены '{}' ({}): {}",
-								scene->GetName(), scene->GetGuid().ToString(), initRes.error());
+							NotifySceneLoadFailed(scene->GetGuid(), std::move(initRes.error()));
 
-							m_MainThreadQueue.Push([this, guid = scene->GetGuid(), err = std::move(initRes.error())]() mutable
-							{
-								std::lock_guard lock(m_LoadSceneMutex);
-								auto it = m_Scenes.find(guid);
-								if (it != m_Scenes.end())
-								{
-									it->second.readyEvent.Resolve(std::unexpected(err));
-									m_Scenes.erase(it);
-								}
-							});
 							return;
 						}
 
@@ -107,45 +96,40 @@ namespace zzz::engine
 						{
 							std::lock_guard lock(m_LoadSceneMutex);
 							auto it = m_Scenes.find(scene->GetGuid());
-							if (it != m_Scenes.end())
-							{
-								scene->InvokeStart();
-								it->second = scene;
-								it->second.readyEvent.Resolve(scene);
-							}
+							ensure(it != m_Scenes.end(), "Запись сцены не найдена в реестре.");
+
+							scene->InvokeStart();
+							it->second = scene;
+							it->second.readyEvent.Resolve(scene);
 						});
 					});
 				}
 				catch (const std::exception& e)
 				{
-					std::string err = e.what();
-					m_MainThreadQueue.Push([this, sceneGuid, err]()
-					{
-						std::lock_guard lock(m_LoadSceneMutex);
-						auto it = m_Scenes.find(sceneGuid);
-						if (it != m_Scenes.end())
-						{
-							it->second.readyEvent.Resolve(std::unexpected(err));
-							m_Scenes.erase(it);
-						}
-					});
+					NotifySceneLoadFailed(sceneGuid, e.what());
 				}
 				catch (...)
 				{
-					std::string err = "Неизвестное исключение при создании сцены";
-					m_MainThreadQueue.Push([this, sceneGuid, err]()
-					{
-						std::lock_guard lock(m_LoadSceneMutex);
-						auto it = m_Scenes.find(sceneGuid);
-						if (it != m_Scenes.end())
-						{
-							it->second.readyEvent.Resolve(std::unexpected(err));
-							m_Scenes.erase(it);
-						}
-					});
+					NotifySceneLoadFailed(sceneGuid, "Неизвестное исключение при создании сцены");
 				}
 			}
 		);
+	}
+
+	void SceneManager::NotifySceneLoadFailed(const Guid& sceneGuid, std::string err)
+	{
+		DOutError("Сбой загрузки сцены ({}): {}", sceneGuid.ToString(), err);
+
+		m_MainThreadQueue.Push([this, sceneGuid, err = std::move(err)]() mutable
+		{
+			std::lock_guard lock(m_LoadSceneMutex);
+			auto it = m_Scenes.find(sceneGuid);
+			if (it != m_Scenes.end())
+			{
+				it->second.readyEvent.Resolve(std::unexpected(err));
+				m_Scenes.erase(it);
+			}
+		});
 	}
 
 	void SceneManager::Update(const Time& time)

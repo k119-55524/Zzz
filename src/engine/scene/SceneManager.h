@@ -50,5 +50,7 @@ namespace zzz::engine
 		std::mutex m_LoadSceneMutex;
 		CallbackQueue<> m_MainThreadQueue;
 		std::unordered_map<Guid, SceneRecord> m_Scenes;
+
+		void NotifySceneLoadFailed(const Guid& sceneGuid, std::string err);
 	};
 }

@@ -11,11 +11,10 @@ namespace zzz::core
 		const std::source_location& loc)
 	{
 		std::ostringstream oss;
-		oss << "\n+-> " << msg
-			<< "\n+-> Метод: " << loc.function_name()
-			<< ",\n+-> строка: " << loc.line()
-			<< ",\n+-> файл: " << loc.file_name()
-			<< "\n";
+		oss << "\n>>>>> [Runtime Error]\n"
+			<< "    +-> " << msg << "\n"
+			<< "    +-> Метод: " << loc.function_name() << "\n"
+			<< "    +-> Место: " << loc.file_name() << ":" << loc.line();
 
 		DOutException("{}", oss.str());
 		throw std::runtime_error(oss.str());
@@ -26,11 +25,10 @@ namespace zzz::core
 		const std::source_location& loc)
 	{
 		std::ostringstream oss;
-		oss << "\n+-> [ENSURE FAILED]: " << message
-			<< "\n+-> Метод: " << loc.function_name()
-			<< ",\n+-> строка: " << loc.line()
-			<< ",\n+-> файл: " << loc.file_name()
-			<< "\n";
+		oss << "\n>>>>> [Ensure]\n"
+			<< "    +-> " << message << "\n"
+			<< "    +-> Метод: " << loc.function_name() << "\n"
+			<< "    +-> Место: " << loc.file_name() << ":" << loc.line();
 
 		DOutException("{}", oss.str());
 		throw std::runtime_error(oss.str());

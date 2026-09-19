@@ -34,6 +34,7 @@ namespace zzz::engine
 		, m_GpuResourceManager(std::move(gpuResourceManager))
 		, m_TransitionParams(std::move(defaultTransition))
 	{
+		ensure(!guid.IsEmpty(), "GUID сцены не должен быть пустым.");
 		ensure(m_CpuResourceManager != nullptr, "CpuResourceManager не должен быть null при создании Scene.");
 		ensure(m_GpuResourceManager != nullptr, "GpuResourceManager не должен быть null при создании Scene.");
 	}
