@@ -51,12 +51,11 @@ namespace zzz::core
 		DispatcherFunc m_Dispatcher;
 
 	public:
-		OneShotEvent() = delete;
+		OneShotEvent() = default;
 
 		explicit OneShotEvent(DispatcherFunc dispatcher)
 			: m_Dispatcher(std::move(dispatcher))
 		{
-			ensure(m_Dispatcher != nullptr, "OneShotEvent: dispatcher не установлен");
 		}
 
 		~OneShotEvent() = default;
@@ -150,8 +149,10 @@ namespace zzz::core
 				std::apply(sub.callback, result);
 			};
 
-			ensure(m_Dispatcher != nullptr, "OneShotEvent: dispatcher не установлен");
-			m_Dispatcher(std::move(task));
+			if (m_Dispatcher)
+				m_Dispatcher(std::move(task));
+			else
+				task();
 		}
 	};
 }

@@ -322,8 +322,6 @@ void Engine::OnUpdateSystem()
 #endif // Z_ADD_LOGGER
 
 	m_EventBus->InvokeUpdate(*m_Time);
-	m_CpuResourceManager->Update();
-	m_GpuResourceManager->Update();
 	m_SceneManager->Update(*m_Time);
 	m_ViewManager->Update(*m_Time);
 }

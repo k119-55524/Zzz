@@ -57,10 +57,10 @@ TaskDispatcher Worker (колбэк по готовности CpuMesh, спла�
   │     (ТЯЖЁЛАЯ СБОРКА ВЫПОЛНЯЕТСЯ СТРОГО НА ВОРКЕРЕ ПУЛА, А НЕ НА ГЛАВНОМ ПОТОКЕ!)
   │     (после выхода из Build память CpuMesh немедленно освобождается)
   ▼  2. GpuResourceManager::GetTable<GpuMesh>().Resolve(guid, std::move(gpuMesh))
-[5. ОПОВЕЩЕНИЕ ВВЕРХ (Главный поток)]
-Main Thread (колбэк запланирован диспетчером GpuRM через CallbackQueue):
-  │  Вызов легковесного колбэка GameObject::OnMeshLoaded(result)
-  ▼  CountdownTrigger::CountDown() -> сцена переходит в Ready!
+[5. ОПОВЕЩЕНИЕ ВВЕРХ (TaskDispatcher Worker)]
+TaskDispatcher Worker (прямой вызов из Resolve):
+  │  Вызов асинхронного колбэка GameObject::OnMeshLoaded(result)
+  ▼  AsyncInitTracker::NotifySuccess() -> CountdownTrigger::CountDown() -> сцена переходит в Ready!
 ```
 
 > **Примечание по времени жизни памяти и разделению систем:**
@@ -95,9 +95,10 @@ Main Thread (колбэк запланирован диспетчером GpuRM 
   - Чтение с диска выполняется на выделенном потоке `IoScheduler`.
   - Десериализация (парсинг) выполняется на фоновом воркере `TaskDispatcher` с переданным приоритетом (`priority`).
   - Колбэк вызывается сразу по завершении парсинга на том же воркере `TaskDispatcher`, поэтому операция `GpuResourceBuilder<GpuMesh>::Build` (аллокация буферов, сборка меша в RAM) гарантированно выполняется **на фоновом потоке пула воркеров**, не создавая фризов и пауз на главном потоке.
-- **`GpuResourceManager`:** инициализирует свои таблицы `ResourceTable<TGpu>` диспетчером **главного потока (`MainThreadQueue`)**.
-  - Когда `GpuResourceBuilder::Build` завершён и вызывается `GpuResourceManager::Resolve`, оповещение подписчика (`GameObject::OnMeshLoaded`) отправляется в очередь главного потока.
-  - На главном потоке исполняется только финальный лёгкий колбэк (сохранение `ResourceRef<GpuMesh>` и вызов `CountdownTrigger::CountDown()`).
+- **`GpuResourceManager`:**
+  - Таблицы `ResourceTable<TGpu>` не требуют диспетчера и маршалинга на главный поток.
+  - Когда `GpuResourceBuilder::Build` завершён и вызывается `GpuResourceManager::Resolve`, подписчик (`GameObject::OnMeshLoaded`) оповещается прямо на воркере `TaskDispatcher`.
+  - Потокобезопасный `AsyncInitTracker` фиксирует готовность ресурса без блокировки и без лишней нагрузки на главный поток.
 
 ---
 

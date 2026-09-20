@@ -9,7 +9,6 @@
 #include "core/utils/Guid.h"
 #include "engine/gapi/GAPI.h"
 #include "engine/tasks/TaskDispatcher.h"
-#include "core/templates/CallbackQueue.h"
 #include "engine/resources/gpu/GpuMesh.h"
 #include "engine/resources/ResourceTable.h"
 #include "engine/resources/gpu/GpuShader.h"
@@ -42,8 +41,6 @@ namespace zzz::engine
 
 		~GpuResourceManager();
 
-		inline void Update() { m_MainThreadQueue.ExecuteAll(); }
-
 		template<typename T, typename ContextType>
 		void GetAsync(
 			const Guid& guid,
@@ -51,7 +48,7 @@ namespace zzz::engine
 			std::function<void(std::expected<ResourceRef<T>, std::string>)> onLoaded,
 			eTaskPriority priority = eTaskPriority::Normal)
 		{
-			GetTable<T>().GetOrRequest(
+			GetTable<T>().SubscribeOrRequest(
 				guid,
 				std::move(context),
 				[cb = std::move(onLoaded)](typename ResourceTable<T>::ResultType res)
@@ -146,7 +143,6 @@ namespace zzz::engine
 		std::shared_ptr<CpuResourceManager> m_CpuManager;
 
 		std::atomic<bool> m_IsRunning{ true };
-		CallbackQueue<> m_MainThreadQueue;
 
 		ResourceTable<GpuMesh>      m_Meshes;
 		ResourceTable<GpuMaterial>  m_Materials;

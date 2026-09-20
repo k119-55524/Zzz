@@ -31,16 +31,9 @@ namespace zzz::engine
 	public:
 		using ResultType = std::expected<std::shared_ptr<T>, std::string>;
 		using CallbackType = std::function<void(ResultType)>;
-		using CallbackDispatcher = std::function<void(std::function<void()>)>;
 		using ResourceEntry = OneShotEvent<ResultType>;
 
-		ResourceTable() = delete;
-		explicit ResourceTable(CallbackDispatcher dispatcher)
-			: m_CallbackDispatcher(std::move(dispatcher))
-		{
-			ensure(m_CallbackDispatcher != nullptr, "ResourceTable: CallbackDispatcher не должен быть null");
-		}
-
+		ResourceTable() = default;
 		~ResourceTable() = default;
 
 		/**
@@ -50,7 +43,7 @@ namespace zzz::engine
 		 *          Замки снимаются перед подпиской и запуском onLoadRequest.
 		 */
 		template<typename ContextType, typename LoadFunc>
-		void GetOrRequest(
+		void SubscribeOrRequest(
 			const Guid& guid,
 			std::weak_ptr<ContextType> context,
 			CallbackType onLoaded,
@@ -59,41 +52,35 @@ namespace zzz::engine
 			std::shared_ptr<ResourceEntry> entry;
 			bool isNew = false;
 
-			// Фаза 1: Read-First под shared_lock
+			// Ищем ресурс в таблице
 			{
 				std::shared_lock readLock(m_Mutex);
+
 				auto it = m_Resources.find(guid);
 				if (it != m_Resources.end())
-				{
 					entry = it->second;
-				}
 			}
 
-			// Фаза 2: Если не найден — переходим под unique_lock
+			// Если не найден, пытаемся добавить 
 			if (!entry)
 			{
 				std::unique_lock writeLock(m_Mutex);
+
 				auto it = m_Resources.find(guid);
 				if (it != m_Resources.end())
-				{
 					entry = it->second;
-				}
 				else
 				{
-					entry = std::make_shared<ResourceEntry>(m_CallbackDispatcher);
+					entry = std::make_shared<ResourceEntry>();
 					m_Resources.emplace(guid, entry);
 					isNew = true;
 				}
 			}
 
-			// Фаза 3: Zero User Code Under Lock
-			ensure(entry != nullptr, "ResourceTable: entry не должен быть null");
+			// Подписываемся на событие готовности ресурса (или ошибки)
 			entry->Subscribe(std::move(context), std::move(onLoaded));
-
 			if (isNew)
-			{
 				onLoadRequest(guid);
-			}
 		}
 
 		/**
@@ -159,6 +146,5 @@ namespace zzz::engine
 	private:
 		mutable std::shared_mutex m_Mutex;
 		std::unordered_map<Guid, std::shared_ptr<ResourceEntry>> m_Resources;
-		CallbackDispatcher m_CallbackDispatcher;
 	};
 }

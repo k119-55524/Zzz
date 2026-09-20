@@ -52,8 +52,6 @@ namespace zzz::engine
 
 		~CpuResourceManager();
 
-		inline void Update() noexcept {}
-
 		template<typename T, typename ContextType>
 		void GetAsync(
 			const Guid& guid,
