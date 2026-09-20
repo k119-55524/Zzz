@@ -33,4 +33,9 @@ namespace zzz::core
 		}
 		THROW_RUNTIME("Необработанный eFileLocation");
 	}
+
+	[[nodiscard]] constexpr bool IsLocationWritable(eFileLocation location) noexcept
+	{
+		return location != eFileLocation::App;
+	}
 }

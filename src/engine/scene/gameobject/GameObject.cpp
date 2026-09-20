@@ -1,6 +1,4 @@
 
-#include <format>
-
 #include "core/utils/Ensure.h"
 #include "engine/resources/gpu/GpuMesh.h"
 #include "core/io/package/GameObjectData.h"

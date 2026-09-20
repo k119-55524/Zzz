@@ -8,15 +8,15 @@
 #include "core/utils/Guid.h"
 #include "core/io/FileSystem.h"
 #include "core/enums/eResourceType.h"
+#include "engine/tasks/TaskDispatcher.h"
 #include "core/io/package/PackageEntry.h"
 #include "core/templates/CallbackQueue.h"
-#include "engine/tasks/TaskDispatcher.h"
-#include "engine/resources/ResourceTable.h"
 #include "engine/resources/ResourceRef.h"
 #include "engine/resources/cpu/CpuMesh.h"
+#include "engine/resources/ResourceTable.h"
+#include "engine/resources/cpu/CpuShader.h"
 #include "engine/resources/cpu/CpuMaterial.h"
 #include "engine/resources/cpu/CpuTexture2D.h"
-#include "engine/resources/cpu/CpuShader.h"
 #include "core/io/package/DataAssetsManager.h"
 
 using namespace zzz::core;
