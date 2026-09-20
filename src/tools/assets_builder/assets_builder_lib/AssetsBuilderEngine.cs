@@ -385,7 +385,8 @@ public class AssetsBuilderEngine
 			var dir = new DirectoryInfo(path);
 			while (dir != null)
 			{
-				if (File.Exists(Path.Combine(dir.FullName, "CMakeLists.txt")))
+				if (Directory.Exists(Path.Combine(dir.FullName, ".git")) ||
+				    (File.Exists(Path.Combine(dir.FullName, "CMakeLists.txt")) && Directory.Exists(Path.Combine(dir.FullName, "src", "engine"))))
 				{
 					return dir.FullName;
 				}

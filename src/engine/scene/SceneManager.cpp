@@ -1,13 +1,10 @@
 
-#include <format>
-#include <stdexcept>
-
 #include "Scene.h"
 #include "core/utils/Ensure.h"
 #include "core/utils/MemoryUtils.h"
+#include "core/io/package/SceneData.h"
 #include "engine/package/PackageManager.h"
 #include "core/io/package/ProjectManifestData.h"
-#include "core/io/package/SceneData.h"
 #include "engine/resources/cpu/CpuResourceManager.h"
 #include "engine/resources/gpu/GpuResourceManager.h"
 
@@ -53,18 +50,40 @@ namespace zzz::engine
 		ensure(!sceneGuid.IsEmpty(), "GUID загружаемой сцены не может быть пустым.");
 		ensure(onComplete != nullptr, "onComplete коллбэк должен быть валидным.");
 
-		std::lock_guard lock(m_LoadSceneMutex);
+		std::shared_ptr<OneShotEvent<SceneLoadResult>> loadEvent;
 
-		auto [it, inserted] = m_Scenes.try_emplace(sceneGuid, [this](auto task)
 		{
-			m_MainThreadQueue.Push(std::move(task));
-		});
+			std::lock_guard lock(m_LoadSceneMutex);
 
-		it->second.readyEvent.Subscribe(std::move(onComplete));
+			// Сцена уже полностью загружена и готова к использованию
+			if (auto it = m_Scenes.find(sceneGuid); it != m_Scenes.end())
+			{
+				auto scene = it->second;
+				m_MainThreadQueue.Push([onComplete = std::move(onComplete), scene = std::move(scene)]() mutable
+				{
+					onComplete(scene);
+				});
 
-		// Сцена уже загружена, либо в процессе загрузки
-		if (!inserted)
-			return;
+				return;
+			}
+
+			// Сцена уже загружается асинхронно
+			if (auto it = m_LoadingScenes.find(sceneGuid); it != m_LoadingScenes.end())
+			{
+				it->second->Subscribe(std::move(onComplete));
+
+				return;
+			}
+
+			// Сцена ещё не загружается - создаём событие и регистрируем в m_LoadingScenes
+			loadEvent = safe_make_shared<OneShotEvent<SceneLoadResult>>([this](auto task)
+			{
+				m_MainThreadQueue.Push(std::move(task));
+			});
+
+			loadEvent->Subscribe(std::move(onComplete));
+			m_LoadingScenes.emplace(sceneGuid, loadEvent);
+		}
 
 		m_TaskDispatcher.Submit(eTaskPriority::Normal, [this, sceneGuid]()
 			{
@@ -90,7 +109,6 @@ namespace zzz::engine
 						if (!initRes)
 						{
 							NotifySceneLoadFailed(scene->GetGuid(), std::move(initRes.error()));
-
 							return;
 						}
 
@@ -98,13 +116,20 @@ namespace zzz::engine
 
 						m_MainThreadQueue.Push([this, scene = std::move(scene)]() mutable
 						{
-							std::lock_guard lock(m_LoadSceneMutex);
-							auto it = m_Scenes.find(scene->GetGuid());
-							ensure(it != m_Scenes.end(), "Запись сцены не найдена в реестре.");
+							std::shared_ptr<OneShotEvent<SceneLoadResult>> loadEvent;
+
+							{
+								std::lock_guard lock(m_LoadSceneMutex);
+								auto it = m_LoadingScenes.find(scene->GetGuid());
+
+								loadEvent = std::move(it->second);
+								m_LoadingScenes.erase(it);
+
+								m_Scenes[scene->GetGuid()] = scene;
+							}
 
 							scene->InvokeStart();
-							it->second = scene;
-							it->second.readyEvent.Resolve(scene);
+							loadEvent->Resolve(scene);
 						});
 					});
 				}
@@ -126,28 +151,35 @@ namespace zzz::engine
 
 		m_MainThreadQueue.Push([this, sceneGuid, err = std::move(err)]() mutable
 		{
-			std::lock_guard lock(m_LoadSceneMutex);
-			auto it = m_Scenes.find(sceneGuid);
-			if (it != m_Scenes.end())
+			std::shared_ptr<OneShotEvent<SceneLoadResult>> loadEvent;
+
 			{
-				it->second.readyEvent.Resolve(std::unexpected(err));
-				m_Scenes.erase(it);
+				std::lock_guard lock(m_LoadSceneMutex);
+				auto it = m_LoadingScenes.find(sceneGuid);
+				if (it != m_LoadingScenes.end())
+				{
+					loadEvent = std::move(it->second);
+					m_LoadingScenes.erase(it);
+				}
+			}
+
+			if (loadEvent)
+			{
+				loadEvent->Resolve(std::unexpected(std::move(err)));
 			}
 		});
 	}
 
 	void SceneManager::Update(const Time& time)
 	{
-		// 1. Разбор отложенных задач диспетчеризации (перенос готовых сцен и вызовы Start в главном потоке)
+		// Разбор отложенных задач диспетчеризации
 		m_MainThreadQueue.ExecuteAll();
 
-		// 2. Кадровое обновление всех активных сцен (выполнение пользовательских скриптов SceneScript/GameScript)
-		for (auto& [guid, record] : m_Scenes)
+		for (auto& [guid, scene] : m_Scenes)
 		{
-			if (record)
-			{
-				record.resource->Update(time);
-			}
+			ensure(scene != nullptr, "Сцена с GUID '{}' равна null.", guid.ToString());
+
+			scene->Update(time);
 		}
 	}
 }

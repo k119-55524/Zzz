@@ -130,10 +130,7 @@ void Engine::Shutdown() noexcept
 		m_CpuResourceManager = nullptr;
 		m_GAPI = nullptr;
 		m_Time = nullptr;
-
-		// Освобождение пулов потоков диспетчера
 		m_TaskDispatcher = nullptr;
-		m_MainThreadQueue.Clear();
 
 		if (m_UserSettingsManager)
 		{
@@ -262,9 +259,6 @@ void Engine::OnAppClosed() const
 
 void Engine::OnUpdateSystem()
 {
-	// 0. Выполнение задач и перехват исключений из фоновых воркеров на главном потоке
-	m_MainThreadQueue.ExecuteAll();
-
 	m_Time->Update();
 
 	// Вывод среднего FPS в лог каждые logInterval секунд

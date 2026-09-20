@@ -4,9 +4,8 @@
 #include <memory>
 
 #include "engine/scene/layer/ILayer.h"
-#include "engine/gapi/clear_config/ClearConfig.h"
-
 #include "core/io/package/SceneData.h"
+#include "engine/gapi/clear_config/ClearConfig.h"
 
 namespace zzz::core
 {
@@ -15,7 +14,6 @@ namespace zzz::core
 
 namespace zzz::engine
 {
-	using namespace zzz::core;
 	class TaskDispatcher;
 	class CpuResourceManager;
 	class GpuResourceManager;
@@ -45,14 +43,9 @@ namespace zzz::engine
 
 		[[nodiscard]] const ClearConfig& GetClearConfig() const noexcept { return m_ClearConfig; }
 		void SetClearConfig(const ClearConfig& config) noexcept { m_ClearConfig = config; }
-
 		[[nodiscard]] const SceneTransitionParams& GetTransitionParams() const noexcept { return m_TransitionParams; }
 		void SetTransitionParams(const SceneTransitionParams& params) noexcept { m_TransitionParams = params; }
 
-		[[nodiscard]] std::shared_ptr<CpuResourceManager> GetCpuResourceManager() const noexcept { return m_CpuResourceManager; }
-		[[nodiscard]] std::shared_ptr<GpuResourceManager> GetGpuResourceManager() const noexcept { return m_GpuResourceManager; }
-
-		// --- Управление слоями сцены ---
 		[[nodiscard]] const std::vector<std::unique_ptr<ILayer>>& GetLayers() const noexcept { return m_Layers; }
 
 		void BeginFrame();

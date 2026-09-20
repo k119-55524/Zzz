@@ -15,6 +15,7 @@
 #include "engine/resources/gpu/GpuResourceManager.h"
 
 using namespace zzz::core;
+using namespace zzz::templates;
 
 namespace zzz::engine
 {
@@ -25,16 +26,6 @@ namespace zzz::engine
 		~Engine();
 
 		[[nodiscard]] virtual std::expected<void, std::string> Run();
-		[[nodiscard]] std::shared_ptr<DataAssetsManager> GetDataAssetsManager() const noexcept { return m_DataAssetsManager; }
-		[[nodiscard]] std::shared_ptr<CpuResourceManager> GetCpuResourceManager() const noexcept { return m_CpuResourceManager; }
-		[[nodiscard]] std::shared_ptr<GpuResourceManager> GetGpuResourceManager() const noexcept { return m_GpuResourceManager; }
-		[[nodiscard]] TaskDispatcher* GetTaskDispatcher() const noexcept { return m_TaskDispatcher.get(); }
-
-		/// @brief Прокидывает задачу или обработчик ошибки для выполнения на главном потоке кадра
-		void DispatchToMainThread(std::function<void()> callback)
-		{
-			m_MainThreadQueue.Push(std::move(callback));
-		}
 
 	protected:
 		void Shutdown() noexcept;
@@ -68,7 +59,6 @@ namespace zzz::engine
 		std::shared_ptr<MainLoopBase> m_MainLoop;
 		std::shared_ptr<ProjectEventBus> m_EventBus;
 		std::shared_ptr<Time> m_Time;
-		templates::CallbackQueue<std::function<void()>> m_MainThreadQueue;
 
 	private:
 		void OnAppClosed() const;
