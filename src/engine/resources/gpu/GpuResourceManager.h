@@ -48,7 +48,15 @@ namespace zzz::engine
 			std::function<void(std::expected<ResourceRef<T>, std::string>)> onLoaded,
 			eTaskPriority priority = eTaskPriority::Normal)
 		{
-			GetTable<T>().SubscribeOrRequest(
+			if (!m_IsRunning.load(std::memory_order_acquire))
+			{
+				if (auto ctx = context.lock())
+					onLoaded(std::unexpected(std::string("GpuResourceManager остановлен")));
+
+				return;
+			}
+
+			GetTable<T>().GetOrRequest(
 				guid,
 				std::move(context),
 				[cb = std::move(onLoaded)](typename ResourceTable<T>::ResultType res)
@@ -92,22 +100,10 @@ namespace zzz::engine
 		template<typename TGpu>
 		void RequestFromCpu(const Guid& guid, eTaskPriority priority)
 		{
-			if (!m_IsRunning.load(std::memory_order_acquire))
-			{
-				GetTable<TGpu>().Resolve(guid, std::unexpected(std::string("GpuResourceManager остановлен")));
-				return;
-			}
-
 			using TCpu = typename TGpu::CpuType;
 
 			m_CpuManager->GetAsync<TCpu>(guid, weak_from_this(), [this, guid, priority](std::expected<ResourceRef<TCpu>, std::string> cpuRes)
 			{
-				if (!m_IsRunning.load(std::memory_order_acquire))
-				{
-					GetTable<TGpu>().Resolve(guid, std::unexpected(std::string("GpuResourceManager остановлен")));
-					return;
-				}
-
 				if (!cpuRes)
 				{
 					GetTable<TGpu>().Resolve(guid, std::unexpected(cpuRes.error()));

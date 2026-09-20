@@ -43,7 +43,7 @@ namespace zzz::engine
 		 *          Замки снимаются перед подпиской и запуском onLoadRequest.
 		 */
 		template<typename ContextType, typename LoadFunc>
-		void SubscribeOrRequest(
+		void GetOrRequest(
 			const Guid& guid,
 			std::weak_ptr<ContextType> context,
 			CallbackType onLoaded,
