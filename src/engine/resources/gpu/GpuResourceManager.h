@@ -43,10 +43,7 @@ namespace zzz::engine
 		inline void Update() { m_MainThreadQueue.ExecuteAll(); }
 
 		template<typename T, typename ContextType>
-		void GetAsync(
-			const Guid& guid,
-			std::weak_ptr<ContextType> context,
-			std::function<void(std::expected<ResourceRef<T>, std::string>)> onLoaded)
+		void GetAsync(const Guid& guid, std::weak_ptr<ContextType> context, std::function<void(std::expected<ResourceRef<T>, std::string>)> onLoaded)
 		{
 			GetTable<T>().GetOrRequest(
 				guid,
@@ -54,38 +51,41 @@ namespace zzz::engine
 				[cb = std::move(onLoaded)](typename ResourceTable<T>::ResultType res)
 				{
 					if (!res)
-					{
 						cb(std::unexpected(std::move(res.error())));
-					}
 					else
-					{
 						cb(ResourceRef<T>(std::move(*res)));
-					}
 				},
 				GetDispatcher(),
-				[this](const Guid& g) { RequestFromCpu<T>(g); });
+				[this](const Guid& guid)
+				{
+					RequestFromCpu<T>(guid);
+				});
 		}
 
 		template<typename T>
-		void GetAsync(
-			const Guid& guid,
-			std::function<void(std::expected<ResourceRef<T>, std::string>)> onLoaded)
+		void GetAsync(const Guid& guid, std::function<void(std::expected<ResourceRef<T>, std::string>)> onLoaded)
 		{
 			GetTable<T>().GetOrRequest(
 				guid,
 				[cb = std::move(onLoaded)](typename ResourceTable<T>::ResultType res)
 				{
 					if (!res)
-					{
 						cb(std::unexpected(std::move(res.error())));
-					}
 					else
-					{
 						cb(ResourceRef<T>(std::move(*res)));
-					}
 				},
 				GetDispatcher(),
-				[this](const Guid& g) { RequestFromCpu<T>(g); });
+				[this](const Guid& guid)
+				{
+					RequestFromCpu<T>(guid);
+				});
+		}
+
+		template<typename T>
+		[[nodiscard]] ResourceRef<T> TryGet(const Guid& guid)
+		{
+			auto res = GetTable<T>().TryGet(guid);
+			return res ? ResourceRef<T>(std::move(res)) : ResourceRef<T>{};
 		}
 
 	private:

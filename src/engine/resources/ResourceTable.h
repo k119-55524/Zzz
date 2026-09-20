@@ -10,7 +10,6 @@
 #include "core/utils/Guid.h"
 #include "core/events/OneShotEvent.h"
 #include "core/utils/macros/MiscMacros.h"
-#include "engine/resources/ResourceRecord.h"
 
 using namespace zzz::core;
 
@@ -19,8 +18,8 @@ namespace zzz::engine
 	/**
 	 * @class ResourceTable
 	 * @brief Потокобезопасная типизированная таблица ресурсов конкретного типа T.
-	 * @details Инкапсулирует хэш-таблицу записей ResourceRecord<T>, shared_mutex
-	 *          и реактивную механику "верни из кэша или поставь на загрузку".
+	 * @details Инкапсулирует хэш-таблицу событий OneShotEvent<ResultType>, shared_mutex
+	 *          и реактивную механику "подпишись на шот или запусти загрузку".
 	 */
 	template<typename T>
 	class ResourceTable final
@@ -37,8 +36,8 @@ namespace zzz::engine
 
 		/**
 		 * @brief Асинхронный запрос ресурса по GUID с контекстом жизни (weak_ptr).
-		 * @details Если запись уже есть — атомарно подписывает коллбэк (вызовется сразу, если ресурс уже готов).
-		 *          Если записи нет — атомарно создаёт запись, подписывает коллбэк и вызывает onLoadRequest(guid).
+		 * @details Если шот уже есть — атомарно подписывает коллбэк (вызовется сразу, если ресурс готов).
+		 *          Если шота нет — атомарно создаёт шот, подписывает коллбэк и вызывает onLoadRequest(guid).
 		 */
 		template<typename ContextType, typename LoadFunc>
 		void GetOrRequest(
@@ -49,12 +48,12 @@ namespace zzz::engine
 			LoadFunc&& onLoadRequest)
 		{
 			std::unique_lock lock(m_Mutex);
-			auto [it, inserted] = m_Records.try_emplace(guid, dispatcher);
-			it->second.readyEvent.Subscribe(std::move(context), std::move(onLoaded));
+
+			auto [it, inserted] = m_Events.try_emplace(guid, dispatcher);
+			it->second.Subscribe(std::move(context), std::move(onLoaded));
+
 			if (inserted)
-			{
 				onLoadRequest(guid);
-			}
 		}
 
 		/**
@@ -68,41 +67,57 @@ namespace zzz::engine
 			LoadFunc&& onLoadRequest)
 		{
 			std::unique_lock lock(m_Mutex);
-			auto [it, inserted] = m_Records.try_emplace(guid, dispatcher);
-			it->second.readyEvent.Subscribe(std::move(onLoaded));
+
+			auto [it, inserted] = m_Events.try_emplace(guid, dispatcher);
+			it->second.Subscribe(std::move(onLoaded));
+
 			if (inserted)
-			{
 				onLoadRequest(guid);
-			}
 		}
 
 		/// @brief Разрешение события готовности (успех или ошибка)
 		void Resolve(const Guid& guid, ResultType result, const DispatcherFunc& dispatcher)
 		{
 			std::unique_lock lock(m_Mutex);
-			auto [it, _] = m_Records.try_emplace(guid, dispatcher);
-			if (result)
+			auto [it, _] = m_Events.try_emplace(guid, dispatcher);
+			it->second.Resolve(std::move(result));
+		}
+
+		/// @brief Синхронная попытка получить готовый ресурс из таблицы без ожидания
+		[[nodiscard]] std::shared_ptr<T> TryGet(const Guid& guid) const
+		{
+			std::shared_lock lock(m_Mutex);
+			auto it = m_Events.find(guid);
+			if (it != m_Events.end())
 			{
-				it->second.resource = *result;
+				auto resOpt = it->second.GetResult();
+				if (resOpt)
+				{
+					const auto& expectedRes = std::get<0>(*resOpt);
+					if (expectedRes)
+					{
+						return *expectedRes;
+					}
+				}
 			}
-			it->second.readyEvent.Resolve(std::move(result));
+			return nullptr;
 		}
 
 		/// @brief Очистка всех записей таблицы
 		void Clear()
 		{
 			std::unique_lock lock(m_Mutex);
-			m_Records.clear();
+			m_Events.clear();
 		}
 
 		[[nodiscard]] size_t Size() const noexcept
 		{
 			std::shared_lock lock(m_Mutex);
-			return m_Records.size();
+			return m_Events.size();
 		}
 
 	private:
 		mutable std::shared_mutex m_Mutex;
-		std::unordered_map<Guid, ResourceRecord<T>> m_Records;
+		std::unordered_map<Guid, OneShotEvent<ResultType>> m_Events;
 	};
 }

@@ -98,6 +98,13 @@ namespace zzz::engine
 				});
 		}
 
+		template<typename T>
+		[[nodiscard]] ResourceRef<T> TryGet(const Guid& guid)
+		{
+			auto res = GetTable<T>().TryGet(guid);
+			return res ? ResourceRef<T>(std::move(res)) : ResourceRef<T>{};
+		}
+
 	private:
 		template<typename T>
 		[[nodiscard]] auto& GetTable() noexcept
