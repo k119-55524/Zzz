@@ -246,3 +246,15 @@ int APIENTRY wWinMain(...)
   target_link_libraries(GameTarget PRIVATE engine_lib core_lib logger_lib)
   ```
 Такой подход обеспечит переносимость игровых скриптов и сценариев без привязки к абсолютным путям репозитория.
+
+## Генерация документации (Doxygen)
+
+В проекте настроена автоматическая генерация документации по кодовой базе C++ с использованием современной темы **doxygen-awesome-css**.
+
+- **Windows (быстрый запуск):** запустить скрипт `automation\build_doxygen_docs.bat`. Скрипт через CMake FetchContent автоматически загрузит portable-версию Doxygen и Graphviz (dot), скомпилирует CMake-таргет `docs`, сформирует HTML в каталоге `.docs/html/index.html`, создаст ярлык `Documentation.lnk` в корне репозитория и автоматически откроет документацию в браузере.
+- **Сборка через CMake:** собрать таргет `docs` напрямую в активной папке сборки:
+  ```sh
+  cmake --build <папка_сборки> --target docs
+  ```
+- **Linux / macOS:** убедиться, что установлены системные пакеты `doxygen` и `graphviz` (`sudo apt install doxygen graphviz` на Linux или `brew install doxygen graphviz` на macOS), после чего вызвать сборку таргета `docs`.
+

@@ -4,6 +4,8 @@
 
 A multiplatform C++23 framework for building modern UI applications with integrated 3D graphics.
 
+> **Note:** The project is actively developed by a single author. Architecture and subsystems are continuously evolving, so certain modules and tools may temporarily be in a transitional state or slightly out of sync with other parts of the codebase. CI/CD (Git pipeline) is not integrated yet as the engine Core is still in active development and stabilization.
+
 ## Project Goals
 
 The primary goal of the project is to build a robust and lightweight technological foundation for a planned commercial application (details undisclosed), combining a modern user interface, 3D graphics, and power efficiency:
@@ -76,5 +78,7 @@ The project uses Google Test and Google Benchmark (`src/qa/tests` and `src/qa/be
 ## Documentation
 
 - **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — engine architecture, subsystems, resource formats, and user data directories.
-- **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)** — detailed platform guides for macOS, iOS, Linux (WSL), and remote logging.
-- **[current_plan/RULES.md](current_plan/RULES.md)** — architectural rules, code standards, and workflow requirements.
+- **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)** — detailed platform guides for macOS, iOS, Linux (WSL), remote logging, and Doxygen documentation.
+- **[current_plan/general_plan.md](current_plan/general_plan.md)** — master development plan, milestones (MVP), and current progress (detailed step specifications are tracked in `current_plan/stage_XX_*.md`).
+- **[current_plan/RULES.md](current_plan/RULES.md)** — architectural rules, code standards, and Definition of Done (DoD).
+- **API Documentation (Doxygen):** to generate full documentation for C++ classes and code, run `automation\build_doxygen_docs.bat` (automatically fetches portable Doxygen/Graphviz, outputs HTML to `.docs/html/`, and creates a `Documentation.lnk` shortcut in the project root).
