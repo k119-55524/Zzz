@@ -1,6 +1,24 @@
 
 #include <logger.h>
 
+#include "core/time/Time.h"
+#include "core/events/EventBus.h"
+#include "engine/view/ViewManager.h"
+#include "core/utils/MemoryUtils.h"
+#include "engine/platforms/Platform.h"
+#include "engine/scene/SceneManager.h"
+#include "engine/tasks/TaskDispatcher.h"
+#include "engine/package/PackageManager.h"
+#include "core/userscripts/ScriptFactory.h"
+#include "core/userscripts/ScriptStorage.h"
+#include "core/userscripts/ScriptRegistry.h"
+#include "core/io/package/DataAssetsManager.h"
+#include "engine/package/UserSettingsManager.h"
+#include "engine/platforms/mainloop/MainLoop.h"
+#include "core/userscripts/base_script/GameScript.h"
+#include "engine/resources/cpu/CpuResourceManager.h"
+#include "engine/resources/gpu/GpuResourceManager.h"
+
 #include "Engine.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::LogEngine);

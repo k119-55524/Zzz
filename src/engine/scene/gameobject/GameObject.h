@@ -8,6 +8,9 @@
 #include <functional>
 
 #include "core/utils/Guid.h"
+#include "engine/resources/ResourceRef.h"
+#include "engine/resources/gpu/GpuMesh.h"
+#include "engine/resources/gpu/GpuMaterial.h"
 #include "engine/scene/storage/NodeStorage.h"
 
 namespace zzz::core
@@ -16,10 +19,6 @@ namespace zzz::core
 	class GameObjectData;
 	class ScriptFactory;
 }
-
-#include "engine/resources/ResourceRef.h"
-#include "engine/resources/gpu/GpuMesh.h"
-#include "engine/resources/gpu/GpuMaterial.h"
 
 namespace zzz::engine
 {

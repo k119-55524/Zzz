@@ -1,29 +1,45 @@
 #pragma once
 
-#include "engine/gapi/GAPI.h"
-#include "core/enums/eInitState.h"
-#include "engine/view/ViewManager.h"
-#include "engine/platforms/Platform.h"
-#include "engine/scene/SceneManager.h"
-#include "engine/tasks/TaskDispatcher.h"
-#include "core/templates/CallbackQueue.h"
-#include "engine/package/PackageManager.h"
-#include "core/io/package/DataAssetsManager.h"
-#include "engine/package/UserSettingsManager.h"
-#include "engine/platforms/mainloop/MainLoop.h"
-#include "engine/resources/cpu/CpuResourceManager.h"
-#include "engine/resources/gpu/GpuResourceManager.h"
+#include <mutex>
+#include <atomic>
+#include <string>
+#include <vector>
+#include <memory>
+#include <expected>
 
-using namespace zzz::core;
-using namespace zzz::templates;
+#include "engine/gapi/GAPI.h"
+#include "core/io/FileSystem.h"
+#include "core/enums/eInitState.h"
+#include "core/utils/NativeAppData.h"
+
+namespace zzz::core
+{
+	class Time;
+	class GameScript;
+	class ScriptStorage;
+	class ScriptRegistry;
+	class ScriptFactory;
+	class ProjectEventBus;
+	class DataAssetsManager;
+}
 
 namespace zzz::engine
 {
+	class Platform;
+	class ViewManager;
+	class SceneManager;
+	class MainLoopBase;
+	class PackageManager;
+	class TaskDispatcher;
+	class CpuResourceManager;
+	class GpuResourceManager;
+	class UserSettingsManager;
+
 	class Engine
 	{
 	public:
-		Engine(std::shared_ptr<NativeAppData> nativeData = nullptr);
-		~Engine();
+		Engine(std::shared_ptr<zzz::core::NativeAppData> nativeData = nullptr);
+		virtual ~Engine();
 
 		[[nodiscard]] virtual std::expected<void, std::string> Run();
 
