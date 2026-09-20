@@ -59,6 +59,18 @@ public static class SessionManager
                         {
                             p.DestinationPath = GetDefaultBuildPath();
                         }
+
+                        // Если сохраненный путь проекта устарел или не существует (например, после перемещения/переименования репозитория),
+                        // пытаемся найти его в текущем найденном рабочем каталоге
+                        if (!string.IsNullOrEmpty(p.SourcePath) && !Directory.Exists(p.SourcePath))
+                        {
+                            string resolvedProjects = ResolveWorkspaceProjectsPath(config.WorkspaceProjectsPath);
+                            string candidate = Path.Combine(resolvedProjects, "assets_projects", p.Name);
+                            if (Directory.Exists(candidate))
+                            {
+                                p.SourcePath = candidate;
+                            }
+                        }
                     }
                     return config;
                 }
@@ -119,8 +131,29 @@ public static class SessionManager
             current = parent.FullName;
         }
 
-        // Fallback на стандартный путь репозитория
-        return @"C:\Workspaces\ZzzTest\src\projects";
+        // Поиск относительно текущей рабочей директории
+        current = Directory.GetCurrentDirectory();
+        while (!string.IsNullOrEmpty(current))
+        {
+            string candidate = Path.Combine(current, "src", "projects");
+            if (Directory.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            string rootMarker = Path.Combine(current, "CMakeLists.txt");
+            if (File.Exists(rootMarker))
+            {
+                string p = Path.Combine(current, "src", "projects");
+                if (Directory.Exists(p)) return p;
+            }
+
+            var parent = Directory.GetParent(current);
+            if (parent == null) break;
+            current = parent.FullName;
+        }
+
+        return Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "src", "projects"));
     }
 
     public static SessionConfig GetDefaultConfig()

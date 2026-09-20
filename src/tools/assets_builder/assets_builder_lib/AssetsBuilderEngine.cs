@@ -378,11 +378,47 @@ public class AssetsBuilderEngine
 		return (guid, type);
 	}
 
+	private static string? FindRepoRoot(string path)
+	{
+		try
+		{
+			var dir = new DirectoryInfo(path);
+			while (dir != null)
+			{
+				if (File.Exists(Path.Combine(dir.FullName, "CMakeLists.txt")))
+				{
+					return dir.FullName;
+				}
+				dir = dir.Parent;
+			}
+		}
+		catch
+		{
+		}
+		return null;
+	}
+
+	private static string ToCMakePath(string fullPath, string? repoRoot)
+	{
+		if (!string.IsNullOrEmpty(repoRoot))
+		{
+			string normFull = Path.GetFullPath(fullPath);
+			string normRoot = Path.GetFullPath(repoRoot);
+			if (normFull.StartsWith(normRoot, StringComparison.OrdinalIgnoreCase))
+			{
+				string rel = Path.GetRelativePath(normRoot, normFull).Replace('\\', '/');
+				return $"${{CMAKE_SOURCE_DIR}}/{rel}";
+			}
+		}
+		return fullPath.Replace('\\', '/');
+	}
+
 	public void GenerateScriptsCmake(string sourcePath, string destinationPath, string platformConfigFile = "")
 	{
 		try
 		{
 			var removedScriptGuids = LoadRemovedScriptGuids(sourcePath, platformConfigFile);
+			string? repoRoot = FindRepoRoot(sourcePath) ?? FindRepoRoot(AppDomain.CurrentDomain.BaseDirectory);
 
 			string scriptsPath = Path.Combine(sourcePath, "Assets", "Scripts");
 			var cppFiles = new List<string>();
@@ -393,7 +429,6 @@ public class AssetsBuilderEngine
 				foreach (var file in Directory.GetFiles(scriptsPath, "*.*", SearchOption.AllDirectories))
 				{
 					string ext = Path.GetExtension(file).ToLowerInvariant();
-					string fullPathNormalized = file.Replace('\\', '/');
 
 					if (IsScriptExcluded(file, removedScriptGuids))
 					{
@@ -402,16 +437,16 @@ public class AssetsBuilderEngine
 
 					if (ext == ".cpp" || ext == ".c")
 					{
-						cppFiles.Add(fullPathNormalized);
+						cppFiles.Add(file);
 					}
 					else if (ext == ".h" || ext == ".hpp")
 					{
-						hppFiles.Add(fullPathNormalized);
+						hppFiles.Add(file);
 					}
 				}
 			}
 
-			// ГенерацияRegisterAllScripts.cpp с полной регистрацией классов и GUID напрямую в C# Сборщике
+			// Генерация RegisterAllScripts.cpp с полной регистрацией классов и GUID напрямую в C# Сборщике
 			var registerLines = new List<string>();
 			var headerIncludes = new List<string>();
 
@@ -421,7 +456,10 @@ public class AssetsBuilderEngine
 				var (scriptGuid, scriptNamespace) = GetScriptMetaInfo(headerFile);
 
 				string qualifiedName = string.IsNullOrWhiteSpace(scriptNamespace) ? className : $"{scriptNamespace}::{className}";
-				headerIncludes.Add($"#include \"{headerFile}\"");
+				string relHeader = Directory.Exists(scriptsPath)
+					? Path.GetRelativePath(scriptsPath, headerFile).Replace('\\', '/')
+					: Path.GetFileName(headerFile);
+				headerIncludes.Add($"#include \"{relHeader}\"");
 
 				if (!string.IsNullOrWhiteSpace(scriptGuid))
 				{
@@ -433,7 +471,7 @@ public class AssetsBuilderEngine
 				}
 			}
 
-			string registerCppPath = Path.Combine(destinationPath, "RegisterAllScripts.cpp").Replace('\\', '/');
+			string registerCppPath = Path.Combine(destinationPath, "RegisterAllScripts.cpp");
 			var regSb = new System.Text.StringBuilder();
 			regSb.AppendLine("// RegisterAllScripts.cpp — сгенерировано Assets Builder");
 			regSb.AppendLine("#include <core/Core.h>");
@@ -453,36 +491,36 @@ public class AssetsBuilderEngine
 			regSb.AppendLine("}");
 
 			File.WriteAllText(registerCppPath, regSb.ToString());
-			cppFiles.Add(registerCppPath);
 
 			var sb = new System.Text.StringBuilder();
 			sb.AppendLine("# Автогенерируемый файл от Assets Builder");
 			sb.AppendLine("set(GAME_SCRIPT_SOURCES");
 			foreach (var cpp in cppFiles)
 			{
-				sb.AppendLine($"    \"{cpp}\"");
+				sb.AppendLine($"    \"{ToCMakePath(cpp, repoRoot)}\"");
 			}
+			sb.AppendLine("    \"${CMAKE_CURRENT_LIST_DIR}/RegisterAllScripts.cpp\"");
 			sb.AppendLine(")");
 			sb.AppendLine();
 			sb.AppendLine("set(GAME_SCRIPT_HEADERS");
 			foreach (var hpp in hppFiles)
 			{
-				sb.AppendLine($"    \"{hpp}\"");
+				sb.AppendLine($"    \"{ToCMakePath(hpp, repoRoot)}\"");
 			}
 			sb.AppendLine(")");
 			sb.AppendLine();
 			sb.AppendLine("set(GAME_SCRIPT_INCLUDES");
 			if (Directory.Exists(scriptsPath))
 			{
-				sb.AppendLine($"    \"{scriptsPath.Replace('\\', '/')}\"");
+				sb.AppendLine($"    \"{ToCMakePath(scriptsPath, repoRoot)}\"");
 			}
-			sb.AppendLine($"    \"{sourcePath.Replace('\\', '/')}\"");
-			sb.AppendLine($"    \"{destinationPath.Replace('\\', '/')}\"");
+			sb.AppendLine($"    \"{ToCMakePath(sourcePath, repoRoot)}\"");
+			sb.AppendLine("    \"${CMAKE_CURRENT_LIST_DIR}\"");
 			sb.AppendLine(")");
 
 			string cmakeFilePath = Path.Combine(destinationPath, "Scripts.cmake");
 			File.WriteAllText(cmakeFilePath, sb.ToString());
-			Log($"Сгенерирован C++ файл регистрации: RegisterAllScripts.cpp и Scripts.cmake ({cppFiles.Count} .cpp, {hppFiles.Count} .hpp)");
+			Log($"Сгенерирован C++ файл регистрации: RegisterAllScripts.cpp и Scripts.cmake ({cppFiles.Count + 1} .cpp, {hppFiles.Count} .hpp)");
 		}
 		catch (Exception ex)
 		{
