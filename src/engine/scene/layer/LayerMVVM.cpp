@@ -24,7 +24,8 @@ namespace zzz::engine
 	void LayerMVVM::Populate(
 		const LayerData& /*layerData*/,
 		const ScriptFactory& /*scriptFactory*/,
-		std::function<void(std::expected<void, std::string>)> onReady)
+		std::function<void(std::expected<void, std::string>)> onReady,
+		eTaskPriority /*priority*/)
 	{
 		// Декларативный UI слой: парсинг и биндинг XAML/MVVM разметки (будет реализовано в MVP ZzzGUI)
 		if (onReady)

@@ -7,6 +7,7 @@
 
 #include "core/enums/eLayerType.h"
 #include "core/utils/Guid.h"
+#include "engine/tasks/TaskPriority.h"
 #include "core/utils/macros/MiscMacros.h"
 
 namespace zzz::core
@@ -56,7 +57,8 @@ namespace zzz::engine
 		virtual void Populate(
 			const LayerData& layerData,
 			const ScriptFactory& scriptFactory,
-			std::function<void(std::expected<void, std::string>)> onReady = {}) = 0;
+			std::function<void(std::expected<void, std::string>)> onReady = {},
+			eTaskPriority priority = eTaskPriority::Normal) = 0;
 
 	protected:
 		zzz::core::Guid m_Guid;

@@ -8,11 +8,11 @@ using namespace zzz::core;
 
 namespace zzz::engine
 {
-	std::expected<std::shared_ptr<CpuMesh>, std::string> CpuMeshLoader::Load(
+	std::expected<std::shared_ptr<CpuMesh>, std::string> CpuMeshLoader::LoadFromMemory(
 		const PackageEntry& entry,
-		DataAssetsManager& dataAssetsManager)
+		std::span<const std::byte> bytes)
 	{
-		auto meshDataRes = dataAssetsManager.DeserializeAsset<MeshData>(entry);
+		auto meshDataRes = DataAssetsManager::DeserializeAssetFromMemory<MeshData>(entry, bytes);
 		if (!meshDataRes)
 		{
 			return std::unexpected(std::format(
@@ -22,5 +22,20 @@ namespace zzz::engine
 
 		auto mesh = safe_make_shared<CpuMesh>(entry.GetGuid(), entry.GetName(), std::move(*meshDataRes));
 		return mesh;
+	}
+
+	std::expected<std::shared_ptr<CpuMesh>, std::string> CpuMeshLoader::Load(
+		const PackageEntry& entry,
+		DataAssetsManager& dataAssetsManager)
+	{
+		auto rawRes = dataAssetsManager.ReadRawBytes(entry);
+		if (!rawRes)
+		{
+			return std::unexpected(std::format(
+				"[CpuMeshLoader] Ошибка чтения сырых данных меша '{}' (GUID: {}, смещение: {}): {}",
+				entry.GetName(), entry.GetGuid().ToString(), entry.GetOffset(), rawRes.error()));
+		}
+
+		return LoadFromMemory(entry, *rawRes);
 	}
 }

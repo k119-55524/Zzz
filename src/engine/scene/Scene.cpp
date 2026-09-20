@@ -50,7 +50,8 @@ namespace zzz::engine
 		SceneData sceneData,
 		const ScriptFactory& scriptFactory,
 		TaskDispatcher& taskDispatcher,
-		std::function<void(std::expected<void, std::string>)> onLayersCreated)
+		std::function<void(std::expected<void, std::string>)> onLayersCreated,
+		eTaskPriority priority)
 	{
 		ensure(onLayersCreated != nullptr, "onLayersCreated коллбэк не должен быть null при инициализации Scene.");
 
@@ -113,8 +114,8 @@ namespace zzz::engine
 					ToString(layerData.GetType()), layerData.GetName(), m_Name);
 			}
 
-			// Асинхронное наполнение слоя в пуле потоков через TaskDispatcher (приоритет Normal)
-			taskDispatcher.Submit(eTaskPriority::Normal, [layer = m_Layers[i].get(), layerIndex = i, &scriptFactory, sharedSceneData, tracker]()
+			// Асинхронное наполнение слоя в пуле потоков через TaskDispatcher с переданным приоритетом
+			taskDispatcher.Submit(priority, [layer = m_Layers[i].get(), layerIndex = i, &scriptFactory, sharedSceneData, tracker, priority]()
 			{
 				const auto& currentLayerData = sharedSceneData->GetLayers()[layerIndex];
 				try
@@ -122,7 +123,7 @@ namespace zzz::engine
 					layer->Populate(currentLayerData, scriptFactory, [tracker](std::expected<void, std::string> res)
 					{
 						tracker->Notify(res);
-					});
+					}, priority);
 				}
 				catch (const std::exception& ex)
 				{

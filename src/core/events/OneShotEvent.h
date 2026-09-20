@@ -9,6 +9,7 @@
 #include <functional>
 
 #include "core/utils/Ensure.h"
+#include "core/utils/macros/MiscMacros.h"
 
 namespace zzz::core
 {

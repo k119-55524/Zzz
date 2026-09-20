@@ -52,7 +52,8 @@ namespace zzz::engine
 	void GameLayer::Populate(
 		const LayerData& layerData,
 		const ScriptFactory& scriptFactory,
-		std::function<void(std::expected<void, std::string>)> onReady)
+		std::function<void(std::expected<void, std::string>)> onReady,
+		eTaskPriority priority)
 	{
 		// 1. Всегда очищаем предыдущее состояние слоя
 		m_ObjectDomain->Clear();
@@ -148,7 +149,8 @@ namespace zzz::engine
 				[tracker](std::expected<void, std::string> res)
 				{
 					tracker->Notify(res);
-				});
+				},
+				priority);
 		}
 	}
 }

@@ -137,19 +137,24 @@ namespace zzz::engine
 		return guidIt->second;
 	}
 
-	template <typename T> requires std::derived_from<T, ISerializable>
-	[[nodiscard]] std::expected<T, std::string> PackageManager::DeserializeEntry(const PackageEntry& entry) const
+	std::expected<std::vector<std::byte>, std::string> PackageManager::ReadRawBytes(const PackageEntry& entry) const
 	{
 		auto bufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_GamePackageRelativePath, entry.GetOffset(), entry.GetSize());
 		if (!bufferRes)
+		{
 			return UNEXPECTED("Не удалось прочитать блок данных '{}' из пакета '{}': {}",
 				entry.GetName(), c_GamePackageRelativePath, bufferRes.error());
+		}
+		return bufferRes;
+	}
 
-		const auto& buffer = *bufferRes;
+	template <typename T> requires std::derived_from<T, ISerializable>
+	[[nodiscard]] std::expected<T, std::string> PackageManager::DeserializeEntryFromMemory(const PackageEntry& entry, std::span<const std::byte> bytes)
+	{
 		std::size_t offset = 0;
 		Serializer serializer;
 		T data{};
-		auto res = serializer.Deserialize(buffer, offset, data);
+		auto res = serializer.Deserialize(bytes, offset, data);
 		if (!res)
 			return UNEXPECTED("Ошибка десериализации данных пакета '{}': {}.", entry.GetName(), res.error());
 
@@ -160,12 +165,29 @@ namespace zzz::engine
 		return data;
 	}
 
+	template <typename T> requires std::derived_from<T, ISerializable>
+	[[nodiscard]] std::expected<T, std::string> PackageManager::DeserializeEntry(const PackageEntry& entry) const
+	{
+		auto bufferRes = ReadRawBytes(entry);
+		if (!bufferRes)
+			return UNEXPECTED("{}", bufferRes.error());
+
+		return DeserializeEntryFromMemory<T>(entry, *bufferRes);
+	}
+
 	template std::expected<ProjectManifestData, std::string> PackageManager::DeserializeEntry<ProjectManifestData>(const PackageEntry&) const;
 	template std::expected<PrimaryViewData, std::string> PackageManager::DeserializeEntry<PrimaryViewData>(const PackageEntry&) const;
 	template std::expected<SceneData, std::string> PackageManager::DeserializeEntry<SceneData>(const PackageEntry&) const;
 	template std::expected<ChildViewData, std::string> PackageManager::DeserializeEntry<ChildViewData>(const PackageEntry&) const;
 	template std::expected<IndependentViewData, std::string> PackageManager::DeserializeEntry<IndependentViewData>(const PackageEntry&) const;
 	template std::expected<PrefabData, std::string> PackageManager::DeserializeEntry<PrefabData>(const PackageEntry&) const;
+
+	template std::expected<ProjectManifestData, std::string> PackageManager::DeserializeEntryFromMemory<ProjectManifestData>(const PackageEntry&, std::span<const std::byte>);
+	template std::expected<PrimaryViewData, std::string> PackageManager::DeserializeEntryFromMemory<PrimaryViewData>(const PackageEntry&, std::span<const std::byte>);
+	template std::expected<SceneData, std::string> PackageManager::DeserializeEntryFromMemory<SceneData>(const PackageEntry&, std::span<const std::byte>);
+	template std::expected<ChildViewData, std::string> PackageManager::DeserializeEntryFromMemory<ChildViewData>(const PackageEntry&, std::span<const std::byte>);
+	template std::expected<IndependentViewData, std::string> PackageManager::DeserializeEntryFromMemory<IndependentViewData>(const PackageEntry&, std::span<const std::byte>);
+	template std::expected<PrefabData, std::string> PackageManager::DeserializeEntryFromMemory<PrefabData>(const PackageEntry&, std::span<const std::byte>);
 
 #pragma region Logging
 	void PackageManager::LogPackageEntriesSummary() const

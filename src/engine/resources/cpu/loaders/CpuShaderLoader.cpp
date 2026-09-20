@@ -12,11 +12,11 @@ using namespace zzz::logger;
 
 namespace zzz::engine
 {
-	std::expected<std::shared_ptr<CpuShader>, std::string> CpuShaderLoader::Load(
+	std::expected<std::shared_ptr<CpuShader>, std::string> CpuShaderLoader::LoadFromMemory(
 		const PackageEntry& entry,
-		DataAssetsManager& dataAssetsManager)
+		std::span<const std::byte> bytes)
 	{
-		auto shaderDataRes = dataAssetsManager.DeserializeAsset<ShaderData>(entry);
+		auto shaderDataRes = DataAssetsManager::DeserializeAssetFromMemory<ShaderData>(entry, bytes);
 		if (!shaderDataRes)
 		{
 			return std::unexpected(std::format(
@@ -33,5 +33,20 @@ namespace zzz::engine
 		DOut("[CpuShaderLoader] Загружен шейдер '{}' (GUID: {})", shaderName, entry.GetGuid().ToString());
 
 		return safe_make_shared<CpuShader>(entry.GetGuid(), std::move(shaderName));
+	}
+
+	std::expected<std::shared_ptr<CpuShader>, std::string> CpuShaderLoader::Load(
+		const PackageEntry& entry,
+		DataAssetsManager& dataAssetsManager)
+	{
+		auto rawRes = dataAssetsManager.ReadRawBytes(entry);
+		if (!rawRes)
+		{
+			return std::unexpected(std::format(
+				"[CpuShaderLoader] Ошибка чтения сырых данных шейдера '{}' (GUID: {}, смещение: {}): {}",
+				entry.GetName(), entry.GetGuid().ToString(), entry.GetOffset(), rawRes.error()));
+		}
+
+		return LoadFromMemory(entry, *rawRes);
 	}
 }

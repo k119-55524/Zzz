@@ -1,12 +1,11 @@
 #pragma once
 
-#include "core/Core.h"
 #include "engine/gapi/GAPI.h"
 #include "engine/view/View.h"
 #include "engine/platforms/Platform.h"
+#include "engine/tasks/TaskDispatcher.h"
 #include "engine/package/PackageManager.h"
 #include "engine/package/UserSettingsManager.h"
-#include "engine/tasks/TaskDispatcher.h"
 
 using namespace zzz::core;
 using namespace zzz::templates;
@@ -76,6 +75,6 @@ namespace zzz::engine
 		std::function<void()> OnAllViewsClosed;
 		void OnWindowClose(View& view);
 		std::shared_ptr<View> CreateViewInstance(const ViewConfigData& viewData, ePackage viewType, const View* parentView = nullptr);
-		void SetInitialSceneAsync(std::weak_ptr<View> viewWeak, const Guid& sceneGuid);
+		void SetInitialSceneAsync(std::weak_ptr<View> viewWeak, const Guid& sceneGuid, eTaskPriority priority = eTaskPriority::High);
 	};
 }

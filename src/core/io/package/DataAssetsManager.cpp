@@ -110,6 +110,17 @@ namespace zzz::core
 #endif // Z_ADD_LOGGER
 	}
 
+	std::expected<std::vector<std::byte>, std::string> DataAssetsManager::ReadRawBytes(const PackageEntry& entry) const
+	{
+		auto bufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_DataPackageRelativePath, entry.GetOffset(), entry.GetSize());
+		if (!bufferRes)
+		{
+			return UNEXPECTED("Не удалось прочитать блок данных '{}' из пакета '{}': {}",
+				entry.GetName(), c_DataPackageRelativePath, bufferRes.error());
+		}
+		return bufferRes;
+	}
+
 	template std::expected<MeshData, std::string> DataAssetsManager::LoadAsset<MeshData>(const Guid&) const;
 	template std::expected<MeshData, std::string> DataAssetsManager::LoadAsset<MeshData>(std::string_view) const;
 	template std::expected<MeshData, std::string> DataAssetsManager::DeserializeEntry<MeshData>(const PackageEntry&) const;

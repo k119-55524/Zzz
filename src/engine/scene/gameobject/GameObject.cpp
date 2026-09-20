@@ -34,7 +34,8 @@ namespace zzz::engine
 		const GameObjectData& data,
 		const ScriptFactory& scriptFactory,
 		GpuResourceManager& gpuResourceManager,
-		std::function<void(std::expected<void, std::string>)> onReady)
+		std::function<void(std::expected<void, std::string>)> onReady,
+		eTaskPriority priority)
 	{
 		ensure(onReady != nullptr, "GameObject::Initialize: onReady коллбэк не должен быть null.");
 
@@ -66,33 +67,47 @@ namespace zzz::engine
 
 			gpuResourceManager.GetAsync<GpuMesh>(pair.meshGuid, weak_from_this(), [this, i, tracker](auto res)
 			{
-				if (!res)
-					tracker->NotifyError(std::move(res.error()));
-				else
-				{
-					m_RenderPairs[i].gpuMesh = std::move(*res);
-					tracker->NotifySuccess();
-				}
-			});
+				OnMeshLoaded(i, std::move(res), tracker);
+			}, priority);
 
 			gpuResourceManager.GetAsync<GpuMaterial>(pair.materialGuid, weak_from_this(), [this, i, tracker](auto res)
 			{
-				if (!res)
-					tracker->NotifyError(std::move(res.error()));
-				else
-				{
-					m_RenderPairs[i].gpuMaterial = std::move(*res);
-					tracker->NotifySuccess();
-				}
-			});
+				OnMaterialLoaded(i, std::move(res), tracker);
+			}, priority);
+		}
+	}
+
+	void GameObject::OnMeshLoaded(
+		size_t index,
+		std::expected<ResourceRef<GpuMesh>, std::string> res,
+		std::shared_ptr<AsyncInitTracker> tracker)
+	{
+		if (!res)
+			tracker->NotifyError(std::move(res.error()));
+		else
+		{
+			m_RenderPairs[index].gpuMesh = std::move(*res);
+			tracker->NotifySuccess();
+		}
+	}
+
+	void GameObject::OnMaterialLoaded(
+		size_t index,
+		std::expected<ResourceRef<GpuMaterial>, std::string> res,
+		std::shared_ptr<AsyncInitTracker> tracker)
+	{
+		if (!res)
+			tracker->NotifyError(std::move(res.error()));
+		else
+		{
+			m_RenderPairs[index].gpuMaterial = std::move(*res);
+			tracker->NotifySuccess();
 		}
 	}
 
 	void GameObject::AddScript(std::shared_ptr<Script> script)
 	{
 		if (script != nullptr)
-		{
 			m_Scripts.push_back(std::move(script));
-		}
 	}
 }

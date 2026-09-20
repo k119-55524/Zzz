@@ -8,6 +8,7 @@
 #include <functional>
 
 #include "core/utils/Guid.h"
+#include "engine/tasks/TaskPriority.h"
 #include "engine/resources/ResourceRef.h"
 #include "engine/resources/gpu/GpuMesh.h"
 #include "engine/resources/gpu/GpuMaterial.h"
@@ -18,6 +19,11 @@ namespace zzz::core
 	class Script;
 	class GameObjectData;
 	class ScriptFactory;
+}
+
+namespace zzz::templates
+{
+	class AsyncInitTracker;
 }
 
 namespace zzz::engine
@@ -57,7 +63,8 @@ namespace zzz::engine
 			const GameObjectData& data,
 			const ScriptFactory& scriptFactory,
 			GpuResourceManager& gpuResourceManager,
-			std::function<void(std::expected<void, std::string>)> onReady);
+			std::function<void(std::expected<void, std::string>)> onReady,
+			eTaskPriority priority = eTaskPriority::Normal);
 
 #pragma region Getters and Setters
 		[[nodiscard]] NodeHandle GetNodeHandle() const noexcept { return m_NodeHandle; }
@@ -164,6 +171,9 @@ namespace zzz::engine
 		void AddScript(std::shared_ptr<Script> script);
 
 	private:
+		void OnMeshLoaded(size_t index, std::expected<ResourceRef<GpuMesh>, std::string> res, std::shared_ptr<templates::AsyncInitTracker> tracker);
+		void OnMaterialLoaded(size_t index, std::expected<ResourceRef<GpuMaterial>, std::string> res, std::shared_ptr<templates::AsyncInitTracker> tracker);
+
 		Guid m_Guid;
 		std::string m_Name;
 

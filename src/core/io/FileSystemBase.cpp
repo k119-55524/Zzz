@@ -126,6 +126,13 @@ namespace zzz::core
 	std::expected<void, std::string> FileSystemBase::WriteAllBytes(
 		eFileLocation location, std::string_view relativePath, std::span<const std::byte> bytes) noexcept
 	{
+		if (!IsLocationWritable(location))
+			return UNEXPECTED("Попытка записи в защищённую область: {}", ToString(location));
+
+		const std::filesystem::path p{ relativePath };
+		if (p.is_absolute() || relativePath.find("..") != std::string_view::npos)
+			return UNEXPECTED("Недопустимый путь к файлу: выход за пределы директории запрещён");
+
 		auto resolved = ResolvePhysicalPath(location, relativePath);
 		if (!resolved)
 			return UNEXPECTED("{}", resolved.error());

@@ -27,7 +27,7 @@ namespace zzz::engine
 		explicit TaskDispatcher(const CpuTopology& topology);
 		~TaskDispatcher();
 
-		void Submit(eTaskPriority priority, std::function<void()> task, ErrorHandler onError = nullptr);
+		bool Submit(eTaskPriority priority, std::function<void()> task, ErrorHandler onError = nullptr);
 		void Join(eTaskPriority priority);
 		void JoinAll();
 

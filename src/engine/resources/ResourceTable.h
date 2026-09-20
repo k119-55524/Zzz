@@ -20,6 +20,8 @@ namespace zzz::engine
 	 * @brief Потокобезопасная типизированная таблица ресурсов конкретного типа T.
 	 * @details Инкапсулирует хэш-таблицу событий OneShotEvent<ResultType>, shared_mutex
 	 *          и реактивную механику "подпишись на шот или запусти загрузку".
+	 *          Соблюдает контракт Zero User Code Under Lock: замки таблицы всегда
+	 *          освобождаются до вызова внешних функций (Subscribe, onLoadRequest, Resolve).
 	 */
 	template<typename T>
 	class ResourceTable final
@@ -29,31 +31,69 @@ namespace zzz::engine
 	public:
 		using ResultType = std::expected<std::shared_ptr<T>, std::string>;
 		using CallbackType = std::function<void(ResultType)>;
-		using DispatcherFunc = typename OneShotEvent<ResultType>::DispatcherFunc;
+		using CallbackDispatcher = std::function<void(std::function<void()>)>;
+		using EventType = OneShotEvent<ResultType>;
 
-		ResourceTable() = default;
+		ResourceTable() = delete;
+		explicit ResourceTable(CallbackDispatcher dispatcher)
+			: m_CallbackDispatcher(std::move(dispatcher))
+		{
+			ensure(m_CallbackDispatcher != nullptr, "ResourceTable: CallbackDispatcher не должен быть null");
+		}
+
 		~ResourceTable() = default;
 
 		/**
 		 * @brief Асинхронный запрос ресурса по GUID с контекстом жизни (weak_ptr).
-		 * @details Если шот уже есть — атомарно подписывает коллбэк (вызовется сразу, если ресурс готов).
-		 *          Если шота нет — атомарно создаёт шот, подписывает коллбэк и вызывает onLoadRequest(guid).
+		 * @details Реализует Read-First паттерн: сначала поиск под shared_lock,
+		 *          при отсутствии — вставка под unique_lock.
+		 *          Замки снимаются перед подпиской и запуском onLoadRequest.
 		 */
 		template<typename ContextType, typename LoadFunc>
 		void GetOrRequest(
 			const Guid& guid,
 			std::weak_ptr<ContextType> context,
 			CallbackType onLoaded,
-			const DispatcherFunc& dispatcher,
 			LoadFunc&& onLoadRequest)
 		{
-			std::unique_lock lock(m_Mutex);
+			std::shared_ptr<EventType> eventPtr;
+			bool isNew = false;
 
-			auto [it, inserted] = m_Events.try_emplace(guid, dispatcher);
-			it->second.Subscribe(std::move(context), std::move(onLoaded));
+			// Фаза 1: Read-First под shared_lock
+			{
+				std::shared_lock readLock(m_Mutex);
+				auto it = m_Events.find(guid);
+				if (it != m_Events.end())
+				{
+					eventPtr = it->second;
+				}
+			}
 
-			if (inserted)
+			// Фаза 2: Если не найден — переходим под unique_lock
+			if (!eventPtr)
+			{
+				std::unique_lock writeLock(m_Mutex);
+				auto it = m_Events.find(guid);
+				if (it != m_Events.end())
+				{
+					eventPtr = it->second;
+				}
+				else
+				{
+					eventPtr = std::make_shared<EventType>(m_CallbackDispatcher);
+					m_Events.emplace(guid, eventPtr);
+					isNew = true;
+				}
+			}
+
+			// Фаза 3: Zero User Code Under Lock
+			ensure(eventPtr != nullptr, "ResourceTable: eventPtr не должен быть null");
+			eventPtr->Subscribe(std::move(context), std::move(onLoaded));
+
+			if (isNew)
+			{
 				onLoadRequest(guid);
+			}
 		}
 
 		/**
@@ -63,34 +103,89 @@ namespace zzz::engine
 		void GetOrRequest(
 			const Guid& guid,
 			CallbackType onLoaded,
-			const DispatcherFunc& dispatcher,
 			LoadFunc&& onLoadRequest)
 		{
-			std::unique_lock lock(m_Mutex);
+			std::shared_ptr<EventType> eventPtr;
+			bool isNew = false;
 
-			auto [it, inserted] = m_Events.try_emplace(guid, dispatcher);
-			it->second.Subscribe(std::move(onLoaded));
+			// Фаза 1: Read-First под shared_lock
+			{
+				std::shared_lock readLock(m_Mutex);
+				auto it = m_Events.find(guid);
+				if (it != m_Events.end())
+				{
+					eventPtr = it->second;
+				}
+			}
 
-			if (inserted)
+			// Фаза 2: Если не найден — переходим под unique_lock
+			if (!eventPtr)
+			{
+				std::unique_lock writeLock(m_Mutex);
+				auto it = m_Events.find(guid);
+				if (it != m_Events.end())
+				{
+					eventPtr = it->second;
+				}
+				else
+				{
+					eventPtr = std::make_shared<EventType>(m_CallbackDispatcher);
+					m_Events.emplace(guid, eventPtr);
+					isNew = true;
+				}
+			}
+
+			// Фаза 3: Zero User Code Under Lock
+			ensure(eventPtr != nullptr, "ResourceTable: eventPtr не должен быть null");
+			eventPtr->Subscribe(std::move(onLoaded));
+
+			if (isNew)
+			{
 				onLoadRequest(guid);
+			}
 		}
 
-		/// @brief Разрешение события готовности (успех или ошибка)
-		void Resolve(const Guid& guid, ResultType result, const DispatcherFunc& dispatcher)
+		/**
+		 * @brief Разрешение события готовности (успех или ошибка).
+		 * @details Поиск выполняется под shared_lock строго без создания новой записи.
+		 *          Замок снимается до вызова eventPtr->Resolve.
+		 */
+		bool Resolve(const Guid& guid, ResultType result)
 		{
-			std::unique_lock lock(m_Mutex);
-			auto [it, _] = m_Events.try_emplace(guid, dispatcher);
-			it->second.Resolve(std::move(result));
+			std::shared_ptr<EventType> eventPtr;
+
+			{
+				std::shared_lock lock(m_Mutex);
+				auto it = m_Events.find(guid);
+				if (it != m_Events.end())
+				{
+					eventPtr = it->second;
+				}
+			}
+
+			if (!eventPtr)
+				return false;
+
+			eventPtr->Resolve(std::move(result));
+			return true;
 		}
 
 		/// @brief Синхронная попытка получить готовый ресурс из таблицы без ожидания
 		[[nodiscard]] std::shared_ptr<T> TryGet(const Guid& guid) const
 		{
-			std::shared_lock lock(m_Mutex);
-			auto it = m_Events.find(guid);
-			if (it != m_Events.end())
+			std::shared_ptr<EventType> eventPtr;
 			{
-				auto resOpt = it->second.GetResult();
+				std::shared_lock lock(m_Mutex);
+				auto it = m_Events.find(guid);
+				if (it != m_Events.end())
+				{
+					eventPtr = it->second;
+				}
+			}
+
+			if (eventPtr)
+			{
+				auto resOpt = eventPtr->GetResult();
 				if (resOpt)
 				{
 					const auto& expectedRes = std::get<0>(*resOpt);
@@ -101,6 +196,13 @@ namespace zzz::engine
 				}
 			}
 			return nullptr;
+		}
+
+		/// @brief Проверка наличия записи в таблице по GUID
+		[[nodiscard]] bool Contains(const Guid& guid) const
+		{
+			std::shared_lock lock(m_Mutex);
+			return m_Events.contains(guid);
 		}
 
 		/// @brief Очистка всех записей таблицы
@@ -118,6 +220,7 @@ namespace zzz::engine
 
 	private:
 		mutable std::shared_mutex m_Mutex;
-		std::unordered_map<Guid, OneShotEvent<ResultType>> m_Events;
+		std::unordered_map<Guid, std::shared_ptr<EventType>> m_Events;
+		CallbackDispatcher m_CallbackDispatcher;
 	};
 }

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <string_view>
+
 #include "math/utils/Types.h"
-#include "core/utils/ThrowWrappers.h"
 
 namespace zzz::core
 {
@@ -36,6 +36,16 @@ namespace zzz::core
 
 	[[nodiscard]] constexpr bool IsLocationWritable(eFileLocation location) noexcept
 	{
-		return location != eFileLocation::App;
+		switch (location)
+		{
+		case eFileLocation::User:
+		case eFileLocation::Saves:
+		case eFileLocation::Cache:
+		case eFileLocation::Logs:
+			return true;
+		case eFileLocation::App:
+		default:
+			return false;
+		}
 	}
 }

@@ -36,16 +36,16 @@ namespace zzz::engine
 		m_GlobalTransitionParams = m_PackageManager->GetProjectManifestData().GetDefaultTransitionParams();
 	}
 
-	void SceneManager::LoadSceneAsync(std::string sceneName, SceneLoadCallback onComplete)
+	void SceneManager::LoadSceneAsync(std::string sceneName, SceneLoadCallback onComplete, eTaskPriority priority)
 	{
 		ensure(onComplete != nullptr, "onComplete коллбэк должен быть валидным.");
 		auto entryOpt = m_PackageManager->GetEntry(ePackage::Scene, sceneName);
 		ensure(entryOpt.has_value(), "Сцена с именем '{}' не найдена в package.dat.", sceneName);
 
-		LoadSceneAsync(entryOpt->GetGuid(), std::move(onComplete));
+		LoadSceneAsync(entryOpt->GetGuid(), std::move(onComplete), priority);
 	}
 
-	void SceneManager::LoadSceneAsync(Guid sceneGuid, SceneLoadCallback onComplete)
+	void SceneManager::LoadSceneAsync(Guid sceneGuid, SceneLoadCallback onComplete, eTaskPriority priority)
 	{
 		ensure(!sceneGuid.IsEmpty(), "GUID загружаемой сцены не может быть пустым.");
 		ensure(onComplete != nullptr, "onComplete коллбэк должен быть валидным.");
@@ -85,7 +85,7 @@ namespace zzz::engine
 			m_LoadingScenes.emplace(sceneGuid, loadEvent);
 		}
 
-		m_TaskDispatcher.Submit(eTaskPriority::Normal, [this, sceneGuid]()
+		m_TaskDispatcher.Submit(priority, [this, sceneGuid, priority]()
 			{
 				try
 				{
@@ -131,7 +131,7 @@ namespace zzz::engine
 							scene->InvokeStart();
 							loadEvent->Resolve(scene);
 						});
-					});
+					}, priority);
 				}
 				catch (const std::exception& e)
 				{

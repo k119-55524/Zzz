@@ -12,11 +12,11 @@ using namespace zzz::logger;
 
 namespace zzz::engine
 {
-	std::expected<std::shared_ptr<CpuMaterial>, std::string> CpuMaterialLoader::Load(
+	std::expected<std::shared_ptr<CpuMaterial>, std::string> CpuMaterialLoader::LoadFromMemory(
 		const PackageEntry& entry,
-		DataAssetsManager& dataAssetsManager)
+		std::span<const std::byte> bytes)
 	{
-		auto matDataRes = dataAssetsManager.DeserializeAsset<MaterialData>(entry);
+		auto matDataRes = DataAssetsManager::DeserializeAssetFromMemory<MaterialData>(entry, bytes);
 		if (!matDataRes)
 		{
 			return std::unexpected(std::format(
@@ -35,5 +35,20 @@ namespace zzz::engine
 			matName, entry.GetGuid().ToString(), shaderGuid.ToString());
 
 		return safe_make_shared<CpuMaterial>(entry.GetGuid(), std::move(matName), shaderGuid);
+	}
+
+	std::expected<std::shared_ptr<CpuMaterial>, std::string> CpuMaterialLoader::Load(
+		const PackageEntry& entry,
+		DataAssetsManager& dataAssetsManager)
+	{
+		auto rawRes = dataAssetsManager.ReadRawBytes(entry);
+		if (!rawRes)
+		{
+			return std::unexpected(std::format(
+				"[CpuMaterialLoader] Ошибка чтения сырых данных материала '{}' (GUID: {}, смещение: {}): {}",
+				entry.GetName(), entry.GetGuid().ToString(), entry.GetOffset(), rawRes.error()));
+		}
+
+		return LoadFromMemory(entry, *rawRes);
 	}
 }

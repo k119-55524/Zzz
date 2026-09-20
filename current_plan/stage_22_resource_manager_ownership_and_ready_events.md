@@ -40,18 +40,17 @@ GameObject (Main Thread)
 CpuResourceManager::GetAsync<CpuMesh>(guid, onLoadRequest, eTaskPriority::High)
   │    └─ ResourceTable<CpuMesh>::GetOrRequest (статус: Pending)
   ▼
-[2. ДИСКОВЫЙ I/O (m_IoScheduler)]
-CpuResourceManager::IoScheduler (выделенный приватный поток m_IoThread на std::jthread)
-  │  Выбор источника по storageKind:
-  │    - DataArchive -> DataAssetsManager::ReadRawBytes(entry)
-  │    - PackageArchive -> PackageManager::ReadRawBytes(entry)
-  │    - DedicatedFolder -> FileSystem::ReadAllBytes(path)
-  │  Последовательное чтение сырых байт (std::vector<zU8>) под контролем InFlightPermit.
-  ▼  m_TaskDispatcher.Submit(request.priority) [eTaskPriority::High]
+[2. ДИСКОВЫЙ ВВОД-ВЫВОД С BACKPRESSURE (Выделенный поток IoScheduler)]
+IoScheduler Thread (выделенный m_IoThread, последовательное чтение с диска):
+  │  1. Контроль лимитов Backpressure (m_MaxInFlightBytes, m_MaxInFlightRequests)
+  │  2. Чтение сырых байт из архива через FileSystem::ReadBytes
+  │  3. Создание RAII-токена InFlightPermit
+  ▼  4. Передача (std::vector<std::byte>, InFlightPermit) в onIoComplete
 [3. CPU ДЕСЕРИАЛИЗАЦИЯ (Воркер TaskDispatcher)]
-TaskDispatcher Worker (Пул воркеров)
+TaskDispatcher Worker (Пул воркеров, приоритет eTaskPriority::Normal / High):
   │  1. CpuMeshLoader::LoadFromMemory(entry, bytes) -> парсинг CPU-структуры
-  ▼  2. CpuResourceManager::GetTable<CpuMesh>().Resolve(guid, std::move(cpuMesh))
+  │  2. Освобождение InFlightPermit (возврат квоты в IoScheduler)
+  ▼  3. CpuResourceManager::GetTable<CpuMesh>().Resolve(guid, std::move(cpuMesh))
 [4. GPU PREPARATION STUB (Фоновый воркер TaskDispatcher)]
 TaskDispatcher Worker (колбэк по готовности CpuMesh, спланированный диспетчером CpuRM на пул воркеров):
   │  1. GpuResourceBuilder<GpuMesh>::Build(std::move(cpuMesh)) -> создание RAM-заглушки GpuMesh
@@ -101,22 +100,26 @@ Main Thread (колбэк запланирован диспетчером GpuRM 
 
 ---
 
-### 2.3. Владение `IoScheduler`, Backpressure и точки расширения
+### 2.3. Маршрутизация задач, IoScheduler и проброс приоритетов
 
-1. **Модель владения и инкапсуляция:**
-   - `IoScheduler` является приватным компонентом ввода-вывода внутри `CpuResourceManager` (`std::unique_ptr<IoScheduler> m_IoScheduler`).
-   - `GpuResourceManager` **полностью изолирован от диска** и не знает про `IoScheduler`, файлы или архивы — он запрашивает типизированные данные у `CpuResourceManager::GetAsync<CpuMesh>`.
-   - Вся дисковая работа, доступ к `DataAssetsManager` / `PackageManager` и координация чтения сосредоточены в `CpuResourceManager`.
-   - При завершении приложения: `Engine::Destroy()` вызывает `m_CpuResourceManager->Stop()`, который внутри себя останавливает `m_IoScheduler->Stop()`.
+1. **Модель исполнения задач и Backpressure (IoScheduler):**
+   - Дисковый ввод-вывод изолирован в приватном `IoScheduler` внутри `CpuResourceManager`.
+   - Выделенный поток ввода-вывода `m_IoThread` последовательно читает данные с диска без конкуренции головок/дескрипторов.
+   - Механизм Backpressure (`InFlightPermit`) ограничивает суммарный объём байт (по умолчанию 64 МБ) и количество запросов (128) в полёте: если лимит превышен, `m_IoThread` засыпает на `m_BackpressureCv` до завершения десериализации предыдущих ресурсов на воркерах `TaskDispatcher`.
+   - `GpuResourceManager` **полностью изолирован от диска** — он запрашивает типизированные данные у `CpuResourceManager::GetAsync<CpuMesh>`.
+   - Вся дисковая работа, доступ к `DataAssetsManager` / `PackageManager` сосредоточены в `CpuResourceManager` и `IoScheduler`.
 
-2. **Точки расширения `IoScheduler` (без изменения архитектуры):**
-   - **Количество потоков чтения:** на этапе 22 — 1 поток `std::jthread m_IoThread` (оптимально для последовательного чтения архива `data.dat` без конкуренции за диск). В будущем класс легко расширяется на несколько потоков при необходимости.
-   - **Контроль занятой памяти (Backpressure):** ограничение суммарного объёма байтов в полёте (`m_MaxInFlightBytes`) и лимита запросов (`m_MaxInFlightRequests`) через RAII-токен `InFlightPermit`.
-   - **Смена бэкенда (этап 58 / TODO 25):** в будущем реализация `IoScheduler` может быть заменена на Windows IOCP, Linux `io_uring` или DirectStorage без изменения контрактов менеджеров ресурсов.
+2. **Проброс приоритетов (`eTaskPriority`):**
+   - Стартовая загрузка первой сцены окна инициируется из `ViewManager::SetInitialSceneAsync(view, sceneGuid, eTaskPriority::High)`.
+   - Приоритет `eTaskPriority::High` сквозным образом транслируется через `SceneManager::LoadSceneAsync` $\to$ `Scene::Initialize` $\to$ `GameLayer::Populate` $\to$ `GameObject::Initialize`.
+   - Все последующие загрузки и фоновые сцены используют стандартный/фоновый приоритет (`Normal` / `Background`).
+   - `GpuResourceManager` транслирует приоритет запроса в `CpuResourceManager::GetAsync`, а затем использует его же при постановке задачи сборки GPU-ресурса.
+   - `CpuResourceManager` передаёт `priority` в `IoScheduler::QueueRead` и в `m_TaskDispatcher.Submit(priority, ...)`, направляя задачу в соответствующий физический пул воркеров (`Critical`, `High`, `Normal`, `Background`).
 
-3. **Синхронизация очереди:**
-   - Очередь `DoubleBufferedVector<IoReadRequest>` и `m_IoCv` синхронизируются через единый `std::mutex m_IoMutex`.
-   - Воркер `m_IoThread` ожидает по `m_IoCv.wait(lock, predicate)` с предикатом проверки очереди и `stopToken.stop_requested()`, исключая lost wakeup.
+3. **Контракт гарантированного разрешения (No-Hang в состоянии Running):**
+   - Метод `TaskDispatcher::Submit` возвращает `bool` (`true` при принятии в очередь, `false` при закрытом пуле).
+   - Если `Submit` вернул `false`, менеджер немедленно разрешает запрос вызовом `Resolve(guid, std::unexpected(...))`.
+   - Любые ошибки чтения, парсинга или брошенные C++ исключения перехватываются через `try ... catch` и транслируются в `Resolve`, исключая зависание `Pending`.
 
 ---
 
@@ -169,16 +172,13 @@ Main Thread (колбэк запланирован диспетчером GpuRM 
   - Переименовать `m_RefCount` $\to$ `m_ExternalRefCount`, `GetRefCount()` $\to$ `GetExternalRefCount()`.
 - **Верификация:** Компиляция `run_build.bat game_win`.
 
-### **Подшаг 3: Дисковый планировщик `IoScheduler` и `CpuResourceManager`**
+### **Подшаг 3: Асинхронная загрузка через `TaskDispatcher` и `CpuResourceManager`**
 - В `src/engine/tasks/TaskDispatcher.h/.cpp`:
-  - Минимальная правка `Submit`: возвращает `bool` (`true` при `eEnqueueResult::Accepted`, `false` при `Closed` / ошибке).
-- Создать `src/engine/resources/io/IoScheduler.h/.cpp` как приватный компонент `CpuResourceManager`:
-  - Выделить `std::jthread m_IoThread`, `m_IoMutex`, `m_IoCv`, очереди `DoubleBufferedVector<IoReadRequest>`.
-  - Метод `QueueRead(entry, priority, onReadComplete)` с передачей прочитанных байт/ошибок в воркер `TaskDispatcher`.
-  - Контроль Backpressure (`InFlightPermit`) и метод `Stop()`.
+  - Правка `Submit`: возвращает `bool` (`true` при `eEnqueueResult::Accepted`, `false` при `Closed` / ошибке).
 - В `CpuResourceManager`:
-  - Владение `std::unique_ptr<IoScheduler> m_IoScheduler`.
-  - Реализация `GetAsync<T>` (`QueueRead` $\to$ воркер пула вызывает `LoadFromMemory` $\to$ `CpuResourceManager::GetTable<T>().Resolve(...)`).
+  - Методы `GetAsync<T>` принимают `eTaskPriority priority = eTaskPriority::Normal`.
+  - Реализация `DispatchLoad<T>(guid, priority)`: отправка задачи в `m_TaskDispatcher.Submit(priority, ...)`.
+  - Воркер пула вызывает `LoadResourceSync<T>(guid)` (чтение байт + `LoadFromMemory`) $\to$ `CpuResourceManager::GetTable<T>().Resolve(...)`.
   - Обязательный `try ... catch` в задачах воркера и проверка результата `TaskDispatcher::Submit` с трансляцией исключений, дисковых ошибок и отказов очереди в `Resolve(guid, std::unexpected(...))`.
   - Методы `Stop()` и `Clear()`.
 - **Верификация:** Компиляция `run_build.bat game_win`.
@@ -186,11 +186,11 @@ Main Thread (колбэк запланирован диспетчером GpuRM 
 ### **Подшаг 4: `GpuResourceBuilder` и конвейер `GpuResourceManager`**
 - Создать `GpuResourceBuilder.h` со специализацией `Build` для меша, текстуры, материала, шейдера (создание RAM-заглушек без вызовов GAPI; `GpuMesh` удерживает `ResourceRef<CpuMesh>` до этапа 23).
 - В `GpuResourceManager`:
-  - Приём `CpuResourceManager&` через конструктор (DI). Полная изоляция от диска и `IoScheduler`.
+  - Приём `CpuResourceManager&` через конструктор (DI). Полная изоляция от диска.
   - Типизированные `ResourceTable<TGpu>` (дедупликация запросов сцены по GUID).
-  - Метод `GetAsync<TGpu>`: проверяет таблицу `ResourceTable<TGpu>` $\to$ запрашивает `CpuResourceManager::GetAsync<TCpu>` $\to$ по готовности CPU-данных воркер вызывает `GpuResourceBuilder::Build` $\to$ `GpuResourceManager::GetTable<TGpu>().Resolve`.
+  - Метод `GetAsync<TGpu>` с параметром `priority`: проверяет таблицу `ResourceTable<TGpu>` $\to$ запрашивает `CpuResourceManager::GetAsync<TCpu>(guid, weak_from_this(), ..., priority)` $\to$ по готовности CPU-данных воркер вызывает `GpuResourceBuilder::Build` $\to$ `GpuResourceManager::GetTable<TGpu>().Resolve`.
   - Гарантия No-Hang: задача воркера обёрнута в `try ... catch`, любая ошибка или отказ постановки транслируется в `Resolve(guid, std::unexpected(err))`.
-  - Метод `Clear()`.
+  - Методы `Stop()` и `Clear()`.
 - **Верификация:** Компиляция `run_build.bat game_win`.
 
 ### **Подшаг 5: Детерминированный Shutdown, связка с `GameObject` и финальная проверка**
@@ -199,7 +199,7 @@ Main Thread (колбэк запланирован диспетчером GpuRM 
   - В `Engine::Destroy()`: строгий порядок остановки (`m_CpuResourceManager->Stop()` $\to$ `TaskDispatcher::JoinAll()` $\to$ очистка completion queues без исполнения $\to$ `WaitForGpu()` $\to$ `Clear()` таблиц $\to$ уничтожение менеджеров).
 - В `GameObject` (`src/engine/scene/gameobject/GameObject.cpp`):
   - Инициализация меша и материала через `m_GpuResourceManager.GetAsync<GpuMesh>` и `m_GpuResourceManager.GetAsync<GpuMaterial>`.
-  - Проверка сквозной цепочки: `GameObject` $\to$ `GpuResourceManager` $\to$ `CpuResourceManager` $\to$ `IoScheduler` (I/O) $\to$ Worker (десериализация + GPU-сборка) $\to$ Main Thread `OnMeshLoaded` $\to$ `CountdownTrigger::CountDown()`.
+  - Проверка сквозной цепочки: `GameObject` $\to$ `GpuResourceManager` $\to$ `CpuResourceManager` $\to$ `TaskDispatcher` (I/O + десериализация + GPU-сборка) $\to$ Main Thread `OnMeshLoaded` $\to$ `CountdownTrigger::CountDown()`.
 - **Финальная верификация:** Запуск тестовых наборов `run_build.bat game_win`, `run_build.bat editor_dll`, `run_build.bat tests`.
 
 ---

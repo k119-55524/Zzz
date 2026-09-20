@@ -1,8 +1,4 @@
 
-#include <thread>
-#include <algorithm>
-
-#include "core/Core.h"
 #include "engine/view/View.h"
 #include "engine/view/ViewManager.h"
 #include "engine/scene/Scene.h"
@@ -151,12 +147,14 @@ std::shared_ptr<View> ViewManager::CreateViewInstance(
 	);
 
 	view->InvokeStart();
-	SetInitialSceneAsync(view, viewData.GetSceneGuid());
+
+	// TODO: Первую сцену читаем с eTaskPriority::High, потом можно будет задавать из профиля(конкретика под платформу, выбор девелопера), анализа конкретной системы
+	SetInitialSceneAsync(view, viewData.GetSceneGuid(), eTaskPriority::High);
 
 	return view;
 }
 
-void ViewManager::SetInitialSceneAsync(std::weak_ptr<View> viewWeak, const Guid& sceneGuid)
+void ViewManager::SetInitialSceneAsync(std::weak_ptr<View> viewWeak, const Guid& sceneGuid, eTaskPriority priority)
 {
 	ensure(!sceneGuid.IsEmpty(), "GUID стартовой сцены окна не может быть пустым.");
 
@@ -170,7 +168,7 @@ void ViewManager::SetInitialSceneAsync(std::weak_ptr<View> viewWeak, const Guid&
 			THROW_RUNTIME("Не удалось загрузить стартовую сцену View: {}", sceneRes.error());
 
 		view->SetScene(*sceneRes);
-	});
+	}, priority);
 }
 
 void ViewManager::OnWindowClose(View& view)

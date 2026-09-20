@@ -49,7 +49,8 @@ namespace zzz::engine
 		void Populate(
 			const LayerData& layerData,
 			const ScriptFactory& scriptFactory,
-			std::function<void(std::expected<void, std::string>)> onReady = {}) override;
+			std::function<void(std::expected<void, std::string>)> onReady = {},
+			eTaskPriority priority = eTaskPriority::Normal) override;
 
 	private:
 		std::shared_ptr<CpuResourceManager>   m_CpuResourceManager;

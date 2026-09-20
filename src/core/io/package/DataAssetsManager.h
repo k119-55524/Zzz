@@ -65,8 +65,12 @@ namespace zzz::core
 
 		[[nodiscard]] const DatFileHeader& GetHeader() const noexcept { return m_Header; }
 
+		[[nodiscard]] std::expected<std::vector<std::byte>, std::string> ReadRawBytes(const PackageEntry& entry) const;
+
 		template <typename T>
-		[[nodiscard]] std::expected<T, std::string> DeserializeAsset(const PackageEntry& entry) const
+		[[nodiscard]] static std::expected<T, std::string> DeserializeAssetFromMemory(
+			const PackageEntry& entry,
+			std::span<const std::byte> bytes)
 		{
 			constexpr eResourceType expectedType = c_DataAssetResourceType<T>;
 			if (entry.GetAssetType() != static_cast<zU32>(expectedType))
@@ -75,6 +79,19 @@ namespace zzz::core
 					entry.GetName(), ToString(expectedType), entry.GetAssetType());
 			}
 
+			std::size_t offset = 0;
+			Serializer serializer;
+			T data{};
+			auto res = serializer.Deserialize(bytes, offset, data);
+			if (!res)
+				return UNEXPECTED("Ошибка десериализации ресурса '{}': {}", entry.GetName(), res.error());
+
+			return data;
+		}
+
+		template <typename T>
+		[[nodiscard]] std::expected<T, std::string> DeserializeAsset(const PackageEntry& entry) const
+		{
 			return DeserializeEntry<T>(entry);
 		}
 
@@ -107,20 +124,11 @@ namespace zzz::core
 		template <typename T>
 		[[nodiscard]] std::expected<T, std::string> DeserializeEntry(const PackageEntry& entry) const
 		{
-			auto bufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_DataPackageRelativePath, entry.GetOffset(), entry.GetSize());
+			auto bufferRes = ReadRawBytes(entry);
 			if (!bufferRes)
-				return UNEXPECTED("Не удалось прочитать блок данных '{}' из пакета '{}': {}",
-					entry.GetName(), c_DataPackageRelativePath, bufferRes.error());
+				return UNEXPECTED("{}", bufferRes.error());
 
-			const auto& buffer = *bufferRes;
-			std::size_t offset = 0;
-			Serializer serializer;
-			T data{};
-			auto res = serializer.Deserialize(buffer, offset, data);
-			if (!res)
-				return UNEXPECTED("Ошибка десериализации ресурса '{}': {}", entry.GetName(), res.error());
-
-			return data;
+			return DeserializeAssetFromMemory<T>(entry, *bufferRes);
 		}
 
 		void Initialize();

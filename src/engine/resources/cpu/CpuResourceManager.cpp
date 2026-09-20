@@ -30,11 +30,31 @@ namespace zzz::engine
 		, m_PackageManager(std::move(packageManager))
 		, m_DataAssetsManager(std::move(dataAssetsManager))
 		, m_FileSystem(std::move(fileSystem))
+		, m_IoScheduler(m_FileSystem ? safe_make_unique<IoScheduler>(m_FileSystem) : nullptr)
+		, m_Meshes([this](auto task) { m_TaskDispatcher.Submit(eTaskPriority::High, std::move(task)); })
+		, m_Materials([this](auto task) { m_TaskDispatcher.Submit(eTaskPriority::High, std::move(task)); })
+		, m_Textures([this](auto task) { m_TaskDispatcher.Submit(eTaskPriority::High, std::move(task)); })
+		, m_Shaders([this](auto task) { m_TaskDispatcher.Submit(eTaskPriority::High, std::move(task)); })
 	{
 		ensure(m_PackageManager != nullptr, "PackageManager не должен быть null в CpuResourceManager.");
 	}
 
 	CpuResourceManager::~CpuResourceManager()
+	{
+		Stop();
+		Clear();
+	}
+
+	void CpuResourceManager::Stop()
+	{
+		m_IsRunning.store(false, std::memory_order_release);
+		if (m_IoScheduler)
+		{
+			m_IoScheduler->Stop();
+		}
+	}
+
+	void CpuResourceManager::Clear()
 	{
 		EmergencyStop();
 	}
@@ -135,4 +155,37 @@ namespace zzz::engine
 		}
 		return safe_make_shared<CpuTexture2D>(entryRes->GetGuid(), std::string(entryRes->GetName()));
 	}
+
+	template<>
+	std::expected<std::shared_ptr<CpuMesh>, std::string> CpuResourceManager::LoadFromBytes<CpuMesh>(
+		const PackageEntry& entry,
+		std::span<const std::byte> bytes)
+	{
+		return CpuMeshLoader::LoadFromMemory(entry, bytes);
+	}
+
+	template<>
+	std::expected<std::shared_ptr<CpuMaterial>, std::string> CpuResourceManager::LoadFromBytes<CpuMaterial>(
+		const PackageEntry& entry,
+		std::span<const std::byte> bytes)
+	{
+		return CpuMaterialLoader::LoadFromMemory(entry, bytes);
+	}
+
+	template<>
+	std::expected<std::shared_ptr<CpuShader>, std::string> CpuResourceManager::LoadFromBytes<CpuShader>(
+		const PackageEntry& entry,
+		std::span<const std::byte> bytes)
+	{
+		return CpuShaderLoader::LoadFromMemory(entry, bytes);
+	}
+
+	template<>
+	std::expected<std::shared_ptr<CpuTexture2D>, std::string> CpuResourceManager::LoadFromBytes<CpuTexture2D>(
+		const PackageEntry& entry,
+		std::span<const std::byte> /*bytes*/)
+	{
+		return safe_make_shared<CpuTexture2D>(entry.GetGuid(), std::string(entry.GetName()));
+	}
 }
+

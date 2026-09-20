@@ -28,7 +28,7 @@ namespace zzz::engine
 			, m_Type(type)
 			, m_Name(std::move(name))
 			, m_State(::zzz::core::eResourceState::Ready)
-			, m_RefCount(0)
+			, m_ExternalRefCount(0)
 		{
 		}
 
@@ -40,17 +40,18 @@ namespace zzz::engine
 		[[nodiscard]] virtual ::zzz::core::eResourceState GetState() const noexcept { return m_State.load(std::memory_order_relaxed); }
 		virtual void SetState(::zzz::core::eResourceState state) noexcept { m_State.store(state, std::memory_order_relaxed); }
 
-		[[nodiscard]] zU32 GetRefCount() const noexcept { return m_RefCount.load(std::memory_order_relaxed); }
+		[[nodiscard]] zU32 GetExternalRefCount() const noexcept { return m_ExternalRefCount.load(std::memory_order_relaxed); }
+		[[nodiscard]] zU32 GetRefCount() const noexcept { return GetExternalRefCount(); }
 
 	protected:
 		::zzz::core::Guid m_Guid;
 		::zzz::core::eResourceType m_Type;
 		std::string m_Name;
 		std::atomic<::zzz::core::eResourceState> m_State;
-		std::atomic<zU32> m_RefCount;
+		std::atomic<zU32> m_ExternalRefCount;
 
 	private:
-		void AddRef() noexcept { m_RefCount.fetch_add(1, std::memory_order_relaxed); }
-		void Release() noexcept { m_RefCount.fetch_sub(1, std::memory_order_relaxed); }
+		void AddRef() noexcept { m_ExternalRefCount.fetch_add(1, std::memory_order_relaxed); }
+		void Release() noexcept { m_ExternalRefCount.fetch_sub(1, std::memory_order_relaxed); }
 	};
 }

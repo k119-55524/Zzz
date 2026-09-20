@@ -84,6 +84,11 @@ namespace zzz::engine
 			return DeserializeEntry<T>(*entryOpt);
 		}
 
+		[[nodiscard]] std::expected<std::vector<std::byte>, std::string> ReadRawBytes(const PackageEntry& entry) const;
+
+		template <typename T> requires std::derived_from<T, ISerializable>
+		[[nodiscard]] static std::expected<T, std::string> DeserializeEntryFromMemory(const PackageEntry& entry, std::span<const std::byte> bytes);
+
 	private:
 		[[nodiscard]] std::optional<PackageEntry> GetEntry(const Guid& guid) const;
 		[[nodiscard]] std::optional<PackageEntry> GetEntry(ePackage type, const Guid& guid) const;

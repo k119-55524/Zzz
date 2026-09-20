@@ -5,6 +5,8 @@
 
 #include "engine/scene/layer/ILayer.h"
 #include "core/io/package/SceneData.h"
+#include "core/utils/Guid.h"
+#include "engine/tasks/TaskPriority.h"
 #include "engine/gapi/clear_config/ClearConfig.h"
 
 namespace zzz::core
@@ -36,7 +38,8 @@ namespace zzz::engine
 			SceneData sceneData,
 			const ScriptFactory& scriptFactory,
 			TaskDispatcher& taskDispatcher,
-			std::function<void(std::expected<void, std::string>)> onLayersCreated);
+			std::function<void(std::expected<void, std::string>)> onLayersCreated,
+			eTaskPriority priority = eTaskPriority::Normal);
 
 		[[nodiscard]] const Guid& GetGuid() const noexcept { return m_Guid; }
 		[[nodiscard]] const std::string& GetName() const noexcept { return m_Name; }
