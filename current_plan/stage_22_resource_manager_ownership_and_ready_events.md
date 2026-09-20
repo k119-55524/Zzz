@@ -9,8 +9,8 @@
 1. **Строгая типизация без стирания типов:** Полное отсутствие полиморфного `IResourceLoader`, `m_Loaders`, `AnyResourceCallback` и runtime-кастов. Загрузка типизирована: `CpuMesh`, `CpuMaterial`, `CpuTexture2D`, `CpuShader` на CPU и `GpuMesh`, `GpuMaterial`, `GpuTexture2D`, `GpuShader` на GPU.
 2. **Безопасная подписка по `weak_ptr`:** Механизм `OwnerToken` полностью удалён. `GameObject` наследует `std::enable_shared_from_this<GameObject>` и передаёт `weak_from_this()` в `OneShotEvent`. Если подписчик уничтожен — колбэк безопасно пропускается.
 3. **Zero User Code Under Lock:** Никакой внешний код (подписчики `onLoaded`, инициирующий `onLoadRequest`, постановка задач в `IoScheduler`/диспетчеры) не исполняется под блокировками таблиц ресурсов. Замки $L1$ всегда снимаются до вызова внешних функций.
-4. **Семантика `Ready` и честное время жизни памяти:** Сигнал готовности на этапе 22 означает **исключительно готовность C++ объекта-заглушки в RAM, а не GPU residency**. Вызовы GAPI из фоновых воркеров категорически запрещены. `CpuMesh` — это промежуточное представление данных пакета в RAM перед созданием GPU-ресурса. В этапе 22 `CpuMesh` честно остаётся в таблице `ResourceTable<CpuMesh>` до shutdown приложения (`Clear()`). Мы не обещаем его выгрузку простым `m_CpuMesh.reset()` на этапе 22 (так как запись кэша удерживает `std::shared_ptr`). Реальная политика выгрузки данных сетки из системной RAM будет решена на этапе 23 вместе с GPU upload. Физические меши (коллизии, convex hulls) изолированы от графических и управляются отдельно через `CpuResourceManager` (TODO 31, [`docs/ARCHITECTURE.md §31`](../docs/ARCHITECTURE.md)).
-5. **Гибридный подсчёт ссылок:** `std::shared_ptr<T>` управляет физическим временем жизни в кэше. `ResourceRef<T>` управляет внешними движковыми ссылками через атомарный счётчик `ResourceBase::m_ExternalRefCount`. Кэш не инкрементирует внешний счётчик, поэтому число внешних ссылок равно строго `GetExternalRefCount()`.
+4. **Семантика `Ready` и честное время жизни памяти:** Сигнал готовности на этапе 22 означает **исключительно готовность C++ объекта-заглушки в RAM, а не GPU residency**. Вызовы GAPI из фоновых воркеров категорически запрещены. `CpuMesh` — это транзитное представление данных пакета в RAM: `CpuResourceManager` не кэширует CPU-ресурсы в постоянных таблицах, а передаёт их в `GpuResourceManager`, где они конвертируются в `GpuMesh` и память `CpuMesh` немедленно освобождается. Физические меши (коллизии, convex hulls) изолированы от графических и управляются отдельно через `CpuResourceManager` (TODO 31, [`docs/ARCHITECTURE.md §31`](../docs/ARCHITECTURE.md)).
+5. **Гибридный подсчёт ссылок:** `std::shared_ptr<T>` управляет физическим временем жизни в кэше GPU. `ResourceRef<T>` управляет внешними движковыми ссылками через атомарный счётчик `ResourceBase::m_ExternalRefCount`. Кэш не инкрементирует внешний счётчик, поэтому число внешних ссылок равно строго `GetExternalRefCount()`.
 6. **Ограничение памяти в полёте (Backpressure):** Лимиты байтов (`m_MaxInFlightBytes`) и запросов (`m_MaxInFlightRequests`) в полёте, пакетное ограничение (Batch Drain Limit) и RAII-токен `InFlightPermit` предотвращают неконтролируемое накопление сырых буферов в памяти.
 7. **Детерминированный Shutdown:** Строгая последовательность в `Engine::Destroy`: остановка I/O $\to$ `JoinAll()` воркеров $\to$ сброс completion queues без исполнения $\to$ `WaitForGpu()` $\to$ очистка таблиц ресурсов $\to$ уничтожение менеджеров.
 8. **Защита дисковых зон:** `IsLocationWritable(location)` по принципу явного allowlist (`User`, `Saves`, `Cache`, `Logs`) и защита от выхода за пределы директории (Path Traversal `..`) в `FileSystemBase::WriteAllBytes`.
@@ -37,8 +37,8 @@ GameObject (Main Thread)
   │  GpuResourceManager::GetAsync<GpuMesh>(guid, weak_this, onLoaded, eTaskPriority::High)
   │    └─ ResourceTable<GpuMesh>::GetOrRequest (статус: Pending, подписчик зарегистрирован)
   ▼
-CpuResourceManager::GetAsync<CpuMesh>(guid, onLoadRequest, eTaskPriority::High)
-  │    └─ ResourceTable<CpuMesh>::GetOrRequest (статус: Pending)
+CpuResourceManager::GetAsync<CpuMesh>(guid, weak_this, onLoadRequest, eTaskPriority::High)
+  │    (транзитный запрос: без кэширования в таблицах)
   ▼
 [2. ДИСКОВЫЙ ВВОД-ВЫВОД С BACKPRESSURE (Выделенный поток IoScheduler)]
 IoScheduler Thread (выделенный m_IoThread, последовательное чтение с диска):
@@ -50,12 +50,12 @@ IoScheduler Thread (выделенный m_IoThread, последователь�
 TaskDispatcher Worker (Пул воркеров, приоритет eTaskPriority::Normal / High):
   │  1. CpuMeshLoader::LoadFromMemory(entry, bytes) -> парсинг CPU-структуры
   │  2. Освобождение InFlightPermit (возврат квоты в IoScheduler)
-  ▼  3. CpuResourceManager::GetTable<CpuMesh>().Resolve(guid, std::move(cpuMesh))
+  ▼  3. Передача ResourceRef<CpuMesh> напрямую в колбэк GpuResourceManager
 [4. GPU PREPARATION STUB (Фоновый воркер TaskDispatcher)]
-TaskDispatcher Worker (колбэк по готовности CpuMesh, спланированный диспетчером CpuRM на пул воркеров):
+TaskDispatcher Worker (колбэк по готовности CpuMesh, спланированный на пул воркеров):
   │  1. GpuResourceBuilder<GpuMesh>::Build(std::move(cpuMesh)) -> создание RAM-заглушки GpuMesh
   │     (ТЯЖЁЛАЯ СБОРКА ВЫПОЛНЯЕТСЯ СТРОГО НА ВОРКЕРЕ ПУЛА, А НЕ НА ГЛАВНОМ ПОТОКЕ!)
-  │     (удерживает ResourceRef<CpuMesh> до этапа 23, где будет реализована политика освобождения после upload)
+  │     (после выхода из Build память CpuMesh немедленно освобождается)
   ▼  2. GpuResourceManager::GetTable<GpuMesh>().Resolve(guid, std::move(gpuMesh))
 [5. ОПОВЕЩЕНИЕ ВВЕРХ (Главный поток)]
 Main Thread (колбэк запланирован диспетчером GpuRM через CallbackQueue):
@@ -63,37 +63,38 @@ Main Thread (колбэк запланирован диспетчером GpuRM 
   ▼  CountdownTrigger::CountDown() -> сцена переходит в Ready!
 ```
 
-> **Примечание по честному времени жизни памяти и разделению систем:**
-> - `GpuResourceManager` обслуживает исключительно графические ресурсы. Физические ресурсы (коллизии, упрощённые сетки, примитивы PhysX/Jolt) изолированы от тяжёлых графических вертексов (TODO 31).
-> - На этапе 22 дедупликация в `ResourceTable<GpuMesh>` гарантирует однократное чтение при множественных запросах сцены.
-> - На этапе 22 `CpuMesh` честно остаётся в таблице `CpuResourceManager::ResourceTable<CpuMesh>` в системной RAM до shutdown приложения (`Clear()`). Реальное освобождение системной памяти после заливки в VRAM будет спроектировано и реализовано на этапе 23 вместе с конвейером GPU upload.
+> **Примечание по времени жизни памяти и разделению систем:**
+> - `GpuResourceManager` обслуживает исключительно графические ресурсы и владеет таблицами `ResourceTable<TGpu>`. Дедупликация в `ResourceTable<GpuMesh>` гарантирует однократное чтение при множественных запросах сцены.
+> - `CpuResourceManager` является чисто транзитным загрузчиком: сырые данные читаются через `IoScheduler`, десериализуются в воркере и передаются в `GpuResourceManager`, после чего память `CpuMesh` немедленно освобождается. В `CpuResourceManager` таблицы не хранятся.
+> - Физические ресурсы (коллизии, упрощённые сетки, примитивы PhysX/Jolt) изолированы от тяжёлых графических вертексов (TODO 31).
 
 ---
 
 ### 2.2. Архитектура `ResourceTable<T>`, Zero User Code Under Lock и Thread Affinity
 
-`ResourceTable<T>` хранит `std::unordered_map<Guid, std::shared_ptr<OneShotEvent<ResultType>>>` и защищена `std::shared_mutex m_Mutex`.
+`ResourceTable<T>` хранит `std::unordered_map<Guid, std::shared_ptr<ResourceEntry>> m_Resources` (где `using ResourceEntry = OneShotEvent<ResultType>`) и защищена `std::shared_mutex m_Mutex`.
 
 #### 1. Метод `GetOrRequest`:
 1. **Фаза 1 (под $L1$-замком таблицы):**
-   - Read-First поиск под `std::shared_lock`: если событие уже существует, извлекаем `shared_ptr<OneShotEvent>` и `inserted = false`.
-   - Если нет — берём `std::unique_lock`, выполняем `try_emplace` нового `safe_make_shared<OneShotEvent<ResultType>>()`, фиксируем `inserted = true`.
+   - Read-First поиск под `std::shared_lock`: если запись `guid` уже существует в `m_Resources`, извлекаем `shared_ptr<ResourceEntry>` и `isNew = false`.
+   - Если нет — переходим под `std::unique_lock`, выполняем `emplace` нового `safe_make_shared<ResourceEntry>(m_CallbackDispatcher)`, фиксируем `isNew = true`.
 2. **Фаза 2 (замки таблицы $L1$ полностью сняты):**
-3. **Фаза 3 (под $L2$-мьютексом события):**
-   - Вызываем `eventPtr->Subscribe(context, onLoaded, m_Dispatcher)`. Если ресурс уже готов (`Resolved`), колбэк планируется в очередь через переданный `m_Dispatcher`.
+3. **Фаза 3 (под $L2$-мьютексом записи):**
+   - Вызываем `entry->Subscribe(std::move(context), std::move(onLoaded))` — гарантирует проверку `weak_ptr` и безопасность от use-after-free.
 4. **Фаза 4 (ВНЕ ВСЕХ ЗАМКОВ):**
-   - Если `inserted == true`, вызываем `onLoadRequest(guid)` вне каких-либо мьютексов.
+   - Если `isNew == true`, вызываем `onLoadRequest(guid)` вне каких-либо мьютексов.
    - Постановка задачи на чтение в `IoScheduler` и передача запроса происходят при полностью снятых замках таблицы ресурсов, исключая любые межпоточные блокировки.
 
 #### 2. Метод `Resolve`:
-1. Под `std::shared_lock` ищет запись `find(guid)`.
+1. Под `std::shared_lock` ищет запись `m_Resources.find(guid)`.
 2. Если запись отсутствует (ресурс был очищен) — результат отбрасывается. **`try_emplace` категорически не вызывается!**
-3. Если запись найдена — извлекается `eventPtr`, замок таблицы $L1$ отпускается, и вызывается `eventPtr->Resolve(std::move(result), m_Dispatcher)` полностью вне замка таблицы.
+3. Если запись найдена — извлекается `entry`, замок таблицы $L1$ отпускается, и вызывается `entry->Resolve(std::move(result))` полностью вне замка таблицы.
 
 #### 3. Разделение диспетчеров (Thread Affinity Contract):
-- **`CpuResourceManager`:** инициализирует свои таблицы `ResourceTable<TCpu>` диспетчером **пула воркеров (`TaskDispatcher::Submit`)**.
-  - Когда десериализация `CpuMesh` завершена и вызывается `CpuResourceManager::Resolve`, оповещение подписчика (`GpuResourceManager`) планируется на фоновый воркер `TaskDispatcher`.
-  - Благодаря этому операция `GpuResourceBuilder<GpuMesh>::Build` (аллокация буферов, сборка меша в RAM) гарантированно выполняется **на фоновом потоке пула воркеров**, не создавая фризов и пауз на главном потоке.
+- **`CpuResourceManager`:** является транзитным сервисом:
+  - Чтение с диска выполняется на выделенном потоке `IoScheduler`.
+  - Десериализация (парсинг) выполняется на фоновом воркере `TaskDispatcher` с переданным приоритетом (`priority`).
+  - Колбэк вызывается сразу по завершении парсинга на том же воркере `TaskDispatcher`, поэтому операция `GpuResourceBuilder<GpuMesh>::Build` (аллокация буферов, сборка меша в RAM) гарантированно выполняется **на фоновом потоке пула воркеров**, не создавая фризов и пауз на главном потоке.
 - **`GpuResourceManager`:** инициализирует свои таблицы `ResourceTable<TGpu>` диспетчером **главного потока (`MainThreadQueue`)**.
   - Когда `GpuResourceBuilder::Build` завершён и вызывается `GpuResourceManager::Resolve`, оповещение подписчика (`GameObject::OnMeshLoaded`) отправляется в очередь главного потока.
   - На главном потоке исполняется только финальный лёгкий колбэк (сохранение `ResourceRef<GpuMesh>` и вызов `CountdownTrigger::CountDown()`).

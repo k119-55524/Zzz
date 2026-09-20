@@ -31,10 +31,6 @@ namespace zzz::engine
 		, m_DataAssetsManager(std::move(dataAssetsManager))
 		, m_FileSystem(std::move(fileSystem))
 		, m_IoScheduler(m_FileSystem ? safe_make_unique<IoScheduler>(m_FileSystem) : nullptr)
-		, m_Meshes([this](auto task) { m_TaskDispatcher.Submit(eTaskPriority::High, std::move(task)); })
-		, m_Materials([this](auto task) { m_TaskDispatcher.Submit(eTaskPriority::High, std::move(task)); })
-		, m_Textures([this](auto task) { m_TaskDispatcher.Submit(eTaskPriority::High, std::move(task)); })
-		, m_Shaders([this](auto task) { m_TaskDispatcher.Submit(eTaskPriority::High, std::move(task)); })
 	{
 		ensure(m_PackageManager != nullptr, "PackageManager не должен быть null в CpuResourceManager.");
 	}
@@ -56,15 +52,6 @@ namespace zzz::engine
 
 	void CpuResourceManager::Clear()
 	{
-		EmergencyStop();
-	}
-
-	void CpuResourceManager::EmergencyStop()
-	{
-		m_Meshes.Clear();
-		m_Materials.Clear();
-		m_Textures.Clear();
-		m_Shaders.Clear();
 	}
 
 	std::expected<PackageEntry, std::string> CpuResourceManager::FindEntry(

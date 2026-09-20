@@ -32,7 +32,7 @@ namespace zzz::engine
 		using ResultType = std::expected<std::shared_ptr<T>, std::string>;
 		using CallbackType = std::function<void(ResultType)>;
 		using CallbackDispatcher = std::function<void(std::function<void()>)>;
-		using EventType = OneShotEvent<ResultType>;
+		using ResourceEntry = OneShotEvent<ResultType>;
 
 		ResourceTable() = delete;
 		explicit ResourceTable(CallbackDispatcher dispatcher)
@@ -56,39 +56,39 @@ namespace zzz::engine
 			CallbackType onLoaded,
 			LoadFunc&& onLoadRequest)
 		{
-			std::shared_ptr<EventType> eventPtr;
+			std::shared_ptr<ResourceEntry> entry;
 			bool isNew = false;
 
 			// Фаза 1: Read-First под shared_lock
 			{
 				std::shared_lock readLock(m_Mutex);
-				auto it = m_Events.find(guid);
-				if (it != m_Events.end())
+				auto it = m_Resources.find(guid);
+				if (it != m_Resources.end())
 				{
-					eventPtr = it->second;
+					entry = it->second;
 				}
 			}
 
 			// Фаза 2: Если не найден — переходим под unique_lock
-			if (!eventPtr)
+			if (!entry)
 			{
 				std::unique_lock writeLock(m_Mutex);
-				auto it = m_Events.find(guid);
-				if (it != m_Events.end())
+				auto it = m_Resources.find(guid);
+				if (it != m_Resources.end())
 				{
-					eventPtr = it->second;
+					entry = it->second;
 				}
 				else
 				{
-					eventPtr = std::make_shared<EventType>(m_CallbackDispatcher);
-					m_Events.emplace(guid, eventPtr);
+					entry = std::make_shared<ResourceEntry>(m_CallbackDispatcher);
+					m_Resources.emplace(guid, entry);
 					isNew = true;
 				}
 			}
 
 			// Фаза 3: Zero User Code Under Lock
-			ensure(eventPtr != nullptr, "ResourceTable: eventPtr не должен быть null");
-			eventPtr->Subscribe(std::move(context), std::move(onLoaded));
+			ensure(entry != nullptr, "ResourceTable: entry не должен быть null");
+			entry->Subscribe(std::move(context), std::move(onLoaded));
 
 			if (isNew)
 			{
@@ -97,95 +97,46 @@ namespace zzz::engine
 		}
 
 		/**
-		 * @brief Асинхронный запрос ресурса по GUID без контекста жизни.
-		 */
-		template<typename LoadFunc>
-		void GetOrRequest(
-			const Guid& guid,
-			CallbackType onLoaded,
-			LoadFunc&& onLoadRequest)
-		{
-			std::shared_ptr<EventType> eventPtr;
-			bool isNew = false;
-
-			// Фаза 1: Read-First под shared_lock
-			{
-				std::shared_lock readLock(m_Mutex);
-				auto it = m_Events.find(guid);
-				if (it != m_Events.end())
-				{
-					eventPtr = it->second;
-				}
-			}
-
-			// Фаза 2: Если не найден — переходим под unique_lock
-			if (!eventPtr)
-			{
-				std::unique_lock writeLock(m_Mutex);
-				auto it = m_Events.find(guid);
-				if (it != m_Events.end())
-				{
-					eventPtr = it->second;
-				}
-				else
-				{
-					eventPtr = std::make_shared<EventType>(m_CallbackDispatcher);
-					m_Events.emplace(guid, eventPtr);
-					isNew = true;
-				}
-			}
-
-			// Фаза 3: Zero User Code Under Lock
-			ensure(eventPtr != nullptr, "ResourceTable: eventPtr не должен быть null");
-			eventPtr->Subscribe(std::move(onLoaded));
-
-			if (isNew)
-			{
-				onLoadRequest(guid);
-			}
-		}
-
-		/**
-		 * @brief Разрешение события готовности (успех или ошибка).
+		 * @brief Разрешение записи ресурса (успех или ошибка).
 		 * @details Поиск выполняется под shared_lock строго без создания новой записи.
-		 *          Замок снимается до вызова eventPtr->Resolve.
+		 *          Замок снимается до вызова entry->Resolve.
 		 */
 		bool Resolve(const Guid& guid, ResultType result)
 		{
-			std::shared_ptr<EventType> eventPtr;
+			std::shared_ptr<ResourceEntry> entry;
 
 			{
 				std::shared_lock lock(m_Mutex);
-				auto it = m_Events.find(guid);
-				if (it != m_Events.end())
+				auto it = m_Resources.find(guid);
+				if (it != m_Resources.end())
 				{
-					eventPtr = it->second;
+					entry = it->second;
 				}
 			}
 
-			if (!eventPtr)
+			if (!entry)
 				return false;
 
-			eventPtr->Resolve(std::move(result));
+			entry->Resolve(std::move(result));
 			return true;
 		}
 
 		/// @brief Синхронная попытка получить готовый ресурс из таблицы без ожидания
 		[[nodiscard]] std::shared_ptr<T> TryGet(const Guid& guid) const
 		{
-			std::shared_ptr<EventType> eventPtr;
+			std::shared_ptr<ResourceEntry> entry;
 			{
 				std::shared_lock lock(m_Mutex);
-				auto it = m_Events.find(guid);
-				if (it != m_Events.end())
+				auto it = m_Resources.find(guid);
+				if (it != m_Resources.end())
 				{
-					eventPtr = it->second;
+					entry = it->second;
 				}
 			}
 
-			if (eventPtr)
+			if (entry)
 			{
-				auto resOpt = eventPtr->GetResult();
+				auto resOpt = entry->GetResult();
 				if (resOpt)
 				{
 					const auto& expectedRes = std::get<0>(*resOpt);
@@ -198,29 +149,16 @@ namespace zzz::engine
 			return nullptr;
 		}
 
-		/// @brief Проверка наличия записи в таблице по GUID
-		[[nodiscard]] bool Contains(const Guid& guid) const
-		{
-			std::shared_lock lock(m_Mutex);
-			return m_Events.contains(guid);
-		}
-
 		/// @brief Очистка всех записей таблицы
 		void Clear()
 		{
 			std::unique_lock lock(m_Mutex);
-			m_Events.clear();
-		}
-
-		[[nodiscard]] size_t Size() const noexcept
-		{
-			std::shared_lock lock(m_Mutex);
-			return m_Events.size();
+			m_Resources.clear();
 		}
 
 	private:
 		mutable std::shared_mutex m_Mutex;
-		std::unordered_map<Guid, std::shared_ptr<EventType>> m_Events;
+		std::unordered_map<Guid, std::shared_ptr<ResourceEntry>> m_Resources;
 		CallbackDispatcher m_CallbackDispatcher;
 	};
 }

@@ -17,7 +17,6 @@
 #include "core/constants/PackageConstants.h"
 #include "engine/resources/ResourceRef.h"
 #include "engine/resources/cpu/CpuMesh.h"
-#include "engine/resources/ResourceTable.h"
 #include "engine/resources/cpu/CpuShader.h"
 #include "engine/resources/cpu/CpuMaterial.h"
 #include "engine/resources/cpu/CpuTexture2D.h"
@@ -33,9 +32,10 @@ namespace zzz::engine
 
 	/**
 	 * @class CpuResourceManager
-	 * @brief Централизованный сервис асинхронной загрузки и кэширования CPU-ресурсов.
-	 * @details Хранит типизированные таблицы ресурсов m_Meshes, m_Materials, m_Textures, m_Shaders.
-	 *          Владеет приватным планировщиком дискового ввода-вывода IoScheduler.
+	 * @brief Транзитный сервис асинхронного дискового ввода-вывода и десериализации CPU-ресурсов.
+	 * @details Загружает сырые данные из архивов через IoScheduler, десериализует их в структуры
+	 *          (CpuMesh, CpuMaterial и т.д.) на воркерах TaskDispatcher и передаёт заказчику.
+	 *          CPU-ресурсы не кэшируются на CPU и освобождаются сразу после создания GPU-ресурсов.
 	 */
 	class CpuResourceManager final
 	{
@@ -61,75 +61,130 @@ namespace zzz::engine
 			std::function<void(std::expected<ResourceRef<T>, std::string>)> onLoaded,
 			eTaskPriority priority = eTaskPriority::Normal)
 		{
-			GetTable<T>().GetOrRequest(guid,
-				std::move(context),
-				[cb = std::move(onLoaded)](typename ResourceTable<T>::ResultType res)
+			if (!m_IsRunning.load(std::memory_order_acquire))
+			{
+				if (auto ctx = context.lock())
 				{
-					if (!res)
-					{
-						cb(std::unexpected(std::move(res.error())));
-					}
-					else
-					{
-						cb(ResourceRef<T>(std::move(*res)));
-					}
-				},
-				[this, priority](const Guid& g)
-				{
-					DispatchLoad<T>(g, priority);
-				});
-		}
+					onLoaded(std::unexpected(std::string("CpuResourceManager остановлен")));
+				}
+				return;
+			}
 
-		template<typename T>
-		void GetAsync(
-			const Guid& guid,
-			std::function<void(std::expected<ResourceRef<T>, std::string>)> onLoaded,
-			eTaskPriority priority = eTaskPriority::Normal)
-		{
-			GetTable<T>().GetOrRequest(guid,
-				[cb = std::move(onLoaded)](typename ResourceTable<T>::ResultType res)
+			constexpr auto type = GetCpuResourceType<T>();
+			auto entryRes = FindEntry(guid, type);
+			if (!entryRes)
+			{
+				if (auto ctx = context.lock())
 				{
-					if (!res)
-					{
-						cb(std::unexpected(std::move(res.error())));
-					}
-					else
-					{
-						cb(ResourceRef<T>(std::move(*res)));
-					}
-				},
-				[this, priority](const Guid& g)
-				{
-					DispatchLoad<T>(g, priority);
-				});
-		}
+					onLoaded(std::unexpected(entryRes.error()));
+				}
+				return;
+			}
 
-		template<typename T>
-		[[nodiscard]] ResourceRef<T> TryGet(const Guid& guid)
-		{
-			auto res = GetTable<T>().TryGet(guid);
-			return res ? ResourceRef<T>(std::move(res)) : ResourceRef<T>{};
+			const auto storageKind = GetResourceStorageTraits(type).storageKind;
+			std::string archivePath;
+			if (storageKind == eResourceStorageKind::DataArchive)
+			{
+				archivePath = c_DataPackageRelativePath;
+			}
+			else if (storageKind == eResourceStorageKind::PackageArchive)
+			{
+				archivePath = c_GamePackageRelativePath;
+			}
+
+			auto onIoComplete = [this, guid, priority, entry = *entryRes, context = std::move(context), onLoaded = std::move(onLoaded)](
+				std::expected<std::vector<std::byte>, std::string> bytesRes,
+				InFlightPermit permit) mutable
+			{
+				if (!bytesRes)
+				{
+					if (auto ctx = context.lock())
+					{
+						onLoaded(std::unexpected(std::move(bytesRes.error())));
+					}
+					return;
+				}
+
+				auto sharedPermit = std::make_shared<InFlightPermit>(std::move(permit));
+				auto sharedBytes = std::make_shared<std::vector<std::byte>>(std::move(*bytesRes));
+
+				const bool enqueued = m_TaskDispatcher.Submit(priority,
+					[this, guid, entry = std::move(entry), sharedBytes, sharedPermit, context = std::move(context), onLoaded = std::move(onLoaded)]() mutable
+				{
+					if (context.expired())
+					{
+						return;
+					}
+
+					try
+					{
+						auto parseRes = LoadFromBytes<T>(entry, *sharedBytes);
+						sharedBytes.reset();
+						sharedPermit.reset();
+
+						if (auto ctx = context.lock())
+						{
+							if (!parseRes)
+							{
+								onLoaded(std::unexpected(std::move(parseRes.error())));
+							}
+							else
+							{
+								onLoaded(ResourceRef<T>(std::move(*parseRes)));
+							}
+						}
+					}
+					catch (const std::exception& ex)
+					{
+						if (auto ctx = context.lock())
+						{
+							onLoaded(std::unexpected(std::format("Исключение при десериализации ресурса: {}", ex.what())));
+						}
+					}
+					catch (...)
+					{
+						if (auto ctx = context.lock())
+						{
+							onLoaded(std::unexpected(std::string("Неизвестное исключение при десериализации ресурса")));
+						}
+					}
+				});
+
+				if (!enqueued)
+				{
+					sharedPermit.reset();
+					sharedBytes.reset();
+					if (auto ctx = context.lock())
+					{
+						onLoaded(std::unexpected(std::string("Не удалось поставить задачу десериализации в TaskDispatcher (пул закрыт)")));
+					}
+				}
+			};
+
+			if (m_IoScheduler)
+			{
+				const bool queued = m_IoScheduler->QueueRead(guid, *entryRes, eFileLocation::App, std::move(archivePath), priority, std::move(onIoComplete));
+				if (!queued)
+				{
+					if (auto ctx = context.lock())
+					{
+						onLoaded(std::unexpected(std::string("Не удалось поставить задачу в IoScheduler (планировщик закрыт)")));
+					}
+				}
+			}
+			else
+			{
+				if (auto ctx = context.lock())
+				{
+					onLoaded(std::unexpected(std::string("IoScheduler не инициализирован")));
+				}
+			}
 		}
 
 		void Stop();
 		void Clear();
 
 	private:
-		template<typename T>
-		[[nodiscard]] auto& GetTable() noexcept
-		{
-			if constexpr (std::is_same_v<T, CpuMesh>)           return m_Meshes;
-			else if constexpr (std::is_same_v<T, CpuMaterial>)  return m_Materials;
-			else if constexpr (std::is_same_v<T, CpuTexture2D>) return m_Textures;
-			else if constexpr (std::is_same_v<T, CpuShader>)    return m_Shaders;
-			else static_assert(sizeof(T) == 0, "Запрашиваемый тип ресурса не поддерживается CpuResourceManager!");
-		}
-
-		void EmergencyStop();
-
-		template<typename T>
-		void DispatchLoad(const Guid& guid, eTaskPriority priority);
-
 		template<typename T>
 		std::expected<std::shared_ptr<T>, std::string> LoadResourceSync(const Guid& guid);
 
@@ -145,11 +200,6 @@ namespace zzz::engine
 		std::unique_ptr<IoScheduler> m_IoScheduler;
 
 		std::atomic<bool> m_IsRunning{ true };
-
-		ResourceTable<CpuMesh>      m_Meshes;
-		ResourceTable<CpuMaterial>  m_Materials;
-		ResourceTable<CpuTexture2D> m_Textures;
-		ResourceTable<CpuShader>    m_Shaders;
 	};
 
 	template<typename T>
@@ -159,84 +209,5 @@ namespace zzz::engine
 		else if constexpr (std::is_same_v<T, CpuMaterial>)  return eResourceType::Material;
 		else if constexpr (std::is_same_v<T, CpuTexture2D>) return eResourceType::Texture2D;
 		else if constexpr (std::is_same_v<T, CpuShader>)    return eResourceType::Shader;
-	}
-
-	template<typename T>
-	void CpuResourceManager::DispatchLoad(const Guid& guid, eTaskPriority priority)
-	{
-		if (!m_IsRunning.load(std::memory_order_acquire))
-		{
-			GetTable<T>().Resolve(guid, std::unexpected(std::string("CpuResourceManager остановлен")));
-			return;
-		}
-
-		constexpr auto type = GetCpuResourceType<T>();
-		auto entryRes = FindEntry(guid, type);
-		if (!entryRes)
-		{
-			GetTable<T>().Resolve(guid, std::unexpected(entryRes.error()));
-			return;
-		}
-
-		const auto storageKind = GetResourceStorageTraits(type).storageKind;
-		std::string archivePath;
-		if (storageKind == eResourceStorageKind::DataArchive)
-		{
-			archivePath = c_DataPackageRelativePath;
-		}
-		else if (storageKind == eResourceStorageKind::PackageArchive)
-		{
-			archivePath = c_GamePackageRelativePath;
-		}
-
-		auto onIoComplete = [this, guid, priority, entry = *entryRes](
-			std::expected<std::vector<std::byte>, std::string> bytesRes,
-			InFlightPermit permit) mutable
-		{
-			if (!bytesRes)
-			{
-				GetTable<T>().Resolve(guid, std::unexpected(std::move(bytesRes.error())));
-				return;
-			}
-
-			auto sharedPermit = std::make_shared<InFlightPermit>(std::move(permit));
-			auto sharedBytes = std::make_shared<std::vector<std::byte>>(std::move(*bytesRes));
-
-			const bool enqueued = m_TaskDispatcher.Submit(priority,
-				[this, guid, entry = std::move(entry), sharedBytes, sharedPermit]() mutable
-			{
-				try
-				{
-					auto parseRes = LoadFromBytes<T>(entry, *sharedBytes);
-					GetTable<T>().Resolve(guid, std::move(parseRes));
-				}
-				catch (const std::exception& ex)
-				{
-					GetTable<T>().Resolve(guid, std::unexpected(std::format("Исключение при десериализации ресурса: {}", ex.what())));
-				}
-				catch (...)
-				{
-					GetTable<T>().Resolve(guid, std::unexpected(std::string("Неизвестное исключение при десериализации ресурса")));
-				}
-			});
-
-			if (!enqueued)
-			{
-				GetTable<T>().Resolve(guid, std::unexpected(std::string("Не удалось поставить задачу десериализации в TaskDispatcher (пул закрыт)")));
-			}
-		};
-
-		if (m_IoScheduler)
-		{
-			const bool queued = m_IoScheduler->QueueRead(guid, *entryRes, eFileLocation::App, std::move(archivePath), priority, std::move(onIoComplete));
-			if (!queued)
-			{
-				GetTable<T>().Resolve(guid, std::unexpected(std::string("Не удалось поставить задачу в IoScheduler (планировщик закрыт)")));
-			}
-		}
-		else
-		{
-			GetTable<T>().Resolve(guid, std::unexpected(std::string("IoScheduler не инициализирован")));
-		}
 	}
 }

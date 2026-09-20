@@ -56,6 +56,7 @@ namespace zzz::engine
 				std::move(context),
 				[cb = std::move(onLoaded)](typename ResourceTable<T>::ResultType res)
 				{
+					// Точка выхода к заказчику ресурса(вызов коллбэка), когда ресурс готов (или произошла ошибка)
 					if (!res)
 						cb(std::unexpected(std::move(res.error())));
 					else
@@ -63,27 +64,7 @@ namespace zzz::engine
 				},
 				[this, priority](const Guid& guid)
 				{
-					RequestFromCpu<T>(guid, priority);
-				});
-		}
-
-		template<typename T>
-		void GetAsync(
-			const Guid& guid,
-			std::function<void(std::expected<ResourceRef<T>, std::string>)> onLoaded,
-			eTaskPriority priority = eTaskPriority::Normal)
-		{
-			GetTable<T>().GetOrRequest(
-				guid,
-				[cb = std::move(onLoaded)](typename ResourceTable<T>::ResultType res)
-				{
-					if (!res)
-						cb(std::unexpected(std::move(res.error())));
-					else
-						cb(ResourceRef<T>(std::move(*res)));
-				},
-				[this, priority](const Guid& guid)
-				{
+					// Если ресурс не найден в таблице, инициируем запрос CPU-ресурса и создание GPU-ресурса
 					RequestFromCpu<T>(guid, priority);
 				});
 		}
