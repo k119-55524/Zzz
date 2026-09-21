@@ -1,10 +1,13 @@
 #pragma once
 
-#include <memory>
 #include <string>
-#include "engine/resources/ResourceBase.h"
+#include <memory>
+
 #include "engine/resources/ResourceRef.h"
+#include "engine/resources/ResourceBase.h"
 #include "engine/resources/cpu/CpuTexture2D.h"
+
+using namespace zzz::core;
 
 namespace zzz::engine
 {
@@ -15,13 +18,12 @@ namespace zzz::engine
 	class GpuTexture2D final : public ResourceBase
 	{
 	public:
-		using CpuType = CpuTexture2D;
+		using CpuSource = CpuTexture2D;
 
-		GpuTexture2D(
-			const ::zzz::core::Guid& guid,
-			std::string name,
-			ResourceRef<CpuTexture2D> cpuTexture);
+		GpuTexture2D(const Guid& guid, std::string name, ResourceRef<CpuTexture2D> cpuTexture);
 		~GpuTexture2D() override = default;
+
+		[[nodiscard]] static std::shared_ptr<GpuTexture2D> CreateFromCpu(ResourceRef<CpuTexture2D> cpuTexture);
 
 		[[nodiscard]] const ResourceRef<CpuTexture2D>& GetCpuTexture() const noexcept { return m_CpuTexture; }
 		[[nodiscard]] uint32_t GetWidth() const noexcept { return m_CpuTexture ? m_CpuTexture->GetWidth() : 0; }

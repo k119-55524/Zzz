@@ -43,7 +43,6 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         "resources/cpu/CpuTexture2D.h" "resources/cpu/CpuTexture2D.cpp"
         "resources/cpu/CpuShader.h" "resources/cpu/CpuShader.cpp"
         "resources/cpu/CpuResourceManager.h" "resources/cpu/CpuResourceManager.cpp"
-        "resources/gpu/GpuResourceBuilder.h"
         "resources/gpu/GpuMesh.h" "resources/gpu/GpuMesh.cpp"
         "resources/gpu/GpuMaterial.h" "resources/gpu/GpuMaterial.cpp"
         "resources/gpu/GpuTexture2D.h" "resources/gpu/GpuTexture2D.cpp"

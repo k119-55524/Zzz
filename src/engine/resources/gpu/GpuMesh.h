@@ -1,10 +1,13 @@
 #pragma once
 
-#include <memory>
 #include <string>
-#include "engine/resources/ResourceBase.h"
+#include <memory>
+
 #include "engine/resources/ResourceRef.h"
 #include "engine/resources/cpu/CpuMesh.h"
+#include "engine/resources/ResourceBase.h"
+
+using namespace zzz::core;
 
 namespace zzz::engine
 {
@@ -17,13 +20,12 @@ namespace zzz::engine
 	class GpuMesh final : public ResourceBase
 	{
 	public:
-		using CpuType = CpuMesh;
+		using CpuSource = CpuMesh;
 
-		GpuMesh(
-			const ::zzz::core::Guid& guid,
-			std::string name,
-			ResourceRef<CpuMesh> cpuMesh);
+		GpuMesh(const Guid& guid, std::string name, ResourceRef<CpuMesh> cpuMesh);
 		~GpuMesh() override = default;
+
+		[[nodiscard]] static std::shared_ptr<GpuMesh> CreateFromCpu(ResourceRef<CpuMesh> cpuMesh);
 
 		[[nodiscard]] const ResourceRef<CpuMesh>& GetCpuMesh() const noexcept { return m_CpuMesh; }
 		[[nodiscard]] zU32 GetVertexCount() const noexcept { return m_CpuMesh ? m_CpuMesh->GetVertexCount() : 0; }

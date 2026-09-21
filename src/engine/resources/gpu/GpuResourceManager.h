@@ -4,6 +4,7 @@
 #include <string>
 #include <format>
 #include <expected>
+#include <concepts>
 
 #include "core/utils/Guid.h"
 #include "engine/gapi/GAPI.h"
@@ -13,13 +14,24 @@
 #include "engine/resources/gpu/GpuShader.h"
 #include "engine/resources/gpu/GpuMaterial.h"
 #include "engine/resources/gpu/GpuTexture2D.h"
-#include "engine/resources/gpu/GpuResourceBuilder.h"
 #include "engine/resources/cpu/CpuResourceManager.h"
 
 using namespace zzz::core;
 
 namespace zzz::engine
 {
+	/**
+	 * @concept GpuResource
+	 * @brief Концепт валидного GPU-ресурса движка.
+	 * @details Требует наличие ассоциированного CpuSource и статического метода CreateFromCpu.
+	 */
+	template<typename T>
+	concept GpuResource = requires(ResourceRef<typename T::CpuSource> cpuRef)
+	{
+		typename T::CpuSource;
+		{ T::CreateFromCpu(std::move(cpuRef)) } -> std::same_as<std::shared_ptr<T>>;
+	};
+
 	/**
 	 * @class GpuResourceManager
 	 * @brief Централизованный сервис управления видеопамятью и GPU-ресурсами.
@@ -40,7 +52,7 @@ namespace zzz::engine
 
 		~GpuResourceManager();
 
-		template<typename T, typename ContextType>
+		template<GpuResource T, typename ContextType>
 		void GetAsync(
 			const Guid& guid,
 			std::weak_ptr<ContextType> context,
@@ -65,7 +77,7 @@ namespace zzz::engine
 				});
 		}
 
-		template<typename T>
+		template<GpuResource T>
 		[[nodiscard]] ResourceRef<T> TryGet(const Guid& guid)
 		{
 			auto res = GetTable<T>().TryGet(guid);
@@ -73,7 +85,7 @@ namespace zzz::engine
 		}
 
 	private:
-		template<typename T>
+		template<GpuResource T>
 		[[nodiscard]] auto& GetTable() noexcept
 		{
 			if constexpr (std::is_same_v<T, GpuMesh>)           return m_Meshes;
@@ -85,10 +97,10 @@ namespace zzz::engine
 
 		void EmergencyStop();
 
-		template<typename TGpu>
+		template<GpuResource TGpu>
 		void RequestFromCpu(const Guid& guid, eTaskPriority priority)
 		{
-			using TCpu = typename TGpu::CpuType;
+			using TCpu = typename TGpu::CpuSource;
 
 			m_CpuManager->GetAsync<TCpu>(guid, weak_from_this(), [this, guid, priority](std::expected<ResourceRef<TCpu>, std::string> cpuRes)
 			{
@@ -102,7 +114,7 @@ namespace zzz::engine
 				{
 					try
 					{
-						auto gpuObj = GpuResourceBuilder<TGpu>::Build(std::move(cpuRef));
+						auto gpuObj = TGpu::CreateFromCpu(std::move(cpuRef));
 						GetTable<TGpu>().Resolve(guid, std::move(gpuObj));
 					}
 					catch (const std::exception& ex)

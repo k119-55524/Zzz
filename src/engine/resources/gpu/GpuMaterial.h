@@ -1,10 +1,13 @@
 #pragma once
 
-#include <memory>
 #include <string>
-#include "engine/resources/ResourceBase.h"
+#include <memory>
+
 #include "engine/resources/ResourceRef.h"
+#include "engine/resources/ResourceBase.h"
 #include "engine/resources/cpu/CpuMaterial.h"
+
+using namespace zzz::core;
 
 namespace zzz::engine
 {
@@ -15,18 +18,17 @@ namespace zzz::engine
 	class GpuMaterial final : public ResourceBase
 	{
 	public:
-		using CpuType = CpuMaterial;
+		using CpuSource = CpuMaterial;
 
-		GpuMaterial(
-			const ::zzz::core::Guid& guid,
-			std::string name,
-			ResourceRef<CpuMaterial> cpuMaterial);
+		GpuMaterial(const Guid& guid, std::string name, ResourceRef<CpuMaterial> cpuMaterial);
 		~GpuMaterial() override = default;
 
+		[[nodiscard]] static std::shared_ptr<GpuMaterial> CreateFromCpu(ResourceRef<CpuMaterial> cpuMaterial);
+
 		[[nodiscard]] const ResourceRef<CpuMaterial>& GetCpuMaterial() const noexcept { return m_CpuMaterial; }
-		[[nodiscard]] const ::zzz::core::Guid& GetShaderGuid() const noexcept
+		[[nodiscard]] const Guid& GetShaderGuid() const noexcept
 		{
-			static const ::zzz::core::Guid s_Empty;
+			static const Guid s_Empty;
 			return m_CpuMaterial ? m_CpuMaterial->GetShaderGuid() : s_Empty;
 		}
 

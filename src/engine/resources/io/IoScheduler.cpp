@@ -1,17 +1,18 @@
-#include <format>
+
 #include <logger.h>
 
 #include "core/utils/Ensure.h"
 #include "core/utils/ThreadUtils.h"
+
 #include "IoScheduler.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::LogEngine);
 
 namespace zzz::engine
 {
-	InFlightPermit::InFlightPermit(IoScheduler* scheduler, size_t bytes) noexcept
-		: m_Scheduler(scheduler)
-		, m_Bytes(bytes)
+	InFlightPermit::InFlightPermit(IoScheduler* scheduler, size_t bytes) noexcept :
+			m_Scheduler(scheduler), 
+			m_Bytes(bytes)
 	{
 	}
 
@@ -20,9 +21,9 @@ namespace zzz::engine
 		Release();
 	}
 
-	InFlightPermit::InFlightPermit(InFlightPermit&& other) noexcept
-		: m_Scheduler(other.m_Scheduler)
-		, m_Bytes(other.m_Bytes)
+	InFlightPermit::InFlightPermit(InFlightPermit&& other) noexcept :
+			m_Scheduler(other.m_Scheduler),
+			m_Bytes(other.m_Bytes)
 	{
 		other.m_Scheduler = nullptr;
 		other.m_Bytes = 0;

@@ -1,10 +1,13 @@
 #pragma once
 
-#include <memory>
 #include <string>
-#include "engine/resources/ResourceBase.h"
+#include <memory>
+
 #include "engine/resources/ResourceRef.h"
+#include "engine/resources/ResourceBase.h"
 #include "engine/resources/cpu/CpuShader.h"
+
+using namespace zzz::core;
 
 namespace zzz::engine
 {
@@ -15,13 +18,12 @@ namespace zzz::engine
 	class GpuShader final : public ResourceBase
 	{
 	public:
-		using CpuType = CpuShader;
+		using CpuSource = CpuShader;
 
-		GpuShader(
-			const ::zzz::core::Guid& guid,
-			std::string name,
-			ResourceRef<CpuShader> cpuShader);
+		GpuShader(const Guid& guid, std::string name, ResourceRef<CpuShader> cpuShader);
 		~GpuShader() override = default;
+
+		[[nodiscard]] static std::shared_ptr<GpuShader> CreateFromCpu(ResourceRef<CpuShader> cpuShader);
 
 		[[nodiscard]] const ResourceRef<CpuShader>& GetCpuShader() const noexcept { return m_CpuShader; }
 
