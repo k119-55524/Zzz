@@ -13,7 +13,7 @@ namespace zzz::engine
 	{
 	}
 
-	std::expected<std::shared_ptr<CpuMesh>, std::string> CpuMesh::CreateFromMemory(
+	std::expected<std::shared_ptr<CpuMesh>, std::string> CpuMesh::CreateCpuResourceFromPackageBytes(
 		const PackageEntry& entry,
 		std::span<const std::byte> bytes)
 	{

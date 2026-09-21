@@ -20,7 +20,7 @@ namespace zzz::engine
 		CpuShader(const ::zzz::core::Guid& guid, std::string name);
 		~CpuShader() override = default;
 
-		[[nodiscard]] static std::expected<std::shared_ptr<CpuShader>, std::string> CreateFromMemory(
+		[[nodiscard]] static std::expected<std::shared_ptr<CpuShader>, std::string> CreateCpuResourceFromPackageBytes(
 			const ::zzz::core::PackageEntry& entry,
 			std::span<const std::byte> bytes);
 	};

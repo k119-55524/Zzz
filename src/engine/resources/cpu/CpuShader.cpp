@@ -13,7 +13,7 @@ namespace zzz::engine
 	{
 	}
 
-	std::expected<std::shared_ptr<CpuShader>, std::string> CpuShader::CreateFromMemory(
+	std::expected<std::shared_ptr<CpuShader>, std::string> CpuShader::CreateCpuResourceFromPackageBytes(
 		const PackageEntry& entry,
 		std::span<const std::byte> bytes)
 	{

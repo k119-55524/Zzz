@@ -14,7 +14,7 @@ namespace zzz::engine
 	{
 	}
 
-	std::expected<std::shared_ptr<CpuMaterial>, std::string> CpuMaterial::CreateFromMemory(
+	std::expected<std::shared_ptr<CpuMaterial>, std::string> CpuMaterial::CreateCpuResourceFromPackageBytes(
 		const PackageEntry& entry,
 		std::span<const std::byte> bytes)
 	{

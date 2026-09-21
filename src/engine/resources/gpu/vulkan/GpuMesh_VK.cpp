@@ -9,17 +9,22 @@ namespace zzz::engine
 	GpuMesh_VK::GpuMesh_VK(
 		const Guid& guid,
 		std::string name,
-		ResourceRef<CpuMesh> cpuMesh)
+		zU32 vertexCount,
+		zU32 indexCount)
 		: ResourceBase(guid, eResourceType::Mesh, std::move(name))
-		, m_CpuMesh(std::move(cpuMesh))
+		, m_VertexCount(vertexCount)
+		, m_IndexCount(indexCount)
 	{
 	}
 
-	std::shared_ptr<GpuMesh_VK> GpuMesh_VK::CreateFromCpu(ResourceRef<CpuMesh> cpuMesh)
+	std::shared_ptr<GpuMesh_VK> GpuMesh_VK::CreateGpuResourceAndUploadFromCpu(ResourceRef<CpuMesh> cpuMesh)
 	{
-		ensure(cpuMesh != nullptr, "GpuMesh_VK::CreateFromCpu: cpuMesh не должен быть null");
+		ensure(cpuMesh != nullptr, "GpuMesh_VK::CreateGpuResourceAndUploadFromCpu: cpuMesh не должен быть null");
 		const auto& guid = cpuMesh->GetGuid();
 		std::string name(cpuMesh->GetName());
-		return safe_make_shared<GpuMesh_VK>(guid, std::move(name), std::move(cpuMesh));
+		const zU32 vertexCount = cpuMesh->GetVertexCount();
+		const zU32 indexCount = cpuMesh->GetIndexCount();
+
+		return safe_make_shared<GpuMesh_VK>(guid, std::move(name), vertexCount, indexCount);
 	}
 }

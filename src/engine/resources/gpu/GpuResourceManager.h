@@ -23,13 +23,13 @@ namespace zzz::engine
 	/**
 	 * @concept GpuResource
 	 * @brief Концепт валидного GPU-ресурса движка.
-	 * @details Требует наличие ассоциированного CpuSource и статического метода CreateFromCpu.
+	 * @details Требует наличие ассоциированного CpuSource и статического метода CreateGpuResourceAndUploadFromCpu.
 	 */
 	template<typename T>
 	concept GpuResource = requires(ResourceRef<typename T::CpuSource> cpuRef)
 	{
 		typename T::CpuSource;
-		{ T::CreateFromCpu(std::move(cpuRef)) } -> std::same_as<std::shared_ptr<T>>;
+		{ T::CreateGpuResourceAndUploadFromCpu(std::move(cpuRef)) } -> std::same_as<std::shared_ptr<T>>;
 	};
 
 	/**
@@ -56,7 +56,7 @@ namespace zzz::engine
 			const Guid& guid,
 			std::weak_ptr<ContextType> context,
 			std::function<void(std::expected<ResourceRef<T>, std::string>)> onLoaded,
-			eTaskPriority priority = eTaskPriority::Normal)
+			eTaskPriority priority)
 		{
 			GetTable<T>().GetOrRequest(
 				guid,
@@ -109,7 +109,7 @@ namespace zzz::engine
 
 				try
 				{
-					auto gpuObj = TGpu::CreateFromCpu(std::move(*cpuRes));
+					auto gpuObj = TGpu::CreateGpuResourceAndUploadFromCpu(std::move(*cpuRes));
 					GetTable<TGpu>().Resolve(guid, std::move(gpuObj));
 				}
 				catch (const std::exception& ex)

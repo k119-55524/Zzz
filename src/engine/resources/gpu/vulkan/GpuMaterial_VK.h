@@ -2,7 +2,6 @@
 
 #include <string>
 #include <memory>
-
 #include "engine/resources/ResourceRef.h"
 #include "engine/resources/ResourceBase.h"
 #include "engine/resources/cpu/CpuMaterial.h"
@@ -20,19 +19,14 @@ namespace zzz::engine
 	public:
 		using CpuSource = CpuMaterial;
 
-		GpuMaterial_VK(const Guid& guid, std::string name, ResourceRef<CpuMaterial> cpuMaterial);
+		GpuMaterial_VK(const Guid& guid, std::string name, const Guid& shaderGuid);
 		~GpuMaterial_VK() override = default;
 
-		[[nodiscard]] static std::shared_ptr<GpuMaterial_VK> CreateFromCpu(ResourceRef<CpuMaterial> cpuMaterial);
+		[[nodiscard]] static std::shared_ptr<GpuMaterial_VK> CreateGpuResourceAndUploadFromCpu(ResourceRef<CpuMaterial> cpuMaterial);
 
-		[[nodiscard]] const ResourceRef<CpuMaterial>& GetCpuMaterial() const noexcept { return m_CpuMaterial; }
-		[[nodiscard]] const Guid& GetShaderGuid() const noexcept
-		{
-			static const Guid s_Empty;
-			return m_CpuMaterial ? m_CpuMaterial->GetShaderGuid() : s_Empty;
-		}
+		[[nodiscard]] const Guid& GetShaderGuid() const noexcept { return m_ShaderGuid; }
 
 	private:
-		ResourceRef<CpuMaterial> m_CpuMaterial;
+		Guid m_ShaderGuid;
 	};
 }

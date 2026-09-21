@@ -25,7 +25,7 @@ namespace zzz::engine
 			std::vector<std::byte> pixelData = {});
 		~CpuTexture2D() override = default;
 
-		[[nodiscard]] static std::expected<std::shared_ptr<CpuTexture2D>, std::string> CreateFromMemory(
+		[[nodiscard]] static std::expected<std::shared_ptr<CpuTexture2D>, std::string> CreateCpuResourceFromPackageBytes(
 			const ::zzz::core::PackageEntry& entry,
 			std::span<const std::byte> bytes);
 

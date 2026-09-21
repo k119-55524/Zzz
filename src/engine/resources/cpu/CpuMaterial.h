@@ -21,7 +21,7 @@ namespace zzz::engine
 		CpuMaterial(const ::zzz::core::Guid& guid, std::string name, ::zzz::core::Guid shaderGuid = {});
 		~CpuMaterial() override = default;
 
-		[[nodiscard]] static std::expected<std::shared_ptr<CpuMaterial>, std::string> CreateFromMemory(
+		[[nodiscard]] static std::expected<std::shared_ptr<CpuMaterial>, std::string> CreateCpuResourceFromPackageBytes(
 			const ::zzz::core::PackageEntry& entry,
 			std::span<const std::byte> bytes);
 

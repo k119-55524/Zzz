@@ -9,17 +9,22 @@ namespace zzz::engine
 	GpuTexture2D_VK::GpuTexture2D_VK(
 		const Guid& guid,
 		std::string name,
-		ResourceRef<CpuTexture2D> cpuTexture)
+		uint32_t width,
+		uint32_t height)
 		: ResourceBase(guid, eResourceType::Texture2D, std::move(name))
-		, m_CpuTexture(std::move(cpuTexture))
+		, m_Width(width)
+		, m_Height(height)
 	{
 	}
 
-	std::shared_ptr<GpuTexture2D_VK> GpuTexture2D_VK::CreateFromCpu(ResourceRef<CpuTexture2D> cpuTexture)
+	std::shared_ptr<GpuTexture2D_VK> GpuTexture2D_VK::CreateGpuResourceAndUploadFromCpu(ResourceRef<CpuTexture2D> cpuTexture)
 	{
-		ensure(cpuTexture != nullptr, "GpuTexture2D_VK::CreateFromCpu: cpuTexture не должен быть null");
+		ensure(cpuTexture != nullptr, "GpuTexture2D_VK::CreateGpuResourceAndUploadFromCpu: cpuTexture не должен быть null");
 		const auto& guid = cpuTexture->GetGuid();
 		std::string name(cpuTexture->GetName());
-		return safe_make_shared<GpuTexture2D_VK>(guid, std::move(name), std::move(cpuTexture));
+		const uint32_t width = cpuTexture->GetWidth();
+		const uint32_t height = cpuTexture->GetHeight();
+
+		return safe_make_shared<GpuTexture2D_VK>(guid, std::move(name), width, height);
 	}
 }

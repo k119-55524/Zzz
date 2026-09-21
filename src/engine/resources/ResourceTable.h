@@ -18,10 +18,11 @@ namespace zzz::engine
 	/**
 	 * @class ResourceTable
 	 * @brief Потокобезопасная типизированная таблица ресурсов конкретного типа T.
-	 * @details Инкапсулирует хэш-таблицу событий OneShotEvent<ResultType>, shared_mutex
-	 *          и реактивную механику "подпишись на шот или запусти загрузку".
+	 * @details Хранит слабые ссылки std::weak_ptr на загруженные ресурсы и OneShotEvent
+	 *          для ожидающих in-flight загрузок. Ресурсы в памяти удерживаются внешними
+	 *          ResourceRef; при обнулении внешних ссылок ресурс автоматически удаляется из RAM/VRAM.
 	 *          Соблюдает контракт Zero User Code Under Lock: замки таблицы всегда
-	 *          освобождаются до вызова внешних функций (Subscribe, onLoadRequest, Resolve).
+	 *          освобождаются до вызова внешних функций (onLoaded, onLoadRequest, Resolve).
 	 */
 	template<typename T>
 	class ResourceTable final
@@ -31,16 +32,18 @@ namespace zzz::engine
 	public:
 		using ResultType = std::expected<std::shared_ptr<T>, std::string>;
 		using CallbackType = std::function<void(ResultType)>;
-		using ResourceEntry = OneShotEvent<ResultType>;
+		using ResourceEvent = OneShotEvent<ResultType>;
 
 		ResourceTable() = default;
 		~ResourceTable() = default;
 
 		/**
 		 * @brief Асинхронный запрос ресурса по GUID с контекстом жизни (weak_ptr).
-		 * @details Реализует Read-First паттерн: сначала поиск под shared_lock,
-		 *          при отсутствии — вставка под unique_lock.
-		 *          Замки снимаются перед подпиской и запуском onLoadRequest.
+		 * @details Реализует Read-First паттерн:
+		 *          1. Поиск живого ресурса в слабом кэше (weak_ptr.lock()). При попадании — немедленный вызов колбэка.
+		 *          2. Если ресурс уже загружается другим запросом — подписка на in-flight событие.
+		 *          3. Если ресурса нет или он выгружен — создание нового in-flight события и вызов onLoadRequest.
+		 *          Замки таблицы всегда снимаются до вызова onLoaded и onLoadRequest.
 		 */
 		template<typename ContextType, typename LoadFunc>
 		void GetOrRequest(
@@ -49,90 +52,125 @@ namespace zzz::engine
 			CallbackType onLoaded,
 			LoadFunc&& onLoadRequest)
 		{
-			std::shared_ptr<ResourceEntry> entry;
+			std::shared_ptr<T> cachedResource;
+			std::shared_ptr<ResourceEvent> inFlight;
 			bool isNew = false;
 
-			// Ищем ресурс в таблице
+			// Read-lock: быстрая проверка кэша и in-flight
 			{
 				std::shared_lock readLock(m_Mutex);
 
 				auto it = m_Resources.find(guid);
 				if (it != m_Resources.end())
-					entry = it->second;
+				{
+					cachedResource = it->second.weakResource.lock();
+					if (!cachedResource)
+					{
+						inFlight = it->second.inFlightEvent;
+					}
+				}
 			}
 
-			// Если не найден, пытаемся добавить 
-			if (!entry)
+			if (cachedResource)
+			{
+				if (auto ctx = context.lock())
+				{
+					onLoaded(std::move(cachedResource));
+				}
+				return;
+			}
+
+			if (inFlight)
+			{
+				inFlight->Subscribe(std::move(context), std::move(onLoaded));
+				return;
+			}
+
+			// Write-lock: создание in-flight записи при отсутствии
 			{
 				std::unique_lock writeLock(m_Mutex);
 
-				auto it = m_Resources.find(guid);
-				if (it != m_Resources.end())
-					entry = it->second;
+				auto& slot = m_Resources[guid];
+				cachedResource = slot.weakResource.lock();
+				if (cachedResource)
+				{
+					// Успел загрузиться в параллельном потоке
+				}
+				else if (slot.inFlightEvent)
+				{
+					inFlight = slot.inFlightEvent;
+				}
 				else
 				{
-					entry = std::make_shared<ResourceEntry>();
-					m_Resources.emplace(guid, entry);
+					inFlight = std::make_shared<ResourceEvent>();
+					slot.inFlightEvent = inFlight;
 					isNew = true;
 				}
 			}
 
-			// Подписываемся на событие готовности ресурса (или ошибки)
-			entry->Subscribe(std::move(context), std::move(onLoaded));
+			if (cachedResource)
+			{
+				if (auto ctx = context.lock())
+				{
+					onLoaded(std::move(cachedResource));
+				}
+				return;
+			}
+
+			inFlight->Subscribe(std::move(context), std::move(onLoaded));
 			if (isNew)
+			{
 				onLoadRequest(guid);
+			}
 		}
 
 		/**
 		 * @brief Разрешение записи ресурса (успех или ошибка).
-		 * @details Поиск выполняется под shared_lock строго без создания новой записи.
-		 *          Замок снимается до вызова entry->Resolve.
+		 * @details При успехе сохраняет слабую ссылку std::weak_ptr в слот, оповещает
+		 *          подписчиков и сбрасывает in-flight событие. Таблица НЕ удерживает
+		 *          жесткий shared_ptr. Замок снимается до вызова Resolve.
 		 */
 		bool Resolve(const Guid& guid, ResultType result)
 		{
-			std::shared_ptr<ResourceEntry> entry;
+			std::shared_ptr<ResourceEvent> eventToResolve;
 
 			{
-				std::shared_lock lock(m_Mutex);
+				std::unique_lock lock(m_Mutex);
 				auto it = m_Resources.find(guid);
-				if (it != m_Resources.end())
+				if (it == m_Resources.end())
+					return false;
+
+				eventToResolve = std::move(it->second.inFlightEvent);
+				it->second.inFlightEvent.reset();
+
+				if (result.has_value())
 				{
-					entry = it->second;
+					it->second.weakResource = *result;
+				}
+				else
+				{
+					if (it->second.weakResource.expired())
+					{
+						m_Resources.erase(it);
+					}
 				}
 			}
 
-			if (!entry)
+			if (!eventToResolve)
 				return false;
 
-			entry->Resolve(std::move(result));
-
+			eventToResolve->Resolve(std::move(result));
 			return true;
 		}
 
 		/// @brief Синхронная попытка получить готовый ресурс из таблицы без ожидания
 		[[nodiscard]] std::shared_ptr<T> TryGet(const Guid& guid) const
 		{
-			std::shared_ptr<ResourceEntry> entry;
+			std::shared_lock lock(m_Mutex);
+			auto it = m_Resources.find(guid);
+			if (it != m_Resources.end())
 			{
-				std::shared_lock lock(m_Mutex);
-				auto it = m_Resources.find(guid);
-				if (it != m_Resources.end())
-				{
-					entry = it->second;
-				}
-			}
-
-			if (entry)
-			{
-				auto resOpt = entry->GetResult();
-				if (resOpt)
-				{
-					const auto& expectedRes = std::get<0>(*resOpt);
-					if (expectedRes)
-					{
-						return *expectedRes;
-					}
-				}
+				return it->second.weakResource.lock();
 			}
 			return nullptr;
 		}
@@ -145,7 +183,13 @@ namespace zzz::engine
 		}
 
 	private:
+		struct ResourceSlot
+		{
+			std::weak_ptr<T> weakResource;
+			std::shared_ptr<ResourceEvent> inFlightEvent;
+		};
+
 		mutable std::shared_mutex m_Mutex;
-		std::unordered_map<Guid, std::shared_ptr<ResourceEntry>> m_Resources;
+		std::unordered_map<Guid, ResourceSlot> m_Resources;
 	};
 }

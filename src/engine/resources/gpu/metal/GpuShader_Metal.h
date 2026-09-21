@@ -2,7 +2,8 @@
 
 #include <string>
 #include <memory>
-
+#include "core/utils/Ensure.h"
+#include "core/utils/MemoryUtils.h"
 #include "engine/resources/ResourceRef.h"
 #include "engine/resources/ResourceBase.h"
 #include "engine/resources/cpu/CpuShader.h"
@@ -16,18 +17,20 @@ namespace zzz::engine
 	public:
 		using CpuSource = CpuShader;
 
-		GpuShader_Metal(const Guid& guid, std::string name, ResourceRef<CpuShader> cpuShader)
-			: ResourceBase(guid, eResourceType::Shader, std::move(name)), m_CpuShader(std::move(cpuShader)) {}
-		~GpuShader_Metal() override = default;
-
-		[[nodiscard]] static std::shared_ptr<GpuShader_Metal> CreateFromCpu(ResourceRef<CpuShader> cpuShader)
+		GpuShader_Metal(const Guid& guid, std::string name)
+			: ResourceBase(guid, eResourceType::Shader, std::move(name))
 		{
-			return safe_make_shared<GpuShader_Metal>(cpuShader->GetGuid(), std::string(cpuShader->GetName()), std::move(cpuShader));
 		}
 
-		[[nodiscard]] const ResourceRef<CpuShader>& GetCpuShader() const noexcept { return m_CpuShader; }
+		~GpuShader_Metal() override = default;
 
-	private:
-		ResourceRef<CpuShader> m_CpuShader;
+		[[nodiscard]] static std::shared_ptr<GpuShader_Metal> CreateGpuResourceAndUploadFromCpu(ResourceRef<CpuShader> cpuShader)
+		{
+			ensure(cpuShader != nullptr, "GpuShader_Metal::CreateGpuResourceAndUploadFromCpu: cpuShader не должен быть null");
+			const auto& guid = cpuShader->GetGuid();
+			std::string name(cpuShader->GetName());
+
+			return safe_make_shared<GpuShader_Metal>(guid, std::move(name));
+		}
 	};
 }

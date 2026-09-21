@@ -22,7 +22,7 @@ namespace zzz::engine
 		CpuMesh(const ::zzz::core::Guid& guid, std::string name, ::zzz::core::MeshData meshData);
 		~CpuMesh() override = default;
 
-		[[nodiscard]] static std::expected<std::shared_ptr<CpuMesh>, std::string> CreateFromMemory(
+		[[nodiscard]] static std::expected<std::shared_ptr<CpuMesh>, std::string> CreateCpuResourceFromPackageBytes(
 			const ::zzz::core::PackageEntry& entry,
 			std::span<const std::byte> bytes);
 

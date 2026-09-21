@@ -9,17 +9,19 @@ namespace zzz::engine
 	GpuMaterial_VK::GpuMaterial_VK(
 		const Guid& guid,
 		std::string name,
-		ResourceRef<CpuMaterial> cpuMaterial)
+		const Guid& shaderGuid)
 		: ResourceBase(guid, eResourceType::Material, std::move(name))
-		, m_CpuMaterial(std::move(cpuMaterial))
+		, m_ShaderGuid(shaderGuid)
 	{
 	}
 
-	std::shared_ptr<GpuMaterial_VK> GpuMaterial_VK::CreateFromCpu(ResourceRef<CpuMaterial> cpuMaterial)
+	std::shared_ptr<GpuMaterial_VK> GpuMaterial_VK::CreateGpuResourceAndUploadFromCpu(ResourceRef<CpuMaterial> cpuMaterial)
 	{
-		ensure(cpuMaterial != nullptr, "GpuMaterial_VK::CreateFromCpu: cpuMaterial не должен быть null");
+		ensure(cpuMaterial != nullptr, "GpuMaterial_VK::CreateGpuResourceAndUploadFromCpu: cpuMaterial не должен быть null");
 		const auto& guid = cpuMaterial->GetGuid();
 		std::string name(cpuMaterial->GetName());
-		return safe_make_shared<GpuMaterial_VK>(guid, std::move(name), std::move(cpuMaterial));
+		const Guid shaderGuid = cpuMaterial->GetShaderGuid();
+
+		return safe_make_shared<GpuMaterial_VK>(guid, std::move(name), shaderGuid);
 	}
 }

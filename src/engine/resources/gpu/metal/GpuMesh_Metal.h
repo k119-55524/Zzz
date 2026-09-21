@@ -2,7 +2,8 @@
 
 #include <string>
 #include <memory>
-
+#include "core/utils/Ensure.h"
+#include "core/utils/MemoryUtils.h"
 #include "engine/resources/cpu/CpuMesh.h"
 #include "engine/resources/ResourceRef.h"
 #include "engine/resources/ResourceBase.h"
@@ -16,20 +17,31 @@ namespace zzz::engine
 	public:
 		using CpuSource = CpuMesh;
 
-		GpuMesh_Metal(const Guid& guid, std::string name, ResourceRef<CpuMesh> cpuMesh)
-			: ResourceBase(guid, eResourceType::Mesh, std::move(name)), m_CpuMesh(std::move(cpuMesh)) {}
-		~GpuMesh_Metal() override = default;
-
-		[[nodiscard]] static std::shared_ptr<GpuMesh_Metal> CreateFromCpu(ResourceRef<CpuMesh> cpuMesh)
+		GpuMesh_Metal(const Guid& guid, std::string name, zU32 vertexCount, zU32 indexCount)
+			: ResourceBase(guid, eResourceType::Mesh, std::move(name))
+			, m_VertexCount(vertexCount)
+			, m_IndexCount(indexCount)
 		{
-			return safe_make_shared<GpuMesh_Metal>(cpuMesh->GetGuid(), std::string(cpuMesh->GetName()), std::move(cpuMesh));
 		}
 
-		[[nodiscard]] const ResourceRef<CpuMesh>& GetCpuMesh() const noexcept { return m_CpuMesh; }
-		[[nodiscard]] zU32 GetVertexCount() const noexcept { return m_CpuMesh ? m_CpuMesh->GetVertexCount() : 0; }
-		[[nodiscard]] zU32 GetIndexCount() const noexcept { return m_CpuMesh ? m_CpuMesh->GetIndexCount() : 0; }
+		~GpuMesh_Metal() override = default;
+
+		[[nodiscard]] static std::shared_ptr<GpuMesh_Metal> CreateGpuResourceAndUploadFromCpu(ResourceRef<CpuMesh> cpuMesh)
+		{
+			ensure(cpuMesh != nullptr, "GpuMesh_Metal::CreateGpuResourceAndUploadFromCpu: cpuMesh не должен быть null");
+			const auto& guid = cpuMesh->GetGuid();
+			std::string name(cpuMesh->GetName());
+			const zU32 vertexCount = cpuMesh->GetVertexCount();
+			const zU32 indexCount = cpuMesh->GetIndexCount();
+
+			return safe_make_shared<GpuMesh_Metal>(guid, std::move(name), vertexCount, indexCount);
+		}
+
+		[[nodiscard]] zU32 GetVertexCount() const noexcept { return m_VertexCount; }
+		[[nodiscard]] zU32 GetIndexCount() const noexcept { return m_IndexCount; }
 
 	private:
-		ResourceRef<CpuMesh> m_CpuMesh;
+		zU32 m_VertexCount{ 0 };
+		zU32 m_IndexCount{ 0 };
 	};
 }

@@ -3,6 +3,7 @@
 #include <memory>
 #include <utility>
 #include <type_traits>
+
 #include "engine/resources/ResourceBase.h"
 
 namespace zzz::engine
