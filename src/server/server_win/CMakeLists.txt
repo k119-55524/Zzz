@@ -3,7 +3,7 @@ add_executable(server_win
     resource/server_win.rc
 )
 
-target_link_libraries(server_win PRIVATE server_lib core_lib logger_lib)
+target_link_libraries(server_win PRIVATE server_lib core_lib)
 
 if(WIN32)
     target_precompile_headers(server_win PRIVATE

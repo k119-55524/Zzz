@@ -263,13 +263,11 @@ macro(setup_engine_target TARGET_NAME IS_EDITOR)
         target_link_libraries(${TARGET_NAME}
             PUBLIC
                 core_lib_editor
-                logger_lib_editor
         )
     else()
         target_link_libraries(${TARGET_NAME}
             PUBLIC
                 core_lib
-                logger_lib
         )
     endif()
 

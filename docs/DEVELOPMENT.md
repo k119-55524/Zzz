@@ -243,7 +243,7 @@ int APIENTRY wWinMain(...)
   # Указание пути к библиотекам SDK
   link_directories("${Z_EDITOR_PATH}/libs/zlibs/lib")
   # Линковка со скомпилированными модулями
-  target_link_libraries(GameTarget PRIVATE engine_lib core_lib logger_lib)
+  target_link_libraries(GameTarget PRIVATE engine_lib core_lib)
   ```
 Такой подход обеспечит переносимость игровых скриптов и сценариев без привязки к абсолютным путям репозитория.
 

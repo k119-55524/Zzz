@@ -74,7 +74,6 @@ target_sources(game_android PRIVATE
 
 target_link_libraries(game_android PRIVATE
     engine_lib
-    logger_lib
 
     # Это магическая строка, которая решит UnsatisfiedLinkError
     -Wl,--whole-archive game-activity::game-activity_static -Wl,--no-whole-archive

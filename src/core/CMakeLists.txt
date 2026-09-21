@@ -3,7 +3,9 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
 
     target_include_directories(${TARGET_NAME} PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/pch
+        ${CMAKE_CURRENT_SOURCE_DIR}/logger
     )
 
     target_sources(${TARGET_NAME} PRIVATE
@@ -43,6 +45,16 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/platforms/VKToStringHelpers.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/platforms/MetalToStringHelpers.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/macros/LogMacros.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/logger/LoggerIncludes.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/logger/logger.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/logger/logger.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/logger/private/log_entry.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/logger/private/log_entry.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/logger/private/IBroadcaster.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/logger/private/CallbackBroadcaster.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/logger/private/ConsoleBroadcaster.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/logger/private/NetworkBroadcaster.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/logger/private/NetworkBroadcaster.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/macros/MiscMacros.h
         ${CMAKE_CURRENT_SOURCE_DIR}/headers/Apple.h
         ${CMAKE_CURRENT_SOURCE_DIR}/headers/platforms/MSWin.h
@@ -201,9 +213,17 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
 
     if(${IS_EDITOR})
         target_compile_definitions(${TARGET_NAME} PUBLIC Z_EDITOR=1 EDITORDLL_EXPORTS)
-        target_link_libraries(${TARGET_NAME} PUBLIC logger_lib_editor math_editor)
+        target_link_libraries(${TARGET_NAME} PUBLIC math_editor)
     else()
-        target_link_libraries(${TARGET_NAME} PUBLIC logger_lib math)
+        target_link_libraries(${TARGET_NAME} PUBLIC math)
+    endif()
+
+    if(WIN32)
+        target_link_libraries(${TARGET_NAME} PRIVATE User32 Ws2_32)
+    endif()
+
+    if(ANDROID)
+        target_link_libraries(${TARGET_NAME} PRIVATE log)
     endif()
 
     if(TARGET Microsoft::WinPixEventRuntime)
@@ -227,3 +247,8 @@ endmacro()
 
 setup_core_target(core_lib FALSE)
 setup_core_target(core_lib_editor TRUE)
+
+add_library(logger_lib ALIAS core_lib)
+if(WIN32)
+    add_library(logger_lib_editor ALIAS core_lib_editor)
+endif()

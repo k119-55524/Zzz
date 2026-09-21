@@ -83,7 +83,6 @@ target_sources(game_win PRIVATE
 target_link_libraries(game_win PRIVATE
     engine_lib
     core_lib
-    logger_lib
 )
 
 target_compile_features(game_win PUBLIC cxx_std_23)

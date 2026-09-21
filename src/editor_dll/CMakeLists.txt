@@ -20,18 +20,17 @@ target_sources(editor_dll PRIVATE
 
 target_include_directories(editor_dll PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
-# WHOLE_ARCHIVE - core_lib_editor/logger_lib_editor/engine_lib_editor помечают своё API
+# WHOLE_ARCHIVE - core_lib_editor/engine_lib_editor помечают своё API
 # Z_CORE_API (dllexport, см. core/utils/Export.h) специально для того,
 # чтобы scripts.dll (Hot-Reload) мог импортировать его из editor_dll.dll. Обычная статическая
 # линковка подтягивает из .lib только те .obj, чьи символы уже на что-то ссылаются из
 # editor_dll.cpp/EditorEngine.cpp - throw_runtime_error и подобные символы, используемые только
 # шаблонным кодом (Event<>::Subscribe), инстанцируемым уже в самих скриптах, иначе тихо
-# выпадают из экспортов editor_dll.dll. WHOLE_ARCHIVE форсирует включение всех .obj из этих трёх
+# выпадают из экспортов editor_dll.dll. WHOLE_ARCHIVE форсирует включение всех .obj из этих
 # библиотек целиком, независимо от того, что из них реально использует сам editor_dll.
 target_link_libraries(editor_dll
     PRIVATE
         $<LINK_LIBRARY:WHOLE_ARCHIVE,engine_lib_editor>
         $<LINK_LIBRARY:WHOLE_ARCHIVE,core_lib_editor>
-        $<LINK_LIBRARY:WHOLE_ARCHIVE,logger_lib_editor>
 )
 target_compile_definitions(editor_dll PRIVATE Z_TARGET_NAME="editor_dll")

@@ -105,7 +105,6 @@ endif()
 
 target_link_libraries(game_ios PRIVATE
     engine_lib
-    logger_lib
 )
 
 target_link_libraries(game_ios PRIVATE

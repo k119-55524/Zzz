@@ -33,7 +33,6 @@ target_include_directories(assets_builder_dll PRIVATE
 
 target_link_libraries(assets_builder_dll PRIVATE
     core_lib
-    logger_lib
 )
 
 target_compile_definitions(assets_builder_dll PRIVATE ASSETS_BUILDER_EXPORTS Z_TARGET_NAME="assets_builder_dll")

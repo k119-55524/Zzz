@@ -129,7 +129,6 @@ void TaskDispatcher::InitializePools(const CpuTopology& topology)
 				ToString(prio), m_Pools[i]->GetThreadCount());
 		}
 	}
-	DOut(Hardware, "==========================================================");
 #endif
 }
 

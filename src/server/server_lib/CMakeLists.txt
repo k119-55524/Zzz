@@ -6,7 +6,7 @@ target_include_directories(server_lib PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_link_libraries(server_lib PUBLIC core_lib logger_lib)
+target_link_libraries(server_lib PUBLIC core_lib)
 
 if(WIN32)
     target_precompile_headers(server_lib PRIVATE

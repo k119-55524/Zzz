@@ -107,7 +107,6 @@ endif()
 target_link_libraries(game_macos
     PRIVATE
         engine_lib
-        logger_lib
 )
 
 target_compile_features(game_macos PUBLIC cxx_std_23)

@@ -108,7 +108,6 @@ target_sources(game_linux
 target_link_libraries(game_linux
     PRIVATE
         engine_lib
-        logger_lib
 )
 
 target_compile_features(game_linux PUBLIC cxx_std_23)

@@ -41,7 +41,6 @@ if(TEST_SOURCES)
             GTest::gtest_main
             engine_lib
             core_lib
-            logger_lib
     )
 
     # -----------------------------------------------------------------------------
