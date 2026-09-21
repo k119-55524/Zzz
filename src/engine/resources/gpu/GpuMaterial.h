@@ -1,38 +1,23 @@
 #pragma once
 
-#include <string>
-#include <memory>
-
-#include "engine/resources/ResourceRef.h"
-#include "engine/resources/ResourceBase.h"
-#include "engine/resources/cpu/CpuMaterial.h"
-
-using namespace zzz::core;
-
+#if defined(Z_VULKAN)
+#include "engine/resources/gpu/vulkan/GpuMaterial_VK.h"
 namespace zzz::engine
 {
-	/**
-	 * @class GpuMaterial
-	 * @brief Ресурс материала на GPU (шейдеры, параметры, текстурные привязки).
-	 */
-	class GpuMaterial final : public ResourceBase
-	{
-	public:
-		using CpuSource = CpuMaterial;
-
-		GpuMaterial(const Guid& guid, std::string name, ResourceRef<CpuMaterial> cpuMaterial);
-		~GpuMaterial() override = default;
-
-		[[nodiscard]] static std::shared_ptr<GpuMaterial> CreateFromCpu(ResourceRef<CpuMaterial> cpuMaterial);
-
-		[[nodiscard]] const ResourceRef<CpuMaterial>& GetCpuMaterial() const noexcept { return m_CpuMaterial; }
-		[[nodiscard]] const Guid& GetShaderGuid() const noexcept
-		{
-			static const Guid s_Empty;
-			return m_CpuMaterial ? m_CpuMaterial->GetShaderGuid() : s_Empty;
-		}
-
-	private:
-		ResourceRef<CpuMaterial> m_CpuMaterial;
-	};
+	using GpuMaterial = GpuMaterial_VK;
 }
+#elif defined(Z_D3D12)
+#include "engine/resources/gpu/directx12/GpuMaterial_DX.h"
+namespace zzz::engine
+{
+	using GpuMaterial = GpuMaterial_DX;
+}
+#elif defined(Z_METAL)
+#include "engine/resources/gpu/metal/GpuMaterial_Metal.h"
+namespace zzz::engine
+{
+	using GpuMaterial = GpuMaterial_Metal;
+}
+#else
+#error "No graphics API defined for GpuMaterial!"
+#endif

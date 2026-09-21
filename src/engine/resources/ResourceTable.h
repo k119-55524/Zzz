@@ -105,6 +105,7 @@ namespace zzz::engine
 				return false;
 
 			entry->Resolve(std::move(result));
+
 			return true;
 		}
 

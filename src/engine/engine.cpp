@@ -72,7 +72,7 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 	m_CpuResourceManager = safe_make_shared<CpuResourceManager>(*m_TaskDispatcher, m_PackageManager, m_DataAssetsManager, m_FileSystem);
 
 	// Инициализация менеджера ресурсов GPU
-	m_GpuResourceManager = safe_make_shared<GpuResourceManager>(*m_TaskDispatcher, m_GAPI, m_CpuResourceManager);
+	m_GpuResourceManager = safe_make_shared<GpuResourceManager>(m_GAPI, m_CpuResourceManager);
 
 	// Инициализация изолированной подсистемы скриптов
 	m_ScriptStorage = safe_make_shared<ScriptStorage>();

@@ -1,37 +1,23 @@
 #pragma once
 
-#include <string>
-#include <memory>
-
-#include "engine/resources/ResourceRef.h"
-#include "engine/resources/cpu/CpuMesh.h"
-#include "engine/resources/ResourceBase.h"
-
-using namespace zzz::core;
-
+#if defined(Z_VULKAN)
+#include "engine/resources/gpu/vulkan/GpuMesh_VK.h"
 namespace zzz::engine
 {
-	/**
-	 * @class GpuMesh
-	 * @brief Ресурс полигональной 3D-геометрии на GPU.
-	 * @details На этапе 22 хранит валидную ссылку на CPU-ресурс и дескрипторы.
-	 *          Настоящие Vertex/Index GPU-буферы и барьеры создаются на этапе 23.
-	 */
-	class GpuMesh final : public ResourceBase
-	{
-	public:
-		using CpuSource = CpuMesh;
-
-		GpuMesh(const Guid& guid, std::string name, ResourceRef<CpuMesh> cpuMesh);
-		~GpuMesh() override = default;
-
-		[[nodiscard]] static std::shared_ptr<GpuMesh> CreateFromCpu(ResourceRef<CpuMesh> cpuMesh);
-
-		[[nodiscard]] const ResourceRef<CpuMesh>& GetCpuMesh() const noexcept { return m_CpuMesh; }
-		[[nodiscard]] zU32 GetVertexCount() const noexcept { return m_CpuMesh ? m_CpuMesh->GetVertexCount() : 0; }
-		[[nodiscard]] zU32 GetIndexCount() const noexcept { return m_CpuMesh ? m_CpuMesh->GetIndexCount() : 0; }
-
-	private:
-		ResourceRef<CpuMesh> m_CpuMesh;
-	};
+	using GpuMesh = GpuMesh_VK;
 }
+#elif defined(Z_D3D12)
+#include "engine/resources/gpu/directx12/GpuMesh_DX.h"
+namespace zzz::engine
+{
+	using GpuMesh = GpuMesh_DX;
+}
+#elif defined(Z_METAL)
+#include "engine/resources/gpu/metal/GpuMesh_Metal.h"
+namespace zzz::engine
+{
+	using GpuMesh = GpuMesh_Metal;
+}
+#else
+#error "No graphics API defined for GpuMesh!"
+#endif

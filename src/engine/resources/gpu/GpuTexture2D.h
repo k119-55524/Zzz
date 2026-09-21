@@ -1,35 +1,23 @@
 #pragma once
 
-#include <string>
-#include <memory>
-
-#include "engine/resources/ResourceRef.h"
-#include "engine/resources/ResourceBase.h"
-#include "engine/resources/cpu/CpuTexture2D.h"
-
-using namespace zzz::core;
-
+#if defined(Z_VULKAN)
+#include "engine/resources/gpu/vulkan/GpuTexture2D_VK.h"
 namespace zzz::engine
 {
-	/**
-	 * @class GpuTexture2D
-	 * @brief Ресурс 2D-текстуры в видеопамяти (GPU).
-	 */
-	class GpuTexture2D final : public ResourceBase
-	{
-	public:
-		using CpuSource = CpuTexture2D;
-
-		GpuTexture2D(const Guid& guid, std::string name, ResourceRef<CpuTexture2D> cpuTexture);
-		~GpuTexture2D() override = default;
-
-		[[nodiscard]] static std::shared_ptr<GpuTexture2D> CreateFromCpu(ResourceRef<CpuTexture2D> cpuTexture);
-
-		[[nodiscard]] const ResourceRef<CpuTexture2D>& GetCpuTexture() const noexcept { return m_CpuTexture; }
-		[[nodiscard]] uint32_t GetWidth() const noexcept { return m_CpuTexture ? m_CpuTexture->GetWidth() : 0; }
-		[[nodiscard]] uint32_t GetHeight() const noexcept { return m_CpuTexture ? m_CpuTexture->GetHeight() : 0; }
-
-	private:
-		ResourceRef<CpuTexture2D> m_CpuTexture;
-	};
+	using GpuTexture2D = GpuTexture2D_VK;
 }
+#elif defined(Z_D3D12)
+#include "engine/resources/gpu/directx12/GpuTexture2D_DX.h"
+namespace zzz::engine
+{
+	using GpuTexture2D = GpuTexture2D_DX;
+}
+#elif defined(Z_METAL)
+#include "engine/resources/gpu/metal/GpuTexture2D_Metal.h"
+namespace zzz::engine
+{
+	using GpuTexture2D = GpuTexture2D_Metal;
+}
+#else
+#error "No graphics API defined for GpuTexture2D!"
+#endif

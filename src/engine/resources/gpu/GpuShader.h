@@ -1,33 +1,23 @@
 #pragma once
 
-#include <string>
-#include <memory>
-
-#include "engine/resources/ResourceRef.h"
-#include "engine/resources/ResourceBase.h"
-#include "engine/resources/cpu/CpuShader.h"
-
-using namespace zzz::core;
-
+#if defined(Z_VULKAN)
+#include "engine/resources/gpu/vulkan/GpuShader_VK.h"
 namespace zzz::engine
 {
-	/**
-	 * @class GpuShader
-	 * @brief Ресурс скомпилированного шейдера на GPU.
-	 */
-	class GpuShader final : public ResourceBase
-	{
-	public:
-		using CpuSource = CpuShader;
-
-		GpuShader(const Guid& guid, std::string name, ResourceRef<CpuShader> cpuShader);
-		~GpuShader() override = default;
-
-		[[nodiscard]] static std::shared_ptr<GpuShader> CreateFromCpu(ResourceRef<CpuShader> cpuShader);
-
-		[[nodiscard]] const ResourceRef<CpuShader>& GetCpuShader() const noexcept { return m_CpuShader; }
-
-	private:
-		ResourceRef<CpuShader> m_CpuShader;
-	};
+	using GpuShader = GpuShader_VK;
 }
+#elif defined(Z_D3D12)
+#include "engine/resources/gpu/directx12/GpuShader_DX.h"
+namespace zzz::engine
+{
+	using GpuShader = GpuShader_DX;
+}
+#elif defined(Z_METAL)
+#include "engine/resources/gpu/metal/GpuShader_Metal.h"
+namespace zzz::engine
+{
+	using GpuShader = GpuShader_Metal;
+}
+#else
+#error "No graphics API defined for GpuShader!"
+#endif

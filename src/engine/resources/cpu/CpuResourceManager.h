@@ -102,7 +102,7 @@ namespace zzz::engine
 				auto sharedPermit = std::make_shared<InFlightPermit>(std::move(permit));
 				auto sharedBytes = std::make_shared<std::vector<std::byte>>(std::move(*bytesRes));
 
-				const bool enqueued = m_TaskDispatcher.Submit(priority,
+				m_TaskDispatcher.Submit(priority,
 					[this, guid, entry = std::move(entry), sharedBytes, sharedPermit, context = std::move(context), onLoaded = std::move(onLoaded)]() mutable
 				{
 					if (context.expired())
@@ -143,16 +143,6 @@ namespace zzz::engine
 						}
 					}
 				});
-
-				if (!enqueued)
-				{
-					sharedPermit.reset();
-					sharedBytes.reset();
-					if (auto ctx = context.lock())
-					{
-						onLoaded(std::unexpected(std::string("Не удалось поставить задачу десериализации в TaskDispatcher (пул закрыт)")));
-					}
-				}
 			};
 
 			if (m_IoScheduler)

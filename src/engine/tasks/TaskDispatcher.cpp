@@ -139,7 +139,7 @@ TaskDispatcher::~TaskDispatcher()
 	JoinAll();
 }
 
-bool TaskDispatcher::Submit(eTaskPriority priority, std::function<void()> task, ErrorHandler onError)
+void TaskDispatcher::Submit(eTaskPriority priority, std::function<void()> task, ErrorHandler onError)
 {
 	ensure(task != nullptr, "Попытка отправить пустую задачу в TaskDispatcher.");
 
@@ -174,7 +174,7 @@ bool TaskDispatcher::Submit(eTaskPriority priority, std::function<void()> task, 
 		}
 	};
 
-	return pool->Enqueue(std::move(safeTask)) == eEnqueueResult::Accepted;
+	pool->Enqueue(std::move(safeTask));
 }
 
 void TaskDispatcher::Join(eTaskPriority priority)

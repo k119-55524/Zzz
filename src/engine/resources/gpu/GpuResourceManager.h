@@ -8,7 +8,7 @@
 
 #include "core/utils/Guid.h"
 #include "engine/gapi/GAPI.h"
-#include "engine/tasks/TaskDispatcher.h"
+#include "engine/tasks/TaskPriority.h"
 #include "engine/resources/gpu/GpuMesh.h"
 #include "engine/resources/ResourceTable.h"
 #include "engine/resources/gpu/GpuShader.h"
@@ -46,7 +46,6 @@ namespace zzz::engine
 		GpuResourceManager() = delete;
 
 		explicit GpuResourceManager(
-			TaskDispatcher& taskDispatcher,
 			std::shared_ptr<GAPI> gapi,
 			std::shared_ptr<CpuResourceManager> cpuResourceManager);
 
@@ -61,10 +60,9 @@ namespace zzz::engine
 		{
 			GetTable<T>().GetOrRequest(
 				guid,
-				std::move(context),
-				[cb = std::move(onLoaded)](typename ResourceTable<T>::ResultType res)
+				context,
+				[cb = std::move(onLoaded)](std::expected<std::shared_ptr<T>, std::string> res)
 				{
-					// Точка выхода к заказчику ресурса(вызов коллбэка), когда ресурс готов (или произошла ошибка)
 					if (!res)
 						cb(std::unexpected(std::move(res.error())));
 					else
@@ -72,7 +70,6 @@ namespace zzz::engine
 				},
 				[this, priority](const Guid& guid)
 				{
-					// Если ресурс не найден в таблице, инициируем запрос CPU-ресурса и создание GPU-ресурса
 					RequestFromCpu<T>(guid, priority);
 				});
 		}
@@ -100,9 +97,9 @@ namespace zzz::engine
 		template<GpuResource TGpu>
 		void RequestFromCpu(const Guid& guid, eTaskPriority priority)
 		{
-			using TCpu = typename TGpu::CpuSource;
+			using TCpu = TGpu::CpuSource;
 
-			m_CpuManager->GetAsync<TCpu>(guid, weak_from_this(), [this, guid, priority](std::expected<ResourceRef<TCpu>, std::string> cpuRes)
+			m_CpuManager->GetAsync<TCpu>(guid, weak_from_this(), [this, guid](std::expected<ResourceRef<TCpu>, std::string> cpuRes)
 			{
 				if (!cpuRes)
 				{
@@ -110,31 +107,22 @@ namespace zzz::engine
 					return;
 				}
 
-				const bool enqueued = m_TaskDispatcher.Submit(priority, [this, guid, cpuRef = std::move(*cpuRes)]() mutable
+				try
 				{
-					try
-					{
-						auto gpuObj = TGpu::CreateFromCpu(std::move(cpuRef));
-						GetTable<TGpu>().Resolve(guid, std::move(gpuObj));
-					}
-					catch (const std::exception& ex)
-					{
-						GetTable<TGpu>().Resolve(guid, std::unexpected(std::format("Ошибка создания GPU-ресурса: {}", ex.what())));
-					}
-					catch (...)
-					{
-						GetTable<TGpu>().Resolve(guid, std::unexpected(std::string("Неизвестная ошибка создания GPU-ресурса")));
-					}
-				});
-
-				if (!enqueued)
+					auto gpuObj = TGpu::CreateFromCpu(std::move(*cpuRes));
+					GetTable<TGpu>().Resolve(guid, std::move(gpuObj));
+				}
+				catch (const std::exception& ex)
 				{
-					GetTable<TGpu>().Resolve(guid, std::unexpected(std::string("Не удалось поставить задачу создания GPU-ресурса в TaskDispatcher (пул закрыт)")));
+					GetTable<TGpu>().Resolve(guid, std::unexpected(std::format("Ошибка создания GPU-ресурса: {}", ex.what())));
+				}
+				catch (...)
+				{
+					GetTable<TGpu>().Resolve(guid, std::unexpected(std::string("Неизвестная ошибка создания GPU-ресурса")));
 				}
 			}, priority);
 		}
 
-		TaskDispatcher& m_TaskDispatcher;
 		std::shared_ptr<GAPI> m_GAPI;
 		std::shared_ptr<CpuResourceManager> m_CpuManager;
 
