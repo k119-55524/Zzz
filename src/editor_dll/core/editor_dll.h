@@ -1,6 +1,6 @@
 #pragma once
 
-#include <logger/logger.h>
+#include "core/logger/logger.h"
 
 #if defined(_WIN32)
 #define EDITOR_API __declspec(dllexport)

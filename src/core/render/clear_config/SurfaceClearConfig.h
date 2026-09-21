@@ -1,15 +1,17 @@
 #pragma once
 
 #include <string_view>
-#include "core/utils/ThrowWrappers.h"
+
 #include "math/Color.h"
 #include "core/utils/Guid.h"
+#include "core/logger/logger.h"
+#include "core/utils/ThrowWrappers.h"
 #include "core/Serialize/Serializer.h"
-#include <logger/logger.h>
+
+using namespace zzz::math;
 
 namespace zzz::core
 {
-	using namespace zzz::math;
 
 	/**
 	 * @enum eSurfaceClearMode

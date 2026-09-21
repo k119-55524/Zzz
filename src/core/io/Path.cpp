@@ -1,20 +1,18 @@
-
 #include <array>
 #include <cctype>
 #include <memory>
 #include <cstdlib>
 #include <algorithm>
-#include <logger/logger.h>
-
-#include "core/utils/Defines.h"
-#include "core/utils/Ensure.h"
-#include "core/headers/Apple.h"
-#include "core/headers/Linux.h"
-#include "core/headers/platforms/MSWin.h"
-#include "core/headers/Android.h"
-#include "core/constants/PackageConstants.h"
 
 #include "Path.h"
+#include "core/headers/Apple.h"
+#include "core/headers/Linux.h"
+#include "core/utils/Ensure.h"
+#include "core/headers/Android.h"
+#include "core/utils/Defines.h"
+#include "core/logger/logger.h"
+#include "core/headers/platforms/MSWin.h"
+#include "core/constants/PackageConstants.h"
 
 namespace
 {

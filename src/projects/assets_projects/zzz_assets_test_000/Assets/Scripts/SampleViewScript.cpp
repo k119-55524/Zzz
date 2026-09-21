@@ -1,7 +1,5 @@
-
-#include <logger/logger.h>
-
 #include "SampleViewScript.h"
+#include "core/logger/logger.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::ScriptView);
 

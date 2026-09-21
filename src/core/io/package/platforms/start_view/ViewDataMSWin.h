@@ -1,21 +1,22 @@
 #pragma once
 
 #include <string>
-#include <string_view>
 #include <vector>
-#include "math/Math.h"
-#include "core/Serialize/Serializer.h"
-#include "core/Enums/platforms/eMSWinEnums.h"
-#include "core/hardware/MonitorInfo.h"
-#include "core/constants/DisplayConstants.h"
-#include "core/constants/LogCategoryConstants.h"
-#include <logger/logger.h>
+#include <string_view>
 
+#include "math/Math.h"
+#include "core/logger/logger.h"
 #include "core/enums/eWindowState.h"
+#include "core/hardware/MonitorInfo.h"
+#include "core/Serialize/Serializer.h"
+#include "core/constants/DisplayConstants.h"
+#include "core/Enums/platforms/eMSWinEnums.h"
+#include "core/constants/LogCategoryConstants.h"
+
+using namespace zzz::math;
 
 namespace zzz::core
 {
-	using namespace zzz::math;
 
 	class ViewDataMSWin final : public ISerializable
 	{

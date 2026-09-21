@@ -1,12 +1,9 @@
-
-#include <logger/logger.h>
-
+#include "DataAssetsManager.h"
+#include "core/logger/logger.h"
 #include "core/io/DatFileHeader.h"
 #include "core/io/package/MeshData.h"
 #include "core/io/package/MaterialData.h"
 #include "core/constants/PackageConstants.h"
-
-#include "DataAssetsManager.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Assets);
 

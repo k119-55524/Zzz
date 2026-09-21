@@ -484,7 +484,7 @@ namespace editor.ViewModels
             sb.AppendLine("// RegisterAllScripts.cpp — генерируется автоматически ZzzEngine Editor");
             sb.AppendLine("#include <core/Core.h>");
             sb.AppendLine("#include <ScriptRegistry.h>");
-            sb.AppendLine("#include <logger/logger.h>");
+            sb.AppendLine("#include <core/logger/logger.h>");
             sb.AppendLine();
 
             // Добавляем инклуды для каждого скрипта

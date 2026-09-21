@@ -1,12 +1,13 @@
 #pragma once
 
-#include "core/CoreIncludes.h"
-#include "core/utils/ThreadUtils.h"
-#include <logger/logger.h>
 #include <queue>
 #include <future>
-#include <type_traits>
 #include <functional>
+#include <type_traits>
+
+#include "core/CoreIncludes.h"
+#include "core/logger/logger.h"
+#include "core/utils/ThreadUtils.h"
 
 namespace zzz::templates
 {

@@ -1,8 +1,7 @@
 #pragma once
 
-#include <logger/logger.h>
-
 #include "core/CoreIncludes.h"
+#include "core/logger/logger.h"
 #include "core/Serialize/Serializer.h"
 
 namespace zzz::core

@@ -1,14 +1,14 @@
 #pragma once
 
-#include <array>
 #include <span>
+#include <array>
 #include <string>
 #include <vector>
 #include <cstddef>
 #include <expected>
-#include <logger/logger.h>
 
 #include "core/utils/Version.h"
+#include "core/logger/logger.h"
 #include "core/serialize/Serializer.h"
 #include "core/constants/LogCategoryConstants.h"
 

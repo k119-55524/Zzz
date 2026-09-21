@@ -1,9 +1,9 @@
 #pragma once
 
 #include <string_view>
-#include <logger/logger.h>
 
 #include "core/CoreIncludes.h"
+#include "core/logger/logger.h"
 #include "core/utils/ThrowWrappers.h"
 #include "core/Serialize/Serializer.h"
 

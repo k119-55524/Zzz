@@ -1,5 +1,5 @@
-#include <logger/logger.h>
 #include "SampleObjectScript.h"
+#include "core/logger/logger.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::ScriptObject);
 
