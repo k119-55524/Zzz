@@ -4,7 +4,6 @@
 #include <string>
 #include <format>
 #include <expected>
-#include <atomic>
 
 #include "core/utils/Guid.h"
 #include "engine/gapi/GAPI.h"
@@ -48,14 +47,6 @@ namespace zzz::engine
 			std::function<void(std::expected<ResourceRef<T>, std::string>)> onLoaded,
 			eTaskPriority priority = eTaskPriority::Normal)
 		{
-			if (!m_IsRunning.load(std::memory_order_acquire))
-			{
-				if (auto ctx = context.lock())
-					onLoaded(std::unexpected(std::string("GpuResourceManager остановлен")));
-
-				return;
-			}
-
 			GetTable<T>().GetOrRequest(
 				guid,
 				std::move(context),
@@ -80,9 +71,6 @@ namespace zzz::engine
 			auto res = GetTable<T>().TryGet(guid);
 			return res ? ResourceRef<T>(std::move(res)) : ResourceRef<T>{};
 		}
-
-		void Stop();
-		void Clear();
 
 	private:
 		template<typename T>
@@ -137,8 +125,6 @@ namespace zzz::engine
 		TaskDispatcher& m_TaskDispatcher;
 		std::shared_ptr<GAPI> m_GAPI;
 		std::shared_ptr<CpuResourceManager> m_CpuManager;
-
-		std::atomic<bool> m_IsRunning{ true };
 
 		ResourceTable<GpuMesh>      m_Meshes;
 		ResourceTable<GpuMaterial>  m_Materials;

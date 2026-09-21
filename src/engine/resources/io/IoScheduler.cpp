@@ -73,9 +73,6 @@ namespace zzz::engine
 
 	void IoScheduler::Stop()
 	{
-		if (!m_IsRunning.exchange(false, std::memory_order_acq_rel))
-			return;
-
 		if (m_IoThread.joinable())
 		{
 			m_IoThread.request_stop();
@@ -112,9 +109,6 @@ namespace zzz::engine
 		eTaskPriority priority,
 		std::function<void(std::expected<std::vector<std::byte>, std::string>, InFlightPermit)> onCompleted)
 	{
-		if (!m_IsRunning.load(std::memory_order_acquire))
-			return false;
-
 		ensure(onCompleted != nullptr, "IoScheduler::QueueRead: onCompleted не должен быть null");
 
 		IoReadRequest req{

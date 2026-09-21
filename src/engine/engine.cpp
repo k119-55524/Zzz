@@ -136,11 +136,6 @@ void Engine::Shutdown() noexcept
 		StopGame();
 		m_EventBus = nullptr;
 
-		if (m_CpuResourceManager)
-			m_CpuResourceManager->Stop();
-		if (m_GpuResourceManager)
-			m_GpuResourceManager->Stop();
-
 		if (m_TaskDispatcher)
 			m_TaskDispatcher->JoinAll();
 
@@ -149,17 +144,8 @@ void Engine::Shutdown() noexcept
 
 		m_SceneManager = nullptr;
 		m_ViewManager = nullptr;
-
-		if (m_GpuResourceManager)
-		{
-			m_GpuResourceManager->Clear();
-			m_GpuResourceManager = nullptr;
-		}
-		if (m_CpuResourceManager)
-		{
-			m_CpuResourceManager->Clear();
-			m_CpuResourceManager = nullptr;
-		}
+		m_CpuResourceManager = nullptr;
+		m_GpuResourceManager = nullptr;
 
 		m_GAPI = nullptr;
 		m_Time = nullptr;

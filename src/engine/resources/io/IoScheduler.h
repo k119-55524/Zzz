@@ -1,9 +1,9 @@
 #pragma once
 
+#include <span>
 #include <vector>
 #include <memory>
 #include <string>
-#include <span>
 #include <mutex>
 #include <atomic>
 #include <thread>
@@ -14,9 +14,11 @@
 #include "core/utils/Guid.h"
 #include "core/io/FileSystem.h"
 #include "core/enums/eFileLocation.h"
+#include "engine/tasks/TaskPriority.h"
 #include "core/io/package/PackageEntry.h"
 #include "core/templates/DoubleBufferedVector.h"
-#include "engine/tasks/TaskPriority.h"
+
+using namespace zzz::core;
 
 namespace zzz::engine
 {
@@ -54,9 +56,9 @@ namespace zzz::engine
 	 */
 	struct IoReadRequest
 	{
-		core::Guid guid;
-		core::PackageEntry entry;
-		core::eFileLocation location = core::eFileLocation::App;
+		Guid guid;
+		PackageEntry entry;
+		eFileLocation location = eFileLocation::App;
 		std::string archivePath;
 		eTaskPriority priority = eTaskPriority::Normal;
 		std::function<void(std::expected<std::vector<std::byte>, std::string>, InFlightPermit)> onCompleted;
@@ -81,14 +83,12 @@ namespace zzz::engine
 		~IoScheduler();
 
 		[[nodiscard]] bool QueueRead(
-			const core::Guid& guid,
-			const core::PackageEntry& entry,
-			core::eFileLocation location,
+			const Guid& guid,
+			const PackageEntry& entry,
+			eFileLocation location,
 			std::string archivePath,
 			eTaskPriority priority,
 			std::function<void(std::expected<std::vector<std::byte>, std::string>, InFlightPermit)> onCompleted);
-
-		void Stop();
 
 		void ReleasePermit(size_t bytes) noexcept;
 
@@ -96,13 +96,13 @@ namespace zzz::engine
 		[[nodiscard]] size_t GetInFlightRequests() const noexcept { return m_CurrentInFlightRequests.load(std::memory_order_relaxed); }
 
 	private:
+		void Stop();
 		void IoWorker(std::stop_token stopToken);
 
-		std::shared_ptr<core::FileSystem> m_FileSystem;
+		std::shared_ptr<FileSystem> m_FileSystem;
 		size_t m_MaxInFlightBytes;
 		size_t m_MaxInFlightRequests;
 
-		std::atomic<bool> m_IsRunning{ true };
 		std::atomic<size_t> m_CurrentInFlightBytes{ 0 };
 		std::atomic<size_t> m_CurrentInFlightRequests{ 0 };
 
@@ -110,7 +110,7 @@ namespace zzz::engine
 		std::condition_variable m_QueueCv;
 		std::condition_variable m_BackpressureCv;
 
-		core::DoubleBufferedVector<IoReadRequest> m_Requests;
+		DoubleBufferedVector<IoReadRequest> m_Requests;
 		std::jthread m_IoThread;
 	};
 }

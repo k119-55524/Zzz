@@ -1,27 +1,25 @@
 #pragma once
 
+#include <span>
+#include <vector>
 #include <memory>
 #include <string>
 #include <format>
 #include <expected>
-#include <atomic>
-#include <span>
-#include <vector>
 
 #include "core/utils/Guid.h"
 #include "core/io/FileSystem.h"
 #include "core/enums/eResourceType.h"
 #include "engine/tasks/TaskDispatcher.h"
 #include "core/io/package/PackageEntry.h"
-#include "core/templates/CallbackQueue.h"
-#include "core/constants/PackageConstants.h"
 #include "engine/resources/ResourceRef.h"
 #include "engine/resources/cpu/CpuMesh.h"
+#include "core/io/ResourceStorageTraits.h"
 #include "engine/resources/cpu/CpuShader.h"
+#include "core/constants/PackageConstants.h"
+#include "engine/resources/io/IoScheduler.h"
 #include "engine/resources/cpu/CpuMaterial.h"
 #include "engine/resources/cpu/CpuTexture2D.h"
-#include "engine/resources/io/IoScheduler.h"
-#include "core/io/ResourceStorageTraits.h"
 #include "core/io/package/DataAssetsManager.h"
 
 using namespace zzz::core;
@@ -29,6 +27,12 @@ using namespace zzz::core;
 namespace zzz::engine
 {
 	class PackageManager;
+
+	template<typename T>
+	concept ParsableCpuResource = requires(const core::PackageEntry& entry, std::span<const std::byte> bytes)
+	{
+		{ T::CreateFromMemory(entry, bytes) } -> std::same_as<std::expected<std::shared_ptr<T>, std::string>>;
+	};
 
 	/**
 	 * @class CpuResourceManager
@@ -59,15 +63,7 @@ namespace zzz::engine
 			std::function<void(std::expected<ResourceRef<T>, std::string>)> onLoaded,
 			eTaskPriority priority = eTaskPriority::Normal)
 		{
-			if (!m_IsRunning.load(std::memory_order_acquire))
-			{
-				if (auto ctx = context.lock())
-				{
-					onLoaded(std::unexpected(std::string("CpuResourceManager остановлен")));
-				}
-				return;
-			}
-
+			static_assert(ParsableCpuResource<T>, "Тип ресурса обязан поддерживать статический метод CreateFromMemory");
 			constexpr auto type = GetCpuResourceType<T>();
 			auto entryRes = FindEntry(guid, type);
 			if (!entryRes)
@@ -116,7 +112,7 @@ namespace zzz::engine
 
 					try
 					{
-						auto parseRes = LoadFromBytes<T>(entry, *sharedBytes);
+						auto parseRes = T::CreateFromMemory(entry, *sharedBytes);
 						sharedBytes.reset();
 						sharedPermit.reset();
 
@@ -179,16 +175,7 @@ namespace zzz::engine
 			}
 		}
 
-		void Stop();
-		void Clear();
-
 	private:
-		template<typename T>
-		std::expected<std::shared_ptr<T>, std::string> LoadResourceSync(const Guid& guid);
-
-		template<typename T>
-		std::expected<std::shared_ptr<T>, std::string> LoadFromBytes(const PackageEntry& entry, std::span<const std::byte> bytes);
-
 		[[nodiscard]] std::expected<PackageEntry, std::string> FindEntry(const Guid& guid, eResourceType type) const;
 
 		TaskDispatcher& m_TaskDispatcher;
@@ -196,8 +183,6 @@ namespace zzz::engine
 		std::shared_ptr<DataAssetsManager> m_DataAssetsManager;
 		std::shared_ptr<FileSystem> m_FileSystem;
 		std::unique_ptr<IoScheduler> m_IoScheduler;
-
-		std::atomic<bool> m_IsRunning{ true };
 	};
 
 	template<typename T>

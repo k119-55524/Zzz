@@ -1,11 +1,13 @@
 #pragma once
 #include <span>
-
 #include <string>
 #include <vector>
+#include <memory>
+#include <expected>
 #include <cstddef>
 #include "engine/resources/ResourceBase.h"
 #include "core/io/package/MeshData.h"
+#include "core/io/package/PackageEntry.h"
 #include "core/enums/eIndexFormat.h"
 
 namespace zzz::engine
@@ -19,6 +21,10 @@ namespace zzz::engine
 	public:
 		CpuMesh(const ::zzz::core::Guid& guid, std::string name, ::zzz::core::MeshData meshData);
 		~CpuMesh() override = default;
+
+		[[nodiscard]] static std::expected<std::shared_ptr<CpuMesh>, std::string> CreateFromMemory(
+			const ::zzz::core::PackageEntry& entry,
+			std::span<const std::byte> bytes);
 
 		[[nodiscard]] zU32 GetVertexCount() const noexcept { return m_MeshData.GetVertexCount(); }
 		[[nodiscard]] zU32 GetVertexStride() const noexcept { return m_MeshData.GetVertexStride(); }

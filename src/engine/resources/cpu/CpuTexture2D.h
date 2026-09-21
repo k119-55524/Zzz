@@ -1,10 +1,12 @@
 #pragma once
 #include <span>
-
 #include <string>
 #include <vector>
+#include <memory>
+#include <expected>
 #include <cstddef>
 #include "engine/resources/ResourceBase.h"
+#include "core/io/package/PackageEntry.h"
 
 namespace zzz::engine
 {
@@ -22,6 +24,10 @@ namespace zzz::engine
 			uint32_t height = 0,
 			std::vector<std::byte> pixelData = {});
 		~CpuTexture2D() override = default;
+
+		[[nodiscard]] static std::expected<std::shared_ptr<CpuTexture2D>, std::string> CreateFromMemory(
+			const ::zzz::core::PackageEntry& entry,
+			std::span<const std::byte> bytes);
 
 		[[nodiscard]] uint32_t GetWidth() const noexcept { return m_Width; }
 		[[nodiscard]] uint32_t GetHeight() const noexcept { return m_Height; }

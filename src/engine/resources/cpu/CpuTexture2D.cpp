@@ -1,3 +1,4 @@
+#include "core/utils/MemoryUtils.h"
 #include "CpuTexture2D.h"
 
 using namespace zzz::core;
@@ -15,5 +16,12 @@ namespace zzz::engine
 		, m_Height(height)
 		, m_PixelData(std::move(pixelData))
 	{
+	}
+
+	std::expected<std::shared_ptr<CpuTexture2D>, std::string> CpuTexture2D::CreateFromMemory(
+		const PackageEntry& entry,
+		std::span<const std::byte> /*bytes*/)
+	{
+		return safe_make_shared<CpuTexture2D>(entry.GetGuid(), std::string(entry.GetName()));
 	}
 }
