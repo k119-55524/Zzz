@@ -34,6 +34,16 @@ namespace zzz::engine
 		{ T::CreateFromMemory(entry, bytes) } -> std::same_as<std::expected<std::shared_ptr<T>, std::string>>;
 	};
 
+	template<typename T>
+	constexpr eResourceType GetCpuResourceType() noexcept
+	{
+		if constexpr (std::is_same_v<T, CpuMesh>)           return eResourceType::Mesh;
+		else if constexpr (std::is_same_v<T, CpuMaterial>)  return eResourceType::Material;
+		else if constexpr (std::is_same_v<T, CpuTexture2D>) return eResourceType::Texture2D;
+		else if constexpr (std::is_same_v<T, CpuShader>)    return eResourceType::Shader;
+		else static_assert(sizeof(T) == 0, "Неизвестный тип CPU-ресурса!");
+	}
+
 	/**
 	 * @class CpuResourceManager
 	 * @brief Транзитный сервис асинхронного дискового ввода-вывода и десериализации CPU-ресурсов.
@@ -174,13 +184,4 @@ namespace zzz::engine
 		std::shared_ptr<FileSystem> m_FileSystem;
 		std::unique_ptr<IoScheduler> m_IoScheduler;
 	};
-
-	template<typename T>
-	constexpr eResourceType GetCpuResourceType() noexcept
-	{
-		if constexpr (std::is_same_v<T, CpuMesh>)           return eResourceType::Mesh;
-		else if constexpr (std::is_same_v<T, CpuMaterial>)  return eResourceType::Material;
-		else if constexpr (std::is_same_v<T, CpuTexture2D>) return eResourceType::Texture2D;
-		else if constexpr (std::is_same_v<T, CpuShader>)    return eResourceType::Shader;
-	}
 }

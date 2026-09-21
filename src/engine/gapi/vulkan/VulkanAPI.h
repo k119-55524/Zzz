@@ -44,6 +44,12 @@ namespace zzz::engine
 		VkResult QueueSubmit(uint32_t submitCount, const VkSubmitInfo* submits, VkFence fence);
 		VkResult QueuePresent(const VkPresentInfoKHR* presentInfo);
 
+		template<typename T = void>
+		void RegisterPendingTransition([[maybe_unused]] T* resource = nullptr) noexcept {}
+
+		template<typename T = void>
+		void FlushPendingTransitions([[maybe_unused]] T* cmdList = nullptr) noexcept {}
+
 		template<typename T>
 		void SetDebugName(T handle, const char* name) const
 		{

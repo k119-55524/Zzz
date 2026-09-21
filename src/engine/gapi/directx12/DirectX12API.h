@@ -18,6 +18,12 @@ namespace zzz::engine
 		uint64_t SignalFence();
 		void WaitForFenceValue(uint64_t fenceValue);
 
+		template<typename T = void>
+		void RegisterPendingTransition([[maybe_unused]] T* resource = nullptr) noexcept {}
+
+		template<typename T = void>
+		void FlushPendingTransitions([[maybe_unused]] T* cmdList = nullptr) noexcept {}
+
 		[[nodiscard]] ID3D12Device* GetDevice() const noexcept { return m_Device.Get(); }
 		[[nodiscard]] ID3D12CommandQueue* GetCommandQueue() const noexcept { return m_CommandQueue.Get(); }
 

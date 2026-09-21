@@ -14,6 +14,12 @@ namespace zzz::engine
 
 		void WaitForGpu() override;
 
+		template<typename T = void>
+		void RegisterPendingTransition([[maybe_unused]] T* resource = nullptr) noexcept {}
+
+		template<typename T = void>
+		void FlushPendingTransitions([[maybe_unused]] T* cmdList = nullptr) noexcept {}
+
 	private:
 		friend class Engine;
 		void Initialize(std::shared_ptr<UserSettingsManager> userSettings) override;
