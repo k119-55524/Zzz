@@ -1,6 +1,4 @@
-
 #include "core/utils/Ensure.h"
-
 #include "GpuResourceManager.h"
 
 using namespace zzz::core;

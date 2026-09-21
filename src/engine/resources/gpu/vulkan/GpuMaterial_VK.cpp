@@ -1,6 +1,6 @@
+#include "GpuMaterial_VK.h"
 #include "core/utils/Ensure.h"
 #include "core/utils/MemoryUtils.h"
-#include "GpuMaterial_VK.h"
 
 using namespace zzz::core;
 

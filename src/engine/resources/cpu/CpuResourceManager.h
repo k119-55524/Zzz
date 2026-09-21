@@ -1,21 +1,21 @@
 #pragma once
 
 #include <span>
-#include <vector>
-#include <memory>
 #include <string>
 #include <format>
+#include <memory>
+#include <vector>
 #include <expected>
 
 #include "core/utils/Guid.h"
 #include "core/io/FileSystem.h"
 #include "core/enums/eResourceType.h"
 #include "engine/tasks/TaskDispatcher.h"
+#include "engine/resources/cpu/CpuMesh.h"
 #include "core/io/package/PackageEntry.h"
 #include "engine/resources/ResourceRef.h"
-#include "engine/resources/cpu/CpuMesh.h"
-#include "core/io/ResourceStorageTraits.h"
 #include "engine/resources/cpu/CpuShader.h"
+#include "core/io/ResourceStorageTraits.h"
 #include "core/constants/PackageConstants.h"
 #include "engine/resources/io/IoScheduler.h"
 #include "engine/resources/cpu/CpuMaterial.h"
@@ -29,7 +29,7 @@ namespace zzz::engine
 	class PackageManager;
 
 	template<typename T>
-	concept ParsableCpuResource = requires(const core::PackageEntry& entry, std::span<const std::byte> bytes)
+	concept ParsableCpuResource = requires(const PackageEntry& entry, std::span<const std::byte> bytes)
 	{
 		{ T::CreateFromMemory(entry, bytes) } -> std::same_as<std::expected<std::shared_ptr<T>, std::string>>;
 	};

@@ -3,8 +3,8 @@
 #include <string>
 #include <memory>
 
-#include "engine/resources/ResourceRef.h"
 #include "engine/resources/cpu/CpuMesh.h"
+#include "engine/resources/ResourceRef.h"
 #include "engine/resources/ResourceBase.h"
 
 using namespace zzz::core;

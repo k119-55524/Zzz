@@ -8,11 +8,11 @@
 #include "core/templates/ThreadPool.h"
 #include "engine/tasks/TaskPriority.h"
 
+using namespace zzz::core;
+using namespace zzz::templates;
+
 namespace zzz::engine
 {
-	using namespace zzz::core;
-	using namespace zzz::templates;
-
 	/**
 	 * @brief Централизованный диспетчер пулов потоков движка.
 	 * Обеспечивает O(1) маршрутизацию задач по приоритетам и clean shutdown через JoinAll().
