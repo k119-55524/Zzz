@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/enums/ePackage.h"
 #include "core/io/FileSystem.h"
+#include "core/enums/ePackage.h"
 #include "core/io/package/PackageEntry.h"
 #include "core/io/package/PrimaryViewData.h"
 #include "core/io/package/ProjectManifestData.h"
@@ -9,30 +9,9 @@
 namespace zzz::core
 {
 	class SceneData;
+	class PrefabData;
 	class ChildViewData;
 	class IndependentViewData;
-	class PrefabData;
-
-	/**
-	 * @brief Соответствие между типом ресурса, поддерживаемым архивом package.dat, и его ePackage.
-	 * @details Задаёт единственно верный ePackage для каждого T, чтобы вызывающий код
-	 *          не мог передать в LoadAsset<T> несовместимый друг с другом тип и ePackage.
-	 *          Специализирован только для допустимых типов (ProjectManifestData, PrimaryViewData,
-	 *          SceneData, ChildViewData, IndependentViewData, PrefabData) - для любого другого T
-	 *          обращение к PackageAssetType<T>::value не скомпилируется (incomplete type).
-	 */
-	template <typename T>
-	struct PackageAssetType;
-
-	template <> struct PackageAssetType<ProjectManifestData>  { static constexpr ePackage value = ePackage::ProjectManifest; };
-	template <> struct PackageAssetType<PrimaryViewData>      { static constexpr ePackage value = ePackage::PrimaryView; };
-	template <> struct PackageAssetType<SceneData>            { static constexpr ePackage value = ePackage::Scene; };
-	template <> struct PackageAssetType<ChildViewData>        { static constexpr ePackage value = ePackage::ChildView; };
-	template <> struct PackageAssetType<IndependentViewData>  { static constexpr ePackage value = ePackage::IndependentView; };
-	template <> struct PackageAssetType<PrefabData>           { static constexpr ePackage value = ePackage::Prefab; };
-
-	template <typename T>
-	inline constexpr ePackage c_PackageAssetType = PackageAssetType<T>::value;
 }
 
 namespace zzz::engine
@@ -41,8 +20,6 @@ namespace zzz::engine
 
 	class PackageManager final
 	{
-		friend class SceneManager;
-
 	public:
 		PackageManager() = delete;
 		explicit PackageManager(std::shared_ptr<FileSystem> fileSystem);
@@ -51,9 +28,6 @@ namespace zzz::engine
 		[[nodiscard]] const ProjectManifestData& GetProjectManifestData() const noexcept { return m_ProjectManifest; }
 		[[nodiscard]] std::expected<PrimaryViewData, std::string> GetPrimaryViewData() const;
 
-		[[nodiscard]] const DatFileHeader& GetHeader() const noexcept { return m_Header; }
-		[[nodiscard]] zU64 GetBuildTime() const noexcept { return m_Header.GetBuildTime(); }
-
 		/// @brief Имя компании и приложения, закэшированные из ProjectManifestData во время Initialize().
 		[[nodiscard]] const std::string& GetCompanyName() const noexcept { return m_CompanyName; }
 		[[nodiscard]] const std::string& GetAppName() const noexcept { return m_AppName; }
@@ -61,7 +35,7 @@ namespace zzz::engine
 		template <typename T>
 		[[nodiscard]] std::expected<T, std::string> LoadAsset(const Guid& guid) const
 		{
-			constexpr ePackage type = c_PackageAssetType<T>;
+			constexpr ePackage type = T::c_PackageType;
 			auto entryOpt = GetEntry(type, guid);
 			if (!entryOpt)
 				return UNEXPECTED("Package entry of type {} with GUID '{}' was not found.", ToString(type), guid.ToString());
@@ -69,14 +43,11 @@ namespace zzz::engine
 			return DeserializeEntry<T>(*entryOpt);
 		}
 
-		[[nodiscard]] std::expected<std::vector<std::byte>, std::string> ReadRawBytes(const PackageEntry& entry) const;
-
-		template <typename T> requires std::derived_from<T, ISerializable>
-		[[nodiscard]] static std::expected<T, std::string> DeserializeEntryFromMemory(const PackageEntry& entry, std::span<const std::byte> bytes);
-
 	private:
 		[[nodiscard]] std::optional<PackageEntry> GetEntry(ePackage type, const Guid& guid) const;
 		void Initialize();
+
+		[[nodiscard]] std::expected<std::vector<std::byte>, std::string> ReadRawBytes(const PackageEntry& entry) const;
 
 		template <typename T> requires std::derived_from<T, ISerializable>
 		[[nodiscard]] std::expected<T, std::string> DeserializeEntry(const PackageEntry& entry) const;

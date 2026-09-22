@@ -9,6 +9,7 @@
 #include "core/io/package/MeshData.h"
 #include "core/io/package/PackageEntry.h"
 #include "core/enums/eIndexFormat.h"
+#include "core/enums/eResourceType.h"
 
 namespace zzz::engine
 {
@@ -19,6 +20,8 @@ namespace zzz::engine
 	class CpuMesh final : public ResourceBase
 	{
 	public:
+		static constexpr ::zzz::core::eResourceType c_ResourceType = ::zzz::core::eResourceType::Mesh;
+
 		CpuMesh(const ::zzz::core::Guid& guid, std::string name, ::zzz::core::MeshData meshData);
 		~CpuMesh() override = default;
 

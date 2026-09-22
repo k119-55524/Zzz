@@ -32,18 +32,9 @@ namespace zzz::engine
 	template<typename T>
 	concept ParsableCpuResource = requires(const PackageEntry& entry, std::span<const std::byte> bytes)
 	{
+		{ T::c_ResourceType } -> std::convertible_to<eResourceType>;
 		{ T::CreateCpuResourceFromPackageBytes(entry, bytes) } -> std::same_as<std::expected<std::shared_ptr<T>, std::string>>;
 	};
-
-	template<typename T>
-	constexpr eResourceType GetCpuResourceType() noexcept
-	{
-		if constexpr (std::is_same_v<T, CpuMesh>)           return eResourceType::Mesh;
-		else if constexpr (std::is_same_v<T, CpuMaterial>)  return eResourceType::Material;
-		else if constexpr (std::is_same_v<T, CpuTexture2D>) return eResourceType::Texture2D;
-		else if constexpr (std::is_same_v<T, CpuShader>)    return eResourceType::Shader;
-		else static_assert(sizeof(T) == 0, "Неизвестный тип CPU-ресурса!");
-	}
 
 	/**
 	 * @class CpuResourceManager
@@ -118,7 +109,7 @@ namespace zzz::engine
 
 			try
 			{
-				m_TaskDispatcher.Submit(priority, [this, guid, type = GetCpuResourceType<T>(), context = std::move(context), onLoaded = std::move(onLoaded)]() mutable
+				m_TaskDispatcher.Submit(priority, [this, guid, type = T::c_ResourceType, context = std::move(context), onLoaded = std::move(onLoaded)]() mutable
 				{
 					TaskGuard taskGuard(*this);
 

@@ -124,34 +124,21 @@ namespace zzz::engine
 	}
 
 	template <typename T> requires std::derived_from<T, ISerializable>
-	[[nodiscard]] std::expected<T, std::string> PackageManager::DeserializeEntryFromMemory(const PackageEntry& entry, std::span<const std::byte> bytes)
-	{
-		std::size_t offset = 0;
-		Serializer serializer;
-		T data{};
-		auto res = serializer.Deserialize(bytes, offset, data);
-		if (!res)
-			return UNEXPECTED("Ошибка десериализации данных пакета с GUID '{}': {}.", entry.GetGuid().ToString(), res.error());
-
-		return data;
-	}
-
-	template <typename T> requires std::derived_from<T, ISerializable>
 	[[nodiscard]] std::expected<T, std::string> PackageManager::DeserializeEntry(const PackageEntry& entry) const
 	{
 		auto bufferRes = ReadRawBytes(entry);
 		if (!bufferRes)
 			return UNEXPECTED("{}", bufferRes.error());
 
-		return DeserializeEntryFromMemory<T>(entry, *bufferRes);
-	}
+		std::size_t offset = 0;
+		Serializer serializer;
+		T data{};
+		auto res = serializer.Deserialize(*bufferRes, offset, data);
+		if (!res)
+			return UNEXPECTED("Ошибка десериализации данных пакета с GUID '{}': {}.", entry.GetGuid().ToString(), res.error());
 
-	template std::expected<ProjectManifestData, std::string> PackageManager::DeserializeEntryFromMemory<ProjectManifestData>(const PackageEntry&, std::span<const std::byte>);
-	template std::expected<PrimaryViewData, std::string> PackageManager::DeserializeEntryFromMemory<PrimaryViewData>(const PackageEntry&, std::span<const std::byte>);
-	template std::expected<SceneData, std::string> PackageManager::DeserializeEntryFromMemory<SceneData>(const PackageEntry&, std::span<const std::byte>);
-	template std::expected<ChildViewData, std::string> PackageManager::DeserializeEntryFromMemory<ChildViewData>(const PackageEntry&, std::span<const std::byte>);
-	template std::expected<IndependentViewData, std::string> PackageManager::DeserializeEntryFromMemory<IndependentViewData>(const PackageEntry&, std::span<const std::byte>);
-	template std::expected<PrefabData, std::string> PackageManager::DeserializeEntryFromMemory<PrefabData>(const PackageEntry&, std::span<const std::byte>);
+		return data;
+	}
 
 	template std::expected<ProjectManifestData, std::string> PackageManager::DeserializeEntry<ProjectManifestData>(const PackageEntry&) const;
 	template std::expected<PrimaryViewData, std::string> PackageManager::DeserializeEntry<PrimaryViewData>(const PackageEntry&) const;

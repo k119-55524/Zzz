@@ -25,29 +25,6 @@ namespace zzz::core
 	class PrefabData;
 	class MaterialData;
 	class ShaderData;
-	class AnimationData;
-	class BinaryData;
-
-	/**
-	 * @brief Соответствие между типом ресурса, поддерживаемым архивом data.dat, и его eResourceType.
-	 * @details Задаёт единственно верный eResourceType для каждого T, чтобы вызывающий код
-	 *          не мог передать в LoadAsset<T> несовместимый друг с другом тип и eResourceType.
-	 *          Специализирован только для допустимых типов (MeshData, PrefabData, MaterialData,
-	 *          ShaderData, AnimationData, BinaryData) - для любого другого T обращение
-	 *          к DataAssetResourceType<T>::value не скомпилируется (incomplete type).
-	 */
-	template <typename T>
-	struct DataAssetResourceType;
-
-	template <> struct DataAssetResourceType<MeshData>      { static constexpr eResourceType value = eResourceType::Mesh; };
-	template <> struct DataAssetResourceType<PrefabData>    { static constexpr eResourceType value = eResourceType::Prefab; };
-	template <> struct DataAssetResourceType<MaterialData>  { static constexpr eResourceType value = eResourceType::Material; };
-	template <> struct DataAssetResourceType<ShaderData>    { static constexpr eResourceType value = eResourceType::Shader; };
-	template <> struct DataAssetResourceType<AnimationData> { static constexpr eResourceType value = eResourceType::Animation; };
-	template <> struct DataAssetResourceType<BinaryData>    { static constexpr eResourceType value = eResourceType::BinaryData; };
-
-	template <typename T>
-	inline constexpr eResourceType c_DataAssetResourceType = DataAssetResourceType<T>::value;
 
 	/**
 	 * @struct AssetLocation
@@ -82,7 +59,7 @@ namespace zzz::core
 			const PackageEntry& entry,
 			std::span<const std::byte> bytes)
 		{
-			constexpr eResourceType expectedType = c_DataAssetResourceType<T>;
+			constexpr eResourceType expectedType = T::c_ResourceType;
 			if (entry.GetAssetType() != static_cast<zU32>(expectedType))
 			{
 				return UNEXPECTED("Несоответствие типа ассета с GUID '{}'. Ожидался: {}, в записи: {}",

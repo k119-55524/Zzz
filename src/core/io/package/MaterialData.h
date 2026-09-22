@@ -9,6 +9,7 @@
 #include "core/utils/Export.h"
 #include "core/utils/Guid.h"
 #include "core/serialize/Serializer.h"
+#include "core/enums/eResourceType.h"
 
 namespace zzz::core
 {
@@ -19,6 +20,8 @@ namespace zzz::core
 	class Z_CORE_API MaterialData final : public ISerializable
 	{
 	public:
+		static constexpr eResourceType c_ResourceType = eResourceType::Material;
+
 		MaterialData() = default;
 		explicit MaterialData(std::string name, Guid shaderGuid = {});
 

@@ -80,9 +80,6 @@ namespace zzz::engine
 			{
 				try
 				{
-					auto entryOpt = m_PackageManager->GetEntry(ePackage::Scene, sceneGuid);
-					ensure(entryOpt.has_value(), "Сцена с GUID '{}' не найдена в package.dat.", sceneGuid.ToString());
-
 					auto sceneDataRes = m_PackageManager->LoadAsset<SceneData>(sceneGuid);
 					ensure(sceneDataRes.has_value(), "Ошибка загрузки данных сцены '{}': {}", sceneGuid.ToString(), sceneDataRes ? "" : sceneDataRes.error());
 

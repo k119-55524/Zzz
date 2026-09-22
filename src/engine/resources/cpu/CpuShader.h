@@ -7,6 +7,7 @@
 #include <cstddef>
 #include "engine/resources/ResourceBase.h"
 #include "core/io/package/PackageEntry.h"
+#include "core/enums/eResourceType.h"
 
 namespace zzz::engine
 {
@@ -17,6 +18,8 @@ namespace zzz::engine
 	class CpuShader final : public ResourceBase
 	{
 	public:
+		static constexpr ::zzz::core::eResourceType c_ResourceType = ::zzz::core::eResourceType::Shader;
+
 		CpuShader(const ::zzz::core::Guid& guid, std::string name);
 		~CpuShader() override = default;
 

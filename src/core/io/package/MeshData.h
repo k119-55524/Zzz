@@ -10,6 +10,7 @@
 #include "math/utils/Types.h"
 #include "core/serialize/Serializer.h"
 #include "core/enums/eIndexFormat.h"
+#include "core/enums/eResourceType.h"
 
 namespace zzz::core
 {
@@ -20,6 +21,8 @@ namespace zzz::core
 	class Z_CORE_API MeshData final : public ISerializable
 	{
 	public:
+		static constexpr eResourceType c_ResourceType = eResourceType::Mesh;
+
 		MeshData() = default;
 		MeshData(
 			zU32 vertexCount,

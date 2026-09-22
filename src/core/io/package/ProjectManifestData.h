@@ -7,6 +7,7 @@
 #include "core/utils/Guid.h"
 #include "core/utils/Version.h"
 #include "core/Serialize/Serializer.h"
+#include "core/enums/ePackage.h"
 #include "core/scene/SceneTransitionParams.h"
 #include "core/IO/package/platforms/project/ProjectPlatformConfig.h"
 
@@ -15,6 +16,8 @@ namespace zzz::core
 	class ProjectManifestData final : public ISerializable
 	{
 	public:
+		static constexpr ePackage c_PackageType = ePackage::ProjectManifest;
+
 		ProjectManifestData() = default;
 		ProjectManifestData(std::vector<Guid> gameScriptGuids, std::vector<Guid> sceneGuids, std::vector<Guid> viewGuids, ProjectPlatformData platformData = {}, zU32 maxLogQueueSize = c_MaxNetworkLogQueueSize, zU16 loggerPort = c_DefaultLoggerPort, std::string appName = {}, std::string companyName = {}, Version appVersion = {}, SceneTransitionParams defaultTransitionParams = {})
 			: gameScriptGuids(std::move(gameScriptGuids))

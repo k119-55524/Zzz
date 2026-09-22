@@ -8,6 +8,7 @@
 #include "core/utils/Guid.h"
 #include "core/serialize/Serializer.h"
 #include "core/io/package/LayerData.h"
+#include "core/enums/ePackage.h"
 #include "core/render/clear_config/ClearConfig.h"
 
 namespace zzz::core
@@ -15,6 +16,8 @@ namespace zzz::core
 	class SceneData final : public ISerializable
 	{
 	public:
+		static constexpr ePackage c_PackageType = ePackage::Scene;
+
 		SceneData() = default;
 		explicit SceneData(
 			std::vector<Guid> sceneScriptGuids,
