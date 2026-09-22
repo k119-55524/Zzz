@@ -83,11 +83,17 @@
   * `user.dat` — `c_UserConfigHeader` (`"ZUD"`), `c_UserConfigFileMajorVersion`
 - [x] Добавить в начало `PackageConstants.h` архитектурную документацию по ручной настройке структуры хранения данных проекта.
 
+### 7. Изоляция констант и интеграция сборщика (IWYU & PackageConstants.cs)
+- [x] Полностью удалить зонтичный заголовок `src/core/constants/Constants.h` и перевести ядро, движок и тесты на принцип IWYU (Include What You Use).
+- [x] Создать в `assets_builder_lib` класс-прослойку `PackageConstants.cs`, инкапсулирующий чтение путей, версий, сигнатур и типов пакетов из нативной DLL.
+- [x] Экспортировать `GetAssetsDirectoryName()`, `GetGamePackageRelativePath()`, `GetDataPackageRelativePath()` из `assets_builder_dll`.
+- [x] Перенести `package.dat` внутрь каталога `assets/` (`c_GamePackageRelativePath = c_AssetsDirectoryName / c_GamePackageFileName`), обеспечив консистентность со всеми платформами (Windows, Linux, Android, iOS, macOS) и корректную очистку GUI сборщика.
+
 ---
 
 ## 🔍 Критерии приёмки (DoD)
 1. Проект собирается полностью без ошибок компилятора и линковщика (`cmake --build build --config Debug --target assets_builder_dll game_win editor_dll`).
-2. Сборщик формирует чистую двухархивную структуру: `package.dat` (корень) и `assets/data.dat` (ресурсы контента).
+2. Сборщик формирует чистую двухархивную структуру внутри `assets/`: `assets/package.dat` (манифест, декларации представлений и сцены) и `assets/data.dat` (TOC и ресурсы контента).
 3. В коде движка отсутствуют привязки расширений файлов, строковых имён ресурсов в TOC и категорийных путей.
 4. В рантайме гарантируется уникальность GUID внутри архивов.
 5. В Release-сборках проверочный код валидации полностью исключается.
