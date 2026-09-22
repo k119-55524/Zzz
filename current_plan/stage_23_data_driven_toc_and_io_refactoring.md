@@ -89,6 +89,21 @@
 - [x] Экспортировать `GetAssetsDirectoryName()`, `GetGamePackageRelativePath()`, `GetDataPackageRelativePath()` из `assets_builder_dll`.
 - [x] Перенести `package.dat` внутрь каталога `assets/` (`c_GamePackageRelativePath = c_AssetsDirectoryName / c_GamePackageFileName`), обеспечив консистентность со всеми платформами (Windows, Linux, Android, iOS, macOS) и корректную очистку GUI сборщика.
 
+### 8. Унификация сопоставления типов и очистка интерфейсов подсистемы пакетов
+- [x] Унификация сопоставления типов контента со статическими константами (Способ 2):
+  * Добавлены статические константы `static constexpr ePackage c_PackageType` в классы данных пакетов (`ProjectManifestData`, `PrimaryViewData`, `SceneData`, `ChildViewData`, `IndependentViewData`, `PrefabData`).
+  * Добавлены статические константы `static constexpr eResourceType c_ResourceType` в классы данных (`MeshData`, `MaterialData`, `ShaderData`, `PrefabData`) и CPU-ресурсов (`CpuMesh`, `CpuMaterial`, `CpuTexture2D`, `CpuShader`).
+  * Удалены внешние специализации шаблонов-структур (`PackageAssetType` в `PackageManager.h`, `GetCpuResourceType<T>()` в `CpuResourceManager.h`, `DataAssetResourceType` в `DataAssetsManager.h`). Концепт `ParsableCpuResource` валидирует `T::c_ResourceType`.
+- [x] Ревизия и оптимизация `PackageManager`:
+  * Устранён избыточный вызов `GetEntry` перед `LoadAsset` в `SceneManager.cpp`.
+  * Удалён устаревший `friend class SceneManager;` из `PackageManager.h`, восстановлена строгая инкапсуляция класса.
+  * Метод `ReadRawBytes` скрыт в `private`.
+  * Удалён избыточный метод `DeserializeEntryFromMemory` и 6 его явных инстанцирований в `PackageManager.cpp`, логика десериализации объединена внутри `DeserializeEntry`.
+  * Удалены неиспользуемые рудименты публичного интерфейса `GetHeader()` и `GetBuildTime()`.
+- [x] Полная очистка устаревших артефактов `.dat`:
+  * Удалены старые рудименты `package.dat`, `data/data.dat`, `paks/package_0.dat` из `dist/Debug/assets/` и каталогов платформенных проектов.
+  * Подтверждена кроссплатформенная готовность путей CMake и `FileSystemAndroid` к единой структуре `assets/package.dat` и `assets/data.dat`.
+
 ---
 
 ## 🔍 Критерии приёмки (DoD)
