@@ -53,7 +53,7 @@ namespace zzz::engine
 		appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 		appInfo.pEngineName = "Zzz Engine";
 		appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-		appInfo.apiVersion = c_DefaultVulkanApiVersion; // VK_API_VERSION_1_4 из Constants.h
+		appInfo.apiVersion = c_DefaultVulkanApiVersion; // VK_API_VERSION_1_4 из GAPIConstants.h
 
 		std::vector<const char*> instanceExtensions = BuildInstanceExtensions();
 		std::vector<const char*> instanceLayers = FindValidationLayers();

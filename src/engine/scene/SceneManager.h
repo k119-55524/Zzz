@@ -40,7 +40,6 @@ namespace zzz::engine
 		using SceneLoadCallback = std::function<void(SceneLoadResult)>;
 
 		void LoadSceneAsync(Guid sceneGuid, SceneLoadCallback onComplete, eTaskPriority priority = eTaskPriority::Normal);
-		void LoadSceneAsync(std::string sceneName, SceneLoadCallback onComplete, eTaskPriority priority = eTaskPriority::Normal);
 
 		void Update(const Time& time);
 

@@ -21,15 +21,11 @@ namespace zzz::engine
 		if (!shaderDataRes)
 		{
 			return std::unexpected(std::format(
-				"[CpuShader] Ошибка десериализации шейдера '{}' (GUID: {}, смещение: {}): {}",
-				entry.GetName(), entry.GetGuid().ToString(), entry.GetOffset(), shaderDataRes.error()));
+				"[CpuShader] Ошибка десериализации шейдера (GUID: {}, смещение: {}): {}",
+				entry.GetGuid().ToString(), entry.GetOffset(), shaderDataRes.error()));
 		}
 
-		std::string shaderName = entry.GetName().empty() ? "DefaultShader" : std::string(entry.GetName());
-		if (!shaderDataRes->GetName().empty())
-		{
-			shaderName = shaderDataRes->GetName();
-		}
+		std::string shaderName = shaderDataRes->GetName().empty() ? entry.GetGuid().ToString() : shaderDataRes->GetName();
 
 		return safe_make_shared<CpuShader>(entry.GetGuid(), std::move(shaderName));
 	}

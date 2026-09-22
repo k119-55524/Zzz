@@ -36,15 +36,6 @@ namespace zzz::engine
 		m_GlobalTransitionParams = m_PackageManager->GetProjectManifestData().GetDefaultTransitionParams();
 	}
 
-	void SceneManager::LoadSceneAsync(std::string sceneName, SceneLoadCallback onComplete, eTaskPriority priority)
-	{
-		ensure(onComplete != nullptr, "onComplete коллбэк должен быть валидным.");
-		auto entryOpt = m_PackageManager->GetEntry(ePackage::Scene, sceneName);
-		ensure(entryOpt.has_value(), "Сцена с именем '{}' не найдена в package.dat.", sceneName);
-
-		LoadSceneAsync(entryOpt->GetGuid(), std::move(onComplete), priority);
-	}
-
 	void SceneManager::LoadSceneAsync(Guid sceneGuid, SceneLoadCallback onComplete, eTaskPriority priority)
 	{
 		ensure(!sceneGuid.IsEmpty(), "GUID загружаемой сцены не может быть пустым.");
@@ -97,7 +88,7 @@ namespace zzz::engine
 
 					auto scene = safe_make_shared<Scene>(
 						sceneGuid,
-						std::string(entryOpt->GetName()),
+						sceneGuid.ToString(),
 						m_CpuResourceManager,
 						m_GpuResourceManager,
 						m_GlobalTransitionParams

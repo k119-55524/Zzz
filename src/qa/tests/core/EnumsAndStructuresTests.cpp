@@ -17,6 +17,7 @@
 #include "core/enums/eWindowState.h"
 #include "core/enums/eLogMessageType.h"
 #include "core/enums/eWinResize.h"
+#include "core/constants/GAPIConstants.h"
 #include "math/Math.h"
 
 using namespace zzz;

@@ -17,7 +17,7 @@ namespace zzz::engine
 {
 	UserSettingsManager::UserSettingsManager(std::shared_ptr<FileSystem> fileSystem) :
 		m_FileSystem{ std::move(fileSystem) },
-		m_Header(c_ConfigHeader, Version(c_ConfigFileMajorVersion, c_ConfigFileMinorVersion, c_ConfigFilePatchVersion), 0, 0),
+		m_Header(c_UserConfigHeader, Version(c_UserConfigFileMajorVersion, c_UserConfigFileMinorVersion, c_UserConfigFilePatchVersion), 0, 0),
 		m_IsDirty(true)
 	{
 		ensure(m_FileSystem, "FileSystem не должен быть null при создании UserSettingsManager.");
@@ -34,9 +34,9 @@ namespace zzz::engine
 		try
 		{
 			SetDefaultUserSettings();
-			if (!m_FileSystem->FileExists(eFileLocation::User, c_ConfigFileName))
+			if (!m_FileSystem->FileExists(eFileLocation::User, c_UserConfigFileName))
 			{
-				DOutWarning("Файл конфигурации не найден: {}. Используется конфигурация по умолчанию.", c_ConfigFileName);
+				DOutWarning("Файл конфигурации не найден: {}. Используется конфигурация по умолчанию.", c_UserConfigFileName);
 				return;
 			}
 
@@ -64,12 +64,12 @@ namespace zzz::engine
 			return;
 		}
 
-		DOut("[UserSettingsManager] Конфигурация десериализована: {}.", c_ConfigFileName);
+		DOut("[UserSettingsManager] Конфигурация десериализована: {}.", c_UserConfigFileName);
 	}
 
 	void UserSettingsManager::SetDefaultUserSettings()
 	{
-		m_Header = DatFileHeader(c_ConfigHeader, Version(c_ConfigFileMajorVersion, c_ConfigFileMinorVersion, c_ConfigFilePatchVersion), 0, 0);
+		m_Header = DatFileHeader(c_UserConfigHeader, Version(c_UserConfigFileMajorVersion, c_UserConfigFileMinorVersion, c_UserConfigFilePatchVersion), 0, 0);
 		m_PrimaryViewUserData.reset();
 	}
 
@@ -170,7 +170,7 @@ namespace zzz::engine
 				return UNEXPECTED("Не удалось сериализовать конфигурацию: {}.", res.error());
 			}
 
-			auto writeRes = m_FileSystem->WriteAllBytes(eFileLocation::User, c_ConfigFileName, buffer);
+			auto writeRes = m_FileSystem->WriteAllBytes(eFileLocation::User, c_UserConfigFileName, buffer);
 			if (!writeRes)
 			{
 				withTimestamp(prevSaveTime);
@@ -189,7 +189,7 @@ namespace zzz::engine
 		}
 
 		m_IsDirty = false;
-		DOut("[UserSettingsManager] Конфигурация сохранена: {}.", c_ConfigFileName);
+		DOut("[UserSettingsManager] Конфигурация сохранена: {}.", c_UserConfigFileName);
 
 		return {};
 #endif // Z_EDITOR
@@ -199,7 +199,7 @@ namespace zzz::engine
 	{
 		try
 		{
-			auto bufferRes = m_FileSystem->ReadAllBytes(eFileLocation::User, c_ConfigFileName);
+			auto bufferRes = m_FileSystem->ReadAllBytes(eFileLocation::User, c_UserConfigFileName);
 			if (!bufferRes)
 				return UNEXPECTED("Не удалось прочитать файл конфигурации: {}", bufferRes.error());
 
@@ -411,7 +411,7 @@ namespace zzz::engine
 		auto res = s.Deserialize(buffer, offset, header)
 			.and_then([&]() -> std::expected<void, std::string>
 				{
-					auto valRes = header.Validate(c_ConfigHeader, c_ConfigFileMajorVersion);
+					auto valRes = header.Validate(c_UserConfigHeader, c_UserConfigFileMajorVersion);
 					if (!valRes)
 						return UNEXPECTED("Некорректный заголовок конфигурации: {}", valRes.error());
 
@@ -499,7 +499,7 @@ namespace zzz::engine
 	void UserSettingsManager::LogUserData() const
 	{
 #if Z_ADD_LOGGER
-		DOut("========== [UserSettingsManager] User Data: {} ==========", c_ConfigFileName);
+		DOut("========== [UserSettingsManager] User Data: {} ==========", c_UserConfigFileName);
 		m_Header.LogFileBlock("  ");
 		if (m_PrimaryViewUserData)
 			m_PrimaryViewUserData->LogFileBlock("  ");

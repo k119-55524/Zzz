@@ -13,7 +13,6 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/Core.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/NativeAppData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Export.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/constants/Constants.h
         ${CMAKE_CURRENT_SOURCE_DIR}/constants/ConfigConstants.h
         ${CMAKE_CURRENT_SOURCE_DIR}/constants/DisplayConstants.h
         ${CMAKE_CURRENT_SOURCE_DIR}/constants/PackageConstants.h
@@ -65,8 +64,6 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/headers/platforms/Metal.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eInitState.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eWindowState.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eAssetDirectoryKind.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eUserDirectoryKind.h
         ${CMAKE_CURRENT_SOURCE_DIR}/time/Time.h
         ${CMAKE_CURRENT_SOURCE_DIR}/time/Time.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/events/Event.h
@@ -135,7 +132,6 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/io/FileSystem.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/FileSystemBase.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/FileSystemBase.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/ResourceStorageTraits.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/platforms/FileSystemDesktop.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/platforms/FileSystemDesktop.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/io/platforms/FileSystemAndroid.h

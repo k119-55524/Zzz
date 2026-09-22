@@ -22,6 +22,6 @@ namespace zzz::engine
 		const PackageEntry& entry,
 		std::span<const std::byte> /*bytes*/)
 	{
-		return safe_make_shared<CpuTexture2D>(entry.GetGuid(), std::string(entry.GetName()));
+		return safe_make_shared<CpuTexture2D>(entry.GetGuid(), entry.GetGuid().ToString());
 	}
 }

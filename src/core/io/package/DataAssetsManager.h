@@ -3,7 +3,6 @@
 #include <map>
 #include <string>
 #include <memory>
-#include <optional>
 #include <expected>
 #include <unordered_map>
 
@@ -51,6 +50,19 @@ namespace zzz::core
 	inline constexpr eResourceType c_DataAssetResourceType = DataAssetResourceType<T>::value;
 
 	/**
+	 * @struct AssetLocation
+	 * @brief Физические координаты размещения ассета на диске для чтения.
+	 */
+	struct AssetLocation
+	{
+		eFileLocation location{ eFileLocation::App };
+		std::filesystem::path relativePath;
+		std::size_t offset = 0;
+		std::size_t size = 0;
+		const PackageEntry* entry = nullptr;
+	};
+
+	/**
 	 * @class DataAssetsManager
 	 * @brief Менеджер для чтения игровых ресурсов из архива assets/data/data.dat (меши, материалы, шейдеры, префабы).
 	 */
@@ -63,9 +75,7 @@ namespace zzz::core
 		explicit DataAssetsManager(std::shared_ptr<FileSystem> fileSystem);
 		~DataAssetsManager() = default;
 
-		[[nodiscard]] const DatFileHeader& GetHeader() const noexcept { return m_Header; }
-
-		[[nodiscard]] std::expected<std::vector<std::byte>, std::string> ReadRawBytes(const PackageEntry& entry) const;
+		[[nodiscard]] std::expected<AssetLocation, std::string> GetAssetLocation(eResourceType type, const Guid& guid) const;
 
 		template <typename T>
 		[[nodiscard]] static std::expected<T, std::string> DeserializeAssetFromMemory(
@@ -75,8 +85,8 @@ namespace zzz::core
 			constexpr eResourceType expectedType = c_DataAssetResourceType<T>;
 			if (entry.GetAssetType() != static_cast<zU32>(expectedType))
 			{
-				return UNEXPECTED("Несоответствие типа ассета '{}'. Ожидался: {}, в записи: {}",
-					entry.GetName(), ToString(expectedType), entry.GetAssetType());
+				return UNEXPECTED("Несоответствие типа ассета с GUID '{}'. Ожидался: {}, в записи: {}",
+					entry.GetGuid().ToString(), ToString(expectedType), entry.GetAssetType());
 			}
 
 			std::size_t offset = 0;
@@ -84,52 +94,13 @@ namespace zzz::core
 			T data{};
 			auto res = serializer.Deserialize(bytes, offset, data);
 			if (!res)
-				return UNEXPECTED("Ошибка десериализации ресурса '{}': {}", entry.GetName(), res.error());
+				return UNEXPECTED("Ошибка десериализации ресурса с GUID '{}': {}", entry.GetGuid().ToString(), res.error());
 
 			return data;
 		}
 
-		template <typename T>
-		[[nodiscard]] std::expected<T, std::string> DeserializeAsset(const PackageEntry& entry) const
-		{
-			return DeserializeEntry<T>(entry);
-		}
-
-		template <typename T>
-		[[nodiscard]] std::expected<T, std::string> LoadAsset(const Guid& guid) const
-		{
-			constexpr eResourceType expectedType = c_DataAssetResourceType<T>;
-			auto entryOpt = GetEntry(expectedType, guid);
-			if (!entryOpt)
-				return UNEXPECTED("Ресурс типа {} с GUID '{}' не найден в data.dat", ToString(expectedType), guid.ToString());
-
-			return DeserializeEntry<T>(*entryOpt);
-		}
-
-		template <typename T>
-		[[nodiscard]] std::expected<T, std::string> LoadAsset(std::string_view name) const
-		{
-			constexpr eResourceType expectedType = c_DataAssetResourceType<T>;
-			auto entryOpt = GetEntry(expectedType, name);
-			if (!entryOpt)
-				return UNEXPECTED("Ресурс типа {} с именем '{}' не найден в data.dat", ToString(expectedType), name);
-
-			return DeserializeEntry<T>(*entryOpt);
-		}
-
 	private:
-		[[nodiscard]] std::optional<PackageEntry> GetEntry(eResourceType type, const Guid& guid) const;
-		[[nodiscard]] std::optional<PackageEntry> GetEntry(eResourceType type, std::string_view name) const;
-
-		template <typename T>
-		[[nodiscard]] std::expected<T, std::string> DeserializeEntry(const PackageEntry& entry) const
-		{
-			auto bufferRes = ReadRawBytes(entry);
-			if (!bufferRes)
-				return UNEXPECTED("{}", bufferRes.error());
-
-			return DeserializeAssetFromMemory<T>(entry, *bufferRes);
-		}
+		[[nodiscard]] const PackageEntry* GetEntryPtr(eResourceType type, const Guid& guid) const;
 
 		void Initialize();
 		void LogDataEntriesSummary() const;
@@ -137,6 +108,5 @@ namespace zzz::core
 		std::shared_ptr<FileSystem> m_FileSystem;
 		DatFileHeader m_Header{};
 		std::map<eResourceType, std::unordered_map<Guid, PackageEntry>> m_EntriesByGuid;
-		std::map<eResourceType, std::unordered_map<std::string, PackageEntry>> m_EntriesByName;
 	};
 }

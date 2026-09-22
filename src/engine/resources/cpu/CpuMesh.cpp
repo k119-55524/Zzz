@@ -21,10 +21,10 @@ namespace zzz::engine
 		if (!meshDataRes)
 		{
 			return std::unexpected(std::format(
-				"[CpuMesh] Ошибка десериализации меша '{}' (GUID: {}, смещение: {}): {}",
-				entry.GetName(), entry.GetGuid().ToString(), entry.GetOffset(), meshDataRes.error()));
+				"[CpuMesh] Ошибка десериализации меша (GUID: {}, смещение: {}): {}",
+				entry.GetGuid().ToString(), entry.GetOffset(), meshDataRes.error()));
 		}
 
-		return safe_make_shared<CpuMesh>(entry.GetGuid(), std::string(entry.GetName()), std::move(*meshDataRes));
+		return safe_make_shared<CpuMesh>(entry.GetGuid(), entry.GetGuid().ToString(), std::move(*meshDataRes));
 	}
 }

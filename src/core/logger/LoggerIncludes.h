@@ -10,7 +10,8 @@
 #include <condition_variable>
 #include <core/CoreIncludes.h>
 #include <core/utils/Macroses.h>
-#include <core/constants/Constants.h>
+#include <core/constants/LogCategoryConstants.h>
+#include <core/constants/NetworkConstants.h>
 #include <core/serialize/Serializer.h>
 #include <core/enums/eLogMessageType.h>
 #include <core/templates/DoubleBufferedVector.h>

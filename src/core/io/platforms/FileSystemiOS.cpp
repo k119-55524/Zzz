@@ -6,7 +6,7 @@
 
 namespace zzz::core
 {
-	[[nodiscard]] bool FileSystemiOS::FileExists(eFileLocation location, std::string_view relativePath) const noexcept
+	[[nodiscard]] bool FileSystemiOS::FileExists(eFileLocation location, const std::filesystem::path& relativePath) const noexcept
 	{
 		if (location == eFileLocation::App)
 			return false; // Stub до КП-5
@@ -15,7 +15,7 @@ namespace zzz::core
 	}
 
 	[[nodiscard]] std::expected<std::vector<std::byte>, std::string> FileSystemiOS::ReadBytes(
-		eFileLocation location, std::string_view relativePath, std::size_t offset, std::size_t size) const noexcept
+		eFileLocation location, const std::filesystem::path& relativePath, std::size_t offset, std::size_t size) const noexcept
 	{
 		if (location == eFileLocation::App)
 			return UNEXPECTED("iOS NSBundle чтение будет реализовано на шаге КП-5.");
@@ -24,7 +24,7 @@ namespace zzz::core
 	}
 
 	[[nodiscard]] std::expected<std::vector<std::byte>, std::string> FileSystemiOS::ReadAllBytes(
-		eFileLocation location, std::string_view relativePath) const noexcept
+		eFileLocation location, const std::filesystem::path& relativePath) const noexcept
 	{
 		if (location == eFileLocation::App)
 			return UNEXPECTED("iOS NSBundle чтение будет реализовано на шаге КП-5.");
@@ -33,7 +33,7 @@ namespace zzz::core
 	}
 
 	std::expected<void, std::string> FileSystemiOS::WriteAllBytes(
-		eFileLocation location, std::string_view relativePath, std::span<const std::byte> bytes) noexcept
+		eFileLocation location, const std::filesystem::path& relativePath, std::span<const std::byte> bytes) noexcept
 	{
 		if (location == eFileLocation::App)
 			return UNEXPECTED("Запись в eFileLocation::App на iOS запрещена (read-only бандл приложения).");

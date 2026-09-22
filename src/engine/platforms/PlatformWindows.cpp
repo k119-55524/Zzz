@@ -5,6 +5,7 @@
 #include "Platform.h"
 #include "window/WinMSWindows.h"
 #include "engine/utils/MonitorUtils.h"
+#include "core/constants/platforms/MSWinConstants.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Window);
 

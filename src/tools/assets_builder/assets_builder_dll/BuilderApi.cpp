@@ -1,6 +1,7 @@
 #include "BuilderApi.h"
 #include <core/Core.h>
 #include <core/io/Path.h>
+#include <core/constants/PackageConstants.h>
 #include "AssetExtensions.h"
 
 #include "PackagePacker.h"
@@ -22,34 +23,46 @@ namespace
 
 extern "C"
 {
+	BUILDER_API const char* GetAssetsDirectoryName()
+	{
+		static const std::string s = zzz::core::c_AssetsDirectoryName.generic_string();
+		return s.c_str();
+	}
+
 	BUILDER_API const char* GetGamePackageFileName()
 	{
-		return zzz::core::c_GamePackageRelativePath.data();
+		return zzz::core::c_GamePackageFileName.c_str();
+	}
+
+	BUILDER_API const char* GetGamePackageRelativePath()
+	{
+		static const std::string s = zzz::core::c_GamePackageRelativePath.generic_string();
+		return s.c_str();
 	}
 
 	BUILDER_API const uint8_t* GetGamePackageMagicBytes()
 	{
 		static const uint8_t magic[3] = {
-			static_cast<uint8_t>(zzz::core::c_GamePackageHeader[0]),
-			static_cast<uint8_t>(zzz::core::c_GamePackageHeader[1]),
-			static_cast<uint8_t>(zzz::core::c_GamePackageHeader[2])
+			static_cast<uint8_t>(zzz::core::c_PackageDatHeader[0]),
+			static_cast<uint8_t>(zzz::core::c_PackageDatHeader[1]),
+			static_cast<uint8_t>(zzz::core::c_PackageDatHeader[2])
 		};
 		return magic;
 	}
 
 	BUILDER_API uint32_t GetGamePackageMajorVersion()
 	{
-		return zzz::core::c_GamePackageFileMajorVersion;
+		return zzz::core::c_PackageDatFileMajorVersion;
 	}
 
 	BUILDER_API uint32_t GetGamePackageMinorVersion()
 	{
-		return zzz::core::c_GamePackageFileMinorVersion;
+		return zzz::core::c_PackageDatFileMinorVersion;
 	}
 
 	BUILDER_API uint32_t GetGamePackagePatchVersion()
 	{
-		return zzz::core::c_GamePackageFilePatchVersion;
+		return zzz::core::c_PackageDatFilePatchVersion;
 	}
 
 	BUILDER_API uint32_t GetAssetTypeProjectManifest()
@@ -60,6 +73,11 @@ extern "C"
 	BUILDER_API uint32_t GetAssetTypeScene()
 	{
 		return static_cast<uint32_t>(zzz::core::ePackage::Scene);
+	}
+
+	BUILDER_API uint32_t GetAssetTypePrimaryView()
+	{
+		return static_cast<uint32_t>(zzz::core::ePackage::PrimaryView);
 	}
 
 	BUILDER_API uint32_t GetAssetTypeChildView()
@@ -79,32 +97,38 @@ extern "C"
 
 	BUILDER_API const char* GetDataPackageFileName()
 	{
-		return zzz::core::c_DataPackageRelativePath.data();
+		return zzz::core::c_DataPackageFileName.c_str();
+	}
+
+	BUILDER_API const char* GetDataPackageRelativePath()
+	{
+		static const std::string s = zzz::core::c_DataPackageRelativePath.generic_string();
+		return s.c_str();
 	}
 
 	BUILDER_API const uint8_t* GetDataPackageMagicBytes()
 	{
 		static const uint8_t magic[3] = {
-			static_cast<uint8_t>(zzz::core::c_DataPackageHeader[0]),
-			static_cast<uint8_t>(zzz::core::c_DataPackageHeader[1]),
-			static_cast<uint8_t>(zzz::core::c_DataPackageHeader[2])
+			static_cast<uint8_t>(zzz::core::c_DataDatHeader[0]),
+			static_cast<uint8_t>(zzz::core::c_DataDatHeader[1]),
+			static_cast<uint8_t>(zzz::core::c_DataDatHeader[2])
 		};
 		return magic;
 	}
 
 	BUILDER_API uint32_t GetDataPackageMajorVersion()
 	{
-		return zzz::core::c_DataPackageFileMajorVersion;
+		return zzz::core::c_DataDatFileMajorVersion;
 	}
 
 	BUILDER_API uint32_t GetDataPackageMinorVersion()
 	{
-		return zzz::core::c_DataPackageFileMinorVersion;
+		return zzz::core::c_DataDatFileMinorVersion;
 	}
 
 	BUILDER_API uint32_t GetDataPackagePatchVersion()
 	{
-		return zzz::core::c_DataPackageFilePatchVersion;
+		return zzz::core::c_DataDatFilePatchVersion;
 	}
 
 	BUILDER_API bool PackProjectNative(const char* sourceDir, const char* destinationDir, uint32_t targetPlatform, const char* platformConfigFile, uint64_t inBuildTimestamp, uint64_t* outBuildTimestamp)

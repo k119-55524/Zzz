@@ -10,6 +10,7 @@
 #include <core/utils/Version.h>
 #include <core/io/DatFileHeader.h>
 #include <core/serialize/Serializer.h>
+#include <core/enums/eFileLocation.h>
 
 namespace zzz::builder
 {

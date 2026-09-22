@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/utils/Defines.h"
-#include "FileSystemBase.h"
 
 #if defined(Z_DESKTOP)
 #include "platforms/FileSystemDesktop.h"

@@ -22,15 +22,11 @@ namespace zzz::engine
 		if (!matDataRes)
 		{
 			return std::unexpected(std::format(
-				"[CpuMaterial] Ошибка десериализации материала '{}' (GUID: {}, смещение: {}): {}",
-				entry.GetName(), entry.GetGuid().ToString(), entry.GetOffset(), matDataRes.error()));
+				"[CpuMaterial] Ошибка десериализации материала (GUID: {}, смещение: {}): {}",
+				entry.GetGuid().ToString(), entry.GetOffset(), matDataRes.error()));
 		}
 
-		std::string matName = entry.GetName().empty() ? "DefaultMaterial" : std::string(entry.GetName());
-		if (!matDataRes->GetName().empty())
-		{
-			matName = matDataRes->GetName();
-		}
+		std::string matName = matDataRes->GetName().empty() ? entry.GetGuid().ToString() : matDataRes->GetName();
 
 		return safe_make_shared<CpuMaterial>(entry.GetGuid(), std::move(matName), matDataRes->GetShaderGuid());
 	}

@@ -6,21 +6,7 @@ public static class AssetExtensions
 {
 	public const string ProjectJsonName = "project.json";
 
-	public static string GamePackageBinaryName
-	{
-		get
-		{
-			try
-			{
-				IntPtr ptr = NativeMethods.GetGamePackageFileName();
-				return ptr != IntPtr.Zero ? Marshal.PtrToStringAnsi(ptr) ?? "game.dat" : "game.dat";
-			}
-			catch
-			{
-				return "game.dat";
-			}
-		}
-	}
+	public static string GamePackageBinaryName => PackageConstants.GamePackageFileName;
 
 	// Используется отдельно от IsSupportedAssetExtension - диспетчеризация SceneAssetImporter/SceneAssetValidator
 	// по конкретному расширению (см. assets_builder_dll/AssetExtensions.h).

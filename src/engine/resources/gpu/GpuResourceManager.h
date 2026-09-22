@@ -58,6 +58,8 @@ namespace zzz::engine
 			std::function<void(std::expected<ResourceRef<T>, std::string>)> onLoaded,
 			eTaskPriority priority)
 		{
+			ensure(priority != eTaskPriority::Critical, "Приоритет Critical зарезервирован строго для кадровых задач движка!");
+
 			GetTable<T>().GetOrRequest(
 				guid,
 				context,

@@ -5,7 +5,7 @@
 #include "core/utils/Export.h"
 #include "core/serialize/Serializer.h"
 #include "core/io/DatFileHeader.h"
-#include "core/constants/Constants.h"
+#include "core/constants/LogCategoryConstants.h"
 #include "core/utils/Defines.h"
 #include "core/utils/Ensure.h"
 #include "core/utils/Guid.h"

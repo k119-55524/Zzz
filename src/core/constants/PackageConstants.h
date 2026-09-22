@@ -1,73 +1,99 @@
 #pragma once
 
+/**
+ * @file PackageConstants.h
+ * @brief Константы структуры хранения данных, пакетов ресурсов и файлов конфигурации.
+ *
+ * =========================================================================================
+ * КАК ВРУЧНУЮ НАСТРОИТЬ СТРУКТУРУ ХРАНЕНИЯ ДАННЫХ ПРОЕКТА
+ * =========================================================================================
+ * Данные разделены на две независимые зоны (eFileLocation):
+ *
+ * 1. ЗОНА ДАННЫХ ПРИЛОЖЕНИЯ (Read-Only, каталог исполняемого файла, eFileLocation::App):
+ *    - c_PackageName / c_DatExtension:
+ *        Имя главного пакета ("package.dat").
+ *        Хранит: манифест проекта, декларации представлений (Views) и сцены (SceneData).
+ *    - c_GamePackageRelativePath:
+ *        Расположение пакета ("assets/package.dat"). По умолчанию размещается внутри каталога
+ *        ассетов c_AssetsDirectoryName, чтобы платформенные системы сборки (CMake/Android/iOS)
+ *        копировали весь контент единой директорией assets.
+ *    - c_AssetsDirectoryName:
+ *        Имя каталога игровых ассетов ("assets").
+ *    - c_DataPackageRelativePath:
+ *        Расположение архива данных ("assets/data.dat").
+ *        Хранит: таблицу оглавления (TOC) и полезную нагрузку ресурсов (меши, материалы, шейдеры).
+ *    - Внешние пакеты ассетов {guid}.dat:
+ *        Если ресурсы выносятся в отдельные файлы, они размещаются в каталоге
+ *        c_AssetsDirectoryName рядом с data.dat ("assets/{guid}.dat").
+ *
+ * 2. ЗОНА ПОЛЬЗОВАТЕЛЯ (Read-Write, AppData / Home, eFileLocation::User):
+ *    - c_ConfigFileName ("user.dat", см. ConfigConstants.h): файл настроек пользователя.
+ *    - c_CacheDirectoryName ("cache"): временный кэш приложения.
+ *    - c_SavesDirectoryName ("saves"): сохранения игрового процесса.
+ *    - c_LogsDirectoryName  ("logs"): журналы работы приложения.
+ * =========================================================================================
+ */
+
 #include <array>
+#include <string>
 #include <cstddef>
-#include "core/CoreIncludes.h"
+#include <filesystem>
+#include <string_view>
 
 namespace zzz::core
 {
-#pragma region Path composition constants
-	/// Имя каталога игровых ассетов (Read-Only, поставляется с игрой) - используется и напрямую, и в путях ниже.
-	inline constexpr char c_AssetsDirectoryName[] = "assets";
+#pragma region File and Path Names and Extensions
+	inline constexpr std::string_view	c_DatExtension				= ".dat";
+	inline constexpr std::string_view	c_PackageName				= "package";
+	inline constexpr std::string_view	c_DataName					= "data";
 
-	/// Максимальная длина имени ассета в символах (кодовых точках Unicode, не байтах) в таблице пакетов (PackageEntry, см. core::FixedLengthString32)
-	inline constexpr std::size_t c_MaxAssetNameLength = 64;
+	inline const std::filesystem::path	c_AssetsDirectoryName		= "assets";
 
-	/// Относительные (от каталога исполняемого файла) пути к файлам/каталогам ассетов.
-	inline constexpr std::string_view c_GamePackageRelativePath       = "assets/package.dat";
-	inline constexpr std::string_view c_PaksDirectoryRelativePath     = "assets/paks";
-	inline constexpr std::string_view c_DataDirectoryRelativePath     = "assets/data";
-	inline constexpr std::string_view c_DataPackageRelativePath       = "assets/data/data.dat";
-	inline constexpr std::string_view c_TexturesDirectoryRelativePath = "assets/data/textures";
-	inline constexpr std::string_view c_VideoDirectoryRelativePath    = "assets/data/video";
-	inline constexpr std::string_view c_AudioDirectoryRelativePath    = "assets/data/audio";
-	inline constexpr std::string_view c_FontsDirectoryRelativePath    = "assets/data/fonts";
+	inline const std::string			c_GamePackageFileName		= std::string(c_PackageName) + std::string(c_DatExtension);
+	inline const std::filesystem::path	c_GamePackageRelativePath	= c_AssetsDirectoryName / c_GamePackageFileName;
+	inline const std::string			c_DataPackageFileName		= std::string(c_DataName) + std::string(c_DatExtension);
+	inline const std::filesystem::path	c_DataPackageRelativePath	= c_AssetsDirectoryName / c_DataPackageFileName;
 
-	/// Имена подкаталогов внутри каталога пользовательских данных (Read-Write, машина пользователя).
-	inline constexpr std::string_view c_CacheDirectoryName = "cache";
-	inline constexpr std::string_view c_SavesDirectoryName = "saves";
-	inline constexpr std::string_view c_LogsDirectoryName = "logs";
-#pragma endregion // Path composition constants
+	inline constexpr std::string_view	c_CacheDirectoryName		= "cache";
+	inline constexpr std::string_view	c_SavesDirectoryName		= "saves";
+	inline constexpr std::string_view	c_LogsDirectoryName			= "logs";
+#pragma endregion // File and Path Names and Extensions
 
-#pragma region Game Package file constants
-	/// Сигнатура (Magic Bytes) файла пакета ресурсов: "ZZP"
-	constexpr std::array<std::byte, 3> c_GamePackageHeader
+#pragma region Game Data files constants
+	/// Сигнатура package.dat
+	constexpr std::array<std::byte, 3> c_PackageDatHeader
 	{
 		static_cast<std::byte>('Z'),
-		static_cast<std::byte>('Z'),
-		static_cast<std::byte>('P')
-	};
-
-	/// Мажорная версия формата пакета ресурсов
-	constexpr zU8 c_GamePackageFileMajorVersion = 1;
-
-	/// Минорная версия формата пакета ресурсов
-	constexpr zU8 c_GamePackageFileMinorVersion = 0;
-
-	/// Патч-версия формата пакета ресурсов
-	constexpr zU8 c_GamePackageFilePatchVersion = 0;
-#pragma endregion // Game Package file constants
-
-#pragma region Data Package file constants
-	/// Сигнатура (Magic Bytes) файла пакета данных: "ZZD"
-	constexpr std::array<std::byte, 3> c_DataPackageHeader
-	{
-		static_cast<std::byte>('Z'),
-		static_cast<std::byte>('Z'),
+		static_cast<std::byte>('P'),
 		static_cast<std::byte>('D')
 	};
 
-	/// Мажорная версия формата пакета данных
-	constexpr zU8 c_DataPackageFileMajorVersion = 1;
+	constexpr zU8 c_PackageDatFileMajorVersion = 1;
+	constexpr zU8 c_PackageDatFileMinorVersion = 0;
+	constexpr zU8 c_PackageDatFilePatchVersion = 0;
 
-	/// Минорная версия формата пакета данных
-	constexpr zU8 c_DataPackageFileMinorVersion = 0;
+	/// Сигнатура data.dat
+	constexpr std::array<std::byte, 3> c_DataDatHeader
+	{
+		static_cast<std::byte>('Z'),
+		static_cast<std::byte>('D'),
+		static_cast<std::byte>('D')
+	};
 
-	/// Патч-версия формата пакета данных
-	constexpr zU8 c_DataPackageFilePatchVersion = 0;
-#pragma endregion // Data Package file constants
+	constexpr zU8 c_DataDatFileMajorVersion = 1;
+	constexpr zU8 c_DataDatFileMinorVersion = 0;
+	constexpr zU8 c_DataDatFilePatchVersion = 0;
 
-#pragma region Scene and GameObject JSON constants
-	inline constexpr std::string_view c_FieldIsEntity     = "isEntity";
-#pragma endregion // Scene and GameObject JSON constants
+	/// Сигнатура внешних пакетов ассетов {guid}.dat
+	constexpr std::array<std::byte, 3> c_AssetPackageHeader
+	{
+		static_cast<std::byte>('Z'),
+		static_cast<std::byte>('A'),
+		static_cast<std::byte>('P')
+	};
+
+	constexpr zU8 c_AssetPackageFileMajorVersion = 1;
+	constexpr zU8 c_AssetPackageFileMinorVersion = 0;
+	constexpr zU8 c_AssetPackageFilePatchVersion = 0;
+#pragma endregion // Game Data files constants
 }

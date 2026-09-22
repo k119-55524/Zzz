@@ -4,15 +4,11 @@
 #include <cstdlib>
 #include <algorithm>
 
-#include "Path.h"
-#include "core/headers/Apple.h"
-#include "core/headers/Linux.h"
 #include "core/utils/Ensure.h"
-#include "core/headers/Android.h"
 #include "core/utils/Defines.h"
-#include "core/logger/logger.h"
-#include "core/headers/platforms/MSWin.h"
 #include "core/constants/PackageConstants.h"
+
+#include "Path.h"
 
 namespace
 {
@@ -231,29 +227,22 @@ namespace zzz::core
 		}
 	}
 
-	[[nodiscard]] std::filesystem::path Path::GetDirectory(eUserDirectoryKind kind) const
+	[[nodiscard]] std::filesystem::path Path::GetDirectory(eFileLocation location) const
 	{
-		switch (kind)
-		{
-		case eUserDirectoryKind::Cache: return m_UserDataDirectory / c_CacheDirectoryName;
-		case eUserDirectoryKind::Saves: return m_UserDataDirectory / c_SavesDirectoryName;
-		case eUserDirectoryKind::Logs:  return m_UserDataDirectory / c_LogsDirectoryName;
-		default:
-			THROW_RUNTIME("Path::GetDirectory(): необработанный eUserDirectoryKind.");
-		}
-	}
+		if (location == eFileLocation::App)
+			return m_ExecutableDirectory;
 
-	[[nodiscard]] std::filesystem::path Path::GetDirectory(eAssetDirectoryKind kind) const
-	{
-		switch (kind)
+		ensure(!m_UserDataDirectory.empty(),
+			"Path::GetDirectory(eFileLocation): Каталог пользовательских данных не инициализирован. Вызовите InitializeUserData() перед обращением к подкаталогам.");
+
+		switch (location)
 		{
-		case eAssetDirectoryKind::Paks:     return m_ExecutableDirectory / c_PaksDirectoryRelativePath;
-		case eAssetDirectoryKind::Textures: return m_ExecutableDirectory / c_TexturesDirectoryRelativePath;
-		case eAssetDirectoryKind::Video:    return m_ExecutableDirectory / c_VideoDirectoryRelativePath;
-		case eAssetDirectoryKind::Audio:    return m_ExecutableDirectory / c_AudioDirectoryRelativePath;
-		case eAssetDirectoryKind::Fonts:    return m_ExecutableDirectory / c_FontsDirectoryRelativePath;
+		case eFileLocation::User:  return m_UserDataDirectory;
+		case eFileLocation::Cache: return m_UserDataDirectory / c_CacheDirectoryName;
+		case eFileLocation::Saves: return m_UserDataDirectory / c_SavesDirectoryName;
+		case eFileLocation::Logs:  return m_UserDataDirectory / c_LogsDirectoryName;
 		default:
-			THROW_RUNTIME("Path::GetDirectory(): необработанный eAssetDirectoryKind.");
+			THROW_RUNTIME("Path::GetDirectory(): необработанный eFileLocation.");
 		}
 	}
 }

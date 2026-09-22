@@ -1,3 +1,4 @@
+#include <algorithm>
 
 #include "core/utils/Ensure.h"
 #include "core/utils/MemoryUtils.h"
@@ -18,8 +19,7 @@ namespace zzz::engine
 		std::shared_ptr<FileSystem> fileSystem) :
 			m_TaskDispatcher(taskDispatcher),
 			m_DataAssetsManager(std::move(dataAssetsManager)),
-			m_FileSystem(std::move(fileSystem)),
-			m_IoScheduler(safe_make_unique<IoScheduler>(m_FileSystem))
+			m_FileSystem(std::move(fileSystem))
 	{
 		ensure(m_DataAssetsManager != nullptr, "DataAssetsManager не должен быть null в CpuResourceManager.");
 		ensure(m_FileSystem != nullptr, "FileSystem не должен быть null в CpuResourceManager.");
@@ -27,6 +27,10 @@ namespace zzz::engine
 
 	CpuResourceManager::~CpuResourceManager()
 	{
-		m_IoScheduler = nullptr;
+		std::unique_lock lock(m_ShutdownMutex);
+		m_IsStopping.store(true, std::memory_order_release);
+		m_ShutdownCv.wait(lock, [this]() {
+			return m_ActiveIoTasks == 0;
+		});
 	}
 }

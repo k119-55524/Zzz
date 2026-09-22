@@ -27,7 +27,6 @@
 #include "core/IO/package/ChildViewData.h"
 #include "core/IO/package/GameObjectData.h"
 #include "core/IO/package/PrimaryViewData.h"
-#include "core/IO/ResourceStorageTraits.h"
 #include "core/constants/PackageConstants.h"
 #include "core/IO/package/ProjectManifestData.h"
 #include "core/IO/package/IndependentViewData.h"
@@ -62,6 +61,8 @@ namespace zzz::builder
 
 	namespace
 	{
+		constexpr std::string_view c_FieldIsEntity = "isEntity";
+
 		bool ReplaceArchiveFile(const fs::path& from, const fs::path& to, std::string& outError)
 		{
 #if defined(_WIN32)
@@ -1415,8 +1416,8 @@ namespace zzz::builder
 
 		auto packageWriteRes = WriteBinaryArchive(
 			packageTmpPath,
-			c_GamePackageHeader,
-			Version{ c_GamePackageFileMajorVersion, c_GamePackageFileMinorVersion, c_GamePackageFilePatchVersion },
+			c_PackageDatHeader,
+			Version{ c_PackageDatFileMajorVersion, c_PackageDatFileMinorVersion, c_PackageDatFilePatchVersion },
 			packageItems,
 			serializer,
 			buildTimestamp);
@@ -1425,14 +1426,15 @@ namespace zzz::builder
 			DOutError("PackProject: Не удалось записать package.dat.tmp: {}", packageWriteRes.error());
 			std::error_code cleanupEc;
 			fs::remove(packageTmpPath, cleanupEc);
-			fs::remove_all(destinationDir / "assets", cleanupEc);
+			fs::remove_all(destinationDir / zzz::core::c_AssetsDirectoryName, cleanupEc);
 			return false;
 		}
 
-		// 4. Формирование бинарного архива игровых данных data.dat в destinationDir/assets/data/
+		// 4. Формирование архива игровых ресурсов data.dat (в assets/data.dat)
 		fs::path dataOutPath = destinationDir / zzz::core::c_DataPackageRelativePath;
 		fs::path dataTmpPath = dataOutPath;
 		dataTmpPath += ".tmp";
+
 		std::vector<ArchiveItem> dataItems;
 		dataItems.reserve(pendingDataAssets.size());
 
@@ -1448,8 +1450,8 @@ namespace zzz::builder
 
 		auto dataWriteRes = WriteBinaryArchive(
 			dataTmpPath,
-			c_DataPackageHeader,
-			Version{ c_DataPackageFileMajorVersion, c_DataPackageFileMinorVersion, c_DataPackageFilePatchVersion },
+			c_DataDatHeader,
+			Version{ c_DataDatFileMajorVersion, c_DataDatFileMinorVersion, c_DataDatFilePatchVersion },
 			dataItems,
 			serializer,
 			buildTimestamp);
@@ -1459,14 +1461,14 @@ namespace zzz::builder
 			std::error_code cleanupEc;
 			fs::remove(packageTmpPath, cleanupEc);
 			fs::remove(dataTmpPath, cleanupEc);
-			fs::remove_all(destinationDir / "assets", cleanupEc);
+			fs::remove_all(destinationDir / zzz::core::c_AssetsDirectoryName, cleanupEc);
 			return false;
 		}
 
 		// Оба архива успешно сформированы во временных файлах - публикуем.
 		// Замена выполняется атомарно с перезаписью существующих файлов.
-		// При сбое публикации любого из архивов каталог assets/ удаляется полностью,
-		// гарантируя инвариант: либо оба архива одной сборки, либо ни одного.
+		// При сбое публикации каталог assets/ и package.dat откатываются/удаляются,
+		// гарантируя инвариант: либо все архивы одной сборки, либо ни одного.
 		std::string replaceErr;
 		if (!ReplaceArchiveFile(packageTmpPath, outPath, replaceErr))
 		{
@@ -1474,16 +1476,17 @@ namespace zzz::builder
 			std::error_code cleanupEc;
 			fs::remove(packageTmpPath, cleanupEc);
 			fs::remove(dataTmpPath, cleanupEc);
-			fs::remove_all(destinationDir / "assets", cleanupEc);
+			fs::remove_all(destinationDir / zzz::core::c_AssetsDirectoryName, cleanupEc);
 			return false;
 		}
 
 		if (!ReplaceArchiveFile(dataTmpPath, dataOutPath, replaceErr))
 		{
-			DOutError("PackProject: Не удалось опубликовать data.dat: {} (удаляем каталог assets)", replaceErr);
+			DOutError("PackProject: Не удалось опубликовать data.dat: {} (удаляем каталог assets и package.dat)", replaceErr);
 			std::error_code cleanupEc;
 			fs::remove(dataTmpPath, cleanupEc);
-			fs::remove_all(destinationDir / "assets", cleanupEc);
+			fs::remove(outPath, cleanupEc);
+			fs::remove_all(destinationDir / zzz::core::c_AssetsDirectoryName, cleanupEc);
 			return false;
 		}
 

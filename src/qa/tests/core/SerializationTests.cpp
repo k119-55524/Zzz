@@ -139,7 +139,11 @@ TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
 	auto dataMgr = core::safe_make_shared<core::DataAssetsManager>(fs);
 
 	core::Guid cubeMeshGuid = *core::Guid::Parse("00000000-0000-0000-0000-000000000010");
-	auto meshRes = dataMgr->LoadAsset<core::MeshData>(cubeMeshGuid);
+	auto loc = dataMgr->GetAssetLocation(core::eResourceType::Mesh, cubeMeshGuid);
+	ASSERT_TRUE(loc.has_value()) << "Ресурс меша куба не найден в оглавлении data.dat: " << loc.error();
+	auto bytesRes = fs->ReadBytes(loc->location, loc->relativePath, loc->offset, loc->size);
+	ASSERT_TRUE(bytesRes.has_value()) << "Ошибка чтения байт: " << bytesRes.error();
+	auto meshRes = core::DataAssetsManager::DeserializeAssetFromMemory<core::MeshData>(*loc->entry, *bytesRes);
 	ASSERT_TRUE(meshRes.has_value()) << "Ошибка загрузки меша куба: " << meshRes.error();
 
 	EXPECT_EQ(meshRes->GetVertexCount(), 24u);
@@ -149,7 +153,8 @@ TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
 
 	// Проверяем чтение из package.dat через PackageManager
 	auto pkgMgr = core::safe_make_shared<engine::PackageManager>(fs);
-	auto sceneRes = pkgMgr->LoadAsset<core::SceneData>("MainScene");
+	core::Guid sceneGuid = *core::Guid::Parse("3cbf41ff-f608-47ca-b383-ea5698648aca");
+	auto sceneRes = pkgMgr->LoadAsset<core::SceneData>(sceneGuid);
 	ASSERT_TRUE(sceneRes.has_value()) << "Ошибка загрузки MainScene: " << sceneRes.error();
 
 	EXPECT_EQ(sceneRes->GetTransitionSource(), core::eTransitionSource::Custom);

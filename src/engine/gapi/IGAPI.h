@@ -2,6 +2,7 @@
 
 #include "engine/EngineIncludes.h"
 #include "engine/package/UserSettingsManager.h"
+#include "core/constants/GAPIConstants.h"
 
 namespace zzz::engine
 {

@@ -22,16 +22,16 @@ namespace zzz::core
 		using FileSystemBase::FileSystemBase;
 		~FileSystemiOS() = default;
 
-		[[nodiscard]] bool FileExists(eFileLocation location, std::string_view relativePath) const noexcept;
+		[[nodiscard]] bool FileExists(eFileLocation location, const std::filesystem::path& relativePath) const noexcept;
 
 		[[nodiscard]] std::expected<std::vector<std::byte>, std::string> ReadBytes(
-			eFileLocation location, std::string_view relativePath, std::size_t offset, std::size_t size) const noexcept;
+			eFileLocation location, const std::filesystem::path& relativePath, std::size_t offset, std::size_t size) const noexcept;
 
 		[[nodiscard]] std::expected<std::vector<std::byte>, std::string> ReadAllBytes(
-			eFileLocation location, std::string_view relativePath) const noexcept;
+			eFileLocation location, const std::filesystem::path& relativePath) const noexcept;
 
 		std::expected<void, std::string> WriteAllBytes(
-			eFileLocation location, std::string_view relativePath, std::span<const std::byte> bytes) noexcept;
+			eFileLocation location, const std::filesystem::path& relativePath, std::span<const std::byte> bytes) noexcept;
 	};
 }
 

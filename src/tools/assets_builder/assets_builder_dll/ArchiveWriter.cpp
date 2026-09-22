@@ -42,15 +42,7 @@ namespace zzz::builder
 		tempEntries.reserve(items.size());
 		for (const auto& item : items)
 		{
-			auto nameRes = zzz::core::PackageEntry::NameStringType::Create(item.name);
-			if (!nameRes)
-			{
-				return std::unexpected(std::format(
-					"Имя ресурса '{}' превышает лимит в {} символов: {}",
-					item.name, zzz::core::c_MaxAssetNameLength, nameRes.error()));
-			}
-
-			tempEntries.emplace_back(*nameRes, item.guid, item.assetType, 0, item.payload.size());
+			tempEntries.emplace_back(item.guid, item.assetType, 0, item.payload.size());
 		}
 
 		std::vector<std::byte> headerBuffer;
@@ -75,20 +67,13 @@ namespace zzz::builder
 
 		for (const auto& item : items)
 		{
-			auto nameRes = zzz::core::PackageEntry::NameStringType::Create(item.name);
-			if (!nameRes)
-			{
-				return std::unexpected(std::format(
-					"Имя ресурса '{}' превышает лимит в {} символов: {}",
-					item.name, zzz::core::c_MaxAssetNameLength, nameRes.error()));
-			}
-
 			finalEntries.emplace_back(
-				*nameRes,
 				item.guid,
 				item.assetType,
 				currentOffset,
-				item.payload.size()
+				item.payload.size(),
+				0,
+				zzz::core::eFileLocation::App
 			);
 
 			currentOffset += item.payload.size();

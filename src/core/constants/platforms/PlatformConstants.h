@@ -10,7 +10,6 @@
  *
  * @note Используется в:
  *       - Платформенных подсистемах и оконных менеджерах
- *       - Общем зонтичном заголовке core/constants/Constants.h
  */
 
 #include "core/utils/Defines.h"

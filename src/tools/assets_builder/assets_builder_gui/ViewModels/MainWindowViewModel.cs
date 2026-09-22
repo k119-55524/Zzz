@@ -398,12 +398,24 @@ public class MainWindowViewModel : ViewModelBase
                         Directory.CreateDirectory(target.BuildDirectory);
                         string targetIncludeDir = Path.Combine(target.BuildDirectory, "include");
                         Directory.CreateDirectory(targetIncludeDir);
-                        string targetAssetsDir = Path.Combine(target.BuildDirectory, "assets");
+                        string targetAssetsDir = Path.Combine(target.BuildDirectory, PackageConstants.AssetsDirectoryName);
                         if (Directory.Exists(targetAssetsDir))
                         {
                             Directory.Delete(targetAssetsDir, recursive: true);
                         }
                         Directory.CreateDirectory(targetAssetsDir);
+
+                        // Удаляем старые пакеты из корня каталога сборки, если они остались от прошлых версий сборщика
+                        string oldRootPackage = Path.Combine(target.BuildDirectory, PackageConstants.GamePackageFileName);
+                        if (File.Exists(oldRootPackage))
+                        {
+                            File.Delete(oldRootPackage);
+                        }
+                        string oldRootData = Path.Combine(target.BuildDirectory, PackageConstants.DataPackageFileName);
+                        if (File.Exists(oldRootData))
+                        {
+                            File.Delete(oldRootData);
+                        }
 
                         _engine.CopyHeaderFiles(sourcePath, targetIncludeDir, target.ConfigFile);
                         _engine.GenerateScriptsCmake(sourcePath, target.BuildDirectory, target.ConfigFile);
@@ -507,12 +519,24 @@ public class MainWindowViewModel : ViewModelBase
                 Directory.CreateDirectory(target.BuildDirectory);
                 string targetIncludeDir = Path.Combine(target.BuildDirectory, "include");
                 Directory.CreateDirectory(targetIncludeDir);
-                string targetAssetsDir = Path.Combine(target.BuildDirectory, "assets");
+                string targetAssetsDir = Path.Combine(target.BuildDirectory, PackageConstants.AssetsDirectoryName);
                 if (Directory.Exists(targetAssetsDir))
                 {
                     Directory.Delete(targetAssetsDir, recursive: true);
                 }
                 Directory.CreateDirectory(targetAssetsDir);
+
+                // Удаляем старые пакеты из корня каталога сборки, если они остались от прошлых версий сборщика
+                string oldRootPackage = Path.Combine(target.BuildDirectory, PackageConstants.GamePackageFileName);
+                if (File.Exists(oldRootPackage))
+                {
+                    File.Delete(oldRootPackage);
+                }
+                string oldRootData = Path.Combine(target.BuildDirectory, PackageConstants.DataPackageFileName);
+                if (File.Exists(oldRootData))
+                {
+                    File.Delete(oldRootData);
+                }
 
                 _engine.CopyHeaderFiles(sourcePath, targetIncludeDir, target.ConfigFile);
                 _engine.GenerateScriptsCmake(sourcePath, target.BuildDirectory, target.ConfigFile);

@@ -30,19 +30,22 @@ namespace zzz::core
 	 */
 	class FileSystemBase
 	{
-		friend class ::zzz::engine::Engine;
+		friend class engine::Engine;
 
 	public:
 		explicit FileSystemBase(std::shared_ptr<NativeAppData> nativeData = nullptr);
 		~FileSystemBase() = default;
 
-		[[nodiscard]] bool FileExists(eFileLocation location, std::string_view relativePath) const noexcept;
-		[[nodiscard]] std::expected<std::vector<std::byte>, std::string> ReadBytes(eFileLocation location, std::string_view relativePath, std::size_t offset, std::size_t size) const noexcept;
-		[[nodiscard]] std::expected<std::vector<std::byte>, std::string> ReadAllBytes(eFileLocation location, std::string_view relativePath) const noexcept;
-		std::expected<void, std::string> WriteAllBytes(eFileLocation location, std::string_view relativePath, std::span<const std::byte> bytes) noexcept;
+		[[nodiscard]] bool FileExists(eFileLocation location, const std::filesystem::path& relativePath) const noexcept;
+		[[nodiscard]] std::expected<std::vector<std::byte>, std::string> ReadBytes(eFileLocation location, const std::filesystem::path& relativePath, std::size_t offset, std::size_t size) const noexcept;
+		[[nodiscard]] std::expected<std::vector<std::byte>, std::string> ReadAllBytes(eFileLocation location, const std::filesystem::path& relativePath) const noexcept;
+		std::expected<void, std::string> WriteAllBytes(eFileLocation location, const std::filesystem::path& relativePath, std::span<const std::byte> bytes) noexcept;
 
 	protected:
-		[[nodiscard]] std::expected<std::filesystem::path, std::string> ResolvePhysicalPath(eFileLocation location, std::string_view relativePath) const noexcept;
+		[[nodiscard]] inline std::filesystem::path ResolvePhysicalPath(eFileLocation location, const std::filesystem::path& relativePath) const
+		{
+			return m_Path->GetDirectory(location) / relativePath;
+		}
 
 		std::shared_ptr<NativeAppData> m_NativeData;
 		std::shared_ptr<Path>          m_Path;
