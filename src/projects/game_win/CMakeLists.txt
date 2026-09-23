@@ -49,6 +49,7 @@ foreach(BUILD_DIR ${Z_ASSET_BUILD_DIRS})
     # 2. Копирование папки с бинарным пакетом ресурсов assets/при сборке целевого проекта
     if(EXISTS "${BUILD_DIR}/assets")
         add_custom_command(TARGET game_win POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E rm -rf "$<TARGET_FILE_DIR:game_win>/assets"
             COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${BUILD_DIR}/assets"
             "$<TARGET_FILE_DIR:game_win>/assets"

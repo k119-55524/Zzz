@@ -43,6 +43,8 @@ namespace zzz::engine
 			return DeserializeEntry<T>(*entryOpt);
 		}
 
+		[[nodiscard]] std::optional<Guid> FindSceneGuidByName(std::string_view name) const noexcept;
+
 	private:
 		[[nodiscard]] std::optional<PackageEntry> GetEntry(ePackage type, const Guid& guid) const;
 		void Initialize();
@@ -56,8 +58,15 @@ namespace zzz::engine
 		template <typename T> requires std::derived_from<T, ISerializable>
 		void LogEntriesSummaryForType(ePackage type) const;
 
+		struct StringHash
+		{
+			using is_transparent = void;
+			[[nodiscard]] size_t operator()(std::string_view sv) const noexcept { return std::hash<std::string_view>{}(sv); }
+		};
+
 		std::shared_ptr<FileSystem> m_FileSystem;
 		std::map<ePackage, std::unordered_map<Guid, PackageEntry>> m_EntriesByGuid;
+		std::unordered_map<std::string, Guid, StringHash, std::equal_to<>> m_SceneGuidsByName;
 		std::string m_CompanyName;
 		std::string m_AppName;
 		ProjectManifestData m_ProjectManifest{};

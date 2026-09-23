@@ -47,6 +47,7 @@ foreach(BUILD_DIR ${Z_ASSET_BUILD_DIRS})
 
     if(EXISTS "${BUILD_DIR}/assets")
         add_custom_command(TARGET game_linux POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E rm -rf "$<TARGET_FILE_DIR:game_linux>/assets"
             COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${BUILD_DIR}/assets"
             "$<TARGET_FILE_DIR:game_linux>/assets"

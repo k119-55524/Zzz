@@ -357,23 +357,23 @@ DOut("Формат глубины: {}", c_DefaultDepthFormat);
 3. **Единый заголовок бинарных файлов (`DatFileHeader`, 27 байт):**
    - Все `.dat` файлы движка используют универсальный заголовок `DatFileHeader`:
      `Magic (3 байта) + Version (12 байт: major, minor, patch) + entryCount (uint32_t, 4 байта) + timestamp (uint64_t UTC ms, 8 байт)`.
-   - **`assets/package.dat` (`ZZP`)** и **`assets/data/data.dat` (`ZZD`):** время сборки `timestamp` синхронно фиксируется Asset Builder'ом с точностью до миллисекунды (соответствует `yyyy-MM-dd HH:mm:ss:fff` в `buildtime-data.txt` и `assets_config.json`) и в рантайме движка никогда не меняется. Поле `entryCount` отражает количество упакованных ассетов.
-   - **`user.dat` (`ZZZ`):** файл настроек пользователя в каталоге User Data. При каждом сохранении (`UserSettingsManager::SaveConfig()`) заголовок перезаписывается с текущим системным временем UTC (`timestamp`). Поле `entryCount` равно `0`. Тело файла хранит только пользовательские настройки (состояние окон View, выбранный GPU, отключённые категории логов).
+   - **Главный пакет и архив данных** используют пути и сигнатуры из `c_GamePackageRelativePath` / `c_PackageDatHeader` и `c_DataPackageRelativePath` / `c_DataDatHeader`. Время сборки `timestamp` синхронно фиксируется Asset Builder'ом с точностью до миллисекунды (соответствует `yyyy-MM-dd HH:mm:ss:fff` в `buildtime-data.txt` и `assets_config.json`) и в рантайме движка никогда не меняется. Поле `entryCount` отражает количество упакованных ассетов.
+   - **Файл пользовательской конфигурации** использует имя и сигнатуру из `c_UserConfigFileName` и `c_UserConfigHeader`. При каждом сохранении (`UserSettingsManager::SaveConfig()`) заголовок перезаписывается с текущим системным временем UTC (`timestamp`). Поле `entryCount` равно `0`. Тело файла хранит только пользовательские настройки (состояние окон View, выбранный GPU, отключенные категории логов).
 4. **Нативный упаковщик** (`PackagePacker.cpp`, вызывается из C# через `PackProjectNative`) сериализует:
-   - Структуру и манифест игры в единый бинарный `package.dat` (`assets/package.dat`): `project.json`, сцены (`.zs`), представления (`.zv`);
-   - Игровые ресурсы в бинарный архив `data.dat` (`assets/data/data.dat`): меши (`MeshData` из `.obj` через `ObjImporter`), материалы (`.zmat` через `MaterialImporter`), шейдеры, префабы.
-   - Записи обоих архивов имеют фиксированный размер (`PackageEntry::BinarySize()` = 292 байта, включая `FixedLengthString32<c_MaxAssetNameLength>`), позволяя считывать TOC блоками фиксированного размера без загрузки данных файлов в память.
-   - Публикация атомарна (2026-09-18): оба архива сначала полностью пишутся в `.tmp`, рабочие `package.dat`/`data.dat` заменяются через `fs::rename` только после успеха обоих; между двумя `rename` нет кросс-файловой транзакции (см. `PackagePacker.cpp`, публикация архивов).
-5. При старте движка `PackageManager::Initialize()` и `DataAssetsManager::Initialize()` считывают заголовок (`DatFileHeader::BinarySize()` = 27 байт) и блок записей TOC (`entryCount * PackageEntry::BinarySize()`), проверяют сигнатуры (`ZZP` / `ZZD`), версию и строят быстрый индекс по GUID и имени. В обычном режиме payload вычитывается точечно по требованию (`ReadBytes` по смещению и размеру конкретной записи `PackageEntry`). При включённом `Z_ADD_LOGGER` полное диагностическое логирование намеренно десериализует записи пакета для визуального контроля результата Assets Builder; такой запуск не используется как эталон измерения startup I/O.
-6. `Path::InitializeUserData(companyName, appName)` строит двухуровневый каталог пользовательских данных (`%LOCALAPPDATA%/<company>/<app>/` на Windows и аналоги на других платформах) — до этого вызова `GetUserDataDirectory()`/`GetCacheDirectory()`/`GetSavesDirectory()`/`GetLogsDirectory()` бросают исключение (см. `ensure()`).
-7. `SceneManager` загружает и выгружает сцены (`LoadScene`/`LoadSceneByName`/`UnloadScene`), `View` хранит `weak_ptr<Scene>` на активную сцену. Ресурсы сцены (например, `MeshData` объектов) извлекаются по GUID из `DataAssetsManager`.
+   - Структуру и манифест игры в единый бинарный архив по пути `c_GamePackageRelativePath`: `project.json` (с именами и GUID сцен в `ProjectManifestData`), сцены (`.zs`), представления (`.zv`);
+   - Игровые ресурсы в бинарный архив по пути `c_DataPackageRelativePath`: меши (`MeshData` из `.obj` через `ObjImporter`), материалы (`.zmat` через `MaterialImporter`), шейдеры, текстуры, аудио.
+   - Записи обоих архивов имеют строго фиксированный размер (`PackageEntry::BinarySize()` = 36 байт: `Guid (16) + assetType (4) + offset (8) + size (8)`), позволяя считывать TOC единым блоком фиксированного размера без загрузки данных файлов в память.
+   - Публикация атомарна (2026-09-18): оба архива сначала полностью пишутся во временные файлы, рабочие архивы заменяются через `fs::rename` только после успеха обоих; между двумя `rename` нет кросс-файловой транзакции (см. `PackagePacker.cpp`, публикация архивов).
+5. При старте движка `PackageManager::Initialize()` и `DataAssetsManager::Initialize()` считывают заголовок (`DatFileHeader::BinarySize()` = 27 байт) и блок записей TOC (`entryCount * PackageEntry::BinarySize()`), проверяют сигнатуры `c_PackageDatHeader` / `c_DataDatHeader`, версию и выполняют сквозную валидацию уникальности GUID по всему архиву. В обычном режиме payload вычитывается точечно по требованию (`ReadBytes` по смещению и размеру конкретной записи `PackageEntry`). При включённом `Z_ADD_LOGGER` полное диагностическое логирование намеренно десериализует записи пакета для визуального контроля результата Assets Builder; такой запуск не используется как эталон измерения startup I/O.
+6. `Path::InitializeUserData(companyName, appName)` строит двухуровневый каталог пользовательских данных (`%LOCALAPPDATA%/<company>/<app>/` на Windows и аналоги на других платформах) — до этого вызова `GetUserDataDirectory()`/`GetCacheDirectory()`/`GetSavesDirectory()`/`GetLogsDirectory()` возвращают ошибку `unexpected` без бросков исключений.
+7. `SceneManager` загружает сцены как по GUID, так и по строковому имени (`LoadSceneAsync("MainScene", ...)`), используя быстрый индекс `m_SceneGuidsByName` из `PackageManager`. Ресурсы сцены (например, `MeshData` объектов) извлекаются по GUID из `DataAssetsManager`.
 
 ### 6.2. Модель сцен
 - GUID сцены хранится в её `.meta`. Каждый слой и каждый объект дерева содержит собственный неизменяемый GUID в JSON сцены; все они входят в общее глобальное пространство GUID проекта.
 - `LayerData` содержит GUID, имя, тип и объекты. Порядок `layers[]` сохраняется без сортировки и является порядком слоёв для отрисовки.
 - Объекты находятся только в `layers[].objects` и задаются вложенным деревом. Упаковщик рекурсивно разворачивает каждый слой в preorder-плоский список: родитель всегда расположен раньше потомка, `parentIndex` локален для массива объектов слоя. Корневой массив сцены `objects` и неявный слой не входят в актуальный формат.
 - На этапе 18 `isEntity` однозначно маршрутизирует узел либо в `ObjectDomain`, либо в `EntityDomain`; `NodeBindings` хранит вид домена и его handle. В плоский `DefaultSpatialStorage` входят только узлы с мешем. `isActive` сохраняется, но пока не имеет runtime-семантики.
-- `Scene` создаётся через `SceneManager`. Сейчас полное CPU-построение неопубликованной сцены выполняется в `SceneLoader`, а регистрация, `InvokeStart()` и передача во `View` — через очередь игрового потока. Этапы 17–18 эту границу потоков не меняют; пользовательская инициализация скриптов уточняется в этапе 23, владение задачами и завершение `SceneManager` — в этапе 49.
+- `Scene` создаётся через `SceneManager`. Сейчас полное CPU-построение неопубликованной сцены выполняется асинхронно через `TaskDispatcher`, а регистрация, `InvokeStart()` и передача во `View` — через очередь игрового потока. Имя создаваемой сцены транслируется из манифеста в `Scene::GetName()`.
 - `SceneManager::Update()` вызывается **строго один раз за кадр**, до `ViewManager::Update()`, из `Engine::OnUpdateSystem()` — логика мира (Model) обновляется строго до параллельного `Update`/`PrepareFrame` (поток 1) и `RenderFrame` (поток 2) пайплайна `ViewManager` (View).
 - Загрузка/выгрузка сцен во время итерации (например, вызванная скриптом текущей сцены) и полная модель active/paused/unloading сознательно отложены в этап 49.
 
@@ -386,28 +386,23 @@ DOut("Формат глубины: {}", c_DefaultDepthFormat);
 ### 6.4. Структура каталога собранных ресурсов и архитектура пакетов (Data-Driven TOC)
 ```
 <DestinationPath>/
-├── assets/
-│   ├── package.dat              # Системный пакет (манифест проекта, сцены, вьюхи, конфиги)
-│   ├── data/
-│   │   └── data.dat             # Мастер-оглавление (Table of Contents / TOC) игрового контента
-│   └── paks/
-│       ├── package_0.dat        # Пакет сырых данных (меши, текстуры, звук, материалы)
-│       └── package_1.dat        # Дополнительные пакеты / чанки контента
+├── <c_GamePackageRelativePath>  # Главный пакет: манифест, сцены, представления, конфиги
+├── <c_DataPackageRelativePath>  # Архив игрового контента и TOC
 └── include/                     # Экспортированные .h/.hpp скриптов проекта
 ```
 
 #### Архитектурные принципы хранения и загрузки (Data-Driven Asset Architecture):
-1. **Мастер-оглавление (`assets/data/data.dat`):**
-   - Файл `data.dat` выступает централизованным индексом (TOC) всех игровых ассетов проекта.
-   - Заголовок содержит полную таблицу координат для каждого ресурса: `{ guid, assetType, packagePath/index, offset, size }`.
-   - Загружается в память один раз при старте `DataAssetsManager` за $O(1)$ системный вызов.
+1. **Архив контента и TOC (`c_DataPackageRelativePath`):**
+   - Архив содержит заголовок `DatFileHeader` и таблицу записей TOC `PackageEntry` (36 байт каждая) всех игровых ассетов проекта.
+   - Загружается в память один раз при старте `DataAssetsManager` за один системный вызов.
+   - Сквозная проверка уникальности GUID по всему архиву исключает любые конфликты ресурсов.
 2. **Ликвидация hardcoded-топологии в движке:**
    - Движок (`engine_lib`) **не принимает решений** о физическом размещении ресурсов и не содержит привязок расширений (`.dds`, `.png`, `.ogg`) или подкаталогов (`textures/`, `audio/`) к типам ресурсов.
-   - Способ нарезки и упаковки контента по пакетам полностью определяется **Сборщиком (Assets Builder)** при публикации билда.
    - Метод `DataAssetsManager::GetAssetLocation(type, guid)` за $O(1)$ в памяти возвращает `AssetLocation { location, relativePath, offset, size }` без дисковых обращений (`FileExists`).
-3. **Бесшовная поддержка Addressables и DLC:**
-   - Поле `eFileLocation location` в координатах ассета позволяет прозрачно адресовать как вшитый контент дистрибутива (`eFileLocation::App`), так и динамически скачанные/обновленные бандлы в кэше пользователя (`eFileLocation::Cache`).
-   - Патчи и моды работают по принципу прозрачного перекрытия записей в таблице `m_EntriesByGuid` без перезаписи дистрибутива игры.
+3. **Быстрый поиск сцен по имени для скриптов:**
+   - В `ProjectManifestData` упаковываются пары `{ name, guid }`.
+   - `PackageManager` при старте индексирует их в хэш-таблицу $O(1)$ `m_SceneGuidsByName`.
+   - `SceneManager::LoadSceneAsync(std::string_view sceneName, ...)` находит GUID сцены за $O(1)$ и загружает сцену, присваивая ей имя из манифеста.
 
 ### 6.5. Категория логирования
 Подсистема `Scene`/`SceneManager` логируется под отдельной категорией `::zzz::core::Scene` (не переиспользует `Assets`), так как `Scene` — это одновременно имя класса и потенциальное имя категории в разных единицах трансляции (аналогичная коллизия имён уже решена для `GAPI`). Полностью квалифицированное имя в `Z_SET_LOG_CATEGORY(::zzz::core::Scene)` устраняет неоднозначность с классом `zzz::engine::Scene`.

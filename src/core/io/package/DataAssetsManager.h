@@ -41,7 +41,7 @@ namespace zzz::core
 
 	/**
 	 * @class DataAssetsManager
-	 * @brief Менеджер для чтения игровых ресурсов из архива assets/data.dat (меши, материалы, шейдеры, префабы).
+	 * @brief Менеджер для чтения игровых ресурсов из архива по пути c_DataPackageRelativePath.
 	 */
 	class Z_CORE_API DataAssetsManager final
 	{
@@ -77,13 +77,13 @@ namespace zzz::core
 		}
 
 	private:
-		[[nodiscard]] const PackageEntry* GetEntryPtr(eResourceType type, const Guid& guid) const;
+		[[nodiscard]] const PackageEntry* GetEntryPtr(const Guid& guid) const;
 
 		void Initialize();
 		void LogDataEntriesSummary() const;
 
 		std::shared_ptr<FileSystem> m_FileSystem;
 		DatFileHeader m_Header{};
-		std::map<eResourceType, std::unordered_map<Guid, PackageEntry>> m_EntriesByGuid;
+		std::unordered_map<Guid, PackageEntry> m_Entries;
 	};
 }

@@ -36,6 +36,25 @@ namespace zzz::engine
 		m_GlobalTransitionParams = m_PackageManager->GetProjectManifestData().GetDefaultTransitionParams();
 	}
 
+	void SceneManager::LoadSceneAsync(std::string_view sceneName, SceneLoadCallback onComplete, eTaskPriority priority)
+	{
+		ensure(!sceneName.empty(), "Имя загружаемой сцены не может быть пустым.");
+		ensure(onComplete != nullptr, "onComplete коллбэк должен быть валидным.");
+
+		auto guidOpt = m_PackageManager->FindSceneGuidByName(sceneName);
+		if (!guidOpt)
+		{
+			std::string err = std::format("Сцена с именем '{}' не найдена в манифесте проекта.", sceneName);
+			m_MainThreadQueue.Push([onComplete = std::move(onComplete), err = std::move(err)]() mutable
+			{
+				onComplete(std::unexpected(std::move(err)));
+			});
+			return;
+		}
+
+		LoadSceneAsync(*guidOpt, std::move(onComplete), priority);
+	}
+
 	void SceneManager::LoadSceneAsync(Guid sceneGuid, SceneLoadCallback onComplete, eTaskPriority priority)
 	{
 		ensure(!sceneGuid.IsEmpty(), "GUID загружаемой сцены не может быть пустым.");
@@ -76,61 +95,90 @@ namespace zzz::engine
 			m_LoadingScenes.emplace(sceneGuid, loadEvent);
 		}
 
-		m_TaskDispatcher.Submit(priority, [this, sceneGuid, priority]()
-			{
-				try
+		bool submitted = false;
+		try
+		{
+			submitted = m_TaskDispatcher.Submit(priority, [this, sceneGuid, priority]()
 				{
-					auto sceneDataRes = m_PackageManager->LoadAsset<SceneData>(sceneGuid);
-					ensure(sceneDataRes.has_value(), "Ошибка загрузки данных сцены '{}': {}", sceneGuid.ToString(), sceneDataRes ? "" : sceneDataRes.error());
-
-					auto scene = safe_make_shared<Scene>(
-						sceneGuid,
-						sceneGuid.ToString(),
-						m_CpuResourceManager,
-						m_GpuResourceManager,
-						m_GlobalTransitionParams
-					);
-
-					// Инициализация слоёв сцены
-					scene->Initialize(std::move(*sceneDataRes), *m_ScriptFactory, m_TaskDispatcher, [this, scene](std::expected<void, std::string> initRes) mutable
+					try
 					{
-						if (!initRes)
+						auto sceneDataRes = m_PackageManager->LoadAsset<SceneData>(sceneGuid);
+						ensure(sceneDataRes.has_value(), "Ошибка загрузки данных сцены '{}': {}", sceneGuid.ToString(), sceneDataRes ? "" : sceneDataRes.error());
+
+						std::string sceneName = sceneGuid.ToString();
+						for (const auto& s : m_PackageManager->GetProjectManifestData().GetScenes())
 						{
-							NotifySceneLoadFailed(scene->GetGuid(), std::move(initRes.error()));
-							return;
+							if (s.GetGuid() == sceneGuid)
+							{
+								sceneName = s.GetName();
+								break;
+							}
 						}
 
-						DOut("[SceneManager::LoadSceneAsync] Собрана сцена '{}' ({}).", scene->GetName(), scene->GetGuid().ToString());
+						auto scene = safe_make_shared<Scene>(
+							sceneGuid,
+							std::move(sceneName),
+							m_CpuResourceManager,
+							m_GpuResourceManager,
+							m_GlobalTransitionParams
+						);
 
-						m_MainThreadQueue.Push([this, scene = std::move(scene)]() mutable
+						// Инициализация слоёв сцены
+						scene->Initialize(std::move(*sceneDataRes), *m_ScriptFactory, m_TaskDispatcher, [this, scene](std::expected<void, std::string> initRes) mutable
 						{
-							std::shared_ptr<OneShotEvent<SceneLoadResult>> loadEvent;
-
+							if (!initRes)
 							{
-								std::lock_guard lock(m_LoadSceneMutex);
-								auto it = m_LoadingScenes.find(scene->GetGuid());
-
-								loadEvent = std::move(it->second);
-								m_LoadingScenes.erase(it);
-
-								m_Scenes[scene->GetGuid()] = scene;
+								NotifySceneLoadFailed(scene->GetGuid(), std::move(initRes.error()));
+								return;
 							}
 
-							scene->InvokeStart();
-							loadEvent->Resolve(scene);
-						});
-					}, priority);
+							DOut("[SceneManager::LoadSceneAsync] Собрана сцена '{}' ({}).", scene->GetName(), scene->GetGuid().ToString());
+
+							m_MainThreadQueue.Push([this, scene = std::move(scene)]() mutable
+							{
+								std::shared_ptr<OneShotEvent<SceneLoadResult>> loadEvent;
+
+								{
+									std::lock_guard lock(m_LoadSceneMutex);
+									auto it = m_LoadingScenes.find(scene->GetGuid());
+
+									loadEvent = std::move(it->second);
+									m_LoadingScenes.erase(it);
+
+									m_Scenes[scene->GetGuid()] = scene;
+								}
+
+								scene->InvokeStart();
+								loadEvent->Resolve(scene);
+							});
+						}, priority);
+					}
+					catch (const std::exception& e)
+					{
+						NotifySceneLoadFailed(sceneGuid, e.what());
+					}
+					catch (...)
+					{
+						NotifySceneLoadFailed(sceneGuid, "Неизвестное исключение при создании сцены");
+					}
 				}
-				catch (const std::exception& e)
-				{
-					NotifySceneLoadFailed(sceneGuid, e.what());
-				}
-				catch (...)
-				{
-					NotifySceneLoadFailed(sceneGuid, "Неизвестное исключение при создании сцены");
-				}
-			}
-		);
+			);
+		}
+		catch (const std::exception& e)
+		{
+			NotifySceneLoadFailed(sceneGuid, e.what());
+			return;
+		}
+		catch (...)
+		{
+			NotifySceneLoadFailed(sceneGuid, "Неизвестное исключение при отправке задачи в TaskDispatcher");
+			return;
+		}
+
+		if (!submitted)
+		{
+			NotifySceneLoadFailed(sceneGuid, "TaskDispatcher rejected task: pool is closed");
+		}
 	}
 
 	void SceneManager::NotifySceneLoadFailed(const Guid& sceneGuid, std::string err)

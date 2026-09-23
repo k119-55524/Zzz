@@ -544,7 +544,12 @@ namespace zzz::builder
 		return params;
 	}
 
-	static std::expected<std::vector<std::byte>, std::string> SerializeAssetToBinary(const PendingAsset& item, const fs::path& projectDir, zzz::core::eTargetPlatform targetPlatform, const std::string& platformConfigFile)
+	static std::expected<std::vector<std::byte>, std::string> SerializeAssetToBinary(
+		const PendingAsset& item,
+		const fs::path& projectDir,
+		zzz::core::eTargetPlatform targetPlatform,
+		const std::string& platformConfigFile,
+		const std::unordered_map<Guid, std::string>& sceneNamesByGuid)
 	{
 		Serializer serializer;
 		std::vector<std::byte> result;
@@ -701,7 +706,12 @@ namespace zzz::builder
 				if (auto res = serializer.Serialize(result, scenesCount); !res) return {};
 				for (const auto& guid : sceneGuids)
 				{
-					if (auto res = serializer.Serialize(result, guid); !res) return {};
+					std::string scName = guid.ToString();
+					if (auto it = sceneNamesByGuid.find(guid); it != sceneNamesByGuid.end())
+						scName = it->second;
+
+					SceneManifestEntry scEntry(std::move(scName), guid);
+					if (auto res = serializer.Serialize(result, scEntry); !res) return {};
 				}
 
 				const zU32 viewsCount = static_cast<zU32>(viewGuids.size());
@@ -1386,9 +1396,16 @@ namespace zzz::builder
 		std::vector<ArchiveItem> packageItems;
 		packageItems.reserve(pendingAssets.size());
 
+		std::unordered_map<Guid, std::string> sceneNamesByGuid;
+		for (const auto& a : pendingAssets)
+		{
+			if (a.type == static_cast<uint32_t>(zzz::core::ePackage::Scene))
+				sceneNamesByGuid.emplace(a.guid, a.name);
+		}
+
 		for (const auto& item : pendingAssets)
 		{
-			auto payloadRes = SerializeAssetToBinary(item, sourceDir, targetPlatform, platformConfigFile);
+			auto payloadRes = SerializeAssetToBinary(item, sourceDir, targetPlatform, platformConfigFile, sceneNamesByGuid);
 			if (!payloadRes)
 			{
 				DOutError("PackProject: Ошибка обработки '{}': {}", item.filePath.string(), payloadRes.error());

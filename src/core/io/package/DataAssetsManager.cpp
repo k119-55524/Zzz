@@ -32,7 +32,7 @@ namespace zzz::core
 		if (!validRes)
 			THROW_RUNTIME("Некорректный заголовок в файле '{}': {}", c_DataPackageRelativePath.generic_string(), validRes.error());
 
-		m_EntriesByGuid.clear();
+		m_Entries.clear();
 
 		const zU32 entryCount = m_Header.GetEntryCount();
 		if (entryCount > 0)
@@ -50,38 +50,45 @@ namespace zzz::core
 				if (!entryRes)
 					THROW_RUNTIME("Ошибка десериализации записи архива данных #{} в файле '{}': {}", i, c_DataPackageRelativePath.generic_string(), entryRes.error());
 
-				auto type = static_cast<eResourceType>(entry.GetAssetType());
 #if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
 				ensure(entry.GetGuid().IsValid(), "Ресурс в пакете data.dat имеет невалидный (нулевой) GUID!");
-				ensure(!m_EntriesByGuid[type].contains(entry.GetGuid()), "Обнаружен дубликат GUID {} ресурса типа {} в data.dat!", entry.GetGuid().ToString(), ToString(type));
+				if (auto it = m_Entries.find(entry.GetGuid()); it != m_Entries.end())
+				{
+					ensure(false,
+						"Обнаружен дубликат GUID {} в архиве data.dat (конфликт типов: существующий={}, новый={})!",
+						entry.GetGuid().ToString(),
+						ToString(static_cast<eResourceType>(it->second.GetAssetType())),
+						ToString(static_cast<eResourceType>(entry.GetAssetType())));
+				}
 #endif
-				m_EntriesByGuid[type].emplace(entry.GetGuid(), entry);
+				m_Entries.emplace(entry.GetGuid(), entry);
 			}
 		}
 
 		LogDataEntriesSummary();
 	}
 
-	[[nodiscard]] const PackageEntry* DataAssetsManager::GetEntryPtr(eResourceType type, const Guid& guid) const
+	[[nodiscard]] const PackageEntry* DataAssetsManager::GetEntryPtr(const Guid& guid) const
 	{
-		auto it = m_EntriesByGuid.find(type);
-		if (it == m_EntriesByGuid.end())
+		auto it = m_Entries.find(guid);
+		if (it == m_Entries.end())
 			return nullptr;
 
-		auto guidIt = it->second.find(guid);
-		if (guidIt == it->second.end())
-			return nullptr;
-
-		return &guidIt->second;
+		return &it->second;
 	}
 
 	[[nodiscard]] std::expected<AssetLocation, std::string> DataAssetsManager::GetAssetLocation(eResourceType type, const Guid& guid) const
 	{
-		const PackageEntry* entry = GetEntryPtr(type, guid);
+		const PackageEntry* entry = GetEntryPtr(guid);
 		if (!entry)
 		{
-			return UNEXPECTED("Ресурс типа {} с GUID '{}' не найден в оглавлении data.dat",
-				ToString(type), guid.ToString());
+			return UNEXPECTED("Ресурс с GUID '{}' не найден в оглавлении data.dat", guid.ToString());
+		}
+
+		if (entry->GetAssetType() != static_cast<zU32>(type))
+		{
+			return UNEXPECTED("Несоответствие типа ресурса с GUID '{}': ожидался {}, в архиве {}",
+				guid.ToString(), ToString(type), ToString(static_cast<eResourceType>(entry->GetAssetType())));
 		}
 
 		return AssetLocation{
@@ -96,20 +103,13 @@ namespace zzz::core
 	void DataAssetsManager::LogDataEntriesSummary() const
 	{
 #if Z_ADD_LOGGER
-		size_t totalCount = 0;
-		for (const auto& [type, entries] : m_EntriesByGuid)
-			totalCount += entries.size();
-
 		DOut("========== [DataAssetsManager] Data Package: {} (Total entries: {}) ==========",
-			c_DataPackageRelativePath.generic_string(), totalCount);
+			c_DataPackageRelativePath.generic_string(), m_Entries.size());
 		m_Header.LogFileBlock("  ");
-		for (const auto& [type, entries] : m_EntriesByGuid)
+		for (const auto& [guid, entry] : m_Entries)
 		{
-			for (const auto& [guid, entry] : entries)
-			{
-				DOut("  [DataEntry] type: {}, guid: {}, size: {} bytes",
-					ToString(type), guid.ToString(), entry.GetSize());
-			}
+			DOut("  [DataEntry] type: {}, guid: {}, size: {} bytes",
+				ToString(static_cast<eResourceType>(entry.GetAssetType())), guid.ToString(), entry.GetSize());
 		}
 #endif // Z_ADD_LOGGER
 	}

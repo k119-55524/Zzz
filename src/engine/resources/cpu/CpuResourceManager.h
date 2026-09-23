@@ -50,19 +50,29 @@ namespace zzz::engine
 		{
 			Z_NO_COPY_MOVE(TaskGuard);
 
-			explicit TaskGuard(CpuResourceManager& manager) noexcept : m_Manager(manager) {}
+			explicit TaskGuard(CpuResourceManager& manager) noexcept : m_Manager(manager), m_Released(false) {}
+
+			void Release() noexcept
+			{
+				if (!m_Released)
+				{
+					m_Released = true;
+					std::lock_guard lock(m_Manager.m_ShutdownMutex);
+					if (--m_Manager.m_ActiveIoTasks == 0)
+					{
+						m_Manager.m_ShutdownCv.notify_all();
+					}
+				}
+			}
 
 			~TaskGuard()
 			{
-				std::lock_guard lock(m_Manager.m_ShutdownMutex);
-				if (--m_Manager.m_ActiveIoTasks == 0)
-				{
-					m_Manager.m_ShutdownCv.notify_all();
-				}
+				Release();
 			}
 
 		private:
 			CpuResourceManager& m_Manager;
+			bool m_Released{false};
 		};
 
 	public:
@@ -107,14 +117,16 @@ namespace zzz::engine
 				return;
 			}
 
+			bool submitted = false;
 			try
 			{
-				m_TaskDispatcher.Submit(priority, [this, guid, type = T::c_ResourceType, context = std::move(context), onLoaded = std::move(onLoaded)]() mutable
+				submitted = m_TaskDispatcher.Submit(priority, [this, guid, type = T::c_ResourceType, context, onLoaded]() mutable
 				{
 					TaskGuard taskGuard(*this);
 
 					if (m_IsStopping.load(std::memory_order_acquire) || context.expired())
 					{
+						taskGuard.Release();
 						if (auto ctx = context.lock())
 							onLoaded(std::unexpected("CpuResourceManager is stopping or context expired"));
 						return;
@@ -123,8 +135,10 @@ namespace zzz::engine
 					auto loc = m_DataAssetsManager->GetAssetLocation(type, guid);
 					if (!loc)
 					{
+						std::string err = loc.error();
+						taskGuard.Release();
 						if (auto ctx = context.lock())
-							onLoaded(std::unexpected(loc.error()));
+							onLoaded(std::unexpected(std::move(err)));
 						return;
 					}
 
@@ -140,18 +154,22 @@ namespace zzz::engine
 
 					if (!readRes)
 					{
+						std::string err = std::move(readRes.error());
+						taskGuard.Release();
 						if (auto ctx = context.lock())
-							onLoaded(std::unexpected(std::move(readRes.error())));
+							onLoaded(std::unexpected(std::move(err)));
 						return;
 					}
 
 					if (m_IsStopping.load(std::memory_order_acquire) || context.expired())
 					{
+						taskGuard.Release();
 						if (auto ctx = context.lock())
 							onLoaded(std::unexpected("CpuResourceManager is stopping or context expired"));
 						return;
 					}
 
+					std::expected<ResourceRef<T>, std::string> finalResult;
 					try
 					{
 						auto parseRes = T::CreateCpuResourceFromPackageBytes(
@@ -159,23 +177,25 @@ namespace zzz::engine
 							*readRes
 						);
 
-						if (auto ctx = context.lock())
-						{
-							if (!parseRes)
-								onLoaded(std::unexpected(std::move(parseRes.error())));
-							else
-								onLoaded(ResourceRef<T>(std::move(*parseRes)));
-						}
+						if (!parseRes)
+							finalResult = std::unexpected(std::move(parseRes.error()));
+						else
+							finalResult = ResourceRef<T>(std::move(*parseRes));
 					}
 					catch (const std::exception& ex)
 					{
-						if (auto ctx = context.lock())
-							onLoaded(std::unexpected(std::format("Исключение при десериализации ресурса: {}", ex.what())));
+						finalResult = std::unexpected(std::format("Исключение при десериализации ресурса: {}", ex.what()));
 					}
 					catch (...)
 					{
-						if (auto ctx = context.lock())
-							onLoaded(std::unexpected(std::string("Неизвестное исключение при десериализации ресурса")));
+						finalResult = std::unexpected(std::string("Неизвестное исключение при десериализации ресурса"));
+					}
+
+					taskGuard.Release();
+
+					if (auto ctx = context.lock())
+					{
+						onLoaded(std::move(finalResult));
 					}
 				});
 			}
@@ -189,6 +209,21 @@ namespace zzz::engine
 					}
 				}
 				throw;
+			}
+
+			if (!submitted)
+			{
+				{
+					std::lock_guard lock(m_ShutdownMutex);
+					if (--m_ActiveIoTasks == 0)
+					{
+						m_ShutdownCv.notify_all();
+					}
+				}
+				if (auto ctx = context.lock())
+				{
+					onLoaded(std::unexpected("TaskDispatcher rejected task: pool is closed"));
+				}
 			}
 		}
 

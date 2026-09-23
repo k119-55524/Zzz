@@ -3,6 +3,7 @@
 
 #include "core/time/Time.h"
 #include "core/events/EventBus.h"
+#include "core/constants/ConfigConstants.h"
 #include "engine/view/ViewManager.h"
 #include "core/utils/MemoryUtils.h"
 #include "engine/platforms/Platform.h"
@@ -54,7 +55,7 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 	if (!primaryViewData)
 		THROW_RUNTIME("Failed to load PrimaryViewData: {}", primaryViewData.error());
 
-	// Загрузка пользовательских настроек (user.dat).
+	// Загрузка пользовательских настроек.
 	m_UserSettingsManager = safe_make_shared<UserSettingsManager>(m_FileSystem);
 
 	// Создание платформенного слоя абстракции ОС
@@ -154,7 +155,7 @@ void Engine::Shutdown() noexcept
 		if (m_UserSettingsManager)
 		{
 			if (auto res = m_UserSettingsManager->SaveConfig(); !res)
-				DOutWarning("Не удалось сохранить user.dat: {}", res.error());
+				DOutWarning("Не удалось сохранить '{}': {}", c_UserConfigFileName, res.error());
 			m_UserSettingsManager = nullptr;
 		}
 
@@ -199,7 +200,7 @@ void Engine::Shutdown() noexcept
 
 		m_ViewManager->CreatePrimaryView();
 
-		// Восстановление состояния Child/Independent окон из user.dat, если они были открыты в прошлой сессии
+		// Восстановление состояния Child/Independent окон из пользовательской конфигурации, если они были открыты в прошлой сессии
 #if !Z_MOBILE
 		for (const auto& [guid, userData] : m_UserSettingsManager->GetChildViewsUserData())
 		{

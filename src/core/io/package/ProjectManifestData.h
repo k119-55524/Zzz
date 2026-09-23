@@ -13,15 +13,49 @@
 
 namespace zzz::core
 {
+	struct SceneManifestEntry final : public ISerializable
+	{
+		std::string name;
+		Guid guid;
+
+		SceneManifestEntry() = default;
+		SceneManifestEntry(std::string name, const Guid& guid)
+			: name(std::move(name)), guid(guid) {}
+
+		[[nodiscard]] const std::string& GetName() const noexcept { return name; }
+		[[nodiscard]] const Guid& GetGuid() const noexcept { return guid; }
+
+		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& serializer) const override
+		{
+			return serializer.Serialize(buffer, name)
+				.and_then([&]() { return serializer.Serialize(buffer, guid); });
+		}
+		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& serializer) override
+		{
+			return serializer.Deserialize(buffer, offset, name)
+				.and_then([&]() { return serializer.Deserialize(buffer, offset, guid); });
+		}
+	};
+
 	class ProjectManifestData final : public ISerializable
 	{
 	public:
 		static constexpr ePackage c_PackageType = ePackage::ProjectManifest;
 
 		ProjectManifestData() = default;
-		ProjectManifestData(std::vector<Guid> gameScriptGuids, std::vector<Guid> sceneGuids, std::vector<Guid> viewGuids, ProjectPlatformData platformData = {}, zU32 maxLogQueueSize = c_MaxNetworkLogQueueSize, zU16 loggerPort = c_DefaultLoggerPort, std::string appName = {}, std::string companyName = {}, Version appVersion = {}, SceneTransitionParams defaultTransitionParams = {})
+		ProjectManifestData(
+			std::vector<Guid> gameScriptGuids,
+			std::vector<SceneManifestEntry> scenes,
+			std::vector<Guid> viewGuids,
+			ProjectPlatformData platformData = {},
+			zU32 maxLogQueueSize = c_MaxNetworkLogQueueSize,
+			zU16 loggerPort = c_DefaultLoggerPort,
+			std::string appName = {},
+			std::string companyName = {},
+			Version appVersion = {},
+			SceneTransitionParams defaultTransitionParams = {})
 			: gameScriptGuids(std::move(gameScriptGuids))
-			, sceneGuids(std::move(sceneGuids))
+			, scenes(std::move(scenes))
 			, viewGuids(std::move(viewGuids))
 			, platformData(std::move(platformData))
 			, maxLogQueueSize(maxLogQueueSize)
@@ -33,7 +67,24 @@ namespace zzz::core
 		{}
 
 		[[nodiscard]] std::span<const Guid> GetGameScriptGuids() const noexcept { return gameScriptGuids; }
-		[[nodiscard]] std::span<const Guid> GetSceneGuids() const noexcept { return sceneGuids; }
+		[[nodiscard]] std::span<const SceneManifestEntry> GetScenes() const noexcept { return scenes; }
+		[[nodiscard]] std::vector<Guid> GetSceneGuids() const
+		{
+			std::vector<Guid> guids;
+			guids.reserve(scenes.size());
+			for (const auto& s : scenes)
+				guids.push_back(s.guid);
+			return guids;
+		}
+		[[nodiscard]] std::optional<Guid> FindSceneGuid(std::string_view sceneName) const noexcept
+		{
+			for (const auto& s : scenes)
+			{
+				if (s.name == sceneName)
+					return s.guid;
+			}
+			return std::nullopt;
+		}
 		[[nodiscard]] std::span<const Guid> GetViewGuids() const noexcept { return viewGuids; }
 		[[nodiscard]] const ProjectPlatformData& GetPlatformData() const noexcept { return platformData; }
 		[[nodiscard]] zU32 GetMaxLogQueueSize() const noexcept { return maxLogQueueSize; }
@@ -58,10 +109,10 @@ namespace zzz::core
 				DOut(Assets, "{}  gameScriptGuid #{}: {}", nestedIndentation, i, gameScriptGuids[i].ToString());
 			}
 
-			DOut(Assets, "{}sceneGuids({})", nestedIndentation, sceneGuids.size());
-			for (zU32 i = 0; i < sceneGuids.size(); ++i)
+			DOut(Assets, "{}scenes({})", nestedIndentation, scenes.size());
+			for (zU32 i = 0; i < scenes.size(); ++i)
 			{
-				DOut(Assets, "{}  sceneGuid #{}: {}", nestedIndentation, i, sceneGuids[i].ToString());
+				DOut(Assets, "{}  scene #{}: '{}' [{}]", nestedIndentation, i, scenes[i].GetName(), scenes[i].GetGuid().ToString());
 			}
 
 			DOut(Assets, "{}viewGuids({})", nestedIndentation, viewGuids.size());
@@ -82,7 +133,7 @@ namespace zzz::core
 
 	private:
 		std::vector<Guid> gameScriptGuids;
-		std::vector<Guid> sceneGuids;
+		std::vector<SceneManifestEntry> scenes;
 		std::vector<Guid> viewGuids;
 		ProjectPlatformData platformData;
 		zU32 maxLogQueueSize{ c_MaxNetworkLogQueueSize };
@@ -106,13 +157,13 @@ namespace zzz::core
 					return {};
 				})
 				.and_then([&]() {
-					const zU32 scenesCount = static_cast<zU32>(sceneGuids.size());
+					const zU32 scenesCount = static_cast<zU32>(scenes.size());
 					return serializer.Serialize(buffer, scenesCount);
 				})
 				.and_then([&]() -> std::expected<void, std::string> {
-					for (const auto& scGuid : sceneGuids)
+					for (const auto& sc : scenes)
 					{
-						auto res = serializer.Serialize(buffer, scGuid);
+						auto res = sc.Serialize(buffer, serializer);
 						if (!res) return res;
 					}
 					return {};
@@ -180,16 +231,16 @@ namespace zzz::core
 				})
 				.and_then([&]() -> std::expected<void, std::string>
 				{
-					sceneGuids.clear();
-					sceneGuids.reserve(scenesCount);
+					scenes.clear();
+					scenes.reserve(scenesCount);
 					for (zU32 i = 0; i < scenesCount; ++i)
 					{
-						Guid scGuid{};
-						auto res = serializer.Deserialize(buffer, offset, scGuid);
+						SceneManifestEntry sc{};
+						auto res = serializer.Deserialize(buffer, offset, sc);
 						if (!res)
 							return res;
 
-						sceneGuids.push_back(scGuid);
+						scenes.push_back(std::move(sc));
 					}
 
 					return {};

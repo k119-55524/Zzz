@@ -1,4 +1,6 @@
 
+#include <unordered_set>
+
 #include "core/io/DatFileHeader.h"
 #include "core/io/package/SceneData.h"
 #include "core/io/package/PrefabData.h"
@@ -38,6 +40,7 @@ namespace zzz::engine
 			THROW_RUNTIME("Некорректный заголовок в файле '{}': {}", c_GamePackageRelativePath.generic_string(), validRes.error());
 
 		m_EntriesByGuid.clear();
+		m_SceneGuidsByName.clear();
 
 		const zU32 entryCount = m_Header.GetEntryCount();
 		if (entryCount > 0)
@@ -46,6 +49,10 @@ namespace zzz::engine
 			auto tableBufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_GamePackageRelativePath, DatFileHeader::BinarySize(), tableSize);
 			if (!tableBufferRes)
 				THROW_RUNTIME("Ошибка чтения таблицы записей пакета '{}': {}", c_GamePackageRelativePath.generic_string(), tableBufferRes.error());
+
+#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
+			std::unordered_set<Guid> allGuids;
+#endif
 
 			std::size_t tableOffset = 0;
 			for (zU32 i = 0; i < entryCount; ++i)
@@ -58,7 +65,7 @@ namespace zzz::engine
 				auto type = static_cast<ePackage>(entry.GetAssetType());
 #if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
 				ensure(entry.GetGuid().IsValid(), "Ресурс в пакете package.dat имеет невалидный (нулевой) GUID!");
-				ensure(!m_EntriesByGuid[type].contains(entry.GetGuid()), "Обнаружен дубликат GUID {} ресурса типа {} в package.dat!", entry.GetGuid().ToString(), ToString(type));
+				ensure(allGuids.insert(entry.GetGuid()).second, "Обнаружен дубликат GUID {} в package.dat (тип {})!", entry.GetGuid().ToString(), ToString(type));
 #endif
 				m_EntriesByGuid[type].emplace(entry.GetGuid(), entry);
 			}
@@ -89,7 +96,21 @@ namespace zzz::engine
 		m_AppName = manifestRes->GetAppName();
 		m_ProjectManifest = std::move(*manifestRes);
 
+		for (const auto& sceneEntry : m_ProjectManifest.GetScenes())
+		{
+			m_SceneGuidsByName.emplace(sceneEntry.GetName(), sceneEntry.GetGuid());
+		}
+
 		LogPackageEntriesSummary();
+	}
+
+	[[nodiscard]] std::optional<Guid> PackageManager::FindSceneGuidByName(std::string_view name) const noexcept
+	{
+		auto it = m_SceneGuidsByName.find(name);
+		if (it != m_SceneGuidsByName.end())
+			return it->second;
+
+		return std::nullopt;
 	}
 
 	[[nodiscard]] std::expected<PrimaryViewData, std::string> PackageManager::GetPrimaryViewData() const
