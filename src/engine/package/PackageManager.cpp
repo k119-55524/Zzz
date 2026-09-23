@@ -1,27 +1,19 @@
 
 #include "core/utils/Ensure.h"
-#include "core/utils/SafeRange.h"
+#include "core/utils/SafeMath.h"
 #include "core/io/DatFileHeader.h"
+#include "core/io/package/PackageEntry.h"
 #include "core/io/package/scene/SceneData.h"
+#include "core/constants/PackagesConstants.h"
 #include "core/io/package/assets/PrefabData.h"
+#include "core/io/package/ProjectManifestData.h"
 #include "core/io/package/views/ChildViewData.h"
 #include "core/io/package/views/PrimaryViewData.h"
-#include "core/constants/PackagesConstants.h"
-#include "core/io/package/ProjectManifestData.h"
 #include "core/io/package/views/IndependentViewData.h"
 
 #include "PackageManager.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Assets);
-
-namespace
-{
-	[[nodiscard]] constexpr bool IsPackageArchiveType(zU32 assetType) noexcept
-	{
-		return assetType >= static_cast<zU32>(::zzz::core::ePackage::ProjectManifest) &&
-			assetType <= static_cast<zU32>(::zzz::core::ePackage::Prefab);
-	}
-}
 
 using namespace zzz::core;
 
@@ -40,7 +32,7 @@ namespace zzz::engine
 
 		auto fileSizeRes = m_FileSystem->GetFileSize(eFileLocation::App, c_GamePackageRelativePath);
 		if (!fileSizeRes)
-			THROW_RUNTIME("Ошибка получения размера пакета '{}': {}", pathStr, fileSizeRes.error());
+			THROW_RUNTIME("Ошибка получения размера файла '{}': {}", pathStr, fileSizeRes.error());
 
 		const std::uintmax_t fileSize = *fileSizeRes;
 
@@ -58,7 +50,7 @@ namespace zzz::engine
 		const zU32 entryCount = m_Header.GetEntryCount();
 		if (entryCount > 0)
 		{
-			const auto tableSize = CheckedMul<std::size_t>(entryCount, PackageEntry::BinarySize());
+			const auto tableSize = PackageEntry::CalculateTableSize(entryCount);
 			if (!tableSize)
 				THROW_RUNTIME("Размер таблицы записей пакета '{}' переполняет std::size_t (записей: {})", pathStr, entryCount);
 
@@ -80,20 +72,28 @@ namespace zzz::engine
 				if (auto res = serializer.Deserialize(*tableBufferRes, tableOffset, entry); !res)
 					THROW_RUNTIME("Ошибка десериализации записи #{} пакета '{}': {}", i, pathStr, res.error());
 
-				if (!IsPackageArchiveType(entry.GetAssetType()))
-					THROW_RUNTIME("Запись #{} пакета '{}' содержит недопустимый тип ресурса: {}", i, pathStr, entry.GetAssetType());
-
-				const std::uintmax_t entryOffset = entry.GetOffset();
-				const std::uintmax_t entrySize = entry.GetSize();
-				if (entryOffset < payloadBegin || !IsRangeInside<std::uintmax_t>(entryOffset - payloadBegin, entrySize, payloadSize))
+				// Проверка типа ресурса записи
+				const auto rawType = entry.GetAssetType();
+				const auto pkgType = static_cast<ePackage>(rawType);
+				switch (pkgType)
 				{
-					THROW_RUNTIME("Запись #{} пакета '{}' содержит недопустимый диапазон (offset={}, size={}) при границах данных [{}, {})",
-						i, pathStr, entryOffset, entrySize, payloadBegin, fileSize);
+				case ePackage::ProjectManifest:
+				case ePackage::Scene:
+				case ePackage::PrimaryView:
+				case ePackage::ChildView:
+				case ePackage::IndependentView:
+				case ePackage::Prefab:
+					break;
+				default:
+					THROW_RUNTIME("Запись #{} пакета '{}' содержит недопустимый тип ресурса: {}", i, pathStr, rawType);
 				}
+
+				if (!entry.IsRangeValid(payloadBegin, payloadSize))
+					THROW_RUNTIME("Запись #{} пакета '{}' содержит недопустимый диапазон (offset={}, size={}) при границах данных [{}, {})",
+						i, pathStr, entry.GetOffset(), entry.GetSize(), payloadBegin, fileSize);
 
 #if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
 				ensure(entry.GetGuid().IsValid(), "Запись пакета #{} содержит невалидный GUID.", i);
-				auto pkgType = static_cast<ePackage>(entry.GetAssetType());
 				if (auto it = m_EntriesByGuid.find(pkgType); it != m_EntriesByGuid.end())
 				{
 					ensure(!it->second.contains(entry.GetGuid()),
@@ -102,7 +102,7 @@ namespace zzz::engine
 				}
 #endif
 
-				m_EntriesByGuid[static_cast<ePackage>(entry.GetAssetType())].emplace(entry.GetGuid(), entry);
+				m_EntriesByGuid[pkgType].emplace(entry.GetGuid(), entry);
 			}
 		}
 
@@ -127,8 +127,6 @@ namespace zzz::engine
 		if (manifestRes->GetCompanyName().empty() || manifestRes->GetAppName().empty())
 			THROW_RUNTIME("Ошибка пакета '{}': ProjectManifestData не содержит имя компании и/или приложения.", pathStr);
 
-		m_CompanyName = manifestRes->GetCompanyName();
-		m_AppName = manifestRes->GetAppName();
 		m_ProjectManifest = std::move(*manifestRes);
 
 		for (const auto& sceneEntry : m_ProjectManifest.GetScenes())
@@ -169,17 +167,17 @@ namespace zzz::engine
 		return DeserializeEntry<PrimaryViewData>(it->second.begin()->second);
 	}
 
-	[[nodiscard]] std::optional<PackageEntry> PackageManager::GetEntry(ePackage type, const Guid& guid) const
+	[[nodiscard]] const PackageEntry* PackageManager::GetEntry(ePackage type, const Guid& guid) const noexcept
 	{
 		auto it = m_EntriesByGuid.find(type);
 		if (it == m_EntriesByGuid.end())
-			return std::nullopt;
+			return nullptr;
 
 		auto guidIt = it->second.find(guid);
 		if (guidIt == it->second.end())
-			return std::nullopt;
+			return nullptr;
 
-		return guidIt->second;
+		return &guidIt->second;
 	}
 
 	std::expected<std::vector<std::byte>, std::string> PackageManager::ReadRawBytes(const PackageEntry& entry) const

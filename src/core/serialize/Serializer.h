@@ -10,7 +10,7 @@
 
 #include "core/utils/Export.h"
 #include "core/utils/Macroses.h"
-#include "core/utils/SafeRange.h"
+#include "core/utils/SafeMath.h"
 #include "core/scene/SceneTransitionParams.h"
 #include <math/Math.h>
 

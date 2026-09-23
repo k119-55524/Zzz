@@ -2,11 +2,13 @@
 #include <type_traits>
 
 #include "core/utils/Ensure.h"
-#include "core/utils/SafeRange.h"
+#include "core/utils/SafeMath.h"
 #include "core/io/DatFileHeader.h"
 #include "core/constants/PackagesConstants.h"
 
 #include "DataAssetsManager.h"
+
+using namespace zzz::core;
 
 Z_SET_LOG_CATEGORY(::zzz::core::Assets);
 
@@ -14,9 +16,8 @@ namespace
 {
 	/// @brief Типы ресурсов, которые допустимо хранить в архиве data.dat.
 	/// Манифест, окна и сцены хранятся в package.dat и в data.dat считаются повреждением.
-	[[nodiscard]] constexpr bool IsDataArchiveResourceType(::zzz::core::eResourceType type) noexcept
+	[[nodiscard]] constexpr bool IsDataArchiveResourceType(eResourceType type) noexcept
 	{
-		using ::zzz::core::eResourceType;
 		switch (type)
 		{
 		case eResourceType::Prefab:
@@ -75,7 +76,7 @@ namespace zzz::core
 		// Сами бинарные данные ассетов в память здесь не загружаются.
 		if (entryCount > 0)
 		{
-			const auto tableSize = CheckedMul<std::size_t>(entryCount, PackageEntry::BinarySize());
+			const auto tableSize = PackageEntry::CalculateTableSize(entryCount);
 			if (!tableSize)
 			{
 				THROW_RUNTIME("Размер таблицы записей архива '{}' переполняет std::size_t (записей: {})", pathStr, entryCount);
@@ -112,12 +113,10 @@ namespace zzz::core
 					THROW_RUNTIME("Запись #{} архива '{}' содержит недопустимый тип ресурса: {}", i, pathStr, entry.GetAssetType());
 				}
 
-				const std::uintmax_t entryOffset = entry.GetOffset();
-				const std::uintmax_t entrySize = entry.GetSize();
-				if (entryOffset < payloadBegin || !IsRangeInside<std::uintmax_t>(entryOffset - payloadBegin, entrySize, payloadSize))
+				if (!entry.IsRangeValid(payloadBegin, payloadSize))
 				{
 					THROW_RUNTIME("Запись #{} архива '{}' содержит недопустимый диапазон (offset={}, size={}) при границах данных [{}, {})",
-						i, pathStr, entryOffset, entrySize, payloadBegin, fileSize);
+						i, pathStr, entry.GetOffset(), entry.GetSize(), payloadBegin, fileSize);
 				}
 
 #if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD

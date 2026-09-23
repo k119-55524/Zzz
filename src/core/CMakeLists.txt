@@ -31,7 +31,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Guid.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Macroses.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/MemoryUtils.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/utils/SafeRange.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/SafeMath.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/ThrowWrappers.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/ThrowWrappers.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/FixedLengthString.h
@@ -40,7 +40,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/ToStringHelpers.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/ThreadUtils.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/ThreadUtils.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/utils/DX12ToStringHelpers.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/platforms/DX12ToStringHelpers.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/platforms/VKToStringHelpers.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/platforms/MetalToStringHelpers.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/macros/LogMacros.h

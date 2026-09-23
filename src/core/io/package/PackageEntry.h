@@ -3,9 +3,12 @@
 #include <span>
 #include <vector>
 #include <string>
+#include <cstddef>
+#include <optional>
 #include <string_view>
 
 #include "core/utils/Guid.h"
+#include "core/utils/SafeMath.h"
 #include "core/logger/logger.h"
 #include "core/Serialize/Serializer.h"
 
@@ -35,6 +38,18 @@ namespace zzz::core
 		{
 			// Guid (16) + assetType (4) + offset (8) + size (8) = 36 байт
 			return Guid::BinarySize() + sizeof(zU32) + sizeof(zU64) + sizeof(zU64);
+		}
+
+		/// @brief Безопасно вычисляет общий размер таблицы записей оглавления с защитой от переполнения.
+		[[nodiscard]] static constexpr std::optional<std::size_t> CalculateTableSize(zU32 entryCount) noexcept
+		{
+			return CheckedMul<std::size_t>(entryCount, BinarySize());
+		}
+
+		/// @brief Проверяет, что диапазон данных записи [offset, offset + size) корректен и лежит внутри области полезной нагрузки.
+		[[nodiscard]] constexpr bool IsRangeValid(std::uintmax_t payloadBegin, std::uintmax_t payloadSize) const noexcept
+		{
+			return offset >= payloadBegin && IsRangeInside<std::uintmax_t>(offset - payloadBegin, size, payloadSize);
 		}
 
 		inline void LogFileBlock([[maybe_unused]] std::string_view indentation = {}) const

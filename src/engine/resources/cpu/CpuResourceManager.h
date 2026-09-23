@@ -12,7 +12,7 @@
 #include <condition_variable>
 
 #include "core/utils/Guid.h"
-#include "core/utils/SafeRange.h"
+#include "core/utils/SafeMath.h"
 #include "core/io/FileSystem.h"
 #include "core/enums/eResourceType.h"
 #include "engine/tasks/TaskDispatcher.h"
