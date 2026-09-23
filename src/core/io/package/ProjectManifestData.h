@@ -66,34 +66,12 @@ namespace zzz::core
 			, defaultTransitionParams(std::move(defaultTransitionParams))
 		{}
 
-		[[nodiscard]] std::span<const Guid> GetGameScriptGuids() const noexcept { return gameScriptGuids; }
 		[[nodiscard]] std::span<const SceneManifestEntry> GetScenes() const noexcept { return scenes; }
-		[[nodiscard]] std::vector<Guid> GetSceneGuids() const
-		{
-			std::vector<Guid> guids;
-			guids.reserve(scenes.size());
-			for (const auto& s : scenes)
-				guids.push_back(s.guid);
-			return guids;
-		}
-		[[nodiscard]] std::optional<Guid> FindSceneGuid(std::string_view sceneName) const noexcept
-		{
-			for (const auto& s : scenes)
-			{
-				if (s.name == sceneName)
-					return s.guid;
-			}
-			return std::nullopt;
-		}
-		[[nodiscard]] std::span<const Guid> GetViewGuids() const noexcept { return viewGuids; }
 		[[nodiscard]] const ProjectPlatformData& GetPlatformData() const noexcept { return platformData; }
 		[[nodiscard]] zU32 GetMaxLogQueueSize() const noexcept { return maxLogQueueSize; }
-		[[nodiscard]] zU16 GetLoggerPort() const noexcept { return loggerPort; }
 		[[nodiscard]] const std::string& GetAppName() const noexcept { return appName; }
 		[[nodiscard]] const std::string& GetCompanyName() const noexcept { return companyName; }
-		[[nodiscard]] const Version& GetAppVersion() const noexcept { return appVersion; }
 		[[nodiscard]] const SceneTransitionParams& GetDefaultTransitionParams() const noexcept { return defaultTransitionParams; }
-		void SetDefaultTransitionParams(const SceneTransitionParams& params) noexcept { defaultTransitionParams = params; }
 
 		inline void LogFileBlock([[maybe_unused]] std::string_view indentation = {}) const
 		{
@@ -211,6 +189,9 @@ namespace zzz::core
 			return serializer.Deserialize(buffer, offset, scriptsCount)
 				.and_then([&]() -> std::expected<void, std::string>
 				{
+					if (auto v = Serializer::ValidateElementCount(buffer, offset, scriptsCount, Guid::BinarySize()); !v)
+						return v;
+
 					gameScriptGuids.clear();
 					gameScriptGuids.reserve(scriptsCount);
 					for (zU32 i = 0; i < scriptsCount; ++i)
@@ -231,6 +212,10 @@ namespace zzz::core
 				})
 				.and_then([&]() -> std::expected<void, std::string>
 				{
+					// SceneManifestEntry: длина имени (zU32) + Guid
+					if (auto v = Serializer::ValidateElementCount(buffer, offset, scenesCount, sizeof(zU32) + Guid::BinarySize()); !v)
+						return v;
+
 					scenes.clear();
 					scenes.reserve(scenesCount);
 					for (zU32 i = 0; i < scenesCount; ++i)
@@ -251,6 +236,9 @@ namespace zzz::core
 				})
 				.and_then([&]() -> std::expected<void, std::string>
 				{
+					if (auto v = Serializer::ValidateElementCount(buffer, offset, viewsCount, Guid::BinarySize()); !v)
+						return v;
+
 					viewGuids.clear();
 					viewGuids.reserve(viewsCount);
 					for (zU32 i = 0; i < viewsCount; ++i)

@@ -115,7 +115,7 @@ namespace zzz::engine
 			}
 
 			// Асинхронное наполнение слоя в пуле потоков через TaskDispatcher с переданным приоритетом
-			taskDispatcher.Submit(priority, [layer = m_Layers[i].get(), layerIndex = i, &scriptFactory, sharedSceneData, tracker, priority]()
+			const bool submitted = taskDispatcher.Submit(priority, [layer = m_Layers[i].get(), layerIndex = i, &scriptFactory, sharedSceneData, tracker, priority]()
 			{
 				const auto& currentLayerData = sharedSceneData->GetLayers()[layerIndex];
 				try
@@ -134,6 +134,13 @@ namespace zzz::engine
 					tracker->NotifyError(std::format("Неизвестное исключение при наполнении слоя '{}'.", currentLayerData.GetName()));
 				}
 			});
+
+			if (!submitted)
+			{
+				tracker->NotifyError(std::format(
+					"TaskDispatcher отклонил задачу наполнения слоя #{} сцены '{}': пул закрыт.",
+					i, m_Name));
+			}
 		}
 
 		DOut("[Scene::Initialize] Запущена инициализация сцены '{}' ({}), скриптов: {}, слоёв: {}",

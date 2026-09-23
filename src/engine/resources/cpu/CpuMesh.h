@@ -37,8 +37,6 @@ namespace zzz::engine
 		[[nodiscard]] ::zzz::core::eIndexFormat GetIndexFormat() const noexcept { return m_MeshData.GetIndexFormat(); }
 		[[nodiscard]] std::span<const std::byte> GetIndexData() const noexcept { return m_MeshData.GetIndexData(); }
 
-		[[nodiscard]] const ::zzz::core::MeshData& GetMeshData() const noexcept { return m_MeshData; }
-
 	private:
 		::zzz::core::MeshData m_MeshData;
 	};

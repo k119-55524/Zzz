@@ -42,7 +42,7 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 {
 	m_FileSystem = safe_make_shared<FileSystem>(nativeData);
 	m_PackageManager = safe_make_shared<PackageManager>(m_FileSystem);
-	m_DataAssetsManager = safe_make_shared<DataAssetsManager>(m_FileSystem);
+	m_DataAssetsManager = safe_make_shared<DataAssetsManager>(*m_FileSystem);
 	if (auto res = m_FileSystem->InitializeUserData(m_PackageManager->GetCompanyName(), m_PackageManager->GetAppName()); !res)
 		THROW_RUNTIME("Не удалось инициализировать каталог пользовательских данных: {}", res.error());
 
@@ -50,10 +50,6 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 
 	// Установка максимального размера сетевой очереди логов из манифеста
 	g_Logger.SetMaxNetworkLogQueueSize(projectManifestData.GetMaxLogQueueSize());
-
-	auto primaryViewData = m_PackageManager->GetPrimaryViewData();
-	if (!primaryViewData)
-		THROW_RUNTIME("Failed to load PrimaryViewData: {}", primaryViewData.error());
 
 	// Загрузка пользовательских настроек.
 	m_UserSettingsManager = safe_make_shared<UserSettingsManager>(m_FileSystem);

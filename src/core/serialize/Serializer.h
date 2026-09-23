@@ -10,6 +10,7 @@
 
 #include "core/utils/Export.h"
 #include "core/utils/Macroses.h"
+#include "core/utils/SafeRange.h"
 #include "core/scene/SceneTransitionParams.h"
 #include <math/Math.h>
 
@@ -146,6 +147,24 @@ namespace zzz::core
 			const auto oldSize = buffer.size();
 			buffer.resize(oldSize + bytes.size());
 			std::memcpy(buffer.data() + oldSize, bytes.data(), bytes.size());
+
+			return {};
+		}
+
+		/// @brief Проверяет, что count элементов (каждый не меньше minElementSize байт) могут поместиться в остаток буфера.
+		/// @details Вызывается до reserve()/resize() по счётчику, прочитанному из файла, чтобы повреждённые данные
+		///          не приводили к огромным аллокациям.
+		/// @param buffer Исходный буфер байт.
+		/// @param offset Текущее смещение в буфере.
+		/// @param count Количество элементов, прочитанное из потока.
+		/// @param minElementSize Минимальный сериализованный размер одного элемента в байтах (0 трактуется как 1).
+		/// @return Ошибка, если элементы заведомо не помещаются в остаток буфера.
+		[[nodiscard]] static std::expected<void, std::string> ValidateElementCount(std::span<const std::byte> buffer, std::size_t offset, std::size_t count, std::size_t minElementSize)
+		{
+			const std::size_t elementSize = minElementSize == 0 ? 1 : minElementSize;
+			const auto minByteSize = CheckedMul(count, elementSize);
+			if (!minByteSize || !IsRangeInside(offset, *minByteSize, buffer.size()))
+				return std::unexpected("Element count exceeds remaining buffer size.");
 
 			return {};
 		}

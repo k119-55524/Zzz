@@ -115,6 +115,9 @@ namespace zzz::core
 
 			auto res = serializer.Deserialize(buffer, offset, scriptsCount)
 				.and_then([&]() -> std::expected<void, std::string> {
+					if (auto v = Serializer::ValidateElementCount(buffer, offset, scriptsCount, Guid::BinarySize()); !v)
+						return v;
+
 					sceneScriptGuids.clear();
 					sceneScriptGuids.reserve(scriptsCount);
 					for (zU32 i = 0; i < scriptsCount; ++i)
@@ -139,6 +142,13 @@ namespace zzz::core
 			{
 				zU32 layersCount = 0;
 				res = serializer.Deserialize(buffer, offset, layersCount);
+				if (!res)
+				{
+					return res;
+				}
+
+				// LayerData начинается с Guid -> минимальный размер слоя не меньше Guid::BinarySize()
+				res = Serializer::ValidateElementCount(buffer, offset, layersCount, Guid::BinarySize());
 				if (!res)
 				{
 					return res;

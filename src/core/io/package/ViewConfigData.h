@@ -64,6 +64,9 @@ namespace zzz::core
 				.and_then([&]() { return serializer.Deserialize(buffer, offset, m_SceneGuid); })
 				.and_then([&]() { return serializer.Deserialize(buffer, offset, scriptsCount); })
 				.and_then([&]() -> std::expected<void, std::string> {
+					if (auto v = Serializer::ValidateElementCount(buffer, offset, scriptsCount, Guid::BinarySize()); !v)
+						return v;
+
 					m_UiScriptGuids.clear();
 					m_UiScriptGuids.reserve(scriptsCount);
 					for (zU32 i = 0; i < scriptsCount; ++i)

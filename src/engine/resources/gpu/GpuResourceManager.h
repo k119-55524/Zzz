@@ -49,7 +49,7 @@ namespace zzz::engine
 			std::shared_ptr<GAPI> gapi,
 			std::shared_ptr<CpuResourceManager> cpuResourceManager);
 
-		~GpuResourceManager();
+		~GpuResourceManager() = default;
 
 		template<GpuResource T, typename ContextType>
 		void GetAsync(
@@ -76,13 +76,6 @@ namespace zzz::engine
 				});
 		}
 
-		template<GpuResource T>
-		[[nodiscard]] ResourceRef<T> TryGet(const Guid& guid)
-		{
-			auto res = GetTable<T>().TryGet(guid);
-			return res ? ResourceRef<T>(std::move(res)) : ResourceRef<T>{};
-		}
-
 	private:
 		template<GpuResource T>
 		[[nodiscard]] auto& GetTable() noexcept
@@ -93,8 +86,6 @@ namespace zzz::engine
 			else if constexpr (std::is_same_v<T, GpuShader>)    return m_Shaders;
 			else static_assert(sizeof(T) == 0, "Запрашиваемый тип ресурса не поддерживается GpuResourceManager!");
 		}
-
-		void EmergencyStop();
 
 		template<GpuResource TGpu>
 		void RequestFromCpu(const Guid& guid, eTaskPriority priority)

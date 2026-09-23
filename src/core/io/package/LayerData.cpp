@@ -40,6 +40,12 @@ namespace zzz::core
 
 		m_Type = static_cast<eLayerType>(typeRaw);
 
+		res = Serializer::ValidateElementCount(buffer, offset, objectsCount, Guid::BinarySize());
+		if (!res)
+		{
+			return res;
+		}
+
 		m_Objects.clear();
 		m_Objects.reserve(objectsCount);
 		for (uint32_t i = 0; i < objectsCount; ++i)

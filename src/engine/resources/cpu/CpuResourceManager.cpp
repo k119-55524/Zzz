@@ -1,16 +1,10 @@
-#include <algorithm>
-
 #include "core/utils/Ensure.h"
-#include "core/utils/MemoryUtils.h"
-#include "engine/tasks/TaskDispatcher.h"
 
 #include "CpuResourceManager.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::LogEngine);
 
 using namespace zzz::core;
-using namespace zzz::templates;
-
 namespace zzz::engine
 {
 	CpuResourceManager::CpuResourceManager(

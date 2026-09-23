@@ -58,7 +58,6 @@ namespace zzz::core
 
 		[[nodiscard]] std::span<const RenderPairData> GetRenderPairs() const noexcept { return m_RenderPairs; }
 		[[nodiscard]] bool HasMesh() const noexcept { return !m_RenderPairs.empty(); }
-		[[nodiscard]] bool HasMaterial() const noexcept { return !m_RenderPairs.empty(); }
 
 		void LogFileBlock(std::string_view indentation = {}) const;
 		[[nodiscard]] std::span<const Guid> GetScriptGuids() const noexcept { return m_ScriptGuids; }

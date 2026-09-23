@@ -1,8 +1,7 @@
 #pragma once
 
-#include <map>
+#include <functional>
 #include <string>
-#include <memory>
 #include <expected>
 #include <unordered_map>
 
@@ -14,29 +13,17 @@
 #include "core/serialize/Serializer.h"
 #include "core/io/package/PackageEntry.h"
 
-namespace zzz::engine
-{
-	class CpuResourceManager;
-}
-
 namespace zzz::core
 {
-	class MeshData;
-	class PrefabData;
-	class MaterialData;
-	class ShaderData;
-
 	/**
 	 * @struct AssetLocation
 	 * @brief Физические координаты размещения ассета на диске для чтения.
 	 */
 	struct AssetLocation
 	{
-		eFileLocation location{ eFileLocation::App };
-		std::filesystem::path relativePath;
-		std::size_t offset = 0;
-		std::size_t size = 0;
-		const PackageEntry* entry = nullptr;
+		eFileLocation location;
+		std::reference_wrapper<const std::filesystem::path> relativePath;
+		std::reference_wrapper<const PackageEntry> entry;
 	};
 
 	/**
@@ -45,11 +32,9 @@ namespace zzz::core
 	 */
 	class Z_CORE_API DataAssetsManager final
 	{
-		friend class ::zzz::engine::CpuResourceManager;
-
 	public:
 		DataAssetsManager() = delete;
-		explicit DataAssetsManager(std::shared_ptr<FileSystem> fileSystem);
+		explicit DataAssetsManager(const FileSystem& fileSystem);
 		~DataAssetsManager() = default;
 
 		[[nodiscard]] std::expected<AssetLocation, std::string> GetAssetLocation(eResourceType type, const Guid& guid) const;
@@ -79,11 +64,9 @@ namespace zzz::core
 	private:
 		[[nodiscard]] const PackageEntry* GetEntryPtr(const Guid& guid) const;
 
-		void Initialize();
-		void LogDataEntriesSummary() const;
+		void Initialize(const FileSystem& fileSystem);
+		void LogDataEntriesSummary(const DatFileHeader& header) const;
 
-		std::shared_ptr<FileSystem> m_FileSystem;
-		DatFileHeader m_Header{};
 		std::unordered_map<Guid, PackageEntry> m_Entries;
 	};
 }

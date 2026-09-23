@@ -4,6 +4,8 @@
 
 #include "FileSystemAndroid.h"
 #include "core/utils/Ensure.h"
+#include "core/utils/SafeRange.h"
+#include <limits>
 #include <android/asset_manager.h>
 #include <android_native_app_glue.h>
 
@@ -46,27 +48,64 @@ namespace zzz::core
 		return FileSystemBase::FileExists(location, relativePath);
 	}
 
-	[[nodiscard]] std::expected<std::vector<std::byte>, std::string> FileSystemAndroid::ReadBytes(
-		eFileLocation location, const std::filesystem::path& relativePath, std::size_t offset, std::size_t size) const noexcept
+	[[nodiscard]] std::expected<std::uintmax_t, std::string> FileSystemAndroid::GetFileSize(
+		eFileLocation location, const std::filesystem::path& relativePath) const noexcept
 	{
-		if (size == 0)
-			return std::vector<std::byte>{};
-
 		if (location == eFileLocation::App)
 		{
 			auto asset = TryOpenAsset(relativePath, AASSET_MODE_UNKNOWN);
 			if (!asset)
 				return UNEXPECTED("{}", asset.error());
 
-			const auto totalLength = static_cast<std::size_t>(AAsset_getLength(*asset));
-			if (offset + size > totalLength)
+			const auto length = NarrowTo<std::uintmax_t>(AAsset_getLength64(*asset));
+			AAsset_close(*asset);
+			if (!length)
+				return UNEXPECTED("Не удалось получить размер Android-ассета: '{}'", relativePath.generic_string());
+
+			return *length;
+		}
+
+		return FileSystemBase::GetFileSize(location, relativePath);
+	}
+
+	[[nodiscard]] std::expected<std::vector<std::byte>, std::string> FileSystemAndroid::ReadBytes(
+		eFileLocation location, const std::filesystem::path& relativePath, std::size_t offset, std::size_t size) const noexcept
+	{
+		if (location == eFileLocation::App)
+		{
+			auto asset = TryOpenAsset(relativePath, AASSET_MODE_UNKNOWN);
+			if (!asset)
+				return UNEXPECTED("{}", asset.error());
+
+			const auto assetLength = NarrowTo<std::size_t>(AAsset_getLength64(*asset));
+			if (!assetLength)
 			{
 				AAsset_close(*asset);
-				return UNEXPECTED("Диапазон чтения [{}, {}) выходит за границы ассета '{}' (размер: {})",
-					offset, offset + size, relativePath.generic_string(), totalLength);
+				return UNEXPECTED("Размер Android-ассета '{}' не представим адресным размером платформы", relativePath.generic_string());
 			}
 
-			if (AAsset_seek(*asset, static_cast<off_t>(offset), SEEK_SET) == -1)
+			const std::size_t totalLength = *assetLength;
+			if (!IsRangeInside(offset, size, totalLength))
+			{
+				AAsset_close(*asset);
+				return UNEXPECTED("Диапазон чтения (offset={}, size={}) выходит за границы ассета '{}' (размер: {})",
+					offset, size, relativePath.generic_string(), totalLength);
+			}
+
+			if (size == 0)
+			{
+				AAsset_close(*asset);
+				return std::vector<std::byte>{};
+			}
+
+			const auto seekOffset = NarrowTo<off64_t>(offset);
+			if (!NarrowTo<int>(size) || !seekOffset)
+			{
+				AAsset_close(*asset);
+				return UNEXPECTED("Диапазон чтения Android-ассета '{}' (offset={}, size={}) превышает пределы AAsset_seek64/AAsset_read", relativePath.generic_string(), offset, size);
+			}
+
+			if (AAsset_seek64(*asset, *seekOffset, SEEK_SET) == -1)
 			{
 				AAsset_close(*asset);
 				return UNEXPECTED("Ошибка позиционирования (seek) в ассете Android: '{}'", relativePath.generic_string());
@@ -94,11 +133,24 @@ namespace zzz::core
 			if (!asset)
 				return UNEXPECTED("{}", asset.error());
 
-			const auto length = static_cast<std::size_t>(AAsset_getLength(*asset));
+			const auto assetLength = NarrowTo<std::size_t>(AAsset_getLength64(*asset));
+			if (!assetLength)
+			{
+				AAsset_close(*asset);
+				return UNEXPECTED("Размер Android-ассета '{}' не представим адресным размером платформы", relativePath.generic_string());
+			}
+
+			const std::size_t length = *assetLength;
 			if (length == 0)
 			{
 				AAsset_close(*asset);
 				return std::vector<std::byte>{};
+			}
+
+			if (!NarrowTo<int>(length))
+			{
+				AAsset_close(*asset);
+				return UNEXPECTED("Размер Android-ассета '{}' превышает предел AAsset_read: {}", relativePath.generic_string(), length);
 			}
 
 			std::vector<std::byte> buffer(length);

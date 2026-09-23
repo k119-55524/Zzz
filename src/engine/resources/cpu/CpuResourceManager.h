@@ -12,17 +12,12 @@
 #include <condition_variable>
 
 #include "core/utils/Guid.h"
+#include "core/utils/SafeRange.h"
 #include "core/io/FileSystem.h"
 #include "core/enums/eResourceType.h"
-#include "core/enums/eFileLocation.h"
-#include "core/constants/PackageConstants.h"
 #include "engine/tasks/TaskDispatcher.h"
-#include "engine/resources/cpu/CpuMesh.h"
 #include "core/io/package/PackageEntry.h"
 #include "engine/resources/ResourceRef.h"
-#include "engine/resources/cpu/CpuShader.h"
-#include "engine/resources/cpu/CpuMaterial.h"
-#include "engine/resources/cpu/CpuTexture2D.h"
 #include "core/io/package/DataAssetsManager.h"
 
 using namespace zzz::core;
@@ -142,14 +137,29 @@ namespace zzz::engine
 						return;
 					}
 
+					const PackageEntry& entry = loc->entry.get();
+					const auto offset = NarrowTo<std::size_t>(entry.GetOffset());
+					const auto size = NarrowTo<std::size_t>(entry.GetSize());
+					if (!offset || !size)
+					{
+						taskGuard.Release();
+						if (auto ctx = context.lock())
+							onLoaded(std::unexpected("Диапазон ресурса не представим адресным размером платформы"));
+						return;
+					}
+
 					std::expected<std::vector<std::byte>, std::string> readRes;
-					if (loc->size == 0)
+					if (*size == 0)
 					{
 						readRes = std::vector<std::byte>{};
 					}
 					else
 					{
-						readRes = m_FileSystem->ReadBytes(loc->location, loc->relativePath, loc->offset, loc->size);
+						readRes = m_FileSystem->ReadBytes(
+							loc->location,
+							loc->relativePath.get(),
+							*offset,
+							*size);
 					}
 
 					if (!readRes)
@@ -173,7 +183,7 @@ namespace zzz::engine
 					try
 					{
 						auto parseRes = T::CreateCpuResourceFromPackageBytes(
-							loc->entry ? *loc->entry : PackageEntry{},
+							entry,
 							*readRes
 						);
 

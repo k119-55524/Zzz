@@ -10,9 +10,7 @@ namespace zzz::engine
 {
 	/**
 	 * @class ResourceRef
-	 * @brief Легковесная RAII-обёртка для интрузивного подсчёта ссылок на ресурсы движка.
-	 * @details Автоматически вызывает приватные AddRef() и Release() у ResourceBase,
-	 *          обеспечивая безопасный подсчет ссылок и прозрачный доступ к ресурсу.
+	 * @brief Легковесная типизированная RAII-обёртка над std::shared_ptr ресурса движка.
 	 * @tparam T Конкретный тип ресурса (должен наследоваться от ResourceBase).
 	 */
 	template<typename T>
@@ -28,77 +26,24 @@ namespace zzz::engine
 
 		explicit ResourceRef(std::shared_ptr<T> resource)
 			: m_Resource(std::move(resource))
-		{
-			if (m_Resource)
-			{
-				static_cast<ResourceBase*>(m_Resource.get())->AddRef();
-			}
-		}
+		{}
 
-		~ResourceRef()
-		{
-			Reset();
-		}
+		~ResourceRef() = default;
 
-		ResourceRef(const ResourceRef& other)
-			: m_Resource(other.m_Resource)
-		{
-			if (m_Resource)
-			{
-				static_cast<ResourceBase*>(m_Resource.get())->AddRef();
-			}
-		}
-
-		ResourceRef& operator=(const ResourceRef& other)
-		{
-			if (this != &other)
-			{
-				Reset();
-				m_Resource = other.m_Resource;
-				if (m_Resource)
-				{
-					static_cast<ResourceBase*>(m_Resource.get())->AddRef();
-				}
-			}
-			return *this;
-		}
-
-		ResourceRef(ResourceRef&& other) noexcept
-			: m_Resource(std::move(other.m_Resource))
-		{
-		}
-
-		ResourceRef& operator=(ResourceRef&& other) noexcept
-		{
-			if (this != &other)
-			{
-				Reset();
-				m_Resource = std::move(other.m_Resource);
-			}
-			return *this;
-		}
+		ResourceRef(const ResourceRef&) = default;
+		ResourceRef(ResourceRef&&) noexcept = default;
+		ResourceRef& operator=(const ResourceRef&) = default;
+		ResourceRef& operator=(ResourceRef&&) noexcept = default;
 
 		ResourceRef& operator=(std::shared_ptr<T> resource)
 		{
-			if (m_Resource != resource)
-			{
-				Reset();
-				m_Resource = std::move(resource);
-				if (m_Resource)
-				{
-					static_cast<ResourceBase*>(m_Resource.get())->AddRef();
-				}
-			}
+			m_Resource = std::move(resource);
 			return *this;
 		}
 
 		void Reset() noexcept
 		{
-			if (m_Resource)
-			{
-				static_cast<ResourceBase*>(m_Resource.get())->Release();
-				m_Resource.reset();
-			}
+			m_Resource.reset();
 		}
 
 		[[nodiscard]] T* Get() const noexcept { return m_Resource.get(); }

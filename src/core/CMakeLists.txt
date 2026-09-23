@@ -32,6 +32,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Guid.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Macroses.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/MemoryUtils.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils/SafeRange.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/ThrowWrappers.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/ThrowWrappers.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/FixedLengthString.h
@@ -86,7 +87,6 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/base_script/ViewScript.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Alignment.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eResourceType.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eResourceState.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/ePixelFormat.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eIndexFormat.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eVertexSemantic.h
@@ -139,6 +139,8 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/io/platforms/FileSystemiOS.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/platforms/FileSystemiOS.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/PackageEntry.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/ArchiveTableReader.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/ArchiveTableReader.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/MeshData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/MeshData.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/MaterialData.h

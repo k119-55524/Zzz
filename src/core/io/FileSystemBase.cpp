@@ -1,8 +1,10 @@
 
 #include <fstream>
+#include <limits>
 #include <system_error>
 
 #include "FileSystemBase.h"
+#include "core/utils/SafeRange.h"
 
 namespace zzz::core
 {
@@ -22,12 +24,24 @@ namespace zzz::core
 		return std::filesystem::is_regular_file(*pathRes, ec) && !ec;
 	}
 
+	[[nodiscard]] std::expected<std::uintmax_t, std::string> FileSystemBase::GetFileSize(
+		eFileLocation location, const std::filesystem::path& relativePath) const noexcept
+	{
+		auto pathRes = ResolvePhysicalPath(location, relativePath);
+		if (!pathRes)
+			return UNEXPECTED("{}", pathRes.error());
+
+		std::error_code ec;
+		const auto fileSize = std::filesystem::file_size(*pathRes, ec);
+		if (ec)
+			return UNEXPECTED("Не удалось получить размер файла '{}': {}", pathRes->string(), ec.message());
+
+		return fileSize;
+	}
+
 	[[nodiscard]] std::expected<std::vector<std::byte>, std::string> FileSystemBase::ReadBytes(
 		eFileLocation location, const std::filesystem::path& relativePath, std::size_t offset, std::size_t size) const noexcept
 	{
-		if (size == 0)
-			return std::vector<std::byte>{};
-
 		auto pathRes = ResolvePhysicalPath(location, relativePath);
 		if (!pathRes)
 			return UNEXPECTED("{}", pathRes.error());
@@ -39,23 +53,34 @@ namespace zzz::core
 		if (ec)
 			return UNEXPECTED("Не удалось получить размер файла '{}': {}", physicalPath.string(), ec.message());
 
-		if (offset + size > fileSize)
+		if (!IsRangeInside<std::uintmax_t>(offset, size, fileSize))
 		{
-			return UNEXPECTED("Диапазон чтения [{}, {}) выходит за границы файла '{}' (размер: {})",
-				offset, offset + size, physicalPath.string(), fileSize);
+			return UNEXPECTED("Диапазон чтения (offset={}, size={}) выходит за границы файла '{}' (размер: {})",
+				offset, size, physicalPath.string(), fileSize);
 		}
+
+		const auto streamOffset = NarrowTo<std::streamoff>(offset);
+		if (!streamOffset)
+			return UNEXPECTED("Смещение {} не представимо типом std::streamoff", offset);
+
+		const auto streamSize = NarrowTo<std::streamsize>(size);
+		if (!streamSize)
+			return UNEXPECTED("Размер чтения {} не представим типом std::streamsize", size);
 
 		std::ifstream file(physicalPath, std::ios::binary);
 		if (!file.is_open())
 			return UNEXPECTED("Не удалось открыть файл для чтения: '{}'", physicalPath.string());
 
-		if (!file.seekg(static_cast<std::streamoff>(offset), std::ios::beg))
+		if (size == 0)
+			return std::vector<std::byte>{};
+
+		if (!file.seekg(*streamOffset, std::ios::beg))
 			return UNEXPECTED("Ошибка смещения (seekg) на позицию {} в файле '{}'", offset, physicalPath.string());
 
 		std::vector<std::byte> buffer(size);
-		file.read(reinterpret_cast<char*>(buffer.data()), static_cast<std::streamsize>(size));
-		if (!file && !file.eof())
-			return UNEXPECTED("Ошибка чтения {} байт из файла '{}'", size, physicalPath.string());
+		file.read(reinterpret_cast<char*>(buffer.data()), *streamSize);
+		if (file.gcount() != *streamSize)
+			return UNEXPECTED("Прочитано {} из {} байт файла '{}'", file.gcount(), size, physicalPath.string());
 
 		return buffer;
 	}
@@ -77,14 +102,22 @@ namespace zzz::core
 		if (fileSize == 0)
 			return std::vector<std::byte>{};
 
+		const auto bufferSize = NarrowTo<std::size_t>(fileSize);
+		if (!bufferSize)
+			return UNEXPECTED("Размер файла '{}' не представим типом std::size_t: {}", physicalPath.string(), fileSize);
+
+		const auto streamSize = NarrowTo<std::streamsize>(fileSize);
+		if (!streamSize)
+			return UNEXPECTED("Размер файла '{}' не представим типом std::streamsize: {}", physicalPath.string(), fileSize);
+
 		std::ifstream file(physicalPath, std::ios::binary);
 		if (!file.is_open())
 			return UNEXPECTED("Не удалось открыть файл для чтения: '{}'", physicalPath.string());
 
-		std::vector<std::byte> buffer(fileSize);
-		file.read(reinterpret_cast<char*>(buffer.data()), static_cast<std::streamsize>(fileSize));
-		if (!file && !file.eof())
-			return UNEXPECTED("Ошибка чтения данных из файла '{}'", physicalPath.string());
+		std::vector<std::byte> buffer(*bufferSize);
+		file.read(reinterpret_cast<char*>(buffer.data()), *streamSize);
+		if (file.gcount() != *streamSize)
+			return UNEXPECTED("Прочитано {} из {} байт файла '{}'", file.gcount(), fileSize, physicalPath.string());
 
 		return buffer;
 	}

@@ -14,6 +14,15 @@ namespace zzz::core
 		return FileSystemBase::FileExists(location, relativePath);
 	}
 
+	[[nodiscard]] std::expected<std::uintmax_t, std::string> FileSystemiOS::GetFileSize(
+		eFileLocation location, const std::filesystem::path& relativePath) const noexcept
+	{
+		if (location == eFileLocation::App)
+			return UNEXPECTED("iOS NSBundle чтение будет реализовано на шаге КП-5.");
+
+		return FileSystemBase::GetFileSize(location, relativePath);
+	}
+
 	[[nodiscard]] std::expected<std::vector<std::byte>, std::string> FileSystemiOS::ReadBytes(
 		eFileLocation location, const std::filesystem::path& relativePath, std::size_t offset, std::size_t size) const noexcept
 	{

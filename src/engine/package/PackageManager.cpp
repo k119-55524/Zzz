@@ -1,7 +1,6 @@
-
-#include <unordered_set>
-
+#include "core/utils/SafeRange.h"
 #include "core/io/DatFileHeader.h"
+#include "core/io/package/ArchiveTableReader.h"
 #include "core/io/package/SceneData.h"
 #include "core/io/package/PrefabData.h"
 #include "core/constants/PackageConstants.h"
@@ -25,50 +24,27 @@ namespace zzz::engine
 
 	void PackageManager::Initialize()
 	{
-		auto headerBufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_GamePackageRelativePath, 0, DatFileHeader::BinarySize());
-		if (!headerBufferRes)
-			THROW_RUNTIME("Отсутствует обязательный пакет игровых ресурсов: {}: {}", c_GamePackageRelativePath.generic_string(), headerBufferRes.error());
+		auto tableRes = ReadArchiveTable(
+			*m_FileSystem,
+			eFileLocation::App,
+			c_GamePackageRelativePath,
+			c_PackageDatHeader,
+			c_PackageDatFileMajorVersion,
+			[](zU32 assetType) noexcept
+			{
+				return assetType >= static_cast<zU32>(ePackage::ProjectManifest) &&
+					assetType <= static_cast<zU32>(ePackage::Prefab);
+			});
+		if (!tableRes)
+			THROW_RUNTIME("Ошибка загрузки пакета '{}': {}", c_GamePackageRelativePath.generic_string(), tableRes.error());
 
-		std::size_t offset = 0;
-		Serializer serializer;
-		auto headerRes = serializer.Deserialize(*headerBufferRes, offset, m_Header);
-		if (!headerRes)
-			THROW_RUNTIME("Ошибка десериализации заголовка пакета '{}': {}", c_GamePackageRelativePath.generic_string(), headerRes.error());
-
-		auto validRes = m_Header.Validate(c_PackageDatHeader, c_PackageDatFileMajorVersion);
-		if (!validRes)
-			THROW_RUNTIME("Некорректный заголовок в файле '{}': {}", c_GamePackageRelativePath.generic_string(), validRes.error());
-
+		m_Header = tableRes->header;
 		m_EntriesByGuid.clear();
 		m_SceneGuidsByName.clear();
 
-		const zU32 entryCount = m_Header.GetEntryCount();
-		if (entryCount > 0)
+		for (const auto& entry : tableRes->entries)
 		{
-			const std::size_t tableSize = static_cast<std::size_t>(entryCount) * PackageEntry::BinarySize();
-			auto tableBufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_GamePackageRelativePath, DatFileHeader::BinarySize(), tableSize);
-			if (!tableBufferRes)
-				THROW_RUNTIME("Ошибка чтения таблицы записей пакета '{}': {}", c_GamePackageRelativePath.generic_string(), tableBufferRes.error());
-
-#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
-			std::unordered_set<Guid> allGuids;
-#endif
-
-			std::size_t tableOffset = 0;
-			for (zU32 i = 0; i < entryCount; ++i)
-			{
-				PackageEntry entry{};
-				auto entryRes = serializer.Deserialize(*tableBufferRes, tableOffset, entry);
-				if (!entryRes)
-					THROW_RUNTIME("Ошибка десериализации записи пакета #{} в файле '{}': {}", i, c_GamePackageRelativePath.generic_string(), entryRes.error());
-
-				auto type = static_cast<ePackage>(entry.GetAssetType());
-#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
-				ensure(entry.GetGuid().IsValid(), "Ресурс в пакете package.dat имеет невалидный (нулевой) GUID!");
-				ensure(allGuids.insert(entry.GetGuid()).second, "Обнаружен дубликат GUID {} в package.dat (тип {})!", entry.GetGuid().ToString(), ToString(type));
-#endif
-				m_EntriesByGuid[type].emplace(entry.GetGuid(), entry);
-			}
+			m_EntriesByGuid[static_cast<ePackage>(entry.GetAssetType())].emplace(entry.GetGuid(), entry);
 		}
 
 		auto primaryViewIt = m_EntriesByGuid.find(ePackage::PrimaryView);
@@ -137,7 +113,12 @@ namespace zzz::engine
 
 	std::expected<std::vector<std::byte>, std::string> PackageManager::ReadRawBytes(const PackageEntry& entry) const
 	{
-		auto bufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_GamePackageRelativePath, entry.GetOffset(), entry.GetSize());
+		const auto offset = NarrowTo<std::size_t>(entry.GetOffset());
+		const auto size = NarrowTo<std::size_t>(entry.GetSize());
+		if (!offset || !size)
+			return UNEXPECTED("Диапазон ресурса с GUID '{}' не представим адресным размером платформы", entry.GetGuid().ToString());
+
+		auto bufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_GamePackageRelativePath, *offset, *size);
 		if (!bufferRes)
 		{
 			return UNEXPECTED("Не удалось прочитать блок данных с GUID '{}' из пакета '{}': {}",

@@ -16,16 +16,4 @@ namespace zzz::engine
 		ensure(m_CpuManager != nullptr, "CpuResourceManager не должен быть null в GpuResourceManager.");
 	}
 
-	GpuResourceManager::~GpuResourceManager()
-	{
-		EmergencyStop();
-	}
-
-	void GpuResourceManager::EmergencyStop()
-	{
-		m_Meshes.Clear();
-		m_Materials.Clear();
-		m_Textures.Clear();
-		m_Shaders.Clear();
-	}
 }

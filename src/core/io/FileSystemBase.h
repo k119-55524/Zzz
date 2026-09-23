@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <cstddef>
+#include <cstdint>
 #include <expected>
 #include <filesystem>
 #include <string_view>
@@ -37,6 +38,7 @@ namespace zzz::core
 		~FileSystemBase() = default;
 
 		[[nodiscard]] bool FileExists(eFileLocation location, const std::filesystem::path& relativePath) const noexcept;
+		[[nodiscard]] std::expected<std::uintmax_t, std::string> GetFileSize(eFileLocation location, const std::filesystem::path& relativePath) const noexcept;
 		[[nodiscard]] std::expected<std::vector<std::byte>, std::string> ReadBytes(eFileLocation location, const std::filesystem::path& relativePath, std::size_t offset, std::size_t size) const noexcept;
 		[[nodiscard]] std::expected<std::vector<std::byte>, std::string> ReadAllBytes(eFileLocation location, const std::filesystem::path& relativePath) const noexcept;
 		std::expected<void, std::string> WriteAllBytes(eFileLocation location, const std::filesystem::path& relativePath, std::span<const std::byte> bytes) noexcept;

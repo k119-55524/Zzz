@@ -163,25 +163,6 @@ namespace zzz::engine
 			return true;
 		}
 
-		/// @brief Синхронная попытка получить готовый ресурс из таблицы без ожидания
-		[[nodiscard]] std::shared_ptr<T> TryGet(const Guid& guid) const
-		{
-			std::shared_lock lock(m_Mutex);
-			auto it = m_Resources.find(guid);
-			if (it != m_Resources.end())
-			{
-				return it->second.weakResource.lock();
-			}
-			return nullptr;
-		}
-
-		/// @brief Очистка всех записей таблицы
-		void Clear()
-		{
-			std::unique_lock lock(m_Mutex);
-			m_Resources.clear();
-		}
-
 	private:
 		struct ResourceSlot
 		{

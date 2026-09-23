@@ -119,20 +119,6 @@ namespace zzz::core
 				DispatchSubscriber(std::move(sub), resultTuple);
 		}
 
-		/// @brief Проверка, перешло ли событие в состояние Resolved
-		[[nodiscard]] bool IsResolved() const noexcept
-		{
-			std::lock_guard lock(m_Mutex);
-			return m_State == State::Resolved;
-		}
-
-		/// @brief Получение сохранённого результата события (если IsResolved() == true)
-		[[nodiscard]] std::optional<std::tuple<Args...>> GetResult() const
-		{
-			std::lock_guard lock(m_Mutex);
-			return m_Result;
-		}
-
 	private:
 		void DispatchSubscriber(Subscriber inSub, const std::tuple<Args...>& result)
 		{

@@ -1,5 +1,7 @@
 #include "core/io/package/MeshData.h"
 
+#include "core/utils/SafeRange.h"
+
 namespace zzz::core
 {
 	MeshData::MeshData(
@@ -49,8 +51,19 @@ namespace zzz::core
 		res = serializer.Deserialize(buffer, offset, m_VertexStride);
 		if (!res) return res;
 
-		const std::size_t vertexByteSize = static_cast<std::size_t>(m_VertexCount) * m_VertexStride;
-		m_VertexData.resize(vertexByteSize);
+		if (m_VertexCount > 0 && m_VertexStride == 0)
+			return std::unexpected("MeshData: vertexStride не может быть равен 0 при ненулевом vertexCount.");
+
+		const auto vertexCount = NarrowTo<std::size_t>(m_VertexCount);
+		const auto vertexStride = NarrowTo<std::size_t>(m_VertexStride);
+		const auto vertexByteSize = (vertexCount && vertexStride) ? CheckedMul(*vertexCount, *vertexStride) : std::nullopt;
+		if (!vertexByteSize)
+			return std::unexpected("MeshData: размер вершинных данных переполняет std::size_t.");
+
+		if (!IsRangeInside(offset, *vertexByteSize, buffer.size()))
+			return std::unexpected("MeshData: вершинные данные выходят за границы буфера.");
+
+		m_VertexData.resize(*vertexByteSize);
 		res = serializer.Deserialize(buffer, offset, std::span<std::byte>(m_VertexData));
 		if (!res) return res;
 
@@ -60,9 +73,31 @@ namespace zzz::core
 		res = serializer.Deserialize(buffer, offset, m_IndexFormat);
 		if (!res) return res;
 
-		const std::size_t indexElemSize = (m_IndexFormat == eIndexFormat::UInt16) ? 2 : 4;
-		const std::size_t indexByteSize = static_cast<std::size_t>(m_IndexCount) * indexElemSize;
-		m_IndexData.resize(indexByteSize);
+		std::size_t indexElemSize = 0;
+		switch (m_IndexFormat)
+		{
+		case eIndexFormat::UInt16:
+			indexElemSize = sizeof(zU16);
+			break;
+		case eIndexFormat::UInt32:
+			indexElemSize = sizeof(zU32);
+			break;
+		default:
+			return std::unexpected("MeshData: неизвестный формат индексов.");
+		}
+
+		if (m_IndexCount > 0 && m_VertexCount == 0)
+			return std::unexpected("MeshData: индексы не могут существовать без вершин.");
+
+		const auto indexCount = NarrowTo<std::size_t>(m_IndexCount);
+		const auto indexByteSize = indexCount ? CheckedMul(*indexCount, indexElemSize) : std::nullopt;
+		if (!indexByteSize)
+			return std::unexpected("MeshData: размер индексных данных переполняет std::size_t.");
+
+		if (!IsRangeInside(offset, *indexByteSize, buffer.size()))
+			return std::unexpected("MeshData: индексные данные выходят за границы буфера.");
+
+		m_IndexData.resize(*indexByteSize);
 		res = serializer.Deserialize(buffer, offset, std::span<std::byte>(m_IndexData));
 		if (!res) return res;
 

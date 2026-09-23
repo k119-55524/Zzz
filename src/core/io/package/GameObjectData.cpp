@@ -102,6 +102,12 @@ namespace zzz::core
 		m_IsEntity = (entityRaw != 0);
 		m_IsActive = (activeRaw != 0);
 
+		res = Serializer::ValidateElementCount(buffer, offset, scriptsCount, Guid::BinarySize());
+		if (!res)
+		{
+			return res;
+		}
+
 		m_ScriptGuids.clear();
 		m_ScriptGuids.reserve(scriptsCount);
 		for (uint32_t i = 0; i < scriptsCount; ++i)
@@ -128,6 +134,9 @@ namespace zzz::core
 
 		uint32_t pairsCount = 0;
 		res = serializer.Deserialize(buffer, offset, pairsCount);
+		if (!res) return res;
+
+		res = Serializer::ValidateElementCount(buffer, offset, pairsCount, Guid::BinarySize() * 2);
 		if (!res) return res;
 
 		m_RenderPairs.reserve(pairsCount);
