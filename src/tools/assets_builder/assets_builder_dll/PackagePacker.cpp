@@ -1222,9 +1222,7 @@ namespace zzz::builder
 		// 2. Поиск сцен (*.zscene), вьюх (*.zview) и префабов (*.zprefab) в исходной директории
 		// Защита от дублей имён сцен (см. также AssetsBuilderEngine.ScanProjectMetaFiles в C# -
 		// там же выполняется основная, отчитывающаяся об ошибке проверка перед вызовом PackProjectNative).
-		// Здесь - "тихий" защитный фильтр на случай прямого вызова нативного упаковщика в обход C#-валидации:
-		// SceneManager::LoadSceneByName ищет сцену по имени в package.dat, и дубликат сделал бы поиск
-		// неоднозначным (m_EntriesByName молча перезаписал бы более раннюю запись более поздней).
+		// Здесь - защитный фильтр на случай прямого вызова нативного упаковщика в обход C#-валидации.
 		std::unordered_set<std::string> seenSceneNames;
 
 		std::vector<PendingDataAsset> pendingDataAssets;

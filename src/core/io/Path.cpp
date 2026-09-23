@@ -227,13 +227,13 @@ namespace zzz::core
 		}
 	}
 
-	[[nodiscard]] std::filesystem::path Path::GetDirectory(eFileLocation location) const
+	[[nodiscard]] std::expected<std::filesystem::path, std::string> Path::GetDirectory(eFileLocation location) const noexcept
 	{
 		if (location == eFileLocation::App)
 			return m_ExecutableDirectory;
 
-		ensure(!m_UserDataDirectory.empty(),
-			"Path::GetDirectory(eFileLocation): Каталог пользовательских данных не инициализирован. Вызовите InitializeUserData() перед обращением к подкаталогам.");
+		if (m_UserDataDirectory.empty())
+			return UNEXPECTED("Каталог пользовательских данных не инициализирован. Вызовите InitializeUserData() перед обращением к подкаталогам.");
 
 		switch (location)
 		{
@@ -242,7 +242,7 @@ namespace zzz::core
 		case eFileLocation::Saves: return m_UserDataDirectory / c_SavesDirectoryName;
 		case eFileLocation::Logs:  return m_UserDataDirectory / c_LogsDirectoryName;
 		default:
-			THROW_RUNTIME("Path::GetDirectory(): необработанный eFileLocation.");
+			return UNEXPECTED("Path::GetDirectory(): необработанный eFileLocation: {}.", static_cast<int>(location));
 		}
 	}
 }

@@ -14,8 +14,12 @@ namespace zzz::core
 
 	[[nodiscard]] bool FileSystemBase::FileExists(eFileLocation location, const std::filesystem::path& relativePath) const noexcept
 	{
+		auto pathRes = ResolvePhysicalPath(location, relativePath);
+		if (!pathRes)
+			return false;
+
 		std::error_code ec;
-		return std::filesystem::is_regular_file(ResolvePhysicalPath(location, relativePath), ec) && !ec;
+		return std::filesystem::is_regular_file(*pathRes, ec) && !ec;
 	}
 
 	[[nodiscard]] std::expected<std::vector<std::byte>, std::string> FileSystemBase::ReadBytes(
@@ -24,7 +28,11 @@ namespace zzz::core
 		if (size == 0)
 			return std::vector<std::byte>{};
 
-		const auto physicalPath = ResolvePhysicalPath(location, relativePath);
+		auto pathRes = ResolvePhysicalPath(location, relativePath);
+		if (!pathRes)
+			return UNEXPECTED("{}", pathRes.error());
+
+		const auto& physicalPath = *pathRes;
 
 		std::error_code ec;
 		const auto fileSize = std::filesystem::file_size(physicalPath, ec);
@@ -55,7 +63,11 @@ namespace zzz::core
 	[[nodiscard]] std::expected<std::vector<std::byte>, std::string> FileSystemBase::ReadAllBytes(
 		eFileLocation location, const std::filesystem::path& relativePath) const noexcept
 	{
-		const auto physicalPath = ResolvePhysicalPath(location, relativePath);
+		auto pathRes = ResolvePhysicalPath(location, relativePath);
+		if (!pathRes)
+			return UNEXPECTED("{}", pathRes.error());
+
+		const auto& physicalPath = *pathRes;
 
 		std::error_code ec;
 		const auto fileSize = std::filesystem::file_size(physicalPath, ec);
@@ -86,7 +98,11 @@ namespace zzz::core
 		if (relativePath.is_absolute() || relativePath.generic_string().find("..") != std::string::npos)
 			return UNEXPECTED("Недопустимый путь к файлу: выход за пределы директории запрещён");
 
-		const auto physicalPath = ResolvePhysicalPath(location, relativePath);
+		auto pathRes = ResolvePhysicalPath(location, relativePath);
+		if (!pathRes)
+			return UNEXPECTED("{}", pathRes.error());
+
+		const auto& physicalPath = *pathRes;
 
 		std::error_code ec;
 		const auto parentDir = physicalPath.parent_path();

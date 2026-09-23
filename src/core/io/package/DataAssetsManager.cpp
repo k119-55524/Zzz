@@ -85,7 +85,7 @@ namespace zzz::core
 		}
 
 		return AssetLocation{
-			.location = entry->GetFileLocation(),
+			.location = eFileLocation::App,
 			.relativePath = c_DataPackageRelativePath,
 			.offset = entry->GetOffset(),
 			.size = entry->GetSize(),

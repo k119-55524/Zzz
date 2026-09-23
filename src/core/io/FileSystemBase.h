@@ -42,9 +42,13 @@ namespace zzz::core
 		std::expected<void, std::string> WriteAllBytes(eFileLocation location, const std::filesystem::path& relativePath, std::span<const std::byte> bytes) noexcept;
 
 	protected:
-		[[nodiscard]] inline std::filesystem::path ResolvePhysicalPath(eFileLocation location, const std::filesystem::path& relativePath) const
+		[[nodiscard]] inline std::expected<std::filesystem::path, std::string> ResolvePhysicalPath(eFileLocation location, const std::filesystem::path& relativePath) const noexcept
 		{
-			return m_Path->GetDirectory(location) / relativePath;
+			auto dirRes = m_Path->GetDirectory(location);
+			if (!dirRes)
+				return std::unexpected(std::move(dirRes.error()));
+
+			return *dirRes / relativePath;
 		}
 
 		std::shared_ptr<NativeAppData> m_NativeData;

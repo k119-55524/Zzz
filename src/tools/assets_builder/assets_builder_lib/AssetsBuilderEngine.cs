@@ -158,8 +158,8 @@ public class AssetsBuilderEngine
 		var guidToFileMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 		var guidToTypeMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 		var scriptNameToGuidMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-		// Имя сцены (имя файла .zscene без расширения) должно быть уникально в проекте - SceneManager::LoadSceneByName
-		// ищет сцену по имени в package.dat, и дубликат имени сделал бы такой поиск неоднозначным.
+		// Имя сцены (имя файла .zscene без расширения) должно быть уникально в проекте
+		// для предотвращения коллизий идентификаторов сцен в редакторе и инструментах сборки.
 		var sceneNameToFileMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 		int sceneNameDuplicateErrors = 0;
 
@@ -214,15 +214,14 @@ public class AssetsBuilderEngine
 				guidToTypeMap[guid] = assetType;
 			}
 
-			// Проверка на дубликат имени сцены (имя файла .zscene без расширения - см. PackagePacker.cpp,
-			// где оно используется как PackageEntry.Name для сцены в package.dat)
+			// Проверка на дубликат имени сцены (имя файла .zscene без расширения)
 			if (assetType.Equals("scene", StringComparison.OrdinalIgnoreCase))
 			{
 				string sceneName = Path.GetFileNameWithoutExtension(file);
 				if (sceneNameToFileMap.TryGetValue(sceneName, out var existingSceneFile))
 				{
 					sceneNameDuplicateErrors++;
-					Log($"Ошибка: Обнаружен дубликат имени сцены '{sceneName}' в файлах:\n     1) {existingSceneFile}\n     2) {relativePath}\n     SceneManager::LoadSceneByName не сможет однозначно определить нужную сцену.");
+					Log($"Ошибка: Обнаружен дубликат имени сцены '{sceneName}' в файлах:\n     1) {existingSceneFile}\n     2) {relativePath}\n     Имена файлов сцен должны быть уникальными в проекте.");
 				}
 				else
 				{

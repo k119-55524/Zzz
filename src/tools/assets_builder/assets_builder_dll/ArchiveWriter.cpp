@@ -71,9 +71,7 @@ namespace zzz::builder
 				item.guid,
 				item.assetType,
 				currentOffset,
-				item.payload.size(),
-				0,
-				zzz::core::eFileLocation::App
+				item.payload.size()
 			);
 
 			currentOffset += item.payload.size();

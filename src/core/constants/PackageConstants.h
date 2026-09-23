@@ -27,7 +27,7 @@
  *        c_AssetsDirectoryName рядом с data.dat ("assets/{guid}.dat").
  *
  * 2. ЗОНА ПОЛЬЗОВАТЕЛЯ (Read-Write, AppData / Home, eFileLocation::User):
- *    - c_ConfigFileName ("user.dat", см. ConfigConstants.h): файл настроек пользователя.
+ *    - c_UserConfigFileName ("cfg.dat", см. ConfigConstants.h): файл настроек пользователя.
  *    - c_CacheDirectoryName ("cache"): временный кэш приложения.
  *    - c_SavesDirectoryName ("saves"): сохранения игрового процесса.
  *    - c_LogsDirectoryName  ("logs"): журналы работы приложения.

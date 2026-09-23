@@ -21,7 +21,7 @@ namespace zzz::core
 		Path() = delete;
 		explicit Path(std::shared_ptr<NativeAppData> nativeData = nullptr);
 
-		[[nodiscard]] std::filesystem::path GetDirectory(eFileLocation location) const;
+		[[nodiscard]] std::expected<std::filesystem::path, std::string> GetDirectory(eFileLocation location) const noexcept;
 		[[nodiscard]] static bool IsValidDirectoryName(std::string_view name) noexcept;
 
 	private:

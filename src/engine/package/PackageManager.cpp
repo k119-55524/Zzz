@@ -10,6 +10,8 @@
 
 #include "PackageManager.h"
 
+Z_SET_LOG_CATEGORY(::zzz::core::Assets);
+
 namespace zzz::engine
 {
 	PackageManager::PackageManager(std::shared_ptr<FileSystem> fileSystem)

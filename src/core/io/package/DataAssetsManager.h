@@ -41,7 +41,7 @@ namespace zzz::core
 
 	/**
 	 * @class DataAssetsManager
-	 * @brief Менеджер для чтения игровых ресурсов из архива assets/data/data.dat (меши, материалы, шейдеры, префабы).
+	 * @brief Менеджер для чтения игровых ресурсов из архива assets/data.dat (меши, материалы, шейдеры, префабы).
 	 */
 	class Z_CORE_API DataAssetsManager final
 	{
