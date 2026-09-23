@@ -1,10 +1,10 @@
-#include "qa/tests/TestsConfig.h"
+﻿#include "qa/tests/TestsConfig.h"
 
 #ifdef Z_TEST_ENGINE_NODE_STORAGE
 
 #include <gtest/gtest.h>
 #include "engine/scene/storage/NodeStorage.h"
-#include "core/io/package/GameObjectData.h"
+#include "core/io/package/assets/GameObjectData.h"
 
 using namespace zzz;
 using namespace zzz::core;

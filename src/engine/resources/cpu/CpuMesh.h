@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <span>
 #include <string>
 #include <vector>
@@ -6,7 +6,7 @@
 #include <expected>
 #include <cstddef>
 #include "engine/resources/ResourceBase.h"
-#include "core/io/package/MeshData.h"
+#include "core/io/package/assets/MeshData.h"
 #include "core/io/package/PackageEntry.h"
 #include "core/enums/eIndexFormat.h"
 #include "core/enums/eResourceType.h"

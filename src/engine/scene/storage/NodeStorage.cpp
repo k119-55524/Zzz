@@ -1,7 +1,7 @@
-
+﻿
 #include <algorithm>
 
-#include "core/io/package/GameObjectData.h"
+#include "core/io/package/assets/GameObjectData.h"
 
 #include "NodeStorage.h"
 

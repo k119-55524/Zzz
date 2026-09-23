@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file PackageConstants.h
+ * @file PackagesConstants.h
  * @brief Константы структуры хранения данных, пакетов ресурсов и файлов конфигурации.
  *
  * =========================================================================================
@@ -27,7 +27,7 @@
  *        c_AssetsDirectoryName рядом с data.dat ("assets/{guid}.dat").
  *
  * 2. ЗОНА ПОЛЬЗОВАТЕЛЯ (Read-Write, AppData / Home, eFileLocation::User):
- *    - c_UserConfigFileName ("cfg.dat", см. ConfigConstants.h): файл настроек пользователя.
+ *    - c_UserConfigFileName ("cfg.dat"): файл настроек пользователя.
  *    - c_CacheDirectoryName ("cache"): временный кэш приложения.
  *    - c_SavesDirectoryName ("saves"): сохранения игрового процесса.
  *    - c_LogsDirectoryName  ("logs"): журналы работы приложения.
@@ -39,6 +39,8 @@
 #include <cstddef>
 #include <filesystem>
 #include <string_view>
+
+#include "core/utils/Version.h"
 
 namespace zzz::core
 {
@@ -54,46 +56,26 @@ namespace zzz::core
 	inline const std::string			c_DataPackageFileName		= std::string(c_DataName) + std::string(c_DatExtension);
 	inline const std::filesystem::path	c_DataPackageRelativePath	= c_AssetsDirectoryName / c_DataPackageFileName;
 
+	inline constexpr std::string_view	c_UserConfigName			= "cfg";
+	inline const std::string			c_UserConfigFileName		= std::string(c_UserConfigName) + std::string(c_DatExtension);
+
 	inline constexpr std::string_view	c_CacheDirectoryName		= "cache";
 	inline constexpr std::string_view	c_SavesDirectoryName		= "saves";
 	inline constexpr std::string_view	c_LogsDirectoryName			= "logs";
 #pragma endregion // File and Path Names and Extensions
 
-#pragma region Game Data files constants
-	/// Сигнатура package.dat
-	constexpr std::array<std::byte, 3> c_PackageDatHeader
+#pragma region Dat File Formats (Signatures and Versions)
+	using DatMagic = std::string_view;
+	[[nodiscard]] consteval DatMagic operator""_magic(const char* str, std::size_t len) noexcept { return { str, len }; }
+	struct DatFileFormat
 	{
-		static_cast<std::byte>('Z'),
-		static_cast<std::byte>('P'),
-		static_cast<std::byte>('D')
+		DatMagic Magic;
+		Version  FormatVersion;
 	};
 
-	constexpr zU8 c_PackageDatFileMajorVersion = 1;
-	constexpr zU8 c_PackageDatFileMinorVersion = 0;
-	constexpr zU8 c_PackageDatFilePatchVersion = 0;
-
-	/// Сигнатура data.dat
-	constexpr std::array<std::byte, 3> c_DataDatHeader
-	{
-		static_cast<std::byte>('Z'),
-		static_cast<std::byte>('D'),
-		static_cast<std::byte>('D')
-	};
-
-	constexpr zU8 c_DataDatFileMajorVersion = 1;
-	constexpr zU8 c_DataDatFileMinorVersion = 0;
-	constexpr zU8 c_DataDatFilePatchVersion = 0;
-
-	/// Сигнатура внешних пакетов ассетов {guid}.dat
-	constexpr std::array<std::byte, 3> c_AssetPackageHeader
-	{
-		static_cast<std::byte>('Z'),
-		static_cast<std::byte>('A'),
-		static_cast<std::byte>('P')
-	};
-
-	constexpr zU8 c_AssetPackageFileMajorVersion = 1;
-	constexpr zU8 c_AssetPackageFileMinorVersion = 0;
-	constexpr zU8 c_AssetPackageFilePatchVersion = 0;
-#pragma endregion // Game Data files constants
+	inline constexpr DatFileFormat c_PackageDatFormat	{ "ZPD"_magic, Version(1, 0, 0) };
+	inline constexpr DatFileFormat c_DataDatFormat		{ "ZDD"_magic, Version(1, 0, 0) };
+	inline constexpr DatFileFormat c_UserConfigFormat	{ "ZUD"_magic, Version(1, 0, 0) };
+	inline constexpr DatFileFormat c_AssetPackageFormat	{ "ZAP"_magic, Version(1, 0, 0) };
+#pragma endregion
 }

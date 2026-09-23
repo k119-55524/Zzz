@@ -11,7 +11,7 @@ namespace zzz::builder
 	public:
 		// Упаковка манифеста project.json, сцен (*.zscene) и вьюх (*.zview) в destinationDir/assets/package.dat
 		// и данных (мешей/материалов/шейдеров) в destinationDir/assets/data/data.dat. Оба архива получают
-		// одно и то же время упаковки (см. DatFileHeader::GetBuildTime()); buildTimestamp - если задан (>0),
+		// одно и то же время упаковки (см. DatFileHeader::GetTimestamp()); buildTimestamp - если задан (>0),
 		// используется как единый timestamp (мс от unix epoch), иначе генерируется текущее время.
 		// outBuildTimestamp - опциональный (может быть nullptr) выходной параметр для передачи того же значения вызывающей стороне.
 		static bool PackProject(

@@ -2,8 +2,11 @@
 
 #include "core/io/FileSystem.h"
 #include "core/enums/ePackage.h"
+#include "core/io/DatFileHeader.h"
+#include "core/utils/macros/MiscMacros.h"
 #include "core/io/package/PackageEntry.h"
-#include "core/io/package/PrimaryViewData.h"
+#include "core/io/package/views/PrimaryViewData.h"
+#include "core/constants/PackagesConstants.h"
 #include "core/io/package/ProjectManifestData.h"
 
 namespace zzz::core
@@ -25,6 +28,7 @@ namespace zzz::engine
 		explicit PackageManager(std::shared_ptr<FileSystem> fileSystem);
 		~PackageManager() = default;
 
+		[[nodiscard]] const DatFileHeader& GetHeader() const noexcept { return m_Header; }
 		[[nodiscard]] const ProjectManifestData& GetProjectManifestData() const noexcept { return m_ProjectManifest; }
 		[[nodiscard]] std::expected<PrimaryViewData, std::string> GetPrimaryViewData() const;
 
@@ -71,6 +75,6 @@ namespace zzz::engine
 
 		std::shared_ptr<FileSystem> m_FileSystem;
 		ProjectManifestData m_ProjectManifest{};
-		DatFileHeader m_Header{};
+		DatFileHeader m_Header{ c_PackageDatFormat };
 	};
 }

@@ -22,11 +22,24 @@ namespace zzz::builder
 		std::vector<std::byte> payload;
 	};
 
-	[[nodiscard]] std::expected<void, std::string> WriteBinaryArchive(
+	[[nodiscard]] std::expected<void, std::string> WriteBinaryArchiveImpl(
 		const std::filesystem::path& outPath,
-		const zzz::core::DatFileHeader::Magic& magic,
-		const zzz::core::Version& version,
+		const zzz::core::ISerializable& header,
+		const std::vector<ArchiveItem>& items,
+		const zzz::core::Serializer& serializer);
+
+	[[nodiscard]] inline std::expected<void, std::string> WriteBinaryArchive(
+		const std::filesystem::path& outPath,
+		const zzz::core::DatFileFormat& format,
 		const std::vector<ArchiveItem>& items,
 		const zzz::core::Serializer& serializer,
-		uint64_t buildTime);
+		uint64_t buildTime)
+	{
+		const zzz::core::DatFileHeader header(
+			format,
+			static_cast<uint32_t>(items.size()),
+			buildTime
+		);
+		return WriteBinaryArchiveImpl(outPath, header, items, serializer);
+	}
 }

@@ -1,7 +1,7 @@
-
+﻿
 #include "core/utils/Ensure.h"
-#include "core/io/package/MeshData.h"
-#include "core/io/package/LayerData.h"
+#include "core/io/package/assets/MeshData.h"
+#include "core/io/package/scene/LayerData.h"
 #include "core/userscripts/ScriptFactory.h"
 #include "core/templates/AsyncInitTracker.h"
 #include "engine/scene/gameobject/GameObject.h"

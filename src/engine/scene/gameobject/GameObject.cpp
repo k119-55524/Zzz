@@ -1,7 +1,7 @@
-
+﻿
 #include "core/utils/Ensure.h"
 #include "engine/resources/gpu/GpuMesh.h"
-#include "core/io/package/GameObjectData.h"
+#include "core/io/package/assets/GameObjectData.h"
 #include "core/userscripts/ScriptFactory.h"
 #include "core/templates/AsyncInitTracker.h"
 #include "engine/resources/gpu/GpuMaterial.h"

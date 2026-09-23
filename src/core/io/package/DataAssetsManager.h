@@ -1,6 +1,5 @@
 #pragma once
 
-#include <functional>
 #include <string>
 #include <expected>
 #include <unordered_map>
@@ -12,6 +11,7 @@
 #include "core/enums/eResourceType.h"
 #include "core/serialize/Serializer.h"
 #include "core/io/package/PackageEntry.h"
+#include "core/constants/PackagesConstants.h"
 
 namespace zzz::core
 {
@@ -21,9 +21,26 @@ namespace zzz::core
 	 */
 	struct AssetLocation
 	{
-		eFileLocation location;
-		std::reference_wrapper<const std::filesystem::path> relativePath;
-		std::reference_wrapper<const PackageEntry> entry;
+		eFileLocation location{ eFileLocation::App };
+
+		struct PathRef
+		{
+			std::filesystem::path path;
+			[[nodiscard]] const std::filesystem::path& get() const noexcept { return path; }
+			[[nodiscard]] operator const std::filesystem::path&() const noexcept { return path; }
+		} relativePath;
+
+		std::size_t offset = 0;
+		std::size_t size = 0;
+
+		struct EntryRef
+		{
+			const PackageEntry* ptr = nullptr;
+			[[nodiscard]] const PackageEntry& operator*() const noexcept { return *ptr; }
+			[[nodiscard]] const PackageEntry* operator->() const noexcept { return ptr; }
+			[[nodiscard]] const PackageEntry& get() const noexcept { return *ptr; }
+			[[nodiscard]] operator const PackageEntry*() const noexcept { return ptr; }
+		} entry;
 	};
 
 	/**
@@ -35,8 +52,12 @@ namespace zzz::core
 	public:
 		DataAssetsManager() = delete;
 		explicit DataAssetsManager(const FileSystem& fileSystem);
+		explicit DataAssetsManager(const std::shared_ptr<FileSystem>& fileSystem)
+			: DataAssetsManager(*fileSystem)
+		{}
 		~DataAssetsManager() = default;
 
+		[[nodiscard]] const DatFileHeader& GetHeader() const noexcept { return m_Header; }
 		[[nodiscard]] std::expected<AssetLocation, std::string> GetAssetLocation(eResourceType type, const Guid& guid) const;
 
 		template <typename T>
@@ -67,6 +88,7 @@ namespace zzz::core
 		void Initialize(const FileSystem& fileSystem);
 		void LogDataEntriesSummary(const DatFileHeader& header) const;
 
+		DatFileHeader m_Header{ c_DataDatFormat };
 		std::unordered_map<Guid, PackageEntry> m_Entries;
 	};
 }

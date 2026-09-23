@@ -1,8 +1,8 @@
-
+﻿
 #include "Scene.h"
 #include "core/utils/Ensure.h"
 #include "core/utils/MemoryUtils.h"
-#include "core/io/package/SceneData.h"
+#include "core/io/package/scene/SceneData.h"
 #include "engine/package/PackageManager.h"
 #include "core/io/package/ProjectManifestData.h"
 #include "engine/resources/cpu/CpuResourceManager.h"

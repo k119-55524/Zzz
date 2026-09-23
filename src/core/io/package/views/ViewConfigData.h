@@ -7,7 +7,7 @@
 #include "core/utils/Guid.h"
 #include "core/logger/logger.h"
 #include "core/Serialize/Serializer.h"
-#include "platforms/start_view/ViewPlatformConfig.h"
+#include "core/io/package/platforms/start_view/ViewPlatformConfig.h"
 
 namespace zzz::core
 {

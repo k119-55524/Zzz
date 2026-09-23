@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <span>
 
 #include <string>
@@ -7,7 +7,7 @@
 
 #include "core/utils/Guid.h"
 #include "core/serialize/Serializer.h"
-#include "core/io/package/LayerData.h"
+#include "core/io/package/scene/LayerData.h"
 #include "core/enums/ePackage.h"
 #include "core/render/clear_config/ClearConfig.h"
 

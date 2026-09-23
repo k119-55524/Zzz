@@ -3,18 +3,16 @@
 #include <format>
 #include <core/io/DatFileHeader.h>
 #include <core/io/package/PackageEntry.h>
-#include <core/constants/PackageConstants.h>
+#include <core/constants/PackagesConstants.h>
 #include <core/utils/ThrowWrappers.h>
 
 namespace zzz::builder
 {
-	std::expected<void, std::string> WriteBinaryArchive(
+	std::expected<void, std::string> WriteBinaryArchiveImpl(
 		const std::filesystem::path& outPath,
-		const zzz::core::DatFileHeader::Magic& magic,
-		const zzz::core::Version& version,
+		const zzz::core::ISerializable& header,
 		const std::vector<ArchiveItem>& items,
-		const zzz::core::Serializer& serializer,
-		uint64_t buildTime)
+		const zzz::core::Serializer& serializer)
 	{
 		std::error_code directoryError;
 		std::filesystem::create_directories(outPath.parent_path(), directoryError);
@@ -29,14 +27,6 @@ namespace zzz::builder
 		{
 			return std::unexpected("Не удалось открыть архив для записи: " + outPath.string());
 		}
-
-		// Сериализатор сам сформирует заголовок и таблицу и сдвинет указатель на точный размер
-		zzz::core::DatFileHeader header(
-			magic,
-			version,
-			static_cast<uint32_t>(items.size()),
-			buildTime
-		);
 
 		std::vector<zzz::core::PackageEntry> tempEntries;
 		tempEntries.reserve(items.size());

@@ -1,7 +1,7 @@
 #include "BuilderApi.h"
 #include <core/Core.h>
 #include <core/io/Path.h>
-#include <core/constants/PackageConstants.h>
+#include <core/constants/PackagesConstants.h>
 #include "AssetExtensions.h"
 
 #include "PackagePacker.h"
@@ -43,26 +43,26 @@ extern "C"
 	BUILDER_API const uint8_t* GetGamePackageMagicBytes()
 	{
 		static const uint8_t magic[3] = {
-			static_cast<uint8_t>(zzz::core::c_PackageDatHeader[0]),
-			static_cast<uint8_t>(zzz::core::c_PackageDatHeader[1]),
-			static_cast<uint8_t>(zzz::core::c_PackageDatHeader[2])
+			static_cast<uint8_t>(zzz::core::c_PackageDatFormat.Magic[0]),
+			static_cast<uint8_t>(zzz::core::c_PackageDatFormat.Magic[1]),
+			static_cast<uint8_t>(zzz::core::c_PackageDatFormat.Magic[2])
 		};
 		return magic;
 	}
 
 	BUILDER_API uint32_t GetGamePackageMajorVersion()
 	{
-		return zzz::core::c_PackageDatFileMajorVersion;
+		return zzz::core::c_PackageDatFormat.FormatVersion.GetMajor();
 	}
 
 	BUILDER_API uint32_t GetGamePackageMinorVersion()
 	{
-		return zzz::core::c_PackageDatFileMinorVersion;
+		return zzz::core::c_PackageDatFormat.FormatVersion.GetMinor();
 	}
 
 	BUILDER_API uint32_t GetGamePackagePatchVersion()
 	{
-		return zzz::core::c_PackageDatFilePatchVersion;
+		return zzz::core::c_PackageDatFormat.FormatVersion.GetPatch();
 	}
 
 	BUILDER_API uint32_t GetAssetTypeProjectManifest()
@@ -109,26 +109,26 @@ extern "C"
 	BUILDER_API const uint8_t* GetDataPackageMagicBytes()
 	{
 		static const uint8_t magic[3] = {
-			static_cast<uint8_t>(zzz::core::c_DataDatHeader[0]),
-			static_cast<uint8_t>(zzz::core::c_DataDatHeader[1]),
-			static_cast<uint8_t>(zzz::core::c_DataDatHeader[2])
+			static_cast<uint8_t>(zzz::core::c_DataDatFormat.Magic[0]),
+			static_cast<uint8_t>(zzz::core::c_DataDatFormat.Magic[1]),
+			static_cast<uint8_t>(zzz::core::c_DataDatFormat.Magic[2])
 		};
 		return magic;
 	}
 
 	BUILDER_API uint32_t GetDataPackageMajorVersion()
 	{
-		return zzz::core::c_DataDatFileMajorVersion;
+		return zzz::core::c_DataDatFormat.FormatVersion.GetMajor();
 	}
 
 	BUILDER_API uint32_t GetDataPackageMinorVersion()
 	{
-		return zzz::core::c_DataDatFileMinorVersion;
+		return zzz::core::c_DataDatFormat.FormatVersion.GetMinor();
 	}
 
 	BUILDER_API uint32_t GetDataPackagePatchVersion()
 	{
-		return zzz::core::c_DataDatFilePatchVersion;
+		return zzz::core::c_DataDatFormat.FormatVersion.GetPatch();
 	}
 
 	BUILDER_API bool PackProjectNative(const char* sourceDir, const char* destinationDir, uint32_t targetPlatform, const char* platformConfigFile, uint64_t inBuildTimestamp, uint64_t* outBuildTimestamp)

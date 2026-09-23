@@ -3,7 +3,7 @@
 
 #include "core/time/Time.h"
 #include "core/events/EventBus.h"
-#include "core/constants/ConfigConstants.h"
+#include "core/constants/PackagesConstants.h"
 #include "engine/view/ViewManager.h"
 #include "core/utils/MemoryUtils.h"
 #include "engine/platforms/Platform.h"

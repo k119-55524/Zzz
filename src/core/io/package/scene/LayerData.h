@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <string>
 #include <vector>
@@ -8,7 +8,7 @@
 #include "core/utils/Guid.h"
 #include "core/serialize/Serializer.h"
 #include "core/enums/eLayerType.h"
-#include "core/io/package/GameObjectData.h"
+#include "core/io/package/assets/GameObjectData.h"
 
 namespace zzz::core
 {

@@ -1,9 +1,9 @@
-#pragma once
+﻿#pragma once
 
 #include <string>
 #include <string_view>
 #include "core/Serialize/Serializer.h"
-#include "core/IO/package/PrimaryViewData.h"
+#include "core/io/package/views/PrimaryViewData.h"
 
 namespace zzz::core
 {

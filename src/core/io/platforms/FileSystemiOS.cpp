@@ -3,6 +3,7 @@
 #if defined(Z_IOS)
 
 #include "FileSystemiOS.h"
+#include "core/utils/macros/MiscMacros.h"
 
 namespace zzz::core
 {

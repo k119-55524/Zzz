@@ -1,4 +1,4 @@
-#include "qa/tests/TestsConfig.h"
+﻿#include "qa/tests/TestsConfig.h"
 
 #ifdef Z_TEST_CORE_SERIALIZATION
 
@@ -80,9 +80,9 @@ TEST(SerializationTest, VectorsPoint2DSize2DRect2D)
 	EXPECT_EQ(offset, buffer.size());
 }
 
-#include "core/io/package/MeshData.h"
+#include "core/io/package/assets/MeshData.h"
 #include "core/io/package/DataAssetsManager.h"
-#include "core/io/package/SceneData.h"
+#include "core/io/package/scene/SceneData.h"
 #include "engine/package/PackageManager.h"
 #include "core/io/FileSystem.h"
 #include "core/utils/MemoryUtils.h"
@@ -124,12 +124,20 @@ TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
 	}
 	ASSERT_NE(hDll, nullptr) << "Не удалось загрузить assets_builder_dll.dll";
 
-	using PackFn = bool (*)(const char*, const char*, uint32_t);
+	using PackFn = bool (*)(const char*, const char*, uint32_t, const char*, uint64_t, uint64_t*);
 	auto packProject = reinterpret_cast<PackFn>(GetProcAddress(hDll, "PackProjectNative"));
 	ASSERT_NE(packProject, nullptr) << "Не найдена функция PackProjectNative";
 
-	// Собираем пакет в dist/Debug
-	bool ok = packProject("src/projects/assets_projects/zzz_assets_test_000", "dist/Debug", 0);
+	std::string srcDir = "src/projects/assets_projects/zzz_assets_test_000";
+	std::string dstDir = "dist/Debug";
+	if (!std::filesystem::exists(srcDir))
+	{
+		srcDir = "../../../" + srcDir;
+		dstDir = "../../../" + dstDir;
+	}
+
+	// Собираем пакет
+	bool ok = packProject(srcDir.c_str(), dstDir.c_str(), 0, nullptr, 0, nullptr);
 	EXPECT_TRUE(ok);
 
 	FreeLibrary(hDll);

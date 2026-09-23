@@ -1,9 +1,9 @@
-#include "ObjImporter.h"
+﻿#include "ObjImporter.h"
 #include <sstream>
 #include <vector>
 #include <unordered_map>
 #include <cstring>
-#include "core/io/package/MeshData.h"
+#include "core/io/package/assets/MeshData.h"
 #include "core/serialize/Serializer.h"
 #include "math/geometry/Vertex3D.h"
 #include "math/vector/Vec2.h"

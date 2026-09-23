@@ -14,11 +14,11 @@ namespace zzz::core
 	 */
 	enum class eFileLocation : zU8
 	{
-		App = 0,    ///< Ресурсы приложения / папка установки игры (Read-Only на Android/iOS, Read/Write в папке .exe на ПК)
-		User,       ///< Пользовательские данные / конфиги (Read-Write: LOCALAPPDATA / internalDataPath)
-		Saves,      ///< Папка сохранений игры (Read-Write)
-		Cache,      ///< Папка временного кэша (Read-Write)
-		Logs        ///< Папка лог-файлов (Read-Write)
+		App = 0,	///< Ресурсы приложения / папка установки игры (Read-Only на Android/iOS, Read/Write в папке .exe на ПК)
+		User,		///< Пользовательские данные / конфиги (Read-Write: LOCALAPPDATA / internalDataPath)
+		Saves,		///< Папка сохранений игры (Read-Write)
+		Cache,		///< Папка временного кэша (Read-Write)
+		Logs		///< Папка лог-файлов (Read-Write)
 	};
 
 	constexpr std::string_view ToString(eFileLocation location)
@@ -32,20 +32,5 @@ namespace zzz::core
 		case eFileLocation::Logs:  return "Logs";
 		}
 		THROW_RUNTIME("Необработанный eFileLocation");
-	}
-
-	[[nodiscard]] constexpr bool IsLocationWritable(eFileLocation location) noexcept
-	{
-		switch (location)
-		{
-		case eFileLocation::User:
-		case eFileLocation::Saves:
-		case eFileLocation::Cache:
-		case eFileLocation::Logs:
-			return true;
-		case eFileLocation::App:
-		default:
-			return false;
-		}
 	}
 }

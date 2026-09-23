@@ -1,13 +1,13 @@
-
+﻿
 #include "engine/view/View.h"
 #include "engine/view/ViewManager.h"
 #include "engine/scene/Scene.h"
 #include "engine/scene/SceneManager.h"
 #include "engine/platforms/Platform.h"
 #include "engine/package/PackageManager.h"
-#include "core/io/package/ChildViewData.h"
+#include "core/io/package/views/ChildViewData.h"
 #include "engine/package/UserSettingsManager.h"
-#include "core/io/package/IndependentViewData.h"
+#include "core/io/package/views/IndependentViewData.h"
 #include "engine/platforms/monitor/IMonitorProvider.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Window);

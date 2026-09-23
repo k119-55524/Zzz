@@ -14,6 +14,7 @@
 #include "core/utils/Ensure.h"
 #include "core/logger/logger.h"
 #include "core/serialize/Serializer.h"
+#include "core/utils/macros/MiscMacros.h"
 
 namespace zzz::core
 {

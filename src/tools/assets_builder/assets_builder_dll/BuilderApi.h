@@ -30,7 +30,7 @@ extern "C"
 
 	/**
 	 * @brief Упаковывает проект в package.dat/data.dat. Оба архива получают одно и то же время упаковки
-	 * (см. DatFileHeader::GetBuildTime()).
+	 * (см. DatFileHeader::GetTimestamp()).
 	 * @param inBuildTimestamp Если > 0, используется как единый timestamp (мс от unix epoch) для архивов,
 	 *        чтобы совпадать с buildtime-data.txt и assets_config.json. Если 0, генерируется автоматически.
 	 * @param outBuildTimestamp Необязательный (может быть nullptr) выходной параметр - unix-время (мс),

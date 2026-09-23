@@ -16,20 +16,21 @@
 #include "AssetImportPipeline.h"
 #include "core/enums/eLayerType.h"
 #include "core/io/DatFileHeader.h"
+#include "core/constants/PackagesConstants.h"
 #include "AssetImporterRegistry.h"
-#include "core/IO/package/MeshData.h"
-#include "core/IO/package/LayerData.h"
-#include "core/IO/package/SceneData.h"
+#include "core/io/package/assets/MeshData.h"
+#include "core/io/package/scene/LayerData.h"
+#include "core/io/package/scene/SceneData.h"
 #include "ProjectIdentityValidator.h"
-#include "core/IO/package/PrefabData.h"
+#include "core/io/package/assets/PrefabData.h"
 #include "core/IO/package/PackageEntry.h"
 #include "core/utils/macros/LogMacros.h"
-#include "core/IO/package/ChildViewData.h"
-#include "core/IO/package/GameObjectData.h"
-#include "core/IO/package/PrimaryViewData.h"
-#include "core/constants/PackageConstants.h"
+#include "core/io/package/views/ChildViewData.h"
+#include "core/io/package/assets/GameObjectData.h"
+#include "core/io/package/views/PrimaryViewData.h"
+#include "core/constants/PackagesConstants.h"
 #include "core/IO/package/ProjectManifestData.h"
-#include "core/IO/package/IndependentViewData.h"
+#include "core/io/package/views/IndependentViewData.h"
 #include "core/IO/package/platforms/start_view/ViewDataiOS.h"
 #include "core/IO/package/platforms/start_view/ViewDataLinux.h"
 #include "core/IO/package/platforms/start_view/ViewDataMacOS.h"
@@ -1431,8 +1432,7 @@ namespace zzz::builder
 
 		auto packageWriteRes = WriteBinaryArchive(
 			packageTmpPath,
-			c_PackageDatHeader,
-			Version{ c_PackageDatFileMajorVersion, c_PackageDatFileMinorVersion, c_PackageDatFilePatchVersion },
+			zzz::core::c_PackageDatFormat,
 			packageItems,
 			serializer,
 			buildTimestamp);
@@ -1465,8 +1465,7 @@ namespace zzz::builder
 
 		auto dataWriteRes = WriteBinaryArchive(
 			dataTmpPath,
-			c_DataDatHeader,
-			Version{ c_DataDatFileMajorVersion, c_DataDatFileMinorVersion, c_DataDatFilePatchVersion },
+			zzz::core::c_DataDatFormat,
 			dataItems,
 			serializer,
 			buildTimestamp);

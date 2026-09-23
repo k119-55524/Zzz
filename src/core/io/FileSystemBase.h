@@ -42,6 +42,20 @@ namespace zzz::core
 		[[nodiscard]] std::expected<std::vector<std::byte>, std::string> ReadBytes(eFileLocation location, const std::filesystem::path& relativePath, std::size_t offset, std::size_t size) const noexcept;
 		[[nodiscard]] std::expected<std::vector<std::byte>, std::string> ReadAllBytes(eFileLocation location, const std::filesystem::path& relativePath) const noexcept;
 		std::expected<void, std::string> WriteAllBytes(eFileLocation location, const std::filesystem::path& relativePath, std::span<const std::byte> bytes) noexcept;
+		[[nodiscard]] static constexpr bool IsLocationWritable(eFileLocation location) noexcept
+		{
+			switch (location)
+			{
+			case eFileLocation::User:
+			case eFileLocation::Saves:
+			case eFileLocation::Cache:
+			case eFileLocation::Logs:
+				return true;
+			case eFileLocation::App:
+			default:
+				return false;
+			}
+		}
 
 	protected:
 		[[nodiscard]] inline std::expected<std::filesystem::path, std::string> ResolvePhysicalPath(eFileLocation location, const std::filesystem::path& relativePath) const noexcept

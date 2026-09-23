@@ -1,10 +1,10 @@
-#pragma once
+﻿#pragma once
 
 #include "engine/gapi/SurfView.h"
 #include "../platforms/Platform.h"
 #include "../platforms/input/Input.h"
 #include "engine/renderer/RenderManager.h"
-#include "core/io/package/ViewConfigData.h"
+#include "core/io/package/views/ViewConfigData.h"
 #include "../platforms/window/NativeWindow.h"
 
 using namespace zzz::core;

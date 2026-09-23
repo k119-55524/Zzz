@@ -1,6 +1,6 @@
-#include <format>
+﻿#include <format>
 #include "core/io/package/DataAssetsManager.h"
-#include "core/io/package/MaterialData.h"
+#include "core/io/package/assets/MaterialData.h"
 #include "core/utils/MemoryUtils.h"
 #include "CpuMaterial.h"
 

@@ -1,30 +1,26 @@
-
 #include <chrono>
 
-#include "PackageManager.h"
 #include "engine/view/View.h"
 #include "core/utils/Ensure.h"
 #include "UserSettingsManager.h"
-#include "core/io/package/ViewUserData.h"
-#include "core/constants/ConfigConstants.h"
+#include "core/io/package/views/ViewUserData.h"
+#include "core/constants/PackagesConstants.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Assets);
 
 using namespace zzz::core;
-using zzz::core::PrimaryViewUserData;
 
 namespace zzz::engine
 {
 	UserSettingsManager::UserSettingsManager(std::shared_ptr<FileSystem> fileSystem) :
 		m_FileSystem{ std::move(fileSystem) },
-		m_Header(c_UserConfigHeader, Version(c_UserConfigFileMajorVersion, c_UserConfigFileMinorVersion, c_UserConfigFilePatchVersion), 0, 0),
-		m_IsDirty(true)
+		m_Header{},
+		m_IsDirty{ true }
 	{
 		ensure(m_FileSystem, "FileSystem не должен быть null при создании UserSettingsManager.");
 #if Z_EDITOR
 #else
 		Initialize();
-		ApplyLogCategorySettings();
 		LogUserData();
 #endif
 	}
@@ -46,10 +42,6 @@ namespace zzz::engine
 				DOutWarning("Не удалось загрузить файл конфигурации: {}. Создаётся конфигурация по умолчанию.", res.error());
 				SetDefaultUserSettings();
 			}
-			else
-			{
-				m_IsFirstRun = false;
-			}
 		}
 		catch (const std::exception& e)
 		{
@@ -69,7 +61,7 @@ namespace zzz::engine
 
 	void UserSettingsManager::SetDefaultUserSettings()
 	{
-		m_Header = DatFileHeader(c_UserConfigHeader, Version(c_UserConfigFileMajorVersion, c_UserConfigFileMinorVersion, c_UserConfigFilePatchVersion), 0, 0);
+		m_Header = DatFileHeader{ c_UserConfigFormat };
 		m_PrimaryViewUserData.reset();
 	}
 
@@ -84,37 +76,6 @@ namespace zzz::engine
 		{
 			m_SelectedGpuId = std::move(gpuId);
 			m_IsDirty = true;
-		}
-	}
-
-	bool UserSettingsManager::IsLogCategoryDisabled(std::string_view categoryName) const
-	{
-		return m_DisabledLogCategories.contains(std::string(categoryName));
-	}
-
-	void UserSettingsManager::SetLogCategoryEnabled(std::string_view categoryName, bool enabled)
-	{
-		if (enabled)
-		{
-			if (m_DisabledLogCategories.erase(std::string(categoryName)) > 0)
-				m_IsDirty = true;
-		}
-		else
-		{
-			auto [it, inserted] = m_DisabledLogCategories.insert(std::string(categoryName));
-			(void)it;
-			if (inserted)
-				m_IsDirty = true;
-		}
-
-		zzz::logger::g_Logger.SetCategoryEnabled(categoryName, enabled);
-	}
-
-	void UserSettingsManager::ApplyLogCategorySettings() const
-	{
-		for (const auto& name : m_DisabledLogCategories)
-		{
-			zzz::logger::g_Logger.SetCategoryEnabled(name, false);
 		}
 	}
 
@@ -155,7 +116,7 @@ namespace zzz::engine
 		// пересборка через конструктор с сохранением остальных полей заголовка без изменений.
 		auto withTimestamp = [&](zU64 timestamp)
 		{
-			m_Header = DatFileHeader(m_Header.GetMagic(), m_Header.GetVersion(), m_Header.GetEntryCount(), timestamp);
+			m_Header = DatFileHeader(c_UserConfigFormat, m_Header.GetEntryCount(), timestamp);
 		};
 
 		withTimestamp(saveTime);
@@ -279,18 +240,6 @@ namespace zzz::engine
 		return &it->second.GetPlatformDataRef();
 	}
 
-	void UserSettingsManager::RemoveChildViewUserData(const Guid& guid)
-	{
-		if (m_ChildViewsUserData.erase(guid) > 0)
-			m_IsDirty = true;
-	}
-
-	void UserSettingsManager::RemoveIndependentViewUserData(const Guid& guid)
-	{
-		if (m_IndependentViewsUserData.erase(guid) > 0)
-			m_IsDirty = true;
-	}
-
 	void UserSettingsManager::StoreViewState(const View& view)
 	{
 		const ViewWindowState viewState = view.GetState();
@@ -385,39 +334,12 @@ namespace zzz::engine
 				return res;
 		}
 
-		auto resGpu = s.Serialize(buffer, m_SelectedGpuId);
-		if (!resGpu)
-			return resGpu;
-
-		zU32 disabledCatCount = static_cast<zU32>(m_DisabledLogCategories.size());
-		auto resCount = s.Serialize(buffer, disabledCatCount);
-		if (!resCount)
-			return resCount;
-
-		for (const auto& name : m_DisabledLogCategories)
-		{
-			auto resName = s.Serialize(buffer, name);
-			if (!resName)
-				return resName;
-		}
-
-		return {};
+		return s.Serialize(buffer, m_SelectedGpuId);
 	}
 
 	[[nodiscard]] std::expected<void, std::string> UserSettingsManager::Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s)
 	{
-		DatFileHeader header;
-
-		auto res = s.Deserialize(buffer, offset, header)
-			.and_then([&]() -> std::expected<void, std::string>
-				{
-					auto valRes = header.Validate(c_UserConfigHeader, c_UserConfigFileMajorVersion);
-					if (!valRes)
-						return UNEXPECTED("Некорректный заголовок конфигурации: {}", valRes.error());
-
-					m_Header = header;
-					return {};
-				})
+		auto res = s.Deserialize(buffer, offset, m_Header)
 			.and_then([&]() -> std::expected<void, std::string> {
 				bool hasPrimary = false;
 				auto resP = s.Deserialize(buffer, offset, hasPrimary);
@@ -473,26 +395,7 @@ namespace zzz::engine
 			m_IndependentViewsUserData.emplace(std::move(guid), std::move(item));
 		}
 
-		auto resGpu = s.Deserialize(buffer, offset, m_SelectedGpuId);
-		if (!resGpu)
-			return resGpu;
-
-		m_DisabledLogCategories.clear();
-		zU32 disabledCatCount = 0;
-		auto resCount = s.Deserialize(buffer, offset, disabledCatCount);
-		if (!resCount)
-			return resCount;
-
-		for (zU32 i = 0; i < disabledCatCount; ++i)
-		{
-			std::string name;
-			auto resName = s.Deserialize(buffer, offset, name);
-			if (!resName)
-				return resName;
-			m_DisabledLogCategories.insert(std::move(name));
-		}
-
-		return {};
+		return s.Deserialize(buffer, offset, m_SelectedGpuId);
 	}
 
 #pragma region Logging

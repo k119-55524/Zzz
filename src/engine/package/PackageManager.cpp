@@ -1,17 +1,29 @@
+
+#include "core/utils/Ensure.h"
 #include "core/utils/SafeRange.h"
 #include "core/io/DatFileHeader.h"
-#include "core/io/package/ArchiveTableReader.h"
-#include "core/io/package/SceneData.h"
-#include "core/io/package/PrefabData.h"
-#include "core/constants/PackageConstants.h"
-#include "core/io/package/ChildViewData.h"
-#include "core/io/package/PrimaryViewData.h"
+#include "core/io/package/scene/SceneData.h"
+#include "core/io/package/assets/PrefabData.h"
+#include "core/io/package/views/ChildViewData.h"
+#include "core/io/package/views/PrimaryViewData.h"
+#include "core/constants/PackagesConstants.h"
 #include "core/io/package/ProjectManifestData.h"
-#include "core/io/package/IndependentViewData.h"
+#include "core/io/package/views/IndependentViewData.h"
 
 #include "PackageManager.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Assets);
+
+namespace
+{
+	[[nodiscard]] constexpr bool IsPackageArchiveType(zU32 assetType) noexcept
+	{
+		return assetType >= static_cast<zU32>(::zzz::core::ePackage::ProjectManifest) &&
+			assetType <= static_cast<zU32>(::zzz::core::ePackage::Prefab);
+	}
+}
+
+using namespace zzz::core;
 
 namespace zzz::engine
 {
@@ -24,49 +36,96 @@ namespace zzz::engine
 
 	void PackageManager::Initialize()
 	{
-		auto tableRes = ReadArchiveTable(
-			*m_FileSystem,
-			eFileLocation::App,
-			c_GamePackageRelativePath,
-			c_PackageDatHeader,
-			c_PackageDatFileMajorVersion,
-			[](zU32 assetType) noexcept
-			{
-				return assetType >= static_cast<zU32>(ePackage::ProjectManifest) &&
-					assetType <= static_cast<zU32>(ePackage::Prefab);
-			});
-		if (!tableRes)
-			THROW_RUNTIME("Ошибка загрузки пакета '{}': {}", c_GamePackageRelativePath.generic_string(), tableRes.error());
+		const std::string pathStr = c_GamePackageRelativePath.generic_string();
 
-		m_Header = tableRes->header;
+		auto fileSizeRes = m_FileSystem->GetFileSize(eFileLocation::App, c_GamePackageRelativePath);
+		if (!fileSizeRes)
+			THROW_RUNTIME("Ошибка получения размера пакета '{}': {}", pathStr, fileSizeRes.error());
+
+		const std::uintmax_t fileSize = *fileSizeRes;
+
+		auto headerBytesRes = m_FileSystem->ReadBytes(eFileLocation::App, c_GamePackageRelativePath, 0, m_Header.c_BaseHeaderSize);
+		if (!headerBytesRes)
+			THROW_RUNTIME("Ошибка чтения заголовка пакета '{}': {}", pathStr, headerBytesRes.error());
+
+		if (auto res = m_Header.DeserializeAndValidate(*headerBytesRes, fileSize); !res)
+			THROW_RUNTIME("Ошибка заголовка пакета '{}': {}", pathStr, res.error());
+
+		const std::size_t headerSize = m_Header.GetHeaderSize();
+
 		m_EntriesByGuid.clear();
 		m_SceneGuidsByName.clear();
-
-		for (const auto& entry : tableRes->entries)
+		const zU32 entryCount = m_Header.GetEntryCount();
+		if (entryCount > 0)
 		{
-			m_EntriesByGuid[static_cast<ePackage>(entry.GetAssetType())].emplace(entry.GetGuid(), entry);
+			const auto tableSize = CheckedMul<std::size_t>(entryCount, PackageEntry::BinarySize());
+			if (!tableSize)
+				THROW_RUNTIME("Размер таблицы записей пакета '{}' переполняет std::size_t (записей: {})", pathStr, entryCount);
+
+			const std::uintmax_t payloadBegin = headerSize + static_cast<std::uintmax_t>(*tableSize);
+			if (!IsRangeInside<std::uintmax_t>(headerSize, *tableSize, fileSize))
+				THROW_RUNTIME("Таблица записей пакета '{}' выходит за границы файла: {} > {}", pathStr, payloadBegin, fileSize);
+
+			auto tableBufferRes = m_FileSystem->ReadBytes(eFileLocation::App, c_GamePackageRelativePath, headerSize, *tableSize);
+			if (!tableBufferRes)
+				THROW_RUNTIME("Ошибка чтения таблицы записей пакета '{}': {}", pathStr, tableBufferRes.error());
+
+			const std::uintmax_t payloadSize = fileSize - payloadBegin;
+			std::size_t tableOffset = 0;
+			Serializer serializer;
+
+			for (zU32 i = 0; i < entryCount; ++i)
+			{
+				PackageEntry entry{};
+				if (auto res = serializer.Deserialize(*tableBufferRes, tableOffset, entry); !res)
+					THROW_RUNTIME("Ошибка десериализации записи #{} пакета '{}': {}", i, pathStr, res.error());
+
+				if (!IsPackageArchiveType(entry.GetAssetType()))
+					THROW_RUNTIME("Запись #{} пакета '{}' содержит недопустимый тип ресурса: {}", i, pathStr, entry.GetAssetType());
+
+				const std::uintmax_t entryOffset = entry.GetOffset();
+				const std::uintmax_t entrySize = entry.GetSize();
+				if (entryOffset < payloadBegin || !IsRangeInside<std::uintmax_t>(entryOffset - payloadBegin, entrySize, payloadSize))
+				{
+					THROW_RUNTIME("Запись #{} пакета '{}' содержит недопустимый диапазон (offset={}, size={}) при границах данных [{}, {})",
+						i, pathStr, entryOffset, entrySize, payloadBegin, fileSize);
+				}
+
+#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
+				ensure(entry.GetGuid().IsValid(), "Запись пакета #{} содержит невалидный GUID.", i);
+				auto pkgType = static_cast<ePackage>(entry.GetAssetType());
+				if (auto it = m_EntriesByGuid.find(pkgType); it != m_EntriesByGuid.end())
+				{
+					ensure(!it->second.contains(entry.GetGuid()),
+						"Обнаружен дубликат GUID={} для типа {} в пакете '{}'",
+						entry.GetGuid().ToString(), static_cast<zU32>(pkgType), pathStr);
+				}
+#endif
+
+				m_EntriesByGuid[static_cast<ePackage>(entry.GetAssetType())].emplace(entry.GetGuid(), entry);
+			}
 		}
 
 		auto primaryViewIt = m_EntriesByGuid.find(ePackage::PrimaryView);
 		if (primaryViewIt == m_EntriesByGuid.end() || primaryViewIt->second.empty())
-			THROW_RUNTIME("Ошибка пакета '{}': Обязательный ресурс PrimaryViewData отсутствует.", c_GamePackageRelativePath.generic_string());
+			THROW_RUNTIME("Ошибка пакета '{}': Обязательный ресурс PrimaryViewData отсутствует.", pathStr);
 
 		if (primaryViewIt->second.size() > 1)
-			THROW_RUNTIME("Ошибка пакета '{}': Ресурс PrimaryViewData не уникален (найдено {} штук).", c_GamePackageRelativePath.generic_string(), primaryViewIt->second.size());
+			THROW_RUNTIME("Ошибка пакета '{}': Ресурс PrimaryViewData не уникален (найдено {} штук).", pathStr, primaryViewIt->second.size());
 
 		auto manifestIt = m_EntriesByGuid.find(ePackage::ProjectManifest);
 		if (manifestIt == m_EntriesByGuid.end() || manifestIt->second.empty())
-			THROW_RUNTIME("Ошибка пакета '{}': Обязательный ресурс ProjectManifestData отсутствует.", c_GamePackageRelativePath.generic_string());
+			THROW_RUNTIME("Ошибка пакета '{}': Обязательный ресурс ProjectManifestData отсутствует.", pathStr);
 
 		if (manifestIt->second.size() > 1)
-			THROW_RUNTIME("Ошибка пакета '{}': Ресурс ProjectManifestData не уникален (найдено {} штук).", c_GamePackageRelativePath.generic_string(), manifestIt->second.size());
+			THROW_RUNTIME("Ошибка пакета '{}': Ресурс ProjectManifestData не уникален (найдено {} штук).", pathStr, manifestIt->second.size());
 
 		auto manifestRes = DeserializeEntry<ProjectManifestData>(manifestIt->second.begin()->second);
 		if (!manifestRes)
-			THROW_RUNTIME("Ошибка десериализации ProjectManifestData из пакета '{}': {}", c_GamePackageRelativePath.generic_string(), manifestRes.error());
+			THROW_RUNTIME("Ошибка десериализации ProjectManifestData из пакета '{}': {}", pathStr, manifestRes.error());
 
 		if (manifestRes->GetCompanyName().empty() || manifestRes->GetAppName().empty())
-			THROW_RUNTIME("Ошибка пакета '{}': ProjectManifestData не содержит имя компании и/или приложения.", c_GamePackageRelativePath.generic_string());
+			THROW_RUNTIME("Ошибка пакета '{}': ProjectManifestData не содержит имя компании и/или приложения.", pathStr);
 
 		m_CompanyName = manifestRes->GetCompanyName();
 		m_AppName = manifestRes->GetAppName();
@@ -74,6 +133,18 @@ namespace zzz::engine
 
 		for (const auto& sceneEntry : m_ProjectManifest.GetScenes())
 		{
+#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
+			// Проверка на дубликаты имен сцен в манифесте проекта
+			if (auto it = m_SceneGuidsByName.find(sceneEntry.GetName()); it != m_SceneGuidsByName.end())
+			{
+				ensure(false,
+					"Обнаружен дубликат имени сцены '{}' в манифесте проекта package.dat (существующий GUID={}, дублирующий GUID={})!",
+					sceneEntry.GetName(),
+					it->second.ToString(),
+					sceneEntry.GetGuid().ToString());
+			}
+#endif
+
 			m_SceneGuidsByName.emplace(sceneEntry.GetName(), sceneEntry.GetGuid());
 		}
 

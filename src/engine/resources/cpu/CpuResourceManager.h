@@ -241,8 +241,8 @@ namespace zzz::engine
 		TaskDispatcher& m_TaskDispatcher;
 		std::shared_ptr<DataAssetsManager> m_DataAssetsManager;
 		std::shared_ptr<FileSystem> m_FileSystem;
-		std::atomic<bool> m_IsStopping{false};
-		size_t m_ActiveIoTasks{0};
+		std::atomic<bool> m_IsStopping;
+		size_t m_ActiveIoTasks;
 		std::mutex m_ShutdownMutex;
 		std::condition_variable m_ShutdownCv;
 	};

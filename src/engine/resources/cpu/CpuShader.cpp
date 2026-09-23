@@ -1,6 +1,6 @@
-#include <format>
+﻿#include <format>
 #include "core/io/package/DataAssetsManager.h"
-#include "core/io/package/ShaderData.h"
+#include "core/io/package/assets/ShaderData.h"
 #include "core/utils/MemoryUtils.h"
 #include "CpuShader.h"
 

@@ -1,6 +1,7 @@
 #include "Serializer.h"
 #include "math/utils/Types.h"
 #include "core/logger/logger.h"
+#include "core/utils/macros/MiscMacros.h"
 
 using namespace zzz::core;
 

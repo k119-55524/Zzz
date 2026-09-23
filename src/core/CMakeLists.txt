@@ -13,9 +13,8 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/Core.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/NativeAppData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Export.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/constants/ConfigConstants.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/constants/PackagesConstants.h
         ${CMAKE_CURRENT_SOURCE_DIR}/constants/DisplayConstants.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/constants/PackageConstants.h
         ${CMAKE_CURRENT_SOURCE_DIR}/constants/GAPIConstants.h
         ${CMAKE_CURRENT_SOURCE_DIR}/constants/NetworkConstants.h
         ${CMAKE_CURRENT_SOURCE_DIR}/constants/LogCategoryConstants.h
@@ -139,17 +138,27 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/io/platforms/FileSystemiOS.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/platforms/FileSystemiOS.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/PackageEntry.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/ArchiveTableReader.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/ArchiveTableReader.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/MeshData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/MeshData.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/MaterialData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/MaterialData.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/ShaderData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/ShaderData.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/DataAssetsManager.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/DataAssetsManager.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/PrimaryViewData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/ProjectManifestData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/assets/MeshData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/assets/MeshData.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/assets/MaterialData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/assets/MaterialData.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/assets/ShaderData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/assets/ShaderData.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/assets/PrefabData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/assets/GameObjectData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/assets/GameObjectData.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/views/PrimaryViewData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/views/ChildViewData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/views/IndependentViewData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/views/ViewConfigData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/views/ViewUserData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/views/PrimaryViewUserData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/scene/SceneData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/scene/LayerData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/scene/LayerData.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/platforms/project/ProjectPlatformConfig.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/platforms/project/ProjectPlatformDataMSWin.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/platforms/project/ProjectPlatformDataAndroid.h
@@ -162,21 +171,9 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/platforms/start_view/ViewDataiOS.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/platforms/start_view/ViewDataLinux.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/platforms/start_view/ViewDataMacOS.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/PrimaryViewUserData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/ViewUserData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/ViewConfigData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/ChildViewData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/IndependentViewData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/ProjectManifestData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/SceneData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/render/clear_config/ClearConfig.h
         ${CMAKE_CURRENT_SOURCE_DIR}/render/clear_config/DepthBufferClearConfig.h
         ${CMAKE_CURRENT_SOURCE_DIR}/render/clear_config/SurfaceClearConfig.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/GameObjectData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/GameObjectData.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/LayerData.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/LayerData.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/PrefabData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/serialize/Serializer.h
         ${CMAKE_CURRENT_SOURCE_DIR}/serialize/Serializer.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/pch/pch.h
