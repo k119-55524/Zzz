@@ -2,33 +2,56 @@
 
 #include <span>
 #include <string>
-#include <memory>
 #include <expected>
 
 #include "core/utils/Guid.h"
 #include "core/utils/Export.h"
-#include "core/io/storage/FileSystem.h"
 #include "core/enums/eResourceType.h"
 #include "core/serialize/Serializer.h"
 #include "core/io/package/PackageEntry.h"
-#include "core/io/package/PackageArchive.h"
+#include "core/io/package/ArchiveReaderBase.h"
 
 namespace zzz::core
 {
+	[[nodiscard]] constexpr bool IsDataArchiveResourceType(eResourceType resType) noexcept
+	{
+		switch (resType)
+		{
+		case eResourceType::Prefab:
+		case eResourceType::Mesh:
+		case eResourceType::Material:
+		case eResourceType::Shader:
+		case eResourceType::Animation:
+		case eResourceType::Texture2D:
+		case eResourceType::AudioClip:
+		case eResourceType::Video:
+		case eResourceType::Font:
+		case eResourceType::BinaryData:
+			return true;
+		default:
+			return false;
+		}
+	}
+
 	/**
 	 * @class DataAssetsManager
 	 * @brief Менеджер для чтения игровых ресурсов из архива data.dat.
 	 */
-	class Z_CORE_API DataAssetsManager final : public PackageArchive<eResourceType>
+	class Z_CORE_API DataAssetsManager final : public ArchiveReaderBase<eResourceType>
 	{
 	public:
 		DataAssetsManager() = delete;
-		explicit DataAssetsManager(std::shared_ptr<FileSystem> fileSystem);
+		explicit DataAssetsManager(const std::filesystem::path& physicalPath);
 		~DataAssetsManager() override = default;
 
 		template <typename T>
 		[[nodiscard]] std::expected<T, std::string> LoadAsset(const Guid& guid) const
 		{
+			static_assert(requires { { T::c_ResourceType } -> std::convertible_to<eResourceType>; },
+				"T must define static constexpr eResourceType c_ResourceType");
+			static_assert(IsDataArchiveResourceType(T::c_ResourceType),
+				"Asset type is not allowed in data.dat");
+
 			constexpr eResourceType type = T::c_ResourceType;
 			const auto* entry = GetEntry(type, guid);
 			if (!entry)
@@ -38,7 +61,7 @@ namespace zzz::core
 			if (!payloadRes)
 				return UNEXPECTED("{}", payloadRes.error());
 
-			return DeserializeAssetFromMemory<T>(*entry, payloadRes->GetSpan());
+			return DeserializeAssetFromMemory<T>(*entry, *payloadRes);
 		}
 
 		template <typename T>

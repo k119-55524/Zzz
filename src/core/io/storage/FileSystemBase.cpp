@@ -1,5 +1,6 @@
 #include "FileSystemBase.h"
 #include "logger.h"
+#include "core/constants/PackagesConstants.h"
 #include "core/utils/macros/MiscMacros.h"
 
 #include <system_error>
@@ -93,6 +94,24 @@ namespace zzz::core
 			return std::unexpected(std::move(dirRes.error()));
 
 		return *dirRes / relativePath;
+	}
+
+	[[nodiscard]] std::expected<std::filesystem::path, std::string> FileSystemBase::GetDirectory(eFileLocation location) const noexcept
+	{
+		if (!m_Path)
+			return UNEXPECTED("Подсистема Path не инициализирована в FileSystemBase.");
+
+		return m_Path->GetDirectory(location);
+	}
+
+	[[nodiscard]] std::expected<std::filesystem::path, std::string> FileSystemBase::GetGamePackagePath() const noexcept
+	{
+		return ResolvePhysicalPath(eFileLocation::App, c_GamePackageRelativePath);
+	}
+
+	[[nodiscard]] std::expected<std::filesystem::path, std::string> FileSystemBase::GetDataPackagePath() const noexcept
+	{
+		return ResolvePhysicalPath(eFileLocation::App, c_DataPackageRelativePath);
 	}
 
 	[[nodiscard]] std::expected<void, std::string> FileSystemBase::InitializeUserData(

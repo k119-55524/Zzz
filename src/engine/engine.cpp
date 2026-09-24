@@ -1,9 +1,7 @@
 
-#include <logger.h>
-
 #include "core/time/Time.h"
+#include "core/logger/logger.h"
 #include "core/events/EventBus.h"
-#include "core/constants/PackagesConstants.h"
 #include "engine/view/ViewManager.h"
 #include "core/utils/MemoryUtils.h"
 #include "engine/platforms/Platform.h"
@@ -13,6 +11,7 @@
 #include "core/userscripts/ScriptFactory.h"
 #include "core/userscripts/ScriptStorage.h"
 #include "core/userscripts/ScriptRegistry.h"
+#include "core/constants/PackagesConstants.h"
 #include "core/io/package/DataAssetsManager.h"
 #include "engine/package/UserSettingsManager.h"
 #include "engine/platforms/mainloop/MainLoop.h"
@@ -41,8 +40,17 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 	engineState{ eInitState::NotInitialized }
 {
 	m_FileSystem = safe_make_shared<FileSystem>(nativeData);
-	m_PackageManager = safe_make_shared<PackageManager>(m_FileSystem);
-	m_DataAssetsManager = safe_make_shared<DataAssetsManager>(m_FileSystem);
+
+	auto pkgPath = m_FileSystem->GetGamePackagePath();
+	if (!pkgPath)
+		THROW_RUNTIME("Не удалось определить путь к главному пакету: {}", pkgPath.error());
+
+	auto dataPath = m_FileSystem->GetDataPackagePath();
+	if (!dataPath)
+		THROW_RUNTIME("Не удалось определить путь к пакету данных: {}", dataPath.error());
+
+	m_PackageManager = safe_make_shared<PackageManager>(*pkgPath);
+	m_DataAssetsManager = safe_make_shared<DataAssetsManager>(*dataPath);
 	if (auto res = m_FileSystem->InitializeUserData(m_PackageManager->GetCompanyName(), m_PackageManager->GetAppName()); !res)
 		THROW_RUNTIME("Не удалось инициализировать каталог пользовательских данных: {}", res.error());
 

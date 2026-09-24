@@ -12,37 +12,12 @@ using namespace zzz::core;
 
 Z_SET_LOG_CATEGORY(::zzz::core::Assets);
 
-namespace
-{
-	[[nodiscard]] constexpr bool IsGamePackageResourceType(ePackage pkgType) noexcept
-	{
-		switch (pkgType)
-		{
-		case ePackage::ProjectManifest:
-		case ePackage::Scene:
-		case ePackage::PrimaryView:
-		case ePackage::ChildView:
-		case ePackage::IndependentView:
-		case ePackage::Prefab:
-			return true;
-		default:
-			return false;
-		}
-	}
-}
-
 namespace zzz::engine
 {
-	PackageManager::PackageManager(std::shared_ptr<FileSystem> fileSystem)
-		: PackageArchive(std::move(fileSystem))
+	PackageManager::PackageManager(const std::filesystem::path& physicalPath)
+		: ArchiveReaderBase(physicalPath, c_PackageDatFormat, &IsGamePackageResourceType)
 	{
-		InitializeArchive(ArchiveInitParams<ePackage>{
-			.relativePath = c_GamePackageRelativePath,
-			.expectedFormat = c_PackageDatFormat,
-			.isTypeAllowed = &IsGamePackageResourceType
-		});
-
-		const std::string pathStr = c_GamePackageRelativePath.generic_string();
+		const auto pathStr = GetArchiveName();
 
 		auto primaryViewIt = m_EntriesByGuid.find(ePackage::PrimaryView);
 		if (primaryViewIt == m_EntriesByGuid.end() || primaryViewIt->second.empty())

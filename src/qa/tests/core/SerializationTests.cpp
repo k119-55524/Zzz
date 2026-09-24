@@ -154,7 +154,9 @@ TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
 
 	// Проверяем чтение из data.dat через DataAssetsManager
 	auto fs = core::safe_make_shared<core::FileSystem>();
-	auto dataMgr = core::safe_make_shared<core::DataAssetsManager>(fs);
+	auto dataPathRes = fs->GetDataPackagePath();
+	ASSERT_TRUE(dataPathRes.has_value()) << dataPathRes.error();
+	auto dataMgr = core::safe_make_shared<core::DataAssetsManager>(*dataPathRes);
 
 	core::Guid cubeMeshGuid = *core::Guid::Parse("00000000-0000-0000-0000-000000000010");
 	const auto* entry = dataMgr->GetEntry(core::eResourceType::Mesh, cubeMeshGuid);
@@ -163,12 +165,12 @@ TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
 
 	auto payloadRes = dataMgr->ReadRawPayload(*entry);
 	ASSERT_TRUE(payloadRes.has_value()) << payloadRes.error();
-	EXPECT_EQ(payloadRes->GetSpan().size(), entry->GetSize());
+	EXPECT_EQ(payloadRes->size(), entry->GetSize());
 
 	core::PackageEntry emptyEntry(cubeMeshGuid, static_cast<zU32>(core::eResourceType::Mesh), entry->GetOffset(), 0);
 	auto emptyPayloadRes = dataMgr->ReadRawPayload(emptyEntry);
 	ASSERT_TRUE(emptyPayloadRes.has_value()) << emptyPayloadRes.error();
-	EXPECT_TRUE(emptyPayloadRes->GetSpan().empty());
+	EXPECT_TRUE(emptyPayloadRes->empty());
 
 	core::PackageEntry invalidEntry(
 		cubeMeshGuid,
@@ -203,24 +205,14 @@ TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
 	for (auto& reader : readers)
 		EXPECT_TRUE(reader.get());
 
-	std::optional<core::ArchivePayload> retainedPayload;
-	{
-		auto transientManager = core::safe_make_shared<core::DataAssetsManager>(fs);
-		const auto* transientEntry = transientManager->GetEntry(core::eResourceType::Mesh, cubeMeshGuid);
-		ASSERT_NE(transientEntry, nullptr);
-		auto transientPayload = transientManager->ReadRawPayload(*transientEntry);
-		ASSERT_TRUE(transientPayload.has_value()) << transientPayload.error();
-		retainedPayload.emplace(std::move(*transientPayload));
-	}
-	ASSERT_TRUE(retainedPayload.has_value());
-	EXPECT_EQ(retainedPayload->GetSpan().size(), entry->GetSize());
-
 	// Проверяем строгий контроль типов: запрос Mesh GUID с неверным типом ресурса должен возвращать nullptr
 	const auto* wrongTypeEntry = dataMgr->GetEntry(core::eResourceType::Texture2D, cubeMeshGuid);
 	EXPECT_EQ(wrongTypeEntry, nullptr);
 
 	// Проверяем чтение из package.dat через PackageManager
-	auto pkgMgr = core::safe_make_shared<engine::PackageManager>(fs);
+	auto pkgPathRes = fs->GetGamePackagePath();
+	ASSERT_TRUE(pkgPathRes.has_value()) << pkgPathRes.error();
+	auto pkgMgr = core::safe_make_shared<engine::PackageManager>(*pkgPathRes);
 	core::Guid sceneGuid = *core::Guid::Parse("3cbf41ff-f608-47ca-b383-ea5698648aca");
 
 	const auto* sceneEntry = pkgMgr->GetEntry(core::ePackage::Scene, sceneGuid);
@@ -236,7 +228,7 @@ TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
 	EXPECT_FALSE(sceneRes->GetLayers().empty());
 	// Проверяем прямую работу с ReadOnlyFile и ReadWriteFile
 	{
-		auto readOnlyRes = core::ReadOnlyFile::Open(*fs, core::eFileLocation::App, "assets/data.dat");
+		auto readOnlyRes = core::ReadOnlyFile::Open(*dataPathRes);
 		ASSERT_TRUE(readOnlyRes.has_value()) << readOnlyRes.error();
 		EXPECT_TRUE(readOnlyRes->IsValid());
 		EXPECT_GT(readOnlyRes->GetSize(), 0u);

@@ -67,13 +67,17 @@ namespace zzz::core
 		{}
 
 		[[nodiscard]] std::span<const SceneManifestEntry> GetScenes() const noexcept { return scenes; }
+		[[nodiscard]] std::span<const Guid> GetGameScriptGuids() const noexcept { return gameScriptGuids; }
+		[[nodiscard]] std::span<const Guid> GetViewGuids() const noexcept { return viewGuids; }
 		[[nodiscard]] const ProjectPlatformData& GetPlatformData() const noexcept { return platformData; }
 		[[nodiscard]] zU32 GetMaxLogQueueSize() const noexcept { return maxLogQueueSize; }
+		[[nodiscard]] zU16 GetLoggerPort() const noexcept { return loggerPort; }
 		[[nodiscard]] const std::string& GetAppName() const noexcept { return appName; }
 		[[nodiscard]] const std::string& GetCompanyName() const noexcept { return companyName; }
+		[[nodiscard]] const Version& GetAppVersion() const noexcept { return appVersion; }
 		[[nodiscard]] const SceneTransitionParams& GetDefaultTransitionParams() const noexcept { return defaultTransitionParams; }
 
-		inline void LogFileBlock([[maybe_unused]] std::string_view indentation = {}) const
+		void LogFileBlock([[maybe_unused]] std::string_view indentation = {}) const
 		{
 #if Z_ADD_LOGGER
 			const std::string nestedIndentation = std::string(indentation) + "  ";

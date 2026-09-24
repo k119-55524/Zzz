@@ -155,7 +155,7 @@ namespace zzz::engine
 					{
 						auto parseRes = T::CreateCpuResourceFromPackageBytes(
 							*entry,
-							payloadRes->GetSpan()
+							*payloadRes
 						);
 
 						if (!parseRes)

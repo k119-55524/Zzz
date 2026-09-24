@@ -7,13 +7,10 @@
 #include <span>
 #include <string>
 
-#include "core/enums/eFileLocation.h"
 #include "core/utils/Defines.h"
 
 namespace zzz::core
 {
-	class FileSystemBase;
-
 	/**
 	 * @brief Неизменяемое отображение физического файла в память процесса (Zero-Copy Read-Only).
 	 * @details Реализует строгое чтение через Memory Mapping (Win32 MapViewOfFile, POSIX mmap).
@@ -29,10 +26,6 @@ namespace zzz::core
 
 		ReadOnlyFile() noexcept;
 		explicit ReadOnlyFile(const std::filesystem::path& physicalPath);
-		ReadOnlyFile(
-			const FileSystemBase& fileSystem,
-			eFileLocation location,
-			const std::filesystem::path& relativePath);
 		~ReadOnlyFile();
 
 		ReadOnlyFile(const ReadOnlyFile&) = delete;
@@ -43,11 +36,7 @@ namespace zzz::core
 		[[nodiscard]] static std::expected<ReadOnlyFile, std::string> Open(
 			const std::filesystem::path& physicalPath);
 
-		[[nodiscard]] static std::expected<ReadOnlyFile, std::string> Open(
-			const FileSystemBase& fileSystem,
-			eFileLocation location,
-			const std::filesystem::path& relativePath);
-
+		[[nodiscard]] const std::filesystem::path& GetPath() const noexcept;
 		[[nodiscard]] std::span<const std::byte> GetSpan() const noexcept;
 		[[nodiscard]] std::span<const std::byte> Subspan(std::size_t offset, std::size_t size) const noexcept;
 		[[nodiscard]] std::size_t GetSize() const noexcept;
@@ -57,9 +46,10 @@ namespace zzz::core
 
 	private:
 		struct Impl;
-		explicit ReadOnlyFile(std::unique_ptr<Impl> impl) noexcept;
+		explicit ReadOnlyFile(std::unique_ptr<Impl> impl, std::filesystem::path path = {}) noexcept;
 
 		std::unique_ptr<Impl> m_Impl;
+		std::filesystem::path m_Path;
 		std::string m_Error;
 	};
 }

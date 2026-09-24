@@ -18,7 +18,6 @@ namespace zzz::engine
 
 namespace zzz::core
 {
-	class ReadOnlyFile;
 	class ReadWriteFile;
 
 	/**
@@ -32,7 +31,6 @@ namespace zzz::core
 	class FileSystemBase
 	{
 		friend class engine::Engine;
-		friend class ReadOnlyFile;
 		friend class ReadWriteFile;
 
 	public:
@@ -62,6 +60,10 @@ namespace zzz::core
 
 		[[nodiscard]] std::expected<std::filesystem::path, std::string> ResolvePhysicalPath(
 			eFileLocation location, const std::filesystem::path& relativePath) const noexcept;
+
+		[[nodiscard]] std::expected<std::filesystem::path, std::string> GetDirectory(eFileLocation location) const noexcept;
+		[[nodiscard]] std::expected<std::filesystem::path, std::string> GetGamePackagePath() const noexcept;
+		[[nodiscard]] std::expected<std::filesystem::path, std::string> GetDataPackagePath() const noexcept;
 
 		[[nodiscard]] std::shared_ptr<NativeAppData> GetNativeData() const noexcept { return m_NativeData; }
 

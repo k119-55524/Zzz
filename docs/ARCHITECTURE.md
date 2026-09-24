@@ -134,9 +134,10 @@ namespace = "Gameplay"
 
 8. **[ВЫПОЛНЕНО ДЛЯ DESKTOP] Архитектура storage/: ReadOnlyFile, ReadWriteFile, FileSystem.**
    Архитектура I/O реорганизована в модуль `core/io/storage/`:
-   - `ReadOnlyFile`: RAII zero-copy отображение неизменяемых архивов (`package.dat`, `data.dat`), lock-free потокобезопасность «из коробки», платформенное окружение изолировано через `MappedFileHandle` (выбирается CMake без `#ifdef` в бизнес-логике);
+   - `ReadOnlyFile`: RAII zero-copy отображение неизменяемых файлов по переданному физическому пути (`std::filesystem::path`), lock-free потокобезопасность «из коробки», платформенное окружение изолировано через `MappedFileHandle` (выбирается CMake без `#ifdef` в бизнес-логике);
    - `ReadWriteFile`: потокобезопасный (mutex) файловый поток C++23 для изменяемых данных (`user_settings.json`, сейвы, логи);
-   - `FileSystemBase` / `FileSystem`: чистая топология путей (`eFileLocation`), создание папок, проверки существования и удаление файлов (без прямого байтового I/O). На Android/iOS сохранён ranged-read fallback; Android mmap/noCompress отложен в `TODO.md`. Диагностический `Z_ADD_LOGGER` намеренно десериализует записи для визуального контроля сборки и не считается startup-бенчмарком.
+   - `FileSystemBase` / `FileSystem`: чистая топология путей (`eFileLocation`), создание папок, проверки существования и удаление файлов (без прямого байтового I/O). Выступает в роли резолвера путей (`ResolvePhysicalPath`, `GetGamePackagePath`, `GetDataPackagePath`), передавая разрешённые пути потребителям;
+   - `ArchiveReaderBase`: базовый шаблонный класс для чтения архивов .dat, зеркальный к `ArchiveWriter`. Хранит `ReadOnlyFile m_ReadOnlyFile;` строго по значению (без `std::shared_ptr`, без зависимости от `FileSystem`), раздавая прямой zero-copy `std::span<const std::byte>` через `ReadRawPayload`. `PackageManager` и `DataAssetsManager` наследуют `ArchiveReaderBase` и принимают разрешённый `const std::filesystem::path&` из `FileSystem`. Диагностический `Z_ADD_LOGGER` намеренно десериализует записи для визуального контроля сборки и не считается startup-бенчмарком.
 
 9. **[ВЫПОЛНЕНО] Фиксированный PackageEntry и чтение TOC.**
    `FixedLengthString32<c_MaxAssetNameLength>`: 64 UTF-32 символа, 256 байт на имя; `Guid::BinarySize()` равен 16 и не включает vptr. Размер записи детерминирован, TOC читается отдельно от payload. ArchiveWriter отвергает слишком длинные имена с логом и `false`, не пропуская исключение через PInvoke.
@@ -370,7 +371,7 @@ DOut("Формат глубины: {}", c_DefaultDepthFormat);
    - Игровые ресурсы в бинарный архив по пути `c_DataPackageRelativePath`: меши (`MeshData` из `.obj` через `ObjImporter`), материалы (`.zmat` через `MaterialImporter`), шейдеры, текстуры, аудио.
    - Записи обоих архивов имеют строго фиксированный размер (`PackageEntry::BinarySize()` = 36 байт: `Guid (16) + assetType (4) + offset (8) + size (8)`), позволяя считывать TOC единым блоком фиксированного размера без загрузки данных файлов в память.
    - Публикация атомарна (2026-09-18): оба архива сначала полностью пишутся во временные файлы, рабочие архивы заменяются через `fs::rename` только после успеха обоих; между двумя `rename` нет кросс-файловой транзакции (см. `PackagePacker.cpp`, публикация архивов).
-5. При старте движка `PackageManager` и `DataAssetsManager` отображают desktop-архивы read-only через `ReadOnlyFile`, считывают заголовок (`DatFileHeader::c_FullHeaderSize` = 31 байт) и TOC (`entryCount * PackageEntry::BinarySize()`), проверяют формат и диапазоны. Payload выдаётся как самодостаточный `ArchivePayload`, удерживающий mapping; на mobile используется owned buffer от ranged-read fallback. При включённом `Z_ADD_LOGGER` полное диагностическое логирование намеренно десериализует записи пакета для визуального контроля результата Assets Builder.
+5. При старте движка `PackageManager` и `DataAssetsManager` отображают desktop-архивы read-only через `ReadOnlyFile`, считывают заголовок (`DatFileHeader::c_FullHeaderSize` = 31 байт) и TOC (`entryCount * PackageEntry::BinarySize()`), проверяют формат и диапазоны. Payload выдаётся напрямую как zero-copy `std::span<const std::byte>`. При включённом `Z_ADD_LOGGER` полное диагностическое логирование намеренно десериализует записи пакета для визуального контроля результата Assets Builder.
 6. `Path::InitializeUserData(companyName, appName)` строит двухуровневый каталог пользовательских данных (`%LOCALAPPDATA%/<company>/<app>/` на Windows и аналоги на других платформах) — до этого вызова `GetUserDataDirectory()`/`GetCacheDirectory()`/`GetSavesDirectory()`/`GetLogsDirectory()` возвращают ошибку `unexpected` без бросков исключений.
 7. `SceneManager` загружает сцены как по GUID, так и по строковому имени (`LoadSceneAsync("MainScene", ...)`), используя быстрый индекс `m_SceneGuidsByName` из `PackageManager`. Ресурсы сцены (например, `MeshData` объектов) извлекаются по GUID из `DataAssetsManager`.
 
@@ -404,7 +405,7 @@ DOut("Формат глубины: {}", c_DefaultDepthFormat);
    - Сквозная проверка уникальности GUID по всему архиву исключает любые конфликты ресурсов.
 2. **Ликвидация hardcoded-топологии в движке:**
    - Движок (`engine_lib`) **не принимает решений** о физическом размещении ресурсов и не содержит привязок расширений (`.dds`, `.png`, `.ogg`) или подкаталогов (`textures/`, `audio/`) к типам ресурсов.
-   - `DataAssetsManager::GetEntry(type, guid)` за $O(1)$ находит TOC-запись, а `ReadRawPayload(entry)` возвращает span в mapping без дисковых системных вызовов на desktop либо owned ranged-read buffer на mobile.
+   - `DataAssetsManager::GetEntry(type, guid)` за $O(1)$ находит TOC-запись, а `ReadRawPayload(entry)` возвращает span в mapping без дисковых системных вызовов на desktop.
 3. **Быстрый поиск сцен по имени для скриптов:**
    - В `ProjectManifestData` упаковываются пары `{ name, guid }`.
    - `PackageManager` при старте индексирует их в хэш-таблицу $O(1)$ `m_SceneGuidsByName`.

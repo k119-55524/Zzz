@@ -1,6 +1,5 @@
 #include "ReadOnlyFile.h"
 #include "platforms/MappedFileHandle.h"
-#include "FileSystemBase.h"
 #include "core/utils/SafeMath.h"
 
 namespace zzz::core
@@ -12,38 +11,15 @@ namespace zzz::core
 
 	ReadOnlyFile::ReadOnlyFile() noexcept = default;
 
-	ReadOnlyFile::ReadOnlyFile(std::unique_ptr<Impl> impl) noexcept
-		: m_Impl(std::move(impl))
+	ReadOnlyFile::ReadOnlyFile(std::unique_ptr<Impl> impl, std::filesystem::path path) noexcept
+		: m_Impl(std::move(impl)), m_Path(std::move(path))
 	{
 	}
 
 	ReadOnlyFile::ReadOnlyFile(const std::filesystem::path& physicalPath)
+		: m_Path(physicalPath)
 	{
 		auto handleRes = MappedFileHandle::Open(physicalPath);
-		if (!handleRes)
-		{
-			m_Error = handleRes.error();
-			return;
-		}
-
-		auto impl = std::make_unique<Impl>();
-		impl->handle = std::move(*handleRes);
-		m_Impl = std::move(impl);
-	}
-
-	ReadOnlyFile::ReadOnlyFile(
-		const FileSystemBase& fileSystem,
-		eFileLocation location,
-		const std::filesystem::path& relativePath)
-	{
-		auto pathRes = fileSystem.ResolvePhysicalPath(location, relativePath);
-		if (!pathRes)
-		{
-			m_Error = pathRes.error();
-			return;
-		}
-
-		auto handleRes = MappedFileHandle::Open(*pathRes);
 		if (!handleRes)
 		{
 			m_Error = handleRes.error();
@@ -68,19 +44,12 @@ namespace zzz::core
 
 		auto impl = std::make_unique<Impl>();
 		impl->handle = std::move(*handleRes);
-		return ReadOnlyFile(std::move(impl));
+		return ReadOnlyFile(std::move(impl), physicalPath);
 	}
 
-	std::expected<ReadOnlyFile, std::string> ReadOnlyFile::Open(
-		const FileSystemBase& fileSystem,
-		eFileLocation location,
-		const std::filesystem::path& relativePath)
+	const std::filesystem::path& ReadOnlyFile::GetPath() const noexcept
 	{
-		auto pathRes = fileSystem.ResolvePhysicalPath(location, relativePath);
-		if (!pathRes)
-			return std::unexpected(pathRes.error());
-
-		return Open(*pathRes);
+		return m_Path;
 	}
 
 	std::span<const std::byte> ReadOnlyFile::GetSpan() const noexcept
@@ -122,5 +91,7 @@ namespace zzz::core
 			m_Impl->handle.Close();
 			m_Impl.reset();
 		}
+		m_Path.clear();
+		m_Error.clear();
 	}
 }
