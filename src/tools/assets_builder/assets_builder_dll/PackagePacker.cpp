@@ -99,7 +99,7 @@ namespace zzz::builder
 	{
 		std::string name;
 		Guid guid;
-		eResourceType resourceType{ eResourceType::Unknown };
+		zzz::core::eEngineResourceType resourceType{ zzz::core::eEngineResourceType::Unknown };
 		std::vector<std::byte> payload;
 	};
 
@@ -567,9 +567,9 @@ namespace zzz::builder
 				return std::unexpected("Некорректный JSON в файле '" + item.filePath.string() + "'.");
 			}
 
-			auto assetType = static_cast<zzz::core::ePackage>(item.type);
+			auto assetType = static_cast<zzz::core::ePackageDatType>(item.type);
 
-			if (assetType == zzz::core::ePackage::ProjectManifest)
+			if (assetType == zzz::core::ePackageDatType::ProjectManifest)
 			{
 				json configRoot = LoadPlatformConfigJson(projectDir, platformConfigFile);
 
@@ -770,7 +770,7 @@ namespace zzz::builder
 				}
 				if (auto res = serializer.Serialize(result, defaultTransitionParams); !res) return {};
 			}
-			else if (assetType == zzz::core::ePackage::PrimaryView)
+			else if (assetType == zzz::core::ePackageDatType::PrimaryView)
 			{
 				json startViewRoot = ResolveStartViewJson(root, projectDir, targetPlatform, platformConfigFile);
 				json configRoot = LoadPlatformConfigJson(projectDir, platformConfigFile);
@@ -887,7 +887,7 @@ namespace zzz::builder
 				}
 				}
 			}
-			else if (assetType == zzz::core::ePackage::Scene)
+			else if (assetType == zzz::core::ePackageDatType::Scene)
 			{
 				std::vector<Guid> sceneScriptGuids;
 				if (root.contains("scripts") && root["scripts"].is_array())
@@ -979,7 +979,7 @@ namespace zzz::builder
 				if (auto res = serializer.Serialize(result, sceneData); !res)
 					return {};
 			}
-			else if (assetType == zzz::core::ePackage::ChildView || assetType == zzz::core::ePackage::IndependentView)
+			else if (assetType == zzz::core::ePackageDatType::ChildView || assetType == zzz::core::ePackageDatType::IndependentView)
 			{
 				Guid viewGuid = item.guid;
 
@@ -1151,7 +1151,7 @@ namespace zzz::builder
 			pendingAssets.push_back({
 				"ProjectManifest",
 				manifestGuid,
-				static_cast<uint32_t>(zzz::core::ePackage::ProjectManifest),
+				static_cast<uint32_t>(zzz::core::ePackageDatType::ProjectManifest),
 				projJsonPath
 				});
 		}
@@ -1272,7 +1272,7 @@ namespace zzz::builder
 				// через блоб-импортёр data.dat (обрабатываются структурно ниже).
 				auto knownType = scannedFile.knownType;
 				const bool isStructuredPackageAsset = knownType.has_value() &&
-					(*knownType == zzz::core::eResourceType::Scene || *knownType == zzz::core::eResourceType::View);
+					(*knownType == zzz::core::eEngineResourceType::Scene || *knownType == zzz::core::eEngineResourceType::View);
 				if (!isStructuredPackageAsset)
 				{
 					// Исходники скриптов собираются отдельно в scripts.dll, а не упаковщиком ассетов -
@@ -1282,7 +1282,9 @@ namespace zzz::builder
 						(genericRel.find("Assets/Scripts/") != std::string::npos ||
 						 genericRel.find("Assets/scripts/") != std::string::npos);
 					if (isScriptSource)
+					{
 						return true;
+					}
 
 					DOutError("PackProject: Незарегистрированный тип ассета '{}' для файла '{}'.", ext, path.string());
 					return false;
@@ -1327,7 +1329,7 @@ namespace zzz::builder
 						return true;
 					if (!seenSceneNames.insert(assetName).second)
 						return true;
-					typeVal = static_cast<uint32_t>(zzz::core::ePackage::Scene);
+					typeVal = static_cast<uint32_t>(zzz::core::ePackageDatType::Scene);
 					pendingAssets.push_back({ assetName, assetGuid, typeVal, path });
 				}
 				else if (ext == c_ExtView)
@@ -1338,19 +1340,19 @@ namespace zzz::builder
 
 					if (isPrimary)
 					{
-						typeVal = static_cast<uint32_t>(zzz::core::ePackage::PrimaryView);
+						typeVal = static_cast<uint32_t>(zzz::core::ePackageDatType::PrimaryView);
 						pendingAssets.push_back({ assetName, assetGuid, typeVal, path });
 					}
 					else if (isIndependent)
 					{
 						matchedIndependentViewGuids.insert(assetGuid);
-						typeVal = static_cast<uint32_t>(zzz::core::ePackage::IndependentView);
+						typeVal = static_cast<uint32_t>(zzz::core::ePackageDatType::IndependentView);
 						pendingAssets.push_back({ assetName, assetGuid, typeVal, path });
 					}
 					else
 					{
 						matchedChildViewGuids.insert(assetGuid);
-						typeVal = static_cast<uint32_t>(zzz::core::ePackage::ChildView);
+						typeVal = static_cast<uint32_t>(zzz::core::ePackageDatType::ChildView);
 						pendingAssets.push_back({ assetName, assetGuid, typeVal, path });
 					}
 				}
@@ -1370,18 +1372,18 @@ namespace zzz::builder
 				DOutWarning("PackProject: guid {} объявлен в independent_views, но соответствующий .zview ресурс не найден в Assets/ - пропущен.", guid.ToString());
 
 		bool hasPrimaryView = std::any_of(pendingAssets.begin(), pendingAssets.end(), [](const PendingAsset& item) {
-			return item.type == static_cast<uint32_t>(zzz::core::ePackage::PrimaryView);
+			return item.type == static_cast<uint32_t>(zzz::core::ePackageDatType::PrimaryView);
 		});
 
 		if (!hasPrimaryView)
 		{
 			// Если start_view не был задан явно, но есть .zview вьюхи, делаем первую из них PrimaryView
 			auto firstViewIt = std::find_if(pendingAssets.begin(), pendingAssets.end(), [](const PendingAsset& item) {
-				return item.type == static_cast<uint32_t>(zzz::core::ePackage::ChildView);
+				return item.type == static_cast<uint32_t>(zzz::core::ePackageDatType::ChildView);
 			});
 			if (firstViewIt != pendingAssets.end())
 			{
-				firstViewIt->type = static_cast<uint32_t>(zzz::core::ePackage::PrimaryView);
+				firstViewIt->type = static_cast<uint32_t>(zzz::core::ePackageDatType::PrimaryView);
 				hasPrimaryView = true;
 			}
 		}
@@ -1400,7 +1402,7 @@ namespace zzz::builder
 		std::unordered_map<Guid, std::string> sceneNamesByGuid;
 		for (const auto& a : pendingAssets)
 		{
-			if (a.type == static_cast<uint32_t>(zzz::core::ePackage::Scene))
+			if (a.type == static_cast<uint32_t>(zzz::core::ePackageDatType::Scene))
 				sceneNamesByGuid.emplace(a.guid, a.name);
 		}
 
@@ -1458,7 +1460,7 @@ namespace zzz::builder
 			dataItems.push_back({
 				std::move(item.name),
 				item.guid,
-				static_cast<uint32_t>(item.resourceType),
+				static_cast<uint32_t>(zzz::core::ToDataDatType(item.resourceType)),
 				std::move(item.payload)
 			});
 		}

@@ -3,7 +3,7 @@
 #include <string>
 #include <string_view>
 #include "core/utils/Guid.h"
-#include "core/enums/eResourceType.h"
+#include "core/enums/eEngineResourceType.h"
 #include "math/utils/Types.h"
 
 namespace zzz::engine
@@ -15,7 +15,7 @@ namespace zzz::engine
 	class ResourceBase
 	{
 	public:
-		ResourceBase(const ::zzz::core::Guid& guid, ::zzz::core::eResourceType type, std::string name)
+		ResourceBase(const ::zzz::core::Guid& guid, ::zzz::core::eEngineResourceType type, std::string name)
 			: m_Guid(guid)
 			, m_Type(type)
 			, m_Name(std::move(name))
@@ -25,12 +25,12 @@ namespace zzz::engine
 		virtual ~ResourceBase() = default;
 
 		[[nodiscard]] virtual const ::zzz::core::Guid& GetGuid() const noexcept { return m_Guid; }
-		[[nodiscard]] virtual ::zzz::core::eResourceType GetResourceType() const noexcept { return m_Type; }
+		[[nodiscard]] virtual ::zzz::core::eEngineResourceType GetResourceType() const noexcept { return m_Type; }
 		[[nodiscard]] virtual std::string_view GetName() const noexcept { return m_Name; }
 
 	protected:
 		::zzz::core::Guid m_Guid;
-		::zzz::core::eResourceType m_Type;
+		::zzz::core::eEngineResourceType m_Type;
 		std::string m_Name;
 	};
 }

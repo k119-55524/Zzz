@@ -11,7 +11,7 @@ namespace zzz::engine
 		std::string name,
 		uint32_t width,
 		uint32_t height)
-		: ResourceBase(guid, eResourceType::Texture2D, std::move(name))
+		: ResourceBase(guid, eEngineResourceType::Texture2D, std::move(name))
 		, m_Width(width)
 		, m_Height(height)
 	{

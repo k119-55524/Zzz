@@ -10,7 +10,8 @@
 #include "math/utils/Types.h"
 #include "core/serialize/Serializer.h"
 #include "core/enums/eIndexFormat.h"
-#include "core/enums/eResourceType.h"
+#include "core/enums/eDataDatType.h"
+#include "core/enums/eEngineResourceType.h"
 
 namespace zzz::core
 {
@@ -21,7 +22,8 @@ namespace zzz::core
 	class Z_CORE_API MeshData final : public ISerializable
 	{
 	public:
-		static constexpr eResourceType c_ResourceType = eResourceType::Mesh;
+		static constexpr eDataDatType c_DataDatType = eDataDatType::Mesh;
+		static constexpr eEngineResourceType c_ResourceType = eEngineResourceType::Mesh;
 
 		MeshData() = default;
 		MeshData(

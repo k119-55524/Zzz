@@ -1,16 +1,21 @@
 #pragma once
 
-#include "core/io/storage/FileSystem.h"
 #include "core/io/DatFileHeader.h"
+#include "core/io/storage/ReadWriteFile.h"
 #include "core/io/package/views/ViewUserData.h"
-#include "core/constants/PackagesConstants.h"
 #include "core/io/package/views/PrimaryViewUserData.h"
 
 using namespace zzz::core;
 
+namespace zzz::core
+{
+	class DataAssetsManager;
+}
+
 namespace zzz::engine
 {
 	class View;
+	class PackageManager;
 
 	using ViewUserDataMap = std::unordered_map<Guid, ViewUserData>;
 
@@ -18,9 +23,20 @@ namespace zzz::engine
 	{
 	public:
 		UserSettingsManager() = delete;
-		explicit UserSettingsManager(std::shared_ptr<FileSystem> fileSystem);
+		explicit UserSettingsManager(const std::filesystem::path& configPath);
+		~UserSettingsManager() override = default;
+
+		/**
+		 * @brief Валидирует сохранённые идентификаторы окон по записям PackageManager (package.dat)
+		 *        и DataAssetsManager (data.dat).
+		 * @details Удаляет из конфигурации пользователя окна, чьи GUID отсутствуют в пакетах или
+		 *          не соответствуют требуемому типу (PrimaryView, ChildView, IndependentView),
+		 *          предотвращая падения движка на старте при изменении/удалении ресурсов разработчиком.
+		 */
+		void ValidateAgainstPackages(const PackageManager& packageManager, const DataAssetsManager* dataAssetsManager = nullptr);
 
 		[[nodiscard]] inline const std::string& GetSelectedGpuId() const noexcept { return m_SelectedGpuId; }
+		[[nodiscard]] inline const std::filesystem::path& GetPath() const noexcept { return m_File.GetPath(); }
 
 		/**
 		 * @brief Возвращает пользовательские настройки Основного окна (PrimaryViewUserData).
@@ -73,14 +89,14 @@ namespace zzz::engine
 		void Initialize();
 		void LogUserData() const;
 		void SetDefaultUserSettings();
-		std::expected<void, std::string> LoadConfig();
+		std::expected<void, std::string> LoadConfig(std::span<const std::byte> buffer);
 
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override;
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override;
 
-		std::shared_ptr<FileSystem> m_FileSystem;
+		ReadWriteFile m_File;
 
-		DatFileHeader m_Header{ c_UserConfigFormat };
+		DatFileHeader m_Header;
 		std::optional<PrimaryViewUserData> m_PrimaryViewUserData;
 		ViewUserDataMap m_ChildViewsUserData;
 		ViewUserDataMap m_IndependentViewsUserData;

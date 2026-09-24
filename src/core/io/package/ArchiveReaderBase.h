@@ -11,10 +11,10 @@
 #include "core/utils/Guid.h"
 #include "core/utils/Ensure.h"
 #include "core/utils/SafeMath.h"
-#include "core/enums/ePackage.h"
 #include "core/io/DatFileHeader.h"
-#include "core/enums/eResourceType.h"
+#include "core/enums/eDataDatType.h"
 #include "core/serialize/Serializer.h"
+#include "core/enums/ePackageDatType.h"
 #include "core/io/package/PackageEntry.h"
 #include "core/io/storage/ReadOnlyFile.h"
 
@@ -24,50 +24,26 @@ namespace zzz::core
 	struct ArchiveTraits;
 
 	template <>
-	struct ArchiveTraits<ePackage>
+	struct ArchiveTraits<ePackageDatType>
 	{
 		static constexpr DatFileFormat c_ExpectedFormat = c_PackageDatFormat;
 
-		[[nodiscard]] static constexpr bool IsTypeAllowed(ePackage type) noexcept
+		[[nodiscard]] static constexpr bool IsTypeAllowed(ePackageDatType type) noexcept
 		{
-			switch (type)
-			{
-			case ePackage::ProjectManifest:
-			case ePackage::Scene:
-			case ePackage::PrimaryView:
-			case ePackage::ChildView:
-			case ePackage::IndependentView:
-			case ePackage::Prefab:
-				return true;
-			default:
-				return false;
-			}
+			return std::to_underlying(type) >= std::to_underlying(ePackageDatType::ProjectManifest)
+				&& std::to_underlying(type) <= std::to_underlying(ePackageDatType::Prefab);
 		}
 	};
 
 	template <>
-	struct ArchiveTraits<eResourceType>
+	struct ArchiveTraits<eDataDatType>
 	{
 		static constexpr DatFileFormat c_ExpectedFormat = c_DataDatFormat;
 
-		[[nodiscard]] static constexpr bool IsTypeAllowed(eResourceType type) noexcept
+		[[nodiscard]] static constexpr bool IsTypeAllowed(eDataDatType type) noexcept
 		{
-			switch (type)
-			{
-			case eResourceType::Prefab:
-			case eResourceType::Mesh:
-			case eResourceType::Material:
-			case eResourceType::Shader:
-			case eResourceType::Animation:
-			case eResourceType::Texture2D:
-			case eResourceType::AudioClip:
-			case eResourceType::Video:
-			case eResourceType::Font:
-			case eResourceType::BinaryData:
-				return true;
-			default:
-				return false;
-			}
+			return std::to_underlying(type) >= std::to_underlying(eDataDatType::Mesh)
+				&& std::to_underlying(type) <= std::to_underlying(eDataDatType::BinaryData);
 		}
 	};
 
@@ -105,6 +81,11 @@ namespace zzz::core
 				return nullptr;
 
 			return &guidIt->second;
+		}
+
+		[[nodiscard]] bool HasEntry(TType type, const Guid& guid) const noexcept
+		{
+			return GetEntry(type, guid) != nullptr;
 		}
 
 		[[nodiscard]] std::expected<std::span<const std::byte>, std::string> ReadRawPayload(const PackageEntry& entry) const

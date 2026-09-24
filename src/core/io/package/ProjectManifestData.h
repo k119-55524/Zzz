@@ -7,7 +7,7 @@
 #include "core/utils/Guid.h"
 #include "core/utils/Version.h"
 #include "core/Serialize/Serializer.h"
-#include "core/enums/ePackage.h"
+#include "core/enums/ePackageDatType.h"
 #include "core/scene/SceneTransitionParams.h"
 #include "core/IO/package/platforms/project/ProjectPlatformConfig.h"
 
@@ -40,7 +40,7 @@ namespace zzz::core
 	class ProjectManifestData final : public ISerializable
 	{
 	public:
-		static constexpr ePackage c_PackageType = ePackage::ProjectManifest;
+		static constexpr ePackageDatType c_PackageType = ePackageDatType::ProjectManifest;
 
 		ProjectManifestData() = default;
 		ProjectManifestData(

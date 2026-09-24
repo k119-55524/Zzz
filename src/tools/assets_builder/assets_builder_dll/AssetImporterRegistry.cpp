@@ -37,8 +37,8 @@ namespace zzz::builder
 		// Scene/View - структурные ресурсы package.dat, не блоб-импортёры data.dat (обрабатываются
 		// PackagePacker напрямую), но должны быть "известны" реестру наравне с остальными типами,
 		// чтобы сканирование и проверка незарегистрированных файлов были едиными.
-		RegisterKnownType(c_ExtScene, core::eResourceType::Scene);
-		RegisterKnownType(c_ExtView, core::eResourceType::View);
+		RegisterKnownType(c_ExtScene, core::eEngineResourceType::Scene);
+		RegisterKnownType(c_ExtView, core::eEngineResourceType::View);
 	}
 
 	void AssetImporterRegistry::RegisterImporter(std::string_view extension, std::shared_ptr<IAssetImporter> importer)
@@ -54,12 +54,12 @@ namespace zzz::builder
 		return nullptr;
 	}
 
-	void AssetImporterRegistry::RegisterKnownType(std::string_view extension, core::eResourceType type)
+	void AssetImporterRegistry::RegisterKnownType(std::string_view extension, core::eEngineResourceType type)
 	{
 		m_KnownKinds[NormalizeExtension(extension)] = type;
 	}
 
-	std::optional<core::eResourceType> AssetImporterRegistry::GetKnownType(std::string_view extension) const
+	std::optional<core::eEngineResourceType> AssetImporterRegistry::GetKnownType(std::string_view extension) const
 	{
 		const std::string norm = NormalizeExtension(extension);
 

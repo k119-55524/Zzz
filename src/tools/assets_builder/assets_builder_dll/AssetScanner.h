@@ -5,7 +5,7 @@
 #include <optional>
 #include <string>
 
-#include "core/enums/eResourceType.h"
+#include "core/enums/eEngineResourceType.h"
 
 namespace zzz::builder
 {
@@ -17,7 +17,7 @@ namespace zzz::builder
 	{
 		std::filesystem::path path;
 		std::string extension;
-		std::optional<zzz::core::eResourceType> knownType;
+		std::optional<zzz::core::eEngineResourceType> knownType;
 	};
 
 	// Рекурсивно обходит assetsDir (не ошибка, если её нет - тогда просто ничего не вызывается) и

@@ -9,7 +9,7 @@ namespace zzz::engine
 	GpuShader_VK::GpuShader_VK(
 		const Guid& guid,
 		std::string name)
-		: ResourceBase(guid, eResourceType::Shader, std::move(name))
+		: ResourceBase(guid, eEngineResourceType::Shader, std::move(name))
 	{
 	}
 

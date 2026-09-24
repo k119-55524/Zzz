@@ -14,9 +14,9 @@ namespace zzz::builder
 		ShaderImporter() = default;
 		~ShaderImporter() override = default;
 
-		[[nodiscard]] core::eResourceType GetResourceType() const noexcept override
+		[[nodiscard]] core::eEngineResourceType GetResourceType() const noexcept override
 		{
-			return core::eResourceType::Shader;
+			return core::eEngineResourceType::Shader;
 		}
 
 		[[nodiscard]] ImportResult Import(const ImportContext& ctx) override;

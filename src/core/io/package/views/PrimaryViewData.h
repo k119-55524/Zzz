@@ -1,14 +1,14 @@
 #pragma once
 
 #include "ViewConfigData.h"
-#include "core/enums/ePackage.h"
+#include "core/enums/ePackageDatType.h"
 
 namespace zzz::core
 {
 	class PrimaryViewData final : public ViewConfigData
 	{
 	public:
-		static constexpr ePackage c_PackageType = ePackage::PrimaryView;
+		static constexpr ePackageDatType c_PackageType = ePackageDatType::PrimaryView;
 
 		PrimaryViewData() = default;
 		PrimaryViewData(Guid viewGuid, Guid sceneGuid, std::vector<Guid> uiScriptGuids, ViewPlatformData platformData = {})

@@ -19,14 +19,14 @@ namespace zzz::engine
 	{
 		const auto pathStr = GetArchiveName();
 
-		auto primaryViewIt = m_EntriesByGuid.find(ePackage::PrimaryView);
+		auto primaryViewIt = m_EntriesByGuid.find(ePackageDatType::PrimaryView);
 		if (primaryViewIt == m_EntriesByGuid.end() || primaryViewIt->second.empty())
 			THROW_RUNTIME("Ошибка пакета '{}': Обязательный ресурс PrimaryViewData отсутствует.", pathStr);
 
 		if (primaryViewIt->second.size() != 1)
 			THROW_RUNTIME("Ошибка пакета '{}': Ожидался ровно один ресурс PrimaryViewData, обнаружено: {}.", pathStr, primaryViewIt->second.size());
 
-		auto manifestIt = m_EntriesByGuid.find(ePackage::ProjectManifest);
+		auto manifestIt = m_EntriesByGuid.find(ePackageDatType::ProjectManifest);
 		if (manifestIt == m_EntriesByGuid.end() || manifestIt->second.empty())
 			THROW_RUNTIME("Ошибка пакета '{}': Обязательный ресурс ProjectManifestData отсутствует.", pathStr);
 
@@ -69,7 +69,7 @@ namespace zzz::engine
 
 	std::expected<PrimaryViewData, std::string> PackageManager::GetPrimaryViewData() const
 	{
-		auto it = m_EntriesByGuid.find(ePackage::PrimaryView);
+		auto it = m_EntriesByGuid.find(ePackageDatType::PrimaryView);
 		if (it == m_EntriesByGuid.end() || it->second.empty())
 			return UNEXPECTED("Package entry of type PrimaryView was not found.");
 
@@ -82,30 +82,30 @@ namespace zzz::engine
 	void PackageManager::LogEntryDetails(const PackageEntry& entry) const
 	{
 #if Z_ADD_LOGGER
-		const auto pkgType = static_cast<ePackage>(entry.GetAssetType());
+		const auto pkgType = static_cast<ePackageDatType>(entry.GetAssetType());
 		switch (pkgType)
 		{
-		case ePackage::ProjectManifest:
+		case ePackageDatType::ProjectManifest:
 			if (auto res = DeserializeEntryRaw<ProjectManifestData>(entry))
 				res->LogFileBlock("      ");
 			break;
-		case ePackage::PrimaryView:
+		case ePackageDatType::PrimaryView:
 			if (auto res = DeserializeEntryRaw<PrimaryViewData>(entry))
 				res->LogFileBlock("      ");
 			break;
-		case ePackage::Scene:
+		case ePackageDatType::Scene:
 			if (auto res = DeserializeEntryRaw<SceneData>(entry))
 				res->LogFileBlock("      ");
 			break;
-		case ePackage::ChildView:
+		case ePackageDatType::ChildView:
 			if (auto res = DeserializeEntryRaw<ChildViewData>(entry))
 				res->LogFileBlock("      ");
 			break;
-		case ePackage::IndependentView:
+		case ePackageDatType::IndependentView:
 			if (auto res = DeserializeEntryRaw<IndependentViewData>(entry))
 				res->LogFileBlock("      ");
 			break;
-		case ePackage::Prefab:
+		case ePackageDatType::Prefab:
 			if (auto res = DeserializeEntryRaw<PrefabData>(entry))
 				res->LogFileBlock("      ");
 			break;

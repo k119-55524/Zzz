@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "core/enums/eResourceType.h"
+#include "core/enums/eEngineResourceType.h"
 #include "core/enums/eTargetPlatform.h"
 #include "core/utils/Guid.h"
 
@@ -16,7 +16,7 @@ namespace zzz::builder
 	{
 		std::string name;
 		core::Guid guid;
-		core::eResourceType resourceType{ core::eResourceType::Unknown };
+		core::eEngineResourceType resourceType{ core::eEngineResourceType::Unknown };
 		std::vector<std::byte> payload;
 	};
 

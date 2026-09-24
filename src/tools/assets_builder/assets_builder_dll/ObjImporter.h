@@ -10,9 +10,9 @@ namespace zzz::builder
 		ObjImporter() = default;
 		~ObjImporter() override = default;
 
-		[[nodiscard]] core::eResourceType GetResourceType() const noexcept override
+		[[nodiscard]] core::eEngineResourceType GetResourceType() const noexcept override
 		{
-			return core::eResourceType::Mesh;
+			return core::eEngineResourceType::Mesh;
 		}
 
 		[[nodiscard]] ImportResult Import(const ImportContext& ctx) override;

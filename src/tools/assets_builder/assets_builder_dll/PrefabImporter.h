@@ -15,9 +15,9 @@ namespace zzz::builder
 		PrefabImporter() = default;
 		~PrefabImporter() override = default;
 
-		[[nodiscard]] core::eResourceType GetResourceType() const noexcept override
+		[[nodiscard]] core::eEngineResourceType GetResourceType() const noexcept override
 		{
-			return core::eResourceType::Prefab;
+			return core::eEngineResourceType::Prefab;
 		}
 
 		[[nodiscard]] ImportResult Import(const ImportContext& ctx) override

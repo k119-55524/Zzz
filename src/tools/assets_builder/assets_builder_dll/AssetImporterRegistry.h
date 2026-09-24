@@ -21,12 +21,12 @@ namespace zzz::builder
 		// (структурные package.dat-ресурсы вроде Scene/View, обрабатываемые PackagePacker напрямую).
 		// GetKnownType - единая точка правды "известно ли расширение вообще", используемая и
 		// валидатором, и упаковщиком, независимо от того, есть ли у типа блоб-импортёр.
-		void RegisterKnownType(std::string_view extension, core::eResourceType type);
-		[[nodiscard]] std::optional<core::eResourceType> GetKnownType(std::string_view extension) const;
+		void RegisterKnownType(std::string_view extension, core::eEngineResourceType type);
+		[[nodiscard]] std::optional<core::eEngineResourceType> GetKnownType(std::string_view extension) const;
 
 	private:
 		AssetImporterRegistry();
 		std::unordered_map<std::string, std::shared_ptr<IAssetImporter>> m_Importers;
-		std::unordered_map<std::string, core::eResourceType> m_KnownKinds;
+		std::unordered_map<std::string, core::eEngineResourceType> m_KnownKinds;
 	};
 }

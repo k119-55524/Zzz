@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <span>
 #include <string>
 #include <vector>
@@ -9,7 +9,7 @@
 #include "core/io/package/assets/MeshData.h"
 #include "core/io/package/PackageEntry.h"
 #include "core/enums/eIndexFormat.h"
-#include "core/enums/eResourceType.h"
+#include "core/enums/eEngineResourceType.h"
 
 namespace zzz::engine
 {
@@ -20,7 +20,7 @@ namespace zzz::engine
 	class CpuMesh final : public ResourceBase
 	{
 	public:
-		static constexpr ::zzz::core::eResourceType c_ResourceType = ::zzz::core::eResourceType::Mesh;
+		static constexpr ::zzz::core::eEngineResourceType c_ResourceType = ::zzz::core::eEngineResourceType::Mesh;
 
 		CpuMesh(const ::zzz::core::Guid& guid, std::string name, ::zzz::core::MeshData meshData);
 		~CpuMesh() override = default;

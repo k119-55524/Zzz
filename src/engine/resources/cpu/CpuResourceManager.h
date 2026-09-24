@@ -11,7 +11,7 @@
 #include <condition_variable>
 
 #include "core/utils/Guid.h"
-#include "core/enums/eResourceType.h"
+#include "core/enums/eEngineResourceType.h"
 #include "engine/tasks/TaskDispatcher.h"
 #include "core/io/package/PackageEntry.h"
 #include "engine/resources/ResourceRef.h"
@@ -24,7 +24,7 @@ namespace zzz::engine
 	template<typename T>
 	concept ParsableCpuResource = requires(const PackageEntry& entry, std::span<const std::byte> bytes)
 	{
-		{ T::c_ResourceType } -> std::convertible_to<eResourceType>;
+		{ T::c_ResourceType } -> std::convertible_to<eEngineResourceType>;
 		{ T::CreateCpuResourceFromPackageBytes(entry, bytes) } -> std::same_as<std::expected<std::shared_ptr<T>, std::string>>;
 	};
 

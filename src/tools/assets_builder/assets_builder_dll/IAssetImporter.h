@@ -7,7 +7,7 @@
 #include <vector>
 #include <cstddef>
 #include "core/utils/Guid.h"
-#include "core/enums/eResourceType.h"
+#include "core/enums/eEngineResourceType.h"
 #include "core/enums/eTargetPlatform.h"
 
 namespace zzz::builder
@@ -32,7 +32,7 @@ namespace zzz::builder
 	{
 	public:
 		virtual ~IAssetImporter() = default;
-		[[nodiscard]] virtual core::eResourceType GetResourceType() const noexcept = 0;
+		[[nodiscard]] virtual core::eEngineResourceType GetResourceType() const noexcept = 0;
 		[[nodiscard]] virtual ImportResult Import(const ImportContext& ctx) = 0;
 	};
 }

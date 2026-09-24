@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <span>
 
 #include <string>
@@ -8,7 +8,7 @@
 #include "core/utils/Guid.h"
 #include "core/serialize/Serializer.h"
 #include "core/io/package/scene/LayerData.h"
-#include "core/enums/ePackage.h"
+#include "core/enums/ePackageDatType.h"
 #include "core/render/clear_config/ClearConfig.h"
 
 namespace zzz::core
@@ -16,7 +16,7 @@ namespace zzz::core
 	class SceneData final : public ISerializable
 	{
 	public:
-		static constexpr ePackage c_PackageType = ePackage::Scene;
+		static constexpr ePackageDatType c_PackageType = ePackageDatType::Scene;
 
 		SceneData() = default;
 		explicit SceneData(

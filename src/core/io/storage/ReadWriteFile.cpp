@@ -153,6 +153,11 @@ namespace zzz::core
 		return file;
 	}
 
+	const std::filesystem::path& ReadWriteFile::GetPath() const noexcept
+	{
+		return m_Path;
+	}
+
 	bool ReadWriteFile::IsValid() const noexcept
 	{
 		std::lock_guard<std::mutex> lock(m_Mutex);
@@ -215,11 +220,19 @@ namespace zzz::core
 	std::expected<void, std::string> ReadWriteFile::WriteAll(std::span<const std::byte> bytes) noexcept
 	{
 		std::lock_guard<std::mutex> lock(m_Mutex);
-		if (!m_IsValid || !m_Stream.is_open())
+		if (!m_IsValid)
 			return std::unexpected("Файл не открыт для записи.");
 
-		m_Stream.clear();
-		m_Stream.seekp(0, std::ios::beg);
+		if (m_Stream.is_open())
+			m_Stream.close();
+
+		const auto openMode = ConvertAccessMode(m_Mode) | std::ios::trunc;
+		m_Stream.open(m_Path, openMode);
+		if (!m_Stream.is_open())
+		{
+			m_IsValid = false;
+			return std::unexpected(std::format("Не удалось открыть файл для записи '{}'", m_Path.string()));
+		}
 
 		if (!bytes.empty())
 		{
@@ -232,6 +245,7 @@ namespace zzz::core
 		if (!m_Stream)
 			return std::unexpected(std::format("Ошибка сброса буфера (flush) в файл '{}'", m_Path.string()));
 
+		m_IsValid = true;
 		return {};
 	}
 

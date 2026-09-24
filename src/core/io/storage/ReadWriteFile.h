@@ -61,6 +61,7 @@ namespace zzz::core
 			const std::filesystem::path& relativePath,
 			eFileAccessMode mode = eFileAccessMode::ReadWrite);
 
+		[[nodiscard]] const std::filesystem::path& GetPath() const noexcept;
 		[[nodiscard]] bool IsValid() const noexcept;
 		[[nodiscard]] const std::string& GetError() const noexcept;
 		[[nodiscard]] std::size_t GetSize() const noexcept;

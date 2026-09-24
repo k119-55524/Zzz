@@ -7,7 +7,7 @@
 #include <cstddef>
 #include "engine/resources/ResourceBase.h"
 #include "core/io/package/PackageEntry.h"
-#include "core/enums/eResourceType.h"
+#include "core/enums/eEngineResourceType.h"
 
 namespace zzz::engine
 {
@@ -18,7 +18,7 @@ namespace zzz::engine
 	class CpuTexture2D final : public ResourceBase
 	{
 	public:
-		static constexpr ::zzz::core::eResourceType c_ResourceType = ::zzz::core::eResourceType::Texture2D;
+		static constexpr ::zzz::core::eEngineResourceType c_ResourceType = ::zzz::core::eEngineResourceType::Texture2D;
 
 		CpuTexture2D(
 			const ::zzz::core::Guid& guid,

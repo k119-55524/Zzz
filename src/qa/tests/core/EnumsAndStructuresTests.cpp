@@ -6,12 +6,15 @@
 #include <vector>
 #include <cstring>
 #include "core/Core.h"
-#include "core/enums/eResourceType.h"
+#include "core/enums/eEngineResourceType.h"
+#include "core/enums/ePackageDatType.h"
+#include "core/enums/eDataDatType.h"
+#include "core/enums/eScriptType.h"
+#include "core/enums/ResourceDatMapping.h"
 #include "core/enums/ePixelFormat.h"
 #include "core/enums/eIndexFormat.h"
 #include "core/enums/eVertexSemantic.h"
 #include "core/enums/eFileLocation.h"
-#include "core/enums/ePackage.h"
 #include "core/enums/eTargetPlatform.h"
 #include "core/enums/eGAPIType.h"
 #include "core/enums/eWindowState.h"
@@ -166,17 +169,51 @@ TEST(EnumsAndStructuresTests, AttributeRangeOperations)
 
 TEST(EnumsAndStructuresTests, ToStringAllValues)
 {
-	// eResourceType
-	EXPECT_EQ(ToString(eResourceType::Unknown), "Unknown");
-	EXPECT_EQ(ToString(eResourceType::Texture2D), "Texture2D");
-	EXPECT_EQ(ToString(eResourceType::Mesh), "Mesh");
-	EXPECT_EQ(ToString(eResourceType::Material), "Material");
-	EXPECT_EQ(ToString(eResourceType::Shader), "Shader");
-	EXPECT_EQ(ToString(eResourceType::AudioClip), "AudioClip");
-	EXPECT_EQ(ToString(eResourceType::Font), "Font");
-	EXPECT_EQ(ToString(eResourceType::Scene), "Scene");
-	EXPECT_EQ(ToString(eResourceType::Prefab), "Prefab");
-	EXPECT_EQ(ToString(eResourceType::BinaryData), "BinaryData");
+	// eEngineResourceType
+	EXPECT_EQ(ToString(eEngineResourceType::Unknown), "Unknown");
+	EXPECT_EQ(ToString(eEngineResourceType::Texture2D), "Texture2D");
+	EXPECT_EQ(ToString(eEngineResourceType::Mesh), "Mesh");
+	EXPECT_EQ(ToString(eEngineResourceType::Material), "Material");
+	EXPECT_EQ(ToString(eEngineResourceType::Shader), "Shader");
+	EXPECT_EQ(ToString(eEngineResourceType::AudioClip), "AudioClip");
+	EXPECT_EQ(ToString(eEngineResourceType::Font), "Font");
+	EXPECT_EQ(ToString(eEngineResourceType::Scene), "Scene");
+	EXPECT_EQ(ToString(eEngineResourceType::Prefab), "Prefab");
+	EXPECT_EQ(ToString(eEngineResourceType::BinaryData), "BinaryData");
+
+	// ePackageDatType
+	EXPECT_EQ(ToString(ePackageDatType::ProjectManifest), "ProjectManifest");
+	EXPECT_EQ(ToString(ePackageDatType::Scene), "Scene");
+	EXPECT_EQ(ToString(ePackageDatType::PrimaryView), "PrimaryView");
+	EXPECT_EQ(ToString(ePackageDatType::ChildView), "ChildView");
+	EXPECT_EQ(ToString(ePackageDatType::IndependentView), "IndependentView");
+	EXPECT_EQ(ToString(ePackageDatType::Prefab), "Prefab");
+
+	// eDataDatType
+	EXPECT_EQ(ToString(eDataDatType::Mesh), "Mesh");
+	EXPECT_EQ(ToString(eDataDatType::Material), "Material");
+	EXPECT_EQ(ToString(eDataDatType::Shader), "Shader");
+	EXPECT_EQ(ToString(eDataDatType::Animation), "Animation");
+	EXPECT_EQ(ToString(eDataDatType::Texture2D), "Texture2D");
+	EXPECT_EQ(ToString(eDataDatType::AudioClip), "AudioClip");
+	EXPECT_EQ(ToString(eDataDatType::Video), "Video");
+	EXPECT_EQ(ToString(eDataDatType::Font), "Font");
+	EXPECT_EQ(ToString(eDataDatType::BinaryData), "BinaryData");
+
+	// eScriptType
+	EXPECT_EQ(ToString(eScriptType::Unknown), "Unknown");
+	EXPECT_EQ(ToString(eScriptType::Game), "Game");
+	EXPECT_EQ(ToString(eScriptType::Scene), "Scene");
+	EXPECT_EQ(ToString(eScriptType::Layer), "Layer");
+	EXPECT_EQ(ToString(eScriptType::GameObject), "GameObject");
+	EXPECT_EQ(ToString(eScriptType::ECS), "ECS");
+	EXPECT_EQ(ToString(eScriptType::Common), "Common");
+	EXPECT_EQ(ToString(eScriptType::ScriptableObject), "ScriptableObject");
+	EXPECT_EQ(ToString(eScriptType::Editor), "Editor");
+	EXPECT_EQ(ToString(eScriptType::Model), "Model");
+	EXPECT_EQ(ToString(eScriptType::ViewModel), "ViewModel");
+	EXPECT_EQ(ToString(eScriptType::View), "View");
+	EXPECT_EQ(ToString(eScriptType::UIBehavior), "UIBehavior");
 
 	// ePixelFormat
 	EXPECT_EQ(ToString(ePixelFormat::Unknown), "Unknown");
@@ -311,14 +348,14 @@ TEST(EnumsAndStructuresTests, BinarySerializationEnumsAndVertex3D)
 
 	// 1. Сериализация перечислений
 	std::vector<std::byte> enumBuffer;
-	ASSERT_TRUE(serializer.Serialize(enumBuffer, eResourceType::Texture2D).has_value());
+	ASSERT_TRUE(serializer.Serialize(enumBuffer, eEngineResourceType::Texture2D).has_value());
 	ASSERT_TRUE(serializer.Serialize(enumBuffer, ePixelFormat::RGBA8_SRGB).has_value());
 	ASSERT_TRUE(serializer.Serialize(enumBuffer, eIndexFormat::UInt16).has_value());
 	ASSERT_TRUE(serializer.Serialize(enumBuffer, eVertexSemantic::Normal).has_value());
 
 	// Десериализация перечислений
 	std::size_t offset = 0;
-	eResourceType resType = eResourceType::Unknown;
+	eEngineResourceType resType = eEngineResourceType::Unknown;
 	ePixelFormat pixFormat = ePixelFormat::Unknown;
 	eIndexFormat idxFormat = eIndexFormat::UInt32;
 	eVertexSemantic vSemantic = eVertexSemantic::Position;
@@ -328,7 +365,7 @@ TEST(EnumsAndStructuresTests, BinarySerializationEnumsAndVertex3D)
 	ASSERT_TRUE(serializer.Deserialize(enumBuffer, offset, idxFormat).has_value());
 	ASSERT_TRUE(serializer.Deserialize(enumBuffer, offset, vSemantic).has_value());
 
-	EXPECT_EQ(resType, eResourceType::Texture2D);
+	EXPECT_EQ(resType, eEngineResourceType::Texture2D);
 	EXPECT_EQ(pixFormat, ePixelFormat::RGBA8_SRGB);
 	EXPECT_EQ(idxFormat, eIndexFormat::UInt16);
 	EXPECT_EQ(vSemantic, eVertexSemantic::Normal);
@@ -355,6 +392,72 @@ TEST(EnumsAndStructuresTests, BinarySerializationEnumsAndVertex3D)
 	EXPECT_EQ(deserializedVertex.texCoord, Vec2f(0.25f, 0.75f));
 	EXPECT_EQ(deserializedVertex.color, Palette4::Cyan);
 	EXPECT_EQ(deserializedVertex.tangent, Vec4f(0.5f, 0.5f, 0.0f, 1.0f));
+}
+
+// -----------------------------------------------------------------------------
+// 8. Тесты сопоставителя ResourceDatMapping (Архивы package.dat и data.dat)
+// -----------------------------------------------------------------------------
+
+TEST(EnumsAndStructuresTests, ResourceDatMappingAndConversion)
+{
+	// 1. Определение целевого архива
+	EXPECT_EQ(GetArchiveLocation(eEngineResourceType::ProjectManifest), eArchiveLocation::PackageDat);
+	EXPECT_EQ(GetArchiveLocation(eEngineResourceType::Scene), eArchiveLocation::PackageDat);
+	EXPECT_EQ(GetArchiveLocation(eEngineResourceType::PrimaryView), eArchiveLocation::PackageDat);
+	EXPECT_EQ(GetArchiveLocation(eEngineResourceType::ChildView), eArchiveLocation::PackageDat);
+	EXPECT_EQ(GetArchiveLocation(eEngineResourceType::IndependentView), eArchiveLocation::PackageDat);
+	EXPECT_EQ(GetArchiveLocation(eEngineResourceType::Prefab), eArchiveLocation::PackageDat);
+
+	EXPECT_EQ(GetArchiveLocation(eEngineResourceType::Mesh), eArchiveLocation::DataDat);
+	EXPECT_EQ(GetArchiveLocation(eEngineResourceType::Material), eArchiveLocation::DataDat);
+	EXPECT_EQ(GetArchiveLocation(eEngineResourceType::Shader), eArchiveLocation::DataDat);
+	EXPECT_EQ(GetArchiveLocation(eEngineResourceType::Animation), eArchiveLocation::DataDat);
+	EXPECT_EQ(GetArchiveLocation(eEngineResourceType::Texture2D), eArchiveLocation::DataDat);
+	EXPECT_EQ(GetArchiveLocation(eEngineResourceType::AudioClip), eArchiveLocation::DataDat);
+	EXPECT_EQ(GetArchiveLocation(eEngineResourceType::Video), eArchiveLocation::DataDat);
+	EXPECT_EQ(GetArchiveLocation(eEngineResourceType::Font), eArchiveLocation::DataDat);
+	EXPECT_EQ(GetArchiveLocation(eEngineResourceType::BinaryData), eArchiveLocation::DataDat);
+
+	EXPECT_EQ(GetArchiveLocation(eEngineResourceType::Unknown), eArchiveLocation::None);
+
+	// 2. Предикаты
+	EXPECT_TRUE(IsPackageDatResource(eEngineResourceType::Scene));
+	EXPECT_FALSE(IsDataDatResource(eEngineResourceType::Scene));
+	EXPECT_TRUE(IsDataDatResource(eEngineResourceType::Mesh));
+	EXPECT_FALSE(IsPackageDatResource(eEngineResourceType::Mesh));
+
+	// 3. Строгая конвертация: легальные значения
+	EXPECT_EQ(ToPackageDatType(eEngineResourceType::Scene), ePackageDatType::Scene);
+	EXPECT_EQ(ToPackageDatType(eEngineResourceType::Prefab), ePackageDatType::Prefab);
+	EXPECT_EQ(ToDataDatType(eEngineResourceType::Mesh), eDataDatType::Mesh);
+	EXPECT_EQ(ToDataDatType(eEngineResourceType::Material), eDataDatType::Material);
+
+	// 4. Строгая конвертация: выброс исключений при недопустимых типах
+	EXPECT_THROW((void)ToPackageDatType(eEngineResourceType::Mesh), std::runtime_error);
+	EXPECT_THROW((void)ToDataDatType(eEngineResourceType::Scene), std::runtime_error);
+	EXPECT_THROW((void)ToDataDatType(eEngineResourceType::Prefab), std::runtime_error);
+
+	// 5. Безопасные небросающие обёртки
+	EXPECT_TRUE(TryToPackageDatType(eEngineResourceType::Scene).has_value());
+	EXPECT_EQ(*TryToPackageDatType(eEngineResourceType::Scene), ePackageDatType::Scene);
+	EXPECT_FALSE(TryToPackageDatType(eEngineResourceType::Mesh).has_value());
+
+	EXPECT_TRUE(TryToDataDatType(eEngineResourceType::Mesh).has_value());
+	EXPECT_EQ(*TryToDataDatType(eEngineResourceType::Mesh), eDataDatType::Mesh);
+	EXPECT_FALSE(TryToDataDatType(eEngineResourceType::Scene).has_value());
+
+	// 6. Обратная конвертация
+	EXPECT_EQ(ToEngineResourceType(ePackageDatType::Scene), eEngineResourceType::Scene);
+	EXPECT_EQ(ToEngineResourceType(eDataDatType::Mesh), eEngineResourceType::Mesh);
+
+	// 7. Операторы сравнения (равенства)
+	EXPECT_TRUE(eEngineResourceType::Scene == ePackageDatType::Scene);
+	EXPECT_TRUE(ePackageDatType::Scene == eEngineResourceType::Scene);
+	EXPECT_FALSE(eEngineResourceType::Mesh == ePackageDatType::Scene);
+
+	EXPECT_TRUE(eEngineResourceType::Mesh == eDataDatType::Mesh);
+	EXPECT_TRUE(eDataDatType::Mesh == eEngineResourceType::Mesh);
+	EXPECT_FALSE(eEngineResourceType::Scene == eDataDatType::Mesh);
 }
 
 #endif // Z_TEST_CORE_ENUMS_STRUCTS

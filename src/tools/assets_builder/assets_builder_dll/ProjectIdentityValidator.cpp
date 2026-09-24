@@ -42,17 +42,17 @@ namespace zzz::builder
 
 	namespace
 	{
-		std::optional<GuidOwnerKind> ToGuidOwnerKind(eResourceType type)
+		std::optional<GuidOwnerKind> ToGuidOwnerKind(eEngineResourceType type)
 		{
 			switch (type)
 			{
-			case eResourceType::Mesh: return GuidOwnerKind::Mesh;
-			case eResourceType::Material: return GuidOwnerKind::Material;
-			case eResourceType::Shader: return GuidOwnerKind::Shader;
-			case eResourceType::Texture2D: return GuidOwnerKind::Texture;
-			case eResourceType::Prefab: return GuidOwnerKind::Prefab;
-			case eResourceType::Scene: return GuidOwnerKind::Scene;
-			case eResourceType::View: return GuidOwnerKind::View;
+			case eEngineResourceType::Mesh: return GuidOwnerKind::Mesh;
+			case eEngineResourceType::Material: return GuidOwnerKind::Material;
+			case eEngineResourceType::Shader: return GuidOwnerKind::Shader;
+			case eEngineResourceType::Texture2D: return GuidOwnerKind::Texture;
+			case eEngineResourceType::Prefab: return GuidOwnerKind::Prefab;
+			case eEngineResourceType::Scene: return GuidOwnerKind::Scene;
+			case eEngineResourceType::View: return GuidOwnerKind::View;
 			default: return std::nullopt;
 			}
 		}

@@ -67,32 +67,32 @@ extern "C"
 
 	BUILDER_API uint32_t GetAssetTypeProjectManifest()
 	{
-		return static_cast<uint32_t>(zzz::core::ePackage::ProjectManifest);
+		return static_cast<uint32_t>(zzz::core::ePackageDatType::ProjectManifest);
 	}
 
 	BUILDER_API uint32_t GetAssetTypeScene()
 	{
-		return static_cast<uint32_t>(zzz::core::ePackage::Scene);
+		return static_cast<uint32_t>(zzz::core::ePackageDatType::Scene);
 	}
 
 	BUILDER_API uint32_t GetAssetTypePrimaryView()
 	{
-		return static_cast<uint32_t>(zzz::core::ePackage::PrimaryView);
+		return static_cast<uint32_t>(zzz::core::ePackageDatType::PrimaryView);
 	}
 
 	BUILDER_API uint32_t GetAssetTypeChildView()
 	{
-		return static_cast<uint32_t>(zzz::core::ePackage::ChildView);
+		return static_cast<uint32_t>(zzz::core::ePackageDatType::ChildView);
 	}
 
 	BUILDER_API uint32_t GetAssetTypeIndependentView()
 	{
-		return static_cast<uint32_t>(zzz::core::ePackage::IndependentView);
+		return static_cast<uint32_t>(zzz::core::ePackageDatType::IndependentView);
 	}
 
 	BUILDER_API uint32_t GetAssetTypePrefab()
 	{
-		return static_cast<uint32_t>(zzz::core::ePackage::Prefab);
+		return static_cast<uint32_t>(zzz::core::ePackageDatType::Prefab);
 	}
 
 	BUILDER_API const char* GetDataPackageFileName()
@@ -170,7 +170,7 @@ extern "C"
 		if (!ext) return false;
 		const std::string norm = NormalizeExt(ext);
 		auto known = zzz::builder::AssetImporterRegistry::Instance().GetKnownType(norm);
-		return known.has_value() && *known == zzz::core::eResourceType::View;
+		return known.has_value() && *known == zzz::core::eEngineResourceType::View;
 	}
 
 	BUILDER_API bool GenerateGuidNative(char* outBuffer, uint32_t bufferSize)

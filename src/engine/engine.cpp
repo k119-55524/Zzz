@@ -59,8 +59,13 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 	// Установка максимального размера сетевой очереди логов из манифеста
 	g_Logger.SetMaxNetworkLogQueueSize(projectManifestData.GetMaxLogQueueSize());
 
-	// Загрузка пользовательских настроек.
-	m_UserSettingsManager = safe_make_shared<UserSettingsManager>(m_FileSystem);
+	auto userConfigPath = m_FileSystem->ResolvePhysicalPath(eFileLocation::User, c_UserConfigFileName);
+	if (!userConfigPath)
+		THROW_RUNTIME("Не удалось определить путь к файлу настроек пользователя: {}", userConfigPath.error());
+
+	// Загрузка пользовательских настроек и валидация по пакетам ресурсов
+	m_UserSettingsManager = safe_make_shared<UserSettingsManager>(*userConfigPath);
+	m_UserSettingsManager->ValidateAgainstPackages(*m_PackageManager, m_DataAssetsManager.get());
 
 	// Создание платформенного слоя абстракции ОС
 	m_Platform = safe_make_unique<Platform>(nativeData, projectManifestData.GetPlatformData());

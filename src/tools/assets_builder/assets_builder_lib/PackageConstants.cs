@@ -140,7 +140,7 @@ public static class PackageConstants
 
 	#endregion // Versions and Signatures
 
-	#region Package Entry Types (ePackage)
+	#region Package Entry Types (ePackageDatType)
 
 	public static uint AssetTypeProjectManifest => NativeMethods.GetAssetTypeProjectManifest();
 	public static uint AssetTypePrimaryView => NativeMethods.GetAssetTypePrimaryView();

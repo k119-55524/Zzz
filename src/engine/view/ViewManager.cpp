@@ -1,4 +1,4 @@
-﻿
+
 #include "engine/view/View.h"
 #include "engine/view/ViewManager.h"
 #include "engine/scene/Scene.h"
@@ -57,7 +57,7 @@ void ViewManager::CreatePrimaryView()
 	auto primaryViewData = m_PackageManager->GetPrimaryViewData();
 	ensure(primaryViewData.has_value(), "Не удалось получить данные для основного окна.");
 
-	m_PrimaryView = CreateViewInstance(*primaryViewData, ePackage::PrimaryView);
+	m_PrimaryView = CreateViewInstance(*primaryViewData, ePackageDatType::PrimaryView);
 }
 
 void ViewManager::CreateChildView(const Guid& viewGuid)
@@ -68,9 +68,12 @@ void ViewManager::CreateChildView(const Guid& viewGuid)
 	ensure(m_PrimaryView != nullptr, "Дочернее окно не может быть создано до создания Основного окна.");
 
 	auto viewDataRes = m_PackageManager->LoadAsset<ChildViewData>(viewGuid);
-
-	ensure(viewDataRes.has_value(), "Не удалось загрузить ChildViewData из пакета для GUID '{}': {}", viewGuid.ToString(), viewDataRes ? "" : viewDataRes.error());
-	m_ChildViews.push_back(CreateViewInstance(*viewDataRes, ePackage::ChildView, m_PrimaryView.get()));
+	if (!viewDataRes)
+	{
+		DOutError("Не удалось загрузить ChildViewData из пакета для GUID '{}': {}", viewGuid.ToString(), viewDataRes.error());
+		return;
+	}
+	m_ChildViews.push_back(CreateViewInstance(*viewDataRes, ePackageDatType::ChildView, m_PrimaryView.get()));
 #endif // Z_MOBILE
 }
 
@@ -82,15 +85,18 @@ void ViewManager::CreateIndependentView(const Guid& viewGuid)
 	ensure(m_PrimaryView != nullptr, "Независимое окно не может быть создано до создания Основного окна.");
 
 	auto viewDataRes = m_PackageManager->LoadAsset<IndependentViewData>(viewGuid);
-	ensure(viewDataRes.has_value(), "Не удалось загрузить IndependentViewData из пакета для GUID '{}': {}", viewGuid.ToString(), viewDataRes ? "" : viewDataRes.error());
-
-	m_IndependentViews.push_back(CreateViewInstance(*viewDataRes, ePackage::IndependentView));
+	if (!viewDataRes)
+	{
+		DOutError("Не удалось загрузить IndependentViewData из пакета для GUID '{}': {}", viewGuid.ToString(), viewDataRes.error());
+		return;
+	}
+	m_IndependentViews.push_back(CreateViewInstance(*viewDataRes, ePackageDatType::IndependentView));
 #endif // Z_MOBILE
 }
 
 std::shared_ptr<View> ViewManager::CreateViewInstance(
 	const ViewConfigData& viewData,
-	ePackage viewType,
+	ePackageDatType viewType,
 	const View* parentView)
 {
 	const Guid& guid = viewData.GetViewGuid();
@@ -99,20 +105,20 @@ std::shared_ptr<View> ViewManager::CreateViewInstance(
 
 	switch (viewType)
 	{
-	case ePackage::PrimaryView:
+	case ePackageDatType::PrimaryView:
 	{
 		const auto* primaryUserData = m_UserSettingsManager->GetPrimaryViewUserData();
 		needsAutoCentering = (primaryUserData == nullptr || primaryUserData->GetViewGuid() != guid);
 		userPlatformData = m_UserSettingsManager->GetOrCreatePrimaryViewPlatformData(guid, viewData.GetPlatformData());
 		break;
 	}
-	case ePackage::ChildView:
+	case ePackageDatType::ChildView:
 	{
 		needsAutoCentering = (m_UserSettingsManager->GetChildViewUserData(guid) == nullptr);
 		userPlatformData = m_UserSettingsManager->GetOrCreateChildViewPlatformData(guid, viewData.GetPlatformData());
 		break;
 	}
-	case ePackage::IndependentView:
+	case ePackageDatType::IndependentView:
 	{
 		needsAutoCentering = (m_UserSettingsManager->GetIndependentViewUserData(guid) == nullptr);
 		userPlatformData = m_UserSettingsManager->GetOrCreateIndependentViewPlatformData(guid, viewData.GetPlatformData());

@@ -11,7 +11,7 @@ namespace zzz::engine
 		std::string name,
 		zU32 vertexCount,
 		zU32 indexCount)
-		: ResourceBase(guid, eResourceType::Mesh, std::move(name))
+		: ResourceBase(guid, eEngineResourceType::Mesh, std::move(name))
 		, m_VertexCount(vertexCount)
 		, m_IndexCount(indexCount)
 	{

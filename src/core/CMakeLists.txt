@@ -85,7 +85,11 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/base_script/ViewScript.h
         ${CMAKE_CURRENT_SOURCE_DIR}/userscripts/base_script/ViewScript.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Alignment.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eResourceType.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eScriptType.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/ePackageDatType.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eDataDatType.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eEngineResourceType.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/ResourceDatMapping.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/ePixelFormat.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eIndexFormat.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eVertexSemantic.h
@@ -95,7 +99,6 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eGAPIType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eLayerType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eSpatialStorageType.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/enums/ePackage.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eTargetPlatform.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/platforms/ConverterGAPITypes.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/platforms/ConverterMSWinTypes.h

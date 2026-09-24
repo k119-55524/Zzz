@@ -8,7 +8,7 @@
 #include "engine/resources/ResourceBase.h"
 #include "core/utils/Guid.h"
 #include "core/io/package/PackageEntry.h"
-#include "core/enums/eResourceType.h"
+#include "core/enums/eEngineResourceType.h"
 
 namespace zzz::engine
 {
@@ -19,7 +19,7 @@ namespace zzz::engine
 	class CpuMaterial final : public ResourceBase
 	{
 	public:
-		static constexpr ::zzz::core::eResourceType c_ResourceType = ::zzz::core::eResourceType::Material;
+		static constexpr ::zzz::core::eEngineResourceType c_ResourceType = ::zzz::core::eEngineResourceType::Material;
 
 		CpuMaterial(const ::zzz::core::Guid& guid, std::string name, ::zzz::core::Guid shaderGuid = {});
 		~CpuMaterial() override = default;

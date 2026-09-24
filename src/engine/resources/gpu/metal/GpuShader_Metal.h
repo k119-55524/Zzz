@@ -18,7 +18,7 @@ namespace zzz::engine
 		using CpuSource = CpuShader;
 
 		GpuShader_Metal(const Guid& guid, std::string name)
-			: ResourceBase(guid, eResourceType::Shader, std::move(name))
+			: ResourceBase(guid, eEngineResourceType::Shader, std::move(name))
 		{
 		}
 

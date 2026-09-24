@@ -18,7 +18,7 @@ namespace zzz::engine
 		using CpuSource = CpuMaterial;
 
 		GpuMaterial_DX(const Guid& guid, std::string name, const Guid& shaderGuid)
-			: ResourceBase(guid, eResourceType::Material, std::move(name))
+			: ResourceBase(guid, eEngineResourceType::Material, std::move(name))
 			, m_ShaderGuid(shaderGuid)
 		{
 		}

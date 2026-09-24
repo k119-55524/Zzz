@@ -18,7 +18,7 @@ namespace zzz::engine
 		using CpuSource = CpuMesh;
 
 		GpuMesh_DX(const Guid& guid, std::string name, zU32 vertexCount, zU32 indexCount)
-			: ResourceBase(guid, eResourceType::Mesh, std::move(name))
+			: ResourceBase(guid, eEngineResourceType::Mesh, std::move(name))
 			, m_VertexCount(vertexCount)
 			, m_IndexCount(indexCount)
 		{

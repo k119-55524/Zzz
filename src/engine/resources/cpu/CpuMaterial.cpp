@@ -1,4 +1,4 @@
-﻿#include <format>
+#include <format>
 #include "core/io/package/DataAssetsManager.h"
 #include "core/io/package/assets/MaterialData.h"
 #include "core/utils/MemoryUtils.h"
@@ -9,7 +9,7 @@ using namespace zzz::core;
 namespace zzz::engine
 {
 	CpuMaterial::CpuMaterial(const Guid& guid, std::string name, Guid shaderGuid)
-		: ResourceBase(guid, eResourceType::Material, std::move(name))
+		: ResourceBase(guid, eEngineResourceType::Material, std::move(name))
 		, m_ShaderGuid(shaderGuid)
 	{
 	}

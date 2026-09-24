@@ -8,7 +8,8 @@
 
 #include "core/utils/Export.h"
 #include "core/serialize/Serializer.h"
-#include "core/enums/eResourceType.h"
+#include "core/enums/eDataDatType.h"
+#include "core/enums/eEngineResourceType.h"
 
 namespace zzz::core
 {
@@ -19,7 +20,8 @@ namespace zzz::core
 	class Z_CORE_API ShaderData final : public ISerializable
 	{
 	public:
-		static constexpr eResourceType c_ResourceType = eResourceType::Shader;
+		static constexpr eDataDatType c_DataDatType = eDataDatType::Shader;
+		static constexpr eEngineResourceType c_ResourceType = eEngineResourceType::Shader;
 
 		ShaderData() = default;
 		explicit ShaderData(std::string name);
