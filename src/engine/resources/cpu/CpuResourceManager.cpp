@@ -9,14 +9,11 @@ namespace zzz::engine
 {
 	CpuResourceManager::CpuResourceManager(
 		TaskDispatcher& taskDispatcher,
-		std::shared_ptr<DataAssetsManager> dataAssetsManager,
-		std::shared_ptr<FileSystem> fileSystem) :
+		std::shared_ptr<DataAssetsManager> dataAssetsManager) :
 			m_TaskDispatcher(taskDispatcher),
-			m_DataAssetsManager(std::move(dataAssetsManager)),
-			m_FileSystem(std::move(fileSystem))
+			m_DataAssetsManager(std::move(dataAssetsManager))
 	{
 		ensure(m_DataAssetsManager != nullptr, "DataAssetsManager не должен быть null в CpuResourceManager.");
-		ensure(m_FileSystem != nullptr, "FileSystem не должен быть null в CpuResourceManager.");
 	}
 
 	CpuResourceManager::~CpuResourceManager()

@@ -66,7 +66,7 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 	m_GAPI->Initialize(m_UserSettingsManager);
 
 	// Инициализация центрального менеджера ресурсов CPU
-	m_CpuResourceManager = safe_make_shared<CpuResourceManager>(*m_TaskDispatcher, m_DataAssetsManager, m_FileSystem);
+	m_CpuResourceManager = safe_make_shared<CpuResourceManager>(*m_TaskDispatcher, m_DataAssetsManager);
 
 	// Инициализация менеджера ресурсов GPU
 	m_GpuResourceManager = safe_make_shared<GpuResourceManager>(m_GAPI, m_CpuResourceManager);

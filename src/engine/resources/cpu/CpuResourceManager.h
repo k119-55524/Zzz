@@ -5,15 +5,12 @@
 #include <string>
 #include <format>
 #include <memory>
-#include <vector>
 #include <expected>
 #include <functional>
 #include <mutex>
 #include <condition_variable>
 
 #include "core/utils/Guid.h"
-#include "core/utils/SafeMath.h"
-#include "core/io/FileSystem.h"
 #include "core/enums/eResourceType.h"
 #include "engine/tasks/TaskDispatcher.h"
 #include "core/io/package/PackageEntry.h"
@@ -75,8 +72,7 @@ namespace zzz::engine
 
 		explicit CpuResourceManager(
 			TaskDispatcher& taskDispatcher,
-			std::shared_ptr<DataAssetsManager> dataAssetsManager,
-			std::shared_ptr<FileSystem> fileSystem);
+			std::shared_ptr<DataAssetsManager> dataAssetsManager);
 
 		~CpuResourceManager();
 
@@ -127,52 +123,19 @@ namespace zzz::engine
 						return;
 					}
 
-					auto loc = m_DataAssetsManager->GetAssetLocation(type, guid);
-					if (!loc)
-					{
-						std::string err = loc.error();
-						taskGuard.Release();
-						if (auto ctx = context.lock())
-							onLoaded(std::unexpected(std::move(err)));
-						return;
-					}
-
-					const PackageEntry* entry = loc->entry;
+					const auto* entry = m_DataAssetsManager->GetEntry(type, guid);
 					if (!entry)
 					{
 						taskGuard.Release();
 						if (auto ctx = context.lock())
-							onLoaded(std::unexpected("Запись пакета в AssetLocation не существует (null)."));
+							onLoaded(std::unexpected(std::format("Package entry of type {} with GUID '{}' was not found.", ToString(type), guid.ToString())));
 						return;
 					}
 
-					const auto offset = NarrowTo<std::size_t>(entry->GetOffset());
-					const auto size = NarrowTo<std::size_t>(entry->GetSize());
-					if (!offset || !size)
+					auto payloadRes = m_DataAssetsManager->ReadRawPayload(*entry);
+					if (!payloadRes)
 					{
-						taskGuard.Release();
-						if (auto ctx = context.lock())
-							onLoaded(std::unexpected("Диапазон ресурса не представим адресным размером платформы"));
-						return;
-					}
-
-					std::expected<std::vector<std::byte>, std::string> readRes;
-					if (*size == 0)
-					{
-						readRes = std::vector<std::byte>{};
-					}
-					else
-					{
-						readRes = m_FileSystem->ReadBytes(
-							loc->location,
-							loc->relativePath,
-							*offset,
-							*size);
-					}
-
-					if (!readRes)
-					{
-						std::string err = std::move(readRes.error());
+						std::string err = std::move(payloadRes.error());
 						taskGuard.Release();
 						if (auto ctx = context.lock())
 							onLoaded(std::unexpected(std::move(err)));
@@ -192,7 +155,7 @@ namespace zzz::engine
 					{
 						auto parseRes = T::CreateCpuResourceFromPackageBytes(
 							*entry,
-							*readRes
+							payloadRes->GetSpan()
 						);
 
 						if (!parseRes)
@@ -248,9 +211,8 @@ namespace zzz::engine
 	private:
 		TaskDispatcher& m_TaskDispatcher;
 		std::shared_ptr<DataAssetsManager> m_DataAssetsManager;
-		std::shared_ptr<FileSystem> m_FileSystem;
-		std::atomic<bool> m_IsStopping;
-		size_t m_ActiveIoTasks;
+		std::atomic<bool> m_IsStopping{false};
+		size_t m_ActiveIoTasks{0};
 		std::mutex m_ShutdownMutex;
 		std::condition_variable m_ShutdownCv;
 	};

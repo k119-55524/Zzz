@@ -48,9 +48,15 @@ namespace zzz::engine
 		if (primaryViewIt == m_EntriesByGuid.end() || primaryViewIt->second.empty())
 			THROW_RUNTIME("Ошибка пакета '{}': Обязательный ресурс PrimaryViewData отсутствует.", pathStr);
 
+		if (primaryViewIt->second.size() != 1)
+			THROW_RUNTIME("Ошибка пакета '{}': Ожидался ровно один ресурс PrimaryViewData, обнаружено: {}.", pathStr, primaryViewIt->second.size());
+
 		auto manifestIt = m_EntriesByGuid.find(ePackage::ProjectManifest);
 		if (manifestIt == m_EntriesByGuid.end() || manifestIt->second.empty())
 			THROW_RUNTIME("Ошибка пакета '{}': Обязательный ресурс ProjectManifestData отсутствует.", pathStr);
+
+		if (manifestIt->second.size() != 1)
+			THROW_RUNTIME("Ошибка пакета '{}': Ожидался ровно один ресурс ProjectManifestData, обнаружено: {}.", pathStr, manifestIt->second.size());
 
 		auto manifestRes = DeserializeEntryRaw<ProjectManifestData>(manifestIt->second.begin()->second);
 		if (!manifestRes)
@@ -91,6 +97,9 @@ namespace zzz::engine
 		auto it = m_EntriesByGuid.find(ePackage::PrimaryView);
 		if (it == m_EntriesByGuid.end() || it->second.empty())
 			return UNEXPECTED("Package entry of type PrimaryView was not found.");
+
+		if (it->second.size() != 1)
+			return UNEXPECTED("Expected exactly one PrimaryView in package, found: {}.", it->second.size());
 
 		return DeserializeEntryRaw<PrimaryViewData>(it->second.begin()->second);
 	}

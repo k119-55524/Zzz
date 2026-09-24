@@ -21,6 +21,8 @@ namespace zzz::engine
 
 namespace zzz::core
 {
+	class MemoryMappedFile;
+
 	/**
 	 * @class FileSystemBase
 	 * @brief Базовая реализация файловой системы для кроссплатформенного ввода-вывода.
@@ -32,6 +34,7 @@ namespace zzz::core
 	class FileSystemBase
 	{
 		friend class engine::Engine;
+		friend class MemoryMappedFile;
 
 	public:
 		explicit FileSystemBase(std::shared_ptr<NativeAppData> nativeData = nullptr);

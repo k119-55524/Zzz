@@ -86,6 +86,9 @@ TEST(SerializationTest, VectorsPoint2DSize2DRect2D)
 #include "engine/package/PackageManager.h"
 #include "core/io/FileSystem.h"
 #include "core/utils/MemoryUtils.h"
+#include <future>
+#include <limits>
+#include <optional>
 #include <windows.h>
 
 TEST(SerializationTest, MeshDataSymmetricSerialization)
@@ -116,25 +119,30 @@ TEST(SerializationTest, MeshDataSymmetricSerialization)
 
 TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
 {
-	// Загружаем assets_builder_dll и вызываем PackProjectNative
-	HMODULE hDll = LoadLibraryA("assets_builder_dll.dll");
+	std::filesystem::path rootDir = std::filesystem::current_path();
+	while (!rootDir.empty() && !std::filesystem::exists(rootDir / "src/projects/assets_projects/zzz_assets_test_000/project.json"))
+	{
+		if (!rootDir.has_parent_path() || rootDir == rootDir.parent_path())
+			break;
+		rootDir = rootDir.parent_path();
+	}
+	ASSERT_TRUE(std::filesystem::exists(rootDir / "src/projects/assets_projects/zzz_assets_test_000/project.json"))
+		<< "Не удалось найти корень репозитория из текущего пути: " << std::filesystem::current_path().string();
+
+	const auto dllPath = (rootDir / "dist/Debug/assets_builder_dll.dll").string();
+	HMODULE hDll = LoadLibraryA(dllPath.c_str());
 	if (hDll == nullptr)
 	{
-		hDll = LoadLibraryA("dist/Debug/assets_builder_dll.dll");
+		hDll = LoadLibraryA("assets_builder_dll.dll");
 	}
-	ASSERT_NE(hDll, nullptr) << "Не удалось загрузить assets_builder_dll.dll";
+	ASSERT_NE(hDll, nullptr) << "Не удалось загрузить assets_builder_dll.dll из: " << dllPath;
 
 	using PackFn = bool (*)(const char*, const char*, uint32_t, const char*, uint64_t, uint64_t*);
 	auto packProject = reinterpret_cast<PackFn>(GetProcAddress(hDll, "PackProjectNative"));
 	ASSERT_NE(packProject, nullptr) << "Не найдена функция PackProjectNative";
 
-	std::string srcDir = "src/projects/assets_projects/zzz_assets_test_000";
-	std::string dstDir = "dist/Debug";
-	if (!std::filesystem::exists(srcDir))
-	{
-		srcDir = "../../../" + srcDir;
-		dstDir = "../../../" + dstDir;
-	}
+	const auto srcDir = (rootDir / "src/projects/assets_projects/zzz_assets_test_000").string();
+	const auto dstDir = (rootDir / "dist/Debug").string();
 
 	// Собираем пакет
 	bool ok = packProject(srcDir.c_str(), dstDir.c_str(), 0, nullptr, 0, nullptr);
@@ -147,11 +155,25 @@ TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
 	auto dataMgr = core::safe_make_shared<core::DataAssetsManager>(fs);
 
 	core::Guid cubeMeshGuid = *core::Guid::Parse("00000000-0000-0000-0000-000000000010");
-	auto loc = dataMgr->GetAssetLocation(core::eResourceType::Mesh, cubeMeshGuid);
-	ASSERT_TRUE(loc.has_value()) << "Ресурс меша куба не найден в оглавлении data.dat: " << loc.error();
-	EXPECT_EQ(loc->location, core::eFileLocation::App);
-	EXPECT_EQ(loc->relativePath, core::c_DataPackageRelativePath);
-	ASSERT_NE(loc->entry, nullptr);
+	const auto* entry = dataMgr->GetEntry(core::eResourceType::Mesh, cubeMeshGuid);
+	ASSERT_NE(entry, nullptr) << "Ресурс меша куба не найден в оглавлении data.dat";
+	EXPECT_EQ(entry->GetGuid(), cubeMeshGuid);
+
+	auto payloadRes = dataMgr->ReadRawPayload(*entry);
+	ASSERT_TRUE(payloadRes.has_value()) << payloadRes.error();
+	EXPECT_EQ(payloadRes->GetSpan().size(), entry->GetSize());
+
+	core::PackageEntry emptyEntry(cubeMeshGuid, static_cast<zU32>(core::eResourceType::Mesh), entry->GetOffset(), 0);
+	auto emptyPayloadRes = dataMgr->ReadRawPayload(emptyEntry);
+	ASSERT_TRUE(emptyPayloadRes.has_value()) << emptyPayloadRes.error();
+	EXPECT_TRUE(emptyPayloadRes->GetSpan().empty());
+
+	core::PackageEntry invalidEntry(
+		cubeMeshGuid,
+		static_cast<zU32>(core::eResourceType::Mesh),
+		(std::numeric_limits<zU64>::max)(),
+		1);
+	EXPECT_FALSE(dataMgr->ReadRawPayload(invalidEntry).has_value());
 
 	auto meshRes = dataMgr->LoadAsset<core::MeshData>(cubeMeshGuid);
 	ASSERT_TRUE(meshRes.has_value()) << "Ошибка загрузки меша куба: " << meshRes.error();
@@ -161,19 +183,47 @@ TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
 	EXPECT_EQ(meshRes->GetIndexCount(), 36u);
 	EXPECT_EQ(meshRes->GetIndexFormat(), core::eIndexFormat::UInt16);
 
-	// Проверяем строгий контроль типов: запрос Mesh GUID с неверным типом ресурса должен отклоняться
-	auto wrongTypeLoc = dataMgr->GetAssetLocation(core::eResourceType::Texture2D, cubeMeshGuid);
-	EXPECT_FALSE(wrongTypeLoc.has_value());
+	std::vector<std::future<bool>> readers;
+	for (std::size_t i = 0; i < 8; ++i)
+	{
+		readers.push_back(std::async(std::launch::async, [dataMgr, cubeMeshGuid]()
+		{
+			for (std::size_t iteration = 0; iteration < 64; ++iteration)
+			{
+				auto concurrentMesh = dataMgr->LoadAsset<core::MeshData>(cubeMeshGuid);
+				if (!concurrentMesh || concurrentMesh->GetVertexCount() != 24u || concurrentMesh->GetIndexCount() != 36u)
+					return false;
+			}
+			return true;
+		}));
+	}
+
+	for (auto& reader : readers)
+		EXPECT_TRUE(reader.get());
+
+	std::optional<core::ArchivePayload> retainedPayload;
+	{
+		auto transientManager = core::safe_make_shared<core::DataAssetsManager>(fs);
+		const auto* transientEntry = transientManager->GetEntry(core::eResourceType::Mesh, cubeMeshGuid);
+		ASSERT_NE(transientEntry, nullptr);
+		auto transientPayload = transientManager->ReadRawPayload(*transientEntry);
+		ASSERT_TRUE(transientPayload.has_value()) << transientPayload.error();
+		retainedPayload.emplace(std::move(*transientPayload));
+	}
+	ASSERT_TRUE(retainedPayload.has_value());
+	EXPECT_EQ(retainedPayload->GetSpan().size(), entry->GetSize());
+
+	// Проверяем строгий контроль типов: запрос Mesh GUID с неверным типом ресурса должен возвращать nullptr
+	const auto* wrongTypeEntry = dataMgr->GetEntry(core::eResourceType::Texture2D, cubeMeshGuid);
+	EXPECT_EQ(wrongTypeEntry, nullptr);
 
 	// Проверяем чтение из package.dat через PackageManager
 	auto pkgMgr = core::safe_make_shared<engine::PackageManager>(fs);
 	core::Guid sceneGuid = *core::Guid::Parse("3cbf41ff-f608-47ca-b383-ea5698648aca");
 
-	auto sceneLoc = pkgMgr->GetAssetLocation(core::ePackage::Scene, sceneGuid);
-	ASSERT_TRUE(sceneLoc.has_value()) << "Запись сцены не найдена в оглавлении package.dat: " << sceneLoc.error();
-	EXPECT_EQ(sceneLoc->location, core::eFileLocation::App);
-	EXPECT_EQ(sceneLoc->relativePath, core::c_GamePackageRelativePath);
-	ASSERT_NE(sceneLoc->entry, nullptr);
+	const auto* sceneEntry = pkgMgr->GetEntry(core::ePackage::Scene, sceneGuid);
+	ASSERT_NE(sceneEntry, nullptr) << "Запись сцены не найдена в оглавлении package.dat";
+	EXPECT_EQ(sceneEntry->GetGuid(), sceneGuid);
 
 	auto sceneRes = pkgMgr->LoadAsset<core::SceneData>(sceneGuid);
 	ASSERT_TRUE(sceneRes.has_value()) << "Ошибка загрузки MainScene: " << sceneRes.error();

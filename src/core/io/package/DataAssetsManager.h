@@ -34,11 +34,11 @@ namespace zzz::core
 			if (!entry)
 				return UNEXPECTED("Package entry of type {} with GUID '{}' was not found.", ToString(type), guid.ToString());
 
-			auto bytesRes = ReadRawBytes(*entry);
-			if (!bytesRes)
-				return UNEXPECTED("{}", bytesRes.error());
+			auto payloadRes = ReadRawPayload(*entry);
+			if (!payloadRes)
+				return UNEXPECTED("{}", payloadRes.error());
 
-			return DeserializeAssetFromMemory<T>(*entry, *bytesRes);
+			return DeserializeAssetFromMemory<T>(*entry, payloadRes->GetSpan());
 		}
 
 		template <typename T>

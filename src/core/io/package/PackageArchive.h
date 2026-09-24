@@ -4,7 +4,9 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <variant>
 #include <expected>
+#include <algorithm>
 #include <filesystem>
 #include <type_traits>
 #include <unordered_map>
@@ -14,14 +16,49 @@
 #include "core/io/FileSystem.h"
 #include "core/utils/SafeMath.h"
 #include "core/io/DatFileHeader.h"
+#include "core/io/MemoryMappedFile.h"
 #include "core/serialize/Serializer.h"
 #include "core/io/package/PackageEntry.h"
-#include "core/io/package/AssetLocation.h"
 
 namespace zzz::core
 {
 	template <typename TType>
 	using TypeValidator = bool(*)(TType type) noexcept;
+
+	/**
+	 * @brief Payload записи архива: borrowed span из mmap либо owned buffer мобильного fallback.
+	 */
+	class ArchivePayload final
+	{
+		struct MappedView
+		{
+			std::shared_ptr<const MemoryMappedFile> owner;
+			std::span<const std::byte> bytes;
+		};
+
+	public:
+		ArchivePayload(std::shared_ptr<const MemoryMappedFile> mappedFile, std::span<const std::byte> bytes) noexcept
+			: m_Data(MappedView{ std::move(mappedFile), bytes })
+		{
+		}
+
+		explicit ArchivePayload(std::vector<std::byte> bytes) noexcept
+			: m_Data(std::move(bytes))
+		{
+		}
+
+		[[nodiscard]] std::span<const std::byte> GetSpan() const noexcept
+		{
+			if (const auto* mapped = std::get_if<MappedView>(&m_Data))
+				return mapped->bytes;
+
+			const auto& owned = std::get<std::vector<std::byte>>(m_Data);
+			return owned;
+		}
+
+	private:
+		std::variant<MappedView, std::vector<std::byte>> m_Data;
+	};
 
 	/**
 	 * @struct ArchiveInitParams
@@ -65,29 +102,27 @@ namespace zzz::core
 			return &guidIt->second;
 		}
 
-		[[nodiscard]] std::expected<AssetLocation, std::string> GetAssetLocation(const PackageEntry& entry) const
+		[[nodiscard]] std::expected<ArchivePayload, std::string> ReadRawPayload(const PackageEntry& entry) const
 		{
+			if (!m_FileSystem)
+				return UNEXPECTED("FileSystem не инициализирован в PackageArchive.");
+
 			const auto offset = NarrowTo<std::size_t>(entry.GetOffset());
 			const auto size = NarrowTo<std::size_t>(entry.GetSize());
 			if (!offset || !size)
 				return UNEXPECTED("Диапазон ресурса с GUID '{}' не представим адресным размером платформы", entry.GetGuid().ToString());
 
-			return AssetLocation{
-				.location = eFileLocation::App,
-				.relativePath = m_ArchivePath,
-				.offset = *offset,
-				.size = *size,
-				.entry = &entry
-			};
-		}
+			if (!IsRangeInside(*offset, *size, m_ArchiveSize))
+				return UNEXPECTED("Диапазон ресурса с GUID '{}' выходит за границы архива", entry.GetGuid().ToString());
 
-		[[nodiscard]] std::expected<AssetLocation, std::string> GetAssetLocation(TType type, const Guid& guid) const
-		{
-			const auto* entry = GetEntry(type, guid);
-			if (!entry)
-				return UNEXPECTED("Package entry of type {} with GUID '{}' was not found.", ToString(type), guid.ToString());
+			if (m_MappedFile && m_MappedFile->IsValid())
+				return ArchivePayload(m_MappedFile, m_MappedFile->Subspan(*offset, *size));
 
-			return GetAssetLocation(*entry);
+			auto bytesRes = m_FileSystem->ReadBytes(eFileLocation::App, m_ArchivePath, *offset, *size);
+			if (!bytesRes)
+				return std::unexpected(std::move(bytesRes.error()));
+
+			return ArchivePayload(std::move(*bytesRes));
 		}
 
 	protected:
@@ -99,16 +134,39 @@ namespace zzz::core
 
 			const std::string pathStr = m_ArchivePath.generic_string();
 
-			auto fileSizeRes = m_FileSystem->GetFileSize(eFileLocation::App, m_ArchivePath);
-			if (!fileSizeRes)
-				THROW_RUNTIME("Ошибка получения размера архива '{}': {}", pathStr, fileSizeRes.error());
+			std::vector<std::byte> headerStorage;
+			std::span<const std::byte> headerBytes;
 
-			const std::uintmax_t fileSize = *fileSizeRes;
-			auto headerBytesRes = m_FileSystem->ReadBytes(eFileLocation::App, m_ArchivePath, 0, m_Header.c_BaseHeaderSize);
-			if (!headerBytesRes)
-				THROW_RUNTIME("Ошибка чтения заголовка архива '{}': {}", pathStr, headerBytesRes.error());
+			if constexpr (MemoryMappedFile::c_IsSupported)
+			{
+				auto mappedRes = MemoryMappedFile::Open(*m_FileSystem, eFileLocation::App, m_ArchivePath);
+				if (!mappedRes)
+					THROW_RUNTIME("Ошибка отображения архива '{}': {}", pathStr, mappedRes.error());
 
-			if (auto res = m_Header.DeserializeAndValidate(*headerBytesRes, fileSize); !res)
+				m_MappedFile = std::make_shared<MemoryMappedFile>(std::move(*mappedRes));
+				m_ArchiveSize = m_MappedFile->GetSize();
+				const auto archiveBytes = m_MappedFile->GetSpan();
+				headerBytes = archiveBytes.first((std::min)(archiveBytes.size(), static_cast<std::size_t>(m_Header.c_BaseHeaderSize)));
+			}
+			else
+			{
+				auto fileSizeRes = m_FileSystem->GetFileSize(eFileLocation::App, m_ArchivePath);
+				if (!fileSizeRes)
+					THROW_RUNTIME("Ошибка получения размера архива '{}': {}", pathStr, fileSizeRes.error());
+
+				const auto archiveSize = NarrowTo<std::size_t>(*fileSizeRes);
+				if (!archiveSize)
+					THROW_RUNTIME("Размер архива '{}' не представим адресным размером платформы", pathStr);
+				m_ArchiveSize = *archiveSize;
+
+				auto headerBytesRes = m_FileSystem->ReadBytes(eFileLocation::App, m_ArchivePath, 0, m_Header.c_BaseHeaderSize);
+				if (!headerBytesRes)
+					THROW_RUNTIME("Ошибка чтения заголовка архива '{}': {}", pathStr, headerBytesRes.error());
+				headerStorage = std::move(*headerBytesRes);
+				headerBytes = headerStorage;
+			}
+
+			if (auto res = m_Header.DeserializeAndValidate(headerBytes, m_ArchiveSize); !res)
 				THROW_RUNTIME("Ошибка заголовка архива '{}': {}", pathStr, res.error());
 
 			const std::size_t headerSize = m_Header.GetHeaderSize();
@@ -120,27 +178,38 @@ namespace zzz::core
 				if (!tableSize)
 					THROW_RUNTIME("Размер таблицы записей архива '{}' переполняет std::size_t (записей: {})", pathStr, entryCount);
 
-				const std::uintmax_t payloadBegin = headerSize + static_cast<std::uintmax_t>(*tableSize);
-				if (!IsRangeInside<std::uintmax_t>(headerSize, *tableSize, fileSize))
-					THROW_RUNTIME("Таблица записей архива '{}' выходит за границы файла: {} > {}", pathStr, payloadBegin, fileSize);
+				const std::size_t payloadBegin = headerSize + *tableSize;
+				if (!IsRangeInside(headerSize, *tableSize, m_ArchiveSize))
+					THROW_RUNTIME("Таблица записей архива '{}' выходит за границы файла: {} > {}", pathStr, payloadBegin, m_ArchiveSize);
 
-				auto tableBufferRes = m_FileSystem->ReadBytes(eFileLocation::App, m_ArchivePath, headerSize, *tableSize);
-				if (!tableBufferRes)
-					THROW_RUNTIME("Ошибка чтения таблицы записей архива '{}': {}", pathStr, tableBufferRes.error());
+				std::vector<std::byte> tableStorage;
+				std::span<const std::byte> tableBytes;
+				if (m_MappedFile && m_MappedFile->IsValid())
+				{
+					tableBytes = m_MappedFile->Subspan(headerSize, *tableSize);
+				}
+				else
+				{
+					auto tableBufferRes = m_FileSystem->ReadBytes(eFileLocation::App, m_ArchivePath, headerSize, *tableSize);
+					if (!tableBufferRes)
+						THROW_RUNTIME("Ошибка чтения таблицы записей архива '{}': {}", pathStr, tableBufferRes.error());
+					tableStorage = std::move(*tableBufferRes);
+					tableBytes = tableStorage;
+				}
 
 #if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
 				std::unordered_map<Guid, zU32> seenGuids;
 				seenGuids.reserve(entryCount);
 #endif
 
-				const std::uintmax_t payloadSize = fileSize - payloadBegin;
+				const std::size_t payloadSize = m_ArchiveSize - payloadBegin;
 				std::size_t tableOffset = 0;
 				Serializer serializer;
 
 				for (zU32 i = 0; i < entryCount; ++i)
 				{
 					PackageEntry entry{};
-					if (auto res = serializer.Deserialize(*tableBufferRes, tableOffset, entry); !res)
+					if (auto res = serializer.Deserialize(tableBytes, tableOffset, entry); !res)
 						THROW_RUNTIME("Ошибка десериализации записи #{} архива '{}': {}", i, pathStr, res.error());
 
 					const auto rawType = entry.GetAssetType();
@@ -150,7 +219,7 @@ namespace zzz::core
 
 					if (!entry.IsRangeValid(payloadBegin, payloadSize))
 						THROW_RUNTIME("Запись #{} архива '{}' содержит недопустимый диапазон (offset={}, size={}) при границах данных [{}, {})",
-							i, pathStr, entry.GetOffset(), entry.GetSize(), payloadBegin, fileSize);
+							i, pathStr, entry.GetOffset(), entry.GetSize(), payloadBegin, m_ArchiveSize);
 
 #if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
 					ensure(entry.GetGuid().IsValid(), "Ресурс в пакете '{}' имеет невалидный (нулевой) GUID!", pathStr);
@@ -171,22 +240,6 @@ namespace zzz::core
 			}
 
 			LogArchiveSummary();
-		}
-
-		[[nodiscard]] std::expected<std::vector<std::byte>, std::string> ReadRawBytes(const PackageEntry& entry) const
-		{
-			if (!m_FileSystem)
-				return UNEXPECTED("FileSystem не инициализирован в PackageArchive.");
-
-			const auto offset = NarrowTo<std::size_t>(entry.GetOffset());
-			const auto size = NarrowTo<std::size_t>(entry.GetSize());
-			if (!offset || !size)
-				return UNEXPECTED("Диапазон ресурса с GUID '{}' не представим адресным размером платформы", entry.GetGuid().ToString());
-
-			if (*size == 0)
-				return std::vector<std::byte>{};
-
-			return m_FileSystem->ReadBytes(eFileLocation::App, m_ArchivePath, *offset, *size);
 		}
 
 		void LogArchiveSummary() const
@@ -221,23 +274,26 @@ namespace zzz::core
 		template <typename T> requires std::derived_from<T, ISerializable>
 		[[nodiscard]] std::expected<T, std::string> DeserializeEntryRaw(const PackageEntry& entry) const
 		{
-			auto bufferRes = ReadRawBytes(entry);
-			if (!bufferRes)
-				return UNEXPECTED("{}", bufferRes.error());
+			auto payloadRes = ReadRawPayload(entry);
+			if (!payloadRes)
+				return UNEXPECTED("{}", payloadRes.error());
 
 			std::size_t offset = 0;
 			Serializer serializer;
 			T data{};
-			auto res = serializer.Deserialize(*bufferRes, offset, data);
+			auto res = serializer.Deserialize(payloadRes->GetSpan(), offset, data);
 			if (!res)
 				return UNEXPECTED("Ошибка десериализации данных пакета с GUID '{}': {}.", entry.GetGuid().ToString(), res.error());
 
 			return data;
 		}
 
-		DatFileHeader m_Header;
-		std::map<TType, std::unordered_map<Guid, PackageEntry>> m_EntriesByGuid;
 		std::shared_ptr<FileSystem> m_FileSystem;
 		std::filesystem::path m_ArchivePath;
+
+		DatFileHeader m_Header;
+		std::map<TType, std::unordered_map<Guid, PackageEntry>> m_EntriesByGuid;
+		std::shared_ptr<const MemoryMappedFile> m_MappedFile;
+		std::size_t m_ArchiveSize = 0;
 	};
 }
