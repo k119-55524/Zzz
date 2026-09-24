@@ -15,7 +15,7 @@
      * **Windows (`MappedFileHandleMSWin.cpp`):** `CreateFileW`, `CreateFileMappingW`, `MapViewOfFile`, `UnmapViewOfFile`, `CloseHandle`.
      * **POSIX (`MappedFileHandlePosix.cpp`):** `open`, `fstat`, `mmap`, `munmap`, `close`.
      * **Android (`MappedFileHandleAndroid.cpp`):** NDK `AAsset` fallback.
-   - **`ReadWriteFile`** — потокобезопасный (`mutable std::mutex`) файловый поток C++23 для изменяемых данных (`user_settings.json`, сейвы, логи): `ReadAll`, `WriteAll`, `Read`, `Write`, `Flush`. 100% кроссплатформенный код без `#ifdef`.
+   - **`ReadWriteFile`** — потокобезопасный (`std::mutex`) файл для изменяемых данных (`user_settings.json`, сейвы, логи): `Read`, `Write`. Хэндл между вызовами не удерживается. 100% кроссплатформенный код без `#ifdef`. Права на путь проверяет `FileSystem` до создания объекта (см. п. 6 детального плана).
    - **`FileSystemBase` / `FileSystem`** — чистая топология путей и песочниц (`eFileLocation`), создание каталогов, проверки существования и удаление файлов. **Полное исключение методов чтения/записи байт (`ReadBytes`, `ReadAllBytes`, `WriteAllBytes`) из `FileSystem`**. Выступает в роли резолвера путей (`GetGamePackagePath`, `GetDataPackagePath`), передавая разрешённые пути потребителям.
 
 3. **Интеграция в `ArchiveReaderBase<TType>`, разделение типизации и `ResourceDatMapping`:**
@@ -76,3 +76,14 @@
 - [x] Добавить в `EngineTests` проверки mapped payload, пустого/некорректного диапазона и удержания данных.
 - [x] Проверить end-to-end тест `PackagePackerAndDataAssetsManagerEndToEnd`.
 - [x] Проверить многопоточную устойчивость параллельной десериализации одного ресурса.
+
+### 6. Валидация прав файлов и упрощение `ReadWriteFile`
+- [ ] Платформенная обёртка `FileAccess` в `src/core/io/storage/platforms/file_access/` по образцу `MappedFileHandle`: один заголовок и реализации, выбираемые через CMake. Две проверки без изменений на диске: можно ли читать и писать существующий файл; можно ли создать файл в каталоге.
+  * **Windows (`FileAccessMSWin.cpp`):** открытие хэндла файла (или каталога с правом на добавление файла) с нужными правами и немедленное закрытие.
+  * **POSIX (`FileAccessPosix.cpp`, Linux/macOS/iOS/Android):** `access()` с нужными флагами.
+- [ ] В `FileSystemBase` приватный метод `ValidateFilePath` — проверка полного физического пути с флагом `bool writable`, используется только внутри `FileSystem`:
+  * `false` — файл существует и является обычным файлом;
+  * `true` — существующий файл доступен на чтение и запись; для отсутствующего — ближайший существующий каталог-предок позволяет создать файл.
+- [ ] `GetGamePackagePath` / `GetDataPackagePath` по контракту только читаются: проверяют наличие файла через `FileExists` (на Android — ассеты APK через существующее переопределение). Флаг не принимают.
+- [ ] `FileSystemBase::InitializeUserData` переименован в `GetUserConfigPath`: инициализирует каталог пользовательских данных и возвращает путь к файлу настроек, проверенный с `writable = true`. `engine.cpp` при ошибке бросает исключение.
+- [ ] `ReadWriteFile`: конструктор только сохраняет путь (пробный файл удалён). `Read` / `Write` сохраняют минимальные проверки при работе; `Write` пишет напрямую в файл, с откатом созданных файла и каталогов при ошибке и исключении; пустые данные пропускаются с предупреждением в лог.

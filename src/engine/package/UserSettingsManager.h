@@ -36,7 +36,7 @@ namespace zzz::engine
 		void ValidateAgainstPackages(const PackageManager& packageManager, const DataAssetsManager* dataAssetsManager = nullptr);
 
 		[[nodiscard]] inline const std::string& GetSelectedGpuId() const noexcept { return m_SelectedGpuId; }
-		[[nodiscard]] inline const std::filesystem::path& GetPath() const noexcept { return m_File.GetPath(); }
+		[[nodiscard]] inline const std::filesystem::path& GetPath() const noexcept { return m_ConfigPath; }
 
 		/**
 		 * @brief Возвращает пользовательские настройки Основного окна (PrimaryViewUserData).
@@ -94,6 +94,7 @@ namespace zzz::engine
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override;
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override;
 
+		std::filesystem::path m_ConfigPath;
 		ReadWriteFile m_File;
 
 		DatFileHeader m_Header;

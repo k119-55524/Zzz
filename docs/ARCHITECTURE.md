@@ -135,8 +135,8 @@ namespace = "Gameplay"
 8. **[ВЫПОЛНЕНО ДЛЯ DESKTOP] Архитектура storage/: ReadOnlyFile, ReadWriteFile, FileSystem.**
    Архитектура I/O реорганизована в модуль `core/io/storage/`:
    - `ReadOnlyFile`: RAII zero-copy отображение неизменяемых файлов по переданному физическому пути (`std::filesystem::path`), lock-free потокобезопасность «из коробки», платформенное окружение изолировано через `MappedFileHandle` (выбирается CMake без `#ifdef` в бизнес-логике);
-   - `ReadWriteFile`: потокобезопасный (mutex) файловый поток C++23 для изменяемых данных (`user_settings.json`, сейвы, логи);
-   - `FileSystemBase` / `FileSystem`: чистая топология путей (`eFileLocation`), создание папок, проверки существования и удаление файлов (без прямого байтового I/O). Выступает в роли резолвера путей (`ResolvePhysicalPath`, `GetGamePackagePath`, `GetDataPackagePath`), передавая разрешённые пути потребителям;
+   - `ReadWriteFile`: потокобезопасный (mutex) файл для изменяемых данных (`user_settings.json`, сейвы, логи): `Read` / `Write`;
+   - `FileSystemBase` / `FileSystem`: чистая топология путей (`eFileLocation`), создание папок, проверки существования и удаление файлов (без прямого байтового I/O). Выступает в роли резолвера путей (`ResolvePhysicalPath`, `GetGamePackagePath`, `GetDataPackagePath`, `GetUserConfigPath`), передавая разрешённые пути потребителям;
    - `ArchiveReaderBase`: базовый шаблонный класс для чтения архивов .dat, зеркальный к `ArchiveWriter`. Хранит `ReadOnlyFile m_ReadOnlyFile;` строго по значению (без `std::shared_ptr`, без зависимости от `FileSystem`), раздавая прямой zero-copy `std::span<const std::byte>` через `ReadRawPayload`. Принимает строго `const std::filesystem::path&` извне (Inversion of Control).
    - **Архитектура типизации архивов и ресурсов (Разделение зон ответственности):**
      * `ePackageDatType`: физические типы записей оглавления `package.dat` (`ProjectManifest`, `Scene`, `PrimaryView`, `ChildView`, `IndependentView`, `Prefab`);

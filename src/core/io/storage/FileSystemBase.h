@@ -50,10 +50,24 @@ namespace zzz::core
 		[[nodiscard]] std::expected<std::filesystem::path, std::string> GetGamePackagePath() const noexcept;
 		[[nodiscard]] std::expected<std::filesystem::path, std::string> GetDataPackagePath() const noexcept;
 
-		[[nodiscard]] std::expected<void, std::string> InitializeUserData(std::string_view companyName, std::string_view appName);
+		/**
+		 * @brief Инициализирует каталог пользовательских данных и возвращает путь к файлу настроек пользователя.
+		 * @details Путь проверяется на чтение и запись (для отсутствующего файла — на возможность создания).
+		 */
+		[[nodiscard]] std::expected<std::filesystem::path, std::string> GetUserConfigPath(std::string_view companyName, std::string_view appName);
 
 	protected:
 		std::shared_ptr<NativeAppData> m_NativeData;
 		std::shared_ptr<Path>          m_Path;
+
+	private:
+		/**
+		 * @brief Проверяет физический путь к файлу.
+		 * @param physicalPath Полный путь к файлу.
+		 * @param writable false — файл существует и является обычным файлом;
+		 *                 true — существующий файл доступен на чтение и запись, а для отсутствующего
+		 *                 ближайший существующий каталог-предок позволяет создать файл.
+		 */
+		[[nodiscard]] std::expected<void, std::string> ValidateFilePath(const std::filesystem::path& physicalPath, bool writable = false) const noexcept;
 	};
 }

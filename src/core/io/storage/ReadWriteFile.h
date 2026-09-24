@@ -1,87 +1,50 @@
 #pragma once
 
+#include <span>
+#include <mutex>
+#include <string>
+#include <vector>
 #include <cstddef>
 #include <expected>
 #include <filesystem>
-#include <fstream>
-#include <memory>
-#include <mutex>
-#include <span>
-#include <string>
-#include <vector>
 
-#include "core/enums/eFileLocation.h"
+#include "core/utils/Macroses.h"
 
 namespace zzz::core
 {
-	class FileSystemBase;
-
-	enum class eFileAccessMode
-	{
-		Read,        // Только чтение существующего файла
-		Write,       // Перезапись (создаёт новый или усекает существующий до 0)
-		ReadWrite,   // Чтение и запись (создаёт, если файла нет)
-		Append       // Дозапись в конец (для логов и потоков)
-	};
-
 	/**
 	 * @brief Изменяемый файл с потокобезопасными операциями чтения и записи.
-	 * @details Все операции синхронизированы внутренним мьютексом.
+	 * @details Права на путь проверяет FileSystem при выдаче пути; конструктор проверок не выполняет.
+	 *          Хэндл между вызовами не удерживается: файл открывается и закрывается внутри Read/Write.
+	 *          Read и Write выполняют минимальные проверки при работе. Write с пустыми данными ничего не делает
+	 *          (только предупреждение в лог), иначе при необходимости создаёт каталоги
+	 *          и пишет напрямую в файл. При ошибке созданные файл и каталоги удаляются.
+	 *          Ошибки Read/Write возвращаются через std::expected с логированием через UNEXPECTED.
 	 */
 	class ReadWriteFile final
 	{
 	public:
-		ReadWriteFile() noexcept = default;
+		Z_NO_COPY_MOVE(ReadWriteFile);
 
-		explicit ReadWriteFile(
-			const std::filesystem::path& physicalPath,
-			eFileAccessMode mode = eFileAccessMode::ReadWrite);
+		explicit ReadWriteFile(const std::filesystem::path& physicalPath);
 
-		ReadWriteFile(
-			const FileSystemBase& fileSystem,
-			eFileLocation location,
-			const std::filesystem::path& relativePath,
-			eFileAccessMode mode = eFileAccessMode::ReadWrite);
-
-		~ReadWriteFile();
-
-		ReadWriteFile(const ReadWriteFile&) = delete;
-		ReadWriteFile& operator=(const ReadWriteFile&) = delete;
-
-		ReadWriteFile(ReadWriteFile&& other) noexcept;
-		ReadWriteFile& operator=(ReadWriteFile&& other) noexcept;
-
-		[[nodiscard]] static std::expected<ReadWriteFile, std::string> Open(
-			const std::filesystem::path& physicalPath,
-			eFileAccessMode mode = eFileAccessMode::ReadWrite);
-
-		[[nodiscard]] static std::expected<ReadWriteFile, std::string> Open(
-			const FileSystemBase& fileSystem,
-			eFileLocation location,
-			const std::filesystem::path& relativePath,
-			eFileAccessMode mode = eFileAccessMode::ReadWrite);
-
-		[[nodiscard]] const std::filesystem::path& GetPath() const noexcept;
-		[[nodiscard]] bool IsValid() const noexcept;
-		[[nodiscard]] const std::string& GetError() const noexcept;
-		[[nodiscard]] std::size_t GetSize() const noexcept;
-
-		[[nodiscard]] std::expected<std::vector<std::byte>, std::string> ReadAll() noexcept;
-		std::expected<void, std::string> WriteAll(std::span<const std::byte> bytes) noexcept;
-
-		[[nodiscard]] std::expected<std::size_t, std::string> Read(std::span<std::byte> destination) noexcept;
-		std::expected<void, std::string> Write(std::span<const std::byte> bytes) noexcept;
-		std::expected<void, std::string> Flush() noexcept;
-		void Close() noexcept;
+		[[nodiscard]] std::expected<std::vector<std::byte>, std::string> Read();
+		std::expected<void, std::string> Write(std::span<const std::byte> bytes);
 
 	private:
-		mutable std::mutex    m_Mutex;
-		std::fstream          m_Stream;
-		std::filesystem::path m_Path;
-		eFileAccessMode       m_Mode = eFileAccessMode::ReadWrite;
-		std::string           m_Error;
-		bool                  m_IsValid = false;
+		std::mutex				m_Mutex;
+		std::filesystem::path	m_Path;
 
-		void OpenInternal(const std::filesystem::path& physicalPath, eFileAccessMode mode);
+#pragma region Validation helpers
+		/// @brief Возвращает статус пути. Отсутствие файла ошибкой не считается.
+		[[nodiscard]] static std::expected<std::filesystem::file_status, std::string> GetStatus(const std::filesystem::path& path);
+
+		/// @brief Проверяет, что существующий путь — обычный файл, доступный на чтение и запись. Содержимое не изменяется.
+		[[nodiscard]] static std::expected<void, std::string> CheckExistingFile(
+			const std::filesystem::path& path, const std::filesystem::file_status& status);
+
+		/// @brief Возвращает несуществующие каталоги-предки файла, от самого глубокого к корню.
+		[[nodiscard]] static std::expected<std::vector<std::filesystem::path>, std::string> CollectMissingDirs(const std::filesystem::path& path);
+#pragma endregion // Validation helpers
 	};
 }

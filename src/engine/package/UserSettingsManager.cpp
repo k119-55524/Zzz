@@ -16,11 +16,11 @@ using namespace zzz::core;
 namespace zzz::engine
 {
 	UserSettingsManager::UserSettingsManager(const std::filesystem::path& configPath) :
-		m_File{ configPath, eFileAccessMode::ReadWrite },
+		m_ConfigPath{ configPath },
+		m_File{ configPath },
 		m_Header{},
 		m_IsDirty{ false }
 	{
-		ensure(m_File.IsValid(), "ReadWriteFile не удалось открыть для UserSettingsManager: {}", m_File.GetError());
 #if Z_EDITOR
 #else
 		Initialize();
@@ -81,19 +81,18 @@ namespace zzz::engine
 
 		try
 		{
-			// Сразу читаем весь байтмассив файла из ReadWriteFile
-			auto bufferRes = m_File.ReadAll();
+			// Читаем байтмассив файла из ReadWriteFile
+			auto bufferRes = m_File.Read();
 			if (!bufferRes)
 			{
-				DOutWarning("Не удалось прочитать файл конфигурации: {}. Создаётся конфигурация по умолчанию.", bufferRes.error());
-				SetDefaultUserSettings();
+				DOut("[UserSettingsManager] Конфигурация не загружена ({}). Используется конфигурация по умолчанию.", bufferRes.error());
 				return;
 			}
 
 			const auto& buffer = *bufferRes;
 			if (buffer.empty())
 			{
-				DOut("[UserSettingsManager] Файл конфигурации пуст: {}. Используется конфигурация по умолчанию.", m_File.GetPath().string());
+				DOut("[UserSettingsManager] Файл конфигурации пуст: {}. Используется конфигурация по умолчанию.", m_ConfigPath.string());
 				return;
 			}
 
@@ -114,7 +113,7 @@ namespace zzz::engine
 				return;
 			}
 
-			DOut("[UserSettingsManager] Конфигурация десериализована: {}.", m_File.GetPath().string());
+			DOut("[UserSettingsManager] Конфигурация десериализована: {}.", m_ConfigPath.string());
 		}
 		catch (const std::exception& e)
 		{
@@ -204,11 +203,10 @@ namespace zzz::engine
 				return UNEXPECTED("Не удалось сериализовать конфигурацию: {}.", res.error());
 			}
 
-			auto writeRes = m_File.WriteAll(buffer);
-			if (!writeRes)
+			if (auto writeRes = m_File.Write(buffer); !writeRes)
 			{
 				withTimestamp(prevSaveTime);
-				return UNEXPECTED("Не удалось сохранить файл конфигурации: {}.", writeRes.error());
+				return UNEXPECTED("Не удалось сохранить конфигурацию: {}.", writeRes.error());
 			}
 		}
 		catch (const std::exception& e)
@@ -223,7 +221,7 @@ namespace zzz::engine
 		}
 
 		m_IsDirty = false;
-		DOut("[UserSettingsManager] Конфигурация сохранена: {}.", m_File.GetPath().string());
+		DOut("[UserSettingsManager] Конфигурация сохранена: {}.", m_ConfigPath.string());
 
 		return {};
 #endif // Z_EDITOR
@@ -474,7 +472,7 @@ namespace zzz::engine
 	void UserSettingsManager::LogUserData() const
 	{
 #if Z_ADD_LOGGER
-		DOut("========== [UserSettingsManager] User Data: {} ==========", m_File.GetPath().string());
+		DOut("========== [UserSettingsManager] User Data: {} ==========", m_ConfigPath.string());
 		m_Header.LogFileBlock("  ");
 		if (m_PrimaryViewUserData)
 			m_PrimaryViewUserData->LogFileBlock("  ");

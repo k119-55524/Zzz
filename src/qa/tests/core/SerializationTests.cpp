@@ -228,11 +228,9 @@ TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
 	EXPECT_FALSE(sceneRes->GetLayers().empty());
 	// Проверяем прямую работу с ReadOnlyFile и ReadWriteFile
 	{
-		auto readOnlyRes = core::ReadOnlyFile::Open(*dataPathRes);
-		ASSERT_TRUE(readOnlyRes.has_value()) << readOnlyRes.error();
-		EXPECT_TRUE(readOnlyRes->IsValid());
-		EXPECT_GT(readOnlyRes->GetSize(), 0u);
-		auto magicSpan = readOnlyRes->Subspan(0, 3);
+		core::ReadOnlyFile readOnlyFile(*dataPathRes);
+		EXPECT_GT(readOnlyFile.GetSpan().size(), 0u);
+		auto magicSpan = readOnlyFile.Subspan(0, 3);
 		ASSERT_EQ(magicSpan.size(), 3u);
 		EXPECT_EQ(static_cast<char>(magicSpan[0]), 'Z');
 		EXPECT_EQ(static_cast<char>(magicSpan[1]), 'D');
@@ -240,28 +238,36 @@ TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
 	}
 
 	{
-		auto initRes = fs->InitializeUserData("ZzzTestCompany", "ZzzTestApp");
+		auto initRes = fs->GetUserConfigPath("ZzzTestCompany", "ZzzTestApp");
 		ASSERT_TRUE(initRes.has_value()) << initRes.error();
 
 		const std::filesystem::path testRelPath = "test_rw_file.bin";
+		auto testPathRes = fs->ResolvePhysicalPath(core::eFileLocation::User, testRelPath);
+		ASSERT_TRUE(testPathRes.has_value()) << testPathRes.error();
+
 		const std::vector<std::byte> testPayload = {
 			std::byte{ 0x11 }, std::byte{ 0x22 }, std::byte{ 0x33 }, std::byte{ 0x44 }
 		};
 
-		// 1. Запись через ReadWriteFile
+		// 1. Создание ReadWriteFile для ещё не существующего файла НЕ создаёт файл на диске
 		{
-			core::ReadWriteFile rwFile(*fs, core::eFileLocation::User, testRelPath, core::eFileAccessMode::Write);
-			ASSERT_TRUE(rwFile.IsValid()) << rwFile.GetError();
-			auto writeRes = rwFile.WriteAll(testPayload);
+			core::ReadWriteFile rwFile(*testPathRes);
+			EXPECT_FALSE(fs->FileExists(core::eFileLocation::User, testRelPath));
+			// Попытка чтения несуществующего файла возвращает unexpected
+			auto readRes = rwFile.Read();
+			EXPECT_FALSE(readRes.has_value());
+			EXPECT_FALSE(fs->FileExists(core::eFileLocation::User, testRelPath));
+
+			// Запись создаёт файл
+			auto writeRes = rwFile.Write(testPayload);
 			EXPECT_TRUE(writeRes.has_value());
-			EXPECT_EQ(rwFile.GetSize(), testPayload.size());
+			EXPECT_TRUE(fs->FileExists(core::eFileLocation::User, testRelPath));
 		}
 
-		// 2. Чтение через ReadWriteFile
+		// 2. Чтение через новый экземпляр ReadWriteFile
 		{
-			core::ReadWriteFile rwFile(*fs, core::eFileLocation::User, testRelPath, core::eFileAccessMode::Read);
-			ASSERT_TRUE(rwFile.IsValid()) << rwFile.GetError();
-			auto readRes = rwFile.ReadAll();
+			core::ReadWriteFile rwFile(*testPathRes);
+			auto readRes = rwFile.Read();
 			ASSERT_TRUE(readRes.has_value()) << readRes.error();
 			EXPECT_EQ(*readRes, testPayload);
 		}

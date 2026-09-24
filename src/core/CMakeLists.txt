@@ -139,6 +139,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/FileSystemBase.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/FileSystemBase.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/platforms/MappedFileHandle.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/platforms/file_access/FileAccess.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/platforms/FileSystemDesktop.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/platforms/FileSystemDesktop.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/platforms/FileSystemAndroid.h
@@ -215,14 +216,17 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
     if(WIN32)
         target_sources(${TARGET_NAME} PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/platforms/MappedFileHandleMSWin.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/platforms/file_access/FileAccessMSWin.cpp
         )
     elseif(ANDROID)
         target_sources(${TARGET_NAME} PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/platforms/MappedFileHandleAndroid.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/platforms/file_access/FileAccessPosix.cpp
         )
     elseif(UNIX OR APPLE)
         target_sources(${TARGET_NAME} PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/platforms/MappedFileHandlePosix.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/platforms/file_access/FileAccessPosix.cpp
         )
     endif()
 

@@ -51,16 +51,13 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 
 	m_PackageManager = safe_make_shared<PackageManager>(*pkgPath);
 	m_DataAssetsManager = safe_make_shared<DataAssetsManager>(*dataPath);
-	if (auto res = m_FileSystem->InitializeUserData(m_PackageManager->GetCompanyName(), m_PackageManager->GetAppName()); !res)
-		THROW_RUNTIME("Не удалось инициализировать каталог пользовательских данных: {}", res.error());
+	auto userConfigPath = m_FileSystem->GetUserConfigPath(m_PackageManager->GetCompanyName(), m_PackageManager->GetAppName());
+	if (!userConfigPath)
+		THROW_RUNTIME("Не удалось получить путь к файлу настроек пользователя: {}", userConfigPath.error());
 
 	// Установка максимального размера сетевой очереди логов из манифеста
 	const auto& projectManifestData = m_PackageManager->GetProjectManifestData();
 	g_Logger.SetMaxNetworkLogQueueSize(projectManifestData.GetMaxLogQueueSize());
-
-	auto userConfigPath = m_FileSystem->ResolvePhysicalPath(eFileLocation::User, c_UserConfigFileName);
-	if (!userConfigPath)
-		THROW_RUNTIME("Не удалось определить путь к файлу настроек пользователя: {}", userConfigPath.error());
 
 	// Загрузка пользовательских настроек и валидация по пакетам ресурсов
 	m_UserSettingsManager = safe_make_shared<UserSettingsManager>(*userConfigPath);

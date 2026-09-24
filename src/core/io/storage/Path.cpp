@@ -236,7 +236,7 @@ namespace zzz::core
 			return m_ExecutableDirectory;
 
 		if (m_UserDataDirectory.empty())
-			return UNEXPECTED("Каталог пользовательских данных не инициализирован. Вызовите InitializeUserData() перед обращением к подкаталогам.");
+			return UNEXPECTED("Каталог пользовательских данных не инициализирован. Вызовите FileSystem::GetUserConfigPath() перед обращением к подкаталогам.");
 
 		switch (location)
 		{

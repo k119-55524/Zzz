@@ -67,7 +67,6 @@ namespace zzz::core
 
 		virtual ~ArchiveReaderBase() = default;
 
-		[[nodiscard]] const std::filesystem::path& GetPath() const noexcept { return m_ReadOnlyFile.GetPath(); }
 		[[nodiscard]] std::string_view GetArchiveName() const noexcept { return m_ArchiveName; }
 
 		[[nodiscard]] const PackageEntry* GetEntry(TType type, const Guid& guid) const noexcept
@@ -90,9 +89,6 @@ namespace zzz::core
 
 		[[nodiscard]] std::expected<std::span<const std::byte>, std::string> ReadRawPayload(const PackageEntry& entry) const
 		{
-			if (!m_ReadOnlyFile.IsValid())
-				return UNEXPECTED("ReadOnlyFile не инициализирован для архива '{}'", m_ArchiveName);
-
 			const auto offset = NarrowTo<std::size_t>(entry.GetOffset());
 			const auto size = NarrowTo<std::size_t>(entry.GetSize());
 			if (!offset || !size)
@@ -107,10 +103,7 @@ namespace zzz::core
 	private:
 		void InitializeArchive()
 		{
-			if (!m_ReadOnlyFile.IsValid())
-				THROW_RUNTIME("Ошибка архива '{}': файл не открыт или повреждён ({}).", m_ArchiveName, m_ReadOnlyFile.GetError());
-
-			m_ArchiveSize = m_ReadOnlyFile.GetSize();
+			m_ArchiveSize = m_ReadOnlyFile.GetSpan().size();
 			m_Header = DatFileHeader{ Traits::c_ExpectedFormat };
 
 			const auto archiveBytes = m_ReadOnlyFile.GetSpan();
