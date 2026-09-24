@@ -15,7 +15,7 @@ Z_SET_LOG_CATEGORY(::zzz::core::Assets);
 namespace zzz::engine
 {
 	PackageManager::PackageManager(const std::filesystem::path& physicalPath)
-		: ArchiveReaderBase(physicalPath, c_PackageDatFormat, &IsGamePackageResourceType)
+		: ArchiveReaderBase(physicalPath)
 	{
 		const auto pathStr = GetArchiveName();
 

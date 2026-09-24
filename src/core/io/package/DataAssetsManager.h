@@ -13,26 +13,6 @@
 
 namespace zzz::core
 {
-	[[nodiscard]] constexpr bool IsDataArchiveResourceType(eResourceType resType) noexcept
-	{
-		switch (resType)
-		{
-		case eResourceType::Prefab:
-		case eResourceType::Mesh:
-		case eResourceType::Material:
-		case eResourceType::Shader:
-		case eResourceType::Animation:
-		case eResourceType::Texture2D:
-		case eResourceType::AudioClip:
-		case eResourceType::Video:
-		case eResourceType::Font:
-		case eResourceType::BinaryData:
-			return true;
-		default:
-			return false;
-		}
-	}
-
 	/**
 	 * @class DataAssetsManager
 	 * @brief Менеджер для чтения игровых ресурсов из архива data.dat.
@@ -49,7 +29,7 @@ namespace zzz::core
 		{
 			static_assert(requires { { T::c_ResourceType } -> std::convertible_to<eResourceType>; },
 				"T must define static constexpr eResourceType c_ResourceType");
-			static_assert(IsDataArchiveResourceType(T::c_ResourceType),
+			static_assert(ArchiveTraits<eResourceType>::IsTypeAllowed(T::c_ResourceType),
 				"Asset type is not allowed in data.dat");
 
 			constexpr eResourceType type = T::c_ResourceType;

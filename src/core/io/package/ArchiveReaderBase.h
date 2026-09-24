@@ -11,7 +11,9 @@
 #include "core/utils/Guid.h"
 #include "core/utils/Ensure.h"
 #include "core/utils/SafeMath.h"
+#include "core/enums/ePackage.h"
 #include "core/io/DatFileHeader.h"
+#include "core/enums/eResourceType.h"
 #include "core/serialize/Serializer.h"
 #include "core/io/package/PackageEntry.h"
 #include "core/io/storage/ReadOnlyFile.h"
@@ -19,7 +21,55 @@
 namespace zzz::core
 {
 	template <typename TType>
-	using TypeValidator = bool(*)(TType type) noexcept;
+	struct ArchiveTraits;
+
+	template <>
+	struct ArchiveTraits<ePackage>
+	{
+		static constexpr DatFileFormat c_ExpectedFormat = c_PackageDatFormat;
+
+		[[nodiscard]] static constexpr bool IsTypeAllowed(ePackage type) noexcept
+		{
+			switch (type)
+			{
+			case ePackage::ProjectManifest:
+			case ePackage::Scene:
+			case ePackage::PrimaryView:
+			case ePackage::ChildView:
+			case ePackage::IndependentView:
+			case ePackage::Prefab:
+				return true;
+			default:
+				return false;
+			}
+		}
+	};
+
+	template <>
+	struct ArchiveTraits<eResourceType>
+	{
+		static constexpr DatFileFormat c_ExpectedFormat = c_DataDatFormat;
+
+		[[nodiscard]] static constexpr bool IsTypeAllowed(eResourceType type) noexcept
+		{
+			switch (type)
+			{
+			case eResourceType::Prefab:
+			case eResourceType::Mesh:
+			case eResourceType::Material:
+			case eResourceType::Shader:
+			case eResourceType::Animation:
+			case eResourceType::Texture2D:
+			case eResourceType::AudioClip:
+			case eResourceType::Video:
+			case eResourceType::Font:
+			case eResourceType::BinaryData:
+				return true;
+			default:
+				return false;
+			}
+		}
+	};
 
 	/**
 	 * @class ArchiveReaderBase
@@ -28,17 +78,15 @@ namespace zzz::core
 	template <typename TType> requires std::is_enum_v<TType>
 	class ArchiveReaderBase
 	{
+		using Traits = ArchiveTraits<TType>;
+
 	public:
 		ArchiveReaderBase() = delete;
-		explicit ArchiveReaderBase(
-			const std::filesystem::path& path,
-			DatFileFormat expectedFormat,
-			TypeValidator<TType> isTypeAllowed)
+		explicit ArchiveReaderBase(const std::filesystem::path& path)
 			: m_ReadOnlyFile(path),
 			  m_ArchiveName(path.filename().string())
 		{
-			ensure(isTypeAllowed != nullptr, "isTypeAllowed не должен быть null в ArchiveReaderBase.");
-			InitializeArchive(expectedFormat, isTypeAllowed);
+			InitializeArchive();
 		}
 
 		virtual ~ArchiveReaderBase() = default;
@@ -76,13 +124,13 @@ namespace zzz::core
 		}
 
 	private:
-		void InitializeArchive(DatFileFormat expectedFormat, TypeValidator<TType> isTypeAllowed)
+		void InitializeArchive()
 		{
 			if (!m_ReadOnlyFile.IsValid())
 				THROW_RUNTIME("Ошибка архива '{}': файл не открыт или повреждён ({}).", m_ArchiveName, m_ReadOnlyFile.GetError());
 
 			m_ArchiveSize = m_ReadOnlyFile.GetSize();
-			m_Header = DatFileHeader{ expectedFormat };
+			m_Header = DatFileHeader{ Traits::c_ExpectedFormat };
 
 			const auto archiveBytes = m_ReadOnlyFile.GetSpan();
 			const auto headerBytes = archiveBytes.first((std::min)(archiveBytes.size(), static_cast<std::size_t>(m_Header.c_BaseHeaderSize)));
@@ -122,7 +170,7 @@ namespace zzz::core
 
 					const auto rawType = entry.GetAssetType();
 					const auto typedType = static_cast<TType>(rawType);
-					if (!isTypeAllowed(typedType))
+					if (!Traits::IsTypeAllowed(typedType))
 						THROW_RUNTIME("Запись #{} архива '{}' содержит недопустимый тип ресурса: {}", i, m_ArchiveName, rawType);
 
 					if (!entry.IsRangeValid(payloadBegin, payloadSize))

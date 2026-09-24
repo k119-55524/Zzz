@@ -18,9 +18,11 @@
    - **`ReadWriteFile`** — потокобезопасный (`mutable std::mutex`) файловый поток C++23 для изменяемых данных (`user_settings.json`, сейвы, логи): `ReadAll`, `WriteAll`, `Read`, `Write`, `Flush`. 100% кроссплатформенный код без `#ifdef`.
    - **`FileSystemBase` / `FileSystem`** — чистая топология путей и песочниц (`eFileLocation`), создание каталогов, проверки существования и удаление файлов. **Полное исключение методов чтения/записи байт (`ReadBytes`, `ReadAllBytes`, `WriteAllBytes`) из `FileSystem`**. Выступает в роли резолвера путей (`GetGamePackagePath`, `GetDataPackagePath`), передавая разрешённые пути потребителям.
 
-3. **Интеграция в `ArchiveReaderBase<TType>`:**
+3. **Интеграция в `ArchiveReaderBase<TType>` и compile-time `ArchiveTraits`:**
    - Хранение `ReadOnlyFile m_ReadOnlyFile;` строго по значению внутри `ArchiveReaderBase` (без `std::shared_ptr`, без зависимости от `FileSystem`).
-   - `PackageManager` и `DataAssetsManager` наследуют `ArchiveReaderBase` и принимают разрешённый `std::filesystem::path`, исключая прокидывание ссылки на всю структуру `FileSystem`.
+   - Унификация конструктора: `ArchiveReaderBase(const std::filesystem::path&)` принимает исключительно физический путь. Полная ликвидация параметров форматов и рантайм-колбэков валидации `TypeValidator<TType>`.
+   - Введение `ArchiveTraits<TType>` в `ArchiveReaderBase.h`: compile-time связь между перечислением типа (`ePackage`, `eResourceType`), ожидаемым форматом архива (`c_PackageDatFormat`, `c_DataDatFormat`) и валидацией разрешённых типов (`IsTypeAllowed`).
+   - `PackageManager` и `DataAssetsManager` наследуют `ArchiveReaderBase` и принимают разрешённый `std::filesystem::path`, исключая прокидывание ссылки на всю структуру `FileSystem`. В `LoadAsset<T>` валидация типов выполняется в `static_assert(ArchiveTraits<...>::IsTypeAllowed(...))`.
    - В `InitializeArchive`: маппинг архива один раз при старте; чтение заголовка и оглавления прямо из `std::span` mapped-памяти без лишних дисковых I/O.
    - Добавление `ReadRawPayload`, возвращающего прямой zero-copy `std::span<const std::byte>`.
    - Сохранение `ReadRawBytes(entry)` как совместимой копирующей обёртки только для потребителей, которым действительно нужен `std::vector<std::byte>`.
@@ -48,6 +50,7 @@
 
 ### 2. Базовый читатель архивов (`ArchiveReaderBase<TType>`)
 - [x] Добавить постоянный mapping и `std::size_t m_ArchiveSize` в `ArchiveReaderBase`.
+- [x] Реализовать compile-time `ArchiveTraits<TType>` (`ePackage`, `eResourceType`), устранить runtime-колбэк валидатора и унифицировать конструкторы `ArchiveReaderBase`, `PackageManager` и `DataAssetsManager` с передачей только пути `(const std::filesystem::path&)`.
 - [x] Переписать `InitializeArchive`:
   * Открытие `MemoryMappedFile`.
   * Чтение заголовка `DatFileHeader` и таблицы `PackageEntry` прямо из mapped-памяти.
