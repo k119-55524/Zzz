@@ -61,6 +61,8 @@ namespace zzz::core
 
 	[[nodiscard]] std::expected<void, std::string> Path::InitializeUserData(std::string_view companyName, std::string_view appName)
 	{
+		Z_CHECK_ONCE_CALL();
+
 		ensure(IsValidDirectoryName(companyName), "Недопустимое имя компании для каталога пользовательских данных: '{}'.", companyName);
 		ensure(IsValidDirectoryName(appName), "Недопустимое имя приложения для каталога пользовательских данных: '{}'.", appName);
 

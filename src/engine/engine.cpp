@@ -54,9 +54,8 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 	if (auto res = m_FileSystem->InitializeUserData(m_PackageManager->GetCompanyName(), m_PackageManager->GetAppName()); !res)
 		THROW_RUNTIME("Не удалось инициализировать каталог пользовательских данных: {}", res.error());
 
-	const auto& projectManifestData = m_PackageManager->GetProjectManifestData();
-
 	// Установка максимального размера сетевой очереди логов из манифеста
+	const auto& projectManifestData = m_PackageManager->GetProjectManifestData();
 	g_Logger.SetMaxNetworkLogQueueSize(projectManifestData.GetMaxLogQueueSize());
 
 	auto userConfigPath = m_FileSystem->ResolvePhysicalPath(eFileLocation::User, c_UserConfigFileName);

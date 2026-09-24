@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string_view>
+
 #include "math/utils/Types.h"
 #include "core/utils/ThrowWrappers.h"
 

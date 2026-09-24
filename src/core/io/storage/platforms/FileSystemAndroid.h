@@ -24,8 +24,6 @@ namespace zzz::core
 		~FileSystemAndroid() = default;
 
 		[[nodiscard]] bool FileExists(eFileLocation location, const std::filesystem::path& relativePath) const noexcept override;
-		[[nodiscard]] std::expected<std::uintmax_t, std::string> GetFileSize(
-			eFileLocation location, const std::filesystem::path& relativePath) const noexcept override;
 
 	private:
 		[[nodiscard]] std::expected<AAsset*, std::string> TryOpenAsset(

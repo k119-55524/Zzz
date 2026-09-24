@@ -10,6 +10,7 @@ namespace zzz::engine
 
 	void MetalAPI::Initialize(std::shared_ptr<UserSettingsManager> userSettings)
 	{
+		Z_CHECK_ONCE_CALL();
 	}
 
 	void MetalAPI::WaitForGpu()

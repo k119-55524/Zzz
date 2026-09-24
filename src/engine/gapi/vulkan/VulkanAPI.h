@@ -28,6 +28,7 @@ namespace zzz::engine
 		~VulkanAPI() override;
 
 		void WaitForGpu() override;
+		void Initialize(std::shared_ptr<UserSettingsManager> userSettings) override;
 
 		[[nodiscard]] VkInstance GetInstance() const noexcept { return m_Instance; }
 		[[nodiscard]] VkPhysicalDevice GetPhysicalDevice() const noexcept { return m_PhysicalDevice; }
@@ -72,9 +73,6 @@ namespace zzz::engine
 		}
 
 	private:
-		friend class Engine;
-		void Initialize(std::shared_ptr<UserSettingsManager> userSettings) override;
-
 		// Имя слоя и его debug_action для VK_EXT_layer_settings - используются и в FindValidationLayers
 		// (поиск/сравнение), и в BuildVerboseValidationLayerSettings (заполнение VkLayerSettingEXT), поэтому
 		// вынесены в константы класса, а не дублируются как локальные литералы в каждой функции.

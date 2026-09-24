@@ -14,6 +14,7 @@ namespace zzz::engine
 		~DirectX12API() override;
 
 		void WaitForGpu() override;
+		void Initialize(std::shared_ptr<UserSettingsManager> userSettings) override;
 
 		uint64_t SignalFence();
 		void WaitForFenceValue(uint64_t fenceValue);
@@ -46,8 +47,6 @@ namespace zzz::engine
 		}
 
 	private:
-		friend class Engine;
-		void Initialize(std::shared_ptr<UserSettingsManager> userSettings) override;
 		void EnableDebugLayer(UINT& dxgiFactoryFlags);
 		void InitializeDevice(std::shared_ptr<UserSettingsManager> userSettings, UINT dxgiFactoryFlags);
 		[[nodiscard]] Microsoft::WRL::ComPtr<IDXGIFactory7> CreateFactory(UINT dxgiFactoryFlags);

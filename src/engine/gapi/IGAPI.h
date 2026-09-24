@@ -8,12 +8,8 @@ namespace zzz::engine
 {
 	using namespace zzz::core;
 
-	class Engine;
-
 	class IGAPI
 	{
-		friend class Engine;
-
 	public:
 		explicit IGAPI() = default;
 		virtual ~IGAPI() = default;
@@ -32,11 +28,9 @@ namespace zzz::engine
 		[[nodiscard]] inline bool IsCanDisableVSync() const noexcept { return m_IsCanDisableVSync; }
 
 		virtual void WaitForGpu() = 0;
+		virtual void Initialize(std::shared_ptr<UserSettingsManager> userSettings) = 0;
 
 	protected:
 		bool m_IsCanDisableVSync{ false };
-
-	private:
-		virtual void Initialize(std::shared_ptr<UserSettingsManager> userSettings) = 0;
 	};
 }

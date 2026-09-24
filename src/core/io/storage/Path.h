@@ -11,22 +11,18 @@
 
 namespace zzz::core
 {
-	class FileSystemBase;
-
 	class Path final
 	{
-		friend class FileSystemBase;
-
 	public:
 		Path() = delete;
 		explicit Path(std::shared_ptr<NativeAppData> nativeData = nullptr);
 
 		[[nodiscard]] std::expected<std::filesystem::path, std::string> GetDirectory(eFileLocation location) const noexcept;
 		[[nodiscard]] static bool IsValidDirectoryName(std::string_view name) noexcept;
+		[[nodiscard]] std::expected<void, std::string> InitializeUserData(std::string_view companyName, std::string_view appName);
 
 	private:
 		[[nodiscard]] static std::expected<std::filesystem::path, std::string> ResolveExecutableDirectory() noexcept;
-		[[nodiscard]] std::expected<void, std::string> InitializeUserData(std::string_view companyName, std::string_view appName);
 		[[nodiscard]] std::expected<std::filesystem::path, std::string> ResolveUserDataDirectory(std::string_view companyName, std::string_view appName);
 
 		std::shared_ptr<NativeAppData> m_NativeData;

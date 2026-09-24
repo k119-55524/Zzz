@@ -36,6 +36,8 @@ namespace zzz::engine
 #pragma region Initialize
 	void VulkanAPI::Initialize(std::shared_ptr<UserSettingsManager> userSettings)
 	{
+		Z_CHECK_ONCE_CALL();
+
 		CreateInstance();
 		EnableDebugMessenger();
 		SelectPhysicalDeviceAndCreateLogicalDevice(userSettings);

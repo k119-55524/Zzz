@@ -68,6 +68,8 @@ namespace zzz::engine
 #pragma region Initialize
 	void DirectX12API::Initialize(std::shared_ptr<UserSettingsManager> userSettings)
 	{
+		Z_CHECK_ONCE_CALL();
+
 		UINT dxgiFactoryFlags = 0;
 		EnableDebugLayer(dxgiFactoryFlags);
 		InitializeDevice(userSettings, dxgiFactoryFlags);

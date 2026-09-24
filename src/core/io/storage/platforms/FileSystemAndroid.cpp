@@ -48,26 +48,6 @@ namespace zzz::core
 
 		return FileSystemBase::FileExists(location, relativePath);
 	}
-
-	[[nodiscard]] std::expected<std::uintmax_t, std::string> FileSystemAndroid::GetFileSize(
-		eFileLocation location, const std::filesystem::path& relativePath) const noexcept
-	{
-		if (location == eFileLocation::App)
-		{
-			auto asset = TryOpenAsset(relativePath, AASSET_MODE_UNKNOWN);
-			if (!asset)
-				return UNEXPECTED("{}", asset.error());
-
-			const auto length = AAsset_getLength64(*asset);
-			AAsset_close(*asset);
-			if (length < 0)
-				return UNEXPECTED("Не удалось определить длину Android asset: '{}'", relativePath.string());
-
-			return static_cast<std::uintmax_t>(length);
-		}
-
-		return FileSystemBase::GetFileSize(location, relativePath);
-	}
 }
 
 #endif // defined(Z_ANDROID)

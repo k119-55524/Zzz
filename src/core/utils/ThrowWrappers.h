@@ -9,6 +9,14 @@
 #define THROW_RUNTIME(...) ::zzz::core::throw_runtime_error(std::format(__VA_ARGS__), std::source_location::current())
 #endif
 
+#ifndef Z_CHECK_ONCE_CALL
+#define Z_CHECK_ONCE_CALL() \
+	static bool s_isOnceCalled = false; \
+	if (s_isOnceCalled) \
+		THROW_RUNTIME("Повторный вызов однократной функции запрещён."); \
+	s_isOnceCalled = true
+#endif
+
 namespace zzz::core
 {
 	[[noreturn]] Z_CORE_API void throw_runtime_error(
