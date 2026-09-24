@@ -138,6 +138,8 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/io/platforms/FileSystemiOS.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/platforms/FileSystemiOS.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/PackageEntry.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/AssetLocation.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/PackageArchive.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/DataAssetsManager.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/DataAssetsManager.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/ProjectManifestData.h

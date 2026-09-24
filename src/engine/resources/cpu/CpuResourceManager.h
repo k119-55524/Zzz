@@ -137,9 +137,17 @@ namespace zzz::engine
 						return;
 					}
 
-					const PackageEntry& entry = loc->entry.get();
-					const auto offset = NarrowTo<std::size_t>(entry.GetOffset());
-					const auto size = NarrowTo<std::size_t>(entry.GetSize());
+					const PackageEntry* entry = loc->entry;
+					if (!entry)
+					{
+						taskGuard.Release();
+						if (auto ctx = context.lock())
+							onLoaded(std::unexpected("Запись пакета в AssetLocation не существует (null)."));
+						return;
+					}
+
+					const auto offset = NarrowTo<std::size_t>(entry->GetOffset());
+					const auto size = NarrowTo<std::size_t>(entry->GetSize());
 					if (!offset || !size)
 					{
 						taskGuard.Release();
@@ -157,7 +165,7 @@ namespace zzz::engine
 					{
 						readRes = m_FileSystem->ReadBytes(
 							loc->location,
-							loc->relativePath.get(),
+							loc->relativePath,
 							*offset,
 							*size);
 					}
@@ -183,7 +191,7 @@ namespace zzz::engine
 					try
 					{
 						auto parseRes = T::CreateCpuResourceFromPackageBytes(
-							entry,
+							*entry,
 							*readRes
 						);
 

@@ -1,64 +1,45 @@
 #pragma once
 
+#include <span>
 #include <string>
+#include <memory>
 #include <expected>
-#include <unordered_map>
 
 #include "core/utils/Guid.h"
 #include "core/utils/Export.h"
 #include "core/io/FileSystem.h"
-#include "core/io/DatFileHeader.h"
 #include "core/enums/eResourceType.h"
 #include "core/serialize/Serializer.h"
 #include "core/io/package/PackageEntry.h"
-#include "core/constants/PackagesConstants.h"
+#include "core/io/package/PackageArchive.h"
 
 namespace zzz::core
 {
 	/**
-	 * @struct AssetLocation
-	 * @brief Физические координаты размещения ассета на диске для чтения.
-	 */
-	struct AssetLocation
-	{
-		eFileLocation location{ eFileLocation::App };
-
-		struct PathRef
-		{
-			std::filesystem::path path;
-			[[nodiscard]] const std::filesystem::path& get() const noexcept { return path; }
-			[[nodiscard]] operator const std::filesystem::path&() const noexcept { return path; }
-		} relativePath;
-
-		std::size_t offset = 0;
-		std::size_t size = 0;
-
-		struct EntryRef
-		{
-			const PackageEntry* ptr = nullptr;
-			[[nodiscard]] const PackageEntry& operator*() const noexcept { return *ptr; }
-			[[nodiscard]] const PackageEntry* operator->() const noexcept { return ptr; }
-			[[nodiscard]] const PackageEntry& get() const noexcept { return *ptr; }
-			[[nodiscard]] operator const PackageEntry*() const noexcept { return ptr; }
-		} entry;
-	};
-
-	/**
 	 * @class DataAssetsManager
-	 * @brief Менеджер для чтения игровых ресурсов из архива по пути c_DataPackageRelativePath.
+	 * @brief Менеджер для чтения игровых ресурсов из архива data.dat.
 	 */
-	class Z_CORE_API DataAssetsManager final
+	class Z_CORE_API DataAssetsManager final : public PackageArchive<eResourceType>
 	{
 	public:
 		DataAssetsManager() = delete;
-		explicit DataAssetsManager(const FileSystem& fileSystem);
-		explicit DataAssetsManager(const std::shared_ptr<FileSystem>& fileSystem)
-			: DataAssetsManager(*fileSystem)
-		{}
-		~DataAssetsManager() = default;
+		explicit DataAssetsManager(std::shared_ptr<FileSystem> fileSystem);
+		~DataAssetsManager() override = default;
 
-		[[nodiscard]] const DatFileHeader& GetHeader() const noexcept { return m_Header; }
-		[[nodiscard]] std::expected<AssetLocation, std::string> GetAssetLocation(eResourceType type, const Guid& guid) const;
+		template <typename T>
+		[[nodiscard]] std::expected<T, std::string> LoadAsset(const Guid& guid) const
+		{
+			constexpr eResourceType type = T::c_ResourceType;
+			const auto* entry = GetEntry(type, guid);
+			if (!entry)
+				return UNEXPECTED("Package entry of type {} with GUID '{}' was not found.", ToString(type), guid.ToString());
+
+			auto bytesRes = ReadRawBytes(*entry);
+			if (!bytesRes)
+				return UNEXPECTED("{}", bytesRes.error());
+
+			return DeserializeAssetFromMemory<T>(*entry, *bytesRes);
+		}
 
 		template <typename T>
 		[[nodiscard]] static std::expected<T, std::string> DeserializeAssetFromMemory(
@@ -67,10 +48,8 @@ namespace zzz::core
 		{
 			constexpr eResourceType expectedType = T::c_ResourceType;
 			if (entry.GetAssetType() != static_cast<zU32>(expectedType))
-			{
 				return UNEXPECTED("Несоответствие типа ассета с GUID '{}'. Ожидался: {}, в записи: {}",
 					entry.GetGuid().ToString(), ToString(expectedType), entry.GetAssetType());
-			}
 
 			std::size_t offset = 0;
 			Serializer serializer;
@@ -81,14 +60,5 @@ namespace zzz::core
 
 			return data;
 		}
-
-	private:
-		[[nodiscard]] const PackageEntry* GetEntryPtr(const Guid& guid) const;
-
-		void Initialize(const FileSystem& fileSystem);
-		void LogDataEntriesSummary(const DatFileHeader& header) const;
-
-		DatFileHeader m_Header{ c_DataDatFormat };
-		std::unordered_map<Guid, PackageEntry> m_Entries;
 	};
 }

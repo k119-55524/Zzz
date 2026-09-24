@@ -1,4 +1,4 @@
-﻿#include "qa/tests/TestsConfig.h"
+#include "qa/tests/TestsConfig.h"
 
 #ifdef Z_TEST_CORE_SERIALIZATION
 
@@ -149,9 +149,11 @@ TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
 	core::Guid cubeMeshGuid = *core::Guid::Parse("00000000-0000-0000-0000-000000000010");
 	auto loc = dataMgr->GetAssetLocation(core::eResourceType::Mesh, cubeMeshGuid);
 	ASSERT_TRUE(loc.has_value()) << "Ресурс меша куба не найден в оглавлении data.dat: " << loc.error();
-	auto bytesRes = fs->ReadBytes(loc->location, loc->relativePath, loc->offset, loc->size);
-	ASSERT_TRUE(bytesRes.has_value()) << "Ошибка чтения байт: " << bytesRes.error();
-	auto meshRes = core::DataAssetsManager::DeserializeAssetFromMemory<core::MeshData>(*loc->entry, *bytesRes);
+	EXPECT_EQ(loc->location, core::eFileLocation::App);
+	EXPECT_EQ(loc->relativePath, core::c_DataPackageRelativePath);
+	ASSERT_NE(loc->entry, nullptr);
+
+	auto meshRes = dataMgr->LoadAsset<core::MeshData>(cubeMeshGuid);
 	ASSERT_TRUE(meshRes.has_value()) << "Ошибка загрузки меша куба: " << meshRes.error();
 
 	EXPECT_EQ(meshRes->GetVertexCount(), 24u);
@@ -159,9 +161,20 @@ TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
 	EXPECT_EQ(meshRes->GetIndexCount(), 36u);
 	EXPECT_EQ(meshRes->GetIndexFormat(), core::eIndexFormat::UInt16);
 
+	// Проверяем строгий контроль типов: запрос Mesh GUID с неверным типом ресурса должен отклоняться
+	auto wrongTypeLoc = dataMgr->GetAssetLocation(core::eResourceType::Texture2D, cubeMeshGuid);
+	EXPECT_FALSE(wrongTypeLoc.has_value());
+
 	// Проверяем чтение из package.dat через PackageManager
 	auto pkgMgr = core::safe_make_shared<engine::PackageManager>(fs);
 	core::Guid sceneGuid = *core::Guid::Parse("3cbf41ff-f608-47ca-b383-ea5698648aca");
+
+	auto sceneLoc = pkgMgr->GetAssetLocation(core::ePackage::Scene, sceneGuid);
+	ASSERT_TRUE(sceneLoc.has_value()) << "Запись сцены не найдена в оглавлении package.dat: " << sceneLoc.error();
+	EXPECT_EQ(sceneLoc->location, core::eFileLocation::App);
+	EXPECT_EQ(sceneLoc->relativePath, core::c_GamePackageRelativePath);
+	ASSERT_NE(sceneLoc->entry, nullptr);
+
 	auto sceneRes = pkgMgr->LoadAsset<core::SceneData>(sceneGuid);
 	ASSERT_TRUE(sceneRes.has_value()) << "Ошибка загрузки MainScene: " << sceneRes.error();
 
