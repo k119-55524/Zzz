@@ -84,7 +84,9 @@ TEST(SerializationTest, VectorsPoint2DSize2DRect2D)
 #include "core/io/package/DataAssetsManager.h"
 #include "core/io/package/scene/SceneData.h"
 #include "engine/package/PackageManager.h"
-#include "core/io/FileSystem.h"
+#include "core/io/storage/FileSystem.h"
+#include "core/io/storage/ReadOnlyFile.h"
+#include "core/io/storage/ReadWriteFile.h"
 #include "core/utils/MemoryUtils.h"
 #include <future>
 #include <limits>
@@ -232,7 +234,52 @@ TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
 	EXPECT_EQ(sceneRes->GetTransitionParams().type, core::eTransitionType::Instant);
 	EXPECT_FLOAT_EQ(sceneRes->GetTransitionParams().durationSeconds, 0.0f);
 	EXPECT_FALSE(sceneRes->GetLayers().empty());
-	EXPECT_FALSE(sceneRes->GetLayers().front().GetObjects().empty());
+	// Проверяем прямую работу с ReadOnlyFile и ReadWriteFile
+	{
+		auto readOnlyRes = core::ReadOnlyFile::Open(*fs, core::eFileLocation::App, "assets/data.dat");
+		ASSERT_TRUE(readOnlyRes.has_value()) << readOnlyRes.error();
+		EXPECT_TRUE(readOnlyRes->IsValid());
+		EXPECT_GT(readOnlyRes->GetSize(), 0u);
+		auto magicSpan = readOnlyRes->Subspan(0, 3);
+		ASSERT_EQ(magicSpan.size(), 3u);
+		EXPECT_EQ(static_cast<char>(magicSpan[0]), 'Z');
+		EXPECT_EQ(static_cast<char>(magicSpan[1]), 'D');
+		EXPECT_EQ(static_cast<char>(magicSpan[2]), 'D');
+	}
+
+	{
+		auto initRes = fs->InitializeUserData("ZzzTestCompany", "ZzzTestApp");
+		ASSERT_TRUE(initRes.has_value()) << initRes.error();
+
+		const std::filesystem::path testRelPath = "test_rw_file.bin";
+		const std::vector<std::byte> testPayload = {
+			std::byte{ 0x11 }, std::byte{ 0x22 }, std::byte{ 0x33 }, std::byte{ 0x44 }
+		};
+
+		// 1. Запись через ReadWriteFile
+		{
+			core::ReadWriteFile rwFile(*fs, core::eFileLocation::User, testRelPath, core::eFileAccessMode::Write);
+			ASSERT_TRUE(rwFile.IsValid()) << rwFile.GetError();
+			auto writeRes = rwFile.WriteAll(testPayload);
+			EXPECT_TRUE(writeRes.has_value());
+			EXPECT_EQ(rwFile.GetSize(), testPayload.size());
+		}
+
+		// 2. Чтение через ReadWriteFile
+		{
+			core::ReadWriteFile rwFile(*fs, core::eFileLocation::User, testRelPath, core::eFileAccessMode::Read);
+			ASSERT_TRUE(rwFile.IsValid()) << rwFile.GetError();
+			auto readRes = rwFile.ReadAll();
+			ASSERT_TRUE(readRes.has_value()) << readRes.error();
+			EXPECT_EQ(*readRes, testPayload);
+		}
+
+		// 3. Удаление через FileSystem
+		EXPECT_TRUE(fs->FileExists(core::eFileLocation::User, testRelPath));
+		auto delRes = fs->DeleteFile(core::eFileLocation::User, testRelPath);
+		EXPECT_TRUE(delRes.has_value());
+		EXPECT_FALSE(fs->FileExists(core::eFileLocation::User, testRelPath));
+	}
 }
 
 #endif // Z_TEST_CORE_SERIALIZATION

@@ -13,10 +13,10 @@
 
 #include "core/utils/Guid.h"
 #include "core/utils/Ensure.h"
-#include "core/io/FileSystem.h"
+#include "core/io/storage/FileSystem.h"
 #include "core/utils/SafeMath.h"
 #include "core/io/DatFileHeader.h"
-#include "core/io/MemoryMappedFile.h"
+#include "core/io/storage/ReadOnlyFile.h"
 #include "core/serialize/Serializer.h"
 #include "core/io/package/PackageEntry.h"
 
@@ -26,19 +26,19 @@ namespace zzz::core
 	using TypeValidator = bool(*)(TType type) noexcept;
 
 	/**
-	 * @brief Payload записи архива: borrowed span из mmap либо owned buffer мобильного fallback.
+	 * @brief Payload записи архива: borrowed span из ReadOnlyFile либо owned buffer.
 	 */
 	class ArchivePayload final
 	{
 		struct MappedView
 		{
-			std::shared_ptr<const MemoryMappedFile> owner;
+			std::shared_ptr<const ReadOnlyFile> owner;
 			std::span<const std::byte> bytes;
 		};
 
 	public:
-		ArchivePayload(std::shared_ptr<const MemoryMappedFile> mappedFile, std::span<const std::byte> bytes) noexcept
-			: m_Data(MappedView{ std::move(mappedFile), bytes })
+		ArchivePayload(std::shared_ptr<const ReadOnlyFile> readFile, std::span<const std::byte> bytes) noexcept
+			: m_Data(MappedView{ std::move(readFile), bytes })
 		{
 		}
 
@@ -115,14 +115,10 @@ namespace zzz::core
 			if (!IsRangeInside(*offset, *size, m_ArchiveSize))
 				return UNEXPECTED("Диапазон ресурса с GUID '{}' выходит за границы архива", entry.GetGuid().ToString());
 
-			if (m_MappedFile && m_MappedFile->IsValid())
-				return ArchivePayload(m_MappedFile, m_MappedFile->Subspan(*offset, *size));
+			if (m_ReadOnlyFile && m_ReadOnlyFile->IsValid())
+				return ArchivePayload(m_ReadOnlyFile, m_ReadOnlyFile->Subspan(*offset, *size));
 
-			auto bytesRes = m_FileSystem->ReadBytes(eFileLocation::App, m_ArchivePath, *offset, *size);
-			if (!bytesRes)
-				return std::unexpected(std::move(bytesRes.error()));
-
-			return ArchivePayload(std::move(*bytesRes));
+			return UNEXPECTED("ReadOnlyFile не инициализирован для архива '{}'", m_ArchivePath.string());
 		}
 
 	protected:
@@ -137,15 +133,15 @@ namespace zzz::core
 			std::vector<std::byte> headerStorage;
 			std::span<const std::byte> headerBytes;
 
-			if constexpr (MemoryMappedFile::c_IsSupported)
+			if constexpr (ReadOnlyFile::c_IsSupported)
 			{
-				auto mappedRes = MemoryMappedFile::Open(*m_FileSystem, eFileLocation::App, m_ArchivePath);
+				auto mappedRes = ReadOnlyFile::Open(*m_FileSystem, eFileLocation::App, m_ArchivePath);
 				if (!mappedRes)
 					THROW_RUNTIME("Ошибка отображения архива '{}': {}", pathStr, mappedRes.error());
 
-				m_MappedFile = std::make_shared<MemoryMappedFile>(std::move(*mappedRes));
-				m_ArchiveSize = m_MappedFile->GetSize();
-				const auto archiveBytes = m_MappedFile->GetSpan();
+				m_ReadOnlyFile = std::make_shared<ReadOnlyFile>(std::move(*mappedRes));
+				m_ArchiveSize = m_ReadOnlyFile->GetSize();
+				const auto archiveBytes = m_ReadOnlyFile->GetSpan();
 				headerBytes = archiveBytes.first((std::min)(archiveBytes.size(), static_cast<std::size_t>(m_Header.c_BaseHeaderSize)));
 			}
 			else
@@ -158,12 +154,6 @@ namespace zzz::core
 				if (!archiveSize)
 					THROW_RUNTIME("Размер архива '{}' не представим адресным размером платформы", pathStr);
 				m_ArchiveSize = *archiveSize;
-
-				auto headerBytesRes = m_FileSystem->ReadBytes(eFileLocation::App, m_ArchivePath, 0, m_Header.c_BaseHeaderSize);
-				if (!headerBytesRes)
-					THROW_RUNTIME("Ошибка чтения заголовка архива '{}': {}", pathStr, headerBytesRes.error());
-				headerStorage = std::move(*headerBytesRes);
-				headerBytes = headerStorage;
 			}
 
 			if (auto res = m_Header.DeserializeAndValidate(headerBytes, m_ArchiveSize); !res)
@@ -182,19 +172,10 @@ namespace zzz::core
 				if (!IsRangeInside(headerSize, *tableSize, m_ArchiveSize))
 					THROW_RUNTIME("Таблица записей архива '{}' выходит за границы файла: {} > {}", pathStr, payloadBegin, m_ArchiveSize);
 
-				std::vector<std::byte> tableStorage;
 				std::span<const std::byte> tableBytes;
-				if (m_MappedFile && m_MappedFile->IsValid())
+				if (m_ReadOnlyFile && m_ReadOnlyFile->IsValid())
 				{
-					tableBytes = m_MappedFile->Subspan(headerSize, *tableSize);
-				}
-				else
-				{
-					auto tableBufferRes = m_FileSystem->ReadBytes(eFileLocation::App, m_ArchivePath, headerSize, *tableSize);
-					if (!tableBufferRes)
-						THROW_RUNTIME("Ошибка чтения таблицы записей архива '{}': {}", pathStr, tableBufferRes.error());
-					tableStorage = std::move(*tableBufferRes);
-					tableBytes = tableStorage;
+					tableBytes = m_ReadOnlyFile->Subspan(headerSize, *tableSize);
 				}
 
 #if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
@@ -293,7 +274,7 @@ namespace zzz::core
 
 		DatFileHeader m_Header;
 		std::map<TType, std::unordered_map<Guid, PackageEntry>> m_EntriesByGuid;
-		std::shared_ptr<const MemoryMappedFile> m_MappedFile;
+		std::shared_ptr<const ReadOnlyFile> m_ReadOnlyFile;
 		std::size_t m_ArchiveSize = 0;
 	};
 }

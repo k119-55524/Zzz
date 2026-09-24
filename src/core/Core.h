@@ -58,8 +58,8 @@
 #include "core/userscripts/base_script/SceneScript.h"
 #include "core/userscripts/base_script/ViewScript.h"
 
-#include "core/io/Path.h"
-#include "core/io/FileSystem.h"
+#include "core/io/storage/Path.h"
+#include "core/io/storage/FileSystem.h"
 // Узкие типы данных пакета (PrimaryViewData, ChildViewData и т.д.) и hardware/*
 // намеренно НЕ включаются сюда: они используются только в единичных местах (PackageManager,
 // UserSettingsManager, ViewManager, Platform и т.п.), а не по всему проекту. Раньше их бланкетное

@@ -3,6 +3,7 @@
 #include "engine/view/View.h"
 #include "core/utils/Ensure.h"
 #include "UserSettingsManager.h"
+#include "core/io/storage/ReadWriteFile.h"
 #include "core/io/package/views/ViewUserData.h"
 #include "core/constants/PackagesConstants.h"
 
@@ -131,7 +132,14 @@ namespace zzz::engine
 				return UNEXPECTED("Не удалось сериализовать конфигурацию: {}.", res.error());
 			}
 
-			auto writeRes = m_FileSystem->WriteAllBytes(eFileLocation::User, c_UserConfigFileName, buffer);
+			ReadWriteFile file(*m_FileSystem, eFileLocation::User, c_UserConfigFileName, eFileAccessMode::Write);
+			if (!file.IsValid())
+			{
+				withTimestamp(prevSaveTime);
+				return UNEXPECTED("Не удалось открыть файл конфигурации для записи: {}.", file.GetError());
+			}
+
+			auto writeRes = file.WriteAll(buffer);
 			if (!writeRes)
 			{
 				withTimestamp(prevSaveTime);
@@ -160,7 +168,11 @@ namespace zzz::engine
 	{
 		try
 		{
-			auto bufferRes = m_FileSystem->ReadAllBytes(eFileLocation::User, c_UserConfigFileName);
+			ReadWriteFile file(*m_FileSystem, eFileLocation::User, c_UserConfigFileName, eFileAccessMode::Read);
+			if (!file.IsValid())
+				return UNEXPECTED("Не удалось открыть файл конфигурации для чтения: {}", file.GetError());
+
+			auto bufferRes = file.ReadAll();
 			if (!bufferRes)
 				return UNEXPECTED("Не удалось прочитать файл конфигурации: {}", bufferRes.error());
 

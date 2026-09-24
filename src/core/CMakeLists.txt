@@ -126,19 +126,22 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/hardware/NetworkAdapterInfo.h
         ${CMAKE_CURRENT_SOURCE_DIR}/hardware/HardwareState.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/DatFileHeader.h
-		${CMAKE_CURRENT_SOURCE_DIR}/io/MemoryMappedFile.h
-		${CMAKE_CURRENT_SOURCE_DIR}/io/MemoryMappedFile.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/Path.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/Path.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/FileSystem.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/FileSystemBase.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/FileSystemBase.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/platforms/FileSystemDesktop.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/platforms/FileSystemDesktop.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/platforms/FileSystemAndroid.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/platforms/FileSystemAndroid.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/platforms/FileSystemiOS.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/io/platforms/FileSystemiOS.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/ReadOnlyFile.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/ReadOnlyFile.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/ReadWriteFile.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/ReadWriteFile.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/Path.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/Path.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/FileSystem.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/FileSystemBase.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/FileSystemBase.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/platforms/MappedFileHandle.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/platforms/FileSystemDesktop.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/platforms/FileSystemDesktop.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/platforms/FileSystemAndroid.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/platforms/FileSystemAndroid.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/platforms/FileSystemiOS.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/platforms/FileSystemiOS.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/PackageEntry.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/PackageArchive.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/DataAssetsManager.h
@@ -202,7 +205,21 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
 
     if(APPLE)
         target_sources(${TARGET_NAME} PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}/io/apple/Path_Apple.mm
+            ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/apple/Path_Apple.mm
+        )
+    endif()
+
+    if(WIN32)
+        target_sources(${TARGET_NAME} PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/platforms/MappedFileHandleMSWin.cpp
+        )
+    elseif(ANDROID)
+        target_sources(${TARGET_NAME} PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/platforms/MappedFileHandleAndroid.cpp
+        )
+    elseif(UNIX OR APPLE)
+        target_sources(${TARGET_NAME} PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/io/storage/platforms/MappedFileHandlePosix.cpp
         )
     endif()
 

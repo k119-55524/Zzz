@@ -7,7 +7,7 @@
 
 #include "core/utils/Guid.h"
 #include "core/utils/Export.h"
-#include "core/io/FileSystem.h"
+#include "core/io/storage/FileSystem.h"
 #include "core/enums/eResourceType.h"
 #include "core/serialize/Serializer.h"
 #include "core/io/package/PackageEntry.h"

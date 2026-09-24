@@ -4,7 +4,7 @@
 
 #if defined(Z_ANDROID)
 
-#include "core/io/FileSystemBase.h"
+#include "core/io/storage/FileSystemBase.h"
 
 struct AAsset;
 
@@ -15,7 +15,6 @@ namespace zzz::core
 	 * @brief Специализация файловой системы для платформы Android.
 	 *
 	 * @details eFileLocation::App читается напрямую из закрытого APK через NDK AAssetManager.
-	 *          Запись в eFileLocation::App запрещена.
 	 *          Все пользовательские данные (User, Saves, Cache, Logs) делегируются в FileSystemBase.
 	 */
 	class FileSystemAndroid final : public FileSystemBase
@@ -24,18 +23,9 @@ namespace zzz::core
 		using FileSystemBase::FileSystemBase;
 		~FileSystemAndroid() = default;
 
-		[[nodiscard]] bool FileExists(eFileLocation location, const std::filesystem::path& relativePath) const noexcept;
+		[[nodiscard]] bool FileExists(eFileLocation location, const std::filesystem::path& relativePath) const noexcept override;
 		[[nodiscard]] std::expected<std::uintmax_t, std::string> GetFileSize(
-			eFileLocation location, const std::filesystem::path& relativePath) const noexcept;
-
-		[[nodiscard]] std::expected<std::vector<std::byte>, std::string> ReadBytes(
-			eFileLocation location, const std::filesystem::path& relativePath, std::size_t offset, std::size_t size) const noexcept;
-
-		[[nodiscard]] std::expected<std::vector<std::byte>, std::string> ReadAllBytes(
-			eFileLocation location, const std::filesystem::path& relativePath) const noexcept;
-
-		std::expected<void, std::string> WriteAllBytes(
-			eFileLocation location, const std::filesystem::path& relativePath, std::span<const std::byte> bytes) noexcept;
+			eFileLocation location, const std::filesystem::path& relativePath) const noexcept override;
 
 	private:
 		[[nodiscard]] std::expected<AAsset*, std::string> TryOpenAsset(
