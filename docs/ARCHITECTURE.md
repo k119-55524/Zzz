@@ -278,11 +278,11 @@ namespace = "Gameplay"
       1. Прямые вызовы графического API из воркеров `TaskDispatcher` отсутствуют. Методы `CreateGpuResourceAndUploadFromCpu` пока создают платформенные C++-заглушки и не выполняют реальный upload.
       2. `CpuResourceManager` передаёт `ResourceRef<CpuMesh>` в callback `GpuResourceManager`; после создания заглушки последняя CPU-ссылка освобождается. Дополнительного интрузивного счётчика ссылок и CPU-кэша нет.
       3. Разрешение `OneShotEvent` означает готовность текущего объекта-заглушки, а не подтверждённую GPU residency.
-    - **Архитектурный контракт этапа 24 (`GpuUploadScheduler` и GPU-синхронизация):**
+    - **Архитектурный контракт этапа 25 (`GpuUploadScheduler` и GPU-синхронизация):**
       1. **Ограничения многопоточности современных GAPI:**
          - В **DirectX 12** разрешена параллельная запись в разные command lists, но `ID3D12CommandAllocator` и `ID3D12GraphicsCommandList` не являются свободно разделяемыми между произвольными потоками ([Microsoft D3D12](https://learn.microsoft.com/en-us/windows/win32/direct3d12/recording-command-lists-and-bundles));
          - В **Vulkan** очереди `VkQueue` и пулы команд `VkCommandPool` требуют строгой внешней синхронизации ([Vulkan Specification](https://registry.khronos.org/vulkan/specs/latest/html/vkspec.html)). Произвольный вызов GAPI из несинхронизированных воркеров `TaskDispatcher` приводит к race conditions и крашам;
-         - Поэтому реальный GPU-трансфер (upload) на этапе 23 архитектурно реализуется через специализированный **`GpuUploadScheduler`** (координатор/выделенный конвейер upload с отдельной Copy Queue, copy command allocator/list и fence/timeline semaphore), а не через произвольные воркеры `TaskDispatcher` без дополнительного контракта.
+         - Поэтому реальный GPU-трансфер (upload) на этапе 25 архитектурно реализуется через специализированный **`GpuUploadScheduler`** (координатор/выделенный конвейер upload с отдельной Copy Queue, copy command allocator/list и fence/timeline semaphore), а не через произвольные воркеры `TaskDispatcher` без дополнительного контракта.
       2. **Наступление истинного `GpuReady`:** готовность наступает только после физического завершения copy-команд и подтверждения через fence / timeline semaphore;
       3. **Освобождение системной памяти:** CPU bulk data удерживаются до подтверждения завершения upload, после чего освобождаются, если не нужны редактору или восстановлению устройства.
           - Данные сохраняются только в исключительных случаях: при необходимости восстановления контекста при потере устройства (`Device Loss / Restore`) или в редакторе (Editor tools).
