@@ -1,4 +1,4 @@
-# Этап 25. GPU-буферы, асинхронная загрузка в GPU и полноценный GpuMesh
+# Этап 25. GPU-буферы, прямой стриминг с диска в Staging и полноценный GpuMesh
 
 **Статус:** ⏳ В процессе (активный этап разработки)
 
@@ -6,86 +6,100 @@
 
 ## 🎯 Цель этапа
 
-Довести цепочку `mapped archive → CpuMesh → GpuMesh` до реального размещения vertex/index данных в видеопамяти. `GpuMesh` становится готовым только после завершения GPU copy-команд, подтверждённого fence. Произвольные воркеры `TaskDispatcher` не обращаются напрямую к DX12/Vulkan.
+Реализовать сквозной высокопроизводительный пайплайн загрузки геометрии: **TOC метаданных в RAM → Direct-to-Staging Zero-Copy DMA → VRAM**. 
+Устранить промежуточные выделения динамических векторов в оперативной памяти (Zero CPU RAM overhead). `GpuMesh` становится готовым к отрисовке только после завершения GPU copy-команд, подтверждённого Fence. Произвольные воркеры `TaskDispatcher` не обращаются напрямую к очередям и аллокаторам DX12/Vulkan.
 
-Целевые backend’ы этапа — **DirectX 12 и Vulkan на Windows**. Metal сохраняет компилируемую заглушку до этапа соответствующей платформы. Draw/Pipeline State, шейдеры и материалы не входят в этап 25.
+Целевые backend’ы этапа — **DirectX 12 и Vulkan на Windows**. Metal сохраняет компилируемую заглушку до этапа соответствующей платформы. Draw/Pipeline State, шейдеры и материалы остаются заглушками и не входят в этап 25.
 
-## Исходное состояние
+---
 
-- `CpuMesh` уже содержит vertex/index bytes, stride, count и `eIndexFormat`.
-- `GpuMesh_DX` и `GpuMesh_VK` хранят только GUID, имя и количества элементов; настоящих GPU-буферов нет.
-- `GpuResourceManager` получает `GAPI`, но не использует его при создании GPU-ресурса.
-- `CreateGpuResourceAndUploadFromCpu` синхронно создаёт C++-заглушку, после чего `ResourceTable` немедленно разрешается как Ready.
-- DX12 уже имеет direct queue и fence; Vulkan имеет graphics queue с централизованной внешней синхронизацией `QueueSubmit`.
+## 🏗️ Архитектурные принципы и контракты
 
-## Архитектурные контракты
+1. **Неизменяемое оглавление ресурсов (In-Memory TOC / Metadata Manifest):**
+   * При монтировании `data.dat` оглавление архива со всеми характеристиками ресурсов (размеры вершин/индексов, stride, формат) кэшируется в оперативной памяти (`DataAssetsManager`).
+   * Поиск по GUID происходит мгновенно в RAM без обращения к диску и без блокировок (Read-Only / Thread-Safe).
+2. **Baked бинарный формат данных в архиве:**
+   * Вершины и индексы упаковываются сборщиком ассетов в конечном бинарном представлении GPU, с выравниванием по 16 байт.
+   * Отсутствует цикл побайтовой сериализации/десериализации на CPU.
+3. **Direct-to-Staging Copy (Zero CPU RAM Overhead):**
+   * Исключаются промежуточные `std::vector<std::byte>` на CPU.
+   * Данные копируются напрямую из отображённого файла (`MapViewOfFile`) в предварительно выделенный/замапленный Staging-буфер GPU (`memcpy`).
+4. **Один владелец GPU-контекста загрузки (`GpuUploadScheduler`):**
+   * Воркеры `TaskDispatcher` не касаются `CommandQueue`, `CommandAllocator`, `CommandList` (DX12) и `VkQueue`, `VkCommandPool` (Vulkan).
+   * Запись команд копирования, барьеры ресурсов и отправка батчей изолированы в `GpuUploadScheduler`.
+5. **Истинный `GpuReady` и отслеживание Fence:**
+   * `ResourceTable<GpuMesh>::Resolve` вызывается строго после подтверждения выполнения copy-команд на GPU через Fence.
+   * Staging-память удерживается до срабатывания Fence и освобождается/возвращается в пул только после подтверждения.
+6. **No-Hang и детерминированный Shutdown:**
+   * При ошибках выделения, переполнениях, ошибках GAPI или остановке движка каждый запрос гарантированно завершается через `std::unexpected`.
+   * Перед уничтожением GAPI и завершением работы движка все in-flight uploads детерминированно завершаются или отменяются.
 
-1. **Истинный GpuReady.** `ResourceTable<GpuMesh>::Resolve(success)` вызывается только после подтверждённого выполнения copy-команд.
-2. **Один владелец upload-контекста.** Command allocator/list DX12 и command pool/buffer Vulkan не разделяются между произвольными worker-потоками. Ими управляет `GpuUploadScheduler`.
-3. **Асинхронность для вызывающего кода.** CPU-десериализация остаётся в `TaskDispatcher`; GPU upload ставится в специализированную очередь и не блокирует игровой поток.
-4. **Внешняя синхронизация очередей.** Все Vulkan submit проходят через синхронизированный API; DX12 submission и fence-value выдаются централизованно.
-5. **Время жизни данных.** `CpuMesh` и staging-ресурсы удерживаются до безопасного завершения upload. После fence CPU bulk data освобождаются, если других ссылок на `CpuMesh` нет.
-6. **No-Hang.** Ошибка создания buffer/staging, записи команд, submit или shutdown обязательно разрешает ожидающий запрос через `std::unexpected`.
-7. **Детерминированный shutdown.** Новые upload-запросы прекращаются, in-flight submissions завершаются либо переводятся в ошибку, затем освобождаются staging и device-local ресурсы.
-8. **Границы этапа.** Hot reload, device-loss restore, общий GPU allocator, defragmentation, textures, descriptors и draw-команды не входят в этот этап.
+---
 
 ## 🛠️ План работ
 
-### 1. Общие контракты GPU-буферов
+### 1. Метаданные ресурсов и бинарный формат геометрии
 
-- [ ] Ввести типизированное назначение buffer (`Vertex`, `Index`, `Staging`) и проверяемый размер в байтах.
-- [ ] Добавить платформенно выбираемый RAII `GPUBuffer` с backend-реализациями DX12/Vulkan и безопасным освобождением native handle/memory.
-- [ ] Зафиксировать неизменяемость vertex/index buffer после завершения upload.
-- [ ] Добавить в Vulkan debug-object mapping тип `VkBuffer`; назначать debug names обоим backend’ам.
+- [ ] Ввести компактную структуру метаданных геометрии `MeshResourceHeader` (число вершин, stride, размер вершинных данных, число индексов, `eIndexFormat`, размер индексных данных, 16-байтное выравнивание).
+- [ ] Обеспечить доступ к характеристикам геометрии из оглавления архива (`DataAssetsManager`) в RAM по GUID без чтения полезной нагрузки.
+- [ ] Адаптировать упаковку мешей в `ObjImporter` / `PackagePacker` для записи данных в конечном бинарном виде, готовом для прямого переноса в GPU.
+- [ ] Перевести `MeshData` / `CpuMesh` на легковесный Zero-Copy интерфейс (хранение метаданных и `std::span` вместо тяжёлых `std::vector<std::byte>`).
 
-### 2. GpuUploadScheduler
+### 2. Общие контракты GPU-буферов (`GPUBuffer`)
 
-- [ ] Создать специализированный `GpuUploadScheduler`, принимающий upload-запросы независимо от `TaskDispatcher`.
-- [ ] Определить пакет запроса, который удерживает источник данных и completion callback до завершения fence.
-- [ ] Реализовать состояния `Accepting → Stopping → Stopped`, запрет новых запросов после начала shutdown и гарантированное разрешение каждого принятого запроса.
-- [ ] Ограничить объём in-flight staging memory; не создавать неограниченную очередь больших CPU-копий.
-- [ ] Не исполнять пользовательский callback под внутренними mutex scheduler’а.
+- [ ] Ввести типизированное назначение буфера `eGpuBufferUsage` (`Vertex`, `Index`, `Staging`).
+- [ ] Создать платформенно выбираемый RAII `GPUBuffer` с реализациями:
+  * `GPUBuffer_DX` (`ID3D12Resource`)
+  * `GPUBuffer_VK` (`VkBuffer` + `VkDeviceMemory`)
+- [ ] Обеспечить безопасное освобождение нативных дескрипторов и памяти в деструкторах.
+- [ ] Назначать отладочные имена (Debug Names) для отладки в RenderDoc, PIX и Nsight.
 
-### 3. DirectX 12 backend
+### 3. GpuUploadScheduler и Staging-менеджмент
 
-- [ ] Создать default-heap vertex/index buffers и upload-heap staging resources.
-- [ ] Записывать `CopyBufferRegion` и переходы `COPY_DEST → VERTEX_AND_CONSTANT_BUFFER` / `INDEX_BUFFER`.
-- [ ] Централизовать command allocator/list и submission; не использовать один allocator одновременно несколькими потоками.
-- [ ] Удерживать upload resources до достижения fence value и освобождать их после completion.
+- [ ] Реализовать `GpuUploadScheduler` — централизованный сервис асинхронного трансфера данных на GPU.
+- [ ] Реализовать стратегию выделения Staging-памяти (замапленный staging ring-buffer или пул staging-блоков) с контролем лимита памяти in-flight.
+- [ ] Реализовать прямой перенос `MapViewOfFile span → Staging buffer` (`std::memcpy`).
+- [ ] Реализовать жизненный цикл планировщика: `Accepting → Stopping → Stopped` с запретом новых задач и гарантированным no-hang разрешением ожидающих запросов.
+- [ ] Обеспечить выполнение completion callback'ов вне внутренних локов планировщика.
+
+### 4. DirectX 12 Backend
+
+- [ ] Создавать целевые Vertex/Index буферы в `D3D12_HEAP_TYPE_DEFAULT` (VRAM).
+- [ ] Создавать Staging буферы в `D3D12_HEAP_TYPE_UPLOAD`.
+- [ ] Записывать команды `CopyBufferRegion` и расставлять барьеры переходов состояний:
+  `D3D12_RESOURCE_STATE_COPY_DEST` $\to$ `D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER` / `INDEX_BUFFER`.
+* [ ] Централизовать command allocator/list и выдачу `Fence` значений.
 - [ ] Сформировать валидные `D3D12_VERTEX_BUFFER_VIEW` и `D3D12_INDEX_BUFFER_VIEW` в `GpuMesh_DX`.
 
-### 4. Vulkan backend
+### 5. Vulkan Backend
 
-- [ ] Создать device-local vertex/index `VkBuffer` и выделить/bind memory подходящего memory type.
-- [ ] Создать host-visible staging buffer, скопировать CPU bytes и записать `vkCmdCopyBuffer`.
-- [ ] Добавить buffer memory barriers до `VERTEX_ATTRIBUTE_READ` / `INDEX_READ`.
-- [ ] Управлять command pool/buffer с корректной внешней синхронизацией и выполнять submit через `VulkanAPI::QueueSubmit`.
-- [ ] Удерживать staging buffer/memory до fence completion и затем освобождать.
+- [ ] Создавать целевые Vertex/Index `VkBuffer` с флагами `TRANSFER_DST_BIT | VERTEX_BUFFER_BIT / INDEX_BUFFER_BIT` в `DEVICE_LOCAL` памяти.
+- [ ] Создавать Staging `VkBuffer` с `TRANSFER_SRC_BIT` в памяти `HOST_VISIBLE | HOST_COHERENT`.
+- [ ] Записывать команды `vkCmdCopyBuffer` и расставлять барьеры памяти буферов (`TRANSFER_WRITE` $\to$ `VERTEX_ATTRIBUTE_READ / INDEX_READ`).
+- [ ] Отправлять команды через синхронизированный `VulkanAPI::QueueSubmit` с отслеживанием `VkFence`.
+- [ ] Формировать валидные дескрипторы буферов и привязок в `GpuMesh_VK`.
 
-### 5. Интеграция ресурсов
+### 6. Интеграция ресурсов и готовность (GpuReady)
 
-- [ ] Заменить синхронный `CreateGpuResourceAndUploadFromCpu` на асинхронный контракт через `GpuUploadScheduler`.
-- [ ] Передать scheduler/GAPI в путь создания `GpuMesh`, не использовать глобальные device/queue.
-- [ ] Хранить в `GpuMesh_DX` / `GpuMesh_VK` реальные vertex/index buffers, stride, count и index format.
-- [ ] Разрешать `ResourceTable<GpuMesh>` только из completion upload; ошибки пробрасывать без создания готовой заглушки.
-- [ ] Убедиться, что последняя ссылка на `CpuMesh` освобождается после завершения upload, а не до копирования данных.
-- [ ] Оставить Material/Texture/Shader на существующих заглушках до следующих этапов, не выдавая их за реализованный GPU upload.
+- [ ] Перевести `GpuResourceManager` на асинхронную постановку задач в `GpuUploadScheduler`.
+- [ ] Разрешать `ResourceTable<GpuMesh>::Resolve` строго по событию завершения Fence.
+- [ ] Освобождать Staging-память сразу после подтверждения Fence.
+- [ ] Сохранять компилируемые заглушки для `GpuMaterial`, `GpuShader`, `GpuTexture2D` до соответствующих этапов.
 
-### 6. Жизненный цикл и верификация
+### 7. Жизненный цикл, верификация и тесты
 
-- [ ] Встроить остановку `GpuUploadScheduler` в `Engine::Shutdown` перед `GAPI::WaitForGpu` и уничтожением GAPI.
-- [ ] Проверить shutdown при queued и in-flight upload без зависания, use-after-free и callback после уничтожения владельца.
-- [ ] Собрать Windows DX12 и Windows Vulkan конфигурации с включёнными debug/validation layers.
-- [ ] Проверить загрузку непустого mesh: размеры buffer, stride, index format/count и достижение completion fence.
-- [ ] Проверить ошибочные входы: пустые vertex/index bytes, переполнение размеров, отказ выделения и ошибка submit.
-- [ ] Обновить `docs/ARCHITECTURE.md` и `general_plan.md` по фактически реализованной схеме.
+- [ ] Интегрировать остановку `GpuUploadScheduler` в `Engine::Shutdown` до вызова `GAPI::WaitForGpu` и разрушения контекстов GAPI.
+- [ ] Проверить чистый запуск без предупреждений и ошибок в **DirectX 12 Debug Layer** и **Vulkan Validation Layers**.
+- [ ] Проверить краевые сценарии: пустой меш, некорректные смещения/размеры, shutdown во время активного копирования.
+- [ ] Написать сквозной тест загрузки реального меша из `data.dat` с валидацией готовности буферов.
+- [ ] Обновить `docs/ARCHITECTURE.md` и `general_plan.md` по результатам реализации.
 
-## Критерии приёмки
+---
 
-1. `GpuMesh` содержит реальные native vertex/index buffers и корректные метаданные для будущего DrawIndexed.
-2. Callback успешной загрузки не вызывается до fence completion.
-3. Ни один worker `TaskDispatcher` не использует несинхронизированные command allocator/list, command pool/buffer или queue.
-4. Staging и `CpuMesh` живут достаточно долго и освобождаются после завершения upload.
-5. Любой принятый запрос завершается успехом или `std::unexpected`, включая shutdown и ошибки GAPI.
-6. DX12 и Vulkan validation/debug layers не сообщают об ошибках времени жизни, барьеров или внешней синхронизации.
+## 🏆 Критерии приёмки
 
+1. Отсутствуют промежуточные аллокации `std::vector` под вершины и индексы на CPU при загрузке меша.
+2. `GpuMesh` содержит валидные нативные GPU-буферы и представления (Buffer Views), готовые для будущего `DrawIndexed`.
+3. Колбэк готовности ресурса и переход в Ready происходят строго после завершения Fence.
+4. Воркеры `TaskDispatcher` не имеют прямого доступа к нативным очередям и аллокаторам GPU.
+5. Приложение чисто закрывается без утечек памяти, зависаний и жалоб валидационных слоев DX12 и Vulkan.

@@ -61,7 +61,7 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 
 	// Загрузка пользовательских настроек и валидация по пакетам ресурсов
 	m_UserSettingsManager = safe_make_shared<UserSettingsManager>(*userConfigPath);
-	m_UserSettingsManager->ValidateAgainstPackages(*m_PackageManager, m_DataAssetsManager.get());
+	m_UserSettingsManager->ValidateAgainstPackages(*m_PackageManager);
 
 	// Создание платформенного слоя абстракции ОС
 	m_Platform = safe_make_unique<Platform>(nativeData, projectManifestData.GetPlatformData());

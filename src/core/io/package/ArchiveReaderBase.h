@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <array>
 #include <string>
 #include <expected>
 #include <algorithm>
@@ -21,30 +22,41 @@
 namespace zzz::core
 {
 	template <typename TType>
-	struct ArchiveTraits;
-
-	template <>
-	struct ArchiveTraits<ePackageDatType>
+	struct ArchiveTraitsBase
 	{
-		static constexpr DatFileFormat c_ExpectedFormat = c_PackageDatFormat;
+		static constexpr std::size_t c_TypeCount =
+			static_cast<std::size_t>(std::to_underlying(TType::Last) - std::to_underlying(TType::First) + 1);
 
-		[[nodiscard]] static constexpr bool IsTypeAllowed(ePackageDatType type) noexcept
+		[[nodiscard]] static constexpr bool IsTypeAllowed(TType type) noexcept
 		{
-			return std::to_underlying(type) >= std::to_underlying(ePackageDatType::ProjectManifest)
-				&& std::to_underlying(type) <= std::to_underlying(ePackageDatType::Prefab);
+			return std::to_underlying(type) >= std::to_underlying(TType::First)
+				&& std::to_underlying(type) <= std::to_underlying(TType::Last);
+		}
+
+		[[nodiscard]] static constexpr std::size_t TypeToIndex(TType type) noexcept
+		{
+			return static_cast<std::size_t>(std::to_underlying(type) - std::to_underlying(TType::First));
+		}
+
+		[[nodiscard]] static constexpr TType IndexToType(std::size_t index) noexcept
+		{
+			return static_cast<TType>(index + std::to_underlying(TType::First));
 		}
 	};
 
+	template <typename TType>
+	struct ArchiveTraits;
+
 	template <>
-	struct ArchiveTraits<eDataDatType>
+	struct ArchiveTraits<ePackageDatType> : ArchiveTraitsBase<ePackageDatType>
+	{
+		static constexpr DatFileFormat c_ExpectedFormat = c_PackageDatFormat;
+	};
+
+	template <>
+	struct ArchiveTraits<eDataDatType> : ArchiveTraitsBase<eDataDatType>
 	{
 		static constexpr DatFileFormat c_ExpectedFormat = c_DataDatFormat;
-
-		[[nodiscard]] static constexpr bool IsTypeAllowed(eDataDatType type) noexcept
-		{
-			return std::to_underlying(type) >= std::to_underlying(eDataDatType::Mesh)
-				&& std::to_underlying(type) <= std::to_underlying(eDataDatType::BinaryData);
-		}
 	};
 
 	/**
@@ -71,17 +83,33 @@ namespace zzz::core
 
 		[[nodiscard]] std::string_view GetArchiveName() const noexcept { return m_ArchiveName; }
 
+		template <TType TypeVal>
+		[[nodiscard]] const std::unordered_map<Guid, PackageEntry>& GetEntries() const noexcept
+		{
+			static_assert(Traits::IsTypeAllowed(TypeVal), "TypeVal is not allowed for this archive");
+			constexpr auto index = Traits::TypeToIndex(TypeVal);
+			return m_Tables[index];
+		}
+
+		template <TType TypeVal>
+		[[nodiscard]] const PackageEntry* GetEntry(const Guid& guid) const noexcept
+		{
+			static_assert(Traits::IsTypeAllowed(TypeVal), "TypeVal is not allowed for this archive");
+			constexpr auto index = Traits::TypeToIndex(TypeVal);
+			const auto& table = m_Tables[index];
+			auto it = table.find(guid);
+			return it != table.end() ? &it->second : nullptr;
+		}
+
 		[[nodiscard]] const PackageEntry* GetEntry(TType type, const Guid& guid) const noexcept
 		{
-			auto typeIt = m_EntriesByGuid.find(type);
-			if (typeIt == m_EntriesByGuid.end())
+			if (!Traits::IsTypeAllowed(type))
 				return nullptr;
 
-			auto guidIt = typeIt->second.find(guid);
-			if (guidIt == typeIt->second.end())
-				return nullptr;
-
-			return &guidIt->second;
+			const auto index = Traits::TypeToIndex(type);
+			const auto& table = m_Tables[index];
+			auto it = table.find(guid);
+			return it != table.end() ? &it->second : nullptr;
 		}
 
 		[[nodiscard]] bool HasEntry(TType type, const Guid& guid) const noexcept
@@ -102,7 +130,34 @@ namespace zzz::core
 			return m_ReadOnlyFile.Read(*offset, *size);
 		}
 
+	protected:
+		virtual void LogEntryDetails([[maybe_unused]] const PackageEntry& entry) const {}
+
+		template <typename T> requires std::derived_from<T, ISerializable>
+		[[nodiscard]] std::expected<T, std::string> DeserializeEntryRaw(const PackageEntry& entry) const
+		{
+			auto payloadRes = ReadRawPayload(entry);
+			if (!payloadRes)
+				return UNEXPECTED("{}", payloadRes.error());
+
+			std::size_t offset = 0;
+			Serializer serializer;
+			T data{};
+			auto res = serializer.Deserialize(*payloadRes, offset, data);
+			if (!res)
+				return UNEXPECTED("Ошибка десериализации данных пакета с GUID '{}': {}.", entry.GetGuid().ToString(), res.error());
+
+			return data;
+		}
+
+		std::array<std::unordered_map<Guid, PackageEntry>, Traits::c_TypeCount> m_Tables;
+
 	private:
+		std::string		m_ArchiveName;
+		ReadOnlyFile	m_ReadOnlyFile;
+		DatFileHeader	m_Header;
+		std::size_t		m_ArchiveSize;
+
 		void InitializeArchive()
 		{
 			auto archiveBytesRes = m_ReadOnlyFile.Read();
@@ -119,7 +174,9 @@ namespace zzz::core
 				THROW_RUNTIME("Ошибка заголовка архива '{}': {}", m_ArchiveName, res.error());
 
 			const std::size_t headerSize = m_Header.GetHeaderSize();
-			m_EntriesByGuid.clear();
+			for (auto& table : m_Tables)
+				table.clear();
+
 			const zU32 entryCount = m_Header.GetEntryCount();
 			if (entryCount > 0)
 			{
@@ -175,19 +232,19 @@ namespace zzz::core
 					seenGuids.emplace(entry.GetGuid(), rawType);
 #endif
 
-					m_EntriesByGuid[typedType].emplace(entry.GetGuid(), entry);
+					const auto typeIndex = Traits::TypeToIndex(typedType);
+					m_Tables[typeIndex].emplace(entry.GetGuid(), entry);
 				}
 			}
 
 			LogArchiveSummary();
 		}
-
 		void LogArchiveSummary() const
 		{
 #if Z_ADD_LOGGER
 			std::size_t totalEntries = 0;
-			for (const auto& [type, entries] : m_EntriesByGuid)
-				totalEntries += entries.size();
+			for (const auto& table : m_Tables)
+				totalEntries += table.size();
 
 			DOut("========== Package Archive: {} (Total entries: {}) ==========",
 				m_ArchiveName,
@@ -195,46 +252,14 @@ namespace zzz::core
 
 			m_Header.LogFileBlock("  ");
 
-			for (const auto& [type, entries] : m_EntriesByGuid)
+			for (std::size_t i = 0; i < Traits::c_TypeCount; ++i)
 			{
-				DOut("  [Type] {:<16} ({})", ToString(type), entries.size());
-
-				for (const auto& [guid, entry] : entries)
+				if (!m_Tables[i].empty())
 				{
-					entry.LogFileBlock("    ");
-					LogEntryDetails(entry);
+					DOut("  [Type] {:<16} ({})", ToString(Traits::IndexToType(i)), m_Tables[i].size());
 				}
-				DOut("");
 			}
-#endif // Z_ADD_LOGGER
+#endif
 		}
-
-	protected:
-		virtual void LogEntryDetails([[maybe_unused]] const PackageEntry& entry) const {}
-
-		template <typename T> requires std::derived_from<T, ISerializable>
-		[[nodiscard]] std::expected<T, std::string> DeserializeEntryRaw(const PackageEntry& entry) const
-		{
-			auto payloadRes = ReadRawPayload(entry);
-			if (!payloadRes)
-				return UNEXPECTED("{}", payloadRes.error());
-
-			std::size_t offset = 0;
-			Serializer serializer;
-			T data{};
-			auto res = serializer.Deserialize(*payloadRes, offset, data);
-			if (!res)
-				return UNEXPECTED("Ошибка десериализации данных пакета с GUID '{}': {}.", entry.GetGuid().ToString(), res.error());
-
-			return data;
-		}
-
-		std::map<TType, std::unordered_map<Guid, PackageEntry>> m_EntriesByGuid;
-
-	private:
-		std::string		m_ArchiveName;
-		ReadOnlyFile	m_ReadOnlyFile;
-		DatFileHeader	m_Header;
-		std::size_t		m_ArchiveSize;
 	};
 }

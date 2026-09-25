@@ -7,11 +7,6 @@
 
 using namespace zzz::core;
 
-namespace zzz::core
-{
-	class DataAssetsManager;
-}
-
 namespace zzz::engine
 {
 	class View;
@@ -23,20 +18,27 @@ namespace zzz::engine
 	{
 	public:
 		UserSettingsManager() = delete;
+
+		/**
+		 * @brief Конструктор менеджера пользовательских настроек cfg.dat.
+		 * @param configPath Путь к файлу конфигурации пользователя.
+		 */
 		explicit UserSettingsManager(const std::filesystem::path& configPath);
 		~UserSettingsManager() override = default;
 
 		/**
-		 * @brief Валидирует сохранённые идентификаторы окон по записям PackageManager (package.dat)
-		 *        и DataAssetsManager (data.dat).
+		 * @brief Валидирует сохранённые идентификаторы окон по записям PackageManager (package.dat).
 		 * @details Удаляет из конфигурации пользователя окна, чьи GUID отсутствуют в пакетах или
 		 *          не соответствуют требуемому типу (PrimaryView, ChildView, IndependentView),
 		 *          предотвращая падения движка на старте при изменении/удалении ресурсов разработчиком.
+		 * @param packageManager Ссылка на инициализированный менеджер пакетов движка.
 		 */
-		void ValidateAgainstPackages(const PackageManager& packageManager, const DataAssetsManager* dataAssetsManager = nullptr);
+		void ValidateAgainstPackages(const PackageManager& packageManager);
 
+		/**
+		 * @brief Возвращает идентификатор выбранного пользователем графического адаптера (GPU).
+		 */
 		[[nodiscard]] inline const std::string& GetSelectedGpuId() const noexcept { return m_SelectedGpuId; }
-		[[nodiscard]] inline const std::filesystem::path& GetPath() const noexcept { return m_ConfigPath; }
 
 		/**
 		 * @brief Возвращает пользовательские настройки Основного окна (PrimaryViewUserData).
@@ -70,10 +72,34 @@ namespace zzz::engine
 		 */
 		[[nodiscard]] const ViewUserDataMap& GetIndependentViewsUserData() const noexcept { return m_IndependentViewsUserData; }
 
+		/**
+		 * @brief Получает или инициализирует платформенные данные главного окна (PrimaryView).
+		 * @param guid Идентификатор окна.
+		 * @param defaultData Настройки по умолчанию, если в cfg.dat запись ещё отсутствует.
+		 * @return Указатель на актуальные ViewPlatformData.
+		 */
 		[[nodiscard]] ViewPlatformData* GetOrCreatePrimaryViewPlatformData(const Guid& guid, const ViewPlatformData& defaultData);
+
+		/**
+		 * @brief Получает или инициализирует платформенные данные дочернего окна (ChildView).
+		 * @param guid Идентификатор окна.
+		 * @param defaultData Настройки по умолчанию, если в cfg.dat запись ещё отсутствует.
+		 * @return Указатель на актуальные ViewPlatformData.
+		 */
 		[[nodiscard]] ViewPlatformData* GetOrCreateChildViewPlatformData(const Guid& guid, const ViewPlatformData& defaultData);
+
+		/**
+		 * @brief Получает или инициализирует платформенные данные независимого окна (IndependentView).
+		 * @param guid Идентификатор окна.
+		 * @param defaultData Настройки по умолчанию, если в cfg.dat запись ещё отсутствует.
+		 * @return Указатель на актуальные ViewPlatformData.
+		 */
 		[[nodiscard]] ViewPlatformData* GetOrCreateIndependentViewPlatformData(const Guid& guid, const ViewPlatformData& defaultData);
 
+		/**
+		 * @brief Сохраняет идентификатор выбранного GPU в конфигурацию пользователя.
+		 * @param gpuId Идентификатор адаптера.
+		 */
 		void SetSelectedGpuId(std::string gpuId);
 
 		/**
@@ -83,6 +109,10 @@ namespace zzz::engine
 		 */
 		void StoreViewState(const View& view);
 
+		/**
+		 * @brief Сохраняет изменения конфигурации пользователя в файл cfg.dat на диске.
+		 * @return Успех или сообщение об ошибке ввода-вывода.
+		 */
 		[[nodiscard]] std::expected<void, std::string> SaveConfig();
 
 	private:
@@ -90,6 +120,7 @@ namespace zzz::engine
 		void LogUserData() const;
 		void SetDefaultUserSettings();
 		std::expected<void, std::string> LoadConfig(std::span<const std::byte> buffer);
+		ViewPlatformData* GetOrCreateViewPlatformData(ViewUserDataMap& map, const Guid& guid, const ViewPlatformData& defaultData);
 
 		[[nodiscard]] std::expected<void, std::string> Serialize(std::vector<std::byte>& buffer, const Serializer& s) const override;
 		[[nodiscard]] std::expected<void, std::string> Deserialize(std::span<const std::byte> buffer, std::size_t& offset, const Serializer& s) override;

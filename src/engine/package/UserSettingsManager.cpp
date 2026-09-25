@@ -4,7 +4,6 @@
 #include "engine/package/PackageManager.h"
 #include "core/io/storage/ReadWriteFile.h"
 #include "core/constants/PackagesConstants.h"
-#include "core/io/package/DataAssetsManager.h"
 #include "core/io/package/views/ViewUserData.h"
 
 #include "UserSettingsManager.h"
@@ -28,7 +27,7 @@ namespace zzz::engine
 #endif
 	}
 
-	void UserSettingsManager::ValidateAgainstPackages(const PackageManager& packageManager, const DataAssetsManager* /*dataAssetsManager*/)
+	void UserSettingsManager::ValidateAgainstPackages(const PackageManager& packageManager)
 	{
 		// Валидация первичного окна
 		if (m_PrimaryViewUserData.has_value())
@@ -282,30 +281,27 @@ namespace zzz::engine
 		return &platformData;
 	}
 
-	ViewPlatformData* UserSettingsManager::GetOrCreateChildViewPlatformData(const Guid& guid, const ViewPlatformData& defaultData)
+	ViewPlatformData* UserSettingsManager::GetOrCreateViewPlatformData(ViewUserDataMap& map, const Guid& guid, const ViewPlatformData& defaultData)
 	{
-		auto it = m_ChildViewsUserData.find(guid);
-		if (it == m_ChildViewsUserData.end())
+		auto it = map.find(guid);
+		if (it == map.end())
 		{
 			NativeWindowState navState(defaultData.GetMonitorId(), defaultData.GetWindowRect(), defaultData.GetWindowState());
 			ViewWindowState viewState(guid, navState);
-			it = m_ChildViewsUserData.emplace(guid, ViewUserData(viewState)).first;
+			it = map.emplace(guid, ViewUserData(viewState)).first;
 			m_IsDirty = true;
 		}
 		return &it->second.GetPlatformDataRef();
 	}
 
+	ViewPlatformData* UserSettingsManager::GetOrCreateChildViewPlatformData(const Guid& guid, const ViewPlatformData& defaultData)
+	{
+		return GetOrCreateViewPlatformData(m_ChildViewsUserData, guid, defaultData);
+	}
+
 	ViewPlatformData* UserSettingsManager::GetOrCreateIndependentViewPlatformData(const Guid& guid, const ViewPlatformData& defaultData)
 	{
-		auto it = m_IndependentViewsUserData.find(guid);
-		if (it == m_IndependentViewsUserData.end())
-		{
-			NativeWindowState navState(defaultData.GetMonitorId(), defaultData.GetWindowRect(), defaultData.GetWindowState());
-			ViewWindowState viewState(guid, navState);
-			it = m_IndependentViewsUserData.emplace(guid, ViewUserData(viewState)).first;
-			m_IsDirty = true;
-		}
-		return &it->second.GetPlatformDataRef();
+		return GetOrCreateViewPlatformData(m_IndependentViewsUserData, guid, defaultData);
 	}
 
 	void UserSettingsManager::StoreViewState(const View& view)
@@ -340,27 +336,24 @@ namespace zzz::engine
 			return;
 		}
 
-		if (auto it = m_ChildViewsUserData.find(guid); it != m_ChildViewsUserData.end())
+		auto updateStateInMap = [&](ViewUserDataMap& map) -> bool
 		{
-			it->second.GetWindowState().GetNativeState().SetWindowRect(navState.GetWindowRect());
-			it->second.GetWindowState().GetNativeState().SetMonitorId(navState.GetMonitorId());
-			if (state != eWindowState::Closed && state != eWindowState::Minimized)
-				it->second.GetWindowState().GetNativeState().SetState(state);
-			it->second.SyncPlatformDataFromState();
-			m_IsDirty = true;
-			return;
-		}
+			auto it = map.find(guid);
+			if (it != map.end())
+			{
+				it->second.GetWindowState().GetNativeState().SetWindowRect(navState.GetWindowRect());
+				it->second.GetWindowState().GetNativeState().SetMonitorId(navState.GetMonitorId());
+				if (state != eWindowState::Closed && state != eWindowState::Minimized)
+					it->second.GetWindowState().GetNativeState().SetState(state);
+				it->second.SyncPlatformDataFromState();
+				m_IsDirty = true;
+				return true;
+			}
+			return false;
+		};
 
-		if (auto it = m_IndependentViewsUserData.find(guid); it != m_IndependentViewsUserData.end())
-		{
-			it->second.GetWindowState().GetNativeState().SetWindowRect(navState.GetWindowRect());
-			it->second.GetWindowState().GetNativeState().SetMonitorId(navState.GetMonitorId());
-			if (state != eWindowState::Closed && state != eWindowState::Minimized)
-				it->second.GetWindowState().GetNativeState().SetState(state);
-			it->second.SyncPlatformDataFromState();
-			m_IsDirty = true;
+		if (updateStateInMap(m_ChildViewsUserData) || updateStateInMap(m_IndependentViewsUserData))
 			return;
-		}
 
 		THROW_RUNTIME("Не удалось сохранить состояние окна: View с GUID {} не найдено в конфигурации пользователя.", guid.ToString());
 	}
@@ -380,29 +373,25 @@ namespace zzz::engine
 		if (!res)
 			return res;
 
-		zU32 childCount = static_cast<zU32>(m_ChildViewsUserData.size());
-		res = s.Serialize(buffer, childCount);
-		if (!res)
-			return res;
-
-		for (const auto& [guid, item] : m_ChildViewsUserData)
+		auto serializeViewMap = [&](const ViewUserDataMap& map) -> std::expected<void, std::string>
 		{
-			res = s.Serialize(buffer, item);
-			if (!res)
-				return res;
-		}
+			const zU32 count = static_cast<zU32>(map.size());
+			auto resCount = s.Serialize(buffer, count);
+			if (!resCount) return resCount;
 
-		zU32 independentCount = static_cast<zU32>(m_IndependentViewsUserData.size());
-		res = s.Serialize(buffer, independentCount);
-		if (!res)
-			return res;
+			for (const auto& [g, item] : map)
+			{
+				auto resItem = s.Serialize(buffer, item);
+				if (!resItem) return resItem;
+			}
+			return {};
+		};
 
-		for (const auto& [guid, item] : m_IndependentViewsUserData)
-		{
-			res = s.Serialize(buffer, item);
-			if (!res)
-				return res;
-		}
+		auto resChild = serializeViewMap(m_ChildViewsUserData);
+		if (!resChild) return resChild;
+
+		auto resIndep = serializeViewMap(m_IndependentViewsUserData);
+		if (!resIndep) return resIndep;
 
 		return s.Serialize(buffer, m_SelectedGpuId);
 	}
@@ -431,39 +420,30 @@ namespace zzz::engine
 		if (!res)
 			return res;
 
-		zU32 childCount = 0;
-		res = s.Deserialize(buffer, offset, childCount);
-		if (!res)
-			return res;
-
-		m_ChildViewsUserData.clear();
-		m_ChildViewsUserData.reserve(childCount);
-		for (zU32 i = 0; i < childCount; ++i)
+		auto deserializeViewMap = [&](ViewUserDataMap& map) -> std::expected<void, std::string>
 		{
-			ViewUserData item;
-			res = s.Deserialize(buffer, offset, item);
-			if (!res)
-				return res;
-			Guid guid = item.GetViewGuid();
-			m_ChildViewsUserData.emplace(std::move(guid), std::move(item));
-		}
+			zU32 count = 0;
+			auto resCount = s.Deserialize(buffer, offset, count);
+			if (!resCount) return resCount;
 
-		zU32 independentCount = 0;
-		res = s.Deserialize(buffer, offset, independentCount);
-		if (!res)
-			return res;
+			map.clear();
+			map.reserve(count);
+			for (zU32 i = 0; i < count; ++i)
+			{
+				ViewUserData item;
+				auto resItem = s.Deserialize(buffer, offset, item);
+				if (!resItem) return resItem;
+				Guid g = item.GetViewGuid();
+				map.emplace(std::move(g), std::move(item));
+			}
+			return {};
+		};
 
-		m_IndependentViewsUserData.clear();
-		m_IndependentViewsUserData.reserve(independentCount);
-		for (zU32 i = 0; i < independentCount; ++i)
-		{
-			ViewUserData item;
-			res = s.Deserialize(buffer, offset, item);
-			if (!res)
-				return res;
-			Guid guid = item.GetViewGuid();
-			m_IndependentViewsUserData.emplace(std::move(guid), std::move(item));
-		}
+		auto resChild = deserializeViewMap(m_ChildViewsUserData);
+		if (!resChild) return resChild;
+
+		auto resIndep = deserializeViewMap(m_IndependentViewsUserData);
+		if (!resIndep) return resIndep;
 
 		return s.Deserialize(buffer, offset, m_SelectedGpuId);
 	}

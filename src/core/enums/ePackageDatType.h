@@ -21,7 +21,12 @@ namespace zzz::core
 		PrimaryView     = 3, ///< Основное окно игры (PrimaryViewData)
 		ChildView       = 4, ///< Дочернее представление (ChildViewData)
 		IndependentView = 5, ///< Независимое окно (IndependentViewData)
-		Prefab          = 6  ///< Иерархия префаба (PrefabData)
+		Prefab          = 6, ///< Иерархия префаба (PrefabData)
+
+		/// @brief Граничные маркеры диапазона для compile-time вычисления размера массива таблиц
+		///        (c_TypeCount), проверки валидности типа и индексации в ArchiveTraitsBase.
+		First           = ProjectManifest,
+		Last            = Prefab
 	};
 
 	[[nodiscard]] constexpr std::string_view ToString(ePackageDatType type)

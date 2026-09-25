@@ -25,7 +25,12 @@ namespace zzz::core
 		AudioClip  = 6, ///< Звуковой файл (WAV, OGG, MP3)
 		Video      = 7, ///< Видеопоток
 		Font       = 8, ///< Шрифт (TTF, OTF, атласы)
-		BinaryData = 9  ///< Произвольный бинарный буфер данных
+		BinaryData = 9, ///< Произвольный бинарный буфер данных
+
+		/// @brief Граничные маркеры диапазона для compile-time вычисления размера массива таблиц
+		///        (c_TypeCount), проверки валидности типа и индексации в ArchiveTraitsBase.
+		First      = Mesh,
+		Last       = BinaryData
 	};
 
 	[[nodiscard]] constexpr std::string_view ToString(eDataDatType type)

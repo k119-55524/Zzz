@@ -21,21 +21,21 @@ namespace zzz::engine
 	{
 		const auto pathStr = GetArchiveName();
 
-		auto primaryViewIt = m_EntriesByGuid.find(ePackageDatType::PrimaryView);
-		if (primaryViewIt == m_EntriesByGuid.end() || primaryViewIt->second.empty())
+		const auto& primaryViews = GetEntries<ePackageDatType::PrimaryView>();
+		if (primaryViews.empty())
 			THROW_RUNTIME("Ошибка пакета '{}': Обязательный ресурс PrimaryViewData отсутствует.", pathStr);
 
-		if (primaryViewIt->second.size() != 1)
-			THROW_RUNTIME("Ошибка пакета '{}': Ожидался ровно один ресурс PrimaryViewData, обнаружено: {}.", pathStr, primaryViewIt->second.size());
+		if (primaryViews.size() != 1)
+			THROW_RUNTIME("Ошибка пакета '{}': Ожидался ровно один ресурс PrimaryViewData, обнаружено: {}.", pathStr, primaryViews.size());
 
-		auto manifestIt = m_EntriesByGuid.find(ePackageDatType::ProjectManifest);
-		if (manifestIt == m_EntriesByGuid.end() || manifestIt->second.empty())
+		const auto& manifests = GetEntries<ePackageDatType::ProjectManifest>();
+		if (manifests.empty())
 			THROW_RUNTIME("Ошибка пакета '{}': Обязательный ресурс ProjectManifestData отсутствует.", pathStr);
 
-		if (manifestIt->second.size() != 1)
-			THROW_RUNTIME("Ошибка пакета '{}': Ожидался ровно один ресурс ProjectManifestData, обнаружено: {}.", pathStr, manifestIt->second.size());
+		if (manifests.size() != 1)
+			THROW_RUNTIME("Ошибка пакета '{}': Ожидался ровно один ресурс ProjectManifestData, обнаружено: {}.", pathStr, manifests.size());
 
-		auto manifestRes = DeserializeEntryRaw<ProjectManifestData>(manifestIt->second.begin()->second);
+		auto manifestRes = DeserializeEntryRaw<ProjectManifestData>(manifests.begin()->second);
 		if (!manifestRes)
 			THROW_RUNTIME("Ошибка десериализации ProjectManifestData из пакета '{}': {}", pathStr, manifestRes.error());
 
@@ -56,6 +56,7 @@ namespace zzz::engine
 					sceneEntry.GetGuid().ToString());
 			}
 #endif
+
 			m_SceneGuidsByName.emplace(sceneEntry.GetName(), sceneEntry.GetGuid());
 		}
 	}
@@ -71,14 +72,14 @@ namespace zzz::engine
 
 	std::expected<PrimaryViewData, std::string> PackageManager::GetPrimaryViewData() const
 	{
-		auto it = m_EntriesByGuid.find(ePackageDatType::PrimaryView);
-		if (it == m_EntriesByGuid.end() || it->second.empty())
-			return UNEXPECTED("Package entry of type PrimaryView was not found.");
+		const auto& primaryViews = GetEntries<ePackageDatType::PrimaryView>();
+		if (primaryViews.empty())
+			return UNEXPECTED("Запись пакета типа PrimaryView не найдена.");
 
-		if (it->second.size() != 1)
-			return UNEXPECTED("Expected exactly one PrimaryView in package, found: {}.", it->second.size());
+		if (primaryViews.size() != 1)
+			return UNEXPECTED("Ожидался ровно один PrimaryView в пакете, обнаружено: {}.", primaryViews.size());
 
-		return DeserializeEntryRaw<PrimaryViewData>(it->second.begin()->second);
+		return DeserializeEntryRaw<PrimaryViewData>(primaryViews.begin()->second);
 	}
 
 	void PackageManager::LogEntryDetails(const PackageEntry& entry) const
