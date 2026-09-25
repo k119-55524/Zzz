@@ -1,16 +1,22 @@
 #pragma once
 
+#include <memory>
+#include <string>
 #include <cstddef>
 #include <expected>
 #include <filesystem>
-#include <memory>
-#include <string>
+
+#include "core/utils/Defines.h"
+#include "core/utils/NativeAppData.h"
 
 namespace zzz::core
 {
 	/**
 	 * @brief Платформенно-изолированный RAII-хэндл отображения файла в виртуальную память.
-	 * @details Реализация Impl выбирается на этапе сборки через CMake без макросов в заголовке.
+	 * @details Реализация Impl выбирается на этапе сборки через CMake без макросов в бизнес-логике.
+	 *          На Android удерживает AAsset и его буфер вместо системного mmap.
+	 * @note Пока хэндл существует, источник нельзя изменять, удалять или заменять. Архивы
+	 *       публикуются до запуска движка либо после его остановки; hot reload не поддерживается.
 	 */
 	class MappedFileHandle final
 	{
@@ -25,7 +31,8 @@ namespace zzz::core
 		MappedFileHandle& operator=(MappedFileHandle&& other) noexcept;
 
 		[[nodiscard]] static std::expected<MappedFileHandle, std::string> Open(
-			const std::filesystem::path& physicalPath);
+			const std::filesystem::path& physicalPath,
+			NativeAppData* nativeData = nullptr);
 
 		[[nodiscard]] const std::byte* GetData() const noexcept;
 		[[nodiscard]] std::size_t GetSize() const noexcept;

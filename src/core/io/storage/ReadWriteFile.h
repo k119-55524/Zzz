@@ -22,8 +22,9 @@ namespace zzz::core
 	 */
 	class ReadWriteFile final
 	{
-	public:
 		Z_NO_COPY_MOVE(ReadWriteFile);
+
+	public:
 
 		explicit ReadWriteFile(const std::filesystem::path& physicalPath);
 

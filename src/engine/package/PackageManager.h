@@ -18,7 +18,9 @@ namespace zzz::engine
 	{
 	public:
 		PackageManager() = delete;
-		explicit PackageManager(const std::filesystem::path& physicalPath);
+		explicit PackageManager(
+			const std::filesystem::path& physicalPath,
+			NativeAppData* nativeData = nullptr);
 		~PackageManager() override = default;
 
 		using ArchiveReaderBase<ePackageDatType>::GetEntry;

@@ -23,7 +23,9 @@ namespace zzz::core
 	{
 	public:
 		DataAssetsManager() = delete;
-		explicit DataAssetsManager(const std::filesystem::path& physicalPath);
+		explicit DataAssetsManager(
+			const std::filesystem::path& physicalPath,
+			NativeAppData* nativeData = nullptr);
 		~DataAssetsManager() override = default;
 
 		using ArchiveReaderBase<eDataDatType>::GetEntry;

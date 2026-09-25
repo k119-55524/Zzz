@@ -10,7 +10,7 @@
    - Заменить открытие файла на каждый чих постоянным отображением в виртуальную память (Memory-Mapped File).
 
 2. **Архитектура модуля `src/core/io/storage/` с 3 специализированными классами:**
-   - **`ReadOnlyFile`** — неизменяемое отображение физического файла по переданному пути (`std::filesystem::path`), zero-copy `std::span` и `Subspan`, lock-free потокобезопасность «из коробки». Полная изоляция от `FileSystem`.
+   - **`ReadOnlyFile`** — неизменяемое отображение физического файла по переданному пути (`std::filesystem::path`), zero-copy `std::span` и `Subspan`, lock-free потокобезопасность «из коробки». Полная изоляция от `FileSystem`. Архив не изменяется, не удаляется и не заменяется до разрушения `ReadOnlyFile`; новые архивы публикуются только до запуска движка либо после его остановки, hot reload не поддерживается.
    - **`MappedFileHandle`** (`storage/platforms/`) — RAII-хэндл системного маппинга без `#ifdef` в коде (выбирается через CMake):
      * **Windows (`MappedFileHandleMSWin.cpp`):** `CreateFileW`, `CreateFileMappingW`, `MapViewOfFile`, `UnmapViewOfFile`, `CloseHandle`.
      * **POSIX (`MappedFileHandlePosix.cpp`):** `open`, `fstat`, `mmap`, `munmap`, `close`.
@@ -19,7 +19,7 @@
    - **`FileSystemBase` / `FileSystem`** — чистая топология путей и песочниц (`eFileLocation`), создание каталогов, проверки существования файлов. **Полное исключение методов чтения/записи байт (`ReadBytes`, `ReadAllBytes`, `WriteAllBytes`) из `FileSystem`**. Выступает в роли резолвера путей (`GetGamePackagePath`, `GetDataPackagePath`), передавая разрешённые пути потребителям.
 
 3. **Интеграция в `ArchiveReaderBase<TType>`, разделение типизации и `ResourceDatMapping`:**
-   - Хранение `ReadOnlyFile m_ReadOnlyFile;` строго по значению внутри `ArchiveReaderBase` (без `std::shared_ptr`, без зависимости от `FileSystem`).
+   - Хранение `ReadOnlyFile m_ReadOnlyFile;` строго по значению внутри `ArchiveReaderBase` (без `std::shared_ptr`, без зависимости от `FileSystem`); Android дополнительно получает нативный контекст для доступа к `AAssetManager`.
    - Унификация конструктора: `ArchiveReaderBase(const std::filesystem::path&)` принимает исключительно физический путь. Полная ликвидация параметров форматов и рантайм-колбэков валидации `TypeValidator<TType>`.
    - Разделение зон ответственности типизации:
      * `ePackageDatType` — типы записей оглавления для `package.dat`.

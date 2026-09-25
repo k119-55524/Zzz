@@ -5,5 +5,6 @@
 #if defined(Z_ANDROID)
 #include <pthread.h>
 #include <sys/resource.h>
+#include <android/asset_manager.h>
 #include <game-activity/native_app_glue/android_native_app_glue.h>
 #endif // defined(Z_ANDROID)

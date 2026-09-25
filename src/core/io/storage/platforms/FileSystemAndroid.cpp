@@ -5,10 +5,9 @@
 #include "FileSystemAndroid.h"
 #include "core/utils/Ensure.h"
 #include "core/utils/SafeMath.h"
+#include "core/headers/Android.h"
 #include "core/utils/macros/MiscMacros.h"
 #include <limits>
-#include <android/asset_manager.h>
-#include <android_native_app_glue.h>
 
 namespace zzz::core
 {

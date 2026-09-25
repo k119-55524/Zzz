@@ -1,8 +1,11 @@
-#include "MappedFileHandle.h"
-#include "core/headers/platforms/MSWin.h"
-#include "core/utils/SafeMath.h"
 
 #include <format>
+
+#include "core/utils/SafeMath.h"
+#include "core/utils/Macroses.h"
+#include "core/headers/platforms/MSWin.h"
+
+#include "MappedFileHandle.h"
 
 namespace zzz::core
 {
@@ -17,8 +20,10 @@ namespace zzz::core
 		{
 			if (data)
 				UnmapViewOfFile(data);
+
 			if (mapping)
 				CloseHandle(mapping);
+
 			if (file != INVALID_HANDLE_VALUE)
 				CloseHandle(file);
 		}
@@ -36,7 +41,8 @@ namespace zzz::core
 	MappedFileHandle& MappedFileHandle::operator=(MappedFileHandle&& other) noexcept = default;
 
 	std::expected<MappedFileHandle, std::string> MappedFileHandle::Open(
-		const std::filesystem::path& physicalPath)
+		const std::filesystem::path& physicalPath,
+		[[maybe_unused]] NativeAppData* nativeData)
 	{
 		auto impl = std::make_unique<Impl>();
 
@@ -48,24 +54,35 @@ namespace zzz::core
 			OPEN_EXISTING,
 			FILE_ATTRIBUTE_NORMAL | FILE_FLAG_RANDOM_ACCESS,
 			nullptr);
+
 		if (impl->file == INVALID_HANDLE_VALUE)
 		{
-			return std::unexpected(std::format(
-				"Не удалось открыть файл '{}' для отображения в память (Win32 error: {}).",
-				physicalPath.string(), GetLastError()));
+			const DWORD error = GetLastError();
+			return UNEXPECTED("Не удалось открыть файл '{}' для отображения в память (Win32 error: {}).", physicalPath.string(), error);
 		}
 
-		LARGE_INTEGER fileSize{};
-		if (!GetFileSizeEx(impl->file, &fileSize) || fileSize.QuadPart < 0)
+		BY_HANDLE_FILE_INFORMATION fileInfo{};
+		if (!GetFileInformationByHandle(impl->file, &fileInfo))
 		{
-			return std::unexpected(std::format(
-				"Не удалось получить размер файла '{}' (Win32 error: {}).",
-				physicalPath.string(), GetLastError()));
+			const DWORD error = GetLastError();
+			return UNEXPECTED("Не удалось получить сведения о файле '{}' (Win32 error: {}).", physicalPath.string(), error);
 		}
+
+		if ((fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0 || GetFileType(impl->file) != FILE_TYPE_DISK)
+			return UNEXPECTED("Путь '{}' не является обычным файлом.", physicalPath.string());
+
+		LARGE_INTEGER fileSize{};
+		if (!GetFileSizeEx(impl->file, &fileSize))
+		{
+			const DWORD error = GetLastError();
+			return UNEXPECTED("Не удалось получить размер файла '{}' (Win32 error: {}).", physicalPath.string(), error);
+		}
+		if (fileSize.QuadPart < 0)
+			return UNEXPECTED("Файл '{}' имеет некорректный отрицательный размер.", physicalPath.string());
 
 		const auto mappedSize = NarrowTo<std::size_t>(static_cast<std::uint64_t>(fileSize.QuadPart));
 		if (!mappedSize)
-			return std::unexpected(std::format("Размер файла '{}' не представим типом std::size_t.", physicalPath.string()));
+			return UNEXPECTED("Размер файла '{}' не представим типом std::size_t.", physicalPath.string());
 
 		impl->size = *mappedSize;
 		if (impl->size > 0)
@@ -73,17 +90,15 @@ namespace zzz::core
 			impl->mapping = CreateFileMappingW(impl->file, nullptr, PAGE_READONLY, 0, 0, nullptr);
 			if (!impl->mapping)
 			{
-				return std::unexpected(std::format(
-					"Не удалось создать отображение файла '{}' (Win32 error: {}).",
-					physicalPath.string(), GetLastError()));
+				const DWORD error = GetLastError();
+				return UNEXPECTED("Не удалось создать отображение файла '{}' (Win32 error: {}).", physicalPath.string(), error);
 			}
 
 			impl->data = static_cast<const std::byte*>(MapViewOfFile(impl->mapping, FILE_MAP_READ, 0, 0, 0));
 			if (!impl->data)
 			{
-				return std::unexpected(std::format(
-					"Не удалось отобразить файл '{}' в память (Win32 error: {}).",
-					physicalPath.string(), GetLastError()));
+				const DWORD error = GetLastError();
+				return UNEXPECTED("Не удалось отобразить файл '{}' в память (Win32 error: {}).", physicalPath.string(), error);
 			}
 		}
 

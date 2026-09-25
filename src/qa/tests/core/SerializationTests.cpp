@@ -229,12 +229,21 @@ TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
 	// Проверяем прямую работу с ReadOnlyFile и ReadWriteFile
 	{
 		core::ReadOnlyFile readOnlyFile(*dataPathRes);
-		EXPECT_GT(readOnlyFile.GetSpan().size(), 0u);
-		auto magicSpan = readOnlyFile.Subspan(0, 3);
+		auto fileBytesRes = readOnlyFile.Read();
+		ASSERT_TRUE(fileBytesRes.has_value()) << fileBytesRes.error();
+		EXPECT_GT(fileBytesRes->size(), 0u);
+
+		auto magicSpanRes = readOnlyFile.Read(0, 3);
+		ASSERT_TRUE(magicSpanRes.has_value()) << magicSpanRes.error();
+		auto magicSpan = *magicSpanRes;
 		ASSERT_EQ(magicSpan.size(), 3u);
 		EXPECT_EQ(static_cast<char>(magicSpan[0]), 'Z');
 		EXPECT_EQ(static_cast<char>(magicSpan[1]), 'D');
 		EXPECT_EQ(static_cast<char>(magicSpan[2]), 'D');
+
+		// Проверка выхода за границы
+		auto outOfBoundsRes = readOnlyFile.Read(fileBytesRes->size() + 100, 10);
+		EXPECT_FALSE(outOfBoundsRes.has_value());
 	}
 
 	{

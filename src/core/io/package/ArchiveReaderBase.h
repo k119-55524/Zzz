@@ -58,8 +58,10 @@ namespace zzz::core
 
 	public:
 		ArchiveReaderBase() = delete;
-		explicit ArchiveReaderBase(const std::filesystem::path& path)
-			: m_ReadOnlyFile(path),
+		explicit ArchiveReaderBase(
+			const std::filesystem::path& path,
+			NativeAppData* nativeData = nullptr)
+			: m_ReadOnlyFile(path, nativeData),
 			  m_ArchiveName(path.filename().string())
 		{
 			InitializeArchive();
@@ -97,16 +99,20 @@ namespace zzz::core
 			if (!IsRangeInside(*offset, *size, m_ArchiveSize))
 				return UNEXPECTED("Диапазон ресурса с GUID '{}' выходит за границы архива", entry.GetGuid().ToString());
 
-			return m_ReadOnlyFile.Subspan(*offset, *size);
+			return m_ReadOnlyFile.Read(*offset, *size);
 		}
 
 	private:
 		void InitializeArchive()
 		{
-			m_ArchiveSize = m_ReadOnlyFile.GetSpan().size();
+			auto archiveBytesRes = m_ReadOnlyFile.Read();
+			if (!archiveBytesRes)
+				THROW_RUNTIME("Не удалось прочитать архив '{}': {}", m_ArchiveName, archiveBytesRes.error());
+
+			const auto archiveBytes = *archiveBytesRes;
+			m_ArchiveSize = archiveBytes.size();
 			m_Header = DatFileHeader{ Traits::c_ExpectedFormat };
 
-			const auto archiveBytes = m_ReadOnlyFile.GetSpan();
 			const auto headerBytes = archiveBytes.first((std::min)(archiveBytes.size(), static_cast<std::size_t>(m_Header.c_BaseHeaderSize)));
 
 			if (auto res = m_Header.DeserializeAndValidate(headerBytes, m_ArchiveSize); !res)
@@ -125,7 +131,11 @@ namespace zzz::core
 				if (!IsRangeInside(headerSize, *tableSize, m_ArchiveSize))
 					THROW_RUNTIME("Таблица записей архива '{}' выходит за границы файла: {} > {}", m_ArchiveName, payloadBegin, m_ArchiveSize);
 
-				const auto tableBytes = m_ReadOnlyFile.Subspan(headerSize, *tableSize);
+				auto tableBytesRes = m_ReadOnlyFile.Read(headerSize, *tableSize);
+				if (!tableBytesRes)
+					THROW_RUNTIME("Не удалось прочитать таблицу записей архива '{}': {}", m_ArchiveName, tableBytesRes.error());
+
+				const auto tableBytes = *tableBytesRes;
 
 #if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
 				std::unordered_map<Guid, zU32> seenGuids;

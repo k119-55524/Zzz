@@ -49,8 +49,8 @@ Engine::Engine(std::shared_ptr<NativeAppData> nativeData) :
 	if (!dataPath)
 		THROW_RUNTIME("Не удалось определить путь к пакету данных: {}", dataPath.error());
 
-	m_PackageManager = safe_make_shared<PackageManager>(*pkgPath);
-	m_DataAssetsManager = safe_make_shared<DataAssetsManager>(*dataPath);
+	m_PackageManager = safe_make_shared<PackageManager>(*pkgPath, nativeData.get());
+	m_DataAssetsManager = safe_make_shared<DataAssetsManager>(*dataPath, nativeData.get());
 	auto userConfigPath = m_FileSystem->GetUserConfigPath(m_PackageManager->GetCompanyName(), m_PackageManager->GetAppName());
 	if (!userConfigPath)
 		THROW_RUNTIME("Не удалось получить путь к файлу настроек пользователя: {}", userConfigPath.error());

@@ -1,13 +1,16 @@
-#include "MappedFileHandle.h"
-#include "core/utils/SafeMath.h"
 
+#include <format>
 #include <cerrno>
 #include <cstring>
 #include <fcntl.h>
-#include <format>
+#include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <unistd.h>
+
+#include "core/utils/SafeMath.h"
+#include "core/utils/Macroses.h"
+
+#include "MappedFileHandle.h"
 
 namespace zzz::core
 {
@@ -38,39 +41,47 @@ namespace zzz::core
 	MappedFileHandle& MappedFileHandle::operator=(MappedFileHandle&& other) noexcept = default;
 
 	std::expected<MappedFileHandle, std::string> MappedFileHandle::Open(
-		const std::filesystem::path& physicalPath)
+		const std::filesystem::path& physicalPath,
+		[[maybe_unused]] NativeAppData* nativeData)
 	{
 		auto impl = std::make_unique<Impl>();
 
-		impl->file = open(physicalPath.c_str(), O_RDONLY);
+		impl->file = open(physicalPath.c_str(), O_RDONLY | O_CLOEXEC);
 		if (impl->file < 0)
 		{
-			return std::unexpected(std::format(
+			const int error = errno;
+			return UNEXPECTED(
 				"Не удалось открыть файл '{}' для отображения в память: {}.",
-				physicalPath.string(), std::strerror(errno)));
+				physicalPath.string(), std::strerror(error));
 		}
 
 		struct stat fileStat{};
-		if (fstat(impl->file, &fileStat) != 0 || fileStat.st_size < 0)
+		if (fstat(impl->file, &fileStat) != 0)
 		{
-			return std::unexpected(std::format(
+			const int error = errno;
+			return UNEXPECTED(
 				"Не удалось получить размер файла '{}': {}.",
-				physicalPath.string(), std::strerror(errno)));
+				physicalPath.string(), std::strerror(error));
 		}
+		if (!S_ISREG(fileStat.st_mode))
+			return UNEXPECTED("Путь '{}' не является обычным файлом.", physicalPath.string());
+		if (fileStat.st_size < 0)
+			return UNEXPECTED("Файл '{}' имеет некорректный отрицательный размер.", physicalPath.string());
 
 		const auto mappedSize = NarrowTo<std::size_t>(static_cast<std::uint64_t>(fileStat.st_size));
 		if (!mappedSize)
-			return std::unexpected(std::format("Размер файла '{}' не представим типом std::size_t.", physicalPath.string()));
+			return UNEXPECTED("Размер файла '{}' не представим типом std::size_t.", physicalPath.string());
 
 		impl->size = *mappedSize;
 		if (impl->size > 0)
 		{
-			void* mapped = mmap(nullptr, impl->size, PROT_READ, MAP_SHARED, impl->file, 0);
+			void* mapped = mmap(nullptr, impl->size, PROT_READ, MAP_PRIVATE, impl->file, 0);
 			if (mapped == MAP_FAILED)
 			{
-				return std::unexpected(std::format(
+				const int error = errno;
+				return UNEXPECTED(
 					"Не удалось отобразить файл '{}' в память: {}.",
-					physicalPath.string(), std::strerror(errno)));
+					physicalPath.string(), std::strerror(error));
 			}
 			impl->data = static_cast<const std::byte*>(mapped);
 		}
