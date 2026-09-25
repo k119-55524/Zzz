@@ -77,45 +77,19 @@ namespace zzz::core
 
 	[[nodiscard]] bool Path::IsValidDirectoryName(std::string_view name) noexcept
 	{
-		if (name.empty())
+		if (name.empty() || name == "." || name == ".." || name.back() == '.' || name.back() == ' '
+			|| name.find_first_of(R"(<>:"/\|?*)") != std::string_view::npos)
 			return false;
 
-		if (name == "." || name == "..")
-			return false;
-
-		if (name.back() == '.' || name.back() == ' ')
-			return false;
-
-		static constexpr std::string_view invalidChars = R"(< > : " / \ | ? *)";
-		(void)invalidChars;
 		for (unsigned char c : name)
 		{
 			if (c < 32)
 				return false;
-
-			switch (c)
-			{
-			case '<':
-			case '>':
-			case ':':
-			case '"':
-			case '/':
-			case '\\':
-			case '|':
-			case '?':
-			case '*':
-				return false;
-			default:
-				break;
-			}
 		}
 
 		const auto dotPos = name.find('.');
 		const std::string_view stem = (dotPos == std::string_view::npos) ? name : name.substr(0, dotPos);
-		if (IsReservedWindowsName(stem))
-			return false;
-
-		return true;
+		return !IsReservedWindowsName(stem);
 	}
 
 	/// @brief Определяет каталог, в котором расположен исполняемый файл приложения (вызывается один раз в конструкторе).

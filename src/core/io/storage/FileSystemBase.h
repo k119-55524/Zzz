@@ -17,7 +17,7 @@ namespace zzz::core
 	 * @brief Базовая реализация файловой системы для кроссплатформенного ввода-вывода.
 	 *
 	 * @details Отвечает за разрешение путей, песочницы ОС (User, Saves, Cache, Logs, App)
-	 *          и метаданные файловой системы (проверка существования и удаление файлов).
+	 *          и метаданные файловой системы (проверка существования файлов).
 	 *          Не выполняет ввод-вывод байт (это задача ReadOnlyFile и ReadWriteFile).
 	 */
 	class FileSystemBase
@@ -27,7 +27,6 @@ namespace zzz::core
 		virtual ~FileSystemBase() = default;
 
 		[[nodiscard]] virtual bool FileExists(eFileLocation location, const std::filesystem::path& relativePath) const noexcept;
-		[[nodiscard]] virtual std::expected<void, std::string> DeleteFile(eFileLocation location, const std::filesystem::path& relativePath) const noexcept;
 
 		[[nodiscard]] static constexpr bool IsLocationWritable(eFileLocation location) noexcept
 		{
@@ -62,12 +61,11 @@ namespace zzz::core
 
 	private:
 		/**
-		 * @brief Проверяет физический путь к файлу.
+		 * @brief Проверяет физический путь к изменяемому файлу.
 		 * @param physicalPath Полный путь к файлу.
-		 * @param writable false — файл существует и является обычным файлом;
-		 *                 true — существующий файл доступен на чтение и запись, а для отсутствующего
-		 *                 ближайший существующий каталог-предок позволяет создать файл.
+		 * @details Существующий путь должен быть обычным файлом, доступным на чтение и запись.
+		 *          Для отсутствующего файла непосредственный родительский каталог должен позволять его создание.
 		 */
-		[[nodiscard]] std::expected<void, std::string> ValidateFilePath(const std::filesystem::path& physicalPath, bool writable = false) const noexcept;
+		[[nodiscard]] std::expected<void, std::string> ValidateFilePath(const std::filesystem::path& physicalPath) const noexcept;
 	};
 }

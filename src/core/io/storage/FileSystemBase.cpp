@@ -26,25 +26,6 @@ namespace zzz::core
 		return std::filesystem::is_regular_file(*pathRes, ec) && !ec;
 	}
 
-
-
-	[[nodiscard]] std::expected<void, std::string> FileSystemBase::DeleteFile(
-		eFileLocation location, const std::filesystem::path& relativePath) const noexcept
-	{
-		if (!IsLocationWritable(location))
-			return UNEXPECTED("Попытка удаления файла в защищённой области: {}", ToString(location));
-
-		auto pathRes = ResolvePhysicalPath(location, relativePath);
-		if (!pathRes)
-			return UNEXPECTED("{}", pathRes.error());
-
-		std::error_code ec;
-		if (!std::filesystem::remove(*pathRes, ec) || ec)
-			return UNEXPECTED("Не удалось удалить файл '{}': {}", pathRes->string(), ec.message());
-
-		return {};
-	}
-
 	[[nodiscard]] std::expected<std::filesystem::path, std::string> FileSystemBase::ResolvePhysicalPath(
 		eFileLocation location, const std::filesystem::path& relativePath) const noexcept
 	{
@@ -58,7 +39,7 @@ namespace zzz::core
 		return *dirRes / relativePath;
 	}
 
-	[[nodiscard]] std::expected<void, std::string> FileSystemBase::ValidateFilePath(const std::filesystem::path& physicalPath, bool writable) const noexcept
+	[[nodiscard]] std::expected<void, std::string> FileSystemBase::ValidateFilePath(const std::filesystem::path& physicalPath) const noexcept
 	{
 		std::error_code ec;
 		const auto status = std::filesystem::status(physicalPath, ec);
@@ -70,42 +51,24 @@ namespace zzz::core
 			if (!std::filesystem::is_regular_file(status))
 				return UNEXPECTED("Путь '{}' не является обычным файлом.", physicalPath.string());
 
-			if (writable && !FileAccess::CanReadWrite(physicalPath))
+			if (!FileAccess::CanReadWrite(physicalPath))
 				return UNEXPECTED("Нет прав на чтение и запись файла '{}'.", physicalPath.string());
 
 			return {};
 		}
 
-		if (!writable)
-			return UNEXPECTED("Файл '{}' не существует.", physicalPath.string());
+		const auto directory = physicalPath.parent_path();
+		const auto directoryStatus = std::filesystem::status(directory, ec);
+		if (ec)
+			return UNEXPECTED("Не удалось получить статус каталога '{}': {}", directory.string(), ec.message());
 
-		// Файла нет: ближайший существующий каталог-предок должен позволять создать файл
-		auto dir = physicalPath.parent_path();
-		while (!dir.empty())
-		{
-			const auto dirStatus = std::filesystem::status(dir, ec);
-			if (ec && ec != std::errc::no_such_file_or_directory)
-				return UNEXPECTED("Не удалось получить статус пути '{}': {}", dir.string(), ec.message());
+		if (!std::filesystem::is_directory(directoryStatus))
+			return UNEXPECTED("Путь '{}' не является каталогом.", directory.string());
 
-			if (std::filesystem::exists(dirStatus))
-			{
-				if (!std::filesystem::is_directory(dirStatus))
-					return UNEXPECTED("Путь '{}' не является каталогом.", dir.string());
+		if (!FileAccess::CanCreateIn(directory))
+			return UNEXPECTED("Нет прав на создание файла '{}' в каталоге '{}'.", physicalPath.string(), directory.string());
 
-				if (!FileAccess::CanCreateIn(dir))
-					return UNEXPECTED("Нет прав на создание файла '{}' в каталоге '{}'.", physicalPath.string(), dir.string());
-
-				return {};
-			}
-
-			const auto parent = dir.parent_path();
-			if (parent == dir)
-				break;
-
-			dir = parent;
-		}
-
-		return UNEXPECTED("Не найден существующий каталог для файла '{}'.", physicalPath.string());
+		return {};
 	}
 
 	[[nodiscard]] std::expected<std::filesystem::path, std::string> FileSystemBase::GetGamePackagePath() const noexcept
@@ -147,7 +110,13 @@ namespace zzz::core
 		if (!pathRes)
 			return std::unexpected(std::move(pathRes.error()));
 
-		if (auto res = ValidateFilePath(*pathRes, true); !res)
+		std::error_code ec;
+		const auto directory = pathRes->parent_path();
+		std::filesystem::create_directories(directory, ec);
+		if (ec)
+			return UNEXPECTED("Не удалось создать каталог пользовательских данных '{}': {}", directory.string(), ec.message());
+
+		if (auto res = ValidateFilePath(*pathRes); !res)
 			return std::unexpected(std::move(res.error()));
 
 		return pathRes;

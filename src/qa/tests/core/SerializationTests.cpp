@@ -272,10 +272,10 @@ TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
 			EXPECT_EQ(*readRes, testPayload);
 		}
 
-		// 3. Удаление через FileSystem
+		// 3. Удаление тестового файла
 		EXPECT_TRUE(fs->FileExists(core::eFileLocation::User, testRelPath));
-		auto delRes = fs->DeleteFile(core::eFileLocation::User, testRelPath);
-		EXPECT_TRUE(delRes.has_value());
+		std::error_code ec;
+		EXPECT_TRUE(std::filesystem::remove(*testPathRes, ec)) << ec.message();
 		EXPECT_FALSE(fs->FileExists(core::eFileLocation::User, testRelPath));
 	}
 }
