@@ -14,7 +14,7 @@
   6. Публикация ресурса в кэш `m_Meshes[guid]` и `m_MeshNames[resource->GetName()]`.
   7. Заворачивание вызовов колбэков в задачи и отправка в межпоточную очередь `CallbackQueue<> m_MainThreadQueue`.
   8. Исполнение колбэков на главном потоке кадра внутри `ResourceManager::Update()`, вызываемого из `Engine::OnUpdateSystem()`.
-- **Граница этапа:** Никаких `fenceValue`, `VkFence`, staging-буферов, `RetireQueue`, командных списков копирования и отправки на GPU в этом этапе **нет**. Всё GPU-взаимодействие (создание `GPUBuffer`, выделение staging-памяти, запись команд копирования, `VkFence`/`SignalFence`, барьеры ресурсов и отложенное освобождение staging) — это **этап 19** после исправлений сцен этапов 17–18.
+- **Граница этапа:** Никаких `fenceValue`, `VkFence`, staging-буферов, `RetireQueue`, командных списков копирования и отправки на GPU в этом этапе **нет**. Текущая подзадача этапа 25 сначала доводит CPU-контур до данных, готовых для staging; само GPU-взаимодействие выполняется будущим продолжением этапа 25. Источник истины — [`stage_25_gpu_buffers_and_upload.md`](stage_25_gpu_buffers_and_upload.md).
 - **Тесты:** Модульные тесты в `src/qa/tests/` не создаются по решению пользователя. Проверка — сборка `engine_lib` и `engine_lib_editor`.
 
 ## 2. Сверка с кодовой базой и исправление замечаний
@@ -199,9 +199,9 @@
   - Устанавливает состояние `eResourceState::Ready`.
   - Хранит геометрию на CPU в том же виде, что и источник `MeshData` (без домысливания несуществующих полей):
     - `m_VertexData: std::vector<std::byte>`, `m_VertexCount`, `m_VertexStride` — как в `MeshData`; интерпретация как `Vertex3D` возможна только при `vertexStride == sizeof(Vertex3D)` (проверяется `ensure`/`THROW_RUNTIME` при несовпадении, а не молчаливым reinterpret).
-    - `m_IndexData: std::vector<std::byte>`, `m_IndexCount`, `m_IndexFormat: eIndexFormat` — индексы хранятся как есть, без безусловного расширения `UInt16` до `uint32_t`; конкретный тип индексного GPU-буфера (16 или 32 бита) выбирается в этапе 19 по `m_IndexFormat`.
+    - `m_IndexData: std::vector<std::byte>`, `m_IndexCount`, `m_IndexFormat: eIndexFormat` — индексы хранятся как есть, без безусловного расширения `UInt16` до `uint32_t`; конкретный тип индексного GPU-буфера выбирается в этапе 25 по `m_IndexFormat`.
   - Bounding box и сабмеши в `Mesh` не добавляются: bounding box — это этап 36 (AABB/Frustum Culling), а понятия "сабмеш" нет ни в `MeshData`, ни где-либо ещё в проекте — добавлять `MeshSubsetInfo` без формата-источника и потребителя нарушает правило 16 (YAGNI).
-  - Предоставляет константные геттеры к этим данным для последующей отправки на GPU в этапе 19.
+  - Предоставляет константные геттеры к этим данным; актуальный путь этапа 25 получает проверенные данные через `CpuResourceManager` и подготавливает стабильные pointers/spans для будущего staging-copy.
 - В `src/engine/resources/MeshLoader.h` и `src/engine/resources/MeshLoader.cpp`:
   - Наследует `IResourceLoader`.
   - Метод `GetSupportedType()` возвращает `::zzz::core::eResourceType::Mesh`.
@@ -276,8 +276,8 @@
 
 ## 6. Не входит в этап
 
-- Загрузка в GPU (создание `GPUBuffer`, выделение staging-буферов, запись команд копирования, `VkFence`/`SignalFence`, барьеры состояний, очередь отложенного освобождения staging-буферов) — **этап 19**.
-- Текстуры (`Texture2D`), материалы (`Material`), шейдеры (`Shader`) — **этап 20**.
+- Загрузка в GPU (создание `GPUBuffer`, staging, copy-команды, fence, барьеры состояний и освобождение staging) — будущее продолжение **этапа 25** после подготовки CPU-данных.
+- Текстуры (`Texture2D`), материалы (`Material`), шейдеры (`Shader`) — **этап 26**.
 - Барьер готовности сцены и запуск скриптов — **этапы 20, 23**.
-- Кадровые команды рендера и отрисовка (`DrawIndexed`) — **этап 24**.
+- Кадровые команды рендера и отрисовка (`DrawIndexed`) — **этап 27**.
 - Модульные тесты в `src/qa/tests/` — не создаются по решению пользователя.

@@ -139,7 +139,7 @@ namespace zzz::engine
 
 ### 2.2. Инициализация и двухпроходное наполнение слоя (`SceneTreeLayerBase::Populate`)
 
-`GameObjectData` дополняется полем `Guid m_ParentGuid` (если объект корневой — `Guid::Empty()`).
+`GameObjectData` дополняется полем `Guid m_ParentGuid` (если объект корневой — `Guid{}`).
 
 Алгоритм наполнения:
 1. **Проход 1 (Создание объектов и регистрация в структурах слоя):**
@@ -175,7 +175,7 @@ namespace zzz::engine
 2. **Проход 2 (Связывание иерархии):**
    - Для каждого `objData` из `layerData.GetObjects()`:
      - `parentGuid = objData.GetParentGuid();`
-     - Если `parentGuid != Guid::Empty()`:
+     - Если `parentGuid != Guid{}`:
        - `childHandle = guidToHandle[objData.GetGuid()];`
        - Поиск родителя: `auto it = guidToHandle.find(parentGuid);`
        - Если родитель найден:
@@ -201,7 +201,7 @@ namespace zzz::engine
 2. **Параллельная фаза во `ViewManager::Update()`:**
    - Для окон отправляется RenderFrame с командами ранее подготовленного кадрового слота. RenderFrame не должен читать m_PrimaryNodes или живые GameObject.
    - Задачи окон исполняют PreRender, View::Update(time), PrepareFrame. View::Update обслуживает окно/переходы; Scene::Update вызывается один раз через SceneManager до ViewManager, не отдельно для каждого окна.
-   - PrepareFrame предназначен для чтения опубликованного Front Buffer и записи собственных команд слота; фактические BuildRenderTree/SubmitRenderTree ещё заглушки, доводятся в этапе 24.
+   - PrepareFrame предназначен для чтения опубликованного Front Buffer и записи собственных команд слота; фактические BuildRenderTree/SubmitRenderTree ещё заглушки, доводятся в этапе 27.
    - m_ThreadsUpdate.Join() ожидает CPU-задачи подготовки и отправки. Он не означает GPU completion; освобождение и переиспользование GPU-объектов требует fence.
 
 3. **Точка Handover Barrier (после `Join()`, перед `PostRender()`):**

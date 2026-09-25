@@ -54,11 +54,11 @@
 ### 📌 Текущее состояние разработки
 
 > [!IMPORTANT]
-> **Текущий активный пункт:** `Пункт 25. GPU-буферы, загрузка в GPU и GPU-меш`
+> **Текущий активный пункт:** `Пункт 25. Подготовка данных меша для будущего GPU upload`
 >
 > **Статус:** ⏳ В процессе
 > **Список открытых сквозных задач / технического долга:** [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) §4  
-> **Текущая подзадача:** Общие контракты `GPUBuffer` и `GpuUploadScheduler`; затем backend-реализации DX12/Vulkan и интеграция с `GpuMesh`.
+> **Текущая подзадача:** Маршрут `GpuResourceManager → CpuResourceManager → DataAssetsManager`, внешние `.pak` и получение проверенных vertex/index pointers/spans, готовых для будущего копирования в staging. Реальный GPU upload пока не реализуется.
 > 
 ---
 
@@ -99,8 +99,8 @@
 | **22** | Разделение ResourceManager (CPU/GPU), прямая типизация без IResourceLoader, OneShotEvent, ResourceTable/ResourceRef и трёхзвенный конвейер | ✅ Выполнено | [`stage_22_resource_manager_ownership_and_ready_events.md`](stage_22_resource_manager_ownership_and_ready_events.md) | Полный демонтаж `IResourceLoader`, `RegisterLoader`, стирания типов и `OwnerToken`/`IsOwnerAlive`; шаблоны `ResourceTable<T>` и `ResourceRef<T>`; разделение на `CpuResourceManager` и `GpuResourceManager` (изолирован от диска, зависит от `CpuResourceManager`); примитив `OneShotEvent`; изоляция графических ресурсов от ресурсов других систем; контракт No-Hang гарантированного разрешения ошибок/исключений; приоритеты `eTaskPriority` |
 | **23** | Рефакторинг I/O конвейера, Data-Driven Master TOC, ликвидация IoScheduler и ResourceStorageTraits, чистый GUID в PackageEntry и приоритеты ввода-вывода | ✅ Выполнено | [`stage_23_data_driven_toc_and_io_refactoring.md`](stage_23_data_driven_toc_and_io_refactoring.md) | Ликвидация `IoScheduler`, `ResourceStorageTraits` и `eAssetDirectoryKind`; двухархивная модель с путями `c_GamePackageRelativePath` и `c_DataPackageRelativePath`; сжатие `PackageEntry` под чистый 16-байтный GUID (строго 36 байт); загрузка сцен по имени через прозрачный индекс `m_SceneGuidsByName`; устранение бага `size == 0`; приоритетная диспетчеризация в `TaskDispatcher` и автономный shutdown `CpuResourceManager`; сквозная валидация GUID; унификация путей через `std::filesystem::path` |
 | **24** | Постоянный archive handle (Memory-Mapped File) и Zero-Copy I/O конвейер архивов | ✅ Выполнено | [`stage_24_memory_mapped_archive_and_zero_copy_io.md`](stage_24_memory_mapped_archive_and_zero_copy_io.md) | Ликвидация системных вызовов в горячем пути; `ReadOnlyFile` и платформенный `MappedFileHandle` (Win32 mapping / POSIX `mmap` / Android `AAsset`), потокобезопасный `ReadWriteFile` и `FileSystemBase` без байтового I/O; интеграция в `ArchiveReaderBase`, `PackageManager` и `DataAssetsManager`; прямой `ReadRawPayload` как `std::span`; архивы неизменяемы до остановки движка, hot reload не поддерживается |
-| **25** | GPU-буферы, загрузка в GPU и GPU-меш | ⏳ В процессе | [`stage_25_gpu_buffers_and_upload.md`](stage_25_gpu_buffers_and_upload.md) | Создание GPUBuffer (вершинный/индексный); инфраструктура загрузки через специализированный `GpuUploadScheduler` (учёт ограничений многопоточности DX12 command allocator/list и внешней синхронизации очередей/пулов Vulkan; без хаотичных вызовов GAPI из воркеров `TaskDispatcher`); барьеры, истинный GpuReady только после выполнения copy-команд и fence/timeline semaphore; неблокирующий staging lifetime и освобождение CPU bulk data после upload. Этап использует готовый mapped-archive → CPU-resource конвейер этапа 24 и не возвращает отдельную Ping-Pong дисковую очередь или несуществующий постоянный L2 CPU-кэш |
-| **26** | Базовые Shader и Material | ⏳ Не начато | — | Компиляция минимальных шейдеров DXIL/SPIR-V, рабочий pipeline для куба, MaterialData + Texture2D + параметры; разрешение всех обязательных зависимостей сцены и OnStart только после полной CPU/GPU-готовности |
+| **25** | Подготовка данных меша и последующий GPU upload | ⏳ В процессе | [`stage_25_gpu_buffers_and_upload.md`](stage_25_gpu_buffers_and_upload.md) | Текущая подзадача: трёхсекционный TOC `data.dat`, внешние `.pak`, запрос строго через `CpuResourceManager` и результат со стабильными vertex/index pointers/spans. Несжатые данные готовы к прямому staging-copy; будущие сжатые данные сначала проходят unpacker. GPUBuffer, staging-copy, backend submit/fence и настоящий GpuMesh выполняются отдельным продолжением этого этапа. Версия `data.dat` не меняется |
+| **26** | Базовые Shader и Material | ⏳ Не начато | — | После завершения GPU-upload продолжения этапа 25: компиляция минимальных шейдеров DXIL/SPIR-V, рабочий pipeline для куба, MaterialData + Texture2D + параметры; разрешение всех обязательных зависимостей сцены и OnStart только после полной CPU/GPU-готовности |
 | **27** | Минимальный сквозной рендер куба | ⏳ Не начато | — | Базовая Camera, View/Projection и aspect при resize; обход DefaultSpatialStorage без BVH; игровой поток после update публикует неизменяемый набор команд кадра N, render-поток исполняет только набор N-1 без чтения живой сцены; DrawIndexed на DX12/Vulkan и раздельные CPU/GPU-барьеры |
 | **28** | КП-1 / КП-2: вращающийся текстурированный куб на Windows | ⏳ Не начато | — | Проверка всей цепочки ассет -> пакет/файл -> ресурс -> скрипт -> Draw/Present под DX12 и Vulkan. Resize, minimize/restore, смена сцены и закрытие при загрузке, ошибка обязательного ресурса, отсутствие преждевременного GPU-release; закрытие применимых проверок этапа 10 |
 
@@ -127,7 +127,7 @@
 | **38** | Расширение Camera и Frustum | ⏳ Не начато | — | Развитие базовой камеры из этапа 27, плоскости видимости и необходимые режимы камеры |
 | **39** | Пространственные индексы и Frustum Culling | ⏳ Не начато | — | AABB, развитие ISpatialStorage вместо плоского DefaultSpatialStorage; выбор BVH/Octree по задаче и замерам, без обещания O(log N) для любого запроса видимости |
 | **40** | Оптимизация кадровой очереди | ⏳ Не начато | — | Расширение работающих команд из этапа 27: результаты culling, сортировка и batching; не первая реализация Draw/RenderQueue |
-| **41** | Развитие шейдеров и кэша PSO | ⏳ Не начато | — | Кэш и инвалидация поверх рабочего pipeline этапа 25: VkPipelineCache/ID3D12PipelineLibrary; офлайн-упаковка шейдеров относится к этапу 49 |
+| **41** | Развитие шейдеров и кэша PSO | ⏳ Не начато | — | Кэш и инвалидация поверх рабочего pipeline этапа 26: VkPipelineCache/ID3D12PipelineLibrary; офлайн-упаковка шейдеров относится к этапу 49 |
 | **42** | Фасады движка для скриптов | ⏳ Не начато | — | EngineFacade/SceneFacade/ViewFacade, границы доступа поверх минимального API этапа 26; герметизация Engine.h и SDK-изоляция (TODO 24) |
 | **43** | Изоляция и видимость скриптов | ⏳ Не начато | — | Политика доступа между уровнями скриптов; не обязательная зависимость базового CubeRotatorScript |
 | **44** | Сериализуемые поля и ссылки (FieldRef) | ⏳ Не начато | — | Ссылки на GameObject, скрипты и ассеты, двухфазное разрешение; основа сохранения состояния при hot-reload |
@@ -140,9 +140,9 @@
 | **46** | Параметры импорта в .meta | ⏳ Не начато | — | Типоспецифичные параметры: mipmaps, сжатие, фильтрация, sRGB, настройки мешей и материалов; версия и миграция формата |
 | **47** | Развитие пресетов сборки | ⏳ Не начато | — | Расширять реализованные в этапе 10 `build_settings/presets.json` и `platforms/<platform>/*.json` только по появившимся требованиям; не вводить заново старую `project_<platform>.json`-схему |
 | **48** | Платформенные форматы ресурсов | ⏳ Не начато | — | Развитие общего MVP-формата и схемы выбора ресурсов; платформенные варианты без дублирования идентичности ассетов |
-| **49** | Офлайн-компиляция ресурсов | ⏳ Не начато | — | BC1-BC7/ASTC, упаковка скомпилированных шейдеров, зависимости и инвалидация результатов импорта |
+| **49** | Офлайн-компиляция ресурсов | ⏳ Не начато | — | BC1-BC7/ASTC, выбор и интеграция codec/checksum для payload `data.dat`/`.pak` с явной миграцией формата, упаковка скомпилированных шейдеров, зависимости и инвалидация результатов импорта |
 | **50** | Студия проектов | ⏳ Не начато | — | tools/editor и assets_builder: инспектор .zmat, FieldRef, безопасность unload/reload scripts.dll, состояние скриптов, режим сборки; долг TODO 2, 12–19 по актуальности |
-| **51** | Доставка ресурсов в игровые таргеты | ⏳ Не начато | — | Развитие существующего Windows/Linux post-build копирования assets: проверка полноты отдельных файлов/data.dat/package.dat и остальных таргетов; минимальная доставка для куба уже обязательна в этапе 28 |
+| **51** | Доставка ресурсов в игровые таргеты | ⏳ Не начато | — | Развитие базовой Windows-доставки `package.dat`/`data.dat`/внешних `.pak`, необходимой уже в этапах 25–28: полнота отдельных файлов и поддержка остальных desktop/mobile таргетов |
 | **52** | Развитие асинхронной загрузки сцен и отмена запросов | ⏳ Не начато | — | Базовая загрузка всех видов окон уже в этапе 8. Здесь дорабатываются владение задачами и безопасное завершение `SceneManager`, кооперативная отмена устаревших I/O-запросов ресурсов конвейера при смене/выгрузке сцены (TODO 26), состояния active/paused/unloading и диагностика |
 
 ### Уровень 6: Apple/mobile и полировка
@@ -156,7 +156,7 @@
 | **57** | Платформенный сплэшскрин | ⏳ Не начато | — | Win/Linux/macOS frameless splash, Android SplashScreen, iOS Storyboard |
 | **58** | 3D и GPU-эффекты в UI | ⏳ Не начато | — | Viewport3DControl, интерактивные объекты, частицы, Glass/Acrylic blur |
 | **59** | Адаптивный ZzzGUI | ⏳ Не начато | — | Desktop/mobile, стабильные Element ID, платформенные шаблоны и UI-скрипты |
-| **60** | Высоконагруженный стриминг ресурсов (NVMe I/O и шардирование ResourceTable) | ⏳ Не начато | — | Переход с однопоточного m_IoThread (MVP) на многопоточный асинхронный I/O (IOCP/io_uring/DirectStorage) для NVMe SSD (TODO 25); устранение lock contention в ResourceTable<T> через шардирование (Striped Locks) и Read-First оптимизацию (TODO 27); чанковое чтение видео/длинного аудио; стриминг открытого мира; отложенная загрузка не меняет правило полной готовности обязательных ресурсов сцены без нового решения |
+| **60** | Высоконагруженный стриминг ресурсов (NVMe I/O и шардирование ResourceTable) | ⏳ Не начато | — | Развитие mapped-span и базового GPU-upload пути до платформенного асинхронного I/O/DirectStorage по измерениям; шардирование `ResourceTable<T>`; выделенная copy-очередь DX12, адаптивный backpressure, исследование Staging Ring-Buffer, chunked upload и стриминга открытого мира. Отложенная загрузка не меняет правило полной готовности обязательных ресурсов сцены без нового решения |
 | **61** | Визуальные переходы сцен | ⏳ Не начато | — | Развитие каркаса из этапа 8: Fade/Cross-Fade/Dissolve/Wipe, маски, захват кадра |
 
 ### Уровень 7: Финал

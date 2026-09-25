@@ -1,105 +1,162 @@
-# Этап 25. GPU-буферы, прямой стриминг с диска в Staging и полноценный GpuMesh
+# Этап 25. Подготовка данных меша для будущего GPU upload
 
-**Статус:** ⏳ В процессе (активный этап разработки)
+**Статус:** ⏳ В процессе
 
----
-
-## 🎯 Цель этапа
-
-Реализовать сквозной высокопроизводительный пайплайн загрузки геометрии: **TOC метаданных в RAM → Direct-to-Staging Zero-Copy DMA → VRAM**. 
-Устранить промежуточные выделения динамических векторов в оперативной памяти (Zero CPU RAM overhead). `GpuMesh` становится готовым к отрисовке только после завершения GPU copy-команд, подтверждённого Fence. Произвольные воркеры `TaskDispatcher` не обращаются напрямую к очередям и аллокаторам DX12/Vulkan.
-
-Целевые backend’ы этапа — **DirectX 12 и Vulkan на Windows**. Metal сохраняет компилируемую заглушку до этапа соответствующей платформы. Draw/Pipeline State, шейдеры и материалы остаются заглушками и не входят в этап 25.
+> [!IMPORTANT]
+> Этот файл — источник истины для этапа 25. Текущая подзадача заканчивается получением проверенных данных, готовых для помещения в staging. Создание GPU-буферов, копирование в staging/device-local memory, submit, barriers, fence и настоящий `GpuReady` — будущее продолжение этапа, не текущая реализация.
 
 ---
 
-## 🏗️ Архитектурные принципы и контракты
+## Цель текущей подзадачи
 
-1. **Неизменяемое оглавление ресурсов (In-Memory TOC / Metadata Manifest):**
-   * При монтировании `data.dat` оглавление архива со всеми характеристиками ресурсов (размеры вершин/индексов, stride, формат) кэшируется в оперативной памяти (`DataAssetsManager`).
-   * Поиск по GUID происходит мгновенно в RAM без обращения к диску и без блокировок (Read-Only / Thread-Safe).
-2. **Baked бинарный формат данных в архиве:**
-   * Вершины и индексы упаковываются сборщиком ассетов в конечном бинарном представлении GPU, с выравниванием по 16 байт.
-   * Отсутствует цикл побайтовой сериализации/десериализации на CPU.
-3. **Direct-to-Staging Copy (Zero CPU RAM Overhead):**
-   * Исключаются промежуточные `std::vector<std::byte>` на CPU.
-   * Данные копируются напрямую из отображённого файла (`MapViewOfFile`) в предварительно выделенный/замапленный Staging-буфер GPU (`memcpy`).
-4. **Один владелец GPU-контекста загрузки (`GpuUploadScheduler`):**
-   * Воркеры `TaskDispatcher` не касаются `CommandQueue`, `CommandAllocator`, `CommandList` (DX12) и `VkQueue`, `VkCommandPool` (Vulkan).
-   * Запись команд копирования, барьеры ресурсов и отправка батчей изолированы в `GpuUploadScheduler`.
-5. **Истинный `GpuReady` и отслеживание Fence:**
-   * `ResourceTable<GpuMesh>::Resolve` вызывается строго после подтверждения выполнения copy-команд на GPU через Fence.
-   * Staging-память удерживается до срабатывания Fence и освобождается/возвращается в пул только после подтверждения.
-6. **No-Hang и детерминированный Shutdown:**
-   * При ошибках выделения, переполнениях, ошибках GAPI или остановке движка каждый запрос гарантированно завершается через `std::unexpected`.
-   * Перед уничтожением GAPI и завершением работы движка все in-flight uploads детерминированно завершаются или отменяются.
+Сохранить существующий маршрут запроса:
 
----
+`GpuResourceManager → CpuResourceManager → DataAssetsManager → data.dat/.pak`.
 
-## 🛠️ План работ
+`CpuResourceManager` возвращает результат, из которого графический путь получает проверенные метаданные и стабильный указатель/`std::span` на vertex/index payload. Время жизни памяти обязано покрывать всё будущее копирование потребителем.
 
-### 1. Метаданные ресурсов и бинарный формат геометрии
+- Для несжатого payload указатель готов к прямому копированию в staging buffer.
+- Для сжатого payload данные сначала должны пройти через unpacker, после чего указатель на распакованные данные передаётся в staging. Codec, checksum и сама компрессия относятся к этапу 49; сейчас payload несжатый и unpacker не реализуется.
+- Текущая подзадача не вызывает GAPI и не выдаёт подготовленность CPU-данных за готовность GPU-ресурса.
 
-- [ ] Ввести компактную структуру метаданных геометрии `MeshResourceHeader` (число вершин, stride, размер вершинных данных, число индексов, `eIndexFormat`, размер индексных данных, 16-байтное выравнивание).
-- [ ] Обеспечить доступ к характеристикам геометрии из оглавления архива (`DataAssetsManager`) в RAM по GUID без чтения полезной нагрузки.
-- [ ] Адаптировать упаковку мешей в `ObjImporter` / `PackagePacker` для записи данных в конечном бинарном виде, готовом для прямого переноса в GPU.
-- [ ] Перевести `MeshData` / `CpuMesh` на легковесный Zero-Copy интерфейс (хранение метаданных и `std::span` вместо тяжёлых `std::vector<std::byte>`).
+## Границы
 
-### 2. Общие контракты GPU-буферов (`GPUBuffer`)
+В текущую подзадачу входят:
 
-- [ ] Ввести типизированное назначение буфера `eGpuBufferUsage` (`Vertex`, `Index`, `Staging`).
-- [ ] Создать платформенно выбираемый RAII `GPUBuffer` с реализациями:
-  * `GPUBuffer_DX` (`ID3D12Resource`)
-  * `GPUBuffer_VK` (`VkBuffer` + `VkDeviceMemory`)
-- [ ] Обеспечить безопасное освобождение нативных дескрипторов и памяти в деструкторах.
-- [ ] Назначать отладочные имена (Debug Names) для отладки в RenderDoc, PIX и Nsight.
+- трёхсекционный TOC `data.dat` и внешние `{Guid}.pak`;
+- индексируемый массив файлов в `DataAssetsManager`: у `data.dat` и каждого `.pak` свой `ReadOnlyFile`;
+- получение ресурса только через `CpuResourceManager`, без прямой зависимости `GpuResourceManager → DataAssetsManager`;
+- единый парсер layout меша и проверенные vertex/index spans;
+- lifetime результата до окончания его использования вызывающей стороной;
+- проверки writer↔reader и inline/external payload.
 
-### 3. GpuUploadScheduler и Staging-менеджмент
+Не входят в текущую подзадачу:
 
-- [ ] Реализовать `GpuUploadScheduler` — централизованный сервис асинхронного трансфера данных на GPU.
-- [ ] Реализовать стратегию выделения Staging-памяти (замапленный staging ring-buffer или пул staging-блоков) с контролем лимита памяти in-flight.
-- [ ] Реализовать прямой перенос `MapViewOfFile span → Staging buffer` (`std::memcpy`).
-- [ ] Реализовать жизненный цикл планировщика: `Accepting → Stopping → Stopped` с запретом новых задач и гарантированным no-hang разрешением ожидающих запросов.
-- [ ] Обеспечить выполнение completion callback'ов вне внутренних локов планировщика.
+- `GPUBuffer`, staging buffer и device-local/default buffer;
+- `GpuUploadScheduler`, copy-команды и GPU memory allocation;
+- DX12/Vulkan queue synchronization, barriers, ownership transfer и fence;
+- настоящий `GpuMesh` с native buffers и семантика `GpuReady`;
+- сжатие, unpacker, checksum и выбор codec.
 
-### 4. DirectX 12 Backend
+## Архитектурные контракты
 
-- [ ] Создавать целевые Vertex/Index буферы в `D3D12_HEAP_TYPE_DEFAULT` (VRAM).
-- [ ] Создавать Staging буферы в `D3D12_HEAP_TYPE_UPLOAD`.
-- [ ] Записывать команды `CopyBufferRegion` и расставлять барьеры переходов состояний:
-  `D3D12_RESOURCE_STATE_COPY_DEST` $\to$ `D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER` / `INDEX_BUFFER`.
-* [ ] Централизовать command allocator/list и выдачу `Fence` значений.
-- [ ] Сформировать валидные `D3D12_VERTEX_BUFFER_VIEW` и `D3D12_INDEX_BUFFER_VIEW` в `GpuMesh_DX`.
+### 1. `data.dat` и внешние паки
 
-### 5. Vulkan Backend
+`data.dat` использует три секции TOC:
 
-- [ ] Создавать целевые Vertex/Index `VkBuffer` с флагами `TRANSFER_DST_BIT | VERTEX_BUFFER_BIT / INDEX_BUFFER_BIT` в `DEVICE_LOCAL` памяти.
-- [ ] Создавать Staging `VkBuffer` с `TRANSFER_SRC_BIT` в памяти `HOST_VISIBLE | HOST_COHERENT`.
-- [ ] Записывать команды `vkCmdCopyBuffer` и расставлять барьеры памяти буферов (`TRANSFER_WRITE` $\to$ `VERTEX_ATTRIBUTE_READ / INDEX_READ`).
-- [ ] Отправлять команды через синхронизированный `VulkanAPI::QueueSubmit` с отслеживанием `VkFence`.
-- [ ] Формировать валидные дескрипторы буферов и привязок в `GpuMesh_VK`.
+1. `PackManifestTable`: `[0]` обозначает `data.dat`, `[1..N]` — внешние `{Guid}.pak`.
+2. `InlinePackageEntryTable`: payload внутри `data.dat`, неявный `packIndex = 0`.
+3. `ExternalPackageEntryTable`: payload во внешнем `.pak`, сериализованный `packIndex` находится в диапазоне `[1, packCount)`.
 
-### 6. Интеграция ресурсов и готовность (GpuReady)
+`DataAssetsManager` владеет индексируемым массивом хранилищ. Массив хранит владельцев `ReadOnlyFile`, а не сами non-copyable/non-movable объекты по значению. Доступ выполняется по `packIndex`; повторный mapping одного файла не допускается.
 
-- [ ] Перевести `GpuResourceManager` на асинхронную постановку задач в `GpuUploadScheduler`.
-- [ ] Разрешать `ResourceTable<GpuMesh>::Resolve` строго по событию завершения Fence.
-- [ ] Освобождать Staging-память сразу после подтверждения Fence.
-- [ ] Сохранять компилируемые заглушки для `GpuMaterial`, `GpuShader`, `GpuTexture2D` до соответствующих этапов.
+Проверяются GUID паков, уникальность, `packIndex`, наличие файлов и диапазон `offset/size` относительно выбранного storage. Внешний `.pak` создаётся до публикации ссылающегося на него `data.dat`.
 
-### 7. Жизненный цикл, верификация и тесты
+`data.dat` ещё находится в разработке. Новый layout заменяет прежний черновик в той же версии: номер версии не меняется, отдельная миграция черновика не поддерживается, writer/reader/test packages обновляются вместе.
 
-- [ ] Интегрировать остановку `GpuUploadScheduler` в `Engine::Shutdown` до вызова `GAPI::WaitForGpu` и разрушения контекстов GAPI.
-- [ ] Проверить чистый запуск без предупреждений и ошибок в **DirectX 12 Debug Layer** и **Vulkan Validation Layers**.
-- [ ] Проверить краевые сценарии: пустой меш, некорректные смещения/размеры, shutdown во время активного копирования.
-- [ ] Написать сквозной тест загрузки реального меша из `data.dat` с валидацией готовности буферов.
-- [ ] Обновить `docs/ARCHITECTURE.md` и `general_plan.md` по результатам реализации.
+### 2. Получение данных через CPU-контур
+
+- `GpuResourceManager` продолжает запрашивать данные у `CpuResourceManager`.
+- `CpuResourceManager` отвечает за поиск записи, выбор `ReadOnlyFile`, валидацию layout и возврат результата с метаданными и указателями/spans.
+- Результат удерживает владельца backing memory либо сам владеет распакованным буфером; голый указатель без lifetime-контракта запрещён.
+- Для текущего несжатого формата vertex/index spans ссылаются на проверенный payload и готовы стать источником будущего staging-copy.
+- Наличие будущей ветки unpacker не является основанием писать codec или универсальную систему распаковки сейчас.
+
+### 3. Единый layout меша
+
+`MeshData` остаётся источником истины для упаковки и CPU-десериализации. GPU-потребителю нужен zero-allocation view/parser над тем же layout, а не второй независимый `MeshResourceHeader`.
+
+Парсер проверяет stride/count/index format, переполнения при вычислении размеров, границы vertex/index областей и отсутствие пересечений или необъяснённого хвоста.
+
+### 4. Граница готовности
+
+Получение upload-ready spans означает только готовность CPU-источника копирования. Оно не означает, что данные находятся в VRAM или могут использоваться `DrawIndexed`.
+
+Настоящий `ResourceTable<GpuMesh>::Resolve(success)` после GPU fence вводится вместе с будущим upload-кодом. До этого существующие RAM-заглушки не называются `GpuReady`.
 
 ---
 
-## 🏆 Критерии приёмки
+## План текущей реализации (разбиение на подшаги)
 
-1. Отсутствуют промежуточные аллокации `std::vector` под вершины и индексы на CPU при загрузке меша.
-2. `GpuMesh` содержит валидные нативные GPU-буферы и представления (Buffer Views), готовые для будущего `DrawIndexed`.
-3. Колбэк готовности ресурса и переход в Ready происходят строго после завершения Fence.
-4. Воркеры `TaskDispatcher` не имеют прямого доступа к нативным очередям и аллокаторам GPU.
-5. Приложение чисто закрывается без утечек памяти, зависаний и жалоб валидационных слоев DX12 и Vulkan.
+### Подшаг 25.1. Трёхсекционный TOC `data.dat` и структуры данных
+- [ ] Обновить `DatFileHeader`:
+  * Для `c_DataDatFormat` вместо одного `entryCount` хранить три счётчика: `packCount` (кол-во записей манифеста паков), `inlineCount` (кол-во встроенных ресурсов), `externalCount` (кол-во внешних ресурсов).
+  * Для `c_PackageDatFormat` заголовок остаётся неизменным (`entryCount`).
+  * Номер версии формата сохраняется (in-place обновление черновика).
+- [ ] Реализовать структуры записей в `src/core/io/package/`:
+  * Дисковая Таблица 1: Массив GUID внешних файлов-пакетов (`[0] = Guid::Empty()`, `[1..N] = Guid` паков `{Guid}.pak`).
+  * Дисковая Таблица 2 (`InlinePackageEntry`): локальные ресурсы `data.dat` (без `packIndex`, 52 байта).
+  * Дисковая Таблица 3 (`ExternalPackageEntry`): внешние ресурсы (с полем `packIndex`, 52 байта).
+  * In-memory структура (`DataPackageEntry`): единая компактная структура для runtime-таблиц `m_Tables` с полем `packIndex`.
+
+### Подшаг 25.2. Обновление ArchiveWriter и PackagePacker
+- [ ] Расширить `ArchiveWriter` для поддержки формирования трёхсекционного `data.dat` и внешних файлов `{Guid}.pak`.
+- [ ] Адаптировать `PackagePacker`: разделение ресурсов на встроенные (`data.dat`, `packIndex = 0`) и внешние (`.pak`, `packIndex = 1..N`).
+- [ ] Синхронизировать запись и выравнивание полезной нагрузки (4 КБ для начала файлов / payload area, 16 байт для записей).
+
+### Подшаг 25.3. Монтирование и индексация в ArchiveReaderBase и DataAssetsManager
+- [ ] Параметризовать `ArchiveReaderBase` типом записи через `ArchiveTraits<TType>::EntryType`:
+  * `ArchiveTraits<ePackageDatType>::EntryType = PackageEntry` (36 байт, без изменений).
+  * `ArchiveTraits<eDataDatType>::EntryType = DataPackageEntry`.
+- [ ] Добавить в `DataAssetsManager` индексируемый массив владельцев хранилищ:
+  `std::vector<std::unique_ptr<ReadOnlyFile>> m_PackageFiles`.
+- [ ] При монтировании `data.dat`:
+  * Считывать Таблицу 1; индекс `[0]` инициализировать открытым `data.dat`.
+  * Для внешних паков `[1..N]` открывать соответствующие `{Guid}.pak` рядом с `data.dat` и сохранять в `m_PackageFiles[packIndex]`.
+  * Валидировать наличие всех файлов, уникальность GUID и корректность `packIndex`.
+  * Считывать Таблицу 2 (Inline) и нормализовать в `m_Tables` с `packIndex = 0`.
+  * Считывать Таблицу 3 (External) и нормализовать в `m_Tables` с `packIndex` из файла.
+- [ ] Обновить `DataAssetsManager::ReadRawPayload(entry)`: прямое чтение `m_PackageFiles[entry.GetPackIndex()]->Read(entry.GetOffset(), entry.GetStoredSize())`.
+
+### Подшаг 25.4. Zero-allocation parser/view для MeshData
+- [ ] Реализовать легковесный парсер/представление `MeshPayloadView` над бинарным layout `MeshData`:
+  * Парсинг `vertexCount`, `vertexStride`, `indexCount`, `indexFormat` без динамических аллокаций памяти CPU.
+  * Защита от переполнений (`SafeMath` / `CheckedMul`).
+  * Полная валидация границ: проверка того, что диапазоны `vertexData` и `indexData` строго укладываются в переданный span полезной нагрузки без пересечений и без остаточного невалидного хвоста байтов.
+  * Предоставление стабильных `std::span<const std::byte>` на вершинные и индексные данные.
+
+### Подшаг 25.5. Сквозной маршрут через CpuResourceManager и Lifetime-контракт
+- [ ] Сформировать CPU-результат подготовки данных меша (например, `PreparedMeshData` или расширение `CpuMesh`), который:
+  * Содержит проверенные метаданные (`vertexCount`, `vertexStride`, `indexCount`, `indexFormat`);
+  * Содержит стабильные `std::span` на вершины и индексы;
+  * Гарантирует сохранение времени жизни backing memory (через удержание `ReadOnlyFile` / guard), пока вызывающая сторона владеет результатом.
+- [ ] Маршрут запроса: `GpuResourceManager → CpuResourceManager → DataAssetsManager`.
+  * `GpuResourceManager` запрашивает подготовленные данные у `CpuResourceManager`.
+  * Запрещено прямое обращение `GpuResourceManager → DataAssetsManager`.
+  * Данные возвращаются готовыми к будущему прямому копированию в staging buffer (без вызова GAPI на текущем подшаге).
+
+### Подшаг 25.6. Тестовые пакеты и комплексная верификация
+- [ ] Сформировать тестовые пакеты (сценарий `data.dat` + внешние `.pak` с текстурами/данными).
+- [ ] Реализовать тесты в `EngineTests` (`SerializationTests` / `ResourceTests`):
+  * Консистентность writer ↔ reader на новом трёхсекционном TOC;
+  * Сквозное чтение inline-ресурса (`data.dat`, `packIndex = 0`) и внешних ресурсов (`{Guid}.pak`, `packIndex = 1..N`);
+  * Проверка $O(1)$ прямого доступа по `packIndex` без повторных поисков по имени/GUID пака;
+  * Проверка валидации и парсинга `MeshPayloadView` на валидном меше;
+  * Edge cases:
+    - Отсутствующий файл внешнего пака на диске;
+    - Недопустимый `packIndex` (0 в таблице внешних ресурсов или $\ge packCount$);
+    - Выход диапазонов `offset/size` за границы соответствующего файла;
+    - Повреждённый layout меша (`vertexStride == 0`, битый формат индекса, переполнение размера, лишние байты в хвосте).
+
+## Будущее продолжение этапа
+
+После завершения текущей подзадачи отдельно реализуются:
+
+- GPU/staging buffers;
+- копирование несжатого span напрямую в staging и распакованного span после unpacker;
+- DX12/Vulkan submit, barriers и fence;
+- lifetime staging и ограничение памяти;
+- настоящий `GpuMesh` и `GpuReady` только после завершения GPU-команд.
+
+Детальные backend-решения фиксируются перед написанием соответствующего кода, а не в текущей подзадаче.
+
+---
+
+## Критерии приёмки текущей подзадачи
+
+1. Запрос графического ресурса получает данные через `CpuResourceManager`, а не обращается к `DataAssetsManager` напрямую.
+2. Для mesh доступны проверенные метаданные и стабильные vertex/index pointers/spans с явным lifetime.
+3. Несжатый payload готов к будущему прямому копированию в staging без повторного парсинга.
+4. Каждый `packIndex` выбирает свой `ReadOnlyFile`; inline и external ranges валидируются относительно правильного файла.
+5. Writer и reader одинаково понимают новый layout при неизменной версии.
+6. В рамках текущей подзадачи не добавлены GPU buffers, submit, fence или фиктивная семантика `GpuReady`.
