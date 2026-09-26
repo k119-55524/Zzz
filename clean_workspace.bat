@@ -2,7 +2,17 @@
 echo Cleaning temporary build directories and files...
 
 REM Folders to delete
-set "FOLDERS=.build .cache .docs bin out tmp .vs dist src\tools\build_configurator\bin src\tools\build_configurator\obj src\tools\RemoteLogViewer\bin src\tools\RemoteLogViewer\obj src\tools\editor\bin src\tools\editor\obj src\server\admin_panel_win\bin src\server\admin_panel_win\obj src\editor_projects\super_game\.editor\build src\editor_projects\super_game\.editor\bin CMakeFiles .idea"
+set FOLDERS=build .build .cache .docs bin out tmp .vs dist Testing CMakeFiles .idea
+set FOLDERS=%FOLDERS% src\tools\bin src\tools\build
+set FOLDERS=%FOLDERS% src\tools\build_configurator\bin src\tools\build_configurator\obj
+set FOLDERS=%FOLDERS% src\tools\RemoteLogViewer\bin src\tools\RemoteLogViewer\obj
+set FOLDERS=%FOLDERS% src\tools\editor\bin src\tools\editor\obj
+set FOLDERS=%FOLDERS% src\tools\assets_builder\assets_builder_gui\bin src\tools\assets_builder\assets_builder_gui\obj
+set FOLDERS=%FOLDERS% src\server\admin_panel_win\bin src\server\admin_panel_win\obj
+set FOLDERS=%FOLDERS% src\projects\game_android\build src\projects\game_android\app\build
+set FOLDERS=%FOLDERS% src\projects\game_android\app\.cxx src\projects\game_android\.idea
+set FOLDERS=%FOLDERS% src\projects\game_android\.gradle
+set FOLDERS=%FOLDERS% src\editor_projects\super_game\.editor\build src\editor_projects\super_game\.editor\bin
 
 for %%D in (%FOLDERS%) do (
     if exist "%%D" (

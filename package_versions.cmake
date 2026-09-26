@@ -34,3 +34,9 @@ set(Z_DOTNET_CHANNEL "10.0" CACHE STRING ".NET SDK Channel Version")
 set(Z_DOXYGEN_VERSION "1.12.0" CACHE STRING "Doxygen Windows Portable Version")
 set(Z_DOXYGEN_AWESOME_VERSION "v2.4.1" CACHE STRING "Doxygen Awesome CSS Git Tag")
 set(Z_GRAPHVIZ_VERSION "12.2.1" CACHE STRING "Graphviz Windows Portable Version")
+
+# -----------------------------------------------------------------------------
+# Библиотеки обработки текстур
+# -----------------------------------------------------------------------------
+set(Z_STB_VERSION "master" CACHE STRING "stb Git Commit/Tag")
+set(Z_DIRECTXTEX_VERSION "oct2024" CACHE STRING "DirectXTex Release Tag")

@@ -1,9 +1,9 @@
-# Этап 25. Подготовка данных меша для будущего GPU upload
+# Этап 27. Подготовка данных меша для будущего GPU upload
 
-**Статус:** ⏳ В процессе
+**Статус:** ⏳ Не начато (следующий после этапа 26)
 
 > [!IMPORTANT]
-> Этот файл — источник истины для этапа 25. Текущая подзадача заканчивается получением проверенных данных, готовых для помещения в staging. Создание GPU-буферов, копирование в staging/device-local memory, submit, barriers, fence и настоящий `GpuReady` — будущее продолжение этапа, не текущая реализация.
+> Этот файл — источник истины для этапа 27. В этом этапе реализуются: монтирование трёхсекционного `data.dat` и `.pak` файлов, нормализация записей в `DataPackageEntry`, zero-allocation парсер `MeshData`, маршрут через `CpuResourceManager` с гарантированным lifetime, и последующий GPU upload. Запекание текстур реализовано в **Этапе 25**, сборка архивов и упаковщик — в **Этапе 26**.
 
 ---
 
@@ -78,9 +78,27 @@
 
 ## План текущей реализации (разбиение на подшаги)
 
-### Подшаг 25.1. Трёхсекционный TOC `data.dat` и структуры данных
-- [ ] Обновить `DatFileHeader`:
-  * Для `c_DataDatFormat` вместо одного `entryCount` хранить три счётчика: `packCount` (кол-во записей манифеста паков), `inlineCount` (кол-во встроенных ресурсов), `externalCount` (кол-во внешних ресурсов).
+## План текущей реализации (разбиение на подшаги)
+
+### Подшаг 25.1. Подготовка тестовых пакетов (ассеты и распределение по пакам)
+- [ ] Добавить тестовые ресурсы в проект `src/projects/assets_projects/zzz_assets_test_000/Assets/`:
+  * **Каталог `Assets/Textures/` (тип `Texture2D`):**
+    - `cube_diffuse.png` (+ `.meta`)
+    - `cube_normal.png` (+ `.meta`)
+    - Автоматически направляются сборщиком во внешний пак `textures.pak` (`packIndex = 1`).
+  * **Каталог `Assets/Audio/` (тип `AudioClip`):**
+    - `click.wav` (+ `.meta`)
+    - `ambient.wav` (+ `.meta`)
+    - Автоматически направляются сборщиком во внешний пак `audio.pak` (`packIndex = 2`).
+  * **Inline-контент `data.dat` (`packIndex = 0`):**
+    - `Assets/Meshes/cube_00.obj` (геометрия)
+    - `Assets/Material/Default.zmaterial` (материалы)
+    - `Assets/Shaders/DefaultShader.zshaders` (шейдеры)
+- [ ] Зарегистрировать импорт текстур (`TextureImporter` для `.png` $\to$ `eEngineResourceType::Texture2D`) и базовый импорт звука (`AudioImporter` для `.wav` $\to$ `eEngineResourceType::AudioClip`) в `AssetImporterRegistry`.
+
+### Подшаг 25.2. Сборщик: структуры TOC, ArchiveWriter и PackagePacker (новая логика сборки и пакаджи)
+- [ ] Обновить заголовок `DatFileHeader` для `c_DataDatFormat`:
+  * Хранить три счётчика: `packCount` (кол-во записей манифеста паков), `inlineCount` (кол-во встроенных ресурсов), `externalCount` (кол-во внешних ресурсов).
   * Для `c_PackageDatFormat` заголовок остаётся неизменным (`entryCount`).
   * Номер версии формата сохраняется (in-place обновление черновика).
 - [ ] Реализовать структуры записей в `src/core/io/package/`:
@@ -88,13 +106,15 @@
   * Дисковая Таблица 2 (`InlinePackageEntry`): локальные ресурсы `data.dat` (без `packIndex`, 52 байта).
   * Дисковая Таблица 3 (`ExternalPackageEntry`): внешние ресурсы (с полем `packIndex`, 52 байта).
   * In-memory структура (`DataPackageEntry`): единая компактная структура для runtime-таблиц `m_Tables` с полем `packIndex`.
+- [ ] Обновить `ArchiveWriter` и `PackagePacker`:
+  * Извлечение `pack_guid` из метаданных ассетов.
+  * Формирование Таблицы 1 (Манифест): `[0] = Guid::Empty()`, `[1..N] = уникальные pack_guid`.
+  * Разделение наборов полезной нагрузки:
+    - Ресурсы без `pack_guid` записываются в Таблицу 2 и в тело `data.dat` (`packIndex = 0`).
+    - Ресурсы с `pack_guid` получают `packIndex` (1..N), записываются в Таблицу 3 `data.dat`, а их полезная нагрузка пишется в соответствующие отдельные файлы `destinationDir/assets/data/{pack_guid}.pak`.
+  * Выравнивание полезной нагрузки (4 КБ для начал файлов / payload area, 16 байт для записей).
 
-### Подшаг 25.2. Обновление ArchiveWriter и PackagePacker
-- [ ] Расширить `ArchiveWriter` для поддержки формирования трёхсекционного `data.dat` и внешних файлов `{Guid}.pak`.
-- [ ] Адаптировать `PackagePacker`: разделение ресурсов на встроенные (`data.dat`, `packIndex = 0`) и внешние (`.pak`, `packIndex = 1..N`).
-- [ ] Синхронизировать запись и выравнивание полезной нагрузки (4 КБ для начала файлов / payload area, 16 байт для записей).
-
-### Подшаг 25.3. Монтирование и индексация в ArchiveReaderBase и DataAssetsManager
+### Подшаг 25.3. Читатель архивов: ArchiveReaderBase и DataAssetsManager (монтирование и O(1) доступ)
 - [ ] Параметризовать `ArchiveReaderBase` типом записи через `ArchiveTraits<TType>::EntryType`:
   * `ArchiveTraits<ePackageDatType>::EntryType = PackageEntry` (36 байт, без изменений).
   * `ArchiveTraits<eDataDatType>::EntryType = DataPackageEntry`.
@@ -125,18 +145,17 @@
   * Запрещено прямое обращение `GpuResourceManager → DataAssetsManager`.
   * Данные возвращаются готовыми к будущему прямому копированию в staging buffer (без вызова GAPI на текущем подшаге).
 
-### Подшаг 25.6. Тестовые пакеты и комплексная верификация
-- [ ] Сформировать тестовые пакеты (сценарий `data.dat` + внешние `.pak` с текстурами/данными).
-- [ ] Реализовать тесты в `EngineTests` (`SerializationTests` / `ResourceTests`):
-  * Консистентность writer ↔ reader на новом трёхсекционном TOC;
-  * Сквозное чтение inline-ресурса (`data.dat`, `packIndex = 0`) и внешних ресурсов (`{Guid}.pak`, `packIndex = 1..N`);
-  * Проверка $O(1)$ прямого доступа по `packIndex` без повторных поисков по имени/GUID пака;
-  * Проверка валидации и парсинга `MeshPayloadView` на валидном меше;
-  * Edge cases:
-    - Отсутствующий файл внешнего пака на диске;
-    - Недопустимый `packIndex` (0 в таблице внешних ресурсов или $\ge packCount$);
-    - Выход диапазонов `offset/size` за границы соответствующего файла;
-    - Повреждённый layout меша (`vertexStride == 0`, битый формат индекса, переполнение размера, лишние байты в хвосте).
+### Подшаг 25.6. Комплексная верификация и сквозные тесты
+- [ ] Реализовать интеграционный сквозной тест упаковки и чтения в `EngineTests`:
+  * Упаковка тестового проекта `zzz_assets_test_000` через `PackagePacker::PackProject`;
+  * Проверка создания `package.dat`, `data.dat` и двух внешних файлов `{Guid}.pak`;
+  * Монтирование в `DataAssetsManager` и чтение: inline-меша `cube_00` (`packIndex = 0`), текстур (`packIndex = 1`) и звуков (`packIndex = 2`);
+  * Валидация прямого $O(1)$ доступа по `packIndex`.
+- [ ] Реализовать модульные тесты краевых случаев:
+  * Отсутствующий файл внешнего пака на диске;
+  * Недопустимый `packIndex` (0 в таблице внешних ресурсов или $\ge packCount$);
+  * Выход диапазонов `offset/size` за границы соответствующего файла;
+  * Повреждённый layout меша (`vertexStride == 0`, битый формат индекса, переполнение размера, лишние байты в хвосте).
 
 ## Будущее продолжение этапа
 

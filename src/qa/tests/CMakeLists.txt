@@ -27,6 +27,7 @@ if(Z_TESTS_ENABLE_COMMON)
         "${CMAKE_CURRENT_SOURCE_DIR}/engine/*.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/gapi/*.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/common/*.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/texture_processor/*.cpp"
     )
     list(APPEND TEST_SOURCES ${TEST_CPP_FILES})
 endif()
@@ -41,6 +42,7 @@ if(TEST_SOURCES)
             GTest::gtest_main
             engine_lib
             core_lib
+            texture_processor
     )
 
     # -----------------------------------------------------------------------------

@@ -18,7 +18,10 @@ set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/.cache" CACHE PATH "Directory for
 
 # Если зависимости уже скачаны в .cache/ — включаем FULLY_DISCONNECTED (0 задержек, без subbuild).
 # Если кэша ещё нет (первый запуск на чистой машине) — скачиваем один раз через UPDATES_DISCONNECTED.
-if(EXISTS "${FETCHCONTENT_BASE_DIR}/googletest-src" AND EXISTS "${FETCHCONTENT_BASE_DIR}/googlebenchmark-src")
+if(EXISTS "${FETCHCONTENT_BASE_DIR}/googletest-src" 
+   AND EXISTS "${FETCHCONTENT_BASE_DIR}/googlebenchmark-src"
+   AND EXISTS "${FETCHCONTENT_BASE_DIR}/directxtex-src"
+   AND EXISTS "${FETCHCONTENT_BASE_DIR}/stb-src")
     set(FETCHCONTENT_FULLY_DISCONNECTED ON CACHE BOOL "Fully disconnect FetchContent when dependencies exist" FORCE)
 else()
     set(FETCHCONTENT_FULLY_DISCONNECTED OFF CACHE BOOL "Allow download when dependencies missing" FORCE)
@@ -103,6 +106,7 @@ endif()
 
 add_subdirectory(src/math)
 add_subdirectory(src/core)
+add_subdirectory(src/texture_processor)
 
 add_subdirectory(src/tools/RemoteLogViewer)
 add_subdirectory(src/engine)
