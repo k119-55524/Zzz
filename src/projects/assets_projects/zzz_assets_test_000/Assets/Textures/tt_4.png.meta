@@ -1,0 +1,16 @@
+{
+  "guid": "00000000-0000-0000-0000-000000000044",
+  "textureSettings": {
+    "textureType": "Color",
+    "generateMipMaps": true,
+    "maxTextureSize": 2048
+  },
+  "platformSettings": {
+    "Desktop": {
+      "format": "BC7"
+    },
+    "Mobile": {
+      "format": "ASTC_4x4"
+    }
+  }
+}
