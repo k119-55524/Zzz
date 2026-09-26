@@ -11,11 +11,7 @@ public class ViewAssetValidator : IAssetValidator
         return AssetExtensions.IsSupportedViewExtension(ext);
     }
 
-    public ValidationResult Validate(
-        string filePath,
-        IReadOnlyDictionary<string, string> guidToFileMap,
-        IReadOnlyDictionary<string, string> guidToTypeMap,
-        IReadOnlyDictionary<string, string> scriptNameToGuidMap)
+    public ValidationResult Validate(string filePath)
     {
         var result = new ValidationResult();
 
@@ -23,11 +19,7 @@ public class ViewAssetValidator : IAssetValidator
         {
             string json = File.ReadAllText(filePath);
             using var doc = JsonDocument.Parse(json);
-            var root = doc.RootElement;
-
-            string fileName = Path.GetFileName(filePath);
-
-            // Синтаксическая валидация JSON и обязательных полей вьюшки.
+            // Синтаксическая валидация JSON вьюшки.
             // Проверка уникальности GUID и типизированных ссылок делегирована нативному ProjectIdentityValidator.
         }
         catch (Exception ex)

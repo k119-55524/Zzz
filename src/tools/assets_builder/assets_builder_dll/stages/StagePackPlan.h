@@ -58,54 +58,5 @@ namespace zzz::builder
 
 		// Результаты Probe для текстур
 		std::unordered_map<zzz::core::Guid, ProbedTextureInfo> probedTextures;
-
-		[[nodiscard]] std::size_t GetTotalInlineCount() const noexcept
-		{
-			std::size_t count = 0;
-			for (const auto& [type, assets] : assetsByPak)
-			{
-				if (type == zzz::core::eDataDatType::Mesh ||
-					type == zzz::core::eDataDatType::Material ||
-					type == zzz::core::eDataDatType::Shader ||
-					type == zzz::core::eDataDatType::Animation)
-				{
-					count += assets.size();
-				}
-			}
-			return count;
-		}
-
-		[[nodiscard]] std::size_t GetTotalExternalCount() const noexcept
-		{
-			std::size_t count = 0;
-			for (const auto& [type, assets] : assetsByPak)
-			{
-				if (type != zzz::core::eDataDatType::Mesh &&
-					type != zzz::core::eDataDatType::Material &&
-					type != zzz::core::eDataDatType::Shader &&
-					type != zzz::core::eDataDatType::Animation)
-				{
-					count += assets.size();
-				}
-			}
-			return count;
-		}
-
-		[[nodiscard]] std::size_t GetExternalPackCount() const noexcept
-		{
-			std::size_t count = 0;
-			for (const auto& [type, assets] : assetsByPak)
-			{
-				if (!assets.empty() &&
-					type != zzz::core::eDataDatType::Mesh &&
-					type != zzz::core::eDataDatType::Material &&
-					type != zzz::core::eDataDatType::Shader &&
-					type != zzz::core::eDataDatType::Animation)
-				{
-					++count;
-				}
-			}
-			return count;
-		}
 	};
 }

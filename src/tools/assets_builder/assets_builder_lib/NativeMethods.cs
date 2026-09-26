@@ -8,63 +8,10 @@ internal static class NativeMethods
     private const string DllName = "assets_builder_dll";
 
     [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr GetAssetsDirectoryName();
-
-    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
     public static extern IntPtr GetGamePackageFileName();
 
     [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr GetGamePackageRelativePath();
-
-    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr GetGamePackageMagicBytes();
-
-    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-    public static extern uint GetGamePackageMajorVersion();
-
-    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-    public static extern uint GetGamePackageMinorVersion();
-
-    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-    public static extern uint GetGamePackagePatchVersion();
-
-    // Data package constants
-    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
     public static extern IntPtr GetDataPackageFileName();
-
-    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr GetDataPackageRelativePath();
-
-    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr GetDataPackageMagicBytes();
-
-    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-    public static extern uint GetDataPackageMajorVersion();
-
-    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-    public static extern uint GetDataPackageMinorVersion();
-
-    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-    public static extern uint GetDataPackagePatchVersion();
-
-    // AssetType enum values P/Invoke
-    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-    public static extern uint GetAssetTypeProjectManifest();
-
-    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-    public static extern uint GetAssetTypePrimaryView();
-
-    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-    public static extern uint GetAssetTypeScene();
-
-    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-    public static extern uint GetAssetTypeChildView();
-
-    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-    public static extern uint GetAssetTypeIndependentView();
-
-    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-    public static extern uint GetAssetTypePrefab();
 
     // inBuildTimestamp - unix-время (UTC, миллисекунды), записанное в заголовки package.dat/data.dat при
     // упаковке (см. DatFileHeader::GetBuildTime() и PackagePacker::PackProject).
@@ -120,12 +67,5 @@ internal static class NativeMethods
 
     [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
     public static extern void EndBuildSessionNative();
-
-    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-    [return: MarshalAs(UnmanagedType.I1)]
-    public static extern bool ValidateBuiltPackageNative(
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string assetsDir,
-        [Out] byte[]? errorBuffer,
-        uint errorBufferSize);
 }
 

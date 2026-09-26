@@ -1,4 +1,5 @@
 #include "AssetScanner.h"
+#include "AssetExtensions.h"
 #include "AssetImporterRegistry.h"
 
 namespace fs = std::filesystem;
@@ -20,7 +21,7 @@ namespace zzz::builder
 			std::ranges::transform(ext, ext.begin(), [](unsigned char ch) {
 				return static_cast<char>(std::tolower(ch));
 			});
-			if (ext == ".meta")
+			if (ext == c_ExtMeta)
 				continue;
 
 			ScannedAssetFile file{ path, ext, AssetImporterRegistry::Instance().GetKnownType(ext) };

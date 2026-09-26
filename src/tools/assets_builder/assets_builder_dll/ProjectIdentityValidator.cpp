@@ -33,6 +33,7 @@ namespace zzz::builder
 		case GuidOwnerKind::Material:  return "Material";
 		case GuidOwnerKind::Shader:    return "Shader";
 		case GuidOwnerKind::Texture:   return "Texture";
+		case GuidOwnerKind::Audio:     return "Audio";
 		case GuidOwnerKind::Prefab:    return "Prefab";
 		case GuidOwnerKind::Layer:     return "Layer";
 		case GuidOwnerKind::Object:    return "Object";
@@ -50,6 +51,7 @@ namespace zzz::builder
 			case eEngineResourceType::Material: return GuidOwnerKind::Material;
 			case eEngineResourceType::Shader: return GuidOwnerKind::Shader;
 			case eEngineResourceType::Texture2D: return GuidOwnerKind::Texture;
+			case eEngineResourceType::AudioClip: return GuidOwnerKind::Audio;
 			case eEngineResourceType::Prefab: return GuidOwnerKind::Prefab;
 			case eEngineResourceType::Scene: return GuidOwnerKind::Scene;
 			case eEngineResourceType::View: return GuidOwnerKind::View;
@@ -531,7 +533,8 @@ namespace zzz::builder
 
 			// 1.1. project.json и project.json.meta
 			fs::path projJsonPath = projectDir / "project.json";
-			fs::path projMetaPath = projectDir / "project.json.meta";
+			fs::path projMetaPath = projJsonPath;
+			projMetaPath += c_ExtMeta;
 
 			if (!fs::exists(projJsonPath))
 			{
@@ -663,7 +666,7 @@ namespace zzz::builder
 					}
 
 					fs::path metaPath = path;
-					metaPath += ".meta";
+					metaPath += c_ExtMeta;
 					if (!fs::exists(metaPath))
 					{
 						outError = std::format("Отсутствует обязательный мета-файл '{}' для ассета '{}'.",

@@ -155,9 +155,6 @@ public class AssetsBuilderEngine
 		var allValidFiles = scriptsFiles.Concat(assetsFiles).Distinct().Where(f => !ignoredFiles.Contains(f)).ToList();
 
 		// 2. Проверка мета-файлов: сохраняем существующие GUID, создаем .meta только для новых ресурсов без мета-файлов
-		var guidToFileMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-		var guidToTypeMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-		var scriptNameToGuidMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 		// Имя сцены (имя файла .zscene без расширения) должно быть уникально в проекте
 		// для предотвращения коллизий идентификаторов сцен в редакторе и инструментах сборки.
 		var sceneNameToFileMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -207,13 +204,6 @@ public class AssetsBuilderEngine
 				Log($"  {relativePath}  ->  Добавлен новый мета-файл GUID: {guid} [{assetType}]");
 			}
 
-			// Регистрируем GUID и тип ресурса для валидаторов
-			if (!string.IsNullOrEmpty(guid) && guid != "unknown")
-			{
-				guidToFileMap[guid] = relativePath;
-				guidToTypeMap[guid] = assetType;
-			}
-
 			// Проверка на дубликат имени сцены (имя файла .zscene без расширения)
 			if (assetType.Equals("scene", StringComparison.OrdinalIgnoreCase))
 			{
@@ -230,7 +220,7 @@ public class AssetsBuilderEngine
 			}
 		}
 
-		// 3. Валидация связей ресурсов и типов по GUID
+		// 3. Валидация связей ресурсов и типов
 		int validationErrorsCount = 0;
 		int warningsCount = ignoredFiles.Count;
 
@@ -243,7 +233,7 @@ public class AssetsBuilderEngine
 			if (validator == null)
 				continue;
 
-			var result = validator.Validate(file, guidToFileMap, guidToTypeMap, scriptNameToGuidMap);
+			var result = validator.Validate(file);
 			if (!result.IsValid)
 			{
 				foreach (var err in result.Errors)

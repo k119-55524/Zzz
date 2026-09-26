@@ -18,12 +18,5 @@ namespace zzz::builder
 		[[nodiscard]] PakBuildResult Build(
 			const StagePackPlan& plan,
 			const std::filesystem::path& outputDir) override;
-
-		[[nodiscard]] PakBuildResult BuildPackageDat(
-			const StagePackPlan& plan,
-			const std::filesystem::path& outputDir)
-		{
-			return Build(plan, outputDir);
-		}
 	};
 }

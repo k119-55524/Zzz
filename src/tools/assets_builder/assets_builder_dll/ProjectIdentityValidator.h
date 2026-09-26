@@ -21,6 +21,7 @@ namespace zzz::builder
 		Material,
 		Shader,
 		Texture,
+		Audio,
 		Prefab,
 		Layer,
 		Object

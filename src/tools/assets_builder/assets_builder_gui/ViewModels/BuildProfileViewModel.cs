@@ -102,8 +102,6 @@ public class TargetConfigViewModel : ViewModelBase
         }
     }
 
-    public bool IsEnabled => !IsNone;
-
     public ObservableCollection<PlatformConfigOption> AvailableConfigOptions { get; }
 
     public PlatformConfigOption? SelectedConfigOption
@@ -115,7 +113,6 @@ public class TargetConfigViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(ConfigFilePath));
                 OnPropertyChanged(nameof(IsNone));
-                OnPropertyChanged(nameof(IsEnabled));
                 OnPropertyChanged(nameof(IsDirty));
             }
         }
@@ -164,7 +161,6 @@ public class TargetConfigViewModel : ViewModelBase
         _projectPath = _model.ProjectPath ?? string.Empty;
         OnPropertyChanged(nameof(ProjectPath));
         UpdateAvailableConfigs();
-        OnPropertyChanged(nameof(IsEnabled));
         OnPropertyChanged(nameof(IsDirty));
     }
 }
@@ -358,14 +354,11 @@ public class BuildProfileViewModel : ViewModelBase
                 OnPropertyChanged(nameof(IsProjectValid));
                 OnPropertyChanged(nameof(ValidationErrorsSummary));
                 OnPropertyChanged(nameof(ProjectDescription));
-                OnPropertyChanged(nameof(AppName));
             }
         }
     }
 
     public string ProjectDescription => _validationResult?.Manifest?.Description ?? string.Empty;
-
-    public string AppName => _validationResult?.Manifest?.AppName ?? string.Empty;
 
     public bool IsProjectValid => _validationResult != null && _validationResult.IsValid;
 

@@ -25,6 +25,7 @@
 #include "core/enums/platforms/eAndroidEnums.h"
 #include "core/serialize/Serializer.h"
 #include "../../ArchiveWriter.h"
+#include "../../AssetExtensions.h"
 
 using json = nlohmann::json;
 using namespace zzz::core;
@@ -466,7 +467,8 @@ namespace zzz::builder
 
 		// Читаем Guid манифеста из project.json.meta
 		Guid manifestGuid{};
-		const auto projMetaPath = plan.sourceDir / "project.json.meta";
+		auto projMetaPath = plan.sourceDir / "project.json";
+		projMetaPath += c_ExtMeta;
 		if (std::filesystem::exists(projMetaPath))
 		{
 			std::ifstream mf(projMetaPath);

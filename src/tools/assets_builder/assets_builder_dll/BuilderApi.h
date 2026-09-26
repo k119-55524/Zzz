@@ -1,32 +1,13 @@
 #pragma once
 
-#include "BuilderExport.h"
 #include <cstdint>
+
+#include "BuilderExport.h"
 
 extern "C"
 {
-	BUILDER_API const char* GetAssetsDirectoryName();
 	BUILDER_API const char* GetGamePackageFileName();
-	BUILDER_API const char* GetGamePackageRelativePath();
-	BUILDER_API const uint8_t* GetGamePackageMagicBytes();
-	BUILDER_API uint32_t GetGamePackageMajorVersion();
-	BUILDER_API uint32_t GetGamePackageMinorVersion();
-	BUILDER_API uint32_t GetGamePackagePatchVersion();
-
-	BUILDER_API uint32_t GetAssetTypeProjectManifest();
-	BUILDER_API uint32_t GetAssetTypePrimaryView();
-	BUILDER_API uint32_t GetAssetTypeScene();
-	BUILDER_API uint32_t GetAssetTypeChildView();
-	BUILDER_API uint32_t GetAssetTypeIndependentView();
-	BUILDER_API uint32_t GetAssetTypePrefab();
-
-	// Data Package constants (data.dat)
 	BUILDER_API const char* GetDataPackageFileName();
-	BUILDER_API const char* GetDataPackageRelativePath();
-	BUILDER_API const uint8_t* GetDataPackageMagicBytes();
-	BUILDER_API uint32_t GetDataPackageMajorVersion();
-	BUILDER_API uint32_t GetDataPackageMinorVersion();
-	BUILDER_API uint32_t GetDataPackagePatchVersion();
 
 	/**
 	 * @brief Упаковывает проект в package.dat/data.dat. Оба архива получают одно и то же время упаковки
@@ -113,14 +94,4 @@ extern "C"
 	 * @brief Завершает сессию сборки проекта и сбрасывает кэш сессии.
 	 */
 	BUILDER_API void EndBuildSessionNative();
-
-	/**
-	 * @brief Валидирует собранные архивы пакетов в каталоге assets (TOC, контрольные суммы, заголовки, оффсеты).
-	 * @param assetsDir Путь к каталогу assets в UTF-8 (например, "dist/Debug/assets").
-	 * @param errorBuffer Буфер для сообщения об ошибке.
-	 * @param errorBufferSize Размер буфера ошибки.
-	 * @return true, если все пакеты валидны; false при обнаружении повреждений.
-	 */
-	BUILDER_API bool ValidateBuiltPackageNative(const char8_t* assetsDir, char* errorBuffer, uint32_t errorBufferSize);
 }
-

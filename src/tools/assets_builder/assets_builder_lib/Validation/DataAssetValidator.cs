@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 
 namespace assets_builder_lib.Validation;
 
@@ -10,11 +10,7 @@ public class DataAssetValidator : IAssetValidator
         return AssetExtensions.IsSupportedDataAssetExtension(ext);
     }
 
-    public ValidationResult Validate(
-        string filePath,
-        IReadOnlyDictionary<string, string> guidToFileMap,
-        IReadOnlyDictionary<string, string> guidToTypeMap,
-        IReadOnlyDictionary<string, string> scriptNameToGuidMap)
+    public ValidationResult Validate(string filePath)
     {
         var result = new ValidationResult();
         string fileName = Path.GetFileName(filePath);

@@ -28,11 +28,6 @@ namespace zzz::builder
 		{
 		}
 
-		void SetExternalEntries(std::span<const core::PackageEntry> externalEntries) noexcept
-		{
-			m_ExternalEntries = externalEntries;
-		}
-
 		[[nodiscard]] PakBuildResult Build(
 			const StagePackPlan& plan,
 			const std::filesystem::path& outputDir) override

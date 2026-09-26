@@ -10,11 +10,7 @@ public class ProjectJsonValidator : IAssetValidator
         return Path.GetFileName(filePath).Equals(AssetExtensions.ProjectJsonName, StringComparison.OrdinalIgnoreCase);
     }
 
-    public ValidationResult Validate(
-        string filePath,
-        IReadOnlyDictionary<string, string> guidToFileMap,
-        IReadOnlyDictionary<string, string> guidToTypeMap,
-        IReadOnlyDictionary<string, string> scriptNameToGuidMap)
+    public ValidationResult Validate(string filePath)
     {
         var result = new ValidationResult();
 

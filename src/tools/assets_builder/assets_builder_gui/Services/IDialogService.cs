@@ -11,7 +11,6 @@ public interface IDialogService
 {
     bool ShowConfirmation(string title, string message);
     SaveCloseChoice ShowSaveOnCloseConfirmation(string title, string message);
-    void ShowInformation(string title, string message);
     void ShowError(string title, string message);
     string? SelectFolder(string title, string initialPath);
     void CopyToClipboard(string text);

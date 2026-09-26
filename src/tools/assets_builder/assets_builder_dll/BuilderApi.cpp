@@ -1,14 +1,14 @@
-#include "BuilderApi.h"
+
 #include <core/Core.h>
+#include "AssetExtensions.h"
 #include <core/io/storage/Path.h>
 #include <core/constants/PackagesConstants.h>
-#include "AssetExtensions.h"
 
 #include "PackagePacker.h"
 #include "AssetImporterRegistry.h"
 #include "ProjectIdentityValidator.h"
-#include "stages/validation/BuiltPackageValidator.h"
 
+#include "BuilderApi.h"
 
 namespace
 {
@@ -18,119 +18,21 @@ namespace
 		std::string result(ext);
 		std::ranges::transform(result, result.begin(), [](unsigned char ch) {
 			return static_cast<char>(std::tolower(ch));
-		});
+			});
 		return result;
 	}
 }
 
 extern "C"
 {
-	BUILDER_API const char* GetAssetsDirectoryName()
-	{
-		static const std::string s = zzz::core::c_AssetsDirectoryName.generic_string();
-		return s.c_str();
-	}
-
 	BUILDER_API const char* GetGamePackageFileName()
 	{
 		return zzz::core::c_GamePackageFileName.c_str();
 	}
 
-	BUILDER_API const char* GetGamePackageRelativePath()
-	{
-		static const std::string s = zzz::core::c_GamePackageRelativePath.generic_string();
-		return s.c_str();
-	}
-
-	BUILDER_API const uint8_t* GetGamePackageMagicBytes()
-	{
-		static const uint8_t magic[3] = {
-			static_cast<uint8_t>(zzz::core::c_PackageDatFormat.Magic[0]),
-			static_cast<uint8_t>(zzz::core::c_PackageDatFormat.Magic[1]),
-			static_cast<uint8_t>(zzz::core::c_PackageDatFormat.Magic[2])
-		};
-		return magic;
-	}
-
-	BUILDER_API uint32_t GetGamePackageMajorVersion()
-	{
-		return zzz::core::c_PackageDatFormat.FormatVersion.GetMajor();
-	}
-
-	BUILDER_API uint32_t GetGamePackageMinorVersion()
-	{
-		return zzz::core::c_PackageDatFormat.FormatVersion.GetMinor();
-	}
-
-	BUILDER_API uint32_t GetGamePackagePatchVersion()
-	{
-		return zzz::core::c_PackageDatFormat.FormatVersion.GetPatch();
-	}
-
-	BUILDER_API uint32_t GetAssetTypeProjectManifest()
-	{
-		return static_cast<uint32_t>(zzz::core::ePackageDatType::ProjectManifest);
-	}
-
-	BUILDER_API uint32_t GetAssetTypeScene()
-	{
-		return static_cast<uint32_t>(zzz::core::ePackageDatType::Scene);
-	}
-
-	BUILDER_API uint32_t GetAssetTypePrimaryView()
-	{
-		return static_cast<uint32_t>(zzz::core::ePackageDatType::PrimaryView);
-	}
-
-	BUILDER_API uint32_t GetAssetTypeChildView()
-	{
-		return static_cast<uint32_t>(zzz::core::ePackageDatType::ChildView);
-	}
-
-	BUILDER_API uint32_t GetAssetTypeIndependentView()
-	{
-		return static_cast<uint32_t>(zzz::core::ePackageDatType::IndependentView);
-	}
-
-	BUILDER_API uint32_t GetAssetTypePrefab()
-	{
-		return static_cast<uint32_t>(zzz::core::ePackageDatType::Prefab);
-	}
-
 	BUILDER_API const char* GetDataPackageFileName()
 	{
 		return zzz::core::c_DataPackageFileName.c_str();
-	}
-
-	BUILDER_API const char* GetDataPackageRelativePath()
-	{
-		static const std::string s = zzz::core::c_DataPackageRelativePath.generic_string();
-		return s.c_str();
-	}
-
-	BUILDER_API const uint8_t* GetDataPackageMagicBytes()
-	{
-		static const uint8_t magic[3] = {
-			static_cast<uint8_t>(zzz::core::c_DataDatFormat.Magic[0]),
-			static_cast<uint8_t>(zzz::core::c_DataDatFormat.Magic[1]),
-			static_cast<uint8_t>(zzz::core::c_DataDatFormat.Magic[2])
-		};
-		return magic;
-	}
-
-	BUILDER_API uint32_t GetDataPackageMajorVersion()
-	{
-		return zzz::core::c_DataDatFormat.FormatVersion.GetMajor();
-	}
-
-	BUILDER_API uint32_t GetDataPackageMinorVersion()
-	{
-		return zzz::core::c_DataDatFormat.FormatVersion.GetMinor();
-	}
-
-	BUILDER_API uint32_t GetDataPackagePatchVersion()
-	{
-		return zzz::core::c_DataDatFormat.FormatVersion.GetPatch();
 	}
 
 	BUILDER_API bool PackProjectNative(
@@ -272,33 +174,4 @@ extern "C"
 	{
 		zzz::builder::PackagePacker::EndBuildSession();
 	}
-
-	BUILDER_API bool ValidateBuiltPackageNative(const char8_t* assetsDir, char* errorBuffer, uint32_t errorBufferSize)
-	{
-		if (!assetsDir)
-		{
-			if (errorBuffer && errorBufferSize > 0)
-			{
-				const char* msg = "Assets directory is null.";
-				const size_t len = std::min<size_t>(std::strlen(msg), errorBufferSize - 1);
-				std::memcpy(errorBuffer, msg, len);
-				errorBuffer[len] = '\0';
-			}
-			return false;
-		}
-
-		auto report = zzz::builder::BuiltPackageValidator::Validate(
-			std::filesystem::path(assetsDir));
-
-		if (!report.isValid && errorBuffer && errorBufferSize > 0 && !report.errorMessage.empty())
-		{
-			const size_t len = std::min<size_t>(report.errorMessage.size(), errorBufferSize - 1);
-			std::memcpy(errorBuffer, report.errorMessage.data(), len);
-			errorBuffer[len] = '\0';
-		}
-		return report.isValid;
-	}
 }
-
-
-

@@ -10,11 +10,7 @@ public class ScriptAssetValidator : IAssetValidator
         return ext == AssetExtensions.HeaderH || ext == AssetExtensions.HeaderHpp;
     }
 
-    public ValidationResult Validate(
-        string filePath,
-        IReadOnlyDictionary<string, string> guidToFileMap,
-        IReadOnlyDictionary<string, string> guidToTypeMap,
-        IReadOnlyDictionary<string, string> scriptNameToGuidMap)
+    public ValidationResult Validate(string filePath)
     {
         var result = new ValidationResult();
         string dir = Path.GetDirectoryName(filePath) ?? string.Empty;

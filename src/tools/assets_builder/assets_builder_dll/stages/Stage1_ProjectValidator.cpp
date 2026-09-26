@@ -1,6 +1,7 @@
 #include "Stage1_ProjectValidator.h"
 #include <fstream>
 #include <format>
+#include "../AssetExtensions.h"
 #include "../AssetScanner.h"
 #include "../AssetImporterRegistry.h"
 #include "../ProjectIdentityValidator.h"
@@ -43,7 +44,21 @@ namespace zzz::builder
 
 		bool scanOk = ScanAssetsDirectory(assetsDir, [&](const ScannedAssetFile& file) -> bool {
 			const auto relPath = std::filesystem::relative(file.path, assetsDir);
-			const auto metaPath = std::filesystem::path(file.path.string() + ".meta");
+
+			// .cpp-файлы скриптов не имеют собственного .meta (идентичность несёт .h/.meta) — пропускаем,
+			// зеркалит логику ProjectIdentityValidator.
+			if (file.extension == ".cpp")
+			{
+				const std::string genericRel = relPath.generic_string();
+				if (genericRel.find("Scripts/") != std::string::npos ||
+					genericRel.find("scripts/") != std::string::npos)
+				{
+					return true;
+				}
+			}
+
+			auto metaPath = file.path;
+			metaPath += c_ExtMeta;
 
 			if (!std::filesystem::exists(metaPath, ec))
 			{
@@ -145,7 +160,8 @@ namespace zzz::builder
 			result.projectJsonSnapshot.fileSize = std::filesystem::file_size(projectJson, ec);
 		}
 
-		const auto projectMeta = projectDir / "project.json.meta";
+		auto projectMeta = projectJson;
+		projectMeta += c_ExtMeta;
 		if (std::filesystem::exists(projectMeta, ec))
 		{
 			result.hasProjectMeta = true;
