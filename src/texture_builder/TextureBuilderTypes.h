@@ -6,12 +6,15 @@
 
 #include "math/utils/Types.h"
 #include "core/enums/ePixelFormat.h"
+#include "core/enums/eTextureType.h"
+#include "core/constants/TextureConstants.h"
+#include "core/io/package/assets/AssetMetadata.h"
 
 /**
  * @file TextureBuilderTypes.h
  * @brief Базовые типы данных, структуры настроек и результаты обработки текстур.
  */
- namespace zzz::texture
+namespace zzz::texture
 {
 	/**
 	 * @struct ImageInfo
@@ -48,28 +51,6 @@
 	};
 
 	/**
-	 * @struct TextureMipDesc
-	 * @brief Описание отдельного мип-уровня в итоговом буфере полезной нагрузки.
-	 */
-	struct TextureMipDesc
-	{
-		/// Ширина данного мип-уровня в пикселях.
-		zU32 width{ 0 };
-
-		/// Высота данного мип-уровня в пикселях.
-		zU32 height{ 0 };
-
-		/// Шаг строки в байтах (Row Pitch / Stride).
-		zU32 rowPitch{ 0 };
-
-		/// Смещение данных мип-уровня от начала буфера payload в байтах.
-		size_t byteOffset{ 0 };
-
-		/// Размер данных мип-уровня в байтах.
-		size_t byteSize{ 0 };
-	};
-
-	/**
 	 * @struct TextureConvertOptions
 	 * @brief Параметры конвертации, генерации мипмапов и компрессии текстуры.
 	 */
@@ -80,6 +61,12 @@
 
 		/// Флаг генерации цепочки мип-уровней до 1x1 пикселя.
 		bool generateMips{ true };
+
+		/// Тип текстурного ресурса на GPU (2D, Cube, 3D, 2DArray).
+		core::eTextureType textureType{ core::eTextureType::Texture2D };
+
+		/// Признак карты нормалей (выставляет бит IsNormalMap в metadata.flags).
+		bool isNormalMap{ false };
 	};
 
 	/**
@@ -88,25 +75,10 @@
 	 */
 	struct TextureConvertResult
 	{
-		/// Успешность операции конвертации.
-		bool success{ false };
+		/// Метаданные текстуры (32 байта), готовые к записи в PackageEntry оглавления data.dat.
+		core::TextureMetadata metadata{};
 
-		/// Описание ошибки в случае неудачи.
-		std::string errorMessage;
-
-		/// Итоговая ширина текстуры (мип 0).
-		zU32 width{ 0 };
-
-		/// Итоговая высота текстуры (мип 0).
-		zU32 height{ 0 };
-
-		/// Итоговый формат текстуры.
-		core::ePixelFormat format{ core::ePixelFormat::Unknown };
-
-		/// Список дескрипторов всех сгенерированных мип-уровней.
-		std::vector<TextureMipDesc> mips;
-
-		/// Непрерывный массив байтов всех сжатых/несжатых мип-уровней.
+		/// Непрерывный массив байтов всех сжатых/несжатых мип-уровней (чистый GPU-payload для 0004.pak).
 		std::vector<zU8> payload;
 	};
 
@@ -117,10 +89,10 @@
 	struct AtlasOptions
 	{
 		/// Максимальная допустимая ширина атласа в пикселях.
-		zU32 maxAtlasWidth{ 4096 };
+		zU32 maxAtlasWidth{ core::c_MaxAtlasDimension };
 
 		/// Максимальная допустимая высота атласа в пикселях.
-		zU32 maxAtlasHeight{ 4096 };
+		zU32 maxAtlasHeight{ core::c_MaxAtlasDimension };
 
 		/// Отступ между спрайтами в пикселях для предотвращения артефактов фильтрации (bleeding).
 		zU32 paddingPixels{ 2 };
@@ -169,12 +141,6 @@
 	 */
 	struct AtlasBuildResult
 	{
-		/// Успешность операции упаковки атласа.
-		bool success{ false };
-
-		/// Описание ошибки в случае неудачи.
-		std::string errorMessage;
-
 		/// Итоговая ширина атласа в пикселях.
 		zU32 atlasWidth{ 0 };
 

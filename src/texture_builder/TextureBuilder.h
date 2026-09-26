@@ -10,7 +10,6 @@
  *          - Блочная компрессия в нативные GPU-форматы (BC1-BC7) с помощью DirectXTex.
  *          - Упаковка PBR-каналов (ORM), обработка карт нормалей, сборка атласов и cubemap.
  */
-
 #include <span>
 #include <array>
 #include <vector>
@@ -22,19 +21,6 @@
 
 namespace zzz::texture
 {
-	/**
-	 * @struct TextureBuilderConfig
-	 * @brief Параметры конфигурации экземпляра TextureBuilder.
-	 */
-	struct TextureBuilderConfig
-	{
-		/// Максимально допустимый размер стороны изображения в пикселях.
-		zU32 maxDimension{ 16384 };
-
-		/// Флаг проверки кратности сторон текстуры двум (требуется для блочных компрессоров).
-		bool requireDivisibleByTwo{ true };
-	};
-
 	/**
 	 * @class TextureBuilder
 	 * @brief Билдер обработки, запекания, построения мипмапов и компрессии текстур.
@@ -61,16 +47,12 @@ namespace zzz::texture
 	 *      и потокобезопасными относительно состояния билдера. В многопоточных пайплайнах
 	 *      сборки ресурсов рекомендуется создавать по одному экземпляру `TextureBuilder`
 	 *      на каждый рабочий поток (worker thread) для независимого управления конфигурацией.
-	 *
 	 * @par Пример использования:
 	 * @code{.cpp}
 	 * using namespace zzz::texture;
 	 *
-	 * // 1. Инициализация билдера с настройками
-	 * TextureBuilder builder(TextureBuilderConfig{
-	 *     .maxDimension = 4096,
-	 *     .requireDivisibleByTwo = true
-	 * });
+	 * // 1. Инициализация билдера
+	 * TextureBuilder builder;
 	 *
 	 * // 2. Быстрая проверка метаданных
 	 * auto probeInfo = builder.Probe(fileBytes);
@@ -80,14 +62,13 @@ namespace zzz::texture
 	 *         .targetFormat = core::ePixelFormat::BC7_SRGB,
 	 *         .generateMips = true
 	 *     };
-	 *     TextureConvertResult result = builder.Convert(fileBytes, options);
-	 *     if (result.success) {
-	 *         // Использование payload и mips
+	 *     auto result = builder.Convert(fileBytes, options);
+	 *     if (result) {
+	 *         // Использование result->payload и result->metadata
 	 *     }
 	 * }
 	 * @endcode
 	 *
-	 * @see TextureBuilderConfig
 	 * @see TextureConvertOptions
 	 * @see TextureConvertResult
 	 * @see ImageInfo
@@ -95,11 +76,7 @@ namespace zzz::texture
 	class TextureBuilder
 	{
 	public:
-		/**
-		 * @brief Создаёт экземпляр билдера с заданной конфигурацией.
-		 * @param config Настройки валидации и ограничений разрешений.
-		 */
-		explicit TextureBuilder(const TextureBuilderConfig& config = {});
+		TextureBuilder() = default;
 
 		/**
 		 * @brief Быстро считывает характеристики изображения из буфера байтов в памяти.
@@ -113,9 +90,9 @@ namespace zzz::texture
 		 * @brief Выполняет декодирование из памяти, валидацию, генерацию мипмапов и сжатие в целевой формат.
 		 * @param fileBytes Срез байтов исходного файла изображения.
 		 * @param options Параметры конвертации (целевой формат, генерация мипов).
-		 * @return TextureConvertResult со статусом, дескрипторами мип-уровней и упакованными байтами.
+		 * @return TextureConvertResult с метаданными ресурса и упакованными байтами payload.
 		 */
-		[[nodiscard]] TextureConvertResult Convert(std::span<const zU8> fileBytes, const TextureConvertOptions& options) const;
+		[[nodiscard]] std::expected<TextureConvertResult, std::string> Convert(std::span<const zU8> fileBytes, const TextureConvertOptions& options) const;
 
 		/**
 		 * @brief Упаковывает набор отдельных спрайтов/текстур в единый атлас.
@@ -124,15 +101,15 @@ namespace zzz::texture
 		 * @param options Параметры атласа (максимальное разрешение, отступы, кратность степени двойки).
 		 * @return AtlasBuildResult с координатами спрайтов на атласе (UV) или текстом ошибки.
 		 */
-		[[nodiscard]] AtlasBuildResult BuildAtlas(const std::vector<std::filesystem::path>& inputFiles, const std::filesystem::path& outputImagePath, const AtlasOptions& options) const;
+		[[nodiscard]] std::expected<AtlasBuildResult, std::string> BuildAtlas(const std::vector<std::filesystem::path>& inputFiles, const std::filesystem::path& outputImagePath, const AtlasOptions& options) const;
 
 		/**
 		 * @brief Упаковывает отдельные текстуры в цветовые каналы единого PBR-композита (например, ORM: R=AO, G=Roughness, B=Metallic).
 		 * @param sources Пути к исходным одноканальным или цветным текстурам для каждого канала.
 		 * @param options Параметры конвертации и сжатия результирующего композита.
-		 * @return TextureConvertResult с упакованной и сжатой составной текстурой.
+		 * @return TextureConvertResult с упакованной и сжатой составной текстурой или текстом ошибки.
 		 */
-		[[nodiscard]] TextureConvertResult PackChannels(const ChannelPackSources& sources, const TextureConvertOptions& options) const;
+		[[nodiscard]] std::expected<TextureConvertResult, std::string> PackChannels(const ChannelPackSources& sources, const TextureConvertOptions& options) const;
 
 		/**
 		 * @brief Выполняет специализированную обработку карт нормалей.
@@ -140,20 +117,16 @@ namespace zzz::texture
 		 *          ренормализацию векторов и сжатие в двухканальный формат BC5.
 		 * @param filePath Путь к файлу карты нормалей.
 		 * @param options Параметры обработки (инверсия Y, нормализация, целевой формат).
-		 * @return TextureConvertResult с обработанной картой нормалей.
+		 * @return TextureConvertResult с обработанной картой нормалей или текстом ошибки.
 		 */
-		[[nodiscard]] TextureConvertResult ProcessNormalMap(const std::filesystem::path& filePath, const NormalMapOptions& options) const;
+		[[nodiscard]] std::expected<TextureConvertResult, std::string> ProcessNormalMap(const std::filesystem::path& filePath, const NormalMapOptions& options) const;
 
 		/**
 		 * @brief Собирает кубическую карту (Cubemap) из 6 отдельных текстур граней.
 		 * @param faceFiles Массив путей к 6 граням (+X, -X, +Y, -Y, +Z, -Z).
 		 * @param options Параметры конвертации и генерации мип-уровней для граней.
-		 * @return TextureConvertResult с итоговой кубической текстурой.
+		 * @return TextureConvertResult с итоговой кубической текстурой или текстом ошибки.
 		 */
-		[[nodiscard]] TextureConvertResult BuildCubemap(const std::array<std::filesystem::path, 6>& faceFiles, const TextureConvertOptions& options) const;
-
-	private:
-		/// Внутренняя конфигурация экземпляра билдера
-		TextureBuilderConfig m_config;
+		[[nodiscard]] std::expected<TextureConvertResult, std::string> BuildCubemap(const std::array<std::filesystem::path, 6>& faceFiles, const TextureConvertOptions& options) const;
 	};
-}
+} // namespace zzz::texture

@@ -1,5 +1,6 @@
-
 #include "TextureBuilder.h"
+
+#include "core/constants/TextureConstants.h"
 
 Z_SET_LOG_CATEGORY(::zzz::core::Assets);
 
@@ -10,7 +11,8 @@ namespace zzz::texture
 	{
 		DXGI_FORMAT ToDxgiFormat(core::ePixelFormat format)
 		{
-			switch (format) {
+			switch (format)
+			{
 			case core::ePixelFormat::RGBA8_UNORM: return DXGI_FORMAT_R8G8B8A8_UNORM;
 			case core::ePixelFormat::RGBA8_SRGB:  return DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 			case core::ePixelFormat::BC1_UNORM:   return DXGI_FORMAT_BC1_UNORM;
@@ -29,16 +31,10 @@ namespace zzz::texture
 	}
 #endif
 
-	TextureBuilder::TextureBuilder(const TextureBuilderConfig& config)
-		: m_config(config)
-	{
-	}
-
 	std::expected<ImageInfo, std::string> TextureBuilder::Probe(std::span<const zU8> fileBytes) const
 	{
-		if (fileBytes.empty()) {
-			return std::unexpected("Input file byte span is empty");
-		}
+		if (fileBytes.empty())
+			return UNEXPECTED("Input file byte span is empty");
 
 		int w = 0;
 		int h = 0;
@@ -49,10 +45,8 @@ namespace zzz::texture
 			&w, &h, &comp
 		);
 
-		if (result == 0) {
-			DOutWarning("TextureBuilder::Probe: stbi_info failed to parse image header");
-			return std::unexpected("stbi_info failed to parse image header (unsupported or corrupted format)");
-		}
+		if (result == 0)
+			return UNEXPECTED("stbi_info failed to parse image header (unsupported or corrupted format)");
 
 		ImageInfo info;
 		info.width = static_cast<zU32>(w);
@@ -67,15 +61,10 @@ namespace zzz::texture
 		return info;
 	}
 
-	TextureConvertResult TextureBuilder::Convert(
-		std::span<const zU8> fileBytes,
-		const TextureConvertOptions& options
-	) const
+	std::expected<TextureConvertResult, std::string> TextureBuilder::Convert(std::span<const zU8> fileBytes, const TextureConvertOptions& options) const
 	{
-		if (fileBytes.empty()) {
-			DOutError("TextureBuilder::Convert: input file bytes buffer is empty");
-			return { .success = false, .errorMessage = "Input file bytes buffer is empty" };
-		}
+		if (fileBytes.empty())
+			return UNEXPECTED("Input file bytes buffer is empty");
 
 		DOut("TextureBuilder::Convert: starting conversion, targetFormat={}, mips={}",
 			static_cast<zU32>(options.targetFormat), options.generateMips);
@@ -90,48 +79,40 @@ namespace zzz::texture
 			&w, &h, &comp, 4
 		);
 
-		if (!rawPixels) {
+		if (!rawPixels)
+		{
 			const std::string reason = stbi_failure_reason() ? stbi_failure_reason() : "unknown";
-			DOutError("TextureBuilder::Convert: failed to decode image: {}", reason);
-			return {
-				.success = false,
-				.errorMessage = std::format("Failed to decode image data: {}", reason)
-			};
+			return UNEXPECTED("Failed to decode image data: {}", reason);
 		}
 
-		if (w <= 0 || h <= 0) {
+		if (w <= 0 || h <= 0)
+		{
 			stbi_image_free(rawPixels);
-			DOutError("TextureBuilder::Convert: invalid dimensions ({}x{})", w, h);
-			return { .success = false, .errorMessage = "Image has invalid dimensions (width or height <= 0)" };
+			return UNEXPECTED("Image has invalid dimensions (width or height <= 0)");
 		}
 
-		// Валидация максимального допустимого размера из конфигурации
-		if (static_cast<zU32>(w) > m_config.maxDimension || static_cast<zU32>(h) > m_config.maxDimension) {
-			const std::string msg = std::format("Image dimensions ({}x{}) exceed maximum allowed dimension ({})",
-				w, h, m_config.maxDimension);
+		// Валидация максимального допустимого размера из констант core
+		if (static_cast<zU32>(w) > core::c_MaxTextureDimension || static_cast<zU32>(h) > core::c_MaxTextureDimension)
+		{
 			stbi_image_free(rawPixels);
-			DOutError("TextureBuilder::Convert: validation error: {}", msg);
-			return { .success = false, .errorMessage = msg };
+			return UNEXPECTED("Image dimensions ({}x{}) exceed maximum allowed dimension ({})",
+				w, h, core::c_MaxTextureDimension);
 		}
 
-		// 2. Валидация кратности 2 (если включено в конфигурации)
-		if (m_config.requireDivisibleByTwo && ((w % 2 != 0) || (h % 2 != 0))) {
-			const std::string msg = std::format("Image dimensions ({}x{}) must be divisible by 2", w, h);
+		// Обязательная проверка кратности двум (требование блочных компрессоров)
+		if ((w % 2 != 0) || (h % 2 != 0))
+		{
 			stbi_image_free(rawPixels);
-			DOutError("TextureBuilder::Convert: validation error: {}", msg);
-			return { .success = false, .errorMessage = msg };
+			return UNEXPECTED("Image dimensions ({}x{}) must be divisible by 2", w, h);
 		}
 
 		const bool compressed = core::PixelFormatUtils::IsCompressedFormat(options.targetFormat);
 
 #if !Z_DESKTOP
-		if (compressed) {
+		if (compressed)
+		{
 			stbi_image_free(rawPixels);
-			DOutError("TextureBuilder::Convert: BCn compression is not supported on this platform. ASTC compression is required for mobile platforms.");
-			return {
-				.success = false,
-				.errorMessage = "BCn compression is only supported on Desktop platforms (Windows/Linux/macOS) via DirectXTex. Mobile platforms (Android/iOS) require ASTC compression."
-			};
+			return UNEXPECTED("BCn compression is only supported on Desktop platforms (Windows/Linux/macOS) via DirectXTex. Mobile platforms (Android/iOS) require ASTC compression.");
 		}
 #endif
 
@@ -147,29 +128,34 @@ namespace zzz::texture
 		zU32 currentW = static_cast<zU32>(w);
 		zU32 currentH = static_cast<zU32>(h);
 
-		rawMips.push_back(RawMip{
+		rawMips.push_back(RawMip
+		{
 			.width = currentW,
 			.height = currentH,
 			.rgbaPixels = std::vector<zU8>(rawPixels, rawPixels + (currentW * currentH * 4))
-			});
+		});
 		stbi_image_free(rawPixels);
 
 		const bool isSRGB = core::PixelFormatUtils::IsSRGBFormat(options.targetFormat);
 
-		if (options.generateMips) {
-			while (currentW > 1 || currentH > 1) {
+		if (options.generateMips)
+		{
+			while (currentW > 1 || currentH > 1)
+			{
 				const zU32 nextW = std::max(1u, currentW / 2);
 				const zU32 nextH = std::max(1u, currentH / 2);
 				std::vector<zU8> nextPixels(nextW * nextH * 4);
 
-				if (isSRGB) {
+				if (isSRGB)
+				{
 					stbir_resize_uint8_srgb(
 						rawMips.back().rgbaPixels.data(), static_cast<int>(currentW), static_cast<int>(currentH), static_cast<int>(currentW * 4),
 						nextPixels.data(), static_cast<int>(nextW), static_cast<int>(nextH), static_cast<int>(nextW * 4),
 						STBIR_RGBA
 					);
 				}
-				else {
+				else
+				{
 					stbir_resize_uint8_linear(
 						rawMips.back().rgbaPixels.data(), static_cast<int>(currentW), static_cast<int>(currentH), static_cast<int>(currentW * 4),
 						nextPixels.data(), static_cast<int>(nextW), static_cast<int>(nextH), static_cast<int>(nextW * 4),
@@ -177,11 +163,12 @@ namespace zzz::texture
 					);
 				}
 
-				rawMips.push_back(RawMip{
+				rawMips.push_back(RawMip
+				{
 					.width = nextW,
 					.height = nextH,
 					.rgbaPixels = std::move(nextPixels)
-					});
+				});
 
 				currentW = nextW;
 				currentH = nextH;
@@ -192,27 +179,20 @@ namespace zzz::texture
 
 		// Сжатие или копирование каждого мип-уровня
 		TextureConvertResult result;
-		result.width = static_cast<zU32>(w);
-		result.height = static_cast<zU32>(h);
-		result.format = options.targetFormat;
 
 #if Z_DESKTOP
 		const DXGI_FORMAT targetDxgi = compressed ? ToDxgiFormat(options.targetFormat) : DXGI_FORMAT_UNKNOWN;
 #endif
 
-		for (const auto& mip : rawMips) {
-			TextureMipDesc desc;
-			desc.width = mip.width;
-			desc.height = mip.height;
-			desc.byteOffset = result.payload.size();
-
-			if (!compressed) {
+		for (const auto& mip : rawMips)
+		{
+			if (!compressed)
+			{
 				// Несжатый RGBA8
-				desc.rowPitch = mip.width * 4;
-				desc.byteSize = mip.rgbaPixels.size();
 				result.payload.insert(result.payload.end(), mip.rgbaPixels.begin(), mip.rgbaPixels.end());
 			}
-			else {
+			else
+			{
 #if Z_DESKTOP
 				// Компрессия через DirectXTex
 				DirectX::Image srcImage;
@@ -232,68 +212,52 @@ namespace zzz::texture
 					compressedImage
 				);
 
-				if (FAILED(hr)) {
-					DOutError("TextureBuilder::Convert: DirectXTex compression failed for mip {}x{}, HRESULT: 0x{:08X}",
+				if (FAILED(hr))
+				{
+					return UNEXPECTED("DirectXTex compression failed for mip {}x{}, HRESULT: 0x{:08X}",
 						mip.width, mip.height, static_cast<zU32>(hr));
-					return {
-						.success = false,
-						.errorMessage = std::format("DirectXTex compression failed for mip {}x{}, HRESULT: 0x{:08X}",
-													mip.width, mip.height, static_cast<zU32>(hr))
-					};
 				}
 
-				const auto* image = compressedImage.GetImage(0, 0, 0);
-				desc.rowPitch = static_cast<zU32>(image->rowPitch);
-				desc.byteSize = compressedImage.GetPixelsSize();
-
+				const size_t byteSize = compressedImage.GetPixelsSize();
 				const auto* compressedBytes = compressedImage.GetPixels();
-				result.payload.insert(result.payload.end(), compressedBytes, compressedBytes + desc.byteSize);
+				result.payload.insert(result.payload.end(), compressedBytes, compressedBytes + byteSize);
 #endif
 			}
-
-			result.mips.push_back(desc);
 		}
 
-		result.success = true;
+		// Заполнение готовых 32 байт метаданных для TOC data.dat
+		result.metadata.width = static_cast<zU32>(w);
+		result.metadata.height = static_cast<zU32>(h);
+		result.metadata.depth = 1;
+		result.metadata.arraySize = (options.textureType == core::eTextureType::TextureCube) ? 6 : 1;
+		result.metadata.format = options.targetFormat;
+		result.metadata.mipCount = static_cast<zU8>(rawMips.size());
+		result.metadata.textureType = options.textureType;
+		result.metadata.flags = (isSRGB ? 0x01 : 0x00) | (options.isNormalMap ? 0x02 : 0x00);
+
 		DOut("TextureBuilder::Convert: finished successfully ({}x{}, {} mips, total payload {} bytes)",
-			result.width, result.height, result.mips.size(), result.payload.size());
+			result.metadata.width, result.metadata.height, result.metadata.mipCount, result.payload.size());
 
 		return result;
 	}
 
-	AtlasBuildResult TextureBuilder::BuildAtlas(const std::vector<std::filesystem::path>& /*inputFiles*/, const std::filesystem::path& /*outputImagePath*/, const AtlasOptions& /*options*/) const
+	std::expected<AtlasBuildResult, std::string> TextureBuilder::BuildAtlas(const std::vector<std::filesystem::path>& /*inputFiles*/, const std::filesystem::path& /*outputImagePath*/, const AtlasOptions& /*options*/) const
 	{
-		return
-		{
-			.success = false,
-			.errorMessage = "TextureBuilder::BuildAtlas is not implemented yet"
-		};
+		return UNEXPECTED("TextureBuilder::BuildAtlas is not implemented yet");
 	}
 
-	TextureConvertResult TextureBuilder::PackChannels(const ChannelPackSources& /*sources*/, const TextureConvertOptions& /*options*/) const
+	std::expected<TextureConvertResult, std::string> TextureBuilder::PackChannels(const ChannelPackSources& /*sources*/, const TextureConvertOptions& /*options*/) const
 	{
-		return
-		{
-			.success = false,
-			.errorMessage = "TextureBuilder::PackChannels is not implemented yet"
-		};
+		return UNEXPECTED("TextureBuilder::PackChannels is not implemented yet");
 	}
 
-	TextureConvertResult TextureBuilder::ProcessNormalMap(const std::filesystem::path& /*filePath*/, const NormalMapOptions& /*options*/) const
+	std::expected<TextureConvertResult, std::string> TextureBuilder::ProcessNormalMap(const std::filesystem::path& /*filePath*/, const NormalMapOptions& /*options*/) const
 	{
-		return
-		{
-			.success = false,
-			.errorMessage = "TextureBuilder::ProcessNormalMap is not implemented yet"
-		};
+		return UNEXPECTED("TextureBuilder::ProcessNormalMap is not implemented yet");
 	}
 
-	TextureConvertResult TextureBuilder::BuildCubemap(const std::array<std::filesystem::path, 6>& /*faceFiles*/, const TextureConvertOptions& /*options*/) const
+	std::expected<TextureConvertResult, std::string> TextureBuilder::BuildCubemap(const std::array<std::filesystem::path, 6>& /*faceFiles*/, const TextureConvertOptions& /*options*/) const
 	{
-		return
-		{
-			.success = false,
-			.errorMessage = "TextureBuilder::BuildCubemap is not implemented yet"
-		};
+		return UNEXPECTED("TextureBuilder::BuildCubemap is not implemented yet");
 	}
-} 
+} // namespace zzz::texture

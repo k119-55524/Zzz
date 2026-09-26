@@ -70,8 +70,8 @@ TEST(TextureBuilderTests, ConvertOddDimensionsFailsValidation) {
     };
 
     const auto result = builder.Convert(oddTga, options);
-    EXPECT_FALSE(result.success);
-    EXPECT_NE(result.errorMessage.find("must be divisible by 2"), std::string::npos);
+    EXPECT_FALSE(result.has_value());
+    EXPECT_NE(result.error().find("must be divisible by 2"), std::string::npos);
 }
 
 TEST(TextureBuilderTests, ConvertRgba8WithMips) {
@@ -83,26 +83,14 @@ TEST(TextureBuilderTests, ConvertRgba8WithMips) {
     };
 
     const auto result = builder.Convert(tgaData, options);
-    ASSERT_TRUE(result.success);
-    EXPECT_EQ(result.width, 4u);
-    EXPECT_EQ(result.height, 4u);
-    EXPECT_EQ(result.format, zzz::core::ePixelFormat::RGBA8_UNORM);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(result->metadata.width, 4u);
+    EXPECT_EQ(result->metadata.height, 4u);
+    EXPECT_EQ(result->metadata.format, zzz::core::ePixelFormat::RGBA8_UNORM);
 
     // 4x4 -> 2x2 -> 1x1 = 3 levels
-    ASSERT_EQ(result.mips.size(), 3u);
-    EXPECT_EQ(result.mips[0].width, 4u);
-    EXPECT_EQ(result.mips[0].height, 4u);
-    EXPECT_EQ(result.mips[0].byteSize, 4u * 4u * 4u); // 64 bytes
-
-    EXPECT_EQ(result.mips[1].width, 2u);
-    EXPECT_EQ(result.mips[1].height, 2u);
-    EXPECT_EQ(result.mips[1].byteSize, 2u * 2u * 4u); // 16 bytes
-
-    EXPECT_EQ(result.mips[2].width, 1u);
-    EXPECT_EQ(result.mips[2].height, 1u);
-    EXPECT_EQ(result.mips[2].byteSize, 1u * 1u * 4u); // 4 bytes
-
-    EXPECT_EQ(result.payload.size(), 64u + 16u + 4u);
+    EXPECT_EQ(result->metadata.mipCount, 3u);
+    EXPECT_EQ(result->payload.size(), 64u + 16u + 4u);
 }
 
 TEST(TextureBuilderTests, ConvertBc7Compression) {
@@ -114,26 +102,21 @@ TEST(TextureBuilderTests, ConvertBc7Compression) {
     };
 
     const auto result = builder.Convert(tgaData, options);
-    ASSERT_TRUE(result.success);
-    EXPECT_EQ(result.width, 8u);
-    EXPECT_EQ(result.height, 8u);
-    EXPECT_EQ(result.format, zzz::core::ePixelFormat::BC7_SRGB);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(result->metadata.width, 8u);
+    EXPECT_EQ(result->metadata.height, 8u);
+    EXPECT_EQ(result->metadata.format, zzz::core::ePixelFormat::BC7_SRGB);
 
     // 8x8 -> 4x4 -> 2x2 -> 1x1 = 4 levels
-    ASSERT_EQ(result.mips.size(), 4u);
-    EXPECT_FALSE(result.payload.empty());
-
-    EXPECT_EQ(result.mips[0].byteSize, 64u);
-    EXPECT_EQ(result.mips[1].byteSize, 16u);
-    EXPECT_EQ(result.mips[2].byteSize, 16u);
-    EXPECT_EQ(result.mips[3].byteSize, 16u);
-    EXPECT_EQ(result.payload.size(), 64u + 16u + 16u + 16u);
+    EXPECT_EQ(result->metadata.mipCount, 4u);
+    EXPECT_FALSE(result->payload.empty());
+    EXPECT_EQ(result->payload.size(), 64u + 16u + 16u + 16u);
 }
 
 TEST(TextureBuilderTests, StubsReturnNotImplemented) {
     const TextureBuilder builder;
-    EXPECT_FALSE(builder.BuildAtlas({}, "atlas.png", {}).success);
-    EXPECT_FALSE(builder.PackChannels({}, {}).success);
-    EXPECT_FALSE(builder.ProcessNormalMap("norm.png", {}).success);
-    EXPECT_FALSE(builder.BuildCubemap({}, {}).success);
+    EXPECT_FALSE(builder.BuildAtlas({}, "atlas.png", {}).has_value());
+    EXPECT_FALSE(builder.PackChannels({}, {}).has_value());
+    EXPECT_FALSE(builder.ProcessNormalMap("norm.png", {}).has_value());
+    EXPECT_FALSE(builder.BuildCubemap({}, {}).has_value());
 }

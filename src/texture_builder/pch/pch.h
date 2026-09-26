@@ -32,3 +32,4 @@
 
 #include "core/logger/logger.h"
 #include "core/constants/LogCategoryConstants.h"
+#include "core/utils/macros/MiscMacros.h"

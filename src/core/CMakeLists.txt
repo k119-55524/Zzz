@@ -15,6 +15,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/utils/Export.h
         ${CMAKE_CURRENT_SOURCE_DIR}/constants/PackagesConstants.h
         ${CMAKE_CURRENT_SOURCE_DIR}/constants/DisplayConstants.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/constants/TextureConstants.h
         ${CMAKE_CURRENT_SOURCE_DIR}/constants/GAPIConstants.h
         ${CMAKE_CURRENT_SOURCE_DIR}/constants/NetworkConstants.h
         ${CMAKE_CURRENT_SOURCE_DIR}/constants/LogCategoryConstants.h
@@ -100,6 +101,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eLayerType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eSpatialStorageType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/eTargetPlatform.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/enums/eTextureType.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/platforms/ConverterGAPITypes.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/platforms/ConverterMSWinTypes.h
         ${CMAKE_CURRENT_SOURCE_DIR}/enums/platforms/ConverterAndroidTypes.h
@@ -151,6 +153,7 @@ macro(setup_core_target TARGET_NAME IS_EDITOR)
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/DataAssetsManager.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/DataAssetsManager.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/ProjectManifestData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/package/assets/AssetMetadata.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/assets/MeshData.h
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/assets/MeshData.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/io/package/assets/MaterialData.h
