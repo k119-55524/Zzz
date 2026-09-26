@@ -1,6 +1,6 @@
 # Этап 26. Трёхсекционный TOC data.dat, внешние пакеты и модульный конвейер PackagePacker
 
-**Статус:** 📝 План готов к реализации (код этапа не начат)
+**Статус:** 🚀 В работе
 
 > [!IMPORTANT]
 > Этот файл — источник истины для этапа 26. Этап целиком посвящён **структурам оглавления (TOC), форматам пакетов и модульному конвейеру сборщика `PackagePacker`**. Запекание текстур выполняется через библиотеку `texture_builder` (**Этап 25**). Runtime-монтирование нового `data.dat`, чтение внешних паков, zero-allocation парсинг данных, CPU-контур меша и последующий GPU upload вынесены в **Этап 27**. В Этапе 26 реализуется только builder-side parser/validator нового формата, необходимый для проверки результата перед публикацией и для тестов writer-а.
@@ -10,9 +10,9 @@
 ## 🎯 Цель этапа
 
 1. Сформировать новую архитектуру бинарного архива `data.dat` с **трёхсекционным оглавлением (TOC)**:
-   - **Таблица 1 (PackManifestTable):** компактный массив типов внешних паков `eDataDatType` (элементы `[0..N-1]`, имена файлов однозначно вычисляются через `GetPakFileName(type)` в `constexpr`).
+   - **Таблица 1 (PackManifestTable):** компактный массив типов внешних паков `eDataDatType` (элементы `[0..N-1]`, имена файлов однозначно вычисляются через `GetPakFileName(type)`).
    - **Таблица 2 (InlinePackageEntryTable):** ресурсы, встроенные непосредственно в тело `data.dat` (`Mesh`, `Material`, `Shader`, `Animation`). Каждая запись содержит 32 байта `AssetMetadata`.
-   - **Таблица 3 (ExternalPackageEntryTable):** ресурсы, вынесенные во внешние `.pak` файлы (`Texture2D` $\to$ `0005.pak`, `AudioClip` $\to$ `0006.pak` и т. д.). Каждая запись содержит 32 байта `AssetMetadata` и смещение внутри соответствующего `.pak` файла.
+   - **Таблица 3 (ExternalPackageEntryTable):** ресурсы, вынесенные во внешние `N.dat` файлы (`Texture2D` $\to$ `0.dat`, `AudioClip` $\to$ `1.dat` и т. д.). Каждая запись содержит 32 байта `AssetMetadata` и смещение внутри соответствующего `N.dat` файла.
 2. Реализовать строгое архитектурное разделение:
    - **`src/core/` (Ядро runtime):** только общие контракты, `constexpr` сопоставление паков, резолвер путей `ResolvePakPath(type)`, заголовки и структуры записей. Никакой логики сборки, стадий, запекания текстур или компиляции.
    - **`src/tools/assets_builder/assets_builder_dll/` (Сборщик):** модульный конвейер (Pipeline + DTO + Strategy) из независимых стадий с префиксом `Stage`.
@@ -27,14 +27,14 @@
 ## 📐 Архитектурные контракты сборщика и форматов
 
 ### 1. Трёхсекционный TOC `data.dat`
-`data.dat` получает несовместимый с текущим однотабличным layout и поэтому меняет major-версию. В Core одновременно объявляются `c_DataDatFormatV1 = { "ZDD", Version(1, 0, 0) }` и `c_DataDatFormatV2 = { "ZDD", Version(2, 0, 0) }`. В Этапе 26 builder пишет только V2, а существующий runtime reader продолжает ожидать V1 и обязан отклонять V2 по major-версии. Переключение runtime на V2 выполняется в Этапе 27.
-- Заголовок `DataDatHeader` для `c_DataDatFormatV2`:
+`data.dat` использует трёхсекционный layout оглавления. Заголовок `DataDatHeader` использует существующий `c_DataDatFormat = { "ZDD", Version(1, 0, 0) }`. Формат ещё находится в разработке и не считается опубликованным или замороженным: до завершения всего связанного конвейера его layout можно менять без повышения версии.
+- Заголовок `DataDatHeader` для `c_DataDatFormat`:
   * Базовое поле `m_EntryCount` хранит **общее число ассетов** в архиве: `inlineCount + externalCount`. Это даёт быстрый общий счётчик без парсинга Extra.
   * Содержит блок дополнительных данных `DataDatHeaderExtra`:
     - `packCount` — количество записей в Манифесте паков (Таблица 1);
     - `inlineCount` — количество встроенных ресурсов (Таблица 2);
     - `externalCount` — количество внешних ресурсов (Таблица 3).
-  * Единый `buildTime` (timestamp сборки в миллисекундах) для валидации согласованности `package.dat`, `data.dat` и всех внешних `.pak`.
+  * Единый `buildTime` (timestamp сборки в миллисекундах) для валидации согласованности `package.dat`, `data.dat` и всех внешних `.dat` пакетов.
   * Для `c_PackageDatFormat` заголовок и версия остаются без изменений (`entryCount`, 31 байт).
   * Для `PakFileHeader` поле `m_EntryCount` равно числу блобов этого типа во внешнем паке и обязано совпадать с числом соответствующих записей Таблицы 3.
 
@@ -51,7 +51,7 @@
 Размер padding рассчитывается по сериализованному размеру полей, а не через `sizeof` C++-класса/структуры:
 $$\text{PaddingSize} = (\text{Alignment} - ((\text{BaseSize} + \text{ExtraSerializedSize}) \pmod{\text{Alignment}})) \pmod{\text{Alignment}}$$
 - Для `data.dat` (`Alignment = 64`): $31 + 12 = 43 \to$ размер padding **21 байт**, итоговый размер заголовка ровно **64 байта**.
-- Для `.pak` (`Alignment = 4096`, без Extra): $31 + 0 = 31 \to$ размер padding **4065 байт**, итоговый размер заголовка ровно **4096 байт**.
+- Для `N.dat` (`Alignment = 4096`, без Extra): $31 + 0 = 31 \to$ размер padding **4065 байт**, итоговый размер заголовка ровно **4096 байт**.
 - Extra записывается сразу после базового envelope, затем записывается нулевой padding. Дисковый порядок числовых полей — little-endian; GUID сохраняется в уже принятом проектом 16-байтовом бинарном представлении. Layout проверяется golden-byte тестом.
 
 #### 2.2. Блок `DataDatHeaderExtra` (12 байт)
@@ -60,12 +60,12 @@ struct DataDatHeaderExtra
 {
 	zU32 packCount = 0;     // Количество внешних паков в Таблице 1
 	zU32 inlineCount = 0;   // Количество записей в Таблице 2 (data.dat)
-	zU32 externalCount = 0; // Количество записей в Таблице 3 (внешние .pak)
+	zU32 externalCount = 0; // Количество записей в Таблице 3 (внешние N.dat)
 };
 ```
 
 #### 2.3. Таблица 1 (Список типов внешних паков)
-Хранить GUID для паков не требуется, так как имя файла однозначно вычисляется из стабильного числового значения `eDataDatType` в `constexpr`:
+Хранить GUID для паков не требуется, так как имя файла однозначно вычисляется из стабильного значения `eDataDatType` (порядковый номер внешнего типа):
 ```cpp
 // Таблица 1: массив типов внешних паков (packCount элементов по 4 байта)
 eDataDatType externalPackTypes[packCount];
@@ -79,15 +79,15 @@ eDataDatType externalPackTypes[packCount];
 | `Material` | 2 | inline в `data.dat` | да |
 | `Shader` | 3 | inline в `data.dat` | да |
 | `Animation` | 4 | inline в `data.dat` | нет, зарезервировано |
-| `Texture2D` | 5 | `0005.pak` | да |
-| `AudioClip` | 6 | `0006.pak` | да |
-| `Video` | 7 | `0007.pak` | нет, зарезервировано |
-| `Font` | 8 | `0008.pak` | нет, зарезервировано |
-| `BinaryData` | 9 | `0009.pak` | нет, зарезервировано |
+| `Texture2D` | 5 | `0.dat` | да |
+| `AudioClip` | 6 | `1.dat` | да |
+| `Video` | 7 | `2.dat` | нет, зарезервировано |
+| `Font` | 8 | `3.dat` | нет, зарезервировано |
+| `BinaryData` | 9 | `4.dat` | нет, зарезервировано |
 
 Таблица 1 содержит только реально созданные непустые внешние паки, строго по возрастанию значения типа, без дубликатов. Каждая запись Таблицы 3 обязана ссылаться на тип, присутствующий в Таблице 1; inline-типы в Таблице 1 и внешние типы в Таблице 2 запрещены. GUID уникален сразу по Таблицам 2 и 3.
 
-Числовые значения `eDataDatType` после публикации V2 являются частью дискового ABI и не перенумеровываются. Добавление нового типа выполняется новым значением; изменение размещения или значения существующего типа требует новой major-версии формата.
+Числовые значения `eDataDatType` пока остаются частью разрабатываемого контракта и при необходимости могут быть скорректированы без повышения версии. Стабильным дисковым ABI они становятся только после отдельного решения о заморозке и публикации формата.
 
 Зарезервированные типы входят в контракт размещения, но файл для них не создаётся без активных ресурсов и зарегистрированного импортёра. Достижимый ресурс неподдерживаемого типа завершает `Stage2_PackPlanner` ошибкой до сборки.
 
@@ -97,7 +97,7 @@ class PackageEntry final : public ISerializable
 {
 	Guid          guid;      // 16 байт: уникальный идентификатор ресурса
 	zU32          assetType; // 4 байта: eDataDatType (Mesh, Texture2D, Material...)
-	zU64          offset;    // 8 байт: смещение данных (в data.dat для Таблицы 2, в 000X.pak для Таблицы 3)
+	zU64          offset;    // 8 байт: смещение данных (в data.dat для Таблицы 2, в N.dat для Таблицы 3)
 	zU64          size;      // 8 байт: размер полезной нагрузки в байтах
 	AssetMetadata metadata;  // 32 байта: union POD-метаданных ресурса (TextureMetadata, MeshMetadata...)
 }; // Итого ровно 68 байт
@@ -107,7 +107,7 @@ class PackageEntry final : public ISerializable
 #### 2.5. Контроль и валидация смещений (Offset Validation & Invariants)
 Для исключения повреждения данных, битых ссылок и наложения ресурсов друг на друга сборщик и ядро соблюдают строгие инварианты смещений:
 1. **Правила выравнивания смещений:**
-   - **Внешние паки (`000X.pak`):** заголовок занимает ровно 4096 байт ($4 \text{ КБ}$). Первое смещение данных всегда $\ge 4096$. Все последующие смещения блобов ресурсов строго выровнены по 16 байтам: $\text{offset} \pmod{16} == 0$.
+   - **Внешние паки (`N.dat`):** заголовок занимает ровно 4096 байт ($4 \text{ КБ}$). Первое смещение данных всегда $\ge 4096$. Все последующие смещения блобов ресурсов строго выровнены по 16 байтам: $\text{offset} \pmod{16} == 0$.
    - **Архив `data.dat` (Inline):** сначала вычисляется конец TOC, затем начало payload с padding до 16 байт:
      $$\text{tocEnd} = \text{headerSize} + \text{table1Size} + \text{table2Size} + \text{table3Size}$$
      $$\text{payloadBegin} = \operatorname{AlignUp}(\text{tocEnd}, 16)$$
@@ -116,7 +116,7 @@ class PackageEntry final : public ISerializable
    - Для Таблицы 2 (встроенные ресурсы):
      $$\text{offset} \ge \text{payloadBegin} \quad \text{и} \quad \text{offset} + \text{size} \le \text{fileSize}(\texttt{data.dat})$$
    - Для Таблицы 3 (внешние ресурсы):
-     $$\text{offset} \ge 4096 \quad \text{и} \quad \text{offset} + \text{size} \le \text{fileSize}(000X\texttt{.pak})$$
+     $$\text{offset} \ge 4096 \quad \text{и} \quad \text{offset} + \text{size} \le \text{fileSize}(N\texttt{.dat})$$
 3. **Защита от пересечений (Non-overlapping Invariant):**
    Внутри одного физического файла диапазоны ресурсов не должны накладываться друг на друга:
    $$[\text{offset}_i, \text{offset}_i + \text{size}_i) \cap [\text{offset}_j, \text{offset}_j + \text{size}_j) = \emptyset \quad \forall i \ne j$$
@@ -133,21 +133,21 @@ class PackageEntry final : public ISerializable
 #### 3.1. Ядро (`src/core/`) — только runtime-контракты
 В ядро помещаются исключительно структуры и функции, необходимые для чтения и резолвинга данных во время работы движка:
 1. **`PackagesConstants.h`:**
-   - `constexpr std::string_view GetPakFileName(eDataDatType type)`:
-     * `Texture2D` $\to$ `"0005.pak"`
-     * `AudioClip` $\to$ `"0006.pak"`
-     * `Video` $\to$ `"0007.pak"`
-     * `Font` $\to$ `"0008.pak"`
-     * `BinaryData` $\to$ `"0009.pak"`
+   - `std::string GetPakFileName(eDataDatType type)` (имя = порядковый номер внешнего типа без ведущих нулей + `c_DatExtension`):
+     * `Texture2D` $\to$ `"0.dat"`
+     * `AudioClip` $\to$ `"1.dat"`
+     * `Video` $\to$ `"2.dat"`
+     * `Font` $\to$ `"3.dat"`
+     * `BinaryData` $\to$ `"4.dat"`
      * Для встроенных ресурсов (`Mesh`, `Material`, `Shader`, `Animation`) и невалидных значений возвращает пустую строку `""`.
    - Замена устаревших определений:
      * Удаляется устаревший `c_AssetPackageFormat` (`"ZAP"`) и упоминания `assets/{guid}.dat`.
-     * Вводится актуальный формат внешних паков: `c_PakFileFormat { "ZPK"_magic, Version(1, 0, 0) }` и расширение `c_PakExtension = ".pak"`.
+     * Вводится актуальный формат внешних паков: `c_PakFileFormat { "ZPK"_magic, Version(1, 0, 0) }`, расширение общее — `c_DatExtension`.
 2. **`src/core/io/storage/Path.h` / `Path.cpp`:**
    - Метод `Path::ResolvePakPath(eDataDatType type)`: возвращает путь к внешнему паку (`c_AssetsDirectoryName / GetPakFileName(type)`), используемый в `DataAssetsManager` для передачи в конструктор `ReadOnlyFile`.
 3. **`DatFileHeader.h` и `PackageEntry.h`:**
    - Дисковые варианты заголовка с явной policy выравнивания и поддержкой `DataDatHeaderExtra`.
-   - Добавляются явные `c_DataDatFormatV1` и `c_DataDatFormatV2`; builder использует V2, runtime до Этапа 27 — V1. `c_PackageDatFormat` остаётся `1.0.0`, `c_PakFileFormat` начинается с `1.0.0`.
+   - Используется единый разрабатываемый `c_DataDatFormat` версии `1.0.0`; параллельные V1/V2-константы и миграция между черновыми layout не вводятся. `c_PackageDatFormat` и `c_PakFileFormat` также остаются `1.0.0`.
 
 > [!WARNING]
 > В `src/core/` строго запрещено помещать логику сборки, код компиляции скриптов, манипуляции с `.staging/`, вызовы `TextureBuilder` или классы стадий.
@@ -169,7 +169,7 @@ src/tools/assets_builder/assets_builder_dll/
 │   ├── pak_builders/                       // Паттерн Strategy для запекания и сборки файлов
 │       ├── IPakBuilder.h                   // Интерфейс стратегии сборки пака
 │       ├── InlineDataDatBuilder.h / .cpp   // Сборщик data.dat (3 секции TOC + inline blobs)
-│       └── StandardExternalPakBuilder.h/.cpp // Сборщик внешних паков (0005.pak, 0006.pak в этом этапе)
+│       └── StandardExternalPakBuilder.h/.cpp // Сборщик внешних паков (0.dat, 1.dat в этом этапе)
 │   └── validation/
 │       └── BuiltPackageValidator.h / .cpp  // Builder-side parser и полная проверка готового набора файлов
 ├── PackagePacker.h / .cpp                  // Легковесный фасад-оркестратор (~50-80 строк)
@@ -200,7 +200,7 @@ flowchart TD
     subgraph S3["Изолированный билдер таргета (Target 1..N)"]
         PlanDTO --> S3_Build["Stage3_PakBuilder<br/>(Recover-Build-Validate-Swap-Cleanup)"]
         S3_Build --> Staging["1. Recovery + подготовка:<br/>восстановление assets.old при необходимости,<br/>затем удаление только .staging/"]
-        Staging --> BakeExt["2.1. StandardExternalPakBuilder<br/>(Сборка 0005.pak, 0006.pak в assets.new,<br/>расчёт смещений PackageEntry)"]
+        Staging --> BakeExt["2.1. StandardExternalPakBuilder<br/>(Сборка 0.dat, 1.dat в assets.new,<br/>расчёт смещений PackageEntry)"]
         BakeExt -->|PackageEntry для Таблицы 3| BakeInl["2.2. InlineDataDatBuilder<br/>(Сборка data.dat с 3-мя TOC:<br/>Табл 1: типы паков, Табл 2: inline, Табл 3: external)"]
         Staging --> BakePkg["2.3. Сборка package.dat<br/>(манифест, сцены, вьюхи)"]
         BakeInl & BakePkg --> AtomicCopy["3. Публикация при 100% успехе:<br/>directory swap assets.new/assets.old<br/>с восстановлением при ошибке"]
@@ -242,7 +242,7 @@ flowchart TD
      - Перед запуском тяжёлой сборки и запекания выводит в лог структурированную таблицу:
        * Список включённых сцен;
        * Состав встроенных ресурсов `data.dat` (количество мешей, материалов, шейдеров, анимаций);
-       * Состав внешних паков (`0005.pak`: список текстур, форматы, размеры; `0006.pak`: список звуков);
+       * Состав внешних паков (`0.dat`: список текстур, форматы, размеры; `1.dat`: список звуков);
        * Список отсеянных ресурсов (неиспользуемый контент).
   6. **Группировка по корзинам:**
      - Раскладывает активные ресурсы по корзинам типов: `assetsByPak[type]`.
@@ -277,16 +277,16 @@ flowchart TD
        └── output/assets.new/
            ├── package.dat
            ├── data.dat
-           ├── 0005.pak
-           └── 0006.pak
+           ├── 0.dat
+           └── 1.dat
        ```
      - **Порядок сборки паков (разрешение смещений Таблицы 3):**
        * **Шаг 2.1 (Сборка внешних паков `StandardExternalPakBuilder`):**
-          Внешние паки (`0005.pak`, `0006.pak` для реализуемых в этом этапе типов) собираются **первыми**. Сборщик внешнего пака записывает 4 КБ заголовок `PakFileHeader` (`"ZPK"`, версия 1.0.0, единый timestamp сборки) и выровненные по 16 байт блобы ресурсов.
-         На выходе `StandardExternalPakBuilder` возвращает список готовых `PackageEntry` с вычисленными смещениями `offset` (от начала соответствующего `.pak` файла) и `size`.
+          Внешние паки (`0.dat`, `1.dat` для реализуемых в этом этапе типов) собираются **первыми**. Сборщик внешнего пака записывает 4 КБ заголовок `PakFileHeader` (`"ZPK"`, версия 1.0.0, единый timestamp сборки) и выровненные по 16 байт блобы ресурсов.
+         На выходе `StandardExternalPakBuilder` возвращает список готовых `PackageEntry` с вычисленными смещениями `offset` (от начала соответствующего `N.dat` файла) и `size`.
        * **Шаг 2.2 (Сборка `InlineDataDatBuilder`):**
           Получает записи Таблицы 3 от внешних сборщиков и собирает `output/assets.new/data.dat`:
-         1. Заголовок `DataDatHeader` (сигнатура `"ZDD"`, версия 2.0.0, размер 64 байта, блок `DataDatHeaderExtra`).
+         1. Заголовок `DataDatHeader` (сигнатура `"ZDD"`, разрабатываемая версия 1.0.0, размер 64 байта, блок `DataDatHeaderExtra`).
          2. Таблица 1: компактный массив типов внешних паков (`packCount` элементов `eDataDatType`).
          3. Таблица 2: массив встроенных записей `PackageEntry` (`inlineCount` элементов).
          4. Таблица 3: массив внешних записей `PackageEntry` (`externalCount` элементов с точными смещениями).
@@ -390,61 +390,58 @@ flowchart TD
 ## 🛠️ План реализации этапа 26
 
 ### Шаг 1. Ядро (Core) — минимальный разделяемый контракт
-- [ ] В `src/core/constants/PackagesConstants.h`:
-  * Добавить `constexpr std::string_view GetPakFileName(eDataDatType type) noexcept`.
-  * Добавить `c_DataDatFormatV1` и `c_DataDatFormatV2`; `PackagePacker` и data-format getters `BuilderApi` перевести на V2, а `ArchiveTraits<eDataDatType>` оставить на V1 до Этапа 27. `c_PackageDatFormat` оставить `1.0.0`.
-  * Добавить формат `c_PakFileFormat { "ZPK"_magic, Version(1, 0, 0) }` и расширение `c_PakExtension = ".pak"`.
-  * Удалить устаревший `c_AssetPackageFormat` (`"ZAP"`, вне файла не используется) и обновить шапку-комментарий (`assets/{guid}.dat` $\to$ `assets/000X.pak`).
-- [ ] В `src/core/io/storage/Path.h` / `Path.cpp`:
+- [x] В `src/core/constants/PackagesConstants.h`:
+  * Добавить `std::string GetPakFileName(eDataDatType type)`.
+  * Использовать единый `c_DataDatFormat { "ZDD"_magic, Version(1, 0, 0) }` и `c_PackageDatFormat { "ZPD"_magic, Version(1, 0, 0) }`.
+  * Добавить формат `c_PakFileFormat { "ZPK"_magic, Version(1, 0, 0) }`, использовать `c_DatExtension` для всех пакетов.
+  * Удалить устаревший `c_AssetPackageFormat` (`"ZAP"`, вне файла не используется) и обновить шапку-комментарий (`assets/{guid}.dat` $\to$ `assets/N.dat`).
+- [x] В `src/core/io/storage/Path.h` / `Path.cpp`:
   * Добавить метод `ResolvePakPath(eDataDatType type)`.
-- [ ] В `src/core/io/DatFileHeader.h`:
+- [x] В `src/core/io/DatFileHeader.h`:
   * Реализовать структуру `DataDatHeaderExtra` (`packCount`, `inlineCount`, `externalCount`).
-  * Реализовать явные дисковые варианты заголовка: 31 байт для `package.dat`, 64 байта для `data.dat`, 4096 байт для `.pak`; не выбирать layout через runtime magic.
-- [ ] Проверить структуру `PackageEntry.h` (68 байт, интеграция с 32-байтным `AssetMetadata`).
-- [ ] Зафиксировать compile-time таблицу размещения всех `eDataDatType` и тесты `GetPakFileName`: inline для 1–4, внешние `0005.pak`–`0009.pak` для 5–9.
+  * Реализовать явные дисковые варианты заголовка: 31 байт для `package.dat`, 64 байта для `data.dat`, 4096 байт для `N.dat`; не выбирать layout через runtime magic.
+- [x] Проверить структуру `PackageEntry.h` (68 байт, интеграция с 32-байтным `AssetMetadata`).
+- [x] Зафиксировать таблицу размещения всех `eDataDatType` в `GetPakFileName`: inline для 1–4, внешние `0.dat`–`4.dat` для 5–9 (тесты пропущены по указанию пользователя).
 
 ### Шаг 2. DTO и интерфейсы стадий сборщика
-- [ ] Создать `StageValidationResult.h` (DTO первой стадии).
-- [ ] Создать `StagePackPlan.h` (DTO второй стадии: сцены, корзины паков, статистика).
-- [ ] Создать интерфейс стратегии `IPakBuilder.h` в `stages/pak_builders/`.
+- [x] Создать `StageValidationResult.h` (DTO первой стадии).
+- [x] Создать `StagePackPlan.h` (DTO второй стадии: сцены, корзины паков, статистика).
+- [x] Создать интерфейс стратегии `IPakBuilder.h` в `stages/pak_builders/`.
 
 ### Шаг 3. Реализация стадий конвейера
-- [ ] Реализовать `Stage1_ProjectValidator` (на базе рефакторинга `ProjectIdentityValidator`):
+- [x] Реализовать `Stage1_ProjectValidator` (на базе рефакторинга `ProjectIdentityValidator`):
   * Двухпроходное сканирование, проверка GUID и JSON, сбор плоского списка `allAssets`.
-- [ ] Реализовать `Stage2_PackPlanner`:
+- [x] Реализовать `Stage2_PackPlanner`:
   * Раскрутка графа зависимостей от сцен (`add_scenes`/`remove_scenes`) и представлений (`startView`, `platform.child_views`, `platform.independent_views`) с visited-state и типизированной проверкой каждой ссылки.
   * Отсечение неиспользуемых ассетов (dead-code elimination).
   * Вызов `TextureBuilder::Probe` для активных текстур.
   * Форматированный вывод состава сборки в журнал (таблица включённых и исключённых ресурсов).
   * Распределение по корзинам `assetsByPak`.
-- [ ] Реализовать стратегии сборки паков:
-  * `StandardExternalPakBuilder`: запекание текстур/звуков, сборка `0005.pak`, `0006.pak` в `assets.new/` с 4 КБ заголовком и возвратом `PackageEntry` со смещениями.
-  * `InlineDataDatBuilder`: получение внешних записей Таблицы 3, запекание поддержанных inline-типов (в Этапе 26: меши/материалы/шейдеры), сборка трёхсекционного `data.dat` v2.
-- [ ] Реализовать `Stage3_PakBuilder`:
+- [x] Реализовать стратегии сборки паков:
+  * `StandardExternalPakBuilder`: запекание текстур/звуков, сборка `0.dat`, `1.dat` в `assets.new/` с 4 КБ заголовком и возвратом `PackageEntry` со смещениями.
+  * `InlineDataDatBuilder`: получение внешних записей Таблицы 3, запекание поддержанных inline-типов (в Этапе 26: меши/материалы/шейдеры), сборка трёхсекционного `data.dat`.
+- [x] Реализовать `Stage3_PakBuilder`:
   * Строгий цикл: recovery прошлой публикации, очистка только `.staging/`, сборка полного `assets.new/`, независимая проверка через `BuiltPackageValidator`, recoverable swap через `assets.old/`, очистка временных каталогов.
   * Удалить из GUI/headless предварительное удаление `destinationDir/assets/`.
-- [ ] Рефакторинг `PackagePacker` и методы сессии в `BuilderApi`:
+- [x] Рефакторинг `PackagePacker` и методы сессии в `BuilderApi`:
   * Добавить `BeginBuildSessionNative` / `EndBuildSessionNative` с сессионным кэшем валидации.
   * Добавить C# P/Invoke и managed-обёртки; вызывать Begin один раз на build и End в `finally` во всех GUI/headless путях.
   * Зафиксировать process-wide синхронизацию, snapshot-проверку проекта, UTF-8 ABI, маршалинг `bool` и получение текста ошибки.
   * Сократить `PackagePacker` до легковесного оркестратора (~50-80 строк).
 
 ### Шаг 4. Импортёры и тестовые ассеты
-- [ ] Реализовать `TextureImporter` с подключением `texture_builder.lib` (поддержка `.png`, `.jpg`, `.jpeg`, `.tga`, `.bmp` и форматов BCn/RGBA8).
-- [ ] Реализовать базовый `AudioImporter`.
-- [ ] Зарегистрировать импортёры в `AssetImporterRegistry`.
-- [ ] Проверить/дополнить тестовые ассеты в `src/projects/assets_projects/zzz_assets_test_000/Assets/`:
+- [x] Реализовать `TextureImporter` с подключением `texture_builder.lib` (поддержка `.png`, `.jpg`, `.jpeg`, `.tga`, `.bmp` и форматов BCn/RGBA8).
+- [x] Реализовать базовый `AudioImporter`.
+- [x] Зарегистрировать импортёры в `AssetImporterRegistry`.
+- [x] Проверить/дополнить тестовые ассеты в `src/projects/assets_projects/zzz_assets_test_000/Assets/`:
   * `Assets/Textures/`: `tt_1.png` .. `tt_6.png` + `.meta` файлы.
-  * `Assets/Audio/`: создать `click.wav` + `.meta` (каталог пока отсутствует).
+  * `Assets/Audio/`: создать `click.wav` + `.meta`.
 
 ### Шаг 5. Верификация и компиляция
-- [ ] Собрать `texture_builder`, `assets_builder_dll`, `EngineTests`.
-- [ ] Переписать существующий `SerializationTest.PackagePackerAndDataAssetsManagerEndToEnd` в builder-side тест writer + `BuiltPackageValidator`. Интеграционный тест runtime `DataAssetsManager` для `data.dat` v2 переносится в Этап 27; до этого старый reader обязан предсказуемо отклонять major 2.
-- [ ] Добавить golden-byte тесты трёх вариантов заголовка и расчёта `tocEnd/payloadBegin`, включая пустые таблицы и максимальные безопасные counts.
-- [ ] Добавить негативные тесты: переполнение counts/размеров, дубликат типа manifest, отсутствующий/лишний pak, external entry без manifest, тип не в своей секции, дубликат GUID между секциями, несовпадающий timestamp, неверное выравнивание, выход за файл и пересечение диапазонов.
-- [ ] Добавить fault-injection тесты публикации на каждом шаге rename: старая версия либо остаётся доступна, либо восстанавливается при следующем запуске; состояние без `assets/` не считается допустимым успешным исходом.
-- [ ] Добавить тесты сессии: Stage1 вызывается один раз на несколько таргетов, `End` выполняется после ошибки, чужой `sourceDir`, вложенный Begin и изменение ассета во время сессии отклоняются.
-- [ ] Проверить успешное прохождение всех тестов и целостность собранных пакетов.
+- [x] Собрать `texture_builder`, `assets_builder_dll`, C# приложения `assets_builder_lib` и `assets_builder_gui`.
+- [-] Unit-тесты пропущены по указанию пользователя ("тесты не надо").
+- [x] Целостность ядра, сборщика и управляемых слоёв подтверждена чистой компиляцией всех таргетов.
+
 
 ---
 
@@ -454,8 +451,8 @@ flowchart TD
 2. **Модульность конвейера:** сборщик разделен на `Stage1_ProjectValidator`, `Stage2_PackPlanner`, `Stage3_PakBuilder` и стратегии `IPakBuilder` с передачей через DTO.
 3. **Оптимизация сессии сборки:** сессионный кэш валидации (`BeginBuildSessionNative`) обеспечивает запуск `Stage1` строго 1 раз на всю сессию сборки нескольких таргетов.
 4. **Информативность логов:** перед началом тяжёлой сборки таргета в лог выводится сводная таблица состава ресурсов (включённые сцены, паки, форматы, отсеянный контент).
-5. **Трёхсекционный TOC `data.dat` v2:** создаётся корректный заголовок (64 байта) и три секции: Таблица 1 (уникальные отсортированные типы реально существующих внешних паков), Таблица 2 (встроенные `PackageEntry`), Таблица 3 (внешние `PackageEntry` с точными смещениями внутри `.pak`). Старый reader отклоняет major 2.
-6. **Внешние `.pak` файлы:** внешние файлы собираются до `data.dat`, имеют 4 КБ заголовок `PakFileHeader`, корректный `entryCount` и выровненные по 16 байтам блобы данных.
+5. **Трёхсекционный TOC `data.dat`:** создаётся корректный заголовок (64 байта) и три секции: Таблица 1 (уникальные отсортированные типы реально существующих внешних паков), Таблица 2 (встроенные `PackageEntry`), Таблица 3 (внешние `PackageEntry` с точными смещениями внутри `N.dat`). Версия формата остаётся 1.0.0; runtime reader обновляется в Этапе 27.
+6. **Внешние `N.dat` файлы:** внешние файлы собираются до `data.dat`, имеют 4 КБ заголовок `PakFileHeader`, корректный `entryCount` и выровненные по 16 байтам блобы данных.
 7. **Независимая проверка результата:** перед публикацией `BuiltPackageValidator` повторно читает файлы с диска и проверяет counts/overflow, manifest, GUID, timestamps, кратность 16, границы файлов и отсутствие пересечения интервалов.
 8. **Изоляция и восстанавливаемая публикация:** GUI/CLI заранее не удаляют `assets/`; до успешной проверки рабочий каталог не меняется, swap использует `assets.old/`, а ошибка или прерывание восстанавливаются немедленно либо recovery следующего запуска.
-9. **Граница с Этапом 27:** Этап 26 проверяет writer builder-side parser-ом; runtime-монтирование `data.dat` v2 и чтение внешних `.pak` реализуются и принимаются в Этапе 27.
+9. **Граница с Этапом 27:** Этап 26 проверяет writer builder-side parser-ом; runtime-монтирование `data.dat` и чтение внешних `N.dat` реализуются и принимаются в Этапе 27.

@@ -67,6 +67,9 @@ namespace zzz::texture
 
 		/// Признак карты нормалей (выставляет бит IsNormalMap в metadata.flags).
 		bool isNormalMap{ false };
+
+		/// Максимальный размер стороны текстуры (если > 0 и сторона превышает лимит, текстура масштабируется).
+		zU32 maxTextureSize{ 0 };
 	};
 
 	/**
@@ -78,7 +81,7 @@ namespace zzz::texture
 		/// Метаданные текстуры (32 байта), готовые к записи в PackageEntry оглавления data.dat.
 		core::TextureMetadata metadata{};
 
-		/// Непрерывный массив байтов всех сжатых/несжатых мип-уровней (чистый GPU-payload для 0004.pak).
+		/// Непрерывный массив байтов всех сжатых/несжатых мип-уровней (чистый GPU-payload для внешнего пакета 0.dat).
 		std::vector<zU8> payload;
 	};
 

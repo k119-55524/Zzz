@@ -222,4 +222,12 @@ namespace zzz::core
 			return UNEXPECTED("Path::GetDirectory(): необработанный eFileLocation: {}.", static_cast<int>(location));
 		}
 	}
+
+	[[nodiscard]] std::filesystem::path Path::ResolvePakPath(eDataDatType type) noexcept
+	{
+		const auto fileName = GetPakFileName(type);
+		if (fileName.empty())
+			return {};
+		return c_AssetsDirectoryName / fileName;
+	}
 }

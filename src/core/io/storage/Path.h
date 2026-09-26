@@ -8,6 +8,7 @@
 
 #include "core/utils/NativeAppData.h"
 #include "core/enums/eFileLocation.h"
+#include "core/enums/eDataDatType.h"
 
 namespace zzz::core
 {
@@ -19,6 +20,7 @@ namespace zzz::core
 
 		[[nodiscard]] std::expected<std::filesystem::path, std::string> GetDirectory(eFileLocation location) const noexcept;
 		[[nodiscard]] static bool IsValidDirectoryName(std::string_view name) noexcept;
+		[[nodiscard]] static std::filesystem::path ResolvePakPath(eDataDatType type) noexcept;
 		[[nodiscard]] std::expected<void, std::string> InitializeUserData(std::string_view companyName, std::string_view appName);
 
 	private:

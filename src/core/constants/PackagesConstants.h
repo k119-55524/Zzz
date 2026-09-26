@@ -22,9 +22,9 @@
  *    - c_DataPackageRelativePath:
  *        Расположение архива данных ("assets/data.dat").
  *        Хранит: таблицу оглавления (TOC) и полезную нагрузку ресурсов (меши, материалы, шейдеры).
- *    - Внешние пакеты ассетов {guid}.dat:
+ *    - Внешние пакеты ассетов (0.dat, 1.dat и т.д.):
  *        Если ресурсы выносятся в отдельные файлы, они размещаются в каталоге
- *        c_AssetsDirectoryName рядом с data.dat ("assets/{guid}.dat").
+ *        c_AssetsDirectoryName рядом с data.dat ("assets/0.dat", "assets/1.dat" и т.д.).
  *
  * 2. ЗОНА ПОЛЬЗОВАТЕЛЯ (Read-Write, AppData / Home, eFileLocation::User):
  *    - c_UserConfigFileName ("cfg.dat"): файл настроек пользователя.
@@ -39,6 +39,7 @@
 #include <string_view>
 
 #include "core/utils/Version.h"
+#include "core/enums/eDataDatType.h"
 
 namespace zzz::core
 {
@@ -60,6 +61,26 @@ namespace zzz::core
 	inline constexpr std::string_view	c_CacheDirectoryName		= "cache";
 	inline constexpr std::string_view	c_SavesDirectoryName		= "saves";
 	inline constexpr std::string_view	c_LogsDirectoryName			= "logs";
+
+	/**
+	 * @brief Возвращает фиксированное имя внешнего пакета для заданного типа ресурса.
+	 * Имена формируются по порядку начиная с 0, без ведущих нулей, с расширением c_DatExtension:
+	 * Texture2D -> "0.dat", AudioClip -> "1.dat", Video -> "2.dat", Font -> "3.dat", BinaryData -> "4.dat".
+	 * Для встроенных типов (Mesh, Material, Shader, Animation) и невалидных значений возвращает пустую строку.
+	 */
+	[[nodiscard]] inline std::string GetPakFileName(eDataDatType type)
+	{
+		switch (type)
+		{
+		case eDataDatType::Texture2D:  return "0" + std::string(c_DatExtension);
+		case eDataDatType::AudioClip:  return "1" + std::string(c_DatExtension);
+		case eDataDatType::Video:      return "2" + std::string(c_DatExtension);
+		case eDataDatType::Font:       return "3" + std::string(c_DatExtension);
+		case eDataDatType::BinaryData: return "4" + std::string(c_DatExtension);
+		default:                       return "";
+		}
+	}
+
 #pragma endregion // File and Path Names and Extensions
 
 #pragma region Dat File Formats (Signatures and Versions)
@@ -73,7 +94,7 @@ namespace zzz::core
 
 	inline constexpr DatFileFormat c_PackageDatFormat	{ "ZPD"_magic, Version(1, 0, 0) };
 	inline constexpr DatFileFormat c_DataDatFormat		{ "ZDD"_magic, Version(1, 0, 0) };
+	inline constexpr DatFileFormat c_PakFileFormat		{ "ZPK"_magic, Version(1, 0, 0) };
 	inline constexpr DatFileFormat c_UserConfigFormat	{ "ZUD"_magic, Version(1, 0, 0) };
-	inline constexpr DatFileFormat c_AssetPackageFormat	{ "ZAP"_magic, Version(1, 0, 0) };
 #pragma endregion
 }

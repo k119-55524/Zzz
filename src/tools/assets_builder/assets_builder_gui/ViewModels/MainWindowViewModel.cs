@@ -393,43 +393,53 @@ public class MainWindowViewModel : ViewModelBase
                 // 2. Сборка индивидуального пакета для каждого таргета пресета
                 if (success)
                 {
-                    foreach (var target in runnableTargets)
+                    if (!PackagePacker.BeginBuildSession(sourcePath, out string sessionError))
                     {
-                        Directory.CreateDirectory(target.BuildDirectory);
-                        string targetIncludeDir = Path.Combine(target.BuildDirectory, "include");
-                        Directory.CreateDirectory(targetIncludeDir);
-                        string targetAssetsDir = Path.Combine(target.BuildDirectory, PackageConstants.AssetsDirectoryName);
-                        if (Directory.Exists(targetAssetsDir))
+                        AppendLog($"Ошибка инициализации сессии сборщика: {sessionError}");
+                        success = false;
+                    }
+                    else
+                    {
+                        try
                         {
-                            Directory.Delete(targetAssetsDir, recursive: true);
-                        }
-                        Directory.CreateDirectory(targetAssetsDir);
+                            foreach (var target in runnableTargets)
+                            {
+                                Directory.CreateDirectory(target.BuildDirectory);
+                                string targetIncludeDir = Path.Combine(target.BuildDirectory, "include");
+                                Directory.CreateDirectory(targetIncludeDir);
 
-                        // Удаляем старые пакеты из корня каталога сборки, если они остались от прошлых версий сборщика
-                        string oldRootPackage = Path.Combine(target.BuildDirectory, PackageConstants.GamePackageFileName);
-                        if (File.Exists(oldRootPackage))
-                        {
-                            File.Delete(oldRootPackage);
-                        }
-                        string oldRootData = Path.Combine(target.BuildDirectory, PackageConstants.DataPackageFileName);
-                        if (File.Exists(oldRootData))
-                        {
-                            File.Delete(oldRootData);
-                        }
+                                // Удаляем старые пакеты из корня каталога сборки, если они остались от прошлых версий сборщика
+                                string oldRootPackage = Path.Combine(target.BuildDirectory, PackageConstants.GamePackageFileName);
+                                if (File.Exists(oldRootPackage))
+                                {
+                                    File.Delete(oldRootPackage);
+                                }
+                                string oldRootData = Path.Combine(target.BuildDirectory, PackageConstants.DataPackageFileName);
+                                if (File.Exists(oldRootData))
+                                {
+                                    File.Delete(oldRootData);
+                                }
 
-                        _engine.CopyHeaderFiles(sourcePath, targetIncludeDir, target.ConfigFile);
-                        _engine.GenerateScriptsCmake(sourcePath, target.BuildDirectory, target.ConfigFile);
+                                _engine.CopyHeaderFiles(sourcePath, targetIncludeDir, target.ConfigFile);
+                                _engine.GenerateScriptsCmake(sourcePath, target.BuildDirectory, target.ConfigFile);
 
-                        AppendLog($"Сериализация пакета для '{target.Name}' ({target.TargetPlatform}, конфиг: '{target.ConfigFile}')...");
-                        bool packSuccess = PackagePacker.PackProject(sourcePath, target.BuildDirectory, target.TargetPlatform, buildTimestampMs, out _, target.ConfigFile, AppendLog);
-                        if (!packSuccess)
+                                AppendLog($"Сериализация пакета для '{target.Name}' ({target.TargetPlatform}, конфиг: '{target.ConfigFile}')...");
+                                bool packSuccess = PackagePacker.PackProject(sourcePath, target.BuildDirectory, target.TargetPlatform, buildTimestampMs, out _, target.ConfigFile, AppendLog);
+                                if (!packSuccess)
+                                {
+                                    AppendLog($"Ошибка упаковки для таргета '{target.Name}'!");
+                                    success = false;
+                                    break;
+                                }
+                            }
+                        }
+                        finally
                         {
-                            AppendLog($"Ошибка упаковки для таргета '{target.Name}'!");
-                            success = false;
-                            break;
+                            PackagePacker.EndBuildSession();
                         }
                     }
                 }
+
 
                 if (success)
                 {
@@ -514,43 +524,53 @@ public class MainWindowViewModel : ViewModelBase
 
         if (success)
         {
-            foreach (var target in runnableTargets)
+            if (!PackagePacker.BeginBuildSession(sourcePath, out string sessionError))
             {
-                Directory.CreateDirectory(target.BuildDirectory);
-                string targetIncludeDir = Path.Combine(target.BuildDirectory, "include");
-                Directory.CreateDirectory(targetIncludeDir);
-                string targetAssetsDir = Path.Combine(target.BuildDirectory, PackageConstants.AssetsDirectoryName);
-                if (Directory.Exists(targetAssetsDir))
+                Console.WriteLine($"Ошибка инициализации сессии сборщика: {sessionError}");
+                success = false;
+            }
+            else
+            {
+                try
                 {
-                    Directory.Delete(targetAssetsDir, recursive: true);
-                }
-                Directory.CreateDirectory(targetAssetsDir);
+                    foreach (var target in runnableTargets)
+                    {
+                        Directory.CreateDirectory(target.BuildDirectory);
+                        string targetIncludeDir = Path.Combine(target.BuildDirectory, "include");
+                        Directory.CreateDirectory(targetIncludeDir);
 
-                // Удаляем старые пакеты из корня каталога сборки, если они остались от прошлых версий сборщика
-                string oldRootPackage = Path.Combine(target.BuildDirectory, PackageConstants.GamePackageFileName);
-                if (File.Exists(oldRootPackage))
-                {
-                    File.Delete(oldRootPackage);
-                }
-                string oldRootData = Path.Combine(target.BuildDirectory, PackageConstants.DataPackageFileName);
-                if (File.Exists(oldRootData))
-                {
-                    File.Delete(oldRootData);
-                }
+                        // Удаляем старые пакеты из корня каталога сборки, если они остались от прошлых версий сборщика
+                        string oldRootPackage = Path.Combine(target.BuildDirectory, PackageConstants.GamePackageFileName);
+                        if (File.Exists(oldRootPackage))
+                        {
+                            File.Delete(oldRootPackage);
+                        }
+                        string oldRootData = Path.Combine(target.BuildDirectory, PackageConstants.DataPackageFileName);
+                        if (File.Exists(oldRootData))
+                        {
+                            File.Delete(oldRootData);
+                        }
 
-                _engine.CopyHeaderFiles(sourcePath, targetIncludeDir, target.ConfigFile);
-                _engine.GenerateScriptsCmake(sourcePath, target.BuildDirectory, target.ConfigFile);
+                        _engine.CopyHeaderFiles(sourcePath, targetIncludeDir, target.ConfigFile);
+                        _engine.GenerateScriptsCmake(sourcePath, target.BuildDirectory, target.ConfigFile);
 
-                Console.WriteLine($"Сериализация индивидуального пакета для '{target.Name}' ({target.TargetPlatform}, конфиг: '{target.ConfigFile}')...");
-                bool packSuccess = PackagePacker.PackProject(sourcePath, target.BuildDirectory, target.TargetPlatform, buildTimestampMs, out _, target.ConfigFile, msg => Console.WriteLine(msg));
-                if (!packSuccess)
+                        Console.WriteLine($"Сериализация индивидуального пакета для '{target.Name}' ({target.TargetPlatform}, конфиг: '{target.ConfigFile}')...");
+                        bool packSuccess = PackagePacker.PackProject(sourcePath, target.BuildDirectory, target.TargetPlatform, buildTimestampMs, out _, target.ConfigFile, msg => Console.WriteLine(msg));
+                        if (!packSuccess)
+                        {
+                            Console.WriteLine($"Ошибка упаковки для таргета '{target.Name}'!");
+                            success = false;
+                            break;
+                        }
+                    }
+                }
+                finally
                 {
-                    Console.WriteLine($"Ошибка упаковки для таргета '{target.Name}'!");
-                    success = false;
-                    break;
+                    PackagePacker.EndBuildSession();
                 }
             }
         }
+
 
         if (success)
         {

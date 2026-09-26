@@ -124,19 +124,62 @@ namespace zzz::texture
 			std::vector<zU8> rgbaPixels;
 		};
 
+		const bool isSRGB = core::PixelFormatUtils::IsSRGBFormat(options.targetFormat);
+
 		std::vector<RawMip> rawMips;
 		zU32 currentW = static_cast<zU32>(w);
 		zU32 currentH = static_cast<zU32>(h);
 
-		rawMips.push_back(RawMip
+		if (options.maxTextureSize > 0 && (currentW > options.maxTextureSize || currentH > options.maxTextureSize))
 		{
-			.width = currentW,
-			.height = currentH,
-			.rgbaPixels = std::vector<zU8>(rawPixels, rawPixels + (currentW * currentH * 4))
-		});
-		stbi_image_free(rawPixels);
+			zU32 targetW = currentW;
+			zU32 targetH = currentH;
+			while ((targetW > options.maxTextureSize || targetH > options.maxTextureSize) && (targetW > 1 || targetH > 1))
+			{
+				targetW = std::max(1u, targetW / 2);
+				targetH = std::max(1u, targetH / 2);
+			}
 
-		const bool isSRGB = core::PixelFormatUtils::IsSRGBFormat(options.targetFormat);
+			if (targetW > 1 && (targetW % 2 != 0)) targetW = (targetW + 1) & ~1u;
+			if (targetH > 1 && (targetH % 2 != 0)) targetH = (targetH + 1) & ~1u;
+
+			std::vector<zU8> resizedPixels(targetW * targetH * 4);
+			if (isSRGB)
+			{
+				stbir_resize_uint8_srgb(
+					rawPixels, static_cast<int>(currentW), static_cast<int>(currentH), static_cast<int>(currentW * 4),
+					resizedPixels.data(), static_cast<int>(targetW), static_cast<int>(targetH), static_cast<int>(targetW * 4),
+					STBIR_RGBA
+				);
+			}
+			else
+			{
+				stbir_resize_uint8_linear(
+					rawPixels, static_cast<int>(currentW), static_cast<int>(currentH), static_cast<int>(currentW * 4),
+					resizedPixels.data(), static_cast<int>(targetW), static_cast<int>(targetH), static_cast<int>(targetW * 4),
+					STBIR_RGBA
+				);
+			}
+
+			rawMips.push_back(RawMip
+			{
+				.width = targetW,
+				.height = targetH,
+				.rgbaPixels = std::move(resizedPixels)
+			});
+			currentW = targetW;
+			currentH = targetH;
+		}
+		else
+		{
+			rawMips.push_back(RawMip
+			{
+				.width = currentW,
+				.height = currentH,
+				.rgbaPixels = std::vector<zU8>(rawPixels, rawPixels + (currentW * currentH * 4))
+			});
+		}
+		stbi_image_free(rawPixels);
 
 		if (options.generateMips)
 		{
@@ -226,8 +269,8 @@ namespace zzz::texture
 		}
 
 		// Заполнение готовых 32 байт метаданных для TOC data.dat
-		result.metadata.width = static_cast<zU32>(w);
-		result.metadata.height = static_cast<zU32>(h);
+		result.metadata.width = rawMips.front().width;
+		result.metadata.height = rawMips.front().height;
 		result.metadata.depth = 1;
 		result.metadata.arraySize = (options.textureType == core::eTextureType::TextureCube) ? 6 : 1;
 		result.metadata.format = options.targetFormat;

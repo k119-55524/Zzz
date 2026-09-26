@@ -9,6 +9,7 @@
 #include "core/utils/Guid.h"
 #include "core/enums/eEngineResourceType.h"
 #include "core/enums/eTargetPlatform.h"
+#include "core/io/package/assets/AssetMetadata.h"
 
 namespace zzz::builder
 {
@@ -25,6 +26,7 @@ namespace zzz::builder
 	struct ImportedAssetData
 	{
 		std::vector<std::byte> binaryPayload;
+		core::AssetMetadata    metadata{};
 	};
 	using ImportResult = std::expected<ImportedAssetData, std::string>;
 

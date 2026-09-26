@@ -69,8 +69,17 @@ internal static class NativeMethods
     // inBuildTimestamp - unix-время (UTC, миллисекунды), записанное в заголовки package.dat/data.dat при
     // упаковке (см. DatFileHeader::GetBuildTime() и PackagePacker::PackProject).
     // outBuildTimestamp - фактически записанное значение.
-    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-    public static extern bool PackProjectNative(string sourceDir, string destinationDir, uint targetPlatform, string platformConfigFile, ulong inBuildTimestamp, out ulong outBuildTimestamp);
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    public static extern bool PackProjectNative(
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string sourceDir,
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string destinationDir,
+        uint targetPlatform,
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string? platformConfigFile,
+        ulong inBuildTimestamp,
+        out ulong outBuildTimestamp,
+        [Out] byte[]? errorBuffer = null,
+        uint errorBufferSize = 0);
 
     // Валидация имени каталога (company_name/app_name из project.json) той же логикой, что и движок
     // (Path::IsValidDirectoryName) - единственный источник истины на стороне C++. Имя передаётся в UTF-8,
@@ -101,4 +110,22 @@ internal static class NativeMethods
         [Out] byte[] errorBuffer,
         uint errorBufferSize,
         [MarshalAs(UnmanagedType.LPUTF8Str)] string? platformConfigFile = null);
+
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    public static extern bool BeginBuildSessionNative(
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string projectDir,
+        [Out] byte[] errorBuffer,
+        uint errorBufferSize);
+
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+    public static extern void EndBuildSessionNative();
+
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    public static extern bool ValidateBuiltPackageNative(
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string assetsDir,
+        [Out] byte[]? errorBuffer,
+        uint errorBufferSize);
 }
+

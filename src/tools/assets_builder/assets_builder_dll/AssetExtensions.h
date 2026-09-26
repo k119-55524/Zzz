@@ -11,6 +11,14 @@ namespace zzz::builder
 
 	// Текстуры
 	inline constexpr std::string_view c_ExtTexturePng  = ".png";
+	inline constexpr std::string_view c_ExtTextureJpg  = ".jpg";
+	inline constexpr std::string_view c_ExtTextureJpeg = ".jpeg";
+	inline constexpr std::string_view c_ExtTextureTga  = ".tga";
+	inline constexpr std::string_view c_ExtTextureBmp  = ".bmp";
+
+	// Аудио
+	inline constexpr std::string_view c_ExtAudioWav    = ".wav";
+	inline constexpr std::string_view c_ExtAudioOgg    = ".ogg";
 
 	// Материалы и шейдеры
 	inline constexpr std::string_view c_ExtMaterial    = ".zmaterial";

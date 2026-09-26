@@ -31,12 +31,24 @@ extern "C"
 	/**
 	 * @brief Упаковывает проект в package.dat/data.dat. Оба архива получают одно и то же время упаковки
 	 * (см. DatFileHeader::GetTimestamp()).
+	 * @param sourceDir Каталог проекта в UTF-8 (char8_t).
+	 * @param destinationDir Каталог назначения в UTF-8 (char8_t).
 	 * @param inBuildTimestamp Если > 0, используется как единый timestamp (мс от unix epoch) для архивов,
 	 *        чтобы совпадать с buildtime-data.txt и assets_config.json. Если 0, генерируется автоматически.
 	 * @param outBuildTimestamp Необязательный (может быть nullptr) выходной параметр - unix-время (мс),
 	 *        которое было записано в заголовки package.dat/data.dat при успешной упаковке.
+	 * @param errorBuffer Выделенный вызывающей стороной буфер под текст ошибки.
+	 * @param errorBufferSize Размер буфера ошибки.
 	 */
-	BUILDER_API bool PackProjectNative(const char* sourceDir, const char* destinationDir, uint32_t targetPlatform, const char* platformConfigFile, uint64_t inBuildTimestamp, uint64_t* outBuildTimestamp);
+	BUILDER_API bool PackProjectNative(
+		const char8_t* sourceDir,
+		const char8_t* destinationDir,
+		uint32_t targetPlatform,
+		const char8_t* platformConfigFile,
+		uint64_t inBuildTimestamp,
+		uint64_t* outBuildTimestamp,
+		char* errorBuffer = nullptr,
+		uint32_t errorBufferSize = 0);
 
 	/**
 	 * @brief Валидирует имя каталога (компании/приложения) по тем же правилам, что и Path::IsValidDirectoryName
@@ -45,7 +57,7 @@ extern "C"
 	 * @param name Имя каталога в кодировке UTF-8 (на стороне C# - [MarshalAs(UnmanagedType.LPUTF8Str)]).
 	 * @return true, если имя допустимо; false для nullptr, пустой строки или некорректного имени.
 	 */
-	BUILDER_API bool ValidateDirectoryNameNative(const char* name);
+	BUILDER_API bool ValidateDirectoryNameNative(const char8_t* name);
 
 	/**
 	 * @brief Проверяет, поддерживается ли указанное расширение ресурса сборщиком
@@ -86,5 +98,29 @@ extern "C"
 	 * @param platformConfigFile Опциональный путь к конкретному файлу платформенной конфигурации.
 	 * @return true, если проект валиден; false, если обнаружена ошибка (сообщение записывается в errorBuffer).
 	 */
-	BUILDER_API bool ValidateProjectIdentityNative(const char* projectDir, char* errorBuffer, uint32_t errorBufferSize, const char* platformConfigFile = nullptr);
+	BUILDER_API bool ValidateProjectIdentityNative(const char8_t* projectDir, char* errorBuffer, uint32_t errorBufferSize, const char8_t* platformConfigFile = nullptr);
+
+	/**
+	 * @brief Начинает сессию сборки проекта. Выполняет Стадию 1 (валидация проекта) один раз и кэширует её.
+	 * @param projectDir Корневой каталог проекта в UTF-8.
+	 * @param errorBuffer Выделенный вызывающей стороной буфер под текст ошибки.
+	 * @param errorBufferSize Размер буфера ошибки.
+	 * @return true при успехе; false при ошибке валидации.
+	 */
+	BUILDER_API bool BeginBuildSessionNative(const char8_t* projectDir, char* errorBuffer, uint32_t errorBufferSize);
+
+	/**
+	 * @brief Завершает сессию сборки проекта и сбрасывает кэш сессии.
+	 */
+	BUILDER_API void EndBuildSessionNative();
+
+	/**
+	 * @brief Валидирует собранные архивы пакетов в каталоге assets (TOC, контрольные суммы, заголовки, оффсеты).
+	 * @param assetsDir Путь к каталогу assets в UTF-8 (например, "dist/Debug/assets").
+	 * @param errorBuffer Буфер для сообщения об ошибке.
+	 * @param errorBufferSize Размер буфера ошибки.
+	 * @return true, если все пакеты валидны; false при обнаружении повреждений.
+	 */
+	BUILDER_API bool ValidateBuiltPackageNative(const char8_t* assetsDir, char* errorBuffer, uint32_t errorBufferSize);
 }
+

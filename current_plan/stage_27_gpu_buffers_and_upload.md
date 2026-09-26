@@ -3,7 +3,7 @@
 **Статус:** ⏳ Не начато (следующий после этапа 26)
 
 > [!IMPORTANT]
-> Этот файл — источник истины для этапа 27. В этом этапе реализуются: монтирование трёхсекционного `data.dat` и `.pak` файлов, нормализация записей в `DataPackageEntry`, zero-allocation парсер `MeshData`, маршрут через `CpuResourceManager` с гарантированным lifetime, и последующий GPU upload. Запекание текстур реализовано в **Этапе 25**, сборка архивов и упаковщик — в **Этапе 26**.
+> Этот файл — источник истины для этапа 27. В этом этапе реализуются: монтирование трёхсекционного архива `data.dat` и внешних паков `0.dat`, `1.dat` в `DataAssetsManager`, zero-allocation парсер `MeshData` (`MeshPayloadView`), маршрут через `CpuResourceManager` с гарантированным lifetime backing memory, и подготовка данных для будущего GPU upload. Запекание текстур реализовано в **Этапе 25**, сборка архивов и упаковщик — в **Этапе 26**.
 
 ---
 
@@ -11,7 +11,7 @@
 
 Сохранить существующий маршрут запроса:
 
-`GpuResourceManager → CpuResourceManager → DataAssetsManager → data.dat/.pak`.
+`GpuResourceManager → CpuResourceManager → DataAssetsManager → data.dat / N.dat`.
 
 `CpuResourceManager` возвращает результат, из которого графический путь получает проверенные метаданные и стабильный указатель/`std::span` на vertex/index payload. Время жизни памяти обязано покрывать всё будущее копирование потребителем.
 
@@ -23,12 +23,12 @@
 
 В текущую подзадачу входят:
 
-- трёхсекционный TOC `data.dat` и внешние `{Guid}.pak`;
-- индексируемый массив файлов в `DataAssetsManager`: у `data.dat` и каждого `.pak` свой `ReadOnlyFile`;
+- монтирование трёхсекционного TOC `data.dat` (Таблица 1: типы внешних паков, Таблица 2: inline-записи, Таблица 3: внешние записи) и внешних паков `N.dat` (`0.dat`, `1.dat`...);
+- сопоставление хранилищ `ReadOnlyFile` в `DataAssetsManager`: у `data.dat` и каждого внешнего пака (`eDataDatType`) свой `ReadOnlyFile`;
 - получение ресурса только через `CpuResourceManager`, без прямой зависимости `GpuResourceManager → DataAssetsManager`;
-- единый парсер layout меша и проверенные vertex/index spans;
-- lifetime результата до окончания его использования вызывающей стороной;
-- проверки writer↔reader и inline/external payload.
+- единый zero-allocation парсер layout меша и проверенные vertex/index spans;
+- lifetime результата (`PreparedMeshData` / guard) до окончания его использования вызывающей стороной;
+- проверки writer ↔ reader, валидация смещений и границ inline/external payload.
 
 Не входят в текущую подзадачу:
 
@@ -40,124 +40,109 @@
 
 ## Архитектурные контракты
 
-### 1. `data.dat` и внешние паки
+### 1. `data.dat` и внешние паки (Формат Этапа 26)
 
-`data.dat` использует три секции TOC:
+Архив `data.dat` использует три секции TOC:
 
-1. `PackManifestTable`: `[0]` обозначает `data.dat`, `[1..N]` — внешние `{Guid}.pak`.
-2. `InlinePackageEntryTable`: payload внутри `data.dat`, неявный `packIndex = 0`.
-3. `ExternalPackageEntryTable`: payload во внешнем `.pak`, сериализованный `packIndex` находится в диапазоне `[1, packCount)`.
+1. **Таблица 1 (`PackTypesTable`):** компактный массив типов внешних паков `eDataDatType` (`packCount` элементов по 4 байта). Содержит только реально существующие внешние паки (например, `Texture2D` $\to$ `0.dat`, `AudioClip` $\to$ `1.dat`), строго по возрастанию без дубликатов.
+2. **Таблица 2 (`InlinePackageEntryTable`):** массив встроенных записей `PackageEntry` (`inlineCount` элементов). Полезная нагрузка размещается внутри `data.dat` со смещением $\text{offset} \ge \text{payloadBegin}$ (выравнивание по 16 байтам). Включает типы `Mesh`, `Material`, `Shader`, `Animation`.
+3. **Таблица 3 (`ExternalPackageEntryTable`):** массив внешних записей `PackageEntry` (`externalCount` элементов). Полезная нагрузка размещается в соответствующем внешнем файле `N.dat` со смещением $\text{offset} \ge 4096$ (выравнивание по 16 байтам).
 
-`DataAssetsManager` владеет индексируемым массивом хранилищ. Массив хранит владельцев `ReadOnlyFile`, а не сами non-copyable/non-movable объекты по значению. Доступ выполняется по `packIndex`; повторный mapping одного файла не допускается.
+Имя внешнего пака вычисляется детерминированно через `core::GetPakFileName(type)`:
+- `Texture2D` $\to$ `"0.dat"`
+- `AudioClip` $\to$ `"1.dat"`
+- `Video` $\to$ `"2.dat"`
+- `Font` $\to$ `"3.dat"`
+- `BinaryData` $\to$ `"4.dat"`
 
-Проверяются GUID паков, уникальность, `packIndex`, наличие файлов и диапазон `offset/size` относительно выбранного storage. Внешний `.pak` создаётся до публикации ссылающегося на него `data.dat`.
+Путь к внешнему файлу резолвится через `core::Path::ResolvePakPath(type)`.
 
-`data.dat` ещё находится в разработке. Новый layout заменяет прежний черновик в той же версии: номер версии не меняется, отдельная миграция черновика не поддерживается, writer/reader/test packages обновляются вместе.
+`DataAssetsManager` владеет хранилищами `ReadOnlyFile` (для `data.dat` и для каждого внешнего пака по `eDataDatType`). Доступ к файлу выполняется по типу ассета `entry.GetAssetType()`; повторное открытие одного файла не допускается.
 
-### 2. Получение данных через CPU-контур
+Проверяются наличие файлов на диске, соответствие типов секциям, уникальность GUID, диапазон `offset/size` относительно выбранного файла и валидность заголовков (`DataDatHeader` с `"ZDD"` и `PakFileHeader` с `"ZPK"`).
 
-- `GpuResourceManager` продолжает запрашивать данные у `CpuResourceManager`.
-- `CpuResourceManager` отвечает за поиск записи, выбор `ReadOnlyFile`, валидацию layout и возврат результата с метаданными и указателями/spans.
-- Результат удерживает владельца backing memory либо сам владеет распакованным буфером; голый указатель без lifetime-контракта запрещён.
-- Для текущего несжатого формата vertex/index spans ссылаются на проверенный payload и готовы стать источником будущего staging-copy.
-- Наличие будущей ветки unpacker не является основанием писать codec или универсальную систему распаковки сейчас.
+### 2. Записи `PackageEntry` и метаданные
 
-### 3. Единый layout меша
+Единая дисковая и runtime-структура `PackageEntry` (68 байт):
+- `Guid guid` (16 байт)
+- `zU32 assetType` (4 байта: `eDataDatType`)
+- `zU64 offset` (8 байт: смещение в `data.dat` для Таблицы 2, в `N.dat` для Таблицы 3)
+- `zU64 size` (8 байт: размер полезной нагрузки в байтах)
+- `AssetMetadata metadata` (32 байта: union метаданных ресурса)
 
-`MeshData` остаётся источником истины для упаковки и CPU-десериализации. GPU-потребителю нужен zero-allocation view/parser над тем же layout, а не второй независимый `MeshResourceHeader`.
+Для ресурсов геометрии метаданные `MeshMetadata` доступны напрямую из `PackageEntry` без чтения полезной нагрузки:
+- `vertexCount`, `indexCount`;
+- `vertexStride`, `indexFormat`;
+- `vertexOffset`, `indexOffset`.
 
-Парсер проверяет stride/count/index format, переполнения при вычислении размеров, границы vertex/index областей и отсутствие пересечений или необъяснённого хвоста.
+### 3. Получение данных через CPU-контур
 
-### 4. Граница готовности
+- `GpuResourceManager` запрашивает данные меша исключительно у `CpuResourceManager`.
+- `CpuResourceManager` отвечает за поиск записи в `DataAssetsManager`, чтение из соответствующего `ReadOnlyFile`, валидацию layout и возврат результата с метаданными и spans.
+- Результат удерживает владельца backing memory (через shared/guard на `ReadOnlyFile`), пока вызывающая сторона работает с данными. Голый указатель без lifetime-контракта запрещён.
+- Для текущего несжатого формата vertex/index spans ссылаются непосредственно на проверенный payload и готовы стать источником будущего staging-copy.
+
+### 4. Zero-allocation layout меша
+
+`MeshData` остаётся источником истины для структуры бинарного блоба меша.
+Парсер `MeshPayloadView`:
+- проверяет `vertexCount`, `vertexStride`, `indexCount`, `indexFormat`;
+- использует безопасную арифметику с защитой от переполнений при вычислении размеров;
+- валидирует границы: диапазоны вершинных и индексных данных обязаны строго укладываться в переданный span полезной нагрузки без пересечений и без остаточного невалидного хвоста байтов;
+- возвращает `std::span<const std::byte>` на вершины и индексы с нулевыми аллокациями в куче.
+
+### 5. Граница готовности
 
 Получение upload-ready spans означает только готовность CPU-источника копирования. Оно не означает, что данные находятся в VRAM или могут использоваться `DrawIndexed`.
-
 Настоящий `ResourceTable<GpuMesh>::Resolve(success)` после GPU fence вводится вместе с будущим upload-кодом. До этого существующие RAM-заглушки не называются `GpuReady`.
 
 ---
 
-## План текущей реализации (разбиение на подшаги)
+## План реализации Этапа 27 (разбиение на подшаги)
 
-## План текущей реализации (разбиение на подшаги)
+### Подшаг 27.1. Монтирование трёхсекционного data.dat и внешних паков в DataAssetsManager
+- [ ] Расширить `DataAssetsManager` для работы с трёхсекционным TOC:
+  * Чтение заголовка `DataDatHeader` (`"ZDD"`, версия `1.0.0`, `headerSize = 64`).
+  * Считывание Таблицы 1 (`externalPackTypes`): для каждого типа `eDataDatType` открытие соответствующего файла `N.dat` (`0.dat`, `1.dat`...) через `core::Path::ResolvePakPath(type)` и сохранение `std::unique_ptr<ReadOnlyFile>`.
+  * Валидация заголовка каждого открытого внешнего пака (`PakFileHeader`, сигнатура `"ZPK"`, версия `1.0.0`, размер 4096 байт).
+  * Считывание Таблицы 2 (`InlinePackageEntryTable`): регистрация записей в `m_Tables` с привязкой к основному файлу `data.dat`.
+  * Считывание Таблицы 3 (`ExternalPackageEntryTable`): регистрация записей в `m_Tables` с привязкой к соответствующему `ReadOnlyFile` внешнего пака по `assetType`.
+- [ ] Валидация смещений и границ при монтировании:
+  * Для inline-записей: $\text{offset} \ge \text{payloadBegin}$ и $\text{offset} + \text{size} \le \text{fileSize}(\texttt{data.dat})$.
+  * Для внешних записей: $\text{offset} \ge 4096$ и $\text{offset} + \text{size} \le \text{fileSize}(N\texttt{.dat})$.
+  * Проверка на отсутствие взаимных пересечений диапазонов полезной нагрузки внутри каждого файла.
 
-### Подшаг 25.1. Подготовка тестовых пакетов (ассеты и распределение по пакам)
-- [ ] Добавить тестовые ресурсы в проект `src/projects/assets_projects/zzz_assets_test_000/Assets/`:
-  * **Каталог `Assets/Textures/` (тип `Texture2D`):**
-    - `cube_diffuse.png` (+ `.meta`)
-    - `cube_normal.png` (+ `.meta`)
-    - Автоматически направляются сборщиком во внешний пак `textures.pak` (`packIndex = 1`).
-  * **Каталог `Assets/Audio/` (тип `AudioClip`):**
-    - `click.wav` (+ `.meta`)
-    - `ambient.wav` (+ `.meta`)
-    - Автоматически направляются сборщиком во внешний пак `audio.pak` (`packIndex = 2`).
-  * **Inline-контент `data.dat` (`packIndex = 0`):**
-    - `Assets/Meshes/cube_00.obj` (геометрия)
-    - `Assets/Material/Default.zmaterial` (материалы)
-    - `Assets/Shaders/DefaultShader.zshaders` (шейдеры)
-- [ ] Зарегистрировать импорт текстур (`TextureImporter` для `.png` $\to$ `eEngineResourceType::Texture2D`) и базовый импорт звука (`AudioImporter` для `.wav` $\to$ `eEngineResourceType::AudioClip`) в `AssetImporterRegistry`.
-
-### Подшаг 25.2. Сборщик: структуры TOC, ArchiveWriter и PackagePacker (новая логика сборки и пакаджи)
-- [ ] Обновить заголовок `DatFileHeader` для `c_DataDatFormat`:
-  * Хранить три счётчика: `packCount` (кол-во записей манифеста паков), `inlineCount` (кол-во встроенных ресурсов), `externalCount` (кол-во внешних ресурсов).
-  * Для `c_PackageDatFormat` заголовок остаётся неизменным (`entryCount`).
-  * Номер версии формата сохраняется (in-place обновление черновика).
-- [ ] Реализовать структуры записей в `src/core/io/package/`:
-  * Дисковая Таблица 1: Массив GUID внешних файлов-пакетов (`[0] = Guid::Empty()`, `[1..N] = Guid` паков `{Guid}.pak`).
-  * Дисковая Таблица 2 (`InlinePackageEntry`): локальные ресурсы `data.dat` (без `packIndex`, 52 байта).
-  * Дисковая Таблица 3 (`ExternalPackageEntry`): внешние ресурсы (с полем `packIndex`, 52 байта).
-  * In-memory структура (`DataPackageEntry`): единая компактная структура для runtime-таблиц `m_Tables` с полем `packIndex`.
-- [ ] Обновить `ArchiveWriter` и `PackagePacker`:
-  * Извлечение `pack_guid` из метаданных ассетов.
-  * Формирование Таблицы 1 (Манифест): `[0] = Guid::Empty()`, `[1..N] = уникальные pack_guid`.
-  * Разделение наборов полезной нагрузки:
-    - Ресурсы без `pack_guid` записываются в Таблицу 2 и в тело `data.dat` (`packIndex = 0`).
-    - Ресурсы с `pack_guid` получают `packIndex` (1..N), записываются в Таблицу 3 `data.dat`, а их полезная нагрузка пишется в соответствующие отдельные файлы `destinationDir/assets/data/{pack_guid}.pak`.
-  * Выравнивание полезной нагрузки (4 КБ для начал файлов / payload area, 16 байт для записей).
-
-### Подшаг 25.3. Читатель архивов: ArchiveReaderBase и DataAssetsManager (монтирование и O(1) доступ)
-- [ ] Параметризовать `ArchiveReaderBase` типом записи через `ArchiveTraits<TType>::EntryType`:
-  * `ArchiveTraits<ePackageDatType>::EntryType = PackageEntry` (36 байт, без изменений).
-  * `ArchiveTraits<eDataDatType>::EntryType = DataPackageEntry`.
-- [ ] Добавить в `DataAssetsManager` индексируемый массив владельцев хранилищ:
-  `std::vector<std::unique_ptr<ReadOnlyFile>> m_PackageFiles`.
-- [ ] При монтировании `data.dat`:
-  * Считывать Таблицу 1; индекс `[0]` инициализировать открытым `data.dat`.
-  * Для внешних паков `[1..N]` открывать соответствующие `{Guid}.pak` рядом с `data.dat` и сохранять в `m_PackageFiles[packIndex]`.
-  * Валидировать наличие всех файлов, уникальность GUID и корректность `packIndex`.
-  * Считывать Таблицу 2 (Inline) и нормализовать в `m_Tables` с `packIndex = 0`.
-  * Считывать Таблицу 3 (External) и нормализовать в `m_Tables` с `packIndex` из файла.
-- [ ] Обновить `DataAssetsManager::ReadRawPayload(entry)`: прямое чтение `m_PackageFiles[entry.GetPackIndex()]->Read(entry.GetOffset(), entry.GetStoredSize())`.
-
-### Подшаг 25.4. Zero-allocation parser/view для MeshData
-- [ ] Реализовать легковесный парсер/представление `MeshPayloadView` над бинарным layout `MeshData`:
-  * Парсинг `vertexCount`, `vertexStride`, `indexCount`, `indexFormat` без динамических аллокаций памяти CPU.
-  * Защита от переполнений (`SafeMath` / `CheckedMul`).
-  * Полная валидация границ: проверка того, что диапазоны `vertexData` и `indexData` строго укладываются в переданный span полезной нагрузки без пересечений и без остаточного невалидного хвоста байтов.
+### Подшаг 27.2. Zero-allocation parser/view для MeshData
+- [ ] Реализовать легковесный парсер/представление `MeshPayloadView` над бинарным блобом `MeshData`:
+  * Парсинг заголовка меша, `vertexCount`, `vertexStride`, `indexCount`, `indexFormat` без динамических аллокаций памяти CPU.
+  * Защита от переполнений целочисленной арифметики при расчёте размеров буферов вершин и индексов.
+  * Полная валидация границ: проверка того, что диапазоны вершинных данных и индексных данных строго укладываются в переданный span полезной нагрузки без пересечений и без остаточного невалидного хвоста байтов.
   * Предоставление стабильных `std::span<const std::byte>` на вершинные и индексные данные.
 
-### Подшаг 25.5. Сквозной маршрут через CpuResourceManager и Lifetime-контракт
-- [ ] Сформировать CPU-результат подготовки данных меша (например, `PreparedMeshData` или расширение `CpuMesh`), который:
+### Подшаг 27.3. Сквозной маршрут через CpuResourceManager и Lifetime-контракт
+- [ ] Сформировать результат CPU-подготовки данных меша (`PreparedMeshData`):
   * Содержит проверенные метаданные (`vertexCount`, `vertexStride`, `indexCount`, `indexFormat`);
-  * Содержит стабильные `std::span` на вершины и индексы;
-  * Гарантирует сохранение времени жизни backing memory (через удержание `ReadOnlyFile` / guard), пока вызывающая сторона владеет результатом.
+  * Содержит стабильные `std::span<const std::byte>` на вершины и индексы;
+  * Гарантирует сохранение времени жизни backing memory (через удержание `ReadOnlyFile` / guard), пока вызывающая сторона владеет объектом `PreparedMeshData`.
 - [ ] Маршрут запроса: `GpuResourceManager → CpuResourceManager → DataAssetsManager`.
   * `GpuResourceManager` запрашивает подготовленные данные у `CpuResourceManager`.
-  * Запрещено прямое обращение `GpuResourceManager → DataAssetsManager`.
-  * Данные возвращаются готовыми к будущему прямому копированию в staging buffer (без вызова GAPI на текущем подшаге).
+  * Прямое обращение `GpuResourceManager → DataAssetsManager` запрещено архитектурным контрактом.
+  * Данные возвращаются готовыми к будущему прямому копированию в staging buffer (без вызова GAPI на текущем этапе).
 
-### Подшаг 25.6. Комплексная верификация и сквозные тесты
-- [ ] Реализовать интеграционный сквозной тест упаковки и чтения в `EngineTests`:
-  * Упаковка тестового проекта `zzz_assets_test_000` через `PackagePacker::PackProject`;
-  * Проверка создания `package.dat`, `data.dat` и двух внешних файлов `{Guid}.pak`;
-  * Монтирование в `DataAssetsManager` и чтение: inline-меша `cube_00` (`packIndex = 0`), текстур (`packIndex = 1`) и звуков (`packIndex = 2`);
-  * Валидация прямого $O(1)$ доступа по `packIndex`.
-- [ ] Реализовать модульные тесты краевых случаев:
+### Подшаг 27.4. Комплексная верификация и интеграционные проверки
+- [ ] Проверка чтения реального пакета, собранного сборщиком:
+  * Проверка чтения встроенных мешей (например, куба из `zzz_assets_test_000`) из `data.dat`.
+  * Проверка доступа к внешним текстурам из `0.dat` и аудио из `1.dat`.
+  * Валидация прямого $O(1)$ поиска записей по GUID и чтение полезной нагрузки из корректного `ReadOnlyFile`.
+- [ ] Верификация защиты от некорректных данных:
   * Отсутствующий файл внешнего пака на диске;
-  * Недопустимый `packIndex` (0 в таблице внешних ресурсов или $\ge packCount$);
+  * Неизвестный или невалидный `eDataDatType` в Таблице 1 или Таблице 3;
   * Выход диапазонов `offset/size` за границы соответствующего файла;
   * Повреждённый layout меша (`vertexStride == 0`, битый формат индекса, переполнение размера, лишние байты в хвосте).
 
-## Будущее продолжение этапа
+---
+
+## Будущее продолжение (последующие этапы)
 
 После завершения текущей подзадачи отдельно реализуются:
 
@@ -167,15 +152,13 @@
 - lifetime staging и ограничение памяти;
 - настоящий `GpuMesh` и `GpuReady` только после завершения GPU-команд.
 
-Детальные backend-решения фиксируются перед написанием соответствующего кода, а не в текущей подзадаче.
-
 ---
 
-## Критерии приёмки текущей подзадачи
+## Критерии приёмки этапа 27
 
 1. Запрос графического ресурса получает данные через `CpuResourceManager`, а не обращается к `DataAssetsManager` напрямую.
-2. Для mesh доступны проверенные метаданные и стабильные vertex/index pointers/spans с явным lifetime.
+2. Для mesh доступны проверенные метаданные и стабильные vertex/index spans с явным lifetime-контрактом.
 3. Несжатый payload готов к будущему прямому копированию в staging без повторного парсинга.
-4. Каждый `packIndex` выбирает свой `ReadOnlyFile`; inline и external ranges валидируются относительно правильного файла.
-5. Writer и reader одинаково понимают новый layout при неизменной версии.
-6. В рамках текущей подзадачи не добавлены GPU buffers, submit, fence или фиктивная семантика `GpuReady`.
+4. Монтирование `data.dat` открывает внешние паки `N.dat` по типам из Таблицы 1; inline и external ranges валидируются относительно правильного `ReadOnlyFile`.
+5. Writer и reader одинаково понимают трёхсекционный layout `data.dat` и заголовки `PakFileHeader`.
+6. В рамках этапа 27 не добавляются GPU buffers, submit, fence или фиктивная семантика `GpuReady`.

@@ -51,12 +51,14 @@ namespace zzz::core
 	struct ArchiveTraits<ePackageDatType> : ArchiveTraitsBase<ePackageDatType>
 	{
 		static constexpr DatFileFormat c_ExpectedFormat = c_PackageDatFormat;
+		using HeaderType = PackageDatHeader;
 	};
 
 	template <>
 	struct ArchiveTraits<eDataDatType> : ArchiveTraitsBase<eDataDatType>
 	{
 		static constexpr DatFileFormat c_ExpectedFormat = c_DataDatFormat;
+		using HeaderType = DataDatHeader;
 	};
 
 	/**
@@ -69,6 +71,8 @@ namespace zzz::core
 		using Traits = ArchiveTraits<TType>;
 
 	public:
+		using HeaderType = typename Traits::HeaderType;
+
 		ArchiveReaderBase() = delete;
 		explicit ArchiveReaderBase(
 			const std::filesystem::path& path,
@@ -119,6 +123,27 @@ namespace zzz::core
 
 		[[nodiscard]] std::expected<std::span<const std::byte>, std::string> ReadRawPayload(const PackageEntry& entry) const
 		{
+			if constexpr (std::is_same_v<TType, eDataDatType>)
+			{
+				const auto typedType = static_cast<eDataDatType>(entry.GetAssetType());
+				switch (typedType)
+				{
+				case eDataDatType::Mesh:
+				case eDataDatType::Material:
+				case eDataDatType::Shader:
+				case eDataDatType::Animation:
+					break;
+				default:
+					return UNEXPECTED("Ресурс с GUID '{}' находится во внешнем пакете (тип: {}), прямое чтение из data.dat не поддерживается",
+						entry.GetGuid().ToString(), entry.GetAssetType());
+				}
+			}
+
+			if (entry.GetSize() == 0)
+			{
+				return std::span<const std::byte>{};
+			}
+
 			const auto offset = NarrowTo<std::size_t>(entry.GetOffset());
 			const auto size = NarrowTo<std::size_t>(entry.GetSize());
 			if (!offset || !size)
@@ -155,8 +180,8 @@ namespace zzz::core
 	private:
 		std::string		m_ArchiveName;
 		ReadOnlyFile	m_ReadOnlyFile;
-		DatFileHeader	m_Header;
-		std::size_t		m_ArchiveSize;
+		HeaderType		m_Header{ Traits::c_ExpectedFormat };
+		std::size_t		m_ArchiveSize{ 0 };
 
 		void InitializeArchive()
 		{
@@ -166,74 +191,155 @@ namespace zzz::core
 
 			const auto archiveBytes = *archiveBytesRes;
 			m_ArchiveSize = archiveBytes.size();
-			m_Header = DatFileHeader{ Traits::c_ExpectedFormat };
+			m_Header = HeaderType{ Traits::c_ExpectedFormat };
 
-			const auto headerBytes = archiveBytes.first((std::min)(archiveBytes.size(), static_cast<std::size_t>(m_Header.c_BaseHeaderSize)));
-
-			if (auto res = m_Header.DeserializeAndValidate(headerBytes, m_ArchiveSize); !res)
-				THROW_RUNTIME("Ошибка заголовка архива '{}': {}", m_ArchiveName, res.error());
-
-			const std::size_t headerSize = m_Header.GetHeaderSize();
 			for (auto& table : m_Tables)
 				table.clear();
 
-			const zU32 entryCount = m_Header.GetEntryCount();
-			if (entryCount > 0)
+			if constexpr (std::is_same_v<TType, eDataDatType>)
 			{
-				const auto tableSize = PackageEntry::CalculateTableSize(entryCount);
-				if (!tableSize)
-					THROW_RUNTIME("Размер таблицы записей архива '{}' переполняет std::size_t (записей: {})", m_ArchiveName, entryCount);
+				if (m_ArchiveSize < DataDatHeader::c_FullHeaderSize)
+					THROW_RUNTIME("Размер архива '{}' ({} байт) меньше размера заголовка (64 байта)", m_ArchiveName, m_ArchiveSize);
 
-				const std::size_t payloadBegin = headerSize + *tableSize;
-				if (!IsRangeInside(headerSize, *tableSize, m_ArchiveSize))
-					THROW_RUNTIME("Таблица записей архива '{}' выходит за границы файла: {} > {}", m_ArchiveName, payloadBegin, m_ArchiveSize);
+				const auto headerBytes = archiveBytes.first(static_cast<std::size_t>(DataDatHeader::c_FullHeaderSize));
+				if (auto res = m_Header.DeserializeAndValidate(headerBytes, m_ArchiveSize); !res)
+					THROW_RUNTIME("Ошибка заголовка архива '{}': {}", m_ArchiveName, res.error());
 
-				auto tableBytesRes = m_ReadOnlyFile.Read(headerSize, *tableSize);
-				if (!tableBytesRes)
-					THROW_RUNTIME("Не удалось прочитать таблицу записей архива '{}': {}", m_ArchiveName, tableBytesRes.error());
-
-				const auto tableBytes = *tableBytesRes;
+				const auto& extra = m_Header.GetExtra();
+				std::size_t offset = DataDatHeader::c_FullHeaderSize;
+				Serializer serializer;
 
 #if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
 				std::unordered_map<Guid, zU32> seenGuids;
-				seenGuids.reserve(entryCount);
+				seenGuids.reserve(extra.inlineCount + extra.externalCount);
 #endif
 
-				const std::size_t payloadSize = m_ArchiveSize - payloadBegin;
-				std::size_t tableOffset = 0;
-				Serializer serializer;
+				// Таблица 1: pack manifest (packCount элементов uint32_t)
+				for (zU32 i = 0; i < extra.packCount; ++i)
+				{
+					zU32 typeVal = 0;
+					if (auto res = serializer.Deserialize(archiveBytes, offset, typeVal); !res)
+						THROW_RUNTIME("Ошибка десериализации Таблицы 1 архива '{}': {}", m_ArchiveName, res.error());
+				}
 
-				for (zU32 i = 0; i < entryCount; ++i)
+				// Таблица 2: inline entries
+				for (zU32 i = 0; i < extra.inlineCount; ++i)
 				{
 					PackageEntry entry{};
-					if (auto res = serializer.Deserialize(tableBytes, tableOffset, entry); !res)
-						THROW_RUNTIME("Ошибка десериализации записи #{} архива '{}': {}", i, m_ArchiveName, res.error());
+					if (auto res = serializer.Deserialize(archiveBytes, offset, entry); !res)
+						THROW_RUNTIME("Ошибка десериализации Таблицы 2 архива '{}': {}", m_ArchiveName, res.error());
 
 					const auto rawType = entry.GetAssetType();
-					const auto typedType = static_cast<TType>(rawType);
+					const auto typedType = static_cast<eDataDatType>(rawType);
 					if (!Traits::IsTypeAllowed(typedType))
-						THROW_RUNTIME("Запись #{} архива '{}' содержит недопустимый тип ресурса: {}", i, m_ArchiveName, rawType);
-
-					if (!entry.IsRangeValid(payloadBegin, payloadSize))
-						THROW_RUNTIME("Запись #{} архива '{}' содержит недопустимый диапазон (offset={}, size={}) при границах данных [{}, {})",
-							i, m_ArchiveName, entry.GetOffset(), entry.GetSize(), payloadBegin, m_ArchiveSize);
+						THROW_RUNTIME("Запись #{} (inline) архива '{}' содержит недопустимый тип ресурса: {}", i, m_ArchiveName, rawType);
 
 #if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
 					ensure(entry.GetGuid().IsValid(), "Ресурс в пакете '{}' имеет невалидный (нулевой) GUID!", m_ArchiveName);
 					if (auto it = seenGuids.find(entry.GetGuid()); it != seenGuids.end())
 					{
-						ensure(false,
-							"Обнаружен дубликат GUID {} в архиве '{}' (конфликт типов: существующий={}, новый={})!",
-							entry.GetGuid().ToString(),
-							m_ArchiveName,
-							it->second,
-							rawType);
+						ensure(false, "Обнаружен дубликат GUID {} в архиве '{}' (конфликт типов: существующий={}, новый={})!",
+							entry.GetGuid().ToString(), m_ArchiveName, it->second, rawType);
 					}
 					seenGuids.emplace(entry.GetGuid(), rawType);
 #endif
 
 					const auto typeIndex = Traits::TypeToIndex(typedType);
 					m_Tables[typeIndex].emplace(entry.GetGuid(), entry);
+				}
+
+				// Таблица 3: external entries
+				for (zU32 i = 0; i < extra.externalCount; ++i)
+				{
+					PackageEntry entry{};
+					if (auto res = serializer.Deserialize(archiveBytes, offset, entry); !res)
+						THROW_RUNTIME("Ошибка десериализации Таблицы 3 архива '{}': {}", m_ArchiveName, res.error());
+
+					const auto rawType = entry.GetAssetType();
+					const auto typedType = static_cast<eDataDatType>(rawType);
+					if (!Traits::IsTypeAllowed(typedType))
+						THROW_RUNTIME("Запись #{} (external) архива '{}' содержит недопустимый тип ресурса: {}", i, m_ArchiveName, rawType);
+
+#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
+					ensure(entry.GetGuid().IsValid(), "Ресурс в пакете '{}' имеет невалидный (нулевой) GUID!", m_ArchiveName);
+					if (auto it = seenGuids.find(entry.GetGuid()); it != seenGuids.end())
+					{
+						ensure(false, "Обнаружен дубликат GUID {} в архиве '{}' (конфликт типов: существующий={}, новый={})!",
+							entry.GetGuid().ToString(), m_ArchiveName, it->second, rawType);
+					}
+					seenGuids.emplace(entry.GetGuid(), rawType);
+#endif
+
+					const auto typeIndex = Traits::TypeToIndex(typedType);
+					m_Tables[typeIndex].emplace(entry.GetGuid(), entry);
+				}
+			}
+			else
+			{
+				const auto headerBytes = archiveBytes.first((std::min)(archiveBytes.size(), static_cast<std::size_t>(m_Header.c_BaseHeaderSize)));
+
+				if (auto res = m_Header.DeserializeAndValidate(headerBytes, m_ArchiveSize); !res)
+					THROW_RUNTIME("Ошибка заголовка архива '{}': {}", m_ArchiveName, res.error());
+
+				const std::size_t headerSize = m_Header.GetHeaderSize();
+				const zU32 entryCount = m_Header.GetEntryCount();
+				if (entryCount > 0)
+				{
+					const auto tableSize = PackageEntry::CalculateTableSize(entryCount);
+					if (!tableSize)
+						THROW_RUNTIME("Размер таблицы записей архива '{}' переполняет std::size_t (записей: {})", m_ArchiveName, entryCount);
+
+					const std::size_t payloadBegin = headerSize + *tableSize;
+					if (!IsRangeInside(headerSize, *tableSize, m_ArchiveSize))
+						THROW_RUNTIME("Таблица записей архива '{}' выходит за границы файла: {} > {}", m_ArchiveName, payloadBegin, m_ArchiveSize);
+
+					auto tableBytesRes = m_ReadOnlyFile.Read(headerSize, *tableSize);
+					if (!tableBytesRes)
+						THROW_RUNTIME("Не удалось прочитать таблицу записей архива '{}': {}", m_ArchiveName, tableBytesRes.error());
+
+					const auto tableBytes = *tableBytesRes;
+
+#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
+					std::unordered_map<Guid, zU32> seenGuids;
+					seenGuids.reserve(entryCount);
+#endif
+
+					const std::size_t payloadSize = m_ArchiveSize - payloadBegin;
+					std::size_t tableOffset = 0;
+					Serializer serializer;
+
+					for (zU32 i = 0; i < entryCount; ++i)
+					{
+						PackageEntry entry{};
+						if (auto res = serializer.Deserialize(tableBytes, tableOffset, entry); !res)
+							THROW_RUNTIME("Ошибка десериализации записи #{} архива '{}': {}", i, m_ArchiveName, res.error());
+
+						const auto rawType = entry.GetAssetType();
+						const auto typedType = static_cast<TType>(rawType);
+						if (!Traits::IsTypeAllowed(typedType))
+							THROW_RUNTIME("Запись #{} архива '{}' содержит недопустимый тип ресурса: {}", i, m_ArchiveName, rawType);
+
+						if (!entry.IsRangeValid(payloadBegin, payloadSize))
+							THROW_RUNTIME("Запись #{} архива '{}' содержит недопустимый диапазон (offset={}, size={}) при границах данных [{}, {})",
+								i, m_ArchiveName, entry.GetOffset(), entry.GetSize(), payloadBegin, m_ArchiveSize);
+
+#if Z_DEBUG_BUILD || Z_DEVELOPMENT_BUILD
+						ensure(entry.GetGuid().IsValid(), "Ресурс в пакете '{}' имеет невалидный (нулевой) GUID!", m_ArchiveName);
+						if (auto it = seenGuids.find(entry.GetGuid()); it != seenGuids.end())
+						{
+							ensure(false,
+								"Обнаружен дубликат GUID {} в архиве '{}' (конфликт типов: существующий={}, новый={})!",
+								entry.GetGuid().ToString(),
+								m_ArchiveName,
+								it->second,
+								rawType);
+						}
+						seenGuids.emplace(entry.GetGuid(), rawType);
+#endif
+
+						const auto typeIndex = Traits::TypeToIndex(typedType);
+						m_Tables[typeIndex].emplace(entry.GetGuid(), entry);
+					}
 				}
 			}
 

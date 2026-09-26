@@ -139,16 +139,17 @@ TEST(SerializationTest, PackagePackerAndDataAssetsManagerEndToEnd)
 	}
 	ASSERT_NE(hDll, nullptr) << "Не удалось загрузить assets_builder_dll.dll из: " << dllPath;
 
-	using PackFn = bool (*)(const char*, const char*, uint32_t, const char*, uint64_t, uint64_t*);
+	using PackFn = bool (*)(const char8_t*, const char8_t*, uint32_t, const char8_t*, uint64_t, uint64_t*, char*, uint32_t);
 	auto packProject = reinterpret_cast<PackFn>(GetProcAddress(hDll, "PackProjectNative"));
 	ASSERT_NE(packProject, nullptr) << "Не найдена функция PackProjectNative";
 
-	const auto srcDir = (rootDir / "src/projects/assets_projects/zzz_assets_test_000").string();
-	const auto dstDir = (rootDir / "dist/Debug").string();
+	const auto srcDir = (rootDir / "src/projects/assets_projects/zzz_assets_test_000").u8string();
+	const auto dstDir = (rootDir / "dist/Debug").u8string();
 
+	char errBuf[1024] = { 0 };
 	// Собираем пакет
-	bool ok = packProject(srcDir.c_str(), dstDir.c_str(), 0, nullptr, 0, nullptr);
-	EXPECT_TRUE(ok);
+	bool ok = packProject(srcDir.c_str(), dstDir.c_str(), 0, nullptr, 0, nullptr, errBuf, sizeof(errBuf));
+	EXPECT_TRUE(ok) << "Ошибка сборки пакета: " << errBuf;
 
 	FreeLibrary(hDll);
 

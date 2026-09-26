@@ -23,6 +23,27 @@ add_library(assets_builder_dll SHARED
     PrefabImporter.h
     ProjectIdentityValidator.h
     ProjectIdentityValidator.cpp
+    importers/TextureImporter.h
+    importers/TextureImporter.cpp
+    importers/AudioImporter.h
+    importers/AudioImporter.cpp
+    stages/StageValidationResult.h
+    stages/StagePackPlan.h
+    stages/Stage1_ProjectValidator.h
+    stages/Stage1_ProjectValidator.cpp
+    stages/Stage2_PackPlanner.h
+    stages/Stage2_PackPlanner.cpp
+    stages/Stage3_PakBuilder.h
+    stages/Stage3_PakBuilder.cpp
+    stages/pak_builders/IPakBuilder.h
+    stages/pak_builders/StandardExternalPakBuilder.h
+    stages/pak_builders/StandardExternalPakBuilder.cpp
+    stages/pak_builders/InlineDataDatBuilder.h
+    stages/pak_builders/InlineDataDatBuilder.cpp
+    stages/pak_builders/PackageDatBuilder.h
+    stages/pak_builders/PackageDatBuilder.cpp
+    stages/validation/BuiltPackageValidator.h
+    stages/validation/BuiltPackageValidator.cpp
 )
 
 target_include_directories(assets_builder_dll PRIVATE
@@ -33,7 +54,9 @@ target_include_directories(assets_builder_dll PRIVATE
 
 target_link_libraries(assets_builder_dll PRIVATE
     core_lib
+    texture_builder
 )
 
 target_compile_definitions(assets_builder_dll PRIVATE ASSETS_BUILDER_EXPORTS Z_TARGET_NAME="assets_builder_dll")
 target_compile_features(assets_builder_dll PUBLIC cxx_std_23)
+

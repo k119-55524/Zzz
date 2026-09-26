@@ -7,6 +7,8 @@
 #include "PackagePacker.h"
 #include "AssetImporterRegistry.h"
 #include "ProjectIdentityValidator.h"
+#include "stages/validation/BuiltPackageValidator.h"
+
 
 namespace
 {
@@ -131,25 +133,59 @@ extern "C"
 		return zzz::core::c_DataDatFormat.FormatVersion.GetPatch();
 	}
 
-	BUILDER_API bool PackProjectNative(const char* sourceDir, const char* destinationDir, uint32_t targetPlatform, const char* platformConfigFile, uint64_t inBuildTimestamp, uint64_t* outBuildTimestamp)
+	BUILDER_API bool PackProjectNative(
+		const char8_t* sourceDir,
+		const char8_t* destinationDir,
+		uint32_t targetPlatform,
+		const char8_t* platformConfigFile,
+		uint64_t inBuildTimestamp,
+		uint64_t* outBuildTimestamp,
+		char* errorBuffer,
+		uint32_t errorBufferSize)
 	{
-		if (!sourceDir || !destinationDir) return false;
-		std::string platformConfig = platformConfigFile ? platformConfigFile : "";
-		return zzz::builder::PackagePacker::PackProject(
-			sourceDir,
-			destinationDir,
+		if (!sourceDir || !destinationDir)
+		{
+			if (errorBuffer && errorBufferSize > 0)
+			{
+				const char* msg = "Source or destination directory is null.";
+				const size_t len = std::min<size_t>(std::strlen(msg), errorBufferSize - 1);
+				std::memcpy(errorBuffer, msg, len);
+				errorBuffer[len] = '\0';
+			}
+			return false;
+		}
+
+		std::filesystem::path sourcePath(sourceDir);
+		std::filesystem::path destPath(destinationDir);
+		std::string platformConfig = platformConfigFile ? reinterpret_cast<const char*>(platformConfigFile) : "";
+		std::string errMsg;
+		bool ok = zzz::builder::PackagePacker::PackProject(
+			sourcePath,
+			destPath,
 			static_cast<zzz::core::eTargetPlatform>(targetPlatform),
 			platformConfig,
 			inBuildTimestamp,
-			outBuildTimestamp);
+			outBuildTimestamp,
+			&errMsg);
+
+		if (!ok && !errMsg.empty())
+		{
+			std::fprintf(stderr, "[PackProjectNative ERROR] %s\n", errMsg.c_str());
+			if (errorBuffer && errorBufferSize > 0)
+			{
+				const size_t len = std::min<size_t>(errMsg.size(), errorBufferSize - 1);
+				std::memcpy(errorBuffer, errMsg.data(), len);
+				errorBuffer[len] = '\0';
+			}
+		}
+		return ok;
 	}
 
-	BUILDER_API bool ValidateDirectoryNameNative(const char* name)
+	BUILDER_API bool ValidateDirectoryNameNative(const char8_t* name)
 	{
 		if (!name) return false;
-		return zzz::core::Path::IsValidDirectoryName(name);
+		return zzz::core::Path::IsValidDirectoryName(reinterpret_cast<const char*>(name));
 	}
-
 
 	BUILDER_API bool IsSupportedAssetExtension(const char* ext)
 	{
@@ -182,7 +218,7 @@ extern "C"
 		return true;
 	}
 
-	BUILDER_API bool ValidateProjectIdentityNative(const char* projectDir, char* errorBuffer, uint32_t errorBufferSize, const char* platformConfigFile)
+	BUILDER_API bool ValidateProjectIdentityNative(const char8_t* projectDir, char* errorBuffer, uint32_t errorBufferSize, const char8_t* platformConfigFile)
 	{
 		if (!projectDir)
 		{
@@ -196,11 +232,73 @@ extern "C"
 			return false;
 		}
 
-		std::string cfg = platformConfigFile ? platformConfigFile : "";
+		std::string cfg = platformConfigFile ? reinterpret_cast<const char*>(platformConfigFile) : "";
 		return zzz::builder::ProjectIdentityValidator::Validate(
-			std::filesystem::path(reinterpret_cast<const char8_t*>(projectDir)),
+			std::filesystem::path(projectDir),
 			errorBuffer,
 			errorBufferSize,
 			cfg);
 	}
+
+	BUILDER_API bool BeginBuildSessionNative(const char8_t* projectDir, char* errorBuffer, uint32_t errorBufferSize)
+	{
+		if (!projectDir)
+		{
+			if (errorBuffer && errorBufferSize > 0)
+			{
+				const char* msg = "Каталог проекта не задан (null).";
+				const size_t len = std::min<size_t>(std::strlen(msg), errorBufferSize - 1);
+				std::memcpy(errorBuffer, msg, len);
+				errorBuffer[len] = '\0';
+			}
+			return false;
+		}
+
+		std::string errorMsg;
+		const bool success = zzz::builder::PackagePacker::BeginBuildSession(
+			std::filesystem::path(projectDir),
+			errorMsg);
+
+		if (!success && errorBuffer && errorBufferSize > 0 && !errorMsg.empty())
+		{
+			const size_t len = std::min<size_t>(errorMsg.size(), errorBufferSize - 1);
+			std::memcpy(errorBuffer, errorMsg.data(), len);
+			errorBuffer[len] = '\0';
+		}
+		return success;
+	}
+
+	BUILDER_API void EndBuildSessionNative()
+	{
+		zzz::builder::PackagePacker::EndBuildSession();
+	}
+
+	BUILDER_API bool ValidateBuiltPackageNative(const char8_t* assetsDir, char* errorBuffer, uint32_t errorBufferSize)
+	{
+		if (!assetsDir)
+		{
+			if (errorBuffer && errorBufferSize > 0)
+			{
+				const char* msg = "Assets directory is null.";
+				const size_t len = std::min<size_t>(std::strlen(msg), errorBufferSize - 1);
+				std::memcpy(errorBuffer, msg, len);
+				errorBuffer[len] = '\0';
+			}
+			return false;
+		}
+
+		auto report = zzz::builder::BuiltPackageValidator::Validate(
+			std::filesystem::path(assetsDir));
+
+		if (!report.isValid && errorBuffer && errorBufferSize > 0 && !report.errorMessage.empty())
+		{
+			const size_t len = std::min<size_t>(report.errorMessage.size(), errorBufferSize - 1);
+			std::memcpy(errorBuffer, report.errorMessage.data(), len);
+			errorBuffer[len] = '\0';
+		}
+		return report.isValid;
+	}
 }
+
+
+
