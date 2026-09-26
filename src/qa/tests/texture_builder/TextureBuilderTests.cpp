@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "texture_processor/TextureProcessor.h"
+#include "texture_builder/TextureBuilder.h"
 
 using namespace zzz::texture;
 
@@ -26,9 +26,10 @@ std::vector<uint8_t> CreateTestTga(uint16_t w, uint16_t h, uint8_t bpp = 32) {
 
 } // namespace
 
-TEST(TextureProcessorTests, ProbeValidTga) {
+TEST(TextureBuilderTests, ProbeValidTga) {
+    const TextureBuilder builder;
     const auto tgaData = CreateTestTga(16, 16);
-    const auto probeResult = TextureProcessor::Probe(tgaData);
+    const auto probeResult = builder.Probe(tgaData);
 
     ASSERT_TRUE(probeResult.has_value());
     const auto& info = probeResult.value();
@@ -36,54 +37,56 @@ TEST(TextureProcessorTests, ProbeValidTga) {
     EXPECT_EQ(info.height, 16u);
     EXPECT_EQ(info.channels, 4u);
     EXPECT_TRUE(info.hasAlpha);
-    EXPECT_TRUE(info.isDivisibleByTwo);
-    EXPECT_TRUE(info.isPowerOfTwo);
+    EXPECT_TRUE(info.IsDivisibleByTwo());
+    EXPECT_TRUE(info.IsPowerOfTwo());
 }
 
-TEST(TextureProcessorTests, ProbeNonPowerOfTwoDivisibleByTwo) {
+TEST(TextureBuilderTests, ProbeNonPowerOfTwoDivisibleByTwo) {
+    const TextureBuilder builder;
     const auto tgaData = CreateTestTga(6, 10);
-    const auto probeResult = TextureProcessor::Probe(tgaData);
+    const auto probeResult = builder.Probe(tgaData);
 
     ASSERT_TRUE(probeResult.has_value());
     const auto& info = probeResult.value();
     EXPECT_EQ(info.width, 6u);
     EXPECT_EQ(info.height, 10u);
-    EXPECT_TRUE(info.isDivisibleByTwo);
-    EXPECT_FALSE(info.isPowerOfTwo);
+    EXPECT_TRUE(info.IsDivisibleByTwo());
+    EXPECT_FALSE(info.IsPowerOfTwo());
 }
 
-TEST(TextureProcessorTests, ProbeEmptyBufferFails) {
+TEST(TextureBuilderTests, ProbeEmptyBufferFails) {
+    const TextureBuilder builder;
     const std::vector<uint8_t> empty;
-    const auto probeResult = TextureProcessor::Probe(empty);
+    const auto probeResult = builder.Probe(empty);
     EXPECT_FALSE(probeResult.has_value());
 }
 
-TEST(TextureProcessorTests, ConvertOddDimensionsFailsValidation) {
+TEST(TextureBuilderTests, ConvertOddDimensionsFailsValidation) {
+    const TextureBuilder builder;
     const auto oddTga = CreateTestTga(5, 5);
     TextureConvertOptions options{
-        .targetFormat = TextureFormat::RGBA8_UNORM,
-        .generateMips = false,
-        .isSRGB = false
+        .targetFormat = zzz::core::ePixelFormat::RGBA8_UNORM,
+        .generateMips = false
     };
 
-    const auto result = TextureProcessor::Convert(oddTga, options);
+    const auto result = builder.Convert(oddTga, options);
     EXPECT_FALSE(result.success);
     EXPECT_NE(result.errorMessage.find("must be divisible by 2"), std::string::npos);
 }
 
-TEST(TextureProcessorTests, ConvertRgba8WithMips) {
+TEST(TextureBuilderTests, ConvertRgba8WithMips) {
+    const TextureBuilder builder;
     const auto tgaData = CreateTestTga(4, 4);
     TextureConvertOptions options{
-        .targetFormat = TextureFormat::RGBA8_UNORM,
-        .generateMips = true,
-        .isSRGB = false
+        .targetFormat = zzz::core::ePixelFormat::RGBA8_UNORM,
+        .generateMips = true
     };
 
-    const auto result = TextureProcessor::Convert(tgaData, options);
+    const auto result = builder.Convert(tgaData, options);
     ASSERT_TRUE(result.success);
     EXPECT_EQ(result.width, 4u);
     EXPECT_EQ(result.height, 4u);
-    EXPECT_EQ(result.format, TextureFormat::RGBA8_UNORM);
+    EXPECT_EQ(result.format, zzz::core::ePixelFormat::RGBA8_UNORM);
 
     // 4x4 -> 2x2 -> 1x1 = 3 levels
     ASSERT_EQ(result.mips.size(), 3u);
@@ -102,29 +105,24 @@ TEST(TextureProcessorTests, ConvertRgba8WithMips) {
     EXPECT_EQ(result.payload.size(), 64u + 16u + 4u);
 }
 
-TEST(TextureProcessorTests, ConvertBc7Compression) {
+TEST(TextureBuilderTests, ConvertBc7Compression) {
+    const TextureBuilder builder;
     const auto tgaData = CreateTestTga(8, 8);
     TextureConvertOptions options{
-        .targetFormat = TextureFormat::BC7_SRGB,
-        .generateMips = true,
-        .isSRGB = true
+        .targetFormat = zzz::core::ePixelFormat::BC7_SRGB,
+        .generateMips = true
     };
 
-    const auto result = TextureProcessor::Convert(tgaData, options);
+    const auto result = builder.Convert(tgaData, options);
     ASSERT_TRUE(result.success);
     EXPECT_EQ(result.width, 8u);
     EXPECT_EQ(result.height, 8u);
-    EXPECT_EQ(result.format, TextureFormat::BC7_SRGB);
+    EXPECT_EQ(result.format, zzz::core::ePixelFormat::BC7_SRGB);
 
     // 8x8 -> 4x4 -> 2x2 -> 1x1 = 4 levels
     ASSERT_EQ(result.mips.size(), 4u);
     EXPECT_FALSE(result.payload.empty());
 
-    // BC7 block size is 16 bytes for each 4x4 block:
-    // Mip 0 (8x8): 2x2 blocks = 4 * 16 = 64 bytes
-    // Mip 1 (4x4): 1x1 block  = 1 * 16 = 16 bytes
-    // Mip 2 (2x2): 1x1 block  = 1 * 16 = 16 bytes (clamped to 4x4 block)
-    // Mip 3 (1x1): 1x1 block  = 1 * 16 = 16 bytes (clamped to 4x4 block)
     EXPECT_EQ(result.mips[0].byteSize, 64u);
     EXPECT_EQ(result.mips[1].byteSize, 16u);
     EXPECT_EQ(result.mips[2].byteSize, 16u);
@@ -132,9 +130,10 @@ TEST(TextureProcessorTests, ConvertBc7Compression) {
     EXPECT_EQ(result.payload.size(), 64u + 16u + 16u + 16u);
 }
 
-TEST(TextureProcessorTests, StubsReturnNotImplemented) {
-    EXPECT_FALSE(TextureProcessor::BuildAtlas({}, "atlas.png", {}).success);
-    EXPECT_FALSE(TextureProcessor::PackChannels({}, {}).success);
-    EXPECT_FALSE(TextureProcessor::ProcessNormalMap("norm.png", {}).success);
-    EXPECT_FALSE(TextureProcessor::BuildCubemap({}, {}).success);
+TEST(TextureBuilderTests, StubsReturnNotImplemented) {
+    const TextureBuilder builder;
+    EXPECT_FALSE(builder.BuildAtlas({}, "atlas.png", {}).success);
+    EXPECT_FALSE(builder.PackChannels({}, {}).success);
+    EXPECT_FALSE(builder.ProcessNormalMap("norm.png", {}).success);
+    EXPECT_FALSE(builder.BuildCubemap({}, {}).success);
 }

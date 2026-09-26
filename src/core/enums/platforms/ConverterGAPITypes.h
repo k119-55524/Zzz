@@ -55,8 +55,15 @@ namespace zzz::core
 			case ePixelFormat::D24_UNORM_S8_UINT: return DXGI_FORMAT_D24_UNORM_S8_UINT;
 			case ePixelFormat::D32_FLOAT_S8_UINT: return DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
 			case ePixelFormat::BC1_UNORM:         return DXGI_FORMAT_BC1_UNORM;
+			case ePixelFormat::BC1_SRGB:          return DXGI_FORMAT_BC1_UNORM_SRGB;
 			case ePixelFormat::BC3_UNORM:         return DXGI_FORMAT_BC3_UNORM;
+			case ePixelFormat::BC3_SRGB:          return DXGI_FORMAT_BC3_UNORM_SRGB;
+			case ePixelFormat::BC4_UNORM:         return DXGI_FORMAT_BC4_UNORM;
+			case ePixelFormat::BC4_SNORM:         return DXGI_FORMAT_BC4_SNORM;
+			case ePixelFormat::BC5_UNORM:         return DXGI_FORMAT_BC5_UNORM;
+			case ePixelFormat::BC5_SNORM:         return DXGI_FORMAT_BC5_SNORM;
 			case ePixelFormat::BC7_UNORM:         return DXGI_FORMAT_BC7_UNORM;
+			case ePixelFormat::BC7_SRGB:          return DXGI_FORMAT_BC7_UNORM_SRGB;
 			default:                              return DXGI_FORMAT_UNKNOWN;
 			}
 #elif defined(Z_VULKAN)
@@ -73,8 +80,15 @@ namespace zzz::core
 			case ePixelFormat::D24_UNORM_S8_UINT: return VK_FORMAT_D24_UNORM_S8_UINT;
 			case ePixelFormat::D32_FLOAT_S8_UINT: return VK_FORMAT_D32_SFLOAT_S8_UINT;
 			case ePixelFormat::BC1_UNORM:         return VK_FORMAT_BC1_RGBA_UNORM_BLOCK;
+			case ePixelFormat::BC1_SRGB:          return VK_FORMAT_BC1_RGBA_SRGB_BLOCK;
 			case ePixelFormat::BC3_UNORM:         return VK_FORMAT_BC3_UNORM_BLOCK;
+			case ePixelFormat::BC3_SRGB:          return VK_FORMAT_BC3_SRGB_BLOCK;
+			case ePixelFormat::BC4_UNORM:         return VK_FORMAT_BC4_UNORM_BLOCK;
+			case ePixelFormat::BC4_SNORM:         return VK_FORMAT_BC4_SNORM_BLOCK;
+			case ePixelFormat::BC5_UNORM:         return VK_FORMAT_BC5_UNORM_BLOCK;
+			case ePixelFormat::BC5_SNORM:         return VK_FORMAT_BC5_SNORM_BLOCK;
 			case ePixelFormat::BC7_UNORM:         return VK_FORMAT_BC7_UNORM_BLOCK;
+			case ePixelFormat::BC7_SRGB:          return VK_FORMAT_BC7_SRGB_BLOCK;
 			case ePixelFormat::ASTC_4x4_UNORM:    return VK_FORMAT_ASTC_4x4_UNORM_BLOCK;
 			case ePixelFormat::ETC2_RGBA8_UNORM:  return VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK;
 			default:                              return VK_FORMAT_UNDEFINED;
@@ -93,7 +107,15 @@ namespace zzz::core
 			case ePixelFormat::D24_UNORM_S8_UINT: return MTLPixelFormatDepth24Unorm_Stencil8;
 			case ePixelFormat::D32_FLOAT_S8_UINT: return MTLPixelFormatDepth32Float_Stencil8;
 			case ePixelFormat::BC1_UNORM:         return MTLPixelFormatBC1_RGBA;
+			case ePixelFormat::BC1_SRGB:          return MTLPixelFormatBC1_RGBA_sRGB;
+			case ePixelFormat::BC3_UNORM:         return MTLPixelFormatBC3_RGBA;
+			case ePixelFormat::BC3_SRGB:          return MTLPixelFormatBC3_RGBA_sRGB;
+			case ePixelFormat::BC4_UNORM:         return MTLPixelFormatBC4_RUnorm;
+			case ePixelFormat::BC4_SNORM:         return MTLPixelFormatBC4_RSnorm;
+			case ePixelFormat::BC5_UNORM:         return MTLPixelFormatBC5_RGUnorm;
+			case ePixelFormat::BC5_SNORM:         return MTLPixelFormatBC5_RGSnorm;
 			case ePixelFormat::BC7_UNORM:         return MTLPixelFormatBC7_RGBAUnorm;
+			case ePixelFormat::BC7_SRGB:          return MTLPixelFormatBC7_RGBAUnorm_sRGB;
 			case ePixelFormat::ASTC_4x4_UNORM:    return MTLPixelFormatASTC_4x4_LDR;
 			default:                              return MTLPixelFormatInvalid;
 			}
@@ -135,8 +157,15 @@ namespace zzz::core
 			case DXGI_FORMAT_D24_UNORM_S8_UINT:   return ePixelFormat::D24_UNORM_S8_UINT;
 			case DXGI_FORMAT_D32_FLOAT_S8X24_UINT: return ePixelFormat::D32_FLOAT_S8_UINT;
 			case DXGI_FORMAT_BC1_UNORM:           return ePixelFormat::BC1_UNORM;
+			case DXGI_FORMAT_BC1_UNORM_SRGB:      return ePixelFormat::BC1_SRGB;
 			case DXGI_FORMAT_BC3_UNORM:           return ePixelFormat::BC3_UNORM;
+			case DXGI_FORMAT_BC3_UNORM_SRGB:      return ePixelFormat::BC3_SRGB;
+			case DXGI_FORMAT_BC4_UNORM:           return ePixelFormat::BC4_UNORM;
+			case DXGI_FORMAT_BC4_SNORM:           return ePixelFormat::BC4_SNORM;
+			case DXGI_FORMAT_BC5_UNORM:           return ePixelFormat::BC5_UNORM;
+			case DXGI_FORMAT_BC5_SNORM:           return ePixelFormat::BC5_SNORM;
 			case DXGI_FORMAT_BC7_UNORM:           return ePixelFormat::BC7_UNORM;
+			case DXGI_FORMAT_BC7_UNORM_SRGB:      return ePixelFormat::BC7_SRGB;
 			default:                              return ePixelFormat::Unknown;
 			}
 #elif defined(Z_VULKAN)
@@ -153,8 +182,15 @@ namespace zzz::core
 			case VK_FORMAT_D24_UNORM_S8_UINT:         return ePixelFormat::D24_UNORM_S8_UINT;
 			case VK_FORMAT_D32_SFLOAT_S8_UINT:        return ePixelFormat::D32_FLOAT_S8_UINT;
 			case VK_FORMAT_BC1_RGBA_UNORM_BLOCK:      return ePixelFormat::BC1_UNORM;
+			case VK_FORMAT_BC1_RGBA_SRGB_BLOCK:       return ePixelFormat::BC1_SRGB;
 			case VK_FORMAT_BC3_UNORM_BLOCK:           return ePixelFormat::BC3_UNORM;
+			case VK_FORMAT_BC3_SRGB_BLOCK:            return ePixelFormat::BC3_SRGB;
+			case VK_FORMAT_BC4_UNORM_BLOCK:           return ePixelFormat::BC4_UNORM;
+			case VK_FORMAT_BC4_SNORM_BLOCK:           return ePixelFormat::BC4_SNORM;
+			case VK_FORMAT_BC5_UNORM_BLOCK:           return ePixelFormat::BC5_UNORM;
+			case VK_FORMAT_BC5_SNORM_BLOCK:           return ePixelFormat::BC5_SNORM;
 			case VK_FORMAT_BC7_UNORM_BLOCK:           return ePixelFormat::BC7_UNORM;
+			case VK_FORMAT_BC7_SRGB_BLOCK:            return ePixelFormat::BC7_SRGB;
 			case VK_FORMAT_ASTC_4x4_UNORM_BLOCK:      return ePixelFormat::ASTC_4x4_UNORM;
 			case VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK: return ePixelFormat::ETC2_RGBA8_UNORM;
 			default:                                  return ePixelFormat::Unknown;
@@ -173,7 +209,15 @@ namespace zzz::core
 			case MTLPixelFormatDepth24Unorm_Stencil8: return ePixelFormat::D24_UNORM_S8_UINT;
 			case MTLPixelFormatDepth32Float_Stencil8: return ePixelFormat::D32_FLOAT_S8_UINT;
 			case MTLPixelFormatBC1_RGBA:              return ePixelFormat::BC1_UNORM;
+			case MTLPixelFormatBC1_RGBA_sRGB:         return ePixelFormat::BC1_SRGB;
+			case MTLPixelFormatBC3_RGBA:              return ePixelFormat::BC3_UNORM;
+			case MTLPixelFormatBC3_RGBA_sRGB:         return ePixelFormat::BC3_SRGB;
+			case MTLPixelFormatBC4_RUnorm:            return ePixelFormat::BC4_UNORM;
+			case MTLPixelFormatBC4_RSnorm:            return ePixelFormat::BC4_SNORM;
+			case MTLPixelFormatBC5_RGUnorm:           return ePixelFormat::BC5_UNORM;
+			case MTLPixelFormatBC5_RGSnorm:           return ePixelFormat::BC5_SNORM;
 			case MTLPixelFormatBC7_RGBAUnorm:         return ePixelFormat::BC7_UNORM;
+			case MTLPixelFormatBC7_RGBAUnorm_sRGB:    return ePixelFormat::BC7_SRGB;
 			case MTLPixelFormatASTC_4x4_LDR:          return ePixelFormat::ASTC_4x4_UNORM;
 			default:                              return ePixelFormat::Unknown;
 			}

@@ -34,9 +34,16 @@ namespace zzz::core
 		D32_FLOAT_S8_UINT,  ///< 32-бит глубина + 8-бит трафарет (дефолтный буфер Vulkan/Metal)
 
 		// --- 4. Сжатые форматы Desktop (Windows / Linux / macOS) ---
-		BC1_UNORM,          ///< DXT1 (RGB без альфы / 1-бит альфа)
-		BC3_UNORM,          ///< DXT5 (RGBA с интерполированной альфой)
-		BC7_UNORM,          ///< Высококачественное сжатие RGBA
+		BC1_UNORM,          ///< DXT1 (RGB без альфы / 1-бит альфа, Linear)
+		BC1_SRGB,           ///< DXT1 (sRGB)
+		BC3_UNORM,          ///< DXT5 (RGBA с интерполированной альфой, Linear)
+		BC3_SRGB,           ///< DXT5 (sRGB)
+		BC4_UNORM,          ///< 1 канал беззнаковый (маски, высота)
+		BC4_SNORM,          ///< 1 канал знаковый
+		BC5_UNORM,          ///< 2 канала беззнаковые (карты нормалей RG)
+		BC5_SNORM,          ///< 2 канала знаковые
+		BC7_UNORM,          ///< Высококачественное сжатие RGBA (Linear)
+		BC7_SRGB,           ///< Высококачественное сжатие RGBA (sRGB)
 
 		// --- 5. Сжатые форматы Mobile (Android / iOS) ---
 		ASTC_4x4_UNORM,     ///< Универсальный мобильный стандарт качества (Android + iOS)
@@ -92,7 +99,11 @@ namespace zzz::core
 		/// @brief Проверяет, является ли формат sRGB (с аппаратной гамма-коррекцией).
 		[[nodiscard]] constexpr bool IsSRGBFormat(ePixelFormat format) noexcept
 		{
-			return format == ePixelFormat::RGBA8_SRGB || format == ePixelFormat::BGRA8_SRGB;
+			return format == ePixelFormat::RGBA8_SRGB ||
+			       format == ePixelFormat::BGRA8_SRGB ||
+			       format == ePixelFormat::BC1_SRGB   ||
+			       format == ePixelFormat::BC3_SRGB   ||
+			       format == ePixelFormat::BC7_SRGB;
 		}
 
 		/// @brief Проверяет, является ли формат сжатым (Block Compression / ASTC / ETC2).
@@ -101,8 +112,15 @@ namespace zzz::core
 			switch (format)
 			{
 			case ePixelFormat::BC1_UNORM:
+			case ePixelFormat::BC1_SRGB:
 			case ePixelFormat::BC3_UNORM:
+			case ePixelFormat::BC3_SRGB:
+			case ePixelFormat::BC4_UNORM:
+			case ePixelFormat::BC4_SNORM:
+			case ePixelFormat::BC5_UNORM:
+			case ePixelFormat::BC5_SNORM:
 			case ePixelFormat::BC7_UNORM:
+			case ePixelFormat::BC7_SRGB:
 			case ePixelFormat::ASTC_4x4_UNORM:
 			case ePixelFormat::ETC2_RGBA8_UNORM:
 				return true;
@@ -128,8 +146,15 @@ namespace zzz::core
 		case ePixelFormat::D24_UNORM_S8_UINT: return "D24_UNORM_S8_UINT";
 		case ePixelFormat::D32_FLOAT_S8_UINT: return "D32_FLOAT_S8_UINT";
 		case ePixelFormat::BC1_UNORM:         return "BC1_UNORM";
+		case ePixelFormat::BC1_SRGB:          return "BC1_SRGB";
 		case ePixelFormat::BC3_UNORM:         return "BC3_UNORM";
+		case ePixelFormat::BC3_SRGB:          return "BC3_SRGB";
+		case ePixelFormat::BC4_UNORM:         return "BC4_UNORM";
+		case ePixelFormat::BC4_SNORM:         return "BC4_SNORM";
+		case ePixelFormat::BC5_UNORM:         return "BC5_UNORM";
+		case ePixelFormat::BC5_SNORM:         return "BC5_SNORM";
 		case ePixelFormat::BC7_UNORM:         return "BC7_UNORM";
+		case ePixelFormat::BC7_SRGB:          return "BC7_SRGB";
 		case ePixelFormat::ASTC_4x4_UNORM:    return "ASTC_4x4_UNORM";
 		case ePixelFormat::ETC2_RGBA8_UNORM:  return "ETC2_RGBA8_UNORM";
 		}

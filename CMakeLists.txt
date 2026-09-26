@@ -106,7 +106,7 @@ endif()
 
 add_subdirectory(src/math)
 add_subdirectory(src/core)
-add_subdirectory(src/texture_processor)
+add_subdirectory(src/texture_builder)
 
 add_subdirectory(src/tools/RemoteLogViewer)
 add_subdirectory(src/engine)
