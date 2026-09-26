@@ -65,10 +65,11 @@ namespace zzz::core
 	 */
 	struct ShaderMetadata
 	{
-		zU32 stageMask{ 0 };    ///< Битовая маска стадий (Vertex, Pixel, Compute)
-		zU32 bytecodeSize{ 0 }; ///< Размер бинарного байткода в байтах
-		zU32 gapiType{ 0 };     ///< Целевое графическое API (D3D12, Vulkan, Metal)
-		zU8  reserved[20]{ 0 }; ///< Резерв
+		zU32 stageMask{ 0 };           ///< Битовая маска стадий (Vertex, Pixel, Compute)
+		zU32 bytecodeSize{ 0 };        ///< Размер бинарного байткода в байтах
+		zU32 gapiType{ 0 };            ///< Целевое графическое API (eShaderBinaryFormat)
+		zU32 requiredStreamsMask{ 0 }; ///< Битовая маска необходимых стримов геометрии (eMeshStreamFlags)
+		zU8  reserved[16]{ 0 };        ///< Резерв
 	};
 
 	/**

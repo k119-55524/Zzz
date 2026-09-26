@@ -258,3 +258,23 @@ int APIENTRY wWinMain(...)
   ```
 - **Linux / macOS:** убедиться, что установлены системные пакеты `doxygen` и `graphviz` (`sudo apt install doxygen graphviz` на Linux или `brew install doxygen graphviz` на macOS), после чего вызвать сборку таргета `docs`.
 
+## Компиляция шейдеров для Apple Metal (macOS / iOS) на Windows
+
+Для оффлайн-компиляции шейдеров под платформы Apple в чистый бинарный формат архивов `.metallib` на Windows-машинах сборщика используется официальный пакет инструментов **Apple Metal Developer Tools for Windows**.
+
+### Требования и расположение дистрибутива:
+- **Официальный установщик:** лежит в корне проекта в папке `tools/` (например, `tools/Metal_Developer_Tools6.2Windows.exe`) или скачивается с официального портала: [developer.apple.com/metal/tools/](https://developer.apple.com/metal/tools/) (требуется Apple ID).
+- **Установка:** запустить установщик `.exe` и установить в стандартную системную директорию:
+  `C:\Program Files\Metal Developer Tools\`
+- **Что входит:** компиляторы и утилиты архивации `metal.exe`, `metallib.exe`, библиотеки clang/LLVM.
+
+### Автопоиск сборщиком шейдеров (`shader_builder`):
+Сборщик ресурсов `shader_builder` автоматически производит поиск компилятора по следующим приоритетам:
+1. Системная переменная окружения `METAL_DEVELOPER_TOOLS_DIR` (если задана).
+2. Стандартный системный каталог: `C:\Program Files\Metal Developer Tools\bin\metal.exe`.
+3. Системная переменная `PATH`.
+4. Локальный путь инструментов в проекте: `tools/metal_developer_tools/bin/metal.exe`.
+
+> [!NOTE]
+> Если утилиты Apple не установлены в системе разработчика под Windows, `shader_builder` автоматически производит fallback: транслирует HLSL $\to$ SPIR-V $\to$ MSL (текстовый код Metal Shading Language через SPIRV-Cross). При запуске на устройствах Apple этот MSL-текст компилируется драйвером Metal и кэшируется в системный `MTLBinaryArchive`. Установка Metal Developer Tools обязательна на машинах релизной сборки (CI/CD) для исключения задержек компиляции при первом старте игры на iOS/macOS.
+

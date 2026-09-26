@@ -40,3 +40,26 @@ set(Z_GRAPHVIZ_VERSION "12.2.1" CACHE STRING "Graphviz Windows Portable Version"
 # -----------------------------------------------------------------------------
 set(Z_STB_VERSION "master" CACHE STRING "stb Git Commit/Tag")
 set(Z_DIRECTXTEX_VERSION "oct2024" CACHE STRING "DirectXTex Release Tag")
+
+# -----------------------------------------------------------------------------
+# Библиотеки компиляции и трансляции шейдеров
+# -----------------------------------------------------------------------------
+set(Z_SPIRV_CROSS_VERSION "vulkan-sdk-1.3.296.0" CACHE STRING "SPIRV-Cross Git Tag")
+
+# -----------------------------------------------------------------------------
+# Автоматический контроль кэша зависимостей (.cache/)
+# Проверяем наличие ключевых маркерных файлов.
+# Если все зависимости присутствуют — включаем полный оффлайн-режим (0 обращений к сети).
+# Если хотя бы одной нет или кэш пуст — разрешаем FetchContent докачать недостающее.
+# -----------------------------------------------------------------------------
+if(EXISTS "${FETCHCONTENT_BASE_DIR}/googletest-src/googletest/include/gtest/gtest.h"
+   AND EXISTS "${FETCHCONTENT_BASE_DIR}/googlebenchmark-src/include/benchmark/benchmark.h"
+   AND EXISTS "${FETCHCONTENT_BASE_DIR}/directxtex-src/DirectXTex/DirectXTex.h"
+   AND EXISTS "${FETCHCONTENT_BASE_DIR}/stb-src/stb_image.h"
+   AND EXISTS "${FETCHCONTENT_BASE_DIR}/dxc-src/inc/dxcapi.h"
+   AND EXISTS "${FETCHCONTENT_BASE_DIR}/spirv_cross-src/spirv_cross.hpp")
+    set(FETCHCONTENT_FULLY_DISCONNECTED ON CACHE BOOL "Fully disconnect FetchContent when dependencies exist" FORCE)
+else()
+    set(FETCHCONTENT_FULLY_DISCONNECTED OFF CACHE BOOL "Allow download when dependencies missing" FORCE)
+    set(FETCHCONTENT_UPDATES_DISCONNECTED ON CACHE BOOL "Skip update step for already-populated FetchContent dependencies" FORCE)
+endif()

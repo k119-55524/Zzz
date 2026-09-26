@@ -113,3 +113,8 @@ bin/
 **/bin/
 **/obj/
 
+# Local tools distributions and installers
+tools/
+tools/*.exe
+tools/distrib/
+

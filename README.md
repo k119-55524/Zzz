@@ -26,6 +26,7 @@
 - Visual Studio 2022 / 2026 (MSVC с поддержкой стандарта C++23).
 - CMake 3.28+ и Ninja.
 - .NET 8 / 9 SDK (для сборки C# инструментов и редактора).
+- (Опционально) **Apple Metal Developer Tools for Windows** (версия 6.2 Windows, установщик `Metal_Developer_Tools6.2Windows.exe` в папке `tools/`) — требуется для предварительной оффлайн-компиляции шейдеров под macOS/iOS в бинарные `.metallib` архивы.
 
 > Инструкции по настройке окружения для других платформ (Linux/WSL, macOS, iOS) вынесены в **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)**.
 

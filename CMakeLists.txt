@@ -16,18 +16,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/dist/$<CONFIG>")
 
 set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/.cache" CACHE PATH "Directory for downloaded external packages")
 
-# Если зависимости уже скачаны в .cache/ — включаем FULLY_DISCONNECTED (0 задержек, без subbuild).
-# Если кэша ещё нет (первый запуск на чистой машине) — скачиваем один раз через UPDATES_DISCONNECTED.
-if(EXISTS "${FETCHCONTENT_BASE_DIR}/googletest-src" 
-   AND EXISTS "${FETCHCONTENT_BASE_DIR}/googlebenchmark-src"
-   AND EXISTS "${FETCHCONTENT_BASE_DIR}/directxtex-src"
-   AND EXISTS "${FETCHCONTENT_BASE_DIR}/stb-src")
-    set(FETCHCONTENT_FULLY_DISCONNECTED ON CACHE BOOL "Fully disconnect FetchContent when dependencies exist" FORCE)
-else()
-    set(FETCHCONTENT_FULLY_DISCONNECTED OFF CACHE BOOL "Allow download when dependencies missing" FORCE)
-    set(FETCHCONTENT_UPDATES_DISCONNECTED ON CACHE BOOL "Skip update step for already-populated FetchContent dependencies" FORCE)
-endif()
-
+# Централизованный реестр версий и автоматический контроль кэша зависимостей
+include(package_versions.cmake)
 
 # Отключаем сканирование модулей C++20, так как они не используются в проекте и вызывают спам иерархии зависимостей в Ninja
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
@@ -40,7 +30,6 @@ if(MSVC)
     add_compile_options(/utf-8 /Zc:preprocessor /W4 /w44062 /EHsc /wd4251)
 endif()
 
-include(package_versions.cmake)
 include(build_configs/current.cmake OPTIONAL)
 
 # Единый флаг Z_FORCE_VULKAN приходит из build_configs/current.cmake (BuildConfigurator/Switcher)
@@ -107,6 +96,7 @@ endif()
 add_subdirectory(src/math)
 add_subdirectory(src/core)
 add_subdirectory(src/texture_builder)
+add_subdirectory(src/shader_builder)
 
 add_subdirectory(src/tools/RemoteLogViewer)
 add_subdirectory(src/engine)

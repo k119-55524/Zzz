@@ -26,6 +26,7 @@ Execution of the end-to-end pipeline: from preparing assets in Assets Builder to
 - Visual Studio 2022 / 2026 (MSVC with C++23 standard support).
 - CMake 3.28+ and Ninja.
 - .NET 8 / 9 SDK (for building C# tools and the editor).
+- (Optional) **Apple Metal Developer Tools for Windows** (version 6.2 Windows, installer `Metal_Developer_Tools6.2Windows.exe` in `tools/`) — required for offline precompilation of shaders for macOS/iOS into binary `.metallib` archives.
 
 > Detailed instructions for setting up environments on other platforms (Linux/WSL, macOS, iOS) are available in **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)**.
 
